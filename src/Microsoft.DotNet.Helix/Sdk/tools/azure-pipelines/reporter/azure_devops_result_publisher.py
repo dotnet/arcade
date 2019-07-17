@@ -138,40 +138,33 @@ class AzureDevOpsTestResultPublisher:
                 )
 
             print("Unexpected result value {} for {}".format(r.result, r.name))
-        
-        cheese = None
-        cheese2 = None
 
-        unconverted_results = list(results)
+        unconverted_results = list(results) # type: List[TestResult]
         print("Count of unconverted_results: {0}".format(len(unconverted_results)))
 
-        for r in unconverted_results:
-            if r is None:
-                continue
-            if r.name.endswith("cheese2"):
-                cheese2 = r
-                break
+        # Find all DDTs, determine parent, and add to dictionary
+        data_driven_tests = {}  # type: Dict[str, TestCaseResult]
+        non_data_driven_tests = [] # type: TestCaseResult
 
         for r in unconverted_results:
             if r is None:
                 continue
-            elif r.name.endswith("cheese"):
-                cheese = r
-                break
-            
-        converted_results = []
+            if is_data_driven_test(r):
+                print("Found data driven test: {0}".format(r.name))
+                base_name = get_ddt_base_name(r)
+                if base_name in data_driven_tests:
+                    print("\tData driven test already known; adding as sub result.")
+                    data_driven_tests[base_name].sub_results.append(convert_to_sub_test(r))
+                else:
+                    print("\tData driven test not yet known; adding as \"{0}\".".format(base_name))
+                    data_driven_tests[base_name] = convert_result(r)
+                    data_driven_tests[base_name].automated_test_name = base_name
+                    data_driven_tests[base_name].result_group_type = "dataDriven"
+                    data_driven_tests[base_name].sub_results = [convert_to_sub_test(r)]
+            else:
+                non_data_driven_tests.append(convert_result(r))
 
-        for r in unconverted_results:
-            if r is None:
-                continue
-            converted_results.append(convert_result(r))
-
-        if cheese is not None and cheese2 is not None:
-            lastresult = convert_result(cheese)
-            lastresult.result_group_type = "dataDriven"
-            lastresult.sub_results = [convert_to_sub_test(cheese2)]
-            converted_results.append(lastresult)
-        return converted_results
+        return list(data_driven_tests.values()) + non_data_driven_tests
 
     def get_connection(self) -> Connection:
         credentials = self.get_credentials()
