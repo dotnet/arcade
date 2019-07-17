@@ -168,7 +168,7 @@ class AzureDevOpsTestResultPublisher:
 
         if cheese is not None and cheese2 is not None:
             lastresult = convert_result(cheese)
-            lastresult.result_group_type = "generic"
+            lastresult.result_group_type = "dataDriven"
             lastresult.sub_results = [convert_to_sub_test(cheese2)]
             converted_results.append(lastresult)
         return converted_results
