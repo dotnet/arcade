@@ -78,11 +78,16 @@ namespace XliffTasks.Model
         {
             foreach (var imageTag in Document.Descendants(Document.Root.Name.Namespace + "Bitmap"))
             {
-                string resourceRelativePath = imageTag.Attribute("href").Value.Replace('\\', Path.DirectorySeparatorChar);
+                var hrefAttribute = imageTag.Attribute("href");
 
-                var absolutePath = Path.Combine(Path.GetDirectoryName(sourceFullPath), resourceRelativePath);
+                if (hrefAttribute != null)
+                {
+                    string resourceRelativePath = hrefAttribute.Value.Replace('\\', Path.DirectorySeparatorChar);
 
-                imageTag.Attribute("href").Value = absolutePath;
+                    var absolutePath = Path.Combine(Path.GetDirectoryName(sourceFullPath), resourceRelativePath);
+
+                    imageTag.Attribute("href").Value = absolutePath;
+                }
             }
         }
     }
