@@ -48,7 +48,7 @@ of Arcade or services.**
 
 The mechanics of 'branching' our services tends to be service specific, but
 generally involves generating new API versions for breaking changes. For Arcade,
-the mechanics are a little more complex. The the following is the process by
+the mechanics are a little more complex. The following is the process by
 which Arcade can be branched for major release 'N' of .NET Core.
 
 1. Branch `dotnet/arcade` off of `master` into `release/<N>`
