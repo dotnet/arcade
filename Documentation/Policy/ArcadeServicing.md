@@ -36,7 +36,7 @@ of Arcade or services.**
 - See [Change Bar](#ChangeBar.md) and [Changes Policy](#ChangesPolicy.md) for
   additional details on change bars and communication policies.
 
-### What is the bar for changes affecting non-current APIs in engineering services?
+### What is the bar for changes affecting non-current (not latest) APIs in engineering services?
 - Uses same bar as product servicing, where our customers are the repositories.
     - Security
     - Exceptionally high impact issues reported by customers.
@@ -53,16 +53,18 @@ which Arcade can be branched for major release 'N' of .NET Core.
 
 1. Branch `dotnet/arcade` off of `master` into `release/<N>`
 2. Branch `dotnet/arcade-validation` off of `master` into `release/<N>`
-3. Introduce channels for the new branches
+3. Update package version numbers in master to match the next major version of
+   .NET Core (N+1).
+4. Introduce channels for the new branches
     - `.NET Core <N+1 or next version> Tools`
     - `.NET Core <N+1 or next version> Tools - Validation`
-4. Modify default channel associations for Arcade `master` to point to `.NET Core <N+1
+5. Modify default channel associations for Arcade `master` to point to `.NET Core <N+1
    or next version> Tools - Validation`
-5. Add default channel associations for Arcade `release/<N>` to point to `.NET
+6. Add default channel associations for Arcade `release/<N>` to point to `.NET
    Core <N> Tools - Validation`
-6. Modify the release and master branches of arcade-validation to promote builds
+7. Modify the release and master branches of arcade-validation to promote builds
    to the appropriate channels.
-7. Reset arcade Maestro++ subscriptions targeting .NET Core master branches to
+8. Reset arcade Maestro++ subscriptions targeting .NET Core master branches to
    source from .NET Core <N+1> Tools.
-8. Reset arcade Maestro++ subscriptions targeting .NET Core release branches to
+9. Reset arcade Maestro++ subscriptions targeting .NET Core release branches to
    source from .NET Core <N> Tools.
