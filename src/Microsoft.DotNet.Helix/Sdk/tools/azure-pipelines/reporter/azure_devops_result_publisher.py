@@ -91,7 +91,7 @@ class AzureDevOpsTestResultPublisher:
                     duration_in_ms=r.duration_seconds*1000,
                     outcome="NotExecuted"
                     )
-            print("Unexpected result value {} for {}".format(r.result, r.name))
+            log.warning("Unexpected result value {} for {}".format(r.result, r.name))
 
         def convert_result(r: TestResult) -> TestCaseResult:
             if r.result == "Pass":
@@ -135,10 +135,10 @@ class AzureDevOpsTestResultPublisher:
                     comment=comment,
                 )
 
-            print("Unexpected result value {} for {}".format(r.result, r.name))
+            log.warning("Unexpected result value {} for {}".format(r.result, r.name))
 
         unconverted_results = list(results) # type: List[TestResult]
-        print("Count of unconverted_results: {0}".format(len(unconverted_results)))
+        log.debug("Count of unconverted_results: {0}".format(len(unconverted_results)))
 
         # Find all DDTs, determine parent, and add to dictionary
         data_driven_tests = {}  # type: Dict[str, TestCaseResult]
@@ -148,13 +148,13 @@ class AzureDevOpsTestResultPublisher:
             if r is None:
                 continue
             if is_data_driven_test(r):
-                print("Found data driven test: {0}".format(r.name))
+                log.debug("Found data driven test: {0}".format(r.name))
                 base_name = get_ddt_base_name(r)
                 if base_name in data_driven_tests:
-                    print("\tData driven test already known; adding as sub result.")
+                    log.debug("\tData driven test already known; adding as sub result.")
                     data_driven_tests[base_name].sub_results.append(convert_to_sub_test(r))
                 else:
-                    print("\tData driven test not yet known; adding as \"{0}\".".format(base_name))
+                    log.debug("\tData driven test not yet known; adding as \"{0}\".".format(base_name))
                     data_driven_tests[base_name] = convert_result(r)
                     data_driven_tests[base_name].automated_test_name = base_name
                     data_driven_tests[base_name].result_group_type = "dataDriven"
