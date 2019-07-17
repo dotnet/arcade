@@ -103,6 +103,26 @@ namespace XliffTasks.Tests
         }
 
         [Fact]
+        public void DoesNotNullReferenceWhenNoHRef()
+        {
+            string source =
+@"<CommandTable xmlns=""http://schemas.microsoft.com/VisualStudio/2005-10-18/CommandTable"" xmlns:xs=""http://www.w3.org/2001/XMLSchema"">
+  <Bitmaps>
+    <Bitmap guid=""guidImages"" usedList=""bmpPic1, bmpPic2, bmpPicSearch, bmpPicX, bmpPicArrows"" />
+  </Bitmaps>
+</CommandTable>";
+
+            var document = new VsctDocument();
+            var writer = new StringWriter();
+            document.Load(new StringReader(source));
+            document.RewriteRelativePathsToAbsolute(
+                        Path.Combine(Directory.GetCurrentDirectory(), "Resources.resx"));
+            document.Save(writer);
+
+            AssertEx.EqualIgnoringLineEndings(source, writer.ToString());
+        }
+
+        [Fact]
         public void NonUniqueIds()
         {
             string source =
