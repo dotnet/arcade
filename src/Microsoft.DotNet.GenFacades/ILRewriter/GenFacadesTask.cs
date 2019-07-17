@@ -4,6 +4,7 @@
 
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
+using Microsoft.DotNet.Build.Tasks;
 using Microsoft.Cci.Extensions;
 using System;
 using System.Diagnostics;
@@ -15,7 +16,7 @@ namespace Microsoft.DotNet.GenFacades.ILRewriter
     /// <summary>
     /// Runs GenFacades In-Proc.
     /// </summary>
-    public sealed class GenFacadesTask : MSBuild.Task
+    public sealed class GenFacadesTask : BuildTask
     {
         [Required]
         public string Seeds { get; set; }
@@ -118,9 +119,9 @@ namespace Microsoft.DotNet.GenFacades.ILRewriter
     // Trace listener which writes to the MSBuild log.
     public class TraceLogger : TraceListener
     {
-        private readonly TaskLoggingHelper _log;
+        private readonly ILog _log;
 
-        public TraceLogger(TaskLoggingHelper log)
+        public TraceLogger(ILog log)
         {
             _log = log;
         }
