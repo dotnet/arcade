@@ -107,7 +107,6 @@ try {
             if ((Get-Variable 'DoNotDisplayNativeToolsInstallationWarnings' -ErrorAction 'SilentlyContinue') -and $DoNotDisplayNativeToolsInstallationWarnings) {
                 $showNativeToolsWarning = $false
             }
-            
             if ($showNativeToolsWarning) {
                 Write-Warning $errMsg
             }
