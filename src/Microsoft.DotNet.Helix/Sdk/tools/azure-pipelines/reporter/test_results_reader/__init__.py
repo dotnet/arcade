@@ -76,8 +76,7 @@ def add_logs(tr, log_list):
     total_added_logs += 1
     return tr
 
-def read_results(dir):
-    # type: (str) -> Iterable[TestResult]
+def read_results(dir: str) -> Iterable[TestResult]:
 
     log_files = list(get_log_files(os.path.join(get_env("HELIX_WORKITEM_ROOT"), "..")))
     log_list = construct_log_list(log_files)

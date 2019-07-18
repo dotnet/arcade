@@ -4,6 +4,7 @@ import traceback
 import helix.logs
 from queue import Queue
 from threading import Thread
+from typing import Tuple, Optional
 
 from test_results_reader import read_results
 from helpers import batch
@@ -45,7 +46,8 @@ class UploadWorker(Thread):
                 self.queue.task_done()
 
 
-def process_args():
+
+def process_args() -> Tuple[str, str, str, Optional[str]]:
     if len(sys.argv) < 4 or len(sys.argv) > 5:
         sys.exit("Expected 3 or 4 arguments")
 
@@ -53,7 +55,7 @@ def process_args():
     team_project = sys.argv[2]
     test_run_id = sys.argv[3]
     if len(sys.argv) == 5:
-        access_token = sys.argv[4]
+        access_token = sys.argv[4] # type: Optional[str]
     else:
         access_token = None
 
