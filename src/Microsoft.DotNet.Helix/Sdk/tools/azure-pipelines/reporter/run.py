@@ -2,7 +2,6 @@ import os
 import sys
 import traceback
 import helix.logs
-import helix.settings
 from queue import Queue
 from threading import Thread
 
@@ -65,13 +64,9 @@ def main():
     with helix.logs.SelfUploadingLogFile(helix.settings.settings_from_env()):
         collection_uri, team_project, test_run_id, access_token = process_args()
 
-        print("Got args", collection_uri, team_project, test_run_id, access_token)
-        log.debug("Got args {0} {1} {2} {3}".format(collection_uri, team_project, test_run_id, access_token))
-
         worker_count = 10
         q = Queue()
 
-        print("Main thread starting workers")
         log.info("Main thread starting workers")
 
         for i in range(worker_count):
@@ -79,25 +74,21 @@ def main():
             worker.daemon = True
             worker.start()
 
-        print("Beginning reading of test results.")
         log.info("Beginning reading of test results.")
 
         all_results = read_results(os.getcwd())
         batch_size = 1000
         batches = batch(all_results, batch_size)
 
-        print("Uploading results in batches of size {}".format(batch_size))
         log.info("Uploading results in batches of size {}".format(batch_size))
 
         for b in batches:
             q.put(b)
 
-        print("Main thread finished queueing batches")
         log.info("Main thread finished queueing batches")
 
         q.join()
 
-        print("Main thread exiting")
         log.info("Main thread exiting")
 
 
