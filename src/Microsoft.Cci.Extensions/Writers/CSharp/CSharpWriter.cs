@@ -22,7 +22,6 @@ namespace Microsoft.Cci.Writers
         private readonly bool _writeAssemblyAttributes;
         private readonly bool _apiOnly;
         private readonly ICciFilter _cciFilter;
-
         private bool _firstMemberGroup;
 
         public CSharpWriter(ISyntaxWriter writer, ICciFilter filter, bool apiOnly, bool writeAssemblyAttributes = false)
@@ -82,6 +81,8 @@ namespace Microsoft.Cci.Writers
 
         public override void Visit(IAssembly assembly)
         {
+            _declarationWriter.ModuleNullableContextValue = assembly.ModuleAttributes.GetCustomAttributeArgumentValue<byte?>(CSDeclarationWriter.NullableContextAttributeName);
+
             if (_writeAssemblyAttributes)
             {
                 _declarationWriter.WriteDeclaration(assembly);
@@ -117,6 +118,12 @@ namespace Microsoft.Cci.Writers
 
         public override void Visit(ITypeDefinition type)
         {
+            byte? value = type.Attributes.GetCustomAttributeArgumentValue<byte?>(CSDeclarationWriter.NullableContextAttributeName);
+            if (!(type is INestedTypeDefinition) || value != null) // Only override the value when we're not on a nested type, or if so, only if the value is not null.
+            {
+                _declarationWriter.TypeNullableContextValue = value;
+            }
+
             _declarationWriter.WriteDeclaration(type);
 
             if (!type.IsDelegate)

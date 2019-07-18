@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.Cci.Extensions.CSharp;
 
 namespace Microsoft.Cci.Writers.CSharp
@@ -51,6 +52,12 @@ namespace Microsoft.Cci.Writers.CSharp
             }
 
             WriteAttributes(property.Attributes);
+
+            // We need to preserve nullable custom attributes which are preserved by the compiler as param on the value parameter and return attributes.
+            if (getter != null)
+                WriteAttributes(getter.ReturnValueAttributes);
+            if (setter != null)
+                WriteAttributes(setter.Parameters.Last().Attributes);
 
             if (!isInterfaceProp)
             {
@@ -159,7 +166,8 @@ namespace Microsoft.Cci.Writers.CSharp
             if (isSetterAccessor) // If setter remove value parameter.
                 parameters.RemoveAt(parameters.Count - 1);
 
-            WriteParameters(parameters, accessor.ContainingType, property: true);
+            byte? nullableContextValue = accessor.Attributes.GetCustomAttributeArgumentValue<byte?>(NullableContextAttributeName);
+            WriteParameters(parameters, accessor.ContainingType, nullableContextValue, property: true);
         }
 
         private void WriteAccessorDefinition(IPropertyDefinition property, IMethodDefinition accessor, string accessorType, bool isReadOnly)

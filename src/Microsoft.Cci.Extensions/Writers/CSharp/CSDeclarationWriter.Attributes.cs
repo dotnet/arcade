@@ -143,7 +143,7 @@ namespace Microsoft.Cci.Writers.CSharp
         {
             if (!string.IsNullOrEmpty(prefix))
             {
-                WriteKeyword(prefix);
+                WriteKeyword(prefix, noSpace: true);
                 WriteSymbol(":", addSpace: true);
             }
             WriteTypeName(attribute.Constructor.ContainingType, noSpace: true); // Should we strip Attribute from name?

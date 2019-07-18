@@ -642,6 +642,41 @@ namespace Microsoft.Cci.Extensions.CSharp
             return false;
         }
 
+        public static object GetAttributeArgumentValue<TType>(this ICustomAttribute attribute, object defaultValue = null)
+        {
+            object result = defaultValue;
+            if (attribute != null)
+            {
+                object argument = attribute.Arguments.FirstOrDefault();
+                if (argument is IMetadataCreateArray argumentArray)
+                {
+                    TType[] array = new TType[argumentArray.Sizes.Single()];
+                    int i = 0;
+                    foreach (IMetadataExpression value in argumentArray.Initializers)
+                    {
+                        array[i++] = (TType)(value as IMetadataConstant).Value;
+                    }
+                    result = array;
+                }
+                else if (argument is IMetadataConstant value)
+                {
+                    result = (TType)value.Value;
+                }
+            }
+
+            return result;
+        }
+
+        public static T GetCustomAttributeArgumentValue<T>(this IEnumerable<ICustomAttribute> attributes, string attributeType)
+        {
+            if (attributes.TryGetAttributeOfType(attributeType, out ICustomAttribute attribute))
+            {
+                return (T)attribute.GetAttributeArgumentValue<T>();
+            }
+
+            return default;
+        }
+
         public static bool HasAttributeOfType(this IEnumerable<ICustomAttribute> attributes, string attributeName)
         {
             return GetAttributeOfType(attributes, attributeName) != null;

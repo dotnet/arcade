@@ -53,11 +53,11 @@ namespace Microsoft.Cci.Writers.CSharp
         }
 
 
-        private void WriteTypeName(ITypeReference type, ITypeReference containingType, IEnumerable<ICustomAttribute> attributes = null)
+        private void WriteTypeName(ITypeReference type, ITypeReference containingType, IEnumerable<ICustomAttribute> attributes = null, byte? methodNullableContextValue = null)
         {
             var useKeywords = containingType.GetTypeName() != type.GetTypeName();
 
-            WriteTypeName(type, attributes: attributes, useTypeKeywords: useKeywords);
+            WriteTypeName(type, attributes: attributes, useTypeKeywords: useKeywords, methodNullableContextValue: methodNullableContextValue);
         }
 
         private string GetNormalizedMethodName(IName name)
@@ -124,6 +124,7 @@ namespace Microsoft.Cci.Writers.CSharp
 
         private void WriteMethodDefinitionSignature(IMethodDefinition method)
         {
+            byte? nullableContextValue = method.Attributes.GetCustomAttributeArgumentValue<byte?>(NullableContextAttributeName);
             bool isOperator = method.IsConversionOperator();
 
             if (!isOperator && !method.IsConstructor)
@@ -142,7 +143,7 @@ namespace Microsoft.Cci.Writers.CSharp
                 }
 
                 // We are ignoring custom modifiers right now, we might need to add them later.
-                WriteTypeName(method.Type, method.ContainingType, method.ReturnValueAttributes);
+                WriteTypeName(method.Type, method.ContainingType, method.ReturnValueAttributes, nullableContextValue);
             }
 
             if (method.IsExplicitInterfaceMethod() && _forCompilationIncludeGlobalprefix)
@@ -154,19 +155,19 @@ namespace Microsoft.Cci.Writers.CSharp
             {
                 WriteSpace();
 
-                WriteTypeName(method.Type, method.ContainingType);
+                WriteTypeName(method.Type, method.ContainingType, methodNullableContextValue: nullableContextValue);
             }
 
             Contract.Assert(!(method is IGenericMethodInstance), "Currently don't support generic method instances");
             if (method.IsGeneric)
                 WriteGenericParameters(method.GenericParameters);
 
-            WriteParameters(method.Parameters, method.ContainingType, extensionMethod: method.IsExtensionMethod(), acceptsExtraArguments: method.AcceptsExtraArguments);
+            WriteParameters(method.Parameters, method.ContainingType, nullableContextValue, extensionMethod: method.IsExtensionMethod(), acceptsExtraArguments: method.AcceptsExtraArguments);
             if (method.IsGeneric && !method.IsOverride() && !method.IsExplicitInterfaceMethod())
-                WriteGenericContraints(method.GenericParameters);
+                WriteGenericContraints(method.GenericParameters, nullableContextValue);
         }
 
-        private void WriteParameters(IEnumerable<IParameterDefinition> parameters, ITypeReference containingType, bool property = false, bool extensionMethod = false, bool acceptsExtraArguments = false)
+        private void WriteParameters(IEnumerable<IParameterDefinition> parameters, ITypeReference containingType, byte? methodNullableContextValue, bool property = false, bool extensionMethod = false, bool acceptsExtraArguments = false)
         {
             string start = property ? "[" : "(";
             string end = property ? "]" : ")";
@@ -174,7 +175,7 @@ namespace Microsoft.Cci.Writers.CSharp
             WriteSymbol(start);
             _writer.WriteList(parameters, p =>
             {
-                WriteParameter(p, containingType, extensionMethod);
+                WriteParameter(p, containingType, extensionMethod, methodNullableContextValue);
                 extensionMethod = false;
             });
 
@@ -189,7 +190,7 @@ namespace Microsoft.Cci.Writers.CSharp
             WriteSymbol(end);
         }
 
-        private void WriteParameter(IParameterDefinition parameter, ITypeReference containingType, bool extensionMethod)
+        private void WriteParameter(IParameterDefinition parameter, ITypeReference containingType, bool extensionMethod, byte? methodNullableContextValue)
         {
             WriteAttributes(parameter.Attributes, true);
 
@@ -223,7 +224,7 @@ namespace Microsoft.Cci.Writers.CSharp
                 }
             }
 
-            WriteTypeName(parameter.Type, containingType, parameter.Attributes);
+            WriteTypeName(parameter.Type, containingType, parameter.Attributes, methodNullableContextValue);
             WriteIdentifier(parameter.Name);
             if (parameter.IsOptional && parameter.HasDefaultValue)
             {

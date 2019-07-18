@@ -7,6 +7,7 @@ using Microsoft.Cci.Extensions.CSharp;
 using Microsoft.Cci.Filters;
 using Microsoft.Cci.Writers.Syntax;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
@@ -22,6 +23,8 @@ namespace Microsoft.Cci.Writers.CSharp
         public static readonly Version LangVersionDefault = LangVersion7_0;
         public static readonly Version LangVersionLatest = LangVersion7_3;
         public static readonly Version LangVersionPreview = LangVersion8_0;
+
+        public const string NullableContextAttributeName = "System.Runtime.CompilerServices.NullableContextAttribute";
 
         private readonly ISyntaxWriter _writer;
         private readonly ICciFilter _filter;
@@ -88,6 +91,9 @@ namespace Microsoft.Cci.Writers.CSharp
         public ICciFilter Filter { get { return _filter; } }
 
         public Version LangVersion { get; set; }
+
+        public byte? ModuleNullableContextValue { get; set; }
+        public byte? TypeNullableContextValue { get; set; }
 
         public void WriteDeclaration(IDefinition definition)
         {
@@ -232,31 +238,6 @@ namespace Microsoft.Cci.Writers.CSharp
         private void Write(string literal)
         {
             _writer.Write(literal);
-        }
-
-        private object GetAttributeArgumentValue<TType>(ICustomAttribute attribute, object defaultValue = null)
-        {
-            object result = defaultValue;
-            if (attribute != null)
-            {
-                object argument = attribute.Arguments.FirstOrDefault();
-                if (argument is IMetadataCreateArray argumentArray)
-                {
-                    TType[] array = new TType[argumentArray.Sizes.Single()];
-                    int i = 0;
-                    foreach (IMetadataExpression value in argumentArray.Initializers)
-                    {
-                        array[i++] = (TType)(value as IMetadataConstant).Value;
-                    }
-                    result = array;
-                }
-                else if (argument is IMetadataConstant value)
-                {
-                    result = (TType)value.Value;
-                }
-            }
-
-            return result;
         }
 
         private void WriteNullableSymbolForReferenceType(object nullableAttributeArgument, int arrayIndex)
@@ -465,14 +446,14 @@ namespace Microsoft.Cci.Writers.CSharp
             return genericArgumentsCount;
         }
 
-        private void WriteTypeName(ITypeReference type, IEnumerable<ICustomAttribute> attributes, bool noSpace = false, bool useTypeKeywords = true,
+        private void WriteTypeName(ITypeReference type, IEnumerable<ICustomAttribute> attributes, object methodNullableContextValue = null, bool noSpace = false, bool useTypeKeywords = true,
             bool omitGenericTypeList = false)
         {
             attributes.TryGetAttributeOfType("System.Runtime.CompilerServices.NullableAttribute", out ICustomAttribute nullableAttribute);
             bool hasDynamicAttribute = attributes.TryGetAttributeOfType("System.Runtime.CompilerServices.DynamicAttribute", out ICustomAttribute dynamicAttribute);
 
-            object nullableAttributeArgument = GetAttributeArgumentValue<byte>(nullableAttribute);
-            object dynamicAttributeArgument = GetAttributeArgumentValue<bool>(dynamicAttribute, defaultValue: hasDynamicAttribute);
+            object nullableAttributeArgument = nullableAttribute.GetAttributeArgumentValue<byte>() ?? methodNullableContextValue ?? TypeNullableContextValue ?? ModuleNullableContextValue;
+            object dynamicAttributeArgument = dynamicAttribute.GetAttributeArgumentValue<bool>(defaultValue: hasDynamicAttribute);
 
             WriteTypeName(type, noSpace, useTypeKeywords, omitGenericTypeList, nullableAttributeArgument, dynamicAttributeArgument, attributes?.GetValueTupleNames());
         }

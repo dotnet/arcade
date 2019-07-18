@@ -65,13 +65,14 @@ namespace Microsoft.Cci.Writers.CSharp
             {
                 Contract.Assert(type.IsDelegate);
 
+                byte? nullableContextValue = invoke.Attributes.GetCustomAttributeArgumentValue<byte?>(NullableContextAttributeName);
                 if (invoke.IsMethodUnsafe()) WriteKeyword("unsafe");
                 WriteKeyword("delegate");
-                WriteTypeName(invoke.Type, invoke.ReturnValueAttributes);
+                WriteTypeName(invoke.Type, invoke.ReturnValueAttributes, methodNullableContextValue: nullableContextValue);
                 WriteIdentifier(namedType.Name);
                 if (type.IsGeneric) WriteGenericParameters(type.GenericParameters);
-                WriteParameters(invoke.Parameters, invoke.ContainingType);
-                if (type.IsGeneric) WriteGenericContraints(type.GenericParameters);
+                WriteParameters(invoke.Parameters, invoke.ContainingType, nullableContextValue);
+                if (type.IsGeneric) WriteGenericContraints(type.GenericParameters, TypeNullableContextValue); // Delegates are special, and the NullableContextValue we should fallback to is the delegate type one, not the invoke method one.
                 WriteSymbol(";");
             }
             else

@@ -34,14 +34,14 @@ namespace Microsoft.Cci.Writers.CSharp
             WriteTypeName(param, noSpace: true);
         }
 
-        private void WriteGenericContraints(IEnumerable<IGenericParameter> genericParams)
+        private void WriteGenericContraints(IEnumerable<IGenericParameter> genericParams, byte? methodNullableContextValue = null)
         {
             if (!genericParams.Any())
                 return;
 
             foreach (IGenericParameter param in genericParams)
             {
-                var constraints = GetConstraints(param).ToList();
+                var constraints = GetConstraints(param, methodNullableContextValue).ToList();
 
                 if (constraints.Count <= 0)
                     continue;
@@ -55,9 +55,11 @@ namespace Microsoft.Cci.Writers.CSharp
             }
         }
 
-        private IEnumerable<Action> GetConstraints(IGenericParameter parameter)
+        private IEnumerable<Action> GetConstraints(IGenericParameter parameter, byte? methodNullableContextValue)
         {
             parameter.Attributes.TryGetAttributeOfType("System.Runtime.CompilerServices.NullableAttribute", out ICustomAttribute nullableAttribute);
+            object nullableAttributeValue = nullableAttribute.GetAttributeArgumentValue<byte>() ?? methodNullableContextValue ?? TypeNullableContextValue ?? ModuleNullableContextValue;
+
             if (parameter.MustBeValueType)
                 yield return () => WriteKeyword("struct", noSpace: true);
             else
@@ -69,9 +71,18 @@ namespace Microsoft.Cci.Writers.CSharp
 
                         if (nullableAttribute != null)
                         {
-                            WriteNullableSymbolForReferenceType(GetAttributeArgumentValue<byte>(nullableAttribute), arrayIndex: 0);
+                            WriteNullableSymbolForReferenceType(nullableAttributeValue, arrayIndex: 0);
                         }
                     };
+            }
+
+            // If there are no struct or class constraints and contains a nullableAttributeValue then it might have a notnull constraint
+            if (!parameter.MustBeValueType && !parameter.MustBeReferenceType && nullableAttributeValue != null)
+            {
+                if (((byte)nullableAttributeValue & 1) != 0)
+                {
+                    yield return () => WriteKeyword("notnull", noSpace: true);
+                }
             }
 
             var assemblyLocation = parameter.Locations.FirstOrDefault()?.Document?.Location;
@@ -82,24 +93,13 @@ namespace Microsoft.Cci.Writers.CSharp
                 // Skip valuetype because we should get it above.
                 if (!TypeHelper.TypesAreEquivalent(constraint, constraint.PlatformType.SystemValueType) && !parameter.MustBeValueType)
                 {
-                    object nullableAttributeValue = null;
                     if (assemblyLocation != null)
                     {
                         nullableAttributeValue = parameter.GetGenericParameterConstraintConstructorArgument(constraintIndex, "System.Runtime.CompilerServices.NullableAttribute", assemblyLocation, CSharpCciExtensions.NullableConstructorArgumentParser);
                     }
 
                     constraintIndex++;
-                    yield return () => WriteTypeName(constraint, noSpace: true, nullableAttributeArgument: nullableAttributeValue);
-                }
-            }
-
-            // If it has no other constraint of any type and the parameter contains a NullableAttribute then it might have a notnull constraint
-            if (constraintIndex == 0 && !parameter.MustBeValueType && !parameter.MustBeReferenceType && nullableAttribute != null)
-            {
-                byte value = (byte)GetAttributeArgumentValue<byte>(nullableAttribute);
-                if ((value & 1) != 0)
-                {
-                    yield return () => WriteKeyword("notnull", noSpace: true);
+                    yield return () => WriteTypeName(constraint, noSpace: true, nullableAttributeArgument: nullableAttributeValue ?? methodNullableContextValue ?? TypeNullableContextValue ?? ModuleNullableContextValue);
                 }
             }
 
