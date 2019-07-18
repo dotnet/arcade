@@ -36,7 +36,8 @@ begin the release stabilization process.
 
 **Promotion:** 
 1. Version is coherent
-2. Move all related builds to the Release Validation channel
+2. Release Team approval
+3. Move all related builds to the Release Validation channel
 
 ### Release Validation Ring (Release Validation channel)
 
