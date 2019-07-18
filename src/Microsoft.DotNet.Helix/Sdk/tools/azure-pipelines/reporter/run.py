@@ -62,39 +62,43 @@ def process_args():
 
 
 def main():
-    collection_uri, team_project, test_run_id, access_token = process_args()
+    with helix.logs.SelfUploadingLogFile(helix.settings.settings_from_env()):
+        collection_uri, team_project, test_run_id, access_token = process_args()
 
-    worker_count = 10
-    q = Queue()
+        print("Got args", collection_uri, team_project, test_run_id, access_token)
+        log.debug("Got args {0} {1} {2} {3}".format(collection_uri, team_project, test_run_id, access_token))
 
-    print("Main thread starting workers")
-    log.info("Main thread starting workers")
+        worker_count = 10
+        q = Queue()
 
-    for i in range(worker_count):
-        worker = UploadWorker(q, i, collection_uri, team_project, test_run_id, access_token)
-        worker.daemon = True
-        worker.start()
+        print("Main thread starting workers")
+        log.info("Main thread starting workers")
 
-    print("Beginning reading of test results.")
-    log.info("Beginning reading of test results.")
+        for i in range(worker_count):
+            worker = UploadWorker(q, i, collection_uri, team_project, test_run_id, access_token)
+            worker.daemon = True
+            worker.start()
 
-    all_results = read_results(os.getcwd())
-    batch_size = 1000
-    batches = batch(all_results, batch_size)
+        print("Beginning reading of test results.")
+        log.info("Beginning reading of test results.")
 
-    print("Uploading results in batches of size {}".format(batch_size))
-    log.info("Uploading results in batches of size {}".format(batch_size))
+        all_results = read_results(os.getcwd())
+        batch_size = 1000
+        batches = batch(all_results, batch_size)
 
-    for b in batches:
-        q.put(b)
+        print("Uploading results in batches of size {}".format(batch_size))
+        log.info("Uploading results in batches of size {}".format(batch_size))
 
-    print("Main thread finished queueing batches")
-    log.info("Main thread finished queueing batches")
+        for b in batches:
+            q.put(b)
 
-    q.join()
+        print("Main thread finished queueing batches")
+        log.info("Main thread finished queueing batches")
 
-    print("Main thread exiting")
-    log.info("Main thread exiting")
+        q.join()
+
+        print("Main thread exiting")
+        log.info("Main thread exiting")
 
 
 if __name__ == '__main__':
