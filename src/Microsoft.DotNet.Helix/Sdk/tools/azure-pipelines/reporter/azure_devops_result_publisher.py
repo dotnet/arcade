@@ -1,5 +1,6 @@
 import base64
 import os
+import helix.logs
 from typing import Iterable, Mapping, List, Dict
 from builtins import str as text
 from azure.devops.connection import Connection
