@@ -1,8 +1,8 @@
 # Arcade Servicing
 
-This document is intended to describe arcade servicing workflow and policies.
+This document is intended to describe Arcade servicing workflow and policies.
 Our goal is to ensure that supported versions of the .NET Core product remain
-servicable over time. As the Engineering Services team, we will need to make
+serviceable over time. As the Engineering Services team, we will need to make
 major changes to Arcade and our services over time to support new versions of
 .NET Core, while still supporting older versions.
 
