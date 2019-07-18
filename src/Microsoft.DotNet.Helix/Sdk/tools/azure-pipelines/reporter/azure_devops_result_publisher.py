@@ -10,9 +10,9 @@ from azure.devops.v5_1.test.models import TestCaseResult, TestAttachmentRequestM
 from helpers import get_env
 from defs import TestResult
 
-log = helix.logs.get_logger()
-
 class AzureDevOpsTestResultPublisher:
+    log = helix.logs.get_logger()
+    
     def __init__(self, collection_uri, access_token, team_project, test_run_id=None):
         """
 
