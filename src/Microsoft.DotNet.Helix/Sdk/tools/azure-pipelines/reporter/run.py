@@ -2,6 +2,7 @@ import os
 import sys
 import traceback
 import helix.logs
+import helix.settings
 from queue import Queue
 from threading import Thread
 from typing import Tuple, Optional
