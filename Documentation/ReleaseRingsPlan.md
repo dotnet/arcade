@@ -35,9 +35,8 @@ begin the release stabilization process.
 6. Publish packages, installers, packages, etc. to dotnet feeds and MyGet
 
 **Promotion:** 
-1. Version is coherent 
-2. Tactics approve this version
-3. Move all related builds to the Release Validation channel
+1. Version is coherent
+2. Move all related builds to the Release Validation channel
 
 ### Release Validation Ring (Release Validation channel)
 
@@ -53,9 +52,10 @@ post-build script. Zips are validated by the ASP team against an App Services te
 
 **Promotion:**
 1. CTI sign off
-2. All the previous validation steps succeed
-3. Tactics approve this version
-4. Move all related builds to the Publish Release channel
+2. Individual Teams signoff (tracked as a flag the release team signals when all teams are done)
+3. All the previous validation steps succeed
+4. Tactics approve this version
+5. Move all related builds to the Publish Release channel
 
 ### Final Release/Publish Ring (Publish Release channel)
  
