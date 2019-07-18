@@ -26,7 +26,7 @@ class AzureDevOpsTestResultPublisher:
         self.work_item_name = get_env("HELIX_WORKITEM_FRIENDLYNAME")
         pass
 
-    def upload_batch(self, results) -> Iterable[TestResult]:
+    def upload_batch(self, results: Iterable[TestResult]):
         results_with_attachments = {r.name: r for r in results if r.attachments}
 
         test_case_results = self.convert_results(results)
@@ -39,7 +39,7 @@ class AzureDevOpsTestResultPublisher:
 
         published_results = test_client.add_test_results_to_test_run(list(test_case_results), self.team_project, self.test_run_id)  # type: List[TestCaseResult]
 
-        print("Published Results count: {0}".format(len(published_results)))
+        log.info("Published Results count: {0}".format(len(published_results)))
 
         # for published_result in published_results:
         #     if published_result.automated_test_name in results_with_attachments:
