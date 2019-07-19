@@ -78,7 +78,7 @@ namespace Microsoft.SignCheck.Verification
                             X509ChainElement rootChainElement = null;
                             X500DistinguishedName subjectDistinguishedName = certificate.SubjectName;
 
-                            // Locate the last element in the the chain as that should be the root, otherwise use the certificate we have
+                            // Locate the last element in the chain as that should be the root, otherwise use the certificate we have
                             // and try to match that against a root certificate.
                             if (numberOfChainElements > 0)
                             {

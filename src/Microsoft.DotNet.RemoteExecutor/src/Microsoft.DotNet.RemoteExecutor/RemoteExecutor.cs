@@ -5,6 +5,7 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
@@ -32,7 +33,7 @@ namespace Microsoft.DotNet.RemoteExecutor
             string processFileName = Process.GetCurrentProcess().MainModule.FileName;
             HostRunnerName = System.IO.Path.GetFileName(processFileName);
 
-            if (RuntimeInformation.FrameworkDescription.StartsWith(".NET Native", StringComparison.OrdinalIgnoreCase) || PlatformDetection.IsInAppContainer)
+            if (PlatformDetection.IsInAppContainer)
             {
                 // Host is required to have a remote execution feature integrated. Currently applies to uap and *aot.
                 Path = processFileName;
@@ -44,6 +45,12 @@ namespace Microsoft.DotNet.RemoteExecutor
                 Path = System.IO.Path.Combine(AppContext.BaseDirectory, "Microsoft.DotNet.RemoteExecutorHost.dll");
                 HostRunner = processFileName;
                 s_extraParameter = Path;
+
+                string runtimeConfigPath = GetInnerRuntimeConfig();
+                if (runtimeConfigPath != null)
+                {
+                    s_extraParameter = $"exec --runtimeconfig \"{runtimeConfigPath}\" \"{s_extraParameter}\"";
+                }
             }
             else if (RuntimeInformation.FrameworkDescription.StartsWith(".NET Framework", StringComparison.OrdinalIgnoreCase))
             {
@@ -319,6 +326,22 @@ namespace Microsoft.DotNet.RemoteExecutor
             }
 
             return d.GetMethodInfo();
+        }
+
+        private static string GetInnerRuntimeConfig()
+        {
+            const string RuntimeConfigExtension = ".runtimeconfig.json";
+            var currentAssembly = typeof(RemoteExecutor).Assembly;
+
+            // We deep-dive into the loaded assemblies and search for the most inner runtimeconfig.json.
+            // We need to check for null as global methods in a module don't belong to a type.
+            return new StackTrace().GetFrames()
+                .Select(frame => frame.GetMethod()?.ReflectedType?.Assembly)
+                .Where(asm => asm != null && asm != currentAssembly)
+                .Distinct()
+                .Select(asm => System.IO.Path.Combine(AppContext.BaseDirectory, asm.GetName().Name + RuntimeConfigExtension))
+                .Where(File.Exists)
+                .FirstOrDefault();
         }
     }
 }

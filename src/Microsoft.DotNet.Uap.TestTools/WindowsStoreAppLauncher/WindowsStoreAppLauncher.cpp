@@ -64,7 +64,7 @@ int wmain(int argc, wchar_t* argv [])
   info.executionArguments = L"";
   bool help = false;
 
-  OptionList options(L"WindowsStoreAppLauncher.exe", L"<Appx Manifest Path> [<execution args>]", L"\tAppx Manifest Path\n\t\tPath to the AppxManifest.xml file\n\texecution args\n\t\tThe arguments to pass the the application.");
+  OptionList options(L"WindowsStoreAppLauncher.exe", L"<Appx Manifest Path> [<execution args>]", L"\tAppx Manifest Path\n\t\tPath to the AppxManifest.xml file\n\texecution args\n\t\tThe arguments to pass the application.");
 
   vector<wstring> argInfoTmp;
 

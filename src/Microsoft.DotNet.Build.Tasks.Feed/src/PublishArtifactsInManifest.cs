@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using MSBuild = Microsoft.Build.Utilities;
 
@@ -341,8 +342,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 + Path.DirectorySeparatorChar;
 
             var packages = packagesToPublish.Select(p => $"{PackageAssetsBasePath}{p.Id}.{p.Version}.nupkg");
+            var blobFeedAction = CreateBlobFeedAction(feedConfig);
 
-            var blobFeedAction = new BlobFeedAction(feedConfig.TargetFeedURL, feedConfig.FeedKey, Log);
             var pushOptions = new PushOptions
             {
                 AllowOverwrite = false,
@@ -397,7 +398,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 })
                 .ToArray();
 
-            var blobFeedAction = new BlobFeedAction(feedConfig.TargetFeedURL, feedConfig.FeedKey, Log);
+            var blobFeedAction = CreateBlobFeedAction(feedConfig);
             var pushOptions = new PushOptions
             {
                 AllowOverwrite = false,
@@ -430,6 +431,59 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             await blobFeedAction.PublishToFlatContainerAsync(blobs, maxClients: 8, pushOptions);
         }
 
+        private BlobFeedAction CreateBlobFeedAction(FeedConfig feedConfig)
+        {
+            // Matches package feeds like
+            // https://dotnet-feed-internal.azurewebsites.net/container/dotnet-core-internal/sig/dsdfasdfasdf234234s/se/2020-02-02/darc-int-dotnet-arcade-services-babababababe-08/index.json
+            const string azureStorageProxyFeedPattern =
+                @"(?<feedURL>https://([a-z-]+).azurewebsites.net/container/(?<container>[^/]+)/sig/\w+/se/([0-9]{4}-[0-9]{2}-[0-9]{2})/(?<baseFeedName>darc-(?<type>int|pub)-(?<repository>.+?)-(?<sha>[A-Fa-f0-9]{7,40})-?(?<subversion>\d*)/))index.json";
+
+            // Matches package feeds like the one below. Special case for static internal proxy-backed feed
+            // https://dotnet-feed-internal.azurewebsites.net/container/dotnet-core-internal/sig/dsdfasdfasdf234234s/se/2020-02-02/darc-int-dotnet-arcade-services-babababababe-08/index.json
+            const string azureStorageProxyFeedStaticPattern =
+                @"(?<feedURL>https://([a-z-]+).azurewebsites.net/container/(?<container>[^/]+)/sig/\w+/se/([0-9]{4}-[0-9]{2}-[0-9]{2})/(?<baseFeedName>[^/]+/))index.json";
+
+            // Matches package feeds like
+            // https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json
+            const string azureStorageStaticBlobFeedPattern =
+                @"https://([a-z-]+).blob.core.windows.net/[^/]+/index.json";
+
+            var proxyBackedFeedMatch = Regex.Match(feedConfig.TargetFeedURL, azureStorageProxyFeedPattern);
+            var proxyBackedStaticFeedMatch = Regex.Match(feedConfig.TargetFeedURL, azureStorageProxyFeedStaticPattern);
+            var azureStorageStaticBlobFeedMatch = Regex.Match(feedConfig.TargetFeedURL, azureStorageStaticBlobFeedPattern);
+
+            if (proxyBackedFeedMatch.Success || proxyBackedStaticFeedMatch.Success)
+            {
+                var regexMatch = (proxyBackedFeedMatch.Success) ? proxyBackedFeedMatch : proxyBackedStaticFeedMatch;
+                var containerName = regexMatch.Groups["container"].Value;
+                var baseFeedName = regexMatch.Groups["baseFeedName"].Value;
+                var feedURL = regexMatch.Groups["feedURL"].Value;
+                var storageAccountName = "dotnetfeed";
+
+                // Initialize the feed using sleet
+                SleetSource sleetSource = new SleetSource()
+                {
+                    Name = baseFeedName,
+                    Type = "azure",
+                    BaseUri = feedURL,
+                    AccountName = storageAccountName,
+                    Container = containerName,
+                    FeedSubPath = baseFeedName,
+                    ConnectionString = $"DefaultEndpointsProtocol=https;AccountName={storageAccountName};AccountKey={feedConfig.FeedKey};EndpointSuffix=core.windows.net"
+                };
+
+                return new BlobFeedAction(sleetSource, feedConfig.FeedKey, Log);
+            }
+            else if (azureStorageStaticBlobFeedMatch.Success)
+            {
+                return new BlobFeedAction(feedConfig.TargetFeedURL, feedConfig.FeedKey, Log);
+            }
+            else
+            {
+                Log.LogError($"Could not parse Azure feed URL: '{feedConfig.TargetFeedURL}'");
+                return null;
+            }
+        }
         private string InferCategory(string assetId)
         {
             var extension = Path.GetExtension(assetId).ToUpper();

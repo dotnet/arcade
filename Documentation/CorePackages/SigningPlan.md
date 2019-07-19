@@ -3,7 +3,7 @@ The goal of the signing plan is to provide guidance on how the tier 1 (T1) produ
 
 ## Requirements
 - Leverage pre-existing solutions so that work isn't duplicated.
-- Where possible, avoid dependency on software installed on the machine to facilitate the consumtion of the tool across the .NET Core repositories.
+- Where possible, avoid dependency on software installed on the machine to facilitate the consumption of the tool across the .NET Core repositories.
 - The consumption method of the SignTool should follow the [Methods for Consuming the .NET Core Shared Infrastructure Components](https://github.com/dotnet/arcade/blob/master/Documentation/Overview.md#methods-for-consuming-the-net-core-shared-infrastructure-components).
 - Signtool will need a list of containers in order to know what to sign.
 

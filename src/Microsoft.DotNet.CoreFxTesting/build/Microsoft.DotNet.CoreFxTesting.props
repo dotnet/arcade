@@ -10,9 +10,6 @@
 
     <TestCoreDir>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', 'core'))</TestCoreDir>
     <TestAssetsDir>$([MSBuild]::NormalizeDirectory('$(MSBuildThisFileDirectory)', 'assets'))</TestAssetsDir>
-
-    <!-- We don't want to generate deps.json files for test projects: https://github.com/dotnet/corefx/issues/38508 -->
-    <GenerateDependencyFile Condition="'$(IsTestProject)' == 'true'">false</GenerateDependencyFile>
   </PropertyGroup>
 
   <!-- Import the core testing infrastructure only for test projects. -->

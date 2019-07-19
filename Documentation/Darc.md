@@ -203,7 +203,7 @@ Some examples:
 
 ##### Toolset
 - **Arcade SDK or other arcade packages** - These packages are not customer
-  facing and do not not ship as part of the product.
+  facing and do not ship as part of the product.
 - **dotnet/corefx's dependency on Microsoft.NETCore.App** - This is a circular
   dependency for testing purposes.
 
@@ -243,7 +243,7 @@ doing:
 ```
 PS C:\enlistments\arcade> darc update-dependencies --channel ".NET Core 3 Dev" --name "Microsoft.Netcore.app"
 
-Updating 'MIcrosoft.NETCore.App': '' => '3.0.0-preview-27401-3' (from build '20190201.3' of 'https://github.com/dotnet/core-setup')
+Updating 'Microsoft.NETCore.App': '' => '3.0.0-preview-27401-3' (from build '20190201.3' of 'https://github.com/dotnet/core-setup')
   Dependency name normalized to 'Microsoft.NETCore.App'
 Local dependencies updated from channel '.NET Core 3 Dev'.
 
@@ -533,7 +533,7 @@ dependencies in eng/Version.Details.xml match the outputs of the new builds.
 
 These updates are selective and based on 'subscriptions'. A subscription describes an update
 operation for a specific repository+branch combination, mapping outputs of a
-repository that have beeen applied to a channel (virtual branch) onto matching
+repository that have been applied to a channel (virtual branch) onto matching
 inputs of the target repository+branch.
 
 For example, a build of dotnet/corefx might be applied to the ".NET Core 3 Dev"
@@ -590,7 +590,7 @@ darc and Maestro++ have a few mechanisms to enable such scenarios:
 
 - **Disabling or deleting a default channel association** - By disabling a
   default channel association for a repo, no new builds of that repo will be
-  automatical assigned to the targeted channel.  This effectively halts
+  automatically assigned to the targeted channel.  This effectively halts
   dependency flow without altering all the subscriptions sourcing from that
   repository.  Furthermore, if a selective fix needs to be flowed, the build
   containing that fix can be selectively assigned to correct channel and the
@@ -733,7 +733,7 @@ reported to the Build Asset Registry into a local location. Optionally, this
 build drop may also include any builds that were inputs to this build, based on
 the dependency information in Version.Details.xml. Builds produce various
 outputs that go to various locations. For example, they may produce NuGet
-packges, zips, MSIs, etc. These may be available in the build artifacts, or may
+packages, zips, MSIs, etc. These may be available in the build artifacts, or may
 be located in various storage accounts.  Gather-drop mines the Build Asset
 Registry for these locations and downloads them all to the local directory.
 
@@ -773,7 +773,7 @@ PS C:\enlistments\core-sdk> darc gather-drop --repo https://github.com/dotnet/co
 ```
 
 If no build exists at that drop, darc will show an error. In this case, you
-might try other recents shas, or use the BAR swagger API
+might try other recent shas, or use the BAR swagger API
 (https://maestro-prod.westus2.cloudapp.azure.com/swagger) to look up a build
 id. Remember to authenticate using a token from
 https://maestro-prod.westus2.cloudapp.azure.com/.  Better methods of obtaining
@@ -957,7 +957,7 @@ should always be applied to its "normal" channel.
 "refs/heads/{branchName}", unless you explicitly know otherwise***.
 
 This is because the BAR reporting functionality pulls the branch name from the
-Azure Devops built in pipeline variables, which specify refs/heads/foo vs. foo.
+Azure DevOps built in pipeline variables, which specify refs/heads/foo vs. foo.
 If your repository is manually reporting to BAR without using the Arcade
 templates, then this name may be different.
 
@@ -967,7 +967,7 @@ Default channel mappings can be deleted with [delete-default-channel](#delete-de
 - `--channel` - **(Required)** Name of channel that a build of 'branch' and 'repo' should be applied to.
 - `--branch` - **(Required)** Build of 'repo' on this branch will be
   automatically applied to 'channel'.  Should generally be "refs/heads/branchName"
-- `--repo` - **(Required)** Build of this repo repo on 'branch' will be automatically applied to 'channel'
+- `--repo` - **(Required)** Build of this repo on 'branch' will be automatically applied to 'channel'
 
 **Sample**
 ```
@@ -985,7 +985,7 @@ Adds a new subscription to Maestro++.
 
 A subscription describes an update
 operation for a specific repository+branch combination, mapping outputs of a
-repository that have beeen applied to a channel (virtual branch) onto matching
+repository that have been applied to a channel (virtual branch) onto matching
 inputs of the target repository+branch.
 
 For example, a build of dotnet/corefx might be applied to the ".NET Core 3 Dev"
@@ -1006,7 +1006,7 @@ A subscription has a few parts:
 `add-subscription` has two modes of operation:
 - Interactive mode (default) - Interactive mode will take whatever input parameters were
   provided on the command line (if any) and pop an editor where the user can
-  provide the subscription input prameters.
+  provide the subscription input parameters.
 - Command-line only mode (`-q`) - In this mode, the full set of input options must be
  supplied.
 
@@ -1315,7 +1315,7 @@ reported to the Build Asset Registry into a local location. Optionally, this
 build drop may also include any builds that were inputs to this build, based on
 the dependency information in Version.Details.xml. Builds produce various
 outputs that go to various locations. For example, they may produce NuGet
-packges, zips, MSIs, etc. These may be available in the build artifacts, or may
+packages, zips, MSIs, etc. These may be available in the build artifacts, or may
 be located in various storage accounts.  Gather-drop mines the Build Asset
 Registry for these locations and downloads them all to the local directory.
 
@@ -2416,7 +2416,7 @@ https://github.com/aspnet/Extensions @ release/3.0-preview6
 
 ### **`get-subscriptions`**
 
-Retrives information about existing subscriptions. This command is generally
+Retrieves information about existing subscriptions. This command is generally
 useful to determine what kind of dependency flow will happen on new builds, or
 to obtain the id of a subscription for use in
 [delete-subscription](#delete-subscription).

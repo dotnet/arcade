@@ -1,6 +1,6 @@
 # .NET Core Infrastructure Ecosystem Overview
 
-This document provides an overview of the infrastructure ecosystem for future .NET Core product developemnt.
+This document provides an overview of the infrastructure ecosystem for future .NET Core product development.
 
 ## Background
 
@@ -75,7 +75,7 @@ Specific infrastructure ecosystem requirements are implied from the set of produ
 - **Given a SHA and repository that produced an asset, a functionally identical package should be producible by checking out that SHA and building** - Reproducible builds are important, for servicing and development.
   - Implements Requirements
     - Must be able to service the product
-    - Must be able to able to rapdily make changes to individual components. 
+    - Must be able to able to rapidly make changes to individual components. 
   - Affects Components
     - Repository Contracts
 - **For a repository, package dependencies should be described such that the package version, the repo and SHA are all specified in source** - Developers must be able to locate exactly what a repository depends on.
@@ -121,7 +121,7 @@ Specific infrastructure ecosystem requirements are implied from the set of produ
     - Must be able to rapidly make changes to product components
   - Affects Components
     - CI/Build Automation
-- **Build/validation automation can be generated off repository metadata** – We must utilize config-as-code as much as possible to ensure we can rapidly iterate on process and feel confident that changes to process will not damage servicability.
+- **Build/validation automation can be generated off repository metadata** – We must utilize config-as-code as much as possible to ensure we can rapidly iterate on process and feel confident that changes to process will not damage serviceability.
   - Implements Requirements
     - Must be able to rapidly make changes to product components
     - Must be able to rapidly makes changes to the product as a whole

@@ -11,13 +11,13 @@ Performs a set of actions to enable a repo in VSTS.
 Repository name of the GitHub repo to onboard, in org/repo form.
 
 .PARAMETER GitHubPat
-PAT used to make GitHub hook modifications.  If UseKeyVault is passed, may be ommitted
+PAT used to make GitHub hook modifications.  If UseKeyVault is passed, may be omitted
 
 .PARAMETER VSTSPat
-PAT used to make VSTS modifications.  If UseKeyVault is passed, may be ommitted
+PAT used to make VSTS modifications.  If UseKeyVault is passed, may be omitted
 
 .PARAMETER MaestroSecret
-Secret for Maestro webhooks.  If UseKeyVault is passed, may be ommitted
+Secret for Maestro webhooks.  If UseKeyVault is passed, may be omitted
 
 .PARAMETER DryRun
 Perform no modifications
