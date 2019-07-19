@@ -43,6 +43,13 @@
   </ItemGroup>
 
   <ItemGroup>
+    <HelixWorkItem Include="XunitTest">
+      <Command>echo 'done!'</Command>
+      <PayloadDirectory>$(MSBuildThisFileDirectory)xUnit</PayloadDirectory>
+    </HelixWorkItem>
+  </ItemGroup>
+
+  <ItemGroup>
     <XUnitProject Include="..\src\**\*.Tests.csproj"/>
 
     <!-- Remove the arcade sdk tests project because it depends heavily on machine/repo state and doesn't work properly in helix yet -->
