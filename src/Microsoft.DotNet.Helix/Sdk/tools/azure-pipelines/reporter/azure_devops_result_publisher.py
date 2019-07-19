@@ -1,6 +1,6 @@
 import base64
 import os
-import helix.logs
+import logging
 from typing import Iterable, Mapping, List, Dict
 from builtins import str as text
 from azure.devops.connection import Connection
@@ -11,10 +11,9 @@ from azure.devops.v5_1.test.models import TestCaseResult, TestAttachmentRequestM
 from helpers import get_env
 from defs import TestResult
 
-log = helix.logs.get_logger()
+log = logging.getLogger(__name__)
 
 class AzureDevOpsTestResultPublisher:
-    
     def __init__(self, collection_uri, access_token, team_project, test_run_id=None):
         """
 

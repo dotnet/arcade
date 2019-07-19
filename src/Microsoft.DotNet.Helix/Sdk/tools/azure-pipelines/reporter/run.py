@@ -1,6 +1,7 @@
 import os
 import sys
 import traceback
+import logging
 import helix.logs
 import helix.settings
 from queue import Queue
@@ -10,8 +11,6 @@ from typing import Tuple, Optional
 from test_results_reader import read_results
 from helpers import batch
 from azure_devops_result_publisher import AzureDevOpsTestResultPublisher
-
-log = helix.logs.get_logger()
 
 class UploadWorker(Thread):
     def __init__(self, queue, idx, collection_uri, team_project, test_run_id, access_token):
@@ -37,11 +36,10 @@ class UploadWorker(Thread):
 
     def run(self):
         self.__print("starting...")
-        while True:            
+        while True:
             try:
-                with helix.logs.SelfUploadingLogFile(settings_from_env()):
-                    item = self.queue.get()
-                    self.__process(item)
+                item = self.queue.get()
+                self.__process(item)
             except:
                 self.__print("got error: {}".format(traceback.format_exc()))
             finally:
@@ -65,7 +63,18 @@ def process_args() -> Tuple[str, str, str, Optional[str]]:
 
 
 def main():
-    with helix.logs.SelfUploadingLogFile(helix.settings.settings_from_env()):
+    log_path = os.path.join(helix.settings.log_root, str(uuid.uuid4()) + '.log')
+    logging.basicConfig(
+        format='%(asctime)s: %(levelname)s: %(module)s(%(lineno)d): %(funcName)s: %(message)s',
+        level=logging.DEBUG,
+        handlers=[
+            logging.StreamHandler(),
+            logging.FileHandler(log_path)
+        ]
+    )
+    log = logging.getLogger(__name__)
+
+    try:
         collection_uri, team_project, test_run_id, access_token = process_args()
 
         worker_count = 10
@@ -94,6 +103,12 @@ def main():
         q.join()
 
         log.info("Main thread exiting")
+    
+    finally:
+        for h in log.handlers:
+            if isinstance(h, logging.FileHandler):
+                h.flush()
+                helix.logs._upload_single_log(helix.settings, h.baseFilename)
 
 
 if __name__ == '__main__':
