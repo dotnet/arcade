@@ -15,12 +15,32 @@ using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
 using System.Reflection.PortableExecutable;
 using System.Text.RegularExpressions;
+using System.Xml.Linq;
 using SRMetadataReader = System.Reflection.Metadata.MetadataReader;
 
 namespace Microsoft.Cci.Extensions.CSharp
 {
     public static class CSharpCciExtensions
     {
+        public const string NullableAttributeFullName = "System.Runtime.CompilerServices.NullableAttribute";
+        public const string NullableContextAttributeFullName = "System.Runtime.CompilerServices.NullableContextAttribute";
+
+        public static ReadOnlySpan<byte> RosNullableAttributeName => new byte[]
+        {
+            // NullableAttribute
+            (byte)'N', (byte)'u', (byte)'l', (byte)'l', (byte)'a', (byte)'b', (byte)'l', (byte)'e',
+            (byte)'A', (byte)'t', (byte)'t', (byte)'r', (byte)'i', (byte)'b', (byte)'u', (byte)'t', (byte)'e',
+        };
+
+        public static ReadOnlySpan<byte> RosSystemRuntimeCompilerServicesNamespace => new byte[]
+        {
+            // System.Runtime.CompilerServices
+            (byte)'S', (byte)'y', (byte)'s', (byte)'t', (byte)'e', (byte)'m', (byte)'.',
+            (byte)'R', (byte)'u', (byte)'n', (byte)'t', (byte)'i', (byte)'m', (byte)'e', (byte)'.',
+            (byte)'C', (byte)'o', (byte)'m', (byte)'p', (byte)'i', (byte)'l', (byte)'e', (byte)'r',
+            (byte)'S', (byte)'e', (byte)'r', (byte)'v', (byte)'i', (byte)'c', (byte)'e', (byte)'s'
+        };
+
         public static string GetCSharpDeclaration(this IDefinition definition, bool includeAttributes = false)
         {
             using (var stringWriter = new StringWriter())
@@ -567,7 +587,7 @@ namespace Microsoft.Cci.Extensions.CSharp
                 uint typeToken = ((IMetadataObjectWithToken)methodImplementation.ContainingType).TokenValue;
                 string location = methodImplementation.ContainingType.Locations.FirstOrDefault()?.Document?.Location;
                 if (location != null)
-                    return methodImplementation.ImplementedMethod.ContainingType.GetInterfaceImplementationAttributeConstructorArgument(typeToken, "System.Runtime.CompilerServices.NullableAttribute", location, NullableConstructorArgumentParser);
+                    return methodImplementation.ImplementedMethod.ContainingType.GetInterfaceImplementationAttributeConstructorArgument(typeToken, location, NullableConstructorArgumentParser);
             }
 
             return null;
@@ -725,98 +745,6 @@ namespace Microsoft.Cci.Extensions.CSharp
             return names;
         }
 
-        public static object GetInterfaceImplementationAttributeConstructorArgument(this ITypeReference interfaceImplementation, uint typeDefinitionToken, string attributeType, string assemblyPath, Func<CustomAttributeValue<string>, object> argumentResolver)
-        {
-            using (FileStream stream = File.OpenRead(assemblyPath))
-            using (PEReader peFile = new PEReader(stream))
-            {
-                SRMetadataReader metadataReader = peFile.GetMetadataReader();
-                int rowId = GetRowId(typeDefinitionToken);
-                TypeDefinition typeDefinition = metadataReader.GetTypeDefinition(MetadataTokens.TypeDefinitionHandle(rowId));
-
-                uint interfaceImplementationToken = ((IMetadataObjectWithToken)interfaceImplementation).TokenValue;
-                IEnumerable<InterfaceImplementation> foundInterfaces = typeDefinition.GetInterfaceImplementations().Select(metadataReader.GetInterfaceImplementation).Where(impl => metadataReader.GetToken(impl.Interface) == (int)interfaceImplementationToken);
-                if (foundInterfaces.Any())
-                {
-                    InterfaceImplementation iImpl = foundInterfaces.First();
-                    return GetCustomAttributeArgument(metadataReader, iImpl.GetCustomAttributes(), attributeType, argumentResolver);
-                }
-            }
-
-            return null;
-        }
-
-        public static object GetGenericParameterConstraintConstructorArgument(this IGenericParameter parameter, int constraintIndex, string attributeType, string assemblyPath, Func<CustomAttributeValue<string>, object> argumentResolver)
-        {
-            using (FileStream stream = File.OpenRead(assemblyPath))
-            using (PEReader peFile = new PEReader(stream))
-            {
-                SRMetadataReader metadataReader = peFile.GetMetadataReader();
-                uint token = ((IMetadataObjectWithToken)parameter).TokenValue;
-                int rowId = GetRowId(token);
-                GenericParameter genericParameter = metadataReader.GetGenericParameter(MetadataTokens.GenericParameterHandle(rowId));
-                GenericParameterConstraint constraint = metadataReader.GetGenericParameterConstraint(genericParameter.GetConstraints()[constraintIndex]);
-                return GetCustomAttributeArgument(metadataReader, constraint.GetCustomAttributes(), attributeType, argumentResolver);
-            }
-
-        }
-
-        private static object GetCustomAttributeArgument(SRMetadataReader metadataReader, CustomAttributeHandleCollection customAttributeHandles, string attributeType, Func<CustomAttributeValue<string>, object> argumentResolver)
-        {
-            foreach (CustomAttributeHandle customAttributeHandle in customAttributeHandles)
-            {
-                CustomAttribute customAttribute = metadataReader.GetCustomAttribute(customAttributeHandle);
-
-                if (TryGetAttributeName(metadataReader, customAttribute, out StringHandle typeNamespaceHandle, out StringHandle typeNameHandle))
-                {
-                    string attributeTypeName = $"{metadataReader.GetString(typeNamespaceHandle)}.{metadataReader.GetString(typeNameHandle)}";
-                    if (attributeType == attributeTypeName)
-                    {
-                        CustomAttributeValue<string> value = customAttribute.DecodeValue(new CustomAttributeTypeProvider());
-                        return argumentResolver(value);
-                    }
-                }
-            }
-
-            return null;
-        }
-
-        private static int GetRowId(uint token)
-        {
-            const uint metadataRowIdMask = (1 << 24) - 1;
-            return (int)(token & metadataRowIdMask);
-        }
-
-        private static bool TryGetAttributeName(SRMetadataReader reader, CustomAttribute attr, out StringHandle typeNamespaceHandle, out StringHandle typeNameHandle)
-        {
-            EntityHandle ctorHandle = attr.Constructor;
-            switch (ctorHandle.Kind)
-            {
-                case HandleKind.MemberReference:
-                    EntityHandle container = reader.GetMemberReference((MemberReferenceHandle)ctorHandle).Parent;
-                    if (container.Kind == HandleKind.TypeReference)
-                    {
-                        TypeReference tr = reader.GetTypeReference((TypeReferenceHandle)container);
-                        typeNamespaceHandle = tr.Namespace;
-                        typeNameHandle = tr.Name;
-                        return true;
-                    }
-                    break;
-
-                case HandleKind.MethodDefinition:
-                    MethodDefinition md = reader.GetMethodDefinition((MethodDefinitionHandle)ctorHandle);
-                    TypeDefinition td = reader.GetTypeDefinition(md.GetDeclaringType());
-                    typeNamespaceHandle = td.Namespace;
-                    typeNameHandle = td.Name;
-                    return true;
-            }
-
-            // Unusual case, potentially invalid IL
-            typeNamespaceHandle = default;
-            typeNameHandle = default;
-            return false;
-        }
-
         private static IEnumerable<ITypeReference> GetBaseTypes(this ITypeReference typeRef)
         {
             ITypeDefinition type = typeRef.GetDefinitionOrNull();
@@ -833,33 +761,131 @@ namespace Microsoft.Cci.Extensions.CSharp
             }
         }
 
-        // Delegate to parse nullable attribute argument retrieved using System.Reflection.Metadata
-        internal static readonly Func<CustomAttributeValue<string>, object> NullableConstructorArgumentParser = value =>
+        public static object GetInterfaceImplementationAttributeConstructorArgument(this ITypeReference interfaceImplementation, uint typeDefinitionToken, string assemblyPath, Func<SRMetadataReader, CustomAttribute, (bool, object)> argumentResolver)
         {
-            if (value.FixedArguments.IsEmpty)
+            using (FileStream stream = File.OpenRead(assemblyPath))
+            using (PEReader peFile = new PEReader(stream))
             {
-                throw new ArgumentException("NullableAttribute constructor should have only 1 fixed argument");
-            }
+                SRMetadataReader metadataReader = peFile.GetMetadataReader();
+                int rowId = GetRowId(typeDefinitionToken);
+                TypeDefinition typeDefinition = metadataReader.GetTypeDefinition(MetadataTokens.TypeDefinitionHandle(rowId));
 
-            CustomAttributeTypedArgument<string> argument = value.FixedArguments[0];
-            if (argument.Type == "uint8[]")
-            {
-                ImmutableArray<CustomAttributeTypedArgument<string>> argumentValue = (ImmutableArray<CustomAttributeTypedArgument<string>>)argument.Value;
-                byte[] array = new byte[argumentValue.Length];
-                for (int i = 0; i < argumentValue.Length; i++)
+                uint interfaceImplementationToken = ((IMetadataObjectWithToken)interfaceImplementation).TokenValue;
+                IEnumerable<InterfaceImplementation> foundInterfaces = typeDefinition.GetInterfaceImplementations().Select(metadataReader.GetInterfaceImplementation).Where(impl => metadataReader.GetToken(impl.Interface) == (int)interfaceImplementationToken);
+                if (foundInterfaces.Any())
                 {
-                    array[i] = (byte)argumentValue[i].Value;
+                    InterfaceImplementation iImpl = foundInterfaces.First();
+                    return GetCustomAttributeArgument(metadataReader, iImpl.GetCustomAttributes(), argumentResolver);
                 }
-
-                return array;
             }
 
-            if (argument.Type == "uint8")
+            return null;
+        }
+
+        public static object GetGenericParameterConstraintConstructorArgument(this IGenericParameter parameter, int constraintIndex, string assemblyPath, Func<SRMetadataReader, CustomAttribute, (bool, object)> argumentResolver)
+        {
+            using (FileStream stream = File.OpenRead(assemblyPath))
+            using (PEReader peFile = new PEReader(stream))
             {
-                return argument.Value;
+                SRMetadataReader metadataReader = peFile.GetMetadataReader();
+                uint token = ((IMetadataObjectWithToken)parameter).TokenValue;
+                int rowId = GetRowId(token);
+                GenericParameter genericParameter = metadataReader.GetGenericParameter(MetadataTokens.GenericParameterHandle(rowId));
+                GenericParameterConstraint constraint = metadataReader.GetGenericParameterConstraint(genericParameter.GetConstraints()[constraintIndex]);
+                return GetCustomAttributeArgument(metadataReader, constraint.GetCustomAttributes(), argumentResolver);
             }
 
-            throw new ArgumentException("NullableAttribute should habe a byte or byte[] as a parameters");
+        }
+
+        private static object GetCustomAttributeArgument(SRMetadataReader metadataReader, CustomAttributeHandleCollection customAttributeHandles, Func<SRMetadataReader, CustomAttribute, (bool, object)> argumentResolver)
+        {
+            foreach (CustomAttributeHandle customAttributeHandle in customAttributeHandles)
+            {
+                CustomAttribute customAttribute = metadataReader.GetCustomAttribute(customAttributeHandle);
+                (bool success, object value) result = argumentResolver(metadataReader, customAttribute);
+                if (result.success)
+                {
+                    return result.value;
+                }
+            }
+
+            return null;
+        }
+
+        private static int GetRowId(uint token)
+        {
+            const uint metadataRowIdMask = (1 << 24) - 1;
+            return (int)(token & metadataRowIdMask);
+        }
+
+        private static unsafe bool Equals(this StringHandle handle, ReadOnlySpan<byte> other, SRMetadataReader reader)
+        {
+            BlobReader blob = reader.GetBlobReader(handle);
+            ReadOnlySpan<byte> actual = new ReadOnlySpan<byte>(blob.CurrentPointer, blob.Length);
+            return actual.SequenceEqual(other);
+        }
+
+        private static bool TypeMatchesNameAndNamespace(this EntityHandle handle, ReadOnlySpan<byte> ns, ReadOnlySpan<byte> name, SRMetadataReader reader)
+        {
+            switch (handle.Kind)
+            {
+                case HandleKind.TypeDefinition:
+                    TypeDefinition td = reader.GetTypeDefinition((TypeDefinitionHandle)handle);
+                    return !td.Namespace.IsNil && td.Namespace.Equals(ns, reader) && td.Name.Equals(name, reader);
+                case HandleKind.TypeReference:
+                    TypeReference tr = reader.GetTypeReference((TypeReferenceHandle)handle);
+                    return tr.ResolutionScope.Kind != HandleKind.TypeReference && !tr.Namespace.IsNil && tr.Namespace.Equals(ns, reader) && tr.Name.Equals(name, reader);
+                default:
+                    return false;
+            }
+        }
+
+        private static bool CustomAttributeTypeMatchesNameAndNamespace(this CustomAttribute attribute, ReadOnlySpan<byte> ns, ReadOnlySpan<byte> name, SRMetadataReader reader)
+        {
+            EntityHandle ctorHandle = attribute.Constructor;
+            switch (ctorHandle.Kind)
+            {
+                case HandleKind.MemberReference:
+                    return reader.GetMemberReference((MemberReferenceHandle)ctorHandle).Parent.TypeMatchesNameAndNamespace(ns, name, reader);
+                case HandleKind.MethodDefinition:
+                    EntityHandle handle = reader.GetMethodDefinition((MethodDefinitionHandle)ctorHandle).GetDeclaringType();
+                    return handle.TypeMatchesNameAndNamespace(ns, name, reader);
+                default:
+                    return false;
+            }
+        }
+
+        private static readonly CustomAttributeTypeProvider s_CustomAttributeTypeProvider = new CustomAttributeTypeProvider();
+
+        // Delegate to parse nullable attribute argument retrieved using System.Reflection.Metadata
+        internal static readonly Func<SRMetadataReader, CustomAttribute, (bool, object)> NullableConstructorArgumentParser = (reader, attribute) =>
+        {
+            if (attribute.CustomAttributeTypeMatchesNameAndNamespace(RosSystemRuntimeCompilerServicesNamespace, RosNullableAttributeName, reader))
+            {
+                CustomAttributeValue<string> value = attribute.DecodeValue(s_CustomAttributeTypeProvider);
+                if (value.FixedArguments.Length > 0)
+                {
+                    CustomAttributeTypedArgument<string> argument = value.FixedArguments[0];
+                    if (argument.Type == "uint8[]")
+                    {
+                        ImmutableArray<CustomAttributeTypedArgument<string>> argumentValue = (ImmutableArray<CustomAttributeTypedArgument<string>>)argument.Value;
+                        byte[] array = new byte[argumentValue.Length];
+                        for (int i = 0; i < argumentValue.Length; i++)
+                        {
+                            array[i] = (byte)argumentValue[i].Value;
+                        }
+
+                        return (true, array);
+                    }
+
+                    if (argument.Type == "uint8")
+                    {
+                        return (true, argument.Value);
+                    }
+                }
+            }
+
+            return (false, null);
         };
     }
 }

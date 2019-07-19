@@ -65,7 +65,7 @@ namespace Microsoft.Cci.Writers.CSharp
             {
                 Contract.Assert(type.IsDelegate);
 
-                byte? nullableContextValue = invoke.Attributes.GetCustomAttributeArgumentValue<byte?>(NullableContextAttributeName);
+                byte? nullableContextValue = invoke.Attributes.GetCustomAttributeArgumentValue<byte?>(CSharpCciExtensions.NullableContextAttributeFullName);
                 if (invoke.IsMethodUnsafe()) WriteKeyword("unsafe");
                 WriteKeyword("delegate");
                 WriteTypeName(invoke.Type, invoke.ReturnValueAttributes, methodNullableContextValue: nullableContextValue);
@@ -126,7 +126,7 @@ namespace Microsoft.Cci.Writers.CSharp
                     object nullableAttributeValue = null;
                     if (location != null)
                     {
-                        nullableAttributeValue = interfaceImplementation.GetInterfaceImplementationAttributeConstructorArgument(typeToken, "System.Runtime.CompilerServices.NullableAttribute", location, CSharpCciExtensions.NullableConstructorArgumentParser);
+                        nullableAttributeValue = interfaceImplementation.GetInterfaceImplementationAttributeConstructorArgument(typeToken, location, CSharpCciExtensions.NullableConstructorArgumentParser);
                     }
 
                     yield return () => WriteTypeName(interfaceImplementation, noSpace: true, nullableAttributeArgument: nullableAttributeValue);

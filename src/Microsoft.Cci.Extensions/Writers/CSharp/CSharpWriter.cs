@@ -81,7 +81,7 @@ namespace Microsoft.Cci.Writers
 
         public override void Visit(IAssembly assembly)
         {
-            _declarationWriter.ModuleNullableContextValue = assembly.ModuleAttributes.GetCustomAttributeArgumentValue<byte?>(CSDeclarationWriter.NullableContextAttributeName);
+            _declarationWriter.ModuleNullableContextValue = assembly.ModuleAttributes.GetCustomAttributeArgumentValue<byte?>(CSharpCciExtensions.NullableContextAttributeFullName);
 
             if (_writeAssemblyAttributes)
             {
@@ -118,7 +118,7 @@ namespace Microsoft.Cci.Writers
 
         public override void Visit(ITypeDefinition type)
         {
-            byte? value = type.Attributes.GetCustomAttributeArgumentValue<byte?>(CSDeclarationWriter.NullableContextAttributeName);
+            byte? value = type.Attributes.GetCustomAttributeArgumentValue<byte?>(CSharpCciExtensions.NullableContextAttributeFullName);
             if (!(type is INestedTypeDefinition) || value != null) // Only override the value when we're not on a nested type, or if so, only if the value is not null.
             {
                 _declarationWriter.TypeNullableContextValue = value;

@@ -166,7 +166,7 @@ namespace Microsoft.Cci.Writers.CSharp
             if (isSetterAccessor) // If setter remove value parameter.
                 parameters.RemoveAt(parameters.Count - 1);
 
-            byte? nullableContextValue = accessor.Attributes.GetCustomAttributeArgumentValue<byte?>(NullableContextAttributeName);
+            byte? nullableContextValue = accessor.Attributes.GetCustomAttributeArgumentValue<byte?>(CSharpCciExtensions.NullableContextAttributeFullName);
             WriteParameters(parameters, accessor.ContainingType, nullableContextValue, property: true);
         }
 

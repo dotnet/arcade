@@ -41,9 +41,9 @@ namespace Microsoft.Cci.Writers.CSharp
 
             foreach (IGenericParameter param in genericParams)
             {
-                var constraints = GetConstraints(param, methodNullableContextValue).ToList();
+                var constraints = GetConstraints(param, methodNullableContextValue).ToArray();
 
-                if (constraints.Count <= 0)
+                if (constraints.Length <= 0)
                     continue;
 
                 WriteSpace();
@@ -57,7 +57,7 @@ namespace Microsoft.Cci.Writers.CSharp
 
         private IEnumerable<Action> GetConstraints(IGenericParameter parameter, byte? methodNullableContextValue)
         {
-            parameter.Attributes.TryGetAttributeOfType("System.Runtime.CompilerServices.NullableAttribute", out ICustomAttribute nullableAttribute);
+            parameter.Attributes.TryGetAttributeOfType(CSharpCciExtensions.NullableAttributeFullName, out ICustomAttribute nullableAttribute);
             object nullableAttributeValue = nullableAttribute.GetAttributeArgumentValue<byte>() ?? methodNullableContextValue ?? TypeNullableContextValue ?? ModuleNullableContextValue;
 
             if (parameter.MustBeValueType)
@@ -95,7 +95,7 @@ namespace Microsoft.Cci.Writers.CSharp
                 {
                     if (assemblyLocation != null)
                     {
-                        nullableAttributeValue = parameter.GetGenericParameterConstraintConstructorArgument(constraintIndex, "System.Runtime.CompilerServices.NullableAttribute", assemblyLocation, CSharpCciExtensions.NullableConstructorArgumentParser);
+                        nullableAttributeValue = parameter.GetGenericParameterConstraintConstructorArgument(constraintIndex, assemblyLocation, CSharpCciExtensions.NullableConstructorArgumentParser);
                     }
 
                     constraintIndex++;

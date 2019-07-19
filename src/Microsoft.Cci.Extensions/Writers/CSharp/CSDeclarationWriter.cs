@@ -24,8 +24,6 @@ namespace Microsoft.Cci.Writers.CSharp
         public static readonly Version LangVersionLatest = LangVersion7_3;
         public static readonly Version LangVersionPreview = LangVersion8_0;
 
-        public const string NullableContextAttributeName = "System.Runtime.CompilerServices.NullableContextAttribute";
-
         private readonly ISyntaxWriter _writer;
         private readonly ICciFilter _filter;
         private bool _forCompilation;
@@ -449,7 +447,7 @@ namespace Microsoft.Cci.Writers.CSharp
         private void WriteTypeName(ITypeReference type, IEnumerable<ICustomAttribute> attributes, object methodNullableContextValue = null, bool noSpace = false, bool useTypeKeywords = true,
             bool omitGenericTypeList = false)
         {
-            attributes.TryGetAttributeOfType("System.Runtime.CompilerServices.NullableAttribute", out ICustomAttribute nullableAttribute);
+            attributes.TryGetAttributeOfType(CSharpCciExtensions.NullableAttributeFullName, out ICustomAttribute nullableAttribute);
             bool hasDynamicAttribute = attributes.TryGetAttributeOfType("System.Runtime.CompilerServices.DynamicAttribute", out ICustomAttribute dynamicAttribute);
 
             object nullableAttributeArgument = nullableAttribute.GetAttributeArgumentValue<byte>() ?? methodNullableContextValue ?? TypeNullableContextValue ?? ModuleNullableContextValue;

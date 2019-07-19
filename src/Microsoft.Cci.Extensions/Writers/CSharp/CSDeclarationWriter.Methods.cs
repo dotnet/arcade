@@ -124,7 +124,7 @@ namespace Microsoft.Cci.Writers.CSharp
 
         private void WriteMethodDefinitionSignature(IMethodDefinition method)
         {
-            byte? nullableContextValue = method.Attributes.GetCustomAttributeArgumentValue<byte?>(NullableContextAttributeName);
+            byte? nullableContextValue = method.Attributes.GetCustomAttributeArgumentValue<byte?>(CSharpCciExtensions.NullableContextAttributeFullName);
             bool isOperator = method.IsConversionOperator();
 
             if (!isOperator && !method.IsConstructor)
