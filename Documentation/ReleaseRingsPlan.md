@@ -53,7 +53,7 @@ post-build script. Zips are validated by the ASP team against an App Services te
 
 **Promotion:**
 1. CTI sign off
-2. Individual Teams signoff (tracked as a flag the release team signals when all teams are done)
+2. Individual Teams sign-off either by email, OneNote or roll call in Tactics
 3. All the previous validation steps succeed
 4. Tactics approve this version
 5. Move all related builds to the Publish Release channel
