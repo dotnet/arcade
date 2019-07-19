@@ -39,8 +39,9 @@ class UploadWorker(Thread):
         self.__print("starting...")
         while True:            
             try:
-                item = self.queue.get()
-                self.__process(item)
+                with helix.logs.SelfUploadingLogFile(settings_from_env()):
+                    item = self.queue.get()
+                    self.__process(item)
             except:
                 self.__print("got error: {}".format(traceback.format_exc()))
             finally:
@@ -70,7 +71,7 @@ def main():
         worker_count = 10
         q = Queue()
 
-        log.info("Main thread starting workers")
+        log.info("Main thread starting {0} workers".format(worker_count))
 
         for i in range(worker_count):
             worker = UploadWorker(q, i, collection_uri, team_project, test_run_id, access_token)
