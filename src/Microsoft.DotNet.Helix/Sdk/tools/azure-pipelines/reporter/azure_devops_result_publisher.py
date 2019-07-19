@@ -155,7 +155,11 @@ class AzureDevOpsTestResultPublisher:
                 base_name = get_ddt_base_name(r)
                 if base_name in data_driven_tests:
                     log.debug("\tData driven test already known; adding as sub result.")
-                    data_driven_tests[base_name].sub_results.append(convert_to_sub_test(r))
+                    sub_test = convert_to_sub_test(r)
+                    data_driven_tests[base_name].sub_results.append(sub_test)
+                    if sub_test.outcome == "Failed":
+                        data_driven_tests[base_name].outcome = "Failed"
+
                 else:
                     log.debug("\tData driven test not yet known; adding as \"{0}\".".format(base_name))
                     data_driven_tests[base_name] = convert_result(r)
