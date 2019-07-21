@@ -54,8 +54,6 @@
           Condition="'$(IncludeDefaultReferences)' == 'true' and '$(IncludeDefaultTestReferences)' == 'true'"
           BeforeTargets="SetupDefaultReferences">
     <ItemGroup>
-      <!-- Harmless, but causes PRI targets to run -->
-      <DefaultReferenceExclusions Include="System.Runtime.WindowsRuntime.UI.Xaml" />
       <DefaultReferenceExclusions Include="@(ReferenceFromRuntime)"/>
 
       <!-- Reference everything in the targeting pack directory -->

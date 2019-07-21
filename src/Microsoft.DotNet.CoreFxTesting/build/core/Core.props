@@ -4,9 +4,6 @@
 
   <PropertyGroup>
     <TestProjectName Condition="'$(TestProjectName)' == ''">$(MSBuildProjectName)</TestProjectName>
-    <TestsSuccessfulSemaphoreName>tests.passed</TestsSuccessfulSemaphoreName>
-    <TestDependsOn>GenerateRunScript;RunTests;</TestDependsOn>
-    <RunTestsDependsOn>ValidateTestPlatform;DiscoverRunTestsInputs;DiscoverRunTestsOutputs;</RunTestsDependsOn>
   </PropertyGroup>
 
   <!-- Set env variable to use the local netfx assemblies instead of the ones in the GAC. -->

@@ -7,7 +7,6 @@
     <TestAssembly Condition="'$(TestAssembly)' == ''">$(TargetFileName)</TestAssembly>
     <TestAssemblyFullPath>$([MSBuild]::NormalizePath('$(TestPath)', '$(TestAssembly)'))</TestAssemblyFullPath>
     <RunWorkingDirectory>$(TestPath)</RunWorkingDirectory>
-    <ArchiveTest Condition="'$(ArchiveTest)' == '' AND ('$(ArchiveTests.ToLower())' == 'all' OR $(MSBuildProjectName.ToLower().EndsWith('.$(ArchiveTests.ToLower())')))">true</ArchiveTest>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -85,36 +84,6 @@
 
   </Target>
 
-  <Target Name="DiscoverRunTestsInputs"
-          DependsOnTargets="ResolveReferences;GetCopyToOutputDirectoryItems">
-
-    <ItemGroup>
-      <RunTestsInputs Include="@(ReferenceCopyLocalPaths)" />
-      <RunTestsInputs Include="@(Content)" />
-      <RunTestsInputs Include="@(IntermediateAssembly)" />
-      <RunTestsInputs Include="@(_DebugSymbolsIntermediatePath)" />
-      <RunTestsInputs Include="@(AllItemsFullPathWithTargetPath)" />
-    </ItemGroup>
-
-  </Target>
-
-  <Target Name="DiscoverRunTestsOutputs">
-
-    <PropertyGroup>
-      <TestsSuccessfulSemaphorePath>$([MSBuild]::NormalizePath('$(TestPath)', '$(TestsSuccessfulSemaphoreName)'))</TestsSuccessfulSemaphorePath>
-      <TestResultsPath Condition="'$(TestResultsName)' != ''">$([MSBuild]::NormalizePath('$(TestPath)', '$(TestResultsName)'))</TestResultsPath>
-    </PropertyGroup>
-
-    <ItemGroup>
-      <RunTestsOutputs Include="$(TestsSuccessfulSemaphorePath)" />
-      <RunTestsOutputs Condition="'$(TestResultsPath)' != ''" Include="$(TestResultsPath)" />
-    </ItemGroup>
-
-    <Delete Files="$(TestsSuccessfulSemaphorePath)"
-            Condition="'$(ForceRunTests)' == 'true' AND Exists($(TestsSuccessfulSemaphorePath))" />
-
-  </Target>
-
   <Target Name="ValidateTestPlatform">
 
     <ItemGroup>
@@ -137,9 +106,7 @@
 
   <Target Name="RunTests"
           Condition="'$(TestDisabled)' != 'true'"
-          DependsOnTargets="$(RunTestsDependsOn)"
-          Inputs="@(RunTestsInputs)"
-          Outputs="@(RunTestsOutputs)">
+          DependsOnTargets="ValidateTestPlatform">
 
     <Error Condition="!Exists('$(TestAssemblyFullPath)')"
            Text="Test assembly couldn't be found. Make sure to build the test project first." />
@@ -162,8 +129,6 @@
     </PropertyGroup>
 
     <Error Condition="'$(TestRunExitCode)' != '0'" Text="$(TestRunErrorMessage)" />
-    <Touch Condition="'$(TestRunExitCode)' == '0'" Files="$(TestsSuccessfulSemaphorePath)" AlwaysCreate="true" />
-
   </Target>
 
   <!--

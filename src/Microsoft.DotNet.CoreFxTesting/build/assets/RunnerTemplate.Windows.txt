@@ -50,6 +50,9 @@ if not defined RUNTIME_PATH (
 :: Don't use a globally installed SDK.
 set DOTNET_MULTILEVEL_LOOKUP=0
 
+:: Roll forward on [major], [minor] and [patch].
+set DOTNET_ROLL_FORWARD_ON_NO_CANDIDATE_FX=2
+
 :: ========================= BEGIN Test Execution ============================= 
 echo ----- start %DATE% %TIME% ===============  To repro directly: ===================================================== 
 echo pushd %EXECUTION_DIR%
