@@ -55,6 +55,7 @@
     <SystemTextEncodingsWebVersion>4.5.0</SystemTextEncodingsWebVersion>
     <SystemTextJsonVersion Condition="'$(SystemTextJsonVersion)' == ''">4.6.0-preview6.19303.8</SystemTextJsonVersion>
     <SystemThreadingTasksExtensionVersion>4.5.2</SystemThreadingTasksExtensionVersion>
+    <SystemValueTupleVersion>4.4.0</SystemValueTupleVersion>
     <WindowsAzureStorageVersion>8.5.0</WindowsAzureStorageVersion>
     <XUnitVersion>2.4.1</XUnitVersion>
     <XUnitAbstractionsVersion>2.0.3</XUnitAbstractionsVersion>
