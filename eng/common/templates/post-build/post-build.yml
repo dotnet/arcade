@@ -7,9 +7,12 @@ parameters:
     enable: false
     params: ''
 
+  # Which stages should finish execution before post-build stages start
+  depends: [build]
+
 stages:
 - stage: validate
-  dependsOn: build
+  dependsOn: ${{ parameters.depends }}
   displayName: Validate
   jobs:
   - ${{ if eq(parameters.enableNugetValidation, 'true') }}:
