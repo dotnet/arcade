@@ -17,8 +17,13 @@
       - AzureStorageTargetFeedPAT
       - StaticInternalFeed          : URL of the feed to publish internal non-stable packages
       
-      - CreateTestConfig            : If set to true the user will be able to test a TargetFeedConfig constructed using:
-          - TestFeedCategories, TestFeedURL, TestFeedName, TestFeedType and TestFeedToken
+      - CreateTestConfig            : If set to true the user will be able to test a TargetFeedConfig 
+                                      constructed using parameters below:
+        - TestFeedCategories
+        - TestFeedURL
+        - TestFeedName
+        - TestFeedType
+        - TestFeedToken
   -->
 
   <Target Name="SetupTargetFeeds">
@@ -39,7 +44,7 @@
       Text="Parameters 'AzureStorageAccountName/Key' are empty." />
 
     <!--
-      If the wants to use a test configuration we'll create a TargetFeedConfig using
+      If the user wants to use a test configuration we'll create a TargetFeedConfig using
       optional parameters passed as properties. This should prevent all the other 
       cases below from being activated.
     -->
