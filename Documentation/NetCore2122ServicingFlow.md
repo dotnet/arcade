@@ -26,8 +26,8 @@ The pipebuild descriptions for the builds are held in https://dev.azure.com/devd
   - **2.1 Pipebuild Description** - https://dev.azure.com/devdiv/DevDiv/Default/_git/DotNet-BuildPipeline?path=%2Fsrc%2FPipeBuild%2FPipeBuild%2Fpipelines.orchestrated-release-2.1.json&version=GBmaster
   - **2.2 Pipebuild Description** - https://dev.azure.com/devdiv/DevDiv/Default/_git/DotNet-BuildPipeline?path=%2Fsrc%2FPipeBuild%2FPipeBuild%2Fpipelines.orchestrated-release-2.2.json&version=GBmaster
 - **Internal Servicing** - Internal builds will use private intermediate storage, including private blob feeds and will not publish build information to the dotnet/versions repo on completion.
-  - **2.1 Build Definition** - https://dev.azure.com/devdiv/_build/index?definitionId=9010
-  - **2.2 Build Definition** - https://dev.azure.com/devdiv/_build/index?definitionId=10367
+  - **2.1 Build Definition** - https://dev.azure.com/devdiv/DevDiv/_build/index?definitionId=9010
+  - **2.2 Build Definition** - https://dev.azure.com/devdiv/DevDiv/_build/index?definitionId=10367
   - **2.1 Pipebuild Definition** - `https://dev.azure.com/devdiv/DevDiv/Default/_git/DotNet-BuildPipeline?path=%2Fsrc%2FPipeBuild%2FPipeBuild%2Fpipelines.orchestrated-release-2.1-internal.json&version=GBmaster
   - **2.2 Pipebuild Definition** - `https://dev.azure.com/devdiv/DevDiv/Default/_git/DotNet-BuildPipeline?path=%2Fsrc%2FPipeBuild%2FPipeBuild%2Fpipelines.orchestrated-release-2.2-internal.json&version=GBmaster
 
