@@ -16,6 +16,14 @@
       - ArtifactsCategory
       - AzureStorageTargetFeedPAT
       - StaticInternalFeed          : URL of the feed to publish internal non-stable packages
+      
+      - CreateTestConfig            : If set to true the user will be able to test a TargetFeedConfig 
+                                      constructed using parameters below:
+        - TestFeedCategories
+        - TestFeedURL
+        - TestFeedName
+        - TestFeedType
+        - TestFeedToken
   -->
 
   <Target Name="SetupTargetFeeds">
@@ -36,13 +44,27 @@
       Text="Parameters 'AzureStorageAccountName/Key' are empty." />
 
     <!--
+      If the user wants to use a test configuration we'll create a TargetFeedConfig using
+      optional parameters passed as properties. This should prevent all the other 
+      cases below from being activated.
+    -->
+    <ItemGroup Condition="'$(CreateTestConfig)' == 'true'">
+      <TargetFeedConfig
+        Include="$(TestFeedCategories)"
+        TargetURL="$(TestFeedURL)"
+        FeedName="$(TestFeedName)"
+        Type="$(TestFeedType)"
+        Token="$(TestFeedToken)" />
+    </ItemGroup>
+
+    <!--
       When a build is stable we ask `CreateInternalBlobFeed` in Tasks.Feed to create a new AzDO feed.
       That task will return an Azure Storage feed wrapped by an authenticated Azure function proxy,
       we use that to mimic an internal/authenticated feed. This will likely change in the future once
       we switch to using AzDO private feeds.
     -->
     <CreateInternalBlobFeed
-        Condition="'$(IsStableBuild)' == 'true'"
+        Condition="'@(TargetFeedConfig)' == '' AND '$(IsStableBuild)' == 'true'"
         RepositoryName="$(RepositoryName)"
         CommitSha="$(CommitSha)"
         AzureDevOpsFeedsBaseUrl="$(AzureDevOpsFeedsBaseUrl)"
@@ -52,7 +74,7 @@
       <Output TaskParameter="TargetFeedName" PropertyName="NewTargetFeedName"/>
     </CreateInternalBlobFeed>
 
-    <ItemGroup Condition="'$(IsStableBuild)' == 'true'">
+    <ItemGroup Condition="'@(TargetFeedConfig)' == '' AND '$(IsStableBuild)' == 'true'">
       <TargetFeedConfig
         Include="NetCore;OSX;Deb;Rpm;Node;BinaryLayout;Installer;Checksum;Maven;VSIX"
         TargetURL="$(NewAzDoFeedURL)/index.json"
