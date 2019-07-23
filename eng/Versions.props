@@ -48,12 +48,13 @@
     <SystemIOCompressionVersion>4.3.0</SystemIOCompressionVersion>
     <SystemIOPackagingVersion>4.5.0</SystemIOPackagingVersion>
     <SystemIOFileSystemPrimitivesVersion>4.3.0</SystemIOFileSystemPrimitivesVersion>
-    <SystemMemoryVersion>4.5.1</SystemMemoryVersion>
-    <SystemNumericsVectorsVersion>4.4.0</SystemNumericsVectorsVersion>
+    <SystemMemoryVersion>4.5.3</SystemMemoryVersion>
+    <SystemNumericsVectorsVersion>4.5.0</SystemNumericsVectorsVersion>
     <SystemReflectionMetadataVersion>1.4.2</SystemReflectionMetadataVersion>
-    <SystemRuntimeCompilerServicesUnsafeVersion>4.5.0</SystemRuntimeCompilerServicesUnsafeVersion>
+    <SystemRuntimeCompilerServicesUnsafeVersion>4.6.0-preview6.19303.8</SystemRuntimeCompilerServicesUnsafeVersion>
     <SystemTextEncodingsWebVersion>4.5.0</SystemTextEncodingsWebVersion>
-    <SystemThreadingTasksExtensionVersion>4.5.1</SystemThreadingTasksExtensionVersion>
+    <SystemTextJsonVersion>4.6.0-preview6.19303.8</SystemTextJsonVersion>
+    <SystemThreadingTasksExtensionVersion>4.5.2</SystemThreadingTasksExtensionVersion>
     <SystemValueTupleVersion>4.4.0</SystemValueTupleVersion>
     <WindowsAzureStorageVersion>8.5.0</WindowsAzureStorageVersion>
     <XUnitVersion>2.4.1</XUnitVersion>
