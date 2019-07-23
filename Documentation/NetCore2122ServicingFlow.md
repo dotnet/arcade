@@ -168,22 +168,15 @@ The pipebuild descriptions for the builds are held in https://dev.azure.com/devd
 
 10. Perform final release - In conjunction with normal tic-toc activities, final release can be done by ensuring the build description is published to the versions repo, then adding triggers for that location.
     1. **If public** - Poke the "build.semaphore" file by adding a digit to the end of the versions repo file where the stabilized build was published. For example: https://github.com/dotnet/versions/commit/641b24a434bbb4fc801ec56a7ad9eef36e5c5a01
-    2. **If internal** -
-        1. Update build.xml manifest (e.g. `https://<account>.blob.core.windows.net/orchestrated-release-2-1/<product build id>/final/assets/orchestration-metadata/manifests/build.xml`) and re-upload.
-            - Update branch names in the 'build.xml' manifest to correspond to the public branch names.
-            
-            ```
-            <Build BuildId="2.1.10-servicing-32095+pb-20190314-05" Name="aspnet" Commit="2a2809afe4a2c665c4bfe25ff816c542948c4ab5" Branch="internal/release/2.1" ProductVersion="2.1.10" UniverseCommitHash="2a2809afe4a2c665c4bfe25ff816c542948c4ab5"/>
-            ```
-            to
-            ```
-            <Build BuildId="2.1.10-servicing-32095+pb-20190314-05" Name="aspnet" Commit="2a2809afe4a2c665c4bfe25ff816c542948c4ab5" Branch="release/2.1" ProductVersion="2.1.10" UniverseCommitHash="2a2809afe4a2c665c4bfe25ff816c542948c4ab5"/>
-            ```
-            - Update endpoint URL to point to public account.
-        2. Copy build outputs from internal storage account to dotnetfeed storage account.  This is typically done just by copying the whole build output directory (`$(PB_FeedBaseUrl)/$(ProductBuildId)/`) to another container (e.g. orchestrated-foo-bar-baz).  Then launch the **public** build definition with the following parameters:
-            - `ProductBuildId` - `ProductBuildId` of the build being released
-            -  `PB_VersionsRepoPath` - `build-info/dotnet/product/cli/release/2.1.<servicing suffix>` (e.g. 2.1.10) or `build-info/dotnet/product/cli/release/2.2.<servicing suffix>` (e.g. 2.2.4)
-            - `PB_PipelineRoots` - `Final-PushOrchestratedBuildManifest`
+    2. **If internal** - Execute [DotNet-Orchestrated-Release-2-1-Move-To-Public](https://dev.azure.com/devdiv/DevDiv/_build?definitionId=11719&_a=summary)
+       or
+       [DotNet-Orchestrated-Release-2-2-Move-To-Public](https://dev.azure.com/devdiv/DevDiv/_build?definitionId=11723&_a=summary)
+       build definitions with appropriate parameters to move the builds to
+       public storage
+        - `ProductBuildId` = build product build id
+        - `PB_VersionsRepoPath` -
+          `build-info/dotnet/product/cli/release/2.1.<servicing suffix>` (2.2.5,
+          2.1.12, etc.)
 
 ## Build Flow Diagram
 
