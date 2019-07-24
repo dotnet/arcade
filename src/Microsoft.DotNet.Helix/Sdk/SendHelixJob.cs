@@ -188,6 +188,8 @@ namespace Microsoft.DotNet.Helix.Sdk
                     Log.LogMessage($"Setting creator to '{Creator}'");
                 }
 
+                Log.LogMessage(MessageImportance.High, $"Uploading payloads for Job on {TargetQueue}...");
+
                 if (CorrelationPayloads != null)
                 {
                     foreach (ITaskItem correlationPayload in CorrelationPayloads)
@@ -213,6 +215,8 @@ namespace Microsoft.DotNet.Helix.Sdk
                     def = def.WithCorrelationPayloadDirectory(directory);
                 }
 
+                Log.LogMessage(MessageImportance.High, $"Finished uploading payloads for Job on {TargetQueue}...");
+
                 if (HelixProperties != null)
                 {
                     foreach (ITaskItem helixProperty in HelixProperties)
@@ -232,7 +236,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                     return;
                 }
 
-                Log.LogMessage(MessageImportance.Normal, "Sending Job...");
+                Log.LogMessage(MessageImportance.High, $"Sending Job to {TargetQueue}...");
 
                 cancellationToken.ThrowIfCancellationRequested();
                 ISentJob job = await def.SendAsync(msg => Log.LogMessage(msg));
