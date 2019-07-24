@@ -24,18 +24,6 @@
        as necessary.
     5. Add dotnet-core feed and any other feeds that the repository restores NuGet packages from to
        [NuGet.config](https://github.com/dotnet/arcade-minimalci-sample/blob/master/NuGet.config).
-    6. Must have a root project/solution file for the repo to build.
-    7. Additional package feeds can be added to the `eng\Version.props` file, e.g.
-       ```
-       <PropertyGroup>
-         <RestoreSources>
-           $(RestoreSources);
-           https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json;
-           https://dotnet.myget.org/F/symreader-converter/api/v3/index.json;
-           https://dotnet.myget.org/F/symreader/api/v3/index.json
-         </RestoreSources>
-       </PropertyGroup>
-       ```
 
     **Using Arcade packages** - See [documentation](CorePackages/) for
     information on specific packages.
