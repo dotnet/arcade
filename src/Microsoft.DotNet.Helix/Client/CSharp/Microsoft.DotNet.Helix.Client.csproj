@@ -17,7 +17,7 @@
     <PackageReference Include="System.Collections.Immutable" Version="$(SystemCollectionsImmutableVersion)" />
     <PackageReference Include="System.Text.Encodings.Web" Version="$(SystemTextEncodingsWebVersion)" />
 
-    <!--<ProjectReference Include="..\..\..\Microsoft.DotNet.SwaggerGenerator\Microsoft.DotNet.SwaggerGenerator.MSBuild\Microsoft.DotNet.SwaggerGenerator.MSBuild.csproj" />-->
+    <PackageReference Include="Microsoft.DotNet.SwaggerGenerator.MSBuild" Version="$(MicrosoftDotNetSwaggerGeneratorMSBuildVersion)" PrivateAssets="all"/>
   </ItemGroup>
 
   <ItemGroup>

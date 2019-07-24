@@ -216,7 +216,7 @@ namespace {{pascalCaseNs Namespace}}
                     {{/unless}}
                 };
                 {{else}}
-                Stream _responseStream = await _res.Content.ReadAsStreamAsync().ConfigureAwait(false);
+                System.IO.Stream _responseStream = await _res.Content.ReadAsStreamAsync().ConfigureAwait(false);
                 return new HttpOperationResponse<System.IO.Stream>
                 {
                     Request = _req,

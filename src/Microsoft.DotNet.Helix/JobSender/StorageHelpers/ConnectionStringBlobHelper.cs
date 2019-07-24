@@ -20,7 +20,7 @@ namespace Microsoft.DotNet.Helix.Client
             _connectionString = connectionString;
         }
 
-        public async Task<IBlobContainer> GetContainerAsync(string requestedName)
+        public async Task<IBlobContainer> GetContainerAsync(string requestedName, string targetQueue)
         {
             CloudStorageAccount account = CloudStorageAccount.Parse(_connectionString);
             CloudBlobClient client = account.CreateCloudBlobClient();
