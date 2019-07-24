@@ -1,43 +1,18 @@
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
 <Project Sdk="Microsoft.NET.Sdk">
-  <!--
-    Used to restore global toolset packages. 
-    Not imported when building from source.
-
-    Required parameters:
-      VersionsPropsPath             Versions.props path. 
-
-    Optional parameters:
-      PublishingToBlobStorage
-  -->
-
   <Import Project="BuildStep.props" />
 
   <PropertyGroup>
-    <TargetFramework>net462</TargetFramework>
+    <TargetFramework>net472</TargetFramework>
   </PropertyGroup>
 
+  <!-- 
+    Configure NuGet Restore to use NuGet.config file in the repository root.
+    We could drop a custom NuGet.config to the containing directory but it's simpler
+    if we use the same config for all restore operations.
+  -->
   <PropertyGroup>
-    <RestoreSources>$(DotNetRestoreSources)</RestoreSources>
-    <RestoreSources Condition="'$(DotNetBuildOffline)' != 'true'">
-      $(RestoreSources);
-      https://api.nuget.org/v3/index.json;
-      https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json;
-      https://dotnetfeed.blob.core.windows.net/arcade-validation/index.json;
-      https://dotnet.myget.org/F/roslyn-tools/api/v3/index.json
-    </RestoreSources>
-    <RestoreSources Condition="'$(UsingToolSymbolUploader)' == 'true'">
-      $(RestoreSources);
-      https://dotnet.myget.org/F/dotnet-buildtools/api/v3/index.json
-    </RestoreSources>
-    <RestoreSources Condition="'$(UsingToolPdbConverter)' == 'true' and $(MicrosoftDiaSymReaderPdb2PdbVersion.Contains('-'))">
-      $(RestoreSources);
-      https://dotnet.myget.org/F/symreader-converter/api/v3/index.json
-    </RestoreSources>
-    <RestoreSources Condition="'$(PublishingToBlobStorage)' == 'true'">
-      $(RestoreSources);
-      https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json
-    </RestoreSources>
+    <RestoreConfigFile>$(RepoRoot)NuGet.config</RestoreConfigFile>
   </PropertyGroup>
 
   <ItemGroup Condition="'$(DotNetBuildFromSource)' != 'true'">
@@ -62,18 +37,7 @@
           Condition="'$(DotNetBuildFromSource)' != 'true' and Exists('$(_RepoToolManifest)')"
           AfterTargets="Restore">
 
-    <ItemGroup>
-      <_RestoreSources Include="$(RestoreSources)" />
-    </ItemGroup>
-
-    <PropertyGroup>
-      <RestoreRepoToolsCommmand>"$(DotNetTool)" tool restore</RestoreRepoToolsCommmand>
-      <RestoreRepoToolsCommmand Condition="'@(_RestoreSources)' != ''">$(RestoreRepoToolsCommmand) --add-source @(_RestoreSources -> '"%(Identity)"', ' --add-source ')</RestoreRepoToolsCommmand>
-    </PropertyGroup>
-
-    <Exec Command="$(RestoreRepoToolsCommmand)"
-          WorkingDirectory="$(RepoRoot)" />
-
+    <Exec Command='"$(DotNetTool)" tool restore' WorkingDirectory="$(RepoRoot)" />
   </Target>
 
   <!-- Repository extensibility point -->

@@ -4,7 +4,7 @@ This document is intended to provide insight into the design of native toolset b
 
 ## Overview
 
-Arcade will provide a set of common installation libraries which will be provided to partipating repos via Maestro.  The common libraries will be used to acquire "installers" for native components.
+Arcade will provide a set of common installation libraries which will be provided to participating repos via Maestro.  The common libraries will be used to acquire "installers" for native components.
 
 Repo's will be provided a local bootstrapping file (both an ps1 and an sh file).  The bootstrapper uses the common libraries to install native toolset dependencies.
 
@@ -86,7 +86,7 @@ You can browse the installers available using this url - https://netcorenativeas
 
 ### external resources folder structure
 
-The `external` folder is a folder structure that contains all installers and resources for external depencencies.  These are zips / tarballs /etc... provided by a tool publisher which we have republished into Azure blob storage, organized in folders by the operating system and tool to be installed.
+The `external` folder is a folder structure that contains all installers and resources for external dependencies.  These are zips / tarballs /etc... provided by a tool publisher which we have republished into Azure blob storage, organized in folders by the operating system and tool to be installed.
 
 ## Example - resource-packages container
 
@@ -159,4 +159,4 @@ Example:
 
 I think that this model will allow us to be a bit more flexible in the types of dependencies that we install and provide a method for non-xcopy deployable dependencies to be installed in the future.  The tool installers may make use of common libraries for installs though.
 
-We are looking into improving this experience to generizice the installers and reduce boilerplate.
+We are looking into improving this experience to genericize the installers and reduce boilerplate.

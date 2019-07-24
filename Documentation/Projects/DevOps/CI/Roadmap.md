@@ -58,7 +58,7 @@ After this phase completes, data from the Azure DevOps Timeline API will be stor
   
   - Task ingests into Kusto database
 
-- Create an dnceng build definition that runs on a scheduled trigger which will be used to gather telemetry on a defined candence (daily? hourly? weekly?) or create a service that triggers automatically based on REST API calls or schedule.
+- Create an dnceng build definition that runs on a scheduled trigger which will be used to gather telemetry on a defined cadence (daily? hourly? weekly?) or create a service that triggers automatically based on REST API calls or schedule.
 
 ## Phase 3 – Provide reports
 

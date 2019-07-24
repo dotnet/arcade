@@ -11,10 +11,10 @@ Subscriptions](BranchesChannelsAndSubscriptions.md). Please read if you are unfa
 
 The general workflow for a release looks like:
 1. Commit desired changes to each repository involved in the release.
-    1. For a .NET Core 3.x preview, these changes may be commited by the process
+    1. For a .NET Core 3.x preview, these changes may be committed by the process
        of branching the working (typically master) branch into a release branch
        (like release 3.0)
-    2. For a servicing release, these changes may simply be commited into an
+    2. For a servicing release, these changes may simply be committed into an
        existing release branch.
 2. Official builds and dependency flow begins in each repository with changes.
 3. New commits are built, generating new assets, which flow via Maestro++
@@ -63,7 +63,7 @@ Microsoft.NETCore.App, there is a possibility that a breaking change has not
 been reacted to.
 
 ***Does this mean that incoherency is always an error state?*** No. For example, let's
-say that the the incoherency of Microsoft.NETCore.App in the graph only
+say that the incoherency of Microsoft.NETCore.App in the graph only
 represents a single change in coreclr, a single non-breaking JIT bug fix. There
 would technically be no need to ingest the new Microsoft.NETCore.App at each
 point in the graph. Simply shipping the same components against the new runtime
@@ -122,7 +122,7 @@ The coherency QB is responsible for the following:
 
 *Note: There is a goal to automate as much of this process as is possible.*
 
-Below specfic steps in the coherency QB are detailed.
+Below specific steps in the coherency QB are detailed.
 
 ### Prepare and verify dependency flow
 
@@ -182,7 +182,7 @@ state of the Dev channel subscription state.
    features to get-subscriptions to help out with this exercise*
 
 3. Dump the default channel state and ensure that repositories with a default
-   channel assocation in the Dev channel have a default channel association in the
+   channel association in the Dev channel have a default channel association in the
    Release channel. Where there are gaps work with with repository owners to
    understand which branch will ship the coming release. Some repositories may
    not have default associations and can be left alone. For example nuget
@@ -197,7 +197,7 @@ state of the Dev channel subscription state.
    darc add-default-channel
    ```
 
-   Some typical repositories with odd/no assocations:
+   Some typical repositories with odd/no associations:
    - **dotnet/roslyn** - Branch changes preview to preview to align with VS
    - **microsoft/msbuild** - Branch changes preview to preview to align with VS
    - **dotnet/fsharp** - Branch changes preview to preview to align with VS
@@ -246,7 +246,7 @@ Commit/branching day happens in the following steps:
 concern is branding. dotnet/core-sdk will publish its outputs to public on the
 main web github page on each build (it overwrites a set of 'latest' blobs based
 on information in the current branch being built). Until the core-sdk branches
-affected by branching/commiting for release (e.g. release/3.0.1xx moves to
+affected by branching/committing for release (e.g. release/3.0.1xx moves to
 previewN and master moves to previewN+1) reflect the branding updates for their
 input dependencies, exposing new builds to the public will cause confusion. The
 builds will have mixed previewN and previewN+1 branding. We want to avoid this.
@@ -308,13 +308,13 @@ for validation. A drop consists of 3 parts:
   dev builds upload packages to feeds that contain a mix of transport and
   shipping packages, as those feeds are needed for downstream builds.
 
-Drops of builds are uploaded to to
+Drops of builds are uploaded to
 `\\vsufile\patches\sign\NET\CORE_BUILDS\3.0.X\3.0.0\`
 
 To gather a drop:
 1. Create a directory (if it does not exist) under the drop root for the
    appropriate preview/release (e.g. `preview6').
-2. Create a directory under that with the appopriate SDK build number. E.g.
+2. Create a directory under that with the appropriate SDK build number. E.g.
    `3.0.100-preview6-012264` of the top level SDK build.
 3. Run `darc gather-drop` to upload the unified drop to the share:
    ```

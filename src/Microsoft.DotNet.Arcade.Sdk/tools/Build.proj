@@ -9,9 +9,7 @@
   Optional parameters:
     Configuration                   Build configuration: "Debug", "Release", etc.
 
-    DotNetRestoreSourcePropsPath    Overrides of ResourceSources (list of NuGet feeds to download dependencies from)
     DotNetBuildFromSource           Building the entire stack from source with no external dependencies.
-    DotNetBuildOffline              Building without access to NuGet servers.
     DotNetOutputBlobFeedDir         Directory to publish Source Build assets to (packages, symbol packages, installers, etc.).
     DotNetPublishUsingPipelines     Publish assets using Azure DevOps release pipelines.
     DotNetArtifactsCategory         Type of assets being produced by the build.
