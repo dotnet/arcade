@@ -52,7 +52,8 @@ namespace Microsoft.Cci.Writers.CSharp
                 if (!field.IsCompileTimeConstant && field.GetHiddenBaseField(_filter) != Dummy.Field)
                     WriteKeyword("new");
 
-                WriteTypeName(field.Type, field.Attributes);
+                // If it is a dummy field we call the override that ignores reference type nullability
+                WriteTypeName(field.Type, field.Attributes, includeReferenceTypeNullability: !(field is DummyPrivateField));
 
                 string name = field.Name.Value;
                 if (name.Contains("<") || name.Contains(">"))
@@ -97,6 +98,7 @@ namespace Microsoft.Cci.Writers.CSharp
         private ITypeReference _type;
         private IName _name;
         private IEnumerable<ICustomAttribute> _attributes = System.Linq.Enumerable.Empty<ICustomAttribute>();
+        private bool _isReadOnly;
 
         public DummyPrivateField(ITypeDefinition parentType, ITypeReference type, string name)
         {
@@ -105,9 +107,10 @@ namespace Microsoft.Cci.Writers.CSharp
             _name = new NameTable().GetNameFor(name);
         }
 
-        public DummyPrivateField(ITypeDefinition parentType, ITypeReference type, string name, IEnumerable<ICustomAttribute> attributes) : this(parentType, type, name)
+        public DummyPrivateField(ITypeDefinition parentType, ITypeReference type, string name, IEnumerable<ICustomAttribute> attributes, bool isReadOnly) : this(parentType, type, name)
         {
             _attributes = attributes;
+            _isReadOnly = isReadOnly;
         }
 
         public uint BitLength => 0;
@@ -126,7 +129,7 @@ namespace Microsoft.Cci.Writers.CSharp
 
         public bool IsNotSerialized => false;
 
-        public bool IsReadOnly => _parentType.Attributes.HasIsReadOnlyAttribute();
+        public bool IsReadOnly => _isReadOnly || _parentType.Attributes.HasIsReadOnlyAttribute();
 
         public bool IsRuntimeSpecial => false;
 

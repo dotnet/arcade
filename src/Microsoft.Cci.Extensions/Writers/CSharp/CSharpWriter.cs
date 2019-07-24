@@ -181,7 +181,7 @@ namespace Microsoft.Cci.Writers
                     // to validate there aren't any struct layout cycles
                     foreach (var genericField in genericTypedFields)
                     {
-                        IFieldDefinition fieldType = new DummyPrivateField(parentType, genericField.Type, genericField.Name.Value, genericField.Attributes.Where(a => !a.FullName().EndsWith("NullAttribute")));
+                        IFieldDefinition fieldType = new DummyPrivateField(parentType, genericField.Type, genericField.Name.Value, genericField.Attributes.Where(a => !a.FullName().EndsWith("NullAttribute")), genericField.IsReadOnly);
                         newFields.Add(fieldType);
                     }
 

@@ -425,6 +425,13 @@ namespace Microsoft.Cci.Writers.CSharp
                 WriteTypeNameRecursive(arrayType.ElementType, namingOptions, valueTupleNames, ref valueTupleNameIndex, ref nullableIndex,
                     nullableAttributeArgument, dynamicAttributeArgument, typeDepth + 1);
                 WriteSymbol("[");
+
+                uint arrayDimension = arrayType.Rank - 1;
+                for (; arrayDimension > 0; arrayDimension--)
+                {
+                    WriteSymbol(",");
+                }
+
                 WriteSymbol("]");
             }
             else
@@ -445,12 +452,15 @@ namespace Microsoft.Cci.Writers.CSharp
         }
 
         private void WriteTypeName(ITypeReference type, IEnumerable<ICustomAttribute> attributes, object methodNullableContextValue = null, bool noSpace = false, bool useTypeKeywords = true,
-            bool omitGenericTypeList = false)
+            bool omitGenericTypeList = false, bool includeReferenceTypeNullability = true)
         {
             attributes.TryGetAttributeOfType(CSharpCciExtensions.NullableAttributeFullName, out ICustomAttribute nullableAttribute);
             bool hasDynamicAttribute = attributes.TryGetAttributeOfType("System.Runtime.CompilerServices.DynamicAttribute", out ICustomAttribute dynamicAttribute);
 
-            object nullableAttributeArgument = nullableAttribute.GetAttributeArgumentValue<byte>() ?? methodNullableContextValue ?? TypeNullableContextValue ?? ModuleNullableContextValue;
+            object nullableAttributeArgument = null;
+            if (includeReferenceTypeNullability)
+                nullableAttributeArgument = nullableAttribute.GetAttributeArgumentValue<byte>() ?? methodNullableContextValue ?? TypeNullableContextValue ?? ModuleNullableContextValue;
+
             object dynamicAttributeArgument = dynamicAttribute.GetAttributeArgumentValue<bool>(defaultValue: hasDynamicAttribute);
 
             WriteTypeName(type, noSpace, useTypeKeywords, omitGenericTypeList, nullableAttributeArgument, dynamicAttributeArgument, attributes?.GetValueTupleNames());

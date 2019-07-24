@@ -95,7 +95,7 @@ namespace Microsoft.Cci.Writers.CSharp
                 {
                     if (assemblyLocation != null)
                     {
-                        nullableAttributeValue = parameter.GetGenericParameterConstraintConstructorArgument(constraintIndex, assemblyLocation, CSharpCciExtensions.NullableConstructorArgumentParser);
+                        nullableAttributeValue = parameter.GetGenericParameterConstraintConstructorArgument(constraintIndex, assemblyLocation, CSharpCciExtensions.NullableConstructorArgumentParser) ?? nullableAttributeValue;
                     }
 
                     constraintIndex++;
