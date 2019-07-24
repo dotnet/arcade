@@ -1,13 +1,11 @@
 param(
   [Parameter(Mandatory=$true)][string] $InputPath,              # Full path to directory where NuGet packages to be checked are stored
   [Parameter(Mandatory=$true)][string] $ExtractPath,            # Full path to directory where the packages will be extracted during validation
-  [Parameter(Mandatory=$true)][string] $DotnetSymbolVersion     # Version of dotnet symbol to use
+  [Parameter(Mandatory=$true)][string] $DotnetSymbolVersion,    # Version of dotnet symbol to use
+  [switch] $JustSetup                                           # If set the script will just install dotnet-symbol
 )
 
-$ErrorActionPreference = "Stop"
-Set-StrictMode -Version 2.0
-
-. $PSScriptRoot\..\tools.ps1
+. $PSScriptRoot\post-build-utils.ps1
 
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 
@@ -162,21 +160,29 @@ function CheckSymbolsAvailable {
     }
 }
 
-function CheckExitCode ([string]$stage) {
-  $exitCode = $LASTEXITCODE
-  if ($exitCode -ne 0) {
-    Write-PipelineTaskError "Something failed while '$stage'. Check for errors above. Exiting now..."
-    ExitWithExitCode $exitCode
+function Installdotnetsymbol {
+  $dotnetsymbolPackageName = "dotnet-symbol"
+
+  $dotnetRoot = InitializeDotNetCli -install:$true
+  $dotnet = "$dotnetRoot\dotnet.exe"
+  $toolList = & "$dotnet" tool list --global
+
+  if (($toolList -like "*$dotnetsymbolPackageName*") -and ($toolList -like "*$dotnetsymbolVersion*")) {
+    Write-Host "dotnet-symbol version $dotnetsymbolVersion is already installed."
+  }
+  else {
+    Write-Host "Installing dotnet-symbol version $dotnetsymbolVersion..."
+    Write-Host "You may need to restart your command window if this is the first dotnet tool you have installed."
+    & "$dotnet" tool install $dotnetsymbolPackageName --version $dotnetsymbolVersion --verbosity "minimal" --global
   }
 }
 
 try {
-  Write-Host "Installing dotnet symbol ..."
-  Get-Location
-  . $PSScriptRoot\dotnetsymbol-init.ps1 -dotnetsymbolVersion $DotnetSymbolVersion
-  CheckExitCode "Running dotnetsymbol-init"
+  Installdotnetsymbol
 
-  CheckSymbolsAvailable
+  if (-not $JustSetup) {
+    CheckSymbolsAvailable
+  }
 }
 catch {
   Write-Host $_
