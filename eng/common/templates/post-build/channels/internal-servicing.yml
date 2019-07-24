@@ -87,12 +87,18 @@ stages:
             /p:StaticInternalFeed=$(dotnetfeed-internal-nonstable-feed-url)
             /p:NugetPath=$(Agent.BuildDirectory)\Nuget\NuGet.exe
             /p:BARBuildId=$(BARBuildId) 
-            /p:MaestroApiEndpoint='https://maestro-prod.westus2.cloudapp.azure.com'
-            /p:BuildAssetRegistryToken='$(MaestroAccessToken)' 
+            /p:MaestroApiEndpoint='https://maestro-int.westus2.cloudapp.azure.com'
+            /p:BuildAssetRegistryToken='$(MaestroAccessTokenInt)' 
             /p:ManifestsBasePath='$(Build.ArtifactStagingDirectory)/AssetManifests/' 
             /p:BlobBasePath='$(Build.ArtifactStagingDirectory)\BlobArtifacts' 
             /p:PackageBasePath='$(Build.ArtifactStagingDirectory)\PackageArtifacts' 
             /p:Configuration=Release 
+            /p:CreateTestConfig=true
+            /p:TestFeedCategories=NetCore
+            /p:TestFeedURL=https://dotnetfeed.blob.core.windows.net/cesar-test4/index.json
+            /p:TestFeedName=cesar-test4
+            /p:TestFeedType=AzureStorageFeed
+            /p:TestFeedToken=$(dotnetfeed-storage-access-key-1)
         
       - task: NuGetCommand@2
         displayName: Publish Packages to AzDO Feed

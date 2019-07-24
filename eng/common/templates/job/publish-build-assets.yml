@@ -53,8 +53,8 @@ jobs:
         filePath: eng\common\sdk-task.ps1
         arguments: -task PublishBuildAssets -restore -msbuildEngine dotnet
           /p:ManifestsPath='$(Build.StagingDirectory)/Download/AssetManifests'
-          /p:BuildAssetRegistryToken=$(MaestroAccessToken)
-          /p:MaestroApiEndpoint=https://maestro-prod.westus2.cloudapp.azure.com
+          /p:BuildAssetRegistryToken=$(MaestroAccessTokenInt)
+          /p:MaestroApiEndpoint=https://maestro-int.westus2.cloudapp.azure.com
           /p:PublishUsingPipelines=${{ parameters.publishUsingPipelines }}
           /p:Configuration=$(_BuildConfig)
       condition: ${{ parameters.condition }}
