@@ -1,14 +1,16 @@
 param(
   [Parameter(Mandatory=$true)][int] $BuildId,
   [Parameter(Mandatory=$true)][int] $ChannelId,
-  [Parameter(Mandatory=$true)][string] $MaestroAccessToken
+  [Parameter(Mandatory=$true)][string] $MaestroAccessToken,
+  [Parameter(Mandatory=$false)][string] $MaestroApiEndPoint = "https://maestro-int.westus2.cloudapp.azure.com",      # Maestro API URL
+  [Parameter(Mandatory=$false)][string] $MaestroApiVersion = "2019-01-16"                                            # Version of Maestro API to use
 )
 
 . $PSScriptRoot\post-build-utils.ps1
 
 try {
   # Check that the channel we are going to promote the build to exist
-  $channelInfo = Get-MaestroChannel -ChannelId $ChannelId -MaestroAccessToken $MaestroAccessToken
+  $channelInfo = Get-MaestroChannel -ChannelId $ChannelId
 
   if (!$channelInfo) {
     Write-Host "Channel with BAR ID $ChannelId was not found in BAR!"
@@ -16,7 +18,7 @@ try {
   }
 
   # Get info about which channels the build has already been promoted to
-  $buildInfo = Get-MaestroBuild -BuildId $BuildId -MaestroAccessToken $MaestroAccessToken
+  $buildInfo = Get-MaestroBuild -BuildId $BuildId
   
   if (!$buildInfo) {
     Write-Host "Build with BAR ID $BuildId was not found in BAR!"
@@ -35,7 +37,7 @@ try {
 
   Write-Host "Promoting build '$BuildId' to channel '$ChannelId'."
 
-  Assign-BuildToChannel -BuildId $BuildId -ChannelId $ChannelId -MaestroAccessToken $MaestroAccessToken
+  Assign-BuildToChannel -BuildId $BuildId -ChannelId $ChannelId
 
   Write-Host "done."
 } 

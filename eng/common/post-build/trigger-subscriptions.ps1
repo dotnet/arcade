@@ -1,14 +1,16 @@
 param(
   [Parameter(Mandatory=$true)][string] $SourceRepo,
   [Parameter(Mandatory=$true)][int] $ChannelId,
-  [Parameter(Mandatory=$true)][string] $MaestroAccessToken
+  [Parameter(Mandatory=$true)][string] $MaestroAccessToken,
+  [Parameter(Mandatory=$false)][string] $MaestroApiEndPoint = "https://maestro-int.westus2.cloudapp.azure.com",      # Maestro API URL
+  [Parameter(Mandatory=$false)][string] $MaestroApiVersion = "2019-01-16"                                            # Version of Maestro API to use
 )
 
 . $PSScriptRoot\post-build-utils.ps1
 
 # Get all the $SourceRepo subscriptions
 $normalizedSourceRepo = $SourceRepo.Replace('dnceng@', '')
-$subscriptions = Get-MaestroSubscriptions -SourceRepository $normalizedSourceRepo -ChannelId $ChannelId -MaestroAccessToken $MaestroAccessToken
+$subscriptions = Get-MaestroSubscriptions -SourceRepository $normalizedSourceRepo -ChannelId $ChannelId
 
 if (!$subscriptions) {
   Write-Host "No subscriptions found for source repo '$normalizedSourceRepo' in channel '$ChannelId'"
@@ -30,7 +32,7 @@ foreach ($subscriptionToTrigger in $subscriptionsToTrigger) {
   try {
     Write-Host "Triggering subscription '$subscriptionToTrigger'."
 
-    Trigger-Subscription -SubscriptionId $subscriptionToTrigger -MaestroAccessToken $MaestroAccessToken
+    Trigger-Subscription -SubscriptionId $subscriptionToTrigger
   
     Write-Host "done."
   } 
