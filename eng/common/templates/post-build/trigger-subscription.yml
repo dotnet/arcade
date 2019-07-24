@@ -4,8 +4,6 @@ parameters:
 steps:
 - task: PowerShell@2
   displayName: Triggering subscriptions
-  variables:
-    - group: Publish-Build-Assets
   inputs:
     filePath: $(Build.SourcesDirectory)/eng/common/post-build/trigger-subscriptions.ps1
     arguments: -SourceRepo $(Build.Repository.Uri)
