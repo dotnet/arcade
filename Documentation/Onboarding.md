@@ -1,10 +1,12 @@
 # Onboarding onto Arcade
 
-- Onboard onto the arcade SDK, which provides templates (building blocks) for
+- Onboard onto the Arcade SDK, which provides templates (building blocks) for
   interacting with Azure DevOps, as well as shared tooling for signing,
-  packaging, publishing and general build infrastructure.  (Here's a [video of a walkthrough](https://msit.microsoftstream.com/video/e22d2dad-ef72-4cca-9b62-7e33621f86a1) which might help too)
+  packaging, publishing and general build infrastructure.  
+  
+  Resources: [Reference documentation](ArcadeSdk.md), [walkthough video](https://msit.microsoftstream.com/video/e22d2dad-ef72-4cca-9b62-7e33621f86a1), [feature documentation](CorePackages/).
 
-    **Arcade SDK onboarding**
+   Steps:
     1. Add a
        [global.json](https://github.com/dotnet/arcade-minimalci-sample/blob/master/global.json).
     2. Add (or copy)
@@ -20,7 +22,7 @@
        [Version.Details.xml](https://github.com/dotnet/arcade-minimalci-sample/blob/master/eng/Version.Details.xml)
        files to your eng\ folder. Adjust the version prefix and prerelease label
        as necessary.
-    5. Add dotnet-core feed to
+    5. Add dotnet-core feed and any other feeds that the repository restores NuGet packages from to
        [NuGet.config](https://github.com/dotnet/arcade-minimalci-sample/blob/master/NuGet.config).
     6. Must have a root project/solution file for the repo to build.
     7. Additional package feeds can be added to the `eng\Version.props` file, e.g.

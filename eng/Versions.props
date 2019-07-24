@@ -73,12 +73,4 @@
     <MicrosoftDotNetMaestroClientVersion>1.1.0-beta.19374.3</MicrosoftDotNetMaestroClientVersion>
     <MicrosoftDotNetSwaggerGeneratorMSBuildVersion>1.0.0-beta.19372.10</MicrosoftDotNetSwaggerGeneratorMSBuildVersion>
   </PropertyGroup>
-  <PropertyGroup>
-    <RestoreSources>
-      $(RestoreSources);
-      https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json;
-      https://dotnet.myget.org/F/symreader-converter/api/v3/index.json;
-      https://dotnet.myget.org/F/symreader/api/v3/index.json
-    </RestoreSources>
-  </PropertyGroup>
 </Project>
