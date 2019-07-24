@@ -93,15 +93,15 @@
 
   <!-- Yields an existing archive that will fail if ArchivePayload doesn't work -->
   <Target Name="ZipPrexistingArchive" BeforeTargets="Build">
-      <MakeDir Directories="$(TMP)\correlationarchivepayload" /> 
+      <MakeDir Directories="$(IntermediateOutputPath)\correlationarchivepayload" /> 
       <WriteLinesToFile
-           File="$(TMP)\correlationarchivepayload\testArchivePayload.txt"
+           File="$(IntermediateOutputPath)\correlationarchivepayload\testArchivePayload.txt"
            Lines="I am a test Archive Payload"
            Overwrite="true" />
       <ZipDirectory Overwrite="True"
-          SourceDirectory="$(TMP)\correlationarchivepayload"
+          SourceDirectory="$(IntermediateOutputPath)\correlationarchivepayload"
           DestinationFile="$(MSBuildProjectDirectory)\archivepayload.zip" />
-      <RemoveDir Directories="$(TMP)\correlationarchivepayload" />
+      <RemoveDir Directories="$(IntermediateOutputPath)\correlationarchivepayload" />
   </Target>
   <!-- Attach the ArchivePayload to all Helix work items to validate uploading them (and via logs whether caching occurs) -->
   <ItemGroup>
