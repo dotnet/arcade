@@ -2,7 +2,7 @@ param(
   [Parameter(Mandatory=$true)][int] $BarBuildId,                # ID of the build which assets should be downloaded
   [Parameter(Mandatory=$true)][string] $DropLocation,           # Where the assets should be downloaded to
   [Parameter(Mandatory=$true)][string] $MaestroAccessToken,     # Token used to access Maestro API
-  [Parameter(Mandatory=$false)][string] $MaestroApiEndPoint = "https://maestro-int.westus2.cloudapp.azure.com",      # Maestro API URL
+  [Parameter(Mandatory=$false)][string] $MaestroApiEndPoint = "https://maestro-prod.westus2.cloudapp.azure.com",      # Maestro API URL
   [Parameter(Mandatory=$false)][string] $MaestroApiVersion = "2019-01-16"                                            # Version of Maestro API to use
 )
 

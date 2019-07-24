@@ -22,3 +22,5 @@ jobs:
         arguments: -BuildId $(BARBuildId) 
           -ChannelId $(ChannelId) 
           -MaestroAccessToken $(MaestroAccessToken)
+          -MaestroApiEndPoint $(MaestroApiEndPoint)
+          -MaestroApiVersion $(MaestroApiVersion)

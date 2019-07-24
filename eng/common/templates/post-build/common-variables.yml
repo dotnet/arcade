@@ -17,5 +17,9 @@ variables:
   # Storage account name for proxy-backed feeds
   ProxyBackedFeedsAccountName: dotnetfeed
 
+  # Default Maestro++ API Endpoint and API Version
+  MaestroApiEndPoint: "https://maestro-int.westus2.cloudapp.azure.com"
+  MaestroApiVersion: "2019-01-16"
+
   SourceLinkCLIVersion: 3.0.0
   SymbolToolVersion: 1.0.1
