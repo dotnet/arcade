@@ -80,6 +80,13 @@ function DownloadAndExtract {
     if ($UnzipRetryStatus -Eq $False)
     {
       Write-Error "Last attempt of unzip failed as well"
+      # Clean up partial zips and extracts
+      if (Test-Path $TempToolPath) {
+        Remove-Item $TempToolPath -Force
+      }
+      if (Test-Path $InstallDirectory) {
+        Remove-Item $InstallDirectory -Force -Recurse
+      }
       return $False
     }
   }
