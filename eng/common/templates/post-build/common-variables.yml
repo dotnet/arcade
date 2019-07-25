@@ -1,4 +1,6 @@
 variables:
+  - group: Publish-Build-Assets
+
   # .NET Core 3 Dev
   PublicDevRelease_30_Channel_Id: 3
 
@@ -19,6 +21,7 @@ variables:
 
   # Default Maestro++ API Endpoint and API Version
   MaestroApiEndPoint: "https://maestro-int.westus2.cloudapp.azure.com"
+  MaestroApiAccessToken: $(MaestroAccessTokenInt)
   MaestroApiVersion: "2019-01-16"
 
   SourceLinkCLIVersion: 3.0.0

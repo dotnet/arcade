@@ -21,6 +21,6 @@ jobs:
         filePath: $(Build.SourcesDirectory)/eng/common/post-build/promote-build.ps1
         arguments: -BuildId $(BARBuildId) 
           -ChannelId $(ChannelId) 
-          -MaestroAccessToken $(MaestroAccessToken)
+          -MaestroApiAccessToken $(MaestroApiAccessToken)
           -MaestroApiEndPoint $(MaestroApiEndPoint)
           -MaestroApiVersion $(MaestroApiVersion)

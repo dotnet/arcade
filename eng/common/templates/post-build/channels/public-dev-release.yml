@@ -87,8 +87,8 @@ stages:
             /p:TargetFeedPAT='$(dn-bot-dnceng-unviersal-packages-rw)' 
             /p:AzureStorageTargetFeedPAT='$(dotnetfeed-storage-access-key-1)' 
             /p:BARBuildId=$(BARBuildId) 
-            /p:MaestroApiEndpoint='https://maestro-int.westus2.cloudapp.azure.com'
-            /p:BuildAssetRegistryToken='$(MaestroAccessTokenInt)' 
+            /p:MaestroApiEndpoint='$(MaestroApiEndPoint)' 
+            /p:BuildAssetRegistryToken='$(MaestroApiAccessToken)' 
             /p:ManifestsBasePath='$(Build.ArtifactStagingDirectory)/AssetManifests/' 
             /p:BlobBasePath='$(Build.ArtifactStagingDirectory)/BlobArtifacts/' 
             /p:PackageBasePath='$(Build.ArtifactStagingDirectory)/PackageArtifacts/' 

@@ -1,5 +1,5 @@
 # Most of the functions in this file require the variables `MaestroApiEndPoint`, 
-# `MaestroApiVersion` and `MaestroAccessToken` to be globally available.
+# `MaestroApiVersion` and `MaestroApiAccessToken` to be globally available.
 
 $ErrorActionPreference = "Stop"
 Set-StrictMode -Version 2.0
@@ -13,7 +13,7 @@ $ci = $true
 function Create-MaestroApiRequestHeaders([string]$ContentType = "application/json") {
   $headers = New-Object 'System.Collections.Generic.Dictionary[[String],[String]]'
   $headers.Add('Accept', $ContentType)
-  $headers.Add('Authorization',"Bearer $MaestroAccessToken")
+  $headers.Add('Authorization',"Bearer $MaestroApiAccessToken")
   return $headers
 }
 
@@ -26,7 +26,7 @@ function Get-MaestroChannel([int]$ChannelId) {
 }
 
 function Get-MaestroBuild([int]$BuildId) {
-  $apiHeaders = Create-MaestroApiRequestHeaders -AuthToken $MaestroAccessToken
+  $apiHeaders = Create-MaestroApiRequestHeaders -AuthToken $MaestroApiAccessToken
   $apiEndpoint = "$MaestroApiEndPoint/api/builds/${BuildId}?api-version=$MaestroApiVersion"
 
   $result = try { return Invoke-WebRequest -Method Get -Uri $apiEndpoint -Headers $apiHeaders | ConvertFrom-Json } catch { Write-Host "Error: $_" }
@@ -35,7 +35,7 @@ function Get-MaestroBuild([int]$BuildId) {
 
 function Get-MaestroSubscriptions([string]$SourceRepository, [int]$ChannelId) {
   $SourceRepository = [System.Web.HttpUtility]::UrlEncode($SourceRepository) 
-  $apiHeaders = Create-MaestroApiRequestHeaders -AuthToken $MaestroAccessToken
+  $apiHeaders = Create-MaestroApiRequestHeaders -AuthToken $MaestroApiAccessToken
   $apiEndpoint = "$MaestroApiEndPoint/api/subscriptions?sourceRepository=$SourceRepository&channelId=$ChannelId&api-version=$MaestroApiVersion"
 
   $result = try { Invoke-WebRequest -Method Get -Uri $apiEndpoint -Headers $apiHeaders | ConvertFrom-Json } catch { Write-Host "Error: $_" }
@@ -43,13 +43,13 @@ function Get-MaestroSubscriptions([string]$SourceRepository, [int]$ChannelId) {
 }
 
 function Trigger-Subscription([string]$SubscriptionId) {
-  $apiHeaders = Create-MaestroApiRequestHeaders -AuthToken $MaestroAccessToken
+  $apiHeaders = Create-MaestroApiRequestHeaders -AuthToken $MaestroApiAccessToken
   $apiEndpoint = "$MaestroApiEndPoint/api/subscriptions/$SubscriptionId/trigger?api-version=$MaestroApiVersion"
   Invoke-WebRequest -Uri $apiEndpoint -Headers $apiHeaders -Method Post | Out-Null
 }
 
 function Assign-BuildToChannel([int]$BuildId, [int]$ChannelId) {
-  $apiHeaders = Create-MaestroApiRequestHeaders -AuthToken $MaestroAccessToken
+  $apiHeaders = Create-MaestroApiRequestHeaders -AuthToken $MaestroApiAccessToken
   $apiEndpoint = "$MaestroApiEndPoint/api/channels/${ChannelId}/builds/${BuildId}?api-version=$MaestroApiVersion"
   Invoke-WebRequest -Method Post -Uri $apiEndpoint -Headers $apiHeaders | Out-Null
 }
