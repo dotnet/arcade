@@ -16,13 +16,12 @@ namespace Microsoft.DotNet.Helix.Client
         IJobDefinition WithCorrelationPayloadArchive(string archive, string destination = "");
         IJobDefinition WithCorrelationPayloadFiles(params string[] files);
         IJobDefinition WithCorrelationPayloadFiles(IList<string> files, string destination);
+        IJobDefinition WithSource(string source);
         IJobDefinition WithProperty(string key, string value);
         IJobDefinition WithCreator(string creator);
         IJobDefinition WithContainerName(string targetContainerName);
         IJobDefinition WithStorageAccountConnectionString(string accountConnectionString);
         IJobDefinition WithResultsContainerName(string resultsContainerName);
-        IJobDefinition WithResultsStorageAccountConnectionString(string resultsAccountConnectionString);
-        IJobDefinition WithDefaultResultsContainer();
         IJobDefinition WithMaxRetryCount(int? maxRetryCount);
         Task<ISentJob> SendAsync(Action<string> log = null);
     }

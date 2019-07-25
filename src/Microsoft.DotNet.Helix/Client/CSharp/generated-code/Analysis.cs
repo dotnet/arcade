@@ -67,6 +67,18 @@ namespace Microsoft.DotNet.Helix.Client
             }
         }
 
+        internal async Task OnSetReasonFailed(HttpRequestMessage req, HttpResponseMessage res)
+        {
+            var content = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
+            var ex = new RestApiException(
+                new HttpRequestMessageWrapper(req, content),
+                new HttpResponseMessageWrapper(res, content));
+            HandleFailedSetReasonRequest(ex);
+            HandleFailedRequest(ex);
+            Client.OnFailedRequest(ex);
+            throw ex;
+        }
+
         internal async Task<HttpOperationResponse> SetReasonInternalAsync(
             string analysisName,
             string analysisType,
@@ -102,7 +114,7 @@ namespace Microsoft.DotNet.Helix.Client
             }
 
 
-            var _path = "/api/2018-03-14/analysis/{job}/{analysisType}/reason";
+            var _path = "/api/2019-06-17/analysis/{job}/{analysisType}/reason";
             _path = _path.Replace("{job}", Client.Serialize(job));
             _path = _path.Replace("{analysisType}", Client.Serialize(analysisType));
 
@@ -146,19 +158,11 @@ namespace Microsoft.DotNet.Helix.Client
                 }
 
                 _res = await Client.SendAsync(_req, cancellationToken).ConfigureAwait(false);
-                string _responseContent;
                 if (!_res.IsSuccessStatusCode)
                 {
-                    _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
-                    var ex = new RestApiException(
-                        new HttpRequestMessageWrapper(_req, _requestContent),
-                        new HttpResponseMessageWrapper(_res, _responseContent));
-                    HandleFailedSetReasonRequest(ex);
-                    HandleFailedRequest(ex);
-                    Client.OnFailedRequest(ex);
-                    throw ex;
+                    await OnSetReasonFailed(_req, _res);
                 }
-                _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
+                string _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
                 return new HttpOperationResponse
                 {
                     Request = _req,
@@ -195,6 +199,18 @@ namespace Microsoft.DotNet.Helix.Client
             }
         }
 
+        internal async Task OnGetDetailsFailed(HttpRequestMessage req, HttpResponseMessage res)
+        {
+            var content = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
+            var ex = new RestApiException(
+                new HttpRequestMessageWrapper(req, null),
+                new HttpResponseMessageWrapper(res, content));
+            HandleFailedGetDetailsRequest(ex);
+            HandleFailedRequest(ex);
+            Client.OnFailedRequest(ex);
+            throw ex;
+        }
+
         internal async Task<HttpOperationResponse<Newtonsoft.Json.Linq.JToken>> GetDetailsInternalAsync(
             string analysisName,
             string analysisType,
@@ -224,7 +240,7 @@ namespace Microsoft.DotNet.Helix.Client
             }
 
 
-            var _path = "/api/2018-03-14/analysis/{job}/{analysisType}";
+            var _path = "/api/2019-06-17/analysis/{job}/{analysisType}";
             _path = _path.Replace("{job}", Client.Serialize(job));
             _path = _path.Replace("{analysisType}", Client.Serialize(analysisType));
 
@@ -255,19 +271,11 @@ namespace Microsoft.DotNet.Helix.Client
                 }
 
                 _res = await Client.SendAsync(_req, cancellationToken).ConfigureAwait(false);
-                string _responseContent;
                 if (!_res.IsSuccessStatusCode)
                 {
-                    _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
-                    var ex = new RestApiException(
-                        new HttpRequestMessageWrapper(_req, null),
-                        new HttpResponseMessageWrapper(_res, _responseContent));
-                    HandleFailedGetDetailsRequest(ex);
-                    HandleFailedRequest(ex);
-                    Client.OnFailedRequest(ex);
-                    throw ex;
+                    await OnGetDetailsFailed(_req, _res);
                 }
-                _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
+                string _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
                 return new HttpOperationResponse<Newtonsoft.Json.Linq.JToken>
                 {
                     Request = _req,

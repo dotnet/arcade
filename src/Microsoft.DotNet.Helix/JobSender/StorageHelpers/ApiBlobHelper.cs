@@ -24,11 +24,11 @@ namespace Microsoft.DotNet.Helix.Client
             _helixApi = ((IServiceOperations<HelixApi>) helixApiStorage).Client;
         }
 
-        public async Task<IBlobContainer> GetContainerAsync(string requestedName)
+        public async Task<IBlobContainer> GetContainerAsync(string requestedName, string targetQueue)
         {
             ContainerInformation info = await _helixApi.RetryAsync(
                 () => _helixApiStorage.NewAsync(
-                    new ContainerCreationRequest{DesiredName = requestedName, ExpirationInDays = 30}),
+                    new ContainerCreationRequest(30, requestedName, targetQueue)),
                 ex => { },
                 CancellationToken.None);
             var client = new CloudBlobClient(new Uri($"https://{info.StorageAccountName}.blob.core.windows.net/"), new StorageCredentials(info.WriteToken));
