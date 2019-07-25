@@ -7,8 +7,10 @@ jobs:
   dependsOn: setupMaestroVars
   condition: contains(dependencies.setupMaestroVars.outputs['setReleaseVars.InitialChannels'], ${{ parameters.ChannelId }})
   variables:
-    - BARBuildId: $[ dependencies.setupMaestroVars.outputs['setReleaseVars.BARBuildId'] ]
-    - ChannelId: ${{ parameters.ChannelId }}
+    - name: BARBuildId
+      value: $[ dependencies.setupMaestroVars.outputs['setReleaseVars.BARBuildId'] ]
+    - name: ChannelId
+      value: ${{ parameters.ChannelId }}
   pool:
     vmImage: 'windows-2019'
   steps:
