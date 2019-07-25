@@ -16,7 +16,6 @@
     <TestRunNamePrefix>$(AGENT_JOBNAME)</TestRunNamePrefix>
 
     <EnableXUnitReporter>true</EnableXUnitReporter>
-    <FailOnMissionControlTestFailure>true</FailOnMissionControlTestFailure>
   </PropertyGroup>
 
   <ItemGroup>
