@@ -24,6 +24,7 @@ Target completion date is 8/13/2019.
 | CLICommandLineParser       | licavalc         | On track | ➖ | |
 | CoreClr                    | russellk         | On track | ➖ | |
 | CoreFx                     | danmose          | On track | ➖ | |
+| IoT                        | joperezr         | Complete | ✔️ | |
 | Core-SDK                   | licavalc         | On track | ➖ | |
 | Core-Setup                 | dleeapho         | On track | ➖ | |
 | FSharp                     | brettfo          | On track | ➖ | |
