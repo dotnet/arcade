@@ -20,7 +20,7 @@ variables:
   - name: _PublishUsingPipelines
     value: true
   - name: _DotNetArtifactsCategory
-    value: .NETCore
+    value: .NETCoreValidation
 
 resources:
   containers:
