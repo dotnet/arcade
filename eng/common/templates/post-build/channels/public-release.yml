@@ -41,7 +41,6 @@ stages:
     dependsOn: setupMaestroVars
     variables:
       - group: DotNet-Blob-Feed
-      - group: Publish-Build-Assets
       - group: AzureDevOps-Artifact-Feeds-Pats
       - name: BARBuildId
         value: $[ dependencies.setupMaestroVars.outputs['setReleaseVars.BARBuildId'] ]
