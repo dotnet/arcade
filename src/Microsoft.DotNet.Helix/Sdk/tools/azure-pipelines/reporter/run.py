@@ -2,8 +2,6 @@ import os
 import sys
 import traceback
 import logging
-import helix.logs
-import helix.settings
 from queue import Queue
 from threading import Thread
 from typing import Tuple, Optional
@@ -63,53 +61,43 @@ def process_args() -> Tuple[str, str, str, Optional[str]]:
 
 
 def main():
-    log_path = os.path.join(helix.settings.log_root, str(uuid.uuid4()) + '.log')
     logging.basicConfig(
         format='%(asctime)s: %(levelname)s: %(module)s(%(lineno)d): %(funcName)s: %(message)s',
         level=logging.DEBUG,
         handlers=[
-            logging.StreamHandler(),
-            logging.FileHandler(log_path)
+            logging.StreamHandler()
         ]
     )
     log = logging.getLogger(__name__)
 
-    try:
-        collection_uri, team_project, test_run_id, access_token = process_args()
+    collection_uri, team_project, test_run_id, access_token = process_args()
 
-        worker_count = 10
-        q = Queue()
+    worker_count = 10
+    q = Queue()
 
-        log.info("Main thread starting {0} workers".format(worker_count))
+    log.info("Main thread starting {0} workers".format(worker_count))
 
-        for i in range(worker_count):
-            worker = UploadWorker(q, i, collection_uri, team_project, test_run_id, access_token)
-            worker.daemon = True
-            worker.start()
+    for i in range(worker_count):
+        worker = UploadWorker(q, i, collection_uri, team_project, test_run_id, access_token)
+        worker.daemon = True
+        worker.start()
 
-        log.info("Beginning reading of test results.")
+    log.info("Beginning reading of test results.")
 
-        all_results = read_results(os.getcwd())
-        batch_size = 1000
-        batches = batch(all_results, batch_size)
+    all_results = read_results(os.getcwd())
+    batch_size = 1000
+    batches = batch(all_results, batch_size)
 
-        log.info("Uploading results in batches of size {}".format(batch_size))
+    log.info("Uploading results in batches of size {}".format(batch_size))
 
-        for b in batches:
-            q.put(b)
+    for b in batches:
+        q.put(b)
 
-        log.info("Main thread finished queueing batches")
+    log.info("Main thread finished queueing batches")
 
-        q.join()
+    q.join()
 
-        log.info("Main thread exiting")
-    
-    finally:
-        for h in log.handlers:
-            if isinstance(h, logging.FileHandler):
-                h.flush()
-                helix.logs._upload_single_log(helix.settings, h.baseFilename)
-
+    log.info("Main thread exiting")
 
 if __name__ == '__main__':
     main()
