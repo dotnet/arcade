@@ -15,7 +15,7 @@ Target completion date is 8/13/2019.
 | Arcade-Validation          | mawilkie         | Complete | ✔️ | |
 | aspnet-AspLabs             | dougbu/johluo    | On track | ➖ | |
 | aspnet-AspNetCore          | dougbu/johluo    | On track | ➖ | |
-| aspnet-AspNetCore-Tooling  | dougbu/johluo    | On track | ➖ | |
+| aspnet-AspNetCore-Tooling  | dougbu/johluo    | Complete | ✔️ | |
 | aspnet-EntityFramework6    | dougbu/johluo    | On track | ➖ | |
 | aspnet-EntityFrameworkCore | dougbu/johluo    | On track | ➖ | |
 | aspnet-Blazor              | dougbu/johluo    | On track | ➖ | |
