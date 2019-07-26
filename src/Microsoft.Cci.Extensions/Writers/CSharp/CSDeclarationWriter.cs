@@ -14,7 +14,7 @@ using System.Linq;
 
 namespace Microsoft.Cci.Writers.CSharp
 {
-    public partial class CSDeclarationWriter : ICciDeclarationWriter
+    public partial class CSDeclarationWriter : ICciDeclarationWriter, IDisposable
     {
         public static readonly Version LangVersion7_0 = new Version(7, 0);
         public static readonly Version LangVersion7_3 = new Version(7, 3);
@@ -23,6 +23,8 @@ namespace Microsoft.Cci.Writers.CSharp
         public static readonly Version LangVersionDefault = LangVersion7_0;
         public static readonly Version LangVersionLatest = LangVersion7_3;
         public static readonly Version LangVersionPreview = LangVersion8_0;
+
+        public static SRMetadataPEReaderCache MetadataReaderCache { get; private set; }
 
         private readonly ISyntaxWriter _writer;
         private readonly ICciFilter _filter;
@@ -52,6 +54,7 @@ namespace Microsoft.Cci.Writers.CSharp
             _platformNotSupportedExceptionMessage = null;
             _includeFakeAttributes = false;
             _alwaysIncludeBase = false;
+            MetadataReaderCache = new SRMetadataPEReaderCache();
         }
 
         public CSDeclarationWriter(ISyntaxWriter writer, ICciFilter filter, bool forCompilation, bool includePseudoCustomAttributes = false)
@@ -516,6 +519,11 @@ namespace Microsoft.Cci.Writers.CSharp
         private void WriteList<T>(IEnumerable<T> list, Action<T> writeItem)
         {
             _writer.WriteList(list, writeItem);
+        }
+
+        public void Dispose()
+        {
+            MetadataReaderCache.Dispose();
         }
     }
 }

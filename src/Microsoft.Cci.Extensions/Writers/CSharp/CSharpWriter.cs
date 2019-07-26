@@ -14,7 +14,7 @@ using Microsoft.Cci.Writers.Syntax;
 
 namespace Microsoft.Cci.Writers
 {
-    public class CSharpWriter : SimpleTypeMemberTraverser, ICciWriter
+    public class CSharpWriter : SimpleTypeMemberTraverser, ICciWriter, IDisposable
     {
         private readonly ISyntaxWriter _syntaxWriter;
         private readonly IStyleSyntaxWriter _styleWriter;
@@ -320,6 +320,11 @@ namespace Microsoft.Cci.Writers
                 return "Nested Types";
 
             return null;
+        }
+
+        public void Dispose()
+        {
+            _declarationWriter?.Dispose();
         }
     }
 }

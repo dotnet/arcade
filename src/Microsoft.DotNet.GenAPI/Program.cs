@@ -80,10 +80,21 @@ namespace Microsoft.DotNet.GenAPI
                         using (TextWriter output = GetOutput(GetFilename(assembly, writerType.ParsedValue, syntaxWriterType.ParsedValue)))
                         using (IStyleSyntaxWriter syntaxWriter = GetSyntaxWriter(output, writerType.ParsedValue, syntaxWriterType.ParsedValue))
                         {
-                            if (headerText != null)
-                                output.Write(headerText);
-                            ICciWriter writer = GetWriter(output, syntaxWriter);
-                            writer.WriteAssemblies(new IAssembly[] { assembly });
+                            ICciWriter writer = null;
+                            try
+                            {
+                                if (headerText != null)
+                                    output.Write(headerText);
+                                writer = GetWriter(output, syntaxWriter);
+                                writer.WriteAssemblies(new IAssembly[] { assembly });
+                            }
+                            finally
+                            {
+                                if (writer is CSharpWriter csWriter)
+                                {
+                                    csWriter.Dispose();
+                                }
+                            }
                         }
                     }
                 }
@@ -92,10 +103,21 @@ namespace Microsoft.DotNet.GenAPI
                     using (TextWriter output = GetOutput(outFilePath.Value()))
                     using (IStyleSyntaxWriter syntaxWriter = GetSyntaxWriter(output, writerType.ParsedValue, syntaxWriterType.ParsedValue))
                     {
-                        if (headerText != null)
-                            output.Write(headerText);
-                        ICciWriter writer = GetWriter(output, syntaxWriter);
-                        writer.WriteAssemblies(assemblies);
+                        ICciWriter writer = null;
+                        try
+                        {
+                            if (headerText != null)
+                                output.Write(headerText);
+                            writer = GetWriter(output, syntaxWriter);
+                            writer.WriteAssemblies(assemblies);
+                        }
+                        finally
+                        {
+                            if (writer is CSharpWriter csWriter)
+                            {
+                                csWriter.Dispose();
+                            }
+                        }
                     }
                 }
 

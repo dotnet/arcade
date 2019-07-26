@@ -763,10 +763,9 @@ namespace Microsoft.Cci.Extensions.CSharp
 
         public static object GetInterfaceImplementationAttributeConstructorArgument(this ITypeReference interfaceImplementation, uint typeDefinitionToken, string assemblyPath, Func<SRMetadataReader, CustomAttribute, (bool, object)> argumentResolver)
         {
-            using (FileStream stream = File.OpenRead(assemblyPath))
-            using (PEReader peFile = new PEReader(stream))
+            if (CSDeclarationWriter.MetadataReaderCache != null)
             {
-                SRMetadataReader metadataReader = peFile.GetMetadataReader();
+                SRMetadataReader metadataReader = CSDeclarationWriter.MetadataReaderCache.GetMetadataReader(assemblyPath);
                 int rowId = GetRowId(typeDefinitionToken);
                 TypeDefinition typeDefinition = metadataReader.GetTypeDefinition(MetadataTokens.TypeDefinitionHandle(rowId));
 
@@ -784,10 +783,9 @@ namespace Microsoft.Cci.Extensions.CSharp
 
         public static object GetGenericParameterConstraintConstructorArgument(this IGenericParameter parameter, int constraintIndex, string assemblyPath, Func<SRMetadataReader, CustomAttribute, (bool, object)> argumentResolver)
         {
-            using (FileStream stream = File.OpenRead(assemblyPath))
-            using (PEReader peFile = new PEReader(stream))
+            if (CSDeclarationWriter.MetadataReaderCache != null)
             {
-                SRMetadataReader metadataReader = peFile.GetMetadataReader();
+                SRMetadataReader metadataReader = CSDeclarationWriter.MetadataReaderCache.GetMetadataReader(assemblyPath);
                 uint token = ((IMetadataObjectWithToken)parameter).TokenValue;
                 int rowId = GetRowId(token);
                 GenericParameter genericParameter = metadataReader.GetGenericParameter(MetadataTokens.GenericParameterHandle(rowId));
@@ -795,6 +793,7 @@ namespace Microsoft.Cci.Extensions.CSharp
                 return GetCustomAttributeArgument(metadataReader, constraint.GetCustomAttributes(), argumentResolver);
             }
 
+            return null;
         }
 
         private static object GetCustomAttributeArgument(SRMetadataReader metadataReader, CustomAttributeHandleCollection customAttributeHandles, Func<SRMetadataReader, CustomAttribute, (bool, object)> argumentResolver)
