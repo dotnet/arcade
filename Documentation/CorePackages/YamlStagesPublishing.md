@@ -24,18 +24,7 @@ In order to use this new publishing mechanism, the easiest way to start is by ma
 
 1. Disable package publishing during the build:
 
-    Set the `enablePublishUsingPipelines` template parameter to `true` when calling the `/eng/common/templates/jobs/jobs.yml` template.
-
-    ```YAML
-    jobs:
-    - template: /eng/common/templates/jobs/jobs.yml
-      parameters:
-        enablePublishUsingPipelines: true
-    ```
-
-    It is recommended to use the jobs.yml template to manage this property, as it will make sure to flow it to all the jobs and steps that require it.  The template also handles a lot of the boilerplate steps that need to be performed during the build, such as the publishing of build assets to the BAR. More information about the jobs.yml template can be found [here](../AzureDevOps/PhaseToJobSchemaChange.md#--what-is-the-engcommontemplatesjobsjobsyml-template).  If it is not possible for the repo to use the jobs.yml template, the following steps need to be performed:
-
-    * Set a variable called `_PublishUsingPipelines` with a value of `true` so that the gathering of asset manifests won't be performed during the build.
+    Set a variable called `_PublishUsingPipelines` with a value of `true` so that the gathering of asset manifests won't be performed during the build.
 
       ```YAML
       variables:
@@ -43,6 +32,17 @@ In order to use this new publishing mechanism, the easiest way to start is by ma
         value: true
         ...
       ```
+
+    Set the `enablePublishUsingPipelines` template parameter to the value of `_PublishUsingPipelines` variable  when calling the `/eng/common/templates/jobs/jobs.yml` template.
+
+    ```YAML
+    jobs:
+    - template: /eng/common/templates/jobs/jobs.yml
+      parameters:
+        enablePublishUsingPipelines: $(_PublishUsingPipelines)
+    ```
+
+    It is recommended to use the jobs.yml template to manage this property, as it will make sure to flow it to all the jobs and steps that require it.  The template also handles a lot of the boilerplate steps that need to be performed during the build, such as the publishing of build assets to the BAR. More information about the jobs.yml template can be found [here](../AzureDevOps/PhaseToJobSchemaChange.md#--what-is-the-engcommontemplatesjobsjobsyml-template).  If it is not possible for the repo to use the jobs.yml template, the following additional step needs to be performed:
 
     * Set the `publishUsingPipelines` parameter to true when calling the [publish-build-assets.yml](../../eng/common/templates/job/publish-build-assets.yml) template.
 
