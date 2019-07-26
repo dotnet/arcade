@@ -5,6 +5,7 @@
 using Microsoft.Cci.Extensions.CSharp;
 using Microsoft.Cci.Writers.Syntax;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -41,7 +42,7 @@ namespace Microsoft.Cci.Writers.CSharp
 
             foreach (IGenericParameter param in genericParams)
             {
-                var constraints = GetConstraints(param, methodNullableContextValue).ToArray();
+                Action[] constraints = GetConstraints(param, methodNullableContextValue).ToArray();
 
                 if (constraints.Length <= 0)
                     continue;

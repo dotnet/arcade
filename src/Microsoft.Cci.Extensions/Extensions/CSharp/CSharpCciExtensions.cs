@@ -752,7 +752,7 @@ namespace Microsoft.Cci.Extensions.CSharp
             if (type == null)
                 yield break;
 
-            foreach (var baseTypeRef in type.BaseClasses)
+            foreach (ITypeReference baseTypeRef in type.BaseClasses)
             {
                 yield return baseTypeRef;
 
@@ -761,6 +761,11 @@ namespace Microsoft.Cci.Extensions.CSharp
             }
         }
 
+
+        // In order to get interface implementation attributes we need to use System.Reflection.Metadata because that is a feature not exposed by CCI.
+        // Basically an interface implementation can't have attributes applied directly in IL so they're added into the custom attribute table in metadata,
+        // CCI doesn't expose APIs to read that metadata and we don't have a way to map those attributes, since we have a type reference rather than the reference
+        // to the interfaceimpl.
         public static object GetInterfaceImplementationAttributeConstructorArgument(this ITypeReference interfaceImplementation, uint typeDefinitionToken, string assemblyPath, Func<SRMetadataReader, CustomAttribute, (bool, object)> argumentResolver)
         {
             if (CSDeclarationWriter.MetadataReaderCache != null)
@@ -781,6 +786,10 @@ namespace Microsoft.Cci.Extensions.CSharp
             return null;
         }
 
+        // In order to get generic constraint attributes we need to use System.Reflection.Metadata because that is a feature not exposed by CCI.
+        // Basically a generic constraint can't have attributes applied directly in IL so they're added into the custom attribute table in metadata via
+        // the generic constraint table, CCI doesn't expose APIs to read that metadata and we don't have a way to map those attributes directly without using
+        // System.Reflection.Metadata
         public static object GetGenericParameterConstraintConstructorArgument(this IGenericParameter parameter, int constraintIndex, string assemblyPath, Func<SRMetadataReader, CustomAttribute, (bool, object)> argumentResolver)
         {
             if (CSDeclarationWriter.MetadataReaderCache != null)
@@ -824,31 +833,31 @@ namespace Microsoft.Cci.Extensions.CSharp
             return actual.SequenceEqual(other);
         }
 
-        private static bool TypeMatchesNameAndNamespace(this EntityHandle handle, ReadOnlySpan<byte> ns, ReadOnlySpan<byte> name, SRMetadataReader reader)
+        private static bool TypeMatchesNameAndNamespace(this EntityHandle handle, ReadOnlySpan<byte> @namespace, ReadOnlySpan<byte> name, SRMetadataReader reader)
         {
             switch (handle.Kind)
             {
                 case HandleKind.TypeDefinition:
                     TypeDefinition td = reader.GetTypeDefinition((TypeDefinitionHandle)handle);
-                    return !td.Namespace.IsNil && td.Namespace.Equals(ns, reader) && td.Name.Equals(name, reader);
+                    return !td.Namespace.IsNil && td.Namespace.Equals(@namespace, reader) && td.Name.Equals(name, reader);
                 case HandleKind.TypeReference:
                     TypeReference tr = reader.GetTypeReference((TypeReferenceHandle)handle);
-                    return tr.ResolutionScope.Kind != HandleKind.TypeReference && !tr.Namespace.IsNil && tr.Namespace.Equals(ns, reader) && tr.Name.Equals(name, reader);
+                    return tr.ResolutionScope.Kind != HandleKind.TypeReference && !tr.Namespace.IsNil && tr.Namespace.Equals(@namespace, reader) && tr.Name.Equals(name, reader);
                 default:
                     return false;
             }
         }
 
-        private static bool CustomAttributeTypeMatchesNameAndNamespace(this CustomAttribute attribute, ReadOnlySpan<byte> ns, ReadOnlySpan<byte> name, SRMetadataReader reader)
+        private static bool CustomAttributeTypeMatchesNameAndNamespace(this CustomAttribute attribute, ReadOnlySpan<byte> @namespace, ReadOnlySpan<byte> name, SRMetadataReader reader)
         {
             EntityHandle ctorHandle = attribute.Constructor;
             switch (ctorHandle.Kind)
             {
                 case HandleKind.MemberReference:
-                    return reader.GetMemberReference((MemberReferenceHandle)ctorHandle).Parent.TypeMatchesNameAndNamespace(ns, name, reader);
+                    return reader.GetMemberReference((MemberReferenceHandle)ctorHandle).Parent.TypeMatchesNameAndNamespace(@namespace, name, reader);
                 case HandleKind.MethodDefinition:
                     EntityHandle handle = reader.GetMethodDefinition((MethodDefinitionHandle)ctorHandle).GetDeclaringType();
-                    return handle.TypeMatchesNameAndNamespace(ns, name, reader);
+                    return handle.TypeMatchesNameAndNamespace(@namespace, name, reader);
                 default:
                     return false;
             }
