@@ -3,8 +3,7 @@ param(
   [Parameter(Mandatory=$true)][string] $ExtractPath,            # Full path to directory where the packages will be extracted during validation
   [Parameter(Mandatory=$true)][string] $GHRepoName,             # GitHub name of the repo including the Org. E.g., dotnet/arcade
   [Parameter(Mandatory=$true)][string] $GHCommit,               # GitHub commit SHA used to build the packages
-  [Parameter(Mandatory=$true)][string] $SourcelinkCliVersion,   # Version of SourceLink CLI to use
-  [switch] $JustSetup                                           # If set the script will just install sourcelink CLI
+  [Parameter(Mandatory=$true)][string] $SourcelinkCliVersion    # Version of SourceLink CLI to use
 )
 
 . $PSScriptRoot\post-build-utils.ps1
@@ -218,9 +217,7 @@ function InstallSourcelinkCli {
 try {
   InstallSourcelinkCli
 
-  if (-not $JustSetup) {
-    ValidateSourceLinkLinks 
-  }
+  ValidateSourceLinkLinks 
 }
 catch {
   Write-Host $_

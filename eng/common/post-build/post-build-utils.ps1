@@ -53,3 +53,25 @@ function Assign-BuildToChannel([int]$BuildId, [int]$ChannelId) {
   $apiEndpoint = "$MaestroApiEndPoint/api/channels/${ChannelId}/builds/${BuildId}?api-version=$MaestroApiVersion"
   Invoke-WebRequest -Method Post -Uri $apiEndpoint -Headers $apiHeaders | Out-Null
 }
+
+try {
+  Get-Variable MaestroApiEndPoint -Scope Global | Out-Null
+  Get-Variable MaestroApiVersion -Scope Global | Out-Null
+  Get-Variable MaestroApiAccessToken -Scope Global | Out-Null
+
+  if (!($MaestroApiEndPoint -Match "^http[s]?://maestro-(int|prod).westus2.cloudapp.azure.com$")) {
+    Write-PipelineTaskError "MaestroApiEndPoint is not a valid Maestro URL. '$MaestroApiEndPoint'"
+    ExitWithExitCode 1  
+  }
+
+  if (!($MaestroApiVersion -Match "^[0-9]{4}-[0-9]{2}-[0-9]{2}$")) {
+    Write-PipelineTaskError "MaestroApiVersion does not match a version string in the format yyyy-MM-DD. '$MaestroApiVersion'"
+    ExitWithExitCode 1
+  }
+
+}
+catch {
+  Write-PipelineTaskError "Error: Variables `MaestroApiEndPoint`, `MaestroApiVersion` and `MaestroApiAccessToken` are required while using this script."
+  Write-Host $_
+  ExitWithExitCode 1
+}
