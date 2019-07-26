@@ -32,7 +32,7 @@ Target completion date is 8/13/2019.
 | nuget-NugetClient          | dtivel           | On track | ➖ | |
 | Roslyn                     | jaredpar         | On track | ➖ | |
 | SDK                        | licavalc         | On track | ➖ | |
-| Standard                   | danmose          | On track | ➖ | |
+| Standard                   | danmose          | Complete | ✔️ | |
 | SymReader                  | tmat             | On track | ➖ | |
 | SymReader-Portable         | tmat             | On track | ➖ | |
 | Templating                 | vramak           | On track | ➖ | |
