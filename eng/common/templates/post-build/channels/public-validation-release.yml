@@ -63,12 +63,6 @@ stages:
             /p:BlobBasePath='$(Build.ArtifactStagingDirectory)\BlobArtifacts' 
             /p:PackageBasePath='$(Build.ArtifactStagingDirectory)\PackageArtifacts' 
             /p:Configuration=Release 
-            /p:CreateTestConfig=true
-            /p:TestFeedCategories=NetCore
-            /p:TestFeedURL=https://dotnetfeed.blob.core.windows.net/cesar-test/index.json
-            /p:TestFeedName=cesar-test
-            /p:TestFeedType=AzureStorageFeed
-            /p:TestFeedToken=$(dotnetfeed-storage-access-key-1)
 
       - task: NuGetCommand@2
         displayName: Publish Packages to AzDO Feed
