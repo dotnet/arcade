@@ -11,6 +11,8 @@ $ci = $true
 . $PSScriptRoot\..\tools.ps1
 
 function Create-MaestroApiRequestHeaders([string]$ContentType = "application/json") {
+  Validate-MaestroVars
+
   $headers = New-Object 'System.Collections.Generic.Dictionary[[String],[String]]'
   $headers.Add('Accept', $ContentType)
   $headers.Add('Authorization',"Bearer $MaestroApiAccessToken")
@@ -18,6 +20,8 @@ function Create-MaestroApiRequestHeaders([string]$ContentType = "application/jso
 }
 
 function Get-MaestroChannel([int]$ChannelId) {
+  Validate-MaestroVars
+
   $apiHeaders = Create-MaestroApiRequestHeaders
   $apiEndpoint = "$MaestroApiEndPoint/api/channels/${ChannelId}?api-version=$MaestroApiVersion"
   
@@ -26,6 +30,8 @@ function Get-MaestroChannel([int]$ChannelId) {
 }
 
 function Get-MaestroBuild([int]$BuildId) {
+  Validate-MaestroVars
+
   $apiHeaders = Create-MaestroApiRequestHeaders -AuthToken $MaestroApiAccessToken
   $apiEndpoint = "$MaestroApiEndPoint/api/builds/${BuildId}?api-version=$MaestroApiVersion"
 
@@ -34,6 +40,8 @@ function Get-MaestroBuild([int]$BuildId) {
 }
 
 function Get-MaestroSubscriptions([string]$SourceRepository, [int]$ChannelId) {
+  Validate-MaestroVars
+
   $SourceRepository = [System.Web.HttpUtility]::UrlEncode($SourceRepository) 
   $apiHeaders = Create-MaestroApiRequestHeaders -AuthToken $MaestroApiAccessToken
   $apiEndpoint = "$MaestroApiEndPoint/api/subscriptions?sourceRepository=$SourceRepository&channelId=$ChannelId&api-version=$MaestroApiVersion"
@@ -43,35 +51,40 @@ function Get-MaestroSubscriptions([string]$SourceRepository, [int]$ChannelId) {
 }
 
 function Trigger-Subscription([string]$SubscriptionId) {
+  Validate-MaestroVars
+
   $apiHeaders = Create-MaestroApiRequestHeaders -AuthToken $MaestroApiAccessToken
   $apiEndpoint = "$MaestroApiEndPoint/api/subscriptions/$SubscriptionId/trigger?api-version=$MaestroApiVersion"
   Invoke-WebRequest -Uri $apiEndpoint -Headers $apiHeaders -Method Post | Out-Null
 }
 
 function Assign-BuildToChannel([int]$BuildId, [int]$ChannelId) {
+  Validate-MaestroVars
+
   $apiHeaders = Create-MaestroApiRequestHeaders -AuthToken $MaestroApiAccessToken
   $apiEndpoint = "$MaestroApiEndPoint/api/channels/${ChannelId}/builds/${BuildId}?api-version=$MaestroApiVersion"
   Invoke-WebRequest -Method Post -Uri $apiEndpoint -Headers $apiHeaders | Out-Null
 }
 
-try {
-  Get-Variable MaestroApiEndPoint -Scope Global | Out-Null
-  Get-Variable MaestroApiVersion -Scope Global | Out-Null
-  Get-Variable MaestroApiAccessToken -Scope Global | Out-Null
+function Validate-MaestroVars {
+  try {
+    Get-Variable MaestroApiEndPoint -Scope Global | Out-Null
+    Get-Variable MaestroApiVersion -Scope Global | Out-Null
+    Get-Variable MaestroApiAccessToken -Scope Global | Out-Null
 
-  if (!($MaestroApiEndPoint -Match "^http[s]?://maestro-(int|prod).westus2.cloudapp.azure.com$")) {
-    Write-PipelineTaskError "MaestroApiEndPoint is not a valid Maestro URL. '$MaestroApiEndPoint'"
-    ExitWithExitCode 1  
+    if (!($MaestroApiEndPoint -Match "^http[s]?://maestro-(int|prod).westus2.cloudapp.azure.com$")) {
+      Write-PipelineTaskError "MaestroApiEndPoint is not a valid Maestro URL. '$MaestroApiEndPoint'"
+      ExitWithExitCode 1  
+    }
+
+    if (!($MaestroApiVersion -Match "^[0-9]{4}-[0-9]{2}-[0-9]{2}$")) {
+      Write-PipelineTaskError "MaestroApiVersion does not match a version string in the format yyyy-MM-DD. '$MaestroApiVersion'"
+      ExitWithExitCode 1
+    }
   }
-
-  if (!($MaestroApiVersion -Match "^[0-9]{4}-[0-9]{2}-[0-9]{2}$")) {
-    Write-PipelineTaskError "MaestroApiVersion does not match a version string in the format yyyy-MM-DD. '$MaestroApiVersion'"
+  catch {
+    Write-PipelineTaskError "Error: Variables `MaestroApiEndPoint`, `MaestroApiVersion` and `MaestroApiAccessToken` are required while using this script."
+    Write-Host $_
     ExitWithExitCode 1
   }
-
-}
-catch {
-  Write-PipelineTaskError "Error: Variables `MaestroApiEndPoint`, `MaestroApiVersion` and `MaestroApiAccessToken` are required while using this script."
-  Write-Host $_
-  ExitWithExitCode 1
 }
