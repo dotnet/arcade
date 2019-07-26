@@ -101,7 +101,7 @@ namespace Microsoft.DotNet.XUnitExtensions
             if (falseConditions.Count > 0)
             {
                 string skippedReason = string.Format("Condition(s) not met: \"{0}\"", string.Join("\", \"", falseConditions));
-                return testCases.Select(tc => new SkippedTestCase(tc, skippedReason));
+                return testCases.Select(tc => new SkippedTestCase(skippedReason, diagnosticMessageSink, defaultMethodDisplay, defaultMethodDisplayOptions, tc.TestMethod, tc.TestMethodArguments));
             }
 
             // No conditions returned false (including the absence of any conditions).
