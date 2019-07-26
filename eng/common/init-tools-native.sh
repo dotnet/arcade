@@ -70,8 +70,7 @@ function ReadGlobalJsonNativeTools {
   # Only extract the contents of the object.
   local native_tools_list=$(echo $native_tools_section | awk -F"[{}]" '{print $2}')
   native_tools_list=${native_tools_list//[\" ]/}
-  native_tools_list=${native_tools_list//,/$'\n'}
-  native_tools_list="$(echo -e "${native_tools_list}" | tr -d '[[:space:]]')"
+  native_tools_list=$( echo "$native_tools_list" | sed 's/,//g' | sed 's/^\s//g' | sed 's/\r/\n/g' )
 
   local old_IFS=$IFS
   while read -r line; do
