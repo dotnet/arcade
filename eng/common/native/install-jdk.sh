@@ -1,5 +1,20 @@
 #!/usr/bin/env bash
 
+#    _____  .____     ________________________________._._._.
+#   /  _  \ |    |    \_   _____/\______   \__    ___/| | | |
+#  /  /_\  \|    |     |    __)_  |       _/ |    |   | | | |
+# /    |    \    |___  |        \ |    |   \ |    |    \|\|\|
+# \____|__  /_______ \/_______  / |____|_  / |____|    ______
+#         \/        \/        \/         \/            \/\/\/
+#
+# Please do not use this script unless you are installing version 10.0.2.
+# It will not work with other versions of the JDK and is currently here only
+# for arcade-validation.
+#
+# Once this feature (https://github.com/dotnet/arcade/issues/2674) is implemented,
+# these scripts and artifacts will be properly refactored to work with all available
+# versions.
+
 source="${BASH_SOURCE[0]}"
 scriptroot="$( cd -P "$( dirname "$source" )" && pwd )"
 
