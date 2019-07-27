@@ -18,9 +18,9 @@ namespace Microsoft.DotNet.GitSync.CommitManager
     public class Program
     {
         private const string _cloudTableName = "CommitHistory";
-        private const string _repoTableName = "MirrorRepos";
+        private const string _repoTableName = "MirrorBranchRepos";
         private static Table s_table { get; set; }
-        private static Dictionary<string, List<string>> s_repos { get; set; } = new Dictionary<string, List<string>>();
+        private static Dictionary<(string, string), List<string>> s_repos { get; set; } = new Dictionary<(string, string), List<string>>();
         private static ILog s_logger = LogManager.GetLogger(typeof(Program));
 
         public static async Task Main(string[] args)
@@ -56,7 +56,7 @@ namespace Microsoft.DotNet.GitSync.CommitManager
 
                 foreach (var item in tableRows)
                 {
-                    s_repos.Add(item.PartitionKey, item.Properties["ReposToMirrorInto"].StringValue.Split(';').ToList());
+                    s_repos.Add((item.PartitionKey, item.Properties["Branch"].StringValue), item.Properties["ReposToMirrorInto"].StringValue.Split(';').ToList());
                     s_logger.Info($"The commits in  {item.PartitionKey} repo will be mirrored into {item.Properties["ReposToMirrorInto"].StringValue} Repos");
                 }
             } while (token != null);
@@ -65,7 +65,7 @@ namespace Microsoft.DotNet.GitSync.CommitManager
         private static async Task InsertCommitsAsync(string sourceRepoFullname, string commitList, string branch)
         {
             string sourceRepo = sourceRepoFullname.Split("/")[1];
-            foreach (string repo in s_repos[sourceRepo])
+            foreach (string repo in s_repos[(sourceRepo, branch)])
             {
                 foreach (var commitId in commitList.Split(";"))
                 {
