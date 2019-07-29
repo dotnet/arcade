@@ -42,6 +42,19 @@ class AzureDevOpsTestResultPublisher:
 
         log.info("Published Results count: {0}".format(len(published_results)))
 
+        try:
+            for r in published_results:
+                log.debug(r.automated_test_name)
+                if r.sub_results is not None:
+                    for rs in r.sub_results:
+                        log.debug(rs.display_name)
+
+            log.info("Attachments count: {0}".format(len(results_with_attachments)))
+            for (k,v) in results_with_attachments.items():
+                log.debug("{0}: {1}".format(k, v.automated_test_name))
+        except Exception as e:
+            log.debug(e)
+
         # for published_result in published_results:
         #     if published_result.automated_test_name in results_with_attachments:
         #         result = results_with_attachments.get(published_result.automated_test_name)
