@@ -236,14 +236,6 @@ The file is present in the repo and defines versions of all dependencies used in
     <!-- Versions of other dependencies -->   
     <MyPackageVersion>1.2.3-beta</MyPackageVersion>
   </PropertyGroup>
-  
-  <PropertyGroup>
-    <!-- Feeds to use to restore dependent packages from. -->  
-    <RestoreSources>
-      $(RestoreSources);
-      https://dotnet.myget.org/F/myfeed/api/v3/index.json
-    </RestoreSources>
-  </PropertyGroup>
 </Project>
 ```
 
@@ -401,23 +393,23 @@ Note: defining `runtimes` in your global.json will signal to Arcade to install a
 
 ### /NuGet.config
 
-`/NuGet.config` file is present and specifies the MyGet feed to retrieve Arcade SDK from like so:
+`/NuGet.config` file is present and specifies the MyGet feed to retrieve Arcade SDK from and other feeds required by the repository like so:
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
 <configuration>
-  <!-- Only specify feed for Arcade SDK (see https://github.com/Microsoft/msbuild/issues/2982) -->
   <packageSources>
     <clear />
+    <!-- Feed to use to restore the Arcade SDK from -->  
     <add key="dotnet-core" value="https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json" />
+    <!-- Feeds to use to restore dependent packages from -->  
+    <add key="my-feed" value="https://dotnet.myget.org/F/myfeed/api/v3/index.json" />
   </packageSources>
   <disabledPackageSources>
     <clear />
   </disabledPackageSources>
 </configuration>
 ```
-
-> An improvement in SKD resolver is proposed to be able to specify the feed in `global.json` file to avoid the need for extra configuration in `NuGet.config`. See https://github.com/Microsoft/msbuild/issues/2982.
 
 ### /Directory.Build.props
 
@@ -481,7 +473,7 @@ Projects shall use `Microsoft.NET.Sdk` SDK like so:
 
 - Unit test project file names shall end with `.UnitTests` or `.Tests`, e.g. `MyProject.UnitTests.csproj` or `MyProject.Tests.csproj`. 
 - Integration test project file names shall end with `.IntegrationTests`, e.g. `MyProject.IntegrationTests.vbproj`.
-- Performance test project file names shall end with `.PerformanceTests`, e.g. `MyProject.PerformaceTests.csproj`.
+- Performance test project file names shall end with `.PerformanceTests`, e.g. `MyProject.PerformanceTests.csproj`.
 - If `source.extension.vsixmanifest` is present next to the project file the project is by default considered to be a VSIX producing project.
 
 ## Other Projects
@@ -526,7 +518,7 @@ Repository that builds VS insertion components must set `VisualStudioDropName` g
 To include the output VSIX of a project in Visual Studio insertion, set the `VisualStudioInsertionComponent` property.
 Multiple VSIXes can specify the same component name, in which case their manifests will be merged into a single insertion unit.
 
-The Visual Studio insertion manifests and VSIXes are generated during Pack task into `VSSetup\Insertion` directory, where they are picked by by MicroBuild Azure DevOps publishing task during official builds.
+The Visual Studio insertion manifests and VSIXes are generated during Pack task into `VSSetup\Insertion` directory, where they are picked up by MicroBuild Azure DevOps publishing task during official builds.
 
 Arcade SDK also enables building VS Setup Components from .swr files (as opposed to components comprised of one or more VSIXes).
 Projects that set `VisualStudioInsertionComponent` but do not have `source.extension.vsixmanifest` are considered to be _swix projects_ (`IsSwixProject` property is set to true).
@@ -714,7 +706,7 @@ $(IbcOptimizationDataDir)path2\{AssemblyFileName2}\Scenario1.ibc
 $(IbcOptimizationDataDir)path2\{AssemblyFileName2}\Scenario2.ibc
 ...
 ```
-The assemblies must be exaclty those that were used in the training run that produced the IBC data files.
+The assemblies must be exactly those that were used in the training run that produced the IBC data files.
 One assembly might be present in multiple copies in different subdirectories. These copies must be identical
 (an assembly is identified by name only). `ApplyOptimizations` target aggregates all IBC data files present
 next to the assembly and all of its  copies. Multiple flavors of an assembly with the same names
@@ -750,7 +742,7 @@ is passed via `VisualStudioDropAccessToken` property. If the account the officia
 an access to the VS drop storage, the build definition can pass `/p:VisualStudioDropAccessToken=$(System.AccessToken)` to
 the `/eng/common/CIBuild.cmd` script.
 
-The IBC data drop produced by a training run is identitifed by the name of the repository, the branch and the build number
+The IBC data drop produced by a training run is identified by the name of the repository, the branch and the build number
 the trained binaries came from, and a training run id. An example of IBC data identifier is
 `OptimizationData/dotnet/roslyn/master-vs-deps/20190210.1/935479/1`, where `dotnet/roslyn` is the repository name,
 `master-vs-deps` is the branch name, `20190210.1` is the build number and `935479/1` is training run id.
@@ -777,7 +769,7 @@ The VS Bootstrapper is built by an Azure DevOps task provided by MicroBuild.
 
 The `Training.runsettings` file is generated by Arcade SDK task `VisualStudio.BuildIbcTrainingSettings`.
 
-The following build definition steps are required for sucessful generation of all training inputs (in the listed order):
+The following build definition steps are required for successful generation of all training inputs (in the listed order):
 
 ```yml
   variables:

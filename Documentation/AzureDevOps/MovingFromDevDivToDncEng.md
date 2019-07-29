@@ -26,7 +26,7 @@ These are the general steps for moving an official build from https://dev.azure.
 
       - Justification: .Net Core product repo
 
-    c. Your M2 will be notificed of the request and will have to approve the request before the MicroBuild team will review the request enable signing of your Pipeline.
+    c. Your M2 will be notified of the request and will have to approve the request before the MicroBuild team will review the request enable signing of your Pipeline.
 
 ## Known issues
 

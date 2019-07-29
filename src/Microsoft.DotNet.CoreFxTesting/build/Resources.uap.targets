@@ -21,8 +21,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <_AllRuntimeDllFiles Include="$(RuntimePath)\*.dll" Exclude="$(RuntimePath)\Microsoft.VisualStudio.TestPlatform.*dll;$(RuntimePath)\Microsoft.TestPlatform.*dll" />
-    <_ExternalReswFiles Include="$(_ExternalReswOutputPath)*.resw" Exclude="$(RuntimePath)\Microsoft.VisualStudio.TestPlatform.*resw;$(RuntimePath)\Microsoft.TestPlatform.*resw" />
+    <_AllRuntimeDllFiles Include="$(RuntimePath)*.dll" />
+    <_ExternalReswFiles Include="$(_ExternalReswOutputPath)*.resw" />
 
     <!-- The first time the CreateReswFilesForExternalDependencies target is executed the itemgroup _ExternalReswFiles will be empty
     and that will avoid the target from executing, so we add a dummy file if they are empty so that the target is executed the first time. -->

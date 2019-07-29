@@ -121,7 +121,7 @@
     <value>The format '{noun}' has {adjective} parameters.</value>
   </data>
   <data name="StringWithNumberedArgs" xml:space="preserve">
-    <value>The format string '{0}' has numbered {1} parameter {2}.</value>
+    <value>The really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really really long format string '{0}' has numbered {1} parameter {2}.</value>
   </data>
   <data name="StringWithoutArgs" xml:space="preserve">
     <value>No arguments for this one.</value>

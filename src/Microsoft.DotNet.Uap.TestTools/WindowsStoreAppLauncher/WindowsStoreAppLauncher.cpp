@@ -64,7 +64,7 @@ int wmain(int argc, wchar_t* argv [])
   info.executionArguments = L"";
   bool help = false;
 
-  OptionList options(L"WindowsStoreAppLauncher.exe", L"<Appx Manifest Path> [<execution args>]", L"\tAppx Manifest Path\n\t\tPath to the AppxManifest.xml file\n\texecution args\n\t\tThe arguments to pass the the application.");
+  OptionList options(L"WindowsStoreAppLauncher.exe", L"<Appx Manifest Path> [<execution args>]", L"\tAppx Manifest Path\n\t\tPath to the AppxManifest.xml file\n\texecution args\n\t\tThe arguments to pass the application.");
 
   vector<wstring> argInfoTmp;
 
@@ -111,7 +111,7 @@ int wmain(int argc, wchar_t* argv [])
 
   wchar_t** endOfArgs = options.Parse(argc - 1, argv + 1, [&](const wstring& failedOpt)
   {
-    wprintf(L"Error: Option %s missing argument\n", failedOpt.c_str());
+    wprintf_s(L"Error: Option %s missing argument\n", failedOpt.c_str());
     options.PrintUsage();
     exit(1);
   });
@@ -125,11 +125,11 @@ int wmain(int argc, wchar_t* argv [])
   if (endOfArgs - argv < argc)
   {
     info.manifestPath = *(endOfArgs++);
-    wprintf(L"Got manifest file %s\n", info.manifestPath.c_str());
+    wprintf_s(L"Got manifest file %s\n", info.manifestPath.c_str());
   }
   else
   {
-    fwprintf(stderr, L"Error: Missing appx manifest path\n");
+    fwprintf_s(stderr, L"Error: Missing appx manifest path\n");
     options.PrintUsage();
     return 1;
   }
@@ -142,19 +142,19 @@ int wmain(int argc, wchar_t* argv [])
   try
   {
     Run(info, exitCode);
-    wprintf(L"\n");
-    wprintf(L"SUCCESS\n");
-    wprintf(L"ExitCode %d\n", exitCode);
+    wprintf_s(L"\n");
+    wprintf_s(L"SUCCESS\n");
+    wprintf_s(L"ExitCode %d\n", exitCode);
     return exitCode;
   }
   catch (com_error e)
   {
-    wprintf(L"\nFAILED 0x%X (%hs)\n", e.HR(), e.what());
+    wprintf_s(L"\nFAILED 0x%X (%hs)\n", e.HR(), e.what());
     return 1;
   }
   catch (exception e)
   {
-    wprintf(L"\nFAILED (%hs)\n", e.what());
+    wprintf_s(L"\nFAILED (%hs)\n", e.what());
     return 1;
   }
 }
@@ -167,17 +167,17 @@ bool FileExists(const wstring& fname)
     DWORD error = GetLastError();
 
     if (error == ERROR_FILE_NOT_FOUND || error == ERROR_PATH_NOT_FOUND) {
-      fwprintf(stderr, L"%s: does not exist\n", fname.c_str());
+      fwprintf_s(stderr, L"%s: does not exist\n", fname.c_str());
       return false;
     }
     else if (error == ERROR_INVALID_NAME)
     {
-      wprintf(L"%s: is not a valid path\n", fname.c_str());
+      wprintf_s(L"%s: is not a valid path\n", fname.c_str());
       return false;
     }
     else
     {
-      wprintf(L"%s: could not be opened(%s)\n", fname.c_str(), MessageForHR(HRESULT_FROM_WIN32(error)).c_str());
+      wprintf_s(L"%s: could not be opened(%s)\n", fname.c_str(), MessageForHR(HRESULT_FROM_WIN32(error)).c_str());
       return false;
     }
   }
@@ -187,17 +187,17 @@ bool FileExists(const wstring& fname)
 void Install(const unique_ptr<App>& app)
 {
   // Install the application
-  wprintf(L"Removing any previous installation...\n");
+  wprintf_s(L"Removing any previous installation...\n");
   app->Remove();
 
-  wprintf(L"Installing the application...\n");
+  wprintf_s(L"Installing the application...\n");
   app->Add();
 }
 
 void Uninstall(const unique_ptr<App>& app)
 {
   // Remove the application
-  wprintf(L"Removing the application...\n");
+  wprintf_s(L"Removing the application...\n");
   app->Remove();
 }
 
@@ -214,24 +214,24 @@ void Execute(const unique_ptr<App>& app, const ArgInfo& info, DWORD& exitCode)
       // Wait for the specified interval before launch
       // These changes allow us to avoid a race condition between app launch and the app resolver cache. 
       // See DevDiv Bug # 779425 for more details.
-      wprintf(L"Waiting for %ims before launch...\n", info.delayLaunchMilliseconds);
+      wprintf_s(L"Waiting for %ims before launch...\n", info.delayLaunchMilliseconds);
       Sleep(info.delayLaunchMilliseconds);
     }
 
     // Start the application
-    wprintf(L"Starting the application...\n");
+    wprintf_s(L"Starting the application...\n");
     app->Start(info.runInBackground, info.isTestApp, info.executionArguments);
 
     bool waitResult;
 
     if (info.debuggerCommandLine.empty() && info.isTimeoutSpecified)
     {
-        wprintf(L"Waiting for %ims...\n", info.timeoutMilliseconds);
+        wprintf_s(L"Waiting for %ims...\n", info.timeoutMilliseconds);
         exitCode = app->WaitForExit(info.timeoutMilliseconds, &waitResult);
     }
     else
     {
-        wprintf(L"Waiting for the application to exit...\n");
+        wprintf_s(L"Waiting for the application to exit...\n");
         waitResult = true;
         exitCode = app->WaitForExit();
     }
@@ -240,35 +240,35 @@ void Execute(const unique_ptr<App>& app, const ArgInfo& info, DWORD& exitCode)
     {
       if (info.isTestApp)
       {
-          wprintf(L"The app did not exit within %ims - stopping the app...\n", info.timeoutMilliseconds);
+          wprintf_s(L"The app did not exit within %ims - stopping the app...\n", info.timeoutMilliseconds);
       }
       else
       {
-          wprintf(L"Stopping the app...\n");
+          wprintf_s(L"Stopping the app...\n");
       }
 
       app->Stop();
     }
 
-    wprintf(L"Disabling the debugger...\n");
+    wprintf_s(L"Disabling the debugger...\n");
     app->DisableDebug();
 
     if (info.isTestApp)
     {
-      wprintf(L"\n\nSTDOUT & STDERR from immersive process:\n");
-      wprintf(L"==================================================================================\n");
-      wprintf(L"\n%s\n", app->GetAppStdOutContent().c_str());
-      wprintf(L"==================================================================================\n");
+      wprintf_s(L"\n\nSTDOUT & STDERR from immersive process:\n");
+      wprintf_s(L"==================================================================================\n");
+      wprintf_s(L"\n%s\n", app->GetAppStdOutContent().c_str());
+      wprintf_s(L"==================================================================================\n");
     }
     else if (waitResult)
     {
-      wprintf(L"Error: The app exited before the timeout and most likely crashed\n");
+      wprintf_s(L"Error: The app exited before the timeout and most likely crashed\n");
       throw com_error(E_FAIL);
     }
   }
   catch (com_error e)
   {
-    wprintf(L"\nFAILED 0x%X (%hs)\n", e.HR(), e.what());
+    wprintf_s(L"\nFAILED 0x%X (%hs)\n", e.HR(), e.what());
     Uninstall(app);
     throw;
   }
@@ -289,7 +289,7 @@ HRESULT _DoSystemStateChecks()
     HINSTANCE hinstLib = LoadLibraryW(L"Dwmapi.dll");
     if (hinstLib == NULL)
     {
-        wprintf(L"Error: Dwmapi.dll could not be found!");
+        wprintf_s(L"Error: Dwmapi.dll could not be found!");
         return 0x8007007E;
     }
         
@@ -318,12 +318,12 @@ HRESULT _DoSystemStateChecks()
                     const wchar_t szDWMMsg[] =
                         L"ERROR: 0x%X - The DWM is still disabled even after call DwmEnableComposition, but is required for running\r\n"
                         L"immersive applications. Please enable desktop composition and try again.\r\n";
-                    wprintf(szDWMMsg, hr);
+                    wprintf_s(szDWMMsg, hr);
                 }
                 else
                 {
                     const wchar_t szDWMMsg[] = L"ERROR: 0x%X - DwmIsCompositionEnabled return bad HResult.\r\n";
-                    wprintf(szDWMMsg, hr);
+                    wprintf_s(szDWMMsg, hr);
                 }
             }
             else
@@ -331,14 +331,14 @@ HRESULT _DoSystemStateChecks()
                 const wchar_t szDWMMsg[] =
                     L"ERROR: 0x%X - The DWM is currently disabled, but is required for running\r\n"
                     L"immersive applications. Please enable desktop composition and try again.\r\n";
-                wprintf(szDWMMsg, hr);
+                wprintf_s(szDWMMsg, hr);
             }
         }
     }
     else
     {
         const wchar_t szDWMMsg[] = L"ERROR: 0x%X - DwmIsCompositionEnabled return bad HResult.\r\n";
-        wprintf(szDWMMsg, hr);
+        wprintf_s(szDWMMsg, hr);
     }
 
     FreeLibrary(hinstLib);
@@ -352,7 +352,7 @@ void Run(__in const ArgInfo& info, __out DWORD& exitCode)
 
   if (FAILED(roInitialize))
   {
-    wprintf(L"FAILED to initialize the Windows Runtime(0x%x)\n%s\n", static_cast<HRESULT>(roInitialize), MessageForHR(roInitialize).c_str());
+    wprintf_s(L"FAILED to initialize the Windows Runtime(0x%x)\n%s\n", static_cast<HRESULT>(roInitialize), MessageForHR(roInitialize).c_str());
     throw exception();
   }
 
@@ -382,7 +382,7 @@ void Run(__in const ArgInfo& info, __out DWORD& exitCode)
   {
     exitCode = 100;
     Install(app);
-    wprintf(L"Package Full Name is %s\n", app->get_PackageFullName().c_str());
+    wprintf_s(L"Package Full Name is %s\n", app->get_PackageFullName().c_str());
   }
   else
   {

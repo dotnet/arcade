@@ -23,6 +23,8 @@
 #include <iterator>
 #include <stdio.h>
 #include <string>
+#include <string.h>
+#include <wchar.h>
 #include <fstream>
 #include <iterator>
 #include <wrl.h>
@@ -39,12 +41,10 @@
 #include <Psapi.h>
 #include <PathCch.h>
 #include <memory>
-#include <string>
 #include <exception>
 #include <cstring>
 #include <fstream>
 #include <sstream>
-#include <string>
 #include <vector>
 #include <cstdio>
 #include <wrl\wrappers\corewrappers.h>

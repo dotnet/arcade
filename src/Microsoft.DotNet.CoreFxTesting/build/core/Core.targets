@@ -42,8 +42,7 @@
   </Target>
 
   <UsingTask TaskName="GenerateRunScript" AssemblyFile="$(CoreFxTestingAssemblyPath)"/>
-  <Target Name="GenerateRunScript"
-          DependsOnTargets="$(GenerateRunScriptDependsOn)">
+  <Target Name="GenerateRunScript">
 
     <PropertyGroup>
       <!-- RSP file support. -->
@@ -182,7 +181,7 @@
     Unit/Functional/Integration test support.
     Supported runners: xunit.
   -->
-  <Import Condition="'$(IsUnitTestProject)' == 'true'" Project="$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', 'test', 'Test.targets'))" />
+  <Import Project="$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', 'test', 'Test.targets'))" />
 
   <!--
     Code Coverage support.

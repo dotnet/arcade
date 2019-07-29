@@ -40,6 +40,6 @@ The criteria for *when* changes can be taken into Arcade are as follows.  See fa
 | Breaking        | Change breaks a scenario, requiring an update by our customer/s |
 | Disruptive      | Not necessarily breaking, but there's a high likelihood there will be some unintended fallout **OR** is a change which adds debt|
 | Minimal Risk    | Probably won't break anyone or cause disruption |
-| Minor, low risk | Very unlikely to to have any negative impact |
+| Minor, low risk | Very unlikely to have any negative impact |
 
 

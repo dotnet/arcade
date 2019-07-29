@@ -4,6 +4,7 @@
     <TargetFrameworks>net472;netcoreapp2.1</TargetFrameworks>
     <SignAssembly>false</SignAssembly>
     <IsPackable>true</IsPackable>
+    <ExcludeFromSourceBuild>true</ExcludeFromSourceBuild>
   </PropertyGroup>
 
   <ItemGroup>

@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using Microsoft.Build.Utilities;
+using Microsoft.DotNet.Build.Tasks;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -17,7 +18,7 @@ namespace Microsoft.DotNet.GenFacades
         private readonly IReadOnlyDictionary<string, IList<string>> _seedTypes;
         private readonly string _outputSourcePath;
         private readonly HashSet<string> _ignoreMissingTypesList = new HashSet<string>();
-        private readonly TaskLoggingHelper _logger;
+        private readonly ILog _logger;
 
         public SourceGenerator(
             IEnumerable<string> referenceTypes,
@@ -25,7 +26,7 @@ namespace Microsoft.DotNet.GenFacades
             IReadOnlyDictionary<string, string> seedTypePreferences,
             string outputSourcePath,
             string[] ignoreMissingTypesList,
-            TaskLoggingHelper logger
+            ILog logger
             )
         {
             _referenceTypes = referenceTypes;

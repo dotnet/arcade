@@ -26,14 +26,14 @@
   </Target>
 
   <Target Name="StopTestRuns"
-          AfterTargets="CoreTest"
+          AfterTargets="AfterTest"
           Outputs="%(HelixTargetQueue.Identity)">
     <Message Text="Stopping Azure Pipelines Test Run %(HelixTargetQueue.TestRunName)" Importance="High"/>
     <StopAzurePipelinesTestRun TestRunId="%(HelixTargetQueue.TestRunId)"/>
   </Target>
 
   <Target Name="CheckTestResults"
-          BeforeTargets="AfterTest"
+          AfterTargets="StopTestRuns"
           Condition="$(FailOnTestFailure)">
     <CheckAzurePipelinesTestResults ExpectedTestFailures="@(AzurePipelinesExpectedTestFailure)" EnableFlakyTestSupport="$(AzurePipelinesEnableFlakyTestSupport)" TestRunIds="@(HelixTargetQueue -> '%(TestRunId)')"/>
   </Target>

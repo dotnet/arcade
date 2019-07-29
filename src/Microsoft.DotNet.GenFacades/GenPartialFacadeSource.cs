@@ -4,12 +4,13 @@
 
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
+using Microsoft.DotNet.Build.Tasks;
 using System;
 using System.Linq;
 
 namespace Microsoft.DotNet.GenFacades
 {
-    public class GenPartialFacadeSource : Task
+    public class GenPartialFacadeSource : BuildTask
     {
         [Required]
         public ITaskItem[] ReferencePaths { get; set; }

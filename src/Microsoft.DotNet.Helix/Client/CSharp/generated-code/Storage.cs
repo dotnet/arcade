@@ -57,13 +57,25 @@ namespace Microsoft.DotNet.Helix.Client
             }
         }
 
+        internal async Task OnListFailed(HttpRequestMessage req, HttpResponseMessage res)
+        {
+            var content = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
+            var ex = new RestApiException(
+                new HttpRequestMessageWrapper(req, null),
+                new HttpResponseMessageWrapper(res, content));
+            HandleFailedListRequest(ex);
+            HandleFailedRequest(ex);
+            Client.OnFailedRequest(ex);
+            throw ex;
+        }
+
         internal async Task<HttpOperationResponse<IImmutableList<ContainerInformation>>> ListInternalAsync(
             bool? getSasTokens = default,
             CancellationToken cancellationToken = default
         )
         {
 
-            var _path = "/api/2018-03-14/storage";
+            var _path = "/api/2019-06-17/storage";
 
             var _query = new QueryBuilder();
             if (getSasTokens != default)
@@ -88,19 +100,11 @@ namespace Microsoft.DotNet.Helix.Client
                 }
 
                 _res = await Client.SendAsync(_req, cancellationToken).ConfigureAwait(false);
-                string _responseContent;
                 if (!_res.IsSuccessStatusCode)
                 {
-                    _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
-                    var ex = new RestApiException(
-                        new HttpRequestMessageWrapper(_req, null),
-                        new HttpResponseMessageWrapper(_res, _responseContent));
-                    HandleFailedListRequest(ex);
-                    HandleFailedRequest(ex);
-                    Client.OnFailedRequest(ex);
-                    throw ex;
+                    await OnListFailed(_req, _res);
                 }
-                _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
+                string _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
                 return new HttpOperationResponse<IImmutableList<ContainerInformation>>
                 {
                     Request = _req,
@@ -132,6 +136,18 @@ namespace Microsoft.DotNet.Helix.Client
             }
         }
 
+        internal async Task OnNewFailed(HttpRequestMessage req, HttpResponseMessage res)
+        {
+            var content = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
+            var ex = new RestApiException(
+                new HttpRequestMessageWrapper(req, content),
+                new HttpResponseMessageWrapper(res, content));
+            HandleFailedNewRequest(ex);
+            HandleFailedRequest(ex);
+            Client.OnFailedRequest(ex);
+            throw ex;
+        }
+
         internal async Task<HttpOperationResponse<ContainerInformation>> NewInternalAsync(
             ContainerCreationRequest body,
             CancellationToken cancellationToken = default
@@ -142,8 +158,13 @@ namespace Microsoft.DotNet.Helix.Client
                 throw new ArgumentNullException(nameof(body));
             }
 
+            if (!body.IsValid)
+            {
+                throw new ArgumentException("The parameter is not valid", nameof(body));
+            }
 
-            var _path = "/api/2018-03-14/storage";
+
+            var _path = "/api/2019-06-17/storage";
 
             var _query = new QueryBuilder();
 
@@ -177,19 +198,11 @@ namespace Microsoft.DotNet.Helix.Client
                 }
 
                 _res = await Client.SendAsync(_req, cancellationToken).ConfigureAwait(false);
-                string _responseContent;
                 if (!_res.IsSuccessStatusCode)
                 {
-                    _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
-                    var ex = new RestApiException(
-                        new HttpRequestMessageWrapper(_req, _requestContent),
-                        new HttpResponseMessageWrapper(_res, _responseContent));
-                    HandleFailedNewRequest(ex);
-                    HandleFailedRequest(ex);
-                    Client.OnFailedRequest(ex);
-                    throw ex;
+                    await OnNewFailed(_req, _res);
                 }
-                _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
+                string _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
                 return new HttpOperationResponse<ContainerInformation>
                 {
                     Request = _req,
@@ -221,6 +234,18 @@ namespace Microsoft.DotNet.Helix.Client
             }
         }
 
+        internal async Task OnExtendExpirationFailed(HttpRequestMessage req, HttpResponseMessage res)
+        {
+            var content = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
+            var ex = new RestApiException(
+                new HttpRequestMessageWrapper(req, content),
+                new HttpResponseMessageWrapper(res, content));
+            HandleFailedExtendExpirationRequest(ex);
+            HandleFailedRequest(ex);
+            Client.OnFailedRequest(ex);
+            throw ex;
+        }
+
         internal async Task<HttpOperationResponse<ContainerInformation>> ExtendExpirationInternalAsync(
             ContainerExtensionRequest body,
             CancellationToken cancellationToken = default
@@ -231,8 +256,13 @@ namespace Microsoft.DotNet.Helix.Client
                 throw new ArgumentNullException(nameof(body));
             }
 
+            if (!body.IsValid)
+            {
+                throw new ArgumentException("The parameter is not valid", nameof(body));
+            }
 
-            var _path = "/api/2018-03-14/storage/renew";
+
+            var _path = "/api/2019-06-17/storage/renew";
 
             var _query = new QueryBuilder();
 
@@ -266,19 +296,11 @@ namespace Microsoft.DotNet.Helix.Client
                 }
 
                 _res = await Client.SendAsync(_req, cancellationToken).ConfigureAwait(false);
-                string _responseContent;
                 if (!_res.IsSuccessStatusCode)
                 {
-                    _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
-                    var ex = new RestApiException(
-                        new HttpRequestMessageWrapper(_req, _requestContent),
-                        new HttpResponseMessageWrapper(_res, _responseContent));
-                    HandleFailedExtendExpirationRequest(ex);
-                    HandleFailedRequest(ex);
-                    Client.OnFailedRequest(ex);
-                    throw ex;
+                    await OnExtendExpirationFailed(_req, _res);
                 }
-                _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
+                string _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
                 return new HttpOperationResponse<ContainerInformation>
                 {
                     Request = _req,

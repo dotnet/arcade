@@ -21,6 +21,7 @@ The primary driving business requirement is the ability to build .NET Core 3.
 | dotnet/corefx               | master        |  @danmosemsft   |
 | dotnet/core-sdk             | master        |  @livarcocc     |
 | dotnet/core-setup           | master        |  TBD            |
+| dotnet/fsharp               | master        |  @brettfo       |
 | dotnet/roslyn               | master        |  @jaredpar      |
 | dotnet/templating           | master        |  @mlorbetske    |
 | dotnet/toolset              | master        |  @livarcocc     |

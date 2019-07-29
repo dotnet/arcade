@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using MSBuild = Microsoft.Build.Utilities;
 
@@ -149,6 +150,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 SplitArtifactsInCategories(buildModel);
 
                 await HandlePackagePublishingAsync(client, buildInformation);
+
+                await HandleBlobPublishingAsync(client, buildInformation);
             }
             catch (Exception e)
             {
@@ -176,6 +179,37 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     else if (feedType.Equals("AZURESTORAGEFEED"))
                     {
                         await PublishPackagesToAzureStorageNugetFeedAsync(packages, client, buildInformation, feedConfig);
+                    }
+                    else
+                    {
+                        Log.LogError($"Unknown target feed type for category '{category}': '{feedType}'.");
+                    }
+                }
+                else
+                {
+                    Log.LogError($"No target feed configuration found for artifact category: '{category}'.");
+                }
+            }
+        }
+
+        private async Task HandleBlobPublishingAsync(IMaestroApi client, Maestro.Client.Models.Build buildInformation)
+        {
+            foreach (var blobsPerCategory in BlobsByCategory)
+            {
+                var category = blobsPerCategory.Key;
+                var blobs = blobsPerCategory.Value;
+
+                if (FeedConfigs.TryGetValue(category, out FeedConfig feedConfig))
+                {
+                    var feedType = feedConfig.Type.ToUpper();
+
+                    if (feedType.Equals("AZDONUGETFEED"))
+                    {
+                        await PublishBlobsToAzDoNugetFeedAsync(blobs, client, buildInformation, feedConfig);
+                    }
+                    else if (feedType.Equals("AZURESTORAGEFEED"))
+                    {
+                        await PublishBlobsToAzureStorageNugetFeedAsync(blobs, client, buildInformation, feedConfig);
                     }
                     else
                     {
@@ -254,8 +288,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     continue;
                 }
 
-                await PublishWithNugetAsync(feedConfig, package);
-
                 var assetWithLocations = await client.Assets.GetAssetAsync(assetRecord.Id);
 
                 if (assetWithLocations?.Locations.Any(al => al.Location.Equals(feedConfig.TargetFeedURL, StringComparison.OrdinalIgnoreCase)) ?? false)
@@ -265,6 +297,36 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 }
 
                 await client.Assets.AddAssetLocationToAssetAsync(assetRecord.Id, AddAssetLocationToAssetAssetLocationType.NugetFeed, feedConfig.TargetFeedURL);
+            }
+        }
+
+        private async Task PublishBlobsToAzDoNugetFeedAsync(
+            List<BlobArtifactModel> blobsToPublish,
+            IMaestroApi client,
+            Maestro.Client.Models.Build buildInformation,
+            FeedConfig feedConfig)
+        {
+            foreach (var blob in blobsToPublish)
+            {
+                var assetRecord = buildInformation.Assets
+                    .Where(a => a.Name.Equals(blob.Id))
+                    .FirstOrDefault();
+
+                if (assetRecord == null)
+                {
+                    Log.LogError($"Asset with Id {blob.Id} isn't registered on the BAR Build with ID {BARBuildId}");
+                    continue;
+                }
+
+                var assetWithLocations = await client.Assets.GetAssetAsync(assetRecord.Id);
+
+                if (assetWithLocations?.Locations.Any(al => al.Location.Equals(feedConfig.TargetFeedURL, StringComparison.OrdinalIgnoreCase)) ?? false)
+                {
+                    Log.LogMessage($"Asset with Id {blob.Id} already has location {feedConfig.TargetFeedURL}");
+                    continue;
+                }
+
+                await client.Assets.AddAssetLocationToAssetAsync(assetRecord.Id, AddAssetLocationToAssetAssetLocationType.Container, feedConfig.TargetFeedURL);
             }
         }
 
@@ -280,8 +342,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 + Path.DirectorySeparatorChar;
 
             var packages = packagesToPublish.Select(p => $"{PackageAssetsBasePath}{p.Id}.{p.Version}.nupkg");
+            var blobFeedAction = CreateBlobFeedAction(feedConfig);
 
-            var blobFeedAction = new BlobFeedAction(feedConfig.TargetFeedURL, feedConfig.FeedKey, Log);
             var pushOptions = new PushOptions
             {
                 AllowOverwrite = false,
@@ -314,54 +376,121 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             await blobFeedAction.PushToFeedAsync(packages, pushOptions);
         }
 
-        private Task<int> PublishWithNugetAsync(FeedConfig feedConfig, PackageArtifactModel package)
+        private async Task PublishBlobsToAzureStorageNugetFeedAsync(
+            List<BlobArtifactModel> blobsToPublish,
+            IMaestroApi client,
+            Maestro.Client.Models.Build buildInformation,
+            FeedConfig feedConfig)
         {
-            var packageFullPath = $"{PackageAssetsBasePath}{Path.DirectorySeparatorChar}{package.Id}.{package.Version}.nupkg";
+            BlobAssetsBasePath = BlobAssetsBasePath.TrimEnd(
+                Path.DirectorySeparatorChar,
+                Path.AltDirectorySeparatorChar) 
+                + Path.DirectorySeparatorChar;
 
-            var tcs = new TaskCompletionSource<int>();
-
-            Log.LogMessage($"Publishing package {packageFullPath} to target feed {feedConfig.TargetFeedURL} with nuget.exe push");
-
-            var process = new Process
-            {
-                StartInfo = new ProcessStartInfo()
+            var blobs = blobsToPublish
+                .Select(blob =>
                 {
-                    FileName = NugetPath,
-                    Arguments = $"push -Source {feedConfig.TargetFeedURL} -apikey {feedConfig.FeedKey} {packageFullPath}",
-                    UseShellExecute = false,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    CreateNoWindow = true
-                },
-                EnableRaisingEvents = true
+                    var fileName = Path.GetFileName(blob.Id);
+                    return new MSBuild.TaskItem($"{BlobAssetsBasePath}{fileName}", new Dictionary<string, string>
+                    {
+                        {"RelativeBlobPath", blob.Id}
+                    });
+                })
+                .ToArray();
+
+            var blobFeedAction = CreateBlobFeedAction(feedConfig);
+            var pushOptions = new PushOptions
+            {
+                AllowOverwrite = false,
+                PassIfExistingItemIdentical = true
             };
 
-            process.Exited += (sender, args) =>
+            foreach (var blob in blobsToPublish)
             {
-                tcs.SetResult(process.ExitCode);
-                if (process.ExitCode != 0)
-                {
-                    Log.LogError($"Nuget push failed with exit code {process.ExitCode}. Standard error output: {process.StandardError.ReadToEnd()}");
-                }
-                else
-                {
-                    Log.LogMessage($"Successfully published package {packageFullPath} to {feedConfig.TargetFeedURL}");
-                }
-                process.Dispose();
-            };
+                var assetRecord = buildInformation.Assets
+                    .Where(a => a.Name.Equals(blob.Id))
+                    .SingleOrDefault();
 
-            process.Start();
+                if (assetRecord == null)
+                {
+                    Log.LogError($"Asset with Id {blob.Id} isn't registered on the BAR Build with ID {BARBuildId}");
+                    continue;
+                }
 
-            return tcs.Task;
+                var assetWithLocations = await client.Assets.GetAssetAsync(assetRecord.Id);
+
+                if (assetWithLocations?.Locations.Any(al => al.Location.Equals(feedConfig.TargetFeedURL, StringComparison.OrdinalIgnoreCase)) ?? false)
+                {
+                    Log.LogMessage($"Asset with Id {blob.Id} already has location {feedConfig.TargetFeedURL}");
+                    continue;
+                }
+
+                await client.Assets.AddAssetLocationToAssetAsync(assetRecord.Id, AddAssetLocationToAssetAssetLocationType.Container, feedConfig.TargetFeedURL);
+            }
+
+            await blobFeedAction.PublishToFlatContainerAsync(blobs, maxClients: 8, pushOptions);
         }
 
+        private BlobFeedAction CreateBlobFeedAction(FeedConfig feedConfig)
+        {
+            // Matches package feeds like
+            // https://dotnet-feed-internal.azurewebsites.net/container/dotnet-core-internal/sig/dsdfasdfasdf234234s/se/2020-02-02/darc-int-dotnet-arcade-services-babababababe-08/index.json
+            const string azureStorageProxyFeedPattern =
+                @"(?<feedURL>https://([a-z-]+).azurewebsites.net/container/(?<container>[^/]+)/sig/\w+/se/([0-9]{4}-[0-9]{2}-[0-9]{2})/(?<baseFeedName>darc-(?<type>int|pub)-(?<repository>.+?)-(?<sha>[A-Fa-f0-9]{7,40})-?(?<subversion>\d*)/))index.json";
+
+            // Matches package feeds like the one below. Special case for static internal proxy-backed feed
+            // https://dotnet-feed-internal.azurewebsites.net/container/dotnet-core-internal/sig/dsdfasdfasdf234234s/se/2020-02-02/darc-int-dotnet-arcade-services-babababababe-08/index.json
+            const string azureStorageProxyFeedStaticPattern =
+                @"(?<feedURL>https://([a-z-]+).azurewebsites.net/container/(?<container>[^/]+)/sig/\w+/se/([0-9]{4}-[0-9]{2}-[0-9]{2})/(?<baseFeedName>[^/]+/))index.json";
+
+            // Matches package feeds like
+            // https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json
+            const string azureStorageStaticBlobFeedPattern =
+                @"https://([a-z-]+).blob.core.windows.net/[^/]+/index.json";
+
+            var proxyBackedFeedMatch = Regex.Match(feedConfig.TargetFeedURL, azureStorageProxyFeedPattern);
+            var proxyBackedStaticFeedMatch = Regex.Match(feedConfig.TargetFeedURL, azureStorageProxyFeedStaticPattern);
+            var azureStorageStaticBlobFeedMatch = Regex.Match(feedConfig.TargetFeedURL, azureStorageStaticBlobFeedPattern);
+
+            if (proxyBackedFeedMatch.Success || proxyBackedStaticFeedMatch.Success)
+            {
+                var regexMatch = (proxyBackedFeedMatch.Success) ? proxyBackedFeedMatch : proxyBackedStaticFeedMatch;
+                var containerName = regexMatch.Groups["container"].Value;
+                var baseFeedName = regexMatch.Groups["baseFeedName"].Value;
+                var feedURL = regexMatch.Groups["feedURL"].Value;
+                var storageAccountName = "dotnetfeed";
+
+                // Initialize the feed using sleet
+                SleetSource sleetSource = new SleetSource()
+                {
+                    Name = baseFeedName,
+                    Type = "azure",
+                    BaseUri = feedURL,
+                    AccountName = storageAccountName,
+                    Container = containerName,
+                    FeedSubPath = baseFeedName,
+                    ConnectionString = $"DefaultEndpointsProtocol=https;AccountName={storageAccountName};AccountKey={feedConfig.FeedKey};EndpointSuffix=core.windows.net"
+                };
+
+                return new BlobFeedAction(sleetSource, feedConfig.FeedKey, Log);
+            }
+            else if (azureStorageStaticBlobFeedMatch.Success)
+            {
+                return new BlobFeedAction(feedConfig.TargetFeedURL, feedConfig.FeedKey, Log);
+            }
+            else
+            {
+                Log.LogError($"Could not parse Azure feed URL: '{feedConfig.TargetFeedURL}'");
+                return null;
+            }
+        }
         private string InferCategory(string assetId)
         {
             var extension = Path.GetExtension(assetId).ToUpper();
 
             var whichCategory = new Dictionary<string, string>()
             {
-                { ".NUPKG", "NetCore" },
+                { ".NUPKG", "NETCORE" },
                 { ".PKG", "OSX" },
                 { ".DEB", "DEB" },
                 { ".RPM", "RPM" },
@@ -379,7 +508,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             }
             else
             {
-                return "NetCore";
+                return "NETCORE";
             }
         }
     }

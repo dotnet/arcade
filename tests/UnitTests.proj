@@ -14,9 +14,8 @@
 
     <EnableAzurePipelinesReporter>true</EnableAzurePipelinesReporter>
     <TestRunNamePrefix>$(AGENT_JOBNAME)</TestRunNamePrefix>
-    
+
     <EnableXUnitReporter>true</EnableXUnitReporter>
-    <FailOnMissionControlTestFailure>true</FailOnMissionControlTestFailure>
   </PropertyGroup>
 
   <ItemGroup>
@@ -91,6 +90,22 @@
   </PropertyGroup>
   <Target Name="Pack"/>
 
+  <!-- Yields an existing archive that will fail if ArchivePayload doesn't work -->
+  <Target Name="ZipPrexistingArchive" BeforeTargets="Build">
+      <MakeDir Directories="$(IntermediateOutputPath)\correlationarchivepayload" /> 
+      <WriteLinesToFile
+           File="$(IntermediateOutputPath)\correlationarchivepayload\testArchivePayload.txt"
+           Lines="I am a test Archive Payload"
+           Overwrite="true" />
+      <ZipDirectory Overwrite="True"
+          SourceDirectory="$(IntermediateOutputPath)\correlationarchivepayload"
+          DestinationFile="$(MSBuildProjectDirectory)\archivepayload.zip" />
+      <RemoveDir Directories="$(IntermediateOutputPath)\correlationarchivepayload" />
+  </Target>
+  <!-- Attach the ArchivePayload to all Helix work items to validate uploading them (and via logs whether caching occurs) -->
+  <ItemGroup>
+      <HelixCorrelationPayload Include="$(MSBuildProjectDirectory)\archivepayload.zip" />
+  </ItemGroup>
+
   <Import Project="$(MSBuildThisFileDirectory)\..\src\Microsoft.DotNet.Helix\Sdk\sdk\Sdk.targets"/>
-  <!-- <Import Sdk="Microsoft.DotNet.Helix.Sdk" Project="Sdk.targets"/> -->
 </Project>

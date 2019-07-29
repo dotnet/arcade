@@ -25,9 +25,9 @@ namespace Microsoft.DotNet.GitSync
     internal class Program
     {
         private const string TableName = "CommitHistory";
-        private const string RepoTableName = "MirrorRepos";
+        private const string RepoTableName = "MirrorBranchRepos";
         private static CloudTable s_table;
-        private static Dictionary<string, List<string>> s_repos { get; set; } = new Dictionary<string, List<string>>();
+        private static Dictionary<(string, string), List<string>> s_repos { get; set; } = new Dictionary<(string, string), List<string>>();
         private ConfigFile ConfigFile { get; }
         private static Lazy<GitHubClient> _lazyClient;
         private static EmailManager s_emailManager;
@@ -544,7 +544,7 @@ namespace Microsoft.DotNet.GitSync
             var repos = RepoTable.ExecuteQuery(getAllMirrorPairs);
             foreach (var item in repos)
             {
-                s_repos.Add(item.PartitionKey, item["ReposToMirrorInto"].StringValue.Split(';').ToList());
+                s_repos.Add((item.PartitionKey, item["Branch"].StringValue), item["ReposToMirrorInto"].StringValue.Split(';').ToList());
                 s_logger.Info($"The commits in  {item.PartitionKey} repo will be mirrored into {item["ReposToMirrorInto"].StringValue} Repos");
             }
 
@@ -615,7 +615,7 @@ namespace Microsoft.DotNet.GitSync
                     {
                         if (changedFile.Contains(sharedDirectory))
                         {
-                            foreach (string targetRepo in s_repos[repository.Name])
+                            foreach (string targetRepo in s_repos[(repository.Name, branch)])
                             {
                                 RetrieveOrInsert(repository.Name, branch, commit.Sha, targetRepo);
                             }

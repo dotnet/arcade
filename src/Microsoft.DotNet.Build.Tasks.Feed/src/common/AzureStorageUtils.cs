@@ -6,6 +6,7 @@ using Microsoft.Azure.Storage;
 using Microsoft.Azure.Storage.Auth;
 using Microsoft.Azure.Storage.Blob;
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
@@ -46,6 +47,8 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
         public async Task UploadBlockBlobAsync(string filePath, string blobPath)
         {
             CloudBlockBlob cloudBlockBlob = GetBlockBlob(blobPath.Replace("\\", "/"));
+
+            cloudBlockBlob.Properties.ContentType = GetMimeMapping(filePath);
 
             await cloudBlockBlob.UploadFromFileAsync(filePath);
         }
@@ -134,9 +137,9 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
             return Container.GetSharedAccessSignature(sasConstraints);
         }
 
-        public Task<bool> CheckIfContainerExistsAsync()
+        public async Task<bool> CheckIfContainerExistsAsync()
         {
-            return Container.ExistsAsync();
+            return await Container.ExistsAsync();
         }
 
         public async Task<bool> CheckIfBlobExistsAsync(string blobPath)
@@ -144,6 +147,23 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
             var blob = GetBlockBlob(blobPath);
 
             return await blob.ExistsAsync();
+        }
+
+        private string GetMimeMapping(string filePath)
+        {
+            var mimeMappings = new Dictionary<string, string>()
+            {
+                {".svg", "image/svg+xml"}
+            };
+
+            if (string.IsNullOrWhiteSpace(filePath))
+            {
+                throw new ArgumentException("An attempt to get the MIME mapping of an empty path was made.");
+            }
+
+            return mimeMappings.TryGetValue(Path.GetExtension(filePath).ToLower(), out string mime) ?
+                mime :
+                "application/octet-stream";
         }
     }
 }

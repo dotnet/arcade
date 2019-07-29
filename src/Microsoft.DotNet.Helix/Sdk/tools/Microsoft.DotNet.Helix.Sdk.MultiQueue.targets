@@ -66,11 +66,11 @@
           BeforeTargets="AfterTest">
     <CheckHelixJobStatus
       Condition="$(WaitForWorkItemCompletion)"
-      AccessToken="$(HelixAccessToken)"
+      HelixAccessToken="$(HelixAccessToken)"
       BaseUri="$(HelixBaseUri)"
       Jobs="@(SentJob)"
       FailOnWorkItemFailure="$(FailOnWorkItemFailure)"
-      FailOnMissionControlTestFailure="$(FailOnMissionControlTestFailure)"
+      FailOnMissionControlTestFailure="$(FailOnMissionControlTestFailure)" 
       />
   </Target>
 </Project>

@@ -1,4 +1,5 @@
 import base64
+import os
 from typing import Iterable, Mapping
 from builtins import str as text
 from vsts.vss_connection import VssConnection
@@ -63,11 +64,13 @@ class AzureDevOpsTestResultPublisher:
                         stream=stream,
                     ), self.team_project, self.test_run_id, published_result.id)
 
-    def convert_results(self, results):
-        # type: (Iterable[TestResult]) -> Iterable[TestCaseResult]
-        def convert_result(r):
-            # type: (TestResult) -> TestCaseResult
+    def convert_results(self, results: Iterable[TestResult]) -> Iterable[TestCaseResult]:
+        comment = "{{ \"HelixJobId\": \"{}\", \"HelixWorkItemName\": \"{}\" }}".format(
+            os.getenv("HELIX_CORRELATION_ID"),
+            os.getenv("HELIX_WORKITEM_FRIENDLYNAME"),
+        )
 
+        def convert_result(r: TestResult) -> TestCaseResult:
             if r.result == "Pass":
                 return TestCaseResult(
                     test_case_title=text(r.name),
@@ -78,6 +81,7 @@ class AzureDevOpsTestResultPublisher:
                     duration_in_ms=r.duration_seconds*1000,
                     outcome="Passed",
                     state="Completed",
+                    comment=comment,
                 )
             if r.result == "Fail":
                 return TestCaseResult(
@@ -91,6 +95,7 @@ class AzureDevOpsTestResultPublisher:
                     state="Completed",
                     error_message=text(r.failure_message),
                     stack_trace=text(r.stack_trace) if r.stack_trace is not None else None,
+                    comment=comment,
                 )
 
             if r.result == "Skip":
@@ -104,6 +109,7 @@ class AzureDevOpsTestResultPublisher:
                     outcome="NotExecuted",
                     state="Completed",
                     error_message=text(r.skip_reason),
+                    comment=comment,
                 )
 
             print("Unexpected result value {} for {}".format(r.result, r.name))

@@ -106,7 +106,7 @@ If you repo have signable files that have a different Public Key Token than the 
 </ItemGroup>
 ```
 
-If that is is your only custom configuration all files with that Public Key Token will be signed with the `DifferentCertName` certificate and `StrongName1` strong name.
+If that is your only custom configuration all files with that Public Key Token will be signed with the `DifferentCertName` certificate and `StrongName1` strong name.
 
 #### 3. Configure signing information for an specific file
 
