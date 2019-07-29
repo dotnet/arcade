@@ -17,6 +17,8 @@ We need repo owners to complete a two-part work explained bellow in the followin
 1) Once all repos have completed Part 1, https://github.com/dotnet/arcade/pull/3041 will be merged and changes propagated to all repos
 2) Arcade working group member will inform that #4 is complete and will inform the working group that Part 2 can be done
 3) Delete the code that sets `RestoreSources` in `Version.props`
+4) Make sure your repo doesn't need any of the feeds removed [here](https://github.com/dotnet/arcade/pull/3041/files#diff-f1b1f6d246bc1f9a81d8ea1c4498e3a5L101). If
+https://api.nuget.org/v3/index.json is not in NuGet.config we recommend it is added
 4) Update the Status of your repo in the table bellow to "Part 2 complete"
 
 | Repo                       | Owner            |  Status           | Notes              |
