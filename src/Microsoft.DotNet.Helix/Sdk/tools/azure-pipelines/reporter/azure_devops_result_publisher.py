@@ -55,20 +55,38 @@ class AzureDevOpsTestResultPublisher:
         except Exception as e:
             log.debug(e)
 
-        # for published_result in published_results:
-        #     if published_result.automated_test_name in results_with_attachments:
-        #         result = results_with_attachments.get(published_result.automated_test_name)
-        #         for attachment in result.attachments:
-        #             try:
-        #                 # Python 3 will throw a TypeError exception because b64encode expects bytes
-        #                 stream=base64.b64encode(text(attachment.text))
-        #             except TypeError:
-        #                 # stream has to be a string but b64encode takes and returns bytes on Python 3
-        #                 stream=base64.b64encode(bytes(attachment.text, "utf-8")).decode("utf-8") 
-        #             test_client.create_test_result_attachment(TestAttachmentRequestModel(
-        #                 file_name=text(attachment.name),
-        #                 stream=stream,
-        #             ), self.team_project, self.test_run_id, published_result.id)
+        for published_result in published_results:
+            if published_result.automated_test_name in results_with_attachments:
+                result = results_with_attachments.get(published_result.automated_test_name)
+                for attachment in result.attachments:
+                    try:
+                        # Python 3 will throw a TypeError exception because b64encode expects bytes
+                        stream=base64.b64encode(text(attachment.text))
+                    except TypeError:
+                        # stream has to be a string but b64encode takes and returns bytes on Python 3
+                        stream=base64.b64encode(bytes(attachment.text, "utf-8")).decode("utf-8")
+                    test_client.create_test_result_attachment(
+                        TestAttachmentRequestModel(
+                            file_name=text(attachment.name),
+                            stream=stream,
+                        ), self.team_project, self.test_run_id, published_result.id)
+            elif published_result.sub_results is not None:
+                log.debug("Checking {0} subresults...".format(len(published_results.sub_results)))
+                for published_sub_result in published_result:
+                    if published_sub_result.display_name in results_with_attachments:
+                        result = results_with_attachments.get(published_result.automated_test_name)
+                        for attachment in result.attachments:
+                            try:
+                                # Python 3 will throw a TypeError exception because b64encode expects bytes
+                                stream=base64.b64encode(text(attachment.text))
+                            except TypeError:
+                                # stream has to be a string but b64encode takes and returns bytes on Python 3
+                                stream=base64.b64encode(bytes(attachment.text, "utf-8")).decode("utf-8")
+                            test_client.create_test_sub_result_attachment(
+                                TestAttachmentRequestModel( ## <-- YOU STOPPED HERE. IS THIS MODEL VALID FOR SUBRESULTS?
+                                    file_name=text(attachment.name),
+                                    stream=stream,
+                                ), self.team_project, self.test_run_id, published_result.id)
 
     def convert_results(self, results: Iterable[TestResult]) -> Iterable[TestCaseResult]:
         comment = "{{ \"HelixJobId\": \"{}\", \"HelixWorkItemName\": \"{}\" }}".format(
