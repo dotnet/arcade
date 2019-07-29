@@ -57,6 +57,18 @@ namespace Microsoft.DotNet.Helix.Client
             }
         }
 
+        internal async Task OnGetMachineStatusFailed(HttpRequestMessage req, HttpResponseMessage res)
+        {
+            var content = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
+            var ex = new RestApiException(
+                new HttpRequestMessageWrapper(req, null),
+                new HttpResponseMessageWrapper(res, content));
+            HandleFailedGetMachineStatusRequest(ex);
+            HandleFailedRequest(ex);
+            Client.OnFailedRequest(ex);
+            throw ex;
+        }
+
         internal async Task<HttpOperationResponse<MachineInformation>> GetMachineStatusInternalAsync(
             string machineName,
             string queueId,
@@ -74,7 +86,7 @@ namespace Microsoft.DotNet.Helix.Client
             }
 
 
-            var _path = "/api/2018-03-14/machines/{queueId}/{machineName}/state";
+            var _path = "/api/2019-06-17/machines/{queueId}/{machineName}/state";
             _path = _path.Replace("{queueId}", Client.Serialize(queueId));
             _path = _path.Replace("{machineName}", Client.Serialize(machineName));
 
@@ -97,19 +109,11 @@ namespace Microsoft.DotNet.Helix.Client
                 }
 
                 _res = await Client.SendAsync(_req, cancellationToken).ConfigureAwait(false);
-                string _responseContent;
                 if (!_res.IsSuccessStatusCode)
                 {
-                    _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
-                    var ex = new RestApiException(
-                        new HttpRequestMessageWrapper(_req, null),
-                        new HttpResponseMessageWrapper(_res, _responseContent));
-                    HandleFailedGetMachineStatusRequest(ex);
-                    HandleFailedRequest(ex);
-                    Client.OnFailedRequest(ex);
-                    throw ex;
+                    await OnGetMachineStatusFailed(_req, _res);
                 }
-                _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
+                string _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
                 return new HttpOperationResponse<MachineInformation>
                 {
                     Request = _req,
@@ -145,6 +149,18 @@ namespace Microsoft.DotNet.Helix.Client
             }
         }
 
+        internal async Task OnChangeStateFailed(HttpRequestMessage req, HttpResponseMessage res)
+        {
+            var content = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
+            var ex = new RestApiException(
+                new HttpRequestMessageWrapper(req, content),
+                new HttpResponseMessageWrapper(res, content));
+            HandleFailedChangeStateRequest(ex);
+            HandleFailedRequest(ex);
+            Client.OnFailedRequest(ex);
+            throw ex;
+        }
+
         internal async Task<HttpOperationResponse<Newtonsoft.Json.Linq.JToken>> ChangeStateInternalAsync(
             MachineStateChangeRequest body,
             string machineName,
@@ -168,7 +184,7 @@ namespace Microsoft.DotNet.Helix.Client
             }
 
 
-            var _path = "/api/2018-03-14/machines/{queueId}/{machineName}/state";
+            var _path = "/api/2019-06-17/machines/{queueId}/{machineName}/state";
             _path = _path.Replace("{queueId}", Client.Serialize(queueId));
             _path = _path.Replace("{machineName}", Client.Serialize(machineName));
 
@@ -204,19 +220,11 @@ namespace Microsoft.DotNet.Helix.Client
                 }
 
                 _res = await Client.SendAsync(_req, cancellationToken).ConfigureAwait(false);
-                string _responseContent;
                 if (!_res.IsSuccessStatusCode)
                 {
-                    _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
-                    var ex = new RestApiException(
-                        new HttpRequestMessageWrapper(_req, _requestContent),
-                        new HttpResponseMessageWrapper(_res, _responseContent));
-                    HandleFailedChangeStateRequest(ex);
-                    HandleFailedRequest(ex);
-                    Client.OnFailedRequest(ex);
-                    throw ex;
+                    await OnChangeStateFailed(_req, _res);
                 }
-                _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
+                string _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
                 return new HttpOperationResponse<Newtonsoft.Json.Linq.JToken>
                 {
                     Request = _req,

@@ -10,8 +10,8 @@ def __no_results_result():
     work_item_name = get_env("HELIX_WORKITEM_FRIENDLYNAME")
     
     if exitCode != "0":
-        result = 'Fail'
-        failure_message = 'The work item failed to produce any test results.'
+        # if we have a catastrophic failure, we want to create the fake test result with attached dump files and logs (if available)
+        return
     else:
         result = 'Pass'
         failure_message = None

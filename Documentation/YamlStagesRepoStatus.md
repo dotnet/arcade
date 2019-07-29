@@ -15,7 +15,7 @@ Target completion date is 8/13/2019.
 | Arcade-Validation          | mawilkie         | Complete | ✔️ | |
 | aspnet-AspLabs             | dougbu/johluo    | On track | ➖ | |
 | aspnet-AspNetCore          | dougbu/johluo    | On track | ➖ | |
-| aspnet-AspNetCore-Tooling  | dougbu/johluo    | On track | ➖ | |
+| aspnet-AspNetCore-Tooling  | dougbu/johluo    | Complete | ✔️ | |
 | aspnet-EntityFramework6    | dougbu/johluo    | On track | ➖ | |
 | aspnet-EntityFrameworkCore | dougbu/johluo    | On track | ➖ | |
 | aspnet-Blazor              | dougbu/johluo    | On track | ➖ | |
@@ -24,6 +24,7 @@ Target completion date is 8/13/2019.
 | CLICommandLineParser       | licavalc         | On track | ➖ | |
 | CoreClr                    | russellk         | On track | ➖ | |
 | CoreFx                     | danmose          | On track | ➖ | |
+| IoT                        | joperezr         | Complete | ✔️ | |
 | Core-SDK                   | licavalc         | On track | ➖ | |
 | Core-Setup                 | dleeapho         | On track | ➖ | |
 | FSharp                     | brettfo          | On track | ➖ | |
@@ -31,7 +32,7 @@ Target completion date is 8/13/2019.
 | nuget-NugetClient          | dtivel           | On track | ➖ | |
 | Roslyn                     | jaredpar         | On track | ➖ | |
 | SDK                        | licavalc         | On track | ➖ | |
-| Standard                   | danmose          | On track | ➖ | |
+| Standard                   | danmose          | Complete | ✔️ | |
 | SymReader                  | tmat             | On track | ➖ | |
 | SymReader-Portable         | tmat             | On track | ➖ | |
 | Templating                 | vramak           | On track | ➖ | |
