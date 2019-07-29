@@ -51,7 +51,7 @@ class AzureDevOpsTestResultPublisher:
 
             log.info("Attachments count: {0}".format(len(results_with_attachments)))
             for (k,v) in results_with_attachments.items():
-                log.debug("{0}: {1}".format(k, v.automated_test_name))
+                log.debug("{0}: {1}".format(k, v.name))
         except Exception as e:
             log.debug(e)
 
@@ -163,17 +163,14 @@ class AzureDevOpsTestResultPublisher:
             if r is None:
                 continue
             if is_data_driven_test(r):
-                log.debug("Found data driven test: {0}".format(r.name))
                 base_name = get_ddt_base_name(r)
                 if base_name in data_driven_tests:
-                    log.debug("\tData driven test already known; adding as sub result.")
                     sub_test = convert_to_sub_test(r)
                     data_driven_tests[base_name].sub_results.append(sub_test)
                     if sub_test.outcome == "Failed":
                         data_driven_tests[base_name].outcome = "Failed"
 
                 else:
-                    log.debug("\tData driven test not yet known; adding as \"{0}\".".format(base_name))
                     data_driven_tests[base_name] = convert_result(r)
                     data_driven_tests[base_name].automated_test_name = base_name
                     data_driven_tests[base_name].result_group_type = "dataDriven"
