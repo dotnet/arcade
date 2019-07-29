@@ -80,7 +80,7 @@ namespace Microsoft.DotNet.Tools.Tests
 @"<dc:description>Signed</dc:description>" +
 @"<dc:identifier>Signed</dc:identifier>" +
 @"<version>1.2.3-replaced</version>" +
-@"<keywords />" +
+@"<keywords></keywords>" +
 @"<lastModifiedBy>NuGet, Version=4.7.0.5, Culture=neutral, PublicKeyToken=31bf3856ad364e35;Microsoft Windows NT 6.2.9200.0;.NET Framework 4.6</lastModifiedBy>" +
 @"</coreProperties>", reader.ReadToEnd());
                 }
