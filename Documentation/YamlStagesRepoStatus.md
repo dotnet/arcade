@@ -23,7 +23,7 @@ Target completion date is 8/13/2019.
 | CLI                        | licavalc         | On track | ➖ | |
 | CLICommandLineParser       | licavalc         | On track | ➖ | |
 | CoreClr                    | russellk         | On track | ➖ | |
-| CoreFx                     | danmose          | On track | ➖ | |
+| CoreFx                     | danmose/safern   | On track | ➖ | |
 | IoT                        | joperezr         | Complete | ✔️ | |
 | Core-SDK                   | licavalc         | On track | ➖ | |
 | Core-Setup                 | dleeapho         | On track | ➖ | |
@@ -32,7 +32,7 @@ Target completion date is 8/13/2019.
 | nuget-NugetClient          | dtivel           | On track | ➖ | |
 | Roslyn                     | jaredpar         | On track | ➖ | |
 | SDK                        | licavalc         | On track | ➖ | |
-| Standard                   | danmose          | Complete | ✔️ | |
+| Standard                   | danmose/wigodbe  | Complete | ✔️ | |
 | SymReader                  | tmat             | On track | ➖ | |
 | SymReader-Portable         | tmat             | On track | ➖ | |
 | Templating                 | vramak           | On track | ➖ | |
