@@ -1,20 +1,5 @@
 #!/usr/bin/env bash
 
-#    _____  .____     ________________________________._._._.
-#   /  _  \ |    |    \_   _____/\______   \__    ___/| | | |
-#  /  /_\  \|    |     |    __)_  |       _/ |    |   | | | |
-# /    |    \    |___  |        \ |    |   \ |    |    \|\|\|
-# \____|__  /_______ \/_______  / |____|_  / |____|    ______
-#         \/        \/        \/         \/            \/\/\/
-#
-# Please do not use this script unless you are installing version 10.0.2.
-# It will not work with other versions of the JDK and is currently here only
-# for arcade-validation.
-#
-# Once this feature (https://github.com/dotnet/arcade/issues/2674) is implemented,
-# these scripts and artifacts will be properly refactored to work with all available
-# versions.
-
 source="${BASH_SOURCE[0]}"
 scriptroot="$( cd -P "$( dirname "$source" )" && pwd )"
 
@@ -76,15 +61,15 @@ while (($# > 0)); do
   esac
 done
 
-tool_name="jdk"
+tool_name="cmake-test"
 tool_os=$(GetCurrentOS)
 tool_folder=$(echo $tool_os | awk '{print tolower($0)}')
-tool_arch="x64_bin"
+tool_arch="x86_64"
 tool_name_moniker="$tool_name-$version-$tool_os-$tool_arch"
 tool_install_directory="$install_path/$tool_name/$version"
 tool_file_path="$tool_install_directory/$tool_name_moniker/bin/$tool_name"
 shim_path="$install_path/$tool_name.sh"
-uri="${base_uri}/$tool_folder/jdk/$tool_name_moniker.tar.gz"
+uri="${base_uri}/$tool_folder/$tool_name/$tool_name_moniker.tar.gz"
 
 # Clean up tool and installers
 if [[ $clean = true ]]; then
