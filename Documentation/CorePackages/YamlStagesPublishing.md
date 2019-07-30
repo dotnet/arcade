@@ -39,8 +39,8 @@ In order to use this new publishing mechanism, the easiest way to start is by ma
 
       ```YAML
       variables:
-      - name: _PublishUsingPipelines
-        value: true
+        - name: _PublishUsingPipelines
+          value: true
         ...
       ```
 
@@ -70,11 +70,11 @@ In order to use this new publishing mechanism, the easiest way to start is by ma
     ```YAML
     stages:
     - stage: build
-    displayName: Build
-    jobs:
-    - template: /eng/common/templates/jobs/jobs.yml
-      parameters:
-        enablePublishUsingPipelines: true
+      displayName: Build
+      jobs:
+      - template: /eng/common/templates/jobs/jobs.yml
+        parameters:
+          enablePublishUsingPipelines: true
     ...
     ```
 
