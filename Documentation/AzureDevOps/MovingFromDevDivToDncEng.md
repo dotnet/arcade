@@ -10,7 +10,7 @@ These are the general steps for moving an official build from https://dev.azure.
 
 3. Add your repo to the dnceng/internal mirror. Example: https://github.com/dotnet/versions/pull/361/files
 
-4. Create a Pipeline following the documented [guidance](https://github.com/dotnet/arcade/blob/master/Documentation/AzureDevOps/Policy/AzureDevOpsGuidance.md#build-definitions).
+4. Create a Pipeline following the documented [guidance](https://github.com/dotnet/arcade/blob/master/Documentation/AzureDevOps/AzureDevOpsGuidance.md#pipelines).
 
 5. Request signing approval
 
