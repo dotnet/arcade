@@ -139,6 +139,16 @@
         Token="$(AzureStorageTargetFeedPAT)" />
     </ItemGroup>
 
+    <!-- Public non-stable feed used by `.NET Core 3 Release` Channel. -->
+    <ItemGroup Condition="'@(TargetFeedConfig)' == '' AND '$(ChannelId)' == '19'">
+      <TargetFeedConfig
+        Include="NetCore;OSX;Deb;Rpm;Node;BinaryLayout;Installer;Checksum;Maven;VSIX"
+        TargetURL="$(TargetStaticFeed)"
+        FeedName="public/dotnet-core-public"
+        Type="AzureStorageFeed"
+        Token="$(AzureStorageTargetFeedPAT)" />
+    </ItemGroup>
+
     <Error
       Condition="'@(TargetFeedConfig)' == ''"
       Text="It wasn't possible to determine which target feed configuration to use." />
