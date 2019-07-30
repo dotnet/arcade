@@ -37,7 +37,7 @@ Target completion date is 8/13/2019.
 | SymReader-Portable         | tmat             | On track | ➖ | |
 | Templating                 | vramak           | On track | ➖ | |
 | Test-Templates             | sasin            | On track | ➖ | |
-| Toolset                    | licavalc         | On track | ➖ | |
+| Toolset                    | licavalc         | At risk  | Blocked by https://github.com/dotnet/arcade/issues/3476. | |
 | WebSDK                     | vramak           | On track | ➖ | |
 | WinForms                   | mmcgaw           | On track | ➖ | |
 | WPF                        | vatsan-madhavan  | On track | ➖ | |
