@@ -46,6 +46,7 @@ class AzureDevOpsTestResultPublisher:
 
         published_results = test_client.add_test_results_to_test_run(list(test_case_results), self.team_project, self.test_run_id)  # type: List[TestCaseResult]
 
+        already_published = [] # type: List[str]
         for published_result in published_results:
             # Does the test result have an attachment with an exact matching name?
             if published_result.automated_test_name in results_with_attachments:
@@ -70,8 +71,8 @@ class AzureDevOpsTestResultPublisher:
             elif published_result.sub_results is not None:
                 # We assume all subresults have the same attachments, so get just the first matching.
                 for (test_name,test_result) in results_with_attachments.items():
-                    if self.is_data_driven_test(test_name) and self.get_ddt_base_name(test_name) == published_result.automated_test_name:
-
+                    if self.is_data_driven_test(test_name) and self.get_ddt_base_name(test_name) not in already_published and self.get_ddt_base_name(test_name) == published_result.automated_test_name:
+                        already_published.append(self.get_ddt_base_name(test_name))
                         for attachment in test_result.attachments:
                             try:
                                 # Python 3 will throw a TypeError exception because b64encode expects bytes
