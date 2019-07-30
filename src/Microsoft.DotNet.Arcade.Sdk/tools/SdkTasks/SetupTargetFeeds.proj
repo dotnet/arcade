@@ -52,7 +52,6 @@
       <TargetFeedConfig
         Include="$(TestFeedCategories)"
         TargetURL="$(TestFeedURL)"
-        FeedName="$(TestFeedName)"
         Type="$(TestFeedType)"
         Token="$(TestFeedToken)" />
     </ItemGroup>
@@ -78,7 +77,6 @@
       <TargetFeedConfig
         Include="NetCore;OSX;Deb;Rpm;Node;BinaryLayout;Installer;Checksum;Maven;VSIX"
         TargetURL="$(NewAzDoFeedURL)/index.json"
-        FeedName="$(NewTargetFeedName)"
         Type="AzureStorageFeed"
         Token="$(AzureStorageAccountKey)" />
     </ItemGroup>
@@ -88,7 +86,6 @@
       <TargetFeedConfig
         Include="NetCore;OSX;Deb;Rpm;Node;BinaryLayout;Installer;Checksum;Maven;VSIX"
         TargetURL="$(StaticInternalFeed)/index.json"
-        FeedName="dotnet-core-internal"
         Type="AzureStorageFeed"
         Token="$(AzureStorageAccountKey)" />
     </ItemGroup>
@@ -124,7 +121,6 @@
       <TargetFeedConfig
         Include="NetCore;OSX;Deb;Rpm;Node;BinaryLayout;Installer;Checksum;Maven;VSIX"
         TargetURL="$(TargetStaticFeed)"
-        FeedName="willbeused/forazdofeeds"
         Type="AzureStorageFeed"
         Token="$(AzureStorageTargetFeedPAT)" />
     </ItemGroup>
@@ -132,14 +128,6 @@
     <Error
       Condition="'@(TargetFeedConfig)' == ''"
       Text="It wasn't possible to determine which target feed configuration to use." />
-
-    <Message
-      Text="##vso[task.setvariable variable=AzDoFeedName]%(TargetFeedConfig.FeedName)"
-      Importance="high" />
-
-    <Message
-      Text="##vso[task.setvariable variable=TargetAzDOFeed]%(TargetFeedConfig.TargetURL)"
-      Importance="high" />
 
     <Message
       Text="Artifact with category '%(TargetFeedConfig.Identity)' should go to %(TargetFeedConfig.Type) -> '%(TargetFeedConfig.TargetURL)'"
