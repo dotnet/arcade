@@ -184,10 +184,6 @@
       Text="##vso[artifact.upload containerfolder=AssetManifests;artifactname=AssetManifests]$(TempWorkingDirectory)/$(AssetManifestFileName)"
       Importance="high" />
 
-    <!--
-      This won't be necessary once we solve this issue:
-      https://github.com/dotnet/arcade/issues/2266
-    -->
     <WriteLinesToFile
       File="$(MSBuildThisFileDirectory)ArtifactsCategory.props"
       Lines="&lt;Project>&lt;PropertyGroup>&lt;ArtifactsCategory>$(ArtifactsCategory)&lt;/ArtifactsCategory>&lt;/PropertyGroup>&lt;/Project>"
