@@ -119,32 +119,12 @@
       <TargetStaticFeed Condition="'$(TargetStaticFeed)' == ''">https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json</TargetStaticFeed>
     </PropertyGroup>
 
-    <!-- Public non-stable feed used by `Validation` Channel. -->
-    <ItemGroup Condition="'@(TargetFeedConfig)' == '' AND '$(ChannelId)' == '9'">
+    <!-- Configuration for public non-stable feeds -->
+    <ItemGroup Condition="'@(TargetFeedConfig)' == ''">
       <TargetFeedConfig
         Include="NetCore;OSX;Deb;Rpm;Node;BinaryLayout;Installer;Checksum;Maven;VSIX"
         TargetURL="$(TargetStaticFeed)"
-        FeedName="public/dotnet-core-validation-public"
-        Type="AzureStorageFeed"
-        Token="$(AzureStorageTargetFeedPAT)" />
-    </ItemGroup>
-
-    <!-- Public non-stable feed used by `.NET Core 3 Dev` Channel. -->
-    <ItemGroup Condition="'@(TargetFeedConfig)' == '' AND '$(ChannelId)' == '3'">
-      <TargetFeedConfig
-        Include="NetCore;OSX;Deb;Rpm;Node;BinaryLayout;Installer;Checksum;Maven;VSIX"
-        TargetURL="$(TargetStaticFeed)"
-        FeedName="public/dotnet-core-public"
-        Type="AzureStorageFeed"
-        Token="$(AzureStorageTargetFeedPAT)" />
-    </ItemGroup>
-
-    <!-- Public non-stable feed used by `.NET Core 3 Release` Channel. -->
-    <ItemGroup Condition="'@(TargetFeedConfig)' == '' AND '$(ChannelId)' == '19'">
-      <TargetFeedConfig
-        Include="NetCore;OSX;Deb;Rpm;Node;BinaryLayout;Installer;Checksum;Maven;VSIX"
-        TargetURL="$(TargetStaticFeed)"
-        FeedName="public/dotnet-core-public"
+        FeedName="willbeused/forazdofeeds"
         Type="AzureStorageFeed"
         Token="$(AzureStorageTargetFeedPAT)" />
     </ItemGroup>
