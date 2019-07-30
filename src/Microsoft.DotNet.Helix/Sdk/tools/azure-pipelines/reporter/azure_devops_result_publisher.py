@@ -40,7 +40,7 @@ class AzureDevOpsTestResultPublisher:
 
         published_results = test_client.add_test_results_to_test_run(list(test_case_results), self.team_project, self.test_run_id)  # type: List[TestCaseResult]
 
-        actually_published_results = test_client.get_test_results(self.team_project, self.test_run_id)
+        actually_published_results = test_client.get_test_results(self.team_project, self.test_run_id, "subResults")
 
         log.info("Published Results count: {0}".format(len(published_results)))
         try:
