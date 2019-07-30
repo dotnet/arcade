@@ -34,42 +34,24 @@ class AzureDevOpsTestResultPublisher:
 
         self.publish_results(test_case_results, results_with_attachments)
 
+    def is_data_driven_test(self, r: str) -> bool:
+        return r.endswith(")")
+
+    def get_ddt_base_name(self, r: str) -> str:
+        return r.split('(',1)[0]
+
     def publish_results(self, test_case_results: Iterable[TestCaseResult], results_with_attachments: Mapping[str, TestResult]) -> None:
         connection = self.get_connection()
         test_client = connection.get_client("azure.devops.v5_1.test.TestClient")  # type: TestClient
 
         published_results = test_client.add_test_results_to_test_run(list(test_case_results), self.team_project, self.test_run_id)  # type: List[TestCaseResult]
 
-        actually_published_results = test_client.get_test_results(self.team_project, self.test_run_id, "subResults")
-
-        log.info("Published Results count: {0}".format(len(published_results)))
-        try:
-            for r in published_results:
-                log.debug("Published Result automated test name: {0}".format(r.automated_test_name))
-                if r.sub_results is not None:
-                    for rs in r.sub_results:
-                        log.debug("Subtest id: {0}, display name: {1}".format(rs.id, rs.display_name))
-
-            log.info("Attachments count: {0}".format(len(results_with_attachments)))
-            for (k,v) in results_with_attachments.items():
-                log.debug("Attachment Name: {0}, value: {1}".format(k, v.name))
-        except Exception as e:
-            log.debug(e)
-
-        log.info("Actually Published result count: {0}".format(len(actually_published_results)))
-        try:
-            for r in actually_published_results:
-                log.debug("Actually Published Result automated test name: {0}".format(r.automated_test_name))
-                if r.sub_results is not None:
-                    for rs in r.sub_results:
-                        log.debug("Actually Subtest id: {0}, display name: {1}".format(rs.id, rs.display_name))
-        except Exception as e:
-            log.debug(e)
-
         for published_result in published_results:
+            # Does the test result have an attachment with an exact matching name?
             if published_result.automated_test_name in results_with_attachments:
                 log.debug("Result {0} has an attachment".format(published_result.automated_test_name))
                 result = results_with_attachments.get(published_result.automated_test_name)
+
                 for attachment in result.attachments:
                     try:
                         # Python 3 will throw a TypeError exception because b64encode expects bytes
@@ -77,26 +59,28 @@ class AzureDevOpsTestResultPublisher:
                     except TypeError:
                         # stream has to be a string but b64encode takes and returns bytes on Python 3
                         stream=base64.b64encode(bytes(attachment.text, "utf-8")).decode("utf-8")
+
                     test_client.create_test_result_attachment(
                         TestAttachmentRequestModel(
                             file_name=text(attachment.name),
                             stream=stream,
                         ), self.team_project, self.test_run_id, published_result.id)
+
+            # Does the test result have an attachment with a sub-result matching name?
             elif published_result.sub_results is not None:
-                log.debug("Checking {0} subresults...".format(len(published_result.sub_results)))
-                for published_sub_result in published_result.sub_results:
-                    log.debug("Checkign subresult {0}".format(published_sub_result.display_name))
-                    if published_sub_result.display_name in results_with_attachments:
-                        log.debug("Subresult {0} has an attachment".format(published_sub_result.display_name))
-                        result = results_with_attachments.get(published_result.automated_test_name)
-                        for attachment in result.attachments:
+                # We assume all subresults have the same attachments, so get just the first matching.
+                for (test_name,test_result) in results_with_attachments.items():
+                    if self.is_data_driven_test(test_name) and self.get_ddt_base_name(test_name) == published_result.automated_test_name:
+
+                        for attachment in test_result.attachments:
                             try:
                                 # Python 3 will throw a TypeError exception because b64encode expects bytes
                                 stream=base64.b64encode(text(attachment.text))
                             except TypeError:
                                 # stream has to be a string but b64encode takes and returns bytes on Python 3
                                 stream=base64.b64encode(bytes(attachment.text, "utf-8")).decode("utf-8")
-                            test_client.create_test_sub_result_attachment(
+
+                            test_client.create_test_result_attachment(
                                 TestAttachmentRequestModel(
                                     file_name=text(attachment.name),
                                     stream=stream,
@@ -107,12 +91,6 @@ class AzureDevOpsTestResultPublisher:
             os.getenv("HELIX_CORRELATION_ID"),
             os.getenv("HELIX_WORKITEM_FRIENDLYNAME"),
         )
-
-        def is_data_driven_test(r: TestResult) -> bool:
-            return r.name.endswith(")")
-
-        def get_ddt_base_name(r: TestResult) -> str:
-            return r.name.split('(',1)[0]
 
         def convert_to_sub_test(r: TestResult) -> TestSubResult:
             if r.result == "Pass":
@@ -194,8 +172,8 @@ class AzureDevOpsTestResultPublisher:
         for r in unconverted_results:
             if r is None:
                 continue
-            if is_data_driven_test(r):
-                base_name = get_ddt_base_name(r)
+            if self.is_data_driven_test(r.name):
+                base_name = self.get_ddt_base_name(r.name)
                 if base_name in data_driven_tests:
                     sub_test = convert_to_sub_test(r)
                     data_driven_tests[base_name].sub_results.append(sub_test)
