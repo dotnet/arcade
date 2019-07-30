@@ -7,6 +7,9 @@ parameters:
     enable: false
     params: ''
 
+  # Which kind of build is happening: 'release', 'prerelease', ''
+  dotNetFinalVersionKind: ''
+
   # Which stages should finish execution before post-build stages start
   dependsOn: [build]
 
@@ -85,10 +88,17 @@ stages:
 
 - template: \eng\common\templates\post-build\channels\public-dev-release.yml
   parameters:
+    dotNetFinalVersionKind: ${{ parameters.dotNetFinalVersionKind }}
     enableSymbolValidation: ${{ parameters.enableSymbolValidation }}
 
 - template: \eng\common\templates\post-build\channels\public-validation-release.yml
+  parameters:
+    dotNetFinalVersionKind: ${{ parameters.dotNetFinalVersionKind }}
 
 - template: \eng\common\templates\post-build\channels\public-release.yml
+  parameters:
+    dotNetFinalVersionKind: ${{ parameters.dotNetFinalVersionKind }}
 
 - template: \eng\common\templates\post-build\channels\internal-servicing.yml
+  parameters:
+    dotNetFinalVersionKind: ${{ parameters.dotNetFinalVersionKind }}

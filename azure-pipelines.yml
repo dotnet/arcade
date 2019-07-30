@@ -23,6 +23,8 @@ variables:
     value: .NETCore
   - name: _DotNetValidationArtifactsCategory
     value: .NETCoreValidation
+  - name: _DotNetFinalVersionKind
+    value: ''
 
 resources:
   containers:
@@ -78,6 +80,7 @@ stages:
               /p:DotNetPublishUsingPipelines=$(_PublishUsingPipelines)
               /p:DotNetArtifactsCategory=$(_DotNetArtifactsCategory)
               /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
+              /p:DotNetFinalVersionKind=$(_DotNetFinalVersionKind)
 
         strategy:
           matrix:
@@ -184,12 +187,17 @@ stages:
 - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
   - template: eng\common\templates\post-build\post-build.yml
     parameters:
+      # Which kind of build is happening: 'release', 'prerelease', ''
+      dotNetFinalVersionKind: ${{ variables._DotNetFinalVersionKind }}
+
       # Symbol validation isn't being very reliable lately. This should be enabled back
       # once this issue is resolved: https://github.com/dotnet/arcade/issues/2871
       enableSymbolValidation: false
+      
       # Sourcelink validation isn't passing for Arcade due to some regressions. This should be
       # enabled back once this issue is resolved: https://github.com/dotnet/arcade/issues/2912
       enableSourceLinkValidation: false
+      
       # This is to enable SDL runs part of Post-Build Validation Stage
       SDLValidationParameters:
         enable: true

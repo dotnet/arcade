@@ -1,6 +1,7 @@
 parameters:
   enableSymbolValidation: true
-
+  dotNetFinalVersionKind: ''
+  
 stages:
 - stage: PubRel_Publish
   dependsOn: validate
@@ -45,7 +46,7 @@ stages:
       - name: BARBuildId
         value: $[ dependencies.setupMaestroVars.outputs['setReleaseVars.BARBuildId'] ]
       - name: IsStableBuild
-        value: $[ dependencies.setupMaestroVars.outputs['setReleaseVars.IsStableBuild'] ]
+        value: ${{ eq(parameters.dotNetFinalVersionKind, 'release') }}
     condition: contains(dependencies.setupMaestroVars.outputs['setReleaseVars.InitialChannels'], variables.PublicRelease_30_Channel_Id)
     pool:
       vmImage: 'windows-2019'
