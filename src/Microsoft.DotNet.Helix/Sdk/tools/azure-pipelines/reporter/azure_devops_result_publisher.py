@@ -40,18 +40,29 @@ class AzureDevOpsTestResultPublisher:
 
         published_results = test_client.add_test_results_to_test_run(list(test_case_results), self.team_project, self.test_run_id)  # type: List[TestCaseResult]
 
-        log.info("Published Results count: {0}".format(len(published_results)))
+        actually_published_results = test_client.get_test_results(self.team_project, self.test_run_id)
 
+        log.info("Published Results count: {0}".format(len(published_results)))
         try:
             for r in published_results:
-                log.debug(r.automated_test_name)
+                log.debug("Published Result automated test name: {0}".format(r.automated_test_name))
                 if r.sub_results is not None:
                     for rs in r.sub_results:
-                        log.debug(rs.display_name)
+                        log.debug("Subtest id: {0}, display name: {1}".format(rs.id, rs.display_name))
 
             log.info("Attachments count: {0}".format(len(results_with_attachments)))
             for (k,v) in results_with_attachments.items():
-                log.debug("{0}: {1}".format(k, v.name))
+                log.debug("Attachment Name: {0}, value: {1}".format(k, v.name))
+        except Exception as e:
+            log.debug(e)
+
+        log.info("Actually Published result count: {0}".format(len(actually_published_results)))
+        try:
+            for r in actually_published_results:
+                log.debug("Actually Published Result automated test name: {0}".format(r.automated_test_name))
+                if r.sub_results is not None:
+                    for rs in r.sub_results:
+                        log.debug("Actually Subtest id: {0}, display name: {1}".format(rs.id, rs.display_name))
         except Exception as e:
             log.debug(e)
 
