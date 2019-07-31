@@ -47,7 +47,7 @@ namespace Microsoft.DotNet.Tools.Tests
             }
         }
 
-        [Fact]
+        [WindowsOnlyFact]
         public void TestPackagesSemVer1()
         {
             var dir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
@@ -85,7 +85,7 @@ namespace Microsoft.DotNet.Tools.Tests
             Directory.Delete(dir, recursive: true);
         }
 
-        [Fact]
+        [WindowsOnlyFact]
         public void TestPackagesSemVer2()
         {
             var dir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
