@@ -52,7 +52,6 @@
       <TargetFeedConfig
         Include="$(TestFeedCategories)"
         TargetURL="$(TestFeedURL)"
-        FeedName="$(TestFeedName)"
         Type="$(TestFeedType)"
         Token="$(TestFeedToken)" />
     </ItemGroup>
@@ -78,7 +77,6 @@
       <TargetFeedConfig
         Include="NetCore;OSX;Deb;Rpm;Node;BinaryLayout;Installer;Checksum;Maven;VSIX"
         TargetURL="$(NewAzDoFeedURL)/index.json"
-        FeedName="$(NewTargetFeedName)"
         Type="AzureStorageFeed"
         Token="$(AzureStorageAccountKey)" />
     </ItemGroup>
@@ -88,7 +86,6 @@
       <TargetFeedConfig
         Include="NetCore;OSX;Deb;Rpm;Node;BinaryLayout;Installer;Checksum;Maven;VSIX"
         TargetURL="$(StaticInternalFeed)/index.json"
-        FeedName="dotnet-core-internal"
         Type="AzureStorageFeed"
         Token="$(AzureStorageAccountKey)" />
     </ItemGroup>
@@ -119,22 +116,11 @@
       <TargetStaticFeed Condition="'$(TargetStaticFeed)' == ''">https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json</TargetStaticFeed>
     </PropertyGroup>
 
-    <!-- Public non-stable feed used by `Validation` Channel. -->
-    <ItemGroup Condition="'@(TargetFeedConfig)' == '' AND '$(ChannelId)' == '9'">
+    <!-- Configuration for public non-stable feeds -->
+    <ItemGroup Condition="'@(TargetFeedConfig)' == ''">
       <TargetFeedConfig
         Include="NetCore;OSX;Deb;Rpm;Node;BinaryLayout;Installer;Checksum;Maven;VSIX"
         TargetURL="$(TargetStaticFeed)"
-        FeedName="public/dotnet-core-validation-public"
-        Type="AzureStorageFeed"
-        Token="$(AzureStorageTargetFeedPAT)" />
-    </ItemGroup>
-
-    <!-- Public non-stable feed used by `.NET Core 3 Dev` Channel. -->
-    <ItemGroup Condition="'@(TargetFeedConfig)' == '' AND '$(ChannelId)' == '3'">
-      <TargetFeedConfig
-        Include="NetCore;OSX;Deb;Rpm;Node;BinaryLayout;Installer;Checksum;Maven;VSIX"
-        TargetURL="$(TargetStaticFeed)"
-        FeedName="public/dotnet-core-public"
         Type="AzureStorageFeed"
         Token="$(AzureStorageTargetFeedPAT)" />
     </ItemGroup>
@@ -142,14 +128,6 @@
     <Error
       Condition="'@(TargetFeedConfig)' == ''"
       Text="It wasn't possible to determine which target feed configuration to use." />
-
-    <Message
-      Text="##vso[task.setvariable variable=AzDoFeedName]%(TargetFeedConfig.FeedName)"
-      Importance="high" />
-
-    <Message
-      Text="##vso[task.setvariable variable=TargetAzDOFeed]%(TargetFeedConfig.TargetURL)"
-      Importance="high" />
 
     <Message
       Text="Artifact with category '%(TargetFeedConfig.Identity)' should go to %(TargetFeedConfig.Type) -> '%(TargetFeedConfig.TargetURL)'"
