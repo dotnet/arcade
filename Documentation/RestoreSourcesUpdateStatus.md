@@ -28,9 +28,9 @@ https://api.nuget.org/v3/index.json is not in NuGet.config we recommend it is ad
 | Arcade-Services            | mawilkie         | Part 2 complete   |                    |
 | SymReader                  | tmat             | Part 2 complete   |                    |
 | SymReader-Portable         | tmat             | Part 2 complete   |                    |
-| CoreFx                     | danmose          | Part 1 complete   | Part 2 in PR       |
+| CoreFx                     | danmose          | Part 2 complete   |                    |
 | Templating                 | phenning         | Part 2 complete   |                    |
-| Test-Templates             | singhsarab       | Part 1 complete   | Part 2 in PR       |
+| Test-Templates             | singhsarab       | Part 2 complete   |                    |
 | Toolset                    | licavalc         | Part 2 complete   |                    |
 | CoreClr                    | russellk         | Part 1 complete   | No change needed   |
 | WebSDK                     | vramak           | Part 1 complete   |                    |
