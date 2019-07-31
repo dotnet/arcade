@@ -34,6 +34,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public string AssetManifestPath { get; set; }
 
+        public bool IsStableBuild { get; set; }
+
         public override bool Execute()
         {
             try
@@ -111,8 +113,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         ManifestRepoUri, 
                         ManifestBuildId,
                         ManifestBranch, 
-                        ManifestCommit, 
-                        ManifestBuildData);
+                        ManifestCommit,
+                        ManifestBuildData,
+                        IsStableBuild);
                 }
             }
             catch (Exception e)
