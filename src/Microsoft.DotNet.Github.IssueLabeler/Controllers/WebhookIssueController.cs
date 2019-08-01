@@ -25,9 +25,9 @@ namespace Microsoft.DotNet.GitHub.IssueLabeler
         public async Task PostAsync([FromBody]IssueEventPayload data)
         {
             GitHubIssue issueOrPullRequest = data.Issue ?? data.Pull_Request;
-            List<object> labels = issueOrPullRequest?.Labels;
+            List<object> labels = issueOrPullRequest.Labels;
 
-            if (issueOrPullRequest != null && data.Action == "opened" && labels.Count == 0)
+            if (data.Action == "opened" && labels.Count == 0)
             {
                 string title = issueOrPullRequest.Title;
                 int number = issueOrPullRequest.Number;
