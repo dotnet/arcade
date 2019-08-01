@@ -30,7 +30,9 @@
     <IsStableBuild>false</IsStableBuild>
     <IsStableBuild Condition="'$(DotNetFinalVersionKind)' == 'release'">true</IsStableBuild>
 
-    <AssetManifestFileName>$(OS)-$(PlatformName).xml</AssetManifestFileName>
+    <AssetManifestOS Condition="'$(AssetManifestOS)' == ''">$(OS)</AssetManifestOS>
+
+    <AssetManifestFileName>$(AssetManifestOS)-$(PlatformName).xml</AssetManifestFileName>
     <AssetManifestFilePath>$(ArtifactsLogDir)AssetManifest\$(AssetManifestFileName)</AssetManifestFilePath>
 
     <SymbolPackagesDir>$(ArtifactsTmpDir)SymbolPackages\</SymbolPackagesDir>
