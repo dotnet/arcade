@@ -41,7 +41,7 @@
 
 # Enable repos to use a particular version of the on-line dotnet-install scripts.
 #    default URL: https://dot.net/v1/dotnet-install.ps1
-[string]$installScriptsVersion = if (Test-Path variable:installScriptsVersion) { $installScriptsVersion } else { "v1" }
+[string]$dotnetInstallScriptVersion = if (Test-Path variable:dotnetInstallScriptVersion) { $dotnetInstallScriptVersion } else { "v1" }
 
 # True to use global NuGet cache instead of restoring packages to repository-local directory.
 [bool]$useGlobalNuGetCache = if (Test-Path variable:useGlobalNuGetCache) { $useGlobalNuGetCache } else { !$ci }
@@ -163,7 +163,7 @@ function GetDotNetInstallScript([string] $dotnetRoot) {
   $installScript = Join-Path $dotnetRoot "dotnet-install.ps1"
   if (!(Test-Path $installScript)) {
     Create-Directory $dotnetRoot
-    Invoke-WebRequest "https://dot.net/$installScriptsVersion/dotnet-install.ps1" -OutFile $installScript
+    Invoke-WebRequest "https://dot.net/$dotnetInstallScriptVersion/dotnet-install.ps1" -OutFile $installScript
   }
 
   return $installScript
