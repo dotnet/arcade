@@ -47,6 +47,11 @@ namespace Microsoft.DotNet.Tools.Tests
             }
         }
 
+        // As part of repacking, certain files are updated and rewritten. When this occurs line endings
+        // change to match the platform that is executing. The reference packages that we use to validate
+        // the SemVer tests were built on Windows which makes these test only valid for Windows.
+        //
+        // This can be removed when https://github.com/dotnet/corefx/issues/39931 is fixed. 
         [WindowsOnlyFact]
         public void TestPackagesSemVer1()
         {
