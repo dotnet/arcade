@@ -195,12 +195,15 @@ for the category to the TargetStaticFeed PropertyGroup in
 
 ### Integrating custom publishing logic
 
-Repositories that perform additional publishing during their build outside the Arcade SDK publishing should move away
-from doing so, as they would likely end up publishing to incorrect feeds for servicing builds. To help with this, the
-Arcade SDK provides the [PushToAzureDevOpsArtifacts](https://github.com/dotnet/arcade/blob/master/src/Microsoft.DotNet.Build.Tasks.Feed/src/PushToAzureDevOpsArtifacts.cs) task, which will generate an appropriately
-populated asset manifest, and will publish the assets to the build's artifacts. The post-build stages will then publish the assets to the correct location based on the channel that the build will be assigned to, and the artifact categories.
+Repositories that perform additional publishing during their build outside of the Arcade SDK publishing should
+move away from doing so, as they would likely end up publishing to incorrect feeds for servicing builds.
+To help with this, the Arcade SDK provides the [PushToAzureDevOpsArtifacts](https://github.com/dotnet/arcade/blob/master/src/Microsoft.DotNet.Build.Tasks.Feed/src/PushToAzureDevOpsArtifacts.cs) task,
+which will generate an appropriately populated asset manifest, and will publish the assets to the build's
+artifacts. The post-build stages will then publish the assets to the correct location based on the channel that
+the build will be assigned to, and the asset categories.
 
-A conversion to this model for repos that are using the `PushToBlobFeed` task inside their build would like like this:
+A conversion to this model for repos that are using the `PushToBlobFeed` task inside their build would look like
+this:
 
 1. Replace the `PushToBlobFeed` task with `PushToAzureDevOpsArtifacts`:
 
