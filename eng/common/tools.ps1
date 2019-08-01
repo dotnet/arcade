@@ -522,6 +522,9 @@ function MSBuild-Core() {
   if ($warnAsError) {
     $cmdArgs += " /warnaserror /p:TreatWarningsAsErrors=true"
   }
+  else {
+    $cmdArgs += " /p:TreatWarningsAsErrors=false"
+  }
 
   foreach ($arg in $args) {
     if ($arg -ne $null -and $arg.Trim() -ne "") {
