@@ -40,6 +40,20 @@ class AzureDevOpsTestResultPublisher:
     def get_ddt_base_name(self, r: str) -> str:
         return r.split('(',1)[0]
 
+    def send_attachment(self, test_client, attachment, published_result):
+        try:
+            # Python 3 will throw a TypeError exception because b64encode expects bytes
+            stream=base64.b64encode(text(attachment.text))
+        except TypeError:
+            # stream has to be a string but b64encode takes and returns bytes on Python 3
+            stream=base64.b64encode(bytes(attachment.text, "utf-8")).decode("utf-8")
+
+        test_client.create_test_result_attachment(
+            TestAttachmentRequestModel(
+                file_name=text(attachment.name),
+                stream=stream,
+            ), self.team_project, self.test_run_id, published_result.id)
+
     def publish_results(self, test_case_results: Iterable[TestCaseResult], results_with_attachments: Mapping[str, TestResult]) -> None:
         connection = self.get_connection()
         test_client = connection.get_client("azure.devops.v5_1.test.TestClient")  # type: TestClient
@@ -54,38 +68,24 @@ class AzureDevOpsTestResultPublisher:
                 result = results_with_attachments.get(published_result.automated_test_name)
 
                 for attachment in result.attachments:
-                    try:
-                        # Python 3 will throw a TypeError exception because b64encode expects bytes
-                        stream=base64.b64encode(text(attachment.text))
-                    except TypeError:
-                        # stream has to be a string but b64encode takes and returns bytes on Python 3
-                        stream=base64.b64encode(bytes(attachment.text, "utf-8")).decode("utf-8")
-
-                    test_client.create_test_result_attachment(
-                        TestAttachmentRequestModel(
-                            file_name=text(attachment.name),
-                            stream=stream,
-                        ), self.team_project, self.test_run_id, published_result.id)
+                    self.send_attachment(test_client, attachment, published_result)
 
             # Does the test result have an attachment with a sub-result matching name?
             elif published_result.sub_results is not None:
                 # We assume all subresults have the same attachments, so get just the first matching.
                 for (test_name,test_result) in results_with_attachments.items():
-                    if self.is_data_driven_test(test_name) and self.get_ddt_base_name(test_name) not in already_published and self.get_ddt_base_name(test_name) == published_result.automated_test_name:
-                        already_published.append(self.get_ddt_base_name(test_name))
-                        for attachment in test_result.attachments:
-                            try:
-                                # Python 3 will throw a TypeError exception because b64encode expects bytes
-                                stream=base64.b64encode(text(attachment.text))
-                            except TypeError:
-                                # stream has to be a string but b64encode takes and returns bytes on Python 3
-                                stream=base64.b64encode(bytes(attachment.text, "utf-8")).decode("utf-8")
+                    if self.is_data_driven_test(test_name):
+                        ddt_base_name = self.get_ddt_base_name(test_name)
 
-                            test_client.create_test_result_attachment(
-                                TestAttachmentRequestModel(
-                                    file_name=text(attachment.name),
-                                    stream=stream,
-                                ), self.team_project, self.test_run_id, published_result.id)
+                        if ddt_base_name in already_published:
+                            continue
+
+                        if ddt_base_name != published_result.automated_test_name:
+                            continue
+
+                        already_published.append(ddt_base_name)
+                        for attachment in test_result.attachments:
+                            self.send_attachment(test_client, attachment, published_result)
 
     def convert_results(self, results: Iterable[TestResult]) -> Iterable[TestCaseResult]:
         comment = "{{ \"HelixJobId\": \"{}\", \"HelixWorkItemName\": \"{}\" }}".format(
