@@ -140,7 +140,7 @@ publishing works as expected.
 We are looking into ways to improve the onboarding experience, and are tracking that through https://github.com/dotnet/arcade/issues/3390
 
 1. Publish a branch to the Azure devops mirror for the repo that includes the pipeline changes
-2. Set up a default channel for the internal repo + branch combination using darc that targets the `.Net Tools - Validation` channel
+2. Set up a default channel for the internal repo + branch combination using darc that targets the `.Net Tools - Validation` channel. Note that the default channels require the full branch reference.
 
     ``` Powershell
     # From a repository that contains an eng/common folder
@@ -163,7 +163,7 @@ By default, builds that will be published to the Validation and Dev channels wil
 The steps to enable this override are:
 
 1. Create a PR to https://github.com/dotnet/arcade that adds a category for your assets and a target feed
-for the category to the categories PropertyGroup in
+for the category to the TargetStaticFeed PropertyGroup in
 [/src/Microsoft.DotNet.Arcade.Sdk/tools/SdkTasks/SetupTargetFeeds.proj](https://github.com/dotnet/arcade/blob/fd91e27589e69c0a97db2e208b112a24ab989180/src/Microsoft.DotNet.Arcade.Sdk/tools/SdkTasks/SetupTargetFeeds.proj)
 
     ```XML
@@ -201,20 +201,20 @@ A conversion to this model for repos that are using the `PushToBlobFeed` task in
 1. Replace the `PushToBlobFeed` task with `PushToAzureDevOpsArtifacts`:
 
     ```XML
-      <AssetManifestFileName>ManifestFileName</AssetManifestFileName>
-      <AssetManifestPath>$(ArtifactsLogDir)AssetManifest\$(SdkAssetManifestFileName)</AssetManifestPath>
+      <AssetManifestFileName>ManifestFileName.xml</AssetManifestFileName>
+      <AssetManifestPath>$(ArtifactsLogDir)AssetManifest\$(AssetManifestFileName)</AssetManifestPath>
 
       <PushToBlobFeed
-      ExpectedFeedUrl="$(FeedURL)"
-      AccountKey="$(FeedKey)"
-      ItemsToPush="@(ItemsToPush)"
-      ManifestBuildData="Location=$(FeedURL)"
-      ManifestRepoUri="$(BUILD_REPOSITORY_URI)"
-      ManifestBranch="$(BUILD_SOURCEBRANCH)"
-      ManifestBuildId="$(BUILD_BUILDNUMBER)"
-      ManifestCommit="$(BUILD_SOURCEVERSION)"
-      AssetManifestPath="$(AssetManifestPath)"
-      PublishFlatContainer="$(PublishFlatContainer)" />
+        ExpectedFeedUrl="$(FeedURL)"
+        AccountKey="$(FeedKey)"
+        ItemsToPush="@(ItemsToPush)"
+        ManifestBuildData="Location=$(FeedURL)"
+        ManifestRepoUri="$(BUILD_REPOSITORY_URI)"
+        ManifestBranch="$(BUILD_SOURCEBRANCH)"
+        ManifestBuildId="$(BUILD_BUILDNUMBER)"
+        ManifestCommit="$(BUILD_SOURCEVERSION)"
+        AssetManifestPath="$(AssetManifestPath)"
+        PublishFlatContainer="$(PublishFlatContainer)" />
     ```
 
     becomes
@@ -230,15 +230,15 @@ A conversion to this model for repos that are using the `PushToBlobFeed` task in
 
       <!-- Generate the asset manifest using the PushToAzureDevOpsArtifacts task -->
       <PushToAzureDevOpsArtifacts
-      ItemsToPush="@(ItemsToPush)"
-      ManifestBuildData="Location=$(FeedURL)"
-      ManifestRepoUri="$(BUILD_REPOSITORY_URI)"
-      ManifestBranch="$(BUILD_SOURCEBRANCH)"
-      ManifestBuildId="$(BUILD_BUILDNUMBER)"
-      ManifestCommit="$(BUILD_SOURCEVERSION)"
-      PublishFlatContainer="$(PublishFlatContainer)"
-      AssetManifestPath="$(AssetManifestPath)"
-      AssetsTemporaryDirectory="$(TempWorkingDirectory)" />
+        ItemsToPush="@(ItemsToPush)"
+        ManifestBuildData="Location=$(FeedURL)"
+        ManifestRepoUri="$(BUILD_REPOSITORY_URI)"
+        ManifestBranch="$(BUILD_SOURCEBRANCH)"
+        ManifestBuildId="$(BUILD_BUILDNUMBER)"
+        ManifestCommit="$(BUILD_SOURCEVERSION)"
+        PublishFlatContainer="$(PublishFlatContainer)"
+        AssetManifestPath="$(AssetManifestPath)"
+        AssetsTemporaryDirectory="$(TempWorkingDirectory)" />
 
       <!-- Copy the generated manifest to the build's artifacts -->
       <Copy
@@ -250,7 +250,7 @@ A conversion to this model for repos that are using the `PushToBlobFeed` task in
         Importance="high" />
     ```
 
-    This will do something similar to what the SDK does for its default publishing pipeline, as seen in [publishToPackageFeed.proj](https://github.com/dotnet/arcade/blob/master/eng/common/PublishToPackageFeed.proj)
+    This will do something similar to what the SDK does for its default publishing pipeline, as seen in [publish.proj](https://github.com/dotnet/arcade/blob/master/src/Microsoft.DotNet.Arcade.Sdk/tools/Publish.proj)
 
 ## Additional considerations for internal and stable builds
 
@@ -288,4 +288,6 @@ any such feeds into the repo's NuGet.config as part of a dependency update PR.
 The PackageSources enclosed in the
 `<!--Begin: Package sources managed by Dependency Flow automation. Do not edit the sources below.-->` and
 `<!--End: Package sources managed by Dependency Flow automation. Do not edit the sources above.-->` comments
-are managed by automation, and will be added and removed by dependency update pull requests as they are needed.
+are managed by Maestro++ Dependency update PRs, and will be added and removed by dependency update pull requests
+as they are needed.
+
