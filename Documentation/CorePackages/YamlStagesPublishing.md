@@ -145,7 +145,7 @@ We are looking into ways to improve the onboarding experience, and are tracking 
     ``` Powershell
     # From a repository that contains an eng/common folder
     .\eng\common\darc-init.ps1
-    darc add-default-channel --channel ".Net Tools - Validation" --branch "refs/heads/<my_new_branch>
+    darc add-default-channel --channel ".Net Tools - Validation" --branch "refs/heads/<my_new_branch>" --repo "https://dev.azure.com/dnceng/internal/_git/dotnet-arcade"
     ```
 
 3. Queue a build for your test branch
