@@ -13,34 +13,34 @@ Target completion date is 8/13/2019.
 | Arcade                     | mawilkie         | Complete | ✔️ | |
 | Arcade-Services            | mawilkie         | Complete | ✔️ | |
 | Arcade-Validation          | mawilkie         | Complete | ✔️ | |
-| aspnet-AspLabs             | dougbu/johluo    | On track | ➖ | |
-| aspnet-AspNetCore          | dougbu/johluo    | On track | ➖ | |
+| aspnet-AspLabs             | dougbu/johluo    | At risk | ❌ |  No plan available |
+| aspnet-AspNetCore          | dougbu/johluo    | At risk | ❌ |  No plan available |
 | aspnet-AspNetCore-Tooling  | dougbu/johluo    | Complete | ✔️ | |
-| aspnet-EntityFramework6    | dougbu/johluo    | On track | ➖ | |
-| aspnet-EntityFrameworkCore | dougbu/johluo    | On track | ➖ | |
-| aspnet-Blazor              | dougbu/johluo    | On track | ➖ | |
-| aspnet-Extensions          | dougbu/johluo    | On track | ➖ | |
-| CLI                        | licavalc         | On track | ➖ | |
-| CLICommandLineParser       | licavalc         | On track | ➖ | |
-| CoreClr                    | russellk         | On track | ➖ | |
-| CoreFx                     | danmose/safern   | On track | ➖ | |
+| aspnet-EntityFramework6    | dougbu/johluo    | At risk | ❌ |  No plan available |
+| aspnet-EntityFrameworkCore | dougbu/johluo    | At risk | ❌ |  No plan available |
+| aspnet-Blazor              | dougbu/johluo    | At risk | ❌ |  No plan available |
+| aspnet-Extensions          | dougbu/johluo    | At risk | ❌ |  No plan available |
+| CLI                        | licavalc         | At risk | ❌ |  No plan available |
+| CLICommandLineParser       | licavalc         | At risk | ❌ |  No plan available |
+| CoreClr                    | russellk         | At risk | ❌ |  No plan available |
+| CoreFx                     | danmose/safern   | At risk | ❌ |  No plan available |
 | IoT                        | joperezr         | Complete | ✔️ | |
-| Core-SDK                   | licavalc         | On track | ➖ | |
-| Core-Setup                 | dleeapho         | On track | ➖ | |
-| FSharp                     | brettfo          | On track | ➖ | |
-| MSBuild                    | licavalc         | On track | ➖ | |
-| nuget-NugetClient          | dtivel           | On track | ➖ | |
-| Roslyn                     | jaredpar         | On track | ➖ | |
-| SDK                        | licavalc         | On track | ➖ | |
+| Core-SDK                   | licavalc         | At risk | ❌ |  No plan available |
+| Core-Setup                 | dleeapho         | At risk | ❌ |  No plan available |
+| FSharp                     | brettfo          | At risk | ❌ |  No plan available |
+| MSBuild                    | licavalc         | At risk | ❌ |  No plan available |
+| nuget-NugetClient          | dtivel           | At risk | ❌ |  No plan available |
+| Roslyn                     | jaredpar         | At risk | ❌ |  No plan available |
+| SDK                        | licavalc         | At risk | ❌ |  No plan available |
 | Standard                   | danmose/wigodbe  | Complete | ✔️ | |
-| SymReader                  | tmat             | On track | ➖ | |
-| SymReader-Portable         | tmat             | On track | ➖ | |
+| SymReader                  | tmat             | At risk | ❌ |  No plan available |
+| SymReader-Portable         | tmat             | At risk | ❌ |  No plan available |
 | Templating                 | vramak           | Complete | ✔️ | |
-| Test-Templates             | sasin            | On track | ➖ | |
+| Test-Templates             | sasin            | At risk | ❌ |  No plan available |
 | Toolset                    | licavalc         | At risk  | ❌ | Blocked by https://github.com/dotnet/arcade/issues/3476. | 
 | WebSDK                     | vramak           | Complete | ✔️ | |
-| WinForms                   | mmcgaw           | On track | ➖ | |
-| WPF                        | vatsan-madhavan  | On track | ➖ | |
+| WinForms                   | mmcgaw           | At risk | ❌ |  No plan available |
+| WPF                        | vatsan-madhavan  | At risk | ❌ |  No plan available |
 
 | Status     | Description |
 | ---------- | ----------- |
