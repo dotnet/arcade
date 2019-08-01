@@ -1,7 +1,7 @@
 import base64
 import os
 import logging
-from typing import Iterable, Mapping, List, Dict
+from typing import Iterable, Mapping, List, Dict, Optional
 from builtins import str as text
 from azure.devops.connection import Connection
 from msrest.authentication import BasicTokenAuthentication, BasicAuthentication
@@ -93,7 +93,7 @@ class AzureDevOpsTestResultPublisher:
             os.getenv("HELIX_WORKITEM_FRIENDLYNAME"),
         )
 
-        def convert_to_sub_test(r: TestResult) -> TestSubResult:
+        def convert_to_sub_test(r: TestResult) -> Optional[TestSubResult]:
             if r.result == "Pass":
                 return TestSubResult(
                     comment=comment,
@@ -118,8 +118,9 @@ class AzureDevOpsTestResultPublisher:
                     outcome="NotExecuted"
                     )
             log.warning("Unexpected result value {} for {}".format(r.result, r.name))
+            return None
 
-        def convert_result(r: TestResult) -> TestCaseResult:
+        def convert_result(r: TestResult) -> Optional[TestCaseResult]:
             if r.result == "Pass":
                 return TestCaseResult(
                     test_case_title=text(r.name),
@@ -162,6 +163,7 @@ class AzureDevOpsTestResultPublisher:
                 )
 
             log.warning("Unexpected result value {} for {}".format(r.result, r.name))
+            return None
 
         unconverted_results = list(results) # type: List[TestResult]
         log.debug("Count of unconverted_results: {0}".format(len(unconverted_results)))
@@ -177,15 +179,23 @@ class AzureDevOpsTestResultPublisher:
                 base_name = self.get_ddt_base_name(r.name)
                 if base_name in data_driven_tests:
                     sub_test = convert_to_sub_test(r)
+                    if sub_test is None:
+                        continue
                     data_driven_tests[base_name].sub_results.append(sub_test)
                     if sub_test.outcome == "Failed":
                         data_driven_tests[base_name].outcome = "Failed"
 
                 else:
-                    data_driven_tests[base_name] = convert_result(r)
+                    cr = convert_result(r)
+                    csr = convert_to_sub_test(r)
+
+                    if cr is None or csr is None:
+                        continue
+
+                    data_driven_tests[base_name] = cr
                     data_driven_tests[base_name].automated_test_name = base_name
                     data_driven_tests[base_name].result_group_type = "dataDriven"
-                    data_driven_tests[base_name].sub_results = [convert_to_sub_test(r)]
+                    data_driven_tests[base_name].sub_results = [csr]
             else:
                 non_data_driven_tests.append(convert_result(r))
 
