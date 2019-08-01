@@ -151,7 +151,7 @@ We are looking into ways to improve the onboarding experience, and are tracking 
 3. Queue a build for your test branch
 4. Once the Build stage completes, the validation channel stage should trigger, and publish the packages to the feed during the `Publish Assets` job in the `Validation Channel`
 
-![validation-stage](./images/validation-stage.png)
+    ![validation-stage](./images/validation-stage.png)
 
 ## Advanced Scenarios
 
@@ -179,11 +179,15 @@ for the category to the TargetStaticFeed PropertyGroup in
     </PropertyGroup>
     ```
 
-1. Add a variable to your pipeline's YAML called `_DotNetArtifactsCategory` and set the value as your new category.
+1. Add a variable to your pipeline's YAML and set the value as your new category.
+    * `_DotNetValidationArtifactCategory` for publishing to the Validation channel (Such as for testing the changes in these onboarding steps)
+    * `_DotNetArtifactsCategory` for publishing to the Dev channel.
 
     ```YAML
     variables:
     ...
+      - name: _DotNetValidationArtifactCategory
+        value: MyNewCategory
       - name: _DotNetArtifactsCategory
         value: MyNewCategory
     ...
