@@ -24,21 +24,21 @@ namespace Microsoft.DotNet.GitHub.IssueLabeler
         [HttpPost]
         public async Task PostAsync([FromBody]IssueEventPayload data)
         {
-            GitHubIssue issue = data.Issue;
-            List<object> labels = issue.Labels;
+            GitHubIssue issueOrPullRequest = data.Issue ?? data.Pull_Request;
+            List<object> labels = issueOrPullRequest?.Labels;
 
-            if (data.Action == "opened" && labels.Count == 0)
+            if (issueOrPullRequest != null && data.Action == "opened" && labels.Count == 0)
             {
-                string title = issue.Title;
-                int number = issue.Number;
-                string body = issue.Body;
+                string title = issueOrPullRequest.Title;
+                int number = issueOrPullRequest.Number;
+                string body = issueOrPullRequest.Body;
 
                 await Issuelabeler.PredictAndApplyLabelAsync(number, title, body, Logger);
                 Logger.LogInformation("! Labeling completed");
             }
             else
             {
-                Logger.LogInformation($"! The issue {issue.Number.ToString()} is already opened or it already has a label");
+                Logger.LogInformation($"! The issue or pull request {issueOrPullRequest.Number.ToString()} is already opened or it already has a label");
             }
         }
     }
