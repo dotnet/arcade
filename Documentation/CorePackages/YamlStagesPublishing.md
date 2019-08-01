@@ -243,10 +243,10 @@ A conversion to this model for repos that are using the `PushToBlobFeed` task in
       <!-- Copy the generated manifest to the build's artifacts -->
       <Copy
       SourceFiles="$(AssetManifestPath)"
-      DestinationFolder="$(TempWorkingDirectory)\$(ManifestFileName)" />
+      DestinationFolder="$(TempWorkingDirectory)\$(AssetManifestFileName)" />
 
       <Message
-        Text="##vso[artifact.upload containerfolder=AssetManifests;artifactname=AssetManifests]$(TempWorkingDirectory)/$(ManifestFileName)"
+        Text="##vso[artifact.upload containerfolder=AssetManifests;artifactname=AssetManifests]$(TempWorkingDirectory)/$(AssetManifestFileName)"
         Importance="high" />
     ```
 
