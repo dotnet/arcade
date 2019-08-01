@@ -23,7 +23,7 @@ Target completion date is 8/13/2019.
 | CLI                        | licavalc         | At risk | ❌ |  No plan available |
 | CLICommandLineParser       | licavalc         | At risk | ❌ |  No plan available |
 | CoreClr                    | russellk         | At risk | ❌ |  No plan available |
-| CoreFx                     | danmose/safern   | At risk | ❌ |  No plan available |
+| CoreFx                     | danmose/safern   | On track | ➖ | |
 | IoT                        | joperezr         | Complete | ✔️ | |
 | Core-SDK                   | licavalc         | At risk | ❌ |  No plan available |
 | Core-Setup                 | dleeapho         | At risk | ❌ |  No plan available |
