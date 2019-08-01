@@ -9,8 +9,8 @@
     <PackagingTaskDir Condition="'$(PackagingTaskDir)' == '' AND '$(MSBuildRuntimeType)' != 'core'">$(MSBuildThisFileDirectory)../tools/net472/</PackagingTaskDir>
     <RuntimeIdGraphDefinitionFile Condition="'$(RuntimeIdGraphDefinitionFile)' == ''">$(MSBuildThisFileDirectory)runtime.json</RuntimeIdGraphDefinitionFile>
 
-    <PackageOutputPath Condition="'$(PackageOutputPath)' == ''">$(BaseOutputPath)pkg/</PackageOutputPath>
-    <PackageReportDir Condition="'$(PackageReportDir)' == ''">$(PackageOutputPath)reports/</PackageReportDir>
+    <PackageOutputPath Condition="'$(PackageOutputPath)' == ''">$([MSBuild]::NormalizePath('$(BaseOutputPath)', 'pkg/'))</PackageOutputPath>
+    <PackageReportDir Condition="'$(PackageReportDir)' == ''">$([MSBuild]::NormalizePath('$(ArtifactsPackagesDir)', 'reports/'))</PackageReportDir>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(PackageTargetRuntimeSuffix)' != ''">
