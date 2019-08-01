@@ -53,8 +53,8 @@
 
   <Target Name="BeforePublish">
     <ItemGroup>
-      <ExistingSymbolPackages Include="$(ArtifactsShippingPackagesDir)*.symbols.nupkg" IsShipping="true" />
-      <ExistingSymbolPackages Include="$(ArtifactsNonShippingPackagesDir)*.symbols.nupkg" IsShipping="false" />
+      <ExistingSymbolPackages Include="$(ArtifactsShippingPackagesDir)**/*.symbols.nupkg" IsShipping="true" />
+      <ExistingSymbolPackages Include="$(ArtifactsNonShippingPackagesDir)**/*.symbols.nupkg" IsShipping="false" />
 
       <PackagesToPublish Include="$(ArtifactsShippingPackagesDir)*.nupkg" IsShipping="true" />
       <PackagesToPublish Include="$(ArtifactsNonShippingPackagesDir)*.nupkg" IsShipping="false" />
@@ -64,7 +64,7 @@
         <SymbolPackageToGenerate Condition="!Exists('%(RootDir)%(Directory)%(Filename).symbols.nupkg')">$(SymbolPackagesDir)%(Filename).symbols.nupkg</SymbolPackageToGenerate>
       </PackagesToPublish>
 
-      <SymbolPackagesToGenerate Include="@(PackagesToPublish->'%(SymbolPackageToGenerate)')" Condition="'%(PackagesToPublish.SymbolPackageToGenerate)' != ''">
+      <SymbolPackagesToGenerate Include="@(PackagesToPublish->'%(SymbolPackageToGenerate)')" Condition="'%(PackagesToPublish.SymbolPackageToGenerate)' != ''" Exclude="@(ExistingSymbolPackages -> '$(SymbolPackagesDir)%(Filename)%(Extension)')">
         <OriginalPackage>%(PackagesToPublish.Identity)</OriginalPackage>
         <IsShipping>%(PackagesToPublish.IsShipping)</IsShipping>
       </SymbolPackagesToGenerate>
@@ -75,7 +75,7 @@
       Such packages can act as symbol packages since they have the same structure.
       We just need to copy them to *.symbols.nupkg.
     -->
-    <MakeDir Directories="$(SymbolPackagesDir)" />
+    <MakeDir Condition="'@(SymbolPackagesToGenerate)' != ''" Directories="$(SymbolPackagesDir)" />
     <Copy SourceFiles="@(SymbolPackagesToGenerate->'%(OriginalPackage)')" DestinationFiles="@(SymbolPackagesToGenerate)" />
 
     <!-- Orchestrated Build blob storage -->
