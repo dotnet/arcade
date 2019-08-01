@@ -125,6 +125,9 @@ namespace Microsoft.DotNet.GitSync
 
                 foreach (RepositoryInfo repo in config.Repos)
                 {
+                    if (!s_repos.ContainsKey((repo.Name, prBranch)))
+                        break;
+
                     if (repo.LastSynchronizedCommits != null)
                         SanityCheck(repo, prBranch);
 
@@ -374,6 +377,9 @@ namespace Microsoft.DotNet.GitSync
         {
             foreach (var repo in repos)
             {
+                if (!s_repos.ContainsKey((repo.Name, branch)))
+                    break;
+
                 s_logger.Debug($"Updating {repo}\\{branch} to latest version.");
                 using (var repository = new Repository(repo.Path))
                 {
