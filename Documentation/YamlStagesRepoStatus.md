@@ -35,10 +35,10 @@ Target completion date is 8/13/2019.
 | Standard                   | danmose/wigodbe  | Complete | ✔️ | |
 | SymReader                  | tmat             | On track | ➖ | |
 | SymReader-Portable         | tmat             | On track | ➖ | |
-| Templating                 | vramak           | On track | ➖ | |
+| Templating                 | vramak           | Complete | ✔️ | |
 | Test-Templates             | sasin            | On track | ➖ | |
 | Toolset                    | licavalc         | At risk  | ❌ | Blocked by https://github.com/dotnet/arcade/issues/3476. | 
-| WebSDK                     | vramak           | On track | ➖ | |
+| WebSDK                     | vramak           | Complete | ✔️ | |
 | WinForms                   | mmcgaw           | On track | ➖ | |
 | WPF                        | vatsan-madhavan  | On track | ➖ | |
 
