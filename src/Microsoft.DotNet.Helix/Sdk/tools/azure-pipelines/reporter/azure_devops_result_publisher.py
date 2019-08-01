@@ -62,6 +62,11 @@ class AzureDevOpsTestResultPublisher:
 
         already_published = [] # type: List[str]
         for published_result in published_results:
+            
+            # Don't send attachments if the result was not accepted.
+            if published_result.id == -1:
+                continue
+
             # Does the test result have an attachment with an exact matching name?
             if published_result.automated_test_name in results_with_attachments:
                 log.debug("Result {0} has an attachment".format(published_result.automated_test_name))
