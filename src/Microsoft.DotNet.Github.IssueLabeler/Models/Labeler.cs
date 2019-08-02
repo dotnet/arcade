@@ -56,7 +56,7 @@ namespace Microsoft.DotNet.GitHub.IssueLabeler
             };
         }
 
-        public async Task PredictAndApplyLabelAsync(int number, string title, string body, ILogger logger)
+        public async Task PredictAndApplyLabelAsync(int number, string title, string body, GithubObjectType issueOrPr, ILogger logger)
         {
             if (_client == null)
             {
@@ -67,7 +67,8 @@ namespace Microsoft.DotNet.GitHub.IssueLabeler
             {
                 Number = number,
                 Title = title,
-                Body = body
+                Body = body,
+                IssueOrPr = issueOrPr
             };
 
             string label = Predictor.Predict(corefxIssue, logger, _threshold);
@@ -83,7 +84,7 @@ namespace Microsoft.DotNet.GitHub.IssueLabeler
             }
             else
             {
-                logger.LogInformation($"! The Model is not able to assign the label to the Issue {corefxIssue.Number} confidently.");
+                logger.LogInformation($"! The Model is not able to assign the label to the {issueOrPr} {corefxIssue.Number} confidently.");
             }
         }
     }
