@@ -29,10 +29,19 @@ namespace Microsoft.DotNet.GitHub.IssueLabeler
 
         [NoColumn]
         public int Number { get; set; }
+
+        [JsonIgnore]
+        public GithubObjectType IssueOrPr { get; set; }
     }
 
     public class Milestone
     {
         public int Number { get; set; }
+    }
+
+    public enum GithubObjectType 
+    {
+        PullRequest,
+        Issue
     }
 }
