@@ -2,5 +2,6 @@ jobs:
 - job: Build
   steps:
   - powershell: |
-      Write-Host "##vso[task.setprogress value=0;] chcosta Set progress"
+      Write-Host "##vso[task.setprogress value=0;] chcosta task setprogress"
+      Write-Host "##vso[task.logdetail id=a804d160-f69f-4e8a-bdd2-0076d716a01f;name=chcosta;type=build;order=1]chcosta task logdetail"
     displayName: powershell command
