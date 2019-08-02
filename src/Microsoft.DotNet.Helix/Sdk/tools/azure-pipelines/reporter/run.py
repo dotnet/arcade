@@ -63,7 +63,7 @@ def process_args() -> Tuple[str, str, str, Optional[str]]:
 def main():
     logging.basicConfig(
         format='%(asctime)s: %(levelname)s: %(thread)d: %(module)s(%(lineno)d): %(funcName)s: %(message)s',
-        level=logging.DEBUG,
+        level=logging.INFO,
         handlers=[
             logging.StreamHandler()
         ]
