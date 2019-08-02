@@ -2,7 +2,7 @@ parameters:
   enableSymbolValidation: true
 
 stages:
-- stage: Publish
+- stage: NetCore_Tools_Latest_Publish
   dependsOn: validate
   variables:
     - template: ../common-variables.yml
@@ -112,7 +112,7 @@ stages:
         enabled: false
 
 
-- stage: PublishValidation
+- stage: NetCore_Tools_Latest_PublishValidation
   displayName: Publish Validation
   variables:
     - template: ../common-variables.yml  
