@@ -61,6 +61,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// </summary>
         public bool IsStableBuild { get; set; }
 
+        /// <summary>
+        /// Should these assets be published to flatcontainer?
+        /// </summary>
+        public bool PublishToFlatContainer { get; set; }
+
         public override bool Execute()
         {
             try
@@ -73,6 +78,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     RepoBranch,
                     RepoCommit,
                     IsStableBuild,
+                    PublishToFlatContainer,
                     Log);
 
                 buildModel.WriteAsXml(OutputPath, Log);

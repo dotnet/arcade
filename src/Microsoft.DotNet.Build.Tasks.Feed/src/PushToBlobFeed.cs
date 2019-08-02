@@ -165,7 +165,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     ManifestBranch,
                     ManifestCommit,
                     ManifestBuildData,
-                    IsStableBuild);
+                    IsStableBuild,
+                    PublishFlatContainer);
             }
             catch (Exception e)
             {

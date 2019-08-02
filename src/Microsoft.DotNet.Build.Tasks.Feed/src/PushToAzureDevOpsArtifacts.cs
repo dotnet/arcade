@@ -53,7 +53,18 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                     if (PublishFlatContainer)
                     {
-                        blobArtifacts = ItemsToPush.Select(BuildManifestUtil.CreateBlobArtifactModel).Where(blob => blob != null);
+                        var itemsToPushNoExcludes = ItemsToPush.
+                            Where(i => !string.Equals(i.GetMetadata("ExcludeFromManifest"), "true", StringComparison.OrdinalIgnoreCase));
+
+                        blobArtifacts = itemsToPushNoExcludes
+                            .Select(BuildManifestUtil.CreateBlobArtifactModel);
+                        foreach (var blobItem in itemsToPushNoExcludes)
+                        {
+                            var destFile = $"{AssetsTemporaryDirectory}/{Path.GetFileName(blobItem.ItemSpec)}";
+                            File.Copy(blobItem.ItemSpec, destFile);
+                            Log.LogMessage(MessageImportance.High,
+                                $"##vso[artifact.upload containerfolder=BlobArtifacts;artifactname=BlobArtifacts]{destFile}");
+                        }
                     }
                     else
                     {
@@ -115,7 +126,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         ManifestBranch, 
                         ManifestCommit,
                         ManifestBuildData,
-                        IsStableBuild);
+                        IsStableBuild,
+                        PublishFlatContainer);
                 }
             }
             catch (Exception e)
