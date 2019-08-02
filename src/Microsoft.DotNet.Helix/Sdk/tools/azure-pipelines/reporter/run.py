@@ -47,8 +47,12 @@ class UploadWorker(Thread):
 
 def process_args() -> Tuple[str, str, str, Optional[str]]:
     if len(sys.argv) < 4 or len(sys.argv) > 5:
+        print("Usage:")
+        print("run.py <collection URI> <team project> <test run ID>")
+        print("run.py <collection URI> <team project> <test run ID> <access token>")
         sys.exit("Expected 3 or 4 arguments")
 
+    # argv[0] is the script name
     collection_uri = sys.argv[1]
     team_project = sys.argv[2]
     test_run_id = sys.argv[3]
