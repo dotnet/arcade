@@ -60,9 +60,9 @@
 
   <!-- Shared properties -->
   <PropertyGroup>
-    <SymbolPackageOutputPath Condition="'$(SymbolPackageOutputPath)' == ''">$([MSBuild]::NormalizePath('$(PackageOutputPath)', 'symbols/'))</SymbolPackageOutputPath>
+    <SymbolPackageOutputPath Condition="'$(SymbolPackageOutputPath)' == ''">$([MSBuild]::NormalizeDirectory('$(PackageOutputPath)', 'symbols'))</SymbolPackageOutputPath>
     <OutputPath>$(PackageOutputPath)</OutputPath>
-    <NuSpecOutputPath Condition="'$(NuSpecOutputPath)' == ''">$([MSBuild]::NormalizePath('$(ArtifactsPackagesDir)', 'specs/'))</NuSpecOutputPath>
+    <NuSpecOutputPath Condition="'$(NuSpecOutputPath)' == ''">$([MSBuild]::NormalizeDirectory('$(ArtifactsPackagesDir)', 'specs'))</NuSpecOutputPath>
     <NuSpecPath>$(NuSpecOutputPath)$(Id)$(NuspecSuffix).nuspec</NuSpecPath>
     <PackageReportPath>$(PackageReportDir)$(Id)$(NuspecSuffix).json</PackageReportPath>
     <TargetPath>$(NuSpecPath)</TargetPath>
