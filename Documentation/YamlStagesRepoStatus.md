@@ -39,7 +39,7 @@ Target completion date is 8/13/2019.
 | Test-Templates             | sasin            | At risk | ❌ |  No plan available |
 | Toolset                    | licavalc/riarenas| At risk  | ❌ | Blocked by https://github.com/dotnet/arcade/issues/3476. |
 | WebSDK                     | vramak           | Complete | ✔️ | |
-| WinForms                   | mmcgaw           | At risk | ❌ |  No plan available |
+| WinForms                   | mmcgaw           | Complete | ✔️ | |
 | WPF                        | vatsan-madhavan  | At risk | ❌ |  No plan available |
 
 | Status     | Description |
