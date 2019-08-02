@@ -13,13 +13,13 @@ Target completion date is 8/13/2019.
 | Arcade                     | mawilkie         | Complete | ✔️ | |
 | Arcade-Services            | mawilkie         | Complete | ✔️ | |
 | Arcade-Validation          | mawilkie         | Complete | ✔️ | |
-| aspnet-AspLabs             | dougbu/johluo    | At risk | ❌ |  No plan available |
-| aspnet-AspNetCore          | dougbu/johluo    | At risk | ❌ |  No plan available |
-| aspnet-AspNetCore-Tooling  | dougbu/johluo    | Complete | ✔️ | |
-| aspnet-EntityFramework6    | dougbu/johluo    | At risk | ❌ |  No plan available |
-| aspnet-EntityFrameworkCore | dougbu/johluo    | At risk | ❌ |  No plan available |
-| aspnet-Blazor              | dougbu/johluo    | At risk | ❌ |  No plan available |
-| aspnet-Extensions          | dougbu/johluo    | At risk | ❌ |  No plan available |
+| aspnet-AspLabs             | dougbu    | At risk | ❌ |  Expected completion 8/11 |
+| aspnet-AspNetCore          | dougbu    | At risk | ❌ |  Expected completion 8/11 |
+| aspnet-AspNetCore-Tooling  | dougbu    | Complete | ✔️ | |
+| aspnet-EntityFramework6    | dougbu    | At risk | ❌ |  Expected completion 8/11 |
+| aspnet-EntityFrameworkCore | dougbu    | At risk | ❌ |  Expected completion 8/11 |
+| aspnet-Blazor              | dougbu    | At risk | ❌ |  Expected completion 8/11 |
+| aspnet-Extensions          | dougbu    | At risk | ❌ |  Expected completion 8/11 |
 | CLI                        | licavalc         | At risk | ❌ |  No plan available |
 | CLICommandLineParser       | licavalc         | At risk | ❌ |  No plan available |
 | CoreClr                    | russellk         | At risk | ❌ |  No plan available |
