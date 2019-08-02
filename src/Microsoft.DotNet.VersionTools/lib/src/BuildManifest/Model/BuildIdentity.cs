@@ -62,12 +62,6 @@ namespace Microsoft.DotNet.VersionTools.BuildManifest.Model
             set { Attributes[nameof(IsStable)] = value; }
         }
 
-        public string PublishToFlatContainer
-        {
-            get { return Attributes.GetOrDefault(nameof(PublishToFlatContainer)); }
-            set { Attributes[nameof(PublishToFlatContainer)] = value; }
-        }
-
         public string VersionStamp
         {
             get { return Attributes.GetOrDefault(nameof(VersionStamp)); }

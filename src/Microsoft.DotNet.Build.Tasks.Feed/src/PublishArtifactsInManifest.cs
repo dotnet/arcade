@@ -82,6 +82,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         private readonly Dictionary<string, List<BlobArtifactModel>> BlobsByCategory = new Dictionary<string, List<BlobArtifactModel>>();
 
+        private bool PublishToFlatContainer { get; set; } = false;
 
         public override bool Execute()
         {
@@ -110,6 +111,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 }
 
                 var buildModel = BuildManifestUtil.ManifestFileToModel(AssetManifestPath, Log);
+
+                PublishToFlatContainer = bool.Parse(buildModel.Identity.PublishToFlatContainer);
 
                 // Parsing the manifest may fail for several reasons
                 if (Log.HasLoggedErrors)

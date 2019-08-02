@@ -26,8 +26,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             string manifestBranch,
             string manifestCommit,
             string[] manifestBuildData,
-            bool isStableBuild,
-            bool publishToFlatContainer)
+            bool isStableBuild)
         {
             CreateModel(
                 blobArtifacts,
@@ -38,7 +37,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 manifestBranch,
                 manifestCommit,
                 isStableBuild,
-                publishToFlatContainer,
                 log)
                 .WriteAsXml(assetManifestPath, log);
         }
@@ -61,7 +59,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             string repoBranch,
             string repoCommit,
             bool isStableBuild,
-            bool publishToFlatContainer,
             TaskLoggingHelper log)
         {
             if (artifacts == null)
@@ -107,7 +104,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 repoBranch,
                 repoCommit,
                 isStableBuild,
-                publishToFlatContainer,
                 log);
             return buildModel;
         }
@@ -137,7 +133,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         Branch = manifestBranch,
                         Commit = manifestCommit,
                         IsStable = isStableBuild.ToString(),
-                        PublishToFlatContainer = publishToFlatContainer.ToString()
                     });
 
             buildModel.Artifacts.Blobs.AddRange(blobArtifacts);
