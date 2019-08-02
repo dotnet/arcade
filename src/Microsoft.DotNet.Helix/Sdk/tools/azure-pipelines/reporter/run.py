@@ -63,7 +63,7 @@ def process_args() -> Tuple[str, str, str, Optional[str]]:
 def main():
     logging.basicConfig(
         format='%(asctime)s: %(levelname)s: %(thread)d: %(module)s(%(lineno)d): %(funcName)s: %(message)s',
-        level=logging.INFO,
+        level=logging.DEBUG,
         handlers=[
             logging.StreamHandler()
         ]
@@ -79,7 +79,7 @@ def main():
 
     for i in range(worker_count):
         worker = UploadWorker(q, i, collection_uri, team_project, test_run_id, access_token)
-        worker.daemon = True
+        worker.daemon = True 
         worker.start()
 
     log.info("Beginning reading of test results.")
