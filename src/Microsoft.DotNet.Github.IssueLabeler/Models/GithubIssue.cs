@@ -31,6 +31,7 @@ namespace Microsoft.DotNet.GitHub.IssueLabeler
         public int Number { get; set; }
 
         [JsonIgnore]
+        [NoColumn]
         public GithubObjectType IssueOrPr { get; set; }
     }
 
