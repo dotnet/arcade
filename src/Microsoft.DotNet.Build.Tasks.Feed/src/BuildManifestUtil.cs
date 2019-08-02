@@ -116,7 +116,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             string manifestBranch,
             string manifestCommit,
             bool isStableBuild,
-            bool publishToFlatContainer,
             TaskLoggingHelper log)
         {
             var attributes = MSBuildListSplitter.GetNamedProperties(manifestBuildData);
@@ -132,7 +131,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         BuildId = manifestBuildId,
                         Branch = manifestBranch,
                         Commit = manifestCommit,
-                        IsStable = isStableBuild.ToString(),
+                        IsStable = isStableBuild.ToString()
                     });
 
             buildModel.Artifacts.Blobs.AddRange(blobArtifacts);
