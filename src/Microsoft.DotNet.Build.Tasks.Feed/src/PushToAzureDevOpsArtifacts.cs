@@ -51,11 +51,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     IEnumerable<BlobArtifactModel> blobArtifacts = Enumerable.Empty<BlobArtifactModel>();
                     IEnumerable<PackageArtifactModel> packageArtifacts = Enumerable.Empty<PackageArtifactModel>();
 
+                    var itemsToPushNoExcludes = ItemsToPush.
+                        Where(i => !string.Equals(i.GetMetadata("ExcludeFromManifest"), "true", StringComparison.OrdinalIgnoreCase));
+
                     if (PublishFlatContainer)
                     {
-                        var itemsToPushNoExcludes = ItemsToPush.
-                            Where(i => !string.Equals(i.GetMetadata("ExcludeFromManifest"), "true", StringComparison.OrdinalIgnoreCase));
-
                         blobArtifacts = itemsToPushNoExcludes
                             .Select(BuildManifestUtil.CreateBlobArtifactModel);
                         foreach (var blobItem in itemsToPushNoExcludes)
@@ -68,8 +68,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     }
                     else
                     {
-                        var itemsToPushNoExcludes = ItemsToPush.
-                            Where(i => !string.Equals(i.GetMetadata("ExcludeFromManifest"), "true", StringComparison.OrdinalIgnoreCase));
                         ITaskItem[] symbolItems = itemsToPushNoExcludes
                             .Where(i => i.ItemSpec.Contains("symbols.nupkg"))
                             .Select(i =>

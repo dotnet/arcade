@@ -82,6 +82,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         private readonly Dictionary<string, List<BlobArtifactModel>> BlobsByCategory = new Dictionary<string, List<BlobArtifactModel>>();
 
+
         public override bool Execute()
         {
             return ExecuteAsync().GetAwaiter().GetResult();
