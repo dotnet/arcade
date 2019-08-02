@@ -1,7 +1,7 @@
 import base64
 import os
 import logging
-from typing import Iterable, Mapping, List, Dict, Optional
+from typing import Iterable, Mapping, List, Dict, Optional, Tuple
 from builtins import str as text
 from azure.devops.connection import Connection
 from msrest.authentication import BasicTokenAuthentication, BasicAuthentication
@@ -30,9 +30,9 @@ class AzureDevOpsTestResultPublisher:
     def upload_batch(self, results: Iterable[TestResult]):
         results_with_attachments = {r.name: r for r in results if r.attachments}
 
-        test_case_results = self.convert_results(results)
+        (test_case_results, test_name_order) = self.convert_results(results)
 
-        self.publish_results(test_case_results, results_with_attachments)
+        self.publish_results(test_case_results, test_name_order, results_with_attachments)
 
     def is_data_driven_test(self, r: str) -> bool:
         return r.endswith(")")
@@ -54,15 +54,23 @@ class AzureDevOpsTestResultPublisher:
                 stream=stream,
             ), self.team_project, self.test_run_id, published_result.id)
 
-    def publish_results(self, test_case_results: Iterable[TestCaseResult], results_with_attachments: Mapping[str, TestResult]) -> None:
+    def send_sub_attachment(self, test_client, attachment, published_result, sub_result_id):
+        stream=base64.b64encode(bytes(attachment.text, "utf-8")).decode("utf-8")
+
+        test_client.create_test_sub_result_attachment(
+            TestAttachmentRequestModel(
+                file_name=text(attachment.name),
+                stream=stream,
+            ), self.team_project, self.test_run_id, published_result.id, sub_result_id)
+
+    def publish_results(self, test_case_results: Iterable[TestCaseResult], test_result_order: Dict[str, List[str]], results_with_attachments: Mapping[str, TestResult]) -> None:
         connection = self.get_connection()
         test_client = connection.get_client("azure.devops.v5_1.test.TestClient")  # type: TestClient
 
         published_results = test_client.add_test_results_to_test_run(list(test_case_results), self.team_project, self.test_run_id)  # type: List[TestCaseResult]
 
-        already_published = [] # type: List[str]
         for published_result in published_results:
-            
+
             # Don't send attachments if the result was not accepted.
             if published_result.id == -1:
                 continue
@@ -76,23 +84,23 @@ class AzureDevOpsTestResultPublisher:
                     self.send_attachment(test_client, attachment, published_result)
 
             # Does the test result have an attachment with a sub-result matching name?
+            # The data structure returned from AzDO does not contain a subresult's name, only an 
+            # index. The order of results is meant to be the same as was posted. This assumes that 
+            # is true , and uses the order of test names recorded earlier to look-up the attachments.
             elif published_result.sub_results is not None:
-                # We assume all subresults have the same attachments, so get just the first matching.
-                for (test_name,test_result) in results_with_attachments.items():
-                    if self.is_data_driven_test(test_name):
-                        ddt_base_name = self.get_ddt_base_name(test_name)
+                sub_results_order = test_result_order[published_result.automated_test_name]
+                
+                # Sanity check
+                if len(sub_results_order) != len(published_result.sub_results):
+                    log.warning("Returned subresults list length does not match expected. Attachments may not pair correctly.")
+                
+                for (name, sub_result) in zip(sub_results_order, published_result.sub_results):
+                    if name in results_with_attachments:
+                        result = results_with_attachments.get(name)
+                        for attachment in result.attachments:
+                            self.send_sub_attachment(test_client, attachment, published_result, sub_result.id)
 
-                        if ddt_base_name in already_published:
-                            continue
-
-                        if ddt_base_name != published_result.automated_test_name:
-                            continue
-
-                        already_published.append(ddt_base_name)
-                        for attachment in test_result.attachments:
-                            self.send_attachment(test_client, attachment, published_result)
-
-    def convert_results(self, results: Iterable[TestResult]) -> Iterable[TestCaseResult]:
+    def convert_results(self, results: Iterable[TestResult]) -> Tuple[Iterable[TestCaseResult], Dict[str, List[str]]]:
         comment = "{{ \"HelixJobId\": \"{}\", \"HelixWorkItemName\": \"{}\" }}".format(
             os.getenv("HELIX_CORRELATION_ID"),
             os.getenv("HELIX_WORKITEM_FRIENDLYNAME"),
@@ -175,36 +183,47 @@ class AzureDevOpsTestResultPublisher:
 
         # Find all DDTs, determine parent, and add to dictionary
         data_driven_tests = {}  # type: Dict[str, TestCaseResult]
-        non_data_driven_tests = [] # type: TestCaseResult
+        non_data_driven_tests = [] # type: List[TestCaseResult]
+        test_name_ordering = {} # type: Dict[str, List[str]]
 
         for r in unconverted_results:
             if r is None:
                 continue
-            if self.is_data_driven_test(r.name):
-                base_name = self.get_ddt_base_name(r.name)
-                if base_name in data_driven_tests:
-                    sub_test = convert_to_sub_test(r)
-                    if sub_test is None:
-                        continue
-                    data_driven_tests[base_name].sub_results.append(sub_test)
-                    if sub_test.outcome == "Failed":
-                        data_driven_tests[base_name].outcome = "Failed"
 
-                else:
-                    cr = convert_result(r)
-                    csr = convert_to_sub_test(r)
-
-                    if cr is None or csr is None:
-                        continue
-
-                    data_driven_tests[base_name] = cr
-                    data_driven_tests[base_name].automated_test_name = base_name
-                    data_driven_tests[base_name].result_group_type = "dataDriven"
-                    data_driven_tests[base_name].sub_results = [csr]
-            else:
+            if not self.is_data_driven_test(r.name):
                 non_data_driven_tests.append(convert_result(r))
+                test_name_ordering[r.name] = []
+                continue
 
-        return list(data_driven_tests.values()) + non_data_driven_tests
+            # Must be a DDT
+            base_name = self.get_ddt_base_name(r.name)
+
+            if base_name in data_driven_tests:
+                sub_test = convert_to_sub_test(r)
+                if sub_test is None:
+                    continue
+
+                data_driven_tests[base_name].sub_results.append(sub_test)
+                test_name_ordering[base_name].append(r.name)
+
+                # Mark parent test as Failed if any subresult is Failed
+                if sub_test.outcome == "Failed":
+                    data_driven_tests[base_name].outcome = "Failed"
+
+            else:
+                cr = convert_result(r)
+                csr = convert_to_sub_test(r)
+
+                if cr is None or csr is None:
+                    continue
+
+                data_driven_tests[base_name] = cr
+                data_driven_tests[base_name].automated_test_name = base_name
+                data_driven_tests[base_name].result_group_type = "dataDriven"
+                data_driven_tests[base_name].sub_results = [csr]
+                test_name_ordering[base_name] = [r.name]
+
+        return (list(data_driven_tests.values()) + non_data_driven_tests, test_name_ordering)
 
     def get_connection(self) -> Connection:
         credentials = self.get_credentials()
