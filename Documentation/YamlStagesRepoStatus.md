@@ -40,7 +40,7 @@ Target completion date is 8/13/2019.
 | Toolset                    | licavalc/riarenas| At risk  | ❌ | Blocked by https://github.com/dotnet/arcade/issues/3476. |
 | WebSDK                     | vramak           | Complete | ✔️ | |
 | WinForms                   | mmcgaw           | Complete | ✔️ | |
-| WPF                        | vatsan-madhavan  | At risk | ❌ |  No plan available |
+| WPF                        | vatsan-madhavan  | At risk | ❌ | Blocked by https://github.com/dotnet/arcade/issues/3565; https://github.com/dotnet/core-eng/issues/7258;  
 
 | Status     | Description |
 | ---------- | ----------- |
