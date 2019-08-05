@@ -11,7 +11,7 @@ jobs:
   variables:
     - group: DotNet-VSTS-Bot
   pool:
-    vmImage: 'windows-2019'
+    vmImage: Hosted VS2017
   steps:
   - checkout: self
     clean: true
