@@ -2,7 +2,7 @@
 
 Crash dumps are uploaded to an Azure storage account in the same manner as test results, logs, and other output related to the work item. When a work item contains a failure, a special file containing links to these files is created and attached to a test result named "{Test} Failure Results". It may be viewed along with the other tests in the Azure DevOps Test tab.
 
-Here are steps to find the dump files: 
+To retrieve the dump files:
 
 1. Navigate to the Test tab in Azure DevOps.
 
