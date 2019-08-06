@@ -96,7 +96,7 @@ some highlights
   - Helix: [SDK](../src/Microsoft.DotNet.Helix/Sdk/Readme.md), [JobSender](../src/Microsoft.DotNet.Helix/Sdk/Readme.md)
   - Azure Agent pools and queues
   - Docker support
-  - [Dump file retrieval](Dumps.md)
+  - [Dump file retrieval](Dumps/Dumps.md)
 
 #### Deploying projects
   - [Packaging](CorePackages/Packaging.md)
