@@ -10,7 +10,7 @@ To retrieve the dump files:
 
 2. By default, only test results without outcome "aborted" or "failed" are shown. The Failure Results test result is marked with an outcome of "None." To filter for this, click the Outcome dropdown (circled in blue), and click "X Clear" or select "Others". 
 
-The Test Result that contains the link to the dumps and other files is of type "Error" which shows up under "Others". 
+The test result that contains the link to the dumps and other files is of type "Error" which shows up under "Others."
 
 ![Outcome dropdown](DumpsOutcomeDropdown.png)
 
