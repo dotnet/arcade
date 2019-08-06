@@ -198,13 +198,14 @@ namespace Microsoft.DotNet.Helix.Client
             {
                 Creator = Creator,
                 ResultContainerPrefix = ResultContainerPrefix,
-                Branch = GetBranch(),
                 DockerTag = dockerTag,
                 QueueAlias = queueAlias,
             };
 
             if (string.IsNullOrEmpty(Source))
             {
+                // We only want to specify a branch if Source wasn't already provided.
+                // Latest Helix Job API will 400 if both Source and any of SourcePrefix, TeamProject, Repository, or Branch are set.
                 InitializeSourceParameters(creationRequest);
             }
             else
@@ -278,11 +279,6 @@ namespace Microsoft.DotNet.Helix.Client
             }
 
             return "ci";
-        }
-
-        private string GetBranch()
-        {
-            return Environment.GetEnvironmentVariable("BUILD_SOURCEBRANCH") ?? "~adhoc~";
         }
 
         public bool IsRetryableJobListUriHttpError(Exception ex)
