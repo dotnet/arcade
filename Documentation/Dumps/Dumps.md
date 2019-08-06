@@ -16,7 +16,7 @@ The test result that contains the link to the dumps and other files is of type "
 
 3. Filter by "Failure Report" in the "Filter by test or run name" text box (circled in red). 
 
-The Test Result will be named: workitem name + "Failure Report"
+The test result will be named `[workitem_name] Failure Report`.
 
 ![Failure Report Filter](DumpsFailureReportFilter.png)
 
