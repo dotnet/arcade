@@ -20,7 +20,7 @@ The test result will be named `[workitem_name] Failure Report`.
 
 ![Failure Report Filter](DumpsFailureReportFilter.png)
 
-4. After filtering down to the Failure Reports, you should see the Test Results of the appropriate name. You may need to expand the Test Run to see the Failure Report Test Result. 
+4. After filtering down to the Failure Reports, you should see the test results matching the provided name. You may need to expand the Test Run to see the Failure Report Test Result. 
 
 ![Failure Report Test Results](DumpsFailureReportTestResults.png)
 
