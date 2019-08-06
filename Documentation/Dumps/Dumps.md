@@ -1,6 +1,6 @@
 # Retrieving Dump Files and Other Logs From a Crash or Timeout
 
-Crash dumps are uploaded to an Azure storage account in the same manner as test results, logs, and other output related to the work item. When a work item contains a failure, a special file containing links to these files is created and attached to a test result named "{Test} Failure Results". It may be viewed along with the other tests in the Azure DevOps Test tab.
+Crash dumps are uploaded to an Azure storage account in the same manner as test results, logs, and other output related to the work item. When a work item contains a failure, a special file containing links to these files is created and attached to a test result named "{Work Item} Failure Results". It may be viewed along with the other tests in the Azure DevOps Test tab.
 
 To retrieve the dump files:
 
