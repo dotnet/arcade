@@ -122,6 +122,9 @@ namespace Microsoft.DotNet.GitSync
 
             foreach (string prBranch in config.Branches)
             {
+                if (!s_branchRepoPairs.ContainsKey(prBranch))
+                    throw new ArgumentException($"None of the repos mirror {prBranch} branch.", nameof(prBranch));
+
                 UpdateRepository(config.Repos, prBranch);
 
                 foreach (RepositoryInfo repo in config.Repos)
