@@ -24,7 +24,7 @@ The test result will be named `[workitem_name] Failure Report`.
 
 ![Failure Report Test Results](DumpsFailureReportTestResults.png)
 
-5. Click on the Test Result link to open up the Test Result blade. Click on the Attachments tab to view the attached UploadFileResult.html file. 
+5. Click on the Test Result link to open up the Test Result blade. Click on the Attachments tab to view the attached `UploadFileResult.html` file. 
 
 ![UploadFileResult.html Attachment](DumpsUploadFileResultsAttachment.png)
 
