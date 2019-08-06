@@ -4,7 +4,7 @@ Crash dumps are uploaded to an Azure storage account in the same manner as test 
 
 Here are steps to find the dump files: 
 
-1. Navigate to the Test tab in Azure DevOps: 
+1. Navigate to the Test tab in Azure DevOps.
 
 ![AzDO Test Tab](DumpsTestTab.png)
 
