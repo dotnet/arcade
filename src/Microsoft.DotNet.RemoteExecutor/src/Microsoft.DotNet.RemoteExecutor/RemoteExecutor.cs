@@ -44,13 +44,20 @@ namespace Microsoft.DotNet.RemoteExecutor
             {
                 Path = System.IO.Path.Combine(AppContext.BaseDirectory, "Microsoft.DotNet.RemoteExecutorHost.dll");
                 HostRunner = processFileName;
-                s_extraParameter = Path;
 
-                string runtimeConfigPath = GetInnerRuntimeConfig();
+                string runtimeConfigPath = GetAppRuntimeConfig();
                 if (runtimeConfigPath != null)
                 {
-                    s_extraParameter = $"exec --runtimeconfig \"{runtimeConfigPath}\" \"{s_extraParameter}\"";
+                    s_extraParameter = $"--runtimeconfig \"{runtimeConfigPath}\" ";
                 }
+
+                object depsJsonData = AppContext.GetData("APP_CONTEXT_DEPS_FILES");
+                if (depsJsonData != null)
+                {
+                    s_extraParameter += $"--depsfile \"{depsJsonData.ToString()}\" ";
+                }
+
+                s_extraParameter = $"exec {s_extraParameter}\"{Path}\"";
             }
             else if (RuntimeInformation.FrameworkDescription.StartsWith(".NET Framework", StringComparison.OrdinalIgnoreCase))
             {
@@ -328,7 +335,7 @@ namespace Microsoft.DotNet.RemoteExecutor
             return d.GetMethodInfo();
         }
 
-        private static string GetInnerRuntimeConfig()
+        private static string GetAppRuntimeConfig()
         {
             const string RuntimeConfigExtension = ".runtimeconfig.json";
             var currentAssembly = typeof(RemoteExecutor).Assembly;

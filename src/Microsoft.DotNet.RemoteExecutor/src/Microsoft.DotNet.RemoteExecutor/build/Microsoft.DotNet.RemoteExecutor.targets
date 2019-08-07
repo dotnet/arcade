@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
 <Project>
+  <PropertyGroup>
+    <RemoteExecutorHostName>Microsoft.DotNet.RemoteExecutorHost</RemoteExecutorHostName>
+  </PropertyGroup>
+
   <ItemGroup>
     <Content Include="$(MSBuildThisFileDirectory)\..\tools\net472\*" 
              Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'"
@@ -11,4 +15,27 @@
              CopyToOutputDirectory="PreserveNewest"
              Visible="false" />
   </ItemGroup>
+
+  <PropertyGroup Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'">
+    <RemoteClientAppConfigFile>$(OutDir)$(TargetFileName).config</RemoteClientAppConfigFile>
+    <RemoteHostAppConfigFile>$(OutDir)$(RemoteExecutorHostName).exe.config</RemoteHostAppConfigFile>
+  </PropertyGroup>
+
+  <Target Name="_CopyRemoteClientAppConfigFile"
+          Condition="Exists('$(RemoteClientAppConfigFile)') and '$(TargetFrameworkIdentifier)' == '.NETFramework'"
+          AfterTargets="_CopyAppConfigFile"
+          Inputs="$(RemoteClientAppConfigFile)"
+          Outputs="$(RemoteHostAppConfigFile)">
+
+    <Copy SourceFiles="$(RemoteClientAppConfigFile)"
+          DestinationFiles="$(RemoteHostAppConfigFile)"
+          OverwriteReadOnlyFiles="$(OverwriteReadOnlyFiles)"
+          Retries="$(CopyRetryCount)"
+          RetryDelayMilliseconds="$(CopyRetryDelayMilliseconds)"
+          UseHardlinksIfPossible="$(CreateHardLinksForAdditionalFilesIfPossible)"
+          UseSymboliclinksIfPossible="$(CreateSymbolicLinksForAdditionalFilesIfPossible)">
+      <Output TaskParameter="DestinationFiles" ItemName="FileWrites"/>
+    </Copy>
+
+  </Target>
 </Project>
