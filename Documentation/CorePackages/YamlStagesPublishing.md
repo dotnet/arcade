@@ -180,13 +180,13 @@ for the category to the TargetStaticFeed PropertyGroup in
     ```
 
 1. Add a variable to your pipeline's YAML and set the value as your new category.
-    * `_DotNetValidationArtifactCategory` for publishing to the Validation channel (Such as for testing the changes in these onboarding steps)
+    * `_DotNetValidationArtifactsCategory` for publishing to the Validation channel (Such as for testing the changes in these onboarding steps)
     * `_DotNetArtifactsCategory` for publishing to the Dev channel.
 
     ```YAML
     variables:
     ...
-      - name: _DotNetValidationArtifactCategory
+      - name: _DotNetValidationArtifactsCategory
         value: MyNewCategory
       - name: _DotNetArtifactsCategory
         value: MyNewCategory
