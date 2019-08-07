@@ -54,6 +54,17 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     var itemsToPushNoExcludes = ItemsToPush.
                         Where(i => !string.Equals(i.GetMetadata("ExcludeFromManifest"), "true", StringComparison.OrdinalIgnoreCase));
 
+                    // To prevent conflicts with other parts of the build system that might move the artifacts
+                    // folder while the artifacts are still being published, we copy the artifacts to a temporary
+                    // location only for the sake of uploading them. This is a temporary solution and will be
+                    // removed in the future.
+                    if (!Directory.Exists(AssetsTemporaryDirectory))
+                    {
+                        Log.LogMessage(MessageImportance.High,
+                            $"Assets temporary directory {AssetsTemporaryDirectory} doesn't exist. Creating it.");
+                        Directory.CreateDirectory(AssetsTemporaryDirectory);
+                    }
+
                     if (PublishFlatContainer)
                     {
                         blobArtifacts = itemsToPushNoExcludes
@@ -81,17 +92,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         ITaskItem[] packageItems = itemsToPushNoExcludes
                             .Where(i => !symbolItems.Contains(i))
                             .ToArray();
-
-                        // To prevent conflicts with other parts of the build system that might move the artifacts
-                        // folder while the artifacts are still being published, we copy the artifacts to a temporary
-                        // location only for the sake of uploading them. This is a temporary solution and will be
-                        // removed in the future.
-                        if (!Directory.Exists(AssetsTemporaryDirectory))
-                        {
-                            Log.LogMessage(MessageImportance.High, 
-                                $"Assets temporary directory {AssetsTemporaryDirectory} doesn't exist. Creating it.");
-                            Directory.CreateDirectory(AssetsTemporaryDirectory);
-                        }
 
                         foreach (var packagePath in packageItems)
                         {
