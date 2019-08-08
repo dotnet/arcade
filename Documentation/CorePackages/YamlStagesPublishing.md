@@ -99,7 +99,7 @@ In order to use this new publishing mechanism, the easiest way to start is by ma
       - template: eng\common\templates\post-build\post-build.yml
         parameters:
           # Symbol validation is not entirely reliable as of yet, so should be turned off until
-          https://github.com/dotnet/arcade/issues/2871 is resolved.
+          # https://github.com/dotnet/arcade/issues/2871 is resolved.
           enableSymbolValidation: false
           ...
     ```
@@ -180,81 +180,94 @@ for the category to the TargetStaticFeed PropertyGroup in
     ```
 
 1. Add a variable to your pipeline's YAML and set the value as your new category.
-    * `_DotNetValidationArtifactCategory` for publishing to the Validation channel (Such as for testing the changes in these onboarding steps)
+    * `_DotNetValidationArtifactsCategory` for publishing to the Validation channel (Such as for testing the changes in these onboarding steps)
     * `_DotNetArtifactsCategory` for publishing to the Dev channel.
 
     ```YAML
     variables:
     ...
-      - name: _DotNetValidationArtifactCategory
-        value: MyNewCategory
-      - name: _DotNetArtifactsCategory
-        value: MyNewCategory
+    - name: _DotNetValidationArtifactsCategory
+      value: MyNewCategory
+    - name: _DotNetArtifactsCategory
+      value: MyNewCategory
     ...
     ```
 
 ### Integrating custom publishing logic
 
-Repositories that perform additional publishing during their build outside of the Arcade SDK publishing should
-move away from doing so, as they would likely end up publishing to incorrect feeds for servicing builds.
-To help with this, the Arcade SDK provides the [PushToAzureDevOpsArtifacts](https://github.com/dotnet/arcade/blob/master/src/Microsoft.DotNet.Build.Tasks.Feed/src/PushToAzureDevOpsArtifacts.cs) task,
-which will generate an appropriately populated asset manifest, and will publish the assets to the build's
-artifacts. The post-build stages will then publish the assets to the correct location based on the channel that
-the build will be assigned to, and the asset categories.
+Repositories that perform additional publishing during their build outside of
+the Arcade SDK publishing should move away from doing so, as they would likely
+end up publishing to incorrect feeds for servicing builds.
 
-A conversion to this model for repos that are using the `PushToBlobFeed` task inside their build would look like
-this:
+Support for adding truly custom publishing logic to the publish stage in an
+Arcade-compatible way not yet implemented. Publish steps that can't be
+accomplished with Arcade must be performed in additional stages that happen
+before or after the Arcade publish stages.
+
+The Arcade SDK provides a way to convert `PushToBlobFeed` calls: the
+[PushToAzureDevOpsArtifacts](https://github.com/dotnet/arcade/blob/master/src/Microsoft.DotNet.Build.Tasks.Feed/src/PushToAzureDevOpsArtifacts.cs)
+task generates an appropriately populated asset manifest and publishes the
+assets to upload to the build's artifacts. The post-build stages will then
+publish the assets to the correct location based on the channel that the build
+will be assigned to and the asset categories.
+
+A conversion to `PushToAzureDevOpsArtifacts` for repos that are using the
+`PushToBlobFeed` task inside their build would look like this:
 
 1. Replace the `PushToBlobFeed` task with `PushToAzureDevOpsArtifacts`:
 
     ```XML
+    <PropertyGroup>
       <AssetManifestFileName>ManifestFileName.xml</AssetManifestFileName>
       <AssetManifestPath>$(ArtifactsLogDir)AssetManifest\$(AssetManifestFileName)</AssetManifestPath>
+    </PropertyGroup>
 
-      <PushToBlobFeed
-        ExpectedFeedUrl="$(FeedURL)"
-        AccountKey="$(FeedKey)"
-        ItemsToPush="@(ItemsToPush)"
-        ManifestBuildData="Location=$(FeedURL)"
-        ManifestRepoUri="$(BUILD_REPOSITORY_URI)"
-        ManifestBranch="$(BUILD_SOURCEBRANCH)"
-        ManifestBuildId="$(BUILD_BUILDNUMBER)"
-        ManifestCommit="$(BUILD_SOURCEVERSION)"
-        AssetManifestPath="$(AssetManifestPath)"
-        PublishFlatContainer="$(PublishFlatContainer)" />
+    <PushToBlobFeed
+      ExpectedFeedUrl="$(FeedURL)"
+      AccountKey="$(FeedKey)"
+      ItemsToPush="@(ItemsToPush)"
+      ManifestBuildData="Location=$(FeedURL)"
+      ManifestRepoUri="$(BUILD_REPOSITORY_URI)"
+      ManifestBranch="$(BUILD_SOURCEBRANCH)"
+      ManifestBuildId="$(BUILD_BUILDNUMBER)"
+      ManifestCommit="$(BUILD_SOURCEVERSION)"
+      AssetManifestPath="$(AssetManifestPath)"
+      PublishFlatContainer="$(PublishFlatContainer)" />
     ```
 
     becomes
 
     ```XML
-
+    <PropertyGroup>
       <AssetManifestFileName>ManifestFileName</AssetManifestFileName>
       <AssetManifestPath>$(ArtifactsLogDir)AssetManifest\$(SdkAssetManifestFileName)</AssetManifestPath>
 
       <!-- Create a temporary directory to store the generated asset manifest by the task -->
       <TempWorkingDirectory>$(ArtifactsDir)\..\AssetsTmpDir\$([System.Guid]::NewGuid())</TempWorkingDirectory>
-      <MakeDir Directories="$(TempWorkingDirectory)"/>
+    </PropertyGroup>
 
-      <!-- Generate the asset manifest using the PushToAzureDevOpsArtifacts task -->
-      <PushToAzureDevOpsArtifacts
-        ItemsToPush="@(ItemsToPush)"
-        ManifestBuildData="Location=$(FeedURL)"
-        ManifestRepoUri="$(BUILD_REPOSITORY_URI)"
-        ManifestBranch="$(BUILD_SOURCEBRANCH)"
-        ManifestBuildId="$(BUILD_BUILDNUMBER)"
-        ManifestCommit="$(BUILD_SOURCEVERSION)"
-        PublishFlatContainer="$(PublishFlatContainer)"
-        AssetManifestPath="$(AssetManifestPath)"
-        AssetsTemporaryDirectory="$(TempWorkingDirectory)" />
+    <MakeDir Directories="$(TempWorkingDirectory)"/>
 
-      <!-- Copy the generated manifest to the build's artifacts -->
-      <Copy
+    <!-- Generate the asset manifest using the PushToAzureDevOpsArtifacts task -->
+    <PushToAzureDevOpsArtifacts
+      ItemsToPush="@(ItemsToPush)"
+      ManifestBuildData="Location=$(FeedURL)"
+      ManifestRepoUri="$(BUILD_REPOSITORY_URI)"
+      ManifestBranch="$(BUILD_SOURCEBRANCH)"
+      ManifestBuildId="$(BUILD_BUILDNUMBER)"
+      ManifestCommit="$(BUILD_SOURCEVERSION)"
+      PublishFlatContainer="$(PublishFlatContainer)"
+      AssetManifestPath="$(AssetManifestPath)"
+      AssetsTemporaryDirectory="$(TempWorkingDirectory)" />
+
+    <!-- Copy the generated manifest to the build's artifacts -->
+    <Copy
       SourceFiles="$(AssetManifestPath)"
       DestinationFolder="$(TempWorkingDirectory)\$(AssetManifestFileName)" />
 
-      <Message
-        Text="##vso[artifact.upload containerfolder=AssetManifests;artifactname=AssetManifests]$(TempWorkingDirectory)/$(AssetManifestFileName)"
-        Importance="high" />
+    <Message
+      Text="##vso[artifact.upload containerfolder=AssetManifests;artifactname=AssetManifests]$(TempWorkingDirectory)/$(AssetManifestFileName)"
+      Importance="high" />
     ```
 
     This will do something similar to what the SDK does for its default publishing pipeline, as seen in [publish.proj](https://github.com/dotnet/arcade/blob/master/src/Microsoft.DotNet.Arcade.Sdk/tools/Publish.proj)

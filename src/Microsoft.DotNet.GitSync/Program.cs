@@ -28,6 +28,7 @@ namespace Microsoft.DotNet.GitSync
         private const string RepoTableName = "MirrorBranchRepos";
         private static CloudTable s_table;
         private static Dictionary<(string, string), List<string>> s_repos { get; set; } = new Dictionary<(string, string), List<string>>();
+        private static Dictionary<string, HashSet<string>> s_branchRepoPairs = new Dictionary<string, HashSet<string>>();
         private ConfigFile ConfigFile { get; }
         private static Lazy<GitHubClient> _lazyClient;
         private static EmailManager s_emailManager;
@@ -121,11 +122,14 @@ namespace Microsoft.DotNet.GitSync
 
             foreach (string prBranch in config.Branches)
             {
+                if (!s_branchRepoPairs.ContainsKey(prBranch))
+                    throw new ArgumentException($"None of the repos mirror {prBranch} branch.", nameof(prBranch));
+
                 UpdateRepository(config.Repos, prBranch);
 
                 foreach (RepositoryInfo repo in config.Repos)
                 {
-                    if (!s_repos.ContainsKey((repo.Name, prBranch)))
+                    if (!s_branchRepoPairs[prBranch].Contains(repo.Name))
                         break;
 
                     if (repo.LastSynchronizedCommits != null)
@@ -377,7 +381,7 @@ namespace Microsoft.DotNet.GitSync
         {
             foreach (var repo in repos)
             {
-                if (!s_repos.ContainsKey((repo.Name, branch)))
+                if (!s_branchRepoPairs[branch].Contains(repo.Name))
                     break;
 
                 s_logger.Debug($"Updating {repo}\\{branch} to latest version.");
@@ -550,7 +554,23 @@ namespace Microsoft.DotNet.GitSync
             var repos = RepoTable.ExecuteQuery(getAllMirrorPairs);
             foreach (var item in repos)
             {
-                s_repos.Add((item.PartitionKey, item["Branch"].StringValue), item["ReposToMirrorInto"].StringValue.Split(';').ToList());
+                string branchName = item["Branch"].StringValue;
+                string[] targetRepos = item["ReposToMirrorInto"].StringValue.Split(';');
+
+                s_repos.Add((item.PartitionKey, branchName), targetRepos.ToList());
+
+                if (s_branchRepoPairs.ContainsKey(branchName))
+                {
+                    foreach (var repoName in targetRepos)
+                    {
+                        s_branchRepoPairs[branchName].Add(repoName);
+                    }
+                }
+                else
+                {
+                    s_branchRepoPairs.Add(branchName, targetRepos.ToHashSet());
+                }
+
                 s_logger.Info($"The commits in  {item.PartitionKey} repo will be mirrored into {item["ReposToMirrorInto"].StringValue} Repos");
             }
 
