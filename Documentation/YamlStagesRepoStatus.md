@@ -15,7 +15,7 @@ Target completion date is 8/13/2019.
 | Arcade-Validation          | mawilkie         | Complete | ✔️ | |
 | aspnet-AspLabs             | dougbu/wtgodbe    | On track | ➖ |  Expected completion 8/11 |
 | aspnet-AspNetCore          | dougbu    | At risk | ❌ |  Expected completion 8/11 |
-| aspnet-AspNetCore-Tooling  | dougbu/wtgodbe    | Complete | ✔️ | |
+| aspnet-AspNetCore-Tooling  | dougbu    | Complete | ✔️ | |
 | aspnet-EntityFramework6    | dougbu/wtgodbe    | On track | ➖ |  In PR: https://github.com/aspnet/EntityFramework6/pull/1128 |
 | aspnet-EntityFrameworkCore | dougbu/wtgodbe    | On track | ➖ |  In PR: https://github.com/aspnet/EntityFrameworkCore/pull/17032 |
 | aspnet-Blazor              | dougbu    | On track | ➖ |  Expected completion 8/11 |
