@@ -30,7 +30,7 @@ Target completion date is 8/13/2019.
 | FSharp                     | brettfo          | On track | ➖ |  Functionally complete, but debugging MicroBuild machines being unable to restore some NuGet packages.  ETA EOW. |
 | MSBuild                    | licavalc         | At risk | ❌ |  No plan available |
 | nuget-NugetClient          | dtivel           | At risk | ❌ |  No plan available |
-| Roslyn                     | jaredpar         | At risk | ❌ |  No plan available |
+| Roslyn                     | jaredpar         | At risk | ❌ |  Expected completion 8/15 |
 | SDK                        | licavalc         | At risk | ❌ |  No plan available |
 | Standard                   | danmose/wigodbe  | Complete | ✔️ | |
 | SymReader                  | tmat             | At risk | ❌ |  No plan available |
