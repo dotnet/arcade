@@ -30,7 +30,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
         /// </summary>
         public ITaskItem[] NugetPackageVersionsEndpoints { get; set; }
 
-        private const string NuGetDotOrgVersionEndpoint = @"http://api.nuget.org/v3-flatcontainer/";
+        private const string NuGetDotOrgVersionEndpoint = @"https://api.nuget.org/v3-flatcontainer/";
 
         public override bool Execute()
         {
@@ -51,7 +51,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
                 string latestPatchVersion = GetLatestStableVersionForEra(packageReport.Id, harvestEraMajor, harvestEraMinor);
                 if (latestPatchVersion.CompareTo(harvestVersion) != 0)
                 {
-                    Log.LogError($"Validation Failed: {packageReport.Id} is harvesting assets from package version {harvestVersion} which is not the latest for that package era. Latest package version from that era is {latestPatchVersion}. Update packageIndex.json in order to fix this.");
+                    Log.LogError($"Validation Failed: {packageReport.Id} is harvesting assets from package version {harvestVersion} which is not the latest for that package era. Latest package version from that era is {latestPatchVersion}.");
                 }
                 else
                 {
