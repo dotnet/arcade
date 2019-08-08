@@ -34,7 +34,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
 
         public override bool Execute()
         {
-            var packageReport = PackageReport.Load(PackageReportPath);
+            PackageReport packageReport = GetPackageReportFromPath();
             bool isHarvestingAssetsFromPackage = TryGetHarvestVersionFromReport(packageReport, out string harvestVersion, out int harvestEraMajor, out int harvestEraMinor);
 
             if (isHarvestingAssetsFromPackage)
@@ -64,6 +64,12 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
             }
 
             return !Log.HasLoggedErrors;
+        }
+
+        // Making this method protected virtual for tests.
+        protected virtual PackageReport GetPackageReportFromPath()
+        {
+            return PackageReport.Load(PackageReportPath);
         }
 
         private bool TryGetHarvestVersionFromReport(PackageReport report, out string harvestVersion, out int harvestEraMajor, out int harvestEraMinor)
@@ -121,7 +127,8 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
             }
         }
 
-        private string GetLatestStableVersionForEra(string packageId, int eraMajorVersion, int eraMinorVersion)
+        // Making this method protected virtual for tests.
+        protected virtual string GetLatestStableVersionForEra(string packageId, int eraMajorVersion, int eraMinorVersion)
         {
             string latestPatchVersion = string.Empty;
             foreach (var versionEndpoint in NugetPackageVersionsEndpoints)
