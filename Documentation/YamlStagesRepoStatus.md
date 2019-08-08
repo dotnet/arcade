@@ -26,7 +26,7 @@ Target completion date is 8/13/2019.
 | CoreFx                     | danmose/safern   | On track | ➖ | Expected completion: 8/9 |
 | IoT                        | joperezr         | Complete | ✔️ | |
 | Core-SDK                   | licavalc         | At risk | ❌ |  No plan available |
-| Core-Setup                 | dleeapho         | At risk | ❌ |  No plan available |
+| Core-Setup                 | dleeapho         | At risk | ❌ |  Expected completion 8/21 |
 | FSharp                     | brettfo          | At risk | ❌ |  No plan available |
 | MSBuild                    | licavalc         | At risk | ❌ |  No plan available |
 | nuget-NugetClient          | dtivel           | At risk | ❌ |  No plan available |
