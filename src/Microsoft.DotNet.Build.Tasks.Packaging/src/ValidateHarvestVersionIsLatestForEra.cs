@@ -39,6 +39,12 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
 
             if (isHarvestingAssetsFromPackage)
             {
+                if (packageReport.Version.StartsWith($"{harvestEraMajor}.{harvestEraMinor}."))
+                {
+                    Log.LogError($"Validation Failed: {packageReport.Id} is harvesting package version {harvestVersion} which belongs to the current package era: {packageReport.Version}");
+                    return false;
+                }
+
                 // If no package versions endpoints were provided, then default to use NuGet.org version endpoint.
                 if (NugetPackageVersionsEndpoints == null || NugetPackageVersionsEndpoints.Length == 0)
                 {

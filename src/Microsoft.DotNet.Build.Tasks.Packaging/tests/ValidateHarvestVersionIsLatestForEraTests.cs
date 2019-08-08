@@ -18,6 +18,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
         private PackageReport _testPackageReport = new PackageReport()
         {
             Id = "TestPackage",
+            Version = "4.7.0",
             Targets = new Dictionary<string, Target>
             {
                 {
@@ -102,6 +103,37 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
             _log.Reset();
             task.Execute();
             Assert.Equal(0, _log.ErrorsLogged);
+            Assert.Equal(0, _log.WarningsLogged);
+        }
+
+        [Fact]
+        public void ValidationFailsWhenHarvestingFromCurrentVersionTest()
+        {
+            TestableValidateHarvestVersionTask task = new TestableValidateHarvestVersionTask(() =>
+            {
+                return new PackageReport()
+                {
+                    Id = "TestPackage",
+                    Version = "4.6.3",
+                    Targets = new Dictionary<string, Target>
+                    {
+                        {
+                            "testTarget", new Target
+                            {
+                                CompileAssets = new PackageAsset[]
+                                {
+                                    new PackageAsset{ HarvestedFrom = "TestPackage/4.6.2/ref/netstandard2.0/TestPackage.dll" }
+                                }
+                            }
+                        }
+                    }
+                };
+            }, (packageId, eraMajor, eraMinor) => string.Empty)
+            { BuildEngine = _engine, PackageReportPath = TestReportPath };
+
+            _log.Reset();
+            task.Execute();
+            Assert.Equal(1, _log.ErrorsLogged);
             Assert.Equal(0, _log.WarningsLogged);
         }
 
