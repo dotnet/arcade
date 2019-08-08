@@ -27,7 +27,7 @@ Target completion date is 8/13/2019.
 | IoT                        | joperezr         | Complete | ✔️ | |
 | Core-SDK                   | licavalc         | At risk | ❌ |  No plan available |
 | Core-Setup                 | dleeapho         | At risk | ❌ |  No plan available |
-| FSharp                     | brettfo          | At risk | ❌ |  No plan available |
+| FSharp                     | brettfo          | On track | ➖ |  Functionally complete, but debugging MicroBuild machines being unable to restore some NuGet packages.  ETA EOW. |
 | MSBuild                    | licavalc         | At risk | ❌ |  No plan available |
 | nuget-NugetClient          | dtivel           | At risk | ❌ |  No plan available |
 | Roslyn                     | jaredpar         | At risk | ❌ |  No plan available |
