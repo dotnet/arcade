@@ -37,7 +37,7 @@ Target completion date is 8/13/2019.
 | SymReader-Portable         | tmat             | At risk | ❌ |  No plan available |
 | Templating                 | vramak           | Complete | ✔️ | |
 | Test-Templates             | sasin            | At risk | ❌ |  No plan available |
-| Toolset                    | licavalc/riarenas| At risk  | ❌ | Blocked by https://github.com/dotnet/arcade/issues/3476. |
+| Toolset                    | licavalc/riarenas| Complete | ✔️ | |
 | WebSDK                     | vramak           | Complete | ✔️ | |
 | WinForms                   | mmcgaw           | Complete | ✔️ | |
 | WPF                        | vatsan-madhavan  | Complete | ✔️ | Some reliability problems being observed, for e.g., https://github.com/dotnet/arcade/issues/3609| 
