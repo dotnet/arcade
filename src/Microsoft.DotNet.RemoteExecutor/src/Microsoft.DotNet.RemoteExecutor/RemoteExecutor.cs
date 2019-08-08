@@ -15,17 +15,34 @@ namespace Microsoft.DotNet.RemoteExecutor
 {
     public static partial class RemoteExecutor
     {
-        // A timeout (milliseconds) after which a wait on a remote operation should be considered a failure.
+        /// <summary>
+        /// A timeout (milliseconds) after which a wait on a remote operation should be considered a failure.
+        /// </summary>
         public const int FailWaitTimeoutMilliseconds = 60 * 1000;
-        // The exit code returned when the test process exits successfully.
+
+        /// <summary>
+        /// The exit code returned when the test process exits successfully.
+        /// </summary>
         public const int SuccessExitCode = 42;
-        // The path of the remote executor.
+
+        /// <summary>
+        /// The path of the remote executor.
+        /// </summary>
         public static readonly string Path;
-        // The name of the host
+
+        /// <summary>
+        /// The name of the host.
+        /// </summary>
         public static string HostRunnerName;
-        // The path of the host
+
+        /// <summary>
+        /// The path of the host.
+        /// </summary>
         public static readonly string HostRunner;
-        // Optional additional arguments
+
+        /// <summary>
+        /// Optional additional arguments.
+        /// </summary>
         private static readonly string s_extraParameter;
 
         static RemoteExecutor()
@@ -35,14 +52,14 @@ namespace Microsoft.DotNet.RemoteExecutor
 
             if (PlatformDetection.IsInAppContainer)
             {
-                // Host is required to have a remote execution feature integrated. Currently applies to uap and *aot.
+                // Host is required to have a remote execution feature integrated, i.e. UWP.
                 Path = processFileName;
                 HostRunner = HostRunnerName;
                 s_extraParameter = "remote";
             }
             else if (RuntimeInformation.FrameworkDescription.StartsWith(".NET Core", StringComparison.OrdinalIgnoreCase))
             {
-                Path = System.IO.Path.Combine(AppContext.BaseDirectory, "Microsoft.DotNet.RemoteExecutorHost.dll");
+                Path = typeof(RemoteExecutor).Assembly.Location;
                 HostRunner = processFileName;
 
                 string runtimeConfigPath = GetAppRuntimeConfig();
@@ -51,17 +68,21 @@ namespace Microsoft.DotNet.RemoteExecutor
                     s_extraParameter = $"--runtimeconfig \"{runtimeConfigPath}\" ";
                 }
 
-                object depsJsonData = AppContext.GetData("APP_CONTEXT_DEPS_FILES");
-                if (depsJsonData != null)
+                if (AppContext.GetData("APP_CONTEXT_DEPS_FILES") is string depsJsonData)
                 {
-                    s_extraParameter += $"--depsfile \"{depsJsonData.ToString()}\" ";
+                    // The first entry in the deps.json string is the app's one.
+                    string[] depsJsonFiles = ((string)depsJsonData).Split(';');
+                    if (depsJsonFiles.Length > 0)
+                    {
+                        s_extraParameter += $"--depsfile \"{depsJsonFiles[0].ToString()}\" ";
+                    }
                 }
 
                 s_extraParameter = $"exec {s_extraParameter}\"{Path}\"";
             }
             else if (RuntimeInformation.FrameworkDescription.StartsWith(".NET Framework", StringComparison.OrdinalIgnoreCase))
             {
-                Path = System.IO.Path.Combine(AppContext.BaseDirectory, "Microsoft.DotNet.RemoteExecutorHost.exe");
+                Path = typeof(RemoteExecutor).Assembly.Location;
                 HostRunner = Path;
             }
             else
