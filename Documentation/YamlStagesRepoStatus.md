@@ -40,7 +40,7 @@ Target completion date is 8/13/2019.
 | Toolset                    | licavalc/riarenas| At risk  | ❌ | Blocked by https://github.com/dotnet/arcade/issues/3476. |
 | WebSDK                     | vramak           | Complete | ✔️ | |
 | WinForms                   | mmcgaw           | Complete | ✔️ | |
-| WPF                        | vatsan-madhavan  | At risk | ❌ | Have a working [prototype](https://dev.azure.com/dnceng/internal/_git/6c03b454-12c7-4c55-add0-b4ac2ab19c36?version=GBdev%2Fvatsan%2Fyamlstages); Everything seems to work except package publishing - investigating; WPF will need help with resourcing if this investigation become time consuming.| 
+| WPF                        | vatsan-madhavan  | Complete | ✔️ | Some reliability problems being observed, for e.g., https://github.com/dotnet/arcade/issues/3609| 
 
 | Status     | Description |
 | ---------- | ----------- |
