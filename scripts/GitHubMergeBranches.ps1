@@ -98,7 +98,7 @@ function GetCommitterGitHubName($sha) {
 
     if ($email -like '*@users.noreply.github.com') {
         [string[]] $userNames = ($email -replace '@users.noreply.github.com', '') -split '\+'
-        return $userNames | select -last 1
+        return $userNames | Select-Object -last 1
     }
     elseif ($script:emails[$email]) {
         return $script:emails[$email]
@@ -124,7 +124,7 @@ function RepoExists($owner, $name) {
     try {
         $resp = Invoke-RestMethod -Headers $headers "https://api.github.com/repos/$owner/$name"
         $resp | Write-Verbose
-        return ($resp -ne $null)
+        return ($null -ne $resp)
     }
     catch {
         return $false
@@ -207,17 +207,20 @@ try {
     }
 
     $authors = $commitsToMerge `
-        | % { Write-Host -f Cyan "Merging:`t$(git log --format=$formatString -1 $_)"; $_ } `
-        | % { GetCommitterGitHubName $_ } `
-        | ? { $_ -ne $null } `
-        | select -Unique
+        | ForEach-Object { Write-Host -f Cyan "Merging:`t$(git log --format=$formatString -1 $_)"; $_ } `
+        | ForEach-Object { GetCommitterGitHubName $_ } `
+        | Where-Object { $_ -ne $null } `
+        | Select-Object -Unique
 
-    if (-not $AllowAutomatedCommits -and (($authors | measure).Count -eq 1) -and ($authors | select -first 1) -eq 'dotnet-maestro') {
-        Write-Host -ForegroundColor Yellow 'Skipping PR generation because it appears this PR would only contain automated commits by @dotnet-maestro'
-        exit 0
+    if ((-not $AllowAutomatedCommits) -and (($authors | Measure-Object).Count -eq 1)) {
+        $firstAuthor = $authors | Select-Object -first 1
+        if (($firstAuthor -eq 'dotnet-maestro') -or ($firstAuthor -eq 'dotnet-maestro[bot]')) {
+            Write-Host -ForegroundColor Yellow 'Skipping PR generation because it appears this PR would only contain automated commits by @dotnet-maestro'
+            exit 0
+        }
     }
 
-    $authors = $authors | % { "* @$_" }
+    $authors = $authors | ForEach-Object { "* @$_" }
 
     $committersList = "This PR merges commits made on $HeadBranch by the following committers:`n`n$($authors -join "`n")"
 
@@ -287,8 +290,8 @@ try {
     $resp | Write-Verbose
 
     $matchingPr = $resp.data.repository.pullRequests.nodes `
-        | ? { $_.headRef.name -eq $mergeBranchName -and $_.headRef.repository.owner.login -eq $prOwnerName } `
-        | select -First 1
+        | Where-Object { $_.headRef.name -eq $mergeBranchName -and $_.headRef.repository.owner.login -eq $prOwnerName } `
+        | Select-Object -First 1
 
     if ($matchingPr) {
         $prUpdatedSuccess = $false
