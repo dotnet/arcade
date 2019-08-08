@@ -1232,5 +1232,18 @@ $@"
 
             ValidateGeneratedProject(itemsToSign, new Dictionary<string, SignInfo>(), new Dictionary<ExplicitCertificateKey, string>(), s_fileExtensionSignInfo, new string[0]);
         }
+
+        [Fact]
+        public void CheckHelixJobStatusNoAzDO(){
+
+            var client = new HttpClient(new HttpClientHandler
+            {
+                AllowAutoRedirect = false,
+                CheckCertificateRevocationList = true,
+            });
+             
+            var resultID = CheckHelixJobStatus.CreateFakeTestResultAsync(client,8366428,"TestingHelixJobNoAzDO");
+            Assert.Throws<NotImplementedException>(resultID);
+        }
     }
 }
