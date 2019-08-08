@@ -147,7 +147,8 @@
 
   </Choose>
 
-  <Target Name="CopyRunnerToOutputDirectory" BeforeTargets="CopyFilesToOutputDirectory">
+  <!-- ResolveAssemblyReferences is the target that populates ReferenceCopyLocalPaths which is what is copied to output directory. -->
+  <Target Name="CopyRunnerToOutputDirectory" BeforeTargets="ResolveAssemblyReferences">
     <ItemGroup>
       <!-- Add the runner configuration file -->
       <None Include="$(TestRunnerConfigPath)"
