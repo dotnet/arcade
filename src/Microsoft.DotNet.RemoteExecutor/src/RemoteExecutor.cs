@@ -61,11 +61,12 @@ namespace Microsoft.DotNet.RemoteExecutor
             {
                 Path = typeof(RemoteExecutor).Assembly.Location;
                 HostRunner = processFileName;
+                s_extraParameter = "exec";
 
                 string runtimeConfigPath = GetAppRuntimeConfig();
                 if (runtimeConfigPath != null)
                 {
-                    s_extraParameter = $"--runtimeconfig \"{runtimeConfigPath}\" ";
+                    s_extraParameter += $" --runtimeconfig \"{runtimeConfigPath}\"";
                 }
 
                 if (AppContext.GetData("APP_CONTEXT_DEPS_FILES") is string depsJsonData)
@@ -74,11 +75,11 @@ namespace Microsoft.DotNet.RemoteExecutor
                     string[] depsJsonFiles = ((string)depsJsonData).Split(';');
                     if (depsJsonFiles.Length > 0)
                     {
-                        s_extraParameter += $"--depsfile \"{depsJsonFiles[0].ToString()}\" ";
+                        s_extraParameter += $" --depsfile \"{depsJsonFiles[0].ToString()}\"";
                     }
                 }
 
-                s_extraParameter = $"exec {s_extraParameter}\"{Path}\"";
+                s_extraParameter += $" \"{Path}\"";
             }
             else if (RuntimeInformation.FrameworkDescription.StartsWith(".NET Framework", StringComparison.OrdinalIgnoreCase))
             {
