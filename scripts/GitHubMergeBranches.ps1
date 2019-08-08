@@ -213,8 +213,8 @@ try {
         | Select-Object -Unique
 
     if ((-not $AllowAutomatedCommits) -and (($authors | Measure-Object).Count -eq 1)) {
-        $firstAuthor = $authors | Select-Object -first 1
-        if (($firstAuthor -eq 'dotnet-maestro') -or ($firstAuthor -eq 'dotnet-maestro[bot]')) {
+        $onlyAuthor = $authors | Select-Object -first 1
+        if (($onlyAuthor -eq 'dotnet-maestro') -or ($onlyAuthor -eq 'dotnet-maestro[bot]')) {
             Write-Host -ForegroundColor Yellow 'Skipping PR generation because it appears this PR would only contain automated commits by @dotnet-maestro'
             exit 0
         }
