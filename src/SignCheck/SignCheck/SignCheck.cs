@@ -303,7 +303,7 @@ namespace SignCheck
             {
                 TotalFiles++;
 
-                if (result.IsSigned)
+                if (result.IsSigned && !result.IsExcluded)
                 {
                     TotalSignedFiles++;
                 }
