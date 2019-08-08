@@ -69,7 +69,7 @@ eng\common\darc-init.ps1 script located under any arcade enabled repository.
 The version number is currently baked into the install script, so ensuring you
 have the latest arcade is a good idea.
 
-#### Step 1: Ensure sure you're part of the **arcade-contrib** team:
+#### Step 1: Ensure you're part of the **arcade-contrib** team:
 - If not you'll get 'Forbidden' errors when trying to use darc
 - Go to https://github.com/orgs/dotnet/teams/arcade-contrib/members
 - Click on "Request to join"
