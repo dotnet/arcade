@@ -27,7 +27,7 @@ Target completion date is 8/13/2019.
 | IoT                        | joperezr         | Complete | ✔️ | |
 | Core-SDK                   | licavalc         | At risk | ❌ |  No plan available |
 | Core-Setup                 | dleeapho         | At risk | ❌ |  No plan available |
-| FSharp                     | brettfo          | At risk | ❌ |  No plan available |
+| FSharp                     | brettfo          | On track | ➖ |  Functionally complete, but debugging MicroBuild machines being unable to restore some NuGet packages.  ETA EOW. |
 | MSBuild                    | licavalc         | At risk | ❌ |  No plan available |
 | nuget-NugetClient          | dtivel           | At risk | ❌ |  No plan available |
 | Roslyn                     | jaredpar         | At risk | ❌ |  No plan available |
@@ -37,10 +37,10 @@ Target completion date is 8/13/2019.
 | SymReader-Portable         | tmat             | At risk | ❌ |  No plan available |
 | Templating                 | vramak           | Complete | ✔️ | |
 | Test-Templates             | sasin            | At risk | ❌ |  No plan available |
-| Toolset                    | licavalc/riarenas| At risk  | ❌ | Blocked by https://github.com/dotnet/arcade/issues/3476. |
+| Toolset                    | licavalc/riarenas| Complete | ✔️ | |
 | WebSDK                     | vramak           | Complete | ✔️ | |
 | WinForms                   | mmcgaw           | Complete | ✔️ | |
-| WPF                        | vatsan-madhavan  | At risk | ❌ | Have a working [prototype](https://dev.azure.com/dnceng/internal/_git/6c03b454-12c7-4c55-add0-b4ac2ab19c36?version=GBdev%2Fvatsan%2Fyamlstages); Everything seems to work except package publishing - investigating; WPF will need help with resourcing if this investigation become time consuming.| 
+| WPF                        | vatsan-madhavan  | Complete | ✔️ | Some reliability problems being observed, for e.g., https://github.com/dotnet/arcade/issues/3609| 
 
 | Status     | Description |
 | ---------- | ----------- |
