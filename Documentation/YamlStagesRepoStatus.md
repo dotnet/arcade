@@ -27,14 +27,15 @@ Target completion date is 8/13/2019.
 | IoT                        | joperezr         | Complete | ✔️ | |
 | Core-SDK                   | licavalc         | At risk | ❌ |  No plan available |
 | Core-Setup                 | dleeapho         | At risk | ❌ |  Expected completion 8/21 |
-| FSharp                     | brettfo          | At risk | ❌ |  No plan available |
+| FSharp                     | brettfo          | On track | ➖ |  Functionally complete, but debugging MicroBuild machines being unable to restore some NuGet packages.  ETA EOW. |
 | MSBuild                    | licavalc         | At risk | ❌ |  No plan available |
 | nuget-NugetClient          | dtivel           | At risk | ❌ |  No plan available |
-| Roslyn                     | jaredpar         | At risk | ❌ |  No plan available |
+| Roslyn                     | jaredpar         | At risk | ❌ |  Expected completion 8/15 |
 | SDK                        | licavalc         | At risk | ❌ |  No plan available |
+| SourceLink                 | tmat             | Complete | ✔️ | |
 | Standard                   | danmose/wigodbe  | Complete | ✔️ | |
-| SymReader                  | tmat             | At risk | ❌ |  No plan available |
-| SymReader-Portable         | tmat             | At risk | ❌ |  No plan available |
+| SymReader                  | tmat             | Complete | ✔️ | |
+| SymReader-Portable         | tmat             | Complete | ✔️ | |
 | Templating                 | vramak           | Complete | ✔️ | |
 | Test-Templates             | sasin            | At risk | ❌ |  No plan available |
 | Toolset                    | licavalc/riarenas| Complete | ✔️ | |

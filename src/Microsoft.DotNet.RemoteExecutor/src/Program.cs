@@ -8,9 +8,8 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Runtime.ExceptionServices;
-using System.Runtime.InteropServices;
 
-namespace Microsoft.DotNet.RemoteExecutorHost
+namespace Microsoft.DotNet.RemoteExecutor
 {
     /// <summary>
     /// Provides an entry point in a new process that will load a specified method and invoke it.

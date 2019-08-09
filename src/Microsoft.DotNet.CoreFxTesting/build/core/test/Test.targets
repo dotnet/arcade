@@ -74,9 +74,7 @@
 
     <ItemGroup>
       <_testRunnerConfigSourceFile Include="$(TargetDir)$(TargetName).exe.config" />
-      <_testRunnerConfigSourceFile Include="$(TargetDir)$(TargetName).exe.config" Condition="'$(IncludeRemoteExecutor)' == 'true'" />
       <_testRunnerConfigDestFile Include="$(TargetDir)$(TestRunnerName).config" />
-      <_testRunnerConfigDestFile Include="$(TargetDir)Microsoft.DotNet.RemoteExecutorHost.exe.config" Condition="'$(IncludeRemoteExecutor)' == 'true'" />
     </ItemGroup>
 
     <Copy SourceFiles="@(_testRunnerConfigSourceFile)"
@@ -147,7 +145,8 @@
 
   </Choose>
 
-  <Target Name="CopyRunnerToOutputDirectory" BeforeTargets="CopyFilesToOutputDirectory">
+  <!-- ResolveAssemblyReferences is the target that populates ReferenceCopyLocalPaths which is what is copied to output directory. -->
+  <Target Name="CopyRunnerToOutputDirectory" BeforeTargets="ResolveAssemblyReferences">
     <ItemGroup>
       <!-- Add the runner configuration file -->
       <None Include="$(TestRunnerConfigPath)"
