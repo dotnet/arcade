@@ -12,7 +12,6 @@ using Microsoft.Build.Framework;
 using TestUtilities;
 using Xunit;
 using Xunit.Abstractions;
-using System.Net.Http;
 
 namespace Microsoft.DotNet.SignTool.Tests
 {
