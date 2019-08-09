@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -63,20 +64,16 @@ namespace Microsoft.DotNet.RemoteExecutor
                 HostRunner = processFileName;
                 s_extraParameter = "exec";
 
-                string runtimeConfigPath = GetAppRuntimeConfig();
+                (string runtimeConfigPath, string depsJsonPath) = GetAppRuntimeOptions();
+
                 if (runtimeConfigPath != null)
                 {
                     s_extraParameter += $" --runtimeconfig \"{runtimeConfigPath}\"";
                 }
 
-                if (AppContext.GetData("APP_CONTEXT_DEPS_FILES") is string depsJsonData)
+                if (depsJsonPath != null)
                 {
-                    // The first entry in the deps.json string is the app's one.
-                    string[] depsJsonFiles = ((string)depsJsonData).Split(';');
-                    if (depsJsonFiles.Length > 0)
-                    {
-                        s_extraParameter += $" --depsfile \"{depsJsonFiles[0].ToString()}\"";
-                    }
+                    s_extraParameter += $" --depsfile \"{depsJsonPath}\"";
                 }
 
                 s_extraParameter += $" \"{Path}\"";
@@ -357,20 +354,28 @@ namespace Microsoft.DotNet.RemoteExecutor
             return d.GetMethodInfo();
         }
 
-        private static string GetAppRuntimeConfig()
+        private static (string runtimeConfigPath, string depsJsonPath) GetAppRuntimeOptions()
         {
-            const string RuntimeConfigExtension = ".runtimeconfig.json";
-            var currentAssembly = typeof(RemoteExecutor).Assembly;
+            Assembly currentAssembly = typeof(RemoteExecutor).Assembly;
 
             // We deep-dive into the loaded assemblies and search for the most inner runtimeconfig.json.
             // We need to check for null as global methods in a module don't belong to a type.
-            return new StackTrace().GetFrames()
+            IEnumerable<Assembly> assemblies = new StackTrace().GetFrames()
                 .Select(frame => frame.GetMethod()?.ReflectedType?.Assembly)
                 .Where(asm => asm != null && asm != currentAssembly)
-                .Distinct()
-                .Select(asm => System.IO.Path.Combine(AppContext.BaseDirectory, asm.GetName().Name + RuntimeConfigExtension))
+                .Distinct();
+
+            string runtimeConfigPath = assemblies
+                .Select(asm => System.IO.Path.Combine(AppContext.BaseDirectory, asm.GetName().Name + ".runtimeconfig.json"))
                 .Where(File.Exists)
                 .FirstOrDefault();
+
+            string depsJsonPath = assemblies
+                .Select(asm => System.IO.Path.Combine(AppContext.BaseDirectory, asm.GetName().Name + ".deps.json"))
+                .Where(File.Exists)
+                .FirstOrDefault();
+            
+            return (runtimeConfigPath, depsJsonPath);
         }
     }
 }
