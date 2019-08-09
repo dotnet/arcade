@@ -1233,15 +1233,5 @@ $@"
 
             ValidateGeneratedProject(itemsToSign, new Dictionary<string, SignInfo>(), new Dictionary<ExplicitCertificateKey, string>(), s_fileExtensionSignInfo, new string[0]);
         }
-
-        [Fact]
-        public void CheckHelixJobStatusNoAzDO()
-        {
-            Helix.AzureDevOps.CheckHelixJobStatus checkHelixJobStat = new Helix.AzureDevOps.CheckHelixJobStatus() {
-                Jobs = Array.Empty<ITaskItem>()
-            };
-
-            Assert.True(checkHelixJobStat.Execute());
-        }
     }
 }
