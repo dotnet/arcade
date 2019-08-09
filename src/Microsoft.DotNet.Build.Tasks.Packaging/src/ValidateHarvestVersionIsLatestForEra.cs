@@ -4,11 +4,13 @@
 
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using Newtonsoft.Json;
+using NuGet.Versioning;
 using System.Collections.Generic;
-using System.IO;
 using System.Net;
-using System.Text.RegularExpressions;
+using System.Net.Http;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Build.Tasks.Packaging
 {
@@ -26,7 +28,11 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
 
         /// <summary>
         /// Version endpoints to be queried in order to get the latest stable patch
-        /// version for a package era.
+        /// version for a package era. The endpoints passed in should follow the following format:
+        /// If the versions endpoint looks like: https://api.nuget.org/v3-flatcontainer/System.Runtime/index.json
+        /// then we should pass in <![CDATA[<NugetPackageVersionsEndpoint Include="https://api.nuget.org/v3-flatcontainer/" />]]>
+        /// The MSBuild task will use that base url to build the rest of it in order to get the list
+        /// of versions for a given package.
         /// </summary>
         public ITaskItem[] NugetPackageVersionsEndpoints { get; set; }
 
@@ -54,7 +60,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
                     };
                 }
 
-                string latestPatchVersion = GetLatestStableVersionForEra(packageReport.Id, harvestEraMajor, harvestEraMinor);
+                string latestPatchVersion = GetLatestStableVersionForEraAsync(packageReport.Id, harvestEraMajor, harvestEraMinor).GetAwaiter().GetResult();
                 if (latestPatchVersion.CompareTo(harvestVersion) != 0)
                 {
                     Log.LogError($"Validation Failed: {packageReport.Id} is harvesting assets from package version {harvestVersion} which is not the latest for that package era. Latest package version from that era is {latestPatchVersion}.");
@@ -82,7 +88,6 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
         {
             harvestVersion = string.Empty;
             harvestEraMajor = harvestEraMinor = 0;
-            Regex regex = new Regex($"{report.Id}/(\\d*).(\\d*).(\\d*)/");
 
             foreach (KeyValuePair<string, Target> packageTarget in report.Targets.NullAsEmpty())
             {
@@ -90,7 +95,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
                 {
                     if (!string.IsNullOrEmpty(compileAsset.HarvestedFrom))
                     {
-                        return MatchesHarvestVersionPattern(regex, compileAsset.HarvestedFrom, out harvestVersion, out harvestEraMajor, out harvestEraMinor);
+                        return GetHarvestVersionFromString(compileAsset.HarvestedFrom, report.Id, out harvestVersion, out harvestEraMajor, out harvestEraMinor);
                     }
                 }
 
@@ -98,7 +103,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
                 {
                     if (!string.IsNullOrEmpty(runtimeAsset.HarvestedFrom))
                     {
-                        return MatchesHarvestVersionPattern(regex, runtimeAsset.HarvestedFrom, out harvestVersion, out harvestEraMajor, out harvestEraMinor);
+                        return GetHarvestVersionFromString(runtimeAsset.HarvestedFrom, report.Id, out harvestVersion, out harvestEraMajor, out harvestEraMinor);
                     }
                 }
 
@@ -106,7 +111,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
                 {
                     if (!string.IsNullOrEmpty(nativeAsset.HarvestedFrom))
                     {
-                        return MatchesHarvestVersionPattern(regex, nativeAsset.HarvestedFrom, out harvestVersion, out harvestEraMajor, out harvestEraMinor);
+                        return GetHarvestVersionFromString(nativeAsset.HarvestedFrom, report.Id, out harvestVersion, out harvestEraMajor, out harvestEraMinor);
                     }
                 }
             }
@@ -114,27 +119,39 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
             return false;
         }
 
-        private bool MatchesHarvestVersionPattern(Regex regex, string harvestedFrom, out string harvestVersion, out int harvestEraMajor, out int harvestEraMinor)
+        private bool GetHarvestVersionFromString(string harvestedFrom, string packageId, out string harvestVersion, out int harvestEraMajor, out int harvestEraMinor)
         {
-            var match = regex.Match(harvestedFrom);
-            if (match.Success)
+            harvestVersion = string.Empty;
+            harvestEraMajor = harvestEraMinor = 0;
+            string patternToSearchFor = $"{packageId}/";
+            int startIndex = harvestedFrom.IndexOf(patternToSearchFor);
+            if (startIndex != -1)
             {
-                harvestEraMajor = int.Parse(match.Groups[1].Value);
-                harvestEraMinor = int.Parse(match.Groups[2].Value);
-                harvestVersion = $"{match.Groups[1].Value}.{match.Groups[2].Value}.{match.Groups[3].Value}";
-                return true;
+                startIndex += patternToSearchFor.Length;
+                int endIndex = harvestedFrom.IndexOf("/", startIndex);
+                if (endIndex != -1)
+                {
+                    harvestVersion = harvestedFrom.Substring(startIndex, endIndex - startIndex);
+                    NuGetVersion harvestPackageVersion = new NuGetVersion(harvestVersion);
+                    harvestEraMajor = harvestPackageVersion.Major;
+                    harvestEraMinor = harvestPackageVersion.Minor;
+                    return true;
+                }
+                else
+                {
+                    Log.LogError($"Failed to parse package version from string: {harvestedFrom}");
+                    return false;
+                }
             }
             else
             {
-                harvestVersion = string.Empty;
-                harvestEraMajor = harvestEraMinor = 0;
-                Log.LogError($"Failed to get harvest version from string {harvestedFrom}");
+                Log.LogError($"Failed to parse package version from string: {harvestedFrom}");
                 return false;
             }
         }
 
         // Making this method protected virtual for tests.
-        protected virtual string GetLatestStableVersionForEra(string packageId, int eraMajorVersion, int eraMinorVersion)
+        protected virtual async Task<string> GetLatestStableVersionForEraAsync(string packageId, int eraMajorVersion, int eraMinorVersion)
         {
             string latestPatchVersion = string.Empty;
             foreach (var versionEndpoint in NugetPackageVersionsEndpoints)
@@ -143,22 +160,18 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
                 string allPackageVersionsUrl = string.Concat(versionEndpoint.ItemSpec, packageId, "/index.json");
                 string versionsJson = string.Empty;
 
-                HttpWebRequest request = (HttpWebRequest)WebRequest.Create(allPackageVersionsUrl);
-                using (HttpWebResponse response = (HttpWebResponse)request.GetResponse())
+                using HttpClient httpClient = new HttpClient();
+                using (HttpResponseMessage httpResponseMessage = await httpClient.GetAsync(allPackageVersionsUrl))
                 {
-                    if (response.StatusCode != HttpStatusCode.OK)
+                    if (httpResponseMessage.StatusCode != HttpStatusCode.OK)
                     {
-                        Log.LogError($"Unable to reach the package versions url at {allPackageVersionsUrl}. Recieved status code {response.StatusCode}.");
+                        Log.LogError($"Unable to reach the package versions url at {allPackageVersionsUrl}. Recieved status code {httpResponseMessage.StatusCode}.");
                         return null;
                     }
-                    using (var stream = response.GetResponseStream())
-                    using (var reader = new StreamReader(stream))
-                    {
-                        versionsJson = reader.ReadToEnd();
-                    }
+                    versionsJson = await httpResponseMessage.Content.ReadAsStringAsync();
                 }
 
-                PackageVersions packageVersions = JsonConvert.DeserializeObject<PackageVersions>(versionsJson);
+                PackageVersions packageVersions = JsonSerializer.Deserialize<PackageVersions>(versionsJson);
                 string latestPatchFromFeed = packageVersions.GetLatestPatchStableVersionForEra(eraMajorVersion, eraMinorVersion, Log);
                 // CompareTo method will return 1 if latestPatchVersion is empty so no need to add check.
                 if (latestPatchFromFeed.CompareTo(latestPatchVersion) > 0)
@@ -171,7 +184,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
 
         private class PackageVersions
         {
-            [JsonProperty(PropertyName = "versions")]
+            [JsonPropertyName("versions")]
             public List<string> Versions { get; set; }
 
             public string GetLatestPatchStableVersionForEra(int major, int minor, Log buildlog)
@@ -180,7 +193,8 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
 
                 foreach (var version in Versions)
                 {
-                    if (IsStableVersion(version) && version.StartsWith($"{major}.{minor}"))
+                    NuGetVersion nugetVersion = new NuGetVersion(version);
+                    if (!nugetVersion.IsPrerelease && nugetVersion.Major == major && nugetVersion.Minor == minor)
                     {
                         result = version;
                     }
@@ -192,11 +206,6 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
                 }
 
                 return result;
-            }
-
-            private bool IsStableVersion(string version)
-            {
-                return version.IndexOf("-") == -1;
             }
         }
     }

@@ -4,7 +4,7 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
+using System.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -42,10 +42,13 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
         [Fact]
         public void ValidationFailsWhenHarvestVersionIsNotLatestTest()
         {
-            TestableValidateHarvestVersionTask task = new TestableValidateHarvestVersionTask(() => _testPackageReport, (packageId, eraMajor, eraMinor) =>
+            TestableValidateHarvestVersionTask task = new TestableValidateHarvestVersionTask()
             {
-                return $"{eraMajor}.{eraMinor}.3";
-            }) { BuildEngine = _engine, PackageReportPath = TestReportPath };
+                BuildEngine = _engine,
+                PackageReportPath = TestReportPath,
+                PackageReportFunc = () => _testPackageReport,
+                GetLatestStableVersionFunc = (packageId, eraMajor, eraMinor) => $"{eraMajor}.{eraMinor}.3"
+            };
 
             _log.Reset();
             task.Execute();
@@ -56,11 +59,13 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
         [Fact]
         public void ValidationSucceedsWhenHarvestVersionIsLatestTest()
         {
-            TestableValidateHarvestVersionTask task = new TestableValidateHarvestVersionTask(() => _testPackageReport, (packageId, eraMajor, eraMinor) =>
+            TestableValidateHarvestVersionTask task = new TestableValidateHarvestVersionTask()
             {
-                return $"{eraMajor}.{eraMinor}.2";
-            })
-            { BuildEngine = _engine, PackageReportPath = TestReportPath };
+                BuildEngine = _engine,
+                PackageReportPath = TestReportPath,
+                PackageReportFunc = () => _testPackageReport,
+                GetLatestStableVersionFunc = (packageId, eraMajor, eraMinor) => $"{eraMajor}.{eraMinor}.2"
+            };
 
             _log.Reset();
             task.Execute();
@@ -71,34 +76,36 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
         [Fact]
         public void ValidationSucceedsWhenNoPackagesWhereHarvestedTest()
         {
-            TestableValidateHarvestVersionTask task = new TestableValidateHarvestVersionTask(() =>
+            TestableValidateHarvestVersionTask task = new TestableValidateHarvestVersionTask()
             {
-                return new PackageReport()
-                {
-                    Id = "TestPackage",
-                    Targets = new Dictionary<string, Target>
-                    {
-                        {
-                            "testTarget", new Target
-                            {
-                                CompileAssets = new PackageAsset[]
-                                {
-                                    new PackageAsset{  }
-                                },
-                                RuntimeAssets = new PackageAsset[]
-                                {
-                                    new PackageAsset{  }
-                                },
-                                NativeAssets = new PackageAsset[]
-                                {
-                                    new PackageAsset{  }
-                                }
-                            }
-                        }
-                    }
-                };
-            }, (packageId, eraMajor, eraMinor) => string.Empty)
-            { BuildEngine = _engine, PackageReportPath = TestReportPath };
+                BuildEngine = _engine,
+                PackageReportPath = TestReportPath,
+                PackageReportFunc = () => new PackageReport()
+                                    {
+                                        Id = "TestPackage",
+                                        Targets = new Dictionary<string, Target>
+                                        {
+                                            {
+                                                "testTarget", new Target
+                                                {
+                                                    CompileAssets = new PackageAsset[]
+                                                    {
+                                                        new PackageAsset{  }
+                                                    },
+                                                    RuntimeAssets = new PackageAsset[]
+                                                    {
+                                                        new PackageAsset{  }
+                                                    },
+                                                    NativeAssets = new PackageAsset[]
+                                                    {
+                                                        new PackageAsset{  }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    },
+                GetLatestStableVersionFunc = (packageId, eraMajor, eraMinor) => string.Empty
+            };
 
             _log.Reset();
             task.Execute();
@@ -109,27 +116,29 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
         [Fact]
         public void ValidationFailsWhenHarvestingFromCurrentVersionTest()
         {
-            TestableValidateHarvestVersionTask task = new TestableValidateHarvestVersionTask(() =>
+            TestableValidateHarvestVersionTask task = new TestableValidateHarvestVersionTask()
             {
-                return new PackageReport()
-                {
-                    Id = "TestPackage",
-                    Version = "4.6.3",
-                    Targets = new Dictionary<string, Target>
-                    {
-                        {
-                            "testTarget", new Target
-                            {
-                                CompileAssets = new PackageAsset[]
-                                {
-                                    new PackageAsset{ HarvestedFrom = "TestPackage/4.6.2/ref/netstandard2.0/TestPackage.dll" }
-                                }
-                            }
-                        }
-                    }
-                };
-            }, (packageId, eraMajor, eraMinor) => string.Empty)
-            { BuildEngine = _engine, PackageReportPath = TestReportPath };
+                BuildEngine = _engine,
+                PackageReportPath = TestReportPath,
+                PackageReportFunc = () => new PackageReport()
+                                    {
+                                        Id = "TestPackage",
+                                        Version = "4.6.3",
+                                        Targets = new Dictionary<string, Target>
+                                        {
+                                            {
+                                                "testTarget", new Target
+                                                {
+                                                    CompileAssets = new PackageAsset[]
+                                                    {
+                                                        new PackageAsset{ HarvestedFrom = "TestPackage/4.6.2/ref/netstandard2.0/TestPackage.dll" }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    },
+                GetLatestStableVersionFunc = (packageId, eraMajor, eraMinor) => string.Empty
+            };
 
             _log.Reset();
             task.Execute();
@@ -139,18 +148,12 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
 
         private class TestableValidateHarvestVersionTask : ValidateHarvestVersionIsLatestForEra
         {
-            private Func<PackageReport> _packageReportFunc;
-            private Func<string, int, int, string> _getLatestStableVersionFunc;
+            public Func<PackageReport> PackageReportFunc { get; set; }
+            public Func<string, int, int, string> GetLatestStableVersionFunc { get; set; }
 
-            public TestableValidateHarvestVersionTask(Func<PackageReport> packageReportFunc, Func<string, int, int, string> getLatestStableVersionFunc)
-            {
-                _packageReportFunc = packageReportFunc;
-                _getLatestStableVersionFunc = getLatestStableVersionFunc;
-            }
+            protected override PackageReport GetPackageReportFromPath() => PackageReportFunc();
 
-            protected override PackageReport GetPackageReportFromPath() => _packageReportFunc();
-
-            protected override string GetLatestStableVersionForEra(string packageId, int eraMajorVersion, int eraMinorVersion) => _getLatestStableVersionFunc(packageId, eraMajorVersion, eraMinorVersion);
+            protected override Task<string> GetLatestStableVersionForEraAsync(string packageId, int eraMajorVersion, int eraMinorVersion) => Task.FromResult(GetLatestStableVersionFunc(packageId, eraMajorVersion, eraMinorVersion));
         }
     }
 }
