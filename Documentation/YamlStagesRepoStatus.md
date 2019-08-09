@@ -16,10 +16,10 @@ Target completion date is 8/13/2019.
 | aspnet-AspLabs             | dougbu/wtgodbe    | On track | ➖ |  In PR: https://github.com/aspnet/AspLabs/pull/210 |
 | aspnet-AspNetCore          | dougbu    | At risk | ❌ |  Expected completion 8/11 |
 | aspnet-AspNetCore-Tooling  | dougbu    | Complete | ✔️ | |
-| aspnet-EntityFramework6    | dougbu/wtgodbe    | On track | ➖ |  In PR: https://github.com/aspnet/EntityFramework6/pull/1129 |
-| aspnet-EntityFrameworkCore | dougbu/wtgodbe    | On track | ➖ |  In PR: https://github.com/aspnet/EntityFrameworkCore/pull/17040 |
+| aspnet-EntityFramework6    | dougbu/wtgodbe    | Complete | ✔️ | |
+| aspnet-EntityFrameworkCore | dougbu/wtgodbe    | Complete | ✔️ | |
 | aspnet-Blazor              | dougbu    | On track | ➖ |  In PR: https://github.com/aspnet/Blazor/pull/1848 |
-| aspnet-Extensions          | dougbu/wtgodbe    | On track | ➖ |  In PR: https://github.com/aspnet/Extensions/pull/2162 |
+| aspnet-Extensions          | dougbu/wtgodbe    | Complete | ✔️ | |
 | CLI                        | licavalc         | At risk | ❌ |  No plan available |
 | CLICommandLineParser       | licavalc         | At risk | ❌ |  No plan available |
 | CoreClr                    | russellk/arobins         | On track | ➖ | Expected completion: 8/9 |
