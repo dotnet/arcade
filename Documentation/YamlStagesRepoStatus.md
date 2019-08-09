@@ -32,9 +32,10 @@ Target completion date is 8/13/2019.
 | nuget-NugetClient          | dtivel           | At risk | ❌ |  No plan available |
 | Roslyn                     | jaredpar         | At risk | ❌ |  Expected completion 8/15 |
 | SDK                        | licavalc         | At risk | ❌ |  No plan available |
+| SourceLink                 | tmat             | Complete | ✔️ | |
 | Standard                   | danmose/wigodbe  | Complete | ✔️ | |
-| SymReader                  | tmat             | At risk | ❌ |  No plan available |
-| SymReader-Portable         | tmat             | At risk | ❌ |  No plan available |
+| SymReader                  | tmat             | Complete | ✔️ | |
+| SymReader-Portable         | tmat             | Complete | ✔️ | |
 | Templating                 | vramak           | Complete | ✔️ | |
 | Test-Templates             | sasin            | At risk | ❌ |  No plan available |
 | Toolset                    | licavalc/riarenas| Complete | ✔️ | |
