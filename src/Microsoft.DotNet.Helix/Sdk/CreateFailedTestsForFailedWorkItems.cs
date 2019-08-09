@@ -38,8 +38,6 @@ namespace Microsoft.DotNet.Helix.Sdk
                     Log.LogWarningFromException(ex);
                 }
             }
-
-            throw new NotImplementedException();
         }
 
         private async Task AttachResultFileToTestResultAsync(HttpClient client, string testRunId, int testResultId, string text)
