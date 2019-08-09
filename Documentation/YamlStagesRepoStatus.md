@@ -23,7 +23,7 @@ Target completion date is 8/13/2019.
 | CLI                        | licavalc         | At risk | ❌ |  No plan available |
 | CLICommandLineParser       | licavalc         | At risk | ❌ |  No plan available |
 | CoreClr                    | russellk/arobins         | On track | ➖ | Expected completion: 8/9 |
-| CoreFx                     | danmose/safern   | On track | ➖ | Expected completion: 8/9 |
+| CoreFx                     | danmose/safern   | Complete | ✔️ | SourceLink disabled: https://github.com/dotnet/arcade/issues/3603 |
 | IoT                        | joperezr         | Complete | ✔️ | |
 | Core-SDK                   | licavalc         | At risk | ❌ |  No plan available |
 | Core-Setup                 | dleeapho         | At risk | ❌ |  Expected completion 8/21 |
