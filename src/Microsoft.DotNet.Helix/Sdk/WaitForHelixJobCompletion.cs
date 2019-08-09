@@ -2,7 +2,7 @@ using Microsoft.Build.Framework;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
-using Task = System.Threading.Tasks.Task;
+using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Helix.Sdk
 {
