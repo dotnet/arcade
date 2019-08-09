@@ -20,18 +20,18 @@ Target completion date is 8/13/2019.
 | aspnet-EntityFrameworkCore | dougbu    | At risk | ❌ |  Expected completion 8/11 |
 | aspnet-Blazor              | dougbu    | At risk | ❌ |  Expected completion 8/11 |
 | aspnet-Extensions          | dougbu    | At risk | ❌ |  Expected completion 8/11 |
-| CLI                        | licavalc         | At risk | ❌ |  No plan available |
-| CLICommandLineParser       | licavalc         | At risk | ❌ |  No plan available |
+| CLI                        | licavalc         | Complete | ✔️ |  No plan available |
+| CLICommandLineParser       | licavalc         | N/A | |  This repo is not being developed anymore. We are taking a pinned version of it |
 | CoreClr                    | russellk/arobins         | On track | ➖ | Expected completion: 8/9 |
 | CoreFx                     | danmose/safern   | On track | ➖ | Expected completion: 8/9 |
 | IoT                        | joperezr         | Complete | ✔️ | |
-| Core-SDK                   | licavalc         | At risk | ❌ |  No plan available |
+| Core-SDK                   | licavalc         | At risk | ❌ |  We need clarity on how to do the blob storage publishing with YAML stages. |
 | Core-Setup                 | dleeapho         | At risk | ❌ |  Expected completion 8/21 |
 | FSharp                     | brettfo          | Complete | ✔️ | |
-| MSBuild                    | licavalc         | At risk | ❌ |  No plan available |
+| MSBuild                    | licavalc         | At risk | ❌ |  No ETA yet. Investigation under way. |
 | nuget-NugetClient          | dtivel           | At risk | ❌ |  No plan available |
 | Roslyn                     | jaredpar         | At risk | ❌ |  Expected completion 8/15 |
-| SDK                        | licavalc         | At risk | ❌ |  No plan available |
+| SDK                        | licavalc         | In progress |  |  Running into issues with signing and asset publishing |
 | SourceLink                 | tmat             | Complete | ✔️ | |
 | Standard                   | danmose/wigodbe  | Complete | ✔️ | |
 | SymReader                  | tmat             | Complete | ✔️ | |
