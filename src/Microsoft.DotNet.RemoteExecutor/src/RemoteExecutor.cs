@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -15,17 +16,34 @@ namespace Microsoft.DotNet.RemoteExecutor
 {
     public static partial class RemoteExecutor
     {
-        // A timeout (milliseconds) after which a wait on a remote operation should be considered a failure.
+        /// <summary>
+        /// A timeout (milliseconds) after which a wait on a remote operation should be considered a failure.
+        /// </summary>
         public const int FailWaitTimeoutMilliseconds = 60 * 1000;
-        // The exit code returned when the test process exits successfully.
+
+        /// <summary>
+        /// The exit code returned when the test process exits successfully.
+        /// </summary>
         public const int SuccessExitCode = 42;
-        // The path of the remote executor.
+
+        /// <summary>
+        /// The path of the remote executor.
+        /// </summary>
         public static readonly string Path;
-        // The name of the host
+
+        /// <summary>
+        /// The name of the host.
+        /// </summary>
         public static string HostRunnerName;
-        // The path of the host
+
+        /// <summary>
+        /// The path of the host.
+        /// </summary>
         public static readonly string HostRunner;
-        // Optional additional arguments
+
+        /// <summary>
+        /// Optional additional arguments.
+        /// </summary>
         private static readonly string s_extraParameter;
 
         static RemoteExecutor()
@@ -35,26 +53,34 @@ namespace Microsoft.DotNet.RemoteExecutor
 
             if (PlatformDetection.IsInAppContainer)
             {
-                // Host is required to have a remote execution feature integrated. Currently applies to uap and *aot.
+                // Host is required to have a remote execution feature integrated, i.e. UWP.
                 Path = processFileName;
                 HostRunner = HostRunnerName;
                 s_extraParameter = "remote";
             }
             else if (RuntimeInformation.FrameworkDescription.StartsWith(".NET Core", StringComparison.OrdinalIgnoreCase))
             {
-                Path = System.IO.Path.Combine(AppContext.BaseDirectory, "Microsoft.DotNet.RemoteExecutorHost.dll");
+                Path = typeof(RemoteExecutor).Assembly.Location;
                 HostRunner = processFileName;
-                s_extraParameter = Path;
+                s_extraParameter = "exec";
 
-                string runtimeConfigPath = GetInnerRuntimeConfig();
+                (string runtimeConfigPath, string depsJsonPath) = GetAppRuntimeOptions();
+
                 if (runtimeConfigPath != null)
                 {
-                    s_extraParameter = $"exec --runtimeconfig \"{runtimeConfigPath}\" \"{s_extraParameter}\"";
+                    s_extraParameter += $" --runtimeconfig \"{runtimeConfigPath}\"";
                 }
+
+                if (depsJsonPath != null)
+                {
+                    s_extraParameter += $" --depsfile \"{depsJsonPath}\"";
+                }
+
+                s_extraParameter += $" \"{Path}\"";
             }
             else if (RuntimeInformation.FrameworkDescription.StartsWith(".NET Framework", StringComparison.OrdinalIgnoreCase))
             {
-                Path = System.IO.Path.Combine(AppContext.BaseDirectory, "Microsoft.DotNet.RemoteExecutorHost.exe");
+                Path = typeof(RemoteExecutor).Assembly.Location;
                 HostRunner = Path;
             }
             else
@@ -328,20 +354,28 @@ namespace Microsoft.DotNet.RemoteExecutor
             return d.GetMethodInfo();
         }
 
-        private static string GetInnerRuntimeConfig()
+        private static (string runtimeConfigPath, string depsJsonPath) GetAppRuntimeOptions()
         {
-            const string RuntimeConfigExtension = ".runtimeconfig.json";
-            var currentAssembly = typeof(RemoteExecutor).Assembly;
+            Assembly currentAssembly = typeof(RemoteExecutor).Assembly;
 
             // We deep-dive into the loaded assemblies and search for the most inner runtimeconfig.json.
             // We need to check for null as global methods in a module don't belong to a type.
-            return new StackTrace().GetFrames()
+            IEnumerable<Assembly> assemblies = new StackTrace().GetFrames()
                 .Select(frame => frame.GetMethod()?.ReflectedType?.Assembly)
                 .Where(asm => asm != null && asm != currentAssembly)
-                .Distinct()
-                .Select(asm => System.IO.Path.Combine(AppContext.BaseDirectory, asm.GetName().Name + RuntimeConfigExtension))
+                .Distinct();
+
+            string runtimeConfigPath = assemblies
+                .Select(asm => System.IO.Path.Combine(AppContext.BaseDirectory, asm.GetName().Name + ".runtimeconfig.json"))
                 .Where(File.Exists)
                 .FirstOrDefault();
+
+            string depsJsonPath = assemblies
+                .Select(asm => System.IO.Path.Combine(AppContext.BaseDirectory, asm.GetName().Name + ".deps.json"))
+                .Where(File.Exists)
+                .FirstOrDefault();
+            
+            return (runtimeConfigPath, depsJsonPath);
         }
     }
 }
