@@ -170,7 +170,7 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
                     });
 
             var failedResults = (JArray)testRunData["value"];
-            var automatedTestName = (failedResults != null ? (string)failedResults.First()["automatedTestName"] : string.Empty);
+            var automatedTestName = (failedResults.Count > 0 ? (string)failedResults.First()["automatedTestName"] : string.Empty);
 
             var testResultData = await RetryAsync(
                  async () =>
