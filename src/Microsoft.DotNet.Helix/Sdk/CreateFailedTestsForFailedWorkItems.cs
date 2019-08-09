@@ -94,7 +94,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                                             ["outcome"] = "Failed",
                                             ["state"] = "Completed",
                                             ["errorMessage"] = "The Work Item Failed",
-                                            ["comments"] = new JObject
+                                            ["comment"] = new JObject
                                             {
                                                 ["HelixJobId"] = jobName,
                                                 ["HelixWorkItemName"] = workItemFriendlyName,
