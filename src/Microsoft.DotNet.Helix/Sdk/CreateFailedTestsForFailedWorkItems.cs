@@ -91,10 +91,10 @@ namespace Microsoft.DotNet.Helix.Sdk
                                             ["automatedTestName"] = $"{workItemFriendlyName}.WorkItemExecution",
                                             ["automatedTestStorage"] = workItemFriendlyName,
                                             ["testCaseTitle"] = $"{workItemFriendlyName} Work Item",
-                                            ["outcome"] = "Error",
+                                            ["outcome"] = "Failed",
                                             ["state"] = "Completed",
                                             ["errorMessage"] = "The Work Item Failed",
-                                            ["comment"] = new JObject
+                                            ["comments"] = new JObject
                                             {
                                                 ["HelixJobId"] = jobName,
                                                 ["HelixWorkItemName"] = workItemFriendlyName,
