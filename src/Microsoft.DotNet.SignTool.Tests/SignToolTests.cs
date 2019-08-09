@@ -12,6 +12,7 @@ using Microsoft.Build.Framework;
 using TestUtilities;
 using Xunit;
 using Xunit.Abstractions;
+using System.Net.Http;
 
 namespace Microsoft.DotNet.SignTool.Tests
 {
@@ -1231,6 +1232,21 @@ $@"
             ValidateFileSignInfos(itemsToSign, new Dictionary<string, SignInfo>(), new Dictionary<ExplicitCertificateKey, string>(), s_fileExtensionSignInfo, new string[0]);
 
             ValidateGeneratedProject(itemsToSign, new Dictionary<string, SignInfo>(), new Dictionary<ExplicitCertificateKey, string>(), s_fileExtensionSignInfo, new string[0]);
+        }
+
+        [Fact]
+        public void CheckHelixJobStatusNoAzDO(){
+
+            var checkHelixJobStaus = new CheckHelixJobStatus();
+
+            var client = new HttpClient(new HttpClientHandler
+            {
+                AllowAutoRedirect = false,
+                CheckCertificateRevocationList = true,
+            });
+             
+            var resultID = checkHelixJobStaus.CreateFakeTestResultAsync(client,8366428,"TestingHelixJobNoAzDO");
+            Assert.Throws<NotImplementedException>(resultID);
         }
     }
 }
