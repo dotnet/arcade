@@ -11,6 +11,7 @@ using System.Linq;
 using Microsoft.Build.Framework;
 using Microsoft.DotNet.Helix.AzureDevOps;
 using TestUtilities;
+using Microsoft.Build.Utilities;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -1238,14 +1239,28 @@ $@"
         [Fact]
         public void CheckHelixJobStatusNoAzDO()
         {
-
-            var checkHelixJobStat = new CheckHelixJobStatus();
-            bool resultID = checkHelixJobStat.Execute();
-
-            if (!resultID)
+            ITaskItem[] job = new[]
             {
-                throw new NotImplementedException("!");
+                CreateItem("System.Runtime", "4.0.0")
+            };
+
+            CheckHelixJobStatus checkHelixJobStat = new CheckHelixJobStatus() {
+                Jobs = job
+            };
+
+            checkHelixJobStat.Execute();
+        }
+
+        private static ITaskItem CreateItem(string name, string version)
+        {
+            TaskItem item = new TaskItem(name);
+
+            if (version != null)
+            {
+                item.SetMetadata("Version", version);
             }
+
+            return item;
         }
     }
 }
