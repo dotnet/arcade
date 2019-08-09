@@ -12,6 +12,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\Microsoft.DotNet.SignTool\Microsoft.DotNet.SignTool.csproj" />
+    <ProjectReference Include="..\Microsoft.DotNet.Helix\Sdk\Microsoft.DotNet.Helix.Sdk.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Common\TestUtilities\AssertEx.cs" Link="TestUtilities\AssertEx.cs" />

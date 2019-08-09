@@ -9,6 +9,7 @@ using System.IO;
 using System.IO.Packaging;
 using System.Linq;
 using Microsoft.Build.Framework;
+using Microsoft.DotNet.Helix.AzureDevOps;
 using TestUtilities;
 using Xunit;
 using Xunit.Abstractions;
@@ -252,7 +253,8 @@ namespace Microsoft.DotNet.SignTool.Tests
         [Fact]
         public void EmptySigningListForTask()
         {
-            var task = new SignToolTask {
+            var task = new SignToolTask
+            {
                 BuildEngine = new FakeBuildEngine(),
                 ItemsToSign = Array.Empty<string>(),
                 StrongNameSignInfo = Array.Empty<ITaskItem>(),
@@ -458,8 +460,8 @@ $@"
                 "File 'ProjectOne.dll' TargetFramework='.NETCoreApp,Version=v2.1' Certificate='3PartySHA2' StrongName='ArcadeStrongTest'",
                 "File 'ProjectOne.dll' TargetFramework='.NETStandard,Version=v2.0' Certificate='3PartySHA2' StrongName='ArcadeStrongTest'",
                 "File 'ContainerOne.1.0.0.nupkg' Certificate='NuGet'"
-            }, 
-            expectedWarnings: new[] 
+            },
+            expectedWarnings: new[]
             {
                 $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "4", "lib/netcoreapp2.0/ContainerOne.dll")}' with Microsoft certificate 'ArcadeCertTest'. The library is considered 3rd party library due to its copyright: ''."
             });
@@ -588,14 +590,14 @@ $@"<FilesToSign Include=""{Path.Combine(_tmpDir, "CoreLibCrossARM.dll")}"">
                 GetResourcePath("EmptyPKT.dll")
             };
 
-            var strongNameSignInfo = new Dictionary<string, SignInfo>() {};
+            var strongNameSignInfo = new Dictionary<string, SignInfo>() { };
             var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>() { };
 
             ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
                 "File 'EmptyPKT.dll' TargetFramework='.NETCoreApp,Version=v2.1' Certificate='Microsoft400'",
-            }, 
-            expectedWarnings: new[] 
+            },
+            expectedWarnings: new[]
             {
                 $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "EmptyPKT.dll")}' with Microsoft certificate 'Microsoft400'. The library is considered 3rd party library due to its copyright: ''."
             });
@@ -1031,7 +1033,7 @@ $@"
             {
                 $"File 'SignedLibrary.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='{dualCertificates.First()}'",
             },
-            dualCertificates : dualCertificates);
+            dualCertificates: dualCertificates);
         }
 
         [Fact]
@@ -1150,7 +1152,7 @@ $@"
                 "File 'test.vsix' Certificate='VSIXCertificate'",
                 "File 'Simple.dll' TargetFramework='.NETCoreApp,Version=v2.1' Certificate='DLLCertificate2'",
                 "File 'Simple.nupkg' Certificate='NUPKGCertificate'",
-            }, 
+            },
             expectedWarnings: new[]
             {
                 $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "EmptyPKT.dll")}' with Microsoft certificate 'DLLCertificate'. The library is considered 3rd party library due to its copyright: ''.",
@@ -1213,7 +1215,7 @@ $@"
                 new Dictionary<string, SignInfo>(),
                 new Dictionary<ExplicitCertificateKey, string>(),
                 new Dictionary<string, SignInfo>() { { extension, SignInfo.Ignore } },
-                new string[0], 
+                new string[0],
                 task.Log)
                 .GenerateListOfFiles();
 
@@ -1231,6 +1233,19 @@ $@"
             ValidateFileSignInfos(itemsToSign, new Dictionary<string, SignInfo>(), new Dictionary<ExplicitCertificateKey, string>(), s_fileExtensionSignInfo, new string[0]);
 
             ValidateGeneratedProject(itemsToSign, new Dictionary<string, SignInfo>(), new Dictionary<ExplicitCertificateKey, string>(), s_fileExtensionSignInfo, new string[0]);
+        }
+
+        [Fact]
+        public void CheckHelixJobStatusNoAzDO()
+        {
+
+            var checkHelixJobStat = new CheckHelixJobStatus();
+            bool resultID = checkHelixJobStat.Execute();
+
+            if (!resultID)
+            {
+                throw new NotImplementedException("!");
+            }
         }
     }
 }
