@@ -30,10 +30,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <HelixWorkItem Include="exit 1" Command="exit 1"/>
-  </ItemGroup>
-
-  <ItemGroup>
     <HelixWorkItem Include="TrxTest">
       <Command>echo 'done!'</Command>
       <PayloadDirectory>$(MSBuildThisFileDirectory)Trx</PayloadDirectory>
