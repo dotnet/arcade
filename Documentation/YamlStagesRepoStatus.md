@@ -13,13 +13,12 @@ Target completion date is 8/13/2019.
 | Arcade                     | mawilkie         | Complete | ✔️ | |
 | Arcade-Services            | mawilkie         | Complete | ✔️ | |
 | Arcade-Validation          | mawilkie         | Complete | ✔️ | |
-| aspnet-AspLabs             | dougbu    | At risk | ❌ |  Expected completion 8/11 |
-| aspnet-AspNetCore          | dougbu    | At risk | ❌ |  Expected completion 8/11 |
+| aspnet-AspNetCore          | dougbu    | On track | ➖ |  In PR https://github.com/aspnet/AspNetCore/pull/13040 |
 | aspnet-AspNetCore-Tooling  | dougbu    | Complete | ✔️ | |
-| aspnet-EntityFramework6    | dougbu    | At risk | ❌ |  Expected completion 8/11 |
-| aspnet-EntityFrameworkCore | dougbu    | At risk | ❌ |  Expected completion 8/11 |
-| aspnet-Blazor              | dougbu    | At risk | ❌ |  Expected completion 8/11 |
-| aspnet-Extensions          | dougbu    | At risk | ❌ |  Expected completion 8/11 |
+| aspnet-EntityFramework6    | dougbu/wtgodbe    | Complete | ✔️ | |
+| aspnet-EntityFrameworkCore | dougbu/wtgodbe    | Complete | ✔️ | |
+| aspnet-Blazor              | dougbu    | Complete | ✔️ | |
+| aspnet-Extensions          | dougbu/wtgodbe    | Complete | ✔️ | |
 | CLI                        | licavalc         | Complete | ✔️ |  No plan available |
 | CLICommandLineParser       | licavalc         | N/A | |  This repo is not being developed anymore. We are taking a pinned version of it |
 | CoreClr                    | russellk/arobins         | On track | ➖ | Expected completion: 8/9 |
