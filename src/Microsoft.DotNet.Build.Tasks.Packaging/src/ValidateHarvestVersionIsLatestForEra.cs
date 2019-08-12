@@ -160,15 +160,17 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
                 string allPackageVersionsUrl = string.Concat(versionEndpoint.ItemSpec, packageId, "/index.json");
                 string versionsJson = string.Empty;
 
-                using HttpClient httpClient = new HttpClient();
-                using (HttpResponseMessage httpResponseMessage = await httpClient.GetAsync(allPackageVersionsUrl))
+                using (HttpClient httpClient = new HttpClient())
                 {
-                    if (httpResponseMessage.StatusCode != HttpStatusCode.OK)
+                    using (HttpResponseMessage httpResponseMessage = await httpClient.GetAsync(allPackageVersionsUrl))
                     {
-                        Log.LogError($"Unable to reach the package versions url at {allPackageVersionsUrl}. Recieved status code {httpResponseMessage.StatusCode}.");
-                        return null;
+                        if (httpResponseMessage.StatusCode != HttpStatusCode.OK)
+                        {
+                            Log.LogError($"Unable to reach the package versions url at {allPackageVersionsUrl}. Recieved status code {httpResponseMessage.StatusCode}.");
+                            return null;
+                        }
+                        versionsJson = await httpResponseMessage.Content.ReadAsStringAsync();
                     }
-                    versionsJson = await httpResponseMessage.Content.ReadAsStringAsync();
                 }
 
                 PackageVersions packageVersions = JsonSerializer.Deserialize<PackageVersions>(versionsJson);
