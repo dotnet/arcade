@@ -13,12 +13,11 @@ Target completion date is 8/13/2019.
 | Arcade                     | mawilkie         | Complete | ✔️ | |
 | Arcade-Services            | mawilkie         | Complete | ✔️ | |
 | Arcade-Validation          | mawilkie         | Complete | ✔️ | |
-| aspnet-AspLabs             | dougbu/wtgodbe    | On track | ➖ |  In PR: https://github.com/aspnet/AspLabs/pull/210 |
-| aspnet-AspNetCore          | dougbu    | At risk | ❌ |  Expected completion 8/11 |
+| aspnet-AspNetCore          | dougbu    | On track | ➖ |  In PR https://github.com/aspnet/AspNetCore/pull/13040 |
 | aspnet-AspNetCore-Tooling  | dougbu    | Complete | ✔️ | |
 | aspnet-EntityFramework6    | dougbu/wtgodbe    | Complete | ✔️ | |
 | aspnet-EntityFrameworkCore | dougbu/wtgodbe    | Complete | ✔️ | |
-| aspnet-Blazor              | dougbu    | On track | ➖ |  In PR: https://github.com/aspnet/Blazor/pull/1848 |
+| aspnet-Blazor              | dougbu    | Complete | ✔️ | |
 | aspnet-Extensions          | dougbu/wtgodbe    | Complete | ✔️ | |
 | CLI                        | licavalc         | At risk | ❌ |  No plan available |
 | CLICommandLineParser       | licavalc         | At risk | ❌ |  No plan available |
