@@ -165,24 +165,16 @@ namespace Microsoft.SignCheck.Verification
         {
             Log.WriteMessage(LogVerbosity.Detailed, String.Format(SignCheckResources.ProcessingFile, Path.GetFileName(path), String.IsNullOrEmpty(parent) ? SignCheckResources.NA : parent));
 
-            SignatureVerificationResult svr;
-
-            if (Exclusions.IsExcluded(path, parent, containerPath))
-            {
-                svr = SignatureVerificationResult.ExcludedFileResult(path, parent);
-            }
-            else
-            {
-                FileVerifier fileVerifier = GetFileVerifier(path);
-                svr = fileVerifier.VerifySignature(path, parent);
-            }
+            FileVerifier fileVerifier = GetFileVerifier(path);
+            SignatureVerificationResult svr = fileVerifier.VerifySignature(path, parent);
+            svr.IsExcluded = Exclusions.IsExcluded(path, parent, containerPath);
 
             if (GenerateExclusion)
             {
                 svr.ExclusionEntry = String.Join(";", String.Join("|", path, containerPath), parent, String.Empty);
                 Log.WriteMessage(LogVerbosity.Diagnostic, SignCheckResources.DiagGenerateExclusion, svr.Filename, svr.ExclusionEntry);
             }
-
+            
             // Include the full path for top-level files
             if (String.IsNullOrEmpty(parent))
             {

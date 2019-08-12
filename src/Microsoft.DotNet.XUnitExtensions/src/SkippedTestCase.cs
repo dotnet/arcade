@@ -13,50 +13,40 @@ using Xunit.Sdk;
 namespace Microsoft.DotNet.XUnitExtensions
 {
     /// <summary>Wraps another test case that should be skipped.</summary>
-    internal sealed class SkippedTestCase : LongLivedMarshalByRefObject, IXunitTestCase
+    internal sealed class SkippedTestCase : XunitTestCase
     {
-        private readonly IXunitTestCase _testCase;
-        private readonly string _skippedReason;
+        private string _skipReason;
 
-        public SkippedTestCase()
+        [Obsolete("Called by the de-serializer; should only be called by deriving classes for de-serialization purposes")]
+        public SkippedTestCase() : base()
         {
         }
 
-        internal SkippedTestCase(IXunitTestCase testCase, string skippedReason)
+        public SkippedTestCase(
+            string skipReason,
+            IMessageSink diagnosticMessageSink,
+            TestMethodDisplay defaultMethodDisplay,
+            TestMethodDisplayOptions defaultMethodDisplayOptions,
+            ITestMethod testMethod,
+            object[] testMethodArguments = null)
+            : base(diagnosticMessageSink, defaultMethodDisplay, defaultMethodDisplayOptions, testMethod, testMethodArguments)
         {
-            _testCase = testCase;
-            _skippedReason = skippedReason;
+            _skipReason = skipReason;
         }
 
-        public string DisplayName { get { return _testCase.DisplayName; } }
+        protected override string GetSkipReason(IAttributeInfo factAttribute)
+            => _skipReason ?? base.GetSkipReason(factAttribute);
 
-        public IMethodInfo Method { get { return _testCase.Method; } }
-
-        public string SkipReason { get { return _skippedReason; } }
-
-        public ISourceInformation SourceInformation { get { return _testCase.SourceInformation; } set { _testCase.SourceInformation = value; } }
-
-        public ITestMethod TestMethod { get { return _testCase.TestMethod; } }
-
-        public object[] TestMethodArguments { get { return _testCase.TestMethodArguments; } }
-
-        public Dictionary<string, List<string>> Traits { get { return _testCase.Traits; } }
-
-        public string UniqueID { get { return _testCase.UniqueID; } }
-
-        public Exception InitializationException { get { return null; } }
-
-        public int Timeout { get { return 0; } }
-
-        public void Deserialize(IXunitSerializationInfo info) { _testCase.Deserialize(info); }
-
-        public Task<RunSummary> RunAsync(
-            IMessageSink diagnosticMessageSink, IMessageBus messageBus, object[] constructorArguments,
-            ExceptionAggregator aggregator, CancellationTokenSource cancellationTokenSource)
+        public override void Deserialize(IXunitSerializationInfo data)
         {
-            return new XunitTestCaseRunner(this, DisplayName, _skippedReason, constructorArguments, TestMethodArguments, messageBus, aggregator, cancellationTokenSource).RunAsync();
+            base.Deserialize(data);
+            _skipReason = data.GetValue<string>(nameof(_skipReason));
         }
 
-        public void Serialize(IXunitSerializationInfo info) { _testCase.Serialize(info); }
+        public override void Serialize(IXunitSerializationInfo data)
+        {
+            base.Serialize(data);
+            data.AddValue(nameof(_skipReason), _skipReason);
+        }
     }
 }
