@@ -30,7 +30,7 @@ Target completion date is 8/13/2019.
 | FSharp                     | brettfo          | Complete | ✔️ | |
 | MSBuild                    | licavalc         | At risk | ❌ |  No ETA yet. Investigation under way. |
 | nuget-NugetClient          | dtivel           | At risk | ❌ |  No plan available |
-| Roslyn                     | jaredpar         | At risk | ❌ |  Expected completion 8/15 |
+| Roslyn                     | jaredpar         | At risk | ✔️ |  Complete with source link disabled |
 | SDK                        | licavalc         | In progress |  |  Running into issues with signing and asset publishing |
 | SourceLink                 | tmat             | Complete | ✔️ | |
 | Standard                   | danmose/wigodbe  | Complete | ✔️ | |
