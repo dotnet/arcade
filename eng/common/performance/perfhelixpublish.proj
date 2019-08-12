@@ -5,8 +5,11 @@
     <CliArguments>--dotnet-versions %DOTNET_VERSION% --cli-source-info args --cli-branch %PERFLAB_BRANCH% --cli-commit-sha %PERFLAB_HASH% --cli-repository https://github.com/%PERFLAB_REPO% --cli-source-timestamp %PERFLAB_BUILDTIMESTAMP%</CliArguments>
     <Python>py -3</Python>
     <CoreRun>%HELIX_CORRELATION_PAYLOAD%\Core_Root\CoreRun.exe</CoreRun>
+    <BaselineCoreRun>%HELIX_CORRELATION_PAYLOAD%\Baseline_Core_Root\CoreRun.exe</BaselineCoreRun>
     <HelixPreCommands>$(HelixPreCommands);call %HELIX_CORRELATION_PAYLOAD%\performance\tools\machine-setup.cmd</HelixPreCommands>
     <ArtifactsDirectory>%HELIX_CORRELATION_PAYLOAD%\artifacts\BenchmarkDotNet.Artifacts</ArtifactsDirectory>
+    <BaselineArtifactsDirectory>%HELIX_CORRELATION_PAYLOAD%\artifacts\BenchmarkDotNet.Artifacts_Baseline</BaselineArtifactsDirectory>
+    <ResultsComparer>%HELIX_CORRELATION_PAYLOAD%\performance\src\tools\ResultsComparer\ResultsComparer.csproj</ResultsComparer>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(AGENT_OS)' != 'Windows_NT' and '$(RunFromPerfRepo)' == 'false'">
@@ -24,12 +27,19 @@
     <CliArguments>--dotnet-versions $DOTNET_VERSION --cli-source-info args --cli-branch $PERFLAB_BRANCH --cli-commit-sha $PERFLAB_HASH --cli-repository https://github.com/$PERFLAB_REPO --cli-source-timestamp $PERFLAB_BUILDTIMESTAMP</CliArguments>
     <Python>python3</Python>
     <CoreRun>$(BaseDirectory)/Core_Root/corerun</CoreRun>
+    <BaselineCoreRun>$(BaseDirectory)/Baseline_Core_Root/corerun</Baseline_CoreRun>
     <HelixPreCommands>$(HelixPreCommands);chmod +x $(PerformanceDirectory)/tools/machine-setup.sh;. $(PerformanceDirectory)/tools/machine-setup.sh</HelixPreCommands>
     <ArtifactsDirectory>$(BaseDirectory)/artifacts/BenchmarkDotNet.Artifacts</ArtifactsDirectory>
+    <BaselineArtifactsDirectory>$(BaseDirectory)/artifacts/BenchmarkDotNet.Artifacts_Baseline</BaselineArtifactsDirectory>
+    <ResultsComparer>$(PerformanceDirectory)/src/tools/ResultsComparer/ResultsComparer.csproj</ResultsComparer>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(UseCoreRun)' == 'true'">
     <CoreRunArgument>--corerun $(CoreRun)</CoreRunArgument>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(UseBaselineCoreRun)' == 'true'">
+    <BaselineCoreRunArgument>--corerun $(BaselineCoreRun)</BaselineCoreRunArgument>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(WorkItemCommand)' != ''">
@@ -63,14 +73,18 @@
   <ItemGroup Condition="$(TargetCsproj.Contains('MicroBenchmarks.csproj'))">
     <HelixWorkItem Include="@(Partition)">
       <PayloadDirectory>$(WorkItemDirectory)</PayloadDirectory>
+      <PreCommands Condition="'$(Compare)' == 'true'">$(WorkItemCommand) --bdn-arguments="--anyCategories $(BDNCategories) $(ExtraBenchmarkDotNetArguments) $(BaselineCoreRunArgument) --artifacts $(BaselineArtifactsDirectory) --partition-count $(PartitionCount) --partition-index %(HelixWorkItem.Index)"</PreCommands>
       <Command>$(WorkItemCommand) --bdn-arguments="--anyCategories $(BDNCategories) $(ExtraBenchmarkDotNetArguments) $(CoreRunArgument) --artifacts $(ArtifactsDirectory) --partition-count $(PartitionCount) --partition-index %(HelixWorkItem.Index)"</Command>
+      <PostCommands Condition="'$(Compare)' == 'true'">dotnet run -p $(ResultsComparer) --base $(BaselineArtifactsDirectory) --diff $(ArtifactsDirectory) --threshold 2%</PostCommands>
       <Timeout>4:00</Timeout>
     </HelixWorkItem>
   </ItemGroup>
   <ItemGroup Condition="!$(TargetCsproj.Contains('MicroBenchmarks.csproj'))">
     <HelixWorkItem Include="$(BuildConfig).WorkItem">
       <PayloadDirectory>$(WorkItemDirectory)</PayloadDirectory>
+      <PreCommands Condition="'$(Compare)' == 'true'">$(WorkItemCommand) --bdn-arguments="--anyCategories $(BDNCategories) $(ExtraBenchmarkDotNetArguments) $(BaselineCoreRunArgument) --artifacts $(ArtifactsDirectory)"</Command>
       <Command>$(WorkItemCommand) --bdn-arguments="--anyCategories $(BDNCategories) $(ExtraBenchmarkDotNetArguments) $(CoreRunArgument) --artifacts $(ArtifactsDirectory)"</Command>
+      <PostCommands Condition="'$(Compare)' == 'true'">dotnet run -p $(ResultsComparer) --base $(BaselineArtifactsDirectory) --diff $(ArtifactsDirectory) --threshold 2%</PostCommands>
       <Timeout>4:00</Timeout>
     </HelixWorkItem>
   </ItemGroup>
