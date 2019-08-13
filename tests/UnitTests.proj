@@ -39,7 +39,7 @@
   <ItemGroup>
     <HelixWorkItem Include="XunitTest">
       <Command>echo 'done!'</Command>
-      <PayloadDirectory>$(MSBuildThisFileDirectory)XunitTest</PayloadDirectory>
+      <PayloadDirectory>$(MSBuildThisFileDirectory)Xunit</PayloadDirectory>
     </HelixWorkItem>
   </ItemGroup>
 
