@@ -7,6 +7,11 @@ parameters:
     enable: false
     params: ''
 
+  # These parameters let the user customize the call to sdk-task.ps1
+  signingValidationAdditionalParams = ''
+  symbolPublishingAdditionalParameters = ''
+  artifactsPublishingAdditionalParameters = ''
+
   # Which stages should finish execution before post-build stages start
   dependsOn: [build]
 
@@ -53,7 +58,9 @@ stages:
             arguments: -task SigningValidation -restore -msbuildEngine dotnet
               /p:PackageBasePath='$(Build.ArtifactStagingDirectory)/PackageArtifacts'
               /p:SignCheckExclusionsFile='$(Build.SourcesDirectory)/eng/SignCheckExclusionsFile.txt'
-              /p:Configuration=Release
+              /p:Configuration=Release 
+              - ${{ if ne(parameters.signingValidationAdditionalParams, '') }}:
+                ${{ parameters.signingValidationAdditionalParams }}
 
   - ${{ if eq(parameters.enableSourceLinkValidation, 'true') }}:
     - job:
