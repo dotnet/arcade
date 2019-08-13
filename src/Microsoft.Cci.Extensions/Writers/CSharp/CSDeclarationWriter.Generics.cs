@@ -66,14 +66,14 @@ namespace Microsoft.Cci.Writers.CSharp
 
             foreach (var constraint in parameter.Constraints)
             {
-                // Skip valuetype becaue we should get it below.
+                // Skip valuetype because we should get it below.
                 if (TypeHelper.TypesAreEquivalent(constraint, constraint.PlatformType.SystemValueType) && parameter.MustBeValueType)
                     continue;
 
                 yield return () => WriteTypeName(constraint, noSpace: true);
             }
 
-            // new constaint cannot be put on structs and needs to be the last constraint
+            // new constraint cannot be put on structs and needs to be the last constraint
             if (!parameter.MustBeValueType && parameter.MustHaveDefaultConstructor)
                 yield return () => { WriteKeyword("new", noSpace: true); WriteSymbol("("); WriteSymbol(")"); };
         }

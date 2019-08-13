@@ -13,7 +13,7 @@
             <Output>
                 <StdOut>hello</StdOut>
                 <ErrorInfo>
-                    <Message>Assert.Fail failed. </Message>
+                    <Message>Intentional Failure</Message>
                     <StackTrace>   at tests.UnitTest1.TestMethod4() in UnitTest1.cs:line 26</StackTrace>
                 </ErrorInfo>
             </Output>

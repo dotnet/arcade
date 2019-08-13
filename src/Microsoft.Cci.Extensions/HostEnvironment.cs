@@ -359,7 +359,7 @@ namespace Microsoft.Cci.Extensions
 
         /// <summary>
         ///  Override ProbeAssemblyReference to ensure we only look in the LibPaths for resolving assemblies and 
-        ///  we don't accidently find some in the GAC or in the framework directory. 
+        ///  we don't accidentally find some in the GAC or in the framework directory. 
         /// </summary>
         public override AssemblyIdentity ProbeAssemblyReference(IUnit referringUnit, AssemblyIdentity referencedAssembly)
         {
@@ -419,8 +419,8 @@ namespace Microsoft.Cci.Extensions
 
         // Overriding this method allows us to read the binaries without blocking the files. The default
         // implementation will use a memory mapped file (MMF) which causes the files to be locked. That
-        // means you can delete them, but you can't overwrite them in-palce, which is especially painful
-        // when reading binaries directly from a build ouput folder.
+        // means you can delete them, but you can't overwrite them in-place, which is especially painful
+        // when reading binaries directly from a build output folder.
         //
         // Measuring indicated that performance implications are negligible. That's why we decided to
         // make this the default and not exposing any (more) options to our ctor.
@@ -484,7 +484,7 @@ namespace Microsoft.Cci.Extensions
 
             if (!string.IsNullOrEmpty(coreAssemblySimpleName))
             {
-                // Otherwise, rearange the list such that the specified coreAssembly is the first one in the list.
+                // Otherwise, rearrange the list such that the specified coreAssembly is the first one in the list.
                 coreAssemblyFile = GetCoreAssemblyFile(coreAssemblySimpleName, contractSet);
 
                 contractSet.Remove(coreAssemblyFile);
@@ -506,7 +506,7 @@ namespace Microsoft.Cci.Extensions
             set;
         }
 
-        // False by deafult for backwards compatibility with tools that wire in their own custom handlers.
+        // False by default for backwards compatibility with tools that wire in their own custom handlers.
         private bool _traceResolutionErrorsAsLoadErrors;
         public bool TraceResolutionErrorsAsLoadErrors
         {

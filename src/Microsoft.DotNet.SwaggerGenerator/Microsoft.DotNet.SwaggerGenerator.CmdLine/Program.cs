@@ -112,7 +112,7 @@ namespace Microsoft.DotNet.SwaggerGenerator.CmdLine
 
         private static async Task<(OpenApiDiagnostic, OpenApiDocument)> GetSwaggerDocument(string input)
         {
-            using (var client = new HttpClient())
+            using (var client = new HttpClient(new HttpClientHandler { CheckCertificateRevocationList = true }))
             {
                 using (Stream docStream = await client.GetStreamAsync(input))
                 {

@@ -49,10 +49,10 @@
 
   <!--
     The project can specify version either directly using the .NET SDK recognized property VersionPrefix, or using MajorVersion and MinorVersion properties.
-    Note that .NET Core SDK sets VersionPrefix to 1.0.0 if not set by the project. Override it here if the project sets MajorVersion and MinorVersion.
+    Note that .NET Core SDK sets VersionPrefix to 1.0.0 if not set by the project. Override it here if the project sets MajorVersion, MinorVersion, and optionally a PatchVersion.
   -->
   <PropertyGroup>
-    <VersionPrefix Condition="'$(MajorVersion)' != '' and '$(MinorVersion)' != ''">$(MajorVersion).$(MinorVersion).0</VersionPrefix>
+    <VersionPrefix Condition="'$(MajorVersion)' != '' and '$(MinorVersion)' != ''">$(MajorVersion).$(MinorVersion).$([MSBuild]::ValueOrDefault('$(PatchVersion)', '0'))</VersionPrefix>
     <_OriginalVersionPrefix>$(VersionPrefix)</_OriginalVersionPrefix>
   </PropertyGroup>
 

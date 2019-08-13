@@ -39,7 +39,7 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links
             ClientCredential credential = new ClientCredential(ClientId, ClientSecret);
             AuthenticationResult token = authContext.AcquireTokenAsync(Endpoint, credential).Result;
 
-            HttpClient httpClient = new HttpClient();
+            HttpClient httpClient = new HttpClient(new HttpClientHandler { CheckCertificateRevocationList = true });
             httpClient.DefaultRequestHeaders.Add("Authorization", token.CreateAuthorizationHeader());
 
             return httpClient;

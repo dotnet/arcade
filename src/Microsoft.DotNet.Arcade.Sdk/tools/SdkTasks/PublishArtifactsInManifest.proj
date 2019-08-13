@@ -1,0 +1,65 @@
+<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
+<Project Sdk="Microsoft.NET.Sdk" DefaultTargets="Execute">
+  <!--
+    The target in this file initially calls `SetupTargetFeeds.proj` to create the list of
+    target feed descriptors for the artifacts and then calls the `PublishArtifactsInManifest` 
+    task (from Tasks.Feed) to publish the artifacts described in the informed build manifest.
+    
+    Parameters:
+      - ManifestsBasePath
+      - BlobBasePath
+      - PackageBasePath
+      - BARBuildId
+      - MaestroApiEndpoint
+      - BuildAssetRegistryToken
+      - NugetPath
+
+    Parameters required by SetupTargetFeeds.proj:
+      - IsInternalBuild
+      - IsStableBuild
+      - ChannelId
+      - RepositoryName
+      - CommitSha
+      - AzureStorageAccountName
+      - AzureStorageAccountKey
+      - AzureDevOpsFeedsBaseUrl
+      - ArtifactsCategory
+      - AzureStorageTargetFeedPAT
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
+  </PropertyGroup>
+
+  <Import Project="SetupTargetFeeds.proj" />
+
+  <Target Name="Execute" DependsOnTargets="SetupTargetFeeds">
+    <Error Condition="'$(ManifestsBasePath)' == ''" Text="ManifestsBasePath is empty. Please provide the full path to asset manifest(s) directory." />
+    <Error Condition="'$(BlobBasePath)' == '' OR '$(PackageBasePath)' == ''" Text="A valid full path to BlobBasePath and PackageBasePath is required." />
+
+    <ItemGroup>
+      <ManifestFiles Include="$(ManifestsBasePath)\*.xml" />
+    </ItemGroup>
+
+    <Error
+      Condition="'@(ManifestFiles)' == ''"
+      Text="No manifest file was found in the provided path: $(ManifestsBasePath)" />
+
+    <!-- 
+      **Iterate** publishing assets from each manifest file. 
+    -->
+    <PublishArtifactsInManifest
+      TargetFeedConfig="@(TargetFeedConfig)"
+      BARBuildId="$(BARBuildId)"
+      MaestroApiEndpoint="$(MaestroApiEndpoint)"
+      BuildAssetRegistryToken="$(BuildAssetRegistryToken)"
+      AssetManifestPath="%(ManifestFiles.Identity)"
+      BlobAssetsBasePath="$(BlobBasePath)"
+      PackageAssetsBasePath="$(PackageBasePath)"
+      NugetPath="$(NugetPath)"/>
+  </Target>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.DotNet.Build.Tasks.Feed" Version="$(MicrosoftDotNetBuildTasksFeedVersion)" />
+  </ItemGroup>
+</Project>

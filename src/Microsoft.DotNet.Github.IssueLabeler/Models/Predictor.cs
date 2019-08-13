@@ -5,22 +5,27 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.ML;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.GitHub.IssueLabeler
 {
     internal static class Predictor
     {
         private static string ModelPath => @"model\GitHubIssueLabelerModel.zip";
+        private static PredictionEngine<GitHubIssue, GitHubIssuePrediction> predEngine;
 
-        public static async Task<string> PredictAsync(GitHubIssue issue, ILogger logger, double threshold)
+        public static string Predict(GitHubIssue issue, ILogger logger, double threshold)
         {
-            PredictionModel<GitHubIssue, GitHubIssuePrediction> model = await PredictionModel.ReadAsync<GitHubIssue, GitHubIssuePrediction>(ModelPath);
-            GitHubIssuePrediction prediction = model.Predict(issue);
-      
-            float[] probabilities = prediction.Probabilities;
+            if (predEngine == null)
+            {
+                MLContext mlContext = new MLContext();
+                ITransformer mlModel = mlContext.Model.Load(ModelPath, out DataViewSchema inputSchema);
+                predEngine = mlContext.Model.CreatePredictionEngine<GitHubIssue, GitHubIssuePrediction>(mlModel);
+            }
+
+            GitHubIssuePrediction prediction = predEngine.Predict(issue);
+            float[] probabilities = prediction.Score;
             float maxProbability = probabilities.Max();
-            logger.LogInformation($"# {maxProbability.ToString()} {prediction.Area} for #{issue.ID} {issue.Title}");
+            logger.LogInformation($"# {maxProbability} {prediction.Area} for #{issue.Number} {issue.Title}");
             return maxProbability > threshold ? prediction.Area : null;
         }
     }

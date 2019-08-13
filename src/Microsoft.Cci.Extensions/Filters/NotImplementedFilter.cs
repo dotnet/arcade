@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
@@ -61,7 +61,7 @@ namespace Microsoft.Cci.Filters
         private static bool IsImplemented(IMethodDefinition method)
         {
             // Generally, a method that throws NotImplementedException is considered not implemented.
-            // However, if the containin assembly is marked to be a reference assembly then this is
+            // However, if the containing assembly is marked to be a reference assembly then this is
             // likely not true as virtually all methods in reference assemblies have bodies that throw.
             //
             // Thus, if the assembly is a reference assembly, we consider it implemented.
@@ -90,9 +90,9 @@ namespace Microsoft.Cci.Filters
             // we just ignore this case.
             //
             // Also note that empty methods are considered implemented. There are many methods for which doing
-            // nothing is a legitmate fulfilment of its contract.
+            // nothing is a legitimate fulfillment of its contract.
             //
-            // In order to be resilient to code gen diffeerences we'll allow for any nop instructions between
+            // In order to be resilient to code gen differences we'll allow for any nop instructions between
             // the newobj and the throw.
 
             var lastOp = (IOperation)null;

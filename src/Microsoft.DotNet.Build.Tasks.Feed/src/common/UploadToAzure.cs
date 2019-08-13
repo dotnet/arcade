@@ -3,21 +3,16 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
-using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Xml;
-using System.Linq;
-using System.Net.Http;
-
 using Microsoft.Build.Framework;
-using ThreadingTask = System.Threading.Tasks.Task;
+using Microsoft.Azure.Storage;
+using Microsoft.Azure.Storage.Blob;
+using System.Collections.Generic;
 
 namespace Microsoft.DotNet.Build.CloudTestTasks
 {
-
     public class UploadToAzure : AzureConnectionStringBuildTask, ICancelableTask
     {
         private static readonly CancellationTokenSource TokenSource = new CancellationTokenSource();
@@ -55,6 +50,7 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
         /// <summary>
         /// Specifies the maximum number of clients to concurrently upload blobs to azure
         /// </summary>
+        [Obsolete]
         public int MaxClients { get; set; } = 8;
 
         public int UploadTimeoutInMinutes { get; set; } = 5;
@@ -71,140 +67,77 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
 
         public async Task<bool> ExecuteAsync(CancellationToken ct)
         {
-            ParseConnectionString();
-            // If the connection string AND AccountKey & AccountName are provided, error out.
-            if (Log.HasLoggedErrors)
-            {
-                return false;
-            }
-
-            Log.LogMessage(
-                MessageImportance.Normal, 
-                "Begin uploading blobs to Azure account {0} in container {1}.", 
-                AccountName, 
-                ContainerName);
-
             if (Items.Length == 0)
             {
                 Log.LogError("No items were provided for upload.");
                 return false;
             }
 
-            // first check what blobs are present
-            string checkListUrl = $"{AzureHelper.GetContainerRestUrl(AccountName, ContainerName)}?restype=container&comp=list"; 
+            if (!CloudStorageAccount.TryParse(ConnectionString, out CloudStorageAccount storageAccount))
+            {
+                Log.LogError("Invalid connection string was provided.");
+                return false;
+            }
 
-            HashSet<string> blobsPresent = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            Log.LogMessage("Begin uploading blobs to Azure account {0} in container {1}.",
+                AccountName,
+                ContainerName);
 
             try
             {
-                using (HttpClient client = new HttpClient())
+                CloudBlobClient cloudBlobClient = storageAccount.CreateCloudBlobClient();
+                CloudBlobContainer cloudBlobContainer = cloudBlobClient.GetContainerReference(ContainerName);
+                AzureStorageUtils blobUtils = new AzureStorageUtils(AccountName, AccountKey, ContainerName);
+
+                List<Task> uploadTasks = new List<Task>();
+
+                foreach (var item in Items)
                 {
-                    var createRequest = AzureHelper.RequestMessage("GET", checkListUrl, AccountName, AccountKey);
-
-                    Log.LogMessage(MessageImportance.Low, "Sending request to check whether Container blobs exist");
-                    using (HttpResponseMessage response = await AzureHelper.RequestWithRetry(Log, client, createRequest))
+                    uploadTasks.Add(Task.Run(async () =>
                     {
-                        var doc = new XmlDocument();
-                        doc.LoadXml(await response.Content.ReadAsStringAsync());
+                        string relativeBlobPath = item.GetMetadata("RelativeBlobPath");
 
-                        XmlNodeList nodes = doc.DocumentElement.GetElementsByTagName("Blob");
-
-                        foreach (XmlNode node in nodes)
+                        if (string.IsNullOrEmpty(relativeBlobPath))
                         {
-                            blobsPresent.Add(node["Name"].InnerText);
+                            throw new Exception(string.Format("Metadata 'RelativeBlobPath' is missing for item '{0}'.", item.ItemSpec));
                         }
 
-                        Log.LogMessage(MessageImportance.Low, "Received response to check whether Container blobs exist");
-                    }
+                        if (!File.Exists(item.ItemSpec))
+                        {
+                            throw new Exception(string.Format("The file '{0}' does not exist.", item.ItemSpec));
+                        }
+
+                        CloudBlockBlob blobReference = cloudBlobContainer.GetBlockBlobReference(relativeBlobPath);
+
+                        if (!Overwrite && await blobReference.ExistsAsync())
+                        {
+                            if (PassIfExistingItemIdentical)
+                            {
+                                if (await blobUtils.IsFileIdenticalToBlob(item.ItemSpec, blobReference))
+                                {
+                                    return;
+                                }
+                            }
+
+                            throw new Exception(string.Format("The blob '{0}' already exists.", relativeBlobPath));
+                        }
+
+                        CancellationTokenSource timeoutTokenSource = new CancellationTokenSource(TimeSpan.FromMinutes(UploadTimeoutInMinutes));
+
+                        await blobReference.UploadFromFileAsync(item.ItemSpec, timeoutTokenSource.Token);
+                    }));
                 }
 
-                using (var clientThrottle = new SemaphoreSlim(this.MaxClients, this.MaxClients))
-                {
-                    await ThreadingTask.WhenAll(Items.Select(item => UploadAsync(ct, item, blobsPresent, clientThrottle)));
-                }
+                await Task.WhenAll(uploadTasks);
 
-                Log.LogMessage(MessageImportance.Normal, "Upload to Azure is complete, a total of {0} items were uploaded.", Items.Length);
+                Log.LogMessage("Upload to Azure is complete, a total of {0} items were uploaded.", Items.Length);
             }
             catch (Exception e)
             {
                 Log.LogErrorFromException(e, true);
             }
+
             return !Log.HasLoggedErrors;
-        }
-
-        private async ThreadingTask UploadAsync(CancellationToken ct, ITaskItem item, HashSet<string> blobsPresent, SemaphoreSlim clientThrottle)
-        {
-            if (ct.IsCancellationRequested)
-            {
-                Log.LogError("Task UploadToAzure cancelled");
-                ct.ThrowIfCancellationRequested();
-            }
-
-            string relativeBlobPath = item.GetMetadata("RelativeBlobPath");
-            if (string.IsNullOrEmpty(relativeBlobPath))
-                throw new Exception(string.Format("Metadata 'RelativeBlobPath' is missing for item '{0}'.", item.ItemSpec));
-
-            if (!File.Exists(item.ItemSpec))
-                throw new Exception(string.Format("The file '{0}' does not exist.", item.ItemSpec));
-
-            UploadClient uploadClient = new UploadClient(Log);
-
-            if (!Overwrite && blobsPresent.Contains(relativeBlobPath))
-            {
-                if (PassIfExistingItemIdentical &&
-                    await ItemEqualsExistingBlobAsync(item, relativeBlobPath, uploadClient, clientThrottle))
-                {
-                    return;
-                }
-
-                throw new Exception(string.Format("The blob '{0}' already exists.", relativeBlobPath));
-            }
-
-            string contentType = item.GetMetadata("ContentType");
-
-            await clientThrottle.WaitAsync();
-
-            try
-            {
-                Log.LogMessage("Uploading {0} to {1}.", item.ItemSpec, ContainerName);
-                await
-                    uploadClient.UploadBlockBlobAsync(
-                        ct,
-                        AccountName,
-                        AccountKey,
-                        ContainerName,
-                        item.ItemSpec,
-                        relativeBlobPath,
-                        contentType,
-                        UploadTimeoutInMinutes);
-            }
-            finally
-            {
-                clientThrottle.Release();
-            }
-        }
-
-        private async Task<bool> ItemEqualsExistingBlobAsync(
-            ITaskItem item,
-            string relativeBlobPath,
-            UploadClient client,
-            SemaphoreSlim clientThrottle)
-        {
-            await clientThrottle.WaitAsync();
-            try
-            {
-                return await client.FileEqualsExistingBlobAsync(
-                    AccountName,
-                    AccountKey,
-                    ContainerName,
-                    item.ItemSpec,
-                    relativeBlobPath,
-                    UploadTimeoutInMinutes);
-            }
-            finally
-            {
-                clientThrottle.Release();
-            }
         }
     }
 }

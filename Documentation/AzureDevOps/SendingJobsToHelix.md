@@ -2,6 +2,10 @@
 
 The primary reason to use Helix is to leverage its scalability to run tests. Arcade and the Arcade SDK provide out-of-the-box functionality to interface with Helix.
 
+## Understanding Helix
+
+This document assumes you have familiarity with Helix. If that is not the case, it is recommended that you start [here](https://github.com/dotnet/core-eng/blob/master/Documentation/HelixDocumentation.md).
+
 ## Getting Started
 
 First, you have to import the SDK. Everything that follows requires dotnet-cli ≥ 2.1.300 and needs the following files in a directory at or above the project's directory.
@@ -36,7 +40,7 @@ Helix access tokens are used to authenticate users sending jobs to Helix.
 
 ### External builds (Public CI)
 
-For external builds, you don't need to specify an access token (indeed, doing so is prohibited). Simply specify a *Creator* in order to send the jobs to Helix anonymously. The "creator" should be an identifiable username which is clearly related to your build. For example, Arcade might specify a creator of `arcade`. This will make collating your results on Mission Control much easier.
+For external builds, you don't need to specify an access token (indeed, doing so is prohibited). Simply specify a *Creator* in order to send the jobs to Helix anonymously. The "creator" should be an identifiable username which is clearly related to your build. For example, Arcade might specify a creator of `arcade`.
 
 Please note that external jobs may only be submitted to queues which end with the value `IsInternalOnly` set to false. In general, these queues end with **.Open**; however, this is not necessarily true.  To determine this value for a particular queue, see the list of available queues [here](https://helix.dot.net/api/2018-03-14/info/queues).
 
@@ -107,7 +111,6 @@ The list of available Helix queues can be found on the [Helix homepage](https://
       IncludeDotNetCli: true
       DotNetCliPackageType: sdk
       DotNetCliVersion: 2.1.403 # full list of versions here: https://raw.githubusercontent.com/dotnet/core/master/release-notes/releases.json
-      EnableXUnitReporter: true # required for reporting out xUnit test results to Mission Control
       # WaitForWorkItemCompletion: true -- defaults to true
       Creator: arcade # specify an appropriate Creator here -- required for external builds
       # DisplayNamePrefix: 'Send job to Helix' -- the Helix task's display name in AzDO. Defaults to 'Send job to Helix'
@@ -120,7 +123,7 @@ For anything more complex than the above example, you'll want to create your own
 
 ## Viewing test results
 
-All test results will be downloaded to the Azure DevOps build and viewable through the **Tests** tab. However, you can also view the results on Mission Control.
+All test results will be downloaded to the Azure DevOps build and viewable through the **Tests** tab.
 
 ### External test results
 
@@ -136,4 +139,4 @@ Results will be available from https://mc.dot.net/#/user/dotnet-github-anon-kaon
 
 ### Internal test results
 
-Test results for "internal" projects are accessible via the link which is provided in the build output or via configurable [Mission Control views](https://github.com/dotnet/core-eng/blob/ad1d9dd5b9797f0e659a647dbce9e8c842fa3324/Documentation/HelixDocumentation.md#mission-control).
+Test results for "internal" projects are accessible via the link which is provided in the build output or via Azure DevOps Tests tab.

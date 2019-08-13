@@ -13,28 +13,21 @@ namespace Microsoft.DotNet.XUnitExtensions
 {
     // Internal helper class for code common to conditional test discovery through
     // [ConditionalFact] and [ConditionalTheory]
-    internal class ConditionalTestDiscoverer
+    internal static class ConditionalTestDiscoverer
     {
         // This helper method evaluates the given condition member names for a given set of test cases.
         // If any condition member evaluates to 'false', the test cases are marked to be skipped.
-        // The skip reason is the collection of all the condition members that evalated to 'false'.
-        internal static IEnumerable<IXunitTestCase> Discover(
-                                                        ITestFrameworkDiscoveryOptions discoveryOptions,
-                                                        IMessageSink diagnosticMessageSink,
-                                                        ITestMethod testMethod,
-                                                        IEnumerable<IXunitTestCase> testCases,
-                                                        object[] conditionArguments)
+        // The skip reason is the collection of all the condition members that evaluated to 'false'.
+        internal static string EvaluateSkipConditions(ITestMethod testMethod, object[] conditionArguments)
         {
             Type calleeType = null;
             string[] conditionMemberNames = null;
 
-            if (CheckInputToSkipExecution(conditionArguments, ref calleeType, ref conditionMemberNames, testMethod)) return testCases;
+            if (CheckInputToSkipExecution(conditionArguments, ref calleeType, ref conditionMemberNames, testMethod)) return null;
 
             MethodInfo testMethodInfo = testMethod.Method.ToRuntimeMethod();
             Type testMethodDeclaringType = testMethodInfo.DeclaringType;
             List<string> falseConditions = new List<string>(conditionMemberNames.Count());
-            TestMethodDisplay defaultMethodDisplay = discoveryOptions.MethodDisplayOrDefault();
-            TestMethodDisplayOptions defaultMethodDisplayOptions = discoveryOptions.MethodDisplayOptionsOrDefault();
 
             foreach (string entry in conditionMemberNames)
             {
@@ -71,15 +64,7 @@ namespace Microsoft.DotNet.XUnitExtensions
                 MethodInfo conditionMethodInfo;
                 if ((conditionMethodInfo = LookupConditionalMethod(declaringType, conditionMemberName)) == null)
                 {
-                    return new[] 
-                    {
-                        new ExecutionErrorTestCase(
-                            diagnosticMessageSink,
-                            defaultMethodDisplay,
-                            defaultMethodDisplayOptions,
-                            testMethod,
-                            GetFailedLookupString(conditionMemberName, declaringType))
-                    };
+                    throw new ConditionalDiscovererException(GetFailedLookupString(conditionMemberName, declaringType));
                 }
 
                 // In the case of multiple conditions, collect the results of all
@@ -100,12 +85,32 @@ namespace Microsoft.DotNet.XUnitExtensions
             // Compose a summary of all conditions that returned false.
             if (falseConditions.Count > 0)
             {
-                string skippedReason = string.Format("Condition(s) not met: \"{0}\"", string.Join("\", \"", falseConditions));
-                return testCases.Select(tc => new SkippedTestCase(tc, skippedReason));
+                return string.Format("Condition(s) not met: \"{0}\"", string.Join("\", \"", falseConditions));
             }
 
             // No conditions returned false (including the absence of any conditions).
-            return testCases;
+            return null;
+        }
+
+        internal static bool TryEvaluateSkipConditions(ITestFrameworkDiscoveryOptions discoveryOptions, IMessageSink diagnosticMessageSink, ITestMethod testMethod, object[] conditionArguments, out string skipReason, out ExecutionErrorTestCase errorTestCase)
+        {
+            skipReason = null;
+            errorTestCase = null;
+            try
+            {
+                skipReason = EvaluateSkipConditions(testMethod, conditionArguments);
+                return true;
+            }
+            catch (ConditionalDiscovererException e)
+            {
+                errorTestCase = new ExecutionErrorTestCase(
+                    diagnosticMessageSink,
+                    discoveryOptions.MethodDisplayOrDefault(),
+                    discoveryOptions.MethodDisplayOptionsOrDefault(),
+                    testMethod,
+                    e.Message);
+                return false;
+            }
         }
 
         internal static string GetFailedLookupString(string name, Type type)

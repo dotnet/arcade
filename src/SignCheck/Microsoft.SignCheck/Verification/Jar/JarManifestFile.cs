@@ -33,7 +33,7 @@ namespace Microsoft.SignCheck.Verification.Jar
         }
 
         /// <summary>
-        /// Verifies each inidividual entry in the MANFIEST.MF file's x-DIGEST attribute against the computed
+        /// Verifies each individual entry in the MANFIEST.MF file's x-DIGEST attribute against the computed
         /// digest of the actual file in the JAR file.
         /// </summary>
         /// <returns></returns>

@@ -110,7 +110,7 @@
 
       <!--
         There isn't a defacto standard for including version information in a native binary on unix so we defined a static
-        variable which contains the version information we want which can be retrived by using What(1) or strings+grep.
+        variable which contains the version information we want which can be retrieved by using What(1) or strings+grep.
         See https://github.com/dotnet/coreclr/issues/3133 for further discussion on this approach.
       -->
       <_NativeVersionFileContents>
@@ -125,7 +125,8 @@ static char sccsid[] __attribute__((used)) = "@(#)Version $(FileVersion)$(_Sourc
     <WriteLinesToFile
       File="$(NativeVersionFile)"
       Lines="$(_NativeVersionFileContents.Replace(';', '%3B'))"
-      Overwrite="true" />
+      Overwrite="true"
+      WriteOnlyWhenDifferent="true" />
 
     <ItemGroup>
       <FileWrites Include="$(NativeVersionFile)" />

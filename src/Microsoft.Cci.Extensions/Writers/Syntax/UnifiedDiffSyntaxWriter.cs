@@ -64,14 +64,14 @@ namespace Microsoft.Cci.Writers.Syntax
 
         private void WriteLineMarker(char marker)
         {
-            // The first two lines in a diff format use three pluses and three minues, e.g.
+            // The first two lines in a diff format use three pluses and three minuses, e.g.
             //
             // ---assembly-location\before\System.Collections.Immutable.dll
             // +++assembly-location\after-extract\System.Collections.Immutable.dll
             //  namespace System.Collections.Immutable {
             // ...
             //
-            // Subsquent line markers use a single plus and single minus.
+            // Subsequent line markers use a single plus and single minus.
 
             var isHeader = _numberOfLines++ < 2;
             var count = isHeader ? 3 : 1;
@@ -140,7 +140,7 @@ namespace Microsoft.Cci.Writers.Syntax
             // to the API the comment is associated with. Subsequent lines will use the pipe (|)
             // to make it clear that these are comments.
             //
-            // This will rougly look like this:
+            // This will roughly look like this:
             //
             // ---assembly-location\before\System.Collections.Immutable.dll
             // +++assembly-location\after-extract\System.Collections.Immutable.dll

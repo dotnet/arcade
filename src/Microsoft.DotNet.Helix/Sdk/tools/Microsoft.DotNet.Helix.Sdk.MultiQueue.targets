@@ -55,6 +55,14 @@
       AccessToken="$(HelixAccessToken)"
       BaseUri="$(HelixBaseUri)"
       Jobs="@(SentJob)" />
+
+    <GetFailedWorkItems
+      Condition="$(WaitForWorkItemCompletion)"
+      AccessToken="$(HelixAccessToken)"
+      BaseUri="$(HelixBaseUri)"
+      Jobs="@(SentJob)">
+      <Output TaskParameter="FailedWorkItems" ItemName="FailedWorkItem" />
+    </GetFailedWorkItems>
   </Target>
 
   <Target Name="Test"
@@ -69,8 +77,9 @@
       AccessToken="$(HelixAccessToken)"
       BaseUri="$(HelixBaseUri)"
       Jobs="@(SentJob)"
+      FailedWorkItems="@(FailedWorkItem)"
       FailOnWorkItemFailure="$(FailOnWorkItemFailure)"
-      FailOnMissionControlTestFailure="$(FailOnMissionControlTestFailure)"
+      FailOnMissionControlTestFailure="$(FailOnMissionControlTestFailure)" 
       />
   </Target>
 </Project>

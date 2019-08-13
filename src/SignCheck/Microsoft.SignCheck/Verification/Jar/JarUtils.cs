@@ -45,7 +45,7 @@ namespace Microsoft.SignCheck.Verification.Jar
         /// Creates a Base64 encoded digest for a given input string and hash algorithm.
         /// </summary>
         /// <param name="input">The input to hash.</param>
-        /// <param name="algorithmName">The hash algorithmg to use.</param>
+        /// <param name="algorithmName">The hash algorithm to use.</param>
         /// <returns></returns>
         public static string GetHashDigest(string input, string algorithmName)
         {

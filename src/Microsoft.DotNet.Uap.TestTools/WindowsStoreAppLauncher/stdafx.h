@@ -4,6 +4,11 @@
 
 #pragma once
 
+// Force a minimum compiler version for VSC++ (security requirement)
+#if _MSC_VER < 1900 
+#error "Minimum compiler version not found. Minimum version = 1900 (Visual Studio 2015)."
+#endif
+
 #include <Windows.Applicationmodel.Activation.h>
 #include <windows.management.deployment.h>
 #include <windows.foundation.h>
@@ -18,6 +23,8 @@
 #include <iterator>
 #include <stdio.h>
 #include <string>
+#include <string.h>
+#include <wchar.h>
 #include <fstream>
 #include <iterator>
 #include <wrl.h>
@@ -34,12 +41,10 @@
 #include <Psapi.h>
 #include <PathCch.h>
 #include <memory>
-#include <string>
 #include <exception>
 #include <cstring>
 #include <fstream>
 #include <sstream>
-#include <string>
 #include <vector>
 #include <cstdio>
 #include <wrl\wrappers\corewrappers.h>

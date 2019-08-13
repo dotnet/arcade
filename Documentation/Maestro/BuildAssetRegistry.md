@@ -94,7 +94,7 @@ class Build {
 ```
 
 ### DefaultChannel
-Identifes a default channel that will be associated with new builds from a specific repository/branch.
+Identifies a default channel that will be associated with new builds from a specific repository/branch.
 ```csharp
 class DefaultChannel {
     string Repository;

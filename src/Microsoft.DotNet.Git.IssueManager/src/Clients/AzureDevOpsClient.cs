@@ -37,7 +37,6 @@ namespace Microsoft.DotNet.Git.IssueManager.Clients
 
                 response.EnsureSuccessStatusCode();
 
-                string x = await response.Content.ReadAsStringAsync();
                 AzureDevOpsCommit commitResponse = JsonConvert.DeserializeObject<AzureDevOpsCommit>(await response.Content.ReadAsStringAsync());
 
                 if (commitResponse == null)
@@ -51,7 +50,7 @@ namespace Microsoft.DotNet.Git.IssueManager.Clients
 
         private static HttpClient GetHttpClient(string accountName, string projectName, string personalAccessToken)
         {
-            HttpClient client = new HttpClient
+            HttpClient client = new HttpClient(new HttpClientHandler { CheckCertificateRevocationList = true })
             {
                 BaseAddress = new Uri($"https://dev.azure.com/{accountName}/{projectName}/")
             };

@@ -20,7 +20,7 @@ namespace Microsoft.Cci.Mappings
 
         public ElementMapping(MappingSettings settings, bool allowDuplicateMatchingAdds = false)
         {
-            // While this theorectically could work for more than 2 elements the 
+            // While this theoretically could work for more than 2 elements the 
             // diffing of more than 2 is tricky and as such I'm not supporting yet.
             Contract.Requires(settings.ElementCount >= 0 && settings.ElementCount <= 2);
             _elements = new TElement[settings.ElementCount];

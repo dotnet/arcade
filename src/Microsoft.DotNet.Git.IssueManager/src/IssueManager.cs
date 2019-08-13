@@ -27,7 +27,7 @@ namespace Microsoft.DotNet.Git.IssueManager
         /// </summary>
         /// <param name="repositoryUrl">The repository URL</param>
         /// <param name="commit">The commit SHA.</param>
-        /// <returns>In GitHub returns the handdle, in AzDO returns the full name.</returns>
+        /// <returns>In GitHub returns the handle, in AzDO returns the full name.</returns>
         public async Task<string> GetCommitAuthorAsync(string repositoryUrl, string commit)
         {
             if (string.IsNullOrEmpty(repositoryUrl))

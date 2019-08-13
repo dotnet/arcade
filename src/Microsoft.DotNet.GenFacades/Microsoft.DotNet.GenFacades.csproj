@@ -34,6 +34,15 @@
     <Compile Remove="ILRewriter\**" />
   </ItemGroup>
 
+  <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
+    <Compile Include="..\Common\AssemblyResolver.cs" />
+    <Compile Include="..\Common\BuildTask.Desktop.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Common\BuildTask.cs" />
+  </ItemGroup>
+
   <!-- On Core, these native binaries wind up in the Runtimes folder of this package. For Desktop, we have to manually mark them to get them packed -->
   <ItemGroup Condition="'$(TargetFramework)'=='net472' and '$(DotNetBuildFromSource)' != 'true'">
     <None Include="$(NuGetPackageRoot)\microsoft.diasymreader.native\$(MicrosoftDiaSymReaderNativeVersion)\runtimes\win\native\Microsoft.DiaSymReader.Native.x86.dll">

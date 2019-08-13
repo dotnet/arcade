@@ -76,12 +76,12 @@ wstring FileDisambiguator::DisambiguateFile(const wstring& prefix, const wstring
   }
 
 
-  wprintf(L"copying %s -> %s\n", src.c_str(), name.c_str());
+  wprintf_s(L"copying %s -> %s\n", src.c_str(), name.c_str());
   BOOL cancel = false;
   if (copy && !CopyFileEx(src.c_str(), name.c_str(), NULL, NULL, &cancel, COPY_FILE_FAIL_IF_EXISTS))
   {
     DWORD err = GetLastError();
-    wprintf(L"Error copying file:\n%s\n", MessageForHR(HRESULT_FROM_WIN32(err)).c_str());
+    wprintf_s(L"Error copying file:\n%s\n", MessageForHR(HRESULT_FROM_WIN32(err)).c_str());
     if (err == ERROR_FILE_EXISTS)
       return name.c_str();
     return L"";
@@ -98,7 +98,7 @@ FileDisambiguator::~FileDisambiguator()
   {
     if (del && !f.empty())
     {
-      wprintf(L"deleting %s...\n", f.c_str());
+      wprintf_s(L"deleting %s...\n", f.c_str());
       DeleteFile(f.c_str());
     }
   }

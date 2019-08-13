@@ -1,10 +1,10 @@
 # .NET Core 2.1/2.2 Servicing Workflow
 
-This document is intended to provide a practical servicing worflow for .NET Core 2.1.
+This document is intended to provide a practical servicing workflow for .NET Core 2.1.
 
 ## Overview
 
-.NET Core 2.1/2.2 were built via the "ProdCon v1" model, in which repositories are strung together via the PipeBuild orchestration system (see below). A build produces outputs to a specified per-repository location.  Those outputs are analyzed and an msbuild property file is created with version numbers for all package outputs.  That property file is fed into any builds of repositories that depend on the previously built repository, which in term produces new ouputs, which are analyzed, and so on until a product is produced. Building each invdividual repo after this commit can produce functionally equivalent assets to the final build.
+.NET Core 2.1/2.2 were built via the "ProdCon v1" model, in which repositories are strung together via the PipeBuild orchestration system (see below). A build produces outputs to a specified per-repository location.  Those outputs are analyzed and an msbuild property file is created with version numbers for all package outputs.  That property file is fed into any builds of repositories that depend on the previously built repository, which in term produces new outputs, which are analyzed, and so on until a product is produced. Building each individual repo after this commit can produce functionally equivalent assets to the final build.
 
 The general servicing flow looks like this:
   1. Modify ProdCon definition to reflect the minimal set of repos that must be built.
@@ -26,8 +26,8 @@ The pipebuild descriptions for the builds are held in https://dev.azure.com/devd
   - **2.1 Pipebuild Description** - https://dev.azure.com/devdiv/DevDiv/Default/_git/DotNet-BuildPipeline?path=%2Fsrc%2FPipeBuild%2FPipeBuild%2Fpipelines.orchestrated-release-2.1.json&version=GBmaster
   - **2.2 Pipebuild Description** - https://dev.azure.com/devdiv/DevDiv/Default/_git/DotNet-BuildPipeline?path=%2Fsrc%2FPipeBuild%2FPipeBuild%2Fpipelines.orchestrated-release-2.2.json&version=GBmaster
 - **Internal Servicing** - Internal builds will use private intermediate storage, including private blob feeds and will not publish build information to the dotnet/versions repo on completion.
-  - **2.1 Build Definition** - https://dev.azure.com/devdiv/_build/index?definitionId=9010
-  - **2.2 Build Definition** - https://dev.azure.com/devdiv/_build/index?definitionId=10367
+  - **2.1 Build Definition** - https://dev.azure.com/devdiv/DevDiv/_build/index?definitionId=9010
+  - **2.2 Build Definition** - https://dev.azure.com/devdiv/DevDiv/_build/index?definitionId=10367
   - **2.1 Pipebuild Definition** - `https://dev.azure.com/devdiv/DevDiv/Default/_git/DotNet-BuildPipeline?path=%2Fsrc%2FPipeBuild%2FPipeBuild%2Fpipelines.orchestrated-release-2.1-internal.json&version=GBmaster
   - **2.2 Pipebuild Definition** - `https://dev.azure.com/devdiv/DevDiv/Default/_git/DotNet-BuildPipeline?path=%2Fsrc%2FPipeBuild%2FPipeBuild%2Fpipelines.orchestrated-release-2.2-internal.json&version=GBmaster
 
@@ -36,7 +36,7 @@ The pipebuild descriptions for the builds are held in https://dev.azure.com/devd
 1. Update branding in required repos to reflect the servicing event. How this is done is repository dependent, but generally post-release, the pre-release label is updated in each of the servicing branches to 'servicing' (or something like that) and the patch version element is incremented. The `PB_VersionStamp` default should be changed on the build definition.
 2. Check in fixes to required repositories.
 3. Update ProdCon pipebuild descriptions
-    1. Change to reflect the minimal set of repos that must be built. Typically, the description does not change and contains all the core repositories (coreclr, corefx, core-setup aspnet, extensions, cli). Ocassionally, sdk will have a servicing fix and require an entry in the description file.  When adding or removing builds from prodcon, ensure that dependency and input/output merges are updated.
+    1. Change to reflect the minimal set of repos that must be built. Typically, the description does not change and contains all the core repositories (coreclr, corefx, core-setup aspnet, extensions, cli). Occasionally, sdk will have a servicing fix and require an entry in the description file.  When adding or removing builds from prodcon, ensure that dependency and input/output merges are updated.
     2. Verify/Update input branches
     3. For build of CLI, update the **MicrosoftNETCoreAppLatestVersion1_0** (2.1 + 2.2),
        **MicrosoftNETCoreAppLatestVersion1_1** (2.1 + 2.2), **MicrosoftNETCoreAppLatestVersion2_0** (2.1 only),
@@ -168,22 +168,15 @@ The pipebuild descriptions for the builds are held in https://dev.azure.com/devd
 
 10. Perform final release - In conjunction with normal tic-toc activities, final release can be done by ensuring the build description is published to the versions repo, then adding triggers for that location.
     1. **If public** - Poke the "build.semaphore" file by adding a digit to the end of the versions repo file where the stabilized build was published. For example: https://github.com/dotnet/versions/commit/641b24a434bbb4fc801ec56a7ad9eef36e5c5a01
-    2. **If internal** -
-        1. Update build.xml manifest (e.g. `https://<account>.blob.core.windows.net/orchestrated-release-2-1/<product build id>/final/assets/orchestration-metadata/manifests/build.xml`) and re-upload.
-            - Update branch names in the 'build.xml' manifest to correspond to the public branch names.
-            
-            ```
-            <Build BuildId="2.1.10-servicing-32095+pb-20190314-05" Name="aspnet" Commit="2a2809afe4a2c665c4bfe25ff816c542948c4ab5" Branch="internal/release/2.1" ProductVersion="2.1.10" UniverseCommitHash="2a2809afe4a2c665c4bfe25ff816c542948c4ab5"/>
-            ```
-            to
-            ```
-            <Build BuildId="2.1.10-servicing-32095+pb-20190314-05" Name="aspnet" Commit="2a2809afe4a2c665c4bfe25ff816c542948c4ab5" Branch="release/2.1" ProductVersion="2.1.10" UniverseCommitHash="2a2809afe4a2c665c4bfe25ff816c542948c4ab5"/>
-            ```
-            - Update endpoint URL to point to public account.
-        2. Copy build outputs from internal storage account to dotnetfeed storage account.  This is typically done just by copying the whole build output directory (`$(PB_FeedBaseUrl)/$(ProductBuildId)/`) to another container (e.g. orchestrated-foo-bar-baz).  Then launch the **public** build definition with the following parameters:
-            - `ProductBuildId` - `ProductBuildId` of the build being released
-            -  `PB_VersionsRepoPath` - `build-info/dotnet/product/cli/release/2.1.<servicing suffix>` (e.g. 2.1.10) or `build-info/dotnet/product/cli/release/2.2.<servicing suffix>` (e.g. 2.2.4)
-            - `PB_PipelineRoots` - `Final-PushOrchestratedBuildManifest`
+    2. **If internal** - Execute [DotNet-Orchestrated-Release-2-1-Move-To-Public](https://dev.azure.com/devdiv/DevDiv/_build?definitionId=11719&_a=summary)
+       or
+       [DotNet-Orchestrated-Release-2-2-Move-To-Public](https://dev.azure.com/devdiv/DevDiv/_build?definitionId=11723&_a=summary)
+       build definitions with appropriate parameters to move the builds to
+       public storage
+        - `ProductBuildId` = build product build id
+        - `PB_VersionsRepoPath` -
+          `build-info/dotnet/product/cli/release/2.1.<servicing suffix>` (2.2.5,
+          2.1.12, etc.)
 
 ## Build Flow Diagram
 

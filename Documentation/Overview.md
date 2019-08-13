@@ -40,7 +40,7 @@ This approach publishes what amounts to “public surface area” for the shared
 -	Each package is serviceable (forkable) itself, and can be easily used for servicing of the product.  The idea is that the common infra should “fork” with the product repo branch.  (see below for implementation notes/questions as this area is likely challenging to get right)
 - Each package must carry key pieces of meta-data for auditing.  Example: source repo link and commit SHA
 -	Each contract represents a single area of work.  In other words, there is specific “intent” for each contract/package.  (contrasted with general “helper” stuff, or lumping several things together)
--	New packages must be reviewed by the the product teams in conjunction with Engineering Services.  (think API reviews…)
+-	New packages must be reviewed by the product teams in conjunction with Engineering Services.  (think API reviews…)
 -	Existing consumption of common infra will be migrated to this new approach, piecemeal over time as appropriate.  No giant “switch”….  (plus, some things don’t need to migrate)
 -	In addition to unit tests at the code level, end-to-end validation tests are required to ensure the contracts are still fulfilled.
 - Each package should carry its own documentation that is updated when the tool/package is updated.

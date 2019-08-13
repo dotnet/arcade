@@ -5,7 +5,9 @@
 using Microsoft.Build.Framework;
 using Microsoft.DotNet.Build.CloudTestTasks;
 using Microsoft.WindowsAzure.Storage;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Serialization;
 using NuGet.Packaging;
 using NuGet.Packaging.Core;
 using Sleet;
@@ -30,7 +32,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         private SleetSource source;
         private bool hasToken = false;
 
-        public BlobFeed feed;
+        private string AccountName { get; set; }
+        public string AccountKey { get; set; }
+        private string ContainerName { get; set; }
+        public string RelativePath { get; set; }
 
         public BlobFeedAction(string expectedFeedUrl, string accountKey, MSBuild.TaskLoggingHelper Log)
         {
@@ -42,27 +47,39 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             Match m = Regex.Match(expectedFeedUrl, feedRegex);
             if (m.Success)
             {
-                string accountName = m.Groups["accountname"].Value;
-                string containerName = m.Groups["containername"].Value;
-                string relativePath = m.Groups["relativepath"].Value;
-                feed = new BlobFeed(accountName, accountKey, containerName, relativePath, Log);
+                AccountKey = accountKey;
+                AccountName = m.Groups["accountname"].Value;
+                ContainerName = m.Groups["containername"].Value;
+                RelativePath = m.Groups["relativepath"].Value;
+
                 feedUrl = m.Groups["feedurl"].Value;
                 hasToken = !string.IsNullOrEmpty(m.Groups["token"].Value);
 
                 source = new SleetSource
                 {
-                    Name = feed.ContainerName,
+                    Name = ContainerName,
                     Type = "azure",
                     Path = feedUrl,
-                    Container = feed.ContainerName,
-                    FeedSubPath = feed.RelativePath,
-                    ConnectionString = $"DefaultEndpointsProtocol=https;AccountName={feed.AccountName};AccountKey={feed.AccountKey};EndpointSuffix=core.windows.net"
+                    Container = ContainerName,
+                    FeedSubPath = RelativePath,
+                    ConnectionString = $"DefaultEndpointsProtocol=https;AccountName={AccountName};AccountKey={AccountKey};EndpointSuffix=core.windows.net"
                 };
             }
             else
             {
                 throw new Exception("Unable to parse expected feed. Please check ExpectedFeedUrl.");
             }
+        }
+
+        public BlobFeedAction(SleetSource sleetSource, string accountKey, MSBuild.TaskLoggingHelper log)
+        {
+            ContainerName = sleetSource.Container;
+            RelativePath = sleetSource.FeedSubPath;
+            AccountName = sleetSource.AccountName;
+            AccountKey = accountKey;
+            hasToken = true;
+            Log = log;
+            source = sleetSource;
         }
 
         public async Task<bool> PushToFeedAsync(
@@ -97,8 +114,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
             try
             {
-                bool result = await PushAsync(items, options);
-                return result;
+                return await PushAsync(items, options);
             }
             catch (Exception e)
             {
@@ -108,10 +124,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             return !Log.HasLoggedErrors;
         }
 
-        public async Task PublishToFlatContainerAsync(IEnumerable<ITaskItem> taskItems,
-            int maxClients,
-            int uploadTimeoutInMinutes,
-            PushOptions pushOptions)
+        public async Task PublishToFlatContainerAsync(IEnumerable<ITaskItem> taskItems, int maxClients, PushOptions pushOptions)
         {
             if (taskItems.Any())
             {
@@ -122,11 +135,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         item =>
                         {
                             Log.LogMessage(MessageImportance.High, $"Async uploading {item.ItemSpec}");
-                            return UploadAssetAsync(
-                                item,
-                                clientThrottle,
-                                uploadTimeoutInMinutes,
-                                pushOptions);
+                            return UploadAssetAsync(item, clientThrottle, pushOptions);
                         }
                     ));
                 }
@@ -136,7 +145,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         public async Task UploadAssetAsync(
             ITaskItem item,
             SemaphoreSlim clientThrottle,
-            int uploadTimeout,
             PushOptions options)
         {
             string relativeBlobPath = item.GetMetadata("RelativeBlobPath");
@@ -148,9 +156,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 relativeBlobPath = $"{recursiveDir}{fileName}";
             }
 
-            string contentType = item.GetMetadata("ContentType");
-
-            relativeBlobPath = $"{feed.RelativePath}{relativeBlobPath}".Replace("\\", "/");
+            relativeBlobPath = $"{RelativePath}{relativeBlobPath}".Replace("\\", "/");
 
             if (relativeBlobPath.Contains("//"))
             {
@@ -166,19 +172,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
             try
             {
-                UploadClient uploadClient = new UploadClient(Log);
+                AzureStorageUtils blobUtils = new AzureStorageUtils(AccountName, AccountKey, ContainerName);
 
-                if (!options.AllowOverwrite && await feed.CheckIfBlobExistsAsync(relativeBlobPath))
+                if (!options.AllowOverwrite && await blobUtils.CheckIfBlobExistsAsync(relativeBlobPath))
                 {
                     if (options.PassIfExistingItemIdentical)
                     {
-                        if (!await uploadClient.FileEqualsExistingBlobAsync(
-                            feed.AccountName,
-                            feed.AccountKey,
-                            feed.ContainerName,
-                            item.ItemSpec,
-                            relativeBlobPath,
-                            uploadTimeout))
+                        if (!await blobUtils.IsFileIdenticalToBlobAsync(relativeBlobPath, item.ItemSpec))
                         {
                             Log.LogError(
                                 $"Item '{item}' already exists with different contents " +
@@ -193,15 +193,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 else
                 {
                     Log.LogMessage($"Uploading {item} to {relativeBlobPath}.");
-                    await uploadClient.UploadBlockBlobAsync(
-                        CancellationToken,
-                        feed.AccountName,
-                        feed.AccountKey,
-                        feed.ContainerName,
-                        item.ItemSpec,
-                        relativeBlobPath,
-                        contentType,
-                        uploadTimeout);
+                    await blobUtils.UploadBlockBlobAsync(item.ItemSpec, relativeBlobPath);
                 }
             }
             catch (Exception exc)
@@ -217,13 +209,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public async Task CreateContainerAsync(IBuildEngine buildEngine, bool publishFlatContainer)
         {
-            Log.LogMessage($"Creating container {feed.ContainerName}...");
+            Log.LogMessage($"Creating container {ContainerName}...");
 
             CreateAzureContainer createContainer = new CreateAzureContainer
             {
-                AccountKey = feed.AccountKey,
-                AccountName = feed.AccountName,
-                ContainerName = feed.ContainerName,
+                AccountKey = AccountKey,
+                AccountName = AccountName,
+                ContainerName = ContainerName,
                 FailIfExists = false,
                 IsPublic = !hasToken,
                 BuildEngine = buildEngine
@@ -231,7 +223,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
             await createContainer.ExecuteAsync();
 
-            Log.LogMessage($"Creating container {feed.ContainerName} succeeded!");
+            Log.LogMessage($"Creating container {ContainerName} succeeded!");
 
             if (!publishFlatContainer)
             {
@@ -339,19 +331,32 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     }
             };
 
+            var jsonSerializer = JsonSerializer.Create(
+                new JsonSerializerSettings
+                {
+                    ContractResolver = new CamelCasePropertyNamesContractResolver(),
+                    NullValueHandling = NullValueHandling.Ignore
+                });
+
             LocalSettings settings = new LocalSettings
             {
-                Json = JObject.FromObject(sleetSettings)
+                Json = JObject.FromObject(sleetSettings, jsonSerializer)
             };
 
             return settings;
         }
 
-        private AzureFileSystem GetAzureFileSystem(LocalCache fileCache)
+        private ISleetFileSystem GetAzureFileSystem(LocalCache fileCache)
         {
-            CloudStorageAccount storageAccount = CloudStorageAccount.Parse(source.ConnectionString);
-            AzureFileSystem fileSystem = new AzureFileSystem(fileCache, new Uri(source.Path), new Uri(source.Path), storageAccount, source.Name, source.FeedSubPath);
-            return fileSystem;
+            try
+            {
+                CloudStorageAccount storageAccount = CloudStorageAccount.Parse(source.ConnectionString);
+                return new AzureFileSystem(fileCache, new Uri(source.Path), new Uri(source.Path), storageAccount, source.Name, source.FeedSubPath);
+            }
+            catch
+            {
+                return FileSystemFactory.CreateFileSystem(GetSettings(), fileCache, source.Name);
+            }
         }
 
         private async Task<bool> PushAsync(
@@ -369,7 +374,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             // normally performed inside the lock.
             using (var preLockCache = CreateFileCache())
             {
-                AzureFileSystem preLockFileSystem = GetAzureFileSystem(preLockCache);
+                var preLockFileSystem = GetAzureFileSystem(preLockCache);
 
                 if (!options.AllowOverwrite && options.PassIfExistingItemIdentical)
                 {
@@ -446,12 +451,19 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             }
         }
 
-        private async Task<bool> InitAsync()
+        public async Task<bool> InitAsync()
         {
+            AzureStorageUtils blobUtils = new AzureStorageUtils(AccountName, AccountKey, ContainerName);
+
+            if (!await blobUtils.CheckIfContainerExistsAsync())
+            {
+                throw new Exception($"The informed container for the feed '{ContainerName}' doesn't exist!");
+            }
+
             using (var fileCache = CreateFileCache())
             {
                 LocalSettings settings = GetSettings();
-                AzureFileSystem fileSystem = GetAzureFileSystem(fileCache);
+                var fileSystem = FileSystemFactory.CreateFileSystem(settings, fileCache, source.Name);
                 bool result = await InitCommand.RunAsync(settings, fileSystem, enableCatalog: false, enableSymbols: false, log: new SleetLogger(Log, NuGet.Common.LogLevel.Verbose), token: CancellationToken);
                 return result;
             }

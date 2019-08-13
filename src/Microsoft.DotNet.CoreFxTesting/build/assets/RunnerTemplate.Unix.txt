@@ -2,19 +2,16 @@
 
 usage()
 {
-  echo "Usage: RunTests.sh {-r|--runtime-path} <runtime-path> [{-d|--dotnet-root} <dotnet-root>] [{-g|--global-tools-dir} <global-tools-dir>] [{--rsp-file} <rsp-file>]"
+  echo "Usage: RunTests.sh {-r|--runtime-path} <runtime-path> [{--rsp-file} <rsp-file>]"
   echo ""
   echo "Parameters:"
   echo "--runtime-path           (Mandatory) Testhost containing the test runtime used during test execution (short: -r)"
-  echo "--dotnet-root            SDK directory for hosting shims and tools (short: -d)"
-  echo "--global-tools-dir       Global tools directory (short: -g)"
   echo "--rsp-file               RSP file to pass in additional arguments"
   echo "--help                   Print help and exit (short: -h)"
 }
 
 EXECUTION_DIR=$(dirname "$0")
 RUNTIME_PATH=''
-GLOBAL_TOOLS_DIR=''
 RSP_FILE=''
 
 while [[ $# > 0 ]]; do
@@ -26,14 +23,6 @@ while [[ $# > 0 ]]; do
       ;;
     --runtime-path|-r)
       RUNTIME_PATH=$2
-      shift
-      ;;
-    --dotnet-root|-d)
-      export DOTNET_ROOT=$2
-      shift
-      ;;
-    --global-tools-dir|-g)
-      GLOBAL_TOOLS_DIR=$2
       shift
       ;;
     --rsp-file)
@@ -58,9 +47,6 @@ fi
 
 # Don't use a globally installed SDK.
 export DOTNET_MULTILEVEL_LOOKUP=0
-
-# Roll forward on [major], [minor] and [patch].
-export DOTNET_ROLL_FORWARD_ON_NO_CANDIDATE_FX=2
 
 exitcode_list[0]="Exited Successfully"
 exitcode_list[130]="SIGINT  Ctrl-C occurred. Likely tests timed out."
@@ -165,7 +151,7 @@ fi
 # ========================= END Core File Setup ==============================
 
 # ========================= BEGIN Test Execution =============================
-echo ----- start $(date +"%T") ===============  To repro directly: ===================================================== 
+echo ----- start $(date) ===============  To repro directly: ===================================================== 
 echo pushd $EXECUTION_DIR
 [[RunCommandsEcho]]
 echo popd
@@ -174,7 +160,7 @@ pushd $EXECUTION_DIR
 [[RunCommands]]
 test_exitcode=$?
 popd
-echo ----- end $(date +"%T") ----- exit code $test_exitcode ----------------------------------------------------------
+echo ----- end $(date) ----- exit code $test_exitcode ----------------------------------------------------------
 
 if [ "${exitcode_list[$test_exitcode]}" != "" ]; then
   echo exit code $test_exitcode means ${exitcode_list[$test_exitcode]}

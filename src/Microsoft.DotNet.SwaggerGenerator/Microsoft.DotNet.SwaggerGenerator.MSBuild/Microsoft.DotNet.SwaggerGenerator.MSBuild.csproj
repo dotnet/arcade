@@ -6,6 +6,7 @@
     <IsPackable>true</IsPackable>
     <Description>This package provides support for generating client library code from a swagger document.</Description>
     <DevelopmentDependency>true</DevelopmentDependency>
+    <ExcludeFromSourceBuild>true</ExcludeFromSourceBuild>
   </PropertyGroup>
 
   <ItemGroup>
@@ -14,13 +15,6 @@
     <PackageReference Include="System.Net.Http" Version="$(SystemNetHttpVersion)"/>
     <ProjectReference Include="..\Microsoft.DotNet.SwaggerGenerator.CodeGenerator\Microsoft.DotNet.SwaggerGenerator.CodeGenerator.csproj" />
   </ItemGroup>
-
-  <PropertyGroup>
-    <RestoreSources>
-      $(RestoreSources);
-      https://dotnetfeed.blob.core.windows.net/dotnet-tools-internal/index.json;
-    </RestoreSources>
-  </PropertyGroup>
 
   <Import Project="$(RepoRoot)eng\BuildTask.targets" />
 </Project>

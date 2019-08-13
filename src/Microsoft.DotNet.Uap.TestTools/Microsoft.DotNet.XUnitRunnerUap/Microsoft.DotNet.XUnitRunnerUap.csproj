@@ -29,6 +29,7 @@
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <PackageCertificateThumbprint>E4D13099C16EAFEACC5562ACF779105B1C569458</PackageCertificateThumbprint>
     <SkipMergingFrameworkResources>true</SkipMergingFrameworkResources>
+    <ExcludeFromSourceBuild>true</ExcludeFromSourceBuild>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
     <DebugSymbols>true</DebugSymbols>
@@ -202,10 +203,10 @@
       <Version>6.2.0-preview1-26926-04</Version>
     </PackageReference>
     <PackageReference Include="xunit">
-      <Version>2.4.1-pre.build.4059</Version>
+      <Version>2.4.1</Version>
     </PackageReference>
     <PackageReference Include="xunit.runner.utility">
-      <Version>2.4.1-pre.build.4059</Version>
+      <Version>2.4.1</Version>
     </PackageReference>
   </ItemGroup>
   <ItemGroup>

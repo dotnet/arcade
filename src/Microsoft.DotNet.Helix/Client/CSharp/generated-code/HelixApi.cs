@@ -164,7 +164,14 @@ namespace Microsoft.DotNet.Helix.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public string Serialize<T>(T value)
         {
-            return JsonConvert.SerializeObject(value, SerializerSettings);
+            string result = JsonConvert.SerializeObject(value, SerializerSettings);
+
+            if (value is Enum)
+            {
+                return result.Substring(1, result.Length-2);
+            }
+
+            return result;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

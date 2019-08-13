@@ -21,7 +21,7 @@ namespace Microsoft.Cci.Differs.Rules
     public class TokenListDiffer : DifferenceRule
     {
         [Import(AllowDefault = true)]
-        private IDiffingService DiffingService { get; set; }
+        public IDiffingService DiffingService { get; set; }
 
         private CSDeclarationHelper _declHelper = null;
 

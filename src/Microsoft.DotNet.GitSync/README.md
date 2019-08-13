@@ -27,7 +27,7 @@ In order to deploy the tool you need to take the following steps :-
 - You can then publish the tool and input all the required settings in the settings.json(configuration) file.
 
 ## How to handle missing commits
-We are storing all the commits(occuring in the shared path) in the Azure Table. You can go to the Azure table and retrieve the entires with the value of commit id as the missing commit. There is a boolean field called "mirrored", switch its value to be false and then this commit will be picked up by the tool in the next iteration.
+We are storing all the commits (occurring in the shared path) in the Azure Table. You can go to the Azure table and retrieve the entires with the value of commit id as the missing commit. There is a boolean field called "mirrored", switch its value to be false and then this commit will be picked up by the tool in the next iteration.
 There is also another column called "PR" which will contain the reason about why this commit was skipped in the first place. 
 
 ## How to resolve merge conflicts
@@ -44,6 +44,6 @@ In order to use this tool for any other pair of repos, you need to take followin
 ## How to populate the commit table
 This can be done in 2 ways
 - Using [Microsoft.DotNet.GitSync.CommitManager](../Microsoft.DotNet.GitSync.CommitManager/README.md) tool.
-- Using the LastSynchronisedCommit property of RepositoryInfo object. Although this is sufficent for mirroring all the commits, but it should only be used as a fail safe as it is little bit less reliable and results in more missing commits.
+- Using the LastSynchronisedCommit property of RepositoryInfo object. Although this is sufficient for mirroring all the commits, but it should only be used as a fail safe as it is little bit less reliable and results in more missing commits.
 
 [Related Documentation](../../Documentation/GitSyncTools.md )

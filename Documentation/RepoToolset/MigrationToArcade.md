@@ -73,7 +73,7 @@ The following applies to CI build definition, not PR validation build definition
   - Set SemanticVersioningV1 property to true if you want to continue using SemVer1.
 
 ### XUnit updated
--	Arcade uses XUnit 2.4.1 preview by default, which introduces new diagnostics that might fail the build.
+-	Arcade uses XUnit 2.4.1 by default, which introduces new diagnostics that might fail the build.
 -	You can override the version in Version.props if absolutely necessary.
 
 ### Output directory layout change

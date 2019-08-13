@@ -12,7 +12,7 @@
 
     Optional properties:
 
-    PushToBlobFeed_Overwrite - Set to true if you want to allow overrriting of existing files or packages. Defaults to 'false'.
+    PushToBlobFeed_Overwrite - Set to true if you want to allow overwriting of existing files or packages. Defaults to 'false'.
     PushToBlobFeed_MaxClients - Number of clients to push in parallel.
 
     FileRelativePathBase - The base relative path from the blob feed root for any files uploaded. Defaults to 'assets'.
@@ -27,7 +27,7 @@
     FilesToPublishPattern - Property to declare a file glob for selecting the files to be pushed. (eg. $(OutputPath)*.zip)
     FilesToPublish - Item group that contains a list of files to be pushed, if glob isn't enough.
     %(RelativeBlobPath) - Metadata that can be put on file items to control the relative path where the file
-    goes underneath the blob feed. If not specfied it is default based on the FileRelativePathBase
+    goes underneath the blob feed. If not specified it is default based on the FileRelativePathBase
 
     Specifying build output manifest values:
 
@@ -53,6 +53,9 @@
   <UsingTask TaskName="PushToBlobFeed" AssemblyFile="$(_MicrosoftDotNetBuildTasksFeedTaskDir)Microsoft.DotNet.Build.Tasks.Feed.dll"/>
   <UsingTask TaskName="PushToAzureDevOpsArtifacts" AssemblyFile="$(_MicrosoftDotNetBuildTasksFeedTaskDir)Microsoft.DotNet.Build.Tasks.Feed.dll"/>
   <UsingTask TaskName="PushArtifactsInManifestToFeed" AssemblyFile="$(_MicrosoftDotNetBuildTasksFeedTaskDir)Microsoft.DotNet.Build.Tasks.Feed.dll"/>
+  <UsingTask TaskName="PublishArtifactsInManifest" AssemblyFile="$(_MicrosoftDotNetBuildTasksFeedTaskDir)Microsoft.DotNet.Build.Tasks.Feed.dll"/>
+  <UsingTask TaskName="CreateAzureDevOpsFeed" AssemblyFile="$(_MicrosoftDotNetBuildTasksFeedTaskDir)Microsoft.DotNet.Build.Tasks.Feed.dll" />
+  <UsingTask TaskName="CreateInternalBlobFeed" AssemblyFile="$(_MicrosoftDotNetBuildTasksFeedTaskDir)Microsoft.DotNet.Build.Tasks.Feed.dll" />
   <UsingTask TaskName="ExecWithRetriesForNuGetPush" AssemblyFile="$(_MicrosoftDotNetBuildTasksFeedTaskDir)Microsoft.DotNet.Build.Tasks.Feed.dll" />
   <UsingTask TaskName="ParseBuildManifest" AssemblyFile="$(_MicrosoftDotNetBuildTasksFeedTaskDir)Microsoft.DotNet.Build.Tasks.Feed.dll" />
   

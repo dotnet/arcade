@@ -18,7 +18,7 @@ When API Compat identifies an error it will log the error and fail the build.  I
 
 `@(ResolvedMatchingContract)` - should point to a single file that represents the contract to validate
     %(DependencyPaths) - optional, specifies a semi-colon delimited set of paths that contain the assembly dependencies of this contract
-`$(ContractDependencyPaths)` - optional, speicifies a semi-colon delimited set of paths that contain the assembly dependencies of this contract
+`$(ContractDependencyPaths)` - optional, specifies a semi-colon delimited set of paths that contain the assembly dependencies of this contract
 
 ## Additional settings
 

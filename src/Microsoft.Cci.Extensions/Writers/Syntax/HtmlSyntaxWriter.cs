@@ -96,7 +96,7 @@ namespace Microsoft.Cci.Writers.Syntax
         {
             if (_writeColor != null)
             {
-                // Need to not get into an infinte loop
+                // Need to not get into an infinite loop
                 Action write = _writeColor;
                 _writeColor = null;
                 write();
@@ -129,7 +129,7 @@ namespace Microsoft.Cci.Writers.Syntax
             return new DisposeAction(() =>
             {
                 _hasColor = false;
-                // Only write if we wrote the begining tag
+                // Only write if we wrote the beginning tag
                 if (_writeColor == null)
                     WriteCore("</span>");
 
@@ -152,7 +152,7 @@ namespace Microsoft.Cci.Writers.Syntax
 
             return new DisposeAction(() =>
             {
-                // Only write if we wrote the begining tag
+                // Only write if we wrote the beginning tag
                 if (_writeBackground == null)
                     WriteCore("</span>");
 

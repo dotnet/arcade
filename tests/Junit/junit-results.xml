@@ -2,10 +2,10 @@
 <testsuites>
    <testsuite name="Pizza" errors="0" skipped="1" tests="3" failures="1" time="0.006" timestamp="2013-05-24T10:23:58">
       <testcase classname="PizzaTests" name="cheese" time="0.006">
-         <failure message="test failure">Assertion failed</failure>
+         <failure message="Intentional Failure">This test is supposed to fail. It is used to verify that test reporting works.</failure>
       </testcase>
       <testcase classname="PizzaTests" name="cheese2" time="0.006">
-         <error message="test failure">Assertion failed</error>
+         <error message="Intentional Failure">This test is supposed to fail. It is used to verify that test reporting works.</error>
       </testcase>
       <testcase classname="PizzaTests" name="pepperoni" time="0">
          <skipped />

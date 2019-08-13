@@ -3,47 +3,29 @@
 <Project>
 
   <PropertyGroup>
-    <IncludeTestFrameworkReferences>true</IncludeTestFrameworkReferences>
     <TestRunnerConfigPath>$(TestAssetsDir)xunit.runner.json</TestRunnerConfigPath>
     <TestResultsName>testResults.xml</TestResultsName>
-    <RemoteExecutorHostName>Microsoft.DotNet.RemoteExecutorHost</RemoteExecutorHostName>
-
-    <GenerateRunScriptDependsOn>ValidateTargetOSTrait;$(GenerateRunScriptDependsOn);</GenerateRunScriptDependsOn>
+    <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- Test runner config file. -->
-    <SupplementalTestData Condition="'$(SkipTestRunnerConfigCopying)' != 'true'" Include="$(TestRunnerConfigPath)" />
-    <SupplementalTestData Include="$(RuntimePath)Microsoft.DotNet.XUnitExtensions.dll" />
-    <SupplementalTestData Include="$(RuntimePath)xunit.assert.dll" />
-    <SupplementalTestData Include="$(RuntimePath)xunit.core.dll" />
-    <SupplementalTestData Include="$(RuntimePath)xunit.abstractions.dll" />
-    <SupplementalTestData Include="$(RuntimePath)CoreFx.Private.TestUtilities.dll" />
-  </ItemGroup>
+    <PackageReference Condition="'$(IncludeRemoteExecutor)' == 'true'" Include="Microsoft.DotNet.RemoteExecutor" Version="$(MicrosoftDotNetRemoteExecutorPackageVersion)" />
 
-  <!-- Supplemental test data. -->
-  <ItemGroup Condition="'$(BuildingNETCoreAppVertical)' == 'true'">
-    <SupplementalTestData Include="$(RuntimePath)$(TestRunnerName)" />
-    <SupplementalTestData Include="$(TestRuntimeConfigPath)" DestinationName="$(TestRunnerNameWithoutExtension).runtimeconfig.json" />
-    <SupplementalTestData Condition="'$(IncludeRemoteExecutor)' == 'true'" Include="$(RuntimePath)Microsoft.DotNet.RemoteExecutor.dll" />
-    <SupplementalTestData Condition="'$(IncludeRemoteExecutor)' == 'true'" Include="$(RuntimePath)$(RemoteExecutorHostName).dll" />
-    <SupplementalTestData Condition="'$(IncludeRemoteExecutor)' == 'true'" Include="$(TestRuntimeConfigPath)" DestinationName="$(RemoteExecutorHostName).runtimeconfig.json" />
-    <SupplementalTestData Include="$(RuntimePath)xunit.execution.dotnet.dll" />
-    <SupplementalTestData Include="$(RuntimePath)xunit.runner.reporters.netcoreapp10.dll" />
-    <SupplementalTestData Include="$(RuntimePath)xunit.runner.utility.netcoreapp10.dll" />
-  </ItemGroup>
+    <PackageReference Include="Microsoft.DotNet.XUnitExtensions" Version="$(MicrosoftDotNetXUnitExtensionsPackageVersion)" />
+    <!-- Excluding xunit.core/build as it enables deps file generation. -->
+    <PackageReference Include="xunit" Version="$(XUnitPackageVersion)" ExcludeAssets="build" />
+    <PackageReference Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp'" Include="Microsoft.DotNet.XUnitConsoleRunner" Version="$(MicrosoftDotNetXUnitConsoleRunnerPackageVersion)" />
+    <PackageReference Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'" Include="xunit.runner.console" Version="$(XUnitPackageVersion)" />
 
-  <ItemGroup Condition="'$(BuildingNETFxVertical)' == 'true'">
-    <SupplementalTestData Include="$(RuntimePath)$(TestRunnerName)" />
-    <SupplementalTestData Include="$(TestRuntimeConfigPath)" DestinationName="$(TestRunnerName).config" />
-    <SupplementalTestData Condition="'$(IncludeRemoteExecutor)' == 'true'" Include="$(RuntimePath)Microsoft.DotNet.RemoteExecutor.dll" />
-    <SupplementalTestData Condition="'$(IncludeRemoteExecutor)' == 'true'" Include="$(RuntimePath)$(RemoteExecutorHostName).exe" />
-    <SupplementalTestData Condition="'$(IncludeRemoteExecutor)' == 'true'" Include="$(TestRuntimeConfigPath)" DestinationName="$(RemoteExecutorHostName).exe.config" />
-    <SupplementalTestData Include="$(RuntimePath)xunit.execution.desktop.dll" />
-    <SupplementalTestData Include="$(RuntimePath)xunit.runner.reporters.net452.dll" />
-    <SupplementalTestData Include="$(RuntimePath)xunit.runner.utility.net452.dll" />
+    <!-- Microsoft.Net.Test.Sdk brings a lot of assemblies with it. To reduce helix payload submission size we disable it on CI. -->
+    <PackageReference Condition="'$(ArchiveTest)' != 'true'" Include="Microsoft.NET.Test.Sdk" Version="$(MicrosoftNETTestSdkPackageVersion)" />
+    <PackageReference Condition="'$(ArchiveTest)' != 'true'" Include="xunit.runner.visualstudio" Version="$(XUnitPackageVersion)" />
+    <!--
+      Microsoft.Net.Test.Sdk has a dependency on Newtonsoft.Json v9.0.1. We upgrade the dependency version
+      with the one used in corefx to have a consistent set of dependency versions. Additionally this works
+      around a dupliate type between System.Runtime.Serialization.Formatters and Newtonsoft.Json.
+    -->
+    <PackageReference Condition="'$(ArchiveTest)' != 'true'" Include="Newtonsoft.Json" Version="$(NewtonsoftJsonPackageVersion)" />
   </ItemGroup>
-
-  <Import Project="$(MSBuildThisFileDirectory)References.props" />
 
 </Project>

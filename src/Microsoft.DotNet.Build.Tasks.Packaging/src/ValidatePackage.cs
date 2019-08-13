@@ -42,8 +42,8 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
 
         /// <summary>
         /// Frameworks supported by this package
-        ///   Identity: name of framework, can suffx '+' to indicate all later frameworks under validation.
-        ///   RuntimeIDs: Semi-colon seperated list of runtime IDs.  If specified overrides the value specified in Frameworks.
+        ///   Identity: name of framework, can suffix '+' to indicate all later frameworks under validation.
+        ///   RuntimeIDs: Semi-colon separated list of runtime IDs.  If specified overrides the value specified in Frameworks.
         ///   Version: version of API supported
         /// </summary>
         [Required]
@@ -56,7 +56,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
         /// <summary>
         /// Frameworks to evaluate.
         ///   Identity: Framework
-        ///   RuntimeIDs: Semi-colon seperated list of runtime IDs
+        ///   RuntimeIDs: Semi-colon separated list of runtime IDs
         /// </summary>
         [Required]
         public ITaskItem[] Frameworks

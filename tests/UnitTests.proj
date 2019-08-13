@@ -14,9 +14,8 @@
 
     <EnableAzurePipelinesReporter>true</EnableAzurePipelinesReporter>
     <TestRunNamePrefix>$(AGENT_JOBNAME)</TestRunNamePrefix>
-    
+
     <EnableXUnitReporter>true</EnableXUnitReporter>
-    <FailOnMissionControlTestFailure>true</FailOnMissionControlTestFailure>
   </PropertyGroup>
 
   <ItemGroup>
@@ -39,6 +38,7 @@
   <ItemGroup>
     <AzurePipelinesExpectedTestFailure Include="tests.UnitTest1.TestMethod1"/>
     <AzurePipelinesExpectedTestFailure Include="tests.UnitTest1.TestMethod4"/>
+    <AzurePipelinesExpectedTestFailure Include="tests.UnitTest2.ExpectedFailureTheoryTest"/>
   </ItemGroup>
 
   <ItemGroup>
@@ -72,7 +72,7 @@
   <ItemGroup Condition=" '$(HelixAccessToken)' == '' ">
     <HelixTargetQueue Include="Debian.9.Amd64.Open"/>
     <HelixTargetQueue Include="RedHat.7.Amd64.Open"/>
-    <HelixTargetQueue Include="Windows.10.Amd64.ServerRS4.Open"/>
+    <HelixTargetQueue Include="Windows.10.Amd64.Open"/>
   </ItemGroup>
 
   <PropertyGroup Condition="!$(HelixTargetQueue.StartsWith('Windows'))">
@@ -91,6 +91,22 @@
   </PropertyGroup>
   <Target Name="Pack"/>
 
+  <!-- Yields an existing archive that will fail if ArchivePayload doesn't work -->
+  <Target Name="ZipPrexistingArchive" BeforeTargets="Build">
+      <MakeDir Directories="$(IntermediateOutputPath)\correlationarchivepayload" /> 
+      <WriteLinesToFile
+           File="$(IntermediateOutputPath)\correlationarchivepayload\testArchivePayload.txt"
+           Lines="I am a test Archive Payload"
+           Overwrite="true" />
+      <ZipDirectory Overwrite="True"
+          SourceDirectory="$(IntermediateOutputPath)\correlationarchivepayload"
+          DestinationFile="$(MSBuildProjectDirectory)\archivepayload.zip" />
+      <RemoveDir Directories="$(IntermediateOutputPath)\correlationarchivepayload" />
+  </Target>
+  <!-- Attach the ArchivePayload to all Helix work items to validate uploading them (and via logs whether caching occurs) -->
+  <ItemGroup>
+      <HelixCorrelationPayload Include="$(MSBuildProjectDirectory)\archivepayload.zip" />
+  </ItemGroup>
+
   <Import Project="$(MSBuildThisFileDirectory)\..\src\Microsoft.DotNet.Helix\Sdk\sdk\Sdk.targets"/>
-  <!-- <Import Sdk="Microsoft.DotNet.Helix.Sdk" Project="Sdk.targets"/> -->
 </Project>

@@ -2,44 +2,47 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using Microsoft.ML.Runtime.Api;
+using Microsoft.ML.Data;
 using Newtonsoft.Json;
 using System.Collections.Generic;
-using System.Runtime.Serialization;
 
 namespace Microsoft.DotNet.GitHub.IssueLabeler
 {
     public class GitHubIssue
     {
-        [Column(ordinal: "0")]
-        public string ID;
-
         [JsonIgnore]
-        [Column(ordinal: "1")]
+        [LoadColumn(0)]
         public string Area;
 
-        [Column(ordinal: "2")]
+        [LoadColumn(1)]
         public string Title;
 
-        [DataMember(Name = "body")]
-        [Column(ordinal: "3")]
-        public string Description;
+        [LoadColumn(2)]
+        [ColumnName("Description")]
+        public string Body;
 
-        [DataMember(Name = "labels")]
         [NoColumn]
         public List<object> Labels { get; set; }
 
-        [DataMember(Name = "milestone")]
         [NoColumn]
         public Milestone Milestone { get; set; }
 
-        [DataMember(Name = "number")]
         [NoColumn]
         public int Number { get; set; }
+
+        [JsonIgnore]
+        [NoColumn]
+        public GithubObjectType IssueOrPr { get; set; }
     }
 
     public class Milestone
     {
         public int Number { get; set; }
+    }
+
+    public enum GithubObjectType 
+    {
+        PullRequest,
+        Issue
     }
 }

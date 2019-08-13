@@ -4,7 +4,7 @@
     <TargetFrameworks>netstandard2.0</TargetFrameworks>
     <AssetTargetFallback>$(PackageTargetFallback)portable-net45+win8;</AssetTargetFallback>
     <ExcludeFromSourceBuild>true</ExcludeFromSourceBuild>
-    <IsPackable>false</IsPackable>
+    <IsPackable>true</IsPackable>
   </PropertyGroup>
 
   <PropertyGroup>

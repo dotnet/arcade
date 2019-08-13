@@ -29,7 +29,7 @@
   <Target Name="RunTests"
           Inputs="@(TestToRun);*"
           Outputs="%(TestToRun.ResultsStdOutPath);%(TestToRun.ResultsXmlPath);%(TestToRun.ResultsHtmlPath)">
-
+    <Telemetry EventName="NETCORE_ENGINEERING_TELEMETRY" EventData="Category=Test" />
     <PropertyGroup>
       <_TestEnvironment>%(TestToRun.EnvironmentDisplay)</_TestEnvironment>
       <_TestAssembly>%(TestToRun.Identity)</_TestAssembly>

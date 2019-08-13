@@ -81,9 +81,13 @@ function Invoke-Block([scriptblock]$cmd) {
     }
 }
 
-function GetCommiterGitHubName($sha) {
+function GetCommitterGitHubName($sha) {
     $email = & git show -s --format='%ce' $sha
     $key = 'committer'
+
+    if ($email -eq '@dotnet-maestro') {
+        return 'dotnet-maestro'
+    }
 
     # Exclude noreply@github.com - these map to https://github.com/web-flow, which is the user account
     # added as the 'committer' when users commit via the GitHub web UI on their own PRs
@@ -93,7 +97,8 @@ function GetCommiterGitHubName($sha) {
     }
 
     if ($email -like '*@users.noreply.github.com') {
-        return $email -replace '@users.noreply.github.com', ''
+        [string[]] $userNames = ($email -replace '@users.noreply.github.com', '') -split '\+'
+        return $userNames | select -last 1
     }
     elseif ($script:emails[$email]) {
         return $script:emails[$email]
@@ -163,6 +168,8 @@ function GetOrCreateFork() {
 
 $workDir = "$PSScriptRoot/obj/$RepoOwner/$RepoName"
 New-Item "$PSScriptRoot/obj/" -ItemType Directory -ErrorAction Ignore | Out-Null
+            
+Invoke-Block { & git config --system core.longpaths true }
 
 $fetch = $true
 if (-not (Test-Path $workDir)) {
@@ -201,12 +208,12 @@ try {
 
     $authors = $commitsToMerge `
         | % { Write-Host -f Cyan "Merging:`t$(git log --format=$formatString -1 $_)"; $_ } `
-        | % { GetCommiterGitHubName $_ } `
+        | % { GetCommitterGitHubName $_ } `
         | ? { $_ -ne $null } `
         | select -Unique
 
-    if (-not $AllowAutomatedCommits -and (($authors | measure).Count -eq 1) -and ($authors | select -first 1) -eq 'aspnetci') {
-        Write-Host -ForegroundColor Yellow 'Skipping PR generation because it appears this PR would only contain automated commits by aspnetci'
+    if (-not $AllowAutomatedCommits -and (($authors | measure).Count -eq 1) -and ($authors | select -first 1) -eq 'dotnet-maestro') {
+        Write-Host -ForegroundColor Yellow 'Skipping PR generation because it appears this PR would only contain automated commits by @dotnet-maestro'
         exit 0
     }
 
@@ -227,7 +234,7 @@ try {
         $remoteName = 'fork'
 
         try {
-            # remove remote if it already exists and re-confgure
+            # remove remote if it already exists and re-configure
             Invoke-Block { & git remote remove fork }
         }
         catch { }

@@ -27,6 +27,6 @@ In order to use this tool for any other pair of repos, you need to take followin
 - You also need another table with information about repositories i.e. which repos need to be mirrored into which repos. The columns required will be SourceRepo and ReposToMirrorInto.
 - You also need to setup the [webhook](https://developer.github.com/webhooks/creating/) in all the repos whose commits need to be mirrored. You then need to check if the commit is in the shared path by looking at the webhook payload.
 - If the commit is in the shared path, you need to build and run this tool with appropriate arguments.
-- The webhook part could be done through [maestro](https://github.com/dotnet/versions/tree/master/Maestro) or you can write an Azure function which recieves the webhook payload and takes the required actions.
+- The webhook part could be done through [maestro](https://github.com/dotnet/versions/tree/master/Maestro) or you can write an Azure function which receives the webhook payload and takes the required actions.
 
 [Related Documentation](../../Documentation/GitSyncTools.md )

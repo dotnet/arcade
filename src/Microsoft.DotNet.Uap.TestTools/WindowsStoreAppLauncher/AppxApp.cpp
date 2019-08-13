@@ -168,7 +168,7 @@ void ProcessSmartyJob(HANDLE hProcess, const wchar_t* manifestPath)
     else
     {
       auto msg = MessageForHR(HRESULT_FROM_WIN32(err));
-      fwprintf(stderr, L"Error reading environment:\n%s\n", msg.c_str());
+      fwprintf_s(stderr, L"Error reading environment:\n%s\n", msg.c_str());
       throw runtime_error(string(msg.begin(), msg.end()));
     }
   }
@@ -181,20 +181,20 @@ void ProcessSmartyJob(HANDLE hProcess, const wchar_t* manifestPath)
       return;
     else
     {
-      fwprintf(stderr, L"Error reading environment:\n%s\n", MessageForHR(HRESULT_FROM_WIN32(err)).c_str());
+      fwprintf_s(stderr, L"Error reading environment:\n%s\n", MessageForHR(HRESULT_FROM_WIN32(err)).c_str());
       return;
     }
   }
   unique_char_array appxProcessFileName(new wchar_t[MAX_PATH], unique_char_deleter);
   if ((*p_GetProcessImageFileName)(hProcess, appxProcessFileName.get(), MAX_PATH) == 0)
   {
-    fwprintf(stderr, L"Error getting process file name:\n%s\n", MessageForHR(HRESULT_FROM_WIN32(GetLastError())).c_str());
+    fwprintf_s(stderr, L"Error getting process file name:\n%s\n", MessageForHR(HRESULT_FROM_WIN32(GetLastError())).c_str());
     return;
   }
   HRESULT hr = PathCchRemoveFileSpec(appxProcessFileName.get(), MAX_PATH);
   if (FAILED(hr))
   {
-    fwprintf(stderr, L"Error processing path:\n%s\n", MessageForHR(hr).c_str());
+    fwprintf_s(stderr, L"Error processing path:\n%s\n", MessageForHR(hr).c_str());
     return;
   }
   unique_char_array manifestDirectory(new wchar_t[MAX_PATH], unique_char_deleter);
@@ -202,7 +202,7 @@ void ProcessSmartyJob(HANDLE hProcess, const wchar_t* manifestPath)
   hr = PathCchRemoveFileSpec(manifestDirectory.get(), MAX_PATH);
   if (FAILED(hr))
   {
-    fwprintf(stderr, L"Error processing path:\n%s\n", MessageForHR(hr).c_str());
+    fwprintf_s(stderr, L"Error processing path:\n%s\n", MessageForHR(hr).c_str());
     return;
   }
   if (wcscmp(appxProcessFileName.get(), manifestDirectory.get()) == 0)
@@ -212,14 +212,14 @@ void ProcessSmartyJob(HANDLE hProcess, const wchar_t* manifestPath)
     HANDLE tmp = (*p_OpenJobObject)(JOB_OBJECT_ASSIGN_PROCESS, FALSE, smartyJobId.get());
     if (tmp == NULL)
     {
-      fwprintf(stderr, L"Error opening job object %s:\n%s\n", smartyJobId.get(), MessageForHR(HRESULT_FROM_WIN32(GetLastError())).c_str());
+      fwprintf_s(stderr, L"Error opening job object %s:\n%s\n", smartyJobId.get(), MessageForHR(HRESULT_FROM_WIN32(GetLastError())).c_str());
       return;
     }
     unique_ptr < void, add_pointer<decltype(CloseHandle)>::type> jobHandle(tmp, &CloseHandle);
     BOOL ret = (*p_AssignProcessToJobObject)(jobHandle.get(), hProcess);
     if (ret == 0)
     {
-      fwprintf(stderr, L"Error assigning appx process to job:\n%s\n%s\n", smartyJobId.get(), MessageForHR(HRESULT_FROM_WIN32(GetLastError())).c_str());
+      fwprintf_s(stderr, L"Error assigning appx process to job:\n%s\n%s\n", smartyJobId.get(), MessageForHR(HRESULT_FROM_WIN32(GetLastError())).c_str());
       return;
     }
   }
@@ -338,7 +338,7 @@ void AppxApp::EnableDebug(const wstring& debuggerCommandLine)
 {
   if (packageDebugSettings == nullptr)
     IFT(CoCreateInstance(CLSID_PackageDebugSettings, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&packageDebugSettings)));
-  wprintf(L"Package ID is %s\n", m_packageId.c_str());
+  wprintf_s(L"Package ID is %s\n", m_packageId.c_str());
   IFT(packageDebugSettings->EnableDebugging(m_packageId.c_str(), debuggerCommandLine.empty() ? nullptr : debuggerCommandLine.c_str(), nullptr));
 }
 
@@ -368,7 +368,7 @@ HRESULT AppxApp::GetAppContainerFolderPathInternal(wchar_t** appContainerFolderP
   std::unique_ptr<wchar_t, void(__stdcall *)(LPVOID)> folderPath(tempfolderPath, CoTaskMemFree);
 
   // Remove the trailing \AC from the path
-  size_t pathLength = wcslen(folderPath.get());
+  size_t pathLength = wcsnlen_s(folderPath.get(), SHORT_MAX);
 
   if (pathLength < 3)
   {
@@ -414,13 +414,13 @@ DWORD AppxApp::GetAppExitCode()
     char content[256];
     memset(content, '\0', 256 * sizeof(char));
     file.getline(content, 256);
-    exitCode = atoi(content);
-    wprintf(L"Process exited with return code(from exitcode.txt) %d.\n", exitCode);
+    exitCode = strtol(content, NULL, 10);
+    wprintf_s(L"Process exited with return code(from exitcode.txt) %d.\n", exitCode);
   }
   else
   {
     if (GetExitCodeProcess(m_hProcess, &exitCode) != 0)
-      wprintf(L"Process has just exited with return code %d.\n", exitCode);
+      wprintf_s(L"Process has just exited with return code %d.\n", exitCode);
   }
 
   return exitCode;

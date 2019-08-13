@@ -30,6 +30,7 @@
     <GenerateBuildManifest Artifacts="@(ItemsToPush)"
                            OutputPath="$(AssetManifestFilePath)"
                            BuildId="$(BUILD_BUILDNUMBER)"
+                           BuildData="$(ManifestBuildData)"
                            RepoUri="$(BUILD_REPOSITORY_URI)"
                            RepoBranch="$(BUILD_SOURCEBRANCH)"
                            RepoCommit="$(BUILD_SOURCEVERSION)" />

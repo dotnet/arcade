@@ -7,12 +7,7 @@
     <TestAssembly Condition="'$(TestAssembly)' == ''">$(TargetFileName)</TestAssembly>
     <TestAssemblyFullPath>$([MSBuild]::NormalizePath('$(TestPath)', '$(TestAssembly)'))</TestAssemblyFullPath>
     <RunWorkingDirectory>$(TestPath)</RunWorkingDirectory>
-    <ArchiveTest Condition="'$(ArchiveTest)' == '' AND ('$(ArchiveTests.ToLower())' == 'all' OR $(MSBuildProjectName.EndsWith('.$(ArchiveTests)')))">true</ArchiveTest>
-
-    <!-- Publish the test data as part of the build to enable VS test runs. -->
-    <PrepareForRunDependsOn>$(PrepareForRunDependsOn);PublishSupplementalTestData;</PrepareForRunDependsOn>
-    <!-- Clean leftovers not tracked by FileWrites. -->
-    <CleanDependsOn>$(CleanDependsOn);CleanTestPath;</CleanDependsOn>
+    <ArchiveTest Condition="'$(ArchiveTest)' == '' AND ('$(ArchiveTests.ToLower())' == 'all' OR $(MSBuildProjectName.ToLower().EndsWith('.$(ArchiveTests.ToLower())')))">true</ArchiveTest>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -29,51 +24,15 @@
 
     <RunScriptHost Condition="'$(TargetOS)' == 'Windows_NT'">$(RunScriptHostDir)dotnet.exe</RunScriptHost>
     <RunScriptHost Condition="'$(TargetOS)' != 'Windows_NT'">$(RunScriptHostDir)dotnet</RunScriptHost>
-
-    <RunScriptGlobalToolsDir Condition="'$(TargetOS)' == 'Windows_NT'">%GLOBAL_TOOLS_DIR%\</RunScriptGlobalToolsDir>
-    <RunScriptGlobalToolsDir Condition="'$(TargetOS)' != 'Windows_NT'">$GLOBAL_TOOLS_DIR/</RunScriptGlobalToolsDir>
   </PropertyGroup>
 
-  <Target Name="PublishSupplementalTestData"
-          DependsOnTargets="$(PublishSupplementalTestDataDependsOn)"
-          Inputs="@(SupplementalTestDataDir);%(SupplementalTestDataDir.Identity)"
-          Outputs="unused">
-
-    <PropertyGroup>
-      <_SupplementalTestDataDir>%(SupplementalTestDataDir.Identity)</_SupplementalTestDataDir>
-    </PropertyGroup>
-
-    <ItemGroup>
-      <_SupplementalTestData Include="@(SupplementalTestData)">
-        <DestinationDir Condition="'%(SupplementalTestData.DestinationDir)' == ''">%(RecursiveDir)</DestinationDir>
-        <DestinationName Condition="'%(SupplementalTestData.DestinationName)' == ''">%(Filename)%(Extension)</DestinationName>
-      </_SupplementalTestData>
-    </ItemGroup>
-
-    <Copy SourceFiles="@(_SupplementalTestData)"
-          DestinationFiles="@(_SupplementalTestData -> '$([MSBuild]::NormalizePath('$(_SupplementalTestDataDir)', '%(DestinationDir)', '%(DestinationName)'))')"
-          SkipUnchangedFiles="$(SkipCopyUnchangedFiles)"
-          OverwriteReadOnlyFiles="$(OverwriteReadOnlyFiles)"
-          Retries="$(CopyRetryCount)"
-          RetryDelayMilliseconds="$(CopyRetryDelayMilliseconds)"
-          UseHardlinksIfPossible="$(CreateHardLinksForCopyFilesToOutputDirectoryIfPossible)">
-      <Output TaskParameter="DestinationFiles" ItemName="FileWrites" />
-    </Copy>
-
-  </Target>
-
-  <!-- Archive test binaries along with supporting files. -->
+  <!-- Archive test binaries. -->
   <Target Name="ArchiveTests"
           Condition="'$(ArchiveTest)' == 'true'"
           AfterTargets="PrepareForRun"
           DependsOnTargets="GenerateRunScript">
 
     <Error Condition="'$(TestArchiveTestsDir)' == ''" Text="TestArchiveTestsDir property to archive the test folder must be set." />
-
-    <!-- Copy additional test dependencies. -->
-    <Copy SourceFiles="@(TestArchiveDependencies)"
-          DestinationFolder="$(TestPath)"
-          SkipUnchangedFiles="true" />
 
     <MakeDir Directories="$(TestArchiveTestsDir)" />
     <ZipDirectory SourceDirectory="$(TestPath)"
@@ -83,8 +42,7 @@
   </Target>
 
   <UsingTask TaskName="GenerateRunScript" AssemblyFile="$(CoreFxTestingAssemblyPath)"/>
-  <Target Name="GenerateRunScript"
-          DependsOnTargets="$(GenerateRunScriptDependsOn)">
+  <Target Name="GenerateRunScript">
 
     <PropertyGroup>
       <!-- RSP file support. -->
@@ -119,10 +77,9 @@
       <RunScriptCommands Include="@(PostRunScriptCommands)" />
     </ItemGroup>
 
-    <GenerateRunScript
-      RunCommands="@(RunScriptCommands)"
-      TemplatePath="$(RunScriptInputPath)"
-      OutputPath ="$(RunScriptOutputPath)" />
+    <GenerateRunScript RunCommands="@(RunScriptCommands)"
+                       TemplatePath="$(RunScriptInputPath)"
+                       OutputPath="$(RunScriptOutputPath)" />
 
     <Exec Condition="'$(TargetOS)' != 'Windows_NT'" Command="chmod +x $(RunScriptOutputPath)" />
 
@@ -188,8 +145,7 @@
            Text="Test assembly couldn't be found. Make sure to build the test project first." />
 
     <PropertyGroup>
-      <RunTestsCommand>"$(RunScriptOutputPath)" --runtime-path "$(TestHostRootPath.TrimEnd('\/'))" --dotnet-root "$(DotNetRoot.TrimEnd('\/'))"</RunTestsCommand>
-      <RunTestsCommand Condition="'$(UseGlobalTools)' == 'true'">$(RunTestsCommand) --global-tools-dir "$(GlobalToolsDir.TrimEnd('\/'))"</RunTestsCommand>
+      <RunTestsCommand>"$(RunScriptOutputPath)" --runtime-path "$(TestHostRootPath.TrimEnd('\/'))"</RunTestsCommand>
       <RunTestsCommand Condition="'$(TestRspFile)' != ''">$(RunTestsCommand) --rsp-file "$(TestRspFile)"</RunTestsCommand>
     </PropertyGroup>
 
@@ -210,18 +166,7 @@
 
   </Target>
 
-  <!--
-    Manual clean step for TestPath.
-    Necessary as we are copying files into the TestPath as part of the Test Target after the build.
-  -->
-  <Target Name="CleanTestPath" Condition="Exists('$(TestPath)')">
-
-    <RemoveDir Directories="$(TestPath)"
-               ContinueOnError="WarnAndContinue" />
-
-  </Target>
-
-  <Import Condition="'$(BuildingUAPVertical)' == 'true'" Project="$(MSBuildThisFileDirectory)Core.uap.targets" />
+  <Import Condition="'$(TargetFrameworkIdentifier)' == 'UAP'" Project="$(MSBuildThisFileDirectory)Core.uap.targets" />
 
   <!--
     LaunchSettings.json support.
@@ -233,19 +178,10 @@
   <Import Condition="'$(EnableLaunchSettings)' == 'true'" Project="$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', 'launchSettings', 'LaunchSettings.targets'))" />
 
   <!--
-    Visual Studio Test Framework (vstest) support.
-    References the Microsoft.Net.Test.Sdk and the VS test runner.
-
-    Inputs:
-      - EnableVSTestReferences: Intended to be passed in as a global property or being set.
-  -->
-  <Import Condition="'$(EnableVSTestReferences)' == 'true'" Project="$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', 'vstest', 'VSTest.targets'))" />
-
-  <!--
     Unit/Functional/Integration test support.
     Supported runners: xunit.
   -->
-  <Import Condition="'$(IsUnitTestProject)' == 'true' OR '$(IsIntegrationTestProject)' == 'true'" Project="$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', 'test', 'Test.targets'))" />
+  <Import Project="$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', 'test', 'Test.targets'))" />
 
   <!--
     Code Coverage support.

@@ -38,6 +38,9 @@
 
     <!-- Default test runner -->
     <TestRunnerName Condition="'$(UsingToolXUnit)' == 'true'">XUnit</TestRunnerName>
+
+    <!-- exclude test projects from source-build by default -->
+    <ExcludeFromSourceBuild Condition="'$(ExcludeFromSourceBuild)' == ''">true</ExcludeFromSourceBuild>
   </PropertyGroup>
 
   <!-- Import specialized props files of supported test runners -->

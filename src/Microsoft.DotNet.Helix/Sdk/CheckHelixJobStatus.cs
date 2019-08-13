@@ -1,11 +1,9 @@
-using Microsoft.Build.Framework;
-using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.DotNet.Helix.Client.Models;
+using Microsoft.Build.Framework;
+using Newtonsoft.Json;
 
 namespace Microsoft.DotNet.Helix.Sdk
 {
@@ -17,59 +15,63 @@ namespace Microsoft.DotNet.Helix.Sdk
         [Required]
         public ITaskItem[] Jobs { get; set; }
 
+        [Required]
+        public ITaskItem[] FailedWorkItems { get; set; }
+
         public bool FailOnWorkItemFailure { get; set; } = true;
 
         public bool FailOnMissionControlTestFailure { get; set; } = false;
 
-        protected override async Task ExecuteCore()
+        protected override async Task ExecuteCore(CancellationToken cancellationToken)
         {
-            List<string> jobNames = Jobs.Select(j => j.GetMetadata("Identity")).ToList();
+            cancellationToken.ThrowIfCancellationRequested();
+            var jobNames = Jobs.Select(j => j.GetMetadata("Identity")).ToList();
 
-            await Task.WhenAll(jobNames.Select(CheckHelixJobAsync));
-        }
-
-        private async Task CheckHelixJobAsync(string jobName)
-        {
-            await Task.Yield();
-            Log.LogMessage($"Checking status of job {jobName}");
-            var status = await HelixApi.RetryAsync(
-                () => HelixApi.Job.PassFailAsync(jobName),
-                LogExceptionRetry);
-            if (status.Working > 0)
-            {
-                Log.LogError(
-                    $"This task can only be used on completed jobs. There are {status.Working} of {status.Total} unfinished work items.");
-                return;
-            }
             if (FailOnWorkItemFailure)
             {
-                foreach (string failedWorkItem in status.Failed)
+                foreach (ITaskItem failedWorkItem in FailedWorkItems)
                 {
-                    Log.LogError($"Work item {failedWorkItem} in job {jobName} has failed.");
+                    var jobName = failedWorkItem.GetMetadata("JobName");
+                    var workItemName = failedWorkItem.GetMetadata("WorkItemName");
+                    var consoleUri = failedWorkItem.GetMetadata("ConsoleOutputUri");
+
+                    Log.LogError($"Work item {failedWorkItem} in job {jobName} has failed, logs available here: {consoleUri}.");
                 }
             }
 
             if (FailOnMissionControlTestFailure)
             {
-                for (; ; await Task.Delay(10000)) // delay every time this loop repeats
-                {
-                    if (await MissionControlTestProcessingDoneAsync(jobName))
-                    {
-                        break;
-                    }
-
-                    Log.LogMessage($"Job {jobName} is still processing xunit results.");
-                }
+                await Task.WhenAll(jobNames.Select(n => CheckMissionControlTestFailuresAsync(n, cancellationToken)));
             }
         }
 
-        private async Task<bool> MissionControlTestProcessingDoneAsync(string jobName)
+        private async Task CheckMissionControlTestFailuresAsync(string jobName, CancellationToken cancellationToken)
+        {
+            await Task.Yield();
+            cancellationToken.ThrowIfCancellationRequested();
+
+
+            Log.LogMessage($"Checking mission control test status of job {jobName}");
+            for (; ; await Task.Delay(10000, cancellationToken)) // delay every time this loop repeats
+            {
+                if (await MissionControlTestProcessingDoneAsync(jobName, cancellationToken))
+                {
+                    break;
+                }
+
+                Log.LogMessage($"Job {jobName} is still processing xunit results.");
+                cancellationToken.ThrowIfCancellationRequested();
+            }
+        }
+
+        private async Task<bool> MissionControlTestProcessingDoneAsync(string jobName,
+            CancellationToken cancellationToken)
         {
             var results = await HelixApi.Aggregate.JobSummaryAsync(
                 groupBy: ImmutableList.Create("job.name"),
                 maxResultSets: 1,
-                filterName: jobName
-            );
+                filterName: jobName,
+                cancellationToken: cancellationToken);
 
             if (results.Count != 1)
             {

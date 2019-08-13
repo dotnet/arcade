@@ -2,11 +2,13 @@
 
   <PropertyGroup>
     <TargetFramework>net472</TargetFramework>
+    <ExcludeFromSourceBuild>true</ExcludeFromSourceBuild>
   </PropertyGroup>
 
   <ItemGroup>
     <Compile Include="..\Common\TestUtilities\AssertEx.cs" Link="TestUtilities\AssertEx.cs" />
     <Compile Include="..\Common\TestUtilities\DiffUtil.cs" Link="TestUtilities\DiffUtil.cs" />
+    <Compile Include="..\Common\TestUtilities\MockEngine.cs" Link="TestUtilities\MockEngine.cs" />
   </ItemGroup>
 
   <ItemGroup>

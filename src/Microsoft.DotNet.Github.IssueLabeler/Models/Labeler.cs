@@ -56,7 +56,7 @@ namespace Microsoft.DotNet.GitHub.IssueLabeler
             };
         }
 
-        public async Task PredictAndApplyLabelAsync(int number, string title, string body, ILogger logger)
+        public async Task PredictAndApplyLabelAsync(int number, string title, string body, GithubObjectType issueOrPr, ILogger logger)
         {
             if (_client == null)
             {
@@ -65,26 +65,30 @@ namespace Microsoft.DotNet.GitHub.IssueLabeler
 
             var corefxIssue = new GitHubIssue
             {
-                ID = number.ToString(),
+                Number = number,
                 Title = title,
-                Description = body
+                Body = body,
+                IssueOrPr = issueOrPr
             };
 
-            string label = await Predictor.PredictAsync(corefxIssue, logger, _threshold);
-
+            string label = Predictor.Predict(corefxIssue, logger, _threshold);
             Issue issueGithubVersion = await _client.Issue.Get(_repoOwner, _repoName, number);
+            if (label.Equals("area-System.Net.Http.SocketsHttpHandler", StringComparison.OrdinalIgnoreCase))
+            {
+                label = "area-System.Net.Http";
+            }
 
             if (label != null && issueGithubVersion.Labels.Count == 0)
             {
                 var issueUpdate = new IssueUpdate();
                 issueUpdate.AddLabel(label);
-                issueUpdate.Milestone = issueGithubVersion.Milestone.Number; // The number of milestone associated with the issue.
+                issueUpdate.Milestone = issueGithubVersion.Milestone?.Number; // The number of milestone associated with the issue.
 
                 await _client.Issue.Update(_repoOwner, _repoName, number, issueUpdate);
             }
             else
             {
-                logger.LogInformation($"! The Model is not able to assign the label to the Issue {corefxIssue.ID} confidently.");
+                logger.LogInformation($"! The Model is not able to assign the label to the {issueOrPr} {corefxIssue.Number} confidently.");
             }
         }
     }

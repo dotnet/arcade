@@ -4,7 +4,6 @@
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.GitHub.IssueLabeler
@@ -24,21 +23,21 @@ namespace Microsoft.DotNet.GitHub.IssueLabeler
         [HttpPost]
         public async Task PostAsync([FromBody]IssueEventPayload data)
         {
-            GitHubIssue issue = data.Issue;
-            List<object> labels = issue.Labels;
+            GitHubIssue issueOrPullRequest = data.Issue ?? data.Pull_Request;
+            GithubObjectType issueOrPr = data.Issue == null ? GithubObjectType.PullRequest : GithubObjectType.Issue;
 
-            if (data.Action == "opened" && labels.Count == 0)
+            if (data.Action == "opened" && issueOrPullRequest.Labels.Count == 0)
             {
-                string title = issue.Title;
-                int number = issue.Number;
-                string body = issue.Description;
+                string title = issueOrPullRequest.Title;
+                int number = issueOrPullRequest.Number;
+                string body = issueOrPullRequest.Body;
 
-                await Issuelabeler.PredictAndApplyLabelAsync(number, title, body, Logger);
+                await Issuelabeler.PredictAndApplyLabelAsync(number, title, body, issueOrPr, Logger);
                 Logger.LogInformation("! Labeling completed");
             }
             else
             {
-                Logger.LogInformation($"! The issue {issue.Number.ToString()} is already opened or it already has a label");
+                Logger.LogInformation($"! The {issueOrPr} {issueOrPullRequest.Number} is already opened or it already has a label");
             }
         }
     }

@@ -73,7 +73,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
             Directory.CreateDirectory(OutputDirectory);
 
             // When AssemblyTargetFramework is set then this is an assembly that is being built by the current
-            // bulid. Appending the target framework means we will avoid name clashes. When it's not set then
+            // build. Appending the target framework means we will avoid name clashes. When it's not set then
             // this is a binary that is included in the build but not actually built here. Possible, remotely, 
             // that there will be multiple versions with the same target framework. Hence use the MVID as the 
             // suffix here to avoid clashes.
