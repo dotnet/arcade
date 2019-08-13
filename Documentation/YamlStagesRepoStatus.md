@@ -13,30 +13,29 @@ Target completion date is 8/13/2019.
 | Arcade                     | mawilkie         | Complete | ✔️ | |
 | Arcade-Services            | mawilkie         | Complete | ✔️ | |
 | Arcade-Validation          | mawilkie         | Complete | ✔️ | |
-| aspnet-AspNetCore          | dougbu    | On track | ➖ |  In PR https://github.com/aspnet/AspNetCore/pull/13040 |
-| aspnet-AspNetCore-Tooling  | dougbu    | Complete | ✔️ | |
-| aspnet-EntityFramework6    | dougbu/wtgodbe    | Complete | ✔️ | |
-| aspnet-EntityFrameworkCore | dougbu/wtgodbe    | Complete | ✔️ | |
-| aspnet-Blazor              | dougbu    | Complete | ✔️ | |
-| aspnet-Extensions          | dougbu/wtgodbe    | Complete | ✔️ | |
-| CLI                        | licavalc         | Complete | ✔️ |  No plan available |
+| aspnet-AspNetCore          | dougbu           | In progress | ➖  |  In PR https://github.com/aspnet/AspNetCore/pull/13040 |
+| aspnet-AspNetCore-Tooling  | dougbu           | Complete | ✔️ | |
+| aspnet-EntityFramework6    | dougbu/wtgodbe   | Complete | ✔️ | |
+| aspnet-EntityFrameworkCore | dougbu/wtgodbe   | Complete | ✔️ | |
+| aspnet-Blazor              | dougbu           | Complete | ✔️ | |
+| aspnet-Extensions          | dougbu/wtgodbe   | Complete | ✔️ | |
+| CLI                        | licavalc         | Complete | ✔️ | |
 | CLICommandLineParser       | licavalc         | N/A | |  This repo is not being developed anymore. We are taking a pinned version of it |
-| CoreClr                    | russellk/arobins         | On track | ➖ | Expected completion: 8/9 |
-| CoreFx                     | danmose/safern   | Complete | ✔️ | SourceLink disabled: https://github.com/dotnet/arcade/issues/3603 |
+| CoreClr                    | russellk/arobins | In progress | ➖ | bulk of the work is in master, working through publishing issues |
+| CoreFx                     | danmose/safern   | Complete | ✔️ | SourceLink validation disabled: https://github.com/dotnet/arcade/issues/3603 |
 | IoT                        | joperezr         | Complete | ✔️ | |
-| Core-SDK                   | licavalc         | At risk | ❌ |  We need clarity on how to do the blob storage publishing with YAML stages. |
-| Core-Setup                 | dleeapho         | At risk | ❌ |  Expected completion 8/21 |
+| Core-SDK                   | licavalc         | At risk | ❌ |  We need clarity on how to do the blob storage publishing with YAML stages: https://github.com/dotnet/arcade/issues/3607|
+| Core-Setup                 | dleeapho         | In progress | ➖ |  Expected completion 8/21 |
 | FSharp                     | brettfo          | Complete | ✔️ | |
 | MSBuild                    | licavalc         | At risk | ❌ |  No ETA yet. Investigation under way. |
-| nuget-NugetClient          | dtivel           | At risk | ❌ |  No plan available |
-| Roslyn                     | jaredpar         | At risk | ✔️ |  Complete with source link disabled |
-| SDK                        | licavalc         | In progress |  |  Running into issues with signing and asset publishing |
+| Roslyn                     | jaredpar         | Complete | ✔️ |  Complete with source link validation disabled |
+| SDK                        | licavalc         | In progress |  |  Running into issues with signing validation |
 | SourceLink                 | tmat             | Complete | ✔️ | |
 | Standard                   | danmose/wigodbe  | Complete | ✔️ | |
 | SymReader                  | tmat             | Complete | ✔️ | |
 | SymReader-Portable         | tmat             | Complete | ✔️ | |
 | Templating                 | vramak           | Complete | ✔️ | |
-| Test-Templates             | sasin            | At risk | ❌ |  No plan available |
+| Test-Templates             | sasin            | At risk  | ❌ |  No plan available |
 | Toolset                    | licavalc/riarenas| Complete | ✔️ | |
 | WebSDK                     | vramak           | Complete | ✔️ | |
 | WinForms                   | mmcgaw           | Complete | ✔️ | |
