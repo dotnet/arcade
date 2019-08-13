@@ -7,10 +7,11 @@ parameters:
     enable: false
     params: ''
 
-  # These parameters let the user customize the call to sdk-task.ps1
-  signingValidationAdditionalParams: ''
+  # These parameters let the user customize the call to sdk-task.ps1 for publishing
+  # symbols & general artifacts as well as for signing validation
   symbolPublishingAdditionalParameters: ''
   artifactsPublishingAdditionalParameters: ''
+  signingValidationAdditionalParams: ''
 
   # Which stages should finish execution before post-build stages start
   dependsOn: [build]
