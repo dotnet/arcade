@@ -8,9 +8,9 @@ parameters:
     params: ''
 
   # These parameters let the user customize the call to sdk-task.ps1
-  signingValidationAdditionalParams = ''
-  symbolPublishingAdditionalParameters = ''
-  artifactsPublishingAdditionalParameters = ''
+  signingValidationAdditionalParams: ''
+  symbolPublishingAdditionalParameters: ''
+  artifactsPublishingAdditionalParameters: ''
 
   # Which stages should finish execution before post-build stages start
   dependsOn: [build]
