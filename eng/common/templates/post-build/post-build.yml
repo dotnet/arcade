@@ -13,6 +13,9 @@ parameters:
   artifactsPublishingAdditionalParameters: ''
   signingValidationAdditionalParams: ''
 
+  # Used to let users override the target feed for an artifact category  
+  dotNetArtifactsCategory: '.NETCore'
+
   # Which stages should finish execution before post-build stages start
   dependsOn: [build]
 
@@ -96,18 +99,21 @@ stages:
     enableSymbolValidation: ${{ parameters.enableSymbolValidation }}
     symbolPublishingAdditionalParameters: ${{ parameters.symbolPublishingAdditionalParameters }}
     artifactsPublishingAdditionalParameters: ${{ parameters.artifactsPublishingAdditionalParameters }}
+    dotNetArtifactsCategory: ${{ parameters.dotNetArtifactsCategory }}
 
 - template: \eng\common\templates\post-build\channels\public-dev-release.yml
   parameters:
     enableSymbolValidation: ${{ parameters.enableSymbolValidation }}
     symbolPublishingAdditionalParameters: ${{ parameters.symbolPublishingAdditionalParameters }}
     artifactsPublishingAdditionalParameters: ${{ parameters.artifactsPublishingAdditionalParameters }}
+    dotNetArtifactsCategory: ${{ parameters.dotNetArtifactsCategory }}
 
 - template: \eng\common\templates\post-build\channels\netcore-tools-latest.yml
   parameters:
     enableSymbolValidation: ${{ parameters.enableSymbolValidation }}
     symbolPublishingAdditionalParameters: ${{ parameters.symbolPublishingAdditionalParameters }}
     artifactsPublishingAdditionalParameters: ${{ parameters.artifactsPublishingAdditionalParameters }}
+    dotNetArtifactsCategory: ${{ parameters.dotNetArtifactsCategory }}
 
 - template: \eng\common\templates\post-build\channels\public-validation-release.yml
   parameters:

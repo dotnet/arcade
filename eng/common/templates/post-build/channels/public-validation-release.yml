@@ -50,7 +50,7 @@ stages:
           filePath: eng\common\sdk-task.ps1
           arguments: -task PublishArtifactsInManifest -restore -msbuildEngine dotnet 
             /p:ChannelId=$(PublicValidationRelease_30_Channel_Id)
-            /p:ArtifactsCategory=$(_DotNetValidationArtifactsCategory)
+            /p:ArtifactsCategory='.NETCoreValidation'
             /p:IsStableBuild=$(IsStableBuild)
             /p:IsInternalBuild=$(IsInternalBuild)
             /p:RepositoryName=$(Build.Repository.Name)
