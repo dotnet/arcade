@@ -153,6 +153,7 @@ fi
 
 if [[ "$compare" == true ]]; then
   # extra_benchmark_dotnet_arguments=
+  # perflab_arguments=
   # queue=Ubuntu.1804.Amd64.Tiger.Perf.Open
 fi
 

@@ -45,6 +45,7 @@ if ($Internal) {
 
 if ($Compare) {
     # $Queue = "Windows.10.Amd64.19H1.Tiger.Perf.Open"
+    # $PerfLabArguments = ""
     # $ExtraBenchmarkDotNetArguments = ""
 }
 
