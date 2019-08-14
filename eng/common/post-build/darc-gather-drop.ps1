@@ -24,13 +24,13 @@ try {
   # would check whether the file exists that you can download it,
   # and that it won't conflict with other files.
   # https://github.com/dotnet/arcade/issues/3674
+  # Right now we can't remove continue-on-error because we ocassionally will have
+  # dependencies that have no associated builds (e.g. an old dependency).
+  # We need to add an option to baseline specific dependencies away, or add them manually
+  # to the BAR.
   darc gather-drop --non-shipping `
-    --dry-run
-    # Right now we can't remove this because we ocassionally will have
-    # dependencies that have no associated builds (e.g. an old dependency).
-    # We need to add an option to baseline specific dependencies away, or add them manually
-    # to the BAR.
-    --continue-on-error
+    --dry-run `
+    --continue-on-error `
     --id $BarBuildId `
     --output-dir $DropLocation `
     --bar-uri $MaestroApiEndpoint `
