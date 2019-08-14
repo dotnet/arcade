@@ -11,7 +11,7 @@ parameters:
   # symbols & general artifacts as well as for signing validation
   symbolPublishingAdditionalParameters: ''
   artifactsPublishingAdditionalParameters: ''
-  signingValidationAdditionalParams: ''
+  signingValidationAdditionalParameters: ''
 
   # Used to let users override the target feed for an artifact category  
   dotNetArtifactsCategory: '.NETCore'
@@ -64,7 +64,7 @@ stages:
               /p:PackageBasePath='$(Build.ArtifactStagingDirectory)/PackageArtifacts'
               /p:SignCheckExclusionsFile='$(Build.SourcesDirectory)/eng/SignCheckExclusionsFile.txt'
               /p:Configuration=Release 
-              ${{ parameters.signingValidationAdditionalParams }}
+              ${{ parameters.signingValidationAdditionalParameters }}
 
   - ${{ if eq(parameters.enableSourceLinkValidation, 'true') }}:
     - job:
@@ -100,26 +100,22 @@ stages:
     enableSymbolValidation: ${{ parameters.enableSymbolValidation }}
     symbolPublishingAdditionalParameters: ${{ parameters.symbolPublishingAdditionalParameters }}
     artifactsPublishingAdditionalParameters: ${{ parameters.artifactsPublishingAdditionalParameters }}
-    dotNetArtifactsCategory: ${{ parameters.dotNetArtifactsCategory }}
 
 - template: \eng\common\templates\post-build\channels\public-dev-release.yml
   parameters:
     enableSymbolValidation: ${{ parameters.enableSymbolValidation }}
     symbolPublishingAdditionalParameters: ${{ parameters.symbolPublishingAdditionalParameters }}
     artifactsPublishingAdditionalParameters: ${{ parameters.artifactsPublishingAdditionalParameters }}
-    dotNetArtifactsCategory: ${{ parameters.dotNetArtifactsCategory }}
 
 - template: \eng\common\templates\post-build\channels\netcore-tools-latest.yml
   parameters:
     enableSymbolValidation: ${{ parameters.enableSymbolValidation }}
     symbolPublishingAdditionalParameters: ${{ parameters.symbolPublishingAdditionalParameters }}
     artifactsPublishingAdditionalParameters: ${{ parameters.artifactsPublishingAdditionalParameters }}
-    dotNetArtifactsCategory: ${{ parameters.dotNetArtifactsCategory }}
 
 - template: \eng\common\templates\post-build\channels\public-validation-release.yml
   parameters:
     artifactsPublishingAdditionalParameters: ${{ parameters.artifactsPublishingAdditionalParameters }}
-    dotNetValidationArtifactsCategory: ${{ parameters.dotNetValidationArtifactsCategory }}
 
 - template: \eng\common\templates\post-build\channels\public-release.yml
   parameters:

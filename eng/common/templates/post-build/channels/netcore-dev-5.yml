@@ -2,8 +2,6 @@ parameters:
   enableSymbolValidation: true
   symbolPublishingAdditionalParameters: ''
   artifactsPublishingAdditionalParameters: ''
-  
-  dotNetArtifactsCategory: ''
 
 stages:
 - stage: NetCore_Dev5_Publish
@@ -81,7 +79,7 @@ stages:
           filePath: eng\common\sdk-task.ps1
           arguments: -task PublishArtifactsInManifest -restore -msbuildEngine dotnet 
             /p:ChannelId=$(NetCore_5_Dev_Channel_Id)
-            /p:ArtifactsCategory=${{ parameters.dotNetArtifactsCategory }}
+            /p:ArtifactsCategory=$(_DotNetArtifactsCategory)
             /p:IsStableBuild=$(IsStableBuild)
             /p:IsInternalBuild=$(IsInternalBuild)
             /p:RepositoryName=$(Build.Repository.Name)
