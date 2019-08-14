@@ -10,7 +10,9 @@ pool:
   vmImage: 'windows-latest'
 
 steps:
-- script: echo ##vso[task.setvariable variable=GIT_CURL_VERBOSE]1
+- script: |
+    echo ##vso[task.setvariable variable=GIT_CURL_VERBOSE]1
+    echo ##vso[task.setvariable variable=chcosta]foo
   displayName: set GIT_CURL_VERBOSE
 
 - checkout: self
