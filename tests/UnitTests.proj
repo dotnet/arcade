@@ -38,7 +38,7 @@
 
   <ItemGroup>
     <HelixWorkItem Include="XunitTest">
-      <Command>exit code 1</Command>
+      <Command>exit 1</Command>
     </HelixWorkItem>
   </ItemGroup>
   
