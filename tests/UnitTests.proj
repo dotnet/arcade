@@ -35,12 +35,6 @@
       <PayloadDirectory>$(MSBuildThisFileDirectory)Trx</PayloadDirectory>
     </HelixWorkItem>
   </ItemGroup>
-
-  <ItemGroup>
-    <HelixWorkItem Include="XunitTest">
-      <Command>exit /B 123132132</Command>
-    </HelixWorkItem>
-  </ItemGroup>
   
   <ItemGroup>
     <AzurePipelinesExpectedTestFailure Include="tests.UnitTest1.TestMethod1"/>
