@@ -1,0 +1,21 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+- master
+
+pool:
+  vmImage: 'windows-latest'
+
+steps:
+- script: echo ##vso[task.setvariable variable=GIT_CURL_VERBOSE]1
+  displayName: set GIT_CURL_VERBOSE
+
+- checkout: self
+  clean: true
+
+- script: |
+    echo GIT_CURL_VERBOSE: %GIT_CURL_VERBOSE%
+  displayName: 'Run a multi-line script'
