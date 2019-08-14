@@ -38,7 +38,7 @@
 
   <ItemGroup>
     <HelixWorkItem Include="XunitTest">
-      <Command>exit code 2146232797</Command>
+      <Command>exit code 2563</Command>
     </HelixWorkItem>
   </ItemGroup>
   
