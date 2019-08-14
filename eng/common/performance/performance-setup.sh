@@ -156,6 +156,11 @@ if [[ "$use_core_run" = true ]]; then
     mv $core_root_directory $new_core_root
 fi
 
+ci=true
+
+_script_dir=$(pwd)/eng/common
+. "$_script_dir/pipeline-logging-functions.sh"
+
 # Make sure all of our variables are available for future steps
 Write-PipelineSetVariable -name "UseCoreRun" -value "$use_core_run" -is_multi_job_variable false
 Write-PipelineSetVariable -name "Architecture" -value "$architecture" -is_multi_job_variable false
