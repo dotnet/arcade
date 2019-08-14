@@ -152,9 +152,9 @@ if [[ "$internal" == true ]]; then
 fi
 
 if [[ "$compare" == true ]]; then
-  # extra_benchmark_dotnet_arguments=
-  # perflab_arguments=
-  # queue=Ubuntu.1804.Amd64.Tiger.Perf.Open
+  extra_benchmark_dotnet_arguments=
+  perflab_arguments=
+  queue=Ubuntu.1804.Amd64.Tiger.Perf.Open
 fi
 
 common_setup_arguments="--frameworks $framework --queue $queue --build-number $build_number --build-configs $configurations"
@@ -177,7 +177,7 @@ if [[ "$use_core_run" = true ]]; then
     mv $core_root_directory $new_core_root
 fi
 
-if [[ "$use_baseline_core_run" = true]]; then
+if [[ "$use_baseline_core_run" = true ]]; then
   new_baseline_core_root=$payload_directory/Baseline_Core_Root
   mv $baseline_core_root_directory $new_baseline_core_root
 fi

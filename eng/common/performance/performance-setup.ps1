@@ -32,7 +32,7 @@ $HelixSourcePrefix = "pr"
 $Queue = "Windows.10.Amd64.ClientRS4.DevEx.15.8.Open"
 
 if ($Framework.StartsWith("netcoreapp")) {
-    $Queue = "Windows.10.Amd64.ClientRS4.Open"
+    $Queue = "Windows.10.Amd64.ClientRS5.Open"
 }
 
 if ($Internal) {
@@ -44,9 +44,9 @@ if ($Internal) {
 }
 
 if ($Compare) {
-    # $Queue = "Windows.10.Amd64.19H1.Tiger.Perf.Open"
-    # $PerfLabArguments = ""
-    # $ExtraBenchmarkDotNetArguments = ""
+    $Queue = "Windows.10.Amd64.19H1.Tiger.Perf.Open"
+    $PerfLabArguments = ""
+    $ExtraBenchmarkDotNetArguments = ""
 }
 
 $CommonSetupArguments="--frameworks $Framework --queue $Queue --build-number $BuildNumber --build-configs $Configurations"
