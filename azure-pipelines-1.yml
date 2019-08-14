@@ -10,7 +10,9 @@ pool:
   vmImage: 'windows-latest'
 
 steps:
-- powershell: Write-Host "echo ##vso[task.setvariable variable=GIT_CURL_VERBOSE]1"
+- script: |
+    echo "##vso[task.setvariable variable=GIT_CURL_VERBOSE]1"
+    echo "chcosta"
   displayName: set GIT_CURL_VERBOSE
 
 - checkout: self
