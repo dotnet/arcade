@@ -76,7 +76,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         [Required]
         public string NugetPath { get; set; }
 
-        private readonly Dictionary<string, FeedConfig> FeedConfigs = new Dictionary<string, FeedConfig>();
+        private readonly Dictionary<string, List<FeedConfig>> FeedConfigs = new Dictionary<string, List<FeedConfig>>();
 
         private readonly Dictionary<string, List<PackageArtifactModel>> PackagesByCategory = new Dictionary<string, List<PackageArtifactModel>>();
 
@@ -138,7 +138,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         Log.LogError($"Invalid FeedConfig entry. TargetURL='{feedConfig.TargetFeedURL}' Type='{feedConfig.Type}' Token='{feedConfig.FeedKey}'");
                     }
 
-                    FeedConfigs.Add(fc.ItemSpec.Trim().ToUpper(), feedConfig);
+                    string categoryKey = fc.ItemSpec.Trim().ToUpper();
+                    if (!FeedConfigs.TryGetValue(categoryKey, out var feedsList))
+                    {
+                        FeedConfigs[categoryKey] = new List<FeedConfig>();
+                    }
+                    FeedConfigs[categoryKey].Add(feedConfig);
                 }
 
                 // Return errors from parsing FeedConfig
@@ -168,21 +173,24 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 var category = packagesPerCategory.Key;
                 var packages = packagesPerCategory.Value;
 
-                if (FeedConfigs.TryGetValue(category, out FeedConfig feedConfig))
+                if (FeedConfigs.TryGetValue(category, out List<FeedConfig> feedConfigsForCategory))
                 {
-                    var feedType = feedConfig.Type.ToUpper();
+                    foreach (var feedConfig in feedConfigsForCategory)
+                    {
+                        var feedType = feedConfig.Type.ToUpper();
 
-                    if (feedType.Equals("AZDONUGETFEED"))
-                    {
-                        await PublishPackagesToAzDoNugetFeedAsync(packages, client, buildInformation, feedConfig);
-                    }
-                    else if (feedType.Equals("AZURESTORAGEFEED"))
-                    {
-                        await PublishPackagesToAzureStorageNugetFeedAsync(packages, client, buildInformation, feedConfig);
-                    }
-                    else
-                    {
-                        Log.LogError($"Unknown target feed type for category '{category}': '{feedType}'.");
+                        if (feedType.Equals("AZDONUGETFEED"))
+                        {
+                            await PublishPackagesToAzDoNugetFeedAsync(packages, client, buildInformation, feedConfig);
+                        }
+                        else if (feedType.Equals("AZURESTORAGEFEED"))
+                        {
+                            await PublishPackagesToAzureStorageNugetFeedAsync(packages, client, buildInformation, feedConfig);
+                        }
+                        else
+                        {
+                            Log.LogError($"Unknown target feed type for category '{category}': '{feedType}'.");
+                        }
                     }
                 }
                 else
@@ -199,21 +207,24 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 var category = blobsPerCategory.Key;
                 var blobs = blobsPerCategory.Value;
 
-                if (FeedConfigs.TryGetValue(category, out FeedConfig feedConfig))
+                if (FeedConfigs.TryGetValue(category, out List<FeedConfig> feedConfigsForCategory))
                 {
-                    var feedType = feedConfig.Type.ToUpper();
+                    foreach (var feedConfig in feedConfigsForCategory)
+                    {
+                        var feedType = feedConfig.Type.ToUpper();
 
-                    if (feedType.Equals("AZDONUGETFEED"))
-                    {
-                        await PublishBlobsToAzDoNugetFeedAsync(blobs, client, buildInformation, feedConfig);
-                    }
-                    else if (feedType.Equals("AZURESTORAGEFEED"))
-                    {
-                        await PublishBlobsToAzureStorageNugetFeedAsync(blobs, client, buildInformation, feedConfig);
-                    }
-                    else
-                    {
-                        Log.LogError($"Unknown target feed type for category '{category}': '{feedType}'.");
+                        if (feedType.Equals("AZDONUGETFEED"))
+                        {
+                            await PublishBlobsToAzDoNugetFeedAsync(blobs, client, buildInformation, feedConfig);
+                        }
+                        else if (feedType.Equals("AZURESTORAGEFEED"))
+                        {
+                            await PublishBlobsToAzureStorageNugetFeedAsync(blobs, client, buildInformation, feedConfig);
+                        }
+                        else
+                        {
+                            Log.LogError($"Unknown target feed type for category '{category}': '{feedType}'.");
+                        }
                     }
                 }
                 else
