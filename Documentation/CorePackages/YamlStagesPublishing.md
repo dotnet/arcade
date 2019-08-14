@@ -30,6 +30,25 @@ In order to use this new publishing mechanism, the easiest way to start is by ma
 
 1. Update the repo's arcade version to `1.0.0-beta.19360.8` or newer.
 
+1. Add an artifact category for assets produced by the build:
+
+    * Most repositories will use `.NETCore` as the category unless assets should be published to a feed
+    other than `dotnet-core`.
+    See [Advanced Scenarios](##overriding-the-publishing-feed-used-for-builds-in-the-dev-channel) for instructions on how to publish to a different feed.
+
+    * `_DotNetValidationArtifactsCategory` for publishing to the Validation channel (Such as for testing the changes in these onboarding steps)
+    * `_DotNetArtifactsCategory` for publishing to the Dev channel.
+
+      ```YAML
+      variables:
+      ...
+      - name: _DotNetValidationArtifactsCategory
+        value: .NETCore
+      - name: _DotNetArtifactsCategory
+        value: .NETCore
+      ...
+      ```
+
 1. Disable package publishing during the build:
 
     Set the `enablePublishUsingPipelines` template parameter to `true` when calling the `/eng/common/templates/jobs/jobs.yml` template.
@@ -68,6 +87,21 @@ In order to use this new publishing mechanism, the easiest way to start is by ma
             publishUsingPipelines: true
             ...
       ```
+
+1. Pass the MSBuild properties required by the Arcade SDK's publishing mechanisms during
+the build invocation. Some of these properties are only required for legacy reasons.
+We are tracking cleaning some of these up via https://github.com/dotnet/arcade/issues/3597
+
+    | Name                            | Value                                                                               |
+    | --------------------------------| ----------------------------------------------------------------------------------- |
+    | /p:DotNetPublishBlobFeedUrl     | https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json                     |
+    | /p:DotNetPublishBlobFeedKey     | `$(dotnetfeed-storage-access-key-1)` variable from Dotnet-Blob-Feed variable group  |
+    | /p:DotNetPublishToBlobFeed      | true                                                                                |
+    | /p:DotNetPublishUsingPipelines  | true                                                                                |
+    | /p:DotNetArtifactsCategory      | `$(_DotNetArtifactsCategory)` variable                                              |
+
+    For an example, see how the Arcade repo passes these properties in its
+    [azure-pipelines.yml](https://github.com/dotnet/arcade/blob/2cb8b86c1ca7ff77304f76fe7041135209ab6932/azure-pipelines.yml#L74)
 
 1. Add the stages keyword to your existing pipeline's YAML:
 
@@ -179,9 +213,7 @@ for the category to the TargetStaticFeed PropertyGroup in
     </PropertyGroup>
     ```
 
-1. Add a variable to your pipeline's YAML and set the value as your new category.
-    * `_DotNetValidationArtifactsCategory` for publishing to the Validation channel (Such as for testing the changes in these onboarding steps)
-    * `_DotNetArtifactsCategory` for publishing to the Dev channel.
+1. Set your new category as the value for the artifact category variables
 
     ```YAML
     variables:
