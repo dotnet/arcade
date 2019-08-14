@@ -97,12 +97,6 @@ stages:
             /p:BlobBasePath='$(Build.ArtifactStagingDirectory)/BlobArtifacts/' 
             /p:PackageBasePath='$(Build.ArtifactStagingDirectory)/PackageArtifacts/' 
             /p:Configuration=Release 
-            /p:CreateTestConfig=true
-            /p:TestFeedCategories='.NetCore'
-            /p:TestFeedURL=https://dotnetfeed.blob.core.windows.net/cesar-test5/index.json
-            /p:TestFeedName=testfeed5
-            /p:TestFeedType=AzureStorageFeed
-            /p:TestFeedToken='$(dotnetfeed-storage-access-key-1)'
             ${{ parameters.artifactsPublishingAdditionalParameters }}
         
       - task: NuGetCommand@2
