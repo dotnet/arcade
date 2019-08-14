@@ -97,7 +97,7 @@ stages:
             /p:Configuration=Release 
             /p:CreateTestConfig=true
             /p:TestFeedCategories='.NetCore'
-            /p:TestFeedURL=https://cesarfeed.blob.core.windows.net/testfeed2/index.json
+            /p:TestFeedURL=https://dotnetfeed.blob.core.windows.net/cesar-test2/index.json
             /p:TestFeedName=testfeed2
             /p:TestFeedType=AzureStorageFeed
             /p:TestFeedToken='$(dotnetfeed-storage-access-key-1)'
