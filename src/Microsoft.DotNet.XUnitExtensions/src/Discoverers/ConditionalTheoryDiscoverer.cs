@@ -33,6 +33,7 @@ namespace Microsoft.DotNet.XUnitExtensions
         protected override IEnumerable<IXunitTestCase> CreateTestCasesForDataRow(ITestFrameworkDiscoveryOptions discoveryOptions, ITestMethod testMethod, IAttributeInfo theoryAttribute, object[] dataRow)
         {
             IMethodInfo methodInfo = testMethod.Method;
+            List<IXunitTestCase> skippedTestCase = new List<IXunitTestCase>();
 
             if (!_conditionCache.TryGetValue(methodInfo, out string skipReason))
             {
@@ -42,11 +43,17 @@ namespace Microsoft.DotNet.XUnitExtensions
                 }
 
                 _conditionCache.Add(methodInfo, skipReason);
+
+                if (skipReason != null)
+                {
+                    // If this is the first time we evalute the condition we return a SkippedTestCase to avoid printing a skip for every inline-data.
+                    skippedTestCase.Add(new SkippedTestCase(skipReason, DiagnosticMessageSink, discoveryOptions.MethodDisplayOrDefault(), discoveryOptions.MethodDisplayOptionsOrDefault(), testMethod));
+                }
             }
 
             return skipReason != null ?
-                        base.CreateTestCasesForSkippedDataRow(discoveryOptions, testMethod, theoryAttribute, dataRow, skipReason)
-                        : new IXunitTestCase[] { new SkippedFactTestCase(DiagnosticMessageSink, discoveryOptions.MethodDisplayOrDefault(), discoveryOptions.MethodDisplayOptionsOrDefault(), testMethod, dataRow) }; // Test case skippable at runtime.
+                        (IEnumerable<IXunitTestCase>)skippedTestCase
+                        : new [] { new SkippedFactTestCase(DiagnosticMessageSink, discoveryOptions.MethodDisplayOrDefault(), discoveryOptions.MethodDisplayOptionsOrDefault(), testMethod, dataRow) }; // Test case skippable at runtime.
         }
     }
 }
