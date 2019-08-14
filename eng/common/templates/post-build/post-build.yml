@@ -1,4 +1,5 @@
 parameters:
+
   enableSourceLinkValidation: true
   enableSigningValidation: true
   enableSymbolValidation: true
@@ -6,13 +7,17 @@ parameters:
   SDLValidationParameters:
     enable: false
     params: ''
-
   # Which stages should finish execution before post-build stages start
-  dependsOn: [build]
+  validateDependsOn:
+  - build
+  publishDependsOn: 
+  - validate
 
 stages:
 - stage: validate
-  dependsOn: ${{ parameters.dependsOn }}
+  dependsOn: 
+  - ${{ each dependsOn in parameters.validateDependsOn }}:
+    - ${{ dependsOn }}
   displayName: Validate
   jobs:
   - ${{ if eq(parameters.enableNugetValidation, 'true') }}:
@@ -86,18 +91,39 @@ stages:
 
 - template: \eng\common\templates\post-build\channels\netcore-dev-5.yml
   parameters:
+    dependsOn:
+    - ${{ each dependsOn in parameters.publishDependsOn }}:
+      - ${{ dependsOn }}
     enableSymbolValidation: ${{ parameters.enableSymbolValidation }}
 
 - template: \eng\common\templates\post-build\channels\public-dev-release.yml
   parameters:
+    dependsOn:
+    - ${{ each dependsOn in parameters.publishDependsOn }}:
+      - ${{ dependsOn }}
     enableSymbolValidation: ${{ parameters.enableSymbolValidation }}
 
 - template: \eng\common\templates\post-build\channels\netcore-tools-latest.yml
   parameters:
+    dependsOn:
+    - ${{ each dependsOn in parameters.publishDependsOn }}:
+      - ${{ dependsOn }}
     enableSymbolValidation: ${{ parameters.enableSymbolValidation }}
 
 - template: \eng\common\templates\post-build\channels\public-validation-release.yml
+  parameters:
+    dependsOn:
+    - ${{ each dependsOn in parameters.publishDependsOn }}:
+      - ${{ dependsOn }}
 
 - template: \eng\common\templates\post-build\channels\public-release.yml
+  parameters:
+    dependsOn:
+    - ${{ each dependsOn in parameters.publishDependsOn }}:
+      - ${{ dependsOn }}
 
 - template: \eng\common\templates\post-build\channels\internal-servicing.yml
+  parameters:
+    dependsOn:
+    - ${{ each dependsOn in parameters.publishDependsOn }}:
+      - ${{ dependsOn }}

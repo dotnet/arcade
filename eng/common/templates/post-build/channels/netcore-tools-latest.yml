@@ -1,9 +1,13 @@
 parameters:
+  dependsOn:
+  - validate
   enableSymbolValidation: true
 
 stages:
 - stage: NetCore_Tools_Latest_Publish
-  dependsOn: validate
+  dependsOn:
+  - ${{ each depend in parameters.dependsOn }}:
+    - ${{ depend }}
   variables:
     - template: ../common-variables.yml
   displayName: .NET Tools - Latest

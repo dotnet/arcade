@@ -1,9 +1,14 @@
 parameters:
+  dependsOn:
+  - validate
   enableSymbolValidation: true
 
 stages:
 - stage: NetCore_Dev5_Publish
-  dependsOn: validate
+  dependsOn:
+  - ${{ each depend in parameters.dependsOn }}:
+    - ${{ depend }}
+
   variables:
     - template: ../common-variables.yml
   displayName: .NET Core 5 Dev Channel
