@@ -8,6 +8,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Octokit;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.GitHub.IssueLabeler
@@ -62,13 +64,26 @@ namespace Microsoft.DotNet.GitHub.IssueLabeler
             {
                 await GitSetupAsync();
             }
+            IReadOnlyList<PullRequestFile> prFiles = null;
+            string filePathsToStore = "NULL";
+            try
+            {
+                prFiles = await _client.PullRequest.Files(_repoOwner, _repoName, number);
+                filePathsToStore = "\"" + String.Join(";", prFiles.Select(x => "corefx/" + x.FileName)) + "\"";
+            }
+            catch (Exception)
+            {
+                logger.LogInformation($"Looking at an issue not a PR.");
+            }
 
             var corefxIssue = new GitHubIssue
             {
                 Number = number,
                 Title = title,
                 Body = body,
-                IssueOrPr = issueOrPr
+                IssueOrPr = issueOrPr,
+                IsPR = prFiles == null ? "FALSE" : "TRUE",
+                FilePaths = filePathsToStore
             };
 
             string label = Predictor.Predict(corefxIssue, logger, _threshold);

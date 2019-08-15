@@ -21,6 +21,12 @@ namespace Microsoft.DotNet.GitHub.IssueLabeler
         [ColumnName("Description")]
         public string Body;
 
+        [LoadColumn(3)]
+        public string IsPR;
+
+        [LoadColumn(4)]
+        public string FilePaths;
+
         [NoColumn]
         public List<object> Labels { get; set; }
 
