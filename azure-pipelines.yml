@@ -198,8 +198,8 @@ stages:
         params: ' -SourceToolsList @("policheck","credscan")
         -TsaInstanceURL "https://devdiv.visualstudio.com/"
         -TsaProjectName "DEVDIV"
-        -TsaNotificationEmail "subal@microsoft.com"
-        -TsaCodebaseAdmin "REDMOND\subal"
+        -TsaNotificationEmail "dnceng@microsoft.com"
+        -TsaCodebaseAdmin "REDMOND\dn-bot"
         -TsaBugAreaPath "DevDiv\NET\NET Core "
         -TsaIterationPath "DevDiv"
         -TsaRepositoryName "Arcade"
