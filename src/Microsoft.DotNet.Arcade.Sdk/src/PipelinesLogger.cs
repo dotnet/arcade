@@ -26,9 +26,15 @@ namespace Microsoft.DotNet.Arcade.Sdk
         public LoggerVerbosity Verbosity { get; set; }
         public string Parameters { get; set; }
         private static readonly string s_TelemetryMarker = "NETCORE_ENGINEERING_TELEMETRY";
+        private static bool _debug = false;
 
         public void Initialize(IEventSource eventSource)
         {
+            if (_debug)
+            {
+                _debug = false;
+                System.Diagnostics.Debugger.Launch();
+            }
             var parameters = LoggerParameters.Parse(this.Parameters);
 
             _solutionDirectory = parameters["SolutionDir"];
@@ -57,7 +63,6 @@ namespace Microsoft.DotNet.Arcade.Sdk
             eventSource.ErrorRaised += OnErrorRaised;
             eventSource.WarningRaised += OnWarningRaised;
             eventSource.ProjectStarted += OnProjectStarted;
-
             IEventSource2 eventSource2 = eventSource as IEventSource2;
             eventSource2.TelemetryLogged += OnTelemetryLogged;
 
@@ -68,7 +73,6 @@ namespace Microsoft.DotNet.Arcade.Sdk
         }
         public void Shutdown()
         {
-
         }
 
         private void LogErrorOrWarning(
@@ -84,11 +88,13 @@ namespace Microsoft.DotNet.Arcade.Sdk
                 ? (Guid?)guid
                 : null;
             string telemetryCategory = null;
+            State telemetryState = State.Unknown;
             if (parentId.HasValue)
             {
                 if(_taskTelemetryInfoMap.TryGetValue(parentId.Value, out TelemetryTaskInfo telemetryInfo))
                 {
                     telemetryCategory = telemetryInfo.Category;
+                    telemetryState = telemetryInfo.TelemetryState;
                 }
                 if (telemetryCategory == null)
                 {
@@ -97,17 +103,27 @@ namespace Microsoft.DotNet.Arcade.Sdk
                         telemetryCategory = projectInfo.PropertiesCategory;
                     }
                 }
+                if (telemetryCategory != null)
+                {
+                    message = $"({s_TelemetryMarker}={telemetryCategory}) {message}";
+                }
             }
+            if (parentId.HasValue)
+            {
+                LogDetail(
+                    id: parentId.Value,
+                    type: s_TelemetryMarker,
+                    name: telemetryCategory,
+                    state: State.Completed,
+                    result: Result.Failed);
+            }
+
             _builder.Start("logissue");
             _builder.AddProperty("type", isError ? "error" : "warning");
             _builder.AddProperty("sourcepath", sourceFilePath);
             _builder.AddProperty("linenumber", line);
             _builder.AddProperty("columnnumber", column);
             _builder.AddProperty("code", code);
-            if (telemetryCategory != null)
-            {
-                message = $"({s_TelemetryMarker}={telemetryCategory}) {message}";
-            }
             _builder.Finish(message);
             Console.WriteLine(_builder.GetMessage());
         }
@@ -122,7 +138,8 @@ namespace Microsoft.DotNet.Arcade.Sdk
             DateTimeOffset? endTime = null,
             string order = null,
             string progress = null,
-            Guid? parentId = null)
+            Guid? parentId = null,
+            string message = null)
         {
             _builder.Start("logdetail");
             _builder.AddProperty("id", id);
@@ -130,6 +147,22 @@ namespace Microsoft.DotNet.Arcade.Sdk
             if (parentId != null)
             {
                 _builder.AddProperty("parentid", parentId.Value);
+            }
+            string telemetryCategory = null;
+            if (_taskTelemetryInfoMap.TryGetValue(id, out TelemetryTaskInfo telemetryInfo))
+            {
+                telemetryCategory = telemetryInfo.Category;
+            }
+            if (telemetryCategory == null)
+            {
+                if (_projectInfoMap.TryGetValue(id, out ProjectInfo projectInfo))
+                {
+                    telemetryCategory = projectInfo.PropertiesCategory;
+                }
+            }
+            if (telemetryCategory != null)
+            {
+                message = $"({s_TelemetryMarker}={telemetryCategory}) {message}";
             }
 
             // Certain values on logdetail can only be set once by design of VSO
@@ -165,7 +198,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
                 _builder.AddProperty("result", result.Value.ToString());
             }
 
-            _builder.Finish();
+            _builder.Finish(message);
 
             Console.WriteLine(_builder.GetMessage());
         }
@@ -190,6 +223,21 @@ namespace Microsoft.DotNet.Arcade.Sdk
                 order: order,
                 parentId: projectInfo.ParentId);
 
+        private void LogBuildFinished(
+            bool succeeded,
+            int threadId,
+            BuildEventContext buildEventContext)
+        {
+            Console.WriteLine($"threadId: {threadId}, succeeded: {succeeded.ToString()}, {buildEventContext?.BuildRequestId}");
+        }
+
+        private void LogBuildStarted(
+            int threadId,
+            IDictionary<string, string> buildEnvironment,
+            BuildEventContext buildEventContext)
+        {
+            Console.WriteLine($"threadId: {threadId}, env count: {buildEnvironment.Count}, {buildEventContext?.BuildRequestId}");
+        }
         private void OnErrorRaised(object sender, BuildErrorEventArgs e) =>
             LogErrorOrWarning(isError: true, e.File, e.LineNumber, e.ColumnNumber, e.Code, e.Message, e.BuildEventContext);
 
@@ -201,14 +249,23 @@ namespace Microsoft.DotNet.Arcade.Sdk
             if (e.EventName.Equals(s_TelemetryMarker))
             {
                 e.Properties.TryGetValue("Category", out string telemetryCategory);
+                e.Properties.TryGetValue("State", out string telemetryState);
+                State state = State.Initialized;
+                Enum.TryParse(telemetryState, out state);
+
                 var parentId = _buildEventContextMap.TryGetValue(e.BuildEventContext, out var guid)
                 ? (Guid?)guid
                 : null;
 
                 if (parentId.HasValue)
                 {
-                    var telemetryInfo = new TelemetryTaskInfo(parentId.Value, telemetryCategory);
+                    var telemetryInfo = new TelemetryTaskInfo(parentId.Value, telemetryCategory, state);
                     _taskTelemetryInfoMap[parentId.Value] = telemetryInfo;
+                    LogDetail(
+                        id: telemetryInfo.Id,
+                        type: s_TelemetryMarker,
+                        name: telemetryInfo.Category,
+                        state: state);
                 }
             }
         }
@@ -219,14 +276,19 @@ namespace Microsoft.DotNet.Arcade.Sdk
             {
                 return;
             }
+            projectInfo.ProjectState = State.Completed;
+            _projectInfoMap[projectId] = projectInfo;
 
-            LogBuildEvent(
-                in projectInfo,
-                State.Completed,
-                result: e.Succeeded ? Result.Succeeded : Result.Failed,
-                startTime: projectInfo.StartTime,
-                endTime: DateTimeOffset.UtcNow,
-                progress: "100");
+            if (Verbosity == LoggerVerbosity.Diagnostic)
+            {
+                LogBuildEvent(
+                    in projectInfo,
+                    State.Completed,
+                    result: e.Succeeded ? Result.Succeeded : Result.Failed,
+                    startTime: projectInfo.StartTime,
+                    endTime: DateTimeOffset.UtcNow,
+                    progress: "100");
+            }
         }
 
         private void OnProjectStarted(object sender, ProjectStartedEventArgs e)
@@ -242,7 +304,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
             ? (Guid?)guid
             : null;
 
-            var projectInfo = new ProjectInfo(getName(), parentId, propertyCategory);
+            var projectInfo = new ProjectInfo(getName(), parentId, propertyCategory, State.Initialized);
 
             _buildEventContextMap[e.BuildEventContext] = projectInfo.Id;
 
@@ -349,29 +411,32 @@ namespace Microsoft.DotNet.Arcade.Sdk
         {
             internal Guid Id { get; }
             internal string Category { get; }
+            internal State TelemetryState { get; }
 
-            internal TelemetryTaskInfo(Guid id, string category)
+            internal TelemetryTaskInfo(Guid id, string category, State state = State.Unknown)
             {
                 Id = id;
                 Category = category;
+                TelemetryState = state;
             }
         }
 
-        internal readonly struct ProjectInfo
+        internal struct ProjectInfo
         {
             internal string Name { get; }
             internal Guid Id { get; }
             internal Guid? ParentId { get; }
             internal DateTimeOffset StartTime { get; }
             internal string PropertiesCategory { get; }
-
-            internal ProjectInfo(string name, Guid? parentId, string propertiesCategory)
+            internal State ProjectState { get; set; }
+            internal ProjectInfo(string name, Guid? parentId, string propertiesCategory, State state = State.Unknown)
             {
                 Name = name;
                 Id = Guid.NewGuid();
                 ParentId = parentId;
                 StartTime = DateTimeOffset.UtcNow;
                 PropertiesCategory = propertiesCategory;
+                ProjectState = state;
             }
         }
 

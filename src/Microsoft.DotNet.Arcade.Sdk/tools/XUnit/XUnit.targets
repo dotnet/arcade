@@ -29,7 +29,7 @@
   <Target Name="RunTests"
           Inputs="@(TestToRun);*"
           Outputs="%(TestToRun.ResultsStdOutPath);%(TestToRun.ResultsXmlPath);%(TestToRun.ResultsHtmlPath)">
-    <Telemetry EventName="NETCORE_ENGINEERING_TELEMETRY" EventData="Category=Test" />
+    <Telemetry EventName="NETCORE_ENGINEERING_TELEMETRY" EventData="Category=Test;State=InProgress" />
     <PropertyGroup>
       <_TestEnvironment>%(TestToRun.EnvironmentDisplay)</_TestEnvironment>
       <_TestAssembly>%(TestToRun.Identity)</_TestAssembly>
@@ -117,11 +117,12 @@
     <ItemGroup>
       <FileWrites Include="@(_OutputFiles)"/>
     </ItemGroup>
+
+    <Telemetry EventName="NETCORE_ENGINEERING_TELEMETRY" EventData="Category=Test;State=Completed" />
   </Target>
 
   <!-- Workaround for https://github.com/xunit/xunit/issues/1651 -->
   <ItemGroup>
     <None Remove="$(NuGetPackageRoot)xunit.runner.visualstudio\$(XUnitRunnerVisualStudioVersion)\build\net20\..\_common\xunit.abstractions.dll" />
   </ItemGroup>
-
 </Project>
