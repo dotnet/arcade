@@ -28,7 +28,7 @@ class AzureDevOpsTestResultPublisher:
         pass
 
     def upload_batch(self, results: Iterable[TestResult]):
-        results_with_attachments = {r.name: r for r in results if r.attachments}
+        results_with_attachments = {r.name: r for r in results if r is not None and r.attachments}
 
         (test_case_results, test_name_order) = self.convert_results(results)
 
