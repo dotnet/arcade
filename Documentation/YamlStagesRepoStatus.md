@@ -25,7 +25,7 @@ Target completion date is 8/13/2019.
 | CoreFx                     | danmose/safern   | Complete | ✔️ | SourceLink validation disabled: https://github.com/dotnet/arcade/issues/3603 |
 | IoT                        | joperezr         | Complete | ✔️ | |
 | Core-SDK                   | licavalc         | At risk | ❌ |  We need clarity on how to do the blob storage publishing with YAML stages: https://github.com/dotnet/arcade/issues/3607|
-| Core-Setup                 | dleeapho         | In progress | ➖ |  Expected completion 8/21 |
+| Core-Setup                 | dleeapho         | In progress | ➖ |  Expected completion 8/19 |
 | FSharp                     | brettfo          | Complete | ✔️ | |
 | MSBuild                    | licavalc         | At risk | ❌ |  No ETA yet. Investigation under way. |
 | Roslyn                     | jaredpar         | Complete | ✔️ |  Complete with source link validation disabled |
