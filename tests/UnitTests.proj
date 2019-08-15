@@ -20,7 +20,7 @@
 
   <ItemGroup>
     <HelixWorkItem Include="JUnitTest">
-      <Command>echo 'done!'</Command>
+      <Command>set errorlevel=1286</Command>
       <PayloadDirectory>$(MSBuildThisFileDirectory)Junit</PayloadDirectory>
     </HelixWorkItem>
   </ItemGroup>
@@ -38,7 +38,7 @@
 
   <ItemGroup>
     <HelixWorkItem Include="XunitTest">
-      <xunit ExitCode="4515634"/>
+      <Command>set errorlevel=1284</Command>
     </HelixWorkItem>
   </ItemGroup>
   
