@@ -1,8 +1,8 @@
 param(
   [Parameter(Mandatory=$true)][string] $InputPath,              # Full path to directory where Symbols.NuGet packages to be checked are stored
   [Parameter(Mandatory=$true)][string] $ExtractPath,            # Full path to directory where the packages will be extracted during validation
-  [Parameter(Mandatory=$true)][string] $GHRepoName,             # GitHub name of the repo including the Org. E.g., dotnet/arcade
-  [Parameter(Mandatory=$true)][string] $GHCommit,               # GitHub commit SHA used to build the packages
+  [Parameter(Mandatory=$false)][string] $GHRepoName,            # GitHub name of the repo including the Org. E.g., dotnet/arcade
+  [Parameter(Mandatory=$false)][string] $GHCommit,              # GitHub commit SHA used to build the packages
   [Parameter(Mandatory=$true)][string] $SourcelinkCliVersion    # Version of SourceLink CLI to use
 )
 
@@ -22,8 +22,8 @@ $ValidatePackage = {
 
   # Ensure input file exist
   if (!(Test-Path $PackagePath)) {
-    Write-PipelineTaskError "Input file does not exist: $PackagePath"
-    ExitWithExitCode 1
+    Write-Host "Input file does not exist: $PackagePath"
+    return 1
   }
 
   # Extensions for which we'll look for SourceLink information
@@ -38,7 +38,7 @@ $ValidatePackage = {
 
   Add-Type -AssemblyName System.IO.Compression.FileSystem
 
-  [System.IO.Directory]::CreateDirectory($ExtractPath);
+  [System.IO.Directory]::CreateDirectory($ExtractPath)  | Out-Null
 
   try {
     $zip = [System.IO.Compression.ZipFile]::OpenRead($PackagePath)
@@ -138,9 +138,11 @@ $ValidatePackage = {
 
   if ($FailedFiles -eq 0) {
     Write-Host "Passed."
+    return 0
   }
   else {
-    Write-PipelineTaskError "$PackagePath has broken SourceLink links."
+    Write-Host "$PackagePath has broken SourceLink links."
+    return 1
   }
 }
 
@@ -176,9 +178,7 @@ function ValidateSourceLinkLinks {
     }
   }
   catch {
-    Write-PipelineTaskError "Problems downloading the list of files from the repo. Url used: $RepoTreeURL"
-    Write-Host $_
-    ExitWithExitCode 1
+    Write-Host "Problems downloading the list of files from the repo. Url used: $RepoTreeURL . Execution will proceed without caching."
   }
   
   if (Test-Path $ExtractPath) {
@@ -192,8 +192,16 @@ function ValidateSourceLinkLinks {
       $Jobs += Start-Job -ScriptBlock $ValidatePackage -ArgumentList $_.FullName
     }
 
+  $ValidationFailures = 0
   foreach ($Job in $Jobs) {
-    Wait-Job -Id $Job.Id | Receive-Job
+    $jobResult = Wait-Job -Id $Job.Id | Receive-Job
+    if ($jobResult -ne "0") {
+      $ValidationFailures++
+    }
+  }
+  if ($ValidationFailures -gt 0) {
+    Write-PipelineTaskError " $ValidationFailures package(s) failed validation."
+    ExitWithExitCode 1
   }
 }
 
