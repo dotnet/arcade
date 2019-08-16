@@ -6,6 +6,7 @@
     <HelixSource Condition=" '$(HelixAccessToken)' == '' ">pr/dotnet/arcade/$(BUILD_SOURCEBRANCH)/</HelixSource>
     <HelixSource Condition=" '$(HelixAccessToken)' != '' ">official/dotnet/arcade/$(BUILD_SOURCEBRANCH)/</HelixSource>
     <HelixType>test/product/</HelixType>
+    <WorkItemTimeout>900</WorkItemTimeout>
     <HelixBuild>$(BUILD_BUILDNUMBER)</HelixBuild>
     <HelixBuild Condition="'$(HelixBuild)' == ''">123460.01</HelixBuild>
 
