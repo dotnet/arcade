@@ -115,7 +115,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
                     type: s_TelemetryMarker,
                     name: telemetryCategory,
                     state: State.Completed,
-                    result: Result.Failed);
+                    result: "Failed");
             }
 
             _builder.Start("logissue");
@@ -133,7 +133,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
             string type,
             string name,
             State state,
-            Result? result = null,
+            string result = null,
             DateTimeOffset? startTime = null,
             DateTimeOffset? endTime = null,
             string order = null,
@@ -193,9 +193,9 @@ namespace Microsoft.DotNet.Arcade.Sdk
             }
 
             _builder.AddProperty("state", state.ToString());
-            if (result.HasValue)
+            if (Enum.TryParse(result, out Result resultEnum))
             {
-                _builder.AddProperty("result", result.Value.ToString());
+                _builder.AddProperty("result", result);
             }
 
             _builder.Finish(message);
@@ -206,7 +206,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
         private void LogBuildEvent(
             in ProjectInfo projectInfo,
             State state,
-            Result? result = null,
+            string result = null,
             DateTimeOffset? startTime = null,
             DateTimeOffset? endTime = null,
             string order = null,
@@ -250,6 +250,8 @@ namespace Microsoft.DotNet.Arcade.Sdk
             {
                 e.Properties.TryGetValue("Category", out string telemetryCategory);
                 e.Properties.TryGetValue("State", out string telemetryState);
+                e.Properties.TryGetValue("Result", out string result);
+
                 State state = State.Initialized;
                 Enum.TryParse(telemetryState, out state);
 
@@ -259,13 +261,14 @@ namespace Microsoft.DotNet.Arcade.Sdk
 
                 if (parentId.HasValue)
                 {
-                    var telemetryInfo = new TelemetryTaskInfo(parentId.Value, telemetryCategory, state);
+                    var telemetryInfo = new TelemetryTaskInfo(parentId.Value, telemetryCategory, state, result);
                     _taskTelemetryInfoMap[parentId.Value] = telemetryInfo;
                     LogDetail(
                         id: telemetryInfo.Id,
                         type: s_TelemetryMarker,
                         name: telemetryInfo.Category,
-                        state: state);
+                        state: state,
+                        result: result);
                 }
             }
         }
@@ -284,7 +287,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
                 LogBuildEvent(
                     in projectInfo,
                     State.Completed,
-                    result: e.Succeeded ? Result.Succeeded : Result.Failed,
+                    result: e.Succeeded ? "Succeeded" : "Failed",
                     startTime: projectInfo.StartTime,
                     endTime: DateTimeOffset.UtcNow,
                     progress: "100");
@@ -407,17 +410,18 @@ namespace Microsoft.DotNet.Arcade.Sdk
             }
         }
 
-        internal readonly struct TelemetryTaskInfo
+        internal struct TelemetryTaskInfo
         {
             internal Guid Id { get; }
             internal string Category { get; }
             internal State TelemetryState { get; }
-
-            internal TelemetryTaskInfo(Guid id, string category, State state = State.Unknown)
+            internal string Result { get; set; }
+            internal TelemetryTaskInfo(Guid id, string category, State state = State.Unknown, string result = null)
             {
                 Id = id;
                 Category = category;
                 TelemetryState = state;
+                Result = result;
             }
         }
 

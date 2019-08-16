@@ -118,7 +118,7 @@
       <FileWrites Include="@(_OutputFiles)"/>
     </ItemGroup>
 
-    <Telemetry EventName="NETCORE_ENGINEERING_TELEMETRY" EventData="Category=Test;State=Completed" />
+    <Telemetry EventName="NETCORE_ENGINEERING_TELEMETRY" EventData="Category=Test;State=Completed;Result=Succeeded" />
   </Target>
 
   <!-- Workaround for https://github.com/xunit/xunit/issues/1651 -->
