@@ -124,7 +124,7 @@
         TargetURL="$(TargetStaticFeed)"
         Type="AzureStorageFeed"
         Token="$(AzureStorageTargetFeedPAT)" />
-      <TargetFeedConfig Condition="'$(InstallersAzureAccountKey)' != '' and '$(InstallersAzureAccountKey)' != ''"
+      <TargetFeedConfig Condition="'$(InstallersTargetStaticFeed)' != '' and '$(InstallersAzureAccountKey)' != ''"
         Include="Deb;Rpm;Node;BinaryLayout;Installer;Maven;VSIX"
         TargetURL="$(InstallersTargetStaticFeed)"
         Type="AzureStorageFeed"
