@@ -163,7 +163,7 @@ function GetDotNetInstallScript([string] $dotnetRoot) {
   $installScript = Join-Path $dotnetRoot "dotnet-install.ps1"
   if (!(Test-Path $installScript)) {
     Create-Directory $dotnetRoot
-    Invoke-WebRequest "https://dot.net/$dotnetInstallScriptVersion/dotnet-install.ps1" -OutFile $installScript
+    Invoke-WebRequest "https://raw.githubusercontent.com/dotnet/cli/3704896d65ef72c93991e0ab94ef7a3ac6086c81/scripts/obtain/dotnet-install.ps1" -OutFile $installScript
   }
 
   return $installScript
