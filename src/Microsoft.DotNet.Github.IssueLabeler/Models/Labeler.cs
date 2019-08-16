@@ -64,17 +64,6 @@ namespace Microsoft.DotNet.GitHub.IssueLabeler
             {
                 await GitSetupAsync();
             }
-            IReadOnlyList<PullRequestFile> prFiles = null;
-            string filePathsToStore = "NULL";
-            try
-            {
-                prFiles = await _client.PullRequest.Files(_repoOwner, _repoName, number);
-                filePathsToStore = "\"" + String.Join(";", prFiles.Select(x => "corefx/" + x.FileName)) + "\"";
-            }
-            catch (Exception)
-            {
-                logger.LogInformation($"Looking at an issue not a PR.");
-            }
 
             var corefxIssue = new GitHubIssue
             {
@@ -82,16 +71,18 @@ namespace Microsoft.DotNet.GitHub.IssueLabeler
                 Title = title,
                 Body = body,
                 IssueOrPr = issueOrPr,
-                IsPR = prFiles == null ? "FALSE" : "TRUE",
-                FilePaths = filePathsToStore
+                IsPR = issueOrPr == GithubObjectType.PullRequest,
+                FilePaths = "\"\""
             };
+
+            if (corefxIssue.IsPR)
+            {
+                IReadOnlyList<PullRequestFile> prFiles = await _client.PullRequest.Files(_repoOwner, _repoName, number);
+                corefxIssue.FilePaths = "\"" + String.Join(";", prFiles.Select(x => "corefx/" + x.FileName)) + "\"";
+            }
 
             string label = Predictor.Predict(corefxIssue, logger, _threshold);
             Issue issueGithubVersion = await _client.Issue.Get(_repoOwner, _repoName, number);
-            if (label.Equals("area-System.Net.Http.SocketsHttpHandler", StringComparison.OrdinalIgnoreCase))
-            {
-                label = "area-System.Net.Http";
-            }
 
             if (label != null && issueGithubVersion.Labels.Count == 0)
             {

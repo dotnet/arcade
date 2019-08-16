@@ -22,7 +22,7 @@ namespace Microsoft.DotNet.GitHub.IssueLabeler
         public string Body;
 
         [LoadColumn(3)]
-        public string IsPR;
+        public bool IsPR;
 
         [LoadColumn(4)]
         public string FilePaths;
