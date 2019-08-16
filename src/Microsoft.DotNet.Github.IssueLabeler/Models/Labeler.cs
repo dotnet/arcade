@@ -72,13 +72,13 @@ namespace Microsoft.DotNet.GitHub.IssueLabeler
                 Body = body,
                 IssueOrPr = issueOrPr,
                 IsPR = issueOrPr == GithubObjectType.PullRequest,
-                FilePaths = "\"\""
+                FilePaths = string.Empty
             };
 
             if (corefxIssue.IsPR)
             {
                 IReadOnlyList<PullRequestFile> prFiles = await _client.PullRequest.Files(_repoOwner, _repoName, number);
-                corefxIssue.FilePaths = "\"" + String.Join(";", prFiles.Select(x => "corefx/" + x.FileName)) + "\"";
+                corefxIssue.FilePaths = String.Join(";", prFiles.Select(x => x.FileName));
             }
 
             string label = Predictor.Predict(corefxIssue, logger, _threshold);
