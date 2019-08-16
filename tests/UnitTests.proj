@@ -20,7 +20,7 @@
 
   <ItemGroup>
     <HelixWorkItem Include="JUnitTest">
-      <Command>set errorlevel=1286</Command>
+      <Command>echo 'done!'</Command>
       <PayloadDirectory>$(MSBuildThisFileDirectory)Junit</PayloadDirectory>
     </HelixWorkItem>
   </ItemGroup>
@@ -33,12 +33,6 @@
     <HelixWorkItem Include="TrxTest">
       <Command>echo 'done!'</Command>
       <PayloadDirectory>$(MSBuildThisFileDirectory)Trx</PayloadDirectory>
-    </HelixWorkItem>
-  </ItemGroup>
-
-  <ItemGroup>
-    <HelixWorkItem Include="XunitTest">
-      <Command>set errorlevel=1284</Command>
     </HelixWorkItem>
   </ItemGroup>
   
