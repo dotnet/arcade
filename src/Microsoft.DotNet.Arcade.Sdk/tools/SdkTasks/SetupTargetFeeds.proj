@@ -116,6 +116,7 @@
       <TargetStaticFeed Condition="'$(TargetStaticFeed)' == ''">https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json</TargetStaticFeed>
     </PropertyGroup>
 
+
     <!-- Configuration for public non-stable feeds -->
     <ItemGroup Condition="'@(TargetFeedConfig)' == ''">
       <TargetFeedConfig
@@ -123,6 +124,17 @@
         TargetURL="$(TargetStaticFeed)"
         Type="AzureStorageFeed"
         Token="$(AzureStorageTargetFeedPAT)" />
+      <TargetFeedConfig Condition="'$(InstallersAzureAccountKey)' != '' and '$(InstallersAzureAccountKey)' != ''"
+        Include="Deb;Rpm;Node;BinaryLayout;Installer;Maven;VSIX"
+        TargetURL="$(InstallersTargetStaticFeed)"
+        Type="AzureStorageFeed"
+        Token="$(InstallersAzureAccountKey)" />
+      <TargetFeedConfig Condition="'$(ChecksumsTargetStaticFeed)' != '' and '$(ChecksumsStorageAccountKey)' != ''"
+        Include="Checksum"
+        TargetURL="$(ChecksumsTargetStaticFeed)"
+        Type="AzureStorageFeed"
+        Token="$(ChecksumsStorageAccountKey)" />
+      />
     </ItemGroup>
 
     <Error
