@@ -47,7 +47,8 @@ namespace Microsoft.DotNet.Github.IssueLabeler
         public async Task DownloadAndSaveAsync()
         {
             StringBuilder sb = new StringBuilder();
-            File.WriteAllText(_outputFile, "ID\tArea\tTitle\tDescription\tIsPR\tFilePaths" + Environment.NewLine);
+            if (!File.Exists(_outputFile))
+                File.WriteAllText(_outputFile, "Area\tTitle\tDescription\tIsPR\tFilePaths" + Environment.NewLine);
             for (int i = _startIndex; i < _endIndex; i++)
             {
                 try
@@ -76,23 +77,31 @@ namespace Microsoft.DotNet.Github.IssueLabeler
                             string title = RemoveNewLineCharacters(issue.Title);
                             string description = RemoveNewLineCharacters(issue.Body);
                             // Ordering is important here because we are using the same ordering on the prediction side.
-                            sb.AppendLine($"{i}\t{label.Name}\t\"{title}\"\t\"{description}\"\t{isPr}\t{filePaths}");
+                            sb.AppendLine($"{label.Name}\t\"{title}\"\t\"{description}\"\t{isPr}\t{filePaths}");
                         }
-                    }
-
-                    if (i % 1000 == 0)
-                    {
-                        File.AppendAllText(_outputFile, sb.ToString());
-                        sb.Clear();
                     }
                 }
                 catch (Exception ex)
                 {
+                    if (ex.Message.Contains("Authenticated requests get a higher rate limit"))
+                    {
+                        if (sb.Length != 0)
+                            File.AppendAllText(_outputFile, sb.ToString());
+                        Console.WriteLine($"Rate limit exceeded. Last issue processed is {i}.");
+                        throw ex;
+                    }
                     Console.WriteLine($"Issue {i}: " + ex.Message);
+                }
+
+                if (i % 1000 == 0)
+                {
+                    File.AppendAllText(_outputFile, sb.ToString());
+                    sb.Clear();
                 }
             }
 
-            File.AppendAllText(_outputFile, sb.ToString());
+            if (sb.Length != 0)
+                File.AppendAllText(_outputFile, sb.ToString());
         }
 
         private static string RemoveNewLineCharacters(string input)
