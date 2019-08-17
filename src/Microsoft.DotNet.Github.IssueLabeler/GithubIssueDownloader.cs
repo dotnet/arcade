@@ -5,6 +5,7 @@
 using Octokit;
 using System;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -46,11 +47,26 @@ namespace Microsoft.DotNet.Github.IssueLabeler
         public async Task DownloadAndSaveAsync()
         {
             StringBuilder sb = new StringBuilder();
-            File.WriteAllText(_outputFile, "Id\tArea\tTitle\tDescription");
+            File.WriteAllText(_outputFile, "ID\tArea\tTitle\tDescription\tIsPR\tFilePaths" + Environment.NewLine);
             for (int i = _startIndex; i < _endIndex; i++)
             {
                 try
                 {
+                    string filePaths = string.Empty;
+                    bool isPr = true;
+                    try
+                    {
+                        var prFiles = await _client.PullRequest.Files(_owner, _repoName, i);
+                        filePaths = String.Join(";", prFiles.Select(x => x.FileName));
+                    }
+                    catch (Exception ex)
+                    {
+                        if (ex.Message.Contains("files was not found."))
+                            isPr = false;
+                        else
+                            throw ex;
+                    }
+
                     var issue = await _client.Issue.Get(_owner, _repoName, i);
 
                     foreach (var label in issue.Labels)
@@ -60,7 +76,7 @@ namespace Microsoft.DotNet.Github.IssueLabeler
                             string title = RemoveNewLineCharacters(issue.Title);
                             string description = RemoveNewLineCharacters(issue.Body);
                             // Ordering is important here because we are using the same ordering on the prediction side.
-                            sb.AppendLine($"{label.Name}\t\"{title}\"\t\"{description}\"");
+                            sb.AppendLine($"{i}\t{label.Name}\t\"{title}\"\t\"{description}\"\t{isPr}\t{filePaths}");
                         }
                     }
 
@@ -70,9 +86,9 @@ namespace Microsoft.DotNet.Github.IssueLabeler
                         sb.Clear();
                     }
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
-                    Console.WriteLine($"Issue {i} does not exist");
+                    Console.WriteLine($"Issue {i}: " + ex.Message);
                 }
             }
 
@@ -81,7 +97,7 @@ namespace Microsoft.DotNet.Github.IssueLabeler
 
         private static string RemoveNewLineCharacters(string input)
         {
-            return input.Replace("\r\n", " ").Replace("\n", " ");
+            return input.Replace("\r\n", " ").Replace("\n", " ").Replace("\t", " ");
         }
     }
 }
