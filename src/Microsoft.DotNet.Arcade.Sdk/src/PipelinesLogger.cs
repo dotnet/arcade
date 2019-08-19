@@ -248,11 +248,15 @@ namespace Microsoft.DotNet.Arcade.Sdk
         {
             if (e.EventName.Equals(s_TelemetryMarker))
             {
-                e.Properties.TryGetValue("Category", out string telemetryCategory);
+                string telemetryCategory;
+                if (!e.Properties.TryGetValue("Category", out telemetryCategory))
+                {
+                    e.Properties.TryGetValue("Name", out telemetryCategory);
+                }
                 e.Properties.TryGetValue("State", out string telemetryState);
                 e.Properties.TryGetValue("Result", out string result);
 
-                State state = State.Initialized;
+                State state = State.Unknown;
                 Enum.TryParse(telemetryState, out state);
 
                 var parentId = _buildEventContextMap.TryGetValue(e.BuildEventContext, out var guid)
@@ -263,12 +267,15 @@ namespace Microsoft.DotNet.Arcade.Sdk
                 {
                     var telemetryInfo = new TelemetryTaskInfo(parentId.Value, telemetryCategory, state, result);
                     _taskTelemetryInfoMap[parentId.Value] = telemetryInfo;
-                    LogDetail(
-                        id: telemetryInfo.Id,
-                        type: s_TelemetryMarker,
-                        name: telemetryInfo.Category,
-                        state: state,
-                        result: result);
+                    if (state != State.Unknown)
+                    {
+                        LogDetail(
+                            id: telemetryInfo.Id,
+                            type: s_TelemetryMarker,
+                            name: telemetryCategory,
+                            state: state,
+                            result: result);
+                    }
                 }
             }
         }

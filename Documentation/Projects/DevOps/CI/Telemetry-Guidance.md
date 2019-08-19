@@ -42,7 +42,9 @@ Arcade's MSBuild logger looks for an `NETCORE_ENGINEERING_TELEMETRY` static or g
 
 This will allow us to add telemetry properties into MSBuild projects which will then decorate the Timeline API results with the expected categorization.  
 
-Project properties are useful to set a generic categorization for a project.  This model works well for Arcade because Arcade directly invokes MSBuild on a project and we can specify a categorization when that invocation occurs.  For dynamic categorization (specifying a category to be set when a target is executing), you can use MSBuilds "Telemetry" task.
+Project properties are useful to set a generic categorization for a project.  This model works well for Arcade because Arcade directly invokes MSBuild on a project and we can specify a categorization when that invocation occurs.  
+
+For dynamic categorization (specifying a category to be set when a target is executing), you can use MSBuilds "Telemetry" task.
 
 #### Example
 
@@ -63,7 +65,34 @@ If we add...
 
 into a project file, then any CI failures in the "Build" target will be categorized as "Build".  Any failure in "MyCustomBuildTarget" will be categorized as "Custom" because of the "Telemetry" task.  
 
-Arcade will use a combination of the above techniques to enable categorization for anyone using Arcade.
+### Dynamic telemetry categorization
+
+```<Telemetry EventName="NETCORE_ENGINEERING_TELEMETRY" EventData="[Category|Name]={string};(State={string});(Result={string})>```
+
+- Category | Name - Required: Either "Category" or "Name" may be specified and represent the category of the telemetry.
+
+- State - Optional: One of "Initialized", "InProgress", or "Completed"
+
+- Result - Optional: One of "Succeeded", "SucceededWithIssues", "Failed", "Canceled", or "Skipped"
+
+As mentioned in the previous section, you can use the "Telemetry" task to specify a category to be used by MSBuild if an error occurs.  If you specify a "State" property in the EventData, then the logger will create a log detail item in the Timeline with the specified state.  Within the context of an MSBuild project, **you will only have one timeline detail**, meaning that subsequent telemetry task calls with the "State" property will update the state of the same detail log.  You can use this behavior to track timeout scenarios.
+
+#### Example
+
+```XML
+<Target Name="MyCustomBuildTarget">
+  <Telemetry EventName="NETCORE_ENGINEERING_TELEMETRY" EventData="Category=MyBuild;State=InProgress">
+
+  <MyCustomBuildTask>
+    <Output TaskParameter="Results" ItemName="ResultItems" />
+  </MyCustomBuildTask>
+
+  <Telemetry Condition="'@(ResultItems)' == ''" EventName="NETCORE_ENGINEERING_TELEMETRY" EventData="Category=MyBuild;State=Completed;Result=Failed">
+  <Telemetry Condition="'@(ResultItems)' != ''" EventName="NETCORE_ENGINEERING_TELEMETRY" EventData="Category=MyBuild;State=Completed;Result=Succeeded">
+</Target>
+```
+
+When looking at the Timeline logs after the job completes, you will see a log detail created which will have the state "Completed" if it finished, or "InProgress" if the build was cancelled before the completed telemetry event could be sent.
 
 ## Logging categories
 
