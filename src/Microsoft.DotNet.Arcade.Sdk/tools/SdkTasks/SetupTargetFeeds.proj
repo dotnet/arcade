@@ -128,10 +128,6 @@
       <TargetStaticFeed Condition="'$(ArtifactsCategory.ToUpper())' == 'IOT'">https://dotnetfeed.blob.core.windows.net/dotnet-iot/index.json</TargetStaticFeed>
       <TargetStaticFeed Condition="'$(TargetStaticFeed)' == ''">https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json</TargetStaticFeed>
     </PropertyGroup>
-    <PropertyGroup>
-      <InstallersTargetStaticFeed>https://dotnetcli.blob.core.windows.net/riarenas/index.json</InstallersTargetStaticFeed>
-      <ChecksumsTargetStaticFeed>https://dotnetclichecksums.blob.core.windows.net/riarenas/index.json</ChecksumsTargetStaticFeed>
-    </PropertyGroup>
 
     <!-- Configuration for public non-stable feeds -->
     <ItemGroup Condition="'@(TargetFeedConfig)' == ''">
