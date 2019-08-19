@@ -7,7 +7,7 @@ parameters:
 
 stages:
 - stage: NetCore_Dev5_Publish
-  dependsOn: ${{}} parameters.dependsOn }}
+  dependsOn: ${{ parameters.dependsOn }}
   variables:
     - template: ../common-variables.yml
   displayName: .NET Core 5 Dev Channel
