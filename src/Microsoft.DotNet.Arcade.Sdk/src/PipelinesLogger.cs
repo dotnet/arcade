@@ -26,15 +26,9 @@ namespace Microsoft.DotNet.Arcade.Sdk
         public LoggerVerbosity Verbosity { get; set; }
         public string Parameters { get; set; }
         private static readonly string s_TelemetryMarker = "NETCORE_ENGINEERING_TELEMETRY";
-        private static bool _debug = false;
 
         public void Initialize(IEventSource eventSource)
         {
-            if (_debug)
-            {
-                _debug = false;
-                System.Diagnostics.Debugger.Launch();
-            }
             var parameters = LoggerParameters.Parse(this.Parameters);
 
             _solutionDirectory = parameters["SolutionDir"];
