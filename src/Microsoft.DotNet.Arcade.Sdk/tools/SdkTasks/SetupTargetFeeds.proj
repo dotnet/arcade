@@ -146,7 +146,6 @@
         TargetURL="$(ChecksumsTargetStaticFeed)"
         Type="AzureStorageFeed"
         Token="$(ChecksumsStorageAccountKey)" />
-      />
     </ItemGroup>
 
     <Error
