@@ -147,9 +147,9 @@ $ValidatePackage = {
 }
 
 function ValidateSourceLinkLinks {
-  if (!($GHRepoName -Match "^[^\s\/]+/[^\s\/]+$")) {
+  if ($GHRepoName -ne "" -and !($GHRepoName -Match "^[^\s\/]+/[^\s\/]+$")) {
     if (!($GHRepoName -Match "^[^\s-]+-[^\s]+$")) {
-      Write-PipelineTaskError "GHRepoName should be in the format <org>/<repo> or <org>-<repo>"
+      Write-PipelineTaskError "GHRepoName should be in the format <org>/<repo> or <org>-<repo>. '$GHRepoName'"
       ExitWithExitCode 1
     }
     else {
@@ -157,28 +157,33 @@ function ValidateSourceLinkLinks {
     }
   }
 
-  if (!($GHCommit -Match "^[0-9a-fA-F]{40}$")) {
-    Write-PipelineTaskError "GHCommit should be a 40 chars hexadecimal string"
+  if ($GHCommit -ne "" -and !($GHCommit -Match "^[0-9a-fA-F]{40}$")) {
+    Write-PipelineTaskError "GHCommit should be a 40 chars hexadecimal string. '$GHCommit'"
     ExitWithExitCode 1
   }
 
-  $RepoTreeURL = -Join("http://api.github.com/repos/", $GHRepoName, "/git/trees/", $GHCommit, "?recursive=1")
-  $CodeExtensions = @(".cs", ".vb", ".fs", ".fsi", ".fsx", ".fsscript")
+  if ($GHRepoName -ne "" -and $GHCommit -ne "") {
+    $RepoTreeURL = -Join("http://api.github.com/repos/", $GHRepoName, "/git/trees/", $GHCommit, "?recursive=1")
+    $CodeExtensions = @(".cs", ".vb", ".fs", ".fsi", ".fsx", ".fsscript")
 
-  try {
-    # Retrieve the list of files in the repo at that particular commit point and store them in the RepoFiles hash
-    $Data = Invoke-WebRequest $RepoTreeURL -UseBasicParsing | ConvertFrom-Json | Select-Object -ExpandProperty tree
+    try {
+      # Retrieve the list of files in the repo at that particular commit point and store them in the RepoFiles hash
+      $Data = Invoke-WebRequest $RepoTreeURL -UseBasicParsing | ConvertFrom-Json | Select-Object -ExpandProperty tree
   
-    foreach ($file in $Data) {
-      $Extension = [System.IO.Path]::GetExtension($file.path)
+      foreach ($file in $Data) {
+        $Extension = [System.IO.Path]::GetExtension($file.path)
 
-      if ($CodeExtensions.Contains($Extension)) {
-        $RepoFiles[$file.path] = 1
+        if ($CodeExtensions.Contains($Extension)) {
+          $RepoFiles[$file.path] = 1
+        }
       }
     }
+    catch {
+      Write-Host "Problems downloading the list of files from the repo. Url used: $RepoTreeURL . Execution will proceed without caching."
+    }
   }
-  catch {
-    Write-Host "Problems downloading the list of files from the repo. Url used: $RepoTreeURL . Execution will proceed without caching."
+  elseif ($GHRepoName -ne "" -or $GHCommit -ne "") {
+    Write-Host "For using the http caching mechanism both GHRepoName and GHCommit should be informed."
   }
   
   if (Test-Path $ExtractPath) {
