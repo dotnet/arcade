@@ -25,7 +25,7 @@ Target completion date is 8/13/2019.
 | CoreFx                     | danmose/safern   | Complete | ✔️ | SourceLink validation disabled: https://github.com/dotnet/arcade/issues/3603 |
 | IoT                        | joperezr         | Complete | ✔️ | |
 | Core-SDK                   | licavalc         | In progress | ➖ |  Working in parallel.Will need https://github.com/dotnet/arcade/issues/3607 to be done before completing. |
-| Core-Setup                 | dleeapho         | In progress | ➖ |  Expected completion 8/19 |
+| Core-Setup                 | dleeapho         | Complete | ✔️ | Uses workarounds and skips most validation. Uses custom publish steps. |
 | FSharp                     | brettfo          | Complete | ✔️ | |
 | MSBuild                    | licavalc         | Complete | ✔️ | |
 | Roslyn                     | jaredpar         | Complete | ✔️ |  Complete with source link validation disabled |
