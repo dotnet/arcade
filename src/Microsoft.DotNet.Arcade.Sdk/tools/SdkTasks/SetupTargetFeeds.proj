@@ -145,7 +145,7 @@
         Include="Checksum"
         TargetURL="$(ChecksumsTargetStaticFeed)"
         Type="AzureStorageFeed"
-        Token="$(ChecksumsStorageAccountKey)" />
+        Token="$(ChecksumsAzureAccountKey)" />
     </ItemGroup>
 
     <Error
