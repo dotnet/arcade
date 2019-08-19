@@ -254,7 +254,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
                             name: telemetryCategory,
                             state: state,
                             result: result,
-                            message: $"({s_TelemetryMarker}={telemetryCategory})";
+                            message: $"({s_TelemetryMarker}={telemetryCategory})");
                     }
                 }
             }
