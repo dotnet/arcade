@@ -101,15 +101,13 @@ namespace Microsoft.DotNet.Arcade.Sdk
                 {
                     message = $"({s_TelemetryMarker}={telemetryCategory}) {message}";
                 }
-            }
-            if (parentId.HasValue)
-            {
                 LogDetail(
                     id: parentId.Value,
                     type: s_TelemetryMarker,
                     name: telemetryCategory,
                     state: State.Completed,
-                    result: "Failed");
+                    result: "Failed",
+                    message: message);
             }
 
             _builder.Start("logissue");
@@ -142,22 +140,6 @@ namespace Microsoft.DotNet.Arcade.Sdk
             {
                 _builder.AddProperty("parentid", parentId.Value);
             }
-            string telemetryCategory = null;
-            if (_taskTelemetryInfoMap.TryGetValue(id, out TelemetryTaskInfo telemetryInfo))
-            {
-                telemetryCategory = telemetryInfo.Category;
-            }
-            if (telemetryCategory == null)
-            {
-                if (_projectInfoMap.TryGetValue(id, out ProjectInfo projectInfo))
-                {
-                    telemetryCategory = projectInfo.PropertiesCategory;
-                }
-            }
-            if (telemetryCategory != null)
-            {
-                message = $"({s_TelemetryMarker}={telemetryCategory}) {message}";
-            }
 
             // Certain values on logdetail can only be set once by design of VSO
             if (_detailedLoggedSet.Add(id))
@@ -186,11 +168,11 @@ namespace Microsoft.DotNet.Arcade.Sdk
                 _builder.AddProperty("progress", progress);
             }
 
-            _builder.AddProperty("state", state.ToString());
             if (Enum.TryParse(result, out Result resultEnum))
             {
                 _builder.AddProperty("result", result);
             }
+            _builder.AddProperty("state", state.ToString());
 
             _builder.Finish(message);
 
@@ -247,24 +229,32 @@ namespace Microsoft.DotNet.Arcade.Sdk
                 e.Properties.TryGetValue("Result", out string result);
 
                 State state = State.Unknown;
-                Enum.TryParse(telemetryState, out state);
+                if (!string.IsNullOrEmpty(result))
+                {
+                    state = State.Completed;
+                }
+                else
+                {
+                    Enum.TryParse(telemetryState, out state);
+                }
 
                 var parentId = _buildEventContextMap.TryGetValue(e.BuildEventContext, out var guid)
-                ? (Guid?)guid
-                : null;
+                    ? (Guid?)guid
+                    : null;
 
                 if (parentId.HasValue)
                 {
                     var telemetryInfo = new TelemetryTaskInfo(parentId.Value, telemetryCategory, state, result);
                     _taskTelemetryInfoMap[parentId.Value] = telemetryInfo;
-                    if (state != State.Unknown)
+                    if (state != State.Unknown || !string.IsNullOrEmpty(result))
                     {
                         LogDetail(
                             id: telemetryInfo.Id,
                             type: s_TelemetryMarker,
                             name: telemetryCategory,
                             state: state,
-                            result: result);
+                            result: result,
+                            message: $"({s_TelemetryMarker}={telemetryCategory})";
                     }
                 }
             }
@@ -301,8 +291,8 @@ namespace Microsoft.DotNet.Arcade.Sdk
             string propertyCategory = e.Properties?.Cast<DictionaryEntry>().LastOrDefault(p => p.Key.ToString().Equals(s_TelemetryMarker)).Value?.ToString();
 
             var parentId = _buildEventContextMap.TryGetValue(e.ParentProjectBuildEventContext, out var guid)
-            ? (Guid?)guid
-            : null;
+                ? (Guid?)guid
+                : null;
 
             var projectInfo = new ProjectInfo(getName(), parentId, propertyCategory, State.Initialized);
 

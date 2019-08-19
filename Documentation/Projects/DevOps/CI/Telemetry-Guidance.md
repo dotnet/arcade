@@ -87,10 +87,12 @@ As mentioned in the previous section, you can use the "Telemetry" task to specif
     <Output TaskParameter="Results" ItemName="ResultItems" />
   </MyCustomBuildTask>
 
-  <Telemetry Condition="'@(ResultItems)' == ''" EventName="NETCORE_ENGINEERING_TELEMETRY" EventData="Category=MyBuild;State=Completed;Result=Failed">
-  <Telemetry Condition="'@(ResultItems)' != ''" EventName="NETCORE_ENGINEERING_TELEMETRY" EventData="Category=MyBuild;State=Completed;Result=Succeeded">
+  <Telemetry Condition="'@(ResultItems)' == ''" EventName="NETCORE_ENGINEERING_TELEMETRY" EventData="Category=MyBuild;Result=Failed">
+  <Telemetry Condition="'@(ResultItems)' != ''" EventName="NETCORE_ENGINEERING_TELEMETRY" EventData="Category=MyBuild;Result=Succeeded">
 </Target>
 ```
+
+If you specify a "Result" value, then "State" will automatically be set to "Completed".
 
 When looking at the Timeline logs after the job completes, you will see a log detail created which will have the state "Completed" if it finished, or "InProgress" if the build was cancelled before the completed telemetry event could be sent.
 
