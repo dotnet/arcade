@@ -1,5 +1,6 @@
 parameters:
   artifactsPublishingAdditionalParameters: ''
+  publishInstallersAndChecksums: false
 
 stages:
 - stage: PVR_Publish
@@ -68,6 +69,7 @@ stages:
             /p:Configuration=Release
             /p:InstallersTargetStaticFeed=$(InstallersBlobFeedUrl)
             /p:InstallersAzureAccountKey=$(dotnetcli-storage-key)
+            /p:PublishInstallersAndChecksums=${{ parameters.publishInstallersAndChecksums }}
             /p:ChecksumsTargetStaticFeed=$(ChecksumsBlobFeedUrl)
             /p:ChecksumsAzureAccountKey=$(dotnetclichecksums-storage-key)
             ${{ parameters.artifactsPublishingAdditionalParameters }}

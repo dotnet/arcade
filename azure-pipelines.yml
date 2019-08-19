@@ -192,6 +192,7 @@ stages:
       # enabled back once this issue is resolved: https://github.com/dotnet/arcade/issues/2912
       enableSourceLinkValidation: false
       
+      publishInstallersAndChecksums: true
       # This is to enable SDL runs part of Post-Build Validation Stage
       SDLValidationParameters:
         enable: true

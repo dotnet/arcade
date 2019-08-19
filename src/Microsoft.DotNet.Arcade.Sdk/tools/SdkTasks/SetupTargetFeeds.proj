@@ -16,7 +16,12 @@
       - ArtifactsCategory
       - AzureStorageTargetFeedPAT
       - StaticInternalFeed          : URL of the feed to publish internal non-stable packages
-      
+      - PublishInstallersAndChecksums: Whether to publish installers and checksums to a secondary location for Dev channels
+      - InstallersTargetStaticFeed
+      - InstallersAzureAccountKey
+      - ChecksumsTargetStaticFeed
+      - ChecksumsAzureAccountKey
+
       - CreateTestConfig            : If set to true the user will be able to test a TargetFeedConfig 
                                       constructed using parameters below:
         - TestFeedCategories
@@ -42,6 +47,14 @@
     <Error
       Condition="('$(AzureStorageAccountName)' == '' or '$(AzureStorageAccountKey)' == '') and '$(IsStableBuild)' == 'true'"
       Text="Parameters 'AzureStorageAccountName/Key' are empty." />
+
+    <Error
+      Condition="('$(InstallersTargetStaticFeed)' == '' or '$(InstallersAzureAccountKey)' == '') and '$(PublishInstallersAndChecksums)' == 'true'"
+      Text="Parameters 'InstallersTargetStaticFeed/Key' are empty." />
+
+    <Error
+      Condition="('$(ChecksumsTargetStaticFeed)' == '' or '$(ChecksumsAzureAccountKey)' == '') and '$(PublishChecksumsAndChecksums)' == 'true'"
+      Text="Parameters 'ChecksumsTargetStaticFeed/Key' are empty." />
 
     <!--
       If the user wants to use a test configuration we'll create a TargetFeedConfig using
@@ -115,7 +128,10 @@
       <TargetStaticFeed Condition="'$(ArtifactsCategory.ToUpper())' == 'IOT'">https://dotnetfeed.blob.core.windows.net/dotnet-iot/index.json</TargetStaticFeed>
       <TargetStaticFeed Condition="'$(TargetStaticFeed)' == ''">https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json</TargetStaticFeed>
     </PropertyGroup>
-
+    <PropertyGroup>
+      <InstallersTargetStaticFeed>https://dotnetcli.blob.core.windows.net/riarenas/index.json</InstallersTargetStaticFeed>
+      <ChecksumsTargetStaticFeed>https://dotnetclichecksums.blob.core.windows.net/riarenas/index.json</ChecksumsTargetStaticFeed>
+    </PropertyGroup>
 
     <!-- Configuration for public non-stable feeds -->
     <ItemGroup Condition="'@(TargetFeedConfig)' == ''">
@@ -137,6 +153,7 @@
       />
     </ItemGroup>
 
+    <!-- Configuration for public-->
     <Error
       Condition="'@(TargetFeedConfig)' == ''"
       Text="It wasn't possible to determine which target feed configuration to use." />
