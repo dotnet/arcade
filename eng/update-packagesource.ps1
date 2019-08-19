@@ -6,7 +6,6 @@ Param(
 
 $ErrorActionPreference = "Stop"
 . $PSScriptRoot\common\tools.ps1
-$LocalNugetConfigSourceName = "arcade-local"
 
 # Batch and executable files exit and define $LASTEXITCODE.  Powershell commands exit and define $?
 function CheckExitCode ([string]$stage, [bool]$commandExitCode = $True)
@@ -23,7 +22,7 @@ function CheckExitCode ([string]$stage, [bool]$commandExitCode = $True)
   }
 
   if ($exitCode -ne 0) {
-    Write-Host "Something failed in stage: '$stage'. Check for errors above. Exiting now with exit code $exitCode..."
+    Write-PipelineTelemetryError -Category "UpdatePackageSource" -Message "Something failed in stage: '$stage'. Check for errors above. Exiting now with exit code $exitCode..."
     ExitWithExitCode $exitCode
   }
 }
@@ -39,13 +38,12 @@ function StopDotnetIfRunning
 function AddSourceToNugetConfig([string]$nugetConfigPath, [string]$source) 
 {
     Write-Host "Adding '$source' to '$nugetConfigPath'..."
-    
     $nugetConfig = New-Object XML
     $nugetConfig.PreserveWhitespace = $true
     $nugetConfig.Load($nugetConfigPath)
     $packageSources = $nugetConfig.SelectSingleNode("//packageSources")
     $keyAttribute = $nugetConfig.CreateAttribute("key")
-    $keyAttribute.Value = $LocalNugetConfigSourceName
+    $keyAttribute.Value = "arcade-local"
     $valueAttribute = $nugetConfig.CreateAttribute("value")
     $valueAttribute.Value = $source
     $newSource = $nugetConfig.CreateElement("add")
@@ -57,29 +55,23 @@ function AddSourceToNugetConfig([string]$nugetConfigPath, [string]$source)
 
 try {
   Push-Location $PSScriptRoot
+  $nugetConfigPath = Join-Path $RepoRoot "NuGet.config"
 
-    $nugetConfigPath = Join-Path $RepoRoot "NuGet.config"
-
+  Write-Host "Adding local source to NuGet.config"
   AddSourceToNugetConfig $nugetConfigPath $packagesSource
   CheckExitCode "Adding source to NuGet.config" $?
 
-  Write-Host "Updating Dependencies using Darc..."
-
+  Write-Host "Updating dependencies using Darc..."
   . .\common\darc-init.ps1
   CheckExitCode "Running darc-init"
-
   $DarcExe = "$env:USERPROFILE\.dotnet\tools"
   $DarcExe = Resolve-Path $DarcExe
-
   & $DarcExe\darc.exe update-dependencies --packages-folder $packagesSource --password $barToken --github-pat $gitHubPat --channel ".NET Tools - Latest"
   CheckExitCode "Updating dependencies"
-  StopDotnetIfRunning
-  
 }
 catch {
-  Write-Host $_
-  Write-Host $_.Exception
   Write-Host $_.ScriptStackTrace
+  Write-PipelineTelemetryError -Category "UpdatePackageSource" -Message $_
   ExitWithExitCode 1
 }
 finally {
@@ -87,3 +79,4 @@ finally {
   StopDotnetIfRunning
   Pop-Location
 }
+ExitWithExitCode 0
