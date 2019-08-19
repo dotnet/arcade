@@ -67,9 +67,9 @@ into a project file, then any CI failures in the "Build" target will be categori
 
 ### Dynamic telemetry categorization
 
-```<Telemetry EventName="NETCORE_ENGINEERING_TELEMETRY" EventData="[Category|Name]={string};(State={string});(Result={string})>```
+```<Telemetry EventName="NETCORE_ENGINEERING_TELEMETRY" EventData="Category={string};(State={string});(Result={string})>```
 
-- Category | Name - Required: Either "Category" or "Name" may be specified and represent the category of the telemetry.
+- Category - Required: "Category" must be specified to define the category of the telemetry.
 
 - State - Optional: One of "Initialized", "InProgress", or "Completed"
 

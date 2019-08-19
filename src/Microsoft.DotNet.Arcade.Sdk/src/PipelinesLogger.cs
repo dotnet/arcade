@@ -248,11 +248,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
         {
             if (e.EventName.Equals(s_TelemetryMarker))
             {
-                string telemetryCategory;
-                if (!e.Properties.TryGetValue("Category", out telemetryCategory))
-                {
-                    e.Properties.TryGetValue("Name", out telemetryCategory);
-                }
+                e.Properties.TryGetValue("Category", out string telemetryCategory);
                 e.Properties.TryGetValue("State", out string telemetryState);
                 e.Properties.TryGetValue("Result", out string result);
 
