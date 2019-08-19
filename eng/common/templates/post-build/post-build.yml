@@ -117,15 +117,14 @@ stages:
 
 - template: \eng\common\templates\post-build\channels\public-validation-release.yml
   parameters:
+    artifactsPublishingAdditionalParameters: ${{ parameters.artifactsPublishingAdditionalParameters }}
     dependsOn: ${{ parameters.publishDependsOn }}
 
 - template: \eng\common\templates\post-build\channels\public-release.yml
   parameters:
     symbolPublishingAdditionalParameters: ${{ parameters.symbolPublishingAdditionalParameters }}
     artifactsPublishingAdditionalParameters: ${{ parameters.artifactsPublishingAdditionalParameters }}
-    dependsOn:
-    - ${{ each dependsOnJob in parameters.publishDependsOn }}:
-      - ${{ dependsOnJob }}
+    dependsOn: ${{ parameters.publishDependsOn }}
 
 - template: \eng\common\templates\post-build\channels\internal-servicing.yml
   parameters:

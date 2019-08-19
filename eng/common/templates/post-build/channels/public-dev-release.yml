@@ -7,9 +7,7 @@ parameters:
 
 stages:
 - stage: Publish
-  dependsOn:
-  - ${{ each depend in parameters.dependsOn }}:
-    - ${{ depend }}
+  dependsOn: ${{ parameters.dependsOn }}
   variables:
     - template: ../common-variables.yml
   displayName: Developer Channel

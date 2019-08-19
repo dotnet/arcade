@@ -5,10 +5,7 @@ parameters:
 
 stages:
 - stage: PVR_Publish
-  dependsOn:
-  - ${{ each depend in parameters.dependsOn }}:
-    - ${{ depend }}
-
+  dependsOn: ${{ parameters.dependsOn }}
   variables:
     - template: ../common-variables.yml
   displayName: Validation Channel
