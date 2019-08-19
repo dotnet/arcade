@@ -68,7 +68,7 @@ total_added_logs = 0
 
 def add_logs(tr, log_list):
     global total_added_logs
-    if tr.result != "Pass" and total_added_logs < 50:
+    if tr is not None and tr.result != "Pass" and total_added_logs < 50:
         tr.attachments.append(TestResultAttachment(
             name=u"Logs.html",
             text=log_list,
