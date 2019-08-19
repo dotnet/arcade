@@ -149,7 +149,6 @@
       />
     </ItemGroup>
 
-    <!-- Configuration for public-->
     <Error
       Condition="'@(TargetFeedConfig)' == ''"
       Text="It wasn't possible to determine which target feed configuration to use." />
