@@ -21,9 +21,7 @@ parameters:
 
 stages:
 - stage: validate
-  dependsOn: 
-  - ${{ each dependsOn in parameters.validateDependsOn }}:
-    - ${{ dependsOn }}
+  dependsOn: ${{ parameters.validateDependsOn }}
   displayName: Validate
   jobs:
   - ${{ if eq(parameters.enableNugetValidation, 'true') }}:
@@ -98,49 +96,39 @@ stages:
 
 - template: \eng\common\templates\post-build\channels\netcore-dev-5.yml
   parameters:
-    dependsOn:
-    - ${{ each dependsOn in parameters.publishDependsOn }}:
-      - ${{ dependsOn }}
+    dependsOn: ${{ parameters.publishDependsOn }}
     enableSymbolValidation: ${{ parameters.enableSymbolValidation }}
     symbolPublishingAdditionalParameters: ${{ parameters.symbolPublishingAdditionalParameters }}
     artifactsPublishingAdditionalParameters: ${{ parameters.artifactsPublishingAdditionalParameters }}
 
 - template: \eng\common\templates\post-build\channels\public-dev-release.yml
   parameters:
-    dependsOn:
-    - ${{ each dependsOn in parameters.publishDependsOn }}:
-      - ${{ dependsOn }}
+    dependsOn: ${{ parameters.publishDependsOn }}
     enableSymbolValidation: ${{ parameters.enableSymbolValidation }}
     symbolPublishingAdditionalParameters: ${{ parameters.symbolPublishingAdditionalParameters }}
     artifactsPublishingAdditionalParameters: ${{ parameters.artifactsPublishingAdditionalParameters }}
 
 - template: \eng\common\templates\post-build\channels\netcore-tools-latest.yml
   parameters:
-    dependsOn:
-    - ${{ each dependsOn in parameters.publishDependsOn }}:
-      - ${{ dependsOn }}
+    dependsOn: ${{ parameters.publishDependsOn }}
     enableSymbolValidation: ${{ parameters.enableSymbolValidation }}
     symbolPublishingAdditionalParameters: ${{ parameters.symbolPublishingAdditionalParameters }}
     artifactsPublishingAdditionalParameters: ${{ parameters.artifactsPublishingAdditionalParameters }}
 
 - template: \eng\common\templates\post-build\channels\public-validation-release.yml
   parameters:
-    dependsOn:
-    - ${{ each dependsOn in parameters.publishDependsOn }}:
-      - ${{ dependsOn }}
+    dependsOn: ${{ parameters.publishDependsOn }}
 
 - template: \eng\common\templates\post-build\channels\public-release.yml
   parameters:
     symbolPublishingAdditionalParameters: ${{ parameters.symbolPublishingAdditionalParameters }}
     artifactsPublishingAdditionalParameters: ${{ parameters.artifactsPublishingAdditionalParameters }}
     dependsOn:
-    - ${{ each dependsOn in parameters.publishDependsOn }}:
-      - ${{ dependsOn }}
+    - ${{ each dependsOnJob in parameters.publishDependsOn }}:
+      - ${{ dependsOnJob }}
 
 - template: \eng\common\templates\post-build\channels\internal-servicing.yml
   parameters:
     symbolPublishingAdditionalParameters: ${{ parameters.symbolPublishingAdditionalParameters }}
     artifactsPublishingAdditionalParameters: ${{ parameters.artifactsPublishingAdditionalParameters }}
-    dependsOn:
-    - ${{ each dependsOn in parameters.publishDependsOn }}:
-      - ${{ dependsOn }}
+    dependsOn: ${{ parameters.publishDependsOn }}
