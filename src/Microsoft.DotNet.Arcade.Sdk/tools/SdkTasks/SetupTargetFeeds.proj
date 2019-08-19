@@ -136,12 +136,12 @@
         TargetURL="$(TargetStaticFeed)"
         Type="AzureStorageFeed"
         Token="$(AzureStorageTargetFeedPAT)" />
-      <TargetFeedConfig Condition="'$(InstallersTargetStaticFeed)' != '' and '$(InstallersAzureAccountKey)' != ''"
+      <TargetFeedConfig Condition="'$(PublishInstallersAndChecksums)' == 'true'"
         Include="Deb;Rpm;Node;BinaryLayout;Installer;Maven;VSIX"
         TargetURL="$(InstallersTargetStaticFeed)"
         Type="AzureStorageFeed"
         Token="$(InstallersAzureAccountKey)" />
-      <TargetFeedConfig Condition="'$(ChecksumsTargetStaticFeed)' != '' and '$(ChecksumsStorageAccountKey)' != ''"
+      <TargetFeedConfig Condition="'$(PublishInstallersAndChecksums)' == 'true'"
         Include="Checksum"
         TargetURL="$(ChecksumsTargetStaticFeed)"
         Type="AzureStorageFeed"
