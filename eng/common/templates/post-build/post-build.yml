@@ -1,5 +1,4 @@
 parameters:
-
   enableSourceLinkValidation: true
   enableSigningValidation: true
   enableSymbolValidation: true

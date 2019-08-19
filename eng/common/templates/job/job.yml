@@ -25,7 +25,9 @@ parameters:
   enablePublishTestResults: false
   enablePublishUsingPipelines: false
   name: ''
-  preSteps: []
+  preSteps:
+    - checkout: self
+      clean: true
   runAsPublic: false
 
 jobs:

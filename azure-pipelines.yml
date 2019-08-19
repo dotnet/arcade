@@ -56,9 +56,6 @@ stages:
             ${{ if eq(variables._RunAsPublic, True) }}:
               Build_Debug:
                 _BuildConfig: Debug
-        preSteps:
-        - checkout: self
-          clean: true
         steps:
         - script: eng\common\cibuild.cmd
             -configuration $(_BuildConfig) 
@@ -114,9 +111,6 @@ stages:
                 _BuildConfig: Release
               Build_Debug:
                 _BuildConfig: Debug
-          preSteps:
-          - checkout: self
-            clean: true
           steps:
           - powershell: eng\common\build.ps1
               -configuration $(_BuildConfig) 
@@ -141,9 +135,6 @@ stages:
                 _BuildConfig: Debug
               Build_Release:
                 _BuildConfig: Release
-          preSteps:
-          - checkout: self
-            clean: true
           steps:
           - script: eng/common/build.sh
               --configuration $(_BuildConfig)
