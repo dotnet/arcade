@@ -22,7 +22,7 @@ Target completion date is 8/13/2019.
 | aspnet-Extensions          | dougbu    | At risk | ❌ |  Expected completion 8/11 |
 | CLI                        | licavalc         | At risk | ❌ |  No plan available |
 | CLICommandLineParser       | licavalc         | At risk | ❌ |  No plan available |
-| CoreClr                    | jeffschw/arobins | On track | ➖ | Expected completion: 8/11 |
+| CoreClr                    | jeffschw/arobins | Complete | ✔️ | |
 | CoreFx                     | danmose/safern   | On track | ➖ | Expected completion: 8/9 |
 | IoT                        | joperezr         | Complete | ✔️ | |
 | Core-SDK                   | licavalc         | At risk | ❌ |  No plan available |
