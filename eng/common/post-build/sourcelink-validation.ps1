@@ -1,8 +1,8 @@
 param(
   [Parameter(Mandatory=$true)][string] $InputPath,              # Full path to directory where Symbols.NuGet packages to be checked are stored
   [Parameter(Mandatory=$true)][string] $ExtractPath,            # Full path to directory where the packages will be extracted during validation
-  [Parameter(Mandatory=$false)][string] $GHRepoName,             # GitHub name of the repo including the Org. E.g., dotnet/arcade
-  [Parameter(Mandatory=$false)][string] $GHCommit,               # GitHub commit SHA used to build the packages
+  [Parameter(Mandatory=$true)][string] $GHRepoName,             # GitHub name of the repo including the Org. E.g., dotnet/arcade
+  [Parameter(Mandatory=$true)][string] $GHCommit,               # GitHub commit SHA used to build the packages
   [Parameter(Mandatory=$true)][string] $SourcelinkCliVersion    # Version of SourceLink CLI to use
 )
 
@@ -151,7 +151,7 @@ $ValidatePackage = {
 }
 
 function ValidateSourceLinkLinks {
-    if (!($GHRepoName -Match "^[^\s\/]+/[^\s\/]+$")) {
+  if (!($GHRepoName -Match "^[^\s\/]+/[^\s\/]+$")) {
     if (!($GHRepoName -Match "^[^\s-]+-[^\s]+$")) {
       Write-PipelineTaskError "GHRepoName should be in the format <org>/<repo> or <org>-<repo>"
       ExitWithExitCode 1
