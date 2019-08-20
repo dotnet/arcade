@@ -243,9 +243,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
 
 {memberIndent}<Global.System.Runtime.CompilerServices.MethodImpl(Global.System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)>
 {memberIndent}Friend Shared Function GetResourceString(ByVal resourceKey As String, Optional ByVal defaultValue As String = Nothing) As String
-{memberIndent}  Get
 {memberIndent}    Return ResourceManager.GetString(resourceKey, Culture)
-{memberIndent}  End Get
 {memberIndent}End Function";
                         if (EmitFormatMethods)
                         {

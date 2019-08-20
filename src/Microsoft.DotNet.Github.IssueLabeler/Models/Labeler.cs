@@ -73,6 +73,10 @@ namespace Microsoft.DotNet.GitHub.IssueLabeler
 
             string label = Predictor.Predict(corefxIssue, logger, _threshold);
             Issue issueGithubVersion = await _client.Issue.Get(_repoOwner, _repoName, number);
+            if (label.Equals("area-System.Net.Http.SocketsHttpHandler", StringComparison.OrdinalIgnoreCase))
+            {
+                label = "area-System.Net.Http";
+            }
 
             if (label != null && issueGithubVersion.Labels.Count == 0)
             {

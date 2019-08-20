@@ -13,31 +13,29 @@ Target completion date is 8/13/2019.
 | Arcade                     | mawilkie         | Complete | ✔️ | |
 | Arcade-Services            | mawilkie         | Complete | ✔️ | |
 | Arcade-Validation          | mawilkie         | Complete | ✔️ | |
-| aspnet-AspLabs             | dougbu    | At risk | ❌ |  Expected completion 8/11 |
-| aspnet-AspNetCore          | dougbu    | At risk | ❌ |  Expected completion 8/11 |
-| aspnet-AspNetCore-Tooling  | dougbu    | Complete | ✔️ | |
-| aspnet-EntityFramework6    | dougbu    | At risk | ❌ |  Expected completion 8/11 |
-| aspnet-EntityFrameworkCore | dougbu    | At risk | ❌ |  Expected completion 8/11 |
-| aspnet-Blazor              | dougbu    | At risk | ❌ |  Expected completion 8/11 |
-| aspnet-Extensions          | dougbu    | At risk | ❌ |  Expected completion 8/11 |
-| CLI                        | licavalc         | At risk | ❌ |  No plan available |
-| CLICommandLineParser       | licavalc         | At risk | ❌ |  No plan available |
+| aspnet-AspNetCore          | dougbu           | In progress | ➖  |  In PR https://github.com/aspnet/AspNetCore/pull/13040 |
+| aspnet-AspNetCore-Tooling  | dougbu           | Complete | ✔️ | |
+| aspnet-EntityFramework6    | dougbu/wtgodbe   | Complete | ✔️ | |
+| aspnet-EntityFrameworkCore | dougbu/wtgodbe   | Complete | ✔️ | |
+| aspnet-Blazor              | dougbu           | Complete | ✔️ | |
+| aspnet-Extensions          | dougbu/wtgodbe   | Complete | ✔️ | |
+| CLI                        | licavalc         | Complete | ✔️ | |
+| CLICommandLineParser       | licavalc         | N/A | |  This repo is not being developed anymore. We are taking a pinned version of it |
 | CoreClr                    | jeffschw/arobins | Complete | ✔️ | |
-| CoreFx                     | danmose/safern   | On track | ➖ | Expected completion: 8/9 |
+| CoreFx                     | danmose/safern   | Complete | ✔️ | SourceLink validation disabled: https://github.com/dotnet/arcade/issues/3603 |
 | IoT                        | joperezr         | Complete | ✔️ | |
-| Core-SDK                   | licavalc         | At risk | ❌ |  No plan available |
-| Core-Setup                 | dleeapho         | At risk | ❌ |  Expected completion 8/21 |
+| Core-SDK                   | licavalc         | In progress | ➖ |  Working in parallel.Will need https://github.com/dotnet/arcade/issues/3607 to be done before completing. |
+| Core-Setup                 | dleeapho         | Complete | ✔️ | Uses workarounds and skips most validation. Uses custom publish steps. |
 | FSharp                     | brettfo          | Complete | ✔️ | |
-| MSBuild                    | licavalc         | At risk | ❌ |  No plan available |
-| nuget-NugetClient          | dtivel           | At risk | ❌ |  No plan available |
-| Roslyn                     | jaredpar         | At risk | ❌ |  Expected completion 8/15 |
-| SDK                        | licavalc         | At risk | ❌ |  No plan available |
+| MSBuild                    | licavalc         | Complete | ✔️ | |
+| Roslyn                     | jaredpar         | Complete | ✔️ |  Complete with source link validation disabled |
+| SDK                        | licavalc         | Complete | ✔️ | |
 | SourceLink                 | tmat             | Complete | ✔️ | |
 | Standard                   | danmose/wigodbe  | Complete | ✔️ | |
 | SymReader                  | tmat             | Complete | ✔️ | |
 | SymReader-Portable         | tmat             | Complete | ✔️ | |
 | Templating                 | vramak           | Complete | ✔️ | |
-| Test-Templates             | sasin            | At risk | ❌ |  No plan available |
+| Test-Templates             | sasin            | At risk  | ❌ |  No plan available |
 | Toolset                    | licavalc/riarenas| Complete | ✔️ | |
 | WebSDK                     | vramak           | Complete | ✔️ | |
 | WinForms                   | mmcgaw           | Complete | ✔️ | |

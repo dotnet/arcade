@@ -16,7 +16,12 @@
       - ArtifactsCategory
       - AzureStorageTargetFeedPAT
       - StaticInternalFeed          : URL of the feed to publish internal non-stable packages
-      
+      - PublishInstallersAndChecksums: Whether to publish installers and checksums to a secondary location for Dev channels
+      - InstallersTargetStaticFeed
+      - InstallersAzureAccountKey
+      - ChecksumsTargetStaticFeed
+      - ChecksumsAzureAccountKey
+
       - CreateTestConfig            : If set to true the user will be able to test a TargetFeedConfig 
                                       constructed using parameters below:
         - TestFeedCategories
@@ -42,6 +47,14 @@
     <Error
       Condition="('$(AzureStorageAccountName)' == '' or '$(AzureStorageAccountKey)' == '') and '$(IsStableBuild)' == 'true'"
       Text="Parameters 'AzureStorageAccountName/Key' are empty." />
+
+    <Error
+      Condition="('$(InstallersTargetStaticFeed)' == '' or '$(InstallersAzureAccountKey)' == '') and '$(PublishInstallersAndChecksums)' == 'true'"
+      Text="Parameters 'InstallersTargetStaticFeed/Key' are empty." />
+
+    <Error
+      Condition="('$(ChecksumsTargetStaticFeed)' == '' or '$(ChecksumsAzureAccountKey)' == '') and '$(PublishInstallersAndChecksums)' == 'true'"
+      Text="Parameters 'ChecksumsTargetStaticFeed/Key' are empty." />
 
     <!--
       If the user wants to use a test configuration we'll create a TargetFeedConfig using
@@ -123,6 +136,16 @@
         TargetURL="$(TargetStaticFeed)"
         Type="AzureStorageFeed"
         Token="$(AzureStorageTargetFeedPAT)" />
+      <TargetFeedConfig Condition="'$(PublishInstallersAndChecksums)' == 'true'"
+        Include="Deb;Rpm;Node;BinaryLayout;Installer;Maven;VSIX"
+        TargetURL="$(InstallersTargetStaticFeed)"
+        Type="AzureStorageFeed"
+        Token="$(InstallersAzureAccountKey)" />
+      <TargetFeedConfig Condition="'$(PublishInstallersAndChecksums)' == 'true'"
+        Include="Checksum"
+        TargetURL="$(ChecksumsTargetStaticFeed)"
+        Type="AzureStorageFeed"
+        Token="$(ChecksumsAzureAccountKey)" />
     </ItemGroup>
 
     <Error

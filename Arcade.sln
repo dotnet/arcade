@@ -23,8 +23,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Deployment
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.XUnitExtensions", "src\Microsoft.DotNet.XUnitExtensions\src\Microsoft.DotNet.XUnitExtensions.csproj", "{F8E7FEC3-B9E0-4A08-8608-F48379204F3A}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.ServiceFabric.ServiceHost", "src\Microsoft.DotNet.ServiceFabric.ServiceHost\Microsoft.DotNet.ServiceFabric.ServiceHost.csproj", "{77371D91-1D9B-46E5-A1D5-E31CE3EEF524}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Github.IssueLabeler", "src\Microsoft.DotNet.Github.IssueLabeler\Microsoft.DotNet.Github.IssueLabeler.csproj", "{A32C09E4-C334-4614-B40F-DEDF352C820E}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.SignTool.Tests", "src\Microsoft.DotNet.SignTool.Tests\Microsoft.DotNet.SignTool.Tests.csproj", "{25ACF626-1C89-4A32-A434-E3DA17759631}"
@@ -213,18 +211,6 @@ Global
 		{F8E7FEC3-B9E0-4A08-8608-F48379204F3A}.Release|x64.Build.0 = Release|Any CPU
 		{F8E7FEC3-B9E0-4A08-8608-F48379204F3A}.Release|x86.ActiveCfg = Release|Any CPU
 		{F8E7FEC3-B9E0-4A08-8608-F48379204F3A}.Release|x86.Build.0 = Release|Any CPU
-		{77371D91-1D9B-46E5-A1D5-E31CE3EEF524}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{77371D91-1D9B-46E5-A1D5-E31CE3EEF524}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{77371D91-1D9B-46E5-A1D5-E31CE3EEF524}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{77371D91-1D9B-46E5-A1D5-E31CE3EEF524}.Debug|x64.Build.0 = Debug|Any CPU
-		{77371D91-1D9B-46E5-A1D5-E31CE3EEF524}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{77371D91-1D9B-46E5-A1D5-E31CE3EEF524}.Debug|x86.Build.0 = Debug|Any CPU
-		{77371D91-1D9B-46E5-A1D5-E31CE3EEF524}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{77371D91-1D9B-46E5-A1D5-E31CE3EEF524}.Release|Any CPU.Build.0 = Release|Any CPU
-		{77371D91-1D9B-46E5-A1D5-E31CE3EEF524}.Release|x64.ActiveCfg = Release|Any CPU
-		{77371D91-1D9B-46E5-A1D5-E31CE3EEF524}.Release|x64.Build.0 = Release|Any CPU
-		{77371D91-1D9B-46E5-A1D5-E31CE3EEF524}.Release|x86.ActiveCfg = Release|Any CPU
-		{77371D91-1D9B-46E5-A1D5-E31CE3EEF524}.Release|x86.Build.0 = Release|Any CPU
 		{A32C09E4-C334-4614-B40F-DEDF352C820E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{A32C09E4-C334-4614-B40F-DEDF352C820E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A32C09E4-C334-4614-B40F-DEDF352C820E}.Debug|x64.ActiveCfg = Debug|Any CPU
