@@ -64,8 +64,7 @@
       Jobs="@(SentJob)">
       <Output TaskParameter="FailedWorkItems" ItemName="FailedWorkItem" />
     </GetFailedWorkItems>
-    <Telemetry Condition="'$(FailOnWorkItemFailure)' == 'true' and '@(FailedWorkItem)' != ''" EventName="NETCORE_ENGINEERING_TELEMETRY" EventData="Category=Test;State=Completed;Result=Failed" />
-    <Telemetry Condition="'$(FailOnWorkItemFailure)' == 'false' or '@(FailedWorkItem)' == ''" EventName="NETCORE_ENGINEERING_TELEMETRY" EventData="Category=Test;State=Completed;Result=Succeeded" />
+    <Telemetry Condition="'$(FailOnWorkItemFailure)' == 'true' and '@(FailedWorkItem)' != ''" EventName="NETCORE_ENGINEERING_TELEMETRY" EventData="Category=Test;Result=Failed" />
   </Target>
 
   <Target Name="Test"
