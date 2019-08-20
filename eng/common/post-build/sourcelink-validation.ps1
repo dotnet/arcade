@@ -1,8 +1,8 @@
 param(
   [Parameter(Mandatory=$true)][string] $InputPath,              # Full path to directory where Symbols.NuGet packages to be checked are stored
   [Parameter(Mandatory=$true)][string] $ExtractPath,            # Full path to directory where the packages will be extracted during validation
-  [Parameter(Mandatory=$true)][string] $GHRepoName,             # GitHub name of the repo including the Org. E.g., dotnet/arcade
-  [Parameter(Mandatory=$true)][string] $GHCommit,               # GitHub commit SHA used to build the packages
+  [Parameter(Mandatory=$false)][string] $GHRepoName,             # GitHub name of the repo including the Org. E.g., dotnet/arcade
+  [Parameter(Mandatory=$false)][string] $GHCommit,               # GitHub commit SHA used to build the packages
   [Parameter(Mandatory=$true)][string] $SourcelinkCliVersion    # Version of SourceLink CLI to use
 )
 
@@ -12,6 +12,12 @@ param(
 # in the repository at a specific commit point. This is populated by inserting
 # all files present in the repo at a specific commit point.
 $global:RepoFiles = @{}
+
+# Maximum number of jobs to run in parallel
+$MaxParallelJobs = 6
+
+# Wait time between check for system load
+$MinutesBetweenLoadChecks = 10
 
 $ValidatePackage = {
   param( 
@@ -145,7 +151,7 @@ $ValidatePackage = {
 }
 
 function ValidateSourceLinkLinks {
-  if (!($GHRepoName -Match "^[^\s\/]+/[^\s\/]+$")) {
+    if (!($GHRepoName -Match "^[^\s\/]+/[^\s\/]+$")) {
     if (!($GHRepoName -Match "^[^\s-]+-[^\s]+$")) {
       Write-PipelineTaskError "GHRepoName should be in the format <org>/<repo> or <org>-<repo>"
       ExitWithExitCode 1
@@ -186,14 +192,24 @@ function ValidateSourceLinkLinks {
   }
 
   # Process each NuGet package in parallel
-  $Jobs = @()
   Get-ChildItem "$InputPath\*.symbols.nupkg" |
     ForEach-Object {
-      $Jobs += Start-Job -ScriptBlock $ValidatePackage -ArgumentList $_.FullName
+      Start-Job -ScriptBlock $ValidatePackage -ArgumentList $_.FullName | Out-Null
+      $NumJobs = @(Get-Job -State 'Running').Count
+      
+      while ($NumJobs -ge $MaxParallelJobs) {
+        Write-Host "There are $NumJobs at the moment. Waiting 10 seconds."
+        sleep $MinutesBetweenLoadChecks
+        $NumJobs = @(Get-Job -State 'Running').Count
+      }
+
+      foreach ($Job in @(Get-Job -State 'Completed')) {
+        Remove-Job -Id $Job.Id
+      }
     }
 
-  foreach ($Job in $Jobs) {
-    Wait-Job -Id $Job.Id | Receive-Job
+  foreach ($Job in @(Get-Job)) {
+    Wait-Job -Id $Job.Id | Remove-Job
   }
 }
 
