@@ -53,7 +53,7 @@
       Text="Parameters 'InstallersTargetStaticFeed/Key' are empty." />
 
     <Error
-      Condition="('$(ChecksumsTargetStaticFeed)' == '' or '$(ChecksumsAzureAccountKey)' == '') and '$(PublishChecksumsAndChecksums)' == 'true'"
+      Condition="('$(ChecksumsTargetStaticFeed)' == '' or '$(ChecksumsAzureAccountKey)' == '') and '$(PublishInstallersAndChecksums)' == 'true'"
       Text="Parameters 'ChecksumsTargetStaticFeed/Key' are empty." />
 
     <!--
