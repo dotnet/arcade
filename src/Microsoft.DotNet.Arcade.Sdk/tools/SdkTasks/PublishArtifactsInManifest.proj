@@ -25,6 +25,12 @@
       - AzureDevOpsFeedsBaseUrl
       - ArtifactsCategory
       - AzureStorageTargetFeedPAT
+
+    Optional parameters for SetupTargetFeeds.proj
+      - InstallersStorageAccountName
+      - InstallersAzureAccountKey
+      - ChecksumsStorageAccountName
+      - ChecksumsAzureAccountKey
   -->
 
   <PropertyGroup>
