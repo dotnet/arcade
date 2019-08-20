@@ -17,7 +17,7 @@ $global:RepoFiles = @{}
 $MaxParallelJobs = 6
 
 # Wait time between check for system load
-$MinutesBetweenLoadChecks = 10
+$SecondsBetweenLoadChecks = 10
 
 $ValidatePackage = {
   param( 
@@ -198,18 +198,19 @@ function ValidateSourceLinkLinks {
       $NumJobs = @(Get-Job -State 'Running').Count
       
       while ($NumJobs -ge $MaxParallelJobs) {
-        Write-Host "There are $NumJobs at the moment. Waiting 10 seconds."
-        sleep $MinutesBetweenLoadChecks
+        Write-Host "There are $NumJobs validation jobs running right now. Waiting $SecondsBetweenLoadChecks seconds to check again."
+        sleep $SecondsBetweenLoadChecks
         $NumJobs = @(Get-Job -State 'Running').Count
       }
 
       foreach ($Job in @(Get-Job -State 'Completed')) {
+        Receive-Job -Id $Job.Id
         Remove-Job -Id $Job.Id
       }
     }
 
   foreach ($Job in @(Get-Job)) {
-    Wait-Job -Id $Job.Id | Remove-Job
+    Wait-Job -Id $Job.Id | Receive-Job
   }
 }
 
