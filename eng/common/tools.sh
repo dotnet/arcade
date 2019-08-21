@@ -224,10 +224,11 @@ function GetDotNetInstallScript {
   }
 }
 
-function LogTelemetry
+function LogTelemetry {
   local exit_code=$?
   Write-PipelineTelemetryError -category 'InitializeToolset' "Timed out (exit code '$exit_code')."
   ExitWithExitCode $exit_code
+}
 
 function InitializeBuildTool {
   if [[ -n "${_InitializeBuildTool:-}" ]]; then
