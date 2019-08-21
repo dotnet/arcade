@@ -208,18 +208,26 @@ function GetDotNetInstallScript {
 
     # Use curl if available, otherwise use wget
     if command -v curl > /dev/null; then
-      curl "$install_script_url" -sSL --retry 10 --create-dirs -o "$install_script"
+      if curl "$install_script_url" -sSL --retry 10 --create-dirs -o "$install_script" then 
+        echo "Downloading '$install_script_url' successful"
+      else
+        LogTelemetry
     else
-      wget -q -O "$install_script" "$install_script_url"
+      if wget -q -O "$install_script" "$install_script_url" then 
+        echo "Downloading '$install_script_url' successful"
+      else
+        LogTelemetry 
     fi
   fi
   # return value
-  _GetDotNetInstallScript="$install_script" || {
-    local exit_code=$?
-    Write-PipelineTelemetryError -category 'InitializeToolset' "Timed out (exit code '$exit_code')."
-    ExitWithExitCode $exit_code
+  _GetDotNetInstallScript="$install_script"
   }
 }
+
+function LogTelemetry
+  local exit_code=$?
+  Write-PipelineTelemetryError -category 'InitializeToolset' "Timed out (exit code '$exit_code')."
+  ExitWithExitCode $exit_code
 
 function InitializeBuildTool {
   if [[ -n "${_InitializeBuildTool:-}" ]]; then
