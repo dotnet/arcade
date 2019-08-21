@@ -43,7 +43,7 @@
   </Target>
 
   <Target Name="CoreTest">
-    <Telemetry EventName="NETCORE_ENGINEERING_TELEMETRY" EventData="Category=Test;Progress=0" />
+    <Telemetry EventName="NETCORE_ENGINEERING_TELEMETRY" EventData="category=Test;progress=0" />
     <MSBuild Projects="$(MSBuildProjectFile)"
              Targets="Test"
              Properties="HelixTargetQueue=%(HelixTargetQueue.Identity);%(HelixTargetQueue.AdditionalProperties)"
@@ -64,8 +64,8 @@
       Jobs="@(SentJob)">
       <Output TaskParameter="FailedWorkItems" ItemName="FailedWorkItem" />
     </GetFailedWorkItems>
-    <Telemetry Condition="'$(FailOnWorkItemFailure)' == 'true' and '@(FailedWorkItem)' != ''" EventName="NETCORE_ENGINEERING_TELEMETRY" EventData="Category=Test;Progress=100;Result=Failed" />
-    <Telemetry Condition="'$(FailOnWorkItemFailure)' == 'false' and '@(FailedWorkItem)' != ''" EventName="NETCORE_ENGINEERING_TELEMETRY" EventData="Category=Test;Progress=100;Result=Succeeded" />
+    <Telemetry Condition="'$(FailOnWorkItemFailure)' == 'true' and '@(FailedWorkItem)' != ''" EventName="NETCORE_ENGINEERING_TELEMETRY" EventData="category=Test;progress=100;result=Failed" />
+    <Telemetry Condition="'$(FailOnWorkItemFailure)' == 'false' or '@(FailedWorkItem)' == ''" EventName="NETCORE_ENGINEERING_TELEMETRY" EventData="category=Test;progress=100;result=Succeeded" />
   </Target>
 
   <Target Name="Test"

@@ -223,9 +223,9 @@ namespace Microsoft.DotNet.Arcade.Sdk
         {
             if (e.EventName.Equals(s_TelemetryMarker))
             {
-                e.Properties.TryGetValue("Category", out string telemetryCategory);
-                e.Properties.TryGetValue("Result", out string result);
-                e.Properties.TryGetValue("Progress", out string progress);
+                e.Properties.TryGetValue("category", out string telemetryCategory);
+                e.Properties.TryGetValue("result", out string result);
+                e.Properties.TryGetValue("progress", out string progress);
 
                 var parentId = _buildEventContextMap.TryGetValue(e.BuildEventContext, out var guid)
                     ? (Guid?)guid
