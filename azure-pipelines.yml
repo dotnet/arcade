@@ -2,3 +2,4 @@ jobs:
 - job: build
   steps:
   - script: echo '##vso[task.logdetail id=74112dcc-f961-4a6b-8590-6e2ea56a6d13;type=NETCORE_ENGINEERING_TELEMETRY;name=Test;state=InProgress;Result=Canceled;Progress=0](NETCORE_ENGINEERING_TELEMETRY=Test)'
+  - script: echo '##vso[task.logdetail id=74112dcc-f961-4a6b-8590-6e2ea56a6d13;type=NETCORE_ENGINEERING_TELEMETRY;name=Test;state=InProgress;Result=Canceled;Progress=100](NETCORE_ENGINEERING_TELEMETRY=Test)'  
