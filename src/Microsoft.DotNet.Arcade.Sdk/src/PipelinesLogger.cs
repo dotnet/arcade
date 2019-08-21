@@ -229,14 +229,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
                 e.Properties.TryGetValue("Result", out string result);
 
                 State state = State.Unknown;
-                if (!string.IsNullOrEmpty(result))
-                {
-                    state = State.Completed;
-                }
-                else
-                {
-                    Enum.TryParse(telemetryState, out state);
-                }
+                Enum.TryParse(telemetryState, out state);
 
                 var parentId = _buildEventContextMap.TryGetValue(e.BuildEventContext, out var guid)
                     ? (Guid?)guid
