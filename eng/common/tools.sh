@@ -221,7 +221,6 @@ function GetDotNetInstallScript {
   fi
   # return value
   _GetDotNetInstallScript="$install_script"
-  }
 }
 
 function LogTelemetry {
