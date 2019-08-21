@@ -21,7 +21,7 @@ Target completion date is 8/13/2019.
 | aspnet-Extensions          | dougbu/wtgodbe   | Complete | ✔️ | |
 | CLI                        | licavalc         | Complete | ✔️ | |
 | CLICommandLineParser       | licavalc         | N/A | |  This repo is not being developed anymore. We are taking a pinned version of it |
-| CoreClr                    | russellk/arobins | In progress | ➖ | bulk of the work is in master, working through publishing issues |
+| CoreClr                    | jeffschw/arobins | Complete | ✔️ | |
 | CoreFx                     | danmose/safern   | Complete | ✔️ | SourceLink validation disabled: https://github.com/dotnet/arcade/issues/3603 |
 | IoT                        | joperezr         | Complete | ✔️ | |
 | Core-SDK                   | licavalc         | In progress | ➖ |  Working in parallel.Will need https://github.com/dotnet/arcade/issues/3607 to be done before completing. |

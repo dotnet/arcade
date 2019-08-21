@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading;
@@ -29,13 +30,14 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             if (FailOnWorkItemFailure)
             {
+                string accessTokenSuffix = string.IsNullOrEmpty(this.AccessToken) ? String.Empty : "?access_token={Get this from helix.dot.net}";
                 foreach (ITaskItem failedWorkItem in FailedWorkItems)
                 {
                     var jobName = failedWorkItem.GetMetadata("JobName");
                     var workItemName = failedWorkItem.GetMetadata("WorkItemName");
                     var consoleUri = failedWorkItem.GetMetadata("ConsoleOutputUri");
 
-                    Log.LogError($"Work item {failedWorkItem} in job {jobName} has failed, logs available here: {consoleUri}.");
+                    Log.LogError($"Work item {failedWorkItem} in job {jobName} has failed, logs available here:{Environment.NewLine}{consoleUri}{accessTokenSuffix}.");
                 }
             }
 
