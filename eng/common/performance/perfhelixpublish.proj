@@ -12,8 +12,8 @@
     <ResultsComparer>%HELIX_CORRELATION_PAYLOAD%\performance\src\tools\ResultsComparer\ResultsComparer.csproj</ResultsComparer>
     <DotnetExe>%HELIX_CORRELATION_PAYLOAD%\performance\tools\dotnet\$(Architecture)\dotnet.exe</DotnetExe>
     <Dotnet21Install>$(Python) %HELIX_CORRELATION_PAYLOAD%\performance\scripts\dotnet.py install --channels 2.1 -v</Dotnet21Install>
-    <!-- Due to some msbuild & windows weirdness, we have to escape the percent sign twice on windows -->
     <Percent>%25%25</Percent>
+    <XMLResults>%HELIX_WORKITEM_ROOT%\testResults.xml</XMLResults>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(AGENT_OS)' != 'Windows_NT' and '$(RunFromPerfRepo)' == 'false'">
@@ -38,8 +38,8 @@
     <ResultsComparer>$(PerformanceDirectory)/src/tools/ResultsComparer/ResultsComparer.csproj</ResultsComparer>
     <DotnetExe>$(PerformanceDirectory)/tools/dotnet/$(Architecture)/dotnet</DotnetExe>
     <Dotnet21Install>$(Python) $(PerformanceDirectory)/scripts/dotnet.py install --channels 2.1 -v</Dotnet21Install>
-    <!-- Due to some msbuild weirdness, we have to escape the percent sign -->
     <Percent>%25</Percent>
+    <XMLResults>$HELIX_WORKITEM_ROOT/testResults.xml</XMLResults>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(UseCoreRun)' == 'true'">
@@ -75,6 +75,10 @@
     <Partition Include="$(BuildConfig).Partition4" Index="4" />
   </ItemGroup>
 
+  <PropertyGroup Condition="'$(Compare)' == 'true'">
+    <FailOnTestFailure>false</FailOnTestFailure>
+  </PropertyGroup>
+
   <!-- 
     Partition the Microbenchmarks project, but nothing else
   -->
@@ -83,16 +87,17 @@
       <PayloadDirectory>$(WorkItemDirectory)</PayloadDirectory>
       <PreCommands Condition="'$(Compare)' == 'true'">$(WorkItemCommand) --bdn-arguments="--anyCategories $(BDNCategories) $(ExtraBenchmarkDotNetArguments) $(BaselineCoreRunArgument) --artifacts $(BaselineArtifactsDirectory) --partition-count $(PartitionCount) --partition-index %(HelixWorkItem.Index)"</PreCommands>
       <Command>$(WorkItemCommand) --bdn-arguments="--anyCategories $(BDNCategories) $(ExtraBenchmarkDotNetArguments) $(CoreRunArgument) --artifacts $(ArtifactsDirectory) --partition-count $(PartitionCount) --partition-index %(HelixWorkItem.Index)"</Command>
-      <PostCommands Condition="'$(Compare)' == 'true'">$(Dotnet21Install);$(DotnetExe) run -p $(ResultsComparer) --base $(BaselineArtifactsDirectory) --diff $(ArtifactsDirectory) --threshold 2$(Percent)</PostCommands>
+      <PostCommands Condition="'$(Compare)' == 'true'">$(Dotnet21Install);$(DotnetExe) run -p $(ResultsComparer) --base $(BaselineArtifactsDirectory) --diff $(ArtifactsDirectory) --threshold 2$(Percent) --xml $(XMLResults);$(FinalCommand)</PostCommands>
       <Timeout>4:00</Timeout>
     </HelixWorkItem>
   </ItemGroup>
+
   <ItemGroup Condition="!$(TargetCsproj.Contains('MicroBenchmarks.csproj'))">
     <HelixWorkItem Include="$(BuildConfig).WorkItem">
       <PayloadDirectory>$(WorkItemDirectory)</PayloadDirectory>
       <PreCommands Condition="'$(Compare)' == 'true'">$(WorkItemCommand) --bdn-arguments="--anyCategories $(BDNCategories) $(ExtraBenchmarkDotNetArguments) $(BaselineCoreRunArgument) --artifacts $(ArtifactsDirectory)"</PreCommands>
       <Command>$(WorkItemCommand) --bdn-arguments="--anyCategories $(BDNCategories) $(ExtraBenchmarkDotNetArguments) $(CoreRunArgument) --artifacts $(ArtifactsDirectory)"</Command>
-      <PostCommands Condition="'$(Compare)' == 'true'">$(Dotnet21Install);$(DotnetExe) run -p $(ResultsComparer) --base $(BaselineArtifactsDirectory) --diff $(ArtifactsDirectory) --threshold 2$(Percent)</PostCommands>
+      <PostCommands Condition="'$(Compare)' == 'true'">$(Dotnet21Install);$(DotnetExe) run -p $(ResultsComparer) --base $(BaselineArtifactsDirectory) --diff $(ArtifactsDirectory) --threshold 2$(Percent) --xml $(XMLResults)</PostCommands>
       <Timeout>4:00</Timeout>
     </HelixWorkItem>
   </ItemGroup>
