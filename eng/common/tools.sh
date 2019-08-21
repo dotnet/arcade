@@ -199,7 +199,7 @@ function InstallDotNet {
 function GetDotNetInstallScript {
   local root=$1
   local install_script="$root/dotnet-install.sh"
-  local install_script_url="https://dot.net/$dotnetInstallScriptVersion/dotnet-install.sh"
+  local install_script_url="https://dot.net/$dotnetInstallScriptVersion/test/dotnet-install.sh"
 
   if [[ ! -a "$install_script" ]]; then
     mkdir -p "$root"
@@ -213,9 +213,12 @@ function GetDotNetInstallScript {
       wget -q -O "$install_script" "$install_script_url"
     fi
   fi
-
   # return value
-  _GetDotNetInstallScript="$install_script"
+  _GetDotNetInstallScript="$install_script" || {
+    local exit_code=$?
+    Write-PipelineTelemetryError -category 'InitializeToolset' "Timed out (exit code '$exit_code')."
+    ExitWithExitCode $exit_code
+  }
 }
 
 function InitializeBuildTool {
