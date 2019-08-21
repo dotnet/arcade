@@ -138,6 +138,19 @@ queue=Ubuntu.1804.Amd64.Open
 creator=$BUILD_DEFINITIONNAME
 helix_source_prefix="pr"
 
+if [[ "$compare" == true ]]; then
+  extra_benchmark_dotnet_arguments=
+  perflab_arguments=
+
+  # No open queues for arm64
+  if [[ "$architecture" = "arm64" ]]; then
+    echo "Compare not available for arm64"
+    exit 1
+  fi
+
+  queue=Ubuntu.1804.Amd64.Tiger.Perf.Open
+fi
+
 if [[ "$internal" == true ]]; then
     perflab_arguments="--upload-to-perflab-container"
     helix_source_prefix="official"
@@ -149,12 +162,6 @@ if [[ "$internal" == true ]]; then
     else
         queue=Ubuntu.1804.Amd64.Tiger.Perf
     fi
-fi
-
-if [[ "$compare" == true ]]; then
-  extra_benchmark_dotnet_arguments=
-  perflab_arguments=
-  queue=Ubuntu.1804.Amd64.Tiger.Perf.Open
 fi
 
 common_setup_arguments="--frameworks $framework --queue $queue --build-number $build_number --build-configs $configurations"

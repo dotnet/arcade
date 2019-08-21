@@ -35,18 +35,18 @@ if ($Framework.StartsWith("netcoreapp")) {
     $Queue = "Windows.10.Amd64.ClientRS5.Open"
 }
 
+if ($Compare) {
+    $Queue = "Windows.10.Amd64.19H1.Tiger.Perf.Open"
+    $PerfLabArguments = ""
+    $ExtraBenchmarkDotNetArguments = ""
+}
+
 if ($Internal) {
     $Queue = "Windows.10.Amd64.19H1.Tiger.Perf"
     $PerfLabArguments = "--upload-to-perflab-container"
     $ExtraBenchmarkDotNetArguments = ""
     $Creator = ""
     $HelixSourcePrefix = "official"
-}
-
-if ($Compare) {
-    $Queue = "Windows.10.Amd64.19H1.Tiger.Perf.Open"
-    $PerfLabArguments = ""
-    $ExtraBenchmarkDotNetArguments = ""
 }
 
 $CommonSetupArguments="--frameworks $Framework --queue $Queue --build-number $BuildNumber --build-configs $Configurations"
