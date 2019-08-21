@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <OutputSourcePath>$(IntermediateOutputPath)\$(AssemblyTitle).Forwards.cs</OutputSourcePath>
+    <OutputSourcePath>$(IntermediateOutputPath)\$(AssemblyTitle).Forwards$(DefaultLanguageSourceExtension)</OutputSourcePath>
     <CoreCompileDependsOn Condition="'$(DesignTimeBuild)' != 'true'">
       $(CoreCompileDependsOn);GeneratePartialFacadeSource
     </CoreCompileDependsOn>
@@ -23,7 +23,7 @@
           DependsOnTargets="$(GeneratePartialFacadeSourceDependsOn)">
 
     <PropertyGroup>
-      <OutputSourcePath>$(IntermediateOutputPath)\$(AssemblyTitle).Forwards.cs</OutputSourcePath>
+      <OutputSourcePath>$(IntermediateOutputPath)\$(AssemblyTitle).Forwards$(DefaultLanguageSourceExtension)</OutputSourcePath>
       <ReferenceAssembly>%(ResolvedMatchingContract.Identity)</ReferenceAssembly>
     </PropertyGroup>
 

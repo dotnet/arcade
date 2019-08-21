@@ -26,7 +26,7 @@ namespace Microsoft.DotNet.GenFacades
             ILog logger,
             bool ignoreMissingTypes = false,
             string[] ignoreMissingTypesList = null,
-            string[] OmitTypes = null,
+            string[] omitTypes = null,
             ITaskItem[] seedTypePreferencesList = null)
         {
             Dictionary<string, string> seedTypePreferences = ParseSeedTypePreferences(seedTypePreferencesList, logger);
@@ -49,8 +49,8 @@ namespace Microsoft.DotNet.GenFacades
 
             IReadOnlyDictionary<string, IList<string>> seedTypes = GenerateTypeTable(distinctSeeds);
 
-            if (OmitTypes != null)
-                referenceTypes = referenceTypes.Where(type => !OmitTypes.Contains(type));
+            if (omitTypes != null)
+                referenceTypes = referenceTypes.Where(type => !omitTypes.Contains(type));
 
             var sourceGenerator = new SourceGenerator(referenceTypes, seedTypes, seedTypePreferences, outputSourcePath, ignoreMissingTypesList, logger);
             return sourceGenerator.GenerateSource(compileFiles, ParseDefineConstants(defineConstants), ignoreMissingTypes);
