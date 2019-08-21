@@ -82,13 +82,11 @@ namespace Microsoft.DotNet.Arcade.Sdk
                 ? (Guid?)guid
                 : null;
             string telemetryCategory = null;
-            State telemetryState = State.Unknown;
             if (parentId.HasValue)
             {
                 if(_taskTelemetryInfoMap.TryGetValue(parentId.Value, out TelemetryTaskInfo telemetryInfo))
                 {
                     telemetryCategory = telemetryInfo.Category;
-                    telemetryState = telemetryInfo.TelemetryState;
                 }
                 if (telemetryCategory == null)
                 {
@@ -107,6 +105,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
                     name: telemetryCategory,
                     state: State.Completed,
                     result: "Failed",
+                    progress: "100",
                     message: message);
             }
 
@@ -225,11 +224,8 @@ namespace Microsoft.DotNet.Arcade.Sdk
             if (e.EventName.Equals(s_TelemetryMarker))
             {
                 e.Properties.TryGetValue("Category", out string telemetryCategory);
-                e.Properties.TryGetValue("State", out string telemetryState);
                 e.Properties.TryGetValue("Result", out string result);
-
-                State state = State.Unknown;
-                Enum.TryParse(telemetryState, out state);
+                e.Properties.TryGetValue("Progress", out string progress);
 
                 var parentId = _buildEventContextMap.TryGetValue(e.BuildEventContext, out var guid)
                     ? (Guid?)guid
@@ -237,18 +233,16 @@ namespace Microsoft.DotNet.Arcade.Sdk
 
                 if (parentId.HasValue)
                 {
-                    var telemetryInfo = new TelemetryTaskInfo(parentId.Value, telemetryCategory, state, result);
+                    var telemetryInfo = new TelemetryTaskInfo(parentId.Value, telemetryCategory, progress, result);
                     _taskTelemetryInfoMap[parentId.Value] = telemetryInfo;
-                    if (state != State.Unknown || !string.IsNullOrEmpty(result))
-                    {
-                        LogDetail(
-                            id: telemetryInfo.Id,
-                            type: s_TelemetryMarker,
-                            name: telemetryCategory,
-                            state: state,
-                            result: result,
-                            message: $"({s_TelemetryMarker}={telemetryCategory})");
-                    }
+                    LogDetail(
+                        id: telemetryInfo.Id,
+                        type: s_TelemetryMarker,
+                        name: telemetryCategory,
+                        result: result,
+                        state: State.Initialized,
+                        progress: progress ?? "100",
+                        message: $"({s_TelemetryMarker}={telemetryCategory})") ;
                 }
             }
         }
@@ -394,13 +388,13 @@ namespace Microsoft.DotNet.Arcade.Sdk
         {
             internal Guid Id { get; }
             internal string Category { get; }
-            internal State TelemetryState { get; }
+            internal string Progress { get; }
             internal string Result { get; set; }
-            internal TelemetryTaskInfo(Guid id, string category, State state = State.Unknown, string result = null)
+            internal TelemetryTaskInfo(Guid id, string category, string progress = "100", string result = null)
             {
                 Id = id;
                 Category = category;
-                TelemetryState = state;
+                Progress = progress;
                 Result = result;
             }
         }
