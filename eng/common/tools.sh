@@ -212,11 +212,13 @@ function GetDotNetInstallScript {
         echo "Downloading '$install_script_url' successful"
       else
         LogTelemetry
+        fi
     else
       if wget -q -O "$install_script" "$install_script_url" then 
         echo "Downloading '$install_script_url' successful"
       else
-        LogTelemetry 
+        LogTelemetry
+        fi
     fi
   fi
   # return value
