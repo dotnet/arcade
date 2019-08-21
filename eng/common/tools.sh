@@ -208,14 +208,14 @@ function GetDotNetInstallScript {
 
     # Use curl if available, otherwise use wget
     if command -v curl > /dev/null; then
-      if curl "$install_script_url" -sSL --retry 10 --create-dirs -o "$install_script" then 
+      if curl "$install_script_url" -sSL --retry 10 --create-dirs -o "$install_script"; then 
         echo "Downloading '$install_script_url' successful"
       else
         LogTelemetry
       fi
-    elif wget -q -O "$install_script" "$install_script_url" then 
+    elif wget -q -O "$install_script" "$install_script_url"; then 
         echo "Downloading '$install_script_url' successful"
-      else
+    else
         LogTelemetry
       fi
   fi
