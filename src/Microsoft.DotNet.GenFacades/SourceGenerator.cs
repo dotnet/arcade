@@ -134,44 +134,28 @@ namespace Microsoft.DotNet.GenFacades
             if (!string.IsNullOrEmpty(alias))
                 alias += "::";
 
-            return string.Format($"[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof({alias}{TransformGenericType(typeName)}))]");
-
-            // Typename`3 gets transformed into Typename<,,>
-            static string TransformGenericType(string typeName)
-            {
-                int splitIndex = typeName.LastIndexOf('`');
-
-                if (splitIndex == -1)
-                    return typeName;
-
-                StringBuilder sb = new StringBuilder();
-                sb.Append(typeName.Substring(0, splitIndex));
-                sb.Append('<');
-                sb.Append(',', int.Parse(typeName.Substring(splitIndex + 1)) - 1);
-                sb.Append('>');
-                return sb.ToString();
-            }
+            return string.Format($"[assembly: System.Runtime.CompilerServices.TypeForwardedTo(typeof({alias}{TransformGenericType(typeName, "<", ">")}))]");
         }
 
         private static string GetTypeForwardsToVisualBasicString(string typeName)
         {
-            return string.Format($"<Assembly: System.Runtime.CompilerServices.TypeForwardedTo(GetType({TransformGenericType(typeName)}))>");
+            return string.Format($"<Assembly: System.Runtime.CompilerServices.TypeForwardedTo(GetType({TransformGenericType(typeName, "(Of ", ")")}))>");
+        }
 
-            // Typename`3 gets transformed into Typename(Of ,,)
-            static string TransformGenericType(string typeName)
-            {
-                int splitIndex = typeName.LastIndexOf('`');
+        // Typename`3 gets transformed into Typename<,,>
+        private static string TransformGenericType(string typeName, string prefix, string suffix)
+        {
+            int splitIndex = typeName.LastIndexOf('`');
 
-                if (splitIndex == -1)
-                    return typeName;
+            if (splitIndex == -1)
+                return typeName;
 
-                StringBuilder sb = new StringBuilder();
-                sb.Append(typeName.Substring(0, splitIndex));
-                sb.Append("(Of ");
-                sb.Append(',', int.Parse(typeName.Substring(splitIndex + 1)) - 1);
-                sb.Append(')');
-                return sb.ToString();
-            }
+            StringBuilder sb = new StringBuilder();
+            sb.Append(typeName.Substring(0, splitIndex));
+            sb.Append(prefix);
+            sb.Append(',', int.Parse(typeName.Substring(splitIndex + 1)) - 1);
+            sb.Append(suffix);
+            return sb.ToString();
         }
     }
 }
