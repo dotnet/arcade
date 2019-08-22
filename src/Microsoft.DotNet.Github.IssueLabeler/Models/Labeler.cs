@@ -8,6 +8,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Octokit;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.GitHub.IssueLabeler
@@ -68,15 +70,19 @@ namespace Microsoft.DotNet.GitHub.IssueLabeler
                 Number = number,
                 Title = title,
                 Body = body,
-                IssueOrPr = issueOrPr
+                IssueOrPr = issueOrPr,
+                IsPR = issueOrPr == GithubObjectType.PullRequest,
+                FilePaths = string.Empty
             };
+
+            if (corefxIssue.IsPR)
+            {
+                IReadOnlyList<PullRequestFile> prFiles = await _client.PullRequest.Files(_repoOwner, _repoName, number);
+                corefxIssue.FilePaths = String.Join(";", prFiles.Select(x => x.FileName));
+            }
 
             string label = Predictor.Predict(corefxIssue, logger, _threshold);
             Issue issueGithubVersion = await _client.Issue.Get(_repoOwner, _repoName, number);
-            if (label.Equals("area-System.Net.Http.SocketsHttpHandler", StringComparison.OrdinalIgnoreCase))
-            {
-                label = "area-System.Net.Http";
-            }
 
             if (label != null && issueGithubVersion.Labels.Count == 0)
             {
