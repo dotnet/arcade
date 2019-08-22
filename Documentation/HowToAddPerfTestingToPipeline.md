@@ -133,6 +133,7 @@ Performance testing has been fully tested in coreclr. Coreclr, corefx and other 
 The performance template also supplies support for running PRs on physical hardware to compare the current change against a baseline. The template has two parameters that will enable PR testing:
 
 | Name                       | Type    | Description                                  |
+| -------------------------- | ------- | -------------------------------------------- |
 | BaselineCoreRootDirectory  | string  | Path to the baseline core root directory. To be used when running PR testing to compare current work against a baseline |
 | Compare                    | switch  | Run comparison. To be used when running PR testing to compare against a baseline. Will tell the helix job to run a baseline run, the test run, and then run ResultsComparer to compare the two |
 
