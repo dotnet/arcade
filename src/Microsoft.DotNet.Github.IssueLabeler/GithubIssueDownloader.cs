@@ -5,7 +5,6 @@
 using Octokit;
 using System;
 using System.IO;
-using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -47,27 +46,11 @@ namespace Microsoft.DotNet.Github.IssueLabeler
         public async Task DownloadAndSaveAsync()
         {
             StringBuilder sb = new StringBuilder();
-            if (!File.Exists(_outputFile))
-                File.WriteAllText(_outputFile, "Area\tTitle\tDescription\tIsPR\tFilePaths" + Environment.NewLine);
+            File.WriteAllText(_outputFile, "Id\tArea\tTitle\tDescription");
             for (int i = _startIndex; i < _endIndex; i++)
             {
                 try
                 {
-                    string filePaths = string.Empty;
-                    bool isPr = true;
-                    try
-                    {
-                        var prFiles = await _client.PullRequest.Files(_owner, _repoName, i);
-                        filePaths = String.Join(";", prFiles.Select(x => x.FileName));
-                    }
-                    catch (Exception ex)
-                    {
-                        if (ex.Message.Contains("files was not found."))
-                            isPr = false;
-                        else
-                            throw ex;
-                    }
-
                     var issue = await _client.Issue.Get(_owner, _repoName, i);
 
                     foreach (var label in issue.Labels)
@@ -77,36 +60,28 @@ namespace Microsoft.DotNet.Github.IssueLabeler
                             string title = RemoveNewLineCharacters(issue.Title);
                             string description = RemoveNewLineCharacters(issue.Body);
                             // Ordering is important here because we are using the same ordering on the prediction side.
-                            sb.AppendLine($"{label.Name}\t\"{title}\"\t\"{description}\"\t{isPr}\t{filePaths}");
+                            sb.AppendLine($"{label.Name}\t\"{title}\"\t\"{description}\"");
                         }
                     }
-                }
-                catch (Exception ex)
-                {
-                    if (ex.Message.Contains("Authenticated requests get a higher rate limit"))
-                    {
-                        if (sb.Length != 0)
-                            File.AppendAllText(_outputFile, sb.ToString());
-                        Console.WriteLine($"Rate limit exceeded. Last issue processed is {i}.");
-                        throw ex;
-                    }
-                    Console.WriteLine($"Issue {i}: " + ex.Message);
-                }
 
-                if (i % 1000 == 0)
+                    if (i % 1000 == 0)
+                    {
+                        File.AppendAllText(_outputFile, sb.ToString());
+                        sb.Clear();
+                    }
+                }
+                catch (Exception)
                 {
-                    File.AppendAllText(_outputFile, sb.ToString());
-                    sb.Clear();
+                    Console.WriteLine($"Issue {i} does not exist");
                 }
             }
 
-            if (sb.Length != 0)
-                File.AppendAllText(_outputFile, sb.ToString());
+            File.AppendAllText(_outputFile, sb.ToString());
         }
 
         private static string RemoveNewLineCharacters(string input)
         {
-            return input.Replace("\r\n", " ").Replace("\n", " ").Replace("\t", " ");
+            return input.Replace("\r\n", " ").Replace("\n", " ");
         }
     }
 }
