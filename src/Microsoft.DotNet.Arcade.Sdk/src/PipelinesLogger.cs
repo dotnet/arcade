@@ -62,7 +62,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
 
             if (Verbosity == LoggerVerbosity.Diagnostic)
             {
-                eventSource.ProjectFinished += OnProjectFinished;
+//                eventSource.ProjectFinished += OnProjectFinished;
             }
         }
         public void Shutdown()
@@ -227,20 +227,20 @@ namespace Microsoft.DotNet.Arcade.Sdk
                 e.Properties.TryGetValue("result", out string result);
                 e.Properties.TryGetValue("progress", out string progress);
 
-                var parentId = _buildEventContextMap.TryGetValue(e.BuildEventContext, out var guid)
+                var id = _buildEventContextMap.TryGetValue(e.BuildEventContext, out var guid)
                     ? (Guid?)guid
                     : null;
 
-                if (parentId.HasValue)
+                if (id.HasValue)
                 {
-                    var telemetryInfo = new TelemetryTaskInfo(parentId.Value, telemetryCategory, progress, result);
-                    _taskTelemetryInfoMap[parentId.Value] = telemetryInfo;
+                    var telemetryInfo = new TelemetryTaskInfo(id.Value, telemetryCategory, progress, result);
+                    _taskTelemetryInfoMap[id.Value] = telemetryInfo;
                     LogDetail(
                         id: telemetryInfo.Id,
                         type: s_TelemetryMarker,
                         name: telemetryCategory,
                         result: result,
-                        state: State.Initialized,
+                        state: State.InProgress,
                         progress: progress ?? "100",
                         message: $"({s_TelemetryMarker}={telemetryCategory})") ;
                 }
@@ -289,12 +289,13 @@ namespace Microsoft.DotNet.Arcade.Sdk
 
             if (Verbosity == LoggerVerbosity.Diagnostic)
             {
-                LogBuildEvent(
+/*                LogBuildEvent(
                     in projectInfo,
                     State.Initialized,
                     startTime: projectInfo.StartTime,
                     endTime: null,
                     progress: "0");
+*/
             }
             string getName()
             {
