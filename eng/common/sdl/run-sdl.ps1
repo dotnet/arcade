@@ -26,7 +26,7 @@ if ($ValidPath -eq $False)
 }
 
 $configParam = @("--config")
-$CredTargetDirectory = "+:d|D:\a\1\s*;-:d|artifacts>isGlob=true>batchGlobResults=true"
+$CredTargetDirectory = "+:d|D:\a\1\s\*;-:d|artifacts>isGlob=true>batchGlobResults=true"
 $PoliCheckTargetDirectory = "+|*;-:d|.gdn>isGlob=true>batchGlobResults=true"
 
 foreach ($tool in $ToolsList) {
