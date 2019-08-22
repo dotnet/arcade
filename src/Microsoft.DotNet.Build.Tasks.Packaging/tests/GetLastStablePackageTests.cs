@@ -130,7 +130,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
                 BuildEngine = _engine,
                 PackageIndexes = _packageIndexes,
                 LatestPackages = latestPackages,
-                DoNotAllowVersionsFromSameEra = true
+                DoNotAllowVersionsFromSameRelease = true
             };
 
             _log.Reset();

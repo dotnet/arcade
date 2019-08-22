@@ -34,10 +34,10 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
         public ITaskItem[] PackageIndexes { get; set; }
 
         /// <summary>
-        /// <see langword="true"/> if the result version can be a version from the same package era.
+        /// <see langword="true"/> if the result version can be a version from the same release.
         /// <see langword="false"/> otherwise. Defaults to false.
         /// </summary>
-        public bool DoNotAllowVersionsFromSameEra { get; set; }
+        public bool DoNotAllowVersionsFromSameRelease { get; set; }
         
 
         /// <summary>
@@ -139,20 +139,12 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
                     Log.LogMessage($"Could not parse version {versionString} for LatestPackage {packageId}, will use latest stable.");
                 }
 
-                var latestVersion = nuGetVersion?.Version;
+                var latestVersion = (DoNotAllowVersionsFromSameRelease) ? VersionUtility.As2PartVersion(nuGetVersion?.Version) : nuGetVersion?.Version;
 
                 PackageInfo info;
                 if (index.Packages.TryGetValue(packageId, out info))
                 {
-                    IEnumerable<Version> candidateVersions;
-                    if (DoNotAllowVersionsFromSameEra)
-                    {
-                        candidateVersions = (latestVersion == null) ? info.StableVersions : info.StableVersions.Where(sv => VersionUtility.As4PartVersion(sv) < latestVersion && !VersionsBelongToTheSameEra(sv, latestVersion));
-                    }
-                    else
-                    {
-                        candidateVersions = (latestVersion == null) ? info.StableVersions : info.StableVersions.Where(sv => VersionUtility.As4PartVersion(sv) < latestVersion);
-                    }
+                    IEnumerable<Version> candidateVersions = (latestVersion == null) ? info.StableVersions : info.StableVersions.Where(sv => VersionUtility.As4PartVersion(sv) < latestVersion);
                     if (candidateVersions.Any())
                     {
                         lastStablePackages.Add(CreateItem(latestPackage, candidateVersions.Max()));
@@ -162,12 +154,6 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
 
             LastStablePackages = lastStablePackages.ToArray();
 
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private bool VersionsBelongToTheSameEra(Version version1, Version version2)
-        {
-            return (version1.Major == version2.Major && version1.Minor == version2.Minor);
         }
 
         private ITaskItem CreateItem(ITaskItem originalItem, Version version)

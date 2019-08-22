@@ -381,7 +381,7 @@
     </ItemGroup>
 
     <PropertyGroup>
-      <DoNotAllowVersionsFromSameEra Condition="'$(DoNotAllowVersionsFromSameEra)' == ''">true</DoNotAllowVersionsFromSameEra>
+      <DoNotAllowVersionsFromSameRelease Condition="'$(DoNotAllowVersionsFromSameRelease)' == ''">true</DoNotAllowVersionsFromSameRelease>
     </PropertyGroup>
 
     <!-- Calculate the package version to harvest -->
@@ -389,7 +389,7 @@
                           LatestPackages="@(_latestPackage)"
                           StablePackages="@(StablePackage)"
                           PackageIndexes="@(PackageIndex)"
-                          DoNotAllowVersionsFromSameEra="$(DoNotAllowVersionsFromSameEra)">
+                          DoNotAllowVersionsFromSameRelease="$(DoNotAllowVersionsFromSameRelease)">
       <Output  TaskParameter="LastStablePackages" ItemName="_lastStablePackage"/>
     </GetLastStablePackage>
 
@@ -402,7 +402,7 @@
                           LatestPackages="@(_latestRuntimePackages)"
                           StablePackages="@(StablePackage)"
                           PackageIndexes="@(PackageIndex)"
-                          DoNotAllowVersionsFromSameEra="$(DoNotAllowVersionsFromSameEra)">
+                          DoNotAllowVersionsFromSameRelease="$(DoNotAllowVersionsFromSameRelease)">
       <Output  TaskParameter="LastStablePackages" ItemName="HarvestRuntimePackages"/>
     </GetLastStablePackage>
 
@@ -410,7 +410,7 @@
                           LatestPackages="@(HarvestAdditionalPackageIds)"
                           StablePackages="@(StablePackage)"
                           PackageIndexes="@(PackageIndex)"
-                          DoNotAllowVersionsFromSameEra="$(DoNotAllowVersionsFromSameEra)">
+                          DoNotAllowVersionsFromSameRelease="$(DoNotAllowVersionsFromSameRelease)">
       <Output  TaskParameter="LastStablePackages" ItemName="HarvestAdditionalPackages"/>
     </GetLastStablePackage>
 
