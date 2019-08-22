@@ -84,10 +84,9 @@ namespace Microsoft.DotNet.Arcade.Sdk
             string telemetryCategory = null;
             if (parentId.HasValue)
             {
-                if(_taskTelemetryInfoMap.TryGetValue(parentId.Value, out TelemetryTaskInfo telemetryInfo))
-                {
-                    telemetryCategory = telemetryInfo.Category;
-                }
+                var telemetryTaskInfo = _taskTelemetryInfoMap.Select(s => s.Value).FirstOrDefault(f => f.ProjectId == parentId.Value);
+                telemetryCategory = telemetryTaskInfo.Category;
+
                 if (telemetryCategory == null)
                 {
                     if (_projectInfoMap.TryGetValue(parentId.Value, out ProjectInfo projectInfo))
@@ -100,7 +99,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
                     message = $"({s_TelemetryMarker}={telemetryCategory}) {message}";
                 }
                 LogDetail(
-                    id: parentId.Value,
+                    id: telemetryTaskInfo.Id,
                     type: s_TelemetryMarker,
                     name: telemetryCategory,
                     state: State.Completed,
@@ -234,7 +233,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
                 if (id.HasValue)
                 {
                     var telemetryInfo = new TelemetryTaskInfo(id.Value, telemetryCategory, progress, result);
-                    _taskTelemetryInfoMap[id.Value] = telemetryInfo;
+                    _taskTelemetryInfoMap[telemetryInfo.Id] = telemetryInfo;
                     LogDetail(
                         id: telemetryInfo.Id,
                         type: s_TelemetryMarker,
@@ -385,18 +384,20 @@ namespace Microsoft.DotNet.Arcade.Sdk
             }
         }
 
-        internal struct TelemetryTaskInfo
+        internal readonly struct TelemetryTaskInfo
         {
             internal Guid Id { get; }
             internal string Category { get; }
             internal string Progress { get; }
-            internal string Result { get; set; }
-            internal TelemetryTaskInfo(Guid id, string category, string progress = "100", string result = null)
+            internal string Result { get; }
+            internal Guid ProjectId { get; }
+            internal TelemetryTaskInfo(Guid projectId, string category, string progress = "100", string result = null)
             {
-                Id = id;
+                Id = Guid.NewGuid();
                 Category = category;
                 Progress = progress;
                 Result = result;
+                ProjectId = projectId;
             }
         }
 
