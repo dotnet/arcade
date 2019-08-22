@@ -132,6 +132,18 @@ stages:
             -test
             -projects $(Build.SourcesDirectory)/tests/UnitTests.proj
             /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.binlog
+          displayName: Run Helix Tests again (to waste time)
+          env:
+            SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+            HelixAccessToken: $(HelixApiAccessToken)
+
+        - powershell: eng\common\build.ps1
+            -configuration $(_BuildConfig) 
+            -prepareMachine
+            -ci
+            -test
+            -projects $(Build.SourcesDirectory)/tests/UnitTests.proj
+            /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.binlog
             /p:HelixBaseUri=https://helix.int-dot.net/
           displayName: Run Helix Tests (Int)
           env:
