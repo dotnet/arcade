@@ -26,7 +26,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
         public LoggerVerbosity Verbosity { get; set; }
         public string Parameters { get; set; }
         private static readonly string s_TelemetryMarker = "NETCORE_ENGINEERING_TELEMETRY";
-
+        private static bool sendTelemetry = true;
         public void Initialize(IEventSource eventSource)
         {
             var parameters = LoggerParameters.Parse(this.Parameters);
@@ -54,9 +54,9 @@ namespace Microsoft.DotNet.Arcade.Sdk
                 _ignoredTargets.UnionWith(targetsNotLogged.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries));
             }
 
-            eventSource.ErrorRaised += OnErrorRaised;
-            eventSource.WarningRaised += OnWarningRaised;
-            eventSource.ProjectStarted += OnProjectStarted;
+//            eventSource.ErrorRaised += OnErrorRaised;
+//            eventSource.WarningRaised += OnWarningRaised;
+//            eventSource.ProjectStarted += OnProjectStarted;
             IEventSource2 eventSource2 = eventSource as IEventSource2;
             eventSource2.TelemetryLogged += OnTelemetryLogged;
 
@@ -232,16 +232,20 @@ namespace Microsoft.DotNet.Arcade.Sdk
 
                 if (id.HasValue)
                 {
-                    var telemetryInfo = new TelemetryTaskInfo(id.Value, telemetryCategory, progress, result);
-                    _taskTelemetryInfoMap[telemetryInfo.Id] = telemetryInfo;
-                    LogDetail(
-                        id: telemetryInfo.Id,
-                        type: s_TelemetryMarker,
-                        name: telemetryCategory,
-                        result: result,
-                        state: State.InProgress,
-                        progress: progress ?? "100",
-                        message: $"({s_TelemetryMarker}={telemetryCategory})") ;
+                    if (sendTelemetry)
+                    {
+                        sendTelemetry = false;
+                        var telemetryInfo = new TelemetryTaskInfo(id.Value, telemetryCategory, progress, result);
+                        //                    _taskTelemetryInfoMap[telemetryInfo.Id] = telemetryInfo;
+                        LogDetail(
+                            id: telemetryInfo.Id,
+                            type: s_TelemetryMarker,
+                            name: telemetryCategory,
+                            result: result,
+                            state: State.InProgress,
+                            progress: progress ?? "100",
+                            message: $"({s_TelemetryMarker}={telemetryCategory})");
+                    }
                 }
             }
         }
