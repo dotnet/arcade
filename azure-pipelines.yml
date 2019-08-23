@@ -39,6 +39,7 @@ stages:
 - stage: build
   displayName: Build
   jobs:
+  - job: build
     strategy:
       matrix:
         Build_Release:
@@ -46,25 +47,24 @@ stages:
         Build_Debug:
           _BuildConfig: Debug
 
-    - job: build
-      steps:
-      - task: sendStartTelemetry@0
-        displayName: 'Send Helix Start Telemetry'
-        inputs:
-          helixRepo: dotnet/arcade
-          buildConfig: Debug
-        continueOnError: true
-        condition: always()
-      - script: build.cmd configuration $(_BuildConfig) -ci -projects $(Build.SourcesDirectory)\chcosta.proj /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/chcosta.binlog
-      - task: sendEndTelemetry@0
-        displayName: 'Send Helix End Telemetry'
-        continueOnError: true
-        condition: always()
-      - task: PublishBuildArtifacts@1
-        displayName: Publish Logs
-        inputs:
-          PathtoPublish: '$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)'
-          PublishLocation: Container
-          ArtifactName: artifacts
-        continueOnError: true
-        condition: always()
+    steps:
+    - task: sendStartTelemetry@0
+      displayName: 'Send Helix Start Telemetry'
+      inputs:
+        helixRepo: dotnet/arcade
+        buildConfig: Debug
+      continueOnError: true
+      condition: always()
+    - script: build.cmd configuration $(_BuildConfig) -ci -projects $(Build.SourcesDirectory)\chcosta.proj /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/chcosta.binlog
+    - task: sendEndTelemetry@0
+      displayName: 'Send Helix End Telemetry'
+      continueOnError: true
+      condition: always()
+    - task: PublishBuildArtifacts@1
+      displayName: Publish Logs
+      inputs:
+        PathtoPublish: '$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)'
+        PublishLocation: Container
+        ArtifactName: artifacts
+      continueOnError: true
+      condition: always()
