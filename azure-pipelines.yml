@@ -51,7 +51,6 @@ stages:
           _BuildConfig: Release
         Build_Debug:
           _BuildConfig: Debug
-
     steps:
     - task: sendStartTelemetry@0
       displayName: 'Send Helix Start Telemetry'
@@ -74,9 +73,38 @@ stages:
         ArtifactName: artifacts
       continueOnError: true
       condition: always()
-- stage: dependent
-  dependsOn: build
-  jobs:
-  - job: print
+  - job: build_linux
+    container: LinuxContainer
+    pool:
+      # For public or PR jobs, use the hosted pool.  For internal jobs use the internal pool.
+      # Will eventually change this to two BYOC pools.
+      name: NetCorePublic-Pool
+      queue: BuildPool.Ubuntu.1604.Amd64.Open
+    strategy:
+      matrix:
+        Build_Release:
+          _BuildConfig: Release
+        Build_Debug:
+          _BuildConfig: Debug
     steps:
-    - script: echo 'hello'
+    - task: sendStartTelemetry@0
+      displayName: 'Send Helix Start Telemetry'
+      inputs:
+        helixRepo: dotnet/arcade
+        buildConfig: Debug
+      continueOnError: true
+      condition: always()
+    - script: |
+        eng/common/build.sh -configuration $(_BuildConfig) -build -restore -prepareMachine -ci -projects $(Build.SourcesDirectory)/chcosta.proj /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/chcosta.binlog
+    - task: sendEndTelemetry@0
+      displayName: 'Send Helix End Telemetry'
+      continueOnError: true
+      condition: always()
+    - task: PublishBuildArtifacts@1
+      displayName: Publish Logs
+      inputs:
+        PathtoPublish: '$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)'
+        PublishLocation: Container
+        ArtifactName: artifacts
+      continueOnError: true
+      condition: always()
