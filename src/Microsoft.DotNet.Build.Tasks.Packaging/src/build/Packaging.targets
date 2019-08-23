@@ -380,11 +380,16 @@
       <_latestRuntimePackages Include="@(PkgProjDependency)" Condition="'%(PkgProjDependency.TargetRuntime)' != ''" KeepDuplicates="false" />
     </ItemGroup>
 
+    <PropertyGroup>
+      <DoNotAllowVersionsFromSameRelease Condition="'$(DoNotAllowVersionsFromSameRelease)' == ''">true</DoNotAllowVersionsFromSameRelease>
+    </PropertyGroup>
+
     <!-- Calculate the package version to harvest -->
     <GetLastStablePackage Condition="'$(HarvestVersion)' == ''"
                           LatestPackages="@(_latestPackage)"
                           StablePackages="@(StablePackage)"
-                          PackageIndexes="@(PackageIndex)">
+                          PackageIndexes="@(PackageIndex)"
+                          DoNotAllowVersionsFromSameRelease="$(DoNotAllowVersionsFromSameRelease)">
       <Output  TaskParameter="LastStablePackages" ItemName="_lastStablePackage"/>
     </GetLastStablePackage>
 
@@ -396,14 +401,16 @@
     <GetLastStablePackage Condition="'@(HarvestRuntimePackages)' == ''"
                           LatestPackages="@(_latestRuntimePackages)"
                           StablePackages="@(StablePackage)"
-                          PackageIndexes="@(PackageIndex)">
+                          PackageIndexes="@(PackageIndex)"
+                          DoNotAllowVersionsFromSameRelease="$(DoNotAllowVersionsFromSameRelease)">
       <Output  TaskParameter="LastStablePackages" ItemName="HarvestRuntimePackages"/>
     </GetLastStablePackage>
 
     <GetLastStablePackage Condition="'@(HarvestAdditionalPackageIds)' != ''"
                           LatestPackages="@(HarvestAdditionalPackageIds)"
                           StablePackages="@(StablePackage)"
-                          PackageIndexes="@(PackageIndex)">
+                          PackageIndexes="@(PackageIndex)"
+                          DoNotAllowVersionsFromSameRelease="$(DoNotAllowVersionsFromSameRelease)">
       <Output  TaskParameter="LastStablePackages" ItemName="HarvestAdditionalPackages"/>
     </GetLastStablePackage>
 
