@@ -56,7 +56,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
 
 //            eventSource.ErrorRaised += OnErrorRaised;
 //            eventSource.WarningRaised += OnWarningRaised;
-//            eventSource.ProjectStarted += OnProjectStarted;
+            eventSource.ProjectStarted += OnProjectStarted;
             IEventSource2 eventSource2 = eventSource as IEventSource2;
             eventSource2.TelemetryLogged += OnTelemetryLogged;
 
