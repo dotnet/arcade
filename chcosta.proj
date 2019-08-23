@@ -1,0 +1,10 @@
+<Project DefaultTargets="Build">
+  <PropertyGroup>
+    <Language>MSBuild</Language>
+  </PropertyGroup>
+  <Target Name="Build">
+    <Message Importance="High" Text="##vso[task.logdetail id=9fcf7a50-40cc-47d4-97b2-049094c18547;type=NETCORE_ENGINEERING_TELEMETRY;name=Test;progress=0;state=InProgress;](NETCORE_ENGINEERING_TELEMETRY=Test)" />
+  </Target>
+  <Target Name="Test" />
+  <Target Name="Pack" />
+</Project>
