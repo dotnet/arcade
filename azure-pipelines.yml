@@ -86,7 +86,3 @@ stages:
           env:
             SYSTEM_ACCESSTOKEN: $(System.AccessToken)
             HelixAccessToken: $(HelixApiAccessToken)
-
-        - powershell: |
-            Start-Sleep -Seconds 300
-          displayName: sleep 5 minutes
