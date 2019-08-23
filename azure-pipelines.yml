@@ -61,7 +61,7 @@ stages:
       continueOnError: true
       condition: always()
     - powershell: |
-        eng\common\build.ps1 -configuration $(_BuildConfig) -prepareMachine-ci -projects $(Build.SourcesDirectory)\chcosta.proj /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/chcosta.binlog
+        eng\common\build.ps1 -configuration $(_BuildConfig) -restore -prepareMachine-ci -projects $(Build.SourcesDirectory)\chcosta.proj /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/chcosta.binlog
     - task: sendEndTelemetry@0
       displayName: 'Send Helix End Telemetry'
       continueOnError: true
