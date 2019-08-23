@@ -41,4 +41,15 @@ stages:
   jobs:
   - job: build
     steps:
+    - task: sendStartTelemetry@0
+      displayName: 'Send Helix Start Telemetry'
+      inputs:
+        helixRepo: dotnet/arcade
+        buildConfig: Debug
+      continueOnError: true
+      condition: always()
     - script: build.cmd -ci -projects $(Build.SourcesDirectory)\chcosta.proj
+    - task: sendEndTelemetry@0
+      displayName: 'Send Helix End Telemetry'
+      continueOnError: true
+      condition: always()
