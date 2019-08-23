@@ -59,8 +59,26 @@ stages:
         buildConfig: Debug
       continueOnError: true
       condition: always()
+    - task: MicroBuildSigningPlugin@2
+      displayName: Install MicroBuild plugin
+      inputs:
+        signType: test
+        zipSources: false
+        feedSource: https://dnceng.pkgs.visualstudio.com/_packaging/MicroBuildToolset/nuget/v3/index.json
+      env:
+        TeamName: dotnetcore
+      continueOnError: ${{ parameters.continueOnError }}
+      condition: always()
     - powershell: |
         eng\common\build.ps1 -configuration $(_BuildConfig) -build -restore -prepareMachine -ci -projects $(Build.SourcesDirectory)\chcosta.proj /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/chcosta.binlog
+    - task: MicroBuildCleanup@1
+      displayName: Execute Microbuild cleanup tasks  
+      condition: always()
+      continueOnError: true
+      env:
+        TeamName: dotnetcore
+
+
     - task: sendEndTelemetry@0
       displayName: 'Send Helix End Telemetry'
       continueOnError: true
