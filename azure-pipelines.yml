@@ -68,3 +68,9 @@ stages:
         ArtifactName: artifacts
       continueOnError: true
       condition: always()
+- stage: dependent
+  dependsOn: build
+  jobs:
+  - job: print
+    steps:
+    - script: echo 'hello'
