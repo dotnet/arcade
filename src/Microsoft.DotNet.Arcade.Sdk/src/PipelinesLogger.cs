@@ -27,6 +27,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
         public string Parameters { get; set; }
         private static readonly string s_TelemetryMarker = "NETCORE_ENGINEERING_TELEMETRY";
         private static bool sendTelemetry = true;
+        private static IEventSource2 eventSource2;
         public void Initialize(IEventSource eventSource)
         {
             var parameters = LoggerParameters.Parse(this.Parameters);
@@ -57,7 +58,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
 //            eventSource.ErrorRaised += OnErrorRaised;
 //            eventSource.WarningRaised += OnWarningRaised;
             eventSource.ProjectStarted += OnProjectStarted;
-            IEventSource2 eventSource2 = eventSource as IEventSource2;
+            eventSource2 = eventSource as IEventSource2;
             eventSource2.TelemetryLogged += OnTelemetryLogged;
 
             if (Verbosity == LoggerVerbosity.Diagnostic)
@@ -67,6 +68,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
         }
         public void Shutdown()
         {
+            eventSource2.TelemetryLogged -= OnTelemetryLogged;
         }
 
         private void LogErrorOrWarning(
@@ -98,14 +100,6 @@ namespace Microsoft.DotNet.Arcade.Sdk
                 {
                     message = $"({s_TelemetryMarker}={telemetryCategory}) {message}";
                 }
-                LogDetail(
-                    id: telemetryTaskInfo.Id,
-                    type: s_TelemetryMarker,
-                    name: telemetryCategory,
-                    state: State.Completed,
-                    result: "Failed",
-                    progress: "100",
-                    message: message);
             }
 
             _builder.Start("logissue");
@@ -115,7 +109,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
             _builder.AddProperty("columnnumber", column);
             _builder.AddProperty("code", code);
             _builder.Finish(message);
-            Console.WriteLine(_builder.GetMessage());
+//            Console.WriteLine(_builder.GetMessage());
         }
 
         private void LogDetail(
@@ -261,13 +255,14 @@ namespace Microsoft.DotNet.Arcade.Sdk
 
             if (Verbosity == LoggerVerbosity.Diagnostic)
             {
-                LogBuildEvent(
+/*                LogBuildEvent(
                     in projectInfo,
                     State.Completed,
                     result: e.Succeeded ? "Succeeded" : "Failed",
                     startTime: projectInfo.StartTime,
                     endTime: DateTimeOffset.UtcNow,
                     progress: "100");
+*/
             }
         }
 
