@@ -39,81 +39,51 @@ stages:
 - stage: build
   displayName: Build
   jobs:
-  - job: build
-    pool:
-      # For public or PR jobs, use the hosted pool.  For internal jobs use the internal pool.
-      # Will eventually change this to two BYOC pools.
-      name: NetCorePublic-Pool
-      queue: BuildPool.Windows.10.Amd64.VS2017.Open
-    strategy:
-      matrix:
-        Build_Release:
-          _BuildConfig: Release
-        Build_Debug:
-          _BuildConfig: Debug
-    steps:
-    - task: sendStartTelemetry@0
-      displayName: 'Send Helix Start Telemetry'
-      inputs:
-        helixRepo: dotnet/arcade
-        buildConfig: Debug
-      continueOnError: true
-      condition: always()
-    - powershell: |
-        eng\common\build.ps1 -configuration $(_BuildConfig) -build -restore -prepareMachine -ci -projects $(Build.SourcesDirectory)\chcosta.proj /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/chcosta.binlog
-    - task: sendEndTelemetry@0
-      displayName: 'Send Helix End Telemetry'
-      continueOnError: true
-      condition: always()
-    - task: PublishBuildArtifacts@1
-      displayName: Publish Logs
-      inputs:
-        PathtoPublish: '$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)'
-        PublishLocation: Container
-        ArtifactName: artifacts
-      continueOnError: true
-      condition: always()
-    - task: PublishTestResults@2
-      displayName: Publish Test Results
-      inputs:
-        testResultsFormat: 'xUnit'
-        testResultsFiles: '*.xml' 
-        searchFolder: '$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)'
-      continueOnError: true
+  - template: /eng/common/templates/jobs/jobs.yml
+    parameters:
+      enableTelemetry: true
+      helixRepo: dotnet/arcade
+      jobs:
+      - job: Windows_NT
+        timeoutInMinutes: 90
+        pool:
+          # For public or PR jobs, use the hosted pool.  For internal jobs use the internal pool.
+          # Will eventually change this to two BYOC pools.
+          name: NetCorePublic-Pool
+          queue: BuildPool.Windows.10.Amd64.VS2017.Open
+        variables:
+        - _Script: eng\common\cibuild.cmd
+        - _ValidateSdkArgs: ''
+        - _InternalBuildArgs: ''
+        - HelixApiAccessToken: ''
+        strategy:
+          matrix:
+            Build_Release:
+              _BuildConfig: Release
+              # PRs or external builds are not signed.
+              _SignType: test
+              _DotNetPublishToBlobFeed : false
+        steps:
+        - checkout: self
+          clean: true
+        # Use utility script to run script command dependent on agent OS.
+        - script: $(_Script)
+            -configuration $(_BuildConfig) 
+            -prepareMachine
+            $(_InternalBuildArgs)
+            $(_ValidateSdkArgs)
+            /p:Test=false
+          displayName: Windows Build / Publish
 
-      condition: always()
-  - job: build_linux
-    container: LinuxContainer
-    pool:
-      # For public or PR jobs, use the hosted pool.  For internal jobs use the internal pool.
-      # Will eventually change this to two BYOC pools.
-      name: NetCorePublic-Pool
-      queue: BuildPool.Ubuntu.1604.Amd64.Open
-    strategy:
-      matrix:
-        Build_Release:
-          _BuildConfig: Release
-        Build_Debug:
-          _BuildConfig: Debug
-    steps:
-    - task: sendStartTelemetry@0
-      displayName: 'Send Helix Start Telemetry'
-      inputs:
-        helixRepo: dotnet/arcade
-        buildConfig: Debug
-      continueOnError: true
-      condition: always()
-    - script: |
-        eng/common/build.sh -configuration $(_BuildConfig) -build -restore -prepareMachine -ci -projects $(Build.SourcesDirectory)/chcosta.proj /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/chcosta.binlog
-    - task: sendEndTelemetry@0
-      displayName: 'Send Helix End Telemetry'
-      continueOnError: true
-      condition: always()
-    - task: PublishBuildArtifacts@1
-      displayName: Publish Logs
-      inputs:
-        PathtoPublish: '$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)'
-        PublishLocation: Container
-        ArtifactName: artifacts
-      continueOnError: true
-      condition: always()
+        - powershell: eng\common\build.ps1
+            -configuration $(_BuildConfig) 
+            -prepareMachine
+            -ci
+            -test
+            -projects $(Build.SourcesDirectory)/tests/UnitTests.proj
+            /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.binlog
+          displayName: Run Helix Tests
+          env:
+            SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+            HelixAccessToken: $(HelixApiAccessToken)
+
