@@ -40,6 +40,11 @@ stages:
   displayName: Build
   jobs:
   - job: build
+    pool:
+      # For public or PR jobs, use the hosted pool.  For internal jobs use the internal pool.
+      # Will eventually change this to two BYOC pools.
+      name: NetCorePublic-Pool
+      queue: BuildPool.Windows.10.Amd64.VS2017.Open
     strategy:
       matrix:
         Build_Release:
