@@ -55,7 +55,7 @@ stages:
         buildConfig: Debug
       continueOnError: true
       condition: always()
-    - script: build.cmd configuration $(_BuildConfig) -ci -projects $(Build.SourcesDirectory)\chcosta.proj /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/chcosta.binlog
+    - script: build.cmd -configuration $(_BuildConfig) -ci -projects $(Build.SourcesDirectory)\chcosta.proj /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/chcosta.binlog
     - task: sendEndTelemetry@0
       displayName: 'Send Helix End Telemetry'
       continueOnError: true
