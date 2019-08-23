@@ -212,14 +212,14 @@ function GetDotNetInstallScript {
         echo "Downloading '$install_script_url' successful"
       else
         local exit_code=$?
-        Write-PipelineTelemetryError -category 'InitializeToolset' "Failed to install dotnet SDK (exit code '$exit_code')."
+        Write-PipelineTelemetryError -category 'InitializeToolset' "Failed to acquire dotnet install script (exit code '$exit_code')."
         ExitWithExitCode $exit_code
       fi
     elif wget -q -O "$install_script" "$install_script_url"; then 
         echo "Downloading '$install_script_url' successful"
     else
         local exit_code=$?
-        Write-PipelineTelemetryError -category 'InitializeToolset' "Failed to install dotnet SDK (exit code '$exit_code')."
+        Write-PipelineTelemetryError -category 'InitializeToolset' "Failed to acquire dotnet install script (exit code '$exit_code')."
         ExitWithExitCode $exit_code
       fi
   fi
