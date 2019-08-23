@@ -1,0 +1,172 @@
+##vso[task.setvariable isSecret=False;variable=Artifacts;isOutput=True]E:\gh\chcosta\arcade\artifacts
+##vso[task.setvariable isSecret=False;variable=Artifacts.Toolset;isOutput=True]E:\gh\chcosta\arcade\artifacts\toolset
+##vso[task.setvariable isSecret=False;variable=Artifacts.Log;isOutput=True]E:\gh\chcosta\arcade\artifacts\log\Debug
+##vso[task.setvariable isSecret=False;variable=TEMP;isOutput=True]E:\gh\chcosta\arcade\artifacts\tmp\Debug
+##vso[task.setvariable isSecret=False;variable=TMP;isOutput=True]E:\gh\chcosta\arcade\artifacts\tmp\Debug
+##vso[task.prependpath]E:\gh\chcosta\arcade\.dotnet
+##vso[task.setvariable isSecret=False;variable=DOTNET_MULTILEVEL_LOOKUP;isOutput=True]0
+##vso[task.setvariable isSecret=False;variable=DOTNET_SKIP_FIRST_TIME_EXPERIENCE;isOutput=True]1
+E:\gh\chcosta\arcade\.dotnet\sdk\3.0.100-preview6-012264\MSBuild.dll /nologo -maxcpucount /m -verbosity:m /v:minimal /bl:E:\gh\chcosta\arcade\artifacts\log\Debug\Build.binlog /clp:Summary /logger:E:\gh\chcosta\arcade\.packages\microsoft.dotnet.arcade.sdk\1.0.0-ci\tools\netcoreapp2.1\Microsoft.DotNet.Arcade.Sdk.dll /nr:False /p:ContinuousIntegrationBuild=True /p:TreatWarningsAsErrors=true /p:Configuration=Debug /p:RepoRoot=E:\gh\chcosta\arcade /p:Restore=True /p:DeployDeps=False /p:Build=True /p:Rebuild=False /p:Deploy=False /p:Test=True /p:Pack=True /p:IntegrationTest=False /p:PerformanceTest=False /p:Sign=False /p:Publish=True /warnaserror E:\gh\chcosta\arcade\.packages\microsoft.dotnet.arcade.sdk\1.0.0-ci\tools\Build.proj
+  Restore completed in 186.84 ms for E:\gh\chcosta\arcade\.packages\microsoft.dotnet.arcade.sdk\1.0.0-ci\tools\Tools.proj.
+  Restore completed in 23.16 ms for E:\gh\chcosta\arcade\src\Microsoft.Cci.Extensions\Microsoft.Cci.Extensions.csproj.
+  Restore completed in 12.05 ms for E:\gh\chcosta\arcade\src\Microsoft.DotNet.Build.Tasks.Configuration\src\Microsoft.DotNet.Build.Tasks.Configuration.csproj.
+  Restore completed in 24.44 ms for E:\gh\chcosta\arcade\src\Microsoft.DotNet.ApiCompat\Microsoft.DotNet.ApiCompat.csproj.
+  Restore completed in 12.18 ms for E:\gh\chcosta\arcade\src\Microsoft.DotNet.Arcade.Sdk\Microsoft.DotNet.Arcade.Sdk.csproj.
+  Restore completed in 16.94 ms for E:\gh\chcosta\arcade\src\Microsoft.DotNet.Arcade.Sdk.Tests\Microsoft.DotNet.Arcade.Sdk.Tests.csproj.
+  Restore completed in 10.05 ms for E:\gh\chcosta\arcade\src\Microsoft.DotNet.Build.Tasks.Configuration\tests\Microsoft.DotNet.Build.Tasks.Configuration.Tests.csproj.
+  Restore completed in 37.03 ms for E:\gh\chcosta\arcade\src\Microsoft.DotNet.Build.Tasks.VisualStudio.Tests\Microsoft.DotNet.Build.Tasks.VisualStudio.Tests.csproj.
+  Restore completed in 45.05 ms for E:\gh\chcosta\arcade\src\Microsoft.DotNet.Build.Tasks.Feed\Microsoft.DotNet.Build.Tasks.Feed.csproj.
+  Restore completed in 13.2 ms for E:\gh\chcosta\arcade\src\Microsoft.DotNet.Build.Tasks.VisualStudio\Microsoft.DotNet.Build.Tasks.VisualStudio.csproj.
+  Restore completed in 14.48 ms for E:\gh\chcosta\arcade\src\Microsoft.DotNet.Build.Tasks.Packaging\src\Microsoft.DotNet.Build.Tasks.Packaging.csproj.
+  Restore completed in 10.53 ms for E:\gh\chcosta\arcade\src\Microsoft.DotNet.CodeAnalysis\Microsoft.DotNet.CodeAnalysis.csproj.
+  Restore completed in 14.77 ms for E:\gh\chcosta\arcade\src\Microsoft.DotNet.Build.Tasks.Packaging\tests\Microsoft.DotNet.Build.Tasks.Packaging.Tests.csproj.
+  Restore completed in 18.28 ms for E:\gh\chcosta\arcade\src\Microsoft.DotNet.CoreFxTesting\Microsoft.DotNet.CoreFxTesting.csproj.
+  Restore completed in 8.7 ms for E:\gh\chcosta\arcade\src\Microsoft.DotNet.Deployment.Tasks.Links\Microsoft.DotNet.Deployment.Tasks.Links.csproj.
+  Restore completed in 13.44 ms for E:\gh\chcosta\arcade\src\Microsoft.DotNet.GenAPI\Microsoft.DotNet.GenAPI.csproj.
+  Restore completed in 17.66 ms for E:\gh\chcosta\arcade\src\Microsoft.DotNet.GitSync\Microsoft.DotNet.GitSync.csproj.
+  Restore completed in 19.57 ms for E:\gh\chcosta\arcade\src\Microsoft.DotNet.Git.IssueManager\src\Microsoft.DotNet.Git.IssueManager.csproj.
+  Restore completed in 9.2 ms for E:\gh\chcosta\arcade\src\Microsoft.DotNet.Helix\Client\CSharp\Microsoft.DotNet.Helix.Client.csproj.
+  Restore completed in 9.15 ms for E:\gh\chcosta\arcade\src\Microsoft.DotNet.Helix\JobSender\Microsoft.DotNet.Helix.JobSender.csproj.
+  Restore completed in 9.98 ms for E:\gh\chcosta\arcade\src\Microsoft.DotNet.GenFacades\Microsoft.DotNet.GenFacades.csproj.
+  Restore completed in 17.28 ms for E:\gh\chcosta\arcade\src\Microsoft.DotNet.GitSync.CommitManager\Microsoft.DotNet.GitSync.CommitManager.csproj.
+  Restore completed in 14.76 ms for E:\gh\chcosta\arcade\src\Microsoft.DotNet.RemoteExecutor\src\Microsoft.DotNet.RemoteExecutor.csproj.
+  Restore completed in 9.7 ms for E:\gh\chcosta\arcade\src\Microsoft.DotNet.Helix\Sdk\Microsoft.DotNet.Helix.Sdk.csproj.
+  Restore completed in 9.97 ms for E:\gh\chcosta\arcade\src\Microsoft.DotNet.NuGetRepack\tasks\Microsoft.DotNet.NuGetRepack.Tasks.csproj.
+  Restore completed in 8.82 ms for E:\gh\chcosta\arcade\src\Microsoft.DotNet.SwaggerGenerator\Microsoft.DotNet.SwaggerGenerator.CodeGenerator\Microsoft.DotNet.SwaggerGenerator.CodeGenerator.csproj.
+  Restore completed in 57.37 ms for E:\gh\chcosta\arcade\src\Microsoft.DotNet.Github.IssueLabeler\Microsoft.DotNet.Github.IssueLabeler.csproj.
+  Restore completed in 11.52 ms for E:\gh\chcosta\arcade\src\Microsoft.DotNet.SwaggerGenerator\Microsoft.DotNet.SwaggerGenerator.CmdLine\Microsoft.DotNet.SwaggerGenerator.CmdLine.csproj.
+  Restore completed in 8.88 ms for E:\gh\chcosta\arcade\src\Microsoft.DotNet.SignTool\Microsoft.DotNet.SignTool.csproj.
+  Restore completed in 20.46 ms for E:\gh\chcosta\arcade\src\Microsoft.DotNet.NuGetRepack\tests\Microsoft.DotNet.NuGetRepack.Tests.csproj.
+  Restore completed in 15 ms for E:\gh\chcosta\arcade\src\Microsoft.DotNet.SignTool.Tests\Microsoft.DotNet.SignTool.Tests.csproj.
+  Restore completed in 12.94 ms for E:\gh\chcosta\arcade\src\Microsoft.DotNet.XUnitExtensions\src\Microsoft.DotNet.XUnitExtensions.csproj.
+  Restore completed in 54.81 ms for E:\gh\chcosta\arcade\src\Microsoft.DotNet.SwaggerGenerator\Microsoft.DotNet.SwaggerGenerator.MSBuild\Microsoft.DotNet.SwaggerGenerator.MSBuild.csproj.
+  Restore completed in 17.75 ms for E:\gh\chcosta\arcade\src\Microsoft.DotNet.XUnitConsoleRunner\src\Microsoft.DotNet.XUnitConsoleRunner.csproj.
+  Restore completed in 23.97 ms for E:\gh\chcosta\arcade\src\Microsoft.DotNet.VersionTools\lib\Microsoft.DotNet.VersionTools.csproj.
+  Restore completed in 10.09 ms for E:\gh\chcosta\arcade\src\Microsoft.DotNet.VersionTools\tasks\Microsoft.DotNet.VersionTools.Tasks.csproj.
+  Restore completed in 10.24 ms for E:\gh\chcosta\arcade\src\Microsoft.DotNet.XUnitExtensions\tests\Microsoft.DotNet.XUnitExtensions.Tests.csproj.
+  Restore completed in 16.08 ms for E:\gh\chcosta\arcade\src\Microsoft.DotNet.VersionTools\tests\Microsoft.DotNet.VersionTools.Tests.csproj.
+  Restore completed in 16.47 ms for E:\gh\chcosta\arcade\src\SignCheck\Microsoft.SignCheck\Microsoft.DotNet.SignCheckLibrary.csproj.
+  Restore completed in 9.13 ms for E:\gh\chcosta\arcade\src\Microsoft.DotNet.ServiceFabric.ServiceHost\Microsoft.DotNet.ServiceFabric.ServiceHost.csproj.
+  Restore completed in 6.64 ms for E:\gh\chcosta\arcade\src\SignCheck\SignCheck\Microsoft.DotNet.SignCheck.csproj.
+  Restore completed in 6.65 ms for E:\gh\chcosta\arcade\src\WinShimmer\WinShimmer.csproj.
+  Microsoft.DotNet.Deployment.Tasks.Links -> E:\gh\chcosta\arcade\artifacts\bin\Microsoft.DotNet.Deployment.Tasks.Links\Debug\netcoreapp2.0\Microsoft.DotNet.Deployment.Tasks.Links.dll
+  Microsoft.DotNet.Arcade.Sdk -> E:\gh\chcosta\arcade\artifacts\bin\Microsoft.DotNet.Arcade.Sdk\Debug\net472\Microsoft.DotNet.Arcade.Sdk.dll
+  Microsoft.DotNet.GitSync.CommitManager -> E:\gh\chcosta\arcade\artifacts\bin\Microsoft.DotNet.GitSync.CommitManager\Debug\netcoreapp2.0\Microsoft.DotNet.GitSync.CommitManager.dll
+  Microsoft.DotNet.Deployment.Tasks.Links -> E:\gh\chcosta\arcade\artifacts\bin\Microsoft.DotNet.Deployment.Tasks.Links\Debug\net472\Microsoft.DotNet.Deployment.Tasks.Links.dll
+  Microsoft.DotNet.SignTool -> E:\gh\chcosta\arcade\artifacts\bin\Microsoft.DotNet.SignTool\Debug\netcoreapp2.0\Microsoft.DotNet.SignTool.dll
+  Microsoft.DotNet.SignTool -> E:\gh\chcosta\arcade\artifacts\bin\Microsoft.DotNet.SignTool\Debug\net472\Microsoft.DotNet.SignTool.dll
+  Microsoft.DotNet.GitSync -> E:\gh\chcosta\arcade\artifacts\bin\Microsoft.DotNet.GitSync\Debug\net472\Microsoft.DotNet.GitSync.exe
+  Microsoft.DotNet.XUnitExtensions -> E:\gh\chcosta\arcade\artifacts\bin\Microsoft.DotNet.XUnitExtensions\Debug\net472\Microsoft.DotNet.XUnitExtensions.dll
+  Microsoft.DotNet.XUnitExtensions -> E:\gh\chcosta\arcade\artifacts\bin\Microsoft.DotNet.XUnitExtensions\Debug\netstandard2.0\Microsoft.DotNet.XUnitExtensions.dll
+  Microsoft.DotNet.VersionTools -> E:\gh\chcosta\arcade\artifacts\bin\Microsoft.DotNet.VersionTools\Debug\netstandard2.0\Microsoft.DotNet.VersionTools.dll
+  Microsoft.DotNet.Arcade.Sdk -> E:\gh\chcosta\arcade\artifacts\bin\Microsoft.DotNet.Arcade.Sdk\Debug\netcoreapp2.1\Microsoft.DotNet.Arcade.Sdk.dll
+  Microsoft.DotNet.Helix.Client -> E:\gh\chcosta\arcade\artifacts\bin\Microsoft.DotNet.Helix.Client\Debug\netstandard2.0\Microsoft.DotNet.Helix.Client.dll
+  Microsoft.Cci.Extensions -> E:\gh\chcosta\arcade\artifacts\bin\Microsoft.Cci.Extensions\Debug\netstandard2.0\Microsoft.Cci.Extensions.dll
+  Microsoft.DotNet.Helix.JobSender -> E:\gh\chcosta\arcade\artifacts\bin\Microsoft.DotNet.Helix.JobSender\Debug\netstandard2.0\Microsoft.DotNet.Helix.JobSender.dll
+  Microsoft.DotNet.GenFacades -> E:\gh\chcosta\arcade\artifacts\bin\Microsoft.DotNet.GenFacades\Debug\netcoreapp2.1\Microsoft.DotNet.GenFacades.dll
+  Microsoft.DotNet.SwaggerGenerator.CodeGenerator -> E:\gh\chcosta\arcade\artifacts\bin\Microsoft.DotNet.SwaggerGenerator.CodeGenerator\Debug\netstandard2.0\Microsoft.DotNet.SwaggerGenerator.CodeGenerator.dll
+  Microsoft.DotNet.Build.Tasks.Feed -> E:\gh\chcosta\arcade\artifacts\bin\Microsoft.DotNet.Build.Tasks.Feed\Debug\net472\Microsoft.DotNet.Build.Tasks.Feed.dll
+  Microsoft.DotNet.GenAPI -> E:\gh\chcosta\arcade\artifacts\bin\Microsoft.DotNet.GenAPI\Debug\net472\Microsoft.DotNet.GenAPI.exe
+  Microsoft.DotNet.Arcade.Sdk -> E:\gh\chcosta\arcade\artifacts\bin\Microsoft.DotNet.Arcade.Sdk\Debug\netcoreapp2.1\publish\
+  Microsoft.DotNet.Helix.Client -> E:\gh\chcosta\arcade\artifacts\bin\Microsoft.DotNet.Helix.Client\Debug\net472\Microsoft.DotNet.Helix.Client.dll
+  Microsoft.DotNet.ApiCompat -> E:\gh\chcosta\arcade\artifacts\bin\Microsoft.DotNet.ApiCompat\Debug\netcoreapp2.1\Microsoft.DotNet.ApiCompat.dll
+  Microsoft.DotNet.GenFacades -> E:\gh\chcosta\arcade\artifacts\bin\Microsoft.DotNet.GenFacades\Debug\net472\Microsoft.DotNet.GenFacades.dll
+  Microsoft.DotNet.ServiceFabric.ServiceHost -> E:\gh\chcosta\arcade\artifacts\bin\Microsoft.DotNet.ServiceFabric.ServiceHost\Debug\net472\win7-x64\Microsoft.DotNet.ServiceFabric.ServiceHost.dll
+  Microsoft.DotNet.Build.Tasks.Packaging -> E:\gh\chcosta\arcade\artifacts\bin\Microsoft.DotNet.Build.Tasks.Packaging\Debug\netcoreapp2.1\Microsoft.DotNet.Build.Tasks.Packaging.dll
+  Microsoft.DotNet.CodeAnalysis -> E:\gh\chcosta\arcade\artifacts\bin\Microsoft.DotNet.CodeAnalysis\Debug\netstandard2.0\Microsoft.DotNet.CodeAnalysis.dll
+  Microsoft.DotNet.Build.Tasks.Packaging -> E:\gh\chcosta\arcade\artifacts\bin\Microsoft.DotNet.Build.Tasks.Packaging\Debug\net472\Microsoft.DotNet.Build.Tasks.Packaging.dll
+  Microsoft.DotNet.CoreFxTesting -> E:\gh\chcosta\arcade\artifacts\bin\Microsoft.DotNet.CoreFxTesting\Debug\netcoreapp2.1\Microsoft.DotNet.CoreFxTesting.dll
+  Microsoft.DotNet.SignCheckLibrary -> E:\gh\chcosta\arcade\artifacts\bin\Microsoft.DotNet.SignCheckLibrary\x86\Debug\net472\Microsoft.DotNet.SignCheckLibrary.dll
+  Microsoft.DotNet.CoreFxTesting -> E:\gh\chcosta\arcade\artifacts\bin\Microsoft.DotNet.CoreFxTesting\Debug\net472\Microsoft.DotNet.CoreFxTesting.dll
+  Microsoft.DotNet.ApiCompat -> E:\gh\chcosta\arcade\artifacts\bin\Microsoft.DotNet.ApiCompat\Debug\net472\Microsoft.DotNet.ApiCompat.exe
+  Microsoft.DotNet.GenAPI -> E:\gh\chcosta\arcade\artifacts\bin\Microsoft.DotNet.GenAPI\Debug\netcoreapp2.1\Microsoft.DotNet.GenAPI.dll
+  Microsoft.DotNet.Build.Tasks.Configuration -> E:\gh\chcosta\arcade\artifacts\bin\Microsoft.DotNet.Build.Tasks.Configuration\Debug\netcoreapp2.1\Microsoft.DotNet.Build.Tasks.Configuration.dll
+  Microsoft.DotNet.Build.Tasks.Configuration -> E:\gh\chcosta\arcade\artifacts\bin\Microsoft.DotNet.Build.Tasks.Configuration\Debug\net472\Microsoft.DotNet.Build.Tasks.Configuration.dll
+  Microsoft.DotNet.XUnitConsoleRunner -> E:\gh\chcosta\arcade\artifacts\bin\Microsoft.DotNet.XUnitConsoleRunner\Debug\netcoreapp2.1\xunit.console.dll
+  Microsoft.DotNet.Build.Tasks.VisualStudio -> E:\gh\chcosta\arcade\artifacts\bin\Microsoft.DotNet.Build.Tasks.VisualStudio\Debug\net472\Microsoft.DotNet.Build.Tasks.VisualStudio.dll
+  Successfully created package 'E:\gh\chcosta\arcade\artifacts\packages\Debug\NonShipping\Microsoft.DotNet.Arcade.Sdk.1.0.0-ci.nupkg'.
+  WinShimmer -> E:\gh\chcosta\arcade\artifacts\bin\WinShimmer\Debug\net472\WinShimmer.exe
+  Microsoft.DotNet.Build.Tasks.Feed -> E:\gh\chcosta\arcade\artifacts\bin\Microsoft.DotNet.Build.Tasks.Feed\Debug\netcoreapp2.1\Microsoft.DotNet.Build.Tasks.Feed.dll
+  Microsoft.DotNet.VersionTools.Tasks -> E:\gh\chcosta\arcade\artifacts\bin\Microsoft.DotNet.VersionTools.Tasks\Debug\net472\Microsoft.DotNet.VersionTools.Tasks.dll
+  Microsoft.DotNet.VersionTools.Tasks -> E:\gh\chcosta\arcade\artifacts\bin\Microsoft.DotNet.VersionTools.Tasks\Debug\netcoreapp2.1\Microsoft.DotNet.VersionTools.Tasks.dll
+  Microsoft.DotNet.Git.IssueManager -> E:\gh\chcosta\arcade\artifacts\bin\Microsoft.DotNet.Git.IssueManager\Debug\net472\Microsoft.DotNet.Git.IssueManager.dll
+  Microsoft.DotNet.Helix.Sdk -> E:\gh\chcosta\arcade\artifacts\bin\Microsoft.DotNet.Helix.Sdk\Debug\net472\Microsoft.DotNet.Helix.Sdk.dll
+  Microsoft.DotNet.Helix.Sdk -> E:\gh\chcosta\arcade\artifacts\bin\Microsoft.DotNet.Helix.Sdk\Debug\netcoreapp2.1\Microsoft.DotNet.Helix.Sdk.dll
+  Microsoft.DotNet.Git.IssueManager -> E:\gh\chcosta\arcade\artifacts\bin\Microsoft.DotNet.Git.IssueManager\Debug\netcoreapp2.1\Microsoft.DotNet.Git.IssueManager.dll
+  Microsoft.DotNet.RemoteExecutor -> E:\gh\chcosta\arcade\artifacts\bin\Microsoft.DotNet.RemoteExecutor\Debug\net472\Microsoft.DotNet.RemoteExecutor.exe
+  Microsoft.DotNet.RemoteExecutor -> E:\gh\chcosta\arcade\artifacts\bin\Microsoft.DotNet.RemoteExecutor\Debug\netcoreapp2.1\Microsoft.DotNet.RemoteExecutor.dll
+  Microsoft.DotNet.VersionTools.Tests -> E:\gh\chcosta\arcade\artifacts\bin\Microsoft.DotNet.VersionTools.Tests\Debug\netcoreapp2.1\Microsoft.DotNet.VersionTools.Tests.dll
+  Microsoft.DotNet.RemoteExecutor -> E:\gh\chcosta\arcade\artifacts\bin\Microsoft.DotNet.RemoteExecutor\Debug\netstandard2.0\Microsoft.DotNet.RemoteExecutor.dll
+  Microsoft.DotNet.Build.Tasks.Configuration.Tests -> E:\gh\chcosta\arcade\artifacts\bin\Microsoft.DotNet.Build.Tasks.Configuration.Tests\Debug\netcoreapp2.1\Microsoft.DotNet.Build.Tasks.Configuration.Tests.dll
+  Microsoft.DotNet.NuGetRepack.Tasks -> E:\gh\chcosta\arcade\artifacts\bin\Microsoft.DotNet.NuGetRepack.Tasks\Debug\netcoreapp2.1\Microsoft.DotNet.NuGetRepack.Tasks.dll
+  Microsoft.DotNet.Build.Tasks.Packaging.Tests -> E:\gh\chcosta\arcade\artifacts\bin\Microsoft.DotNet.Build.Tasks.Packaging.Tests\Debug\netcoreapp2.1\Microsoft.DotNet.Build.Tasks.Packaging.Tests.dll
+  Microsoft.DotNet.NuGetRepack.Tests -> E:\gh\chcosta\arcade\artifacts\bin\Microsoft.DotNet.NuGetRepack.Tests\Debug\netcoreapp2.1\Microsoft.DotNet.NuGetRepack.Tests.dll
+  Microsoft.DotNet.Build.Tasks.Packaging.Tests -> E:\gh\chcosta\arcade\artifacts\bin\Microsoft.DotNet.Build.Tasks.Packaging.Tests\Debug\net472\Microsoft.DotNet.Build.Tasks.Packaging.Tests.dll
+  Microsoft.DotNet.Build.Tasks.Configuration.Tests -> E:\gh\chcosta\arcade\artifacts\bin\Microsoft.DotNet.Build.Tasks.Configuration.Tests\Debug\net472\Microsoft.DotNet.Build.Tasks.Configuration.Tests.dll
+  Microsoft.DotNet.SwaggerGenerator.MSBuild -> E:\gh\chcosta\arcade\artifacts\bin\Microsoft.DotNet.SwaggerGenerator.MSBuild\Debug\net472\Microsoft.DotNet.SwaggerGenerator.MSBuild.dll
+  Microsoft.DotNet.NuGetRepack.Tasks -> E:\gh\chcosta\arcade\artifacts\bin\Microsoft.DotNet.NuGetRepack.Tasks\Debug\net472\Microsoft.DotNet.NuGetRepack.Tasks.dll
+  Microsoft.DotNet.SwaggerGenerator.MSBuild -> E:\gh\chcosta\arcade\artifacts\bin\Microsoft.DotNet.SwaggerGenerator.MSBuild\Debug\netcoreapp2.1\Microsoft.DotNet.SwaggerGenerator.MSBuild.dll
+  Microsoft.DotNet.Github.IssueLabeler -> E:\gh\chcosta\arcade\artifacts\bin\Microsoft.DotNet.Github.IssueLabeler\Debug\netcoreapp2.0\Microsoft.DotNet.Github.IssueLabeler.dll
+  Microsoft.DotNet.Arcade.Sdk.Tests -> E:\gh\chcosta\arcade\artifacts\bin\Microsoft.DotNet.Arcade.Sdk.Tests\Debug\netcoreapp2.1\Microsoft.DotNet.Arcade.Sdk.Tests.dll
+  Microsoft.DotNet.XUnitExtensions.Tests -> E:\gh\chcosta\arcade\artifacts\bin\Microsoft.DotNet.XUnitExtensions.Tests\Debug\netcoreapp2.1\Microsoft.DotNet.XUnitExtensions.Tests.dll
+  Microsoft.DotNet.SwaggerGenerator.CmdLine -> E:\gh\chcosta\arcade\artifacts\bin\Microsoft.DotNet.SwaggerGenerator.CmdLine\Debug\netcoreapp2.1\Microsoft.DotNet.SwaggerGenerator.CmdLine.dll
+  Microsoft.DotNet.ServiceFabric.ServiceHost -> E:\gh\chcosta\arcade\artifacts\bin\Microsoft.DotNet.ServiceFabric.ServiceHost\Debug\netcoreapp2.1\win7-x64\Microsoft.DotNet.ServiceFabric.ServiceHost.dll
+  Microsoft.DotNet.SignCheck -> E:\gh\chcosta\arcade\artifacts\bin\Microsoft.DotNet.SignCheck\x86\Debug\net472\Microsoft.DotNet.SignCheck.exe
+  Microsoft.DotNet.Build.Tasks.VisualStudio.Tests -> E:\gh\chcosta\arcade\artifacts\bin\Microsoft.DotNet.Build.Tasks.VisualStudio.Tests\Debug\net472\Microsoft.DotNet.Build.Tasks.VisualStudio.Tests.dll
+  Microsoft.DotNet.XUnitExtensions.Tests -> E:\gh\chcosta\arcade\artifacts\bin\Microsoft.DotNet.XUnitExtensions.Tests\Debug\net472\Microsoft.DotNet.XUnitExtensions.Tests.dll
+  Microsoft.DotNet.SignTool.Tests -> E:\gh\chcosta\arcade\artifacts\bin\Microsoft.DotNet.SignTool.Tests\Debug\netcoreapp2.1\Microsoft.DotNet.SignTool.Tests.dll
+##vso[task.logdetail id=a0cf5e11-2bec-403c-96bf-36288f90c11d;type=NETCORE_ENGINEERING_TELEMETRY;name=Test;state=InProgress;](NETCORE_ENGINEERING_TELEMETRY=Test) 
+##vso[task.logdetail id=9fd29d15-8e2e-4281-a133-1a23bab916d1;type=NETCORE_ENGINEERING_TELEMETRY;name=Test;state=InProgress;](NETCORE_ENGINEERING_TELEMETRY=Test) 
+  Running tests: E:\gh\chcosta\arcade\artifacts\bin\Microsoft.DotNet.Arcade.Sdk.Tests\Debug\netcoreapp2.1\Microsoft.DotNet.Arcade.Sdk.Tests.dll [netcoreapp2.1|x64]
+  Running tests: E:\gh\chcosta\arcade\artifacts\bin\Microsoft.DotNet.SignTool.Tests\Debug\netcoreapp2.1\Microsoft.DotNet.SignTool.Tests.dll [netcoreapp2.1|x64]
+##vso[task.logdetail id=7fd6b0fa-3da2-4f6a-9c71-a9dcef97014b;type=NETCORE_ENGINEERING_TELEMETRY;name=Test;state=InProgress;](NETCORE_ENGINEERING_TELEMETRY=Test) 
+  Running tests: E:\gh\chcosta\arcade\artifacts\bin\Microsoft.DotNet.NuGetRepack.Tests\Debug\netcoreapp2.1\Microsoft.DotNet.NuGetRepack.Tests.dll [netcoreapp2.1|x64]
+##vso[task.logdetail id=fcc9fd91-65cf-42e8-9ac0-e5eb8d62160e;type=NETCORE_ENGINEERING_TELEMETRY;name=Test;state=InProgress;](NETCORE_ENGINEERING_TELEMETRY=Test) 
+  Running tests: E:\gh\chcosta\arcade\artifacts\bin\Microsoft.DotNet.Build.Tasks.Configuration.Tests\Debug\netcoreapp2.1\Microsoft.DotNet.Build.Tasks.Configuration.Tests.dll [netcoreapp2.1|x64]
+XUnit : error : Tests failed: E:\gh\chcosta\arcade\artifacts\log\Debug\Microsoft.DotNet.Build.Tasks.Configuration.Tests_netcoreapp2.1_x64.log [netcoreapp2.1|x64] [E:\gh\chcosta\arcade\src\Microsoft.DotNet.Build.Tasks.Configuration\tests\Microsoft.DotNet.Build.Tasks.Configuration.Tests.csproj]
+##vso[task.logdetail id=fcc9fd91-65cf-42e8-9ac0-e5eb8d62160e;state=Completed;result=Failed;](NETCORE_ENGINEERING_TELEMETRY=Test) 
+##vso[task.logissue type=error;sourcepath=XUnit;linenumber=0;columnnumber=0;code=;](NETCORE_ENGINEERING_TELEMETRY=Test) Tests failed: E:\gh\chcosta\arcade\artifacts\log\Debug\Microsoft.DotNet.Build.Tasks.Configuration.Tests_netcoreapp2.1_x64.log [netcoreapp2.1|x64%5D
+##vso[task.logdetail id=3985a5c1-c08e-4c0d-ab23-00e321927d9c;type=NETCORE_ENGINEERING_TELEMETRY;name=Test;state=InProgress;](NETCORE_ENGINEERING_TELEMETRY=Test) 
+XUnit : error : Tests failed: E:\gh\chcosta\arcade\artifacts\log\Debug\Microsoft.DotNet.SignTool.Tests_netcoreapp2.1_x64.log [netcoreapp2.1|x64] [E:\gh\chcosta\arcade\src\Microsoft.DotNet.SignTool.Tests\Microsoft.DotNet.SignTool.Tests.csproj]
+##vso[task.logdetail id=a0cf5e11-2bec-403c-96bf-36288f90c11d;state=Completed;result=Failed;](NETCORE_ENGINEERING_TELEMETRY=Test) 
+##vso[task.logissue type=error;sourcepath=XUnit;linenumber=0;columnnumber=0;code=;](NETCORE_ENGINEERING_TELEMETRY=Test) Tests failed: E:\gh\chcosta\arcade\artifacts\log\Debug\Microsoft.DotNet.SignTool.Tests_netcoreapp2.1_x64.log [netcoreapp2.1|x64%5D
+  Running tests: E:\gh\chcosta\arcade\artifacts\bin\Microsoft.DotNet.Build.Tasks.VisualStudio.Tests\Debug\net472\Microsoft.DotNet.Build.Tasks.VisualStudio.Tests.dll [net472|x64]
+XUnit : error : Tests failed: E:\gh\chcosta\arcade\artifacts\log\Debug\Microsoft.DotNet.Arcade.Sdk.Tests_netcoreapp2.1_x64.log [netcoreapp2.1|x64] [E:\gh\chcosta\arcade\src\Microsoft.DotNet.Arcade.Sdk.Tests\Microsoft.DotNet.Arcade.Sdk.Tests.csproj]
+##vso[task.logdetail id=9fd29d15-8e2e-4281-a133-1a23bab916d1;state=Completed;result=Failed;](NETCORE_ENGINEERING_TELEMETRY=Test) 
+##vso[task.logissue type=error;sourcepath=XUnit;linenumber=0;columnnumber=0;code=;](NETCORE_ENGINEERING_TELEMETRY=Test) Tests failed: E:\gh\chcosta\arcade\artifacts\log\Debug\Microsoft.DotNet.Arcade.Sdk.Tests_netcoreapp2.1_x64.log [netcoreapp2.1|x64%5D
+##vso[task.logdetail id=1ecdb20d-76f2-4a00-8ff9-38e7798dc02a;type=NETCORE_ENGINEERING_TELEMETRY;name=Test;state=InProgress;](NETCORE_ENGINEERING_TELEMETRY=Test) 
+  Running tests: E:\gh\chcosta\arcade\artifacts\bin\Microsoft.DotNet.VersionTools.Tests\Debug\netcoreapp2.1\Microsoft.DotNet.VersionTools.Tests.dll [netcoreapp2.1|x64]
+XUnit : error : Tests failed: E:\gh\chcosta\arcade\artifacts\log\Debug\Microsoft.DotNet.NuGetRepack.Tests_netcoreapp2.1_x64.log [netcoreapp2.1|x64] [E:\gh\chcosta\arcade\src\Microsoft.DotNet.NuGetRepack\tests\Microsoft.DotNet.NuGetRepack.Tests.csproj]
+##vso[task.logdetail id=7fd6b0fa-3da2-4f6a-9c71-a9dcef97014b;state=Completed;result=Failed;](NETCORE_ENGINEERING_TELEMETRY=Test) 
+##vso[task.logissue type=error;sourcepath=XUnit;linenumber=0;columnnumber=0;code=;](NETCORE_ENGINEERING_TELEMETRY=Test) Tests failed: E:\gh\chcosta\arcade\artifacts\log\Debug\Microsoft.DotNet.NuGetRepack.Tests_netcoreapp2.1_x64.log [netcoreapp2.1|x64%5D
+XUnit : error : Tests failed: E:\gh\chcosta\arcade\artifacts\log\Debug\Microsoft.DotNet.VersionTools.Tests_netcoreapp2.1_x64.log [netcoreapp2.1|x64] [E:\gh\chcosta\arcade\src\Microsoft.DotNet.VersionTools\tests\Microsoft.DotNet.VersionTools.Tests.csproj]
+##vso[task.logdetail id=1ecdb20d-76f2-4a00-8ff9-38e7798dc02a;state=Completed;result=Failed;](NETCORE_ENGINEERING_TELEMETRY=Test) 
+##vso[task.logissue type=error;sourcepath=XUnit;linenumber=0;columnnumber=0;code=;](NETCORE_ENGINEERING_TELEMETRY=Test) Tests failed: E:\gh\chcosta\arcade\artifacts\log\Debug\Microsoft.DotNet.VersionTools.Tests_netcoreapp2.1_x64.log [netcoreapp2.1|x64%5D
+  Tests succeeded: E:\gh\chcosta\arcade\artifacts\bin\Microsoft.DotNet.Build.Tasks.VisualStudio.Tests\Debug\net472\Microsoft.DotNet.Build.Tasks.VisualStudio.Tests.dll [net472|x64]
+##vso[task.logdetail id=3985a5c1-c08e-4c0d-ab23-00e321927d9c;state=Completed;](NETCORE_ENGINEERING_TELEMETRY=Test) 
+##vso[task.logdetail id=b817d019-5773-4c73-8f8b-ec9accae97c7;type=NETCORE_ENGINEERING_TELEMETRY;name=Test;state=InProgress;](NETCORE_ENGINEERING_TELEMETRY=Test) 
+  Running tests: E:\gh\chcosta\arcade\artifacts\bin\Microsoft.DotNet.Build.Tasks.Packaging.Tests\Debug\netcoreapp2.1\Microsoft.DotNet.Build.Tasks.Packaging.Tests.dll [netcoreapp2.1|x64]
+##vso[task.logdetail id=2eaa904f-d083-4479-895a-b59112ac92cf;type=NETCORE_ENGINEERING_TELEMETRY;name=Test;state=InProgress;](NETCORE_ENGINEERING_TELEMETRY=Test) 
+  Running tests: E:\gh\chcosta\arcade\artifacts\bin\Microsoft.DotNet.XUnitExtensions.Tests\Debug\netcoreapp2.1\Microsoft.DotNet.XUnitExtensions.Tests.dll [netcoreapp2.1|x64]
+XUnit : error : Tests failed: E:\gh\chcosta\arcade\artifacts\log\Debug\Microsoft.DotNet.Build.Tasks.Packaging.Tests_netcoreapp2.1_x64.log [netcoreapp2.1|x64] [E:\gh\chcosta\arcade\src\Microsoft.DotNet.Build.Tasks.Packaging\tests\Microsoft.DotNet.Build.Tasks.Packaging.Tests.csproj]
+##vso[task.logdetail id=b817d019-5773-4c73-8f8b-ec9accae97c7;state=Completed;result=Failed;](NETCORE_ENGINEERING_TELEMETRY=Test) 
+##vso[task.logissue type=error;sourcepath=XUnit;linenumber=0;columnnumber=0;code=;](NETCORE_ENGINEERING_TELEMETRY=Test) Tests failed: E:\gh\chcosta\arcade\artifacts\log\Debug\Microsoft.DotNet.Build.Tasks.Packaging.Tests_netcoreapp2.1_x64.log [netcoreapp2.1|x64%5D
+XUnit : error : Tests failed: E:\gh\chcosta\arcade\artifacts\log\Debug\Microsoft.DotNet.XUnitExtensions.Tests_netcoreapp2.1_x64.log [netcoreapp2.1|x64] [E:\gh\chcosta\arcade\src\Microsoft.DotNet.XUnitExtensions\tests\Microsoft.DotNet.XUnitExtensions.Tests.csproj]
+##vso[task.logdetail id=2eaa904f-d083-4479-895a-b59112ac92cf;state=Completed;result=Failed;](NETCORE_ENGINEERING_TELEMETRY=Test) 
+##vso[task.logissue type=error;sourcepath=XUnit;linenumber=0;columnnumber=0;code=;](NETCORE_ENGINEERING_TELEMETRY=Test) Tests failed: E:\gh\chcosta\arcade\artifacts\log\Debug\Microsoft.DotNet.XUnitExtensions.Tests_netcoreapp2.1_x64.log [netcoreapp2.1|x64%5D
+
+Build FAILED.
+
+XUnit : error : Tests failed: E:\gh\chcosta\arcade\artifacts\log\Debug\Microsoft.DotNet.Build.Tasks.Configuration.Tests_netcoreapp2.1_x64.log [netcoreapp2.1|x64] [E:\gh\chcosta\arcade\src\Microsoft.DotNet.Build.Tasks.Configuration\tests\Microsoft.DotNet.Build.Tasks.Configuration.Tests.csproj]
+XUnit : error : Tests failed: E:\gh\chcosta\arcade\artifacts\log\Debug\Microsoft.DotNet.SignTool.Tests_netcoreapp2.1_x64.log [netcoreapp2.1|x64] [E:\gh\chcosta\arcade\src\Microsoft.DotNet.SignTool.Tests\Microsoft.DotNet.SignTool.Tests.csproj]
+XUnit : error : Tests failed: E:\gh\chcosta\arcade\artifacts\log\Debug\Microsoft.DotNet.Arcade.Sdk.Tests_netcoreapp2.1_x64.log [netcoreapp2.1|x64] [E:\gh\chcosta\arcade\src\Microsoft.DotNet.Arcade.Sdk.Tests\Microsoft.DotNet.Arcade.Sdk.Tests.csproj]
+XUnit : error : Tests failed: E:\gh\chcosta\arcade\artifacts\log\Debug\Microsoft.DotNet.NuGetRepack.Tests_netcoreapp2.1_x64.log [netcoreapp2.1|x64] [E:\gh\chcosta\arcade\src\Microsoft.DotNet.NuGetRepack\tests\Microsoft.DotNet.NuGetRepack.Tests.csproj]
+XUnit : error : Tests failed: E:\gh\chcosta\arcade\artifacts\log\Debug\Microsoft.DotNet.VersionTools.Tests_netcoreapp2.1_x64.log [netcoreapp2.1|x64] [E:\gh\chcosta\arcade\src\Microsoft.DotNet.VersionTools\tests\Microsoft.DotNet.VersionTools.Tests.csproj]
+XUnit : error : Tests failed: E:\gh\chcosta\arcade\artifacts\log\Debug\Microsoft.DotNet.Build.Tasks.Packaging.Tests_netcoreapp2.1_x64.log [netcoreapp2.1|x64] [E:\gh\chcosta\arcade\src\Microsoft.DotNet.Build.Tasks.Packaging\tests\Microsoft.DotNet.Build.Tasks.Packaging.Tests.csproj]
+XUnit : error : Tests failed: E:\gh\chcosta\arcade\artifacts\log\Debug\Microsoft.DotNet.XUnitExtensions.Tests_netcoreapp2.1_x64.log [netcoreapp2.1|x64] [E:\gh\chcosta\arcade\src\Microsoft.DotNet.XUnitExtensions\tests\Microsoft.DotNet.XUnitExtensions.Tests.csproj]
+    0 Warning(s)
+    7 Error(s)
+
+Time Elapsed 00:00:32.34
+##vso[task.logissue type=error]Build failed.
+See log: E:\gh\chcosta\arcade\artifacts\log\Debug\Build.binlog
