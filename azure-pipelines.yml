@@ -77,8 +77,6 @@ stages:
       continueOnError: true
       env:
         TeamName: dotnetcore
-
-
     - task: sendEndTelemetry@0
       displayName: 'Send Helix End Telemetry'
       continueOnError: true
@@ -90,6 +88,15 @@ stages:
         PublishLocation: Container
         ArtifactName: artifacts
       continueOnError: true
+      condition: always()
+    - task: PublishTestResults@2
+      displayName: Publish Test Results
+      inputs:
+        testResultsFormat: 'xUnit'
+        testResultsFiles: '*.xml' 
+        searchFolder: '$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)'
+      continueOnError: true
+
       condition: always()
   - job: build_linux
     container: LinuxContainer
