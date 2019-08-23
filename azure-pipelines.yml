@@ -41,4 +41,4 @@ stages:
   jobs:
   - job: build
     steps:
-    - script: eng\common\cibuild.cmd -projects $(Build.SourcesDirectory)\chcosta.proj
+    - script: build.cmd -ci -projects $(Build.SourcesDirectory)\chcosta.proj
