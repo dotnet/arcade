@@ -70,7 +70,7 @@
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(HelixAccessToken)' == '' ">
-    <HelixTargetQueue Include="Windows.10.Amd64.Open"/>
+    <HelixTargetQueue Include="Debian.9.Amd64.Open"/>
   </ItemGroup>
 
   <PropertyGroup Condition="!$(HelixTargetQueue.StartsWith('Windows'))">
