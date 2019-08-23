@@ -26,8 +26,8 @@ if ($ValidPath -eq $False)
 }
 
 $configParam = @("--config")
-$CredTargetDirectory = "+|D:\a\1\s\*;-:d|*artifacts>isGlob=true>batchGlobResults=true"
-$PoliCheckTargetDirectory = "+|*;-:d|*.gdn>isGlob=true>batchGlobResults=true"
+$CredTargetDirectory = "+|$TargetDirectory*;-:d|*artifacts>isGlob=true>batchGlobResults=true"
+$PoliCheckTargetDirectory = "+|*;-:d|*/.gdn>isGlob=true>batchGlobResults=true"
 
 foreach ($tool in $ToolsList) {
   $gdnConfigFile = Join-Path $gdnConfigPath "$tool-configure.gdnconfig"
