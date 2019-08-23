@@ -42,7 +42,7 @@ stages:
   - template: /eng/common/templates/jobs/jobs.yml
     parameters:
       enableTelemetry: false
-      enablePublishBuildArtifacts: true
+      enablePublishBuildAssets: true
       helixRepo: dotnet/arcade
       jobs:
       - job: Windows_NT
