@@ -7,6 +7,7 @@
   <Target Name="StartTestRuns"
           BeforeTargets="CoreBuild"
           Outputs="%(HelixTargetQueue.Identity)">
+    <Telemetry EventName="NETCORE_ENGINEERING_TELEMETRY" EventData="category=Test;progress=0" />          
     <PropertyGroup>
       <_CurrentTargetQueue>%(HelixTargetQueue.Identity)</_CurrentTargetQueue>
       <_CurrentTestRunName>%(HelixTargetQueue.TestRunName)</_CurrentTestRunName>
@@ -45,5 +46,7 @@
       EnableFlakyTestSupport="$(AzurePipelinesEnableFlakyTestSupport)"
       TestRunIds="@(HelixTargetQueue -> '%(TestRunId)')"
     />
+    <Telemetry EventName="NETCORE_ENGINEERING_TELEMETRY" EventData="category=Test;progress=100;result=Succeeded" />
+
   </Target>
 </Project>
