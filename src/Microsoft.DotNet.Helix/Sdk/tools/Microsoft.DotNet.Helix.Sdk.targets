@@ -53,16 +53,11 @@
     </TestDependsOn>
   </PropertyGroup>
 
-  <Target Name="BeforeTest">
-      <Telemetry EventName="NETCORE_ENGINEERING_TELEMETRY" EventData="category=Test;progress=0" />
-  </Target>
+  <Target Name="BeforeTest"/>
 
   <Target Name="Test" DependsOnTargets="$(TestDependsOn)"/>
 
-  <Target Name="AfterTest">
-    <Telemetry Condition="'$(FailOnWorkItemFailure)' == 'true' and '@(FailedWorkItem)' != ''" EventName="NETCORE_ENGINEERING_TELEMETRY" EventData="category=Test;progress=100;result=Failed" />
-    <Telemetry Condition="'$(FailOnWorkItemFailure)' == 'false' or '@(FailedWorkItem)' == ''" EventName="NETCORE_ENGINEERING_TELEMETRY" EventData="category=Test;progress=100;result=Succeeded" />
-  </Target>
+  <Target Name="AfterTest"/>
 
 
   <PropertyGroup>
