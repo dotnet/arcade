@@ -26,9 +26,29 @@ arcade publishing.
 
 ## How to onboard onto YAML based publishing
 
-In order to use this new publishing mechanism, the easiest way to start is by making your existing build pipeline a single stage, and adding a second stage that is driven by a template distributed with Arcade.
+In order to use this new publishing mechanism, the easiest way to start is by making your existing build pipeline
+a single stage, and adding a second stage that is driven by a template distributed with Arcade.
 
 1. Update the repo's arcade version to `1.0.0-beta.19360.8` or newer.
+
+1. Add an artifact category for assets produced by the build:
+
+    * Most repositories will use `.NETCore` as the category unless assets should be published to a feed
+    other than `dotnet-core`.
+    See [Advanced Scenarios](##overriding-the-publishing-feed-used-for-builds-in-the-dev-channel) for instructions on how to publish to a different feed.
+
+    * `_DotNetValidationArtifactsCategory` for publishing to the Validation channel (Such as for testing the changes in these onboarding steps)
+    * `_DotNetArtifactsCategory` for publishing to the Dev channel.
+
+      ```YAML
+      variables:
+      ...
+      - name: _DotNetValidationArtifactsCategory
+        value: .NETCore
+      - name: _DotNetArtifactsCategory
+        value: .NETCore
+      ...
+      ```
 
 1. Disable package publishing during the build:
 
@@ -69,6 +89,22 @@ In order to use this new publishing mechanism, the easiest way to start is by ma
             ...
       ```
 
+1. Pass the MSBuild properties required by the Arcade SDK's publishing mechanisms during
+the build invocation. Some of these properties are only required for legacy reasons.
+We are tracking cleaning some of these up via https://github.com/dotnet/arcade/issues/3597
+
+    | Name                            | Value                                                                               |
+    | --------------------------------| ----------------------------------------------------------------------------------- |
+    | /p:DotNetPublishBlobFeedUrl     | https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json                     |
+    | /p:DotNetPublishBlobFeedKey     | `$(dotnetfeed-storage-access-key-1)` variable from Dotnet-Blob-Feed variable group  |
+    | /p:DotNetPublishToBlobFeed      | true                                                                                |
+    | /p:DotNetPublishUsingPipelines  | true                                                                                |
+    | /p:DotNetArtifactsCategory      | `$(_DotNetArtifactsCategory)` variable                                              |
+
+    For an example, see how the Arcade repo passes these properties in its
+    [azure-pipelines.yml](https://github.com/dotnet/arcade/blob/2cb8b86c1ca7ff77304f76fe7041135209ab6932/azure-pipelines.yml#L74)
+
+
 1. Add the stages keyword to your existing pipeline's YAML:
 
     ```YAML
@@ -106,13 +142,17 @@ In order to use this new publishing mechanism, the easiest way to start is by ma
 
     The parameters for the template are the following:
 
-    | Name                         | Type     | Description                                                   |Default Value     |
-    | -----------------------------| -------- | ------------------------------------------------------------- |----- |
-    | enableSourceLinkValidation   | bool     | Run sourcelink validation during the post-build stage.        | true |
-    | enableSigningValidation      | bool     | Run signing validation during the post-build stage.           | true |
-    | enableSymbolValidation       | bool     | Run symbol validation during the post-build stage.            | true |
-    | enableNugetValidation        | bool     | Run NuGet package validation tool during the post build stage.| true |
-    | SDLValidationParameters      | object   | Parameters for the SDL job template, as documented in the [SDL template documentation](../HowToAddSDLRunToPipeline.md) | -- |
+    | Name                                    | Type     | Description                                                                                          |Default Value |
+    | --------------------------------------- | -------- | -----------------------------------------------------------------------------------------------------|----- |
+    | enableSourceLinkValidation              | bool     | Run sourcelink validation during the post-build stage.                                               | true |
+    | enableSigningValidation                 | bool     | Run signing validation during the post-build stage.                                                  | true |
+    | enableSymbolValidation                  | bool     | Run symbol validation during the post-build stage.                                                   | true |
+    | enableNugetValidation                   | bool     | Run NuGet package validation tool during the post build stage.                                       | true |
+    | publishInstallersAndChecksums           | bool     | Publish installers packages and checksums from the build artifacts to the dotnetcli storage account. | false |
+    | symbolPublishingAdditionalParameters    | string   | Additional arguments for the PublishToSymbolServers sdk task                                         | '' |
+    | artifactsPublishingAdditionalParameters | string   | Additional arguments for the PublishArtifactsInManifest sdk task                                     | '' |
+    | enableNugetValidation                   | bool     | Run NuGet package validation tool during the post build stage.                                       | true |
+    | SDLValidationParameters                 | object   | Parameters for the SDL job template, as documented in the [SDL template documentation](../HowToAddSDLRunToPipeline.md) | -- |
 
     Examples of the use of stages can be found in the Arcade family of repos:
 
@@ -126,6 +166,14 @@ to.  For more information on channels, see the [Channels, Branches and Subscript
 
     **Note:** At the moment, triggering stages manually is not supported by Azure DevOps. Once this capability
     is in place, builds will be able to publish to additional channels besides the default.
+
+    The Arcade SDK will now publish build artifacts to the Azure DevOps build artifacts instead of publishing to a blob feed directly,
+    and the post-build stages will move the assets in the artifacts to the final feeds depending on the channels that the build
+    is assigned to. The artifacts that the post-build templates use are:
+
+    * PDBArtifacts: Stores pdb files generated by the build.
+    * PackageArtifacts: Stores all nupkgs generated by the build.
+    * BlobArtifacts: Stores everything else: symbol packages, installers, zip files, etc...
 
     The pipeline for a build with stages enabled will look similar to this:
 
@@ -179,9 +227,7 @@ for the category to the TargetStaticFeed PropertyGroup in
     </PropertyGroup>
     ```
 
-1. Add a variable to your pipeline's YAML and set the value as your new category.
-    * `_DotNetValidationArtifactsCategory` for publishing to the Validation channel (Such as for testing the changes in these onboarding steps)
-    * `_DotNetArtifactsCategory` for publishing to the Dev channel.
+1. Set your new category as the value for the artifact category variables
 
     ```YAML
     variables:

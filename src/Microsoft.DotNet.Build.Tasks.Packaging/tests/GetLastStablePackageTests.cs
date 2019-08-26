@@ -117,6 +117,80 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
             Assert.Equal(0, task.LastStablePackages.Length);
         }
 
+        [Fact]
+        public void DoNotAllowSameReleasePackageVersions()
+        {
+            ITaskItem[] latestPackages = new[]
+            {
+                CreateItem("StableVersionTest", "1.1.1-pre")
+            };
+
+            GetLastStablePackage task = new GetLastStablePackage()
+            {
+                BuildEngine = _engine,
+                PackageIndexes = _packageIndexes,
+                LatestPackages = latestPackages,
+                DoNotAllowVersionsFromSameRelease = true
+            };
+
+            _log.Reset();
+            task.Execute();
+            Assert.Equal(0, _log.ErrorsLogged);
+            Assert.Equal(0, _log.WarningsLogged);
+            Assert.Equal(task.LatestPackages.Length, task.LastStablePackages.Length);
+            Assert.Equal("StableVersionTest", task.LastStablePackages[0].ItemSpec);
+            Assert.Equal("1.0.0", task.LastStablePackages[0].GetMetadata("Version"));
+        }
+
+        [Fact]
+        public void NullVersionShouldUseLatestStableVersion()
+        {
+            ITaskItem[] latestPackages = new[]
+            {
+                CreateItem("StableVersionTest", null)
+            };
+
+            GetLastStablePackage task = new GetLastStablePackage()
+            {
+                BuildEngine = _engine,
+                PackageIndexes = _packageIndexes,
+                LatestPackages = latestPackages,
+                DoNotAllowVersionsFromSameRelease = true
+            };
+
+            _log.Reset();
+            task.Execute();
+            Assert.Equal(0, _log.ErrorsLogged);
+            Assert.Equal(0, _log.WarningsLogged);
+            Assert.Equal(task.LatestPackages.Length, task.LastStablePackages.Length);
+            Assert.Equal("StableVersionTest", task.LastStablePackages[0].ItemSpec);
+            Assert.Equal("1.1.0", task.LastStablePackages[0].GetMetadata("Version"));
+        }
+
+        [Fact]
+        public void AllowSameReleasePackageVersions()
+        {
+            ITaskItem[] latestPackages = new[]
+            {
+                CreateItem("StableVersionTest", "1.1.1-pre")
+            };
+
+            GetLastStablePackage task = new GetLastStablePackage()
+            {
+                BuildEngine = _engine,
+                PackageIndexes = _packageIndexes,
+                LatestPackages = latestPackages
+            };
+
+            _log.Reset();
+            task.Execute();
+            Assert.Equal(0, _log.ErrorsLogged);
+            Assert.Equal(0, _log.WarningsLogged);
+            Assert.Equal(task.LatestPackages.Length, task.LastStablePackages.Length);
+            Assert.Equal("StableVersionTest", task.LastStablePackages[0].ItemSpec);
+            Assert.Equal("1.1.0", task.LastStablePackages[0].GetMetadata("Version"));
+        }
+
         private static ITaskItem CreateItem(string name, string version)
         {
             TaskItem item = new TaskItem(name);
