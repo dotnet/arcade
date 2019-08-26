@@ -22,7 +22,7 @@ resources:
     image: microsoft/dotnet-buildtools-prereqs:ubuntu-14.04-cross-0cd4667-20170319080304
 
 stages:
-- stage: build
+- stage: Build
   displayName: Build
   jobs:
   - template: /eng/common/templates/jobs/jobs.yml
@@ -86,8 +86,8 @@ stages:
             displayName: Unix Build / Publish
 
 - ${{ if eq(variables._RunAsPublic, True) }}:
-  - stage: test
-    dependsOn: build
+  - stage: Test
+    dependsOn: Build
     jobs:
     - template: /eng/common/templates/jobs/jobs.yml
       parameters:
@@ -151,9 +151,9 @@ stages:
               HelixAccessToken: ''
 
 - ${{ if eq(variables._RunAsInternal, True) }}:
-  - stage: validatesdk
+  - stage: ValidateSdk
     displayName: Validate Arcade SDK
-    dependsOn: build
+    dependsOn: Build
     jobs:
     - template: /eng/validate-sdk.yml
       parameters:
@@ -171,8 +171,8 @@ stages:
       # enabled back once this issue is resolved: https://github.com/dotnet/arcade/issues/2912
       enableSourceLinkValidation: false
       publishDependsOn:
-      - validate
-      - validatesdk
+      - Validate
+      - ValidateSdk
       # This is to enable SDL runs part of Post-Build Validation Stage
       SDLValidationParameters:
         enable: true

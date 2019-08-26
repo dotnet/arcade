@@ -16,12 +16,12 @@ parameters:
 
   # Which stages should finish execution before post-build stages start
   validateDependsOn:
-  - build
+  - Build
   publishDependsOn: 
-  - validate
+  - Validate
 
 stages:
-- stage: validate
+- stage: alidate
   dependsOn: ${{ parameters.validateDependsOn }}
   displayName: Validate
   jobs:
