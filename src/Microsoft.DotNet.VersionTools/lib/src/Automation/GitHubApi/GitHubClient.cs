@@ -357,6 +357,30 @@ namespace Microsoft.DotNet.VersionTools.Automation.GitHubApi
             }
         }
 
+        public async Task<GitReference> PostReferenceAsync(GitHubProject project, string @ref, string sha)
+        {
+            EnsureAuthenticated();
+
+            string body = JsonConvert.SerializeObject(new
+            {
+                @ref = $"refs/{@ref}",
+                sha
+            }, Formatting.Indented);
+
+            string url = $"https://api.github.com/repos/{project.Segments}/git/refs";
+
+            var bodyContent = new StringContent(body);
+            HttpRequestMessage request = new HttpRequestMessage(new HttpMethod("POST"), url)
+            {
+                Content = bodyContent
+            };
+            using (HttpResponseMessage response = await _httpClient.SendAsync(request))
+            {
+                Trace.TraceInformation($"Posting reference '{@ref}' to '{sha}'");
+                return await DeserializeSuccessfulAsync<GitReference>(response);
+            }
+        }
+
         public async Task<GitReference> PatchReferenceAsync(GitHubProject project, string @ref, string sha, bool force)
         {
             EnsureAuthenticated();
