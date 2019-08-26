@@ -27,7 +27,7 @@ variables:
 resources:
   containers:
   - container: LinuxContainer
-    image: microsoft/dotnet-buildtools-prereqs:centos-7-3e800f1-20190501005343
+    image: microsoft/dotnet-buildtools-prereqs:centos-7-3e800f1-20190815164629
 
 stages:
 - stage: build
