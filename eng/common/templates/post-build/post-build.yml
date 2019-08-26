@@ -21,7 +21,7 @@ parameters:
   - Validate
 
 stages:
-- stage: alidate
+- stage: Validate
   dependsOn: ${{ parameters.validateDependsOn }}
   displayName: Validate
   jobs:
