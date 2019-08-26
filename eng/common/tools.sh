@@ -208,7 +208,8 @@ function GetDotNetInstallScript {
 
     # Use curl if available, otherwise use wget
     #testing wget first
-    if wget -q -O "$install_script" "$install_script_url" || {
+    if  command -v wget > /dev/null; then
+      wget -q -O "$install_script" "$install_script_url" || {
       echo "In wget"
       local exit_code=$?
       Write-PipelineTelemetryError -category 'InitializeToolset' "Failed to acquire dotnet install script (exit code '$exit_code')."
