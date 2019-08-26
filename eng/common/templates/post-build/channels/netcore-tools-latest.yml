@@ -1,6 +1,6 @@
 parameters:
   dependsOn:
-  - validate
+  - Validate
   enableSymbolValidation: true
   symbolPublishingAdditionalParameters: ''
   artifactsPublishingAdditionalParameters: ''

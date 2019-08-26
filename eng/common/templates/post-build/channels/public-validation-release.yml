@@ -1,7 +1,7 @@
 parameters:
   artifactsPublishingAdditionalParameters: ''
   dependsOn:
-  - validate
+  - Validate
   publishInstallersAndChecksums: false
 
 stages:
