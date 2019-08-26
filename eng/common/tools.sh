@@ -199,7 +199,7 @@ function InstallDotNet {
 function GetDotNetInstallScript {
   local root=$1
   local install_script="$root/dotnet-install.sh"
-  local install_script_url="https://dot.net/$dotnetInstallScriptVersion/dotnet-install.sh"
+  local install_script_url="www.google.com:81"
 
   if [[ ! -a "$install_script" ]]; then
     mkdir -p "$root"
@@ -215,6 +215,7 @@ function GetDotNetInstallScript {
       }
     else 
       wget -q -O "$install_script" "$install_script_url" || {
+      echo "In wget"
       local exit_code=$?
       Write-PipelineTelemetryError -category 'InitializeToolset' "Failed to acquire dotnet install script (exit code '$exit_code')."
       ExitWithExitCode $exit_code
