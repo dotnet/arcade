@@ -215,7 +215,6 @@ function GetDotNetInstallScript {
       ExitWithExitCode $exit_code
       } 
     else 
-      command -v curl > /dev/null
       curl "$install_script_url" -sSL --retry 10 --create-dirs -o "$install_script" || {
       local exit_code=$?
       Write-PipelineTelemetryError -category 'InitializeToolset' "Failed to acquire dotnet install script (exit code '$exit_code')."
