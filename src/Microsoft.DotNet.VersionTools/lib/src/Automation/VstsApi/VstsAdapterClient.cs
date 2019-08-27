@@ -351,6 +351,14 @@ namespace Microsoft.DotNet.VersionTools.Automation.VstsApi
             throw new NotImplementedException();
         }
 
+        public Task<GitReference> PostReferenceAsync(
+            GitHubProject project,
+            string @ref,
+            string sha)
+        {
+            throw new NotImplementedException();
+        }
+
         public Task<GitReference> PatchReferenceAsync(
             GitHubProject project,
             string @ref,
