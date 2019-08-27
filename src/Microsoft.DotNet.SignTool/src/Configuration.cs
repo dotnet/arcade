@@ -184,12 +184,12 @@ namespace Microsoft.DotNet.SignTool
                     }
 
                     // For each file that had that error
-                    foreach (var erroedFile in errorGroup.Value)
+                    foreach (var erroredFile in errorGroup.Value)
                     {
-                        _log.LogError($"\tFile: {erroedFile.FileName}");
+                        _log.LogError($"\tFile: {erroredFile.FileName}");
 
                         // Get a list of all containers where the file showed up
-                        foreach (var containerName in _whichPackagesTheFileIsIn[erroedFile])
+                        foreach (var containerName in _whichPackagesTheFileIsIn[erroredFile])
                         {
                             _log.LogError($"\t\t{containerName}");
                         }
@@ -219,7 +219,10 @@ namespace Microsoft.DotNet.SignTool
 
             if (FileSignInfo.IsZipContainer(fullPath))
             {
-                Debug.Assert(!_zipDataMap.ContainsKey(contentHash));
+                if (_zipDataMap.ContainsKey(contentHash))
+                {
+                    _log.LogError($"File '{fullPath}' has the same content hash as '{_zipDataMap[contentHash].FileSignInfo.FullPath}'. The incorrect file will be written.");
+                }
 
                 if (TryBuildZipData(fileSignInfo, out var zipData))
                 {
