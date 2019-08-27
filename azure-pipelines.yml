@@ -27,7 +27,7 @@ variables:
 resources:
   containers:
   - container: LinuxContainer
-    image: microsoft/dotnet-buildtools-prereqs:alpine-3.8-ForHelix-7928975-20190215231918
+    image: microsoft/dotnet-buildtools-prereqs:ubuntu-14.04-cross-0cd4667-20170319080304
 
 stages:
 - stage: build
