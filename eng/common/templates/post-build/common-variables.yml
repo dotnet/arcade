@@ -30,10 +30,6 @@ variables:
   - name: IsInternalBuild
     value: ${{ and(ne(variables['System.TeamProject'], 'public'), contains(variables['Build.SourceBranch'], 'internal')) }}
 
-  # Storage account name for proxy-backed feeds
-  - name: ProxyBackedFeedsAccountName
-    value: dotnetfeed
-
   # Default Maestro++ API Endpoint and API Version
   - name: MaestroApiEndPoint
     value: "https://maestro-prod.westus2.cloudapp.azure.com"
@@ -41,6 +37,12 @@ variables:
     value: $(MaestroAccessToken)
   - name: MaestroApiVersion
     value: "2019-01-16"
+
+  # Configuration for the feed where packages from internal non-stable builds will be published to
+  - name: StaticInternalFeed
+    value: 'https://dnceng.pkgs.visualstudio.com/_packaging/dotnet-core-internal/nuget/v3'
+  - name: StaticInternalFeedName
+    value: 'dotnet-core-internal'
 
   - name: SourceLinkCLIVersion
     value: 3.0.0

@@ -85,16 +85,14 @@ stages:
         inputs:
           filePath: eng\common\sdk-task.ps1
           arguments: -task PublishArtifactsInManifest -restore -msbuildEngine dotnet 
-            /p:ChannelId=$(InternalServicing_30_Channel_Id)
             /p:IsStableBuild=$(IsStableBuild)
             /p:IsInternalBuild=$(IsInternalBuild)
             /p:RepositoryName=$(Build.Repository.Name)
             /p:CommitSha=$(Build.SourceVersion)
-            /p:AzureStorageAccountName=$(ProxyBackedFeedsAccountName)
-            /p:AzureStorageAccountKey=$(dotnetfeed-storage-access-key-1)
-            /p:AzureDevOpsFeedsBaseUrl=$(dotnetfeed-internal-private-feed-url)
-            /p:StaticInternalFeed=$(dotnetfeed-internal-nonstable-feed-url)
+            /p:StaticInternalFeed=$(StaticInternalFeed)
+            /p:StaticInternalFeedName=$(StaticInternalFeedName)
             /p:NugetPath=$(Agent.BuildDirectory)\Nuget\NuGet.exe
+            /p:AzdoTargetFeedPAT='$(dn-bot-dnceng-unviersal-packages-rw)' 	
             /p:BARBuildId=$(BARBuildId) 
             /p:MaestroApiEndpoint='$(MaestroApiEndPoint)' 
             /p:BuildAssetRegistryToken='$(MaestroApiAccessToken)' 
@@ -107,6 +105,8 @@ stages:
       - task: NuGetCommand@2
         displayName: Publish Packages to AzDO Feed
         condition: contains(variables['TargetAzDOFeed'], 'pkgs.visualstudio.com')
+        env:
+          AZURE_DEVOPS_EXT_PAT: '$(dn-bot-dnceng-unviersal-packages-rw)'
         inputs:
           command: push
           vstsFeed: $(AzDoFeedName)
@@ -115,12 +115,11 @@ stages:
 
       - task: PowerShell@2
         displayName: Publish Blobs to AzDO Feed
+        env:
+          AZURE_DEVOPS_EXT_PAT: '$(dn-bot-dnceng-unviersal-packages-rw)'
         inputs:
           filePath: $(Build.SourcesDirectory)/eng/common/post-build/publish-blobs-to-azdo.ps1
-          arguments: -FeedName $(AzDoFeedName) 
-            -SourceFolderCollection $(Build.ArtifactStagingDirectory)/BlobArtifacts/
-            -PersonalAccessToken $(dn-bot-dnceng-unviersal-packages-rw)
-        enabled: false
+          arguments: -FeedName $(AzDoFeedName) -ArtifactStagingDirectory $(Build.ArtifactStagingDirectory)/ -BlobCategories '.NUPKG;.PKG;.DEB;.RPM;.NPM;.ZIP;.MSI;.SHA;.POM;.GZ' -IsStable='$(IsStableBuild)'
 
       - template: ../trigger-subscription.yml
         parameters:
