@@ -23,6 +23,20 @@ namespace Microsoft.DotNet.VersionTools.BuildManifest.Model
             set { Attributes[nameof(Id)] = value; }
         }
 
+        public bool NonShipping
+        {
+            get
+            {
+                string val = Attributes.GetOrDefault(nameof(NonShipping));
+                if (!string.IsNullOrEmpty(val))
+                {
+                    return bool.Parse(val);
+                }
+                return false;
+            }
+            set { Attributes[nameof(NonShipping)] = value.ToString(); }
+        }
+
         public override string ToString() => $"Blob {Id}";
 
         public XElement ToXml() => new XElement(

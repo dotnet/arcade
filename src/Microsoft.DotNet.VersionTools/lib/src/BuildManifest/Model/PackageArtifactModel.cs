@@ -42,6 +42,20 @@ namespace Microsoft.DotNet.VersionTools.BuildManifest.Model
             set { Attributes[nameof(OriginBuildName)] = value; }
         }
 
+        public bool NonShipping
+        {
+            get
+            {
+                string val = Attributes.GetOrDefault(nameof(NonShipping));
+                if (!string.IsNullOrEmpty(val))
+                {
+                    return bool.Parse(val);
+                }
+                return false;
+            }
+            set { Attributes[nameof(NonShipping)] = value.ToString(); }
+        }
+
         public override string ToString() => $"Package {Id} {Version}";
 
         public XElement ToXml() => new XElement(
