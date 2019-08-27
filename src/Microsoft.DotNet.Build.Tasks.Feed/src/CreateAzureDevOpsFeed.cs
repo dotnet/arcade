@@ -42,6 +42,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         private readonly string AzureDevOpsFeedsBaseUrl = $"https://feeds.dev.azure.com/{AzureDevOpsOrg}/";
 
+        /// <summary>
+        /// Number of characters from the commit SHA prefix that should be included in the feed name.
+        /// </summary>
+        private readonly int ShaUsableLength = 8;
+
         public override bool Execute()
         {
             return ExecuteAsync().GetAwaiter().GetResult();
@@ -51,6 +56,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         {
             try
             {
+                if (CommitSha.Length < ShaUsableLength)
+                {
+                    Log.LogError($"The CommitSHA should be at least {ShaUsableLength} characters long: CommitSha is '{CommitSha}'. Aborting feed creation.");
+                    return false;
+                }
+
                 JsonSerializerSettings _serializerSettings = new JsonSerializerSettings
                 {
                     ContractResolver = new CamelCasePropertyNamesContractResolver(),
@@ -60,12 +71,18 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 string accessType = IsInternal ? "internal" : "public";
                 string publicSegment = IsInternal ? string.Empty : "public/";
                 string accessId = IsInternal ? "int" : "pub";
-                string baseFeedName = $"darc-{accessId}-{RepositoryName}-{CommitSha}";
+                string baseFeedName = $"darc-{accessId}-{RepositoryName}-{CommitSha.Substring(0, ShaUsableLength)}";
                 string versionedFeedName = baseFeedName;
                 bool needsUniqueName = false;
                 int subVersion = 0;
 
                 Log.LogMessage(MessageImportance.High, $"Creating the new {accessType} Azure DevOps artifacts feed '{baseFeedName}'...");
+
+                if (baseFeedName.Length > 64)
+                {
+                    Log.LogError($"The name of the new feed ({baseFeedName}) exceed the maximum feed name size of 64 chars. Aborting feed creation.");
+                    return false;
+                }
 
                 do
                 {
@@ -99,6 +116,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         {
                             versionedFeedName = $"{baseFeedName}-{++subVersion}";
                             needsUniqueName = true;
+
+                            if (versionedFeedName.Length > 64)
+                            {
+                                Log.LogError($"The name of the new feed ({baseFeedName}) exceed the maximum feed name size of 64 chars. Aborting feed creation.");
+                                return false;
+                            }
                         }
                         else
                         {
