@@ -47,6 +47,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// </summary>
         private readonly int ShaUsableLength = 8;
 
+        /// <summary>
+        /// Maximum allowed length for AzDO feed names.
+        /// </summary>
+        private readonly int MaxLengthForAzDoFeedNames = 64;
+
         public override bool Execute()
         {
             return ExecuteAsync().GetAwaiter().GetResult();
@@ -78,9 +83,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                 Log.LogMessage(MessageImportance.High, $"Creating the new {accessType} Azure DevOps artifacts feed '{baseFeedName}'...");
 
-                if (baseFeedName.Length > 64)
+                if (baseFeedName.Length > MaxLengthForAzDoFeedNames)
                 {
-                    Log.LogError($"The name of the new feed ({baseFeedName}) exceed the maximum feed name size of 64 chars. Aborting feed creation.");
+                    Log.LogError($"The name of the new feed ({baseFeedName}) exceed the maximum feed name size of {MaxLengthForAzDoFeedNames} chars. Aborting feed creation.");
                     return false;
                 }
 
@@ -117,9 +122,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             versionedFeedName = $"{baseFeedName}-{++subVersion}";
                             needsUniqueName = true;
 
-                            if (versionedFeedName.Length > 64)
+                            if (versionedFeedName.Length > MaxLengthForAzDoFeedNames)
                             {
-                                Log.LogError($"The name of the new feed ({baseFeedName}) exceed the maximum feed name size of 64 chars. Aborting feed creation.");
+                                Log.LogError($"The name of the new feed ({baseFeedName}) exceed the maximum feed name size of {MaxLengthForAzDoFeedNames} chars. Aborting feed creation.");
                                 return false;
                             }
                         }
