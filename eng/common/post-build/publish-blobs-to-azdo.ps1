@@ -3,7 +3,7 @@ param(
   [Parameter(Mandatory=$true)][string] $ArtifactStagingDirectory,
   [Parameter(Mandatory=$true)][string] $BlobCategories,
   [string] $IsStable = 'false',
-  [string] $Org = "dnceng",
+  [string] $Organization = "dnceng",
   [string] $AzureCliVersion = "2.0.67",
   [string] $UniversalPackageVersion = ""
 )
@@ -12,10 +12,14 @@ param(
 
 $WarningPreference = "SilentlyContinue"
 
-# This class is a port from https://github.com/dotnet/arcade-services/blob/master/src/Maestro/Microsoft.DotNet.Maestro.Tasks/src/VersionManager.cs
-# which is used to get the version from a blob name. When Azure DevOps provide a better way to publish nupkgs, Universal Packages, etc.
-# outside from a YAML task we'll move the logic to the Microsoft.DotNet.Build.Tasks.Feed package which can then reference Microsoft.DotNet.Maestro.Tasks.
-# Moving the YAML tasks to Microsoft.DotNet.Build.Tasks.Feed is trac
+# This class is a port from 
+# https://github.com/dotnet/arcade-services/blob/master/src/Maestro/Microsoft.DotNet.Maestro.Tasks/src/VersionManager.cs
+# which is used to get the version from a blob name. When Azure DevOps provide
+# a better way to publish nupkgs, Universal Packages, etc. outside from a YAML 
+# task we'll move the logic to the Microsoft.DotNet.Build.Tasks.Feed package 
+# which can then reference Microsoft.DotNet.Maestro.Tasks. Moving the YAML 
+# tasks to Microsoft.DotNet.Build.Tasks.Feed is tracked by this issue:
+# https://github.com/dotnet/arcade/issues/3161
 class VersionManager{   
   [string[]]$KnownTags = @("alpha",
                            "beta",
@@ -262,7 +266,7 @@ function PublishUniversalPackages() {
       Write-Host "Publishing '$packageName' with version '$packageVersion' to '$FeedName'"
 
       & $env:AzExe artifacts universal publish `
-        --organization "https://$Org.visualstudio.com/" `
+        --organization "https://$Organization.visualstudio.com/" `
         --feed "$FeedName" `
         --name "$packageName" `
         --version "$packageVersion" `
@@ -281,4 +285,9 @@ try {
   InstallAzureCLI
   PublishUniversalPackages
 }
-catch {}
+catch {
+  Write-Host $_
+  Write-Host $_.Exception
+  Write-Host $_.ScriptStackTrace
+  ExitWithExitCode 1
+}
