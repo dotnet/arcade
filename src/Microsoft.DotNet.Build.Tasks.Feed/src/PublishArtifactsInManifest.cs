@@ -676,15 +676,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 if (minBytesAvailable == 0)
                 {
                     // If there is nothing left to compare (EOS), then good to go.
-                    if (bytesLocalFile == bytesRemoteFile)
-                    {
-                        return true;
-                    }
-                    // One stream reached EOS before the other.
-                    else
-                    {
-                        return false;
-                    }
+                    // Otherwise, one stream reached EOS before the other.
+                    return bytesLocalFile == bytesRemoteFile;
                 }
 
                 // Compare the minimum number of bytes between the two streams, starting at the offset,
