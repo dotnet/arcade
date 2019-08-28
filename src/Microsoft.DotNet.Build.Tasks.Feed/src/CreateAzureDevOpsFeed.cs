@@ -85,7 +85,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                 if (baseFeedName.Length > MaxLengthForAzDoFeedNames)
                 {
-                    Log.LogError($"The name of the new feed ({baseFeedName}) exceed the maximum feed name size of {MaxLengthForAzDoFeedNames} chars. Aborting feed creation.");
+                    Log.LogError($"The name of the new feed ({baseFeedName}) exceeds the maximum feed name size of 64 chars. Aborting feed creation.");
                     return false;
                 }
 
@@ -124,7 +124,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                             if (versionedFeedName.Length > MaxLengthForAzDoFeedNames)
                             {
-                                Log.LogError($"The name of the new feed ({baseFeedName}) exceed the maximum feed name size of {MaxLengthForAzDoFeedNames} chars. Aborting feed creation.");
+                                Log.LogError($"The name of the new feed ({baseFeedName}) exceeds the maximum feed name size of 64 chars. Aborting feed creation.");
                                 return false;
                             }
                         }
