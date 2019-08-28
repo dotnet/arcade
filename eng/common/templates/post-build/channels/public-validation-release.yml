@@ -46,7 +46,7 @@ stages:
       - task: PowerShell@2
         displayName: Add Assets Location
         env:
-          AZURE_DEVOPS_EXT_PAT: $(dn-bot-dnceng-unviersal-packages-rw)
+          AZURE_DEVOPS_EXT_PAT: $(dn-bot-dnceng-universal-packages-rw)
         inputs:
           filePath: eng\common\sdk-task.ps1
           arguments: -task PublishArtifactsInManifest -restore -msbuildEngine dotnet 
@@ -57,8 +57,8 @@ stages:
             /p:RepositoryName=$(Build.Repository.Name)
             /p:CommitSha=$(Build.SourceVersion)
             /p:NugetPath=$(Agent.BuildDirectory)\Nuget\NuGet.exe
-            /p:AzdoTargetFeedPAT='$(dn-bot-dnceng-unviersal-packages-rw)' 
-            /p:TargetFeedPAT='$(dn-bot-dnceng-unviersal-packages-rw)' 
+            /p:AzdoTargetFeedPAT='$(dn-bot-dnceng-universal-packages-rw)' 
+            /p:TargetFeedPAT='$(dn-bot-dnceng-universal-packages-rw)' 
             /p:AzureStorageTargetFeedPAT='$(dotnetfeed-storage-access-key-1)' 
             /p:BARBuildId=$(BARBuildId) 
             /p:MaestroApiEndpoint='$(MaestroApiEndPoint)' 
@@ -89,7 +89,7 @@ stages:
           filePath: $(Build.SourcesDirectory)/eng/common/post-build/publish-blobs-to-azdo.ps1
           arguments: -FeedName $(AzDoFeedName) 
             -SourceFolderCollection $(Build.ArtifactStagingDirectory)/BlobArtifacts/
-            -PersonalAccessToken $(dn-bot-dnceng-unviersal-packages-rw)
+            -PersonalAccessToken $(dn-bot-dnceng-universal-packages-rw)
         enabled: false
 
 

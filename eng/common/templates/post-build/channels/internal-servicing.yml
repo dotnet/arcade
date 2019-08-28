@@ -81,7 +81,7 @@ stages:
       - task: PowerShell@2
         displayName: Add Assets Location
         env:
-          AZURE_DEVOPS_EXT_PAT: $(dn-bot-dnceng-unviersal-packages-rw)
+          AZURE_DEVOPS_EXT_PAT: $(dn-bot-dnceng-universal-packages-rw)
         inputs:
           filePath: eng\common\sdk-task.ps1
           arguments: -task PublishArtifactsInManifest -restore -msbuildEngine dotnet 
@@ -92,7 +92,7 @@ stages:
             /p:StaticInternalFeed=$(StaticInternalFeed)
             /p:StaticInternalFeedName=$(StaticInternalFeedName)
             /p:NugetPath=$(Agent.BuildDirectory)\Nuget\NuGet.exe
-            /p:AzdoTargetFeedPAT='$(dn-bot-dnceng-unviersal-packages-rw)' 	
+            /p:AzdoTargetFeedPAT='$(dn-bot-dnceng-universal-packages-rw)' 	
             /p:BARBuildId=$(BARBuildId) 
             /p:MaestroApiEndpoint='$(MaestroApiEndPoint)' 
             /p:BuildAssetRegistryToken='$(MaestroApiAccessToken)' 
@@ -106,7 +106,7 @@ stages:
         displayName: Publish Packages to AzDO Feed
         condition: contains(variables['TargetAzDOFeed'], 'pkgs.visualstudio.com')
         env:
-          AZURE_DEVOPS_EXT_PAT: '$(dn-bot-dnceng-unviersal-packages-rw)'
+          AZURE_DEVOPS_EXT_PAT: '$(dn-bot-dnceng-universal-packages-rw)'
         inputs:
           command: push
           vstsFeed: $(AzDoFeedName)
@@ -116,7 +116,7 @@ stages:
       - task: PowerShell@2
         displayName: Publish Blobs to AzDO Feed
         env:
-          AZURE_DEVOPS_EXT_PAT: '$(dn-bot-dnceng-unviersal-packages-rw)'
+          AZURE_DEVOPS_EXT_PAT: '$(dn-bot-dnceng-universal-packages-rw)'
         inputs:
           filePath: $(Build.SourcesDirectory)/eng/common/post-build/publish-blobs-to-azdo.ps1
           arguments: -FeedName $(AzDoFeedName) -ArtifactStagingDirectory $(Build.ArtifactStagingDirectory)/ -BlobCategories '.NUPKG;.PKG;.DEB;.RPM;.NPM;.ZIP;.MSI;.SHA;.POM;.GZ' -IsStable='$(IsStableBuild)'
