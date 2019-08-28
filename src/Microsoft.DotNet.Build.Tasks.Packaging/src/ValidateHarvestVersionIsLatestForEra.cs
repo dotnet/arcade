@@ -156,24 +156,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
             string latestPatchVersion = string.Empty;
             foreach (var versionEndpoint in NugetPackageVersionsEndpoints)
             {
-
-                string allPackageVersionsUrl = string.Concat(versionEndpoint.ItemSpec, packageId, "/index.json");
-                string versionsJson = string.Empty;
-
-                using (HttpClient httpClient = new HttpClient())
-                {
-                    using (HttpResponseMessage httpResponseMessage = await httpClient.GetAsync(allPackageVersionsUrl))
-                    {
-                        if (httpResponseMessage.StatusCode != HttpStatusCode.OK)
-                        {
-                            Log.LogError($"Unable to reach the package versions url at {allPackageVersionsUrl}. Recieved status code {httpResponseMessage.StatusCode}.");
-                            return null;
-                        }
-                        versionsJson = await httpResponseMessage.Content.ReadAsStringAsync();
-                    }
-                }
-
-                PackageVersions packageVersions = JsonSerializer.Deserialize<PackageVersions>(versionsJson);
+                PackageVersions packageVersions = await GetAllVersionsFromPackageId(packageId, versionEndpoint, Log);
                 string latestPatchFromFeed = packageVersions.GetLatestPatchStableVersionForEra(eraMajorVersion, eraMinorVersion, Log);
                 // CompareTo method will return 1 if latestPatchVersion is empty so no need to add check.
                 if (latestPatchFromFeed.CompareTo(latestPatchVersion) > 0)
@@ -184,7 +167,28 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
             return latestPatchVersion;
         }
 
-        private class PackageVersions
+        internal static async Task<PackageVersions> GetAllVersionsFromPackageId(string packageId, ITaskItem versionEndpoint, Log log)
+        {
+            string allPackageVersionsUrl = string.Concat(versionEndpoint.ItemSpec, packageId, "/index.json");
+            string versionsJson = string.Empty;
+
+            using (HttpClient httpClient = new HttpClient())
+            {
+                using (HttpResponseMessage httpResponseMessage = await httpClient.GetAsync(allPackageVersionsUrl))
+                {
+                    if (httpResponseMessage.StatusCode != HttpStatusCode.OK)
+                    {
+                        log.LogError($"Unable to reach the package versions url at {allPackageVersionsUrl}. Recieved status code {httpResponseMessage.StatusCode}.");
+                        return null;
+                    }
+                    versionsJson = await httpResponseMessage.Content.ReadAsStringAsync();
+                }
+            }
+
+            return JsonSerializer.Deserialize<PackageVersions>(versionsJson);
+        }
+
+        internal class PackageVersions
         {
             [JsonPropertyName("versions")]
             public List<string> Versions { get; set; }

@@ -1,8 +1,9 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
 using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
 using Newtonsoft.Json;
 using NuGet.Frameworks;
 using NuGet.Packaging;
@@ -11,12 +12,14 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using static Microsoft.DotNet.Build.Tasks.Packaging.ValidateHarvestVersionIsLatestForEra;
 
 namespace Microsoft.DotNet.Build.Tasks.Packaging
 {
     public class UpdatePackageIndex : BuildTask
     {
         private HashSet<string> _packageIdsToInclude;
+        private const string NuGetDotOrgVersionEndpoint = @"https://api.nuget.org/v3-flatcontainer/";
 
         /// <summary>
         /// File to update or create
@@ -73,7 +76,19 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
         /// </summary>
         public ITaskItem[] InboxFrameworkLayoutFolders { get; set; }
 
+        /// <summary>
+        /// Version endpoints to be queried in order to get the latest stable patch
+        /// version for a package era. The endpoints passed in should follow the following format:
+        /// If the versions endpoint looks like: https://api.nuget.org/v3-flatcontainer/System.Runtime/index.json
+        /// then we should pass in <![CDATA[<NugetPackageVersionsEndpoint Include="https://api.nuget.org/v3-flatcontainer/" />]]>
+        /// The MSBuild task will use that base url to build the rest of it in order to get the list
+        /// of versions for a given package.
+        /// </summary>
+        public ITaskItem[] NugetPackageVersionsEndpoints { get; set; }
+
         public bool SetBaselineVersionsToLatestStableVersion { get; set; }
+
+        public bool UpdateStablePackageInfo { get; set; }
 
         /// <summary>
         /// Pre-release version to use for all pre-release packages covered by this index.
@@ -248,6 +263,34 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
         private void UpdateFromValues(PackageIndex index, string id, NuGetVersion version, IEnumerable<Version> assemblyVersions, IEnumerable<string> dllNames)
         {
             PackageInfo info = GetOrCreatePackageInfo(index, id);
+
+            if (UpdateStablePackageInfo)
+            {
+                if (NugetPackageVersionsEndpoints == null || NugetPackageVersionsEndpoints.Length == 0)
+                {
+                    NugetPackageVersionsEndpoints = new TaskItem[]
+                    {
+                        new TaskItem(NuGetDotOrgVersionEndpoint)
+                    };
+                }
+
+                // First remove everything from the stable versions table in case of corrupted stable version list.
+                info.StableVersions.Clear();
+
+                foreach (TaskItem nugetPackageVersionEndpoint in NugetPackageVersionsEndpoints)
+                {
+                    PackageVersions packageVersionsOnEndpoint = GetAllVersionsFromPackageId(id, nugetPackageVersionEndpoint, Log).GetAwaiter().GetResult();
+                    foreach(var endpointVersionString in packageVersionsOnEndpoint.Versions)
+                    {
+                        NuGetVersion endpointVersion = new NuGetVersion(endpointVersionString);
+                        Version threePartEndpointVersion = VersionUtility.As3PartVersion(endpointVersion.Version);
+                        if (!endpointVersion.IsPrerelease && !info.StableVersions.Contains(threePartEndpointVersion))
+                        {
+                            info.StableVersions.Add(threePartEndpointVersion);
+                        }
+                    }
+                }
+            }
 
             var packageVersion = VersionUtility.As3PartVersion(version.Version);
             // if we have a stable version, add it to the stable versions list
