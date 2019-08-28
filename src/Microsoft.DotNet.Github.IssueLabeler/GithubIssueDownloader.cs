@@ -68,9 +68,9 @@ namespace Microsoft.DotNet.Github.IssueLabeler
                     else
                         continue;
                 }
-                catch (RateLimitExceededException)
+                catch (RateLimitExceededException ex)
                 {
-                    Thread.Sleep(3_600_000);
+                    await Task.Delay(ex.Reset.Millisecond);
                     i--;
                     continue;
                 }
@@ -79,8 +79,8 @@ namespace Microsoft.DotNet.Github.IssueLabeler
                 {
                     if (label.Name.Contains("area-"))
                     {
-                        string title = RemoveNewLineCharacters(issueOrPr.Title);
-                        string description = RemoveNewLineCharacters(issueOrPr.Body);
+                        string title = NormalizeWhitespace(issueOrPr.Title);
+                        string description = NormalizeWhitespace(issueOrPr.Body);
                         // Ordering is important here because we are using the same ordering on the prediction side.
                         string curLabel = label.Name;
                         sb.AppendLine($"{curLabel}\t\"{title}\"\t\"{description}\"\t{isPr}\t{filePaths}");
@@ -96,7 +96,7 @@ namespace Microsoft.DotNet.Github.IssueLabeler
             File.AppendAllText(_outputFile, sb.ToString());
         }
 
-        private static string RemoveNewLineCharacters(string input)
+        private static string NormalizeWhitespace(string input)
         {
             return input?.Replace("\r\n", " ").Replace("\n", " ").Replace("\t", " ");
         }
