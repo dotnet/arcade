@@ -26,6 +26,7 @@ if ($ValidPath -eq $False)
 }
 
 $configParam = @("--config")
+#We have to use Guardian Glob Format to exclude the folder .gdn (https://securitytools.visualstudio.com/SecurityIntegration/_wiki/wikis/SecurityIntegration.wiki)
 $TargetDirectoryCredPoliCheck = "+:dir|*;-:dir|.gdn;>isGlob=true>batchGlobResults=true"
 
 foreach ($tool in $ToolsList) {
