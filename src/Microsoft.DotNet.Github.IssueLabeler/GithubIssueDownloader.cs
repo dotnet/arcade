@@ -49,19 +49,24 @@ namespace Microsoft.DotNet.Github.IssueLabeler
         {
             StringBuilder sb = new StringBuilder();
             if (!File.Exists(_outputFile))
-                File.WriteAllText(_outputFile, "ID\tArea\tTitle\tDescription\tIsPR\tFilePaths" + Environment.NewLine);
+                File.WriteAllText(_outputFile, "Area\tTitle\tDescription\tIsPR\tFilePaths" + Environment.NewLine);
             for (int i = _startIndex; i < _endIndex; i++)
             {
                 string filePaths = string.Empty;
                 bool isPr = true;
+                Issue issueOrPr = null;
                 try
                 {
                     var prFiles = await _client.PullRequest.Files(_owner, _repoName, i);
                     filePaths = String.Join(";", prFiles.Select(x => x.FileName));
+                    issueOrPr = await _client.Issue.Get(_owner, _repoName, i);
                 }
-                catch (NotFoundException)
+                catch (NotFoundException ex)
                 {
-                    isPr = false;
+                    if (ex.Message.Contains("files was not found."))
+                        isPr = false;
+                    else
+                        continue;
                 }
                 catch (RateLimitExceededException)
                 {
@@ -73,36 +78,15 @@ namespace Microsoft.DotNet.Github.IssueLabeler
                     continue;
                 }
 
-                Issue issue = null;
-                try
-                {
-                    issue = await _client.Issue.Get(_owner, _repoName, i);
-                }
-                catch (NotFoundException)
-                {
-                    continue;
-                }
-                catch (RateLimitExceededException)
-                {
-                    if (sb.Length != 0)
-                        File.AppendAllText(_outputFile, sb.ToString());
-                    sb.Clear();
-                    Thread.Sleep(3_600_000);
-                    i--;
-                    continue;
-                }
-
-                foreach (var label in issue.Labels)
+                foreach (var label in issueOrPr.Labels)
                 {
                     if (label.Name.Contains("area-"))
                     {
-                        string title = RemoveNewLineCharacters(issue.Title);
-                        string description = RemoveNewLineCharacters(issue.Body);
+                        string title = RemoveNewLineCharacters(issueOrPr.Title);
+                        string description = RemoveNewLineCharacters(issueOrPr.Body);
                         // Ordering is important here because we are using the same ordering on the prediction side.
                         string curLabel = label.Name;
-                        if (curLabel.Equals("area-System.Net.Http.SocketsHttpHandler", StringComparison.OrdinalIgnoreCase))
-                            curLabel = "area-System.Net.Http";
-                        sb.AppendLine($"{i}\t{curLabel}\t\"{title}\"\t\"{description}\"\t{isPr}\t{filePaths}");
+                        sb.AppendLine($"{curLabel}\t\"{title}\"\t\"{description}\"\t{isPr}\t{filePaths}");
                     }
                 }
 
