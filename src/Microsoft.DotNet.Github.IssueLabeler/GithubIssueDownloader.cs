@@ -70,9 +70,6 @@ namespace Microsoft.DotNet.Github.IssueLabeler
                 }
                 catch (RateLimitExceededException)
                 {
-                    if (sb.Length != 0)
-                        File.AppendAllText(_outputFile, sb.ToString());
-                    sb.Clear();
                     Thread.Sleep(3_600_000);
                     i--;
                     continue;
@@ -96,6 +93,7 @@ namespace Microsoft.DotNet.Github.IssueLabeler
                     sb.Clear();
                 }
             }
+            File.AppendAllText(_outputFile, sb.ToString());
         }
 
         private static string RemoveNewLineCharacters(string input)
