@@ -8,10 +8,13 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Build" Version="$(MicrosoftBuildVersion)" />
     <PackageReference Include="Microsoft.Build.Tasks.Core" Version="$(MicrosoftBuildTasksCoreVersion)" />
+	<!-- This is here so that we agree with the feed tasks project's transitive reference to NewtonSoft.Json -->
+	<PackageReference Include="Newtonsoft.Json" Version="10.0.1" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Microsoft.DotNet.Build.Tasks.Feed\Microsoft.DotNet.Build.Tasks.Feed.csproj" />
   </ItemGroup>
 
+  <Import Project="$(RepoRoot)eng\BuildTask.targets" />
 </Project>
