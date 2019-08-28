@@ -569,7 +569,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             }
             catch (Exception e)
             {
-                Log.LogError($"Unexpected exception pushing package '{packageToPublish.Id}@{packageToPublish.Version}'.");
+                Log.LogError($"Unexpected exception pushing package '{packageToPublish.Id}@{packageToPublish.Version}': {e.Message}");
             }
         }
 
