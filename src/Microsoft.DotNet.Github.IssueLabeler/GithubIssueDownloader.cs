@@ -5,7 +5,9 @@
 using Octokit;
 using System;
 using System.IO;
+using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Github.IssueLabeler
@@ -46,42 +48,75 @@ namespace Microsoft.DotNet.Github.IssueLabeler
         public async Task DownloadAndSaveAsync()
         {
             StringBuilder sb = new StringBuilder();
-            File.WriteAllText(_outputFile, "Id\tArea\tTitle\tDescription");
+            if (!File.Exists(_outputFile))
+                File.WriteAllText(_outputFile, "ID\tArea\tTitle\tDescription\tIsPR\tFilePaths" + Environment.NewLine);
             for (int i = _startIndex; i < _endIndex; i++)
             {
+                string filePaths = string.Empty;
+                bool isPr = true;
                 try
                 {
-                    var issue = await _client.Issue.Get(_owner, _repoName, i);
-
-                    foreach (var label in issue.Labels)
-                    {
-                        if (label.Name.Contains("area-"))
-                        {
-                            string title = RemoveNewLineCharacters(issue.Title);
-                            string description = RemoveNewLineCharacters(issue.Body);
-                            // Ordering is important here because we are using the same ordering on the prediction side.
-                            sb.AppendLine($"{label.Name}\t\"{title}\"\t\"{description}\"");
-                        }
-                    }
-
-                    if (i % 1000 == 0)
-                    {
+                    var prFiles = await _client.PullRequest.Files(_owner, _repoName, i);
+                    filePaths = String.Join(";", prFiles.Select(x => x.FileName));
+                }
+                catch (NotFoundException)
+                {
+                    isPr = false;
+                }
+                catch (RateLimitExceededException)
+                {
+                    if (sb.Length != 0)
                         File.AppendAllText(_outputFile, sb.ToString());
-                        sb.Clear();
+                    sb.Clear();
+                    Thread.Sleep(3_600_000);
+                    i--;
+                    continue;
+                }
+
+                Issue issue = null;
+                try
+                {
+                    issue = await _client.Issue.Get(_owner, _repoName, i);
+                }
+                catch (NotFoundException)
+                {
+                    continue;
+                }
+                catch (RateLimitExceededException)
+                {
+                    if (sb.Length != 0)
+                        File.AppendAllText(_outputFile, sb.ToString());
+                    sb.Clear();
+                    Thread.Sleep(3_600_000);
+                    i--;
+                    continue;
+                }
+
+                foreach (var label in issue.Labels)
+                {
+                    if (label.Name.Contains("area-"))
+                    {
+                        string title = RemoveNewLineCharacters(issue.Title);
+                        string description = RemoveNewLineCharacters(issue.Body);
+                        // Ordering is important here because we are using the same ordering on the prediction side.
+                        string curLabel = label.Name;
+                        if (curLabel.Equals("area-System.Net.Http.SocketsHttpHandler", StringComparison.OrdinalIgnoreCase))
+                            curLabel = "area-System.Net.Http";
+                        sb.AppendLine($"{i}\t{curLabel}\t\"{title}\"\t\"{description}\"\t{isPr}\t{filePaths}");
                     }
                 }
-                catch (Exception)
+
+                if (i % 1000 == 0)
                 {
-                    Console.WriteLine($"Issue {i} does not exist");
+                    File.AppendAllText(_outputFile, sb.ToString());
+                    sb.Clear();
                 }
             }
-
-            File.AppendAllText(_outputFile, sb.ToString());
         }
 
         private static string RemoveNewLineCharacters(string input)
         {
-            return input.Replace("\r\n", " ").Replace("\n", " ");
+            return input?.Replace("\r\n", " ").Replace("\n", " ").Replace("\t", " ");
         }
     }
 }
