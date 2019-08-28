@@ -53,7 +53,6 @@ namespace Microsoft.DotNet.VersionTools.BuildManifest.Model
                 }
                 return false;
             }
-            set { Attributes[nameof(NonShipping)] = value.ToString(); }
         }
 
         public override string ToString() => $"Package {Id} {Version}";

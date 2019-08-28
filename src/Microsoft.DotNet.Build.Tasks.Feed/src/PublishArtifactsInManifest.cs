@@ -262,27 +262,20 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         private List<PackageArtifactModel> FilterPackages(List<PackageArtifactModel> packages, FeedConfig feedConfig)
         {
-            // If the feed config wants further filtering, do that now.
-            List<PackageArtifactModel> filteredPackages = null;
             switch (feedConfig.AssetSelection)
             {
                 case AssetSelection.All:
                     // No filtering needed
-                    filteredPackages = packages;
-                    break;
+                    return packages;
                 case AssetSelection.NonShippingOnly:
-                    filteredPackages = packages.Where(p => p.NonShipping).ToList();
-                    break;
+                    return packages.Where(p => p.NonShipping).ToList();
                 case AssetSelection.ShippingOnly:
-                    filteredPackages = packages.Where(p => !p.NonShipping).ToList();
-                    break;
+                    return packages.Where(p => !p.NonShipping).ToList();
                 default:
                     // Throw NYI here instead of logging an error because error would have already been logged in the
                     // parser for the user.
                     throw new NotImplementedException("Unknown asset selection type '{feedConfig.AssetSelection}'");
             }
-
-            return filteredPackages;
         }
 
         private async Task HandleBlobPublishingAsync(IMaestroApi client, Maestro.Client.Models.Build buildInformation)
@@ -412,7 +405,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         {
             foreach (var package in packagesToPublish)
             {
-
                 var assetRecord = buildInformation.Assets
                     .Where(a => a.Name.Equals(package.Id) && a.Version.Equals(package.Version))
                     .FirstOrDefault();
@@ -437,6 +429,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             await PushNugetPackagesAsync(packagesToPublish, feedConfig, maxClients: MaxClients);
         }
 
+        /// <summary>
+        ///     Start a process as an async Task.
+        /// </summary>
+        /// <param name="path">Path to process</param>
+        /// <param name="arguments">Process arguments</param>
+        /// <returns>Process return code</returns>
         public Task<int> StartProcessAsync(string path, string arguments)
         {
             ProcessStartInfo info = new ProcessStartInfo(path, arguments)
@@ -537,34 +535,41 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 return;
             }
 
-            // The feed key when pushing to AzDo feeds is "AzureDevOps" (works with the credential helper).
-            int result = await StartProcessAsync(NugetPath, $"push \"{localPackageLocation}\" -Source \"{feedConfig.TargetFeedURL}\" -NonInteractive -ApiKey AzureDevOps");
-            if (result != 0)
+            try
             {
-                Log.LogMessage(MessageImportance.Low, $"Failed to push {localPackageLocation}, attempting to determine whether the package already exists on the feed with the same content.");
-
-                try
+                // The feed key when pushing to AzDo feeds is "AzureDevOps" (works with the credential helper).
+                int result = await StartProcessAsync(NugetPath, $"push \"{localPackageLocation}\" -Source \"{feedConfig.TargetFeedURL}\" -NonInteractive -ApiKey AzureDevOps");
+                if (result != 0)
                 {
-                    string packageContentUrl = $"https://pkgs.dev.azure.com/{feedAccount}/{feedProject}/_apis/packaging/feeds/{feedName}/nuget/packages/{packageToPublish.Id}/versions/{packageToPublish.Version}/content";
+                    Log.LogMessage(MessageImportance.Low, $"Failed to push {localPackageLocation}, attempting to determine whether the package already exists on the feed with the same content.");
 
-                    if (await IsLocalPackageIdenticalToFeedPackage(localPackageLocation, packageContentUrl, client))
+                    try
                     {
-                        Log.LogMessage(MessageImportance.Normal, $"Package '{packageToPublish.Id}@{packageToPublish.Version}' already exists on '{feedConfig.TargetFeedURL}' but has the same content. Skipping.");
+                        string packageContentUrl = $"https://pkgs.dev.azure.com/{feedAccount}/{feedProject}/_apis/packaging/feeds/{feedName}/nuget/packages/{packageToPublish.Id}/versions/{packageToPublish.Version}/content";
+
+                        if (await IsLocalPackageIdenticalToFeedPackage(localPackageLocation, packageContentUrl, client))
+                        {
+                            Log.LogMessage(MessageImportance.Normal, $"Package '{packageToPublish.Id}@{packageToPublish.Version}' already exists on '{feedConfig.TargetFeedURL}' but has the same content. Skipping.");
+                        }
+                        else
+                        {
+                            Log.LogError($"Package '{packageToPublish.Id}@{packageToPublish.Version}' already exists on '{feedConfig.TargetFeedURL}' with different content.");
+                        }
+
+                        return;
                     }
-                    else
+                    catch (Exception e)
                     {
-                        Log.LogError($"Package '{packageToPublish.Id}@{packageToPublish.Version}' already exists on '{feedConfig.TargetFeedURL}' with different content.");
+                        // This is an error. It means we were unable to push using nuget, and then could not access to the package otherwise.
+                        Log.LogWarning($"Failed to determine whether an existing package on the feed has the same content as '{localPackageLocation}': {e.Message}");
                     }
 
-                    return;
+                    Log.LogError($"Failed to push '{packageToPublish.Id}@{packageToPublish.Version}'. Result code '{result}'.");
                 }
-                catch (Exception e)
-                {
-                    // This is an error. It means we were unable to push using nuget, and then could not access to the package otherwise.
-                    Log.LogWarning($"Failed to determine whether an existing package on the feed has the same content: {e.Message}");
-                }
-
-                Log.LogError($"Failed to push '{packageToPublish.Id}@{packageToPublish.Version}'. Result code '{result}'.");
+            }
+            catch (Exception e)
+            {
+                Log.LogError($"Unexpected exception pushing package '{packageToPublish.Id}@{packageToPublish.Version}'.");
             }
         }
 
