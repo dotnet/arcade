@@ -8,7 +8,7 @@
   <PropertyGroup>
     <MicrosoftDotNetMaestroTasksVersion>1.1.0-beta.19401.2</MicrosoftDotNetMaestroTasksVersion>
     <MicrosoftDotNetBuildTasksVisualStudioVersion>$(ArcadeSdkVersion)</MicrosoftDotNetBuildTasksVisualStudioVersion>
-    <MicrosoftDotNetBuildTasksFeedVersion>2.2.0-beta.19415.24</MicrosoftDotNetBuildTasksFeedVersion>
+    <MicrosoftDotNetBuildTasksFeedVersion>2.2.0-beta.19429.3</MicrosoftDotNetBuildTasksFeedVersion>
     <MicrosoftDotNetSignCheckVersion Condition="'$(MicrosoftDotNetSignCheckVersion)' == ''">1.0.0-beta.19408.6</MicrosoftDotNetSignCheckVersion>
     <MicrosoftSymbolUploaderBuildTaskVersion Condition="'$(MicrosoftSymbolUploaderBuildTaskVersion)' == ''">1.0.0-beta-64414-01</MicrosoftSymbolUploaderBuildTaskVersion>
   </PropertyGroup>
