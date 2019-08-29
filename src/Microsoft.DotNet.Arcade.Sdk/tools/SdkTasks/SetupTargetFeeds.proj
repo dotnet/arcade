@@ -21,6 +21,11 @@
       - InstallersAzureAccountKey
       - ChecksumsTargetStaticFeed
       - ChecksumsAzureAccountKey
+      - PublishToAzureDevOpsNuGetFeeds  : If true, publish NuGet packages to Azure DevOps feeds.
+      - AzureDevOpsStaticShippingFeed         : URL of the feed Azure DevOps NuGet feed to publish non-stable shipping packages to.
+      - AzureDevOpsStaticShippingFeedKey      : Key of the feed Azure DevOps NuGet feed to publish non-stable shipping packages to.
+      - AzureDevOpsStaticTransportFeed        : URL of the feed Azure DevOps NuGet feed to publish to transport packages to.
+      - AzureDevOpsStaticTransportFeedKey     : Key of the feed Azure DevOps NuGet feed to publish to transport packages to.
 
       - CreateTestConfig            : If set to true the user will be able to test a TargetFeedConfig 
                                       constructed using parameters below:
@@ -53,8 +58,12 @@
       Text="Parameters 'InstallersTargetStaticFeed/Key' are empty." />
 
     <Error
-      Condition="('$(ChecksumsTargetStaticFeed)' == '' or '$(ChecksumsAzureAccountKey)' == '') and '$(PublishInstallersAndChecksums)' == 'true'"
-      Text="Parameters 'ChecksumsTargetStaticFeed/Key' are empty." />
+      Condition="('$(AzureDevOpsStaticShippingFeed)' == '' or '$(AzureDevOpsStaticShippingFeedKey)' == '') and '$(PublishToAzureDevOpsNuGetFeeds)' == 'true'"
+      Text="Parameters 'AzureDevOpsStaticShippingFeed/AzureDevOpsStaticShippingFeedKey' are empty." />
+
+    <Error
+      Condition="('$(AzureDevOpsStaticTransportFeed)' == '' or '$(AzureDevOpsStaticTransportFeedKey)' == '') and '$(PublishToAzureDevOpsNuGetFeeds)' == 'true'"
+      Text="Parameters 'AzureDevOpsStaticTransportFeed/AzureDevOpsStaticTransportFeedKey' are empty." />
 
     <!--
       If the user wants to use a test configuration we'll create a TargetFeedConfig using
@@ -69,6 +78,23 @@
         Token="$(TestFeedToken)" />
     </ItemGroup>
 
+    <!--
+      When a build is stable we ask `CreateInternalBlobFeed` in Tasks.Feed to create a new AzDO feed.
+      That task will return an Azure Storage feed wrapped by an authenticated Azure function proxy,
+      we use that to mimic an internal/authenticated feed. This will likely change in the future once
+      we switch to using AzDO private feeds.
+    -->
+    <CreateInternalBlobFeed
+        Condition="'@(TargetFeedConfig)' == '' AND '$(IsStableBuild)' == 'true'"
+        RepositoryName="$(RepositoryName)"
+        CommitSha="$(CommitSha)"
+        AzureDevOpsFeedsBaseUrl="$(AzureDevOpsFeedsBaseUrl)"
+        AzureStorageAccountName="$(AzureStorageAccountName)"
+        AzureStorageAccountKey="$(AzureStorageAccountKey)">
+      <Output TaskParameter="TargetFeedURL" PropertyName="NewAzDoFeedURL"/>
+      <Output TaskParameter="TargetFeedName" PropertyName="NewTargetFeedName"/>
+    </CreateInternalBlobFeed>
+    
     <!--
       When a build is stable we ask `CreateInternalBlobFeed` in Tasks.Feed to create a new AzDO feed.
       That task will return an Azure Storage feed wrapped by an authenticated Azure function proxy,
@@ -146,6 +172,23 @@
         TargetURL="$(ChecksumsTargetStaticFeed)"
         Type="AzureStorageFeed"
         Token="$(ChecksumsAzureAccountKey)" />
+
+      <!--
+        If there is a request to also publish to NuGet feeds, we will divide the packages into
+        shipping and non-shipping (transport) and push them to separate feeds.
+      -->
+      <TargetFeedConfig Condition="'$(PublishToAzureDevOpsNuGetFeeds)' == 'true'"
+        Include="NetCore"
+        TargetURL="$(AzureDevOpsStaticShippingFeed)"
+        Type="AzDoNugetFeed"
+        Token="$(AzureDevOpsStaticShippingFeedKey)"
+        AssetSelection="ShippingOnly" />
+      <TargetFeedConfig Condition="'$(PublishToAzureDevOpsNuGetFeeds)' == 'true'"
+        Include="NetCore"
+        TargetURL="$(AzureDevOpsStaticTransportFeed)"
+        Type="AzDoNugetFeed"
+        Token="$(AzureDevOpsStaticTransportFeedKey)"
+        AssetSelection="NonShippingOnly" />
     </ItemGroup>
 
     <Error
