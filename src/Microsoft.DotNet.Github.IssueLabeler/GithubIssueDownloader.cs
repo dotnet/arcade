@@ -74,7 +74,7 @@ namespace Microsoft.DotNet.Github.IssueLabeler
                 }
                 catch (RateLimitExceededException ex)
                 {
-                    TimeSpan timeToWait = ex.Reset - DateTimeOffset.UtcNow;
+                    TimeSpan timeToWait = ex.Reset.AddMinutes(1) - DateTimeOffset.UtcNow;
                     await Task.Delay((int)timeToWait.TotalMilliseconds).ConfigureAwait(false);
                     i--;
                     continue;
