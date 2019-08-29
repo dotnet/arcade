@@ -18,7 +18,10 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using NuGet.Versioning;
 using MSBuild = Microsoft.Build.Utilities;
+using Microsoft.DiaSymReader.PortablePdb;
+using Microsoft.DotNet.VersionTools.Util;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed
 {
@@ -106,6 +109,20 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         [Required]
         public string NugetPath { get; set; }
 
+        /// <summary>
+        /// Whether this build is internal or not. If true, extra checks are done to avoid accidental
+        /// publishing of assets to public feeds or storage accounts.
+        /// </summary>
+        [Required]
+        public bool InternalBuild { get; set; }
+
+        /// <summary>
+        /// If true, safety checks only print messages and do not error
+        /// - Internal asset to public feed
+        /// - Stable packages to non-isolated feeds
+        /// </summary>
+        public bool SkipSafetyChecks { get; set; } = false;
+
         public readonly Dictionary<string, List<FeedConfig>> FeedConfigs = new Dictionary<string, List<FeedConfig>>();
 
         private readonly Dictionary<string, List<PackageArtifactModel>> PackagesByCategory = new Dictionary<string, List<PackageArtifactModel>>();
@@ -152,8 +169,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 IMaestroApi client = ApiFactory.GetAuthenticated(MaestroApiEndpoint, BuildAssetRegistryToken);
                 Maestro.Client.Models.Build buildInformation = await client.Builds.GetBuildAsync(BARBuildId);
 
-                ParseTargetFeedConfig();
-
+                await ParseTargetFeedConfig();
+                
                 // Return errors from parsing FeedConfig
                 if (Log.HasLoggedErrors)
                 {
@@ -161,6 +178,19 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 }
 
                 SplitArtifactsInCategories(buildModel);
+
+                // Return errors from the safety checks
+                if (Log.HasLoggedErrors)
+                {
+                    return false;
+                }
+
+                CheckForStableAssets();
+
+                if (Log.HasLoggedErrors)
+                {
+                    return false;
+                }
 
                 await HandlePackagePublishingAsync(client, buildInformation);
 
@@ -177,52 +207,184 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// <summary>
         ///     Parse out the input TargetFeedConfig into a dictionary of FeedConfig types
         /// </summary>
-        public void ParseTargetFeedConfig()
+        public async Task ParseTargetFeedConfig()
         {
-            foreach (var fc in TargetFeedConfig)
+            var retryHandler = new ExponentialRetry
             {
-                string targetFeedUrl = fc.GetMetadata("TargetURL");
-                string feedKey = fc.GetMetadata("Token");
-                string type = fc.GetMetadata("Type");
+                MaxAttempts = 5
+            };
 
-                if (string.IsNullOrEmpty(targetFeedUrl) ||
-                    string.IsNullOrEmpty(feedKey) ||
-                    string.IsNullOrEmpty(type))
+            using (HttpClient httpClient = new HttpClient(new HttpClientHandler { CheckCertificateRevocationList = true }))
+            {
+                foreach (var fc in TargetFeedConfig)
                 {
-                    Log.LogError($"Invalid FeedConfig entry. TargetURL='{targetFeedUrl}' Type='{type}' Token='{feedKey}'");
-                    continue;
-                }
+                    string targetFeedUrl = fc.GetMetadata(nameof(FeedConfig.TargetURL));
+                    string feedKey = fc.GetMetadata(nameof(FeedConfig.Token));
+                    string type = fc.GetMetadata(nameof(FeedConfig.Type));
 
-                if (!Enum.TryParse<FeedType>(type, true, out FeedType feedType))
-                {
-                    Log.LogError($"Invalid feed config type '{type}'. Possible values are: {string.Join(", ", Enum.GetNames(typeof(FeedType)))}");
-                    continue;
-                }
-
-                var feedConfig = new FeedConfig()
-                {
-                    TargetFeedURL = targetFeedUrl,
-                    Type = feedType,
-                    FeedKey = feedKey
-                };
-
-                string assetSelection = fc.GetMetadata("AssetSelection");
-                if (!string.IsNullOrEmpty(assetSelection))
-                {
-                    if (!Enum.TryParse<AssetSelection>(assetSelection, true, out AssetSelection selection))
+                    if (string.IsNullOrEmpty(targetFeedUrl) ||
+                        string.IsNullOrEmpty(feedKey) ||
+                        string.IsNullOrEmpty(type))
                     {
-                        Log.LogError($"Invalid feed config asset selection '{type}'. Possible values are: {string.Join(", ", Enum.GetNames(typeof(AssetSelection)))}");
+                        Log.LogError($"Invalid FeedConfig entry. {nameof(FeedConfig.TargetURL)}='{targetFeedUrl}' {nameof(FeedConfig.Type)}='{type}' {nameof(FeedConfig.Token)}='{feedKey}'");
                         continue;
                     }
-                    feedConfig.AssetSelection = selection;
-                }
 
-                string categoryKey = fc.ItemSpec.Trim().ToUpper();
-                if (!FeedConfigs.TryGetValue(categoryKey, out var feedsList))
-                {
-                    FeedConfigs[categoryKey] = new List<FeedConfig>();
+                    if (!Enum.TryParse<FeedType>(type, true, out FeedType feedType))
+                    {
+                        Log.LogError($"Invalid feed config type '{type}'. Possible values are: {string.Join(", ", Enum.GetNames(typeof(FeedType)))}");
+                        continue;
+                    }
+
+                    var feedConfig = new FeedConfig()
+                    {
+                        TargetURL = targetFeedUrl,
+                        Type = feedType,
+                        Token = feedKey
+                    };
+
+                    string assetSelection = fc.GetMetadata(nameof(FeedConfig.AssetSelection));
+                    if (!string.IsNullOrEmpty(assetSelection))
+                    {
+                        if (!Enum.TryParse<AssetSelection>(assetSelection, true, out AssetSelection selection))
+                        {
+                            Log.LogError($"Invalid feed config asset selection '{type}'. Possible values are: {string.Join(", ", Enum.GetNames(typeof(AssetSelection)))}");
+                            continue;
+                        }
+                        feedConfig.AssetSelection = selection;
+                    }
+
+                    // To determine whether a feed is internal, we allow the user to either
+                    // specify the value explicitly. If that is unset, do an unauthenticated GET
+                    // on the feed URL. If it succeeds, the feed is not public. If it fails with a 4* error,
+                    // assume it is internal.
+                    string feedIsInternal = fc.GetMetadata(nameof(FeedConfig.Internal));
+                    if (!string.IsNullOrEmpty(feedIsInternal))
+                    {
+                        if (!bool.TryParse(feedIsInternal, out bool feedSetting))
+                        {
+                            Log.LogError($"Invalid feed config '{nameof(FeedConfig.Internal)}' setting.  Must be 'true' or 'false'.");
+                            continue;
+                        }
+                        feedConfig.Internal = feedSetting;
+                    }
+                    else
+                    {
+                        bool success = await retryHandler.RunAsync(async attempt =>
+                        {
+                            try
+                            {
+                                HttpResponseMessage response = await httpClient.GetAsync(feedConfig.TargetURL);
+                                if (response.IsSuccessStatusCode)
+                                {
+                                    feedConfig.Internal = false;
+                                    return true;
+                                }
+                                else if (response.StatusCode >= (System.Net.HttpStatusCode)500)
+                                {
+                                    // Don't know for certain
+                                    return false;
+                                }
+                                else
+                                {
+                                    feedConfig.Internal = true;
+                                    return true;
+                                }
+                            }
+                            catch (Exception e)
+                            {
+                                Log.LogMessage(MessageImportance.Low, $"Unexpected exception {e.Message} when attempting to determine whether feed is internal.");
+                                return false;
+                            }
+                        });
+                        
+                        if (!success)
+                        {
+                            // We couldn't determine anything.  We'd be unlikely to be able to push to this feed either,
+                            // since it's 5xx'ing.
+                            Log.LogError($"Unable to determine whether '{feedConfig.TargetURL}' is public or internal.");
+                            continue;
+                        }
+                    }
+
+                    // Protect against accidental publishing of internal assets to non-internal feeds.
+                    // If separated out for clarity.
+                    if (!SkipSafetyChecks)
+                    {
+                        if (InternalBuild && !feedConfig.Internal)
+                        {
+                            Log.LogError($"Use of non-internal feed '{feedConfig.TargetURL}' is invalid for an internal build. This can be overridden with '{nameof(SkipSafetyChecks)}= true'");
+                            continue;
+                        }
+                    }
+
+                    string feedIsIsolated = fc.GetMetadata(nameof(FeedConfig.Isolated));
+                    if (!string.IsNullOrEmpty(feedIsIsolated))
+                    {
+                        if (!bool.TryParse(feedIsIsolated, out bool feedSetting))
+                        {
+                            Log.LogError($"Invalid feed config '{nameof(FeedConfig.Isolated)}' setting.  Must be 'true' or 'false'.");
+                            continue;
+                        }
+                        feedConfig.Isolated = feedSetting;
+                    }
+
+                    string categoryKey = fc.ItemSpec.Trim().ToUpper();
+                    if (!FeedConfigs.TryGetValue(categoryKey, out var feedsList))
+                    {
+                        FeedConfigs[categoryKey] = new List<FeedConfig>();
+                    }
+                    FeedConfigs[categoryKey].Add(feedConfig);
                 }
-                FeedConfigs[categoryKey].Add(feedConfig);
+            }
+        }
+
+        /// <summary>
+        ///  Run a check to verify that stable assets are not published to
+        ///  locations they should not be published.
+        ///  
+        /// For now, this is only done for packages since feeds are
+        /// immutable.
+        /// </summary>
+        public void CheckForStableAssets()
+        {
+            if (SkipSafetyChecks)
+            {
+                return;
+            }
+
+            foreach (var packagesPerCategory in PackagesByCategory)
+            {
+                var category = packagesPerCategory.Key;
+                var packages = packagesPerCategory.Value;
+
+                if (FeedConfigs.TryGetValue(category, out List<FeedConfig> feedConfigsForCategory))
+                {
+                    foreach (var feedConfig in feedConfigsForCategory)
+                    {
+                        // Look at the version numbers. If any of the packages here are stable and about to be published to a
+                        // non-isolated feed, then issue an error. Isolated feeds may recieve all packages.
+                        if (feedConfig.Isolated)
+                        {
+                            continue;
+                        }
+
+                        List<PackageArtifactModel> filteredPackages = FilterPackages(packages, feedConfig);
+
+                        foreach (var package in filteredPackages)
+                        {
+                            if (!NuGetVersion.TryParse(package.Version, out NuGetVersion version))
+                            {
+                                Log.LogError($"Package '{package.Id}' has invalid version '{package.Version}'");
+                            }
+                            // Treat any prerelease version as stable.
+                            else if (!version.IsPrerelease)
+                            {
+                                Log.LogError($"Package '{package.Id}' has stable version '{package.Version}' but is targeted at a non-isolated feed '{feedConfig.TargetURL}'");
+                            }
+                        }
+                    }
+                }
             }
         }
 
@@ -350,7 +512,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         ///     or they are inferred based on the extension of the asset.
         /// </summary>
         /// <param name="buildModel"></param>
-        private void SplitArtifactsInCategories(BuildModel buildModel)
+        public void SplitArtifactsInCategories(BuildModel buildModel)
         {
             foreach (var packageAsset in buildModel.Artifacts.Packages)
             {
@@ -417,13 +579,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                 var assetWithLocations = await client.Assets.GetAssetAsync(assetRecord.Id);
 
-                if (assetWithLocations?.Locations.Any(al => al.Location.Equals(feedConfig.TargetFeedURL, StringComparison.OrdinalIgnoreCase)) ?? false)
+                if (assetWithLocations?.Locations.Any(al => al.Location.Equals(feedConfig.TargetURL, StringComparison.OrdinalIgnoreCase)) ?? false)
                 {
-                    Log.LogMessage($"Asset with Id {package.Id}, Version {package.Version} already has location {feedConfig.TargetFeedURL}");
+                    Log.LogMessage($"Asset with Id {package.Id}, Version {package.Version} already has location {feedConfig.TargetURL}");
                     continue;
                 }
 
-                await client.Assets.AddAssetLocationToAssetAsync(assetRecord.Id, AddAssetLocationToAssetAssetLocationType.NugetFeed, feedConfig.TargetFeedURL);
+                await client.Assets.AddAssetLocationToAssetAsync(assetRecord.Id, AddAssetLocationToAssetAssetLocationType.NugetFeed, feedConfig.TargetURL);
             }
 
             await PushNugetPackagesAsync(packagesToPublish, feedConfig, maxClients: MaxClients);
@@ -470,7 +632,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// <returns>Async task.</returns>
         public async Task PushNugetPackagesAsync(List<PackageArtifactModel> packagesToPublish, FeedConfig feedConfig, int maxClients)
         {
-            var parsedUri = Regex.Match(feedConfig.TargetFeedURL, PublishArtifactsInManifest.AzDoNuGetFeedPattern);
+            var parsedUri = Regex.Match(feedConfig.TargetURL, PublishArtifactsInManifest.AzDoNuGetFeedPattern);
             if (!parsedUri.Success)
             {
                 Log.LogError($"Azure DevOps NuGetFeed was not in the expected format '{PublishArtifactsInManifest.AzDoNuGetFeedPattern}'");
@@ -486,7 +648,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 {
                     httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
                         "Basic",
-                        Convert.ToBase64String(Encoding.ASCII.GetBytes(string.Format("{0}:{1}", "", feedConfig.FeedKey))));
+                        Convert.ToBase64String(Encoding.ASCII.GetBytes(string.Format("{0}:{1}", "", feedConfig.Token))));
 
                     Log.LogMessage(MessageImportance.High, $"Pushing {packagesToPublish.Count()} packages.");
                     await System.Threading.Tasks.Task.WhenAll(packagesToPublish.Select(async packageToPublish =>
@@ -526,7 +688,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         private async Task PushNugetPackageAsync(FeedConfig feedConfig, HttpClient client, PackageArtifactModel packageToPublish,
             string feedAccount, string feedProject, string feedName)
         {
-            Log.LogMessage(MessageImportance.High, $"Pushing package '{packageToPublish.Id}' to feed {feedConfig.TargetFeedURL}");
+            Log.LogMessage(MessageImportance.High, $"Pushing package '{packageToPublish.Id}' to feed {feedConfig.TargetURL}");
 
             string localPackageLocation = $"{PackageAssetsBasePath}{packageToPublish.Id}.{packageToPublish.Version}.nupkg";
             if (!File.Exists(localPackageLocation))
@@ -538,7 +700,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             try
             {
                 // The feed key when pushing to AzDo feeds is "AzureDevOps" (works with the credential helper).
-                int result = await StartProcessAsync(NugetPath, $"push \"{localPackageLocation}\" -Source \"{feedConfig.TargetFeedURL}\" -NonInteractive -ApiKey AzureDevOps");
+                int result = await StartProcessAsync(NugetPath, $"push \"{localPackageLocation}\" -Source \"{feedConfig.TargetURL}\" -NonInteractive -ApiKey AzureDevOps");
                 if (result != 0)
                 {
                     Log.LogMessage(MessageImportance.Low, $"Failed to push {localPackageLocation}, attempting to determine whether the package already exists on the feed with the same content.");
@@ -549,11 +711,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                         if (await IsLocalPackageIdenticalToFeedPackage(localPackageLocation, packageContentUrl, client))
                         {
-                            Log.LogMessage(MessageImportance.Normal, $"Package '{packageToPublish.Id}@{packageToPublish.Version}' already exists on '{feedConfig.TargetFeedURL}' but has the same content. Skipping.");
+                            Log.LogMessage(MessageImportance.Normal, $"Package '{packageToPublish.Id}@{packageToPublish.Version}' already exists on '{feedConfig.TargetURL}' but has the same content. Skipping.");
                         }
                         else
                         {
-                            Log.LogError($"Package '{packageToPublish.Id}@{packageToPublish.Version}' already exists on '{feedConfig.TargetFeedURL}' with different content.");
+                            Log.LogError($"Package '{packageToPublish.Id}@{packageToPublish.Version}' already exists on '{feedConfig.TargetURL}' with different content.");
                         }
 
                         return;
@@ -733,13 +895,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                 var assetWithLocations = await client.Assets.GetAssetAsync(assetRecord.Id);
 
-                if (assetWithLocations?.Locations.Any(al => al.Location.Equals(feedConfig.TargetFeedURL, StringComparison.OrdinalIgnoreCase)) ?? false)
+                if (assetWithLocations?.Locations.Any(al => al.Location.Equals(feedConfig.TargetURL, StringComparison.OrdinalIgnoreCase)) ?? false)
                 {
-                    Log.LogMessage($"Asset with Id {blob.Id} already has location {feedConfig.TargetFeedURL}");
+                    Log.LogMessage($"Asset with Id {blob.Id} already has location {feedConfig.TargetURL}");
                     continue;
                 }
 
-                await client.Assets.AddAssetLocationToAssetAsync(assetRecord.Id, AddAssetLocationToAssetAssetLocationType.Container, feedConfig.TargetFeedURL);
+                await client.Assets.AddAssetLocationToAssetAsync(assetRecord.Id, AddAssetLocationToAssetAssetLocationType.Container, feedConfig.TargetURL);
             }
         }
 
@@ -777,13 +939,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                 var assetWithLocations = await client.Assets.GetAssetAsync(assetRecord.Id);
 
-                if (assetWithLocations?.Locations.Any(al => al.Location.Equals(feedConfig.TargetFeedURL, StringComparison.OrdinalIgnoreCase)) ?? false)
+                if (assetWithLocations?.Locations.Any(al => al.Location.Equals(feedConfig.TargetURL, StringComparison.OrdinalIgnoreCase)) ?? false)
                 {
-                    Log.LogMessage($"Asset with Id {package.Id}, Version {package.Version} already has location {feedConfig.TargetFeedURL}");
+                    Log.LogMessage($"Asset with Id {package.Id}, Version {package.Version} already has location {feedConfig.TargetURL}");
                     continue;
                 }
 
-                await client.Assets.AddAssetLocationToAssetAsync(assetRecord.Id, AddAssetLocationToAssetAssetLocationType.NugetFeed, feedConfig.TargetFeedURL);
+                await client.Assets.AddAssetLocationToAssetAsync(assetRecord.Id, AddAssetLocationToAssetAssetLocationType.NugetFeed, feedConfig.TargetURL);
             }
 
             await blobFeedAction.PushToFeedAsync(packages, pushOptions);
@@ -832,13 +994,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                 var assetWithLocations = await client.Assets.GetAssetAsync(assetRecord.Id);
 
-                if (assetWithLocations?.Locations.Any(al => al.Location.Equals(feedConfig.TargetFeedURL, StringComparison.OrdinalIgnoreCase)) ?? false)
+                if (assetWithLocations?.Locations.Any(al => al.Location.Equals(feedConfig.TargetURL, StringComparison.OrdinalIgnoreCase)) ?? false)
                 {
-                    Log.LogMessage($"Asset with Id {blob.Id} already has location {feedConfig.TargetFeedURL}");
+                    Log.LogMessage($"Asset with Id {blob.Id} already has location {feedConfig.TargetURL}");
                     continue;
                 }
 
-                await client.Assets.AddAssetLocationToAssetAsync(assetRecord.Id, AddAssetLocationToAssetAssetLocationType.Container, feedConfig.TargetFeedURL);
+                await client.Assets.AddAssetLocationToAssetAsync(assetRecord.Id, AddAssetLocationToAssetAssetLocationType.Container, feedConfig.TargetURL);
             }
 
             await blobFeedAction.PublishToFlatContainerAsync(blobs, maxClients: MaxClients, pushOptions);
@@ -846,9 +1008,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         private BlobFeedAction CreateBlobFeedAction(FeedConfig feedConfig)
         {
-            var proxyBackedFeedMatch = Regex.Match(feedConfig.TargetFeedURL, AzureStorageProxyFeedPattern);
-            var proxyBackedStaticFeedMatch = Regex.Match(feedConfig.TargetFeedURL, AzureStorageProxyFeedStaticPattern);
-            var azureStorageStaticBlobFeedMatch = Regex.Match(feedConfig.TargetFeedURL, AzureStorageStaticBlobFeedPattern);
+            var proxyBackedFeedMatch = Regex.Match(feedConfig.TargetURL, AzureStorageProxyFeedPattern);
+            var proxyBackedStaticFeedMatch = Regex.Match(feedConfig.TargetURL, AzureStorageProxyFeedStaticPattern);
+            var azureStorageStaticBlobFeedMatch = Regex.Match(feedConfig.TargetURL, AzureStorageStaticBlobFeedPattern);
 
             if (proxyBackedFeedMatch.Success || proxyBackedStaticFeedMatch.Success)
             {
@@ -867,18 +1029,18 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     AccountName = storageAccountName,
                     Container = containerName,
                     FeedSubPath = baseFeedName,
-                    ConnectionString = $"DefaultEndpointsProtocol=https;AccountName={storageAccountName};AccountKey={feedConfig.FeedKey};EndpointSuffix=core.windows.net"
+                    ConnectionString = $"DefaultEndpointsProtocol=https;AccountName={storageAccountName};AccountKey={feedConfig.Token};EndpointSuffix=core.windows.net"
                 };
 
-                return new BlobFeedAction(sleetSource, feedConfig.FeedKey, Log);
+                return new BlobFeedAction(sleetSource, feedConfig.Token, Log);
             }
             else if (azureStorageStaticBlobFeedMatch.Success)
             {
-                return new BlobFeedAction(feedConfig.TargetFeedURL, feedConfig.FeedKey, Log);
+                return new BlobFeedAction(feedConfig.TargetURL, feedConfig.Token, Log);
             }
             else
             {
-                Log.LogError($"Could not parse Azure feed URL: '{feedConfig.TargetFeedURL}'");
+                Log.LogError($"Could not parse Azure feed URL: '{feedConfig.TargetURL}'");
                 return null;
             }
         }
@@ -941,9 +1103,19 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
     /// </summary>
     public class FeedConfig
     {
-        public string TargetFeedURL { get; set; }
+        public string TargetURL { get; set; }
         public FeedType Type { get; set; }
-        public string FeedKey { get; set; }
+        public string Token { get; set; }
         public AssetSelection AssetSelection { get; set; } = AssetSelection.All;
+        /// <summary>
+        /// If true, the feed is treated as 'isolated', meaning nuget packages pushed
+        /// to it may be stable.
+        /// </summary>
+        public bool Isolated { get; set; } = false;
+        /// <summary>
+        /// If true, the feed is treated as 'internal', meaning artifacts from an internal build
+        /// 
+        /// </summary>
+        public bool Internal { get; set; } = false;
     }
 }
