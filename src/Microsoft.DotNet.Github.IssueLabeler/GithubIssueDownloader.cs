@@ -20,7 +20,8 @@ namespace Microsoft.DotNet.Github.IssueLabeler
         private int _startIndex;
         private int _endIndex;
         private string _outputFile;
-  
+        private bool _skipColumns;
+
         public GithubIssueDownloader(string authToken, string repoName, string owner, int startIndex, int endIndex, string OutputFile)
         {
             if (startIndex <= 0)
@@ -37,19 +38,21 @@ namespace Microsoft.DotNet.Github.IssueLabeler
             {
                 Credentials = new Credentials(authToken)
             };
-
+            
             _repoName = repoName;
             _owner = owner;
             _startIndex = startIndex;
             _endIndex = endIndex;
             _outputFile = OutputFile;
+            _skipColumns = true;
         }
 
         public async Task DownloadAndSaveAsync()
         {
             StringBuilder sb = new StringBuilder();
             if (!File.Exists(_outputFile))
-                File.WriteAllText(_outputFile, "Area\tTitle\tDescription\tIsPR\tFilePaths" + Environment.NewLine);
+                File.WriteAllText(_outputFile, IgnoreForTraining("ID\t") + "Area\tTitle\tDescription\tIsPR\tFilePaths" + Environment.NewLine);
+
             for (int i = _startIndex; i < _endIndex; i++)
             {
                 string filePaths = string.Empty;
@@ -57,20 +60,22 @@ namespace Microsoft.DotNet.Github.IssueLabeler
                 Issue issueOrPr = null;
                 try
                 {
-                    var prFiles = await _client.PullRequest.Files(_owner, _repoName, i);
-                    filePaths = String.Join(";", prFiles.Select(x => x.FileName));
-                    issueOrPr = await _client.Issue.Get(_owner, _repoName, i);
+                    issueOrPr = await _client.Issue.Get(_owner, _repoName, i).ConfigureAwait(false);
+                    isPr = issueOrPr.PullRequest != null;
+                    if (isPr)
+                    {
+                        var prFiles = await _client.PullRequest.Files(_owner, _repoName, i).ConfigureAwait(false);
+                        filePaths = String.Join(";", prFiles.Select(x => x.FileName));
+                    }
                 }
-                catch (NotFoundException ex)
+                catch (NotFoundException)
                 {
-                    if (ex.Message.Contains("files was not found."))
-                        isPr = false;
-                    else
-                        continue;
+                    continue;
                 }
                 catch (RateLimitExceededException ex)
                 {
-                    await Task.Delay(ex.Reset.Millisecond);
+                    TimeSpan timeToWait = ex.Reset - DateTimeOffset.UtcNow;
+                    await Task.Delay((int)timeToWait.TotalMilliseconds).ConfigureAwait(false);
                     i--;
                     continue;
                 }
@@ -83,7 +88,7 @@ namespace Microsoft.DotNet.Github.IssueLabeler
                         string description = NormalizeWhitespace(issueOrPr.Body);
                         // Ordering is important here because we are using the same ordering on the prediction side.
                         string curLabel = label.Name;
-                        sb.AppendLine($"{curLabel}\t\"{title}\"\t\"{description}\"\t{isPr}\t{filePaths}");
+                        sb.AppendLine(IgnoreForTraining($"{i}\t") + $"{curLabel}\t\"{title}\"\t\"{description}\"\t{isPr}\t{filePaths}");
                     }
                 }
 
@@ -93,7 +98,16 @@ namespace Microsoft.DotNet.Github.IssueLabeler
                     sb.Clear();
                 }
             }
-            File.AppendAllText(_outputFile, sb.ToString());
+            if (sb.Length != 0)
+            {
+                File.AppendAllText(_outputFile, sb.ToString());
+            }
+        }
+
+        private string IgnoreForTraining(string column)
+        {
+            if (_skipColumns) return string.Empty;
+            return column;
         }
 
         private static string NormalizeWhitespace(string input)
