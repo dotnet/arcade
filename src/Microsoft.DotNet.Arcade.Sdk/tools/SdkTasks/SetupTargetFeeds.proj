@@ -177,7 +177,7 @@
         If there is a request to also publish to NuGet feeds, we will divide the packages into
         shipping and non-shipping (transport) and push them to separate feeds.
       -->
-      <TargetFeedConfig Condition="'$(PublishToAzureDevOpsNuGetFeeds)' == 'true'"
+      <TargetFeedConfig Condition="'$(PublishToAzureDevOpsNuGetFeeds)' == 'true' AND '$(IsStableBuild)' != 'true'"
         Include="NetCore"
         TargetURL="$(AzureDevOpsStaticShippingFeed)"
         Type="AzDoNugetFeed"
