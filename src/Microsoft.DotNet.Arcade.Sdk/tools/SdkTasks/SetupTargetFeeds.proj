@@ -24,7 +24,7 @@
       - PublishToAzureDevOpsNuGetFeeds  : If true, publish NuGet packages to Azure DevOps feeds.
       - AzureDevOpsStaticShippingFeed         : URL of the Azure DevOps NuGet feed to publish non-stable shipping packages to.
       - AzureDevOpsStaticShippingFeedKey      : Key of the feed Azure DevOps NuGet feed to publish non-stable shipping packages to.
-      - AzureDevOpsStaticTransportFeed        : URL of the feed Azure DevOps NuGet feed to publish to transport packages to.
+      - AzureDevOpsStaticTransportFeed        : URL of the feed Azure DevOps NuGet feed to publish transport packages to.
       - AzureDevOpsStaticTransportFeedKey     : Key of the feed Azure DevOps NuGet feed to publish to transport packages to.
 
       - CreateTestConfig            : If set to true the user will be able to test a TargetFeedConfig 
