@@ -3,16 +3,16 @@
 // See the LICENSE file in the project root for more information.
 
 using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
 using Newtonsoft.Json;
 using NuGet.Frameworks;
 using NuGet.Packaging;
+using NuGet.Protocol.Core.Types;
 using NuGet.Versioning;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using static Microsoft.DotNet.Build.Tasks.Packaging.ValidateHarvestVersionIsLatestForEra;
+using System.Threading;
 
 namespace Microsoft.DotNet.Build.Tasks.Packaging
 {
@@ -75,16 +75,6 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
         ///   TargetFramework: framework which path represents
         /// </summary>
         public ITaskItem[] InboxFrameworkLayoutFolders { get; set; }
-
-        /// <summary>
-        /// Version endpoints to be queried in order to get the latest stable patch
-        /// version for a package era. The endpoints passed in should follow the following format:
-        /// If the versions endpoint looks like: https://api.nuget.org/v3-flatcontainer/System.Runtime/index.json
-        /// then we should pass in <![CDATA[<NugetPackageVersionsEndpoint Include="https://api.nuget.org/v3-flatcontainer/" />]]>
-        /// The MSBuild task will use that base url to build the rest of it in order to get the list
-        /// of versions for a given package.
-        /// </summary>
-        public ITaskItem[] NugetPackageVersionsEndpoints { get; set; }
 
         public bool SetBaselineVersionsToLatestStableVersion { get; set; }
 
@@ -266,29 +256,14 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
 
             if (UpdateStablePackageInfo)
             {
-                if (NugetPackageVersionsEndpoints == null || NugetPackageVersionsEndpoints.Length == 0)
+                try
                 {
-                    NugetPackageVersionsEndpoints = new TaskItem[]
-                    {
-                        new TaskItem(NuGetDotOrgVersionEndpoint)
-                    };
+                    IEnumerable<Version> allStableVersions = NuGetUtility.GetAllVersionsForPackageIdAsync(id, includePrerelease: false, includeUnlisted: false, Log, CancellationToken.None).GetAwaiter().GetResult();
+                    info.StableVersions.AddRange(allStableVersions);
                 }
-
-                // First remove everything from the stable versions table in case of corrupted stable version list.
-                info.StableVersions.Clear();
-
-                foreach (TaskItem nugetPackageVersionEndpoint in NugetPackageVersionsEndpoints)
+                catch(NuGetProtocolException)
                 {
-                    PackageVersions packageVersionsOnEndpoint = GetAllVersionsFromPackageId(id, nugetPackageVersionEndpoint, Log).GetAwaiter().GetResult();
-                    foreach(var endpointVersionString in packageVersionsOnEndpoint.Versions)
-                    {
-                        NuGetVersion endpointVersion = new NuGetVersion(endpointVersionString);
-                        Version threePartEndpointVersion = VersionUtility.As3PartVersion(endpointVersion.Version);
-                        if (!endpointVersion.IsPrerelease && !info.StableVersions.Contains(threePartEndpointVersion))
-                        {
-                            info.StableVersions.Add(threePartEndpointVersion);
-                        }
-                    }
+                    Log.LogWarning("Failed fetching stable nuget package versions from one or more of your feeds. Make sure you are connected to the internet and that all your feeds are reachable.");
                 }
             }
 

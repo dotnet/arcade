@@ -1289,11 +1289,12 @@
     <Error Condition="'$(PackageIndexFile)' == ''"
            Text="The PackageIndexFile property is not set.  Please set this property to point to the path of the packageIndex.json file for your repo." />
 
-    <!--Set UpdateStablePackageInfo to 'true' in order to fetch the information from NugetPackageVersionsEndpoints to get the latest stable package info-->
+    <PropertyGroup>
+      <UpdateStablePackageInfo Condition="'$(UpdateStablePackageInfo)' == ''">true</UpdateStablePackageInfo>
+    </PropertyGroup>
 
     <UpdatePackageIndex PackageIndexFile="$(PackageIndexFile)"
                         Packages="$(PackageOutputPath)$(Id).$(PackageVersion).nupkg"
-                        NugetPackageVersionsEndpoints="@(NugetPackageVersionsEndpoints)"
                         UpdateStablePackageInfo="$(UpdateStablePackageInfo)" />
   </Target>
 
