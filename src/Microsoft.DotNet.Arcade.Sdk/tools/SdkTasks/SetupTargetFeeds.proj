@@ -58,6 +58,10 @@
       Text="Parameters 'InstallersTargetStaticFeed/Key' are empty." />
 
     <Error
+      Condition="('$(ChecksumsTargetStaticFeed)' == '' or '$(ChecksumsAzureAccountKey)' == '') and '$(PublishInstallersAndChecksums)' == 'true'"
+      Text="Parameters 'ChecksumsTargetStaticFeed/Key' are empty." />
+
+    <Error
       Condition="('$(AzureDevOpsStaticShippingFeed)' == '' or '$(AzureDevOpsStaticShippingFeedKey)' == '') and '$(PublishToAzureDevOpsNuGetFeeds)' == 'true'"
       Text="Parameters 'AzureDevOpsStaticShippingFeed/AzureDevOpsStaticShippingFeedKey' are empty." />
 
