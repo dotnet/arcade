@@ -9,7 +9,7 @@
     <PackageReference Include="Microsoft.Build" Version="$(MicrosoftBuildVersion)" />
     <PackageReference Include="Microsoft.Build.Tasks.Core" Version="$(MicrosoftBuildTasksCoreVersion)" />
 	<!-- This is here so that we agree with the feed tasks project's transitive reference to NewtonSoft.Json -->
-	<PackageReference Include="Newtonsoft.Json" Version="10.0.1" />
+	<PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
   </ItemGroup>
 
   <ItemGroup>
