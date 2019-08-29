@@ -15,20 +15,25 @@
       - AzureDevOpsFeedsBaseUrl
       - ArtifactsCategory
       - AzureStorageTargetFeedPAT
-      - StaticInternalFeed          : URL of the feed to publish internal non-stable packages
-      - PublishInstallersAndChecksums: Whether to publish installers and checksums to a secondary location for Dev channels
+      - StaticInternalFeed                    : URL of the feed to publish internal non-stable packages
+      - PublishInstallersAndChecksums         : Whether to publish installers and checksums to a secondary location for Dev channels
       - InstallersTargetStaticFeed
       - InstallersAzureAccountKey
       - ChecksumsTargetStaticFeed
       - ChecksumsAzureAccountKey
+      - PublishToAzureDevOpsNuGetFeeds        : If true, publish NuGet packages to Azure DevOps feeds.
+      - AzureDevOpsStaticShippingFeed         : URL of the Azure DevOps NuGet feed to publish non-stable shipping packages to.
+      - AzureDevOpsStaticShippingFeedKey      : Key of the feed Azure DevOps NuGet feed to publish non-stable shipping packages to.
+      - AzureDevOpsStaticTransportFeed        : URL of the feed Azure DevOps NuGet feed to publish transport packages to.
+      - AzureDevOpsStaticTransportFeedKey     : Key of the feed Azure DevOps NuGet feed to publish to transport packages to.
 
-      - CreateTestConfig            : If set to true the user will be able to test a TargetFeedConfig 
-                                      constructed using parameters below:
-        - TestFeedCategories
-        - TestFeedURL
-        - TestFeedName
-        - TestFeedType
-        - TestFeedToken
+      - CreateTestConfig                      : If set to true the user will be able to test a TargetFeedConfig 
+                                                constructed using parameters below:
+      - TestFeedCategories
+      - TestFeedURL
+      - TestFeedName
+      - TestFeedType
+      - TestFeedToken
   -->
 
   <Target Name="SetupTargetFeeds">
@@ -55,6 +60,14 @@
     <Error
       Condition="('$(ChecksumsTargetStaticFeed)' == '' or '$(ChecksumsAzureAccountKey)' == '') and '$(PublishInstallersAndChecksums)' == 'true'"
       Text="Parameters 'ChecksumsTargetStaticFeed/Key' are empty." />
+
+    <Error
+      Condition="('$(AzureDevOpsStaticShippingFeed)' == '' or '$(AzureDevOpsStaticShippingFeedKey)' == '') and '$(PublishToAzureDevOpsNuGetFeeds)' == 'true'"
+      Text="Parameters 'AzureDevOpsStaticShippingFeed/AzureDevOpsStaticShippingFeedKey' are empty." />
+
+    <Error
+      Condition="('$(AzureDevOpsStaticTransportFeed)' == '' or '$(AzureDevOpsStaticTransportFeedKey)' == '') and '$(PublishToAzureDevOpsNuGetFeeds)' == 'true'"
+      Text="Parameters 'AzureDevOpsStaticTransportFeed/AzureDevOpsStaticTransportFeedKey' are empty." />
 
     <!--
       If the user wants to use a test configuration we'll create a TargetFeedConfig using
@@ -146,6 +159,23 @@
         TargetURL="$(ChecksumsTargetStaticFeed)"
         Type="AzureStorageFeed"
         Token="$(ChecksumsAzureAccountKey)" />
+
+      <!--
+        If there is a request to also publish to NuGet feeds, we will divide the packages into
+        shipping and non-shipping (transport) and push them to separate feeds.
+      -->
+      <TargetFeedConfig Condition="'$(PublishToAzureDevOpsNuGetFeeds)' == 'true' AND '$(IsStableBuild)' != 'true'"
+        Include="NetCore"
+        TargetURL="$(AzureDevOpsStaticShippingFeed)"
+        Type="AzDoNugetFeed"
+        Token="$(AzureDevOpsStaticShippingFeedKey)"
+        AssetSelection="ShippingOnly" />
+      <TargetFeedConfig Condition="'$(PublishToAzureDevOpsNuGetFeeds)' == 'true'"
+        Include="NetCore"
+        TargetURL="$(AzureDevOpsStaticTransportFeed)"
+        Type="AzDoNugetFeed"
+        Token="$(AzureDevOpsStaticTransportFeedKey)"
+        AssetSelection="NonShippingOnly" />
     </ItemGroup>
 
     <Error
