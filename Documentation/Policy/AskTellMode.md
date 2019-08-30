@@ -17,6 +17,12 @@ The main goal is to ensure that the product can still be built and shipped.
 - "Tell Mode" to Arcade means emailing the Arcade Working Group at arcadewg@microsoft.com.  We'll keep this lightweight for now.
 - "Ask Mode" to tactics handled according the guidance managed by Lee Coward
 
+## Things to keep in mind:
+- Breaking changes are basically never ok.  See [Policy](ChangesPolicy.md) for details.
+- Be aware of which arcade branch you're working in, as this determines which part of the product you're affecting. [Arcade Servicing Doc](ArcadeServicing.md)
+- Shared services (like Helix and Maestro) have versioned APIs. (they don't branch)  So again, be sure you understand what you're affecting.
+- When in doubt, please reach out.  (mail arcadewg@microsoft.com)
+
 ## Servicing
 There are a few things to keep in mind with servicing:
 - Shared infra servicing workflow and policies are [found here](ArcadeServicing.md). 
