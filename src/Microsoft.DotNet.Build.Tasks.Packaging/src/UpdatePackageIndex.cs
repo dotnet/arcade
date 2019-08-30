@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
@@ -6,11 +6,14 @@ using Microsoft.Build.Framework;
 using Newtonsoft.Json;
 using NuGet.Frameworks;
 using NuGet.Packaging;
+using NuGet.Protocol.Core.Types;
 using NuGet.Versioning;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Build.Tasks.Packaging
 {
@@ -74,6 +77,8 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
         public ITaskItem[] InboxFrameworkLayoutFolders { get; set; }
 
         public bool SetBaselineVersionsToLatestStableVersion { get; set; }
+
+        public bool UpdateStablePackageInfo { get; set; }
 
         /// <summary>
         /// Pre-release version to use for all pre-release packages covered by this index.
@@ -180,6 +185,17 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
                 }
             }
 
+            if (UpdateStablePackageInfo && Packages == null && PackageFolders == null)
+            {
+                // Given we will query the web for every package, we should run in parallel to try to optimize the performance.
+                Parallel.ForEach(index.Packages, (package) =>
+                {
+                    IEnumerable<Version> stablePackageVersions = NuGetUtility.GetAllVersionsForPackageId(package.Key, includePrerelease: false, includeUnlisted: false, Log, CancellationToken.None);
+                    package.Value.StableVersions.Clear();
+                    package.Value.StableVersions.AddRange(stablePackageVersions);
+                });
+            }
+
             if (!String.IsNullOrEmpty(PreRelease))
             {
                 index.PreRelease = PreRelease;
@@ -248,6 +264,19 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
         private void UpdateFromValues(PackageIndex index, string id, NuGetVersion version, IEnumerable<Version> assemblyVersions, IEnumerable<string> dllNames)
         {
             PackageInfo info = GetOrCreatePackageInfo(index, id);
+
+            if (UpdateStablePackageInfo)
+            {
+                try
+                {
+                    IEnumerable<Version> allStableVersions = NuGetUtility.GetAllVersionsForPackageId(id, includePrerelease: false, includeUnlisted: false, Log, CancellationToken.None);
+                    info.StableVersions.AddRange(allStableVersions);
+                }
+                catch(NuGetProtocolException)
+                {
+                    Log.LogWarning("Failed fetching stable nuget package versions from one or more of your feeds. Make sure you are connected to the internet and that all your feeds are reachable.");
+                }
+            }
 
             var packageVersion = VersionUtility.As3PartVersion(version.Version);
             // if we have a stable version, add it to the stable versions list

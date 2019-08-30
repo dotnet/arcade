@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -10,11 +12,11 @@ using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
 {
-    public class ValidateHarvestVersionIsLatestForEraTests
+    public class ValidateHarvestVersionIsLatestForReleaseTests
     {
         private Log _log;
         private TestBuildEngine _engine;
-        private const string TestReportPath = "dummyReport.json";
+        private ITaskItem[] _testPackageReportPaths = new [] { new TaskItem("dummyReport.json") };
         private PackageReport _testPackageReport = new PackageReport()
         {
             Id = "TestPackage",
@@ -33,7 +35,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
             }
         };
 
-        public ValidateHarvestVersionIsLatestForEraTests(ITestOutputHelper output)
+        public ValidateHarvestVersionIsLatestForReleaseTests(ITestOutputHelper output)
         {
             _log = new Log(output);
             _engine = new TestBuildEngine(_log);
@@ -45,9 +47,9 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
             TestableValidateHarvestVersionTask task = new TestableValidateHarvestVersionTask()
             {
                 BuildEngine = _engine,
-                PackageReportPath = TestReportPath,
-                PackageReportFunc = () => _testPackageReport,
-                GetLatestStableVersionFunc = (packageId, eraMajor, eraMinor) => $"{eraMajor}.{eraMinor}.3"
+                PackageReports = _testPackageReportPaths,
+                PackageReportFunc = (path) => _testPackageReport,
+                GetLatestStableVersionFunc = (packageId, major, minor) => $"{major}.{minor}.3"
             };
 
             _log.Reset();
@@ -62,9 +64,9 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
             TestableValidateHarvestVersionTask task = new TestableValidateHarvestVersionTask()
             {
                 BuildEngine = _engine,
-                PackageReportPath = TestReportPath,
-                PackageReportFunc = () => _testPackageReport,
-                GetLatestStableVersionFunc = (packageId, eraMajor, eraMinor) => $"{eraMajor}.{eraMinor}.2"
+                PackageReports = _testPackageReportPaths,
+                PackageReportFunc = (path) => _testPackageReport,
+                GetLatestStableVersionFunc = (packageId, major, minor) => $"{major}.{minor}.2"
             };
 
             _log.Reset();
@@ -79,8 +81,8 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
             TestableValidateHarvestVersionTask task = new TestableValidateHarvestVersionTask()
             {
                 BuildEngine = _engine,
-                PackageReportPath = TestReportPath,
-                PackageReportFunc = () => new PackageReport()
+                PackageReports = _testPackageReportPaths,
+                PackageReportFunc = (path) => new PackageReport()
                                     {
                                         Id = "TestPackage",
                                         Targets = new Dictionary<string, Target>
@@ -104,7 +106,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
                                             }
                                         }
                                     },
-                GetLatestStableVersionFunc = (packageId, eraMajor, eraMinor) => string.Empty
+                GetLatestStableVersionFunc = (packageId, major, minor) => string.Empty
             };
 
             _log.Reset();
@@ -119,8 +121,8 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
             TestableValidateHarvestVersionTask task = new TestableValidateHarvestVersionTask()
             {
                 BuildEngine = _engine,
-                PackageReportPath = TestReportPath,
-                PackageReportFunc = () => new PackageReport()
+                PackageReports = _testPackageReportPaths,
+                PackageReportFunc = (path) => new PackageReport()
                                     {
                                         Id = "TestPackage",
                                         Version = "4.6.3",
@@ -137,7 +139,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
                                             }
                                         }
                                     },
-                GetLatestStableVersionFunc = (packageId, eraMajor, eraMinor) => string.Empty
+                GetLatestStableVersionFunc = (packageId, major, minor) => string.Empty
             };
 
             _log.Reset();
@@ -146,14 +148,14 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
             Assert.Equal(0, _log.WarningsLogged);
         }
 
-        private class TestableValidateHarvestVersionTask : ValidateHarvestVersionIsLatestForEra
+        private class TestableValidateHarvestVersionTask : ValidateHarvestVersionIsLatestForRelease
         {
-            public Func<PackageReport> PackageReportFunc { get; set; }
+            public Func<string, PackageReport> PackageReportFunc { get; set; }
             public Func<string, int, int, string> GetLatestStableVersionFunc { get; set; }
 
-            protected override PackageReport GetPackageReportFromPath() => PackageReportFunc();
+            protected override PackageReport GetPackageReportFromPath(string path) => PackageReportFunc(path);
 
-            protected override Task<string> GetLatestStableVersionForEraAsync(string packageId, int eraMajorVersion, int eraMinorVersion) => Task.FromResult(GetLatestStableVersionFunc(packageId, eraMajorVersion, eraMinorVersion));
+            protected override string GetLatestStableVersionForPackageRelease(string packageId, int majorVersion, int minorVersion) => GetLatestStableVersionFunc(packageId, majorVersion, minorVersion);
         }
     }
 }
