@@ -1,6 +1,7 @@
 parameters:
   artifactsPublishingAdditionalParameters: ''
   publishInstallersAndChecksums: false
+  publisToAzureDevOpsFeeds: true
 
 stages:
 - stage: PVR_Publish
@@ -72,6 +73,11 @@ stages:
             /p:PublishInstallersAndChecksums=${{ parameters.publishInstallersAndChecksums }}
             /p:ChecksumsTargetStaticFeed=$(ChecksumsBlobFeedUrl)
             /p:ChecksumsAzureAccountKey=$(dotnetclichecksums-storage-key)
+            /p:PublishToAzureDevOpsNuGetFeeds=${{ parameters.publisToAzureDevOpsFeeds }}
+            /p:AzureDevOpsStaticShippingFeed=https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json
+            /p:AzureDevOpsStaticShippingFeedKey='$(dn-bot-dnceng-artifact-feeds-rw)'
+            /p:AzureDevOpsStaticTransportFeed=https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json
+            /p:AzureDevOpsStaticTransportFeedKey='$(dn-bot-dnceng-artifact-feeds-rw)'
             ${{ parameters.artifactsPublishingAdditionalParameters }}
 
       - task: NuGetCommand@2
