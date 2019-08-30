@@ -17,26 +17,30 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
 {
     public static class NuGetUtility
     {
-        internal static async Task<IEnumerable<Version>> GetAllVersionsForPackageIdAsync(string packageId, bool includePrerelease, bool includeUnlisted, Log log, CancellationToken cancellationToken)
+        internal static IEnumerable<Version> GetAllVersionsForPackageId(string packageId, bool includePrerelease, bool includeUnlisted, Log log, CancellationToken cancellationToken)
         {
             List<Version> result = new List<Version>();
             ISettings settings = Settings.LoadDefaultSettings(Directory.GetCurrentDirectory());
             IEnumerable<PackageSource> enabledSources = GetEnabledSources(settings);
             var logger = new NuGetLogger(log);
-            foreach (var packageSource in enabledSources)
+            Parallel.ForEach(enabledSources, (packageSource) =>
             {
-                using (var sourceCacheContext = new SourceCacheContext())
-                {
-                    var sourceRepository = new SourceRepository(packageSource, Repository.Provider.GetCoreV3());
-                    var packageMetadataResource = await sourceRepository.GetResourceAsync<PackageMetadataResource>();
-                    var searchMetadata = await packageMetadataResource.GetMetadataAsync(packageId, includePrerelease, includeUnlisted, sourceCacheContext, logger, cancellationToken);
-                    foreach (IPackageSearchMetadata packageMetadata in searchMetadata)
-                    {
-                        if (!result.Contains(packageMetadata.Identity.Version.Version))
-                            result.Add(VersionUtility.As3PartVersion(packageMetadata.Identity.Version.Version));
-                    }
-                }
-            }
+                 using (var sourceCacheContext = new SourceCacheContext())
+                 {
+                     var sourceRepository = new SourceRepository(packageSource, Repository.Provider.GetCoreV3());
+                     var packageMetadataResource = sourceRepository.GetResourceAsync<PackageMetadataResource>().GetAwaiter().GetResult();
+                     var searchMetadata = packageMetadataResource.GetMetadataAsync(packageId, includePrerelease, includeUnlisted, sourceCacheContext, logger, cancellationToken).GetAwaiter().GetResult();
+                     foreach (IPackageSearchMetadata packageMetadata in searchMetadata)
+                     {
+                         lock (result)
+                         {
+                            Version threePartVersion = VersionUtility.As3PartVersion(packageMetadata.Identity.Version.Version);
+                            if (!result.Contains(threePartVersion))
+                                result.Add(threePartVersion);
+                         }
+                     }
+                 }
+            });
             // Given we are looking in different sources, we reorder all versions.
             return result.OrderBy(v => v);
         }

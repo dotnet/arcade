@@ -13,13 +13,13 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Build.Tasks.Packaging
 {
     public class UpdatePackageIndex : BuildTask
     {
         private HashSet<string> _packageIdsToInclude;
-        private const string NuGetDotOrgVersionEndpoint = @"https://api.nuget.org/v3-flatcontainer/";
 
         /// <summary>
         /// File to update or create
@@ -185,6 +185,17 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
                 }
             }
 
+            if (UpdateStablePackageInfo && Packages == null && PackageFolders == null)
+            {
+                // Given we will query the web for every package, we should run in parallel to try to optimize the performance.
+                Parallel.ForEach(index.Packages, (package) =>
+                {
+                    IEnumerable<Version> stablePackageVersions = NuGetUtility.GetAllVersionsForPackageId(package.Key, includePrerelease: false, includeUnlisted: false, Log, CancellationToken.None);
+                    package.Value.StableVersions.Clear();
+                    package.Value.StableVersions.AddRange(stablePackageVersions);
+                });
+            }
+
             if (!String.IsNullOrEmpty(PreRelease))
             {
                 index.PreRelease = PreRelease;
@@ -258,7 +269,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
             {
                 try
                 {
-                    IEnumerable<Version> allStableVersions = NuGetUtility.GetAllVersionsForPackageIdAsync(id, includePrerelease: false, includeUnlisted: false, Log, CancellationToken.None).GetAwaiter().GetResult();
+                    IEnumerable<Version> allStableVersions = NuGetUtility.GetAllVersionsForPackageId(id, includePrerelease: false, includeUnlisted: false, Log, CancellationToken.None);
                     info.StableVersions.AddRange(allStableVersions);
                 }
                 catch(NuGetProtocolException)

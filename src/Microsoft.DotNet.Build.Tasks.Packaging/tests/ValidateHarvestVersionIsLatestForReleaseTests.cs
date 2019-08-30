@@ -155,7 +155,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
 
             protected override PackageReport GetPackageReportFromPath(string path) => PackageReportFunc(path);
 
-            protected override Task<string> GetLatestStableVersionForPackageReleaseAsync(string packageId, int majorVersion, int minorVersion) => System.Threading.Tasks.Task.FromResult(GetLatestStableVersionFunc(packageId, majorVersion, minorVersion));
+            protected override string GetLatestStableVersionForPackageRelease(string packageId, int majorVersion, int minorVersion) => GetLatestStableVersionFunc(packageId, majorVersion, minorVersion);
         }
     }
 }

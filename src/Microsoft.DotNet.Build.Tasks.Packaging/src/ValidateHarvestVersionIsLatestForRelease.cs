@@ -44,7 +44,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
                     return;
                 }
 
-                string latestPatchVersion = GetLatestStableVersionForPackageReleaseAsync(packageReport.Id, harvestMajor, harvestMinor).GetAwaiter().GetResult();
+                string latestPatchVersion = GetLatestStableVersionForPackageRelease(packageReport.Id, harvestMajor, harvestMinor);
                 if (latestPatchVersion.CompareTo(harvestVersion) != 0)
                 {
                     Log.LogError($"Validation Failed: {packageReport.Id} is harvesting assets from package version {harvestVersion} which is not the latest for that package release. Latest package version from that release is {latestPatchVersion}. In order to fix this, run `dotnet msbuild {packageReport.Id}.pkgproj /t:UpdatePackageIndex /p:UpdateStablePackageInfo=true`");
@@ -133,9 +133,9 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
         }
 
         // Making this method protected virtual for tests.
-        protected virtual async Task<string> GetLatestStableVersionForPackageReleaseAsync(string packageId, int releaseMajorVersion, int releaseMinorVersion)
+        protected virtual string GetLatestStableVersionForPackageRelease(string packageId, int releaseMajorVersion, int releaseMinorVersion)
         {
-            IEnumerable<Version> packageVersions = await NuGetUtility.GetAllVersionsForPackageIdAsync(packageId, includePrerelease: false, includeUnlisted: false, Log, CancellationToken.None); 
+            IEnumerable<Version> packageVersions = NuGetUtility.GetAllVersionsForPackageId(packageId, includePrerelease: false, includeUnlisted: false, Log, CancellationToken.None); 
             Version latestPatchVersion = packageVersions.GetLatestPatchStableVersionForRelease(releaseMajorVersion, releaseMinorVersion);
             return (latestPatchVersion == null) ? string.Empty : $"{latestPatchVersion.Major}.{latestPatchVersion.Minor}.{latestPatchVersion.Build}";
         }
