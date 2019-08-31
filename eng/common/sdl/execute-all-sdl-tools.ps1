@@ -58,8 +58,8 @@ $gdnFolder = Join-Path (Split-Path $SourceDirectory -Parent) ".gdn"
 
 if ($TsaOnboard) {
   if ($TsaCodebaseName -and $TsaNotificationEmail -and $TsaCodebaseAdmin -and $TsaBugAreaPath) {
-    Write-Host "$guardianCliLocation tsa-onboard --codebase-name `"$TsaCodebaseName`" --notification-alias `"$TsaNotificationEmail`" --codebase-admin `"$TsaCodebaseAdmin`" --instance-url `"$TsaInstanceUrl`" --project-name `"$TsaProjectName`" --area-path `"$TsaBugAreaPath`" --iteration-path `"$TsaIterationPath`" --working-directory $ArtifactsDirectory --logger-level $GuardianLoggerLevel"
-    & $guardianCliLocation tsa-onboard --codebase-name "$TsaCodebaseName" --notification-alias "$TsaNotificationEmail" --codebase-admin "$TsaCodebaseAdmin" --instance-url "$TsaInstanceUrl" --project-name "$TsaProjectName" --area-path "$TsaBugAreaPath" --iteration-path "$TsaIterationPath" --working-directory $ArtifactsDirectory --logger-level $GuardianLoggerLevel
+    Write-Host "$guardianCliLocation tsa-onboard --codebase-name `"$TsaCodebaseName`" --notification-alias `"$TsaNotificationEmail`" --codebase-admin `"$TsaCodebaseAdmin`" --instance-url `"$TsaInstanceUrl`" --project-name `"$TsaProjectName`" --area-path `"$TsaBugAreaPath`" --iteration-path `"$TsaIterationPath`" --working-directory $SourceDirectory --logger-level $GuardianLoggerLevel"
+    & $guardianCliLocation tsa-onboard --codebase-name "$TsaCodebaseName" --notification-alias "$TsaNotificationEmail" --codebase-admin "$TsaCodebaseAdmin" --instance-url "$TsaInstanceUrl" --project-name "$TsaProjectName" --area-path "$TsaBugAreaPath" --iteration-path "$TsaIterationPath" --working-directory $SourceDirectory --logger-level $GuardianLoggerLevel
     if ($LASTEXITCODE -ne 0) {
       Write-Host "Guardian tsa-onboard failed with exit code $LASTEXITCODE."
       exit $LASTEXITCODE
@@ -71,10 +71,10 @@ if ($TsaOnboard) {
 }
 
 if ($ArtifactToolsList -and $ArtifactToolsList.Count -gt 0) {
-  & $(Join-Path $PSScriptRoot "run-sdl.ps1") -GuardianCliLocation $guardianCliLocation -WorkingDirectory $ArtifactsDirectory -TargetDirectory $ArtifactsDirectory -GdnFolder $gdnFolder -ToolsList $ArtifactToolsList -AzureDevOpsAccessToken $AzureDevOpsAccessToken -UpdateBaseline $UpdateBaseline -GuardianLoggerLevel $GuardianLoggerLevel -CrScanAdditionalRunConfigParams $CrScanAdditionalRunConfigParams -PoliCheckAdditionalRunConfigParams $PoliCheckAdditionalRunConfigParams
+  & $(Join-Path $PSScriptRoot "run-sdl.ps1") -GuardianCliLocation $guardianCliLocation -WorkingDirectory $SourceDirectory -TargetDirectory $ArtifactsDirectory -GdnFolder $gdnFolder -ToolsList $ArtifactToolsList -AzureDevOpsAccessToken $AzureDevOpsAccessToken -UpdateBaseline $UpdateBaseline -GuardianLoggerLevel $GuardianLoggerLevel -CrScanAdditionalRunConfigParams $CrScanAdditionalRunConfigParams -PoliCheckAdditionalRunConfigParams $PoliCheckAdditionalRunConfigParams
 }
 if ($SourceToolsList -and $SourceToolsList.Count -gt 0) {
-  & $(Join-Path $PSScriptRoot "run-sdl.ps1") -GuardianCliLocation $guardianCliLocation -WorkingDirectory $ArtifactsDirectory -TargetDirectory $SourceDirectory -GdnFolder $gdnFolder -ToolsList $SourceToolsList -AzureDevOpsAccessToken $AzureDevOpsAccessToken -UpdateBaseline $UpdateBaseline -GuardianLoggerLevel $GuardianLoggerLevel -CrScanAdditionalRunConfigParams $CrScanAdditionalRunConfigParams -PoliCheckAdditionalRunConfigParams $PoliCheckAdditionalRunConfigParams
+  & $(Join-Path $PSScriptRoot "run-sdl.ps1") -GuardianCliLocation $guardianCliLocation -WorkingDirectory $SourceDirectory -TargetDirectory $SourceDirectory -GdnFolder $gdnFolder -ToolsList $SourceToolsList -AzureDevOpsAccessToken $AzureDevOpsAccessToken -UpdateBaseline $UpdateBaseline -GuardianLoggerLevel $GuardianLoggerLevel -CrScanAdditionalRunConfigParams $CrScanAdditionalRunConfigParams -PoliCheckAdditionalRunConfigParams $PoliCheckAdditionalRunConfigParams
 }
 
 if ($UpdateBaseline) {
@@ -86,8 +86,8 @@ if ($TsaPublish) {
     if (-not $TsaRepositoryName) {
       $TsaRepositoryName = "$($Repository)-$($BranchName)"
     }
-    Write-Host "$guardianCliLocation tsa-publish --all-tools --repository-name `"$TsaRepositoryName`" --branch-name `"$TsaBranchName`" --build-number `"$BuildNumber`" --codebase-name `"$TsaCodebaseName`" --notification-alias `"$TsaNotificationEmail`" --codebase-admin `"$TsaCodebaseAdmin`" --instance-url `"$TsaInstanceUrl`" --project-name `"$TsaProjectName`" --area-path `"$TsaBugAreaPath`" --iteration-path `"$TsaIterationPath`" --working-directory $ArtifactsDirectory --logger-level $GuardianLoggerLevel"
-    & $guardianCliLocation tsa-publish --all-tools --repository-name "$TsaRepositoryName" --branch-name "$TsaBranchName" --build-number "$BuildNumber" --onboard $True --codebase-name "$TsaCodebaseName" --notification-alias "$TsaNotificationEmail" --codebase-admin "$TsaCodebaseAdmin" --instance-url "$TsaInstanceUrl" --project-name "$TsaProjectName" --area-path "$TsaBugAreaPath" --iteration-path "$TsaIterationPath" --working-directory $ArtifactsDirectory  --logger-level $GuardianLoggerLevel
+    Write-Host "$guardianCliLocation tsa-publish --all-tools --repository-name `"$TsaRepositoryName`" --branch-name `"$TsaBranchName`" --build-number `"$BuildNumber`" --codebase-name `"$TsaCodebaseName`" --notification-alias `"$TsaNotificationEmail`" --codebase-admin `"$TsaCodebaseAdmin`" --instance-url `"$TsaInstanceUrl`" --project-name `"$TsaProjectName`" --area-path `"$TsaBugAreaPath`" --iteration-path `"$TsaIterationPath`" --working-directory $SourceDirectory --logger-level $GuardianLoggerLevel"
+    & $guardianCliLocation tsa-publish --all-tools --repository-name "$TsaRepositoryName" --branch-name "$TsaBranchName" --build-number "$BuildNumber" --onboard $True --codebase-name "$TsaCodebaseName" --notification-alias "$TsaNotificationEmail" --codebase-admin "$TsaCodebaseAdmin" --instance-url "$TsaInstanceUrl" --project-name "$TsaProjectName" --area-path "$TsaBugAreaPath" --iteration-path "$TsaIterationPath" --working-directory $SourceDirectory  --logger-level $GuardianLoggerLevel
     if ($LASTEXITCODE -ne 0) {
       Write-Host "Guardian tsa-publish failed with exit code $LASTEXITCODE."
       exit $LASTEXITCODE
