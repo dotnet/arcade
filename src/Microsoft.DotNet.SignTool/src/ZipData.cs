@@ -88,14 +88,14 @@ namespace Microsoft.DotNet.SignTool
                     var signedPart = FindNestedPart(relativeName);
                     if (!signedPart.HasValue)
                     {
-                        log.LogMessage(MessageImportance.High, $"Didn't find signed part for nested file: {FileSignInfo.FullPath} -> {relativeName}");
+                        log.LogMessage(MessageImportance.Low, $"Didn't find signed part for nested file: {FileSignInfo.FullPath} -> {relativeName}");
                         continue;
                     }
 
                     using (var signedStream = File.OpenRead(signedPart.Value.FileSignInfo.FullPath))
                     using (var partStream = part.GetStream(FileMode.Open, FileAccess.ReadWrite))
                     {
-                        log.LogMessage(MessageImportance.High, $"Copying signed stream from {signedPart.Value.FileSignInfo.FullPath} to {FileSignInfo.FullPath} -> {relativeName}.");
+                        log.LogMessage(MessageImportance.Low, $"Copying signed stream from {signedPart.Value.FileSignInfo.FullPath} to {FileSignInfo.FullPath} -> {relativeName}.");
 
                         signedStream.CopyTo(partStream);
                         partStream.SetLength(signedStream.Length);
@@ -117,14 +117,14 @@ namespace Microsoft.DotNet.SignTool
                     var signedPart = FindNestedPart(relativeName);
                     if (!signedPart.HasValue)
                     {
-                        log.LogMessage(MessageImportance.High, $"Didn't find signed part for nested file: {FileSignInfo.FullPath} -> {relativeName}");
+                        log.LogMessage(MessageImportance.Low, $"Didn't find signed part for nested file: {FileSignInfo.FullPath} -> {relativeName}");
                         continue;
                     }
 
                     using (var signedStream = File.OpenRead(signedPart.Value.FileSignInfo.FullPath))
                     using (var entryStream = entry.Open())
                     {
-                        log.LogMessage(MessageImportance.High, $"Copying signed stream from {signedPart.Value.FileSignInfo.FullPath} to {FileSignInfo.FullPath} -> {relativeName}.");
+                        log.LogMessage(MessageImportance.Low, $"Copying signed stream from {signedPart.Value.FileSignInfo.FullPath} to {FileSignInfo.FullPath} -> {relativeName}.");
 
                         signedStream.CopyTo(entryStream);
                         entryStream.SetLength(signedStream.Length);
