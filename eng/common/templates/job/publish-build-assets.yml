@@ -13,9 +13,6 @@ parameters:
   # Optional: Include PublishBuildArtifacts task
   enablePublishBuildArtifacts: false
 
-  # Optional: whether the AzDO NuGet feeds authentication task needs to be executed
-  authAzDOFeeds: true
-
   # Optional: A defined YAML pool - https://docs.microsoft.com/en-us/azure/devops/pipelines/yaml-schema?view=vsts&tabs=schema#pool
   pool: {}
 
@@ -51,7 +48,7 @@ jobs:
       condition: ${{ parameters.condition }}
       continueOnError: ${{ parameters.continueOnError }}
     
-  - ${{ if eq(parameters.authAzDOFeeds, 'true') }}:
+  - ${{ if and(eq(parameters.runAsPublic, 'false'), ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
     - task: NuGetAuthenticate@0
 
     - task: PowerShell@2

@@ -104,24 +104,6 @@ stages:
             /p:PackageBasePath='$(Build.ArtifactStagingDirectory)\PackageArtifacts' 
             /p:Configuration=Release 
             ${{ parameters.artifactsPublishingAdditionalParameters }}
-        
-      - task: NuGetCommand@2
-        displayName: Publish Packages to AzDO Feed
-        condition: contains(variables['TargetAzDOFeed'], 'pkgs.visualstudio.com')
-        inputs:
-          command: push
-          vstsFeed: $(AzDoFeedName)
-          packagesToPush: $(Build.ArtifactStagingDirectory)\PackageArtifacts\*.nupkg
-          publishVstsFeed: $(AzDoFeedName)
-
-      - task: PowerShell@2
-        displayName: Publish Blobs to AzDO Feed
-        inputs:
-          filePath: $(Build.SourcesDirectory)/eng/common/post-build/publish-blobs-to-azdo.ps1
-          arguments: -FeedName $(AzDoFeedName) 
-            -SourceFolderCollection $(Build.ArtifactStagingDirectory)/BlobArtifacts/
-            -PersonalAccessToken $(dn-bot-dnceng-universal-packages-rw)
-        enabled: false
 
       - template: ../trigger-subscription.yml
         parameters:

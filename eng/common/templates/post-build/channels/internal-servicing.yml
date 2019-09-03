@@ -78,6 +78,13 @@ stages:
           buildType: current
           artifactName: AssetManifests
 
+      - task: NuGetToolInstaller@1
+        displayName: 'Install NuGet.exe'
+
+      # This is necessary whenever we want to publish/restore to an AzDO private feed
+      - task: NuGetAuthenticate@0
+        displayName: 'Authenticate to AzDO Feeds'
+
       - task: PowerShell@2
         displayName: Add Assets Location
         env:
@@ -91,7 +98,11 @@ stages:
             /p:CommitSha=$(Build.SourceVersion)
             /p:StaticInternalFeed=$(StaticInternalFeed)
             /p:StaticInternalFeedName=$(StaticInternalFeedName)
-            /p:NugetPath=$(Agent.BuildDirectory)\Nuget\NuGet.exe
+            /p:InternalChecksumsTargetStaticFeed=$(InternalChecksumsBlobFeedUrl)
+            /p:InternalChecksumsTargetStaticFeedKey=$(InternalChecksumsBlobFeedKey)
+            /p:InternalInstallersTargetStaticFeed=$(InternalInstallersBlobFeedUrl)
+            /p:InternalInstallersTargetStaticFeedKey=$(InternalInstallersBlobFeedKey)
+            /p:NugetPath=$(NuGetExeToolPath)
             /p:AzdoTargetFeedPAT='$(dn-bot-dnceng-universal-packages-rw)' 	
             /p:BARBuildId=$(BARBuildId) 
             /p:MaestroApiEndpoint='$(MaestroApiEndPoint)' 
@@ -101,25 +112,6 @@ stages:
             /p:PackageBasePath='$(Build.ArtifactStagingDirectory)\PackageArtifacts' 
             /p:Configuration=Release 
             ${{ parameters.artifactsPublishingAdditionalParameters }}
-        
-      - task: NuGetCommand@2
-        displayName: Publish Packages to AzDO Feed
-        condition: contains(variables['TargetAzDOFeed'], 'pkgs.visualstudio.com')
-        env:
-          AZURE_DEVOPS_EXT_PAT: '$(dn-bot-dnceng-universal-packages-rw)'
-        inputs:
-          command: push
-          vstsFeed: $(AzDoFeedName)
-          packagesToPush: $(Build.ArtifactStagingDirectory)\PackageArtifacts\*.nupkg
-          publishVstsFeed: $(AzDoFeedName)
-
-      - task: PowerShell@2
-        displayName: Publish Blobs to AzDO Feed
-        env:
-          AZURE_DEVOPS_EXT_PAT: '$(dn-bot-dnceng-universal-packages-rw)'
-        inputs:
-          filePath: $(Build.SourcesDirectory)/eng/common/post-build/publish-blobs-to-azdo.ps1
-          arguments: -FeedName $(AzDoFeedName) -ArtifactStagingDirectory $(Build.ArtifactStagingDirectory)/ -BlobCategories '.NUPKG;.PKG;.DEB;.RPM;.NPM;.ZIP;.MSI;.SHA;.POM;.GZ' -IsStable='$(IsStableBuild)'
 
       - template: ../trigger-subscription.yml
         parameters:
