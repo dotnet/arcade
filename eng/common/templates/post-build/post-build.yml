@@ -4,6 +4,7 @@ parameters:
   enableSymbolValidation: false
   enableNugetValidation: true
   publishInstallersAndChecksums: false
+  enableAzDONuGetFeeds: true
   SDLValidationParameters:
     enable: false
     continueOnError: false
@@ -101,6 +102,7 @@ stages:
     symbolPublishingAdditionalParameters: ${{ parameters.symbolPublishingAdditionalParameters }}
     artifactsPublishingAdditionalParameters: ${{ parameters.artifactsPublishingAdditionalParameters }}
     publishInstallersAndChecksums: ${{ parameters.publishInstallersAndChecksums }}
+    enableAzDONuGetFeeds: ${{ parameters.enableAzDONuGetFeeds }}
 
 - template: \eng\common\templates\post-build\channels\public-dev-release.yml
   parameters:
