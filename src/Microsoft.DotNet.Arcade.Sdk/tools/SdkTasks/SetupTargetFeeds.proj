@@ -12,9 +12,10 @@
       - An internal build is a build from a branch that has `internal` on its name.
         The assets produced from this kind of build aren't meant for public usage.
         
-      - For business reasons package version's for stable builds don't increment
+      - For business reasons package versions for stable builds don't increment
         automatically. That means that different stable builds may produce packages
         with different binary content but same version number.
+        
       - Since feeds don't permit overriding packages, the approach we followed
         to publish assets from stable builds was to create a new _feed_ for every 
         stable build. Therefore, whenever we are publishing packages from a stable
