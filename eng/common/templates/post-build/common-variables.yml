@@ -49,8 +49,6 @@ variables:
   # Configuration for the feed where packages from internal non-stable builds will be published to
   - name: StaticInternalFeed
     value: 'https://dnceng.pkgs.visualstudio.com/_packaging/dotnet-core-internal/nuget/v3/index.json'
-  - name: StaticInternalFeedName
-    value: 'dotnet-core-internal'
 
   # Default locations for Installers and checksums
   # Public Locations

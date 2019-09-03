@@ -97,7 +97,6 @@ stages:
             /p:RepositoryName=$(Build.Repository.Name)
             /p:CommitSha=$(Build.SourceVersion)
             /p:StaticInternalFeed=$(StaticInternalFeed)
-            /p:StaticInternalFeedName=$(StaticInternalFeedName)
             /p:InternalChecksumsTargetStaticFeed=$(InternalChecksumsBlobFeedUrl)
             /p:InternalChecksumsTargetStaticFeedKey=$(InternalChecksumsBlobFeedKey)
             /p:InternalInstallersTargetStaticFeed=$(InternalInstallersBlobFeedUrl)
