@@ -41,7 +41,6 @@
       - ArtifactsCategory
       - AzureStorageTargetFeedPAT
       - StaticInternalFeed              : URL of the feed to publish internal non-stable packages
-      - StaticInternalFeedName          : Name of the feed to publish internal non-stable packages to
       - PublishInstallersAndChecksums   : Whether to publish installers and checksums to a secondary location for Dev channels
       - InstallersTargetStaticFeed
       - InstallersAzureAccountKey
@@ -57,7 +56,6 @@
                                           constructed using parameters below:
         - TestFeedCategories
         - TestFeedURL
-        - TestFeedName
         - TestFeedType
         - TestFeedToken
   -->
@@ -100,7 +98,6 @@
       <TargetFeedConfig
         Include="$(TestFeedCategories)"
         TargetURL="$(TestFeedURL)"
-        FeedName="$(TestFeedName)"
         Type="$(TestFeedType)"
         Token="$(TestFeedToken)" />
     </ItemGroup>
@@ -118,14 +115,12 @@
         RepositoryName="$(RepositoryName)"
         CommitSha="$(CommitSha)">
       <Output TaskParameter="TargetFeedURL" PropertyName="NewAzDoFeedURL"/>
-      <Output TaskParameter="TargetFeedName" PropertyName="NewTargetFeedName"/>
     </CreateAzureDevOpsFeed>
 
     <ItemGroup Condition="'@(TargetFeedConfig)' == '' AND '$(IsStableBuild)' == 'true'">
       <TargetFeedConfig
         Include="NetCore"
         TargetURL="$(NewAzDoFeedURL)"
-        FeedName="$(NewTargetFeedName)"
         Type="AzDoNugetFeed"
         Token="$(AzdoTargetFeedPAT)" />
 
@@ -136,7 +131,6 @@
         Condition="'$(IsInternalBuild)' == 'true'"
         Include="OSX;Deb;Rpm;Node;BinaryLayout;Installer;Maven;VSIX"
         TargetURL="$(InternalInstallersTargetStaticFeed)"
-        FeedName="CategoryStaticFeed"
         Type="AzureStorageFeed"
         Token="$(InternalInstallersTargetStaticFeedKey)" />
       
@@ -144,7 +138,6 @@
         Condition="'$(IsInternalBuild)' == 'true'"
         Include="Checksum"
         TargetURL="$(InternalChecksumsTargetStaticFeed)"
-        FeedName="CategoryStaticFeed"
         Type="AzureStorageFeed"
         Token="$(InternalChecksumsTargetStaticFeedKey)" />
       
@@ -156,7 +149,6 @@
         Condition="'$(IsInternalBuild)' == 'false'"
         Include="OSX;Deb;Rpm;Node;BinaryLayout;Installer;Maven;VSIX"
         TargetURL="$(InstallersTargetStaticFeed)"
-        FeedName="CategoryStaticFeed"
         Type="AzureStorageFeed"
         Token="$(InstallersAzureAccountKey)" />
       
@@ -164,7 +156,6 @@
         Condition="'$(IsInternalBuild)' == 'false'"
         Include="Checksum"
         TargetURL="$(ChecksumsTargetStaticFeed)"
-        FeedName="CategoryStaticFeed"
         Type="AzureStorageFeed"
         Token="$(ChecksumsAzureAccountKey)" />
     </ItemGroup>
@@ -177,21 +168,18 @@
       <TargetFeedConfig
         Include="NetCore;OSX;Deb;Rpm;Node;BinaryLayout;Installer;Checksum;Maven;VSIX"
         TargetURL="$(StaticInternalFeed)"
-        FeedName="$(StaticInternalFeedName)"
         Type="AzDoNugetFeed"
         Token="$(AzdoTargetFeedPAT)" />
       
       <TargetFeedConfig
         Include="OSX;Deb;Rpm;Node;BinaryLayout;Installer;Maven;VSIX"
         TargetURL="$(InternalInstallersTargetStaticFeed)"
-        FeedName="CategoryStaticFeed"
         Type="AzureStorageFeed"
         Token="$(InternalInstallersTargetStaticFeedKey)" />
       
       <TargetFeedConfig
         Include="Checksum"
         TargetURL="$(InternalChecksumsTargetStaticFeed)"
-        FeedName="CategoryStaticFeed"
         Type="AzureStorageFeed"
         Token="$(InternalChecksumsTargetStaticFeedKey)" />
     </ItemGroup>
@@ -227,21 +215,18 @@
       <TargetFeedConfig
         Include="NetCore;OSX;Deb;Rpm;Node;BinaryLayout;Installer;Checksum;Maven;VSIX"
         TargetURL="$(TargetStaticFeed)"
-        FeedName="StaticFeedName"
         Type="AzureStorageFeed"
         Token="$(AzureStorageTargetFeedPAT)" />
       
       <TargetFeedConfig Condition="'$(PublishInstallersAndChecksums)' == 'true'"
         Include="Deb;Rpm;Node;BinaryLayout;Installer;Maven;VSIX"
         TargetURL="$(InstallersTargetStaticFeed)"
-        FeedName="StaticFeedName"
         Type="AzureStorageFeed"
         Token="$(InstallersAzureAccountKey)" />
       
       <TargetFeedConfig Condition="'$(PublishInstallersAndChecksums)' == 'true'"
         Include="Checksum"
         TargetURL="$(ChecksumsTargetStaticFeed)"
-        FeedName="StaticFeedName"
         Type="AzureStorageFeed"
         Token="$(ChecksumsAzureAccountKey)" />
 
@@ -266,10 +251,6 @@
     <Error
       Condition="'@(TargetFeedConfig)' == ''"
       Text="It wasn't possible to determine which target feed configuration to use." />
-
-    <Message
-      Text="##vso[task.setvariable variable=AzDoFeedName]%(TargetFeedConfig.FeedName)"
-      Importance="high" />
 
     <Message
       Text="##vso[task.setvariable variable=TargetAzDOFeed]%(TargetFeedConfig.TargetURL)"
