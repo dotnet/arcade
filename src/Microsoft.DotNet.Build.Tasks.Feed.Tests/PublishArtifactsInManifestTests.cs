@@ -19,7 +19,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         const string BlobFeedUrl = "https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json";
 
         [Fact]
-        public async Task FeedConfigParserTests1()
+        public async Task FeedConfigParserTests1Async()
         {
             var buildEngine = new MockBuildEngine();
             var task = new PublishArtifactsInManifest
@@ -37,7 +37,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 BuildEngine = buildEngine
             };
 
-            await task.ParseTargetFeedConfig();
+            await task.ParseTargetFeedConfigAsync();
             Assert.False(task.Log.HasLoggedErrors);
 
             // This will have set the feed configs.
@@ -49,6 +49,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     {
                         Assert.Equal(RandomToken, config.Token);
                         Assert.Equal(BlobFeedUrl, config.TargetURL);
+                        Assert.False(config.Internal);
                         Assert.Equal(FeedType.AzDoNugetFeed, config.Type);
                         Assert.Equal(AssetSelection.All, config.AssetSelection);
                     });
@@ -56,7 +57,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         }
 
         [Fact]
-        public async Task FeedConfigParserTests2()
+        public async Task FeedConfigParserTests2Async()
         {
             var buildEngine = new MockBuildEngine();
             var task = new PublishArtifactsInManifest
@@ -72,13 +73,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 BuildEngine = buildEngine
             };
 
-            await task.ParseTargetFeedConfig();
+            await task.ParseTargetFeedConfigAsync();
             Assert.True(task.Log.HasLoggedErrors);
             Assert.Contains(buildEngine.BuildErrorEvents, e => e.Message.Equals("Invalid feed config type 'MyUnknownFeedType'. Possible values are: AzDoNugetFeed, AzureStorageFeed"));
         }
 
         [Fact]
-        public async Task FeedConfigParserTests3()
+        public async Task FeedConfigParserTests3Async()
         {
             var buildEngine = new MockBuildEngine();
             var task = new PublishArtifactsInManifest
@@ -94,7 +95,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 BuildEngine = buildEngine
             };
 
-            await task.ParseTargetFeedConfig();
+            await task.ParseTargetFeedConfigAsync();
             Assert.True(task.Log.HasLoggedErrors);
             Assert.Contains(buildEngine.BuildErrorEvents, e => e.Message.Equals("Invalid FeedConfig entry. TargetURL='' Type='' Token=''"));
         }
@@ -103,7 +104,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         ///     Valid feed config with an asset selection set.
         /// </summary>
         [Fact]
-        public async Task FeedConfigParserTests4()
+        public async Task FeedConfigParserTests4Async()
         {
             var buildEngine = new MockBuildEngine();
             var task = new PublishArtifactsInManifest
@@ -113,6 +114,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     new Microsoft.Build.Utilities.TaskItem("FOOPACKAGES", new Dictionary<string, string> {
                         { "TargetUrl", BlobFeedUrl },
                         { "Token", RandomToken },
+                        // Use different casing here to make sure that parsing
+                        // ignores case.
                         { "Type", "AZURESTORAGEFEED" },
                         { "AssetSelection", "SHIPPINGONLY" },
                         { "Internal", "false" }}),
@@ -120,7 +123,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 BuildEngine = buildEngine
             };
 
-            await task.ParseTargetFeedConfig();
+            await task.ParseTargetFeedConfigAsync();
 
             // This will have set the feed configs.
             Assert.Collection(task.FeedConfigs,
@@ -141,7 +144,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         ///     Check that internal builds don't publish to public feeds.
         /// </summary>
         [Fact]
-        public async Task FeedConfigParserTests5()
+        public async Task FeedConfigParserTests5Async()
         {
             var buildEngine = new MockBuildEngine();
             var task = new PublishArtifactsInManifest
@@ -164,13 +167,15 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 BuildEngine = buildEngine
             };
 
-            await task.ParseTargetFeedConfig();
+            await task.ParseTargetFeedConfigAsync();
+            // Verify that the checker errors on attempts to publish internal
+            // artifacts to non-internal feeds
             Assert.True(task.Log.HasLoggedErrors);
             Assert.Contains(buildEngine.BuildErrorEvents, e => e.Message.Equals($"Use of non-internal feed '{BlobFeedUrl}' is invalid for an internal build. This can be overridden with '{nameof(PublishArtifactsInManifest.SkipSafetyChecks)}= true'"));
         }
 
         [Fact]
-        public async Task FeedConfigParserTests6()
+        public async Task FeedConfigParserTests6Async()
         {
             var buildEngine = new MockBuildEngine();
             var task = new PublishArtifactsInManifest
@@ -194,14 +199,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 BuildEngine = buildEngine
             };
 
-            await task.ParseTargetFeedConfig();
+            await task.ParseTargetFeedConfigAsync();
             Assert.True(!task.Log.HasLoggedErrors);
         }
 
 
         /// <summary>
-        ///     Check that an attempt to push a stable package to a non-isolated
-        ///     feed.
+        ///     Check that attempts to publish stable artifacts to non-stable feeds will throw errors.
         /// </summary>
         [Theory]
         [InlineData("3.0.0", false, true)]
@@ -218,7 +222,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         [InlineData("3.3.1-beta3-19430-03", true, false)]
         [InlineData("3.0.0", false, false, true)]
         [InlineData("3.0.0.10", false, false, true)]
-        public async Task StableAssetCheck1(string assetVersion, bool isIsolatedFeed, bool shouldError, bool skipChecks = false)
+        public async Task StableAssetCheck1Async(string assetVersion, bool isIsolatedFeed, bool shouldError, bool skipChecks = false)
         {
             var buildEngine = new MockBuildEngine();
             var task = new PublishArtifactsInManifest
@@ -256,7 +260,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 }
             };
 
-            await task.ParseTargetFeedConfig();
+            await task.ParseTargetFeedConfigAsync();
             Assert.False(task.Log.HasLoggedErrors);
 
             task.SplitArtifactsInCategories(buildModel);
@@ -298,7 +302,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         [InlineData("VGhlIHF1aWNrIGJyb3JuIGZveCBqdW1wcyBvdmVyIHRoZSBsYXp5aXNoIGRvZ2dv", "VGhlIHF1aWNrIGJyb3JuIGZveCBqdW1wcyBvdmVyIHRoZSBsYXp5aXNoIGRvZ2dv", new int[] { 16, 16, 16, 16, 16, 16 }, new int[] { 1, 1, 1, 1, 1 }, 8)]
         // Case where the buffer must wrap around and one stream returns faster than the other, unequal streams
         [InlineData("VGhpcyBpcyBhIHNlbnRlbmNlIHRoYXQgaXMgYSBsaXR0bGUgbG9uZ2Vy", "VGhpcyBpcyBhIHNlbnRlbmNlIHRoYXQgaXMgYSBsb25nZXI=", new int[] { 7, 3, 5, 16, 16, 16 }, new int[] { 1, 1, 1, 1, 1 }, 8)]
-        public async void StreamComparisonTests(string streamA, string streamB, int[] maxStreamABytesReturnedEachCall, int[] maxStreamBBytesReturnedEachCall, int bufferSize)
+        public async Task StreamComparisonTestsAsync(string streamA, string streamB, int[] maxStreamABytesReturnedEachCall, int[] maxStreamBBytesReturnedEachCall, int bufferSize)
         {
             byte[] streamABytes = Convert.FromBase64String(streamA);
             byte[] streamBBytes = Convert.FromBase64String(streamB);

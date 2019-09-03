@@ -169,7 +169,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 IMaestroApi client = ApiFactory.GetAuthenticated(MaestroApiEndpoint, BuildAssetRegistryToken);
                 Maestro.Client.Models.Build buildInformation = await client.Builds.GetBuildAsync(BARBuildId);
 
-                await ParseTargetFeedConfig();
+                await ParseTargetFeedConfigAsync();
                 
                 // Return errors from parsing FeedConfig
                 if (Log.HasLoggedErrors)
@@ -207,13 +207,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// <summary>
         ///     Parse out the input TargetFeedConfig into a dictionary of FeedConfig types
         /// </summary>
-        public async Task ParseTargetFeedConfig()
+        public async Task ParseTargetFeedConfigAsync()
         {
-            var retryHandler = new ExponentialRetry
-            {
-                MaxAttempts = 5
-            };
-
             using (HttpClient httpClient = new HttpClient(new HttpClientHandler { CheckCertificateRevocationList = true }))
             {
                 foreach (var fc in TargetFeedConfig)
@@ -255,9 +250,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     }
 
                     // To determine whether a feed is internal, we allow the user to
-                    // specify the value explicitly. If that is unset, do an unauthenticated GET
-                    // on the feed URL. If it succeeds, the feed is not public. If it fails with a 4* error,
-                    // assume it is internal.
+                    // specify the value explicitly.
                     string feedIsInternal = fc.GetMetadata(nameof(FeedConfig.Internal));
                     if (!string.IsNullOrEmpty(feedIsInternal))
                     {
@@ -270,53 +263,18 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     }
                     else
                     {
-                        bool success = await retryHandler.RunAsync(async attempt =>
+                        bool? isPublicFeed = await IsFeedPublicAsync(feedConfig.TargetURL, httpClient);
+                        if (!isPublicFeed.HasValue)
                         {
-                            try
-                            {
-                                HttpResponseMessage response = await httpClient.GetAsync(feedConfig.TargetURL);
-                                if (response.IsSuccessStatusCode)
-                                {
-                                    feedConfig.Internal = false;
-                                    return true;
-                                }
-                                else if (response.StatusCode >= (System.Net.HttpStatusCode)500)
-                                {
-                                    // Don't know for certain
-                                    return false;
-                                }
-                                else
-                                {
-                                    feedConfig.Internal = true;
-                                    return true;
-                                }
-                            }
-                            catch (Exception e)
-                            {
-                                Log.LogMessage(MessageImportance.Low, $"Unexpected exception {e.Message} when attempting to determine whether feed is internal.");
-                                return false;
-                            }
-                        });
-                        
-                        if (!success)
-                        {
-                            // We couldn't determine anything.  We'd be unlikely to be able to push to this feed either,
-                            // since it's 5xx'ing.
-                            Log.LogError($"Unable to determine whether '{feedConfig.TargetURL}' is public or internal.");
                             continue;
+                        }
+                        else
+                        {
+                            feedConfig.Internal = !isPublicFeed.Value;
                         }
                     }
 
-                    // Protect against accidental publishing of internal assets to non-internal feeds.
-                    // If separated out for clarity.
-                    if (!SkipSafetyChecks)
-                    {
-                        if (InternalBuild && !feedConfig.Internal)
-                        {
-                            Log.LogError($"Use of non-internal feed '{feedConfig.TargetURL}' is invalid for an internal build. This can be overridden with '{nameof(SkipSafetyChecks)}= true'");
-                            continue;
-                        }
-                    }
+                    CheckForInternalBuildsOnPublicFeeds(feedConfig);
 
                     string feedIsIsolated = fc.GetMetadata(nameof(FeedConfig.Isolated));
                     if (!string.IsNullOrEmpty(feedIsIsolated))
@@ -337,6 +295,79 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     FeedConfigs[categoryKey].Add(feedConfig);
                 }
             }
+        }
+
+        /// <summary>
+        /// Protect against accidental publishing of internal assets to non-internal feeds.
+        /// </summary>
+        /// <returns></returns>
+        private void CheckForInternalBuildsOnPublicFeeds(FeedConfig feedConfig)
+        {
+            // If separated out for clarity.
+            if (!SkipSafetyChecks)
+            {
+                if (InternalBuild && !feedConfig.Internal)
+                {
+                    Log.LogError($"Use of non-internal feed '{feedConfig.TargetURL}' is invalid for an internal build. This can be overridden with '{nameof(SkipSafetyChecks)}= true'");
+                }
+            }
+        }
+
+        /// <summary>
+        ///     Determine whether the feed is public or private.
+        /// </summary>
+        /// <param name="feedUrl">Feed url to test</param>
+        /// <returns>True if the feed is public, false if it is private, and null if it was not possible to determine.</returns>
+        /// <remarks>
+        /// Do an unauthenticated GET on the feed URL. If it succeeds, the feed is not public.
+        /// If it fails with a 4* error, assume it is internal.
+        /// </remarks>
+        private async Task<bool?> IsFeedPublicAsync(string feedUrl, HttpClient httpClient)
+        {
+            var retryHandler = new ExponentialRetry
+            {
+                MaxAttempts = 5
+            };
+
+            bool? isPublic = null;
+
+            bool success = await retryHandler.RunAsync(async attempt =>
+            {
+                try
+                {
+                    HttpResponseMessage response = await httpClient.GetAsync(feedUrl);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        isPublic = true;
+                        return true;
+                    }
+                    else if (response.StatusCode >= (System.Net.HttpStatusCode)400 &&
+                              response.StatusCode < (System.Net.HttpStatusCode)500)
+                    {
+                        isPublic = false;
+                        return true;
+                    }
+                    else
+                    {
+                        // Don't know for certain, retry
+                        return false;
+                    }
+                }
+                catch (Exception e)
+                {
+                    Log.LogMessage(MessageImportance.Low, $"Unexpected exception {e.Message} when attempting to determine whether feed is internal.");
+                    return false;
+                }
+            });
+
+            if (!success)
+            {
+                // We couldn't determine anything.  We'd be unlikely to be able to push to this feed either,
+                // since it's 5xx'ing.
+                Log.LogError($"Unable to determine whether '{feedUrl}' is public or internal.");
+            }
+
+            return isPublic;
         }
 
         /// <summary>
@@ -377,7 +408,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             {
                                 Log.LogError($"Package '{package.Id}' has invalid version '{package.Version}'");
                             }
-                            // Treat any prerelease version as stable.
+                            // We want to avoid pushing non-final bits with final version numbers to feeds that are in general
+                            // use by the public. This is for technical (can't overwrite the original packages) reasons as well as 
+                            // to avoid confusion. Because .NET core generally brands its "final" bits without prerelease version
+                            // suffixes (e.g. 3.0.0-preview1), test to see whether a prerelease suffix exists.
                             else if (!version.IsPrerelease)
                             {
                                 Log.LogError($"Package '{package.Id}' has stable version '{package.Version}' but is targeted at a non-isolated feed '{feedConfig.TargetURL}'");
@@ -1114,7 +1148,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         public bool Isolated { get; set; } = false;
         /// <summary>
         /// If true, the feed is treated as 'internal', meaning artifacts from an internal build
-        /// 
+        /// can be published here.
         /// </summary>
         public bool Internal { get; set; } = false;
     }

@@ -115,7 +115,7 @@
         TargetURL="$(StaticInternalFeed)/index.json"
         Type="AzureStorageFeed"
         Token="$(AzureStorageAccountKey)"
-        Internal="true" />
+        Internal="$(IsInternalBuild)" />
     </ItemGroup>
 
     <!--
