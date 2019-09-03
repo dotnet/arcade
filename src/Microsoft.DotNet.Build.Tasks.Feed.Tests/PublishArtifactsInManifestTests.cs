@@ -134,13 +134,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         }
 
         [Theory]
-        [InlineData("https://pkgs.dev.azure.com/dnceng/public/_packaging/mmitche-test-transport/nuget/v3/index.json", "dnceng", "public", "mmitche-test-transport")]
-        [InlineData("https://pkgs.dev.azure.com/DevDiv/public/_packaging/1234.5/nuget/v3/index.json", "DevDiv", "public", "1234.5")]
-        public void NugetFeedParseTests(string uri, string account, string project, string feed)
+        [InlineData("https://pkgs.dev.azure.com/dnceng/public/_packaging/mmitche-test-transport/nuget/v3/index.json", "dnceng", "public/", "mmitche-test-transport")]
+        [InlineData("https://pkgs.dev.azure.com/DevDiv/public/_packaging/1234.5/nuget/v3/index.json", "DevDiv", "public/", "1234.5")]
+        [InlineData("https://pkgs.dev.azure.com/DevDiv/_packaging/1234.5/nuget/v3/index.json", "DevDiv", "", "1234.5")]
+        public void NugetFeedParseTests(string uri, string account, string visibility, string feed)
         {
             var matches = Regex.Match(uri, PublishArtifactsInManifest.AzDoNuGetFeedPattern);
             Assert.Equal(account, matches.Groups["account"]?.Value);
-            Assert.Equal(project, matches.Groups["project"]?.Value);
+            Assert.Equal(visibility, matches.Groups["visibility"]?.Value);
             Assert.Equal(feed, matches.Groups["feed"]?.Value);
         }
 

@@ -44,9 +44,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             @"https://([a-z-]+).blob.core.windows.net/[^/]+/index.json";
 
         // Matches package feeds like
-        // https://pkgs.dev.azure.com/dnceng/public/_packaging/mmitche-test-transport/nuget/v3/index.json
-        public const string AzDoNuGetFeedPattern =
-            @"https://pkgs.dev.azure.com/(?<account>[a-zA-Z0-9]+)/(?<project>[a-zA-Z0-9-]+)/_packaging/(?<feed>.+)/nuget/v3/index.json";
+        // https://pkgs.dev.azure.com/dnceng/public/_packaging/public-feed-name/nuget/v3/index.json
+        // or https://pkgs.dev.azure.com/dnceng/_packaging/internal-feed-name/nuget/v3/index.json
+        public const string AzDoNuGetFeedPattern = 
+            @"https://pkgs.dev.azure.com/(?<account>[a-zA-Z0-9]+)/(?<visibility>[a-zA-Z0-9-]+/)?_packaging/(?<feed>.+)/nuget/v3/index.json";
 
         /// <summary>
         /// Configuration telling which target feed to use for each artifact category.
@@ -477,7 +478,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 return;
             }
             string feedAccount = parsedUri.Groups["account"].Value;
-            string feedProject = parsedUri.Groups["project"].Value;
+            string feedVisibility = parsedUri.Groups["visibility"].Value;
             string feedName = parsedUri.Groups["feed"].Value;
 
             using (var clientThrottle = new SemaphoreSlim(maxClients, maxClients))
@@ -495,7 +496,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         {
                             // Wait to avoid starting too many processes.
                             await clientThrottle.WaitAsync();
-                            await PushNugetPackageAsync(feedConfig, httpClient, packageToPublish, feedAccount, feedProject, feedName);
+                            await PushNugetPackageAsync(feedConfig, httpClient, packageToPublish, feedAccount, feedVisibility, feedName);
                         }
                         finally
                         {
@@ -524,9 +525,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         ///     is simply a case where we should continue onward.
         /// </remarks>
         private async Task PushNugetPackageAsync(FeedConfig feedConfig, HttpClient client, PackageArtifactModel packageToPublish,
-            string feedAccount, string feedProject, string feedName)
+            string feedAccount, string feedVisibility, string feedName)
         {
             Log.LogMessage(MessageImportance.High, $"Pushing package '{packageToPublish.Id}' to feed {feedConfig.TargetFeedURL}");
+
+            PackageAssetsBasePath = PackageAssetsBasePath.TrimEnd(
+                Path.DirectorySeparatorChar,
+                Path.AltDirectorySeparatorChar)
+                + Path.DirectorySeparatorChar;
 
             string localPackageLocation = $"{PackageAssetsBasePath}{packageToPublish.Id}.{packageToPublish.Version}.nupkg";
             if (!File.Exists(localPackageLocation))
@@ -545,7 +551,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                     try
                     {
-                        string packageContentUrl = $"https://pkgs.dev.azure.com/{feedAccount}/{feedProject}/_apis/packaging/feeds/{feedName}/nuget/packages/{packageToPublish.Id}/versions/{packageToPublish.Version}/content";
+                        string packageContentUrl = $"https://pkgs.dev.azure.com/{feedAccount}/{feedVisibility}_apis/packaging/feeds/{feedName}/nuget/packages/{packageToPublish.Id}/versions/{packageToPublish.Version}/content";
 
                         if (await IsLocalPackageIdenticalToFeedPackage(localPackageLocation, packageContentUrl, client))
                         {
