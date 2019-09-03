@@ -24,7 +24,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             var buildEngine = new MockBuildEngine();
             var task = new PublishArtifactsInManifest
             {
-                // Create a single IMicrosoft.Build.Utilities.TaskItem for a simple feed config, then parse to FeedConfigs and
+                // Create a single Microsoft.Build.Utilities.TaskItem for a simple feed config, then parse to FeedConfigs and
                 // check the expected values.
                 TargetFeedConfig = new Microsoft.Build.Utilities.TaskItem[]
                 {
