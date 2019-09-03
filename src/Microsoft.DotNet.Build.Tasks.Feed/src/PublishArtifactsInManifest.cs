@@ -254,7 +254,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         feedConfig.AssetSelection = selection;
                     }
 
-                    // To determine whether a feed is internal, we allow the user to either
+                    // To determine whether a feed is internal, we allow the user to
                     // specify the value explicitly. If that is unset, do an unauthenticated GET
                     // on the feed URL. If it succeeds, the feed is not public. If it fails with a 4* error,
                     // assume it is internal.
