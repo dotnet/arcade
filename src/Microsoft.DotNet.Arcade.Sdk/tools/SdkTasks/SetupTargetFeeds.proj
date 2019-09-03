@@ -31,18 +31,17 @@
       - Non-stable public build's assets are published to various public feeds.
     
     Parameters:
-      - IsInternalBuild
-      - IsStableBuild
-      - RepositoryName
-      - ChannelId
-      - CommitSha
+      - IsInternalBuild                       : true if the build is internal, i.e., created from an branch with internal on its name.
+      - IsStableBuild                         : true if the build is stable, i.e., `DotNetFinalVersionKind` == `release`.
+      - RepositoryName                        : Name of the source repo. Used when creating a stable internal feed.
+      - CommitSha                             : Commit SHA for this build. Used when creating a stable internal feed.
       - AzureStorageAccountName
       - AzureStorageAccountKey
       - AzureDevOpsFeedsBaseUrl
-      - ArtifactsCategory
+      - ArtifactsCategory                     : Used to let user override target feed of public channels.
       - AzureStorageTargetFeedPAT
-      - StaticInternalFeed              : URL of the feed to publish internal non-stable packages
-      - PublishInstallersAndChecksums   : Whether to publish installers and checksums to a secondary location for Dev channels
+      - StaticInternalFeed                    : URL of the feed to publish internal non-stable packages
+      - PublishInstallersAndChecksums         : Whether to publish installers and checksums to a secondary location for Dev channels
       - InstallersTargetStaticFeed
       - InstallersAzureAccountKey
       - ChecksumsTargetStaticFeed
@@ -53,8 +52,8 @@
       - AzureDevOpsStaticTransportFeed        : URL of the feed Azure DevOps NuGet feed to publish transport packages to.
       - AzureDevOpsStaticTransportFeedKey     : Key of the feed Azure DevOps NuGet feed to publish to transport packages to.
 
-      - CreateTestConfig                : If set to true the user will be able to test a TargetFeedConfig 
-                                          constructed using parameters below:
+      - CreateTestConfig                      : If set to true the user will be able to test a TargetFeedConfig 
+                                                constructed using parameters below:
         - TestFeedCategories
         - TestFeedURL
         - TestFeedType
@@ -69,10 +68,6 @@
     <Error
       Condition="'$(IsInternalBuild)' == ''"
       Text="Parameter 'IsInternalBuild' is empty. A boolean value is required." />
-
-    <Error
-      Condition="'$(ChannelId)' == ''"
-      Text="Parameter 'ChannelId' is empty. The ID of the target channel id BAR is required." />
 
     <Error
       Condition="('$(InstallersTargetStaticFeed)' == '' or '$(InstallersAzureAccountKey)' == '') and '$(PublishInstallersAndChecksums)' == 'true'"
@@ -119,15 +114,16 @@
     </CreateAzureDevOpsFeed>
 
     <ItemGroup Condition="'@(TargetFeedConfig)' == '' AND '$(IsStableBuild)' == 'true'">
+      <!--
+        Configs below are for STABLE INTERNAL builds.
+      -->
       <TargetFeedConfig
+        Condition="'$(IsInternalBuild)' == 'false'"
         Include="NetCore"
         TargetURL="$(NewAzDoFeedURL)"
         Type="AzDoNugetFeed"
         Token="$(AzdoTargetFeedPAT)" />
-
-      <!--
-        Configs below are for STABLE INTERNAL builds.
-      -->     
+      
       <TargetFeedConfig
         Condition="'$(IsInternalBuild)' == 'true'"
         Include="OSX;Deb;Rpm;Node;BinaryLayout;Installer;Maven;VSIX"
@@ -145,7 +141,23 @@
       
       <!--
         Configs below are for STABLE PUBLIC builds.
-      -->     
+      -->
+      <TargetFeedConfig
+        Condition="'$(IsInternalBuild)' == 'false'"
+        AssetSelection="ShippingOnly"
+        Include="NetCore"
+        TargetURL="$(NewAzDoFeedURL)"
+        Type="AzDoNugetFeed"
+        Token="$(AzdoTargetFeedPAT)" />
+
+      <TargetFeedConfig
+        Condition="'$(IsInternalBuild)' == 'false'"
+        AssetSelection="NonShippingOnly"
+        Include="NetCore"
+        TargetURL="$(AzureDevOpsStaticTransportFeed)"
+        Type="AzDoNugetFeed"
+        Token="$(AzureDevOpsStaticTransportFeedKey)" />
+
       <TargetFeedConfig
         Condition="'$(IsInternalBuild)' == 'false'"
         Include="OSX;Deb;Rpm;Node;BinaryLayout;Installer;Maven;VSIX"
@@ -241,6 +253,7 @@
         Type="AzDoNugetFeed"
         Token="$(AzureDevOpsStaticShippingFeedKey)"
         AssetSelection="ShippingOnly" />
+      
       <TargetFeedConfig Condition="'$(PublishToAzureDevOpsNuGetFeeds)' == 'true'"
         Include="NetCore"
         TargetURL="$(AzureDevOpsStaticTransportFeed)"
@@ -252,10 +265,6 @@
     <Error
       Condition="'@(TargetFeedConfig)' == ''"
       Text="It wasn't possible to determine which target feed configuration to use." />
-
-    <Message
-      Text="##vso[task.setvariable variable=TargetAzDOFeed]%(TargetFeedConfig.TargetURL)"
-      Importance="high" />
 
     <Message
       Text="Artifact with category '%(TargetFeedConfig.Identity)' should go to %(TargetFeedConfig.Type) -> '%(TargetFeedConfig.TargetURL)'"
