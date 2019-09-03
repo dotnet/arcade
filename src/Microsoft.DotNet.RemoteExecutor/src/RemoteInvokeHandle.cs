@@ -76,7 +76,7 @@ namespace Microsoft.DotNet.RemoteExecutor
                     if (!Process.WaitForExit(Options.TimeOut))
                     {
                         var description = new StringBuilder();
-                        description.AppendLine($"Timed out after {Options.TimeOut}ms waiting for remote process.");
+                        description.AppendLine($"Timed out at {DateTime.Now} after {Options.TimeOut}ms waiting for remote process.");
                         try
                         {
                             description.AppendLine($"\tProcess ID: {Process.Id}");
