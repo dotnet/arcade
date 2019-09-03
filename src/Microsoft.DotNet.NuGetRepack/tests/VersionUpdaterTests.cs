@@ -52,7 +52,7 @@ namespace Microsoft.DotNet.Tools.Tests
         // the SemVer tests were built on Windows which makes these test only valid for Windows.
         //
         // This can be removed when https://github.com/dotnet/corefx/issues/39931 is fixed. 
-        [WindowsOnlyFact]
+        [WindowsOnlyFact(Skip = "https://github.com/dotnet/arcade/issues/3794")]
         public void TestPackagesSemVer1()
         {
             var dir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
@@ -90,7 +90,7 @@ namespace Microsoft.DotNet.Tools.Tests
             Directory.Delete(dir, recursive: true);
         }
 
-        [WindowsOnlyFact]
+        [WindowsOnlyFact(Skip = "https://github.com/dotnet/arcade/issues/3794")]
         public void TestPackagesSemVer2()
         {
             var dir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
@@ -118,7 +118,7 @@ namespace Microsoft.DotNet.Tools.Tests
             Directory.Delete(dir, recursive: true);
         }
 
-        [Fact]
+        [WindowsOnlyFact(Skip = "https://github.com/dotnet/arcade/issues/3794")]
         public void TestValidation()
         {
             var dir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
@@ -157,7 +157,7 @@ namespace Microsoft.DotNet.Tools.Tests
             Directory.Delete(dir, recursive: true);
         }
 
-        [Fact]
+        [WindowsOnlyFact(Skip = "https://github.com/dotnet/arcade/issues/3794")]
         public void TestDotnetToolValidation()
         {
             var dir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());
