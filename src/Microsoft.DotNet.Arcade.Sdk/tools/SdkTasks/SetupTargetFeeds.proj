@@ -104,7 +104,8 @@
         Include="NetCore;OSX;Deb;Rpm;Node;BinaryLayout;Installer;Checksum;Maven;VSIX"
         TargetURL="$(NewAzDoFeedURL)/index.json"
         Type="AzureStorageFeed"
-        Token="$(AzureStorageAccountKey)" />
+        Token="$(AzureStorageAccountKey)"
+        Isolated="true"/>
     </ItemGroup>
 
     <!-- Assets for non-stable AND Internal builds are published to a static feed for now. -->
@@ -113,7 +114,8 @@
         Include="NetCore;OSX;Deb;Rpm;Node;BinaryLayout;Installer;Checksum;Maven;VSIX"
         TargetURL="$(StaticInternalFeed)/index.json"
         Type="AzureStorageFeed"
-        Token="$(AzureStorageAccountKey)" />
+        Token="$(AzureStorageAccountKey)"
+        Internal="$(IsInternalBuild)" />
     </ItemGroup>
 
     <!--
