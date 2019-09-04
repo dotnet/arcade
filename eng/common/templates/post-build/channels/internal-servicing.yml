@@ -86,7 +86,7 @@ stages:
         displayName: 'Authenticate to AzDO Feeds'
 
       - task: PowerShell@2
-        displayName: Add Assets Location
+        displayName: Publish Assets
         env:
           AZURE_DEVOPS_EXT_PAT: $(dn-bot-dnceng-universal-packages-rw)
         inputs:
@@ -103,12 +103,14 @@ stages:
             /p:InternalInstallersTargetStaticFeedKey=$(InternalInstallersBlobFeedKey)
             /p:NugetPath=$(NuGetExeToolPath)
             /p:AzdoTargetFeedPAT='$(dn-bot-dnceng-universal-packages-rw)' 	
+            /p:TargetFeedPAT='$(dn-bot-dnceng-universal-packages-rw)' 
+            /p:AzureStorageTargetFeedPAT='$(dotnetfeed-storage-access-key-1)' 
             /p:BARBuildId=$(BARBuildId) 
             /p:MaestroApiEndpoint='$(MaestroApiEndPoint)' 
             /p:BuildAssetRegistryToken='$(MaestroApiAccessToken)' 
             /p:ManifestsBasePath='$(Build.ArtifactStagingDirectory)/AssetManifests/' 
-            /p:BlobBasePath='$(Build.ArtifactStagingDirectory)\BlobArtifacts' 
-            /p:PackageBasePath='$(Build.ArtifactStagingDirectory)\PackageArtifacts' 
+            /p:BlobBasePath='$(Build.ArtifactStagingDirectory)/BlobArtifacts/' 
+            /p:PackageBasePath='$(Build.ArtifactStagingDirectory)/PackageArtifacts/' 
             /p:Configuration=Release 
             ${{ parameters.artifactsPublishingAdditionalParameters }}
 
