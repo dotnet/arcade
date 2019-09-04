@@ -8,7 +8,7 @@ stages:
   dependsOn: validate
   variables:
     - template: ../common-variables.yml
-  displayName: .NET Core 3 Release Channel
+  displayName: .NET Core 3 Dev Channel
   jobs:
   - template: ../setup-maestro-vars.yml
 
@@ -38,8 +38,8 @@ stages:
         inputs:
           filePath: eng\common\sdk-task.ps1
           arguments: -task PublishToSymbolServers -restore -msbuildEngine dotnet
-            /p:DotNetSymbolServerTokenMsdl=$(microsoft-symbol-server-pat) 
-            /p:DotNetSymbolServerTokenSymWeb=$(symweb-symbol-server-pat) 
+            /p:DotNetSymbolServerTokenMsdl=$(microsoft-symbol-server-pat)
+            /p:DotNetSymbolServerTokenSymWeb=$(symweb-symbol-server-pat)
             /p:PDBArtifactsDirectory='$(Build.ArtifactStagingDirectory)/PDBArtifacts/'
             /p:BlobBasePath='$(Build.ArtifactStagingDirectory)/BlobArtifacts/'
             /p:SymbolPublishingExclusionsFile='$(Build.SourcesDirectory)/eng/SymbolPublishingExclusionsFile.txt'
