@@ -2,20 +2,21 @@ parameters:
   enableSymbolValidation: true
   symbolPublishingAdditionalParameters: ''
   artifactsPublishingAdditionalParameters: ''
+  publishInstallersAndChecksums: false
 
 stages:
-- stage: PubRel_Publish
+- stage: NetCore_Dev30_Publish
   dependsOn: validate
   variables:
     - template: ../common-variables.yml
-  displayName: Public Release
+  displayName: .NET Core 3.0 Dev Publishing
   jobs:
   - template: ../setup-maestro-vars.yml
 
   - job:
     displayName: Symbol Publishing
     dependsOn: setupMaestroVars
-    condition: contains(dependencies.setupMaestroVars.outputs['setReleaseVars.InitialChannels'], format('[{0}]', variables.PublicRelease_30_Channel_Id))
+    condition: contains(dependencies.setupMaestroVars.outputs['setReleaseVars.InitialChannels'], format('[{0}]', variables.PublicDevRelease_30_Channel_Id))
     variables:
       - group: DotNet-Symbol-Server-Pats
     pool:
@@ -38,8 +39,8 @@ stages:
         inputs:
           filePath: eng\common\sdk-task.ps1
           arguments: -task PublishToSymbolServers -restore -msbuildEngine dotnet
-            /p:DotNetSymbolServerTokenMsdl=$(microsoft-symbol-server-pat) 
-            /p:DotNetSymbolServerTokenSymWeb=$(symweb-symbol-server-pat) 
+            /p:DotNetSymbolServerTokenMsdl=$(microsoft-symbol-server-pat)
+            /p:DotNetSymbolServerTokenSymWeb=$(symweb-symbol-server-pat)
             /p:PDBArtifactsDirectory='$(Build.ArtifactStagingDirectory)/PDBArtifacts/'
             /p:BlobBasePath='$(Build.ArtifactStagingDirectory)/BlobArtifacts/'
             /p:SymbolPublishingExclusionsFile='$(Build.SourcesDirectory)/eng/SymbolPublishingExclusionsFile.txt'
@@ -56,7 +57,7 @@ stages:
         value: $[ dependencies.setupMaestroVars.outputs['setReleaseVars.BARBuildId'] ]
       - name: IsStableBuild
         value: $[ dependencies.setupMaestroVars.outputs['setReleaseVars.IsStableBuild'] ]
-    condition: contains(dependencies.setupMaestroVars.outputs['setReleaseVars.InitialChannels'], format('[{0}]', variables.PublicRelease_30_Channel_Id))
+    condition: contains(dependencies.setupMaestroVars.outputs['setReleaseVars.InitialChannels'], format('[{0}]', variables.PublicDevRelease_30_Channel_Id))
     pool:
       vmImage: 'windows-2019'
     steps:
@@ -92,6 +93,7 @@ stages:
         inputs:
           filePath: eng\common\sdk-task.ps1
           arguments: -task PublishArtifactsInManifest -restore -msbuildEngine dotnet 
+            /p:ArtifactsCategory=$(_DotNetArtifactsCategory)
             /p:IsStableBuild=$(IsStableBuild)
             /p:IsInternalBuild=$(IsInternalBuild)
             /p:RepositoryName=$(Build.Repository.Name)
@@ -102,7 +104,7 @@ stages:
             /p:InternalInstallersTargetStaticFeed=$(InternalInstallersBlobFeedUrl)
             /p:InternalInstallersTargetStaticFeedKey=$(InternalInstallersBlobFeedKey)
             /p:NugetPath=$(NuGetExeToolPath)
-            /p:AzdoTargetFeedPAT='$(dn-bot-dnceng-universal-packages-rw)'
+            /p:AzdoTargetFeedPAT='$(dn-bot-dnceng-universal-packages-rw)' 
             /p:TargetFeedPAT='$(dn-bot-dnceng-universal-packages-rw)' 
             /p:AzureStorageTargetFeedPAT='$(dotnetfeed-storage-access-key-1)' 
             /p:BARBuildId=$(BARBuildId) 
@@ -112,16 +114,18 @@ stages:
             /p:BlobBasePath='$(Build.ArtifactStagingDirectory)/BlobArtifacts/' 
             /p:PackageBasePath='$(Build.ArtifactStagingDirectory)/PackageArtifacts/' 
             /p:Configuration=Release 
+            /p:PublishInstallersAndChecksums=${{ parameters.publishInstallersAndChecksums }}
+            /p:InstallersTargetStaticFeed=$(InstallersBlobFeedUrl)
+            /p:InstallersAzureAccountKey=$(dotnetcli-storage-key)
+            /p:ChecksumsTargetStaticFeed=$(ChecksumsBlobFeedUrl)
+            /p:ChecksumsAzureAccountKey=$(dotnetclichecksums-storage-key)
             ${{ parameters.artifactsPublishingAdditionalParameters }}
 
-      - template: ../trigger-subscription.yml
-        parameters:
-          ChannelId: ${{ variables.PublicRelease_30_Channel_Id }}
 
-- stage: PubRel_PublishValidation
-  displayName: Publish Validation
+- stage: NetCore_Dev30_Publish_Validation
+  displayName: .NET Core 3.0 Dev Publish Validation
   variables:
-    - template: ../common-variables.yml  
+    - template: ../common-variables.yml
   jobs:
   - template: ../setup-maestro-vars.yml
 
@@ -129,7 +133,7 @@ stages:
     - job:
       displayName: Symbol Availability
       dependsOn: setupMaestroVars
-      condition: contains(dependencies.setupMaestroVars.outputs['setReleaseVars.InitialChannels'], format('[{0}]', variables.PublicRelease_30_Channel_Id))
+      condition: contains(dependencies.setupMaestroVars.outputs['setReleaseVars.InitialChannels'], format('[{0}]', variables.PublicDevRelease_30_Channel_Id))
       pool:
         vmImage: 'windows-2019'
       steps:
@@ -145,6 +149,10 @@ stages:
             filePath: $(Build.SourcesDirectory)/eng/common/post-build/symbols-validation.ps1
             arguments: -InputPath $(Build.ArtifactStagingDirectory)/PackageArtifacts/ -ExtractPath $(Agent.BuildDirectory)/Temp/ -DotnetSymbolVersion $(SymbolToolVersion)
 
+  - template: ../darc-gather-drop.yml
+    parameters:
+      ChannelId: ${{ variables.PublicDevRelease_30_Channel_Id }}
+
   - template: ../promote-build.yml
     parameters:
-      ChannelId: ${{ variables.PublicRelease_30_Channel_Id }}
+      ChannelId: ${{ variables.PublicDevRelease_30_Channel_Id }}

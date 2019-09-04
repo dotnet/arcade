@@ -9,7 +9,7 @@ stages:
   dependsOn: validate
   variables:
     - template: ../common-variables.yml
-  displayName: .NET Core 5 Dev Channel
+  displayName: .NET Core 5 Dev Publishing
   jobs:
   - template: ../setup-maestro-vars.yml
 
@@ -39,8 +39,8 @@ stages:
         inputs:
           filePath: eng\common\sdk-task.ps1
           arguments: -task PublishToSymbolServers -restore -msbuildEngine dotnet
-            /p:DotNetSymbolServerTokenMsdl=$(microsoft-symbol-server-pat) 
-            /p:DotNetSymbolServerTokenSymWeb=$(symweb-symbol-server-pat) 
+            /p:DotNetSymbolServerTokenMsdl=$(microsoft-symbol-server-pat)
+            /p:DotNetSymbolServerTokenSymWeb=$(symweb-symbol-server-pat)
             /p:PDBArtifactsDirectory='$(Build.ArtifactStagingDirectory)/PDBArtifacts/'
             /p:BlobBasePath='$(Build.ArtifactStagingDirectory)/BlobArtifacts/'
             /p:SymbolPublishingExclusionsFile='$(Build.SourcesDirectory)/eng/SymbolPublishingExclusionsFile.txt'
@@ -122,10 +122,10 @@ stages:
             ${{ parameters.artifactsPublishingAdditionalParameters }}
 
 
-- stage: NetCore_Dev5_PublishValidation
-  displayName: Publish Validation
+- stage: NetCore_Dev5_Publish_Validation
+  displayName: .NET Core 5 Dev Publish Validation
   variables:
-    - template: ../common-variables.yml  
+    - template: ../common-variables.yml
   jobs:
   - template: ../setup-maestro-vars.yml
 
@@ -153,6 +153,6 @@ stages:
     parameters:
       ChannelId: ${{ variables.NetCore_5_Dev_Channel_Id }}
 
-  - template: ../promote-build.yml	
-    parameters:	
+  - template: ../promote-build.yml
+    parameters:
       ChannelId: ${{ variables.NetCore_5_Dev_Channel_Id }}

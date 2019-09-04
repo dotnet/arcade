@@ -9,7 +9,7 @@ stages:
   dependsOn: validate
   variables:
     - template: ../common-variables.yml
-  displayName: Validation Channel
+  displayName: .NET Tools - Validation Publishing
   jobs:
   - template: ../setup-maestro-vars.yml
 
@@ -89,7 +89,7 @@ stages:
 
 
 - stage: PVR_PublishValidation
-  displayName: Publish Validation
+  displayName: .NET Tools - Validation Publish Validation
   variables:
     - template: ../common-variables.yml
   jobs:
@@ -99,6 +99,6 @@ stages:
     parameters:
       ChannelId: ${{ variables.PublicValidationRelease_30_Channel_Id }}
 
-  - template: ../promote-build.yml	
-    parameters:	
+  - template: ../promote-build.yml
+    parameters:
       ChannelId: ${{ variables.PublicValidationRelease_30_Channel_Id }}

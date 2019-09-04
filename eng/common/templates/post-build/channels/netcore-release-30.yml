@@ -4,18 +4,18 @@ parameters:
   artifactsPublishingAdditionalParameters: ''
 
 stages:
-- stage: IS_Publish
+- stage: NetCore_Release30_Publish
   dependsOn: validate
   variables:
     - template: ../common-variables.yml
-  displayName: Internal Servicing
+  displayName: .NET Core 3.0 Release Publishing
   jobs:
   - template: ../setup-maestro-vars.yml
 
   - job:
     displayName: Symbol Publishing
     dependsOn: setupMaestroVars
-    condition: contains(dependencies.setupMaestroVars.outputs['setReleaseVars.InitialChannels'], format('[{0}]', variables.InternalServicing_30_Channel_Id))
+    condition: contains(dependencies.setupMaestroVars.outputs['setReleaseVars.InitialChannels'], format('[{0}]', variables.PublicRelease_30_Channel_Id))
     variables:
       - group: DotNet-Symbol-Server-Pats
     pool:
@@ -38,8 +38,8 @@ stages:
         inputs:
           filePath: eng\common\sdk-task.ps1
           arguments: -task PublishToSymbolServers -restore -msbuildEngine dotnet
-            /p:DotNetSymbolServerTokenMsdl=$(microsoft-symbol-server-pat) 
-            /p:DotNetSymbolServerTokenSymWeb=$(symweb-symbol-server-pat) 
+            /p:DotNetSymbolServerTokenMsdl=$(microsoft-symbol-server-pat)
+            /p:DotNetSymbolServerTokenSymWeb=$(symweb-symbol-server-pat)
             /p:PDBArtifactsDirectory='$(Build.ArtifactStagingDirectory)/PDBArtifacts/'
             /p:BlobBasePath='$(Build.ArtifactStagingDirectory)/BlobArtifacts/'
             /p:SymbolPublishingExclusionsFile='$(Build.SourcesDirectory)/eng/SymbolPublishingExclusionsFile.txt'
@@ -56,7 +56,7 @@ stages:
         value: $[ dependencies.setupMaestroVars.outputs['setReleaseVars.BARBuildId'] ]
       - name: IsStableBuild
         value: $[ dependencies.setupMaestroVars.outputs['setReleaseVars.IsStableBuild'] ]
-    condition: contains(dependencies.setupMaestroVars.outputs['setReleaseVars.InitialChannels'], format('[{0}]', variables.InternalServicing_30_Channel_Id))
+    condition: contains(dependencies.setupMaestroVars.outputs['setReleaseVars.InitialChannels'], format('[{0}]', variables.PublicRelease_30_Channel_Id))
     pool:
       vmImage: 'windows-2019'
     steps:
@@ -102,7 +102,7 @@ stages:
             /p:InternalInstallersTargetStaticFeed=$(InternalInstallersBlobFeedUrl)
             /p:InternalInstallersTargetStaticFeedKey=$(InternalInstallersBlobFeedKey)
             /p:NugetPath=$(NuGetExeToolPath)
-            /p:AzdoTargetFeedPAT='$(dn-bot-dnceng-universal-packages-rw)' 	
+            /p:AzdoTargetFeedPAT='$(dn-bot-dnceng-universal-packages-rw)'
             /p:TargetFeedPAT='$(dn-bot-dnceng-universal-packages-rw)' 
             /p:AzureStorageTargetFeedPAT='$(dotnetfeed-storage-access-key-1)' 
             /p:BARBuildId=$(BARBuildId) 
@@ -116,12 +116,12 @@ stages:
 
       - template: ../trigger-subscription.yml
         parameters:
-          ChannelId: ${{ variables.InternalServicing_30_Channel_Id }}
-        
-- stage: IS_PublishValidation
-  displayName: Publish Validation
+          ChannelId: ${{ variables.PublicRelease_30_Channel_Id }}
+
+- stage: NetCore_Release30_Publish_Validation
+  displayName: .NET Core 3.0 Release Publish Validation
   variables:
-    - template: ../common-variables.yml  
+    - template: ../common-variables.yml
   jobs:
   - template: ../setup-maestro-vars.yml
 
@@ -129,7 +129,8 @@ stages:
     - job:
       displayName: Symbol Availability
       dependsOn: setupMaestroVars
-      condition: contains(dependencies.setupMaestroVars.outputs['setReleaseVars.InitialChannels'], format('[{0}]', variables.InternalServicing_30_Channel_Id))
+      condition: or(contains(dependencies.setupMaestroVars.outputs['setReleaseVars.InitialChannels'], format('[{0}]', variables.PublicRelease_30_Channel_Id)),
+                    contains(dependencies.setupMaestroVars.outputs['setReleaseVars.InitialChannels'], format('[{0}]', variables.PublicRelease_31_Channel_Id)))
       pool:
         vmImage: 'windows-2019'
       steps:
@@ -147,4 +148,4 @@ stages:
 
   - template: ../promote-build.yml
     parameters:
-      ChannelId: ${{ variables.InternalServicing_30_Channel_Id }}
+      ChannelId: ${{ variables.PublicRelease_30_Channel_Id }}
