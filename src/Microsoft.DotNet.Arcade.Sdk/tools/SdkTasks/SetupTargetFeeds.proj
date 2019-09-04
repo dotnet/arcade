@@ -228,13 +228,13 @@
     <!-- Configuration for public non-stable feeds -->
     <ItemGroup Condition="'@(TargetFeedConfig)' == ''">
       <TargetFeedConfig
-        Include="NetCore;OSX;Deb;Rpm;Node;BinaryLayout;Installer;Checksum;Maven;VSIX"
+        Include="NetCore;OSX;Deb;Rpm;Node;BinaryLayout;Installer;Checksum;Maven;VSIX;Badge"
         TargetURL="$(TargetStaticFeed)"
         Type="AzureStorageFeed"
         Token="$(AzureStorageTargetFeedPAT)" />
       
       <TargetFeedConfig Condition="'$(PublishInstallersAndChecksums)' == 'true'"
-        Include="Deb;Rpm;Node;BinaryLayout;Installer;Maven;VSIX"
+        Include="OSX;Deb;Rpm;Node;BinaryLayout;Installer;Maven;VSIX;Badge"
         TargetURL="$(InstallersTargetStaticFeed)"
         Type="AzureStorageFeed"
         Token="$(InstallersAzureAccountKey)" />
