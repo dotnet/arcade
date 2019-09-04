@@ -94,7 +94,7 @@ stages:
 
 
 - stage: PVR_PublishValidation
-  displayName: Publish Validation
+  displayName: .NET Tools - Validation Publish Validation
   variables:
     - template: ../common-variables.yml
   jobs:

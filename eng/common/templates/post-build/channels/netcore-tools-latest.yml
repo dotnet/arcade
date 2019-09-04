@@ -9,7 +9,7 @@ stages:
   dependsOn: validate
   variables:
     - template: ../common-variables.yml
-  displayName: .NET Tools - Latest
+  displayName: .NET Tools - Latest Publishing
   jobs:
   - template: ../setup-maestro-vars.yml
 
@@ -130,7 +130,7 @@ stages:
 
 
 - stage: NetCore_Tools_Latest_PublishValidation
-  displayName: Publish Validation
+  displayName: .NET Tools - Latest Publish Validation
   variables:
     - template: ../common-variables.yml
   jobs:

@@ -126,8 +126,8 @@ stages:
         parameters:
           ChannelId: ${{ variables.InternalServicing_30_Channel_Id }}
 
-- stage: IS_PublishValidation
-  displayName: Publish Validation
+- stage: NetCore_30_Internal_Servicing_Publish_Validation
+  displayName: .NET Core 3.0 Internal Servicing Publish Validation
   variables:
     - template: ../common-variables.yml
   jobs:

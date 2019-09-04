@@ -8,7 +8,7 @@ stages:
   dependsOn: validate
   variables:
     - template: ../common-variables.yml
-  displayName: .NET Core 3.0 Dev Publish Validation
+  displayName: .NET Core 3.0 Release Publishing
   jobs:
   - template: ../setup-maestro-vars.yml
 
@@ -127,8 +127,8 @@ stages:
         parameters:
           ChannelId: ${{ variables.PublicRelease_30_Channel_Id }}
 
-- stage: PubRel_PublishValidation
-  displayName: Publish Validation
+- stage: NetCore_Release30_Publish_Validation
+  displayName: .NET Core 3.0 Release Publish Validation
   variables:
     - template: ../common-variables.yml
   jobs:
