@@ -725,12 +725,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         {
             Log.LogMessage(MessageImportance.High, $"Pushing package '{packageToPublish.Id}' to feed {feedConfig.TargetURL}");
 
-            PackageAssetsBasePath = PackageAssetsBasePath.TrimEnd(
-                Path.DirectorySeparatorChar,
-                Path.AltDirectorySeparatorChar)
-                + Path.DirectorySeparatorChar;
-
-            string localPackageLocation = $"{PackageAssetsBasePath}{packageToPublish.Id}.{packageToPublish.Version}.nupkg";
+            string localPackageLocation = Path.Combine(PackageAssetsBasePath, $"{packageToPublish.Id}.{packageToPublish.Version}.nupkg");
             if (!File.Exists(localPackageLocation))
             {
                 Log.LogError($"Could not locate '{packageToPublish.Id}.{packageToPublish.Version}' at '{localPackageLocation}'");
@@ -951,12 +946,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             Maestro.Client.Models.Build buildInformation,
             FeedConfig feedConfig)
         {
-            PackageAssetsBasePath = PackageAssetsBasePath.TrimEnd(
-                Path.DirectorySeparatorChar,
-                Path.AltDirectorySeparatorChar) 
-                + Path.DirectorySeparatorChar;
-
-            var packages = packagesToPublish.Select(p => $"{PackageAssetsBasePath}{p.Id}.{p.Version}.nupkg");
+            var packages = packagesToPublish.Select(p => Path.Combine(PackageAssetsBasePath, $"{p.Id}.{p.Version}.nupkg"));
             var blobFeedAction = CreateBlobFeedAction(feedConfig);
 
             var pushOptions = new PushOptions
