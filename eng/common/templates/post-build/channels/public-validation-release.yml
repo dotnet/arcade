@@ -2,13 +2,14 @@ parameters:
   artifactsPublishingAdditionalParameters: ''
   publishInstallersAndChecksums: false
   publishToAzureDevOpsFeeds: true
-  azureDevOpsToolsFeed: 'https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json'
 
 stages:
 - stage: PVR_Publish
   dependsOn: validate
   variables:
     - template: ../common-variables.yml
+    - name: azureDevOpsToolsFeed
+      value: 'https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json'
   displayName: .NET Tools - Validation Publishing
   jobs:
   - template: ../setup-maestro-vars.yml
