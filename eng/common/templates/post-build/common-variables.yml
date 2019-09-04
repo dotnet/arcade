@@ -1,6 +1,7 @@
 variables:
   - group: Publish-Build-Assets
   - group: DotNet-DotNetCli-Storage
+  - group: DotNet-MSRC-Storage
 
   # .NET Core 3 Dev
   - name: PublicDevRelease_30_Channel_Id
@@ -59,11 +60,11 @@ variables:
 
   # Private Locations
   - name: InternalChecksumsBlobFeedUrl
-    value: .......
+    value: https://dotnetclichecksumsmsrc.blob.core.windows.net/dotnet/index.json
   - name: InternalChecksumsBlobFeedKey
-    value: ........
+    value: $(dotnetclichecksumsmsrc-storage-key)
 
   - name: InternalInstallersBlobFeedUrl
-    value: ........
+    value: https://dotnetclimsrc.blob.core.windows.net/dotnet/index.json
   - name: InternalInstallersBlobFeedKey
-    value: ..........
+    value: $(dotnetclimsrc-access-key)
