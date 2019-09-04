@@ -170,7 +170,8 @@
         Include="Checksum"
         TargetURL="$(ChecksumsTargetStaticFeed)"
         Type="AzureStorageFeed"
-        Token="$(ChecksumsAzureAccountKey)" />
+        Token="$(ChecksumsAzureAccountKey)" 
+		Isolated="true" />
     </ItemGroup>
 
     <!-- 
@@ -194,7 +195,8 @@
         Include="Checksum"
         TargetURL="$(InternalChecksumsTargetStaticFeed)"
         Type="AzureStorageFeed"
-        Token="$(InternalChecksumsTargetStaticFeedKey)" />
+        Token="$(InternalChecksumsTargetStaticFeedKey)" 
+		Internal="$(IsInternalBuild)" />
     </ItemGroup>
 
     <!--
