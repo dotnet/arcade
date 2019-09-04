@@ -1108,6 +1108,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 { ".SHA", "CHECKSUM" },
                 { ".POM", "MAVEN" },
                 { ".VSIX", "VSIX" },
+                { ".CAB", "BINARYLAYOUT" },
+                { ".TAR", "BINARYLAYOUT" },
+                { ".GZ", "BINARYLAYOUT" },
+                { ".TGZ", "BINARYLAYOUT" },
+                { ".EXE", "INSTALLER" },
+                { ".SVG", "BADGE"}
             };
 
             if (whichCategory.TryGetValue(extension, out var category))
