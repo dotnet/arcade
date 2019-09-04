@@ -102,7 +102,7 @@ stages:
     artifactsPublishingAdditionalParameters: ${{ parameters.artifactsPublishingAdditionalParameters }}
     publishInstallersAndChecksums: ${{ parameters.publishInstallersAndChecksums }}
 
-- template: \eng\common\templates\post-build\channels\public-dev-release.yml
+- template: \eng\common\templates\post-build\channels\netcore-dev-3.yml
   parameters:
     enableSymbolValidation: ${{ parameters.enableSymbolValidation }}
     symbolPublishingAdditionalParameters: ${{ parameters.symbolPublishingAdditionalParameters }}
@@ -121,7 +121,7 @@ stages:
     artifactsPublishingAdditionalParameters: ${{ parameters.artifactsPublishingAdditionalParameters }}
     publishInstallersAndChecksums: ${{ parameters.publishInstallersAndChecksums }}
 
-- template: \eng\common\templates\post-build\channels\public-release.yml
+- template: \eng\common\templates\post-build\channels\netcore-release-3.yml
   parameters:
     symbolPublishingAdditionalParameters: ${{ parameters.symbolPublishingAdditionalParameters }}
     artifactsPublishingAdditionalParameters: ${{ parameters.artifactsPublishingAdditionalParameters }}
