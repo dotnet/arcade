@@ -5,11 +5,11 @@ parameters:
   publishInstallersAndChecksums: false
 
 stages:
-- stage: Publish
+- stage: NetCore_Dev30_Publish
   dependsOn: validate
   variables:
     - template: ../common-variables.yml
-  displayName: .NET Core 3 Dev Channel
+  displayName: .NET Core 3.0 Dev Publishing
   jobs:
   - template: ../setup-maestro-vars.yml
 
@@ -140,8 +140,7 @@ stages:
     - job:
       displayName: Symbol Availability
       dependsOn: setupMaestroVars
-      condition: or(contains(dependencies.setupMaestroVars.outputs['setReleaseVars.InitialChannels'], format('[{0}]', variables.PublicDevRelease_30_Channel_Id)),
-                    contains(dependencies.setupMaestroVars.outputs['setReleaseVars.InitialChannels'], format('[{0}]', variables.PublicDevRelease_31_Channel_Id)))
+      condition: contains(dependencies.setupMaestroVars.outputs['setReleaseVars.InitialChannels'], format('[{0}]', variables.PublicDevRelease_30_Channel_Id))
       pool:
         vmImage: 'windows-2019'
       steps:
