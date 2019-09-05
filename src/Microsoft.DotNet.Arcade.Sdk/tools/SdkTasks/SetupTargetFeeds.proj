@@ -118,7 +118,7 @@
         Configs below are for STABLE INTERNAL builds.
       -->
       <TargetFeedConfig
-        Condition="'$(IsInternalBuild)' == 'false'"
+        Condition="'$(IsInternalBuild)' == 'true'"
         Include="NetCore"
         TargetURL="$(NewAzDoFeedURL)"
         Type="AzDoNugetFeed"
