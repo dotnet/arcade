@@ -13,6 +13,7 @@ usage()
   echo "  --configuration <value>    Build configuration: 'Debug' or 'Release' (short: -c)"
   echo "  --verbosity <value>        Msbuild verbosity: q[uiet], m[inimal], n[ormal], d[etailed], and diag[nostic] (short: -v)"
   echo "  --binaryLog                Create MSBuild binary log (short: -bl)"
+  echo "  --blname <value>           Create MSBuild binary log with the given name"
   echo "  --help                     Print help and exit (short: -h)"
   echo ""
 
@@ -72,6 +73,7 @@ projects=''
 configuration='Debug'
 prepare_machine=false
 verbosity='minimal'
+binary_log_name=''
 
 properties=''
 
@@ -88,6 +90,11 @@ while [[ $# > 0 ]]; do
       ;;
     -verbosity|-v)
       verbosity=$2
+      shift
+      ;;
+    -blname)
+      binary_log_name=$2
+      binary_log=true
       shift
       ;;
     -binarylog|-bl)
@@ -175,7 +182,11 @@ function Build {
 
   local bl=""
   if [[ "$binary_log" == true ]]; then
-    bl="/bl:\"$log_dir/Build.binlog\""
+    local name="Build.binlog"
+    if [[ ! -z "$binary_log_name" ]]; then
+      name="$binary_log_name"
+    fi
+    bl="/bl:\"$log_dir/$name\""
   fi
 
   MSBuild $_InitializeToolset \

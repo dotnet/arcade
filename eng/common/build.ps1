@@ -5,6 +5,7 @@ Param(
   [string] $projects,
   [string][Alias('v')]$verbosity = "minimal",
   [string] $msbuildEngine = $null,
+  [string] $blname = $null,
   [bool] $warnAsError = $true,
   [bool] $nodeReuse = $true,
   [switch][Alias('r')]$restore,
@@ -33,6 +34,7 @@ function Print-Usage() {
     Write-Host "  -platform <value>       Platform configuration: 'x86', 'x64' or any valid Platform value to pass to msbuild"
     Write-Host "  -verbosity <value>      Msbuild verbosity: q[uiet], m[inimal], n[ormal], d[etailed], and diag[nostic] (short: -v)"
     Write-Host "  -binaryLog              Output binary log (short: -bl)"
+    Write-Host "  -blname <value>         Output binary log with the given name"
     Write-Host "  -help                   Print help and exit"
     Write-Host ""
 
@@ -78,7 +80,15 @@ function Build {
   $toolsetBuildProj = InitializeToolset
   InitializeCustomToolset
 
-  $bl = if ($binaryLog) { "/bl:" + (Join-Path $LogDir "Build.binlog") } else { "" }
+  $bl = if ($binaryLog) {
+    $name = "Build.binlog"
+    if ($blname)
+    {
+      $name = $blname
+    }
+    "/bl:" + (Join-Path $LogDir $name)
+  }
+  else { "" }
   $platformArg = if ($platform) { "/p:Platform=$platform" } else { "" }
 
   if ($projects) {
@@ -117,6 +127,11 @@ try {
   if ($ci) {
     $binaryLog = $true
     $nodeReuse = $false
+  }
+
+  if ($blname)
+  {
+    $binaryLog = $true
   }
 
   # Import custom tools configuration, if present in the repo.
