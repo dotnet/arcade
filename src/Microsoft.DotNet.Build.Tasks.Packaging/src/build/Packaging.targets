@@ -734,7 +734,7 @@
     </ApplyBaseLine>
 
     <Error Text="No VersionSuffix was set. Ensure it is set before targets in packaging are ran."
-           Condition="'$(VersionSuffix)' == ''" />
+           Condition="'$(VersionSuffix)' == '' AND '@(_BaseLinedDependencies)' != ''" />
     <Error Condition="'@(_BaseLinedDependencies)' != '' AND '@(PackageIndex)' == '' AND '@(StablePackage)' == ''"
            Text="Neither PackageIndex nor StablePackage items are defined: ensure you have imported Microsoft.Private.PackageBaseLine.props from the Microsoft.Private.PackageBaseLine package" />
     <ApplyPreReleaseSuffix Condition="'@(_BaseLinedDependencies)' != ''"
@@ -826,7 +826,7 @@
         DependsOnTargets="GetAssemblyVersionFromProjects">
 
     <Error Text="No VersionSuffix was set. Ensure it is set before targets in packaging are ran."
-           Condition="'$(VersionSuffix)' == ''" />
+           Condition="'$(VersionSuffix)' == '' AND '$(StableVersion)' == ''" />
 
     <Error Text="No version could be detected.  Either specify the Version property or provide at least one managed assembly."
            Condition="'$(PackageVersion)' == '' AND '$(_AssemblyVersion)' == ''" />
