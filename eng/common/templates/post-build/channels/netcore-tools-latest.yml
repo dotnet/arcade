@@ -123,9 +123,9 @@ stages:
             /p:ChecksumsTargetStaticFeed=$(ChecksumsBlobFeedUrl)
             /p:ChecksumsAzureAccountKey=$(dotnetclichecksums-storage-key)
             /p:PublishToAzureDevOpsNuGetFeeds=${{ parameters.publishToAzureDevOpsFeeds }}
-            /p:AzureDevOpsStaticShippingFeed=${{ parameters.azureDevOpsToolsFeed }}
+            /p:AzureDevOpsStaticShippingFeed=$(azureDevOpsToolsFeed)
             /p:AzureDevOpsStaticShippingFeedKey='$(dn-bot-dnceng-artifact-feeds-rw)'
-            /p:AzureDevOpsStaticTransportFeed=${{ parameters.azureDevOpsToolsFeed }}
+            /p:AzureDevOpsStaticTransportFeed=$(azureDevOpsToolsFeed)
             /p:AzureDevOpsStaticTransportFeedKey='$(dn-bot-dnceng-artifact-feeds-rw)
             ${{ parameters.artifactsPublishingAdditionalParameters }}
         
