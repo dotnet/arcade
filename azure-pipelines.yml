@@ -78,6 +78,7 @@ stages:
               /p:DotNetPublishUsingPipelines=$(_PublishUsingPipelines)
               /p:DotNetArtifactsCategory=$(_DotNetArtifactsCategory)
               /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
+              /p:DotNetFinalVersionKind=release
 
         strategy:
           matrix:
