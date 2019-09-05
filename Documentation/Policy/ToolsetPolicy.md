@@ -20,7 +20,8 @@ For purposes of this document, 'Toolset' refers to tools which create and/or mod
 - Tools from the latest public preview of VS are available via a machine pool.  Private previews of VS should not be widely available and used for targeting testing only.
 - The guidance is to do limited building and testing on the preview versions of VS, such that the upgrade to the latest tools can be done with confidence.  The distinction here comes from two competing business priorities: 1) Always be building and testing using the latest VC toolset, and 2) Keep our cost at a reasonable level. The RTM'd version of VS is on the hosted pools, while previews are on our private pools.
 
-### Managed toolset
+### .NET SDK / Managed toolset
+- Arcade SDK (shared infra for .NET Core) should always reference the latest preview version of the .NET Core SDK.
 - Roslyn version is brought in as a dependency via the Arcade SDK.  It is not recommended for any build to take a direct dependency on Roslyn
 - In cases where an older version of .NET (and by implication Roslyn) is needed, exceptions are supported via Arcade.  
 
