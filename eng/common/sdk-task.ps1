@@ -4,6 +4,8 @@ Param(
   [string] $task,
   [string] $verbosity = "minimal",
   [string] $msbuildEngine = $null,
+  [string] $binlogSuffix = $null,
+  [string] $logFolder = $null,
   [switch] $restore,
   [switch] $prepareMachine,
   [switch] $help,
@@ -31,18 +33,24 @@ function Print-Usage() {
   Write-Host "Command line arguments not listed above are passed thru to msbuild."
 }
 
-function Build([string]$target) {
+function Build([string]$target, [string]$binlogSuffix, [string]$logFolder) {
   $logSuffix = if ($target -eq "Execute") { "" } else { ".$target" }
+  $logSuffix = if ($binlogSuffix -eq "") { $logSuffix } else { "$logSuffix-$binlogSuffix" }
   $log = Join-Path $LogDir "$task$logSuffix.binlog"
   $outputPath = Join-Path $ToolsetDir "$task\\"
 
-  MSBuild $taskProject `
-    /bl:$log `
-    /t:$target `
-    /p:Configuration=$configuration `
-    /p:RepoRoot=$RepoRoot `
-    /p:BaseIntermediateOutputPath=$outputPath `
-    @properties
+  try {
+    MSBuild $taskProject `
+      /bl:$log `
+      /t:$target `
+      /p:Configuration=$configuration `
+      /p:RepoRoot=$RepoRoot `
+      /p:BaseIntermediateOutputPath=$outputPath `
+      @properties
+  }
+  finally {
+    Write-PipelinePublishArtifact -ArtifactSourcePath $log -TargetArtifactName $logFolder
+  }
 }
 
 try {
@@ -64,10 +72,10 @@ try {
   }
 
   if ($restore) {
-    Build "Restore"
+    Build "Restore" -binlogSuffix $binlogSuffix -logFolder $logFolder
   }
 
-  Build "Execute"
+  Build "Execute" -binlogSuffix $binlogSuffix -logFolder $logFolder
 }
 catch {
   Write-Host $_

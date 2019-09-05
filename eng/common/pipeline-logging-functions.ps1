@@ -89,6 +89,22 @@ function Write-PipelineTaskError {
       }
   }
   
+  function Write-PipelinePublishArtifact {
+    [CmdletBinding()]
+    param(
+      [Parameter(Mandatory = $true)]
+      [string]$ArtifactSourcePath,
+      [Parameter(Mandatory = $true)]
+      [string]$TargetArtifactName,
+      [switch]$AsOutput
+    )
+    if($ci) {
+      Write-LoggingCommand -Area 'artifact' -Event 'upload' -Data $ArtifactSourcePath -Properties @{
+        'artifactName' = $TargetArtifactName
+      } -AsOutput:$AsOutput  
+    }
+  }
+
   function Write-PipelinePrependPath {
     [CmdletBinding()]
     param(
