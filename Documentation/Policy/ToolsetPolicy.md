@@ -12,7 +12,8 @@ For purposes of this document, 'Toolset' refers to tools which create and/or mod
 
 ### General
 - Which tool version used across the stack should be determined in one place.  For more comments on this, see farther below.
-- The latest version of a tool should be used.  This implies ongoing diligence to update our toolset dependencies.
+- After every shipment (previews included), all tools are brought forward to the latest appropriate release based on input from tactics.
+- The latest shipping version of a tool should be used.  This implies ongoing diligence to update our toolset dependencies.
 - Tools should be bootstrapped into the build where ever possible.  It is recognized that this is not always reasonable (or even the best approach), but is still desireable as we try and get as close as possible to 'clone and build'.
 
 ### VC toolset
