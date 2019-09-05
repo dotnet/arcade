@@ -164,7 +164,7 @@
         Include="NetCore"
         TargetURL="$(AzureDevOpsStaticTransportFeed)"
         Internal="false"
-        Isolated="true"
+        Isolated="false"
         Type="AzDoNugetFeed"
         Token="$(AzureDevOpsStaticTransportFeedKey)" />
 
