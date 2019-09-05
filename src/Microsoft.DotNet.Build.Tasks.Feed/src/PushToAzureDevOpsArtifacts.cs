@@ -67,6 +67,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                     if (PublishFlatContainer)
                     {
+                        // Act as if %(PublishFlatContainer) were true for all items.
                         blobArtifacts = itemsToPushNoExcludes
                             .Select(BuildManifestUtil.CreateBlobArtifactModel);
                         foreach (var blobItem in itemsToPushNoExcludes)
@@ -89,8 +90,23 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             })
                             .ToArray();
 
+                        var blobItems = itemsToPushNoExcludes
+                            .Where(i =>
+                            {
+                                var isFlatString = i.GetMetadata("PublishFlatContainer");
+                                if (!string.IsNullOrEmpty(isFlatString) &&
+                                    bool.TryParse(isFlatString, out var isFlat))
+                                {
+                                    return isFlat;
+                                }
+
+                                return false;
+                            })
+                            .Union(symbolItems)
+                            .ToArray();
+
                         ITaskItem[] packageItems = itemsToPushNoExcludes
-                            .Where(i => !symbolItems.Contains(i))
+                            .Except(blobItems)
                             .ToArray();
 
                         foreach (var packagePath in packageItems)
@@ -102,26 +118,26 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                                 $"##vso[artifact.upload containerfolder=PackageArtifacts;artifactname=PackageArtifacts]{destFile}");
                         }
 
-                        foreach (var symbolPath in symbolItems)
+                        foreach (var blobItem in blobItems)
                         {
-                            var destFile = $"{AssetsTemporaryDirectory}/{Path.GetFileName(symbolPath.ItemSpec)}";
-                            File.Copy(symbolPath.ItemSpec, destFile);
+                            var destFile = $"{AssetsTemporaryDirectory}/{Path.GetFileName(blobItem.ItemSpec)}";
+                            File.Copy(blobItem.ItemSpec, destFile);
 
                             Log.LogMessage(MessageImportance.High,
                                 $"##vso[artifact.upload containerfolder=BlobArtifacts;artifactname=BlobArtifacts]{destFile}");
                         }
 
                         packageArtifacts = packageItems.Select(BuildManifestUtil.CreatePackageArtifactModel);
-                        blobArtifacts = symbolItems.Select(BuildManifestUtil.CreateBlobArtifactModel).Where(blob => blob != null);
+                        blobArtifacts = blobItems.Select(BuildManifestUtil.CreateBlobArtifactModel).Where(blob => blob != null);
                     }
 
-                    BuildManifestUtil.CreateBuildManifest(Log, 
-                        blobArtifacts, 
+                    BuildManifestUtil.CreateBuildManifest(Log,
+                        blobArtifacts,
                         packageArtifacts,
-                        AssetManifestPath, 
-                        ManifestRepoUri, 
+                        AssetManifestPath,
+                        ManifestRepoUri,
                         ManifestBuildId,
-                        ManifestBranch, 
+                        ManifestBranch,
                         ManifestCommit,
                         ManifestBuildData,
                         IsStableBuild);
