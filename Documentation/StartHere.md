@@ -93,7 +93,7 @@ some highlights
   - Mission Control
 
 #### Testing projects
-  - Helix: [SDK](../src/Microsoft.DotNet.Helix/Sdk/Readme.md), [JobSender](../src/Microsoft.DotNet.Helix/Sdk/Readme.md)
+  - Helix: [SDK](../src/Microsoft.DotNet.Helix/Sdk/Readme.md), [JobSender](../src/Microsoft.DotNet.Helix/JobSender/Readme.md)
   - Azure Agent pools and queues
   - Docker support
   - [Dump file retrieval](Dumps/Dumps.md)
