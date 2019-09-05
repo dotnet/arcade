@@ -63,6 +63,7 @@
       **Iterate** publishing assets from each manifest file. 
     -->
     <PublishArtifactsInManifest
+      InternalBuild="$(IsInternalBuild)"
       TargetFeedConfig="@(TargetFeedConfig)"
       BARBuildId="$(BARBuildId)"
       MaestroApiEndpoint="$(MaestroApiEndpoint)"
