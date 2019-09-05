@@ -201,7 +201,7 @@
         Token="$(AzdoTargetFeedPAT)" />
       
       <TargetFeedConfig
-        Include="OSX;Deb;Rpm;Node;BinaryLayout;Installer;Maven;VSIX"
+        Include="OSX;Deb;Rpm;Node;BinaryLayout;Installer;Maven;VSIX;Badge"
         TargetURL="$(InternalInstallersTargetStaticFeed)"
         Internal="true"
         Isolated="true"
