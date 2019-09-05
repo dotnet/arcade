@@ -155,10 +155,6 @@ stages:
             filePath: $(Build.SourcesDirectory)/eng/common/post-build/symbols-validation.ps1
             arguments: -InputPath $(Build.ArtifactStagingDirectory)/PackageArtifacts/ -ExtractPath $(Agent.BuildDirectory)/Temp/ -DotnetSymbolVersion $(SymbolToolVersion)
 
-  - template: ../darc-gather-drop.yml
-    parameters:
-      ChannelId: ${{ variables.NetCore_Tools_Latest_Channel_Id }}
-
   - template: ../promote-build.yml
     parameters:
       ChannelId: ${{ variables.NetCore_Tools_Latest_Channel_Id }}
