@@ -121,6 +121,8 @@
         Condition="'$(IsInternalBuild)' == 'true'"
         Include="NetCore"
         TargetURL="$(NewAzDoFeedURL)"
+        Internal="true"
+        Isolated="true"
         Type="AzDoNugetFeed"
         Token="$(AzdoTargetFeedPAT)" />
       
@@ -128,6 +130,8 @@
         Condition="'$(IsInternalBuild)' == 'true'"
         Include="OSX;Deb;Rpm;Node;BinaryLayout;Installer;Maven;VSIX"
         TargetURL="$(InternalInstallersTargetStaticFeed)"
+        Internal="true"
+        Isolated="true"
         Type="AzureStorageFeed"
         Token="$(InternalInstallersTargetStaticFeedKey)" />
       
@@ -135,6 +139,8 @@
         Condition="'$(IsInternalBuild)' == 'true'"
         Include="Checksum"
         TargetURL="$(InternalChecksumsTargetStaticFeed)"
+        Internal="true"
+        Isolated="true"
         Type="AzureStorageFeed"
         Token="$(InternalChecksumsTargetStaticFeedKey)" />
       
@@ -147,6 +153,8 @@
         AssetSelection="ShippingOnly"
         Include="NetCore"
         TargetURL="$(NewAzDoFeedURL)"
+        Internal="false"
+        Isolated="true"
         Type="AzDoNugetFeed"
         Token="$(AzdoTargetFeedPAT)" />
 
@@ -155,6 +163,8 @@
         AssetSelection="NonShippingOnly"
         Include="NetCore"
         TargetURL="$(AzureDevOpsStaticTransportFeed)"
+        Internal="false"
+        Isolated="true"
         Type="AzDoNugetFeed"
         Token="$(AzureDevOpsStaticTransportFeedKey)" />
 
@@ -162,6 +172,8 @@
         Condition="'$(IsInternalBuild)' == 'false'"
         Include="OSX;Deb;Rpm;Node;BinaryLayout;Installer;Maven;VSIX"
         TargetURL="$(InstallersTargetStaticFeed)"
+        Internal="false"
+        Isolated="true"
         Type="AzureStorageFeed"
         Token="$(InstallersAzureAccountKey)" />
       
@@ -169,6 +181,8 @@
         Condition="'$(IsInternalBuild)' == 'false'"
         Include="Checksum"
         TargetURL="$(ChecksumsTargetStaticFeed)"
+        Internal="false"
+        Isolated="true"
         Type="AzureStorageFeed"
         Token="$(ChecksumsAzureAccountKey)" 
 		    Isolated="true" />
@@ -182,18 +196,24 @@
       <TargetFeedConfig
         Include="NetCore;OSX;Deb;Rpm;Node;BinaryLayout;Installer;Checksum;Maven;VSIX"
         TargetURL="$(StaticInternalFeed)"
+        Internal="true"
+        Isolated="false"
         Type="AzDoNugetFeed"
         Token="$(AzdoTargetFeedPAT)" />
       
       <TargetFeedConfig
         Include="OSX;Deb;Rpm;Node;BinaryLayout;Installer;Maven;VSIX"
         TargetURL="$(InternalInstallersTargetStaticFeed)"
+        Internal="true"
+        Isolated="false"
         Type="AzureStorageFeed"
         Token="$(InternalInstallersTargetStaticFeedKey)" />
       
       <TargetFeedConfig
         Include="Checksum"
         TargetURL="$(InternalChecksumsTargetStaticFeed)"
+        Internal="true"
+        Isolated="false"
         Type="AzureStorageFeed"
         Token="$(InternalChecksumsTargetStaticFeedKey)" 
 		    Internal="$(IsInternalBuild)" />
@@ -230,18 +250,24 @@
       <TargetFeedConfig
         Include="NetCore;OSX;Deb;Rpm;Node;BinaryLayout;Installer;Checksum;Maven;VSIX;Badge"
         TargetURL="$(TargetStaticFeed)"
+        Internal="false"
+        Isolated="false"
         Type="AzureStorageFeed"
         Token="$(AzureStorageTargetFeedPAT)" />
       
       <TargetFeedConfig Condition="'$(PublishInstallersAndChecksums)' == 'true'"
         Include="OSX;Deb;Rpm;Node;BinaryLayout;Installer;Maven;VSIX;Badge"
         TargetURL="$(InstallersTargetStaticFeed)"
+        Internal="false"
+        Isolated="false"
         Type="AzureStorageFeed"
         Token="$(InstallersAzureAccountKey)" />
       
       <TargetFeedConfig Condition="'$(PublishInstallersAndChecksums)' == 'true'"
         Include="Checksum"
         TargetURL="$(ChecksumsTargetStaticFeed)"
+        Internal="false"
+        Isolated="false"
         Type="AzureStorageFeed"
         Token="$(ChecksumsAzureAccountKey)" />
 
@@ -252,6 +278,8 @@
       <TargetFeedConfig Condition="'$(PublishToAzureDevOpsNuGetFeeds)' == 'true' AND '$(IsStableBuild)' != 'true'"
         Include="NetCore"
         TargetURL="$(AzureDevOpsStaticShippingFeed)"
+        Internal="false"
+        Isolated="false"
         Type="AzDoNugetFeed"
         Token="$(AzureDevOpsStaticShippingFeedKey)"
         AssetSelection="ShippingOnly" />
@@ -259,6 +287,8 @@
       <TargetFeedConfig Condition="'$(PublishToAzureDevOpsNuGetFeeds)' == 'true'"
         Include="NetCore"
         TargetURL="$(AzureDevOpsStaticTransportFeed)"
+        Internal="false"
+        Isolated="false"
         Type="AzDoNugetFeed"
         Token="$(AzureDevOpsStaticTransportFeedKey)"
         AssetSelection="NonShippingOnly" />
