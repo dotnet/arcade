@@ -205,7 +205,7 @@
         Include="OSX;Deb;Rpm;Node;BinaryLayout;Installer;Maven;VSIX"
         TargetURL="$(InternalInstallersTargetStaticFeed)"
         Internal="true"
-        Isolated="false"
+        Isolated="true"
         Type="AzureStorageFeed"
         Token="$(InternalInstallersTargetStaticFeedKey)" />
       
@@ -213,7 +213,7 @@
         Include="Checksum"
         TargetURL="$(InternalChecksumsTargetStaticFeed)"
         Internal="true"
-        Isolated="false"
+        Isolated="true"
         Type="AzureStorageFeed"
         Token="$(InternalChecksumsTargetStaticFeedKey)" 
 		    Internal="$(IsInternalBuild)" />
