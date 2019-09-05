@@ -184,8 +184,7 @@
         Internal="false"
         Isolated="true"
         Type="AzureStorageFeed"
-        Token="$(ChecksumsAzureAccountKey)" 
-		    Isolated="true" />
+        Token="$(ChecksumsAzureAccountKey)" />
     </ItemGroup>
 
     <!-- 
@@ -215,8 +214,7 @@
         Internal="true"
         Isolated="true"
         Type="AzureStorageFeed"
-        Token="$(InternalChecksumsTargetStaticFeedKey)" 
-		    Internal="$(IsInternalBuild)" />
+        Token="$(InternalChecksumsTargetStaticFeedKey)" />
     </ItemGroup>
 
     <!--
