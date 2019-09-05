@@ -1,0 +1,32 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- On .NET Framework and .NET Core we use this assembly as both a library and as an executable. -->
+    <OutputType Condition="'$(TargetFrameworkIdentifier)' != '.NETStandard'">Exe</OutputType>
+    <TargetFrameworks>netcoreapp2.1;net472;netstandard2.0</TargetFrameworks>
+    <Description>This package provides support for running tests out-of-process.</Description>
+    <ExcludeFromSourceBuild>true</ExcludeFromSourceBuild>
+    <IsPackable>true</IsPackable>
+    <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);PackBuildOutputs</TargetsForTfmSpecificContentInPackage>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="xunit.assert" Version="$(XUnitVersion)" />
+    <PackageReference Include="Microsoft.Diagnostics.Runtime" Version="1.0.5" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="build\$(MSBuildProjectName).targets" PackagePath="build\$(MSBuildProjectName).targets" Pack="true" />
+    <None Include="$(RepoRoot)LICENSE.txt" PackagePath="LICENSE.txt" Pack="true" />
+    <None Include="$(RepoRoot)THIRD-PARTY-NOTICES.txt" PackagePath="THIRD-PARTY-NOTICES.txt" Pack="true" />
+  </ItemGroup>
+
+  <Target Name="PackBuildOutputs"
+          DependsOnTargets="CopyFilesToOutputDirectory">
+    <ItemGroup>
+      <TfmSpecificPackageFile Include="$(ProjectDepsFilePath)" Condition="'$(TargetFramework)' != 'net472'" PackagePath="lib\$(TargetFramework)\" />
+      <TfmSpecificPackageFile Include="@(AppConfigWithTargetPath->'$(OutDir)%(TargetPath)')" Condition="'$(TargetFramework)' == 'net472'" PackagePath="lib\$(TargetFramework)\" />
+    </ItemGroup>
+  </Target>
+
+</Project>

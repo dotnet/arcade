@@ -25,6 +25,11 @@
     </ItemGroup>
   </Target>
 
+  <Target Name="CreateFailedTestsForFailedWorkItems"
+          BeforeTargets="StopTestRuns">
+    <CreateFailedTestsForFailedWorkItems FailedWorkItems="@(FailedWorkItem)"/>
+  </Target>
+
   <Target Name="StopTestRuns"
           AfterTargets="CoreTest"
           Outputs="%(HelixTargetQueue.Identity)">
@@ -33,8 +38,12 @@
   </Target>
 
   <Target Name="CheckTestResults"
-          BeforeTargets="AfterTest"
+          AfterTargets="AfterTest"
           Condition="$(FailOnTestFailure)">
-    <CheckAzurePipelinesTestResults ExpectedTestFailures="@(AzurePipelinesExpectedTestFailure)" EnableFlakyTestSupport="$(AzurePipelinesEnableFlakyTestSupport)" TestRunIds="@(HelixTargetQueue -> '%(TestRunId)')"/>
+    <CheckAzurePipelinesTestResults
+      ExpectedTestFailures="@(AzurePipelinesExpectedTestFailure)"
+      EnableFlakyTestSupport="$(AzurePipelinesEnableFlakyTestSupport)"
+      TestRunIds="@(HelixTargetQueue -> '%(TestRunId)')"
+    />
   </Target>
 </Project>

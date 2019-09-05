@@ -13,15 +13,12 @@ using Newtonsoft.Json;
 
 namespace Microsoft.DotNet.Helix.Client
 {
-    internal class JobDefinition : IJobDefinitionWithSource,
-        IJobDefinitionWithType,
-        IJobDefinitionWithBuild,
+    internal class JobDefinition : IJobDefinitionWithType,
         IJobDefinitionWithTargetQueue,
         IJobDefinition
     {
         private readonly Dictionary<string, string> _properties;
         private readonly List<WorkItemDefinition> _workItems;
-        private bool _withDefaultResultsContainer;
 
         public JobDefinition(IJob jobApi)
         {
@@ -48,7 +45,6 @@ namespace Microsoft.DotNet.Helix.Client
         public int? MaxRetryCount { get; private set; }
         public string StorageAccountConnectionString { get; private set; }
         public string TargetContainerName { get; set; } = DefaultContainerName;
-        public string ResultsStorageAccountConnectionString { get; private set; }
         public string TargetResultsContainerName { get; set; } = DefaultContainerName;
         public static string DefaultContainerName => $"helix-job-{Guid.NewGuid()}";
 
@@ -144,18 +140,6 @@ namespace Microsoft.DotNet.Helix.Client
             return this;
         }
 
-        public IJobDefinition WithResultsStorageAccountConnectionString(string resultsAccountConnectionString)
-        {
-            ResultsStorageAccountConnectionString = resultsAccountConnectionString;
-            return this;
-        }
-
-        public IJobDefinition WithDefaultResultsContainer()
-        {
-            _withDefaultResultsContainer = true;
-            return this;
-        }
-
         public async Task<ISentJob> SendAsync(Action<string> log = null)
         {
             IBlobHelper storage;
@@ -168,20 +152,10 @@ namespace Microsoft.DotNet.Helix.Client
                 storage = new ConnectionStringBlobHelper(StorageAccountConnectionString);
             }
 
-            IBlobContainer storageContainer = await storage.GetContainerAsync(TargetContainerName);
+            var (queueId, dockerTag, queueAlias) = ParseQueueId(TargetQueueId);
+
+            IBlobContainer storageContainer = await storage.GetContainerAsync(TargetContainerName, queueId);
             var jobList = new List<JobListEntry>();
-
-            IBlobContainer resultsStorageContainer = null;
-            if (!string.IsNullOrEmpty(ResultsStorageAccountConnectionString))
-            {
-
-                IBlobHelper resultsStorage = new ConnectionStringBlobHelper(ResultsStorageAccountConnectionString);
-                resultsStorageContainer = await resultsStorage.GetContainerAsync(TargetResultsContainerName);
-            }
-            else if (_withDefaultResultsContainer)
-            {
-                resultsStorageContainer = await storage.GetContainerAsync(TargetResultsContainerName);
-            }
 
             Dictionary<string, string> correlationPayloadUris =
                 (await Task.WhenAll(CorrelationPayloads.Select(async p => (uri: await p.Key.UploadAsync(storageContainer, log), destination: p.Value)))).ToDictionary(x => x.uri, x => x.destination);
@@ -220,31 +194,91 @@ namespace Microsoft.DotNet.Helix.Client
                 ResultContainerPrefix  = multipleDashes.Replace(illegalCharacters.Replace(ResultContainerPrefix, ""), "-");
             }
 
+            var creationRequest = new JobCreationRequest(Type, _properties.ToImmutableDictionary(), jobListUri.ToString(), queueId)
+            {
+                Creator = Creator,
+                ResultContainerPrefix = ResultContainerPrefix,
+                DockerTag = dockerTag,
+                QueueAlias = queueAlias,
+            };
+
+            if (string.IsNullOrEmpty(Source))
+            {
+                // We only want to specify a branch if Source wasn't already provided.
+                // Latest Helix Job API will 400 if both Source and any of SourcePrefix, TeamProject, Repository, or Branch are set.
+                InitializeSourceParameters(creationRequest);
+            }
+            else
+            {
+                creationRequest.Source = Source;
+            }
+
             string jobStartIdentifier = Guid.NewGuid().ToString("N");
             JobCreationResult newJob = await HelixApi.RetryAsync(
-                () => JobApi.NewAsync(
-                    new JobCreationRequest(
-                        Source,
-                        Type,
-                        Build,
-                        _properties.ToImmutableDictionary(),
-                        jobListUri.ToString(),
-                        TargetQueueId)
-                    {
-                        Creator = Creator,
-                        MaxRetryCount = MaxRetryCount ?? 0,
-                        JobStartIdentifier = jobStartIdentifier,
-                        ResultsUri = resultsStorageContainer?.Uri,
-                        ResultsUriRSAS = resultsStorageContainer?.ReadSas,
-                        ResultsUriWSAS = resultsStorageContainer?.WriteSas,
-                        ResultContainerPrefix = ResultContainerPrefix,
-                    }),
+                () => JobApi.NewAsync(creationRequest, jobStartIdentifier),
                 ex => log?.Invoke($"Starting job failed with {ex}\nRetrying..."),
                 IsRetryableJobListUriHttpError,
                 CancellationToken.None);
 
+            return new SentJob(JobApi, newJob, newJob.ResultsUri, newJob.ResultsUriRSAS);
+        }
 
-            return new SentJob(JobApi, newJob, resultsStorageContainer?.Uri, string.IsNullOrEmpty(Creator) ? resultsStorageContainer?.ReadSas : string.Empty);
+        private (string queueId, string dockerTag, string queueAlias) ParseQueueId(string value)
+        {
+            var @index = value.IndexOf('@');
+            if (@index < 0)
+            {
+                return (value, string.Empty, value);
+            }
+
+            string queueInfo = value.Substring(0, @index);
+            string dockerTag = value.Substring(@index + 1);
+
+            string queueAlias;
+            string queueId;
+
+            Match queueInfoSplit = new Regex(@"\((.+?)\)(.*)").Match(queueInfo);
+            if (queueInfoSplit.Success && queueInfoSplit.Groups.Count == 3)
+            {
+                queueAlias = queueInfoSplit.Groups[1].Value;
+                queueId = queueInfoSplit.Groups[2].Value;
+            }
+            else
+            {
+                queueId = queueAlias = queueInfo;
+            }
+
+            return (queueId, dockerTag, queueAlias);
+        }
+
+        private string GetRequiredEnvironmentVariable(string name)
+        {
+            return Environment.GetEnvironmentVariable(name) ?? throw new ArgumentException("Missing required environment variable", name);
+        }
+
+        private void InitializeSourceParameters(JobCreationRequest creationRequest)
+        {
+            creationRequest.Branch = GetRequiredEnvironmentVariable("BUILD_SOURCEBRANCH");
+            creationRequest.Repository = GetRequiredEnvironmentVariable("BUILD_REPOSITORY_NAME");
+            creationRequest.TeamProject = GetRequiredEnvironmentVariable("SYSTEM_TEAMPROJECT");
+            creationRequest.SourcePrefix = GetSourcePrefix();
+        }
+
+        private string GetSourcePrefix()
+        {
+            var reason = GetRequiredEnvironmentVariable("BUILD_REASON");
+            if (string.Equals(reason, "PullRequest", StringComparison.OrdinalIgnoreCase))
+            {
+                return "pr";
+            }
+
+            var teamProject = GetRequiredEnvironmentVariable("SYSTEM_TEAMPROJECT");
+            if (string.Equals(teamProject, "internal", StringComparison.OrdinalIgnoreCase))
+            {
+                return "official";
+            }
+
+            return "ci";
         }
 
         public bool IsRetryableJobListUriHttpError(Exception ex)
@@ -263,7 +297,7 @@ namespace Microsoft.DotNet.Helix.Client
             return this;
         }
 
-        public IJobDefinitionWithType WithSource(string source)
+        public IJobDefinition WithSource(string source)
         {
             Source = source;
             return this;
@@ -275,7 +309,7 @@ namespace Microsoft.DotNet.Helix.Client
             return this;
         }
 
-        public IJobDefinitionWithBuild WithType(string type)
+        public IJobDefinitionWithTargetQueue WithType(string type)
         {
             Type = type;
             return this;

@@ -47,13 +47,25 @@ namespace Microsoft.DotNet.Helix.Client
             }
         }
 
+        internal async Task OnGetRepositoriesFailed(HttpRequestMessage req, HttpResponseMessage res)
+        {
+            var content = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
+            var ex = new RestApiException(
+                new HttpRequestMessageWrapper(req, null),
+                new HttpResponseMessageWrapper(res, content));
+            HandleFailedGetRepositoriesRequest(ex);
+            HandleFailedRequest(ex);
+            Client.OnFailedRequest(ex);
+            throw ex;
+        }
+
         internal async Task<HttpOperationResponse<ViewConfiguration>> GetRepositoriesInternalAsync(
             string vcb = default,
             CancellationToken cancellationToken = default
         )
         {
 
-            var _path = "/api/2018-03-14/repo";
+            var _path = "/api/2019-06-17/repo";
 
             var _query = new QueryBuilder();
             if (!string.IsNullOrEmpty(vcb))
@@ -78,19 +90,11 @@ namespace Microsoft.DotNet.Helix.Client
                 }
 
                 _res = await Client.SendAsync(_req, cancellationToken).ConfigureAwait(false);
-                string _responseContent;
                 if (!_res.IsSuccessStatusCode)
                 {
-                    _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
-                    var ex = new RestApiException(
-                        new HttpRequestMessageWrapper(_req, null),
-                        new HttpResponseMessageWrapper(_res, _responseContent));
-                    HandleFailedGetRepositoriesRequest(ex);
-                    HandleFailedRequest(ex);
-                    Client.OnFailedRequest(ex);
-                    throw ex;
+                    await OnGetRepositoriesFailed(_req, _res);
                 }
-                _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
+                string _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
                 return new HttpOperationResponse<ViewConfiguration>
                 {
                     Request = _req,

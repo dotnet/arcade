@@ -18,9 +18,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         [Output]
         public string TargetFeedURL { get; set; }
 
-        [Output]
-        public string TargetFeedName { get; set; }
-
         [Required]
         public string RepositoryName { get; set; }
 
@@ -111,7 +108,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 await bfAction.InitAsync();
 
                 TargetFeedURL = $"{AzureDevOpsFeedsBaseUrl}{baseFeedName}";
-                TargetFeedName = baseFeedName;
 
                 Log.LogMessage(MessageImportance.High, $"Feed '{TargetFeedURL}' created successfully!");
             }

@@ -1,11 +1,10 @@
 using System;
-using Microsoft.Build.Framework;
-using Newtonsoft.Json;
-using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Build.Framework;
+using Newtonsoft.Json;
 
 namespace Microsoft.DotNet.Helix.Sdk
 {
@@ -17,6 +16,9 @@ namespace Microsoft.DotNet.Helix.Sdk
         [Required]
         public ITaskItem[] Jobs { get; set; }
 
+        [Required]
+        public ITaskItem[] FailedWorkItems { get; set; }
+
         public bool FailOnWorkItemFailure { get; set; } = true;
 
         public bool FailOnMissionControlTestFailure { get; set; } = false;
@@ -24,48 +26,44 @@ namespace Microsoft.DotNet.Helix.Sdk
         protected override async Task ExecuteCore(CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            List<string> jobNames = Jobs.Select(j => j.GetMetadata("Identity")).ToList();
+            var jobNames = Jobs.Select(j => j.GetMetadata("Identity")).ToList();
 
-            await Task.WhenAll(jobNames.Select(n => CheckHelixJobAsync(n, cancellationToken)));
-        }
-
-        private async Task CheckHelixJobAsync(string jobName, CancellationToken cancellationToken)
-        {
-            await Task.Yield();
-            cancellationToken.ThrowIfCancellationRequested();
-            Log.LogMessage($"Checking status of job {jobName}");
-            var status = await HelixApi.RetryAsync(
-                () => HelixApi.Job.PassFailAsync(jobName, cancellationToken),
-                LogExceptionRetry,
-                cancellationToken);
-            if (status.Working > 0)
-            {
-                Log.LogError(
-                    $"This task can only be used on completed jobs. There are {status.Working} of {status.Total} unfinished work items.");
-                return;
-            }
             if (FailOnWorkItemFailure)
             {
-                foreach (string failedWorkItem in status.Failed)
+                string accessTokenSuffix = string.IsNullOrEmpty(this.AccessToken) ? String.Empty : "?access_token={Get this from helix.dot.net}";
+                foreach (ITaskItem failedWorkItem in FailedWorkItems)
                 {
-                    var consoleUri = HelixApi.BaseUri.AbsoluteUri.TrimEnd('/') + $"/api/2018-03-14/jobs/{jobName}/workitems/{Uri.EscapeDataString(failedWorkItem)}/console";
+                    var jobName = failedWorkItem.GetMetadata("JobName");
+                    var workItemName = failedWorkItem.GetMetadata("WorkItemName");
+                    var consoleUri = failedWorkItem.GetMetadata("ConsoleOutputUri");
 
-                    Log.LogError($"Work item {failedWorkItem} in job {jobName} has failed, logs available here: {consoleUri}.");
+                    Log.LogError($"Work item {failedWorkItem} in job {jobName} has failed.");
+                    Log.LogError($"Failure log: {consoleUri}{accessTokenSuffix} .");
                 }
             }
 
             if (FailOnMissionControlTestFailure)
             {
-                for (; ; await Task.Delay(10000, cancellationToken)) // delay every time this loop repeats
-                {
-                    if (await MissionControlTestProcessingDoneAsync(jobName, cancellationToken))
-                    {
-                        break;
-                    }
+                await Task.WhenAll(jobNames.Select(n => CheckMissionControlTestFailuresAsync(n, cancellationToken)));
+            }
+        }
 
-                    Log.LogMessage($"Job {jobName} is still processing xunit results.");
-                    cancellationToken.ThrowIfCancellationRequested();
+        private async Task CheckMissionControlTestFailuresAsync(string jobName, CancellationToken cancellationToken)
+        {
+            await Task.Yield();
+            cancellationToken.ThrowIfCancellationRequested();
+
+
+            Log.LogMessage($"Checking mission control test status of job {jobName}");
+            for (; ; await Task.Delay(10000, cancellationToken)) // delay every time this loop repeats
+            {
+                if (await MissionControlTestProcessingDoneAsync(jobName, cancellationToken))
+                {
+                    break;
                 }
+
+                Log.LogMessage($"Job {jobName} is still processing xunit results.");
+                cancellationToken.ThrowIfCancellationRequested();
             }
         }
 

@@ -302,7 +302,7 @@ namespace Microsoft.Cci.Writers.CSharp
                 else if (_platformNotSupportedExceptionMessage.Length > 0)
                     Write($"\"{_platformNotSupportedExceptionMessage}\"");
 
-                Write(");");
+                Write("); ");
             }
             else if (NeedsMethodBodyForCompilation(method))
             {

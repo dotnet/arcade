@@ -20,11 +20,5 @@
   <ItemGroup>
     <ProjectReference Include="..\Microsoft.DotNet.SwaggerGenerator.CodeGenerator\Microsoft.DotNet.SwaggerGenerator.CodeGenerator.csproj" />
   </ItemGroup>
-  <PropertyGroup>
-    <RestoreSources>
-      $(RestoreSources);
-      https://dotnetfeed.blob.core.windows.net/dotnet-tools-internal/index.json;
-    </RestoreSources>
-  </PropertyGroup>
 
 </Project>

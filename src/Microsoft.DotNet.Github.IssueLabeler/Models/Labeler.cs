@@ -8,6 +8,8 @@ using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Octokit;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.GitHub.IssueLabeler
@@ -56,7 +58,7 @@ namespace Microsoft.DotNet.GitHub.IssueLabeler
             };
         }
 
-        public async Task PredictAndApplyLabelAsync(int number, string title, string body, ILogger logger)
+        public async Task PredictAndApplyLabelAsync(int number, string title, string body, GithubObjectType issueOrPr, ILogger logger)
         {
             if (_client == null)
             {
@@ -67,8 +69,17 @@ namespace Microsoft.DotNet.GitHub.IssueLabeler
             {
                 Number = number,
                 Title = title,
-                Body = body
+                Body = body,
+                IssueOrPr = issueOrPr,
+                IsPR = issueOrPr == GithubObjectType.PullRequest,
+                FilePaths = string.Empty
             };
+
+            if (corefxIssue.IsPR)
+            {
+                IReadOnlyList<PullRequestFile> prFiles = await _client.PullRequest.Files(_repoOwner, _repoName, number);
+                corefxIssue.FilePaths = String.Join(";", prFiles.Select(x => x.FileName));
+            }
 
             string label = Predictor.Predict(corefxIssue, logger, _threshold);
             Issue issueGithubVersion = await _client.Issue.Get(_repoOwner, _repoName, number);
@@ -83,7 +94,7 @@ namespace Microsoft.DotNet.GitHub.IssueLabeler
             }
             else
             {
-                logger.LogInformation($"! The Model is not able to assign the label to the Issue {corefxIssue.Number} confidently.");
+                logger.LogInformation($"! The Model is not able to assign the label to the {issueOrPr} {corefxIssue.Number} confidently.");
             }
         }
     }

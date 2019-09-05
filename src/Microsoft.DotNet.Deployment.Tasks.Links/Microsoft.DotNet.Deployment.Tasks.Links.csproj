@@ -8,6 +8,7 @@
     <Description>Aka.ms link manager</Description>
     <PackageTags>Arcade aka.ms</PackageTags>
     <DevelopmentDependency>true</DevelopmentDependency>
+    <ExcludeFromSourceBuild>true</ExcludeFromSourceBuild>
   </PropertyGroup>
 
   <ItemGroup>

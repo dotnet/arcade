@@ -37,9 +37,9 @@
       <SignCheckArgs Include="--file-status AllFiles" />
       <SignCheckArgs Include="--log-file $(SignCheckLog)" />
       <SignCheckArgs Include="--error-log-file $(SignCheckErrorLog)" />
-      <SignCheckArgs Include="--input-files $(SignCheckInputDir)" />
+      <SignCheckArgs Include="--input-files &quot;$(SignCheckInputDir)&quot;" />
       
-      <SignCheckArgs Include="--exclusions-file '$(SignCheckExclusionsFile)'" Condition="'$(SignCheckExclusionsFile)' != '' and Exists($(SignCheckExclusionsFile))" />
+      <SignCheckArgs Include="--exclusions-file &quot;$(SignCheckExclusionsFile)&quot;" Condition="'$(SignCheckExclusionsFile)' != '' and Exists($(SignCheckExclusionsFile))" />
       <SignCheckArgs Include="--verify-jar" Condition="'$(EnableJarSigningCheck)' == 'true'" />
       <SignCheckArgs Include="--verify-strongname" Condition="'$(EnableStrongNameCheck)' == 'true'" />
     </ItemGroup>

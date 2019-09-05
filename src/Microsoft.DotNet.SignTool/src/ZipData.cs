@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
@@ -47,17 +49,17 @@ namespace Microsoft.DotNet.SignTool
         /// <summary>
         /// Repack the zip container with the signed files.
         /// </summary>
-        public void Repack()
+        public void Repack(TaskLoggingHelper log)
         {
 #if NET472
             if (FileSignInfo.IsVsix())
             {
-                RepackPackage();
+                RepackPackage(log);
             }
             else
 #endif
             {
-                RepackRawZip();
+                RepackRawZip(log);
             }
         }
 
@@ -65,7 +67,7 @@ namespace Microsoft.DotNet.SignTool
         /// <summary>
         /// Repack a zip container with a package structure.
         /// </summary>
-        private void RepackPackage()
+        private void RepackPackage(TaskLoggingHelper log)
         {
             string getPartRelativeFileName(PackagePart part)
             {
@@ -86,12 +88,15 @@ namespace Microsoft.DotNet.SignTool
                     var signedPart = FindNestedPart(relativeName);
                     if (!signedPart.HasValue)
                     {
+                        log.LogMessage(MessageImportance.Low, $"Didn't find signed part for nested file: {FileSignInfo.FullPath} -> {relativeName}");
                         continue;
                     }
 
                     using (var signedStream = File.OpenRead(signedPart.Value.FileSignInfo.FullPath))
                     using (var partStream = part.GetStream(FileMode.Open, FileAccess.ReadWrite))
                     {
+                        log.LogMessage(MessageImportance.Low, $"Copying signed stream from {signedPart.Value.FileSignInfo.FullPath} to {FileSignInfo.FullPath} -> {relativeName}.");
+
                         signedStream.CopyTo(partStream);
                         partStream.SetLength(signedStream.Length);
                     }
@@ -102,7 +107,7 @@ namespace Microsoft.DotNet.SignTool
         /// <summary>
         /// Repack raw zip container.
         /// </summary>
-        private void RepackRawZip()
+        private void RepackRawZip(TaskLoggingHelper log)
         {
             using (var archive = new ZipArchive(File.Open(FileSignInfo.FullPath, FileMode.Open), ZipArchiveMode.Update))
             {
@@ -112,12 +117,15 @@ namespace Microsoft.DotNet.SignTool
                     var signedPart = FindNestedPart(relativeName);
                     if (!signedPart.HasValue)
                     {
+                        log.LogMessage(MessageImportance.Low, $"Didn't find signed part for nested file: {FileSignInfo.FullPath} -> {relativeName}");
                         continue;
                     }
 
                     using (var signedStream = File.OpenRead(signedPart.Value.FileSignInfo.FullPath))
                     using (var entryStream = entry.Open())
                     {
+                        log.LogMessage(MessageImportance.Low, $"Copying signed stream from {signedPart.Value.FileSignInfo.FullPath} to {FileSignInfo.FullPath} -> {relativeName}.");
+
                         signedStream.CopyTo(entryStream);
                         entryStream.SetLength(signedStream.Length);
                     }

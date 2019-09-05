@@ -13,36 +13,36 @@ Target completion date is 8/13/2019.
 | Arcade                     | mawilkie         | Complete | ✔️ | |
 | Arcade-Services            | mawilkie         | Complete | ✔️ | |
 | Arcade-Validation          | mawilkie         | Complete | ✔️ | |
-| aspnet-AspLabs             | dougbu/johluo    | On track | ➖ | |
-| aspnet-AspNetCore          | dougbu/johluo    | On track | ➖ | |
-| aspnet-AspNetCore-Tooling  | dougbu/johluo    | On track | ➖ | |
-| aspnet-EntityFramework6    | dougbu/johluo    | On track | ➖ | |
-| aspnet-EntityFrameworkCore | dougbu/johluo    | On track | ➖ | |
-| aspnet-Blazor              | dougbu/johluo    | On track | ➖ | |
-| aspnet-Extensions          | dougbu/johluo    | On track | ➖ | |
-| CLI                        | licavalc         | On track | ➖ | |
-| CLICommandLineParser       | licavalc         | On track | ➖ | |
-| CoreClr                    | russellk         | On track | ➖ | |
-| CoreFx                     | danmose          | On track | ➖ | |
-| Core-SDK                   | licavalc         | On track | ➖ | |
-| Core-Setup                 | dleeapho         | On track | ➖ | |
-| FSharp                     | brettfo          | On track | ➖ | |
-| MSBuild                    | licavalc         | On track | ➖ | |
-| nuget-NugetClient          | dtivel           | On track | ➖ | |
-| Roslyn                     | jaredpar         | On track | ➖ | |
-| SDK                        | licavalc         | On track | ➖ | |
-| Standard                   | danmose          | On track | ➖ | |
-| SymReader                  | tmat             | On track | ➖ | |
-| SymReader-Portable         | tmat             | On track | ➖ | |
-| Templating                 | vramak           | On track | ➖ | |
-| Test-Templates             | sasin            | On track | ➖ | |
-| Toolset                    | licavalc         | On track | ➖ | |
-| WebSDK                     | vramak           | On track | ➖ | |
-| WinForms                   | mmcgaw           | On track | ➖ | |
-| WPF                        | vatsan-madhavan  | On track | ➖ | |
+| aspnet-AspNetCore          | dougbu           | In progress | ➖  |  In PR https://github.com/aspnet/AspNetCore/pull/13040 |
+| aspnet-AspNetCore-Tooling  | dougbu           | Complete | ✔️ | |
+| aspnet-EntityFramework6    | dougbu/wtgodbe   | Complete | ✔️ | |
+| aspnet-EntityFrameworkCore | dougbu/wtgodbe   | Complete | ✔️ | |
+| aspnet-Blazor              | dougbu           | Complete | ✔️ | |
+| aspnet-Extensions          | dougbu/wtgodbe   | Complete | ✔️ | |
+| CLI                        | licavalc         | Complete | ✔️ | |
+| CLICommandLineParser       | licavalc         | N/A | |  This repo is not being developed anymore. We are taking a pinned version of it |
+| CoreClr                    | jeffschw/arobins | Complete | ✔️ | |
+| CoreFx                     | danmose/safern   | Complete | ✔️ | SourceLink validation disabled: https://github.com/dotnet/arcade/issues/3603 |
+| IoT                        | joperezr         | Complete | ✔️ | |
+| Core-SDK                   | licavalc         | In progress | ➖ |  Working in parallel.Will need https://github.com/dotnet/arcade/issues/3607 to be done before completing. |
+| Core-Setup                 | dleeapho         | Complete | ✔️ | Uses workarounds and skips most validation. Uses custom publish steps. |
+| FSharp                     | brettfo          | Complete | ✔️ | |
+| MSBuild                    | licavalc         | Complete | ✔️ | |
+| Roslyn                     | jaredpar         | Complete | ✔️ |  Complete with source link validation disabled |
+| SDK                        | licavalc         | Complete | ✔️ | |
+| SourceLink                 | tmat             | Complete | ✔️ | |
+| Standard                   | danmose/wigodbe  | Complete | ✔️ | |
+| SymReader                  | tmat             | Complete | ✔️ | |
+| SymReader-Portable         | tmat             | Complete | ✔️ | |
+| Templating                 | vramak           | Complete | ✔️ | |
+| Test-Templates             | sasin            | At risk  | ❌ |  No plan available |
+| Toolset                    | licavalc/riarenas| Complete | ✔️ | |
+| WebSDK                     | vramak           | Complete | ✔️ | |
+| WinForms                   | mmcgaw           | Complete | ✔️ | |
+| WPF                        | vatsan-madhavan  | Complete | ✔️ | Some reliability problems being observed, for e.g., https://github.com/dotnet/arcade/issues/3609| 
 
-| Status   | Description |
-| -------- | ----------- |
-| Complete | All work streams are complete |
-| On track | Work streams are on track for completion by the target completion date or exceptions are understood / acceptable |
-| At risk  | One or more work streams are not on track to be completed by the target completion date and may impact business decisions |
+| Status     | Description |
+| ---------- | ----------- |
+| Complete ✔️| All work streams are complete |
+| On track ➖| Work streams are on track for completion by the target completion date or exceptions are understood / acceptable |
+| At risk  ❌| One or more work streams are not on track to be completed by the target completion date and may impact business decisions |

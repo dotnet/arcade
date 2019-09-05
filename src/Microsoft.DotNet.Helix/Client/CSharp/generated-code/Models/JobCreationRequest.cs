@@ -6,24 +6,34 @@ namespace Microsoft.DotNet.Helix.Client.Models
 {
     public partial class JobCreationRequest
     {
-        public JobCreationRequest(string source, string type, string build, IImmutableDictionary<string, string> properties, string listUri, string queueId)
+        public JobCreationRequest(string type, IImmutableDictionary<string, string> properties, string listUri, string queueId)
         {
-            Source = source;
             Type = type;
-            Build = build;
             Properties = properties;
             ListUri = listUri;
             QueueId = queueId;
         }
 
+        [JsonProperty("Creator")]
+        public string Creator { get; set; }
+
         [JsonProperty("Source")]
         public string Source { get; set; }
 
+        [JsonProperty("SourcePrefix")]
+        public string SourcePrefix { get; set; }
+
+        [JsonProperty("TeamProject")]
+        public string TeamProject { get; set; }
+
+        [JsonProperty("Repository")]
+        public string Repository { get; set; }
+
+        [JsonProperty("Branch")]
+        public string Branch { get; set; }
+
         [JsonProperty("Type")]
         public string Type { get; set; }
-
-        [JsonProperty("Build")]
-        public string Build { get; set; }
 
         [JsonProperty("Properties")]
         public IImmutableDictionary<string, string> Properties { get; set; }
@@ -34,29 +44,11 @@ namespace Microsoft.DotNet.Helix.Client.Models
         [JsonProperty("QueueId")]
         public string QueueId { get; set; }
 
-        [JsonProperty("ResultsUri")]
-        public string ResultsUri { get; set; }
+        [JsonProperty("QueueAlias")]
+        public string QueueAlias { get; set; }
 
-        [JsonProperty("ResultsUriRSAS")]
-        public string ResultsUriRSAS { get; set; }
-
-        [JsonProperty("ResultsUriWSAS")]
-        public string ResultsUriWSAS { get; set; }
-
-        [JsonProperty("Creator")]
-        public string Creator { get; set; }
-
-        [JsonProperty("PullRequestId")]
-        public string PullRequestId { get; set; }
-
-        [JsonProperty("MaxRetryCount")]
-        public int? MaxRetryCount { get; set; }
-
-        [JsonProperty("Attempt")]
-        public string Attempt { get; set; }
-
-        [JsonProperty("JobStartIdentifier")]
-        public string JobStartIdentifier { get; set; }
+        [JsonProperty("DockerTag")]
+        public string DockerTag { get; set; }
 
         [JsonProperty("ResultContainerPrefix")]
         public string ResultContainerPrefix { get; set; }
@@ -66,15 +58,7 @@ namespace Microsoft.DotNet.Helix.Client.Models
         {
             get
             {
-                if (string.IsNullOrEmpty(Source))
-                {
-                    return false;
-                }
                 if (string.IsNullOrEmpty(Type))
-                {
-                    return false;
-                }
-                if (string.IsNullOrEmpty(Build))
                 {
                     return false;
                 }

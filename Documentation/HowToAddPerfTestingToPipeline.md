@@ -1,6 +1,10 @@
 # Automate Performance testing run in AzDO Pipelines
 
-This document is meant to help repo owners onboard to performance testing. Currently, following these steps to add performance testing to your repo will allow you to run per-commit performance testing on physical hardware for internal builds. It is also set up to allow per-PR testing to run on virtual machines for functional testing of performance assets, with the ability to run PR performance testing on physical hardware to come in the near future. Performance testing run on internal builds will generate and upload performance data that will be able to be viewed in the performance visualization tool that is being developed by the perf team. 
+This document is meant to help repo owners onboard to performance testing. Currently, following these steps to add performance testing to your repo will allow you to run per-commit performance testing on physical hardware for internal builds. It is also set up to allow per-PR testing to run on virtual machines for functional testing of performance assets, in addition to the ability to run PR performance testing on physical hardware. Performance testing run on internal builds will generate and upload performance data that will be able to be viewed in the performance visualization tool that is being developed by the perf team.
+
+## Motivation
+
+The motivation for these scripts is to allow finer granularity in performance testing. While we test performance out of the dotnet/performance repo frequently, this testing is done at the full stack level. Running performance testing at each level of the stack (i.e. coreclr, corefx, etc.) can help us pinpoint where regressions or improvements originated, improving our ability to understand regressions and improvements.
 
 ## Performance scripts
 
@@ -28,22 +32,24 @@ Additional template parameters are:
 
 All parameters that have default values are based off of Azure Pipelines pre-defined variables should only be specified if there is a specific need.
 
-| Name                | Type    | Description                                  |
-| ------------------- | ------- | -------------------------------------------- |
-| SourceDirectory     | string  | The path to the root of the source directory. Default: $env:BUILD_SOURCESDIRECTORY |
-| CoreRootDirectory   | string  | Path to the core root directory. To be used when testing against a built corerun |
-| Architecture        | string  | Architecture of the build to be tested (i.e. x64, x86, arm64). Default: x64 |
-| Framework           | string  | Dotnet sdk framework to install. To be specified when testing against older frameworks. Default: netcoreapp3.0 |
-| CompilationMode     | string  | CompilationMode to use when jitting. Default: Tiered |
-| Repository          | string  | Repository that is running perf testing. Default: $env:BUILD_REPOSITORY_NAME |
-| Branch              | string  | Branch that is running perf testing. Default: $env:BUILD_SOURCEBRANCH |
-| CommitSha           | string  | Sha1 of the current branch. Default: $env:BUILD_SOURCEVERSION |
-| BuildNumber         | string  | Build number of the run in Azure Pipeline. Default: $env:BUILD_BUILDNUMBER |
-| RunCategories       | string  | Space separated list of test categories to run against. Should match the categories used by the csproj. Default: "coreclr corefx" |
-| Csproj              | string  | Relative path from the performance repository root to the csproj to run against. Default: src\benchmarks\micro\MicroBenchmarks.csproj |
-| Kind                | string  | Short identifier for the csproj. Should match csproj. Default: micro |
-| Internal            | switch  | If this is an official build |
-| Configurations      | string  | Space separated list of key=value pairs to describe the build (i.e. "OptimizationLevel=PGO CompilationMode=Tiered"). Default: CompilationMode=$CompilationMode |
+| Name                       | Type    | Description                                  |
+| -------------------------- | ------- | -------------------------------------------- |
+| SourceDirectory            | string  | The path to the root of the source directory. Default: $env:BUILD_SOURCESDIRECTORY |
+| CoreRootDirectory          | string  | Path to the core root directory. To be used when testing against a built corerun |
+| BaselineCoreRootDirectory  | string  | Path to the baseline core root directory. To be used when running PR testing to compare current work against a baseline |
+| Architecture               | string  | Architecture of the build to be tested (i.e. x64, x86, arm64). Default: x64 |
+| Framework                  | string  | Dotnet sdk framework to install. To be specified when testing against older frameworks. Default: netcoreapp3.0 |
+| CompilationMode            | string  | CompilationMode to use when jitting. Default: Tiered |
+| Repository                 | string  | Repository that is running perf testing. Default: $env:BUILD_REPOSITORY_NAME |
+| Branch                     | string  | Branch that is running perf testing. Default: $env:BUILD_SOURCEBRANCH |
+| CommitSha                  | string  | Sha1 of the current branch. Default: $env:BUILD_SOURCEVERSION |
+| BuildNumber                | string  | Build number of the run in Azure Pipeline. Default: $env:BUILD_BUILDNUMBER |
+| RunCategories              | string  | Space separated list of test categories to run against. Should match the categories used by the csproj. Default: "coreclr corefx" |
+| Csproj                     | string  | Relative path from the performance repository root to the csproj to run against. Default: src\benchmarks\micro\MicroBenchmarks.csproj |
+| Kind                       | string  | Short identifier for the csproj. Should match csproj. Default: micro |
+| Internal                   | switch  | If this is an official build |
+| Configurations             | string  | Space separated list of key=value pairs to describe the build (i.e. "OptimizationLevel=PGO CompilationMode=Tiered"). Default: CompilationMode=$CompilationMode |
+| Compare                    | switch  | Run comparison. To be used when running PR testing to compare against a baseline. Will tell the helix job to run a baseline run, the test run, and then run ResultsComparer to compare the two |
 
 Note: These parameters should be passed to the yml template in the extraSetupParameters parameter.
 
@@ -121,6 +127,25 @@ Performance testing has been fully tested in coreclr. Coreclr, corefx and other 
     - script: build-test.cmd Release x64 skipmanaged skipnative
       displayName: Create Core_Root
 ```
+
+## PR Comparison Support
+
+The performance template also supplies support for running PRs on physical hardware to compare the current change against a baseline. The template has two parameters that will enable PR testing:
+
+| Name                       | Type    | Description                                  |
+| -------------------------- | ------- | -------------------------------------------- |
+| BaselineCoreRootDirectory  | string  | Path to the baseline core root directory. To be used when running PR testing to compare current work against a baseline |
+| Compare                    | switch  | Run comparison. To be used when running PR testing to compare against a baseline. Will tell the helix job to run a baseline run, the test run, and then run ResultsComparer to compare the two |
+
+For PR testing, the Compare switch is required. It does the following:
+
+* Changes the helix queue to be Windows.10.Amd64.19H1.Tiger.Perf.Open or Ubuntu.1804.Amd64.Tiger.Perf.Open (i.e. physical perf hardware).
+* Sets up all perf parameters to match a normal perf run
+* Sets FailOnTestFailure to false in the helix project, so that regressions do not fail the run
+* Tells helix to run the baseline as a precommand
+* Tells helix to run ResultsComparer to compare the baseline and diff
+
+The BaselineCoreRootDirectory is similar to the CoreRootDirectory. It causes the baseline CoreRun to be moved to the payload directory so it can be pushed to the Helix machine, and then adds the --corerun option to the baseline command. It is not required, though strongly recommended, to run a compare PR. If it is not supplied, the baseline will be the most recent dotnet sdk, which may be several commits behind the master of your repository, and could obfuscate actual performance regressions or improvements.
 
 ## Available parameter values
 
