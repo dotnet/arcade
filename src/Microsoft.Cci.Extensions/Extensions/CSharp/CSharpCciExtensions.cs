@@ -580,14 +580,14 @@ namespace Microsoft.Cci.Extensions.CSharp
             return ((ITypeDefinition)method.ContainingType).ExplicitImplementationOverrides.Where(mi => mi.ImplementingMethod.Equals(method)).FirstOrDefault();
         }
 
-        public static object GetExplicitInterfaceMethodNullableAttributeArgument(this IMethodImplementation methodImplementation)
+        public static object GetExplicitInterfaceMethodNullableAttributeArgument(this IMethodImplementation methodImplementation, SRMetadataPEReaderCache metadataReaderCache)
         {
             if (methodImplementation != null)
             {
                 uint typeToken = ((IMetadataObjectWithToken)methodImplementation.ContainingType).TokenValue;
                 string location = methodImplementation.ContainingType.Locations.FirstOrDefault()?.Document?.Location;
                 if (location != null)
-                    return methodImplementation.ImplementedMethod.ContainingType.GetInterfaceImplementationAttributeConstructorArgument(typeToken, location, NullableConstructorArgumentParser);
+                    return methodImplementation.ImplementedMethod.ContainingType.GetInterfaceImplementationAttributeConstructorArgument(typeToken, location, metadataReaderCache, NullableConstructorArgumentParser);
             }
 
             return null;
@@ -766,11 +766,11 @@ namespace Microsoft.Cci.Extensions.CSharp
         // Basically an interface implementation can't have attributes applied directly in IL so they're added into the custom attribute table in metadata,
         // CCI doesn't expose APIs to read that metadata and we don't have a way to map those attributes, since we have a type reference rather than the reference
         // to the interfaceimpl.
-        public static object GetInterfaceImplementationAttributeConstructorArgument(this ITypeReference interfaceImplementation, uint typeDefinitionToken, string assemblyPath, Func<SRMetadataReader, CustomAttribute, (bool, object)> argumentResolver)
+        public static object GetInterfaceImplementationAttributeConstructorArgument(this ITypeReference interfaceImplementation, uint typeDefinitionToken, string assemblyPath, SRMetadataPEReaderCache metadataReaderCache, Func<SRMetadataReader, CustomAttribute, (bool, object)> argumentResolver)
         {
-            if (CSDeclarationWriter.MetadataReaderCache != null)
+            if (metadataReaderCache != null)
             {
-                SRMetadataReader metadataReader = CSDeclarationWriter.MetadataReaderCache.GetMetadataReader(assemblyPath);
+                SRMetadataReader metadataReader = metadataReaderCache.GetMetadataReader(assemblyPath);
                 int rowId = GetRowId(typeDefinitionToken);
                 TypeDefinition typeDefinition = metadataReader.GetTypeDefinition(MetadataTokens.TypeDefinitionHandle(rowId));
 
@@ -790,11 +790,11 @@ namespace Microsoft.Cci.Extensions.CSharp
         // Basically a generic constraint can't have attributes applied directly in IL so they're added into the custom attribute table in metadata via
         // the generic constraint table, CCI doesn't expose APIs to read that metadata and we don't have a way to map those attributes directly without using
         // System.Reflection.Metadata
-        public static object GetGenericParameterConstraintConstructorArgument(this IGenericParameter parameter, int constraintIndex, string assemblyPath, Func<SRMetadataReader, CustomAttribute, (bool, object)> argumentResolver)
+        public static object GetGenericParameterConstraintConstructorArgument(this IGenericParameter parameter, int constraintIndex, string assemblyPath, SRMetadataPEReaderCache metadataReaderCache, Func<SRMetadataReader, CustomAttribute, (bool, object)> argumentResolver)
         {
-            if (CSDeclarationWriter.MetadataReaderCache != null)
+            if (metadataReaderCache != null)
             {
-                SRMetadataReader metadataReader = CSDeclarationWriter.MetadataReaderCache.GetMetadataReader(assemblyPath);
+                SRMetadataReader metadataReader = metadataReaderCache.GetMetadataReader(assemblyPath);
                 uint token = ((IMetadataObjectWithToken)parameter).TokenValue;
                 int rowId = GetRowId(token);
                 GenericParameter genericParameter = metadataReader.GetGenericParameter(MetadataTokens.GenericParameterHandle(rowId));

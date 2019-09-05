@@ -124,7 +124,7 @@ namespace Microsoft.Cci.Writers.CSharp
             if (property.IsExplicitInterfaceProperty())
             {
                 IMethodImplementation methodImplementation = accessor.GetMethodImplementation();
-                object nullableAttributeArgument = methodImplementation.GetExplicitInterfaceMethodNullableAttributeArgument();
+                object nullableAttributeArgument = methodImplementation.GetExplicitInterfaceMethodNullableAttributeArgument(_metadataReaderCache);
                 if (nullableAttributeArgument != null)
                 {
                     WriteTypeName(methodImplementation.ImplementedMethod.ContainingType, noSpace: true, nullableAttributeArgument: nullableAttributeArgument);

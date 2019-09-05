@@ -24,8 +24,7 @@ namespace Microsoft.Cci.Writers.CSharp
         public static readonly Version LangVersionLatest = LangVersion7_3;
         public static readonly Version LangVersionPreview = LangVersion8_0;
 
-        public static SRMetadataPEReaderCache MetadataReaderCache { get; private set; }
-
+        private readonly SRMetadataPEReaderCache _metadataReaderCache;
         private readonly ISyntaxWriter _writer;
         private readonly ICciFilter _filter;
         private bool _forCompilation;
@@ -54,7 +53,7 @@ namespace Microsoft.Cci.Writers.CSharp
             _platformNotSupportedExceptionMessage = null;
             _includeFakeAttributes = false;
             _alwaysIncludeBase = false;
-            MetadataReaderCache = new SRMetadataPEReaderCache();
+            _metadataReaderCache = new SRMetadataPEReaderCache();
         }
 
         public CSDeclarationWriter(ISyntaxWriter writer, ICciFilter filter, bool forCompilation, bool includePseudoCustomAttributes = false)
@@ -523,7 +522,7 @@ namespace Microsoft.Cci.Writers.CSharp
 
         public void Dispose()
         {
-            MetadataReaderCache.Dispose();
+            _metadataReaderCache.Dispose();
         }
     }
 }

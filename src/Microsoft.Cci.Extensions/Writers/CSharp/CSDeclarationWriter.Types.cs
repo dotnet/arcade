@@ -126,7 +126,7 @@ namespace Microsoft.Cci.Writers.CSharp
                     object nullableAttributeValue = null;
                     if (location != null)
                     {
-                        nullableAttributeValue = interfaceImplementation.GetInterfaceImplementationAttributeConstructorArgument(typeToken, location, CSharpCciExtensions.NullableConstructorArgumentParser);
+                        nullableAttributeValue = interfaceImplementation.GetInterfaceImplementationAttributeConstructorArgument(typeToken, location, _metadataReaderCache, CSharpCciExtensions.NullableConstructorArgumentParser);
                     }
 
                     yield return () => WriteTypeName(interfaceImplementation, noSpace: true, nullableAttributeArgument: nullableAttributeValue);
