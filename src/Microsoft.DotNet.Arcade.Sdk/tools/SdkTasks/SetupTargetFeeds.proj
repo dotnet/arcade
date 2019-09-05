@@ -269,7 +269,7 @@
       Text="It wasn't possible to determine which target feed configuration to use." />
 
     <Message
-      Text="Artifact with category '%(TargetFeedConfig.Identity)' should go to %(TargetFeedConfig.Type) -> '%(TargetFeedConfig.TargetURL)'"
+      Text="Artifact with category '%(TargetFeedConfig.Identity)', Isolated='%(TargetFeedConfig.Isolated)', Internal='%(TargetFeedConfig.Internal)', AssetSelection='%(TargetFeedConfig.AssetSelection)' should go to %(TargetFeedConfig.Type) -> '%(TargetFeedConfig.TargetURL)'"
       Importance="high" />
   </Target>
 </Project>
