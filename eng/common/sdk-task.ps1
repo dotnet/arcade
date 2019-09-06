@@ -49,7 +49,7 @@ function Build([string]$target, [string]$binlogSuffix, [string]$logFolder) {
       @properties
   }
   finally {
-    Write-PipelinePublishArtifact -ArtifactSourcePath $log -TargetArtifactName $logFolder
+    Write-PipelineArtifactUpload -ArtifactSourcePath $log -TargetArtifactName $logFolder
   }
 }
 
