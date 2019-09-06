@@ -87,8 +87,6 @@ function Build {
     [string[]] $msbuildArgs = $properties
     
     # Resolve relative project paths into full paths 
-    # Multiple projects can be specified by delimiting them with semi-colons - obtain the 
-    #   individual paths, resolve them, and splice them back into a single semi-colon delimited list. 
     $projects = ($projects.Split(';').ForEach({Resolve-Path $_}) -join ';')
     
     $msbuildArgs += "/p:Projects=$projects"
