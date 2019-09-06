@@ -23,10 +23,22 @@ namespace Microsoft.DotNet.Arcade.Sdk.Tests
         public void MinimalRepoBuildsWithoutErrors()
         {
             var app = _fixture.CreateTestApp("MinimalRepo");
-            var exitCode = app.ExecuteBuild(_output, 
+            var exitCode = app.ExecuteBuild(_output,
                 // these properties are required for projects that are not in a git repo
-                "/p:EnableSourceLink=false", 
+                "/p:EnableSourceLink=false",
                 "/p:EnableSourceControlManagerQueries=false");
+            Assert.Equal(0, exitCode);
+        }
+
+        [Fact]
+        public void MinimalRepoWithFinalVersions()
+        {
+            var app = _fixture.CreateTestApp("MinimalRepo");
+            var exitCode = app.ExecuteBuild(_output,
+                // these properties are required for projects that are not in a git repo
+                "/p:EnableSourceLink=false",
+                "/p:EnableSourceControlManagerQueries=false",
+                "/p:DotNetFinalVersionKind=release");
             Assert.Equal(0, exitCode);
         }
     }

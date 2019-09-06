@@ -1,5 +1,4 @@
 parameters:
-  enableSymbolValidation: true
   symbolPublishingAdditionalParameters: ''
   artifactsPublishingAdditionalParameters: ''
   publishInstallersAndChecksums: false
@@ -10,8 +9,6 @@ stages:
   dependsOn: validate
   variables:
     - template: ../common-variables.yml
-    - name: azureDevOpsToolsFeed
-      value: 'https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json'
   displayName: .NET Tools - Latest Publishing
   jobs:
   - template: ../setup-maestro-vars.yml
@@ -123,9 +120,9 @@ stages:
             /p:ChecksumsTargetStaticFeed=$(ChecksumsBlobFeedUrl)
             /p:ChecksumsAzureAccountKey=$(dotnetclichecksums-storage-key)
             /p:PublishToAzureDevOpsNuGetFeeds=${{ parameters.publishToAzureDevOpsFeeds }}
-            /p:AzureDevOpsStaticShippingFeed=${{ parameters.azureDevOpsToolsFeed }}
+            /p:AzureDevOpsStaticShippingFeed='https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json'
             /p:AzureDevOpsStaticShippingFeedKey='$(dn-bot-dnceng-artifact-feeds-rw)'
-            /p:AzureDevOpsStaticTransportFeed=${{ parameters.azureDevOpsToolsFeed }}
+            /p:AzureDevOpsStaticTransportFeed='https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json'
             /p:AzureDevOpsStaticTransportFeedKey='$(dn-bot-dnceng-artifact-feeds-rw)
             ${{ parameters.artifactsPublishingAdditionalParameters }}
         
@@ -136,30 +133,6 @@ stages:
     - template: ../common-variables.yml
   jobs:
   - template: ../setup-maestro-vars.yml
-
-  - ${{ if eq(parameters.enableSymbolValidation, 'true') }}:
-    - job:
-      displayName: Symbol Availability
-      dependsOn: setupMaestroVars
-      condition: contains(dependencies.setupMaestroVars.outputs['setReleaseVars.InitialChannels'], format('[{0}]', variables.NetCore_Tools_Latest_Channel_Id))
-      pool:
-        vmImage: 'windows-2019'
-      steps:
-        - task: DownloadBuildArtifacts@0
-          displayName: Download Package Artifacts
-          inputs:
-            buildType: current
-            artifactName: PackageArtifacts
-
-        - task: PowerShell@2
-          displayName: Check Symbol Availability
-          inputs:
-            filePath: $(Build.SourcesDirectory)/eng/common/post-build/symbols-validation.ps1
-            arguments: -InputPath $(Build.ArtifactStagingDirectory)/PackageArtifacts/ -ExtractPath $(Agent.BuildDirectory)/Temp/ -DotnetSymbolVersion $(SymbolToolVersion)
-
-  - template: ../darc-gather-drop.yml
-    parameters:
-      ChannelId: ${{ variables.NetCore_Tools_Latest_Channel_Id }}
 
   - template: ../promote-build.yml
     parameters:
