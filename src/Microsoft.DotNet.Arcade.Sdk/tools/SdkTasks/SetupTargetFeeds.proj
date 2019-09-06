@@ -40,7 +40,8 @@
       - AzureDevOpsFeedsBaseUrl
       - ArtifactsCategory                     : Used to let user override target feed of public channels.
       - AzureStorageTargetFeedPAT
-      - StaticInternalFeed                    : URL of the feed to publish internal non-stable packages
+      - StaticInternalShippingFeed            : URL of the feed to publish shipping internal non-stable packages
+      - StaticInternalTransportFeed           : URL of the feed to publish non-shipping internal non-stable packages
       - PublishInstallersAndChecksums         : Whether to publish installers and checksums to a secondary location for Dev channels
       - InstallersTargetStaticFeed
       - InstallersAzureAccountKey
@@ -193,12 +194,22 @@
     -->
     <ItemGroup Condition="'@(TargetFeedConfig)' == '' AND '$(IsStableBuild)' == 'false' AND '$(IsInternalBuild)' == 'true'">
       <TargetFeedConfig
-        Include="NetCore;OSX;Deb;Rpm;Node;BinaryLayout;Installer;Checksum;Maven;VSIX"
-        TargetURL="$(StaticInternalFeed)"
+        Include="NetCore"
+        TargetURL="$(StaticInternalShippingFeed)"
         Internal="true"
         Isolated="false"
         Type="AzDoNugetFeed"
-        Token="$(AzdoTargetFeedPAT)" />
+        Token="$(AzdoTargetFeedPAT)" 
+        AssetSelection="ShippingOnly" />
+
+      <TargetFeedConfig
+        Include="NetCore"
+        TargetURL="$(StaticInternalTransportFeed)"
+        Internal="true"
+        Isolated="false"
+        Type="AzDoNugetFeed"
+        Token="$(AzdoTargetFeedPAT)" 
+        AssetSelection="NonShippingOnly" />
       
       <TargetFeedConfig
         Include="OSX;Deb;Rpm;Node;BinaryLayout;Installer;Maven;VSIX;Badge"
