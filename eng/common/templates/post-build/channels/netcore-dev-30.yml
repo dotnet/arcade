@@ -128,10 +128,6 @@ stages:
   jobs:
   - template: ../setup-maestro-vars.yml
 
-  - template: ../darc-gather-drop.yml
-    parameters:
-      ChannelId: ${{ variables.PublicDevRelease_30_Channel_Id }}
-
   - template: ../promote-build.yml
     parameters:
       ChannelId: ${{ variables.PublicDevRelease_30_Channel_Id }}
