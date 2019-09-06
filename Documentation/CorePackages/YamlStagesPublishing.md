@@ -5,6 +5,7 @@ This applies for builds from public branches, as well as for internal branches, 
 
 ## Deprecated Parameters
 
+If you use any of these parameters please stop doing so.
 
 | Parameter                       | Description                                                                               |
 | --------------------------------| ----------------------------------------------------------------------------------- |
