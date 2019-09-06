@@ -85,6 +85,12 @@ function Build {
     # Re-assign properties to a new variable because PowerShell doesn't let us append properties directly for unclear reasons.
     # Explicitly set the type as string[] because otherwise PowerShell would make this char[] if $properties is empty.
     [string[]] $msbuildArgs = $properties
+    
+    # Resolve relative project paths into full paths 
+    # Multiple projects can be specified by delimiting them with semi-colons - obtain the 
+    #   individual paths, resolve them, and splice them back into a single semi-colon delimited list. 
+    $projects = ($projects.Split(';').ForEach({Resolve-Path $_}) -join ';')
+    
     $msbuildArgs += "/p:Projects=$projects"
     $properties = $msbuildArgs
   }
