@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
+<Project>
+
+  <Target Name="RunCodeCoverage"
+          Inputs="@(TestRunWithRunner)"
+          Outputs="%(TestRunWithRunner.ResultsCodeCoveragePath)">
+
+      <Telemetry EventName="NETCORE_ENGINEERING_TELEMETRY" EventData="Category=CodeCoverage" />
+
+    <PropertyGroup>
+      <_TestAssembly>%(TestRunWithRunner.Identity)</_TestAssembly>
+      <_CoverageOutputFile>%(TestRunWithRunner.ResultsCodeCoveragePath)</_CoverageOutputFile>
+      <_TestRunner>%(TestRunWithRunner.TestRunner)</_TestRunner>
+      <_TestRunner>$(_TestRunner.Replace('"', '\"'))</_TestRunner>
+      <_TestRunnerArgs>%(TestRunWithRunner.TestRunnerArgs)</_TestRunnerArgs>
+      <_TestRunnerArgs>$(_TestRunnerArgs.Replace('"', '\"'))</_TestRunnerArgs>
+      <_ReportCoverageDirectory>$(ArtifactsLogDir)codecoverage/$([System.IO.Path]::GetFileNameWithoutExtension('$(_TestAssembly)'))</_ReportCoverageDirectory>
+
+      <_CoverletArgs>"$(_TestAssembly)" --format $(CoverletFormat) --output "$(_CoverageOutputFile)" --threshold $(CoverletThreshold) --threshold-type "$(CoverletThresholdType)" --threshold-stat $(CoverletThresholdStat) --verbosity $(CoverletVerbosity) --target "$(_TestRunner)" --targetargs "$(_TestRunnerArgs)"</_CoverletArgs>
+      <_CoverletCommand>"$(DotNetTool)" tool run coverlet $(_CoverletArgs)</_CoverletCommand>
+    </PropertyGroup>
+
+    <Exec Command="$(_CoverletCommand)" Condition="'%(TestRunWithRunner.TestRuntime)' == 'Core'" WorkingDirectory="$(_TargetDir)" />
+
+    <Message Text="Coverlet does not support non-Core projects" Condition="'%(TestRunWithRunner.TestRuntime)' != 'Core'" Importance="Low" />
+
+    <PropertyGroup>
+      <_ReportGeneratorArgs>"--reports:$(_CoverageOutputFile)" "--targetdir:$(_ReportCoverageDirectory)" "-reporttypes:$(ReportGeneratorReportType)" "-verbosity:$(ReportGeneratorVerbosity)"</_ReportGeneratorArgs>
+      <_ReportGeneratorCommand>"$(DotNetTool)" tool run reportgenerator $(_ReportGeneratorArgs)</_ReportGeneratorCommand>
+    </PropertyGroup>
+
+    <Exec Command="$(_ReportGeneratorCommand)" Condition="Exists('$(_CoverageOutputFile)')" />
+  </Target>
+</Project>

@@ -6,7 +6,7 @@
     <IsPerformanceTestProject>false</IsPerformanceTestProject>
     <IsPerformanceTestProject Condition="$(MSBuildProjectName.EndsWith('.PerformanceTests'))">true</IsPerformanceTestProject>
   </PropertyGroup>
-  
+
   <PropertyGroup Condition="'$(IsIntegrationTestProject)' == ''">
     <IsIntegrationTestProject>false</IsIntegrationTestProject>
     <IsIntegrationTestProject Condition="$(MSBuildProjectName.EndsWith('.IntegrationTests'))">true</IsIntegrationTestProject>
@@ -39,10 +39,16 @@
     <!-- Default test runner -->
     <TestRunnerName Condition="'$(UsingToolXUnit)' == 'true'">XUnit</TestRunnerName>
 
+    <!-- Default code coverage -->
+    <CodeCoverageRunnerName>Coverlet</CodeCoverageRunnerName>
+
     <!-- exclude test projects from source-build by default -->
     <ExcludeFromSourceBuild Condition="'$(ExcludeFromSourceBuild)' == ''">true</ExcludeFromSourceBuild>
   </PropertyGroup>
 
   <!-- Import specialized props files of supported test runners -->
   <Import Project="$(MSBuildThisFileDirectory)$(TestRunnerName)\$(TestRunnerName).props" Condition="'$(TestRunnerName)' != '' and Exists('$(MSBuildThisFileDirectory)$(TestRunnerName)\$(TestRunnerName).props')"/>
+
+  <!-- Import specialized props files of supported code coverage tool -->
+  <Import Project="$(MSBuildThisFileDirectory)$(CodeCoverageRunnerName)\$(CodeCoverageRunnerName).props" Condition="'$(CodeCoverageRunnerName)' != '' and Exists('$(MSBuildThisFileDirectory)$(CodeCoverageRunnerName)\$(CodeCoverageRunnerName).props')"/>
 </Project>

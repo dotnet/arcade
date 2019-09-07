@@ -14,12 +14,27 @@
     <TestRuntime Condition="'$(TestRuntime)' == '' and '$(OS)' == 'Windows_NT'">Full</TestRuntime>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(RunCodeCoverage)' == 'true'">
+    <DeterministicSourcePaths>false</DeterministicSourcePaths>
+  </PropertyGroup>
+
   <PropertyGroup Condition="'$(IsTestProject)' == 'true' and '$(TestArchitectures)' == ''">
     <TestArchitectures>$(PlatformTarget)</TestArchitectures>
     <TestArchitectures Condition="'$(PlatformTarget)' == '' or '$(PlatformTarget)' == 'AnyCpu'">x64</TestArchitectures>
+
+    <TestDependsOn Condition="'$(RunCodeCoverage)' != 'true'">
+      $(_GetTestsToRunTarget);
+      RunTests
+    </TestDependsOn>
+
+    <TestDependsOn Condition="'$(RunCodeCoverage)' == 'true'">
+      $(_GetTestsToRunTarget);
+      PrepareForRunTests;
+      RunCodeCoverage;
+    </TestDependsOn>
   </PropertyGroup>
 
-  <Target Name="Test" DependsOnTargets="$(_GetTestsToRunTarget);RunTests" Condition="'$(IsUnitTestProject)' == 'true' or '$(IsPerformanceTestProject)' == 'true'" />
+  <Target Name="Test" DependsOnTargets="$(TestDependsOn)" Condition="'$(IsUnitTestProject)' == 'true' or '$(IsPerformanceTestProject)' == 'true'" />
   <Target Name="IntegrationTest" DependsOnTargets="$(_GetTestsToRunTarget);RunTests" Condition="'$(IsIntegrationTestProject)' == 'true'" />
 
   <ItemGroup>
@@ -50,6 +65,7 @@
         <ResultsXmlPath>$(ArtifactsTestResultsDir)$(_ResultFileNameNoExt).xml</ResultsXmlPath>
         <ResultsHtmlPath>$(ArtifactsTestResultsDir)$(_ResultFileNameNoExt).html</ResultsHtmlPath>
         <ResultsStdOutPath>$(ArtifactsLogDir)$(_ResultFileNameNoExt).log</ResultsStdOutPath>
+        <ResultsCodeCoveragePath>$(ArtifactsLogDir)$(_ResultFileNameNoExt).codecoverage.xml</ResultsCodeCoveragePath>
         <TestRunnerAdditionalArguments>$(TestRunnerAdditionalArguments)</TestRunnerAdditionalArguments>
       </TestToRun>
     </ItemGroup>
@@ -69,4 +85,7 @@
 
   <!-- Import specialized targets files of supported test runners -->
   <Import Project="$(MSBuildThisFileDirectory)$(TestRunnerName)\$(TestRunnerName).targets" Condition="'$(TestRunnerName)' != '' and Exists('$(MSBuildThisFileDirectory)$(TestRunnerName)\$(TestRunnerName).targets')"/>
+
+  <!-- Import specialized targets files of supported code coverage runners -->
+  <Import Project="$(MSBuildThisFileDirectory)$(CodeCoverageRunnerName)\$(CodeCoverageRunnerName).targets" Condition="'$(CodeCoverageRunnerName)' != '' and Exists('$(MSBuildThisFileDirectory)$(CodeCoverageRunnerName)\$(CodeCoverageRunnerName).targets')"/>
 </Project>

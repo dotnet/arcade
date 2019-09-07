@@ -22,14 +22,11 @@
           Condition="'$(XUnitCoreSettingsFile)' != '' and '$(TargetFrameworkIdentifier)' == '.NETCoreApp'" />
   </ItemGroup>
 
-  <!-- 
-    Include '*' target to force running tests even if the input assemblies haven't changed and the outputs are present.
-    This matches the common expectations that test command always runs all tests in scope.
-  -->
-  <Target Name="RunTests"
-          Inputs="@(TestToRun);*"
-          Outputs="%(TestToRun.ResultsStdOutPath);%(TestToRun.ResultsXmlPath);%(TestToRun.ResultsHtmlPath)">
-    <Telemetry EventName="NETCORE_ENGINEERING_TELEMETRY" EventData="Category=Test" />
+
+  <Target Name="PrepareForRunTests"
+          Inputs="%(TestToRun.Identity)"
+          Outputs="%(TestToRun.Identity);*">
+
     <PropertyGroup>
       <_TestEnvironment>%(TestToRun.EnvironmentDisplay)</_TestEnvironment>
       <_TestAssembly>%(TestToRun.Identity)</_TestAssembly>
@@ -47,10 +44,10 @@
       <_TargetDir>$([System.IO.Path]::GetDirectoryName('$(_TestAssembly)'))\</_TargetDir>
       <_CoreRuntimeConfigPath>$(_TargetDir)$(_TargetFileNameNoExt).runtimeconfig.json</_CoreRuntimeConfigPath>
       <_CoreDepsPath>$(_TargetDir)$(_TargetFileNameNoExt).deps.json</_CoreDepsPath>
-      
+
       <_TestRunner Condition="'%(TestToRun.Architecture)'=='x86' And Exists('$(DotNetRoot)x86\dotnet.exe')">$(DotNetRoot)x86\dotnet.exe</_TestRunner>
       <_TestRunner Condition="'$(_TestRunner)'==''">$(DotNetTool)</_TestRunner>
-      
+
       <_TestRunnerArgs>exec --depsfile "$(_CoreDepsPath)" --runtimeconfig "$(_CoreRuntimeConfigPath)" $(TestRuntimeAdditionalArguments) "$(NuGetPackageRoot)xunit.runner.console/$(XUnitVersion)/tools/$(_TestRunnerTargetFramework)/xunit.console.dll" "$(_TestAssembly)" -noautoreporters -xml "%(TestToRun.ResultsXmlPath)" -html "%(TestToRun.ResultsHtmlPath)" $(_TestRunnerAdditionalArguments)</_TestRunnerArgs>
     </PropertyGroup>
 
@@ -66,20 +63,43 @@
       <_TestRunner Condition="'$(_TestRuntime)' != 'Mono'">$(_XUnitConsoleExePath)</_TestRunner>
     </PropertyGroup>
 
-    <PropertyGroup>
-      <_TestRunnerCommand>"$(_TestRunner)" $(_TestRunnerArgs)</_TestRunnerCommand>
+    <ItemGroup>
+      <TestRunWithRunner Include="@(TestToRun)">
+        <TestRunner>$(_TestRunner)</TestRunner>
+        <TestRunnerArgs>$(_TestRunnerArgs)</TestRunnerArgs>
+      </TestRunWithRunner>
+    </ItemGroup>
 
-      <!-- 
+  </Target>
+
+  <!--
+    Include '*' target to force running tests even if the input assemblies haven't changed and the outputs are present.
+    This matches the common expectations that test command always runs all tests in scope.
+  -->
+  <Target Name="RunTests"
+          DependsOnTargets="PrepareForRunTests"
+          Inputs="@(TestRunWithRunner);*"
+          Outputs="%(TestRunWithRunner.ResultsStdOutPath);%(TestRunWithRunner.ResultsXmlPath);%(TestRunWithRunner.ResultsHtmlPath)">
+    <Telemetry EventName="NETCORE_ENGINEERING_TELEMETRY" EventData="Category=Test" />
+
+    <PropertyGroup>
+      <_TestEnvironment>%(TestRunWithRunner.EnvironmentDisplay)</_TestEnvironment>
+      <_TestAssembly>%(TestRunWithRunner.Identity)</_TestAssembly>
+      <_TestRunnerAdditionalArguments>%(TestRunWithRunner.TestRunnerAdditionalArguments)</_TestRunnerAdditionalArguments>
+
+      <_TestRunnerCommand>"%(TestRunWithRunner.TestRunner)" %(TestRunWithRunner.TestRunnerArgs)</_TestRunnerCommand>
+
+      <!--
         Redirect std output of the runner.
-        Note that xUnit outputs failure info to both STDOUT (stack trace, message) and STDERR (failed test name) 
+        Note that xUnit outputs failure info to both STDOUT (stack trace, message) and STDERR (failed test name)
       -->
-      <_TestRunnerCommand Condition="'$(TestCaptureOutput)' != 'false'">$(_TestRunnerCommand) > "%(TestToRun.ResultsStdOutPath)" 2>&amp;1</_TestRunnerCommand>
+      <_TestRunnerCommand Condition="'$(TestCaptureOutput)' != 'false'">$(_TestRunnerCommand) > "%(TestRunWithRunner.ResultsStdOutPath)" 2>&amp;1</_TestRunnerCommand>
     </PropertyGroup>
 
     <ItemGroup>
-      <_OutputFiles Include="%(TestToRun.ResultsXmlPath)" />
-      <_OutputFiles Include="%(TestToRun.ResultsHtmlPath)" />
-      <_OutputFiles Include="%(TestToRun.ResultsStdOutPath)" />
+      <_OutputFiles Include="%(TestRunWithRunner.ResultsXmlPath)" />
+      <_OutputFiles Include="%(TestRunWithRunner.ResultsHtmlPath)" />
+      <_OutputFiles Include="%(TestRunWithRunner.ResultsStdOutPath)" />
     </ItemGroup>
 
     <MakeDir Directories="@(_OutputFiles->'%(RootDir)%(Directory)')"/>
@@ -93,8 +113,8 @@
     <!--
       Add command line to the log.
     -->
-    <WriteLinesToFile File="%(TestToRun.ResultsStdOutPath)" 
-                      Overwrite="false" 
+    <WriteLinesToFile File="%(TestRunWithRunner.ResultsStdOutPath)"
+                      Overwrite="false"
                       Lines=";=== COMMAND LINE ===;$(_TestRunnerCommand)"
                       Condition="'$(TestCaptureOutput)' != 'false'" />
 
@@ -104,11 +124,11 @@
     <Message Text="Tests succeeded: $(_TestAssembly) [$(_TestEnvironment)]" Condition="'$(_TestErrorCode)' == '0'" Importance="high" />
 
     <PropertyGroup>
-      <_ResultsFileToDisplay>%(TestToRun.ResultsHtmlPath)</_ResultsFileToDisplay>
+      <_ResultsFileToDisplay>%(TestRunWithRunner.ResultsHtmlPath)</_ResultsFileToDisplay>
       <_ResultsFileToDisplay Condition="!Exists('$(_ResultsFileToDisplay)')">%(TestToRun.ResultsStdOutPath)</_ResultsFileToDisplay>
     </PropertyGroup>
 
-    <!-- 
+    <!--
       Ideally we would set ContinueOnError="ErrorAndContinue" so that when a test fails in multi-targeted test project
       we'll still run tests for all target frameworks. ErrorAndContinue doesn't work well on Linux though: https://github.com/Microsoft/msbuild/issues/3961.
     -->
