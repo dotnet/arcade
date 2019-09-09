@@ -16,9 +16,17 @@ parameters:
   variables: []
   workspace: ''
 
+<<<<<<< HEAD
 # Job base template specific parameters
   # See schema documentation in /Documentation/AzureDevOps/TemplateSchema.md
   artifacts: ''
+=======
+  # Job base template specific parameters
+  # Optional: Enable installing Microbuild plugin
+  #           if 'true', these "variables" must be specified in the variables object or as part of the queue matrix
+  #             _TeamName - the name of your team
+  #             _SignType - 'test' or 'real'
+>>>>>>> 92c97296945e2e8bde147586cf7d142988719171
   enableMicrobuild: false
   enablePublishBuildArtifacts: false
   enablePublishBuildAssets: false
@@ -97,8 +105,8 @@ jobs:
     - ${{ each preStep in parameters.preSteps }}:
       - ${{ preStep }}
 
-  - ${{ if eq(parameters.enableMicrobuild, 'true') }}:
-    - ${{ if and(eq(parameters.runAsPublic, 'false'), ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
+  - ${{ if and(eq(parameters.runAsPublic, 'false'), ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
+    - ${{ if eq(parameters.enableMicrobuild, 'true') }}:
       - task: MicroBuildSigningPlugin@2
         displayName: Install MicroBuild plugin
         inputs:
@@ -109,6 +117,8 @@ jobs:
           TeamName: $(_TeamName)
         continueOnError: ${{ parameters.continueOnError }}
         condition: and(succeeded(), in(variables['_SignType'], 'real', 'test'), eq(variables['Agent.Os'], 'Windows_NT'))
+
+    - task: NuGetAuthenticate@0
 
   - ${{ if or(eq(parameters.artifacts.download, 'true'), ne(parameters.artifacts.download, '')) }}:
     - task: DownloadPipelineArtifact@2

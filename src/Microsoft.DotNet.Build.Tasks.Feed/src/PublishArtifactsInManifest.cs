@@ -1103,7 +1103,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 { ".GZ", "BINARYLAYOUT" },
                 { ".TGZ", "BINARYLAYOUT" },
                 { ".EXE", "INSTALLER" },
-                { ".SVG", "BADGE"}
+                { ".SVG", "BADGE"},
+                { ".WIXLIB", "INSTALLER" },
+                { ".JAR", "INSTALLER" },
+                { ".VERSION", "INSTALLER"},
+                { ".SWR", "INSTALLER" }
             };
 
             if (whichCategory.TryGetValue(extension, out var category))
