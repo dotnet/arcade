@@ -20,10 +20,10 @@ parameters:
   validateDependsOn:
   - Build
   publishDependsOn: 
-  - validate
+  - Validate
 
 stages:
-- stage: validate
+- stage: Validate
   dependsOn: ${{ parameters.validateDependsOn }}
   displayName: Validate
   jobs:
