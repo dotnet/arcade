@@ -7,7 +7,7 @@ steps:
   inputs:
     filePath: $(Build.SourcesDirectory)/eng/common/post-build/promote-build.ps1
     arguments: -BuildId $(BARBuildId) 
-      -ChannelId $(ChannelId) 
+      -ChannelId ${{ parameters.ChannelId }}
       -MaestroApiAccessToken $(MaestroApiAccessToken)
       -MaestroApiEndPoint $(MaestroApiEndPoint)
       -MaestroApiVersion $(MaestroApiVersion)
