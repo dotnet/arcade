@@ -101,7 +101,7 @@
     <!--
       If a project produces non-shipping packages, these packages should always include the build number label
     -->
-    <VersionSuffix Condition="'$(IsShipping)' == 'false'">$(_PreReleaseLabel)$(_BuildNumberLabels)</VersionSuffix>
+    <VersionSuffix Condition="'$(IsShippingPackage)' != 'true'">$(_PreReleaseLabel)$(_BuildNumberLabels)</VersionSuffix>
 
     <!--
       Disable NuGet Pack warning that the version is SemVer 2.0.
