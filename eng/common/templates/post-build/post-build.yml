@@ -108,12 +108,14 @@ stages:
     symbolPublishingAdditionalParameters: ${{ parameters.symbolPublishingAdditionalParameters }}
     artifactsPublishingAdditionalParameters: ${{ parameters.artifactsPublishingAdditionalParameters }}
     publishInstallersAndChecksums: ${{ parameters.publishInstallersAndChecksums }}
+    enableAzDONuGetFeeds: ${{ parameters.enableAzDONuGetFeeds }}
 
 - template: \eng\common\templates\post-build\channels\netcore-dev-31.yml
   parameters:
     symbolPublishingAdditionalParameters: ${{ parameters.symbolPublishingAdditionalParameters }}
     artifactsPublishingAdditionalParameters: ${{ parameters.artifactsPublishingAdditionalParameters }}
     publishInstallersAndChecksums: ${{ parameters.publishInstallersAndChecksums }}
+    enableAzDONuGetFeeds: ${{ parameters.enableAzDONuGetFeeds }}
 
 - template: \eng\common\templates\post-build\channels\netcore-tools-latest.yml
   parameters:
@@ -132,11 +134,13 @@ stages:
   parameters:
     symbolPublishingAdditionalParameters: ${{ parameters.symbolPublishingAdditionalParameters }}
     artifactsPublishingAdditionalParameters: ${{ parameters.artifactsPublishingAdditionalParameters }}
+    enableAzDONuGetFeeds: ${{ parameters.enableAzDONuGetFeeds }}
 
 - template: \eng\common\templates\post-build\channels\netcore-release-31.yml
   parameters:
     symbolPublishingAdditionalParameters: ${{ parameters.symbolPublishingAdditionalParameters }}
     artifactsPublishingAdditionalParameters: ${{ parameters.artifactsPublishingAdditionalParameters }}
+    enableAzDONuGetFeeds: ${{ parameters.enableAzDONuGetFeeds }}
 
 - template: \eng\common\templates\post-build\channels\netcore-internal-30.yml
   parameters:
