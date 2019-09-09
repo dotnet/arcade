@@ -168,33 +168,36 @@ namespace Microsoft.Cci.Writers
 
                 if (excludedFields.Any())
                 {
-                    var genericTypedFields = excludedFields.Where(f => f.Type.UnWrap().IsGenericParameter());
+                    // Struct layout should follow these rules:
+                    // 1. If there is a reference type field in the struct or within the fields' type closure,
+                    //    it should emit a reference type and a value type dummy field.
+                    //    - The reference type dummy field is needed in order to inform the compiler to block
+                    //      taking pointers to this struct because the GC will not track updating those references.
+                    //    - The value type dummy field is needed in order for the compiler to error correctly on definite assignment checks in all scenarios. dotnet/roslyn#30194
+                    // 2. If there are no reference type fields, but there are value type fields in the struct field closure,
+                    //    and at least one of these fields is a nonempty struct, then we should emit a value type dummy field.
+                    // 3. If the type is generic, then for every type parameter of the type, if there are any private
+                    //    or internal fields that are or contain any members whose type is that type parameter,
+                    //    we add a direct private field of that type.
 
-                    // Compiler needs to see any fields, even private, that have generic arguments to be able
-                    // to validate there aren't any struct layout cycles
+                    var genericTypedFields = excludedFields.Where(f => f.Type.UnWrap().IsGenericParameter());
                     foreach (var genericField in genericTypedFields)
                         newFields.Add(genericField);
 
-                    // For definiteassignment checks the compiler needs to know there is a private field
-                    // that has not been initialized so if there are any we need to add a dummy private
-                    // field to help the compiler do its job and error about uninitialized structs
+                    IFieldDefinition intField = DummyFieldWriterHelper(parentType, excludedFields, parentType.PlatformType.SystemInt32, "_dummyPrimitive");
                     bool hasRefPrivateField = excludedFields.Any(f => f.Type.IsOrContainsReferenceType());
-
-                    // If at least one of the private fields contains a reference type then we need to
-                    // set this field type to object or reference field to inform the compiler to block
-                    // taking pointers to this struct because the GC will not track updating those references
                     if (hasRefPrivateField)
                     {
-                        IFieldDefinition fieldType = DummyFieldWriterHelper(parentType, excludedFields, parentType.PlatformType.SystemObject);
-                        newFields.Add(fieldType);
+                        newFields.Add(DummyFieldWriterHelper(parentType, excludedFields, parentType.PlatformType.SystemObject));
+                        newFields.Add(intField);
                     }
-
-                    bool hasValueTypePrivateField = excludedFields.Any(f => !f.Type.IsOrContainsReferenceType());
-
-                    if (hasValueTypePrivateField)
+                    else
                     {
-                        IFieldDefinition fieldType = DummyFieldWriterHelper(parentType, excludedFields, parentType.PlatformType.SystemInt32, "_dummyPrimitive");
-                        newFields.Add(fieldType);
+                        bool hasEmptyValueTypePrivateField = excludedFields.Any(f => f.Type.IsNonEmptyStruct());
+                        if (hasEmptyValueTypePrivateField)
+                        {
+                            newFields.Add(intField);
+                        }
                     }
                 }
 

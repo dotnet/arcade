@@ -17,6 +17,8 @@ namespace Microsoft.Cci.Extensions.CSharp
 {
     public static class CSharpCciExtensions
     {
+        private const string ByReferenceFullName = "System.ByReference<T>";
+
         public static string GetCSharpDeclaration(this IDefinition definition, bool includeAttributes = false)
         {
             using (var stringWriter = new StringWriter())
@@ -134,7 +136,7 @@ namespace Microsoft.Cci.Extensions.CSharp
                     return true;
 
                 // ByReference<T> is a special type understood by runtime to hold a ref T.
-                if (resolvedType.AreEquivalent("System.ByReference<T>"))
+                if (resolvedType.AreEquivalent(ByReferenceFullName))
                     return true;
 
                 foreach (var field in resolvedType.Fields.Where(f => !f.IsStatic))
@@ -146,6 +148,50 @@ namespace Microsoft.Cci.Extensions.CSharp
                 }
             }
 
+            return false;
+        }
+
+        public static bool IsNonEmptyStruct(this ITypeReference type)
+        {
+            Queue<ITypeReference> typesToCheck = new Queue<ITypeReference>();
+            HashSet<ITypeReference> visited = new HashSet<ITypeReference>();
+
+            typesToCheck.Enqueue(type);
+
+            int node = 0;
+            while (typesToCheck.Count != 0)
+            {
+                var typeToCheck = typesToCheck.Dequeue();
+                visited.Add(typeToCheck);
+
+                var resolvedType = typeToCheck.ResolvedType;
+
+                if (resolvedType is Dummy || resolvedType.IsReferenceType || resolvedType.AreEquivalent(ByReferenceFullName))
+                {
+                    if (node == 0)
+                    {
+                        return false;
+                    }
+
+                    // If we're not in the root of the tree, it means we found a non-empty non-empty struct.
+                    return true;
+                }
+
+                foreach (var field in resolvedType.Fields.Where(f => !f.IsStatic))
+                {
+                    if (visited.Contains(field.Type))
+                    {
+                        // if we find a visited type in the fields tree, it means we have a cycle, which means the struct is non-empty.
+                        return true;
+                    }
+
+                    typesToCheck.Enqueue(field.Type);
+                }
+
+                node++;
+            }
+
+            // All the fields we found lead to empty structs.
             return false;
         }
 
