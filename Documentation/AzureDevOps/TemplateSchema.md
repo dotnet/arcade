@@ -36,7 +36,11 @@ parameters:
 
   # additional parameters
   artifacts: { artifactsReference }
-  enableMicrobuild: boolean # 'true' if Microbuild plugin should be installed for internal builds.
+  # 'true' if Microbuild plugin should be installed for internal builds.
+  #           if 'true', these "variables" must be specified in the variables object or as part of the queue matrix
+  #             _TeamName - the name of your team
+  #             _SignType - 'test' or 'real'  
+  enableMicrobuild: boolean
   enablePublishBuildArtifacts: boolean # deprecated (replaced by 'artifacts' parameter).  Enables publishing build logs as an Azure DevOps artifact.
   enablePublishBuildAssets: boolean # deprecated (replaced by 'artifacts' parameter). Enables publishing asset manifests as an Azure DevOps artifact.
   enablePublishUsingPipelines: boolean # prevent gather / push manifest from executing when using publishing pipelines

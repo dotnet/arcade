@@ -16,17 +16,9 @@ parameters:
   variables: []
   workspace: ''
 
-<<<<<<< HEAD
 # Job base template specific parameters
   # See schema documentation in /Documentation/AzureDevOps/TemplateSchema.md
   artifacts: ''
-=======
-  # Job base template specific parameters
-  # Optional: Enable installing Microbuild plugin
-  #           if 'true', these "variables" must be specified in the variables object or as part of the queue matrix
-  #             _TeamName - the name of your team
-  #             _SignType - 'test' or 'real'
->>>>>>> 92c97296945e2e8bde147586cf7d142988719171
   enableMicrobuild: false
   enablePublishBuildArtifacts: false
   enablePublishBuildAssets: false
