@@ -151,7 +151,7 @@ namespace Microsoft.Cci.Extensions.CSharp
             return false;
         }
 
-        public static bool IsNonEmptyStruct(this ITypeReference type)
+        public static bool IsOrContainsNonEmptyStruct(this ITypeReference type)
         {
             Queue<ITypeReference> typesToCheck = new Queue<ITypeReference>();
             HashSet<ITypeReference> visited = new HashSet<ITypeReference>();
