@@ -40,6 +40,7 @@
       - AzureDevOpsFeedsBaseUrl
       - ArtifactsCategory                     : Used to let user override target feed of public channels.
       - AzureStorageTargetFeedPAT
+      - StaticInternalFeed                    : URL of the feed to publish internal non-stable packages
       - PublishInstallersAndChecksums         : Whether to publish installers and checksums to a secondary location for Dev channels
       - InstallersTargetStaticFeed
       - InstallersAzureAccountKey
@@ -47,11 +48,9 @@
       - ChecksumsAzureAccountKey
       - PublishToAzureDevOpsNuGetFeeds        : If true, publish NuGet packages to Azure DevOps feeds.
       - AzureDevOpsStaticShippingFeed         : URL of the Azure DevOps NuGet feed to publish non-stable shipping packages to.
-      - AzureDevOpsStaticShippingFeedKey      : Key of the Azure DevOps NuGet feed to publish non-stable shipping packages to.
-      - AzureDevOpsStaticTransportFeed        : URL of the Azure DevOps NuGet feed to publish transport packages to.
-      - AzureDevOpsStaticTransportFeedKey     : Key of the Azure DevOps NuGet feed to publish transport packages to.
-      - AzureDevOpsStaticSymbolsFeed          : URL of the Azure DevOps NuGet feed to publish symbol packages to. Only non-stabilized assets are published here.
-      - AzureDevOpsStaticSymbolsFeedKey       : Key of the Azure DevOps NuGet feed to publish symbol packages to.
+      - AzureDevOpsStaticShippingFeedKey      : Key of the feed Azure DevOps NuGet feed to publish non-stable shipping packages to.
+      - AzureDevOpsStaticTransportFeed        : URL of the feed Azure DevOps NuGet feed to publish transport packages to.
+      - AzureDevOpsStaticTransportFeedKey     : Key of the feed Azure DevOps NuGet feed to publish to transport packages to.
 
       - CreateTestConfig                      : If set to true the user will be able to test a TargetFeedConfig 
                                                 constructed using parameters below:
@@ -100,24 +99,27 @@
     </ItemGroup>
 
     <!--
-      When a build is stable we ask `CreateAzureDevOpsFeed` in Tasks.Feed to create a new AzDO feed for packages
-      and an azure storage blob feed for symbols. We do not use 
+      When a build is stable we ask `CreateInternalBlobFeed` in Tasks.Feed to create a new AzDO feed.
+      That task will return an Azure Storage feed wrapped by an authenticated Azure function proxy,
+      we use that to mimic an internal/authenticated feed. This will likely change in the future once
+      we switch to using AzDO private feeds.
     -->
     <CreateAzureDevOpsFeed
         Condition="'@(TargetFeedConfig)' == '' AND '$(IsStableBuild)' == 'true'"
         IsInternal="$(IsInternalBuild)"
         AzureDevOpsPersonalAccessToken="$(AzdoTargetFeedPAT)"
         RepositoryName="$(RepositoryName)"
-        CommitSha="$(CommitSha)" >
+        CommitSha="$(CommitSha)">
       <Output TaskParameter="TargetFeedURL" PropertyName="NewAzDoFeedURL"/>
     </CreateAzureDevOpsFeed>
+
     <ItemGroup Condition="'@(TargetFeedConfig)' == '' AND '$(IsStableBuild)' == 'true'">
       <!--
         Configs below are for STABLE INTERNAL builds.
       -->
       <TargetFeedConfig
         Condition="'$(IsInternalBuild)' == 'true'"
-        Include="Package;Other"
+        Include="NetCore"
         TargetURL="$(NewAzDoFeedURL)"
         Internal="true"
         Isolated="true"
@@ -149,7 +151,7 @@
       <TargetFeedConfig
         Condition="'$(IsInternalBuild)' == 'false'"
         AssetSelection="ShippingOnly"
-        Include="Package"
+        Include="NetCore"
         TargetURL="$(NewAzDoFeedURL)"
         Internal="false"
         Isolated="true"
@@ -159,7 +161,7 @@
       <TargetFeedConfig
         Condition="'$(IsInternalBuild)' == 'false'"
         AssetSelection="NonShippingOnly"
-        Include="Package"
+        Include="NetCore"
         TargetURL="$(AzureDevOpsStaticTransportFeed)"
         Internal="false"
         Isolated="false"
@@ -191,7 +193,7 @@
     -->
     <ItemGroup Condition="'@(TargetFeedConfig)' == '' AND '$(IsStableBuild)' == 'false' AND '$(IsInternalBuild)' == 'true'">
       <TargetFeedConfig
-        Include="Package;Other;Symbols;OSX;Deb;Rpm;Node;BinaryLayout;Installer;Checksum;Maven;VSIX"
+        Include="NetCore;OSX;Deb;Rpm;Node;BinaryLayout;Installer;Checksum;Maven;VSIX"
         TargetURL="$(StaticInternalFeed)"
         Internal="true"
         Isolated="false"
@@ -244,7 +246,7 @@
     <!-- Configuration for public non-stable feeds -->
     <ItemGroup Condition="'@(TargetFeedConfig)' == ''">
       <TargetFeedConfig
-        Include="Package;Other;Symbols;OSX;Deb;Rpm;Node;BinaryLayout;Installer;Checksum;Maven;VSIX;Badge"
+        Include="NetCore;OSX;Deb;Rpm;Node;BinaryLayout;Installer;Checksum;Maven;VSIX;Badge"
         TargetURL="$(TargetStaticFeed)"
         Internal="false"
         Isolated="false"
@@ -272,22 +274,22 @@
         shipping and non-shipping (transport) and push them to separate feeds.
       -->
       <TargetFeedConfig Condition="'$(PublishToAzureDevOpsNuGetFeeds)' == 'true' AND '$(IsStableBuild)' != 'true'"
-        Include="Package"
+        Include="NetCore"
         TargetURL="$(AzureDevOpsStaticShippingFeed)"
         Internal="false"
         Isolated="false"
         Type="AzDoNugetFeed"
         Token="$(AzureDevOpsStaticShippingFeedKey)"
         AssetSelection="ShippingOnly" />
-
-      <TargetFeedConfig Condition="'$(PublishToAzureDevOpsNuGetFeeds)' == 'true' AND '$(IsStableBuild)' != 'true'"
-          Include="Package"
-          TargetURL="$(AzureDevOpsStaticShippingFeed)"
-          Internal="false"
-          Isolated="false"
-          Type="AzDoNugetFeed"
-          Token="$(AzureDevOpsStaticShippingFeedKey)"
-          AssetSelection="ShippingOnly" />
+      
+      <TargetFeedConfig Condition="'$(PublishToAzureDevOpsNuGetFeeds)' == 'true'"
+        Include="NetCore"
+        TargetURL="$(AzureDevOpsStaticTransportFeed)"
+        Internal="false"
+        Isolated="false"
+        Type="AzDoNugetFeed"
+        Token="$(AzureDevOpsStaticTransportFeedKey)"
+        AssetSelection="NonShippingOnly" />
     </ItemGroup>
 
     <Error
