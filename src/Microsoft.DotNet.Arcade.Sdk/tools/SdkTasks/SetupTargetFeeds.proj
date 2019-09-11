@@ -57,7 +57,7 @@
   -->
 
   <Target Name="SetupTargetFeeds">
-    Error
+    <Error
       Condition="'$(IsStableBuild)' == ''"
       Text="Parameter 'IsStableBuild' is empty. A boolean value is required." />
 
