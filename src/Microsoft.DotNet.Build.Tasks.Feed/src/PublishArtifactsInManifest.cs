@@ -7,6 +7,9 @@ using Microsoft.DotNet.Build.CloudTestTasks;
 using Microsoft.DotNet.Maestro.Client;
 using Microsoft.DotNet.Maestro.Client.Models;
 using Microsoft.DotNet.VersionTools.BuildManifest.Model;
+using Microsoft.DotNet.VersionTools.Util;
+using NuGet.Packaging.Core;
+using NuGet.Versioning;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -18,10 +21,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using NuGet.Versioning;
 using MSBuild = Microsoft.Build.Utilities;
-using Microsoft.DiaSymReader.PortablePdb;
-using Microsoft.DotNet.VersionTools.Util;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed
 {
@@ -51,6 +51,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         // or https://pkgs.dev.azure.com/dnceng/_packaging/internal-feed-name/nuget/v3/index.json
         public const string AzDoNuGetFeedPattern = 
             @"https://pkgs.dev.azure.com/(?<account>[a-zA-Z0-9]+)/(?<visibility>[a-zA-Z0-9-]+/)?_packaging/(?<feed>.+)/nuget/v3/index.json";
+        private const string SymbolPackageSuffix = ".symbols.nupkg";
 
         /// <summary>
         /// Configuration telling which target feed to use for each artifact category.
@@ -623,7 +624,18 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 await client.Assets.AddAssetLocationToAssetAsync(assetRecord.Id, AddAssetLocationToAssetAssetLocationType.NugetFeed, feedConfig.TargetURL);
             }
 
-            await PushNugetPackagesAsync(packagesToPublish, feedConfig, maxClients: MaxClients);
+            await PushNugetPackagesAsync(packagesToPublish, feedConfig, maxClients: MaxClients,
+                async (feedConfig, httpClient, package, feedAccount, feedVisibility, feedName) =>
+                {
+                    string localPackagePath = Path.Combine(PackageAssetsBasePath, $"{package.Id}.{package.Version}.nupkg");
+                    if (!File.Exists(localPackagePath))
+                    {
+                        Log.LogError($"Could not locate '{package.Id}.{package.Version}' at '{localPackagePath}'");
+                        return;
+                    }
+
+                    await PushNugetPackageAsync(feedConfig, httpClient, localPackagePath, package.Id, package.Version, feedAccount, feedVisibility, feedName);
+                });
         }
 
         /// <summary>
@@ -665,7 +677,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// <param name="packagesToPublish">List of packages to publish</param>
         /// <param name="feedConfig">Information about feed to publish ot</param>
         /// <returns>Async task.</returns>
-        public async Task PushNugetPackagesAsync(List<PackageArtifactModel> packagesToPublish, FeedConfig feedConfig, int maxClients)
+        public async Task PushNugetPackagesAsync<T>(List<T> packagesToPublish, FeedConfig feedConfig, int maxClients,
+            Action<FeedConfig, HttpClient, T, string, string, string> packagePublishAction)
         {
             var parsedUri = Regex.Match(feedConfig.TargetURL, PublishArtifactsInManifest.AzDoNuGetFeedPattern);
             if (!parsedUri.Success)
@@ -692,7 +705,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         {
                             // Wait to avoid starting too many processes.
                             await clientThrottle.WaitAsync();
-                            await PushNugetPackageAsync(feedConfig, httpClient, packageToPublish, feedAccount, feedVisibility, feedName);
+                            packagePublishAction(feedConfig, httpClient, packageToPublish, feedAccount, feedVisibility, feedName);
                         }
                         finally
                         {
@@ -720,17 +733,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         ///     a different package with the same id and version. The second case is an error, as azure devops feeds are immutable, the former
         ///     is simply a case where we should continue onward.
         /// </remarks>
-        private async Task PushNugetPackageAsync(FeedConfig feedConfig, HttpClient client, PackageArtifactModel packageToPublish,
+        private async Task PushNugetPackageAsync(FeedConfig feedConfig, HttpClient client, string localPackageLocation, string id, string version,
             string feedAccount, string feedVisibility, string feedName)
         {
-            Log.LogMessage(MessageImportance.High, $"Pushing package '{packageToPublish.Id}' to feed {feedConfig.TargetURL}");
-
-            string localPackageLocation = Path.Combine(PackageAssetsBasePath, $"{packageToPublish.Id}.{packageToPublish.Version}.nupkg");
-            if (!File.Exists(localPackageLocation))
-            {
-                Log.LogError($"Could not locate '{packageToPublish.Id}.{packageToPublish.Version}' at '{localPackageLocation}'");
-                return;
-            }
+            Log.LogMessage(MessageImportance.High, $"Pushing package '{id}' to feed {feedConfig.TargetURL}");
 
             try
             {
@@ -742,15 +748,15 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                     try
                     {
-                        string packageContentUrl = $"https://pkgs.dev.azure.com/{feedAccount}/{feedVisibility}_apis/packaging/feeds/{feedName}/nuget/packages/{packageToPublish.Id}/versions/{packageToPublish.Version}/content";
+                        string packageContentUrl = $"https://pkgs.dev.azure.com/{feedAccount}/{feedVisibility}_apis/packaging/feeds/{feedName}/nuget/packages/{id}/versions/{version}/content";
 
                         if (await IsLocalPackageIdenticalToFeedPackage(localPackageLocation, packageContentUrl, client))
                         {
-                            Log.LogMessage(MessageImportance.Normal, $"Package '{packageToPublish.Id}@{packageToPublish.Version}' already exists on '{feedConfig.TargetURL}' but has the same content. Skipping.");
+                            Log.LogMessage(MessageImportance.Normal, $"Package '{id}@{version}' already exists on '{feedConfig.TargetURL}' but has the same content. Skipping.");
                         }
                         else
                         {
-                            Log.LogError($"Package '{packageToPublish.Id}@{packageToPublish.Version}' already exists on '{feedConfig.TargetURL}' with different content.");
+                            Log.LogError($"Package '{id}@{version}' already exists on '{feedConfig.TargetURL}' with different content.");
                         }
 
                         return;
@@ -761,12 +767,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         Log.LogWarning($"Failed to determine whether an existing package on the feed has the same content as '{localPackageLocation}': {e.Message}");
                     }
 
-                    Log.LogError($"Failed to push '{packageToPublish.Id}@{packageToPublish.Version}'. Result code '{result}'.");
+                    Log.LogError($"Failed to push '{id}@{version}'. Result code '{result}'.");
                 }
             }
             catch (Exception e)
             {
-                Log.LogError($"Unexpected exception pushing package '{packageToPublish.Id}@{packageToPublish.Version}': {e.Message}");
+                Log.LogError($"Unexpected exception pushing package '{id}@{version}': {e.Message}");
             }
         }
 
@@ -916,6 +922,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             Maestro.Client.Models.Build buildInformation,
             FeedConfig feedConfig)
         {
+            List<BlobArtifactModel> symbolPackagesToPublish = new List<BlobArtifactModel>();
+
             foreach (var blob in blobsToPublish)
             {
                 var assetRecord = buildInformation.Assets
@@ -938,8 +946,40 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                 await client.Assets.AddAssetLocationToAssetAsync(assetRecord.Id, AddAssetLocationToAssetAssetLocationType.Container, feedConfig.TargetURL);
 
-                Log.LogWarning($"AzDO feed publishing not available for blobs. Blob '{blob.Id}' was not published.");
+                if (blob.Id.EndsWith(SymbolPackageSuffix, StringComparison.OrdinalIgnoreCase))
+                {
+                    symbolPackagesToPublish.Add(blob);
+                }
+                else
+                {
+                    Log.LogWarning($"AzDO feed publishing not available for blobs. Blob '{blob.Id}' was not published.");
+                }
             }
+
+            await PushNugetPackagesAsync<BlobArtifactModel>(symbolPackagesToPublish, feedConfig, maxClients: MaxClients,
+                async (feedConfig, httpClient, blob, feedAccount, feedVisibility, feedName) =>
+                {
+                    // Determine the local path to the blob
+                    string fileName = Path.GetFileName(blob.Id);
+                    string localBlobPath = Path.Combine(BlobAssetsBasePath, fileName);
+                    if (!File.Exists(localBlobPath))
+                    {
+                        Log.LogError($"Could not locate '{blob.Id} at '{localBlobPath}'");
+                        return;
+                    }
+
+                    string id;
+                    string version;
+                    // Determine package ID and version by asking the nuget libraries
+                    using (var packageReader = new NuGet.Packaging.PackageArchiveReader(localBlobPath))
+                    {
+                        PackageIdentity packageIdentity = packageReader.GetIdentity();
+                        id = packageIdentity.Id;
+                        version = packageIdentity.Version.ToString();
+                    }
+
+                    await PushNugetPackageAsync(feedConfig, httpClient, localBlobPath, id, version, feedAccount, feedVisibility, feedName);
+                });
         }
 
         private async Task PublishPackagesToAzureStorageNugetFeedAsync(
@@ -989,16 +1029,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             Maestro.Client.Models.Build buildInformation,
             FeedConfig feedConfig)
         {
-            BlobAssetsBasePath = BlobAssetsBasePath.TrimEnd(
-                Path.DirectorySeparatorChar,
-                Path.AltDirectorySeparatorChar) 
-                + Path.DirectorySeparatorChar;
-
             var blobs = blobsToPublish
                 .Select(blob =>
                 {
                     var fileName = Path.GetFileName(blob.Id);
-                    return new MSBuild.TaskItem($"{BlobAssetsBasePath}{fileName}", new Dictionary<string, string>
+                    return new MSBuild.TaskItem(Path.Combine(BlobAssetsBasePath, fileName), new Dictionary<string, string>
                     {
                         {"RelativeBlobPath", blob.Id}
                     });
@@ -1080,7 +1115,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// <summary>
         ///     Infers the category based on the extension of the particular asset
         ///     
-        ///     If no category can be inferred, then "NETCORE" is used.
+        ///     If no category can be inferred, then "OTHER" is used.
         /// </summary>
         /// <param name="assetId">ID of asset</param>
         /// <returns>Asset cateogry</returns>
@@ -1090,7 +1125,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
             var whichCategory = new Dictionary<string, string>()
             {
-                { ".NUPKG", "NETCORE" },
+                { ".NUPKG", "PACKAGE" },
                 { ".PKG", "OSX" },
                 { ".DEB", "DEB" },
                 { ".RPM", "RPM" },
@@ -1120,7 +1155,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 // We want to divide these into a separate category because for stabilized builds,
                 // they should go to an isolated location. In a non-stabilized build, they can go straight
                 // to blob feeds because the blob feed push tasks will automatically push them to the assets.
-                if (assetId.EndsWith("symbols.nupkg", StringComparison.OrdinalIgnoreCase))
+                if (assetId.EndsWith(SymbolPackageSuffix, StringComparison.OrdinalIgnoreCase))
                 {
                     return "SYMBOLS";
                 }
@@ -1128,7 +1163,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             }
             else
             {
-                return "NETCORE";
+                return "OTHER";
             }
         }
     }
