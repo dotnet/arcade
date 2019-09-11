@@ -230,7 +230,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 SkipSafetyChecks = skipChecks,
                 TargetFeedConfig = new Microsoft.Build.Utilities.TaskItem[]
                 {
-                    new Microsoft.Build.Utilities.TaskItem("NETCORE", new Dictionary<string, string> {
+                    new Microsoft.Build.Utilities.TaskItem("PACKAGE", new Dictionary<string, string> {
                         { "TargetUrl", BlobFeedUrl },
                         { "Token", RandomToken },
                         { "Type", "AZURESTORAGEFEED" },
