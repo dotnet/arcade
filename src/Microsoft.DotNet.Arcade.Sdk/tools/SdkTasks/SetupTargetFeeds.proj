@@ -128,7 +128,7 @@
       
       <TargetFeedConfig
         Condition="'$(IsInternalBuild)' == 'true'"
-        Include="OSX;Deb;Rpm;Node;BinaryLayout;Installer;Maven;VSIX"
+        Include="OSX;Deb;Rpm;Node;BinaryLayout;Installer;Maven;VSIX;Badge"
         TargetURL="$(InternalInstallersTargetStaticFeed)"
         Internal="true"
         Isolated="true"
@@ -170,7 +170,7 @@
 
       <TargetFeedConfig
         Condition="'$(IsInternalBuild)' == 'false'"
-        Include="OSX;Deb;Rpm;Node;BinaryLayout;Installer;Maven;VSIX"
+        Include="OSX;Deb;Rpm;Node;BinaryLayout;Installer;Maven;VSIX;Badge"
         TargetURL="$(InstallersTargetStaticFeed)"
         Internal="false"
         Isolated="true"
