@@ -625,7 +625,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             }
 
             await PushNugetPackagesAsync(packagesToPublish, feedConfig, maxClients: MaxClients,
-                async (feedConfig, httpClient, package, feedAccount, feedVisibility, feedName) =>
+                async (feed, httpClient, package, feedAccount, feedVisibility, feedName) =>
                 {
                     string localPackagePath = Path.Combine(PackageAssetsBasePath, $"{package.Id}.{package.Version}.nupkg");
                     if (!File.Exists(localPackagePath))
@@ -634,7 +634,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         return;
                     }
 
-                    await PushNugetPackageAsync(feedConfig, httpClient, localPackagePath, package.Id, package.Version, feedAccount, feedVisibility, feedName);
+                    await PushNugetPackageAsync(feed, httpClient, localPackagePath, package.Id, package.Version, feedAccount, feedVisibility, feedName);
                 });
         }
 
@@ -957,7 +957,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             }
 
             await PushNugetPackagesAsync<BlobArtifactModel>(symbolPackagesToPublish, feedConfig, maxClients: MaxClients,
-                async (feedConfig, httpClient, blob, feedAccount, feedVisibility, feedName) =>
+                async (feed, httpClient, blob, feedAccount, feedVisibility, feedName) =>
                 {
                     // Determine the local path to the blob
                     string fileName = Path.GetFileName(blob.Id);
@@ -978,7 +978,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         version = packageIdentity.Version.ToString();
                     }
 
-                    await PushNugetPackageAsync(feedConfig, httpClient, localBlobPath, id, version, feedAccount, feedVisibility, feedName);
+                    await PushNugetPackageAsync(feed, httpClient, localBlobPath, id, version, feedAccount, feedVisibility, feedName);
                 });
         }
 
