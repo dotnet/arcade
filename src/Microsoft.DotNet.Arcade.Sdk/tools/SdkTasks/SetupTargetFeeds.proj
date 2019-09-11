@@ -3,56 +3,52 @@
   <!--
     This file main target, namely `SetupTargetFeeds`, is used to create an ItemGroup with
     feed descriptors that will be used for publishing build assets.
-    
+
     Summary of the logic implemented here:
-      - A stable build is a non-preview build. Package versions are usually in 
+      - A stable build is a non-preview build. Package versions are usually in
         the format <Major.Minor.Patch>. To create stable builds the user have to
         set the `DotNetFinalVersionKind` build parameter to `release`.
-        
+
       - An internal build is a build from a branch that has `internal` on its name.
         The assets produced from this kind of build aren't meant for public usage.
-        
+
       - For business reasons package versions for stable builds don't increment
         automatically. That means that different stable builds may produce packages
         with different binary content but same version number.
-        
+
       - Since feeds don't permit overriding packages, the approach we followed
-        to publish assets from stable builds was to create a new _feed_ for every 
+        to publish assets from stable builds was to create a new _feed_ for every
         stable build. Therefore, whenever we are publishing packages from a stable
         build we create a new (public | internal) feed to publish packages to.
-        
+
       - Non stable builds are the usual ones. Package's version for such builds have
         a prerelease label, e.g., preview, beta, alpha, etc. Since packages for these
         builds have their version incremented automatically for every build we can
         publish the packages always to the same feed.
-        
+
       - Non-stable internal build's assets are published to a fixed internal feed.
-      
+
       - Non-stable public build's assets are published to various public feeds.
-    
+
     Parameters:
       - IsInternalBuild                       : true if the build is internal, i.e., created from an branch with internal on its name.
       - IsStableBuild                         : true if the build is stable, i.e., `DotNetFinalVersionKind` == `release`.
       - RepositoryName                        : Name of the source repo. Used when creating a stable internal feed.
       - CommitSha                             : Commit SHA for this build. Used when creating a stable internal feed.
-      - AzureStorageAccountName
-      - AzureStorageAccountKey
-      - AzureDevOpsFeedsBaseUrl
       - ArtifactsCategory                     : Used to let user override target feed of public channels.
-      - AzureStorageTargetFeedPAT
-      - StaticInternalFeed                    : URL of the feed to publish internal non-stable packages
-      - PublishInstallersAndChecksums         : Whether to publish installers and checksums to a secondary location for Dev channels
-      - InstallersTargetStaticFeed
-      - InstallersAzureAccountKey
-      - ChecksumsTargetStaticFeed
-      - ChecksumsAzureAccountKey
+      - AzureStorageTargetFeedPAT             : Key for Azure storage feed used to publish for non-stable, non-internal builds
+      - PublishInstallersAndChecksums         : Whether to publish installers and checksums to a secondary locations
+      - InstallersTargetStaticFeed            : Where installers should be published
+      - InstallersAzureAccountKey             : Account key for installers location
+      - ChecksumsTargetStaticFeed             : Where checksums should be published
+      - ChecksumsAzureAccountKey              : Account key forchecksums location
       - PublishToAzureDevOpsNuGetFeeds        : If true, publish NuGet packages to Azure DevOps feeds.
       - AzureDevOpsStaticShippingFeed         : URL of the Azure DevOps NuGet feed to publish non-stable shipping packages to.
       - AzureDevOpsStaticShippingFeedKey      : Key of the feed Azure DevOps NuGet feed to publish non-stable shipping packages to.
       - AzureDevOpsStaticTransportFeed        : URL of the feed Azure DevOps NuGet feed to publish transport packages to.
       - AzureDevOpsStaticTransportFeedKey     : Key of the feed Azure DevOps NuGet feed to publish to transport packages to.
 
-      - CreateTestConfig                      : If set to true the user will be able to test a TargetFeedConfig 
+      - CreateTestConfig                      : If set to true the user will be able to test a TargetFeedConfig
                                                 constructed using parameters below:
         - TestFeedCategories
         - TestFeedURL
@@ -61,7 +57,7 @@
   -->
 
   <Target Name="SetupTargetFeeds">
-    <Error
+    Error
       Condition="'$(IsStableBuild)' == ''"
       Text="Parameter 'IsStableBuild' is empty. A boolean value is required." />
 
@@ -87,7 +83,7 @@
 
     <!--
       If the user wants to use a test configuration we'll create a TargetFeedConfig using
-      optional parameters passed as properties. This should prevent all the other 
+      optional parameters passed as properties. This should prevent all the other
       cases below from being activated.
     -->
     <ItemGroup Condition="'$(CreateTestConfig)' == 'true'">
@@ -99,127 +95,8 @@
     </ItemGroup>
 
     <!--
-      When a build is stable we ask `CreateInternalBlobFeed` in Tasks.Feed to create a new AzDO feed.
-      That task will return an Azure Storage feed wrapped by an authenticated Azure function proxy,
-      we use that to mimic an internal/authenticated feed. This will likely change in the future once
-      we switch to using AzDO private feeds.
-    -->
-    <CreateAzureDevOpsFeed
-        Condition="'@(TargetFeedConfig)' == '' AND '$(IsStableBuild)' == 'true'"
-        IsInternal="$(IsInternalBuild)"
-        AzureDevOpsPersonalAccessToken="$(AzdoTargetFeedPAT)"
-        RepositoryName="$(RepositoryName)"
-        CommitSha="$(CommitSha)">
-      <Output TaskParameter="TargetFeedURL" PropertyName="NewAzDoFeedURL"/>
-    </CreateAzureDevOpsFeed>
-
-    <ItemGroup Condition="'@(TargetFeedConfig)' == '' AND '$(IsStableBuild)' == 'true'">
-      <!--
-        Configs below are for STABLE INTERNAL builds.
-      -->
-      <TargetFeedConfig
-        Condition="'$(IsInternalBuild)' == 'true'"
-        Include="NetCore"
-        TargetURL="$(NewAzDoFeedURL)"
-        Internal="true"
-        Isolated="true"
-        Type="AzDoNugetFeed"
-        Token="$(AzdoTargetFeedPAT)" />
-      
-      <TargetFeedConfig
-        Condition="'$(IsInternalBuild)' == 'true'"
-        Include="OSX;Deb;Rpm;Node;BinaryLayout;Installer;Maven;VSIX;Badge"
-        TargetURL="$(InternalInstallersTargetStaticFeed)"
-        Internal="true"
-        Isolated="true"
-        Type="AzureStorageFeed"
-        Token="$(InternalInstallersTargetStaticFeedKey)" />
-      
-      <TargetFeedConfig
-        Condition="'$(IsInternalBuild)' == 'true'"
-        Include="Checksum"
-        TargetURL="$(InternalChecksumsTargetStaticFeed)"
-        Internal="true"
-        Isolated="true"
-        Type="AzureStorageFeed"
-        Token="$(InternalChecksumsTargetStaticFeedKey)" />
-      
-      
-      <!--
-        Configs below are for STABLE PUBLIC builds.
-      -->
-      <TargetFeedConfig
-        Condition="'$(IsInternalBuild)' == 'false'"
-        AssetSelection="ShippingOnly"
-        Include="NetCore"
-        TargetURL="$(NewAzDoFeedURL)"
-        Internal="false"
-        Isolated="true"
-        Type="AzDoNugetFeed"
-        Token="$(AzdoTargetFeedPAT)" />
-
-      <TargetFeedConfig
-        Condition="'$(IsInternalBuild)' == 'false'"
-        AssetSelection="NonShippingOnly"
-        Include="NetCore"
-        TargetURL="$(AzureDevOpsStaticTransportFeed)"
-        Internal="false"
-        Isolated="false"
-        Type="AzDoNugetFeed"
-        Token="$(AzureDevOpsStaticTransportFeedKey)" />
-
-      <TargetFeedConfig
-        Condition="'$(IsInternalBuild)' == 'false'"
-        Include="OSX;Deb;Rpm;Node;BinaryLayout;Installer;Maven;VSIX;Badge"
-        TargetURL="$(InstallersTargetStaticFeed)"
-        Internal="false"
-        Isolated="true"
-        Type="AzureStorageFeed"
-        Token="$(InstallersAzureAccountKey)" />
-      
-      <TargetFeedConfig
-        Condition="'$(IsInternalBuild)' == 'false'"
-        Include="Checksum"
-        TargetURL="$(ChecksumsTargetStaticFeed)"
-        Internal="false"
-        Isolated="true"
-        Type="AzureStorageFeed"
-        Token="$(ChecksumsAzureAccountKey)" />
-    </ItemGroup>
-
-    <!-- 
-      Feed configuration for non-stable AND Internal builds. 
-      The NuGet feed is a static feed in this case.
-    -->
-    <ItemGroup Condition="'@(TargetFeedConfig)' == '' AND '$(IsStableBuild)' == 'false' AND '$(IsInternalBuild)' == 'true'">
-      <TargetFeedConfig
-        Include="NetCore;OSX;Deb;Rpm;Node;BinaryLayout;Installer;Checksum;Maven;VSIX"
-        TargetURL="$(StaticInternalFeed)"
-        Internal="true"
-        Isolated="false"
-        Type="AzDoNugetFeed"
-        Token="$(AzdoTargetFeedPAT)" />
-      
-      <TargetFeedConfig
-        Include="OSX;Deb;Rpm;Node;BinaryLayout;Installer;Maven;VSIX;Badge"
-        TargetURL="$(InternalInstallersTargetStaticFeed)"
-        Internal="true"
-        Isolated="true"
-        Type="AzureStorageFeed"
-        Token="$(InternalInstallersTargetStaticFeedKey)" />
-      
-      <TargetFeedConfig
-        Include="Checksum"
-        TargetURL="$(InternalChecksumsTargetStaticFeed)"
-        Internal="true"
-        Isolated="true"
-        Type="AzureStorageFeed"
-        Token="$(InternalChecksumsTargetStaticFeedKey)" />
-    </ItemGroup>
-
-    <!--
       - Adding this to let repos that want to override the TargetFeed be able to do so.
-      - I'm reusing the parameter that was introduced by RM pipelines so that no further 
+      - I'm reusing the parameter that was introduced by RM pipelines so that no further
         changes are needed in customer repos.
       - Eventually this will be deprecated or at least modified so that the build TargetFeed
         is selected based on build intent ('channel').
@@ -243,45 +120,169 @@
       <TargetStaticFeed Condition="'$(TargetStaticFeed)' == ''">https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json</TargetStaticFeed>
     </PropertyGroup>
 
-    <!-- Configuration for public non-stable feeds -->
-    <ItemGroup Condition="'@(TargetFeedConfig)' == ''">
+    <!--
+      When a build is stable we ask `CreateAzureDevOpsFeed` in Tasks.Feed to create a new AzDO feed.
+    -->
+    <CreateAzureDevOpsFeed
+        Condition="'@(TargetFeedConfig)' == '' AND '$(IsStableBuild)' == 'true'"
+        IsInternal="$(IsInternalBuild)"
+        AzureDevOpsPersonalAccessToken="$(AzdoTargetFeedPAT)"
+        RepositoryName="$(RepositoryName)"
+        CommitSha="$(CommitSha)">
+      <Output TaskParameter="TargetFeedURL" PropertyName="NewAzDoFeedURL"/>
+    </CreateAzureDevOpsFeed>
+
+    <Error
+      Condition="'@(TargetFeedConfig)' == '' AND '$(AzureStorageTargetFeedPAT)' == '' AND '$(IsInternalBuild)' == 'false'"
+      Text="Parameter 'AzureStorageTargetFeedPAT' is empty. A valid storage account key for $(TargetStaticFeed) is required." />
+
+    <!--
+        Config for:
+        - Stable = true
+        - Internal = true/false
+
+        Publish:
+          - Shipping (stable) assets to new azure devops feed url
+          - NonShipping (non-stable) assets to azure devops transport feed url
+          - NonShipping (non-stable) assets to legacy blob feed url
+          - Installers and checksums to desired storage accounts.
+
+        We leave the 'Internal' property off of these so that the
+        publish task will determine whether the feed is public or private by attempting to access
+        the URL anonymously.
+    -->
+    <ItemGroup Condition="'@(TargetFeedConfig)' == '' AND '$(IsStableBuild)' == 'true'">
       <TargetFeedConfig
-        Include="NetCore;OSX;Deb;Rpm;Node;BinaryLayout;Installer;Checksum;Maven;VSIX;Badge"
+        AssetSelection="ShippingOnly"
+        Include="NetCore"
+        TargetURL="$(NewAzDoFeedURL)"
+        Isolated="true"
+        Type="AzDoNugetFeed"
+        Token="$(AzdoTargetFeedPAT)" />
+
+      <TargetFeedConfig
+        AssetSelection="NonShippingOnly"
+        Include="NetCore"
         TargetURL="$(TargetStaticFeed)"
-        Internal="false"
         Isolated="false"
         Type="AzureStorageFeed"
         Token="$(AzureStorageTargetFeedPAT)" />
-      
+
+      <TargetFeedConfig
+        Condition="'$(PublishToAzureDevOpsNuGetFeeds)' == 'true'"
+        AssetSelection="NonShippingOnly"
+        Include="NetCore"
+        TargetURL="$(AzureDevOpsStaticTransportFeed)"
+        Isolated="false"
+        Type="AzDoNugetFeed"
+        Token="$(AzureDevOpsStaticTransportFeedKey)" />
+
+      <!-- These feeds are marked as isolated even though they are not. We simply overwrite
+           the old data with the new -->
+      <TargetFeedConfig
+        Condition="'$(PublishInstallersAndChecksums)' == 'true'"
+        Include="OSX;Deb;Rpm;Node;BinaryLayout;Installer;Maven;VSIX;Badge"
+        TargetURL="$(InstallersTargetStaticFeed)"
+        Isolated="true"
+        Type="AzureStorageFeed"
+        Token="$(InstallersTargetStaticFeedKey)" />
+
+      <TargetFeedConfig
+        Condition="'$(PublishInstallersAndChecksums)' == 'true'"
+        Include="Checksum"
+        TargetURL="$(ChecksumsTargetStaticFeed)"
+        Isolated="true"
+        Type="AzureStorageFeed"
+        Token="$(ChecksumsTargetStaticFeedKey)" />
+    </ItemGroup>
+
+    <!--
+      Config for:
+        - Stable = false
+        - Internal = true
+
+        Publish:
+          - Shipping (non-stable) assets to azure devops shipping feed url
+          - NonShipping (non-stable) assets to azure devops transport feed url
+          - Installers and checksums to desired storage accounts.
+    -->
+    <ItemGroup Condition="'@(TargetFeedConfig)' == '' AND '$(IsStableBuild)' == 'false' AND '$(IsInternalBuild)' == 'true'">
+      <TargetFeedConfig
+        Condition="'$(PublishToAzureDevOpsNuGetFeeds)' == 'true'"
+        AssetSelection="ShippingOnly"
+        Include="NetCore"
+        TargetURL="$(AzureDevOpsStaticShippingFeed)"
+        Isolated="false"
+        Type="AzDoNugetFeed"
+        Token="$(AzureDevOpsStaticShippingFeedKey)" />
+
+      <TargetFeedConfig
+        Condition="'$(PublishToAzureDevOpsNuGetFeeds)' == 'true'"
+        AssetSelection="NonShippingOnly"
+        Include="NetCore"
+        TargetURL="$(AzureDevOpsStaticTransportFeed)"
+        Isolated="false"
+        Type="AzDoNugetFeed"
+        Token="$(AzureDevOpsStaticTransportFeedKey)" />
+
+      <TargetFeedConfig
+        Condition="'$(PublishInstallersAndChecksums)' == 'true'"
+        Include="OSX;Deb;Rpm;Node;BinaryLayout;Installer;Maven;VSIX;Badge"
+        TargetURL="$(InstallersTargetStaticFeed)"
+        Isolated="false"
+        Type="AzureStorageFeed"
+        Token="$(InstallersTargetStaticFeedKey)" />
+
+      <TargetFeedConfig
+        Condition="'$(PublishInstallersAndChecksums)' == 'true'"
+        Include="Checksum"
+        TargetURL="$(ChecksumsTargetStaticFeed)"
+        Isolated="false"
+        Type="AzureStorageFeed"
+        Token="$(ChecksumsTargetStaticFeedKey)" />
+    </ItemGroup>
+
+    <!--
+      Config for:
+        - Stable = false
+        - Internal = false
+
+        Publish:
+          - Shipping (non-stable) assets to azure devops shipping feed url
+          - NonShipping (non-stable) assets to azure devops transport feed url
+          - All assets to legacy blob feed url
+          - Installers and checksums to desired storage accounts.
+    -->
+    <ItemGroup Condition="'@(TargetFeedConfig)' == '' AND '$(IsStableBuild)' == 'false' AND '$(IsInternalBuild)' == 'false'">
+      <TargetFeedConfig
+        Include="NetCore;OSX;Deb;Rpm;Node;BinaryLayout;Installer;Checksum;Maven;VSIX;Badge"
+        TargetURL="$(TargetStaticFeed)"
+        Isolated="false"
+        Type="AzureStorageFeed"
+        Token="$(AzureStorageTargetFeedPAT)" />
+
       <TargetFeedConfig Condition="'$(PublishInstallersAndChecksums)' == 'true'"
         Include="OSX;Deb;Rpm;Node;BinaryLayout;Installer;Maven;VSIX;Badge"
         TargetURL="$(InstallersTargetStaticFeed)"
-        Internal="false"
         Isolated="false"
         Type="AzureStorageFeed"
         Token="$(InstallersAzureAccountKey)" />
-      
+
       <TargetFeedConfig Condition="'$(PublishInstallersAndChecksums)' == 'true'"
         Include="Checksum"
         TargetURL="$(ChecksumsTargetStaticFeed)"
-        Internal="false"
         Isolated="false"
         Type="AzureStorageFeed"
         Token="$(ChecksumsAzureAccountKey)" />
 
-      <!--
-        If there is a request to also publish to NuGet feeds, we will divide the packages into
-        shipping and non-shipping (transport) and push them to separate feeds.
-      -->
-      <TargetFeedConfig Condition="'$(PublishToAzureDevOpsNuGetFeeds)' == 'true' AND '$(IsStableBuild)' != 'true'"
+      <TargetFeedConfig Condition="'$(PublishToAzureDevOpsNuGetFeeds)' == 'true'"
         Include="NetCore"
         TargetURL="$(AzureDevOpsStaticShippingFeed)"
-        Internal="false"
         Isolated="false"
         Type="AzDoNugetFeed"
         Token="$(AzureDevOpsStaticShippingFeedKey)"
         AssetSelection="ShippingOnly" />
-      
+
       <TargetFeedConfig Condition="'$(PublishToAzureDevOpsNuGetFeeds)' == 'true'"
         Include="NetCore"
         TargetURL="$(AzureDevOpsStaticTransportFeed)"
