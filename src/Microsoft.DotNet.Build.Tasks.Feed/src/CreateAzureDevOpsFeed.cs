@@ -34,6 +34,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         public string CommitSha { get; set; }
 
         [Required]
+        public string Bool { get; set; }
+
+        [Required]
         public string AzureDevOpsPersonalAccessToken { get; set; }
 
         public string AzureDevOpsFeedsApiVersion { get; set; } = "5.0-preview.1";

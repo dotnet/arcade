@@ -937,6 +937,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 }
 
                 await client.Assets.AddAssetLocationToAssetAsync(assetRecord.Id, AddAssetLocationToAssetAssetLocationType.Container, feedConfig.TargetURL);
+
+                Log.LogWarning($"AzDO feed publishing not available for blobs. Blob '{blob.Id}' was not published.");
             }
         }
 
@@ -1112,6 +1114,16 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
             if (whichCategory.TryGetValue(extension, out var category))
             {
+                // Special handling for symbols.nupkg. There are typically plenty of
+                // periods in package names. We get the extension to identify nupkg
+                // assets. But symbol packages have the extension '.symbols.nupkg'.
+                // We want to divide these into a separate category because for stabilized builds,
+                // they should go to an isolated location. In a non-stabilized build, they can go straight
+                // to blob feeds because the blob feed push tasks will automatically push them to the assets.
+                if (assetId.EndsWith("symbols.nupkg", StringComparison.OrdinalIgnoreCase))
+                {
+                    return "SYMBOLS";
+                }
                 return category;
             }
             else

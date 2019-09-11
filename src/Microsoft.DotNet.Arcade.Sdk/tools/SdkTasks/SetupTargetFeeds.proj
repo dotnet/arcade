@@ -99,10 +99,7 @@
     </ItemGroup>
 
     <!--
-      When a build is stable we ask `CreateInternalBlobFeed` in Tasks.Feed to create a new AzDO feed.
-      That task will return an Azure Storage feed wrapped by an authenticated Azure function proxy,
-      we use that to mimic an internal/authenticated feed. This will likely change in the future once
-      we switch to using AzDO private feeds.
+      When a build is stable we ask `CreateAzureDevOpsFeed` in Tasks.Feed to create a new AzDO feed.
     -->
     <CreateAzureDevOpsFeed
         Condition="'@(TargetFeedConfig)' == '' AND '$(IsStableBuild)' == 'true'"
@@ -193,7 +190,7 @@
     -->
     <ItemGroup Condition="'@(TargetFeedConfig)' == '' AND '$(IsStableBuild)' == 'false' AND '$(IsInternalBuild)' == 'true'">
       <TargetFeedConfig
-        Include="NetCore;OSX;Deb;Rpm;Node;BinaryLayout;Installer;Checksum;Maven;VSIX"
+        Include="NetCore;Symbols;OSX;Deb;Rpm;Node;BinaryLayout;Installer;Checksum;Maven;VSIX"
         TargetURL="$(StaticInternalFeed)"
         Internal="true"
         Isolated="false"
@@ -246,7 +243,7 @@
     <!-- Configuration for public non-stable feeds -->
     <ItemGroup Condition="'@(TargetFeedConfig)' == ''">
       <TargetFeedConfig
-        Include="NetCore;OSX;Deb;Rpm;Node;BinaryLayout;Installer;Checksum;Maven;VSIX;Badge"
+        Include="NetCore;Symbols;OSX;Deb;Rpm;Node;BinaryLayout;Installer;Checksum;Maven;VSIX;Badge"
         TargetURL="$(TargetStaticFeed)"
         Internal="false"
         Isolated="false"
@@ -283,7 +280,7 @@
         AssetSelection="ShippingOnly" />
       
       <TargetFeedConfig Condition="'$(PublishToAzureDevOpsNuGetFeeds)' == 'true'"
-        Include="NetCore"
+        Include="NetCore;Symbols"
         TargetURL="$(AzureDevOpsStaticTransportFeed)"
         Internal="false"
         Isolated="false"
