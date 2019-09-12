@@ -117,7 +117,7 @@ Phase 2 key dates are not yet defined.  The working group needs to gather more e
 
 - Dependency update workstream
 
-  - Primary: Michelle McDaniels, Megan Quinn
+  - Primary: Michelle McDaniel, Megan Quinn
 
   - Secondary: Chris Costa (providing additional support where needed) (*note: on FR rotation 10/7 - 10/21)
 
