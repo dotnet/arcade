@@ -95,7 +95,8 @@ function Build {
 
   # Work around issues with Azure Artifacts credential provider
   if ($ci) {
-    dotnet nuget locals http-cache -c
+    $dotnet = "$dotnetRoot\dotnet.exe"
+    & $dotnet nuget locals http-cache -c
     $env:NUGET_PLUGIN_HANDSHAKE_TIMEOUT_IN_SECONDS=20
     $env:NUGET_PLUGIN_REQUEST_TIMEOUT_IN_SECONDS=20
   }
