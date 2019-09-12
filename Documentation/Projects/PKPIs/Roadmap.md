@@ -57,15 +57,20 @@ See [features](#features) for which features are being delivered in phase 1.
 | 9/13 | PKPI Roadmap available |
 | 9/18 | Checkpoint* 1 for phase 1 | By this point we should review early visualizations of official build health and we should be able to identify missing data sources or data sources that need adjusting for "dependency update" visualizations. |
 | 9/25 | Checkpoint* 2 for phase 1 | Visualizations for dependency updates should be ready for review |
-| 10/2 | Checkpoint* 3 for phase 1 (if needed) | Final feedback |
-| 10/9 | LTS review** ||
-| 10/11 | Complete | Available for general use |
+| 10/2 | Checkpoint* 3 for phase 1 (tentative) | Optional checkpoint if needed |
+| 10/9 | Checkpoint* 4 for phase 1 (tentative) | Final feedback |
+| 10/16 | LTS review** ||
+| 10/18 | Complete | Available for general use |
 
 \* Checkpoint - meeting between WG and key stakeholders (Matt Mitchell / Jared Parsons) to review progress, acquire feedback, adjust course
 
 \*\* LTS review - demonstrate phase 1 deliverables to LTS team (Mark Wilkie, Chris Bohm, Shawn Rothlisberger, etc...)
 
-Note: After 10/9, we may be using staging data for visualizations depending on Arcade rollout schedules.
+Notes:
+
+- Checkpoints 3 and 4 are "tentative".  They will be scheduled if necessary.
+
+- After 10/16, we may be using staging data for visualizations depending on Arcade rollout schedules.
 
 ## Phase 2 - Build state
 
