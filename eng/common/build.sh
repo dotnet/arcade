@@ -178,13 +178,6 @@ function Build {
     bl="/bl:\"$log_dir/Build.binlog\""
   fi
 
-  # Work around issues with Azure Artifacts Credential Provider
-  if [[ "$ci" == true ]]; then
-    "$DOTNET_INSTALL_DIR/dotnet" nuget locals http-cache -c
-    export NUGET_PLUGIN_HANDSHAKE_TIMEOUT_IN_SECONDS=20
-    export NUGET_PLUGIN_REQUEST_TIMEOUT_IN_SECONDS=20
-  fi
-
   MSBuild $_InitializeToolset \
     $bl \
     /p:Configuration=$configuration \
