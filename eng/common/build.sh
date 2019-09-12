@@ -180,7 +180,7 @@ function Build {
 
   # Work around issues with Azure Artifacts Credential Provider
   if [[ "$ci" == true ]]; then
-    $DOTNET_INSTALL_DIR/dotnet nuget locals http-cache -c
+    "$DOTNET_INSTALL_DIR/dotnet" nuget locals http-cache -c
     export NUGET_PLUGIN_HANDSHAKE_TIMEOUT_IN_SECONDS=20
     export NUGET_PLUGIN_REQUEST_TIMEOUT_IN_SECONDS=20
   fi
