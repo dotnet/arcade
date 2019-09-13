@@ -52,6 +52,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         public const string AzDoNuGetFeedPattern = 
             @"https://pkgs.dev.azure.com/(?<account>[a-zA-Z0-9]+)/(?<visibility>[a-zA-Z0-9-]+/)?_packaging/(?<feed>.+)/nuget/v3/index.json";
         private const string SymbolPackageSuffix = ".symbols.nupkg";
+        private const string PackageSuffix = ".nupkg";
         private const string PackagesCategory = "PACKAGE";
 
         /// <summary>
@@ -972,13 +973,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                 await client.Assets.AddAssetLocationToAssetAsync(assetRecord.Id, AddAssetLocationToAssetAssetLocationType.Container, feedConfig.TargetURL);
 
-                if (blob.Id.EndsWith(SymbolPackageSuffix, StringComparison.OrdinalIgnoreCase))
+                if (blob.Id.EndsWith(PackageSuffix, StringComparison.OrdinalIgnoreCase))
                 {
                     symbolPackagesToPublish.Add(blob);
                 }
                 else
                 {
-                    Log.LogMessage($"AzDO feed publishing not available for blobs. Blob '{blob.Id}' was not published.");
+                    Log.LogWarning($"AzDO feed publishing not available for blobs. Blob '{blob.Id}' was not published.");
                 }
             }
 
