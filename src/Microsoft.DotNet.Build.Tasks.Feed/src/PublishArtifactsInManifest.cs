@@ -978,7 +978,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 }
                 else
                 {
-                    Log.LogWarning($"AzDO feed publishing not available for blobs. Blob '{blob.Id}' was not published.");
+                    Log.LogMessage($"AzDO feed publishing not available for blobs. Blob '{blob.Id}' was not published.");
                 }
             }
 
