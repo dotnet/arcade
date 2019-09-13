@@ -59,12 +59,12 @@ See [features](#features) for which features are being delivered in phase 1.
 | 9/25 | Checkpoint* 2 for phase 1 | Visualizations for dependency updates should be ready for review |
 | 10/2 | Checkpoint* 3 for phase 1 (tentative) | Optional checkpoint if needed |
 | 10/9 | Checkpoint* 4 for phase 1 (tentative) | Final feedback |
-| 10/16 | LTS review** ||
+| 10/16 | LT review** ||
 | 10/18 | Complete | Available for general use |
 
 \* Checkpoint - meeting between WG and key stakeholders (Matt Mitchell / Jared Parsons) to review progress, acquire feedback, adjust course
 
-\*\* LTS review - demonstrate phase 1 deliverables to LTS team (Mark Wilkie, Chris Bohm, Shawn Rothlisberger, etc...)
+\*\* LT review - demonstrate phase 1 deliverables to LTS team (Mark Wilkie, Chris Bohm, Shawn Rothlisberger, etc...)
 
 Notes:
 
