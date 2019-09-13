@@ -194,10 +194,23 @@
       <TargetFeedConfig
         Condition="'$(IsInternalBuild)' == 'false'"
         AssetSelection="NonShippingOnly"
-        Include="PACKAGE;SYMBOLS"
+        Include="Package;Symbols"
         TargetURL="$(TargetStaticFeed)"
         Isolated="false"
         Type="AzureStorageFeed"
+        Token="$(AzureStorageTargetFeedPAT)" />
+
+      <!-- Backup locations for the non package artifacts for those repositories that
+           have not yet moved to allowing Arcade to publish their own installers and checksums.
+           Core-setup, for instance, publishes its own installers and checksums and sets up their
+           locations. -->
+      <TargetFeedConfig
+        Condition="'$(IsInternalBuild)' == 'false' AND '$(PublishInstallersAndChecksums)' == 'false'"
+        Include="Symbols;OSX;Deb;Rpm;Node;BinaryLayout;Installer;Checksum;Maven;VSIX;Badge;Other"
+        TargetURL="$(TargetStaticFeed)"
+        Isolated="false"
+        Type="AzureStorageFeed"
+        AllowOverwrite="true"
         Token="$(AzureStorageTargetFeedPAT)" />
 
       <TargetFeedConfig
