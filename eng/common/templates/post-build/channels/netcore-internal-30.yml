@@ -84,8 +84,11 @@ stages:
       - task: NuGetAuthenticate@0
         displayName: 'Authenticate to AzDO Feeds'
 
-      - powershell: eng\common\enable-cross-org-publishing.ps1
+      - task: PowerShell@2
         displayName: Enable cross-org publishing
+        inputs:
+          filePath: eng\common\enable-cross-org-publishing.ps1
+          arguments: -token $(dn-bot-dnceng-artifact-feeds-rw)
 
       - task: PowerShell@2
         displayName: Publish Assets
