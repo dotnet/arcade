@@ -1,2 +1,6 @@
-Write-Host "##vso[task.setvariable variable=VSS_NUGET_ACCESSTOKEN;issecret=true;]$(dn-bot-dnceng-artifact-feeds-rw)"
-          Write-Host "##vso[task.setvariable variable=VSS_NUGET_URI_PREFIXES]https://dnceng.pkgs.visualstudio.com/;https://pkgs.dev.azure.com/dnceng/;https://devdiv.pkgs.visualstudio.com/;https://pkgs.dev.azure.com/devdiv/"
+param(
+  [string] $token
+)
+
+Write-Host "##vso[task.setvariable variable=VSS_NUGET_ACCESSTOKEN;issecret=true;]$token"
+Write-Host "##vso[task.setvariable variable=VSS_NUGET_URI_PREFIXES]https://dnceng.pkgs.visualstudio.com/;https://pkgs.dev.azure.com/dnceng/;https://devdiv.pkgs.visualstudio.com/;https://pkgs.dev.azure.com/devdiv/"
