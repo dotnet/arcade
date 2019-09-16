@@ -162,7 +162,7 @@ namespace Microsoft.Cci.Writers
                 // 2. If there are no reference type fields, but there are value type fields in the struct field closure,
                 //    and at least one of these fields is a nonempty struct, then we should emit a value type dummy field.
 
-                //    - The previous rules are for definiteassignment checks, so the compiler knows there is a private field
+                //    - The previous rules are for definite assignment checks, so the compiler knows there is a private field
                 //      that has not been initialized to error about uninitialized structs.
                 //
                 // 3. If the type is generic, then for every type parameter of the type, if there are any private
