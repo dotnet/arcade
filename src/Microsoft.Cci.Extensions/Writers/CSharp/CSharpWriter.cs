@@ -169,7 +169,7 @@ namespace Microsoft.Cci.Writers
                 //    or internal fields that are or contain any members whose type is that type parameter,
                 //    we add a direct private field of that type.
 
-                //    - Compiler needs to see any fields, even private, that have generic arguments to be able
+                //    - Compiler needs to see all fields that have generic arguments (even private ones) to be able
                 //      to validate there aren't any struct layout cycles.
 
                 // Note: By "private", we mean not visible outside the assembly.
