@@ -136,7 +136,7 @@ namespace Microsoft.Cci.Extensions.CSharp
                     return true;
 
                 // ByReference<T> is a special type understood by runtime to hold a ref T.
-                if (resolvedType.AreEquivalent(ByReferenceFullName))
+                if (resolvedType.AreGenericTypeEquivalent(ByReferenceFullName))
                     return true;
 
                 foreach (var field in resolvedType.Fields.Where(f => !f.IsStatic))
@@ -166,7 +166,7 @@ namespace Microsoft.Cci.Extensions.CSharp
 
                 var resolvedType = typeToCheck.ResolvedType;
 
-                if (resolvedType is Dummy || resolvedType.IsReferenceType || resolvedType.AreEquivalent(ByReferenceFullName))
+                if (resolvedType is Dummy || resolvedType.IsReferenceType || resolvedType.AreGenericTypeEquivalent(ByReferenceFullName))
                 {
                     if (node == 0)
                     {
