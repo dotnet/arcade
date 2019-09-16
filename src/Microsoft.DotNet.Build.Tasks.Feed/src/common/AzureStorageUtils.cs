@@ -48,7 +48,10 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
         {
             CloudBlockBlob cloudBlockBlob = GetBlockBlob(blobPath.Replace("\\", "/"));
 
-            cloudBlockBlob.Properties.ContentType = GetMimeMapping(filePath);
+            var properties = GetBlobPropertiesByExtensions(filePath);
+
+            cloudBlockBlob.Properties.ContentType = properties.ContentType;
+            cloudBlockBlob.Properties.CacheControl = properties.CacheControl;
 
             await cloudBlockBlob.UploadFromFileAsync(filePath);
         }
@@ -149,11 +152,17 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
             return await blob.ExistsAsync();
         }
 
-        private string GetMimeMapping(string filePath)
+        private (string ContentType, string CacheControl) GetBlobPropertiesByExtensions(string filePath)
         {
             var mimeMappings = new Dictionary<string, string>()
             {
-                {".svg", "image/svg+xml"}
+                {".svg", "image/svg+xml"},
+                {".version", "text/plain" }
+            };
+
+            var cacheMappings = new Dictionary<string, string>()
+            {
+                {".svg", "no-cache"}
             };
 
             if (string.IsNullOrWhiteSpace(filePath))
@@ -161,9 +170,15 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
                 throw new ArgumentException("An attempt to get the MIME mapping of an empty path was made.");
             }
 
-            return mimeMappings.TryGetValue(Path.GetExtension(filePath).ToLower(), out string mime) ?
-                mime :
+            string contentType = mimeMappings.TryGetValue(Path.GetExtension(filePath).ToLower(), out string cttType) ?
+                cttType :
                 "application/octet-stream";
+
+            string cacheCtrl = cacheMappings.TryGetValue(Path.GetExtension(filePath).ToLower(), out string cache) ?
+                cache :
+                string.Empty;
+
+            return (contentType, cacheCtrl);
         }
     }
 }
