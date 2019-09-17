@@ -127,8 +127,8 @@ Below specific steps in the coherency QB are detailed.
 ### Prepare and verify dependency flow
 
 .NET Core releases are generally tied to Maestro++ channels. For instance, for
-.NET Core 3.0, the *.NET Core 3 Dev* channel is used for dependency flow of
-day-to-day development builds, while the *.NET Core 3 Release* channel is used
+.NET Core 3.1, the *.NET Core 3.1 Dev* channel is used for dependency flow of
+day-to-day development builds, while the *.NET Core 3.1 Release* channel is used
 for the flow of the final builds. Different channels are used for two reasons:
 - A separate set of branches can be used to flow outputs into each channel,
   allowing for development to continue during product shutdown.
@@ -165,14 +165,14 @@ state of the Dev channel subscription state.
 1. Dump all subscriptions that apply specifically to the Dev and Release
    channels with two separate darc commands
    ```
-   darc get-subscriptions --channel ".NET Core 3 Dev"
+   darc get-subscriptions --channel ".NET Core 3.1 Dev"
 
-   darc get-subscriptions --channel ".NET Core 3 Release"
+   darc get-subscriptions --channel ".NET Core 3.1 Release"
    ```
 2. Match Dev and Release subscriptions. Identify missing Release channel
    subscriptions and add. Identify existing Release channel subscriptions that
    have no equivalent Dev subscription and eliminate.
-   
+
    Use `darc add-subscription` and `darc delete-subscription` to add and delete subscriptions.
 
    **Ensure that subscriptions updating toolsets (generally these are backedges
