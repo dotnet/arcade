@@ -12,7 +12,7 @@ validation checks.
 
 ## Release Rings
 
-### Dev Ring (.NET Core 3 Dev channel)
+### Dev Ring (.NET Core 5 Dev channel)
 
 1. Standard builds after merges into master branch
 2. Sign produced packages by the build
@@ -25,7 +25,7 @@ validation checks.
 **Promotion:** Tactics decision and coordinated activities driven by the repos to snap release branches from master and 
 begin the release stabilization process. 
 
-### Release Ring (.NET Core 3 Release channel)
+### Release Ring (.NET Core 5 Release channel)
 
 1. Standard builds after merges into release/* branch
 2. Sign produced packages by the build
