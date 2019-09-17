@@ -156,7 +156,7 @@ It is recommended that you do **NOT** enable the checkbox labeled "Make secrets 
 
 - Variable groups
 
-  Build definitions using variable groups must first be authorized by manually queuing a build and following instructions presented in the portal. Without authorization, the variables will not be set in the build environment. See [Variable groups for Azure Pipelines](https://docs.microsoft.com/en-us/azure/devops/pipelines/library/variable-groups) for more information.
+  Build definitions using variable groups in the DevDiv Organization must first be authorized by manually queuing a build and following instructions presented in the portal. Without authorization, the variables will not be set in the build environment. See [Variable groups for Azure Pipelines](https://docs.microsoft.com/en-us/azure/devops/pipelines/library/variable-groups) for more information.
 
 Notes about templates:
 
