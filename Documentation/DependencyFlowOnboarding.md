@@ -186,7 +186,7 @@ How often does a source repo flows dependencies into a target repo.
 
 ##### 3.5. Create a channel (optional, typically not needed)
 
-You only need to create a channel in  rare cases.  Most .NET Core 5 builds should be assigned to the ".NET Core 5 Dev" channel.  However, if you do need to create a new channel:
+You only need to create a channel in rare cases.  Most .NET Core 5 builds should be assigned to the ".NET Core 5 Dev" channel.  However, if you do need to create a new channel:
 
 1. Run the following darc command:
    ```
