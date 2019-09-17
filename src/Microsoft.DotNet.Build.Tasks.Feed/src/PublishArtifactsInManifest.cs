@@ -7,6 +7,9 @@ using Microsoft.DotNet.Build.CloudTestTasks;
 using Microsoft.DotNet.Maestro.Client;
 using Microsoft.DotNet.Maestro.Client.Models;
 using Microsoft.DotNet.VersionTools.BuildManifest.Model;
+using Microsoft.DotNet.VersionTools.Util;
+using NuGet.Packaging.Core;
+using NuGet.Versioning;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -18,10 +21,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using NuGet.Versioning;
 using MSBuild = Microsoft.Build.Utilities;
-using Microsoft.DiaSymReader.PortablePdb;
-using Microsoft.DotNet.VersionTools.Util;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed
 {
@@ -51,6 +51,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         // or https://pkgs.dev.azure.com/dnceng/_packaging/internal-feed-name/nuget/v3/index.json
         public const string AzDoNuGetFeedPattern = 
             @"https://pkgs.dev.azure.com/(?<account>[a-zA-Z0-9]+)/(?<visibility>[a-zA-Z0-9-]+/)?_packaging/(?<feed>.+)/nuget/v3/index.json";
+        private const string SymbolPackageSuffix = ".symbols.nupkg";
+        private const string PackageSuffix = ".nupkg";
+        private const string PackagesCategory = "PACKAGE";
 
         /// <summary>
         /// Configuration telling which target feed to use for each artifact category.
@@ -288,6 +291,17 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         feedConfig.Isolated = feedSetting;
                     }
 
+                    string allowOverwriteOnFeed = fc.GetMetadata(nameof(FeedConfig.AllowOverwrite));
+                    if (!string.IsNullOrEmpty(allowOverwriteOnFeed))
+                    {
+                        if (!bool.TryParse(allowOverwriteOnFeed, out bool feedSetting))
+                        {
+                            Log.LogError($"Invalid feed config '{nameof(FeedConfig.AllowOverwrite)}' setting.  Must be 'true' or 'false'.");
+                            continue;
+                        }
+                        feedConfig.AllowOverwrite = feedSetting;
+                    }
+
                     string categoryKey = fc.ItemSpec.Trim().ToUpper();
                     if (!FeedConfigs.TryGetValue(categoryKey, out var feedsList))
                     {
@@ -436,6 +450,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     {
                         List<PackageArtifactModel> filteredPackages = FilterPackages(packages, feedConfig);
 
+                        foreach (var package in filteredPackages)
+                        {
+                            string isolatedString = feedConfig.Isolated ? "Isolated" : "Non-Isolated";
+                            string internalString = feedConfig.Internal ? $", Internal" : ", Public";
+                            string shippingString = package.NonShipping ? "NonShipping" : "Shipping";
+                            Log.LogMessage(MessageImportance.High, $"{package.Id}@{package.Version} ({shippingString}) -> {feedConfig.TargetURL} ({isolatedString}{internalString})");
+                        }
+
                         switch (feedConfig.Type)
                         {
                             case FeedType.AzDoNugetFeed:
@@ -487,6 +509,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     foreach (var feedConfig in feedConfigsForCategory)
                     {
                         List<BlobArtifactModel> filteredBlobs = FilterBlobs(blobs, feedConfig);
+
+                        foreach (var blob in filteredBlobs)
+                        {
+                            string isolatedString = feedConfig.Isolated ? "Isolated" : "Non-Isolated";
+                            string internalString = feedConfig.Internal ? $", Internal" : ", Public";
+                            string shippingString = blob.NonShipping ? "NonShipping" : "Shipping";
+                            Log.LogMessage(MessageImportance.High, $"{blob.Id} ({shippingString}) -> {feedConfig.TargetURL} ({isolatedString}{internalString})");
+                        }
 
                         switch (feedConfig.Type)
                         {
@@ -555,7 +585,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                 if (!packageAsset.Attributes.TryGetValue("Category", out categories))
                 {
-                    categories = InferCategory(packageAsset.Id);
+                    // Package artifacts don't have extensions. They are always nupkgs.
+                    // Set the category explicitly to "PACKAGE"
+                    categories = PackagesCategory;
                 }
 
                 foreach (var category in categories.Split(';').Select(c => c.ToUpper()))
@@ -623,7 +655,18 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 await client.Assets.AddAssetLocationToAssetAsync(assetRecord.Id, AddAssetLocationToAssetAssetLocationType.NugetFeed, feedConfig.TargetURL);
             }
 
-            await PushNugetPackagesAsync(packagesToPublish, feedConfig, maxClients: MaxClients);
+            await PushNugetPackagesAsync(packagesToPublish, feedConfig, maxClients: MaxClients,
+                async (feed, httpClient, package, feedAccount, feedVisibility, feedName) =>
+                {
+                    string localPackagePath = Path.Combine(PackageAssetsBasePath, $"{package.Id}.{package.Version}.nupkg");
+                    if (!File.Exists(localPackagePath))
+                    {
+                        Log.LogError($"Could not locate '{package.Id}.{package.Version}' at '{localPackagePath}'");
+                        return;
+                    }
+
+                    await PushNugetPackageAsync(feed, httpClient, localPackagePath, package.Id, package.Version, feedAccount, feedVisibility, feedName);
+                });
         }
 
         /// <summary>
@@ -665,8 +708,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// <param name="packagesToPublish">List of packages to publish</param>
         /// <param name="feedConfig">Information about feed to publish ot</param>
         /// <returns>Async task.</returns>
-        public async Task PushNugetPackagesAsync(List<PackageArtifactModel> packagesToPublish, FeedConfig feedConfig, int maxClients)
+        public async Task PushNugetPackagesAsync<T>(List<T> packagesToPublish, FeedConfig feedConfig, int maxClients,
+            Func<FeedConfig, HttpClient, T, string, string, string, Task> packagePublishAction)
         {
+            if (!packagesToPublish.Any())
+            {
+                return;
+            }
+
             var parsedUri = Regex.Match(feedConfig.TargetURL, PublishArtifactsInManifest.AzDoNuGetFeedPattern);
             if (!parsedUri.Success)
             {
@@ -692,7 +741,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         {
                             // Wait to avoid starting too many processes.
                             await clientThrottle.WaitAsync();
-                            await PushNugetPackageAsync(feedConfig, httpClient, packageToPublish, feedAccount, feedVisibility, feedName);
+                            await packagePublishAction(feedConfig, httpClient, packageToPublish, feedAccount, feedVisibility, feedName);
                         }
                         finally
                         {
@@ -720,17 +769,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         ///     a different package with the same id and version. The second case is an error, as azure devops feeds are immutable, the former
         ///     is simply a case where we should continue onward.
         /// </remarks>
-        private async Task PushNugetPackageAsync(FeedConfig feedConfig, HttpClient client, PackageArtifactModel packageToPublish,
+        private async Task PushNugetPackageAsync(FeedConfig feedConfig, HttpClient client, string localPackageLocation, string id, string version,
             string feedAccount, string feedVisibility, string feedName)
         {
-            Log.LogMessage(MessageImportance.High, $"Pushing package '{packageToPublish.Id}' to feed {feedConfig.TargetURL}");
-
-            string localPackageLocation = Path.Combine(PackageAssetsBasePath, $"{packageToPublish.Id}.{packageToPublish.Version}.nupkg");
-            if (!File.Exists(localPackageLocation))
-            {
-                Log.LogError($"Could not locate '{packageToPublish.Id}.{packageToPublish.Version}' at '{localPackageLocation}'");
-                return;
-            }
+            Log.LogMessage(MessageImportance.High, $"Pushing package '{localPackageLocation}' to feed {feedConfig.TargetURL}");
 
             try
             {
@@ -742,15 +784,15 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                     try
                     {
-                        string packageContentUrl = $"https://pkgs.dev.azure.com/{feedAccount}/{feedVisibility}_apis/packaging/feeds/{feedName}/nuget/packages/{packageToPublish.Id}/versions/{packageToPublish.Version}/content";
+                        string packageContentUrl = $"https://pkgs.dev.azure.com/{feedAccount}/{feedVisibility}_apis/packaging/feeds/{feedName}/nuget/packages/{id}/versions/{version}/content";
 
                         if (await IsLocalPackageIdenticalToFeedPackage(localPackageLocation, packageContentUrl, client))
                         {
-                            Log.LogMessage(MessageImportance.Normal, $"Package '{packageToPublish.Id}@{packageToPublish.Version}' already exists on '{feedConfig.TargetURL}' but has the same content. Skipping.");
+                            Log.LogMessage(MessageImportance.Normal, $"Package '{localPackageLocation}' already exists on '{feedConfig.TargetURL}' but has the same content. Skipping.");
                         }
                         else
                         {
-                            Log.LogError($"Package '{packageToPublish.Id}@{packageToPublish.Version}' already exists on '{feedConfig.TargetURL}' with different content.");
+                            Log.LogError($"Package '{localPackageLocation}' already exists on '{feedConfig.TargetURL}' with different content.");
                         }
 
                         return;
@@ -761,12 +803,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         Log.LogWarning($"Failed to determine whether an existing package on the feed has the same content as '{localPackageLocation}': {e.Message}");
                     }
 
-                    Log.LogError($"Failed to push '{packageToPublish.Id}@{packageToPublish.Version}'. Result code '{result}'.");
+                    Log.LogError($"Failed to push '{id}@{version}'. Result code '{result}'.");
                 }
             }
             catch (Exception e)
             {
-                Log.LogError($"Unexpected exception pushing package '{packageToPublish.Id}@{packageToPublish.Version}': {e.Message}");
+                Log.LogError($"Unexpected exception pushing package '{id}@{version}': {e.Message}");
             }
         }
 
@@ -790,46 +832,37 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         {
             Log.LogMessage($"Getting package content from {packageContentUrl} and comparing to {localPackageFullPath}");
 
-            try
+            using (Stream localFileStream = File.OpenRead(localPackageFullPath))
+            using (HttpResponseMessage response = await client.GetAsync(packageContentUrl))
             {
-                using (Stream localFileStream = File.OpenRead(localPackageFullPath))
-                using (HttpResponseMessage response = await client.GetAsync(packageContentUrl))
+                response.EnsureSuccessStatusCode();
+
+                // Check the headers for content length and md5
+                bool md5HeaderAvailable = response.Headers.TryGetValues("Content-MD5", out var md5);
+                bool lengthHeaderAvailable = response.Headers.TryGetValues("Content-Length", out var contentLength);
+
+                if (lengthHeaderAvailable && long.Parse(contentLength.Single()) != localFileStream.Length)
                 {
-                    response.EnsureSuccessStatusCode();
-
-                    // Check the headers for content length and md5
-                    bool md5HeaderAvailable = response.Headers.TryGetValues("Content-MD5", out var md5);
-                    bool lengthHeaderAvailable = response.Headers.TryGetValues("Content-Length", out var contentLength);
-
-                    if (lengthHeaderAvailable && long.Parse(contentLength.Single()) != localFileStream.Length)
-                    {
-                        Log.LogMessage(MessageImportance.Low, $"Package '{localPackageFullPath}' has different length than remote package '{packageContentUrl}'.");
-                        return false;
-                    }
-
-                    if (md5HeaderAvailable)
-                    {
-                        var localMD5 = AzureStorageUtils.CalculateMD5(localPackageFullPath);
-                        if (!localMD5.Equals(md5.Single(), StringComparison.OrdinalIgnoreCase))
-                        {
-                            Log.LogMessage(MessageImportance.Low, $"Package '{localPackageFullPath}' has different MD5 hash than remote package '{packageContentUrl}'.");
-                        }
-
-                        return true;
-                    }
-
-                    const int BufferSize = 64 * 1024;
-
-                    // Otherwise, compare the streams
-                    var remoteStream = await response.Content.ReadAsStreamAsync();
-                    return await CompareStreamsAsync(localFileStream, remoteStream, BufferSize);
+                    Log.LogMessage(MessageImportance.Low, $"Package '{localPackageFullPath}' has different length than remote package '{packageContentUrl}'.");
+                    return false;
                 }
-            }
-            catch (Exception e)
-            {
-                // This is an error. It means we were unable to push using nuget, and then could not access to the package otherwise.
-                Log.LogWarning($"Failed to determine whether an existing package on the feed has the same content: {e.Message}");
-                return false;
+
+                if (md5HeaderAvailable)
+                {
+                    var localMD5 = AzureStorageUtils.CalculateMD5(localPackageFullPath);
+                    if (!localMD5.Equals(md5.Single(), StringComparison.OrdinalIgnoreCase))
+                    {
+                        Log.LogMessage(MessageImportance.Low, $"Package '{localPackageFullPath}' has different MD5 hash than remote package '{packageContentUrl}'.");
+                    }
+
+                    return true;
+                }
+
+                const int BufferSize = 64 * 1024;
+
+                // Otherwise, compare the streams
+                var remoteStream = await response.Content.ReadAsStreamAsync();
+                return await CompareStreamsAsync(localFileStream, remoteStream, BufferSize);
             }
         }
 
@@ -916,6 +949,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             Maestro.Client.Models.Build buildInformation,
             FeedConfig feedConfig)
         {
+            List<BlobArtifactModel> packagesToPublish = new List<BlobArtifactModel>();
+
             foreach (var blob in blobsToPublish)
             {
                 var assetRecord = buildInformation.Assets
@@ -937,7 +972,42 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 }
 
                 await client.Assets.AddAssetLocationToAssetAsync(assetRecord.Id, AddAssetLocationToAssetAssetLocationType.Container, feedConfig.TargetURL);
+
+                // Applies to symbol packages and core-sdk's VS feed packages
+                if (blob.Id.EndsWith(PackageSuffix, StringComparison.OrdinalIgnoreCase))
+                {
+                    packagesToPublish.Add(blob);
+                }
+                else
+                {
+                    Log.LogWarning($"AzDO feed publishing not available for blobs. Blob '{blob.Id}' was not published.");
+                }
             }
+
+            await PushNugetPackagesAsync<BlobArtifactModel>(packagesToPublish, feedConfig, maxClients: MaxClients,
+                async (feed, httpClient, blob, feedAccount, feedVisibility, feedName) =>
+                {
+                    // Determine the local path to the blob
+                    string fileName = Path.GetFileName(blob.Id);
+                    string localBlobPath = Path.Combine(BlobAssetsBasePath, fileName);
+                    if (!File.Exists(localBlobPath))
+                    {
+                        Log.LogError($"Could not locate '{blob.Id} at '{localBlobPath}'");
+                        return;
+                    }
+
+                    string id;
+                    string version;
+                    // Determine package ID and version by asking the nuget libraries
+                    using (var packageReader = new NuGet.Packaging.PackageArchiveReader(localBlobPath))
+                    {
+                        PackageIdentity packageIdentity = packageReader.GetIdentity();
+                        id = packageIdentity.Id;
+                        version = packageIdentity.Version.ToString();
+                    }
+
+                    await PushNugetPackageAsync(feed, httpClient, localBlobPath, id, version, feedAccount, feedVisibility, feedName);
+                });
         }
 
         private async Task PublishPackagesToAzureStorageNugetFeedAsync(
@@ -951,7 +1021,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
             var pushOptions = new PushOptions
             {
-                AllowOverwrite = false,
+                AllowOverwrite = feedConfig.AllowOverwrite,
                 PassIfExistingItemIdentical = true
             };
 
@@ -987,16 +1057,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             Maestro.Client.Models.Build buildInformation,
             FeedConfig feedConfig)
         {
-            BlobAssetsBasePath = BlobAssetsBasePath.TrimEnd(
-                Path.DirectorySeparatorChar,
-                Path.AltDirectorySeparatorChar) 
-                + Path.DirectorySeparatorChar;
-
             var blobs = blobsToPublish
                 .Select(blob =>
                 {
                     var fileName = Path.GetFileName(blob.Id);
-                    return new MSBuild.TaskItem($"{BlobAssetsBasePath}{fileName}", new Dictionary<string, string>
+                    return new MSBuild.TaskItem(Path.Combine(BlobAssetsBasePath, fileName), new Dictionary<string, string>
                     {
                         {"RelativeBlobPath", blob.Id}
                     });
@@ -1006,7 +1071,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             var blobFeedAction = CreateBlobFeedAction(feedConfig);
             var pushOptions = new PushOptions
             {
-                AllowOverwrite = false,
+                AllowOverwrite = feedConfig.AllowOverwrite,
                 PassIfExistingItemIdentical = true
             };
 
@@ -1078,7 +1143,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// <summary>
         ///     Infers the category based on the extension of the particular asset
         ///     
-        ///     If no category can be inferred, then "NETCORE" is used.
+        ///     If no category can be inferred, then "OTHER" is used.
         /// </summary>
         /// <param name="assetId">ID of asset</param>
         /// <returns>Asset cateogry</returns>
@@ -1088,7 +1153,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
             var whichCategory = new Dictionary<string, string>()
             {
-                { ".NUPKG", "NETCORE" },
+                { ".NUPKG", PackagesCategory },
                 { ".PKG", "OSX" },
                 { ".DEB", "DEB" },
                 { ".RPM", "RPM" },
@@ -1112,11 +1177,22 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
             if (whichCategory.TryGetValue(extension, out var category))
             {
+                // Special handling for symbols.nupkg. There are typically plenty of
+                // periods in package names. We get the extension to identify nupkg
+                // assets. But symbol packages have the extension '.symbols.nupkg'.
+                // We want to divide these into a separate category because for stabilized builds,
+                // they should go to an isolated location. In a non-stabilized build, they can go straight
+                // to blob feeds because the blob feed push tasks will automatically push them to the assets.
+                if (assetId.EndsWith(SymbolPackageSuffix, StringComparison.OrdinalIgnoreCase))
+                {
+                    return "SYMBOLS";
+                }
                 return category;
             }
             else
             {
-                return "NETCORE";
+                Log.LogMessage(MessageImportance.High, $"Defaulting to category 'OTHER' for asset {assetId}");
+                return "OTHER";
             }
         }
     }
@@ -1157,5 +1233,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// can be published here.
         /// </summary>
         public bool Internal { get; set; } = false;
+        /// <summary>
+        /// If true, the items on the feed can be overwritten. This is only
+        /// valid for azure blob storage feeds.
+        /// </summary>
+        public bool AllowOverwrite { get; set; } = false;
     }
 }

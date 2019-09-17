@@ -3,6 +3,27 @@
 <Project>
 
   <!--
+    Compute the IsShipping* properties
+
+    Unless specified otherwise project is assumed to produce artifacts (assembly, package, vsix, etc.) that ship.
+      Test projects automatically set IsShipping to false.
+
+      Some projects may produce packages that contain shipping assemblies but the packages themselves do not ship.
+      Thes projects shall specify IsShippingPackage=false and leave IsShipping unset (will default to true).
+
+      Targets that need to determine whether an artifact is shipping shall use the artifact specific IsShippingXxx property,
+      if available for the kind of artifact they operate on.
+  -->
+  <PropertyGroup>
+    <IsShipping Condition="'$(IsShipping)' == ''">true</IsShipping>
+
+    <IsShippingAssembly Condition="'$(IsShippingAssembly)' == ''">$(IsShipping)</IsShippingAssembly>
+    <IsShippingPackage Condition="'$(IsVisualStudioBuildPackage)' == 'true'">false</IsShippingPackage>
+    <IsShippingPackage Condition="'$(IsShippingPackage)' == ''">$(IsShipping)</IsShippingPackage>
+    <IsShippingVsix Condition="'$(IsShippingVsix)' == ''">$(IsShipping)</IsShippingVsix>
+  </PropertyGroup>
+
+  <!--
     Specification: https://github.com/dotnet/arcade/blob/master/Documentation/CorePackages/Versioning.md
 
     Workaround for https://github.com/dotnet/sdk/issues/3173:
@@ -101,7 +122,7 @@
     <!--
       If a project produces non-shipping packages, these packages should always include the build number label
     -->
-    <VersionSuffix Condition="'$(IsShipping)' == 'false'">$(_PreReleaseLabel)$(_BuildNumberLabels)</VersionSuffix>
+    <VersionSuffix Condition="'$(IsShippingPackage)' != 'true'">$(_PreReleaseLabel)$(_BuildNumberLabels)</VersionSuffix>
 
     <!--
       Disable NuGet Pack warning that the version is SemVer 2.0.
