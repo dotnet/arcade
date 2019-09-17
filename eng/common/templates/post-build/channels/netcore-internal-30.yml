@@ -86,11 +86,10 @@ stages:
       - task: NuGetAuthenticate@0
         displayName: 'Authenticate to AzDO Feeds'
 
-      - task: PowerShell@2
+      - powershell: |
+          Write-Host "##vso[task.setvariable variable=VSS_NUGET_ACCESSTOKEN;issecret=true;]$(dn-bot-dnceng-artifact-feeds-rw)"
+          Write-Host "##vso[task.setvariable variable=VSS_NUGET_URI_PREFIXES]https://dnceng.pkgs.visualstudio.com/;https://pkgs.dev.azure.com/dnceng/;https://devdiv.pkgs.visualstudio.com/;https://pkgs.dev.azure.com/devdiv/"
         displayName: Enable cross-org publishing
-        inputs:
-          filePath: eng\common\enable-cross-org-publishing.ps1
-          arguments: -token $(dn-bot-dnceng-artifact-feeds-rw)
 
       - task: PowerShell@2
         displayName: Publish Assets
