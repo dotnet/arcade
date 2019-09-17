@@ -3,11 +3,13 @@ trigger:
   branches:
     include:
     - master
+    - release/3.x
     
 pr:
   branches:
     include:
     - master
+    - release/3.x
     - templates
   paths:
     exclude:
