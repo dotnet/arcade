@@ -156,7 +156,7 @@ It is recommended that you do **NOT** enable the checkbox labeled "Make secrets 
 
 - Variable groups
 
-  Variable groups are not yet supported in Yaml.  They are scheduled to be available soon (June 2018), in the interim if you need to access a key vault secret, you can explicitly reference a key vault secret using the Azure DevOps key vault task.
+  Build definitions using variable groups must first be authorized by manually queuing a build and following instructions presented in the portal. Without authorization, the variables will not be set in the build environment. See [Variable groups for Azure Pipelines](https://docs.microsoft.com/en-us/azure/devops/pipelines/library/variable-groups) for more information.
 
 Notes about templates:
 
