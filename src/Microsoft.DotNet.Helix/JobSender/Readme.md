@@ -67,7 +67,7 @@ var job = await api.Job.Define()
   .WithTargetQueue("Windows.10.Amd64" /* Helix Queue ID Goes Here */)
   .WithSource("test/diskspd")
     .DefineWorkItem("Diskspd")
-    .WithCommand("amd64/diskspd.exe C:")
+    .WithCommand("amd64\\diskspd.exe C:")
     .WithPayloadUri(new Uri("https://gallery.technet.microsoft.com/DiskSpd-A-Robust-Storage-6ef84e62/file/199535/1/DiskSpd-2.0.20a.zip"))
     .AttachToJob()
   .SendAsync();
