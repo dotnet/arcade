@@ -62,7 +62,7 @@
       <_DropName>$(_DropNamePrefix)/$(VisualStudioIbcDropId)</_DropName>
     </PropertyGroup>
 
-    <Message Text="Acquiring optimization data" Importance="high"/>
+    <Message Text="Listing optimization data from service $(_DropServiceUrl), prefix $(_DropNamePrefix)" Importance="high"/>
 
     <Exec Command='"$(_DropToolPath)" list --dropservice "$(_DropServiceUrl)" $(_PatAuthArg) --pathPrefixFilter "$(_DropNamePrefix)" --toJsonFile "$(_DropsJsonPath)" --traceto "$(_DropsLogPath)"' 
           Condition="'$(VisualStudioIbcDropId)' == ''"/>
