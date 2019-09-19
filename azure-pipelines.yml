@@ -24,7 +24,7 @@ resources:
     image: microsoft/dotnet-buildtools-prereqs:ubuntu-14.04-cross-0cd4667-20170319080304
 
 stages:
-- stage: Build
+- stage: build
   displayName: Build
   jobs:
   - template: /eng/common/templates/jobs/jobs.yml
@@ -91,8 +91,8 @@ stages:
             displayName: Unix Build / Publish
 
 - ${{ if eq(variables._RunAsPublic, True) }}:
-  - stage: Test
-    dependsOn: Build
+  - stage: test
+    dependsOn: build
     jobs:
     - template: /eng/common/templates/jobs/jobs.yml
       parameters:
@@ -164,7 +164,7 @@ stages:
 - ${{ if eq(variables._RunAsInternal, True) }}:
   - stage: ValidateSdk
     displayName: Validate Arcade SDK
-    dependsOn: Build
+    dependsOn: build
     jobs:
     - template: /eng/validate-sdk.yml
       parameters:
