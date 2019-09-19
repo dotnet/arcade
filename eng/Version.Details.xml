@@ -3,29 +3,29 @@
   <ProductDependencies>
   </ProductDependencies>
   <ToolsetDependencies>
-    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="1.0.0-beta.19429.16">
+    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="1.0.0-beta.19459.10">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>e5aaea7fcfc46449b035d5b220032bfb933e98a4</Sha>
+      <Sha>f5ccfdcbd828383d39cf583086ef42d72ca5b320</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Build.Tasks.Feed" Version="2.2.0-beta.19429.16">
+    <Dependency Name="Microsoft.DotNet.Build.Tasks.Feed" Version="2.2.0-beta.19459.10">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>e5aaea7fcfc46449b035d5b220032bfb933e98a4</Sha>
+      <Sha>f5ccfdcbd828383d39cf583086ef42d72ca5b320</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.SignTool" Version="1.0.0-beta.19429.16">
+    <Dependency Name="Microsoft.DotNet.SignTool" Version="1.0.0-beta.19459.10">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>e5aaea7fcfc46449b035d5b220032bfb933e98a4</Sha>
+      <Sha>f5ccfdcbd828383d39cf583086ef42d72ca5b320</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Helix.Sdk" Version="2.0.0-beta.19429.16">
+    <Dependency Name="Microsoft.DotNet.Helix.Sdk" Version="2.0.0-beta.19459.10">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>e5aaea7fcfc46449b035d5b220032bfb933e98a4</Sha>
+      <Sha>f5ccfdcbd828383d39cf583086ef42d72ca5b320</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.SwaggerGenerator.MSBuild" Version="1.0.0-beta.19429.16">
+    <Dependency Name="Microsoft.DotNet.SwaggerGenerator.MSBuild" Version="1.0.0-beta.19459.10">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>e5aaea7fcfc46449b035d5b220032bfb933e98a4</Sha>
+      <Sha>f5ccfdcbd828383d39cf583086ef42d72ca5b320</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Maestro.Client" Version="1.1.0-beta.19426.2">
+    <Dependency Name="Microsoft.DotNet.Maestro.Client" Version="1.1.0-beta.19454.3">
       <Uri>https://github.com/dotnet/arcade-services</Uri>
-      <Sha>3e839fe4a86d1366c5876dad6e2deead7d775756</Sha>
+      <Sha>1a295b33d669417b3d28795c3fa22efef21686a3</Sha>
     </Dependency>
   </ToolsetDependencies>
 </Dependencies>

@@ -33,6 +33,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         [Required]
         public string CommitSha { get; set; }
 
+        /// <summary>
+        /// Additional info to include in the feed name (for example "sym")
+        /// </summary>
+        public string ContentIdentifier { get; set; }
+
         [Required]
         public string AzureDevOpsPersonalAccessToken { get; set; }
 
@@ -76,7 +81,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 string accessType = IsInternal ? "internal" : "public";
                 string publicSegment = IsInternal ? string.Empty : "public/";
                 string accessId = IsInternal ? "int" : "pub";
-                string baseFeedName = $"darc-{accessId}-{RepositoryName}-{CommitSha.Substring(0, ShaUsableLength)}";
+                string extraContentInfo = !string.IsNullOrEmpty(ContentIdentifier) ? $"-{ContentIdentifier}" : "";
+                string baseFeedName = $"darc-{accessId}{extraContentInfo}-{RepositoryName}-{CommitSha.Substring(0, ShaUsableLength)}";
                 string versionedFeedName = baseFeedName;
                 bool needsUniqueName = false;
                 int subVersion = 0;

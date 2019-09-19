@@ -402,7 +402,7 @@ git checkout -b ${mergeBranchName} $BaseBranch
 git pull https://github.com/$prOwnerName/$prRepoName ${mergeBranchName}
 (make changes)
 git commit -m "Updated PR with my changes"
-git push https://github.com/$prOwnerName/$prRepoName ${mergeBranchName}
+git push https://github.com/$prOwnerName/$prRepoName HEAD:${mergeBranchName}
 ``````
 
 <details>
@@ -413,7 +413,7 @@ git checkout -b ${mergeBranchName} $BaseBranch
 git pull git@github.com:$prOwnerName/$prRepoName ${mergeBranchName}
 (make changes)
 git commit -m "Updated PR with my changes"
-git push git@github.com:$prOwnerName/$prRepoName ${mergeBranchName}
+git push git@github.com:$prOwnerName/$prRepoName HEAD:${mergeBranchName}
 ``````
 
 </details>
