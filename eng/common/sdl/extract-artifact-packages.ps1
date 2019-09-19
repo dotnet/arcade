@@ -5,6 +5,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 Set-StrictMode -Version 2.0
+. $PSScriptRoot\..\tools.ps1
 $ExtractPackage = {
   param( 
     [string] $PackagePath                                 # Full path to a NuGet package
