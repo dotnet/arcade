@@ -83,7 +83,7 @@
         TestSign="$(_TestSign)"
         DoStrongNameCheck="$(DoStrongNameCheck)"
         AllowEmptySignList="$(AllowEmptySignList)"
-        CertificatesSignInfo="$(CertificatesSignInfo)"
+        CertificatesSignInfo="@(CertificatesSignInfo)"
         ItemsToSign="@(ItemsToSign)"
         StrongNameSignInfo="@(StrongNameSignInfo)"
         FileSignInfo="@(FileSignInfo)"
