@@ -91,7 +91,7 @@ stages:
             displayName: Unix Build / Publish
 
 - ${{ if eq(variables._RunAsPublic, True) }}:
-  - stage: test
+  - stage: Test
     dependsOn: build
     jobs:
     - template: /eng/common/templates/jobs/jobs.yml
