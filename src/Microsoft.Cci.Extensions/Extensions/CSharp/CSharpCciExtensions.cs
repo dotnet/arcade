@@ -166,6 +166,10 @@ namespace Microsoft.Cci.Extensions.CSharp
 
                 var resolvedType = typeToCheck.ResolvedType;
 
+                // Pointers should be treated as primitives
+                if (typeToCheck.TypeCode == PrimitiveTypeCode.Pointer)
+                    return true;
+
                 if (resolvedType is Dummy || resolvedType.IsReferenceType || resolvedType.AreGenericTypeEquivalent(ByReferenceFullName))
                 {
                     if (node == 0)
@@ -173,7 +177,7 @@ namespace Microsoft.Cci.Extensions.CSharp
                         return false;
                     }
 
-                    // If we're not in the root of the tree, it means we found a non-empty non-empty struct.
+                    // If we're not in the root of the tree, it means we found a non-empty struct.
                     return true;
                 }
 
