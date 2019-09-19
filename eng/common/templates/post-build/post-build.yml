@@ -64,6 +64,12 @@ stages:
           displayName: 'Authenticate to AzDO Feeds'
 
         - task: PowerShell@2
+          displayName: Enable cross-org publishing
+          inputs:
+            filePath: eng\common\enable-cross-org-publishing.ps1
+            arguments: -token $(dn-bot-dnceng-artifact-feeds-rw)
+
+        - task: PowerShell@2
           displayName: Validate
           inputs:
             filePath: eng\common\sdk-task.ps1
