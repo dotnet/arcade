@@ -50,6 +50,7 @@ stages:
       displayName: Signing Validation
       variables:
         - template: common-variables.yml
+        - group: AzureDevOps-Artifact-Feeds-Pats
       pool:
         vmImage: 'windows-2019'
       steps:
