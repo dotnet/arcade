@@ -10,7 +10,7 @@ namespace Microsoft.DotNet.Helix.Client
         public async Task<JobPassFail> WaitForJobAsync(string jobCorrelationId, int pollingIntervalMs = 10000, CancellationToken cancellationToken = default)
         {
             if (string.IsNullOrEmpty(jobCorrelationId)) throw new ArgumentNullException(nameof(jobCorrelationId));
-            if (pollingIntervalMs < 1000) throw new ArgumentOutOfRangeException(nameof(pollingIntervalMs), pollingIntervalMs, "The polling interval cannot be less than 1000.");
+            if (pollingIntervalMs < 5000) throw new ArgumentOutOfRangeException(nameof(pollingIntervalMs), pollingIntervalMs, "The polling interval cannot be less than 5000.");
 
             cancellationToken.ThrowIfCancellationRequested();
 
