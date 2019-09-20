@@ -6,6 +6,6 @@ namespace Microsoft.DotNet.Helix.Client
 {
     partial interface IJob
     {
-        Task<JobPassFail> WaitForJobAsync(string job, int pollingIntervalMs = 10000, CancellationToken cancellationToken = default);
+        Task<JobPassFail> WaitForJobAsync(string jobCorrelationId, int pollingIntervalMs = 10000, CancellationToken cancellationToken = default);
     }
 }

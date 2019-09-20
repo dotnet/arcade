@@ -7,20 +7,19 @@ namespace Microsoft.DotNet.Helix.Client
 {
     partial class Job
     {
-        public async Task<JobPassFail> WaitForJobAsync(string job, int pollingIntervalMs = 10000, CancellationToken cancellationToken = default)
+        public async Task<JobPassFail> WaitForJobAsync(string jobCorrelationId, int pollingIntervalMs = 10000, CancellationToken cancellationToken = default)
         {
-            if (string.IsNullOrEmpty(job)) throw new ArgumentNullException(nameof(job));
+            if (string.IsNullOrEmpty(jobCorrelationId)) throw new ArgumentNullException(nameof(jobCorrelationId));
             if (pollingIntervalMs < 1000) throw new ArgumentOutOfRangeException(nameof(pollingIntervalMs), pollingIntervalMs, "The polling interval cannot be less than 1000.");
 
-            await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
 
-            for (;; await Task.Delay(pollingIntervalMs, cancellationToken)) // delay every time this loop repeats
+            for (;; await Task.Delay(pollingIntervalMs, cancellationToken).ConfigureAwait(false)) // delay every time this loop repeats
             {
                 var pf = await Client.RetryAsync(
-                    () => PassFailAsync(job, cancellationToken), 
+                    () => PassFailAsync(jobCorrelationId, cancellationToken), 
                     e => { },
-                    cancellationToken);
+                    cancellationToken).ConfigureAwait(false);
                 if (pf.Working == 0 && pf.Total != 0)
                 {
                     return pf;
