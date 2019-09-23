@@ -1,12 +1,12 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using Microsoft.DotNet.Helix.Client;
+using Microsoft.DotNet.Helix.Client.Models;
 using Newtonsoft.Json;
 using Task = System.Threading.Tasks.Task;
 
@@ -61,6 +61,14 @@ namespace Microsoft.DotNet.Helix.Sdk
                         () => HelixApi.WorkItem.ListFilesAsync(wi, jobName, cancellationToken),
                         LogExceptionRetry,
                         cancellationToken);
+
+                    if (!string.IsNullOrEmpty(AccessToken))
+                    {
+                        // Add AccessToken to all file links because the api requires auth if we submitted the job with auth
+                        files = files
+                            .Select(file => new UploadedFile(file.Name, file.Link + "?access_token=" + AccessToken))
+                            .ToImmutableList();
+                    }
 
                     metadata["UploadedFiles"] = JsonConvert.SerializeObject(files);
                 }

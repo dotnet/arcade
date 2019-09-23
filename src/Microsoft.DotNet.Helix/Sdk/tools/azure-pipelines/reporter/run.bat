@@ -1,9 +1,13 @@
 
 set ENV_PATH=%USERPROFILE%\.vsts-env
+set TMP_ENV_PATH=%USERPROFILE%\.vsts-env-tmp
 echo  %date%-%time%
 
 if NOT EXIST %ENV_PATH%\Scripts\python.exe (
-  %HELIX_PYTHONPATH% -m virtualenv --no-site-packages %ENV_PATH%
+  rmdir /Q /S %TMP_ENV_PATH%
+  rmdir /Q /S %ENV_PATH%
+  %HELIX_PYTHONPATH% -m virtualenv --no-site-packages %TMP_ENV_PATH%
+  rename %TMP_ENV_PATH% .vsts-env
 )
 
 %ENV_PATH%\Scripts\python.exe -c "import azure.devops" || %ENV_PATH%\Scripts\python.exe -m pip install azure-devops==5.0.0b9
