@@ -114,35 +114,8 @@ namespace Microsoft.DotNet.SwaggerGenerator.Languages
                 throw new NotSupportedException(reference.ToString());
             }
 
-            /// <summary>
-            ///     When doing a null/default check, get the value that
-            ///     the given type reference should be compared against.
-            /// </summary>
-            /// <param name="reference">Type reference. May not be 'string'</param>
-            /// <returns>Value that a null/default comparison should be done against</returns>
-            private static string GetNullComparisonValue(TypeReference reference)
-            {
-                if (reference == TypeReference.String)
-                {
-                    throw new ArgumentException("Type reference should not be a string");
-                }
-
-                if ((reference is TypeReference.TypeModelReference typeModelRef && !typeModelRef.Model.IsEnum) ||
-                    reference is TypeReference.ArrayTypeReference ||
-                    reference is TypeReference.DictionaryTypeReference ||
-                    reference == TypeReference.Any ||
-                    reference == TypeReference.File)
-                {
-                    return "null";
-                }
-                else
-                {
-                    return "default";
-                }
-            }
-
             [BlockHelperMethod]
-            public static void NullCheck(TextWriter output, object context, Action<TextWriter, object> template, TypeReference reference)
+            public void NullCheck(TextWriter output, object context, Action<TextWriter, object> template, TypeReference reference)
             {
                 if (reference == TypeReference.String)
                 {
@@ -153,12 +126,12 @@ namespace Microsoft.DotNet.SwaggerGenerator.Languages
                 else
                 {
                     template(output, context);
-                    output.Write($" == {GetNullComparisonValue(reference)}");
+                    output.WriteSafeString($" == default({ResolveReference(reference, null)})");
                 }
             }
 
             [BlockHelperMethod]
-            public static void NotNullCheck(TextWriter output, object context, Action<TextWriter, object> template, TypeReference reference)
+            public void NotNullCheck(TextWriter output, object context, Action<TextWriter, object> template, TypeReference reference)
             {
                 if (reference == TypeReference.String)
                 {
@@ -169,7 +142,7 @@ namespace Microsoft.DotNet.SwaggerGenerator.Languages
                 else
                 {
                     template(output, context);
-                    output.Write($" != {GetNullComparisonValue(reference)}");
+                    output.WriteSafeString($" != default({ResolveReference(reference, null)})");
                 }
             }
 
