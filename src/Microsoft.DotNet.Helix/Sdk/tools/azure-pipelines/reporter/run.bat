@@ -7,7 +7,7 @@ if NOT EXIST %ENV_PATH%\Scripts\python.exe (
   rmdir /Q /S %TMP_ENV_PATH%
   rmdir /Q /S %ENV_PATH%
   %HELIX_PYTHONPATH% -m virtualenv --no-site-packages %TMP_ENV_PATH%
-  rename %TMP_ENV_PATH% %ENV_PATH%
+  rename %TMP_ENV_PATH% .vsts-env
 )
 
 %ENV_PATH%\Scripts\python.exe -c "import azure.devops" || %ENV_PATH%\Scripts\python.exe -m pip install azure-devops==5.0.0b9
