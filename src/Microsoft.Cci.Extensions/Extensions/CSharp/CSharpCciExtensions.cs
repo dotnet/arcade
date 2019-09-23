@@ -166,8 +166,7 @@ namespace Microsoft.Cci.Extensions.CSharp
 
                 var resolvedType = typeToCheck.ResolvedType;
 
-                // Pointers should be treated as primitives
-                if (typeToCheck.TypeCode == PrimitiveTypeCode.Pointer)
+                if (typeToCheck.TypeCode != PrimitiveTypeCode.NotPrimitive && typeToCheck.TypeCode != PrimitiveTypeCode.Invalid)
                     return true;
 
                 if (resolvedType is Dummy || resolvedType.IsReferenceType || resolvedType.AreGenericTypeEquivalent(ByReferenceFullName))
@@ -183,13 +182,10 @@ namespace Microsoft.Cci.Extensions.CSharp
 
                 foreach (var field in resolvedType.Fields.Where(f => !f.IsStatic))
                 {
-                    if (visited.Contains(field.Type))
+                    if (!visited.Contains(field.Type))
                     {
-                        // if we find a visited type in the fields tree, it means we have a cycle, which means the struct is non-empty.
-                        return true;
+                        typesToCheck.Enqueue(field.Type);
                     }
-
-                    typesToCheck.Enqueue(field.Type);
                 }
 
                 node++;
