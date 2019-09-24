@@ -409,6 +409,11 @@ namespace Microsoft.Cci.Extensions
             }
         }
 
+        public static bool AreGenericTypeEquivalent(this ITypeReference type, string typeName)
+        {
+            return type is IGenericTypeInstanceReference genericType && genericType.GenericType.AreEquivalent(typeName);
+        }
+
         public static bool AreEquivalent(this ITypeReference type, string typeName)
         {
             return type.FullName() == typeName;
