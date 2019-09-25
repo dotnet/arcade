@@ -22,6 +22,7 @@ namespace Microsoft.Cci.Extensions.CSharp
 {
     public static class CSharpCciExtensions
     {
+        private const string ByReferenceFullName = "System.ByReference<T>";
         public const string NullableAttributeFullName = "System.Runtime.CompilerServices.NullableAttribute";
         public const string NullableContextAttributeFullName = "System.Runtime.CompilerServices.NullableContextAttribute";
 
@@ -158,7 +159,7 @@ namespace Microsoft.Cci.Extensions.CSharp
                     return true;
 
                 // ByReference<T> is a special type understood by runtime to hold a ref T.
-                if (resolvedType.AreEquivalent("System.ByReference<T>"))
+                if (resolvedType.AreGenericTypeEquivalent(ByReferenceFullName))
                     return true;
 
                 foreach (var field in resolvedType.Fields.Where(f => !f.IsStatic))
@@ -170,6 +171,50 @@ namespace Microsoft.Cci.Extensions.CSharp
                 }
             }
 
+            return false;
+        }
+
+        public static bool IsOrContainsNonEmptyStruct(this ITypeReference type)
+        {
+            Queue<ITypeReference> typesToCheck = new Queue<ITypeReference>();
+            HashSet<ITypeReference> visited = new HashSet<ITypeReference>();
+
+            typesToCheck.Enqueue(type);
+
+            int node = 0;
+            while (typesToCheck.Count != 0)
+            {
+                var typeToCheck = typesToCheck.Dequeue();
+                visited.Add(typeToCheck);
+
+                var resolvedType = typeToCheck.ResolvedType;
+
+                if (typeToCheck.TypeCode != PrimitiveTypeCode.NotPrimitive && typeToCheck.TypeCode != PrimitiveTypeCode.Invalid)
+                    return true;
+
+                if (resolvedType is Dummy || resolvedType.IsReferenceType || resolvedType.AreGenericTypeEquivalent(ByReferenceFullName))
+                {
+                    if (node == 0)
+                    {
+                        return false;
+                    }
+
+                    // If we're not in the root of the tree, it means we found a non-empty struct.
+                    return true;
+                }
+
+                foreach (var field in resolvedType.Fields.Where(f => !f.IsStatic))
+                {
+                    if (!visited.Contains(field.Type))
+                    {
+                        typesToCheck.Enqueue(field.Type);
+                    }
+                }
+
+                node++;
+            }
+
+            // All the fields we found lead to empty structs.
             return false;
         }
 

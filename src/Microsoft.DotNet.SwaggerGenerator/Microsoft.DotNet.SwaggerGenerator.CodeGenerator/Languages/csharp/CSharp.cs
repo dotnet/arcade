@@ -1,7 +1,6 @@
 using HandlebarsDotNet;
 using Microsoft.DotNet.SwaggerGenerator.Modeler;
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
@@ -114,7 +113,7 @@ namespace Microsoft.DotNet.SwaggerGenerator.Languages
             }
 
             [BlockHelperMethod]
-            public static void NullCheck(TextWriter output, object context, Action<TextWriter, object> template, TypeReference reference)
+            public void NullCheck(TextWriter output, object context, Action<TextWriter, object> template, TypeReference reference)
             {
                 if (reference == TypeReference.String)
                 {
@@ -125,12 +124,12 @@ namespace Microsoft.DotNet.SwaggerGenerator.Languages
                 else
                 {
                     template(output, context);
-                    output.Write(" == default");
+                    output.WriteSafeString($" == default({ResolveReference(reference, null)})");
                 }
             }
 
             [BlockHelperMethod]
-            public static void NotNullCheck(TextWriter output, object context, Action<TextWriter, object> template, TypeReference reference)
+            public void NotNullCheck(TextWriter output, object context, Action<TextWriter, object> template, TypeReference reference)
             {
                 if (reference == TypeReference.String)
                 {
@@ -141,7 +140,7 @@ namespace Microsoft.DotNet.SwaggerGenerator.Languages
                 else
                 {
                     template(output, context);
-                    output.Write(" != default");
+                    output.WriteSafeString($" != default({ResolveReference(reference, null)})");
                 }
             }
 

@@ -3,6 +3,16 @@
 This document describes the new YAML based approach that will be used for build artifact publishing.
 This applies for builds from public branches, as well as for internal branches, with a few additional considerations.
 
+## Deprecated Parameters
+
+If you use any of these parameters please stop doing so.
+
+| Parameter                       | Description                                                                               |
+| --------------------------------| ----------------------------------------------------------------------------------- |
+| enableSymbolValidation     | Symbol validation, for now, will be performed manually during the release process. |
+
+
+
 ## What are YAML stages?
 
 Stages are a concept introduced by Azure DevOps to organize the jobs in a pipeline. Just as Jobs are a
@@ -93,13 +103,13 @@ a single stage, and adding a second stage that is driven by a template distribut
 the build invocation. Some of these properties are only required for legacy reasons.
 We are tracking cleaning some of these up via https://github.com/dotnet/arcade/issues/3597
 
-    | Name                            | Value                                                                               |
-    | --------------------------------| ----------------------------------------------------------------------------------- |
-    | /p:DotNetPublishBlobFeedUrl     | https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json                     |
-    | /p:DotNetPublishBlobFeedKey     | `$(dotnetfeed-storage-access-key-1)` variable from Dotnet-Blob-Feed variable group  |
-    | /p:DotNetPublishToBlobFeed      | true                                                                                |
-    | /p:DotNetPublishUsingPipelines  | true                                                                                |
-    | /p:DotNetArtifactsCategory      | `$(_DotNetArtifactsCategory)` variable                                              |
+  | Name                            | Value                                                                               |
+  | --------------------------------| ----------------------------------------------------------------------------------- |
+  | /p:DotNetPublishBlobFeedUrl     | https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json                     |
+  | /p:DotNetPublishBlobFeedKey     | `$(dotnetfeed-storage-access-key-1)` variable from Dotnet-Blob-Feed variable group  |
+  | /p:DotNetPublishToBlobFeed      | true                                                                                |
+  | /p:DotNetPublishUsingPipelines  | true                                                                                |
+  | /p:DotNetArtifactsCategory      | `$(_DotNetArtifactsCategory)` variable                                              |
 
     For an example, see how the Arcade repo passes these properties in its
     [azure-pipelines.yml](https://github.com/dotnet/arcade/blob/2cb8b86c1ca7ff77304f76fe7041135209ab6932/azure-pipelines.yml#L74)
@@ -134,9 +144,7 @@ We are tracking cleaning some of these up via https://github.com/dotnet/arcade/i
     - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
       - template: eng\common\templates\post-build\post-build.yml
         parameters:
-          # Symbol validation is not entirely reliable as of yet, so should be turned off until
-          # https://github.com/dotnet/arcade/issues/2871 is resolved.
-          enableSymbolValidation: false
+          enableSourceLinkValidation: false
           ...
     ```
 
@@ -144,9 +152,8 @@ We are tracking cleaning some of these up via https://github.com/dotnet/arcade/i
 
     | Name                                    | Type     | Description                                                                                          |Default Value |
     | --------------------------------------- | -------- | -----------------------------------------------------------------------------------------------------|----- |
-    | enableSourceLinkValidation              | bool     | Run sourcelink validation during the post-build stage.                                               | true |
+    | enableSourceLinkValidation              | bool     | Run sourcelink validation during the post-build stage.                                               | false |
     | enableSigningValidation                 | bool     | Run signing validation during the post-build stage.                                                  | true |
-    | enableSymbolValidation                  | bool     | Run symbol validation during the post-build stage.                                                   | true |
     | enableNugetValidation                   | bool     | Run NuGet package validation tool during the post build stage.                                       | true |
     | publishInstallersAndChecksums           | bool     | Publish installers packages and checksums from the build artifacts to the dotnetcli storage account. | false |
     | symbolPublishingAdditionalParameters    | string   | Additional arguments for the PublishToSymbolServers sdk task                                         | '' |

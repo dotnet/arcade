@@ -13,7 +13,7 @@ using MSBuild = Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed
 {
-    public class CreateInternalBlobFeed : MSBuild.Task
+    public class CreateAzureStorageBlobFeed : MSBuild.Task
     {
         [Output]
         public string TargetFeedURL { get; set; }
@@ -25,13 +25,16 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         public string CommitSha { get; set; }
 
         [Required]
-        public string AzureDevOpsFeedsBaseUrl { get; set; }
+        public string AzureStorageFeedsBaseUrl { get; set; }
 
         [Required]
         public string AzureStorageAccountName { get; set; }
 
         [Required]
         public string AzureStorageAccountKey { get; set; }
+
+        [Required]
+        public bool IsInternal { get; set; }
 
         private const string baseUrlRegex = @"https:\/\/[^/]+/container/(?<containername>[^/]+).*";
 
@@ -44,7 +47,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         {
             try
             {
-                string baseFeedName = $"darc-int-{RepositoryName}-{CommitSha}";
+                string accessId = IsInternal ? "int" : "pub";
+                string baseFeedName = $"darc-{accessId}-{RepositoryName}-{CommitSha}";
                 string versionedFeedName = baseFeedName;
                 bool needsUniqueName = false;
                 int subVersion = 0;
@@ -52,14 +56,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                 Log.LogMessage(MessageImportance.High, $"Creating a new Azure Storage internal feed ...");
 
-                Match m = Regex.Match(AzureDevOpsFeedsBaseUrl, baseUrlRegex);
+                Match m = Regex.Match(AzureStorageFeedsBaseUrl, baseUrlRegex);
                 if (m.Success)
                 {
                     containerName = m.Groups["containername"].Value;
                 }
                 else
                 {
-                    Log.LogError($"Could not parse {nameof(AzureDevOpsFeedsBaseUrl)} to extract the container name: '{AzureDevOpsFeedsBaseUrl}'");
+                    Log.LogError($"Could not parse {nameof(AzureStorageFeedsBaseUrl)} to extract the container name: '{AzureStorageFeedsBaseUrl}'");
                     return false;
                 }
 
@@ -70,7 +74,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 {
                     BlobContainerPermissions permissions = new BlobContainerPermissions
                     {
-                        PublicAccess = BlobContainerPublicAccessType.Off
+                        PublicAccess = IsInternal ? BlobContainerPublicAccessType.Off : BlobContainerPublicAccessType.Container
                     };
 
                     await azUtils.CreateContainerAsync(permissions);
@@ -97,7 +101,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 {
                     Name = baseFeedName,
                     Type = "azure",
-                    BaseUri = $"{AzureDevOpsFeedsBaseUrl}{baseFeedName}",
+                    BaseUri = $"{AzureStorageFeedsBaseUrl}{baseFeedName}",
                     AccountName = AzureStorageAccountName,
                     Container = containerName,
                     FeedSubPath = $"{baseFeedName}",
@@ -107,7 +111,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 BlobFeedAction bfAction = new BlobFeedAction(sleetSource, AzureStorageAccountKey, Log);
                 await bfAction.InitAsync();
 
-                TargetFeedURL = $"{AzureDevOpsFeedsBaseUrl}{baseFeedName}";
+                TargetFeedURL = $"{AzureStorageFeedsBaseUrl}{baseFeedName}";
 
                 Log.LogMessage(MessageImportance.High, $"Feed '{TargetFeedURL}' created successfully!");
             }
