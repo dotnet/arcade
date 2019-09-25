@@ -3,12 +3,14 @@
 Infrastructure changes are handled a bit differently from the product because they don't actually ship.  
 The main goal is to ensure that the product can still be built and shipped.
 
-| Product "mode" | Branch Infra     | Shared Infra     | Notes                                              |
+When multiple products share the same infrastructure, the most "strict" product determines the mode according to the table below.
+
+| Product "mode" | Product Infra    | Shared Infra     | Notes                                              |
 | ---------------| -----------------| ---------------- |----------------------------------------------------|
 | Open           | Open             | Open             | Changes are handled according to normal policy     |
 | Tell           | Tell --> Prod    | Tell --> Arcade  | Product branch changes are handled by the product team, and shared infra updates reviewed by the larger working group |
 | Ask            | Tell --> Tactics | Tell --> Tactics | Tactics needs to know when in ask mode.  Holding off on 'ask mode' to Arcade for now  |
-| Stabilization  | Ask --> Tactics  | Ask --> Tactics  | Changes when trying to get a coherent build can be very destabilizing  |
+| Stabilization  | Tell --> Tactics  | Ask --> Arcade  | Changes when trying to get a coherent build can be very destabilizing.  Arcade decides if it's ask or tell to tactics  |
 
 ## Definitions:
 - "Branch Infra": Infrastructure changes in the product branch
@@ -26,4 +28,4 @@ The main goal is to ensure that the product can still be built and shipped.
 ## Servicing
 There are a few things to keep in mind with servicing:
 - Shared infra servicing workflow and policies are [found here](ArcadeServicing.md). 
-- Servicing release are basically in perpetual 'Ask' and 'Stabilization' mode.
+- Servicing release are basically in perpetual 'Stabilization' mode.
