@@ -4,6 +4,16 @@ This Package provides Helix Job sending functionality from an MSBuild project fi
 
 ## Examples
 Each of the following examples require dotnet-cli >= 2.1.300 and need the following files in a directory at or above the example project's directory.
+#### NuGet.config
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+  <packageSources>
+    <clear />
+    <add key="dotnet-tools" value="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json" />
+  </packageSources>
+</configuration>
+```
 #### global.json
 ```json
 {
@@ -12,20 +22,10 @@ Each of the following examples require dotnet-cli >= 2.1.300 and need the follow
   }
 }
 ```
-#### NuGet.config
-```xml
-<?xml version="1.0" encoding="utf-8"?>
-<configuration>
-  <packageSources>
-    <clear />
-    <add key="dotnet-core" value="https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json" />
-  </packageSources>
-</configuration>
-```
 
-The examples can all be run with `dotnet msbuild` and will require an environment variable or MSBuildProperty `HelixAccessToken` set if:
-- A queue with a value of IsInternalOnly=true (usually any not ending in '.Open') is selected for `HelixTargetQueues`
-- Any payloads are used, as the payloads are uploaded using Helix-Managed storage apis and these require authentication
+Versions of the package can be found by browsing the feed at https://dev.azure.com/dnceng/public/_packaging?_a=feed&feed=dotnet-tools
+
+The examples can all be run with `dotnet msbuild` and will require an environment variable or MSBuildProperty `HelixAccessToken` set if a queue with a value of IsInternalOnly=true (usually any not ending in '.Open') is selected for `HelixTargetQueues`
 
 ### Docker Support
 Helix machines now have (where available on the machine) the ability to run work items directly inside Docker containers.  This allows work items to use operating systems that only work for Docker scenarios, as well as custom configurations of already-supported operating systems.  
