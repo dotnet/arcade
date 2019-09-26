@@ -36,7 +36,8 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
         public static PackageIndex Load(IEnumerable<string> packageIndexFiles)
         {
             string indexKey = String.Join("|",
-                packageIndexFiles.Select(pif => $"{pif}:{File.GetLastWriteTimeUtc(pif).Ticks}"));
+                packageIndexFiles.Select(packageIndexFile => new FileInfo(packageIndexFile))
+                                 .Select(packageIndexFileInfo => $"{packageIndexFileInfo.FullName}:{packageIndexFileInfo.Length}:{packageIndexFileInfo.LastWriteTimeUtc.Ticks}"));
 
             PackageIndex result = null;
 
