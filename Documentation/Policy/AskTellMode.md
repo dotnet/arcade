@@ -1,9 +1,9 @@
 # Infrastructure Ask & Tell Mode
 
 Infrastructure changes are handled a bit differently from the product because they don't actually ship.  
-The main goal is to ensure that the product can still be built and shipped.
+The main goal is to ensure that the product can always be built and shipped.
 
-When multiple products share the same infrastructure, the most "strict" product determines the mode according to the table below.
+When multiple products share the same infrastructure, the most "strict" product determines the mode according to the table below.  (Definitions right after table)
 
 | Product "mode" | Product Infra    | Shared Infra     | Notes                                              |
 | ---------------| -----------------| ---------------- |----------------------------------------------------|
@@ -14,8 +14,8 @@ When multiple products share the same infrastructure, the most "strict" product 
 
 ## Definitions:
 - "Branch Infra": Infrastructure changes in the product branch
-- "Shared Infra": Infrastructure changes in shared infra like Arcade, Helix, etc.
-- "Tell Mode" for each product teams will follow their own process
+- "Product Infra": Infrastructure changes in shared infra like Arcade, Helix, etc.
+- "Tell Mode" for each product, teams will follow their own process
 - "Tell Mode" to Arcade means emailing the Arcade Working Group at arcadewg@microsoft.com.  We'll keep this lightweight for now.
 - "Ask Mode" to tactics handled according the guidance managed by Lee Coward
 
