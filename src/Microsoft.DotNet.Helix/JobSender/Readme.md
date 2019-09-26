@@ -1,6 +1,14 @@
 # Microsoft.DotNet.Helix.JobSender
 This Package provides simple Helix Job sending functionality allowing sending jobs to helix with a minimal amount of C# code.
 
+## Installing the Package
+
+The Helix Packages are pushed to the dotnet-tools package feed:
+
+> `https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json`
+
+To use these packages add the above feed to `NuGet.config`. There are currently no stable versions of the package in the feed so you must specify the version if you are using `dotnet add package`.
+
 ## Examples
 All of the following examples are C# code that is inserted in the following template.
 ```csharp
