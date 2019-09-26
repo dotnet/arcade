@@ -34,6 +34,8 @@ stages:
     steps:
     - script: systeminfo
 
+    - script: where.exe tar
+
     - script: tar --help
 
     - script: curl --help
