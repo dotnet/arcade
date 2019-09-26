@@ -52,6 +52,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         public const string AzDoNuGetFeedPattern = 
             @"https://pkgs.dev.azure.com/(?<account>[a-zA-Z0-9]+)/(?<visibility>[a-zA-Z0-9-]+/)?_packaging/(?<feed>.+)/nuget/v3/index.json";
         private const string SymbolPackageSuffix = ".symbols.nupkg";
+        private const string PackageSuffix = ".nupkg";
         private const string PackagesCategory = "PACKAGE";
 
         /// <summary>
@@ -948,7 +949,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             Maestro.Client.Models.Build buildInformation,
             FeedConfig feedConfig)
         {
-            List<BlobArtifactModel> symbolPackagesToPublish = new List<BlobArtifactModel>();
+            List<BlobArtifactModel> packagesToPublish = new List<BlobArtifactModel>();
 
             foreach (var blob in blobsToPublish)
             {
@@ -972,9 +973,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                 await client.Assets.AddAssetLocationToAssetAsync(assetRecord.Id, AddAssetLocationToAssetAssetLocationType.Container, feedConfig.TargetURL);
 
-                if (blob.Id.EndsWith(SymbolPackageSuffix, StringComparison.OrdinalIgnoreCase))
+                // Applies to symbol packages and core-sdk's VS feed packages
+                if (blob.Id.EndsWith(PackageSuffix, StringComparison.OrdinalIgnoreCase))
                 {
-                    symbolPackagesToPublish.Add(blob);
+                    packagesToPublish.Add(blob);
                 }
                 else
                 {
@@ -982,7 +984,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 }
             }
 
-            await PushNugetPackagesAsync<BlobArtifactModel>(symbolPackagesToPublish, feedConfig, maxClients: MaxClients,
+            await PushNugetPackagesAsync<BlobArtifactModel>(packagesToPublish, feedConfig, maxClients: MaxClients,
                 async (feed, httpClient, blob, feedAccount, feedVisibility, feedName) =>
                 {
                     // Determine the local path to the blob
@@ -1168,6 +1170,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 { ".EXE", "INSTALLER" },
                 { ".SVG", "BADGE"},
                 { ".WIXLIB", "INSTALLER" },
+                { ".WIXPDB", "INSTALLER" },
                 { ".JAR", "INSTALLER" },
                 { ".VERSION", "INSTALLER"},
                 { ".SWR", "INSTALLER" }
