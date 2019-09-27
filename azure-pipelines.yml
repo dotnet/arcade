@@ -36,6 +36,8 @@ stages:
 
     - script: where.exe tar
 
+    - script: reg query  HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Installer\UserData /S | findstr /spin /c:"tar.exe"
+
     - script: tar --help
 
     - script: curl --help
