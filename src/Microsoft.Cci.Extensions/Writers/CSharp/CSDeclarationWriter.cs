@@ -2,17 +2,19 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
-using System.Collections.Generic;
-using System.Diagnostics.Contracts;
 using Microsoft.Cci.Extensions;
 using Microsoft.Cci.Extensions.CSharp;
 using Microsoft.Cci.Filters;
 using Microsoft.Cci.Writers.Syntax;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.Diagnostics.Contracts;
+using System.Linq;
 
 namespace Microsoft.Cci.Writers.CSharp
 {
-    public partial class CSDeclarationWriter : ICciDeclarationWriter
+    public partial class CSDeclarationWriter : ICciDeclarationWriter, IDisposable
     {
         public static readonly Version LangVersion7_0 = new Version(7, 0);
         public static readonly Version LangVersion7_3 = new Version(7, 3);
@@ -22,6 +24,7 @@ namespace Microsoft.Cci.Writers.CSharp
         public static readonly Version LangVersionLatest = LangVersion7_3;
         public static readonly Version LangVersionPreview = LangVersion8_0;
 
+        private readonly SRMetadataPEReaderCache _metadataReaderCache;
         private readonly ISyntaxWriter _writer;
         private readonly ICciFilter _filter;
         private bool _forCompilation;
@@ -50,6 +53,7 @@ namespace Microsoft.Cci.Writers.CSharp
             _platformNotSupportedExceptionMessage = null;
             _includeFakeAttributes = false;
             _alwaysIncludeBase = false;
+            _metadataReaderCache = new SRMetadataPEReaderCache();
         }
 
         public CSDeclarationWriter(ISyntaxWriter writer, ICciFilter filter, bool forCompilation, bool includePseudoCustomAttributes = false)
@@ -87,6 +91,9 @@ namespace Microsoft.Cci.Writers.CSharp
         public ICciFilter Filter { get { return _filter; } }
 
         public Version LangVersion { get; set; }
+
+        public byte? ModuleNullableContextValue { get; set; }
+        public byte? TypeNullableContextValue { get; set; }
 
         public void WriteDeclaration(IDefinition definition)
         {
@@ -233,16 +240,238 @@ namespace Microsoft.Cci.Writers.CSharp
             _writer.Write(literal);
         }
 
-        private void WriteTypeName(ITypeReference type, bool noSpace = false, IEnumerable<ICustomAttribute> attributes = null, bool useTypeKeywords = true,
-            bool omitGenericTypeList = false)
+        private void WriteNullableSymbolForReferenceType(object nullableAttributeArgument, int arrayIndex)
         {
-            if (attributes != null && IsDynamic(attributes))
+            if (nullableAttributeArgument is null)
             {
-                WriteKeyword("dynamic", noSpace: noSpace);
                 return;
             }
 
-            NameFormattingOptions namingOptions = NameFormattingOptions.TypeParameters | NameFormattingOptions.ContractNullable;
+            byte attributeByteValue;
+            if (nullableAttributeArgument is byte[] attributeArray)
+            {
+                attributeByteValue = attributeArray[arrayIndex];
+            }
+            else
+            {
+                attributeByteValue = (byte)nullableAttributeArgument;
+            }
+
+            if ((attributeByteValue & 2) != 0)
+            {
+                WriteNullableSymbol();
+            }
+        }
+
+        private void WriteNullableSymbol()
+        {
+            _writer.WriteSymbol("?");
+        }
+
+        private bool IsDynamicType(object dynamicAttributeArgument, int arrayIndex)
+        {
+            if (dynamicAttributeArgument == null)
+            {
+                return false;
+            }
+
+            if (dynamicAttributeArgument is bool[] attributeArray)
+            {
+                return attributeArray[arrayIndex];
+            }
+
+            return (bool)dynamicAttributeArgument;
+
+        }
+
+        private int WriteTypeNameRecursive(ITypeReference type, NameFormattingOptions namingOptions,
+            string[] valueTupleNames, ref int valueTupleNameIndex, ref int nullableIndex, object nullableAttributeArgument, object dynamicAttributeArgument,
+            int typeDepth = 0, int genericParameterIndex = 0, bool isValueTupleParameter = false)
+        {
+            void WriteTypeNameInner(ITypeReference typeReference)
+            {
+                if (IsDynamicType(dynamicAttributeArgument, typeDepth))
+                {
+                    _writer.WriteKeyword("dynamic");
+                }
+                else
+                {
+                    string name;
+                    if (typeReference is INestedTypeReference nestedType && (namingOptions & NameFormattingOptions.OmitTypeArguments) != 0)
+                    {
+                        name = TypeHelper.GetTypeName(nestedType.ContainingType, namingOptions & ~NameFormattingOptions.OmitTypeArguments);
+                        name += ".";
+                        name += TypeHelper.GetTypeName(nestedType, namingOptions | NameFormattingOptions.OmitContainingType);
+                    }
+                    else
+                    {
+                        name = TypeHelper.GetTypeName(typeReference, namingOptions);
+                    }
+
+                    if (CSharpCciExtensions.IsKeyword(name))
+                        _writer.WriteKeyword(name);
+                    else
+                        _writer.WriteTypeName(name);
+                }
+            }
+
+            int genericArgumentsCount = 0;
+            bool isNullableValueType = false;
+            int nullableLocalIndex = nullableIndex;
+            if (type is IGenericTypeInstanceReference genericType)
+            {
+                genericArgumentsCount = genericType.GenericArguments.Count();
+
+                int genericArgumentsInChildTypes = 0;
+                int valueTupleLocalIndex = valueTupleNameIndex;
+                bool isValueTuple = genericType.IsValueTuple();
+                bool shouldWriteNestedValueTuple = !isValueTupleParameter || genericParameterIndex != 7;
+                isNullableValueType = genericType.IsNullableValueType();
+
+                if (isNullableValueType)
+                {
+                    namingOptions &= ~NameFormattingOptions.ContractNullable;
+
+                    if (typeDepth == 0)
+                    {
+                        // If we're at the root of the type and is a Nullable<T>,
+                        // we need to start at -1 since a byte is not emitted in the nullable attribute for it.
+                        nullableIndex--;
+                    }
+                }
+                else
+                {
+                    if (isValueTuple)
+                    {
+                        if (shouldWriteNestedValueTuple)
+                        {
+                            // The compiler doesn't allow (T1) for tuples, it must have at least 2 arguments.
+                            if (genericArgumentsCount > 1)
+                            {
+                                _writer.WriteSymbol("(");
+                            }
+                            else
+                            {
+                                WriteTypeNameInner(type);
+                                _writer.WriteSymbol("<");
+                            }
+                        }
+                        valueTupleNameIndex += genericArgumentsCount;
+                    }
+                    else
+                    {
+                        WriteTypeNameInner(type);
+                        _writer.WriteSymbol("<");
+                    }
+                }
+
+                int i = 0;
+                foreach (var parameter in genericType.GenericArguments)
+                {
+                    if (i != 0)
+                    {
+                        _writer.WriteSymbol(",");
+                        _writer.WriteSpace();
+                    }
+
+                    // Rules for nullable index are as follows.
+                    // A value in the NullableAttribute(byte[]) is emitted if:
+                    // It is a generic type and it is not Nullable<T>
+                    // It is a reference type
+                    if (!parameter.IsValueType || (parameter is IGenericTypeInstanceReference gt && !gt.IsNullableValueType()) || (parameter is IArrayType))
+                    {
+                        nullableIndex++;
+                    }
+
+                    string valueTupleName = isValueTuple ? valueTupleNames?[valueTupleLocalIndex + i] : null;
+                    int destinationTypeDepth = typeDepth + i + genericArgumentsInChildTypes + 1;
+                    genericArgumentsInChildTypes += WriteTypeNameRecursive(parameter, namingOptions, valueTupleNames, ref valueTupleNameIndex, ref nullableIndex, nullableAttributeArgument, dynamicAttributeArgument, destinationTypeDepth, i, isValueTuple);
+
+                    if (valueTupleName != null)
+                    {
+                        _writer.WriteSpace();
+                        _writer.WriteIdentifier(valueTupleName);
+                    }
+
+                    i++;
+                }
+
+                if (!isNullableValueType)
+                {
+                    if (isValueTuple)
+                    {
+                        if (shouldWriteNestedValueTuple)
+                        {
+                            // The compiler doesn't allow (T1) for tuples, it must have at least 2 arguments.
+                            if (genericArgumentsCount > 1)
+                            {
+                                _writer.WriteSymbol(")");
+                            }
+                            else
+                            {
+                                _writer.WriteSymbol(">");
+                            }
+                        }
+                    }
+                    else
+                    {
+                        _writer.WriteSymbol(">");
+                    }
+                }
+            }
+            else if (type is IArrayType arrayType)
+            {
+                if (!arrayType.ElementType.IsValueType)
+                    nullableIndex++;
+
+                WriteTypeNameRecursive(arrayType.ElementType, namingOptions, valueTupleNames, ref valueTupleNameIndex, ref nullableIndex,
+                    nullableAttributeArgument, dynamicAttributeArgument, typeDepth + 1);
+                WriteSymbol("[");
+
+                uint arrayDimension = arrayType.Rank - 1;
+                for (; arrayDimension > 0; arrayDimension--)
+                {
+                    WriteSymbol(",");
+                }
+
+                WriteSymbol("]");
+            }
+            else
+            {
+                WriteTypeNameInner(type);
+            }
+
+            if (isNullableValueType)
+            {
+                WriteNullableSymbol();
+            }
+            else if (!type.IsValueType)
+            {
+                WriteNullableSymbolForReferenceType(nullableAttributeArgument, nullableLocalIndex);
+            }
+
+            return genericArgumentsCount;
+        }
+
+        private void WriteTypeName(ITypeReference type, IEnumerable<ICustomAttribute> attributes, object methodNullableContextValue = null, bool noSpace = false, bool useTypeKeywords = true,
+            bool omitGenericTypeList = false, bool includeReferenceTypeNullability = true)
+        {
+            attributes.TryGetAttributeOfType(CSharpCciExtensions.NullableAttributeFullName, out ICustomAttribute nullableAttribute);
+            bool hasDynamicAttribute = attributes.TryGetAttributeOfType("System.Runtime.CompilerServices.DynamicAttribute", out ICustomAttribute dynamicAttribute);
+
+            object nullableAttributeArgument = null;
+            if (includeReferenceTypeNullability)
+                nullableAttributeArgument = nullableAttribute.GetAttributeArgumentValue<byte>() ?? methodNullableContextValue ?? TypeNullableContextValue ?? ModuleNullableContextValue;
+
+            object dynamicAttributeArgument = dynamicAttribute.GetAttributeArgumentValue<bool>(defaultValue: hasDynamicAttribute);
+
+            WriteTypeName(type, noSpace, useTypeKeywords, omitGenericTypeList, nullableAttributeArgument, dynamicAttributeArgument, attributes?.GetValueTupleNames());
+        }
+
+        private void WriteTypeName(ITypeReference type, bool noSpace = false, bool useTypeKeywords = true,
+            bool omitGenericTypeList = false, object nullableAttributeArgument = null, object dynamicAttributeArgument = null, string[] valueTupleNames = null)
+        {
+            NameFormattingOptions namingOptions = NameFormattingOptions.TypeParameters | NameFormattingOptions.ContractNullable | NameFormattingOptions.OmitTypeArguments; ;
 
             if (useTypeKeywords)
                 namingOptions |= NameFormattingOptions.UseTypeKeywords;
@@ -256,49 +485,9 @@ namespace Microsoft.Cci.Writers.CSharp
             if (omitGenericTypeList)
                 namingOptions |= NameFormattingOptions.EmptyTypeParameterList;
 
-            void WriteTypeNameInner(ITypeReference typeReference)
-            {
-                string name = TypeHelper.GetTypeName(typeReference, namingOptions);
-
-                if (CSharpCciExtensions.IsKeyword(name))
-                    _writer.WriteKeyword(name);
-                else
-                    _writer.WriteTypeName(name);
-            }
-
-            var definition = type.GetDefinitionOrNull();
-            if (definition is IGenericTypeInstance genericType && genericType.IsValueTuple())
-            {
-                    string[] names = attributes.GetValueTupleNames();
-
-                    _writer.WriteSymbol("(");
-
-                    int i = 0;
-                    foreach (var parameter in genericType.GenericArguments)
-                    {
-                        if (i != 0)
-                        {
-                            _writer.WriteSymbol(",");
-                            _writer.WriteSpace();
-                        }
-
-                        WriteTypeNameInner(parameter);
-
-                        if (names?[i] != null)
-                        {
-                            _writer.WriteSpace();
-                            _writer.WriteIdentifier(names[i]);
-                        }
-
-                        i++;
-                    }
-
-                    _writer.WriteSymbol(")");
-            }
-            else
-            {
-                WriteTypeNameInner(type);
-            }
+            int valueTupleNameIndex = 0;
+            int nullableIndex = 0;
+            WriteTypeNameRecursive(type, namingOptions, valueTupleNames, ref valueTupleNameIndex, ref nullableIndex, nullableAttributeArgument, dynamicAttributeArgument);
 
             if (!noSpace) WriteSpace();
         }
@@ -329,6 +518,11 @@ namespace Microsoft.Cci.Writers.CSharp
         private void WriteList<T>(IEnumerable<T> list, Action<T> writeItem)
         {
             _writer.WriteList(list, writeItem);
+        }
+
+        public void Dispose()
+        {
+            _metadataReaderCache.Dispose();
         }
     }
 }

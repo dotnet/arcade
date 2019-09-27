@@ -14,7 +14,7 @@ using Microsoft.Cci.Writers.Syntax;
 
 namespace Microsoft.Cci.Writers
 {
-    public class CSharpWriter : SimpleTypeMemberTraverser, ICciWriter
+    public class CSharpWriter : SimpleTypeMemberTraverser, ICciWriter, IDisposable
     {
         private readonly ISyntaxWriter _syntaxWriter;
         private readonly IStyleSyntaxWriter _styleWriter;
@@ -22,7 +22,6 @@ namespace Microsoft.Cci.Writers
         private readonly bool _writeAssemblyAttributes;
         private readonly bool _apiOnly;
         private readonly ICciFilter _cciFilter;
-
         private bool _firstMemberGroup;
 
         public CSharpWriter(ISyntaxWriter writer, ICciFilter filter, bool apiOnly, bool writeAssemblyAttributes = false)
@@ -82,6 +81,8 @@ namespace Microsoft.Cci.Writers
 
         public override void Visit(IAssembly assembly)
         {
+            _declarationWriter.ModuleNullableContextValue = assembly.ModuleAttributes.GetCustomAttributeArgumentValue<byte?>(CSharpCciExtensions.NullableContextAttributeFullName);
+
             if (_writeAssemblyAttributes)
             {
                 _declarationWriter.WriteDeclaration(assembly);
@@ -117,6 +118,12 @@ namespace Microsoft.Cci.Writers
 
         public override void Visit(ITypeDefinition type)
         {
+            byte? value = type.Attributes.GetCustomAttributeArgumentValue<byte?>(CSharpCciExtensions.NullableContextAttributeFullName);
+            if (!(type is INestedTypeDefinition) || value != null) // Only override the value when we're not on a nested type, or if so, only if the value is not null.
+            {
+                _declarationWriter.TypeNullableContextValue = value;
+            }
+
             _declarationWriter.WriteDeclaration(type);
 
             if (!type.IsDelegate)
@@ -187,7 +194,10 @@ namespace Microsoft.Cci.Writers
                 {
                     var genericTypedFields = excludedFields.Where(f => f.Type.UnWrap().IsGenericParameter());
                     foreach (var genericField in genericTypedFields)
-                        newFields.Add(genericField);
+                    {
+                        IFieldDefinition fieldType = new DummyPrivateField(parentType, genericField.Type, genericField.Name.Value, genericField.Attributes.Where(a => !a.FullName().EndsWith("NullAttribute")), genericField.IsReadOnly);
+                        newFields.Add(fieldType);
+                    }
 
                     IFieldDefinition intField = DummyFieldWriterHelper(parentType, excludedFields, parentType.PlatformType.SystemInt32, "_dummyPrimitive");
                     bool hasRefPrivateField = excludedFields.Any(f => f.Type.IsOrContainsReferenceType());
@@ -318,6 +328,11 @@ namespace Microsoft.Cci.Writers
                 return "Nested Types";
 
             return null;
+        }
+
+        public void Dispose()
+        {
+            _declarationWriter?.Dispose();
         }
     }
 }
