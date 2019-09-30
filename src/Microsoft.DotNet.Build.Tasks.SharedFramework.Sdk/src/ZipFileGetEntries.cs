@@ -8,7 +8,7 @@ using System;
 using System.IO.Compression;
 using System.Linq;
 
-namespace Microsoft.DotNet.Build.Tasks
+namespace Microsoft.DotNet.Build.Tasks.SharedFramework.Sdk
 {
     public sealed class ZipFileGetEntries : BuildTask
     {
@@ -25,7 +25,7 @@ namespace Microsoft.DotNet.Build.Tasks
         [Output]
         public ITaskItem[] Entries { get; set; }
 
-        public override bool Execute()
+        public override bool ExecuteCore()
         {
             try
             {

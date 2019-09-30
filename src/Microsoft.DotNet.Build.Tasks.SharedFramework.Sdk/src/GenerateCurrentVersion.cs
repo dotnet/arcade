@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
@@ -7,7 +7,7 @@ using System;
 using System.Globalization;
 using System.Text.RegularExpressions;
 
-namespace Microsoft.DotNet.Build.Tasks
+namespace Microsoft.DotNet.Build.Tasks.SharedFramework.Sdk
 {
     public sealed class GenerateCurrentVersion : BuildTask
     {
@@ -48,7 +48,7 @@ namespace Microsoft.DotNet.Build.Tasks
         private const string LastModifiedTimeDateFormat = "yyyy-MM-dd HH:mm:ss.FFFFFFF";
         private CultureInfo enUS = new CultureInfo("en-US");
 
-        public override bool Execute()
+        public override bool ExecuteCore()
         {
             // If OfficialBuildId is passed in, then use that to calculate the version and revision.
             if (string.IsNullOrEmpty(OfficialBuildId))

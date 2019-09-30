@@ -8,7 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace Microsoft.DotNet.Build.Tasks
+namespace Microsoft.DotNet.Build.Tasks.SharedFramework.Sdk
 {
     public class GenerateJsonObjectString : BuildTask
     {
@@ -34,7 +34,7 @@ namespace Microsoft.DotNet.Build.Tasks
         [Output]
         public string Json { get; set; }
 
-        public override bool Execute()
+        public override bool ExecuteCore()
         {
             var result = new StringBuilder();
             result.AppendLine("{");

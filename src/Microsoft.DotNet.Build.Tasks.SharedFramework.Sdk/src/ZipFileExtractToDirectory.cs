@@ -7,7 +7,7 @@ using System;
 using System.IO;
 using System.IO.Compression;
 
-namespace Microsoft.DotNet.Build.Tasks
+namespace Microsoft.DotNet.Build.Tasks.SharedFramework.Sdk
 {
     public sealed class ZipFileExtractToDirectory : BuildTask
     {
@@ -34,7 +34,7 @@ namespace Microsoft.DotNet.Build.Tasks
         /// </summary>
         public ITaskItem[] Include { get; set; }
 
-        public override bool Execute()
+        public override bool ExecuteCore()
         {
             try
             {

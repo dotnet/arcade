@@ -1,11 +1,11 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
 using Microsoft.Build.Framework;
 using System.Runtime.InteropServices;
 
-namespace Microsoft.DotNet.Build.Tasks
+namespace Microsoft.DotNet.Build.Tasks.SharedFramework.Sdk
 {
     public class GetTargetMachineInfo : BuildTask
     {
@@ -18,7 +18,7 @@ namespace Microsoft.DotNet.Build.Tasks
         [Output]
         public string RuntimeIdentifier { get; set; }
 
-        public override bool Execute()
+        public override bool ExecuteCore()
         {
             switch (RuntimeInformation.OSArchitecture)
             {

@@ -9,7 +9,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
-namespace Microsoft.DotNet.Build.Tasks
+namespace Microsoft.DotNet.Build.Tasks.SharedFramework.Sdk
 {
     public partial class GenerateFileVersionProps : BuildTask
     {
@@ -42,7 +42,7 @@ namespace Microsoft.DotNet.Build.Tasks
         /// </summary>
         public bool PermitDllAndExeFilesLackingFileVersion { get; set; }
 
-        public override bool Execute()
+        public override bool ExecuteCore()
         {
             var fileVersions = new Dictionary<string, FileVersionData>(StringComparer.OrdinalIgnoreCase);
             foreach(var file in Files)

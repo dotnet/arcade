@@ -11,7 +11,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Xml.Linq;
 
-namespace Microsoft.DotNet.Build.Tasks
+namespace Microsoft.DotNet.Build.Tasks.SharedFramework.Sdk
 {
     public class CopyNupkgAndChangeVersion : BuildTask
     {
@@ -29,7 +29,7 @@ namespace Microsoft.DotNet.Build.Tasks
 
         public string[] DependencyPackageIdsToChange { get; set; }
 
-        public override bool Execute()
+        public override bool ExecuteCore()
         {
             Directory.CreateDirectory(Path.GetDirectoryName(TargetFile));
             File.Copy(SourceFile, TargetFile, true);

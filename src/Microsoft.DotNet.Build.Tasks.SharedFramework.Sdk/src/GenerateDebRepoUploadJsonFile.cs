@@ -5,8 +5,7 @@
 using Microsoft.Build.Framework;
 using System.IO;
 
-
-namespace Microsoft.DotNet.Build.Tasks
+namespace Microsoft.DotNet.Build.Tasks.SharedFramework.Sdk
 {
     public partial class GenerateDebRepoUploadJsonFile : BuildTask
     {
@@ -22,7 +21,7 @@ namespace Microsoft.DotNet.Build.Tasks
         [Required]
         public string UploadUrl { get; set; }
 
-        public override bool Execute()
+        public override bool ExecuteCore()
         {
             File.Delete(UploadJsonFilename);
 

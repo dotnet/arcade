@@ -4,7 +4,7 @@
 
 using Microsoft.Build.Framework;
 
-namespace Microsoft.DotNet.Build.Tasks
+namespace Microsoft.DotNet.Build.Tasks.SharedFramework.Sdk
 {
     // MSI versioning
     // Encode the CLI version to fit into the MSI versioning scheme - https://msdn.microsoft.com/en-us/library/windows/desktop/aa370859(v=vs.85).aspx
@@ -40,7 +40,7 @@ namespace Microsoft.DotNet.Build.Tasks
         [Output]
         public string MsiVersion { get; set; }
 
-        public override bool Execute()
+        public override bool ExecuteCore()
         {
             if(BuildNumber == null && BuildNumberMajor == null)
             {

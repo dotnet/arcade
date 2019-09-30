@@ -9,7 +9,7 @@ using System.IO;
 using System.Linq;
 using System.Xml.Linq;
 
-namespace Microsoft.DotNet.Build.Tasks
+namespace Microsoft.DotNet.Build.Tasks.SharedFramework.Sdk
 {
     public class CreateFrameworkListFile : BuildTask
     {
@@ -54,7 +54,7 @@ namespace Microsoft.DotNet.Build.Tasks
         /// </summary>
         public ITaskItem[] RootAttributes { get; set; }
 
-        public override bool Execute()
+        public override bool ExecuteCore()
         {
             XAttribute[] rootAttributes = RootAttributes
                 ?.Select(item => new XAttribute(item.ItemSpec, item.GetMetadata("Value")))

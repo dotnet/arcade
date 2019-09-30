@@ -11,7 +11,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace Microsoft.DotNet.Build.Tasks
+namespace Microsoft.DotNet.Build.Tasks.SharedFramework.Sdk
 {
     /// <summary>
     /// This task prepares the command line parameters for running a RPM build using FPM tool and also updates the copyright and changelog file tokens.
@@ -31,7 +31,7 @@ namespace Microsoft.DotNet.Build.Tasks
         [Output]
         public string FPMParameters { get; set; }
 
-        public override bool Execute()
+        public override bool ExecuteCore()
         {
             try
             {

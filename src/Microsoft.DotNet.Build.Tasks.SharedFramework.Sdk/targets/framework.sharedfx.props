@@ -8,6 +8,15 @@
     <GenerateCompressedArchive>true</GenerateCompressedArchive>
   </PropertyGroup>
 
+  <!--
+    Support Arcade's up-front restore with sfxproj. Skip the product package references during this
+    stage, because they aren't built yet. The build will run restore again during the build to find
+    the product nupkgs.
+  -->
+  <PropertyGroup Condition="'$(__BuildPhase)' == 'SolutionRestore'">
+    <SkipProductDependencies>true</SkipProductDependencies>
+  </PropertyGroup>
+
   <PropertyGroup>
     <TargetFramework>$(NETCoreAppFramework)</TargetFramework>
     <PackageId>unused</PackageId>

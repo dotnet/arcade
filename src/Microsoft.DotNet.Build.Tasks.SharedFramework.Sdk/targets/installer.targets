@@ -3,11 +3,11 @@
     Shared targets to build installer artifacts such as installers, distro packages, and tarballs.
   -->
 
-  <UsingTask TaskName="BuildFPMToolPreReqs" AssemblyFile="$(LocalBuildToolsTaskFile)"/>
-  <UsingTask TaskName="GenerateJsonObjectString" AssemblyFile="$(LocalBuildToolsTaskFile)"/>
-  <UsingTask TaskName="ZipFileCreateFromDirectory" AssemblyFile="$(LocalBuildToolsTaskFile)"/>
-  <UsingTask TaskName="ZipFileExtractToDirectory" AssemblyFile="$(LocalBuildToolsTaskFile)" />
-  <UsingTask TaskName="ZipFileGetEntries" AssemblyFile="$(LocalBuildToolsTaskFile)" />
+  <UsingTask TaskName="BuildFPMToolPreReqs" AssemblyFile="$(DotNetBuildTasksSharedFrameworkTaskFile)"/>
+  <UsingTask TaskName="GenerateJsonObjectString" AssemblyFile="$(DotNetBuildTasksSharedFrameworkTaskFile)"/>
+  <UsingTask TaskName="ZipFileCreateFromDirectory" AssemblyFile="$(DotNetBuildTasksSharedFrameworkTaskFile)"/>
+  <UsingTask TaskName="ZipFileExtractToDirectory" AssemblyFile="$(DotNetBuildTasksSharedFrameworkTaskFile)" />
+  <UsingTask TaskName="ZipFileGetEntries" AssemblyFile="$(DotNetBuildTasksSharedFrameworkTaskFile)" />
 
   <Import Project="$(MSBuildThisFileDirectory)windows/wix.targets" />
 

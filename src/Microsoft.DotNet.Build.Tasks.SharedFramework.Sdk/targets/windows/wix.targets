@@ -6,8 +6,42 @@
     this file and switch to wixproj. See https://github.com/wixtoolset/issues/issues/5627
   -->
 
-  <UsingTask TaskName="ExecWithRetries" AssemblyFile="$(LocalBuildToolsTaskFile)" />
-  <UsingTask TaskName="StabilizeWixFileId" AssemblyFile="$(LocalBuildToolsTaskFile)" />
+  <UsingTask TaskName="ExecWithRetries" AssemblyFile="$(DotNetBuildTasksSharedFrameworkTaskFile)" />
+  <UsingTask TaskName="StabilizeWixFileId" AssemblyFile="$(DotNetBuildTasksSharedFrameworkTaskFile)" />
+
+  <!--
+    Acquire WiX tools, if not present.
+  -->
+  <Target Name="AcquireWix"
+          DependsOnTargets="GetAcquireWixProperties">
+    <MSBuild
+      Projects="$(AcquireWixProjectFile)"
+      Targets="AcquireWixCore"
+      Properties="IntermediateOutputRootPath=$(IntermediateOutputRootPath)" />
+  </Target>
+
+  <Target Name="GetAcquireWixProperties"> 
+    <Error
+      Condition="'$(IntermediateOutputRootPath)' == ''"
+      Text="IntermediateOutputRootPath not specified" />
+
+    <PropertyGroup>
+      <WixVersion>3.10.4</WixVersion>
+      <WixToolsDir>$(IntermediateOutputRootPath)WixTools.$(WixVersion)/</WixToolsDir>
+      <!-- Used in WiX targets to locate files. -->
+      <WixInstallPath>$(WixToolsDir)</WixInstallPath>
+      <WixTargetsPath>$(WixToolsDir)wix.targets</WixTargetsPath>
+      <WixObjRoot>$(IntermediateOutputRootPath)wix/</WixObjRoot>
+      <WixObjDir>$(WixObjRoot)$(MSBuildProjectName)/</WixObjDir>
+      <MsiArch>$(TargetArchitecture)</MsiArch>
+
+      <AcquireWixProjectFile>$(PackagingToolsDir)acquire-wix\acquire-wix.proj</AcquireWixProjectFile>
+      <WixDownloadFilename>wix.$(WixVersion).zip</WixDownloadFilename>
+      <WixDownloadUrl>https://dotnetcli.azureedge.net/build/wix/$(WixDownloadFilename)</WixDownloadUrl>
+      <WixDestinationPath>$(WixToolsDir)$(WixDownloadFilename)</WixDestinationPath>
+      <WixDownloadSentinel>$(WixToolsDir)WixDownload.$(WixVersion).sentinel</WixDownloadSentinel>
+    </PropertyGroup>
+  </Target>
 
   <!--
     Generate bundle upgrade code. This code needs to be constant within a product band for upgrades.
@@ -126,7 +160,7 @@
       <CandleVariables Include="FrameworkDisplayVersion" Value="$(ProductVersion)" />
       <CandleVariables Include="LcidList" Value="@(LocDirName)" />
 
-      <CandleVariables Include="DotNetBackgroundPngFile" Value="$(MSBuildThisFileDirectory)..\..\packaging\osx\sharedframework\resources\dotnetbackground.png" />
+      <CandleVariables Include="DotNetBackgroundPngFile" Value="$(MSBuildThisFileDirectory)..\resources\dotnetbackground.png" />
       <CandleVariables Include="DotNetDummyEulaFile" Value="$(MSBuildThisFileDirectory)bundle\dummyEula.rtf" />
     </ItemGroup>
 
@@ -372,6 +406,7 @@
 
   <Target Name="GenerateVSInsertionNupkgCore"
           DependsOnTargets="
+            GetAcquireWixProperties;
             AcquireNuGetExe;
             GetInstallerProperties;
             GetWixBuildConfiguration">
@@ -383,6 +418,10 @@
 
       <ProjectUrlForVS>https://github.com/dotnet/core-setup</ProjectUrlForVS>
 
+      <!-- Work around NuGet silently ignoring nuspec files in PackTask by changing extension. https://github.com/NuGet/Home/issues/8637 -->
+      <MangledNuspecFile>$(MSBuildThisFileDirectory)vs\VS.Redist.Common.Component.nuspec.txt</MangledNuspecFile>
+      <VsInsertionNuspecFile>$(IntermediateOutputPath)vs\VS.Redist.Common.Component.nuspec</VsInsertionNuspecFile>
+
       <PackProperties />
       <PackProperties>$(PackProperties)COMPONENT_MSI=$(ComponentMsiFile);</PackProperties>
       <PackProperties>$(PackProperties)ARCH=$(MsiArch);</PackProperties>
@@ -391,13 +430,15 @@
       <PackProperties>$(PackProperties)PROJECT_URL=$(ProjectUrlForVS);</PackProperties>
 
       <PackArgs />
-      <PackArgs>$(PackArgs) $(MSBuildThisFileDirectory)vs\VS.Redist.Common.Component.nuspec</PackArgs>
+      <PackArgs>$(PackArgs) $(VsInsertionNuspecFile)</PackArgs>
       <PackArgs>$(PackArgs) -Version $(ProductVersion)</PackArgs>
       <PackArgs>$(PackArgs) -OutputDirectory $(ArtifactsNonShippingPackagesDir)</PackArgs>
       <PackArgs>$(PackArgs) -NoDefaultExcludes</PackArgs>
       <PackArgs>$(PackArgs) -NoPackageAnalysis</PackArgs>
       <PackArgs>$(PackArgs) -Properties "$(PackProperties)"</PackArgs>
     </PropertyGroup>
+
+    <Copy SourceFiles="$(MangledNuspecFile)" DestinationFiles="$(VsInsertionNuspecFile)" />
 
     <Exec Command="$(NuGetExeFile) pack $(PackArgs)" StandardOutputImportance="normal" />
 

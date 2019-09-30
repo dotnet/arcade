@@ -1,14 +1,13 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
 using Microsoft.Build.Framework;
 using System;
-using System.Diagnostics;
 using System.Linq;
 using System.Xml.Linq;
 
-namespace Microsoft.DotNet.Build.Tasks
+namespace Microsoft.DotNet.Build.Tasks.SharedFramework.Sdk
 {
     /// <summary>
     /// In a WiX source file, replaces the Id of a File with some given string in order to stabilize
@@ -49,7 +48,7 @@ namespace Microsoft.DotNet.Build.Tasks
         [Required]
         public ITaskItem[] FileElementToStabilize { get; set; }
 
-        public override bool Execute()
+        public override bool ExecuteCore()
         {
             XDocument content = XDocument.Load(SourceFile);
 

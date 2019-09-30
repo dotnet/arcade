@@ -1,4 +1,4 @@
-<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project>
 
   <!--
     Include common targets for specific project types. These files include BuildTools target
@@ -147,10 +147,17 @@
   -->
   <Target Name="AcquireNuGetExe"
           DependsOnTargets="GetAcquireNuGetExeProperties">
-    <MSBuild Projects="$(AcquireNuGetExeProjectFile)" Targets="AcquireNuGetExeCore" />
+    <MSBuild
+      Projects="$(AcquireNuGetExeProjectFile)"
+      Targets="AcquireNuGetExeCore"
+      Properties="IntermediateOutputRootPath=$(IntermediateOutputRootPath)" />
   </Target>
 
   <Target Name="GetAcquireNuGetExeProperties">
+    <Error
+      Condition="'$(IntermediateOutputRootPath)' == ''"
+      Text="IntermediateOutputRootPath not specified" />
+
     <PropertyGroup>
       <AcquireNuGetExeProjectFile>$(PackagingToolsDir)acquire-nuget-exe\acquire-nuget-exe.proj</AcquireNuGetExeProjectFile>
       <!-- Using 3.5.0 to workaround https://github.com/NuGet/Home/issues/5016 -->

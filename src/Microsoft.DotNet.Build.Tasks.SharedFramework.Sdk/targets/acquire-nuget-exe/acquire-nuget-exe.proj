@@ -15,6 +15,4 @@
       Overwrite="true" />
   </Target>
 
-  <Import Project="$(MSBuildThisFileDirectory)..\packaging-tools.targets" />
-
 </Project>

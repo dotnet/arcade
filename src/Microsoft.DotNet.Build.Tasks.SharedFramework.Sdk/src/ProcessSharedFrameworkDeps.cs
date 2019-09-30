@@ -11,7 +11,7 @@ using System;
 using System.IO;
 using System.Linq;
 
-namespace Microsoft.DotNet.Build.Tasks
+namespace Microsoft.DotNet.Build.Tasks.SharedFramework.Sdk
 {
     public partial class ProcessSharedFrameworkDeps : Task
     {

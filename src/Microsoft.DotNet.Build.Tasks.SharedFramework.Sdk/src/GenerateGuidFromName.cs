@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
@@ -6,7 +6,7 @@ using Microsoft.Build.Framework;
 using System;
 using System.Security.Cryptography;
 
-namespace Microsoft.DotNet.Build.Tasks
+namespace Microsoft.DotNet.Build.Tasks.SharedFramework.Sdk
 {
     public class GenerateGuidFromName : BuildTask
     {
@@ -17,7 +17,7 @@ namespace Microsoft.DotNet.Build.Tasks
         public string GeneratedGuid { get; set; }
 
         // Generate a Version 5 (SHA1 Name Based) Guid from a name.
-        public override bool Execute()
+        public override bool ExecuteCore()
         {
             // Any fixed GUID will do for a namespace.
             Guid namespaceId = new Guid("28F1468D-672B-489A-8E0C-7C5B3030630C");

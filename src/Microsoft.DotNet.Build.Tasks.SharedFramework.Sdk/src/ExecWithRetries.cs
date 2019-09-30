@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
@@ -10,12 +10,12 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Microsoft.DotNet.Build.Tasks
+namespace Microsoft.DotNet.Build.Tasks.SharedFramework.Sdk
 {
     /// <summary>
     /// Run a command and retry if the exit code is not 0.
     /// </summary>
-    public class ExecWithRetries : BuildTask
+    public class ExecWithRetries : BuildTask, ICancelableTask
     {
         [Required]
         public string Command { get; set; }
@@ -60,7 +60,7 @@ namespace Microsoft.DotNet.Build.Tasks
             _cancelTokenSource.Cancel();
         }
 
-        public override bool Execute()
+        public override bool ExecuteCore()
         {
             for (int i = 0; i < MaxAttempts; i++)
             {

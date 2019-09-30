@@ -3,7 +3,7 @@
     Shared targets specific to shared framework projects (sfxproj).
   -->
 
-  <UsingTask TaskName="ProcessSharedFrameworkDeps" AssemblyFile="$(LocalBuildToolsTaskFile)" />
+  <UsingTask TaskName="ProcessSharedFrameworkDeps" AssemblyFile="$(DotNetBuildTasksSharedFrameworkTaskFile)" />
 
   <Target Name="GetSharedFrameworkInstallerProperties"
           Condition="'$(GenerateSharedFramework)' == 'true'"
@@ -26,7 +26,12 @@
   <Target Name="GetPackageReference"
           DependsOnTargets="GetProductVersions"
           BeforeTargets="CollectPackageReferences"
-          Condition="'$(DotNetBuildFromSource)' != 'true' or '$(ExcludeFromSourceBuild)' != 'true'">
+          Condition="
+            '$(SkipProductDependencies)' != 'true' and
+            (
+              '$(DotNetBuildFromSource)' != 'true' or
+              '$(ExcludeFromSourceBuild)' != 'true'
+            )">
     <PropertyGroup>
       <SfxVersion Condition="'$(SfxVersion)' == ''">$(ProductVersion)</SfxVersion>
       <SfxPackageIdentity Condition="'$(SfxPackageIdentity)' == ''">$(SfxIdentity)</SfxPackageIdentity>

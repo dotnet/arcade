@@ -8,7 +8,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 
-namespace Microsoft.DotNet.Build.Tasks
+namespace Microsoft.DotNet.Build.Tasks.SharedFramework.Sdk
 {
     internal static partial class FileUtilities
     {

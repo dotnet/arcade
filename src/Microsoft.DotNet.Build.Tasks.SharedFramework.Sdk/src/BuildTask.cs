@@ -5,33 +5,35 @@
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
-namespace Microsoft.DotNet.Build.Tasks
+namespace Microsoft.DotNet.Build.Tasks.SharedFramework.Sdk
 {
     public abstract partial class BuildTask : ITask
     {
         private TaskLoggingHelper _log = null;
 
-        internal TaskLoggingHelper Log
-        {
-            get { return _log ?? (_log = new TaskLoggingHelper(this)); }
-        }
+        internal TaskLoggingHelper Log => _log ??= new TaskLoggingHelper(this);
 
-        public BuildTask()
-        {
-        }
+        public IBuildEngine BuildEngine { get; set; }
 
-        public IBuildEngine BuildEngine
-        {
-            get;
-            set;
-        }
+        public ITaskHost HostObject { get; set; }
 
-        public ITaskHost HostObject
-        {
-            get;
-            set;
-        }
+        public abstract bool ExecuteCore();
 
-        public abstract bool Execute();
+        public bool Execute()
+        {
+#if NET472
+            AssemblyResolution.Log = Log;
+#endif
+            try
+            {
+                return ExecuteCore();
+            }
+            finally
+            {
+#if NET472
+                AssemblyResolution.Log = null;
+#endif
+            }
+        }
     }
 }
