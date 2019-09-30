@@ -16,14 +16,20 @@ parameters:
   signingValidationAdditionalParameters: ''
 
   # Which stages should finish execution before post-build stages start
-  dependsOn:
+  validateDependsOn:
   - build
   publishDependsOn: 
   - Validate
 
 stages:
 - stage: Validate
-  dependsOn: ${{ parameters.dependsOn }}
+
+  ${{ if eq(parameters.dependsOn, '') }}:
+    dependsOn: ${{ parameters.validateDependsOn }}
+  # for backwards compatibility
+  ${{ if ne(parameters.dependsOn, '') }}:
+    dependsOn: ${{ parameters.dependsOn }}
+
   displayName: Validate
   jobs:
   - ${{ if eq(parameters.enableNugetValidation, 'true') }}:
