@@ -172,12 +172,14 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
                 throw new ArgumentException($"Trying to set properties for a null blob or property field based on file: '{filePath}'");
             }
 
-            blob.Properties.ContentType = MimeMappings.TryGetValue(Path.GetExtension(filePath).ToLowerInvariant(), out string cttType) ?
+            var fileExtension = Path.GetExtension(filePath).ToLowerInvariant();
+
+            blob.Properties.ContentType = MimeMappings.TryGetValue(fileExtension, out string cttType) ?
                 cttType :
                 "application/octet-stream";
 
-            blob.Properties.CacheControl = CacheMappings.TryGetValue(Path.GetExtension(filePath).ToLowerInvariant(), out string cache) ?
-                cache :
+            blob.Properties.CacheControl = CacheMappings.TryGetValue(fileExtension, out string cacheCtrl) ?
+                cacheCtrl :
                 blob.Properties.CacheControl;
         }
     }
