@@ -27,7 +27,7 @@ For purposes of this document, 'Toolset' refers to tools which create and/or mod
 - In cases where an older version of .NET (and by implication Roslyn) is needed, exceptions are supported via Arcade.  
 
 ### Linux native toolsets
-- The native *nix build tools are managed via docker containers.
+- The native \*nix build tools are managed via docker containers.
 - Support for "blessed" containers that can be shared across the teams is preferable.
 
 ### Mac native toolsets
