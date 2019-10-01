@@ -178,9 +178,10 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
                 cttType :
                 "application/octet-stream";
 
-            blob.Properties.CacheControl = CacheMappings.TryGetValue(fileExtension, out string cacheCtrl) ?
-                cacheCtrl :
-                blob.Properties.CacheControl;
+            if (CacheMappings.TryGetValue(fileExtension, out string cacheCtrl))
+            {
+                blob.Properties.CacheControl = cacheCtrl;
+            }
         }
     }
 }
