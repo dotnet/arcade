@@ -1,4 +1,4 @@
-<Project ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project>
   <!--
     These targets use MSBuild Exec tasks to run WiX 3 toolset commands.
 
