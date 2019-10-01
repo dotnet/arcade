@@ -170,7 +170,7 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
                 throw new ArgumentException("An attempt to get the MIME mapping of an empty path was made.");
             }
 
-            string contentType = mimeMappings.TryGetValue(Path.GetExtension(filePath).ToLower(), out string cttType) ?
+            string contentType = mimeMappings.TryGetValue(Path.GetExtension(filePath).ToLowerInvariant(), out string cttType) ?
                 cttType :
                 "application/octet-stream";
 
