@@ -73,7 +73,7 @@ namespace Microsoft.DotNet.Helix.Client
                 try
                 {
                     cancellationToken.ThrowIfCancellationRequested();
-                    return await function();
+                    return await function().ConfigureAwait(false);
                 }
                 catch (OperationCanceledException ocex) when (ocex.CancellationToken == cancellationToken)
                 {
@@ -89,7 +89,7 @@ namespace Microsoft.DotNet.Helix.Client
                     logRetry(ex);
                 }
                 cancellationToken.ThrowIfCancellationRequested();
-                await Task.Delay(GetRetryDelay(attempt));
+                await Task.Delay(GetRetryDelay(attempt)).ConfigureAwait(false);
                 cancellationToken.ThrowIfCancellationRequested();
                 attempt++;
             }
