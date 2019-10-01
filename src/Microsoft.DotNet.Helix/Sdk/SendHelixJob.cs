@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -125,6 +126,11 @@ namespace Microsoft.DotNet.Helix.Sdk
         /// </summary>
         public int MaxRetryCount { get; set; }
 
+        /// <summary>
+        ///   <see langword="true"/> when a warning will be thrown when a queue is disabled,; <see langword="false"/> (default value) when an error will be thrown.
+        /// </summary>
+        public bool ProceedIfQueueDisabled { get; set; } = false;
+
         private CommandPayload _commandPayload;
 
         protected override async Task ExecuteCore(CancellationToken cancellationToken)
@@ -148,6 +154,22 @@ namespace Microsoft.DotNet.Helix.Sdk
             using (_commandPayload = new CommandPayload(this))
             {
                 var currentHelixApi = HelixApi;
+
+                Client.Models.QueueInfo qi = await currentHelixApi.Information.QueueInfoAsync(TargetQueue);
+                bool? availability = qi.IsAvailable;
+                if (availability == false)
+                {
+                    if (ProceedIfQueueDisabled)
+                    {
+                        Log.LogWarning("Queue is not available");
+                        return;
+                    } else
+                    {
+                        Log.LogError("Queue is not available");
+                        return;
+                    }
+                    
+                }
 
                 IJobDefinition def = currentHelixApi.Job.Define()
                     .WithType(Type)
