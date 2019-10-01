@@ -18,7 +18,7 @@
 
   <!-- Allow setting a property to use targets from a development dir for faster iteration. -->
   <PropertyGroup>
-    <DotNetBuildTasksSharedFrameworkMSBuildDir>$(MSBuildThisFileDirectory)..\targets\</DotNetBuildTasksSharedFrameworkMSBuildDir>
+    <DotNetBuildTasksSharedFrameworkMSBuildDir Condition="'$(DotNetBuildTasksSharedFrameworkMSBuildDir)' == ''">$(MSBuildThisFileDirectory)..\targets\</DotNetBuildTasksSharedFrameworkMSBuildDir>
   </PropertyGroup>
 
   <Import Project="$(DotNetBuildTasksSharedFrameworkMSBuildDir)packaging-tools.props" />
