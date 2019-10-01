@@ -1,20 +1,15 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Net;
-using System.Net.Http;
 using System.Text;
-using System.Text.Encodings.Web;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.DotNet.Helix.Client;
-using Microsoft.WindowsAzure.Storage;
+using Microsoft.DotNet.Helix.Client.Models;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace Microsoft.DotNet.Helix.Sdk
 {
@@ -127,9 +122,9 @@ namespace Microsoft.DotNet.Helix.Sdk
         public int MaxRetryCount { get; set; }
 
         /// <summary>
-        ///   <see langword="true"/> when a warning will be thrown when a queue is disabled,; <see langword="false"/> (default value) when an error will be thrown.
+        ///   Defaults to <see langword="false"/>, logging an error when a queue is disabled, if <see langword="true"/>, a warning will be logged instead.
         /// </summary>
-        public bool ProceedIfQueueDisabled { get; set; } = false;
+        public bool NoErrorIfQueueDisabled { get; set; } = false;
 
         private CommandPayload _commandPayload;
 
@@ -155,11 +150,10 @@ namespace Microsoft.DotNet.Helix.Sdk
             {
                 var currentHelixApi = HelixApi;
 
-                Client.Models.QueueInfo qi = await currentHelixApi.Information.QueueInfoAsync(TargetQueue);
-                bool? availability = qi.IsAvailable;
-                if (availability == false)
+                QueueInfo qi = await currentHelixApi.Information.QueueInfoAsync(TargetQueue);
+                if (qi.IsAvailable == false)
                 {
-                    if (ProceedIfQueueDisabled)
+                    if (NoErrorIfQueueDisabled)
                     {
                         Log.LogWarning("Queue is not available");
                         return;
@@ -168,7 +162,6 @@ namespace Microsoft.DotNet.Helix.Sdk
                         Log.LogError("Queue is not available");
                         return;
                     }
-                    
                 }
 
                 IJobDefinition def = currentHelixApi.Job.Define()

@@ -57,7 +57,7 @@
                   CorrelationPayloads="@(HelixCorrelationPayload)"
                   WorkItems="@(HelixWorkItem)"
                   HelixProperties="@(HelixProperties)"
-                  ProceedIfQueueDisabled="$(ProceedIfDisabled)">
+                  NoErrorIfQueueDisabled="$(ProceedIfDisabled)">
       <Output TaskParameter="JobCorrelationId" PropertyName="HelixJobId"/>
       <Output TaskParameter="ResultsContainerUri" PropertyName="HelixResultsContainer"/>
       <Output TaskParameter="ResultsContainerReadSAS" PropertyName="HelixResultsContainerReadSAS"/>
