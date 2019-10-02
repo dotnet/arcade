@@ -1161,6 +1161,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 { ".ZIP", "BINARYLAYOUT" },
                 { ".MSI", "INSTALLER" },
                 { ".SHA", "CHECKSUM" },
+                { ".SHA512", "CHECKSUM" },
                 { ".POM", "MAVEN" },
                 { ".VSIX", "VSIX" },
                 { ".CAB", "BINARYLAYOUT" },
@@ -1170,6 +1171,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 { ".EXE", "INSTALLER" },
                 { ".SVG", "BADGE"},
                 { ".WIXLIB", "INSTALLER" },
+                { ".WIXPDB", "INSTALLER" },
                 { ".JAR", "INSTALLER" },
                 { ".VERSION", "INSTALLER"},
                 { ".SWR", "INSTALLER" }
