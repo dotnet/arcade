@@ -50,11 +50,12 @@ The documentations linked above has specific examples for each bucket, for OSOB 
 ### Test Upgrade On-Prem
 
 **How it will be tested**: Send a work item to the queue after upgrade is completed. 
-o	Create an on-prem VM
-o	Have Helix download the upgrades package
-o	Have Helix install the artifacts in the package
-o	Check that the version and artifacts match those in the package
-o	This should always run at the end of the "installation" script
+
+    o	Create an on-prem VM
+    o	Have Helix download the upgrades package
+    o	Have Helix install the artifacts in the package
+    o	Check that the version and artifacts match those in the package
+    o	This should always run at the end of the "installation" script
 
 
 **What kinds of functionality will be tested**: Verify version of wheel is as expected
@@ -62,18 +63,20 @@ o	This should always run at the end of the "installation" script
 ### Test Bootstrapper
 
 **How it will be tested**: 
-o	Create Linux, Windows, Docker, on-prem VMs
-o	Bootstrap downloads and installs the version of Helix based on the queue
-o	Check that the installed Helix is the expected one
+
+    o	Create Linux, Windows, Docker, on-prem VMs
+    o	Bootstrap downloads and installs the version of Helix based on the queue
+    o	Check that the installed Helix is the expected one
 
 **What kinds of functionality will be tested**: Verify version of Helix that was installed is as expected. 
 
 ### Test Helix Scripts
 
 **How it will be tested**: 
-o	Create Linux, Windows, Docker, on-prem VMs
-o	Upgrade Helix
-o	Send a work item which will return the version of the wheel or store the version in the heartbeat table and query for the value
+
+    o	Create Linux, Windows, Docker, on-prem VMs
+    o	Upgrade Helix
+    o	Send a work item which will return the version of the wheel or store the version in the heartbeat table and query for the value
 
 **What kinds of functionality will be tested**: Existence of required environment variables
 
@@ -86,7 +89,9 @@ o	Send a work item which will return the version of the wheel or store the versi
 ### Test Image
 
 **How it will be tested**: 
+
 For On-Prem machine, use VMWare to create an OSX VM an run the OnPrem scripts inside it and make sure that the VM shows in the heartbeat table. 
+
 For VMs, create a VM with the specific version of the image and check if shows up in the heartbeat table.
 
 **What kinds of functionality will be tested**: 
