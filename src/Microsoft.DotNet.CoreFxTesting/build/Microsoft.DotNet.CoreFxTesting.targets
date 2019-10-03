@@ -37,13 +37,14 @@
   </ItemGroup>
 
   <!--
-    As we disabled implicit framework references but want to populate the framework node in the runtimeconfig's
-    runtimeOptions node we manually set the RuntimeFramework.
+    We disabled implicit framework references but still want to be treated as framework dependent:
+    1. To have runtimeTargets in the deps file.
+    2. To populate the framework node in the runtimeconfig's runtimeOptions 
+    To do this we manually set the RuntimeFramework.
     At that point restore and conflict resolution already happened therefore setting the item here has no side effects.
    -->
-  <Target Name="SetRuntimeFrameworksBeforeGenerateConfigurationFiles"
-          Condition="'$(GenerateRuntimeConfigurationFiles)' == 'true'"
-          BeforeTargets="GenerateBuildRuntimeConfigurationFiles">
+  <Target Name="_SetRuntimeFrameworksForCoreFxTesting"
+          BeforeTargets="GenerateBuildDependencyFile;GenerateBuildRuntimeConfigurationFiles">
     <ItemGroup>
       <RuntimeFramework Include="Microsoft.NETCore.App" Version="$(ProductVersion)" />
     </ItemGroup>
@@ -98,7 +99,9 @@
   -->
   <UsingTask TaskName="GenerateTestSharedFrameworkDepsFile" AssemblyFile="$(CoreFxTestingAssemblyPath)"/>
   <Target Name="GenerateTestSharedFrameworkDepsFile">
-    <GenerateTestSharedFrameworkDepsFile SharedFrameworkDirectory="$(NETCoreAppTestSharedFrameworkPath)" />
+    <GenerateTestSharedFrameworkDepsFile SharedFrameworkDirectory="$(NETCoreAppTestSharedFrameworkPath)"
+                                         RuntimeGraphFiles="$(RuntimeIdGraphDefinitionFile)"
+                                         TargetRuntimeIdentifier="$(PackageRID)" />
   </Target>
 
   <!-- UAP resource generation needed by both source and test projects. -->

@@ -101,7 +101,8 @@
       <PropertyGroup>
         <TestRunnerName>xunit.console.dll</TestRunnerName>
         <RunCommand>"$(RunScriptHost)"</RunCommand>
-        <RunArguments>exec --runtimeconfig $(AssemblyName).runtimeconfig.json $(TestRunnerName) $(RunArguments)</RunArguments>
+        <_depsFileRunArgument Condition="'$(GenerateDependencyFile)' == 'true'">--depsfile $(AssemblyName).deps.json</_depsFileRunArgument>
+        <RunArguments>exec --runtimeconfig $(AssemblyName).runtimeconfig.json $(_depsFileRunArgument) $(TestRunnerName) $(RunArguments)</RunArguments>
       </PropertyGroup>
     </When>
 

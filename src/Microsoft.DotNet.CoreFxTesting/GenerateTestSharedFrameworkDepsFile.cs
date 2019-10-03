@@ -10,6 +10,7 @@ using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
 using Microsoft.Extensions.DependencyModel;
 using System.Collections.Generic;
+using NuGet.RuntimeModel;
 
 namespace Microsoft.DotNet.Build.Tasks
 {
@@ -22,6 +23,12 @@ namespace Microsoft.DotNet.Build.Tasks
 
         [Required]
         public string SharedFrameworkDirectory { get; set; }
+
+        [Required]
+        public string[] RuntimeGraphFiles { get; set; }
+
+        [Required]
+        public string TargetRuntimeIdentifier { get; set; }
 
         public override bool Execute()
         {
@@ -67,12 +74,14 @@ namespace Microsoft.DotNet.Build.Tasks
 
             var targetInfo = new TargetInfo(fullTfm, rid, "runtimeSignature", isPortable: false);
 
+            var runtimeFallbacks = GetRuntimeFallbacks(RuntimeGraphFiles, TargetRuntimeIdentifier);
+
             var dependencyContext = new DependencyContext(
                 targetInfo,
                 CompilationOptions.Default,
                 Enumerable.Empty<CompilationLibrary>(),
                 runtimeLibraries,
-                Enumerable.Empty<RuntimeFallbacks>());
+                runtimeFallbacks);
 
             using (var depsFileStream = File.Create(Path.Combine(SharedFrameworkDirectory, $"{sharedFxName}.deps.json")))
             {
@@ -97,5 +106,27 @@ namespace Microsoft.DotNet.Build.Tasks
 
             return result;
         }
+
+        private static IEnumerable<RuntimeFallbacks> GetRuntimeFallbacks(string[] runtimeGraphFiles, string runtime)
+        {
+            RuntimeGraph runtimeGraph = RuntimeGraph.Empty;
+
+            foreach (string runtimeGraphFile in runtimeGraphFiles)
+            {
+                runtimeGraph = RuntimeGraph.Merge(runtimeGraph, JsonRuntimeFormat.ReadRuntimeGraph(runtimeGraphFile));
+            }
+
+            foreach (string rid in runtimeGraph.Runtimes.Select(p => p.Key))
+            {
+                IEnumerable<string> ridFallback = runtimeGraph.ExpandRuntime(rid);
+
+                if (ridFallback.Contains(runtime))
+                {
+                    // ExpandRuntime return runtime itself as first item so we are skiping it
+                    yield return new RuntimeFallbacks(rid, ridFallback.Skip(1));
+                }
+            }
+        }
+
     }
 }
