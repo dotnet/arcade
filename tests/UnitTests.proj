@@ -73,6 +73,8 @@
     <HelixTargetQueue Include="Debian.9.Amd64.Open"/>
     <HelixTargetQueue Include="RedHat.7.Amd64.Open"/>
     <HelixTargetQueue Include="Windows.10.Amd64.Open"/>
+    <!--Used for testing behavior for unavailable queues-->
+    <!--<HelixTargetQueue Include="Alpine.36.Amd64"/>-->
   </ItemGroup>
 
   <PropertyGroup Condition="!$(HelixTargetQueue.StartsWith('Windows'))">
