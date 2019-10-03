@@ -122,9 +122,9 @@ namespace Microsoft.DotNet.Helix.Sdk
         public int MaxRetryCount { get; set; }
 
         /// <summary>
-        ///   Defaults to <see langword="false"/>, logging an error when a queue is disabled, if <see langword="true"/>, a warning will be logged instead.
+        ///   Defaults to <see langword="true"/>, logging an error when a queue is disabled, if <see langword="false"/>, a warning will be logged instead.
         /// </summary>
-        public bool NoErrorIfQueueDisabled { get; set; } = false;
+        public bool LogErrorIfQueueDisabled { get; set; } = true;
 
         private CommandPayload _commandPayload;
 
@@ -153,13 +153,13 @@ namespace Microsoft.DotNet.Helix.Sdk
                 QueueInfo qi = await currentHelixApi.Information.QueueInfoAsync(TargetQueue);
                 if (qi.IsAvailable == false)
                 {
-                    if (NoErrorIfQueueDisabled)
+                    if (LogErrorIfQueueDisabled)
                     {
-                        Log.LogWarning("Queue is not available");
+                        Log.LogError("Queue is not available");
                         return;
                     } else
                     {
-                        Log.LogError("Queue is not available");
+                        Log.LogWarning("Queue is not available");
                         return;
                     }
                 }

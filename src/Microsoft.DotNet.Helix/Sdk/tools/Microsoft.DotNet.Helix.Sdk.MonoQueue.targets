@@ -2,7 +2,7 @@
 <Project>
   <PropertyGroup>
     <EnableXUnitReporter Condition=" '$(EnableXUnitReporter)' != 'true' ">false</EnableXUnitReporter>
-    <ProceedIfDisabled Condition=" '$(ProceedIfDisabled)' != 'true' ">false</ProceedIfDisabled>
+    <LogErrorIfQueueDisabled Condition=" '$(LogErrorIfQueueDisabled)' != 'false' ">true</LogErrorIfQueueDisabled>
   </PropertyGroup>
 
   <Choose>
@@ -57,7 +57,7 @@
                   CorrelationPayloads="@(HelixCorrelationPayload)"
                   WorkItems="@(HelixWorkItem)"
                   HelixProperties="@(HelixProperties)"
-                  NoErrorIfQueueDisabled="$(ProceedIfDisabled)">
+                  LogErrorIfQueueDisabled="$(LogErrorIfQueueDisabled)">
       <Output TaskParameter="JobCorrelationId" PropertyName="HelixJobId"/>
       <Output TaskParameter="ResultsContainerUri" PropertyName="HelixResultsContainer"/>
       <Output TaskParameter="ResultsContainerReadSAS" PropertyName="HelixResultsContainerReadSAS"/>
