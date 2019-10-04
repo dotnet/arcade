@@ -72,7 +72,7 @@ namespace Microsoft.SignCheck.Verification
 
         public bool IsExcluded(string path, string parent, string containerPath, IEnumerable<Exclusion> exclusions)
         {
-            foreach(Exclusion e in exclusions)
+            foreach (Exclusion e in exclusions)
             {
                 // 1. The file/container path matches a file part of the exclusion and the parent matches the parent part of the exclusion.
                 //    Example: bar.dll;*.zip --> Exclude any occurence of bar.dll that is in a zip file
@@ -119,7 +119,7 @@ namespace Microsoft.SignCheck.Verification
         public bool IsDoNotSign(string path, string parent, string containerPath)
         {
             // Get all the exclusions with DO-NOT-SIGN markers and check only against those
-            IEnumerable<Exclusion> doNotSignExclusions = _exclusions.Where(e => e.Comment.Contains("DO-NOT-SIGN"));
+            IEnumerable<Exclusion> doNotSignExclusions = _exclusions.Where(e => e.Comment.Contains("DO-NOT-SIGN")).ToArray();
 
             return (doNotSignExclusions.Count() > 0) && (IsExcluded(path, parent, containerPath, doNotSignExclusions));
         }
