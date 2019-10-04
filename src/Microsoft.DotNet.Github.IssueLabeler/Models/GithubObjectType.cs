@@ -4,12 +4,9 @@
 
 namespace Microsoft.DotNet.GitHub.IssueLabeler
 {
-    public class IssueEventPayload
+    public enum GithubObjectType 
     {
-        public string Action { set; get; }
-
-        public IssueModel Issue { set; get; }
-
-        public PrModel Pull_Request { set; get; }
+        PullRequest,
+        Issue
     }
 }
