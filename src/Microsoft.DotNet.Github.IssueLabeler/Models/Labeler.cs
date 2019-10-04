@@ -10,9 +10,7 @@ using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Octokit;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
@@ -21,8 +19,8 @@ namespace Microsoft.DotNet.GitHub.IssueLabeler
     public class Labeler
     {
         private GitHubClient _client;
-        private IDiffHelper _diffHelper;
-        private IDatasetHelper _datasetHelper;
+        private DiffHelper _diffHelper;
+        private DatasetHelper _datasetHelper;
         private Regex _regex;
         private readonly string _repoOwner;
         private readonly string _repoName;

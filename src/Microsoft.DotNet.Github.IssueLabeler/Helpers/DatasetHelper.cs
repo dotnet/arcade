@@ -7,14 +7,18 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices.ComTypes;
 using System.Text;
 using System.Text.RegularExpressions;
 
 namespace Microsoft.DotNet.Github.IssueLabeler.Helpers
 {
-    public interface IDatasetHelper
+    internal class DatasetHelper
     {
+        private Regex _regex;
+        private StringBuilder _sb;
+        private StringBuilder _folderSb;
+        private DiffHelper _diffHelper;
+
         /// <summary>
         /// partitions the dataset in inputPath into train, validate and test datapaths
         /// </summary>
@@ -22,61 +26,6 @@ namespace Microsoft.DotNet.Github.IssueLabeler.Helpers
         /// <param name="trainPath">the output to store the train dataset</param>
         /// <param name="validatePath">the output to store the train dataset</param>
         /// <param name="testPath">the output to store the train dataset</param>
-        void BreakIntoTrainValidateTestDatasets(string inputPath, string trainPath, string validatePath, string testPath);
-
-        /// <summary>
-        /// saves to file a subset containing only PRs
-        /// </summary>
-        /// <param name="input">path to the reference dataset</param>
-        /// <param name="output">the output to store the new dataset</param>
-        void OnlyPrs(string input, string output);
-
-        /// <summary>
-        /// saves to file a subset containing only issues
-        /// </summary>
-        /// <param name="input">path to the reference dataset</param>
-        /// <param name="output">the output to store the new dataset</param>
-        void OnlyIssues(string input, string output);
-
-        /// <summary>
-        /// saves to file a dataset ready for training, given one created using GithubIssueDownloader.
-        /// For training we can remove ID column, and further expand information in FilePaths
-        /// We also retrieve user @ mentions from instead Description and add into new columns
-        /// </summary>
-        /// <param name="input">path to the reference dataset</param>
-        /// <param name="output">the output to store the new dataset</param>
-        /// <param name="includeFileColumns">when true, it contains extra columns with file related information</param>
-        void AddOrRemoveColumnsPriorToTraining(string input, string output, bool includeFileColumns = true);
-
-        /// <summary>
-        /// flattens a dictionary to be repeated in a space separated format
-        /// </summary>
-        /// <param name="textToFlatten">a dictionary containing text and number of times they were repeated</param>
-        /// <returns>space delimited text</returns>
-        string FlattenIntoColumn(Dictionary<string, int> textToFlatten);
-
-        /// <summary>
-        /// flattens texts in a space separated format
-        /// </summary>
-        /// <param name="array">the input containing text to show</param>
-        /// <returns>space delimited text</returns>
-        string FlattenIntoColumn(string[] array);
-
-        /// <summary>
-        /// flattens texts in a space separated format
-        /// </summary>
-        /// <param name="enumerable">the input containing text to show</param>
-        /// <returns>space delimited text</returns>
-        string FlattenIntoColumn(IEnumerable<string> enumerable);
-    }
-
-    internal class DatasetHelper : IDatasetHelper
-    {
-        private Regex _regex;
-        private StringBuilder _sb;
-        private StringBuilder _folderSb;
-        private IDiffHelper _diffHelper;
-
         public void BreakIntoTrainValidateTestDatasets(string inputPath, string trainPath, string validatePath, string testPath)
         {
             var lines = File.ReadAllLines(inputPath);
@@ -121,6 +70,11 @@ namespace Microsoft.DotNet.Github.IssueLabeler.Helpers
             File.AppendAllLines(output, lines);
         }
 
+        /// <summary>
+        /// saves to file a subset containing only PRs
+        /// </summary>
+        /// <param name="input">path to the reference dataset</param>
+        /// <param name="output">the output to store the new dataset</param>
         public void OnlyPrs(string input, string output)
         {
             var lines = File.ReadAllLines(input);
@@ -133,6 +87,11 @@ namespace Microsoft.DotNet.Github.IssueLabeler.Helpers
             File.AppendAllLines(output, lines.Where(x => int.TryParse(x.Split('\t')[3], out int isPrAsNumber) && isPrAsNumber == 1).ToArray());
         }
 
+        /// <summary>
+        /// saves to file a subset containing only issues
+        /// </summary>
+        /// <param name="input">path to the reference dataset</param>
+        /// <param name="output">the output to store the new dataset</param>
         public void OnlyIssues(string input, string output)
         {
             var lines = File.ReadAllLines(input);
@@ -145,6 +104,14 @@ namespace Microsoft.DotNet.Github.IssueLabeler.Helpers
             File.AppendAllLines(output, lines.Where(x => int.TryParse(x.Split('\t')[3], out int isPrAsNumber) && isPrAsNumber == 0).ToArray());
         }
 
+        /// <summary>
+        /// saves to file a dataset ready for training, given one created using GithubIssueDownloader.
+        /// For training we can remove ID column, and further expand information in FilePaths
+        /// We also retrieve user @ mentions from instead Description and add into new columns
+        /// </summary>
+        /// <param name="input">path to the reference dataset</param>
+        /// <param name="output">the output to store the new dataset</param>
+        /// <param name="includeFileColumns">when true, it contains extra columns with file related information</param>
         public void AddOrRemoveColumnsPriorToTraining(string input, string output, bool includeFileColumns = true)
         {
             if (_sb == null)
@@ -171,7 +138,8 @@ namespace Microsoft.DotNet.Github.IssueLabeler.Helpers
                 area = lineSplitByTab[1];
                 title = lineSplitByTab[2];
                 body = lineSplitByTab[3];
-                Debug.Assert(int.TryParse(lineSplitByTab[4], out int isPrAsNumber) && (isPrAsNumber == 1 || isPrAsNumber == 0));
+                int.TryParse(lineSplitByTab[4], out int isPrAsNumber);
+                Debug.Assert((isPrAsNumber == 1 || isPrAsNumber == 0));
                 _sb.Append(area)
                     .Append('\t').Append(title)
                     .Append('\t').Append(body)
@@ -233,6 +201,11 @@ namespace Microsoft.DotNet.Github.IssueLabeler.Helpers
             }
         }
 
+        /// <summary>
+        /// flattens a dictionary to be repeated in a space separated format
+        /// </summary>
+        /// <param name="textToFlatten">a dictionary containing text and number of times they were repeated</param>
+        /// <returns>space delimited text</returns>
         public string FlattenIntoColumn(Dictionary<string, int> folder)
         {
             if (_folderSb == null)
@@ -266,11 +239,21 @@ namespace Microsoft.DotNet.Github.IssueLabeler.Helpers
             return res;
         }
 
+        /// <summary>
+        /// flattens texts in a space separated format
+        /// </summary>
+        /// <param name="array">the input containing text to show</param>
+        /// <returns>space delimited text</returns>
         public string FlattenIntoColumn(string[] array)
         {
             return string.Join(' ', array);
         }
 
+        /// <summary>
+        /// flattens texts in a space separated format
+        /// </summary>
+        /// <param name="enumerable">the input containing text to show</param>
+        /// <returns>space delimited text</returns>
         public string FlattenIntoColumn(IEnumerable<string> enumerable)
         {
             return string.Join(' ', enumerable);

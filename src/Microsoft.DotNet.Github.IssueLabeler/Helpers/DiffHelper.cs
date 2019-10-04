@@ -9,36 +9,7 @@ using System.Linq;
 
 namespace Microsoft.DotNet.Github.IssueLabeler.Helpers
 {
-    public interface IDiffHelper
-    {
-        /// <summary>
-        /// resets file diffs for which we compute filenames, extensions, folders, and subfolder parts
-        /// </summary>
-        /// <param name="fileDiffs">subset of nested files from a root repository</param>
-        void ResetTo(string[] fileDiffs);
-
-        /// <summary>
-        /// name of files taken from fileDiffs
-        /// </summary>
-        IEnumerable<string> Filenames { get; }
-
-        /// <summary>
-        /// file extensions taken from fileDiffs
-        /// </summary>
-        IEnumerable<string> Extensions { get; }
-
-        /// <summary>
-        /// folders taken from parsing the fileDiffs, while keeping track of the number of nested files in each
-        /// </summary>
-        Dictionary<string, int> Folders { get; }
-
-        /// <summary>
-        /// folder names taken from parsing the fileDiffs, while keeping track of the number of times such a folder name was repeated
-        /// </summary>
-        Dictionary<string, int> FolderNames { get; }
-    }
-
-    internal class DiffHelper : IDiffHelper
+    internal class DiffHelper
     {
         private string[] _fileDiffs;
         public DiffHelper(string[] fileDiffs)
@@ -46,6 +17,10 @@ namespace Microsoft.DotNet.Github.IssueLabeler.Helpers
             ResetTo(fileDiffs);
         }
 
+        /// <summary>
+        /// resets file diffs for which we compute filenames, extensions, folders, and subfolder parts
+        /// </summary>
+        /// <param name="fileDiffs">subset of nested files from a root repository</param>
         public void ResetTo(string[] fileDiffs)
         {
             if (fileDiffs == null || string.IsNullOrEmpty(string.Join(';', fileDiffs)))
@@ -56,13 +31,25 @@ namespace Microsoft.DotNet.Github.IssueLabeler.Helpers
             SetupFolderParts();
         }
 
+        /// <summary>
+        /// name of files taken from fileDiffs
+        /// </summary>
         public IEnumerable<string> Filenames => _fileDiffs.Select(fileWithDiff => Path.GetFileNameWithoutExtension(fileWithDiff));
 
+        /// <summary>
+        /// file extensions taken from fileDiffs
+        /// </summary>
         public IEnumerable<string> Extensions => _fileDiffs.Select(file => Path.GetExtension(file)).
                 Select(extension => string.IsNullOrEmpty(extension) ? "no_extension" : extension);
 
+        /// <summary>
+        /// folders taken from parsing the fileDiffs, while keeping track of the number of nested files in each
+        /// </summary>
         public Dictionary<string, int> Folders { get; } = new Dictionary<string, int>();
 
+        /// <summary>
+        /// folder names taken from parsing the fileDiffs, while keeping track of the number of times such a folder name was repeated
+        /// </summary>
         public Dictionary<string, int> FolderNames { get; } = new Dictionary<string, int>();
 
         private void SetupFolderParts()

@@ -53,7 +53,7 @@ namespace Microsoft.DotNet.Github.IssueLabeler
                 File.WriteAllText(_outputFile, IgnoreForTraining("ID\t") + "Area\tTitle\tDescription\tIsPR\tFilePaths" + Environment.NewLine);
 
             for (int i = _startIndex; i < _endIndex; i++)
-            { 
+            {
                 string filePaths = string.Empty;
                 bool isPr = true;
                 Issue issueOrPr = null;

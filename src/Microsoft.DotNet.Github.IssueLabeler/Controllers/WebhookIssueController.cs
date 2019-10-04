@@ -23,7 +23,7 @@ namespace Microsoft.DotNet.GitHub.IssueLabeler
         [HttpPost]
         public async Task PostAsync([FromBody]IssueEventPayload data)
         {
-            var issueOrPullRequest = data.Issue ?? data.Pull_Request;
+            IssueModel issueOrPullRequest = data.Issue ?? data.Pull_Request;
             GithubObjectType issueOrPr = data.Issue == null ? GithubObjectType.PullRequest : GithubObjectType.Issue;
 
             if (data.Action == "opened" && issueOrPullRequest.Labels.Count == 0)
