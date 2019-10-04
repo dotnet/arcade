@@ -3,13 +3,17 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Http;
 using System.Text;
+using System.Text.Encodings.Web;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.DotNet.Helix.Client;
-using Microsoft.DotNet.Helix.Client.Models;
+using Microsoft.WindowsAzure.Storage;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace Microsoft.DotNet.Helix.Sdk
 {
@@ -121,11 +125,6 @@ namespace Microsoft.DotNet.Helix.Sdk
         /// </summary>
         public int MaxRetryCount { get; set; }
 
-        /// <summary>
-        ///   Defaults to <see langword="true"/>, logging an error when a queue is disabled, if <see langword="false"/>, a warning will be logged instead.
-        /// </summary>
-        public bool LogErrorIfQueueDisabled { get; set; } = true;
-
         private CommandPayload _commandPayload;
 
         protected override async Task ExecuteCore(CancellationToken cancellationToken)
@@ -149,20 +148,6 @@ namespace Microsoft.DotNet.Helix.Sdk
             using (_commandPayload = new CommandPayload(this))
             {
                 var currentHelixApi = HelixApi;
-
-                QueueInfo qi = await currentHelixApi.Information.QueueInfoAsync(TargetQueue);
-                if (qi.IsAvailable == false)
-                {
-                    if (LogErrorIfQueueDisabled)
-                    {
-                        Log.LogError("Queue is not available");
-                        return;
-                    } else
-                    {
-                        Log.LogWarning("Queue is not available");
-                        return;
-                    }
-                }
 
                 IJobDefinition def = currentHelixApi.Job.Define()
                     .WithType(Type)
