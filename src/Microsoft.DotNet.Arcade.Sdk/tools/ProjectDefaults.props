@@ -131,4 +131,10 @@
     <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="$(MicrosoftNetFrameworkReferenceAssembliesVersion)" PrivateAssets="all" IsImplicitlyDefined="true" />
   </ItemGroup>
 
+  <!--
+    SourceLink settings
+    -->
+  <PropertyGroup>
+    <EmbedUntrackedSources Condition="'$(EmbedUntrackedSources) ==''">true</EmbedUntrackedSources>
+  </PropertyGroup>
 </Project>
