@@ -39,3 +39,4 @@ For purposes of this document, 'Toolset' refers to tools which create and/or mod
 - Any other tools not directly called out should be managed via Arcade, and preferably bootstrapped in as part of the build.
 - All toolset updates will be communicated in advance by the engineering services team.
 - The implication here is that product teams should expect to deal with the toolsets updating on a higher cadence.  However, this in turn means that the delta will be much smaller each update.
+- The latest version principle does not apply to .net runtimes and refpacks when used for compat testing
