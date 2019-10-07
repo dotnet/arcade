@@ -6,7 +6,6 @@
     <ExcludeFromSourceBuild>false</ExcludeFromSourceBuild>
 
     <IsPackable>true</IsPackable>
-    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 
     <Description>Common toolset for building shared frameworks and framework packs.</Description>
     <PackageType>MSBuildSdk</PackageType>
