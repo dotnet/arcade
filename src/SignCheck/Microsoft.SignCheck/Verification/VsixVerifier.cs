@@ -39,7 +39,7 @@ namespace Microsoft.SignCheck.Verification
 
             if (packageSignature == null)
             {
-                throw new ArgumentNullException("signature");
+                throw new ArgumentNullException(nameof(packageSignature));
             }
 
             timestamp = new Timestamp()
