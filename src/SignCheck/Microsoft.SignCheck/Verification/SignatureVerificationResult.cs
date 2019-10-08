@@ -71,6 +71,16 @@ namespace Microsoft.SignCheck.Verification
         }
 
         /// <summary>
+        /// True if this file was marked as DO-NOT-SIGN. This result can be used with IsSigned to
+        /// determine if there is an error.
+        /// </summary>
+        public bool IsDoNotSign
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// True if the file was excluded from verification, false otherwise.
         /// </summary>
         public bool IsExcluded
@@ -79,7 +89,10 @@ namespace Microsoft.SignCheck.Verification
             set;
         }
 
-
+        /// <summary>
+        /// True if the file is a portable executable and the header indicates it is a native
+        /// code image.
+        /// </summary>
         public bool IsNativeImage
         {
             get;

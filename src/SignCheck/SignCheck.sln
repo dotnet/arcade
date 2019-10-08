@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.27130.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SignCheck", "SignCheck\SignCheck.csproj", "{FA490389-CA35-41B4-8EEA-15DB39093716}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SignCheck", "SignCheck\Microsoft.DotNet.SignCheck.csproj", "{FA490389-CA35-41B4-8EEA-15DB39093716}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.SignCheck", "Microsoft.SignCheck\Microsoft.SignCheck.csproj", "{55C6C9BF-ED45-4BE2-B122-1BD989DFEB7F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.SignCheck", "Microsoft.SignCheck\Microsoft.DotNet.SignCheckLibrary.csproj", "{55C6C9BF-ED45-4BE2-B122-1BD989DFEB7F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
