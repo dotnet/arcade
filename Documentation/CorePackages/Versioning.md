@@ -91,13 +91,13 @@ _Package Version_ comprises of a three-part version number (**PACKAGE_MAJOR**, *
 
 The pre-release label is determined based on the following table:
 
-| Build kind                      | Pre-release labels                                   | Package Version example   |
-|---------------------------------|------------------------------------------------------|---------------------------|
-| Local developer build default   | "dev"                                                | "1.2.3-dev"               |
-| PR validation build             | "ci"                                                 | "1.2.3-ci"                |
-| Daily official build            | `PreReleaseVersionLabel`.**SHORT_DATE**.**REVISION** | "1.2.3-preview1.12345.1"  |
+| Build kind                       | Pre-release labels                                   | Package Version example   |
+|----------------------------------|------------------------------------------------------|---------------------------|
+| Local developer build default    | "dev"                                                | "1.2.3-dev"               |
+| PR validation build              | "ci"                                                 | "1.2.3-ci"                |
+| Daily official build             | `PreReleaseVersionLabel`.**SHORT_DATE**.**REVISION** | "1.2.3-preview1.12345.1"  |
 | Final pre-release official build | `PreReleaseVersionLabel`."final"                     | "1.2.3-beta.final"        |
-| Release official build          | ""                                                   | "1.2.3"                   |   
+| Release official build           | ""                                                   | "1.2.3"                   |   
 
 In official builds the values of **SHORT_DATE** and **REVISION** are derived from build parameter `OfficialBuildId` with format `20yymmdd.r` like so:
 - **REVISION** is set to `r` component of `OfficialBuildId` build property.
@@ -110,6 +110,9 @@ and `r` = 1. Note that non-official builds with `DotNetUseShippingVersion` set t
 If a package is designated to be a _release-only_ package (`PreReleaseVersionLabel` is empty) its package version does not include 
 any pre-release labels when produced by an official build. Every official build of such package must produce a unique **PATCH_NUMBER**.
 This versioning policy is not applied to developer and PR validation builds as it relies on the availability of a unique `OfficialBuildId`.
+
+Some projects want to remain producing pre-release packages even if the repository is running a final stable build because
+they don't ship or aren't ready to ship stable. Those projects can set `SuppressFinalPackageVersion` property to `true`.
 
 **PATCH_NUMBER** is defined as (**SHORT_DATE** - `VersionBaseShortDate`) * 100 + `r`, where `VersionBaseShortDate` is `19000` unless 
 set in `eng/Version.props`. 
