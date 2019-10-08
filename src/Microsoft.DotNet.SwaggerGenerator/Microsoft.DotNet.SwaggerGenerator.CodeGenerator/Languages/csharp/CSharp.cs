@@ -113,7 +113,7 @@ namespace Microsoft.DotNet.SwaggerGenerator.Languages
             }
 
             [BlockHelperMethod]
-            public void NullCheck(TextWriter output, object context, Action<TextWriter, object> template, TypeReference reference)
+            public void NullCheck(TextWriter output, object context, Action<TextWriter, object> template, TypeReference reference, bool required)
             {
                 if (reference == TypeReference.String)
                 {
@@ -124,12 +124,12 @@ namespace Microsoft.DotNet.SwaggerGenerator.Languages
                 else
                 {
                     template(output, context);
-                    output.WriteSafeString($" == default({ResolveReference(reference, null)})");
+                    output.WriteSafeString($" == {GetDefaultExpression(reference, required)}");
                 }
             }
 
             [BlockHelperMethod]
-            public void NotNullCheck(TextWriter output, object context, Action<TextWriter, object> template, TypeReference reference)
+            public void NotNullCheck(TextWriter output, object context, Action<TextWriter, object> template, TypeReference reference, bool required)
             {
                 if (reference == TypeReference.String)
                 {
@@ -140,8 +140,19 @@ namespace Microsoft.DotNet.SwaggerGenerator.Languages
                 else
                 {
                     template(output, context);
-                    output.WriteSafeString($" != default({ResolveReference(reference, null)})");
+                    output.WriteSafeString($" != {GetDefaultExpression(reference, required)}");
                 }
+            }
+
+            public string GetDefaultExpression(TypeReference reference, bool required)
+            {
+                string typeElement = ResolveReference(reference, null);
+                string nullableElement = "";
+                if (!required && !IsNullable(reference))
+                {
+                    nullableElement = "?";
+                }
+                return $"default({typeElement}{nullableElement})";
             }
 
             [HelperMethod]
