@@ -149,6 +149,7 @@ stages:
 
 - template: \eng\common\templates\post-build\channels\netcore-3-tools.yml
   parameters:
+    dependsOn: ${{ parameters.publishDependsOn }}
     symbolPublishingAdditionalParameters: ${{ parameters.symbolPublishingAdditionalParameters }}
     artifactsPublishingAdditionalParameters: ${{ parameters.artifactsPublishingAdditionalParameters }}
     publishInstallersAndChecksums: ${{ parameters.publishInstallersAndChecksums }}
