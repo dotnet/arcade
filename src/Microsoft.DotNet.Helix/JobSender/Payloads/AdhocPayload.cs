@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Helix.Client
@@ -16,6 +18,11 @@ namespace Microsoft.DotNet.Helix.Client
 
         public async Task<string> UploadAsync(IBlobContainer payloadContainer, Action<string> log)
         {
+            if (FindFileNameDuplicate(out var duplicateName))
+            {
+                throw new FileNameDuplicateException(duplicateName);
+            }
+
             using (var stream = new MemoryStream())
             {
                 using (var zip = new ZipArchive(stream, ZipArchiveMode.Create, true))
@@ -35,5 +42,18 @@ namespace Microsoft.DotNet.Helix.Client
                 return zipUri.AbsoluteUri;
             }
         }
+
+        private bool FindFileNameDuplicate(out string duplicateName)
+        {
+            var filesSeen = new HashSet<string>();
+            duplicateName = Files.FirstOrDefault(file => !filesSeen.Add(Path.GetFileName(file)));
+            return duplicateName != null;
+        }
+    }
+
+    public class FileNameDuplicateException : Exception
+    {
+        public FileNameDuplicateException(string duplicatedName)
+            : base($"Names of files to upload have to be distinct. The following name repeats at least once: {Path.GetFileName(duplicatedName)}") { }
     }
 }
