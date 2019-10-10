@@ -16,6 +16,10 @@ For purposes of this document, 'Toolset' refers to tools which create and/or mod
 - As needed, dependencies can be taken on brand new, non-shipping versions of a toolset, and conversely, older versions too - so long as tactics approves.
 - Tools should be bootstrapped into the build where ever possible.  It is recognized that this is not always reasonable (or even the best approach), but is still desireable as we try and get as close as possible to 'clone and build'.  NOTE: There will still need to be provision for source-build to build "offline".
 
+### Servicing (LTS)
+- All toolsets should be the latest RTM (serviceable) version for LTS.
+- Toolsets should only change as needed, and with explicit consent of tactics.
+  
 ### VC toolset
 - VC tools are brought in via Visual Studio, preferably via the build sku.  Given the install limitations of VS and the Windows SDK, VC tools are provided via VM images which make up our build/test pools.   
 - Tools from the latest public preview of VS are available via a machine pool.  Private previews of VS are not widely available and are used for targeting testing only.
@@ -33,10 +37,6 @@ For purposes of this document, 'Toolset' refers to tools which create and/or mod
 
 ### Mac native toolsets
 - Mac tools are managed via O/S itself.  Here too we have both hosted and private machine pools.
-
-### Servicing (LTS)
-- All toolsets should be the latest RTM (serviceable) version for LTS.
-- Toolsets should only change as needed, and with explicit consent of tactics.
 
 ### Other
 - Any other tools not directly called out should be managed via Arcade, and preferably bootstrapped in as part of the build.
