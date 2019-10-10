@@ -4,7 +4,7 @@ For purposes of this document, 'Toolset' refers to tools which create and/or mod
 
 ## Principles
 
-- **Consistent across the stack:** The minimum number of tool versions should be used - with the ideal being one version per tool for the entire .NET Core product.  
+- **Consistent and serviceable across the stack:** The minimum number of tool versions should be used with the ideal being one (serviceable) version per tool for the entire .NET Core product.
 - **Visible:** It must be obvious which tool is being used in which situation.
 - **For tools MSFT owns, the latest shipping version is used to build .NET Core:** Our product/s should be built using the last shipping version of our toolsets.
 
@@ -33,6 +33,10 @@ For purposes of this document, 'Toolset' refers to tools which create and/or mod
 
 ### Mac native toolsets
 - Mac tools are managed via O/S itself.  Here too we have both hosted and private machine pools.
+
+### Servicing (LTS)
+- All toolsets should be the latest RTM (serviceable) version for LTS.
+- Toolsets should only change as needed, and with explicit consent of tactics.
 
 ### Other
 - Any other tools not directly called out should be managed via Arcade, and preferably bootstrapped in as part of the build.
