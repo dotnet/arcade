@@ -140,14 +140,6 @@
     </ItemGroup>
 
     <!--
-      Restore built-in tools.
-    -->
-    <MSBuild Projects="Tools.proj"
-             Targets="Restore"
-             Properties="@(_RestoreToolsProps);_NETCORE_ENGINEERING_TELEMETRY=Restore"
-             Condition="'$(Restore)' == 'true'"/>
-
-    <!--
       Restore solutions and projects.
 
       Run solution restore separately from the other targets, in a different build phase.
@@ -208,6 +200,17 @@
              Targets="Restore"
              SkipNonexistentTargets="true"
              BuildInParallel="%(_ProjectToRestore.RestoreInParallel)"
+             Condition="'$(Restore)' == 'true'"/>
+
+    <!--
+      Restore built-in tools after the solution is restored.
+      The order is significant because MSBuild SDK resolution looks for global.json the first time it encounters an SDK import
+      using the containing project's location. Tools.proj imports the SDK. If it was built first it would look for global.json
+      starting from the Arcade SDK package directory in NuGet cache and would not find the repo's global.json.
+    -->
+    <MSBuild Projects="Tools.proj"
+             Targets="Restore"
+             Properties="@(_RestoreToolsProps);_NETCORE_ENGINEERING_TELEMETRY=Restore"
              Condition="'$(Restore)' == 'true'"/>
 
     <!--
