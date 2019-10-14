@@ -11,6 +11,11 @@ namespace Microsoft.DotNet.Helix.Client
     {
         public AdhocPayload(string[] files)
         {
+            if (FindFileNameDuplicate(files, out var duplicateName))
+            {
+                throw new ArgumentException($"Names of files to upload have to be distinct. The following name repeats at least once: {Path.GetFileName(duplicateName)}");
+            }
+
             Files = files;
         }
 
@@ -18,11 +23,6 @@ namespace Microsoft.DotNet.Helix.Client
 
         public async Task<string> UploadAsync(IBlobContainer payloadContainer, Action<string> log)
         {
-            if (FindFileNameDuplicate(out var duplicateName))
-            {
-                throw new FileNameDuplicateException(duplicateName);
-            }
-
             using (var stream = new MemoryStream())
             {
                 using (var zip = new ZipArchive(stream, ZipArchiveMode.Create, true))
@@ -43,17 +43,11 @@ namespace Microsoft.DotNet.Helix.Client
             }
         }
 
-        private bool FindFileNameDuplicate(out string duplicateName)
+        private bool FindFileNameDuplicate(string[] files, out string duplicateName)
         {
             var filesSeen = new HashSet<string>();
-            duplicateName = Files.FirstOrDefault(file => !filesSeen.Add(Path.GetFileName(file)));
+            duplicateName = files.FirstOrDefault(file => !filesSeen.Add(Path.GetFileName(file)));
             return duplicateName != null;
         }
-    }
-
-    public class FileNameDuplicateException : Exception
-    {
-        public FileNameDuplicateException(string duplicatedName)
-            : base($"Names of files to upload have to be distinct. The following name repeats at least once: {Path.GetFileName(duplicatedName)}") { }
     }
 }
