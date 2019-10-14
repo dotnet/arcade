@@ -46,7 +46,7 @@ namespace Microsoft.DotNet.Helix.Client
         private bool FindFileNameDuplicate(string[] files, out string duplicateName)
         {
             var filesSeen = new HashSet<string>();
-            duplicateName = files.FirstOrDefault(file => !filesSeen.Add(Path.GetFileName(file)));
+            duplicateName = files.FirstOrDefault(file => !filesSeen.Add(Path.GetFileName(file).ToLowerInvariant()));
             return duplicateName != null;
         }
     }
