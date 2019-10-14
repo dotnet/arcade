@@ -13,7 +13,9 @@ namespace Microsoft.DotNet.Helix.Client
         {
             if (FindFileNameDuplicate(files, out var duplicateName))
             {
-                throw new ArgumentException($"Names of files to upload have to be distinct. The following name repeats at least once: {Path.GetFileName(duplicateName)}");
+                throw new ArgumentException(
+                    $"Names of files to upload have to be distinct. The following name repeats at least once: {Path.GetFileName(duplicateName)}",
+                    nameof(files));
             }
 
             Files = files;

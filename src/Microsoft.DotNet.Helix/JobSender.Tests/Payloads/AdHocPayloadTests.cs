@@ -11,14 +11,14 @@ namespace Microsoft.DotNet.Helix.JobSender.Test
         public void MultipleFilesWithSameNameAreRefused()
         {
             var exception = Assert.Throws<ArgumentException>(() => new AdhocPayload(new[] { "a/b.txt", "a/c.txt", "d/b.txt" }));
-            Assert.Equal("Names of files to upload have to be distinct. The following name repeats at least once: b.txt", exception.Message);
+            Assert.Equal("Names of files to upload have to be distinct. The following name repeats at least once: b.txt\r\nParameter name: files", exception.Message);
         }
 
         [Fact]
         public void MultipleFilesWithNamesSameUpToCaseAreStillRefused()
         {
             var exception = Assert.Throws<ArgumentException>(() => new AdhocPayload(new[] { "a/B.txt", "a/c.txt", "d/b.txt" }));
-            Assert.Equal("Names of files to upload have to be distinct. The following name repeats at least once: b.txt", exception.Message);
+            Assert.Equal("Names of files to upload have to be distinct. The following name repeats at least once: b.txt\r\nParameter name: files", exception.Message);
         }
 
         [Fact]
