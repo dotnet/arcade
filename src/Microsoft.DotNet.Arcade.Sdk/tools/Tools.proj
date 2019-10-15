@@ -17,7 +17,7 @@
     <RestoreConfigFile>$(RepoRoot)NuGet.config</RestoreConfigFile>
   </PropertyGroup>
 
-  <Import Project="$(_NuGetRestoreTargets)" Condition="'$(DotNetBuildFromSource)' != 'true'"/>
+  <Import Project="$(_NuGetRestoreTargets)" Condition="'$(DotNetBuildFromSource)' != 'true' OR '$(DisableNuGetTargetsImport)' != 'true'"/>
 
   <ItemGroup Condition="'$(DotNetBuildFromSource)' != 'true'">
     <!-- Copy of 'sn.exe' in form of NuGet package. -->
