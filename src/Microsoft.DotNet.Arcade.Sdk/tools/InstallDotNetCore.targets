@@ -16,7 +16,9 @@
       VersionsPropsPath="$(RepoRoot)eng\Versions.props"
       GlobalJsonPath="$(RepoRoot)global.json"
       DotNetInstallScript="$(_DotNetInstallScript)"
-      Platform="$(Platform)"/>
+      Platform="$(Platform)"
+      NetRuntimeSourceFeed="$(NetRuntimeSourceFeed)"
+      NetRuntimeSourceFeedKey="$(NetRuntimeSourceFeedKey)"/>
   </Target>
 
 </Project>
