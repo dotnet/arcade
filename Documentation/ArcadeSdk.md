@@ -221,8 +221,10 @@ The file is present in the repo and defines versions of all dependencies used in
   <PropertyGroup>
     <!-- Base three-part version used for all outputs of the repo (assemblies, packages, vsixes) -->
     <VersionPrefix>1.0.0</VersionPrefix>
-    <!-- Package pre-release suffix not including build number -->
-    <PreReleaseVersionLabel>rc2</PreReleaseVersionLabel>
+    <!-- Package pre-release label not including build number or the pre-release iteration-->
+    <PreReleaseVersionLabel>rc</PreReleaseVersionLabel>
+    <!-- Package pre-release version iteration. Combines with the label to produce a final pre-release suffix. -->
+    <PreReleaseVersionIteration>2</PreReleaseVersionIteration>
     <!-- Optional: base short date used for calculating version numbers of release-only packages (e.g. global tools) -->
     <VersionBaseShortDate>19000</VersionBaseShortDate>
 

@@ -91,13 +91,15 @@ _Package Version_ comprises of a three-part version number (**PACKAGE_MAJOR**, *
 
 The pre-release label is determined based on the following table:
 
-| Build kind                      | Pre-release labels                                   | Package Version example   |
-|---------------------------------|------------------------------------------------------|---------------------------|
-| Local developer build default   | "dev"                                                | "1.2.3-dev"               |
-| PR validation build             | "ci"                                                 | "1.2.3-ci"                |
-| Daily official build            | `PreReleaseVersionLabel`.**SHORT_DATE**.**REVISION** | "1.2.3-preview1.12345.1"  |
-| Final pre-release official build | `PreReleaseVersionLabel`."final"                     | "1.2.3-beta.final"        |
-| Release official build          | ""                                                   | "1.2.3"                   |   
+| Build kind                                                     | Pre-release labels                                   | Package Version example    |
+|----------------------------------------------------------------|------------------------------------------------------|----------------------------|
+| Local developer build default                                  | "dev"                                                | "1.2.3-dev"                |
+| PR validation build                                            | "ci"                                                 | "1.2.3-ci"                 |
+| Daily official build with pre-release iteration                | `PreReleaseVersionLabel`.`PreReleaseVersionIteration`.**SHORT_DATE**.**REVISION** | "1.2.3-preview.1.12345.1" |
+| Daily official build with no pre-release iteration             | `PreReleaseVersionLabel`.**SHORT_DATE**.**REVISION** | "1.2.3-beta.12345.1"       |
+| Final pre-release official build with pre-release iteration    | `PreReleaseVersionLabel`.`PreReleaseVersionIteration`."final"                     | "1.2.3-beta.1.final" |
+| Final pre-release official build with no pre-release iteration | `PreReleaseVersionLabel`."final"                     | "1.2.3-beta.final"         |
+| Release official build                                         | ""                                                   | "1.2.3"                    |   
 
 In official builds the values of **SHORT_DATE** and **REVISION** are derived from build parameter `OfficialBuildId` with format `20yymmdd.r` like so:
 - **REVISION** is set to `r` component of `OfficialBuildId` build property.
@@ -212,6 +214,7 @@ Below is a list of the main parameters that control the logic.
 | DotNetUseShippingVersions  | Arcade | Set to `true` to produce shipping version strings in non-official builds. I.e., instead of fixed values like `42.42.42.42` for `AssemblyVersion`. |
 | DotNetFinalVersionKind     | Arcade | Specify the kind of version being generated: `release`, `prerelease` or empty. |
 | PreReleaseVersionLabel     | Arcade | Pre-release label to be used on the string. E.g., `beta`, `prerelease`, etc. `ci` and `dev` are reserved for non-official CI builds and dev builds, respectively. |
+| PreReleaseVersionIteration | Arcade | Numeric pre-release iteration to be used on the pre-release suffix string. E.g., `1`, `2`, etc. If set, and SemVer2 is in use, appends to the prerelease version label, separated by a `.` |
 | VersionPrefix              | .NET   | Specify the leading part of the version string. If empty and both `MajorVersion` and `MinorVersion` are set, initialized to `$(MajorVersion).$(MinorVersion).0`. |
 | MajorVersion               | Arcade | Major version to use in `VersionPrefix`. |
 | MinorVersion               | Arcade | Minor version to use in `VersionPrefix`. |
