@@ -23,9 +23,9 @@
       <Uri>https://github.com/dotnet/arcade</Uri>
       <Sha>8cd48078f550fbcbd4f684b897b14db207397b52</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Maestro.Client" Version="1.1.0-beta.19502.3">
+    <Dependency Name="Microsoft.DotNet.Maestro.Client" Version="1.1.0-beta.19516.2">
       <Uri>https://github.com/dotnet/arcade-services</Uri>
-      <Sha>91c871a8d54a0f10f446c76cc5620a244ff6ebf3</Sha>
+      <Sha>ae2bacfbdf34af9bc2d2fda82253d55761f31262</Sha>
     </Dependency>
   </ToolsetDependencies>
 </Dependencies>
