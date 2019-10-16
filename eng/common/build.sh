@@ -196,7 +196,7 @@ function Build {
   ExitWithExitCode 0
 }
 
-if [[ "$restore" == true && -z ${DisableNativeToolsetInstalls:-} ]]; then
+if [[ "$restore" == true ]]; then
   InitializeNativeTools
 fi
 
