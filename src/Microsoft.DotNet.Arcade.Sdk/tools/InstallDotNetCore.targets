@@ -17,8 +17,8 @@
       GlobalJsonPath="$(RepoRoot)global.json"
       DotNetInstallScript="$(_DotNetInstallScript)"
       Platform="$(Platform)"
-      NetRuntimeSourceFeed="$(NetRuntimeSourceFeed)"
-      NetRuntimeSourceFeedKey="$(NetRuntimeSourceFeedKey)"/>
+      RuntimeSourceFeed="$(DotNetRuntimeSourceFeed)"
+      RuntimeSourceFeedKey="$(DotNetRuntimeSourceFeedKey)"/>
   </Target>
 
 </Project>
