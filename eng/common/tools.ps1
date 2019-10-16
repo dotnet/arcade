@@ -193,7 +193,7 @@ function InstallDotNet([string] $dotnetRoot, [string] $version, [string] $archit
     Write-PipelineTelemetryError -Category "InitializeToolset" -Message "Failed to install dotnet runtime '$runtime' from public location."
 
     # Only the runtime can be installed from a custom [private] location.
-	if ($runtime -and ($RuntimeSourceFeed -or $RuntimeSourceFeedKey)) {
+    if ($runtime -and ($RuntimeSourceFeed -or $RuntimeSourceFeedKey)) {
     if ($RuntimeSourceFeed) { $installParameters.AzureFeed = $RuntimeSourceFeed }
 
     if ($RuntimeSourceFeedKey) {
