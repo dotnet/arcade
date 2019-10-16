@@ -126,8 +126,9 @@ namespace Microsoft.DotNet.Arcade.Sdk
                                         {
                                             arguments += $" -RuntimeSourceFeed {RuntimeSourceFeed}";
                                         }
-                                        // The default NetRuntimeSourceFeed doesn't need a key
-                                        if (!string.IsNullOrWhiteSpace(RuntimeSourceFeed) && !String.IsNullOrWhiteSpace(RuntimeSourceFeedKey))
+
+                                        // The default RuntimeSourceFeed doesn't need a key
+                                        if (!string.IsNullOrWhiteSpace(RuntimeSourceFeed) && !string.IsNullOrWhiteSpace(RuntimeSourceFeedKey))
                                         {
                                             arguments += $" -RuntimeSourceFeedKey {RuntimeSourceFeedKey}";
                                         }
