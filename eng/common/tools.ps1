@@ -194,19 +194,20 @@ function InstallDotNet([string] $dotnetRoot, [string] $version, [string] $archit
 
     # Only the runtime can be installed from a custom [private] location.
     if ($runtime -and ($RuntimeSourceFeed -or $RuntimeSourceFeedKey)) {
-    if ($RuntimeSourceFeed) { $installParameters.AzureFeed = $RuntimeSourceFeed }
+      if ($RuntimeSourceFeed) { $installParameters.AzureFeed = $RuntimeSourceFeed }
 
-    if ($RuntimeSourceFeedKey) {
-      $decodedBytes = [System.Convert]::FromBase64String($RuntimeSourceFeedKey)
-      $decodedString = [System.Text.Encoding]::UTF8.GetString($decodedBytes)
-      $installParameters.FeedCredential = $decodedString
-    }
+      if ($RuntimeSourceFeedKey) {
+        $decodedBytes = [System.Convert]::FromBase64String($RuntimeSourceFeedKey)
+        $decodedString = [System.Text.Encoding]::UTF8.GetString($decodedBytes)
+        $installParameters.FeedCredential = $decodedString
+      }
 
-    try {
-      & $installScript @installParameters
-    }
-    catch {
-	  Write-PipelineTelemetryError -Category "InitializeToolset" -Message "Failed to install dotnet runtime '$runtime' from custom location '$RuntimeSourceFeed'."
+      try {
+        & $installScript @installParameters
+      }
+      catch {
+        Write-PipelineTelemetryError -Category "InitializeToolset" -Message "Failed to install dotnet runtime '$runtime' from custom location '$RuntimeSourceFeed'."
+      }
     }
   }
 }
