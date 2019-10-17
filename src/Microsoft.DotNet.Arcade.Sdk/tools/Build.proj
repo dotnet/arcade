@@ -38,6 +38,7 @@
     <_RepoRootOriginal>$(RepoRoot)</_RepoRootOriginal>
     <RepoRoot>$([System.IO.Path]::GetFullPath('$(RepoRoot)/'))</RepoRoot>
 
+    <_RemoveProps>Projects;Restore;QuietRestore;QuietRestoreBinaryLog;Build;Rebuild;Deploy;Test;IntegrationTest;PerformanceTest;Pack;Sign;Publish;NETCORE_ENGINEERING_TELEMETRY</_RemoveProps>
     <_OriginalProjectsValue>$(Projects)</_OriginalProjectsValue>
   </PropertyGroup>
 
@@ -91,8 +92,6 @@
     <ItemGroup>
       <_SolutionBuildTargets Include="Rebuild" Condition="'$(Rebuild)' == 'true'" />
       <_SolutionBuildTargets Include="Build" Condition="'$(Build)' == 'true' and '$(Rebuild)' != 'true'" />
-      <!-- Extensibility point to run addition build targets after build. -->
-      <_SolutionBuildTargets Include="@(SolutionBuildTargets)" />
       <!-- Deploy target is set up to chain after Build so that F5 in VS works. -->
       <_SolutionBuildTargets Include="Test" Condition="'$(Test)' == 'true'" />
       <!-- Pack before running integration and performance tests so that these tests can test packages produced by the repo. -->
@@ -100,10 +99,6 @@
       <_SolutionBuildTargets Include="IntegrationTest" Condition="'$(IntegrationTest)' == 'true'" />
       <_SolutionBuildTargets Include="PerformanceTest" Condition="'$(PerformanceTest)' == 'true'" />
     </ItemGroup>
-
-    <PropertyGroup>
-      <_RemoveProps>Projects;Restore;Deploy;Sign;Publish;NETCORE_ENGINEERING_TELEMETRY;@(_SolutionBuildTargets)</_RemoveProps>
-    </PropertyGroup>
 
     <ItemGroup>
       <_CommonProps Include="Configuration=$(Configuration)"/>
@@ -226,7 +221,6 @@
     <MSBuild Projects="AfterSolutionBuild.proj"
              Properties="@(_CommonProps);_NETCORE_ENGINEERING_TELEMETRY=Build"
              Targets="@(_SolutionBuildTargets)"
-             SkipNonexistentTargets="true"
              Condition="'@(_SolutionBuildTargets)' != ''" />
 
     <!--
@@ -240,7 +234,6 @@
     <MSBuild Projects="AfterSigning.proj"
              Properties="@(_CommonProps);_NETCORE_ENGINEERING_TELEMETRY=Sign"
              Targets="@(_SolutionBuildTargets)"
-             SkipNonexistentTargets="true"
              Condition="'@(_SolutionBuildTargets)' != ''"/>
 
     <MSBuild Projects="Publish.proj"
