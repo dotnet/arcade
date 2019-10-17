@@ -38,7 +38,6 @@
     <_RepoRootOriginal>$(RepoRoot)</_RepoRootOriginal>
     <RepoRoot>$([System.IO.Path]::GetFullPath('$(RepoRoot)/'))</RepoRoot>
 
-    <_RemoveProps>Projects;Restore;Build;Rebuild;Deploy;Test;IntegrationTest;PerformanceTest;Pack;Sign;Publish;NETCORE_ENGINEERING_TELEMETRY</_RemoveProps>
     <_OriginalProjectsValue>$(Projects)</_OriginalProjectsValue>
   </PropertyGroup>
 
@@ -99,6 +98,10 @@
       <_SolutionBuildTargets Include="IntegrationTest" Condition="'$(IntegrationTest)' == 'true'" />
       <_SolutionBuildTargets Include="PerformanceTest" Condition="'$(PerformanceTest)' == 'true'" />
     </ItemGroup>
+
+    <PropertyGroup>
+      <_RemoveProps>Projects;Restore;Deploy;Sign;Publish;NETCORE_ENGINEERING_TELEMETRY;@(_SolutionBuildTargets)</_RemoveProps>
+    </PropertyGroup>
 
     <ItemGroup>
       <_CommonProps Include="Configuration=$(Configuration)"/>
