@@ -38,7 +38,7 @@
     <_RepoRootOriginal>$(RepoRoot)</_RepoRootOriginal>
     <RepoRoot>$([System.IO.Path]::GetFullPath('$(RepoRoot)/'))</RepoRoot>
 
-    <_RemoveProps>Projects;Restore;QuietRestore;QuietRestoreBinaryLog;Build;Rebuild;Deploy;Test;IntegrationTest;PerformanceTest;Pack;Sign;Publish;NETCORE_ENGINEERING_TELEMETRY</_RemoveProps>
+    <_RemoveProps>Projects;Restore;Build;Rebuild;Deploy;Test;IntegrationTest;PerformanceTest;Pack;Sign;Publish;NETCORE_ENGINEERING_TELEMETRY</_RemoveProps>
     <_OriginalProjectsValue>$(Projects)</_OriginalProjectsValue>
   </PropertyGroup>
 
