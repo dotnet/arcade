@@ -20,7 +20,7 @@ In phase 1, we will provide PKPI data about official build health.  Official bui
 
 In phase 2, we will provide PKPI data about official build state.  Official build state includes indicators about dependency staleness, dependency flow, and subscriptions.
 
-[Phase 1](#phase-1---build-health) completion date: 10/11
+[Phase 1](#phase-1---build-health) completion date: 10/21
 
 [Phase 2](#phase-2---build-state) completion date: [TBD]
 
@@ -52,25 +52,37 @@ See [features](#features) for which features are being delivered in phase 1.
 
 ### Phase 1 key dates
 
-| Date | Deliverable | Notes |
-| ---- | ----------- | ----- |
-| 9/13 | PKPI Roadmap available |
-| 9/18 | Checkpoint* 1 for phase 1 |  Note: this checkpoint was cancelled |
-| 9/25 | Checkpoint* 2 for phase 1 | Visualizations for dependency updates should be ready for review |
-| 10/2 | Checkpoint* 3 for phase 1 (tentative) | Cancelled, not needed |
-| 10/9 | Checkpoint* 4 for phase 1 (tentative) | Cancelled, not needed |
+| Date  | Deliverable | Notes |
+| ----- | ----------- | ----- |
+| 9/13  | PKPI Roadmap available |
+| 9/25  | Checkpoint* for phase 1 | Visualizations for dependency updates should be ready for review |
 | 10/10 | LT review** ||
-| 10/15 | Complete | Available for general use |
+|       | Address LT review issues |
+|| Complete | Available for general use |
 
-\* Checkpoint - meeting between WG and key stakeholders (Matt Mitchell / Jared Parsons) to review progress, acquire feedback, adjust course
+\* Checkpoint - meeting between WG and key stakeholders (Chris Bohm / Matt Mitchell / Jared Parsons) to review progress, acquire feedback, adjust course
 
 \*\* LT review - demonstrate phase 1 deliverables to LTS team (Mark Wilkie, Chris Bohm, Shawn Rothlisberger, etc...)
 
-Notes:
+### Phase 1 Delivered
 
-- Checkpoints 3 and 4 are "tentative".  They will be scheduled if necessary.
+| Issue | Notes |
+| ----- | ----- |
+| [Dependency updates that fail to flow seamlessly](https://github.com/dotnet/arcade/issues/4014) | Available in power bi dashboard |
+| [Number of dependency updates per given time frame](https://github.com/dotnet/arcade/issues/3907) | Available in power bi dashboard |
+| [Official build pass rate](https://github.com/dotnet/arcade/issues/2787) | Available in power bi dashboard |
+| [Official build time](https://github.com/dotnet/arcade/issues/2786) | Available in power bi dashboard |
+| [Dependency staleness](https://github.com/dotnet/arcade/issues/2782) | Available in barviz |
+| [Existence of product dependency cycles](https://github.com/dotnet/arcade/issues/3905) | Available in barviz |
 
-- After 10/16, we may be using staging data for visualizations depending on Arcade rollout schedules.
+### Phase 1 issues resulting from LT review
+
+| Date  | Deliverable | Notes |
+| ----- | ----------- | ----- |
+| 10/21 | [Official build time goal lines](https://github.com/dotnet/arcade/issues/4101) | Add ability to define per repo goal lines for build time |
+|       | [PKPI documentation](https://github.com/dotnet/arcade/issues/4077) ||
+| 10/18 | [Official build time worst case scenario](https://github.com/dotnet/arcade/issues/4103) | Toggle view between average repo build time in a given time frame and maximum build time in a given time frame |
+| 10/24 | [Update official build time report to use buildchannel insert time as end time](https://github.com/dotnet/arcade/issues/4116) |
 
 ## Phase 2 - Build state
 
@@ -82,7 +94,21 @@ See [features](#features) for which features are being delivered in phase 2.
 
 ### Phase 2 key dates
 
-Phase 2 key dates are not yet defined.  The working group needs to gather more education about the technologies involved (darc / barviz) for phase 2 before defining dates.  Investigation of those areas will occur in parallel with phase 1.  More information about phase 2 planning / dates will be provided near the completion of phase 1.  We will also take that time to reassess if there are key pieces of "build health" that were not provided during phase 1 and need to be addressed.
+
+
+### Phase 2 feature dates
+
+| Date  | Issue | Notes |
+| ----- | ----- | ----- |
+| Done  | [Dependency staleness](https://github.com/dotnet/arcade/issues/2782) | Available in barviz |
+| Done  | [Existence of product dependency cycles](https://github.com/dotnet/arcade/issues/3905) | Available in barviz |
+| 10/18 | [Missing / Disabled subscriptions](https://github.com/dotnet/arcade/issues/4023) ||
+| 10/30 | [Longest build path visualization](https://github.com/dotnet/arcade/issues/4071) ||
+| 11/1  | [Split subscriptions view into product and toolset](https://github.com/dotnet/arcade/issues/4138) ||
+|       | [Release stages should use category telemetry](https://github.com/dotnet/arcade/issues/3797) ||
+| 11/6  | [Superfluous input subscriptions](https://github.com/dotnet/arcade/issues/3906) ||
+| 11/13 | [Conflicting input subscriptions](https://github.com/dotnet/arcade/issues/2801) ||
+|       | [Open dependency update PRs vs possible dependency update PRs](https://github.com/dotnet/arcade/issues/2781)||
 
 ## Features
 
