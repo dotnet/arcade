@@ -91,15 +91,18 @@ _Package Version_ comprises of a three-part version number (**PACKAGE_MAJOR**, *
 
 The pre-release label is determined based on the following table:
 
-| Build kind                                                     | Pre-release labels                                   | Package Version example    |
-|----------------------------------------------------------------|------------------------------------------------------|----------------------------|
-| Local developer build default                                  | "dev"                                                | "1.2.3-dev"                |
-| PR validation build                                            | "ci"                                                 | "1.2.3-ci"                 |
-| Daily official build with pre-release iteration                | `PreReleaseVersionLabel`.`PreReleaseVersionIteration`.**SHORT_DATE**.**REVISION** | "1.2.3-preview.1.12345.1" |
-| Daily official build with no pre-release iteration             | `PreReleaseVersionLabel`.**SHORT_DATE**.**REVISION** | "1.2.3-beta.12345.1"       |
-| Final pre-release official build with pre-release iteration    | `PreReleaseVersionLabel`.`PreReleaseVersionIteration`."final"                     | "1.2.3-beta.1.final" |
-| Final pre-release official build with no pre-release iteration | `PreReleaseVersionLabel`."final"                     | "1.2.3-beta.final"         |
-| Release official build                                         | ""                                                   | "1.2.3"                    |   
+| Build kind                       | Pre-release labels                                | Package Version example    |
+|----------------------------------|---------------------------------------------------|----------------------------|
+| Local developer build default    | "dev"                                             | "1.2.3-dev"                |
+| PR validation build              | "ci"                                              | "1.2.3-ci"                 |
+| Daily official build             | **PRERELEASE_LABELS**.**SHORT_DATE**.**REVISION** | "1.2.3-preview.1.12345.1"  |
+| Final pre-release official build | **PRERELEASE_LABELS**."final"                     | "1.2.3-beta.1.final"       |
+| Release official build           | ""                                                | "1.2.3"                    |   
+
+In official builds, the value of **PRERELEASE_LABELS** is derived as in the following way:
+- If `SemanticVersioningV1` is set to true, it will be `PreReleaseVersionLabel`
+- If `SemanticVersioningV1` is not set to true, and `PreReleaseVersionIteration` is empty, it will be `PreReleaseVersionLabel`
+- If `SemanticVersioningV1` is not set to true, and `PreReleaseVersionIteration` is non empty, it will be `PreReleaseVersionLabel`.`PreReleaseVersionIteration`
 
 In official builds the values of **SHORT_DATE** and **REVISION** are derived from build parameter `OfficialBuildId` with format `20yymmdd.r` like so:
 - **REVISION** is set to `r` component of `OfficialBuildId` build property.
