@@ -1,8 +1,8 @@
 <Project>
 
   <PropertyGroup>
-    <SigningToolsDirectory Condition="'$(SigningToolsDirectory)' != ''">$(RepoRoot)signing\</SigningToolsDirectory>
-    <LicenseFileLocation Condition="'$(LicenseFileLocation)' != ''">$(RepoRoot)LICENSE.TXT</LicenseFileLocation>
+    <SigningToolsDir Condition="'$(SigningToolsDir)' != ''">$(RepoRoot)signing\</SigningToolsDir>
+    <LicenseFile Condition="'$(LicenseFile)' != ''">$(RepoRoot)LICENSE.TXT</LicenseFile>
   </PropertyGroup>
 
   <Import Project="framework.bundle.props" Condition="'$(MSBuildProjectExtension)' == '.bundleproj'" />
