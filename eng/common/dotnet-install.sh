@@ -41,7 +41,6 @@ while [[ $# > 0 ]]; do
       ;;
     *)
       echo "Invalid argument: $1"
-      usage
       exit 1
       ;;
   esac

@@ -124,13 +124,13 @@ namespace Microsoft.DotNet.Arcade.Sdk
 
                                         if (!string.IsNullOrWhiteSpace(RuntimeSourceFeed))
                                         {
-                                            arguments += $" -RuntimeSourceFeed {RuntimeSourceFeed}";
+                                            arguments += $" -runtimeSourceFeed {RuntimeSourceFeed}";
                                         }
 
                                         // The default RuntimeSourceFeed doesn't need a key
                                         if (!string.IsNullOrWhiteSpace(RuntimeSourceFeed) && !string.IsNullOrWhiteSpace(RuntimeSourceFeedKey))
                                         {
-                                            arguments += $" -RuntimeSourceFeedKey {RuntimeSourceFeedKey}";
+                                            arguments += $" -runtimeSourceFeedKey {RuntimeSourceFeedKey}";
                                         }
 
                                         Log.LogMessage(MessageImportance.Low, $"Executing: {DotNetInstallScript} {arguments}");
