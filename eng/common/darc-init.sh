@@ -20,6 +20,10 @@ while [[ $# > 0 ]]; do
       verbosity=$2
       shift
       ;;
+    --toolpath)
+      toolpath=$2
+      shift
+      ;;
     *)
       echo "Invalid argument: $1"
       usage
@@ -62,7 +66,11 @@ function InstallDarcCli {
 
   echo "Installing Darc CLI version $darcVersion..."
   echo "You may need to restart your command shell if this is the first dotnet tool you have installed."
-  echo $($dotnet_root/dotnet tool install $darc_cli_package_name --version $darcVersion --add-source "$arcadeServicesSource" -v $verbosity -g)
+  if [ -z "$toolpath" ]; then
+    echo $($dotnet_root/dotnet tool install $darc_cli_package_name --version $darcVersion --add-source "$arcadeServicesSource" -v $verbosity -g)
+  else
+    echo $($dotnet_root/dotnet tool install $darc_cli_package_name --version $darcVersion --add-source "$arcadeServicesSource" -v $verbosity -g --tool-path $toolpath)
+  fi
 }
 
 InstallDarcCli
