@@ -418,7 +418,7 @@ function GetSdkTaskProject([string]$taskName) {
 }
 
 function InitializeNativeTools() {
-  if($null -eq $env:DisableNativeToolsetInstalls){
+  if ($env:DisableNativeToolsetInstalls) {
     return
   }
   if (Get-Member -InputObject $GlobalJson -Name "native-tools") {
@@ -605,7 +605,9 @@ Write-PipelineSetVariable -Name 'TMP' -Value $TempDir
 
 # Import custom tools configuration, if present in the repo.
 # Note: Import in global scope so that the script set top-level variables without qualification.
-$configureToolsetScript = Join-Path $EngRoot "configure-toolset.ps1"
-if (Test-Path $configureToolsetScript) {
-    . $configureToolsetScript
+if (!$env:DisableNativeToolsetInstalls) {
+  $configureToolsetScript = Join-Path $EngRoot "configure-toolset.ps1"
+  if (Test-Path $configureToolsetScript) {
+      . $configureToolsetScript
+  }
 }
