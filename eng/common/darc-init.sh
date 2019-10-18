@@ -56,10 +56,16 @@ function InstallDarcCli {
   InitializeDotNetCli
   local dotnet_root=$_InitializeDotNetCli
 
-  local uninstall_command=`$dotnet_root/dotnet tool uninstall $darc_cli_package_name -g`
-  local tool_list=$($dotnet_root/dotnet tool list -g)
-  if [[ $tool_list = *$darc_cli_package_name* ]]; then
-    echo $($dotnet_root/dotnet tool uninstall $darc_cli_package_name -g)
+  if [ -z "$toolpath" ]; then
+    local tool_list=$($dotnet_root/dotnet tool list -g)
+    if [[ $tool_list = *$darc_cli_package_name* ]]; then
+      echo $($dotnet_root/dotnet tool uninstall $darc_cli_package_name -g)
+    fi
+  else
+    local tool_list=$($dotnet_root/dotnet tool list --tool-path "$toolpath")
+    if [[ $tool_list = *$darc_cli_package_name* ]]; then
+      echo $($dotnet_root/dotnet tool uninstall $darc_cli_package_name --tool-path "$toolpath")
+    fi
   fi
 
   local arcadeServicesSource="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json"
