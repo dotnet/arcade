@@ -69,7 +69,7 @@ function InstallDarcCli {
   if [ -z "$toolpath" ]; then
     echo $($dotnet_root/dotnet tool install $darc_cli_package_name --version $darcVersion --add-source "$arcadeServicesSource" -v $verbosity -g)
   else
-    echo $($dotnet_root/dotnet tool install $darc_cli_package_name --version $darcVersion --add-source "$arcadeServicesSource" -v $verbosity --tool-path $toolpath)
+    echo $($dotnet_root/dotnet tool install $darc_cli_package_name --version $darcVersion --add-source "$arcadeServicesSource" -v $verbosity --tool-path "$toolpath")
   fi
 }
 
