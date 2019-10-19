@@ -31,11 +31,11 @@ while [[ $# > 0 ]]; do
       shift
       runtime="$1"
       ;;
-    -runtimeSourceFeed)
+    -runtimesourcefeed)
       shift
       runtimeSourceFeed="$1"
       ;;
-    -runtimeSourceFeedKey)
+    -runtimesourcefeedkey)
       shift
       runtimeSourceFeedKey="$1"
       ;;
