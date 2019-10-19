@@ -25,6 +25,12 @@ Param(
   [Parameter(ValueFromRemainingArguments=$true)][String[]]$properties
 )
 
+# Unset 'Platform' environment variable to avoid unwanted collision in InstallDotNetCore.targets file
+# some computer has this env var defined (e.g. Some HP)
+if($env:Platform) {
+  $env:Platform=""  
+}
+
 . $PSScriptRoot\tools.ps1
 
 function Print-Usage() {
