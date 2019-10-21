@@ -57,8 +57,8 @@ See [features](#features) for which features are being delivered in phase 1.
 | 9/13  | PKPI Roadmap available |
 | 9/25  | Checkpoint* for phase 1 | Visualizations for dependency updates should be ready for review |
 | 10/10 | LT review** ||
-|       | Address LT review issues |
-|| Complete | Available for general use |
+| 10/28 | Address LT review issues |
+|       | Complete |
 
 \* Checkpoint - meeting between WG and key stakeholders (Chris Bohm / Matt Mitchell / Jared Parsons) to review progress, acquire feedback, adjust course
 
