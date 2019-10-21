@@ -94,7 +94,10 @@ See [features](#features) for which features are being delivered in phase 2.
 
 ### Phase 2 key dates
 
-
+| Date  | Deliverable | Notes |
+| ----- | ----------- | ----- |
+| 11/6  | Checkpoint  | Review phase 2 deliverables with stakeholders |
+| 11/14 | LT review   ||
 
 ### Phase 2 feature dates
 
@@ -109,46 +112,3 @@ See [features](#features) for which features are being delivered in phase 2.
 | 11/6  | [Superfluous input subscriptions](https://github.com/dotnet/arcade/issues/3906) ||
 | 11/13 | [Conflicting input subscriptions](https://github.com/dotnet/arcade/issues/2801) ||
 |       | [Open dependency update PRs vs possible dependency update PRs](https://github.com/dotnet/arcade/issues/2781)||
-
-## Features
-
-| Name | Phase | Workstream | UI | Notes |
-| ---- | ----- | ---------- | -- | ----- |
-| **Official Build Time** | Phase 1 | Official build | PowerBI ||
-| **Official Build Pass Rate** | Phase 1 | Official build | PowerBI ||
-| **Dependency updates that flow seamlessly** | Phase 1 | Dependency updates | PowerBI ||
-| **Dependency updates that fail** | Phase 1 | Dependency updates | Power BI ||
-| **Number of dependency updates per given time frame** | Phase 1 | Dependency updates | PowerBi ||
-| **Percent of changes that don't require a dependency Update PR** | Undefined* | Dependency updates | PowerBI | Applies to branch dependency flow implementation |
-| **Dependency updates that fail, open a corresponding PR, and that PR fails initially** | Undefined* | Dependency updates | PowerBi | Applies to branch dependency flow implementation |
-| **Dependency updates that fail, open a corresponding PR, and that PR fails instantly** | Undefined* | Dependency updates | PowerBi | Applies to branch dependency flow implementation |
-| **Dependency updates that fail, open a corresponding PR, and that PR passes and is auto-merged** | Undefined* | Dependency updates | PowerBi | Applies to branch dependency flow implementation |
-| **Dependency updates that require a merge commit** | Undefined* | Dependency updates | PowerBi | Applies to branch dependency flow implementation |
-| **Direct Product Dependency Staleness** | Phase 2 | Dependency staleness | BarViz ||
-| **Direct Toolset Dependency Staleness** | Phase 2 | Dependency staleness | BarViz ||
-| **Existence of Product Dependency Cycles** | Phase 2 | Dependency flow | Darc / BarViz ||
-| **Existence of Automated dependency Flow Cycles** | Phase 2 | Dependency flow | Darc / BarViz ||
-| **Existence of cross-channel flow** | Phase 2 | Dependency flow | Darc / BarViz ||
-| **Missing/Disabled Product Input Subscriptions** | Phase 2 | Subscriptions | Darc / BarViz ||
-| **Missing/Disabled Toolset Input Subscriptions** | Phase 2 | Subscriptions | Darc / BarViz ||
-| **Superfluous Input Subscriptions** | Phase 2 | Subscriptions | Darc / BarViz ||
-| **Conflicting Input Subscriptions** | Phase 2 | Subscriptions | Darc / BarViz ||
-
-\* Undefined identifies metrics we would like to deliver but the implementation is not yet available.  This work may fall into phase 2 or later work depending on timeline of implementation.
-
-## Working Groups
-
-### Phase 1 working groups
-
-- Official build workstream
-
-  - Primary: Epsitha Ananth (*note: on FR rotation 9/23 - 10/7)
-  
-  - Secondary: Chris Costa (providing additional support where needed) (*note: on FR rotation 10/7 - 10/21)
-
-- Dependency update workstream
-
-  - Primary: Michelle McDaniel, Megan Quinn
-
-  - Secondary: Chris Costa (providing additional support where needed) (*note: on FR rotation 10/7 - 10/21)
-
