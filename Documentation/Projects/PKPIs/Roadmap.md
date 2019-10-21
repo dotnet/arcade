@@ -110,7 +110,5 @@ See [features](#features) for which features are being delivered in phase 2.
 | 10/18 | [Missing / Disabled subscriptions](https://github.com/dotnet/arcade/issues/4023) ||
 | 10/30 | [Longest build path visualization](https://github.com/dotnet/arcade/issues/4071) ||
 | 11/1  | [Split subscriptions view into product and toolset](https://github.com/dotnet/arcade/issues/4138) ||
-|       | [Release stages should use category telemetry](https://github.com/dotnet/arcade/issues/3797) ||
 | 11/6  | [Superfluous input subscriptions](https://github.com/dotnet/arcade/issues/3906) ||
 | 11/13 | [Conflicting input subscriptions](https://github.com/dotnet/arcade/issues/2801) ||
-|       | [Open dependency update PRs vs possible dependency update PRs](https://github.com/dotnet/arcade/issues/2781)||
