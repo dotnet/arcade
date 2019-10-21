@@ -77,6 +77,8 @@ See [features](#features) for which features are being delivered in phase 1.
 
 ### Phase 1 issues resulting from LT review
 
+These issues are based on feedback from LT review and are in varying states of completion.
+
 | Date  | Deliverable | Notes |
 | ----- | ----------- | ----- |
 | 10/21 | [Official build time goal lines](https://github.com/dotnet/arcade/issues/4101) | Add ability to define per repo goal lines for build time |
