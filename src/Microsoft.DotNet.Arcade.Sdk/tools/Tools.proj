@@ -1,9 +1,11 @@
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
-<Project Sdk="Microsoft.NET.Sdk">
+<Project>
   <Import Project="BuildStep.props" />
 
+  <!-- Properties requires by NuGet.targets to restore PackageReferences -->
   <PropertyGroup>
     <TargetFramework>net472</TargetFramework>
+    <MSBuildProjectExtensionsPath>$(BaseIntermediateOutputPath)</MSBuildProjectExtensionsPath>
   </PropertyGroup>
 
   <!-- 
@@ -14,6 +16,8 @@
   <PropertyGroup>
     <RestoreConfigFile>$(RepoRoot)NuGet.config</RestoreConfigFile>
   </PropertyGroup>
+
+  <Import Project="$(_NuGetRestoreTargets)" Condition="'$(DotNetBuildFromSource)' != 'true'"/>
 
   <ItemGroup Condition="'$(DotNetBuildFromSource)' != 'true'">
     <!-- Copy of 'sn.exe' in form of NuGet package. -->
@@ -35,7 +39,7 @@
 
   <Target Name="RestoreRepoTools"
           Condition="'$(DotNetBuildFromSource)' != 'true' and Exists('$(_RepoToolManifest)')"
-          AfterTargets="Restore">
+          BeforeTargets="Restore">
 
     <Exec Command='"$(DotNetTool)" tool restore' WorkingDirectory="$(RepoRoot)" />
   </Target>

@@ -1,5 +1,10 @@
 <Project>
 
+  <PropertyGroup>
+    <SigningToolsDir Condition="'$(SigningToolsDir)' == ''">$(RepoRoot)signing\</SigningToolsDir>
+    <LicenseFile Condition="'$(LicenseFile)' == ''">$(RepoRoot)LICENSE.TXT</LicenseFile>
+  </PropertyGroup>
+
   <Import Project="framework.bundle.props" Condition="'$(MSBuildProjectExtension)' == '.bundleproj'" />
   <Import Project="framework.dependency.props" Condition="'$(MSBuildProjectExtension)' == '.depproj'" />
   <Import Project="framework.packaging.props" Condition="'$(MSBuildProjectExtension)' == '.pkgproj'" />

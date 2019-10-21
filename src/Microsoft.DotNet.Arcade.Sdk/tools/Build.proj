@@ -82,11 +82,15 @@
     <Error Text="Property 'RepoRoot' must be specified" Condition="'$(_RepoRootOriginal)' == ''"/>
     <Error Text="File 'global.json' must exist in directory specified by RepoRoot: '$(_RepoRootOriginal)'" Condition="'$(_RepoRootOriginal)' != '' and !Exists('$(RepoRoot)global.json')"/>
 
+    <PropertyGroup>
+      <!-- IsRunningFromVisualStudio may be true even when running msbuild.exe from command line. This generally means that MSBUild is Visual Studio installation and therefore we need to find NuGet.targets in a different location.  -->
+      <_NuGetRestoreTargets>$(MSBuildToolsPath)\NuGet.targets</_NuGetRestoreTargets>
+      <_NuGetRestoreTargets Condition="'$([MSBuild]::IsRunningFromVisualStudio())' == 'true'">$(MSBuildToolsPath32)\..\..\..\Common7\IDE\CommonExtensions\Microsoft\NuGet\NuGet.targets</_NuGetRestoreTargets>
+    </PropertyGroup>
+
     <ItemGroup>
       <_SolutionBuildTargets Include="Rebuild" Condition="'$(Rebuild)' == 'true'" />
       <_SolutionBuildTargets Include="Build" Condition="'$(Build)' == 'true' and '$(Rebuild)' != 'true'" />
-      <!-- Extensibility point to run addition build targets after build. -->
-      <_SolutionBuildTargets Include="@(SolutionBuildTargets)" />
       <!-- Deploy target is set up to chain after Build so that F5 in VS works. -->
       <_SolutionBuildTargets Include="Test" Condition="'$(Test)' == 'true'" />
       <!-- Pack before running integration and performance tests so that these tests can test packages produced by the repo. -->
@@ -123,6 +127,7 @@
       <_RestoreToolsProps Include="BaseIntermediateOutputPath=$(ArtifactsToolsetDir)Common"/>
       <_RestoreToolsProps Include="ExcludeRestorePackageImports=true"/>
       <_RestoreToolsProps Include="PublishingToBlobStorage=$(DotNetPublishToBlobFeed)"/>
+      <_RestoreToolsProps Include="_NuGetRestoreTargets=$(_NuGetRestoreTargets)"/>
     </ItemGroup>
 
     <ItemGroup>
@@ -164,10 +169,6 @@
     <PropertyGroup>
       <!-- This can be set to false as an optimization for repos that don't use NuGet. -->
       <RestoreUsingNuGetTargets Condition="'$(RestoreUsingNuGetTargets)' == ''">true</RestoreUsingNuGetTargets>
-
-      <!-- IsRunningFromVisualStudio may be true even when running msbuild.exe from command line. This generally means that MSBUild is Visual Studio installation and therefore we need to find NuGet.targets in a different location.  -->
-      <_NuGetRestoreTargets>$(MSBuildToolsPath)\NuGet.targets</_NuGetRestoreTargets>
-      <_NuGetRestoreTargets Condition="'$([MSBuild]::IsRunningFromVisualStudio())' == 'true'">$(MSBuildToolsPath32)\..\..\..\Common7\IDE\CommonExtensions\Microsoft\NuGet\NuGet.targets</_NuGetRestoreTargets>
     </PropertyGroup>
 
     <!--
@@ -223,7 +224,6 @@
     <MSBuild Projects="AfterSolutionBuild.proj"
              Properties="@(_CommonProps);_NETCORE_ENGINEERING_TELEMETRY=Build"
              Targets="@(_SolutionBuildTargets)"
-             SkipNonexistentTargets="true"
              Condition="'@(_SolutionBuildTargets)' != ''" />
 
     <!--
@@ -237,7 +237,6 @@
     <MSBuild Projects="AfterSigning.proj"
              Properties="@(_CommonProps);_NETCORE_ENGINEERING_TELEMETRY=Sign"
              Targets="@(_SolutionBuildTargets)"
-             SkipNonexistentTargets="true"
              Condition="'@(_SolutionBuildTargets)' != ''"/>
 
     <MSBuild Projects="Publish.proj"
