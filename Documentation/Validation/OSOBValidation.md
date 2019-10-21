@@ -19,7 +19,25 @@ The common pattern for [Validation](./ValidationProcess.md) and [Deployment](./D
 
 **PRs**
 
-Build -> Validate
+1. Build
+    - Unit tests
+2. Build Image
+    - Artifacts
+        - Do the artifacts do what they are expected to do?
+        - Do the OS specific artifacts do what they are expected to do?
+    - Base images from DDFUN
+        - Does the image contain the expected OS?
+        - Is the correct version of Visual Studio installed? 
+        - Is the correct version of other required dependencies installed? 
+3. Create Queues
+    - Use heuristics based on telemetry to determine which queues need to be spun up for PRs
+4. Validate
+    - Job sent to all created queues to do minimum base case validation
+    - Validate Docker queues (if available)
+    - Validate dump collection
+    - Helix Scripts
+        - Are all environment variables set correctly?
+        - Test key functionality (e.g. file uploads, et cetera)
 
 **CI**
 
@@ -35,7 +53,7 @@ The documentations linked above has specific examples for each bucket, for OSOB 
     - Deploy AutoScaleService
 - Post-Deployment Checks, such as:
     - Scenario Testing
-    - Validate if the version of artifacts installed are what the customer wanted, in the right place with the right permissions.    
+    - Validate if the version of artifacts installed are what the customer wanted, in the right place with the right permissions.
 
 ## Validation Flow
 
@@ -96,11 +114,19 @@ For VMs, create a VM with the specific version of the image and check if shows u
 
 **What kinds of functionality will be tested**: 
 
+Are the correct VMs being created, meaning, is the VM that is created in this scaleset the one that was defined to be created? 
+
 ### Test Scaleset
 
 **How it will be tested**: 
 
+May need to employ telemetry to test this functionality
+
 **What kinds of functionality will be tested**: 
+
+Do these function as expected when an upgrade image is deployed? 
+
+Ensure that work is going to new images even if old images still exist in the queue. 
 
 ## OSOB Improvements
 The OSOB improvements are covered in detailed [here](../OSOB/OSOBImprovementsWorkPlan.md)
