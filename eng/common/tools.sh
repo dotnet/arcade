@@ -4,6 +4,7 @@
 
 # CI mode - set to true on CI server for PR validation build or official build.
 ci=${ci:-false}
+DisableConfigureToolsetImport=${DisableConfigureToolsetImport:-null}
 
 # Set to true to use the pipelines logger which will enable Azure logging output.
 # https://github.com/Microsoft/azure-pipelines-tasks/blob/master/docs/authoring/commands.md
@@ -416,9 +417,11 @@ Write-PipelineSetVariable -name "Temp" -value "$temp_dir"
 Write-PipelineSetVariable -name "TMP" -value "$temp_dir"
 
 # Import custom tools configuration, if present in the repo.
-configure_toolset_script="$eng_root/configure-toolset.sh"
-if [[ -a "$configure_toolset_script" ]]; then
-  . "$configure_toolset_script"
+if [[ "$DisableConfigureToolsetImport" != null ]]; then
+  configure_toolset_script="$eng_root/configure-toolset.sh"
+  if [[ -a "$configure_toolset_script" ]]; then
+    . "$configure_toolset_script"
+  fi
 fi
 
 # TODO: https://github.com/dotnet/arcade/issues/1468
