@@ -52,6 +52,7 @@
          so we must provide one.
          nuget's pack task treats _._ as special, to pack it must be in a folder on its own -->
     <None Include="build\content\_._" Pack="true" PackagePath="build\content\_._" />
+    <None Include="build\Icon.png" Pack="true" PackagePath="build\Icon.png" />
   </ItemGroup>
 
   <ItemGroup>
