@@ -131,13 +131,13 @@ namespace Microsoft.DotNet.Helix.Sdk
         {
             if (string.IsNullOrEmpty(AccessToken) && string.IsNullOrEmpty(Creator))
             {
-                Log.LogError("Creator is required when using anonymous access.");
+                Log.LogError(FailureCategory.Build, "Creator is required when using anonymous access.");
                 return;
             }
 
             if (!string.IsNullOrEmpty(AccessToken) && !string.IsNullOrEmpty(Creator))
             {
-                Log.LogError("Creator is forbidden when using authenticated access.");
+                Log.LogError(FailureCategory.Build, "Creator is forbidden when using authenticated access.");
                 return;
             }
 
@@ -180,7 +180,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                 }
                 else
                 {
-                    Log.LogError("SendHelixJob given no WorkItems to send.");
+                    Log.LogError(FailureCategory.Build, "SendHelixJob given no WorkItems to send.");
                 }
 
                 if (_commandPayload.TryGetPayloadDirectory(out string directory))
@@ -443,7 +443,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                 return def.WithCorrelationPayloadArchive(path, destination);
             }
 
-            Log.LogError($"Correlation Payload '{path}' not found.");
+            Log.LogError(FailureCategory.Build, $"Correlation Payload '{path}' not found.");
             return def;
         }
     }

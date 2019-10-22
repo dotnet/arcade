@@ -44,7 +44,7 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
             {
                 if (!InAzurePipeline)
                 {
-                    Log.LogError("This task must be run inside an Azure Pipelines Build");
+                    Log.LogError(FailureCategory.Build, "This task must be run inside an Azure Pipelines Build");
                 }
                 else
                 {
@@ -70,7 +70,7 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
             }
             catch (Exception ex)
             {
-                Log.LogErrorFromException(ex, true);
+                Log.LogErrorFromException(FailureCategory.Infrastructure, ex, true);
             }
 
             return !Log.HasLoggedErrors;
@@ -102,10 +102,16 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
 
         protected async Task LogFailedRequest(HttpRequestMessage req, HttpResponseMessage res)
         {
-            Log.LogError($"Request to {req.RequestUri} returned failed status {(int)res.StatusCode} {res.ReasonPhrase}\n\n{(res.Content != null ? await res.Content.ReadAsStringAsync() : "")}");
+            int statusCodeValue = (int) res.StatusCode;
+            FailureCategory category = statusCodeValue >= 400 && statusCodeValue < 500
+                ? FailureCategory.Build
+                : FailureCategory.Infrastructure;
+
+            Log.LogError(category, $"Request to {req.RequestUri} returned failed status {statusCodeValue} {res.ReasonPhrase}\n\n{(res.Content != null ? await res.Content.ReadAsStringAsync() : "")}");
             if (res.StatusCode == HttpStatusCode.Found)
             {
                 Log.LogError(
+                    FailureCategory.Build,
                     "A call to an Azure DevOps api returned 302 Indicating a bad 'System.AccessToken' value.\n\nPlease Check the 'Make secrets available to builds of forks' in the pipeline pull request validation trigger settings.\nWe have evaluated the security considerations of this setting and have determined that it is fine to use for our public PR validation builds.");
             }
         }
@@ -126,7 +132,7 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
             }
             catch (Exception)
             {
-                Log.LogError($"Request to {req.RequestUri} returned unexpected response: {responseContent}");
+                Log.LogError(FailureCategory.Infrastructure, $"Request to {req.RequestUri} returned unexpected response: {responseContent}");
             }
 
             return null;

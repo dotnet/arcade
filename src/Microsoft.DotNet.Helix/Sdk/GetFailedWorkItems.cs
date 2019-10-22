@@ -42,6 +42,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             if (status.Working > 0)
             {
                 Log.LogError(
+                    FailureCategory.Build,
                     $"This task can only be used on completed jobs. There are {status.Working} of {status.Total} unfinished work items.");
                 return Array.Empty<ITaskItem>();
             }

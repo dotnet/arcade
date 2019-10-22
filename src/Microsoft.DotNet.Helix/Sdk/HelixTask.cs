@@ -54,11 +54,11 @@ namespace Microsoft.DotNet.Helix.Sdk
             }
             catch (HttpOperationException ex) when (ex.Response.StatusCode == HttpStatusCode.Unauthorized)
             {
-                Log.LogError("Helix operation returned 'Unauthorized'. Did you forget to set HelixAccessToken?");
+                Log.LogError(FailureCategory.Build, "Helix operation returned 'Unauthorized'. Did you forget to set HelixAccessToken?");
             }
             catch (HttpOperationException ex) when (ex.Response.StatusCode == HttpStatusCode.Forbidden)
             {
-                Log.LogError("Helix operation returned 'Forbidden'.");
+                Log.LogError(FailureCategory.Build, "Helix operation returned 'Forbidden'.");
             }
             catch (OperationCanceledException ocex) when (ocex.CancellationToken == _cancel.Token)
             {
@@ -67,7 +67,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             }
             catch (Exception ex)
             {
-                Log.LogErrorFromException(ex, true, true, null);
+                Log.LogErrorFromException(FailureCategory.Infrastructure, ex, true, true, null);
             }
 
             return !Log.HasLoggedErrors;
