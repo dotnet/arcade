@@ -1,0 +1,25 @@
+# Template for wrapping calls to SetupNugetSources.ps1/sh which is responsible for updating /NuGet.config
+# with credentials for accessing private AzDO feeds.
+#
+# Requires the inclusion of `AzureDevOps-Artifact-Feeds-Pats` for accessing `dn-bot-dnceng-artifact-feeds-rw`.
+
+steps:
+- ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
+  - task: PowerShell@2
+	displayName: Setup Private Feeds Credentials
+	condition: eq(variables['Agent.OS'], 'Windows_NT')
+	inputs:
+  	  filePath: $(Build.SourcesDirectory)/eng/common/SetupNugetSources.ps1
+	  arguments: -ConfigFile ${Env:BUILD_SOURCESDIRECTORY}/NuGet.config -Password $Env:Token
+	env:
+	  Token: $(dn-bot-dnceng-artifact-feeds-rw)
+
+- ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
+  - task: Bash@3
+	displayName: Setup Private Feeds Credentials
+	inputs:
+	  filePath: $(Build.SourcesDirectory)/eng/common/SetupNugetSources.sh
+	  arguments: $BUILD_SOURCESDIRECTORY/NuGet.config $Token
+	condition: ne(variables['Agent.OS'], 'Windows_NT')
+	env:
+	  Token: $(dn-bot-dnceng-artifact-feeds-rw)
