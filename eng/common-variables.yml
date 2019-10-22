@@ -14,7 +14,6 @@ variables:
     value: False
   - name: _InternalBuildArgs
     value: ''
-  - group: SDL_Settings
 
   - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
     - name: _RunAsPublic
@@ -29,6 +28,7 @@ variables:
     - group: DotNet-Blob-Feed
     - group: Publish-Build-Assets
     - group: DotNet-HelixApi-Access
+    - group: SDL_Settings
     - name: _InternalBuildArgs
       value: /p:DotNetSignType=$(_SignType) /p:TeamName=$(_TeamName)
         /p:DotNetPublishBlobFeedKey=$(dotnetfeed-storage-access-key-1)

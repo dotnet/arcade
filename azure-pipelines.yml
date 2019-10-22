@@ -189,12 +189,12 @@ stages:
         enable: true
         continueOnError: false
         params: ' -SourceToolsList @("policheck","credscan")
-        -TsaInstanceURL $_TsaInstanceURL
-        -TsaProjectName $_TsaProjectName
-        -TsaNotificationEmail $_TsaNotificationEmail
-        -TsaCodebaseAdmin $_TsaCodebaseAdmin
-        -TsaBugAreaPath $_TsaBugAreaPath
-        -TsaIterationPath $_TsaIterationPath
+        -TsaInstanceURL $(_TsaInstanceURL)
+        -TsaProjectName $(_TsaProjectName)
+        -TsaNotificationEmail $(_TsaNotificationEmail)
+        -TsaCodebaseAdmin $(_TsaCodebaseAdmin)
+        -TsaBugAreaPath $(_TsaBugAreaPath)
+        -TsaIterationPath $(_TsaIterationPath)
         -TsaRepositoryName "Arcade"
         -TsaCodebaseName "Arcade"
         -TsaPublish $True'
