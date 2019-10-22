@@ -77,6 +77,27 @@ namespace Microsoft.DotNet.RemoteExecutor
                     {
                         var description = new StringBuilder();
                         description.AppendLine($"Timed out at {DateTime.Now} after {Options.TimeOut}ms waiting for remote process.");
+
+                        // Create a dump if possible
+                        if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+                        {
+                            string uploadPath = Environment.GetEnvironmentVariable("HELIX_WORKITEM_UPLOAD_ROOT");
+                            if (!string.IsNullOrWhiteSpace(uploadPath))
+                            {
+                                try
+                                {
+                                    string miniDmpPath = Path.Combine(uploadPath, $"{Process.Id}.{Path.GetRandomFileName()}.dmp");
+                                    MiniDump.Create(Process, miniDmpPath);
+                                    description.AppendLine($"Wrote mini dump to: {miniDmpPath}");
+                                }
+                                catch (Exception exc)
+                                {
+                                    description.AppendLine($"Failed to create mini dump: {exc.Message}");
+                                }
+                            }
+                        }
+
+                        // Gather additional details about the process if possible
                         try
                         {
                             description.AppendLine($"\tProcess ID: {Process.Id}");

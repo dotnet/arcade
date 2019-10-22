@@ -78,11 +78,19 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     NullValueHandling = NullValueHandling.Ignore
                 };
 
+                // GitHub repos may appear in the repository name with an 'org/repo' form.
+                // When creating a repo, Github aslready replaces all of the characters invalid in AzDO feed names (see below)
+                // with '-' in the repo name. We just need to replace '/' with '-' to deal with the org/repo input.
+                // From the AzDO docs:
+                // The feed name can't contain spaces, start with a '.' or '_', end with a '.',
+                // or contain any of these: @ ~ ; { } ' + = , < > | / \ ? : & $ * " # [ ] %
+                string feedCompatibleRepositoryName = RepositoryName.Replace('/', '-');
+
                 string accessType = IsInternal ? "internal" : "public";
                 string publicSegment = IsInternal ? string.Empty : "public/";
                 string accessId = IsInternal ? "int" : "pub";
                 string extraContentInfo = !string.IsNullOrEmpty(ContentIdentifier) ? $"-{ContentIdentifier}" : "";
-                string baseFeedName = $"darc-{accessId}{extraContentInfo}-{RepositoryName}-{CommitSha.Substring(0, ShaUsableLength)}";
+                string baseFeedName = $"darc-{accessId}{extraContentInfo}-{feedCompatibleRepositoryName}-{CommitSha.Substring(0, ShaUsableLength)}";
                 string versionedFeedName = baseFeedName;
                 bool needsUniqueName = false;
                 int subVersion = 0;
