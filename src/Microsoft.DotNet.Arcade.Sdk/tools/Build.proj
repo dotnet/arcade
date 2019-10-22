@@ -20,6 +20,8 @@
     DotNetSymbolServerTokenSymWeb   Personal access token for SymWeb symbol server. Available from variable group DotNet-Symbol-Publish.
     DotNetSymbolExpirationInDays    Symbol expiration time in days (defaults to 10 years).
     DotNetSignType                  Specifies the signing type: 'real' (default), 'test'.
+    DotNetRuntimeSourceFeed         Storage account to lookup for the .Net runtime files
+    DotNetRuntimeSourceFeedKey      In case the storage account to fetch the .Net runtime files are private this should contain a SAS token.
 
     ContinuousIntegrationBuild      "true" when building on a CI server (PR build or official build)
     Restore                         "true" to restore toolset and solution
@@ -123,6 +125,15 @@
       <_RestoreToolsProps Include="BaseIntermediateOutputPath=$(ArtifactsToolsetDir)Common"/>
       <_RestoreToolsProps Include="ExcludeRestorePackageImports=true"/>
       <_RestoreToolsProps Include="PublishingToBlobStorage=$(DotNetPublishToBlobFeed)"/>
+    </ItemGroup>
+
+    <!--
+      Builds from the 'internal' project, and only those, can download the .net Runtime 
+      from a private location.
+    -->
+    <ItemGroup Condition="'$(SYSTEM_TEAMPROJECT)' == 'internal'">
+      <_RestoreToolsProps Include="DotNetRuntimeSourceFeed=$(DotNetRuntimeSourceFeed)"/>
+      <_RestoreToolsProps Include="DotNetRuntimeSourceFeedKey=$(DotNetRuntimeSourceFeedKey)"/>
     </ItemGroup>
 
     <ItemGroup>
