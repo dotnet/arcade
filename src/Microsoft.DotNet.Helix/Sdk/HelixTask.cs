@@ -67,7 +67,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             }
             catch (Exception ex)
             {
-                Log.LogErrorFromException(FailureCategory.Infrastructure, ex, true, true, null);
+                Log.LogErrorFromException(FailureCategory.Helix, ex, true, true, null);
             }
 
             return !Log.HasLoggedErrors;

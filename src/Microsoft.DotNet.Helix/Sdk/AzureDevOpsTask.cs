@@ -70,7 +70,7 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
             }
             catch (Exception ex)
             {
-                Log.LogErrorFromException(FailureCategory.Infrastructure, ex, true);
+                Log.LogErrorFromException(FailureCategory.Helix, ex, true);
             }
 
             return !Log.HasLoggedErrors;
@@ -105,7 +105,7 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
             int statusCodeValue = (int) res.StatusCode;
             FailureCategory category = statusCodeValue >= 400 && statusCodeValue < 500
                 ? FailureCategory.Build
-                : FailureCategory.Infrastructure;
+                : FailureCategory.Helix;
 
             Log.LogError(category, $"Request to {req.RequestUri} returned failed status {statusCodeValue} {res.ReasonPhrase}\n\n{(res.Content != null ? await res.Content.ReadAsStringAsync() : "")}");
             if (res.StatusCode == HttpStatusCode.Found)
@@ -132,7 +132,7 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
             }
             catch (Exception)
             {
-                Log.LogError(FailureCategory.Infrastructure, $"Request to {req.RequestUri} returned unexpected response: {responseContent}");
+                Log.LogError(FailureCategory.Helix, $"Request to {req.RequestUri} returned unexpected response: {responseContent}");
             }
 
             return null;

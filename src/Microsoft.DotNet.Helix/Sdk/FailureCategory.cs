@@ -10,7 +10,7 @@ namespace Microsoft.DotNet.Helix
 
         public static FailureCategory Build { get; } = new FailureCategory("Build");
         public static FailureCategory Test { get; } = new FailureCategory("Test");
-        public static FailureCategory Infrastructure { get; } = new FailureCategory("Infrastructure");
+        public static FailureCategory Helix { get; } = new FailureCategory("Helix");
 
         private FailureCategory(string value)
         {

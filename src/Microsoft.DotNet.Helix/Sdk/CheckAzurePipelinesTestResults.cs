@@ -105,7 +105,7 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
             }
             else
             {
-                Log.LogError(FailureCategory.Infrastructure, "Unable to get test report from build.");
+                Log.LogError(FailureCategory.Helix, "Unable to get test report from build.");
             }
         }
 

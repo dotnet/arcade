@@ -78,14 +78,14 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             if (results.Count != 1)
             {
-                Log.LogError(FailureCategory.Infrastructure, $"Not exactly 1 result from aggregate api for job '{jobName}': {JsonConvert.SerializeObject(results)}");
+                Log.LogError(FailureCategory.Helix, $"Not exactly 1 result from aggregate api for job '{jobName}': {JsonConvert.SerializeObject(results)}");
                 return true;
             }
 
             var data = results[0].Data;
             if (data == null)
             {
-                Log.LogError(FailureCategory.Infrastructure, $"No data found in first result for job '{jobName}'.");
+                Log.LogError(FailureCategory.Helix, $"No data found in first result for job '{jobName}'.");
                 return true;
             }
 
