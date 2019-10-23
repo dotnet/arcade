@@ -65,13 +65,17 @@ namespace Microsoft.DotNet.Helix.Sdk
 
         /// <summary>
         ///   A collection of commands that will run for each work item before any work item commands.
-        ///   Use ';' to separate commands and escape a ';' with ';;'
+        ///   Use a semicolon to delimit these and escape semicolons by percent coding them ('%3B').
+        ///   NOTE: This is different behavior from the WorkItem PreCommands, where semicolons are escaped
+        ///   by using double semicolons (';;').
         /// </summary>
         public string[] PreCommands { get; set; }
 
         /// <summary>
         ///   A collection of commands that will run for each work item after any work item commands.
-        ///   Use ';' to separate commands and escape a ';' with ';;'
+        ///   Use a semicolon to delimit these and escape semicolons by percent coding them ('%3B').
+        ///   NOTE: This is different behavior from the WorkItem PostCommands, where semicolons are escaped
+        ///   by using double semicolons (';;').
         /// </summary>
         public string[] PostCommands { get; set; }
 
@@ -102,9 +106,13 @@ namespace Microsoft.DotNet.Helix.Sdk
         ///     PreCommands
         ///       A collection of commands that will run for this work item before the 'Command' Runs
         ///       Use ';' to separate commands and escape a ';' with ';;'
+        ///       NOTE: This is different behavior from the Helix PreCommands, where semicolons are escaped
+        ///       with percent coding.
         ///     PostCommands
         ///       A collection of commands that will run for this work item after the 'Command' Runs
         ///       Use ';' to separate commands and escape a ';' with ';;'
+        ///       NOTE: This is different behavior from the Helix PostCommands, where semicolons are escaped
+        ///       with percent coding.
         ///     Destination
         ///       The directory in which to unzip the correlation payload on the Helix agent
         /// </remarks>
