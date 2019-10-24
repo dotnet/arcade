@@ -81,7 +81,7 @@ These issues are based on feedback from LT review and are in varying states of c
 
 | Date  | Deliverable | Notes |
 | ----- | ----------- | ----- |
-| 10/21 | [Official build time goal lines](https://github.com/dotnet/arcade/issues/4101) | Add ability to define per repo goal lines for build time |
+| ~~10/21~~  10/28| [Official build time goal lines](https://github.com/dotnet/arcade/issues/4101) | Add ability to define per repo goal lines for build time |
 |       | [PKPI documentation](https://github.com/dotnet/arcade/issues/4077) ||
 | 10/18 | [Official build time worst case scenario](https://github.com/dotnet/arcade/issues/4103) | Toggle view between average repo build time in a given time frame and maximum build time in a given time frame |
 | 10/24 | [Update official build time report to use buildchannel insert time as end time](https://github.com/dotnet/arcade/issues/4116) |
@@ -107,7 +107,7 @@ See [features](#features) for which features are being delivered in phase 2.
 | ----- | ----- | ----- |
 | Done  | [Dependency staleness](https://github.com/dotnet/arcade/issues/2782) | Available in barviz |
 | Done  | [Existence of product dependency cycles](https://github.com/dotnet/arcade/issues/3905) | Available in barviz |
-| 10/18 | [Missing / Disabled subscriptions](https://github.com/dotnet/arcade/issues/4023) ||
+| 10/18 | [Disabled subscriptions](https://github.com/dotnet/arcade/issues/4023) ||
 | 10/30 | [Longest build path visualization](https://github.com/dotnet/arcade/issues/4071) ||
 | 11/1  | [Split subscriptions view into product and toolset](https://github.com/dotnet/arcade/issues/4138) ||
 | 11/6  | [Superfluous input subscriptions](https://github.com/dotnet/arcade/issues/3906) ||
