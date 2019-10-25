@@ -46,7 +46,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
                                 logger.Log(LogLevel.Error, "Encountered Connection Issue: " + e.ToString() + ", retries exhausted");
                                 throw e;
                             }
-                            logger.Log(LogLevel.Warning, "Encountered Connection Issue: " + e.ToString() + ", retrying...");
+                            logger.Log(LogLevel.Information, "Encountered Connection Issue: " + e.ToString() + ", retrying...");
                             // returns to start of while loop to retry after a delay
                             Thread.Sleep(5000);
                         }
