@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -27,18 +28,34 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
             {
                  using (var sourceCacheContext = new SourceCacheContext())
                  {
-                     var sourceRepository = new SourceRepository(packageSource, Repository.Provider.GetCoreV3());
-                     var packageMetadataResource = sourceRepository.GetResourceAsync<PackageMetadataResource>().GetAwaiter().GetResult();
-                     var searchMetadata = packageMetadataResource.GetMetadataAsync(packageId, includePrerelease, includeUnlisted, sourceCacheContext, logger, cancellationToken).GetAwaiter().GetResult();
-                     foreach (IPackageSearchMetadata packageMetadata in searchMetadata)
-                     {
-                         lock (result)
-                         {
-                            Version threePartVersion = VersionUtility.As3PartVersion(packageMetadata.Identity.Version.Version);
-                            if (!result.Contains(threePartVersion))
-                                result.Add(threePartVersion);
-                         }
-                     }
+                    bool loadedData = false;
+                    int retriesRemaining = 2;
+                    while (!loadedData) {
+                        try
+                        {
+                            var sourceRepository = new SourceRepository(packageSource, Repository.Provider.GetCoreV3());
+                            var packageMetadataResource = sourceRepository.GetResourceAsync<PackageMetadataResource>().GetAwaiter().GetResult();
+                            var searchMetadata = packageMetadataResource.GetMetadataAsync(packageId, includePrerelease, includeUnlisted, sourceCacheContext, logger, cancellationToken).GetAwaiter().GetResult();
+                            loadedData = true;
+
+                            foreach (IPackageSearchMetadata packageMetadata in searchMetadata)
+                            {
+                                lock (result)
+                                {
+                                    Version threePartVersion = VersionUtility.As3PartVersion(packageMetadata.Identity.Version.Version);
+                                    if (!result.Contains(threePartVersion))
+                                        result.Add(threePartVersion);
+                                }
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            retriesRemaining--;
+                            if (retriesRemaining <= 0)
+                                throw e;
+                            // returns to start of while loop to retry
+                        }
+                    }
                  }
             });
             // Given we are looking in different sources, we reorder all versions.
