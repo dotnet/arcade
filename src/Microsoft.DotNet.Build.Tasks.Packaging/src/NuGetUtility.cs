@@ -48,7 +48,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
                             }
                             logger.Log(LogLevel.Warning, "Encountered Connection Issue: " + e.ToString() + ", retrying...");
                             // returns to start of while loop to retry after a delay
-                            Task.Delay(5000);
+                            Thread.Sleep(5000);
                         }
                     }
 
