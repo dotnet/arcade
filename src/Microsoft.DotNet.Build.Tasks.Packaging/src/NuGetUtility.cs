@@ -30,33 +30,38 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
                  {
                     bool loadedData = false;
                     int retriesRemaining = 2;
+                    IEnumerable<IPackageSearchMetadata> searchMetadata = null;
                     while (!loadedData) {
                         try
                         {
                             var sourceRepository = new SourceRepository(packageSource, Repository.Provider.GetCoreV3());
                             var packageMetadataResource = sourceRepository.GetResourceAsync<PackageMetadataResource>().GetAwaiter().GetResult();
-                            var searchMetadata = packageMetadataResource.GetMetadataAsync(packageId, includePrerelease, includeUnlisted, sourceCacheContext, logger, cancellationToken).GetAwaiter().GetResult();
+                            searchMetadata = packageMetadataResource.GetMetadataAsync(packageId, includePrerelease, includeUnlisted, sourceCacheContext, logger, cancellationToken).GetAwaiter().GetResult();
                             loadedData = true;
-
-                            foreach (IPackageSearchMetadata packageMetadata in searchMetadata)
-                            {
-                                lock (result)
-                                {
-                                    Version threePartVersion = VersionUtility.As3PartVersion(packageMetadata.Identity.Version.Version);
-                                    if (!result.Contains(threePartVersion))
-                                        result.Add(threePartVersion);
-                                }
-                            }
                         }
                         catch (Exception e)
                         {
                             retriesRemaining--;
-                            if (retriesRemaining <= 0)
+                            if (retriesRemaining <= 0) {
+                                logger.Log(LogLevel.Error, "Encountered Connection Issue: " + e.ToString() + ", retries exhausted");
                                 throw e;
-                            // returns to start of while loop to retry
+                            }
+                            logger.Log(LogLevel.Warning, "Encountered Connection Issue: " + e.ToString() + ", retrying...");
+                            // returns to start of while loop to retry after a delay
+                            Task.Delay(5000);
                         }
                     }
-                 }
+
+                    foreach (IPackageSearchMetadata packageMetadata in searchMetadata)
+                    {
+                        lock (result)
+                        {
+                            Version threePartVersion = VersionUtility.As3PartVersion(packageMetadata.Identity.Version.Version);
+                            if (!result.Contains(threePartVersion))
+                                result.Add(threePartVersion);
+                        }
+                    }
+                }
             });
             // Given we are looking in different sources, we reorder all versions.
             return result.OrderBy(v => v);
