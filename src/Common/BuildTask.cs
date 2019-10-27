@@ -4,6 +4,7 @@
 
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
+using System;
 
 namespace Microsoft.DotNet.Build.Tasks
 {
@@ -46,6 +47,11 @@ namespace Microsoft.DotNet.Build.Tasks
         public void LogError(string message, params object[] messageArgs)
         {
             _logger.LogError(message, messageArgs);
+        }
+
+        public void LogErrorFromException(Exception exception, bool showStackTrace)
+        {
+            _logger.LogErrorFromException(exception, showStackTrace);
         }
 
         public void LogMessage(string message, params object[] messageArgs)

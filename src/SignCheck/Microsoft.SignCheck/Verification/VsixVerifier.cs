@@ -4,19 +4,18 @@
 
 using System;
 using System.IO;
-using System.IO.Compression;
 using System.IO.Packaging;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography;
-using Microsoft.SignCheck.Logging;
-using Microsoft.SignCheck.Interop;
 using System.Security.Cryptography.X509Certificates;
 using System.Xml;
-using System.Runtime.InteropServices;
+using Microsoft.SignCheck.Interop;
+using Microsoft.SignCheck.Logging;
 
 namespace Microsoft.SignCheck.Verification
 {
-    public class VsixVerifier : FileVerifier
+    public class VsixVerifier : ArchiveVerifier
     {
         public VsixVerifier(Log log, Exclusions exclusions, SignatureVerificationOptions options) : base(log, exclusions, options, fileExtension: ".vsix")
         {
@@ -29,32 +28,7 @@ namespace Microsoft.SignCheck.Verification
             string fullPath = svr.FullPath;
             svr.IsSigned = IsSigned(fullPath, svr);
             svr.AddDetail(DetailKeys.File, SignCheckResources.DetailSigned, svr.IsSigned);
-
-            if (VerifyRecursive)
-            {
-                using (ZipArchive zipArchive = ZipFile.OpenRead(fullPath))
-                {
-                    string tempPath = svr.TempPath;
-                    CreateDirectory(tempPath);
-
-                    foreach (ZipArchiveEntry archiveEntry in zipArchive.Entries)
-                    {
-                        // Generate an alias for the actual file, but keep the original extension. This should limit the chances of running
-                        // into 'path too long' errors when extracting the files.
-                        string aliasFileName = Utils.GetHash(archiveEntry.FullName, HashAlgorithmName.MD5.Name) + Path.GetExtension(archiveEntry.FullName);
-                        string aliasFullName = Path.Combine(tempPath, aliasFileName);
-
-                        archiveEntry.ExtractToFile(aliasFullName);
-                        SignatureVerificationResult archiveEntryResult = VerifyFile(aliasFullName, svr.Filename, archiveEntry.FullName);
-
-                        // Tag the full path into the result detail
-                        archiveEntryResult.AddDetail(DetailKeys.File, SignCheckResources.DetailFullName, archiveEntry.FullName);
-                        svr.NestedResults.Add(archiveEntryResult);
-                    }
-
-                    DeleteDirectory(tempPath);
-                }
-            }
+            VerifyContent(svr);
 
             return svr;
         }
@@ -65,7 +39,7 @@ namespace Microsoft.SignCheck.Verification
 
             if (packageSignature == null)
             {
-                throw new ArgumentNullException("signature");
+                throw new ArgumentNullException(nameof(packageSignature));
             }
 
             timestamp = new Timestamp()

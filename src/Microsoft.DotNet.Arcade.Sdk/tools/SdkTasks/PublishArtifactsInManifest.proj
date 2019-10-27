@@ -17,8 +17,28 @@
     Parameters required by SetupTargetFeeds.proj:
       - IsInternalBuild
       - IsStableBuild
-      - ChannelId
-      - TargetFeedPAT
+      - RepositoryName
+      - CommitSha
+      - AzureStorageAccountName
+      - AzureStorageAccountKey
+      - AzureDevOpsFeedsBaseUrl
+      - ArtifactsCategory
+      - AzureStorageTargetFeedPAT
+
+    Optional parameters for SetupTargetFeeds.proj
+      - PublishInstallersAndChecksums                 : This control whether installers & checksums should be published to public feeds on public builds
+      
+      Parameters for public builds:
+          - InstallersTargetStaticFeed
+          - InstallersAzureAccountKey
+          - ChecksumsTargetStaticFeed
+          - ChecksumsAzureAccountKey
+        
+      Parameters for internal builds:
+          - InternalInstallersTargetStaticFeed
+          - InternalInstallersTargetStaticFeedKey
+          - InternalChecksumsTargetStaticFeed
+          - InternalChecksumsTargetStaticFeedKey
   -->
 
   <PropertyGroup>
@@ -43,6 +63,7 @@
       **Iterate** publishing assets from each manifest file. 
     -->
     <PublishArtifactsInManifest
+      InternalBuild="$(IsInternalBuild)"
       TargetFeedConfig="@(TargetFeedConfig)"
       BARBuildId="$(BARBuildId)"
       MaestroApiEndpoint="$(MaestroApiEndpoint)"

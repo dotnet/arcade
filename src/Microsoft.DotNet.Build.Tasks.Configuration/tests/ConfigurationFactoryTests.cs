@@ -17,7 +17,7 @@ namespace Microsoft.DotNet.Build.Tasks.Configuration.Tests
             Assert.Single(factory.GetAllConfigurations());
             Assert.Single(factory.GetConfigurations(property => Enumerable.Empty<PropertyValue>()));
             Assert.Empty(factory.GetProperties());
-            Assert.Single(factory.GetSignficantConfigurations());
+            Assert.Single(factory.GetSignificantConfigurations());
             Assert.NotNull(factory.IdentityConfiguration);
             Assert.Empty(factory.IdentityConfiguration.Values);
         }

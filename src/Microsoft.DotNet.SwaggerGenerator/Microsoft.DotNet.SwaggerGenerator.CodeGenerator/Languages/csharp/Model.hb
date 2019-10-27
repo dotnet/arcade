@@ -36,7 +36,7 @@ namespace {{pascalCaseNs Namespace}}.Models
             {
                 {{#each Properties}}
                 {{#if (and Required (isNullable Type))}}
-                if ({{#nullCheck Type}}{{pascalCase Name}}{{/nullCheck}})
+                if ({{#nullCheck Type Required}}{{pascalCase Name}}{{/nullCheck}})
                 {
                     return false;
                 }

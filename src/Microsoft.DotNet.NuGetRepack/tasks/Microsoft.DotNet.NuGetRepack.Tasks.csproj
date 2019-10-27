@@ -1,0 +1,29 @@
+﻿<!-- Copyright (c)  Microsoft.  All Rights Reserved.  Licensed under the Apache License, Version 2.0.  See License.txt in the project root for license information. -->
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>net472;netcoreapp2.1</TargetFrameworks>
+
+    <IsPackable>true</IsPackable>
+    <PackageType>MSBuildSdk</PackageType>
+
+    <PackageDescription>Build task for updating version of NuGet packages.</PackageDescription>
+    <PackageTags>Arcade Build Tool NuGet version</PackageTags>
+    <DevelopmentDependency>true</DevelopmentDependency>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NuGet.Versioning" Version="$(NuGetVersion)" />
+    <PackageReference Include="System.IO.Compression" Version="$(SystemIOCompressionVersion)" />
+    <PackageReference Include="System.IO.Packaging" Version="$(SystemIOPackagingVersion)" />
+    <PackageReference Include="System.ValueTuple" Version="$(SystemValueTupleVersion)" />
+    <PackageReference Include="Microsoft.Build" Version="$(MicrosoftBuildVersion)" />
+    <PackageReference Include="Microsoft.Build.Tasks.Core" Version="$(MicrosoftBuildTasksCoreVersion)" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <InternalsVisibleTo Include="Microsoft.DotNet.NuGetRepack.Tests" />
+  </ItemGroup>
+
+  <Import Project="$(RepoRoot)eng\BuildTask.targets" />
+
+</Project>

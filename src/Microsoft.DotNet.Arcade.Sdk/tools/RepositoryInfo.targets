@@ -4,26 +4,15 @@
   <!--
     Include both GitHub and Azure DevOps (formerly VSTS) packages to enable SourceLink in repositories that mirror to Azure DevOps (formerly VSTS).
   -->
-  <ItemGroup Condition="'$(DotNetBuildFromSource)' != 'true'">
+  <ItemGroup>
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="$(MicrosoftSourceLinkVersion)" PrivateAssets="all" IsImplicitlyDefined="true" />
     <PackageReference Include="Microsoft.SourceLink.Vsts.Git" Version="$(MicrosoftSourceLinkVersion)" PrivateAssets="all" IsImplicitlyDefined="true" />
   </ItemGroup>
 
   <!--
-    Workarounds for Source Link not being available for Arm.
     Set the SourceRoot to repo root to facilitate deterministic source paths when SCM queries are disabled.
     Set the RepositoryUrl to the Build.Repository.Uri Azure DevOps build variable if on CI, otherwise to local repo path.
   -->
-
-  <PropertyGroup>
-    <_ProcessArchitecture>$([System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture)</_ProcessArchitecture>
-  </PropertyGroup>
-
-  <!-- Disable SourceLink when building on ARM (libgit2 does not support it currently) or during source build (SourceLink is not buildable from source currently) -->
-  <PropertyGroup Condition="'$(DotNetBuildFromSource)' == 'true' or $(_ProcessArchitecture.StartsWith('Arm'))">
-    <EnableSourceControlManagerQueries>false</EnableSourceControlManagerQueries>
-    <EnableSourceLink>false</EnableSourceLink>
-  </PropertyGroup>
 
   <ItemGroup Condition="'$(EnableSourceControlManagerQueries)' != 'true'">
     <SourceRoot Include="$(RepoRoot)" />

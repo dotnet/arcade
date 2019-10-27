@@ -79,6 +79,11 @@ namespace Microsoft.DotNet.VersionTools.Automation.GitHubApi
             string tree,
             string[] parents);
 
+        Task<GitReference> PostReferenceAsync(
+            GitHubProject project,
+            string @ref,
+            string sha);
+
         Task<GitReference> PatchReferenceAsync(
             GitHubProject project,
             string @ref,

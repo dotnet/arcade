@@ -59,7 +59,7 @@ namespace Microsoft.SignCheck.Verification
             get
             {
                 return (Options & SignatureVerificationOptions.VerifyAuthentiCodeTimestamps) == SignatureVerificationOptions.VerifyAuthentiCodeTimestamps;
-            }            
+            }
         }
 
         protected bool VerifyJarSignatures
@@ -139,7 +139,7 @@ namespace Microsoft.SignCheck.Verification
                 }
             }
 
-            return fileVerifier;            
+            return fileVerifier;
         }
 
         /// <summary>
@@ -165,16 +165,25 @@ namespace Microsoft.SignCheck.Verification
         {
             Log.WriteMessage(LogVerbosity.Detailed, String.Format(SignCheckResources.ProcessingFile, Path.GetFileName(path), String.IsNullOrEmpty(parent) ? SignCheckResources.NA : parent));
 
-            SignatureVerificationResult svr;
+            FileVerifier fileVerifier = GetFileVerifier(path);
+            SignatureVerificationResult svr = fileVerifier.VerifySignature(path, parent);
 
-            if (Exclusions.IsExcluded(path, parent, containerPath))
+            svr.IsDoNotSign = Exclusions.IsDoNotSign(path, parent, containerPath);
+
+            if ((svr.IsDoNotSign) && (svr.IsSigned))
             {
-                svr = SignatureVerificationResult.ExcludedFileResult(path, parent);
+                // Report errors if a DO-NOT-SIGN file is signed.
+                svr.AddDetail(DetailKeys.Error, SignCheckResources.DetailDoNotSignFileSigned, svr.Filename);
             }
-            else
+
+            if ((!svr.IsDoNotSign) && (!svr.IsSigned))
             {
-                FileVerifier fileVerifier = GetFileVerifier(path);
-                svr = fileVerifier.VerifySignature(path, parent);
+                svr.IsExcluded = Exclusions.IsExcluded(path, parent, containerPath);
+
+                if ((svr.IsExcluded))
+                {
+                    svr.AddDetail(DetailKeys.File, SignCheckResources.DetailExcluded);
+                }
             }
 
             if (GenerateExclusion)
@@ -190,7 +199,7 @@ namespace Microsoft.SignCheck.Verification
             }
 
             return svr;
-        }       
+        }
 
         /// <summary>
         /// Create a directory using the specified path.

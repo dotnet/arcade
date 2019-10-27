@@ -21,6 +21,12 @@ namespace Microsoft.DotNet.GitHub.IssueLabeler
         [ColumnName("Description")]
         public string Body;
 
+        [LoadColumn(3)]
+        public bool IsPR;
+
+        [LoadColumn(4)]
+        public string FilePaths;
+
         [NoColumn]
         public List<object> Labels { get; set; }
 
@@ -29,10 +35,20 @@ namespace Microsoft.DotNet.GitHub.IssueLabeler
 
         [NoColumn]
         public int Number { get; set; }
+
+        [JsonIgnore]
+        [NoColumn]
+        public GithubObjectType IssueOrPr { get; set; }
     }
 
     public class Milestone
     {
         public int Number { get; set; }
+    }
+
+    public enum GithubObjectType 
+    {
+        PullRequest,
+        Issue
     }
 }

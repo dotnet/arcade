@@ -10,8 +10,8 @@ def __no_results_result():
     work_item_name = get_env("HELIX_WORKITEM_FRIENDLYNAME")
     
     if exitCode != "0":
-        result = 'Fail'
-        failure_message = 'The work item failed to produce any test results.'
+        # if we have a catastrophic failure, we want to create the fake test result with attached dump files and logs (if available)
+        return
     else:
         result = 'Pass'
         failure_message = None
@@ -68,16 +68,15 @@ total_added_logs = 0
 
 def add_logs(tr, log_list):
     global total_added_logs
-    if tr.result != "Pass" and total_added_logs < 20:
+    if tr is not None and tr.result != "Pass" and total_added_logs < 50:
         tr.attachments.append(TestResultAttachment(
             name=u"Logs.html",
             text=log_list,
         ))
-    total_added_logs += 1
+        total_added_logs += 1
     return tr
 
-def read_results(dir):
-    # type: (str) -> Iterable[TestResult]
+def read_results(dir: str) -> Iterable[TestResult]:
 
     log_files = list(get_log_files(os.path.join(get_env("HELIX_WORKITEM_ROOT"), "..")))
     log_list = construct_log_list(log_files)

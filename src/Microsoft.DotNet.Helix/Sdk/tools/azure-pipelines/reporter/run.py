@@ -1,13 +1,14 @@
 import os
 import sys
 import traceback
+import logging
 from queue import Queue
 from threading import Thread
+from typing import Tuple, Optional
 
 from test_results_reader import read_results
 from helpers import batch
 from azure_devops_result_publisher import AzureDevOpsTestResultPublisher
-
 
 class UploadWorker(Thread):
     def __init__(self, queue, idx, collection_uri, team_project, test_run_id, access_token):
@@ -33,7 +34,7 @@ class UploadWorker(Thread):
 
     def run(self):
         self.__print("starting...")
-        while True:            
+        while True:
             try:
                 item = self.queue.get()
                 self.__process(item)
@@ -43,15 +44,20 @@ class UploadWorker(Thread):
                 self.queue.task_done()
 
 
-def process_args():
+
+def process_args() -> Tuple[str, str, str, Optional[str]]:
     if len(sys.argv) < 4 or len(sys.argv) > 5:
+        print("Usage:")
+        print("run.py <collection URI> <team project> <test run ID>")
+        print("run.py <collection URI> <team project> <test run ID> <access token>")
         sys.exit("Expected 3 or 4 arguments")
 
+    # argv[0] is the script name
     collection_uri = sys.argv[1]
     team_project = sys.argv[2]
     test_run_id = sys.argv[3]
     if len(sys.argv) == 5:
-        access_token = sys.argv[4]
+        access_token = sys.argv[4] # type: Optional[str]
     else:
         access_token = None
 
@@ -59,37 +65,43 @@ def process_args():
 
 
 def main():
-    collection_uri, team_project, test_run_id, access_token = process_args()
+    logging.basicConfig(
+        format='%(asctime)s: %(levelname)s: %(thread)d: %(module)s(%(lineno)d): %(funcName)s: %(message)s',
+        level=logging.INFO,
+        handlers=[
+            logging.StreamHandler()
+        ]
+    )
+    log = logging.getLogger(__name__)
 
-    print("Got args", collection_uri, team_project, test_run_id, access_token)
+    collection_uri, team_project, test_run_id, access_token = process_args()
 
     worker_count = 10
     q = Queue()
 
-    print("Main thread starting workers")
+    log.info("Main thread starting {0} workers".format(worker_count))
 
     for i in range(worker_count):
         worker = UploadWorker(q, i, collection_uri, team_project, test_run_id, access_token)
-        worker.daemon = True
+        worker.daemon = True 
         worker.start()
 
-    print("Beginning reading of test results.")
+    log.info("Beginning reading of test results.")
 
     all_results = read_results(os.getcwd())
     batch_size = 1000
     batches = batch(all_results, batch_size)
 
-    print("Uploading results in batches of size {}".format(batch_size))
+    log.info("Uploading results in batches of size {}".format(batch_size))
 
     for b in batches:
         q.put(b)
 
-    print("Main thread finished queueing batches")
+    log.info("Main thread finished queueing batches")
 
     q.join()
 
-    print("Main thread exiting")
-
+    log.info("Main thread exiting")
 
 if __name__ == '__main__':
     main()

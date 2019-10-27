@@ -1,10 +1,12 @@
 # Onboarding onto Arcade
 
-- Onboard onto the arcade SDK, which provides templates (building blocks) for
+- Onboard onto the Arcade SDK, which provides templates (building blocks) for
   interacting with Azure DevOps, as well as shared tooling for signing,
-  packaging, publishing and general build infrastructure.  (Here's a [video of a walkthough](https://msit.microsoftstream.com/video/e22d2dad-ef72-4cca-9b62-7e33621f86a1) which might help too)
+  packaging, publishing and general build infrastructure.  
+  
+  Resources: [Reference documentation](ArcadeSdk.md), [walkthough video](https://msit.microsoftstream.com/video/e22d2dad-ef72-4cca-9b62-7e33621f86a1), [feature documentation](CorePackages/).
 
-    **Arcade SDK onboarding**
+   Steps:
     1. Add a
        [global.json](https://github.com/dotnet/arcade-minimalci-sample/blob/master/global.json).
     2. Add (or copy)
@@ -20,20 +22,8 @@
        [Version.Details.xml](https://github.com/dotnet/arcade-minimalci-sample/blob/master/eng/Version.Details.xml)
        files to your eng\ folder. Adjust the version prefix and prerelease label
        as necessary.
-    5. Add dotnet-core feed to
+    5. Add dotnet-core feed and any other feeds that the repository restores NuGet packages from to
        [NuGet.config](https://github.com/dotnet/arcade-minimalci-sample/blob/master/NuGet.config).
-    6. Must have a root project/solution file for the repo to build.
-    7. Additional package feeds can be added to the `eng\Version.props` file, e.g.
-       ```
-       <PropertyGroup>
-         <RestoreSources>
-           $(RestoreSources);
-           https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json;
-           https://dotnet.myget.org/F/symreader-converter/api/v3/index.json;
-           https://dotnet.myget.org/F/symreader/api/v3/index.json
-         </RestoreSources>
-       </PropertyGroup>
-       ```
 
     **Using Arcade packages** - See [documentation](CorePackages/) for
     information on specific packages.
@@ -53,5 +43,5 @@
 ## Which branches should I make these changes in?
 
 Prioritize branches that are producing bits for .NET Core 3.  Given the extended
-support lifecyle for .NET Core 2.1, backporting infrastructure to .NET Core 2.1
+support lifecycle for .NET Core 2.1, backporting infrastructure to .NET Core 2.1
 release branches is desired, but .NET Core 3 branches should go first.

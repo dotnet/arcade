@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System.Collections.Generic;
+using System.Linq;
 using Microsoft.Cci.Extensions.CSharp;
 
 namespace Microsoft.Cci.Writers.CSharp
@@ -52,6 +53,12 @@ namespace Microsoft.Cci.Writers.CSharp
 
             WriteAttributes(property.Attributes);
 
+            // We need to preserve nullable custom attributes which are preserved by the compiler as param on the value parameter and return attributes.
+            if (getter != null)
+                WriteAttributes(getter.ReturnValueAttributes);
+            if (setter != null)
+                WriteAttributes(setter.Parameters.Last().Attributes);
+
             if (!isInterfaceProp)
             {
                 if (!accessor.IsExplicitInterfaceMethod())
@@ -92,23 +99,7 @@ namespace Microsoft.Cci.Writers.CSharp
             if (property.IsExplicitInterfaceProperty() && _forCompilationIncludeGlobalprefix)
                 Write("global::");
 
-            if (isIndexer)
-            {
-                int index = property.Name.Value.LastIndexOf(".");
-                if (index >= 0)
-                    WriteIdentifier(property.Name.Value.Substring(0, index + 1) + "this", false); // +1 to include the '.'
-                else
-                    WriteIdentifier("this", false);
-
-                var parameters = new List<IParameterDefinition>(accessor.Parameters);
-                if (accessor == setter) // If setter remove value parameter.
-                    parameters.RemoveAt(parameters.Count - 1);
-                WriteParameters(parameters, property.ContainingType, true);
-            }
-            else
-            {
-                WriteIdentifier(property.Name);
-            }
+            WritePropertyName(property, accessor, accessor == setter, isIndexer);
             WriteSpace();
             WriteSymbol("{");
 
@@ -126,6 +117,57 @@ namespace Microsoft.Cci.Writers.CSharp
             }
             WriteSpace();
             WriteSymbol("}");
+        }
+
+        private void WritePropertyName(IPropertyDefinition property, IMethodDefinition accessor, bool isSetterAccessor, bool isIndexer)
+        {
+            if (property.IsExplicitInterfaceProperty())
+            {
+                IMethodImplementation methodImplementation = accessor.GetMethodImplementation();
+                object nullableAttributeArgument = methodImplementation.GetExplicitInterfaceMethodNullableAttributeArgument(_metadataReaderCache);
+                if (nullableAttributeArgument != null)
+                {
+                    WriteTypeName(methodImplementation.ImplementedMethod.ContainingType, noSpace: true, nullableAttributeArgument: nullableAttributeArgument);
+                    WriteSymbol(".");
+                    if (isIndexer)
+                    {
+                        WriteIdentifier("this", false);
+                        WriteIndexerParameters(accessor, isSetterAccessor);
+                    }
+                    else
+                    {
+                        string name = methodImplementation.ImplementedMethod.Name.Value;
+                        WriteIdentifier(name.Substring(name.IndexOf("_") + 1));
+                    }
+
+                    return;
+                }
+            }
+
+            if (isIndexer)
+            {
+                int index = property.Name.Value.LastIndexOf(".");
+                if (index >= 0)
+                    WriteIdentifier(property.Name.Value.Substring(0, index + 1) + "this", false); // +1 to include the '.'
+                else
+                    WriteIdentifier("this", false);
+
+                WriteIndexerParameters(accessor, isSetterAccessor);
+            }
+            else
+            {
+                WriteIdentifier(property.Name);
+            }
+        }
+
+        private void WriteIndexerParameters(IMethodDefinition accessor, bool isSetterAccessor)
+        {
+            var parameters = new List<IParameterDefinition>(accessor.Parameters);
+            if (isSetterAccessor) // If setter remove value parameter.
+                parameters.RemoveAt(parameters.Count - 1);
+
+            byte? nullableContextValue = accessor.Attributes.GetCustomAttributeArgumentValue<byte?>(CSharpCciExtensions.NullableContextAttributeFullName);
+            WriteParameters(parameters, accessor.ContainingType, nullableContextValue, property: true);
         }
 
         private void WriteAccessorDefinition(IPropertyDefinition property, IMethodDefinition accessor, string accessorType, bool isReadOnly)

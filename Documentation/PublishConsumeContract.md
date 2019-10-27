@@ -31,7 +31,7 @@ Toolset package feed: https://dotnetfeed.blob.core.windows.net/dotnet-core/index
 
 ## Core Tools SDK
 
-The core tools SDK is the entry point for toolset functionality.  We will provide a core SDK which repo's will consume as an SDK (or package reference) that provides functionality for tasks that are common across repo's.  The core tools SDK may contain one or more tools packages which have been determined to be beneficial to a common set of repos (most?) across DotNet.  As packages prove valuable to more than one repo, they will be considered for inclusion in the core tools SDK.  However, we want to be considerate of package bloat and seek alternative (but common) means of consumption for tool packages which do not meet the critera for inclusion in the core tools SDK.  In other words, the packages will need to provide clear benefit to the majority (or all) of repos in order to be considered for inclusion in the core tools SDK.
+The core tools SDK is the entry point for toolset functionality.  We will provide a core SDK which repo's will consume as an SDK (or package reference) that provides functionality for tasks that are common across repo's.  The core tools SDK may contain one or more tools packages which have been determined to be beneficial to a common set of repos (most?) across DotNet.  As packages prove valuable to more than one repo, they will be considered for inclusion in the core tools SDK.  However, we want to be considerate of package bloat and seek alternative (but common) means of consumption for tool packages which do not meet the criteria for inclusion in the core tools SDK.  In other words, the packages will need to provide clear benefit to the majority (or all) of repos in order to be considered for inclusion in the core tools SDK.
 
 ## Tools packages
 
@@ -43,7 +43,7 @@ Bootstrapping a repo will consist of using the CLI (obtainable via a script from
 
 ## Using tools in non-bootstrapping scenarios
 
-There are some scenarios where bootstrapping is not ideal for acquiring tools.  These are scenarios which are not project based, or not tied to a specific repo.  A primary example of this is telemetry, where you want to be able to send information about a build, before a repo has even bootstrapped.  Another may be orchestration (depending on implementation), the orchestration may schedule and report on multiple repo's, but itself is not tied to a repo.  For these scnearios, we would like to be able to provide common tooling.  At this point, there are a couple of ideas being thrown around.
+There are some scenarios where bootstrapping is not ideal for acquiring tools.  These are scenarios which are not project based, or not tied to a specific repo.  A primary example of this is telemetry, where you want to be able to send information about a build, before a repo has even bootstrapped.  Another may be orchestration (depending on implementation), the orchestration may schedule and report on multiple repo's, but itself is not tied to a repo.  For these scenarios, we would like to be able to provide common tooling.  At this point, there are a couple of ideas being thrown around.
 
 - "DotNet CLI install tools" is one option for local toolset installs, but not available until .NET Core 2.1 Preview 2 (at the earliest).
 - "Shared Library" model (like Jenkins), where tools are provided via another common tools repo.
@@ -112,7 +112,7 @@ The standard package layout *supports* (not required) consuming packages as [MSB
 
 ### Package dependencies
 
-The tools provided via NuGet packages for MSBuild tasks will be self-contained (include all of their dependenices).  It is important to be deliberate about what dependency versions are included in a package because otherwise the mix-match model of the tools will be broken.  As a starting place, dependency versions should align with what is provided by the core tools SDK.  If you have additional dependencies outside of those in the core tools SDK (or need to change dependency versions), then we should be deliberate (have a conversation with core tools stakeholders) about what those dependencies are and what versions are required.
+The tools provided via NuGet packages for MSBuild tasks will be self-contained (include all of their dependencies).  It is important to be deliberate about what dependency versions are included in a package because otherwise the mix-match model of the tools will be broken.  As a starting place, dependency versions should align with what is provided by the core tools SDK.  If you have additional dependencies outside of those in the core tools SDK (or need to change dependency versions), then we should be deliberate (have a conversation with core tools stakeholders) about what those dependencies are and what versions are required.
 
 ### Best practices
 
@@ -128,7 +128,7 @@ Task package symbols should be embedded in the binaries.
 
 Toolset packages will assume the use of Maestro for automatic version uptake.
 
-Toolset packages should be publishing version information to the versions repo so that respositories using automatic version updating can consume them.  When publishing, there should be package versions entries both for the repo producing the package, and for a tools location which aggregates the various toolset packages. [Details are TBD]
+Toolset packages should be publishing version information to the versions repo so that repositories using automatic version updating can consume them.  When publishing, there should be package versions entries both for the repo producing the package, and for a tools location which aggregates the various toolset packages. [Details are TBD]
 
 ## Gallery
 

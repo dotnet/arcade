@@ -2,8 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System.Linq;
 using System.Collections.Generic;
+using System.Linq;
 using Xunit.Abstractions;
 using Xunit.Sdk;
 using Xunit;
@@ -24,40 +24,14 @@ namespace Microsoft.DotNet.XUnitExtensions
         public IEnumerable<KeyValuePair<string, string>> GetTraits(IAttributeInfo traitAttribute)
         {
             TargetFrameworkMonikers frameworks = (TargetFrameworkMonikers)traitAttribute.GetConstructorArguments().First();
-            if (frameworks.HasFlag(TargetFrameworkMonikers.Net45))
-                yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.NonNet45Test);
-            if (frameworks.HasFlag(TargetFrameworkMonikers.Net451))
-                yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.NonNet451Test);
-            if (frameworks.HasFlag(TargetFrameworkMonikers.Net452))
-                yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.NonNet452Test);
-            if (frameworks.HasFlag(TargetFrameworkMonikers.Net46))
-                yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.NonNet46Test);
-            if (frameworks.HasFlag(TargetFrameworkMonikers.Net461))
-                yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.NonNet461Test);
-            if (frameworks.HasFlag(TargetFrameworkMonikers.Net472))
-                yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.NonNet472Test);
-            if (frameworks.HasFlag(TargetFrameworkMonikers.Net462))
-                yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.NonNet462Test);
-            if (frameworks.HasFlag(TargetFrameworkMonikers.Net463))
-                yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.NonNet463Test);
-            if (frameworks.HasFlag(TargetFrameworkMonikers.Netcore50))
-                yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.NonNetcore50Test);
-            if (frameworks.HasFlag(TargetFrameworkMonikers.Netcore50aot))
-                yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.NonNetcore50aotTest);
-            if (frameworks.HasFlag(TargetFrameworkMonikers.Netcoreapp1_0))
-                yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.NonNetcoreapp1_0Test);
-            if (frameworks.HasFlag(TargetFrameworkMonikers.Netcoreapp1_1))
-                yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.NonNetcoreapp1_1Test);
-            if (frameworks.HasFlag(TargetFrameworkMonikers.NetFramework))
-                yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.NonNetfxTest);
-            if (frameworks.HasFlag(TargetFrameworkMonikers.Mono))
-                yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.NonMonoTest);
             if (frameworks.HasFlag(TargetFrameworkMonikers.Netcoreapp))
                 yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.NonNetcoreappTest);
-            if (frameworks.HasFlag(TargetFrameworkMonikers.UapNotUapAot))
+            if (frameworks.HasFlag(TargetFrameworkMonikers.NetFramework))
+                yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.NonNetfxTest);
+            if (frameworks.HasFlag(TargetFrameworkMonikers.Uap))
                 yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.NonUapTest);
-            if (frameworks.HasFlag(TargetFrameworkMonikers.UapAot))
-                yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.NonUapAotTest);
+            if (frameworks.HasFlag(TargetFrameworkMonikers.Mono))
+                yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.NonMonoTest);
         }
     }
 }

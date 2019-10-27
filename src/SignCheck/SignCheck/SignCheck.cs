@@ -71,7 +71,7 @@ namespace SignCheck
             set;
         }
 
-        public bool AllFilesSigned
+        public bool NoSignIssues
         {
             get;
             set;
@@ -167,11 +167,11 @@ namespace SignCheck
                 Exclusions = new Exclusions();
             }
             // Add some well-known exclusions for WiX
-            Exclusions.Add(new Exclusion("*netfxca;;Wix custom action (NGEN"));
-            Exclusions.Add(new Exclusion("*wixdepca;;WiX custom action"));
-            Exclusions.Add(new Exclusion("*wixuiwixca;;WiX custom action"));
-            Exclusions.Add(new Exclusion("*wixca;;Wix custom action"));
-            Exclusions.Add(new Exclusion("*wixstdba.dll;;WiX standard bundle application"));
+            Exclusions.Add(new Exclusion("*netfxca*;*.msi;Wix custom action (NGEN"));
+            Exclusions.Add(new Exclusion("*wixdepca*;*.msi;WiX custom action"));
+            Exclusions.Add(new Exclusion("*wixuiwixca*;*.msi;WiX custom action"));
+            Exclusions.Add(new Exclusion("*wixca*;*.msi;Wix custom action"));
+            Exclusions.Add(new Exclusion("*wixstdba.dll*;*.exe;WiX standard bundle application"));
 
             if (!Directory.Exists(_appData))
             {
@@ -303,7 +303,7 @@ namespace SignCheck
             {
                 TotalFiles++;
 
-                if (result.IsSigned)
+                if (result.IsSigned && !result.IsExcluded)
                 {
                     TotalSignedFiles++;
                 }
@@ -332,6 +332,7 @@ namespace SignCheck
                 if (((result.IsSkipped) && ((FileStatus & FileStatus.SkippedFiles) != 0)) ||
                     ((result.IsSigned) && ((FileStatus & FileStatus.SignedFiles) != 0)) ||
                     ((result.IsExcluded) && ((FileStatus & FileStatus.ExcludedFiles) != 0)) ||
+                    ((result.IsSigned) && (result.IsDoNotSign)) ||
                     ((result.NestedResults.Count() > 0) && (Options.Recursive)) ||
                     ((FileStatus & FileStatus.AllFiles) == FileStatus.AllFiles) ||
                     ((!result.IsSigned) && (!result.IsSkipped) && (!result.IsExcluded) && ((FileStatus & FileStatus.UnsignedFiles) != 0)))
@@ -340,9 +341,9 @@ namespace SignCheck
                     Log.WriteMessage(LogVerbosity.Minimum, String.Empty.PadLeft(indent) + result.ToString(ResultDetails));
                 }
 
-                if ((!result.IsSigned) && (!(result.IsSkipped || result.IsExcluded)))
+                if (((!result.IsSigned) && (!(result.IsSkipped || result.IsExcluded))) || (result.IsSigned && result.IsDoNotSign))
                 {
-                    AllFilesSigned = false;
+                    NoSignIssues = false;
                 }
 
                 if (result.NestedResults.Count > 0)
@@ -392,7 +393,7 @@ namespace SignCheck
                     IEnumerable<SignatureVerificationResult> results = signatureVerificationManager.VerifyFiles(InputFiles);
                     DateTime endTime = DateTime.Now;
 
-                    AllFilesSigned = true;
+                    NoSignIssues = true;
                     Log.WriteLine();
                     Log.WriteMessage(LogVerbosity.Minimum, SignCheckResources.scResults);
                     Log.WriteLine();
@@ -416,13 +417,13 @@ namespace SignCheck
                         Log.WriteLine();
                     }
 
-                    if (AllFilesSigned)
+                    if (NoSignIssues)
                     {
-                        Log.WriteMessage(LogVerbosity.Minimum, SignCheckResources.scAllFilesSigned);
+                        Log.WriteMessage(LogVerbosity.Minimum, SignCheckResources.scNoSignIssues);
                     }
                     else
                     {
-                        Log.WriteError(LogVerbosity.Minimum, SignCheckResources.scUnsignedFiles);
+                        Log.WriteError(LogVerbosity.Minimum, SignCheckResources.scSignIssuesFound);
                     }
 
                     TimeSpan totalTime = endTime - startTime;

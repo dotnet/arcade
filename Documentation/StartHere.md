@@ -23,7 +23,7 @@ areas:
   internal as well as public changes.
 - **Improving our inter-repo dependency version management (Darc)** - Improve
   the rate at which dependencies are updated in repos, improve content
-  tracability, etc.
+  traceability, etc.
 
 ## Does my repository need to be involved?
 
@@ -93,9 +93,10 @@ some highlights
   - Mission Control
 
 #### Testing projects
-  - Helix: [SDK](../src/Microsoft.DotNet.Helix/Sdk/Readme.md), [JobSender](../src/Microsoft.DotNet.Helix/Sdk/Readme.md)
+  - Helix: [SDK](../src/Microsoft.DotNet.Helix/Sdk/Readme.md), [JobSender](../src/Microsoft.DotNet.Helix/JobSender/Readme.md)
   - Azure Agent pools and queues
   - Docker support
+  - [Dump file retrieval](Dumps/Dumps.md)
 
 #### Deploying projects
   - [Packaging](CorePackages/Packaging.md)

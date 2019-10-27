@@ -44,13 +44,7 @@
     <PropertyGroup Condition="$(IsPosixShell)">
       <HelixPreCommands>set -x;$(HelixPreCommands)</HelixPreCommands>
     </PropertyGroup>
-    <PropertyGroup>
-      <_usingDownloadResultsFeature>false</_usingDownloadResultsFeature>
-      <_usingDownloadResultsFeature Condition="'@(HelixWorkItem -> HasMetadata('DownloadFilesFromResults'))' != ''">true</_usingDownloadResultsFeature>
-    </PropertyGroup>
-    <SendHelixJob Source="$(HelixSource)"
-                  Type="$(HelixType)"
-                  Build="$(HelixBuild)"
+    <SendHelixJob Type="$(HelixType)"
                   TargetQueue="$(HelixTargetQueue)"
                   IsPosixShell="$(IsPosixShell)"
                   Creator="$(Creator)"
@@ -61,8 +55,7 @@
                   PostCommands="$(HelixPostCommands)"
                   CorrelationPayloads="@(HelixCorrelationPayload)"
                   WorkItems="@(HelixWorkItem)"
-                  HelixProperties="@(HelixProperties)"
-                  UsingDownloadResultsFeature="$(_usingDownloadResultsFeature)">
+                  HelixProperties="@(HelixProperties)">
       <Output TaskParameter="JobCorrelationId" PropertyName="HelixJobId"/>
       <Output TaskParameter="ResultsContainerUri" PropertyName="HelixResultsContainer"/>
       <Output TaskParameter="ResultsContainerReadSAS" PropertyName="HelixResultsContainerReadSAS"/>

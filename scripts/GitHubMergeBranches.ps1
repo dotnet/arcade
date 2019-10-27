@@ -81,7 +81,7 @@ function Invoke-Block([scriptblock]$cmd) {
     }
 }
 
-function GetCommiterGitHubName($sha) {
+function GetCommitterGitHubName($sha) {
     $email = & git show -s --format='%ce' $sha
     $key = 'committer'
 
@@ -208,7 +208,7 @@ try {
 
     $authors = $commitsToMerge `
         | % { Write-Host -f Cyan "Merging:`t$(git log --format=$formatString -1 $_)"; $_ } `
-        | % { GetCommiterGitHubName $_ } `
+        | % { GetCommitterGitHubName $_ } `
         | ? { $_ -ne $null } `
         | select -Unique
 
@@ -234,7 +234,7 @@ try {
         $remoteName = 'fork'
 
         try {
-            # remove remote if it already exists and re-confgure
+            # remove remote if it already exists and re-configure
             Invoke-Block { & git remote remove fork }
         }
         catch { }
@@ -402,7 +402,7 @@ git checkout -b ${mergeBranchName} $BaseBranch
 git pull https://github.com/$prOwnerName/$prRepoName ${mergeBranchName}
 (make changes)
 git commit -m "Updated PR with my changes"
-git push https://github.com/$prOwnerName/$prRepoName ${mergeBranchName}
+git push https://github.com/$prOwnerName/$prRepoName HEAD:${mergeBranchName}
 ``````
 
 <details>
@@ -413,7 +413,7 @@ git checkout -b ${mergeBranchName} $BaseBranch
 git pull git@github.com:$prOwnerName/$prRepoName ${mergeBranchName}
 (make changes)
 git commit -m "Updated PR with my changes"
-git push git@github.com:$prOwnerName/$prRepoName ${mergeBranchName}
+git push git@github.com:$prOwnerName/$prRepoName HEAD:${mergeBranchName}
 ``````
 
 </details>
