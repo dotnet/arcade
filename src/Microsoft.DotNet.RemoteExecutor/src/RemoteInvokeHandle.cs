@@ -177,7 +177,12 @@ namespace Microsoft.DotNet.RemoteExecutor
                                                         thread.IsGC ? "[GC]" :
                                                         "";
 
-                                                    description.AppendLine($"\t\tThread #{thread.ManagedThreadId} (OS 0x{thread.OSThreadId:X}) {threadKind}");
+                                                    string isBackground = thread.IsBackground ? "[Background]" : "";
+                                                    string apartmentModel = thread.IsMTA ? "[MTA]" :
+                                                                            thread.IsSTA ? "[STA]" :
+                                                                            "";
+
+                                                    description.AppendLine($"\t\tThread #{thread.ManagedThreadId} (OS 0x{thread.OSThreadId:X}) {threadKind} {isBackground} {apartmentModel}");
                                                     foreach (ClrStackFrame frame in thread.StackTrace)
                                                     {
                                                         description.AppendLine($"\t\t\t{frame}");
