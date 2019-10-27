@@ -99,9 +99,9 @@ namespace Microsoft.DotNet.RemoteExecutor
                 // needing to do this in every derived test and keep each test much simpler.
                 try
                 {
-                    int timeOut = Options.TimeOut;
+                    int halfTimeOut = Options.TimeOut == Timeout.Infinite ? Options.TimeOut : Options.TimeOut / 2;
 
-                    if (!Process.WaitForExit(timeOut / 2))
+                    if (!Process.WaitForExit(halfTimeOut))
                     {
                         var description = new StringBuilder();
                         description.AppendLine($"Half-way through waiting for remote process.");
@@ -119,7 +119,7 @@ namespace Microsoft.DotNet.RemoteExecutor
                             }
                         }
 
-                        if (!Process.WaitForExit(timeOut / 2))
+                        if (!Process.WaitForExit(halfTimeOut))
                         {
                             description.AppendLine($"Timed out at {DateTime.Now} after {Options.TimeOut}ms waiting for remote process.");
 
