@@ -81,7 +81,7 @@ These issues are based on feedback from LT review and are in varying states of c
 
 | Date  | Deliverable | Notes |
 | ----- | ----------- | ----- |
-| ~~10/21~~  10/28| [Official build time goal lines](https://github.com/dotnet/arcade/issues/4101) | Add ability to define per repo goal lines for build time |
+| ~~10/21~~  ~~10/28|~~ 11/5 [Official build time goal lines](https://github.com/dotnet/arcade/issues/4101) | Add ability to define per repo goal lines for build time |
 |       | [PKPI documentation](https://github.com/dotnet/arcade/issues/4077) ||
 | 10/18 | [Official build time worst case scenario](https://github.com/dotnet/arcade/issues/4103) | done |
 | 10/24 | [Update official build time report to use buildchannel insert time as end time](https://github.com/dotnet/arcade/issues/4116) ||
