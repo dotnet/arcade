@@ -83,9 +83,9 @@ namespace Microsoft.DotNet.Helix.Sdk
             {
                 if (_log == null)
                     return;
-                _log = null;
                 CategoryStack = CategoryStack.Pop();
                 UpdateCategory(_log);
+                _log = null;
             }
         }
     }
