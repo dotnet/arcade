@@ -16,8 +16,8 @@ When multiple products share the same infrastructure, the most "strict" product 
 - "Branch Infra": Infrastructure changes in the product branch
 - "Product Infra": Infrastructure changes in shared infra like Arcade, Helix, etc.
 - "Tell Mode" for each product, teams will follow their own process
-- "Tell Mode" to Arcade means including the [PR template](AskModeTellModeTemplate.md) and add the 'tell-mode' label on your PR as an FYI that the change is being made. Review is required.
-- "Ask Mode" to Arcade means including the [PR template](AskModeTellModeTemplate.md)and add the 'servicing-consider' label on your PR. Your PR must be explicitly approved by a member of the dnceng LT prior to merge, who will replace 'servicing-consider' with 'servicing-approved' label. The approver may require additional approval from .NET Core tactics if the change is particularly impactful to the product.
+- "Tell Mode" to Arcade means including the [PR template](AskModeTellModeTemplate.md) and adding the 'tell-mode' label on your PR as an FYI that the change is being made. Review is required.
+- "Ask Mode" to Arcade means including the [PR template](AskModeTellModeTemplate.md) and adding the 'servicing-consider' label on your PR. Your PR must be explicitly approved by a member of the dnceng LT prior to merge, who will replace 'servicing-consider' with 'servicing-approved' label. The approver may require additional approval from .NET Core tactics if the change is particularly impactful to the product.
 - "Ask Mode" to tactics handled according the guidance managed by Lee Coward
 
 ## Things to keep in mind:
