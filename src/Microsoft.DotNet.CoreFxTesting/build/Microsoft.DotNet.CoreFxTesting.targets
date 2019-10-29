@@ -12,7 +12,7 @@
     <TestRuntimeTemplateConfigPath Condition="'$(TestRuntimeTemplateConfigPath)' == '' and '$(TargetFrameworkIdentifier)' == '.NETFramework'">$(TestAssetsDir)netfx.exe.config</TestRuntimeTemplateConfigPath>
 
     <!-- By default copy the test runtime config file for executable test projects (+ test support projects). -->
-    <GenerateRuntimeConfigurationFiles Condition="'$(IsTestProject)' == 'true' and ('$(IsTestSupportProject)' != 'true' or '$(OutputType.ToLower())' == 'exe') and '$(TargetFrameworkIdentifier)' != 'UAP'">true</GenerateRuntimeConfigurationFiles>
+    <GenerateRuntimeConfigurationFiles Condition="'$(IsTestProject)' == 'true' and ('$(IsTestSupportProject)' != 'true' or '$(OutputType.ToLower())' == 'exe')">true</GenerateRuntimeConfigurationFiles>
   </PropertyGroup>
 
   <ItemGroup Condition="'$(GenerateRuntimeConfigurationFiles)' == 'true'">
@@ -100,9 +100,6 @@
   <Target Name="GenerateTestSharedFrameworkDepsFile">
     <GenerateTestSharedFrameworkDepsFile SharedFrameworkDirectory="$(NETCoreAppTestSharedFrameworkPath)" />
   </Target>
-
-  <!-- UAP resource generation needed by both source and test projects. -->
-  <Import Condition="'$(TargetFrameworkIdentifier)' == 'UAP' and '$(BuildAllConfigurations)' != 'true'" Project="$(MSBuildThisFileDirectory)Resources.uap.targets" />
 
   <!-- Full coverage report. -->
   <Import Condition="'$(EnableFullCoverageReportTarget)' == 'true' and '$(SkipCoverageReport)' != 'true' and '$(Coverage)' == 'true'" Project="$([MSBuild]::NormalizePath('$(TestCoreDir)', 'coverage', 'CoverageReport.targets'))" />

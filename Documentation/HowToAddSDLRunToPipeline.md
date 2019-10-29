@@ -58,7 +58,7 @@ Arcade has enabled SDL runs in official-ci builds.
         -TsaProjectName "DEVDIV"
         -TsaNotificationEmail "xxx@microsoft.com"
         -TsaCodebaseAdmin "aa\bb"
-        -TsaBugAreaPath "DevDiv\NET\NET Core "
+        -TsaBugAreaPath "DevDiv\NET Core "
         -TsaIterationPath "DevDiv"
         -TsaRepositoryName "Arcade"
         -TsaCodebaseName "Arcade"
