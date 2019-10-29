@@ -57,7 +57,7 @@ namespace Microsoft.DotNet.VersionTools.Tests.BuildManifest
                 // Then check that all versions can be removed from the path of any blob asset
                 string expectedNameWithoutVersions = testAsset.NameWithoutVersions;
                 string actualNameWithoutVersions = VersionIdentifier.RemoveVersions(testAsset.Name);
-                Assert.True(expectedNameWithoutVersions == actualNameWithoutVersions, $"Line {testAsset.Line} has incorrect asset name with versions removed {actualNameWithoutVersions}");
+                Assert.True(expectedNameWithoutVersions == actualNameWithoutVersions, $"Line {testAsset.Line} has incorrect asset name without versions {actualNameWithoutVersions}");
             }
         }
 

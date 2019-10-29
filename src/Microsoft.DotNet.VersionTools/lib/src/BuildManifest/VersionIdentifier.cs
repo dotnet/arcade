@@ -4,6 +4,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
 using System.Linq;
 using System.Text;
 
@@ -22,6 +23,16 @@ namespace Microsoft.DotNet.VersionTools.BuildManifest
                 "rc"
             };
 
+        private static readonly SortedDictionary<string, string> _sequencesToReplace =
+            new SortedDictionary<string, string>
+            {
+                { "-.", "." },
+                { "..", "." },
+                { "--", "-" },
+                { "//", "/" },
+                { "_.", "." }
+            };
+
         private const string _finalSuffix = "final";
 
         private static readonly char[] _delimiters = new char[] { '.', '-', '_' };
@@ -29,7 +40,7 @@ namespace Microsoft.DotNet.VersionTools.BuildManifest
         /// <summary>
         /// Identify the version of an asset.
         /// 
-        /// Assets can come in two forms:
+        /// Asset names can come in two forms:
         /// - Blobs that include the full path
         /// - Packages that do not include any path elements.
         /// 
@@ -47,7 +58,7 @@ namespace Microsoft.DotNet.VersionTools.BuildManifest
                 potentialVersion = GetVersionForSingleSegment(pathSegments[i]);
                 if (potentialVersion != null)
                 {
-                    break;
+                    return potentialVersion;
                 }
             }
 
@@ -57,17 +68,19 @@ namespace Microsoft.DotNet.VersionTools.BuildManifest
         /// <summary>
         /// Identify the version number of an asset segment.
         /// </summary>
-        /// <param name="assetSegment">Asset segment</param>
+        /// <param name="assetPathSegment">Asset segment</param>
         /// <returns>Version number, or null if none was found</returns>
         /// <remarks>
-        /// Identifying versions is not particularly easy. To constrain the problem, we apply the following assumptions
-        /// which are generally valid for .NET Core.
+        /// Identifying versions is not particularly easy. To constrain the problem,
+        /// we apply the following assumptions which are generally valid for .NET Core.
         /// - We always have major.minor.patch, and it always begins the version string.
         /// - The only pre-release or build metadata labels we use begin with the _knownTags shown above.
-        /// - We use additional numbers in our version numbers after the initial major.minor.patch, but any non-numeric element will end the version string
-        /// - The delimiters we use in versions and file names are ., -, and _.
+        /// - We use additional numbers in our version numbers after the initial
+        ///   major.minor.patch-prereleaselabel.prereleaseiteration segment,
+        ///   but any non-numeric element will end the version string.
+        /// - The <see cref="_delimiters"/> we use in versions and file names are ., -, and _.
         /// </remarks>
-        private static string GetVersionForSingleSegment(string assetSegment)
+        private static string GetVersionForSingleSegment(string assetPathSegment)
         {
 
             // Find the start of the version number by finding the major.minor.patch.
@@ -87,15 +100,15 @@ namespace Microsoft.DotNet.VersionTools.BuildManifest
             {
                 string nextSegment;
                 prevDelimiterCharacter = nextDelimiterCharacter;
-                int nextDelimiterIndex = assetSegment.IndexOfAny(_delimiters, currentIndex);
+                int nextDelimiterIndex = assetPathSegment.IndexOfAny(_delimiters, currentIndex);
                 if (nextDelimiterIndex != -1)
                 {
-                    nextDelimiterCharacter = assetSegment[nextDelimiterIndex];
-                    nextSegment = assetSegment.Substring(currentIndex, nextDelimiterIndex - currentIndex);
+                    nextDelimiterCharacter = assetPathSegment[nextDelimiterIndex];
+                    nextSegment = assetPathSegment.Substring(currentIndex, nextDelimiterIndex - currentIndex);
                 }
                 else
                 {
-                    nextSegment = assetSegment.Substring(currentIndex, assetSegment.Length - currentIndex);
+                    nextSegment = assetPathSegment.Substring(currentIndex);
                 }
 
                 // If we have not yet found the major/minor/patch, then there are four cases:
@@ -104,7 +117,7 @@ namespace Microsoft.DotNet.VersionTools.BuildManifest
                 // - There has been at least one number found, but less than 3, and the current segment not a number or not preceded by '.'. In this case,
                 //   we should clear out the stack and continue the search.
                 // - There have been at least 2 numbers found and the current segment is a number and preceded by '.'. Push onto the majorMinorPatch stack and continue
-                // - There have been at least 3 numbers found and the current segment is not a number or not preceded by -. In this case, we can call this the major minor
+                // - There have been at least 3 numbers found and the current segment is not a number or not preceded by '-'. In this case, we can call this the major minor
                 //   patch number and no longer need to continue searching
                 if (majorMinorPatch == null)
                 {
@@ -136,12 +149,15 @@ namespace Microsoft.DotNet.VersionTools.BuildManifest
                 // in case we are just deciding that we've finished major minor patch.
                 if (majorMinorPatch != null)
                 {
-                    // Now look at the next segment. If it looks like it could be part of a version. If it can't, then
-                    // we're done.
+                    // Now look at the next segment. If it looks like it could be part of a version, append to what we have
+                    // and continue. If it can't, then we're done.
+                    // 
                     // Cases where we should break out and be done:
                     // - We have an empty pre-release label and the delimiter is not '-'.
-                    // - We have an empty pre-release label and the next segment does not start with a know tag.
-                    // - We have a non-empty pre-release label and the current segment is not a number.
+                    // - We have an empty pre-release label and the next segment does not start with a known tag.
+                    // - We have a non-empty pre-release label and the current segment is not a number and also not 'final'
+                    //      A corner case of versioning uses .final to represent a non-date suffixed final pre-release version:
+                    //      3.1.0-preview.10.final
                     if (versionSuffix.Length == 0 &&
                         (prevDelimiterCharacter != '-' || !_knownTags.Any(tag => nextSegment.StartsWith(tag, StringComparison.OrdinalIgnoreCase))))
                     {
@@ -177,16 +193,6 @@ namespace Microsoft.DotNet.VersionTools.BuildManifest
             return $"{majorMinorPatch}{versionSuffix.ToString()}";
         }
 
-        private static readonly Dictionary<string, string> sequencesToReplace =
-            new Dictionary<string, string>
-            {
-                { "-.", "." },
-                { "..", "." },
-                { "--", "-" },
-                { "//", "/" },
-                { "_.", "." }
-            };
-
         /// <summary>
         ///     Given an asset name, remove all .NET Core version numers (as defined by the version identifier above)
         ///     from the string
@@ -214,7 +220,7 @@ namespace Microsoft.DotNet.VersionTools.BuildManifest
 
             string assetWithoutVersions = string.Join("/", pathSegments);
 
-            foreach (var sequence in sequencesToReplace)
+            foreach (var sequence in _sequencesToReplace)
             {
                 assetWithoutVersions = assetWithoutVersions.Replace(sequence.Key, sequence.Value);
             }
