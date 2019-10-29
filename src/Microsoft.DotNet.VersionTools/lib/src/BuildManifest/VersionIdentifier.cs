@@ -194,7 +194,7 @@ namespace Microsoft.DotNet.VersionTools.BuildManifest
         }
 
         /// <summary>
-        ///     Given an asset name, remove all .NET Core version numers (as defined by the version identifier above)
+        ///     Given an asset name, remove all .NET Core version numbers (as defined by GetVersionForSingleSegment)
         ///     from the string
         /// </summary>
         /// <param name="assetName">Asset</param>
