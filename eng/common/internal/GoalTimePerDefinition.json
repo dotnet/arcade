@@ -1,7 +1,7 @@
 {
     "Goal" :
     [{
-        "defintion": "\\dotnet\\arcade\\arcade-official-ci",
+        "definition": "\\dotnet\\arcade\\arcade-official-ci",
         "goal_time" : 25
     }]
 }
