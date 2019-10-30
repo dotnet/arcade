@@ -90,9 +90,19 @@
       </_TagsElement>
 
       <_IconUrlElement/>
-      <_IconUrlElement Condition="'$(PackageIconUrl)' != ''">
+      <_IconUrlElement Condition="'$(PackageIcon)' == '' and '$(PackageIconUrl)' != ''">
         <iconUrl>$(PackageIconUrl)</iconUrl>
       </_IconUrlElement>
+
+      <_IconElement/>
+      <_IconElement Condition="'$(PackageIcon)' != ''">
+        <icon>$(PackageIcon)</icon>
+      </_IconElement>
+
+      <_IconFileElement/>
+      <_IconFileElement Condition="'$(PackageIcon)' != ''">
+        <file src="$(PackageIconFullPath)" target="$(PackageIcon)" />
+      </_IconFileElement>
 
       <_ReleaseNotesElement/>
       <_ReleaseNotesElement Condition="'$(PackageReleaseNotes)' != ''">
@@ -107,6 +117,7 @@
         <requireLicenseAcceptance>$(PackageRequireLicenseAcceptance)</requireLicenseAcceptance>
         $(_TagsElement)
         $(_LicenseElement)
+        $(_IconElement)
         $(_IconUrlElement)
         $(_ReleaseNotesElement)
         <projectUrl>$(PackageProjectUrl)</projectUrl>
@@ -115,10 +126,15 @@
         <serviceable>$(Serviceable)</serviceable>
         <repository type="$(RepositoryType)" url="$(RepositoryUrl)" commit="$(RepositoryCommit)" />
       </_CommonMetadataElements>
+
+      <_CommonFileElements>
+        $(_IconFileElement)
+      </_CommonFileElements>
     </PropertyGroup>
 
     <ItemGroup Condition="'$(NuspecFile)' != '' and '$(NuspecProperties)' == ''">
       <NuspecProperty Include="CommonMetadataElements=$(_CommonMetadataElements)"/>
+      <NuspecProperty Include="CommonFileElements=$(_CommonFileElements)"/>
       <NuspecProperty Include="PackageId=$(PackageId)"/>
       <NuspecProperty Include="Version=$(PackageVersion)"/>
       <NuspecProperty Include="ProjectDirectory=$(MSBuildProjectDirectory)"/>

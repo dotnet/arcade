@@ -19,6 +19,8 @@ A personal access token
 Make PR from a fork
 .PARAMETER AllowAutomatedCommits
 Create a PR even if the only commits are from aspnetci
+.PARAMETER QuietComments
+Do not tag commiters, do not comment on PR updates. Reduces GitHub notifications
 #>
 [CmdletBinding(SupportsShouldProcess = $true)]
 param(
@@ -48,7 +50,9 @@ param(
 
     [switch]$Fork,
 
-    [switch]$AllowAutomatedCommits
+    [switch]$AllowAutomatedCommits,
+
+    [switch]$QuietComments
 )
 
 $ErrorActionPreference = 'stop'
@@ -217,7 +221,12 @@ try {
         exit 0
     }
 
-    $authors = $authors | % { "* @$_" }
+    if (-not $QuietComments) {
+        $authors = $authors | % { "* @$_" }
+    } else {
+        $authors = $authors | % { "* $_" }
+    }
+    
 
     $committersList = "This PR merges commits made on $HeadBranch by the following committers:`n`n$($authors -join "`n")"
 
@@ -319,7 +328,7 @@ You may need to fix this problem by merging branches with this PR. Contact .NET 
         $prNumber = $matchingPr.number
         $prUrl = "https://github.com/$RepoOwner/$RepoName/pull/$prNumber"
 
-        if ($PSCmdlet.ShouldProcess("Update $prUrl")) {
+        if ($PSCmdlet.ShouldProcess("Update $prUrl") -and -not $QuietComments) {
             $resp = Invoke-RestMethod -Method Post -Headers $headers `
                 "https://api.github.com/repos/$RepoOwner/$RepoName/issues/$prNumber/comments" `
                 -Body ($data | ConvertTo-Json)

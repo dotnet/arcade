@@ -8,16 +8,18 @@
   <PropertyGroup>
     <MicrosoftDotNetMaestroTasksVersion>1.1.0-beta.19401.2</MicrosoftDotNetMaestroTasksVersion>
     <MicrosoftDotNetBuildTasksVisualStudioVersion>$(ArcadeSdkVersion)</MicrosoftDotNetBuildTasksVisualStudioVersion>
-    <MicrosoftDotNetBuildTasksFeedVersion Condition="'$(MicrosoftDotNetBuildTasksFeedVersion)' == ''">5.0.0-beta.19518.2</MicrosoftDotNetBuildTasksFeedVersion>
+    <MicrosoftDotNetBuildTasksFeedVersion Condition="'$(MicrosoftDotNetBuildTasksFeedVersion)' == ''">5.0.0-beta.19529.3</MicrosoftDotNetBuildTasksFeedVersion>
     <MicrosoftDotNetSignCheckVersion Condition="'$(MicrosoftDotNetSignCheckVersion)' == ''">1.0.0-beta.19408.6</MicrosoftDotNetSignCheckVersion>
     <MicrosoftSymbolUploaderBuildTaskVersion Condition="'$(MicrosoftSymbolUploaderBuildTaskVersion)' == ''">1.0.0-beta-64414-01</MicrosoftSymbolUploaderBuildTaskVersion>
   </PropertyGroup>
 
   <PropertyGroup>
-    <RestoreSources>
+    <RestoreAdditionalProjectSources>
+      $(RestoreAdditionalProjectSources);
       https://api.nuget.org/v3/index.json;
       https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json;
-    </RestoreSources>
+      https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json;
+    </RestoreAdditionalProjectSources>
   </PropertyGroup>
 
 </Project>
