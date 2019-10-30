@@ -69,7 +69,6 @@
     <RuntimeFilePath Condition="'$(RuntimeFilePath)' == ''">$(NuSpecOutputPath)$(Id)$(NuspecSuffix)/runtime.json</RuntimeFilePath>
     <PackedPackageRuntimeFilePath Condition="'$(PackedPackageRuntimeFilePath)' == ''">$(NuSpecOutputPath)$(Id)$(NuspecSuffix)/$(PackedPackageNamePrefix).runtime.json</PackedPackageRuntimeFilePath>
     <PlaceholderFile>$(MSBuildThisFileDirectory)content/_._</PlaceholderFile>
-    <PackageIconFile Condition="'$(PackageIconFile)' == ''">$(MSBuildThisFileDirectory)Icon.png</PackageIconFile>
     <PackageDescriptionFile Condition="'$(PackageDescriptionFile)' == ''">path to descriptions.json must be specified</PackageDescriptionFile>
     <ValidationSuppressionFile Condition="'$(ValidationSuppressionFile)' == ''">ValidationSuppression.txt</ValidationSuppressionFile>
     <SyncInfoFile Condition="'$(SyncInfoFile)' == ''">unspecified</SyncInfoFile>
@@ -1224,7 +1223,6 @@
                     Language="$(Language)"
                     ProjectUrl="$(ProjectUrl)"
                     IconUrl="$(IconUrl)"
-                    Icon="$(PackageIconFile)"
                     LicenseUrl="$(LicenseUrl)"
                     PackageLicenseExpression="$(PackageLicenseExpression)"
                     Copyright="$(Copyright)"

@@ -59,8 +59,6 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
 
         public string IconUrl { get; set; }
 
-        public string Icon { get; set; }
-
         public string LicenseUrl { get; set; }
 
         public string PackageLicenseExpression { get; set; }
@@ -203,10 +201,6 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
             {
                 manifestMetadata.SetIconUrl(IconUrl);
             }
-            if (!string.IsNullOrEmpty(Icon))
-            {
-                manifestMetadata.Icon = Path.GetFileName(Icon);
-            }
             manifestMetadata.UpdateMember(x => x.Id, Id);
             manifestMetadata.UpdateMember(x => x.Language, Language);
 
@@ -250,23 +244,15 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
 
         private List<ManifestFile> GetManifestFiles()
         {
-            IEnumerable<ManifestFile> manifestFiles =
-                from f in Files.NullAsEmpty()
-                where !f.GetMetadata(Metadata.FileTarget).StartsWith("$none$", StringComparison.OrdinalIgnoreCase)
-                select new ManifestFile()
-                {
-                    Source = f.GetMetadata(Metadata.FileSource),
-                    // Pattern matching in PathResolver requires that we standardize to OS specific directory separator characters
-                    Target = f.GetMetadata(Metadata.FileTarget).Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar),
-                    Exclude = f.GetMetadata(Metadata.FileExclude)
-                };
-            
-            if (!string.IsNullOrEmpty(Icon))
-            {
-                manifestFiles = manifestFiles.Append(new ManifestFile { Source = Icon, Target = Path.GetFileName(Icon) });
-            }
-            
-            return manifestFiles.OrderBy(f => f.Target, StringComparer.OrdinalIgnoreCase).ToList();
+            return (from f in Files.NullAsEmpty()
+                    where !f.GetMetadata(Metadata.FileTarget).StartsWith("$none$", StringComparison.OrdinalIgnoreCase)
+                    select new ManifestFile()
+                    {
+                        Source = f.GetMetadata(Metadata.FileSource),
+                        // Pattern matching in PathResolver requires that we standardize to OS specific directory separator characters
+                        Target = f.GetMetadata(Metadata.FileTarget).Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar),
+                        Exclude = f.GetMetadata(Metadata.FileExclude)
+                    }).OrderBy(f => f.Target, StringComparer.OrdinalIgnoreCase).ToList();
         }
 
 
