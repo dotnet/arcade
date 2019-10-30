@@ -18,7 +18,7 @@ A personal access token
 .PARAMETER Fork
 Make PR from a fork
 .PARAMETER AllowAutomatedCommits
-Create a PR even if the only commits are from aspnetci
+Create a PR even if the only commits are from dotnet-maestro
 #>
 [CmdletBinding(SupportsShouldProcess = $true)]
 param(
