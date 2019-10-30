@@ -218,11 +218,18 @@ namespace Microsoft.DotNet.VersionTools.BuildManifest
                 }
             }
 
+            // Continue replacing things until there is nothing left to replace.
             string assetWithoutVersions = string.Join("/", pathSegments);
-
-            foreach (var sequence in _sequencesToReplace)
+            bool anyReplacements = true;
+            while (anyReplacements)
             {
-                assetWithoutVersions = assetWithoutVersions.Replace(sequence.Key, sequence.Value);
+                string replacementIterationResult = assetWithoutVersions;
+                foreach (var sequence in _sequencesToReplace)
+                {
+                    replacementIterationResult = replacementIterationResult.Replace(sequence.Key, sequence.Value);
+                }
+                anyReplacements = (replacementIterationResult != assetWithoutVersions);
+                assetWithoutVersions = replacementIterationResult;
             }
 
             return assetWithoutVersions;
