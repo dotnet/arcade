@@ -2,6 +2,7 @@ variables:
   - group: Publish-Build-Assets
   - group: DotNet-DotNetCli-Storage
   - group: DotNet-MSRC-Storage
+  - group: AzureDevOps-Artifact-Feeds-Pats
 
   # .NET Core 3.1 Dev
   - name: PublicDevRelease_31_Channel_Id
