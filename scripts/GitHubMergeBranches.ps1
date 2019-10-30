@@ -18,7 +18,7 @@ A personal access token
 .PARAMETER Fork
 Make PR from a fork
 .PARAMETER AllowAutomatedCommits
-Create a PR even if the only commits are from aspnetci
+Create a PR even if the only commits are from dotnet-maestro[bot]
 .PARAMETER QuietComments
 Do not tag commiters, do not comment on PR updates. Reduces GitHub notifications
 #>
@@ -216,8 +216,8 @@ try {
         | ? { $_ -ne $null } `
         | select -Unique
 
-    if (-not $AllowAutomatedCommits -and (($authors | measure).Count -eq 1) -and ($authors | select -first 1) -eq 'dotnet-maestro') {
-        Write-Host -ForegroundColor Yellow 'Skipping PR generation because it appears this PR would only contain automated commits by @dotnet-maestro'
+    if (-not $AllowAutomatedCommits -and (($authors | measure).Count -eq 1) -and ($authors | select -first 1) -eq 'dotnet-maestro[bot]') {
+        Write-Host -ForegroundColor Yellow 'Skipping PR generation because it appears this PR would only contain automated commits by @dotnet-maestro[bot]'
         exit 0
     }
 
