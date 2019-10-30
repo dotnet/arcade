@@ -1,9 +1,9 @@
 {
-    "goals" :
+    "goal_times" :
     [
         {
         "definitionId": 6,
-        "goal_time_in_minutes" : 25
+        "minutes" : 50
     }
 ]
 }
