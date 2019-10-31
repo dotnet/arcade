@@ -114,8 +114,25 @@ namespace Microsoft.DotNet.RemoteExecutor
                             {
                                 foreach (Process p in Process.GetProcesses())
                                 {
-                                    description.AppendLine($"Process: {p.ProcessName} PrivateMemory: {p.PrivateMemorySize64}");
+                                    description.AppendLine($"Process: {p.Id} {p.ProcessName} PrivateMemory: {p.PrivateMemorySize64}");
                                 }
+                            }
+
+                            try
+                            {
+                                Process p = Process.Start(new ProcessStartInfo()
+                                    {
+                                        FileName = "tasklist.exe",
+                                        Arguments = "/svc /fi \"imagename eq svchost.exe\"",
+                                        UseShellExecute = false,
+                                        RedirectStandardOutput = true,
+                                    }
+                                );
+
+                                description.Append(p.StandardOutput.ReadToEnd());
+                            }
+                            catch
+                            {
                             }
                         }
 
