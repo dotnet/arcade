@@ -12,6 +12,7 @@ namespace Xunit
         ZapDisable = 1 << 4,
         GCStress3 = 1 << 5,
         GCStressC = 1 << 6,
+        CheckedRuntime = 1 << 7,
         AnyGCStress = GCStress3 | GCStressC,
         Any = ~0
     }

@@ -29,14 +29,11 @@ namespace Microsoft.DotNet.XUnitExtensions
                     }
                 }
 
-                if (DiscovererHelpers.TestPlatformApplies(testPlatforms))
+                if (DiscovererHelpers.TestPlatformApplies(testPlatforms) && StressModeApplies(stressMode))
                 {
-                    if (IsCheckedRuntime() || IsRuntimeStressTesting)
+                    if (IsCheckedRuntime() || (IsRuntimeStressTesting && !stressMode.HasFlag(RuntimeStressTestModes.CheckedRuntime)))
                     {
-                        if (StressModeApplies(stressMode))
-                        {
-                            return new[] { new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.Failing) };
-                        }
+                        return new[] { new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.Failing) };
                     }
                 }
             }
@@ -44,52 +41,17 @@ namespace Microsoft.DotNet.XUnitExtensions
             return Array.Empty<KeyValuePair<string, string>>();
         }
 
-        private bool StressModeApplies(RuntimeStressTestModes stressMode)
-        {
-            if (stressMode == 0)
-            {
-                return true;
-            }
+        private static bool StressModeApplies(RuntimeStressTestModes stressMode) =>
+            stressMode == 0 ||
+            (stressMode.HasFlag(RuntimeStressTestModes.GCStress3) && IsGCStress3) ||
+            (stressMode.HasFlag(RuntimeStressTestModes.GCStressC) && IsGCStressC) ||
+            (stressMode.HasFlag(RuntimeStressTestModes.ZapDisable) && IsZapDisable) ||
+            (stressMode.HasFlag(RuntimeStressTestModes.TailcallStress) && IsTailCallStress) ||
+            (stressMode.HasFlag(RuntimeStressTestModes.JitStressRegs) && IsJitStressRegs) ||
+            (stressMode.HasFlag(RuntimeStressTestModes.JitStress) && IsJitStress) ||
+            (stressMode.HasFlag(RuntimeStressTestModes.JitMinOpts) && IsJitMinOpts);
 
-            if (stressMode.HasFlag(RuntimeStressTestModes.GCStress3) && IsGCStress3)
-            {
-                return true;
-            }
-
-            if (stressMode.HasFlag(RuntimeStressTestModes.GCStressC) && IsGCStressC)
-            {
-                return true;
-            }
-
-            if (stressMode.HasFlag(RuntimeStressTestModes.ZapDisable) && IsZapDisable)
-            {
-                return true;
-            }
-
-            if (stressMode.HasFlag(RuntimeStressTestModes.TailcallStress) && IsTailCallStress)
-            {
-                return true;
-            }
-
-            if (stressMode.HasFlag(RuntimeStressTestModes.JitStressRegs) && IsJitStressRegs)
-            {
-                return true;
-            }
-
-            if (stressMode.HasFlag(RuntimeStressTestModes.JitStress) && IsJitStress)
-            {
-                return true;
-            }
-
-            if (stressMode.HasFlag(RuntimeStressTestModes.JitMinOpts) && IsJitMinOpts)
-            {
-                return true;
-            }
-
-            return false;
-        }
-
-        private bool IsRuntimeStressTesting =>
+        private static bool IsRuntimeStressTesting =>
             IsGCStress3 ||
             IsGCStressC ||
             IsZapDisable ||
@@ -98,33 +60,29 @@ namespace Microsoft.DotNet.XUnitExtensions
             IsJitStress ||
             IsJitMinOpts;
 
-        private string GetEnvironmentVariableValue(string name) => Environment.GetEnvironmentVariable(name) ?? "0";
+        private static string GetEnvironmentVariableValue(string name) => Environment.GetEnvironmentVariable(name) ?? "0";
 
-        private bool IsCheckedRuntime()
+        private static bool IsJitStress => !string.Equals(GetEnvironmentVariableValue("COMPlus_JitStress"), "0", StringComparison.InvariantCulture);
+
+        private static bool IsJitStressRegs => !string.Equals(GetEnvironmentVariableValue("COMPlus_JitStressRegs"), "0", StringComparison.InvariantCulture);
+
+        private static bool IsJitMinOpts => string.Equals(GetEnvironmentVariableValue("COMPlus_JitMinOpts"), "1", StringComparison.InvariantCulture);
+
+        private static bool IsTailCallStress => string.Equals(GetEnvironmentVariableValue("COMPlus_TailcallStress"), "1", StringComparison.InvariantCulture);
+
+        private static bool IsZapDisable => string.Equals(GetEnvironmentVariableValue("COMPlus_ZapDisable"), "1", StringComparison.InvariantCulture);
+
+        private static bool IsGCStress3 => string.Equals(GetEnvironmentVariableValue("COMPlus_GCStress"), "0x3", StringComparison.InvariantCulture);
+
+        private static bool IsGCStressC => string.Equals(GetEnvironmentVariableValue("COMPlus_GCStress"), "0xC", StringComparison.InvariantCulture);
+
+        private static bool IsCheckedRuntime()
         {
             Assembly assembly = typeof(string).Assembly;
             AssemblyConfigurationAttribute assemblyConfigurationAttribute = assembly.GetCustomAttribute<AssemblyConfigurationAttribute>();
-            if (assemblyConfigurationAttribute != null)
-            {
-                if (string.Equals(assemblyConfigurationAttribute.Configuration, "Checked", StringComparison.InvariantCulture))
-                    return true;
-            }
 
-            return false;
+            return assemblyConfigurationAttribute != null &&
+                string.Equals(assemblyConfigurationAttribute.Configuration, "Checked", StringComparison.InvariantCulture);
         }
-
-        private bool IsJitStress => !string.Equals(GetEnvironmentVariableValue("COMPlus_JitStress"), "0", StringComparison.InvariantCulture);
-
-        private bool IsJitStressRegs => !string.Equals(GetEnvironmentVariableValue("COMPlus_JitStressRegs"), "0", StringComparison.InvariantCulture);
-
-        private bool IsJitMinOpts => string.Equals(GetEnvironmentVariableValue("COMPlus_JitMinOpts"), "1", StringComparison.InvariantCulture);
-
-        private bool IsTailCallStress => string.Equals(GetEnvironmentVariableValue("COMPlus_TailcallStress"), "1", StringComparison.InvariantCulture);
-
-        private bool IsZapDisable => string.Equals(GetEnvironmentVariableValue("COMPlus_ZapDisable"), "1", StringComparison.InvariantCulture);
-
-        private bool IsGCStress3 => string.Equals(GetEnvironmentVariableValue("COMPlus_GCStress"), "0x3", StringComparison.InvariantCulture);
-
-        private bool IsGCStressC => string.Equals(GetEnvironmentVariableValue("COMPlus_GCStress"), "0xC", StringComparison.InvariantCulture);
     }
 }
