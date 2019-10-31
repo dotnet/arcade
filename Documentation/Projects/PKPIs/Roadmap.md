@@ -111,4 +111,4 @@ See [features](#features) for which features are being delivered in phase 2.
 | 10/30 | [Longest build path visualization](https://github.com/dotnet/arcade/issues/4071) ||
 | ~11/1~ 11/6  | [Split subscriptions view into product and toolset](https://github.com/dotnet/arcade/issues/4138) ||
 | 11/6  | [Superfluous input subscriptions](https://github.com/dotnet/arcade/issues/3906) ||
-| ~11/13~ | [Conflicting input subscriptions](https://github.com/dotnet/arcade/issues/2801) ||
+| ~11/13~ 11/6 | [Conflicting input subscriptions](https://github.com/dotnet/arcade/issues/2801) ||
