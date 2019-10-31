@@ -14,7 +14,7 @@ using Microsoft.Cci.Writers.Syntax;
 
 namespace Microsoft.Cci.Writers
 {
-    public class CSharpWriter : SimpleTypeMemberTraverser, ICciWriter
+    public class CSharpWriter : SimpleTypeMemberTraverser, ICciWriter, IDisposable
     {
         private readonly ISyntaxWriter _syntaxWriter;
         private readonly IStyleSyntaxWriter _styleWriter;
@@ -22,7 +22,6 @@ namespace Microsoft.Cci.Writers
         private readonly bool _writeAssemblyAttributes;
         private readonly bool _apiOnly;
         private readonly ICciFilter _cciFilter;
-
         private bool _firstMemberGroup;
 
         public CSharpWriter(ISyntaxWriter writer, ICciFilter filter, bool apiOnly, bool writeAssemblyAttributes = false)
@@ -82,6 +81,8 @@ namespace Microsoft.Cci.Writers
 
         public override void Visit(IAssembly assembly)
         {
+            _declarationWriter.ModuleNullableContextValue = assembly.ModuleAttributes.GetCustomAttributeArgumentValue<byte?>(CSharpCciExtensions.NullableContextAttributeFullName);
+
             if (_writeAssemblyAttributes)
             {
                 _declarationWriter.WriteDeclaration(assembly);
@@ -117,6 +118,12 @@ namespace Microsoft.Cci.Writers
 
         public override void Visit(ITypeDefinition type)
         {
+            byte? value = type.Attributes.GetCustomAttributeArgumentValue<byte?>(CSharpCciExtensions.NullableContextAttributeFullName);
+            if (!(type is INestedTypeDefinition) || value != null) // Only override the value when we're not on a nested type, or if so, only if the value is not null.
+            {
+                _declarationWriter.TypeNullableContextValue = value;
+            }
+
             _declarationWriter.WriteDeclaration(type);
 
             if (!type.IsDelegate)
@@ -150,10 +157,27 @@ namespace Microsoft.Cci.Writers
         {
             if (parentType.IsStruct && !_apiOnly)
             {
-                // For compile-time compat, the following rules should work for producing a reference assembly. We drop all private fields, but add back certain synthesized private fields for a value type (struct) as follows:
-                // - If there are any private fields that are or contain any value type members, add a single private field of type int.
-                // - And, if there are any private fields that are or contain any reference type members, add a single private field of type object.
-                // - And, if the type is generic, then for every type parameter of the type, if there are any private fields that are or contain any members whose type is that type parameter, we add a direct private field of that type.
+                // For compile-time compat, the following rules should work for producing a reference assembly. We drop all private fields,
+                // but add back certain synthesized private fields for a value type (struct) as follows:
+
+                // 1. If there is a reference type field in the struct or within the fields' type closure,
+                //    it should emit a reference type and a value type dummy field.
+                //    - The reference type dummy field is needed in order to inform the compiler to block
+                //      taking pointers to this struct because the GC will not track updating those references.
+                //    - The value type dummy field is needed in order for the compiler to error correctly on definite assignment checks in all scenarios. dotnet/roslyn#30194
+
+                // 2. If there are no reference type fields, but there are value type fields in the struct field closure,
+                //    and at least one of these fields is a nonempty struct, then we should emit a value type dummy field.
+
+                //    - The previous rules are for definite assignment checks, so the compiler knows there is a private field
+                //      that has not been initialized to error about uninitialized structs.
+                //
+                // 3. If the type is generic, then for every type parameter of the type, if there are any private
+                //    or internal fields that are or contain any members whose type is that type parameter,
+                //    we add a direct private field of that type.
+
+                //    - Compiler needs to see all fields that have generic arguments (even private ones) to be able
+                //      to validate there aren't any struct layout cycles.
 
                 // Note: By "private", we mean not visible outside the assembly.
 
@@ -169,32 +193,26 @@ namespace Microsoft.Cci.Writers
                 if (excludedFields.Any())
                 {
                     var genericTypedFields = excludedFields.Where(f => f.Type.UnWrap().IsGenericParameter());
-
-                    // Compiler needs to see any fields, even private, that have generic arguments to be able
-                    // to validate there aren't any struct layout cycles
                     foreach (var genericField in genericTypedFields)
-                        newFields.Add(genericField);
-
-                    // For definiteassignment checks the compiler needs to know there is a private field
-                    // that has not been initialized so if there are any we need to add a dummy private
-                    // field to help the compiler do its job and error about uninitialized structs
-                    bool hasRefPrivateField = excludedFields.Any(f => f.Type.IsOrContainsReferenceType());
-
-                    // If at least one of the private fields contains a reference type then we need to
-                    // set this field type to object or reference field to inform the compiler to block
-                    // taking pointers to this struct because the GC will not track updating those references
-                    if (hasRefPrivateField)
                     {
-                        IFieldDefinition fieldType = DummyFieldWriterHelper(parentType, excludedFields, parentType.PlatformType.SystemObject);
+                        IFieldDefinition fieldType = new DummyPrivateField(parentType, genericField.Type, genericField.Name.Value, genericField.Attributes.Where(a => !a.FullName().EndsWith("NullAttribute")), genericField.IsReadOnly);
                         newFields.Add(fieldType);
                     }
 
-                    bool hasValueTypePrivateField = excludedFields.Any(f => !f.Type.IsOrContainsReferenceType());
-
-                    if (hasValueTypePrivateField)
+                    IFieldDefinition intField = DummyFieldWriterHelper(parentType, excludedFields, parentType.PlatformType.SystemInt32, "_dummyPrimitive");
+                    bool hasRefPrivateField = excludedFields.Any(f => f.Type.IsOrContainsReferenceType());
+                    if (hasRefPrivateField)
                     {
-                        IFieldDefinition fieldType = DummyFieldWriterHelper(parentType, excludedFields, parentType.PlatformType.SystemInt32, "_dummyPrimitive");
-                        newFields.Add(fieldType);
+                        newFields.Add(DummyFieldWriterHelper(parentType, excludedFields, parentType.PlatformType.SystemObject));
+                        newFields.Add(intField);
+                    }
+                    else
+                    {
+                        bool hasNonEmptyStructPrivateField = excludedFields.Any(f => f.Type.IsOrContainsNonEmptyStruct());
+                        if (hasNonEmptyStructPrivateField)
+                        {
+                            newFields.Add(intField);
+                        }
                     }
                 }
 
@@ -310,6 +328,11 @@ namespace Microsoft.Cci.Writers
                 return "Nested Types";
 
             return null;
+        }
+
+        public void Dispose()
+        {
+            _declarationWriter?.Dispose();
         }
     }
 }

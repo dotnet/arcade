@@ -19,6 +19,12 @@ of Arcade or services.**
 - `master` for future releases
 - `release/<NET Core Major Version Number>` for servicing
 
+### How do I get my servicing fix into master?
+- Fixes that apply to both master as well as servicing releases must be first checked into
+  master and then cherry picked into the appropriate servicing branches.
+- Code flow happens from servicing branches back into master for the purposes of completeness,
+  but developers must **not** rely on this to get fixes into master.
+
 ### When do we branch?
 - Major releases of .NET Core, not minor
 
