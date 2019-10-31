@@ -50,7 +50,7 @@ stages:
       displayName: Signing Validation
       variables:
         - template: common-variables.yml
-        pool:
+      pool:
         vmImage: 'windows-2019'
       steps:
         - task: DownloadBuildArtifacts@0
