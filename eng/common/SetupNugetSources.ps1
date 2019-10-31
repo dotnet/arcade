@@ -14,66 +14,77 @@ param (
     [Parameter(Mandatory = $true)][string]$Password
 )
 
+$ErrorActionPreference = "Stop"
+Set-StrictMode -Version 2.0
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+
+. $PSScriptRoot\tools.ps1
+
 # Add source entry to PackageSources
-function AddPackageSource($sources, [string]$SourceName, [string]$SourceEndPoint, $creds, $Username, $Password) {
-	$packageSource = $sources.SelectSingleNode("add[@key='$SourceName']")
-	
-	if ($packageSource -eq $null)
-	{
-		$packageSource = $doc.CreateElement("add")
-		$packageSource.SetAttribute("key", $SourceName)
-		$packageSource.SetAttribute("value", $SourceEndPoint)
-		$sources.AppendChild($packageSource) | Out-Null
-	}
-	else {
-		Write-Host "Package source $SourceName already present."
-	}
-	
-	AddCredential -Creds $creds -Source $SourceName -Username $Username -Password $Password
+function AddPackageSource($sources, $SourceName, $SourceEndPoint, $creds, $Username, $Password) {
+    $packageSource = $sources.SelectSingleNode("add[@key='$SourceName']")
+    
+    if ($packageSource -eq $null)
+    {
+        $packageSource = $doc.CreateElement("add")
+        $packageSource.SetAttribute("key", $SourceName)
+        $packageSource.SetAttribute("value", $SourceEndPoint)
+        $sources.AppendChild($packageSource) | Out-Null
+    }
+    else {
+        Write-Host "Package source $SourceName already present."
+    }
+    
+    AddCredential -Creds $creds -Source $SourceName -Username $Username -Password $Password
 }
 
 # Add a credential node for the specified source
-function AddCredential($creds, [string]$source, [string]$username, [string]$password) {
-	# Looks for credential configuration for the given SourceName. Create it if none is found.
-	$sourceElement = $creds.SelectSingleNode($Source)
-	if ($sourceElement -eq $null)
-	{
-		$sourceElement = $doc.CreateElement($Source)
-		$creds.AppendChild($sourceElement) | Out-Null
-	}
+function AddCredential($creds, $source, $username, $password) {
+    # Looks for credential configuration for the given SourceName. Create it if none is found.
+    $sourceElement = $creds.SelectSingleNode($Source)
+    if ($sourceElement -eq $null)
+    {
+        $sourceElement = $doc.CreateElement($Source)
+        $creds.AppendChild($sourceElement) | Out-Null
+    }
 
-	# Add the <Username> node to the credential if none is found.
-	$usernameElement = $sourceElement.SelectSingleNode("add[@key='Username']")
-	if ($usernameElement -eq $null)
-	{
-		$usernameElement = $doc.CreateElement("add")
-		$usernameElement.SetAttribute("key", "Username")
-		$sourceElement.AppendChild($usernameElement) | Out-Null
-	}
-	$usernameElement.SetAttribute("value", $Username)
+    # Add the <Username> node to the credential if none is found.
+    $usernameElement = $sourceElement.SelectSingleNode("add[@key='Username']")
+    if ($usernameElement -eq $null)
+    {
+        $usernameElement = $doc.CreateElement("add")
+        $usernameElement.SetAttribute("key", "Username")
+        $sourceElement.AppendChild($usernameElement) | Out-Null
+    }
+    $usernameElement.SetAttribute("value", $Username)
 
-	# Add the <ClearTextPassword> to the credential if none is found.
-	# Add it as a clear text because there is no support for encrypted ones in non-windows .Net SDKs.
-	#   -> https://github.com/NuGet/Home/issues/5526
-	$passwordElement = $sourceElement.SelectSingleNode("add[@key='ClearTextPassword']")
-	if ($passwordElement -eq $null)
-	{
-		$passwordElement = $doc.CreateElement("add")
-		$passwordElement.SetAttribute("key", "ClearTextPassword")
-		$sourceElement.AppendChild($passwordElement) | Out-Null
-	}
-	$passwordElement.SetAttribute("value", $Password)
+    # Add the <ClearTextPassword> to the credential if none is found.
+    # Add it as a clear text because there is no support for encrypted ones in non-windows .Net SDKs.
+    #   -> https://github.com/NuGet/Home/issues/5526
+    $passwordElement = $sourceElement.SelectSingleNode("add[@key='ClearTextPassword']")
+    if ($passwordElement -eq $null)
+    {
+        $passwordElement = $doc.CreateElement("add")
+        $passwordElement.SetAttribute("key", "ClearTextPassword")
+        $sourceElement.AppendChild($passwordElement) | Out-Null
+    }
+    $passwordElement.SetAttribute("value", $Password)
 }
 
 function InsertMaestroPrivateFeedCredentials($Sources, $Creds, $Password) {
-	$maestroPrivateSources = $Sources.SelectNodes("add[contains(@key,'darc-int')]")
+    $maestroPrivateSources = $Sources.SelectNodes("add[contains(@key,'darc-int')]")
 
-	Write-Host "Inserting credentials for $($maestroPrivateSources.Count) Maestro's private feeds."
-	
-	ForEach ($PackageSource in $maestroPrivateSources) {
-		Write-Host "`tInserting credential for Maestro's feed:" $PackageSource.Key
-		AddCredential -Creds $creds -Source $PackageSource.Key -Username $Username -Password $Password
-	}
+    Write-Host "Inserting credentials for $($maestroPrivateSources.Count) Maestro's private feeds."
+    
+    ForEach ($PackageSource in $maestroPrivateSources) {
+        Write-Host "`tInserting credential for Maestro's feed:" $PackageSource.Key
+        AddCredential -Creds $creds -Source $PackageSource.Key -Username $Username -Password $Password
+    }
+}
+
+if (!(Test-Path $ConfigFile -PathType Leaf)) {
+  Write-Host "Couldn't find the file NuGet config file: $ConfigFile"
+  ExitWithExitCode 1
 }
 
 # Load NuGet.config
@@ -102,6 +113,3 @@ AddPackageSource -Sources $sources -SourceName "dotnet3-internal" -SourceEndPoin
 AddPackageSource -Sources $sources -SourceName "dotnet3-internal-transport" -SourceEndPoint "https://pkgs.dev.azure.com/dnceng/_packaging/dotnet3-internal-transport/nuget/v2" -Creds $creds -Username "dn-bot" -Password $Password
 
 $doc.Save($filename)
-
-Write-Host
-Get-Content -Path $ConfigFile
