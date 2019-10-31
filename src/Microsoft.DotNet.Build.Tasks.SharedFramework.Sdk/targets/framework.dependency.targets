@@ -244,11 +244,11 @@
       <_runtimePackageId>transport.runtime.$(PackageRID).$(MicrosoftNETCoreRuntimeCoreCLRPackage.ToLowerInvariant())</_runtimePackageId>
       <_runtimePackageVersion>$(MicrosoftNETCoreRuntimeCoreCLRPackageVersion)</_runtimePackageVersion>
 
-      <_runtimePackageDir>$(PackagesDir)$(_runtimePackageId)/$(_runtimePackageVersion)/</_runtimePackageDir>
-      <_jitPackageDir>$(PackagesDir)transport.runtime.$(PackageRID).microsoft.netcore.jit/$(MicrosoftNETCoreRuntimeCoreCLRPackageVersion)/</_jitPackageDir>
-      <_corefxPackageDir>$(PackagesDir)runtime.$(PackageRID).$(MicrosoftPrivateCoreFxNETCoreAppPackage.ToLowerInvariant())/$(MicrosoftPrivateCoreFxNETCoreAppPackageVersion)/</_corefxPackageDir>
-      <_winmdPackageDir>$(PackagesDir)$(MicrosoftTargetingPackPrivateWinRTPackage.ToLowerInvariant())/$(MicrosoftTargetingPackPrivateWinRTPackageVersion)/</_winmdPackageDir>
-      <_diaSymReaderPackageDir>$(PackagesDir)microsoft.diasymreader.native/$(MicrosoftDiaSymReaderNativePackageVersion)/</_diaSymReaderPackageDir>
+      <_runtimePackageDir>$(NuGetPackageRoot)$(_runtimePackageId)/$(_runtimePackageVersion)/</_runtimePackageDir>
+      <_jitPackageDir>$(NuGetPackageRoot)transport.runtime.$(PackageRID).microsoft.netcore.jit/$(MicrosoftNETCoreRuntimeCoreCLRPackageVersion)/</_jitPackageDir>
+      <_corefxPackageDir>$(NuGetPackageRoot)runtime.$(PackageRID).$(MicrosoftPrivateCoreFxNETCoreAppPackage.ToLowerInvariant())/$(MicrosoftPrivateCoreFxNETCoreAppPackageVersion)/</_corefxPackageDir>
+      <_winmdPackageDir>$(NuGetPackageRoot)$(MicrosoftTargetingPackPrivateWinRTPackage.ToLowerInvariant())/$(MicrosoftTargetingPackPrivateWinRTPackageVersion)/</_winmdPackageDir>
+      <_diaSymReaderPackageDir>$(NuGetPackageRoot)microsoft.diasymreader.native/$(MicrosoftDiaSymReaderNativePackageVersion)/</_diaSymReaderPackageDir>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(TargetArchitecture)' == 'arm' AND '$(OS)' == 'Windows_NT'">
