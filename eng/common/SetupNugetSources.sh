@@ -9,6 +9,18 @@
 #
 # This script needs to be called in every job that will restore packages and which the base repo has
 # private AzDO feeds in the NuGet.config.
+#
+# See example YAML call for this script below. Note the use of the variable `$(dn-bot-dnceng-artifact-feeds-rw)`
+# from the AzureDevOps-Artifact-Feeds-Pats variable group.
+#
+#  - task: Bash@3
+#    displayName: Setup Private Feeds Credentials
+#    inputs:
+#      filePath: $(Build.SourcesDirectory)/eng/common/SetupNugetSources.sh
+#      arguments: $BUILD_SOURCESDIRECTORY/NuGet.config $Token
+#    condition: ne(variables['Agent.OS'], 'Windows_NT')
+#    env:
+#      Token: $(dn-bot-dnceng-artifact-feeds-rw)
 
 ConfigFile=$1
 CredToken=$2
