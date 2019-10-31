@@ -13,7 +13,7 @@
   <PropertyGroup>
     <PackagingToolsDir>$(MSBuildThisFileDirectory)</PackagingToolsDir>
 
-    <InstallerSourceIntermediateOutputDir>$(ObjDir)$(InstallerSourceOSPlatformConfig)\$(MSBuildProjectName)\</InstallerSourceIntermediateOutputDir>
+    <InstallerSourceIntermediateOutputDir>$(ArtifactsObjDir)$(InstallerSourceOSPlatformConfig)\$(MSBuildProjectName)\</InstallerSourceIntermediateOutputDir>
 
     <CopyBuildOutputToOutputDirectory>false</CopyBuildOutputToOutputDirectory>
   </PropertyGroup>
@@ -24,7 +24,7 @@
 
   <!-- OS/Platform-specific obj subdirectory. The repo may provide this, e.g. Core-Setup. -->
   <PropertyGroup>
-    <IntermediateOutputRootPath Condition="'$(IntermediateOutputRootPath)' == ''">$(ObjDir)$(OSPlatformConfig)\</IntermediateOutputRootPath>
+    <IntermediateOutputRootPath Condition="'$(IntermediateOutputRootPath)' == ''">$(ArtifactsObjDir)$(OSPlatformConfig)\</IntermediateOutputRootPath>
   </PropertyGroup>
 
   <!-- Detect framework pack suffix and apply defaults. -->
