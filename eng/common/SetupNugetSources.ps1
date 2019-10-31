@@ -2,7 +2,7 @@
 # This file should be removed as part of this issue: https://github.com/dotnet/arcade/issues/4080
 #
 # What the script does is iterate over all package sources in the pointed NuGet.config and add a credential entry
-# under <packageSourceCredentials> for each Maestro's managed private feed. Two additional credential 
+# under <packageSourceCredentials> for each Maestro managed private feed. Two additional credential 
 # entries are also added for the two private static internal feeds: dotnet3-internal and dotnet3-internal-transport.
 #
 # This script needs to be called in every job that will restore packages and which the base repo has
