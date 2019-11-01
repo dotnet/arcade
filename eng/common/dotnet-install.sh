@@ -42,7 +42,7 @@ while [[ $# > 0 ]]; do
       runtimeSourceFeedKey="$1"
       ;;
     *)
-      Write-PipelineTelemetryError -Category "Build" -Message "Invalid argument: $1"
+      Write-PipelineTelemetryError -Category 'Build' -Message "Invalid argument: $1"
       exit 1
       ;;
   esac
@@ -82,7 +82,7 @@ fi
 
 InstallDotNet $dotnetRoot $version "$architecture" $runtime true $runtimeSourceFeed $runtimeSourceFeedKey || {
   local exit_code=$?
-  Write-PipelineTelemetryError -Category "InitializeToolset" -Message "dotnet-install.sh failed (exit code '$exit_code')." >&2
+  Write-PipelineTelemetryError -Category 'InitializeToolset' -Message "dotnet-install.sh failed (exit code '$exit_code')." >&2
   ExitWithExitCode $exit_code
 }
 
