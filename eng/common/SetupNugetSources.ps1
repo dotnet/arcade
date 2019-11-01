@@ -95,7 +95,7 @@ function InsertMaestroPrivateFeedCredentials($Sources, $Creds, $Password) {
 }
 
 if (!(Test-Path $ConfigFile -PathType Leaf)) {
-  Write-Host "Couldn't find the file NuGet config file: $ConfigFile"
+  Write-PipelineTelemetryError -Category 'Build' -Message "Couldn't find the file NuGet config file: $ConfigFile"
   ExitWithExitCode 1
 }
 
