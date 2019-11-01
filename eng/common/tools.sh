@@ -437,7 +437,7 @@ Write-PipelineSetVariable -name "Temp" -value "$temp_dir"
 Write-PipelineSetVariable -name "TMP" -value "$temp_dir"
 
 # Import custom tools configuration, if present in the repo.
-if [[ "$disable_configure_toolset_import" != null ]]; then
+if [[ -n "$disable_configure_toolset_import" ]]; then
   configure_toolset_script="$eng_root/configure-toolset.sh"
   if [[ -a "$configure_toolset_script" ]]; then
     . "$configure_toolset_script"
