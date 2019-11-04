@@ -66,15 +66,15 @@ namespace Microsoft.DotNet.XUnitExtensions
 
         private static bool IsJitStressRegs => !string.Equals(GetEnvironmentVariableValue("COMPlus_JitStressRegs"), "0", StringComparison.InvariantCulture);
 
-        private static bool IsJitMinOpts => string.Equals(GetEnvironmentVariableValue("COMPlus_JitMinOpts"), "1", StringComparison.InvariantCulture);
+        private static bool IsJitMinOpts => string.Equals(GetEnvironmentVariableValue("COMPlus_JITMinOpts"), "1", StringComparison.InvariantCulture);
 
         private static bool IsTailCallStress => string.Equals(GetEnvironmentVariableValue("COMPlus_TailcallStress"), "1", StringComparison.InvariantCulture);
 
         private static bool IsZapDisable => string.Equals(GetEnvironmentVariableValue("COMPlus_ZapDisable"), "1", StringComparison.InvariantCulture);
 
-        private static bool IsGCStress3 => string.Equals(GetEnvironmentVariableValue("COMPlus_GCStress"), "0x3", StringComparison.InvariantCulture);
+        private static bool IsGCStress3 => CompareMultipleValues(GetEnvironmentVariableValue("COMPlus_GCStress"), "0x3", "3");
 
-        private static bool IsGCStressC => string.Equals(GetEnvironmentVariableValue("COMPlus_GCStress"), "0xC", StringComparison.InvariantCulture);
+        private static bool IsGCStressC => CompareMultipleValues(GetEnvironmentVariableValue("COMPlus_GCStress"), "0xC", "C");
 
         private static bool IsCheckedRuntime()
         {
@@ -84,5 +84,9 @@ namespace Microsoft.DotNet.XUnitExtensions
             return assemblyConfigurationAttribute != null &&
                 string.Equals(assemblyConfigurationAttribute.Configuration, "Checked", StringComparison.InvariantCulture);
         }
+
+        private static bool CompareMultipleValues(string value, string firstOption, string secondOption) =>
+            string.Equals(value, firstOption, StringComparison.InvariantCulture) ||
+            string.Equals(value, secondOption, StringComparison.InvariantCulture);
     }
 }
