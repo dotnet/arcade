@@ -90,7 +90,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
                 {
                     telemetryCategory = telemetryInfo.Category;
                 }
-                if (telemetryCategory == null)
+                if (string.IsNullOrEmpty(telemetryCategory))
                 {
                     if (_projectInfoMap.TryGetValue(parentId.Value, out ProjectInfo projectInfo))
                     {
