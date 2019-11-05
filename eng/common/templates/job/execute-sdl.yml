@@ -6,6 +6,7 @@ parameters:
   # This can also be remedied by the caller (post-build.yml) if it does not use a nested parameter
   sdlContinueOnError: false                                    # optional: determines whether to continue the build if the step errors;
   dependsOn: ''                                                # Optional: dependencies of the job
+  artifactPatterns: []                                     # Optional: patterns supplied to DownloadBuildArtifacts
 
 jobs:
 - job: Run_SDL
@@ -18,13 +19,22 @@ jobs:
   steps:
   - checkout: self
     clean: true
-  - task: DownloadBuildArtifacts@0
-    displayName: Download Build Artifacts
-    inputs:
-      buildType: current
-      downloadType: specific files
-      matchingPattern: "**"
-      downloadPath: $(Build.ArtifactStagingDirectory)\artifacts
+  - ${{ if ne(parameters.artifactPatterns, '') }}:
+    - ${{ each artifactPattern in parameters.artifactPatterns }}:
+      - task: DownloadBuildArtifacts@0
+        displayName: Download Build Artifacts
+        inputs:
+          buildType: current
+          itemPattern: ${{ coalesce(artifactPattern, '**'') }}
+          downloadPath: $(Build.ArtifactStagingDirectory)\artifacts
+  - ${{ if eq (paramteters.artifactsPatterns, '') }}:
+    - task: DownloadBuildArtifacts@0
+        displayName: Download Build Artifacts
+        inputs:
+          buildType: current
+          downloadType: single item
+          itemPattern: "**"
+          downloadPath: $(Build.ArtifactStagingDirectory)\artifacts
   - powershell: eng/common/sdl/extract-artifact-packages.ps1
       -InputPath $(Build.ArtifactStagingDirectory)\artifacts\BlobArtifacts
       -ExtractPath $(Build.ArtifactStagingDirectory)\artifacts\BlobArtifacts
