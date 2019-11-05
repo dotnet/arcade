@@ -854,7 +854,7 @@ Add a goal time for existing repository. The newly added goal time can be update
 ```
 ( this is when we have a separate goal table in BAR )
 
-PS D:\enlistments\arcade> darc add-goal  --goal 38 --repo "https://dev.azure.com/dnceng/internal/_git/dotnet-arcade" --channel ".Net Core 5 Dev"
+PS D:\enlistments\arcade> darc add-goal  --goal 38 --repo "https://dev.azure.com/dnceng/internal/_git/dotnet-arcade" --channel ".Net Core 5 Dev" , "test"
 
 Added a new goal for Repo "https://dev.azure.com/dnceng/internal/_git/dotnet-arcade" = 38 minutes.
 ```
@@ -864,14 +864,14 @@ Added a new goal for Repo "https://dev.azure.com/dnceng/internal/_git/dotnet-arc
 ```
 (if we add another column for subscription table)
 
-PS D:\enlistments\arcade> darc add-goal  --goal 38 --repo "https://dev.azure.com/dnceng/internal/_git/dotnet-arcade" --channel ".Net Core 5 Dev" --subscriptionId "1abbb4c1-19d8-4912-fab8-08d6a19aff9"
+PS D:\enlistments\arcade> darc add-goal  --goal 38 --repo "https://dev.azure.com/dnceng/internal/_git/dotnet-arcade"  --subscriptionId "1abbb4c1-19d8-4912-fab8-08d6a19aff9"  --channel ".Net Core 5 Dev"
 
 Added a new goal for Repo "https://dev.azure.com/dnceng/internal/_git/dotnet-arcade" = 38 minutes.
 ```
 
 **Parameters**
 
-- `-n, --name` -  **(Required)**. Name of channel.
+- `-n, --name` -  **(Required)**. Name of the channel/s where the repo is published.
 - `-r, --repo` - **(Required)** Name of the repository.
 - `--goal` - **(Required)** Goal time in minutues.
 - `--subscriptionid` - **(Required)** Subscription id. 
@@ -2611,7 +2611,7 @@ Updated the goal time for existing repository.
 ```
 (Using new table to ingest goal)
 
-PS D:\enlistments\arcade> darc update-goal  --goal 38 --repo "https://dev.azure.com/dnceng/internal/_git/dotnet-arcade" --channel ".Net Core 5 Dev"
+PS D:\enlistments\arcade> darc update-goal  --goal 38 --repo "https://dev.azure.com/dnceng/internal/_git/dotnet-arcade" --channel ".Net Core 5 Dev" , "test"
 
 Updated the goal for Repo "https://dev.azure.com/dnceng/internal/_git/dotnet-arcade" = 38 minutes.
 ```
@@ -2620,14 +2620,14 @@ Updated the goal for Repo "https://dev.azure.com/dnceng/internal/_git/dotnet-arc
 ```
 (if we add another column for subscription table)
 
-PS D:\enlistments\arcade> darc update-goal  --goal 38 --repo "https://dev.azure.com/dnceng/internal/_git/dotnet-arcade" --channel ".Net Core 5 Dev" --subscriptionId "1abbb4c1-19d8-4912-fab8-08d6a19aff9"
+PS D:\enlistments\arcade> darc update-goal  --goal 38 --repo "https://dev.azure.com/dnceng/internal/_git/dotnet-arcade" --subscriptionId "1abbb4c1-19d8-4912-fab8-08d6a19aff9" --channel ".Net Core 5 Dev" 
 
 Added a new goal for Repo "https://dev.azure.com/dnceng/internal/_git/dotnet-arcade" = 38 minutes.
 ```
 
 **Parameters**
 
-- `-n, --name` -  **(Required)**. Name of channel.
+- `-n, --name` -  **(Required)**. Name of the channel/s where the repo is published.
 - `-r, --repo` - **(Required)** Name of the repository.
 - `--goal` - **(Required)** Goal time in minutues.
 - `--subscriptionid` - **(Required)** Subscription id. 
