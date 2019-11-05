@@ -845,6 +845,40 @@ Successfully created new channel with name 'Foo'.
 - [delete-channel](#delete-channel)
 - [get-channels](#get-channels)
 
+
+### **`add-goal`**
+
+Add a goal time for existing repository. The newly added goal time can be updated using [update-goal](#update-goal). 
+
+**Sample**:  
+```
+( this is when we have a separate goal table in BAR )
+
+PS D:\enlistments\arcade> darc add-goal  --goal 38 --repo "https://dev.azure.com/dnceng/internal/_git/dotnet-arcade" --channel ".Net Core 5 Dev"
+
+Added a new goal for Repo "https://dev.azure.com/dnceng/internal/_git/dotnet-arcade" = 38 minutes.
+```
+
+(Or)
+
+```
+(if we add another column for subscription table)
+
+PS D:\enlistments\arcade> darc add-goal  --goal 38 --repo "https://dev.azure.com/dnceng/internal/_git/dotnet-arcade" --channel ".Net Core 5 Dev" --subscriptionId "1abbb4c1-19d8-4912-fab8-08d6a19aff9"
+
+Added a new goal for Repo "https://dev.azure.com/dnceng/internal/_git/dotnet-arcade" = 38 minutes.
+```
+
+**Parameters**
+
+- `-n, --name` -  **(Required)**. Name of channel.
+- `-r, --repo` - **(Required)** Name of the repository.
+- `--goal` - **(Required)** Goal time in minutues.
+- `--subscriptionid` - **(Required)** Subscription id. 
+
+**See also**:
+- [update-goal](#update-goal)
+
 ### **`add-dependency`**
 
 Add a new tracked dependency to the Version.Detail.xml file in your local repo.
@@ -2567,6 +2601,40 @@ https://github.com/aspnet/AspNetCore (.NET Core 5 Dev) ==> 'https://github.com/a
 
 **See also**:
 - [get-subscriptions](#get-subscriptions)
+
+
+### **`update-goal`**
+
+Updated the goal time for existing repository.
+
+**Sample**:
+```
+(Using new table to ingest goal)
+
+PS D:\enlistments\arcade> darc update-goal  --goal 38 --repo "https://dev.azure.com/dnceng/internal/_git/dotnet-arcade" --channel ".Net Core 5 Dev"
+
+Updated the goal for Repo "https://dev.azure.com/dnceng/internal/_git/dotnet-arcade" = 38 minutes.
+```
+(OR)
+
+```
+(if we add another column for subscription table)
+
+PS D:\enlistments\arcade> darc update-goal  --goal 38 --repo "https://dev.azure.com/dnceng/internal/_git/dotnet-arcade" --channel ".Net Core 5 Dev" --subscriptionId "1abbb4c1-19d8-4912-fab8-08d6a19aff9"
+
+Added a new goal for Repo "https://dev.azure.com/dnceng/internal/_git/dotnet-arcade" = 38 minutes.
+```
+
+**Parameters**
+
+- `-n, --name` -  **(Required)**. Name of channel.
+- `-r, --repo` - **(Required)** Name of the repository.
+- `--goal` - **(Required)** Goal time in minutues.
+- `--subscriptionid` - **(Required)** Subscription id. 
+
+
+**See also**:
+- [add-goal](#add-goal)
 
 ### **`trigger-subscriptions`**
 
