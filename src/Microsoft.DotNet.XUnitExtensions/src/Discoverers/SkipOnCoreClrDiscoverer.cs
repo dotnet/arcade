@@ -72,9 +72,9 @@ namespace Microsoft.DotNet.XUnitExtensions
 
         private static bool IsZapDisable => string.Equals(GetEnvironmentVariableValue("COMPlus_ZapDisable"), "1", StringComparison.InvariantCulture);
 
-        private static bool IsGCStress3 => CompareMultipleValues(GetEnvironmentVariableValue("COMPlus_GCStress"), "0x3", "3");
+        private static bool IsGCStress3 => CompareAsNumber(GetEnvironmentVariableValue("COMPlus_GCStress"), 0x3, 0xF);
 
-        private static bool IsGCStressC => CompareMultipleValues(GetEnvironmentVariableValue("COMPlus_GCStress"), "0xC", "C");
+        private static bool IsGCStressC => CompareAsNumber(GetEnvironmentVariableValue("COMPlus_GCStress"), 0xC, 0xF);
 
         private static bool IsCheckedRuntime()
         {
@@ -85,8 +85,7 @@ namespace Microsoft.DotNet.XUnitExtensions
                 string.Equals(assemblyConfigurationAttribute.Configuration, "Checked", StringComparison.InvariantCulture);
         }
 
-        private static bool CompareMultipleValues(string value, string firstOption, string secondOption) =>
-            string.Equals(value, firstOption, StringComparison.InvariantCulture) ||
-            string.Equals(value, secondOption, StringComparison.InvariantCulture);
+        private static bool CompareAsNumber(string value, int first, int second) =>
+            int.TryParse(value, out int result) && result == first || result == second;
     }
 }
