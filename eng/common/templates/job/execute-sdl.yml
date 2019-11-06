@@ -19,7 +19,7 @@ jobs:
   steps:
   - checkout: self
     clean: true
-  - ${{ if ne(parameters.artifactPatterns, '') }}:
+  - ${{ if ne(parameters.artifactPatterns, []) }}:
     - ${{ each artifactPattern in parameters.artifactPatterns }}:
       - task: DownloadBuildArtifacts@0
         displayName: Download Build Artifacts
@@ -27,7 +27,7 @@ jobs:
           buildType: current
           itemPattern: ${{ coalesce(artifactPattern, '**') }}
           downloadPath: $(Build.ArtifactStagingDirectory)\artifacts
-  - ${{ if eq(parameters.artifactPatterns, '') }}:
+  - ${{ if eq(parameters.artifactPatterns, []) }}:
     - task: DownloadBuildArtifacts@0
       displayName: Download Build Artifacts
       inputs:
