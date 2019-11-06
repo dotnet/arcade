@@ -859,7 +859,7 @@ Added a new goal for Repo "https://dev.azure.com/dnceng/internal/_git/dotnet-arc
 
 **Parameters**
 
-- `-n, --name` -  **(Required)**. Name of the channel/s where the repo is published.
+- `--channel` -  **(Required)**. Name of the channel/s where the repo is published.
 - `-r, --repo` - **(Required)** Name of the repository.
 - `--goal` - **(Required)** Goal time in minutues.
 
@@ -1002,7 +1002,7 @@ PS D:\enlistments\arcade> darc add-default-channel --channel ".Net Core 5 Dev" -
 - [get-channels](#get-channels)
 - [get-default-channels](#get-default-channels)
 - [delete-default-channel](#delete-default-channel)
-- [set-goal][#set-goal]
+- [set-goal](#set-goal)
 
 ### **`add-subscription`**
 
@@ -1265,7 +1265,7 @@ Default channel association has been enabled.
 - [add-default-channel](#add-default-channel)
 - [delete-default-channel](#delete-default-channel)
 - [get-default-channels](#get-default-channels)
-- [set-goal][#set-goal]
+- [set-goal](#set-goal)
 
 ### **`delete-channel`**
 
