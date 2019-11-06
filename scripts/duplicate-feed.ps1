@@ -55,7 +55,9 @@ function Get-Package-List($vstsAuthHeader, $account, $visibility, $feed) {
             $versionsResult = Invoke-WebRequest -Headers $vstsAuthHeader $package._links.versions.href
             $versionsResultJson = $versionsResult | ConvertFrom-Json
             foreach ($version in $versionsResultJson.value) {
-                $listOfPackages += @{ name = $package.name; version = $version.version }
+                if (-not $version.isDeleted) {
+                    $listOfPackages += @{ name = $package.name; version = $version.version }
+                }
             }
         }
     } catch {
