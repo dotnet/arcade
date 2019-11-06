@@ -29,12 +29,12 @@ jobs:
           downloadPath: $(Build.ArtifactStagingDirectory)\artifacts
   - ${{ if eq(paramteters.artifactPatterns, '') }}:
     - task: DownloadBuildArtifacts@0
-        displayName: Download Build Artifacts
-        inputs:
-          buildType: current
-          downloadType: single item
-          itemPattern: "**"
-          downloadPath: $(Build.ArtifactStagingDirectory)\artifacts
+      displayName: Download Build Artifacts
+      inputs:
+        buildType: current
+        downloadType: single item
+        itemPattern: "**"
+        downloadPath: $(Build.ArtifactStagingDirectory)\artifacts
   - powershell: eng/common/sdl/extract-artifact-packages.ps1
       -InputPath $(Build.ArtifactStagingDirectory)\artifacts\BlobArtifacts
       -ExtractPath $(Build.ArtifactStagingDirectory)\artifacts\BlobArtifacts
