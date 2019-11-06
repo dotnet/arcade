@@ -212,8 +212,13 @@
       <FilesToPublishToSymbolServer Include="$(ArtifactsSymStoreDirectory)**\*.pdb"/>
     </ItemGroup>
 
+    <!--
+       Publishes the whole folder of symbols as an artifact container. Unfortunately,
+       AzDO logging commands don't let us add subfolders by executing different `##vso` commands:
+       https://github.com/microsoft/azure-pipelines-tasks/issues/11689
+    -->
     <Message
-      Text="##vso[artifact.upload containerfolder=PdbArtifacts;artifactname=PdbArtifacts]%(FilesToPublishToSymbolServer.Identity)"
+      Text="##vso[artifact.upload containerfolder=PdbArtifacts;artifactname=PdbArtifacts]$(ArtifactsSymStoreDirectory)"
       Importance="high" 
       Condition="'@(FilesToPublishToSymbolServer)' != ''"/>
 
