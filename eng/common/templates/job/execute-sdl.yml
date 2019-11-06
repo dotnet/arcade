@@ -27,7 +27,7 @@ jobs:
           buildType: current
           itemPattern: ${{ coalesce(artifactPattern, '**') }}
           downloadPath: $(Build.ArtifactStagingDirectory)\artifacts
-  - ${{ if eq (paramteters.artifactsPatterns, '') }}:
+  - ${{ if eq(paramteters.artifactPatterns, '') }}:
     - task: DownloadBuildArtifacts@0
         displayName: Download Build Artifacts
         inputs:
