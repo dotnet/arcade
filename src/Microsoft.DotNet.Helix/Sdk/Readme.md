@@ -22,6 +22,20 @@ Each of the following examples require dotnet-cli >= 2.1.300 and need the follow
   </packageSources>
 </configuration>
 ```
+    <add key="dotnet-eng" value="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json" />
+  </packageSources>
+</configuration>
+```
+#### global.json
+```json
+{
+  "msbuild-sdks": {
+    "Microsoft.DotNet.Helix.Sdk": "<version of helix sdk package from package feed>"
+  }
+}
+```
+
+Versions of the package can be found by browsing the feed at https://dev.azure.com/dnceng/public/_packaging?_a=feed&feed=dotnet-eng
 
 The examples can all be run with `dotnet msbuild` and will require an environment variable or MSBuildProperty `HelixAccessToken` set if:
 - A queue with a value of IsInternalOnly=true (usually any not ending in '.Open') is selected for `HelixTargetQueues`
