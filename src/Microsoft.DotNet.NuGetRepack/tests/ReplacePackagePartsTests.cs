@@ -11,7 +11,7 @@ namespace Microsoft.DotNet.Tools.Tests
 {
     public class ReplacePackagePartsTests
     {
-        [Fact]
+        [Fact(Skip = "https://github.com/dotnet/arcade/issues/3794")]
         public static void ReplaceFile()
         {
             var dir = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString());

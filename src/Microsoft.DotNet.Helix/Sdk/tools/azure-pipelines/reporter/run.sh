@@ -4,10 +4,14 @@ set -x
 script_path=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 
 ENV_PATH=$HOME/.vsts-env
+TMP_ENV_PATH=$HOME/.vsts-env-tmp
 date -u +"%FT%TZ"
 
 if [ ! -f $ENV_PATH/bin/python ]; then
-  $HELIX_PYTHONPATH -m virtualenv --no-site-packages $ENV_PATH
+  rm -rf $ENV_PATH
+  rm -rf $TMP_ENV_PATH
+  $HELIX_PYTHONPATH -m virtualenv --no-site-packages $TMP_ENV_PATH
+  mv -T $TMP_ENV_PATH $ENV_PATH
 fi
 
 if $ENV_PATH/bin/python -c "import azure.devops"; then

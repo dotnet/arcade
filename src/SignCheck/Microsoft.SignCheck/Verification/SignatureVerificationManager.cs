@@ -125,7 +125,24 @@ namespace Microsoft.SignCheck.Verification
                     Log.WriteMessage(LogVerbosity.Diagnostic, SignCheckResources.DiagGenerateExclusion, result.Filename, result.ExclusionEntry);
                 }
 
-                result.IsExcluded = Exclusions.IsExcluded(file, parent: null, containerPath: null);
+                result.IsDoNotSign = Exclusions.IsDoNotSign(file, parent: null, containerPath: null);
+
+                if ((result.IsDoNotSign) && (result.IsSigned))
+                {
+                    // Report errors if a DO-NOT-SIGN file is signed.
+                    result.AddDetail(DetailKeys.Error, SignCheckResources.DetailDoNotSignFileSigned, result.Filename);
+                }
+
+                if ((!result.IsDoNotSign) && (!result.IsSigned))
+                {
+                    result.IsExcluded = Exclusions.IsExcluded(file, parent: null, containerPath: null);
+
+                    if ((result.IsExcluded))
+                    {
+                        result.AddDetail(DetailKeys.File, SignCheckResources.DetailExcluded);
+                    }
+                }
+
                 Results.Add(result);
             }
 

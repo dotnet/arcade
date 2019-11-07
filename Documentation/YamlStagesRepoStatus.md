@@ -13,7 +13,7 @@ Target completion date is 8/13/2019.
 | Arcade                     | mawilkie         | Complete | ✔️ | |
 | Arcade-Services            | mawilkie         | Complete | ✔️ | |
 | Arcade-Validation          | mawilkie         | Complete | ✔️ | |
-| aspnet-AspNetCore          | dougbu           | In progress | ➖  |  In PR https://github.com/aspnet/AspNetCore/pull/13040 |
+| aspnet-AspNetCore          | dougbu           | Complete | ✔️ | |
 | aspnet-AspNetCore-Tooling  | dougbu           | Complete | ✔️ | |
 | aspnet-EntityFramework6    | dougbu/wtgodbe   | Complete | ✔️ | |
 | aspnet-EntityFrameworkCore | dougbu/wtgodbe   | Complete | ✔️ | |

@@ -33,6 +33,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         [Required]
         public string CommitSha { get; set; }
 
+        /// <summary>
+        /// Additional info to include in the feed name (for example "sym")
+        /// </summary>
+        public string ContentIdentifier { get; set; }
+
         [Required]
         public string AzureDevOpsPersonalAccessToken { get; set; }
 
@@ -41,6 +46,16 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         public static string AzureDevOpsOrg { get; set; } = "dnceng";
 
         private readonly string AzureDevOpsFeedsBaseUrl = $"https://feeds.dev.azure.com/{AzureDevOpsOrg}/";
+
+        /// <summary>
+        /// Number of characters from the commit SHA prefix that should be included in the feed name.
+        /// </summary>
+        private readonly int ShaUsableLength = 8;
+
+        /// <summary>
+        /// Maximum allowed length for AzDO feed names.
+        /// </summary>
+        private readonly int MaxLengthForAzDoFeedNames = 64;
 
         public override bool Execute()
         {
@@ -51,21 +66,42 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         {
             try
             {
+                if (CommitSha.Length < ShaUsableLength)
+                {
+                    Log.LogError($"The CommitSHA should be at least {ShaUsableLength} characters long: CommitSha is '{CommitSha}'. Aborting feed creation.");
+                    return false;
+                }
+
                 JsonSerializerSettings _serializerSettings = new JsonSerializerSettings
                 {
                     ContractResolver = new CamelCasePropertyNamesContractResolver(),
                     NullValueHandling = NullValueHandling.Ignore
                 };
 
+                // GitHub repos may appear in the repository name with an 'org/repo' form.
+                // When creating a repo, Github aslready replaces all of the characters invalid in AzDO feed names (see below)
+                // with '-' in the repo name. We just need to replace '/' with '-' to deal with the org/repo input.
+                // From the AzDO docs:
+                // The feed name can't contain spaces, start with a '.' or '_', end with a '.',
+                // or contain any of these: @ ~ ; { } ' + = , < > | / \ ? : & $ * " # [ ] %
+                string feedCompatibleRepositoryName = RepositoryName.Replace('/', '-');
+
                 string accessType = IsInternal ? "internal" : "public";
                 string publicSegment = IsInternal ? string.Empty : "public/";
                 string accessId = IsInternal ? "int" : "pub";
-                string baseFeedName = $"darc-{accessId}-{RepositoryName}-{CommitSha}";
+                string extraContentInfo = !string.IsNullOrEmpty(ContentIdentifier) ? $"-{ContentIdentifier}" : "";
+                string baseFeedName = $"darc-{accessId}{extraContentInfo}-{feedCompatibleRepositoryName}-{CommitSha.Substring(0, ShaUsableLength)}";
                 string versionedFeedName = baseFeedName;
                 bool needsUniqueName = false;
                 int subVersion = 0;
 
                 Log.LogMessage(MessageImportance.High, $"Creating the new {accessType} Azure DevOps artifacts feed '{baseFeedName}'...");
+
+                if (baseFeedName.Length > MaxLengthForAzDoFeedNames)
+                {
+                    Log.LogError($"The name of the new feed ({baseFeedName}) exceeds the maximum feed name size of 64 chars. Aborting feed creation.");
+                    return false;
+                }
 
                 do
                 {
@@ -99,6 +135,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         {
                             versionedFeedName = $"{baseFeedName}-{++subVersion}";
                             needsUniqueName = true;
+
+                            if (versionedFeedName.Length > MaxLengthForAzDoFeedNames)
+                            {
+                                Log.LogError($"The name of the new feed ({baseFeedName}) exceeds the maximum feed name size of 64 chars. Aborting feed creation.");
+                                return false;
+                            }
                         }
                         else
                         {
@@ -107,7 +149,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     }
                 } while (needsUniqueName);
 
-                TargetFeedURL = $"https://{AzureDevOpsOrg}.pkgs.visualstudio.com/{publicSegment}_packaging/{baseFeedName}";
+                TargetFeedURL = $"https://pkgs.dev.azure.com/{AzureDevOpsOrg}/{publicSegment}_packaging/{baseFeedName}/nuget/v3/index.json";
                 TargetFeedName = baseFeedName;
 
                 Log.LogMessage(MessageImportance.High, $"Feed '{TargetFeedURL}' created successfully!");

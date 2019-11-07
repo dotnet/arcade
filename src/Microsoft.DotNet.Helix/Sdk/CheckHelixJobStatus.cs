@@ -37,7 +37,8 @@ namespace Microsoft.DotNet.Helix.Sdk
                     var workItemName = failedWorkItem.GetMetadata("WorkItemName");
                     var consoleUri = failedWorkItem.GetMetadata("ConsoleOutputUri");
 
-                    Log.LogError($"Work item {failedWorkItem} in job {jobName} has failed, logs available here:{Environment.NewLine}{consoleUri}{accessTokenSuffix}.");
+                    Log.LogError(FailureCategory.Test, $"Work item {failedWorkItem} in job {jobName} has failed.");
+                    Log.LogError(FailureCategory.Test, $"Failure log: {consoleUri}{accessTokenSuffix} .");
                 }
             }
 
@@ -77,20 +78,20 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             if (results.Count != 1)
             {
-                Log.LogError($"Not exactly 1 result from aggregate api for job '{jobName}': {JsonConvert.SerializeObject(results)}");
+                Log.LogError(FailureCategory.Helix, $"Not exactly 1 result from aggregate api for job '{jobName}': {JsonConvert.SerializeObject(results)}");
                 return true;
             }
 
             var data = results[0].Data;
             if (data == null)
             {
-                Log.LogError($"No data found in first result for job '{jobName}'.");
+                Log.LogError(FailureCategory.Helix, $"No data found in first result for job '{jobName}'.");
                 return true;
             }
 
             if (data.WorkItemStatus.ContainsKey("fail"))
             {
-                Log.LogError($"Job '{jobName}' has {data.WorkItemStatus["fail"]} failed work items.");
+                Log.LogError(FailureCategory.Test, $"Job '{jobName}' has {data.WorkItemStatus["fail"]} failed work items.");
                 return true;
             }
 
@@ -105,7 +106,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                 var xunitAnalysis = analysis.FirstOrDefault(a => a.Name == "xunit");
                 if (xunitAnalysis == null)
                 {
-                    Log.LogError($"Job '{jobName}' has no xunit analysis.");
+                    Log.LogError(FailureCategory.Test, $"Job '{jobName}' has no xunit analysis.");
                     return true;
                 }
 
@@ -116,7 +117,7 @@ namespace Microsoft.DotNet.Helix.Sdk
 
                 if (fail > 0)
                 {
-                    Log.LogError($"Job '{jobName}' failed {fail} out of {total} tests.");
+                    Log.LogError(FailureCategory.Test, $"Job '{jobName}' failed {fail} out of {total} tests.");
                 }
                 return true;
             }

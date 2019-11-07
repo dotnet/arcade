@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.Build.Framework;
+using Microsoft.DotNet.Helix.Sdk;
 using Newtonsoft.Json.Linq;
 
 namespace Microsoft.DotNet.Helix.AzureDevOps
@@ -57,7 +58,7 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
                         .FirstOrDefault(stat => stat["outcome"]?.ToString() == "Failed");
                     if (failed != null)
                     {
-                        Log.LogError($"Test run {testRunId} has one or more failing tests.");
+                        Log.LogError(FailureCategory.Test, $"Test run {testRunId} has one or more failing tests.");
                     }
                     else
                     {
@@ -94,7 +95,7 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
                     var message = $"Build has {count} {outcome} tests.";
                     if (outcome == "failed")
                     {
-                        Log.LogError(message);
+                        Log.LogError(FailureCategory.Test, message);
                     }
                     else
                     {
@@ -104,7 +105,7 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
             }
             else
             {
-                Log.LogError("Unable to get test report from build.");
+                Log.LogError(FailureCategory.Helix, "Unable to get test report from build.");
             }
         }
 
@@ -139,13 +140,13 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
                     }
                     else
                     {
-                        Log.LogError($"TestRun {runId}: Test {testName} has failed and is not expected to fail.");
+                        Log.LogError(FailureCategory.Test, $"TestRun {runId}: Test {testName} has failed and is not expected to fail.");
                     }
                 }
 
                 foreach (string expectedFailure in expectedFailures)
                 {
-                    Log.LogError($"TestRun {runId}: Test {expectedFailure} was expected to fail but did not fail.");
+                    Log.LogError(FailureCategory.Test, $"TestRun {runId}: Test {expectedFailure} was expected to fail but did not fail.");
                 }
             }
         }
