@@ -195,7 +195,7 @@ publishing works as expected.
 We are looking into ways to improve the onboarding experience, and are tracking that through https://github.com/dotnet/arcade/issues/3390
 
 1. Publish a branch to the Azure devops mirror for the repo that includes the pipeline changes
-2. Set up a default channel for the internal repo + branch combination using darc that targets the `.Net Tools - Validation` channel. Note that the default channels require the full branch reference.
+2. Set up a default channel for the internal repo + branch combination using darc that targets the `General Testing` channel. Note that the default channels require the full branch reference.
 
     ``` Powershell
     # From a repository that contains an eng/common folder
