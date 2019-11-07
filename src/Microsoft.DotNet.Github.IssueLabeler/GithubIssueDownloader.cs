@@ -38,7 +38,7 @@ namespace Microsoft.DotNet.Github.IssueLabeler
             {
                 Credentials = new Credentials(authToken)
             };
-            
+
             _repoName = repoName;
             _owner = owner;
             _startIndex = startIndex;
@@ -74,8 +74,8 @@ namespace Microsoft.DotNet.Github.IssueLabeler
                 }
                 catch (RateLimitExceededException ex)
                 {
-                    TimeSpan timeToWait = ex.Reset.AddMinutes(1) - DateTimeOffset.UtcNow;
-                    await Task.Delay((int)timeToWait.TotalMilliseconds).ConfigureAwait(false);
+                    TimeSpan timeToWait = ex.Reset.AddMinutes(5) - DateTimeOffset.UtcNow;
+                    await Task.Delay(timeToWait).ConfigureAwait(false);
                     i--;
                     continue;
                 }
