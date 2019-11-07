@@ -111,6 +111,9 @@ stages:
       parameters:
         additionalParameters: ${{ parameters.SDLValidationParameters.params }}
         continueOnError: ${{ parameters.SDLValidationParameters.continueOnError }}
+        artifactPatterns:
+          - 'BlobArtifacts'
+          - 'Artifacts_Windows_NT_Release'
 
 - template: \eng\common\templates\post-build\channels\netcore-dev-5.yml
   parameters:
