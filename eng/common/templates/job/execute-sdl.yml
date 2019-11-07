@@ -6,7 +6,7 @@ parameters:
   # This can also be remedied by the caller (post-build.yml) if it does not use a nested parameter
   sdlContinueOnError: false                                    # optional: determines whether to continue the build if the step errors;
   dependsOn: ''                                                # Optional: dependencies of the job
-  artifactPatterns: ''                                         # Optional: patterns supplied to DownloadBuildArtifacts
+  artifactNames: ''                                         # Optional: patterns supplied to DownloadBuildArtifacts
 
 jobs:
 - job: Run_SDL
@@ -19,15 +19,15 @@ jobs:
   steps:
   - checkout: self
     clean: true
-  - ${{ if ne(parameters.artifactPatterns, '') }}:
-    - ${{ each artifactPattern in parameters.artifactPatterns }}:
+  - ${{ if ne(parameters.artifactNames, '') }}:
+    - ${{ each artifactName in parameters.artifactNames }}:
       - task: DownloadBuildArtifacts@0
         displayName: Download Build Artifacts
         inputs:
           buildType: current
-          itemPattern: ${{ coalesce(artifactPattern, '**') }}
+          artifactName: ${{ artifactName }}
           downloadPath: $(Build.ArtifactStagingDirectory)\artifacts
-  - ${{ if eq(parameters.artifactPatterns, '') }}:
+  - ${{ if eq(parameters.artifactNames, '') }}:
     - task: DownloadBuildArtifacts@0
       displayName: Download Build Artifacts
       inputs:

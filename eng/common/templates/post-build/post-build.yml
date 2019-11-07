@@ -111,7 +111,7 @@ stages:
       parameters:
         additionalParameters: ${{ parameters.SDLValidationParameters.params }}
         continueOnError: ${{ parameters.SDLValidationParameters.continueOnError }}
-        artifactPatterns:
+        artifactNames:
           - 'BlobArtifacts'
           - 'Artifacts_Windows_NT_Release'
 
