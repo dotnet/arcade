@@ -104,11 +104,7 @@ namespace Microsoft.DotNet.Github.IssueLabeler
             }
         }
 
-        private string IgnoreForTraining(string column)
-        {
-            if (_skipColumns) return string.Empty;
-            return column;
-        }
+        private string IgnoreForTraining(string column) => _skipColumns ? string.Empty : column;
 
         private static string NormalizeWhitespace(string input)
         {
