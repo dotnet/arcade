@@ -848,20 +848,21 @@ Successfully created new channel with name 'Foo'.
 
 ### **`set-goal`**
 
-Add or Update a goal time for existing repository for a specific channel. 
+Sets a goal build time for the definition per Channel. This is captured for the PKPI- Build time report. Build time is calculated as a difference between start time of the official build till the time it takes for the build to be published to a channel.
 
 **Sample**:  
 ```
-PS D:\enlistments\arcade> darc set-goal  --goal 38 --repo "https://dev.azure.com/dnceng/internal/_git/dotnet-arcade" --channel ".Net Core 5 Dev" , ".Net Core 3.1 Release"
+PS D:\enlistments\arcade> darc reporting set-goal  --goal 38 --defintiionId 6  --channel ".Net Core 5 Dev" , ".Net Core 3.1 Release"
 
-Added a new goal for Repo "https://dev.azure.com/dnceng/internal/_git/dotnet-arcade" = 38 minutes.
+Added a new goal for definitionId 6 = 38 minutes.
 ```
 
 **Parameters**
 
-- `--channel` -  **(Required)**. Name of the channel/s where the repo is published.
-- `-r, --repo` - **(Required)** Name of the repository.
-- `--goal` - **(Required)** Goal time in minutues.
+- `reporting` - **(Required)** Specifies that it for PKPI- Build time purpose only. This is not for any visualization in BarViz or Maestro.
+- `-c,--channel` -  **(Required)** Name of the channel/s.
+- `-d, --definitionId` - **(Required)** Definition Id.
+- `-m,--minutes` - **(Required)** Goal time in minutues.
 
 ### **`add-dependency`**
 
