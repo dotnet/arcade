@@ -25,8 +25,6 @@ namespace Microsoft.DotNet.GitHub.IssueLabeler
                 new Labeler(
                     Configuration["GitHubRepoOwner"],
                     Configuration["GitHubRepoName"],
-                    Configuration["ClientId"],
-                    Configuration["ClientSecret"],
                     Configuration["SecretUri"],
                     double.Parse(Configuration["Threshold"])));
         }
