@@ -87,21 +87,4 @@
       <FileWrites Include="$(_SymStorePdbPath)"/>
     </ItemGroup>
   </Target>
-
-  <Target Name="_DeployAssembliesToSymStore"
-          AfterTargets="_InnerDeployToSymStore"
-          Condition="'$(PublishWindowsPdb)' == 'true' and '$(UsingToolSymbolUploader)' != 'true'"
-          Inputs="$(TargetPath)"
-          Outputs="$(_SymStoreAssemblyPath)">
-
-    <MakeDir Directories="$(_SymStoreOutputDir)"/>
-   
-    <Copy SourceFiles="$(TargetPath)"
-          DestinationFiles="$(_SymStoreAssemblyPath)"
-          UseHardlinksIfPossible="true"/>
-
-    <ItemGroup>
-      <FileWrites Include="$(_SymStoreAssemblyPath)"/>
-    </ItemGroup>
-  </Target>
 </Project>
