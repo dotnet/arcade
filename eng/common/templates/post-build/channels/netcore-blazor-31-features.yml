@@ -1,13 +1,11 @@
 parameters:
   artifactsPublishingAdditionalParameters: ''
-  dependsOn:
-  - Validate
   publishInstallersAndChecksums: false
   symbolPublishingAdditionalParameters: ''
 
 stages:
 - stage: NetCore_Blazor31_Features_Publish
-  dependsOn: ${{ parameters.dependsOn }}
+  dependsOn: validate
   variables:
     - template: ../common-variables.yml
   displayName: .NET Core 3.1 Blazor Features Publishing

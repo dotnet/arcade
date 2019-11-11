@@ -144,20 +144,17 @@ stages:
 - template: \eng\common\templates\post-build\channels\netcore-blazor-31-features.yml
   parameters:
     artifactsPublishingAdditionalParameters: ${{ parameters.artifactsPublishingAdditionalParameters }}
-    dependsOn: ${{ parameters.publishDependsOn }}
     publishInstallersAndChecksums: ${{ parameters.publishInstallersAndChecksums }}
     symbolPublishingAdditionalParameters: ${{ parameters.symbolPublishingAdditionalParameters }}
 
 - template: \eng\common\templates\post-build\channels\netcore-internal-30.yml
   parameters:
     artifactsPublishingAdditionalParameters: ${{ parameters.artifactsPublishingAdditionalParameters }}
-    dependsOn: ${{ parameters.publishDependsOn }}
     publishInstallersAndChecksums: ${{ parameters.publishInstallersAndChecksums }}
     symbolPublishingAdditionalParameters: ${{ parameters.symbolPublishingAdditionalParameters }}
 
 - template: \eng\common\templates\post-build\channels\general-testing.yml
   parameters:
     artifactsPublishingAdditionalParameters: ${{ parameters.artifactsPublishingAdditionalParameters }}
-    dependsOn: ${{ parameters.publishDependsOn }}
     publishInstallersAndChecksums: ${{ parameters.publishInstallersAndChecksums }}
     symbolPublishingAdditionalParameters: ${{ parameters.symbolPublishingAdditionalParameters }}

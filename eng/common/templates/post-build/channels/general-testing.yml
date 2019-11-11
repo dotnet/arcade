@@ -1,13 +1,11 @@
 parameters:
   artifactsPublishingAdditionalParameters: ''
-  dependsOn:
-  - Validate
   publishInstallersAndChecksums: false
   symbolPublishingAdditionalParameters: ''
 
 stages:
 - stage: General_Testing_Publish
-  dependsOn: ${{ parameters.dependsOn }}
+  dependsOn: validate
   variables:
     - template: ../common-variables.yml
   displayName: General Testing Publishing
