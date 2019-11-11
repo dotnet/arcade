@@ -351,7 +351,7 @@ any such feeds into the repo's NuGet.config as part of a dependency update PR.
     <!--Begin: Package sources managed by Dependency Flow automation. Do not edit the sources below.-->
     <add key="darc-int-dotnet-arcade" value="<private-feed-containing the packages>" />
     <!--End: Package sources managed by Dependency Flow automation. Do not edit the sources above.-->
-    <add key="arcade" value="https://dotnetfeed.blob.core.windows.net/dotnet-tools-internal/index.json" />
+    <add key="arcade" value="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json" />
     <add key="dotnet-core" value="https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json" />
     <add key="nuget.org" value="https://api.nuget.org/v3/index.json" />
   </packageSources>

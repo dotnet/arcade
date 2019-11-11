@@ -1,6 +1,4 @@
 parameters:
-  dependsOn:
-  - Validate
   publishInstallersAndChecksums: false
   symbolPublishingAdditionalParameters: ''
   artifactsPublishingAdditionalParameters: ''
