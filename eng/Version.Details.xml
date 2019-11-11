@@ -31,11 +31,11 @@
       <Uri>https://github.com/dotnet/sourcelink</Uri>
       <Sha></Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DiaSymReader.Pdb2Pdb" Version="1.1.0-beta2-19516-01">
+    <Dependency Name="Microsoft.DiaSymReader.Pdb2Pdb" Version="1.1.0-beta2-19521-03">
       <Uri>https://github.com/dotnet/symreader-converter</Uri>
       <Sha></Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DiaSymReader.Converter" Version="1.1.0-beta2-19516-01">
+    <Dependency Name="Microsoft.DiaSymReader.Converter" Version="1.1.0-beta2-19521-03">
       <Uri>https://github.com/dotnet/symreader-converter</Uri>
       <Sha></Sha>
     </Dependency>
