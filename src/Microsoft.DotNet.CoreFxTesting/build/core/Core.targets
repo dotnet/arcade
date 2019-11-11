@@ -166,8 +166,6 @@
 
   </Target>
 
-  <Import Condition="'$(TargetFrameworkIdentifier)' == 'UAP'" Project="$(MSBuildThisFileDirectory)Core.uap.targets" />
-
   <!--
     LaunchSettings.json support.
     Generates launchSettings.json files during compilation or on demand.
