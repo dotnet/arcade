@@ -81,10 +81,10 @@ stages:
               /p:SignCheckExclusionsFile='$(Build.SourcesDirectory)/eng/SignCheckExclusionsFile.txt'
               ${{ parameters.signingValidationAdditionalParameters }}
 
-      - template: ../../steps/publish-logs.yml
-        parameters:
-          StageLabel: 'Validation'
-          JobLabel: 'Signing'
+        - template: ../steps/publish-logs.yml
+          parameters:
+            StageLabel: 'Validation'
+            JobLabel: 'Signing'
 
   - ${{ if eq(parameters.enableSourceLinkValidation, 'true') }}:
     - job:
