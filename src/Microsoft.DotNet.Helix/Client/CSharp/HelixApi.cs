@@ -1,14 +1,35 @@
 using System;
+using System.IO;
 using System.Net;
 using System.Net.Http;
+using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Rest.TransientFaultHandling;
 using Newtonsoft.Json.Linq;
 
 namespace Microsoft.DotNet.Helix.Client
 {
     partial class HelixApi
     {
+        partial void Init()
+        {
+            // same defaults as used in RetryDelegatingHandler
+            const int DefaultNumberOfAttempts = 3;
+            TimeSpan DefaultBackoffDelta = new TimeSpan(0, 0, 10);
+            TimeSpan DefaultMaxBackoff = new TimeSpan(0, 0, 10);
+            TimeSpan DefaultMinBackoff = new TimeSpan(0, 0, 1);
+
+            // configure and set retry policy used by ServiceClient<T> HTTP requests
+            var retryPolicy = new RetryPolicy<HelixApiServiceClientErrorDetectionStrategy>(new ExponentialBackoffRetryStrategy(
+                retryCount: DefaultNumberOfAttempts,
+                minBackoff: DefaultMinBackoff,
+                maxBackoff: DefaultMaxBackoff,
+                deltaBackoff: DefaultBackoffDelta));
+
+            SetRetryPolicy(retryPolicy);
+        }
+
         partial void HandleFailedRequest(RestApiException ex)
         {
             if (ex.Response.StatusCode == HttpStatusCode.BadRequest)
@@ -52,6 +73,8 @@ namespace Microsoft.DotNet.Helix.Client
                    ex is OperationCanceledException ||
                    ex is HttpRequestException ||
                    ex is RestApiException raex && (int)raex.Response.StatusCode >= 500 && (int)raex.Response.StatusCode <= 599 ||
+                   ex is IOException ||
+                   ex is SocketException ||                    
                    ex is NullReferenceException // Null reference exceptions come from autorest for some reason and are retryable
                 ;
         }
@@ -73,7 +96,7 @@ namespace Microsoft.DotNet.Helix.Client
                 try
                 {
                     cancellationToken.ThrowIfCancellationRequested();
-                    return await function();
+                    return await function().ConfigureAwait(false);
                 }
                 catch (OperationCanceledException ocex) when (ocex.CancellationToken == cancellationToken)
                 {
@@ -89,7 +112,7 @@ namespace Microsoft.DotNet.Helix.Client
                     logRetry(ex);
                 }
                 cancellationToken.ThrowIfCancellationRequested();
-                await Task.Delay(GetRetryDelay(attempt));
+                await Task.Delay(GetRetryDelay(attempt)).ConfigureAwait(false);
                 cancellationToken.ThrowIfCancellationRequested();
                 attempt++;
             }

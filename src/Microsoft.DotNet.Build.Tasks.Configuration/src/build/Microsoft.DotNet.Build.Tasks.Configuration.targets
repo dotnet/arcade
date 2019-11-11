@@ -255,10 +255,14 @@
   <!-- intentionally not sequenced, expected to be called directly-->
   <Target Name="UpdateVSConfigurations">
     <Message Importance="High" Text="Updating configurations for projects ..." />
+    <PropertyGroup>
+      <_solutionPath>$([MSBuild]::GetPathOfFileAbove('$(MSBuildProjectName).sln'))</_solutionPath>
+      <_solutionPath Condition="'$(_solutionPath)' == ''">..\$(MSBuildProjectName).sln</_solutionPath>
+    </PropertyGroup>
     <ItemGroup Condition="'@(ProjectsToUpdate)' == '' AND '@(SolutionsToUpdate)' == ''">
       <!-- if not specified, then use the current project and try to find a solution. -->
       <ProjectsToUpdate Include="$(MSBuildProjectFullPath)" />
-      <SolutionsToUpdate Exists="..\$(MSBuildProjectName).sln" Include="..\$(MSBuildProjectName).sln" />
+      <SolutionsToUpdate Include="$(_solutionPath)" />
     </ItemGroup>
     <UpdateVSConfigurations ProjectsToUpdate="@(ProjectsToUpdate)" SolutionsToUpdate="@(SolutionsToUpdate)" />
   </Target>

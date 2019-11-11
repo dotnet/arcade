@@ -4,8 +4,8 @@
 
 using Microsoft.Azure.KeyVault;
 using Microsoft.Azure.KeyVault.Models;
+using Microsoft.Azure.Services.AppAuthentication;
 using Microsoft.Extensions.Logging;
-using Microsoft.IdentityModel.Clients.ActiveDirectory;
 using Octokit;
 using System;
 using System.Collections.Generic;
@@ -20,36 +20,21 @@ namespace Microsoft.DotNet.GitHub.IssueLabeler
         private readonly string _repoOwner;
         private readonly string _repoName;
         private readonly double _threshold;
-        private readonly string _clientId;
-        private readonly string _clientSecret;
         private readonly string _secretUri;
 
-        public Labeler(string repoOwner, string repoName, string clientId, string clientSecret, string secretUri, double threshold)
+        public Labeler(string repoOwner, string repoName, string secretUri, double threshold)
         {
             _repoOwner = repoOwner;
             _repoName = repoName;
             _threshold = threshold;
-            _clientId = clientId;
-            _clientSecret = clientSecret;
             _secretUri = secretUri;
         }
 
         private async Task GitSetupAsync()
         {
-            var kvc = new KeyVaultClient(new KeyVaultClient.AuthenticationCallback(
-                async (authority, resource, scope) =>
-                {
-                    var authContext = new AuthenticationContext(authority);
-                    var clientCred = new ClientCredential(_clientId, _clientSecret);
-                    var result = await authContext.AcquireTokenAsync(resource, clientCred);
-
-                    if (result == null)
-                        throw new InvalidOperationException("Failed to obtain the github token");
-
-                    return result.AccessToken;
-                }));
-
-            SecretBundle secretBundle = await kvc.GetSecretAsync(_secretUri);
+            AzureServiceTokenProvider azureServiceTokenProvider = new AzureServiceTokenProvider();
+            KeyVaultClient keyVaultClient = new KeyVaultClient(new KeyVaultClient.AuthenticationCallback(azureServiceTokenProvider.KeyVaultTokenCallback));
+            SecretBundle secretBundle = await keyVaultClient.GetSecretAsync(_secretUri).ConfigureAwait(false);
 
             var productInformation = new ProductHeaderValue("MLGitHubLabeler");
             _client = new GitHubClient(productInformation)

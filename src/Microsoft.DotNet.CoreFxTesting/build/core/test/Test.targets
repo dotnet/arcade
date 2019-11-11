@@ -1,21 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
 <Project>
-
-  <PropertyGroup Condition="'$(TargetFrameworkIdentifier)' == 'UAP'">
-    <!--
-      Inside an AppContainer we can't write into the WorkingDirectory. As System.IO is used
-      to write the results file we can't use the documents folder either. Therefore we write
-      into the app's local state directory which doesn't need a StorageFolder broker.
-    -->
-    <UAPResultsPathCmd Condition="'$(UAPResultsPathCmd)' == ''">&quot;%LOCALAPPDATA%\Packages\5cd54353-3ed7-4a6e-a72f-db349f28867c_v52bfwc2c21ha\LocalState\$(AssemblyName).xml&quot;</UAPResultsPathCmd>
-  </PropertyGroup>
-
   <!-- General xunit options -->
   <PropertyGroup>
     <RunArguments>$(TestAssembly)</RunArguments>
-    <RunArguments Condition="'$(TargetFrameworkIdentifier)' != 'UAP'">$(RunArguments) -xml $(TestResultsName)</RunArguments>
-    <RunArguments Condition="'$(TargetFrameworkIdentifier)' == 'UAP'">$(RunArguments) -xml $(UAPResultsPathCmd)</RunArguments>
+    <RunArguments>$(RunArguments) -xml $(TestResultsName)</RunArguments>
     <RunArguments>$(RunArguments) -nologo</RunArguments>
     <RunArguments Condition="'$(ArchiveTest)' == 'true'">$(RunArguments) -nocolor</RunArguments>
     <RunArguments>$(RunArguments) -notrait category=non$(_bc_TargetGroup)tests</RunArguments>
@@ -31,8 +20,7 @@
     <RunArguments Condition="'$(XUnitMaxThreads)' != ''">$(RunArguments) -maxthreads $(XUnitMaxThreads)</RunArguments>
     <RunArguments Condition="'$(XUnitMethodName)' != ''">$(RunArguments) -method $(XUnitMethodName)</RunArguments>
     <RunArguments Condition="'$(XUnitClassName)' != ''">$(RunArguments) -class $(XUnitClassName)</RunArguments>
-    <!-- There's no verbose switch in the XUnitRunnerUap. -->
-    <RunArguments Condition="'$(XUnitShowProgress)' == 'true' AND '$(TargetFrameworkIdentifier)' != 'UAP'">$(RunArguments) -verbose</RunArguments>
+    <RunArguments Condition="'$(XUnitShowProgress)' == 'true'">$(RunArguments) -verbose</RunArguments>
     <RunArguments Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework' and '$(XUnitNoAppdomain)' == 'true'">$(RunArguments) -noappdomain</RunArguments>
 
     <!-- Legacy Outerloop switch -->
@@ -84,16 +72,6 @@
 
   </Target>
 
-  <!-- Work around https://github.com/dotnet/sdk/issues/968 -->
-  <Target Name="RemoveXUnitAnalyzer"
-          Condition="'$(DisableXUnitAnalyzer)' == 'true'"
-          BeforeTargets="CoreCompile">
-    <ItemGroup>
-      <Analyzer Remove="@(Analyzer)"
-                Condition="'%(Analyzer.NuGetPackageId)' == 'xunit.analyzers'" />
-    </ItemGroup>
-  </Target>
-
   <!-- Setup run commands. -->
   <Choose>
 
@@ -110,37 +88,6 @@
         <TestRunnerName>xunit.console.exe</TestRunnerName>
         <RunCommand>$(TestRunnerName)</RunCommand>
       </PropertyGroup>
-    </When>
-
-    <When Condition="'$(TargetFrameworkIdentifier)' == 'UAP'">
-      <PropertyGroup>
-        <!-- Globally registered UWP console app. -->
-        <TestRunnerName>XUnitRunnerUap</TestRunnerName>
-        <RunCommand>$(TestRunnerName)</RunCommand>
-      </PropertyGroup>
-
-      <ItemGroup>
-        <!-- Copy the runner files over. -->
-        <RunScriptCommands Include="for /F %%f in ('dir /b /s &quot;$(RunnerDir)&quot;^|find /i /v &quot;.pri&quot;') do @(set relPath=%%f%26 set relPath=!relPath:$(RunnerDir)=!%26 if exist %%f\nul (if not exist !relPath! mkdir !relPath!) else (if not exist !relPath! mklink /h !relPath! %%f 1>NUL))" />
-
-        <!-- Copy the runtime binaries over. -->
-        <RunScriptCommands Include="for /R &quot;$(_RuntimePath)&quot; %25%25I in (%2A) do @if not exist &quot;%25%25~nxI&quot; (mklink /H &quot;%25%25~nxI&quot; &quot;%25%25I&quot; 1>NUL)" />
-
-        <!-- We need to have the ni as well as the non-ni version of the binary. The host (being a rather old build) looks for the ni name first (so we need that as well for now.) -->
-        <RunScriptCommands Include="copy /y &quot;$(_RuntimePath)System.Private.CoreLib.dll&quot; System.Private.CoreLib.ni.dll" />
-
-        <!-- Install -->
-        <RunScriptCommands Include="call &quot;$(LauncherPath)&quot; -install appxmanifest.xml $(TestAssembly)" />
-
-        <!-- Save error level as the uninstall command overwrites the global one. -->
-        <PostRunScriptCommands Include="set ERRORLEVEL=%ERRORLEVEL%" />
-
-        <!-- Copy the test results file to the execution directory -->
-        <PostRunScriptCommands Include="move /Y $(UAPResultsPathCmd) .\$(TestResultsName)" />
-
-        <!-- Uninstall -->
-        <PostRunScriptCommands Include="call &quot;$(LauncherPath)&quot; -uninstall appxmanifest.xml $(TestAssembly)" />
-      </ItemGroup>
     </When>
 
   </Choose>

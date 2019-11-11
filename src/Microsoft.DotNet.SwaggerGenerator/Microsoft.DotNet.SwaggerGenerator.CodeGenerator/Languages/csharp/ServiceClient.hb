@@ -78,7 +78,14 @@ namespace {{pascalCaseNs Namespace}}
                 },
                 NullValueHandling = NullValueHandling.Ignore,
             };
+
+            Init();
         }
+
+        /// <summary>
+        ///    Optional initialization defined outside of auto-gen code
+        /// </summary>
+        partial void Init();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void OnFailedRequest(RestApiException ex)

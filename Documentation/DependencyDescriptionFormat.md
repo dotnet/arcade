@@ -132,7 +132,7 @@ The dependency description is comprised of two types of assets:
 ```
 
 ### Expression Files
-**Version.props (eng\Version.props)**
+**Versions.props (eng\Versions.props)**
 ```
 <Project>
   <PropertyGroup>

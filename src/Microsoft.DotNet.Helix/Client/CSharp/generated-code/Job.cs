@@ -1,6 +1,6 @@
 using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.ComponentModel;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
@@ -49,6 +49,8 @@ namespace Microsoft.DotNet.Helix.Client
             CancellationToken cancellationToken = default
         );
 
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        [Obsolete("This method doesn't do what you think, use 'WaitForJobAsync' instead.", true)]
         Task<Newtonsoft.Json.Linq.JToken> WaitAsync(
             string job,
             CancellationToken cancellationToken = default
