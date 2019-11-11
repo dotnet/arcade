@@ -6,7 +6,10 @@
   <Target Name="Clean" />
   <Target Name="Build" />
   <Target Name="Test" />
-  <Target Name="Pack" />
+  <Target Name="Pack" >
+    <MSBuild Projects="VisualStudio.InsertionManifests.targets"
+             Targets="GenerateVisualStudioInsertionManifests" />
+  </Target>
   <Target Name="IntegrationTest" />
   <Target Name="PerformanceTest" />
 
@@ -18,7 +21,7 @@
     These need to be calculated using signed VSIXes.
     Hence we need to run this task after signing.
   -->
-  <Import Project="VisualStudio.InsertionManifests.targets" Condition="'$(UsingToolVSSDK)' == 'true' and '$(MSBuildRuntimeType)' != 'Core'" />
+  <Import Project="VisualStudio.InsertionManifests.targets"  Condition="'$(UsingToolVSSDK)' == 'true' and '$(MSBuildRuntimeType)' != 'Core'" />
 
   <!-- 
     Generate IBC training inputs for VS insertion components.
