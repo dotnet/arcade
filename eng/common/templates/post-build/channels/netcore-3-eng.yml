@@ -147,7 +147,7 @@ stages:
       - template: ../../steps/publish-logs.yml
         parameters:
           StageLabel: 'Channel_Net_3_Tools'
-          JobLabel: 'SymbolPublishing'
+          JobLabel: 'AssetPublishing'
 
       - template: ../../steps/promote-build.yml
         parameters:
