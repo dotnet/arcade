@@ -130,6 +130,9 @@
       <AzureDevOpsAccount Condition="$(CollectionUri.IndexOf('visualstudio.com')) >= 0">$(CollectionUri.Split('.')[0].Split('/')[2])</AzureDevOpsAccount>
 
       <TempWorkingDirectory>$(ArtifactsDir)\..\AssetsTmpDir\$([System.Guid]::NewGuid())</TempWorkingDirectory>
+      
+      <!-- Directory where pdbs pointed in `FilesToPublishToSymbolServer` are copied before publishing to AzDO artifacts. -->
+      <PDBsToPublishTempLocation>$(ArtifactsTmpDir)PDBsToPublish/</PDBsToPublishTempLocation>
     </PropertyGroup>
 
     <!--
@@ -227,11 +230,11 @@
     -->
 		<Copy
 			SourceFiles="@(FilesToPublishToSymbolServer)"
-			DestinationFiles="@(FilesToPublishToSymbolServer->'$(ArtifactsTmpDir)PDBsToPublish/%(RecursiveDir)%(Filename)%(Extension)')"
+			DestinationFiles="@(FilesToPublishToSymbolServer->'$(PDBsToPublishTempLocation)%(RecursiveDir)%(Filename)%(Extension)')"
 		/>
 
     <Message
-      Text="##vso[artifact.upload containerfolder=PdbArtifacts;artifactname=PdbArtifacts]$(ArtifactsTmpDir)PDBsToPublish/"
+      Text="##vso[artifact.upload containerfolder=PdbArtifacts;artifactname=PdbArtifacts]$(PDBsToPublishTempLocation)"
       Importance="high" 
       Condition="'@(FilesToPublishToSymbolServer)' != ''"/>
 
