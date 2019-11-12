@@ -39,10 +39,10 @@ datasetHelper.AddOrRemoveColumnsPriorToTraining("GitHubIssueDownloaderFormat.tsv
 This API currently tries to add columns for github user @ mentions and file information on pull requests into separate columns, all from existing columns inside `GitHubIssueDownloaderFormat.tsv`. Since the accuracy of a model has a direct correlation with which type of columns it received, we want to be careful with providing well structured columns into a dataset for training.
 
 In order to prepare a dataset with only issues, you can further reduce the output by filtering with `DatasetHelper.OnlyIssues` API.
-However, for pull requests it is important to use the `includeFileColumns` as shown below before calling the `OnlyPrs`:
+However, for pull requests it is important to use the `includeFileColumns` as shown below before calling the `FilterByIssueOrPr`:
 ```C#
 datasetHelper.AddOrRemoveColumnsPriorToTraining("GitHubIssueDownloaderFormat.tsv", "both-issuesAndPrs-includeFileColumns.tsv", includeFileColumns: true);
-datasetHelper.OnlyPrs("both-issuesAndPrs-includeFileColumns.tsv", "only-prs.tsv");
+datasetHelper.FilterByIssueOrPr("both-issuesAndPrs-includeFileColumns.tsv", "only-prs.tsv");
 ``` 
 Remember, that preparing your dataset for training a model consists of two stages: (1) downloading all the information you need from github using the GithubIssueDownloader into a file that is your reference dataset, and (2) post-processing the downloaded information into multiple new columns, each conveying a certain kind of information for the training stage. The more we know about how files and user mentions map into labels in a repository (summarized into separate columns), the better the resulting accuracy of the training model with become. 
 

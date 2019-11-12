@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using Microsoft.Data.Analysis;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -17,14 +18,12 @@ namespace Microsoft.DotNet.Github.IssueLabeler.Helpers
         public DatasetHelper(DiffHelper diffHelper)
         {
             _diffHelper = diffHelper;
-            _sb = new StringBuilder();
             _folderSb = new StringBuilder();
             _regexForUserMentions = new Regex(@"@[a-zA-Z0-9_//-]+");
         }
         private readonly Regex _regexForUserMentions;
         private readonly StringBuilder _folderSb;
         private readonly DiffHelper _diffHelper;
-        private readonly StringBuilder _sb;
 
         /// <summary>
         /// partitions the dataset in inputPath into train, validate and test datapaths
@@ -35,80 +34,55 @@ namespace Microsoft.DotNet.Github.IssueLabeler.Helpers
         /// <param name="testPath">the output to store the train dataset</param>
         public void BreakIntoTrainValidateTestDatasets(string inputPath, string trainPath, string validatePath, string testPath)
         {
-            var lines = File.ReadAllLines(inputPath);
-            int totalCount = lines.Length;
+            DataFrame df = DataFrame.LoadCsv(inputPath, separator: '\t', header: true);
 
             // have at least 1000 elements
-            Debug.Assert(totalCount > 1000);
-            int numInTrain = (int)(lines.Length * 0.8);
-            int numInValidate = (int)(lines.Length * 0.1);
+            Debug.Assert(df.RowCount > 1000);
 
-            // 80% into train dataset
-            SaveFromXToY(
-                inputPath,
-                trainPath,
-                numToSkip: 0, length: numInTrain); 
+            SplitTrainTest(df, 0.8f, out DataFrame trainDataset, out DataFrame remainingDataframe);
+            SaveToFile(trainDataset, trainPath, withHeader: true);
 
-            // next 10% into validate dataset
-            SaveFromXToY(
-                inputPath,
-                validatePath,
-                numToSkip: numInTrain, length: numInValidate); // next 10%
-
-            // remaining 10% into test dataset
-            SaveFromXToY(
-                inputPath,
-                testPath,
-                numToSkip: numInTrain + numInValidate);
+            SplitTrainTest(remainingDataframe, 0.5f, out DataFrame testDataset, out DataFrame validateDataset);
+            SaveToFile(testDataset, validatePath, withHeader: true);
+            SaveToFile(validateDataset, testPath, withHeader: true);
         }
 
-        private void SaveFromXToY(string input, string output, int numToSkip, int length = -1)
+        private void SaveToFile(DataFrame dataFrame, string output, bool withHeader = true)
         {
-            var lines = File.ReadAllLines(input);
-            var span = lines.AsSpan();
-            var header = span.Slice(0, 1).ToArray(); // include header
-            File.WriteAllLines(output, header);
-            span = span.Slice(numToSkip + 1, span.Length - (numToSkip + 1));
-            if (length != -1)
+            var lines = new List<string>();
+            if (withHeader)
             {
-                span = span.Slice(0, length); // include header
+                lines.Add(string.Join("\t", dataFrame.Columns.Select(x => x.Name)));
             }
-            lines = span.ToArray();
+            for (long i = 0; i < dataFrame.RowCount; i++)
+            {
+                IList<object> row = dataFrame[i];
+                // Now enumerate over the rows 
+                lines.Add(string.Join("\t", row));
+            }
             File.AppendAllLines(output, lines);
         }
 
-        /// <summary>
-        /// saves to file a subset containing only PRs
-        /// </summary>
-        /// <param name="input">path to the reference dataset</param>
-        /// <param name="output">the output to store the new dataset</param>
-        public void OnlyPrs(string input, string output)
+        private void SplitTrainTest(DataFrame input, float trainRatio, out DataFrame trainDataframe, out DataFrame testDataframe)
         {
-            var lines = File.ReadAllLines(input);
-            var span = lines.AsSpan();
-            var header = span.Slice(0, 1).ToArray(); // include header
-            Debug.Assert(header[0].Split("\t")[3] == "IsPR");
-            File.WriteAllLines(output, header);
-            span = span.Slice(1, span.Length - 1);
-            lines = span.ToArray();
-            File.AppendAllLines(output, lines.Where(x => int.TryParse(x.Split('\t')[3], out int isPrAsNumber) && isPrAsNumber == 1).ToArray());
+            IEnumerable<int> indices = Enumerable.Range(0, (int)input.RowCount);
+            IEnumerable<int> trainIndices = indices.Take((int)(input.RowCount * trainRatio));
+            IEnumerable<int> testIndices = indices.TakeLast((int)(input.RowCount * (1 - trainRatio)));
+            trainDataframe = input[trainIndices];
+            testDataframe = input[testIndices];
         }
 
         /// <summary>
-        /// saves to file a subset containing only issues
+        /// saves to file a subset containing only PRs when onlyPrs flag is true, saves only issues otherwise.
         /// </summary>
         /// <param name="input">path to the reference dataset</param>
         /// <param name="output">the output to store the new dataset</param>
-        public void OnlyIssues(string input, string output)
+        public void FilterByIsPrFlag(string input, string output, bool onlyPrs = true)
         {
-            var lines = File.ReadAllLines(input);
-            var span = lines.AsSpan();
-            var header = span.Slice(0, 1).ToArray(); // include header
-            Debug.Assert(header[0].Split("\t")[3] == "IsPR");
-            File.WriteAllLines(output, header);
-            span = span.Slice(1, span.Length - 1);
-            lines = span.ToArray();
-            File.AppendAllLines(output, lines.Where(x => int.TryParse(x.Split('\t')[3], out int isPrAsNumber) && isPrAsNumber == 0).ToArray());
+            int valueToFilterBy = onlyPrs ? 1 : 0;
+            DataFrame df = DataFrame.LoadCsv(input, separator: '\t', header: true);
+            DataFrame prs = df.Filter(df["IsPR"].ElementwiseEquals(valueToFilterBy));
+            SaveToFile(prs, output, withHeader: true);
         }
 
         /// <summary>
@@ -121,76 +95,70 @@ namespace Microsoft.DotNet.Github.IssueLabeler.Helpers
         /// <param name="includeFileColumns">when true, it contains extra columns with file related information</param>
         public void AddOrRemoveColumnsPriorToTraining(string input, string output, bool includeFileColumns = true)
         {
-            var lines = File.ReadAllLines(input);
-            Debug.Assert(lines[0].Equals("ID\tArea\tTitle\tDescription\tIsPR\tFilePaths", StringComparison.OrdinalIgnoreCase));
-            string newHeader = "Area\tTitle\tDescription\tIsPR\tNumMentions\tUserMentions";
+            DataFrame dataFrame = DataFrame.LoadCsv(input, separator: '\t', header: true);
+            var existingHeaderNames = new string[] { "ID", "Area", "Title", "Description", "IsPR", "FilePaths" };
+            Debug.Assert(dataFrame.Columns.Select(x => x.Name).Intersect(existingHeaderNames).Equals(existingHeaderNames));
+            dataFrame.Columns.Remove("ID");
+            var filePathsColumn = dataFrame.Columns.Where(x => x.Name.Equals("FilePaths", StringComparison.OrdinalIgnoreCase));
+
+            var newColumnsToAdd = new List<(string, StringDataFrameColumn)>();
+            foreach (var item in new string[] { "NumMentions", "UserMentions" })
+            {
+                dataFrame.Columns.Add(new StringDataFrameColumn(item, dataFrame.RowCount));
+            }
+
             if (includeFileColumns)
             {
-                newHeader += "\tFileCount\tFiles\tFilenames\tFileExtensions\tFolderNames\tFolders";
+                foreach (var item in new string[] { "FileCount", "Files", "Filenames", "FileExtensions", "FolderNames", "Folders" })
+                {
+                    dataFrame.Columns.Add(new StringDataFrameColumn(item, dataFrame.RowCount));
+                }
             }
-            string[] newLines = new string[lines.Length];
-            newLines[0] = newHeader;
-            string line; // current line
-            string area, body, title;
-            for (int i = 1; i < lines.Length; i++) // skipping header
-            {
-                _sb.Clear();
-                line = lines[i];
-                string[] lineSplitByTab = line.Split('\t');
-                Debug.Assert(int.TryParse(lineSplitByTab[0], out int _)); // skip ID
-                area = lineSplitByTab[1];
-                title = lineSplitByTab[2];
-                body = lineSplitByTab[3];
-                int.TryParse(lineSplitByTab[4], out int isPrAsNumber);
-                Debug.Assert((isPrAsNumber == 1 || isPrAsNumber == 0));
-                _sb.Append(area)
-                    .Append('\t').Append(title)
-                    .Append('\t').Append(body)
-                    .Append('\t').Append(isPrAsNumber);
 
-                AppendColumnsForUserMentions(body);
+            int bodyIndex = dataFrame.Columns.IndexOf("Description");
+            int numMentionsIndex = dataFrame.Columns.IndexOf("NumMentions");
+            int userMentionsIndex = dataFrame.Columns.IndexOf("UserMentions");
+            int filePathsIndex = dataFrame.Columns.IndexOf("FilePaths");
+            int fileCountIndex = dataFrame.Columns.IndexOf("FileCount");
+            int filesIndex = dataFrame.Columns.IndexOf("Files");
+            int filenamesIndex = dataFrame.Columns.IndexOf("Filenames");
+            int fileExtensionsIndex = dataFrame.Columns.IndexOf("FileExtensions");
+            int folderNamesIndex = dataFrame.Columns.IndexOf("FolderNames");
+            int foldersIndex = dataFrame.Columns.IndexOf("Folders");
+            string body;
+            for (long i = 0; i < dataFrame.RowCount; i++)
+            {
+                IList<object> row = dataFrame[i];
+
+                body = dataFrame.Columns[bodyIndex][i].ToString();
+                dataFrame.Columns[bodyIndex][i] = body.Replace('"', '`');
+
+                var userMentions = _regexForUserMentions.Matches(body).Select(x => x.Value).ToArray();
+                dataFrame.Columns[numMentionsIndex][i] = userMentions.Length;
+                dataFrame.Columns[userMentionsIndex][i] = FlattenIntoColumn(userMentions);
                 if (includeFileColumns)
                 {
-                    AppendColumnsForFileDiffs(lineSplitByTab[5], isPr: isPrAsNumber == 1);
-                }
-                newLines[i] = _sb.ToString().Replace('"', '`');
-            }
-            File.WriteAllLines(output, newLines);
-        }
-
-        private void AppendColumnsForUserMentions(string body)
-        {
-            var userMentions = _regexForUserMentions.Matches(body).Select(x => x.Value).ToArray();
-            _sb.Append('\t').Append(userMentions.Length)
-                .Append('\t').Append(FlattenIntoColumn(userMentions));
-        }
-
-        private void AppendColumnsForFileDiffs(string semicolonDelimitedFilesWithDiff, bool isPr)
-        {
-            if (isPr)
-            {
-                string[] filePaths = semicolonDelimitedFilesWithDiff.Split(';');
-                int numFilesChanged = filePaths.Length == 1 && string.IsNullOrEmpty(filePaths[0]) ? 0 : filePaths.Length;
-                _sb.Append('\t').Append(numFilesChanged);
-                if (numFilesChanged != 0)
-                {
+                    string[] filePaths = row[filePathsIndex].ToString().Split(';');
+                    int numFilesChanged = filePaths.Length == 1 && string.IsNullOrEmpty(filePaths[0]) ? 0 : filePaths.Length;
                     _diffHelper.ResetTo(filePaths);
-                    _sb.Append('\t').Append(FlattenIntoColumn(filePaths))
-                        .Append('\t').Append(FlattenIntoColumn(_diffHelper.Filenames))
-                        .Append('\t').Append(FlattenIntoColumn(_diffHelper.Extensions))
-                        .Append('\t').Append(FlattenIntoColumn(_diffHelper.FolderNames))
-                        .Append('\t').Append(FlattenIntoColumn(_diffHelper.Folders));
+                    dataFrame.Columns[fileCountIndex][i] = numFilesChanged;
+                    dataFrame.Columns[filesIndex][i] = FlattenIntoColumn(filePaths);
+                    dataFrame.Columns[filenamesIndex][i] = FlattenIntoColumn(_diffHelper.Filenames);
+                    dataFrame.Columns[fileExtensionsIndex][i] = FlattenIntoColumn(_diffHelper.Extensions);
+                    dataFrame.Columns[folderNamesIndex][i] = FlattenIntoColumn(_diffHelper.FolderNames);
+                    dataFrame.Columns[foldersIndex][i] = FlattenIntoColumn(_diffHelper.Folders);
                 }
                 else
                 {
-                    _sb.Append('\t', 5);
+                    dataFrame.Columns[fileCountIndex][i] = 0;
+                    dataFrame.Columns[filesIndex][i] = string.Empty;
+                    dataFrame.Columns[filenamesIndex][i] = string.Empty;
+                    dataFrame.Columns[fileExtensionsIndex][i] = string.Empty;
+                    dataFrame.Columns[folderNamesIndex][i] = string.Empty;
+                    dataFrame.Columns[foldersIndex][i] = string.Empty;
                 }
             }
-            else
-            {
-                _sb.Append('\t').Append(0)
-                    .Append('\t', 5);
-            }
+            SaveToFile(dataFrame, output, withHeader: true);
         }
 
         /// <summary>
