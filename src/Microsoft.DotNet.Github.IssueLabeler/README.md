@@ -26,26 +26,23 @@ In order to use this web api for any other github repo, you need to take the fol
 ## How to get started with training models for other repositories
 This project has been made generic enough to help with creating issue labelers for any repostory. The first step towards getting started with this application is to use the GithubIssueDownloader class to download all existing labels in a given repository. The GitHubIssueDownloader generates a dense dataset containing IDs for both issues and pull requests.
 
-Once the details for all the labeled issues and pull requests in a repo finished downloading, then we can use APIs provided in DatasetHelper to prepare the datasets with proper format for training using ML.NET. The recommended approach is to separate the downloaded dataset into a PR dataset and an issue dataset. Depending on the nature of your repository you may decide to have columns in the training dataset that area slightly different from what is assumed. You may in fact decide to play around with different column values until you come up with final PR and Issue models that result in the best accuracy.
+Once the details for all the labeled issues and pull requests in a repo finished downloading, then we can use APIs provided in DatasetHelper to prepare the datasets with proper format for training using ML.NET. The recommended approach is to separate the downloaded dataset into a PR dataset and an issue dataset. Depending on the nature of your repository you may decide to play around with different column values until you come up with final PR and Issue models that result in the best accuracy for your specific repository.
 
 You may in fact decide that what works best for you is keeping a single combined trained model for both issues and pull requests. The DatasetHelper APIs could be a good way for helping you try different types of models until you finalize your choice for deployment.
 
 ### How to get separate training datasets for labeling issues and pull requests: 
-As mentioned earlier you can choose to keep the mixed dataset containing both issues and pull requests, downloaded from GitHubIssueDownloader, or to customize it further using additional APIs provided in DatasetHelper class. The DataHelper class uses existing downloaded information from GitHubIssueDownloader to add or remove columns. So far, by trial and error we have found certain columns help drastically improve the accuracy of the issue labeler and we summarized them in the following API:
+As mentioned earlier you can choose to keep the mixed datasets containing both issues and pull requests, downloaded from GitHubIssueDownloader, or to customize it further using additional APIs provided in DatasetHelper class. The DataHelper class uses existing downloaded information from GitHubIssueDownloader to add or remove columns. So far, by trial and error we have found certain columns help drastically improve the accuracy of the issue labeler and we summarized them in the following API:
 
 ```C#
 datasetHelper.AddOrRemoveColumnsPriorToTraining("GitHubIssueDownloaderFormat.tsv", "ready-to-train-with-both-issuesAndPrs.tsv");
 ```
-This API currently tries to add columns for github user @ mentions and file information on pull requests into separate columns, all from existing columns inside `GitHubIssueDownloaderFormat.tsv`. Since the accuracy of a model has a direct correlation with which type of columns it received, we want to be careful with providing well structured columns into a dataset for training.
+This API currently tries to add columns for github user @ mentions and file information on pull requests into separate columns, all from existing columns inside `GitHubIssueDownloaderFormat.tsv`. 
 
-In order to prepare a dataset with only issues, you can further reduce the output by filtering with `DatasetHelper.OnlyIssues` API.
-However, for pull requests it is important to use the `includeFileColumns` as shown below before calling the `FilterByIssueOrPr`:
+Also, in order to prepare a dataset with only issues, you can further reduce the output by using `DatasetHelper.FilterByIssueOrPr` API. For pull requests it is important to use the `includeFileColumns` as shown below before calling the `FilterByIssueOrPr`:
 ```C#
 datasetHelper.AddOrRemoveColumnsPriorToTraining("GitHubIssueDownloaderFormat.tsv", "both-issuesAndPrs-includeFileColumns.tsv", includeFileColumns: true);
 datasetHelper.FilterByIssueOrPr("both-issuesAndPrs-includeFileColumns.tsv", "only-prs.tsv");
 ``` 
 Remember, that preparing your dataset for training a model consists of two stages: (1) downloading all the information you need from github using the GithubIssueDownloader into a file that is your reference dataset, and (2) post-processing the downloaded information into multiple new columns, each conveying a certain kind of information for the training stage. The more we know about how files and user mentions map into labels in a repository (summarized into separate columns), the better the resulting accuracy of the training model with become. 
-
-This shows how/why a single repository could have multiple different kinds of issue labeler models. Each using dataset with different set of additional columns, each aiming to help further help machine learning code more efficient predict labels. As you would expect, the columns expected in a dataset for a performance label prediction, is different from what we expect to have in a dataset that predicts "area-" labels. Feel free to further customize this API with the specific needs of the labels in your own repository.
 
 Once you have a dataset with any of the above formats, you would then want to break your dataset down into three segments: training data (first 80%), validation data (second 10%), and test data (remaining 10%). You can use the `DatasetHelper.BreakIntoTrainValidateTestDatasets(..)` API to get this segmentation.
