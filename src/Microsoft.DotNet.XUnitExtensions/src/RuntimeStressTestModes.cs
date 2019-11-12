@@ -5,6 +5,11 @@ namespace Xunit
     [Flags]
     public enum RuntimeStressTestModes
     {
+        // Disable on any stress test mode or on checked runtime.
+        // Can't be ~0 as that would include CheckedRuntime flag, which would break the case
+        // where you want to disable in all (including release stress test).
+        Any = 0,
+
         // JitStress, JitStressRegs, JitMinOpts and TailcallStress enable
         // various modes in the JIT that cause us to exercise more code paths,
         // and generate different kinds of code
@@ -25,7 +30,6 @@ namespace Xunit
         // including in NGEN/ReadyToRun code.
         GCStressC = 1 << 6, // COMPlus_GCStress includes mode 0xC.
         CheckedRuntime = 1 << 7, // Disable only when running on checked runtime.
-        AnyGCStress = GCStress3 | GCStressC, // Disable when any GCStress is exercised.
-        Any = ~0 // Disable on any stress test mode.
+        AnyGCStress = GCStress3 | GCStressC // Disable when any GCStress is exercised.
     }
 }

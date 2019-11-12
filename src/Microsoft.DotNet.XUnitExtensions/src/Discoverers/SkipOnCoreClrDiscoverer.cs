@@ -41,16 +41,19 @@ namespace Microsoft.DotNet.XUnitExtensions
             return Array.Empty<KeyValuePair<string, string>>();
         }
 
+        // Order here matters as some env variables may appear in multiple modes
         private static bool StressModeApplies(RuntimeStressTestModes stressMode) =>
-            stressMode == 0 ||
+            stressMode == RuntimeStressTestModes.Any ||
             (stressMode.HasFlag(RuntimeStressTestModes.GCStress3) && IsGCStress3) ||
             (stressMode.HasFlag(RuntimeStressTestModes.GCStressC) && IsGCStressC) ||
             (stressMode.HasFlag(RuntimeStressTestModes.ZapDisable) && IsZapDisable) ||
             (stressMode.HasFlag(RuntimeStressTestModes.TailcallStress) && IsTailCallStress) ||
             (stressMode.HasFlag(RuntimeStressTestModes.JitStressRegs) && IsJitStressRegs) ||
             (stressMode.HasFlag(RuntimeStressTestModes.JitStress) && IsJitStress) ||
-            (stressMode.HasFlag(RuntimeStressTestModes.JitMinOpts) && IsJitMinOpts);
+            (stressMode.HasFlag(RuntimeStressTestModes.JitMinOpts) && IsJitMinOpts) ||
+            stressMode == RuntimeStressTestModes.CheckedRuntime; // if checked runtime is the only flag, all stress modes apply.
 
+        // Order here matters as some env variables may appear in multiple modes
         private static bool IsRuntimeStressTesting =>
             IsGCStress3 ||
             IsGCStressC ||
@@ -88,8 +91,8 @@ namespace Microsoft.DotNet.XUnitExtensions
         private static bool CompareGCStressModeAsLower(string value, string first, string second)
         {
             value = value.ToLowerInvariant();
-            return string.Equals(value, first.ToLower(), StringComparison.InvariantCulture) ||
-                string.Equals(value, second.ToLower(), StringComparison.InvariantCulture) ||
+            return string.Equals(value, first.ToLowerInvariant(), StringComparison.InvariantCulture) ||
+                string.Equals(value, second.ToLowerInvariant(), StringComparison.InvariantCulture) ||
                 string.Equals(value, "0xf", StringComparison.InvariantCulture) ||
                 string.Equals(value, "f", StringComparison.InvariantCulture);
         }
