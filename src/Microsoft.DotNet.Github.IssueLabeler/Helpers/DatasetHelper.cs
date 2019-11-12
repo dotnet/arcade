@@ -77,12 +77,30 @@ namespace Microsoft.DotNet.Github.IssueLabeler.Helpers
         /// </summary>
         /// <param name="input">path to the reference dataset</param>
         /// <param name="output">the output to store the new dataset</param>
-        public void FilterByIsPrFlag(string input, string output, bool onlyPrs = true)
+        public void FilterByIssueOrPr(string input, string output, FilterIssueOrPr filter = FilterIssueOrPr.PrsOnly)
         {
-            int valueToFilterBy = onlyPrs ? 1 : 0;
-            DataFrame df = DataFrame.LoadCsv(input, separator: '\t', header: true);
-            DataFrame prs = df.Filter(df["IsPR"].ElementwiseEquals(valueToFilterBy));
-            SaveToFile(prs, output, withHeader: true);
+            DataFrame dataFrame = DataFrame.LoadCsv(input, separator: '\t', header: true);
+            switch (filter)
+            {
+                case FilterIssueOrPr.PrsOnly:
+                    dataFrame = dataFrame.Filter(dataFrame["IsPR"].ElementwiseEquals(1));
+                    break;
+                case FilterIssueOrPr.IssuesOnly:
+                    dataFrame = dataFrame.Filter(dataFrame["IsPR"].ElementwiseEquals(0));
+                    break;
+                case FilterIssueOrPr.Both:
+                default:
+                    // keep both
+                    break;
+            }
+            SaveToFile(dataFrame, output, withHeader: true);
+        }
+
+        public enum FilterIssueOrPr
+        {
+            PrsOnly = 0,
+            IssuesOnly = 1,
+            Both = 2
         }
 
         /// <summary>

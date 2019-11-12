@@ -53,24 +53,24 @@ namespace Microsoft.DotNet.Github.IssueLabeler.Helpers
             FolderNames.Clear();
             Folders.Clear();
             string folderWithDiff, subfolder;
-            string[] folderNames;
+            string[] folderNamesInPr;
             foreach (var fileWithDiff in _fileDiffs)
             {
                 folderWithDiff = Path.GetDirectoryName(fileWithDiff) ?? string.Empty;
-                folderNames = folderWithDiff.Split(Path.DirectorySeparatorChar);
+                folderNamesInPr = folderWithDiff.Split(Path.DirectorySeparatorChar);
                 subfolder = string.Empty;
                 if (!string.IsNullOrEmpty(folderWithDiff))
                 {
-                    foreach (var folderName in folderNames)
+                    foreach (var folderNameInPr in folderNamesInPr)
                     {
-                        subfolder += folderName;
-                        if (FolderNames.ContainsKey(folderName))
+                        subfolder += folderNameInPr;
+                        if (FolderNames.ContainsKey(folderNameInPr))
                         {
-                            FolderNames[folderName] += 1;
+                            FolderNames[folderNameInPr] += 1;
                         }
                         else
                         {
-                            FolderNames.Add(folderName, 1);
+                            FolderNames.Add(folderNameInPr, 1);
                         }
                         if (Folders.ContainsKey(subfolder))
                         {
