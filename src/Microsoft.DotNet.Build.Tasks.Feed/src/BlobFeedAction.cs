@@ -292,35 +292,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             return true;
         }
 
-        private async Task<bool?> IsPackageIdenticalOnFeedAsync(
-            string item,
-            PackageIndex packageIndex,
-            ISleetFileSystem source,
-            FlatContainer flatContainer,
-            SleetLogger log)
-        {
-            using (var package = new PackageArchiveReader(item))
-            {
-                var id = await package.GetIdentityAsync(CancellationToken);
-                if (await packageIndex.Exists(id))
-                {
-                    using (Stream remoteStream = await source
-                        .Get(flatContainer.GetNupkgPath(id))
-                        .GetStream(log, CancellationToken))
-                    using (var remote = new MemoryStream())
-                    {
-                        await remoteStream.CopyToAsync(remote);
-
-                        byte[] existingBytes = remote.ToArray();
-                        byte[] localBytes = File.ReadAllBytes(item);
-
-                        return existingBytes.SequenceEqual(localBytes);
-                    }
-                }
-                return null;
-            }
-        }
-
         private LocalSettings GetSettings()
         {
             SleetSettings sleetSettings = new SleetSettings()
@@ -359,82 +330,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             }
         }
 
-        private async Task<bool> PushAsync(
-            IEnumerable<string> items,
-            PushOptions options)
+        private async Task<bool> PushAsync(IEnumerable<string> items, PushOptions options)
         {
             LocalSettings settings = GetSettings();
             SleetLogger log = new SleetLogger(Log, NuGet.Common.LogLevel.Verbose);
             var packagesToPush = items.ToList();
-
-            // Create a separate LocalCache to use for read only operations on the feed.
-            // Files added to the cache before the lock could be modified by the process
-            // currently holding the lock. Sleet assumes that files in the cache 
-            // are valid and identical to the ones on the feed since operations are 
-            // normally performed inside the lock.
-            using (var preLockCache = CreateFileCache())
-            {
-                var preLockFileSystem = GetAzureFileSystem(preLockCache);
-
-                if (!options.AllowOverwrite && options.PassIfExistingItemIdentical)
-                {
-                    var context = new SleetContext
-                    {
-                        LocalSettings = settings,
-                        Log = log,
-                        Source = preLockFileSystem,
-                        Token = CancellationToken
-                    };
-                    context.SourceSettings = await FeedSettingsUtility.GetSettingsOrDefault(
-                        context.Source,
-                        context.Log,
-                        context.Token);
-
-                    var flatContainer = new FlatContainer(context);
-
-                    var packageIndex = new PackageIndex(context);
-
-                    // Check packages sequentially: Task.WhenAll caused IO exceptions in Sleet.
-                    for (int i = packagesToPush.Count - 1; i >= 0; i--)
-                    {
-                        string item = packagesToPush[i];
-
-                        bool? identical = await IsPackageIdenticalOnFeedAsync(
-                            item,
-                            packageIndex,
-                            context.Source,
-                            flatContainer,
-                            log);
-
-                        if (identical == null)
-                        {
-                            continue;
-                        }
-
-                        packagesToPush.RemoveAt(i);
-
-                        if (identical == true)
-                        {
-                            Log.LogMessage(
-                                MessageImportance.Normal,
-                                "Package exists on the feed, and is verified to be identical. " +
-                                $"Skipping upload: '{item}'");
-                        }
-                        else
-                        {
-                            Log.LogError(
-                                "Package exists on the feed, but contents are different. " +
-                                $"Upload failed: '{item}'");
-                        }
-                    }
-
-                    if (!packagesToPush.Any())
-                    {
-                        Log.LogMessage("After skipping idempotent uploads, no items need pushing.");
-                        return true;
-                    }
-                }
-            }
 
             // Create a new cache to be used once a lock is obtained.
             using (var fileCache = CreateFileCache())
@@ -445,8 +345,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     settings,
                     lockedFileSystem,
                     packagesToPush,
-                    options.AllowOverwrite,
-                    skipExisting: false,
+                    force: options.AllowOverwrite,
+                    skipExisting: !options.AllowOverwrite,
                     log: log);
             }
         }
