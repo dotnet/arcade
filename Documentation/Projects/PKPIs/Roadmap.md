@@ -108,7 +108,7 @@ See [features](#features) for which features are being delivered in phase 2.
 | Done  | [Dependency staleness](https://github.com/dotnet/arcade/issues/2782) | Available in barviz |
 | Done  | [Existence of product dependency cycles](https://github.com/dotnet/arcade/issues/3905) | Available in barviz |
 | 10/18 | [Disabled subscriptions](https://github.com/dotnet/arcade/issues/4023) | done |
-| 10/30 | [Longest build path visualization](https://github.com/dotnet/arcade/issues/4071) ||
+| 11/19 | [Longest build path visualization](https://github.com/dotnet/arcade/issues/4071) | Michelle McDaniel on FR 11/4-11/15 |
 | ~11/1~ 11/6  | [Split subscriptions view into product and toolset](https://github.com/dotnet/arcade/issues/4138) ||
 | 11/6  | [Superfluous input subscriptions](https://github.com/dotnet/arcade/issues/3906) ||
 | ~11/13~ 11/6 | [Conflicting input subscriptions](https://github.com/dotnet/arcade/issues/2801) ||
