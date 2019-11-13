@@ -56,11 +56,24 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// </summary>
         public string RepoCommit { get; set; }
 
+        /// <summary>
+        /// Is this manifest for a stable build?
+        /// </summary>
+        public bool IsStableBuild { get; set; }
+
         public override bool Execute()
         {
             try
             {
-                var buildModel = BuildManifestUtil.CreateModelFromItems(Artifacts, BuildId, BuildData, RepoUri, RepoBranch, RepoCommit, Log);
+                var buildModel = BuildManifestUtil.CreateModelFromItems(
+                    Artifacts,
+                    BuildId,
+                    BuildData,
+                    RepoUri,
+                    RepoBranch,
+                    RepoCommit,
+                    IsStableBuild,
+                    Log);
 
                 buildModel.WriteAsXml(OutputPath, Log);
             }

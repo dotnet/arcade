@@ -56,6 +56,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public string AssetManifestPath { get; set; }
 
+        public bool IsStableBuild { get; set; }
+
         public override bool Execute()
         {
             return ExecuteAsync().GetAwaiter().GetResult();
@@ -162,7 +164,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     ManifestBuildId,
                     ManifestBranch,
                     ManifestCommit,
-                    ManifestBuildData);
+                    ManifestBuildData,
+                    IsStableBuild);
             }
             catch (Exception e)
             {

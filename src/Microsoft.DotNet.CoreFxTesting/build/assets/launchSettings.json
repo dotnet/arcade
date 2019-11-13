@@ -3,17 +3,8 @@
         ".NET Core xUnit Console": {
             "commandName": "Executable",
             "executablePath": "$(TestHostRootPath)dotnet.exe",
-            "commandLineArgs": "$(RunArguments) -wait -parallel none",
-            "workingDirectory": "$(TargetDir)"
-        },
-        ".NET Framework xUnit Console": {
-            "commandName": "Executable",
-            "executablePath": "$(TargetDir)xunit.console.exe",
-            "commandLineArgs": "$(RunArguments) -wait -parallel none",
-            "workingDirectory": "$(TargetDir)",
-            "environmentVariables": {
-                "DEVPATH": "$(TestHostRootPath)"
-            }
+            "commandLineArgs": "$(RunArguments) -parallel none",
+            "workingDirectory": "$(RunWorkingDirectory)"
         }
     }
 }

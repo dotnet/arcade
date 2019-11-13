@@ -123,6 +123,9 @@
   <data name="DetailCertChainValid" xml:space="preserve">
     <value>Certificate chain appears valid.</value>
   </data>
+  <data name="DetailDoNotSignFileSigned" xml:space="preserve">
+    <value>{0} matches a DO-NOT-SIGN exclusion and is signed.</value>
+  </data>
   <data name="DetailErrorFailedToBuildCertChain" xml:space="preserve">
     <value>Failed to build certificate chain.</value>
   </data>

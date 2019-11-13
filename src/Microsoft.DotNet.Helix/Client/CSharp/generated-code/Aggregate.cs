@@ -154,6 +154,18 @@ namespace Microsoft.DotNet.Helix.Client
             }
         }
 
+        internal async Task OnAnalysisSummaryFailed(HttpRequestMessage req, HttpResponseMessage res)
+        {
+            var content = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
+            var ex = new RestApiException(
+                new HttpRequestMessageWrapper(req, null),
+                new HttpResponseMessageWrapper(res, content));
+            HandleFailedAnalysisSummaryRequest(ex);
+            HandleFailedRequest(ex);
+            Client.OnFailedRequest(ex);
+            throw ex;
+        }
+
         internal async Task<HttpOperationResponse<AggregateWorkItemSummary>> AnalysisSummaryInternalAsync(
             IImmutableList<string> groupBy,
             IImmutableList<string> otherProperties,
@@ -182,7 +194,7 @@ namespace Microsoft.DotNet.Helix.Client
             }
 
 
-            var _path = "/api/2018-03-14/aggregate/analysis";
+            var _path = "/api/2019-06-17/aggregate/analysis";
 
             var _query = new QueryBuilder();
             if (!string.IsNullOrEmpty(workitem))
@@ -241,19 +253,11 @@ namespace Microsoft.DotNet.Helix.Client
                 }
 
                 _res = await Client.SendAsync(_req, cancellationToken).ConfigureAwait(false);
-                string _responseContent;
                 if (!_res.IsSuccessStatusCode)
                 {
-                    _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
-                    var ex = new RestApiException(
-                        new HttpRequestMessageWrapper(_req, null),
-                        new HttpResponseMessageWrapper(_res, _responseContent));
-                    HandleFailedAnalysisSummaryRequest(ex);
-                    HandleFailedRequest(ex);
-                    Client.OnFailedRequest(ex);
-                    throw ex;
+                    await OnAnalysisSummaryFailed(_req, _res);
                 }
-                _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
+                string _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
                 return new HttpOperationResponse<AggregateWorkItemSummary>
                 {
                     Request = _req,
@@ -287,6 +291,18 @@ namespace Microsoft.DotNet.Helix.Client
             }
         }
 
+        internal async Task OnBuildHistoryFailed(HttpRequestMessage req, HttpResponseMessage res)
+        {
+            var content = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
+            var ex = new RestApiException(
+                new HttpRequestMessageWrapper(req, null),
+                new HttpResponseMessageWrapper(res, content));
+            HandleFailedBuildHistoryRequest(ex);
+            HandleFailedRequest(ex);
+            Client.OnFailedRequest(ex);
+            throw ex;
+        }
+
         internal async Task<HttpOperationResponse<IImmutableList<BuildHistoryItem>>> BuildHistoryInternalAsync(
             IImmutableList<string> source,
             IImmutableList<string> type,
@@ -304,7 +320,7 @@ namespace Microsoft.DotNet.Helix.Client
             }
 
 
-            var _path = "/api/2018-03-14/aggregate/build/history";
+            var _path = "/api/2019-06-17/aggregate/build/history";
 
             var _query = new QueryBuilder();
             if (source != default)
@@ -339,19 +355,11 @@ namespace Microsoft.DotNet.Helix.Client
                 }
 
                 _res = await Client.SendAsync(_req, cancellationToken).ConfigureAwait(false);
-                string _responseContent;
                 if (!_res.IsSuccessStatusCode)
                 {
-                    _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
-                    var ex = new RestApiException(
-                        new HttpRequestMessageWrapper(_req, null),
-                        new HttpResponseMessageWrapper(_res, _responseContent));
-                    HandleFailedBuildHistoryRequest(ex);
-                    HandleFailedRequest(ex);
-                    Client.OnFailedRequest(ex);
-                    throw ex;
+                    await OnBuildHistoryFailed(_req, _res);
                 }
-                _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
+                string _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
                 return new HttpOperationResponse<IImmutableList<BuildHistoryItem>>
                 {
                     Request = _req,
@@ -387,6 +395,18 @@ namespace Microsoft.DotNet.Helix.Client
             }
         }
 
+        internal async Task OnBuildFailed(HttpRequestMessage req, HttpResponseMessage res)
+        {
+            var content = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
+            var ex = new RestApiException(
+                new HttpRequestMessageWrapper(req, null),
+                new HttpResponseMessageWrapper(res, content));
+            HandleFailedBuildRequest(ex);
+            HandleFailedRequest(ex);
+            Client.OnFailedRequest(ex);
+            throw ex;
+        }
+
         internal async Task<HttpOperationResponse<BuildAggregation>> BuildInternalAsync(
             string buildNumber,
             IImmutableList<string> sources,
@@ -410,7 +430,7 @@ namespace Microsoft.DotNet.Helix.Client
             }
 
 
-            var _path = "/api/2018-03-14/aggregate/build";
+            var _path = "/api/2019-06-17/aggregate/build";
 
             var _query = new QueryBuilder();
             if (sources != default)
@@ -449,19 +469,11 @@ namespace Microsoft.DotNet.Helix.Client
                 }
 
                 _res = await Client.SendAsync(_req, cancellationToken).ConfigureAwait(false);
-                string _responseContent;
                 if (!_res.IsSuccessStatusCode)
                 {
-                    _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
-                    var ex = new RestApiException(
-                        new HttpRequestMessageWrapper(_req, null),
-                        new HttpResponseMessageWrapper(_res, _responseContent));
-                    HandleFailedBuildRequest(ex);
-                    HandleFailedRequest(ex);
-                    Client.OnFailedRequest(ex);
-                    throw ex;
+                    await OnBuildFailed(_req, _res);
                 }
-                _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
+                string _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
                 return new HttpOperationResponse<BuildAggregation>
                 {
                     Request = _req,
@@ -505,6 +517,18 @@ namespace Microsoft.DotNet.Helix.Client
             }
         }
 
+        internal async Task OnJobSummaryFailed(HttpRequestMessage req, HttpResponseMessage res)
+        {
+            var content = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
+            var ex = new RestApiException(
+                new HttpRequestMessageWrapper(req, null),
+                new HttpResponseMessageWrapper(res, content));
+            HandleFailedJobSummaryRequest(ex);
+            HandleFailedRequest(ex);
+            Client.OnFailedRequest(ex);
+            throw ex;
+        }
+
         internal async Task<HttpOperationResponse<IImmutableList<AggregatedWorkItemCounts>>> JobSummaryInternalAsync(
             IImmutableList<string> groupBy,
             int maxResultSets,
@@ -527,7 +551,7 @@ namespace Microsoft.DotNet.Helix.Client
             }
 
 
-            var _path = "/api/2018-03-14/aggregate/jobs";
+            var _path = "/api/2019-06-17/aggregate/jobs";
 
             var _query = new QueryBuilder();
             if (groupBy != default)
@@ -579,19 +603,11 @@ namespace Microsoft.DotNet.Helix.Client
                 }
 
                 _res = await Client.SendAsync(_req, cancellationToken).ConfigureAwait(false);
-                string _responseContent;
                 if (!_res.IsSuccessStatusCode)
                 {
-                    _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
-                    var ex = new RestApiException(
-                        new HttpRequestMessageWrapper(_req, null),
-                        new HttpResponseMessageWrapper(_res, _responseContent));
-                    HandleFailedJobSummaryRequest(ex);
-                    HandleFailedRequest(ex);
-                    Client.OnFailedRequest(ex);
-                    throw ex;
+                    await OnJobSummaryFailed(_req, _res);
                 }
-                _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
+                string _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
                 return new HttpOperationResponse<IImmutableList<AggregatedWorkItemCounts>>
                 {
                     Request = _req,
@@ -633,6 +649,18 @@ namespace Microsoft.DotNet.Helix.Client
             }
         }
 
+        internal async Task OnWorkItemSummaryFailed(HttpRequestMessage req, HttpResponseMessage res)
+        {
+            var content = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
+            var ex = new RestApiException(
+                new HttpRequestMessageWrapper(req, null),
+                new HttpResponseMessageWrapper(res, content));
+            HandleFailedWorkItemSummaryRequest(ex);
+            HandleFailedRequest(ex);
+            Client.OnFailedRequest(ex);
+            throw ex;
+        }
+
         internal async Task<HttpOperationResponse<IImmutableList<AggregatedWorkItemCounts>>> WorkItemSummaryInternalAsync(
             IImmutableList<string> groupBy,
             string filterBuild = default,
@@ -649,7 +677,7 @@ namespace Microsoft.DotNet.Helix.Client
             }
 
 
-            var _path = "/api/2018-03-14/aggregate/workitems";
+            var _path = "/api/2019-06-17/aggregate/workitems";
 
             var _query = new QueryBuilder();
             if (groupBy != default)
@@ -697,19 +725,11 @@ namespace Microsoft.DotNet.Helix.Client
                 }
 
                 _res = await Client.SendAsync(_req, cancellationToken).ConfigureAwait(false);
-                string _responseContent;
                 if (!_res.IsSuccessStatusCode)
                 {
-                    _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
-                    var ex = new RestApiException(
-                        new HttpRequestMessageWrapper(_req, null),
-                        new HttpResponseMessageWrapper(_res, _responseContent));
-                    HandleFailedWorkItemSummaryRequest(ex);
-                    HandleFailedRequest(ex);
-                    Client.OnFailedRequest(ex);
-                    throw ex;
+                    await OnWorkItemSummaryFailed(_req, _res);
                 }
-                _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
+                string _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
                 return new HttpOperationResponse<IImmutableList<AggregatedWorkItemCounts>>
                 {
                     Request = _req,
@@ -751,6 +771,18 @@ namespace Microsoft.DotNet.Helix.Client
             {
                 return _res.Body;
             }
+        }
+
+        internal async Task OnAnalysisDetailFailed(HttpRequestMessage req, HttpResponseMessage res)
+        {
+            var content = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
+            var ex = new RestApiException(
+                new HttpRequestMessageWrapper(req, null),
+                new HttpResponseMessageWrapper(res, content));
+            HandleFailedAnalysisDetailRequest(ex);
+            HandleFailedRequest(ex);
+            Client.OnFailedRequest(ex);
+            throw ex;
         }
 
         internal async Task<HttpOperationResponse<IImmutableList<AggregateAnalysisDetail>>> AnalysisDetailInternalAsync(
@@ -800,7 +832,7 @@ namespace Microsoft.DotNet.Helix.Client
             }
 
 
-            var _path = "/api/2018-03-14/aggregate/analysisdetail";
+            var _path = "/api/2019-06-17/aggregate/analysisdetail";
 
             var _query = new QueryBuilder();
             if (!string.IsNullOrEmpty(source))
@@ -852,19 +884,11 @@ namespace Microsoft.DotNet.Helix.Client
                 }
 
                 _res = await Client.SendAsync(_req, cancellationToken).ConfigureAwait(false);
-                string _responseContent;
                 if (!_res.IsSuccessStatusCode)
                 {
-                    _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
-                    var ex = new RestApiException(
-                        new HttpRequestMessageWrapper(_req, null),
-                        new HttpResponseMessageWrapper(_res, _responseContent));
-                    HandleFailedAnalysisDetailRequest(ex);
-                    HandleFailedRequest(ex);
-                    Client.OnFailedRequest(ex);
-                    throw ex;
+                    await OnAnalysisDetailFailed(_req, _res);
                 }
-                _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
+                string _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
                 return new HttpOperationResponse<IImmutableList<AggregateAnalysisDetail>>
                 {
                     Request = _req,
@@ -904,6 +928,18 @@ namespace Microsoft.DotNet.Helix.Client
             }
         }
 
+        internal async Task OnPropertiesFailed(HttpRequestMessage req, HttpResponseMessage res)
+        {
+            var content = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
+            var ex = new RestApiException(
+                new HttpRequestMessageWrapper(req, null),
+                new HttpResponseMessageWrapper(res, content));
+            HandleFailedPropertiesRequest(ex);
+            HandleFailedRequest(ex);
+            Client.OnFailedRequest(ex);
+            throw ex;
+        }
+
         internal async Task<HttpOperationResponse<IImmutableDictionary<string, Newtonsoft.Json.Linq.JToken>>> PropertiesInternalAsync(
             string filterBuild = default,
             string filterCreator = default,
@@ -914,7 +950,7 @@ namespace Microsoft.DotNet.Helix.Client
         )
         {
 
-            var _path = "/api/2018-03-14/aggregate/properties";
+            var _path = "/api/2019-06-17/aggregate/properties";
 
             var _query = new QueryBuilder();
             if (!string.IsNullOrEmpty(filterCreator))
@@ -955,19 +991,11 @@ namespace Microsoft.DotNet.Helix.Client
                 }
 
                 _res = await Client.SendAsync(_req, cancellationToken).ConfigureAwait(false);
-                string _responseContent;
                 if (!_res.IsSuccessStatusCode)
                 {
-                    _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
-                    var ex = new RestApiException(
-                        new HttpRequestMessageWrapper(_req, null),
-                        new HttpResponseMessageWrapper(_res, _responseContent));
-                    HandleFailedPropertiesRequest(ex);
-                    HandleFailedRequest(ex);
-                    Client.OnFailedRequest(ex);
-                    throw ex;
+                    await OnPropertiesFailed(_req, _res);
                 }
-                _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
+                string _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
                 return new HttpOperationResponse<IImmutableDictionary<string, Newtonsoft.Json.Linq.JToken>>
                 {
                     Request = _req,
@@ -999,6 +1027,18 @@ namespace Microsoft.DotNet.Helix.Client
             }
         }
 
+        internal async Task OnInvestigation_ContinueFailed(HttpRequestMessage req, HttpResponseMessage res)
+        {
+            var content = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
+            var ex = new RestApiException(
+                new HttpRequestMessageWrapper(req, null),
+                new HttpResponseMessageWrapper(res, content));
+            HandleFailedInvestigation_ContinueRequest(ex);
+            HandleFailedRequest(ex);
+            Client.OnFailedRequest(ex);
+            throw ex;
+        }
+
         internal async Task<HttpOperationResponse<InvestigationResult>> Investigation_ContinueInternalAsync(
             string id,
             CancellationToken cancellationToken = default
@@ -1010,7 +1050,7 @@ namespace Microsoft.DotNet.Helix.Client
             }
 
 
-            var _path = "/api/2018-03-14/aggregate/investigation/continue/{id}";
+            var _path = "/api/2019-06-17/aggregate/investigation/continue/{id}";
             _path = _path.Replace("{id}", Client.Serialize(id));
 
             var _query = new QueryBuilder();
@@ -1032,19 +1072,11 @@ namespace Microsoft.DotNet.Helix.Client
                 }
 
                 _res = await Client.SendAsync(_req, cancellationToken).ConfigureAwait(false);
-                string _responseContent;
                 if (!_res.IsSuccessStatusCode)
                 {
-                    _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
-                    var ex = new RestApiException(
-                        new HttpRequestMessageWrapper(_req, null),
-                        new HttpResponseMessageWrapper(_res, _responseContent));
-                    HandleFailedInvestigation_ContinueRequest(ex);
-                    HandleFailedRequest(ex);
-                    Client.OnFailedRequest(ex);
-                    throw ex;
+                    await OnInvestigation_ContinueFailed(_req, _res);
                 }
-                _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
+                string _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
                 return new HttpOperationResponse<InvestigationResult>
                 {
                     Request = _req,
@@ -1090,6 +1122,18 @@ namespace Microsoft.DotNet.Helix.Client
             }
         }
 
+        internal async Task OnInvestigationFailed(HttpRequestMessage req, HttpResponseMessage res)
+        {
+            var content = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
+            var ex = new RestApiException(
+                new HttpRequestMessageWrapper(req, null),
+                new HttpResponseMessageWrapper(res, content));
+            HandleFailedInvestigationRequest(ex);
+            HandleFailedRequest(ex);
+            Client.OnFailedRequest(ex);
+            throw ex;
+        }
+
         internal async Task<HttpOperationResponse<InvestigationResult>> InvestigationInternalAsync(
             IImmutableList<string> groupBy,
             int maxGroups,
@@ -1118,7 +1162,7 @@ namespace Microsoft.DotNet.Helix.Client
             }
 
 
-            var _path = "/api/2018-03-14/aggregate/investigation";
+            var _path = "/api/2019-06-17/aggregate/investigation";
 
             var _query = new QueryBuilder();
             if (groupBy != default)
@@ -1174,19 +1218,11 @@ namespace Microsoft.DotNet.Helix.Client
                 }
 
                 _res = await Client.SendAsync(_req, cancellationToken).ConfigureAwait(false);
-                string _responseContent;
                 if (!_res.IsSuccessStatusCode)
                 {
-                    _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
-                    var ex = new RestApiException(
-                        new HttpRequestMessageWrapper(_req, null),
-                        new HttpResponseMessageWrapper(_res, _responseContent));
-                    HandleFailedInvestigationRequest(ex);
-                    HandleFailedRequest(ex);
-                    Client.OnFailedRequest(ex);
-                    throw ex;
+                    await OnInvestigationFailed(_req, _res);
                 }
-                _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
+                string _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
                 return new HttpOperationResponse<InvestigationResult>
                 {
                     Request = _req,
@@ -1226,6 +1262,18 @@ namespace Microsoft.DotNet.Helix.Client
             {
                 return _res.Body;
             }
+        }
+
+        internal async Task OnHistoryFailed(HttpRequestMessage req, HttpResponseMessage res)
+        {
+            var content = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
+            var ex = new RestApiException(
+                new HttpRequestMessageWrapper(req, null),
+                new HttpResponseMessageWrapper(res, content));
+            HandleFailedHistoryRequest(ex);
+            HandleFailedRequest(ex);
+            Client.OnFailedRequest(ex);
+            throw ex;
         }
 
         internal async Task<HttpOperationResponse<IImmutableList<HistoricalAnalysisItem>>> HistoryInternalAsync(
@@ -1269,7 +1317,7 @@ namespace Microsoft.DotNet.Helix.Client
             }
 
 
-            var _path = "/api/2018-03-14/aggregate/history/{analysisType}";
+            var _path = "/api/2019-06-17/aggregate/history/{analysisType}";
             _path = _path.Replace("{analysisType}", Client.Serialize(analysisType));
 
             var _query = new QueryBuilder();
@@ -1311,19 +1359,11 @@ namespace Microsoft.DotNet.Helix.Client
                 }
 
                 _res = await Client.SendAsync(_req, cancellationToken).ConfigureAwait(false);
-                string _responseContent;
                 if (!_res.IsSuccessStatusCode)
                 {
-                    _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
-                    var ex = new RestApiException(
-                        new HttpRequestMessageWrapper(_req, null),
-                        new HttpResponseMessageWrapper(_res, _responseContent));
-                    HandleFailedHistoryRequest(ex);
-                    HandleFailedRequest(ex);
-                    Client.OnFailedRequest(ex);
-                    throw ex;
+                    await OnHistoryFailed(_req, _res);
                 }
-                _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
+                string _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
                 return new HttpOperationResponse<IImmutableList<HistoricalAnalysisItem>>
                 {
                     Request = _req,
@@ -1355,6 +1395,18 @@ namespace Microsoft.DotNet.Helix.Client
             }
         }
 
+        internal async Task OnMultiSourceFailed(HttpRequestMessage req, HttpResponseMessage res)
+        {
+            var content = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
+            var ex = new RestApiException(
+                new HttpRequestMessageWrapper(req, content),
+                new HttpResponseMessageWrapper(res, content));
+            HandleFailedMultiSourceRequest(ex);
+            HandleFailedRequest(ex);
+            Client.OnFailedRequest(ex);
+            throw ex;
+        }
+
         internal async Task<HttpOperationResponse<MultiSourceResponse>> MultiSourceInternalAsync(
             MultiSourceRequest body,
             CancellationToken cancellationToken = default
@@ -1366,7 +1418,7 @@ namespace Microsoft.DotNet.Helix.Client
             }
 
 
-            var _path = "/api/2018-03-14/aggregate/multi-source";
+            var _path = "/api/2019-06-17/aggregate/multi-source";
 
             var _query = new QueryBuilder();
 
@@ -1400,19 +1452,11 @@ namespace Microsoft.DotNet.Helix.Client
                 }
 
                 _res = await Client.SendAsync(_req, cancellationToken).ConfigureAwait(false);
-                string _responseContent;
                 if (!_res.IsSuccessStatusCode)
                 {
-                    _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
-                    var ex = new RestApiException(
-                        new HttpRequestMessageWrapper(_req, _requestContent),
-                        new HttpResponseMessageWrapper(_res, _responseContent));
-                    HandleFailedMultiSourceRequest(ex);
-                    HandleFailedRequest(ex);
-                    Client.OnFailedRequest(ex);
-                    throw ex;
+                    await OnMultiSourceFailed(_req, _res);
                 }
-                _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
+                string _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
                 return new HttpOperationResponse<MultiSourceResponse>
                 {
                     Request = _req,

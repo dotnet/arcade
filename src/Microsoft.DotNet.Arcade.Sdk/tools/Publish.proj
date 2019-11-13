@@ -4,6 +4,7 @@
     Optional variables:
       AzureFeedUrl                      Target Azure feed URL.
       AzureAccountKey                   Azure account key.
+      DotNetFinalVersionKind            Global property that stores the type of the current build: https://github.com/dotnet/arcade/blob/master/Documentation/CorePackages/Versioning.md#build-kind
       DotNetOutputBlobFeedDir           Source Build publishing directory
       DotNetSymbolServerTokenMsdl       Personal access token for MSDL symbol server. Available from variable group DotNet-Symbol-Publish.
       DotNetSymbolServerTokenSymWeb     Personal access token for SymWeb symbol server. Available from variable group DotNet-Symbol-Publish.
@@ -25,7 +26,13 @@
     <PublishToSymbolServer>false</PublishToSymbolServer>
     <PublishToSymbolServer Condition="'$(UsingToolSymbolUploader)' == 'true' and '$(AzureFeedUrl)' == '' and '$(ContinuousIntegrationBuild)' == 'true'">true</PublishToSymbolServer>
 
-    <AssetManifestFileName>$(OS)-$(PlatformName).xml</AssetManifestFileName>
+    <!-- Globally set property. -->
+    <IsStableBuild>false</IsStableBuild>
+    <IsStableBuild Condition="'$(DotNetFinalVersionKind)' == 'release'">true</IsStableBuild>
+
+    <AssetManifestOS Condition="'$(AssetManifestOS)' == ''">$(OS)</AssetManifestOS>
+
+    <AssetManifestFileName>$(AssetManifestOS)-$(PlatformName).xml</AssetManifestFileName>
     <AssetManifestFilePath>$(ArtifactsLogDir)AssetManifest\$(AssetManifestFileName)</AssetManifestFilePath>
 
     <SymbolPackagesDir>$(ArtifactsTmpDir)SymbolPackages\</SymbolPackagesDir>
@@ -48,8 +55,8 @@
 
   <Target Name="BeforePublish">
     <ItemGroup>
-      <ExistingSymbolPackages Include="$(ArtifactsShippingPackagesDir)*.symbols.nupkg" IsShipping="true" />
-      <ExistingSymbolPackages Include="$(ArtifactsNonShippingPackagesDir)*.symbols.nupkg" IsShipping="false" />
+      <ExistingSymbolPackages Include="$(ArtifactsShippingPackagesDir)**/*.symbols.nupkg" IsShipping="true" />
+      <ExistingSymbolPackages Include="$(ArtifactsNonShippingPackagesDir)**/*.symbols.nupkg" IsShipping="false" />
 
       <PackagesToPublish Include="$(ArtifactsShippingPackagesDir)*.nupkg" IsShipping="true" />
       <PackagesToPublish Include="$(ArtifactsNonShippingPackagesDir)*.nupkg" IsShipping="false" />
@@ -59,7 +66,7 @@
         <SymbolPackageToGenerate Condition="!Exists('%(RootDir)%(Directory)%(Filename).symbols.nupkg')">$(SymbolPackagesDir)%(Filename).symbols.nupkg</SymbolPackageToGenerate>
       </PackagesToPublish>
 
-      <SymbolPackagesToGenerate Include="@(PackagesToPublish->'%(SymbolPackageToGenerate)')" Condition="'%(PackagesToPublish.SymbolPackageToGenerate)' != ''">
+      <SymbolPackagesToGenerate Include="@(PackagesToPublish->'%(SymbolPackageToGenerate)')" Condition="'%(PackagesToPublish.SymbolPackageToGenerate)' != ''" Exclude="@(ExistingSymbolPackages -> '$(SymbolPackagesDir)%(Filename)%(Extension)')">
         <OriginalPackage>%(PackagesToPublish.Identity)</OriginalPackage>
         <IsShipping>%(PackagesToPublish.IsShipping)</IsShipping>
       </SymbolPackagesToGenerate>
@@ -70,7 +77,7 @@
       Such packages can act as symbol packages since they have the same structure.
       We just need to copy them to *.symbols.nupkg.
     -->
-    <MakeDir Directories="$(SymbolPackagesDir)" />
+    <MakeDir Condition="'@(SymbolPackagesToGenerate)' != ''" Directories="$(SymbolPackagesDir)" />
     <Copy SourceFiles="@(SymbolPackagesToGenerate->'%(OriginalPackage)')" DestinationFiles="@(SymbolPackagesToGenerate)" />
 
     <!-- Orchestrated Build blob storage -->
@@ -123,6 +130,9 @@
       <AzureDevOpsAccount Condition="$(CollectionUri.IndexOf('visualstudio.com')) >= 0">$(CollectionUri.Split('.')[0].Split('/')[2])</AzureDevOpsAccount>
 
       <TempWorkingDirectory>$(ArtifactsDir)\..\AssetsTmpDir\$([System.Guid]::NewGuid())</TempWorkingDirectory>
+      
+      <!-- Directory where pdbs pointed in `FilesToPublishToSymbolServer` are copied before publishing to AzDO artifacts. -->
+      <PDBsToPublishTempLocation>$(ArtifactsTmpDir)PDBsToPublish/</PDBsToPublishTempLocation>
     </PropertyGroup>
 
     <!--
@@ -159,6 +169,7 @@
       ManifestBranch="$(BUILD_SOURCEBRANCH)"
       ManifestBuildId="$(BUILD_BUILDNUMBER)"
       ManifestCommit="$(BUILD_SOURCEVERSION)"
+      IsStableBuild="$(IsStableBuild)"
       PublishFlatContainer="false"
       AssetManifestPath="$(AssetManifestFilePath)"
       AssetsTemporaryDirectory="$(TempWorkingDirectory)" />
@@ -184,10 +195,6 @@
       Text="##vso[artifact.upload containerfolder=AssetManifests;artifactname=AssetManifests]$(TempWorkingDirectory)/$(AssetManifestFileName)"
       Importance="high" />
 
-    <!--
-      This won't be necessary once we solve this issue:
-      https://github.com/dotnet/arcade/issues/2266
-    -->
     <WriteLinesToFile
       File="$(MSBuildThisFileDirectory)ArtifactsCategory.props"
       Lines="&lt;Project>&lt;PropertyGroup>&lt;ArtifactsCategory>$(ArtifactsCategory)&lt;/ArtifactsCategory>&lt;/PropertyGroup>&lt;/Project>"
@@ -202,14 +209,32 @@
     <!-- 
         Publish Windows PDBs produced by SymStore.targets (by default, only shipping PDBs are placed there).
         SymbolUploader doesn't support embedded PDBs yet, so let SymStore.targets do the conversion for now.
-        https://github.com/dotnet/core-eng/issues/3645
+        https://github.com/dotnet/symstore/issues/143
       -->
     <ItemGroup>
       <FilesToPublishToSymbolServer Include="$(ArtifactsSymStoreDirectory)**\*.pdb"/>
     </ItemGroup>
 
+    <!--
+      The below lines comprise workarounds for two issues:
+        - AzDO logging commands don't let us add subfolders by executing different `##vso` commands:
+          https://github.com/microsoft/azure-pipelines-tasks/issues/11689 . Therefore a parent folder
+          containing all desired subfolders is published. The primary goal of these artifacts isn't
+          to be browsable by humans. The target that publish the symbols will filter and publish only
+          the PDB files.
+
+        - It's possible that the user have PDBs outside the Arcade.SDK standard folder 
+           (artifacts/SymStore/$Configuration) and we need to maintain that support. For that reason,
+           and the one mentioned above, we copy all files in `FilesToPublishToSymbolServer` to a temporary
+           folder before adding them to the AzDO artifact container.
+    -->
+		<Copy
+			SourceFiles="@(FilesToPublishToSymbolServer)"
+			DestinationFiles="@(FilesToPublishToSymbolServer->'$(PDBsToPublishTempLocation)%(RecursiveDir)%(Filename)%(Extension)')"
+		/>
+
     <Message
-      Text="##vso[artifact.upload containerfolder=PdbArtifacts;artifactname=PdbArtifacts]%(FilesToPublishToSymbolServer.Identity)"
+      Text="##vso[artifact.upload containerfolder=PdbArtifacts;artifactname=PdbArtifacts]$(PDBsToPublishTempLocation)"
       Importance="high" 
       Condition="'@(FilesToPublishToSymbolServer)' != ''"/>
 

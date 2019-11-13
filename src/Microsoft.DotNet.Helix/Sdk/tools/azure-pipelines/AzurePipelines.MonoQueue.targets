@@ -13,4 +13,13 @@
       call %HELIX_CORRELATION_PAYLOAD%\reporter\run.bat $(SYSTEM_TEAMFOUNDATIONCOLLECTIONURI) $(SYSTEM_TEAMPROJECT) $(TestRunId) $(SYSTEM_ACCESSTOKEN)
     </HelixPostCommands>
   </PropertyGroup>
+
+  <Target Name="SaveTestRunId"
+          AfterTargets="CoreTest">
+    <ItemGroup>
+      <SentJob Update="$(HelixJobId)">
+        <TestRunId>$(TestRunId)</TestRunId>
+      </SentJob>
+    </ItemGroup>
+  </Target>
 </Project>

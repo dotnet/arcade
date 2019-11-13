@@ -34,6 +34,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public string AssetManifestPath { get; set; }
 
+        public bool IsStableBuild { get; set; }
+
         public override bool Execute()
         {
             try
@@ -49,14 +51,35 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     IEnumerable<BlobArtifactModel> blobArtifacts = Enumerable.Empty<BlobArtifactModel>();
                     IEnumerable<PackageArtifactModel> packageArtifacts = Enumerable.Empty<PackageArtifactModel>();
 
+                    var itemsToPushNoExcludes = ItemsToPush.
+                        Where(i => !string.Equals(i.GetMetadata("ExcludeFromManifest"), "true", StringComparison.OrdinalIgnoreCase));
+
+                    // To prevent conflicts with other parts of the build system that might move the artifacts
+                    // folder while the artifacts are still being published, we copy the artifacts to a temporary
+                    // location only for the sake of uploading them. This is a temporary solution and will be
+                    // removed in the future.
+                    if (!Directory.Exists(AssetsTemporaryDirectory))
+                    {
+                        Log.LogMessage(MessageImportance.High,
+                            $"Assets temporary directory {AssetsTemporaryDirectory} doesn't exist. Creating it.");
+                        Directory.CreateDirectory(AssetsTemporaryDirectory);
+                    }
+
                     if (PublishFlatContainer)
                     {
-                        blobArtifacts = ItemsToPush.Select(BuildManifestUtil.CreateBlobArtifactModel).Where(blob => blob != null);
+                        // Act as if %(PublishFlatContainer) were true for all items.
+                        blobArtifacts = itemsToPushNoExcludes
+                            .Select(BuildManifestUtil.CreateBlobArtifactModel);
+                        foreach (var blobItem in itemsToPushNoExcludes)
+                        {
+                            var destFile = $"{AssetsTemporaryDirectory}/{Path.GetFileName(blobItem.ItemSpec)}";
+                            File.Copy(blobItem.ItemSpec, destFile);
+                            Log.LogMessage(MessageImportance.High,
+                                $"##vso[artifact.upload containerfolder=BlobArtifacts;artifactname=BlobArtifacts]{destFile}");
+                        }
                     }
                     else
                     {
-                        var itemsToPushNoExcludes = ItemsToPush.
-                            Where(i => !string.Equals(i.GetMetadata("ExcludeFromManifest"), "true", StringComparison.OrdinalIgnoreCase));
                         ITaskItem[] symbolItems = itemsToPushNoExcludes
                             .Where(i => i.ItemSpec.Contains("symbols.nupkg"))
                             .Select(i =>
@@ -67,20 +90,24 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             })
                             .ToArray();
 
-                        ITaskItem[] packageItems = itemsToPushNoExcludes
-                            .Where(i => !symbolItems.Contains(i))
+                        var blobItems = itemsToPushNoExcludes
+                            .Where(i =>
+                            {
+                                var isFlatString = i.GetMetadata("PublishFlatContainer");
+                                if (!string.IsNullOrEmpty(isFlatString) &&
+                                    bool.TryParse(isFlatString, out var isFlat))
+                                {
+                                    return isFlat;
+                                }
+
+                                return false;
+                            })
+                            .Union(symbolItems)
                             .ToArray();
 
-                        // To prevent conflicts with other parts of the build system that might move the artifacts
-                        // folder while the artifacts are still being published, we copy the artifacts to a temporary
-                        // location only for the sake of uploading them. This is a temporary solution and will be
-                        // removed in the future.
-                        if (!Directory.Exists(AssetsTemporaryDirectory))
-                        {
-                            Log.LogMessage(MessageImportance.High, 
-                                $"Assets temporary directory {AssetsTemporaryDirectory} doesn't exist. Creating it.");
-                            Directory.CreateDirectory(AssetsTemporaryDirectory);
-                        }
+                        ITaskItem[] packageItems = itemsToPushNoExcludes
+                            .Except(blobItems)
+                            .ToArray();
 
                         foreach (var packagePath in packageItems)
                         {
@@ -91,28 +118,29 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                                 $"##vso[artifact.upload containerfolder=PackageArtifacts;artifactname=PackageArtifacts]{destFile}");
                         }
 
-                        foreach (var symbolPath in symbolItems)
+                        foreach (var blobItem in blobItems)
                         {
-                            var destFile = $"{AssetsTemporaryDirectory}/{Path.GetFileName(symbolPath.ItemSpec)}";
-                            File.Copy(symbolPath.ItemSpec, destFile);
+                            var destFile = $"{AssetsTemporaryDirectory}/{Path.GetFileName(blobItem.ItemSpec)}";
+                            File.Copy(blobItem.ItemSpec, destFile);
 
                             Log.LogMessage(MessageImportance.High,
                                 $"##vso[artifact.upload containerfolder=BlobArtifacts;artifactname=BlobArtifacts]{destFile}");
                         }
 
                         packageArtifacts = packageItems.Select(BuildManifestUtil.CreatePackageArtifactModel);
-                        blobArtifacts = symbolItems.Select(BuildManifestUtil.CreateBlobArtifactModel).Where(blob => blob != null);
+                        blobArtifacts = blobItems.Select(BuildManifestUtil.CreateBlobArtifactModel).Where(blob => blob != null);
                     }
 
-                    BuildManifestUtil.CreateBuildManifest(Log, 
-                        blobArtifacts, 
+                    BuildManifestUtil.CreateBuildManifest(Log,
+                        blobArtifacts,
                         packageArtifacts,
-                        AssetManifestPath, 
-                        ManifestRepoUri, 
+                        AssetManifestPath,
+                        ManifestRepoUri,
                         ManifestBuildId,
-                        ManifestBranch, 
-                        ManifestCommit, 
-                        ManifestBuildData);
+                        ManifestBranch,
+                        ManifestCommit,
+                        ManifestBuildData,
+                        IsStableBuild);
                 }
             }
             catch (Exception e)

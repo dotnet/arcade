@@ -9,7 +9,7 @@
 
   <PropertyGroup>
     <!-- Copies the app.config file to the OutDir. -->
-    <TestRuntimeTemplateConfigPath Condition="'$(TestRuntimeTemplateConfigPath)' == '' and '$(BuildingNETFxVertical)' == 'true'">$(TestAssetsDir)netfx.exe.config</TestRuntimeTemplateConfigPath>
+    <TestRuntimeTemplateConfigPath Condition="'$(TestRuntimeTemplateConfigPath)' == '' and '$(TargetFrameworkIdentifier)' == '.NETFramework'">$(TestAssetsDir)netfx.exe.config</TestRuntimeTemplateConfigPath>
 
     <!-- By default copy the test runtime config file for executable test projects (+ test support projects). -->
     <GenerateRuntimeConfigurationFiles Condition="'$(IsTestProject)' == 'true' and ('$(IsTestSupportProject)' != 'true' or '$(OutputType.ToLower())' == 'exe')">true</GenerateRuntimeConfigurationFiles>
@@ -17,7 +17,7 @@
 
   <ItemGroup Condition="'$(GenerateRuntimeConfigurationFiles)' == 'true'">
     <None Include="$(TestRuntimeTemplateConfigPath)"
-          Condition="'$(BuildingNETFxVertical)' == 'true'"
+          Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'"
           Link="$(TargetName).exe.config"
           CopyToOutputDirectory="PreserveNewest"
           Visible="false" />
@@ -27,11 +27,11 @@
       Tracking issue: https://github.com/dotnet/sdk/issues/1675
     -->
     <ContentWithTargetPath Include="$(ProjectDepsFilePath)"
-                           Condition="'$(BuildingNETCoreAppVertical)' == 'true' and '$(GenerateDependencyFile)' == 'true'"
+                           Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp' and '$(GenerateDependencyFile)' == 'true'"
                            CopyToOutputDirectory="PreserveNewest"
                            TargetPath="$(ProjectDepsFileName)" />
     <ContentWithTargetPath Include="$(ProjectRuntimeConfigFilePath)"
-                           Condition="'$(BuildingNETCoreAppVertical)' == 'true'"
+                           Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp'"
                            CopyToOutputDirectory="PreserveNewest"
                            TargetPath="$(ProjectRuntimeConfigFileName)" />
   </ItemGroup>
@@ -44,23 +44,19 @@
   <Target Name="SetRuntimeFrameworksBeforeGenerateConfigurationFiles"
           Condition="'$(GenerateRuntimeConfigurationFiles)' == 'true'"
           BeforeTargets="GenerateBuildRuntimeConfigurationFiles">
-
     <ItemGroup>
       <RuntimeFramework Include="Microsoft.NETCore.App" Version="$(ProductVersion)" />
     </ItemGroup>
-
   </Target>
 
   <!-- Auto references support. Used by test projects and companions. -->
   <Target Name="AddDefaultTestReferences"
           Condition="'$(IncludeDefaultReferences)' == 'true' and '$(IncludeDefaultTestReferences)' == 'true'"
           BeforeTargets="SetupDefaultReferences">
-
     <ItemGroup>
       <!-- Harmless, but causes PRI targets to run -->
       <DefaultReferenceExclusions Include="System.Runtime.WindowsRuntime.UI.Xaml" />
       <DefaultReferenceExclusions Include="@(ReferenceFromRuntime)"/>
-      <DefaultReferenceExclusions Include="$(MSBuildProjectName)" />
 
       <!-- Reference everything in the targeting pack directory -->
       <DefaultReferenceDirs Include="$(RefPath)" />
@@ -72,9 +68,27 @@
       <_defaultReferenceExclusionsFullPath Include="%(DefaultReferenceExclusions.RefDir)%(DefaultReferenceExclusions.Identity).dll" />
 
       <!-- Ensure conflict resolution can see these references. -->
-      <Reference Include="%(DefaultReferenceItems.FullPath)" Private="false" Exclude="@(_defaultReferenceExclusionsFullPath)"  />
+      <Reference Include="%(DefaultReferenceItems.FullPath)" Private="false" />
     </ItemGroup>
+  </Target>
 
+  <Target Name="RemoveConflictResolutionAssetsForTests"
+          AfterTargets="_HandlePackageFileConflicts"
+          DependsOnTargets="AddDefaultTestReferences"
+          Condition="'@(_defaultReferenceExclusionsFullPath)' != ''">
+    <ItemGroup>
+      <Reference Remove="@(_defaultReferenceExclusionsFullPath)" />
+    </ItemGroup>
+  </Target>
+
+  <UsingTask TaskName="GenerateFileVersionProps" AssemblyFile="$(CoreFxTestingAssemblyPath)"/>
+  <Target Name="GenerateFileVersionProps">
+    <GenerateFileVersionProps Files="@(SharedFrameworkRuntimeFiles)"
+                              PackageId="Microsoft.NETCore.App"
+                              PackageVersion="$(ProductVersion)"
+                              PlatformManifestFile="$(PlatformManifestFile)"
+                              PreferredPackages="Microsoft.NetCore.App"
+                              PermitDllAndExeFilesLackingFileVersion="true" />
   </Target>
 
   <!--
@@ -83,12 +97,9 @@
     To use invoke target directly specifying NETCoreAppTestSharedFrameworkPath property.
   -->
   <UsingTask TaskName="GenerateTestSharedFrameworkDepsFile" AssemblyFile="$(CoreFxTestingAssemblyPath)"/>
-  <Target Name="GenerateTestSharedFrameworkDepsFile" Condition="'$(GenerateTestSharedFrameworkDepsFile)' == 'true'">
+  <Target Name="GenerateTestSharedFrameworkDepsFile">
     <GenerateTestSharedFrameworkDepsFile SharedFrameworkDirectory="$(NETCoreAppTestSharedFrameworkPath)" />
   </Target>
-
-  <!-- UAP resource generation needed by both source and test projects. -->
-  <Import Condition="'$(BuildingUAPVertical)' == 'true'" Project="$(MSBuildThisFileDirectory)Resources.uap.targets" />
 
   <!-- Full coverage report. -->
   <Import Condition="'$(EnableFullCoverageReportTarget)' == 'true' and '$(SkipCoverageReport)' != 'true' and '$(Coverage)' == 'true'" Project="$([MSBuild]::NormalizePath('$(TestCoreDir)', 'coverage', 'CoverageReport.targets'))" />

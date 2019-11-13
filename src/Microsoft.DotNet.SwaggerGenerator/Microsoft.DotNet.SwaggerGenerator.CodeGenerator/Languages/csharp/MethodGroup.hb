@@ -116,7 +116,7 @@ namespace {{pascalCaseNs Namespace}}
         {
             {{#each NonConstantParameters}}
             {{#if Required}}
-            if ({{#nullCheck Type}}{{camelCase Name}}{{/nullCheck}})
+            if ({{#nullCheck Type Required}}{{camelCase Name}}{{/nullCheck}})
             {
                 throw new ArgumentNullException(nameof({{camelCase Name}}));
             }
@@ -144,7 +144,7 @@ namespace {{pascalCaseNs Namespace}}
             {{#if IsConstant}}
             _query.Add("{{Name}}", Client.Serialize({{camelCase Name}}));
             {{else}}
-            if ({{#notNullCheck Type}}{{camelCase Name}}{{/notNullCheck}})
+            if ({{#notNullCheck Type Required}}{{camelCase Name}}{{/notNullCheck}})
             {
                 {{#if IsArray}}
                 foreach (var _item in {{camelCase Name}})
@@ -170,7 +170,7 @@ namespace {{pascalCaseNs Namespace}}
                 _req = new HttpRequestMessage({{method HttpMethod}}, _url);
                 {{#each HeaderParameters}}
 
-                if ({{#notNullCheck Type}}{{camelCase Name}}{{/notNullCheck}})
+                if ({{#notNullCheck Type Required}}{{camelCase Name}}{{/notNullCheck}})
                 {
                     _req.Headers.Add("{{Name}}", {{camelCase Name}});
                 }
@@ -178,7 +178,7 @@ namespace {{pascalCaseNs Namespace}}
                 {{#with BodyParameter}}
 
                 string _requestContent = null;
-                if ({{#notNullCheck Type}}{{camelCase Name}}{{/notNullCheck}})
+                if ({{#notNullCheck Type Required}}{{camelCase Name}}{{/notNullCheck}})
                 {
                     _requestContent = Client.Serialize({{camelCase Name}});
                     _req.Content = new StringContent(_requestContent, Encoding.UTF8)
@@ -216,7 +216,7 @@ namespace {{pascalCaseNs Namespace}}
                     {{/unless}}
                 };
                 {{else}}
-                Stream _responseStream = await _res.Content.ReadAsStreamAsync().ConfigureAwait(false);
+                System.IO.Stream _responseStream = await _res.Content.ReadAsStreamAsync().ConfigureAwait(false);
                 return new HttpOperationResponse<System.IO.Stream>
                 {
                     Request = _req,

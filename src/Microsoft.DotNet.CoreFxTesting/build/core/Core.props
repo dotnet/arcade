@@ -10,7 +10,7 @@
   </PropertyGroup>
 
   <!-- Set env variable to use the local netfx assemblies instead of the ones in the GAC. -->
-  <ItemGroup Condition="'$(BuildingNETFxVertical)' == 'true'">
+  <ItemGroup Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'">
     <RunScriptCommands Include="set DEVPATH=%RUNTIME_PATH%" />
   </ItemGroup>
 
@@ -18,11 +18,11 @@
     Unit/Functional/Integration test support.
     Supported runners: xunit.
   -->
-  <Import Condition="'$(IsUnitTestProject)' == 'true'" Project="$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', 'test', 'Test.props'))" />
+  <Import Project="$([MSBuild]::NormalizePath('$(MSBuildThisFileDirectory)', 'test', 'Test.props'))" />
 
   <!--
     Code Coverage support.
-    Supported runners: OpenCover.
+    Supported runners: coverlet.
 
     Inputs:
       - Coverage: Intended to be passed in as a global property.

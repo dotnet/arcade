@@ -2,11 +2,11 @@
 
 - Onboard onto the Arcade SDK, which provides templates (building blocks) for
   interacting with Azure DevOps, as well as shared tooling for signing,
-  packaging, publishing and general build infrastructure.
+  packaging, publishing and general build infrastructure.  
   
   Resources: [Reference documentation](ArcadeSdk.md), [walkthough video](https://msit.microsoftstream.com/video/e22d2dad-ef72-4cca-9b62-7e33621f86a1), [feature documentation](CorePackages/).
-  
-  Steps:
+
+   Steps:
     1. Add a
        [global.json](https://github.com/dotnet/arcade-minimalci-sample/blob/master/global.json).
     2. Add (or copy)
@@ -25,6 +25,9 @@
     5. Add dotnet-core feed and any other feeds that the repository restores NuGet packages from to
        [NuGet.config](https://github.com/dotnet/arcade-minimalci-sample/blob/master/NuGet.config).
 
+    **Using Arcade packages** - See [documentation](CorePackages/) for
+    information on specific packages.
+
 - Move out of .NET CI and into our new Azure DevOps project
   (https://dev.azure.com/dnceng/public) for your public CI. - See [Onboarding
   Azure DevOps](AzureDevOps/AzureDevOpsOnboarding.md).
@@ -40,5 +43,5 @@
 ## Which branches should I make these changes in?
 
 Prioritize branches that are producing bits for .NET Core 3.  Given the extended
-support lifecyle for .NET Core 2.1, backporting infrastructure to .NET Core 2.1
+support lifecycle for .NET Core 2.1, backporting infrastructure to .NET Core 2.1
 release branches is desired, but .NET Core 3 branches should go first.

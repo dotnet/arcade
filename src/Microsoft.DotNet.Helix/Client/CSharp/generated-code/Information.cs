@@ -51,6 +51,18 @@ namespace Microsoft.DotNet.Helix.Client
             }
         }
 
+        internal async Task OnQueueInfoFailed(HttpRequestMessage req, HttpResponseMessage res)
+        {
+            var content = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
+            var ex = new RestApiException(
+                new HttpRequestMessageWrapper(req, null),
+                new HttpResponseMessageWrapper(res, content));
+            HandleFailedQueueInfoRequest(ex);
+            HandleFailedRequest(ex);
+            Client.OnFailedRequest(ex);
+            throw ex;
+        }
+
         internal async Task<HttpOperationResponse<QueueInfo>> QueueInfoInternalAsync(
             string queueId,
             CancellationToken cancellationToken = default
@@ -62,7 +74,7 @@ namespace Microsoft.DotNet.Helix.Client
             }
 
 
-            var _path = "/api/2018-03-14/info/queues/{queueId}";
+            var _path = "/api/2019-06-17/info/queues/{queueId}";
             _path = _path.Replace("{queueId}", Client.Serialize(queueId));
 
             var _query = new QueryBuilder();
@@ -84,19 +96,11 @@ namespace Microsoft.DotNet.Helix.Client
                 }
 
                 _res = await Client.SendAsync(_req, cancellationToken).ConfigureAwait(false);
-                string _responseContent;
                 if (!_res.IsSuccessStatusCode)
                 {
-                    _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
-                    var ex = new RestApiException(
-                        new HttpRequestMessageWrapper(_req, null),
-                        new HttpResponseMessageWrapper(_res, _responseContent));
-                    HandleFailedQueueInfoRequest(ex);
-                    HandleFailedRequest(ex);
-                    Client.OnFailedRequest(ex);
-                    throw ex;
+                    await OnQueueInfoFailed(_req, _res);
                 }
-                _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
+                string _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
                 return new HttpOperationResponse<QueueInfo>
                 {
                     Request = _req,
@@ -126,12 +130,24 @@ namespace Microsoft.DotNet.Helix.Client
             }
         }
 
+        internal async Task OnQueueInfoListFailed(HttpRequestMessage req, HttpResponseMessage res)
+        {
+            var content = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
+            var ex = new RestApiException(
+                new HttpRequestMessageWrapper(req, null),
+                new HttpResponseMessageWrapper(res, content));
+            HandleFailedQueueInfoListRequest(ex);
+            HandleFailedRequest(ex);
+            Client.OnFailedRequest(ex);
+            throw ex;
+        }
+
         internal async Task<HttpOperationResponse<IImmutableList<QueueInfo>>> QueueInfoListInternalAsync(
             CancellationToken cancellationToken = default
         )
         {
 
-            var _path = "/api/2018-03-14/info/queues";
+            var _path = "/api/2019-06-17/info/queues";
 
             var _query = new QueryBuilder();
 
@@ -152,19 +168,11 @@ namespace Microsoft.DotNet.Helix.Client
                 }
 
                 _res = await Client.SendAsync(_req, cancellationToken).ConfigureAwait(false);
-                string _responseContent;
                 if (!_res.IsSuccessStatusCode)
                 {
-                    _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
-                    var ex = new RestApiException(
-                        new HttpRequestMessageWrapper(_req, null),
-                        new HttpResponseMessageWrapper(_res, _responseContent));
-                    HandleFailedQueueInfoListRequest(ex);
-                    HandleFailedRequest(ex);
-                    Client.OnFailedRequest(ex);
-                    throw ex;
+                    await OnQueueInfoListFailed(_req, _res);
                 }
-                _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
+                string _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
                 return new HttpOperationResponse<IImmutableList<QueueInfo>>
                 {
                     Request = _req,

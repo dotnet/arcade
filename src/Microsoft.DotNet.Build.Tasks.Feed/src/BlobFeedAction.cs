@@ -5,7 +5,9 @@
 using Microsoft.Build.Framework;
 using Microsoft.DotNet.Build.CloudTestTasks;
 using Microsoft.WindowsAzure.Storage;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Newtonsoft.Json.Serialization;
 using NuGet.Packaging;
 using NuGet.Packaging.Core;
 using Sleet;
@@ -67,6 +69,17 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             {
                 throw new Exception("Unable to parse expected feed. Please check ExpectedFeedUrl.");
             }
+        }
+
+        public BlobFeedAction(SleetSource sleetSource, string accountKey, MSBuild.TaskLoggingHelper log)
+        {
+            ContainerName = sleetSource.Container;
+            RelativePath = sleetSource.FeedSubPath;
+            AccountName = sleetSource.AccountName;
+            AccountKey = accountKey;
+            hasToken = true;
+            Log = log;
+            source = sleetSource;
         }
 
         public async Task<bool> PushToFeedAsync(
@@ -165,7 +178,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 {
                     if (options.PassIfExistingItemIdentical)
                     {
-                        if (!await blobUtils.IsFileIdenticalToBlobAsync(item.ItemSpec, relativeBlobPath))
+                        if (!await blobUtils.IsFileIdenticalToBlobAsync(relativeBlobPath, item.ItemSpec))
                         {
                             Log.LogError(
                                 $"Item '{item}' already exists with different contents " +
@@ -279,35 +292,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             return true;
         }
 
-        private async Task<bool?> IsPackageIdenticalOnFeedAsync(
-            string item,
-            PackageIndex packageIndex,
-            ISleetFileSystem source,
-            FlatContainer flatContainer,
-            SleetLogger log)
-        {
-            using (var package = new PackageArchiveReader(item))
-            {
-                var id = await package.GetIdentityAsync(CancellationToken);
-                if (await packageIndex.Exists(id))
-                {
-                    using (Stream remoteStream = await source
-                        .Get(flatContainer.GetNupkgPath(id))
-                        .GetStream(log, CancellationToken))
-                    using (var remote = new MemoryStream())
-                    {
-                        await remoteStream.CopyToAsync(remote);
-
-                        byte[] existingBytes = remote.ToArray();
-                        byte[] localBytes = File.ReadAllBytes(item);
-
-                        return existingBytes.SequenceEqual(localBytes);
-                    }
-                }
-                return null;
-            }
-        }
-
         private LocalSettings GetSettings()
         {
             SleetSettings sleetSettings = new SleetSettings()
@@ -318,97 +302,39 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     }
             };
 
+            var jsonSerializer = JsonSerializer.Create(
+                new JsonSerializerSettings
+                {
+                    ContractResolver = new CamelCasePropertyNamesContractResolver(),
+                    NullValueHandling = NullValueHandling.Ignore
+                });
+
             LocalSettings settings = new LocalSettings
             {
-                Json = JObject.FromObject(sleetSettings)
+                Json = JObject.FromObject(sleetSettings, jsonSerializer)
             };
 
             return settings;
         }
 
-        private AzureFileSystem GetAzureFileSystem(LocalCache fileCache)
+        private ISleetFileSystem GetAzureFileSystem(LocalCache fileCache)
         {
-            CloudStorageAccount storageAccount = CloudStorageAccount.Parse(source.ConnectionString);
-            AzureFileSystem fileSystem = new AzureFileSystem(fileCache, new Uri(source.Path), new Uri(source.Path), storageAccount, source.Name, source.FeedSubPath);
-            return fileSystem;
+            try
+            {
+                CloudStorageAccount storageAccount = CloudStorageAccount.Parse(source.ConnectionString);
+                return new AzureFileSystem(fileCache, new Uri(source.Path), new Uri(source.Path), storageAccount, source.Name, source.FeedSubPath);
+            }
+            catch
+            {
+                return FileSystemFactory.CreateFileSystem(GetSettings(), fileCache, source.Name);
+            }
         }
 
-        private async Task<bool> PushAsync(
-            IEnumerable<string> items,
-            PushOptions options)
+        private async Task<bool> PushAsync(IEnumerable<string> items, PushOptions options)
         {
             LocalSettings settings = GetSettings();
             SleetLogger log = new SleetLogger(Log, NuGet.Common.LogLevel.Verbose);
             var packagesToPush = items.ToList();
-
-            // Create a separate LocalCache to use for read only operations on the feed.
-            // Files added to the cache before the lock could be modified by the process
-            // currently holding the lock. Sleet assumes that files in the cache 
-            // are valid and identical to the ones on the feed since operations are 
-            // normally performed inside the lock.
-            using (var preLockCache = CreateFileCache())
-            {
-                AzureFileSystem preLockFileSystem = GetAzureFileSystem(preLockCache);
-
-                if (!options.AllowOverwrite && options.PassIfExistingItemIdentical)
-                {
-                    var context = new SleetContext
-                    {
-                        LocalSettings = settings,
-                        Log = log,
-                        Source = preLockFileSystem,
-                        Token = CancellationToken
-                    };
-                    context.SourceSettings = await FeedSettingsUtility.GetSettingsOrDefault(
-                        context.Source,
-                        context.Log,
-                        context.Token);
-
-                    var flatContainer = new FlatContainer(context);
-
-                    var packageIndex = new PackageIndex(context);
-
-                    // Check packages sequentially: Task.WhenAll caused IO exceptions in Sleet.
-                    for (int i = packagesToPush.Count - 1; i >= 0; i--)
-                    {
-                        string item = packagesToPush[i];
-
-                        bool? identical = await IsPackageIdenticalOnFeedAsync(
-                            item,
-                            packageIndex,
-                            context.Source,
-                            flatContainer,
-                            log);
-
-                        if (identical == null)
-                        {
-                            continue;
-                        }
-
-                        packagesToPush.RemoveAt(i);
-
-                        if (identical == true)
-                        {
-                            Log.LogMessage(
-                                MessageImportance.Normal,
-                                "Package exists on the feed, and is verified to be identical. " +
-                                $"Skipping upload: '{item}'");
-                        }
-                        else
-                        {
-                            Log.LogError(
-                                "Package exists on the feed, but contents are different. " +
-                                $"Upload failed: '{item}'");
-                        }
-                    }
-
-                    if (!packagesToPush.Any())
-                    {
-                        Log.LogMessage("After skipping idempotent uploads, no items need pushing.");
-                        return true;
-                    }
-                }
-            }
 
             // Create a new cache to be used once a lock is obtained.
             using (var fileCache = CreateFileCache())
@@ -419,18 +345,25 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     settings,
                     lockedFileSystem,
                     packagesToPush,
-                    options.AllowOverwrite,
-                    skipExisting: false,
+                    force: options.AllowOverwrite,
+                    skipExisting: !options.AllowOverwrite,
                     log: log);
             }
         }
 
-        private async Task<bool> InitAsync()
+        public async Task<bool> InitAsync()
         {
+            AzureStorageUtils blobUtils = new AzureStorageUtils(AccountName, AccountKey, ContainerName);
+
+            if (!await blobUtils.CheckIfContainerExistsAsync())
+            {
+                throw new Exception($"The informed container for the feed '{ContainerName}' doesn't exist!");
+            }
+
             using (var fileCache = CreateFileCache())
             {
                 LocalSettings settings = GetSettings();
-                AzureFileSystem fileSystem = GetAzureFileSystem(fileCache);
+                var fileSystem = FileSystemFactory.CreateFileSystem(settings, fileCache, source.Name);
                 bool result = await InitCommand.RunAsync(settings, fileSystem, enableCatalog: false, enableSymbols: false, log: new SleetLogger(Log, NuGet.Common.LogLevel.Verbose), token: CancellationToken);
                 return result;
             }

@@ -3,7 +3,7 @@
   <!--
     This MSBuild file is intended to be used as the body of the default 
     publishing release pipeline. The release pipeline will use this file
-    to invoke the the SignCheck tool to validate that packages about to
+    to invoke the SignCheck tool to validate that packages about to
     be published are correctly signed.
   
     Parameters:
@@ -23,8 +23,8 @@
       <SignCheckToolPath>$(NuGetPackageRoot)Microsoft.DotNet.SignCheck\$(MicrosoftDotNetSignCheckVersion)\tools\Microsoft.DotNet.SignCheck.exe</SignCheckToolPath>
 
       <SignCheckInputDir>$(PackageBasePath)</SignCheckInputDir>
-      <SignCheckLog>signcheck.log</SignCheckLog>
-      <SignCheckErrorLog>signcheck.errors.log</SignCheckErrorLog>
+      <SignCheckLog Condition="'$(SignCheckLog)' == ''">$(ArtifactsLogDir)\signcheck.log</SignCheckLog>
+      <SignCheckErrorLog Condition="'$(SignCheckErrorLog)' == ''">$(ArtifactsLogDir)\signcheck.errors.log</SignCheckErrorLog>
     </PropertyGroup>
     
     <ItemGroup>
@@ -37,9 +37,9 @@
       <SignCheckArgs Include="--file-status AllFiles" />
       <SignCheckArgs Include="--log-file $(SignCheckLog)" />
       <SignCheckArgs Include="--error-log-file $(SignCheckErrorLog)" />
-      <SignCheckArgs Include="--input-files $(SignCheckInputDir)" />
+      <SignCheckArgs Include="--input-files &quot;$(SignCheckInputDir)&quot;" />
       
-      <SignCheckArgs Include="--exclusions-file '$(SignCheckExclusionsFile)'" Condition="'$(SignCheckExclusionsFile)' != '' and Exists($(SignCheckExclusionsFile))" />
+      <SignCheckArgs Include="--exclusions-file &quot;$(SignCheckExclusionsFile)&quot;" Condition="'$(SignCheckExclusionsFile)' != '' and Exists($(SignCheckExclusionsFile))" />
       <SignCheckArgs Include="--verify-jar" Condition="'$(EnableJarSigningCheck)' == 'true'" />
       <SignCheckArgs Include="--verify-strongname" Condition="'$(EnableStrongNameCheck)' == 'true'" />
     </ItemGroup>

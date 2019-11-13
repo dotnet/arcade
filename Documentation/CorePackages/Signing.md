@@ -54,9 +54,9 @@ This field requires the following metadata: `DualSigningAllowed` (boolean) and `
 
 **FileSignInfo** - Optional parameter
 
-This field accepts the following metadata: `PublicKeyToken` (*optional*), `CertificateName`, `TargetFramework` (*optional*) and the `Include` field is assumed to hold a file name (*including extension; not a full path*). The `CertificateName` attribute accept the value "*None*" to flag a file that should not be signed.
+This field accepts the following metadata: `PublicKeyToken` (*optional*), `CertificateName`, `TargetFramework` (*optional*) and the `Include` field is assumed to hold a file name (*including extension; not a full path*). The `CertificateName` attribute accepts the value "*None*" to flag a file that should not be signed.
 
-All files that match the combination informed will use the Signing information informed.
+All files that match the provided combination will use the Signing information provided. This applies to files discovered during recursive signing.
 
 **ItemsToSign** - Required parameter
 
@@ -106,7 +106,7 @@ If you repo have signable files that have a different Public Key Token than the 
 </ItemGroup>
 ```
 
-If that is is your only custom configuration all files with that Public Key Token will be signed with the `DifferentCertName` certificate and `StrongName1` strong name.
+If that is your only custom configuration all files with that Public Key Token will be signed with the `DifferentCertName` certificate and `StrongName1` strong name.
 
 #### 3. Configure signing information for an specific file
 

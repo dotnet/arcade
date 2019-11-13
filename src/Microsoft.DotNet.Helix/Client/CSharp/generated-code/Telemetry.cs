@@ -104,6 +104,18 @@ namespace Microsoft.DotNet.Helix.Client
             }
         }
 
+        internal async Task OnStartJobFailed(HttpRequestMessage req, HttpResponseMessage res)
+        {
+            var content = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
+            var ex = new RestApiException(
+                new HttpRequestMessageWrapper(req, content),
+                new HttpResponseMessageWrapper(res, content));
+            HandleFailedStartJobRequest(ex);
+            HandleFailedRequest(ex);
+            Client.OnFailedRequest(ex);
+            throw ex;
+        }
+
         internal async Task<HttpOperationResponse<string>> StartJobInternalAsync(
             JobInfo body,
             CancellationToken cancellationToken = default
@@ -120,7 +132,7 @@ namespace Microsoft.DotNet.Helix.Client
             }
 
 
-            var _path = "/api/2018-03-14/telemetry/job";
+            var _path = "/api/2019-06-17/telemetry/job";
 
             var _query = new QueryBuilder();
 
@@ -154,19 +166,11 @@ namespace Microsoft.DotNet.Helix.Client
                 }
 
                 _res = await Client.SendAsync(_req, cancellationToken).ConfigureAwait(false);
-                string _responseContent;
                 if (!_res.IsSuccessStatusCode)
                 {
-                    _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
-                    var ex = new RestApiException(
-                        new HttpRequestMessageWrapper(_req, _requestContent),
-                        new HttpResponseMessageWrapper(_res, _responseContent));
-                    HandleFailedStartJobRequest(ex);
-                    HandleFailedRequest(ex);
-                    Client.OnFailedRequest(ex);
-                    throw ex;
+                    await OnStartJobFailed(_req, _res);
                 }
-                _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
+                string _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
                 return new HttpOperationResponse<string>
                 {
                     Request = _req,
@@ -200,6 +204,18 @@ namespace Microsoft.DotNet.Helix.Client
             }
         }
 
+        internal async Task OnStartBuildWorkItemFailed(HttpRequestMessage req, HttpResponseMessage res)
+        {
+            var content = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
+            var ex = new RestApiException(
+                new HttpRequestMessageWrapper(req, null),
+                new HttpResponseMessageWrapper(res, content));
+            HandleFailedStartBuildWorkItemRequest(ex);
+            HandleFailedRequest(ex);
+            Client.OnFailedRequest(ex);
+            throw ex;
+        }
+
         internal async Task<HttpOperationResponse<string>> StartBuildWorkItemInternalAsync(
             string buildUri,
             string xHelixJobToken,
@@ -217,7 +233,7 @@ namespace Microsoft.DotNet.Helix.Client
             }
 
 
-            var _path = "/api/2018-03-14/telemetry/job/build";
+            var _path = "/api/2019-06-17/telemetry/job/build";
 
             var _query = new QueryBuilder();
             if (!string.IsNullOrEmpty(buildUri))
@@ -247,19 +263,11 @@ namespace Microsoft.DotNet.Helix.Client
                 }
 
                 _res = await Client.SendAsync(_req, cancellationToken).ConfigureAwait(false);
-                string _responseContent;
                 if (!_res.IsSuccessStatusCode)
                 {
-                    _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
-                    var ex = new RestApiException(
-                        new HttpRequestMessageWrapper(_req, null),
-                        new HttpResponseMessageWrapper(_res, _responseContent));
-                    HandleFailedStartBuildWorkItemRequest(ex);
-                    HandleFailedRequest(ex);
-                    Client.OnFailedRequest(ex);
-                    throw ex;
+                    await OnStartBuildWorkItemFailed(_req, _res);
                 }
-                _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
+                string _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
                 return new HttpOperationResponse<string>
                 {
                     Request = _req,
@@ -299,6 +307,18 @@ namespace Microsoft.DotNet.Helix.Client
             }
         }
 
+        internal async Task OnFinishBuildWorkItemFailed(HttpRequestMessage req, HttpResponseMessage res)
+        {
+            var content = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
+            var ex = new RestApiException(
+                new HttpRequestMessageWrapper(req, null),
+                new HttpResponseMessageWrapper(res, content));
+            HandleFailedFinishBuildWorkItemRequest(ex);
+            HandleFailedRequest(ex);
+            Client.OnFailedRequest(ex);
+            throw ex;
+        }
+
         internal async Task<HttpOperationResponse> FinishBuildWorkItemInternalAsync(
             int errorCount,
             string id,
@@ -329,7 +349,7 @@ namespace Microsoft.DotNet.Helix.Client
             }
 
 
-            var _path = "/api/2018-03-14/telemetry/job/build/{id}/finish";
+            var _path = "/api/2019-06-17/telemetry/job/build/{id}/finish";
             _path = _path.Replace("{id}", Client.Serialize(id));
 
             var _query = new QueryBuilder();
@@ -368,19 +388,11 @@ namespace Microsoft.DotNet.Helix.Client
                 }
 
                 _res = await Client.SendAsync(_req, cancellationToken).ConfigureAwait(false);
-                string _responseContent;
                 if (!_res.IsSuccessStatusCode)
                 {
-                    _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
-                    var ex = new RestApiException(
-                        new HttpRequestMessageWrapper(_req, null),
-                        new HttpResponseMessageWrapper(_res, _responseContent));
-                    HandleFailedFinishBuildWorkItemRequest(ex);
-                    HandleFailedRequest(ex);
-                    Client.OnFailedRequest(ex);
-                    throw ex;
+                    await OnFinishBuildWorkItemFailed(_req, _res);
                 }
-                _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
+                string _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
                 return new HttpOperationResponse
                 {
                     Request = _req,
@@ -413,6 +425,18 @@ namespace Microsoft.DotNet.Helix.Client
             }
         }
 
+        internal async Task OnStartXUnitWorkItemFailed(HttpRequestMessage req, HttpResponseMessage res)
+        {
+            var content = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
+            var ex = new RestApiException(
+                new HttpRequestMessageWrapper(req, null),
+                new HttpResponseMessageWrapper(res, content));
+            HandleFailedStartXUnitWorkItemRequest(ex);
+            HandleFailedRequest(ex);
+            Client.OnFailedRequest(ex);
+            throw ex;
+        }
+
         internal async Task<HttpOperationResponse<string>> StartXUnitWorkItemInternalAsync(
             string friendlyName,
             string xHelixJobToken,
@@ -430,7 +454,7 @@ namespace Microsoft.DotNet.Helix.Client
             }
 
 
-            var _path = "/api/2018-03-14/telemetry/job/xunit";
+            var _path = "/api/2019-06-17/telemetry/job/xunit";
 
             var _query = new QueryBuilder();
             if (!string.IsNullOrEmpty(friendlyName))
@@ -460,19 +484,11 @@ namespace Microsoft.DotNet.Helix.Client
                 }
 
                 _res = await Client.SendAsync(_req, cancellationToken).ConfigureAwait(false);
-                string _responseContent;
                 if (!_res.IsSuccessStatusCode)
                 {
-                    _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
-                    var ex = new RestApiException(
-                        new HttpRequestMessageWrapper(_req, null),
-                        new HttpResponseMessageWrapper(_res, _responseContent));
-                    HandleFailedStartXUnitWorkItemRequest(ex);
-                    HandleFailedRequest(ex);
-                    Client.OnFailedRequest(ex);
-                    throw ex;
+                    await OnStartXUnitWorkItemFailed(_req, _res);
                 }
-                _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
+                string _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
                 return new HttpOperationResponse<string>
                 {
                     Request = _req,
@@ -512,6 +528,18 @@ namespace Microsoft.DotNet.Helix.Client
             }
         }
 
+        internal async Task OnFinishXUnitWorkItemFailed(HttpRequestMessage req, HttpResponseMessage res)
+        {
+            var content = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
+            var ex = new RestApiException(
+                new HttpRequestMessageWrapper(req, null),
+                new HttpResponseMessageWrapper(res, content));
+            HandleFailedFinishXUnitWorkItemRequest(ex);
+            HandleFailedRequest(ex);
+            Client.OnFailedRequest(ex);
+            throw ex;
+        }
+
         internal async Task<HttpOperationResponse> FinishXUnitWorkItemInternalAsync(
             int exitCode,
             string id,
@@ -542,7 +570,7 @@ namespace Microsoft.DotNet.Helix.Client
             }
 
 
-            var _path = "/api/2018-03-14/telemetry/job/xunit/{id}/finish";
+            var _path = "/api/2019-06-17/telemetry/job/xunit/{id}/finish";
             _path = _path.Replace("{id}", Client.Serialize(id));
 
             var _query = new QueryBuilder();
@@ -581,19 +609,11 @@ namespace Microsoft.DotNet.Helix.Client
                 }
 
                 _res = await Client.SendAsync(_req, cancellationToken).ConfigureAwait(false);
-                string _responseContent;
                 if (!_res.IsSuccessStatusCode)
                 {
-                    _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
-                    var ex = new RestApiException(
-                        new HttpRequestMessageWrapper(_req, null),
-                        new HttpResponseMessageWrapper(_res, _responseContent));
-                    HandleFailedFinishXUnitWorkItemRequest(ex);
-                    HandleFailedRequest(ex);
-                    Client.OnFailedRequest(ex);
-                    throw ex;
+                    await OnFinishXUnitWorkItemFailed(_req, _res);
                 }
-                _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
+                string _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
                 return new HttpOperationResponse
                 {
                     Request = _req,
@@ -632,6 +652,18 @@ namespace Microsoft.DotNet.Helix.Client
             }
         }
 
+        internal async Task OnWarningFailed(HttpRequestMessage req, HttpResponseMessage res)
+        {
+            var content = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
+            var ex = new RestApiException(
+                new HttpRequestMessageWrapper(req, null),
+                new HttpResponseMessageWrapper(res, content));
+            HandleFailedWarningRequest(ex);
+            HandleFailedRequest(ex);
+            Client.OnFailedRequest(ex);
+            throw ex;
+        }
+
         internal async Task<HttpOperationResponse> WarningInternalAsync(
             string eid,
             string id,
@@ -657,7 +689,7 @@ namespace Microsoft.DotNet.Helix.Client
             }
 
 
-            var _path = "/api/2018-03-14/telemetry/job/workitem/{id}/warning";
+            var _path = "/api/2019-06-17/telemetry/job/workitem/{id}/warning";
             _path = _path.Replace("{id}", Client.Serialize(id));
 
             var _query = new QueryBuilder();
@@ -696,19 +728,11 @@ namespace Microsoft.DotNet.Helix.Client
                 }
 
                 _res = await Client.SendAsync(_req, cancellationToken).ConfigureAwait(false);
-                string _responseContent;
                 if (!_res.IsSuccessStatusCode)
                 {
-                    _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
-                    var ex = new RestApiException(
-                        new HttpRequestMessageWrapper(_req, null),
-                        new HttpResponseMessageWrapper(_res, _responseContent));
-                    HandleFailedWarningRequest(ex);
-                    HandleFailedRequest(ex);
-                    Client.OnFailedRequest(ex);
-                    throw ex;
+                    await OnWarningFailed(_req, _res);
                 }
-                _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
+                string _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
                 return new HttpOperationResponse
                 {
                     Request = _req,
@@ -747,6 +771,18 @@ namespace Microsoft.DotNet.Helix.Client
             }
         }
 
+        internal async Task OnErrorFailed(HttpRequestMessage req, HttpResponseMessage res)
+        {
+            var content = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
+            var ex = new RestApiException(
+                new HttpRequestMessageWrapper(req, null),
+                new HttpResponseMessageWrapper(res, content));
+            HandleFailedErrorRequest(ex);
+            HandleFailedRequest(ex);
+            Client.OnFailedRequest(ex);
+            throw ex;
+        }
+
         internal async Task<HttpOperationResponse> ErrorInternalAsync(
             string eid,
             string id,
@@ -772,7 +808,7 @@ namespace Microsoft.DotNet.Helix.Client
             }
 
 
-            var _path = "/api/2018-03-14/telemetry/job/workitem/{id}/error";
+            var _path = "/api/2019-06-17/telemetry/job/workitem/{id}/error";
             _path = _path.Replace("{id}", Client.Serialize(id));
 
             var _query = new QueryBuilder();
@@ -811,19 +847,11 @@ namespace Microsoft.DotNet.Helix.Client
                 }
 
                 _res = await Client.SendAsync(_req, cancellationToken).ConfigureAwait(false);
-                string _responseContent;
                 if (!_res.IsSuccessStatusCode)
                 {
-                    _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
-                    var ex = new RestApiException(
-                        new HttpRequestMessageWrapper(_req, null),
-                        new HttpResponseMessageWrapper(_res, _responseContent));
-                    HandleFailedErrorRequest(ex);
-                    HandleFailedRequest(ex);
-                    Client.OnFailedRequest(ex);
-                    throw ex;
+                    await OnErrorFailed(_req, _res);
                 }
-                _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
+                string _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
                 return new HttpOperationResponse
                 {
                     Request = _req,
@@ -862,6 +890,18 @@ namespace Microsoft.DotNet.Helix.Client
             }
         }
 
+        internal async Task OnLogFailed(HttpRequestMessage req, HttpResponseMessage res)
+        {
+            var content = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
+            var ex = new RestApiException(
+                new HttpRequestMessageWrapper(req, null),
+                new HttpResponseMessageWrapper(res, content));
+            HandleFailedLogRequest(ex);
+            HandleFailedRequest(ex);
+            Client.OnFailedRequest(ex);
+            throw ex;
+        }
+
         internal async Task<HttpOperationResponse> LogInternalAsync(
             string id,
             string logUri,
@@ -887,7 +927,7 @@ namespace Microsoft.DotNet.Helix.Client
             }
 
 
-            var _path = "/api/2018-03-14/telemetry/job/workitem/{id}/log";
+            var _path = "/api/2019-06-17/telemetry/job/workitem/{id}/log";
             _path = _path.Replace("{id}", Client.Serialize(id));
 
             var _query = new QueryBuilder();
@@ -926,19 +966,11 @@ namespace Microsoft.DotNet.Helix.Client
                 }
 
                 _res = await Client.SendAsync(_req, cancellationToken).ConfigureAwait(false);
-                string _responseContent;
                 if (!_res.IsSuccessStatusCode)
                 {
-                    _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
-                    var ex = new RestApiException(
-                        new HttpRequestMessageWrapper(_req, null),
-                        new HttpResponseMessageWrapper(_res, _responseContent));
-                    HandleFailedLogRequest(ex);
-                    HandleFailedRequest(ex);
-                    Client.OnFailedRequest(ex);
-                    throw ex;
+                    await OnLogFailed(_req, _res);
                 }
-                _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
+                string _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
                 return new HttpOperationResponse
                 {
                     Request = _req,

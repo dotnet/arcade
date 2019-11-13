@@ -409,6 +409,11 @@ namespace Microsoft.Cci.Extensions
             }
         }
 
+        public static bool AreGenericTypeEquivalent(this ITypeReference type, string typeName)
+        {
+            return type is IGenericTypeInstanceReference genericType && genericType.GenericType.AreEquivalent(typeName);
+        }
+
         public static bool AreEquivalent(this ITypeReference type, string typeName)
         {
             return type.FullName() == typeName;
@@ -586,8 +591,10 @@ namespace Microsoft.Cci.Extensions
             if (assembly.GetAllTypes().Any(t => t.Name.Value != "<Module>"))
                 return false;
 
-            Contract.Assert(assembly.ExportedTypes.Any());
-            return true;
+            // Don't assert here -- turns out empty assemblies are a thing.
+            // Contract.Assert(assembly.ExportedTypes.Any());
+
+            return assembly.ExportedTypes.Any();
         }
 
         public static IEnumerable<T> OrderByIdentity<T>(this IEnumerable<T> assemblies)

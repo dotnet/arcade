@@ -52,7 +52,7 @@ Subscriptions have the following characteristics:
 - They have a desired quality metric for when the mapping should be applied (e.g. should tests have passed?)
 - They have a trigger for when the mapping should be applied.
 
-A subscription can be visualized with the following psuedocode
+A subscription can be visualized with the following pseudocode
 
 ```
     function runSubscription(newBuild, subscription) {}
@@ -91,7 +91,7 @@ A subscription can be visualized with the following psuedocode
 
 ## Branches, Channels and Subscriptions in a Monolithic repo world
 
-Those who have worked in a monolithic repo world in the past can have trouble understanding the issues that a distributed repository world introduces (though it has other signficant benefits).  To better understand these issues, let's look at branches, channels and subscriptions in the monolithic world.  A mono repo world is one where the vast majority of changes do not cross repository lines.  Even in monolithic repositories, there are still some distributed qualities.  For example, an update of a checked in toolset effectively is a pull of an external content channel (like a build of a compiler).  However, these types of changes tend to be fewer, and thus the product repository can generally be viewed as self-contained.
+Those who have worked in a monolithic repo world in the past can have trouble understanding the issues that a distributed repository world introduces (though it has other significant benefits).  To better understand these issues, let's look at branches, channels and subscriptions in the monolithic world.  A mono repo world is one where the vast majority of changes do not cross repository lines.  Even in monolithic repositories, there are still some distributed qualities.  For example, an update of a checked in toolset effectively is a pull of an external content channel (like a build of a compiler).  However, these types of changes tend to be fewer, and thus the product repository can generally be viewed as self-contained.
 
 When a product repository can be viewed as self-contained, the branches, channels and subscriptions concepts tend to blend together.
 - A single commit (and moving branch head by extension) covers the entire product stack.  All components are versioned in a single atomic fashion. This makes it possible to imply a *channel* based on a *branch*:
@@ -158,7 +158,7 @@ Onboarding of new repositories adds new nodes to the product dependency graph. I
     darc channel edit '.NET Core 3.0.0'
     ```
 
-Once the repository graph has more than one node (or if there is a circular dependency, like in the case of dotnet/arcade), it becomes possible to create subscriptions.  Onboarding new repositories after the initial node involves the steps above with the follolwing alterations/additions:
+Once the repository graph has more than one node (or if there is a circular dependency, like in the case of dotnet/arcade), it becomes possible to create subscriptions.  Onboarding new repositories after the initial node involves the steps above with the following alterations/additions:
 
 1. No new channel is necessary if repository/branch being onboarded is producing assets for an existing channel
 2. Repository should be onboarded onto the formal [dependency description format](https://github.com/dotnet/arcade/blob/master/Documentation/DependencyDescriptionFormat.md), enabling automated update of dependencies via Darc.
@@ -754,7 +754,7 @@ Additional options:
                                               to-old = merge from new channel's branches to
                                                 existing channel's branches
 --movement-only                           Channel branch is for code movement only.
-                                            Don't branch where unecessary, instead adding new channel to
+                                            Don't branch where unnecessary, instead adding new channel to
                                             existing mappings (see Unstable builds)
 --internal                                New channel is internal-only
 ```
@@ -813,7 +813,7 @@ dotnet/core-sdk master depends on <- reachable from aspnet/universe
 
 Allow user to modify configuration (branch names, remove subscriptions, add repos, etc.)
 
-**Valdiate and apply configuration**
+**Validate and apply configuration**
 
 Validate the configuration and then apply the configuration using the [BAR](https://github.com/dotnet/arcade/blob/master/Documentation/Maestro/BuildAssetRegistry.md) REST API.
 

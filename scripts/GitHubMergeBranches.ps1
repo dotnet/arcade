@@ -18,7 +18,9 @@ A personal access token
 .PARAMETER Fork
 Make PR from a fork
 .PARAMETER AllowAutomatedCommits
-Create a PR even if the only commits are from aspnetci
+Create a PR even if the only commits are from dotnet-maestro[bot]
+.PARAMETER QuietComments
+Do not tag commiters, do not comment on PR updates. Reduces GitHub notifications
 #>
 [CmdletBinding(SupportsShouldProcess = $true)]
 param(
@@ -48,7 +50,9 @@ param(
 
     [switch]$Fork,
 
-    [switch]$AllowAutomatedCommits
+    [switch]$AllowAutomatedCommits,
+
+    [switch]$QuietComments
 )
 
 $ErrorActionPreference = 'stop'
@@ -81,7 +85,7 @@ function Invoke-Block([scriptblock]$cmd) {
     }
 }
 
-function GetCommiterGitHubName($sha) {
+function GetCommitterGitHubName($sha) {
     $email = & git show -s --format='%ce' $sha
     $key = 'committer'
 
@@ -168,6 +172,8 @@ function GetOrCreateFork() {
 
 $workDir = "$PSScriptRoot/obj/$RepoOwner/$RepoName"
 New-Item "$PSScriptRoot/obj/" -ItemType Directory -ErrorAction Ignore | Out-Null
+            
+Invoke-Block { & git config --system core.longpaths true }
 
 $fetch = $true
 if (-not (Test-Path $workDir)) {
@@ -206,16 +212,21 @@ try {
 
     $authors = $commitsToMerge `
         | % { Write-Host -f Cyan "Merging:`t$(git log --format=$formatString -1 $_)"; $_ } `
-        | % { GetCommiterGitHubName $_ } `
+        | % { GetCommitterGitHubName $_ } `
         | ? { $_ -ne $null } `
         | select -Unique
 
-    if (-not $AllowAutomatedCommits -and (($authors | measure).Count -eq 1) -and ($authors | select -first 1) -eq 'dotnet-maestro') {
-        Write-Host -ForegroundColor Yellow 'Skipping PR generation because it appears this PR would only contain automated commits by @dotnet-maestro'
+    if (-not $AllowAutomatedCommits -and (($authors | measure).Count -eq 1) -and ($authors | select -first 1) -eq 'dotnet-maestro[bot]') {
+        Write-Host -ForegroundColor Yellow 'Skipping PR generation because it appears this PR would only contain automated commits by @dotnet-maestro[bot]'
         exit 0
     }
 
-    $authors = $authors | % { "* @$_" }
+    if (-not $QuietComments) {
+        $authors = $authors | % { "* @$_" }
+    } else {
+        $authors = $authors | % { "* $_" }
+    }
+    
 
     $committersList = "This PR merges commits made on $HeadBranch by the following committers:`n`n$($authors -join "`n")"
 
@@ -232,7 +243,7 @@ try {
         $remoteName = 'fork'
 
         try {
-            # remove remote if it already exists and re-confgure
+            # remove remote if it already exists and re-configure
             Invoke-Block { & git remote remove fork }
         }
         catch { }
@@ -317,7 +328,7 @@ You may need to fix this problem by merging branches with this PR. Contact .NET 
         $prNumber = $matchingPr.number
         $prUrl = "https://github.com/$RepoOwner/$RepoName/pull/$prNumber"
 
-        if ($PSCmdlet.ShouldProcess("Update $prUrl")) {
+        if ($PSCmdlet.ShouldProcess("Update $prUrl") -and -not $QuietComments) {
             $resp = Invoke-RestMethod -Method Post -Headers $headers `
                 "https://api.github.com/repos/$RepoOwner/$RepoName/issues/$prNumber/comments" `
                 -Body ($data | ConvertTo-Json)
@@ -400,7 +411,7 @@ git checkout -b ${mergeBranchName} $BaseBranch
 git pull https://github.com/$prOwnerName/$prRepoName ${mergeBranchName}
 (make changes)
 git commit -m "Updated PR with my changes"
-git push https://github.com/$prOwnerName/$prRepoName ${mergeBranchName}
+git push https://github.com/$prOwnerName/$prRepoName HEAD:${mergeBranchName}
 ``````
 
 <details>
@@ -411,7 +422,7 @@ git checkout -b ${mergeBranchName} $BaseBranch
 git pull git@github.com:$prOwnerName/$prRepoName ${mergeBranchName}
 (make changes)
 git commit -m "Updated PR with my changes"
-git push git@github.com:$prOwnerName/$prRepoName ${mergeBranchName}
+git push git@github.com:$prOwnerName/$prRepoName HEAD:${mergeBranchName}
 ``````
 
 </details>

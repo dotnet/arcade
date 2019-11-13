@@ -1,22 +1,19 @@
 <Project DefaultTargets="Test">
   <!-- <Import Sdk="Microsoft.DotNet.Helix.Sdk" Project="Sdk.props"/> -->
+  <!-- Using locally built version of the helix sdk, normal projects replace the below Import and PropertyGroup with the SDK import above-->
   <Import Project="$(MSBuildThisFileDirectory)\..\src\Microsoft.DotNet.Helix\Sdk\sdk\Sdk.props"/>
+  <PropertyGroup>
+    <MicrosoftDotNetHelixSdkTasksAssembly Condition="'$(MSBuildRuntimeType)' == 'Core'">$(MSBuildThisFileDirectory)../artifacts/bin/Microsoft.DotNet.Helix.Sdk/$(Configuration)/netcoreapp2.1/publish/Microsoft.DotNet.Helix.Sdk.dll</MicrosoftDotNetHelixSdkTasksAssembly>
+    <MicrosoftDotNetHelixSdkTasksAssembly Condition="'$(MSBuildRuntimeType)' != 'Core'">$(MSBuildThisFileDirectory)../artifacts/bin/Microsoft.DotNet.Helix.Sdk/$(Configuration)/net472/publish/Microsoft.DotNet.Helix.Sdk.dll</MicrosoftDotNetHelixSdkTasksAssembly>
+  </PropertyGroup>
 
   <PropertyGroup>
-    <HelixSource Condition=" '$(HelixAccessToken)' == '' ">pr/dotnet/arcade/$(BUILD_SOURCEBRANCH)/</HelixSource>
-    <HelixSource Condition=" '$(HelixAccessToken)' != '' ">official/dotnet/arcade/$(BUILD_SOURCEBRANCH)/</HelixSource>
     <HelixType>test/product/</HelixType>
-    <HelixBuild>$(BUILD_BUILDNUMBER)</HelixBuild>
-    <HelixBuild Condition="'$(HelixBuild)' == ''">123460.01</HelixBuild>
 
     <IncludeDotNetCli>true</IncludeDotNetCli>
     <DotNetCliPackageType>sdk</DotNetCliPackageType>
 
-    <EnableAzurePipelinesReporter>true</EnableAzurePipelinesReporter>
     <TestRunNamePrefix>$(AGENT_JOBNAME)</TestRunNamePrefix>
-    
-    <EnableXUnitReporter>true</EnableXUnitReporter>
-    <FailOnMissionControlTestFailure>true</FailOnMissionControlTestFailure>
   </PropertyGroup>
 
   <ItemGroup>
@@ -26,8 +23,8 @@
     </HelixWorkItem>
   </ItemGroup>
   <ItemGroup>
-    <AzurePipelinesExpectedTestFailure Include="PizzaTests.cheese"/>
-    <AzurePipelinesExpectedTestFailure Include="PizzaTests.cheese2"/>
+    <AzurePipelinesExpectedTestFailure Include="HelixReporterTests.failure1"/>
+    <AzurePipelinesExpectedTestFailure Include="HelixReporterTests.failure2"/>
   </ItemGroup>
 
   <ItemGroup>
@@ -37,8 +34,9 @@
     </HelixWorkItem>
   </ItemGroup>
   <ItemGroup>
-    <AzurePipelinesExpectedTestFailure Include="tests.UnitTest1.TestMethod1"/>
-    <AzurePipelinesExpectedTestFailure Include="tests.UnitTest1.TestMethod4"/>
+    <AzurePipelinesExpectedTestFailure Include="HelixReporter.TRXTests.HelixReporter.TRXTests.Fail1"/>
+    <AzurePipelinesExpectedTestFailure Include="HelixReporter.TRXTests.HelixReporter.TRX.Fail2"/>
+    <AzurePipelinesExpectedTestFailure Include="tests.UnitTest2.ExpectedFailureTheoryTest"/>
   </ItemGroup>
 
   <ItemGroup>
@@ -50,12 +48,6 @@
     <!-- Exclude tests that do not target .NET Core -->
     <XUnitProject Remove="..\src\Microsoft.DotNet.Build.Tasks.VisualStudio.Tests\Microsoft.DotNet.Build.Tasks.VisualStudio.Tests.csproj"/>
   </ItemGroup>
-
-  <!-- Use the locally built version of Helix Tasks temporaraily -->
-  <PropertyGroup>
-    <MicrosoftDotNetHelixSdkTasksAssembly Condition="'$(MSBuildRuntimeType)' == 'Core'">$(MSBuildThisFileDirectory)../artifacts/bin/Microsoft.DotNet.Helix.Sdk/$(_BuildConfig)/netcoreapp2.1/publish/Microsoft.DotNet.Helix.Sdk.dll</MicrosoftDotNetHelixSdkTasksAssembly>
-    <MicrosoftDotNetHelixSdkTasksAssembly Condition="'$(MSBuildRuntimeType)' != 'Core'">$(MSBuildThisFileDirectory)../artifacts/bin/Microsoft.DotNet.Helix.Sdk/$(_BuildConfig)/net472/publish/Microsoft.DotNet.Helix.Sdk.dll</MicrosoftDotNetHelixSdkTasksAssembly>
-  </PropertyGroup>
 
   <ItemGroup Condition=" '$(HelixAccessToken)' != '' ">
     <HelixTargetQueue Include="Debian.9.Amd64"/>
@@ -72,7 +64,7 @@
   <ItemGroup Condition=" '$(HelixAccessToken)' == '' ">
     <HelixTargetQueue Include="Debian.9.Amd64.Open"/>
     <HelixTargetQueue Include="RedHat.7.Amd64.Open"/>
-    <HelixTargetQueue Include="Windows.10.Amd64.ServerRS4.Open"/>
+    <HelixTargetQueue Include="Windows.10.Amd64.Open"/>
   </ItemGroup>
 
   <PropertyGroup Condition="!$(HelixTargetQueue.StartsWith('Windows'))">
@@ -91,6 +83,24 @@
   </PropertyGroup>
   <Target Name="Pack"/>
 
-  <Import Project="$(MSBuildThisFileDirectory)\..\src\Microsoft.DotNet.Helix\Sdk\sdk\Sdk.targets"/>
+  <!-- Yields an existing archive that will fail if ArchivePayload doesn't work -->
+  <Target Name="ZipPrexistingArchive" BeforeTargets="Build">
+      <MakeDir Directories="$(IntermediateOutputPath)\correlationarchivepayload" /> 
+      <WriteLinesToFile
+           File="$(IntermediateOutputPath)\correlationarchivepayload\testArchivePayload.txt"
+           Lines="I am a test Archive Payload"
+           Overwrite="true" />
+      <ZipDirectory Overwrite="True"
+          SourceDirectory="$(IntermediateOutputPath)\correlationarchivepayload"
+          DestinationFile="$(MSBuildProjectDirectory)\archivepayload.zip" />
+      <RemoveDir Directories="$(IntermediateOutputPath)\correlationarchivepayload" />
+  </Target>
+  <!-- Attach the ArchivePayload to all Helix work items to validate uploading them (and via logs whether caching occurs) -->
+  <ItemGroup>
+      <HelixCorrelationPayload Include="$(MSBuildProjectDirectory)\archivepayload.zip" />
+  </ItemGroup>
+
   <!-- <Import Sdk="Microsoft.DotNet.Helix.Sdk" Project="Sdk.targets"/> -->
+  <!-- Using locally built version of the helix sdk, normal projects replace the below Import with the SDK import above-->
+  <Import Project="$(MSBuildThisFileDirectory)\..\src\Microsoft.DotNet.Helix\Sdk\sdk\Sdk.targets"/>
 </Project>

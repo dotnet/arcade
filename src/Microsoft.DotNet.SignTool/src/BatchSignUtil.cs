@@ -128,7 +128,7 @@ namespace Microsoft.DotNet.SignTool
                     if (file.IsZipContainer())
                     {
                         _log.LogMessage($"Repacking container: '{file.FileName}'");
-                        _batchData.ZipDataMap[file.ContentHash].Repack();
+                        _batchData.ZipDataMap[file.ContentHash].Repack(_log);
                     }
                 }
             }

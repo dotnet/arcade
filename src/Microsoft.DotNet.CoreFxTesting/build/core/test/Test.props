@@ -5,63 +5,27 @@
   <PropertyGroup>
     <TestRunnerConfigPath>$(TestAssetsDir)xunit.runner.json</TestRunnerConfigPath>
     <TestResultsName>testResults.xml</TestResultsName>
-    <GenerateRunScriptDependsOn>ValidateTargetOSTrait;$(GenerateRunScriptDependsOn);</GenerateRunScriptDependsOn>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Condition="'$(IncludeRemoteExecutor)' == 'true'" Include="Microsoft.DotNet.RemoteExecutor" Version="$(MicrosoftDotNetRemoteExecutorPackageVersion)" />
+    <PackageReference Condition="'$(IncludeRemoteExecutor)' == 'true'" Include="Microsoft.DotNet.RemoteExecutor" Version="$(MicrosoftDotNetRemoteExecutorVersion)" />
 
-    <!-- xunit -->
-    <PackageReference Include="Microsoft.DotNet.XUnitExtensions" Version="$(MicrosoftDotNetXUnitExtensionsPackageVersion)" />
-    <!-- Excluding build as xunit.core enables deps file generation. -->
-    <PackageReference Include="xunit" Version="$(XUnitPackageVersion)" ExcludeAssets="build" />
-    <PackageReference Condition="'$(BuildingNetCoreAppVertical)' == 'true'" Include="Microsoft.DotNet.XUnitConsoleRunner" Version="$(MicrosoftDotNetXUnitConsoleRunnerPackageVersion)" />
-    <PackageReference Condition="'$(BuildingNetFxVertical)' == 'true'" Include="xunit.runner.console" Version="$(XUnitPackageVersion)" />
+    <PackageReference Include="Microsoft.DotNet.XUnitExtensions" Version="$(MicrosoftDotNetXUnitExtensionsVersion)" />
+    <!-- Excluding xunit.core/build as it enables deps file generation. -->
+    <PackageReference Include="xunit" Version="$(XUnitVersion)" ExcludeAssets="build" />
+    <PackageReference Condition="'$(TargetFrameworkIdentifier)' == '.NETCoreApp'" Include="Microsoft.DotNet.XUnitConsoleRunner" Version="$(MicrosoftDotNetXUnitConsoleRunnerVersion)" />
+    <PackageReference Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'" Include="xunit.runner.console" Version="$(XUnitVersion)" />
 
-    <PackageReference Condition="'$(ContinuousIntegrationBuild)' != 'true' and '$(OfficialBuildId)' == ''" Include="Microsoft.NET.Test.Sdk" Version="$(MicrosoftNETTestSdkPackageVersion)" IncludeAssets="build" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <!-- Add the runner configuration file -->
-    <None Include="$(TestRunnerConfigPath)"
-          CopyToOutputDirectory="PreserveNewest"
-          Visible="false" />
-    <!-- Copy test runner to output directory -->
-    <None Include="$([System.IO.Path]::GetDirectoryName('$(XunitConsole472Path)'))\*"
-          Exclude="$([System.IO.Path]::GetDirectoryName('$(XunitConsole472Path)'))\xunit.console.*exe.config;$([System.IO.Path]::GetDirectoryName('$(XunitConsole472Path)'))\xunit.console.x86.exe"
-          Condition="'$(BuildingNetFxVertical)' == 'true'"
-          CopyToOutputDirectory="PreserveNewest"
-          Visible="false" />
-    <None Include="$([System.IO.Path]::GetDirectoryName('$(XunitConsoleNetCore21AppPath)'))\*"
-          Exclude="$([System.IO.Path]::GetDirectoryName('$(XunitConsoleNetCore21AppPath)'))\xunit.console.deps.json"
-          Condition="'$(BuildingNetCoreAppVertical)' == 'true'"
-          CopyToOutputDirectory="PreserveNewest"
-          Visible="false" />
-  </ItemGroup>
-
-  <!--
-    Only add the Test SDK with assemblies when building locally for .NET Core.
-    Microsoft.NET.Test.Sdk brings framework assemblies with it: https://github.com/microsoft/vstest/issues/1764
-  -->
-  <ItemGroup Condition="'$(BuildingNetCoreAppVertical)' == 'true' and '$(ContinuousIntegrationBuild)' != 'true' and '$(OfficialBuildId)' == ''">
-    <PackageReference Include="Microsoft.Extensions.DependencyModel" Version="$(MicrosoftExtensionsDependencyModelPackageVersion)" />
-    <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonPackageVersion)" />
-    <PackageReference Include="Microsoft.TestPlatform.TestHost" Version="$(MicrosoftNETTestSdkPackageVersion)" ExcludeAssets="all" PrivateAssets="all" GeneratePathProperty="true" />
-    <PackageReference Include="Microsoft.TestPlatform.ObjectModel" Version="$(MicrosoftNETTestSdkPackageVersion)" ExcludeAssets="all" PrivateAssets="all" GeneratePathProperty="true" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="$(XUnitPackageVersion)" PrivateAssets="all" IncludeAssets="build"/>
-
-    <Reference Include="$(PkgMicrosoft_TestPlatform_TestHost)\lib\netstandard1.5\Microsoft.TestPlatform.CommunicationUtilities.dll" />
-    <Reference Include="$(PkgMicrosoft_TestPlatform_TestHost)\lib\netstandard1.5\Microsoft.TestPlatform.CrossPlatEngine.dll" />
-    <Reference Include="$(PkgMicrosoft_TestPlatform_TestHost)\lib\netstandard1.5\Microsoft.VisualStudio.TestPlatform.Common.dll" />
-    <None Include="$(PkgMicrosoft_TestPlatform_TestHost)\lib\netstandard1.5\testhost.dll"
-          CopyToOutputDirectory="PreserveNewest"
-          Visible="false" />
-    <None Include="$(PkgMicrosoft_TestPlatform_TestHost)\lib\netstandard1.5\testhost.deps.json"
-          Condition="'$(GenerateDependencyFile)' == 'true'"
-          CopyToOutputDirectory="PreserveNewest"
-          Visible="false" />
-    <Reference Include="$(PkgMicrosoft_TestPlatform_ObjectModel)\lib\netstandard1.5\*.dll" />
+    <!-- Microsoft.Net.Test.Sdk brings a lot of assemblies with it. To reduce helix payload submission size we disable it on CI. -->
+    <PackageReference Condition="'$(ArchiveTest)' != 'true'" Include="Microsoft.NET.Test.Sdk" Version="$(MicrosoftNETTestSdkVersion)" />
+    <PackageReference Condition="'$(ArchiveTest)' != 'true'" Include="xunit.runner.visualstudio" Version="$(XUnitVersion)" />
+    <!--
+      Microsoft.Net.Test.Sdk has a dependency on Newtonsoft.Json v9.0.1. We upgrade the dependency version
+      with the one used in corefx to have a consistent set of dependency versions. Additionally this works
+      around a dupliate type between System.Runtime.Serialization.Formatters and Newtonsoft.Json.
+    -->
+    <PackageReference Condition="'$(ArchiveTest)' != 'true'" Include="Newtonsoft.Json" Version="$(NewtonsoftJsonVersion)" />
   </ItemGroup>
 
 </Project>

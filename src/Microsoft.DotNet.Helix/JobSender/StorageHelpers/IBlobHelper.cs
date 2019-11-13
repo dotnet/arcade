@@ -12,6 +12,6 @@ namespace Microsoft.DotNet.Helix.Client
 {
     internal interface IBlobHelper
     {
-        Task<IBlobContainer> GetContainerAsync(string requestedName);
+        Task<IBlobContainer> GetContainerAsync(string requestedName, string targetQueue);
     }
 }

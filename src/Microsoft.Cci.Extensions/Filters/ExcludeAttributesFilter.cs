@@ -11,14 +11,14 @@ namespace Microsoft.Cci.Filters
     {
         private readonly HashSet<string> _attributeDocIds;
 
-        public ExcludeAttributesFilter(IEnumerable<string> attributeDocIds)
-            : base(false)
+        public ExcludeAttributesFilter(IEnumerable<string> attributeDocIds, bool includeForwardedTypes = false)
+            : base(excludeAttributes: false, includeForwardedTypes: includeForwardedTypes)
         {
             _attributeDocIds = new HashSet<string>(attributeDocIds);
         }
 
-        public ExcludeAttributesFilter(string attributeDocIdFile)
-            : base(false)
+        public ExcludeAttributesFilter(string attributeDocIdFile, bool includeForwardedTypes = false)
+            : base(excludeAttributes: false, includeForwardedTypes: includeForwardedTypes)
         {
             _attributeDocIds = DocIdExtensions.ReadDocIds(attributeDocIdFile);
         }

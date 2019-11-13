@@ -1,9 +1,9 @@
 # Arcade Validation
 
 We need to make sure changes done in the Arcade SDK as well as in the [core packages](https://github.com/dotnet/arcade/tree/master/Documentation/CorePackages) 
-don't break none of the consuming repos nor Arcade itself. 
+don't break any of the consuming repos or Arcade itself. 
 
-Before this effort, we'd know something was broken until we manually updated a dependecy making 
+Before this effort, we'd know something was broken until we manually updated a dependency making 
 things hard to track since the bug could have been introduced way in the past and could be already 
 buried in a lot of commits.
 

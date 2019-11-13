@@ -1,6 +1,8 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Helix.Client
@@ -9,6 +11,13 @@ namespace Microsoft.DotNet.Helix.Client
     {
         public AdhocPayload(string[] files)
         {
+            if (FindFileNameDuplicate(files, out var duplicateName))
+            {
+                throw new ArgumentException(
+                    $"Names of files to upload have to be distinct. The following name repeats at least once: {Path.GetFileName(duplicateName)}",
+                    nameof(files));
+            }
+
             Files = files;
         }
 
@@ -34,6 +43,13 @@ namespace Microsoft.DotNet.Helix.Client
                 Uri zipUri = await payloadContainer.UploadFileAsync(stream, $"{Guid.NewGuid()}.zip");
                 return zipUri.AbsoluteUri;
             }
+        }
+
+        private bool FindFileNameDuplicate(string[] files, out string duplicateName)
+        {
+            var filesSeen = new HashSet<string>();
+            duplicateName = files.FirstOrDefault(file => !filesSeen.Add(Path.GetFileName(file).ToLowerInvariant()));
+            return duplicateName != null;
         }
     }
 }

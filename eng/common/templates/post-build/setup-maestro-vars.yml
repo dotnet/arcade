@@ -4,6 +4,8 @@ jobs:
   pool:
     vmImage: 'windows-2019'
   steps:
+    - checkout: none
+
     - task: DownloadBuildArtifacts@0
       displayName: Download Release Configs
       inputs:
@@ -16,11 +18,23 @@ jobs:
       inputs:
         targetType: inline
         script: |
-          . "$(Build.SourcesDirectory)/eng/common/tools.ps1"
-             
-          $BarId = Get-Content "$(Build.StagingDirectory)/ReleaseConfigs/BARBuildId.txt" 
-          Write-PipelineSetVariable -Name 'BARBuildId' -Value $BarId
-           
-          $Channels = ""
-          Get-Content "$(Build.StagingDirectory)/ReleaseConfigs/Channels.txt" | ForEach-Object { $Channels += "$_ ," }
-          Write-PipelineSetVariable -Name 'InitialChannels' -Value "$Channels"
+          try {
+            $Content = Get-Content $(Build.StagingDirectory)/ReleaseConfigs/ReleaseConfigs.txt
+
+            $BarId = $Content | Select -Index 0
+
+            $Channels = ""
+            $Content | Select -Index 1 | ForEach-Object { $Channels += "$_ ," }
+
+            $IsStableBuild = $Content | Select -Index 2
+
+            Write-Host "##vso[task.setvariable variable=BARBuildId;isOutput=true]$BarId"
+            Write-Host "##vso[task.setvariable variable=InitialChannels;isOutput=true]$Channels"
+            Write-Host "##vso[task.setvariable variable=IsStableBuild;isOutput=true]$IsStableBuild"
+          }
+          catch {
+            Write-Host $_
+            Write-Host $_.Exception
+            Write-Host $_.ScriptStackTrace
+            exit 1
+          }

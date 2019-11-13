@@ -53,7 +53,7 @@ The "dotnet" service connection is the only dnceng supported connection.  Other 
 
 #### Switching service connections
 
-There is no way to update an existing build definition to use a different service connection.  Instead, you will need to deprecate your current build definition (disable triggers, change the name), and create a new build definition with the same properites.  You should then delete your deprecated definition when you are convinced the new definition works as expected.
+There is no way to update an existing build definition to use a different service connection.  Instead, you will need to deprecate your current build definition (disable triggers, change the name), and create a new build definition with the same properties.  You should then delete your deprecated definition when you are convinced the new definition works as expected.
 
 ### Git (internal) connections
 
@@ -156,7 +156,7 @@ It is recommended that you do **NOT** enable the checkbox labeled "Make secrets 
 
 - Variable groups
 
-  Variable groups are not yet supported in Yaml.  They are scheduled to be available soon (June 2018), in the interim if you need to access a key vault secret, you can explicitly reference a key vault secret using the Azure DevOps key vault task.
+  Build definitions using variable groups in the DevDiv Organization must first be authorized by manually queuing a build and following instructions presented in the portal. Without authorization, the variables will not be set in the build environment. See [Variable groups for Azure Pipelines](https://docs.microsoft.com/en-us/azure/devops/pipelines/library/variable-groups) for more information.
 
 Notes about templates:
 
@@ -201,7 +201,7 @@ For a list of known Azure DevOps issues we are tracking, please go [here](https:
   2. Edit the Pipeline
   3. Take note of the "Default branch for manual and scheduled builds"
   4. Change "Default branch for manual and scheduled builds" to the branch you just pushed
-  5. Save the Pipeline.  This will force reauthorization of the "default" branch resoures.
+  5. Save the Pipeline.  This will force reauthorization of the "default" branch resources.
   6. Edit the Pipeline
   7. Change the "default branch for manual and scheduled builds" back to the value you noted in step 3.
   8. Save the Pipeline
@@ -215,7 +215,7 @@ For a list of known Azure DevOps issues we are tracking, please go [here](https:
   4. Change "Default branch for manual and scheduled builds" to the branch you just pushed
   5. Take note of the "Default agent pool"
   6. Change the "Default agent pool" to the pool that is unauthorized.
-  7. Save the Pipeline.  This will force reauthorization of the "default" branch resoures.
+  7. Save the Pipeline.  This will force reauthorization of the "default" branch resources.
   8. Edit the Pipeline
   9. Change the "default branch for manual and scheduled builds" back to the value you noted in step 3 and the default agent pool back to the value you noted in step 4 (or search for previous values in the Pipeline "History" tab.
   10. Save the Pipeline

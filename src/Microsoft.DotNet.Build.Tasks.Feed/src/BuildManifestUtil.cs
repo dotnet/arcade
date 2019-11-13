@@ -25,9 +25,19 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             string manifestBuildId,
             string manifestBranch,
             string manifestCommit,
-            string[] manifestBuildData)
+            string[] manifestBuildData,
+            bool isStableBuild)
         {
-            CreateModel(blobArtifacts, packageArtifacts, manifestBuildId, manifestBuildData, manifestRepoUri, manifestBranch, manifestCommit, log)
+            CreateModel(
+                blobArtifacts,
+                packageArtifacts,
+                manifestBuildId,
+                manifestBuildData,
+                manifestRepoUri,
+                manifestBranch,
+                manifestCommit,
+                isStableBuild,
+                log)
                 .WriteAsXml(assetManifestPath, log);
         }
 
@@ -40,8 +50,16 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
             File.WriteAllText(filePath, buildModel.ToXml().ToString());
         }
-               
-        public static BuildModel CreateModelFromItems(ITaskItem[] artifacts, string buildId, string[] BuildProperties, string repoUri, string repoBranch, string repoCommit, TaskLoggingHelper log)
+
+        public static BuildModel CreateModelFromItems(
+            ITaskItem[] artifacts,
+            string buildId,
+            string[] BuildProperties,
+            string repoUri,
+            string repoBranch,
+            string repoCommit,
+            bool isStableBuild,
+            TaskLoggingHelper log)
         {
             if (artifacts == null)
             {
@@ -85,6 +103,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 repoUri,
                 repoBranch,
                 repoCommit,
+                isStableBuild,
                 log);
             return buildModel;
         }
@@ -96,6 +115,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             string manifestRepoUri,
             string manifestBranch,
             string manifestCommit,
+            bool isStableBuild,
             TaskLoggingHelper log)
         {
             var attributes = MSBuildListSplitter.GetNamedProperties(manifestBuildData);
@@ -110,7 +130,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         Name = manifestRepoUri,
                         BuildId = manifestBuildId,
                         Branch = manifestBranch,
-                        Commit = manifestCommit
+                        Commit = manifestCommit,
+                        IsStable = isStableBuild.ToString()
                     });
 
             buildModel.Artifacts.Blobs.AddRange(blobArtifacts);

@@ -133,17 +133,18 @@ namespace Microsoft.Cci.Writers.CSharp
                 WriteAttribute(attribute, prefix);
                 first = false;
             }
-            WriteSymbol("]");
+            WriteSymbol("]", addSpace: writeInline);
             if (!writeInline)
                 _writer.WriteLine();
+
         }
 
         public void WriteAttribute(ICustomAttribute attribute, string prefix = null, SecurityAction action = SecurityAction.ActionNil)
         {
             if (!string.IsNullOrEmpty(prefix))
             {
-                WriteKeyword(prefix);
-                WriteSymbol(":");
+                WriteKeyword(prefix, noSpace: true);
+                WriteSymbol(":", addSpace: true);
             }
             WriteTypeName(attribute.Constructor.ContainingType, noSpace: true); // Should we strip Attribute from name?
 
@@ -399,17 +400,6 @@ namespace Microsoft.Cci.Writers.CSharp
                         break;
                     }
             }
-            return false;
-        }
-
-        private static bool IsDynamic(IEnumerable<ICustomAttribute> attributes)
-        {
-            foreach (var attribute in attributes)
-            {
-                if (attribute.Type.AreEquivalent("System.Runtime.CompilerServices.DynamicAttribute"))
-                    return true;
-            }
-
             return false;
         }
 

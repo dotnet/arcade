@@ -108,7 +108,14 @@ namespace Microsoft.DotNet.Helix.Client
                 },
                 NullValueHandling = NullValueHandling.Ignore,
             };
+
+            Init();
         }
+
+        /// <summary>
+        ///    Optional initialization defined outside of auto-gen code
+        /// </summary>
+        partial void Init();
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal void OnFailedRequest(RestApiException ex)
@@ -164,7 +171,14 @@ namespace Microsoft.DotNet.Helix.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public string Serialize<T>(T value)
         {
-            return JsonConvert.SerializeObject(value, SerializerSettings);
+            string result = JsonConvert.SerializeObject(value, SerializerSettings);
+
+            if (value is Enum)
+            {
+                return result.Substring(1, result.Length-2);
+            }
+
+            return result;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
