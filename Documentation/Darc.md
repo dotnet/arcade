@@ -879,7 +879,6 @@ Goal for definitionId 6 = 38 minutes.
 
 - `-c,--channel` -  **(Required)** Name of the channel.
 - `-d, --definitionId` - **(Required)** Definition Id.
-- `-m,--minutes` - **(Required)** Goal time in minutues.
 
 
 ### **`add-dependency`**
