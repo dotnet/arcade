@@ -17,6 +17,7 @@
     <SystemNetHttpVersion>4.3.3</SystemNetHttpVersion>
     <MicrosoftAzureStorageBlobVersion>10.0.2</MicrosoftAzureStorageBlobVersion>
     <MicrosoftAzureKeyVaultVersion>3.0.0</MicrosoftAzureKeyVaultVersion>
+    <MicrosoftAzureServicesAppAuthenticationVersion>1.3.1</MicrosoftAzureServicesAppAuthenticationVersion>
     <MicrosoftBuildVersion>15.7.179</MicrosoftBuildVersion>
     <MicrosoftBuildFrameworkVersion>15.7.179</MicrosoftBuildFrameworkVersion>
     <MicrosoftBuildTasksCoreVersion>15.7.179</MicrosoftBuildTasksCoreVersion>
@@ -59,17 +60,17 @@
     <XUnitVersion>2.4.1</XUnitVersion>
     <XUnitAbstractionsVersion>2.0.3</XUnitAbstractionsVersion>
     <XUnitVSRunnerVersion>2.4.1</XUnitVSRunnerVersion>
-    <MicrosoftDotNetBuildTasksFeedVersion>5.0.0-beta.19555.7</MicrosoftDotNetBuildTasksFeedVersion>
-    <MicrosoftDotNetSignToolVersion>5.0.0-beta.19555.7</MicrosoftDotNetSignToolVersion>
+    <MicrosoftDotNetBuildTasksFeedVersion>5.0.0-beta.19561.8</MicrosoftDotNetBuildTasksFeedVersion>
+    <MicrosoftDotNetSignToolVersion>5.0.0-beta.19561.8</MicrosoftDotNetSignToolVersion>
     <MicrosoftAzureDocumentDBVersion>1.22.0</MicrosoftAzureDocumentDBVersion>
     <MicrosoftAzureCosmosDBTableVersion>1.1.2</MicrosoftAzureCosmosDBTableVersion>
     <MicrosoftAspNetCoreAllVersion>2.0.0</MicrosoftAspNetCoreAllVersion>
-    <MicrosoftDotNetGitHubIssueLabelerAssetsVersion>1.4.0</MicrosoftDotNetGitHubIssueLabelerAssetsVersion>
+    <MicrosoftDotNetGitHubIssueLabelerAssetsVersion>1.5.0</MicrosoftDotNetGitHubIssueLabelerAssetsVersion>
     <MicrosoftMLVersion>1.0.0</MicrosoftMLVersion>
     <MicrosoftVisualStudioWebCodeGenerationDesignVersion>2.0.4</MicrosoftVisualStudioWebCodeGenerationDesignVersion>
     <MicrosoftDiaSymReaderConverterVersion>1.1.0-beta1-62810-01</MicrosoftDiaSymReaderConverterVersion>
     <MicrosoftDiaSymReaderNativeVersion>1.7.0</MicrosoftDiaSymReaderNativeVersion>
     <MicrosoftDotNetMaestroClientVersion>1.1.0-beta.19556.4</MicrosoftDotNetMaestroClientVersion>
-    <MicrosoftDotNetSwaggerGeneratorMSBuildVersion>5.0.0-beta.19555.7</MicrosoftDotNetSwaggerGeneratorMSBuildVersion>
+    <MicrosoftDotNetSwaggerGeneratorMSBuildVersion>5.0.0-beta.19561.8</MicrosoftDotNetSwaggerGeneratorMSBuildVersion>
   </PropertyGroup>
 </Project>

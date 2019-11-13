@@ -35,6 +35,17 @@
     </PropertyGroup>
   </Target>
 
+  <Target Name="SkipBuildInstallerProperties"
+          DependsOnTargets="GetSkipBuildProps"
+          BeforeTargets="GetInstallerGenerationFlags">
+    <PropertyGroup Condition="'$(SkipBuild)' == 'true'">
+      <GenerateDeb>false</GenerateDeb>
+      <GenerateRpm>false</GenerateRpm>
+      <GeneratePkg>false</GeneratePkg>
+      <GenerateMSI>false</GenerateMSI>
+    </PropertyGroup>
+  </Target>
+
   <!--
     This targets file is imported for all pkgproj files, but some (like DotNetHostPolicy) don't need
     installers and just use the normal packaging tooling.
