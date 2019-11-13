@@ -96,12 +96,12 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
             }
         }
 
-        protected Task<T> RetryAsync<T>(Func<Task<T>> function)
+        protected async Task<T> RetryAsync<T>(Func<Task<T>> function)
         {
             // Grab the retry logic from the helix api client
             try
             {
-                return ApiFactory.GetAnonymous().RetryAsync(
+                return await ApiFactory.GetAnonymous().RetryAsync(
                         async () => await function(),
                         ex => Log.LogMessage(MessageImportance.Low, $"Azure Dev Ops Operation failed: {ex}\nRetrying..."),
                         CancellationToken.None);
@@ -109,7 +109,7 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
             catch (HttpRequestException ex)
             {
                 Log.LogError(FailureCategory.Helix, ex.ToString());
-                return null;
+                return default;
             }
         }
 
