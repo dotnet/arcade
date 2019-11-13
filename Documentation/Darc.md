@@ -852,16 +852,35 @@ Sets a goal build time for the definition per Channel. This is captured for the 
 
 **Sample**:  
 ```
-PS D:\enlistments\arcade> darc set-goal  --minutes 38 --defintiionId 6  --channels ".Net Core 5 Dev" , ".Net Core 3.1 Release"
+PS D:\enlistments\arcade> darc set-goal  --minutes 38 --defintiionId 6  --channel ".Net Core 5 Dev"
 
 Added a new goal for definitionId 6 = 38 minutes.
 ```
 
 **Parameters**
 
-- `-c,--channels` -  **(Required)** Name of the channel/s.
+- `-c,--channel` -  **(Required)** Name of the channel.
 - `-d, --definitionId` - **(Required)** Definition Id.
 - `-m,--minutes` - **(Required)** Goal time in minutues.
+
+
+### **`get-goal`**
+
+Gets the goal build time for the definition per Channel. This is captured for the PKPI- Build time report.
+
+**Sample**:  
+```
+PS D:\enlistments\arcade> darc get-goal --defintiionId 6  --channel ".Net Core 5 Dev"
+
+Goal for definitionId 6 = 38 minutes.
+```
+
+**Parameters**
+
+- `-c,--channel` -  **(Required)** Name of the channel.
+- `-d, --definitionId` - **(Required)** Definition Id.
+- `-m,--minutes` - **(Required)** Goal time in minutues.
+
 
 ### **`add-dependency`**
 
