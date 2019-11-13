@@ -52,6 +52,7 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
                             }
                         }
                     });
+
                 if (data != null && data["runStatistics"] is JArray runStatistics)
                 {
                     var failed = runStatistics.Children()
@@ -84,6 +85,7 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
                         }
                     }
                 });
+
             if (data != null && data["aggregatedResultsAnalysis"] is JObject aggregatedResultsAnalysis &&
                 aggregatedResultsAnalysis["resultsByOutcome"] is JObject resultsByOutcome)
             {
@@ -128,25 +130,28 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
                         }
                     });
 
-                var failedResults = (JArray) data["value"];
-                HashSet<string> expectedFailures = ExpectedTestFailures?.Select(i => i.GetMetadata("Identity")).ToHashSet() ?? new HashSet<string>();
-                foreach (var failedResult in failedResults)
+                if (data != null)
                 {
-                    var testName = (string) failedResult["automatedTestName"];
-                    if (expectedFailures.Contains(testName))
+                    var failedResults = (JArray)data["value"];
+                    HashSet<string> expectedFailures = ExpectedTestFailures?.Select(i => i.GetMetadata("Identity")).ToHashSet() ?? new HashSet<string>();
+                    foreach (var failedResult in failedResults)
                     {
-                        expectedFailures.Remove(testName);
-                        Log.LogMessage($"TestRun {runId}: Test {testName} has failed and was expected to fail.");
+                        var testName = (string)failedResult["automatedTestName"];
+                        if (expectedFailures.Contains(testName))
+                        {
+                            expectedFailures.Remove(testName);
+                            Log.LogMessage($"TestRun {runId}: Test {testName} has failed and was expected to fail.");
+                        }
+                        else
+                        {
+                            Log.LogError(FailureCategory.Test, $"TestRun {runId}: Test {testName} has failed and is not expected to fail.");
+                        }
                     }
-                    else
-                    {
-                        Log.LogError(FailureCategory.Test, $"TestRun {runId}: Test {testName} has failed and is not expected to fail.");
-                    }
-                }
 
-                foreach (string expectedFailure in expectedFailures)
-                {
-                    Log.LogError(FailureCategory.Test, $"TestRun {runId}: Test {expectedFailure} was expected to fail but did not fail.");
+                    foreach (string expectedFailure in expectedFailures)
+                    {
+                        Log.LogError(FailureCategory.Test, $"TestRun {runId}: Test {expectedFailure} was expected to fail but did not fail.");
+                    }
                 }
             }
         }

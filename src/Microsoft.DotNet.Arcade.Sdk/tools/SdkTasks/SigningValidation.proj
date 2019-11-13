@@ -23,8 +23,8 @@
       <SignCheckToolPath>$(NuGetPackageRoot)Microsoft.DotNet.SignCheck\$(MicrosoftDotNetSignCheckVersion)\tools\Microsoft.DotNet.SignCheck.exe</SignCheckToolPath>
 
       <SignCheckInputDir>$(PackageBasePath)</SignCheckInputDir>
-      <SignCheckLog>signcheck.log</SignCheckLog>
-      <SignCheckErrorLog>signcheck.errors.log</SignCheckErrorLog>
+      <SignCheckLog Condition="'$(SignCheckLog)' == ''">$(ArtifactsLogDir)\signcheck.log</SignCheckLog>
+      <SignCheckErrorLog Condition="'$(SignCheckErrorLog)' == ''">$(ArtifactsLogDir)\signcheck.errors.log</SignCheckErrorLog>
     </PropertyGroup>
     
     <ItemGroup>
