@@ -26,7 +26,6 @@
 
       <_SymStoreOutputDir>$(ArtifactsSymStoreDirectory)$(MSBuildProjectName)\$(TargetFramework)\</_SymStoreOutputDir>
       <_SymStorePdbPath>$(_SymStoreOutputDir)$(TargetName).pdb</_SymStorePdbPath>
-      <_SymStoreAssemblyPath>$(_SymStoreOutputDir)$(TargetName)$(TargetExt)</_SymStoreAssemblyPath>
 
       <!-- By default publish Windows PDBs only for shipping components -->
       <PublishWindowsPdb Condition="'$(PublishWindowsPdb)' == '' and '$(IsShippingAssembly)' == 'true' and Exists('$(TargetPath)') and ('$(DebugType)' == 'embedded' or Exists('$(_TargetPdbPath)'))">true</PublishWindowsPdb>
@@ -85,23 +84,6 @@
 
     <ItemGroup>
       <FileWrites Include="$(_SymStorePdbPath)"/>
-    </ItemGroup>
-  </Target>
-
-  <Target Name="_DeployAssembliesToSymStore"
-          AfterTargets="_InnerDeployToSymStore"
-          Condition="'$(PublishWindowsPdb)' == 'true' and '$(UsingToolSymbolUploader)' != 'true'"
-          Inputs="$(TargetPath)"
-          Outputs="$(_SymStoreAssemblyPath)">
-
-    <MakeDir Directories="$(_SymStoreOutputDir)"/>
-   
-    <Copy SourceFiles="$(TargetPath)"
-          DestinationFiles="$(_SymStoreAssemblyPath)"
-          UseHardlinksIfPossible="true"/>
-
-    <ItemGroup>
-      <FileWrites Include="$(_SymStoreAssemblyPath)"/>
     </ItemGroup>
   </Target>
 </Project>

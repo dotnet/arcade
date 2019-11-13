@@ -59,7 +59,7 @@ namespace Microsoft.SignCheck.Verification
             get
             {
                 return (Options & SignatureVerificationOptions.VerifyAuthentiCodeTimestamps) == SignatureVerificationOptions.VerifyAuthentiCodeTimestamps;
-            }            
+            }
         }
 
         protected bool VerifyJarSignatures
@@ -139,7 +139,7 @@ namespace Microsoft.SignCheck.Verification
                 }
             }
 
-            return fileVerifier;            
+            return fileVerifier;
         }
 
         /// <summary>
@@ -167,14 +167,31 @@ namespace Microsoft.SignCheck.Verification
 
             FileVerifier fileVerifier = GetFileVerifier(path);
             SignatureVerificationResult svr = fileVerifier.VerifySignature(path, parent);
-            svr.IsExcluded = Exclusions.IsExcluded(path, parent, containerPath);
+
+            svr.IsDoNotSign = Exclusions.IsDoNotSign(path, parent, containerPath);
+
+            if ((svr.IsDoNotSign) && (svr.IsSigned))
+            {
+                // Report errors if a DO-NOT-SIGN file is signed.
+                svr.AddDetail(DetailKeys.Error, SignCheckResources.DetailDoNotSignFileSigned, svr.Filename);
+            }
+
+            if ((!svr.IsDoNotSign) && (!svr.IsSigned))
+            {
+                svr.IsExcluded = Exclusions.IsExcluded(path, parent, containerPath);
+
+                if ((svr.IsExcluded))
+                {
+                    svr.AddDetail(DetailKeys.File, SignCheckResources.DetailExcluded);
+                }
+            }
 
             if (GenerateExclusion)
             {
                 svr.ExclusionEntry = String.Join(";", String.Join("|", path, containerPath), parent, String.Empty);
                 Log.WriteMessage(LogVerbosity.Diagnostic, SignCheckResources.DiagGenerateExclusion, svr.Filename, svr.ExclusionEntry);
             }
-            
+
             // Include the full path for top-level files
             if (String.IsNullOrEmpty(parent))
             {
@@ -182,7 +199,7 @@ namespace Microsoft.SignCheck.Verification
             }
 
             return svr;
-        }       
+        }
 
         /// <summary>
         /// Create a directory using the specified path.

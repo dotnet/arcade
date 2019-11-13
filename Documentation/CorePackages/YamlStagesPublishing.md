@@ -195,7 +195,7 @@ publishing works as expected.
 We are looking into ways to improve the onboarding experience, and are tracking that through https://github.com/dotnet/arcade/issues/3390
 
 1. Publish a branch to the Azure devops mirror for the repo that includes the pipeline changes
-2. Set up a default channel for the internal repo + branch combination using darc that targets the `.Net Tools - Validation` channel. Note that the default channels require the full branch reference.
+2. Set up a default channel for the internal repo + branch combination using darc that targets the `General Testing` channel. Note that the default channels require the full branch reference.
 
     ``` Powershell
     # From a repository that contains an eng/common folder
@@ -351,7 +351,7 @@ any such feeds into the repo's NuGet.config as part of a dependency update PR.
     <!--Begin: Package sources managed by Dependency Flow automation. Do not edit the sources below.-->
     <add key="darc-int-dotnet-arcade" value="<private-feed-containing the packages>" />
     <!--End: Package sources managed by Dependency Flow automation. Do not edit the sources above.-->
-    <add key="arcade" value="https://dotnetfeed.blob.core.windows.net/dotnet-tools-internal/index.json" />
+    <add key="arcade" value="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json" />
     <add key="dotnet-core" value="https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json" />
     <add key="nuget.org" value="https://api.nuget.org/v3/index.json" />
   </packageSources>

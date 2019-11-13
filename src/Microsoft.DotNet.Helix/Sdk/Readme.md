@@ -10,7 +10,7 @@ Each of the following examples require dotnet-cli >= 2.1.300 and need the follow
 <configuration>
   <packageSources>
     <clear />
-    <add key="dotnet-tools" value="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json" />
+    <add key="dotnet-eng" value="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json" />
   </packageSources>
 </configuration>
 ```
@@ -23,7 +23,7 @@ Each of the following examples require dotnet-cli >= 2.1.300 and need the follow
 }
 ```
 
-Versions of the package can be found by browsing the feed at https://dev.azure.com/dnceng/public/_packaging?_a=feed&feed=dotnet-tools
+Versions of the package can be found by browsing the feed at https://dev.azure.com/dnceng/public/_packaging?_a=feed&feed=dotnet-eng
 
 The examples can all be run with `dotnet msbuild` and will require an environment variable or MSBuildProperty `HelixAccessToken` set if a queue with a value of IsInternalOnly=true (usually any not ending in '.Open') is selected for `HelixTargetQueues`
 

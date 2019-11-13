@@ -12,9 +12,7 @@ namespace Xunit.ConsoleClient
             var consoleLock = new object();
             var internalDiagnosticsMessageSink = DiagnosticMessageSink.ForInternalDiagnostics(consoleLock, args.Contains("-internaldiagnostics"), args.Contains("-nocolor"));
 
-#if !WINDOWS_UWP
             using (AssemblyHelper.SubscribeResolveForAssembly(typeof(Program), internalDiagnosticsMessageSink))
-#endif
                 return new ConsoleRunner(consoleLock).EntryPoint(args);
         }
     }
