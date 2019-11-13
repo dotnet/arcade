@@ -848,19 +848,18 @@ Successfully created new channel with name 'Foo'.
 
 ### **`set-goal`**
 
-Sets a goal build time for the definition per Channel. This is captured for the PKPI- Build time report. Build time is calculated as a difference between start time of the official build till the time it takes for the build to be published to a channel. 
+Sets a goal build time for the definition per Channel. This is captured for the PKPI- Build time report.
 
 **Sample**:  
 ```
-PS D:\enlistments\arcade> darc reporting set-goal  --goal 38 --defintiionId 6  --channel ".Net Core 5 Dev" , ".Net Core 3.1 Release"
+PS D:\enlistments\arcade> darc set-goal  --minutes 38 --defintiionId 6  --channels ".Net Core 5 Dev" , ".Net Core 3.1 Release"
 
 Added a new goal for definitionId 6 = 38 minutes.
 ```
 
 **Parameters**
 
-- `reporting` - **(Required)** Specifies that it's for PKPI- Build time purpose only. This is not for any visualization in BarViz or Maestro.
-- `-c,--channel` -  **(Required)** Name of the channel/s.
+- `-c,--channels` -  **(Required)** Name of the channel/s.
 - `-d, --definitionId` - **(Required)** Definition Id.
 - `-m,--minutes` - **(Required)** Goal time in minutues.
 
