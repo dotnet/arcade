@@ -870,7 +870,7 @@ Gets the goal build time for the definition per channel. This is captured for th
 
 **Sample**:  
 ```
-PS D:\enlistments\arcade> darc get-goal --defintiionId 6  --channel ".Net Core 5 Dev"
+PS D:\enlistments\arcade> darc get-goal --definitionId 6  --channel ".Net Core 5 Dev"
 
 Goal for definitionId 6 = 38 minutes.
 ```
