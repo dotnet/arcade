@@ -848,7 +848,7 @@ Successfully created new channel with name 'Foo'.
 
 ### **`set-goal`**
 
-Sets a goal build time for the definition per Channel. This is captured for the PKPI- Build time report.
+Sets a goal build time for the definition per Channel. This is captured for the PKPI- Build time report. Only dnceng is in scope.
 
 **Sample**:  
 ```
@@ -860,13 +860,13 @@ Added a new goal for definitionId 6 = 38 minutes.
 **Parameters**
 
 - `-c,--channel` -  **(Required)** Name of the channel.
-- `-d, --definitionId` - **(Required)** Definition Id.
+- `-d, --definitionId` - **(Required)** Azure DevOps Definition Id.
 - `-m, --minutes` - **(Required)** Goal time in minutues.
 
 
 ### **`get-goal`**
 
-Gets the goal build time for the definition per Channel. This is captured for the PKPI- Build time report.
+Gets the goal build time for the definition per Channel. This is captured for the PKPI- Build time report. Only dnceng is in scope.
 
 **Sample**:  
 ```
@@ -878,7 +878,7 @@ Goal for definitionId 6 = 38 minutes.
 **Parameters**
 
 - `-c,--channel` -  **(Required)** Name of the channel.
-- `-d, --definitionId` - **(Required)** Definition Id.
+- `-d, --definitionId` - **(Required)** Azure DevOps Definition Id.
 
 
 ### **`add-dependency`**
