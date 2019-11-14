@@ -36,7 +36,7 @@ namespace Microsoft.DotNet.Helix.Client
                         using (Stream entryStream = zip.CreateEntry(name).Open())
                         using (FileStream inputStream = File.OpenRead(file))
                         {
-                            await inputStream.CopyToAsync(entryStream);
+                            await inputStream.CopyToAsync(entryStream, 81920, cancellationToken);
                         }
                     }
                 }

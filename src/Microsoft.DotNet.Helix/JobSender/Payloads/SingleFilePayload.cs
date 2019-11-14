@@ -36,7 +36,7 @@ namespace Microsoft.DotNet.Helix.Client
                 {
                     using (Stream entryStream = zip.CreateEntry(Name).Open())
                     {
-                        await entryStream.WriteAsync(Content, 0, Content.Length);
+                        await entryStream.WriteAsync(Content, 0, Content.Length, cancellationToken);
                     }
                 }
                 stream.Position = 0;
