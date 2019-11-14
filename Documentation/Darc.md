@@ -852,7 +852,7 @@ Sets a goal build time for the definition per Channel. This is captured for the 
 
 **Sample**:  
 ```
-PS D:\enlistments\arcade> darc set-goal  --minutes 38 --defintiionId 6  --channel ".Net Core 5 Dev"
+PS D:\enlistments\arcade> darc set-goal  --minutes 38 --definitionId 6  --channel ".Net Core 5 Dev"
 
 Added a new goal for definitionId 6 = 38 minutes.
 ```
