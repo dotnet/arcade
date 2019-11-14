@@ -866,7 +866,7 @@ Added a new goal for definitionId 6 = 38 minutes.
 
 ### **`get-goal`**
 
-Gets the goal build time for the definition per Channel. This is captured for the PKPI- Build time report.
+Gets the goal build time for the definition per channel. This is captured for the PKPI - Build time report.
 
 **Sample**:  
 ```
