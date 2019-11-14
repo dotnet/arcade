@@ -48,6 +48,50 @@ When our tests fail, we want to be able to see what failure(s) occurred so that 
 
 Documentation on how to do the above is an absolute must. We want to ensure that other developers can expand upon what we've started, so we will provide guidance with how we expect the test project structure to look like and how to hook them into the pipelines/stages. 
 
+### Unit Testing
+
+(Nov 12, 2019) Note: These steps have been validated to work in the Helix Services, and still need to be validated to work with OSOB and Arcade Services. 
+
+To add a unit test project, and ensure that it is able to automatically run in the pipelines and have it's test results and code coverage collected, do the following steps: 
+
+1. Create the new test project (using xUnit): Right click on the solution (or folder where you want to add the test project) -> Add -> New Project... -> select xUnit Test Project (.NET Core)
+
+![newxunitproject](Images/newxunitproject.png)
+
+Alternatively, you can create a new project via the dotnet CLI with the command: `dotnet new xunit`
+
+Use the same name as the source project the tests will be for, but with ".Tests" at the end. Based on the Validation process diagram, this project should existing beside the project that it will be testing. This allows for better visibility of the test project in relation to the code it will be testing. 
+
+![testproject](Images/testproject.png)
+
+2. The following package references should be added to the .csproj: 
+```
+  <PackageReference Include="xunit" />
+  <PackageReference Include="xunit.runner.visualstudio" />
+  <PackageReference Include="Microsoft.NET.Test.Sdk" />
+```
+3. Rename the namespace of the new test class with the rest of the tests in the solution. Example: 
+`Microsoft.Internal.Helix.Utility.Tests`
+4. Include the source project to be tested as a project reference: Right click on the test project -> Add -> Reference... -> Select the checkbox for the source project. This is what it would look like in the .csproj file: 
+```
+  <ItemGroup>
+    <ProjectReference Include="..\..\Utility\Helix.Utility.Common\Helix.Utility.Common.csproj" />
+  </ItemGroup>
+```
+5. Ensure that the test project is targeting the correct Target Framework Moniker (TFM). This should be the consistent with the source project's TFM. Example: 
+```
+  <PropertyGroup>
+    <TargetFramework>$(NetFrameworkFramework)</TargetFramework>
+  </PropertyGroup>
+```
+
+Notes: 
+- Currently, this process has only been verified to work with xUnit tests. Although we do have nUnit in our codebase, it was introduced to help with parallelization of our functional and scenario tests. 
+- Why are the package references in step 2 needed? 
+  - **xunit**: used for the xUnit test framework. 
+  - **xunit.runner.visualstudio**: required for Visual Studio to run the xunit tests. 
+  - **Microsoft.NET.Test.Sdk**: this package (specifically version 15.8.0+) is required so that the `dotnet test` command can collect code coverage during the PR and CI-merge-to-master pipeline runs. 
+
 ## Validation and Deployment Workflow
 
 Ideal developer workflow from dev environment to production: 
