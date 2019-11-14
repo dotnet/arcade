@@ -140,7 +140,7 @@ namespace Microsoft.DotNet.Helix.Client
             return this;
         }
 
-        public async Task<ISentJob> SendAsync(Action<string> log = null)
+        public async Task<ISentJob> SendAsync(Action<string> log = null, CancellationToken cancellationToken = default)
         {
             IBlobHelper storage;
             if (string.IsNullOrEmpty(StorageAccountConnectionString))
@@ -154,16 +154,16 @@ namespace Microsoft.DotNet.Helix.Client
 
             var (queueId, dockerTag, queueAlias) = ParseQueueId(TargetQueueId);
 
-            IBlobContainer storageContainer = await storage.GetContainerAsync(TargetContainerName, queueId);
+            IBlobContainer storageContainer = await storage.GetContainerAsync(TargetContainerName, queueId, cancellationToken);
             var jobList = new List<JobListEntry>();
 
             Dictionary<string, string> correlationPayloadUris =
-                (await Task.WhenAll(CorrelationPayloads.Select(async p => (uri: await p.Key.UploadAsync(storageContainer, log), destination: p.Value)))).ToDictionary(x => x.uri, x => x.destination);
+                (await Task.WhenAll(CorrelationPayloads.Select(async p => (uri: await p.Key.UploadAsync(storageContainer, log, cancellationToken), destination: p.Value)))).ToDictionary(x => x.uri, x => x.destination);
 
             jobList = (await Task.WhenAll(
                 _workItems.Select(async w =>
                 {
-                    var entry = await w.SendAsync(storageContainer, TargetContainerName, log);
+                    var entry = await w.SendAsync(storageContainer, TargetContainerName, log, cancellationToken);
                     entry.CorrelationPayloadUrisWithDestinations = correlationPayloadUris;
                     return entry;
                 }
@@ -172,10 +172,13 @@ namespace Microsoft.DotNet.Helix.Client
             string jobListJson = JsonConvert.SerializeObject(jobList);
             Uri jobListUri = await storageContainer.UploadTextAsync(
                 jobListJson,
-                $"job-list-{Guid.NewGuid()}.json");
+                $"job-list-{Guid.NewGuid()}.json",
+                cancellationToken);
             // Don't log the sas, remove the query string.
             string jobListUriForLogging = jobListUri.ToString().Replace(jobListUri.Query, "");
             log?.Invoke($"Created job list at {jobListUriForLogging}");
+
+            cancellationToken.ThrowIfCancellationRequested();
 
             // Only specify the ResultContainerPrefix if both repository name and source branch are available.
             if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("BUILD_REPOSITORY_NAME")) && !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("BUILD_SOURCEBRANCH")))
@@ -215,10 +218,10 @@ namespace Microsoft.DotNet.Helix.Client
 
             string jobStartIdentifier = Guid.NewGuid().ToString("N");
             JobCreationResult newJob = await HelixApi.RetryAsync(
-                () => JobApi.NewAsync(creationRequest, jobStartIdentifier),
+                () => JobApi.NewAsync(creationRequest, jobStartIdentifier, cancellationToken),
                 ex => log?.Invoke($"Starting job failed with {ex}\nRetrying..."),
                 IsRetryableJobListUriHttpError,
-                CancellationToken.None);
+                cancellationToken);
 
             return new SentJob(JobApi, newJob, newJob.ResultsUri, newJob.ResultsUriRSAS);
         }

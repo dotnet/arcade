@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Helix.Client
@@ -23,7 +24,7 @@ namespace Microsoft.DotNet.Helix.Client
 
         public string[] Files { get; }
 
-        public async Task<string> UploadAsync(IBlobContainer payloadContainer, Action<string> log)
+        public async Task<string> UploadAsync(IBlobContainer payloadContainer, Action<string> log, CancellationToken cancellationToken)
         {
             using (var stream = new MemoryStream())
             {
@@ -40,7 +41,7 @@ namespace Microsoft.DotNet.Helix.Client
                     }
                 }
                 stream.Position = 0;
-                Uri zipUri = await payloadContainer.UploadFileAsync(stream, $"{Guid.NewGuid()}.zip");
+                Uri zipUri = await payloadContainer.UploadFileAsync(stream, $"{Guid.NewGuid()}.zip", cancellationToken);
                 return zipUri.AbsoluteUri;
             }
         }
