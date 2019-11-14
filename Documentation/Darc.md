@@ -848,7 +848,7 @@ Successfully created new channel with name 'Foo'.
 
 ### **`set-goal`**
 
-Sets a goal build time for the definition per Channel. This is captured for the PKPI- Build time report.
+Sets a goal build time for the definition per channel. This is captured for the PKPI - Build time report.
 
 **Sample**:  
 ```
