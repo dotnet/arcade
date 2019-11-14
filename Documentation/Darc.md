@@ -859,7 +859,7 @@ Added a new goal for definitionId 6 = 38 minutes.
 
 **Parameters**
 
-- `-c,--channel` -  **(Required)** Name of the channel.
+- `-c, --channel` - **(Required)** Name of the channel.
 - `-d, --definitionId` - **(Required)** Definition Id.
 - `-m, --minutes` - **(Required)** Goal time in minutues.
 
