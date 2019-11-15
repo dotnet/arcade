@@ -20,7 +20,7 @@ namespace Microsoft.DotNet.Helix.Client
         {
             var (pageBlob, sasToken) = GetBlob(blobName);
 
-            await pageBlob.UploadFromStreamAsync(stream);
+            await pageBlob.UploadFromStreamAsync(stream, default(AccessCondition), default(BlobRequestOptions), default(OperationContext), cancellationToken);
 
             return new UriBuilder(pageBlob.Uri) { Query = sasToken }.Uri;
         }
@@ -29,7 +29,7 @@ namespace Microsoft.DotNet.Helix.Client
         {
             var (pageBlob, sasToken) = GetBlob(blobName);
             byte[] bytes = Encoding.UTF8.GetBytes(text);
-            await pageBlob.UploadFromByteArrayAsync(bytes, 0, bytes.Length);
+            await pageBlob.UploadFromByteArrayAsync(bytes, 0, bytes.Length, default(AccessCondition), default(BlobRequestOptions), default(OperationContext), cancellationToken);
 
             return new UriBuilder(pageBlob.Uri) { Query = sasToken }.Uri;
         }

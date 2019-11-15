@@ -140,7 +140,7 @@ namespace Microsoft.DotNet.Helix.Client
             return this;
         }
 
-        public async Task<ISentJob> SendAsync(Action<string> log = null, CancellationToken cancellationToken = default)
+        public async Task<ISentJob> SendAsync(Action<string> log, CancellationToken cancellationToken)
         {
             IBlobHelper storage;
             if (string.IsNullOrEmpty(StorageAccountConnectionString))
