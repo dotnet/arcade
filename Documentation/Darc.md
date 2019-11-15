@@ -874,7 +874,7 @@ PS D:\enlistments\arcade> darc get-goal --definition-id 6 --channel ".Net Core 5
 ```
 **Parameters**
 
-- `-c,--channel` - **(Required)** Name of the channel.
+- `-c, --channel` - **(Required)** Name of the channel.
 - `-d, --definition-id` - **(Required)** Azure DevOps Definition Id.
 
 
