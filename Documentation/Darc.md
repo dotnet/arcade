@@ -858,7 +858,7 @@ PS D:\enlistments\arcade> darc set-goal --minutes 38 --definition-id 6 --channel
 ```
 **Parameters**
 
-- `-c,--channel` - **(Required)** Name of the channel.
+- `-c, --channel` - **(Required)** Name of the channel.
 - `-d, --definition-id` - **(Required)** Azure DevOps Definition Id.
 - `-m, --minutes` - **(Required)** Goal time in minutes.
 
