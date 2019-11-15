@@ -848,7 +848,7 @@ Successfully created new channel with name 'Foo'.
 
 ### **`set-goal`**
 
-Sets a goal build time for the definition per Channel in minutes. Only dnceng is in scope. This is captured for the [Power BI dashboard](https://dev.azure.com/dnceng/public/_dashboards/dashboard/40ac4990-3498-4b3a-85dd-2ffde961d672). 
+Sets a goal build time for the definition per channel in minutes. Only dnceng is in scope. This is captured for the [Power BI dashboard](https://dev.azure.com/dnceng/public/_dashboards/dashboard/40ac4990-3498-4b3a-85dd-2ffde961d672). 
 
 **Sample**:
 ```
