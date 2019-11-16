@@ -2,11 +2,11 @@
 <Project>
 
   <PropertyGroup>
-    <_DeployToSymStoreTargetName Condition="'$(TargetFrameworks)' == ''">_InnerDeployToSymStore</_DeployToSymStoreTargetName>
-    <_DeployToSymStoreTargetName Condition="'$(TargetFrameworks)' != ''">_OuterDeployToSymStore</_DeployToSymStoreTargetName>
+    <_DeployToSymStoreTargetNames Condition="'$(TargetFrameworks)' == ''">_InnerDeployToSymStore</_DeployToSymStoreTargetNames>
+    <_DeployToSymStoreTargetNames Condition="'$(TargetFrameworks)' != ''">_OuterDeployToSymStore</_DeployToSymStoreTargetNames>
   </PropertyGroup>
 
-  <Target Name="DeployToSymStore" AfterTargets="Pack" DependsOnTargets="$(_DeployToSymStoreTargetName)" />
+  <Target Name="DeployToSymStore" BeforeTargets="Pack" DependsOnTargets="$(_DeployToSymStoreTargetNames)" />
 
   <Target Name="_OuterDeployToSymStore">
     <ItemGroup>
@@ -19,7 +19,9 @@
     </MSBuild>
   </Target>
 
-  <Target Name="_InnerDeployToSymStore">
+  <Target Name="_InnerDeployToSymStore" DependsOnTargets="CoreCompile;_InnerDeployToSymStoreSetProperties;_DeployPortableSymbolsToSymStore;_DeployWindowsSymbolsToSymStore" />
+    
+  <Target Name="_InnerDeployToSymStoreSetProperties">
     <PropertyGroup>
       <_TargetPdbPath />
       <_TargetPdbPath Condition="'$(DebugType)' != 'embedded'">$([System.IO.Path]::ChangeExtension($(TargetPath), '.pdb'))</_TargetPdbPath>
@@ -41,7 +43,6 @@
     it's published to the public symbol server (msdl.microsoft.com).
   -->
   <Target Name="_DeployPortableSymbolsToSymStore"
-          AfterTargets="_InnerDeployToSymStore"
           Inputs="$(TargetPath);$(_TargetPdbPath)"
           Outputs="$(_SymStorePdbPath)"
           Condition="'$(PublishWindowsPdb)' == 'true' and ('$(DebugType)' == 'portable' or '$(DebugType)' == 'embedded')">
@@ -71,7 +72,6 @@
     symbol store even if the files are copies and not hardlinked.
   -->
   <Target Name="_DeployWindowsSymbolsToSymStore"
-          AfterTargets="_InnerDeployToSymStore"
           Condition="'$(PublishWindowsPdb)' == 'true' and ('$(DebugType)' == 'full' or '$(DebugType)' == 'pdbonly')"
           Inputs="$(_TargetPdbPath)"
           Outputs="$(_SymStorePdbPath)">
