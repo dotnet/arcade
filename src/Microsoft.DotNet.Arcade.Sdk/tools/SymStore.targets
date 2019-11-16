@@ -26,7 +26,6 @@
 
       <_SymStoreOutputDir>$(ArtifactsSymStoreDirectory)$(MSBuildProjectName)\$(TargetFramework)\</_SymStoreOutputDir>
       <_SymStorePdbPath>$(_SymStoreOutputDir)$(TargetName).pdb</_SymStorePdbPath>
-      <_SymStoreAssemblyPath>$(_SymStoreOutputDir)$(TargetName)$(TargetExt)</_SymStoreAssemblyPath>
 
       <!-- By default publish Windows PDBs only for shipping components -->
       <PublishWindowsPdb Condition="'$(PublishWindowsPdb)' == '' and '$(IsShippingAssembly)' == 'true' and Exists('$(TargetPath)') and ('$(DebugType)' == 'embedded' or Exists('$(_TargetPdbPath)'))">true</PublishWindowsPdb>
@@ -49,7 +48,7 @@
 
     <PropertyGroup>
       <_PdbConverterPath>$(NuGetPackageRoot)microsoft.diasymreader.pdb2pdb\$(MicrosoftDiaSymReaderPdb2PdbVersion)\tools\Pdb2Pdb.exe</_PdbConverterPath>
-      <_PdbConverterCommandLineArgs>"$(TargetPath)" /out "$(_SymStorePdbPath)" /verbose /srcsvrvar SRC_INDEX=public</_PdbConverterCommandLineArgs>
+      <_PdbConverterCommandLineArgs>"$(TargetPath)" /out "$(_SymStorePdbPath)" /srcsvrvar SRC_INDEX=public</_PdbConverterCommandLineArgs>
     </PropertyGroup>
 
     <Error Text="Attempt to publish Portable PDB to SymStore without conversion: UsingToolPdbConverter property is false in project $(MSBuildProjectName)"
@@ -85,23 +84,6 @@
 
     <ItemGroup>
       <FileWrites Include="$(_SymStorePdbPath)"/>
-    </ItemGroup>
-  </Target>
-
-  <Target Name="_DeployAssembliesToSymStore"
-          AfterTargets="_InnerDeployToSymStore"
-          Condition="'$(PublishWindowsPdb)' == 'true' and '$(UsingToolSymbolUploader)' != 'true'"
-          Inputs="$(TargetPath)"
-          Outputs="$(_SymStoreAssemblyPath)">
-
-    <MakeDir Directories="$(_SymStoreOutputDir)"/>
-   
-    <Copy SourceFiles="$(TargetPath)"
-          DestinationFiles="$(_SymStoreAssemblyPath)"
-          UseHardlinksIfPossible="true"/>
-
-    <ItemGroup>
-      <FileWrites Include="$(_SymStoreAssemblyPath)"/>
     </ItemGroup>
   </Target>
 </Project>

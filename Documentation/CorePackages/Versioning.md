@@ -116,6 +116,9 @@ If a package is designated to be a _release-only_ package (`PreReleaseVersionLab
 any pre-release labels when produced by an official build. Every official build of such package must produce a unique **PATCH_NUMBER**.
 This versioning policy is not applied to developer and PR validation builds as it relies on the availability of a unique `OfficialBuildId`.
 
+Some projects want to remain producing pre-release packages even if the repository is running a final stable build because
+they don't ship or aren't ready to ship stable. Those projects can set `SuppressFinalPackageVersion` property to `true`.
+
 **PATCH_NUMBER** is defined as (**SHORT_DATE** - `VersionBaseShortDate`) * 100 + `r`, where `VersionBaseShortDate` is `19000` unless 
 set in `eng/Version.props`. 
 Repository shall only change the value of `VersionBaseShortDate` at the same time as it increments **MAJOR** or **MINOR** version.
