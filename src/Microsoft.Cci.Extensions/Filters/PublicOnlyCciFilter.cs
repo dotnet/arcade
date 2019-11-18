@@ -12,7 +12,13 @@ namespace Microsoft.Cci.Filters
     {
         public PublicOnlyCciFilter(bool excludeAttributes = true)
         {
-            this.ExcludeAttributes = excludeAttributes;
+            ExcludeAttributes = excludeAttributes;
+        }
+
+        public PublicOnlyCciFilter(bool excludeAttributes, bool includeForwardedTypes)
+        {
+            ExcludeAttributes = excludeAttributes;
+            IncludeForwardedTypes = includeForwardedTypes;
         }
 
         public bool IncludeForwardedTypes { get; set; }
