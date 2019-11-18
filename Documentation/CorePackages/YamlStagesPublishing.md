@@ -3,6 +3,16 @@
 This document describes the new YAML based approach that will be used for build artifact publishing.
 This applies for builds from public branches, as well as for internal branches, with a few additional considerations.
 
+## Deprecated Parameters
+
+If you use any of these parameters please stop doing so.
+
+| Parameter                       | Description                                                                               |
+| --------------------------------| ----------------------------------------------------------------------------------- |
+| enableSymbolValidation     | Symbol validation, for now, will be performed manually during the release process. |
+
+
+
 ## What are YAML stages?
 
 Stages are a concept introduced by Azure DevOps to organize the jobs in a pipeline. Just as Jobs are a
@@ -26,9 +36,29 @@ arcade publishing.
 
 ## How to onboard onto YAML based publishing
 
-In order to use this new publishing mechanism, the easiest way to start is by making your existing build pipeline a single stage, and adding a second stage that is driven by a template distributed with Arcade.
+In order to use this new publishing mechanism, the easiest way to start is by making your existing build pipeline
+a single stage, and adding a second stage that is driven by a template distributed with Arcade.
 
 1. Update the repo's arcade version to `1.0.0-beta.19360.8` or newer.
+
+1. Add an artifact category for assets produced by the build:
+
+    * Most repositories will use `.NETCore` as the category unless assets should be published to a feed
+    other than `dotnet-core`.
+    See [Advanced Scenarios](##overriding-the-publishing-feed-used-for-builds-in-the-dev-channel) for instructions on how to publish to a different feed.
+
+    * `_DotNetValidationArtifactsCategory` for publishing to the Validation channel (Such as for testing the changes in these onboarding steps)
+    * `_DotNetArtifactsCategory` for publishing to the Dev channel.
+
+      ```YAML
+      variables:
+      ...
+      - name: _DotNetValidationArtifactsCategory
+        value: .NETCore
+      - name: _DotNetArtifactsCategory
+        value: .NETCore
+      ...
+      ```
 
 1. Disable package publishing during the build:
 
@@ -69,6 +99,22 @@ In order to use this new publishing mechanism, the easiest way to start is by ma
             ...
       ```
 
+1. Pass the MSBuild properties required by the Arcade SDK's publishing mechanisms during
+the build invocation. Some of these properties are only required for legacy reasons.
+We are tracking cleaning some of these up via https://github.com/dotnet/arcade/issues/3597
+
+  | Name                            | Value                                                                               |
+  | --------------------------------| ----------------------------------------------------------------------------------- |
+  | /p:DotNetPublishBlobFeedUrl     | https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json                     |
+  | /p:DotNetPublishBlobFeedKey     | `$(dotnetfeed-storage-access-key-1)` variable from Dotnet-Blob-Feed variable group  |
+  | /p:DotNetPublishToBlobFeed      | true                                                                                |
+  | /p:DotNetPublishUsingPipelines  | true                                                                                |
+  | /p:DotNetArtifactsCategory      | `$(_DotNetArtifactsCategory)` variable                                              |
+
+    For an example, see how the Arcade repo passes these properties in its
+    [azure-pipelines.yml](https://github.com/dotnet/arcade/blob/2cb8b86c1ca7ff77304f76fe7041135209ab6932/azure-pipelines.yml#L74)
+
+
 1. Add the stages keyword to your existing pipeline's YAML:
 
     ```YAML
@@ -98,21 +144,22 @@ In order to use this new publishing mechanism, the easiest way to start is by ma
     - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
       - template: eng\common\templates\post-build\post-build.yml
         parameters:
-          # Symbol validation is not entirely reliable as of yet, so should be turned off until
-          # https://github.com/dotnet/arcade/issues/2871 is resolved.
-          enableSymbolValidation: false
+          enableSourceLinkValidation: false
           ...
     ```
 
     The parameters for the template are the following:
 
-    | Name                         | Type     | Description                                                   |Default Value     |
-    | -----------------------------| -------- | ------------------------------------------------------------- |----- |
-    | enableSourceLinkValidation   | bool     | Run sourcelink validation during the post-build stage.        | true |
-    | enableSigningValidation      | bool     | Run signing validation during the post-build stage.           | true |
-    | enableSymbolValidation       | bool     | Run symbol validation during the post-build stage.            | true |
-    | enableNugetValidation        | bool     | Run NuGet package validation tool during the post build stage.| true |
-    | SDLValidationParameters      | object   | Parameters for the SDL job template, as documented in the [SDL template documentation](../HowToAddSDLRunToPipeline.md) | -- |
+    | Name                                    | Type     | Description                                                                                          |Default Value |
+    | --------------------------------------- | -------- | -----------------------------------------------------------------------------------------------------|----- |
+    | enableSourceLinkValidation              | bool     | Run sourcelink validation during the post-build stage.                                               | false |
+    | enableSigningValidation                 | bool     | Run signing validation during the post-build stage.                                                  | true |
+    | enableNugetValidation                   | bool     | Run NuGet package validation tool during the post build stage.                                       | true |
+    | publishInstallersAndChecksums           | bool     | Publish installers packages and checksums from the build artifacts to the dotnetcli storage account. | false |
+    | symbolPublishingAdditionalParameters    | string   | Additional arguments for the PublishToSymbolServers sdk task                                         | '' |
+    | artifactsPublishingAdditionalParameters | string   | Additional arguments for the PublishArtifactsInManifest sdk task                                     | '' |
+    | enableNugetValidation                   | bool     | Run NuGet package validation tool during the post build stage.                                       | true |
+    | SDLValidationParameters                 | object   | Parameters for the SDL job template, as documented in the [SDL template documentation](../HowToAddSDLRunToPipeline.md) | -- |
 
     Examples of the use of stages can be found in the Arcade family of repos:
 
@@ -127,6 +174,14 @@ to.  For more information on channels, see the [Channels, Branches and Subscript
     **Note:** At the moment, triggering stages manually is not supported by Azure DevOps. Once this capability
     is in place, builds will be able to publish to additional channels besides the default.
 
+    The Arcade SDK will now publish build artifacts to the Azure DevOps build artifacts instead of publishing to a blob feed directly,
+    and the post-build stages will move the assets in the artifacts to the final feeds depending on the channels that the build
+    is assigned to. The artifacts that the post-build templates use are:
+
+    * PDBArtifacts: Stores pdb files generated by the build.
+    * PackageArtifacts: Stores all nupkgs generated by the build.
+    * BlobArtifacts: Stores everything else: symbol packages, installers, zip files, etc...
+
     The pipeline for a build with stages enabled will look similar to this:
 
     ![build-with-post-build-stages](./images/build-with-post-build-stages.png)
@@ -140,7 +195,7 @@ publishing works as expected.
 We are looking into ways to improve the onboarding experience, and are tracking that through https://github.com/dotnet/arcade/issues/3390
 
 1. Publish a branch to the Azure devops mirror for the repo that includes the pipeline changes
-2. Set up a default channel for the internal repo + branch combination using darc that targets the `.Net Tools - Validation` channel. Note that the default channels require the full branch reference.
+2. Set up a default channel for the internal repo + branch combination using darc that targets the `General Testing` channel. Note that the default channels require the full branch reference.
 
     ``` Powershell
     # From a repository that contains an eng/common folder
@@ -179,9 +234,7 @@ for the category to the TargetStaticFeed PropertyGroup in
     </PropertyGroup>
     ```
 
-1. Add a variable to your pipeline's YAML and set the value as your new category.
-    * `_DotNetValidationArtifactsCategory` for publishing to the Validation channel (Such as for testing the changes in these onboarding steps)
-    * `_DotNetArtifactsCategory` for publishing to the Dev channel.
+1. Set your new category as the value for the artifact category variables
 
     ```YAML
     variables:
@@ -298,7 +351,7 @@ any such feeds into the repo's NuGet.config as part of a dependency update PR.
     <!--Begin: Package sources managed by Dependency Flow automation. Do not edit the sources below.-->
     <add key="darc-int-dotnet-arcade" value="<private-feed-containing the packages>" />
     <!--End: Package sources managed by Dependency Flow automation. Do not edit the sources above.-->
-    <add key="arcade" value="https://dotnetfeed.blob.core.windows.net/dotnet-tools-internal/index.json" />
+    <add key="arcade" value="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json" />
     <add key="dotnet-core" value="https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json" />
     <add key="nuget.org" value="https://api.nuget.org/v3/index.json" />
   </packageSources>

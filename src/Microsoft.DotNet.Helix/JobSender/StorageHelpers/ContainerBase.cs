@@ -1,7 +1,8 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Helix.Client.Models;
 using Microsoft.WindowsAzure.Storage;
@@ -15,20 +16,20 @@ namespace Microsoft.DotNet.Helix.Client
     {
         protected abstract (CloudBlockBlob blob, string sasToken) GetBlob(string blobName);
 
-        public async Task<Uri> UploadFileAsync(Stream stream, string blobName)
+        public async Task<Uri> UploadFileAsync(Stream stream, string blobName, CancellationToken cancellationToken)
         {
             var (pageBlob, sasToken) = GetBlob(blobName);
 
-            await pageBlob.UploadFromStreamAsync(stream);
+            await pageBlob.UploadFromStreamAsync(stream, default(AccessCondition), default(BlobRequestOptions), default(OperationContext), cancellationToken);
 
             return new UriBuilder(pageBlob.Uri) { Query = sasToken }.Uri;
         }
 
-        public async Task<Uri> UploadTextAsync(string text, string blobName)
+        public async Task<Uri> UploadTextAsync(string text, string blobName, CancellationToken cancellationToken)
         {
             var (pageBlob, sasToken) = GetBlob(blobName);
             byte[] bytes = Encoding.UTF8.GetBytes(text);
-            await pageBlob.UploadFromByteArrayAsync(bytes, 0, bytes.Length);
+            await pageBlob.UploadFromByteArrayAsync(bytes, 0, bytes.Length, default(AccessCondition), default(BlobRequestOptions), default(OperationContext), cancellationToken);
 
             return new UriBuilder(pageBlob.Uri) { Query = sasToken }.Uri;
         }

@@ -69,6 +69,7 @@
     <RuntimeFilePath Condition="'$(RuntimeFilePath)' == ''">$(NuSpecOutputPath)$(Id)$(NuspecSuffix)/runtime.json</RuntimeFilePath>
     <PackedPackageRuntimeFilePath Condition="'$(PackedPackageRuntimeFilePath)' == ''">$(NuSpecOutputPath)$(Id)$(NuspecSuffix)/$(PackedPackageNamePrefix).runtime.json</PackedPackageRuntimeFilePath>
     <PlaceholderFile>$(MSBuildThisFileDirectory)content/_._</PlaceholderFile>
+    <PackageIconFile Condition="'$(PackageIconFile)' == ''">$(MSBuildThisFileDirectory)Icon.png</PackageIconFile>
     <PackageDescriptionFile Condition="'$(PackageDescriptionFile)' == ''">path to descriptions.json must be specified</PackageDescriptionFile>
     <ValidationSuppressionFile Condition="'$(ValidationSuppressionFile)' == ''">ValidationSuppression.txt</ValidationSuppressionFile>
     <SyncInfoFile Condition="'$(SyncInfoFile)' == ''">unspecified</SyncInfoFile>
@@ -380,11 +381,16 @@
       <_latestRuntimePackages Include="@(PkgProjDependency)" Condition="'%(PkgProjDependency.TargetRuntime)' != ''" KeepDuplicates="false" />
     </ItemGroup>
 
+    <PropertyGroup>
+      <DoNotAllowVersionsFromSameRelease Condition="'$(DoNotAllowVersionsFromSameRelease)' == ''">true</DoNotAllowVersionsFromSameRelease>
+    </PropertyGroup>
+
     <!-- Calculate the package version to harvest -->
     <GetLastStablePackage Condition="'$(HarvestVersion)' == ''"
                           LatestPackages="@(_latestPackage)"
                           StablePackages="@(StablePackage)"
-                          PackageIndexes="@(PackageIndex)">
+                          PackageIndexes="@(PackageIndex)"
+                          DoNotAllowVersionsFromSameRelease="$(DoNotAllowVersionsFromSameRelease)">
       <Output  TaskParameter="LastStablePackages" ItemName="_lastStablePackage"/>
     </GetLastStablePackage>
 
@@ -396,14 +402,16 @@
     <GetLastStablePackage Condition="'@(HarvestRuntimePackages)' == ''"
                           LatestPackages="@(_latestRuntimePackages)"
                           StablePackages="@(StablePackage)"
-                          PackageIndexes="@(PackageIndex)">
+                          PackageIndexes="@(PackageIndex)"
+                          DoNotAllowVersionsFromSameRelease="$(DoNotAllowVersionsFromSameRelease)">
       <Output  TaskParameter="LastStablePackages" ItemName="HarvestRuntimePackages"/>
     </GetLastStablePackage>
 
     <GetLastStablePackage Condition="'@(HarvestAdditionalPackageIds)' != ''"
                           LatestPackages="@(HarvestAdditionalPackageIds)"
                           StablePackages="@(StablePackage)"
-                          PackageIndexes="@(PackageIndex)">
+                          PackageIndexes="@(PackageIndex)"
+                          DoNotAllowVersionsFromSameRelease="$(DoNotAllowVersionsFromSameRelease)">
       <Output  TaskParameter="LastStablePackages" ItemName="HarvestAdditionalPackages"/>
     </GetLastStablePackage>
 
@@ -590,13 +598,6 @@
       <_harvestFile Include="@(File)" Condition="'%(File.HarvestDependencies)' == 'true' and '%(File.Extension)' == '.dll'" />
       <_missingHarvestFile Include="@(_harvestFile)" Condition="!Exists('%(FullPath)')" />
       <_harvestFile Remove="@(_missingHarvestFile)" Condition="'$(AllowPartialPackages)' == 'true'" />
-
-      <!-- add a fake dependency to represent the dependencies of any missing file
-           this will prevent the package from installing on that platform. -->
-      <FilePackageDependency Include="Unavailable" Condition="'$(AllowPartialPackages)' == 'true' AND '@(_missingHarvestFile)' != '' AND '$(_TargetFramework)' != ''">
-        <TargetFramework>$(_TargetFramework)</TargetFramework>
-        <Version>0.0.0</Version>
-      </FilePackageDependency>
     </ItemGroup>
 
     <!-- Generate package references based on assembly dependencies -->
@@ -734,7 +735,7 @@
     </ApplyBaseLine>
 
     <Error Text="No VersionSuffix was set. Ensure it is set before targets in packaging are ran."
-           Condition="'$(VersionSuffix)' == ''" />
+           Condition="'$(VersionSuffix)' == '' AND '@(_BaseLinedDependencies)' != ''" />
     <Error Condition="'@(_BaseLinedDependencies)' != '' AND '@(PackageIndex)' == '' AND '@(StablePackage)' == ''"
            Text="Neither PackageIndex nor StablePackage items are defined: ensure you have imported Microsoft.Private.PackageBaseLine.props from the Microsoft.Private.PackageBaseLine package" />
     <ApplyPreReleaseSuffix Condition="'@(_BaseLinedDependencies)' != ''"
@@ -826,7 +827,7 @@
         DependsOnTargets="GetAssemblyVersionFromProjects">
 
     <Error Text="No VersionSuffix was set. Ensure it is set before targets in packaging are ran."
-           Condition="'$(VersionSuffix)' == ''" />
+           Condition="'$(VersionSuffix)' == '' AND '$(StableVersion)' == ''" />
 
     <Error Text="No version could be detected.  Either specify the Version property or provide at least one managed assembly."
            Condition="'$(PackageVersion)' == '' AND '$(_AssemblyVersion)' == ''" />
@@ -1223,6 +1224,7 @@
                     Language="$(Language)"
                     ProjectUrl="$(ProjectUrl)"
                     IconUrl="$(IconUrl)"
+                    Icon="$(PackageIconFile)"
                     LicenseUrl="$(LicenseUrl)"
                     PackageLicenseExpression="$(PackageLicenseExpression)"
                     Copyright="$(Copyright)"
@@ -1282,8 +1284,13 @@
     <Error Condition="'$(PackageIndexFile)' == ''"
            Text="The PackageIndexFile property is not set.  Please set this property to point to the path of the packageIndex.json file for your repo." />
 
+    <PropertyGroup>
+      <UpdateStablePackageInfo Condition="'$(UpdateStablePackageInfo)' == ''">true</UpdateStablePackageInfo>
+    </PropertyGroup>
+
     <UpdatePackageIndex PackageIndexFile="$(PackageIndexFile)"
-                        Packages="$(PackageOutputPath)$(Id).$(PackageVersion).nupkg" />
+                        Packages="$(PackageOutputPath)$(Id).$(PackageVersion).nupkg"
+                        UpdateStablePackageInfo="$(UpdateStablePackageInfo)" />
   </Target>
 
   <!-- Updates the packageIndex with information from the multiple sources for the entire repo -->
@@ -1299,7 +1306,12 @@
     <!-- Set ModuleToPackage to module name identity with 'Package' metadata to define mappings from native modules to package IDs which contain those -->
     <!-- Set FrameworkListsFolder to the path to a set of directories containing framework lists, where the subdirectory name is the TFM.  These lists will determine what is inbox on that framework. -->
     <!-- Set FrameowrkLayout to folder identity with 'TargetFramework' metadata to consider files within that folder inbox on that framework.-->
-
+    <!-- Set UpdateStablePackageInfo to true in order to go through all the package index and update the stable version information for all the packages in the index.-->
+    
+    <ItemGroup>
+      <PackageFolders Include="$(PackageFolders)" />
+    </ItemGroup>
+      
     <UpdatePackageIndex PackageIndexFile="$(PackageIndexFile)"
                         PackageIds="@(PackageIds)"
                         PackageFolders="@(PackageFolders)"
@@ -1307,6 +1319,7 @@
                         StablePackages="@(StablePackage)"
                         ModuleToPackages="@(ModuleToPackage)"
                         InboxFrameworkListFolder="$(FrameworkListsFolder)"
-                        InboxFrameworkLayoutFolders="@(FrameworkLayout)" />
+                        InboxFrameworkLayoutFolders="@(FrameworkLayout)"
+                        UpdateStablePackageInfo="$(UpdateStablePackageInfo)" />
   </Target>
 </Project>

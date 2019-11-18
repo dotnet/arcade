@@ -57,6 +57,9 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
 
         public static Version As3PartVersion(Version version)
         {
+            if (version == null)
+                return null;
+
             int build = version.Build;
 
             if (build == -1)
@@ -73,8 +76,24 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
             return new Version(version.Major, version.Minor, build);
         }
 
+        public static Version As2PartVersion(Version version)
+        {
+            if (version == null)
+                return null;
+
+            if (version.Build == -1)
+            {
+                // we already have a 2-part version
+                return version;
+            }
+            return new Version(version.Major, version.Minor);
+        }
+
         public static Version As4PartVersion(Version version)
         {
+            if (version == null)
+                return null;
+
             int build = version.Build, revision = version.Revision;
 
             if (build == -1)

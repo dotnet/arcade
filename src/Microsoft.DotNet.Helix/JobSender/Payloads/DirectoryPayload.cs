@@ -28,7 +28,7 @@ namespace Microsoft.DotNet.Helix.Client
 
         public string ArchiveEntryPrefix { get; }
 
-        public Task<string> UploadAsync(IBlobContainer payloadContainer, Action<string> log)
+        public Task<string> UploadAsync(IBlobContainer payloadContainer, Action<string> log, CancellationToken cancellationToken)
         {
             string dirHash;
             using (var hasher = SHA256.Create())
@@ -52,7 +52,7 @@ namespace Microsoft.DotNet.Helix.Client
                     }
 
                     hasMutex = true;
-                    return Task.FromResult(DoUploadAsync(payloadContainer, log).GetAwaiter().GetResult()); // Can't await because of mutex
+                    return Task.FromResult(DoUploadAsync(payloadContainer, log, cancellationToken).GetAwaiter().GetResult()); // Can't await because of mutex
                 }
                 finally
                 {
@@ -64,7 +64,7 @@ namespace Microsoft.DotNet.Helix.Client
             }
         }
 
-        private async Task<string> DoUploadAsync(IBlobContainer payloadContainer, Action<string> log)
+        private async Task<string> DoUploadAsync(IBlobContainer payloadContainer, Action<string> log, CancellationToken cancellationToken)
         {
             await Task.Yield();
             string basePath = NormalizedDirectoryPath;
@@ -97,7 +97,7 @@ namespace Microsoft.DotNet.Helix.Client
                 }
 
                 stream.Position = 0;
-                Uri zipUri = await payloadContainer.UploadFileAsync(stream, $"{Guid.NewGuid()}.zip");
+                Uri zipUri = await payloadContainer.UploadFileAsync(stream, $"{Guid.NewGuid()}.zip", cancellationToken);
                 File.WriteAllText(alreadyUploadedFile.FullName, zipUri.AbsoluteUri);
                 return zipUri.AbsoluteUri;
             }

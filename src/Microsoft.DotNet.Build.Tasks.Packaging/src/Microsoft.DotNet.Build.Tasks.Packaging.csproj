@@ -1,7 +1,8 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>netcoreapp2.1;net472</TargetFrameworks>
+    <TargetFrameworks Condition="'$(DotNetBuildFromSource)' == 'true'">netcoreapp2.1</TargetFrameworks>
     <CopyLocalLockFileAssemblies Condition="'$(TargetFramework)' == 'netcoreapp2.1'">true</CopyLocalLockFileAssemblies>
     <PackageType>MSBuildSdk</PackageType>
     <IncludeBuildOutput>false</IncludeBuildOutput>
@@ -52,6 +53,7 @@
          so we must provide one.
          nuget's pack task treats _._ as special, to pack it must be in a folder on its own -->
     <None Include="build\content\_._" Pack="true" PackagePath="build\content\_._" />
+    <None Include="build\Icon.png" Pack="true" PackagePath="build\Icon.png" />
   </ItemGroup>
 
   <ItemGroup>
@@ -63,6 +65,7 @@
     <PackageReference Include="NuGet.Commands" Version="$(NuGetVersion)" />
     <PackageReference Include="NuGet.Packaging" Version="$(NuGetVersion)" />
     <PackageReference Include="NuGet.ProjectModel" Version="$(NuGetVersion)" />
+    <PackageReference Include="System.Text.Json" Version="4.6.0-preview7.19362.9" />
     <PackageReference Include="System.Reflection.Metadata" Version="$(SystemReflectionMetadataVersion)" />
     <PackageReference Include="Microsoft.NETCore.Platforms" Version="$(MicrosoftNETCorePlatformsVersion)" />
   </ItemGroup>

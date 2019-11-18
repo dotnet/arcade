@@ -6,19 +6,19 @@ This document is intended to provide insight into the design of native toolset b
 
 Arcade will provide a set of common installation libraries which will be provided to participating repos via Maestro.  The common libraries will be used to acquire "installers" for native components.
 
-Repo's will be provided a local bootstrapping file (both an ps1 and an sh file).  The bootstrapper uses the common libraries to install native toolset dependencies.
+Repos will be provided a local bootstrapping file (both a ps1 and an sh file).  The bootstrapper uses the common libraries to install native toolset dependencies.
 
 ## Definitions
 
-Tool - a native toolset dependency (cmake, python, etc...)
+*Tool* &ndash; a native toolset dependency (cmake, python, etc...)
 
-Native Asset - Packaged native artifact, also known as a tool but specifically related to the asset as provided by the publisher of the tool.  ie, in the case of cmake, one of the zip or tar files from https://cmake.org/download/
+*Native Asset* &ndash; Packaged native artifact, also known as a tool but specifically related to the asset as provided by the publisher of the tool.  ie, in the case of cmake, one of the zip or tar files from https://cmake.org/download/
 
-Installer - a script(s) used to deploy a native asset
+*Installer* &ndash; a script(s) used to deploy a native asset
 
-Shim - wrapper script which is deployed to a platform that is referenced to execute the provided tool
+*Shim* &ndash; wrapper script which is deployed to a platform that is referenced to execute the provided tool
 
-Common Library - set of libraries available for native asset deployment to a platform
+*Common Library* &ndash; set of libraries available for native asset deployment to a platform
 
 ## Arcade toolset libraries
 
@@ -30,9 +30,8 @@ The entry-point scripts are the scripts which repos will use to bootstrap their 
 
 Entry-point scripts are:
 
-- init-tools-native.cmd
-
-- init-tools-native.sh
+* init-tools-native.cmd
+* init-tools-native.sh
 
 Add a call to these scripts in your build script to bootstrap all tools specified in your global.json.
 

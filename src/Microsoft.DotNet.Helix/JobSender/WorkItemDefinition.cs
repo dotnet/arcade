@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Helix.Client
@@ -109,14 +110,15 @@ namespace Microsoft.DotNet.Helix.Client
         public async Task<JobListEntry> SendAsync(
             IBlobContainer payloadStorage,
             string containerName,
-            Action<string> log)
+            Action<string> log,
+            CancellationToken cancellationToken)
         {
             return new JobListEntry
             {
                 WorkItemId = WorkItemName,
                 Command = Command,
                 TimeoutInSeconds = (int) Timeout.TotalSeconds,
-                PayloadUri = await Payload.UploadAsync(payloadStorage, log),
+                PayloadUri = await Payload.UploadAsync(payloadStorage, log, cancellationToken),
             };
         }
     }

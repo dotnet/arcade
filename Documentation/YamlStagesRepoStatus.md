@@ -13,7 +13,7 @@ Target completion date is 8/13/2019.
 | Arcade                     | mawilkie         | Complete | ✔️ | |
 | Arcade-Services            | mawilkie         | Complete | ✔️ | |
 | Arcade-Validation          | mawilkie         | Complete | ✔️ | |
-| aspnet-AspNetCore          | dougbu           | In progress | ➖  |  In PR https://github.com/aspnet/AspNetCore/pull/13040 |
+| aspnet-AspNetCore          | dougbu           | Complete | ✔️ | |
 | aspnet-AspNetCore-Tooling  | dougbu           | Complete | ✔️ | |
 | aspnet-EntityFramework6    | dougbu/wtgodbe   | Complete | ✔️ | |
 | aspnet-EntityFrameworkCore | dougbu/wtgodbe   | Complete | ✔️ | |
@@ -21,15 +21,15 @@ Target completion date is 8/13/2019.
 | aspnet-Extensions          | dougbu/wtgodbe   | Complete | ✔️ | |
 | CLI                        | licavalc         | Complete | ✔️ | |
 | CLICommandLineParser       | licavalc         | N/A | |  This repo is not being developed anymore. We are taking a pinned version of it |
-| CoreClr                    | russellk/arobins | In progress | ➖ | bulk of the work is in master, working through publishing issues |
+| CoreClr                    | jeffschw/arobins | Complete | ✔️ | |
 | CoreFx                     | danmose/safern   | Complete | ✔️ | SourceLink validation disabled: https://github.com/dotnet/arcade/issues/3603 |
 | IoT                        | joperezr         | Complete | ✔️ | |
-| Core-SDK                   | licavalc         | At risk | ❌ |  We need clarity on how to do the blob storage publishing with YAML stages: https://github.com/dotnet/arcade/issues/3607|
-| Core-Setup                 | dleeapho         | In progress | ➖ |  Expected completion 8/21 |
+| Core-SDK                   | licavalc         | In progress | ➖ |  Working in parallel.Will need https://github.com/dotnet/arcade/issues/3607 to be done before completing. |
+| Core-Setup                 | dleeapho         | Complete | ✔️ | Uses workarounds and skips most validation. Uses custom publish steps. |
 | FSharp                     | brettfo          | Complete | ✔️ | |
-| MSBuild                    | licavalc         | At risk | ❌ |  No ETA yet. Investigation under way. |
+| MSBuild                    | licavalc         | Complete | ✔️ | |
 | Roslyn                     | jaredpar         | Complete | ✔️ |  Complete with source link validation disabled |
-| SDK                        | licavalc         | In progress |  |  Running into issues with signing validation |
+| SDK                        | licavalc         | Complete | ✔️ | |
 | SourceLink                 | tmat             | Complete | ✔️ | |
 | Standard                   | danmose/wigodbe  | Complete | ✔️ | |
 | SymReader                  | tmat             | Complete | ✔️ | |

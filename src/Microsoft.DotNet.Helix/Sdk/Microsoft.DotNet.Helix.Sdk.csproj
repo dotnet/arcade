@@ -1,7 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <VersionPrefix>2.0.0</VersionPrefix>
     <TargetFrameworks>net472;netcoreapp2.1</TargetFrameworks>
     <PackageType>MSBuildSdk</PackageType>
     <LangVersion>latest</LangVersion>

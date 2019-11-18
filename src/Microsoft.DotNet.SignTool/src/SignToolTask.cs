@@ -460,7 +460,7 @@ namespace Microsoft.DotNet.SignTool
 
             if (pkt.Length != 16) return false;
 
-            return pkt.ToLower().All(c => (c >= '0' && c <= '9') || (c >= 'a' && c <= 'z')); ;
+            return pkt.ToLower().All(c => (c >= '0' && c <= '9') || (c >= 'a' && c <= 'z'));
         }
     }
 }

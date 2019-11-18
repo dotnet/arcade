@@ -11,7 +11,7 @@ def get_env(name):
 def batch(iterable, n=1):
     current_batch = []
     for item in iterable:
-        current_batch.append(item)
+        if item is not None : current_batch.append(item)
         if len(current_batch) >= n:
             yield current_batch
             current_batch = []

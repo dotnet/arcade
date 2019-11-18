@@ -1,9 +1,10 @@
-﻿using Microsoft.Build.Framework;
+using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using NuGet.Versioning;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -31,7 +32,14 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
         /// Package index files used to define stable packages.
         /// </summary>
         public ITaskItem[] PackageIndexes { get; set; }
+
+        /// <summary>
+        /// <see langword="true"/> if the result version can be a version from the same release.
+        /// <see langword="false"/> otherwise. Defaults to false.
+        /// </summary>
+        public bool DoNotAllowVersionsFromSameRelease { get; set; }
         
+
         /// <summary>
         /// Latest version from StablePackages for all packages in LatestPackages.
         /// If a version isn't found for an item in LatestPackage that will not be included in this set.
@@ -131,13 +139,12 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
                     Log.LogMessage($"Could not parse version {versionString} for LatestPackage {packageId}, will use latest stable.");
                 }
 
-                var latestVersion = nuGetVersion?.Version;
+                var latestVersion = (DoNotAllowVersionsFromSameRelease) ? VersionUtility.As2PartVersion(nuGetVersion?.Version) : nuGetVersion?.Version;
 
                 PackageInfo info;
                 if (index.Packages.TryGetValue(packageId, out info))
                 {
-                    var candidateVersions = (latestVersion == null) ? info.StableVersions : info.StableVersions.Where(sv => VersionUtility.As4PartVersion(sv) < latestVersion);
-
+                    IEnumerable<Version> candidateVersions = (latestVersion == null) ? info.StableVersions : info.StableVersions.Where(sv => VersionUtility.As4PartVersion(sv) < latestVersion);
                     if (candidateVersions.Any())
                     {
                         lastStablePackages.Add(CreateItem(latestPackage, candidateVersions.Max()));

@@ -1,4 +1,4 @@
-<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
+﻿<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
 <Project Sdk="Microsoft.NET.Sdk">
   <Import Project="$(MSBuildThisFileDirectory)/../Microsoft.SignCheck/ResxWorkaround.props" />
   <PropertyGroup>
@@ -9,6 +9,8 @@
     <Configurations>Release;Debug</Configurations>
     <SignAssembly>false</SignAssembly>
     <IsPackable>true</IsPackable>
+    <!-- Build Tasks should not include any dependencies -->
+    <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
     <Description>Build artifact signing validation tool</Description>
     <PackageTags>Arcade Signing Validation Tool</PackageTags>
     <RootNamespace>SignCheck</RootNamespace>

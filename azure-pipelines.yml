@@ -3,26 +3,20 @@ trigger:
   branches:
     include:
     - master
+    - release/3.x
     
 pr:
   branches:
     include:
     - master
+    - release/3.x
     - templates
   paths:
     exclude:
     - Documentation/*
     
 variables:
-  # Cannot use key:value syntax in root defined variables
-  - name: _TeamName
-    value: DotNetCore
-  - name: _PublishUsingPipelines
-    value: true
-  - name: _DotNetArtifactsCategory
-    value: .NETCore
-  - name: _DotNetValidationArtifactsCategory
-    value: .NETCoreValidation
+- template: eng/common-variables.yml
 
 resources:
   containers:
@@ -35,154 +29,150 @@ stages:
   jobs:
   - template: /eng/common/templates/jobs/jobs.yml
     parameters:
+      artifacts:
+        publish:
+          artifacts: true
+          logs: true
+          manifests: true
       enableMicrobuild: true
-      enablePublishBuildArtifacts: true
-      enablePublishBuildAssets: true
-      enablePublishUsingPipelines: ${{ variables._PublishUsingPipelines }}
-      enableTelemetry: true
+      enablePublishUsingPipelines: true
       graphFileGeneration:
         enabled: true
         includeToolset: true
-      helixRepo: dotnet/arcade
+      workspace:
+        clean: all
       jobs:
       - job: Windows_NT
         timeoutInMinutes: 90
         pool:
-          # For public or PR jobs, use the hosted pool.  For internal jobs use the internal pool.
-          # Will eventually change this to two BYOC pools.
-          ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
+          ${{ if eq(variables._RunAsPublic, True) }}:
             name: NetCorePublic-Pool
             queue: BuildPool.Windows.10.Amd64.VS2017.Open
-          ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
+          ${{ if eq(variables._RunAsInternal, True) }}:
             name: NetCoreInternal-Pool
             queue: BuildPool.Windows.10.Amd64.VS2017
-        variables:
-        - _Script: eng\common\cibuild.cmd
-        - _ValidateSdkArgs: ''
-        - _InternalBuildArgs: ''
-        - HelixApiAccessToken: ''
-
-        # Only enable publishing in non-public, non PR scenarios.
-        - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
-          # DotNet-Blob-Feed provides: dotnetfeed-storage-access-key-1
-          # Publish-Build-Assets provides: MaestroAccessToken, BotAccount-dotnet-maestro-bot-PAT
-          # DotNet-HelixApi-Access provides: HelixApiAccessToken
-          - group: DotNet-Blob-Feed
-          - group: Publish-Build-Assets
-          - group: DotNet-HelixApi-Access
-          - _PublishBlobFeedUrl: https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json
-          - _InternalBuildArgs: /p:DotNetSignType=$(_SignType) /p:TeamName=$(_TeamName)
-              /p:DotNetPublishBlobFeedKey=$(dotnetfeed-storage-access-key-1)
-              /p:DotNetPublishBlobFeedUrl=$(_PublishBlobFeedUrl)
-              /p:DotNetPublishToBlobFeed=$(_DotNetPublishToBlobFeed)
-              /p:DotNetPublishUsingPipelines=$(_PublishUsingPipelines)
-              /p:DotNetArtifactsCategory=$(_DotNetArtifactsCategory)
-              /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
-
         strategy:
           matrix:
             Build_Release:
               _BuildConfig: Release
-              # PRs or external builds are not signed.
-              ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
-                _SignType: test
-                _DotNetPublishToBlobFeed : false
-              ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
-                _SignType: real
-                _DotNetPublishToBlobFeed : true
-                _Script: eng\validate-sdk.cmd
-                _ValidateSdkArgs: -gitHubPat $(BotAccount-dotnet-maestro-bot-PAT) -barToken $(MaestroAccessToken)
-            ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
+            ${{ if eq(variables._RunAsPublic, True) }}:
               Build_Debug:
                 _BuildConfig: Debug
-                _SignType: test
-                _DotNetPublishToBlobFeed : false
-        steps:
+        preSteps:
         - checkout: self
           clean: true
-        # Use utility script to run script command dependent on agent OS.
-        - script: $(_Script)
+        steps:
+        - script: eng\common\cibuild.cmd
             -configuration $(_BuildConfig) 
             -prepareMachine
             $(_InternalBuildArgs)
-            $(_ValidateSdkArgs)
             /p:Test=false
           displayName: Windows Build / Publish
-
-        - powershell: eng\common\build.ps1
-            -configuration $(_BuildConfig) 
-            -prepareMachine
-            -ci
-            -test
-            -projects $(Build.SourcesDirectory)/tests/UnitTests.proj
-            /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.binlog
-          displayName: Run Helix Tests
-          env:
-            SYSTEM_ACCESSTOKEN: $(System.AccessToken)
-            HelixAccessToken: $(HelixApiAccessToken)
-
-        - powershell: eng\common\build.ps1
-            -configuration $(_BuildConfig) 
-            -prepareMachine
-            -ci
-            -test
-            -projects $(Build.SourcesDirectory)/tests/UnitTests.proj
-            /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.binlog
-            /p:HelixBaseUri=https://helix.int-dot.net/
-          displayName: Run Helix Tests (Int)
-          env:
-            SYSTEM_ACCESSTOKEN: $(System.AccessToken)
-            HelixAccessToken: $(HelixApiAccessToken)
-            WorkItemTimeout: 900
-          enabled: false
-
-      - ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
+      - ${{ if eq(variables._RunAsPublic, True) }}:
         - job: Linux
           container: LinuxContainer
           pool:
-            ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
-              name:  NetCorePublic-Pool
-              queue: BuildPool.Ubuntu.1604.Amd64.Open
-            ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
-              name:  NetCoreInternal-Pool
-              queue: BuildPool.Ubuntu.1604.Amd64
-          variables:
-          - HelixApiAccessToken: ''
-          - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
-            - group: DotNet-HelixApi-Access
+            name:  NetCorePublic-Pool
+            queue: BuildPool.Ubuntu.1604.Amd64.Open
           strategy:
             matrix:
               Build_Debug:
                 _BuildConfig: Debug
-                _PublishType: none
-                _SignType: none
-                _DotNetPublishToBlobFeed : false
               Build_Release:
                 _BuildConfig: Release
-                _PublishType: none
-                _SignType: none
-                _DotNetPublishToBlobFeed : false
-          steps:
+          preSteps:
           - checkout: self
             clean: true
+          steps:
           - script: eng/common/cibuild.sh
               --configuration $(_BuildConfig)
               --prepareMachine
               /p:Test=false
             displayName: Unix Build / Publish
+
+- ${{ if eq(variables._RunAsPublic, True) }}:
+  - stage: Test
+    dependsOn: build
+    jobs:
+    - template: /eng/common/templates/jobs/jobs.yml
+      parameters:
+        artifacts:
+          publish:
+            artifacts:
+              name: Artifacts_Test_$(Agent.OS)_$(_BuildConfig)
+            logs: 
+              name: Logs_Test_$(Agent.OS)_$(_BuildConfig)
+          download: true
+        workspace:
+          clean: all
+        jobs:
+        - job: Windows_NT
+          timeoutInMinutes: 90
+          pool:
+            vmimage: windows-latest
+          strategy:
+            matrix:
+              Build_Release:
+                _BuildConfig: Release
+              Build_Debug:
+                _BuildConfig: Debug
+          preSteps:
+          - checkout: self
+            clean: true
+          steps:
+          - powershell: eng\common\build.ps1
+              -configuration $(_BuildConfig) 
+              -prepareMachine
+              -ci
+              -restore
+              -test
+              -projects $(Build.SourcesDirectory)\tests\UnitTests.proj
+              /bl:$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)\Helix.binlog
+              /p:RestoreUsingNuGetTargets=false
+            displayName: Run Helix Tests
+            env:
+              SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+              HelixAccessToken: ''
+        - job: Linux
+          container: LinuxContainer
+          pool:
+            vmimage: ubuntu-latest
+          strategy:
+            matrix:
+              Build_Debug:
+                _BuildConfig: Debug
+              Build_Release:
+                _BuildConfig: Release
+          preSteps:
+          - checkout: self
+            clean: true
+          steps:
           - script: eng/common/build.sh
               --configuration $(_BuildConfig)
               --prepareMachine
               --ci
+              --restore
               --test
               --projects $(Build.SourcesDirectory)/tests/UnitTests.proj
               /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.binlog
+              /p:RestoreUsingNuGetTargets=false
             displayName: Run Helix Tests
             env:
               SYSTEM_ACCESSTOKEN: $(System.AccessToken)
-              HelixAccessToken: $(HelixApiAccessToken)
+              HelixAccessToken: ''
 
-- ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
+- ${{ if eq(variables._RunAsInternal, True) }}:
+  - stage: ValidateSdk
+    displayName: Validate Arcade SDK
+    dependsOn: build
+    jobs:
+    - template: /eng/validate-sdk.yml
+      parameters:
+        buildArgs: -configuration $(_BuildConfig) 
+          -prepareMachine
+          $(_InternalBuildArgs)
+          /p:Test=false
+
   - template: eng\common\templates\post-build\post-build.yml
     parameters:
       # Symbol validation isn't being very reliable lately. This should be enabled back
@@ -191,16 +181,20 @@ stages:
       # Sourcelink validation isn't passing for Arcade due to some regressions. This should be
       # enabled back once this issue is resolved: https://github.com/dotnet/arcade/issues/2912
       enableSourceLinkValidation: false
+      publishDependsOn:
+      - Validate
+      - ValidateSdk
       # This is to enable SDL runs part of Post-Build Validation Stage
       SDLValidationParameters:
         enable: true
+        continueOnError: false
         params: ' -SourceToolsList @("policheck","credscan")
-        -TsaInstanceURL "https://devdiv.visualstudio.com/"
-        -TsaProjectName "DEVDIV"
-        -TsaNotificationEmail "subal@microsoft.com"
-        -TsaCodebaseAdmin "REDMOND\\subal"
-        -TsaBugAreaPath "DevDiv\\NET\\NET Core "
-        -TsaIterationPath "DevDiv"
+        -TsaInstanceURL $(_TsaInstanceURL)
+        -TsaProjectName $(_TsaProjectName)
+        -TsaNotificationEmail $(_TsaNotificationEmail)
+        -TsaCodebaseAdmin $(_TsaCodebaseAdmin)
+        -TsaBugAreaPath $(_TsaBugAreaPath)
+        -TsaIterationPath $(_TsaIterationPath)
         -TsaRepositoryName "Arcade"
         -TsaCodebaseName "Arcade"
         -TsaPublish $True'
