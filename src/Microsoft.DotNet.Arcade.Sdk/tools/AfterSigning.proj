@@ -6,10 +6,7 @@
   <Target Name="Clean" />
   <Target Name="Build" />
   <Target Name="Test" />
-  <Target Name="Pack" >
-    <MSBuild Projects="VisualStudio.InsertionManifests.targets"
-             Targets="GenerateVisualStudioInsertionManifests" />
-  </Target>
+  <Target Name="Pack" />
   <Target Name="IntegrationTest" />
   <Target Name="PerformanceTest" />
 
