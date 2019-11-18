@@ -35,14 +35,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <HelixWorkItem Include="XunitTest">
-      <Command>echo 'done!'</Command>
-      <PayloadDirectory>$(MSBuildThisFileDirectory)Xunit</PayloadDirectory>
-      <Timeout>900</Timeout>
-    </HelixWorkItem>
-  </ItemGroup>
-
-  <ItemGroup>
     <AzurePipelinesExpectedTestFailure Include="HelixReporter.TRXTests.HelixReporter.TRXTests.Fail1"/>
     <AzurePipelinesExpectedTestFailure Include="HelixReporter.TRXTests.HelixReporter.TRX.Fail2"/>
     <AzurePipelinesExpectedTestFailure Include="tests.UnitTest2.ExpectedFailureTheoryTest"/>
@@ -74,7 +66,6 @@
     <HelixTargetQueue Include="Debian.9.Amd64.Open"/>
     <HelixTargetQueue Include="RedHat.7.Amd64.Open"/>
     <HelixTargetQueue Include="Windows.10.Amd64.Open"/>
-    <HelixTargetQueue Include="ubuntu.1604.arm32.open"/>
   </ItemGroup>
 
   <PropertyGroup Condition="!$(HelixTargetQueue.StartsWith('Windows'))">
