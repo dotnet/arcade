@@ -10,6 +10,7 @@
     This is important since the manifest contain hashes of the VSIX files.
   -->
   <Target Name="GenerateVisualStudioInsertionManifests"
+          AfterTargets="Pack"
           Outputs="%(_StubDirs.Identity)"
           Condition="'@(_StubDirs)' != ''">
     <PropertyGroup>
