@@ -46,6 +46,7 @@
   <ItemDefinitionGroup>
     <ProjectToBuild>
       <RestoreInParallel>true</RestoreInParallel>
+      <BuildInParallel>true</BuildInParallel>
     </ProjectToBuild>
   </ItemDefinitionGroup>
 
@@ -229,7 +230,7 @@
              Properties="@(_SolutionBuildProps);__BuildPhase=SolutionBuild;_NETCORE_ENGINEERING_TELEMETRY=Build"
              RemoveProperties="$(_RemoveProps)"
              Targets="@(_SolutionBuildTargets)"
-             BuildInParallel="true"
+             BuildInParallel="%(ProjectToBuild.BuildInParallel)"
              Condition="'@(_SolutionBuildTargets)' != ''" />
 
     <MSBuild Projects="AfterSolutionBuild.proj"
