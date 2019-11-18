@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Net;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
@@ -38,8 +39,13 @@ namespace Microsoft.DotNet.Helix.Client
                 handler = delegated.InnerHandler;
             }
 
+            HttpRequestHeaders oldHeaders = HttpClient?.DefaultRequestHeaders;
             HttpClient?.Dispose();
             HttpClient = new HttpClient(FirstMessageHandler, false);
+            foreach (var header in oldHeaders)
+            {
+                HttpClient.DefaultRequestHeaders.Add(header.Key, header.Value);
+            }
 
             // configure and set retry policy used by ServiceClient<T> HTTP requests
             var retryPolicy = new RetryPolicy<HelixApiServiceClientErrorDetectionStrategy>(new ExponentialBackoffRetryStrategy(
