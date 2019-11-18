@@ -22,6 +22,11 @@ namespace Microsoft.DotNet.Helix.Client
             TimeSpan DefaultMinBackoff = new TimeSpan(0, 0, 1);
 
             // The retry thing is causes connection leaks, remove it
+            while (FirstMessageHandler is RetryAfterDelegatingHandler inner)
+            {
+                FirstMessageHandler = inner.InnerHandler;
+            }
+            
             HttpMessageHandler handler = FirstMessageHandler;
             while (handler is DelegatingHandler delegated)
             {
@@ -34,7 +39,7 @@ namespace Microsoft.DotNet.Helix.Client
             }
 
             HttpClient?.Dispose();
-            HttpClient = new HttpClient(handler, false);
+            HttpClient = new HttpClient(FirstMessageHandler, false);
 
             // configure and set retry policy used by ServiceClient<T> HTTP requests
             var retryPolicy = new RetryPolicy<HelixApiServiceClientErrorDetectionStrategy>(new ExponentialBackoffRetryStrategy(
