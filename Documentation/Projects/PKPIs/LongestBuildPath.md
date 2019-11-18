@@ -24,7 +24,7 @@ This graph will be a bar graph and display two measurements: the best case measu
 
 ![LongestBuildPathStacked](./lbp-stacked.png)
 
-![LongestBuildPathBreakdown](./lbp-bd.png)
+![LongestBuildPathBreakdown](./lbp-breakdown.png)
 
 ### Longest Build Path time over time
 
