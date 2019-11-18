@@ -5,6 +5,7 @@ using System.Net.Http;
 using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Rest;
 using Microsoft.Rest.TransientFaultHandling;
 using Newtonsoft.Json.Linq;
 
@@ -19,6 +20,21 @@ namespace Microsoft.DotNet.Helix.Client
             TimeSpan DefaultBackoffDelta = new TimeSpan(0, 0, 10);
             TimeSpan DefaultMaxBackoff = new TimeSpan(0, 0, 10);
             TimeSpan DefaultMinBackoff = new TimeSpan(0, 0, 1);
+
+            // The retry thing is causes connection leaks, remove it
+            HttpMessageHandler handler = FirstMessageHandler;
+            while (handler is DelegatingHandler delegated)
+            {
+                if (delegated.InnerHandler is RetryAfterDelegatingHandler inner)
+                {
+                    delegated.InnerHandler = inner.InnerHandler;
+                }
+
+                handler = delegated.InnerHandler;
+            }
+
+            HttpClient?.Dispose();
+            HttpClient = new HttpClient(handler, false);
 
             // configure and set retry policy used by ServiceClient<T> HTTP requests
             var retryPolicy = new RetryPolicy<HelixApiServiceClientErrorDetectionStrategy>(new ExponentialBackoffRetryStrategy(
