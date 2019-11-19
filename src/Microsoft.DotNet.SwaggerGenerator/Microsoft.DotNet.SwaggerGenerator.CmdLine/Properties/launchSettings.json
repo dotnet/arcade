@@ -2,7 +2,7 @@
   "profiles": {
     "Microsoft.DotNet.SwaggerGenerator.CmdLine": {
       "commandName": "Project",
-      "commandLineArgs": "-i https://helix.dot.net/swagger/docs -n Microsoft.DotNet.Helix.Client -o E:\\dotnet\\arcade\\src\\Microsoft.DotNet.Helix\\Client\\CSharp\\generated-code -l csharp -c HelixApi"
+      "commandLineArgs": "-i https://helix.dot.net/swagger/docs -n Microsoft.DotNet.Helix.Client -o ..\\..\\Microsoft.DotNet.Helix\\Client\\CSharp\\generated-code -l csharp -c HelixApi"
     }
   }
 }
