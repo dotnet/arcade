@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
+<Project>
+
+  <Target Name="RunOnlyBestConfiguration" BeforeTargets="DispatchToInnerBuilds">
+    <ItemGroup>
+      <!-- Emptying the list -->
+      <_InnerBuildProjects Remove="@(_InnerBuildProjects)" />
+      <!-- Run a task here to get the best configuration and then set all the items again. Currently Hardcoding to one -->
+    </ItemGroup>
+    <PropertyGroup>
+      <BestTfm>netcoreapp2.2</BestTfm>
+    </PropertyGroup>
+    <ItemGroup>
+      <_InnerBuildProjects Include="$(MSBuildProjectFile)">
+        <AdditionalProperties>TargetFramework=$(BestTfm)</AdditionalProperties>
+      </_InnerBuildProjects>
+    </ItemGroup>
+  </Target>
+  
+
+  <Target Name="StripOsGroupFromTargetFrameworks" BeforeTargets="CollectPackageReferences">
+    <ItemGroup>
+      <_t1 Include="$(TargetFrameworks)" />
+      <_t1 Length="$([System.String]::new('%(Identity)').IndexOf('-'))"/>
+      <_t1 Condition="'%(Length)' == '-1'" Length="$([System.String]::new('%(Identity)').Length)"/>
+      <_t2 Include="$([System.String]::new('%(_t1.Identity)').Substring(0, '%(_t1.Length)'))" />
+    </ItemGroup>
+    
+    <PropertyGroup>
+      <TargetFrameworks>@(_t2->Distinct())</TargetFrameworks>
+    </PropertyGroup>
+  </Target>
+
+  <Target Name="AttachOsGroupFromTargetFrameworks" AfterTargets="Restore">    
+    <PropertyGroup>
+      <TargetFrameworks>$(OriginalTargetFrameworks)</TargetFrameworks>
+    </PropertyGroup>
+  </Target>
+</Project>
