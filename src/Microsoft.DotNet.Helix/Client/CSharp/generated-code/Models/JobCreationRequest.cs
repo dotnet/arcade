@@ -62,7 +62,7 @@ namespace Microsoft.DotNet.Helix.Client.Models
                 {
                     return false;
                 }
-                if (Properties == default)
+                if (Properties == default(IImmutableDictionary<string, string>))
                 {
                     return false;
                 }

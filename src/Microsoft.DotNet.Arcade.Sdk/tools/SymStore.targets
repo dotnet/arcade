@@ -19,7 +19,7 @@
     </MSBuild>
   </Target>
 
-  <Target Name="_InnerDeployToSymStore" DependsOnTargets="CoreCompile;_InnerDeployToSymStoreSetProperties;_DeployPortableSymbolsToSymStore;_DeployWindowsSymbolsToSymStore" />
+  <Target Name="_InnerDeployToSymStore" DependsOnTargets="Build;_InnerDeployToSymStoreSetProperties;_DeployPortableSymbolsToSymStore;_DeployWindowsSymbolsToSymStore" />
     
   <Target Name="_InnerDeployToSymStoreSetProperties">
     <PropertyGroup>
