@@ -16,10 +16,7 @@ namespace Microsoft.DotNet.Helix.Client
 
             for (;; await Task.Delay(pollingIntervalMs, cancellationToken).ConfigureAwait(false)) // delay every time this loop repeats
             {
-                var pf = await Client.RetryAsync(
-                    () => PassFailAsync(jobCorrelationId, cancellationToken), 
-                    e => { },
-                    cancellationToken).ConfigureAwait(false);
+                var pf = await PassFailAsync(jobCorrelationId, cancellationToken).ConfigureAwait(false);
                 if (pf.Working == 0 && pf.Total != 0)
                 {
                     return pf;

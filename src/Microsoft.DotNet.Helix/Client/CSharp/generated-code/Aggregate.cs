@@ -1,12 +1,11 @@
 using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Net.Http;
-using System.Net.Http.Headers;
+using System.IO;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Rest;
+using Azure;
+using Azure.Core;
 using Microsoft.DotNet.Helix.Client.Models;
 
 namespace Microsoft.DotNet.Helix.Client
@@ -138,52 +137,12 @@ namespace Microsoft.DotNet.Helix.Client
             CancellationToken cancellationToken = default
         )
         {
-            using (var _res = await AnalysisSummaryInternalAsync(
-                groupBy,
-                otherProperties,
-                workitem,
-                filterBuild,
-                filterCreator,
-                filterName,
-                filterSource,
-                filterType,
-                cancellationToken
-            ).ConfigureAwait(false))
-            {
-                return _res.Body;
-            }
-        }
-
-        internal async Task OnAnalysisSummaryFailed(HttpRequestMessage req, HttpResponseMessage res)
-        {
-            var content = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
-            var ex = new RestApiException(
-                new HttpRequestMessageWrapper(req, null),
-                new HttpResponseMessageWrapper(res, content));
-            HandleFailedAnalysisSummaryRequest(ex);
-            HandleFailedRequest(ex);
-            Client.OnFailedRequest(ex);
-            throw ex;
-        }
-
-        internal async Task<HttpOperationResponse<AggregateWorkItemSummary>> AnalysisSummaryInternalAsync(
-            IImmutableList<string> groupBy,
-            IImmutableList<string> otherProperties,
-            string workitem,
-            string filterBuild = default,
-            string filterCreator = default,
-            string filterName = default,
-            string filterSource = default,
-            string filterType = default,
-            CancellationToken cancellationToken = default
-        )
-        {
-            if (groupBy == default)
+            if (groupBy == default(IImmutableList<string>))
             {
                 throw new ArgumentNullException(nameof(groupBy));
             }
 
-            if (otherProperties == default)
+            if (otherProperties == default(IImmutableList<string>))
             {
                 throw new ArgumentNullException(nameof(otherProperties));
             }
@@ -194,83 +153,99 @@ namespace Microsoft.DotNet.Helix.Client
             }
 
 
-            var _path = "/api/2019-06-17/aggregate/analysis";
+            var _baseUri = Client.Options.BaseUri;
+            var _url = new RequestUriBuilder();
+            _url.Reset(_baseUri);
+            _url.AppendPath(
+                "/api/2019-06-17/aggregate/analysis",
+                false);
 
-            var _query = new QueryBuilder();
             if (!string.IsNullOrEmpty(workitem))
             {
-                _query.Add("workitem", Client.Serialize(workitem));
+                _url.AppendQuery("workitem", Client.Serialize(workitem));
             }
-            if (groupBy != default)
+            if (groupBy != default(IImmutableList<string>))
             {
                 foreach (var _item in groupBy)
                 {
-                    _query.Add("groupBy", Client.Serialize(_item));
+                    _url.AppendQuery("groupBy", Client.Serialize(_item));
                 }
             }
-            if (otherProperties != default)
+            if (otherProperties != default(IImmutableList<string>))
             {
                 foreach (var _item in otherProperties)
                 {
-                    _query.Add("otherProperties", Client.Serialize(_item));
+                    _url.AppendQuery("otherProperties", Client.Serialize(_item));
                 }
             }
             if (!string.IsNullOrEmpty(filterCreator))
             {
-                _query.Add("filter.creator", Client.Serialize(filterCreator));
+                _url.AppendQuery("filter.creator", Client.Serialize(filterCreator));
             }
             if (!string.IsNullOrEmpty(filterSource))
             {
-                _query.Add("filter.source", Client.Serialize(filterSource));
+                _url.AppendQuery("filter.source", Client.Serialize(filterSource));
             }
             if (!string.IsNullOrEmpty(filterType))
             {
-                _query.Add("filter.type", Client.Serialize(filterType));
+                _url.AppendQuery("filter.type", Client.Serialize(filterType));
             }
             if (!string.IsNullOrEmpty(filterBuild))
             {
-                _query.Add("filter.build", Client.Serialize(filterBuild));
+                _url.AppendQuery("filter.build", Client.Serialize(filterBuild));
             }
             if (!string.IsNullOrEmpty(filterName))
             {
-                _query.Add("filter.name", Client.Serialize(filterName));
+                _url.AppendQuery("filter.name", Client.Serialize(filterName));
             }
 
-            var _uriBuilder = new UriBuilder(Client.BaseUri);
-            _uriBuilder.Path = _uriBuilder.Path.TrimEnd('/') + _path;
-            _uriBuilder.Query = _query.ToString();
-            var _url = _uriBuilder.Uri;
 
-            HttpRequestMessage _req = null;
-            HttpResponseMessage _res = null;
-            try
+            using (var _req = Client.Pipeline.CreateRequest())
             {
-                _req = new HttpRequestMessage(HttpMethod.Get, _url);
+                _req.Uri = _url;
+                _req.Method = RequestMethod.Get;
 
-                if (Client.Credentials != null)
+                using (var _res = await Client.SendAsync(_req, cancellationToken).ConfigureAwait(false))
                 {
-                    await Client.Credentials.ProcessHttpRequestAsync(_req, cancellationToken).ConfigureAwait(false);
-                }
+                    if (_res.Status < 200 || _res.Status >= 300)
+                    {
+                        await OnAnalysisSummaryFailed(_req, _res).ConfigureAwait(false);
+                    }
 
-                _res = await Client.SendAsync(_req, cancellationToken).ConfigureAwait(false);
-                if (!_res.IsSuccessStatusCode)
-                {
-                    await OnAnalysisSummaryFailed(_req, _res);
+                    if (_res.ContentStream == null)
+                    {
+                        await OnAnalysisSummaryFailed(_req, _res).ConfigureAwait(false);
+                    }
+
+                    using (var _reader = new StreamReader(_res.ContentStream))
+                    {
+                        var _content = await _reader.ReadToEndAsync().ConfigureAwait(false);
+                        var _body = Client.Deserialize<AggregateWorkItemSummary>(_content);
+                        return _body;
+                    }
                 }
-                string _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
-                return new HttpOperationResponse<AggregateWorkItemSummary>
-                {
-                    Request = _req,
-                    Response = _res,
-                    Body = Client.Deserialize<AggregateWorkItemSummary>(_responseContent),
-                };
             }
-            catch (Exception)
+        }
+
+        internal async Task OnAnalysisSummaryFailed(Request req, Response res)
+        {
+            string content = null;
+            if (res.ContentStream != null)
             {
-                _req?.Dispose();
-                _res?.Dispose();
-                throw;
+                using (var reader = new StreamReader(res.ContentStream))
+                {
+                    content = await reader.ReadToEndAsync().ConfigureAwait(false);
+                }
             }
+
+            var ex = new RestApiException(
+                req,
+                res,
+                content);
+            HandleFailedAnalysisSummaryRequest(ex);
+            HandleFailedRequest(ex);
+            Client.OnFailedRequest(ex);
+            throw ex;
         }
 
         partial void HandleFailedBuildHistoryRequest(RestApiException ex);
@@ -281,98 +256,86 @@ namespace Microsoft.DotNet.Helix.Client
             CancellationToken cancellationToken = default
         )
         {
-            using (var _res = await BuildHistoryInternalAsync(
-                source,
-                type,
-                cancellationToken
-            ).ConfigureAwait(false))
-            {
-                return _res.Body;
-            }
-        }
-
-        internal async Task OnBuildHistoryFailed(HttpRequestMessage req, HttpResponseMessage res)
-        {
-            var content = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
-            var ex = new RestApiException(
-                new HttpRequestMessageWrapper(req, null),
-                new HttpResponseMessageWrapper(res, content));
-            HandleFailedBuildHistoryRequest(ex);
-            HandleFailedRequest(ex);
-            Client.OnFailedRequest(ex);
-            throw ex;
-        }
-
-        internal async Task<HttpOperationResponse<IImmutableList<BuildHistoryItem>>> BuildHistoryInternalAsync(
-            IImmutableList<string> source,
-            IImmutableList<string> type,
-            CancellationToken cancellationToken = default
-        )
-        {
-            if (source == default)
+            if (source == default(IImmutableList<string>))
             {
                 throw new ArgumentNullException(nameof(source));
             }
 
-            if (type == default)
+            if (type == default(IImmutableList<string>))
             {
                 throw new ArgumentNullException(nameof(type));
             }
 
 
-            var _path = "/api/2019-06-17/aggregate/build/history";
+            var _baseUri = Client.Options.BaseUri;
+            var _url = new RequestUriBuilder();
+            _url.Reset(_baseUri);
+            _url.AppendPath(
+                "/api/2019-06-17/aggregate/build/history",
+                false);
 
-            var _query = new QueryBuilder();
-            if (source != default)
+            if (source != default(IImmutableList<string>))
             {
                 foreach (var _item in source)
                 {
-                    _query.Add("source", Client.Serialize(_item));
+                    _url.AppendQuery("source", Client.Serialize(_item));
                 }
             }
-            if (type != default)
+            if (type != default(IImmutableList<string>))
             {
                 foreach (var _item in type)
                 {
-                    _query.Add("type", Client.Serialize(_item));
+                    _url.AppendQuery("type", Client.Serialize(_item));
                 }
             }
 
-            var _uriBuilder = new UriBuilder(Client.BaseUri);
-            _uriBuilder.Path = _uriBuilder.Path.TrimEnd('/') + _path;
-            _uriBuilder.Query = _query.ToString();
-            var _url = _uriBuilder.Uri;
 
-            HttpRequestMessage _req = null;
-            HttpResponseMessage _res = null;
-            try
+            using (var _req = Client.Pipeline.CreateRequest())
             {
-                _req = new HttpRequestMessage(HttpMethod.Get, _url);
+                _req.Uri = _url;
+                _req.Method = RequestMethod.Get;
 
-                if (Client.Credentials != null)
+                using (var _res = await Client.SendAsync(_req, cancellationToken).ConfigureAwait(false))
                 {
-                    await Client.Credentials.ProcessHttpRequestAsync(_req, cancellationToken).ConfigureAwait(false);
-                }
+                    if (_res.Status < 200 || _res.Status >= 300)
+                    {
+                        await OnBuildHistoryFailed(_req, _res).ConfigureAwait(false);
+                    }
 
-                _res = await Client.SendAsync(_req, cancellationToken).ConfigureAwait(false);
-                if (!_res.IsSuccessStatusCode)
-                {
-                    await OnBuildHistoryFailed(_req, _res);
+                    if (_res.ContentStream == null)
+                    {
+                        await OnBuildHistoryFailed(_req, _res).ConfigureAwait(false);
+                    }
+
+                    using (var _reader = new StreamReader(_res.ContentStream))
+                    {
+                        var _content = await _reader.ReadToEndAsync().ConfigureAwait(false);
+                        var _body = Client.Deserialize<IImmutableList<BuildHistoryItem>>(_content);
+                        return _body;
+                    }
                 }
-                string _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
-                return new HttpOperationResponse<IImmutableList<BuildHistoryItem>>
-                {
-                    Request = _req,
-                    Response = _res,
-                    Body = Client.Deserialize<IImmutableList<BuildHistoryItem>>(_responseContent),
-                };
             }
-            catch (Exception)
+        }
+
+        internal async Task OnBuildHistoryFailed(Request req, Response res)
+        {
+            string content = null;
+            if (res.ContentStream != null)
             {
-                _req?.Dispose();
-                _res?.Dispose();
-                throw;
+                using (var reader = new StreamReader(res.ContentStream))
+                {
+                    content = await reader.ReadToEndAsync().ConfigureAwait(false);
+                }
             }
+
+            var ex = new RestApiException(
+                req,
+                res,
+                content);
+            HandleFailedBuildHistoryRequest(ex);
+            HandleFailedRequest(ex);
+            Client.OnFailedRequest(ex);
+            throw ex;
         }
 
         partial void HandleFailedBuildRequest(RestApiException ex);
@@ -384,109 +347,95 @@ namespace Microsoft.DotNet.Helix.Client
             CancellationToken cancellationToken = default
         )
         {
-            using (var _res = await BuildInternalAsync(
-                buildNumber,
-                sources,
-                types,
-                cancellationToken
-            ).ConfigureAwait(false))
-            {
-                return _res.Body;
-            }
-        }
-
-        internal async Task OnBuildFailed(HttpRequestMessage req, HttpResponseMessage res)
-        {
-            var content = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
-            var ex = new RestApiException(
-                new HttpRequestMessageWrapper(req, null),
-                new HttpResponseMessageWrapper(res, content));
-            HandleFailedBuildRequest(ex);
-            HandleFailedRequest(ex);
-            Client.OnFailedRequest(ex);
-            throw ex;
-        }
-
-        internal async Task<HttpOperationResponse<BuildAggregation>> BuildInternalAsync(
-            string buildNumber,
-            IImmutableList<string> sources,
-            IImmutableList<string> types,
-            CancellationToken cancellationToken = default
-        )
-        {
             if (string.IsNullOrEmpty(buildNumber))
             {
                 throw new ArgumentNullException(nameof(buildNumber));
             }
 
-            if (sources == default)
+            if (sources == default(IImmutableList<string>))
             {
                 throw new ArgumentNullException(nameof(sources));
             }
 
-            if (types == default)
+            if (types == default(IImmutableList<string>))
             {
                 throw new ArgumentNullException(nameof(types));
             }
 
 
-            var _path = "/api/2019-06-17/aggregate/build";
+            var _baseUri = Client.Options.BaseUri;
+            var _url = new RequestUriBuilder();
+            _url.Reset(_baseUri);
+            _url.AppendPath(
+                "/api/2019-06-17/aggregate/build",
+                false);
 
-            var _query = new QueryBuilder();
-            if (sources != default)
+            if (sources != default(IImmutableList<string>))
             {
                 foreach (var _item in sources)
                 {
-                    _query.Add("sources", Client.Serialize(_item));
+                    _url.AppendQuery("sources", Client.Serialize(_item));
                 }
             }
-            if (types != default)
+            if (types != default(IImmutableList<string>))
             {
                 foreach (var _item in types)
                 {
-                    _query.Add("types", Client.Serialize(_item));
+                    _url.AppendQuery("types", Client.Serialize(_item));
                 }
             }
             if (!string.IsNullOrEmpty(buildNumber))
             {
-                _query.Add("buildNumber", Client.Serialize(buildNumber));
+                _url.AppendQuery("buildNumber", Client.Serialize(buildNumber));
             }
 
-            var _uriBuilder = new UriBuilder(Client.BaseUri);
-            _uriBuilder.Path = _uriBuilder.Path.TrimEnd('/') + _path;
-            _uriBuilder.Query = _query.ToString();
-            var _url = _uriBuilder.Uri;
 
-            HttpRequestMessage _req = null;
-            HttpResponseMessage _res = null;
-            try
+            using (var _req = Client.Pipeline.CreateRequest())
             {
-                _req = new HttpRequestMessage(HttpMethod.Get, _url);
+                _req.Uri = _url;
+                _req.Method = RequestMethod.Get;
 
-                if (Client.Credentials != null)
+                using (var _res = await Client.SendAsync(_req, cancellationToken).ConfigureAwait(false))
                 {
-                    await Client.Credentials.ProcessHttpRequestAsync(_req, cancellationToken).ConfigureAwait(false);
-                }
+                    if (_res.Status < 200 || _res.Status >= 300)
+                    {
+                        await OnBuildFailed(_req, _res).ConfigureAwait(false);
+                    }
 
-                _res = await Client.SendAsync(_req, cancellationToken).ConfigureAwait(false);
-                if (!_res.IsSuccessStatusCode)
-                {
-                    await OnBuildFailed(_req, _res);
+                    if (_res.ContentStream == null)
+                    {
+                        await OnBuildFailed(_req, _res).ConfigureAwait(false);
+                    }
+
+                    using (var _reader = new StreamReader(_res.ContentStream))
+                    {
+                        var _content = await _reader.ReadToEndAsync().ConfigureAwait(false);
+                        var _body = Client.Deserialize<BuildAggregation>(_content);
+                        return _body;
+                    }
                 }
-                string _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
-                return new HttpOperationResponse<BuildAggregation>
-                {
-                    Request = _req,
-                    Response = _res,
-                    Body = Client.Deserialize<BuildAggregation>(_responseContent),
-                };
             }
-            catch (Exception)
+        }
+
+        internal async Task OnBuildFailed(Request req, Response res)
+        {
+            string content = null;
+            if (res.ContentStream != null)
             {
-                _req?.Dispose();
-                _res?.Dispose();
-                throw;
+                using (var reader = new StreamReader(res.ContentStream))
+                {
+                    content = await reader.ReadToEndAsync().ConfigureAwait(false);
+                }
             }
+
+            var ex = new RestApiException(
+                req,
+                res,
+                content);
+            HandleFailedBuildRequest(ex);
+            HandleFailedRequest(ex);
+            Client.OnFailedRequest(ex);
+            throw ex;
         }
 
         partial void HandleFailedJobSummaryRequest(RestApiException ex);
@@ -502,125 +451,103 @@ namespace Microsoft.DotNet.Helix.Client
             CancellationToken cancellationToken = default
         )
         {
-            using (var _res = await JobSummaryInternalAsync(
-                groupBy,
-                maxResultSets,
-                filterBuild,
-                filterCreator,
-                filterName,
-                filterSource,
-                filterType,
-                cancellationToken
-            ).ConfigureAwait(false))
-            {
-                return _res.Body;
-            }
-        }
-
-        internal async Task OnJobSummaryFailed(HttpRequestMessage req, HttpResponseMessage res)
-        {
-            var content = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
-            var ex = new RestApiException(
-                new HttpRequestMessageWrapper(req, null),
-                new HttpResponseMessageWrapper(res, content));
-            HandleFailedJobSummaryRequest(ex);
-            HandleFailedRequest(ex);
-            Client.OnFailedRequest(ex);
-            throw ex;
-        }
-
-        internal async Task<HttpOperationResponse<IImmutableList<AggregatedWorkItemCounts>>> JobSummaryInternalAsync(
-            IImmutableList<string> groupBy,
-            int maxResultSets,
-            string filterBuild = default,
-            string filterCreator = default,
-            string filterName = default,
-            string filterSource = default,
-            string filterType = default,
-            CancellationToken cancellationToken = default
-        )
-        {
-            if (groupBy == default)
+            if (groupBy == default(IImmutableList<string>))
             {
                 throw new ArgumentNullException(nameof(groupBy));
             }
 
-            if (maxResultSets == default)
+            if (maxResultSets == default(int))
             {
                 throw new ArgumentNullException(nameof(maxResultSets));
             }
 
 
-            var _path = "/api/2019-06-17/aggregate/jobs";
+            var _baseUri = Client.Options.BaseUri;
+            var _url = new RequestUriBuilder();
+            _url.Reset(_baseUri);
+            _url.AppendPath(
+                "/api/2019-06-17/aggregate/jobs",
+                false);
 
-            var _query = new QueryBuilder();
-            if (groupBy != default)
+            if (groupBy != default(IImmutableList<string>))
             {
                 foreach (var _item in groupBy)
                 {
-                    _query.Add("groupBy", Client.Serialize(_item));
+                    _url.AppendQuery("groupBy", Client.Serialize(_item));
                 }
             }
-            if (maxResultSets != default)
+            if (maxResultSets != default(int))
             {
-                _query.Add("maxResultSets", Client.Serialize(maxResultSets));
+                _url.AppendQuery("maxResultSets", Client.Serialize(maxResultSets));
             }
             if (!string.IsNullOrEmpty(filterCreator))
             {
-                _query.Add("filter.creator", Client.Serialize(filterCreator));
+                _url.AppendQuery("filter.creator", Client.Serialize(filterCreator));
             }
             if (!string.IsNullOrEmpty(filterSource))
             {
-                _query.Add("filter.source", Client.Serialize(filterSource));
+                _url.AppendQuery("filter.source", Client.Serialize(filterSource));
             }
             if (!string.IsNullOrEmpty(filterType))
             {
-                _query.Add("filter.type", Client.Serialize(filterType));
+                _url.AppendQuery("filter.type", Client.Serialize(filterType));
             }
             if (!string.IsNullOrEmpty(filterBuild))
             {
-                _query.Add("filter.build", Client.Serialize(filterBuild));
+                _url.AppendQuery("filter.build", Client.Serialize(filterBuild));
             }
             if (!string.IsNullOrEmpty(filterName))
             {
-                _query.Add("filter.name", Client.Serialize(filterName));
+                _url.AppendQuery("filter.name", Client.Serialize(filterName));
             }
 
-            var _uriBuilder = new UriBuilder(Client.BaseUri);
-            _uriBuilder.Path = _uriBuilder.Path.TrimEnd('/') + _path;
-            _uriBuilder.Query = _query.ToString();
-            var _url = _uriBuilder.Uri;
 
-            HttpRequestMessage _req = null;
-            HttpResponseMessage _res = null;
-            try
+            using (var _req = Client.Pipeline.CreateRequest())
             {
-                _req = new HttpRequestMessage(HttpMethod.Get, _url);
+                _req.Uri = _url;
+                _req.Method = RequestMethod.Get;
 
-                if (Client.Credentials != null)
+                using (var _res = await Client.SendAsync(_req, cancellationToken).ConfigureAwait(false))
                 {
-                    await Client.Credentials.ProcessHttpRequestAsync(_req, cancellationToken).ConfigureAwait(false);
-                }
+                    if (_res.Status < 200 || _res.Status >= 300)
+                    {
+                        await OnJobSummaryFailed(_req, _res).ConfigureAwait(false);
+                    }
 
-                _res = await Client.SendAsync(_req, cancellationToken).ConfigureAwait(false);
-                if (!_res.IsSuccessStatusCode)
-                {
-                    await OnJobSummaryFailed(_req, _res);
+                    if (_res.ContentStream == null)
+                    {
+                        await OnJobSummaryFailed(_req, _res).ConfigureAwait(false);
+                    }
+
+                    using (var _reader = new StreamReader(_res.ContentStream))
+                    {
+                        var _content = await _reader.ReadToEndAsync().ConfigureAwait(false);
+                        var _body = Client.Deserialize<IImmutableList<AggregatedWorkItemCounts>>(_content);
+                        return _body;
+                    }
                 }
-                string _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
-                return new HttpOperationResponse<IImmutableList<AggregatedWorkItemCounts>>
-                {
-                    Request = _req,
-                    Response = _res,
-                    Body = Client.Deserialize<IImmutableList<AggregatedWorkItemCounts>>(_responseContent),
-                };
             }
-            catch (Exception)
+        }
+
+        internal async Task OnJobSummaryFailed(Request req, Response res)
+        {
+            string content = null;
+            if (res.ContentStream != null)
             {
-                _req?.Dispose();
-                _res?.Dispose();
-                throw;
+                using (var reader = new StreamReader(res.ContentStream))
+                {
+                    content = await reader.ReadToEndAsync().ConfigureAwait(false);
+                }
             }
+
+            var ex = new RestApiException(
+                req,
+                res,
+                content);
+            HandleFailedJobSummaryRequest(ex);
+            HandleFailedRequest(ex);
+            Client.OnFailedRequest(ex);
+            throw ex;
         }
 
         partial void HandleFailedWorkItemSummaryRequest(RestApiException ex);
@@ -635,157 +562,99 @@ namespace Microsoft.DotNet.Helix.Client
             CancellationToken cancellationToken = default
         )
         {
-            using (var _res = await WorkItemSummaryInternalAsync(
-                groupBy,
-                filterBuild,
-                filterCreator,
-                filterName,
-                filterSource,
-                filterType,
-                cancellationToken
-            ).ConfigureAwait(false))
+            if (groupBy == default(IImmutableList<string>))
             {
-                return _res.Body;
+                throw new ArgumentNullException(nameof(groupBy));
+            }
+
+
+            var _baseUri = Client.Options.BaseUri;
+            var _url = new RequestUriBuilder();
+            _url.Reset(_baseUri);
+            _url.AppendPath(
+                "/api/2019-06-17/aggregate/workitems",
+                false);
+
+            if (groupBy != default(IImmutableList<string>))
+            {
+                foreach (var _item in groupBy)
+                {
+                    _url.AppendQuery("groupBy", Client.Serialize(_item));
+                }
+            }
+            if (!string.IsNullOrEmpty(filterCreator))
+            {
+                _url.AppendQuery("filter.creator", Client.Serialize(filterCreator));
+            }
+            if (!string.IsNullOrEmpty(filterSource))
+            {
+                _url.AppendQuery("filter.source", Client.Serialize(filterSource));
+            }
+            if (!string.IsNullOrEmpty(filterType))
+            {
+                _url.AppendQuery("filter.type", Client.Serialize(filterType));
+            }
+            if (!string.IsNullOrEmpty(filterBuild))
+            {
+                _url.AppendQuery("filter.build", Client.Serialize(filterBuild));
+            }
+            if (!string.IsNullOrEmpty(filterName))
+            {
+                _url.AppendQuery("filter.name", Client.Serialize(filterName));
+            }
+
+
+            using (var _req = Client.Pipeline.CreateRequest())
+            {
+                _req.Uri = _url;
+                _req.Method = RequestMethod.Get;
+
+                using (var _res = await Client.SendAsync(_req, cancellationToken).ConfigureAwait(false))
+                {
+                    if (_res.Status < 200 || _res.Status >= 300)
+                    {
+                        await OnWorkItemSummaryFailed(_req, _res).ConfigureAwait(false);
+                    }
+
+                    if (_res.ContentStream == null)
+                    {
+                        await OnWorkItemSummaryFailed(_req, _res).ConfigureAwait(false);
+                    }
+
+                    using (var _reader = new StreamReader(_res.ContentStream))
+                    {
+                        var _content = await _reader.ReadToEndAsync().ConfigureAwait(false);
+                        var _body = Client.Deserialize<IImmutableList<AggregatedWorkItemCounts>>(_content);
+                        return _body;
+                    }
+                }
             }
         }
 
-        internal async Task OnWorkItemSummaryFailed(HttpRequestMessage req, HttpResponseMessage res)
+        internal async Task OnWorkItemSummaryFailed(Request req, Response res)
         {
-            var content = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
+            string content = null;
+            if (res.ContentStream != null)
+            {
+                using (var reader = new StreamReader(res.ContentStream))
+                {
+                    content = await reader.ReadToEndAsync().ConfigureAwait(false);
+                }
+            }
+
             var ex = new RestApiException(
-                new HttpRequestMessageWrapper(req, null),
-                new HttpResponseMessageWrapper(res, content));
+                req,
+                res,
+                content);
             HandleFailedWorkItemSummaryRequest(ex);
             HandleFailedRequest(ex);
             Client.OnFailedRequest(ex);
             throw ex;
         }
 
-        internal async Task<HttpOperationResponse<IImmutableList<AggregatedWorkItemCounts>>> WorkItemSummaryInternalAsync(
-            IImmutableList<string> groupBy,
-            string filterBuild = default,
-            string filterCreator = default,
-            string filterName = default,
-            string filterSource = default,
-            string filterType = default,
-            CancellationToken cancellationToken = default
-        )
-        {
-            if (groupBy == default)
-            {
-                throw new ArgumentNullException(nameof(groupBy));
-            }
-
-
-            var _path = "/api/2019-06-17/aggregate/workitems";
-
-            var _query = new QueryBuilder();
-            if (groupBy != default)
-            {
-                foreach (var _item in groupBy)
-                {
-                    _query.Add("groupBy", Client.Serialize(_item));
-                }
-            }
-            if (!string.IsNullOrEmpty(filterCreator))
-            {
-                _query.Add("filter.creator", Client.Serialize(filterCreator));
-            }
-            if (!string.IsNullOrEmpty(filterSource))
-            {
-                _query.Add("filter.source", Client.Serialize(filterSource));
-            }
-            if (!string.IsNullOrEmpty(filterType))
-            {
-                _query.Add("filter.type", Client.Serialize(filterType));
-            }
-            if (!string.IsNullOrEmpty(filterBuild))
-            {
-                _query.Add("filter.build", Client.Serialize(filterBuild));
-            }
-            if (!string.IsNullOrEmpty(filterName))
-            {
-                _query.Add("filter.name", Client.Serialize(filterName));
-            }
-
-            var _uriBuilder = new UriBuilder(Client.BaseUri);
-            _uriBuilder.Path = _uriBuilder.Path.TrimEnd('/') + _path;
-            _uriBuilder.Query = _query.ToString();
-            var _url = _uriBuilder.Uri;
-
-            HttpRequestMessage _req = null;
-            HttpResponseMessage _res = null;
-            try
-            {
-                _req = new HttpRequestMessage(HttpMethod.Get, _url);
-
-                if (Client.Credentials != null)
-                {
-                    await Client.Credentials.ProcessHttpRequestAsync(_req, cancellationToken).ConfigureAwait(false);
-                }
-
-                _res = await Client.SendAsync(_req, cancellationToken).ConfigureAwait(false);
-                if (!_res.IsSuccessStatusCode)
-                {
-                    await OnWorkItemSummaryFailed(_req, _res);
-                }
-                string _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
-                return new HttpOperationResponse<IImmutableList<AggregatedWorkItemCounts>>
-                {
-                    Request = _req,
-                    Response = _res,
-                    Body = Client.Deserialize<IImmutableList<AggregatedWorkItemCounts>>(_responseContent),
-                };
-            }
-            catch (Exception)
-            {
-                _req?.Dispose();
-                _res?.Dispose();
-                throw;
-            }
-        }
-
         partial void HandleFailedAnalysisDetailRequest(RestApiException ex);
 
         public async Task<IImmutableList<AggregateAnalysisDetail>> AnalysisDetailAsync(
-            string analysisName,
-            string analysisType,
-            string build,
-            IImmutableList<string> groupBy,
-            string source,
-            string type,
-            string workitem,
-            CancellationToken cancellationToken = default
-        )
-        {
-            using (var _res = await AnalysisDetailInternalAsync(
-                analysisName,
-                analysisType,
-                build,
-                groupBy,
-                source,
-                type,
-                workitem,
-                cancellationToken
-            ).ConfigureAwait(false))
-            {
-                return _res.Body;
-            }
-        }
-
-        internal async Task OnAnalysisDetailFailed(HttpRequestMessage req, HttpResponseMessage res)
-        {
-            var content = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
-            var ex = new RestApiException(
-                new HttpRequestMessageWrapper(req, null),
-                new HttpResponseMessageWrapper(res, content));
-            HandleFailedAnalysisDetailRequest(ex);
-            HandleFailedRequest(ex);
-            Client.OnFailedRequest(ex);
-            throw ex;
-        }
-
-        internal async Task<HttpOperationResponse<IImmutableList<AggregateAnalysisDetail>>> AnalysisDetailInternalAsync(
             string analysisName,
             string analysisType,
             string build,
@@ -811,7 +680,7 @@ namespace Microsoft.DotNet.Helix.Client
                 throw new ArgumentNullException(nameof(build));
             }
 
-            if (groupBy == default)
+            if (groupBy == default(IImmutableList<string>))
             {
                 throw new ArgumentNullException(nameof(groupBy));
             }
@@ -832,76 +701,92 @@ namespace Microsoft.DotNet.Helix.Client
             }
 
 
-            var _path = "/api/2019-06-17/aggregate/analysisdetail";
+            var _baseUri = Client.Options.BaseUri;
+            var _url = new RequestUriBuilder();
+            _url.Reset(_baseUri);
+            _url.AppendPath(
+                "/api/2019-06-17/aggregate/analysisdetail",
+                false);
 
-            var _query = new QueryBuilder();
             if (!string.IsNullOrEmpty(source))
             {
-                _query.Add("source", Client.Serialize(source));
+                _url.AppendQuery("source", Client.Serialize(source));
             }
             if (!string.IsNullOrEmpty(type))
             {
-                _query.Add("type", Client.Serialize(type));
+                _url.AppendQuery("type", Client.Serialize(type));
             }
             if (!string.IsNullOrEmpty(build))
             {
-                _query.Add("build", Client.Serialize(build));
+                _url.AppendQuery("build", Client.Serialize(build));
             }
             if (!string.IsNullOrEmpty(workitem))
             {
-                _query.Add("workitem", Client.Serialize(workitem));
+                _url.AppendQuery("workitem", Client.Serialize(workitem));
             }
             if (!string.IsNullOrEmpty(analysisType))
             {
-                _query.Add("analysisType", Client.Serialize(analysisType));
+                _url.AppendQuery("analysisType", Client.Serialize(analysisType));
             }
             if (!string.IsNullOrEmpty(analysisName))
             {
-                _query.Add("analysisName", Client.Serialize(analysisName));
+                _url.AppendQuery("analysisName", Client.Serialize(analysisName));
             }
-            if (groupBy != default)
+            if (groupBy != default(IImmutableList<string>))
             {
                 foreach (var _item in groupBy)
                 {
-                    _query.Add("groupBy", Client.Serialize(_item));
+                    _url.AppendQuery("groupBy", Client.Serialize(_item));
                 }
             }
 
-            var _uriBuilder = new UriBuilder(Client.BaseUri);
-            _uriBuilder.Path = _uriBuilder.Path.TrimEnd('/') + _path;
-            _uriBuilder.Query = _query.ToString();
-            var _url = _uriBuilder.Uri;
 
-            HttpRequestMessage _req = null;
-            HttpResponseMessage _res = null;
-            try
+            using (var _req = Client.Pipeline.CreateRequest())
             {
-                _req = new HttpRequestMessage(HttpMethod.Get, _url);
+                _req.Uri = _url;
+                _req.Method = RequestMethod.Get;
 
-                if (Client.Credentials != null)
+                using (var _res = await Client.SendAsync(_req, cancellationToken).ConfigureAwait(false))
                 {
-                    await Client.Credentials.ProcessHttpRequestAsync(_req, cancellationToken).ConfigureAwait(false);
-                }
+                    if (_res.Status < 200 || _res.Status >= 300)
+                    {
+                        await OnAnalysisDetailFailed(_req, _res).ConfigureAwait(false);
+                    }
 
-                _res = await Client.SendAsync(_req, cancellationToken).ConfigureAwait(false);
-                if (!_res.IsSuccessStatusCode)
-                {
-                    await OnAnalysisDetailFailed(_req, _res);
+                    if (_res.ContentStream == null)
+                    {
+                        await OnAnalysisDetailFailed(_req, _res).ConfigureAwait(false);
+                    }
+
+                    using (var _reader = new StreamReader(_res.ContentStream))
+                    {
+                        var _content = await _reader.ReadToEndAsync().ConfigureAwait(false);
+                        var _body = Client.Deserialize<IImmutableList<AggregateAnalysisDetail>>(_content);
+                        return _body;
+                    }
                 }
-                string _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
-                return new HttpOperationResponse<IImmutableList<AggregateAnalysisDetail>>
-                {
-                    Request = _req,
-                    Response = _res,
-                    Body = Client.Deserialize<IImmutableList<AggregateAnalysisDetail>>(_responseContent),
-                };
             }
-            catch (Exception)
+        }
+
+        internal async Task OnAnalysisDetailFailed(Request req, Response res)
+        {
+            string content = null;
+            if (res.ContentStream != null)
             {
-                _req?.Dispose();
-                _res?.Dispose();
-                throw;
+                using (var reader = new StreamReader(res.ContentStream))
+                {
+                    content = await reader.ReadToEndAsync().ConfigureAwait(false);
+                }
             }
+
+            var ex = new RestApiException(
+                req,
+                res,
+                content);
+            HandleFailedAnalysisDetailRequest(ex);
+            HandleFailedRequest(ex);
+            Client.OnFailedRequest(ex);
+            throw ex;
         }
 
         partial void HandleFailedPropertiesRequest(RestApiException ex);
@@ -915,131 +800,87 @@ namespace Microsoft.DotNet.Helix.Client
             CancellationToken cancellationToken = default
         )
         {
-            using (var _res = await PropertiesInternalAsync(
-                filterBuild,
-                filterCreator,
-                filterName,
-                filterSource,
-                filterType,
-                cancellationToken
-            ).ConfigureAwait(false))
+
+            var _baseUri = Client.Options.BaseUri;
+            var _url = new RequestUriBuilder();
+            _url.Reset(_baseUri);
+            _url.AppendPath(
+                "/api/2019-06-17/aggregate/properties",
+                false);
+
+            if (!string.IsNullOrEmpty(filterCreator))
             {
-                return _res.Body;
+                _url.AppendQuery("filter.creator", Client.Serialize(filterCreator));
+            }
+            if (!string.IsNullOrEmpty(filterSource))
+            {
+                _url.AppendQuery("filter.source", Client.Serialize(filterSource));
+            }
+            if (!string.IsNullOrEmpty(filterType))
+            {
+                _url.AppendQuery("filter.type", Client.Serialize(filterType));
+            }
+            if (!string.IsNullOrEmpty(filterBuild))
+            {
+                _url.AppendQuery("filter.build", Client.Serialize(filterBuild));
+            }
+            if (!string.IsNullOrEmpty(filterName))
+            {
+                _url.AppendQuery("filter.name", Client.Serialize(filterName));
+            }
+
+
+            using (var _req = Client.Pipeline.CreateRequest())
+            {
+                _req.Uri = _url;
+                _req.Method = RequestMethod.Get;
+
+                using (var _res = await Client.SendAsync(_req, cancellationToken).ConfigureAwait(false))
+                {
+                    if (_res.Status < 200 || _res.Status >= 300)
+                    {
+                        await OnPropertiesFailed(_req, _res).ConfigureAwait(false);
+                    }
+
+                    if (_res.ContentStream == null)
+                    {
+                        await OnPropertiesFailed(_req, _res).ConfigureAwait(false);
+                    }
+
+                    using (var _reader = new StreamReader(_res.ContentStream))
+                    {
+                        var _content = await _reader.ReadToEndAsync().ConfigureAwait(false);
+                        var _body = Client.Deserialize<IImmutableDictionary<string, Newtonsoft.Json.Linq.JToken>>(_content);
+                        return _body;
+                    }
+                }
             }
         }
 
-        internal async Task OnPropertiesFailed(HttpRequestMessage req, HttpResponseMessage res)
+        internal async Task OnPropertiesFailed(Request req, Response res)
         {
-            var content = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
+            string content = null;
+            if (res.ContentStream != null)
+            {
+                using (var reader = new StreamReader(res.ContentStream))
+                {
+                    content = await reader.ReadToEndAsync().ConfigureAwait(false);
+                }
+            }
+
             var ex = new RestApiException(
-                new HttpRequestMessageWrapper(req, null),
-                new HttpResponseMessageWrapper(res, content));
+                req,
+                res,
+                content);
             HandleFailedPropertiesRequest(ex);
             HandleFailedRequest(ex);
             Client.OnFailedRequest(ex);
             throw ex;
         }
 
-        internal async Task<HttpOperationResponse<IImmutableDictionary<string, Newtonsoft.Json.Linq.JToken>>> PropertiesInternalAsync(
-            string filterBuild = default,
-            string filterCreator = default,
-            string filterName = default,
-            string filterSource = default,
-            string filterType = default,
-            CancellationToken cancellationToken = default
-        )
-        {
-
-            var _path = "/api/2019-06-17/aggregate/properties";
-
-            var _query = new QueryBuilder();
-            if (!string.IsNullOrEmpty(filterCreator))
-            {
-                _query.Add("filter.creator", Client.Serialize(filterCreator));
-            }
-            if (!string.IsNullOrEmpty(filterSource))
-            {
-                _query.Add("filter.source", Client.Serialize(filterSource));
-            }
-            if (!string.IsNullOrEmpty(filterType))
-            {
-                _query.Add("filter.type", Client.Serialize(filterType));
-            }
-            if (!string.IsNullOrEmpty(filterBuild))
-            {
-                _query.Add("filter.build", Client.Serialize(filterBuild));
-            }
-            if (!string.IsNullOrEmpty(filterName))
-            {
-                _query.Add("filter.name", Client.Serialize(filterName));
-            }
-
-            var _uriBuilder = new UriBuilder(Client.BaseUri);
-            _uriBuilder.Path = _uriBuilder.Path.TrimEnd('/') + _path;
-            _uriBuilder.Query = _query.ToString();
-            var _url = _uriBuilder.Uri;
-
-            HttpRequestMessage _req = null;
-            HttpResponseMessage _res = null;
-            try
-            {
-                _req = new HttpRequestMessage(HttpMethod.Get, _url);
-
-                if (Client.Credentials != null)
-                {
-                    await Client.Credentials.ProcessHttpRequestAsync(_req, cancellationToken).ConfigureAwait(false);
-                }
-
-                _res = await Client.SendAsync(_req, cancellationToken).ConfigureAwait(false);
-                if (!_res.IsSuccessStatusCode)
-                {
-                    await OnPropertiesFailed(_req, _res);
-                }
-                string _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
-                return new HttpOperationResponse<IImmutableDictionary<string, Newtonsoft.Json.Linq.JToken>>
-                {
-                    Request = _req,
-                    Response = _res,
-                    Body = Client.Deserialize<IImmutableDictionary<string, Newtonsoft.Json.Linq.JToken>>(_responseContent),
-                };
-            }
-            catch (Exception)
-            {
-                _req?.Dispose();
-                _res?.Dispose();
-                throw;
-            }
-        }
-
         partial void HandleFailedInvestigation_ContinueRequest(RestApiException ex);
 
         public async Task<InvestigationResult> Investigation_ContinueAsync(
-            string id,
-            CancellationToken cancellationToken = default
-        )
-        {
-            using (var _res = await Investigation_ContinueInternalAsync(
-                id,
-                cancellationToken
-            ).ConfigureAwait(false))
-            {
-                return _res.Body;
-            }
-        }
-
-        internal async Task OnInvestigation_ContinueFailed(HttpRequestMessage req, HttpResponseMessage res)
-        {
-            var content = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
-            var ex = new RestApiException(
-                new HttpRequestMessageWrapper(req, null),
-                new HttpResponseMessageWrapper(res, content));
-            HandleFailedInvestigation_ContinueRequest(ex);
-            HandleFailedRequest(ex);
-            Client.OnFailedRequest(ex);
-            throw ex;
-        }
-
-        internal async Task<HttpOperationResponse<InvestigationResult>> Investigation_ContinueInternalAsync(
             string id,
             CancellationToken cancellationToken = default
         )
@@ -1050,46 +891,61 @@ namespace Microsoft.DotNet.Helix.Client
             }
 
 
-            var _path = "/api/2019-06-17/aggregate/investigation/continue/{id}";
-            _path = _path.Replace("{id}", Client.Serialize(id));
+            var _baseUri = Client.Options.BaseUri;
+            var _url = new RequestUriBuilder();
+            _url.Reset(_baseUri);
+            _url.AppendPath(
+                "/api/2019-06-17/aggregate/investigation/continue/{id}".Replace("{id}", Uri.EscapeDataString(Client.Serialize(id))),
+                false);
 
-            var _query = new QueryBuilder();
 
-            var _uriBuilder = new UriBuilder(Client.BaseUri);
-            _uriBuilder.Path = _uriBuilder.Path.TrimEnd('/') + _path;
-            _uriBuilder.Query = _query.ToString();
-            var _url = _uriBuilder.Uri;
 
-            HttpRequestMessage _req = null;
-            HttpResponseMessage _res = null;
-            try
+            using (var _req = Client.Pipeline.CreateRequest())
             {
-                _req = new HttpRequestMessage(HttpMethod.Get, _url);
+                _req.Uri = _url;
+                _req.Method = RequestMethod.Get;
 
-                if (Client.Credentials != null)
+                using (var _res = await Client.SendAsync(_req, cancellationToken).ConfigureAwait(false))
                 {
-                    await Client.Credentials.ProcessHttpRequestAsync(_req, cancellationToken).ConfigureAwait(false);
-                }
+                    if (_res.Status < 200 || _res.Status >= 300)
+                    {
+                        await OnInvestigation_ContinueFailed(_req, _res).ConfigureAwait(false);
+                    }
 
-                _res = await Client.SendAsync(_req, cancellationToken).ConfigureAwait(false);
-                if (!_res.IsSuccessStatusCode)
-                {
-                    await OnInvestigation_ContinueFailed(_req, _res);
+                    if (_res.ContentStream == null)
+                    {
+                        await OnInvestigation_ContinueFailed(_req, _res).ConfigureAwait(false);
+                    }
+
+                    using (var _reader = new StreamReader(_res.ContentStream))
+                    {
+                        var _content = await _reader.ReadToEndAsync().ConfigureAwait(false);
+                        var _body = Client.Deserialize<InvestigationResult>(_content);
+                        return _body;
+                    }
                 }
-                string _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
-                return new HttpOperationResponse<InvestigationResult>
-                {
-                    Request = _req,
-                    Response = _res,
-                    Body = Client.Deserialize<InvestigationResult>(_responseContent),
-                };
             }
-            catch (Exception)
+        }
+
+        internal async Task OnInvestigation_ContinueFailed(Request req, Response res)
+        {
+            string content = null;
+            if (res.ContentStream != null)
             {
-                _req?.Dispose();
-                _res?.Dispose();
-                throw;
+                using (var reader = new StreamReader(res.ContentStream))
+                {
+                    content = await reader.ReadToEndAsync().ConfigureAwait(false);
+                }
             }
+
+            var ex = new RestApiException(
+                req,
+                res,
+                content);
+            HandleFailedInvestigation_ContinueRequest(ex);
+            HandleFailedRequest(ex);
+            Client.OnFailedRequest(ex);
+            throw ex;
         }
 
         partial void HandleFailedInvestigationRequest(RestApiException ex);
@@ -1106,177 +962,117 @@ namespace Microsoft.DotNet.Helix.Client
             CancellationToken cancellationToken = default
         )
         {
-            using (var _res = await InvestigationInternalAsync(
-                groupBy,
-                maxGroups,
-                maxResults,
-                filterBuild,
-                filterCreator,
-                filterName,
-                filterSource,
-                filterType,
-                cancellationToken
-            ).ConfigureAwait(false))
+            if (groupBy == default(IImmutableList<string>))
             {
-                return _res.Body;
+                throw new ArgumentNullException(nameof(groupBy));
+            }
+
+            if (maxGroups == default(int))
+            {
+                throw new ArgumentNullException(nameof(maxGroups));
+            }
+
+            if (maxResults == default(int))
+            {
+                throw new ArgumentNullException(nameof(maxResults));
+            }
+
+
+            var _baseUri = Client.Options.BaseUri;
+            var _url = new RequestUriBuilder();
+            _url.Reset(_baseUri);
+            _url.AppendPath(
+                "/api/2019-06-17/aggregate/investigation",
+                false);
+
+            if (groupBy != default(IImmutableList<string>))
+            {
+                foreach (var _item in groupBy)
+                {
+                    _url.AppendQuery("groupBy", Client.Serialize(_item));
+                }
+            }
+            if (maxGroups != default(int))
+            {
+                _url.AppendQuery("maxGroups", Client.Serialize(maxGroups));
+            }
+            if (maxResults != default(int))
+            {
+                _url.AppendQuery("maxResults", Client.Serialize(maxResults));
+            }
+            if (!string.IsNullOrEmpty(filterCreator))
+            {
+                _url.AppendQuery("filter.creator", Client.Serialize(filterCreator));
+            }
+            if (!string.IsNullOrEmpty(filterSource))
+            {
+                _url.AppendQuery("filter.source", Client.Serialize(filterSource));
+            }
+            if (!string.IsNullOrEmpty(filterType))
+            {
+                _url.AppendQuery("filter.type", Client.Serialize(filterType));
+            }
+            if (!string.IsNullOrEmpty(filterBuild))
+            {
+                _url.AppendQuery("filter.build", Client.Serialize(filterBuild));
+            }
+            if (!string.IsNullOrEmpty(filterName))
+            {
+                _url.AppendQuery("filter.name", Client.Serialize(filterName));
+            }
+
+
+            using (var _req = Client.Pipeline.CreateRequest())
+            {
+                _req.Uri = _url;
+                _req.Method = RequestMethod.Get;
+
+                using (var _res = await Client.SendAsync(_req, cancellationToken).ConfigureAwait(false))
+                {
+                    if (_res.Status < 200 || _res.Status >= 300)
+                    {
+                        await OnInvestigationFailed(_req, _res).ConfigureAwait(false);
+                    }
+
+                    if (_res.ContentStream == null)
+                    {
+                        await OnInvestigationFailed(_req, _res).ConfigureAwait(false);
+                    }
+
+                    using (var _reader = new StreamReader(_res.ContentStream))
+                    {
+                        var _content = await _reader.ReadToEndAsync().ConfigureAwait(false);
+                        var _body = Client.Deserialize<InvestigationResult>(_content);
+                        return _body;
+                    }
+                }
             }
         }
 
-        internal async Task OnInvestigationFailed(HttpRequestMessage req, HttpResponseMessage res)
+        internal async Task OnInvestigationFailed(Request req, Response res)
         {
-            var content = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
+            string content = null;
+            if (res.ContentStream != null)
+            {
+                using (var reader = new StreamReader(res.ContentStream))
+                {
+                    content = await reader.ReadToEndAsync().ConfigureAwait(false);
+                }
+            }
+
             var ex = new RestApiException(
-                new HttpRequestMessageWrapper(req, null),
-                new HttpResponseMessageWrapper(res, content));
+                req,
+                res,
+                content);
             HandleFailedInvestigationRequest(ex);
             HandleFailedRequest(ex);
             Client.OnFailedRequest(ex);
             throw ex;
         }
 
-        internal async Task<HttpOperationResponse<InvestigationResult>> InvestigationInternalAsync(
-            IImmutableList<string> groupBy,
-            int maxGroups,
-            int maxResults,
-            string filterBuild = default,
-            string filterCreator = default,
-            string filterName = default,
-            string filterSource = default,
-            string filterType = default,
-            CancellationToken cancellationToken = default
-        )
-        {
-            if (groupBy == default)
-            {
-                throw new ArgumentNullException(nameof(groupBy));
-            }
-
-            if (maxGroups == default)
-            {
-                throw new ArgumentNullException(nameof(maxGroups));
-            }
-
-            if (maxResults == default)
-            {
-                throw new ArgumentNullException(nameof(maxResults));
-            }
-
-
-            var _path = "/api/2019-06-17/aggregate/investigation";
-
-            var _query = new QueryBuilder();
-            if (groupBy != default)
-            {
-                foreach (var _item in groupBy)
-                {
-                    _query.Add("groupBy", Client.Serialize(_item));
-                }
-            }
-            if (maxGroups != default)
-            {
-                _query.Add("maxGroups", Client.Serialize(maxGroups));
-            }
-            if (maxResults != default)
-            {
-                _query.Add("maxResults", Client.Serialize(maxResults));
-            }
-            if (!string.IsNullOrEmpty(filterCreator))
-            {
-                _query.Add("filter.creator", Client.Serialize(filterCreator));
-            }
-            if (!string.IsNullOrEmpty(filterSource))
-            {
-                _query.Add("filter.source", Client.Serialize(filterSource));
-            }
-            if (!string.IsNullOrEmpty(filterType))
-            {
-                _query.Add("filter.type", Client.Serialize(filterType));
-            }
-            if (!string.IsNullOrEmpty(filterBuild))
-            {
-                _query.Add("filter.build", Client.Serialize(filterBuild));
-            }
-            if (!string.IsNullOrEmpty(filterName))
-            {
-                _query.Add("filter.name", Client.Serialize(filterName));
-            }
-
-            var _uriBuilder = new UriBuilder(Client.BaseUri);
-            _uriBuilder.Path = _uriBuilder.Path.TrimEnd('/') + _path;
-            _uriBuilder.Query = _query.ToString();
-            var _url = _uriBuilder.Uri;
-
-            HttpRequestMessage _req = null;
-            HttpResponseMessage _res = null;
-            try
-            {
-                _req = new HttpRequestMessage(HttpMethod.Get, _url);
-
-                if (Client.Credentials != null)
-                {
-                    await Client.Credentials.ProcessHttpRequestAsync(_req, cancellationToken).ConfigureAwait(false);
-                }
-
-                _res = await Client.SendAsync(_req, cancellationToken).ConfigureAwait(false);
-                if (!_res.IsSuccessStatusCode)
-                {
-                    await OnInvestigationFailed(_req, _res);
-                }
-                string _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
-                return new HttpOperationResponse<InvestigationResult>
-                {
-                    Request = _req,
-                    Response = _res,
-                    Body = Client.Deserialize<InvestigationResult>(_responseContent),
-                };
-            }
-            catch (Exception)
-            {
-                _req?.Dispose();
-                _res?.Dispose();
-                throw;
-            }
-        }
-
         partial void HandleFailedHistoryRequest(RestApiException ex);
 
         public async Task<IImmutableList<HistoricalAnalysisItem>> HistoryAsync(
-            string analysisName,
-            string analysisType,
-            int days,
-            string source,
-            string type,
-            string workitem,
-            CancellationToken cancellationToken = default
-        )
-        {
-            using (var _res = await HistoryInternalAsync(
-                analysisName,
-                analysisType,
-                days,
-                source,
-                type,
-                workitem,
-                cancellationToken
-            ).ConfigureAwait(false))
-            {
-                return _res.Body;
-            }
-        }
-
-        internal async Task OnHistoryFailed(HttpRequestMessage req, HttpResponseMessage res)
-        {
-            var content = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
-            var ex = new RestApiException(
-                new HttpRequestMessageWrapper(req, null),
-                new HttpResponseMessageWrapper(res, content));
-            HandleFailedHistoryRequest(ex);
-            HandleFailedRequest(ex);
-            Client.OnFailedRequest(ex);
-            throw ex;
-        }
-
-        internal async Task<HttpOperationResponse<IImmutableList<HistoricalAnalysisItem>>> HistoryInternalAsync(
             string analysisName,
             string analysisType,
             int days,
@@ -1296,7 +1092,7 @@ namespace Microsoft.DotNet.Helix.Client
                 throw new ArgumentNullException(nameof(analysisType));
             }
 
-            if (days == default)
+            if (days == default(int))
             {
                 throw new ArgumentNullException(nameof(days));
             }
@@ -1317,66 +1113,81 @@ namespace Microsoft.DotNet.Helix.Client
             }
 
 
-            var _path = "/api/2019-06-17/aggregate/history/{analysisType}";
-            _path = _path.Replace("{analysisType}", Client.Serialize(analysisType));
+            var _baseUri = Client.Options.BaseUri;
+            var _url = new RequestUriBuilder();
+            _url.Reset(_baseUri);
+            _url.AppendPath(
+                "/api/2019-06-17/aggregate/history/{analysisType}".Replace("{analysisType}", Uri.EscapeDataString(Client.Serialize(analysisType))),
+                false);
 
-            var _query = new QueryBuilder();
             if (!string.IsNullOrEmpty(source))
             {
-                _query.Add("source", Client.Serialize(source));
+                _url.AppendQuery("source", Client.Serialize(source));
             }
             if (!string.IsNullOrEmpty(type))
             {
-                _query.Add("type", Client.Serialize(type));
+                _url.AppendQuery("type", Client.Serialize(type));
             }
             if (!string.IsNullOrEmpty(workitem))
             {
-                _query.Add("workitem", Client.Serialize(workitem));
+                _url.AppendQuery("workitem", Client.Serialize(workitem));
             }
             if (!string.IsNullOrEmpty(analysisName))
             {
-                _query.Add("analysisName", Client.Serialize(analysisName));
+                _url.AppendQuery("analysisName", Client.Serialize(analysisName));
             }
-            if (days != default)
+            if (days != default(int))
             {
-                _query.Add("days", Client.Serialize(days));
+                _url.AppendQuery("days", Client.Serialize(days));
             }
 
-            var _uriBuilder = new UriBuilder(Client.BaseUri);
-            _uriBuilder.Path = _uriBuilder.Path.TrimEnd('/') + _path;
-            _uriBuilder.Query = _query.ToString();
-            var _url = _uriBuilder.Uri;
 
-            HttpRequestMessage _req = null;
-            HttpResponseMessage _res = null;
-            try
+            using (var _req = Client.Pipeline.CreateRequest())
             {
-                _req = new HttpRequestMessage(HttpMethod.Get, _url);
+                _req.Uri = _url;
+                _req.Method = RequestMethod.Get;
 
-                if (Client.Credentials != null)
+                using (var _res = await Client.SendAsync(_req, cancellationToken).ConfigureAwait(false))
                 {
-                    await Client.Credentials.ProcessHttpRequestAsync(_req, cancellationToken).ConfigureAwait(false);
+                    if (_res.Status < 200 || _res.Status >= 300)
+                    {
+                        await OnHistoryFailed(_req, _res).ConfigureAwait(false);
+                    }
+
+                    if (_res.ContentStream == null)
+                    {
+                        await OnHistoryFailed(_req, _res).ConfigureAwait(false);
+                    }
+
+                    using (var _reader = new StreamReader(_res.ContentStream))
+                    {
+                        var _content = await _reader.ReadToEndAsync().ConfigureAwait(false);
+                        var _body = Client.Deserialize<IImmutableList<HistoricalAnalysisItem>>(_content);
+                        return _body;
+                    }
                 }
+            }
+        }
 
-                _res = await Client.SendAsync(_req, cancellationToken).ConfigureAwait(false);
-                if (!_res.IsSuccessStatusCode)
-                {
-                    await OnHistoryFailed(_req, _res);
-                }
-                string _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
-                return new HttpOperationResponse<IImmutableList<HistoricalAnalysisItem>>
-                {
-                    Request = _req,
-                    Response = _res,
-                    Body = Client.Deserialize<IImmutableList<HistoricalAnalysisItem>>(_responseContent),
-                };
-            }
-            catch (Exception)
+        internal async Task OnHistoryFailed(Request req, Response res)
+        {
+            string content = null;
+            if (res.ContentStream != null)
             {
-                _req?.Dispose();
-                _res?.Dispose();
-                throw;
+                using (var reader = new StreamReader(res.ContentStream))
+                {
+                    content = await reader.ReadToEndAsync().ConfigureAwait(false);
+                }
             }
+
+            var ex = new RestApiException(
+                req,
+                res,
+                content);
+            HandleFailedHistoryRequest(ex);
+            HandleFailedRequest(ex);
+            Client.OnFailedRequest(ex);
+            throw ex;
         }
 
         partial void HandleFailedMultiSourceRequest(RestApiException ex);
@@ -1386,90 +1197,73 @@ namespace Microsoft.DotNet.Helix.Client
             CancellationToken cancellationToken = default
         )
         {
-            using (var _res = await MultiSourceInternalAsync(
-                body,
-                cancellationToken
-            ).ConfigureAwait(false))
-            {
-                return _res.Body;
-            }
-        }
-
-        internal async Task OnMultiSourceFailed(HttpRequestMessage req, HttpResponseMessage res)
-        {
-            var content = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
-            var ex = new RestApiException(
-                new HttpRequestMessageWrapper(req, content),
-                new HttpResponseMessageWrapper(res, content));
-            HandleFailedMultiSourceRequest(ex);
-            HandleFailedRequest(ex);
-            Client.OnFailedRequest(ex);
-            throw ex;
-        }
-
-        internal async Task<HttpOperationResponse<MultiSourceResponse>> MultiSourceInternalAsync(
-            MultiSourceRequest body,
-            CancellationToken cancellationToken = default
-        )
-        {
-            if (body == default)
+            if (body == default(MultiSourceRequest))
             {
                 throw new ArgumentNullException(nameof(body));
             }
 
 
-            var _path = "/api/2019-06-17/aggregate/multi-source";
+            var _baseUri = Client.Options.BaseUri;
+            var _url = new RequestUriBuilder();
+            _url.Reset(_baseUri);
+            _url.AppendPath(
+                "/api/2019-06-17/aggregate/multi-source",
+                false);
 
-            var _query = new QueryBuilder();
 
-            var _uriBuilder = new UriBuilder(Client.BaseUri);
-            _uriBuilder.Path = _uriBuilder.Path.TrimEnd('/') + _path;
-            _uriBuilder.Query = _query.ToString();
-            var _url = _uriBuilder.Uri;
 
-            HttpRequestMessage _req = null;
-            HttpResponseMessage _res = null;
-            try
+            using (var _req = Client.Pipeline.CreateRequest())
             {
-                _req = new HttpRequestMessage(HttpMethod.Post, _url);
+                _req.Uri = _url;
+                _req.Method = RequestMethod.Post;
 
-                string _requestContent = null;
-                if (body != default)
+                if (body != default(MultiSourceRequest))
                 {
-                    _requestContent = Client.Serialize(body);
-                    _req.Content = new StringContent(_requestContent, Encoding.UTF8)
+                    _req.Content = RequestContent.Create(Encoding.UTF8.GetBytes(Client.Serialize(body)));
+                    _req.Headers.Add("Content-Type", "application/json; charset=utf-8");
+                }
+
+                using (var _res = await Client.SendAsync(_req, cancellationToken).ConfigureAwait(false))
+                {
+                    if (_res.Status < 200 || _res.Status >= 300)
                     {
-                        Headers =
-                        {
-                            ContentType = MediaTypeHeaderValue.Parse("application/json; charset=utf-8"),
-                        },
-                    };
-                }
+                        await OnMultiSourceFailed(_req, _res).ConfigureAwait(false);
+                    }
 
-                if (Client.Credentials != null)
-                {
-                    await Client.Credentials.ProcessHttpRequestAsync(_req, cancellationToken).ConfigureAwait(false);
-                }
+                    if (_res.ContentStream == null)
+                    {
+                        await OnMultiSourceFailed(_req, _res).ConfigureAwait(false);
+                    }
 
-                _res = await Client.SendAsync(_req, cancellationToken).ConfigureAwait(false);
-                if (!_res.IsSuccessStatusCode)
-                {
-                    await OnMultiSourceFailed(_req, _res);
+                    using (var _reader = new StreamReader(_res.ContentStream))
+                    {
+                        var _content = await _reader.ReadToEndAsync().ConfigureAwait(false);
+                        var _body = Client.Deserialize<MultiSourceResponse>(_content);
+                        return _body;
+                    }
                 }
-                string _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
-                return new HttpOperationResponse<MultiSourceResponse>
-                {
-                    Request = _req,
-                    Response = _res,
-                    Body = Client.Deserialize<MultiSourceResponse>(_responseContent),
-                };
             }
-            catch (Exception)
+        }
+
+        internal async Task OnMultiSourceFailed(Request req, Response res)
+        {
+            string content = null;
+            if (res.ContentStream != null)
             {
-                _req?.Dispose();
-                _res?.Dispose();
-                throw;
+                using (var reader = new StreamReader(res.ContentStream))
+                {
+                    content = await reader.ReadToEndAsync().ConfigureAwait(false);
+                }
             }
+
+            var ex = new RestApiException(
+                req,
+                res,
+                content);
+            HandleFailedMultiSourceRequest(ex);
+            HandleFailedRequest(ex);
+            Client.OnFailedRequest(ex);
+            throw ex;
         }
     }
 }

@@ -2,25 +2,26 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
-using System.Net.Http;
+using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
-using System.Security.Authentication;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Rest;
+using Azure;
+using Azure.Core;
+using Azure.Core.Pipeline;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 
 namespace Microsoft.DotNet.Helix.Client
 {
-    public partial interface IHelixApi : IDisposable
+    public partial interface IHelixApi
     {
-        Uri BaseUri { get; set; }
+        HelixApiOptions Options { get; set; }
 
         IAggregate Aggregate { get; }
         IAnalysis Analysis { get; }
@@ -34,17 +35,76 @@ namespace Microsoft.DotNet.Helix.Client
         IWorkItem WorkItem { get; }
     }
 
-    public partial class HelixApi : ServiceClient<HelixApi>, IHelixApi
+    public partial interface IServiceOperations<T>
     {
+        T Client { get; }
+    }
+
+    public partial class HelixApiOptions : ClientOptions
+    {
+        public HelixApiOptions()
+            : this(new Uri("https://helix.dot.net"))
+        {
+        }
+
+        public HelixApiOptions(Uri baseUri)
+            : this(baseUri, null)
+        {
+        }
+
+        public HelixApiOptions(TokenCredential credentials)
+            : this(new Uri("https://helix.dot.net"), credentials)
+        {
+        }
+
+        public HelixApiOptions(Uri baseUri, TokenCredential credentials)
+        {
+            BaseUri = baseUri;
+            Credentials = credentials;
+            InitializeOptions();
+        }
+
+        partial void InitializeOptions();
+
         /// <summary>
         ///   The base URI of the service.
         /// </summary>
-        public Uri BaseUri { get; set; }
+        public Uri BaseUri { get; }
 
         /// <summary>
         ///   Credentials to authenticate requests.
         /// </summary>
-        public ServiceClientCredentials Credentials { get; set; }
+        public TokenCredential Credentials { get; }
+    }
+
+    internal partial class HelixApiResponseClassifier : ResponseClassifier
+    {
+    }
+
+    public partial class HelixApi : IHelixApi
+    {
+        private HelixApiOptions _options = null;
+
+        public HelixApiOptions Options
+        {
+            get => _options;
+            set
+            {
+                _options = value;
+                Pipeline = CreatePipeline(value);
+            }
+        }
+
+        private static HttpPipeline CreatePipeline(HelixApiOptions options)
+        {
+            return HttpPipelineBuilder.Build(options, Array.Empty<HttpPipelinePolicy>(), Array.Empty<HttpPipelinePolicy>(), new HelixApiResponseClassifier());
+        }
+
+        public HttpPipeline Pipeline
+        {
+            get;
+            private set;
+        }
 
         public JsonSerializerSettings SerializerSettings { get; }
 
@@ -69,27 +129,14 @@ namespace Microsoft.DotNet.Helix.Client
         public IWorkItem WorkItem { get; }
 
 
-        public HelixApi(params DelegatingHandler[] handlers)
-            :this(null, null, handlers)
+        public HelixApi()
+            :this(new HelixApiOptions())
         {
         }
 
-        public HelixApi(Uri baseUri, params DelegatingHandler[] handlers)
-            :this(baseUri, null, handlers)
+        public HelixApi(HelixApiOptions options)
         {
-        }
-
-        public HelixApi(ServiceClientCredentials credentials, params DelegatingHandler[] handlers)
-            :this(null, credentials, handlers)
-        {
-        }
-
-        public HelixApi(Uri baseUri, ServiceClientCredentials credentials, params DelegatingHandler[] handlers)
-            :base(handlers)
-        {
-            HttpClientHandler.SslProtocols = SslProtocols.Tls12;
-            BaseUri = baseUri ?? new Uri("https://helix.dot.net/");
-            Credentials = credentials;
+            Options = options;
             Aggregate = new Aggregate(this);
             Analysis = new Analysis(this);
             Information = new Information(this);
@@ -131,7 +178,7 @@ namespace Microsoft.DotNet.Helix.Client
         {
             return value;
         }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public string Serialize(bool value)
         {
@@ -175,7 +222,7 @@ namespace Microsoft.DotNet.Helix.Client
 
             if (value is Enum)
             {
-                return result.Substring(1, result.Length-2);
+                return result.Substring(1, result.Length - 2);
             }
 
             return result;
@@ -187,9 +234,9 @@ namespace Microsoft.DotNet.Helix.Client
             return JsonConvert.DeserializeObject<T>(value, SerializerSettings);
         }
 
-        public virtual Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        public virtual ValueTask<Response> SendAsync(Request request, CancellationToken cancellationToken)
         {
-            return HttpClient.SendAsync(request, cancellationToken);
+            return Pipeline.SendRequestAsync(request, cancellationToken);
         }
     }
 
@@ -215,6 +262,39 @@ namespace Microsoft.DotNet.Helix.Client
         }
     }
 
+    public partial class RequestWrapper
+    {
+        public RequestWrapper(Request request)
+        {
+            Uri = request.Uri.ToUri();
+            Method = request.Method;
+            Headers = request.Headers.ToDictionary(h => h.Name, h => h.Value);
+        }
+
+        public Uri Uri { get; }
+        public RequestMethod Method { get; }
+        public IReadOnlyDictionary<string, string> Headers { get; }
+    }
+
+    public partial class ResponseWrapper
+    {
+        public ResponseWrapper(Response response, string responseContent)
+        {
+            Status = response.Status;
+            ReasonPhrase = response.ReasonPhrase;
+            Headers = response.Headers;
+            Content = responseContent;
+        }
+
+        public string Content { get; }
+
+        public ResponseHeaders Headers { get; }
+
+        public string ReasonPhrase { get; }
+
+        public int Status { get; }
+    }
+
     [Serializable]
     public partial class RestApiException : Exception
     {
@@ -223,40 +303,35 @@ namespace Microsoft.DotNet.Helix.Client
             ContractResolver = new AllPropertiesContractResolver(),
         };
 
-        private static string FormatMessage(HttpResponseMessageWrapper response)
+        private static string FormatMessage(Response response, string responseContent)
         {
-            var result = $"The response contained an invalid status code {(int)response.StatusCode} {response.ReasonPhrase}";
-            if (!string.IsNullOrEmpty(response.Content))
+            var result = $"The response contained an invalid status code {response.Status} {response.ReasonPhrase}";
+            if (responseContent != null)
             {
                 result += "\n\nBody: ";
-                result += response.Content.Length < 300 ? response.Content : response.Content.Substring(0, 300);
+                result += responseContent.Length < 300 ? responseContent : responseContent.Substring(0, 300);
             }
             return result;
         }
 
-        public HttpRequestMessageWrapper Request { get; }
+        public RequestWrapper Request { get; }
 
-        public HttpResponseMessageWrapper Response { get; }
+        public ResponseWrapper Response { get; }
 
-        public RestApiException(HttpRequestMessageWrapper request, HttpResponseMessageWrapper response)
-           :this(FormatMessage(response), request, response)
+        public RestApiException(Request request, Response response, string responseContent)
+            : base(FormatMessage(response, responseContent))
         {
-        }
-
-        public RestApiException(string message, HttpRequestMessageWrapper request, HttpResponseMessageWrapper response)
-           :base(message)
-        {
-            Request = request;
-            Response = response;
+            Request = new RequestWrapper(request);
+            Response = new ResponseWrapper(response, responseContent);
         }
 
         protected RestApiException(SerializationInfo info, StreamingContext context)
-            :base(info, context)
+            : base(info, context)
         {
             var requestString = info.GetString("Request");
             var responseString = info.GetString("Response");
-            Request = JsonConvert.DeserializeObject<HttpRequestMessageWrapper>(requestString, SerializerSettings);
-            Response = JsonConvert.DeserializeObject<HttpResponseMessageWrapper>(responseString, SerializerSettings);
+            Request = JsonConvert.DeserializeObject<RequestWrapper>(requestString, SerializerSettings);
+            Response = JsonConvert.DeserializeObject<ResponseWrapper>(responseString, SerializerSettings);
         }
 
         public override void GetObjectData(SerializationInfo info, StreamingContext context)
@@ -280,20 +355,14 @@ namespace Microsoft.DotNet.Helix.Client
     {
         public T Body { get; }
 
-        public RestApiException(HttpRequestMessageWrapper request, HttpResponseMessageWrapper response, T body)
-           :base(request, response)
-        {
-            Body = body;
-        }
-
-        public RestApiException(string message, HttpRequestMessageWrapper request, HttpResponseMessageWrapper response, T body)
-           :base(message, request, response)
+        public RestApiException(Request request, Response response, string responseContent, T body)
+           : base(request, response, responseContent)
         {
             Body = body;
         }
 
         protected RestApiException(SerializationInfo info, StreamingContext context)
-            :base(info, context)
+            : base(info, context)
         {
             Body = JsonConvert.DeserializeObject<T>(info.GetString("Body"));
         }
@@ -354,9 +423,9 @@ namespace Microsoft.DotNet.Helix.Client
     public class ResponseStream : Stream
     {
         private readonly Stream _inner;
-        private readonly HttpOperationResponse _response;
+        private readonly Response _response;
 
-        public ResponseStream(Stream inner, HttpOperationResponse response)
+        public ResponseStream(Stream inner, Response response)
         {
             _inner = inner;
             _response = response;
