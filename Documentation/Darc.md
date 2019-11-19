@@ -845,6 +845,39 @@ Successfully created new channel with name 'Foo'.
 - [delete-channel](#delete-channel)
 - [get-channels](#get-channels)
 
+
+### **`set-goal`**
+
+Sets a goal build time for the definition per channel in minutes. Only dnceng is in scope. This is captured for the [Power BI dashboard](https://dev.azure.com/dnceng/public/_dashboards/dashboard/40ac4990-3498-4b3a-85dd-2ffde961d672). 
+
+**Sample**:
+```
+PS D:\enlistments\arcade> darc set-goal --minutes 38 --definition-id 6 --channel ".Net Core 5 Dev"
+
+38
+```
+**Parameters**
+
+- `-c, --channel` - **(Required)** Name of the channel.
+- `-d, --definition-id` - **(Required)** Azure DevOps Definition Id.
+- `-m, --minutes` - **(Required)** Goal time in minutes.
+
+### **`get-goal`**
+
+Get the goal build time for a definition per channel in minutes. Only dnceng is in scope. This is captured for the [Power BI dashboard](https://dev.azure.com/dnceng/public/_dashboards/dashboard/40ac4990-3498-4b3a-85dd-2ffde961d672)
+
+**Sample**:
+```
+PS D:\enlistments\arcade> darc get-goal --definition-id 6 --channel ".Net Core 5 Dev"
+
+38
+```
+**Parameters**
+
+- `-c, --channel` - **(Required)** Name of the channel.
+- `-d, --definition-id` - **(Required)** Azure DevOps Definition Id.
+
+
 ### **`add-dependency`**
 
 Add a new tracked dependency to the Version.Detail.xml file in your local repo.
@@ -984,6 +1017,8 @@ PS D:\enlistments\arcade> darc add-default-channel --channel ".Net Core 5 Dev" -
 - [get-channels](#get-channels)
 - [get-default-channels](#get-default-channels)
 - [delete-default-channel](#delete-default-channel)
+- [set-goal](#set-goal)
+- [get-goal](#get-goal)
 
 ### **`add-subscription`**
 
@@ -1246,6 +1281,8 @@ Default channel association has been enabled.
 - [add-default-channel](#add-default-channel)
 - [delete-default-channel](#delete-default-channel)
 - [get-default-channels](#get-default-channels)
+- [set-goal](#set-goal)
+- [get-goal](#get-goal)
 
 ### **`delete-channel`**
 

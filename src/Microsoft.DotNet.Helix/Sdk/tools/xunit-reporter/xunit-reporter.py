@@ -71,7 +71,7 @@ def main():
 
     log.info("Uploading results from {}".format(results_path))
 
-    with open(results_path) as result_file:
+    with open(results_path, encoding="utf-8") as result_file:
         test_count = 0
         total_regex = re.compile(r'total="(\d+)"')
         for line in result_file:

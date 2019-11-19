@@ -1,4 +1,3 @@
-using Microsoft.Rest;
 using System;
 
 namespace Microsoft.DotNet.Helix.Client
@@ -7,22 +6,22 @@ namespace Microsoft.DotNet.Helix.Client
     {
         public static IHelixApi GetAuthenticated(string accessToken)
         {
-            return new HelixApi(new TokenCredentials(accessToken, "token"));
+            return new HelixApi(new HelixApiOptions(new HelixApiTokenCredential(accessToken)));
         }
 
         public static IHelixApi GetAnonymous()
         {
-            return new NoCredentialsHelixApi();
+            return new HelixApi(new HelixApiOptions());
         }
 
         public static IHelixApi GetAuthenticated(string baseUri, string accessToken)
         {
-            return new HelixApi(new Uri(baseUri), new TokenCredentials(accessToken, "token"));
+            return new HelixApi(new HelixApiOptions(new Uri(baseUri), new HelixApiTokenCredential(accessToken)));
         }
 
         public static IHelixApi GetAnonymous(string baseUri)
         {
-            return new NoCredentialsHelixApi(new Uri(baseUri));
+            return new HelixApi(new HelixApiOptions(new Uri(baseUri)));
         }
     }
 }

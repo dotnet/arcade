@@ -1,11 +1,9 @@
 using System;
+using System.Diagnostics;
 using System.Net;
 using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.DotNet.Helix.Client;
-using Microsoft.Rest;
-using Task = Microsoft.Build.Utilities.Task;
 
 namespace Microsoft.DotNet.Helix.Sdk
 {
@@ -52,13 +50,13 @@ namespace Microsoft.DotNet.Helix.Sdk
                 AnonymousApi = ApiFactory.GetAnonymous(BaseUri);
                 System.Threading.Tasks.Task.Run(() => ExecuteCore(_cancel.Token)).GetAwaiter().GetResult();
             }
-            catch (HttpOperationException ex) when (ex.Response.StatusCode == HttpStatusCode.Unauthorized)
+            catch (RestApiException ex) when (ex.Response.Status == (int)HttpStatusCode.Unauthorized)
             {
-                Log.LogError("Helix operation returned 'Unauthorized'. Did you forget to set HelixAccessToken?");
+                Log.LogError(FailureCategory.Build, "Helix operation returned 'Unauthorized'. Did you forget to set HelixAccessToken?");
             }
-            catch (HttpOperationException ex) when (ex.Response.StatusCode == HttpStatusCode.Forbidden)
+            catch (RestApiException ex) when (ex.Response.Status == (int)HttpStatusCode.Forbidden)
             {
-                Log.LogError("Helix operation returned 'Forbidden'.");
+                Log.LogError(FailureCategory.Build, "Helix operation returned 'Forbidden'.");
             }
             catch (OperationCanceledException ocex) when (ocex.CancellationToken == _cancel.Token)
             {
@@ -67,7 +65,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             }
             catch (Exception ex)
             {
-                Log.LogErrorFromException(ex, true, true, null);
+                Log.LogErrorFromException(FailureCategory.Helix, ex, true, true, null);
             }
 
             return !Log.HasLoggedErrors;

@@ -30,7 +30,7 @@
 
   <Target Name="Execute">
     <ItemGroup>
-      <FilesToPublishToSymbolServer Include="$(PDBArtifactsDirectory)\*.pdb"/>
+      <FilesToPublishToSymbolServer Include="$(PDBArtifactsDirectory)\**\*.pdb"/>
       <PackagesToPublishToSymbolServer Include="$(BlobBasePath)\*.symbols.nupkg"/>
 
       <!--
