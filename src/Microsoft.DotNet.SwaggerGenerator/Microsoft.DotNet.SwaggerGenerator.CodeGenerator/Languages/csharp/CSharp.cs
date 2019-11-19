@@ -158,19 +158,14 @@ namespace Microsoft.DotNet.SwaggerGenerator.Languages
             [HelperMethod]
             public static string Method(HttpMethod method)
             {
-                if (string.Equals(method.Method, "PATCH", StringComparison.OrdinalIgnoreCase))
-                {
-                    return "new HttpMethod(\"PATCH\")";
-                }
 
                 if (method == HttpMethod.Delete || method == HttpMethod.Get || method == HttpMethod.Head ||
-                    method == HttpMethod.Options || method == HttpMethod.Post || method == HttpMethod.Put ||
-                    method == HttpMethod.Trace)
+                    method.Method.ToLower() == "patch" || method == HttpMethod.Post || method == HttpMethod.Put)
                 {
-                    return $"HttpMethod.{Helpers.PascalCase(method.Method.ToLower().AsSpan())}";
+                    return $"RequestMethod.{Helpers.PascalCase(method.Method.ToLower().AsSpan())}";
                 }
 
-                return $"new HttpMethod(\"{method.Method}\")";
+                return $"RequestMethod.Parse(\"{method.Method}\")";
             }
 
             public override Templates GetTemplates(IHandlebars hb)

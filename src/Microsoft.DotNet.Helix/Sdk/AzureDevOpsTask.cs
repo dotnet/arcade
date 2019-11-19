@@ -1,7 +1,9 @@
 using System;
+using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Net.Sockets;
 using System.Reflection;
 using System.Text;
 using System.Threading;
@@ -81,7 +83,7 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
             try
             {
                 // Grab the retry logic from the helix api client
-                await ApiFactory.GetAnonymous().RetryAsync(
+                await RetryAsync(
                         async () =>
                         {
                             await function();
@@ -101,7 +103,7 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
             // Grab the retry logic from the helix api client
             try
             {
-                return await ApiFactory.GetAnonymous().RetryAsync(
+                return await RetryAsync(
                         async () => await function(),
                         ex => Log.LogMessage(MessageImportance.Low, $"Azure Dev Ops Operation failed: {ex}\nRetrying..."),
                         CancellationToken.None);
@@ -158,6 +160,69 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
             }
 
             return null;
+        }
+
+        private static readonly Random s_rand = new Random();
+
+        public int RetryCount { get; set; } = 15;
+
+        public double RetryBackOffFactor { get; set; } = 1.3;
+
+        protected virtual int GetRetryDelay(int attempt)
+        {
+            var factor = RetryBackOffFactor;
+            var min = (int)(Math.Pow(factor, attempt) * 1000);
+            var max = (int)(Math.Pow(factor, attempt + 1) * 1000);
+            return s_rand.Next(min, max);
+        }
+
+        public static bool IsRetryableHttpException(Exception ex)
+        {
+            return ex is TaskCanceledException ||
+                   ex is OperationCanceledException ||
+                   ex is HttpRequestException ||
+                   ex is IOException ||
+                   ex is SocketException
+                ;
+        }
+
+        public Task<T> RetryAsync<T>(Func<Task<T>> function, Action<Exception> logRetry,
+            CancellationToken cancellationToken)
+        {
+            return RetryAsync<T>(function, logRetry, IsRetryableHttpException, cancellationToken);
+        }
+
+        public async Task<T> RetryAsync<T>(Func<Task<T>> function, Action<Exception> logRetry,
+            Func<Exception, bool> isRetryable, CancellationToken cancellationToken)
+        {
+            var attempt = 0;
+            var maxAttempt = RetryCount;
+            cancellationToken.ThrowIfCancellationRequested();
+            while (true)
+            {
+                try
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    return await function().ConfigureAwait(false);
+                }
+                catch (OperationCanceledException ocex) when (ocex.CancellationToken == cancellationToken)
+                {
+                    throw;
+                }
+                catch (Exception ex) when (isRetryable(ex))
+                {
+                    if (attempt >= maxAttempt)
+                    {
+                        throw;
+                    }
+
+                    logRetry(ex);
+                }
+                cancellationToken.ThrowIfCancellationRequested();
+                await Task.Delay(GetRetryDelay(attempt)).ConfigureAwait(false);
+                cancellationToken.ThrowIfCancellationRequested();
+                attempt++;
+            }
         }
     }
 }
