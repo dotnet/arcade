@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
 <Project>
-
   <UsingTask TaskName="ChooseBestTargetFrameworkTask" AssemblyFile="..\tools\netcoreapp2.1\Microsoft.DotNet.Build.Tasks.TargetFramework.dll"/>
-  <UsingTask TaskName="ChooseBestTargetFrameworkReference" AssemblyFile="..\tools\netcoreapp2.1\Microsoft.DotNet.Build.Tasks.TargetFramework.dll"/>
+  <UsingTask TaskName="ChooseBestP2PTargetFrameworkTask" AssemblyFile="..\tools\netcoreapp2.1\Microsoft.DotNet.Build.Tasks.TargetFramework.dll"/>
+  <UsingTask TaskName="ChooseBestTargetFrameworksTask" AssemblyFile="..\tools\netcoreapp2.1\Microsoft.DotNet.Build.Tasks.TargetFramework.dll"/>
   
   <Target Name="RunOnlyBestConfiguration" BeforeTargets="DispatchToInnerBuilds">    
     <ItemGroup>
@@ -12,7 +12,7 @@
     </ItemGroup>
 
     <ChooseBestTargetFrameworkTask TargetFrameworkOsGroup="$(TargetFrameworkOsGroup)"
-                                   TargetFrameworks="@(TargetFrameworksList)"
+                                   SupportedTargetFrameworks="@(TargetFrameworksList)"
                                    RuntimeGraph="$(RuntimeGraph)" >
       <Output TaskParameter="BestTargetFramework" PropertyName="BestTargetFramework" />      
     </ChooseBestTargetFrameworkTask>
@@ -43,21 +43,12 @@
     </PropertyGroup>
   </Target>
 
-  <Target Name="ChooseBestTargetFrameworkReferenceTarget">
-    <ChooseBestTargetFrameworkReference TargetFrameworkOsGroup="$(BestTargetFramework)"
-                                   TargetFrameworks="@(TargetFrameworksList)"
-                                   RuntimeGraph="$(RuntimeGraph)" >
-      <Output TaskParameter="BestTargetFrameworkArray" ItemName="BestTargetFrameworks" />
-    </ChooseBestTargetFrameworkReference>
-  </Target>
-
   <Target Name="ResolveP2Preferences" BeforeTargets="AssignProjectConfiguration">
     
     <MSBuild Projects="@(ProjectReference)"
               Targets="GetTargetFrameworks"
               ContinueOnError="true"
               SkipNonexistentTargets="true">
-
      <Output TaskParameter="TargetOutputs" ItemName="projectRefWithTfms"/>
     </MSBuild>
      
@@ -66,17 +57,15 @@
       <_tfm Condition="'$(TargetFrameworkOsGroup)' != ''">$(TargetFrameworkOsGroup)</_tfm>
     </PropertyGroup>
 
-    <ChooseBestTargetFrameworkReference TargetFrameworkOsGroup="$(_tfm)"
-                                   TargetFrameworks="@(projectRefWithTfms)"
+    <ChooseBestP2PTargetFrameworkTask TargetFrameworkOsGroup="$(_tfm)"
+                                   ProjectReferencesWithTargetFrameworks="@(projectRefWithTfms)"
                                    RuntimeGraph="$(RuntimeGraph)" >
-      <Output TaskParameter="TargetFrameworksWithTargetFramework" ItemName="BestTargetFrameworks" />
-    </ChooseBestTargetFrameworkReference>
+      <Output TaskParameter="AnnotatedProjectReferencesWithSetTargetFramework" ItemName="BestTargetFrameworks" />
+    </ChooseBestP2PTargetFrameworkTask>
     
     <ItemGroup>
       <ProjectReference Remove="@(ProjectReference)" />
       <ProjectReference Include="@(BestTargetFrameworks)" SkipGetTargetFrameworkProperties="true"/>
     </ItemGroup>
-    <Message Text="@(BestTargetFrameworks)" Importance="high"/>
   </Target>
-
 </Project>
