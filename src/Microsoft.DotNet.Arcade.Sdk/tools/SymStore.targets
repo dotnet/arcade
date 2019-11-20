@@ -4,8 +4,6 @@
   <PropertyGroup>
     <_DeployToSymStoreTargetNames Condition="'$(TargetFrameworks)' == ''">_InnerDeployToSymStore</_DeployToSymStoreTargetNames>
     <_DeployToSymStoreTargetNames Condition="'$(TargetFrameworks)' != ''">_OuterDeployToSymStore</_DeployToSymStoreTargetNames>
-    <_SymbolProducerTarget Condition="'$(Language)' == 'C++'">BuildLink</_SymbolProducerTarget>
-    <_SymbolProducerTarget Condition="'$(Language)' != 'C++'">CoreBuild</_SymbolProducerTarget>
   </PropertyGroup>
 
   <!-- This file is only imported in CI build. The conversion thus does not affect dev build. -->
@@ -22,7 +20,7 @@
     </MSBuild>
   </Target>
 
-  <Target Name="_InnerDeployToSymStore" DependsOnTargets="$(_SymbolProducerTarget);_InnerDeployToSymStoreSetProperties;_DeployPortableSymbolsToSymStore;_DeployWindowsSymbolsToSymStore" />
+  <Target Name="_InnerDeployToSymStore" DependsOnTargets="_InnerDeployToSymStoreSetProperties;_DeployPortableSymbolsToSymStore;_DeployWindowsSymbolsToSymStore" />
     
   <Target Name="_InnerDeployToSymStoreSetProperties">
     <PropertyGroup>
