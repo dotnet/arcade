@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>netcoreapp2.1;net472</TargetFrameworks>
@@ -24,6 +24,7 @@
     <PackageReference Include="Microsoft.Build" Version="$(MicrosoftBuildVersion)" />
     <PackageReference Include="Microsoft.Build.Tasks.Core" Version="$(MicrosoftBuildTasksCoreVersion)" />
     <PackageReference Include="Microsoft.DotNet.PlatformAbstractions" Version="$(MicrosoftDotNetPlatformAbstractionsVersion)" />
+    <PackageReference Include="NuGet.Packaging" Version="$(NugetVersion)" />
   </ItemGroup>
 
   <Import Project="$(RepoRoot)eng\BuildTask.targets" />
