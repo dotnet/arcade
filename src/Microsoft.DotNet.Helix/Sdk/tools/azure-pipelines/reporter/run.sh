@@ -27,5 +27,5 @@ else
 fi
 
 date -u +"%FT%TZ"
-sudo $ENV_PATH/bin/python $script_path/run.py "$@"
+sudo -E $ENV_PATH/bin/python $script_path/run.py "$@"
 date -u +"%FT%TZ"
