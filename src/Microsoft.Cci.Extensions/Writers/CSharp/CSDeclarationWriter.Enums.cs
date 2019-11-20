@@ -98,7 +98,7 @@ namespace Microsoft.Cci.Writers.CSharp
                     }
 
                     // we found a valid combination of flags
-                    if (value == satisfiedValue)
+                    if (value == satisfiedValue && candidateFlagFields.Count > 0)
                     {
                         for (int i = 0; i < candidateFlagFields.Count; i++)
                         {
@@ -116,7 +116,7 @@ namespace Microsoft.Cci.Writers.CSharp
                 }
             }
 
-            if (constant.Value == null)
+            if (constant.Value == null || ToULongUnchecked(constant.Value) == 0) // default(T) on an enum is 0
             {
                 if (enumType.IsValueType)
                 {
