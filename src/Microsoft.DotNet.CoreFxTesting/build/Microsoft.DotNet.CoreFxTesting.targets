@@ -44,7 +44,8 @@
     At that point restore and conflict resolution already happened therefore setting the item here has no side effects.
    -->
   <Target Name="_SetRuntimeFrameworksForCoreFxTesting"
-          BeforeTargets="GenerateBuildDependencyFile;GenerateBuildRuntimeConfigurationFiles">
+          Condition="'$(SelfContained)' != 'true'"
+          BeforeTargets="GenerateBuildDependencyFile">
     <ItemGroup>
       <RuntimeFramework Include="Microsoft.NETCore.App" Version="$(ProductVersion)" />
     </ItemGroup>
