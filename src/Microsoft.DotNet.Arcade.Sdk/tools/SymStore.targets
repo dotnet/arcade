@@ -1,28 +1,13 @@
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
 <Project>
 
-  <PropertyGroup>
-    <_DeployToSymStoreTargetNames Condition="'$(TargetFrameworks)' == ''">_InnerDeployToSymStore</_DeployToSymStoreTargetNames>
-    <_DeployToSymStoreTargetNames Condition="'$(TargetFrameworks)' != ''">_OuterDeployToSymStore</_DeployToSymStoreTargetNames>
-  </PropertyGroup>
-
   <!-- This file is only imported in CI build. The conversion thus does not affect dev build. -->
-  <Target Name="DeployToSymStore" BeforeTargets="AfterBuild" DependsOnTargets="$(_DeployToSymStoreTargetNames)" />
 
-  <Target Name="_OuterDeployToSymStore">
-    <ItemGroup>
-      <_TargetFramework Include="$(TargetFrameworks)" />
-    </ItemGroup>
-    <MSBuild Projects="$(MSBuildProjectFile)"
-             Condition="'$(TargetFrameworks)' != ''"
-             Targets="_InnerDeployToSymStore"
-             Properties="TargetFramework=%(_TargetFramework.Identity)">
-    </MSBuild>
-  </Target>
-
-  <Target Name="_InnerDeployToSymStore" DependsOnTargets="_InnerDeployToSymStoreSetProperties;_DeployPortableSymbolsToSymStore;_DeployWindowsSymbolsToSymStore" />
+  <Target Name="DeployToSymStore"
+          BeforeTargets="AfterBuild" 
+          DependsOnTargets="_DeployToSymStoreSetProperties;_DeployPortableSymbolsToSymStore;_DeployWindowsSymbolsToSymStore" />
     
-  <Target Name="_InnerDeployToSymStoreSetProperties">
+  <Target Name="_DeployToSymStoreSetProperties">
     <PropertyGroup>
       <_TargetPdbPath />
       <_TargetPdbPath Condition="'$(DebugType)' != 'embedded'">$([System.IO.Path]::ChangeExtension($(TargetPath), '.pdb'))</_TargetPdbPath>
