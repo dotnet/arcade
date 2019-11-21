@@ -16,14 +16,6 @@ namespace Microsoft.DotNet.Build.Tasks.TargetFramework
         private ManagedCodeConventions _conventions;
         private PatternSet _configStringPattern;
 
-        private static PatternTable _dotnetAnyTable = new PatternTable(new[]
-        {
-            new PatternTableEntry(
-                "tfm",
-                "any",
-                FrameworkConstants.CommonFrameworks.DotNet)
-        });
-
         public BestTfmResolver(string runtimeGraph, PatternSet PatternSet)
         {
             _conventions = new ManagedCodeConventions(JsonRuntimeFormat.ReadRuntimeGraph(runtimeGraph));
@@ -34,13 +26,13 @@ namespace Microsoft.DotNet.Build.Tasks.TargetFramework
                         _conventions.Properties,
                         groupPatterns: new PatternDefinition[]
                         {
-                            new PatternDefinition("{tfm}/", table: _dotnetAnyTable),
-                            new PatternDefinition("{tfm}-{rid}/", table: _dotnetAnyTable)
+                            new PatternDefinition("{tfm}/"),
+                            new PatternDefinition("{tfm}-{rid}/")
                         },
                         pathPatterns: new PatternDefinition[]
                         {
-                            new PatternDefinition("{tfm}/", table: _dotnetAnyTable),
-                            new PatternDefinition("{tfm}-{rid}/", table: _dotnetAnyTable)
+                            new PatternDefinition("{tfm}/"),
+                            new PatternDefinition("{tfm}-{rid}/")
                         });
             }
         }
