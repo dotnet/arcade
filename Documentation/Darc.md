@@ -2220,7 +2220,6 @@ Subscription health for https://github.com/dotnet/corefx @ release/3.0 - (Failed
     Microsoft.DotNet.XUnitConsoleRunner
     Microsoft.DotNet.Build.Tasks.Packaging
     Microsoft.DotNet.CodeAnalysis
-    Microsoft.DotNet.CoreFxTesting
     Microsoft.DotNet.RemoteExecutor
     Microsoft.DotNet.Build.Tasks.Configuration
     Microsoft.DotNet.Build.Tasks.Feed
