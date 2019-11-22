@@ -11,7 +11,7 @@ namespace Microsoft.DotNet.Helix.Client
         /// on one of the machines of the queue you selected.
         /// </summary>
         /// <param name="command">
-        /// Any command (like `ls` or `dotnet test Solution.sln`) you want
+        /// Any command (like <strong>ls</strong> or <strong>dotnet test Solution.sln</strong>) you want
         /// to be processed.
         /// </param>
         IWorkItemDefinitionWithPayload WithCommand(string command);
