@@ -2,10 +2,15 @@
 <Project>
 
   <!-- This file is only imported in CI build. The conversion thus does not affect dev build. -->
+  
+  <PropertyGroup>
+    <_SymbolProducerTarget Condition="'$(Language)' == 'C++'">BuildLink</_SymbolProducerTarget>
+    <_SymbolProducerTarget Condition="'$(Language)' != 'C++'">CoreBuild</_SymbolProducerTarget>
+  </PropertyGroup>
 
   <Target Name="DeployToSymStore"
           BeforeTargets="AfterBuild" 
-          DependsOnTargets="_DeployToSymStoreSetProperties;_DeployPortableSymbolsToSymStore;_DeployWindowsSymbolsToSymStore" />
+          DependsOnTargets="$(_SymbolProducerTarget);_DeployToSymStoreSetProperties;_DeployPortableSymbolsToSymStore;_DeployWindowsSymbolsToSymStore" />
     
   <Target Name="_DeployToSymStoreSetProperties">
     <PropertyGroup>
