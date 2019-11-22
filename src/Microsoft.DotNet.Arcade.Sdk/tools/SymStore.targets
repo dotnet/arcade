@@ -10,9 +10,11 @@
 
   <Target Name="DeployToSymStore"
           BeforeTargets="AfterBuild" 
-          DependsOnTargets="$(_SymbolProducerTarget);_DeployToSymStoreSetProperties;_DeployPortableSymbolsToSymStore;_DeployWindowsSymbolsToSymStore" />
+          DependsOnTargets="_DeployToSymStoreSetProperties;_DeployPortableSymbolsToSymStore;_DeployWindowsSymbolsToSymStore" />
     
-  <Target Name="_DeployToSymStoreSetProperties">
+  <Target Name="_DeployToSymStoreSetProperties"
+          DependsOnTargets="$(_SymbolProducerTarget)">
+
     <PropertyGroup>
       <_TargetPdbPath />
       <_TargetPdbPath Condition="'$(DebugType)' != 'embedded'">$([System.IO.Path]::ChangeExtension($(TargetPath), '.pdb'))</_TargetPdbPath>
@@ -36,6 +38,7 @@
     it's published to the public symbol server (msdl.microsoft.com).
   -->
   <Target Name="_DeployPortableSymbolsToSymStore"
+          DependsOnTargets="_DeployToSymStoreSetProperties"
           Inputs="$(TargetPath);$(_TargetPdbPath)"
           Outputs="$(_SymStorePdbPath)"
           Condition="'$(PublishWindowsPdb)' == 'true' and $(_BuildsPortablePdb)">
@@ -65,6 +68,7 @@
     symbol store even if the files are copies and not hardlinked.
   -->
   <Target Name="_DeployWindowsSymbolsToSymStore"
+          DependsOnTargets="_DeployToSymStoreSetProperties"
           Condition="'$(PublishWindowsPdb)' == 'true' and !$(_BuildsPortablePdb)"
           Inputs="$(_TargetPdbPath)"
           Outputs="$(_SymStorePdbPath)">
