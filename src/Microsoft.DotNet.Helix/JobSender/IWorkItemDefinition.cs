@@ -4,7 +4,7 @@ namespace Microsoft.DotNet.Helix.Client
 {
     /// <summary>
     /// Work Item definition with all required information already specified
-    /// that can either completed by calling `AttachToJob` or further extended.
+    /// that can either completed by calling <see cref="AttachToJob"/> or further extended.
     /// </summary>
     public interface IWorkItemDefinition
     {
