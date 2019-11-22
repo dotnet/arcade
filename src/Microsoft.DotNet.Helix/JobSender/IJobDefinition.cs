@@ -7,7 +7,7 @@ namespace Microsoft.DotNet.Helix.Client
 {
     /// <summary>
     /// Job definition with almost all required information already specified
-    /// that can be either completed by calling `SendAsync` or further extended.
+    /// that can be either completed by calling <c>SendAsync</c> or further extended.
     /// 
     /// Note that when not running inside Azure DevOps with its set of environment
     /// variables that JobSender captures, Source need to be provided before sending the job.
