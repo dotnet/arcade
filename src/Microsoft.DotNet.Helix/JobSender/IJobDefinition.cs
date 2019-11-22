@@ -54,7 +54,7 @@ namespace Microsoft.DotNet.Helix.Client
         /// <param name="directory">Path to the directory.</param>
         /// <param name="includeDirectoryName">
         /// Should the resulting archive contain the folder with its
-        /// content inside (`true`), or directly the content (`false`)?
+        /// content inside (<see langword="true"/>), or directly the content (<see langword="false"/>)?
         /// </param>
         /// <param name="destination">
         /// The path on the target system for the correlation payload to be extracted.
