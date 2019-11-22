@@ -36,7 +36,7 @@ namespace Microsoft.DotNet.Helix.Client
         /// <param name="directory">Path to the directory.</param>
         /// <param name="includeDirectoryName">
         /// Should the resulting archive contain the folder with its
-        /// content inside (`true`), or directly the content (`false`)?
+        /// content inside (<see langword="true"/>), or directly the content (<see langword="false"/>)?
         /// </param>
         /// <returns>Fluent workitem builder.</returns>
         IWorkItemDefinition WithDirectoryPayload(string directory, bool includeDirectoryName);
