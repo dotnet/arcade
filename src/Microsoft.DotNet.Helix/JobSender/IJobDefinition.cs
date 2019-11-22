@@ -142,7 +142,7 @@ namespace Microsoft.DotNet.Helix.Client
         IJobDefinition WithResultsContainerName(string resultsContainerName);
 
         /// <summary>
-        /// Sets max automatic retry of workitems which do not return 0.
+        /// Sets max automatic retry of work items which do not return 0.
         /// </summary>
         /// <returns>Fluent job builder.</returns>
         IJobDefinition WithMaxRetryCount(int? maxRetryCount);
