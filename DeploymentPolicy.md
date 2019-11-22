@@ -25,7 +25,7 @@ Deployments follow the pattern described in the [Deployment Process](../Validati
     - Rolling back database changes can be tricky especially if data loss is incurred like in case of a added column/dropping a table. This is only scenario where they might be manual intervention needed for rollback.
 * Workflow for Rollback:
     - When a service in production is discovered to be in a "downed" state (e.g. not taking work, constantly throwing errors, etc.) following a rollout, then rollback IMMEDIATELY to a previously known working deployment. Continue investigation in staging by reproing the failure.
-    - Rollback PRs need to have tags in title indicating its a rollback like "[ROLLBACK] blah blah"
+    - Rollback PRs need to have a commit message which starts with `[ROLLBACK]`, e.g. "[ROLLBACK] blah blah"
     - Create a GitHub issue for tracking, with tags indicating that this is a rollback.
     - Communicate the state of affairs to dncpartners@microsoft.com when the issue is identified along with the tracking GitHub issue, and when it's mitigated.
 
@@ -36,7 +36,7 @@ Deployments follow the pattern described in the [Deployment Process](../Validati
     - Manual changes to Prod environment - data changes in the DB, on-prem machine settings etc.
 * Workflow for Hotfix:
     - When a service in production is discovered to be in a erroneous state following a rollout.
-    - Hotfix PRs need to have tags in title indicating its a hotfix like "[HOTFIX] blah blah"
+    - Hotfix PRs need to have a commit message which starts with `[HOTFIX]`, e.g. "[HOTFIX] blah blah"
     - Create a GitHub issue for tracking, with tags indicating that this a hotfix.
     - If the root cause of failure is determined, make the hotfix and deploy to prod.
     - Communicate the state of affairs to dncpartners@microsoft.com when the issue is identified along with the tracking GitHub issue, and when it's mitigated.
