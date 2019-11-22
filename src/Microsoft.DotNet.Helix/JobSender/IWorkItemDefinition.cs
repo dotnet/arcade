@@ -3,7 +3,7 @@ using System;
 namespace Microsoft.DotNet.Helix.Client
 {
     /// <summary>
-    /// Job definition with all required information already specified
+    /// Work Item definition with all required information already specified
     /// that can either completed by calling `AttachToJob` or further extended.
     /// </summary>
     public interface IWorkItemDefinition
