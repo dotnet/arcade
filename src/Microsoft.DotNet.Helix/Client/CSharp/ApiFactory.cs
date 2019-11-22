@@ -23,7 +23,7 @@ namespace Microsoft.DotNet.Helix.Client
         /// </summary>
         /// <remarks>
         /// Attempt to access internal queues by such client will cause
-        /// `ArgumentException` triggered by `SendAsync` call.
+        /// <see cref="ArgumentException"/> triggered by <c>SendAsync</c> call.
         /// </remarks>
         public static IHelixApi GetAnonymous()
         {
