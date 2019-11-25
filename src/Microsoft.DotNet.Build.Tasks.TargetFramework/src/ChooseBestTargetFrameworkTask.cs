@@ -9,7 +9,7 @@ namespace Microsoft.DotNet.Build.Tasks.TargetFramework
     public class ChooseBestTargetFrameworkTask : BuildTask
     {
         [Required]
-        public string TargetFrameworkOsGroup { get; set; }
+        public string BuildTargetFramework { get; set; }
         
         [Required]
         public string[] SupportedTargetFrameworks { get; set; }
@@ -22,7 +22,7 @@ namespace Microsoft.DotNet.Build.Tasks.TargetFramework
 
         public override bool Execute()
         {
-            BestTargetFramework = new BestTfmResolver(RuntimeGraph, null).GetBestSupportedTfm(SupportedTargetFrameworks, TargetFrameworkOsGroup);
+            BestTargetFramework = new TargetFrameworkResolver(RuntimeGraph).GetBestSupportedTargetFramework(SupportedTargetFrameworks, BuildTargetFramework);
             if (BestTargetFramework == null)
             {                
                 Log.LogError("Not able to find a compatible configurations");

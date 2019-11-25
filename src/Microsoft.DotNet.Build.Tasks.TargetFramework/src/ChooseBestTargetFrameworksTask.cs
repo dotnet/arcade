@@ -4,38 +4,40 @@
 
 using Microsoft.Build.Framework;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Microsoft.DotNet.Build.Tasks.TargetFramework
 {
     public class ChooseBestTargetFrameworksTask : BuildTask
     {
         [Required]
-        public string[] TargetFrameworkOsGroupList { get; set; }
-
+        public ITaskItem[] SupportedTargetFrameworks { get; set; }
+        
         [Required]
-        public string[] SupportedTargetFrameworks { get; set; }
+        public ITaskItem[] BuildTargetFrameworks { get; set; }
 
         [Required]
         public string RuntimeGraph { get; set; }
 
         [Output]
-        public string[] BestTargetFrameworkArray { get; set; }
+        public ITaskItem[] BestTargetFrameworks { get; set; }
 
         public override bool Execute()
         {
-            List<string> bestTargetFrameworkList = new List<string>();
-            BestTfmResolver bestTfmResolver = new BestTfmResolver(RuntimeGraph, null);
+            List<ITaskItem> bestTargetFrameworkList = new List<ITaskItem>();
+            TargetFrameworkResolver bestTfmResolver = new TargetFrameworkResolver(RuntimeGraph);
             
-            foreach (var targetFrameworkOsGroup in TargetFrameworkOsGroupList)
+            foreach (var buildTargetFramework in BuildTargetFrameworks)
             {                
-                string bestTargetFramework = bestTfmResolver.GetBestSupportedTfm(SupportedTargetFrameworks, targetFrameworkOsGroup);
-                if (bestTargetFramework == null)
+                string bestTargetFramework = bestTfmResolver.GetBestSupportedTargetFramework(SupportedTargetFrameworks.Select(t => t.ItemSpec), buildTargetFramework.ItemSpec);
+                if (bestTargetFramework != null)
                 {
-                    Log.LogError("Not able to find a compatible configurations");
+                    ITaskItem item = SupportedTargetFrameworks.Where(t => t.ItemSpec == bestTargetFramework).First();
+                    buildTargetFramework.CopyMetadataTo(item);
+                    bestTargetFrameworkList.Add(item);
                 }
-                bestTargetFrameworkList.Add(bestTargetFramework);
             }
-            BestTargetFrameworkArray = bestTargetFrameworkList.ToArray();
+            BestTargetFrameworks = bestTargetFrameworkList.ToArray();
             return true;
         }
     }

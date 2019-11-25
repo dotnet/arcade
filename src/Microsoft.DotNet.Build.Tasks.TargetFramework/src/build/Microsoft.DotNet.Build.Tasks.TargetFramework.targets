@@ -4,15 +4,16 @@
   <UsingTask TaskName="ChooseBestTargetFrameworkTask" AssemblyFile="..\tools\netcoreapp2.1\Microsoft.DotNet.Build.Tasks.TargetFramework.dll"/>
   <UsingTask TaskName="ChooseBestP2PTargetFrameworkTask" AssemblyFile="..\tools\netcoreapp2.1\Microsoft.DotNet.Build.Tasks.TargetFramework.dll"/>
   <UsingTask TaskName="ChooseBestTargetFrameworksTask" AssemblyFile="..\tools\netcoreapp2.1\Microsoft.DotNet.Build.Tasks.TargetFramework.dll"/>
+  <UsingTask TaskName="AddTargetFrameworksToProjectTask" AssemblyFile="..\tools\netcoreapp2.1\Microsoft.DotNet.Build.Tasks.TargetFramework.dll"/>
   
-  <Target Name="RunOnlyBestConfiguration" BeforeTargets="DispatchToInnerBuilds">    
+  <Target Name="RunOnlyBestConfiguration1" BeforeTargets="DispatchToInnerBuilds">    
     <ItemGroup>
       <!-- Emptying the list -->
       <_InnerBuildProjects Remove="@(_InnerBuildProjects)" />
     </ItemGroup>
 
-    <ChooseBestTargetFrameworkTask TargetFrameworkOsGroup="$(TargetFrameworkOsGroup)"
-                                   SupportedTargetFrameworks="@(TargetFrameworksList)"
+    <ChooseBestTargetFrameworkTask BuildTargetFramework="$(BuildTargetFramework)"
+                                   SupportedTargetFrameworks="$(TargetFrameworks)"
                                    RuntimeGraph="$(RuntimeGraph)" >
       <Output TaskParameter="BestTargetFramework" PropertyName="BestTargetFramework" />      
     </ChooseBestTargetFrameworkTask>
@@ -23,7 +24,26 @@
       </_InnerBuildProjects>
     </ItemGroup>
   </Target>
+
+  <Target Name="RunOnlyBestConfiguration" BeforeTargets="DispatchToInnerBuilds">
+    <ItemGroup>
+      <!-- Emptying the list -->
+      <_InnerBuildProjects Remove="@(_InnerBuildProjects)" />
+    </ItemGroup>
+
+    <ChooseBestTargetFrameworksTask BuildTargetFrameworks="$(BuildTargetFramework)"
+                                   SupportedTargetFrameworks="$(TargetFrameworks)"
+                                   RuntimeGraph="$(RuntimeGraph)" >
+      <Output TaskParameter="BestTargetFrameworks" ItemName="BestTargetFramework" />
+    </ChooseBestTargetFrameworksTask>
+
+    <AddTargetFrameworksToProjectTask ProjectName="$(MSBuildProjectFile)"
+                               BestTargetFrameworks="@(BestTargetFramework)" >
+      <Output TaskParameter="InnerBuildProjects" ItemName="_InnerBuildProjects" />
+    </AddTargetFrameworksToProjectTask>
+  </Target>
   
+  <!-- Restore does not take into account osgroup, so we remove the osgroup from the TargetFramework before restore.-->
   <Target Name="StripOsGroupFromTargetFrameworks" BeforeTargets="CollectPackageReferences">
     <ItemGroup>
       <_t1 Include="$(TargetFrameworks)" />
@@ -37,6 +57,7 @@
     </PropertyGroup>
   </Target>
 
+  <!-- Attaching the osgroup after restore for build.-->
   <Target Name="AttachOsGroupFromTargetFrameworks" AfterTargets="Restore">    
     <PropertyGroup>
       <TargetFrameworks>$(OriginalTargetFrameworks)</TargetFrameworks>
@@ -52,12 +73,7 @@
      <Output TaskParameter="TargetOutputs" ItemName="projectRefWithTfms"/>
     </MSBuild>
      
-    <PropertyGroup>
-      <_tfm>$(TargetFramework)</_tfm>
-      <_tfm Condition="'$(TargetFrameworkOsGroup)' != ''">$(TargetFrameworkOsGroup)</_tfm>
-    </PropertyGroup>
-
-    <ChooseBestP2PTargetFrameworkTask TargetFrameworkOsGroup="$(_tfm)"
+    <ChooseBestP2PTargetFrameworkTask TargetFrameworkOsGroup="$(TargetFramework)"
                                    ProjectReferencesWithTargetFrameworks="@(projectRefWithTfms)"
                                    RuntimeGraph="$(RuntimeGraph)" >
       <Output TaskParameter="AnnotatedProjectReferencesWithSetTargetFramework" ItemName="BestTargetFrameworks" />
