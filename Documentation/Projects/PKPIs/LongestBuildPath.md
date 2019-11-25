@@ -20,7 +20,7 @@ We will use three metrics to measure longest build path time:
 
 ## Views
 
-We are proposing to visualize the longest path per repository by adding the longest path time to each node on the dependency flow graph. For each node, we will display the best case time and worst case time. We will also mark any node that we don't have any runtime information for. We will also highlight the longest path through the graph in a different color.
+We are proposing to visualize the longest path per repository by adding the longest path time to each node on the dependency flow graph. For each node, we will display the best case time and worst case time. We will also mark any node that we don't have any runtime information for. We will also highlight the longest path through the graph in a different color. This graph will be displayed in BarViz.
 
 ![FlowGraph](./flowgraph.png)
 
