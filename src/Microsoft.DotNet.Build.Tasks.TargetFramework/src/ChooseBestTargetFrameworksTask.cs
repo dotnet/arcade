@@ -25,11 +25,11 @@ namespace Microsoft.DotNet.Build.Tasks.TargetFramework
         public override bool Execute()
         {
             List<ITaskItem> bestTargetFrameworkList = new List<ITaskItem>();
-            TargetFrameworkResolver bestTfmResolver = new TargetFrameworkResolver(RuntimeGraph);
+            TargetFrameworkResolver targetframeworkResolver = new TargetFrameworkResolver(RuntimeGraph);
             
             foreach (var buildTargetFramework in BuildTargetFrameworks)
             {                
-                string bestTargetFramework = bestTfmResolver.GetBestSupportedTargetFramework(SupportedTargetFrameworks.Select(t => t.ItemSpec), buildTargetFramework.ItemSpec);
+                string bestTargetFramework = targetframeworkResolver.GetBestSupportedTargetFramework(SupportedTargetFrameworks.Select(t => t.ItemSpec), buildTargetFramework.ItemSpec);
                 if (bestTargetFramework != null)
                 {
                     ITaskItem item = SupportedTargetFrameworks.Where(t => t.ItemSpec == bestTargetFramework).First();

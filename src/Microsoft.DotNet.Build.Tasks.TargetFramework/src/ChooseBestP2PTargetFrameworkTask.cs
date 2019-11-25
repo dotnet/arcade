@@ -24,11 +24,11 @@ namespace Microsoft.DotNet.Build.Tasks.TargetFramework
         public override bool Execute()
         {      
             List<ITaskItem> AnnotatedProjectReferencesWithSetTargetFrameworkList = new List<ITaskItem>();
-            TargetFrameworkResolver bestTfmResolver = new TargetFrameworkResolver(RuntimeGraph);            
+            TargetFrameworkResolver targetFrameworkResolver = new TargetFrameworkResolver(RuntimeGraph);            
 
             foreach (var projectReference in ProjectReferencesWithTargetFrameworks)
             {                
-                string BestTargetFramework = bestTfmResolver.GetBestSupportedTargetFramework(projectReference.GetMetadata("TargetFrameworks").Split(';'), TargetFrameworkOsGroup);
+                string BestTargetFramework = targetFrameworkResolver.GetBestSupportedTargetFramework(projectReference.GetMetadata("TargetFrameworks").Split(';'), TargetFrameworkOsGroup);
                 if (BestTargetFramework == null)
                 {
                     Log.LogError("Not able to find a compatible configurations");
