@@ -11,6 +11,7 @@ namespace Xunit
 
         public SkipOnCoreClrAttribute(string reason, TestPlatforms testPlatforms) { }
         public SkipOnCoreClrAttribute(string reason, RuntimeStressTestModes testMode) { }
+        public SkipOnCoreClrAttribute(string reason, TestPlatforms testPlatforms, RuntimeStressTestModes testMode) { }
         public SkipOnCoreClrAttribute(string reason) { }
     }
 }
