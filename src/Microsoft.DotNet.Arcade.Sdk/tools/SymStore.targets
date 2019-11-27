@@ -3,6 +3,10 @@
 
   <!-- This file is only imported in CI build. The conversion thus does not affect dev build. -->
   
+  <ItemGroup>
+    <PackageReference Include="Microsoft.DiaSymReader.Pdb2Pdb" Version="$(MicrosoftDiaSymReaderPdb2PdbVersion)" Condition="'$(UsingToolPdbConverter)' == 'true'" IsImplicitlyDefined="true" />
+  </ItemGroup>
+
   <PropertyGroup>
     <_SymbolProducerTarget Condition="'$(Language)' == 'C++'">BuildLink</_SymbolProducerTarget>
     <_SymbolProducerTarget Condition="'$(Language)' != 'C++'">CoreBuild</_SymbolProducerTarget>
