@@ -53,6 +53,8 @@ artifacts
         $(VsixPackageId).vsmand
         $(VsixContainerName).vsix
         $(VisualStudioInsertionComponent).vsman
+      DevDivPackages
+        $(MSBuildProjectName).$(PackageVersion).nupkg
       $(VsixPackageId).json
       $(VsixContainerName).vsix
   VSSetup.obj
