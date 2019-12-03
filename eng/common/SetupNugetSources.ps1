@@ -95,12 +95,12 @@ function InsertMaestroPrivateFeedCredentials($Sources, $Creds, $Password) {
 }
 
 if (!(Test-Path $ConfigFile -PathType Leaf)) {
-  Write-Host "Couldn't find the NuGet config file: $ConfigFile"
+  Write-PipelineTelemetryError -Category 'Build' -Message "Eng/common/SetupNugetSources.ps1 returned a non-zero exit code. Couldn't find the NuGet config file: $ConfigFile"
   ExitWithExitCode 1
 }
 
 if (!$Password) {
-    Write-Host "Please supply a valid PAT"
+    Write-PipelineTelemetryError -Category 'Build' -Message 'Eng/common/SetupNugetSources.ps1 returned a non-zero exit code. Please supply a valid PAT'
     ExitWithExitCode 1
 }
 

@@ -42,12 +42,12 @@ scriptroot="$( cd -P "$( dirname "$source" )" && pwd )"
 . "$scriptroot/tools.sh"
 
 if [ ! -f "$ConfigFile" ]; then
-    echo "Couldn't find the file NuGet config file: $ConfigFile"
+    Write-PipelineTelemetryError -Category 'Build' "Error: Eng/common/SetupNugetSources.sh returned a non-zero exit code. Couldn't find the NuGet config file: $ConfigFile"
     ExitWithExitCode 1
 fi
 
 if [ -z "$CredToken" ]; then
-    echo "Please supply a valid PAT"
+    Write-PipelineTelemetryError -category 'Build' "Error: Eng/common/SetupNugetSources.sh returned a non-zero exit code. Please supply a valid PAT"
     ExitWithExitCode 1
 fi
 
