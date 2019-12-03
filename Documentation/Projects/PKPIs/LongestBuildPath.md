@@ -4,12 +4,12 @@ This document will describe how we define longest build path and how we will dem
 
 ## Goal
 
-The goal of the longest build path calculation is to answer the question: if a change is made in a repository, how long will it take that change to make it to the composed product?
+The goal of the longest build path calculation is to answer the question: if a change is made in a repository, how long will it take from the time that change is checked into a repository to when we have a coherent and shippable product containing that change.
 
 ## Definitions
 
 * Source Repository: a repository that flows changes from itself to downstream repositories.
-* Product Repository: a repository that does not flow changes to any other repositories (ie a shipping product).
+* Shipping Repository: a repository that does not flow changes to any other repositories as a product dependency (ie a shipping product).
 
 ## Metrics
 
