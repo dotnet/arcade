@@ -39,8 +39,13 @@ namespace Microsoft.DotNet.Arcade.Sdk
             const string fileName = "license";
 
 #if NET472
-            IEnumerable<string> enumerateFiles(string extension) =>
-                System.IO.Directory.EnumerateFiles(Directory, fileName + extension, SearchOption.TopDirectoryOnly);
+            IEnumerable<string> enumerateFiles(string extension)
+            {
+                var fileNameWithExtension = fileName + extension;
+                return System.IO.Directory.EnumerateFiles(Directory, "*", SearchOption.TopDirectoryOnly)
+                        .Where(path => string.Equals(fileNameWithExtension, System.IO.Path.GetFileName(path), System.StringComparison.OrdinalIgnoreCase));
+            }
+
 #else
             var options = new EnumerationOptions
             {
