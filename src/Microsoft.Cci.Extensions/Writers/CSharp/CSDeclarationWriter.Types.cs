@@ -65,13 +65,14 @@ namespace Microsoft.Cci.Writers.CSharp
             {
                 Contract.Assert(type.IsDelegate);
 
+                byte? nullableContextValue = invoke.Attributes.GetCustomAttributeArgumentValue<byte?>(CSharpCciExtensions.NullableContextAttributeFullName);
                 if (invoke.IsMethodUnsafe()) WriteKeyword("unsafe");
                 WriteKeyword("delegate");
-                WriteTypeName(invoke.Type);
+                WriteTypeName(invoke.Type, invoke.ReturnValueAttributes, methodNullableContextValue: nullableContextValue);
                 WriteIdentifier(namedType.Name);
                 if (type.IsGeneric) WriteGenericParameters(type.GenericParameters);
-                WriteParameters(invoke.Parameters, invoke.ContainingType);
-                if (type.IsGeneric) WriteGenericContraints(type.GenericParameters);
+                WriteParameters(invoke.Parameters, invoke.ContainingType, nullableContextValue);
+                if (type.IsGeneric) WriteGenericContraints(type.GenericParameters, TypeNullableContextValue); // Delegates are special, and the NullableContextValue we should fallback to is the delegate type one, not the invoke method one.
                 WriteSymbol(";");
             }
             else
@@ -93,22 +94,44 @@ namespace Microsoft.Cci.Writers.CSharp
         // to reflect this.
         private void WriteBaseTypes(ITypeDefinition type)
         {
-            List<ITypeReference> baseTypes = new List<ITypeReference>();
-
             ITypeReference baseType = GetBaseType(type);
-
-            if (baseType != null)
-                baseTypes.Add(baseType);
-
-            baseTypes.AddRange(type.Interfaces.Where(IncludeBaseType).OrderBy((t) => GetTypeName(t), StringComparer.OrdinalIgnoreCase));
-
-            if (baseTypes.Count == 0)
+            IEnumerable<ITypeReference> interfaces = type.Interfaces.Where(IncludeBaseType).OrderBy(t => GetTypeName(t), StringComparer.OrdinalIgnoreCase);
+            
+            if (baseType == null && !interfaces.Any())
                 return;
 
             WriteSpace();
             WriteSymbol(":", true);
 
-            WriteList(baseTypes, (t) => WriteTypeName(t, noSpace: true));
+            if (baseType != null)
+            {
+                WriteTypeName(baseType, type.Attributes, noSpace: true);
+                if (interfaces.Any())
+                {
+                    WriteSymbol(",", addSpace: true);
+                }
+            }
+
+            WriteList(GetInterfaceWriterActions(type, interfaces), i => i());
+        }
+
+        private IEnumerable<Action> GetInterfaceWriterActions(ITypeReference type, IEnumerable<ITypeReference> interfaces)
+        {
+            if (interfaces.Any())
+            {
+                string location = type.Locations.FirstOrDefault()?.Document?.Location;
+                uint typeToken = ((IMetadataObjectWithToken)type).TokenValue;
+                foreach (var interfaceImplementation in interfaces)
+                {
+                    object nullableAttributeValue = null;
+                    if (location != null)
+                    {
+                        nullableAttributeValue = interfaceImplementation.GetInterfaceImplementationAttributeConstructorArgument(typeToken, location, _metadataReaderCache, CSharpCciExtensions.NullableConstructorArgumentParser);
+                    }
+
+                    yield return () => WriteTypeName(interfaceImplementation, noSpace: true, nullableAttributeArgument: nullableAttributeValue);
+                }
+            }
         }
 
         private string GetTypeName(ITypeReference type)

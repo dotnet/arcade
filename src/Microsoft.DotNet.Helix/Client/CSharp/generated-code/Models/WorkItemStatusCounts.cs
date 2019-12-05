@@ -23,11 +23,11 @@ namespace Microsoft.DotNet.Helix.Client.Models
         {
             get
             {
-                if (Analysis == default)
+                if (Analysis == default(IImmutableList<AnalysisCount>))
                 {
                     return false;
                 }
-                if (WorkItemStatus == default)
+                if (WorkItemStatus == default(IImmutableDictionary<string, int>))
                 {
                     return false;
                 }

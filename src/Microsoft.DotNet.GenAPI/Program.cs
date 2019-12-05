@@ -42,6 +42,7 @@ namespace Microsoft.DotNet.GenAPI
             CommandOption globalPrefix = app.Option("-g|--global", "Include global prefix for compilation.", CommandOptionType.NoValue);
             CommandOption excludeApiList = app.Option("--exclude-api-list", "Specify a api list in the DocId format of which APIs to exclude.", CommandOptionType.SingleValue);
             CommandOption excludeAttributesList = app.Option("--exclude-attributes-list", "Specify a list in the DocId format of which attributes should be excluded from being applied on apis.", CommandOptionType.SingleValue);
+            CommandOption followTypeForwards = app.Option("--follow-type-forwards", "[CSDecl] Resolve type forwards and include its members.", CommandOptionType.NoValue);
             CommandOption apiOnly = app.Option("--api-only", "[CSDecl] Include only API's not CS code that compiles.", CommandOptionType.NoValue);
             CommandOption all = app.Option("--all", "Include all API's not just public APIs. Default is public only.", CommandOptionType.NoValue);
             CommandOption memberHeadings = app.Option("--member-headings", "[CSDecl] Include member headings for each type of member.", CommandOptionType.NoValue);
@@ -79,10 +80,21 @@ namespace Microsoft.DotNet.GenAPI
                         using (TextWriter output = GetOutput(GetFilename(assembly, writerType.ParsedValue, syntaxWriterType.ParsedValue)))
                         using (IStyleSyntaxWriter syntaxWriter = GetSyntaxWriter(output, writerType.ParsedValue, syntaxWriterType.ParsedValue))
                         {
-                            if (headerText != null)
-                                output.Write(headerText);
-                            ICciWriter writer = GetWriter(output, syntaxWriter);
-                            writer.WriteAssemblies(new IAssembly[] { assembly });
+                            ICciWriter writer = null;
+                            try
+                            {
+                                if (headerText != null)
+                                    output.Write(headerText);
+                                writer = GetWriter(output, syntaxWriter);
+                                writer.WriteAssemblies(new IAssembly[] { assembly });
+                            }
+                            finally
+                            {
+                                if (writer is CSharpWriter csWriter)
+                                {
+                                    csWriter.Dispose();
+                                }
+                            }
                         }
                     }
                 }
@@ -91,10 +103,21 @@ namespace Microsoft.DotNet.GenAPI
                     using (TextWriter output = GetOutput(outFilePath.Value()))
                     using (IStyleSyntaxWriter syntaxWriter = GetSyntaxWriter(output, writerType.ParsedValue, syntaxWriterType.ParsedValue))
                     {
-                        if (headerText != null)
-                            output.Write(headerText);
-                        ICciWriter writer = GetWriter(output, syntaxWriter);
-                        writer.WriteAssemblies(assemblies);
+                        ICciWriter writer = null;
+                        try
+                        {
+                            if (headerText != null)
+                                output.Write(headerText);
+                            writer = GetWriter(output, syntaxWriter);
+                            writer.WriteAssemblies(assemblies);
+                        }
+                        finally
+                        {
+                            if (writer is CSharpWriter csWriter)
+                            {
+                                csWriter.Dispose();
+                            }
+                        }
                     }
                 }
 
@@ -104,7 +127,7 @@ namespace Microsoft.DotNet.GenAPI
             ICciWriter GetWriter(TextWriter output, ISyntaxWriter syntaxWriter)
             {
                 ICciFilter filter = GetFilter(apiList.Value(), all.HasValue(), apiOnly.HasValue(), 
-                    excludeApiList.Value(), excludeMembers.HasValue(), excludeAttributesList.Value());
+                    excludeApiList.Value(), excludeMembers.HasValue(), excludeAttributesList.Value(), followTypeForwards.HasValue());
 
                 switch (writerType.ParsedValue)
                 {
@@ -130,6 +153,7 @@ namespace Microsoft.DotNet.GenAPI
                             writer.IncludeGlobalPrefixForCompilation = globalPrefix.HasValue();
                             writer.AlwaysIncludeBase = alwaysIncludeBase.HasValue();
                             writer.LangVersion = GetLangVersion();
+                            writer.IncludeForwardedTypes = followTypeForwards.HasValue();
                             return writer;
                         }
                 }
@@ -220,7 +244,7 @@ namespace Microsoft.DotNet.GenAPI
             }
         }
 
-        private static ICciFilter GetFilter(string apiList, bool all, bool apiOnly, string excludeApiList, bool excludeMembers, string excludeAttributesList)
+        private static ICciFilter GetFilter(string apiList, bool all, bool apiOnly, string excludeApiList, bool excludeMembers, string excludeAttributesList, bool includeForwardedTypes)
         {
             ICciFilter includeFilter = null;
 
@@ -232,7 +256,7 @@ namespace Microsoft.DotNet.GenAPI
                 }
                 else
                 {
-                    includeFilter = new PublicOnlyCciFilter(excludeAttributes: apiOnly);
+                    includeFilter = new PublicOnlyCciFilter(excludeAttributes: apiOnly, includeForwardedTypes: includeForwardedTypes);
                 }
             }
             else
@@ -247,7 +271,7 @@ namespace Microsoft.DotNet.GenAPI
 
             if (!string.IsNullOrWhiteSpace(excludeAttributesList))
             {
-                includeFilter = new IntersectionFilter(includeFilter, new ExcludeAttributesFilter(excludeAttributesList));
+                includeFilter = new IntersectionFilter(includeFilter, new ExcludeAttributesFilter(excludeAttributesList, includeForwardedTypes: includeForwardedTypes));
             }
 
             return includeFilter;
