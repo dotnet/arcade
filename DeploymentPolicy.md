@@ -18,6 +18,16 @@ It is important that we have metrics, with clear targets to measure how we're do
 
 Deployments follow the pattern described in the [Deployment Process](../Validation/DeploymentProcess.md).
 
+## GitHub Issue Tagging
+Every issue that arises as a result of a rollout must be filed on GitHub in dotnet/core-eng. These issues should include labels that specify the type of event and the repo in which it occurred.
+
+* The event type labels are: **Rollout Issue** for issues that arise as a result of the rollout, **Rollout Hotfix** for manual hotfixes, and **Rollout Rollback** for manual rollbacks
+  * Hotfixes and rollbacks that result in a deployment do not need to be filed on GitHub (i.e. only manual hotfixes and rollbacks should be filed)
+* Additionally, all issues must contain a label indicating the repo affected:
+  * **Rollout Helix** for Helix rollouts
+  * **Rollout OSOB** for OS Onboarding rollouts
+  * **Rollout Arcade Services** for Arcade Services rollouts.
+
 ## Rollbacks
 * Rollbacks are triggered by manually kicking off a build/release pipeline to deploy the *n-1*th version. There should be minimal to no human intervention needed in rolling back a deployment. Every new deployable service/feature that is coming up needs to have a rollback story defined and implemented as part of the epic.
     - For Pipeline-based deployment, revert the change to production branch and kick-off a build and deploy pipeline.
@@ -25,7 +35,7 @@ Deployments follow the pattern described in the [Deployment Process](../Validati
     - Rolling back database changes can be tricky especially if data loss is incurred like in case of a added column/dropping a table. This is only scenario where they might be manual intervention needed for rollback.
 * Workflow for Rollback:
     - When a service in production is discovered to be in a "downed" state (e.g. not taking work, constantly throwing errors, etc.) following a rollout, then rollback IMMEDIATELY to a previously known working deployment. Continue investigation in staging by reproing the failure.
-    - Rollback PRs need to have a commit message which starts with `[ROLLBACK]`, e.g. "[ROLLBACK] blah blah"
+    - Rollback PRs need to have a commit message which contains `[ROLLBACK]`, e.g. "[ROLLBACK] blah blah"
     - Create a GitHub issue for tracking, with tags indicating that this is a rollback.
     - Communicate the state of affairs to dncpartners@microsoft.com when the issue is identified along with the tracking GitHub issue, and when it's mitigated.
 
