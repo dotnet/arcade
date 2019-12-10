@@ -78,6 +78,8 @@ If you have many native project references and don't want to specify the `CMakeP
 
 All assets that are a direct output of this CMakeLists.txt will be copied to your output folder. This includes all library and executable targets defined in this CMakeLists.txt. This CMakeLists.txt does not have to be the root of your CMake tree, but it must be transitively included by the CMakeLists.txt specified in the referenced `CMakeProject` project.
 
+By default, a NativeProjectReference will not build the native project. It assumes that the project has already been built. To build the project as part of the reference, you can opt-in by setting the `BuildNative="true"` metadata on the `NativeProjectReference`.
+
 ### Generating a raw build script for bringup scenarios
 
 This SDK also supports outputting the script that the SDK runs to configure and build your CMake project. This feature can be used to generate a simple script for use in bringup scenarios where we don't have MSBuild available for the device we are building on. This would enable teams to generate bringup build scripts when needed instead of using bringup-style scripts at all times or having unused bringup scripts that quickly bitrot.
