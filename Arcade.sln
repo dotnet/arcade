@@ -97,6 +97,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Build.Task
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.DotNet.Helix.JobSender.Tests", "src\Microsoft.DotNet.Helix\JobSender.Tests\Microsoft.DotNet.Helix.JobSender.Tests.csproj", "{3376C769-211F-4537-A156-5F841FF7840B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.DotNet.CMake.Sdk", "src\Microsoft.DotNet.CMake.Sdk\Microsoft.DotNet.CMake.Sdk.csproj", "{2A0A942D-77ED-44F6-9C2B-4893FE277A61}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -619,6 +621,18 @@ Global
 		{3376C769-211F-4537-A156-5F841FF7840B}.Release|x64.Build.0 = Release|Any CPU
 		{3376C769-211F-4537-A156-5F841FF7840B}.Release|x86.ActiveCfg = Release|Any CPU
 		{3376C769-211F-4537-A156-5F841FF7840B}.Release|x86.Build.0 = Release|Any CPU
+		{2A0A942D-77ED-44F6-9C2B-4893FE277A61}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2A0A942D-77ED-44F6-9C2B-4893FE277A61}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2A0A942D-77ED-44F6-9C2B-4893FE277A61}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{2A0A942D-77ED-44F6-9C2B-4893FE277A61}.Debug|x64.Build.0 = Debug|Any CPU
+		{2A0A942D-77ED-44F6-9C2B-4893FE277A61}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{2A0A942D-77ED-44F6-9C2B-4893FE277A61}.Debug|x86.Build.0 = Debug|Any CPU
+		{2A0A942D-77ED-44F6-9C2B-4893FE277A61}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2A0A942D-77ED-44F6-9C2B-4893FE277A61}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2A0A942D-77ED-44F6-9C2B-4893FE277A61}.Release|x64.ActiveCfg = Release|Any CPU
+		{2A0A942D-77ED-44F6-9C2B-4893FE277A61}.Release|x64.Build.0 = Release|Any CPU
+		{2A0A942D-77ED-44F6-9C2B-4893FE277A61}.Release|x86.ActiveCfg = Release|Any CPU
+		{2A0A942D-77ED-44F6-9C2B-4893FE277A61}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -641,6 +655,7 @@ Global
 		{41F3EF12-6062-44CE-A1DB-1DCA76122AF8} = {C53DD924-C212-49EA-9BC4-1827421361EF}
 		{6E19C6B6-4ADF-4DD6-86CC-6C1624BCDB71} = {C53DD924-C212-49EA-9BC4-1827421361EF}
 		{3376C769-211F-4537-A156-5F841FF7840B} = {6BE49638-F842-4329-BE8A-30C0F30CCAA5}
+		{2A0A942D-77ED-44F6-9C2B-4893FE277A61} = {326D6C24-3774-4227-AABD-4CB6AD9DF9F8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {32B9C883-432E-4FC8-A1BF-090EB033DD5B}

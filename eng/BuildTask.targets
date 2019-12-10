@@ -4,6 +4,7 @@
     <IsPackable>true</IsPackable>
     <!-- Build Tasks should not include any dependencies -->
     <SuppressDependenciesWhenPacking Condition="'$(SuppressDependenciesWhenPacking)' == ''">true</SuppressDependenciesWhenPacking>
+    <PackTasks Condition="'$(PackTasks)' == ''">true</PackTasks>
   </PropertyGroup>
 
   <!--
@@ -60,7 +61,7 @@
     <PackageReference Update="System.Threading.Tasks.Dataflow" PrivateAssets="All" Publish="false" ExcludeAssets="runtime" />
   </ItemGroup>
 
-  <PropertyGroup>
+  <PropertyGroup Condition="'$(PackTasks)' == 'true'">
     <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_AddBuildOutputToPackageCore;_AddBuildOutputToPackageDesktop</TargetsForTfmSpecificContentInPackage>
   </PropertyGroup>
   
