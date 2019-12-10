@@ -46,8 +46,14 @@
     <Error Condition="'$(_HighestCompatibleVSVersion)' == ''" Text="Unable to find a VS installation with the MSVC tools for the '$(Platform)' architecture." />
 
     <PropertyGroup>
-      <CMakeGenerator Condition="$(_HighestCompatibleVSVersion.StartsWith(15.))">Visual Studio 15 2017</CMakeGenerator>
-      <CMakeGenerator Condition="$(_HighestCompatibleVSVersion.StartsWith(16.))">Visual Studio 16 2019</CMakeGenerator>
+      <VSGenerator Condition="$(_HighestCompatibleVSVersion.StartsWith(16.))">Visual Studio 16 2019</VSGenerator>
+    </PropertyGroup>
+
+    <Error Condition="'$(VSGenerator)' == ''"
+           Text="Unable to determine the correct CMake Generator for Visual Studio. The SDK may need to be updated to understand a new VS version. Unknown Visual Studio version $(_HighestCompatibleVSVersion)" />
+
+    <PropertyGroup>
+      <CMakeGenerator>$(VSGenerator)</CMakeGenerator>
     </PropertyGroup>
   </Target>
 
