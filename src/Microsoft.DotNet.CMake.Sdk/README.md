@@ -18,8 +18,6 @@ This package enables easy Arcade integration of native product and test builds.
 
 Here are a list of common MSBuild items that this SDK consumes:
 
-- CMakeLists
-  - The root CMakeLists.txt of the native build.
 - CMakeDefines
   - Any defines passed directly to CMake via `-D`.
 - CMakeArguments
@@ -31,6 +29,8 @@ Here are a list of common MSBuild items that this SDK consumes:
 
 Here are a list of MSBuild properties that this SDK consumes:
 
+- CMakeLists
+  - The root CMakeLists.txt of the native build.
 - CMakeGenerator
   - The CMake generator to use. To use a Visual Studio based generator, you can specify "Visual Studio" and this SDK will resolve a VS that supports the target platform.
 - Configuration

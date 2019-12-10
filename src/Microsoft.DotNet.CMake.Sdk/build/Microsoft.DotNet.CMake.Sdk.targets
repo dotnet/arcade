@@ -55,7 +55,7 @@
 
   <Target Name="GetRootCMakeListsDirectory" Returns="$(_NormalizedCMakeListsDirectory)">
     <PropertyGroup>
-      <_NormalizedCMakeListsPath>$([MSBuild]::NormalizePath($(MSBuildProjectDirectory),@(CMakeLists)))</_NormalizedCMakeListsPath>
+      <_NormalizedCMakeListsPath>$([MSBuild]::NormalizePath($(MSBuildProjectDirectory),$(CMakeLists)))</_NormalizedCMakeListsPath>
       <_NormalizedCMakeListsDirectory>$([System.IO.Path]::GetDirectoryName($(_NormalizedCMakeListsPath)))</_NormalizedCMakeListsDirectory>
     </PropertyGroup>
   </Target>
@@ -106,9 +106,9 @@
 
   <Target Name="GetConfigScript" Returns="$(CMakeConfigScript)"
     DependsOnTargets="ResolveVSGenerator;_ResolveVSCompilerToolchainForNonVSGenerators;$(CMakeConfigureDependsOn)">
-    <Error Condition="'@(CMakeLists)' == ''" Text="A CMakeLists.txt must be specified via a CMakeLists item." />
+    <Error Condition="'$(CMakeLists)' == ''" Text="A CMakeLists.txt must be specified via a CMakeLists item." />
     <Error Condition="'$(CMakeOutputDir)' == ''" Text="An output directory must be specified via the CMakeOutputDir property." />
-    <Error Condition="!Exists('@(CMakeLists)')" Text="The provided CMakeLists.txt does not exist." />
+    <Error Condition="!Exists('$(CMakeLists)')" Text="The provided CMakeLists.txt does not exist." />
     <Error Condition="'$(Platform)' == 'AnyCPU'" Text="A CMake project must be built for a specific architecture." />
 
     <ItemGroup>
