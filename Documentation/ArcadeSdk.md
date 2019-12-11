@@ -1,4 +1,4 @@
-# Arcade SDK
+﻿# Arcade SDK
 
 Arcade SDK is a set of msbuild props and targets files and packages that provide common build features used across multiple repos, such as CI integration, packaging, VSIX and VS setup authoring, testing, and signing via Microbuild.
 
@@ -342,6 +342,19 @@ The version of `RoslynTools.MSBuild` package can be specified in `global.json` f
 ```
 
 If it is not specified the build script attempts to find `RoslynTools.MSBuild` version `{VSMajor}.{VSMinor}.0-alpha` where `VSMajor.VSMinor` is the value of `tools.vs.version`.
+
+If the fallback behavior to use xcopy-deployable MSBuild package is not desirable, then a version of `none` should be indicated in `global.json`, like this: 
+
+```json
+{
+  "tools": {
+    "vs": {
+      "version": "16.4"
+    },
+    "xcopy-msbuild": "none"
+  }
+}
+```
 
 #### Example: Restoring multiple .NET Core Runtimes for running tests
 

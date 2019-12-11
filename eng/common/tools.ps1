@@ -293,8 +293,11 @@ function InitializeVisualStudioMSBuild([bool]$install, [object]$vsRequirements =
       $vsMajorVersion = $vsMinVersion.Major
       $xcopyMSBuildVersion = "$vsMajorVersion.$($vsMinVersion.Minor).0-alpha"
     }
-
-    $vsInstallDir = InitializeXCopyMSBuild $xcopyMSBuildVersion $install
+    
+    $vsInstallDir = $null
+    if ($xcopyMSBuildVersion.Trim() -ine "none") {
+        $vsInstallDir = InitializeXCopyMSBuild $xcopyMSBuildVersion $install
+    }
     if ($vsInstallDir -eq $null) {
       throw 'Unable to find Visual Studio that has required version and components installed'
     }
