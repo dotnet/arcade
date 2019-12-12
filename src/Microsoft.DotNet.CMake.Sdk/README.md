@@ -63,7 +63,7 @@ An important feature of the Microsoft.DotNet.CMake.Sdk is that it enables the us
 To add a native project reference from a managed project, add the following line to your `.csproj` file to include the targets:
 
 ```xml
-<Import Project="CMake.Sdk.ProjectReference.targets" Sdk="Microsoft.DotNet.CMake.Sdk" />
+<Import Project="ProjectReference.targets" Sdk="Microsoft.DotNet.CMake.Sdk" />
 ```
 
 To add a native project reference to a give CMakeLists.txt, add a `NativeProjectReference` item as shown below:
