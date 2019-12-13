@@ -50,7 +50,7 @@ Documentation on how to do the above is an absolute must. We want to ensure that
 
 ### Unit Testing
 
-(Nov 12, 2019) Note: These steps have been validated to work in the Helix Services, and still need to be validated to work with OSOB and Arcade Services. 
+(Dec 12, 2019) Note: These steps have been validated to work in the Helix Services and Arcade Services, and still need to be validated to work with OSOB. 
 
 To add a unit test project, and ensure that it is able to automatically run in the pipelines and have it's test results and code coverage collected, do the following steps: 
 
@@ -84,6 +84,36 @@ Use the same name as the source project the tests will be for, but with ".Tests"
     <TargetFramework>$(NetFrameworkFramework)</TargetFramework>
   </PropertyGroup>
 ```
+6. Projects that use the .NET Core framework [require an additional property](https://github.com/Microsoft/vstest/issues/800) to ensure the symbols required for code coverage are published. In each source project being tested (not the test project), add the following:
+```
+  <PropertyGroup>
+    <DebugType>Full</DebugType>
+  </PropertyGroup>
+```
+7. Excluding third party libraries from code coverage can be accomplished through [adding a .runsettings file](https://docs.microsoft.com/en-us/visualstudio/test/customizing-code-coverage-analysis?view=vs-2019). This file will need to be referenced in the stage that collects code coverage. The contents of the .runsettings file should look like this: 
+```
+  <RunSettings>
+    <DataCollectionRunSettings>
+      <DataCollectors>
+        <DataCollector friendlyName="Code Coverage" uri="datacollector://Microsoft/CodeCoverage/2.0" assemblyQualifiedName="Microsoft.VisualStudio.Coverage.DynamicCoverageDataCollector, Microsoft.VisualStudio.TraceCollector, Version=11.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a">
+          <Configuration>
+            <CodeCoverage>
+              <ModulePaths>
+                <Exclude>
+                  <ModulePath>.*Moq.dll</ModulePath>
+                  <ModulePath>.*fluentassertions.dll</ModulePath>
+                  <ModulePath>.*microsoft.extensions.logging.applicationinsights.dll</ModulePath>
+                  <ModulePath>.*libgit2sharp.dll</ModulePath>
+                  <ModulePath>.*quartz.dll</ModulePath>
+                </Exclude>
+              </ModulePaths>
+            </CodeCoverage>
+          </Configuration>
+        </DataCollector>
+      </DataCollectors>
+    </DataCollectionRunSettings>
+  </RunSettings>
+```
 
 Notes: 
 - Currently, this process has only been verified to work with xUnit tests. Although we do have nUnit in our codebase, it was introduced to help with parallelization of our functional and scenario tests. 
@@ -91,6 +121,7 @@ Notes:
   - **xunit**: used for the xUnit test framework. 
   - **xunit.runner.visualstudio**: required for Visual Studio to run the xunit tests. 
   - **Microsoft.NET.Test.Sdk**: this package (specifically version 15.8.0+) is required so that the `dotnet test` command can collect code coverage during the PR and CI-merge-to-master pipeline runs. 
+- If the repository is using [Arcade](https://github.com/dotnet/arcade), the unit test results will automatically be collected. If it's not, then the build pipeline will require a step to upload the test results. 
 
 ## Validation and Deployment Workflow
 
