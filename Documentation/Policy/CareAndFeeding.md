@@ -23,7 +23,7 @@ The main responsibilities of the point people are:
 Looked into if it made sense to use the same [triage guidance](https://github.com/dotnet/consolidation/blob/master/Documentation/issues-pr-management.md) as the consolidated repo, but the overlap appears minimal.  However - this should still be considered a possiblity to provide consistency.
 
 ## Filing Issues
-All Arcade (and related like darc, Maestro, Helix, etc) must be filed in the dotnet/arcade repo.  As an aside, the dotnet/core-eng repo is used by the engineering servicing team.
+All issues regarding Arcade (and related like darc, Maestro, Helix, etc) must be filed in the dotnet/arcade repo.  As an aside, the dotnet/core-eng repo is used by the engineering services team.
 
 The default Arcade issue template should be used with every issue filed.  This implies that the template should be *very* simple and have low overhead.
 
@@ -42,4 +42,3 @@ For example perhaps alert on items such as:
 -	More than n comments in x timeframe
 -	Sentiment (angry, upset, distressed)
 -	@somebody on our team
-
