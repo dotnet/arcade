@@ -35,7 +35,7 @@ At this time, the only items in the template are:
 The wider Arcade working group will meet every two weeks, or on demand.  In addition, arcadewg@microsoft can be used for infrastructure related items.
 
 ## Alerting
-At this time, it is one of the roles of the point persons to ensure that "alerting" happens.  However, it would be advantageous to provide some automation so help highlight issues/PRs in Arcade that need more immediate attention.
+At this time, it is one of the roles of the point persons to ensure that "alerting" happens.  However, it would be advantageous to provide some automation to help highlight issues/PRs in Arcade that need more immediate attention.
 
 For example perhaps alert on items such as:
 -   Template marked as blocking or unreasonable pain
