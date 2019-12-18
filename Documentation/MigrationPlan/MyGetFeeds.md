@@ -27,7 +27,7 @@ Fsharp •	Roslyn •	Tomas •	UWP •	Corefxlab •	NuGet •	MSBuild
 
 
 ### Make MyGet Feeds Read-Only
-- This stops the publishing of new packages which gives a stable "snapshot" to migrate.
+- This prevents the publishing of new packages which gives a stable "snapshot" to migrate.
 - Before this happens, it's very important that partner teams are aware that new packages will only be published to the Azure DevOps feeds.  
 - There will likely be some fallout from this step.  Once it's done however, our confidence will be higher that we have functional understanding of who the consumers of our feeds are.
 
