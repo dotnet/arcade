@@ -41,7 +41,7 @@ Fsharp •	Roslyn •	Tomas •	UWP •	Corefxlab •	NuGet •	MSBuild
   - We don't have that many dependencies on MyGet left in our 3.x builds (relatively speaking)
   - There will be a "legacy" feed for existing packages.
   - The migration is being staged over time
-- It is understood that this transition wil be noisy and the engineering servicing team is committed to doing whatever is necessary to help out where and as needed. 
+- It is understood that this transition will be noisy and the engineering servicing team is committed to doing whatever is necessary to help out where and as needed. 
 
 ### Appendix A - donet.myget feed audit (from 12/18/19 courtesy of Matt Mitchell)
 
