@@ -1,6 +1,6 @@
 # Arcade SDK Publishing Infrastructure
 
-This document describes the infrastructure provided by the Arcade SDK for publishing build artifacts.
+This document describes the infrastructure provided by the Arcade SDK for publishing build assets.
 
 ## Main differences to previous approaches
 
@@ -8,7 +8,7 @@ This document describes the infrastructure provided by the Arcade SDK for publis
 
 - **Publishing happens after the build:** assets are not published to any external storage during the build job. They are instead registered as Azure DevOps artifacts which will be published to external locations only after the build job finishes and validations are executed.
 
-- **Don't use Azure DevOps release pipelines:** The new infrastructure doesn't use Azure DevOps Release Management Pipelines. Instead, the new concept of Stages is used. See below more information about stages.
+- **Deprecate Azure DevOps release pipelines:** The new infrastructure doesn't use Azure DevOps Release Management Pipelines - the previous one did. Instead, the new concept of Stages is used. See below more information about stages.
 
 ## What are YAML stages?
 
@@ -116,7 +116,7 @@ In order to use this new publishing mechanism, the easiest way to start is by ma
 
     We suggest you to use the stage name *build*, otherwise you'll need to pass the name of the stage to the `post-build.yml` template (see table on next section).
 
-1. Import the new [eng\common\templates\post-build\post-build.yml](../../eng/common/templates/post-build/post-build.yml) Arcade template at the end of the build definition. This will import all default test, validate and publishing stages provided by Arcade. The bottom part of your build definition will look like this:
+1. Import the new `eng\common\templates\post-build\post-build.yml` Arcade template at the end of the build definition. This will import all default test, validate and publishing stages provided by Arcade. The bottom part of your build definition will look like this:
 
     ```YAML
     - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
@@ -137,7 +137,7 @@ In order to use this new publishing mechanism, the easiest way to start is by ma
     | artifactsPublishingAdditionalParameters | string   | Additional arguments for the PublishArtifactsInManifest sdk task.                                    | '' |
     | signingValidationAdditionalParameters   | string  | Additional arguments for the SigningValidation sdk task.     | '' |
     | publishInstallersAndChecksums           | bool     | Publish installers packages and checksums from the build artifacts to the dotnetcli storage account. | false |
-| SDLValidationParameters                 | object   | Parameters for the SDL job template, as documented in the [SDL template documentation](../HowToAddSDLRunToPipeline.md) | -- |
+| SDLValidationParameters                 | object   | Parameters for the SDL job template, as documented in the [SDL template documentation](https://github.com/dotnet/arcade/blob/66175ebd3756697a3ca515e16cd5ffddc30582cd/Documentation/HowToAddSDLRunToPipeline.md) | -- |
     | validateDependsOn | [array] | Which stage(s) should the validation stage depends on. | build |
     | publishDependsOn | [array] | Which stage(s) should the publishing stage(s) depends on. | Validate |
 
@@ -278,9 +278,7 @@ Since the post-build stages will only trigger during builds that run in the inte
 2. Set up the "General Testing Channel" as a default channel for the internal repo + branch combination using Darc.
 
     ``` Powershell
-    # From a repository that contains an eng/common folder
-    C:\> .\eng\common\darc-init.ps1
-    C:\> darc add-default-channel --channel "General Testing" --branch "<my_new_branch>" --repo "https://dev.azure.com/dnceng/internal/_git/<repo_name>"
+    darc add-default-channel --channel "General Testing" --branch "<my_new_branch>" --repo "https://dev.azure.com/dnceng/internal/_git/<repo_name>"
     ```
 
 3. Queue a build for your test branch
