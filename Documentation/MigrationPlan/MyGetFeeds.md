@@ -3,6 +3,9 @@
 ## Summary
 Now that Azure DevOps has feature parity with MyGet (namely public feeds), and we've already taken our primary dependency on Azure DevOps feeds, it's time to completely discontinue our use of MyGet.
 
+## Scope and Impact
+- We will be shutting down dotnet.myget.org
+
 ## Plan Overview
 1. Broadly socialize this plan with product teams to both set expectations, and catch any gaps.  (end of Jan 2020)
 2. Make all MyGet feeds read-only (first part of Feb)
@@ -13,7 +16,7 @@ Now that Azure DevOps has feature parity with MyGet (namely public feeds), and w
 ## Details
 
 ### Plan Socialization
-- The scope include **all** use of MyGet, including servicing.  It is also expected that there are a variety of places we're currently unaware of...
+- The scope include all feeds on dotnet.myget.org, including servicing.  
 - There likely will need to be some communication to our community about this change.
 - This migration will likely be fairly disruptive, so setting clear expectations, and giving plenty of time to adjust is a key to our success.
 - There are a variety of partner teams which depend on MyGet today to get updates to .NET Core.  These consumers need to be identified as part of the socialization effort so that they can move their dependencies as well.
