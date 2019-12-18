@@ -4,24 +4,21 @@ This document describes the infrastructure provided by the Arcade SDK for publis
 
 ## Main differences to previous approaches
 
-- The concept of Channels is central: 
+- **The concept of Channels is central:** The locations where the packages will be published to are determined based on which Maestro++ channel the build is assigned to. Look [here](https://github.com/dotnet/arcade/blob/66175ebd3756697a3ca515e16cd5ffddc30582cd/Documentation/BranchesChannelsAndSubscriptions.md) for more info about channels.
 
-- Publishing happens after the build:
+- **Publishing happens after the build:** assets are not published to any external storage during the build job. They are instead registered as Azure DevOps artifacts which will be published to external locations only after the build job finishes and validations are executed.
 
-- Don't use Azure DevOps release pipelines: 
+- **Don't use Azure DevOps release pipelines:** The new infrastructure doesn't use Azure DevOps Release Management Pipelines. Instead, the new concept of Stages is used. See below more information about stages.
 
 ## What are YAML stages?
 
-Stages are a concept introduced by Azure DevOps to organize the jobs in a pipeline. Just as Jobs are a
-collection of Steps, Stages can be thought of as a collection of Jobs, where for example, the same pipeline can be split into Build, Test and, Publishing stages.
+Stages are a concept introduced by Azure DevOps to organize the jobs in a pipeline. Just as Jobs are a collection of Steps, Stages can be thought of as a collection of Jobs, where for example, the same pipeline can be split into Build, Test and, Publishing stages.
 
-Stages are the way that Azure DevOps is bringing build and release pipelines together, and are going to
-be the replacement for the RM UI based release pipelines. The official documentation for YAML-based Stages can be found [here](https://docs.microsoft.com/en-us/azure/devops/pipelines/process/stages?view=azure-devops&tabs=yaml).
+Stages are the way that Azure DevOps is bringing build and release pipelines together, and are going to be the replacement for the RM UI based release pipelines. The official documentation for YAML-based Stages can be found [here](https://docs.microsoft.com/en-us/azure/devops/pipelines/process/stages?view=azure-devops&tabs=yaml).
 
 ## Why use YAML stages for publishing?
 
-Using stages for publishing seeks to unify the Arcade SDK build artifact publishing mechanisms into a single
-solution that brings together the advantages of both the in-build synchronous publishing and the previous release pipeline based asynchronous publishing approaches. Other benefits are:
+Using stages for publishing seeks to unify the Arcade SDK build artifact publishing mechanisms into a single solution that brings together the advantages of both the in-build synchronous publishing and the previous release pipeline based asynchronous publishing approaches. Other benefits are:
 
 * Clearly separate the concepts of build, test, publish and validate.
 * Support publishing and validation errors to be reported in the build page UI.
@@ -45,8 +42,7 @@ In order to use this new publishing mechanism, the easiest way to start is by ma
 
 1. Update the repository Arcade SDK version to `1.0.0-beta.19360.8` or newer.
 
-1. Add a *top level* variable named `_DotNetArtifactsCategory` to your build-definition YAML. Most repositories will use `.NETCore` as the category unless assets should be published to a feed
-    other than the default Maestro++ managed feeds. See [Advanced Scenarios](##overriding-the-publishing-feed-used-for-builds-in-the-dev-channel) for instructions on how to publish to a specific feed. See below an example definition:
+1. Add a *top level* variable named `_DotNetArtifactsCategory` to your build-definition YAML. Most repositories will use `.NETCore` as the category unless assets should be published to a feed other than the default Maestro++ managed feeds. See [Advanced Scenarios](##overriding-the-publishing-feed-used-for-builds-in-the-dev-channel) for instructions on how to publish to a specific feed. See below an example definition:
 
     ```YAML
     variables:
@@ -154,7 +150,7 @@ In order to use this new publishing mechanism, the easiest way to start is by ma
     * [Arcade-Services](https://github.com/dotnet/arcade-services/blob/master/azure-pipelines.yml)
 
 1. Once the post-build template is added, a repo's official build will include a series of stages that will
-  publish to the different available feeds, depending on the Maestro++ default channel that the build will be assigned to. For more information on channels, see the [Channels, Branches and Subscriptions document](../BranchesChannelsAndSubscriptions.md).
+  publish to the different available feeds, depending on the Maestro++ default channel that the build will be assigned to. For more information on channels, see the [Channels, Branches and Subscriptions document](https://github.com/dotnet/arcade/blob/66175ebd3756697a3ca515e16cd5ffddc30582cd/Documentation/BranchesChannelsAndSubscriptions.md).
 
 
 After these changes the build job(s) will publish the build assets to Azure DevOps build artifacts instead of immediately publishing them to a feed or storage location. The post-build stages are responsible for moving the AzDO artifacts (only the ones described in the Build Manifest(s)) to the final locations. The final location determined based on the Maestro++'s channels that the build is assigned to.
@@ -167,16 +163,12 @@ The pipeline for a build with stages enabled will look like the one shown below.
 
 #### Advanced Scenarios
 
-##### Overriding the publishing feed used for builds in the Dev channel
+##### Publishing to custom feeds
 
-By default, builds that will be published to the Validation and Dev channels will publish their assets to the
-`dotnet-core` feed. The SDK provides a mechanism to override this default for cases where downstream repositories expect the assets to be located in a different feed.
+By default, public builds currently also publish their assets to the legacy `dotnetfeed/dotnet-core` feed besides the new AzDO feeds (e.g., dotnet5-transport, dotnet5, etc). The SDK provides a mechanism to let you override override the publishing to `dotnetfeed/dotnet-core` to instead publish to a different custom feed of your choice. The steps to enable this override are:
 
-The steps to enable this override are:
-
-1. Create a PR to https://github.com/dotnet/arcade that adds a category for your assets and a target feed
-for the category to the TargetStaticFeed PropertyGroup in
-[/src/Microsoft.DotNet.Arcade.Sdk/tools/SdkTasks/SetupTargetFeeds.proj](https://github.com/dotnet/arcade/blob/fd91e27589e69c0a97db2e208b112a24ab989180/src/Microsoft.DotNet.Arcade.Sdk/tools/SdkTasks/SetupTargetFeeds.proj)
+1. Create a Pull Request in Arcade that adds a new mapping between the category of your build assets to the desired target feed. The mapping needs to go in the `TargetStaticFeed` ItemGroup in this file:
+  [/src/Microsoft.DotNet.Arcade.Sdk/tools/SdkTasks/SetupTargetFeeds.proj](https://github.com/dotnet/arcade/blob/fd91e27589e69c0a97db2e208b112a24ab989180/src/Microsoft.DotNet.Arcade.Sdk/tools/SdkTasks/SetupTargetFeeds.proj). See example below:
 
     ```XML
     <PropertyGroup>
@@ -184,34 +176,37 @@ for the category to the TargetStaticFeed PropertyGroup in
       <TargetStaticFeed Condition="'$(ArtifactsCategory.ToUpper())' == '.NETCORE'">https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json</TargetStaticFeed>
       <TargetStaticFeed Condition="'$(ArtifactsCategory.ToUpper())' == '.NETCOREVALIDATION'">https://dotnetfeed.blob.core.windows.net/arcade-validation/index.json</TargetStaticFeed>
       ...
-      <!-- New Category -->
+      <!-- Begin: New Category -->
       <TargetStaticFeed Condition="'$(ArtifactsCategory.ToUpper())' == 'MYNEWCATEGORY'">https://dotnetfeed.blob.core.windows.net/my-feed/index.json</TargetStaticFeed>
+      <!-- End: New Category -->
       ...
       <TargetStaticFeed Condition="'$(TargetStaticFeed)' == ''">https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json</TargetStaticFeed>
     </PropertyGroup>
     ```
 
-1. Set your new category as the value for the artifact category variables
+1. Set your new category as the value for the artifact category variable.
 
     ```YAML
     variables:
     ...
-    - name: _DotNetValidationArtifactsCategory
-      value: MyNewCategory
     - name: _DotNetArtifactsCategory
       value: MyNewCategory
     ...
     ```
 
+**Note:** We strongly suggest that you discuss with the *.Net Engineering* team the intended use case for this custom feed before starting your work. In the *near* future support for publishing to custom feeds will definitely be implemented differently.
+
 ### Integrating custom publishing logic
 
-Repositories that perform additional publishing during their build outside of the Arcade SDK publishing should move away from doing so, as they would likely end up publishing to incorrect feeds for servicing builds.
+Repositories that make direct use of tasks in Tasks.Feed to publish things during their build jobs should move away from doing so, as they would likely end up publishing to incorrect feeds for servicing builds.
 
-Support for adding truly custom publishing logic to the publish stage in an Arcade-compatible way not yet implemented. Publish steps that can't be accomplished with Arcade must be performed in additional stages that happen before or after the Arcade publish stages.
+However, if for some reason the infra in the default publishing stages don't meet you requirements you can create additional stages and make them dependent on the default ones. That way, it will at least be clear that the build does custom operations.
 
-The Arcade SDK provides a way to convert `PushToBlobFeed` calls: the
-[PushToAzureDevOpsArtifacts](https://github.com/dotnet/arcade/blob/master/src/Microsoft.DotNet.Build.Tasks.Feed/src/PushToAzureDevOpsArtifacts.cs) task generates an appropriately populated asset manifest and publishes the
-assets to upload to the build's artifacts. The post-build stages will then publish the assets to the correct location based on the channel that the build will be assigned to and the asset categories.
+#### Moving away from the legacy PushToBlobFeed task
+
+If you use the legacy Tasks.Feed `PushToBlobFeed` task you should change your code to use a new task called [PushToAzureDevOpsArtifacts](https://github.com/dotnet/arcade/blob/master/src/Microsoft.DotNet.Build.Tasks.Feed/src/PushToAzureDevOpsArtifacts.cs). This new task is also in the Tasks.Feed package and should act as a drop-in replacement for the previous one.
+
+`PushToAzureDevOpsArtifacts` generates an appropriately populated Build Asset Manifest and registers the build assets as Azure DevOps build artifacts. This will guarantee that the default publishing stages will be able to access the build assets.
 
 A conversion to `PushToAzureDevOpsArtifacts` for repos that are using the `PushToBlobFeed` task inside their build would look like this:
 
@@ -271,39 +266,39 @@ A conversion to `PushToAzureDevOpsArtifacts` for repos that are using the `PushT
       Importance="high" />
     ```
 
-    This will do something similar to what the SDK does for its default publishing pipeline, as seen in [publish.proj](https://github.com/dotnet/arcade/blob/master/src/Microsoft.DotNet.Arcade.Sdk/tools/Publish.proj)
+    This will do something similar to what the SDK does for its default publishing pipeline, as seen in [publish.proj](https://github.com/dotnet/arcade/blob/master/src/Microsoft.DotNet.Arcade.Sdk/tools/Publish.proj). 
+
+    **Note:** the usage of a temporary directory for placing the assets while uploading them is needed to guarantee that nothing interfere with the upload since it occurs asynchronously. See [this issue](https://github.com/dotnet/arcade/issues/2197) for context.
 
 #### Validating the changes
 
-Since the post-build stages will only trigger during builds that run in the internal project, there are some
-additional steps that need to be performed in order to test that the changes to the pipeline are correct, and that publishing works as expected. We are looking into ways to improve the onboarding experience, and are tracking that through https://github.com/dotnet/arcade/issues/3390
+Since the post-build stages will only trigger during builds that run in the internal project (i.e., they won't show up on public builds), there are some additional steps that need to be performed in order to test that the changes to the pipeline are correct, and that publishing works as expected. 
 
-1. Publish a branch to the Azure devops mirror for the repo that includes the pipeline changes
-2. Set up a default channel for the internal repo + branch combination using darc that targets the `General Testing` channel. Note that the default channels require the full branch reference.
+1. Publish a branch to the Azure DevOps mirror of the repo that includes the pipeline changes.
+2. Set up the "General Testing Channel" as a default channel for the internal repo + branch combination using Darc.
 
     ``` Powershell
     # From a repository that contains an eng/common folder
-    .\eng\common\darc-init.ps1
-    darc add-default-channel --channel ".Net Tools - Validation" --branch "refs/heads/<my_new_branch>" --repo "https://dev.azure.com/dnceng/internal/_git/dotnet-arcade"
+    C:\> .\eng\common\darc-init.ps1
+    C:\> darc add-default-channel --channel "General Testing" --branch "<my_new_branch>" --repo "https://dev.azure.com/dnceng/internal/_git/<repo_name>"
     ```
 
 3. Queue a build for your test branch
-4. Once the Build stage completes, the validation channel stage should trigger, and publish the packages to the feed during the `Publish Assets` job in the `Validation Channel`
+4. Once the Build and Validate stages complete, the *General Testing* stage should execute and publish the packages to the feed during the `Publish Assets` job.
 
-    ![validation-stage](./images/validation-stage.png)
 
 
 ## Additional considerations for internal and stable builds
 
-In order to publish packages for stable and internal servicing releases, some additional setup is required so that publishing, dependency flow and package restore work correctly.
+In order to publish packages for stable and internal servicing builds, some additional setup is required so that publishing, dependency flow and package restore work correctly.
 
 ### Builds from internal/* branches
 
-Packages from internal/ branches will not be published to public feeds, but will instead be published to a private transport feed provided by @dnceng. In order to be able to restore packages from this feed, repos will need to add the feed to their NuGet.config file.
+Packages from *internal/* branches will not be published to public feeds, but will instead be published to a private transport feed provided by @dnceng. In order to be able to restore packages from this feed, repos will need to add the feed to their NuGet.config file.
 
 ### Stable builds
 
-For stable builds, where every build will produce packages with the same version, the publishing pipeline will generate a new package feed to publish the build artifacts on every build. In order for dependent repos to be able to restore these packages, Maestro++ will flow the feed information required to restore packages located in any such feeds into the repo's NuGet.config as part of a dependency update PR.
+For stable builds, where every build will produce packages with the same version, the publishing pipeline will generate a new package feed to publish the build artifacts on every build. In order for dependent repos to be able to restore these packages, Maestro++ will flow the feed information required to restore packages located in any such feeds into the repo's root folder NuGet.config as part of a dependency update PR.
 
 ```XML
 <?xml version="1.0" encoding="utf-8"?>
@@ -323,4 +318,3 @@ For stable builds, where every build will produce packages with the same version
 The PackageSources enclosed in the
 `<!--Begin: Package sources managed by Dependency Flow automation. Do not edit the sources below.-->` and
 `<!--End: Package sources managed by Dependency Flow automation. Do not edit the sources above.-->` comments are managed by Maestro++ Dependency update PRs, and will be added and removed by dependency update pull requests as they are needed.
-
