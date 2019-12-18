@@ -34,14 +34,14 @@ Fsharp •	Roslyn •	Tomas •	UWP •	Corefxlab •	NuGet •	MSBuild
 ### Bulk Load a "Legacy" Feed
 - MyGet is backed by our own Azure storage location.  The idea is to bulk load a new "legacy" feed in Azure DevOps with all of our existing packages in MyGet.
 - This should allow our servicing builds to simply add a new feed to their nuget.config.
-- It's very important however, that no new packages be published to this legacy feed.  The eventual idea is that we can simply "turn off" the legacy feed.
+- It's very important however, that no new packages be published to this legacy feed.  The eventual idea is that we can simply "turn off" the legacy feed once the usage is either gone or minimal.
 
 ### Turn off MyGet (and clean up)
 - The two main factors which should make this transition reasonable are:
   - We don't have that many dependencies on MyGet left in our 3.x builds (relatively speaking)
   - There will be a "legacy" feed for existing packages.
   - The migration is being staged over time
-- Regardless, it is understood that this transition wil be noisy and the engineering servicing team is committed to doing whatever is necessary to helping out where needed. 
+- It is understood that this transition wil be noisy and the engineering servicing team is committed to doing whatever is necessary to help out where and as needed. 
 
 ### Appendix A - donet.myget feed audit (from 12/18/19 courtesy of Matt Mitchell)
 
