@@ -19,7 +19,7 @@ Fsharp •	Roslyn •	Tomas •	UWP •	Corefxlab •	NuGet •	MSBuild
 ## Details
 
 ### Investigation and Socialization
-- The scope include all feeds on dotnet.myget.org which includes servicing.
+- The scope includes all feeds on dotnet.myget.org which includes servicing.
 - There will need to be communication to our community about this change.
 - This migration will be disruptive, so setting clear expectations, and giving us plenty of time to adjust will be key to our success.
 - There are a variety of partner teams which depend on MyGet today to get updates to .NET Core.  These consumers need to be identified as part of the investigation/socialization effort so that they can move their dependencies.
