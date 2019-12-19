@@ -17,9 +17,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         [Required]
         public ITaskItem[] ItemsToPush { get; set; }
 
-        [Required]
-        public string AssetsTemporaryDirectory { get; set; }
-
         public bool PublishFlatContainer { get; set; }
 
         public string ManifestRepoUri { get; set; }
@@ -54,17 +51,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     var itemsToPushNoExcludes = ItemsToPush.
                         Where(i => !string.Equals(i.GetMetadata("ExcludeFromManifest"), "true", StringComparison.OrdinalIgnoreCase));
 
-                    // To prevent conflicts with other parts of the build system that might move the artifacts
-                    // folder while the artifacts are still being published, we copy the artifacts to a temporary
-                    // location only for the sake of uploading them. This is a temporary solution and will be
-                    // removed in the future.
-                    if (!Directory.Exists(AssetsTemporaryDirectory))
-                    {
-                        Log.LogMessage(MessageImportance.High,
-                            $"Assets temporary directory {AssetsTemporaryDirectory} doesn't exist. Creating it.");
-                        Directory.CreateDirectory(AssetsTemporaryDirectory);
-                    }
-
                     if (PublishFlatContainer)
                     {
                         // Act as if %(PublishFlatContainer) were true for all items.
@@ -72,10 +58,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             .Select(BuildManifestUtil.CreateBlobArtifactModel);
                         foreach (var blobItem in itemsToPushNoExcludes)
                         {
-                            var destFile = $"{AssetsTemporaryDirectory}/{Path.GetFileName(blobItem.ItemSpec)}";
-                            File.Copy(blobItem.ItemSpec, destFile);
                             Log.LogMessage(MessageImportance.High,
-                                $"##vso[artifact.upload containerfolder=BlobArtifacts;artifactname=BlobArtifacts]{destFile}");
+                                $"##vso[artifact.upload containerfolder=BlobArtifacts;artifactname=BlobArtifacts]{blobItem.ItemSpec}");
                         }
                     }
                     else
@@ -111,20 +95,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                         foreach (var packagePath in packageItems)
                         {
-                            var destFile = $"{AssetsTemporaryDirectory}/{Path.GetFileName(packagePath.ItemSpec)}";
-                            File.Copy(packagePath.ItemSpec, destFile);
-
                             Log.LogMessage(MessageImportance.High,
-                                $"##vso[artifact.upload containerfolder=PackageArtifacts;artifactname=PackageArtifacts]{destFile}");
+                                $"##vso[artifact.upload containerfolder=PackageArtifacts;artifactname=PackageArtifacts]{packagePath.ItemSpec}");
                         }
 
                         foreach (var blobItem in blobItems)
                         {
-                            var destFile = $"{AssetsTemporaryDirectory}/{Path.GetFileName(blobItem.ItemSpec)}";
-                            File.Copy(blobItem.ItemSpec, destFile);
-
                             Log.LogMessage(MessageImportance.High,
-                                $"##vso[artifact.upload containerfolder=BlobArtifacts;artifactname=BlobArtifacts]{destFile}");
+                                $"##vso[artifact.upload containerfolder=BlobArtifacts;artifactname=BlobArtifacts]{blobItem.ItemSpec}");
                         }
 
                         packageArtifacts = packageItems.Select(BuildManifestUtil.CreatePackageArtifactModel);
@@ -141,6 +119,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         ManifestCommit,
                         ManifestBuildData,
                         IsStableBuild);
+
+                    Log.LogMessage(MessageImportance.High,
+                        $"##vso[artifact.upload containerfolder=AssetManifests;artifactname=AssetManifests]{AssetManifestPath}");
                 }
             }
             catch (Exception e)
