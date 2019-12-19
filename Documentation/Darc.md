@@ -57,6 +57,8 @@ use darc to achieve them, as well as a general reference guide to darc commands.
     a channel.
   - [update-subscription](#update-subscription) - Update an existing subscription.
   - [verify](#verify) - Verify that the dependency information in the repository is correct.
+  - [set-goal](#set-goal) - Sets goal for a Definition in a Channel.
+  - [get-goal](#get-goal) - Gets the goal for a Definition in a Channel.
 
 
 ## Scenarios
