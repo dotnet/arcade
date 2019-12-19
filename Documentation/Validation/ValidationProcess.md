@@ -69,6 +69,7 @@ Use the same name as the source project the tests will be for, but with ".Tests"
   <PackageReference Include="xunit" />
   <PackageReference Include="xunit.runner.visualstudio" />
   <PackageReference Include="Microsoft.NET.Test.Sdk" />
+  <PackageReference Include="Microsoft.CodeCoverage" />
 ```
 3. Rename the namespace of the new test class with the rest of the tests in the solution. Example: 
 `Microsoft.Internal.Helix.Utility.Tests`
@@ -121,6 +122,7 @@ Notes:
   - **xunit**: used for the xUnit test framework. 
   - **xunit.runner.visualstudio**: required for Visual Studio to run the xunit tests. 
   - **Microsoft.NET.Test.Sdk**: this package (specifically version 15.8.0+) is required so that the `dotnet test` command can collect code coverage during the PR and CI-merge-to-master pipeline runs. 
+  - **Microsoft.CodeCoverage**: this package ensures that the CodeCoverage.exe tool will always be available in our builds, especially to help us reduce our dependency on Visual Studio Enterprise. 
 - If the repository is using [Arcade](https://github.com/dotnet/arcade), the unit test results will automatically be collected. If it's not, then the build pipeline will require a step to upload the test results. 
 
 ## Validation and Deployment Workflow
