@@ -416,6 +416,7 @@
       <_crossGenResponseFile>$(_crossGenIntermediatePath)%(_filesToCrossGen.FileName).rsp</_crossGenResponseFile>
     </PropertyGroup>
     <ItemGroup>
+      <_crossGenArgs Include="-nologo" />
       <_crossGenArgs Include="-readytorun" />
       <_crossGenArgs Include="-in %(_filesToCrossGen.FullPath)" />
       <_crossGenArgs Include="-out %(_filesToCrossGen.CrossGenedPath)" />
