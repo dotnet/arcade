@@ -464,6 +464,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <_crossGenSymbolsArgs Include="-nologo" />
       <_crossGenSymbolsArgs Include="-readytorun" />
       <_crossGenSymbolsArgs Include="-platform_assemblies_paths %(_filesToCrossGen.CrossGenedDirectory)$(_pathSeparatorEscaped)$(_coreLibDirectory)$(_pathSeparatorEscaped)$(_fxLibDirectory)" />
       <_crossGenSymbolsArgs Include="-Platform_Winmd_Paths $(_windowsWinMDDirectory)" Condition="'$(OS)'=='Windows_NT'"/>
