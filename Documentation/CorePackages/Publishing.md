@@ -24,17 +24,34 @@ Using stages for publishing seeks to unify the Arcade SDK build artifact publish
 * Support publishing and validation errors to be reported in the build page UI.
 * Stages can depend on each other, which provides a natural way to extend default Arcade publishing infra with custom (repo or branch specific) publishing steps.
 
-## How to use the new infrastructure
+## Using the new infrastructure
 
-#### Deprecated Parameters
+#### Deprecated parameters
 
 The new infrastructure makes the following parameters obsolete. These parameters were introduced in previous implementations of the publishing infrastructure; you should not need to pass any of them to the build scripts anymore.
 
 - DotNetPublishToBlobFeed
 - DotNetPublishToBlobFeedUrl
 - DotNetPublishBlobFeedKey
+- DotNetPublishUsingPipelines
+- UsingToolSymbolUploader
+- DotNetSymbolServerTokenMsdl
+- DotNetSymbolServerTokenSymWeb
+- DotNetSymbolExpirationInDays
 
-#### Basic Onboarding Scenario
+#### New package feeds
+
+Each Maestro++ channel is configured (currently via YAML) to use three *Azure DevOps* feeds:
+
+-  **A transport feed:** used for publishing packages intended for use internally in the .Net Core stack.
+- **A shipping feed:** used for publishing packages that will be directly used by end users.
+- **A symbols feed:** symbol packages (`.symbols.nupkg`) are published to this feed as well as to symbol servers.
+
+The target feed will be public/private depending on whether the Maestro++ channel is public/private. For public channels the packages/blobs are *also* published to the legacy `dotnetfeed/dotnet-core` feed - You can override this and publish to a another custom feed, see description in a further section. 
+
+Each stable builds (i.e., [Release Official Builds](https://github.com/dotnet/arcade/blob/84f3b4a8520b9e6d50afece47fa1adf4de8ec292/Documentation/CorePackages/Versioning.md#build-kind)) publish to a different set of target feeds. This is because these builds always produce the same package version and overriding packages in the feeds is usually something not supported. Whenever a branch receive a PR from Maestro++, *that contains packages that were published to a dynamically created feed*, it will add the new feed to the repository root NuGet.Config file as a package source feed. *Note that Maestro++ currently doesn't update NuGet.Config with the static feeds*.
+
+#### Basic onboarding scenario
 
 In order to use this new publishing mechanism, the easiest way to start is by making your existing build pipeline a single stage, and then making use of a YAML template ([eng/common/templates/post-build/post-build.yml](https://github.com/dotnet/arcade/blob/66175ebd3756697a3ca515e16cd5ffddc30582cd/eng/common/templates/post-build/post-build.yml)) provided by Arcade to use the default publishing stages. The process is explained below step by step.
 
@@ -72,10 +89,9 @@ In order to use this new publishing mechanism, the easiest way to start is by ma
                 ...
                 enablePublishUsingPipelines: true
                 ...
-    ```
-        
-    1. Make sure that you use the template `eng\common\templates\job\publish-build-assets.yml` to inform Maestro++ that *all* build jobs have finished executing. Also, make sure that you are setting the template parameter `enablePublishUsingPipelines` to `true`:
-        
+            ```
+        1. Make sure that you use the template `eng\common\templates\job\publish-build-assets.yml` to inform Maestro++ that *all* build jobs have finished executing. Also, make sure that you are setting the template parameter `enablePublishUsingPipelines` to `true`:
+
             ```YAML
             jobs:
             ...
@@ -86,7 +102,7 @@ In order to use this new publishing mechanism, the easiest way to start is by ma
                   publishUsingPipelines: true
                   ...
             ```
-    
+
 1. You'll also need to pass the below two MSBuild properties to the Arcade build scripts.
 
     | Name                           | Value                         |
@@ -160,11 +176,11 @@ The pipeline for a build with stages enabled will look like the one shown below.
 
 ![build-with-post-build-stages](./images/build-with-post-build-stages.png)
 
-#### Advanced Scenarios
+#### Advanced scenarios
 
 ##### Publishing to custom feeds
 
-By default, public builds currently also publish their assets to the legacy `dotnetfeed/dotnet-core` feed besides the new AzDO feeds (e.g., dotnet5-transport, dotnet5, etc). The SDK provides a mechanism to let you override override the publishing to `dotnetfeed/dotnet-core` to instead publish to a different custom feed of your choice. The steps to enable this override are:
+By default, public builds currently also publish their assets to the legacy `dotnetfeed/dotnet-core` feed besides the new AzDO feeds (e.g., dotnet5-transport, dotnet5, etc). The SDK provides a mechanism to let you override the publishing to `dotnetfeed/dotnet-core` to instead publish to a different custom feed of your choice. The steps to do this are:
 
 1. Create a Pull Request in Arcade that adds a new mapping between the category of your build assets to the desired target feed. The mapping needs to go in the `TargetStaticFeed` ItemGroup in this file:
     [/src/Microsoft.DotNet.Arcade.Sdk/tools/SdkTasks/SetupTargetFeeds.proj](https://github.com/dotnet/arcade/blob/fd91e27589e69c0a97db2e208b112a24ab989180/src/Microsoft.DotNet.Arcade.Sdk/tools/SdkTasks/SetupTargetFeeds.proj). See example below:
@@ -195,7 +211,7 @@ By default, public builds currently also publish their assets to the legacy `dot
 
 **Note:** We strongly suggest that you discuss with the *.Net Engineering* team the intended use case for this custom feed before starting your work. In the *near* future support for publishing to custom feeds will definitely be implemented differently.
 
-### Integrating custom publishing logic
+##### Integrating custom publishing logic
 
 Repositories that make direct use of tasks in Tasks.Feed to publish assets during their *build jobs* should move away from doing so, as they would likely end up publishing to incorrect feeds for servicing builds.
 
@@ -284,34 +300,3 @@ Since the post-build stages will only trigger during builds that run in the inte
 
 1. Queue a build for your test branch
 1. Once the Build and Validate stages complete, the *General Testing* stage should execute and publish the packages to the feed during the `Publish Assets` job.
-
-## Additional considerations for internal and stable builds
-
-In order to publish packages for stable and internal servicing builds, some additional setup is required so that publishing, dependency flow and package restore work correctly.
-
-### Builds from internal/* branches
-
-Packages from *internal/* branches will not be published to public feeds, but will instead be published to a private transport feed provided by @dnceng. In order to be able to restore packages from this feed, repos will need to add the feed to their NuGet.config file.
-
-### Stable builds
-
-For stable builds, where every build will produce packages with the same version, the publishing pipeline will generate a new package feed to publish the build artifacts on every build. In order for dependent repos to be able to restore these packages, Maestro++ will flow the feed information required to restore packages located in any such feeds into the repo's root folder NuGet.config as part of a dependency update PR.
-
-```XML
-<?xml version="1.0" encoding="utf-8"?>
-<configuration>
-  <packageSources>
-    <clear />
-    <!--Begin: Package sources managed by Dependency Flow automation. Do not edit the sources below.-->
-    <add key="darc-int-dotnet-arcade" value="<private-feed-containing the packages>" />
-    <!--End: Package sources managed by Dependency Flow automation. Do not edit the sources above.-->
-    <add key="arcade" value="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json" />
-    <add key="dotnet-core" value="https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json" />
-    <add key="nuget.org" value="https://api.nuget.org/v3/index.json" />
-  </packageSources>
-</configuration>
-```
-
-The PackageSources enclosed in the
-`<!--Begin: Package sources managed by Dependency Flow automation. Do not edit the sources below.-->` and
-`<!--End: Package sources managed by Dependency Flow automation. Do not edit the sources above.-->` comments are managed by Maestro++ Dependency update PRs, and will be added and removed by dependency update pull requests as they are needed.
