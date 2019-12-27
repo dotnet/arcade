@@ -3,10 +3,13 @@
 // See the LICENSE file in the project root for more information.
 
 using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
+using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
-namespace Microsoft.DotNet.Build.Tasks.TargetFramework
+namespace Microsoft.DotNet.Build.Tasks.TargetFramework.Sdk
 {
     public class ChooseBestTargetFrameworksTask : BuildTask
     {
@@ -24,21 +27,22 @@ namespace Microsoft.DotNet.Build.Tasks.TargetFramework
 
         public override bool Execute()
         {
-            List<ITaskItem> bestTargetFrameworkList = new List<ITaskItem>();
-            TargetFrameworkResolver targetframeworkResolver = new TargetFrameworkResolver(RuntimeGraph);
+            var bestTargetFrameworkList = new List<ITaskItem>();
+            var targetframeworkResolver = new TargetFrameworkResolver(RuntimeGraph);
             
-            foreach (var buildTargetFramework in BuildTargetFrameworks)
-            {                
+            foreach (ITaskItem buildTargetFramework in BuildTargetFrameworks)
+            {
                 string bestTargetFramework = targetframeworkResolver.GetBestSupportedTargetFramework(SupportedTargetFrameworks.Select(t => t.ItemSpec), buildTargetFramework.ItemSpec);
                 if (bestTargetFramework != null)
-                {
-                    ITaskItem item = SupportedTargetFrameworks.Where(t => t.ItemSpec == bestTargetFramework).First();
+                {                    
+                    TaskItem item = new TaskItem(SupportedTargetFrameworks.Where(t => t.ItemSpec == bestTargetFramework).First()) ;
                     buildTargetFramework.CopyMetadataTo(item);
                     bestTargetFrameworkList.Add(item);
                 }
             }
+
             BestTargetFrameworks = bestTargetFrameworkList.ToArray();
-            return true;
+            return !Log.HasLoggedErrors;
         }
     }
 }

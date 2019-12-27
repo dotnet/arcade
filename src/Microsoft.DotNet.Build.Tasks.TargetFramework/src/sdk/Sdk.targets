@@ -1,4 +1,0 @@
-<Project>
-  <Import Project="..\build\Microsoft.DotNet.Build.Tasks.TargetFramework.targets" />
-  <Import Project="..\build\BinPlace.targets" />
-</Project>

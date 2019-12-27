@@ -4,9 +4,8 @@
 
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using System.Collections.Generic;
 
-namespace Microsoft.DotNet.Build.Tasks.TargetFramework
+namespace Microsoft.DotNet.Build.Tasks.TargetFramework.Sdk
 {
     public class AddTargetFrameworksToProjectTask : BuildTask
     {
@@ -21,16 +20,14 @@ namespace Microsoft.DotNet.Build.Tasks.TargetFramework
 
         public override bool Execute()
         {
-            List<ITaskItem> innerBuildProjectsList = new List<ITaskItem>();
-            foreach (var targetFramework in BestTargetFrameworks)
+            InnerBuildProjects = new ITaskItem[BestTargetFrameworks.Length];
+            for (int i = 0; i < BestTargetFrameworks.Length; i++)
             {
-                TaskItem item = new TaskItem(ProjectName);
-                item.SetMetadata("AdditionalProperties", "TargetFramework=" + targetFramework);
-                innerBuildProjectsList.Add(item);
+                InnerBuildProjects[i] = new TaskItem(ProjectName);
+                InnerBuildProjects[i].SetMetadata("AdditionalProperties", "TargetFramework=" + BestTargetFrameworks[i].ItemSpec.Split('-')[0]);
             }
 
-            InnerBuildProjects = innerBuildProjectsList.ToArray();
-            return true;
+            return !Log.HasLoggedErrors; ;
         }
     }
 }
