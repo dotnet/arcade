@@ -194,8 +194,9 @@ namespace Microsoft.DotNet.Arcade.Sdk
                 {
                     case Lang.CSharp:
                         getStringMethod = $@"{memberIndent}internal static global::System.Globalization.CultureInfo Culture {{ get; set; }}
-
+#if !NET20
 {memberIndent}[global::System.Runtime.CompilerServices.MethodImpl(global::System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+#endif
 {memberIndent}internal static string GetResourceString(string resourceKey, string defaultValue = null) =>  ResourceManager.GetString(resourceKey, Culture);";
                         if (EmitFormatMethods)
                         {
@@ -219,8 +220,9 @@ namespace Microsoft.DotNet.Arcade.Sdk
 
                     case Lang.VisualBasic:
                         getStringMethod = $@"{memberIndent}Friend Shared Property Culture As Global.System.Globalization.CultureInfo
-
+#If Not NET20 Then
 {memberIndent}<Global.System.Runtime.CompilerServices.MethodImpl(Global.System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)>
+#End If
 {memberIndent}Friend Shared Function GetResourceString(ByVal resourceKey As String, Optional ByVal defaultValue As String = Nothing) As String
 {memberIndent}    Return ResourceManager.GetString(resourceKey, Culture)
 {memberIndent}End Function";
@@ -388,10 +390,10 @@ Imports System.Reflection
 
             return builder.ToString();
 
-            bool IsIdentifierStartCharacter(char ch)
+            static bool IsIdentifierStartCharacter(char ch)
                 => ch == '_' || IsLetterChar(CharUnicodeInfo.GetUnicodeCategory(ch));
 
-            bool IsIdentifierPartCharacter(char ch)
+            static bool IsIdentifierPartCharacter(char ch)
             {
                 var cat = CharUnicodeInfo.GetUnicodeCategory(ch);
                 return IsLetterChar(cat)
@@ -402,7 +404,7 @@ Imports System.Reflection
                     || cat == UnicodeCategory.SpacingCombiningMark;
             }
 
-            bool IsLetterChar(UnicodeCategory cat)
+            static bool IsLetterChar(UnicodeCategory cat)
             {
                 switch (cat)
                 {
