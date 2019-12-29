@@ -7,13 +7,14 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using McMaster.Extensions.CommandLineUtils;
 using Microsoft.Cci;
 using Microsoft.Cci.Extensions;
+using Microsoft.Cci.Extensions.CSharp;
 using Microsoft.Cci.Filters;
 using Microsoft.Cci.Writers;
-using Microsoft.Cci.Writers.Syntax;
-using McMaster.Extensions.CommandLineUtils;
 using Microsoft.Cci.Writers.CSharp;
+using Microsoft.Cci.Writers.Syntax;
 
 namespace Microsoft.DotNet.GenAPI
 {
@@ -57,6 +58,10 @@ namespace Microsoft.DotNet.GenAPI
             CommandOption followTypeForwards = app.Option("--follow-type-forwards", "[CSDecl] Resolve type forwards and include its members.", CommandOptionType.NoValue);
             CommandOption apiOnly = app.Option("--api-only", "[CSDecl] Include only API's not CS code that compiles.", CommandOptionType.NoValue);
             CommandOption all = app.Option("--all", "Include all API's not just public APIs. Default is public only.", CommandOptionType.NoValue);
+            CommandOption respectInternals = app.Option(
+                "--respect-internals",
+                "Include both internal and public APIs if assembly contains an InternalsVisibleTo attribute. Otherwise, include only public APIs.",
+                CommandOptionType.NoValue);
             CommandOption memberHeadings = app.Option("--member-headings", "[CSDecl] Include member headings for each type of member.", CommandOptionType.NoValue);
             CommandOption hightlightBaseMembers = app.Option("--hightlight-base-members", "[CSDecl] Highlight overridden base members.", CommandOptionType.NoValue);
             CommandOption hightlightInterfaceMembers = app.Option("--hightlight-interface-members", "[CSDecl] Highlight interface implementation members.", CommandOptionType.NoValue);
@@ -67,7 +72,7 @@ namespace Microsoft.DotNet.GenAPI
             app.OnExecute(() =>
             {
                 HostEnvironment host = new HostEnvironment();
-                host.UnableToResolve += (sender, e) => 
+                host.UnableToResolve += (sender, e) =>
                   Console.WriteLine("Unable to resolve assembly '{0}' referenced by '{1}'.", e.Unresolved.ToString(), e.Referrer.ToString()); ;
 
                 host.UnifyToLibPath = true;
@@ -96,8 +101,14 @@ namespace Microsoft.DotNet.GenAPI
                             try
                             {
                                 if (headerText != null)
+                                {
                                     output.Write(headerText);
-                                writer = GetWriter(output, syntaxWriter);
+                                }
+
+                                var includeInternals = respectInternals.HasValue() &&
+                                    assembly.Attributes.HasAttributeOfType(
+                                        "System.Runtime.CompilerServices.InternalsVisibleToAttribute");
+                                writer = GetWriter(output, syntaxWriter, includeInternals);
                                 writer.WriteAssemblies(new IAssembly[] { assembly });
                             }
                             finally
@@ -119,8 +130,14 @@ namespace Microsoft.DotNet.GenAPI
                         try
                         {
                             if (headerText != null)
+                            {
                                 output.Write(headerText);
-                            writer = GetWriter(output, syntaxWriter);
+                            }
+
+                            var includeInternals = respectInternals.HasValue() &&
+                                assemblies.Any(assembly => assembly.Attributes.HasAttributeOfType(
+                                    "System.Runtime.CompilerServices.InternalsVisibleToAttribute"));
+                            writer = GetWriter(output, syntaxWriter, includeInternals);
                             writer.WriteAssemblies(assemblies);
                         }
                         finally
@@ -136,10 +153,17 @@ namespace Microsoft.DotNet.GenAPI
                 return 0;
             });
 
-            ICciWriter GetWriter(TextWriter output, ISyntaxWriter syntaxWriter)
+            ICciWriter GetWriter(TextWriter output, ISyntaxWriter syntaxWriter, bool includeInternals)
             {
-                ICciFilter filter = GetFilter(apiList.Value(), all.HasValue(), apiOnly.HasValue(), 
-                    excludeApiList.Value(), excludeMembers.HasValue(), excludeAttributesList.Value(), followTypeForwards.HasValue());
+                var filter = GetFilter(
+                    apiList.Value(),
+                    all.HasValue(),
+                    includeInternals,
+                    apiOnly.HasValue(),
+                    excludeApiList.Value(),
+                    excludeMembers.HasValue(),
+                    excludeAttributesList.Value(),
+                    followTypeForwards.HasValue());
 
                 switch (writerType.ParsedValue)
                 {
@@ -266,24 +290,32 @@ namespace Microsoft.DotNet.GenAPI
             }
         }
 
-        private static ICciFilter GetFilter(string apiList, bool all, bool apiOnly, string excludeApiList, bool excludeMembers, string excludeAttributesList, bool includeForwardedTypes)
+        private static ICciFilter GetFilter(
+            string apiList,
+            bool all,
+            bool includeInternals,
+            bool apiOnly,
+            string excludeApiList,
+            bool excludeMembers,
+            string excludeAttributesList,
+            bool includeForwardedTypes)
         {
-            ICciFilter includeFilter = null;
-
-            if (string.IsNullOrWhiteSpace(apiList))
+            ICciFilter includeFilter;
+            if (!string.IsNullOrWhiteSpace(apiList))
             {
-                if (all)
-                {
-                    includeFilter = new IncludeAllFilter();
-                }
-                else
-                {
-                    includeFilter = new PublicOnlyCciFilter(excludeAttributes: apiOnly, includeForwardedTypes: includeForwardedTypes);
-                }
+                includeFilter = new DocIdIncludeListFilter(apiList);
+            }
+            else if (all)
+            {
+                includeFilter = new IncludeAllFilter();
+            }
+            else if (includeInternals)
+            {
+                includeFilter = new InternalsAndPublicCciFilter(excludeAttributes: apiOnly, includeForwardedTypes);
             }
             else
             {
-                includeFilter = new DocIdIncludeListFilter(apiList);
+                includeFilter = new PublicOnlyCciFilter(excludeAttributes: apiOnly, includeForwardedTypes);
             }
 
             if (!string.IsNullOrWhiteSpace(excludeApiList))
@@ -293,7 +325,7 @@ namespace Microsoft.DotNet.GenAPI
 
             if (!string.IsNullOrWhiteSpace(excludeAttributesList))
             {
-                includeFilter = new IntersectionFilter(includeFilter, new ExcludeAttributesFilter(excludeAttributesList, includeForwardedTypes: includeForwardedTypes));
+                includeFilter = new IntersectionFilter(includeFilter, new ExcludeAttributesFilter(excludeAttributesList, includeForwardedTypes));
             }
 
             return includeFilter;
