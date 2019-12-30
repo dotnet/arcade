@@ -75,7 +75,7 @@
           Outputs="$(IntermediateOutputPath)$(TargetName).pkgdef">
 
     <!-- If the CTO file was changed, touch the pkgdef file to cause a re-merge. See VSSDK targets. -->
-    <Microsoft.DotNet.Build.Tasks.VisualStudio.GeneratePkgDef Keys="@(PkgDefKey)" OutputFile="$(IntermediateOutputPath)$(TargetName).pkgdef" OverwriteUnchangedFile="'$(CTOFileHasChanged)' == 'true'" />
+    <Microsoft.DotNet.Build.Tasks.VisualStudio.GeneratePkgDef Keys="@(PkgDefKey)" OutputFile="$(IntermediateOutputPath)$(TargetName).pkgdef" OverwriteUnchangedFile="$(CTOFileHasChanged)" />
 
     <ItemGroup>
       <FileWrites Include="$(IntermediateOutputPath)$(TargetName).pkgdef" />
