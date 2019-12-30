@@ -35,7 +35,11 @@ namespace Microsoft.Cci.Writers.CSharp
 
             if (!method.ContainingTypeDefinition.IsInterface)
             {
-                if (!method.IsExplicitInterfaceMethod()) WriteVisibility(method.Visibility);
+                if (!method.IsExplicitInterfaceMethod() && !method.IsStaticConstructor)
+                {
+                    WriteVisibility(method.Visibility);
+                }
+
                 WriteMethodModifiers(method);
             }
             WriteInterfaceMethodModifiers(method);
@@ -96,7 +100,7 @@ namespace Microsoft.Cci.Writers.CSharp
 
         private void WriteMethodName(IMethodDefinition method)
         {
-            if (method.IsConstructor)
+            if (method.IsConstructor || method.IsStaticConstructor)
             {
                 INamedEntity named = method.ContainingTypeDefinition.UnWrap() as INamedEntity;
                 if (named != null)
@@ -127,7 +131,7 @@ namespace Microsoft.Cci.Writers.CSharp
             byte? nullableContextValue = method.Attributes.GetCustomAttributeArgumentValue<byte?>(CSharpCciExtensions.NullableContextAttributeFullName);
             bool isOperator = method.IsConversionOperator();
 
-            if (!isOperator && !method.IsConstructor)
+            if (!isOperator && !method.IsConstructor && !method.IsStaticConstructor)
             {
                 if (method.Attributes.HasIsReadOnlyAttribute() && (LangVersion >= LangVersion8_0))
                 {
