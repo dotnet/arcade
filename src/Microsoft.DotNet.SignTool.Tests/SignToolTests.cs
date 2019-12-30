@@ -9,8 +9,6 @@ using System.IO;
 using System.IO.Packaging;
 using System.Linq;
 using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
-using Microsoft.DotNet.Arcade.Sdk;
 using TestUtilities;
 using Xunit;
 using Xunit.Abstractions;
@@ -249,50 +247,6 @@ namespace Microsoft.DotNet.SignTool.Tests
             Assert.Empty(signingInput.FilesToSign);
             Assert.Empty(signingInput.ZipDataMap);
             Assert.False(task.Log.HasLoggedErrors);
-        }
-
-        [Fact]
-        public void TestDownloadFile()
-        {
-            var task = new DownloadFile()
-            {
-                BuildEngine = new FakeBuildEngine(),
-                Uri = "https://avatars1.githubusercontent.com/u/8725170?s=88&v=4",
-                DestinationPath = @"C:\Workfolder\tmp\avatar.jpg"
-            };
-
-            Assert.True( task.Execute() );
-
-            var plainTextToken = "?sv=2019-02-02&ss=bfqt&srt=sco&sp=rwdlacup&se=2019-12-29T12:13:03Z&st=2019-12-29T04:13:03Z&spr=https&sig=SZoYnmSsakpLTZpEL9uKwEuQhSsbWVp0sOQbVMQ%2BUb0%3D";
-            var plainTextBytes = System.Text.Encoding.UTF8.GetBytes(plainTextToken);
-            var tokenBase64 = System.Convert.ToBase64String(plainTextBytes);
-
-            var listOfUris = new TaskItem[]
-            {
-                new TaskItem("https://avatars1.ggithubusercontent.com/u/8725170?s=88&v=4", new Dictionary<string, string>()
-                {
-                    {"token", "" }
-                }),
-
-                new TaskItem("https://avatars1.gggithubusercontent.com/u/8725170?s=88&v=4", new Dictionary<string, string>()
-                {
-                    {"token", "" }
-                }),
-
-                new TaskItem("https://cesarfeed.blob.core.windows.net/testagain/jcagme.jpg", new Dictionary<string, string>()
-                {
-                    {"token", tokenBase64 }
-                })
-            };
-
-            var task2 = new DownloadFile()
-            {
-                BuildEngine = new FakeBuildEngine(),
-                Uris = listOfUris,
-                DestinationPath = @"C:\Workfolder\tmp\retries.jpg"
-            };
-
-            Assert.True(task2.Execute());
         }
 
         [Fact]

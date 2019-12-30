@@ -12,7 +12,6 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\Microsoft.DotNet.SignTool\Microsoft.DotNet.SignTool.csproj" />
-    <ProjectReference Include="..\Microsoft.DotNet.Arcade.Sdk\Microsoft.DotNet.Arcade.Sdk.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="..\Common\TestUtilities\AssertEx.cs" Link="TestUtilities\AssertEx.cs" />
