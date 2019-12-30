@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
+<Project>
+  <UsingTask TaskName="Microsoft.DotNet.Build.Tasks.VisualStudio.GeneratePkgDef" AssemblyFile="$(_VisualStudioBuildTasksAssembly)" />
+
+  <Target Name="_PopulatePkgDefKeys_Shell"
+          BeforeTargets="GeneratePkgDef"
+          DependsOnTargets="GetAssemblyVersion">
+    <ItemGroup>
+
+      <!-- TODO: simplified -->
+
+      <PkgDefKey Include="@(ProvidePackageRegistration->'Packages\%(Identity)')">
+        <Values>
+          <Value>%(ProvidePackageRegistration.Description)</Value>
+          <Value Name="InprocServer32">$WinDir$\SYSTEM32\MSCOREE.DLL</Value>
+          <Value Name="Class">%(ProvidePackageRegistration.Class)</Value>
+          <Value Name="Assembly">$(AssemblyName), Version=$(AssemblyVersion), Culture=neutral, PublicKeyToken=$(PublicKeyToken)</Value>
+          <Value Name="AllowsBackgroundLoad" Type="bool">true</Value>
+        </Values>
+      </PkgDefKey>
+
+      <PkgDefKey Include="@(ProvideLanguageExtension->'Languages\File Extensions\%(Identity)')">
+        <Values>
+          <Value Type="guid">%(ProvideLanguageExtension.LanguageServiceId)</Value>
+        </Values>
+      </PkgDefKey>
+
+      <PkgDefKey Include="@(ProvideLanguageService->'Languages\Language Services\%(Identity)')">
+        <Values>
+          <Value Type="guid">%(ProvideLanguageService.LanguageServiceId)</Value>
+          <Value Name="Package" Type="guid">%(ProvideLanguageService.PackageId)</Value>
+          <Value Name="LangResID" Type="int">%(ProvideLanguageService.LanguageResourceId)</Value>
+          <Value Name="RequestStockColors" Type="bool">%(ProvideLanguageService.RequestStockColors)</Value>
+          <Value Name="ShowDropdownBarOption" Type="bool">%(ProvideLanguageService.ShowDropDownOptions)</Value>
+        </Values>
+      </PkgDefKey>
+
+      <PkgDefKey Include="@(ProvideLanguageEditorOptionPage->'Languages\Language Services\%(LanguageName)\EditorToolsOptions\%(Identity)')">
+        <Values>
+          <Value Type="resource">%(ProvideLanguageEditorOptionPage.PageNameResourceId)</Value>
+          <Value Name="Package" Type="guid">%(ProvideLanguageEditorOptionPage.PackageId)</Value>
+          <Value Name="Page" Type="guid">%(ProvideLanguageEditorOptionPage.PageGuid)</Value>
+          <Value Name="Keywords" Type="resource">%(ProvideLanguageEditorOptionPage.KeywordListResourceId)</Value>
+        </Values>
+      </PkgDefKey>
+
+      <PkgDefKey Include="@(ProvideLanguageEditorToolsOptionCategory->'Languages\Language Services\%(LanguageName)\EditorToolsOptions\%(Identity)')">
+        <Values>
+          <Value Type="resource">%(ProvideLanguageEditorToolsOptionCategory.CategoryResourceId)</Value>
+          <Value Name="Package" Type="guid">%(ProvideLanguageEditorToolsOptionCategory.PackageId)</Value>
+        </Values>
+      </PkgDefKey>
+
+      <PkgDefKey Include="@(ProvideService->'Services\%(Identity)')">
+        <Values>
+          <Value Type="guid">%(ProvideService.PackageId)</Value>
+          <Value Name="Name">%(ProvideService.ServiceName)</Value>
+          <Value Name="IsAsyncQueryable" Type="bool">%(ProvideService.IsAsyncQueryable)</Value>
+          <Value Name="IsFreeThreaded" Type="bool">%(ProvideService.IsFreeThreaded)</Value>
+        </Values>
+      </PkgDefKey>
+
+      <PkgDefKey Include="@(ProvideMenuResource->'Menus')">
+        <Values>
+          <Value Name="%(ProvideMenuResource.Identity)">, %(ProvideMenuResource.ResourceName), %(ProvideMenuResource.Version)</Value>
+        </Values>
+      </PkgDefKey>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="GeneratePkgDef"
+          DependsOnTargets="$(GeneratePkgDefDependsOn)"
+          Inputs="$(MSBuildAllProjects)"
+          Outputs="$(IntermediateOutputPath)$(TargetName).pkgdef">
+
+    <!-- If the CTO file was changed, touch the pkgdef file to cause a re-merge. See VSSDK targets. -->
+    <Microsoft.DotNet.Build.Tasks.VisualStudio.GeneratePkgDef Keys="@(PkgDefKey)" OutputFile="$(IntermediateOutputPath)$(TargetName).pkgdef" OverwriteUnchangedFile="'$(CTOFileHasChanged)' == 'true'" />
+
+    <ItemGroup>
+      <FileWrites Include="$(IntermediateOutputPath)$(TargetName).pkgdef" />
+    </ItemGroup>
+  </Target>
+</Project>

@@ -18,6 +18,10 @@
       2) SwixBuild
          Builds a Willow component out of SwrFiles.
          Writes a stub file to component intermediate directory.
+         
+      3) GeneratePkgDef
+         Replaces VSSDK target for pkgdef file generation with one that generates the file from items specified in msbuild targets,
+         as opposed to the default one that uses custom attributes.
   -->
 
   <PropertyGroup>
@@ -266,4 +270,10 @@
   <PropertyGroup>
     <GetVsixSourceItemsDependsOn>$(GetVsixSourceItemsDependsOn);_GetVsixTemplateItems</GetVsixSourceItemsDependsOn>
   </PropertyGroup>
+  
+  <!-- 
+    Support for pkgdef content specified in targets files.
+  -->
+  <Import Project="VisualStudio.PkgDef.targets" Condition="'$(EnableArcadeGeneratePkgDef)' == 'true'"/>
+
 </Project>
