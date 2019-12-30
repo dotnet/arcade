@@ -5,6 +5,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Threading;
 using Microsoft.Build.Framework;
@@ -39,6 +40,9 @@ namespace Microsoft.DotNet.Arcade.Sdk
 
         public void Cancel() => _cancellationSource.Cancel();
 
+        private readonly string FileUriProtocol = "file://";
+
+
         public override bool Execute()
         {
             if (Retries < 0)
@@ -59,14 +63,14 @@ namespace Microsoft.DotNet.Arcade.Sdk
             }
 
             if (string.IsNullOrWhiteSpace(Uri) && (Uris == null || Uris.Count() == 0)) {
-                Log.LogError($"Invalid task parameter value: Uri and Uris are empty.");
+                Log.LogError($"Invalid task parameter value: {nameof(Uri)} and {nameof(Uris)} are empty.");
                 return false;
             }
 
             Directory.CreateDirectory(Path.GetDirectoryName(DestinationPath));
 
             if (!string.IsNullOrWhiteSpace(Uri)) {
-                return DownloadBruto(Uri).Result;
+                return DownloadFromUriAsync(Uri).Result;
             }
 
             if (Uris != null) {
@@ -82,18 +86,18 @@ namespace Microsoft.DotNet.Arcade.Sdk
                         uri = $"{uri}{decodedToken}";
                     }
 
-                    if (DownloadBruto(uri).Result) {
+                    if (DownloadFromUriAsync(uri).Result) {
                         return true;
                     }
                 }
             }
 
+            Log.LogWarning($"Failed to download file using addresses in {nameof(Uri)} and/or {nameof(Uris)}.");
+
             return false;
         }
 
-        private async Tasks.Task<bool> DownloadBruto(string uri) {
-            const string FileUriProtocol = "file://";
-
+        private async Tasks.Task<bool> DownloadFromUriAsync(string uri) {
             if (uri.StartsWith(FileUriProtocol, StringComparison.Ordinal))
             {
                 var filePath = uri.Substring(FileUriProtocol.Length);
@@ -108,7 +112,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
             {
                 try
                 {
-                    return await DownloadAsync(httpClient, uri);
+                    return await DownloadWithRetriesAsync(httpClient, uri);
                 }
                 catch (AggregateException e)
                 {
@@ -123,7 +127,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
             }
         }
 
-        private async Tasks.Task<bool> DownloadAsync(HttpClient client, string uri)
+        private async Tasks.Task<bool> DownloadWithRetriesAsync(HttpClient httpClient, string uri)
         {            
             int attempt = 0;
 
@@ -131,11 +135,23 @@ namespace Microsoft.DotNet.Arcade.Sdk
             {
                 try
                 {
-                    var stream = await client.GetStreamAsync(uri).ConfigureAwait(false);
+                    var httpResponse = await httpClient.GetAsync(uri, _cancellationSource.Token).ConfigureAwait(false);
+
+                    // The Azure Storage REST API returns '400 - Bad Request' in some cases
+                    // where the resource is not found on the storage.
+                    // https://docs.microsoft.com/en-us/rest/api/storageservices/common-rest-api-error-codes
+                    if (httpResponse.StatusCode == HttpStatusCode.NotFound ||
+                        httpResponse.ReasonPhrase.IndexOf("The requested URI does not represent any resource on the server.", StringComparison.OrdinalIgnoreCase) == 0)
+                    {
+                        Log.LogMessage($"Problems downloading file from '{uri}'. Does the resource exist on the storage? {httpResponse.StatusCode} : {httpResponse.ReasonPhrase}");
+                        return false;
+                    }
+
+                    httpResponse.EnsureSuccessStatusCode();
 
                     using (var outStream = File.Create(DestinationPath))
                     {
-                        await stream.CopyToAsync(outStream, bufferSize: 81920, cancellationToken: _cancellationSource.Token).ConfigureAwait(false);
+                        await httpResponse.Content.CopyToAsync(outStream).ConfigureAwait(false);
                     }
 
                     return true;
@@ -146,7 +162,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
 
                     if (attempt > Retries)
                     {
-                        Log.LogError($"Failed to download '{uri}' to '{DestinationPath}'");
+                        Log.LogWarning($"Failed to download '{uri}' to '{DestinationPath}'");
                         return false;
                     }
 
