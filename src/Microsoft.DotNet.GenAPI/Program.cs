@@ -62,6 +62,10 @@ namespace Microsoft.DotNet.GenAPI
                 "--respect-internals",
                 "Include both internal and public APIs if assembly contains an InternalsVisibleTo attribute. Otherwise, include only public APIs.",
                 CommandOptionType.NoValue);
+            CommandOption excludeCompilerGenerated = app.Option(
+                "--exclude-compiler-generated",
+                "Exclude APIs marked with a CompilerGenerated attribute.",
+                CommandOptionType.NoValue);
             CommandOption memberHeadings = app.Option("--member-headings", "[CSDecl] Include member headings for each type of member.", CommandOptionType.NoValue);
             CommandOption hightlightBaseMembers = app.Option("--hightlight-base-members", "[CSDecl] Highlight overridden base members.", CommandOptionType.NoValue);
             CommandOption hightlightInterfaceMembers = app.Option("--hightlight-interface-members", "[CSDecl] Highlight interface implementation members.", CommandOptionType.NoValue);
@@ -160,6 +164,7 @@ namespace Microsoft.DotNet.GenAPI
                     all.HasValue(),
                     includeInternals,
                     apiOnly.HasValue(),
+                    excludeCompilerGenerated.HasValue(),
                     excludeApiList.Value(),
                     excludeMembers.HasValue(),
                     excludeAttributesList.Value(),
@@ -295,6 +300,7 @@ namespace Microsoft.DotNet.GenAPI
             bool all,
             bool includeInternals,
             bool apiOnly,
+            bool excludeCompilerGenerated,
             string excludeApiList,
             bool excludeMembers,
             string excludeAttributesList,
@@ -316,6 +322,11 @@ namespace Microsoft.DotNet.GenAPI
             else
             {
                 includeFilter = new PublicOnlyCciFilter(excludeAttributes: apiOnly, includeForwardedTypes);
+            }
+
+            if (excludeCompilerGenerated)
+            {
+                includeFilter = new IntersectionFilter(includeFilter, new ExcludeCompilerGeneratedCciFilter());
             }
 
             if (!string.IsNullOrWhiteSpace(excludeApiList))
