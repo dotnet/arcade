@@ -4,12 +4,12 @@
   <UsingTask TaskName="ChooseBestTargetFrameworksTask" AssemblyFile="$(DotNetBuildTasksTargetFrameworkSdkDll)"/>
   <UsingTask TaskName="AddTargetFrameworksToProjectTask" AssemblyFile="$(DotNetBuildTasksTargetFrameworkSdkDll)"/>
   
-
   <PropertyGroup>
     <OriginalTargetFramework>$(TargetFramework)</OriginalTargetFramework>
     <OriginalTargetFrameworks>$(TargetFrameworks)</OriginalTargetFrameworks>
   </PropertyGroup>
-  <Target Name="RunOnlyBestTargetFrameworks" BeforeTargets="DispatchToInnerBuilds">
+  
+  <Target Name="RunOnlyBestTargetFrameworks" Condition="'$(BuildAllConfigurations)' != 'true'" BeforeTargets="DispatchToInnerBuilds">
     <ItemGroup>
       <_InnerBuildProjects Remove="@(_InnerBuildProjects)" />
     </ItemGroup>
@@ -47,7 +47,7 @@
     </PropertyGroup>
   </Target>
 
-  <Target Name="ResolveP2PReferences" BeforeTargets="AssignProjectConfiguration">
+  <Target Name="ResolveP2PReferences"  BeforeTargets="AssignProjectConfiguration">
     
     <MSBuild Projects="@(ProjectReference)"
              Targets="GetTargetFrameworks"
@@ -55,9 +55,16 @@
              SkipNonexistentTargets="true">
       <Output TaskParameter="TargetOutputs" ItemName="_ProjectRefWithTfms"/>
     </MSBuild>
-     
-    <ChooseBestP2PTargetFrameworkTask TargetFrameworkOsGroup="$(TargetFramework)-$(OSGroup)"
+ 
+    <PropertyGroup>
+      <P2PTargetFrameworkOSGroup>$(TargetFramework)-$(OSGroup)</P2PTargetFrameworkOSGroup>
+      <!-- In AllConfiguration build TargetFramework can contain OSGroup.-->
+      <P2PTargetFrameworkOSGroup Condition="$(TargetFramework.Contains('-'))">$(TargetFramework)</P2PTargetFrameworkOSGroup> 
+    </PropertyGroup>
+    
+    <ChooseBestP2PTargetFrameworkTask TargetFrameworkOsGroup="$(P2PTargetFrameworkOSGroup)"
                                       ProjectReferencesWithTargetFrameworks="@(_ProjectRefWithTfms)"
+                                      BuildAllConfigurations="$(BuildAllConfigurations)"
                                       RuntimeGraph="$(RuntimeGraph)" >
       <Output TaskParameter="AnnotatedProjectReferencesWithSetTargetFramework" ItemName="_ProjectReferencesWithBestTargetFrameworks" />
     </ChooseBestP2PTargetFrameworkTask>

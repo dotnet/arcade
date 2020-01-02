@@ -1,10 +1,5 @@
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
-<Project>
-  <PropertyGroup>
-    <OriginalTargetFramework>$(TargetFramework)</OriginalTargetFramework>
-    <OriginalTargetFrameworks>$(TargetFrameworks)</OriginalTargetFrameworks>
-  </PropertyGroup>
-  
+<Project>  
   <PropertyGroup>
     <DotNetBuildTasksTargetFrameworkSdkDll Condition="'$(DotNetBuildTasksTargetFrameworkSdkDll)' == '' AND '$(MSBuildRuntimeType)' == 'core'">..\tools\netcoreapp2.1\Microsoft.DotNet.Build.Tasks.TargetFramework.Sdk.dll</DotNetBuildTasksTargetFrameworkSdkDll>
     <DotNetBuildTasksTargetFrameworkSdkDll Condition="'$(DotNetBuildTasksTargetFrameworkSdkDll)' == '' AND '$(MSBuildRuntimeType)' != 'core'">..\tools\net472\Microsoft.DotNet.Build.Tasks.TargetFramework.Sdk.dll</DotNetBuildTasksTargetFrameworkSdkDll>
