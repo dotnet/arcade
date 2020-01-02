@@ -73,6 +73,7 @@
     <MicrosoftNetCompilersToolsetVersion>$(MicrosoftNetCompilersToolsetVersion)</MicrosoftNetCompilersToolsetVersion>
     <MicrosoftSourceLinkVersion>$(MicrosoftSourceLinkVersion)</MicrosoftSourceLinkVersion>
     <MicrosoftDiaSymReaderPdb2PdbVersion>$(MicrosoftDiaSymReaderPdb2PdbVersion)</MicrosoftDiaSymReaderPdb2PdbVersion>
+    <XliffTasksVersion>$(XliffTasksVersion)</XliffTasksVersion>
   </PropertyGroup>
 </Project>]]>
   </_SdkVersionPropsContent>
