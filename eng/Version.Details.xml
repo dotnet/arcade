@@ -27,5 +27,10 @@
       <Uri>https://github.com/dotnet/arcade-services</Uri>
       <Sha>1a295b33d669417b3d28795c3fa22efef21686a3</Sha>
     </Dependency>
+    <Dependency Name="XliffTasks" Version="1.0.0-beta.20052.1">
+      <Uri>https://github.com/dotnet/xliff-tasks</Uri>
+      <Sha>
+      </Sha>
+    </Dependency>
   </ToolsetDependencies>
 </Dependencies>
