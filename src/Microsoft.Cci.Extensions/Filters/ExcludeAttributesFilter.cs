@@ -7,21 +7,25 @@ using Microsoft.Cci.Extensions;
 
 namespace Microsoft.Cci.Filters
 {
-    public class ExcludeAttributesFilter : PublicOnlyCciFilter
+    public class ExcludeAttributesFilter : IncludeAllFilter
     {
         private readonly HashSet<string> _attributeDocIds;
 
         public ExcludeAttributesFilter(IEnumerable<string> attributeDocIds, bool includeForwardedTypes = false)
-            : base(excludeAttributes: false, includeForwardedTypes: includeForwardedTypes)
         {
             _attributeDocIds = new HashSet<string>(attributeDocIds);
+            IncludeForwardedTypes = includeForwardedTypes;
         }
 
         public ExcludeAttributesFilter(string attributeDocIdFile, bool includeForwardedTypes = false)
-            : base(excludeAttributes: false, includeForwardedTypes: includeForwardedTypes)
         {
             _attributeDocIds = new HashSet<string>(DocIdExtensions.ReadDocIds(attributeDocIdFile));
+            IncludeForwardedTypes = includeForwardedTypes;
         }
+
+        // Exists to avoid breaking change in removing includeForwardedTypes constructor parameters. This is a bit
+        // less ugly than suppressing IDE0060.
+        public bool IncludeForwardedTypes { get; }
 
         public override bool Include(ICustomAttribute attribute)
         {
