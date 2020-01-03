@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.Contracts;
 using System.Linq;
-using Microsoft.Cci;
+using Microsoft.Cci.Extensions.CSharp;
 
 namespace Microsoft.Cci.Extensions
 {
@@ -490,24 +490,27 @@ namespace Microsoft.Cci.Extensions
         public static AccessorType GetAccessorType(this IMethodDefinition methodDefinition)
         {
             if (!methodDefinition.IsSpecialName)
-                return AccessorType.None;
-
-            foreach (var p in methodDefinition.ContainingTypeDefinition.Properties)
             {
-                if (p.Getter != null && p.Getter.ResolvedMethod.InternedKey == methodDefinition.InternedKey)
-                    return AccessorType.PropertyGetter;
-
-                if (p.Setter != null && p.Setter.ResolvedMethod.InternedKey == methodDefinition.InternedKey)
-                    return AccessorType.PropertySetter;
+                return AccessorType.None;
             }
 
-            foreach (var e in methodDefinition.ContainingTypeDefinition.Events)
+            // Cannot use MemberHelper.IsAdder(...) and similar due to their TypeMemberVisibility.Public restriction.
+            var name = methodDefinition.GetNameWithoutExplicitType();
+            if (name.StartsWith("add_"))
             {
-                if (e.Adder != null && e.Adder.ResolvedMethod.InternedKey == methodDefinition.InternedKey)
-                    return AccessorType.EventAdder;
-
-                if (e.Remover != null && e.Remover.ResolvedMethod.InternedKey == methodDefinition.InternedKey)
-                    return AccessorType.EventRemover;
+                return AccessorType.EventAdder;
+            }
+            else if (name.StartsWith("get_"))
+            {
+                return AccessorType.PropertyGetter;
+            }
+            else if (name.StartsWith("remove_"))
+            {
+                return AccessorType.EventRemover;
+            }
+            else if (name.StartsWith("set_"))
+            {
+                return AccessorType.PropertySetter;
             }
 
             return AccessorType.None;
