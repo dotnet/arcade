@@ -450,7 +450,7 @@ It is a common practice to specify properties applicable to all (most) projects 
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     
     <!--
-      Specify an id of the key used in strong names of assemblies built from this repo.
+      Specify an id of the key used to generate strong names of assemblies built from this repo.
     -->
     <StrongNameKeyId>Microsoft</StrongNameKeyId>
   </PropertyGroup>
