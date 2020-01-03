@@ -21,8 +21,9 @@ Deployments follow the pattern described in the [Deployment Process](../Validati
 ## GitHub Issue Tagging
 Every issue that arises as a result of a rollout must be filed on GitHub in dotnet/core-eng. These issues should include labels that specify the type of event and the repo in which it occurred.
 
-* The event type labels are: **Rollout Issue** for issues that arise as a result of the rollout, **Rollout Hotfix** for manual hotfixes, and **Rollout Rollback** for manual rollbacks
+* The event type labels are: **Rollout Issue** for issues that arise as a result of the rollout, **Rollout Hotfix** for manual hotfixes, **Rollout Rollback** for manual rollbacks, and **Rollout Downtime** for downtime that occurs as a result of the deployment
   * Hotfixes and rollbacks that result in a deployment do not need to be filed on GitHub (i.e. only manual hotfixes and rollbacks should be filed)
+  * Downtime issues may be automatically filed by telemetry
 * Additionally, all issues must contain a label indicating the repo affected:
   * **Rollout Helix** for Helix rollouts
   * **Rollout OSOB** for OS Onboarding rollouts
@@ -36,7 +37,7 @@ Every issue that arises as a result of a rollout must be filed on GitHub in dotn
 * Workflow for Rollback:
     - When a service in production is discovered to be in a "downed" state (e.g. not taking work, constantly throwing errors, etc.) following a rollout, then rollback IMMEDIATELY to a previously known working deployment. Continue investigation in staging by reproing the failure.
     - Rollback PRs need to have a commit message which contains `[ROLLBACK]`, e.g. "[ROLLBACK] blah blah"
-    - Create a GitHub issue for tracking, with tags indicating that this is a rollback.
+    - Create a GitHub issue for tracking. If and only if this is a manual rollback, label it with the **Rollout Rollback** label and the appropriate rollout repo label
     - Communicate the state of affairs to dncpartners@microsoft.com when the issue is identified along with the tracking GitHub issue, and when it's mitigated.
 
 ## Hotfixes
@@ -47,10 +48,17 @@ Every issue that arises as a result of a rollout must be filed on GitHub in dotn
 * Workflow for Hotfix:
     - When a service in production is discovered to be in a erroneous state following a rollout.
     - Hotfix PRs need to have a commit message which starts with `[HOTFIX]`, e.g. "[HOTFIX] blah blah"
-    - Create a GitHub issue for tracking, with tags indicating that this a hotfix.
+    - Create a GitHub issue for tracking. If and only if this is a manual hotfix, label it with the **Rollout Hotfix** label and the appropriate rollout repo label
     - If the root cause of failure is determined, make the hotfix and deploy to prod.
     - Communicate the state of affairs to dncpartners@microsoft.com when the issue is identified along with the tracking GitHub issue, and when it's mitigated.
     - The hotfix needs to be communicated to the team and approved by management.
+
+## Downtime
+* If service downtime occurs as a result of a rollout, an issue must be filed. If alerting files an issue for us, ensure that it is appropriately labeled with **Rollout Downtime** label and the appropriate rollout repo label.
+* If the downtime started prior to the issue filing, note the start of the downtime with `Started: [DATE TIME OFFSET]`, not including the square brackets.
+* Once the downtime ends, close the issue. If the issue cannot be closed for some reason or the downtime ended prior to the issue closure, the end of the downtime can be noted in the issue body or a comment with `Ended: [DATE TIME OFFSET]`, not including the square brackets.
+* If you want to specify the downtime end and start in the same comment or issue body, separate them with a semicolon or a newline, e.g. `Started: [DATE TIME OFFSET]; Ended: [DATE TIME OFFSET]`.
+* `[DATE TIME OFFSET]` is formatted as **yyyy-MM-dd hh:mm [+/-]hh:mm**, so to represent 1:30 PM Pacific Time on 29 December 2019 you would write **2019-12-29 13:30 -08:00**.
 
 ## Unit Of Deployment
 * All services that are dependent on each other to rollout, are considered a unit of deployment and need to be deployed together in a pipeline.
