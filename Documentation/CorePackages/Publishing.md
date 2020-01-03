@@ -280,7 +280,7 @@ Using stages for publishing seeks to unify the Arcade SDK build artifact publish
 * Support publishing and validation errors to be reported in the build page UI.
 * Stages can depend on each other, which provides a natural way to extend default Arcade publishing infra with custom (repo or branch specific) publishing steps.
 
-### New package feeds
+### Are there new package feeds? Which feed will be used?
 
 Each Maestro++ channel is configured ([currently via YAML](https://github.com/dotnet/arcade/tree/ec191f3d706d740bc7a87fbb98d94d916f81f0cb/eng/common/templates/post-build/channels)) to use three *Azure DevOps* feeds:
 
@@ -292,40 +292,44 @@ The target feed will be public/private depending on whether the Maestro++ channe
 
 Each stable builds (i.e., [Release Official Builds](https://github.com/dotnet/arcade/blob/84f3b4a8520b9e6d50afece47fa1adf4de8ec292/Documentation/CorePackages/Versioning.md#build-kind)) publish to a different set of target feeds. This is because these builds always produce the same package version and overriding packages in the feeds is usually something not supported. Whenever a branch receive a PR from Maestro++, *that contains packages that were published to a dynamically created feed*, it will add the new feed to the repository root NuGet.Config file as a package source feed. *Note that Maestro++ currently doesn't update NuGet.Config with the static feeds*.
 
-### Why most stages don't execute?
+### What benefits do I get from the new infrastructure?
 
+There are a few benefits, but the bottom line is: you can rely on Arcade SDK and Maestro++ to determine the correct place to publish the build assets. This is specially important for servicing and/or private builds where assets must not go to public locations before further validations.
 
+### Why most stages don't execute the publishing job?
+
+This happens because the publishing job will only execute in stage(s) representing a channel(s) that is [configured as a Default Channel](https://github.com/dotnet/arcade/blob/ec191f3d706d740bc7a87fbb98d94d916f81f0cb/Documentation/Darc.md#add-default-channel) for the build in Maestro++. All other stages will only execute the `Setup Maestro Vars` job. 
+
+### Why so many stages?
+
+Each stage represents a different Maestro++ channel. Therefore, as the number of channels in Maestro increase the number of stages also increase. We are considering to [change this representation](https://github.com/dotnet/arcade/issues/4283) so that it doesn't clutter the build UI.
 
 ### What's this "Setup Maestro Vars" job?
 
-
-
-### What benefits do I get from the new infrastructure?
-
-
-
-### How do I install Darc on my computer?
-
-
+Currently Azure DevOps does not support communicating "YAML variables" across stages. The recommended workaround to do this is to use an AzDO artifact to persist the variables. The `Setup Maestro Vars` job is used to read one of such artifacts and set stage-scope variables based on the file content.
 
 ### How will this change affect symbol publishing?
 
-
+Symbol publishing to MSDL and SymWeb will be done as a regular part of publishing the build assets. The symbol packages (i.e., symbols.nupkg files) are also published to a feed as a form of backup.
 
 ### Can we manually assign a build to a channel?
 
-
+Yes, that's possible. You need to [use Darc to do that](https://github.com/dotnet/arcade/blob/ec191f3d706d740bc7a87fbb98d94d916f81f0cb/Documentation/Darc.md#add-build-to-channel).
 
 ### Why the build assets aren't getting published anywhere?
 
-
+Most frequent cause of this is that there is no Default Channel configured for the build. [Take a look here](https://github.com/dotnet/arcade/blob/ec191f3d706d740bc7a87fbb98d94d916f81f0cb/Documentation/Darc.md#get-default-channels) to see how to check that.
 
 ### Why do you need the DotNetPublishUsingPipelines / DotNetArtifactsCategory parameter?
 
+The `DotNetPublishUsingPipelines` is a flag that Arcade SDK rely to determine if the repo wants to use the old or new publishing infrastructure. Until now the SDK supports both infra, however we are [working to remove the old one](https://github.com/dotnet/arcade/issues/3597) and thus the need for that parameter.
 
+The `DotNetArtifactsCategory` parameter was introduced to let people override the target feed for the publishing operations. We are in the process of removing support for that.
 
 ### Do I still need to pass the DotNetPublishToBlobFeed, DotNetPublishBlobFeedUrl, DotNetPublishBlobFeedKey parameters to the build scripts?
 
-
+Yes, you still need to pass that. Currently, Arcade SDK has some logic that depends on those parameters to work properly. We are [working to remove the need of those parameters](https://github.com/dotnet/arcade/issues/3597).
 
 ### Do I still need to pass the DotNetSymbolServerTokenMsdl and DotNetSymbolServerTokenSymWeb parameters to the build scripts?
+
+Yes, you still need to pass that. Currently, Arcade SDK has some logic that depends on those parameters to work properly. We are [working to remove the need of those parameters](https://github.com/dotnet/arcade/issues/3597).
