@@ -11,21 +11,15 @@ namespace Microsoft.Cci.Filters
     {
         private readonly HashSet<string> _attributeDocIds;
 
-        public ExcludeAttributesFilter(IEnumerable<string> attributeDocIds, bool includeForwardedTypes = false)
+        public ExcludeAttributesFilter(IEnumerable<string> attributeDocIds)
         {
             _attributeDocIds = new HashSet<string>(attributeDocIds);
-            IncludeForwardedTypes = includeForwardedTypes;
         }
 
-        public ExcludeAttributesFilter(string attributeDocIdFile, bool includeForwardedTypes = false)
+        public ExcludeAttributesFilter(string attributeDocIdFile)
         {
             _attributeDocIds = new HashSet<string>(DocIdExtensions.ReadDocIds(attributeDocIdFile));
-            IncludeForwardedTypes = includeForwardedTypes;
         }
-
-        // Exists to avoid breaking change in removing includeForwardedTypes constructor parameters. This is a bit
-        // less ugly than suppressing IDE0060.
-        public bool IncludeForwardedTypes { get; }
 
         public override bool Include(ICustomAttribute attribute)
         {
