@@ -29,7 +29,7 @@ namespace Microsoft.Cci.Filters
 
         public virtual bool Include(INamespaceDefinition ns)
         {
-            return IsNotMarkedWithAttribute(ns) && ns.GetTypes(includeForwards: true).Any(Include);
+            return ns.GetTypes(includeForwards: true).Any(Include);
         }
 
         public virtual bool Include(ITypeDefinition type)
