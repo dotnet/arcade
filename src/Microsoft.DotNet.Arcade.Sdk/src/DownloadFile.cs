@@ -141,7 +141,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
                     // where the resource is not found on the storage.
                     // https://docs.microsoft.com/en-us/rest/api/storageservices/common-rest-api-error-codes
                     if (httpResponse.StatusCode == HttpStatusCode.NotFound ||
-                        httpResponse.ReasonPhrase.IndexOf("The requested URI does not represent any resource on the server.", StringComparison.OrdinalIgnoreCase) == 0)
+                        httpResponse.ReasonPhrase.StartsWith("The requested URI does not represent any resource on the server.", StringComparison.OrdinalIgnoreCase))
                     {
                         Log.LogMessage($"Problems downloading file from '{uri}'. Does the resource exist on the storage? {httpResponse.StatusCode} : {httpResponse.ReasonPhrase}");
                         return false;
