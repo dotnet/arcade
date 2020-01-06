@@ -58,6 +58,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             .Select(BuildManifestUtil.CreateBlobArtifactModel);
                         foreach (var blobItem in itemsToPushNoExcludes)
                         {
+                            if (!File.Exists(blobItem.ItemSpec))
+                            {
+                                Log.LogError($"Could not find file {blobItem.ItemSpec}.");
+                                continue;
+                            }
+
                             Log.LogMessage(MessageImportance.High,
                                 $"##vso[artifact.upload containerfolder=BlobArtifacts;artifactname=BlobArtifacts]{blobItem.ItemSpec}");
                         }
@@ -95,12 +101,24 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                         foreach (var packagePath in packageItems)
                         {
+                            if (!File.Exists(packagePath.ItemSpec))
+                            {
+                                Log.LogError($"Could not find file {packagePath.ItemSpec}.");
+                                continue;
+                            }
+
                             Log.LogMessage(MessageImportance.High,
                                 $"##vso[artifact.upload containerfolder=PackageArtifacts;artifactname=PackageArtifacts]{packagePath.ItemSpec}");
                         }
 
                         foreach (var blobItem in blobItems)
                         {
+                            if (!File.Exists(blobItem.ItemSpec))
+                            {
+                                Log.LogError($"Could not find file {blobItem.ItemSpec}.");
+                                continue;
+                            }
+
                             Log.LogMessage(MessageImportance.High,
                                 $"##vso[artifact.upload containerfolder=BlobArtifacts;artifactname=BlobArtifacts]{blobItem.ItemSpec}");
                         }
