@@ -276,6 +276,8 @@ Properties:
 
 See [Signing.md](https://github.com/dotnet/arcade/blob/master/Documentation/CorePackages/Signing.md#arguments-metadata) for details.
 
+To change the key used for strong-naming assemblies see `StrongNameKeyId` property.
+
 ### /eng/Publishing.props (optional)
 
 Customization of publishing process.
@@ -446,6 +448,11 @@ It is a common practice to specify properties applicable to all (most) projects 
       Use PackageLicenseExpressionInternal for closed-source licenses.
     -->
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    
+    <!--
+      Specify an id of the key used to generate strong names of assemblies built from this repo.
+    -->
+    <StrongNameKeyId>Microsoft</StrongNameKeyId>
   </PropertyGroup>
 </Project>
 ```
@@ -872,6 +879,14 @@ build -configuration Release -restore -ci /p:EnableNgenOptimization=true /p:Repo
 ### `SemanticVersioningV1` (bool)
 
 `true` if `Version` needs to respect SemVer 1.0. Default is `false`, which means format following SemVer 2.0.
+
+### `StrongNameKeyId` (string)
+
+The id of the key used to generate assembly strong name for signed assemblies (`SignAssembly` is `true`).
+By default, `SignAssembly` is set to `true` and `StrongNameKeyId` is set to `MicrosoftShared`.
+Available values are listed in [StrongName.targets](https://github.com/dotnet/arcade/blob/master/src/Microsoft.DotNet.Arcade.Sdk/tools/StrongName.targets).
+
+`AssemblyOriginatorKeyFile`, `PublicKey`, `PublicKeyToken`, `DelaySign`, `PublicSign` properties are set based on the value of `StrongNameKeyId`.
 
 ### `IsShipping`, `IsShippingAssembly`, `IsShippingPackage`, `IsShippingVsix` (bool)
 
