@@ -9,7 +9,7 @@ For the most part, contributions to Arcade are straight forward and relatively s
 * Keep it simple. (don't over engineer or be "clever")
 * Focus on value over conviction.  (of course conviction should help drive the value discussion)
 * Opinions and beliefs must be substantiated with data and a strong business rationale.
-* All discussions (arguments) must be civil, respectful, productive, and above all - kind. The focus must always be on the topic, not individuals.
+* All discussions (arguments) [must be civil, respectful, productive, and above all - kind](https://microsoft.github.io/codeofconduct/). The focus must always be on the topic, not individuals.
 * Work in 'partnership' (shoulder to shoulder) as opposed to 'us' vs. 'them'.
 
 ## Arcade Core Team
