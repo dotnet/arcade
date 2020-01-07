@@ -17,6 +17,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         [Required]
         public ITaskItem[] ItemsToPush { get; set; }
 
+        public string AssetsTemporaryDirectory { get; set; }
+
         public bool PublishFlatContainer { get; set; }
 
         public string ManifestRepoUri { get; set; }
@@ -38,6 +40,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             try
             {
                 Log.LogMessage(MessageImportance.High, "Performing push to Azure DevOps artifacts storage.");
+
+                if (!string.IsNullOrWhiteSpace(AssetsTemporaryDirectory))
+                {
+                    Log.LogMessage(MessageImportance.High, $"It's no longer necessary to specify a value for the {AssetsTemporaryDirectory} property. " +
+                        $"Please consider patching your code to not use it.");
+                }
 
                 if (ItemsToPush == null)
                 {
