@@ -1,7 +1,9 @@
 using System;
+using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Net.Sockets;
 using System.Reflection;
 using System.Text;
 using System.Threading;
@@ -44,7 +46,7 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
             {
                 if (!InAzurePipeline)
                 {
-                    Log.LogError("This task must be run inside an Azure Pipelines Build");
+                    Log.LogError(FailureCategory.Build, "This task must be run inside an Azure Pipelines Build");
                 }
                 else
                 {
@@ -70,43 +72,71 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
             }
             catch (Exception ex)
             {
-                Log.LogErrorFromException(ex, true);
+                Log.LogErrorFromException(FailureCategory.Helix, ex, true);
             }
 
             return !Log.HasLoggedErrors;
         }
 
-        protected Task RetryAsync(Func<Task> function)
+        protected async Task RetryAsync(Func<Task> function)
         {
-            // Grab the retry logic from the helix api client
-            return ApiFactory.GetAnonymous().RetryAsync(
-                    async () =>
-                    {
-                        await function();
-                        return false; // the retry function requires a return, give it one
-                    },
-                    ex => Log.LogMessage(MessageImportance.Low, $"Azure Dev Ops Operation failed: {ex}\nRetrying..."),
-                    CancellationToken.None);
-
+            try
+            {
+                // Grab the retry logic from the helix api client
+                await RetryAsync(
+                        async () =>
+                        {
+                            await function();
+                            return false; // the retry function requires a return, give it one
+                        },
+                        ex => Log.LogMessage(MessageImportance.Low, $"Azure Dev Ops Operation failed: {ex}\nRetrying..."),
+                        CancellationToken.None);
+            }
+            catch (HttpRequestException ex)
+            {
+                Log.LogError(FailureCategory.Helix, ex.ToString());
+            }
         }
 
-        protected Task<T> RetryAsync<T>(Func<Task<T>> function)
+        protected async Task<T> RetryAsync<T>(Func<Task<T>> function)
         {
             // Grab the retry logic from the helix api client
-            return ApiFactory.GetAnonymous().RetryAsync(
-                    async () => await function(),
-                    ex => Log.LogMessage(MessageImportance.Low, $"Azure Dev Ops Operation failed: {ex}\nRetrying..."),
-                    CancellationToken.None);
-
+            try
+            {
+                return await RetryAsync(
+                        async () => await function(),
+                        ex => Log.LogMessage(MessageImportance.Low, $"Azure Dev Ops Operation failed: {ex}\nRetrying..."),
+                        CancellationToken.None);
+            }
+            catch (HttpRequestException ex)
+            {
+                Log.LogError(FailureCategory.Helix, ex.ToString());
+                return default;
+            }
         }
 
-        protected async Task LogFailedRequest(HttpRequestMessage req, HttpResponseMessage res)
+        protected async Task HandleFailedRequest(HttpRequestMessage req, HttpResponseMessage res)
         {
-            Log.LogError($"Request to {req.RequestUri} returned failed status {(int)res.StatusCode} {res.ReasonPhrase}\n\n{(res.Content != null ? await res.Content.ReadAsStringAsync() : "")}");
             if (res.StatusCode == HttpStatusCode.Found)
             {
                 Log.LogError(
+                    FailureCategory.Build,
                     "A call to an Azure DevOps api returned 302 Indicating a bad 'System.AccessToken' value.\n\nPlease Check the 'Make secrets available to builds of forks' in the pipeline pull request validation trigger settings.\nWe have evaluated the security considerations of this setting and have determined that it is fine to use for our public PR validation builds.");
+                return;
+            }
+
+            var statusCodeValue = (int)res.StatusCode;
+            var message = $"Request to {req.RequestUri} returned failed status {statusCodeValue} {res.ReasonPhrase}\n\n{(res.Content != null ? await res.Content.ReadAsStringAsync() : "")}";
+
+            if (statusCodeValue >= 400 && statusCodeValue < 500)
+            {
+                Log.LogError(FailureCategory.Build, message);
+            }
+            else
+            {
+                // we want to engage retry logic from HelixApi.RetryAsync in this case
+                Log.LogMessage(MessageImportance.Normal, message);
+                throw new HttpRequestException(message);
             }
         }
 
@@ -114,7 +144,7 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
         {
             if (!res.IsSuccessStatusCode)
             {
-                await LogFailedRequest(req, res);
+                await HandleFailedRequest(req, res);
                 return null;
             }
 
@@ -126,10 +156,73 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
             }
             catch (Exception)
             {
-                Log.LogError($"Request to {req.RequestUri} returned unexpected response: {responseContent}");
+                Log.LogError(FailureCategory.Helix, $"Request to {req.RequestUri} returned unexpected response: {responseContent}");
             }
 
             return null;
+        }
+
+        private static readonly Random s_rand = new Random();
+
+        public int RetryCount { get; set; } = 15;
+
+        public double RetryBackOffFactor { get; set; } = 1.3;
+
+        protected virtual int GetRetryDelay(int attempt)
+        {
+            var factor = RetryBackOffFactor;
+            var min = (int)(Math.Pow(factor, attempt) * 1000);
+            var max = (int)(Math.Pow(factor, attempt + 1) * 1000);
+            return s_rand.Next(min, max);
+        }
+
+        public static bool IsRetryableHttpException(Exception ex)
+        {
+            return ex is TaskCanceledException ||
+                   ex is OperationCanceledException ||
+                   ex is HttpRequestException ||
+                   ex is IOException ||
+                   ex is SocketException
+                ;
+        }
+
+        public Task<T> RetryAsync<T>(Func<Task<T>> function, Action<Exception> logRetry,
+            CancellationToken cancellationToken)
+        {
+            return RetryAsync<T>(function, logRetry, IsRetryableHttpException, cancellationToken);
+        }
+
+        public async Task<T> RetryAsync<T>(Func<Task<T>> function, Action<Exception> logRetry,
+            Func<Exception, bool> isRetryable, CancellationToken cancellationToken)
+        {
+            var attempt = 0;
+            var maxAttempt = RetryCount;
+            cancellationToken.ThrowIfCancellationRequested();
+            while (true)
+            {
+                try
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    return await function().ConfigureAwait(false);
+                }
+                catch (OperationCanceledException ocex) when (ocex.CancellationToken == cancellationToken)
+                {
+                    throw;
+                }
+                catch (Exception ex) when (isRetryable(ex))
+                {
+                    if (attempt >= maxAttempt)
+                    {
+                        throw;
+                    }
+
+                    logRetry(ex);
+                }
+                cancellationToken.ThrowIfCancellationRequested();
+                await Task.Delay(GetRetryDelay(attempt)).ConfigureAwait(false);
+                cancellationToken.ThrowIfCancellationRequested();
+                attempt++;
+            }
         }
     }
 }

@@ -44,13 +44,8 @@ namespace Microsoft.DotNet.XUnitExtensions
                 }
             }
         
-            if ((platforms.HasFlag(TestPlatforms.FreeBSD) && RuntimeInformation.IsOSPlatform(OSPlatform.Create("FREEBSD"))) ||
-                (platforms.HasFlag(TestPlatforms.Linux) && RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) ||
-                (platforms.HasFlag(TestPlatforms.NetBSD) && RuntimeInformation.IsOSPlatform(OSPlatform.Create("NETBSD"))) ||
-                (platforms.HasFlag(TestPlatforms.OSX) && RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) ||
-                (platforms.HasFlag(TestPlatforms.Windows) && RuntimeInformation.IsOSPlatform(OSPlatform.Windows)))
+            if (DiscovererHelpers.TestPlatformApplies(platforms))
             {
-                
                 if (frameworks.HasFlag(TargetFrameworkMonikers.Netcoreapp))
                     yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.NonNetcoreappTest);
                 if (frameworks.HasFlag(TargetFrameworkMonikers.NetFramework))

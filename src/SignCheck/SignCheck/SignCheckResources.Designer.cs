@@ -61,15 +61,6 @@ namespace SignCheck {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to All files are signed..
-        /// </summary>
-        internal static string scAllFilesSigned {
-            get {
-                return ResourceManager.GetString("scAllFilesSigned", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Unable to find {0}..
         /// </summary>
         internal static string scCannotFindFile {
@@ -142,6 +133,15 @@ namespace SignCheck {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to No signing issues found.
+        /// </summary>
+        internal static string scNoSignIssues {
+            get {
+                return ResourceManager.GetString("scNoSignIssues", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Processing exclusions list in {0}.
         /// </summary>
         internal static string scProcessExclusions {
@@ -156,6 +156,15 @@ namespace SignCheck {
         internal static string scResults {
             get {
                 return ResourceManager.GetString("scResults", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Signing issues found.
+        /// </summary>
+        internal static string scSignIssuesFound {
+            get {
+                return ResourceManager.GetString("scSignIssuesFound", resourceCulture);
             }
         }
         
@@ -183,15 +192,6 @@ namespace SignCheck {
         internal static string scTime {
             get {
                 return ResourceManager.GetString("scTime", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to There are unsigned files..
-        /// </summary>
-        internal static string scUnsignedFiles {
-            get {
-                return ResourceManager.GetString("scUnsignedFiles", resourceCulture);
             }
         }
     }

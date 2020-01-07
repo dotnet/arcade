@@ -70,6 +70,35 @@ namespace Microsoft.SignCheck.Verification
             return _exclusions.Contains(exclusion);
         }
 
+        public bool IsExcluded(string path, string parent, string containerPath, IEnumerable<Exclusion> exclusions)
+        {
+            foreach (Exclusion e in exclusions)
+            {
+                // 1. The file/container path matches a file part of the exclusion and the parent matches the parent part of the exclusion.
+                //    Example: bar.dll;*.zip --> Exclude any occurence of bar.dll that is in a zip file
+                //             bar.dll;foo.zip --> Exclude bar.dll only if it is contained inside foo.zip
+                //             foo.exe;; --> Exclude any occurance of foo.exe and ignore the parent
+                if (IsMatch(e.FilePatterns, Path.GetFileName(containerPath)) || IsMatch(e.FilePatterns, containerPath) || IsMatch(e.FilePatterns, path) || IsMatch(e.FilePatterns, Path.GetFileName(path)))
+                {
+                    if ((e.ParentFiles.Length == 0) || (e.ParentFiles.All(pf => String.IsNullOrEmpty(pf))) || IsMatch(e.ParentFiles, parent))
+                    {
+                        return true;
+                    }
+                }
+
+                // 2. The file/container path matches the file part of the exclusion and there is no parent exclusion. 
+                //    Example: *.dll;; --> Exclude any file with a .dll extension
+                if ((IsMatch(e.FilePatterns, path) || IsMatch(e.FilePatterns, containerPath)) && (e.ParentFiles.All(pf => String.IsNullOrEmpty(pf))))
+                {
+                    return true;
+                }
+            }
+
+            // 3. There is no file exclusion, but a parent exclusion matches.
+            //    Example: ;foo.zip; --> Exclude any file in foo.zip. This is similar to using *;foo.zip;
+            return exclusions.Any(e => (e.FilePatterns.All(fp => String.IsNullOrEmpty(fp)) && IsMatch(e.ParentFiles, parent)));
+        }
+
         /// <summary>
         /// Return true if an exclusion matches the file path, parent file container or the path in the container
         /// </summary>
@@ -79,24 +108,20 @@ namespace Microsoft.SignCheck.Verification
         /// <returns></returns>
         public bool IsExcluded(string path, string parent, string containerPath)
         {
-            // 1. The file/container path matches a file part of the exclusion and the parent matches the parent part of the exclusion.
-            //    Example: bar.dll;*.zip --> Exclude any occurrence of bar.dll that is in a zip file
-            //             bar.dll;foo.zip --> Exclude bar.dll only if it is contained inside foo.zip
-            if (_exclusions.Any(e => (IsMatch(e.FilePatterns, path) || IsMatch(e.FilePatterns, containerPath)) && (IsMatch(e.ParentFiles, parent))))
-            {
-                return true;
-            }
+            return IsExcluded(path, parent, containerPath, _exclusions);
+        }
 
-            // 2. The file/container path matches the file part of the exclusion and there is no parent exclusion. 
-            //    Example: *.dll;; --> Exclude any file with a .dll extension
-            if (_exclusions.Any(e => (IsMatch(e.FilePatterns, path) || IsMatch(e.FilePatterns, containerPath)) && (e.ParentFiles.All(pf => String.IsNullOrEmpty(pf)))))
-            {
-                return true;
-            }
+        /// <summary>
+        /// Returns true if the file pattern matches the file and the exclusion comment contains DO-NOT-SIGN.
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        public bool IsDoNotSign(string path, string parent, string containerPath)
+        {
+            // Get all the exclusions with DO-NOT-SIGN markers and check only against those
+            IEnumerable<Exclusion> doNotSignExclusions = _exclusions.Where(e => e.Comment.Contains("DO-NOT-SIGN")).ToArray();
 
-            // 3. There is no file exclusion, but a parent exclusion matches.
-            //    Example: ;foo.zip; --> Exclude any file in foo.zip. This is similar to using *;foo.zip;
-            return _exclusions.Any(e => (e.FilePatterns.All(fp => String.IsNullOrEmpty(fp)) && IsMatch(e.ParentFiles, parent)));
+            return (doNotSignExclusions.Count() > 0) && (IsExcluded(path, parent, containerPath, doNotSignExclusions));
         }
 
         /// <summary>

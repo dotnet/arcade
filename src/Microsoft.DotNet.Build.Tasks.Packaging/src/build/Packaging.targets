@@ -69,6 +69,7 @@
     <RuntimeFilePath Condition="'$(RuntimeFilePath)' == ''">$(NuSpecOutputPath)$(Id)$(NuspecSuffix)/runtime.json</RuntimeFilePath>
     <PackedPackageRuntimeFilePath Condition="'$(PackedPackageRuntimeFilePath)' == ''">$(NuSpecOutputPath)$(Id)$(NuspecSuffix)/$(PackedPackageNamePrefix).runtime.json</PackedPackageRuntimeFilePath>
     <PlaceholderFile>$(MSBuildThisFileDirectory)content/_._</PlaceholderFile>
+    <PackageIconFile Condition="'$(PackageIconFile)' == ''">$(MSBuildThisFileDirectory)Icon.png</PackageIconFile>
     <PackageDescriptionFile Condition="'$(PackageDescriptionFile)' == ''">path to descriptions.json must be specified</PackageDescriptionFile>
     <ValidationSuppressionFile Condition="'$(ValidationSuppressionFile)' == ''">ValidationSuppression.txt</ValidationSuppressionFile>
     <SyncInfoFile Condition="'$(SyncInfoFile)' == ''">unspecified</SyncInfoFile>
@@ -955,6 +956,10 @@
     <DefaultValidateFramework Include="netcoreapp3.0">
       <RuntimeIDs>@(NETCoreApp30RIDs)</RuntimeIDs>
     </DefaultValidateFramework>
+    <NETCoreApp50RIDs Condition="'@(NETCoreApp50RIDs)' == ''" Include="@(NETCoreApp30RIDs)" />
+    <DefaultValidateFramework Include="netcoreapp5.0">
+      <RuntimeIDs>@(NETCoreApp50RIDs)</RuntimeIDs>
+    </DefaultValidateFramework>
 
     <NETCore50RIDs Condition="'@(NETCore50RIDs)' == ''" Include="win10-x86;win10-x86-aot;win10-x64;win10-x64-aot;win10-arm;win10-arm-aot" />
     <DefaultValidateFramework Include="netcore50">
@@ -1019,10 +1024,6 @@
     <UAP10016299RIDs Condition="'@(UAP10016299RIDs)' == ''" Include="@(UAP10RIDs)" />
     <DefaultValidateFramework Include="uap10.0.16299">
       <RuntimeIDs>@(UAP10016299RIDs)</RuntimeIDs>
-    </DefaultValidateFramework>
-    <UAPvNextRIDs Condition="'@(UAPvNextRIDs)' == ''" Include="@(UAP10016299RIDs)" />
-    <DefaultValidateFramework Include="$(UAPvNextTFM)">
-      <RuntimeIDs>@(UAPvNextRIDs)</RuntimeIDs>
     </DefaultValidateFramework>
   </ItemGroup>
 
@@ -1223,6 +1224,7 @@
                     Language="$(Language)"
                     ProjectUrl="$(ProjectUrl)"
                     IconUrl="$(IconUrl)"
+                    Icon="$(PackageIconFile)"
                     LicenseUrl="$(LicenseUrl)"
                     PackageLicenseExpression="$(PackageLicenseExpression)"
                     Copyright="$(Copyright)"

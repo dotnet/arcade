@@ -472,9 +472,7 @@ namespace Xunit.ConsoleClient
                         if (option.Value == null)
                             throw new ArgumentException($"missing filename for {option.Key}");
 
-#if !WINDOWS_UWP
                         EnsurePathExists(option.Value);
-#endif
 
                         project.Output.Add(optionName, option.Value);
                     }
@@ -505,7 +503,6 @@ namespace Xunit.ConsoleClient
             return new KeyValuePair<string, string>(option, value);
         }
 
-#if !WINDOWS_UWP
         static void EnsurePathExists(string path)
         {
             var directory = Path.GetDirectoryName(path);
@@ -515,6 +512,5 @@ namespace Xunit.ConsoleClient
 
             Directory.CreateDirectory(directory);
         }
-#endif
     }
 }

@@ -35,7 +35,7 @@ namespace Microsoft.DotNet.Helix.Client.Models
                 {
                     return false;
                 }
-                if (Status == default)
+                if (Status == default(IImmutableDictionary<string, int>))
                 {
                     return false;
                 }

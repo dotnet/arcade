@@ -42,7 +42,6 @@
       - InstallersAzureAccountKey             : Account key for installers location
       - ChecksumsTargetStaticFeed             : Where checksums should be published
       - ChecksumsAzureAccountKey              : Account key forchecksums location
-      - PublishToAzureDevOpsNuGetFeeds        : If true, publish NuGet packages to Azure DevOps feeds.
       - AzureDevOpsStaticShippingFeed         : URL of the Azure DevOps NuGet feed to publish non-stable shipping packages to.
       - AzureDevOpsStaticShippingFeedKey      : Key of the Azure DevOps NuGet feed to publish non-stable shipping packages to.
       - AzureDevOpsStaticTransportFeed        : URL of the Azure DevOps NuGet feed to publish transport packages to.
@@ -76,15 +75,15 @@
       Text="Parameters 'ChecksumsTargetStaticFeed/Key' are empty." />
 
     <Error
-      Condition="('$(AzureDevOpsStaticShippingFeed)' == '' or '$(AzureDevOpsStaticShippingFeedKey)' == '') and '$(PublishToAzureDevOpsNuGetFeeds)' == 'true'"
+      Condition="('$(AzureDevOpsStaticShippingFeed)' == '' or '$(AzureDevOpsStaticShippingFeedKey)' == '')"
       Text="Parameters 'AzureDevOpsStaticShippingFeed/AzureDevOpsStaticShippingFeedKey' are empty." />
 
     <Error
-      Condition="('$(AzureDevOpsStaticTransportFeed)' == '' or '$(AzureDevOpsStaticTransportFeedKey)' == '') and '$(PublishToAzureDevOpsNuGetFeeds)' == 'true'"
+      Condition="('$(AzureDevOpsStaticTransportFeed)' == '' or '$(AzureDevOpsStaticTransportFeedKey)' == '')"
       Text="Parameters 'AzureDevOpsStaticTransportFeed/AzureDevOpsStaticTransportFeedKey' are empty." />
 
     <Error
-      Condition="('$(AzureDevOpsStaticSymbolsFeed)' == '' or '$(AzureDevOpsStaticSymbolsFeedKey)' == '') and '$(PublishToAzureDevOpsNuGetFeeds)' == 'true'"
+      Condition="('$(AzureDevOpsStaticSymbolsFeed)' == '' or '$(AzureDevOpsStaticSymbolsFeedKey)' == '')"
       Text="Parameters 'AzureDevOpsStaticSymbolsFeed/AzureDevOpsStaticSymbolsFeedKey' are empty." />
 
     <!--
@@ -123,6 +122,7 @@
       <TargetStaticFeed Condition="'$(ArtifactsCategory.ToUpper())' == 'ASPNETENTITYFRAMEWORK6'">https://dotnetfeed.blob.core.windows.net/aspnet-entityframework6/index.json</TargetStaticFeed>
       <TargetStaticFeed Condition="'$(ArtifactsCategory.ToUpper())' == 'ASPNETBLAZOR'">https://dotnetfeed.blob.core.windows.net/aspnet-blazor/index.json</TargetStaticFeed>
       <TargetStaticFeed Condition="'$(ArtifactsCategory.ToUpper())' == 'IOT'">https://dotnetfeed.blob.core.windows.net/dotnet-iot/index.json</TargetStaticFeed>
+      <TargetStaticFeed Condition="'$(ArtifactsCategory.ToUpper())' == 'EXPERIMENTAL'">https://dotnetfeed.blob.core.windows.net/dotnet-experimental/index.json</TargetStaticFeed>
       <TargetStaticFeed Condition="'$(TargetStaticFeed)' == ''">https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json</TargetStaticFeed>
     </PropertyGroup>
 
@@ -201,7 +201,6 @@
         Token="$(AzureStorageTargetFeedPAT)" />
 
       <TargetFeedConfig
-        Condition="'$(PublishToAzureDevOpsNuGetFeeds)' == 'true'"
         AssetSelection="NonShippingOnly"
         Include="Package"
         TargetURL="$(AzureDevOpsStaticTransportFeed)"
@@ -210,7 +209,6 @@
         Token="$(AzureDevOpsStaticTransportFeedKey)" />
 
       <TargetFeedConfig
-        Condition="'$(PublishToAzureDevOpsNuGetFeeds)' == 'true'"
         AssetSelection="NonShippingOnly"
         Include="Symbols"
         TargetURL="$(AzureDevOpsStaticSymbolsFeed)"
@@ -252,7 +250,6 @@
     -->
     <ItemGroup Condition="'@(TargetFeedConfig)' == '' AND '$(IsStableBuild)' == 'false' AND '$(IsInternalBuild)' == 'true'">
       <TargetFeedConfig
-        Condition="'$(PublishToAzureDevOpsNuGetFeeds)' == 'true'"
         AssetSelection="ShippingOnly"
         Include="Package"
         TargetURL="$(AzureDevOpsStaticShippingFeed)"
@@ -261,7 +258,6 @@
         Token="$(AzureDevOpsStaticShippingFeedKey)" />
 
       <TargetFeedConfig
-        Condition="'$(PublishToAzureDevOpsNuGetFeeds)' == 'true'"
         AssetSelection="NonShippingOnly"
         Include="Package"
         TargetURL="$(AzureDevOpsStaticTransportFeed)"
@@ -270,7 +266,6 @@
         Token="$(AzureDevOpsStaticTransportFeedKey)" />
 
       <TargetFeedConfig
-        Condition="'$(PublishToAzureDevOpsNuGetFeeds)' == 'true'"
         Include="Symbols"
         TargetURL="$(AzureDevOpsStaticSymbolsFeed)"
         Isolated="false"
@@ -328,7 +323,7 @@
         Type="AzureStorageFeed"
         Token="$(ChecksumsAzureAccountKey)" />
 
-      <TargetFeedConfig Condition="'$(PublishToAzureDevOpsNuGetFeeds)' == 'true'"
+      <TargetFeedConfig
         Include="Package"
         TargetURL="$(AzureDevOpsStaticShippingFeed)"
         Isolated="false"
@@ -336,7 +331,7 @@
         Token="$(AzureDevOpsStaticShippingFeedKey)"
         AssetSelection="ShippingOnly" />
 
-      <TargetFeedConfig Condition="'$(PublishToAzureDevOpsNuGetFeeds)' == 'true'"
+      <TargetFeedConfig
         Include="Package"
         TargetURL="$(AzureDevOpsStaticTransportFeed)"
         Isolated="false"
@@ -344,7 +339,7 @@
         Token="$(AzureDevOpsStaticTransportFeedKey)"
         AssetSelection="NonShippingOnly" />
 
-      <TargetFeedConfig Condition="'$(PublishToAzureDevOpsNuGetFeeds)' == 'true'"
+      <TargetFeedConfig
         Include="Symbols"
         TargetURL="$(AzureDevOpsStaticSymbolsFeed)"
         Isolated="false"

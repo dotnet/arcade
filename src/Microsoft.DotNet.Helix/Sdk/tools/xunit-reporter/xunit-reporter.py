@@ -24,7 +24,7 @@ class HelixHelper:
     def error(self, error_type, message, log_uri=None):
         self.event_client.error(self.settings, error_type, message, log_uri)
 
-    def xunit(self, results_uri, test_count):
+    def xunit(self, results_uri, test_count, file_name):
         self.event_client.send(
             {
                 'Type': 'XUnitTestResult',
@@ -33,6 +33,17 @@ class HelixHelper:
                 'CorrelationId': self.settings.correlation_id,
                 'ResultsXmlUri': results_uri,
                 'TestCount': test_count,
+            }
+        )
+
+        self.event_client.send(
+            {
+                'Type': 'File',
+                'Uri': results_uri,
+                'FileName': file_name,
+                'WorkItemId': self.settings.workitem_id,
+                'WorkItemFriendlyName': self.settings.workitem_friendly_name,
+                'CorrelationId': self.settings.correlation_id,
             }
         )
 
@@ -71,7 +82,7 @@ def main():
 
     log.info("Uploading results from {}".format(results_path))
 
-    with open(results_path) as result_file:
+    with open(results_path, encoding="utf-8") as result_file:
         test_count = 0
         total_regex = re.compile(r'total="(\d+)"')
         for line in result_file:
@@ -84,7 +95,7 @@ def main():
     result_url = helper.upload_file_to_storage(results_path)
 
     log.info("Sending completion event")
-    helper.xunit(result_url, test_count)
+    helper.xunit(result_url, test_count, os.path.basename(results_path))
 
     return 0
 

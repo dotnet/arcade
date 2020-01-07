@@ -117,9 +117,6 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="scAllFilesSigned" xml:space="preserve">
-    <value>All files are signed.</value>
-  </data>
   <data name="scCannotFindFile" xml:space="preserve">
     <value>Unable to find {0}.</value>
   </data>
@@ -144,11 +141,17 @@
   <data name="scNoFilesProcessed" xml:space="preserve">
     <value>No files were processed.</value>
   </data>
+  <data name="scNoSignIssues" xml:space="preserve">
+    <value>No signing issues found</value>
+  </data>
   <data name="scProcessExclusions" xml:space="preserve">
     <value>Processing exclusions list in {0}</value>
   </data>
   <data name="scResults" xml:space="preserve">
     <value>Results</value>
+  </data>
+  <data name="scSignIssuesFound" xml:space="preserve">
+    <value>Signing issues found</value>
   </data>
   <data name="scStats" xml:space="preserve">
     <value>Total Files: {0}, Signed: {1}, Unsigned: {2}, Skipped: {3}, Excluded: {4}, Skipped &amp; Excluded: {5}</value>
@@ -158,8 +161,5 @@
   </data>
   <data name="scTime" xml:space="preserve">
     <value>Total Time: {0:c}</value>
-  </data>
-  <data name="scUnsignedFiles" xml:space="preserve">
-    <value>There are unsigned files.</value>
   </data>
 </root>

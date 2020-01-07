@@ -113,7 +113,7 @@ namespace Microsoft.DotNet.SwaggerGenerator.Languages
             }
 
             [BlockHelperMethod]
-            public void NullCheck(TextWriter output, object context, Action<TextWriter, object> template, TypeReference reference)
+            public void NullCheck(TextWriter output, object context, Action<TextWriter, object> template, TypeReference reference, bool required)
             {
                 if (reference == TypeReference.String)
                 {
@@ -124,12 +124,12 @@ namespace Microsoft.DotNet.SwaggerGenerator.Languages
                 else
                 {
                     template(output, context);
-                    output.WriteSafeString($" == default({ResolveReference(reference, null)})");
+                    output.WriteSafeString($" == {GetDefaultExpression(reference, required)}");
                 }
             }
 
             [BlockHelperMethod]
-            public void NotNullCheck(TextWriter output, object context, Action<TextWriter, object> template, TypeReference reference)
+            public void NotNullCheck(TextWriter output, object context, Action<TextWriter, object> template, TypeReference reference, bool required)
             {
                 if (reference == TypeReference.String)
                 {
@@ -140,26 +140,32 @@ namespace Microsoft.DotNet.SwaggerGenerator.Languages
                 else
                 {
                     template(output, context);
-                    output.WriteSafeString($" != default({ResolveReference(reference, null)})");
+                    output.WriteSafeString($" != {GetDefaultExpression(reference, required)}");
                 }
+            }
+
+            public string GetDefaultExpression(TypeReference reference, bool required)
+            {
+                string typeElement = ResolveReference(reference, null);
+                string nullableElement = "";
+                if (!required && !IsNullable(reference))
+                {
+                    nullableElement = "?";
+                }
+                return $"default({typeElement}{nullableElement})";
             }
 
             [HelperMethod]
             public static string Method(HttpMethod method)
             {
-                if (string.Equals(method.Method, "PATCH", StringComparison.OrdinalIgnoreCase))
-                {
-                    return "new HttpMethod(\"PATCH\")";
-                }
 
                 if (method == HttpMethod.Delete || method == HttpMethod.Get || method == HttpMethod.Head ||
-                    method == HttpMethod.Options || method == HttpMethod.Post || method == HttpMethod.Put ||
-                    method == HttpMethod.Trace)
+                    method.Method.ToLower() == "patch" || method == HttpMethod.Post || method == HttpMethod.Put)
                 {
-                    return $"HttpMethod.{Helpers.PascalCase(method.Method.ToLower().AsSpan())}";
+                    return $"RequestMethod.{Helpers.PascalCase(method.Method.ToLower().AsSpan())}";
                 }
 
-                return $"new HttpMethod(\"{method.Method}\")";
+                return $"RequestMethod.Parse(\"{method.Method}\")";
             }
 
             public override Templates GetTemplates(IHandlebars hb)

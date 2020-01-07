@@ -2,11 +2,12 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.IO;
 using System.Linq;
-using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Rest;
+using Azure;
+using Azure.Core;
 
 namespace Microsoft.DotNet.Helix.Client
 {
@@ -39,14 +40,14 @@ namespace Microsoft.DotNet.Helix.Client
 
     public class PagedResponse<T> : IReadOnlyList<T>
     {
-        private readonly Func<HttpRequestMessage, HttpResponseMessage, Task> _onFailure;
+        private readonly Func<Request, Response, Task> _onFailure;
 
-        public PagedResponse(HelixApi client, Func<HttpRequestMessage, HttpResponseMessage, Task> onFailure, IHttpOperationResponse<IImmutableList<T>> response)
+        public PagedResponse(HelixApi client, Func<Request, Response, Task> onFailure, Response response, IImmutableList<T> values)
         {
             _onFailure = onFailure;
             Client = client;
-            Values = response.Body;
-            if (!response.Response.Headers.TryGetValues("Link", out var linkHeader))
+            Values = values;
+            if (!response.Headers.TryGetValues("Link", out var linkHeader))
             {
                 return;
             }
@@ -128,30 +129,22 @@ namespace Microsoft.DotNet.Helix.Client
 
         public async Task<PagedResponse<T>> GetPageAsync(string link, CancellationToken cancellationToken)
         {
-            using (var req = new HttpRequestMessage(HttpMethod.Get, link))
+            using (var req = Client.Pipeline.CreateRequest())
             {
-                if (Client.Credentials != null)
-                {
-                    await Client.Credentials.ProcessHttpRequestAsync(req, cancellationToken);
-                }
+                req.Uri.Reset(new Uri(link));
 
-                using (var res = await Client.SendAsync(req, cancellationToken))
+                using (var res = await Client.SendAsync(req, cancellationToken).ConfigureAwait(false))
                 {
-                    if (!res.IsSuccessStatusCode)
+                    if (res.Status < 200 || res.Status >= 300 || res.ContentStream == null)
                     {
-                        await _onFailure(req, res);
+                        await _onFailure(req, res).ConfigureAwait(false);
+                        throw new InvalidOperationException("Can't get here");
                     }
 
-                    var content = await res.Content.ReadAsStringAsync();
-
-                    using (var response = new HttpOperationResponse<IImmutableList<T>>
+                    using (var reader = new StreamReader(res.ContentStream))
                     {
-                        Request = req,
-                        Response = res,
-                        Body = Client.Deserialize<IImmutableList<T>>(content),
-                    })
-                    {
-                        return new PagedResponse<T>(Client, _onFailure, response);
+                        var content = await reader.ReadToEndAsync().ConfigureAwait(false);
+                        return new PagedResponse<T>(Client, _onFailure, res, Client.Deserialize<IImmutableList<T>>(content));
                     }
                 }
             }
@@ -208,7 +201,7 @@ namespace Microsoft.DotNet.Helix.Client
                 }
 
                 _currentPageEnumerator.Dispose();
-                _currentPage = await _currentPage.GetPageAsync(_currentPage.NextPageLink, cancellationToken);
+                _currentPage = await _currentPage.GetPageAsync(_currentPage.NextPageLink, cancellationToken).ConfigureAwait(false);
                 _currentPageEnumerator = _currentPage.GetEnumerator();
                 return _currentPageEnumerator.MoveNext();
             }
