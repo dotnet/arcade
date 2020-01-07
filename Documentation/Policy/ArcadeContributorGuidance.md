@@ -30,7 +30,7 @@ The current owner for dotnet/arcade is Mark Wilkie <mawilkie@microsoft.com>.  Th
 This is probably the most straight forward way.  If the PR might take some time and you want to get an early read first, filing an issue to get a discussion going, or emailing arcadewg@microsoft.com should get the insight you need.
 
 ### Filing Issues in Arcade
-All issues regarding our shared infrastructure. (Includes Arcade, darc, Maestro/dependency flow, and Helix) should be filed in the dotnet/arcade repo.  If there's a doubt, file in Arcade.  (As an aside, the private dotnet/core-eng repo is used by the engineering services team for internal facing work)
+All issues regarding our shared infrastructure (including Arcade, darc, Maestro/dependency flow, and Helix) should be filed in the dotnet/arcade repo.  If there's a doubt, file in Arcade.  (As an aside, the private dotnet/core-eng repo is used by the engineering services team for internal facing work.)
 
 The default Arcade issue template should be used with every issue filed.  The template is *very* simple and has low overhead.
 
