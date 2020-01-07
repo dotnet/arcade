@@ -147,7 +147,7 @@ In order to use the new publishing mechanism, the easiest way to start is by tur
     | publishInstallersAndChecksums           | bool     | Publish installers packages and checksums from the build artifacts to the dotnetcli storage account. | false |
     | SDLValidationParameters                 | object   | Parameters for the SDL job template, as documented in the [SDL template documentation](https://github.com/dotnet/arcade/blob/66175ebd3756697a3ca515e16cd5ffddc30582cd/Documentation/HowToAddSDLRunToPipeline.md) | -- |
     | validateDependsOn | [array] | Which stage(s) should the validation stage depend on. | build |
-    | publishDependsOn | [array] | Which stage(s) should the publishing stage(s) depends on. | Validate |
+    | publishDependsOn | [array] | Which stage(s) should the publishing stage(s) depend on. | Validate |
 
     After these changes the build job(s) will publish the build assets to Azure DevOps build artifacts instead of immediately publishing them to a feed or storage location. Once the post-build template is added, a repo's official build will include a series of stages that will publish the assets to different locations, depending on the Maestro++ default channel(s) that the build is assigned to.
 
