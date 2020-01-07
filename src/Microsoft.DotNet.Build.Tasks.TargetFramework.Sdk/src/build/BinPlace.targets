@@ -167,9 +167,11 @@
 
   <!-- IncrementalClean and CoreClean only clean paths under Intermediate or OutDir, handle additional paths -->
   <ItemGroup>
-    <AdditionalCleanDirectories Include="@(BinPlaceTargetFrameworks->'%(RefPath)')" />
+    <AdditionalCleanDirectories Include="@(BinPlaceTargetFrameworks->'%(RefPath)')"/>
+    <AdditionalCleanDirectories Remove="@(BinPlaceTargetFrameworks->'%(RefPath)')"  Condition="'$(SkipRefClean)' == 'true'" />
     <AdditionalCleanDirectories Include="@(BinPlaceTargetFrameworks->'%(RuntimePath)')" />
     <AdditionalCleanDirectories Include="@(BinPlaceTargetFrameworks->'%(PackageFileRefPath)')" />
+    <AdditionalCleanDirectories Remove="@(BinPlaceTargetFrameworks->'%(PackageFileRefPath)')" Condition="'$(SkipRefClean)' == 'true'" />
     <AdditionalCleanDirectories Include="@(BinPlaceTargetFrameworks->'%(PackageFileRuntimePath)')" />
     <AdditionalCleanDirectories Include="@(BinPlaceTargetFrameworks->'%(TestPath)')" />
   </ItemGroup>

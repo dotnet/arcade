@@ -57,9 +57,10 @@
     </MSBuild>
  
     <PropertyGroup>
-      <P2PTargetFrameworkOSGroup>$(TargetFramework)-$(OSGroup)</P2PTargetFrameworkOSGroup>
+      <P2PTargetFrameworkOSGroup Condition="'$(P2PTargetFrameworkOSGroup)' == ''">$(TargetFramework)-$(OSGroup)</P2PTargetFrameworkOSGroup>
       <!-- In AllConfiguration build TargetFramework can contain OSGroup.-->
-      <P2PTargetFrameworkOSGroup Condition="$(TargetFramework.Contains('-'))">$(TargetFramework)</P2PTargetFrameworkOSGroup> 
+      <P2PTargetFrameworkOSGroup Condition="$(TargetFramework.Contains('-')) and '$(P2PTargetFrameworkOSGroup)' == ''">$(TargetFramework)</P2PTargetFrameworkOSGroup> 
+      <BuildAllConfigurations Condition="'$(BuildAllConfigurations)' == ''">false</BuildAllConfigurations>
     </PropertyGroup>
     
     <ChooseBestP2PTargetFrameworkTask TargetFrameworkOsGroup="$(P2PTargetFrameworkOSGroup)"
