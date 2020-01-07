@@ -47,7 +47,7 @@ The default Arcade issue template should be used with every issue filed.  The te
 - Clean ownership helps keep things moving.
 
 ### Working Group Syncs
-The wider Arcade working group (arcadewg) will meet every two weeks, or on demand.  In addition, arcadewg@microsoft can be used for general infrastructure queries.
+The wider Arcade working group (arcadewg) will meet every two weeks, or on demand.  In addition, arcadewg@microsoft.com can be used for general infrastructure queries.
 
 ## Conflict Resolution / Arbitration / Escalation
 
