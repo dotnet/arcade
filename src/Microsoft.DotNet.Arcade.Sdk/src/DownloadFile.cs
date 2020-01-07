@@ -5,6 +5,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Threading;
 using Microsoft.Build.Framework;
@@ -15,7 +16,12 @@ namespace Microsoft.DotNet.Arcade.Sdk
 {
     public class DownloadFile : Task, ICancelableTask
     {
-        [Required]
+        /// <summary>
+        /// List of URls to attempt download from. Accepted metadata are:
+        ///     - Token: Base64 encoded token to be appended to base URL for accessing private locations.
+        /// </summary>
+        public ITaskItem[] Uris { get; set; }
+
         public string Uri { get; set; }
 
         [Required]
@@ -33,6 +39,9 @@ namespace Microsoft.DotNet.Arcade.Sdk
         private readonly CancellationTokenSource _cancellationSource = new CancellationTokenSource();
 
         public void Cancel() => _cancellationSource.Cancel();
+
+        private readonly string FileUriProtocol = "file://";
+
 
         public override bool Execute()
         {
@@ -53,31 +62,63 @@ namespace Microsoft.DotNet.Arcade.Sdk
                 return true;
             }
 
+            if (string.IsNullOrWhiteSpace(Uri) && (Uris == null || Uris.Count() == 0)) {
+                Log.LogError($"Invalid task parameter value: {nameof(Uri)} and {nameof(Uris)} are empty.");
+                return false;
+            }
+
             Directory.CreateDirectory(Path.GetDirectoryName(DestinationPath));
 
-            const string FileUriProtocol = "file://";
+            if (!string.IsNullOrWhiteSpace(Uri)) {
+                return DownloadFromUriAsync(Uri).Result;
+            }
 
-            if (Uri.StartsWith(FileUriProtocol, StringComparison.Ordinal))
+            if (Uris != null) {
+                foreach (var uriConfig in Uris)
+                {
+                    var uri = uriConfig.ItemSpec;
+                    var encodedToken = uriConfig.GetMetadata("token");
+
+                    if (!string.IsNullOrWhiteSpace(encodedToken))
+                    {
+                        var encodedTokenBytes = System.Convert.FromBase64String(encodedToken);
+                        var decodedToken = System.Text.Encoding.UTF8.GetString(encodedTokenBytes);
+                        uri = $"{uri}{decodedToken}";
+                    }
+
+                    if (DownloadFromUriAsync(uri).Result) {
+                        return true;
+                    }
+                }
+            }
+
+            Log.LogWarning($"Failed to download file using addresses in {nameof(Uri)} and/or {nameof(Uris)}.");
+
+            return false;
+        }
+
+        private async Tasks.Task<bool> DownloadFromUriAsync(string uri) {
+            if (uri.StartsWith(FileUriProtocol, StringComparison.Ordinal))
             {
-                var filePath = Uri.Substring(FileUriProtocol.Length);
+                var filePath = uri.Substring(FileUriProtocol.Length);
                 Log.LogMessage($"Copying '{filePath}' to '{DestinationPath}'");
                 File.Copy(filePath, DestinationPath, overwrite: true);
                 return true;
             }
 
-            Log.LogMessage($"Downloading '{Uri}' to '{DestinationPath}'");
+            Log.LogMessage($"Downloading '{uri}' to '{DestinationPath}'");
 
             using (var httpClient = new HttpClient(new HttpClientHandler { CheckCertificateRevocationList = true }))
             {
                 try
                 {
-                    return DownloadAsync(httpClient).Result;
+                    return await DownloadWithRetriesAsync(httpClient, uri);
                 }
                 catch (AggregateException e)
                 {
                     if (e.InnerException is OperationCanceledException)
                     {
-                        Log.LogError($"Download of '{Uri}' to '{DestinationPath}' has been cancelled.");
+                        Log.LogError($"Download of '{uri}' to '{DestinationPath}' has been cancelled.");
                         return false;
                     }
 
@@ -86,7 +127,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
             }
         }
 
-        private async Tasks.Task<bool> DownloadAsync(HttpClient client)
+        private async Tasks.Task<bool> DownloadWithRetriesAsync(HttpClient httpClient, string uri)
         {            
             int attempt = 0;
 
@@ -94,11 +135,23 @@ namespace Microsoft.DotNet.Arcade.Sdk
             {
                 try
                 {
-                    var stream = await client.GetStreamAsync(Uri).ConfigureAwait(false);
+                    var httpResponse = await httpClient.GetAsync(uri, _cancellationSource.Token).ConfigureAwait(false);
+
+                    // The Azure Storage REST API returns '400 - Bad Request' in some cases
+                    // where the resource is not found on the storage.
+                    // https://docs.microsoft.com/en-us/rest/api/storageservices/common-rest-api-error-codes
+                    if (httpResponse.StatusCode == HttpStatusCode.NotFound ||
+                        httpResponse.ReasonPhrase.StartsWith("The requested URI does not represent any resource on the server.", StringComparison.OrdinalIgnoreCase))
+                    {
+                        Log.LogMessage($"Problems downloading file from '{uri}'. Does the resource exist on the storage? {httpResponse.StatusCode} : {httpResponse.ReasonPhrase}");
+                        return false;
+                    }
+
+                    httpResponse.EnsureSuccessStatusCode();
 
                     using (var outStream = File.Create(DestinationPath))
                     {
-                        await stream.CopyToAsync(outStream, bufferSize: 81920, cancellationToken: _cancellationSource.Token).ConfigureAwait(false);
+                        await httpResponse.Content.CopyToAsync(outStream).ConfigureAwait(false);
                     }
 
                     return true;
@@ -109,11 +162,11 @@ namespace Microsoft.DotNet.Arcade.Sdk
 
                     if (attempt > Retries)
                     {
-                        Log.LogError($"Failed to download '{Uri}' to '{DestinationPath}'");
+                        Log.LogWarning($"Failed to download '{uri}' to '{DestinationPath}'");
                         return false;
                     }
 
-                    Log.LogWarning($"Retrying download of '{Uri}' to '{DestinationPath}' due to failure: '{e.Message}' ({attempt}/{Retries})");
+                    Log.LogWarning($"Retrying download of '{uri}' to '{DestinationPath}' due to failure: '{e.Message}' ({attempt}/{Retries})");
 
                     await Tasks.Task.Delay(RetryDelayMilliseconds).ConfigureAwait(false);
                     continue;

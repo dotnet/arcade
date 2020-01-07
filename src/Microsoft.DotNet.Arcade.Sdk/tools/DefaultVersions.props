@@ -78,7 +78,6 @@
     <MicrosoftVSSDKBuildToolsVersion Condition="'$(MicrosoftVSSDKBuildToolsVersion)' == ''">15.1.192</MicrosoftVSSDKBuildToolsVersion>
     <MicrosoftDotnetNuGetRepackTasksVersion Condition="'$(MicrosoftDotnetNuGetRepackTasksVersion)' == ''">$(ArcadeSdkVersion)</MicrosoftDotnetNuGetRepackTasksVersion>
     <MicrosoftDotNetSignToolVersion Condition="'$(MicrosoftDotNetSignToolVersion)' == ''">$(ArcadeSdkVersion)</MicrosoftDotNetSignToolVersion>
-    <XliffTasksVersion Condition="'$(XliffTasksVersion)' == ''">1.0.0-beta.19252.1</XliffTasksVersion>
     <XUnitVersion Condition="'$(XUnitVersion)' == ''">2.4.1</XUnitVersion>
     <XUnitRunnerConsoleVersion Condition="'$(XUnitRunnerConsoleVersion)' == ''">$(XUnitVersion)</XUnitRunnerConsoleVersion>
     <XUnitRunnerVisualStudioVersion Condition="'$(XUnitRunnerVisualStudioVersion)' == ''">$(XUnitVersion)</XUnitRunnerVisualStudioVersion>
