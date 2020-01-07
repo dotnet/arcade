@@ -41,7 +41,7 @@ The default Arcade issue template should be used with every issue filed.  The te
 
 
 ### General guidelines used for triage (not rules, just guidelines)
-- Issues older than 90 days, aren’t assigned to anyone, is not tracking something, and don’t belong to an epic are candidates to be closed
+- Issues older than 90 days, not assigned to anyone, not tracking something, and that don’t belong to an epic are candidates to be closed
 - Issues with only a title, or one liners will be considered for closure
 - Pull requests without a description / linked issue make it hard to understand priority or reasoning behind a change. Is this fixing an annoyance? a blocking bug?
 - Clean ownership helps keep things moving.
