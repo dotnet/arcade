@@ -37,7 +37,7 @@ The default Arcade issue template should be used with every issue filed.  The te
 ### Triage and Backlog Management
 - New Arcade issues are triaged at least once a week.  
 - Issues which have been marked via the template as blocking or causing unreasonable pain are looked at right away via FR ([First Responders](https://github.com/dotnet/core-eng/wiki/%5Bint%5D-First-Responders))
-- General "scrubs" happen at least once a yea.r
+- General "scrubs" happen at least once a year.
 
 
 ### General guidelines used for triage (not rules, just guidelines)
