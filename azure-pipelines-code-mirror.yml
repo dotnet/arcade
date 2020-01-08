@@ -46,5 +46,11 @@ jobs:
           git push azdo-mirror $(BranchToMirror) $(ExtraPushArgs)
           if %errorlevel% neq 0 git fetch azdo-mirror & git push azdo-mirror $(BranchToMirror) $(ExtraPushArgs)
           if %errorlevel% neq 0 git fetch azdo-mirror & git push azdo-mirror $(BranchToMirror) $(ExtraPushArgs)
+          if %errorlevel% neq 0 (
+            @echo git failed to push to mirror. This is often 
+            @echo because a commit exists in the mirror that 
+            @echo does not exist in the source. Verify that 
+            @echo the mirror and source branches are the same.
+          )
         displayName: Push changes to Azure DevOps repo
         workingDirectory: $(WorkingDirectoryName)
