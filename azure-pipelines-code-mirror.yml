@@ -47,9 +47,8 @@ jobs:
           :PUSH_RETRY
           git push azdo-mirror $(BranchToMirror) $(ExtraPushArgs)
           @echo git push azdo-mirror BranchToMirror ExtraPushArgs
-          call cmd exit /b 1
 
-          if errorlevel NEQ 0 (
+          if %errorlevel% NEQ 0 (
               echo Push failed
               REM Retry up to three times
               if %retryattempt% GEQ 3 (
