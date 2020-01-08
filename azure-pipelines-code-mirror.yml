@@ -51,6 +51,9 @@ jobs:
             @echo because a commit exists in the mirror that 
             @echo does not exist in the source. Verify that 
             @echo the mirror and source branches are the same.
+            @echo
+            @echo Suspect commits:
+            git --no-pager log --oneline --all $(BranchToMirror)..azdo-mirror/$(BranchToMirror)
           )
         displayName: Push changes to Azure DevOps repo
         workingDirectory: $(WorkingDirectoryName)
