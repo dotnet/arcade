@@ -43,7 +43,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                 if (!string.IsNullOrWhiteSpace(AssetsTemporaryDirectory))
                 {
-                    Log.LogMessage(MessageImportance.High, $"It's no longer necessary to specify a value for the {AssetsTemporaryDirectory} property. " +
+                    Log.LogMessage(MessageImportance.High, $"It's no longer necessary to specify a value for the {nameof(AssetsTemporaryDirectory)} property. " +
                         $"Please consider patching your code to not use it.");
                 }
 
