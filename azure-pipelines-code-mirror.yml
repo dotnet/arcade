@@ -44,5 +44,7 @@ jobs:
         workingDirectory: $(WorkingDirectoryName)
       - script: |
           git push azdo-mirror $(BranchToMirror) $(ExtraPushArgs)
+          if %errorlevel% neq 0 git fetch azdo-mirror & git push azdo-mirror $(BranchToMirror) $(ExtraPushArgs)
+          if %errorlevel% neq 0 git fetch azdo-mirror & git push azdo-mirror $(BranchToMirror) $(ExtraPushArgs)
         displayName: Push changes to Azure DevOps repo
         workingDirectory: $(WorkingDirectoryName)
