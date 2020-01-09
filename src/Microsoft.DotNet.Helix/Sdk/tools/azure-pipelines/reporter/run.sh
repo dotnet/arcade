@@ -1,5 +1,8 @@
-#!/usr/bin/env sudo -E /bin/sh
+#!/bin/sh
 set -x
+
+# relaunch as root
+[ `whoami` = root ] || exec sudo "$0" "$@"
 
 script_path=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 
