@@ -139,7 +139,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
                     case Lang.CSharp:
                         if (AsConstants)
                         {
-                            strings.AppendLine($"{memberIndent}internal const string @{identifier} = \"{name}\");");
+                            strings.AppendLine($"{memberIndent}internal const string @{identifier} = \"{name}\";");
                         }
                         else
                         {
