@@ -9,12 +9,12 @@
     <OriginalTargetFrameworks>$(TargetFrameworks)</OriginalTargetFrameworks>
   </PropertyGroup>
   
-  <Target Name="RunOnlyBestTargetFrameworks" Condition="'$(BuildAllConfigurations)' != 'true'" BeforeTargets="DispatchToInnerBuilds">
+  <Target Name="RunOnlyBestTargetFrameworks" Condition="'$(BuildAllConfigurations)' != 'true' || '$(SkipOuterBuild)' != 'true'" BeforeTargets="DispatchToInnerBuilds">
     <ItemGroup>
       <_InnerBuildProjects Remove="@(_InnerBuildProjects)" />
     </ItemGroup>
 
-    <ChooseBestTargetFrameworksTask BuildTargetFrameworks="$(BuildTargetFramework)-$(OSGroup);$(AdditionalBuildTargetFrameworks)"
+    <ChooseBestTargetFrameworksTask BuildTargetFrameworks="$(BuildTargetFramework)-$(BuildOS);$(AdditionalBuildTargetFrameworks)"
                                     SupportedTargetFrameworks="$(TargetFrameworks)"
                                     RuntimeGraph="$(RuntimeGraph)" >
       <Output TaskParameter="BestTargetFrameworks" ItemName="_BestTargetFramework" />
@@ -55,12 +55,8 @@
              SkipNonexistentTargets="true">
       <Output TaskParameter="TargetOutputs" ItemName="_ProjectRefWithTfms"/>
     </MSBuild>
- 
-    <PropertyGroup>
-      <P2PTargetFrameworkOSGroup Condition="'$(P2PTargetFrameworkOSGroup)' == ''">$(TargetFramework)</P2PTargetFrameworkOSGroup>
-    </PropertyGroup>
-    
-    <ChooseBestP2PTargetFrameworkTask TargetFrameworkOsGroup="$(P2PTargetFrameworkOSGroup)"
+     
+    <ChooseBestP2PTargetFrameworkTask TargetFrameworkOsGroup="$(TargetFramework)"
                                       ProjectReferencesWithTargetFrameworks="@(_ProjectRefWithTfms)"
                                       RuntimeGraph="$(RuntimeGraph)" >
       <Output TaskParameter="AnnotatedProjectReferencesWithSetTargetFramework" ItemName="_ProjectReferencesWithBestTargetFrameworks" />
@@ -72,7 +68,7 @@
     </ItemGroup>
   </Target>
 
-  <Target Name="ExpandAllPackageConfigurations"
+  <Target Name="ExpandAllPackageTargetFrameworks"
           BeforeTargets="ExpandProjectReferences"
           Condition="'$(MSBuildProjectExtension)' == '.pkgproj'">
     <MSBuild Targets="GetPackageTargetFrameworksList"
@@ -82,7 +78,7 @@
     </MSBuild>
     
     <ItemGroup>
-      <!-- assign configuration as a separate step to prevent batching during the transform which can reorder the list.
+      <!-- assign TargetFramework as a separate step to prevent batching during the transform which can reorder the list.
            order or projects matters here since this applies to traversal projects which build projects serially. -->
       <_NonPkgProjProjectReferenceTargetFrameworkWithAdditionalProperties Include="@(_NonPkgProjProjectReferenceTargetFramework->'%(OriginalItemSpec)')">
         <AdditionalProperties>TargetFramework=%(_NonPkgProjProjectReferenceTargetFramework.Identity);%(_NonPkgProjProjectReferenceTargetFramework.AdditionalProperties)</AdditionalProperties>

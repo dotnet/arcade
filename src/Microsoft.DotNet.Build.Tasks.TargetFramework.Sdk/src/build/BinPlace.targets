@@ -118,11 +118,7 @@
 
   <Target Name="GetBinPlaceTargetFramework">
     <!-- find which, if any, supported target framework of this project is best
-         for each binplace targetFramework -->
-    <PropertyGroup>
-      <FilterFramework Condition="'$(FilterFramework)' == ''">$(TargetFramework)</FilterFramework>
-    </PropertyGroup>
-     
+         for each binplace targetFramework -->     
     <ChooseBestTargetFrameworksTask BuildTargetFrameworks="@(BinPlaceTargetFrameworks)"
                                    SupportedTargetFrameworks="$(TargetFrameworks)"
                                    RuntimeGraph="$(RuntimeGraph)" >
@@ -130,14 +126,8 @@
     </ChooseBestTargetFrameworksTask>
 
     <ItemGroup>
-      <_currentBinPlaceTargetFrameworks Include="@(_bestBinlaceTargetFrameworks)" Condition="'%(Identity)' == '$(FilterFramework)'" />
-    </ItemGroup>
-
-    <ItemGroup Condition="'@(_currentBinPlaceTargetFrameworks->Count())' == '0' and '$(IsReferenceAssembly)' != 'true'">  
       <_currentBinPlaceTargetFrameworks Include="@(_bestBinlaceTargetFrameworks)" Condition="'%(Identity)' == '$(TargetFramework)'" />
-    </ItemGroup>
-    
-    <ItemGroup>
+
       <BinPlaceDir Condition="'$(BinPlaceTest)' == 'true'" Include="@(_currentBinPlaceTargetFrameworks->'%(TestPath)')" />
       <BinPlaceDir Condition="'$(BinPlaceRuntime)' == 'true'" Include="@(_currentBinPlaceTargetFrameworks->'%(RuntimePath)')" />
       <BinPlaceDir Condition="'$(BinPlaceRef)' == 'true'" Include="@(_currentBinPlaceTargetFrameworks->'%(RefPath)')" />
