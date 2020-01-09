@@ -24,7 +24,7 @@ namespace Microsoft.DotNet.Build.Tasks.TargetFramework.Sdk
             for (int i = 0; i < BestTargetFrameworks.Length; i++)
             {
                 InnerBuildProjects[i] = new TaskItem(ProjectName);
-                InnerBuildProjects[i].SetMetadata("AdditionalProperties", "TargetFramework=" + BestTargetFrameworks[i].ItemSpec.Split('-')[0]);
+                InnerBuildProjects[i].SetMetadata("AdditionalProperties", "TargetFramework=" + BestTargetFrameworks[i]);
             }
 
             return !Log.HasLoggedErrors; ;

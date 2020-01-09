@@ -57,15 +57,11 @@
     </MSBuild>
  
     <PropertyGroup>
-      <P2PTargetFrameworkOSGroup Condition="'$(P2PTargetFrameworkOSGroup)' == ''">$(TargetFramework)-$(OSGroup)</P2PTargetFrameworkOSGroup>
-      <!-- In AllConfiguration build TargetFramework can contain OSGroup.-->
-      <P2PTargetFrameworkOSGroup Condition="$(TargetFramework.Contains('-')) and '$(P2PTargetFrameworkOSGroup)' == ''">$(TargetFramework)</P2PTargetFrameworkOSGroup> 
-      <BuildAllConfigurations Condition="'$(BuildAllConfigurations)' == ''">false</BuildAllConfigurations>
+      <P2PTargetFrameworkOSGroup Condition="'$(P2PTargetFrameworkOSGroup)' == ''">$(TargetFramework)</P2PTargetFrameworkOSGroup>
     </PropertyGroup>
     
     <ChooseBestP2PTargetFrameworkTask TargetFrameworkOsGroup="$(P2PTargetFrameworkOSGroup)"
                                       ProjectReferencesWithTargetFrameworks="@(_ProjectRefWithTfms)"
-                                      BuildAllConfigurations="$(BuildAllConfigurations)"
                                       RuntimeGraph="$(RuntimeGraph)" >
       <Output TaskParameter="AnnotatedProjectReferencesWithSetTargetFramework" ItemName="_ProjectReferencesWithBestTargetFrameworks" />
     </ChooseBestP2PTargetFrameworkTask>
@@ -74,5 +70,42 @@
       <ProjectReference Remove="@(ProjectReference)" />
       <ProjectReference Include="@(_ProjectReferencesWithBestTargetFrameworks)" SkipGetTargetFrameworkProperties="true"/>
     </ItemGroup>
+  </Target>
+
+  <Target Name="ExpandAllPackageConfigurations"
+          BeforeTargets="ExpandProjectReferences"
+          Condition="'$(MSBuildProjectExtension)' == '.pkgproj'">
+    <MSBuild Targets="GetPackageTargetFrameworksList"
+             Projects="@(_NonPkgProjProjectReference)">
+      <Output TaskParameter="TargetOutputs"
+              ItemName="_NonPkgProjProjectReferenceTargetFramework" />
+    </MSBuild>
+    
+    <ItemGroup>
+      <!-- assign configuration as a separate step to prevent batching during the transform which can reorder the list.
+           order or projects matters here since this applies to traversal projects which build projects serially. -->
+      <_NonPkgProjProjectReferenceTargetFrameworkWithAdditionalProperties Include="@(_NonPkgProjProjectReferenceTargetFramework->'%(OriginalItemSpec)')">
+        <AdditionalProperties>TargetFramework=%(_NonPkgProjProjectReferenceTargetFramework.Identity);%(_NonPkgProjProjectReferenceTargetFramework.AdditionalProperties)</AdditionalProperties>
+      </_NonPkgProjProjectReferenceTargetFrameworkWithAdditionalProperties>
+
+    </ItemGroup>
+
+    <ItemGroup>
+      <_NonPkgProjProjectReference Remove="@(_NonPkgProjProjectReference)" />
+      <_NonPkgProjProjectReference Include="@(_NonPkgProjProjectReferenceTargetFrameworkWithAdditionalProperties)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="GetPackageTargetFrameworksList"
+          Returns="$(PackageTargetFrameworks)">
+    <ItemGroup>
+      <PackageTargetFrameworksList Include="$(TargetFrameworks)" />
+      <ExcludePackageTargetFrameworksList Include="$(ExcludeTargetFrameworksFromPackages)" />
+      <PackageTargetFrameworksFinalList Include="@(PackageTargetFrameworksList)" Exclude="@(ExcludePackageTargetFrameworksList)" />
+    </ItemGroup>
+
+    <PropertyGroup>
+      <PackageTargetFrameworks>@(PackageTargetFrameworksFinalList)</PackageTargetFrameworks>
+    </PropertyGroup>
   </Target>
 </Project>

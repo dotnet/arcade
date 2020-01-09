@@ -23,9 +23,6 @@ namespace Microsoft.DotNet.Build.Tasks.TargetFramework.Sdk
         [Output]
         public ITaskItem[] AnnotatedProjectReferencesWithSetTargetFramework { get; set; }
 
-        [Required]
-        public bool BuildAllConfigurations { get; set; }
-
         public override bool Execute()
         {
             AnnotatedProjectReferencesWithSetTargetFramework = new ITaskItem[ProjectReferencesWithTargetFrameworks.Length];
@@ -35,34 +32,14 @@ namespace Microsoft.DotNet.Build.Tasks.TargetFramework.Sdk
             {
                 ITaskItem projectReference = ProjectReferencesWithTargetFrameworks[i];
                 string[] targetFrameworks = projectReference.GetMetadata("TargetFrameworks").Split(';');
-                bool refProject = projectReference.ItemSpec.Contains(@"\ref\");
-
+                
                 string bestTargetFramework = targetFrameworkResolver.GetBestSupportedTargetFramework(targetFrameworks, TargetFrameworkOSGroup);
-                if (bestTargetFramework == null)
-                {
-                    if (refProject)
-                    {                        
-                        bestTargetFramework = targetFrameworkResolver.GetBestSupportedTargetFramework(targetFrameworks, TargetFrameworkOSGroup.Split('-')[0]);                    
-                    }
-                    else if (TargetFrameworkOSGroup.Contains("OSX") || TargetFrameworkOSGroup.Contains("Linux") || TargetFrameworkOSGroup.Contains("FreeBSD"))
-                    {
-                        // This is a temporary fix and this needs to be resolved.
-                        bestTargetFramework = targetFrameworkResolver.GetBestSupportedTargetFramework(targetFrameworks, TargetFrameworkOSGroup.Split('-')[0] + "-Unix");
-                    }
-                }
                 if (bestTargetFramework == null)
                 {
                     Log.LogError($"Not able to find a compatible supported target framework for {TargetFrameworkOSGroup} in Project {Path.GetFileName(projectReference.ItemSpec)}. The Supported Configurations are {string.Join(", ", targetFrameworks)}");
                 }
 
-                if (!BuildAllConfigurations || refProject)
-                {
-                    projectReference.SetMetadata("SetTargetFramework", "TargetFramework=" + bestTargetFramework.Split('-')[0]);
-                }
-                else
-                {
-                    projectReference.SetMetadata("SetTargetFramework", "TargetFramework=" + bestTargetFramework);
-                }
+                projectReference.SetMetadata("SetTargetFramework", "TargetFramework=" + bestTargetFramework);                
                 AnnotatedProjectReferencesWithSetTargetFramework[i] = projectReference;
             }
 

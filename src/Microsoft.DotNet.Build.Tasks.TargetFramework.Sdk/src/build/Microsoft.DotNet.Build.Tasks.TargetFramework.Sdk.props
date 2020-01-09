@@ -35,4 +35,131 @@
     <TargetFrameworkVersion Condition="$(_ShortFrameworkVersion.Length) == 2">v$(_ShortFrameworkVersion[0]).$(_ShortFrameworkVersion[1])</TargetFrameworkVersion>
     <TargetFrameworkVersion Condition="$(_ShortFrameworkVersion.Length) == 3">v$(_ShortFrameworkVersion[0]).$(_ShortFrameworkVersion[1]).$(_ShortFrameworkVersion[2])</TargetFrameworkVersion>
   </PropertyGroup>
+
+  <Choose>
+    <When Condition="$(TargetFramework.Contains('net45'))">
+      <PropertyGroup>
+        <TargetingPackNugetPackageId>Microsoft.TargetingPack.NETFramework.v4.5</TargetingPackNugetPackageId>
+      </PropertyGroup>
+    </When>
+    <When Condition="$(TargetFramework.Contains('net451'))">
+      <PropertyGroup>
+        <TargetingPackNugetPackageId>Microsoft.TargetingPack.NETFramework.v4.5.1</TargetingPackNugetPackageId>
+      </PropertyGroup>
+    </When>
+    <When Condition="$(TargetFramework.Contains('net46'))">
+      <PropertyGroup>
+        <TargetingPackNugetPackageId>Microsoft.TargetingPack.NETFramework.v4.6</TargetingPackNugetPackageId>
+      </PropertyGroup>
+    </When>
+    <When Condition="$(TargetFramework.Contains('net461'))">
+      <PropertyGroup>
+        <TargetingPackNugetPackageId>Microsoft.TargetingPack.NETFramework.v4.6.1</TargetingPackNugetPackageId>
+      </PropertyGroup>
+    </When>
+    <When Condition="$(TargetFramework.Contains('net462'))">
+      <PropertyGroup>
+        <TargetingPackNugetPackageId>Microsoft.TargetingPack.NETFramework.v4.6.2</TargetingPackNugetPackageId>
+      </PropertyGroup>
+    </When>
+    <When Condition="$(TargetFramework.Contains('net463'))">
+      <PropertyGroup>
+        <TargetingPackNugetPackageId>Microsoft.TargetingPack.NETFramework.v4.6.3</TargetingPackNugetPackageId>
+      </PropertyGroup>
+    </When>
+    <When Condition="$(TargetFramework.Contains('net47'))">
+      <PropertyGroup>
+        <TargetingPackNugetPackageId>Microsoft.TargetingPack.NETFramework.v4.7</TargetingPackNugetPackageId>
+      </PropertyGroup>
+    </When>
+    <When Condition="$(TargetFramework.Contains('net471'))">
+      <PropertyGroup>
+        <TargetingPackNugetPackageId>Microsoft.TargetingPack.NETFramework.v4.7.1</TargetingPackNugetPackageId>
+      </PropertyGroup>
+    </When>
+    <When Condition="$(TargetFramework.Contains('net472'))">
+      <PropertyGroup>
+        <TargetingPackNugetPackageId>Microsoft.TargetingPack.NETFramework.v4.7.2</TargetingPackNugetPackageId>
+      </PropertyGroup>
+    </When>
+    <When Condition="$(TargetFramework.Contains('win8'))">
+      <PropertyGroup>
+        <TargetFrameworkIdentifier>v8.0</TargetFrameworkIdentifier>
+      </PropertyGroup>
+    </When>
+    <When Condition="$(TargetFramework.Contains('wpa81'))">
+      <PropertyGroup>
+        <TargetFrameworkIdentifier>v8.1</TargetFrameworkIdentifier>
+      </PropertyGroup>
+    </When>
+  </Choose>
+  <Choose>
+    <When Condition="$(TargetFramework.Contains('Windows_NT'))">
+      <PropertyGroup>
+        <OSGroup>Windows_NT</OSGroup>
+        <TargetsWindows>true</TargetsWindows>
+        <PackageTargetRuntime>win</PackageTargetRuntime>
+      </PropertyGroup>
+    </When>
+    <When Condition="$(TargetFramework.Contains('Unix'))">
+      <PropertyGroup>
+        <OSGroup>Unix</OSGroup>
+        <TargetsUnix>true</TargetsUnix>
+        <PackageTargetRuntime>unix</PackageTargetRuntime>
+      </PropertyGroup>
+    </When>
+    <When Condition="$(TargetFramework.Contains('Linux'))">
+      <PropertyGroup>
+        <OSGroup>Linux</OSGroup>
+        <TargetsUnix>true</TargetsUnix>
+        <TargetsLinux>true</TargetsLinux>
+        <PackageTargetRuntime>linux</PackageTargetRuntime>
+      </PropertyGroup>
+    </When>
+    <When Condition="$(TargetFramework.Contains('OSX'))">
+      <PropertyGroup>
+        <OSGroup>OSX</OSGroup>
+        <TargetsUnix>true</TargetsUnix>
+        <TargetsOSX>true</TargetsOSX>
+        <PackageTargetRuntime>osx</PackageTargetRuntime>
+      </PropertyGroup>
+    </When>
+    <When Condition="$(TargetFramework.Contains('FreeBSD'))">
+      <PropertyGroup>
+        <OSGroup>FreeBSD</OSGroup>
+        <TargetsUnix>true</TargetsUnix>
+        <TargetsFreeBSD>true</TargetsFreeBSD>
+        <PackageTargetRuntime>freebsd</PackageTargetRuntime>
+      </PropertyGroup>
+    </When>
+    <When Condition="$(TargetFramework.Contains('NetBSD'))">
+      <PropertyGroup>
+        <OSGroup>NetBSD</OSGroup>
+        <TargetsUnix>true</TargetsUnix>
+        <TargetsNetBSD>true</TargetsNetBSD>
+        <PackageTargetRuntime>netbsd</PackageTargetRuntime>
+      </PropertyGroup>
+    </When>
+    <When Condition="$(TargetFramework.Contains('WebAssembly'))">
+      <PropertyGroup>
+        <OSGroup>WebAssembly</OSGroup>
+        <TargetsLinux>true</TargetsLinux>
+        <TargetsWebAssembly>true</TargetsWebAssembly>
+      </PropertyGroup>
+    </When>
+    <When Condition="$(TargetFramework.Contains('AnyOS'))">
+      <PropertyGroup>
+        <OSGroup>AnyOS</OSGroup>
+      </PropertyGroup>
+    </When>
+    <Otherwise>
+      <PropertyGroup>
+        <OSGroup>AnyOS</OSGroup>
+      </PropertyGroup>
+    </Otherwise>
+  </Choose>
+
+  <PropertyGroup>
+    <RuntimeOS Condition="'$(RuntimeOS)' == ''">win10</RuntimeOS>
+  </PropertyGroup>
 </Project>

@@ -120,8 +120,7 @@
     <!-- find which, if any, supported target framework of this project is best
          for each binplace targetFramework -->
     <PropertyGroup>
-      <FilterFramework Condition="'$(FilterFramework)' == '' and '$(IsReferenceAssembly)' == 'true'">$(TargetFramework)</FilterFramework>
-      <FilterFramework Condition="'$(FilterFramework)' == '' and '$(IsReferenceAssembly)' != 'true'">$(TargetFramework)-$(OSGroup)</FilterFramework>
+      <FilterFramework Condition="'$(FilterFramework)' == ''">$(TargetFramework)</FilterFramework>
     </PropertyGroup>
      
     <ChooseBestTargetFrameworksTask BuildTargetFrameworks="@(BinPlaceTargetFrameworks)"
@@ -168,10 +167,8 @@
   <!-- IncrementalClean and CoreClean only clean paths under Intermediate or OutDir, handle additional paths -->
   <ItemGroup>
     <AdditionalCleanDirectories Include="@(BinPlaceTargetFrameworks->'%(RefPath)')"/>
-    <AdditionalCleanDirectories Remove="@(BinPlaceTargetFrameworks->'%(RefPath)')"  Condition="'$(SkipRefClean)' == 'true'" />
     <AdditionalCleanDirectories Include="@(BinPlaceTargetFrameworks->'%(RuntimePath)')" />
     <AdditionalCleanDirectories Include="@(BinPlaceTargetFrameworks->'%(PackageFileRefPath)')" />
-    <AdditionalCleanDirectories Remove="@(BinPlaceTargetFrameworks->'%(PackageFileRefPath)')" Condition="'$(SkipRefClean)' == 'true'" />
     <AdditionalCleanDirectories Include="@(BinPlaceTargetFrameworks->'%(PackageFileRuntimePath)')" />
     <AdditionalCleanDirectories Include="@(BinPlaceTargetFrameworks->'%(TestPath)')" />
   </ItemGroup>
