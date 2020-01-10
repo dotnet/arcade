@@ -74,6 +74,9 @@
     <MakeDir Directories="$(PublishDir)" />
 
     <PropertyGroup>
+      <!-- Allow the repo to specify a version of Microsoft.NETCore.App to depend on. -->
+      <MicrosoftNETCoreAppRuntimeConfigVersion Condition="'$(MicrosoftNETCoreAppRuntimeConfigVersion)' == ''">$(SharedFrameworkNugetVersion)</MicrosoftNETCoreAppRuntimeConfigVersion>
+
       <_runtimeConfigContent>
       <![CDATA[
 {
@@ -81,7 +84,7 @@
     "tfm": "$(TargetFramework)",
     "framework": {
       "name": "Microsoft.NETCore.App",
-      "version": "$(SharedFrameworkNugetVersion)",
+      "version": "$(MicrosoftNETCoreAppRuntimeConfigVersion)",
       "rollForward": "LatestPatch"
     }
   }
