@@ -2,7 +2,7 @@
 set -x
 
 # relaunch as root
-[ `whoami` = root ] || exec sudo "$0" "$@"
+[ `whoami` = root ] || exec sudo -E "$0" "$@"
 
 script_path=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 
