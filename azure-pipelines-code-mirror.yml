@@ -43,26 +43,41 @@ jobs:
         displayName: Hard reset local branch to GitHub branch
         workingDirectory: $(WorkingDirectoryName)
       - script: |
-          set /a retryattempt=0
-          :PUSH_RETRY
           git push azdo-mirror $(BranchToMirror) $(ExtraPushArgs)
 
-          if %errorlevel% NEQ 0 (
-              echo Push failed
-              REM Retry up to three times
-              if %retryattempt% GEQ 3 (
-                  goto :PUSH_FAILURE
-              )
-
-              set /a retryattempt+=1
-              @echo Retry attempt %retryattempt% of 3 in 5 seconds...
-              ping 127.0.0.1 -n 6 > nul
-              git fetch azdo-mirror
-              goto :PUSH_RETRY
+          if %errorlevel% EQU 0 (
+            @echo Push was successful
+            exit /b 0
           )
+          
+          if %errorlevel% neq 0 (
+            git -C code-mirror-workspace fetch azdo-mirror
+            git -C code-mirror-workspace fetch origin
+            for /f %%i in ('git -C code-mirror-workspace --no-pager rev-list origin/master..azdo-mirror/master ^| find /c /v ""') do set /a commits=%%i
+            if %commits% neq 0 (
+              echo There are rogue commits!
+              git -C code-mirror-workspace --no-pager log origin/master..azdo-mirror/master
+              exit /b 1
+            )
+          )
+          
+          echo Push failed for unknown reason
 
-          @echo Push was successful
-          exit /b 0
+          set /a retryattempt=0
+          :PUSH_RETRY
+
+          if %errorlevel% neq 0 (
+            REM Retry up to three times
+            if %retryattempt% GEQ 3 (
+                goto :PUSH_FAILURE
+            )
+
+            set /a retryattempt+=1
+            @echo Retry attempt %retryattempt% of 3 in 5 seconds...
+            ping 127.0.0.1 -n 6 > nul
+            git fetch azdo-mirror
+            goto :PUSH_RETRY
+          )
 
           :PUSH_FAILURE
           @echo git failed to push to mirror. This is often 
