@@ -5,11 +5,11 @@
   <UsingTask TaskName="AddTargetFrameworksToProjectTask" AssemblyFile="$(DotNetBuildTasksTargetFrameworkSdkDll)"/>
   
   <PropertyGroup>
-    <OriginalTargetFramework>$(TargetFramework)</OriginalTargetFramework>
-    <OriginalTargetFrameworks>$(TargetFrameworks)</OriginalTargetFrameworks>
+    <_OriginalTargetFramework>$(TargetFramework)</_OriginalTargetFramework>
+    <_OriginalTargetFrameworks>$(TargetFrameworks)</_OriginalTargetFrameworks>
   </PropertyGroup>
   
-  <Target Name="RunOnlyBestTargetFrameworks" Condition="'$(BuildAllConfigurations)' != 'true' || '$(SkipOuterBuild)' != 'true'" BeforeTargets="DispatchToInnerBuilds">
+  <Target Name="RunOnlyBestTargetFrameworks" Condition="'$(BuildAllConfigurations)' != 'true' or '$(MSBuildProjectExtension)' == '.pkgproj'" BeforeTargets="DispatchToInnerBuilds">
     <ItemGroup>
       <_InnerBuildProjects Remove="@(_InnerBuildProjects)" />
     </ItemGroup>
@@ -43,7 +43,7 @@
   <!-- Attaching the osgroup after restore for build.-->
   <Target Name="AttachOSGroupToTargetFrameworks" AfterTargets="Restore">    
     <PropertyGroup>
-      <TargetFrameworks>$(OriginalTargetFrameworks)</TargetFrameworks>
+      <TargetFrameworks>$(_OriginalTargetFrameworks)</TargetFrameworks>
     </PropertyGroup>
   </Target>
 

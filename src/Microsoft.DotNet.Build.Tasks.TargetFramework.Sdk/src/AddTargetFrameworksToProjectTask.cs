@@ -27,7 +27,7 @@ namespace Microsoft.DotNet.Build.Tasks.TargetFramework.Sdk
                 InnerBuildProjects[i].SetMetadata("AdditionalProperties", "TargetFramework=" + BestTargetFrameworks[i]);
             }
 
-            return !Log.HasLoggedErrors; ;
+            return !Log.HasLoggedErrors;
         }
     }
 }

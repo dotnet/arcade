@@ -44,14 +44,6 @@ namespace Microsoft.DotNet.Build.Tasks.TargetFramework.Sdk
 
             SelectionCriteria criteria = _conventions.Criteria.ForFrameworkAndRuntime(NuGetFramework.Parse(targetFramework), osGroup);
             string bestTargetFrameworkString = contentCollection.FindBestItemGroup(criteria, _configStringPattern)?.Items[0].Path;
-
-            // This is a temporary fix and we will lowercase all the occurences in runtime in the future.
-            if (bestTargetFrameworkString == null && (osGroup == "FreeBSD" || osGroup == "OSX" || osGroup == "NetBSD" || osGroup == "Linux"))
-            {
-                criteria = _conventions.Criteria.ForFrameworkAndRuntime(NuGetFramework.Parse(targetFramework), "Unix");
-                bestTargetFrameworkString = contentCollection.FindBestItemGroup(criteria, _configStringPattern)?.Items[0].Path;
-            }
-
             return bestTargetFrameworkString?.Remove(bestTargetFrameworkString.Length - 1);
         }
     }

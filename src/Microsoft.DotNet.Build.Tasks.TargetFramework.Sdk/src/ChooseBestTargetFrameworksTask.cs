@@ -33,7 +33,7 @@ namespace Microsoft.DotNet.Build.Tasks.TargetFramework.Sdk
                 string bestTargetFramework = targetframeworkResolver.GetBestSupportedTargetFramework(SupportedTargetFrameworks.Select(t => t.ItemSpec), buildTargetFramework.ItemSpec);
                 if (bestTargetFramework != null)
                 {                    
-                    TaskItem item = new TaskItem(SupportedTargetFrameworks.Where(t => t.ItemSpec == bestTargetFramework).First()) ;
+                    TaskItem item = new TaskItem(SupportedTargetFrameworks.First(t => t.ItemSpec == bestTargetFramework));
                     buildTargetFramework.CopyMetadataTo(item);
                     bestTargetFrameworkList.Add(item);
                 }
