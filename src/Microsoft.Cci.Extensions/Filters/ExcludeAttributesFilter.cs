@@ -7,7 +7,7 @@ using Microsoft.Cci.Extensions;
 
 namespace Microsoft.Cci.Filters
 {
-    public class ExcludeAttributesFilter : IncludeAllFilter
+    public class ExcludeAttributesFilter : ICciFilter
     {
         private readonly HashSet<string> _attributeDocIds;
 
@@ -21,12 +21,15 @@ namespace Microsoft.Cci.Filters
             _attributeDocIds = new HashSet<string>(DocIdExtensions.ReadDocIds(attributeDocIdFile));
         }
 
-        public override bool Include(ICustomAttribute attribute)
-        {
-            if (_attributeDocIds.Contains(attribute.DocId()))
-                return false;
+        public bool Include(INamespaceDefinition ns) => true;
 
-            return base.Include(attribute);
+        public bool Include(ITypeDefinition type) => true;
+
+        public bool Include(ITypeDefinitionMember member) => true;
+
+        public bool Include(ICustomAttribute attribute)
+        {
+            return !_attributeDocIds.Contains(attribute.DocId());
         }
     }
 }
