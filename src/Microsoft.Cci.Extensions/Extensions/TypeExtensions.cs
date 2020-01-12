@@ -4,10 +4,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Diagnostics.Contracts;
 using System.Linq;
-using Microsoft.Cci.Extensions.CSharp;
 
 namespace Microsoft.Cci.Extensions
 {
@@ -20,12 +18,7 @@ namespace Microsoft.Cci.Extensions
 
         public static bool IsVisibleOutsideAssembly(this INestedTypeDefinition type)
         {
-            return IsVisibleOutsideAssembly((ITypeDefinitionMember)type);
-        }
-
-        public static bool IsVisibleOutsideAssembly(this ITypeDefinitionMember member)
-        {
-            return MemberHelper.IsVisibleOutsideAssembly(member);
+            return MemberExtensions.IsVisibleOutsideAssembly((ITypeDefinitionMember)type);
         }
 
         public static TypeMemberVisibility GetVisibility(this ITypeDefinition type)
@@ -169,11 +162,6 @@ namespace Microsoft.Cci.Extensions
             return type is IGenericTypeInstanceReference;
         }
 
-        public static bool IsGenericInstance(this IMethodReference method)
-        {
-            return method is IGenericMethodInstanceReference;
-        }
-
         public static bool IsWindowsRuntimeAssembly(this IAssemblyReference assembly)
         {
             if (assembly == null)
@@ -189,12 +177,6 @@ namespace Microsoft.Cci.Extensions
         public static bool IsWindowsRuntimeType(this ITypeReference type)
         {
             IAssemblyReference assemblyRef = type.GetAssemblyReference();
-            return assemblyRef.IsWindowsRuntimeAssembly();
-        }
-
-        public static bool IsWindowsRuntimeMember(this ITypeMemberReference member)
-        {
-            IAssemblyReference assemblyRef = member.GetAssemblyReference();
             return assemblyRef.IsWindowsRuntimeAssembly();
         }
 
@@ -259,15 +241,6 @@ namespace Microsoft.Cci.Extensions
             throw new NotImplementedException("Called .Name on a currently unsupported type definition!");
         }
 
-        public static string FullName(this ICustomAttribute attribute)
-        {
-            FakeCustomAttribute fca = attribute as FakeCustomAttribute;
-            if (fca != null)
-                return fca.FullTypeName;
-
-            return attribute.Type.FullName();
-        }
-
         public static string FullName(this IReference reference)
         {
             Contract.Requires(reference != null);
@@ -290,11 +263,6 @@ namespace Microsoft.Cci.Extensions
 
             Contract.Assert(false, String.Format("Fell through cases in TypeExtensions.FullName() Type of reference: {0}", reference.GetType()));
             return "<Unknown Reference Type>";
-        }
-
-        public static string GetMethodSignature(this IMethodDefinition method)
-        {
-            return MemberHelper.GetMethodSignature(method, NameFormattingOptions.Signature);
         }
 
         public static string UniqueId(this IReference reference)
@@ -452,70 +420,6 @@ namespace Microsoft.Cci.Extensions
             return reference;
         }
 
-        public static T UnWrapMember<T>(this T member)
-           where T : ITypeMemberReference
-        {
-            IGenericMethodInstanceReference genericMethod = member as IGenericMethodInstanceReference;
-            if (genericMethod != null)
-                return (T)genericMethod.GenericMethod.UnWrapMember();
-
-            ISpecializedNestedTypeReference type = member as ISpecializedNestedTypeReference;
-            if (type != null)
-                return (T)type.UnspecializedVersion.UnWrapMember();
-
-            ISpecializedMethodReference method = member as ISpecializedMethodReference;
-            if (method != null)
-                return (T)method.UnspecializedVersion.UnWrapMember();
-
-            ISpecializedFieldReference field = member as ISpecializedFieldReference;
-            if (field != null)
-                return (T)field.UnspecializedVersion.UnWrapMember();
-
-            ISpecializedPropertyDefinition property = member as ISpecializedPropertyDefinition;
-            if (property != null)
-                return (T)property.UnspecializedVersion.UnWrapMember();
-
-            ISpecializedEventDefinition evnt = member as ISpecializedEventDefinition;
-            if (evnt != null)
-                return (T)evnt.UnspecializedVersion.UnWrapMember();
-
-            return member;
-        }
-
-        public static bool IsPropertyOrEventAccessor(this IMethodDefinition method)
-        {
-            return method.GetAccessorType() != AccessorType.None;
-        }
-
-        public static AccessorType GetAccessorType(this IMethodDefinition methodDefinition)
-        {
-            if (!methodDefinition.IsSpecialName)
-            {
-                return AccessorType.None;
-            }
-
-            // Cannot use MemberHelper.IsAdder(...) and similar due to their TypeMemberVisibility.Public restriction.
-            var name = methodDefinition.GetNameWithoutExplicitType();
-            if (name.StartsWith("add_"))
-            {
-                return AccessorType.EventAdder;
-            }
-            else if (name.StartsWith("get_"))
-            {
-                return AccessorType.PropertyGetter;
-            }
-            else if (name.StartsWith("remove_"))
-            {
-                return AccessorType.EventRemover;
-            }
-            else if (name.StartsWith("set_"))
-            {
-                return AccessorType.PropertySetter;
-            }
-
-            return AccessorType.None;
-        }
-
         public static string GetTargetFrameworkMoniker(this IAssembly assembly)
         {
             var tfmAttribute = (from a in assembly.AssemblyAttributes
@@ -615,61 +519,6 @@ namespace Microsoft.Cci.Extensions
                              .ThenBy(a => a.Version);
         }
 
-        public static bool IsEditorBrowseableStateNever(this ICustomAttribute attribute)
-        {
-            if (attribute.Type.FullName() != typeof(EditorBrowsableAttribute).FullName)
-            {
-                return false;
-            }
-
-            if (attribute.Arguments == null || attribute.Arguments.Count() != 1)
-            {
-                return false;
-            }
-
-            IMetadataConstant singleArgument = attribute.Arguments.Single() as IMetadataConstant;
-
-            if (singleArgument == null || !(singleArgument.Value is int))
-            {
-                return false;
-            }
-
-            if (EditorBrowsableState.Never != (EditorBrowsableState)singleArgument.Value)
-            {
-                return false;
-            }
-
-            return true;
-        }
-
-        public static bool IsObsoleteWithUsageTreatedAsCompilationError(this ICustomAttribute attribute)
-        {
-            if (attribute.Type.FullName() != typeof(ObsoleteAttribute).FullName)
-            {
-                return false;
-            }
-
-            if (attribute.Arguments == null || attribute.Arguments.Count() != 2)
-            {
-                return false;
-            }
-
-            IMetadataConstant messageArgument = attribute.Arguments.ElementAt(0) as IMetadataConstant;
-            IMetadataConstant errorArgument = attribute.Arguments.ElementAt(1) as IMetadataConstant;
-
-            if (messageArgument == null || errorArgument == null)
-            {
-                return false;
-            }
-
-            if (!(messageArgument.Value is string && errorArgument.Value is bool))
-            {
-                return false;
-            }
-
-            return (bool)errorArgument.Value;
-        }
-
         public static ApiKind GetApiKind(this ITypeDefinition type)
         {
             return type.IsInterface
@@ -683,44 +532,6 @@ namespace Microsoft.Cci.Extensions
                             : ApiKind.Class;
         }
 
-        public static ApiKind GetApiKind(this ITypeDefinitionMember member)
-        {
-            if (member.ContainingTypeDefinition.IsDelegate)
-                return ApiKind.DelegateMember;
-
-            var field = member as IFieldDefinition;
-            if (field != null)
-            {
-                if (member.ContainingTypeDefinition.IsEnum && field.IsSpecialName)
-                    return ApiKind.EnumField;
-
-                return ApiKind.Field;
-            }
-
-            if (member is IPropertyDefinition)
-                return ApiKind.Property;
-
-            if (member is IEventDefinition)
-                return ApiKind.Event;
-
-            var method = (IMethodDefinition)member;
-            if (method.IsConstructor || method.IsStaticConstructor)
-                return ApiKind.Constructor;
-
-            var accessorType = method.GetAccessorType();
-            switch (accessorType)
-            {
-                case AccessorType.PropertyGetter:
-                case AccessorType.PropertySetter:
-                    return ApiKind.PropertyAccessor;
-                case AccessorType.EventAdder:
-                case AccessorType.EventRemover:
-                    return ApiKind.EventAccessor;
-                default:
-                    return ApiKind.Method;
-            }
-        }
-
         public static bool IsConstructorVisible(this ITypeDefinition type)
         {
             foreach (var method in type.Methods)
@@ -730,6 +541,19 @@ namespace Microsoft.Cci.Extensions
                     return true;
                 }
             }
+            return false;
+        }
+
+        public static bool IsConstructorVisibleToFriendAssemblies(this ITypeDefinition type)
+        {
+            foreach (var method in type.Methods)
+            {
+                if (method.IsConstructor && method.IsVisibleToFriendAssemblies())
+                {
+                    return true;
+                }
+            }
+
             return false;
         }
     }
