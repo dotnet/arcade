@@ -16,7 +16,6 @@ namespace Microsoft.Cci.Filters
     /// differences:
     /// <list type="number">
     /// <item>Includes <c>internal</c> members.</item>
-    /// <item>Adds more parameter <see langword="null"/> checks.</item>
     /// <item>Reorders a few checks.</item>
     /// </list>
     /// </remarks>
@@ -39,18 +38,13 @@ namespace Microsoft.Cci.Filters
 
         public virtual bool Include(INamespaceDefinition ns)
         {
-            if (ns == null)
-            {
-                return false;
-            }
-
             // Only include non-empty namespaces.
             return ns.GetTypes(IncludeForwardedTypes).Any(Include);
         }
 
         public virtual bool Include(ITypeDefinition type)
         {
-            if (type == null || Dummy.Type == type)
+            if (Dummy.Type == type)
             {
                 return false;
             }
@@ -60,12 +54,6 @@ namespace Microsoft.Cci.Filters
 
         public virtual bool Include(ITypeDefinitionMember member)
         {
-            var containingType = member?.ContainingTypeDefinition;
-            if (!Include(containingType))
-            {
-                return false;
-            }
-
             // Include based on member visibility (simple cases).
             switch (member.Visibility)
             {
@@ -89,6 +77,7 @@ namespace Microsoft.Cci.Filters
             }
 
             // If a type is abstract and has an internal or public constructor, it must expose all abstract members.
+            var containingType = member.ContainingTypeDefinition;
             if (containingType.IsAbstract &&
                 member.IsAbstract() &&
                 containingType.IsConstructorVisibleToFriendAssemblies())
@@ -102,7 +91,7 @@ namespace Microsoft.Cci.Filters
 
         public virtual bool Include(ICustomAttribute attribute)
         {
-            if (attribute == null || ExcludeAttributes)
+            if (ExcludeAttributes)
             {
                 return false;
             }

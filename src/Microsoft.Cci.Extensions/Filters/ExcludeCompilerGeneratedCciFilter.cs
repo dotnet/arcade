@@ -19,8 +19,6 @@ namespace Microsoft.Cci.Filters
     /// <item>Is specific to <see cref="T:System.Runtime.CompilerServices.CompilerGeneratedAttribute"/>.</item>
     /// <item>Includes property and event accessors despite annotations.</item>
     /// <item>Excludes leftover <see cref="T:System.Runtime.CompilerServices.CompilerGeneratedAttribute"/>s.</item>
-    /// <item>Adds parameter <see langword="null"/> checks.</item>
-    /// <item>Avoids <see cref="NullReferenceException"/>s when handling <see cref="FakeCustomAttribute"/>s.</item>
     /// </list>
     /// </remarks>
     public class ExcludeCompilerGeneratedCciFilter : ICciFilter
@@ -39,11 +37,6 @@ namespace Microsoft.Cci.Filters
 
         public virtual bool Include(ITypeDefinitionMember member)
         {
-            if (member == null)
-            {
-                return false;
-            }
-
             // Include all accessors. Accessors are marked with CompilerGeneratedAttribute when compiler provides the
             // body e.g. for { get; }.
             if (member is IMethodDefinition methodDefinition &&
@@ -57,11 +50,6 @@ namespace Microsoft.Cci.Filters
 
         public virtual bool Include(ICustomAttribute attribute)
         {
-            if (attribute == null)
-            {
-                return false;
-            }
-
             // Include all FakeCustomAttribute because they cannot be annotated and they have simple arguments.
             if (attribute is FakeCustomAttribute)
             {
@@ -89,11 +77,6 @@ namespace Microsoft.Cci.Filters
 
         private static bool IsNotMarkedWithAttribute(IReference definition)
         {
-            if (definition?.Attributes == null)
-            {
-                return false;
-            }
-
             return !definition.Attributes.Any(
                 a => string.Equals(a.Type.FullName(), CompilerGeneratedTypeName, StringComparison.Ordinal));
         }
