@@ -9,16 +9,17 @@ using System.Composition.Hosting;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Reflection;
+using McMaster.Extensions.CommandLineUtils;
 using Microsoft.Cci;
 using Microsoft.Cci.Comparers;
 using Microsoft.Cci.Differs;
 using Microsoft.Cci.Differs.Rules;
 using Microsoft.Cci.Extensions;
+using Microsoft.Cci.Extensions.CSharp;
 using Microsoft.Cci.Filters;
 using Microsoft.Cci.Mappings;
 using Microsoft.Cci.Writers;
-using System.Reflection;
-using McMaster.Extensions.CommandLineUtils;
 
 namespace Microsoft.DotNet.ApiCompat
 {
@@ -59,6 +60,10 @@ namespace Microsoft.DotNet.ApiCompat
             CommandOption excludeAttributes = app.Option("--exclude-attributes", "Comma delimited list of files with types in DocId format of which attributes to exclude.", CommandOptionType.SingleValue);
             CommandOption enforceOptionalRules = app.Option("--enforce-optional-rules", "Enforce optional rules, in addition to the mandatory set of rules.", CommandOptionType.NoValue);
             CommandOption allowDefaultInterfaceMethods = app.Option("--allow-default-interface-methods", "Allow default interface methods additions to not be considered breaks. This flag should only be used if you know your consumers support DIM", CommandOptionType.NoValue);
+            CommandOption respectInternals = app.Option(
+                "--respect-internals",
+                "Include both internal and public APIs if assembly contains an InternalsVisibleTo attribute. Otherwise, include only public APIs.",
+                CommandOptionType.NoValue);
 
             app.OnExecute(() =>
             {
@@ -122,8 +127,22 @@ namespace Microsoft.DotNet.ApiCompat
                         if (DifferenceWriter.ExitCode != 0)
                             return 0;
 
-                        ICciDifferenceWriter writer = GetDifferenceWriter(output, filter, enforceOptionalRules.HasValue(), mdil.HasValue(),
-                            excludeNonBrowsable.HasValue(), remapFile.Value(), !skipGroupByAssembly.HasValue(), leftOperandValue, rightOperandValue, excludeAttributes.Value(), allowDefaultInterfaceMethods.HasValue());
+                        var includeInternals = respectInternals.HasValue() &&
+                            contractAssemblies.Any(assembly => assembly.Attributes.HasAttributeOfType(
+                                "System.Runtime.CompilerServices.InternalsVisibleToAttribute"));
+                        ICciDifferenceWriter writer = GetDifferenceWriter(
+                            output,
+                            filter,
+                            enforceOptionalRules.HasValue(),
+                            mdil.HasValue(),
+                            excludeNonBrowsable.HasValue(),
+                            includeInternals,
+                            remapFile.Value(),
+                            !skipGroupByAssembly.HasValue(),
+                            leftOperandValue,
+                            rightOperandValue,
+                            excludeAttributes.Value(),
+							allowDefaultInterfaceMethods.HasValue());
                         writer.Write(implDirs.Value(), implAssemblies, contracts.Value, contractAssemblies);
 
                         return 0;
@@ -145,6 +164,7 @@ namespace Microsoft.DotNet.ApiCompat
             bool enforceOptionalRules,
             bool mdil,
             bool excludeNonBrowsable,
+            bool includeInternals,
             string remapFile,
             bool groupByAssembly,
             string leftOperand,
@@ -169,15 +189,22 @@ namespace Microsoft.DotNet.ApiCompat
                 Trace.TraceWarning("Enforcing MDIL servicing rules and exclusion of non-browsable types are both enabled, but they are not compatible so non-browsable types will not be excluded.");
             }
 
+            if (includeInternals && (mdil || excludeNonBrowsable))
+            {
+                Trace.TraceWarning("Enforcing MDIL servicing rules or exclusion of non-browsable types are enabled " +
+                    "along with including internals -- an incompatible combination. Internal members will not be included.");
+            }
+
+            var cciFilter = GetCciFilter(mdil, excludeNonBrowsable, includeInternals);
             var settings = new MappingSettings
             {
                 Comparers = GetComparers(remapFile),
-                Filter = GetCciFilter(mdil, excludeNonBrowsable)
+                DiffFactory = new ElementDifferenceFactory(container, RuleFilter),
+                DiffFilter = GetDiffFilter(cciFilter),
+                Filter = cciFilter,
+                GroupByAssembly = groupByAssembly,
+                IncludeForwardedTypes = true,
             };
-            settings.DiffFilter = GetDiffFilter(settings.Filter);
-            settings.DiffFactory = new ElementDifferenceFactory(container, RuleFilter);
-            settings.GroupByAssembly = groupByAssembly;
-            settings.IncludeForwardedTypes = true;
 
             if (filter == null)
             {
@@ -278,7 +305,7 @@ namespace Microsoft.DotNet.ApiCompat
             return CciComparers.Default;
         }
 
-        private static ICciFilter GetCciFilter(bool enforcingMdilRules, bool excludeNonBrowsable)
+        private static ICciFilter GetCciFilter(bool enforcingMdilRules, bool excludeNonBrowsable, bool includeInternals)
         {
             if (enforcingMdilRules)
             {
@@ -293,6 +320,10 @@ namespace Microsoft.DotNet.ApiCompat
                 {
                     IncludeForwardedTypes = true
                 };
+            }
+            else if (includeInternals)
+            {
+                return new InternalsAndPublicCciFilter();
             }
             else
             {
