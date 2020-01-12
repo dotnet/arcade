@@ -66,38 +66,38 @@ namespace Microsoft.Cci.Filters
                 return false;
             }
 
-            // Handle simple cases. (At this point, both member and containingType must be non-null.)
-            if (SimpleInclude(member))
+            // Include based on member visibility (simple cases).
+            switch (member.Visibility)
+            {
+                case TypeMemberVisibility.Assembly:
+                case TypeMemberVisibility.FamilyOrAssembly:
+                case TypeMemberVisibility.Public:
+                    return true;
+
+                case TypeMemberVisibility.Family:
+                case TypeMemberVisibility.FamilyAndAssembly:
+                    // Similar to special case in PublicOnlyCciFilter, include protected members even of a sealed type.
+                    // This is necessary to generate compilable code e.g. a derived type in current assembly may
+                    // override the protected member.
+                    return true;
+            }
+
+            // Include explicit interface implementations.
+            if (member.IsVisibleToFriendAssemblies())
             {
                 return true;
             }
 
             // If a type is abstract and has an internal or public constructor, it must expose all abstract members.
-            if (containingType.IsAbstract && member.IsAbstract())
+            if (containingType.IsAbstract &&
+                member.IsAbstract() &&
+                containingType.IsConstructorVisibleToFriendAssemblies())
             {
-                foreach (var method in containingType.Methods)
-                {
-                    if (method.IsConstructor && method.Visibility != TypeMemberVisibility.Private)
-                    {
-                        return true;
-                    }
-                }
+                return true;
             }
 
-            // Include explicit interface implementations. (Inspired by MemberHelper.IsVisibleOutsideAssembly(...).)
-            return member switch
-            {
-                IMethodDefinition methodDefinition =>
-                    IsExplicitImplementationVisible(methodDefinition, containingType),
-                IPropertyDefinition propertyDefinition =>
-                    IsExplicitImplementationVisible(propertyDefinition.Getter, containingType) ||
-                        IsExplicitImplementationVisible(propertyDefinition.Setter, containingType),
-                IEventDefinition eventDefinition =>
-                    IsExplicitImplementationVisible(eventDefinition.Adder, containingType) ||
-                        IsExplicitImplementationVisible(eventDefinition.Remover, containingType),
-                // Otherwise...
-                _ => false,
-            };
+            // Otherwise...
+            return false;
         }
 
         public virtual bool Include(ICustomAttribute attribute)
@@ -126,56 +126,6 @@ namespace Microsoft.Cci.Filters
 
             // Otherwise...
             return true;
-        }
-
-        private bool SimpleInclude(ITypeDefinitionMember member)
-        {
-            switch (member.Visibility)
-            {
-                case TypeMemberVisibility.Assembly:
-                case TypeMemberVisibility.FamilyOrAssembly:
-                case TypeMemberVisibility.Public:
-                    return true;
-
-                case TypeMemberVisibility.Family:
-                case TypeMemberVisibility.FamilyAndAssembly:
-                    // Similar to special case in PublicOnlyCciFilter, include protected members even of a sealed type.
-                    // This is necessary to generate compilable code e.g. a derived type in current assembly may
-                    // override the protected member.
-                    return true;
-            }
-
-            return false;
-        }
-
-        // A rewrite of MemberHelper.IsExplicitImplementationVisible(...) with looser visibility checks.
-        private bool IsExplicitImplementationVisible(IMethodReference method, ITypeDefinition containingType)
-        {
-            if (method == null)
-            {
-                return false;
-            }
-
-            using var enumerator = containingType.ExplicitImplementationOverrides.GetEnumerator();
-            while (enumerator.MoveNext())
-            {
-                var current = enumerator.Current;
-                if (current.ImplementingMethod.InternedKey == method.InternedKey)
-                {
-                    var resolvedMethod = current.ImplementedMethod.ResolvedMethod;
-                    if (resolvedMethod is Dummy)
-                    {
-                        return true;
-                    }
-
-                    if (SimpleInclude(resolvedMethod))
-                    {
-                        return true;
-                    }
-                }
-            }
-
-            return false;
         }
     }
 }
