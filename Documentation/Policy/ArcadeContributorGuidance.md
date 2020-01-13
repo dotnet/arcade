@@ -1,7 +1,7 @@
 # Contributor Guidance for Arcade
 Over and above the [.NET Core contributor guidelines](https://github.com/dotnet/coreclr/blob/master/Documentation/project-docs/contributing.md) (which are important), there are some principles and guidelines that are specific to Arcade as well.
 
-For the most part, contributions to Arcade are straight forward and relatively smooth.  However, from time to time, getting changes in can be challenging, and even frustrating.  The very nature of Arcade is that it's shared across multiple teams.  This document attempts to clarify some of the expectations as well as provide some 'advice' for success when contributing to Arcade.
+For the most part, contributions to Arcade are straightforward and relatively smooth.  However, from time to time, getting changes in can be challenging, and even frustrating.  The very nature of Arcade is that it's shared across multiple teams.  This document attempts to clarify some of the expectations as well as provide some 'advice' for success when contributing to Arcade.
 
 ## Contribution Principles
 * Should benefit multiple repos across .NET Core.
@@ -37,17 +37,17 @@ The default Arcade issue template should be used with every issue filed.  The te
 ### Triage and Backlog Management
 - New Arcade issues are triaged at least once a week.  
 - Issues which have been marked via the template as blocking or causing unreasonable pain are looked at right away via FR ([First Responders](https://github.com/dotnet/core-eng/wiki/%5Bint%5D-First-Responders))
-- General "scrubs" happen at least once a yea.r
+- General "scrubs" happen at least once a year.
 
 
 ### General guidelines used for triage (not rules, just guidelines)
-- Issues older than 90 days, aren’t assigned to anyone, is not tracking something, and don’t belong to an epic are candidates to be closed
+- Issues older than 90 days, not assigned to anyone, not tracking something, and that don’t belong to an epic are candidates to be closed
 - Issues with only a title, or one liners will be considered for closure
 - Pull requests without a description / linked issue make it hard to understand priority or reasoning behind a change. Is this fixing an annoyance? a blocking bug?
 - Clean ownership helps keep things moving.
 
 ### Working Group Syncs
-The wider Arcade working group (arcadewg) will meet every two weeks, or on demand.  In addition, arcadewg@microsoft can be used for general infrastructure queries.
+The wider Arcade working group (arcadewg) will meet every two weeks, or on demand.  In addition, arcadewg@microsoft.com can be used for general infrastructure queries.
 
 ## Conflict Resolution / Arbitration / Escalation
 
