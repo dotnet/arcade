@@ -38,8 +38,6 @@ try {
     $AzDOProjectName = $buildInfo.azureDevOpsProject
     $AzDOPipelineId = $buildInfo.azureDevOpsBuildDefinitionId
     $AzDOBuildId = $buildInfo.azureDevOpsBuildId
-
-    write-host $buildInfo
   }
 
   Write-Host "##vso[task.setvariable variable=BARBuildId;isOutput=true]$BarId"
