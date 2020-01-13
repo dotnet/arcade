@@ -1,4 +1,4 @@
-# (DRAFT) Plan to discontinue our use of MyGet
+# Plan-Of-Record for discontinuing our use of MyGet
 
 ## Summary
 Now that our primary dependency is on Azure DevOps feeds for .NET Core 3.x, it's time to finish the work so that we can completely discontinue our use of MyGet.  The main business driver is senior management's strong desire to take our mission critical dependencies on end points we own, which in this case is AzDO over MyGet.
