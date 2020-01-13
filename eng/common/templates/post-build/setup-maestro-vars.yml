@@ -1,13 +1,17 @@
 jobs:
 - job: setupMaestroVars
   displayName: Setup Maestro Vars
+  variables:
+    - name: BuildId
+      value: $[ coalesce(variables.BARBuildId, 0) ]
+    - name: PromoteToChannelId
+      value: $[ coalesce(variables.PromoteToMaestroChannelId, 0) ]
   pool:
     vmImage: 'windows-2019'
   steps:
-    - checkout: none
-
     - task: DownloadBuildArtifacts@0
       displayName: Download Release Configs
+      condition: eq(variables.PromoteToChannelId, 0)
       inputs:
         buildType: current
         artifactName: ReleaseConfigs
@@ -16,25 +20,9 @@ jobs:
       name: setReleaseVars
       displayName: Set Release Configs Vars
       inputs:
-        targetType: inline
-        script: |
-          try {
-            $Content = Get-Content $(Build.StagingDirectory)/ReleaseConfigs/ReleaseConfigs.txt
-
-            $BarId = $Content | Select -Index 0
-
-            $Channels = ""
-            $Content | Select -Index 1 | ForEach-Object { $Channels += "$_ ," }
-
-            $IsStableBuild = $Content | Select -Index 2
-
-            Write-Host "##vso[task.setvariable variable=BARBuildId;isOutput=true]$BarId"
-            Write-Host "##vso[task.setvariable variable=InitialChannels;isOutput=true]$Channels"
-            Write-Host "##vso[task.setvariable variable=IsStableBuild;isOutput=true]$IsStableBuild"
-          }
-          catch {
-            Write-Host $_
-            Write-Host $_.Exception
-            Write-Host $_.ScriptStackTrace
-            exit 1
-          }
+        filePath: $(Build.SourcesDirectory)/eng/common/post-build/set-release-configs-vars.ps1
+        arguments: -BARBuildId $(BuildId)
+          -PromoteToMaestroChannelId $(PromoteToChannelId)
+          -MaestroApiAccessToken $(MaestroApiAccessToken)
+          -MaestroApiEndPoint $(MaestroApiEndPoint)
+          -MaestroApiVersion $(MaestroApiVersion)

@@ -26,17 +26,33 @@ stages:
 - stage: Validate
   dependsOn: ${{ parameters.validateDependsOn }}
   displayName: Validate
+  variables:
+    - template: common-variables.yml
   jobs:
+  - template: setup-maestro-vars.yml
+
   - ${{ if eq(parameters.enableNugetValidation, 'true') }}:
     - job:
       displayName: NuGet Validation
+      dependsOn: setupMaestroVars
       pool:
         vmImage: 'windows-2019'
+      variables:
+        - name: AzDOProjectName
+          value: $[ dependencies.setupMaestroVars.outputs['setReleaseVars.AzDOProjectName'] ]
+        - name: AzDOPipelineId
+          value: $[ dependencies.setupMaestroVars.outputs['setReleaseVars.AzDOPipelineId'] ]
+        - name: AzDOBuildId
+          value: $[ dependencies.setupMaestroVars.outputs['setReleaseVars.AzDOBuildId'] ]
       steps:
         - task: DownloadBuildArtifacts@0
           displayName: Download Package Artifacts
           inputs:
-            buildType: current
+            buildType: specific
+            buildVersionToDownload: specific
+            project: $(AzDOProjectName)
+            pipeline: $(AzDOPipelineId)
+            buildId: $(AzDOBuildId)
             artifactName: PackageArtifacts
 
         - task: PowerShell@2
@@ -49,15 +65,26 @@ stages:
   - ${{ if eq(parameters.enableSigningValidation, 'true') }}:
     - job:
       displayName: Signing Validation
+      dependsOn: setupMaestroVars
       variables:
         - template: common-variables.yml
+        - name: AzDOProjectName
+          value: $[ dependencies.setupMaestroVars.outputs['setReleaseVars.AzDOProjectName'] ]
+        - name: AzDOPipelineId
+          value: $[ dependencies.setupMaestroVars.outputs['setReleaseVars.AzDOPipelineId'] ]
+        - name: AzDOBuildId
+          value: $[ dependencies.setupMaestroVars.outputs['setReleaseVars.AzDOBuildId'] ]
       pool:
         vmImage: 'windows-2019'
       steps:
         - task: DownloadBuildArtifacts@0
           displayName: Download Package Artifacts
           inputs:
-            buildType: current
+            buildType: specific
+            buildVersionToDownload: specific
+            project: $(AzDOProjectName)
+            pipeline: $(AzDOPipelineId)
+            buildId: $(AzDOBuildId)
             artifactName: PackageArtifacts
 
         # This is necessary whenever we want to publish/restore to an AzDO private feed
@@ -89,15 +116,26 @@ stages:
   - ${{ if eq(parameters.enableSourceLinkValidation, 'true') }}:
     - job:
       displayName: SourceLink Validation
+      dependsOn: setupMaestroVars
       variables:
         - template: common-variables.yml
+        - name: AzDOProjectName
+          value: $[ dependencies.setupMaestroVars.outputs['setReleaseVars.AzDOProjectName'] ]
+        - name: AzDOPipelineId
+          value: $[ dependencies.setupMaestroVars.outputs['setReleaseVars.AzDOPipelineId'] ]
+        - name: AzDOBuildId
+          value: $[ dependencies.setupMaestroVars.outputs['setReleaseVars.AzDOBuildId'] ]
       pool:
         vmImage: 'windows-2019'
       steps:
         - task: DownloadBuildArtifacts@0
           displayName: Download Blob Artifacts
           inputs:
-            buildType: current
+            buildType: specific
+            buildVersionToDownload: specific
+            project: $(AzDOProjectName)
+            pipeline: $(AzDOPipelineId)
+            buildId: $(AzDOBuildId)
             artifactName: BlobArtifacts
 
         - task: PowerShell@2
@@ -114,6 +152,7 @@ stages:
   - ${{ if eq(parameters.SDLValidationParameters.enable, 'true') }}:
     - template: /eng/common/templates/job/execute-sdl.yml
       parameters:
+        dependsOn: setupMaestroVars
         additionalParameters: ${{ parameters.SDLValidationParameters.params }}
         continueOnError: ${{ parameters.SDLValidationParameters.continueOnError }}
         artifactNames: ${{ parameters.SDLValidationParameters.artifactNames }}
@@ -165,7 +204,7 @@ stages:
     symbolPublishingAdditionalParameters: ${{ parameters.symbolPublishingAdditionalParameters }}
     stageName: 'General_Testing_Publish'
     channelName: 'General Testing'
-    channelId: 529
+    channelId: 1
     transportFeed: 'https://pkgs.dev.azure.com/dnceng/public/_packaging/general-testing/nuget/v3/index.json'
     shippingFeed: 'https://pkgs.dev.azure.com/dnceng/public/_packaging/general-testing/nuget/v3/index.json'
     symbolsFeed: 'https://pkgs.dev.azure.com/dnceng/public/_packaging/general-testing-symbols/nuget/v3/index.json'

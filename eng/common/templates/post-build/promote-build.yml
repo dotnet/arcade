@@ -1,25 +1,35 @@
-parameters:
-  ChannelId: 0
+# This file is the main entry point for the Build Promotion build definition.
+# These variables should be declared at build queue time:
+#
+#   - BARBuildId
+#   - PromoteToMaestroChannelId
+#   - EnableSymbolValidation
+#   - EnableSourceLinkValidation
+#   - enableNugetValidation
+#   - EnableSigningValidation
+#   - EnableSDLValidation
+#   -   SDLValidationContinueOnError
+#   -   SDLValidationCustomParams
 
-jobs:
-- job:
-  displayName: Promote Build
-  dependsOn: setupMaestroVars
-  condition: contains(dependencies.setupMaestroVars.outputs['setReleaseVars.InitialChannels'], format('[{0}]', ${{ parameters.ChannelId }}))
-  variables:
-    - name: BARBuildId
-      value: $[ dependencies.setupMaestroVars.outputs['setReleaseVars.BARBuildId'] ]
-    - name: ChannelId
-      value: ${{ parameters.ChannelId }}
-  pool:
-    vmImage: 'windows-2019'
-  steps:
-    - task: PowerShell@2
-      displayName: Add Build to Channel
-      inputs:
-        filePath: $(Build.SourcesDirectory)/eng/common/post-build/promote-build.ps1
-        arguments: -BuildId $(BARBuildId) 
-          -ChannelId $(ChannelId) 
-          -MaestroApiAccessToken $(MaestroApiAccessToken)
-          -MaestroApiEndPoint $(MaestroApiEndPoint)
-          -MaestroApiVersion $(MaestroApiVersion)
+trigger: none
+
+variables:
+  _DotNetArtifactsCategory: .NETCore
+
+stages:
+- template: post-build.yml
+  parameters:
+    enableSymbolValidation: $(EnableSymbolValidation)
+    enableSourceLinkValidation: $(EnableSourceLinkValidation)
+    enableNugetValidation: $(EnableNugetValidation)
+    enableSigningValidation: $(EnableSigningValidation)
+    
+    validateDependsOn:
+    
+    SDLValidationParameters:
+      enable: $(EnableSDLValidation)
+      continueOnError: $(SDLValidationContinueOnError)
+      params: $(SDLValidationCustomParams)
+    
+    BARBuildId: $(BARBuildId)
+    PromoteToMaestroChannelId: $(PromoteToMaestroChannelId)
