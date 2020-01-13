@@ -5,7 +5,7 @@ For the most part, contributions to Arcade are straightforward and relatively sm
 
 ## Contribution Principles
 * Should benefit multiple repos across .NET Core.
-* Every contributor is "heard" and taken seriously every time
+* Ensure all contributors are heard and taken seriously
 * Keep it simple. (don't over engineer or be "clever")
 * Focus on value over conviction.  (of course conviction should help drive the value discussion)
 * Opinions and beliefs must be substantiated with data and a strong business rationale.
@@ -20,29 +20,29 @@ For the most part, contributions to Arcade are straightforward and relatively sm
 
 ### Ownership
 The current owner for dotnet/arcade is Mark Wilkie <mawilkie@microsoft.com>.  The current point persons are:
-- Alex Perovich <Alex.Perovich@microsoft.com>
-- Jon Fortescue <Jonathan.Fortescue@microsoft.com>
-- Michael Stuckey <Michael.Stuckey@microsoft.com>
-- Ricardo Arenas <riarenas@microsoft.com>
+- Alex Perovich @alexperovich / <Alex.Perovich@microsoft.com>
+- Jon Fortescue @jonfortescue  / <Jonathan.Fortescue@microsoft.com>
+- Michael Stuckey @garath / <Michael.Stuckey@microsoft.com>
+- Ricardo Arenas @riarenas / <riarenas@microsoft.com>
 
 ## Getting Things Fixed
 ### Submit a PR
-This is probably the most straight forward way.  If the PR might take some time and you want to get an early read first, filing an issue to get a discussion going, or emailing arcadewg@microsoft.com should get the insight you need.
+The most straightforward way to get things fixed is to submit a pull request.  If the PR might take some time and you want to get an early read first, filing an issue to get a discussion going, or emailing arcadewg@microsoft.com should get the insight you need.
 
 ### Filing Issues in Arcade
-All issues regarding our shared infrastructure (including Arcade, darc, Maestro/dependency flow, and Helix) should be filed in the dotnet/arcade repo.  If there's a doubt, file in Arcade.  (As an aside, the private dotnet/core-eng repo is used by the engineering services team for internal facing work.)
+All issues regarding our shared infrastructure (including Arcade, darc, Maestro/dependency flow, and Helix) should be filed in the dotnet/arcade repo.  If there's a doubt, file in Arcade.  (As an aside, the private dotnet/core-eng repo is used by the engineering services team for internal-facing work.)
 
 The default Arcade issue template should be used with every issue filed.  The template is *very* simple and has low overhead.
 
 ### Triage and Backlog Management
 - New Arcade issues are triaged at least once a week.  
-- Issues which have been marked via the template as blocking or causing unreasonable pain are looked at right away via FR ([First Responders](https://github.com/dotnet/core-eng/wiki/%5Bint%5D-First-Responders))
+- Issues which have been marked via the template as blocking or causing unreasonable pain are looked at right away via FR ([First Responders](https://github.com/dotnet/core-eng/wiki/%5Bint%5D-First-Responders))  NOTE: This wiki is not publically facing yet (sorry community).  Please reach out if you would like to understand more details.
 - General "scrubs" happen at least once a year.
 
 
 ### General guidelines used for triage (not rules, just guidelines)
-- Issues older than 90 days, not assigned to anyone, not tracking something, and that don’t belong to an epic are candidates to be closed
-- Issues with only a title, or one liners will be considered for closure
+- Issues older than 60 days, not assigned to anyone, not tracking something, and that don’t belong to an epic are candidates to be closed
+- Issues that don't accurately or reasonably describe the problem (e.g. only a title, or one liners) will be considered for closure
 - Pull requests without a description / linked issue make it hard to understand priority or reasoning behind a change. Is this fixing an annoyance? a blocking bug?
 - Clean ownership helps keep things moving.
 
@@ -63,7 +63,7 @@ The short answer is that the final arbitrator is the Arcade owner, which current
 
 Time and again differences get worked out when these items occur.  To be sure, it's not easy and we're often tempted to think "it shouldn't be this hard".  While perhaps that's true - the reality is that sometimes it IS this hard, and there's really no easy path through.  The good news is that in Arcade, this is relatively rare.
 
-## Helpful Tactics/Advice if it gets challenging
+## Approaching differences Productively
 * Where there are differences that are challenging, see the '[Defaults Guidance](./DefaultsGuidance.md)' doc for help on framing and definitions.
 * Always feel free to reach out to the Arcade owner (currently @markwilkie) for advice and next steps and another perspective.
 * Search for common ground, then work out from there.
