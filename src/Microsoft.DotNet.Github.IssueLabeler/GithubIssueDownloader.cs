@@ -7,7 +7,6 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Github.IssueLabeler
@@ -44,7 +43,7 @@ namespace Microsoft.DotNet.Github.IssueLabeler
             _startIndex = startIndex;
             _endIndex = endIndex;
             _outputFile = OutputFile;
-            _skipColumns = true;
+            _skipColumns = false;
         }
 
         public async Task DownloadAndSaveAsync()
@@ -88,7 +87,8 @@ namespace Microsoft.DotNet.Github.IssueLabeler
                         string description = NormalizeWhitespace(issueOrPr.Body);
                         // Ordering is important here because we are using the same ordering on the prediction side.
                         string curLabel = label.Name;
-                        sb.AppendLine(IgnoreForTraining($"{i}\t") + $"{curLabel}\t\"{title}\"\t\"{description}\"\t{isPr}\t{filePaths}");
+                        int isPrZeroOrOne = isPr ? 1 : 0;
+                        sb.AppendLine(IgnoreForTraining($"{i}\t") + $"{curLabel}\t`{title}`\t`{description}`\t{isPrZeroOrOne}\t{filePaths}");
                     }
                 }
 
@@ -108,7 +108,7 @@ namespace Microsoft.DotNet.Github.IssueLabeler
 
         private static string NormalizeWhitespace(string input)
         {
-            return input?.Replace("\r\n", " ").Replace("\n", " ").Replace("\t", " ");
+            return input?.Replace("\r\n", " ").Replace("\n", " ").Replace("\t", " ").Replace('"', '`');
         }
     }
 }
