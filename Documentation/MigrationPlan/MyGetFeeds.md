@@ -5,8 +5,8 @@ Now that our primary dependency is on Azure DevOps feeds for .NET Core 3.x, it's
 
 ## Scope and Impact
 - We will be shutting down dotnet.myget.org.
-- Based on a quick audit, the following are the primary folks still pushing.  (e.g. impacted) --- 
-Fsharp •	Roslyn •	Tomas •	UWP •	Corefxlab •	NuGet •	MSBuild
+- Based on a quick audit, the following are the primary folks still pushing.  (e.g. impacted)
+  - Fsharp, Roslyn, Tomas, UWP, Corefxlab, NuGet, MSBuild
 - See Appendix A for the audit results.  (NOTE: there are likely some feeds which we don't have visibility to, but these won't be public of course)
 
 ## Plan Overview
@@ -95,7 +95,7 @@ Fsharp •	Roslyn •	Tomas •	UWP •	Corefxlab •	NuGet •	MSBuild
 |	dotnet-coreclr	|	runtime	|	5 years ago	|		|	
 |	dotnet-corefxlab	|	corefxlab	|	5 days ago	|	Corefxlab folks	|	
 |	dotnet-stage	|	aspnet	|	3 years ago	|		|	
-|	msbuild	|	msbuild	|	5 days ago	|	msbuild	|	
+|	msbuild	|	msbuild	|	5 days ago	|	msbuild	|	Disabled publishing by default in August
 |	windows-sdk-beta	|	uwp	|	10 months ago	|	uwp	|	
 |	rx	|	aspnet	|	5 months ago	|		|	
 |	nuget-beta	|	nuget	|	3 years ago	|		|	
