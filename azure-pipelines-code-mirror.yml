@@ -42,45 +42,42 @@ jobs:
           git reset --hard origin/$(BranchToMirror)
         displayName: Hard reset local branch to GitHub branch
         workingDirectory: $(WorkingDirectoryName)
-      - script: |
-          git push azdo-mirror $(BranchToMirror) $(ExtraPushArgs)
-
-          if %errorlevel% EQU 0 (
-            @echo Push was successful
-            exit /b 0
-          )
-
-          git -C code-mirror-workspace fetch azdo-mirror
-          git -C code-mirror-workspace fetch origin
-          for /f %%i in ('git -C code-mirror-workspace --no-pager rev-list origin/master..azdo-mirror/master ^| find /c /v ""') do set /a commits=%%i
-          if %commits% neq 0 (
-            echo There are rogue commits!
-            git -C code-mirror-workspace --no-pager log origin/master..azdo-mirror/master
-            exit /b 1
-          )
-          
-          echo Push failed for unknown reason
-
-          set /a retryattempt=0
-          :PUSH_RETRY
-
-          set /a retryattempt+=1
-          @echo Retry attempt %retryattempt% of 3 in 5 seconds...
-          ping 127.0.0.1 -n 6 > nul
-
-          git push azdo-mirror $(BranchToMirror) $(ExtraPushArgs)
-          if %errorlevel% EQU 0 (
-            echo Push successful
-            exit /b 0
-          )
-
-          REM Retry up to three times
-          if %retryattempt% LSS 3 (
-              goto :PUSH_RETRY
-          )
-
-          echo git failed to push to Azure DevOps mirror
-          exit /b 1
-
+      - task: PowerShell@2
         displayName: Push changes to Azure DevOps repo
-        workingDirectory: $(WorkingDirectoryName)
+        inputs:
+          targetType: inline
+          workingDirectory: $(WorkingDirectoryName)
+          script: |
+            git push azdo-mirror $(BranchToMirror) $(ExtraPushArgs)
+
+            if ($LASTEXITCODE -EQ 0) {
+              Write-Host "Push was successful"
+              exit
+            }
+
+            git fetch azdo-mirror
+            git fetch origin
+            $commits = (git --no-pager rev-list origin/$(BranchToMirror)..azdo-mirror/$(BranchToMirror) | Measure-Object -line).Lines
+            if ($commits -NE 0) {
+              Write-Host "##vso[task.LogIssue type=error;]Mirror repository $(AzDORepoName) has unexpected commits"
+              git --no-pager log origin/$(BranchToMirror)..azdo-mirror/$(BranchToMirror)
+              exit 1
+            }
+
+            Write-Host "##vso[task.LogIssue type=warning;]Push failed for unknown reason"
+
+            $retryattempt=0
+            while ($retryattempt -LT 3) {
+              $retryattempt+=1
+              Write-Host "Retry attempt $retryattempt of 3 in 5 seconds..."
+              Start-Sleep -Seconds 5
+
+              git push azdo-mirror $(BranchToMirror) $(ExtraPushArgs)
+              if ($LASTEXITCODE -EQ 0) {
+                Write-Host "Push successful"
+                exit
+              }
+            }
+
+            Write-Host "##vso[task.LogIssue type=error;]git failed to push to Azure DevOps mirror"
+            exit 1
