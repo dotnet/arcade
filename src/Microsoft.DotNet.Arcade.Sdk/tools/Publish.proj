@@ -26,8 +26,6 @@
 
     <SymbolPackagesDir>$(ArtifactsTmpDir)SymbolPackages\</SymbolPackagesDir>
 
-    <PublishToBlobFeedFlatContainer Condition="'$(PublishToBlobFeedFlatContainer)' == ''">false</PublishToBlobFeedFlatContainer>
-
     <PublishDependsOnTargets Condition="$(PublishToSourceBuildStorage)">$(PublishDependsOnTargets);PublishToSourceBuildStorage</PublishDependsOnTargets>
     <PublishDependsOnTargets>$(PublishDependsOnTargets);PublishToAzureDevOpsArtifacts</PublishDependsOnTargets>
     <PublishDependsOnTargets>BeforePublish;$(PublishDependsOnTargets)</PublishDependsOnTargets>
@@ -65,26 +63,11 @@
     <MakeDir Condition="'@(SymbolPackagesToGenerate)' != ''" Directories="$(SymbolPackagesDir)" />
     <Copy SourceFiles="@(SymbolPackagesToGenerate->'%(OriginalPackage)')" DestinationFiles="@(SymbolPackagesToGenerate)" />
 
-    <!-- Orchestrated Build blob storage -->
     <ItemGroup>
       <ItemsToPushToBlobFeed Include="@(PackagesToPublish);@(ExistingSymbolPackages);@(SymbolPackagesToGenerate)">
         <ManifestArtifactData Condition="'%(IsShipping)' != 'true'">NonShipping=true</ManifestArtifactData>
       </ItemsToPushToBlobFeed>
-    </ItemGroup>
 
-    <!-- 
-      Translate properties to those used by the feed package
-      https://github.com/dotnet/arcade/blob/master/src/Microsoft.DotNet.Build.Tasks.Feed/build/Microsoft.DotNet.Build.Tasks.Feed.targets 
-    -->
-    <PropertyGroup>
-      <ManifestRepoUri>$(BUILD_REPOSITORY_URI)</ManifestRepoUri>
-      <ManifestBranch>$(BUILD_SOURCEBRANCH)</ManifestBranch>
-      <ManifestBuildData>Location=$(AzureFeedUrl)</ManifestBuildData>
-      <ManifestBuildId>$(BUILD_BUILDNUMBER)</ManifestBuildId>
-      <ManifestCommit>$(BUILD_SOURCEVERSION)</ManifestCommit>
-    </PropertyGroup>
-
-    <ItemGroup>
       <PackagesToPublish Remove="@(PackagesToPublish)" />
       <PackagesToPublish Include="@(ItemsToPushToBlobFeed)" />
     </ItemGroup>
@@ -121,25 +104,24 @@
       The GitHub information will be extracted based on the Azure DevOps repository.
     -->
     <ItemGroup>
-      <NewManifestBuildData Include="InitialAssetsLocation=$(SYSTEM_TEAMFOUNDATIONCOLLECTIONURI)$(SYSTEM_TEAMPROJECT)/_apis/build/builds/$(BUILD_BUILDID)/artifacts" />
-      <NewManifestBuildData Include="AzureDevOpsBuildId=$(BUILD_BUILDID)" />
-      <NewManifestBuildData Include="AzureDevOpsBuildDefinitionId=$(SYSTEM_DEFINITIONID)" />
-      <NewManifestBuildData Include="AzureDevOpsAccount=$(AzureDevOpsAccount)" />
-      <NewManifestBuildData Include="AzureDevOpsProject=$(SYSTEM_TEAMPROJECT)" />
-      <NewManifestBuildData Include="AzureDevOpsBuildNumber=$(BUILD_BUILDNUMBER)" />
-      <NewManifestBuildData Include="AzureDevOpsRepository=$(BUILD_REPOSITORY_URI)" />
-      <NewManifestBuildData Include="AzureDevOpsBranch=$(BUILD_SOURCEBRANCH)" />
+      <ManifestBuildData Include="InitialAssetsLocation=$(SYSTEM_TEAMFOUNDATIONCOLLECTIONURI)$(SYSTEM_TEAMPROJECT)/_apis/build/builds/$(BUILD_BUILDID)/artifacts" />
+      <ManifestBuildData Include="AzureDevOpsBuildId=$(BUILD_BUILDID)" />
+      <ManifestBuildData Include="AzureDevOpsBuildDefinitionId=$(SYSTEM_DEFINITIONID)" />
+      <ManifestBuildData Include="AzureDevOpsAccount=$(AzureDevOpsAccount)" />
+      <ManifestBuildData Include="AzureDevOpsProject=$(SYSTEM_TEAMPROJECT)" />
+      <ManifestBuildData Include="AzureDevOpsBuildNumber=$(BUILD_BUILDNUMBER)" />
+      <ManifestBuildData Include="AzureDevOpsRepository=$(BUILD_REPOSITORY_URI)" />
+      <ManifestBuildData Include="AzureDevOpsBranch=$(BUILD_SOURCEBRANCH)" />
     </ItemGroup>
     
     <PushToAzureDevOpsArtifacts 
       ItemsToPush="@(ItemsToPushToBlobFeed)"
-      ManifestBuildData="@(NewManifestBuildData)"
+      ManifestBuildData="@(ManifestBuildData)"
       ManifestRepoUri="$(BUILD_REPOSITORY_URI)"
       ManifestBranch="$(BUILD_SOURCEBRANCH)"
       ManifestBuildId="$(BUILD_BUILDNUMBER)"
       ManifestCommit="$(BUILD_SOURCEVERSION)"
       IsStableBuild="$(IsStableBuild)"
-      PublishFlatContainer="false"
       AssetManifestPath="$(AssetManifestFilePath)" />
 
     <!-- 
@@ -173,7 +155,6 @@
       Text="##vso[artifact.upload containerfolder=PdbArtifacts;artifactname=PdbArtifacts]$(PDBsToPublishTempLocation)"
       Importance="high" 
       Condition="'@(FilesToPublishToSymbolServer)' != ''"/>
-
   </Target>
 
 </Project>
