@@ -9,13 +9,17 @@
     <_OriginalTargetFrameworks>$(TargetFrameworks)</_OriginalTargetFrameworks>
   </PropertyGroup>
   
-  <Target Name="RemovePlaceHolderConfigs" Condition="'$(BuildAllConfigurations)' == 'true' and '$(MSBuildProjectExtension)' != '.pkgproj'" BeforeTargets="DispatchToInnerBuilds">
+  <Target Name="RemovePlaceHolderConfigs"
+          Condition="'$(BuildAllConfigurations)' == 'true' and '$(MSBuildProjectExtension)' != '.pkgproj'"
+          BeforeTargets="DispatchToInnerBuilds">
     <ItemGroup>
       <_InnerBuildProjects Remove="@(_InnerBuildProjects)" Condition="$([System.String]::Copy('%(_InnerBuildProjects.AdditionalProperties)').Contains('TargetFramework=_'))" />
     </ItemGroup>
   </Target>
      
-  <Target Name="RunOnlyBestTargetFrameworks" Condition="'$(BuildAllConfigurations)' != 'true' or '$(MSBuildProjectExtension)' == '.pkgproj'" BeforeTargets="DispatchToInnerBuilds">
+  <Target Name="RunOnlyBestTargetFrameworks"
+          Condition="'$(BuildAllConfigurations)' != 'true' or '$(MSBuildProjectExtension)' == '.pkgproj'" 
+          BeforeTargets="DispatchToInnerBuilds">
     <ItemGroup>
       <_InnerBuildProjects Remove="@(_InnerBuildProjects)" />
     </ItemGroup>
@@ -33,7 +37,9 @@
   </Target>
   
   <!-- Restore does not take into account osgroup, so we remove the osgroup from the TargetFramework before restore.-->
-  <Target Name="StripOSGroupFromTargetFrameworks" Condition="'$(TargetFrameworks)' != ''" BeforeTargets="CollectPackageReferences">
+  <Target Name="StripOSGroupFromTargetFrameworks"
+          Condition="'$(TargetFrameworks)' != ''"
+          BeforeTargets="CollectPackageReferences">
     <ItemGroup>
       <_TargetFrameworks Include="$(TargetFrameworks)" />
       <_TargetFrameworks Length="$([System.String]::new('%(Identity)').IndexOf('-'))"/>
@@ -47,14 +53,15 @@
   </Target>
 
   <!-- Attaching the osgroup after restore for build.-->
-  <Target Name="AttachOSGroupToTargetFrameworks" AfterTargets="Restore">    
+  <Target Name="AttachOSGroupToTargetFrameworks"
+          AfterTargets="Restore">    
     <PropertyGroup>
       <TargetFrameworks>$(_OriginalTargetFrameworks)</TargetFrameworks>
     </PropertyGroup>
   </Target>
 
-  <Target Name="ResolveP2PReferences"  BeforeTargets="AssignProjectConfiguration">
-    
+  <Target Name="ResolveP2PReferences"
+          BeforeTargets="AssignProjectConfiguration">
     <MSBuild Projects="@(ProjectReference)"
              Targets="GetTargetFrameworks"
              ContinueOnError="true"

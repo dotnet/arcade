@@ -36,9 +36,9 @@ namespace Microsoft.DotNet.Build.Tasks.TargetFramework.Sdk
         public string GetBestSupportedTargetFramework(IEnumerable<string> supportedTargetFrameworks, string buildTargetFramework)
         {
             List<string> exactConfigs = supportedTargetFrameworks.Where(t => !t.StartsWith("_")).ToList();
-            IEnumerable<string> placeHolderConfigs = supportedTargetFrameworks.Where(t => t.StartsWith("_"))?.Select(t => t.Substring(1));
+            IEnumerable<string> placeHolderConfigs = supportedTargetFrameworks.Where(t => t.StartsWith("_")).Select(t => t.Substring(1));
             
-            if (placeHolderConfigs != null)
+            if (placeHolderConfigs.Any())
                 exactConfigs.AddRange(placeHolderConfigs);
             
             var contentCollection = new ContentItemCollection();
@@ -51,7 +51,7 @@ namespace Microsoft.DotNet.Build.Tasks.TargetFramework.Sdk
             SelectionCriteria criteria = _conventions.Criteria.ForFrameworkAndRuntime(NuGetFramework.Parse(targetFramework), osGroup);
             string bestTargetFrameworkString = contentCollection.FindBestItemGroup(criteria, _configStringPattern)?.Items[0].Path;                  
             string bestTargetFrameworkStringWithoutSlash = bestTargetFrameworkString?.Remove(bestTargetFrameworkString.Length - 1);
-            return placeHolderConfigs != null && placeHolderConfigs.Contains(bestTargetFrameworkStringWithoutSlash) ? null : bestTargetFrameworkStringWithoutSlash;
+            return placeHolderConfigs.Any() && placeHolderConfigs.Contains(bestTargetFrameworkStringWithoutSlash) ? null : bestTargetFrameworkStringWithoutSlash;
         }
     }
 }
