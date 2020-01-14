@@ -11,14 +11,6 @@
 
     DotNetBuildFromSource           Building the entire stack from source with no external dependencies.
     DotNetOutputBlobFeedDir         Directory to publish Source Build assets to (packages, symbol packages, installers, etc.).
-    DotNetPublishUsingPipelines     Publish assets using Azure DevOps release pipelines.
-    DotNetArtifactsCategory         Type of assets being produced by the build.
-    DotNetPublishToBlobFeed         Publish assets to blob feed using DotNetPublishBlobFeedUrl and DotNetPublishBlobFeedKey.
-    DotNetPublishBlobFeedUrl        Target feed URL, or empty if not publishing to Azure blob feed.
-    DotNetPublishBlobFeedKey        Azure blob feed account key.
-    DotNetSymbolServerTokenMsdl     Personal access token for MSDL symbol server. Available from variable group DotNet-Symbol-Publish.
-    DotNetSymbolServerTokenSymWeb   Personal access token for SymWeb symbol server. Available from variable group DotNet-Symbol-Publish.
-    DotNetSymbolExpirationInDays    Symbol expiration time in days (defaults to 10 years).
     DotNetSignType                  Specifies the signing type: 'real' (default), 'test'.
     DotNetRuntimeSourceFeed         Storage account to lookup for the .Net runtime files
     DotNetRuntimeSourceFeedKey      In case the storage account to fetch the .Net runtime files are private this should contain a SAS token.
@@ -144,10 +136,6 @@
 
     <ItemGroup>
       <_PublishProps Include="@(_CommonProps)"/>
-      <_PublishProps Include="PublishToAzureDevOpsArtifacts=$(DotNetPublishUsingPipelines)" />
-      <_PublishProps Include="ArtifactsCategory=$(DotNetArtifactsCategory)" />
-      <_PublishProps Include="AzureFeedUrl=$(DotNetPublishBlobFeedUrl)" Condition="'$(DotNetPublishToBlobFeed)' == 'true'" />
-      <_PublishProps Include="AzureAccountKey=$(DotNetPublishBlobFeedKey)" Condition="'$(DotNetPublishToBlobFeed)' == 'true'" />
       <_PublishProps Include="DotNetOutputBlobFeedDir=$(_DotNetOutputBlobFeedDir)" Condition="'$(_DotNetOutputBlobFeedDir)' != ''" />
     </ItemGroup>
 
