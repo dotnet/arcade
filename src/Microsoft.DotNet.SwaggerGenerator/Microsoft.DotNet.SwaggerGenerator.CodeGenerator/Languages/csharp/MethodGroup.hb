@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Text;
@@ -6,25 +7,47 @@ using System.Threading;
 using System.Threading.Tasks;
 using Azure;
 using Azure.Core;
-using {{pascalCaseNs Namespace}}.Models;
+
+{{#*inline "returnType"}}
+        {{~#if Paginated~}}
+        AsyncPageable<{{typeRef ResponseType.BaseType}}>
+        {{~else if ResponseIsVoid~}}
+        Task
+        {{~else~}}
+        Task<{{typeRef ResponseType}}>
+        {{~/if~}}
+{{/inline}}
+{{#*inline "paramType"~}}
+{{typeRef Type}}{{#if (and (not Required) (not (IsNullable Type)))}}?{{/if}}
+{{~/inline}}
+{{#*inline "formalParameter"}}
+            {{> paramType this}} {{camelCase Name}}{{#unless Required}} = default{{/unless}},
+{{/inline}}
+
+{{#*inline "validateParameters"}}
+{{/inline}}
 
 namespace {{pascalCaseNs Namespace}}
 {
     public partial interface I{{pascalCase Name}}
     {
         {{#each Methods}}
-        {{#if ResponseIsVoid}}Task{{else}}Task<
-        {{~#if Paginated~}}
-        PagedResponse<{{typeRef ResponseType.BaseType}}>
-        {{~else~}}
-        {{~typeRef ResponseType~}}
-        {{~/if~}}>{{/if}} {{Name}}Async(
-            {{#each FormalParameters}}
-            {{typeRef Type}}{{#if (and (not Required) (not (IsNullable Type)))}}?{{/if}} {{camelCase Name}}{{#unless Required}} = default{{/unless}},
+        {{> returnType this}} {{Name}}Async(
+            {{#each FormalParametersNoPaging}}
+            {{> formalParameter this}}
             {{/each}}
             CancellationToken cancellationToken = default
         );
 
+        {{#if Paginated}}
+        Task<Page<{{typeRef ResponseType.BaseType}}>> {{Name}}PageAsync(
+            {{#each FormalParameters}}
+            {{> formalParameter this}}
+            {{/each}}
+            CancellationToken cancellationToken = default
+        );
+
+        {{/if}}
         {{/each}}
     }
 
@@ -42,18 +65,52 @@ namespace {{pascalCaseNs Namespace}}
 
         partial void HandleFailed{{Name}}Request(RestApiException ex);
 
-        public async {{#if ResponseIsVoid}}Task{{else}}Task<
-        {{~#if Paginated~}}
-        PagedResponse<{{typeRef ResponseType.BaseType}}>
-        {{~else~}}
-        {{~typeRef ResponseType~}}
-        {{~/if~}}>{{/if}} {{Name}}Async(
-            {{#each FormalParameters}}
-            {{typeRef Type}}{{#if (and (not Required) (not (IsNullable Type)))}}?{{/if}} {{camelCase Name}}{{#unless Required}} = default{{/unless}},
+        public {{#unless Paginated}}async {{/unless}}{{> returnType this}} {{Name}}Async(
+            {{#each FormalParametersNoPaging}}
+            {{> formalParameter this}}
             {{/each}}
             CancellationToken cancellationToken = default
         )
         {
+            {{#if Paginated}}
+            async IAsyncEnumerable<Page<{{typeRef ResponseType.BaseType}}>> GetPages(string _continueToken, int? _pageSizeHint)
+            {
+                {{> paramType PageParameter}} {{camelCase PageParameter.Name}} = 1;
+                {{> paramType PageSizeParameter}} {{camelCase PageSizeParameter.Name}} = _pageSizeHint;
+
+                if (!string.IsNullOrEmpty(_continueToken))
+                {
+                    {{camelCase PageParameter.Name}} = {{typeRef PageParameter.Type}}.Parse(_continueToken);
+                }
+
+                while (true)
+                {
+                    var _page = await {{Name}}PageAsync(
+                        {{#each FormalParameters}}
+                        {{camelCase Name}},
+                        {{/each}}
+                        cancellationToken
+                    ).ConfigureAwait(false);
+                    if (_page.Values.Count < 1)
+                    {
+                        yield break;
+                    }
+                    yield return _page;
+                    {{camelCase PageParameter.Name}}++;
+                }
+            }
+            return AsyncPageable.Create(GetPages);
+        }
+
+        public async Task<Page<{{typeRef ResponseType.BaseType}}>> {{Name}}PageAsync(
+            {{#each FormalParameters}}
+            {{> formalParameter this}}
+            {{/each}}
+            CancellationToken cancellationToken = default
+        )
+        {
+            {{/if}}
+
             {{#each NonConstantParameters}}
             {{#if Required}}
             if ({{#nullCheck Type Required}}{{camelCase Name}}{{/nullCheck}})
@@ -147,7 +204,7 @@ namespace {{pascalCaseNs Namespace}}
                         var _content = await _reader.ReadToEndAsync().ConfigureAwait(false);
                         var _body = Client.Deserialize<{{typeRef ResponseType}}>(_content);
                         {{#if Paginated}}
-                        return new PagedResponse<{{typeRef ResponseType.BaseType}}>(Client, On{{Name}}Failed, _res, _body);
+                        return Page<{{typeRef ResponseType.BaseType}}>.FromValues(_body, ({{camelCase PageParameter.Name}} + 1).ToString(), _res);
                         {{else}}
                         return _body;
                         {{/if}}
