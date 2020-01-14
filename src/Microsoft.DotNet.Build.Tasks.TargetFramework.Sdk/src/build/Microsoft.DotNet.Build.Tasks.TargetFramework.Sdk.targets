@@ -9,6 +9,12 @@
     <_OriginalTargetFrameworks>$(TargetFrameworks)</_OriginalTargetFrameworks>
   </PropertyGroup>
   
+  <Target Name="RemovePlaceHolderConfigs" Condition="'$(BuildAllConfigurations)' == 'true' and '$(MSBuildProjectExtension)' != '.pkgproj'" BeforeTargets="DispatchToInnerBuilds">
+    <ItemGroup>
+      <_InnerBuildProjects Remove="@(_InnerBuildProjects)" Condition="$([System.String]::Copy('%(_InnerBuildProjects.AdditionalProperties)').Contains('TargetFramework=_'))" />
+    </ItemGroup>
+  </Target>
+     
   <Target Name="RunOnlyBestTargetFrameworks" Condition="'$(BuildAllConfigurations)' != 'true' or '$(MSBuildProjectExtension)' == '.pkgproj'" BeforeTargets="DispatchToInnerBuilds">
     <ItemGroup>
       <_InnerBuildProjects Remove="@(_InnerBuildProjects)" />
