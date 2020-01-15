@@ -17,6 +17,17 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
     {
         public const string AssetsVirtualDir = "assets/";
 
+        private static readonly string[] RequiredBuildAttributes = { 
+            "InitialAssetsLocation",
+            "AzureDevOpsBuildId",
+            "AzureDevOpsBuildDefinitionId",
+            "AzureDevOpsAccount",
+            "AzureDevOpsProject",
+            "AzureDevOpsBuildNumber",
+            "AzureDevOpsRepository",
+            "AzureDevOpsBranch",
+        };
+
         public static void CreateBuildManifest(TaskLoggingHelper log,
             IEnumerable<BlobArtifactModel> blobArtifacts,
             IEnumerable<PackageArtifactModel> packageArtifacts,
@@ -158,9 +169,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         {
             errors = new List<string>();
 
-            if (!attributes.ContainsKey("InitialAssetsLocation"))
+            foreach (var requiredAttribute in RequiredBuildAttributes)
             {
-                errors.Add("Missing required property InitialAssetsLocation.");
+                if (!attributes.ContainsKey(requiredAttribute))
+                {
+                    errors.Add($"Missing required property {requiredAttribute}.");
+                }
             }
 
             return errors.Count == 0;
