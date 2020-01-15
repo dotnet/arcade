@@ -10,7 +10,7 @@ namespace Microsoft.DotNet.Build.Tasks.TargetFramework.Sdk
     public class ChooseBestP2PTargetFrameworkTask : BuildTask
     {
         [Required]
-        public string TargetFrameworkOSGroup { get; set; }
+        public string TargetFramework { get; set; }
 
         [Required]
         public ITaskItem[] ProjectReferencesWithTargetFrameworks { get; set; }
@@ -31,10 +31,10 @@ namespace Microsoft.DotNet.Build.Tasks.TargetFramework.Sdk
                 ITaskItem projectReference = ProjectReferencesWithTargetFrameworks[i];
                 string[] targetFrameworks = projectReference.GetMetadata("TargetFrameworks").Split(';');
                 
-                string bestTargetFramework = targetFrameworkResolver.GetBestSupportedTargetFramework(targetFrameworks, TargetFrameworkOSGroup);
+                string bestTargetFramework = targetFrameworkResolver.GetBestSupportedTargetFramework(targetFrameworks, TargetFramework);
                 if (bestTargetFramework == null)
                 {
-                    Log.LogError($"Not able to find a compatible supported target framework for {TargetFrameworkOSGroup} in Project {Path.GetFileName(projectReference.ItemSpec)}. The Supported Configurations are {string.Join(", ", targetFrameworks)}");
+                    Log.LogError($"Not able to find a compatible supported target framework for {TargetFramework} in Project {Path.GetFileName(projectReference.ItemSpec)}. The Supported Configurations are {string.Join(", ", targetFrameworks)}");
                 }
 
                 projectReference.SetMetadata("SetTargetFramework", "TargetFramework=" + bestTargetFramework);                

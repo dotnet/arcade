@@ -1,7 +1,6 @@
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
 <Project>
   <UsingTask TaskName="ChooseBestTargetFrameworksTask" AssemblyFile="$(DotNetBuildTasksTargetFrameworkSdkAssembly)"/>
-  <!-- Binplacing targets and properties -->
   <PropertyGroup>
     <BinPlaceUseHardlinksIfPossible Condition="'$(BinPlaceUseHardlinksIfPossible)' == ''">true</BinPlaceUseHardlinksIfPossible>
     <EnableBinPlacing Condition="'$(EnableBinPlacing)' == '' AND ('$(BinPlaceRef)' == 'true' OR '$(BinPlaceRuntime)' == 'true' OR '$(BinPlaceTest)' == 'true')">true</EnableBinPlacing>
@@ -58,6 +57,7 @@
       <_packageFileDir Include="@(PackageFileDir->Distinct())" />
     </ItemGroup>
 
+    <!-- This filename is chosen so that each build of every project has a uniquie filename.-->
     <PropertyGroup>
       <_propsFilename>$(TargetName).$(TargetFramework)</_propsFilename>
       <_propsFilename Condition="'$(TargetName)' == ''">$(MSBuildProjectName).$(TargetFramework)</_propsFilename>
@@ -156,9 +156,9 @@
 
   <!-- IncrementalClean and CoreClean only clean paths under Intermediate or OutDir, handle additional paths -->
   <ItemGroup>
-    <AdditionalCleanDirectories Include="@(BinPlaceTargetFrameworks->'%(RefPath)')" Condition="'$(IsReferenceAssembly)' == true"/>
+    <AdditionalCleanDirectories Include="@(BinPlaceTargetFrameworks->'%(RefPath)')" />
     <AdditionalCleanDirectories Include="@(BinPlaceTargetFrameworks->'%(RuntimePath)')" />
-    <AdditionalCleanDirectories Include="@(BinPlaceTargetFrameworks->'%(PackageFileRefPath)')" Condition="'$(IsReferenceAssembly)' == true" />
+    <AdditionalCleanDirectories Include="@(BinPlaceTargetFrameworks->'%(PackageFileRefPath)')" />
     <AdditionalCleanDirectories Include="@(BinPlaceTargetFrameworks->'%(PackageFileRuntimePath)')" />
     <AdditionalCleanDirectories Include="@(BinPlaceTargetFrameworks->'%(TestPath)')" />
   </ItemGroup>

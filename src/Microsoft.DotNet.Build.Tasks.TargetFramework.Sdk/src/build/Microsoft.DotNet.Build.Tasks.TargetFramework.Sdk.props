@@ -3,11 +3,11 @@
   <PropertyGroup>
     <DotNetBuildTasksTargetFrameworkSdkAssembly Condition="'$(DotNetBuildTasksTargetFrameworkSdkAssembly)' == '' AND '$(MSBuildRuntimeType)' == 'core'">..\tools\netcoreapp2.1\Microsoft.DotNet.Build.Tasks.TargetFramework.Sdk.dll</DotNetBuildTasksTargetFrameworkSdkAssembly>
     <DotNetBuildTasksTargetFrameworkSdkAssembly Condition="'$(DotNetBuildTasksTargetFrameworkSdkAssembly)' == '' AND '$(MSBuildRuntimeType)' != 'core'">..\tools\net472\Microsoft.DotNet.Build.Tasks.TargetFramework.Sdk.dll</DotNetBuildTasksTargetFrameworkSdkAssembly>
-    <OSGroup>AnyOS</OSGroup>
+    <TargetFrameworkSuffix>AnyOS</TargetFrameworkSuffix >
   </PropertyGroup>
   
   <PropertyGroup Condition="$(TargetFramework.Contains('-'))">
-    <OSGroup>$(TargetFramework.SubString($([MSBuild]::Add($(TargetFramework.IndexOf('-')), 1))))</OSGroup>
+    <TargetFrameworkSuffix>$(TargetFramework.SubString($([MSBuild]::Add($(TargetFramework.IndexOf('-')), 1))))</TargetFrameworkSuffix >
     <_TargetFrameworkWithoutProfile>$(TargetFramework.SubString(0, $(TargetFramework.IndexOf('-'))))</_TargetFrameworkWithoutProfile>
   </PropertyGroup>
  

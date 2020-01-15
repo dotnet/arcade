@@ -36,24 +36,24 @@
     </AddTargetFrameworksToProjectTask>
   </Target>
   
-  <!-- Restore does not take into account osgroup, so we remove the osgroup from the TargetFramework before restore.-->
-  <Target Name="StripOSGroupFromTargetFrameworks"
+  <!-- Restore does not take into account TargetFrameworkSuffix, so we remove the it from the TargetFramework before restore.-->
+  <Target Name="StripTargetFrameworkSuffixFromTargetFrameworks"
           Condition="'$(TargetFrameworks)' != ''"
           BeforeTargets="CollectPackageReferences">
     <ItemGroup>
       <_TargetFrameworks Include="$(TargetFrameworks)" />
       <_TargetFrameworks Length="$([System.String]::new('%(Identity)').IndexOf('-'))"/>
       <_TargetFrameworks Condition="'%(Length)' == '-1'" Length="$([System.String]::new('%(Identity)').Length)"/>
-      <_TargetFrameworksWithoutOSGroup Include="$([System.String]::new('%(_TargetFrameworks.Identity)').Substring(0, '%(_TargetFrameworks.Length)'))" />
+      <_TargetFrameworksWithoutTargetFrameworkSuffix Include="$([System.String]::new('%(_TargetFrameworks.Identity)').Substring(0, '%(_TargetFrameworks.Length)'))" />
     </ItemGroup>
     
     <PropertyGroup>
-      <TargetFrameworks>@(_TargetFrameworksWithoutOSGroup->Distinct())</TargetFrameworks>
+      <TargetFrameworks>@(_TargetFrameworksWithoutTargetFrameworkSuffix->Distinct())</TargetFrameworks>
     </PropertyGroup>
   </Target>
 
-  <!-- Attaching the osgroup after restore for build.-->
-  <Target Name="AttachOSGroupToTargetFrameworks"
+  <!-- Attaching the TargetFrameworkSuffix after restore for build.-->
+  <Target Name="AttachTargetFrameworkSuffixToTargetFrameworks"
           AfterTargets="Restore">    
     <PropertyGroup>
       <TargetFrameworks>$(_OriginalTargetFrameworks)</TargetFrameworks>
@@ -69,7 +69,7 @@
       <Output TaskParameter="TargetOutputs" ItemName="_ProjectRefWithTfms"/>
     </MSBuild>
      
-    <ChooseBestP2PTargetFrameworkTask TargetFrameworkOsGroup="$(TargetFramework)"
+    <ChooseBestP2PTargetFrameworkTask TargetFramework="$(TargetFramework)"
                                       ProjectReferencesWithTargetFrameworks="@(_ProjectRefWithTfms)"
                                       RuntimeGraph="$(RuntimeGraph)" >
       <Output TaskParameter="AnnotatedProjectReferencesWithSetTargetFramework" ItemName="_ProjectReferencesWithBestTargetFrameworks" />
