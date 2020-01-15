@@ -333,3 +333,16 @@ Yes, you still need to pass that. Currently, Arcade SDK has some logic that depe
 ### Do I still need to pass the DotNetSymbolServerTokenMsdl and DotNetSymbolServerTokenSymWeb parameters to the build scripts?
 
 Yes, you still need to pass that. Currently, Arcade SDK has some logic that depends on those parameters to work properly. We are [working to remove the need of those parameters](https://github.com/dotnet/arcade/issues/3597).
+
+### What's PackageArtifacts, BlobArtifacts, PdbArtifacts and ReleaseConfigs for?
+
+- **PackageArtifacts**: contains all NuGet (.nupkg) packages to be published.
+- **BlobArtifacts**: contains all blob artifacts (usually .symbols.nupkg) to be published.
+- **PdbArtifacts**: contains all PDB artifacts to be published to symbol servers - SymWeb & MSDL.
+- **ReleaseConfigs**: contains configuration files used by the post-build stages. In particular it should contain a file called `ReleaseConfigs.txt` that stores the BAR BuildId, the list of default channels IDs of the build and whether the current build is stable or not, respectively.
+
+**Note:** only packages and blobs described in at least one build manifest will be published.
+
+### Where can I see publishing logs?
+
+The publishing logs are stored inside an Azure DevOps artifacts container named `PostBuildLogs`. Each activated post-build channel/stage will have a subfolder under `PostBuildLogs`. Each job in a publishing channel/stage will have `.binlogs` in the container.
