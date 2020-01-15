@@ -18,7 +18,7 @@ In order to use the new publishing mechanism, the easiest way to start is by tur
     ...
     ```
 
-1. Disable asset publishing during the build. 
+1. Disable asset publishing during the build. There are two common situations here. Some build definitions make use of the `jobs.yml` template and others make use of the `job.yml` (singular). The former is a wrapper around a few things, among them the `job.yml` and `publish-build-assets.yml` templates. If your build definition doesn't use `jobs.yml` you'll need to directly pass the `PublishUsingPipelines` parameter to the included templates. See examples below.
     1. If the build job uses the `eng\common\templates\jobs\jobs.yml` template, set the parameter `enablePublishUsingPipelines` to `true`. See example below:
 
         ```YAML
@@ -122,7 +122,7 @@ In order to use the new publishing mechanism, the easiest way to start is by tur
     ...
     ```
 
-    We suggest you to use the stage name *build*, otherwise you'll need to pass the name of the stage to the `post-build.yml` template (see table on next section).
+    We suggest you to use the stage name *build* and have only one build stage. However, that's not a requirement. If you choose to use a different stage name or need to use multiple build stages you'll need to pass the name of the stage(s) to the `post-build.yml` template (see table on next section).
 
 1. Import the new `eng\common\templates\post-build\post-build.yml` Arcade template at the end of the build definition. This will import all default test, validate and publishing stages provided by Arcade. The bottom part of your build definition will look like this:
 
@@ -146,8 +146,8 @@ In order to use the new publishing mechanism, the easiest way to start is by tur
     | signingValidationAdditionalParameters   | string  | Additional arguments for the SigningValidation sdk task.     | '' |
     | publishInstallersAndChecksums           | bool     | Publish installers packages and checksums from the build artifacts to the dotnetcli storage account. | false |
     | SDLValidationParameters                 | object   | Parameters for the SDL job template, as documented in the [SDL template documentation](https://github.com/dotnet/arcade/blob/66175ebd3756697a3ca515e16cd5ffddc30582cd/Documentation/HowToAddSDLRunToPipeline.md) | -- |
-    | validateDependsOn | [array] | Which stage(s) should the validation stage depends on. | build |
-    | publishDependsOn | [array] | Which stage(s) should the publishing stage(s) depends on. | Validate |
+    | validateDependsOn | [array] | Which stage(s) should the validation stage depend on. | build |
+    | publishDependsOn | [array] | Which stage(s) should the publishing stage(s) depend on. | Validate |
 
     After these changes the build job(s) will publish the build assets to Azure DevOps build artifacts instead of immediately publishing them to a feed or storage location. Once the post-build template is added, a repo's official build will include a series of stages that will publish the assets to different locations, depending on the Maestro++ default channel(s) that the build is assigned to.
 
@@ -294,7 +294,7 @@ Each stable builds (i.e., [Release Official Builds](https://github.com/dotnet/ar
 
 ### What benefits do I get from the new infrastructure?
 
-There are a few benefits, but the bottom line is: you can rely on Arcade SDK and Maestro++ to determine the correct place to publish the build assets. This is specially important for servicing and/or private builds where assets must not go to public locations before further validations.
+There are a few benefits, but the bottom line is: you can rely on Arcade SDK and Maestro++ to determine the correct place to publish the build assets. This is specially important for servicing and/or private builds where assets must not go to public locations before further validations. The new infrastructure also performs Signing validation, SDL validation and NuGet packages metadata validation.
 
 ### Why most stages don't execute the publishing job?
 
