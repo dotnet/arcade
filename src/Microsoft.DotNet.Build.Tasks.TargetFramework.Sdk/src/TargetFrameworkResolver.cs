@@ -24,7 +24,7 @@ namespace Microsoft.DotNet.Build.Tasks.TargetFramework.Sdk
         {
             _conventions = new ManagedCodeConventions(JsonRuntimeFormat.ReadRuntimeGraph(runtimeGraph));
             _configStringPattern = new PatternSet(
-                _conventions.Properties,                
+                _conventions.Properties,
                 groupPatterns: new PatternDefinition[]
                 {
                     // In order to use Nuget's asset allocation, the input needs to file paths and should contain a trailing slash.
