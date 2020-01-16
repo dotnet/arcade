@@ -152,7 +152,7 @@
   </Target>
 
   <Target Name="GetBuildScript" Returns="$(CMakeBuildScript)"
-    DependsOnTargets="_ResolveVSCompilerToolchainForNonVSGenerators;$(CMakeBuildDependsOn)">
+    DependsOnTargets="_ResolveVSCompilerToolchainForNonVSGenerators;_ResolveNonMSVCCompilerToolchain;$(CMakeBuildDependsOn)">
     <Error Condition="'$(CMakeOutputDir)' == ''" Text="An output directory must be specified via the CMakeOutputDir property." />
 
     <PropertyGroup>
