@@ -33,6 +33,12 @@ Here are a list of MSBuild properties that this SDK consumes:
   - The root CMakeLists.txt of the native build.
 - CMakeGenerator
   - The CMake generator to use. To use a Visual Studio based generator, you can specify "Visual Studio" and this SDK will resolve a VS that supports the target platform.
+- CMakeCompilerToolchain
+  - The compiler to use for the build. Defaults to MSVC on Windows and Clang on non-Windows.
+- CMakeCompilerMajorVersion (optional)
+  - The major version of the compiler to use. Ignored on VS generators.
+- CMakeCompilerMinorVersion (optional)
+  - The minor version of the compiler to use. Ignored on VS generators.
 - Configuration
   - The configuration for which to generate and build the CMake project.
 - Platform
@@ -66,13 +72,15 @@ To add a native project reference from a managed project, add the following line
 <Import Project="ProjectReference.targets" Sdk="Microsoft.DotNet.CMake.Sdk" />
 ```
 
-To add a native project reference to a give CMakeLists.txt, add a `NativeProjectReference` item as shown below:
+To add a native project reference to a given CMakeLists.txt from a managed project, add a `NativeProjectReference` item to the managed project as shown below:
 
 ```xml
 <ItemGroup>
     <NativeProjectReference Include="path/to/my/CMakeLists.txt" CMakeProject="path/to/CMake/Project/UsingThisSdk.proj" />
 </ItemGroup>
 ```
+
+The project in the `CMakeProject` metadata is the project using this SDK that drives the CMake build of the provided CMakeLists.txt.
 
 If you have many native project references and don't want to specify the `CMakeProject` metadata on all of them, you can also set the `DefaultCMakeProject` property to point to the project.
 

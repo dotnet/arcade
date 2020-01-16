@@ -84,7 +84,8 @@
     </PropertyGroup>
   </Target>
 
-  <Target Name="_ResolveVSCompilerToolchainForNonVSGenerators" Condition="$([MSBuild]::IsOsPlatform(Windows)) and !$(CMakeGenerator.StartsWith('Visual Studio'))">
+  <Target Name="_ResolveVSCompilerToolchainForNonVSGenerators"
+    Condition="$([MSBuild]::IsOsPlatform(Windows)) and !$(CMakeGenerator.StartsWith('Visual Studio')) and '$(CMakeCompilerToolchain)' == 'MSVC' and '$(CMakeCompilerSearchScript)' == ''">
     <Error Condition="'$(_VSNativeCompilerComponentArchName)' == ''" Text="Unable to determine location of MSVC tools installed for the '$(Platform)' architecture." />
 
     <Exec
@@ -110,8 +111,17 @@
     </PropertyGroup>
   </Target>
 
+  <Target Name="_ResolveNonMSVCCompilerToolchain" Condition="'$(CMakeCompilerToolchain)' != 'MSVC' and '$(CMakeCompilerSearchScript)' == ''">
+    <Error Condition="$([MSBuild]::IsOsPlatform(Windows))" Text="This SDK does not support using non-MSVC toolchains on Windows." />
+    <PropertyGroup>
+      <CMakeCompilerSearchScript>
+      . $([MSBuild]::MakeRelative('$(MSBuildProjectDirectory)', '$(RepositoryEngineeringDir)common/native/find-native-compiler.sh') $(CMakeCompilerToolchain) $(CMakeCompilerMajorVersion) $(CMakeCompilerMinorVersion)
+      </CMakeCompilerSearchScript>
+    </PropertyGroup>
+  </Target>
+
   <Target Name="GetConfigScript" Returns="$(CMakeConfigScript)"
-    DependsOnTargets="ResolveVSGenerator;_ResolveVSCompilerToolchainForNonVSGenerators;$(CMakeConfigureDependsOn)">
+    DependsOnTargets="ResolveVSGenerator;_ResolveVSCompilerToolchainForNonVSGenerators;_ResolveNonMSVCCompilerToolchain;$(CMakeConfigureDependsOn)">
     <Error Condition="'$(CMakeLists)' == ''" Text="A CMakeLists.txt must be specified via a CMakeLists item." />
     <Error Condition="'$(CMakeOutputDir)' == ''" Text="An output directory must be specified via the CMakeOutputDir property." />
     <Error Condition="!Exists('$(CMakeLists)')" Text="The provided CMakeLists.txt does not exist." />

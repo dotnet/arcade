@@ -8,6 +8,8 @@
   <PropertyGroup Condition="'$(CMakeGenerator)' == ''">
     <CMakeGenerator Condition="$([MSBuild]::IsOSPlatform(Windows))">Visual Studio</CMakeGenerator>
     <CMakeGenerator Condition="!$([MSBuild]::IsOSPlatform(Windows))">Unix Makefiles</CMakeGenerator>
+    <CMakeCompilerToolchain Condition="$([MSBuild]::IsOSPlatform(Windows))">MSVC</CMakeCompilerToolchain>
+    <CMakeCompilerToolchain Condition="!$([MSBuild]::IsOSPlatform(Windows))">clang</CMakeCompilerToolchain>
     <_CMakeMultiConfigurationGenerator>False</_CMakeMultiConfigurationGenerator>
     <_CMakePassArchitectureToGenerator>False</_CMakePassArchitectureToGenerator>
   </PropertyGroup>
