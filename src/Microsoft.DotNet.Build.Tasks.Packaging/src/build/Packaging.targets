@@ -1293,6 +1293,10 @@
                         UpdateStablePackageInfo="$(UpdateStablePackageInfo)" />
   </Target>
 
+  <!-- When we want to update the package index with the harvest version, we require the package to already be built, which a default call
+  to UpdatePackageIndex won't do. This target will just wrap both targets to ensure the package is built, and then we can update the index. -->
+  <Target Name="UpdateHarvestVersionOnPackageIndex" DependsOnTargets="Build;UpdatePackageIndex" />
+
   <!-- Updates the packageIndex with information from the multiple sources for the entire repo -->
   <!-- Intentionally not sequenced, invoked directly through /t:UpdateRepoPackageIndex -->
   <Target Name="UpdateRepoPackageIndex">

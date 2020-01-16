@@ -99,6 +99,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Helix.JobS
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.CMake.Sdk", "src\Microsoft.DotNet.CMake.Sdk\Microsoft.DotNet.CMake.Sdk.csproj", "{B1BFCB54-0FE7-4745-A471-2D7F21B5C7B9}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Build.Tasks.TargetFramework.Sdk", "src\Microsoft.DotNet.Build.Tasks.TargetFramework.Sdk\src\Microsoft.DotNet.Build.Tasks.TargetFramework.Sdk.csproj", "{E83B25A9-66C3-4E15-9BC3-E843CC471622}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -621,6 +623,18 @@ Global
 		{B1BFCB54-0FE7-4745-A471-2D7F21B5C7B9}.Release|x64.Build.0 = Release|Any CPU
 		{B1BFCB54-0FE7-4745-A471-2D7F21B5C7B9}.Release|x86.ActiveCfg = Release|Any CPU
 		{B1BFCB54-0FE7-4745-A471-2D7F21B5C7B9}.Release|x86.Build.0 = Release|Any CPU
+		{E83B25A9-66C3-4E15-9BC3-E843CC471622}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E83B25A9-66C3-4E15-9BC3-E843CC471622}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E83B25A9-66C3-4E15-9BC3-E843CC471622}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{E83B25A9-66C3-4E15-9BC3-E843CC471622}.Debug|x64.Build.0 = Debug|Any CPU
+		{E83B25A9-66C3-4E15-9BC3-E843CC471622}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{E83B25A9-66C3-4E15-9BC3-E843CC471622}.Debug|x86.Build.0 = Debug|Any CPU
+		{E83B25A9-66C3-4E15-9BC3-E843CC471622}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E83B25A9-66C3-4E15-9BC3-E843CC471622}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E83B25A9-66C3-4E15-9BC3-E843CC471622}.Release|x64.ActiveCfg = Release|Any CPU
+		{E83B25A9-66C3-4E15-9BC3-E843CC471622}.Release|x64.Build.0 = Release|Any CPU
+		{E83B25A9-66C3-4E15-9BC3-E843CC471622}.Release|x86.ActiveCfg = Release|Any CPU
+		{E83B25A9-66C3-4E15-9BC3-E843CC471622}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

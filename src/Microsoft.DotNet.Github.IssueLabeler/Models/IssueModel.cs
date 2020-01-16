@@ -4,11 +4,12 @@
 
 using Microsoft.ML.Data;
 using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 
 namespace Microsoft.DotNet.GitHub.IssueLabeler
 {
-    public class GitHubIssue
+    public class IssueModel
     {
         [JsonIgnore]
         [LoadColumn(0)]
@@ -22,33 +23,18 @@ namespace Microsoft.DotNet.GitHub.IssueLabeler
         public string Body;
 
         [LoadColumn(3)]
-        public bool IsPR;
+        public float IsPR;
 
         [LoadColumn(4)]
-        public string FilePaths;
+        public Single NumMentions;
+
+        [LoadColumn(5)]
+        public string UserMentions;
 
         [NoColumn]
         public List<object> Labels { get; set; }
 
         [NoColumn]
-        public Milestone Milestone { get; set; }
-
-        [NoColumn]
         public int Number { get; set; }
-
-        [JsonIgnore]
-        [NoColumn]
-        public GithubObjectType IssueOrPr { get; set; }
-    }
-
-    public class Milestone
-    {
-        public int Number { get; set; }
-    }
-
-    public enum GithubObjectType 
-    {
-        PullRequest,
-        Issue
     }
 }

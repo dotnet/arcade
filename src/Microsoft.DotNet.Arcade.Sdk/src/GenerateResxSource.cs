@@ -70,27 +70,6 @@ namespace Microsoft.DotNet.Arcade.Sdk
             CSharp,
             VisualBasic,
         }
-
-        private bool IsLetterChar(UnicodeCategory cat)
-        {
-            // letter-character:
-            //   A Unicode character of classes Lu, Ll, Lt, Lm, Lo, or Nl
-            //   A Unicode-escape-sequence representing a character of classes Lu, Ll, Lt, Lm, Lo, or Nl
-
-            switch (cat)
-            {
-                case UnicodeCategory.UppercaseLetter:
-                case UnicodeCategory.LowercaseLetter:
-                case UnicodeCategory.TitlecaseLetter:
-                case UnicodeCategory.ModifierLetter:
-                case UnicodeCategory.OtherLetter:
-                case UnicodeCategory.LetterNumber:
-                    return true;
-            }
-
-            return false;
-        }
-
         public override bool Execute()
         {
             string namespaceName;
@@ -151,7 +130,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
 
                 RenderDocComment(language, memberIndent, strings, docCommentString);
 
-                string identifier = IsLetterChar(CharUnicodeInfo.GetUnicodeCategory(name[0])) ? name : "_" + name;
+                string identifier = GetIdentifierFromResourceName(name);
 
                 string defaultValue = IncludeDefaultValues ? ", " + CreateStringLiteral(value, language) : string.Empty;
 
@@ -160,11 +139,11 @@ namespace Microsoft.DotNet.Arcade.Sdk
                     case Lang.CSharp:
                         if (AsConstants)
                         {
-                            strings.AppendLine($"{memberIndent}internal const string {name} = nameof({name});");
+                            strings.AppendLine($"{memberIndent}internal const string @{identifier} = \"{name}\";");
                         }
                         else
                         {
-                            strings.AppendLine($"{memberIndent}internal static string {identifier} => GetResourceString(\"{name}\"{defaultValue});");
+                            strings.AppendLine($"{memberIndent}internal static string @{identifier} => GetResourceString(\"{name}\"{defaultValue});");
                         }
 
                         if (EmitFormatMethods)
@@ -182,11 +161,11 @@ namespace Microsoft.DotNet.Arcade.Sdk
                     case Lang.VisualBasic:
                         if (AsConstants)
                         {
-                            strings.AppendLine($"{memberIndent}Friend Const {name} As String = \"{name}\"");
+                            strings.AppendLine($"{memberIndent}Friend Const [{identifier}] As String = \"{name}\"");
                         }
                         else
                         {
-                            strings.AppendLine($"{memberIndent}Friend Shared ReadOnly Property {identifier} As String");
+                            strings.AppendLine($"{memberIndent}Friend Shared ReadOnly Property [{identifier}] As String");
                             strings.AppendLine($"{memberIndent}  Get");
                             strings.AppendLine($"{memberIndent}    Return GetResourceString(\"{name}\"{defaultValue})");
                             strings.AppendLine($"{memberIndent}  End Get");
@@ -215,8 +194,9 @@ namespace Microsoft.DotNet.Arcade.Sdk
                 {
                     case Lang.CSharp:
                         getStringMethod = $@"{memberIndent}internal static global::System.Globalization.CultureInfo Culture {{ get; set; }}
-
+#if !NET20
 {memberIndent}[global::System.Runtime.CompilerServices.MethodImpl(global::System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)]
+#endif
 {memberIndent}internal static string GetResourceString(string resourceKey, string defaultValue = null) =>  ResourceManager.GetString(resourceKey, Culture);";
                         if (EmitFormatMethods)
                         {
@@ -240,7 +220,6 @@ namespace Microsoft.DotNet.Arcade.Sdk
 
                     case Lang.VisualBasic:
                         getStringMethod = $@"{memberIndent}Friend Shared Property Culture As Global.System.Globalization.CultureInfo
-
 {memberIndent}<Global.System.Runtime.CompilerServices.MethodImpl(Global.System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)>
 {memberIndent}Friend Shared Function GetResourceString(ByVal resourceKey As String, Optional ByVal defaultValue As String = Nothing) As String
 {memberIndent}    Return ResourceManager.GetString(resourceKey, Culture)
@@ -385,6 +364,59 @@ Imports System.Reflection
 
             File.WriteAllText(OutputPath, result);
             return true;
+        }
+
+        internal static string GetIdentifierFromResourceName(string name)
+        {
+            if (name.All(IsIdentifierPartCharacter))
+            {
+                return IsIdentifierStartCharacter(name[0]) ? name : "_" + name;
+            }
+
+            var builder = new StringBuilder(name.Length);
+
+            char f = name[0];
+            if (IsIdentifierPartCharacter(f) && !IsIdentifierStartCharacter(f))
+            {
+                builder.Append('_');
+            }
+
+            foreach (char c in name)
+            {
+                builder.Append(IsIdentifierPartCharacter(c) ? c : '_');
+            }
+
+            return builder.ToString();
+
+            static bool IsIdentifierStartCharacter(char ch)
+                => ch == '_' || IsLetterChar(CharUnicodeInfo.GetUnicodeCategory(ch));
+
+            static bool IsIdentifierPartCharacter(char ch)
+            {
+                var cat = CharUnicodeInfo.GetUnicodeCategory(ch);
+                return IsLetterChar(cat)
+                    || cat == UnicodeCategory.DecimalDigitNumber
+                    || cat == UnicodeCategory.ConnectorPunctuation
+                    || cat == UnicodeCategory.Format
+                    || cat == UnicodeCategory.NonSpacingMark
+                    || cat == UnicodeCategory.SpacingCombiningMark;
+            }
+
+            static bool IsLetterChar(UnicodeCategory cat)
+            {
+                switch (cat)
+                {
+                    case UnicodeCategory.UppercaseLetter:
+                    case UnicodeCategory.LowercaseLetter:
+                    case UnicodeCategory.TitlecaseLetter:
+                    case UnicodeCategory.ModifierLetter:
+                    case UnicodeCategory.OtherLetter:
+                    case UnicodeCategory.LetterNumber:
+                        return true;
+                }
+
+                return false;
+            }
         }
 
         private static void RenderDocComment(Lang language, string memberIndent, StringBuilder strings, string value)
