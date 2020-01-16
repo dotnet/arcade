@@ -25,6 +25,7 @@
   </PropertyGroup>
 
   <Target Name="ResolveVSGenerator" Condition="'$(CMakeGenerator)' == 'Visual Studio'">
+    <Error Condition="'$(CMakeCompilerToolchain)' != 'MSVC'" Text="The Visual Studio generator only supports the MSVC toolchain." />
     <Error Condition="'$(Platform)' == 'AnyCPU'" Text="A CMake project must be built for a specific architecture." />
     <PropertyGroup>
       <_CMakeMultiConfigurationGenerator>true</_CMakeMultiConfigurationGenerator>

@@ -36,9 +36,9 @@ Here are a list of MSBuild properties that this SDK consumes:
 - CMakeCompilerToolchain
   - The compiler to use for the build. Defaults to MSVC on Windows and Clang on non-Windows.
 - CMakeCompilerMajorVersion (optional)
-  - The major version of the compiler to use. Ignored on VS generators.
+  - The major version of the compiler to use. Ignored on the MSVC toolchain.
 - CMakeCompilerMinorVersion (optional)
-  - The minor version of the compiler to use. Ignored on VS generators.
+  - The minor version of the compiler to use. Ignored on the MSVC toolchain.
 - Configuration
   - The configuration for which to generate and build the CMake project.
 - Platform
