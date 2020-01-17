@@ -53,6 +53,11 @@
     <BuildRidSpecificPacks>true</BuildRidSpecificPacks>
   </PropertyGroup>
 
+  <PropertyGroup Condition="$(MSBuildProjectName.EndsWith('.Crossgen'))">
+    <FrameworkPackType>crossgen</FrameworkPackType>
+    <BuildRidSpecificPacks>true</BuildRidSpecificPacks>
+  </PropertyGroup>
+
   <PropertyGroup Condition="'$(BuildRidSpecificPacks)' == 'true'">
     <!-- RID-specific packs don't have a lineup package. -->
     <BuildLineupPackage>false</BuildLineupPackage>
