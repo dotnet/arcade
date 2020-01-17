@@ -11,7 +11,7 @@
     <CommandLineParserVersion>2.2.1</CommandLineParserVersion>
     <CredentialManagementVersion>1.0.2</CredentialManagementVersion>
     <MicrosoftCciVersion>4.0.0-rc3-24214-00</MicrosoftCciVersion>
-    <HandlebarsNetVersion>1.9.5</HandlebarsNetVersion>
+    <HandlebarsNetVersion>1.10.1</HandlebarsNetVersion>
     <LibGit2SharpVersion>0.25.2</LibGit2SharpVersion>
     <log4netVersion>2.0.8</log4netVersion>
     <SystemNetHttpVersion>4.3.3</SystemNetHttpVersion>
