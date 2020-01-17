@@ -37,7 +37,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             string manifestBranch,
             string manifestCommit,
             string[] manifestBuildData,
-            bool isStableBuild)
+            bool isStableBuild,
+            bool validateManifest = false)
         {
             CreateModel(
                 blobArtifacts,
@@ -48,7 +49,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 manifestBranch,
                 manifestCommit,
                 isStableBuild,
-                log)
+                log,
+                validateManifest)
                 .WriteAsXml(assetManifestPath, log);
         }
 
@@ -70,7 +72,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             string repoBranch,
             string repoCommit,
             bool isStableBuild,
-            TaskLoggingHelper log)
+            TaskLoggingHelper log,
+            bool validateManifest)
         {
             if (artifacts == null)
             {
@@ -115,7 +118,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 repoBranch,
                 repoCommit,
                 isStableBuild,
-                log);
+                log,
+                validateManifest);
             return buildModel;
         }
 
@@ -127,10 +131,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             string manifestBranch,
             string manifestCommit,
             bool isStableBuild,
-            TaskLoggingHelper log)
+            TaskLoggingHelper log,
+            bool validateManifest)
         {
             var attributes = MSBuildListSplitter.GetNamedProperties(manifestBuildData);
-            if(!ValidateManifestBuildData(attributes, out List<string> errors))
+            if(validateManifest && !ValidateManifestBuildData(attributes, out List<string> errors))
             {
                 log.LogError("Missing properties in ManifestBuildData:");
                 foreach (var error in errors)
@@ -157,11 +162,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         internal static bool ManifestBuildDataHasLocationProperty(string [] manifestBuildData)
         {
-            return ManifestBuildDataHasLocationProperty(MSBuildListSplitter.GetNamedProperties(manifestBuildData));
-        }
+            IDictionary<string, string> attributes = MSBuildListSplitter.GetNamedProperties(manifestBuildData);
 
-        internal static bool ManifestBuildDataHasLocationProperty(IDictionary<string, string> attributes)
-        {
             return attributes.ContainsKey("Location");
         }
 

@@ -73,7 +73,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     RepoBranch,
                     RepoCommit,
                     IsStableBuild,
-                    Log);
+                    Log,
+                    validateManifest: false);
 
                 buildModel.WriteAsXml(OutputPath, Log);
             }

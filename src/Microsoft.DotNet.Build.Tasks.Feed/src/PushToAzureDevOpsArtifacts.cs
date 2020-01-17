@@ -144,7 +144,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         ManifestBranch,
                         ManifestCommit,
                         ManifestBuildData,
-                        IsStableBuild);
+                        IsStableBuild,
+                        validateManifest: true);
 
                     Log.LogMessage(MessageImportance.High,
                         $"##vso[artifact.upload containerfolder=AssetManifests;artifactname=AssetManifests]{AssetManifestPath}");
