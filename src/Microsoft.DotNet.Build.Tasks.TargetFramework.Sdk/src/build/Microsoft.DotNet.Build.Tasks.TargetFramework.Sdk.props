@@ -1,21 +1,21 @@
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
-<Project>  
+<Project TreatAsLocalProperty="TargetFramework">  
   <PropertyGroup>
     <DotNetBuildTasksTargetFrameworkSdkAssembly Condition="'$(DotNetBuildTasksTargetFrameworkSdkAssembly)' == '' AND '$(MSBuildRuntimeType)' == 'core'">..\tools\netcoreapp2.1\Microsoft.DotNet.Build.Tasks.TargetFramework.Sdk.dll</DotNetBuildTasksTargetFrameworkSdkAssembly>
     <DotNetBuildTasksTargetFrameworkSdkAssembly Condition="'$(DotNetBuildTasksTargetFrameworkSdkAssembly)' == '' AND '$(MSBuildRuntimeType)' != 'core'">..\tools\net472\Microsoft.DotNet.Build.Tasks.TargetFramework.Sdk.dll</DotNetBuildTasksTargetFrameworkSdkAssembly>
-    <TargetFrameworkSuffix>AnyOS</TargetFrameworkSuffix >
+    <OriginalTargetFramework>$(TargetFramework)</OriginalTargetFramework>
   </PropertyGroup>
   
   <PropertyGroup Condition="$(TargetFramework.Contains('-'))">
     <TargetFrameworkSuffix>$(TargetFramework.SubString($([MSBuild]::Add($(TargetFramework.IndexOf('-')), 1))))</TargetFrameworkSuffix >
-    <_TargetFrameworkWithoutProfile>$(TargetFramework.SubString(0, $(TargetFramework.IndexOf('-'))))</_TargetFrameworkWithoutProfile>
+    <TargetFramework>$(TargetFramework.SubString(0, $(TargetFramework.IndexOf('-'))))</TargetFramework>
   </PropertyGroup>
- 
+
   <!-- Split $(TargetFramework) (e.g. net45) into short identifier and short version (e.g. 'net' and '45'). -->
   <PropertyGroup Condition="'$(TargetFramework)' != '' and !$(TargetFramework.Contains(',')) and !$(TargetFramework.Contains('+'))">
-   <_TargetFrameworkWithoutProfile Condition="'$(_TargetFrameworkWithoutProfile)' == ''">$(TargetFramework)</_TargetFrameworkWithoutProfile>
-   <_ShortFrameworkIdentifier>$(_TargetFrameworkWithoutProfile.TrimEnd('.0123456789'))</_ShortFrameworkIdentifier>
-   <_ShortFrameworkVersion>$(_TargetFrameworkWithoutProfile.Substring($(_ShortFrameworkIdentifier.Length)))</_ShortFrameworkVersion>
+   <TargetFramework Condition="'$(TargetFramework)' == ''">$(TargetFramework)</TargetFramework>
+   <_ShortFrameworkIdentifier>$(TargetFramework.TrimEnd('.0123456789'))</_ShortFrameworkIdentifier>
+   <_ShortFrameworkVersion>$(TargetFramework.Substring($(_ShortFrameworkIdentifier.Length)))</_ShortFrameworkVersion>
   </PropertyGroup>
   
   <!-- Map short name to long name. See earlier comment for example of how to work with identifiers that are not recognized here. -->

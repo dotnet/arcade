@@ -5,7 +5,6 @@
   <UsingTask TaskName="AddTargetFrameworksToProjectTask" AssemblyFile="$(DotNetBuildTasksTargetFrameworkSdkAssembly)"/>
   
   <PropertyGroup>
-    <_OriginalTargetFramework>$(TargetFramework)</_OriginalTargetFramework>
     <_OriginalTargetFrameworks>$(TargetFrameworks)</_OriginalTargetFrameworks>
   </PropertyGroup>
   
@@ -69,7 +68,7 @@
       <Output TaskParameter="TargetOutputs" ItemName="_ProjectRefWithTfms"/>
     </MSBuild>
      
-    <ChooseBestP2PTargetFrameworkTask TargetFramework="$(TargetFramework)"
+    <ChooseBestP2PTargetFrameworkTask TargetFramework="$(OriginalTargetFramework)"
                                       ProjectReferencesWithTargetFrameworks="@(_ProjectRefWithTfms)"
                                       RuntimeGraph="$(RuntimeGraph)" >
       <Output TaskParameter="AnnotatedProjectReferencesWithSetTargetFramework" ItemName="_ProjectReferencesWithBestTargetFrameworks" />
