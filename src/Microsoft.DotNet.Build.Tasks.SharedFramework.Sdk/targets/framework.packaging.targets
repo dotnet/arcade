@@ -23,6 +23,16 @@
     </PropertyGroup>
   </Target>
 
+  <Target Name="GetCrossgenPackInstallerProperties"
+          Condition="'$(FrameworkPackType)' == 'crossgen'"
+          BeforeTargets="GetInstallerProperties">
+    <PropertyGroup>
+      <InstallerName>$(ShortFrameworkName)-crossgen-pack</InstallerName>
+      <WixProductMoniker>$(CrossgenPackBrandName)</WixProductMoniker>
+      <VSInsertionShortComponentName>CrossgenPack</VSInsertionShortComponentName>
+    </PropertyGroup>
+  </Target>
+
   <Target Name="GetRuntimePackInstallerProperties"
           Condition="'$(FrameworkPackType)' == 'runtime'"
           BeforeTargets="GetInstallerGenerationFlags">
