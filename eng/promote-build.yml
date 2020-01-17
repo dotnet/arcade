@@ -17,7 +17,7 @@ variables:
   _DotNetArtifactsCategory: .NETCore
 
 stages:
-- template: post-build.yml
+- template: \eng\common\templates\post-build\post-build.yml
   parameters:
     enableSymbolValidation: $(EnableSymbolValidation)
     enableSourceLinkValidation: $(EnableSourceLinkValidation)

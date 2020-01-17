@@ -2,6 +2,7 @@ jobs:
 - job: setupMaestroVars
   displayName: Setup Maestro Vars
   variables:
+    - template: common-variables.yml
     - name: BuildId
       value: $[ coalesce(variables.BARBuildId, 0) ]
     - name: PromoteToChannelId
@@ -9,6 +10,8 @@ jobs:
   pool:
     vmImage: 'windows-2019'
   steps:
+    - checkout: none
+
     - task: DownloadBuildArtifacts@0
       displayName: Download Release Configs
       condition: eq(variables.PromoteToChannelId, 0)
@@ -20,9 +23,64 @@ jobs:
       name: setReleaseVars
       displayName: Set Release Configs Vars
       inputs:
-        filePath: $(Build.SourcesDirectory)/eng/common/post-build/set-release-configs-vars.ps1
-        arguments: -BARBuildId $(BuildId)
-          -PromoteToMaestroChannelId $(PromoteToChannelId)
-          -MaestroApiAccessToken $(MaestroApiAccessToken)
-          -MaestroApiEndPoint $(MaestroApiEndPoint)
-          -MaestroApiVersion $(MaestroApiVersion)
+        targetType: inline
+        script: |
+          try {
+            if ($Env:PromoteToMaestroChannelId -eq 0) {
+              $Content = Get-Content $(Build.StagingDirectory)/ReleaseConfigs/ReleaseConfigs.txt
+
+              $BarId = $Content | Select -Index 0
+
+              $Channels = ""
+              $Content | Select -Index 1 | ForEach-Object { $Channels += "$_ ," }
+              
+              $IsStableBuild = $Content | Select -Index 2
+
+              $AzureDevOpsProject = $Env:System_TeamProject
+              $AzureDevOpsBuildDefinitionId = $Env:System_DefinitionId
+              $AzureDevOpsBuildId = $Env:Build_BuildId
+              $PromoteToMaestroChannelId = 0
+            }
+            else {
+              $apiEndpoint = "${Env:MaestroApiEndPoint}/api/builds/${Env:BARBuildId}?api-version=${Env:MaestroApiVersion}"
+
+              $apiHeaders = New-Object 'System.Collections.Generic.Dictionary[[String],[String]]'
+              $apiHeaders.Add('Accept', 'application/json')
+              $apiHeaders.Add('Authorization',"Bearer ${Env:MAESTRO_API_TOKEN}")
+
+              $buildInfo = try { Invoke-WebRequest -Method Get -Uri $apiEndpoint -Headers $apiHeaders | ConvertFrom-Json } catch { Write-Host "Error: $_" }
+
+              if (!$buildInfo) {
+                Write-Host "Build with BAR ID ${Env:BARBuildId} was not found in BAR!"
+                exit 1
+              }
+
+              $BarId = $Env:BARBuildId
+              $Channels = 'None'
+
+              #TODO: Fix this once this issue is done: https://github.com/dotnet/arcade/issues/3834
+              $IsStableBuild = 'False'
+
+              $AzureDevOpsProject = $buildInfo.azureDevOpsProject
+              $AzureDevOpsBuildDefinitionId = $buildInfo.azureDevOpsBuildDefinitionId
+              $AzureDevOpsBuildId = $buildInfo.azureDevOpsBuildId
+              $PromoteToMaestroChannelId = $Env:PromoteToMaestroChannelId
+            }
+
+            Write-Host "##vso[task.setvariable variable=BARBuildId;isOutput=true]$BarId"
+            Write-Host "##vso[task.setvariable variable=InitialChannels;isOutput=true]$Channels"
+            Write-Host "##vso[task.setvariable variable=IsStableBuild;isOutput=true]$IsStableBuild"
+
+            Write-Host "##vso[task.setvariable variable=AzDOProjectName;isOutput=true]$AzureDevOpsProject"
+            Write-Host "##vso[task.setvariable variable=AzDOPipelineId;isOutput=true]$AzureDevOpsBuildDefinitionId"
+            Write-Host "##vso[task.setvariable variable=AzDOBuildId;isOutput=true]$AzureDevOpsBuildId"
+            Write-Host "##vso[task.setvariable variable=PromoteToMaestroChannelId;isOutput=true]$PromoteToMaestroChannelId"
+          }
+          catch {
+            Write-Host $_
+            Write-Host $_.Exception
+            Write-Host $_.ScriptStackTrace
+            exit 1
+          }
+      env:
+        MAESTRO_API_TOKEN: $(MaestroApiAccessToken)
