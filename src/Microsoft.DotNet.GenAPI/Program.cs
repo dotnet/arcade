@@ -82,7 +82,7 @@ namespace Microsoft.DotNet.GenAPI
                     return 1;
                 }
 
-                string headerText = GetHeaderText(headerFile.Value(), app);
+                string headerText = GetHeaderText(headerFile.Value(), app, writerType.ParsedValue, syntaxWriterType.ParsedValue);
                 bool loopPerAssembly = Directory.Exists(outFilePath.Value());
 
                 if (loopPerAssembly)
@@ -201,13 +201,20 @@ namespace Microsoft.DotNet.GenAPI
             return app.Execute(args);
         }
 
-        private static string GetHeaderText(string headerFile, CommandLineApplication app)
+        private static string GetHeaderText(string headerFile, CommandLineApplication app, WriterType writerType, SyntaxWriterType syntaxWriterType)
         {
             if (string.IsNullOrEmpty(headerFile))
             {
-                // Write default header (culture-invariant, so that the generated file will not be language-dependent)
-                string defaultHeader = String.Format(CultureInfo.InvariantCulture,
-                    DefaultFileHeader, app.Name, app.ShortVersionGetter());
+                string defaultHeader = String.Empty;
+                // This header is for CS source only
+                if ((writerType == WriterType.CSDecl || writerType == WriterType.TypeForwards) &&
+                    syntaxWriterType == SyntaxWriterType.Text)
+                {
+                    // Write default header (culture-invariant, so that the generated file will not be language-dependent)
+                    defaultHeader = String.Format(CultureInfo.InvariantCulture,
+                        DefaultFileHeader, app.Name, app.ShortVersionGetter());
+                }
+
                 return defaultHeader;
             }
 
