@@ -59,8 +59,8 @@
 
     <!-- This filename is chosen so that each build of every project has a uniquie filename.-->
     <PropertyGroup>
-      <_propsFilename>$(TargetName).$(TargetFramework)</_propsFilename>
-      <_propsFilename Condition="'$(TargetName)' == ''">$(MSBuildProjectName).$(TargetFramework)</_propsFilename>
+      <_propsFilename>$(TargetName).$(OriginalTargetFramework)</_propsFilename>
+      <_propsFilename Condition="'$(TargetName)' == ''">$(MSBuildProjectName).$(OriginalTargetFramework)</_propsFilename>
       <_projectDirLength>$(ProjectDir.Length)</_projectDirLength>
     </PropertyGroup>
 
@@ -126,7 +126,7 @@
     </ChooseBestTargetFrameworksTask>
 
     <ItemGroup>
-      <_currentBinPlaceTargetFrameworks Include="@(_bestBinlaceTargetFrameworks)" Condition="'%(Identity)' == '$(TargetFramework)'" />
+      <_currentBinPlaceTargetFrameworks Include="@(_bestBinlaceTargetFrameworks)" Condition="'%(Identity)' == '$(OriginalTargetFramework)'" />
 
       <BinPlaceDir Condition="'$(BinPlaceTest)' == 'true'" Include="@(_currentBinPlaceTargetFrameworks->'%(TestPath)')" />
       <BinPlaceDir Condition="'$(BinPlaceRuntime)' == 'true'" Include="@(_currentBinPlaceTargetFrameworks->'%(RuntimePath)')" />
