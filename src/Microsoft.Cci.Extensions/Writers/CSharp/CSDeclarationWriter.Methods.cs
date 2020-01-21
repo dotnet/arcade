@@ -354,7 +354,7 @@ namespace Microsoft.Cci.Writers.CSharp
                 type.IsStatic)
                 return;
 
-            WriteVisibility(TypeMemberVisibility.Assembly);
+            WriteVisibility(TypeMemberVisibility.Private);
             if (IsBaseConstructorCallUnsafe(type))
             {
                 WriteKeyword("unsafe");
