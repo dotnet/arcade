@@ -46,3 +46,19 @@ jobs:
           git push azdo-mirror $(BranchToMirror) $(ExtraPushArgs)
         displayName: Push changes to Azure DevOps repo
         workingDirectory: $(WorkingDirectoryName)
+
+      - task: PowerShell@1
+        displayName: Broadcast target, branch, commit in metadata
+        continueOnError: true
+        condition: always()
+        inputs:
+          scriptType: inlineScript
+          arguments: '$(GithubRepo) $(BranchToMirror)'
+          inlineScript: |
+            param([string]$repo, [string]$branch)
+
+            $commit = (git rev-parse HEAD).Substring(0, 7)
+            $message = "$repo/$branch@$commit"
+
+            Write-Host "##vso[build.updatebuildnumber]$message"
+            Write-Host "##vso[build.addbuildtag]$message"
