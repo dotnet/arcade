@@ -54,6 +54,7 @@ jobs:
         inputs:
           scriptType: inlineScript
           arguments: '$(GithubRepo) $(BranchToMirror)'
+          workingDirectory: $(WorkingDirectoryName)
           inlineScript: |
             param([string]$repo, [string]$branch)
 
