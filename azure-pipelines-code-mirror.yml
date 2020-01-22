@@ -59,7 +59,7 @@ jobs:
             param([string]$repo, [string]$branch)
 
             $commit = (git rev-parse HEAD).Substring(0, 7)
-            $message = "$repo $branch $commit".Replace('/', ' ')
+            $target = "$repo $branch".Replace('/', ' ')
 
-            Write-Host "##vso[build.updatebuildnumber]$message"
-            Write-Host "##vso[build.addbuildtag]$message"
+            Write-Host "##vso[build.updatebuildnumber]$target $commit"
+            Write-Host "##vso[build.addbuildtag]$target"
