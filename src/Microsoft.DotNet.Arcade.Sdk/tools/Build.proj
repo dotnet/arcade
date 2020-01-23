@@ -123,7 +123,7 @@
       <_RestoreToolsProps Include="ExcludeRestorePackageImports=true"/>
       <_RestoreToolsProps Include="_NuGetRestoreTargets=$(_NuGetRestoreTargets)"/>
       
-      <!-- Controls whether Tasks.Feed will be restored or not. -->
+      <!-- Used in the SDK (Tools.proj) to control whether Tasks.Feed will be restored or not. -->
       <_RestoreToolsProps Include="Publish=$(Publish)"/>
     </ItemGroup>
 
@@ -139,6 +139,9 @@
     <ItemGroup>
       <_PublishProps Include="@(_CommonProps)"/>
       <_PublishProps Include="DotNetOutputBlobFeedDir=$(_DotNetOutputBlobFeedDir)" Condition="'$(_DotNetOutputBlobFeedDir)' != ''" />
+
+      <!-- Used in a few places in the stack to decide if publishing was enabled or not. -->
+      <_PublishProps Include="Publish=$(Publish)"/>
     </ItemGroup>
 
     <ItemGroup>
