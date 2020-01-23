@@ -1,3 +1,11 @@
+# Currently AzDO does not have native support for communicating variables across stages.
+# This file implements a workaround to solve that: it reads artifacts containing variable 
+# values and then create variables with those values. The job needs to be executed in 
+# every stage.
+#
+# The reason we keep the scripts in this job inlined is to prevent checkout of repositories
+# just to download a single file.
+
 jobs:
 - job: setupMaestroVars
   displayName: Setup Maestro Vars
