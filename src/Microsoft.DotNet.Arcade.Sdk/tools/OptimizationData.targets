@@ -100,10 +100,11 @@
       <_IbcFileByAssemblyName Include="@(_IbcFile->'%(AssemblyFileName)')"
                               IbcFiles="%(_IbcFile.Identity)"
                               PreviousAssemblyPath="%(_IbcFile.PreviousAssemblyDir)\%(_IbcFile.AssemblyFileName)"
-                              PreviousAssemblyCopyPath="$(ArtifactsTmpDir)OptimizedAssemblies\$([System.Guid]::NewGuid())"
+                              UniqueId="$([System.Guid]::NewGuid())"
+                              PreviousAssemblyCopyPath="$(ArtifactsTmpDir)OptimizedAssemblies\%(_IbcFileByAssemblyName.UniqueId)"
                               OptimizeAssemblyPath="%(_IbcFile.OptimizeAssemblyPath)"
                               TargetFramework="%(_IbcFile.TargetFramework)"
-                              XmlOutputPath="$(_IbcMergeXmlOutputDir)\%(_IbcFile.AssemblyFileName).$([System.Guid]::NewGuid()).temp.ibc.xml" />
+                              XmlOutputPath="$(_IbcMergeXmlOutputDir)\%(_IbcFile.AssemblyFileName).%(_IbcFileByAssemblyName.UniqueId).temp.ibc.xml" />
     </ItemGroup>
 
     <Error Text="No optimization data found for assemblies: @(_AssemblyWithoutRawIbcData, ', ')"
@@ -138,6 +139,10 @@
         <UnsignFile>%(_AssemblyWithRawIbcData.OptimizeAssemblyPath)</UnsignFile>
         <XmlOutputPath Condition="'$(EnableNgenOptimizationLogDetails)' == 'true'">%(_AssemblyWithRawIbcData.XmlOutputPath)</XmlOutputPath>
         <TargetFramework>%(_AssemblyWithRawIbcData.TargetFramework)</TargetFramework>
+
+        <!-- Files to copy to log dir if IbcMerge fails -->
+        <LogFilesOnFailure>%(_AssemblyWithRawIbcData.OptimizeAssemblyPath);%(_AssemblyWithRawIbcData.PreviousAssemblyCopyPath)</LogFilesOnFailure>
+        <LogFilesOnFailureDir>$(ArtifactsLogNgenDir)%(_AssemblyWithRawIbcData.UniqueId)\</LogFilesOnFailureDir>
       </_IbcMergeInvocation>
 
       <_IbcMergeInvocation>
@@ -166,14 +171,24 @@
           DestinationFiles="%(_IbcMergeInvocation.CopyFilesDestination)" 
           Condition="'%(_IbcMergeInvocation.CopyFilesSource)' != ''" />
 
-    <Exec Command='"$(DotNetTool)" exec "$(_IbcMergePath)" %(_IbcMergeInvocation.IbcMergeArgs)' ConsoleToMSBuild="true" Condition="'$(_RunIbcMerge)' == 'true'">
+    <Exec Command='"$(DotNetTool)" exec "$(_IbcMergePath)" %(_IbcMergeInvocation.IbcMergeArgs)' ConsoleToMSBuild="true" Condition="'$(_RunIbcMerge)' == 'true'" IgnoreExitCode="true">
       <Output TaskParameter="ConsoleOutput" PropertyName="_IbcMergeOutput" />
+      <Output TaskParameter="ExitCode" PropertyName="_IbcMergeErrorCode" />
     </Exec>
 
     <Message Text="$(_IbcMergeOutput)" Importance="low" />
 
+    <!-- Copy IBCMerge input assembly to logs if the tool fails, to allow investigation -->
+    <Copy SourceFiles="%(_IbcMergeInvocation.LogFilesOnFailure)"
+          DestinationFolder="%(_IbcMergeInvocation.LogFilesOnFailureDir)"
+          Condition="'$(_IbcMergeErrorCode)' != '0' and '%(_IbcMergeInvocation.LogFilesOnFailure)' != ''" />
+
+    <Error Text="IBCMerge failed with exit code $(_IbcMergeErrorCode)."
+           Condition="'$(_IbcMergeErrorCode)' != '0'" />
+
     <!-- Remove Authenticode signing record if present. -->
     <Microsoft.DotNet.Arcade.Sdk.Unsign FilePath="%(_IbcMergeInvocation.UnsignFile)" Condition="'%(_IbcMergeInvocation.UnsignFile)' != ''" />
+
     <Microsoft.DotNet.Arcade.Sdk.ExtractNgenMethodList
       IbcXmlFilePath="%(_IbcMergeInvocation.XmlOutputPath)" 
       AssemblyFilePath="%(_IbcMergeInvocation.UnsignFile)"
