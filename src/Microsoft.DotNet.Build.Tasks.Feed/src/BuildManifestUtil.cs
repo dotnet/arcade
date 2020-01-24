@@ -119,7 +119,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             TaskLoggingHelper log)
         {
             var attributes = MSBuildListSplitter.GetNamedProperties(manifestBuildData);
-            if(!ManifestBuildDataHasLocationProperty(attributes))
+            if(!ManifestBuildDataHasLocationInformation(attributes))
             {
                 log.LogError($"Missing 'location' property from ManifestBuildData");
             }
@@ -139,14 +139,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             return buildModel;
         }
 
-        internal static bool ManifestBuildDataHasLocationProperty(string [] manifestBuildData)
+        internal static bool ManifestBuildDataHasLocationInformation(string [] manifestBuildData)
         {
-            return ManifestBuildDataHasLocationProperty(MSBuildListSplitter.GetNamedProperties(manifestBuildData));
+            return ManifestBuildDataHasLocationInformation(MSBuildListSplitter.GetNamedProperties(manifestBuildData));
         }
 
-        internal static bool ManifestBuildDataHasLocationProperty(IDictionary<string, string> attributes)
+        internal static bool ManifestBuildDataHasLocationInformation(IDictionary<string, string> attributes)
         {
-            return attributes.ContainsKey("Location");
+            return attributes.ContainsKey("Location") || attributes.ContainsKey("InitialAssetsLocation");
         }
 
         public static BuildModel ManifestFileToModel(string assetManifestPath, TaskLoggingHelper log)
