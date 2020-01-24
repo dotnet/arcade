@@ -9,10 +9,6 @@
       EnableNgenOptimizationLogDetails   Set to true to enable NGEN method logging output
       ApplyNgenOptimization              Set to 'partial' or 'full' in a project to embed partial/full NGEN optimization data to the built binary.
 
-    Obsolete (https://github.com/dotnet/arcade/issues/2092):
-      EnablePartialNgenOptimization      Set to true to enable Partial NGEN optimization data embedding.
-      ApplyPartialNgenOptimization       Set to true in a project to apply Partial NGEN optimization data to the built binary.
-
     Items:  
       OptimizeAssembly                   Set of assemblies to apply Partial NGEN optimization data to.
   -->
@@ -24,12 +20,9 @@
   <PropertyGroup>
     <PostCompileBinaryModificationSentinelFile>$(IntermediateOutputPath)$(TargetFileName).pcbm</PostCompileBinaryModificationSentinelFile>
 
-    <!-- TODO: remove (https://github.com/dotnet/arcade/issues/2092) -->
-    <EnablePartialNgenOptimization Condition="'$(EnablePartialNgenOptimization)' == '' and '$(Configuration)' == 'Release' and '$(OfficialBuild)' == 'true'">true</EnablePartialNgenOptimization>
-
-    <EnableNgenOptimization Condition="'$(EnableNgenOptimization)' == ''">$(EnablePartialNgenOptimization)</EnableNgenOptimization>
+    <EnableNgenOptimization Condition="'$(EnableNgenOptimization)' == '' and '$(Configuration)' == 'Release' and '$(OfficialBuild)' == 'true'">true</EnableNgenOptimization>
     <EnableNgenOptimizationLogDetails Condition="'$(EnableNgenOptimizationLogDetails)' == ''">$(UsingToolVisualStudioIbcTraining)</EnableNgenOptimizationLogDetails>
-    <ApplyNgenOptimization Condition="'$(ApplyPartialNgenOptimization)' == 'true'">partial</ApplyNgenOptimization>
+
     <_IbcMergeXmlOutputDir>$(ArtifactsTmpDir)ibcxml</_IbcMergeXmlOutputDir>
   </PropertyGroup>
 
