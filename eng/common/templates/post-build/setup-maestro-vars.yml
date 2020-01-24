@@ -50,16 +50,24 @@ jobs:
               $PromoteToMaestroChannelId = 0
             }
             else {
-              $apiEndpoint = "${Env:MaestroApiEndPoint}/api/builds/${Env:BARBuildId}?api-version=${Env:MaestroApiVersion}"
+              $buildApiEndpoint = "${Env:MaestroApiEndPoint}/api/builds/${Env:BARBuildId}?api-version=${Env:MaestroApiVersion}"
+              $channelApiEndpoint = "${Env:MaestroApiEndPoint}/api/channels/${Env:PromoteToMaestroChannelId}?api-version=${Env:MaestroApiVersion}"
 
               $apiHeaders = New-Object 'System.Collections.Generic.Dictionary[[String],[String]]'
               $apiHeaders.Add('Accept', 'application/json')
               $apiHeaders.Add('Authorization',"Bearer ${Env:MAESTRO_API_TOKEN}")
 
-              $buildInfo = try { Invoke-WebRequest -Method Get -Uri $apiEndpoint -Headers $apiHeaders | ConvertFrom-Json } catch { Write-Host "Error: $_" }
+              $buildInfo = try { Invoke-WebRequest -Method Get -Uri $buildApiEndpoint -Headers $apiHeaders | ConvertFrom-Json } catch { Write-Host "Error: $_" }
 
               if (!$buildInfo) {
                 Write-Host "Build with BAR ID ${Env:BARBuildId} was not found in BAR!"
+                exit 1
+              }
+
+              $channelInfo = try { Invoke-WebRequest -Method Get -Uri $channelApiEndpoint -Headers $apiHeaders | ConvertFrom-Json } catch { Write-Host "Error: $_" }
+
+              if (!$channelInfo) {
+                Write-Host "Channel with ID ${Env:PromoteToMaestroChannelId} was not found in BAR. Aborting."
                 exit 1
               }
 
