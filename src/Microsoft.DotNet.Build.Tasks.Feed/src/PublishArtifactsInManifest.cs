@@ -413,11 +413,16 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             {
                                 Log.LogError($"Package '{package.Id}' has invalid version '{package.Version}'");
                             }
+                            
                             // We want to avoid pushing non-final bits with final version numbers to feeds that are in general
                             // use by the public. This is for technical (can't overwrite the original packages) reasons as well as 
                             // to avoid confusion. Because .NET core generally brands its "final" bits without prerelease version
                             // suffixes (e.g. 3.0.0-preview1), test to see whether a prerelease suffix exists.
-                            else if (!version.IsPrerelease)
+                            //
+                            // Some repos have packages that don't include a pre-release label but are still preview packages 
+                            // (e.g., 1.0.20074.5). For that reason we dropped the check using the `version.PreRelease` flag 
+                            // and switched to strictly comparing whether the version contains only Major.Minor.Patch numbers.
+                            else if (package.Version.Equals($"{version.Major}.{version.Minor}.{version.Patch}"))
                             {
                                 Log.LogError($"Package '{package.Id}' has stable version '{package.Version}' but is targeted at a non-isolated feed '{feedConfig.TargetURL}'");
                             }
