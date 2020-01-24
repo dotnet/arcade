@@ -71,6 +71,28 @@ jobs:
                 exit 1
               }
 
+              $azureDevOpsBuildNumber = $buildInfo.azureDevOpsBuildNumber
+              $channelName = $channelInfo.name
+              $azureDevOpsRepository = "Unknown"
+              $lastIndexOfSlash = $buildInfo.azureDevOpsRepository.LastIndexOf('/')
+
+              if ($lastIndexOfSlash -ne -1) {
+                $azureDevOpsRepository = $buildInfo.azureDevOpsRepository.Substring($lastIndexOfSlash + 1)
+
+                # Invalid chars in Azdo build number: '"', '/', ':', '<', '>', '\', '|', '?', '@', and '*'
+                $azureDevOpsRepository = $azureDevOpsRepository -replace '["/:<>\\|?@*"]', '_'
+              }
+
+              $buildNumberName = "Promoting $azureDevOpsRepository build $azureDevOpsBuildNumber to channel ${channelName}#"
+
+              # Maximum buildnumber length is 255 chars
+              if ($buildNumberName.Length -GT 255) {
+                $buildNumberName = $buildNumberName.Substring(0, 255)
+              }
+
+              Write-Host "##vso[build.updatebuildnumber]$buildNumberName"
+              Write-Host "##vso[build.addbuildtag]$channelName"
+
               $BarId = $Env:BARBuildId
               $Channels = 'None'
 
