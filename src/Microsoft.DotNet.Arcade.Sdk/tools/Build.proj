@@ -11,6 +11,9 @@
 
     DotNetBuildFromSource           Building the entire stack from source with no external dependencies.
     DotNetOutputBlobFeedDir         Directory to publish Source Build assets to (packages, symbol packages, installers, etc.).
+    DotNetSymbolServerTokenMsdl     Personal access token for MSDL symbol server. Available from variable group DotNet-Symbol-Publish.	
+    DotNetSymbolServerTokenSymWeb   Personal access token for SymWeb symbol server. Available from variable group DotNet-Symbol-Publish.	
+    DotNetSymbolExpirationInDays    Symbol expiration time in days (defaults to 10 years).
     DotNetSignType                  Specifies the signing type: 'real' (default), 'test'.
     DotNetRuntimeSourceFeed         Storage account to lookup for the .Net runtime files
     DotNetRuntimeSourceFeedKey      In case the storage account to fetch the .Net runtime files are private this should contain a SAS token.
@@ -81,6 +84,9 @@
       <!-- IsRunningFromVisualStudio may be true even when running msbuild.exe from command line. This generally means that MSBUild is Visual Studio installation and therefore we need to find NuGet.targets in a different location.  -->
       <_NuGetRestoreTargets>$(MSBuildToolsPath)\NuGet.targets</_NuGetRestoreTargets>
       <_NuGetRestoreTargets Condition="'$([MSBuild]::IsRunningFromVisualStudio())' == 'true'">$(MSBuildToolsPath32)\..\..\..\Common7\IDE\CommonExtensions\Microsoft\NuGet\NuGet.targets</_NuGetRestoreTargets>
+
+      <PublishToSymbolServer Condition="'$(PublishToSymbolServer)' == ''">false</PublishToSymbolServer>
+      <PublishToSymbolServer Condition="'$(DotNetPublishBlobFeedUrl)' == '' and '$(UsingToolSymbolUploader)' == 'true' and '$(ContinuousIntegrationBuild)' == 'true' and '$(Publish)' == 'true'">true</PublishToSymbolServer>
     </PropertyGroup>
 
     <ItemGroup>
@@ -123,8 +129,11 @@
       <_RestoreToolsProps Include="ExcludeRestorePackageImports=true"/>
       <_RestoreToolsProps Include="_NuGetRestoreTargets=$(_NuGetRestoreTargets)"/>
       
-      <!-- Used in the SDK (Tools.proj) to control whether Tasks.Feed will be restored or not. -->
+      <!-- Used in the SDK (Tools.proj) to control whether Build.Tasks.Feed will be restored or not. -->
       <_RestoreToolsProps Include="Publish=$(Publish)"/>
+
+      <!-- Used in the SDK (Tools.proj) to control whether SymbolUploader.Build.Task will be restored or not. -->
+      <_RestoreToolsProps Include="PublishToSymbolServer=$(PublishToSymbolServer)"/>
     </ItemGroup>
 
     <!--
@@ -142,6 +151,9 @@
 
       <!-- Used in a few places in the stack to decide if publishing was enabled or not. -->
       <_PublishProps Include="Publish=$(Publish)"/>
+
+      <!-- Used in the SDK (Publish.proj) to control whether in-build symbol publishing should be performed. -->
+      <_PublishProps Include="PublishToSymbolServer=$(PublishToSymbolServer)"/>
     </ItemGroup>
 
     <ItemGroup>
