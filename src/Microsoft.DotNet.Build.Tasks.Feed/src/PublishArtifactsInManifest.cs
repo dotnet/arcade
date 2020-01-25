@@ -179,13 +179,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     return false;
                 }
 
-                CheckForStableAssets();
-
-                if (Log.HasLoggedErrors)
-                {
-                    return false;
-                }
-
                 await HandlePackagePublishingAsync(client, buildInformation);
 
                 await HandleBlobPublishingAsync(client, buildInformation);
@@ -373,63 +366,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             }
 
             return isPublic;
-        }
-
-        /// <summary>
-        ///  Run a check to verify that stable assets are not published to
-        ///  locations they should not be published.
-        ///  
-        /// For now, this is only done for packages since feeds are
-        /// immutable.
-        /// </summary>
-        public void CheckForStableAssets()
-        {
-            if (SkipSafetyChecks)
-            {
-                return;
-            }
-
-            foreach (var packagesPerCategory in PackagesByCategory)
-            {
-                var category = packagesPerCategory.Key;
-                var packages = packagesPerCategory.Value;
-
-                if (FeedConfigs.TryGetValue(category, out List<FeedConfig> feedConfigsForCategory))
-                {
-                    foreach (var feedConfig in feedConfigsForCategory)
-                    {
-                        // Look at the version numbers. If any of the packages here are stable and about to be published to a
-                        // non-isolated feed, then issue an error. Isolated feeds may recieve all packages.
-                        if (feedConfig.Isolated)
-                        {
-                            continue;
-                        }
-
-                        List<PackageArtifactModel> filteredPackages = FilterPackages(packages, feedConfig);
-
-                        foreach (var package in filteredPackages)
-                        {
-                            if (!NuGetVersion.TryParse(package.Version, out NuGetVersion version))
-                            {
-                                Log.LogError($"Package '{package.Id}' has invalid version '{package.Version}'");
-                            }
-                            
-                            // We want to avoid pushing non-final bits with final version numbers to feeds that are in general
-                            // use by the public. This is for technical (can't overwrite the original packages) reasons as well as 
-                            // to avoid confusion. Because .NET core generally brands its "final" bits without prerelease version
-                            // suffixes (e.g. 3.0.0-preview1), test to see whether a prerelease suffix exists.
-                            //
-                            // Some repos have packages that don't include a pre-release label but are still preview packages 
-                            // (e.g., 1.0.20074.5). For that reason we dropped the check using the `version.PreRelease` flag 
-                            // and switched to strictly comparing whether the version contains only Major.Minor.Patch numbers.
-                            else if (package.Version.Equals($"{version.Major}.{version.Minor}.{version.Patch}"))
-                            {
-                                Log.LogError($"Package '{package.Id}' has stable version '{package.Version}' but is targeted at a non-isolated feed '{feedConfig.TargetURL}'");
-                            }
-                        }
-                    }
-                }
-            }
         }
 
         private async Task HandlePackagePublishingAsync(IMaestroApi client, Maestro.Client.Models.Build buildInformation)
