@@ -1,11 +1,3 @@
-# Currently AzDO does not have native support for communicating variables across stages.
-# This file implements a workaround to solve that: it reads artifacts containing variable 
-# values and then create variables with those values. The job needs to be executed in 
-# every stage.
-#
-# The reason we keep the scripts in this job inlined is to prevent checkout of repositories
-# just to download a single file.
-
 jobs:
 - job: setupMaestroVars
   displayName: Setup Maestro Vars
@@ -34,7 +26,7 @@ jobs:
         targetType: inline
         script: |
           try {
-            if ($Env:PromoteToMaestroChannelId -eq 0) {
+            if ($Env:PromoteToChannelId -eq 0) {
               $Content = Get-Content $(Build.StagingDirectory)/ReleaseConfigs/ReleaseConfigs.txt
 
               $BarId = $Content | Select -Index 0
@@ -51,48 +43,13 @@ jobs:
             }
             else {
               $buildApiEndpoint = "${Env:MaestroApiEndPoint}/api/builds/${Env:BARBuildId}?api-version=${Env:MaestroApiVersion}"
-              $channelApiEndpoint = "${Env:MaestroApiEndPoint}/api/channels/${Env:PromoteToMaestroChannelId}?api-version=${Env:MaestroApiVersion}"
 
               $apiHeaders = New-Object 'System.Collections.Generic.Dictionary[[String],[String]]'
               $apiHeaders.Add('Accept', 'application/json')
               $apiHeaders.Add('Authorization',"Bearer ${Env:MAESTRO_API_TOKEN}")
 
               $buildInfo = try { Invoke-WebRequest -Method Get -Uri $buildApiEndpoint -Headers $apiHeaders | ConvertFrom-Json } catch { Write-Host "Error: $_" }
-
-              if (!$buildInfo) {
-                Write-Host "Build with BAR ID ${Env:BARBuildId} was not found in BAR!"
-                exit 1
-              }
-
-              $channelInfo = try { Invoke-WebRequest -Method Get -Uri $channelApiEndpoint -Headers $apiHeaders | ConvertFrom-Json } catch { Write-Host "Error: $_" }
-
-              if (!$channelInfo) {
-                Write-Host "Channel with ID ${Env:PromoteToMaestroChannelId} was not found in BAR. Aborting."
-                exit 1
-              }
-
-              $azureDevOpsBuildNumber = $buildInfo.azureDevOpsBuildNumber
-              $channelName = $channelInfo.name
-              $azureDevOpsRepository = "Unknown"
-              $lastIndexOfSlash = $buildInfo.azureDevOpsRepository.LastIndexOf('/')
-
-              if ($lastIndexOfSlash -ne -1) {
-                $azureDevOpsRepository = $buildInfo.azureDevOpsRepository.Substring($lastIndexOfSlash + 1)
-
-                # Invalid chars in Azdo build number: '"', '/', ':', '<', '>', '\', '|', '?', '@', and '*'
-                $azureDevOpsRepository = $azureDevOpsRepository -replace '["/:<>\\|?@*"]', '_'
-              }
-
-              $buildNumberName = "Promoting $azureDevOpsRepository build $azureDevOpsBuildNumber to channel ${channelName}#"
-
-              # Maximum buildnumber length is 255 chars
-              if ($buildNumberName.Length -GT 255) {
-                $buildNumberName = $buildNumberName.Substring(0, 255)
-              }
-
-              Write-Host "##vso[build.updatebuildnumber]$buildNumberName"
-              Write-Host "##vso[build.addbuildtag]$channelName"
-
+             
               $BarId = $Env:BARBuildId
               $Channels = 'None'
 
