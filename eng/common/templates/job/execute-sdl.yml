@@ -1,4 +1,5 @@
 parameters:
+  enable: 'false'                                             # Whether the SDL validation job should execute or not
   overrideParameters: ''                                       # Optional: to override values for parameters.
   additionalParameters: ''                                     # Optional: parameters that need user specific values eg: '-SourceToolsList @("abc","def") -ArtifactToolsList @("ghi","jkl")'
   # There is some sort of bug (has been reported) in Azure DevOps where if this parameter is named
@@ -16,6 +17,7 @@ jobs:
 - job: Run_SDL
   dependsOn: ${{ parameters.dependsOn }}
   displayName: Run SDL tool
+  condition: eq( ${{ parameters.enable }}, 'true')
   variables:
     - group: DotNet-VSTS-Bot
     - name: AzDOProjectName

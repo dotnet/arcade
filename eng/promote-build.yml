@@ -89,16 +89,16 @@ stages:
 
 - template: \eng\common\templates\post-build\post-build.yml
   parameters:
-    enableSymbolValidation: $(EnableSymbolValidation)
-    enableSourceLinkValidation: $(EnableSourceLinkValidation)
-    enableNugetValidation: $(EnableNugetValidation)
-    enableSigningValidation: $(EnableSigningValidation)
+    enableSymbolValidation: variables['EnableSymbolValidation']
+    enableSourceLinkValidation: variables['EnableSourceLinkValidation']
+    enableNugetValidation: variables['EnableNugetValidation']
+    enableSigningValidation: variables['EnableSigningValidation']
     
     validateDependsOn:
       - prepare_promotion
     
     SDLValidationParameters:
-      enable: $(EnableSDLValidation)
+      enable: variables['EnableSDLValidation']
       continueOnError: $(SDLValidationContinueOnError)
       params: $(SDLValidationCustomParams)
     
