@@ -3,7 +3,6 @@
 #
 #   - BARBuildId                        ; Maestro++/BAR ID of the build to be promoted
 #   - PromoteToMaestroChannelId         ; To which Maestro++ the build should be promoted to
-#   - EnableSymbolValidation            ; Whether symbol validation should be performed
 #   - EnableSourceLinkValidation        ; Whether source link validation should be performed
 #   - enableNugetValidation             ; Whether NuGet metadata validation should be performed
 #   - EnableSigningValidation           ; Whether signing validation should be performed
@@ -89,7 +88,6 @@ stages:
 
 - template: \eng\common\templates\post-build\post-build.yml
   parameters:
-    enableSymbolValidation: variables['EnableSymbolValidation']
     enableSourceLinkValidation: variables['EnableSourceLinkValidation']
     enableNugetValidation: variables['EnableNugetValidation']
     enableSigningValidation: variables['EnableSigningValidation']
