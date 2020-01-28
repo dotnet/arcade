@@ -36,7 +36,7 @@ namespace {{pascalCaseNs Namespace}}
     public partial class {{pascalCase Name}}Options : ClientOptions
     {
         public {{pascalCase Name}}Options()
-            : this(new Uri("https://helix.dot.net"))
+            : this(new Uri("{{BaseUrl}}"))
         {
         }
 
@@ -46,7 +46,7 @@ namespace {{pascalCaseNs Namespace}}
         }
 
         public {{pascalCase Name}}Options(TokenCredential credentials)
-            : this(new Uri("https://helix.dot.net"), credentials)
+            : this(new Uri("{{BaseUrl}}"), credentials)
         {
         }
 
