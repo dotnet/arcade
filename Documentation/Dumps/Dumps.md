@@ -12,8 +12,6 @@ To retrieve the dump files:
 
 ![Azure DevOps Attachments](DumpsAttachments.png)
 
-3. Click on the `Attachments` tab (not `Attachments*`) to see the UploadFileResults.html. Click on that file to download it. 
+3. Click on the `Attachments` tab (not `Attachments*`) to see the UploadFileResults.txt. Click on that file to open the preview.
 
-4. Open the UploadFileResults.html file. There, you will find a list of files that link back to the file that was uploaded to Azure Storage. From there, you can download the dump files or log files or other files that were uploaded as a result from the work item. 
-
-![Upload File Links](DumpsUploadFileLinks.png)
+4. You will find a list of files that link back to the file that was uploaded to Azure Storage. From there, you can download the dump files or log files or other files that were uploaded as a result from the work item. 
