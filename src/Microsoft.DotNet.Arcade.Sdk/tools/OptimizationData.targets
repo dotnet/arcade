@@ -176,15 +176,17 @@
       <Output TaskParameter="ExitCode" PropertyName="_IbcMergeErrorCode" />
     </Exec>
 
-    <Message Text="$(_IbcMergeOutput)" Importance="low" />
+    <Message Text="$(_IbcMergeOutput)"
+             Importance="low"
+             Condition="'$(_RunIbcMerge)' == 'true'" />
 
     <!-- Copy IBCMerge input assembly to logs if the tool fails, to allow investigation -->
     <Copy SourceFiles="%(_IbcMergeInvocation.LogFilesOnFailure)"
           DestinationFolder="%(_IbcMergeInvocation.LogFilesOnFailureDir)"
-          Condition="'$(_IbcMergeErrorCode)' != '0' and '%(_IbcMergeInvocation.LogFilesOnFailure)' != ''" />
+          Condition="'$(_RunIbcMerge)' == 'true' and '$(_IbcMergeErrorCode)' != '0' and '%(_IbcMergeInvocation.LogFilesOnFailure)' != ''" />
 
     <Error Text="IBCMerge failed with exit code $(_IbcMergeErrorCode)."
-           Condition="'$(_IbcMergeErrorCode)' != '0'" />
+           Condition="'$(_RunIbcMerge)' == 'true' and '$(_IbcMergeErrorCode)' != '0'" />
 
     <!-- Remove Authenticode signing record if present. -->
     <Microsoft.DotNet.Arcade.Sdk.Unsign FilePath="%(_IbcMergeInvocation.UnsignFile)" Condition="'%(_IbcMergeInvocation.UnsignFile)' != ''" />
