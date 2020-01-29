@@ -10,4 +10,4 @@ steps:
       -ChannelId ${{ parameters.ChannelId }}
       -MaestroApiAccessToken $(MaestroApiAccessToken)
       -MaestroApiEndPoint $(MaestroApiEndPoint)
-      -MaestroApiVersion $(MaestroApiVersion)
+      -MaestroApiVersion $(MaestroApiVersion) 
