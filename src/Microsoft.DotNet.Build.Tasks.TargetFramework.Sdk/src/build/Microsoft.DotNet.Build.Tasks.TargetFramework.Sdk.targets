@@ -3,7 +3,7 @@
   <UsingTask TaskName="ChooseBestP2PTargetFrameworkTask" AssemblyFile="$(DotNetBuildTasksTargetFrameworkSdkAssembly)"/>
   <UsingTask TaskName="ChooseBestTargetFrameworksTask" AssemblyFile="$(DotNetBuildTasksTargetFrameworkSdkAssembly)"/>
   <UsingTask TaskName="AddTargetFrameworksToProjectTask" AssemblyFile="$(DotNetBuildTasksTargetFrameworkSdkAssembly)"/>
-  <UsingTask TaskName="AddRuntimeOSPropertyTask" AssemblyFile="$(DotNetBuildTasksTargetFrameworkSdkAssembly)"/>
+  <UsingTask TaskName="GenerateRuntimeOSPropsFile" AssemblyFile="$(DotNetBuildTasksTargetFrameworkSdkAssembly)"/>
   
   <PropertyGroup>
     <_OriginalTargetFrameworks>$(TargetFrameworks)</_OriginalTargetFrameworks>
@@ -119,7 +119,7 @@
   </Target>
 
   <Target Name="AddRuntimeOSProperty">
-    <AddRuntimeOSPropertyTask RuntimePropsFilePath="$(RuntimePropsFile)" />
+    <GenerateRuntimeOSPropsFile RuntimePropsFilePath="$(RuntimePropsFile)" />
   </Target>
 
 </Project>

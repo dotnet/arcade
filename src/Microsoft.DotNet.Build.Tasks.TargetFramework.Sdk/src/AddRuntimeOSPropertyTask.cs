@@ -7,7 +7,7 @@ using Microsoft.Build.Framework;
 
 namespace Microsoft.DotNet.Build.Tasks.TargetFramework.Sdk
 {
-    public class AddRuntimeOSPropertyTask : BuildTask
+    public class GenerateRuntimeOSPropsFile : BuildTask
     {
         public  const string RuntimeOSProperty = "RuntimeOS";
 
