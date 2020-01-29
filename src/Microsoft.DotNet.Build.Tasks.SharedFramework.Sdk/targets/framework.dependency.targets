@@ -214,7 +214,7 @@
   <Target Name="AddCrossgenToolPackageReferences"
           BeforeTargets="CollectPackageReferences">
     <ItemGroup>
-      <CrossgenToolPackageReference Include="$(MicrosoftNETCoreAppRuntimePackage)" Version="$(MicrosoftNETCoreAppRuntimeVersion)" />
+      <CrossgenToolPackageReference Include="$(MicrosoftNETCoreAppInternalPackage)" Version="$(MicrosoftNETCoreAppInternalVersion)" />
       <CrossgenToolPackageReference Include="$(MicrosoftTargetingPackPrivateWinRTPackage)" Version="$(MicrosoftTargetingPackPrivateWinRTVersion)" />
 
       <!-- This tool is a prebuilt not buildable from source. -->
@@ -240,8 +240,8 @@
   <Target Name="GetCorePackagePaths"
           DependsOnTargets="ResolveReferences">
     <PropertyGroup>
-      <_runtimePackageId>$(MicrosoftNETCoreAppRuntimePackage.ToLowerInvariant()).$(PackageRID)</_runtimePackageId>
-      <_runtimePackageVersion>$(MicrosoftNETCoreAppRuntimeVersion)</_runtimePackageVersion>
+      <_runtimePackageId>runtime.$(PackageRID).$(MicrosoftNETCoreAppPackage.ToLowerInvariant())</_runtimePackageId>
+      <_runtimePackageVersion>$(MicrosoftNETCoreAppInternalVersion)</_runtimePackageVersion>
 
       <_runtimePackageDir>$(NuGetPackageRoot)$(_runtimePackageId)/$(_runtimePackageVersion)/</_runtimePackageDir>
       <_winmdPackageDir>$(NuGetPackageRoot)$(MicrosoftTargetingPackPrivateWinRTPackage.ToLowerInvariant())/$(MicrosoftTargetingPackPrivateWinRTVersion)/</_winmdPackageDir>
