@@ -214,8 +214,7 @@
   <Target Name="AddCrossgenToolPackageReferences"
           BeforeTargets="CollectPackageReferences">
     <ItemGroup>
-      <CrossgenToolPackageReference Include="Microsoft.Private.CoreFx.NETCoreApp" Version="$(MicrosoftPrivateCoreFxNETCoreAppVersion)" />
-      <CrossgenToolPackageReference Include="transport.Microsoft.NETCore.Runtime.CoreCLR" Version="$(MicrosoftNETCoreRuntimeCoreCLRVersion)" />
+      <CrossgenToolPackageReference Include="$(MicrosoftNETCoreAppRuntimePackage)" Version="$(MicrosoftNETCoreAppRuntimeVersion)" />
       <CrossgenToolPackageReference Include="$(MicrosoftTargetingPackPrivateWinRTPackage)" Version="$(MicrosoftTargetingPackPrivateWinRTVersion)" />
 
       <!-- This tool is a prebuilt not buildable from source. -->
@@ -241,12 +240,10 @@
   <Target Name="GetCorePackagePaths"
           DependsOnTargets="ResolveReferences">
     <PropertyGroup>
-      <_runtimePackageId>transport.runtime.$(PackageRID).$(MicrosoftNETCoreRuntimeCoreCLRPackage.ToLowerInvariant())</_runtimePackageId>
-      <_runtimePackageVersion>$(MicrosoftNETCoreRuntimeCoreCLRVersion)</_runtimePackageVersion>
+      <_runtimePackageId>$(MicrosoftNETCoreAppRuntimePackage.ToLowerInvariant()).$(PackageRID)</_runtimePackageId>
+      <_runtimePackageVersion>$(MicrosoftNETCoreAppRuntimeVersion)</_runtimePackageVersion>
 
       <_runtimePackageDir>$(NuGetPackageRoot)$(_runtimePackageId)/$(_runtimePackageVersion)/</_runtimePackageDir>
-      <_jitPackageDir>$(NuGetPackageRoot)transport.runtime.$(PackageRID).microsoft.netcore.jit/$(MicrosoftNETCoreRuntimeCoreCLRVersion)/</_jitPackageDir>
-      <_corefxPackageDir>$(NuGetPackageRoot)runtime.$(PackageRID).$(MicrosoftPrivateCoreFxNETCoreAppPackage.ToLowerInvariant())/$(MicrosoftPrivateCoreFxNETCoreAppVersion)/</_corefxPackageDir>
       <_winmdPackageDir>$(NuGetPackageRoot)$(MicrosoftTargetingPackPrivateWinRTPackage.ToLowerInvariant())/$(MicrosoftTargetingPackPrivateWinRTVersion)/</_winmdPackageDir>
       <_diaSymReaderPackageDir>$(NuGetPackageRoot)microsoft.diasymreader.native/$(MicrosoftDiaSymReaderNativeVersion)/</_diaSymReaderPackageDir>
     </PropertyGroup>
@@ -265,7 +262,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <_requiredProperty Include="_runtimePackageDir;_jitPackageDir;_corefxPackageDir;_winmdPackageDir" />
+      <_requiredProperty Include="_runtimePackageDir;_winmdPackageDir" />
     </ItemGroup>
 
     <Message Text="%(_requiredProperty.Identity): $(%(_requiredProperty.Identity))" />
@@ -279,7 +276,7 @@
       <!-- Find crossgen tool assets in package cache to allow ExcludeAssets=All. -->
       <_runtimeCLR Include="$(_runtimePackageDir)**/$(LibraryFilePrefix)coreclr$(LibraryFileExtension)" />
       <_runtimeCoreLib Include="$(_runtimePackageDir)**/native/System.Private.CoreLib.dll" />
-      <_fxSystemRuntime Include="$(_corefxPackageDir)**/System.Runtime.dll" />
+      <_fxSystemRuntime Include="$(_runtimePackageDir)**/System.Runtime.dll" />
       <_windowsWinMD Include="$(_winmdPackageDir)**/Windows.winmd" />
       <_diaSymReaderAssembly Include="$(_diaSymReaderPackageDir)**\Microsoft.DiaSymReader.Native.*.dll" />
     </ItemGroup>
@@ -294,8 +291,8 @@
     </PropertyGroup>
 
     <PropertyGroup>
-      <_jitPath Condition="'$(_crossDir)' == ''">$(_jitPackageDir)runtimes/$(PackageRID)/native/$(LibraryFilePrefix)clrjit$(LibraryFileExtension)</_jitPath>
-      <_jitPath Condition="'$(_crossDir)' != ''">$(_jitPackageDir)runtimes$(_crossDir)/native/$(LibraryFilePrefix)clrjit$(LibraryFileExtension)</_jitPath>
+      <_jitPath Condition="'$(_crossDir)' == ''">$(_runtimePackageDir)runtimes/$(PackageRID)/native/$(LibraryFilePrefix)clrjit$(LibraryFileExtension)</_jitPath>
+      <_jitPath Condition="'$(_crossDir)' != ''">$(_runtimePackageDir)runtimes$(_crossDir)/native/$(LibraryFilePrefix)clrjit$(LibraryFileExtension)</_jitPath>
     </PropertyGroup>
 
     <PropertyGroup Condition="'@(_fxSystemRuntime)' != ''">
