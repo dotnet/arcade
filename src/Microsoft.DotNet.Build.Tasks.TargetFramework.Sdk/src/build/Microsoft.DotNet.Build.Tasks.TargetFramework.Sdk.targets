@@ -109,12 +109,11 @@
           Returns="$(PackageTargetFrameworks)">
     <ItemGroup>
       <PackageTargetFrameworksList Include="$(TargetFrameworks)" />
-      <ExcludePackageTargetFrameworksList Include="$(ExcludeTargetFrameworksFromPackages)" />
-      <PackageTargetFrameworksFinalList Include="@(PackageTargetFrameworksList)" Exclude="@(ExcludePackageTargetFrameworksList)" />
+      <PackageTargetFrameworksList Remove="@(PackageTargetFrameworksList)" Condition="$([System.String]::Copy('%(Identity)').StartsWith('_'))" />
     </ItemGroup>
 
     <PropertyGroup>
-      <PackageTargetFrameworks>@(PackageTargetFrameworksFinalList)</PackageTargetFrameworks>
+      <PackageTargetFrameworks>@(PackageTargetFrameworksList)</PackageTargetFrameworks>
     </PropertyGroup>
   </Target>
 

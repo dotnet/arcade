@@ -125,6 +125,10 @@
       <Output TaskParameter="BestTargetFrameworks" ItemName="_bestBinlaceTargetFrameworks" />
     </ChooseBestTargetFrameworksTask>
 
+    <PropertyGroup>
+      <OriginalTargetFramework Condition="'$(MSBuildProjectExtension)' == '.proj' and '$(OriginalTargetFramework)' == ''">$(TargetFramework)</OriginalTargetFramework>
+    </PropertyGroup>
+    
     <ItemGroup>
       <_currentBinPlaceTargetFrameworks Include="@(_bestBinlaceTargetFrameworks)" Condition="'%(Identity)' == '$(OriginalTargetFramework)'" />
 
