@@ -214,7 +214,7 @@
   <Target Name="AddCrossgenToolPackageReferences"
           BeforeTargets="CollectPackageReferences">
     <ItemGroup>
-      <CrossgenToolPackageReference Include="$(MicrosoftNETCoreAppInternalPackage)" Version="$(MicrosoftNETCoreAppInternalVersion)" />
+      <CrossgenToolPackageReference Include="$(MicrosoftNETCoreAppRuntimePackage).$(PackageRID)" Version="$(MicrosoftNETCoreAppRuntimewinx64Version)" />
       <CrossgenToolPackageReference Include="$(MicrosoftTargetingPackPrivateWinRTPackage)" Version="$(MicrosoftTargetingPackPrivateWinRTVersion)" />
 
       <!-- This tool is a prebuilt not buildable from source. -->
@@ -240,10 +240,7 @@
   <Target Name="GetCorePackagePaths"
           DependsOnTargets="ResolveReferences">
     <PropertyGroup>
-      <_runtimePackageId>runtime.$(PackageRID).$(MicrosoftNETCoreAppPackage.ToLowerInvariant())</_runtimePackageId>
-      <_runtimePackageVersion>$(MicrosoftNETCoreAppInternalVersion)</_runtimePackageVersion>
-
-      <_runtimePackageDir>$(NuGetPackageRoot)$(_runtimePackageId)/$(_runtimePackageVersion)/</_runtimePackageDir>
+      <_runtimePackageDir>$(NuGetPackageRoot)$(MicrosoftNETCoreAppRuntimePackage).$(PackageRID)/$(MicrosoftNETCoreAppRuntimewinx64Version)/</_runtimePackageDir>
       <_winmdPackageDir>$(NuGetPackageRoot)$(MicrosoftTargetingPackPrivateWinRTPackage.ToLowerInvariant())/$(MicrosoftTargetingPackPrivateWinRTVersion)/</_winmdPackageDir>
       <_diaSymReaderPackageDir>$(NuGetPackageRoot)microsoft.diasymreader.native/$(MicrosoftDiaSymReaderNativeVersion)/</_diaSymReaderPackageDir>
     </PropertyGroup>
