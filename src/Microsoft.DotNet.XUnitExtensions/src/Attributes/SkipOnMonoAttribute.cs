@@ -2,7 +2,7 @@ using System;
 using Xunit;
 using Xunit.Sdk;
 
-namespace Microsoft.DotNet.XUnitExtensions.Attributes
+namespace Xunit
 {
     [TraitDiscoverer("Microsoft.DotNet.XUnitExtensions.SkipOnMonoDiscoverer", "Microsoft.DotNet.XUnitExtensions")]
     [AttributeUsage(AttributeTargets.Assembly | AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
