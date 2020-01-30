@@ -1,0 +1,125 @@
+<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
+<Project>
+  <UsingTask TaskName="ChooseBestP2PTargetFrameworkTask" AssemblyFile="$(DotNetBuildTasksTargetFrameworkSdkAssembly)"/>
+  <UsingTask TaskName="ChooseBestTargetFrameworksTask" AssemblyFile="$(DotNetBuildTasksTargetFrameworkSdkAssembly)"/>
+  <UsingTask TaskName="AddTargetFrameworksToProjectTask" AssemblyFile="$(DotNetBuildTasksTargetFrameworkSdkAssembly)"/>
+  <UsingTask TaskName="GenerateRuntimeOSPropsFile" AssemblyFile="$(DotNetBuildTasksTargetFrameworkSdkAssembly)"/>
+  
+  <PropertyGroup>
+    <_OriginalTargetFrameworks>$(TargetFrameworks)</_OriginalTargetFrameworks>
+  </PropertyGroup>
+  
+  <Target Name="RemovePlaceHolderConfigs"
+          Condition="'$(BuildAllConfigurations)' == 'true' and '$(MSBuildProjectExtension)' != '.pkgproj'"
+          BeforeTargets="DispatchToInnerBuilds">
+    <ItemGroup>
+      <_InnerBuildProjects Remove="@(_InnerBuildProjects)" Condition="$([System.String]::Copy('%(_InnerBuildProjects.AdditionalProperties)').Contains('TargetFramework=_'))" />
+    </ItemGroup>
+  </Target>
+     
+  <Target Name="RunOnlyBestTargetFrameworks"
+          Condition="'$(BuildAllConfigurations)' != 'true' or '$(MSBuildProjectExtension)' == '.pkgproj'" 
+          BeforeTargets="DispatchToInnerBuilds">
+    <ItemGroup>
+      <_InnerBuildProjects Remove="@(_InnerBuildProjects)" />
+    </ItemGroup>
+
+    <ChooseBestTargetFrameworksTask BuildTargetFrameworks="$(BuildTargetFramework)-$(BuildOS);$(AdditionalBuildTargetFrameworks)"
+                                    SupportedTargetFrameworks="$(TargetFrameworks)"
+                                    RuntimeGraph="$(RuntimeGraph)" >
+      <Output TaskParameter="BestTargetFrameworks" ItemName="_BestTargetFramework" />
+    </ChooseBestTargetFrameworksTask>
+
+    <AddTargetFrameworksToProjectTask ProjectName="$(MSBuildProjectFile)"
+                                      BestTargetFrameworks="@(_BestTargetFramework)" >
+      <Output TaskParameter="InnerBuildProjects" ItemName="_InnerBuildProjects" />
+    </AddTargetFrameworksToProjectTask>
+  </Target>
+  
+  <!-- Restore does not take into account TargetFrameworkSuffix, so we remove the it from the TargetFramework before restore.-->
+  <Target Name="StripTargetFrameworkSuffixFromTargetFrameworks"
+          Condition="'$(TargetFrameworks)' != ''"
+          BeforeTargets="CollectPackageReferences">
+    <ItemGroup>
+      <_TargetFrameworks Include="$(TargetFrameworks)" />
+      <_TargetFrameworks Length="$([System.String]::new('%(Identity)').IndexOf('-'))"/>
+      <_TargetFrameworks Condition="'%(Length)' == '-1'" Length="$([System.String]::new('%(Identity)').Length)"/>
+      <_TargetFrameworksWithoutTargetFrameworkSuffix Include="$([System.String]::new('%(_TargetFrameworks.Identity)').Substring(0, '%(_TargetFrameworks.Length)'))" />
+    </ItemGroup>
+    
+    <PropertyGroup>
+      <TargetFrameworks>@(_TargetFrameworksWithoutTargetFrameworkSuffix->Distinct())</TargetFrameworks>
+    </PropertyGroup>
+  </Target>
+
+  <!-- Attaching the TargetFrameworkSuffix after restore for build.-->
+  <Target Name="AttachTargetFrameworkSuffixToTargetFrameworks"
+          AfterTargets="Restore">    
+    <PropertyGroup>
+      <TargetFrameworks>$(_OriginalTargetFrameworks)</TargetFrameworks>
+    </PropertyGroup>
+  </Target>
+
+  <Target Name="ResolveP2PReferences"
+          BeforeTargets="AssignProjectConfiguration">
+    <MSBuild Projects="@(ProjectReference)"
+             Targets="GetTargetFrameworks"
+             ContinueOnError="true"
+             SkipNonexistentTargets="true">
+      <Output TaskParameter="TargetOutputs" ItemName="_ProjectRefWithTfms"/>
+    </MSBuild>
+     
+    <ChooseBestP2PTargetFrameworkTask TargetFramework="$(OriginalTargetFramework)"
+                                      ProjectReferencesWithTargetFrameworks="@(_ProjectRefWithTfms)"
+                                      RuntimeGraph="$(RuntimeGraph)" >
+      <Output TaskParameter="AnnotatedProjectReferencesWithSetTargetFramework" ItemName="_ProjectReferencesWithBestTargetFrameworks" />
+    </ChooseBestP2PTargetFrameworkTask>
+    
+    <ItemGroup>
+      <ProjectReference Remove="@(ProjectReference)" />
+      <ProjectReference Include="@(_ProjectReferencesWithBestTargetFrameworks)" SkipGetTargetFrameworkProperties="true"/>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="ExpandAllPackageTargetFrameworks"
+          BeforeTargets="ExpandProjectReferences"
+          Condition="'$(MSBuildProjectExtension)' == '.pkgproj'">
+    <MSBuild Targets="GetPackageTargetFrameworksList"
+             Projects="@(_NonPkgProjProjectReference)">
+      <Output TaskParameter="TargetOutputs"
+              ItemName="_NonPkgProjProjectReferenceTargetFramework" />
+    </MSBuild>
+    
+    <ItemGroup>
+      <!-- assign TargetFramework as a separate step to prevent batching during the transform which can reorder the list.
+           order or projects matters here since this applies to traversal projects which build projects serially. -->
+      <_NonPkgProjProjectReferenceTargetFrameworkWithAdditionalProperties Include="@(_NonPkgProjProjectReferenceTargetFramework->'%(OriginalItemSpec)')">
+        <AdditionalProperties>TargetFramework=%(_NonPkgProjProjectReferenceTargetFramework.Identity);%(_NonPkgProjProjectReferenceTargetFramework.AdditionalProperties)</AdditionalProperties>
+      </_NonPkgProjProjectReferenceTargetFrameworkWithAdditionalProperties>
+
+    </ItemGroup>
+
+    <ItemGroup>
+      <_NonPkgProjProjectReference Remove="@(_NonPkgProjProjectReference)" />
+      <_NonPkgProjProjectReference Include="@(_NonPkgProjProjectReferenceTargetFrameworkWithAdditionalProperties)" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="GetPackageTargetFrameworksList"
+          Returns="$(PackageTargetFrameworks)">
+    <ItemGroup>
+      <PackageTargetFrameworksList Include="$(TargetFrameworks)" />
+      <ExcludePackageTargetFrameworksList Include="$(ExcludeTargetFrameworksFromPackages)" />
+      <PackageTargetFrameworksFinalList Include="@(PackageTargetFrameworksList)" Exclude="@(ExcludePackageTargetFrameworksList)" />
+    </ItemGroup>
+
+    <PropertyGroup>
+      <PackageTargetFrameworks>@(PackageTargetFrameworksFinalList)</PackageTargetFrameworks>
+    </PropertyGroup>
+  </Target>
+
+  <Target Name="GenerateRuntimeOSPropsFile">
+    <GenerateRuntimeOSPropsFile RuntimePropsFilePath="$(RuntimePropsFile)" />
+  </Target>
+
+</Project>
