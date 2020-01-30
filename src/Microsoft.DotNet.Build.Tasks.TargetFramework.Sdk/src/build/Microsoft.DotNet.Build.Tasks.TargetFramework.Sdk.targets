@@ -118,7 +118,7 @@
     </PropertyGroup>
   </Target>
 
-  <Target Name="AddRuntimeOSProperty">
+  <Target Name="GenerateRuntimeOSPropsFile">
     <GenerateRuntimeOSPropsFile RuntimePropsFilePath="$(RuntimePropsFile)" />
   </Target>
 
