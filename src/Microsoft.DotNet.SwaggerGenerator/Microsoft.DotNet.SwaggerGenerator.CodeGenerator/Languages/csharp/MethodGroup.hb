@@ -99,7 +99,7 @@ namespace {{pascalCaseNs Namespace}}
                             yield break;
                         }                   
                     }
-                    catch (RestApiException) 
+                    catch (RestApiException) when (e.Response.Status == 404)
                     {
                         yield break;
                     }
