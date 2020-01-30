@@ -22,7 +22,7 @@ namespace Microsoft.DotNet.Build.Tasks.TargetFramework.Sdk
             return !Log.HasLoggedErrors;
         }
 
-        private static void CreateRuntimeIdentifier(ProjectRootElement project)
+        private void CreateRuntimeIdentifier(ProjectRootElement project)
         {
             string rid = PlatformAbstractions.RuntimeEnvironment.GetRuntimeIdentifier();
             string[] ridParts = rid.Split('-');
