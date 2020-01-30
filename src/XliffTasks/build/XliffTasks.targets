@@ -63,7 +63,7 @@
           />
 
   <Target Name="EnsureXlfIsUpToDate"
-          Condition="'$(ErrorOnOutOfDateXlf)' == 'true'"
+          Condition="'$(ErrorOnOutOfDateXlf)' == 'true' and '$(DesignTimeBuild)' != 'true' and '$(BuildingProject)' != 'false'"
           DependsOnTargets="_DisallowXlfModification;_UpdateXlf"
           />
 
