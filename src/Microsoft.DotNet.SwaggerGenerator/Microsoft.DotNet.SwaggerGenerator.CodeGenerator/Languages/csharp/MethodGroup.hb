@@ -85,16 +85,25 @@ namespace {{pascalCaseNs Namespace}}
 
                 while (true)
                 {
-                    var _page = await {{Name}}PageAsync(
-                        {{#each FormalParameters}}
-                        {{camelCase Name}},
-                        {{/each}}
-                        cancellationToken
-                    ).ConfigureAwait(false);
-                    if (_page.Values.Count < 1)
+                    Page<{{typeRef ResponseType.BaseType}}> _page = null;
+
+                    try {
+                        _page = await {{Name}}PageAsync(
+                            {{#each FormalParameters}}
+                            {{camelCase Name}},
+                            {{/each}}
+                            cancellationToken
+                        ).ConfigureAwait(false);
+                        if (_page.Values.Count < 1)
+                        {
+                            yield break;
+                        }                   
+                    }
+                    catch (RestApiException) 
                     {
                         yield break;
                     }
+
                     yield return _page;
                     {{camelCase PageParameter.Name}}++;
                 }
