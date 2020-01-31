@@ -91,7 +91,7 @@
         only in the Maestro post-build stages. If DotNetPublishUsingPipelines is NOT set then
         we publish symbols during the build stage.
       -->
-      <PublishToSymbolServer Condition="'$(DotNetPublishUsingPipelines)' != 'true'">true</PublishToSymbolServer>
+      <PublishToSymbolServer>true</PublishToSymbolServer>
       <PublishToSymbolServer Condition="'$(DotNetPublishUsingPipelines)' == 'true'">false</PublishToSymbolServer>
     </PropertyGroup>
 
