@@ -155,12 +155,12 @@ function InitializeDotNetCli([bool]$install, [bool]$createSdkLocationFile) {
   # The following code block is protecting against concurrent access so that this function can
   # be called in parallel.
   if ($createSdkLocationFile) {
-    do { 
+    do {
       $sdkCacheFileTemp = Join-Path $ToolsetDir $([System.IO.Path]::GetRandomFileName())
-    } 
+    }
     until (!(Test-Path $sdkCacheFileTemp))
     Set-Content -Path $sdkCacheFileTemp -Value $dotnetRoot
-  
+
     try {
       Rename-Item -Force -Path $sdkCacheFileTemp 'sdk.txt'
     } catch {
@@ -198,12 +198,12 @@ function InstallDotNetSdk([string] $dotnetRoot, [string] $version, [string] $arc
   InstallDotNet $dotnetRoot $version $architecture
 }
 
-function InstallDotNet([string] $dotnetRoot, 
-  [string] $version, 
-  [string] $architecture = '', 
-  [string] $runtime = '', 
-  [bool] $skipNonVersionedFiles = $false, 
-  [string] $runtimeSourceFeed = '', 
+function InstallDotNet([string] $dotnetRoot,
+  [string] $version,
+  [string] $architecture = '',
+  [string] $runtime = '',
+  [bool] $skipNonVersionedFiles = $false,
+  [string] $runtimeSourceFeed = '',
   [string] $runtimeSourceFeedKey = '') {
 
   $installScript = GetDotNetInstallScript $dotnetRoot
@@ -298,7 +298,7 @@ function InitializeVisualStudioMSBuild([bool]$install, [object]$vsRequirements =
       $vsMajorVersion = $vsMinVersion.Major
       $xcopyMSBuildVersion = "$vsMajorVersion.$($vsMinVersion.Minor).0-alpha"
     }
-    
+
     $vsInstallDir = $null
     if ($xcopyMSBuildVersion.Trim() -ine "none") {
         $vsInstallDir = InitializeXCopyMSBuild $xcopyMSBuildVersion $install
@@ -657,6 +657,10 @@ Write-PipelineSetVariable -Name 'TMP' -Value $TempDir
 
 $env:TEMP=$TempDir
 $env:TMP=$TempDir
+
+# Ensure projects written into $tempDir do not import Directory.Build.* files from the repo root.
+'<Project/>' | Set-Content (Join-Path $TempDir 'Directory.Build.props')
+'<Project/>' | Set-Content (Join-Path $TempDir 'Directory.Build.targets')
 
 # Import custom tools configuration, if present in the repo.
 # Note: Import in global scope so that the script set top-level variables without qualification.
