@@ -85,8 +85,11 @@
       <_NuGetRestoreTargets>$(MSBuildToolsPath)\NuGet.targets</_NuGetRestoreTargets>
       <_NuGetRestoreTargets Condition="'$([MSBuild]::IsRunningFromVisualStudio())' == 'true'">$(MSBuildToolsPath32)\..\..\..\Common7\IDE\CommonExtensions\Microsoft\NuGet\NuGet.targets</_NuGetRestoreTargets>
 
+      <!-- By default publishing is performed via Maestro channels. -->
+      <PublishToBuildAssetRegistry Condition="'$(PublishToBuildAssetRegistry)' == ''">true</PublishToBuildAssetRegistry>
+
+      <PublishToSymbolServer Condition="'$(PublishToSymbolServer)' == '' and '$(PublishToBuildAssetRegistry)' != 'true' and '$(UsingToolSymbolUploader)' == 'true' and '$(ContinuousIntegrationBuild)' == 'true'">true</PublishToSymbolServer>
       <PublishToSymbolServer Condition="'$(PublishToSymbolServer)' == ''">false</PublishToSymbolServer>
-      <PublishToSymbolServer Condition="'$(DotNetPublishBlobFeedUrl)' == '' and '$(UsingToolSymbolUploader)' == 'true' and '$(ContinuousIntegrationBuild)' == 'true' and '$(Publish)' == 'true'">true</PublishToSymbolServer>
     </PropertyGroup>
 
     <ItemGroup>
