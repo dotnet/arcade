@@ -69,7 +69,7 @@
       <Output TaskParameter="TargetOutputs" ItemName="_ProjectRefWithTfms"/>
     </MSBuild>
      
-    <ChooseBestP2PTargetFrameworkTask TargetFramework="$(OriginalTargetFramework)"
+    <ChooseBestP2PTargetFrameworkTask TargetFramework="$(_OriginalTargetFramework)"
                                       ProjectReferencesWithTargetFrameworks="@(_ProjectRefWithTfms)"
                                       RuntimeGraph="$(RuntimeGraph)" >
       <Output TaskParameter="AnnotatedProjectReferencesWithSetTargetFramework" ItemName="_ProjectReferencesWithBestTargetFrameworks" />
