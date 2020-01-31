@@ -59,8 +59,8 @@
 
     <!-- This filename is chosen so that each build of every project has a uniquie filename.-->
     <PropertyGroup>
-      <_propsFilename>$(TargetName).$(OriginalTargetFramework)</_propsFilename>
-      <_propsFilename Condition="'$(TargetName)' == ''">$(MSBuildProjectName).$(OriginalTargetFramework)</_propsFilename>
+      <_propsFilename>$(TargetName).$(_OriginalTargetFramework)</_propsFilename>
+      <_propsFilename Condition="'$(TargetName)' == ''">$(MSBuildProjectName).$(_OriginalTargetFramework)</_propsFilename>
       <_projectDirLength>$(ProjectDir.Length)</_projectDirLength>
     </PropertyGroup>
 
@@ -125,8 +125,12 @@
       <Output TaskParameter="BestTargetFrameworks" ItemName="_bestBinlaceTargetFrameworks" />
     </ChooseBestTargetFrameworksTask>
 
+    <PropertyGroup>
+      <_OriginalTargetFramework Condition="'$(_OriginalTargetFramework)' == ''">$(TargetFramework)</_OriginalTargetFramework>
+    </PropertyGroup>
+    
     <ItemGroup>
-      <_currentBinPlaceTargetFrameworks Include="@(_bestBinlaceTargetFrameworks)" Condition="'%(Identity)' == '$(OriginalTargetFramework)'" />
+      <_currentBinPlaceTargetFrameworks Include="@(_bestBinlaceTargetFrameworks)" Condition="'%(Identity)' == '$(_OriginalTargetFramework)'" />
 
       <BinPlaceDir Condition="'$(BinPlaceTest)' == 'true'" Include="@(_currentBinPlaceTargetFrameworks->'%(TestPath)')" />
       <BinPlaceDir Condition="'$(BinPlaceRuntime)' == 'true'" Include="@(_currentBinPlaceTargetFrameworks->'%(RuntimePath)')" />
