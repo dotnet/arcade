@@ -2,6 +2,7 @@
 <Project DefaultTargets="Publish">
   <!--
     Optional variables:
+      DotNetPublishUsingPipelines       Whether publishing to BAR should be performed or not. If set to 'false' symbol publishing will be performed immediately.
       DotNetFinalVersionKind            Global property that stores the type of the current build: https://github.com/dotnet/arcade/blob/master/Documentation/CorePackages/Versioning.md#build-kind
       DotNetOutputBlobFeedDir           Source Build publishing directory
       DotNetSymbolServerTokenMsdl       Personal access token for MSDL symbol server. Available from variable group DotNet-Symbol-Publish.	
@@ -31,7 +32,7 @@
 
     <PublishDependsOnTargets Condition="$(PublishToSymbolServer)">$(PublishDependsOnTargets);PublishSymbols</PublishDependsOnTargets>
     <PublishDependsOnTargets Condition="$(PublishToSourceBuildStorage)">$(PublishDependsOnTargets);PublishToSourceBuildStorage</PublishDependsOnTargets>
-    <PublishDependsOnTargets Condition="$(PublishToBuildAssetRegistry)">$(PublishDependsOnTargets);PublishToAzureDevOpsArtifacts</PublishDependsOnTargets>
+    <PublishDependsOnTargets Condition="$(DotNetPublishUsingPipelines)">$(PublishDependsOnTargets);PublishToAzureDevOpsArtifacts</PublishDependsOnTargets>
     <PublishDependsOnTargets>BeforePublish;$(PublishDependsOnTargets)</PublishDependsOnTargets>
   </PropertyGroup>
 

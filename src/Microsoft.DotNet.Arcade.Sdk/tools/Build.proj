@@ -11,6 +11,7 @@
 
     DotNetBuildFromSource           Building the entire stack from source with no external dependencies.
     DotNetOutputBlobFeedDir         Directory to publish Source Build assets to (packages, symbol packages, installers, etc.).
+    DotNetPublishUsingPipelines     Publish assets to Build Asset Registry.
     DotNetSymbolServerTokenMsdl     Personal access token for MSDL symbol server. Available from variable group DotNet-Symbol-Publish.	
     DotNetSymbolServerTokenSymWeb   Personal access token for SymWeb symbol server. Available from variable group DotNet-Symbol-Publish.	
     DotNetSymbolExpirationInDays    Symbol expiration time in days (defaults to 10 years).
@@ -85,11 +86,13 @@
       <_NuGetRestoreTargets>$(MSBuildToolsPath)\NuGet.targets</_NuGetRestoreTargets>
       <_NuGetRestoreTargets Condition="'$([MSBuild]::IsRunningFromVisualStudio())' == 'true'">$(MSBuildToolsPath32)\..\..\..\Common7\IDE\CommonExtensions\Microsoft\NuGet\NuGet.targets</_NuGetRestoreTargets>
 
-      <!-- By default publishing is performed via Maestro channels. -->
-      <PublishToBuildAssetRegistry Condition="'$(PublishToBuildAssetRegistry)' == ''">true</PublishToBuildAssetRegistry>
-
-      <PublishToSymbolServer Condition="'$(PublishToSymbolServer)' == '' and '$(PublishToBuildAssetRegistry)' != 'true' and '$(UsingToolSymbolUploader)' == 'true' and '$(ContinuousIntegrationBuild)' == 'true'">true</PublishToSymbolServer>
-      <PublishToSymbolServer Condition="'$(PublishToSymbolServer)' == ''">false</PublishToSymbolServer>
+      <!-- 
+        If DotNetPublishUsingPipelines is set we don't publish symbols during the build stage,
+        only in the Maestro post-build stages. If DotNetPublishUsingPipelines is NOT set then
+        we publish symbols during the build stage.
+      -->
+      <PublishToSymbolServer Condition="'$(DotNetPublishUsingPipelines)' != 'true'">true</PublishToSymbolServer>
+      <PublishToSymbolServer Condition="'$(DotNetPublishUsingPipelines)' == 'true'">false</PublishToSymbolServer>
     </PropertyGroup>
 
     <ItemGroup>
