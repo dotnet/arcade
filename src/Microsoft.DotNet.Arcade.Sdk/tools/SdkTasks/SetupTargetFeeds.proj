@@ -56,6 +56,9 @@
         - TestFeedType
         - TestFeedToken
   -->
+  <PropertyGroup>
+    <NETCORE_ENGINEERING_TELEMETRY>Publish</NETCORE_ENGINEERING_TELEMETRY>
+  </PropertyGroup>
 
   <Target Name="SetupTargetFeeds">
     <Error
