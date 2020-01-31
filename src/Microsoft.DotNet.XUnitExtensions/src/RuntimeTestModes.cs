@@ -3,7 +3,7 @@ using System;
 namespace Xunit
 {
     [Flags]
-    public enum RuntimeStressTestModes
+    public enum RuntimeTestModes
     {
         // Disable always when using coreclr runtime.
         Any = ~0,

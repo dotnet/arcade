@@ -25,14 +25,14 @@ namespace Microsoft.DotNet.XUnitExtensions
             if (!SkipOnMonoDiscoverer.IsMonoRuntime)
             {
                 TestPlatforms testPlatforms = TestPlatforms.Any;
-                RuntimeStressTestModes stressMode = RuntimeStressTestModes.Any;
+                RuntimeTestModes stressMode = RuntimeTestModes.Any;
                 foreach (object arg in traitAttribute.GetConstructorArguments().Skip(1)) // We skip the first one as it is the reason
                 {
                     if (arg is TestPlatforms tp)
                     {
                         testPlatforms = tp;
                     }
-                    else if (arg is RuntimeStressTestModes rstm)
+                    else if (arg is RuntimeTestModes rstm)
                     {
                         stressMode = rstm;
                     }
@@ -48,16 +48,16 @@ namespace Microsoft.DotNet.XUnitExtensions
         }
 
         // Order here matters as some env variables may appear in multiple modes
-        private static bool StressModeApplies(RuntimeStressTestModes stressMode) =>
-            stressMode == RuntimeStressTestModes.Any ||
-            (stressMode.HasFlag(RuntimeStressTestModes.CheckedRuntime) && s_isCheckedRuntime.Value) ||
-            (stressMode.HasFlag(RuntimeStressTestModes.GCStress3) && s_isGCStress3.Value) ||
-            (stressMode.HasFlag(RuntimeStressTestModes.GCStressC) && s_isGCStressC.Value) ||
-            (stressMode.HasFlag(RuntimeStressTestModes.ZapDisable) && s_isZapDisable.Value) ||
-            (stressMode.HasFlag(RuntimeStressTestModes.TailcallStress) && s_isTailCallStress.Value) ||
-            (stressMode.HasFlag(RuntimeStressTestModes.JitStressRegs) && s_isJitStressRegs.Value) ||
-            (stressMode.HasFlag(RuntimeStressTestModes.JitStress) && s_isJitStress.Value) ||
-            (stressMode.HasFlag(RuntimeStressTestModes.JitMinOpts) && s_isJitMinOpts.Value);
+        private static bool StressModeApplies(RuntimeTestModes stressMode) =>
+            stressMode == RuntimeTestModes.Any ||
+            (stressMode.HasFlag(RuntimeTestModes.CheckedRuntime) && s_isCheckedRuntime.Value) ||
+            (stressMode.HasFlag(RuntimeTestModes.GCStress3) && s_isGCStress3.Value) ||
+            (stressMode.HasFlag(RuntimeTestModes.GCStressC) && s_isGCStressC.Value) ||
+            (stressMode.HasFlag(RuntimeTestModes.ZapDisable) && s_isZapDisable.Value) ||
+            (stressMode.HasFlag(RuntimeTestModes.TailcallStress) && s_isTailCallStress.Value) ||
+            (stressMode.HasFlag(RuntimeTestModes.JitStressRegs) && s_isJitStressRegs.Value) ||
+            (stressMode.HasFlag(RuntimeTestModes.JitStress) && s_isJitStress.Value) ||
+            (stressMode.HasFlag(RuntimeTestModes.JitMinOpts) && s_isJitMinOpts.Value);
 
         private static string GetEnvironmentVariableValue(string name) => Environment.GetEnvironmentVariable(name) ?? "0";
 
