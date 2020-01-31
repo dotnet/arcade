@@ -12,7 +12,7 @@ namespace Microsoft.DotNet.Build.Tasks.TargetFramework.Sdk
         public const string RuntimeOSProperty = "RuntimeOS";
 
         [Required]
-        public string RuntimePropsFilePath { get ; set; }
+        public string RuntimePropsFilePath { get; set; }
 
         public override bool Execute()
         {

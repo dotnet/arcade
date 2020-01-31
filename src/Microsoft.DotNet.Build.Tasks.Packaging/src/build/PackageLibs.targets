@@ -37,7 +37,7 @@
        with appropriate metadata.-->
   <Target Name="GetFilesToPackage"
           Returns="@(FilesToPackage)"
-          Condition="'$(ExcludeFromPackage)' != 'true'" >
+          Condition="'$(ExcludeFromPackage)' != 'true'">
     <PropertyGroup>
       <PackagePath Condition="'$(PackagePath)' == ''">$(TargetPath)</PackagePath>
       <PackageIncludeDocs Condition="'$(PackageIncludeDocs)' == '' AND '$(IsReferenceAssembly)' == 'true'">true</PackageIncludeDocs>
