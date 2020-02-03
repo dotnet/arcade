@@ -22,7 +22,7 @@
   <!--
     From 'Signing.props' we import $(SignValidationExclusionList)
   -->
-  <Import Project="$(MSBuildThisFileDirectory)Signing.props" Condition="Exists('$(MSBuildThisFileDirectory)Signing.props')" />
+  <Import Project="$(RepositoryEngineeringDir)Signing.props" Condition="Exists('$(RepositoryEngineeringDir)Signing.props')" />
 
   <Target Name="ValidateSigning">
     <PropertyGroup>
