@@ -236,7 +236,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             def.WithProperty(key, value);
             Log.LogMessage($"Added property '{key}' (value: '{value}') to job definition.");
             return def;
-        }        
+        }
 
         private IJobDefinition AddWorkItem(IJobDefinition def, ITaskItem workItem)
         {
