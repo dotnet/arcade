@@ -12,7 +12,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
 
             var actual = Helpers.CleanWorkItemName(workItemNameWithEncodedChars);
 
-            Assert.Equal(WebUtility.UrlDecode(workItemNameWithEncodedChars), actual);
+            Assert.Equal(workItemNameWithEncodedChars, actual);
         }
 
         [Fact]
@@ -23,17 +23,6 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             var actual = Helpers.CleanWorkItemName(workItemName);
 
             Assert.Equal(WebUtility.UrlDecode(workItemName), actual);
-        }
-
-        [Fact]
-        public void VerifyEncodedForwardSlashIsConverted()
-        {
-            var workItemNameWithEncodedFowardSlash = "work%2Fitem%2Fname";
-            var workItemNameExpected = "work-item-name";
-
-            var actual = Helpers.CleanWorkItemName(workItemNameWithEncodedFowardSlash);
-
-            Assert.Equal(workItemNameExpected, actual);
         }
 
         [Fact]

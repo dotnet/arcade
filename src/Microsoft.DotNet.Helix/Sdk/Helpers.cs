@@ -14,8 +14,7 @@ namespace Microsoft.DotNet.Helix.Sdk
 
         public static string CleanWorkItemName(string workItemName)
         {
-            var decodedName = WebUtility.UrlDecode(workItemName);
-            var convertedName = decodedName.Replace('/', '-');
+            var convertedName = workItemName.Replace('/', '-');
             return convertedName;
         }
     }

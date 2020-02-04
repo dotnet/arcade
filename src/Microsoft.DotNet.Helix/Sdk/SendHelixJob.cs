@@ -245,11 +245,16 @@ namespace Microsoft.DotNet.Helix.Sdk
                 return def;
             }
 
+            if(name.Contains('%'))
+            {
+                Log.LogWarning($"Work Item named '{name}' contains encoded characters which is not recommended.");
+            }
+
             var cleanedName = Helpers.CleanWorkItemName(name);
 
             if (WebUtility.UrlDecode(name) != cleanedName)
             {
-                Log.LogWarning($"'{name}' contains unsupported characters and has been renamed to '{cleanedName}'.");
+                Log.LogWarning($"Work Item named '{name}' contains unsupported characters and has been renamed to '{cleanedName}'.");
             }
 
             name = cleanedName;
