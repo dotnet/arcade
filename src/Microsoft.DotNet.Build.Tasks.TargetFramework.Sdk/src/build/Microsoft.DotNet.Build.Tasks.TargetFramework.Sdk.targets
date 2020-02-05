@@ -24,7 +24,7 @@
       <_InnerBuildProjects Remove="@(_InnerBuildProjects)" />
     </ItemGroup>
 
-    <ChooseBestTargetFrameworksTask BuildTargetFrameworks="$(BuildTargetFramework)-$(BuildOS);$(AdditionalBuildTargetFrameworks)"
+    <ChooseBestTargetFrameworksTask BuildTargetFrameworks="$(BuildTargetFramework)-$(OSGroup);$(AdditionalBuildTargetFrameworks)"
                                     SupportedTargetFrameworks="$(TargetFrameworks)"
                                     RuntimeGraph="$(RuntimeGraph)" >
       <Output TaskParameter="BestTargetFrameworks" ItemName="_BestTargetFramework" />
