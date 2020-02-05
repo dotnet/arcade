@@ -205,7 +205,7 @@ function GetDotNetInstallScript([string] $dotnetRoot) {
         break
       }
       catch {
-        Write-Message "Failed to download '$uri'"
+        Write-Host "Failed to download '$uri'"
         Write-Error $_.Exception.Message -ErrorAction Continue
       }
 
