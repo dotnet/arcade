@@ -8,7 +8,7 @@ try {
 
   $AvailableChannelIds = 2, 9, 131, 529, 548, 549, 551, 562, 678, 679
 
-  if ($InitialChannels -eq "") {
+  if ($InitialChannels -eq "[] ,") {
     Write-PipelineTelemetryError -Category 'CheckChannelConsistency' -Message "This build won't publish to any channel. Maestro didn't return any default channel."
   }
 
