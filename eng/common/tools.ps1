@@ -194,12 +194,10 @@ function GetDotNetInstallScript([string] $dotnetRoot) {
 
     $uri = "https://dot.net/$dotnetInstallScriptVersion/dotnet-install.ps1"
 
-    # MaximumRetryCount parameter will handle retries for cases when web server replies with codes 304,400-599.
-    # Connection failures, and lower-level errors should be handled by the retry loop.
     while($true) {
       try {
         Write-Host "GET $uri"
-        $response = Invoke-WebRequest $uri -OutFile $installScript -MaximumRetryCount $maxRetries -RetryIntervalSec 2
+        $response = Invoke-WebRequest $uri -OutFile $installScript
         Write-Host ('Status: {0} {1}' -f $response.StatusCode, $response.StatusDescription)
         Write-Host ($response.Headers.Keys | ForEach-Object { "{0}: {1}" -f $_, [string]$response.Headers.$_ })
         break
