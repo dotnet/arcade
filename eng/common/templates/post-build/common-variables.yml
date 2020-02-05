@@ -5,10 +5,6 @@ variables:
   - group: DotNet-MSRC-Storage
   - group: Publish-Build-Assets
     
-   # .NET Core 5 Dev
-  - name: NetCore_5_Dev_Channel_Id
-    value: 131
-
   # .NET Eng - Validation
   - name: Net_Eng_Validation_Channel_Id
     value: 9
@@ -17,13 +13,37 @@ variables:
   - name: Net_Eng_Latest_Channel_Id
     value: 2
 
+   # .NET Core 5 Dev
+  - name: NetCore_5_Dev_Channel_Id
+    value: 131
+
   # General Testing
   - name: GeneralTesting_Channel_Id
     value: 529
 
+  # .NET Core Tooling Dev
+  - name: NETCore_Tooling_Dev_Publishing
+    value: 548
+
+  # .NET Core Tooling Release
+  - name: NETCore_Tooling_Release_Publishing
+    value: 549
+
+  # .NET Internal Tooling
+  - name: NET_Internal_Tooling_Publishing
+    value: 551
+
   # .NET Core Experimental
   - name: NetCore_Experimental_Channel_Id
     value: 562
+
+  # .NET Eng Services - Int
+  - name: Net_Eng_Services_Int_Publish
+    value: 678
+
+  # .NET Eng Services - Prod
+  - name: Net_Eng_Services_Prod_Publish
+    value: 679
 
   # Whether the build is internal or not
   - name: IsInternalBuild
