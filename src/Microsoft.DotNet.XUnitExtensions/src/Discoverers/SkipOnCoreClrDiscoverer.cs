@@ -23,6 +23,7 @@ namespace Microsoft.DotNet.XUnitExtensions
         private static readonly Lazy<bool> s_isGCStressC = new Lazy<bool>(() => CompareGCStressModeAsLower(GetEnvironmentVariableValue("COMPlus_GCStress"), "0xC", "C"));
         private static readonly Lazy<bool> s_isCheckedRuntime = new Lazy<bool>(() => IsCheckedRuntime());
         private static readonly Lazy<bool> s_isReleaseRuntime = new Lazy<bool>(() => IsReleaseRuntime());
+        private static readonly Lazy<bool> s_isDebugRuntime = new Lazy<bool>(() => IsDebugRuntime());
 
         public IEnumerable<KeyValuePair<string, string>> GetTraits(IAttributeInfo traitAttribute)
         {
@@ -58,7 +59,8 @@ namespace Microsoft.DotNet.XUnitExtensions
 
         private static bool RuntimeConfigurationApplies(RuntimeConfiguration runtimeConfigurations) =>
             (runtimeConfigurations.HasFlag(RuntimeConfiguration.Checked) && s_isCheckedRuntime.Value) ||
-            (runtimeConfigurations.HasFlag(RuntimeConfiguration.Release) && s_isReleaseRuntime.Value);
+            (runtimeConfigurations.HasFlag(RuntimeConfiguration.Release) && s_isReleaseRuntime.Value) ||
+            (runtimeConfigurations.HasFlag(RuntimeConfiguration.Debug) && s_isDebugRuntime.Value);
 
         // Order here matters as some env variables may appear in multiple modes
         private static bool StressModeApplies(RuntimeTestModes stressMode) =>
@@ -83,24 +85,19 @@ namespace Microsoft.DotNet.XUnitExtensions
 
         private static string GetEnvironmentVariableValue(string name) => Environment.GetEnvironmentVariable(name) ?? "0";
 
-        private static bool IsCheckedRuntime()
+        private static bool IsCheckedRuntime() => AssemblyConfigurationEquals("Checked");
+
+        private static bool IsReleaseRuntime() => AssemblyConfigurationEquals("Release");
+
+        private static bool IsDebugRuntime() => AssemblyConfigurationEquals("Debug");
+
+        private static bool AssemblyConfigurationEquals(string configuration)
         {
-            AssemblyConfigurationAttribute assemblyConfigurationAttribute = GetAssemblyConfigurationAttribute();
+            AssemblyConfigurationAttribute assemblyConfigurationAttribute = typeof(string).Assembly.GetCustomAttribute<AssemblyConfigurationAttribute>();
 
             return assemblyConfigurationAttribute != null &&
-                string.Equals(assemblyConfigurationAttribute.Configuration, "Checked", StringComparison.InvariantCulture);
+                string.Equals(assemblyConfigurationAttribute.Configuration, configuration, StringComparison.InvariantCulture);
         }
-
-        private static bool IsReleaseRuntime()
-        {
-            AssemblyConfigurationAttribute assemblyConfigurationAttribute = GetAssemblyConfigurationAttribute();
-
-            return assemblyConfigurationAttribute != null &&
-                string.Equals(assemblyConfigurationAttribute.Configuration, "Release", StringComparison.InvariantCulture);
-        }
-
-        private static AssemblyConfigurationAttribute GetAssemblyConfigurationAttribute() =>
-            typeof(string).Assembly.GetCustomAttribute<AssemblyConfigurationAttribute>();
 
         private static bool CompareGCStressModeAsLower(string value, string first, string second)
         {

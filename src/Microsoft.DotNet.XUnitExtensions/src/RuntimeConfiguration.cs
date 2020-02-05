@@ -11,6 +11,7 @@ namespace Xunit
     {
         Any = ~0,
         Checked = 1,
-        Release = 1 << 1,
+        Debug = 1 << 1,
+        Release = 1 << 2
     }
 }
