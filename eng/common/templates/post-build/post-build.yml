@@ -42,30 +42,10 @@ stages:
     pool:
       vmImage: 'windows-2019'
     steps:
-      - checkout: none
-
       - task: PowerShell@2
-        name: setReleaseVars
         displayName: Maestro Channels Consistency
         inputs:
-          targetType: inline
-          script: |
-            $AvailableChannelIds = 2, 9, 131, 529, 548, 549, 551, 562, 678, 679
-
-            if ($InitialChannels -eq "") {
-                Write-Host "This build won't publish to any channel."
-            }
-
-            # Check that every channel that Maestro told to promote the build to 
-            # is available in YAML
-            $InitialChannelsIds = $InitialChannels -split "\D" | Where-Object { $_ }
-
-            foreach ($id in $InitialChannelsIds) {
-                if ($id -notin $AvailableChannelIds) {
-                    Write-Host "Channel $id is not present in the post-build YAML configuration!"
-                    Exit 1
-                }
-            }
+          filePath: $(Build.SourcesDirectory)/eng/common/post-build/check-channel-consistency.ps1
 
   - job:
     displayName: NuGet Validation
