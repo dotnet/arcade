@@ -197,9 +197,7 @@ function GetDotNetInstallScript([string] $dotnetRoot) {
     while($true) {
       try {
         Write-Host "GET $uri"
-        $response = Invoke-WebRequest $uri -OutFile $installScript
-        Write-Host ('Status: {0} {1}' -f $response.StatusCode, $response.StatusDescription)
-        Write-Host ($response.Headers.Keys | ForEach-Object { "{0}: {1}" -f $_, [string]$response.Headers.$_ })
+        Invoke-WebRequest $uri -OutFile $installScript
         break
       }
       catch {
