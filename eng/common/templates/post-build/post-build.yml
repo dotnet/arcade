@@ -46,6 +46,8 @@ stages:
         displayName: Maestro Channels Consistency
         inputs:
           filePath: $(Build.SourcesDirectory)/eng/common/post-build/check-channel-consistency.ps1
+          arguments: -InitialChannels "$(InitialChannels)" 
+            -PromoteToMaestroChannelId $(PromoteToMaestroChannelId)
 
   - job:
     displayName: NuGet Validation

@@ -1,3 +1,8 @@
+param(
+  [Parameter(Mandatory=$true)][string] $InitialChannels,            # List of channels that the build should be promoted to
+  [Parameter(Mandatory=$true)][int] $PromoteToMaestroChannelId      # If the build should be promoted to a channel this will have the Channel ID
+)
+
 try {
   . $PSScriptRoot\post-build-utils.ps1
 
@@ -14,6 +19,13 @@ try {
   foreach ($id in $InitialChannelsIds) {
     if ($id -notin $AvailableChannelIds) {
       Write-PipelineTelemetryError -Category 'CheckChannelConsistency' -Message "Channel $id is not present in the post-build YAML configuration!"
+      ExitWithExitCode 1
+    }
+  }
+
+  if ($PromoteToMaestroChannelId -ne 0) {
+    if ($PromoteToMaestroChannelId -notin $AvailableChannelIds) {
+      Write-PipelineTelemetryError -Category 'CheckChannelConsistency' -Message "Channel $PromoteToMaestroChannelId is not present in the post-build YAML configuration!"
       ExitWithExitCode 1
     }
   }
