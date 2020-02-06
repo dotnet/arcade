@@ -52,11 +52,6 @@
 
     <Message
       Importance="High"
-      Text="No symbol package(s) were found to publish."
-      Condition="$(PublishToSymbolServer) == false" />
-
-    <Message
-      Importance="High"
       Text="No symbol file(s) were found to publish."
       Condition="'$(FilesToPublishToSymbolServer)' == ''" />
 
@@ -74,15 +69,12 @@
     </ReadLinesFromFile>
 
     <Message
-      Importance="High"
       Text="Going to publish this package -> %(PackagesToPublishToSymbolServer.Identity)." />
 
     <Message
-      Importance="High"
       Text="Going to publish this file -> %(FilesToPublishToSymbolServer.Identity)." />
 
     <Message
-      Importance="High"
       Text="Going to ignore this file -> %(PackageExcludeFiles.Identity)." />
     
     <!-- Symbol Uploader: MSDL -->
