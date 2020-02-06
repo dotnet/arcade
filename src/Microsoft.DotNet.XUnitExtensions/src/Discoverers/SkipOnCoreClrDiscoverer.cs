@@ -74,7 +74,6 @@ namespace Microsoft.DotNet.XUnitExtensions
             (stressMode.HasFlag(RuntimeTestModes.JitMinOpts) && s_isJitMinOpts.Value);
 
         private static bool IsStressTest =>
-            s_isCheckedRuntime.Value ||
             s_isGCStress3.Value ||
             s_isGCStressC.Value ||
             s_isZapDisable.Value ||
