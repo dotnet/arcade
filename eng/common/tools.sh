@@ -219,7 +219,7 @@ function InstallDotNet {
 }
 
 function with_retries {
-  local maxRetries=${RETRIES-5}
+  local maxRetries=5
   local retries=1
   echo "Trying to run '$@' for maximum of $maxRetries attempts."
   while [[ $((retries++)) -le $maxRetries ]]; do
@@ -237,7 +237,7 @@ function with_retries {
 
   echo "Failed to execute '$@' for $maxRetries times." 1>&2
 
-  return -1
+  return 1
 }
 
 function GetDotNetInstallScript {
