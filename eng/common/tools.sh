@@ -227,7 +227,7 @@ function with_retries {
 
     if [[ $? == 0 ]]; then
       echo "Ran '$@' successfully."
-      return $?
+      return 0
     fi
 
     timeout=$((2**$retries-1))
