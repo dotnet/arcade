@@ -4,16 +4,12 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Net.Http;
 using System.Text;
-using System.Text.Encodings.Web;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.DotNet.Helix.Client;
-using Microsoft.WindowsAzure.Storage;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace Microsoft.DotNet.Helix.Sdk
 {
@@ -248,6 +244,20 @@ namespace Microsoft.DotNet.Helix.Sdk
             {
                 return def;
             }
+
+            if(name.Contains('%'))
+            {
+                Log.LogWarning($"Work Item named '{name}' contains encoded characters which is not recommended.");
+            }
+
+            var cleanedName = Helpers.CleanWorkItemName(name);
+
+            if (name != cleanedName)
+            {
+                Log.LogWarning($"Work Item named '{name}' contains unsupported characters and has been renamed to '{cleanedName}'.");
+            }
+
+            name = cleanedName;
 
             if (!workItem.GetRequiredMetadata(Log, "Command", out string command))
             {
