@@ -252,7 +252,7 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             var cleanedName = Helpers.CleanWorkItemName(name);
 
-            if (WebUtility.UrlDecode(name) != cleanedName)
+            if (name != cleanedName)
             {
                 Log.LogWarning($"Work Item named '{name}' contains unsupported characters and has been renamed to '{cleanedName}'.");
             }
