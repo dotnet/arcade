@@ -223,7 +223,7 @@ function with_retries {
   local retries=1
   echo "Executing '$@'."
   while [[ $((retries++)) -le $maxRetries ]]; do
-    "$@" 1>&2
+    "$@"
 
     if [[ $? == 0 ]]; then
       echo "Ran '$@' successfully."
@@ -231,11 +231,11 @@ function with_retries {
     fi
 
     timeout=$((2**$retries-1))
-    echo "Failure! Retrying in $timeout seconds." 1>&2
+    echo "Failed to execute '$@'. Waiting $timeout seconds before next attempt ($retries out of $maxRetries)." 1>&2
     sleep $timeout
   done
 
-  echo "Failed to extute '$@' for $maxRetries times." 1>&2
+  echo "Failed to execute '$@' for $maxRetries times." 1>&2
 
   return -1
 }
