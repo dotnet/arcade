@@ -221,7 +221,7 @@ function InstallDotNet {
 function with_retries {
   local maxRetries=${RETRIES-5}
   local retries=1
-  echo "Executing '$@'."
+  echo "Trying to run '$@' for maximum of $maxRetries attempts."
   while [[ $((retries++)) -le $maxRetries ]]; do
     "$@"
 
