@@ -4,53 +4,53 @@ variables:
   - group: DotNet-DotNetCli-Storage
   - group: DotNet-MSRC-Storage
   - group: Publish-Build-Assets
-  
-  # .NET Core 3.1 Dev	
-  - name: PublicDevRelease_31_Channel_Id	
-    value: 128	
+    
+  # .NET Core 3.1 Dev
+  - name: PublicDevRelease_31_Channel_Id
+    value: 128
 
-  # .NET Core 5 Dev	
-  - name: NetCore_5_Dev_Channel_Id	
-    value: 131	
+  # .NET Core 5 Dev
+  - name: NetCore_5_Dev_Channel_Id
+    value: 131
 
-  # .NET Eng - Validation	
-  - name: Net_Eng_Validation_Channel_Id	
-    value: 9	
+  # .NET Eng - Validation
+  - name: Net_Eng_Validation_Channel_Id
+    value: 9
 
-  # .NET Eng - Latest	
-  - name: Net_Eng_Latest_Channel_Id	
-    value: 2	
+  # .NET Eng - Latest
+  - name: Net_Eng_Latest_Channel_Id
+    value: 2
 
-  # .NET 3 Eng - Validation	
-  - name: NET_3_Eng_Validation_Channel_Id	
-    value: 390	
+  # .NET 3 Eng - Validation
+  - name: NET_3_Eng_Validation_Channel_Id
+    value: 390
 
-  # .NET 3 Eng	
-  - name: NetCore_3_Tools_Channel_Id	
-    value: 344	
+  # .NET 3 Eng
+  - name: NetCore_3_Tools_Channel_Id
+    value: 344
 
-  # .NET Core 3.0 Internal Servicing	
-  - name: InternalServicing_30_Channel_Id	
-    value: 184	
+  # .NET Core 3.0 Internal Servicing
+  - name: InternalServicing_30_Channel_Id
+    value: 184
 
-  # .NET Core 3.0 Release	
-  - name: PublicRelease_30_Channel_Id	
-    value: 19	
+  # .NET Core 3.0 Release
+  - name: PublicRelease_30_Channel_Id
+    value: 19
 
-  # .NET Core 3.1 Release	
-  - name: PublicRelease_31_Channel_Id	
-    value: 129	
+  # .NET Core 3.1 Release
+  - name: PublicRelease_31_Channel_Id
+    value: 129
 
-  # General Testing	
-  - name: GeneralTesting_Channel_Id	
-    value: 529	
+  # General Testing
+  - name: GeneralTesting_Channel_Id
+    value: 529
 
-  # .NET Core 3.1 Blazor Features	
-  - name: NetCore_31_Blazor_Features_Channel_Id	
-    value: 531	
+  # .NET Core 3.1 Blazor Features
+  - name: NetCore_31_Blazor_Features_Channel_Id
+    value: 531
 
-  # .NET Core Experimental	
-  - name: NetCore_Experimental_Channel_Id	
+  # .NET Core Experimental
+  - name: NetCore_Experimental_Channel_Id
     value: 562
 
   # Whether the build is internal or not
