@@ -22,6 +22,11 @@ parameters:
   publishDependsOn: 
   - Validate
 
+  # Comma separated list of channel IDs instantiated in this file
+  # This will be used by check-channel-consistency.ps1 to confirm that all
+  # default channels IDs returned by Maestro++ are implemented
+  AvailableChannelIds: '2,9,131,529,548,549,551,562,678,679'
+
 stages:
 - stage: Validate
   dependsOn: ${{ parameters.validateDependsOn }}
@@ -47,7 +52,7 @@ stages:
         inputs:
           filePath: $(Build.SourcesDirectory)/eng/common/post-build/check-channel-consistency.ps1
           arguments: -PromoteToChannels "$(InitialChannels)[$(PromoteToMaestroChannelId)]"
-            -AvailableChannelIds 2,9,131,529,548,549,551,562,678,679
+            -AvailableChannelIds ${{ parameters.AvailableChannelIds }}
 
   - job:
     displayName: NuGet Validation
