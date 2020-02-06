@@ -10,5 +10,11 @@ namespace Microsoft.DotNet.Helix.Sdk
 
         public static string ProductVersion { get; } =
             typeof(Helpers).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion;
+
+        public static string CleanWorkItemName(string workItemName)
+        {
+            var convertedName = workItemName.Replace('/', '-');
+            return convertedName;
+        }
     }
 }
