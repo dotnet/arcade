@@ -92,13 +92,13 @@ try {
 
   Write-Host "Updating Dependencies using Darc..."
 
-  . .\common\darc-init.ps1
+  . .\common\darc-init.ps1 -darcVersion "1.1.0-beta.20073.9"
   CheckExitCode "Running darc-init"
 
   $DarcExe = "$env:USERPROFILE\.dotnet\tools"
   $DarcExe = Resolve-Path $DarcExe
 
-  & $DarcExe\darc.exe update-dependencies --packages-folder $packagesSource --password $barToken --github-pat $gitHubPat --channel ".NET Eng - Latest"
+  & $DarcExe\darc.exe update-dependencies --packages-folder $packagesSource --password $barToken --github-pat $gitHubPat --channel ".NET Tools - Latest"
   CheckExitCode "Updating dependencies"
   StopDotnetIfRunning
   
