@@ -20,14 +20,14 @@
   <Target Name="RunOnlyBestTargetFrameworks"
           Condition="'$(BuildAllConfigurations)' != 'true' or '$(MSBuildProjectExtension)' == '.pkgproj'" 
           BeforeTargets="DispatchToInnerBuilds"
-          DependsOnTargets="RunOuterBuildForProjects">
+          DependsOnTargets="GetProjectWithBestTargetFrameworks">
     <ItemGroup>
       <_InnerBuildProjects Remove="@(_InnerBuildProjects)" />
       <_InnerBuildProjects Include="@(InnerBuildProjectsWithBestTargetFramework)" />
     </ItemGroup>
   </Target>
   
-  <Target Name="RunOuterBuildForProjects">
+  <Target Name="GetProjectWithBestTargetFrameworks">
     <ChooseBestTargetFrameworksTask BuildTargetFrameworks="$(BuildTargetFramework)-$(OSGroup);$(AdditionalBuildTargetFrameworks)"
                                     SupportedTargetFrameworks="$(TargetFrameworks)"
                                     RuntimeGraph="$(RuntimeGraph)" >
