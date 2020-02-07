@@ -19,11 +19,15 @@
      
   <Target Name="RunOnlyBestTargetFrameworks"
           Condition="'$(BuildAllConfigurations)' != 'true' or '$(MSBuildProjectExtension)' == '.pkgproj'" 
-          BeforeTargets="DispatchToInnerBuilds">
+          BeforeTargets="DispatchToInnerBuilds"
+          DependsOnTargets="RunOuterBuildForProjects">
     <ItemGroup>
       <_InnerBuildProjects Remove="@(_InnerBuildProjects)" />
+      <_InnerBuildProjects Include="@(InnerBuildProjectsWithBestTargetFramework)" />
     </ItemGroup>
-
+  </Target>
+  
+  <Target Name="RunOuterBuildForProjects">
     <ChooseBestTargetFrameworksTask BuildTargetFrameworks="$(BuildTargetFramework)-$(OSGroup);$(AdditionalBuildTargetFrameworks)"
                                     SupportedTargetFrameworks="$(TargetFrameworks)"
                                     RuntimeGraph="$(RuntimeGraph)" >
@@ -32,10 +36,10 @@
 
     <AddTargetFrameworksToProjectTask ProjectName="$(MSBuildProjectFile)"
                                       BestTargetFrameworks="@(_BestTargetFramework)" >
-      <Output TaskParameter="InnerBuildProjects" ItemName="_InnerBuildProjects" />
+      <Output TaskParameter="InnerBuildProjects" ItemName="InnerBuildProjectsWithBestTargetFramework" />
     </AddTargetFrameworksToProjectTask>
   </Target>
-  
+
   <!-- Restore does not take into account TargetFrameworkSuffix, so we remove the it from the TargetFramework before restore.-->
   <Target Name="StripTargetFrameworkSuffixFromTargetFrameworks"
           Condition="'$(TargetFrameworks)' != ''"
