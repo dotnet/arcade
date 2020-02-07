@@ -92,7 +92,7 @@ try {
 
   Write-Host "Updating Dependencies using Darc..."
 
-  . .\common\darc-init.ps1
+  . .\common\darc-init.ps1 -darcVersion "1.1.0-beta.20073.9"
   CheckExitCode "Running darc-init"
 
   $DarcExe = "$env:USERPROFILE\.dotnet\tools"
