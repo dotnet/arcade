@@ -7,10 +7,10 @@ using System;
 namespace Xunit
 {
     [Flags]
-    public enum TargetFrameworkMonikers
+    public enum TestRuntimes
     {
-        Netcoreapp = 0x1,
-        NetFramework = 0x2,
-        Uap = 0x4
+        CoreCLR = 1,
+        Mono = 2,
+        Any = ~0
     }
 }
