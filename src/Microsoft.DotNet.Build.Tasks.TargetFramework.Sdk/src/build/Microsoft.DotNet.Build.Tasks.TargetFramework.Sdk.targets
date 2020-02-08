@@ -10,8 +10,8 @@
   </PropertyGroup>
   
   <Target Name="RemovePlaceHolderConfigs"
-          Condition="'$(BuildAllConfigurations)' == 'true' and '$(MSBuildProjectExtension)' != '.pkgproj'"
-          BeforeTargets="DispatchToInnerBuilds">
+          Condition="'$(MSBuildProjectExtension)' != '.pkgproj'"
+          BeforeTargets="DispatchToInnerBuilds;Clean">
     <ItemGroup>
       <_InnerBuildProjects Remove="@(_InnerBuildProjects)" Condition="$([System.String]::Copy('%(_InnerBuildProjects.AdditionalProperties)').Contains('TargetFramework=_'))" />
     </ItemGroup>
