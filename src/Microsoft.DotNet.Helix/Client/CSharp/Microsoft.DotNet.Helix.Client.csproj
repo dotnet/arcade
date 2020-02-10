@@ -1,10 +1,9 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <VersionPrefix>2.0.0</VersionPrefix>
     <TargetFrameworks>netstandard2.0;net472</TargetFrameworks>
     <IsPackable>true</IsPackable>
     <Description>This package provides access to the Helix Api located at https://helix.dot.net/</Description>
-    <LangVersion>latest</LangVersion>
+    <LangVersion>8.0</LangVersion>
 
     <SwaggerDocumentUri>https://helix.dot.net/swagger/docs</SwaggerDocumentUri>
     <SwaggerClientName>HelixApi</SwaggerClientName>
@@ -12,12 +11,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Rest.ClientRuntime" Version="$(MicrosoftRestClientRuntimeVersion)" />
+    <PackageReference Include="Azure.Core" Version="1.0.1" />
+    <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="1.1.0" />
     <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonVersion)" />
     <PackageReference Include="System.Collections.Immutable" Version="$(SystemCollectionsImmutableVersion)" />
     <PackageReference Include="System.Text.Encodings.Web" Version="$(SystemTextEncodingsWebVersion)" />
 
-    <PackageReference Include="Microsoft.DotNet.SwaggerGenerator.MSBuild" Version="$(MicrosoftDotNetSwaggerGeneratorMSBuildVersion)" PrivateAssets="all"/>
+    <PackageReference Include="Microsoft.DotNet.SwaggerGenerator.MSBuild" Version="$(MicrosoftDotNetSwaggerGeneratorMSBuildVersion)" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>

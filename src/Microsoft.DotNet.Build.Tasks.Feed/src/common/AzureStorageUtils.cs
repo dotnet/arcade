@@ -16,6 +16,17 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
 {
     public class AzureStorageUtils
     {
+        private readonly Dictionary<string, string> MimeMappings = new Dictionary<string, string>()
+        {
+            {".svg", "image/svg+xml"},
+            {".version", "text/plain"}
+        };
+
+        private readonly Dictionary<string, string> CacheMappings = new Dictionary<string, string>()
+        {
+            {".svg", "no-cache"}
+        };
+
         public CloudBlobContainer Container { get; set; }
 
         public AzureStorageUtils(string AccountName, string AccountKey, string ContainerName)
@@ -48,7 +59,7 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
         {
             CloudBlockBlob cloudBlockBlob = GetBlockBlob(blobPath.Replace("\\", "/"));
 
-            cloudBlockBlob.Properties.ContentType = GetMimeMapping(filePath);
+            AssignBlobPropertiesByExtension(cloudBlockBlob, filePath);
 
             await cloudBlockBlob.UploadFromFileAsync(filePath);
         }
@@ -149,21 +160,28 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
             return await blob.ExistsAsync();
         }
 
-        private string GetMimeMapping(string filePath)
+        private void AssignBlobPropertiesByExtension(CloudBlockBlob blob, string filePath)
         {
-            var mimeMappings = new Dictionary<string, string>()
-            {
-                {".svg", "image/svg+xml"}
-            };
-
             if (string.IsNullOrWhiteSpace(filePath))
             {
                 throw new ArgumentException("An attempt to get the MIME mapping of an empty path was made.");
             }
 
-            return mimeMappings.TryGetValue(Path.GetExtension(filePath).ToLower(), out string mime) ?
-                mime :
+            if (blob == null || blob.Properties == null)
+            {
+                throw new ArgumentException($"Trying to set properties for a null blob or property field based on file: '{filePath}'");
+            }
+
+            var fileExtension = Path.GetExtension(filePath).ToLowerInvariant();
+
+            blob.Properties.ContentType = MimeMappings.TryGetValue(fileExtension, out string cttType) ?
+                cttType :
                 "application/octet-stream";
+
+            if (CacheMappings.TryGetValue(fileExtension, out string cacheCtrl))
+            {
+                blob.Properties.CacheControl = cacheCtrl;
+            }
         }
     }
 }

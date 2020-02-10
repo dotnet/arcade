@@ -4,12 +4,12 @@
   <PropertyGroup>
     <TargetFrameworks>netcoreapp2.1;net472</TargetFrameworks>
     <SignAssembly>true</SignAssembly>
-    <VersionPrefix>2.2.0</VersionPrefix>
 
     <Description>This package provides support for publishing assets to a NuGet protocol based feed.</Description>
     <DevelopmentDependency>true</DevelopmentDependency>
     <PackageType>MSBuildSdk</PackageType>
     <ExcludeFromSourceBuild>true</ExcludeFromSourceBuild>
+    <_ExcludeNuGetAssembliesTargetFramework>netcoreapp2.1</_ExcludeNuGetAssembliesTargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
@@ -23,6 +23,15 @@
   <ItemGroup>
     <ProjectReference Include="..\Microsoft.DotNet.VersionTools\lib\Microsoft.DotNet.VersionTools.csproj" />
   </ItemGroup>
+
+  <!-- Exclude NuGet package assemblies per https://github.com/dotnet/arcade/issues/1965
+       This is a workaround for https://github.com/microsoft/msbuild/issues/5073.  Required until #5073 is fixed or 
+       https://github.com/microsoft/msbuild/issues/5086 is available and we switch to that workaround -->
+  <Target Name="ExcludeNuGetPackagesFromNetCore" BeforeTargets="GenerateNuspec">
+    <ItemGroup>
+      <_PackageFilesToExclude Include="%(_PackageFiles.Identity)" Condition="$([System.String]::Copy('%(_PackageFiles.FileName)').StartsWith('NuGet')) and $([System.String]::Copy('%(_PackageFiles.Directory)').Contains('$(_ExcludeNuGetAssembliesTargetFramework)'))" />
+    </ItemGroup>
+  </Target>
 
   <Import Project="$(RepoRoot)eng\BuildTask.targets" />
 </Project>

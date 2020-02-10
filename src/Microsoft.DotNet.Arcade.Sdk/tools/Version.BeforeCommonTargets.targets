@@ -93,7 +93,23 @@
     Calculate VersionSuffix.
   -->
   <PropertyGroup Condition="'$(PreReleaseVersionLabel)' != '' or '$(VersionSuffixDateStamp)' == ''">
+  <!--
+      Traditionally, .NET Core has used prerelease labels like:
+      - preview1
+      - beta1,
+      - preview9
+
+      For previews, this presents a problem if we decide to release more than 9 previews, as preview10 sorts
+      after preview9. This could be dealt with by using preview01, preview02, etc. but this is harder to read.
+      Instead, repos should use preview.1, preview.2, etc. if using SemVer2. NuGet will properly preference preview.10
+      over preview.9.
+
+      If PreReleaseVersionIteration is set and SemanticVersioningV1 is not set to true, then the prerelease version
+      number is appended with a '.' to PreReleaseVersionLabel to create the final prerelease label.
+    -->
     <_PreReleaseLabel>$(PreReleaseVersionLabel)</_PreReleaseLabel>
+    <_PreReleaseLabel Condition="'$(SemanticVersioningV1)' != 'true' and '$(PreReleaseVersionIteration)' != ''">$(PreReleaseVersionLabel).$(PreReleaseVersionIteration)</_PreReleaseLabel>
+    <_PreReleaseLabel Condition="'$(SemanticVersioningV1)' == 'true'">$(PreReleaseVersionLabel)$(PreReleaseVersionIteration)</_PreReleaseLabel>
     <_PreReleaseLabel Condition="'$(ContinuousIntegrationBuild)' == 'true' and '$(OfficialBuild)' != 'true'">ci</_PreReleaseLabel>
     <_PreReleaseLabel Condition="'$(ContinuousIntegrationBuild)' != 'true'">dev</_PreReleaseLabel>
 

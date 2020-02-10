@@ -13,10 +13,12 @@ namespace Microsoft.DotNet.SwaggerGenerator.Languages
     {
         private Templates() { }
 
+        public static string BasePath { get; set; } = Path.GetDirectoryName(typeof(Templates).Assembly.Location);
+
         public static Templates Load(string languageName, IHandlebars hb)
         {
             string templateDirectory = Path.GetFullPath(Path.Combine(
-                Path.GetDirectoryName(typeof(Templates).Assembly.Location),
+                BasePath,
                 "Languages",
                 languageName));
             var templates = new Templates();

@@ -2,10 +2,12 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using Microsoft.Cci.Extensions.CSharp;
+using Microsoft.Cci.Writers.Syntax;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using Microsoft.Cci.Writers.Syntax;
 
 namespace Microsoft.Cci.Writers.CSharp
 {
@@ -33,16 +35,16 @@ namespace Microsoft.Cci.Writers.CSharp
             WriteTypeName(param, noSpace: true);
         }
 
-        private void WriteGenericContraints(IEnumerable<IGenericParameter> genericParams)
+        private void WriteGenericContraints(IEnumerable<IGenericParameter> genericParams, byte? methodNullableContextValue = null)
         {
             if (!genericParams.Any())
                 return;
 
             foreach (IGenericParameter param in genericParams)
             {
-                var constraints = GetConstraints(param);
+                Action[] constraints = GetConstraints(param, methodNullableContextValue).ToArray();
 
-                if (!constraints.Any())
+                if (constraints.Length <= 0)
                     continue;
 
                 WriteSpace();
@@ -54,23 +56,52 @@ namespace Microsoft.Cci.Writers.CSharp
             }
         }
 
-        private IEnumerable<Action> GetConstraints(IGenericParameter parameter)
+        private IEnumerable<Action> GetConstraints(IGenericParameter parameter, byte? methodNullableContextValue)
         {
+            parameter.Attributes.TryGetAttributeOfType(CSharpCciExtensions.NullableAttributeFullName, out ICustomAttribute nullableAttribute);
+            object nullableAttributeValue = nullableAttribute.GetAttributeArgumentValue<byte>() ?? methodNullableContextValue ?? TypeNullableContextValue ?? ModuleNullableContextValue;
+
             if (parameter.MustBeValueType)
                 yield return () => WriteKeyword("struct", noSpace: true);
             else
             {
                 if (parameter.MustBeReferenceType)
-                    yield return () => WriteKeyword("class", noSpace: true);
+                    yield return () =>
+                    {
+                        WriteKeyword("class", noSpace: true);
+
+                        if (nullableAttribute != null)
+                        {
+                            WriteNullableSymbolForReferenceType(nullableAttributeValue, arrayIndex: 0);
+                        }
+                    };
             }
 
+            // If there are no struct or class constraints and contains a nullableAttributeValue then it might have a notnull constraint
+            if (!parameter.MustBeValueType && !parameter.MustBeReferenceType && nullableAttributeValue != null)
+            {
+                if (((byte)nullableAttributeValue & 1) != 0)
+                {
+                    yield return () => WriteKeyword("notnull", noSpace: true);
+                }
+            }
+
+            var assemblyLocation = parameter.Locations.FirstOrDefault()?.Document?.Location;
+
+            int constraintIndex = 0;
             foreach (var constraint in parameter.Constraints)
             {
-                // Skip valuetype because we should get it below.
-                if (TypeHelper.TypesAreEquivalent(constraint, constraint.PlatformType.SystemValueType) && parameter.MustBeValueType)
-                    continue;
+                // Skip valuetype because we should get it above.
+                if (!TypeHelper.TypesAreEquivalent(constraint, constraint.PlatformType.SystemValueType) && !parameter.MustBeValueType)
+                {
+                    if (assemblyLocation != null)
+                    {
+                        nullableAttributeValue = parameter.GetGenericParameterConstraintConstructorArgument(constraintIndex, assemblyLocation, _metadataReaderCache, CSharpCciExtensions.NullableConstructorArgumentParser) ?? nullableAttributeValue;
+                    }
 
-                yield return () => WriteTypeName(constraint, noSpace: true);
+                    constraintIndex++;
+                    yield return () => WriteTypeName(constraint, noSpace: true, nullableAttributeArgument: nullableAttributeValue ?? methodNullableContextValue ?? TypeNullableContextValue ?? ModuleNullableContextValue);
+                }
             }
 
             // new constraint cannot be put on structs and needs to be the last constraint

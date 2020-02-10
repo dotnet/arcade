@@ -4,6 +4,7 @@
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.DotNet.Github.IssueLabeler.Helpers;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -20,15 +21,18 @@ namespace Microsoft.DotNet.GitHub.IssueLabeler
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddMvc();
-            services.AddSingleton(
-                new Labeler(
+            var diffHelper = new DiffHelper();
+            var datasetHelper = new DatasetHelper(diffHelper);
+            var labeler = new Labeler(
                     Configuration["GitHubRepoOwner"],
                     Configuration["GitHubRepoName"],
-                    Configuration["ClientId"],
-                    Configuration["ClientSecret"],
                     Configuration["SecretUri"],
-                    double.Parse(Configuration["Threshold"])));
+                    double.Parse(Configuration["Threshold"]), diffHelper, datasetHelper);
+            services.AddMvc();
+
+            services.AddSingleton(labeler)
+            .AddSingleton(datasetHelper)
+            .AddSingleton(diffHelper);
         }
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)

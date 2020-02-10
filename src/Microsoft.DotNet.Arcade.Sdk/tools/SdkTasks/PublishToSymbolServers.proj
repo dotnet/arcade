@@ -17,6 +17,7 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp2.1</TargetFramework>
+    <NETCORE_ENGINEERING_TELEMETRY>Publish</NETCORE_ENGINEERING_TELEMETRY>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -30,7 +31,7 @@
 
   <Target Name="Execute">
     <ItemGroup>
-      <FilesToPublishToSymbolServer Include="$(PDBArtifactsDirectory)\*.pdb"/>
+      <FilesToPublishToSymbolServer Include="$(PDBArtifactsDirectory)\**\*.pdb"/>
       <PackagesToPublishToSymbolServer Include="$(BlobBasePath)\*.symbols.nupkg"/>
 
       <!--
@@ -52,8 +53,13 @@
 
     <Message
       Importance="High"
+      Text="No symbol file(s) were found to publish."
+      Condition="'$(FilesToPublishToSymbolServer)' == ''" />
+
+    <Message
+      Importance="High"
       Text="No symbol package(s) were found to publish."
-      Condition="$(PublishToSymbolServer) == false" />
+      Condition="'$(PackagesToPublishToSymbolServer)' == ''" />
 
     <ReadLinesFromFile
       File="$(SymbolPublishingExclusionsFile)"
@@ -63,6 +69,15 @@
           ItemName="PackageExcludeFiles"/>
     </ReadLinesFromFile>
 
+    <Message
+      Text="Going to publish this package -> %(PackagesToPublishToSymbolServer.Identity)." />
+
+    <Message
+      Text="Going to publish this file -> %(FilesToPublishToSymbolServer.Identity)." />
+
+    <Message
+      Text="Going to ignore this file -> %(PackageExcludeFiles.Identity)." />
+    
     <!-- Symbol Uploader: MSDL -->
     <Message Importance="High" Text="Publishing symbol packages to MSDL ..." Condition="$(PublishToMSDL)" />
     <PublishSymbols PackagesToPublish="@(PackagesToPublishToSymbolServer)"

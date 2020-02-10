@@ -70,7 +70,7 @@
       <ApiCompatArgs Condition="'$(BaselineAllAPICompatError)' != 'true' and Exists('$(ApiCompatBaseline)')">$(ApiCompatArgs) --baseline "$(ApiCompatBaseline)"</ApiCompatArgs>
       <!-- Must be last option. -->
       <ApiCompatArgs>$(ApiCompatArgs) --impl-dirs "$(IntermediateOutputPath),@(_DependencyDirectories, ','),"</ApiCompatArgs>
-      <ApiCompatBaselineAll Condition="'$(BaselineAllAPICompatError)' == 'true'">&gt; $(ApiCompatBaseline)</ApiCompatBaselineAll>
+      <ApiCompatBaselineAll Condition="'$(BaselineAllAPICompatError)' == 'true'">&gt; "$(ApiCompatBaseline)"</ApiCompatBaselineAll>
       <ApiCompatExitCode>0</ApiCompatExitCode>
 
       <ApiCompatResponseFile>$(IntermediateOutputPath)apicompat.rsp</ApiCompatResponseFile>
@@ -130,7 +130,7 @@
       <MatchingRefApiCompatArgs Condition="'$(BaselineAllMatchingRefApiCompatError)' != 'true' and Exists('$(MatchingRefApiCompatBaseline)')">$(MatchingRefApiCompatArgs) --baseline "$(MatchingRefApiCompatBaseline)"</MatchingRefApiCompatArgs>
       <!-- Must be last option. -->
       <MatchingRefApiCompatArgs>$(MatchingRefApiCompatArgs) --impl-dirs "@(_ImplementationDependencyDirectories, ','),"</MatchingRefApiCompatArgs>
-      <MatchingRefApiCompatBaselineAll Condition="'$(BaselineAllMatchingRefApiCompatError)' == 'true'">&gt; $(MatchingRefApiCompatBaseline)</MatchingRefApiCompatBaselineAll>
+      <MatchingRefApiCompatBaselineAll Condition="'$(BaselineAllMatchingRefApiCompatError)' == 'true'">&gt; "$(MatchingRefApiCompatBaseline)"</MatchingRefApiCompatBaselineAll>
 
       <MatchingRefApiCompatExitCode>0</MatchingRefApiCompatExitCode>
 

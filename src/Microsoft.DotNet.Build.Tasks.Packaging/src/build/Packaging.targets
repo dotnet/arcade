@@ -956,6 +956,10 @@
     <DefaultValidateFramework Include="netcoreapp3.0">
       <RuntimeIDs>@(NETCoreApp30RIDs)</RuntimeIDs>
     </DefaultValidateFramework>
+    <NETCoreApp50RIDs Condition="'@(NETCoreApp50RIDs)' == ''" Include="@(NETCoreApp30RIDs)" />
+    <DefaultValidateFramework Include="netcoreapp5.0">
+      <RuntimeIDs>@(NETCoreApp50RIDs)</RuntimeIDs>
+    </DefaultValidateFramework>
 
     <NETCore50RIDs Condition="'@(NETCore50RIDs)' == ''" Include="win10-x86;win10-x86-aot;win10-x64;win10-x64-aot;win10-arm;win10-arm-aot" />
     <DefaultValidateFramework Include="netcore50">
@@ -1020,10 +1024,6 @@
     <UAP10016299RIDs Condition="'@(UAP10016299RIDs)' == ''" Include="@(UAP10RIDs)" />
     <DefaultValidateFramework Include="uap10.0.16299">
       <RuntimeIDs>@(UAP10016299RIDs)</RuntimeIDs>
-    </DefaultValidateFramework>
-    <UAPvNextRIDs Condition="'@(UAPvNextRIDs)' == ''" Include="@(UAP10016299RIDs)" />
-    <DefaultValidateFramework Include="$(UAPvNextTFM)">
-      <RuntimeIDs>@(UAPvNextRIDs)</RuntimeIDs>
     </DefaultValidateFramework>
   </ItemGroup>
 
@@ -1292,6 +1292,10 @@
                         Packages="$(PackageOutputPath)$(Id).$(PackageVersion).nupkg"
                         UpdateStablePackageInfo="$(UpdateStablePackageInfo)" />
   </Target>
+
+  <!-- When we want to update the package index with the harvest version, we require the package to already be built, which a default call
+  to UpdatePackageIndex won't do. This target will just wrap both targets to ensure the package is built, and then we can update the index. -->
+  <Target Name="UpdateHarvestVersionOnPackageIndex" DependsOnTargets="Build;UpdatePackageIndex" />
 
   <!-- Updates the packageIndex with information from the multiple sources for the entire repo -->
   <!-- Intentionally not sequenced, invoked directly through /t:UpdateRepoPackageIndex -->

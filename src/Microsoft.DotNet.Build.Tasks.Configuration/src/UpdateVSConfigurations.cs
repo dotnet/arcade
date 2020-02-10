@@ -56,9 +56,9 @@ namespace Microsoft.DotNet.Build.Tasks.Configuration
                 }
             }
 
-            foreach (var solutionRoot in SolutionsToUpdate)
+            foreach (var solution in SolutionsToUpdate)
             {
-                UpdateSolution(solutionRoot);
+                UpdateSolution(solution);
             }
 
             return !Log.HasLoggedErrors;
@@ -213,31 +213,45 @@ namespace Microsoft.DotNet.Build.Tasks.Configuration
             return false;
         }
 
-        private void UpdateSolution(ITaskItem solutionRootItem)
+        private void UpdateSolution(ITaskItem solutionItem)
         {
-            string solutionRootPath = Path.GetFullPath(solutionRootItem.ItemSpec);
-            string projectExclude = solutionRootItem.GetMetadata("ExcludePattern");
-            List<ProjectFolder> projectFolders = new List<ProjectFolder>();
-
-            if (!solutionRootPath.EndsWith(Path.DirectorySeparatorChar.ToString()))
+            string solutionItemPath = Path.GetFullPath(solutionItem.ItemSpec);
+            string solutionDirectory, solutionPath;            
+            if (Path.GetExtension(solutionItemPath).Equals(".sln", StringComparison.OrdinalIgnoreCase))
             {
-                solutionRootPath += Path.DirectorySeparatorChar;
+                solutionDirectory = Path.GetFileName(solutionItemPath);
+                solutionPath = solutionItemPath;
+            }
+            else
+            {
+                solutionDirectory = solutionItemPath;
+                string solutionFile = GetNameForSolution(solutionDirectory);
+                solutionPath = Path.Combine(solutionDirectory, solutionFile);
             }
 
-            ProjectFolder testFolder = new ProjectFolder(solutionRootPath, "tests", "{1A2F9F4A-A032-433E-B914-ADD5992BB178}", projectExclude, true);
+            if (!solutionDirectory.EndsWith(Path.DirectorySeparatorChar.ToString()))
+            {
+                solutionDirectory += Path.DirectorySeparatorChar;
+            }
+
+            string projectExclude = solutionItem.GetMetadata("ExcludePattern");
+            List<ProjectFolder> projectFolders = new List<ProjectFolder>();
+
+
+            ProjectFolder testFolder = new ProjectFolder(solutionDirectory, "tests", "{1A2F9F4A-A032-433E-B914-ADD5992BB178}", projectExclude, true);
             if (testFolder.FolderExists)
             {
                 projectFolders.Add(testFolder);
             }
 
-            ProjectFolder srcFolder = new ProjectFolder(solutionRootPath, "src", "{E107E9C1-E893-4E87-987E-04EF0DCEAEFD}", projectExclude);
+            ProjectFolder srcFolder = new ProjectFolder(solutionDirectory, "src", "{E107E9C1-E893-4E87-987E-04EF0DCEAEFD}", projectExclude);
             if (srcFolder.FolderExists)
             {
                 testFolder.DependsOn.Add(srcFolder);
                 projectFolders.Add(srcFolder);
             };
 
-            ProjectFolder refFolder = new ProjectFolder(solutionRootPath, "ref", "{2E666815-2EDB-464B-9DF6-380BF4789AD4}", projectExclude);
+            ProjectFolder refFolder = new ProjectFolder(solutionDirectory, "ref", "{2E666815-2EDB-464B-9DF6-380BF4789AD4}", projectExclude);
             if (refFolder.FolderExists)
             {
                 srcFolder.DependsOn.Add(refFolder);
@@ -246,15 +260,13 @@ namespace Microsoft.DotNet.Build.Tasks.Configuration
 
             if (projectFolders.Count == 0)
             {
-                Log.LogMessage($"Directory '{solutionRootPath}' does not contain a 'src', 'tests', or 'ref' directory so skipping solution generation.");
+                Log.LogMessage($"Directory '{solutionDirectory}' does not contain a 'src', 'tests', or 'ref' directory so skipping solution generation.");
                 return;
             }
 
-            Log.LogMessage($"Generating solution for '{solutionRootPath}'...");
+            Log.LogMessage($"Generating solution for '{solutionDirectory}'...");
 
-            string solutionName = GetNameForSolution(solutionRootPath);
-            string slnFile = Path.Combine(solutionRootPath, solutionName + ".sln");
-            Solution solution = new Solution(slnFile);
+            Solution solution = new Solution(solutionPath);
 
             StringBuilder slnBuilder = new StringBuilder();
             slnBuilder.AppendLine("Microsoft Visual Studio Solution File, Format Version 12.00");
@@ -270,7 +282,7 @@ namespace Microsoft.DotNet.Build.Tasks.Configuration
                 {
                     string projectName = Path.GetFileNameWithoutExtension(slnProject.ProjectPath);
                     // Normalize the directory separators to the windows version given these are projects for VS and only work on windows.
-                    string relativePathFromCurrentDirectory = slnProject.ProjectPath.Replace(solutionRootPath, "").Replace("/", "\\");
+                    string relativePathFromCurrentDirectory = slnProject.ProjectPath.Replace(solutionDirectory, "").Replace("/", "\\");
 
                     slnBuilder.AppendLine($"Project(\"{slnProject.SolutionGuid}\") = \"{projectName}\", \"{relativePathFromCurrentDirectory}\", \"{slnProject.ProjectGuid}\"");
 
@@ -359,7 +371,7 @@ namespace Microsoft.DotNet.Build.Tasks.Configuration
 
             slnBuilder.AppendLine("EndGlobal");
 
-            File.WriteAllText(slnFile, slnBuilder.ToString());
+            File.WriteAllText(solutionPath, slnBuilder.ToString());
         }
 
         private static string GetNameForSolution(string path)

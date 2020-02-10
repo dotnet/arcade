@@ -5,6 +5,7 @@
 using Octokit;
 using System;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -18,7 +19,8 @@ namespace Microsoft.DotNet.Github.IssueLabeler
         private int _startIndex;
         private int _endIndex;
         private string _outputFile;
-  
+        private bool _skipColumns;
+
         public GithubIssueDownloader(string authToken, string repoName, string owner, int startIndex, int endIndex, string OutputFile)
         {
             if (startIndex <= 0)
@@ -41,47 +43,72 @@ namespace Microsoft.DotNet.Github.IssueLabeler
             _startIndex = startIndex;
             _endIndex = endIndex;
             _outputFile = OutputFile;
+            _skipColumns = false;
         }
 
         public async Task DownloadAndSaveAsync()
         {
             StringBuilder sb = new StringBuilder();
-            File.WriteAllText(_outputFile, "Id\tArea\tTitle\tDescription");
+            if (!File.Exists(_outputFile))
+                File.WriteAllText(_outputFile, IgnoreForTraining("ID\t") + "Area\tTitle\tDescription\tIsPR\tFilePaths" + Environment.NewLine);
+
             for (int i = _startIndex; i < _endIndex; i++)
             {
+                string filePaths = string.Empty;
+                bool isPr = true;
+                Issue issueOrPr = null;
                 try
                 {
-                    var issue = await _client.Issue.Get(_owner, _repoName, i);
-
-                    foreach (var label in issue.Labels)
+                    issueOrPr = await _client.Issue.Get(_owner, _repoName, i).ConfigureAwait(false);
+                    isPr = issueOrPr.PullRequest != null;
+                    if (isPr)
                     {
-                        if (label.Name.Contains("area-"))
-                        {
-                            string title = RemoveNewLineCharacters(issue.Title);
-                            string description = RemoveNewLineCharacters(issue.Body);
-                            // Ordering is important here because we are using the same ordering on the prediction side.
-                            sb.AppendLine($"{label.Name}\t\"{title}\"\t\"{description}\"");
-                        }
-                    }
-
-                    if (i % 1000 == 0)
-                    {
-                        File.AppendAllText(_outputFile, sb.ToString());
-                        sb.Clear();
+                        var prFiles = await _client.PullRequest.Files(_owner, _repoName, i).ConfigureAwait(false);
+                        filePaths = String.Join(";", prFiles.Select(x => x.FileName));
                     }
                 }
-                catch (Exception)
+                catch (NotFoundException)
                 {
-                    Console.WriteLine($"Issue {i} does not exist");
+                    continue;
+                }
+                catch (RateLimitExceededException ex)
+                {
+                    TimeSpan timeToWait = ex.Reset.AddMinutes(5) - DateTimeOffset.UtcNow;
+                    await Task.Delay(timeToWait).ConfigureAwait(false);
+                    i--;
+                    continue;
+                }
+
+                foreach (var label in issueOrPr.Labels)
+                {
+                    if (label.Name.Contains("area-"))
+                    {
+                        string title = NormalizeWhitespace(issueOrPr.Title);
+                        string description = NormalizeWhitespace(issueOrPr.Body);
+                        // Ordering is important here because we are using the same ordering on the prediction side.
+                        string curLabel = label.Name;
+                        int isPrZeroOrOne = isPr ? 1 : 0;
+                        sb.AppendLine(IgnoreForTraining($"{i}\t") + $"{curLabel}\t`{title}`\t`{description}`\t{isPrZeroOrOne}\t{filePaths}");
+                    }
+                }
+
+                if (i % 1000 == 0)
+                {
+                    File.AppendAllText(_outputFile, sb.ToString());
+                    sb.Clear();
                 }
             }
-
-            File.AppendAllText(_outputFile, sb.ToString());
+            if (sb.Length != 0)
+            {
+                File.AppendAllText(_outputFile, sb.ToString());
+            }
         }
 
-        private static string RemoveNewLineCharacters(string input)
+        private string IgnoreForTraining(string column) => _skipColumns ? string.Empty : column;
+
+        private static string NormalizeWhitespace(string input)
         {
-            return input.Replace("\r\n", " ").Replace("\n", " ");
+            return input?.Replace("\r\n", " ").Replace("\n", " ").Replace("\t", " ").Replace('"', '`');
         }
     }
 }

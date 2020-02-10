@@ -150,16 +150,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     Log.LogError($"Problem reading asset manifest path from '{AssetManifestPath}'");
                 }
 
-                if (!Directory.Exists(BlobAssetsBasePath))
-                {
-                    Log.LogError($"Problem reading blob assets from {BlobAssetsBasePath}");
-                }
-
-                if (!Directory.Exists(PackageAssetsBasePath))
-                {
-                    Log.LogError($"Problem reading package assets from {PackageAssetsBasePath}");
-                }
-
                 var buildModel = BuildManifestUtil.ManifestFileToModel(AssetManifestPath, Log);
 
                 // Parsing the manifest may fail for several reasons
@@ -184,13 +174,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 SplitArtifactsInCategories(buildModel);
 
                 // Return errors from the safety checks
-                if (Log.HasLoggedErrors)
-                {
-                    return false;
-                }
-
-                CheckForStableAssets();
-
                 if (Log.HasLoggedErrors)
                 {
                     return false;
@@ -383,58 +366,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             }
 
             return isPublic;
-        }
-
-        /// <summary>
-        ///  Run a check to verify that stable assets are not published to
-        ///  locations they should not be published.
-        ///  
-        /// For now, this is only done for packages since feeds are
-        /// immutable.
-        /// </summary>
-        public void CheckForStableAssets()
-        {
-            if (SkipSafetyChecks)
-            {
-                return;
-            }
-
-            foreach (var packagesPerCategory in PackagesByCategory)
-            {
-                var category = packagesPerCategory.Key;
-                var packages = packagesPerCategory.Value;
-
-                if (FeedConfigs.TryGetValue(category, out List<FeedConfig> feedConfigsForCategory))
-                {
-                    foreach (var feedConfig in feedConfigsForCategory)
-                    {
-                        // Look at the version numbers. If any of the packages here are stable and about to be published to a
-                        // non-isolated feed, then issue an error. Isolated feeds may recieve all packages.
-                        if (feedConfig.Isolated)
-                        {
-                            continue;
-                        }
-
-                        List<PackageArtifactModel> filteredPackages = FilterPackages(packages, feedConfig);
-
-                        foreach (var package in filteredPackages)
-                        {
-                            if (!NuGetVersion.TryParse(package.Version, out NuGetVersion version))
-                            {
-                                Log.LogError($"Package '{package.Id}' has invalid version '{package.Version}'");
-                            }
-                            // We want to avoid pushing non-final bits with final version numbers to feeds that are in general
-                            // use by the public. This is for technical (can't overwrite the original packages) reasons as well as 
-                            // to avoid confusion. Because .NET core generally brands its "final" bits without prerelease version
-                            // suffixes (e.g. 3.0.0-preview1), test to see whether a prerelease suffix exists.
-                            else if (!version.IsPrerelease)
-                            {
-                                Log.LogError($"Package '{package.Id}' has stable version '{package.Version}' but is targeted at a non-isolated feed '{feedConfig.TargetURL}'");
-                            }
-                        }
-                    }
-                }
-            }
         }
 
         private async Task HandlePackagePublishingAsync(IMaestroApi client, Maestro.Client.Models.Build buildInformation)
@@ -1016,7 +947,21 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             Maestro.Client.Models.Build buildInformation,
             FeedConfig feedConfig)
         {
-            var packages = packagesToPublish.Select(p => Path.Combine(PackageAssetsBasePath, $"{p.Id}.{p.Version}.nupkg"));
+            var packages = packagesToPublish.Select(p =>
+            {
+                var localPackagePath = Path.Combine(PackageAssetsBasePath, $"{p.Id}.{p.Version}.nupkg");
+                if (!File.Exists(localPackagePath))
+                {
+                    Log.LogError($"Could not locate '{p.Id}.{p.Version}' at '{localPackagePath}'");
+                }
+                return localPackagePath;
+            });
+
+            if (Log.HasLoggedErrors)
+            {
+                return;
+            }
+
             var blobFeedAction = CreateBlobFeedAction(feedConfig);
 
             var pushOptions = new PushOptions
@@ -1061,12 +1006,23 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 .Select(blob =>
                 {
                     var fileName = Path.GetFileName(blob.Id);
-                    return new MSBuild.TaskItem(Path.Combine(BlobAssetsBasePath, fileName), new Dictionary<string, string>
+                    var localBlobPath = Path.Combine(BlobAssetsBasePath, fileName);
+                    if (!File.Exists(localBlobPath))
+                    {
+                        Log.LogError($"Could not locate '{blob.Id} at '{localBlobPath}'");
+                    }
+
+                    return new MSBuild.TaskItem(localBlobPath, new Dictionary<string, string>
                     {
                         {"RelativeBlobPath", blob.Id}
                     });
                 })
                 .ToArray();
+
+            if (Log.HasLoggedErrors)
+            {
+                return;
+            }
 
             var blobFeedAction = CreateBlobFeedAction(feedConfig);
             var pushOptions = new PushOptions
