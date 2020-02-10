@@ -30,8 +30,8 @@
 
   <Target Name="Execute">
     <ItemGroup>
-      <FilesToPublishToSymbolServer Include="$(PDBArtifactsDirectory)\*.pdb"/>
-      <PackagesToPublishToSymbolServer Include="$(BlobBasePath)\*.symbols.nupkg"/>
+      <FilesToPublishToSymbolServer Include="$(PDBArtifactsDirectory)**\*.pdb"/>
+      <PackagesToPublishToSymbolServer Include="$(BlobBasePath)**\*.symbols.nupkg"/>
 
       <!--
         These packages from Arcade-Services include some native libraries that
