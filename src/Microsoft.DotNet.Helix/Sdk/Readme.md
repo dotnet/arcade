@@ -80,6 +80,47 @@ Given a local folder `$(TestFolder)` containing `runtests.cmd`, this will run `r
 </Project>
 ```
 
+### Custom Helix WorkItem functionality
+There are times when a work item may detect that the machine being executed on is in a (possibly transient) undesirable state.  Additionally there can be times when a work item would like to request its machine be rebooted after execution (for instance, when a file handle is mysteriously open from another process).  The following functionality has been added to request both of these and can be used either from within a python script or any command line.
+
+#### Request Infrastructure Retry
+An "infrastructure retry" is pre-existing functionality Helix Clients use in cases such as when communication to the telemetry service or Azure Service Bus fails; this allows the work item be run again in entirety, generally (but not guaranteedly) on a different machine, with the hope that the next machine will be in a better state.  Note that requesting this prevents any job using it from finishing, and as a FIFO queue the work items that get retried go to the back of the queue, so calling this API can significantly increase job execution time based off how many jobs are being handled by a given queue.      
+
+##### Sample usage:
+
+###### In Python:
+
+```
+from helix.workitemutil import request_infra_retry
+
+request_infra_retry('Optional reason string')
+
+```
+
+###### Outside python:
+
+Linux / OSX: `$HELIX_PYTHONPATH -c "from helix.workitemutil import request_infra_retry; request_infra_retry('Optional reason string')"`
+Windows: `%HELIX_PYTHONPATH% -c "from helix.workitemutil import request_infra_retry; request_infra_retry('Optional reason string')"`
+
+#### Request post-workitem reboot
+Helix work items explicitly rebooting the helix client machine themself will never "finish", since this will in most cases preclude sending the final event telemetry for these work items.  However, a work item may know that the machine is in a bad state where a reboot would be desirable (for instance, if the Helix agent is acting as a build machine and some leaked build process is preventing workspace cleanup). After calling this API, the work item runs to completion as normal, then after sending the usual telemetry and uploading results will perform a reboot before taking the next work item. 
+
+##### Sample usage:
+
+###### In Python:
+
+```
+from helix.workitemutil import request_reboot
+
+request_reboot('Optional reason string')
+
+```
+
+###### Outside python:
+
+Linux / OSX: `$HELIX_PYTHONPATH -c "from helix.workitemutil import request_reboot; request_reboot('Optional reason string')"`
+Windows: `%HELIX_PYTHONPATH% -c "from helix.workitemutil import request_reboot; request_reboot('Optional reason string')"`
+
 ### All Possible Options
 ```xml
 <Project Sdk="Microsoft.DotNet.Helix.Sdk" DefaultTargets="Test">
