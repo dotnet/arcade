@@ -142,15 +142,6 @@
       <_RestoreToolsProps Include="DotNetRuntimeSourceFeedKey=$(DotNetRuntimeSourceFeedKey)"/>
     </ItemGroup>
 
-    <!--
-      Builds from the 'internal' project, and only those, can download the .net Runtime 
-      from a private location.
-    -->
-    <ItemGroup Condition="'$(SYSTEM_TEAMPROJECT)' == 'internal'">
-      <_RestoreToolsProps Include="DotNetRuntimeSourceFeed=$(DotNetRuntimeSourceFeed)"/>
-      <_RestoreToolsProps Include="DotNetRuntimeSourceFeedKey=$(DotNetRuntimeSourceFeedKey)"/>
-    </ItemGroup>
-
     <ItemGroup>
       <_PublishProps Include="@(_CommonProps)"/>
       <_PublishProps Include="PublishToAzureDevOpsArtifacts=$(DotNetPublishUsingPipelines)" />
