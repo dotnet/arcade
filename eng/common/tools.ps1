@@ -399,7 +399,7 @@ function LocateVisualStudio([object]$vsRequirements = $null){
   if (!(Test-Path $vsWhereExe)) {
     Create-Directory $vsWhereDir
     Write-Host 'Downloading vswhere'
-    Invoke-WebRequest "https://github.com/Microsoft/vswhere/releases/download/$vswhereVersion/vswhere.exe" -OutFile $vswhereExe
+    Invoke-WebRequest "https://netcorenativeassets.blob.core.windows.net/resource-packages/external/windows/vswhere/$vswhereVersion/vswhere.exe" -OutFile $vswhereExe
   }
 
   if (!$vsRequirements) { $vsRequirements = $GlobalJson.tools.vs }
