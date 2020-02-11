@@ -39,7 +39,7 @@ of Arcade or services.**
     - Security
     - Exceptionally high impact issues reported by customers.
     - External dependencies change.
-- See [Change Bar](#ChangeBar.md) and [Changes Policy](#ChangesPolicy.md) for
+- See [Change Bar](./ChangeBar.md) and [Changes Policy](./ChangesPolicy.md) for
   additional details on change bars and communication policies.
 
 ### When can Arcade servicing changes be merged?
@@ -59,7 +59,7 @@ It is the repsonsibility of the coherency QB to ensure that the correct changes 
     - Security
     - Exceptionally high impact issues reported by customers.
     - External dependencies change.
-- See [Change Bar](#ChangeBar.md) and [Changes Policy](#ChangesPolicy.md) for
+- See [Change Bar](./ChangeBar.md) and [Changes Policy](./ChangesPolicy.md) for
   additional details on change bars and communication policies.
 
 ## Mechanics of branching Arcade and services?

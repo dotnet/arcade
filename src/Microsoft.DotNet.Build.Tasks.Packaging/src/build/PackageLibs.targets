@@ -36,7 +36,8 @@
   <!-- Returns the set of files to be included in the NuGet package
        with appropriate metadata.-->
   <Target Name="GetFilesToPackage"
-          Returns="@(FilesToPackage)">
+          Returns="@(FilesToPackage)"
+          Condition="'$(ExcludeFromPackage)' != 'true'">
     <PropertyGroup>
       <PackagePath Condition="'$(PackagePath)' == ''">$(TargetPath)</PackagePath>
       <PackageIncludeDocs Condition="'$(PackageIncludeDocs)' == '' AND '$(IsReferenceAssembly)' == 'true'">true</PackageIncludeDocs>

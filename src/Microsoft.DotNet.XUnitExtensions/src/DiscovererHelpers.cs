@@ -11,5 +11,10 @@ namespace Microsoft.DotNet.XUnitExtensions
                 (platforms.HasFlag(TestPlatforms.NetBSD) && RuntimeInformation.IsOSPlatform(OSPlatform.Create("NETBSD"))) ||
                 (platforms.HasFlag(TestPlatforms.OSX) && RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) ||
                 (platforms.HasFlag(TestPlatforms.Windows) && RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
+        
+        internal static bool TestRuntimeApplies(TestRuntimes runtimes) =>
+                (runtimes.HasFlag(TestRuntimes.Mono) && SkipOnMonoDiscoverer.IsMonoRuntime) ||
+                (runtimes.HasFlag(TestRuntimes.CoreCLR) && !SkipOnMonoDiscoverer.IsMonoRuntime); // assume CoreCLR if it's not Mono
+
     }
 }

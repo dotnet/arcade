@@ -9,10 +9,10 @@ namespace Microsoft.DotNet.Build.Tasks.TargetFramework.Sdk
 {
     public class GenerateRuntimeOSPropsFile : BuildTask
     {
-        public  const string RuntimeOSProperty = "RuntimeOS";
+        public const string RuntimeOSProperty = "RuntimeOS";
 
         [Required]
-        public string RuntimePropsFilePath {get ; set; }
+        public string RuntimePropsFilePath { get; set; }
 
         public override bool Execute()
         {
@@ -22,9 +22,9 @@ namespace Microsoft.DotNet.Build.Tasks.TargetFramework.Sdk
             return !Log.HasLoggedErrors;
         }
 
-        public void CreateRuntimeIdentifier(ProjectRootElement project)
+        private void CreateRuntimeIdentifier(ProjectRootElement project)
         {
-            var rid = PlatformAbstractions.RuntimeEnvironment.GetRuntimeIdentifier();
+            string rid = PlatformAbstractions.RuntimeEnvironment.GetRuntimeIdentifier();
             string[] ridParts = rid.Split('-');
 
             if (ridParts.Length < 1)
@@ -37,10 +37,10 @@ namespace Microsoft.DotNet.Build.Tasks.TargetFramework.Sdk
             var propertyGroup = project.CreatePropertyGroupElement();
             project.AppendChild(propertyGroup);
 
-            var runtimeProperty = propertyGroup.AddProperty(RuntimeOSProperty, $"{osNameAndVersion}");
+            var runtimeProperty = propertyGroup.AddProperty(RuntimeOSProperty, osNameAndVersion);
             runtimeProperty.Condition = $"'$({RuntimeOSProperty})' == ''";
 
-            Log.LogMessage($"Running on OS with RID {rid}, so defaulting RuntimeOS to '{osNameAndVersion}'");
+            Log.LogMessage($"Running on OS with RID '{rid}', so defaulting RuntimeOS to '{osNameAndVersion}'");
         }
     }
 }

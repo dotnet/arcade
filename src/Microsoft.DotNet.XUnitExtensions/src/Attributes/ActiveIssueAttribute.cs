@@ -18,7 +18,9 @@ namespace Xunit
         public ActiveIssueAttribute(string issue, TestPlatforms platforms) { }
         public ActiveIssueAttribute(int issueNumber, TargetFrameworkMonikers framework) { }
         public ActiveIssueAttribute(string issue, TargetFrameworkMonikers framework) { }
-        public ActiveIssueAttribute(int issueNumber, TestPlatforms platforms = TestPlatforms.Any, TargetFrameworkMonikers framework = (TargetFrameworkMonikers)0) { }
-        public ActiveIssueAttribute(string issue, TestPlatforms platforms = TestPlatforms.Any, TargetFrameworkMonikers framework = (TargetFrameworkMonikers)0) { }
+        public ActiveIssueAttribute(int issueNumber, TestRuntimes runtimes) { }
+        public ActiveIssueAttribute(string issue, TestRuntimes runtimes) { }
+        public ActiveIssueAttribute(int issueNumber, TestPlatforms platforms = TestPlatforms.Any, TargetFrameworkMonikers framework = (TargetFrameworkMonikers)0, TestRuntimes runtimes = TestRuntimes.Any) { }
+        public ActiveIssueAttribute(string issue, TestPlatforms platforms = TestPlatforms.Any, TargetFrameworkMonikers framework = (TargetFrameworkMonikers)0, TestRuntimes runtimes = TestRuntimes.Any) { }
     }
 }

@@ -8,6 +8,7 @@
   -->
   <PropertyGroup>
     <TargetFramework>net472</TargetFramework>
+    <NETCORE_ENGINEERING_TELEMETRY>Publish</NETCORE_ENGINEERING_TELEMETRY>
   </PropertyGroup>
 
   <ItemGroup>
