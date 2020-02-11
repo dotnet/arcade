@@ -234,7 +234,7 @@
     <Message
       Text="##vso[artifact.upload containerfolder=PdbArtifacts;artifactname=PdbArtifacts]$(PDBsToPublishTempLocation)"
       Importance="high" 
-      Condition="'@(FilesToPublishToSymbolServer)' != ''" />
+      Condition="'@(FilesToPublishToSymbolServer)' != ''"/>
 
     <Message
       Text="##vso[artifact.upload containerfolder=ReleaseConfigs;artifactname=ReleaseConfigs]$(RepositoryEngineeringDir)common/PublishToSymbolServers.proj"

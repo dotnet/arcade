@@ -114,7 +114,7 @@ stages:
           displayName: Windows Build / Publish
 
         - powershell: eng\common\build.ps1
-            -configuration $(_BuildConfig)
+            -configuration $(_BuildConfig) 
             -prepareMachine
             -ci
             -test
@@ -126,7 +126,7 @@ stages:
             HelixAccessToken: $(HelixApiAccessToken)
 
         - powershell: eng\common\build.ps1
-            -configuration $(_BuildConfig)
+            -configuration $(_BuildConfig) 
             -prepareMachine
             -ci
             -test

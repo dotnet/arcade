@@ -53,12 +53,12 @@
     <Message
       Importance="High"
       Text="No symbol file(s) were found to publish."
-      Condition="'$(FilesToPublishToSymbolServer)' == ''" />
+      Condition="'@(FilesToPublishToSymbolServer)' == ''" />
 
     <Message
       Importance="High"
       Text="No symbol package(s) were found to publish."
-      Condition="'$(PackagesToPublishToSymbolServer)' == ''" />
+      Condition="'@(PackagesToPublishToSymbolServer)' == ''" />
 
     <ReadLinesFromFile
       File="$(SymbolPublishingExclusionsFile)"
