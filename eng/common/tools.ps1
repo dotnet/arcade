@@ -387,8 +387,6 @@ function InitializeXCopyMSBuild([string]$packageVersion, [bool]$install) {
 # or $null if no instance meeting the requirements is found on the machine.
 #
 function LocateVisualStudio([object]$vsRequirements = $null){
-  Import-Module -Name (Join-Path $PSScriptRoot 'native\CommonLibrary.psm1')
-
   if (Get-Member -InputObject $GlobalJson.tools -Name 'vswhere') {
     $vswhereVersion = $GlobalJson.tools.vswhere
   } else {
@@ -401,7 +399,7 @@ function LocateVisualStudio([object]$vsRequirements = $null){
   if (!(Test-Path $vsWhereExe)) {
     Create-Directory $vsWhereDir
     Write-Host 'Downloading vswhere'
-    CommonLibrary\Get-File -Uri "https://netcorenativeassets.blob.core.windows.net/resource-packages/external/windows/vswhere/$vswhereVersion/vswhere.exe" -Path $vswhereExe
+    Invoke-WebRequest "https://netcorenativeassets.blob.core.windows.net/resource-packages/external/windows/vswhere/$vswhereVersion/vswhere.exe" -OutFile $vswhereExe
   }
 
   if (!$vsRequirements) { $vsRequirements = $GlobalJson.tools.vs }
