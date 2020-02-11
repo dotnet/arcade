@@ -19,7 +19,6 @@ namespace Microsoft.DotNet.XUnitExtensions
         internal static string NonUapTest = "nonuaptests";
 
         internal const string Failing = "failing";
-        internal const string ActiveIssue = "activeissue";
         internal const string OuterLoop = "outerloop";
 
         public const string Category = "category";

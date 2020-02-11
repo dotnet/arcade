@@ -59,8 +59,6 @@ namespace Microsoft.DotNet.XUnitExtensions
                     yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.NonUapTest);
                 if (frameworks == (TargetFrameworkMonikers)0)
                     yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.Failing);
-
-                yield return new KeyValuePair<string, string>(XunitConstants.ActiveIssue, issue);
             }
         }
     }
