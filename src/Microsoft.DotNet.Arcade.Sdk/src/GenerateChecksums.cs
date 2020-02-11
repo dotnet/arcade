@@ -29,13 +29,13 @@ namespace Microsoft.DotNet.Arcade.Sdk
                     if (string.IsNullOrEmpty(destinationPath))
                     {
                         Log.LogError($"Metadata 'DestinationPath' is missing for item '{item.ItemSpec}'.");
-                        return;
+                        return false;
                     }
 
                     if (!File.Exists(item.ItemSpec))
                     {
                         Log.LogError($"The file '{item.ItemSpec}' does not exist.");
-                        return;
+                        return false;
                     }
 
                     Log.LogMessage(MessageImportance.High, $"Generating checksum for '{item.ItemSpec}' into '{destinationPath}'...");
