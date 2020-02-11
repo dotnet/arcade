@@ -28,14 +28,14 @@ namespace Microsoft.DotNet.Arcade.Sdk
                     string destinationPath = item.GetMetadata("DestinationPath");
                     if (string.IsNullOrEmpty(destinationPath))
                     {
-                        Log.LogMessage(MessageImportance.High, $"Metadata 'DestinationPath' is missing for item '{item.ItemSpec}'.");
-                        return false;
+                        Log.LogError($"Metadata 'DestinationPath' is missing for item '{item.ItemSpec}'.");
+                        return;
                     }
 
                     if (!File.Exists(item.ItemSpec))
                     {
-                        Log.LogMessage(MessageImportance.High, $"The file '{item.ItemSpec}' does not exist.");
-                        return false;
+                        Log.LogError($"The file '{item.ItemSpec}' does not exist.");
+                        return;
                     }
 
                     Log.LogMessage(MessageImportance.High, $"Generating checksum for '{item.ItemSpec}' into '{destinationPath}'...");
