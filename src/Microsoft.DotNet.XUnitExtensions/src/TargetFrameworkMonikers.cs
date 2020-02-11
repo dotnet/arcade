@@ -10,7 +10,6 @@ namespace Xunit
     public enum TargetFrameworkMonikers
     {
         Netcoreapp = 0x1,
-        NetFramework = 0x2,
-        Uap = 0x4
+        NetFramework = 0x2
     }
 }
