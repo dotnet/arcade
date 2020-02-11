@@ -1,3 +1,7 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
 using Azure;
 using Azure.Storage;
 using Azure.Storage.Blobs;
@@ -71,10 +75,14 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
             await IsFileIdenticalToBlobAsync(localFileFullPath, GetBlob(blobPath)).ConfigureAwait(false);
 
         /// <summary>
-        /// Return a bool indicating whether a local file content is the same as 
-        /// the content of a given blob. If the blob has the ContentHash
-        /// property set (all blobs should) the comparison is performed using that (MD5 hash)
-        /// Otherwise a byte-per-byte comparison with the content of the file is performed.
+        /// Return a bool indicating whether a local file's content is the same as 
+        /// the content of a given blob. 
+        /// 
+        /// If the blob has the ContentHash property set, the comparison is performed using 
+        /// that (MD5 hash).  All recently-uploaded blobs or those uploaded by these libraries
+        /// should; some blob clients older than ~2012 may upload without the property set.
+        /// 
+        /// When the ContentHash property is unset, a byte-by-byte comparison is performed.
         /// </summary>
         public async Task<bool> IsFileIdenticalToBlobAsync(string localFileFullPath, BlobClient blob)
         {
@@ -87,8 +95,8 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
             }
             else
             {
-                int oneMegabyte = 1 * 1024 * 1024;
-                if (properties.ContentLength < oneMegabyte)
+                int bytesPerMegabyte = 1 * 1024 * 1024;
+                if (properties.ContentLength < bytesPerMegabyte)
                 {
                     byte[] existingBytes = new byte[properties.ContentLength];
                     byte[] localBytes = File.ReadAllBytes(localFileFullPath);
@@ -103,14 +111,14 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
                 {
                     using (Stream localFileStream = File.OpenRead(localFileFullPath))
                     {
-                        byte[] localBuffer = new byte[oneMegabyte];
-                        byte[] remoteBuffer = new byte[oneMegabyte];
+                        byte[] localBuffer = new byte[bytesPerMegabyte];
+                        byte[] remoteBuffer = new byte[bytesPerMegabyte];
                         int bytesLocalFile = 0;
 
                         do
                         {
                             long start = localFileStream.Position;
-                            int localBytesRead = await localFileStream.ReadAsync(localBuffer, 0, oneMegabyte);
+                            int localBytesRead = await localFileStream.ReadAsync(localBuffer, 0, bytesPerMegabyte);
 
                             HttpRange range = new HttpRange(start, localBytesRead);
                             BlobDownloadInfo download = await blob.DownloadAsync(range).ConfigureAwait(false);
