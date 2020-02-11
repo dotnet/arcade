@@ -3,9 +3,10 @@
 // See the LICENSE file in the project root for more information.
 
 using Microsoft.Build.Framework;
-using Microsoft.Azure.Storage.Blob;
 using System.Threading.Tasks;
 using System;
+using Azure.Storage.Sas;
+using Azure.Storage.Blobs.Models;
 
 namespace Microsoft.DotNet.Build.CloudTestTasks
 {
@@ -21,7 +22,7 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
 
         /// <summary>
         /// When false, if the specified container already exists get a reference to it.
-        /// When true, if the specified container already exists the task will fail.
+        /// When true, if the specified container already exists, fail the task.
         /// </summary>
         public bool FailIfExists { get; set; }
 
@@ -43,7 +44,7 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
         public string StorageUri { get; set; }
 
         /// <summary>
-        /// The write-only SAS token create when WriteOnlyTokenDaysValid is greater than zero.
+        /// The write-only SAS token to create when the value of WriteOnlyTokenDaysValid is greater than zero.
         /// </summary>
         [Output]
         public string WriteOnlyToken { get; set; }
@@ -75,16 +76,12 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
                     return false;
                 }
 
-                BlobContainerPermissions permissions = new BlobContainerPermissions
-                {
-                    PublicAccess = IsPublic ? BlobContainerPublicAccessType.Blob : BlobContainerPublicAccessType.Off
-                };
+                PublicAccessType permissions = IsPublic ? PublicAccessType.Blob : PublicAccessType.None;
 
                 StorageUri = await blobUtils.CreateContainerAsync(permissions);
 
-                ReadOnlyToken = blobUtils.CreateSASToken(ReadOnlyTokenDaysValid, SharedAccessBlobPermissions.Read);
-
-                WriteOnlyToken = blobUtils.CreateSASToken(WriteOnlyTokenDaysValid, SharedAccessBlobPermissions.Write);
+                ReadOnlyToken = blobUtils.CreateSASToken(ReadOnlyTokenDaysValid, BlobContainerSasPermissions.Read);
+                WriteOnlyToken = blobUtils.CreateSASToken(WriteOnlyTokenDaysValid, BlobContainerSasPermissions.Write);
             }
             catch (Exception e)
             {

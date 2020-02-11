@@ -7,9 +7,9 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Build.Framework;
-using Microsoft.Azure.Storage;
-using Microsoft.Azure.Storage.Blob;
 using System.Collections.Generic;
+using Azure.Storage.Blobs.Specialized;
+using Azure.Storage.Blobs;
 
 namespace Microsoft.DotNet.Build.CloudTestTasks
 {
@@ -73,20 +73,12 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
                 return false;
             }
 
-            if (!CloudStorageAccount.TryParse(ConnectionString, out CloudStorageAccount storageAccount))
-            {
-                Log.LogError("Invalid connection string was provided.");
-                return false;
-            }
-
             Log.LogMessage("Begin uploading blobs to Azure account {0} in container {1}.",
                 AccountName,
                 ContainerName);
 
             try
             {
-                CloudBlobClient cloudBlobClient = storageAccount.CreateCloudBlobClient();
-                CloudBlobContainer cloudBlobContainer = cloudBlobClient.GetContainerReference(ContainerName);
                 AzureStorageUtils blobUtils = new AzureStorageUtils(AccountName, AccountKey, ContainerName);
 
                 List<Task> uploadTasks = new List<Task>();
@@ -107,13 +99,13 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
                             throw new Exception(string.Format("The file '{0}' does not exist.", item.ItemSpec));
                         }
 
-                        CloudBlockBlob blobReference = cloudBlobContainer.GetBlockBlobReference(relativeBlobPath);
+                        BlobClient blobReference = blobUtils.GetBlob(relativeBlobPath);
 
                         if (!Overwrite && await blobReference.ExistsAsync())
                         {
                             if (PassIfExistingItemIdentical)
                             {
-                                if (await blobUtils.IsFileIdenticalToBlob(item.ItemSpec, blobReference))
+                                if (await blobUtils.IsFileIdenticalToBlobAsync(item.ItemSpec, blobReference))
                                 {
                                     return;
                                 }
@@ -124,7 +116,10 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
 
                         CancellationTokenSource timeoutTokenSource = new CancellationTokenSource(TimeSpan.FromMinutes(UploadTimeoutInMinutes));
 
-                        await blobReference.UploadFromFileAsync(item.ItemSpec, timeoutTokenSource.Token);
+                        using (Stream localFileStream = File.OpenRead(item.ItemSpec))
+                        {
+                            await blobReference.UploadAsync(localFileStream, timeoutTokenSource.Token);
+                        }
                     }));
                 }
 
