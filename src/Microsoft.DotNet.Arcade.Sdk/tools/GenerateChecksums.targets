@@ -12,6 +12,9 @@
           Inputs="@(GenerateChecksumItems)"
           Outputs="%(GenerateChecksumItems.DestinationPath)">
 
+    <Error Condition="'%(GenerateChecksumItems.DestinationPath)' == ''"
+           Text="Item &quot;%(GenerateChecksumItems.Identity)&quot; does not define required metadata &quot;DestinationPath&quot;" />
+
     <GenerateChecksums Items="@(GenerateChecksumItems)" />
 
     <!-- Automatically include generated checksums in the asset manifest -->
