@@ -28,12 +28,14 @@ namespace Microsoft.DotNet.Arcade.Sdk
                     string destinationPath = item.GetMetadata("DestinationPath");
                     if (string.IsNullOrEmpty(destinationPath))
                     {
-                        throw new Exception($"Metadata 'DestinationPath' is missing for item '{item.ItemSpec}'.");
+                        Log.LogMessage(MessageImportance.High, $"Metadata 'DestinationPath' is missing for item '{item.ItemSpec}'.");
+                        return false;
                     }
 
                     if (!File.Exists(item.ItemSpec))
                     {
-                        throw new Exception($"The file '{item.ItemSpec}' does not exist.");
+                        Log.LogMessage(MessageImportance.High, $"The file '{item.ItemSpec}' does not exist.");
+                        return false;
                     }
 
                     Log.LogMessage(MessageImportance.High, $"Generating checksum for '{item.ItemSpec}' into '{destinationPath}'...");
@@ -50,9 +52,6 @@ namespace Microsoft.DotNet.Arcade.Sdk
                 }
                 catch (Exception e)
                 {
-                    // We have 2 log calls because we want a nice error message but we also want to capture the
-                    // callstack in the log.
-                    Log.LogError("An exception occurred while trying to generate a checksum for '{0}'.", item.ItemSpec);
                     Log.LogErrorFromException(e);
                     return false;
                 }
