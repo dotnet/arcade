@@ -28,19 +28,17 @@ namespace Microsoft.DotNet.Arcade.Sdk
                     string destinationPath = item.GetMetadata("DestinationPath");
                     if (string.IsNullOrEmpty(destinationPath))
                     {
-                        throw new Exception($"Metadata 'DestinationPath' is missing for item '{item.ItemSpec}'.");
+                        Log.LogError($"Metadata 'DestinationPath' is missing for item '{item.ItemSpec}'.");
+                        return !Log.HasLoggedErrors;
                     }
 
                     if (!File.Exists(item.ItemSpec))
                     {
-                        throw new Exception($"The file '{item.ItemSpec}' does not exist.");
+                        Log.LogError($"The file '{item.ItemSpec}' does not exist.");
+                        return !Log.HasLoggedErrors;
                     }
 
-                    Log.LogMessage(
-                        MessageImportance.High,
-                        "Generating checksum for '{0}' into '{1}'...",
-                        item.ItemSpec,
-                        destinationPath);
+                    Log.LogMessage(MessageImportance.High, $"Generating checksum for '{item.ItemSpec}' into '{destinationPath}'...");
 
                     using (FileStream stream = File.OpenRead(item.ItemSpec))
                     {
@@ -54,15 +52,12 @@ namespace Microsoft.DotNet.Arcade.Sdk
                 }
                 catch (Exception e)
                 {
-                    // We have 2 log calls because we want a nice error message but we also want to capture the
-                    // callstack in the log.
-                    Log.LogError("An exception occurred while trying to generate a checksum for '{0}'.", item.ItemSpec);
-                    Log.LogMessage(MessageImportance.Low, e.ToString());
-                    return false;
+                    Log.LogErrorFromException(e);
+                    return !Log.HasLoggedErrors;
                 }
             }
 
-            return true;
+            return !Log.HasLoggedErrors;
         }
     }
 }
