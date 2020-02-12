@@ -130,6 +130,9 @@
       <AzureDevOpsAccount Condition="$(CollectionUri.IndexOf('visualstudio.com')) >= 0">$(CollectionUri.Split('.')[0].Split('/')[2])</AzureDevOpsAccount>
 
       <TempWorkingDirectory>$(ArtifactsDir)\..\AssetsTmpDir\$([System.Guid]::NewGuid())</TempWorkingDirectory>
+
+      <!-- Directory where pdbs pointed in `FilesToPublishToSymbolServer` are copied before publishing to AzDO artifacts. -->
+      <PDBsToPublishTempLocation>$(ArtifactsTmpDir)PDBsToPublish/</PDBsToPublishTempLocation>
     </PropertyGroup>
 
     <!--
@@ -212,8 +215,24 @@
       <FilesToPublishToSymbolServer Include="$(ArtifactsSymStoreDirectory)**\*.pdb"/>
     </ItemGroup>
 
+    <!--
+      The below lines comprise workarounds for two issues:
+        - AzDO logging commands don't let us add subfolders by executing different `##vso` commands:
+          https://github.com/microsoft/azure-pipelines-tasks/issues/11689 . Therefore a parent folder
+          containing all desired subfolders is published. The primary goal of these artifacts isn't
+          to be browsable by humans. The target that publish the symbols will filter and publish only
+          the PDB files.
+        - It's possible that the user have PDBs outside the Arcade.SDK standard folder 
+           (artifacts/SymStore/$Configuration) and we need to maintain that support. For that reason,
+           and the one mentioned above, we copy all files in `FilesToPublishToSymbolServer` to a temporary
+           folder before adding them to the AzDO artifact container.
+    -->
+		<Copy
+			SourceFiles="@(FilesToPublishToSymbolServer)"
+			DestinationFiles="@(FilesToPublishToSymbolServer->'$(PDBsToPublishTempLocation)%(RecursiveDir)%(Filename)%(Extension)')" />
+
     <Message
-      Text="##vso[artifact.upload containerfolder=PdbArtifacts;artifactname=PdbArtifacts]%(FilesToPublishToSymbolServer.Identity)"
+      Text="##vso[artifact.upload containerfolder=PdbArtifacts;artifactname=PdbArtifacts]$(PDBsToPublishTempLocation)"
       Importance="high" 
       Condition="'@(FilesToPublishToSymbolServer)' != ''"/>
 
