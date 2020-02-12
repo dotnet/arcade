@@ -18,7 +18,7 @@
 
   <PropertyGroup>
     <!-- Default is to run API Compat if this package is referenced -->
-    <RunApiCompat Condition="'$(RunApiCompat)' == ''">true</RunApiCompat>
+    <RunApiCompat Condition="'$(RunApiCompat)' == '' and '$(DesignTimeBuild)' != 'true'">true</RunApiCompat>
   
     <RunApiCompatForSrc Condition="'$(RunApiCompatForSrc)' == ''">$(RunApiCompat)</RunApiCompatForSrc>
     <RunMatchingRefApiCompat Condition="'$(RunMatchingRefApiCompat)' == ''">false</RunMatchingRefApiCompat>
