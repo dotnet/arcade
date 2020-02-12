@@ -91,7 +91,7 @@ function Build {
     # Resolve relative project paths into full paths 
     $projects = ($projects.Split(';').ForEach({Resolve-Path $_}) -join ';')
     
-    $msbuildArgs += "/p:Projects=$projects"
+    $msbuildArgs += "/p:Projects=\""$projects\"""
     $properties = $msbuildArgs
   }
 
