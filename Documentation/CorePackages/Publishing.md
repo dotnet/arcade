@@ -183,13 +183,13 @@ Arcade also includes support for automatically generating checksum files. To opt
 
 Example:
 
-	```XML
+    ```XML
 	<ItemGroup>
 		<GenerateChecksumItems Include="@(OutputFile)">
 			<DestinationPath>%(FullPath).Sha512</OutputPath>
 		</GenerateChecksumItems>
 	</ItemGroup>
-	```
+    ```
 
 You will also need to pass `publishInstallersAndChecksums=true` to the `post-build.yml` template.
 
