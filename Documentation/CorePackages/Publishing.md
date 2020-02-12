@@ -144,7 +144,7 @@ In order to use the new publishing mechanism, the easiest way to start is by tur
     | symbolPublishingAdditionalParameters    | string   | Additional arguments for the PublishToSymbolServers sdk task.                                        | '' |
     | artifactsPublishingAdditionalParameters | string   | Additional arguments for the PublishArtifactsInManifest sdk task.                                    | '' |
     | signingValidationAdditionalParameters   | string  | Additional arguments for the SigningValidation sdk task.     | '' |
-    | publishInstallersAndChecksums           | bool     | Publish installers packages and checksums from the build artifacts to the dotnetcli storage account. | false |
+    | publishInstallersAndChecksums           | bool     | Publish installers packages and checksums from the build artifacts to the dotnetcli storage account. Documentation for opting in to automatic checksum generation can be found in the [Checksum section](https://github.com/dotnet/arcade/blob/master/Documentation/CorePackages/Publishing.md#checksum-generation) of this document. | false |
     | SDLValidationParameters                 | object   | Parameters for the SDL job template, as documented in the [SDL template documentation](https://github.com/dotnet/arcade/blob/66175ebd3756697a3ca515e16cd5ffddc30582cd/Documentation/HowToAddSDLRunToPipeline.md) | -- |
     | validateDependsOn | [array] | Which stage(s) should the validation stage depend on. | build |
     | publishDependsOn | [array] | Which stage(s) should the publishing stage(s) depend on. | Validate |
@@ -176,6 +176,22 @@ Since the post-build stages will only trigger during builds that run in the inte
 
 1. Queue a build for your test branch
 1. Once the Build and Validate stages complete, the *General Testing* stage should execute and publish the packages to the feed during the `Publish Assets` job.
+
+### Checksum generation
+
+Arcade also includes support for automatically generating checksum files. To opt in to this feature, in each project that generates an asset for which you want to generate a checksum, add an Item named `GenerateChecksumItems` to the project file, which includes the output path of the original asset, and a metadata element named `DestinationPath` which represents the desired output path of the checksum file.
+
+Example:
+
+	```XML
+	<ItemGroup>
+		<GenerateChecksumItems Include="@(OutputFile)">
+			<DestinationPath>%(FullPath).Sha512</OutputPath>
+		</GenerateChecksumItems>
+	</ItemGroup>
+	```
+
+You will also need to pass `publishInstallersAndChecksums=true` to the `post-build.yml` template.
 
 ## More complex onboarding scenarios
 
