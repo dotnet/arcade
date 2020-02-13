@@ -59,10 +59,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{C53DD924
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.CodeAnalysis", "src\Microsoft.DotNet.CodeAnalysis\Microsoft.DotNet.CodeAnalysis.csproj", "{AA00BFF4-D182-475F-85B9-BF4924F4D794}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Build.Tasks.Configuration", "src\Microsoft.DotNet.Build.Tasks.Configuration\src\Microsoft.DotNet.Build.Tasks.Configuration.csproj", "{357E3759-EAF2-4F9C-918E-64F801DE3B57}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Build.Tasks.Configuration.Tests", "src\Microsoft.DotNet.Build.Tasks.Configuration\tests\Microsoft.DotNet.Build.Tasks.Configuration.Tests.csproj", "{8693536F-E31B-4841-8D82-7162E9D753D9}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Arcade.Sdk.Tests", "src\Microsoft.DotNet.Arcade.Sdk.Tests\Microsoft.DotNet.Arcade.Sdk.Tests.csproj", "{BA4250FD-9258-4469-A16D-48A0CAF5A2F8}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Helix.Client", "src\Microsoft.DotNet.Helix\Client\CSharp\Microsoft.DotNet.Helix.Client.csproj", "{DC0D0EE5-1C0C-4D3E-BA0B-D6A59717DA94}"
@@ -395,30 +391,6 @@ Global
 		{AA00BFF4-D182-475F-85B9-BF4924F4D794}.Release|x64.Build.0 = Release|Any CPU
 		{AA00BFF4-D182-475F-85B9-BF4924F4D794}.Release|x86.ActiveCfg = Release|Any CPU
 		{AA00BFF4-D182-475F-85B9-BF4924F4D794}.Release|x86.Build.0 = Release|Any CPU
-		{357E3759-EAF2-4F9C-918E-64F801DE3B57}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{357E3759-EAF2-4F9C-918E-64F801DE3B57}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{357E3759-EAF2-4F9C-918E-64F801DE3B57}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{357E3759-EAF2-4F9C-918E-64F801DE3B57}.Debug|x64.Build.0 = Debug|Any CPU
-		{357E3759-EAF2-4F9C-918E-64F801DE3B57}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{357E3759-EAF2-4F9C-918E-64F801DE3B57}.Debug|x86.Build.0 = Debug|Any CPU
-		{357E3759-EAF2-4F9C-918E-64F801DE3B57}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{357E3759-EAF2-4F9C-918E-64F801DE3B57}.Release|Any CPU.Build.0 = Release|Any CPU
-		{357E3759-EAF2-4F9C-918E-64F801DE3B57}.Release|x64.ActiveCfg = Release|Any CPU
-		{357E3759-EAF2-4F9C-918E-64F801DE3B57}.Release|x64.Build.0 = Release|Any CPU
-		{357E3759-EAF2-4F9C-918E-64F801DE3B57}.Release|x86.ActiveCfg = Release|Any CPU
-		{357E3759-EAF2-4F9C-918E-64F801DE3B57}.Release|x86.Build.0 = Release|Any CPU
-		{8693536F-E31B-4841-8D82-7162E9D753D9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{8693536F-E31B-4841-8D82-7162E9D753D9}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{8693536F-E31B-4841-8D82-7162E9D753D9}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{8693536F-E31B-4841-8D82-7162E9D753D9}.Debug|x64.Build.0 = Debug|Any CPU
-		{8693536F-E31B-4841-8D82-7162E9D753D9}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{8693536F-E31B-4841-8D82-7162E9D753D9}.Debug|x86.Build.0 = Debug|Any CPU
-		{8693536F-E31B-4841-8D82-7162E9D753D9}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{8693536F-E31B-4841-8D82-7162E9D753D9}.Release|Any CPU.Build.0 = Release|Any CPU
-		{8693536F-E31B-4841-8D82-7162E9D753D9}.Release|x64.ActiveCfg = Release|Any CPU
-		{8693536F-E31B-4841-8D82-7162E9D753D9}.Release|x64.Build.0 = Release|Any CPU
-		{8693536F-E31B-4841-8D82-7162E9D753D9}.Release|x86.ActiveCfg = Release|Any CPU
-		{8693536F-E31B-4841-8D82-7162E9D753D9}.Release|x86.Build.0 = Release|Any CPU
 		{BA4250FD-9258-4469-A16D-48A0CAF5A2F8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{BA4250FD-9258-4469-A16D-48A0CAF5A2F8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BA4250FD-9258-4469-A16D-48A0CAF5A2F8}.Debug|x64.ActiveCfg = Debug|Any CPU
