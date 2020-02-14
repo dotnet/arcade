@@ -1,8 +1,11 @@
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
 <Project DefaultTargets="Publish">
   <!--
+    Documentation for publishing is available here:
+      - https://github.com/dotnet/arcade/blob/master/Documentation/CorePackages/Publishing.md
+  
     Optional variables:
-      DotNetPublishUsingPipelines       Whether publishing to BAR should be performed or not. If set to 'false' symbol publishing will be performed immediately.
+      DotNetPublishUsingPipelines       Whether publishing to BAR should be performed or not.
       DotNetFinalVersionKind            Global property that stores the type of the current build: https://github.com/dotnet/arcade/blob/master/Documentation/CorePackages/Versioning.md#build-kind
       DotNetOutputBlobFeedDir           Source Build publishing directory
       DotNetSymbolServerTokenMsdl       Personal access token for MSDL symbol server. Available from variable group DotNet-Symbol-Publish.
@@ -176,7 +179,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <!--
+      <!-- 
         Publish Windows PDBs produced by SymStore.targets (by default, only shipping PDBs are placed there).
         SymbolUploader doesn't support embedded PDBs yet, so let SymStore.targets do the conversion for now.
         https://github.com/dotnet/core-eng/issues/3645
