@@ -2,7 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using Microsoft.Azure.Storage.Blob;
+using Azure.Storage.Blobs.Models;
 using Microsoft.Build.Framework;
 using Microsoft.DotNet.Build.CloudTestTasks;
 using Newtonsoft.Json;
@@ -72,11 +72,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 // Create container if it doesn't already exist
                 if (!await azUtils.CheckIfContainerExistsAsync())
                 {
-                    BlobContainerPermissions permissions = new BlobContainerPermissions
-                    {
-                        PublicAccess = IsInternal ? BlobContainerPublicAccessType.Off : BlobContainerPublicAccessType.Container
-                    };
-
+                    PublicAccessType permissions = IsInternal ? PublicAccessType.None : PublicAccessType.BlobContainer;
                     await azUtils.CreateContainerAsync(permissions);
                 }
 

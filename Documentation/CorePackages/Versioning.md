@@ -100,7 +100,7 @@ The pre-release label is determined based on the following table:
 | Release official build           | ""                                                | "1.2.3"                    |   
 
 In official builds, the value of **PRERELEASE_LABELS** is derived as in the following way:
-- If `SemanticVersioningV1` is set to true, it will be `PreReleaseVersionLabel`
+- If `SemanticVersioningV1` is set to true, it will be `PreReleaseVersionLabel` with `PreReleaseVersionIteration` appended. `PreReleaseVersionIteration` may be empty
 - If `SemanticVersioningV1` is not set to true, and `PreReleaseVersionIteration` is empty, it will be `PreReleaseVersionLabel`
 - If `SemanticVersioningV1` is not set to true, and `PreReleaseVersionIteration` is non empty, it will be `PreReleaseVersionLabel`.`PreReleaseVersionIteration`
 
@@ -220,7 +220,7 @@ Below is a list of the main parameters that control the logic.
 | DotNetUseShippingVersions  | Arcade | Set to `true` to produce shipping version strings in non-official builds. I.e., instead of fixed values like `42.42.42.42` for `AssemblyVersion`. |
 | DotNetFinalVersionKind     | Arcade | Specify the kind of version being generated: `release`, `prerelease` or empty. |
 | PreReleaseVersionLabel     | Arcade | Pre-release label to be used on the string. E.g., `beta`, `prerelease`, etc. `ci` and `dev` are reserved for non-official CI builds and dev builds, respectively. |
-| PreReleaseVersionIteration | Arcade | Numeric pre-release iteration to be used on the pre-release suffix string. E.g., `1`, `2`, etc. If set, and SemVer2 is in use, appends to the prerelease version label, separated by a `.` |
+| PreReleaseVersionIteration | Arcade | Numeric pre-release iteration to be used on the pre-release suffix string. E.g., `1`, `2`, etc. If set, and SemVer2 is in use, appends to the prerelease version label, separated by a `.`. If SemVer1 is in use, then it is appended without a separator. |
 | VersionPrefix              | .NET   | Specify the leading part of the version string. If empty and both `MajorVersion` and `MinorVersion` are set, initialized to `$(MajorVersion).$(MinorVersion).0`. |
 | MajorVersion               | Arcade | Major version to use in `VersionPrefix`. |
 | MinorVersion               | Arcade | Minor version to use in `VersionPrefix`. |
