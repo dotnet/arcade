@@ -19,7 +19,7 @@
   <PropertyGroup>
     <!-- Default is to run API Compat if this package is referenced -->
     <RunApiCompat Condition="'$(RunApiCompat)' == '' and '$(DesignTimeBuild)' != 'true'">true</RunApiCompat>
-  
+
     <RunApiCompatForSrc Condition="'$(RunApiCompatForSrc)' == ''">$(RunApiCompat)</RunApiCompatForSrc>
     <RunMatchingRefApiCompat Condition="'$(RunMatchingRefApiCompat)' == ''">false</RunMatchingRefApiCompat>
   </PropertyGroup>
@@ -32,7 +32,7 @@
     <ApiCompatBaseline Condition="!Exists('$(ApiCompatBaseline)')">$(MSBuildProjectDirectory)\ApiCompatBaseline.txt</ApiCompatBaseline>
 
     <MatchingRefApiCompatBaseline Condition="!Exists('$(MatchingRefApiCompatBaseline)')">$(MSBuildProjectDirectory)\MatchingRefApiCompatBaseline.$(_apiCompatTargetSuffix).txt</MatchingRefApiCompatBaseline>
-    <MatchingRefApiCompatBaseline Condition="'$(BaselineAllMatchingRefApiCompatError)' != 'true' and !Exists('$(MatchingRefApiCompatBaseline)')">$(MSBuildProjectDirectory)\MatchingRefApiCompatBaseline.txt</MatchingRefApiCompatBaseline>
+    <MatchingRefApiCompatBaseline Condition="!Exists('$(MatchingRefApiCompatBaseline)')">$(MSBuildProjectDirectory)\MatchingRefApiCompatBaseline.txt</MatchingRefApiCompatBaseline>
 
     <TargetsTriggeredByCompilation Condition="'$(RunApiCompatForSrc)' == 'true'">$(TargetsTriggeredByCompilation);ValidateApiCompatForSrc</TargetsTriggeredByCompilation>
     <TargetsTriggeredByCompilation Condition="'$(RunMatchingRefApiCompat)' == 'true'">$(TargetsTriggeredByCompilation);RunMatchingRefApiCompat</TargetsTriggeredByCompilation>
@@ -45,10 +45,10 @@
   <!-- ApiCompat for Implementation Assemblies  -->
   <Target Name="ValidateApiCompatForSrc"
           Condition="'$(RunApiCompatForSrc)' == 'true' and '$(RunApiCompat)' == 'true'">
-    
-    <Error Condition="'@(ResolvedMatchingContract)' == ''" 
+
+    <Error Condition="'@(ResolvedMatchingContract)' == ''"
            Text="ResolvedMatchingContract item must be specified to run API compat." />
-    <Error Condition="!Exists('%(ResolvedMatchingContract.FullPath)')" 
+    <Error Condition="!Exists('%(ResolvedMatchingContract.FullPath)')"
            Text="ResolvedMatchingContract '%(ResolvedMatchingContract.FullPath)' did not exist." />
 
     <ItemGroup>
@@ -68,8 +68,8 @@
       <ApiCompatArgs Condition="'$(ApiCompatExcludeAttributeList)' != ''">$(ApiCompatArgs) --exclude-attributes "$(ApiCompatExcludeAttributeList)"</ApiCompatArgs>
       <ApiCompatArgs Condition="'$(ApiCompatEnforceOptionalRules)' == 'true'">$(ApiCompatArgs) --enforce-optional-rules</ApiCompatArgs>
       <ApiCompatArgs Condition="'$(BaselineAllAPICompatError)' != 'true' and Exists('$(ApiCompatBaseline)')">$(ApiCompatArgs) --baseline "$(ApiCompatBaseline)"</ApiCompatArgs>
-      <!-- Must be last option. -->
       <ApiCompatArgs>$(ApiCompatArgs) --impl-dirs "$(IntermediateOutputPath),@(_DependencyDirectories, ','),"</ApiCompatArgs>
+      <ApiCompatArgs Condition=" '$(AdditionalApiCompatOptions)' != '' ">$(ApiCompatArgs) $(AdditionalApiCompatOptions)</ApiCompatArgs>
       <ApiCompatBaselineAll Condition="'$(BaselineAllAPICompatError)' == 'true'">&gt; "$(ApiCompatBaseline)"</ApiCompatBaselineAll>
       <ApiCompatExitCode>0</ApiCompatExitCode>
 
@@ -100,13 +100,13 @@
   <Target Name="RunMatchingRefApiCompat"
           Condition="'$(RunMatchingRefApiCompat)' == 'true' and '$(RunApiCompat)' == 'true'" >
 
-    <Error Condition="'@(ResolvedMatchingContract)' == ''" 
+    <Error Condition="'@(ResolvedMatchingContract)' == ''"
            Text="ResolvedMatchingContract item must be specified to run API compat." />
-    <Error Condition="!Exists('%(ResolvedMatchingContract.FullPath)')" 
+    <Error Condition="!Exists('%(ResolvedMatchingContract.FullPath)')"
            Text="ResolvedMatchingContract '%(ResolvedMatchingContract.FullPath)' did not exist." />
-    
+
     <PropertyGroup>
-      <ImplemetnationAssemblyAsContract>@(IntermediateAssembly)</ImplemetnationAssemblyAsContract>
+      <ImplementationAssemblyAsContract>@(IntermediateAssembly)</ImplementationAssemblyAsContract>
     </PropertyGroup>
 
     <ItemGroup>
@@ -121,15 +121,16 @@
     </ItemGroup>
 
     <PropertyGroup>
-      <MatchingRefApiCompatArgs>$(MatchingRefApiCompatArgs) "$(ImplemetnationAssemblyAsContract)"</MatchingRefApiCompatArgs>
+      <MatchingRefApiCompatArgs>$(MatchingRefApiCompatArgs) "$(ImplementationAssemblyAsContract)"</MatchingRefApiCompatArgs>
       <MatchingRefApiCompatArgs>$(MatchingRefApiCompatArgs) --contract-depends "@(_ContractDependencyDirectories, ','),"</MatchingRefApiCompatArgs>
       <MatchingRefApiCompatArgs>$(MatchingRefApiCompatArgs) --left-operand implementation</MatchingRefApiCompatArgs>
       <MatchingRefApiCompatArgs>$(MatchingRefApiCompatArgs) --right-operand reference</MatchingRefApiCompatArgs>
       <MatchingRefApiCompatArgs Condition="'$(ApiCompatExcludeAttributeList)' != ''">$(MatchingRefApiCompatArgs) --exclude-attributes "$(ApiCompatExcludeAttributeList)"</MatchingRefApiCompatArgs>
       <MatchingRefApiCompatArgs Condition="'$(ApiCompatEnforceOptionalRules)' == 'true'">$(MatchingRefApiCompatArgs) --enforce-optional-rules</MatchingRefApiCompatArgs>
       <MatchingRefApiCompatArgs Condition="'$(BaselineAllMatchingRefApiCompatError)' != 'true' and Exists('$(MatchingRefApiCompatBaseline)')">$(MatchingRefApiCompatArgs) --baseline "$(MatchingRefApiCompatBaseline)"</MatchingRefApiCompatArgs>
-      <!-- Must be last option. -->
       <MatchingRefApiCompatArgs>$(MatchingRefApiCompatArgs) --impl-dirs "@(_ImplementationDependencyDirectories, ','),"</MatchingRefApiCompatArgs>
+      <MatchingRefApiCompatArgs
+          Condition=" '$(AdditionalApiCompatOptions)' != '' ">$(MatchingRefApiCompatArgs) $(AdditionalApiCompatOptions)</MatchingRefApiCompatArgs>
       <MatchingRefApiCompatBaselineAll Condition="'$(BaselineAllMatchingRefApiCompatError)' == 'true'">&gt; "$(MatchingRefApiCompatBaseline)"</MatchingRefApiCompatBaselineAll>
 
       <MatchingRefApiCompatExitCode>0</MatchingRefApiCompatExitCode>
