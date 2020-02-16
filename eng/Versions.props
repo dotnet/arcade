@@ -61,8 +61,8 @@
     <XUnitVersion>2.4.1</XUnitVersion>
     <XUnitAbstractionsVersion>2.0.3</XUnitAbstractionsVersion>
     <XUnitVSRunnerVersion>2.4.1</XUnitVSRunnerVersion>
-    <MicrosoftDotNetBuildTasksFeedVersion>5.0.0-beta.20114.5</MicrosoftDotNetBuildTasksFeedVersion>
-    <MicrosoftDotNetSignToolVersion>5.0.0-beta.20114.5</MicrosoftDotNetSignToolVersion>
+    <MicrosoftDotNetBuildTasksFeedVersion>5.0.0-beta.20115.1</MicrosoftDotNetBuildTasksFeedVersion>
+    <MicrosoftDotNetSignToolVersion>5.0.0-beta.20115.1</MicrosoftDotNetSignToolVersion>
     <MicrosoftAzureDocumentDBVersion>1.22.0</MicrosoftAzureDocumentDBVersion>
     <MicrosoftAzureCosmosDBTableVersion>1.1.2</MicrosoftAzureCosmosDBTableVersion>
     <MicrosoftAspNetCoreAllVersion>2.0.0</MicrosoftAspNetCoreAllVersion>
@@ -74,7 +74,7 @@
     <MicrosoftDiaSymReaderNativeVersion>1.7.0</MicrosoftDiaSymReaderNativeVersion>
     <MicrosoftDotNetMaestroClientVersion>1.1.0-beta.19556.4</MicrosoftDotNetMaestroClientVersion>
     <MicrosoftSourceLinkVersion>1.0.0-beta2-19554-01</MicrosoftSourceLinkVersion>
-    <MicrosoftDotNetSwaggerGeneratorMSBuildVersion>5.0.0-beta.20114.5</MicrosoftDotNetSwaggerGeneratorMSBuildVersion>
-    <XliffTasksVersion>1.0.0-beta.20114.1</XliffTasksVersion>
+    <MicrosoftDotNetSwaggerGeneratorMSBuildVersion>5.0.0-beta.20115.1</MicrosoftDotNetSwaggerGeneratorMSBuildVersion>
+    <XliffTasksVersion>1.0.0-beta.20115.1</XliffTasksVersion>
   </PropertyGroup>
 </Project>
