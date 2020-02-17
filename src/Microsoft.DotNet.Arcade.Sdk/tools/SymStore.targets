@@ -26,7 +26,10 @@
       <_BuildsPortablePdb Condition="'$(DebugType)' == 'portable' or '$(DebugType)' == 'embedded'">true</_BuildsPortablePdb>
 
       <_SymStoreTargetFramework>$(TargetFramework)</_SymStoreTargetFramework>
-      <!-- Support Microsoft.DotNet.Build.Tasks.TargetFramework.Sdk TargetFrameworkSuffix property. -->
+      <!--
+        Support Microsoft.DotNet.Build.Tasks.TargetFramework.Sdk TargetFrameworkSuffix property.
+        TODO: Remove when https://github.com/dotnet/arcade/issues/4859 is fixed.
+      -->
       <_SymStoreTargetFramework Condition="'$(TargetFrameworkSuffix)' != ''">$(_SymStoreTargetFramework)-$(TargetFrameworkSuffix)</_SymStoreTargetFramework>
       <_SymStoreOutputDir>$(ArtifactsSymStoreDirectory)$(MSBuildProjectName)\$(_SymStoreTargetFramework)\</_SymStoreOutputDir>
       <_SymStorePdbPath>$(_SymStoreOutputDir)$(TargetName).pdb</_SymStorePdbPath>
