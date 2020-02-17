@@ -25,7 +25,10 @@
       <_BuildsPortablePdb>false</_BuildsPortablePdb>
       <_BuildsPortablePdb Condition="'$(DebugType)' == 'portable' or '$(DebugType)' == 'embedded'">true</_BuildsPortablePdb>
 
-      <_SymStoreOutputDir>$(ArtifactsSymStoreDirectory)$(MSBuildProjectName)\$(TargetFramework)\</_SymStoreOutputDir>
+      <_SymStoreTargetFramework>$(TargetFramework)</_SymStoreTargetFramework>
+      <!-- Support Microsoft.DotNet.Build.Tasks.TargetFramework.Sdk TargetFrameworkSuffix property. -->
+      <_SymStoreTargetFramework Condition="'$(TargetFrameworkSuffix)' != ''">$(_SymStoreTargetFramework)-$(TargetFrameworkSuffix)</_SymStoreTargetFramework>
+      <_SymStoreOutputDir>$(ArtifactsSymStoreDirectory)$(MSBuildProjectName)\$(_SymStoreTargetFramework)\</_SymStoreOutputDir>
       <_SymStorePdbPath>$(_SymStoreOutputDir)$(TargetName).pdb</_SymStorePdbPath>
 
       <!-- By default publish Windows PDBs only for shipping components -->
