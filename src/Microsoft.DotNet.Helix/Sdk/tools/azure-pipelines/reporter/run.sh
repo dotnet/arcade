@@ -30,5 +30,5 @@ else
 fi
 
 date -u +"%FT%TZ"
-$ENV_PATH/bin/python $script_path/run.py "$@"
+$ENV_PATH/bin/python -B $script_path/run.py "$@"
 date -u +"%FT%TZ"
