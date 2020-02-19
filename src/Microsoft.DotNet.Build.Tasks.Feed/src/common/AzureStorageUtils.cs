@@ -71,7 +71,7 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
                 .ConfigureAwait(false);
         }
 
-        public async Task<bool> IsFileIdenticalToBlobAsync(string blobPath, string localFileFullPath) =>
+        public async Task<bool> IsFileIdenticalToBlobAsync(string localFileFullPath, string blobPath) =>
             await IsFileIdenticalToBlobAsync(localFileFullPath, GetBlob(blobPath)).ConfigureAwait(false);
 
         /// <summary>
