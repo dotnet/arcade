@@ -178,7 +178,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 {
                     if (options.PassIfExistingItemIdentical)
                     {
-                        if (!await blobUtils.IsFileIdenticalToBlobAsync(relativeBlobPath, item.ItemSpec))
+                        if (!await blobUtils.IsFileIdenticalToBlobAsync(item.ItemSpec, relativeBlobPath))
                         {
                             Log.LogError(
                                 $"Item '{item}' already exists with different contents " +
