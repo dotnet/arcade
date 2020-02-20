@@ -11,13 +11,9 @@
 
     DotNetBuildFromSource           Building the entire stack from source with no external dependencies.
     DotNetOutputBlobFeedDir         Directory to publish Source Build assets to (packages, symbol packages, installers, etc.).
-    DotNetPublishUsingPipelines     Publish assets using Azure DevOps release pipelines.
-    DotNetArtifactsCategory         Type of assets being produced by the build.
-    DotNetPublishToBlobFeed         Publish assets to blob feed using DotNetPublishBlobFeedUrl and DotNetPublishBlobFeedKey.
-    DotNetPublishBlobFeedUrl        Target feed URL, or empty if not publishing to Azure blob feed.
-    DotNetPublishBlobFeedKey        Azure blob feed account key.
-    DotNetSymbolServerTokenMsdl     Personal access token for MSDL symbol server. Available from variable group DotNet-Symbol-Publish.
-    DotNetSymbolServerTokenSymWeb   Personal access token for SymWeb symbol server. Available from variable group DotNet-Symbol-Publish.
+    DotNetPublishUsingPipelines     Publish assets to Build Asset Registry.
+    DotNetSymbolServerTokenMsdl     Personal access token for MSDL symbol server. Available from variable group DotNet-Symbol-Publish.	
+    DotNetSymbolServerTokenSymWeb   Personal access token for SymWeb symbol server. Available from variable group DotNet-Symbol-Publish.	
     DotNetSymbolExpirationInDays    Symbol expiration time in days (defaults to 10 years).
     DotNetSignType                  Specifies the signing type: 'real' (default), 'test'.
     DotNetRuntimeSourceFeed         Storage account to lookup for the .Net runtime files
@@ -89,6 +85,17 @@
       <!-- IsRunningFromVisualStudio may be true even when running msbuild.exe from command line. This generally means that MSBUild is Visual Studio installation and therefore we need to find NuGet.targets in a different location.  -->
       <_NuGetRestoreTargets>$(MSBuildToolsPath)\NuGet.targets</_NuGetRestoreTargets>
       <_NuGetRestoreTargets Condition="'$([MSBuild]::IsRunningFromVisualStudio())' == 'true'">$(MSBuildToolsPath32)\..\..\..\Common7\IDE\CommonExtensions\Microsoft\NuGet\NuGet.targets</_NuGetRestoreTargets>
+
+      <!-- If `DotNetPublishUsingPipelines` is not set we default it to false. -->
+      <DotNetPublishUsingPipelines Condition="'$(DotNetPublishUsingPipelines)' == ''">false</DotNetPublishUsingPipelines>
+      
+      <!-- 
+        If DotNetPublishUsingPipelines is set we don't publish symbols during the build stage,
+        only in the Maestro post-build stages. If DotNetPublishUsingPipelines is NOT set then
+        we publish symbols during the build stage.
+      -->
+      <PublishToSymbolServer>true</PublishToSymbolServer>
+      <PublishToSymbolServer Condition="'$(DotNetPublishUsingPipelines)' == 'true'">false</PublishToSymbolServer>
     </PropertyGroup>
 
     <ItemGroup>
@@ -129,8 +136,16 @@
       <_RestoreToolsProps Include="@(_CommonProps)"/>
       <_RestoreToolsProps Include="BaseIntermediateOutputPath=$(ArtifactsToolsetDir)Common"/>
       <_RestoreToolsProps Include="ExcludeRestorePackageImports=true"/>
-      <_RestoreToolsProps Include="PublishingToBlobStorage=$(DotNetPublishToBlobFeed)"/>
       <_RestoreToolsProps Include="_NuGetRestoreTargets=$(_NuGetRestoreTargets)"/>
+      
+      <!-- Used in the SDK (Tools.proj) to control whether Build.Tasks.Feed will be restored or not. -->
+      <_RestoreToolsProps Include="Publish=$(Publish)"/>
+
+      <!-- Used in the SDK (Tools.proj) to control whether SymbolUploader.Build.Task will be restored or not. -->
+      <_RestoreToolsProps Include="PublishToSymbolServer=$(PublishToSymbolServer)"/>
+
+      <!-- Forward this property because we can't assume it will be available globally. -->
+      <_RestoreToolsProps Include="DotNetPublishUsingPipelines=$(DotNetPublishUsingPipelines)"/>
     </ItemGroup>
 
     <!--
@@ -144,11 +159,16 @@
 
     <ItemGroup>
       <_PublishProps Include="@(_CommonProps)"/>
-      <_PublishProps Include="PublishToAzureDevOpsArtifacts=$(DotNetPublishUsingPipelines)" />
-      <_PublishProps Include="ArtifactsCategory=$(DotNetArtifactsCategory)" />
-      <_PublishProps Include="AzureFeedUrl=$(DotNetPublishBlobFeedUrl)" Condition="'$(DotNetPublishToBlobFeed)' == 'true'" />
-      <_PublishProps Include="AzureAccountKey=$(DotNetPublishBlobFeedKey)" Condition="'$(DotNetPublishToBlobFeed)' == 'true'" />
       <_PublishProps Include="DotNetOutputBlobFeedDir=$(_DotNetOutputBlobFeedDir)" Condition="'$(_DotNetOutputBlobFeedDir)' != ''" />
+
+      <!-- Used in a few places in the stack to decide if publishing was enabled or not. -->
+      <_PublishProps Include="Publish=$(Publish)"/>
+
+      <!-- Used in the SDK (Publish.proj) to control whether in-build symbol publishing should be performed. -->
+      <_PublishProps Include="PublishToSymbolServer=$(PublishToSymbolServer)"/>
+
+      <!-- Forward this property because we can't assume it will be available globally. -->
+      <_PublishProps Include="DotNetPublishUsingPipelines=$(DotNetPublishUsingPipelines)"/>
     </ItemGroup>
 
     <ItemGroup>
