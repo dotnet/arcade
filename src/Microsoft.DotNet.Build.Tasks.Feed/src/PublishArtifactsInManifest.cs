@@ -685,19 +685,31 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// <summary>
         ///     Push a single package to the azure devops nuget feed.
         /// </summary>
-        /// <param name="feedConfig">Feed</param>
+        /// <param name="feedConfig">Infos about the target feed</param>
         /// <param name="packageToPublish">Package to push</param>
         /// <returns>Task</returns>
         /// <remarks>
         ///     This method attempts to take the most efficient path to push the package.
-        ///     There are two cases:
+        ///     
+        ///     There are three cases:
         ///         - The package does not exist, and is pushed normally
         ///         - The package exists, and its contents may or may not be equivalent.
-        ///     The second case is is by far the most common. So, we first attempt to push the package normally using nuget.exe.
-        ///     If this fails, this could mean any number of things (like failed auth). But in normal circumstances, this might
-        ///     mean the package already exists. This either means that we are attempting to push the same package, or attemtping to push
-        ///     a different package with the same id and version. The second case is an error, as azure devops feeds are immutable, the former
-        ///     is simply a case where we should continue onward.
+        ///         - Azure DevOps is having some issue and we didn't succeed to publish at first.
+        ///         
+        ///     The second case is by far the most common. So, we first attempt to push the 
+        ///     package normally using nuget.exe. If this fails, this could mean any number of 
+        ///     things (like failed auth). But in normal circumstances, this might mean the 
+        ///     package already exists. This either means that we are attempting to push the 
+        ///     same package, or attemtping to push a different package with the same id and 
+        ///     version. The second case is an error, as azure devops feeds are immutable, 
+        ///     the former is simply a case where we should continue onward.
+        ///     
+        ///     To handle the third case we rely on the call to compare file contents 
+        ///     `IsLocalPackageIdenticalToFeedPackage` to return null - meaning that it got 
+        ///     a 404 when looking up the file in the feed - to trigger a retry on the publish 
+        ///     operation. This was implemented this way becase we didn't want to rely on 
+        ///     parsing the output of the push operation - which does a call to `nuget.exe` 
+        ///     behind the scenes.
         /// </remarks>
         private async Task PushNugetPackageAsync(FeedConfig feedConfig, HttpClient client, string localPackageLocation, string id, string version,
             string feedAccount, string feedVisibility, string feedName)
