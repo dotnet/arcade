@@ -69,7 +69,8 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
 
             // This function can sporadically throw 
             // "System.Net.Http.HttpRequestException: Error while copying content to a stream."
-            // Ideally it should retry for itself internally, but the existing retry seems for throttling only.
+            // Ideally it should retry for itself internally, but the existing retry seems 
+            // to be intended for throttling only.
             var retryHandler = new ExponentialRetry
             {
                 MaxAttempts = 5,
