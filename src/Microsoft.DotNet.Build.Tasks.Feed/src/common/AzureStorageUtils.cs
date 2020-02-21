@@ -8,6 +8,7 @@ using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using Azure.Storage.Blobs.Specialized;
 using Azure.Storage.Sas;
+using Microsoft.DotNet.VersionTools.Util;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -65,10 +66,40 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
         {
             BlobClient blob = GetBlob(blobPath.Replace("\\", "/"));
             BlobHttpHeaders headers = GetBlobHeadersByExtension(filePath);
-            await blob.UploadAsync(
-                filePath,
-                headers)
-                .ConfigureAwait(false);
+
+            // This function can sporadically throw 
+            // "System.Net.Http.HttpRequestException: Error while copying content to a stream."
+            // Ideally it should retry for itself internally, but the existing retry seems for throttling only.
+            var retryHandler = new ExponentialRetry
+            {
+                MaxAttempts = 5,
+                DelayBase = 2.5 // 2.5 ^ 5 = ~1.5 minutes max
+            };
+
+            bool success = await retryHandler.RunAsync(async attempt =>
+            {
+                try
+                {
+                    await blob.UploadAsync(
+                        filePath,
+                        headers)
+                        .ConfigureAwait(false);
+                    return true;
+                }
+                catch (System.Net.Http.HttpRequestException)
+                {
+                    // No logger hooked up: let other types of exceptions bubble up.
+                    // If we're here we have valid storage credentials and we're talking to Azure, 
+                    // so logging the exception is not super interesting (any non-HttpReq one still is)
+                    return false;
+                }
+            });
+
+            // If retry failed print out a nice looking exception
+            if (!success)
+            {
+                throw new Exception($"Failed to upload local file '{filePath}' to '{blobPath} in  {retryHandler.MaxAttempts} attempts!");
+            }
         }
 
         public async Task<bool> IsFileIdenticalToBlobAsync(string localFileFullPath, string blobPath) =>
