@@ -66,12 +66,12 @@ post-build script. Zips are validated by the ASP team against an App Services te
 1. No build required
 2. Publish and validate to CDN
 3. Publish signed bits to blob storage
-Publish aggregated checksums to blob storage
-3. Publish and validate to NuGet
-4. Publish and validate NuGet symbols
-Publish SNAP
-5. Publish and validate Linux distributions
-6. Antares deployment*
-7. Publish and validate Docker
-Publish signed bits to dot.net
-8. Publish release notes and metadata to GitHub
+4. Publish aggregated checksums to blob storage
+5. Publish and validate to NuGet
+6. Publish and validate NuGet symbols
+7. Publish SNAP
+8. Publish and validate Linux distributions
+9. Antares deployment*
+10. Publish and validate Docker
+11. Publish signed bits to dot.net
+12. Publish release notes and metadata to GitHub
