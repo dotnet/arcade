@@ -74,8 +74,10 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
             var retryHandler = new ExponentialRetry
             {
                 MaxAttempts = 5,
-                DelayBase = 2.5 // 2.5 ^ 5 = ~1.5 minutes max
+                DelayBase = 2.5 // 2.5 ^ 5 = ~1.5 minutes max wait between retries
             };
+
+            Exception mostRecentlyCaughtException = null;
 
             bool success = await retryHandler.RunAsync(async attempt =>
             {
@@ -87,19 +89,17 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
                         .ConfigureAwait(false);
                     return true;
                 }
-                catch (System.Net.Http.HttpRequestException)
+                catch (System.Net.Http.HttpRequestException toStore)
                 {
-                    // No logger hooked up: let other types of exceptions bubble up.
-                    // If we're here we have valid storage credentials and we're talking to Azure, 
-                    // so logging the exception is not super interesting (any non-HttpReq one still is)
+                    mostRecentlyCaughtException = toStore;
                     return false;
                 }
-            });
+            }).ConfigureAwait(false);
 
             // If retry failed print out a nice looking exception
             if (!success)
             {
-                throw new Exception($"Failed to upload local file '{filePath}' to '{blobPath} in {retryHandler.MaxAttempts} attempts!");
+                throw new Exception($"Failed to upload local file '{filePath}' to '{blobPath} in  {retryHandler.MaxAttempts} attempts.  See inner exception for details.", mostRecentlyCaughtException);
             }
         }
 
