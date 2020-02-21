@@ -99,7 +99,7 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
             // If retry failed print out a nice looking exception
             if (!success)
             {
-                throw new Exception($"Failed to upload local file '{filePath}' to '{blobPath} in  {retryHandler.MaxAttempts} attempts!");
+                throw new Exception($"Failed to upload local file '{filePath}' to '{blobPath} in {retryHandler.MaxAttempts} attempts!");
             }
         }
 
