@@ -13,7 +13,7 @@ using Xunit.Sdk;
 namespace Microsoft.DotNet.XUnitExtensions
 {
     /// <summary>
-    /// This class discovers all of the tests and test classes that have
+    /// This class discovers all of the tests, test classes and test assemblies that have
     /// applied the ActiveIssue attribute
     /// </summary>
     public class ActiveIssueDiscoverer : ITraitDiscoverer
