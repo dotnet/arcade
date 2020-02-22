@@ -97,11 +97,19 @@ Current machine pool recommendations:
 
 | OS         | Recommended pool     | Pool Provider Queue(s)      | Notes | 
 | ---------- | -------------------- | --------------------------- | ----- |
-| Windows_NT | Use Pool Provider -> | buildpool.windows.10.amd64.vs2017  | |
-|            |                      | buildpool.windows.10.amd64.vs2019     |  |
-|            |                      | buildpool.windows.10.amd64.vs2019.bt  | BuildTools SKU: No interactive VS components |
+| Windows_NT | Use Pool Provider -> | BuildPool.Server.Amd64.VS2017 |     |
+|            |                      | BuildPool.Server.Amd64.VS2019 |     |
+|            |                      | BuildPool.Server.Amd64.VS2017 |     |
+|            |                      | BuildPool.Server.Amd64.VS2019 |     |
+|            |                      | BuildPool.Server.Amd64.VS2019.BT |  |
+|            |                      | BuildPool.Server.Amd64.VS2019.Pre | |
+|            |                      | BuildPool.Windows.10.Amd64.VS2017 | |
+|            |                      | BuildPool.Windows.10.Amd64.VS2019 | |
+|            |                      | BuildPool.Windows.10.Amd64.VS2019.BT| |
+|            |                      | BuildPool.Windows.10.Amd64.VS2019.Pre | |
+|            |                      | BuildPool.Windows.10.Amd64.VS2019.Xaml| |
 | Linux      | Hosted Ubuntu 1604   | buildpool.ubuntu.1604.amd64 |
-| MacOS      | Hosted Mac Internal  | n/a | |
+| MacOS      | Hosted MacOs Internal| n/a | |
 
 A couple of notes:
 
