@@ -220,7 +220,7 @@
           -nologo ^
           -template fragment ^
           -sreg ^
-          -gg ^
+          -ag ^
           -var var.%(SubstituteVar) ^
           -cg %(ComponentGroupName) ^
           -srd ^
