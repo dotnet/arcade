@@ -100,7 +100,7 @@ The documentations linked above has specific examples for each bucket, for OSOB 
 
 ### Test Artifacts
 
-**How it will be tested**: Send in a work item to the queue after artifacts have been added. Similar steps as **Test Upgrade On-Prem**
+**How it will be tested**: Each artifact will contain a validate script (either `validate.sh` or `validate.ps1`) inside the artifact folder. It should check that the artifact performed the functionality it was designed to do (e.g. installed a product, set-up an environment variable, et cetera). Results will be outputted to Azure DevOps Test Results. 
 
 **What kinds of functionality will be tested**: Verify artifact is correct (e.g. version, et cetera)
 
