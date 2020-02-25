@@ -44,6 +44,10 @@
     <AllowEmptySignList>false</AllowEmptySignList>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <NETCORE_ENGINEERING_TELEMETRY>Signing</NETCORE_ENGINEERING_TELEMETRY>
+  </PropertyGroup>
+
   <!-- Allow repository to customize signing configuration -->
   <Import Project="$(RepositoryEngineeringDir)Signing.props" Condition="Exists('$(RepositoryEngineeringDir)Signing.props')" />
 
