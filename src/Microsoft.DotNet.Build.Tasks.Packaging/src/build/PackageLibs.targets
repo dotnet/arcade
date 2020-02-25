@@ -9,7 +9,7 @@
         <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
         <Targets>GetPackageAssets</Targets>
         <OutputItemType>PkgProjAsset</OutputItemType>
-        <UndefineProperties>%(ProjectReference.UndefineProperties);OSGroup;TargetGroup</UndefineProperties>
+        <UndefineProperties>%(ProjectReference.UndefineProperties)</UndefineProperties>
       </ProjectReference>
     </ItemGroup>
   </Target>

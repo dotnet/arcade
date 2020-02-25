@@ -187,7 +187,7 @@
             GenerateZip"/>
 
   <Target Name="GenerateZip"
-          Condition="'$(OSGroup)' == 'Windows_NT'">
+          Condition="'$(OS)' == 'Windows_NT'">
     <ZipFileCreateFromDirectory
       SourceDirectory="$(SharedFrameworkArchiveSourceDir)"
       DestinationArchive="$(CompressedArchiveFile)"
@@ -261,7 +261,7 @@
   </Target>
 
   <Target Name="FixLayoutPermissions"
-          Condition="'$(OSGroup)' != 'Windows_NT'">
+          Condition="'$(OS)' != 'Windows_NT'">
     <Error Text="Layout '$(PackLayoutDir)' does not exist." Condition="!Exists('$(PackLayoutDir)')" />
 
     <!-- Fix file permissions in the layout dir. -->
