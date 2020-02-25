@@ -188,7 +188,7 @@
       Workaround: zero-versioned Microsoft.VisualBasic.dll in non-Windows CoreFX transport package.
       See https://github.com/dotnet/corefx/issues/36630
     -->
-    <PropertyGroup Condition="'$(OSGroup)' != 'Windows_NT'">
+    <PropertyGroup Condition="'$(OS)' != 'Windows_NT'">
       <PermitDllAndExeFilesLackingFileVersion>true</PermitDllAndExeFilesLackingFileVersion>
     </PropertyGroup>
 
@@ -386,11 +386,11 @@
 
   <!-- Ensure crossgen is executable. See https://github.com/NuGet/Home/issues/4424 -->
   <Target Name="EnsureCrossGenIsExecutable"
-          Condition="'$(OSGroup)' != 'Windows_NT'"
+          Condition="'$(OS)' != 'Windows_NT'"
           DependsOnTargets="GetCrossgenToolPaths">
     <Exec
       Command="chmod u+x $(_crossGenPath)"
-      Condition="'$(OSGroup)' != 'Windows_NT' AND Exists('$(_crossGenPath)')" />
+      Condition="'$(OS)' != 'Windows_NT' AND Exists('$(_crossGenPath)')" />
   </Target>
 
   <Target Name="CrossGen"
@@ -424,7 +424,7 @@
     </PropertyGroup>
 
     <!-- Measurements show that doing partial crossgen on these assemblies captures a lot of the potential size saving. -->
-    <PropertyGroup Condition="'$(OSGroup)' == 'Linux'">
+    <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('linux'))">
       <_partialCrossgenFlag Condition="'%(_filesToCrossGen.FileName)' == 'System.ComponentModel.TypeConverter'">1</_partialCrossgenFlag>
       <_partialCrossgenFlag Condition="'%(_filesToCrossGen.FileName)' == 'System.Linq.Expressions'">1</_partialCrossgenFlag>
       <_partialCrossgenFlag Condition="'%(_filesToCrossGen.FileName)' == 'System.Private.Xml'">1</_partialCrossgenFlag>

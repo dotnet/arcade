@@ -19,7 +19,7 @@
     <!-- Filter the installer generation/build flags for the current build machine. -->
     <PropertyGroup>
       <_osSupportsWixBasedInstallers>true</_osSupportsWixBasedInstallers>
-      <_osSupportsWixBasedInstallers Condition="'$(OSGroup)' != 'Windows_NT'">false</_osSupportsWixBasedInstallers>
+      <_osSupportsWixBasedInstallers Condition="'$(OS)' != 'Windows_NT'">false</_osSupportsWixBasedInstallers>
 
       <_osArchSupportsWixBasedInstallers>$(_osSupportsWixBasedInstallers)</_osArchSupportsWixBasedInstallers>
       <_osArchSupportsWixBasedInstallers Condition="'$(TargetArchitecture)' == 'arm' or '$(TargetArchitecture)' == 'arm64'">false</_osArchSupportsWixBasedInstallers>
@@ -35,7 +35,7 @@
       <GenerateMSI Condition="'$(_osArchSupportsWixBasedInstallers)' != 'true'">false</GenerateMSI>
       <GenerateExeBundle Condition="'$(_osArchSupportsWixBasedInstallers)' != 'true'">false</GenerateExeBundle>
 
-      <GeneratePkg Condition="'$(OSGroup)' != 'OSX'">false</GeneratePkg>
+      <GeneratePkg Condition="!$([MSBuild]::IsOSPlatform('osx'))">false</GeneratePkg>
     </PropertyGroup>
 
     <!--
