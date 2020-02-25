@@ -29,12 +29,12 @@ namespace Microsoft.DotNet.GenFacades
         {
             try
             {
-                using (var stream = File.Open(Assembly, FileMode.Open, FileAccess.ReadWrite, FileShare.Read))
-                using (var peReader = new PEReader(stream))
+                using (FileStream stream = File.Open(Assembly, FileMode.Open, FileAccess.ReadWrite, FileShare.Read))
+                using (PEReader peReader = new PEReader(stream))
                 {
-                    using (var writer = new BinaryWriter(stream))
+                    using (BinaryWriter writer = new BinaryWriter(stream))
                     {
-                        var mdReader = peReader.GetMetadataReader();
+                        MetadataReader mdReader = peReader.GetMetadataReader();
                         int assemblyRefOffset = mdReader.GetTableMetadataOffset(TableIndex.AssemblyRef);
                         int numAssemblyRef = mdReader.GetTableRowCount(TableIndex.AssemblyRef);
                         int sizeAssemblyRefRow = mdReader.GetTableRowSize(TableIndex.AssemblyRef);
