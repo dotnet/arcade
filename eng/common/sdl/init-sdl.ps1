@@ -58,6 +58,6 @@ try {
 }
 catch {
   Write-Host $_.ScriptStackTrace
-  Write-PipelineTelemetryError -Category 'Sdl' -Message $_
+  Write-PipelineTelemetryError -Force -Category 'Sdl' -Message $_
   ExitWithExitCode 1
 }
