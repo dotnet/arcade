@@ -354,3 +354,7 @@ Lastly, we need to upload both the code coverage report that was generated from 
     searchFolder: $(system.defaultworkingdirectory)
     testRunTitle: Helix Unit Tests
 ```
+
+#### Code Coverage Reports Locally
+
+To get a report of code coverage locally, you can run the Code Coverage Analyzer from Visual Studio Enterprise. Follow the instructions [here](https://docs.microsoft.com/en-us/visualstudio/test/using-code-coverage-to-determine-how-much-code-is-being-tested?view=vs-2019) for how to run and view code coverage results. 
