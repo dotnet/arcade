@@ -718,9 +718,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
             try
             {
+                /// true - Package exists on the feed AND is identical to local one.
+                /// false - Package exists on the feed AND is not identical to local one.
+                /// null - Package DOES NOT EXIST on the feed.
+                bool? packageExistIsIdentical = null;
+
                 const int maxNuGetPushAttempts = 3;
                 const int delayInSecondsBetweenAttempts = 3;
-                bool? packageExist = null;
                 int attemptIndex = 0;
 
                 do
@@ -736,13 +740,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     Log.LogMessage(MessageImportance.Low, $"Failed to push {localPackageLocation}, attempting to determine whether the package already exists on the feed with the same content.");
 
                     string packageContentUrl = $"https://pkgs.dev.azure.com/{feedAccount}/{feedVisibility}_apis/packaging/feeds/{feedName}/nuget/packages/{id}/versions/{version}/content";
-                    packageExist = await IsLocalPackageIdenticalToFeedPackage(localPackageLocation, packageContentUrl, client);
+                    packageExistIsIdentical = await IsLocalPackageIdenticalToFeedPackage(localPackageLocation, packageContentUrl, client);
 
-                    if (packageExist == true)
+                    if (packageExistIsIdentical == true)
                     {
                         Log.LogMessage(MessageImportance.Normal, $"Package '{localPackageLocation}' already exists on '{feedConfig.TargetURL}' but has the same content. Skipping.");
                     }
-                    else if (packageExist == false)
+                    else if (packageExistIsIdentical == false)
                     {
                         Log.LogError($"Package '{localPackageLocation}' already exists on '{feedConfig.TargetURL}' with different content.");
                     }
@@ -754,7 +758,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             .ConfigureAwait(false);
                     }
                 }
-                while (packageExist == null && attemptIndex++ <= maxNuGetPushAttempts);
+                while (packageExistIsIdentical == null && attemptIndex++ <= maxNuGetPushAttempts);
 
                 if (attemptIndex > maxNuGetPushAttempts)
                 {
