@@ -9,7 +9,6 @@ using Microsoft.DotNet.Maestro.Client.Models;
 using Microsoft.DotNet.VersionTools.BuildManifest.Model;
 using Microsoft.DotNet.VersionTools.Util;
 using NuGet.Packaging.Core;
-using NuGet.Versioning;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -49,7 +48,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         // Matches package feeds like
         // https://pkgs.dev.azure.com/dnceng/public/_packaging/public-feed-name/nuget/v3/index.json
         // or https://pkgs.dev.azure.com/dnceng/_packaging/internal-feed-name/nuget/v3/index.json
-        public const string AzDoNuGetFeedPattern = 
+        public const string AzDoNuGetFeedPattern =
             @"https://pkgs.dev.azure.com/(?<account>[a-zA-Z0-9]+)/(?<visibility>[a-zA-Z0-9-]+/)?_packaging/(?<feed>.+)/nuget/v3/index.json";
         private const string SymbolPackageSuffix = ".symbols.nupkg";
         private const string PackageSuffix = ".nupkg";
@@ -164,7 +163,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 Maestro.Client.Models.Build buildInformation = await client.Builds.GetBuildAsync(BARBuildId);
 
                 await ParseTargetFeedConfigAsync();
-                
+
                 // Return errors from parsing FeedConfig
                 if (Log.HasLoggedErrors)
                 {
@@ -686,19 +685,31 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// <summary>
         ///     Push a single package to the azure devops nuget feed.
         /// </summary>
-        /// <param name="feedConfig">Feed</param>
+        /// <param name="feedConfig">Infos about the target feed</param>
         /// <param name="packageToPublish">Package to push</param>
         /// <returns>Task</returns>
         /// <remarks>
         ///     This method attempts to take the most efficient path to push the package.
-        ///     There are two cases:
+        ///     
+        ///     There are three cases:
         ///         - The package does not exist, and is pushed normally
         ///         - The package exists, and its contents may or may not be equivalent.
-        ///     The second case is is by far the most common. So, we first attempt to push the package normally using nuget.exe.
-        ///     If this fails, this could mean any number of things (like failed auth). But in normal circumstances, this might
-        ///     mean the package already exists. This either means that we are attempting to push the same package, or attemtping to push
-        ///     a different package with the same id and version. The second case is an error, as azure devops feeds are immutable, the former
-        ///     is simply a case where we should continue onward.
+        ///         - Azure DevOps is having some issue and we didn't succeed to publish at first.
+        ///         
+        ///     The second case is by far the most common. So, we first attempt to push the 
+        ///     package normally using nuget.exe. If this fails, this could mean any number of 
+        ///     things (like failed auth). But in normal circumstances, this might mean the 
+        ///     package already exists. This either means that we are attempting to push the 
+        ///     same package, or attemtping to push a different package with the same id and 
+        ///     version. The second case is an error, as azure devops feeds are immutable, 
+        ///     the former is simply a case where we should continue onward.
+        ///     
+        ///     To handle the third case we rely on the call to compare file contents 
+        ///     `IsLocalPackageIdenticalToFeedPackage` to return null - meaning that it got 
+        ///     a 404 when looking up the file in the feed - to trigger a retry on the publish 
+        ///     operation. This was implemented this way becase we didn't want to rely on 
+        ///     parsing the output of the push operation - which does a call to `nuget.exe` 
+        ///     behind the scenes.
         /// </remarks>
         private async Task PushNugetPackageAsync(FeedConfig feedConfig, HttpClient client, string localPackageLocation, string id, string version,
             string feedAccount, string feedVisibility, string feedName)
@@ -707,34 +718,51 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
             try
             {
-                // The feed key when pushing to AzDo feeds is "AzureDevOps" (works with the credential helper).
-                int result = await StartProcessAsync(NugetPath, $"push \"{localPackageLocation}\" -Source \"{feedConfig.TargetURL}\" -NonInteractive -ApiKey AzureDevOps");
-                if (result != 0)
+                /// true - Package exists on the feed AND is identical to local one.
+                /// false - Package exists on the feed AND is not identical to local one.
+                /// null - Package DOES NOT EXIST on the feed.
+                bool? packageExistIsIdentical = null;
+
+                const int maxNuGetPushAttempts = 3;
+                const int delayInSecondsBetweenAttempts = 3;
+                int attemptIndex = 0;
+
+                do
                 {
+                    // The feed key when pushing to AzDo feeds is "AzureDevOps" (works with the credential helper).
+                    int result = await StartProcessAsync(NugetPath, $"push \"{localPackageLocation}\" -Source \"{feedConfig.TargetURL}\" -NonInteractive -ApiKey AzureDevOps");
+
+                    if (result == 0)
+                    {
+                        break;
+                    }
+
                     Log.LogMessage(MessageImportance.Low, $"Failed to push {localPackageLocation}, attempting to determine whether the package already exists on the feed with the same content.");
 
-                    try
+                    string packageContentUrl = $"https://pkgs.dev.azure.com/{feedAccount}/{feedVisibility}_apis/packaging/feeds/{feedName}/nuget/packages/{id}/versions/{version}/content";
+                    packageExistIsIdentical = await IsLocalPackageIdenticalToFeedPackage(localPackageLocation, packageContentUrl, client);
+
+                    if (packageExistIsIdentical == true)
                     {
-                        string packageContentUrl = $"https://pkgs.dev.azure.com/{feedAccount}/{feedVisibility}_apis/packaging/feeds/{feedName}/nuget/packages/{id}/versions/{version}/content";
-
-                        if (await IsLocalPackageIdenticalToFeedPackage(localPackageLocation, packageContentUrl, client))
-                        {
-                            Log.LogMessage(MessageImportance.Normal, $"Package '{localPackageLocation}' already exists on '{feedConfig.TargetURL}' but has the same content. Skipping.");
-                        }
-                        else
-                        {
-                            Log.LogError($"Package '{localPackageLocation}' already exists on '{feedConfig.TargetURL}' with different content.");
-                        }
-
-                        return;
+                        Log.LogMessage(MessageImportance.Normal, $"Package '{localPackageLocation}' already exists on '{feedConfig.TargetURL}' but has the same content. Skipping.");
                     }
-                    catch (Exception e)
+                    else if (packageExistIsIdentical == false)
                     {
-                        // This is an error. It means we were unable to push using nuget, and then could not access to the package otherwise.
-                        Log.LogWarning($"Failed to determine whether an existing package on the feed has the same content as '{localPackageLocation}': {e.Message}");
+                        Log.LogError($"Package '{localPackageLocation}' already exists on '{feedConfig.TargetURL}' with different content.");
                     }
+                    else
+                    {
+                        // packageExist == null, which means we didn't find the package on the feed
+                        // will retry the push and check again
+                        await Task.Delay(TimeSpan.FromSeconds(delayInSecondsBetweenAttempts))
+                            .ConfigureAwait(false);
+                    }
+                }
+                while (packageExistIsIdentical == null && attemptIndex++ <= maxNuGetPushAttempts);
 
-                    Log.LogError($"Failed to push '{id}@{version}'. Result code '{result}'.");
+                if (attemptIndex > maxNuGetPushAttempts)
+                {
+                    Log.LogError($"Failed to publish package '{id}@{version}' after {maxNuGetPushAttempts} attempts.");
                 }
             }
             catch (Exception e)
@@ -759,41 +787,50 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         ///       the streams make no gaurantee that they will return a full block each time when read operations are performed, so we
         ///       must be sure to only compare the minimum number of bytes returned.
         /// </remarks>
-        private async Task<bool> IsLocalPackageIdenticalToFeedPackage(string localPackageFullPath, string packageContentUrl, HttpClient client)
+        private async Task<bool?> IsLocalPackageIdenticalToFeedPackage(string localPackageFullPath, string packageContentUrl, HttpClient client)
         {
             Log.LogMessage($"Getting package content from {packageContentUrl} and comparing to {localPackageFullPath}");
 
-            using (Stream localFileStream = File.OpenRead(localPackageFullPath))
-            using (HttpResponseMessage response = await client.GetAsync(packageContentUrl))
+            try
             {
-                response.EnsureSuccessStatusCode();
-
-                // Check the headers for content length and md5
-                bool md5HeaderAvailable = response.Headers.TryGetValues("Content-MD5", out var md5);
-                bool lengthHeaderAvailable = response.Headers.TryGetValues("Content-Length", out var contentLength);
-
-                if (lengthHeaderAvailable && long.Parse(contentLength.Single()) != localFileStream.Length)
+                using (Stream localFileStream = File.OpenRead(localPackageFullPath))
+                using (HttpResponseMessage response = await client.GetAsync(packageContentUrl))
                 {
-                    Log.LogMessage(MessageImportance.Low, $"Package '{localPackageFullPath}' has different length than remote package '{packageContentUrl}'.");
-                    return false;
-                }
+                    response.EnsureSuccessStatusCode();
 
-                if (md5HeaderAvailable)
-                {
-                    var localMD5 = AzureStorageUtils.CalculateMD5(localPackageFullPath);
-                    if (!localMD5.Equals(md5.Single(), StringComparison.OrdinalIgnoreCase))
+                    // Check the headers for content length and md5
+                    bool md5HeaderAvailable = response.Headers.TryGetValues("Content-MD5", out var md5);
+                    bool lengthHeaderAvailable = response.Headers.TryGetValues("Content-Length", out var contentLength);
+
+                    if (lengthHeaderAvailable && long.Parse(contentLength.Single()) != localFileStream.Length)
                     {
-                        Log.LogMessage(MessageImportance.Low, $"Package '{localPackageFullPath}' has different MD5 hash than remote package '{packageContentUrl}'.");
+                        Log.LogMessage(MessageImportance.Low, $"Package '{localPackageFullPath}' has different length than remote package '{packageContentUrl}'.");
+                        return false;
                     }
 
-                    return true;
+                    if (md5HeaderAvailable)
+                    {
+                        var localMD5 = AzureStorageUtils.CalculateMD5(localPackageFullPath);
+                        if (!localMD5.Equals(md5.Single(), StringComparison.OrdinalIgnoreCase))
+                        {
+                            Log.LogMessage(MessageImportance.Low, $"Package '{localPackageFullPath}' has different MD5 hash than remote package '{packageContentUrl}'.");
+                        }
+
+                        return true;
+                    }
+
+                    const int BufferSize = 64 * 1024;
+
+                    // Otherwise, compare the streams
+                    var remoteStream = await response.Content.ReadAsStreamAsync();
+                    return await CompareStreamsAsync(localFileStream, remoteStream, BufferSize);
                 }
-
-                const int BufferSize = 64 * 1024;
-
-                // Otherwise, compare the streams
-                var remoteStream = await response.Content.ReadAsStreamAsync();
-                return await CompareStreamsAsync(localFileStream, remoteStream, BufferSize);
+            }
+            // String based comparison because the status code isn't exposed in HttpRequestException
+            // see here: https://github.com/dotnet/runtime/issues/23648
+            catch (HttpRequestException e) when (e.Message.Contains("404 (Not Found)"))
+            {
+                return null;
             }
         }
 
