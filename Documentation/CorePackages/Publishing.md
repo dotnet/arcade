@@ -269,10 +269,9 @@ Starting with Arcade SDK version **5.0.0-beta.20120.2** there is not support any
   | DotNetPublishBlobFeedKey      |
   | DotNetPublishBlobFeedUrl      |
   | DotNetPublishToBlobFeed       |
-  | DotNetArtifactsCategory       |
   | DotNetSymbolServerTokenMsdl   |
   | DotNetSymbolServerTokenSymWeb |
-
+  
 - **The build definition doesn't set `/p:DotNetPublishingUsingPipelines` or set it to false:** only symbols will be published and they will be controlled by the Arcade SDK. The build definition still needs to inform the `DotNetSymbolServerToken[Msdl/SymWeb]` properties, but the following properties aren't required anymore:
 
   | Property      |
@@ -280,8 +279,8 @@ Starting with Arcade SDK version **5.0.0-beta.20120.2** there is not support any
   | DotNetPublishBlobFeedKey      |
   | DotNetPublishBlobFeedUrl      |
   | DotNetPublishToBlobFeed       |
-  | DotNetArtifactsCategory       |
 
+Furthermore, starting with Arcade SDK version **5.0.0-beta.20120.2** the default value for the `DotNetArtifactsCategory` property is `.NETCore`, therefore you don't need to set that property anymore if you were setting it to `.NETCore`.
 
 ## Frequently Asked Questions
 
