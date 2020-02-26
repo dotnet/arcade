@@ -296,6 +296,39 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         }
 
         /// <summary>
+        /// Adds `feedConfig.TargetURL` to the list of locations of the asset pointed by `assetRecord`.
+        /// </summary>
+        /// <param name="client">Maestro++ API client</param>
+        /// <param name="assetRecord">Asset that will have location list updated</param>
+        /// <param name="feedConfig">Configuration of where the asset was published</param>
+        /// <param name="assetLocationType">Type of feed location that is being added</param>
+        /// <returns>Whether the location was added to the list or not.</returns>
+        private async Task<bool> AddAssetLocationAsync(IMaestroApi client, Asset assetRecord, FeedConfig feedConfig, AddAssetLocationToAssetAssetLocationType assetLocationType)
+        {
+            var assetWithLocations = await client.Assets.GetAssetAsync(assetRecord.Id);
+
+            if (assetWithLocations?.Locations.Any(al => al.Location.Equals(feedConfig.TargetURL, StringComparison.OrdinalIgnoreCase)) ?? false)
+            {
+                Log.LogMessage($"Asset with Id {assetRecord.Id}, Version {assetRecord.Version} already has location {feedConfig.TargetURL}");
+                return false;
+            }
+
+            try
+            {
+                await client.Assets.AddAssetLocationToAssetAsync(assetRecord.Id, assetLocationType, feedConfig.TargetURL);
+            }
+            catch (RestApiException e) when (e.Response.StatusCode == System.Net.HttpStatusCode.Conflict)
+            {
+                // This is likely due to some concurrent operation trying to add same location to same asset.
+                // This is not frequent, but it's possible, for instance, when a build publishes to multiple 
+                // channels that target same feeds.
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
         /// Protect against accidental publishing of internal assets to non-internal feeds.
         /// </summary>
         /// <returns></returns>
@@ -575,15 +608,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     continue;
                 }
 
-                var assetWithLocations = await client.Assets.GetAssetAsync(assetRecord.Id);
-
-                if (assetWithLocations?.Locations.Any(al => al.Location.Equals(feedConfig.TargetURL, StringComparison.OrdinalIgnoreCase)) ?? false)
+                if (await AddAssetLocationAsync(client, assetRecord, feedConfig, AddAssetLocationToAssetAssetLocationType.NugetFeed) == false)
                 {
-                    Log.LogMessage($"Asset with Id {package.Id}, Version {package.Version} already has location {feedConfig.TargetURL}");
                     continue;
                 }
-
-                await client.Assets.AddAssetLocationToAssetAsync(assetRecord.Id, AddAssetLocationToAssetAssetLocationType.NugetFeed, feedConfig.TargetURL);
             }
 
             await PushNugetPackagesAsync(packagesToPublish, feedConfig, maxClients: MaxClients,
@@ -894,15 +922,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     continue;
                 }
 
-                var assetWithLocations = await client.Assets.GetAssetAsync(assetRecord.Id);
-
-                if (assetWithLocations?.Locations.Any(al => al.Location.Equals(feedConfig.TargetURL, StringComparison.OrdinalIgnoreCase)) ?? false)
+                if (await AddAssetLocationAsync(client, assetRecord, feedConfig, AddAssetLocationToAssetAssetLocationType.Container) == false)
                 {
-                    Log.LogMessage($"Asset with Id {blob.Id} already has location {feedConfig.TargetURL}");
                     continue;
                 }
-
-                await client.Assets.AddAssetLocationToAssetAsync(assetRecord.Id, AddAssetLocationToAssetAssetLocationType.Container, feedConfig.TargetURL);
 
                 // Applies to symbol packages and core-sdk's VS feed packages
                 if (blob.Id.EndsWith(PackageSuffix, StringComparison.OrdinalIgnoreCase))
@@ -982,15 +1005,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     continue;
                 }
 
-                var assetWithLocations = await client.Assets.GetAssetAsync(assetRecord.Id);
-
-                if (assetWithLocations?.Locations.Any(al => al.Location.Equals(feedConfig.TargetURL, StringComparison.OrdinalIgnoreCase)) ?? false)
+                if (await AddAssetLocationAsync(client, assetRecord, feedConfig, AddAssetLocationToAssetAssetLocationType.NugetFeed) == false)
                 {
-                    Log.LogMessage($"Asset with Id {package.Id}, Version {package.Version} already has location {feedConfig.TargetURL}");
                     continue;
                 }
-
-                await client.Assets.AddAssetLocationToAssetAsync(assetRecord.Id, AddAssetLocationToAssetAssetLocationType.NugetFeed, feedConfig.TargetURL);
             }
 
             await blobFeedAction.PushToFeedAsync(packages, pushOptions);
@@ -1043,15 +1061,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     continue;
                 }
 
-                var assetWithLocations = await client.Assets.GetAssetAsync(assetRecord.Id);
-
-                if (assetWithLocations?.Locations.Any(al => al.Location.Equals(feedConfig.TargetURL, StringComparison.OrdinalIgnoreCase)) ?? false)
+                if (await AddAssetLocationAsync(client, assetRecord, feedConfig, AddAssetLocationToAssetAssetLocationType.Container) == false)
                 {
-                    Log.LogMessage($"Asset with Id {blob.Id} already has location {feedConfig.TargetURL}");
                     continue;
                 }
-
-                await client.Assets.AddAssetLocationToAssetAsync(assetRecord.Id, AddAssetLocationToAssetAssetLocationType.Container, feedConfig.TargetURL);
             }
 
             await blobFeedAction.PublishToFlatContainerAsync(blobs, maxClients: MaxClients, pushOptions);
