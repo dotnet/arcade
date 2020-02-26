@@ -303,25 +303,18 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// <param name="feedConfig">Configuration of where the asset was published</param>
         /// <param name="assetLocationType">Type of feed location that is being added</param>
         /// <returns>Whether the location was added to the list or not.</returns>
-        private async Task<bool> AddAssetLocationAsync(IMaestroApi client, Asset assetRecord, FeedConfig feedConfig, AddAssetLocationToAssetAssetLocationType assetLocationType)
+        private async Task<bool> TryAddAssetLocationAsync(IMaestroApi client, Asset assetRecord, FeedConfig feedConfig, AddAssetLocationToAssetAssetLocationType assetLocationType)
         {
-            var assetWithLocations = await client.Assets.GetAssetAsync(assetRecord.Id);
-
-            if (assetWithLocations?.Locations.Any(al => al.Location.Equals(feedConfig.TargetURL, StringComparison.OrdinalIgnoreCase)) ?? false)
-            {
-                Log.LogMessage($"Asset with Id {assetRecord.Id}, Version {assetRecord.Version} already has location {feedConfig.TargetURL}");
-                return false;
-            }
-
             try
             {
                 await client.Assets.AddAssetLocationToAssetAsync(assetRecord.Id, assetLocationType, feedConfig.TargetURL);
             }
-            catch (RestApiException e) when (e.Response.StatusCode == System.Net.HttpStatusCode.Conflict)
+            catch (RestApiException e) when (e.Response.StatusCode == System.Net.HttpStatusCode.NotModified)
             {
                 // This is likely due to some concurrent operation trying to add same location to same asset.
                 // This is not frequent, but it's possible, for instance, when a build publishes to multiple 
                 // channels that target same feeds.
+                Log.LogMessage($"Asset with Id {assetRecord.Id}, Version {assetRecord.Version} already has location {feedConfig.TargetURL}");
                 return false;
             }
 
@@ -608,10 +601,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     continue;
                 }
 
-                if (await AddAssetLocationAsync(client, assetRecord, feedConfig, AddAssetLocationToAssetAssetLocationType.NugetFeed) == false)
-                {
-                    continue;
-                }
+                await TryAddAssetLocationAsync(client, assetRecord, feedConfig, AddAssetLocationToAssetAssetLocationType.NugetFeed);
             }
 
             await PushNugetPackagesAsync(packagesToPublish, feedConfig, maxClients: MaxClients,
@@ -922,7 +912,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     continue;
                 }
 
-                if (await AddAssetLocationAsync(client, assetRecord, feedConfig, AddAssetLocationToAssetAssetLocationType.Container) == false)
+                if (await TryAddAssetLocationAsync(client, assetRecord, feedConfig, AddAssetLocationToAssetAssetLocationType.Container) == false)
                 {
                     continue;
                 }
@@ -1005,10 +995,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     continue;
                 }
 
-                if (await AddAssetLocationAsync(client, assetRecord, feedConfig, AddAssetLocationToAssetAssetLocationType.NugetFeed) == false)
-                {
-                    continue;
-                }
+                await TryAddAssetLocationAsync(client, assetRecord, feedConfig, AddAssetLocationToAssetAssetLocationType.NugetFeed);
             }
 
             await blobFeedAction.PushToFeedAsync(packages, pushOptions);
@@ -1061,10 +1048,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     continue;
                 }
 
-                if (await AddAssetLocationAsync(client, assetRecord, feedConfig, AddAssetLocationToAssetAssetLocationType.Container) == false)
-                {
-                    continue;
-                }
+                await TryAddAssetLocationAsync(client, assetRecord, feedConfig, AddAssetLocationToAssetAssetLocationType.Container);
             }
 
             await blobFeedAction.PublishToFlatContainerAsync(blobs, maxClients: MaxClients, pushOptions);
