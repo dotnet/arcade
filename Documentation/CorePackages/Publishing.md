@@ -8,17 +8,8 @@ In order to use the new publishing mechanism, the easiest way to start is by tur
 
 1. Update the Arcade SDK version used by the repository to `1.0.0-beta.19360.8` or newer.
 
-1. Add a *top level* variable named `_DotNetArtifactsCategory` to your build-definition YAML. Most repositories will use `.NETCore` as the category unless assets should be published to a feed other than the default Maestro++ managed feeds (see definition below). Contact @dnceng for instructions about how to publish to a custom feed. See below an example definition:
-
-    ```YAML
-    variables:
-    ...
-    - name: _DotNetArtifactsCategory
-      value: .NETCore
-    ...
-    ```
-
 1. Disable asset publishing during the build. There are two common situations here. Some build definitions make use of the `jobs.yml` template and others make use of the `job.yml` (singular). The former is a wrapper around a few things, among them the `job.yml` and `publish-build-assets.yml` templates. If your build definition doesn't use `jobs.yml` you'll need to directly pass the `PublishUsingPipelines` parameter to the included templates. See examples below.
+
     1. If the build job uses the `eng\common\templates\jobs\jobs.yml` template, set the parameter `enablePublishUsingPipelines` to `true`. See example below:
 
         ```YAML
@@ -54,16 +45,15 @@ In order to use the new publishing mechanism, the easiest way to start is by tur
                   ...
             ```
 
-1. You'll also need to pass the below two MSBuild properties to the Arcade build scripts.
+1. You'll also need to pass the below MSBuild property to the Arcade build scripts.
 
-    | Name                           | Value                         |
-    | ------------------------------ | ----------------------------- |
-    | /p:DotNetPublishUsingPipelines | true                          |
-    | /p:DotNetArtifactsCategory     | `$(_DotNetArtifactsCategory)` |
+  | Name                           | Value |
+  | ------------------------------ | ----- |
+  | /p:DotNetPublishUsingPipelines | true  |
 
-    For example, if the repo has the following configuration for invoking `cibuild.cmd` :
-
-    ```YAML
+  For example, if the repo has the following configuration for invoking `cibuild.cmd`:
+  
+  ```YAML
     - _InternalBuildArgs: /p:DotNetSignType=$(_SignType) 
         /p:TeamName=$(_TeamName)
         /p:DotNetPublishBlobFeedKey=$(dotnetfeed-storage-access-key-1)
@@ -77,11 +67,9 @@ In order to use the new publishing mechanism, the easiest way to start is by tur
         -configuration $(_BuildConfig)
         -prepareMachine
          $(_InternalBuildArgs)
-	```
-
-	after setting the needed MSBuild properties it should looks like this:
-
-    ```YAML
+  ```
+  after setting the needed MSBuild properties it should looks like this:
+  ```YAML
     - _InternalBuildArgs: /p:DotNetSignType=$(_SignType) 
         /p:TeamName=$(_TeamName)
         /p:DotNetPublishBlobFeedKey=$(dotnetfeed-storage-access-key-1)
@@ -91,13 +79,12 @@ In order to use the new publishing mechanism, the easiest way to start is by tur
         /p:DotNetSymbolServerTokenSymWeb=$(symweb-symbol-server-pat)
         /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
         /p:DotNetPublishUsingPipelines=$(_PublishUsingPipelines)
-        /p:DotNetArtifactsCategory=$(_DotNetArtifactsCategory)
     
     - script: eng\common\cibuild.cmd
         -configuration $(_BuildConfig)
         -prepareMachine
          $(_InternalBuildArgs)
-    ```
+  ```
 
 1. Transform your existing build-definition to a single stage. Do that by nesting the current job definition(s) under the `stages` keyword. For instance, this example build definition with a single job definition:
 
@@ -167,7 +154,7 @@ The pipeline for a build with stages enabled will look like the one shown below.
 
 Since the post-build stages will only trigger during builds that run in the internal project (i.e., they won't show up on public builds), there are some additional steps that need to be performed in order to test that the changes to the pipeline are correct, and that publishing works as expected. 
 
-1. Publish a branch to the Azure DevOps mirror of the repo that includes the pipeline changes.
+1. Create a branch on the Azure DevOps internal mirror of the repo that includes the pipeline changes.
 1. Set up the "General Testing Channel" as a default channel for the internal repo + branch combination using Darc.
 
     ``` Powershell
@@ -271,6 +258,29 @@ A conversion to `PushToAzureDevOpsArtifacts` for repos that are using the `PushT
 
     **Note:** the usage of a temporary directory for placing the assets while uploading them is needed to guarantee that nothing interferes with the upload since it occurs asynchronously. See [this issue](https://github.com/dotnet/arcade/issues/2197) for context.
 
+## PublishingUsingPipelines & Deprecated Properties
+
+Starting with Arcade SDK version **5.0.0-beta.20120.2** there is not support anymore for the old publishing infrastructure where the Arcade SDK handled publishing of all assets during the build stage. That means, that if:
+
+- **The build definition sets `/p:DotNetPublishusingPipelines=true`:** Arcade will handle the control of assets publishing to Maestro++ and also that the build definition doesn't need to inform any of the following properties to the build scripts [CIBuild.cmd/sh](https://github.com/dotnet/arcade/blob/master/eng/common/CIBuild.cmd) :
+
+  | Property      |
+  | ----------------------------- |
+  | DotNetPublishBlobFeedKey      |
+  | DotNetPublishBlobFeedUrl      |
+  | DotNetPublishToBlobFeed       |
+  | DotNetSymbolServerTokenMsdl   |
+  | DotNetSymbolServerTokenSymWeb |
+  
+- **The build definition doesn't set `/p:DotNetPublishingUsingPipelines` or set it to false:** only symbols will be published and they will be controlled by the Arcade SDK. The build definition still needs to inform the `DotNetSymbolServerToken[Msdl/SymWeb]` properties, but the following properties aren't required anymore:
+
+  | Property      |
+  | ----------------------------- |
+  | DotNetPublishBlobFeedKey      |
+  | DotNetPublishBlobFeedUrl      |
+  | DotNetPublishToBlobFeed       |
+
+Furthermore, starting with Arcade SDK version **5.0.0-beta.20120.2** the default value for the `DotNetArtifactsCategory` property is `.NETCore`, therefore you don't need to set that property anymore if you were setting it to `.NETCore`.
 
 ## Frequently Asked Questions
 
@@ -336,19 +346,9 @@ Yes, that's possible. You need to [use Darc to do that](https://github.com/dotne
 
 Most frequent cause of this is that there is no Default Channel configured for the build. [Take a look here](https://github.com/dotnet/arcade/blob/ec191f3d706d740bc7a87fbb98d94d916f81f0cb/Documentation/Darc.md#get-default-channels) to see how to check that.
 
-### Why do you need the DotNetPublishUsingPipelines / DotNetArtifactsCategory parameter?
+### Why do you need the DotNetPublishUsingPipelines parameter?
 
-The `DotNetPublishUsingPipelines` is a flag that Arcade SDK rely to determine if the repo wants to use the old or new publishing infrastructure. Until now the SDK supports both infra, however we are [working to remove the old one](https://github.com/dotnet/arcade/issues/3597) and thus the need for that parameter.
-
-The `DotNetArtifactsCategory` parameter was introduced to let people override the target feed for the publishing operations. We are in the process of removing support for that.
-
-### Do I still need to pass the DotNetPublishToBlobFeed, DotNetPublishBlobFeedUrl, DotNetPublishBlobFeedKey parameters to the build scripts?
-
-Yes, you still need to pass that. Currently, Arcade SDK has some logic that depends on those parameters to work properly. We are [working to remove the need of those parameters](https://github.com/dotnet/arcade/issues/3597).
-
-### Do I still need to pass the DotNetSymbolServerTokenMsdl and DotNetSymbolServerTokenSymWeb parameters to the build scripts?
-
-Yes, you still need to pass that. Currently, Arcade SDK has some logic that depends on those parameters to work properly. We are [working to remove the need of those parameters](https://github.com/dotnet/arcade/issues/3597).
+The `DotNetPublishUsingPipelines` is a flag that Arcade SDK uses to determine if the repo wants Maestro++ to control all aspects of publishing. If that parameter is not set (not advisable)  Arcade SDK will only publish symbols produced by the build; publishing of other assets should be taken care of by the repo build definition.
 
 ### What's PackageArtifacts, BlobArtifacts, PdbArtifacts and ReleaseConfigs for?
 
