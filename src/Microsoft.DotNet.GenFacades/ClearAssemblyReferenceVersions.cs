@@ -49,7 +49,7 @@ namespace Microsoft.DotNet.GenFacades
                             writer.Write((long)0);
                         }
 
-                        // remove signature, if present
+                        // remove signature, if present, since we changed the binary which would break any signature.
                         // adapted from https://github.com/dotnet/arcade/blob/866b2acd5ffc3c2031c102f6415fd7c6a1a370d5/src/Microsoft.DotNet.Arcade.Sdk/src/Unsign.cs#L58-L65
                         if (peReader.PEHeaders.PEHeader.CertificateTableDirectory.Size != 0)
                         {
