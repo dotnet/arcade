@@ -17,6 +17,8 @@ if [ ! -f $ENV_PATH/bin/python ]; then
   mv -T $TMP_ENV_PATH $ENV_PATH
 fi
 
+export PYTHONPATH=
+
 if $ENV_PATH/bin/python -c "import azure.devops"; then
   echo "azure-devops module already available"
 else
