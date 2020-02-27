@@ -1,6 +1,8 @@
 
 set ENV_PATH=%USERPROFILE%\.vsts-env
 set TMP_ENV_PATH=%USERPROFILE%\.vsts-env-tmp
+set PYTHONPATH=
+
 echo  %date%-%time%
 
 if NOT EXIST %ENV_PATH%\Scripts\python.exe (
