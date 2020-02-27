@@ -4,8 +4,10 @@
 
 using Microsoft.Build.Framework;
 using Microsoft.DotNet.Build.CloudTestTasks;
+using Microsoft.DotNet.Deployment.Tasks.Links.src;
 using Microsoft.DotNet.Maestro.Client;
 using Microsoft.DotNet.Maestro.Client.Models;
+using Microsoft.DotNet.VersionTools.BuildManifest;
 using Microsoft.DotNet.VersionTools.BuildManifest.Model;
 using Microsoft.DotNet.VersionTools.Util;
 using NuGet.Packaging.Core;
@@ -30,6 +32,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
     /// </summary>
     public class PublishArtifactsInManifest : MSBuild.Task
     {
+        const string FeedExpectedSuffix = "index.json";
+
         // Matches package feeds like
         // https://dotnet-feed-internal.azurewebsites.net/container/dotnet-core-internal/sig/dsdfasdfasdf234234s/se/2020-02-02/darc-int-dotnet-arcade-services-babababababe-08/index.json
         const string AzureStorageProxyFeedPattern =
@@ -60,6 +64,23 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// Metadata TargetURL: target URL where assets of this category should be published to.
         /// Metadata Type: type of the target feed.
         /// Metadata Token: token to be used for publishing to target feed.
+        /// Metadata AssetSelection (optional): Can be "All", "ShippingOnly" or "NonShippingOnly"
+        ///                                     Determines which assets are pushed to this feed config
+        /// Metadata Internal (optional): If true, the feed is assumed to be only internally visible.
+        ///                               If false, the feed is public.
+        ///                               If not provided, then this task will attempt to determine whether the feed URL is publicly visible or not.
+        /// Metadata Isolated (optional): If true, the feed is assumed to be isolated, and stable packages can be pushed to it.
+        ///                               If false, the feed is assumed to be non-isolated, and stable packages will be rejected.
+        ///                               If not provided then defaults to false.
+        /// Metadata AllowOverwrite (optional): If true, existing azure blob storage assets can be overwritten
+        ///                                     If false, an error is thrown if an asset already exists
+        ///                                     If not provided then defaults to false.
+        ///                                     Azure DevOps feeds can never be overwritten.
+        /// Metadata LatestLinkShortUrlPrefix (optional): If provided, AKA ms links are generated (for artifacts blobs only)
+        ///                                               that target this short url path. The link is construct as such:
+        ///                                               aka.ms/AkaShortUrlPath/BlobArtifactPath -> Target blob url
+        ///                                               If specified, then AkaMSClientId, AkaMSClientSecret and AkaMSTenant must be provided.
+        ///                                               The version information is stripped away from the file and blob artifact path.
         /// </summary>
         [Required]
         public ITaskItem[] TargetFeedConfig { get; set; }
@@ -125,6 +146,16 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// - Stable packages to non-isolated feeds
         /// </summary>
         public bool SkipSafetyChecks { get; set; } = false;
+
+        #region Information for AKA MS link generation
+
+        public string AkaMSClientId { get; set; }
+        public string AkaMSClientSecret { get; set; }
+        public string AkaMSTenant { get; set; }
+        public string AkaMsOwners { get; set; }
+        public string AkaMSCreatedBy { get; set; }
+        public string AkaMSGroupOwner { get; set; }
+        #endregion
 
         public readonly Dictionary<string, List<FeedConfig>> FeedConfigs = new Dictionary<string, List<FeedConfig>>();
 
@@ -211,6 +242,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         continue;
                     }
 
+                    if (!targetFeedUrl.EndsWith(FeedExpectedSuffix))
+                    {
+                        Log.LogError($"Exepcted that feed '{targetFeedUrl}' would end in {FeedExpectedSuffix}");
+                        continue;
+                    }
+
                     if (!Enum.TryParse<FeedType>(type, true, out FeedType feedType))
                     {
                         Log.LogError($"Invalid feed config type '{type}'. Possible values are: {string.Join(", ", Enum.GetNames(typeof(FeedType)))}");
@@ -283,6 +320,23 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         }
                         feedConfig.AllowOverwrite = feedSetting;
                     }
+
+                    string latestLinkShortUrlPrefix = fc.GetMetadata(nameof(FeedConfig.LatestLinkShortUrlPrefix));
+                    if (!string.IsNullOrEmpty(latestLinkShortUrlPrefix))
+                    {
+                        // Verify other inputs are provided
+                        if (string.IsNullOrEmpty(AkaMSClientId) ||
+                            string.IsNullOrEmpty(AkaMSClientSecret) ||
+                            string.IsNullOrEmpty(AkaMSTenant) ||
+                            string.IsNullOrEmpty(AkaMsOwners))
+                        {
+                            Log.LogError($"If a short url path is provided, please provide {nameof(AkaMSClientId)}, {nameof(AkaMSClientSecret)}, " +
+                                $"{nameof(AkaMSTenant)}, {nameof(AkaMsOwners)}, {nameof(AkaMSCreatedBy)}");
+                            continue;
+                        }
+                        feedConfig.LatestLinkShortUrlPrefix = latestLinkShortUrlPrefix;
+                    }
+
 
                     string categoryKey = fc.ItemSpec.Trim().ToUpper();
                     if (!FeedConfigs.TryGetValue(categoryKey, out var feedsList))
@@ -1073,9 +1127,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 PassIfExistingItemIdentical = true
             };
 
-            foreach (var blob in blobsToPublish)
+            foreach (BlobArtifactModel blob in blobsToPublish)
             {
-                var assetRecord = buildInformation.Assets
+                Asset assetRecord = buildInformation.Assets
                     .Where(a => a.Name.Equals(blob.Id))
                     .SingleOrDefault();
 
@@ -1089,6 +1143,48 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             }
 
             await blobFeedAction.PublishToFlatContainerAsync(blobs, maxClients: MaxClients, pushOptions);
+            await CreateOrUpdateLatestLinksAsync(blobsToPublish, feedConfig);
+        }
+
+        private async Task CreateOrUpdateLatestLinksAsync(List<BlobArtifactModel> blobsToPublish, FeedConfig feedConfig)
+        {
+            // Update or create aka ms links if desired.
+            if (!string.IsNullOrEmpty(feedConfig.LatestLinkShortUrlPrefix))
+            {
+                Log.LogMessage(MessageImportance.High, "The following aka.ms links for blobs will be created:");
+                List<AkaMSLink> linksToCreate = blobsToPublish.Select(blob =>
+                {
+                    // Strip away the feed expected suffix (index.json) and append on the
+                    // blob path.
+                    string actualTargetUrl = feedConfig.TargetURL.Substring(0,
+                        feedConfig.TargetURL.Length - FeedExpectedSuffix.Length) + blob.Id;
+
+                    AkaMSLink newLink = new AkaMSLink
+                    {
+                        ShortUrl = GetLatestShortUrlForBlob(feedConfig, blob),
+                        TargetUrl = actualTargetUrl
+                    };
+                    Log.LogMessage(MessageImportance.High, $"  {newLink.ShortUrl} -> {newLink.TargetUrl}");
+                    return newLink;
+                }).ToList();
+
+                AkaMSLinkManager linkManager = new AkaMSLinkManager(AkaMSClientId, AkaMSClientSecret, AkaMSTenant, Log);
+                await linkManager.CreateOrUpateLinksAsync(linksToCreate, AkaMsOwners, AkaMSCreatedBy, AkaMSGroupOwner, true);
+            }
+        }
+
+        /// <summary>
+        ///     Get the short url for a blob.
+        /// </summary>
+        /// <param name="feedConfig">Feed configuration</param>
+        /// <param name="blob">Blob</param>
+        /// <returns>Short url prefix for the blob.</returns>
+        /// <remarks>
+        public string GetLatestShortUrlForBlob(FeedConfig feedConfig, BlobArtifactModel blob)
+        {
+            string blobIdWithoutVersions = VersionIdentifier.RemoveVersions(blob.Id);
+
+            return Path.Combine(feedConfig.LatestLinkShortUrlPrefix, blobIdWithoutVersions).Replace("\\", "/");
         }
 
         private BlobFeedAction CreateBlobFeedAction(FeedConfig feedConfig)
@@ -1230,5 +1326,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// valid for azure blob storage feeds.
         /// </summary>
         public bool AllowOverwrite { get; set; } = false;
+        /// <summary>
+        /// Prefix of aka.ms links that should be generated for blobs.
+        /// Not applicable to packages
+        /// Generates a link the blob, stripping away any version information in the file or blob path.
+        /// E.g. 
+        ///      [LatestLinkShortUrl]/aspnetcore/Runtime/dotnet-hosting-win.exe -> aspnetcore/Runtime/3.1.0-preview2.19511.6/dotnet-hosting-3.1.0-preview2.19511.6-win.exe
+        /// </summary>
+        public string LatestLinkShortUrlPrefix { get; set; }
     }
 }

@@ -10,6 +10,8 @@ parameters:
   transportFeed: ''
   shippingFeed: ''
   symbolsFeed: ''
+  # If the channel name is empty, no links will be generated
+  akaMSChannelName: ''
 
 stages:
 - stage: ${{ parameters.stageName }}
@@ -161,6 +163,12 @@ stages:
             /p:AzureDevOpsStaticTransportFeedKey='$(dn-bot-dnceng-artifact-feeds-rw)'
             /p:AzureDevOpsStaticSymbolsFeed='${{ parameters.symbolsFeed }}'
             /p:AzureDevOpsStaticSymbolsFeedKey='$(dn-bot-dnceng-artifact-feeds-rw)'
+            /p:LatestLinkShortUrlPrefix=dotnet/'${{ parameters.akaMSChannelName }}'
+            /p:AkaMSClientId=$(akams-client-id)
+            /p:AkaMSClientSecret=$(akams-client-secret)
+            /p:AkaMSTenant=ncd
+            /p:AkaMSOwners=dn-bot
+            /p:AkaMSCreatedBy=dn-bot
             ${{ parameters.artifactsPublishingAdditionalParameters }}
 
       - template: ../../steps/publish-logs.yml

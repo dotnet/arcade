@@ -24,6 +24,9 @@
   <ItemGroup>
     <Content Include="build\*" PackagePath="build\" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Microsoft.DotNet.VersionTools\lib\Microsoft.DotNet.VersionTools.csproj" />
+  </ItemGroup>
 
   <!-- 
     Specify binaries to include in NuGet package 

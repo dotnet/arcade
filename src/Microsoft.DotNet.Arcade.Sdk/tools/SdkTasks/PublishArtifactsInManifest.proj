@@ -72,7 +72,12 @@
       AssetManifestPath="%(ManifestFiles.Identity)"
       BlobAssetsBasePath="$(BlobBasePath)"
       PackageAssetsBasePath="$(PackageBasePath)"
-      NugetPath="$(NugetPath)"/>
+      NugetPath="$(NugetPath)"
+      AkaMSClientId="$(AkaMSClientId)"
+      AkaMSClientSecret="$(AkaMSClientSecret)"
+      AkaMSTenant="$(AkaMSTenant)"
+      AkaMsOwners="$(AkaMsOwners)"
+      AkaMSCreatedBy="$(AkaMSCreatedBy)" />
   </Target>
 
   <ItemGroup>
