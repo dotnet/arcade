@@ -7,5 +7,8 @@ assignees: ''
 
 ---
 
--  Is this issue blocking (yes/no)
--  Is this issue causing unreasonable pain (yes/no)
+<!-- If these statements apply, replace [ ] with [x] before filing your issue. -->
+- [ ] This issue is blocking <!-- Describe below what is blocked. -->
+- [ ] This issue is causing unreasonable pain
+
+<!-- Write your issue description below. -->
