@@ -17,6 +17,8 @@ if [ ! -f $ENV_PATH/bin/python ]; then
   mv -T $TMP_ENV_PATH $ENV_PATH
 fi
 
+# Removing pythonpath forces a clean installation of the Azure DevOps client, but subsequent commands may use HELIX libraries
+_OLD_PYTHONPATH=$PYTHONPATH
 export PYTHONPATH=
 
 if $ENV_PATH/bin/python -c "import azure.devops"; then
@@ -34,3 +36,5 @@ fi
 date -u +"%FT%TZ"
 $ENV_PATH/bin/python -B $script_path/run.py "$@"
 date -u +"%FT%TZ"
+
+export PYTHONPATH=$_OLD_PYTHONPATH
