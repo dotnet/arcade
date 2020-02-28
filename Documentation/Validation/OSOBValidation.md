@@ -6,13 +6,14 @@ The Validations that currently exist in OSOB are:
 **PRs**
 - Validate whether the yamls are properly constructed ie if the artifacts and Images are correct and they exist.
 - Unit level testing with mocks for Scripts and ServiceBus
-- Create a test queue for Windows and Centos in staging , deploy the images and artifacts, send a test job to the queue.
-(This is broken right now - issue tracked [here](https://github.com/dotnet/core-eng/issues/7984))
+- Create images, deploy images and artifacts (in staging), update test OnPrem machines with Helix Client, and send jobs to selected queues. (This is broken right now - issue tracked [here](https://github.com/dotnet/core-eng/issues/7984))
+  - Supported OnPrem Queues: found in file `validation\onprem.pr.queues.txt`
 
 **CI**
 - Validate whether the yamls are properly constructed ie if the artifacts and Images are correct and they exist.
 - Unit level testing with mocks for Scripts and ServiceBus
-- Create images, deploy images and artifacts and send jobs to all the queues. 
+- Create images, deploy images and artifacts, update test OnPrem machines with Helix Client, and send jobs to all the queues. 
+  - Supported OnPrem Queues: found in file `validation\onprem.staging.queues.txt`
 
 ## What needs to be added?
 The common pattern for [Validation](./ValidationProcess.md) and [Deployment](./DeploymentProcess.md) is as below:
