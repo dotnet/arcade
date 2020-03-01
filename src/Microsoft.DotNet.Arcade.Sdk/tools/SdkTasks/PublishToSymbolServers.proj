@@ -17,6 +17,7 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp2.1</TargetFramework>
+    <NETCORE_ENGINEERING_TELEMETRY>Publish</NETCORE_ENGINEERING_TELEMETRY>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -30,7 +31,7 @@
 
   <Target Name="Execute">
     <ItemGroup>
-      <FilesToPublishToSymbolServer Include="$(PDBArtifactsDirectory)\*.pdb"/>
+      <FilesToPublishToSymbolServer Include="$(PDBArtifactsDirectory)\**\*.pdb"/>
       <PackagesToPublishToSymbolServer Include="$(BlobBasePath)\*.symbols.nupkg"/>
 
       <!--
@@ -45,13 +46,20 @@
     <PropertyGroup>
       <DotNetSymbolExpirationInDays Condition="'$(DotNetSymbolExpirationInDays)' == ''">3650</DotNetSymbolExpirationInDays>
       <PublishToSymbolServer>true</PublishToSymbolServer>
+      <PublishToSymWeb Condition="'$(PublishToSymWeb)' == ''">true</PublishToSymWeb>
+      <PublishToMSDL Condition="'$(PublishToMSDL)' == ''">true</PublishToMSDL>
       <PublishToSymbolServer Condition="'@(FilesToPublishToSymbolServer)' == '' and '@(PackagesToPublishToSymbolServer)' == ''">false</PublishToSymbolServer>
     </PropertyGroup>
 
     <Message
       Importance="High"
+      Text="No symbol file(s) were found to publish."
+      Condition="'@(FilesToPublishToSymbolServer)' == ''" />
+
+    <Message
+      Importance="High"
       Text="No symbol package(s) were found to publish."
-      Condition="$(PublishToSymbolServer) == false" />
+      Condition="'@(PackagesToPublishToSymbolServer)' == ''" />
 
     <ReadLinesFromFile
       File="$(SymbolPublishingExclusionsFile)"
@@ -61,8 +69,17 @@
           ItemName="PackageExcludeFiles"/>
     </ReadLinesFromFile>
 
+    <Message
+      Text="Going to publish this package -> %(PackagesToPublishToSymbolServer.Identity)." />
+
+    <Message
+      Text="Going to publish this file -> %(FilesToPublishToSymbolServer.Identity)." />
+
+    <Message
+      Text="Going to ignore this file -> %(PackageExcludeFiles.Identity)." />
+    
     <!-- Symbol Uploader: MSDL -->
-    <Message Importance="High" Text="Publishing symbol packages to MSDL ..." Condition="$(PublishToSymbolServer)" />
+    <Message Importance="High" Text="Publishing symbol packages to MSDL ..." Condition="$(PublishToMSDL)" />
     <PublishSymbols PackagesToPublish="@(PackagesToPublishToSymbolServer)"
                     FilesToPublish="@(FilesToPublishToSymbolServer)"
                     PackageExcludeFiles="@(PackageExcludeFiles)"
@@ -73,14 +90,14 @@
                     DryRun="false"
                     ConvertPortablePdbsToWindowsPdbs="false"
                     PdbConversionTreatAsWarning=""
-                    Condition="$(PublishToSymbolServer)"/>
+                    Condition="$(PublishToSymbolServer) and $(PublishToMSDL)"/>
 
     <!-- 
       Symbol Uploader: SymWeb 
       Watson, VS insertion testings and the typical internal dev usage require SymWeb.
       Currently we need to call the task twice (https://github.com/dotnet/core-eng/issues/3489).
     -->
-    <Message Importance="High" Text="Publishing symbol packages to SymWeb ..." Condition="$(PublishToSymbolServer)" />
+    <Message Importance="High" Text="Publishing symbol packages to SymWeb ..." Condition="$(PublishToSymWeb)" />
     <PublishSymbols PackagesToPublish="@(PackagesToPublishToSymbolServer)"
                     FilesToPublish="@(FilesToPublishToSymbolServer)"
                     PackageExcludeFiles="@(PackageExcludeFiles)"
@@ -91,7 +108,7 @@
                     DryRun="false"
                     ConvertPortablePdbsToWindowsPdbs="false"
                     PdbConversionTreatAsWarning=""
-                    Condition="$(PublishToSymbolServer)"/>
+                    Condition="$(PublishToSymbolServer) and $(PublishToSymWeb)"/>
   </Target>
 
   <ItemGroup>

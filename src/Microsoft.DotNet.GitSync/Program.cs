@@ -130,7 +130,7 @@ namespace Microsoft.DotNet.GitSync
                 foreach (RepositoryInfo repo in config.Repos)
                 {
                     if (!s_branchRepoPairs[prBranch].Contains(repo.Name))
-                        break;
+                        continue;
 
                     if (repo.LastSynchronizedCommits != null)
                         SanityCheck(repo, prBranch);
@@ -381,18 +381,18 @@ namespace Microsoft.DotNet.GitSync
         {
             foreach (var repo in repos)
             {
-                if (!s_branchRepoPairs[branch].Contains(repo.Name))
-                    break;
-
-                s_logger.Debug($"Updating {repo}\\{branch} to latest version.");
-                using (var repository = new Repository(repo.Path))
+                if (s_branchRepoPairs[branch].Contains(repo.Name) || s_repos.ContainsKey((repo.Name, branch)))
                 {
-                    s_logger.Info($"Fetching new changes for {repo}\\{branch} from upstream");
-                    Commands.Fetch(repository, "upstream", new[] { $"{branch}:{branch}" }, new FetchOptions(), $"fetch {branch}");
-                    s_logger.Info($"Checking out upstream  {repo}\\{branch}");
-                    Commands.Checkout(repository, $"upstream/{branch}");
-                    s_logger.Info($"Hard Reset to Head");
-                    repository.Reset(ResetMode.Hard, "HEAD");
+                    s_logger.Debug($"Updating {repo}\\{branch} to latest version.");
+                    using (var repository = new Repository(repo.Path))
+                    {
+                        s_logger.Info($"Fetching new changes for {repo}\\{branch} from upstream");
+                        Commands.Fetch(repository, "upstream", new[] { $"{branch}:{branch}" }, new FetchOptions(), $"fetch {branch}");
+                        s_logger.Info($"Checking out upstream  {repo}\\{branch}");
+                        Commands.Checkout(repository, $"upstream/{branch}");
+                        s_logger.Info($"Hard Reset to Head");
+                        repository.Reset(ResetMode.Hard, "HEAD");
+                    }
                 }
             }
         }

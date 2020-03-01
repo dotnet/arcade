@@ -43,6 +43,7 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp2.1</TargetFramework>
+    <NETCORE_ENGINEERING_TELEMETRY>Publish</NETCORE_ENGINEERING_TELEMETRY>
   </PropertyGroup>
 
   <Import Project="SetupTargetFeeds.proj" />

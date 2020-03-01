@@ -194,7 +194,7 @@
     the bundle references.
   -->
   <Target Name="GetBundledMsiFiles">
-    <MSBuild Projects="$(RepoRoot)signing\SignMsiFiles.proj" Targets="Build" />
+    <MSBuild Projects="$([MSBuild]::NormalizePath('$(SigningToolsDir)', 'SignMsiFiles.proj'))" Targets="Build" />
     <MSBuild Projects="@(BundleComponentReference)" Targets="Build" />
 
     <MSBuild Projects="@(BundleComponentReference)" Targets="GetOutputWixInstallerFile">
@@ -220,7 +220,7 @@
           -nologo ^
           -template fragment ^
           -sreg ^
-          -gg ^
+          -ag ^
           -var var.%(SubstituteVar) ^
           -cg %(ComponentGroupName) ^
           -srd ^

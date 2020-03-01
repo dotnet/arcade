@@ -188,7 +188,7 @@
       Workaround: zero-versioned Microsoft.VisualBasic.dll in non-Windows CoreFX transport package.
       See https://github.com/dotnet/corefx/issues/36630
     -->
-    <PropertyGroup Condition="'$(OSGroup)' != 'Windows_NT'">
+    <PropertyGroup Condition="'$(OS)' != 'Windows_NT'">
       <PermitDllAndExeFilesLackingFileVersion>true</PermitDllAndExeFilesLackingFileVersion>
     </PropertyGroup>
 
@@ -214,15 +214,14 @@
   <Target Name="AddCrossgenToolPackageReferences"
           BeforeTargets="CollectPackageReferences">
     <ItemGroup>
-      <CrossgenToolPackageReference Include="Microsoft.Private.CoreFx.NETCoreApp" Version="$(MicrosoftPrivateCoreFxNETCoreAppPackageVersion)" />
-      <CrossgenToolPackageReference Include="transport.Microsoft.NETCore.Runtime.CoreCLR" Version="$(MicrosoftNETCoreRuntimeCoreCLRPackageVersion)" />
-      <CrossgenToolPackageReference Include="$(MicrosoftTargetingPackPrivateWinRTPackage)" Version="$(MicrosoftTargetingPackPrivateWinRTPackageVersion)" />
+      <CrossgenToolPackageReference Include="$(MicrosoftNETCoreAppRuntimePackage).$(PackageRID)" Version="$(MicrosoftNETCoreAppRuntimewinx64Version)" />
+      <CrossgenToolPackageReference Include="$(MicrosoftTargetingPackPrivateWinRTPackage)" Version="$(MicrosoftTargetingPackPrivateWinRTVersion)" />
 
       <!-- This tool is a prebuilt not buildable from source. -->
       <CrossgenToolPackageReference
         Condition="'$(DotNetBuildFromSource)' != 'true'"
         Include="Microsoft.DiaSymReader.Native"
-        Version="$(MicrosoftDiaSymReaderNativePackageVersion)" />
+        Version="$(MicrosoftDiaSymReaderNativeVersion)" />
 
       <!--
         If any tool packages are missing, add them with ExcludeAssets=All. Be careful not to modify
@@ -241,14 +240,9 @@
   <Target Name="GetCorePackagePaths"
           DependsOnTargets="ResolveReferences">
     <PropertyGroup>
-      <_runtimePackageId>transport.runtime.$(PackageRID).$(MicrosoftNETCoreRuntimeCoreCLRPackage.ToLowerInvariant())</_runtimePackageId>
-      <_runtimePackageVersion>$(MicrosoftNETCoreRuntimeCoreCLRPackageVersion)</_runtimePackageVersion>
-
-      <_runtimePackageDir>$(PackagesDir)$(_runtimePackageId)/$(_runtimePackageVersion)/</_runtimePackageDir>
-      <_jitPackageDir>$(PackagesDir)transport.runtime.$(PackageRID).microsoft.netcore.jit/$(MicrosoftNETCoreRuntimeCoreCLRPackageVersion)/</_jitPackageDir>
-      <_corefxPackageDir>$(PackagesDir)runtime.$(PackageRID).$(MicrosoftPrivateCoreFxNETCoreAppPackage.ToLowerInvariant())/$(MicrosoftPrivateCoreFxNETCoreAppPackageVersion)/</_corefxPackageDir>
-      <_winmdPackageDir>$(PackagesDir)$(MicrosoftTargetingPackPrivateWinRTPackage.ToLowerInvariant())/$(MicrosoftTargetingPackPrivateWinRTPackageVersion)/</_winmdPackageDir>
-      <_diaSymReaderPackageDir>$(PackagesDir)microsoft.diasymreader.native/$(MicrosoftDiaSymReaderNativePackageVersion)/</_diaSymReaderPackageDir>
+      <_runtimePackageDir>$(NuGetPackageRoot)$(MicrosoftNETCoreAppRuntimePackage).$(PackageRID)/$(MicrosoftNETCoreAppRuntimewinx64Version)/</_runtimePackageDir>
+      <_winmdPackageDir>$(NuGetPackageRoot)$(MicrosoftTargetingPackPrivateWinRTPackage.ToLowerInvariant())/$(MicrosoftTargetingPackPrivateWinRTVersion)/</_winmdPackageDir>
+      <_diaSymReaderPackageDir>$(NuGetPackageRoot)microsoft.diasymreader.native/$(MicrosoftDiaSymReaderNativeVersion)/</_diaSymReaderPackageDir>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(TargetArchitecture)' == 'arm' AND '$(OS)' == 'Windows_NT'">
@@ -265,7 +259,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <_requiredProperty Include="_runtimePackageDir;_jitPackageDir;_corefxPackageDir;_winmdPackageDir" />
+      <_requiredProperty Include="_runtimePackageDir;_winmdPackageDir" />
     </ItemGroup>
 
     <Message Text="%(_requiredProperty.Identity): $(%(_requiredProperty.Identity))" />
@@ -279,7 +273,7 @@
       <!-- Find crossgen tool assets in package cache to allow ExcludeAssets=All. -->
       <_runtimeCLR Include="$(_runtimePackageDir)**/$(LibraryFilePrefix)coreclr$(LibraryFileExtension)" />
       <_runtimeCoreLib Include="$(_runtimePackageDir)**/native/System.Private.CoreLib.dll" />
-      <_fxSystemRuntime Include="$(_corefxPackageDir)**/System.Runtime.dll" />
+      <_fxSystemRuntime Include="$(_runtimePackageDir)**/System.Runtime.dll" />
       <_windowsWinMD Include="$(_winmdPackageDir)**/Windows.winmd" />
       <_diaSymReaderAssembly Include="$(_diaSymReaderPackageDir)**\Microsoft.DiaSymReader.Native.*.dll" />
     </ItemGroup>
@@ -294,8 +288,8 @@
     </PropertyGroup>
 
     <PropertyGroup>
-      <_jitPath Condition="'$(_crossDir)' == ''">$(_jitPackageDir)runtimes/$(PackageRID)/native/$(LibraryFilePrefix)clrjit$(LibraryFileExtension)</_jitPath>
-      <_jitPath Condition="'$(_crossDir)' != ''">$(_jitPackageDir)runtimes$(_crossDir)/native/$(LibraryFilePrefix)clrjit$(LibraryFileExtension)</_jitPath>
+      <_jitPath Condition="'$(_crossDir)' == ''">$(_runtimePackageDir)runtimes/$(PackageRID)/native/$(LibraryFilePrefix)clrjit$(LibraryFileExtension)</_jitPath>
+      <_jitPath Condition="'$(_crossDir)' != ''">$(_runtimePackageDir)runtimes$(_crossDir)/native/$(LibraryFilePrefix)clrjit$(LibraryFileExtension)</_jitPath>
     </PropertyGroup>
 
     <PropertyGroup Condition="'@(_fxSystemRuntime)' != ''">
@@ -392,11 +386,11 @@
 
   <!-- Ensure crossgen is executable. See https://github.com/NuGet/Home/issues/4424 -->
   <Target Name="EnsureCrossGenIsExecutable"
-          Condition="'$(OSGroup)' != 'Windows_NT'"
+          Condition="'$(OS)' != 'Windows_NT'"
           DependsOnTargets="GetCrossgenToolPaths">
     <Exec
       Command="chmod u+x $(_crossGenPath)"
-      Condition="'$(OSGroup)' != 'Windows_NT' AND Exists('$(_crossGenPath)')" />
+      Condition="'$(OS)' != 'Windows_NT' AND Exists('$(_crossGenPath)')" />
   </Target>
 
   <Target Name="CrossGen"
@@ -416,6 +410,7 @@
       <_crossGenResponseFile>$(_crossGenIntermediatePath)%(_filesToCrossGen.FileName).rsp</_crossGenResponseFile>
     </PropertyGroup>
     <ItemGroup>
+      <_crossGenArgs Include="-nologo" />
       <_crossGenArgs Include="-readytorun" />
       <_crossGenArgs Include="-in %(_filesToCrossGen.FullPath)" />
       <_crossGenArgs Include="-out %(_filesToCrossGen.CrossGenedPath)" />
@@ -428,8 +423,9 @@
       <_partialCrossgenFlag>0</_partialCrossgenFlag>
     </PropertyGroup>
 
+    <!-- Partial crossgen requires IBCMerge which is only available during official builds. -->
     <!-- Measurements show that doing partial crossgen on these assemblies captures a lot of the potential size saving. -->
-    <PropertyGroup Condition="'$(OSGroup)' == 'Linux'">
+    <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('linux')) AND '$(SetPartialCrossgenFlag)' == 'true'">
       <_partialCrossgenFlag Condition="'%(_filesToCrossGen.FileName)' == 'System.ComponentModel.TypeConverter'">1</_partialCrossgenFlag>
       <_partialCrossgenFlag Condition="'%(_filesToCrossGen.FileName)' == 'System.Linq.Expressions'">1</_partialCrossgenFlag>
       <_partialCrossgenFlag Condition="'%(_filesToCrossGen.FileName)' == 'System.Private.Xml'">1</_partialCrossgenFlag>
@@ -463,6 +459,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <_crossGenSymbolsArgs Include="-nologo" />
       <_crossGenSymbolsArgs Include="-readytorun" />
       <_crossGenSymbolsArgs Include="-platform_assemblies_paths %(_filesToCrossGen.CrossGenedDirectory)$(_pathSeparatorEscaped)$(_coreLibDirectory)$(_pathSeparatorEscaped)$(_fxLibDirectory)" />
       <_crossGenSymbolsArgs Include="-Platform_Winmd_Paths $(_windowsWinMDDirectory)" Condition="'$(OS)'=='Windows_NT'"/>

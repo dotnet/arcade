@@ -31,6 +31,10 @@ namespace Microsoft.DotNet.Arcade.Sdk
         [Required]
         public string Platform { get; set; }
 
+        public string RuntimeSourceFeed { get; set; }
+        
+        public string RuntimeSourceFeedKey { get; set; }
+
         public override bool Execute()
         {
             if (!File.Exists(GlobalJsonPath))
@@ -116,6 +120,17 @@ namespace Microsoft.DotNet.Arcade.Sdk
                                         if (!string.IsNullOrEmpty(architecture))
                                         {
                                             arguments += $" -architecture {architecture}";
+                                        }
+
+                                        if (!string.IsNullOrWhiteSpace(RuntimeSourceFeed))
+                                        {
+                                            arguments += $" -runtimeSourceFeed {RuntimeSourceFeed}";
+                                        }
+
+                                        // The default RuntimeSourceFeed doesn't need a key
+                                        if (!string.IsNullOrWhiteSpace(RuntimeSourceFeed) && !string.IsNullOrWhiteSpace(RuntimeSourceFeedKey))
+                                        {
+                                            arguments += $" -runtimeSourceFeedKey {RuntimeSourceFeedKey}";
                                         }
 
                                         Log.LogMessage(MessageImportance.Low, $"Executing: {DotNetInstallScript} {arguments}");

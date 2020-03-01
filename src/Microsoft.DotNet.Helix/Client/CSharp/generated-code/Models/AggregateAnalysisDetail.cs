@@ -31,7 +31,7 @@ namespace Microsoft.DotNet.Helix.Client.Models
         {
             get
             {
-                if (Analysis == default)
+                if (Analysis == default(Newtonsoft.Json.Linq.JToken))
                 {
                     return false;
                 }
@@ -43,7 +43,7 @@ namespace Microsoft.DotNet.Helix.Client.Models
                 {
                     return false;
                 }
-                if (Key == default)
+                if (Key == default(IImmutableDictionary<string, string>))
                 {
                     return false;
                 }

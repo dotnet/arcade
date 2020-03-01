@@ -9,7 +9,6 @@ using Microsoft.DotNet.Maestro.Client.Models;
 using Microsoft.DotNet.VersionTools.BuildManifest.Model;
 using Microsoft.DotNet.VersionTools.Util;
 using NuGet.Packaging.Core;
-using NuGet.Versioning;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -49,7 +48,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         // Matches package feeds like
         // https://pkgs.dev.azure.com/dnceng/public/_packaging/public-feed-name/nuget/v3/index.json
         // or https://pkgs.dev.azure.com/dnceng/_packaging/internal-feed-name/nuget/v3/index.json
-        public const string AzDoNuGetFeedPattern = 
+        public const string AzDoNuGetFeedPattern =
             @"https://pkgs.dev.azure.com/(?<account>[a-zA-Z0-9]+)/(?<visibility>[a-zA-Z0-9-]+/)?_packaging/(?<feed>.+)/nuget/v3/index.json";
         private const string SymbolPackageSuffix = ".symbols.nupkg";
         private const string PackageSuffix = ".nupkg";
@@ -150,16 +149,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     Log.LogError($"Problem reading asset manifest path from '{AssetManifestPath}'");
                 }
 
-                if (!Directory.Exists(BlobAssetsBasePath))
-                {
-                    Log.LogError($"Problem reading blob assets from {BlobAssetsBasePath}");
-                }
-
-                if (!Directory.Exists(PackageAssetsBasePath))
-                {
-                    Log.LogError($"Problem reading package assets from {PackageAssetsBasePath}");
-                }
-
                 var buildModel = BuildManifestUtil.ManifestFileToModel(AssetManifestPath, Log);
 
                 // Parsing the manifest may fail for several reasons
@@ -174,7 +163,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 Maestro.Client.Models.Build buildInformation = await client.Builds.GetBuildAsync(BARBuildId);
 
                 await ParseTargetFeedConfigAsync();
-                
+
                 // Return errors from parsing FeedConfig
                 if (Log.HasLoggedErrors)
                 {
@@ -184,13 +173,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 SplitArtifactsInCategories(buildModel);
 
                 // Return errors from the safety checks
-                if (Log.HasLoggedErrors)
-                {
-                    return false;
-                }
-
-                CheckForStableAssets();
-
                 if (Log.HasLoggedErrors)
                 {
                     return false;
@@ -313,6 +295,32 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         }
 
         /// <summary>
+        /// Adds `feedConfig.TargetURL` to the list of locations of the asset pointed by `assetRecord`.
+        /// </summary>
+        /// <param name="client">Maestro++ API client</param>
+        /// <param name="assetRecord">Asset that will have location list updated</param>
+        /// <param name="feedConfig">Configuration of where the asset was published</param>
+        /// <param name="assetLocationType">Type of feed location that is being added</param>
+        /// <returns>Whether the location was added to the list or not.</returns>
+        private async Task<bool> TryAddAssetLocationAsync(IMaestroApi client, Asset assetRecord, FeedConfig feedConfig, AddAssetLocationToAssetAssetLocationType assetLocationType)
+        {
+            try
+            {
+                await client.Assets.AddAssetLocationToAssetAsync(assetRecord.Id, assetLocationType, feedConfig.TargetURL);
+            }
+            catch (RestApiException e) when (e.Response.StatusCode == System.Net.HttpStatusCode.NotModified)
+            {
+                // This is likely due to some concurrent operation trying to add same location to same asset.
+                // This is not frequent, but it's possible, for instance, when a build publishes to multiple 
+                // channels that target same feeds.
+                Log.LogMessage($"Asset with Id {assetRecord.Id}, Version {assetRecord.Version} already has location {feedConfig.TargetURL}");
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
         /// Protect against accidental publishing of internal assets to non-internal feeds.
         /// </summary>
         /// <returns></returns>
@@ -383,58 +391,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             }
 
             return isPublic;
-        }
-
-        /// <summary>
-        ///  Run a check to verify that stable assets are not published to
-        ///  locations they should not be published.
-        ///  
-        /// For now, this is only done for packages since feeds are
-        /// immutable.
-        /// </summary>
-        public void CheckForStableAssets()
-        {
-            if (SkipSafetyChecks)
-            {
-                return;
-            }
-
-            foreach (var packagesPerCategory in PackagesByCategory)
-            {
-                var category = packagesPerCategory.Key;
-                var packages = packagesPerCategory.Value;
-
-                if (FeedConfigs.TryGetValue(category, out List<FeedConfig> feedConfigsForCategory))
-                {
-                    foreach (var feedConfig in feedConfigsForCategory)
-                    {
-                        // Look at the version numbers. If any of the packages here are stable and about to be published to a
-                        // non-isolated feed, then issue an error. Isolated feeds may recieve all packages.
-                        if (feedConfig.Isolated)
-                        {
-                            continue;
-                        }
-
-                        List<PackageArtifactModel> filteredPackages = FilterPackages(packages, feedConfig);
-
-                        foreach (var package in filteredPackages)
-                        {
-                            if (!NuGetVersion.TryParse(package.Version, out NuGetVersion version))
-                            {
-                                Log.LogError($"Package '{package.Id}' has invalid version '{package.Version}'");
-                            }
-                            // We want to avoid pushing non-final bits with final version numbers to feeds that are in general
-                            // use by the public. This is for technical (can't overwrite the original packages) reasons as well as 
-                            // to avoid confusion. Because .NET core generally brands its "final" bits without prerelease version
-                            // suffixes (e.g. 3.0.0-preview1), test to see whether a prerelease suffix exists.
-                            else if (!version.IsPrerelease)
-                            {
-                                Log.LogError($"Package '{package.Id}' has stable version '{package.Version}' but is targeted at a non-isolated feed '{feedConfig.TargetURL}'");
-                            }
-                        }
-                    }
-                }
-            }
         }
 
         private async Task HandlePackagePublishingAsync(IMaestroApi client, Maestro.Client.Models.Build buildInformation)
@@ -644,15 +600,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     continue;
                 }
 
-                var assetWithLocations = await client.Assets.GetAssetAsync(assetRecord.Id);
-
-                if (assetWithLocations?.Locations.Any(al => al.Location.Equals(feedConfig.TargetURL, StringComparison.OrdinalIgnoreCase)) ?? false)
-                {
-                    Log.LogMessage($"Asset with Id {package.Id}, Version {package.Version} already has location {feedConfig.TargetURL}");
-                    continue;
-                }
-
-                await client.Assets.AddAssetLocationToAssetAsync(assetRecord.Id, AddAssetLocationToAssetAssetLocationType.NugetFeed, feedConfig.TargetURL);
+                await TryAddAssetLocationAsync(client, assetRecord, feedConfig, AddAssetLocationToAssetAssetLocationType.NugetFeed);
             }
 
             await PushNugetPackagesAsync(packagesToPublish, feedConfig, maxClients: MaxClients,
@@ -755,19 +703,31 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// <summary>
         ///     Push a single package to the azure devops nuget feed.
         /// </summary>
-        /// <param name="feedConfig">Feed</param>
+        /// <param name="feedConfig">Infos about the target feed</param>
         /// <param name="packageToPublish">Package to push</param>
         /// <returns>Task</returns>
         /// <remarks>
         ///     This method attempts to take the most efficient path to push the package.
-        ///     There are two cases:
+        ///     
+        ///     There are three cases:
         ///         - The package does not exist, and is pushed normally
         ///         - The package exists, and its contents may or may not be equivalent.
-        ///     The second case is is by far the most common. So, we first attempt to push the package normally using nuget.exe.
-        ///     If this fails, this could mean any number of things (like failed auth). But in normal circumstances, this might
-        ///     mean the package already exists. This either means that we are attempting to push the same package, or attemtping to push
-        ///     a different package with the same id and version. The second case is an error, as azure devops feeds are immutable, the former
-        ///     is simply a case where we should continue onward.
+        ///         - Azure DevOps is having some issue and we didn't succeed to publish at first.
+        ///         
+        ///     The second case is by far the most common. So, we first attempt to push the 
+        ///     package normally using nuget.exe. If this fails, this could mean any number of 
+        ///     things (like failed auth). But in normal circumstances, this might mean the 
+        ///     package already exists. This either means that we are attempting to push the 
+        ///     same package, or attemtping to push a different package with the same id and 
+        ///     version. The second case is an error, as azure devops feeds are immutable, 
+        ///     the former is simply a case where we should continue onward.
+        ///     
+        ///     To handle the third case we rely on the call to compare file contents 
+        ///     `IsLocalPackageIdenticalToFeedPackage` to return null - meaning that it got 
+        ///     a 404 when looking up the file in the feed - to trigger a retry on the publish 
+        ///     operation. This was implemented this way becase we didn't want to rely on 
+        ///     parsing the output of the push operation - which does a call to `nuget.exe` 
+        ///     behind the scenes.
         /// </remarks>
         private async Task PushNugetPackageAsync(FeedConfig feedConfig, HttpClient client, string localPackageLocation, string id, string version,
             string feedAccount, string feedVisibility, string feedName)
@@ -776,34 +736,51 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
             try
             {
-                // The feed key when pushing to AzDo feeds is "AzureDevOps" (works with the credential helper).
-                int result = await StartProcessAsync(NugetPath, $"push \"{localPackageLocation}\" -Source \"{feedConfig.TargetURL}\" -NonInteractive -ApiKey AzureDevOps");
-                if (result != 0)
+                /// true - Package exists on the feed AND is identical to local one.
+                /// false - Package exists on the feed AND is not identical to local one.
+                /// null - Package DOES NOT EXIST on the feed.
+                bool? packageExistIsIdentical = null;
+
+                const int maxNuGetPushAttempts = 3;
+                const int delayInSecondsBetweenAttempts = 3;
+                int attemptIndex = 0;
+
+                do
                 {
+                    // The feed key when pushing to AzDo feeds is "AzureDevOps" (works with the credential helper).
+                    int result = await StartProcessAsync(NugetPath, $"push \"{localPackageLocation}\" -Source \"{feedConfig.TargetURL}\" -NonInteractive -ApiKey AzureDevOps");
+
+                    if (result == 0)
+                    {
+                        break;
+                    }
+
                     Log.LogMessage(MessageImportance.Low, $"Failed to push {localPackageLocation}, attempting to determine whether the package already exists on the feed with the same content.");
 
-                    try
+                    string packageContentUrl = $"https://pkgs.dev.azure.com/{feedAccount}/{feedVisibility}_apis/packaging/feeds/{feedName}/nuget/packages/{id}/versions/{version}/content";
+                    packageExistIsIdentical = await IsLocalPackageIdenticalToFeedPackage(localPackageLocation, packageContentUrl, client);
+
+                    if (packageExistIsIdentical == true)
                     {
-                        string packageContentUrl = $"https://pkgs.dev.azure.com/{feedAccount}/{feedVisibility}_apis/packaging/feeds/{feedName}/nuget/packages/{id}/versions/{version}/content";
-
-                        if (await IsLocalPackageIdenticalToFeedPackage(localPackageLocation, packageContentUrl, client))
-                        {
-                            Log.LogMessage(MessageImportance.Normal, $"Package '{localPackageLocation}' already exists on '{feedConfig.TargetURL}' but has the same content. Skipping.");
-                        }
-                        else
-                        {
-                            Log.LogError($"Package '{localPackageLocation}' already exists on '{feedConfig.TargetURL}' with different content.");
-                        }
-
-                        return;
+                        Log.LogMessage(MessageImportance.Normal, $"Package '{localPackageLocation}' already exists on '{feedConfig.TargetURL}' but has the same content. Skipping.");
                     }
-                    catch (Exception e)
+                    else if (packageExistIsIdentical == false)
                     {
-                        // This is an error. It means we were unable to push using nuget, and then could not access to the package otherwise.
-                        Log.LogWarning($"Failed to determine whether an existing package on the feed has the same content as '{localPackageLocation}': {e.Message}");
+                        Log.LogError($"Package '{localPackageLocation}' already exists on '{feedConfig.TargetURL}' with different content.");
                     }
+                    else
+                    {
+                        // packageExist == null, which means we didn't find the package on the feed
+                        // will retry the push and check again
+                        await Task.Delay(TimeSpan.FromSeconds(delayInSecondsBetweenAttempts))
+                            .ConfigureAwait(false);
+                    }
+                }
+                while (packageExistIsIdentical == null && attemptIndex++ <= maxNuGetPushAttempts);
 
-                    Log.LogError($"Failed to push '{id}@{version}'. Result code '{result}'.");
+                if (attemptIndex > maxNuGetPushAttempts)
+                {
+                    Log.LogError($"Failed to publish package '{id}@{version}' after {maxNuGetPushAttempts} attempts.");
                 }
             }
             catch (Exception e)
@@ -828,41 +805,50 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         ///       the streams make no gaurantee that they will return a full block each time when read operations are performed, so we
         ///       must be sure to only compare the minimum number of bytes returned.
         /// </remarks>
-        private async Task<bool> IsLocalPackageIdenticalToFeedPackage(string localPackageFullPath, string packageContentUrl, HttpClient client)
+        private async Task<bool?> IsLocalPackageIdenticalToFeedPackage(string localPackageFullPath, string packageContentUrl, HttpClient client)
         {
             Log.LogMessage($"Getting package content from {packageContentUrl} and comparing to {localPackageFullPath}");
 
-            using (Stream localFileStream = File.OpenRead(localPackageFullPath))
-            using (HttpResponseMessage response = await client.GetAsync(packageContentUrl))
+            try
             {
-                response.EnsureSuccessStatusCode();
-
-                // Check the headers for content length and md5
-                bool md5HeaderAvailable = response.Headers.TryGetValues("Content-MD5", out var md5);
-                bool lengthHeaderAvailable = response.Headers.TryGetValues("Content-Length", out var contentLength);
-
-                if (lengthHeaderAvailable && long.Parse(contentLength.Single()) != localFileStream.Length)
+                using (Stream localFileStream = File.OpenRead(localPackageFullPath))
+                using (HttpResponseMessage response = await client.GetAsync(packageContentUrl))
                 {
-                    Log.LogMessage(MessageImportance.Low, $"Package '{localPackageFullPath}' has different length than remote package '{packageContentUrl}'.");
-                    return false;
-                }
+                    response.EnsureSuccessStatusCode();
 
-                if (md5HeaderAvailable)
-                {
-                    var localMD5 = AzureStorageUtils.CalculateMD5(localPackageFullPath);
-                    if (!localMD5.Equals(md5.Single(), StringComparison.OrdinalIgnoreCase))
+                    // Check the headers for content length and md5
+                    bool md5HeaderAvailable = response.Headers.TryGetValues("Content-MD5", out var md5);
+                    bool lengthHeaderAvailable = response.Headers.TryGetValues("Content-Length", out var contentLength);
+
+                    if (lengthHeaderAvailable && long.Parse(contentLength.Single()) != localFileStream.Length)
                     {
-                        Log.LogMessage(MessageImportance.Low, $"Package '{localPackageFullPath}' has different MD5 hash than remote package '{packageContentUrl}'.");
+                        Log.LogMessage(MessageImportance.Low, $"Package '{localPackageFullPath}' has different length than remote package '{packageContentUrl}'.");
+                        return false;
                     }
 
-                    return true;
+                    if (md5HeaderAvailable)
+                    {
+                        var localMD5 = AzureStorageUtils.CalculateMD5(localPackageFullPath);
+                        if (!localMD5.Equals(md5.Single(), StringComparison.OrdinalIgnoreCase))
+                        {
+                            Log.LogMessage(MessageImportance.Low, $"Package '{localPackageFullPath}' has different MD5 hash than remote package '{packageContentUrl}'.");
+                        }
+
+                        return true;
+                    }
+
+                    const int BufferSize = 64 * 1024;
+
+                    // Otherwise, compare the streams
+                    var remoteStream = await response.Content.ReadAsStreamAsync();
+                    return await CompareStreamsAsync(localFileStream, remoteStream, BufferSize);
                 }
-
-                const int BufferSize = 64 * 1024;
-
-                // Otherwise, compare the streams
-                var remoteStream = await response.Content.ReadAsStreamAsync();
-                return await CompareStreamsAsync(localFileStream, remoteStream, BufferSize);
+            }
+            // String based comparison because the status code isn't exposed in HttpRequestException
+            // see here: https://github.com/dotnet/runtime/issues/23648
+            catch (HttpRequestException e) when (e.Message.Contains("404 (Not Found)"))
+            {
+                return null;
             }
         }
 
@@ -963,15 +949,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     continue;
                 }
 
-                var assetWithLocations = await client.Assets.GetAssetAsync(assetRecord.Id);
-
-                if (assetWithLocations?.Locations.Any(al => al.Location.Equals(feedConfig.TargetURL, StringComparison.OrdinalIgnoreCase)) ?? false)
+                if (await TryAddAssetLocationAsync(client, assetRecord, feedConfig, AddAssetLocationToAssetAssetLocationType.Container) == false)
                 {
-                    Log.LogMessage($"Asset with Id {blob.Id} already has location {feedConfig.TargetURL}");
                     continue;
                 }
-
-                await client.Assets.AddAssetLocationToAssetAsync(assetRecord.Id, AddAssetLocationToAssetAssetLocationType.Container, feedConfig.TargetURL);
 
                 // Applies to symbol packages and core-sdk's VS feed packages
                 if (blob.Id.EndsWith(PackageSuffix, StringComparison.OrdinalIgnoreCase))
@@ -1016,7 +997,21 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             Maestro.Client.Models.Build buildInformation,
             FeedConfig feedConfig)
         {
-            var packages = packagesToPublish.Select(p => Path.Combine(PackageAssetsBasePath, $"{p.Id}.{p.Version}.nupkg"));
+            var packages = packagesToPublish.Select(p =>
+            {
+                var localPackagePath = Path.Combine(PackageAssetsBasePath, $"{p.Id}.{p.Version}.nupkg");
+                if (!File.Exists(localPackagePath))
+                {
+                    Log.LogError($"Could not locate '{p.Id}.{p.Version}' at '{localPackagePath}'");
+                }
+                return localPackagePath;
+            });
+
+            if (Log.HasLoggedErrors)
+            {
+                return;
+            }
+
             var blobFeedAction = CreateBlobFeedAction(feedConfig);
 
             var pushOptions = new PushOptions
@@ -1037,15 +1032,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     continue;
                 }
 
-                var assetWithLocations = await client.Assets.GetAssetAsync(assetRecord.Id);
-
-                if (assetWithLocations?.Locations.Any(al => al.Location.Equals(feedConfig.TargetURL, StringComparison.OrdinalIgnoreCase)) ?? false)
-                {
-                    Log.LogMessage($"Asset with Id {package.Id}, Version {package.Version} already has location {feedConfig.TargetURL}");
-                    continue;
-                }
-
-                await client.Assets.AddAssetLocationToAssetAsync(assetRecord.Id, AddAssetLocationToAssetAssetLocationType.NugetFeed, feedConfig.TargetURL);
+                await TryAddAssetLocationAsync(client, assetRecord, feedConfig, AddAssetLocationToAssetAssetLocationType.NugetFeed);
             }
 
             await blobFeedAction.PushToFeedAsync(packages, pushOptions);
@@ -1061,12 +1048,23 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 .Select(blob =>
                 {
                     var fileName = Path.GetFileName(blob.Id);
-                    return new MSBuild.TaskItem(Path.Combine(BlobAssetsBasePath, fileName), new Dictionary<string, string>
+                    var localBlobPath = Path.Combine(BlobAssetsBasePath, fileName);
+                    if (!File.Exists(localBlobPath))
+                    {
+                        Log.LogError($"Could not locate '{blob.Id} at '{localBlobPath}'");
+                    }
+
+                    return new MSBuild.TaskItem(localBlobPath, new Dictionary<string, string>
                     {
                         {"RelativeBlobPath", blob.Id}
                     });
                 })
                 .ToArray();
+
+            if (Log.HasLoggedErrors)
+            {
+                return;
+            }
 
             var blobFeedAction = CreateBlobFeedAction(feedConfig);
             var pushOptions = new PushOptions
@@ -1087,15 +1085,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     continue;
                 }
 
-                var assetWithLocations = await client.Assets.GetAssetAsync(assetRecord.Id);
-
-                if (assetWithLocations?.Locations.Any(al => al.Location.Equals(feedConfig.TargetURL, StringComparison.OrdinalIgnoreCase)) ?? false)
-                {
-                    Log.LogMessage($"Asset with Id {blob.Id} already has location {feedConfig.TargetURL}");
-                    continue;
-                }
-
-                await client.Assets.AddAssetLocationToAssetAsync(assetRecord.Id, AddAssetLocationToAssetAssetLocationType.Container, feedConfig.TargetURL);
+                await TryAddAssetLocationAsync(client, assetRecord, feedConfig, AddAssetLocationToAssetAssetLocationType.Container);
             }
 
             await blobFeedAction.PublishToFlatContainerAsync(blobs, maxClients: MaxClients, pushOptions);

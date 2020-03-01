@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Sockets;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -27,19 +28,40 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
             {
                  using (var sourceCacheContext = new SourceCacheContext())
                  {
-                     var sourceRepository = new SourceRepository(packageSource, Repository.Provider.GetCoreV3());
-                     var packageMetadataResource = sourceRepository.GetResourceAsync<PackageMetadataResource>().GetAwaiter().GetResult();
-                     var searchMetadata = packageMetadataResource.GetMetadataAsync(packageId, includePrerelease, includeUnlisted, sourceCacheContext, logger, cancellationToken).GetAwaiter().GetResult();
-                     foreach (IPackageSearchMetadata packageMetadata in searchMetadata)
-                     {
-                         lock (result)
-                         {
+                    bool loadedData = false;
+                    int retriesRemaining = 2;
+                    IEnumerable<IPackageSearchMetadata> searchMetadata = null;
+                    while (!loadedData) {
+                        try
+                        {
+                            var sourceRepository = new SourceRepository(packageSource, Repository.Provider.GetCoreV3());
+                            var packageMetadataResource = sourceRepository.GetResourceAsync<PackageMetadataResource>().GetAwaiter().GetResult();
+                            searchMetadata = packageMetadataResource.GetMetadataAsync(packageId, includePrerelease, includeUnlisted, sourceCacheContext, logger, cancellationToken).GetAwaiter().GetResult();
+                            loadedData = true;
+                        }
+                        catch (Exception e)
+                        {
+                            retriesRemaining--;
+                            if (retriesRemaining <= 0) {
+                                logger.Log(LogLevel.Error, "Encountered Connection Issue: " + e.ToString() + ", retries exhausted");
+                                throw e;
+                            }
+                            logger.Log(LogLevel.Information, "Encountered Connection Issue: " + e.ToString() + ", retrying...");
+                            // returns to start of while loop to retry after a delay
+                            Thread.Sleep(5000);
+                        }
+                    }
+
+                    foreach (IPackageSearchMetadata packageMetadata in searchMetadata)
+                    {
+                        lock (result)
+                        {
                             Version threePartVersion = VersionUtility.As3PartVersion(packageMetadata.Identity.Version.Version);
                             if (!result.Contains(threePartVersion))
                                 result.Add(threePartVersion);
-                         }
-                     }
-                 }
+                        }
+                    }
+                }
             });
             // Given we are looking in different sources, we reorder all versions.
             return result.OrderBy(v => v);

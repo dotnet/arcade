@@ -71,7 +71,7 @@ namespace Microsoft.DotNet.Helix.Client.Models
                 {
                     return false;
                 }
-                if (WorkItems == default)
+                if (WorkItems == default(JobWorkItemCounts))
                 {
                     return false;
                 }

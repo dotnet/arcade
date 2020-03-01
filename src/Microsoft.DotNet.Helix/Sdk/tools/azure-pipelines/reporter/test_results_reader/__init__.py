@@ -55,11 +55,11 @@ def get_log_files(dir):
 
 def construct_log_list(log_files):
     def line(name, url):
-        return u"<li><a href='{}' target='_blank'>{}</a></li>".format(url, name)
+        return u"{}:\n  {}\n".format(name, url)
 
     lines = [line(name, url) for name, url in log_files]
 
-    output = u"<ul>" + u"".join(lines) + u"</ul>"
+    output = u"\n".join(lines)
     print("Generated log list: {}".format(output))
     return output
 
@@ -70,7 +70,7 @@ def add_logs(tr, log_list):
     global total_added_logs
     if tr is not None and tr.result != "Pass" and total_added_logs < 50:
         tr.attachments.append(TestResultAttachment(
-            name=u"Logs.html",
+            name=u"Logs.txt",
             text=log_list,
         ))
         total_added_logs += 1

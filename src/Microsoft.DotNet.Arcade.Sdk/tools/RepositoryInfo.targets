@@ -2,11 +2,11 @@
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
 <Project>
   <!--
-    Include both GitHub and Azure DevOps (formerly VSTS) packages to enable SourceLink in repositories that mirror to Azure DevOps (formerly VSTS).
+    Include both GitHub and Azure DevOps packages to enable SourceLink in repositories that mirror to Azure DevOps.
   -->
   <ItemGroup>
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="$(MicrosoftSourceLinkVersion)" PrivateAssets="all" IsImplicitlyDefined="true" />
-    <PackageReference Include="Microsoft.SourceLink.Vsts.Git" Version="$(MicrosoftSourceLinkVersion)" PrivateAssets="all" IsImplicitlyDefined="true" />
+    <PackageReference Include="Microsoft.SourceLink.AzureRepos.Git" Version="$(MicrosoftSourceLinkVersion)" PrivateAssets="all" IsImplicitlyDefined="true" />
   </ItemGroup>
 
   <!--

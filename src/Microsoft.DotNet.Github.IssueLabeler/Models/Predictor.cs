@@ -10,22 +10,36 @@ namespace Microsoft.DotNet.GitHub.IssueLabeler
 {
     internal static class Predictor
     {
-        private static string ModelPath => @"model\GitHubIssueLabelerModel.zip";
-        private static PredictionEngine<GitHubIssue, GitHubIssuePrediction> predEngine;
+        private static string PrModelPath => @"model\GitHubPrLabelerModel.zip";
+        private static string IssueModelPath => @"model\GitHubIssueLabelerModel.zip";
+        private static PredictionEngine<IssueModel, GitHubIssuePrediction> issuePredEngine;
+        private static PredictionEngine<PrModel, GitHubIssuePrediction> prPredEngine;
 
-        public static string Predict(GitHubIssue issue, ILogger logger, double threshold)
+        public static string Predict(IssueModel issue, ILogger logger, double threshold)
+        {
+            return Predict(issue, ref issuePredEngine, logger, threshold);
+        }
+
+        public static string Predict(PrModel issue, ILogger logger, double threshold)
+        {
+            return Predict(issue, ref prPredEngine, logger, threshold);
+        }
+
+        public static string Predict<T>(T issueOrPr, ref PredictionEngine<T, GitHubIssuePrediction> predEngine, ILogger logger, double threshold) 
+            where T : IssueModel
         {
             if (predEngine == null)
             {
                 MLContext mlContext = new MLContext();
-                ITransformer mlModel = mlContext.Model.Load(ModelPath, out DataViewSchema inputSchema);
-                predEngine = mlContext.Model.CreatePredictionEngine<GitHubIssue, GitHubIssuePrediction>(mlModel);
+                ITransformer mlModel = mlContext.Model.Load(PrModelPath, out DataViewSchema inputSchema);
+                predEngine = mlContext.Model.CreatePredictionEngine<T, GitHubIssuePrediction>(mlModel);
             }
 
-            GitHubIssuePrediction prediction = predEngine.Predict(issue);
+            GitHubIssuePrediction prediction = predEngine.Predict(issueOrPr);
             float[] probabilities = prediction.Score;
             float maxProbability = probabilities.Max();
-            logger.LogInformation($"# {maxProbability} {prediction.Area} for #{issue.Number} {issue.Title}");
+            string typeToPredict = issueOrPr is IssueModel ? "issue" : "PR";
+            logger.LogInformation($"# {maxProbability} {prediction.Area} for {typeToPredict} #{issueOrPr.Number} {issueOrPr.Title}");
             return maxProbability > threshold ? prediction.Area : null;
         }
     }

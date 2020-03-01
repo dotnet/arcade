@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
@@ -9,10 +9,11 @@
     <DevelopmentDependency>true</DevelopmentDependency>
     <PackageType>MSBuildSdk</PackageType>
     <ExcludeFromSourceBuild>true</ExcludeFromSourceBuild>
+    <_ExcludeNuGetAssembliesTargetFramework>netcoreapp2.1</_ExcludeNuGetAssembliesTargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Azure.Storage.Blob" Version="$(MicrosoftAzureStorageBlobVersion)" />
+    <PackageReference Include="Azure.Storage.Blobs" Version="$(AzureStorageBlobsVersion)" />
     <PackageReference Include="Microsoft.Build" Version="$(MicrosoftBuildVersion)" />
     <PackageReference Include="Microsoft.Build.Tasks.Core" Version="$(MicrosoftBuildTasksCoreVersion)" />
     <PackageReference Include="Microsoft.DotNet.Maestro.Client" Version="$(MicrosoftDotNetMaestroClientVersion)" />
@@ -22,6 +23,15 @@
   <ItemGroup>
     <ProjectReference Include="..\Microsoft.DotNet.VersionTools\lib\Microsoft.DotNet.VersionTools.csproj" />
   </ItemGroup>
+
+  <!-- Exclude NuGet package assemblies per https://github.com/dotnet/arcade/issues/1965
+       This is a workaround for https://github.com/microsoft/msbuild/issues/5073.  Required until #5073 is fixed or 
+       https://github.com/microsoft/msbuild/issues/5086 is available and we switch to that workaround -->
+  <Target Name="ExcludeNuGetPackagesFromNetCore" BeforeTargets="GenerateNuspec">
+    <ItemGroup>
+      <_PackageFilesToExclude Include="%(_PackageFiles.Identity)" Condition="$([System.String]::Copy('%(_PackageFiles.FileName)').StartsWith('NuGet')) and $([System.String]::Copy('%(_PackageFiles.Directory)').Contains('$(_ExcludeNuGetAssembliesTargetFramework)'))" />
+    </ItemGroup>
+  </Target>
 
   <Import Project="$(RepoRoot)eng\BuildTask.targets" />
 </Project>

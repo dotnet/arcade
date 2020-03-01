@@ -374,9 +374,21 @@ namespace Microsoft.Cci.Writers.CSharp
             WriteSymbol(":", true);
             WriteKeyword("base");
             WriteSymbol("(");
-            _writer.WriteList(ctor.Parameters, p => WriteDefaultOf(p.Type));
+            _writer.WriteList(ctor.Parameters, p => WriteDefaultOf(p.Type, ShouldSuppressNullCheck()));
             WriteSymbol(")");
         }
+
+        /// <summary>
+        /// When generated .notsupported.cs files, we need to generate calls to the base constructor.
+        /// However, if the base constructor doesn't accept null, passing default(T) will cause a compile
+        /// error. In this case, suppress the null check.
+        /// NOTE: It was deemed too much work to dynamically check if the base constructor accepts null
+        /// or not, until we update GenAPI to be based on Roslyn instead of CCI. For now, just always
+        /// suppress the null check.
+        /// </summary>
+        private bool ShouldSuppressNullCheck() => 
+            LangVersion >= LangVersion8_0 &&
+            _platformNotSupportedExceptionMessage != null;
 
         private void WriteEmptyBody()
         {
@@ -392,12 +404,17 @@ namespace Microsoft.Cci.Writers.CSharp
             }
         }
 
-        private void WriteDefaultOf(ITypeReference type)
+        private void WriteDefaultOf(ITypeReference type, bool suppressNullCheck = false)
         {
             WriteKeyword("default", true);
             WriteSymbol("(");
             WriteTypeName(type, noSpace: true);
             WriteSymbol(")");
+
+            if (suppressNullCheck && !type.IsValueType)
+            {
+                WriteSymbol("!");
+            }
         }
 
         public static IDefinition GetDummyConstructor(ITypeDefinition type)

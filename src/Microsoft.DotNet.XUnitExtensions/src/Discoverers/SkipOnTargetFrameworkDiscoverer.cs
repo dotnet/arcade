@@ -28,10 +28,6 @@ namespace Microsoft.DotNet.XUnitExtensions
                 yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.NonNetcoreappTest);
             if (frameworks.HasFlag(TargetFrameworkMonikers.NetFramework))
                 yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.NonNetfxTest);
-            if (frameworks.HasFlag(TargetFrameworkMonikers.Uap))
-                yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.NonUapTest);
-            if (frameworks.HasFlag(TargetFrameworkMonikers.Mono))
-                yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.NonMonoTest);
         }
     }
 }

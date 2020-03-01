@@ -32,13 +32,10 @@ namespace Microsoft.DotNet.Helix.Sdk
             cancellationToken.ThrowIfCancellationRequested();
             Log.LogMessage(MessageImportance.High, $"Waiting for completion of job {jobName}");
 
-            for (;; await Task.Delay(10000, cancellationToken)) // delay every time this loop repeats
+            for (;; await Task.Delay(10000, cancellationToken).ConfigureAwait(false)) // delay every time this loop repeats
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                var pf = await HelixApi.RetryAsync(
-                    () => HelixApi.Job.PassFailAsync(jobName, cancellationToken),
-                    LogExceptionRetry,
-                    cancellationToken);
+                var pf = await HelixApi.Job.PassFailAsync(jobName, cancellationToken).ConfigureAwait(false);
                 if (pf.Working == 0 && pf.Total != 0)
                 {
                     Log.LogMessage(MessageImportance.High, $"Job {jobName} is completed with {pf.Total} finished work items.");

@@ -1,5 +1,4 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net472</TargetFrameworks>
     <AssemblyName>Microsoft.DotNet.XUnitExtensions</AssemblyName>
@@ -17,5 +16,4 @@
     <None Include="$(RepoRoot)LICENSE.txt" PackagePath="LICENSE.txt" Pack="true" />
     <None Include="$(RepoRoot)THIRD-PARTY-NOTICES.txt" PackagePath="THIRD-PARTY-NOTICES.txt" Pack="true" />
   </ItemGroup>
-
 </Project>

@@ -24,8 +24,8 @@
       <HelixCorrelationPayload Include="$(MSBuildThisFileDirectory)xunit-reporter"/>
     </ItemGroup>
     <PropertyGroup>
-      <HelixPostCommands Condition="$(IsPosixShell)">$(HelixPostCommands);$HELIX_PYTHONPATH $HELIX_CORRELATION_PAYLOAD/xunit-reporter.py</HelixPostCommands>
-      <HelixPostCommands Condition="!$(IsPosixShell)">$(HelixPostCommands);%HELIX_PYTHONPATH% %HELIX_CORRELATION_PAYLOAD%\xunit-reporter.py</HelixPostCommands>
+      <HelixPostCommands Condition="$(IsPosixShell)">$(HelixPostCommands);$HELIX_PYTHONPATH -B $HELIX_CORRELATION_PAYLOAD/xunit-reporter.py</HelixPostCommands>
+      <HelixPostCommands Condition="!$(IsPosixShell)">$(HelixPostCommands);%HELIX_PYTHONPATH% -B %HELIX_CORRELATION_PAYLOAD%\xunit-reporter.py</HelixPostCommands>
 
       <MaxRetryCount Condition="'$(MaxRetryCount)' == ''">0</MaxRetryCount>
     </PropertyGroup>

@@ -47,8 +47,13 @@ namespace Microsoft.DotNet.SwaggerGenerator.Modeler
         public IEnumerable<ParameterModel> NonConstantParameters =>
             Parameters.Where(p => !(p.Type is TypeReference.ConstantTypeReference)).OrderBy(p => p.Name);
 
-        public IEnumerable<ParameterModel> FormalParameters =>
-            NonConstantParameters.OrderBy(p => p.Required ? 0 : 1).ThenBy(p => p.Name);
+        public IEnumerable<ParameterModel> FormalParameters => NonConstantParameters.OrderBy(p => p.Required ? 0 : 1).ThenBy(p => p.Name);
+
+        public IEnumerable<ParameterModel> FormalParametersNoPaging => NonConstantParameters.OrderBy(p => p.Required ? 0 : 1).ThenBy(p => p.Name).Where(p => Paginated == null || (p.Name != Paginated.PageParameterName && p.Name != Paginated.PageSizeParameterName));
+
+        public ParameterModel PageParameter => Paginated == null ? null : NonConstantParameters.Single(p => p.Name == Paginated.PageParameterName);
+
+        public ParameterModel PageSizeParameter => Paginated == null ? null : NonConstantParameters.Single(p => p.Name == Paginated.PageSizeParameterName);
 
         public IEnumerable<ParameterModel> PathParameters =>
             Parameters.Where(p => p.Location == ParameterLocation.Path);

@@ -146,7 +146,7 @@ namespace Microsoft.DotNet.VersionTools.Automation
                         Trace.TraceInformation($"Committed build-info update on attempt {i + 1}.");
                         break;
                     }
-                    catch (HttpRequestException ex)
+                    catch (Exception ex) when (ex is HttpRequestException || ex is NotFastForwardUpdateException)
                     {
                         int nextTry = i + 1;
                         if (nextTry < MaxTries)

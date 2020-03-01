@@ -90,7 +90,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
                 {
                     telemetryCategory = telemetryInfo.Category;
                 }
-                if (telemetryCategory == null)
+                if (string.IsNullOrEmpty(telemetryCategory))
                 {
                     if (_projectInfoMap.TryGetValue(parentId.Value, out ProjectInfo projectInfo))
                     {
@@ -200,15 +200,20 @@ namespace Microsoft.DotNet.Arcade.Sdk
         {
             if (e.EventName.Equals(s_TelemetryMarker))
             {
-                e.Properties.TryGetValue("Category", out string telemetryCategory);
-                var parentId = _buildEventContextMap.TryGetValue(e.BuildEventContext, out var guid)
-                ? (Guid?)guid
-                : null;
+                if (!e.Properties.TryGetValue("Category", out string telemetryCategory))
+                    return;
 
-                if (parentId.HasValue)
+                if (!_buildEventContextMap.TryGetValue(e.BuildEventContext, out var parentId))
+                    return;
+
+                if (string.IsNullOrEmpty(telemetryCategory))
                 {
-                    var telemetryInfo = new TelemetryTaskInfo(parentId.Value, telemetryCategory);
-                    _taskTelemetryInfoMap[parentId.Value] = telemetryInfo;
+                    _taskTelemetryInfoMap.Remove(parentId);
+                }
+                else
+                {
+                    var telemetryInfo = new TelemetryTaskInfo(parentId, telemetryCategory);
+                    _taskTelemetryInfoMap[parentId] = telemetryInfo;
                 }
             }
         }

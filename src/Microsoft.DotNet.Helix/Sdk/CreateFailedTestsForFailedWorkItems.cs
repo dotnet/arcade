@@ -30,7 +30,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                 try
                 {
                     var uploadedFiles = JsonConvert.DeserializeObject<List<UploadedFile>>(failedWorkItem.GetMetadata("UploadedFiles"));
-                    var text = $"<ul>{string.Join("", uploadedFiles.Select(f => $"<li><a href='{f.Link}' target='_blank'>{f.Name}</a></li>"))}</ul>";
+                    var text = string.Join(Environment.NewLine, uploadedFiles.Select(f => $"{f.Name}:{Environment.NewLine}  {f.Link}{Environment.NewLine}"));
                     await AttachResultFileToTestResultAsync(client, testRunId, testResultId, text);
                 }
                 catch (Exception ex)
@@ -56,7 +56,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                                     new JObject
                                     {
                                         ["attachmentType"] = "GeneralAttachment",
-                                        ["fileName"] = "UploadFileResults.html",
+                                        ["fileName"] = "UploadFileResults.txt",
                                         ["stream"] = b64Stream,
                                     }),
                                 Encoding.UTF8,

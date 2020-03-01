@@ -8,6 +8,7 @@
     <ExcludeFromSourceBuild>true</ExcludeFromSourceBuild>
     <IsPackable>true</IsPackable>
     <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);PackBuildOutputs</TargetsForTfmSpecificContentInPackage>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>

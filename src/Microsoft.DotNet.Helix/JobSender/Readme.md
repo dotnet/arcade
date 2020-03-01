@@ -3,9 +3,9 @@ This Package provides simple Helix Job sending functionality allowing sending jo
 
 ## Installing the Package
 
-The Helix Packages are pushed to the dotnet-tools package feed:
+The Helix Packages are pushed to the dotnet-eng package feed:
 
-> `https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json`
+> `https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json`
 
 To use these packages add the above feed to `NuGet.config`. There are currently no stable versions of the package in the feed so you must specify the version if you are using `dotnet add package`.
 

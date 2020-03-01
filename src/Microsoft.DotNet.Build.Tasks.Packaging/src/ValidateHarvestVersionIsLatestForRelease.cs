@@ -47,7 +47,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
                 string latestPatchVersion = GetLatestStableVersionForPackageRelease(packageReport.Id, harvestMajor, harvestMinor);
                 if (latestPatchVersion.CompareTo(harvestVersion) != 0)
                 {
-                    Log.LogError($"Validation Failed: {packageReport.Id} is harvesting assets from package version {harvestVersion} which is not the latest for that package release. Latest package version from that release is {latestPatchVersion}. In order to fix this, run `dotnet msbuild {packageReport.Id}.pkgproj /t:UpdatePackageIndex /p:UpdateStablePackageInfo=true`");
+                    Log.LogError($"Validation Failed: {packageReport.Id} is harvesting assets from package version {harvestVersion} which is not the latest for that package release. Latest package version from that release is {latestPatchVersion}. In order to fix this, run `dotnet msbuild {packageReport.Id}.pkgproj /t:UpdateHarvestVersionOnPackageIndex /p:UpdateStablePackageInfo=true`");
                 }
                 else
                 {

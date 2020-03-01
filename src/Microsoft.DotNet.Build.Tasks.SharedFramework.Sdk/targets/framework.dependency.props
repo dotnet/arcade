@@ -4,7 +4,7 @@
   -->
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.DotNet.Build.Tasks.Packaging" Version="$(MicrosoftDotNetBuildTasksPackagingPackageVersion)" />
+    <PackageReference Include="Microsoft.DotNet.Build.Tasks.Packaging" Version="$(MicrosoftDotNetBuildTasksPackagingVersion)" />
   </ItemGroup>
 
 </Project>

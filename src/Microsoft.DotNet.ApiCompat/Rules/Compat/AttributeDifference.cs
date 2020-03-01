@@ -69,41 +69,8 @@ namespace Microsoft.Cci.Differs.Rules
             if (impl == null || contract == null)
                 return DifferenceType.Unknown;
 
-            bool added = false;
-
-            //added |= AnyAttributeAdded(differences, impl, impl.Attributes, contract.Attributes);
-            //added |= AnyMethodSpecificAttributeAdded(differences, impl as IMethodDefinition, contract as IMethodDefinition);
-
-            if (added)
-                return DifferenceType.Changed;
-
-            return DifferenceType.Unknown;
+            return CheckAttributeDifferences(differences, impl, impl.Attributes, contract.Attributes);
         }
-
-        private bool AnyMethodSpecificAttributeAdded(IDifferences differences, IMethodDefinition implMethod, IMethodDefinition contractMethod)
-        {
-            if (implMethod == null || contractMethod == null)
-                return false;
-
-            bool added = false;
-
-            //added |= AnyAttributeAdded(differences, implMethod, implMethod.ReturnValueAttributes, contractMethod.ReturnValueAttributes);
-            //added |= AnySecurityAttributeAdded(differences, implMethod, implMethod.SecurityAttributes, contractMethod.SecurityAttributes);
-
-            //Debug.Assert(implMethod.ParameterCount == contractMethod.ParameterCount);
-
-            //IParameterDefinition[] method1Params = implMethod.Parameters.ToArray();
-            //IParameterDefinition[] method2Params = contractMethod.Parameters.ToArray();
-            //for (int i = 0; i < implMethod.ParameterCount; i++)
-            //    added |= AnyAttributeAdded(differences, method1Params[i], method1Params[i].Attributes, method2Params[i].Attributes);
-
-            return added;
-        }
-
-        //private bool AnySecurityAttributeAdded(IDifferences differences, IReference target, IEnumerable<ISecurityAttribute> attribues1, IEnumerable<ISecurityAttribute> attributes2)
-        //{
-        //    return AnyAttributeAdded(differences, target, attribues1.SelectMany(a => a.Attributes), attributes2.SelectMany(a => a.Attributes));
-        //}
 
         private DifferenceType CheckAttributeDifferences(IDifferences differences, IReference target, IEnumerable<ICustomAttribute> implAttributes, IEnumerable<ICustomAttribute> contractAttributes)
         {

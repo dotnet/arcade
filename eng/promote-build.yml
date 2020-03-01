@@ -1,0 +1,104 @@
+# This file is the main entry point for the Build Promotion build definition.
+# These variables should be declared at build queue time:
+#
+#   - BARBuildId                        ; Maestro++/BAR ID of the build to be promoted
+#   - PromoteToMaestroChannelId         ; To which Maestro++ the build should be promoted to
+#   - EnableSourceLinkValidation        ; Whether source link validation should be performed
+#   - enableNugetValidation             ; Whether NuGet metadata validation should be performed
+#   - EnableSigningValidation           ; Whether signing validation should be performed
+#   - EnableSDLValidation               ; Whether SDL validation should be performed
+#   -   SDLValidationContinueOnError    ; Whether SDL validation errors should be ignored
+#   -   SDLValidationCustomParams       ; Custom parameters for SDL validation
+
+trigger: none
+
+variables:
+  _DotNetArtifactsCategory: .NETCore
+
+stages:
+- stage: prepare_promotion
+  displayName: Prepare for Promotion
+  jobs:
+    - job:
+      displayName: Validate Parameters
+      variables:
+        - template: common\templates\post-build\common-variables.yml
+      steps:
+        - checkout: none
+        
+        - task: PowerShell@2
+          displayName: Validate Build & Channel
+          inputs:
+            targetType: inline
+            script: |
+              # Keeping this script inline so that we don't need to checkout the whole repo to use just one file
+              try {
+                  $buildApiEndpoint = "$(MaestroApiEndPoint)/api/builds/$(BARBuildId)?api-version=$(MaestroApiVersion)"
+                  $channelApiEndpoint = "$(MaestroApiEndPoint)/api/channels/$(PromoteToMaestroChannelId)?api-version=$(MaestroApiVersion)"
+
+                  $apiHeaders = New-Object 'System.Collections.Generic.Dictionary[[String],[String]]'
+                  $apiHeaders.Add('Accept', 'application/json')
+                  $apiHeaders.Add('Authorization',"Bearer ${Env:MAESTRO_API_TOKEN}")
+
+                  $buildInfo = try { Invoke-WebRequest -Method Get -Uri $buildApiEndpoint -Headers $apiHeaders | ConvertFrom-Json } catch { Write-Host "Error: $_" }
+
+                  if (!$buildInfo) {
+                    Write-Host "Build with BAR ID $(BARBuildId) was not found in BAR!"
+                    exit 1
+                  }
+
+                  $channelInfo = try { Invoke-WebRequest -Method Get -Uri $channelApiEndpoint -Headers $apiHeaders | ConvertFrom-Json } catch { Write-Host "Error: $_" }
+
+                  if (!$channelInfo) {
+                    Write-Host "Channel with ID $(PromoteToMaestroChannelId) was not found in BAR. Aborting."
+                    exit 1
+                  }
+                  
+                  $azureDevOpsBuildNumber = $buildInfo.azureDevOpsBuildNumber
+                  $channelName = $channelInfo.name
+                  $azureDevOpsRepository = "Unknown"
+                  $lastIndexOfSlash = $buildInfo.azureDevOpsRepository.LastIndexOf('/')
+
+                  if ($lastIndexOfSlash -ne -1) {
+                    $azureDevOpsRepository = $buildInfo.azureDevOpsRepository.Substring($lastIndexOfSlash + 1)
+
+                    # Invalid chars in Azdo build number: '"', '/', ':', '<', '>', '\', '|', '?', '@', and '*'
+                    $azureDevOpsRepository = $azureDevOpsRepository -replace '["/:<>\\|?@*"]', '_'
+                  }
+
+                  $buildNumberName = "Promoting $azureDevOpsRepository build $azureDevOpsBuildNumber to channel ${channelName}#"
+
+                  # Maximum buildnumber length is 255 chars
+                  if ($buildNumberName.Length -GT 255) {
+                    $buildNumberName = $buildNumberName.Substring(0, 255)
+                  }
+
+                  Write-Host "##vso[build.updatebuildnumber]$buildNumberName"
+                  Write-Host "##vso[build.addbuildtag]$channelName"
+              }
+              catch {
+                Write-Host $_
+                Write-Host $_.Exception
+                Write-Host $_.ScriptStackTrace
+                exit 1
+              }
+          env:
+            MAESTRO_API_TOKEN: $(MaestroApiAccessToken)
+
+
+- template: \eng\common\templates\post-build\post-build.yml
+  parameters:
+    enableSourceLinkValidation: variables['EnableSourceLinkValidation']
+    enableNugetValidation: variables['EnableNugetValidation']
+    enableSigningValidation: variables['EnableSigningValidation']
+    
+    validateDependsOn:
+      - prepare_promotion
+    
+    SDLValidationParameters:
+      enable: variables['EnableSDLValidation']
+      continueOnError: $(SDLValidationContinueOnError)
+      params: $(SDLValidationCustomParams)
+    
+    BARBuildId: $(BARBuildId)
+    PromoteToMaestroChannelId: $(PromoteToMaestroChannelId)

@@ -32,9 +32,17 @@
     <OutDir/>
   </PropertyGroup>
 
-  <ItemGroup Condition="'$(IsWpfTempProject)' == 'true' and '$(TargetFrameworkIdentifier)' == '.NETFramework'">
-    <Reference Include="mscorlib" Pack="false" />
-  </ItemGroup>
+  <!--
+    Workaround to fix that Visual Studio sometimes uses a special MSBuild evaluation
+    mode where all common conditions (e.g., inside ItemGroup) are ignored.
+  -->
+  <Choose>
+    <When Condition=" '$(IsWpfTempProject)' == 'true' and '$(TargetFrameworkIdentifier)' == '.NETFramework' ">
+      <ItemGroup>
+        <Reference Include="mscorlib" Pack="false" />
+      </ItemGroup>
+    </When>
+  </Choose>
 
   <!--
     Workaround for a race condition https://github.com/Microsoft/msbuild/issues/1479.
@@ -44,7 +52,7 @@
     <TargetFrameworkMonikerAssemblyAttributesFileClean>true</TargetFrameworkMonikerAssemblyAttributesFileClean>
   </PropertyGroup>
 
-  <!-- 
+  <!--
      Portable PDBs are not included in .nupkg by default. Include them unless the project produces symbol packages.
      Remove this once we migrate to .snupkg. See https://github.com/dotnet/arcade/issues/1959.
    -->
@@ -90,9 +98,19 @@
       </_TagsElement>
 
       <_IconUrlElement/>
-      <_IconUrlElement Condition="'$(PackageIconUrl)' != ''">
+      <_IconUrlElement Condition="'$(PackageIcon)' == '' and '$(PackageIconUrl)' != ''">
         <iconUrl>$(PackageIconUrl)</iconUrl>
       </_IconUrlElement>
+
+      <_IconElement/>
+      <_IconElement Condition="'$(PackageIcon)' != ''">
+        <icon>$(PackageIcon)</icon>
+      </_IconElement>
+
+      <_IconFileElement/>
+      <_IconFileElement Condition="'$(PackageIcon)' != ''">
+        <file src="$(PackageIconFullPath)" target="$(PackageIcon)" />
+      </_IconFileElement>
 
       <_ReleaseNotesElement/>
       <_ReleaseNotesElement Condition="'$(PackageReleaseNotes)' != ''">
@@ -107,6 +125,7 @@
         <requireLicenseAcceptance>$(PackageRequireLicenseAcceptance)</requireLicenseAcceptance>
         $(_TagsElement)
         $(_LicenseElement)
+        $(_IconElement)
         $(_IconUrlElement)
         $(_ReleaseNotesElement)
         <projectUrl>$(PackageProjectUrl)</projectUrl>
@@ -115,10 +134,15 @@
         <serviceable>$(Serviceable)</serviceable>
         <repository type="$(RepositoryType)" url="$(RepositoryUrl)" commit="$(RepositoryCommit)" />
       </_CommonMetadataElements>
+
+      <_CommonFileElements>
+        $(_IconFileElement)
+      </_CommonFileElements>
     </PropertyGroup>
 
     <ItemGroup Condition="'$(NuspecFile)' != '' and '$(NuspecProperties)' == ''">
       <NuspecProperty Include="CommonMetadataElements=$(_CommonMetadataElements)"/>
+      <NuspecProperty Include="CommonFileElements=$(_CommonFileElements)"/>
       <NuspecProperty Include="PackageId=$(PackageId)"/>
       <NuspecProperty Include="Version=$(PackageVersion)"/>
       <NuspecProperty Include="ProjectDirectory=$(MSBuildProjectDirectory)"/>
@@ -143,7 +167,7 @@
 
   <!--
     NuGet Restore uses PackageId and project name in the same namespace, so that project reference can be interchanged with a package reference.
-    This causes issues however for leaf packages that are not to be referenced (such as analyzer or tools packages) when we want to name the package 
+    This causes issues however for leaf packages that are not to be referenced (such as analyzer or tools packages) when we want to name the package
     the same as an existing project in the solution. In that case we set PackageId to an invalid but unique value for Restore and override it for Pack
     with the desired name stored in $(NuspecPackageId).
   -->

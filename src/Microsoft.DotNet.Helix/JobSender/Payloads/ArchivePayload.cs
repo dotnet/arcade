@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Helix.Client
@@ -18,7 +19,7 @@ namespace Microsoft.DotNet.Helix.Client
             }
         }
 
-        public async Task<string> UploadAsync(IBlobContainer payloadContainer, Action<string> log)
+        public async Task<string> UploadAsync(IBlobContainer payloadContainer, Action<string> log, CancellationToken cancellationToken)
         {
             var alreadyUploadedFile = new FileInfo($"{Archive.FullName}.payload");
             if (alreadyUploadedFile.Exists && IsUpToDate(alreadyUploadedFile))
@@ -29,7 +30,7 @@ namespace Microsoft.DotNet.Helix.Client
 
             using (var stream = File.OpenRead(Archive.FullName))
             {
-                Uri zipUri = await payloadContainer.UploadFileAsync(stream, $"{Archive.Name}");
+                Uri zipUri = await payloadContainer.UploadFileAsync(stream, $"{Archive.Name}", cancellationToken);
                 File.WriteAllText(alreadyUploadedFile.FullName, zipUri.AbsoluteUri);
                 return zipUri.AbsoluteUri;
             }

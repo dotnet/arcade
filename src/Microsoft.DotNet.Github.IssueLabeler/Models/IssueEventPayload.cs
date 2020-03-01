@@ -8,8 +8,8 @@ namespace Microsoft.DotNet.GitHub.IssueLabeler
     {
         public string Action { set; get; }
 
-        public GitHubIssue Issue { set; get; }
+        public IssueModel Issue { set; get; }
 
-        public GitHubIssue Pull_Request { set; get; }
+        public PrModel Pull_Request { set; get; }
     }
 }

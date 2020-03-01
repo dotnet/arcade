@@ -12,11 +12,11 @@ Azure DevOps [![Build Status](https://dev.azure.com/dnceng/public/_apis/build/st
 
 Packages are published daily to our tools feed:
 
-> `https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json`
+> `https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json`
 
 This feed is browsable from here:
 
-> https://dev.azure.com/dnceng/public/_packaging?_a=feed&feed=dotnet-tools
+> https://dev.azure.com/dnceng/public/_packaging?_a=feed&feed=dotnet-eng
 
 ### Source Code
 

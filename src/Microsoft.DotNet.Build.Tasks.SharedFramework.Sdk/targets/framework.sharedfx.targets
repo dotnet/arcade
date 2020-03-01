@@ -74,6 +74,9 @@
     <MakeDir Directories="$(PublishDir)" />
 
     <PropertyGroup>
+      <!-- Allow the repo to specify a version of Microsoft.NETCore.App to depend on. -->
+      <MicrosoftNETCoreAppRuntimeConfigVersion Condition="'$(MicrosoftNETCoreAppRuntimeConfigVersion)' == ''">$(SharedFrameworkNugetVersion)</MicrosoftNETCoreAppRuntimeConfigVersion>
+
       <_runtimeConfigContent>
       <![CDATA[
 {
@@ -81,7 +84,7 @@
     "tfm": "$(TargetFramework)",
     "framework": {
       "name": "Microsoft.NETCore.App",
-      "version": "$(SharedFrameworkNugetVersion)",
+      "version": "$(MicrosoftNETCoreAppRuntimeConfigVersion)",
       "rollForward": "LatestPatch"
     }
   }
@@ -143,7 +146,7 @@
 
     <!-- Ensure the host is executable. See https://github.com/NuGet/Home/issues/4424 -->
     <Exec Command="chmod u+x $(SharedFrameworkLayoutDir)dotnet$(ExeSuffix)"
-          Condition="'$(OSGroup)' != 'Windows_NT'" />
+          Condition="'$(OS)' != 'Windows_NT'" />
   </Target>
 
   <!-- Clean up artifacts that dotnet-publish generates which we don't need -->
@@ -213,9 +216,9 @@
           DependsOnTargets="FixDepsJsonFileName"
           AfterTargets="Publish">
     <PropertyGroup>
-      <RuntimeGraphGeneratorRuntime Condition="'$(OSGroup)'=='Windows_NT'">win</RuntimeGraphGeneratorRuntime>
-      <RuntimeGraphGeneratorRuntime Condition="'$(OSGroup)'=='OSX'">osx</RuntimeGraphGeneratorRuntime>
-      <RuntimeGraphGeneratorRuntime Condition="'$(OSGroup)'=='FreeBSD'">freebsd</RuntimeGraphGeneratorRuntime>
+      <RuntimeGraphGeneratorRuntime Condition="$([MSBuild]::IsOSPlatform('windows'))">win</RuntimeGraphGeneratorRuntime>
+      <RuntimeGraphGeneratorRuntime Condition="$([MSBuild]::IsOSPlatform('osx'))">osx</RuntimeGraphGeneratorRuntime>
+      <RuntimeGraphGeneratorRuntime Condition="$([MSBuild]::IsOSPlatform('freebsd'))">freebsd</RuntimeGraphGeneratorRuntime>
       <RuntimeGraphGeneratorRuntime Condition="'$(RuntimeGraphGeneratorRuntime)'==''">linux</RuntimeGraphGeneratorRuntime>
     </PropertyGroup>
 
@@ -251,7 +254,7 @@
     generate shared frameworks in the Arcade SDK.
   -->
   <Target Name="BuildPkgProjectReferences">
-    <MSBuild Projects="$(RepoRoot)signing\SignBinaries.proj" Targets="Build" />
+    <MSBuild Projects="$([MSBuild]::NormalizePath('$(SigningToolsDir)', 'SignBinaries.proj'))" Targets="Build" />
     <MSBuild Projects="@(PkgProjectReference)" Targets="Build" />
   </Target>
 

@@ -2,8 +2,8 @@
 <Project>
 
   <!-- PInvokeChecker data files-->
-  <PropertyGroup Condition="'$(OSGroup)'=='Windows_NT'">
-    <EnablePinvokeUWPAnalyzer Condition="'$(EnablePinvokeUWPAnalyzer)' == ''">true</EnablePinvokeUWPAnalyzer>
+  <PropertyGroup Condition="'$(OS)'=='Windows_NT'">
+    <!-- Opt-in feature -->
     <UseUWPPinvokeAnalyzer Condition="'$(UWPCompatible)'=='true' AND '$(EnablePinvokeUWPAnalyzer)' == 'true'">true</UseUWPPinvokeAnalyzer>
 
     <!-- Just validate for OneCore: default -->

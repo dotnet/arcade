@@ -16,11 +16,8 @@ namespace Microsoft.DotNet.XUnitExtensions
 
         internal static string NonNetcoreappTest = "nonnetcoreapptests";
         internal static string NonNetfxTest = "nonnetfxtests";
-        internal static string NonUapTest = "nonuaptests";
-        internal static string NonMonoTest = "nonmonotests";
 
         internal const string Failing = "failing";
-        internal const string ActiveIssue = "activeissue";
         internal const string OuterLoop = "outerloop";
 
         public const string Category = "category";
