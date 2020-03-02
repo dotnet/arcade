@@ -12,6 +12,10 @@
     <_SymbolProducerTarget Condition="'$(Language)' != 'C++'">CoreBuild</_SymbolProducerTarget>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <NETCORE_ENGINEERING_TELEMETRY>Build</NETCORE_ENGINEERING_TELEMETRY>
+  </PropertyGroup>
+
   <Target Name="DeployToSymStore"
           BeforeTargets="AfterBuild" 
           DependsOnTargets="_DeployToSymStoreSetProperties;_DeployPortableSymbolsToSymStore;_DeployWindowsSymbolsToSymStore" />
