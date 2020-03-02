@@ -164,6 +164,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         private readonly Dictionary<string, List<BlobArtifactModel>> BlobsByCategory = new Dictionary<string, List<BlobArtifactModel>>();
 
+        private AkaMSLinkManager _linkManager = null;
 
         public override bool Execute()
         {
@@ -337,6 +338,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             continue;
                         }
                         feedConfig.LatestLinkShortUrlPrefix = latestLinkShortUrlPrefix;
+
+                        // Set up the link manager if it hasn't already been done
+                        if (_linkManager == null)
+                        {
+                            _linkManager = new AkaMSLinkManager(AkaMSClientId, AkaMSClientSecret, AkaMSTenant, Log);
+                        }
                     }
 
                     string categoryKey = fc.ItemSpec.Trim().ToUpper();
@@ -1149,29 +1156,29 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         private async Task CreateOrUpdateLatestLinksAsync(List<BlobArtifactModel> blobsToPublish, FeedConfig feedConfig)
         {
-            // Update or create aka ms links if desired.
-            if (!string.IsNullOrEmpty(feedConfig.LatestLinkShortUrlPrefix))
+            if (string.IsNullOrEmpty(feedConfig.LatestLinkShortUrlPrefix))
             {
-                Log.LogMessage(MessageImportance.High, "The following aka.ms links for blobs will be created:");
-                IEnumerable<AkaMSLink> linksToCreate = blobsToPublish.Select(blob =>
-                {
-                    // Strip away the feed expected suffix (index.json) and append on the
-                    // blob path.
-                    string actualTargetUrl = feedConfig.TargetURL.Substring(0,
-                        feedConfig.TargetURL.Length - ExpectedFeedUrlSuffix.Length) + blob.Id;
-
-                    AkaMSLink newLink = new AkaMSLink
-                    {
-                        ShortUrl = GetLatestShortUrlForBlob(feedConfig, blob),
-                        TargetUrl = actualTargetUrl
-                    };
-                    Log.LogMessage(MessageImportance.High, $"  {newLink.ShortUrl} -> {newLink.TargetUrl}");
-                    return newLink;
-                });
-
-                AkaMSLinkManager linkManager = new AkaMSLinkManager(AkaMSClientId, AkaMSClientSecret, AkaMSTenant, Log);
-                await linkManager.CreateOrUpdateLinksAsync(linksToCreate, AkaMsOwners, AkaMSCreatedBy, AkaMSGroupOwner, true);
+                return;
             }
+
+            Log.LogMessage(MessageImportance.High, "The following aka.ms links for blobs will be created:");
+            IEnumerable<AkaMSLink> linksToCreate = blobsToPublish.Select(blob =>
+            {
+                // Strip away the feed expected suffix (index.json) and append on the
+                // blob path.
+                string actualTargetUrl = feedConfig.TargetURL.Substring(0,
+                    feedConfig.TargetURL.Length - ExpectedFeedUrlSuffix.Length) + blob.Id;
+
+                AkaMSLink newLink = new AkaMSLink
+                {
+                    ShortUrl = GetLatestShortUrlForBlob(feedConfig, blob),
+                    TargetUrl = actualTargetUrl
+                };
+                Log.LogMessage(MessageImportance.High, $"  {newLink.ShortUrl} -> {newLink.TargetUrl}");
+                return newLink;
+            });
+
+            await _linkManager.CreateOrUpdateLinksAsync(linksToCreate, AkaMsOwners, AkaMSCreatedBy, AkaMSGroupOwner, true);
         }
 
         /// <summary>

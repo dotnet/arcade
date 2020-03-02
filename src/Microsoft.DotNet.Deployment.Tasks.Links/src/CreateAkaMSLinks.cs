@@ -14,7 +14,7 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links
     /// <summary>
     /// Computes the checksum for a single file.
     /// </summary>
-    public class CreateAkaMSLink : AkaMSLinksBase
+    public class CreateAkaMSLinks : AkaMSLinksBase
     {
         /// <summary>
         /// Set of links to create
