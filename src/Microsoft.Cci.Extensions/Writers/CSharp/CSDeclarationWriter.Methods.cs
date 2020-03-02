@@ -7,6 +7,7 @@ using System.Diagnostics.Contracts;
 using System.Linq;
 using Microsoft.Cci.Extensions;
 using Microsoft.Cci.Extensions.CSharp;
+using Microsoft.Cci.Filters;
 using Microsoft.Cci.Writers.Syntax;
 
 namespace Microsoft.Cci.Writers.CSharp
@@ -354,7 +355,18 @@ namespace Microsoft.Cci.Writers.CSharp
                 type.IsStatic)
                 return;
 
-            WriteVisibility(TypeMemberVisibility.Private);
+            var visibility = Filter switch
+            {
+                IncludeAllFilter _ => TypeMemberVisibility.Private,
+                InternalsAndPublicCciFilter _ => TypeMemberVisibility.Private,
+                IntersectionFilter intersection => intersection.Filters.Any(
+                        f => f is IncludeAllFilter || f is InternalsAndPublicCciFilter) ?
+                    TypeMemberVisibility.Private :
+                    TypeMemberVisibility.Assembly,
+                _ => TypeMemberVisibility.Assembly
+            };
+
+            WriteVisibility(visibility);
             if (IsBaseConstructorCallUnsafe(type))
             {
                 WriteKeyword("unsafe");
@@ -435,7 +447,7 @@ namespace Microsoft.Cci.Writers.CSharp
         /// or not, until we update GenAPI to be based on Roslyn instead of CCI. For now, just always
         /// suppress the null check.
         /// </summary>
-        private bool ShouldSuppressNullCheck() => 
+        private bool ShouldSuppressNullCheck() =>
             LangVersion >= LangVersion8_0 &&
             _platformNotSupportedExceptionMessage != null;
 
