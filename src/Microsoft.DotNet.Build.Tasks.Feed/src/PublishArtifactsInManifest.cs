@@ -32,7 +32,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
     /// </summary>
     public class PublishArtifactsInManifest : MSBuild.Task
     {
-        private const string FeedExpectedSuffix = "index.json";
+        private const string ExpectedFeedUrlSuffix = "index.json";
 
         // Matches package feeds like
         // https://dotnet-feed-internal.azurewebsites.net/container/dotnet-core-internal/sig/dsdfasdfasdf234234s/se/2020-02-02/darc-int-dotnet-arcade-services-babababababe-08/index.json
@@ -243,9 +243,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         continue;
                     }
 
-                    if (!targetFeedUrl.EndsWith(FeedExpectedSuffix))
+                    if (!targetFeedUrl.EndsWith(ExpectedFeedUrlSuffix))
                     {
-                        Log.LogError($"Exepcted that feed '{targetFeedUrl}' would end in {FeedExpectedSuffix}");
+                        Log.LogError($"Exepcted that feed '{targetFeedUrl}' would end in {ExpectedFeedUrlSuffix}");
                         continue;
                     }
 
@@ -329,7 +329,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         if (string.IsNullOrEmpty(AkaMSClientId) ||
                             string.IsNullOrEmpty(AkaMSClientSecret) ||
                             string.IsNullOrEmpty(AkaMSTenant) ||
-                            string.IsNullOrEmpty(AkaMsOwners))
+                            string.IsNullOrEmpty(AkaMsOwners) ||
+                            string.IsNullOrEmpty(AkaMSCreatedBy))
                         {
                             Log.LogError($"If a short url path is provided, please provide {nameof(AkaMSClientId)}, {nameof(AkaMSClientSecret)}, " +
                                 $"{nameof(AkaMSTenant)}, {nameof(AkaMsOwners)}, {nameof(AkaMSCreatedBy)}");
@@ -1157,7 +1158,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     // Strip away the feed expected suffix (index.json) and append on the
                     // blob path.
                     string actualTargetUrl = feedConfig.TargetURL.Substring(0,
-                        feedConfig.TargetURL.Length - FeedExpectedSuffix.Length) + blob.Id;
+                        feedConfig.TargetURL.Length - ExpectedFeedUrlSuffix.Length) + blob.Id;
 
                     AkaMSLink newLink = new AkaMSLink
                     {

@@ -166,9 +166,6 @@ stages:
             /p:LatestLinkShortUrlPrefix=dotnet/'${{ parameters.akaMSChannelName }}'
             /p:AkaMSClientId=$(akams-client-id)
             /p:AkaMSClientSecret=$(akams-client-secret)
-            /p:AkaMSTenant=ncd
-            /p:AkaMSOwners=dn-bot
-            /p:AkaMSCreatedBy=dn-bot
             ${{ parameters.artifactsPublishingAdditionalParameters }}
 
       - template: ../../steps/publish-logs.yml

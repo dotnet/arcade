@@ -26,7 +26,14 @@
       - AzureStorageTargetFeedPAT
 
     Optional parameters for SetupTargetFeeds.proj
-      - PublishInstallersAndChecksums                 : This control whether installers & checksums should be published to public feeds on public builds
+      - PublishInstallersAndChecksums   : This control whether installers & checksums should be published to public feeds on public builds
+      
+      Optional aka.ms link generation parameters:
+        - AkaMSClientId                 : Client ID for the aka.ms AD application
+        - AkaMSClientSecret             : Client secret for the aka.ms AD application
+        - AkaMSTenant                   : Tenant ID for aka.ms link generation. Defaults to ncd
+        - AkaMSOwners                   : Semi-colon delimited list of aliases of the owners of generated links. Defaults to dn-bot
+        - AkaMSCreatedBy                : Semi-colon delimited list of aliases of the creator/updator links. Defaults to dn-bot
       
       Parameters for public builds:
           - InstallersTargetStaticFeed
@@ -55,6 +62,12 @@
     <ItemGroup>
       <ManifestFiles Include="$(ManifestsBasePath)\*.xml" />
     </ItemGroup>
+
+    <PropertyGroup>
+      <AkaMSTenant Condition="'$(AkaMSTenant)' == ''">ncd</AkaMSTenant>
+      <AkaMSOwners Condition="'$(AkaMSOwners)' == ''">dn-bot</AkaMSOwners>
+      <AkaMSCreatedBy Condition="'$(AkaMSCreatedBy)' == ''">dn-bot</AkaMSCreatedBy>
+    </PropertyGroup>
 
     <Error
       Condition="'@(ManifestFiles)' == ''"
