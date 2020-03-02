@@ -4,7 +4,7 @@
 
 - Design a build system which supports our goal of a two hour build time
 
-- Minimize the differences between offical and PR builds, thus increasing the reliability of official builds
+- Minimize the differences between official and PR builds, thus increasing the reliability of official builds
 
 - Minimize the impact of unreliable systems such as signing
 
@@ -14,37 +14,57 @@ Signing is a requirement for artifacts that are officially available for our end
 
 Removing signing as an intermediate step is both important for the throughput of our builds as well as reliability. Presently the time variance of signing for dotnet/runtime is over one and a half hours. That means a normal variance in our signing process guarantees the two hour build goal will not be met. Giving us flexibility in how signing occurs, and mostly making it an asynchronous process, is required for us to be successful.  
 
-Going forward the expectation is that most repositories will remove signing from their official builds. This will be a hard requirement for any repository on the critical build path of .NET. For other repositories it will be strongly recommended but not required.  The core-sdk repository will be responsible for producing all of the signed artifacts for the .NET product.
+Going forward the expectation is that most repositories will remove signing from their official builds. This will be a hard requirement for any repository on the critical build path of .NET. For other repositories it will be strongly recommended but not required.
+
+Moving signing to a promotion ring will improve reliablity, and improve signing times by allowing us to flow dependencies faster and sign asynchronously from testing.
 
 ## Signing in repositories
 
 The responsibility of individual repository builds is to produce artifacts that either ship to customers (shipping repository) or are consumed by other repositories for their own builds (dependency flow repositories).
 
-### Dependency flow repositories
+### Participating repositories
 
 - will not real sign
 
 - will disable signing validation (if they have fully stopped producing signed assemblies)
 
-- will only publish to Azure Artifacts
+- will publish to Azure Artifacts
 
 - will publish to a different (unsigned) artifact feed
 
 - will change their subscriptions to consume from the unsigned feed
 
-- will not need / use an `eng/Signing.props` file
+### Signing via promotion
 
-### Shipping repositories
-
-- will contain the eng/Signing.props file used to configure signing
+- a repository may choose to promote a build to be signed.
 
 - *will real sign shipping packages, MSI's, debs, rpm's, etc... by extracting the contents, signing binaries, and re-packaging.
 
-- will publish to signed and unsigned artifact feeds.
+- Signed builds will be published to the signed feed
 
-\* *Initial investigation and exploration has shown that it **should** be possible to extract an MSI's contents, sign, and repackage them.  The current plan is contingent upon being able to repackage installers.  If that proves not to be possible, then we will scrap this plan and pursue other options (such as a queue/await model) to reduce sign times during official builds.*
+\* *Initial investigation and exploration has shown that it **should** be possible to extract an MSI's contents, sign, and repackage them.  The current plan is contingent upon being able to repackage installers.  We have begun a proof of concept on repackaging MSI's, but that work is still in progress. If that proves not to be possible, then we will scrap this plan and pursue other options (such as a queue/await model) to reduce sign times during official builds.*
 
 ## Moving in stages
+
+Repositories may choose to opt in to the signing promotion model.  If a repository does not opt in, they will continue to sign via current methods.
+
+Repositories targeted for signing promotion model are:
+
+- runtime
+
+- winforms
+
+- wpf
+
+- wpf-int
+
+- windowsdesktop
+
+- aspnetcore
+
+- sdk
+
+- core-sdk
 
 Stage 1:
 
@@ -52,23 +72,23 @@ Stage 1:
 
 Stage 2:
 
-- Move MSI signing to core-sdk
+- Enable MSI signing via signing promotion
 
 While, currently, there are less blockers to moving package signing to core-sdk than moving MSI signing, this entire plan is dependent on the ability to repackage / sign MSI's in core-sdk, so moving packages first may result in throw away work.
 
 Stage 3:
 
-- Move package signing out of dependency flow repositories and into core-sdk
+- Enable package signing via signing promotion
 
 - Disable publish to signed feeds
 
-- Disable signing validation from dependency flow repositories if it is no longer needed
+- Disable signing validation from repository if it is no longer needed
 
 Stage 4:
 
-- Move RPM / deb / etc signing into core-sdk
+- Move RPM / deb / etc signing into signing promotion
 
-- Disable signing validation from dependency flow repositories
+- Disable signing validation from repository if it is no longer needed
 
 ## Notes
 
