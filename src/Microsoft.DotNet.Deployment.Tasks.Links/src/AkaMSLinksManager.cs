@@ -19,26 +19,6 @@ using System.Threading;
 
 namespace Microsoft.DotNet.Deployment.Tasks.Links.src
 {
-    /// <summary>
-    ///     A single aka.ms link.
-    /// </summary>
-    public class AkaMSLink
-    {
-        /// <summary>
-        /// Target of the link
-        /// </summary>
-        public string TargetUrl { get; set; }
-        /// <summary>
-        /// Short url of the link. Should only include the fragment element of the url, not the full aka.ms
-        /// link.
-        /// </summary>
-        public string ShortUrl { get; set; }
-        /// <summary>
-        /// Description of the link.
-        /// </summary>
-        public string Description { get; set; } = "";
-    }
-
     public class AkaMSLinkManager
     {
         private const string ApiBaseUrl = "https://redirectionapi.trafficmanager.net/api/aka";
@@ -85,7 +65,7 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links.src
                         try
                         {
                             await clientThrottle.WaitAsync();
-                            
+
                             bool success = await retryHandler.RunAsync(async attempt =>
                             {
                                 // Use the bulk deletion API. The bulk APIs only work for up to 300 items per call.
@@ -136,7 +116,7 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links.src
         /// exists. If overwrite is true, then we need to bucketize the links we want to create and ones
         /// we want to update, and make two separate calls.
         /// </remarks>
-        public async Task CreateOrUpateLinksAsync(List<AkaMSLink> links, string linkOwners,
+        public async Task CreateOrUpdateLinksAsync(IEnumerable<AkaMSLink> links, string linkOwners,
             string linkCreatedOrUpdatedBy, string linkGroupOwner, bool overwrite)
         {
             // Bucketize the links if necessary, then call the implementation.
@@ -155,62 +135,60 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links.src
             ConcurrentBag<AkaMSLink> linksToUpdate = new ConcurrentBag<AkaMSLink>();
 
             using (HttpClient client = CreateClient())
+            using (var clientThrottle = new SemaphoreSlim(8, 8))
             {
-                using (var clientThrottle = new SemaphoreSlim(8, 8))
+                await Task.WhenAll(links.Select(async link =>
                 {
-                    await Task.WhenAll(links.Select(async link =>
+                    try
                     {
-                        try
-                        {
-                            await clientThrottle.WaitAsync();
+                        await clientThrottle.WaitAsync();
 
-                            bool success = await retryHandler.RunAsync(async attempt =>
+                        bool success = await retryHandler.RunAsync(async attempt =>
+                        {
+                            // Use the bulk deletion API. The bulk APIs only work for up to 300 items per call.
+                            // So batch
+                            var response = await client.GetAsync($"{ApiTargeturl}/{link.ShortUrl}");
+
+                            // 401, and 403 indicate auth failures that should not be retried.
+                            if (response.StatusCode == HttpStatusCode.Unauthorized ||
+                                response.StatusCode == HttpStatusCode.Forbidden)
                             {
-                                // Use the bulk deletion API. The bulk APIs only work for up to 300 items per call.
-                                // So batch
-                                var response = await client.GetAsync($"{ApiTargeturl}/{link.ShortUrl}");
-
-                                // 401, and 403 indicate auth failures that should not be retried.
-                                if (response.StatusCode == HttpStatusCode.Unauthorized ||
-                                    response.StatusCode == HttpStatusCode.Forbidden)
-                                {
-                                    _log.LogError($"Error getting aka.ms/{link.ShortUrl}: {response.Content.ReadAsStringAsync().Result}");
-                                    return true;
-                                }
-
-                                // If 200, then the link should be updated, if 400, then it should be
-                                // created
-                                switch (response.StatusCode)
-                                {
-                                    case HttpStatusCode.OK:
-                                        linksToUpdate.Add(link);
-                                        break;
-                                    case HttpStatusCode.NotFound:
-                                        linksToCreate.Add(link);
-                                        break;
-                                    default:
-                                        _log.LogMessage(MessageImportance.High, $"Failed to delete aka.ms/{link.ShortUrl}: {response.Content.ReadAsStringAsync().Result}");
-                                        return false;
-                                }
-
+                                _log.LogError($"Error getting aka.ms/{link.ShortUrl}: {response.Content.ReadAsStringAsync().Result}");
                                 return true;
-                            });
-                        }
-                        finally
-                        {
-                            clientThrottle.Release();
-                        }
-                    }));
-                }
+                            }
+
+                            // If 200, then the link should be updated, if 400, then it should be
+                            // created
+                            switch (response.StatusCode)
+                            {
+                                case HttpStatusCode.OK:
+                                    linksToUpdate.Add(link);
+                                    break;
+                                case HttpStatusCode.NotFound:
+                                    linksToCreate.Add(link);
+                                    break;
+                                default:
+                                    _log.LogMessage(MessageImportance.High, $"Failed to delete aka.ms/{link.ShortUrl}: {response.Content.ReadAsStringAsync().Result}");
+                                    return false;
+                            }
+
+                            return true;
+                        });
+                    }
+                    finally
+                    {
+                        clientThrottle.Release();
+                    }
+                }));
             }
 
             if (linksToCreate.Any())
             {
-                await CreateOrUpateLinksImplAsync(linksToCreate.ToList(), linkOwners, linkCreatedOrUpdatedBy, linkGroupOwner, false);
+                await CreateOrUpateLinksImplAsync(linksToCreate, linkOwners, linkCreatedOrUpdatedBy, linkGroupOwner, false);
             }
             if (linksToUpdate.Any())
             {
-                await CreateOrUpateLinksImplAsync(linksToUpdate.ToList(), linkOwners, linkCreatedOrUpdatedBy, linkGroupOwner, true);
+                await CreateOrUpateLinksImplAsync(linksToUpdate, linkOwners, linkCreatedOrUpdatedBy, linkGroupOwner, true);
             }
         }
 
@@ -223,7 +201,7 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links.src
         /// <param name="linkOwners">Semicolon delimited list of link owners.</param>
         /// <param name="overwrite">If true, existing links will be overwritten.</param>
         /// <returns>Async task</returns>
-        private async Task CreateOrUpateLinksImplAsync(List<AkaMSLink> links, string linkOwners,
+        private async Task CreateOrUpateLinksImplAsync(IEnumerable<AkaMSLink> links, string linkOwners,
             string linkCreatedOrUpdatedBy, string linkGroupOwner, bool overwrite)
         {
             var retryHandler = new ExponentialRetry
@@ -231,16 +209,16 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links.src
                 MaxAttempts = 5
             };
 
-            _log.LogMessage(MessageImportance.High, $"{(overwrite ? "Creating" : "Updating")} {links.Count} aka.ms links.");
+            _log.LogMessage(MessageImportance.High, $"{(overwrite ? "Creating" : "Updating")} {links.Count()} aka.ms links.");
 
             using (HttpClient client = CreateClient())
             {
-                // The links should be divided into BulkApiBatchSize element chunks
-                var currentElement = 0;
-                var batchOfLinksToCreateOrUpdate = links.Skip(currentElement).Take(BulkApiBatchSize).ToList();
-
-                while (batchOfLinksToCreateOrUpdate.Count > 0)
+                IEnumerable<AkaMSLink> remainingLinks = links;
+                while (remainingLinks.Any())
                 {
+                    IEnumerable<AkaMSLink> batchOfLinksToCreateOrUpdate = remainingLinks.Take(BulkApiBatchSize);
+                    remainingLinks = remainingLinks.Skip(BulkApiBatchSize);
+
                     string newOrUpdatedLinksJson = 
                         GetCreateOrUpdateLinkJson(linkOwners, linkCreatedOrUpdatedBy, linkGroupOwner, overwrite, batchOfLinksToCreateOrUpdate);
 
@@ -282,9 +260,6 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links.src
                     {
                         _log.LogError($"Failed to create/updating aka.ms links");
                     }
-
-                    currentElement += BulkApiBatchSize;
-                    batchOfLinksToCreateOrUpdate = links.Skip(currentElement).Take(BulkApiBatchSize).ToList();
                 }
             }
         }
@@ -298,7 +273,8 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links.src
         /// <param name="overwrite">If true, overwrite existing links, otherwise fail if they already exist.</param>
         /// <param name="batchOfLinksToCreateOrUpdate">Links to create/update</param>
         /// <returns>String representation of the link creation content</returns>
-        private string GetCreateOrUpdateLinkJson(string linkOwners, string linkCreatedOrUpdatedBy, string linkGroupOwner, bool overwrite, List<AkaMSLink> batchOfLinksToCreateOrUpdate)
+        private string GetCreateOrUpdateLinkJson(string linkOwners, string linkCreatedOrUpdatedBy, string linkGroupOwner,
+            bool overwrite, IEnumerable<AkaMSLink> batchOfLinksToCreateOrUpdate)
         {
             if (overwrite)
             {

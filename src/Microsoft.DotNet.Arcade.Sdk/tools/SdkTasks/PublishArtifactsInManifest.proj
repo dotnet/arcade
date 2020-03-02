@@ -76,7 +76,7 @@
       AkaMSClientId="$(AkaMSClientId)"
       AkaMSClientSecret="$(AkaMSClientSecret)"
       AkaMSTenant="$(AkaMSTenant)"
-      AkaMsOwners="$(AkaMsOwners)"
+      AkaMSOwners="$(AkaMSOwners)"
       AkaMSCreatedBy="$(AkaMSCreatedBy)" />
   </Target>
 

@@ -32,21 +32,21 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
     /// </summary>
     public class PublishArtifactsInManifest : MSBuild.Task
     {
-        const string FeedExpectedSuffix = "index.json";
+        private const string FeedExpectedSuffix = "index.json";
 
         // Matches package feeds like
         // https://dotnet-feed-internal.azurewebsites.net/container/dotnet-core-internal/sig/dsdfasdfasdf234234s/se/2020-02-02/darc-int-dotnet-arcade-services-babababababe-08/index.json
-        const string AzureStorageProxyFeedPattern =
+        private const string AzureStorageProxyFeedPattern =
             @"(?<feedURL>https://([a-z-]+).azurewebsites.net/container/(?<container>[^/]+)/sig/\w+/se/([0-9]{4}-[0-9]{2}-[0-9]{2})/(?<baseFeedName>darc-(?<type>int|pub)-(?<repository>.+?)-(?<sha>[A-Fa-f0-9]{7,40})-?(?<subversion>\d*)/))index.json";
 
         // Matches package feeds like the one below. Special case for static internal proxy-backed feed
         // https://dotnet-feed-internal.azurewebsites.net/container/dotnet-core-internal/sig/dsdfasdfasdf234234s/se/2020-02-02/darc-int-dotnet-arcade-services-babababababe-08/index.json
-        const string AzureStorageProxyFeedStaticPattern =
+        private const string AzureStorageProxyFeedStaticPattern =
             @"(?<feedURL>https://([a-z-]+).azurewebsites.net/container/(?<container>[^/]+)/sig/\w+/se/([0-9]{4}-[0-9]{2}-[0-9]{2})/(?<baseFeedName>[^/]+/))index.json";
 
         // Matches package feeds like
         // https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json
-        const string AzureStorageStaticBlobFeedPattern =
+        private const string AzureStorageStaticBlobFeedPattern =
             @"https://([a-z-]+).blob.core.windows.net/[^/]+/index.json";
 
         // Matches package feeds like
@@ -66,11 +66,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// Metadata Token: token to be used for publishing to target feed.
         /// Metadata AssetSelection (optional): Can be "All", "ShippingOnly" or "NonShippingOnly"
         ///                                     Determines which assets are pushed to this feed config
-        /// Metadata Internal (optional): If true, the feed is assumed to be only internally visible.
-        ///                               If false, the feed is public.
+        /// Metadata Internal (optional): If true, the feed is only internally accessible.
+        ///                               If false, the feed is publicly visible and internal builds wwill be rejected.
         ///                               If not provided, then this task will attempt to determine whether the feed URL is publicly visible or not.
-        /// Metadata Isolated (optional): If true, the feed is assumed to be isolated, and stable packages can be pushed to it.
-        ///                               If false, the feed is assumed to be non-isolated, and stable packages will be rejected.
+        ///                               Unless SkipSafetyChecks is passed, the publishing infrastructure will check the accessibility of the feed.
+        /// Metadata Isolated (optional): If true, stable packages can be pushed to this feed.
+        ///                               If false, stable packages will be rejected.
         ///                               If not provided then defaults to false.
         /// Metadata AllowOverwrite (optional): If true, existing azure blob storage assets can be overwritten
         ///                                     If false, an error is thrown if an asset already exists
@@ -1152,7 +1153,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             if (!string.IsNullOrEmpty(feedConfig.LatestLinkShortUrlPrefix))
             {
                 Log.LogMessage(MessageImportance.High, "The following aka.ms links for blobs will be created:");
-                List<AkaMSLink> linksToCreate = blobsToPublish.Select(blob =>
+                IEnumerable<AkaMSLink> linksToCreate = blobsToPublish.Select(blob =>
                 {
                     // Strip away the feed expected suffix (index.json) and append on the
                     // blob path.
@@ -1166,10 +1167,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     };
                     Log.LogMessage(MessageImportance.High, $"  {newLink.ShortUrl} -> {newLink.TargetUrl}");
                     return newLink;
-                }).ToList();
+                });
 
                 AkaMSLinkManager linkManager = new AkaMSLinkManager(AkaMSClientId, AkaMSClientSecret, AkaMSTenant, Log);
-                await linkManager.CreateOrUpateLinksAsync(linksToCreate, AkaMsOwners, AkaMSCreatedBy, AkaMSGroupOwner, true);
+                await linkManager.CreateOrUpdateLinksAsync(linksToCreate, AkaMsOwners, AkaMSCreatedBy, AkaMSGroupOwner, true);
             }
         }
 
