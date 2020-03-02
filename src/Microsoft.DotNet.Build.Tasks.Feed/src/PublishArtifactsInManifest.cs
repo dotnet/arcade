@@ -338,7 +338,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         feedConfig.LatestLinkShortUrlPrefix = latestLinkShortUrlPrefix;
                     }
 
-
                     string categoryKey = fc.ItemSpec.Trim().ToUpper();
                     if (!FeedConfigs.TryGetValue(categoryKey, out var feedsList))
                     {
@@ -1332,7 +1331,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// Not applicable to packages
         /// Generates a link the blob, stripping away any version information in the file or blob path.
         /// E.g. 
-        ///      [LatestLinkShortUrl]/aspnetcore/Runtime/dotnet-hosting-win.exe -> aspnetcore/Runtime/3.1.0-preview2.19511.6/dotnet-hosting-3.1.0-preview2.19511.6-win.exe
+        ///      [LatestLinkShortUrlPrefix]/aspnetcore/Runtime/dotnet-hosting-win.exe -> aspnetcore/Runtime/3.1.0-preview2.19511.6/dotnet-hosting-3.1.0-preview2.19511.6-win.exe
         /// </summary>
         public string LatestLinkShortUrlPrefix { get; set; }
     }
