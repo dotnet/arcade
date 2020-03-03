@@ -62,10 +62,14 @@ try {
   CheckExitCode "Adding source to NuGet.config" $?
 
   Write-Host "Updating dependencies using Darc..."
-  . .\common\darc-init.ps1
-  CheckExitCode "Running darc-init"
-  $DarcExe = "$env:USERPROFILE\.dotnet\tools"
+  $dotnetRoot = InitializeDotNetCli -install:$true
+  $DarcExe = "$dotnetRoot\tools"
+  Create-Directory $DarcExe
   $DarcExe = Resolve-Path $DarcExe
+  . .\common\darc-init.ps1 -toolpath $DarcExe
+  CheckExitCode "Running darc-init"
+
+  $Env:dotnet_root = $dotnetRoot
   & $DarcExe\darc.exe update-dependencies --packages-folder $packagesSource --password $barToken --github-pat $gitHubPat --channel ".NET Tools - Latest"
   CheckExitCode "Updating dependencies"
 }
