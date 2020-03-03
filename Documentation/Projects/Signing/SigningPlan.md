@@ -28,7 +28,7 @@ The responsibility of individual repository builds is to produce artifacts that 
 
 - will disable signing validation (if they have fully stopped producing signed assemblies)
 
-- will publish to Azure Artifacts
+- will publish a build manifest to Azure Artifacts which includes signing information
 
 - will publish to a different (unsigned) artifact feed
 
@@ -40,7 +40,11 @@ The responsibility of individual repository builds is to produce artifacts that 
 
 - *will real sign shipping packages, MSI's, debs, rpm's, etc... by extracting the contents, signing binaries, and re-packaging.
 
-- Signed builds will be published to the signed feed
+- signed builds will be published to the signed feed
+
+- the signing process will use darc to determine what additional assets are required from other builds and need to be signed
+
+- we will not sign NonShipping packages
 
 \* *Initial investigation and exploration has shown that it **should** be possible to extract an MSI's contents, sign, and repackage them.  The current plan is contingent upon being able to repackage installers.  We have begun a proof of concept on repackaging MSI's, but that work is still in progress. If that proves not to be possible, then we will scrap this plan and pursue other options (such as a queue/await model) to reduce sign times during official builds.*
 
@@ -69,6 +73,8 @@ Repositories targeted for signing promotion model are:
 Stage 1:
 
 - Switch repos to consume / publish to unsigned feed and publish to signed feed
+
+- Validate repackaging MSI's is viable via a full proof of concept
 
 Stage 2:
 
@@ -103,3 +109,5 @@ Stage 4:
 - Investigation into signing MSI's is underway
 
 - We have not begun exploring signing RPM's, Deb's, etc... yet but it is not expected that is a high risk part of the plan.
+
+- Mac notarization is not yet automated, after it is automated, we should add that process to the signing promotion stage.
