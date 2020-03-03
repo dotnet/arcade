@@ -221,6 +221,10 @@ Use the same name as the source project the tests will be for, but with ".Tests"
   </RunSettings>
 ```
 
+#### Testing BARViz
+
+There is [documentation in Arcade Services](https://github.com/dotnet/arcade-services/tree/master/src/Maestro/maestro-angular) regarding steps to test locally. Also, there is a task in Arcade Services pipeline that will run these tests via `npm test` during PRs/CI. 
+
 Notes: 
 - Currently, this process has only been verified to work with xUnit tests. Although we do have nUnit in our codebase, it was introduced to help with parallelization of our functional and scenario tests. 
 - Why are the package references in step 2 needed? 
