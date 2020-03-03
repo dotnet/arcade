@@ -362,3 +362,26 @@ Yes, you still need to pass that. Currently, Arcade SDK has some logic that depe
 ### Where can I see publishing logs?
 
 The publishing logs are stored inside an Azure DevOps artifacts container named `PostBuildLogs`. Each activated post-build channel/stage will have a subfolder under `PostBuildLogs`. Each job in a publishing channel/stage will have `.binlogs` in the container.
+
+### Which feeds does Arcade infra publish to?
+
+| Feed Name            | Intended Usage                                               |
+| -------------------- | ------------------------------------------------------------ |
+| DotNet Engineering   | Packages required for engineering infra                      |
+|                      | https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json |
+| DotNet Tools         | Tooling packages, such as Symreader, Sourcelink, etc…        |
+|                      | https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json |
+| DotNet 5             | .NET 5 shipping packages                                     |
+|                      | https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet5/nuget/v3/index.json |
+| DotNet 5 Transport   | .NET 5 non-shipping packages                                 |
+|                      | https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet5-transport/nuget/v3/index.json |
+| Dotnet 3.1           | .NET Core 3.1 shipping packages                              |
+|                      | https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet3.1/nuget/v3/index.json |
+| DotNet 3.1 Transport | .NET Core 3.1 non-shipping packages                          |
+|                      | https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet3.1-transport/nuget/v3/index.json |
+| DotNet 3.1  Blazor   | Packages specific to Blazor 3.1 This is an example of a repo-specific feed/channel |
+|                      | https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet3.1-blazor/nuget/v3/index.json |
+| DotNet 3             | .NET Core 3 shipping packages                                |
+|                      | https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet3/nuget/v3/index.json |
+| DotNet 3 Transport   | .NET Core 3 non-shipping packages                            |
+|                      | https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet3-transport/nuget/v3/index.json |
