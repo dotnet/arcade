@@ -1,6 +1,6 @@
 
-set ENV_PATH=%USERPROFILE%\.vsts-env
-set TMP_ENV_PATH=%USERPROFILE%\.vsts-env-tmp
+set ENV_PATH=%USERPROFILE%\.azdo-env
+set TMP_ENV_PATH=%USERPROFILE%\.azdo-env-tmp
 
 REM Removing pythonpath forces a clean installation of the Azure DevOps client, but subsequent commands may use HELIX libraries
 set _OLD_PYTHONPATH=%PYTHONPATH%
@@ -12,7 +12,7 @@ if NOT EXIST %ENV_PATH%\Scripts\python.exe (
   rmdir /Q /S %TMP_ENV_PATH%
   rmdir /Q /S %ENV_PATH%
   %HELIX_PYTHONPATH% -m virtualenv --no-site-packages %TMP_ENV_PATH%
-  rename %TMP_ENV_PATH% .vsts-env
+  rename %TMP_ENV_PATH% .azdo-env
 )
 
 %ENV_PATH%\Scripts\python.exe -c "import azure.devops" || %ENV_PATH%\Scripts\python.exe -m pip install azure-devops==5.0.0b9

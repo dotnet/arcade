@@ -6,8 +6,8 @@ set -x
 
 script_path=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 
-ENV_PATH=$HOME/.vsts-env
-TMP_ENV_PATH=$HOME/.vsts-env-tmp
+ENV_PATH=$HOME/.azdo-env
+TMP_ENV_PATH=$HOME/.azdo-env-tmp
 date -u +"%FT%TZ"
 
 if [ ! -f $ENV_PATH/bin/python ]; then

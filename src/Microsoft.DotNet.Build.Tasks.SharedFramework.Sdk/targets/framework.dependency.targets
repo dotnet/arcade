@@ -423,8 +423,9 @@
       <_partialCrossgenFlag>0</_partialCrossgenFlag>
     </PropertyGroup>
 
+    <!-- Partial crossgen requires IBCMerge which is only available during official builds. -->
     <!-- Measurements show that doing partial crossgen on these assemblies captures a lot of the potential size saving. -->
-    <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('linux'))">
+    <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('linux')) AND '$(SetPartialCrossgenFlag)' == 'true'">
       <_partialCrossgenFlag Condition="'%(_filesToCrossGen.FileName)' == 'System.ComponentModel.TypeConverter'">1</_partialCrossgenFlag>
       <_partialCrossgenFlag Condition="'%(_filesToCrossGen.FileName)' == 'System.Linq.Expressions'">1</_partialCrossgenFlag>
       <_partialCrossgenFlag Condition="'%(_filesToCrossGen.FileName)' == 'System.Private.Xml'">1</_partialCrossgenFlag>
