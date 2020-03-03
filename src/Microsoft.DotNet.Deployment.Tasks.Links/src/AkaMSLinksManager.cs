@@ -209,7 +209,7 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links.src
                 MaxAttempts = 5
             };
 
-            _log.LogMessage(MessageImportance.High, $"{(overwrite ? "Creating" : "Updating")} {links.Count()} aka.ms links.");
+            _log.LogMessage(MessageImportance.High, $"{(overwrite ? "Updating" : "Creating")} {links.Count()} aka.ms links.");
 
             using (HttpClient client = CreateClient())
             {

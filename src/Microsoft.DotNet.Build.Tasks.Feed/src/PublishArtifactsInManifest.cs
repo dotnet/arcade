@@ -1174,7 +1174,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     ShortUrl = GetLatestShortUrlForBlob(feedConfig, blob),
                     TargetUrl = actualTargetUrl
                 };
-                Log.LogMessage(MessageImportance.High, $"  {newLink.ShortUrl} -> {newLink.TargetUrl}");
+                Log.LogMessage(MessageImportance.High, $"  aka.ms/{newLink.ShortUrl} -> {newLink.TargetUrl}");
                 return newLink;
             });
 
