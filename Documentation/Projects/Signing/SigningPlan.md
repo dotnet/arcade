@@ -10,11 +10,11 @@
 
 ## Overview
 
-Signing is a requirement for artifacts that are officially available for our end customers. It is not required for artifacts that exist solely as an intermediate stage in our official build. Signing is also not required immediately on artifacts which will eventually be available to customers but instead merely needs to be done before we advertise / push the artifact to a channel that we communicate to customers as a supported channel.
+Signing is a requirement for artifacts that are officially available for our end customers. It is not required for artifacts that exist solely as an intermediate stage in our official build process. Signing is also not required immediately on artifacts which will eventually be available to customers but instead merely needs to be done before we advertise / push the artifact to a channel that we communicate to customers as a supported channel.
 
-Removing signing as an intermediate step is both important for the throughput of our builds as well as reliability. Presently the time variance of signing for dotnet/runtime is over one and a half hours. That means a normal variance in our signing process guarantees the two hour build goal will not be met. Giving us flexibility in how signing occurs, and mostly making it an asynchronous process, is required for us to be successful.  
+Removing signing as an intermediate step is both important for the throughput of our builds as well as reliability. Presently the time variance of signing for dotnet/runtime is over one and a half hours. That means a normal variance in our signing process guarantees the two hour build goal will not be met. Giving us flexibility in when signing occurs, and mostly making it an asynchronous process, is required for us to be successful.  
 
-Going forward the expectation is that most repositories will remove signing from their official builds. This will be a hard requirement for any repository on the critical build path of .NET. For other repositories it will be strongly recommended but not required.
+Going forward the expectation is that most repositories will remove signing from their official builds. This will be a hard requirement for any repository on the critical build path of .NET. For other repositories it will be strongly recommended but not required.  Signing will be done at the end of the product build instead of during the build pipeline.
 
 Moving signing to a promotion ring will improve reliablity, and improve signing times by allowing us to flow dependencies faster and sign asynchronously from testing.
 
@@ -46,6 +46,8 @@ The responsibility of individual repository builds is to produce artifacts that 
 
 - we will not sign NonShipping packages
 
+- we will perform signing validation on promoted builds.
+
 \* *Initial investigation and exploration has shown that it **should** be possible to extract an MSI's contents, sign, and repackage them.  The current plan is contingent upon being able to repackage installers.  We have begun a proof of concept on repackaging MSI's, but that work is still in progress. If that proves not to be possible, then we will scrap this plan and pursue other options (such as a queue/await model) to reduce sign times during official builds.*
 
 ## Moving in stages
@@ -66,6 +68,8 @@ Repositories targeted for signing promotion model are:
 
 - aspnetcore
 
+- aspnetcore-tooling
+
 - sdk
 
 - core-sdk
@@ -75,6 +79,10 @@ Stage 1:
 - Switch repos to consume / publish to unsigned feed and publish to signed feed
 
 - Validate repackaging MSI's is viable via a full proof of concept
+
+- Produce a build manifest
+
+- Disable signing validation in repo
 
 Stage 2:
 
@@ -88,13 +96,15 @@ Stage 3:
 
 - Disable publish to signed feeds
 
-- Disable signing validation from repository if it is no longer needed
+- Modify signing validation to support process changes.
+
+  - Enable signing validation in promoted build
 
 Stage 4:
 
 - Move RPM / deb / etc signing into signing promotion
 
-- Disable signing validation from repository if it is no longer needed
+- Enable signing validation of test signed bits in repo builds.
 
 ## Notes
 
