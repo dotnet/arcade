@@ -12,10 +12,6 @@
     <_SymbolProducerTarget Condition="'$(Language)' != 'C++'">CoreBuild</_SymbolProducerTarget>
   </PropertyGroup>
 
-  <PropertyGroup>
-    <NETCORE_ENGINEERING_TELEMETRY>Build</NETCORE_ENGINEERING_TELEMETRY>
-  </PropertyGroup>
-
   <Target Name="DeployToSymStore"
           BeforeTargets="AfterBuild" 
           DependsOnTargets="_DeployToSymStoreSetProperties;_DeployPortableSymbolsToSymStore;_DeployWindowsSymbolsToSymStore" />
@@ -59,6 +55,8 @@
           Inputs="$(TargetPath);$(_TargetPdbPath)"
           Outputs="$(_SymStorePdbPath)"
           Condition="'$(PublishWindowsPdb)' == 'true' and $(_BuildsPortablePdb)">
+
+    <Telemetry EventName="NETCORE_ENGINEERING_TELEMETRY" EventData="Category=Build" />
 
     <PropertyGroup>
       <_PdbConverterPath>$(NuGetPackageRoot)microsoft.diasymreader.pdb2pdb\$(MicrosoftDiaSymReaderPdb2PdbVersion)\tools\Pdb2Pdb.exe</_PdbConverterPath>
