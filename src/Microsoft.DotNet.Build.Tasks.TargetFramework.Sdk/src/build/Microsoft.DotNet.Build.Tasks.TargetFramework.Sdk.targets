@@ -46,6 +46,8 @@
           BeforeTargets="CollectPackageReferences">
     <ItemGroup>
       <_TargetFrameworks Include="$(TargetFrameworks)" />
+      <!-- Remove placeholders from restore. -->
+      <_TargetFrameworks Remove="@(_TargetFrameworks)" Condition="$([System.String]::new('%(Identity)').StartsWith('_'))" />
       <_TargetFrameworks Length="$([System.String]::new('%(Identity)').IndexOf('-'))"/>
       <_TargetFrameworks Condition="'%(Length)' == '-1'" Length="$([System.String]::new('%(Identity)').Length)"/>
       <_TargetFrameworksWithoutTargetFrameworkSuffix Include="$([System.String]::new('%(_TargetFrameworks.Identity)').Substring(0, '%(_TargetFrameworks.Length)'))" />
