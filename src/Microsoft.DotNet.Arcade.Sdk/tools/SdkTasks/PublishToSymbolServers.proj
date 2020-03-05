@@ -92,7 +92,7 @@
                     DryRun="false"
                     ConvertPortablePdbsToWindowsPdbs="false"
                     PdbConversionTreatAsWarning=""
-                    PublishSpecialClrFiles=$(PublishSpecialClrFiles)
+                    PublishSpecialClrFiles="$(PublishSpecialClrFiles)"
                     Condition="$(PublishToSymbolServer) and $(PublishToMSDL)"/>
 
     <!-- 
@@ -111,7 +111,7 @@
                     DryRun="false"
                     ConvertPortablePdbsToWindowsPdbs="false"
                     PdbConversionTreatAsWarning=""
-                    PublishSpecialClrFiles=$(PublishSpecialClrFiles)
+                    PublishSpecialClrFiles="$(PublishSpecialClrFiles)"
                     Condition="$(PublishToSymbolServer) and $(PublishToSymWeb)"/>
   </Target>
 
