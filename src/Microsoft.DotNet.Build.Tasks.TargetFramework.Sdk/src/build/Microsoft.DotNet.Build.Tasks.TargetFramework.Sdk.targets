@@ -43,7 +43,7 @@
   <!-- Restore does not take into account TargetFrameworkSuffix, so we remove the it from the TargetFramework before restore.-->
   <Target Name="StripTargetFrameworkSuffixFromTargetFrameworks"
           Condition="'$(TargetFrameworks)' != ''"
-          BeforeTargets="CollectPackageReferences">
+          BeforeTargets="_GetRestoreTargetFrameworksOutput;_GetRestoreTargetFrameworksAsItems">
     <ItemGroup>
       <_TargetFrameworks Include="$(TargetFrameworks)" />
       <!-- Remove placeholders from restore. -->
@@ -60,7 +60,7 @@
 
   <!-- Attaching the TargetFrameworkSuffix after restore for build.-->
   <Target Name="AttachTargetFrameworkSuffixToTargetFrameworks"
-          AfterTargets="Restore">    
+          AfterTargets="_GenerateRestoreGraph">    
     <PropertyGroup>
       <TargetFrameworks>$(_OriginalTargetFrameworks)</TargetFrameworks>
     </PropertyGroup>
