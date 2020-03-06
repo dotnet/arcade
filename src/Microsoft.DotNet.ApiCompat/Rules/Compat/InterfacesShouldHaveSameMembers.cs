@@ -15,6 +15,9 @@ namespace Microsoft.Cci.Differs.Rules
     [ExportDifferenceRule]
     internal class InterfacesShouldHaveSameMembers : CompatDifferenceRule
     {
+        [Import]
+        public IRuleSettings RuleSettings { get; set; }
+
         public override DifferenceType Diff(IDifferences differences, ITypeDefinitionMember impl, ITypeDefinitionMember contract)
         {
             if (contract != null && impl == null)
@@ -28,7 +31,7 @@ namespace Microsoft.Cci.Differs.Rules
 
             if (impl != null && contract == null)
             {
-                if (impl.ContainingTypeDefinition.IsInterface)
+                if (impl.ContainingTypeDefinition.IsInterface && !CanIgnoreAddedInterfaceMember(impl))
                 {
                     differences.AddIncompatibleDifference(this, $"Interface member '{impl.FullName()}' is present in the {Implementation} but not in the {Contract}.");
                     return DifferenceType.Changed;
@@ -36,6 +39,36 @@ namespace Microsoft.Cci.Differs.Rules
             }
 
             return base.Diff(differences, impl, contract);
+        }
+
+        private bool CanIgnoreAddedInterfaceMember(ITypeDefinitionMember member)
+        {
+            if (!RuleSettings.AllowDefaultInterfaceMethods) {
+                return false;
+            }
+
+            // Default Implementation Method (DIM) scenario.
+            // On DIM, static fields or methods that are not abstract,
+            // have conditional implementation and should not be considered a break
+            if (member is IFieldDefinition field)
+            {
+                return field.IsStatic;
+            }
+
+            if (member is IMethodDefinition method)
+            {
+                return !method.IsAbstract;
+            }
+
+            // We can ignore PropertyDefinition and IEventDefinition
+            // For properties we will receive the changes on the getter and setter as IMethodDefinition later
+            // For events we will receive the changes on the adder and remover as IMethodDefinition later
+            if (member is IPropertyDefinition || member is IEventDefinition)
+            {
+                return true;
+            }
+
+            return false;
         }
     }
 }
