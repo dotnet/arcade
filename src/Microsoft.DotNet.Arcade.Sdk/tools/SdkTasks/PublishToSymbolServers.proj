@@ -13,6 +13,7 @@
       - DotNetSymbolServerTokenSymWeb : PAT to access SymWeb.
       - DotNetSymbolExpirationInDays  : Expiration days for published packages. Default is 3650.
       - SymbolPublishingExclusionsFile : Path to file containing exclusion list to be used by Symbol Uploader.
+      - PublishSpecialClrFiles : If true, publish the DAC, DBI and SOS using the coreclr index. If false, don't do any special indexing.
   -->
 
   <PropertyGroup>
@@ -49,6 +50,7 @@
       <PublishToSymWeb Condition="'$(PublishToSymWeb)' == ''">true</PublishToSymWeb>
       <PublishToMSDL Condition="'$(PublishToMSDL)' == ''">true</PublishToMSDL>
       <PublishToSymbolServer Condition="'@(FilesToPublishToSymbolServer)' == '' and '@(PackagesToPublishToSymbolServer)' == ''">false</PublishToSymbolServer>
+      <PublishSpecialClrFiles Condition="'$(PublishSpecialClrFiles)' == ''">true</PublishSpecialClrFiles>
     </PropertyGroup>
 
     <Message
@@ -90,6 +92,7 @@
                     DryRun="false"
                     ConvertPortablePdbsToWindowsPdbs="false"
                     PdbConversionTreatAsWarning=""
+                    PublishSpecialClrFiles="$(PublishSpecialClrFiles)"
                     Condition="$(PublishToSymbolServer) and $(PublishToMSDL)"/>
 
     <!-- 
@@ -108,6 +111,7 @@
                     DryRun="false"
                     ConvertPortablePdbsToWindowsPdbs="false"
                     PdbConversionTreatAsWarning=""
+                    PublishSpecialClrFiles="$(PublishSpecialClrFiles)"
                     Condition="$(PublishToSymbolServer) and $(PublishToSymWeb)"/>
   </Target>
 
