@@ -27,8 +27,8 @@ While some of these tasks will be largely taken care of by the infrastructure te
 ## Shape Of A Repository's Official Build In .NET 5
 
 Repository builds in .NET 5 must be leaner and more efficient than any of our prior releases. They must build as much in parallel as possible and do no work not essential to the production of outputs necessary to create the product. They must also ensure that source build is treated like a first class citizen rather than a bolt-on. Practically, this means:
-- **Official builds should** only create what is necessary for the shipping product or downstream repos (for dependency flow)
-- **Official builds should not** run tests. Tests should be run in separate CI jobs.
+- **Official builds should** only create what is necessary for the shipping product or downstream repos (for dependency flow). This includes not building tests.
+- **Official builds should not** build or run tests. Tests should be built and run in separate CI jobs.
 - **Official builds should not** sign outputs if that repo is part of the "core" .NET stack (tooling repos are excluded as they ship to VS too).
 - **Official builds should** have minimal long poles.
 - **Official builds should** utilize higher powered machines where possible (when available).
