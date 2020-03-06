@@ -66,8 +66,12 @@
     </PropertyGroup>
   </Target>
 
-  <!-- Hook into ResolvePackageDependenciesForBuild to support transitive dependencies. -->
+  <!--
+    Runs in a leaf project (csproj) to determine best configuration for ProjectReferences.
+    Make sure to run late enough for transitive dependencies which runs before AssignProjectConfiguration.
+  -->
   <Target Name="ResolveP2PReferences"
+          Condition="'@(ProjectReference)' != ''"
           BeforeTargets="AssignProjectConfiguration"
           DependsOnTargets="ResolvePackageDependenciesForBuild">
     <MSBuild Projects="@(ProjectReference)"
