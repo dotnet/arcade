@@ -57,6 +57,7 @@ namespace Microsoft.DotNet.ApiCompat
             CommandOption excludeNonBrowsable = app.Option("--exclude-non-browsable", "When MDIL servicing rules are not being enforced, exclude validation on types that are marked with EditorBrowsable(EditorBrowsableState.Never).", CommandOptionType.NoValue);
             CommandOption excludeAttributes = app.Option("--exclude-attributes", "Specify a api list in the DocId format of which attributes to exclude.", CommandOptionType.SingleValue);
             CommandOption enforceOptionalRules = app.Option("--enforce-optional-rules", "Enforce optional rules, in addition to the mandatory set of rules.", CommandOptionType.NoValue);
+            CommandOption allowDefaultInterfaceMethods = app.Option("--allow-default-interface-methods", "Allow default interface methods additions to not be considered breaks. This flag should only be used if you know your consumers support DIM", CommandOptionType.NoValue);
 
             app.OnExecute(() =>
             {
@@ -120,8 +121,8 @@ namespace Microsoft.DotNet.ApiCompat
                         if (DifferenceWriter.ExitCode != 0)
                             return 0;
 
-                        ICciDifferenceWriter writer = GetDifferenceWriter(output, filter, enforceOptionalRules.HasValue(), mdil.HasValue(), 
-                            excludeNonBrowsable.HasValue(), remapFile.Value(), !skipGroupByAssembly.HasValue(), leftOperandValue, rightOperandValue, excludeAttributes.Value());
+                        ICciDifferenceWriter writer = GetDifferenceWriter(output, filter, enforceOptionalRules.HasValue(), mdil.HasValue(),
+                            excludeNonBrowsable.HasValue(), remapFile.Value(), !skipGroupByAssembly.HasValue(), leftOperandValue, rightOperandValue, excludeAttributes.Value(), allowDefaultInterfaceMethods.HasValue());
                         writer.Write(implDirs.Value(), implAssemblies, contracts.Value, contractAssemblies);
 
                         return 0;
@@ -134,11 +135,11 @@ namespace Microsoft.DotNet.ApiCompat
                     }
                 }
             });
-            
-            return app.Execute(args);            
+
+            return app.Execute(args);
         }
 
-        private static ICciDifferenceWriter GetDifferenceWriter(TextWriter writer, 
+        private static ICciDifferenceWriter GetDifferenceWriter(TextWriter writer,
             IDifferenceFilter filter,
             bool enforceOptionalRules,
             bool mdil,
@@ -147,7 +148,8 @@ namespace Microsoft.DotNet.ApiCompat
             bool groupByAssembly,
             string leftOperand,
             string rightOperand,
-            string excludeAttributes)
+            string excludeAttributes,
+            bool allowDefaultInterfaceMethods)
         {
             CompositionHost container = GetCompositionHost();
 
@@ -189,6 +191,7 @@ namespace Microsoft.DotNet.ApiCompat
                 Implementation = rightOperand
             };
             ExportCciSettings.StaticAttributeFilter = new AttributeFilter(excludeAttributes);
+            ExportCciSettings.StaticRuleSettings = new RuleSettings { AllowDefaultInterfaceMethods = allowDefaultInterfaceMethods};
 
             // Always compose the diff writer to allow it to import or provide exports
             container.SatisfyImports(diffWriter);
