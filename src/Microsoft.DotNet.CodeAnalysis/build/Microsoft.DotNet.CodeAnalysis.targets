@@ -20,14 +20,16 @@
   <ItemGroup>
     <AdditionalFiles Include="$(MSBuildProjectDirectory)\*.analyzerdata" />
     <AdditionalFiles Include="$(MSBuildProjectDirectory)\*.analyzerdata.$(Platform)" />
-    <AdditionalFiles Include="$(MSBuildProjectDirectory)\*.analyzerdata.$(TargetGroup)" />
+    <AdditionalFiles Include="$(MSBuildProjectDirectory)\*.analyzerdata.$(TargetFramework)" />
+    <!-- As of writing possible values: .netstandard, .netframework, .netcoreapp -->
+    <AdditionalFiles Include="$(MSBuildProjectDirectory)\*.analyzerdata$(TargetFrameworkIdentifier.ToLower())" />
 
     <!-- Add the necessary valid Pinvoke mapping file -->
     <AdditionalFiles Include="$(ValidPInvokeMappings)" Condition="'$(ValidPInvokeMappings)' != ''" />
 
     <!-- Disable any analyzers that should not run -->
     <DisabledAnalyzers Condition="'$(IsTestProject)' == 'true' or '$(TargetsUnix)' == 'true' or '$(EnablePInvokeAnalyzer)' != 'true'" Include="PInvokeAnalyzer"/>
-    <DisabledAnalyzers Condition="'$(TargetsWindows)' == 'true' and ($(TargetGroup.Contains('net46')) or $(TargetGroup.Contains('net45')))" Include="PInvokeAnalyzer" />
+    <DisabledAnalyzers Condition="'$(TargetsWindows)' == 'true' and ($(TargetFramework.StartsWith('net46')) or $(TargetFramework.StartsWith('net45')))" Include="PInvokeAnalyzer" />
   </ItemGroup>
 
   <!-- If we have specified any analyzers that need to be disabled write them into the file -->
