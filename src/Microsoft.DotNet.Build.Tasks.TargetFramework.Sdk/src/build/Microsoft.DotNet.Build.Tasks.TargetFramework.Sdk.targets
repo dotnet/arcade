@@ -66,8 +66,10 @@
     </PropertyGroup>
   </Target>
 
+  <!-- Hook into ResolvePackageDependenciesForBuild to support transitive dependencies. -->
   <Target Name="ResolveP2PReferences"
-          BeforeTargets="AssignProjectConfiguration">
+          BeforeTargets="AssignProjectConfiguration"
+          DependsOnTargets="ResolvePackageDependenciesForBuild">
     <MSBuild Projects="@(ProjectReference)"
              Targets="GetTargetFrameworks"
              ContinueOnError="true"
