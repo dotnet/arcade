@@ -113,6 +113,7 @@
       <_ContractDependencyDirectoriesTemp Include="@(ReferencePath -> '%(RootDir)%(Directory)')" />
       <!-- Remove duplicate directories by batching over them -->
       <!-- Add project references first to give precedence to project-specific files -->
+      <_ContractDependencyDirectories Remove="@(_ContractDependencyDirectories)" />
       <_ContractDependencyDirectories Condition="'%(_ContractDependencyDirectoriesTemp.ReferenceSourceTarget)' == 'ProjectReference'" Include="%(_ContractDependencyDirectoriesTemp.Identity)" />
       <_ContractDependencyDirectories Condition="'%(_ContractDependencyDirectoriesTemp.ReferenceSourceTarget)' != 'ProjectReference'" Include="%(_ContractDependencyDirectoriesTemp.Identity)" />
       <_ImplementationDependencyDirectories Include="@(ResolvedMatchingContract -> '%(RootDir)%(Directory)')" />
@@ -122,7 +123,7 @@
 
     <PropertyGroup>
       <MatchingRefApiCompatArgs>$(MatchingRefApiCompatArgs) "$(ImplementationAssemblyAsContract)"</MatchingRefApiCompatArgs>
-      <MatchingRefApiCompatArgs>$(MatchingRefApiCompatArgs) --contract-depends "@(_ContractDependencyDirectories, ','),"</MatchingRefApiCompatArgs>
+      <MatchingRefApiCompatArgs>$(MatchingRefApiCompatArgs) --contract-depends "$(IntermediateOutputPath),@(_ContractDependencyDirectories, ','),"</MatchingRefApiCompatArgs>
       <MatchingRefApiCompatArgs>$(MatchingRefApiCompatArgs) --left-operand implementation</MatchingRefApiCompatArgs>
       <MatchingRefApiCompatArgs>$(MatchingRefApiCompatArgs) --right-operand reference</MatchingRefApiCompatArgs>
       <MatchingRefApiCompatArgs Condition="'$(ApiCompatExcludeAttributeList)' != ''">$(MatchingRefApiCompatArgs) --exclude-attributes "$(ApiCompatExcludeAttributeList)"</MatchingRefApiCompatArgs>
