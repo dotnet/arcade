@@ -23,7 +23,7 @@ We will reassess this step after two weeks to see if we're getting any value out
          1. Passing (document that we ran Arcade through that branch and it was passing)
          2. Failure due to product (this will include the scenario if there are no last known good builds in the last three days, thus, we do not build Arcade against that repo)
          3. Failure due to Arcade/infra failure (this will result in any authors fixing the bug and contributing to the tests in Arcade Validation)
-         4. Failure due to "Impedence Mismatch" (this is when there's too much churn)
+         4. Failure due to "Impedance Mismatch" (this is when there's too much churn)
 2. After this process is set up, we will turn off automatic dependecy flow of Arcade. 
 
 ## Step 2
