@@ -1373,41 +1373,43 @@ reached, when a node has no additional dependencies, or when the dependencies it
 has are only toolset and `--include-toolset` has not been supplied.
 
 The output directory structure is as follows:
-- Default:
-  All outputs will be downloaded under the root folder, in either a 'shipping'
+  - All outputs will be downloaded under the root folder, in either a 'shipping'
   or 'nonshipping' folder  (if `--nonshipping`
   is passed and the build contains non-shipping binaries). Under these
   folders will be two additional folders: 'assets' and 'packages'. Assets
   contains all non-package outputs, while 'packages' contains all NuGet packages.
-- If `--separated` is passed:
-  Each repository in the build structure will be placed in a separate directory,
+  - Each repository in the build structure will be placed in a separate directory,
   with the ID of the build under that directory. Under each build will be a
   'shipping' folder and potentially a 'nonshipping' folder (if `--nonshipping`
   is passed and the build contains non-shipping binaries). Under these
   folders will be two additional folders: 'assets' and 'packages'. Assets
   contains all non-package outputs, while 'packages' contains all NuGet
   packages.
+  - A publish_files directory will contain the layout required for the .NET Core release publishing pipeline to publish nuget packages.
+  - A manifest file will be generated under the root folder containing information about all gathered builds
 
 **Parameters**
 
-- `-i, --id` - BAR ID of build to download. For information on locating the
-  "root build", see [Gathering a build drop](#gathering-a-build-drop)
-- `-r, --repo` - If set, gather a build drop for a build of this repo. Requires
-  --commit. For information on locating the
-  "root build", see [Gathering a build drop](#gathering-a-build-drop)
-- `-c, --commit` - Branch, commit or tag to look up and gather a build drop for.
-  For information on locating the
-  "root build", see [Gathering a build drop](#gathering-a-build-drop)
-- `-o, --output-dir` - **(Required)** Output directory to place build drop.
+- `-i, --id`- BAR ID(s) of the root build(s) that we want to gather. comma separated.
+- `-r, --repo` - Gather a build drop for a build of this repo. Requires --commit or --channel.
+- `-c, --commit` - Commit to gather a drop for.
+- `-o, --output-dir` - Required. Output directory to place build drop.
+- `--max-downloads` - (Default: 4) Maximum concurrent downloads.
+- `--download-timeout` - (Default: 30) Timeout in seconds for downloading each asset.
 - `-f, --full` - Gather the full drop (build and all input builds).
-- `-s, --separated` - Separate out each source repo in the drop into separate directories.
-- `--continue-on-error` - Continue on error rather than halting.  Allows for
-  gathering drops in cases where some outputs might not be able to be
-  downloaded.
-- `--non-shipping` - (Default: true) Include non-shipping assets.
-- `--overwrite` - Overwrite existing files at the destination.
+- `--release-name`- (Default: 3.0.0-previewN) Name of release to use when generating release json.
+- `--continue-on-error` - Continue on error rather than halting.
+- `--non-shipping`- Include non-shipping assets.
+- `--overwrite- Overwrite existing files at the destination.
 - `--dry-run` - Do not actually download files, but print what we would do.
-- `--include-toolset` - Include toolset dependencies.
+- `--include-toolset`- Include toolset dependencies.
+- `--channel` - Download the latest from this channel. Matched on substring.
+- `--no-workarounds` - Do not allow workarounds when gathering the drop.
+- `--skip-existing` - Skip files that already exist at the destination.
+- `--include-released` - Include builds that are marked as released
+- `--latest-location` - Download assets from their latest known location.
+- `--sas-suffixes` - List of potential uri suffixes that can be used if anonymous access to a blob uri fails.                               Appended directly to the end of the URI (use full SAS suffix starting with '?'.
+- `--asset-filter` - Only download assets matching the given regex filter
 
 **Sample**:
 
