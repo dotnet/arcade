@@ -100,6 +100,7 @@ request_infra_retry('Optional reason string')
 ###### Outside python:
 
 Linux / OSX: `$HELIX_PYTHONPATH -c "from helix.workitemutil import request_infra_retry; request_infra_retry('Optional reason string')"`
+
 Windows: `%HELIX_PYTHONPATH% -c "from helix.workitemutil import request_infra_retry; request_infra_retry('Optional reason string')"`
 
 #### Request post-workitem reboot
@@ -119,6 +120,7 @@ request_reboot('Optional reason string')
 ###### Outside python:
 
 Linux / OSX: `$HELIX_PYTHONPATH -c "from helix.workitemutil import request_reboot; request_reboot('Optional reason string')"`
+
 Windows: `%HELIX_PYTHONPATH% -c "from helix.workitemutil import request_reboot; request_reboot('Optional reason string')"`
 
 ### All Possible Options
