@@ -229,12 +229,9 @@ namespace Microsoft.DotNet.ApiCompat
                         throw new FileNotFoundException("File {0} was not found!", file);
                     }
 
-
                     addFile(file);
                 }
             }
-
-            return;
         }
 
         private static TextWriter GetOutput(string outFilePath)
