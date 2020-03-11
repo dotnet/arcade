@@ -31,7 +31,7 @@ namespace Microsoft.DotNet.SwaggerGenerator.Languages
 
                 if (reference is TypeReference.TypeModelReference typeModelRef)
                 {
-                    return Helpers.PascalCase(typeModelRef.Model.Name.AsSpan());
+                    return "Models." + Helpers.PascalCase(typeModelRef.Model.Name.AsSpan());
                 }
 
                 if (reference is TypeReference.ArrayTypeReference arrayTypeRef)

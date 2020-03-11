@@ -4,12 +4,13 @@
 
 using Microsoft.Build.Framework;
 using Microsoft.DotNet.Build.CloudTestTasks;
+using Microsoft.DotNet.Deployment.Tasks.Links.src;
 using Microsoft.DotNet.Maestro.Client;
 using Microsoft.DotNet.Maestro.Client.Models;
+using Microsoft.DotNet.VersionTools.BuildManifest;
 using Microsoft.DotNet.VersionTools.BuildManifest.Model;
 using Microsoft.DotNet.VersionTools.Util;
 using NuGet.Packaging.Core;
-using NuGet.Versioning;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -31,25 +32,27 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
     /// </summary>
     public class PublishArtifactsInManifest : MSBuild.Task
     {
+        private const string ExpectedFeedUrlSuffix = "index.json";
+
         // Matches package feeds like
         // https://dotnet-feed-internal.azurewebsites.net/container/dotnet-core-internal/sig/dsdfasdfasdf234234s/se/2020-02-02/darc-int-dotnet-arcade-services-babababababe-08/index.json
-        const string AzureStorageProxyFeedPattern =
+        private const string AzureStorageProxyFeedPattern =
             @"(?<feedURL>https://([a-z-]+).azurewebsites.net/container/(?<container>[^/]+)/sig/\w+/se/([0-9]{4}-[0-9]{2}-[0-9]{2})/(?<baseFeedName>darc-(?<type>int|pub)-(?<repository>.+?)-(?<sha>[A-Fa-f0-9]{7,40})-?(?<subversion>\d*)/))index.json";
 
         // Matches package feeds like the one below. Special case for static internal proxy-backed feed
         // https://dotnet-feed-internal.azurewebsites.net/container/dotnet-core-internal/sig/dsdfasdfasdf234234s/se/2020-02-02/darc-int-dotnet-arcade-services-babababababe-08/index.json
-        const string AzureStorageProxyFeedStaticPattern =
+        private const string AzureStorageProxyFeedStaticPattern =
             @"(?<feedURL>https://([a-z-]+).azurewebsites.net/container/(?<container>[^/]+)/sig/\w+/se/([0-9]{4}-[0-9]{2}-[0-9]{2})/(?<baseFeedName>[^/]+/))index.json";
 
         // Matches package feeds like
         // https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json
-        const string AzureStorageStaticBlobFeedPattern =
+        private const string AzureStorageStaticBlobFeedPattern =
             @"https://([a-z-]+).blob.core.windows.net/[^/]+/index.json";
 
         // Matches package feeds like
         // https://pkgs.dev.azure.com/dnceng/public/_packaging/public-feed-name/nuget/v3/index.json
         // or https://pkgs.dev.azure.com/dnceng/_packaging/internal-feed-name/nuget/v3/index.json
-        public const string AzDoNuGetFeedPattern = 
+        public const string AzDoNuGetFeedPattern =
             @"https://pkgs.dev.azure.com/(?<account>[a-zA-Z0-9]+)/(?<visibility>[a-zA-Z0-9-]+/)?_packaging/(?<feed>.+)/nuget/v3/index.json";
         private const string SymbolPackageSuffix = ".symbols.nupkg";
         private const string PackageSuffix = ".nupkg";
@@ -61,6 +64,24 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// Metadata TargetURL: target URL where assets of this category should be published to.
         /// Metadata Type: type of the target feed.
         /// Metadata Token: token to be used for publishing to target feed.
+        /// Metadata AssetSelection (optional): Can be "All", "ShippingOnly" or "NonShippingOnly"
+        ///                                     Determines which assets are pushed to this feed config
+        /// Metadata Internal (optional): If true, the feed is only internally accessible.
+        ///                               If false, the feed is publicly visible and internal builds wwill be rejected.
+        ///                               If not provided, then this task will attempt to determine whether the feed URL is publicly visible or not.
+        ///                               Unless SkipSafetyChecks is passed, the publishing infrastructure will check the accessibility of the feed.
+        /// Metadata Isolated (optional): If true, stable packages can be pushed to this feed.
+        ///                               If false, stable packages will be rejected.
+        ///                               If not provided then defaults to false.
+        /// Metadata AllowOverwrite (optional): If true, existing azure blob storage assets can be overwritten
+        ///                                     If false, an error is thrown if an asset already exists
+        ///                                     If not provided then defaults to false.
+        ///                                     Azure DevOps feeds can never be overwritten.
+        /// Metadata LatestLinkShortUrlPrefix (optional): If provided, AKA ms links are generated (for artifacts blobs only)
+        ///                                               that target this short url path. The link is construct as such:
+        ///                                               aka.ms/AkaShortUrlPath/BlobArtifactPath -> Target blob url
+        ///                                               If specified, then AkaMSClientId, AkaMSClientSecret and AkaMSTenant must be provided.
+        ///                                               The version information is stripped away from the file and blob artifact path.
         /// </summary>
         [Required]
         public ITaskItem[] TargetFeedConfig { get; set; }
@@ -127,12 +148,23 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// </summary>
         public bool SkipSafetyChecks { get; set; } = false;
 
+        #region Information for AKA MS link generation
+
+        public string AkaMSClientId { get; set; }
+        public string AkaMSClientSecret { get; set; }
+        public string AkaMSTenant { get; set; }
+        public string AkaMsOwners { get; set; }
+        public string AkaMSCreatedBy { get; set; }
+        public string AkaMSGroupOwner { get; set; }
+        #endregion
+
         public readonly Dictionary<string, List<FeedConfig>> FeedConfigs = new Dictionary<string, List<FeedConfig>>();
 
         private readonly Dictionary<string, List<PackageArtifactModel>> PackagesByCategory = new Dictionary<string, List<PackageArtifactModel>>();
 
         private readonly Dictionary<string, List<BlobArtifactModel>> BlobsByCategory = new Dictionary<string, List<BlobArtifactModel>>();
 
+        private AkaMSLinkManager _linkManager = null;
 
         public override bool Execute()
         {
@@ -164,7 +196,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 Maestro.Client.Models.Build buildInformation = await client.Builds.GetBuildAsync(BARBuildId);
 
                 await ParseTargetFeedConfigAsync();
-                
+
                 // Return errors from parsing FeedConfig
                 if (Log.HasLoggedErrors)
                 {
@@ -174,13 +206,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 SplitArtifactsInCategories(buildModel);
 
                 // Return errors from the safety checks
-                if (Log.HasLoggedErrors)
-                {
-                    return false;
-                }
-
-                CheckForStableAssets();
-
                 if (Log.HasLoggedErrors)
                 {
                     return false;
@@ -216,6 +241,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         string.IsNullOrEmpty(type))
                     {
                         Log.LogError($"Invalid FeedConfig entry. {nameof(FeedConfig.TargetURL)}='{targetFeedUrl}' {nameof(FeedConfig.Type)}='{type}' {nameof(FeedConfig.Token)}='{feedKey}'");
+                        continue;
+                    }
+
+                    if (!targetFeedUrl.EndsWith(ExpectedFeedUrlSuffix))
+                    {
+                        Log.LogError($"Exepcted that feed '{targetFeedUrl}' would end in {ExpectedFeedUrlSuffix}");
                         continue;
                     }
 
@@ -292,6 +323,29 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         feedConfig.AllowOverwrite = feedSetting;
                     }
 
+                    string latestLinkShortUrlPrefix = fc.GetMetadata(nameof(FeedConfig.LatestLinkShortUrlPrefix));
+                    if (!string.IsNullOrEmpty(latestLinkShortUrlPrefix))
+                    {
+                        // Verify other inputs are provided
+                        if (string.IsNullOrEmpty(AkaMSClientId) ||
+                            string.IsNullOrEmpty(AkaMSClientSecret) ||
+                            string.IsNullOrEmpty(AkaMSTenant) ||
+                            string.IsNullOrEmpty(AkaMsOwners) ||
+                            string.IsNullOrEmpty(AkaMSCreatedBy))
+                        {
+                            Log.LogError($"If a short url path is provided, please provide {nameof(AkaMSClientId)}, {nameof(AkaMSClientSecret)}, " +
+                                $"{nameof(AkaMSTenant)}, {nameof(AkaMsOwners)}, {nameof(AkaMSCreatedBy)}");
+                            continue;
+                        }
+                        feedConfig.LatestLinkShortUrlPrefix = latestLinkShortUrlPrefix;
+
+                        // Set up the link manager if it hasn't already been done
+                        if (_linkManager == null)
+                        {
+                            _linkManager = new AkaMSLinkManager(AkaMSClientId, AkaMSClientSecret, AkaMSTenant, Log);
+                        }
+                    }
+
                     string categoryKey = fc.ItemSpec.Trim().ToUpper();
                     if (!FeedConfigs.TryGetValue(categoryKey, out var feedsList))
                     {
@@ -300,6 +354,32 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     FeedConfigs[categoryKey].Add(feedConfig);
                 }
             }
+        }
+
+        /// <summary>
+        /// Adds `feedConfig.TargetURL` to the list of locations of the asset pointed by `assetRecord`.
+        /// </summary>
+        /// <param name="client">Maestro++ API client</param>
+        /// <param name="assetRecord">Asset that will have location list updated</param>
+        /// <param name="feedConfig">Configuration of where the asset was published</param>
+        /// <param name="assetLocationType">Type of feed location that is being added</param>
+        /// <returns>Whether the location was added to the list or not.</returns>
+        private async Task<bool> TryAddAssetLocationAsync(IMaestroApi client, Asset assetRecord, FeedConfig feedConfig, AddAssetLocationToAssetAssetLocationType assetLocationType)
+        {
+            try
+            {
+                await client.Assets.AddAssetLocationToAssetAsync(assetRecord.Id, assetLocationType, feedConfig.TargetURL);
+            }
+            catch (RestApiException e) when (e.Response.StatusCode == System.Net.HttpStatusCode.NotModified)
+            {
+                // This is likely due to some concurrent operation trying to add same location to same asset.
+                // This is not frequent, but it's possible, for instance, when a build publishes to multiple 
+                // channels that target same feeds.
+                Log.LogMessage($"Asset with Id {assetRecord.Id}, Version {assetRecord.Version} already has location {feedConfig.TargetURL}");
+                return false;
+            }
+
+            return true;
         }
 
         /// <summary>
@@ -373,58 +453,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             }
 
             return isPublic;
-        }
-
-        /// <summary>
-        ///  Run a check to verify that stable assets are not published to
-        ///  locations they should not be published.
-        ///  
-        /// For now, this is only done for packages since feeds are
-        /// immutable.
-        /// </summary>
-        public void CheckForStableAssets()
-        {
-            if (SkipSafetyChecks)
-            {
-                return;
-            }
-
-            foreach (var packagesPerCategory in PackagesByCategory)
-            {
-                var category = packagesPerCategory.Key;
-                var packages = packagesPerCategory.Value;
-
-                if (FeedConfigs.TryGetValue(category, out List<FeedConfig> feedConfigsForCategory))
-                {
-                    foreach (var feedConfig in feedConfigsForCategory)
-                    {
-                        // Look at the version numbers. If any of the packages here are stable and about to be published to a
-                        // non-isolated feed, then issue an error. Isolated feeds may recieve all packages.
-                        if (feedConfig.Isolated)
-                        {
-                            continue;
-                        }
-
-                        List<PackageArtifactModel> filteredPackages = FilterPackages(packages, feedConfig);
-
-                        foreach (var package in filteredPackages)
-                        {
-                            if (!NuGetVersion.TryParse(package.Version, out NuGetVersion version))
-                            {
-                                Log.LogError($"Package '{package.Id}' has invalid version '{package.Version}'");
-                            }
-                            // We want to avoid pushing non-final bits with final version numbers to feeds that are in general
-                            // use by the public. This is for technical (can't overwrite the original packages) reasons as well as 
-                            // to avoid confusion. Because .NET core generally brands its "final" bits without prerelease version
-                            // suffixes (e.g. 3.0.0-preview1), test to see whether a prerelease suffix exists.
-                            else if (!version.IsPrerelease)
-                            {
-                                Log.LogError($"Package '{package.Id}' has stable version '{package.Version}' but is targeted at a non-isolated feed '{feedConfig.TargetURL}'");
-                            }
-                        }
-                    }
-                }
-            }
         }
 
         private async Task HandlePackagePublishingAsync(IMaestroApi client, Maestro.Client.Models.Build buildInformation)
@@ -634,15 +662,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     continue;
                 }
 
-                var assetWithLocations = await client.Assets.GetAssetAsync(assetRecord.Id);
-
-                if (assetWithLocations?.Locations.Any(al => al.Location.Equals(feedConfig.TargetURL, StringComparison.OrdinalIgnoreCase)) ?? false)
-                {
-                    Log.LogMessage($"Asset with Id {package.Id}, Version {package.Version} already has location {feedConfig.TargetURL}");
-                    continue;
-                }
-
-                await client.Assets.AddAssetLocationToAssetAsync(assetRecord.Id, AddAssetLocationToAssetAssetLocationType.NugetFeed, feedConfig.TargetURL);
+                await TryAddAssetLocationAsync(client, assetRecord, feedConfig, AddAssetLocationToAssetAssetLocationType.NugetFeed);
             }
 
             await PushNugetPackagesAsync(packagesToPublish, feedConfig, maxClients: MaxClients,
@@ -745,19 +765,31 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// <summary>
         ///     Push a single package to the azure devops nuget feed.
         /// </summary>
-        /// <param name="feedConfig">Feed</param>
+        /// <param name="feedConfig">Infos about the target feed</param>
         /// <param name="packageToPublish">Package to push</param>
         /// <returns>Task</returns>
         /// <remarks>
         ///     This method attempts to take the most efficient path to push the package.
-        ///     There are two cases:
+        ///     
+        ///     There are three cases:
         ///         - The package does not exist, and is pushed normally
         ///         - The package exists, and its contents may or may not be equivalent.
-        ///     The second case is is by far the most common. So, we first attempt to push the package normally using nuget.exe.
-        ///     If this fails, this could mean any number of things (like failed auth). But in normal circumstances, this might
-        ///     mean the package already exists. This either means that we are attempting to push the same package, or attemtping to push
-        ///     a different package with the same id and version. The second case is an error, as azure devops feeds are immutable, the former
-        ///     is simply a case where we should continue onward.
+        ///         - Azure DevOps is having some issue and we didn't succeed to publish at first.
+        ///         
+        ///     The second case is by far the most common. So, we first attempt to push the 
+        ///     package normally using nuget.exe. If this fails, this could mean any number of 
+        ///     things (like failed auth). But in normal circumstances, this might mean the 
+        ///     package already exists. This either means that we are attempting to push the 
+        ///     same package, or attemtping to push a different package with the same id and 
+        ///     version. The second case is an error, as azure devops feeds are immutable, 
+        ///     the former is simply a case where we should continue onward.
+        ///     
+        ///     To handle the third case we rely on the call to compare file contents 
+        ///     `IsLocalPackageIdenticalToFeedPackage` to return null - meaning that it got 
+        ///     a 404 when looking up the file in the feed - to trigger a retry on the publish 
+        ///     operation. This was implemented this way becase we didn't want to rely on 
+        ///     parsing the output of the push operation - which does a call to `nuget.exe` 
+        ///     behind the scenes.
         /// </remarks>
         private async Task PushNugetPackageAsync(FeedConfig feedConfig, HttpClient client, string localPackageLocation, string id, string version,
             string feedAccount, string feedVisibility, string feedName)
@@ -766,34 +798,51 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
             try
             {
-                // The feed key when pushing to AzDo feeds is "AzureDevOps" (works with the credential helper).
-                int result = await StartProcessAsync(NugetPath, $"push \"{localPackageLocation}\" -Source \"{feedConfig.TargetURL}\" -NonInteractive -ApiKey AzureDevOps");
-                if (result != 0)
+                /// true - Package exists on the feed AND is identical to local one.
+                /// false - Package exists on the feed AND is not identical to local one.
+                /// null - Package DOES NOT EXIST on the feed.
+                bool? packageExistIsIdentical = null;
+
+                const int maxNuGetPushAttempts = 3;
+                const int delayInSecondsBetweenAttempts = 3;
+                int attemptIndex = 0;
+
+                do
                 {
+                    // The feed key when pushing to AzDo feeds is "AzureDevOps" (works with the credential helper).
+                    int result = await StartProcessAsync(NugetPath, $"push \"{localPackageLocation}\" -Source \"{feedConfig.TargetURL}\" -NonInteractive -ApiKey AzureDevOps");
+
+                    if (result == 0)
+                    {
+                        break;
+                    }
+
                     Log.LogMessage(MessageImportance.Low, $"Failed to push {localPackageLocation}, attempting to determine whether the package already exists on the feed with the same content.");
 
-                    try
+                    string packageContentUrl = $"https://pkgs.dev.azure.com/{feedAccount}/{feedVisibility}_apis/packaging/feeds/{feedName}/nuget/packages/{id}/versions/{version}/content";
+                    packageExistIsIdentical = await IsLocalPackageIdenticalToFeedPackage(localPackageLocation, packageContentUrl, client);
+
+                    if (packageExistIsIdentical == true)
                     {
-                        string packageContentUrl = $"https://pkgs.dev.azure.com/{feedAccount}/{feedVisibility}_apis/packaging/feeds/{feedName}/nuget/packages/{id}/versions/{version}/content";
-
-                        if (await IsLocalPackageIdenticalToFeedPackage(localPackageLocation, packageContentUrl, client))
-                        {
-                            Log.LogMessage(MessageImportance.Normal, $"Package '{localPackageLocation}' already exists on '{feedConfig.TargetURL}' but has the same content. Skipping.");
-                        }
-                        else
-                        {
-                            Log.LogError($"Package '{localPackageLocation}' already exists on '{feedConfig.TargetURL}' with different content.");
-                        }
-
-                        return;
+                        Log.LogMessage(MessageImportance.Normal, $"Package '{localPackageLocation}' already exists on '{feedConfig.TargetURL}' but has the same content. Skipping.");
                     }
-                    catch (Exception e)
+                    else if (packageExistIsIdentical == false)
                     {
-                        // This is an error. It means we were unable to push using nuget, and then could not access to the package otherwise.
-                        Log.LogWarning($"Failed to determine whether an existing package on the feed has the same content as '{localPackageLocation}': {e.Message}");
+                        Log.LogError($"Package '{localPackageLocation}' already exists on '{feedConfig.TargetURL}' with different content.");
                     }
+                    else
+                    {
+                        // packageExist == null, which means we didn't find the package on the feed
+                        // will retry the push and check again
+                        await Task.Delay(TimeSpan.FromSeconds(delayInSecondsBetweenAttempts))
+                            .ConfigureAwait(false);
+                    }
+                }
+                while (packageExistIsIdentical == null && attemptIndex++ <= maxNuGetPushAttempts);
 
-                    Log.LogError($"Failed to push '{id}@{version}'. Result code '{result}'.");
+                if (attemptIndex > maxNuGetPushAttempts)
+                {
+                    Log.LogError($"Failed to publish package '{id}@{version}' after {maxNuGetPushAttempts} attempts.");
                 }
             }
             catch (Exception e)
@@ -818,41 +867,50 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         ///       the streams make no gaurantee that they will return a full block each time when read operations are performed, so we
         ///       must be sure to only compare the minimum number of bytes returned.
         /// </remarks>
-        private async Task<bool> IsLocalPackageIdenticalToFeedPackage(string localPackageFullPath, string packageContentUrl, HttpClient client)
+        private async Task<bool?> IsLocalPackageIdenticalToFeedPackage(string localPackageFullPath, string packageContentUrl, HttpClient client)
         {
             Log.LogMessage($"Getting package content from {packageContentUrl} and comparing to {localPackageFullPath}");
 
-            using (Stream localFileStream = File.OpenRead(localPackageFullPath))
-            using (HttpResponseMessage response = await client.GetAsync(packageContentUrl))
+            try
             {
-                response.EnsureSuccessStatusCode();
-
-                // Check the headers for content length and md5
-                bool md5HeaderAvailable = response.Headers.TryGetValues("Content-MD5", out var md5);
-                bool lengthHeaderAvailable = response.Headers.TryGetValues("Content-Length", out var contentLength);
-
-                if (lengthHeaderAvailable && long.Parse(contentLength.Single()) != localFileStream.Length)
+                using (Stream localFileStream = File.OpenRead(localPackageFullPath))
+                using (HttpResponseMessage response = await client.GetAsync(packageContentUrl))
                 {
-                    Log.LogMessage(MessageImportance.Low, $"Package '{localPackageFullPath}' has different length than remote package '{packageContentUrl}'.");
-                    return false;
-                }
+                    response.EnsureSuccessStatusCode();
 
-                if (md5HeaderAvailable)
-                {
-                    var localMD5 = AzureStorageUtils.CalculateMD5(localPackageFullPath);
-                    if (!localMD5.Equals(md5.Single(), StringComparison.OrdinalIgnoreCase))
+                    // Check the headers for content length and md5
+                    bool md5HeaderAvailable = response.Headers.TryGetValues("Content-MD5", out var md5);
+                    bool lengthHeaderAvailable = response.Headers.TryGetValues("Content-Length", out var contentLength);
+
+                    if (lengthHeaderAvailable && long.Parse(contentLength.Single()) != localFileStream.Length)
                     {
-                        Log.LogMessage(MessageImportance.Low, $"Package '{localPackageFullPath}' has different MD5 hash than remote package '{packageContentUrl}'.");
+                        Log.LogMessage(MessageImportance.Low, $"Package '{localPackageFullPath}' has different length than remote package '{packageContentUrl}'.");
+                        return false;
                     }
 
-                    return true;
+                    if (md5HeaderAvailable)
+                    {
+                        var localMD5 = AzureStorageUtils.CalculateMD5(localPackageFullPath);
+                        if (!localMD5.Equals(md5.Single(), StringComparison.OrdinalIgnoreCase))
+                        {
+                            Log.LogMessage(MessageImportance.Low, $"Package '{localPackageFullPath}' has different MD5 hash than remote package '{packageContentUrl}'.");
+                        }
+
+                        return true;
+                    }
+
+                    const int BufferSize = 64 * 1024;
+
+                    // Otherwise, compare the streams
+                    var remoteStream = await response.Content.ReadAsStreamAsync();
+                    return await CompareStreamsAsync(localFileStream, remoteStream, BufferSize);
                 }
-
-                const int BufferSize = 64 * 1024;
-
-                // Otherwise, compare the streams
-                var remoteStream = await response.Content.ReadAsStreamAsync();
-                return await CompareStreamsAsync(localFileStream, remoteStream, BufferSize);
+            }
+            // String based comparison because the status code isn't exposed in HttpRequestException
+            // see here: https://github.com/dotnet/runtime/issues/23648
+            catch (HttpRequestException e) when (e.Message.Contains("404 (Not Found)"))
+            {
+                return null;
             }
         }
 
@@ -953,15 +1011,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     continue;
                 }
 
-                var assetWithLocations = await client.Assets.GetAssetAsync(assetRecord.Id);
-
-                if (assetWithLocations?.Locations.Any(al => al.Location.Equals(feedConfig.TargetURL, StringComparison.OrdinalIgnoreCase)) ?? false)
+                if (await TryAddAssetLocationAsync(client, assetRecord, feedConfig, AddAssetLocationToAssetAssetLocationType.Container) == false)
                 {
-                    Log.LogMessage($"Asset with Id {blob.Id} already has location {feedConfig.TargetURL}");
                     continue;
                 }
-
-                await client.Assets.AddAssetLocationToAssetAsync(assetRecord.Id, AddAssetLocationToAssetAssetLocationType.Container, feedConfig.TargetURL);
 
                 // Applies to symbol packages and core-sdk's VS feed packages
                 if (blob.Id.EndsWith(PackageSuffix, StringComparison.OrdinalIgnoreCase))
@@ -1041,15 +1094,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     continue;
                 }
 
-                var assetWithLocations = await client.Assets.GetAssetAsync(assetRecord.Id);
-
-                if (assetWithLocations?.Locations.Any(al => al.Location.Equals(feedConfig.TargetURL, StringComparison.OrdinalIgnoreCase)) ?? false)
-                {
-                    Log.LogMessage($"Asset with Id {package.Id}, Version {package.Version} already has location {feedConfig.TargetURL}");
-                    continue;
-                }
-
-                await client.Assets.AddAssetLocationToAssetAsync(assetRecord.Id, AddAssetLocationToAssetAssetLocationType.NugetFeed, feedConfig.TargetURL);
+                await TryAddAssetLocationAsync(client, assetRecord, feedConfig, AddAssetLocationToAssetAssetLocationType.NugetFeed);
             }
 
             await blobFeedAction.PushToFeedAsync(packages, pushOptions);
@@ -1090,9 +1135,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 PassIfExistingItemIdentical = true
             };
 
-            foreach (var blob in blobsToPublish)
+            foreach (BlobArtifactModel blob in blobsToPublish)
             {
-                var assetRecord = buildInformation.Assets
+                Asset assetRecord = buildInformation.Assets
                     .Where(a => a.Name.Equals(blob.Id))
                     .SingleOrDefault();
 
@@ -1102,18 +1147,52 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     continue;
                 }
 
-                var assetWithLocations = await client.Assets.GetAssetAsync(assetRecord.Id);
-
-                if (assetWithLocations?.Locations.Any(al => al.Location.Equals(feedConfig.TargetURL, StringComparison.OrdinalIgnoreCase)) ?? false)
-                {
-                    Log.LogMessage($"Asset with Id {blob.Id} already has location {feedConfig.TargetURL}");
-                    continue;
-                }
-
-                await client.Assets.AddAssetLocationToAssetAsync(assetRecord.Id, AddAssetLocationToAssetAssetLocationType.Container, feedConfig.TargetURL);
+                await TryAddAssetLocationAsync(client, assetRecord, feedConfig, AddAssetLocationToAssetAssetLocationType.Container);
             }
 
             await blobFeedAction.PublishToFlatContainerAsync(blobs, maxClients: MaxClients, pushOptions);
+            await CreateOrUpdateLatestLinksAsync(blobsToPublish, feedConfig);
+        }
+
+        private async Task CreateOrUpdateLatestLinksAsync(List<BlobArtifactModel> blobsToPublish, FeedConfig feedConfig)
+        {
+            if (string.IsNullOrEmpty(feedConfig.LatestLinkShortUrlPrefix))
+            {
+                return;
+            }
+
+            Log.LogMessage(MessageImportance.High, "The following aka.ms links for blobs will be created:");
+            IEnumerable<AkaMSLink> linksToCreate = blobsToPublish.Select(blob =>
+            {
+                // Strip away the feed expected suffix (index.json) and append on the
+                // blob path.
+                string actualTargetUrl = feedConfig.TargetURL.Substring(0,
+                    feedConfig.TargetURL.Length - ExpectedFeedUrlSuffix.Length) + blob.Id;
+
+                AkaMSLink newLink = new AkaMSLink
+                {
+                    ShortUrl = GetLatestShortUrlForBlob(feedConfig, blob),
+                    TargetUrl = actualTargetUrl
+                };
+                Log.LogMessage(MessageImportance.High, $"  aka.ms/{newLink.ShortUrl} -> {newLink.TargetUrl}");
+                return newLink;
+            });
+
+            await _linkManager.CreateOrUpdateLinksAsync(linksToCreate, AkaMsOwners, AkaMSCreatedBy, AkaMSGroupOwner, true);
+        }
+
+        /// <summary>
+        ///     Get the short url for a blob.
+        /// </summary>
+        /// <param name="feedConfig">Feed configuration</param>
+        /// <param name="blob">Blob</param>
+        /// <returns>Short url prefix for the blob.</returns>
+        /// <remarks>
+        public string GetLatestShortUrlForBlob(FeedConfig feedConfig, BlobArtifactModel blob)
+        {
+            string blobIdWithoutVersions = VersionIdentifier.RemoveVersions(blob.Id);
+
+            return Path.Combine(feedConfig.LatestLinkShortUrlPrefix, blobIdWithoutVersions).Replace("\\", "/");
         }
 
         private BlobFeedAction CreateBlobFeedAction(FeedConfig feedConfig)
@@ -1255,5 +1334,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// valid for azure blob storage feeds.
         /// </summary>
         public bool AllowOverwrite { get; set; } = false;
+        /// <summary>
+        /// Prefix of aka.ms links that should be generated for blobs.
+        /// Not applicable to packages
+        /// Generates a link the blob, stripping away any version information in the file or blob path.
+        /// E.g. 
+        ///      [LatestLinkShortUrlPrefix]/aspnetcore/Runtime/dotnet-hosting-win.exe -> aspnetcore/Runtime/3.1.0-preview2.19511.6/dotnet-hosting-3.1.0-preview2.19511.6-win.exe
+        /// </summary>
+        public string LatestLinkShortUrlPrefix { get; set; }
     }
 }

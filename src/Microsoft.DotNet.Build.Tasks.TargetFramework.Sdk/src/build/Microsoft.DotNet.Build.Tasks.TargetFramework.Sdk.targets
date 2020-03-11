@@ -1,17 +1,17 @@
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
 <Project>
-  <UsingTask TaskName="ChooseBestP2PTargetFrameworkTask" AssemblyFile="$(DotNetBuildTasksTargetFrameworkSdkAssembly)"/>
-  <UsingTask TaskName="ChooseBestTargetFrameworksTask" AssemblyFile="$(DotNetBuildTasksTargetFrameworkSdkAssembly)"/>
-  <UsingTask TaskName="AddTargetFrameworksToProjectTask" AssemblyFile="$(DotNetBuildTasksTargetFrameworkSdkAssembly)"/>
+  <UsingTask TaskName="ChooseBestP2PTargetFrameworkTask" AssemblyFile="$(DotNetBuildTasksTargetFrameworkSdkAssembly)" />
+  <UsingTask TaskName="ChooseBestTargetFrameworksTask" AssemblyFile="$(DotNetBuildTasksTargetFrameworkSdkAssembly)" />
+  <UsingTask TaskName="AddTargetFrameworksToProjectTask" AssemblyFile="$(DotNetBuildTasksTargetFrameworkSdkAssembly)" />
+  <UsingTask TaskName="GenerateRuntimeOSPropsFile" AssemblyFile="$(DotNetBuildTasksTargetFrameworkSdkAssembly)" />
   
   <PropertyGroup>
-    <_OriginalTargetFramework>$(TargetFramework)</_OriginalTargetFramework>
     <_OriginalTargetFrameworks>$(TargetFrameworks)</_OriginalTargetFrameworks>
   </PropertyGroup>
   
   <Target Name="RemovePlaceHolderConfigs"
-          Condition="'$(BuildAllConfigurations)' == 'true' and '$(MSBuildProjectExtension)' != '.pkgproj'"
-          BeforeTargets="DispatchToInnerBuilds">
+          Condition="'$(MSBuildProjectExtension)' != '.pkgproj'"
+          BeforeTargets="DispatchToInnerBuilds;Clean">
     <ItemGroup>
       <_InnerBuildProjects Remove="@(_InnerBuildProjects)" Condition="$([System.String]::Copy('%(_InnerBuildProjects.AdditionalProperties)').Contains('TargetFramework=_'))" />
     </ItemGroup>
@@ -19,11 +19,15 @@
      
   <Target Name="RunOnlyBestTargetFrameworks"
           Condition="'$(BuildAllConfigurations)' != 'true' or '$(MSBuildProjectExtension)' == '.pkgproj'" 
-          BeforeTargets="DispatchToInnerBuilds">
+          BeforeTargets="DispatchToInnerBuilds"
+          DependsOnTargets="GetProjectWithBestTargetFrameworks">
     <ItemGroup>
       <_InnerBuildProjects Remove="@(_InnerBuildProjects)" />
+      <_InnerBuildProjects Include="@(InnerBuildProjectsWithBestTargetFramework)" />
     </ItemGroup>
-
+  </Target>
+  
+  <Target Name="GetProjectWithBestTargetFrameworks">
     <ChooseBestTargetFrameworksTask BuildTargetFrameworks="$(BuildTargetFramework)-$(BuildOS);$(AdditionalBuildTargetFrameworks)"
                                     SupportedTargetFrameworks="$(TargetFrameworks)"
                                     RuntimeGraph="$(RuntimeGraph)" >
@@ -32,16 +36,18 @@
 
     <AddTargetFrameworksToProjectTask ProjectName="$(MSBuildProjectFile)"
                                       BestTargetFrameworks="@(_BestTargetFramework)" >
-      <Output TaskParameter="InnerBuildProjects" ItemName="_InnerBuildProjects" />
+      <Output TaskParameter="InnerBuildProjects" ItemName="InnerBuildProjectsWithBestTargetFramework" />
     </AddTargetFrameworksToProjectTask>
   </Target>
-  
+
   <!-- Restore does not take into account TargetFrameworkSuffix, so we remove the it from the TargetFramework before restore.-->
   <Target Name="StripTargetFrameworkSuffixFromTargetFrameworks"
           Condition="'$(TargetFrameworks)' != ''"
-          BeforeTargets="CollectPackageReferences">
+          BeforeTargets="_GetRestoreTargetFrameworksOutput;_GetRestoreTargetFrameworksAsItems">
     <ItemGroup>
       <_TargetFrameworks Include="$(TargetFrameworks)" />
+      <!-- Remove placeholders from restore. -->
+      <_TargetFrameworks Remove="@(_TargetFrameworks)" Condition="$([System.String]::new('%(Identity)').StartsWith('_'))" />
       <_TargetFrameworks Length="$([System.String]::new('%(Identity)').IndexOf('-'))"/>
       <_TargetFrameworks Condition="'%(Length)' == '-1'" Length="$([System.String]::new('%(Identity)').Length)"/>
       <_TargetFrameworksWithoutTargetFrameworkSuffix Include="$([System.String]::new('%(_TargetFrameworks.Identity)').Substring(0, '%(_TargetFrameworks.Length)'))" />
@@ -54,14 +60,20 @@
 
   <!-- Attaching the TargetFrameworkSuffix after restore for build.-->
   <Target Name="AttachTargetFrameworkSuffixToTargetFrameworks"
-          AfterTargets="Restore">    
+          AfterTargets="_GenerateRestoreGraph">    
     <PropertyGroup>
       <TargetFrameworks>$(_OriginalTargetFrameworks)</TargetFrameworks>
     </PropertyGroup>
   </Target>
 
+  <!--
+    Runs in a leaf project (csproj) to determine best configuration for ProjectReferences.
+    Make sure to run late enough for transitive dependencies which runs before AssignProjectConfiguration.
+  -->
   <Target Name="ResolveP2PReferences"
-          BeforeTargets="AssignProjectConfiguration">
+          Condition="'@(ProjectReference)' != ''"
+          BeforeTargets="AssignProjectConfiguration"
+          DependsOnTargets="ResolvePackageDependenciesForBuild">
     <MSBuild Projects="@(ProjectReference)"
              Targets="GetTargetFrameworks"
              ContinueOnError="true"
@@ -69,7 +81,7 @@
       <Output TaskParameter="TargetOutputs" ItemName="_ProjectRefWithTfms"/>
     </MSBuild>
      
-    <ChooseBestP2PTargetFrameworkTask TargetFramework="$(TargetFramework)"
+    <ChooseBestP2PTargetFrameworkTask TargetFramework="$(_OriginalTargetFramework)"
                                       ProjectReferencesWithTargetFrameworks="@(_ProjectRefWithTfms)"
                                       RuntimeGraph="$(RuntimeGraph)" >
       <Output TaskParameter="AnnotatedProjectReferencesWithSetTargetFramework" ItemName="_ProjectReferencesWithBestTargetFrameworks" />
@@ -109,12 +121,16 @@
           Returns="$(PackageTargetFrameworks)">
     <ItemGroup>
       <PackageTargetFrameworksList Include="$(TargetFrameworks)" />
-      <ExcludePackageTargetFrameworksList Include="$(ExcludeTargetFrameworksFromPackages)" />
-      <PackageTargetFrameworksFinalList Include="@(PackageTargetFrameworksList)" Exclude="@(ExcludePackageTargetFrameworksList)" />
+      <PackageTargetFrameworksList Remove="@(PackageTargetFrameworksList)" Condition="$([System.String]::Copy('%(Identity)').StartsWith('_'))" />
     </ItemGroup>
 
     <PropertyGroup>
-      <PackageTargetFrameworks>@(PackageTargetFrameworksFinalList)</PackageTargetFrameworks>
+      <PackageTargetFrameworks>@(PackageTargetFrameworksList)</PackageTargetFrameworks>
     </PropertyGroup>
   </Target>
+
+  <Target Name="GenerateRuntimeOSPropsFile">
+    <GenerateRuntimeOSPropsFile RuntimePropsFilePath="$(RuntimePropsFile)" />
+  </Target>
+
 </Project>

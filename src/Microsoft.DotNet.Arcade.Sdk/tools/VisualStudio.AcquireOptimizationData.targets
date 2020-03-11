@@ -16,10 +16,7 @@
   <UsingTask AssemblyFile="$(_VisualStudioBuildTasksAssembly)" TaskName="Microsoft.DotNet.Build.Tasks.VisualStudio.FindLatestDrop"/>
 
   <PropertyGroup>
-    <!-- TODO: remove (https://github.com/dotnet/arcade/issues/2092) -->
-    <EnablePartialNgenOptimization Condition="'$(EnablePartialNgenOptimization)' == '' and '$(Configuration)' == 'Release' and '$(OfficialBuild)' == 'true'">true</EnablePartialNgenOptimization>
-
-    <EnableNgenOptimization Condition="'$(EnableNgenOptimization)' == ''">$(EnablePartialNgenOptimization)</EnableNgenOptimization>
+    <EnableNgenOptimization Condition="'$(EnableNgenOptimization)' == '' and '$(Configuration)' == 'Release' and '$(OfficialBuild)' == 'true'">true</EnableNgenOptimization>
   </PropertyGroup>
   
   <!--
@@ -66,7 +63,7 @@
       <_DropName Condition="'$(VisualStudioIbcDrop)' != ''">$(VisualStudioIbcDrop)</_DropName>
     </PropertyGroup>
 
-    <Message Text="Acquiring optimization data" Importance="high"/>
+    <Message Text="Listing optimization data from service $(_DropServiceUrl), prefix $(_DropNamePrefix)" Importance="high"/>
 
     <Exec Command='"$(_DropToolPath)" list --dropservice "$(_DropServiceUrl)" $(_PatAuthArg) --pathPrefixFilter "$(_DropNamePrefix)" --toJsonFile "$(_DropsJsonPath)" --traceto "$(_DropsLogPath)"' 
           Condition="'$(VisualStudioIbcDropId)' == '' and '$(VisualStudioIbcDrop)' == ''"/>

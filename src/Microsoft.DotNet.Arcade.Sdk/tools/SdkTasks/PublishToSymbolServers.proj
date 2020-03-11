@@ -13,10 +13,12 @@
       - DotNetSymbolServerTokenSymWeb : PAT to access SymWeb.
       - DotNetSymbolExpirationInDays  : Expiration days for published packages. Default is 3650.
       - SymbolPublishingExclusionsFile : Path to file containing exclusion list to be used by Symbol Uploader.
+      - PublishSpecialClrFiles : If true, publish the DAC, DBI and SOS using the coreclr index. If false, don't do any special indexing.
   -->
 
   <PropertyGroup>
     <TargetFramework>netcoreapp2.1</TargetFramework>
+    <NETCORE_ENGINEERING_TELEMETRY>Publish</NETCORE_ENGINEERING_TELEMETRY>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -48,12 +50,18 @@
       <PublishToSymWeb Condition="'$(PublishToSymWeb)' == ''">true</PublishToSymWeb>
       <PublishToMSDL Condition="'$(PublishToMSDL)' == ''">true</PublishToMSDL>
       <PublishToSymbolServer Condition="'@(FilesToPublishToSymbolServer)' == '' and '@(PackagesToPublishToSymbolServer)' == ''">false</PublishToSymbolServer>
+      <PublishSpecialClrFiles Condition="'$(PublishSpecialClrFiles)' == ''">true</PublishSpecialClrFiles>
     </PropertyGroup>
 
     <Message
       Importance="High"
+      Text="No symbol file(s) were found to publish."
+      Condition="'@(FilesToPublishToSymbolServer)' == ''" />
+
+    <Message
+      Importance="High"
       Text="No symbol package(s) were found to publish."
-      Condition="$(PublishToSymbolServer) == false" />
+      Condition="'@(PackagesToPublishToSymbolServer)' == ''" />
 
     <ReadLinesFromFile
       File="$(SymbolPublishingExclusionsFile)"
@@ -63,6 +71,15 @@
           ItemName="PackageExcludeFiles"/>
     </ReadLinesFromFile>
 
+    <Message
+      Text="Going to publish this package -> %(PackagesToPublishToSymbolServer.Identity)." />
+
+    <Message
+      Text="Going to publish this file -> %(FilesToPublishToSymbolServer.Identity)." />
+
+    <Message
+      Text="Going to ignore this file -> %(PackageExcludeFiles.Identity)." />
+    
     <!-- Symbol Uploader: MSDL -->
     <Message Importance="High" Text="Publishing symbol packages to MSDL ..." Condition="$(PublishToMSDL)" />
     <PublishSymbols PackagesToPublish="@(PackagesToPublishToSymbolServer)"
@@ -75,6 +92,7 @@
                     DryRun="false"
                     ConvertPortablePdbsToWindowsPdbs="false"
                     PdbConversionTreatAsWarning=""
+                    PublishSpecialClrFiles="$(PublishSpecialClrFiles)"
                     Condition="$(PublishToSymbolServer) and $(PublishToMSDL)"/>
 
     <!-- 
@@ -93,6 +111,7 @@
                     DryRun="false"
                     ConvertPortablePdbsToWindowsPdbs="false"
                     PdbConversionTreatAsWarning=""
+                    PublishSpecialClrFiles="$(PublishSpecialClrFiles)"
                     Condition="$(PublishToSymbolServer) and $(PublishToSymWeb)"/>
   </Target>
 

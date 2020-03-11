@@ -46,6 +46,8 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             return await Task.WhenAll(status.Failed.Select(async wi =>
             {
+                wi = Helpers.CleanWorkItemName(wi);
+
                 // copy all job metadata into the new item
                 var metadata = job.CloneCustomMetadata();
                 metadata["JobName"] = jobName;

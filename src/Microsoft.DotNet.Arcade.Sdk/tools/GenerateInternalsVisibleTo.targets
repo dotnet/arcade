@@ -24,13 +24,15 @@
   <!--
     Dependency on PrepareForBuild is necessary so that we don't accidentally get ordered before it.
     We rely on PrepareForBuild to create the IntermediateOutputDirectory if it doesn't exist.
+
+    Must run before BeforeCompile, as it's the MSBuild's convention for code generators.
   -->
   <Target Name="GenerateInternalsVisibleToFile"
           Inputs="$(MSBuildThisFileFullPath);$(MSBuildProjectFile)"
           Outputs="$(GeneratedInternalsVisibleToFile)"
           DependsOnTargets="PrepareGenerateInternalsVisibleToFile;PrepareForBuild"
           Condition="'@(InternalsVisibleTo)' != ''"
-          BeforeTargets="CoreCompile">
+          BeforeTargets="BeforeCompile;CoreCompile">
 
     <WriteCodeFragment AssemblyAttributes="@(_InternalsVisibleToAttribute)"
                        Language="$(Language)"

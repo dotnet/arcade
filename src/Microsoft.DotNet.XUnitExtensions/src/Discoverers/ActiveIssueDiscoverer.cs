@@ -13,7 +13,7 @@ using Xunit.Sdk;
 namespace Microsoft.DotNet.XUnitExtensions
 {
     /// <summary>
-    /// This class discovers all of the tests and test classes that have
+    /// This class discovers all of the tests, test classes and test assemblies that have
     /// applied the ActiveIssue attribute
     /// </summary>
     public class ActiveIssueDiscoverer : ITraitDiscoverer
@@ -31,6 +31,7 @@ namespace Microsoft.DotNet.XUnitExtensions
             string issue = ctorArgs.First().ToString();
             TestPlatforms platforms = TestPlatforms.Any;
             TargetFrameworkMonikers frameworks = (TargetFrameworkMonikers)0;
+            TestRuntimes runtimes = TestRuntimes.Any;
             
             foreach (object arg in ctorArgs.Skip(1)) // First argument is the issue number.
             {
@@ -42,22 +43,20 @@ namespace Microsoft.DotNet.XUnitExtensions
                 {
                     frameworks = (TargetFrameworkMonikers)arg;
                 }
+                else if (arg is TestRuntimes)
+                {
+                    runtimes = (TestRuntimes)arg;
+                }
             }
         
-            if (DiscovererHelpers.TestPlatformApplies(platforms))
+            if (DiscovererHelpers.TestPlatformApplies(platforms) && DiscovererHelpers.TestRuntimeApplies(runtimes))
             {
                 if (frameworks.HasFlag(TargetFrameworkMonikers.Netcoreapp))
                     yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.NonNetcoreappTest);
                 if (frameworks.HasFlag(TargetFrameworkMonikers.NetFramework))
                     yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.NonNetfxTest);
-                if (frameworks.HasFlag(TargetFrameworkMonikers.Uap))
-                    yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.NonUapTest);
-                if (frameworks.HasFlag(TargetFrameworkMonikers.Mono))
-                    yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.NonMonoTest);
                 if (frameworks == (TargetFrameworkMonikers)0)
                     yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.Failing);
-
-                yield return new KeyValuePair<string, string>(XunitConstants.ActiveIssue, issue);
             }
         }
     }

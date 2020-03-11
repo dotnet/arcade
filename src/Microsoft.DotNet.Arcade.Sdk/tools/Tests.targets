@@ -44,6 +44,7 @@
         <TargetFramework>$(TargetFramework)</TargetFramework>
         <TargetFrameworkIdentifier>$(TargetFrameworkIdentifier)</TargetFrameworkIdentifier>
         <TestRuntime>$(TestRuntime)</TestRuntime>
+        <TestTimeout>$(TestTimeout)</TestTimeout>
         <Architecture>$(_TestArchitecture)</Architecture>
         <EnvironmentDisplay>$(TargetFramework)|$(_TestArchitecture)</EnvironmentDisplay>
         <ResultsFilePathWithoutExtension>$(_ResultFileNameNoExt)</ResultsFilePathWithoutExtension>
