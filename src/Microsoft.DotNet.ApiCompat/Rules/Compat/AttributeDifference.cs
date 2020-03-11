@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
@@ -142,11 +142,17 @@ namespace Microsoft.Cci.Differs.Rules
 
     public class AttributeFilter : IAttributeFilter
     {
-        private HashSet<string> ignorableAttributes;
+        private readonly HashSet<string> ignorableAttributes = new HashSet<string>();
 
-        public AttributeFilter(string docIdList)
+        public AttributeFilter()
+        { }
+
+        public void AddIgnoreAttributeFile(string filePath)
         {
-            ignorableAttributes = DocIdExtensions.ReadDocIds(docIdList);
+            foreach(string id in DocIdExtensions.ReadDocIds(filePath))
+            {
+                ignorableAttributes.Add(id);
+            }
         }
 
         public bool ShouldExclude(string attributeDocID)

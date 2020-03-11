@@ -39,7 +39,7 @@ namespace Microsoft.DotNet.ApiCompat
             contracts.IsRequired();
             CommandOption implDirs = app.Option("-i|--impl-dirs", "Comma delimited list of directories to find the implementation assemblies for each contract assembly.", CommandOptionType.SingleValue);
             implDirs.IsRequired(allowEmptyStrings: true);
-            CommandOption baseline = app.Option("-b|--baseline", "Baseline file to skip known diffs.", CommandOptionType.SingleValue);
+            CommandOption baseline = app.Option("-b|--baseline", "Comma delimited list of files to skip known diffs.", CommandOptionType.SingleValue);
             CommandOption mdil = app.Option("-m|--mdil", "Enforce MDIL servicing rules in addition to IL rules.", CommandOptionType.NoValue);
             CommandOption outFilePath = app.Option("-o|--out", "Output file path. Default is the console.", CommandOptionType.SingleValue);
             CommandOption leftOperand = app.Option("-l|--left-operand", "Name for left operand in comparison, default is 'contract'.", CommandOptionType.SingleValue);
@@ -55,7 +55,7 @@ namespace Microsoft.DotNet.ApiCompat
             CommandOption warnOnIncorrectVersion = app.Option("--warn-on-incorrect-version", "Warn if the contract version number doesn't match the found implementation version number.", CommandOptionType.NoValue);
             CommandOption warnOnMissingAssemblies = app.Option("--warn-on-missing-assemblies", "Warn if the contract assembly cannot be found in the implementation directories. Default is to error and not do analysis.", CommandOptionType.NoValue);
             CommandOption excludeNonBrowsable = app.Option("--exclude-non-browsable", "When MDIL servicing rules are not being enforced, exclude validation on types that are marked with EditorBrowsable(EditorBrowsableState.Never).", CommandOptionType.NoValue);
-            CommandOption excludeAttributes = app.Option("--exclude-attributes", "Specify a api list in the DocId format of which attributes to exclude.", CommandOptionType.SingleValue);
+            CommandOption excludeAttributes = app.Option("--exclude-attributes", "Comma delimited list of files with types in DocId format of which attributes to exclude.", CommandOptionType.SingleValue);
             CommandOption enforceOptionalRules = app.Option("--enforce-optional-rules", "Enforce optional rules, in addition to the mandatory set of rules.", CommandOptionType.NoValue);
             CommandOption allowDefaultInterfaceMethods = app.Option("--allow-default-interface-methods", "Allow default interface methods additions to not be considered breaks. This flag should only be used if you know your consumers support DIM", CommandOptionType.NoValue);
 
@@ -94,7 +94,7 @@ namespace Microsoft.DotNet.ApiCompat
 
                     try
                     {
-                        BaselineDifferenceFilter filter = GetBaselineDifferenceFilter(baseline.Value());
+                        BaselineDifferenceFilter filter = GetBaselineDifferenceFilter(HostEnvironment.SplitPaths(baseline.Value()));
                         NameTable sharedNameTable = new NameTable();
                         HostEnvironment contractHost = new HostEnvironment(sharedNameTable);
                         contractHost.UnableToResolve += (sender, e) => Trace.TraceError($"Unable to resolve assembly '{e.Unresolved}' referenced by the {leftOperandValue} assembly '{e.Referrer}'.");
@@ -190,7 +190,7 @@ namespace Microsoft.DotNet.ApiCompat
                 Contract = leftOperand,
                 Implementation = rightOperand
             };
-            ExportCciSettings.StaticAttributeFilter = new AttributeFilter(excludeAttributes);
+            ExportCciSettings.StaticAttributeFilter = GetAttributeFilter(HostEnvironment.SplitPaths(excludeAttributes));
             ExportCciSettings.StaticRuleSettings = new RuleSettings { AllowDefaultInterfaceMethods = allowDefaultInterfaceMethods};
 
             // Always compose the diff writer to allow it to import or provide exports
@@ -199,19 +199,42 @@ namespace Microsoft.DotNet.ApiCompat
             return diffWriter;
         }
 
-        private static BaselineDifferenceFilter GetBaselineDifferenceFilter(string baselineFileName)
+        private static BaselineDifferenceFilter GetBaselineDifferenceFilter(string[] baselineFileNames)
         {
-            BaselineDifferenceFilter filter = null;
-            if (!string.IsNullOrEmpty(baselineFileName))
+            BaselineDifferenceFilter baselineDifferenceFilter = null;
+            
+            AddFiles(baselineFileNames, (file) => 
+                (baselineDifferenceFilter ??= new BaselineDifferenceFilter(new DifferenceFilter<IncompatibleDifference>())).AddBaselineFile(file));
+
+            return baselineDifferenceFilter;
+        }
+
+        private static AttributeFilter GetAttributeFilter(string[] ignoreAttributeFileNames)
+        {
+            AttributeFilter attributeFilter = new AttributeFilter();
+
+            AddFiles(ignoreAttributeFileNames, (file) => attributeFilter.AddIgnoreAttributeFile(file));
+
+            return attributeFilter;
+        }
+
+        private static void AddFiles(string[] files, System.Action<string> addFile)
+        {
+            foreach (string file in files)
             {
-                if (!File.Exists(baselineFileName))
+                if (!string.IsNullOrEmpty(file))
                 {
-                    throw new FileNotFoundException("Baseline file {0} was not found!", baselineFileName);
+                    if (!File.Exists(file))
+                    {
+                        throw new FileNotFoundException("File {0} was not found!", file);
+                    }
+
+
+                    addFile(file);
                 }
-                IDifferenceFilter incompatibleFilter = new DifferenceFilter<IncompatibleDifference>();
-                filter = new BaselineDifferenceFilter(incompatibleFilter, baselineFileName);
             }
-            return filter;
+
+            return;
         }
 
         private static TextWriter GetOutput(string outFilePath)

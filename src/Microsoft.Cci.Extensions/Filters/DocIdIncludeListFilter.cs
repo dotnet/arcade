@@ -20,9 +20,9 @@ namespace Microsoft.Cci.Filters
             _docIds = new HashSet<string>(docIds);
         }
 
-        public DocIdIncludeListFilter(string whiteListFilePath)
+        public DocIdIncludeListFilter(string includeListFilePath)
         {
-            _docIds = DocIdExtensions.ReadDocIds(whiteListFilePath);
+            _docIds = new HashSet<string>(DocIdExtensions.ReadDocIds(includeListFilePath));
         }
 
         public bool AlwaysIncludeNonEmptyTypes { get; set; }

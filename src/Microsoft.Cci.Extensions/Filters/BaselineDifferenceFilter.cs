@@ -10,21 +10,18 @@ namespace Microsoft.Cci.Filters
 {
     public class BaselineDifferenceFilter : IDifferenceFilter
     {
-        private readonly HashSet<string> _ignoreDifferences;
+        private readonly HashSet<string> _ignoreDifferences = new HashSet<string>();
         private readonly IDifferenceFilter _filter;
 
-        public BaselineDifferenceFilter(IDifferenceFilter filter, string baselineFile)
+        public BaselineDifferenceFilter(IDifferenceFilter filter)
         {
             _filter = filter;
-            _ignoreDifferences = ReadBaselineFile(baselineFile);
         }
 
-        private HashSet<string> ReadBaselineFile(string baselineFile)
+        public void AddBaselineFile(string baselineFile)
         {
-            HashSet<string> ignoreList = new HashSet<string>();
-
             if (!File.Exists(baselineFile))
-                return ignoreList;
+                return;
 
             foreach (var line in File.ReadAllLines(baselineFile))
             {
@@ -38,10 +35,8 @@ namespace Microsoft.Cci.Filters
                 if (string.IsNullOrWhiteSpace(filteredLine))
                     continue;
 
-                ignoreList.Add(filteredLine);
+                _ignoreDifferences.Add(filteredLine);
             }
-
-            return ignoreList;
         }
 
         public bool Include(Difference difference)
