@@ -15,6 +15,7 @@ validation checks.
 ### Build Ring
 
 * Generate the file share by running `darc gather-drop`
+* Signing
 * Notarize PKGs
 
 **Promotion:** 
@@ -30,7 +31,7 @@ validation checks.
 * Sourcelink validation
 * Checksum validation
 * Asset validation
-* Signing + signing validation
+* Signing validation
 
 When all the above have succeeded, we'll do:
 
