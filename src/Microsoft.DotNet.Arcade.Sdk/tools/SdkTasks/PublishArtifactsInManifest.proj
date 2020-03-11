@@ -82,7 +82,7 @@
       BARBuildId="$(BARBuildId)"
       MaestroApiEndpoint="$(MaestroApiEndpoint)"
       BuildAssetRegistryToken="$(BuildAssetRegistryToken)"
-      AssetManifestPath="%(ManifestFiles.Identity)"
+      AssetManifestPaths="@(ManifestFiles)"
       BlobAssetsBasePath="$(BlobBasePath)"
       PackageAssetsBasePath="$(PackageBasePath)"
       NugetPath="$(NugetPath)"
