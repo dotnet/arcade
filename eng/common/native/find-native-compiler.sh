@@ -16,15 +16,17 @@ while [[ -h $source ]]; do
 done
 scriptroot="$( cd -P "$( dirname "$source" )" && pwd )"
 
-if [ $# -lt 4 ]
+if [ $# -lt 0 ]
 then
   echo "Usage..."
-  echo "gen-buildsys.sh <compiler> <compiler major version> <compiler minor version>"
+  echo "find-native-compiler.sh <compiler> <compiler major version> <compiler minor version>"
   echo "Specify the name of compiler (clang or gcc)."
   echo "Specify the major version of compiler."
   echo "Specify the minor version of compiler."
   exit 1
 fi
+
+. $scriptroot/../pipeline-logging-functions.sh
 
 compiler="$1"
 cxxCompiler="$compiler++"
@@ -65,23 +67,23 @@ if [ -z "$CLR_CC" ]; then
         if [ -z "$majorVersion" ]; then
             if command -v "$compiler" > /dev/null; then
                 if [ "$(uname)" != "Darwin" ]; then
-                    echo "WARN: Specific version of $compiler not found, falling back to use the one in PATH."
+                    Write-PipelineTelemetryError -category "Build" -type "warning" "Specific version of $compiler not found, falling back to use the one in PATH."
                 fi
                 export CC="$(command -v "$compiler")"
                 export CXX="$(command -v "$cxxCompiler")"
             else
-                echo "ERROR: No usable version of $compiler found."
+                Write-PipelineTelemetryError -category "Build" "No usable version of $compiler found."
                 exit 1
             fi
         else
             if [ "$compiler" = "clang" ] && [ "$majorVersion" -lt 5 ]; then
                 if [ "$build_arch" = "arm" ] || [ "$build_arch" = "armel" ]; then
                     if command -v "$compiler" > /dev/null; then
-                        echo "WARN: Found clang version $majorVersion which is not supported on arm/armel architectures, falling back to use clang from PATH."
+                        Write-PipelineTelemetryError -category "Build" -type "warning" "Found clang version $majorVersion which is not supported on arm/armel architectures, falling back to use clang from PATH."
                         export CC="$(command -v "$compiler")"
                         export CXX="$(command -v "$cxxCompiler")"
                     else
-                        echo "ERROR: Found clang version $majorVersion which is not supported on arm/armel architectures, and there is no clang in PATH."
+                        Write-PipelineTelemetryError -category "Build" "Found clang version $majorVersion which is not supported on arm/armel architectures, and there is no clang in PATH."
                         exit 1
                     fi
                 fi
@@ -90,7 +92,7 @@ if [ -z "$CLR_CC" ]; then
     else
         desired_version="$(check_version_exists "$majorVersion" "$minorVersion")"
         if [ "$desired_version" = "-1" ]; then
-            echo "ERROR: Could not find specific version of $compiler: $majorVersion $minorVersion."
+            Write-PipelineTelemetryError -category "Build" "Could not find specific version of $compiler: $majorVersion $minorVersion."
             exit 1
         fi
     fi
@@ -102,7 +104,7 @@ if [ -z "$CLR_CC" ]; then
     fi
 else
     if [ ! -f "$CLR_CC" ]; then
-        echo "ERROR: CLR_CC is set but path '$CLR_CC' does not exist"
+        Write-PipelineTelemetryError -category "Build" "CLR_CC is set but path '$CLR_CC' does not exist"
         exit 1
     fi
     export CC="$CLR_CC"
@@ -110,7 +112,7 @@ else
 fi
 
 if [ -z "$CC" ]; then
-    echo "ERROR: Unable to find $compiler."
+   Write-PipelineTelemetryError -category "Build" "Unable to find $compiler."
     exit 1
 fi
 
