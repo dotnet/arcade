@@ -128,7 +128,7 @@ stages:
               -test
               -projects $(Build.SourcesDirectory)\tests\UnitTests.proj
               /bl:$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)\Helix.binlog
-              /p:RestoreUsingNuGetTargets=false /p:HelixBaseUri=https://helix.int-dot.net/'
+              /p:RestoreUsingNuGetTargets=false /p:HelixBaseUri=https://helix.int-dot.net/
             displayName: Run Helix Tests
             env:
               SYSTEM_ACCESSTOKEN: $(System.AccessToken)
@@ -155,7 +155,7 @@ stages:
               --test
               --projects $(Build.SourcesDirectory)/tests/UnitTests.proj
               /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.binlog
-              /p:RestoreUsingNuGetTargets=false /p:HelixBaseUri=https://helix.int-dot.net/'
+              /p:RestoreUsingNuGetTargets=false /p:HelixBaseUri=https://helix.int-dot.net/
             displayName: Run Helix Tests
             env:
               SYSTEM_ACCESSTOKEN: $(System.AccessToken)
