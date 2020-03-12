@@ -19,7 +19,7 @@ namespace Microsoft.Cci.Differs.Rules
             bool isContractOverridable = IsOverridable(contract);
 
             /*
-            //@todo: Move to a separate rule that's only run in "strict" mode. 
+            //@todo: Move to a separate rule that's only run in "strict" mode.
             if (isImplInhertiable && !isContractInheritiable)
             {
                 // This is separate because it can be noisy and is generally allowed as long as it is reviewed properly.
@@ -33,9 +33,7 @@ namespace Microsoft.Cci.Differs.Rules
 
             if (isContractOverridable && !isImplOverridable)
             {
-                differences.AddIncompatibleDifference("CannotMakeMemberNonVirtual",
-                    $"Member '{impl.FullName()}' is non-virtual in the {Implementation} but is virtual in the {Contract}.");
-
+                differences.AddIncompatibleDifference("CannotMakeMemberNonVirtual", impl.GetMemberViolationMessage("Member", $"is non-virtual in the {Implementation}", $"is virtual in the {Contract}"));
                 return DifferenceType.Changed;
             }
 

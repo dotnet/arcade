@@ -466,6 +466,17 @@ namespace Microsoft.Cci.Extensions.CSharp
             return null;
         }
 
+        public static string GetReturnTypeName(this ITypeDefinitionMember member)
+        {
+            var returnType = member.GetReturnType();
+            if (TypeHelper.TypesAreEquivalent(returnType, member.ContainingTypeDefinition.PlatformType.SystemVoid))
+            {
+                return "void";
+            }
+
+            return returnType.FullName();
+        }
+
         public static IFieldDefinition GetHiddenBaseField(this IFieldDefinition field, ICciFilter filter = null)
         {
             foreach (ITypeReference baseClassRef in field.ContainingTypeDefinition.GetAllBaseTypes())
@@ -940,5 +951,33 @@ namespace Microsoft.Cci.Extensions.CSharp
 
             return (false, null);
         };
+
+        public static string GetVisibilityName(this TypeMemberVisibility visibility)
+        {
+            return visibility switch
+            {
+                TypeMemberVisibility.Assembly => "internal",
+                TypeMemberVisibility.Family => "protected",
+                TypeMemberVisibility.FamilyOrAssembly => "protected internal",
+                TypeMemberVisibility.FamilyAndAssembly => "private protected",
+                _ => visibility.ToString().ToLowerInvariant(),
+            };
+        }
+
+        public static string GetVisibilityName(this ITypeDefinition type)
+        {
+            return TypeHelper.TypeVisibilityAsTypeMemberVisibility(type).GetVisibilityName();
+        }
+
+        public static string GetVisibilityName(this ITypeDefinitionMember member)
+        {
+            Contract.Requires(member != null);
+            return member.Visibility.GetVisibilityName();
+        }
+
+        public static string GetMemberViolationMessage(this ITypeDefinitionMember member, string memberMessage, string message1, string message2)
+        {
+            return $"{memberMessage} '{member.GetVisibilityName()} {member.GetReturnTypeName()} {member.FullName()}' {message1} but {message2}.";
+        }
     }
 }
