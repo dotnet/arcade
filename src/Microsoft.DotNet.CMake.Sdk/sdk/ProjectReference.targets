@@ -5,6 +5,10 @@
       <CMakeProject></CMakeProject>
     </NativeProjectReference>
   </ItemDefinitionGroup>
+  
+  <Target Name="_RestoreNativeProjectReferences" DependsOnTargets="NormalizeNativeProjectReferences" BeforeTargets="_GenerateRestoreGraphProjectEntry">
+    <MSBuild Projects="%(NativeProjectReferenceNormalized.CMakeProject)" Targets="Restore" RemoveProperties="RestoreGraphProjectInput" />
+  </Target>
 
   <Target Name="CopyNativeProjectBinaries">
     <MSBuild Projects="$(ReferencedCMakeProject)"

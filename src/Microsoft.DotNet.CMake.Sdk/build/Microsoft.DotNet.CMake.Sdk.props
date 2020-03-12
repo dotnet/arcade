@@ -14,9 +14,6 @@
     <_CMakePassArchitectureToGenerator>False</_CMakePassArchitectureToGenerator>
   </PropertyGroup>
 
-  <ItemDefinitionGroup>
-  </ItemDefinitionGroup>
-
   <PropertyGroup>
     <CMakeConfigureDependsOn></CMakeConfigureDependsOn>
     <CMakeBuildDependsOn></CMakeBuildDependsOn>

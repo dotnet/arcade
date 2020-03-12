@@ -3,7 +3,7 @@
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
 
   <ItemGroup>
-    <PackageReference Include="vswhere" Version="$(VSWhereVersion)" IsImplicitlyDefined="true" />
+    <PackageReference Include="vswhere" Version="$(VSWhereVersion)" IsImplicitlyDefined="true" GeneratePathProperty="true" />
   </ItemGroup>
 
   <PropertyGroup>
@@ -16,7 +16,7 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="$([MSBuild]::IsOsPlatform(Windows))">
-    <VSWherePath>$([MSBuild]::NormalizePath($(VSWhereDir),vswhere.exe))</VSWherePath>
+    <VSWherePath>$([MSBuild]::NormalizePath('$(Pkgvswhere)','tools','vswhere.exe'))</VSWherePath>
     <_VSNativeCompilerComponentArchName Condition="'$(Platform)' == 'x86'">x86.x64</_VSNativeCompilerComponentArchName>
     <_VSNativeCompilerComponentArchName Condition="'$(Platform)' == 'x64'">x86.x64</_VSNativeCompilerComponentArchName>
     <_VSNativeCompilerComponentArchName Condition="'$(Platform)' == 'arm'">ARM</_VSNativeCompilerComponentArchName>
