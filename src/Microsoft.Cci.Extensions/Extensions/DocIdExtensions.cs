@@ -85,22 +85,18 @@ namespace Microsoft.Cci.Extensions
             return "<Unknown Reference Type>";
         }
 
-        public static HashSet<string> ReadDocIds(string docIdsFile)
+        public static IEnumerable<string> ReadDocIds(string docIdsFile)
         {
-            HashSet<string> ids = new HashSet<string>();
-
             if (!File.Exists(docIdsFile))
-                return ids;
+                yield break;
 
             foreach (string id in File.ReadAllLines(docIdsFile))
             {
                 if (string.IsNullOrWhiteSpace(id) || id.StartsWith("#") || id.StartsWith("//"))
                     continue;
 
-                ids.Add(id.Trim());
+                yield return id.Trim();
             }
-
-            return ids;
         }
     }
 }

@@ -20,7 +20,7 @@ namespace Microsoft.Cci.Filters
         public ExcludeAttributesFilter(string attributeDocIdFile, bool includeForwardedTypes = false)
             : base(excludeAttributes: false, includeForwardedTypes: includeForwardedTypes)
         {
-            _attributeDocIds = DocIdExtensions.ReadDocIds(attributeDocIdFile);
+            _attributeDocIds = new HashSet<string>(DocIdExtensions.ReadDocIds(attributeDocIdFile));
         }
 
         public override bool Include(ICustomAttribute attribute)
