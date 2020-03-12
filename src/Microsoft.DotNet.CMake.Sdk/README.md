@@ -30,7 +30,7 @@ Here are a list of common MSBuild items that this SDK consumes:
 Here are a list of MSBuild properties that this SDK consumes:
 
 - CMakeLists
-  - The root CMakeLists.txt of the native build.
+  - The root CMakeLists.txt of the native build. This is required.
 - CMakeGenerator
   - The CMake generator to use. To use a Visual Studio based generator, you can specify "Visual Studio" and this SDK will resolve a VS that supports the target platform.
 - CMakeCompilerToolchain
@@ -61,6 +61,20 @@ Here are a list of MSBuild properties that this SDK consumes:
   - Targets that must be run before the GetConfigScript target is run.
 - CMakeBuildDependsOn
   - Targets that must be run before the GetBuildScript target is run.
+
+### Simple Example Project
+
+If you want to drive a native CMake build with this SDK, add a .proj file next to your CMakeLists.txt with the following content:
+
+```xml
+<Project Sdk="Microsoft.DotNet.CMake.Sdk">
+  <PropertyGroup>
+    <CMakeLists>CMakeLists.txt</CMakeLists>
+  </PropertyGroup>
+</Project>
+```
+
+Building this project will configure and build the CMakeLists.txt project with the default generator provided by the SDK (Visual Studio on Windows, Unix Makefiles off-Windows).
 
 ### Using NativeProjectReference to reference Native assets
 
