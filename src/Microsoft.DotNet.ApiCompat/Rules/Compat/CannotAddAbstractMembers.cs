@@ -26,8 +26,7 @@ namespace Microsoft.Cci.Differs.Rules
                 if (contractType != null && (contractType.IsEffectivelySealed() || (contractType.IsInterface && mapping.ContainingType[0].IsInterface)))
                     return DifferenceType.Unknown;
 
-                differences.AddIncompatibleDifference(this,
-                    $"Member '{impl.FullName()}' is abstract in the {Implementation} but is missing in the {Contract}.");
+                differences.AddIncompatibleDifference(this, impl.GetMemberViolationMessage("Member", $"is abstract in the {Implementation}", $"is missing in the {Contract}"));
                 return DifferenceType.Changed;
             }
             return DifferenceType.Unknown;

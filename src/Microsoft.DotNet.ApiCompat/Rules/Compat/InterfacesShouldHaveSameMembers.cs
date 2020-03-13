@@ -24,7 +24,7 @@ namespace Microsoft.Cci.Differs.Rules
             {
                 if (contract.ContainingTypeDefinition.IsInterface)
                 {
-                    differences.AddIncompatibleDifference(this, $"Interface member '{contract.FullName()}' is present in the {Contract} but not in the {Implementation}.");
+                    differences.AddIncompatibleDifference(this, contract.GetMemberViolationMessage($"{GetNameOfInterfaceMemberType(contract)}", $"is present in the {Contract}", $"not in the {Implementation}"));
                     return DifferenceType.Changed;
                 }
             }
@@ -33,7 +33,7 @@ namespace Microsoft.Cci.Differs.Rules
             {
                 if (impl.ContainingTypeDefinition.IsInterface && !CanIgnoreAddedInterfaceMember(impl))
                 {
-                    differences.AddIncompatibleDifference(this, $"Interface member '{impl.FullName()}' is present in the {Implementation} but not in the {Contract}.");
+                    differences.AddIncompatibleDifference(this, impl.GetMemberViolationMessage($"{GetNameOfInterfaceMemberType(impl)}", $"is present in the {Implementation}", $"not in the {Contract}"));
                     return DifferenceType.Changed;
                 }
             }
@@ -41,12 +41,23 @@ namespace Microsoft.Cci.Differs.Rules
             return base.Diff(differences, impl, contract);
         }
 
+        private string GetNameOfInterfaceMemberType(ITypeDefinitionMember member)
+        {
+            return $"{(IsDefaultImplementationMethod(member) ? "Default interface" : "Interface")} member";
+        }
+
         private bool CanIgnoreAddedInterfaceMember(ITypeDefinitionMember member)
         {
-            if (!RuleSettings.AllowDefaultInterfaceMethods) {
+            if (!RuleSettings.AllowDefaultInterfaceMethods)
+            {
                 return false;
             }
 
+            return IsDefaultImplementationMethod(member);
+        }
+
+        private bool IsDefaultImplementationMethod(ITypeDefinitionMember member)
+        {
             // Default Implementation Method (DIM) scenario.
             // On DIM, static fields or methods that are not abstract,
             // have conditional implementation and should not be considered a break
@@ -60,11 +71,25 @@ namespace Microsoft.Cci.Differs.Rules
                 return !method.IsAbstract;
             }
 
-            // We can ignore PropertyDefinition and IEventDefinition
-            // For properties we will receive the changes on the getter and setter as IMethodDefinition later
-            // For events we will receive the changes on the adder and remover as IMethodDefinition later
-            if (member is IPropertyDefinition || member is IEventDefinition)
+            // If Getter or Setter exist, verify it is not Abstract
+            if (member is IPropertyDefinition prop)
             {
+                if ((prop.Getter != null && ((IMethodDefinition)prop.Getter).IsAbstract) || (prop.Setter != null && ((IMethodDefinition)prop.Setter).IsAbstract))
+                {
+                    return false;
+                }
+
+                return true;
+            }
+
+            // If Adder or Remover exist, verify it is not Abstract
+            if (member is IEventDefinition evt)
+            {
+                if ((evt.Adder != null && ((IMethodDefinition)evt.Adder).IsAbstract) || (evt.Remover != null && ((IMethodDefinition)evt.Remover).IsAbstract))
+                {
+                    return false;
+                }
+
                 return true;
             }
 
