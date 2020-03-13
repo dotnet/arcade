@@ -68,29 +68,40 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links.src
 
                             bool success = await retryHandler.RunAsync(async attempt =>
                             {
-                                // Use the bulk deletion API. The bulk APIs only work for up to 300 items per call.
-                                // So batch
-                                var response = await client.DeleteAsync($"{ApiTargeturl}/harddelete/{link}");
-
-                                // 400, 401, and 403 indicate auth failure or bad requests that should not be retried.
-                                // Check for auth failures/bad request on POST (400, 401, and 403)
-                                if (response.StatusCode == HttpStatusCode.BadRequest ||
-                                    response.StatusCode == HttpStatusCode.Unauthorized ||
-                                    response.StatusCode == HttpStatusCode.Forbidden)
+                                try
                                 {
-                                    _log.LogError($"Error deleting aka.ms/{link}: {response.Content.ReadAsStringAsync().Result}");
+                                    // Use the individual deletion API. The bulk APIs only work for up to 300 items per call.
+                                    // So batch
+                                    var response = await client.DeleteAsync($"{ApiTargeturl}/harddelete/{link}");
+
+                                    // 400, 401, and 403 indicate auth failure or bad requests that should not be retried.
+                                    // Check for auth failures/bad request on POST (400, 401, and 403)
+                                    if (response.StatusCode == HttpStatusCode.BadRequest ||
+                                        response.StatusCode == HttpStatusCode.Unauthorized ||
+                                        response.StatusCode == HttpStatusCode.Forbidden)
+                                    {
+                                        _log.LogError($"Error deleting aka.ms/{link}: {response.Content.ReadAsStringAsync().Result}");
+                                        return true;
+                                    }
+
+                                    // Success if it's 202, 204, 404
+                                    if (response.StatusCode != System.Net.HttpStatusCode.NoContent &&
+                                        response.StatusCode != System.Net.HttpStatusCode.NotFound)
+                                    {
+                                        _log.LogMessage(MessageImportance.High, $"Failed to delete aka.ms/{link}: {response.Content.ReadAsStringAsync().Result}");
+                                        return false;
+                                    }
+
                                     return true;
                                 }
-
-                                // Success if it's 202, 204, 404
-                                if (response.StatusCode != System.Net.HttpStatusCode.NoContent &&
-                                    response.StatusCode != System.Net.HttpStatusCode.NotFound)
+                                catch (HttpRequestException e)
                                 {
-                                    _log.LogMessage(MessageImportance.High, $"Failed to delete aka.ms/{link}: {response.Content.ReadAsStringAsync().Result}");
+                                    // Avoid failing in these cases.  We could have a timeout or other failure that
+                                    // doesn't show up as a normal response status code. The case we typically see is
+                                    // a client timeout.
+                                    _log.LogMessage(MessageImportance.High, $"Failed to delete aka.ms/{link}: {e.Message}");
                                     return false;
                                 }
-
-                                return true;
                             });
                         }
                         finally
@@ -145,34 +156,45 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links.src
 
                         bool success = await retryHandler.RunAsync(async attempt =>
                         {
-                            // Use the bulk deletion API. The bulk APIs only work for up to 300 items per call.
-                            // So batch
-                            var response = await client.GetAsync($"{ApiTargeturl}/{link.ShortUrl}");
-
-                            // 401, and 403 indicate auth failures that should not be retried.
-                            if (response.StatusCode == HttpStatusCode.Unauthorized ||
-                                response.StatusCode == HttpStatusCode.Forbidden)
+                            try
                             {
-                                _log.LogError($"Error getting aka.ms/{link.ShortUrl}: {response.Content.ReadAsStringAsync().Result}");
+                                // Use the bulk deletion API. The bulk APIs only work for up to 300 items per call.
+                                // So batch
+                                var response = await client.GetAsync($"{ApiTargeturl}/{link.ShortUrl}");
+
+                                // 401, and 403 indicate auth failures that should not be retried.
+                                if (response.StatusCode == HttpStatusCode.Unauthorized ||
+                                    response.StatusCode == HttpStatusCode.Forbidden)
+                                {
+                                    _log.LogError($"Error getting aka.ms/{link.ShortUrl}: {response.Content.ReadAsStringAsync().Result}");
+                                    return true;
+                                }
+
+                                // If 200, then the link should be updated, if 400, then it should be
+                                // created
+                                switch (response.StatusCode)
+                                {
+                                    case HttpStatusCode.OK:
+                                        linksToUpdate.Add(link);
+                                        break;
+                                    case HttpStatusCode.NotFound:
+                                        linksToCreate.Add(link);
+                                        break;
+                                    default:
+                                        _log.LogMessage(MessageImportance.High, $"Failed to check aka.ms/{link.ShortUrl}: {response.Content.ReadAsStringAsync().Result}");
+                                        return false;
+                                }
+
                                 return true;
                             }
-
-                            // If 200, then the link should be updated, if 400, then it should be
-                            // created
-                            switch (response.StatusCode)
+                            catch (HttpRequestException e)
                             {
-                                case HttpStatusCode.OK:
-                                    linksToUpdate.Add(link);
-                                    break;
-                                case HttpStatusCode.NotFound:
-                                    linksToCreate.Add(link);
-                                    break;
-                                default:
-                                    _log.LogMessage(MessageImportance.High, $"Failed to delete aka.ms/{link.ShortUrl}: {response.Content.ReadAsStringAsync().Result}");
-                                    return false;
+                                // Avoid failing in these cases.  We could have a timeout or other failure that
+                                // doesn't show up as a normal response status code. The case we typically see is
+                                // a client timeout.
+                                _log.LogMessage(MessageImportance.High, $"Failed to check aka.ms/{link.ShortUrl}: {e.Message}");
+                                return false;
                             }
-
-                            return true;
                         });
                     }
                     finally
@@ -230,28 +252,39 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links.src
 
                         using (requestMessage)
                         {
-                            using (HttpResponseMessage response = await client.SendAsync(requestMessage))
+                            try
                             {
-                                // Check for auth failures/bad request on POST (400, 401, and 403).
-                                // No reason to retry here.
-                                if (response.StatusCode == HttpStatusCode.BadRequest ||
-                                    response.StatusCode == HttpStatusCode.Unauthorized ||
-                                    response.StatusCode == HttpStatusCode.Forbidden)
+                                using (HttpResponseMessage response = await client.SendAsync(requestMessage))
                                 {
-                                    _log.LogError($"Error creating/updating aka.ms links: {response.Content.ReadAsStringAsync().Result}");
+                                    // Check for auth failures/bad request on POST (400, 401, and 403).
+                                    // No reason to retry here.
+                                    if (response.StatusCode == HttpStatusCode.BadRequest ||
+                                        response.StatusCode == HttpStatusCode.Unauthorized ||
+                                        response.StatusCode == HttpStatusCode.Forbidden)
+                                    {
+                                        _log.LogError($"Error creating/updating aka.ms links: {response.Content.ReadAsStringAsync().Result}");
+                                        return true;
+                                    }
+
+                                    if ((!overwrite && response.StatusCode != HttpStatusCode.OK) ||
+                                        (overwrite && response.StatusCode != System.Net.HttpStatusCode.Accepted &&
+                                         response.StatusCode != System.Net.HttpStatusCode.NoContent &&
+                                         response.StatusCode != System.Net.HttpStatusCode.NotFound))
+                                    {
+                                        _log.LogMessage(MessageImportance.High, $"Failed to create/update aka.ms links: {response.StatusCode}\n{response.Content.ReadAsStringAsync().Result}");
+                                        return false;
+                                    }
+
                                     return true;
                                 }
-
-                                if ((!overwrite && response.StatusCode != HttpStatusCode.OK) ||
-                                    (overwrite && response.StatusCode != System.Net.HttpStatusCode.Accepted &&
-                                     response.StatusCode != System.Net.HttpStatusCode.NoContent &&
-                                     response.StatusCode != System.Net.HttpStatusCode.NotFound))
-                                {
-                                    _log.LogMessage(MessageImportance.High, $"Failed to create/update aka.ms links: {response.StatusCode}\n{response.Content.ReadAsStringAsync().Result}");
-                                    return false;
-                                }
-
-                                return true;
+                            }
+                            catch (HttpRequestException e)
+                            {
+                                // Avoid failing in these cases.  We could have a timeout or other failure that
+                                // doesn't show up as a normal response status code. The case we typically see is
+                                // a client timeout.
+                                _log.LogMessage(MessageImportance.High, $"Failed to create/update aka.ms links: {e.Message}");
+                                return false;
                             }
                         }
                     });
