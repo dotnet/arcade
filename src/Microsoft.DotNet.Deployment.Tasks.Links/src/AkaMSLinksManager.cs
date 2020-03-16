@@ -148,7 +148,8 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links.src
         /// </summary>
         /// <param name="links">Links to bucket.</param>
         /// <returns>Tuple of links to create and links to update.</returns>
-        private async Task<(IEnumerable<AkaMSLink> linksToCreate, IEnumerable<AkaMSLink> linksToUpdate)> BucketLinksAsync(IEnumerable<AkaMSLink> links)
+        private async Task<(IEnumerable<AkaMSLink> linksToCreate, IEnumerable<AkaMSLink> linksToUpdate)> BucketLinksAsync(
+            IEnumerable<AkaMSLink> links)
         {
             ConcurrentBag<AkaMSLink> linksToCreate = new ConcurrentBag<AkaMSLink>();
             ConcurrentBag<AkaMSLink> linksToUpdate = new ConcurrentBag<AkaMSLink>();
@@ -223,6 +224,7 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links.src
         /// <param name="linkGroupOwner">SG owner of the link</param>
         /// <param name="linkOwners">Semicolon delimited list of link owners.</param>
         /// <param name="update">If true, existing links will be overwritten.</param>
+        /// <param name="bucketed">Are these links already bucketed?</param>
         /// <returns>Async task</returns>
         private async Task CreateOrUpateLinksImplAsync(IEnumerable<AkaMSLink> links, string linkOwners,
             string linkCreatedOrUpdatedBy, string linkGroupOwner, bool update, bool bucketed)
