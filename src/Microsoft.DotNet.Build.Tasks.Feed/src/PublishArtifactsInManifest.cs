@@ -57,6 +57,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         private const string SymbolPackageSuffix = ".symbols.nupkg";
         private const string PackageSuffix = ".nupkg";
         private const string PackagesCategory = "PACKAGE";
+        private const int MaxRetries = 5;
 
         /// <summary>
         /// Configuration telling which target feed to use for each artifact category.
@@ -147,6 +148,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// - Stable packages to non-isolated feeds
         /// </summary>
         public bool SkipSafetyChecks { get; set; } = false;
+
+        private ExponentialRetry RetryHandler = new ExponentialRetry
+        {
+            MaxAttempts = MaxRetries
+        };
 
         #region Information for AKA MS link generation
 
@@ -409,14 +415,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// </remarks>
         private async Task<bool?> IsFeedPublicAsync(string feedUrl, HttpClient httpClient)
         {
-            var retryHandler = new ExponentialRetry
-            {
-                MaxAttempts = 5
-            };
-
             bool? isPublic = null;
 
-            bool success = await retryHandler.RunAsync(async attempt =>
+            bool success = await RetryHandler.RunAsync(async attempt =>
             {
                 try
                 {
@@ -740,6 +741,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             {
                 using (HttpClient httpClient = new HttpClient(new HttpClientHandler { CheckCertificateRevocationList = true }))
                 {
+                    httpClient.Timeout = TimeSpan.FromSeconds(180);
                     httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
                         "Basic",
                         Convert.ToBase64String(Encoding.ASCII.GetBytes(string.Format("{0}:{1}", "", feedConfig.Token))));
@@ -871,47 +873,64 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         {
             Log.LogMessage($"Getting package content from {packageContentUrl} and comparing to {localPackageFullPath}");
 
-            try
+            bool? result = null;
+
+            bool success = await RetryHandler.RunAsync(async attempt =>
             {
-                using (Stream localFileStream = File.OpenRead(localPackageFullPath))
-                using (HttpResponseMessage response = await client.GetAsync(packageContentUrl))
+                try
                 {
-                    response.EnsureSuccessStatusCode();
-
-                    // Check the headers for content length and md5
-                    bool md5HeaderAvailable = response.Headers.TryGetValues("Content-MD5", out var md5);
-                    bool lengthHeaderAvailable = response.Headers.TryGetValues("Content-Length", out var contentLength);
-
-                    if (lengthHeaderAvailable && long.Parse(contentLength.Single()) != localFileStream.Length)
+                    using (Stream localFileStream = File.OpenRead(localPackageFullPath))
+                    using (HttpResponseMessage response = await client.GetAsync(packageContentUrl))
                     {
-                        Log.LogMessage(MessageImportance.Low, $"Package '{localPackageFullPath}' has different length than remote package '{packageContentUrl}'.");
-                        return false;
-                    }
+                        response.EnsureSuccessStatusCode();
 
-                    if (md5HeaderAvailable)
-                    {
-                        var localMD5 = AzureStorageUtils.CalculateMD5(localPackageFullPath);
-                        if (!localMD5.Equals(md5.Single(), StringComparison.OrdinalIgnoreCase))
+                        // Check the headers for content length and md5
+                        bool md5HeaderAvailable = response.Headers.TryGetValues("Content-MD5", out var md5);
+                        bool lengthHeaderAvailable = response.Headers.TryGetValues("Content-Length", out var contentLength);
+
+                        if (lengthHeaderAvailable && long.Parse(contentLength.Single()) != localFileStream.Length)
                         {
-                            Log.LogMessage(MessageImportance.Low, $"Package '{localPackageFullPath}' has different MD5 hash than remote package '{packageContentUrl}'.");
+                            Log.LogMessage(MessageImportance.Low, $"Package '{localPackageFullPath}' has different length than remote package '{packageContentUrl}'.");
+                            result = false;
+                            return true;
                         }
 
+                        if (md5HeaderAvailable)
+                        {
+                            var localMD5 = AzureStorageUtils.CalculateMD5(localPackageFullPath);
+                            if (!localMD5.Equals(md5.Single(), StringComparison.OrdinalIgnoreCase))
+                            {
+                                Log.LogMessage(MessageImportance.Low, $"Package '{localPackageFullPath}' has different MD5 hash than remote package '{packageContentUrl}'.");
+                            }
+
+                            result = true;
+                            return true;
+                        }
+
+                        const int BufferSize = 64 * 1024;
+
+                        // Otherwise, compare the streams
+                        var remoteStream = await response.Content.ReadAsStreamAsync();
+                        result = await CompareStreamsAsync(localFileStream, remoteStream, BufferSize);
+                        return true;
+                    }
+                }
+                // String based comparison because the status code isn't exposed in HttpRequestException
+                // see here: https://github.com/dotnet/runtime/issues/23648
+                catch (HttpRequestException e)
+                {
+                    if (e.Message.Contains("404 (Not Found)"))
+                    {
+                        result = null;
                         return true;
                     }
 
-                    const int BufferSize = 64 * 1024;
-
-                    // Otherwise, compare the streams
-                    var remoteStream = await response.Content.ReadAsStreamAsync();
-                    return await CompareStreamsAsync(localFileStream, remoteStream, BufferSize);
+                    // Retry this. Could be an http client timeout, 500, etc.
+                    return false;
                 }
-            }
-            // String based comparison because the status code isn't exposed in HttpRequestException
-            // see here: https://github.com/dotnet/runtime/issues/23648
-            catch (HttpRequestException e) when (e.Message.Contains("404 (Not Found)"))
-            {
-                return null;
-            }
+            });
+
+            return result;
         }
 
         /// <summary>

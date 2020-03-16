@@ -25,11 +25,12 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links.src
         private const string Endpoint = "https://microsoft.onmicrosoft.com/redirectionapi";
         private const string Authority = "https://login.microsoftonline.com/72f988bf-86f1-41af-91ab-2d7cd011db47/oauth2/authorize";
         private const int BulkApiBatchSize = 300;
-
+        private const int MaxRetries = 5;
         private string _clientId;
         private string _clientSecret;
         private string _tenant;
         private string ApiTargeturl { get => $"{ApiBaseUrl}/1/{_tenant}"; }
+        private ExponentialRetry RetryHandler;
 
         private Microsoft.Build.Utilities.TaskLoggingHelper _log;
 
@@ -39,6 +40,11 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links.src
             _clientSecret = clientSecret;
             _tenant = tenant;
             _log = log;
+
+            RetryHandler = new ExponentialRetry
+            {
+                MaxAttempts = MaxRetries
+            };
         }
 
         /// <summary>
@@ -48,11 +54,6 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links.src
         /// <returns>Async task</returns>
         public async Task DeleteLinksAsync(List<string> linksToDelete)
         {
-            var retryHandler = new ExponentialRetry
-            {
-                MaxAttempts = 5
-            };
-
             // The bulk hard-delete APIs do not have short-url forms (only identity), so they must be
             // deleted individually. Use a semaphore to avoid excessive numbers of concurrent API calls
 
@@ -66,7 +67,7 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links.src
                         {
                             await clientThrottle.WaitAsync();
 
-                            bool success = await retryHandler.RunAsync(async attempt =>
+                            bool success = await RetryHandler.RunAsync(async attempt =>
                             {
                                 try
                                 {
@@ -137,11 +138,6 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links.src
                 return;
             }
 
-            var retryHandler = new ExponentialRetry
-            {
-                MaxAttempts = 5
-            };
-
             ConcurrentBag<AkaMSLink> linksToCreate = new ConcurrentBag<AkaMSLink>();
             ConcurrentBag<AkaMSLink> linksToUpdate = new ConcurrentBag<AkaMSLink>();
 
@@ -154,7 +150,7 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links.src
                     {
                         await clientThrottle.WaitAsync();
 
-                        bool success = await retryHandler.RunAsync(async attempt =>
+                        bool success = await RetryHandler.RunAsync(async attempt =>
                         {
                             try
                             {
@@ -226,11 +222,6 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links.src
         private async Task CreateOrUpateLinksImplAsync(IEnumerable<AkaMSLink> links, string linkOwners,
             string linkCreatedOrUpdatedBy, string linkGroupOwner, bool overwrite)
         {
-            var retryHandler = new ExponentialRetry
-            {
-                MaxAttempts = 5
-            };
-
             _log.LogMessage(MessageImportance.High, $"{(overwrite ? "Updating" : "Creating")} {links.Count()} aka.ms links.");
 
             using (HttpClient client = CreateClient())
@@ -244,7 +235,7 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links.src
                     string newOrUpdatedLinksJson = 
                         GetCreateOrUpdateLinkJson(linkOwners, linkCreatedOrUpdatedBy, linkGroupOwner, overwrite, batchOfLinksToCreateOrUpdate);
 
-                    bool success = await retryHandler.RunAsync(async attempt =>
+                    bool success = await RetryHandler.RunAsync(async attempt =>
                     {
                         HttpRequestMessage requestMessage = new HttpRequestMessage(overwrite ? HttpMethod.Put : HttpMethod.Post,
                                $"{ApiTargeturl}/bulk");
