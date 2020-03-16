@@ -24,7 +24,16 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links.src
         private const string ApiBaseUrl = "https://redirectionapi.trafficmanager.net/api/aka";
         private const string Endpoint = "https://microsoft.onmicrosoft.com/redirectionapi";
         private const string Authority = "https://login.microsoftonline.com/72f988bf-86f1-41af-91ab-2d7cd011db47/oauth2/authorize";
-        private const int BulkApiBatchSize = 300;
+        /// <summary>
+        ///     Aka.ms max links per batch request. There are two maximums:
+        ///         - Number of links per batch (300)
+        ///         - Max content size per request (50k)
+        ///     It's really easy to go over 50k after content encoding is done if the
+        ///     maximum number of links per requests is reached. So we limit the max size
+        ///     to 100 which is typically ~70% of the overall allowable size. This has plenty of
+        ///     breathing room if the link targets were to get a lot larger.
+        /// </summary>
+        private const int BulkApiBatchSize = 100;
         private const int MaxRetries = 5;
         private string _clientId;
         private string _clientSecret;
@@ -131,13 +140,17 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links.src
         public async Task CreateOrUpdateLinksAsync(IEnumerable<AkaMSLink> links, string linkOwners,
             string linkCreatedOrUpdatedBy, string linkGroupOwner, bool overwrite)
         {
-            // Bucketize the links if necessary, then call the implementation.
-            if (!overwrite)
-            {
-                await CreateOrUpateLinksImplAsync(links, linkOwners, linkCreatedOrUpdatedBy, linkGroupOwner, overwrite);
-                return;
-            }
+            await CreateOrUpateLinksImplAsync(links, linkOwners, linkCreatedOrUpdatedBy, linkGroupOwner, overwrite, false);
+        }
 
+        /// <summary>
+        /// Bucket links by whether they exist or not.
+        /// </summary>
+        /// <param name="links">Links to bucket.</param>
+        /// <returns>Tuple of links to create and links to update.</returns>
+        private async Task<(IEnumerable<AkaMSLink> linksToCreate, IEnumerable<AkaMSLink> linksToUpdate)> BucketLinksAsync(
+            IEnumerable<AkaMSLink> links)
+        {
             ConcurrentBag<AkaMSLink> linksToCreate = new ConcurrentBag<AkaMSLink>();
             ConcurrentBag<AkaMSLink> linksToUpdate = new ConcurrentBag<AkaMSLink>();
 
@@ -200,14 +213,7 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links.src
                 }));
             }
 
-            if (linksToCreate.Any())
-            {
-                await CreateOrUpateLinksImplAsync(linksToCreate, linkOwners, linkCreatedOrUpdatedBy, linkGroupOwner, false);
-            }
-            if (linksToUpdate.Any())
-            {
-                await CreateOrUpateLinksImplAsync(linksToUpdate, linkOwners, linkCreatedOrUpdatedBy, linkGroupOwner, true);
-            }
+            return (linksToCreate, linksToUpdate);
         }
 
         /// <summary>
@@ -217,12 +223,13 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links.src
         /// <param name="linkCreatedOrUpdatedBy">The alias of the link creator. Must be valid</param>
         /// <param name="linkGroupOwner">SG owner of the link</param>
         /// <param name="linkOwners">Semicolon delimited list of link owners.</param>
-        /// <param name="overwrite">If true, existing links will be overwritten.</param>
+        /// <param name="update">If true, existing links will be overwritten.</param>
+        /// <param name="bucketed">Are these links already bucketed?</param>
         /// <returns>Async task</returns>
         private async Task CreateOrUpateLinksImplAsync(IEnumerable<AkaMSLink> links, string linkOwners,
-            string linkCreatedOrUpdatedBy, string linkGroupOwner, bool overwrite)
+            string linkCreatedOrUpdatedBy, string linkGroupOwner, bool update, bool bucketed)
         {
-            _log.LogMessage(MessageImportance.High, $"{(overwrite ? "Updating" : "Creating")} {links.Count()} aka.ms links.");
+            _log.LogMessage(MessageImportance.High, $"{(update ? "Updating" : "Creating")} {links.Count()} aka.ms links.");
 
             using (HttpClient client = CreateClient())
             {
@@ -233,11 +240,11 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links.src
                     remainingLinks = remainingLinks.Skip(BulkApiBatchSize);
 
                     string newOrUpdatedLinksJson = 
-                        GetCreateOrUpdateLinkJson(linkOwners, linkCreatedOrUpdatedBy, linkGroupOwner, overwrite, batchOfLinksToCreateOrUpdate);
+                        GetCreateOrUpdateLinkJson(linkOwners, linkCreatedOrUpdatedBy, linkGroupOwner, update, batchOfLinksToCreateOrUpdate);
 
                     bool success = await RetryHandler.RunAsync(async attempt =>
                     {
-                        HttpRequestMessage requestMessage = new HttpRequestMessage(overwrite ? HttpMethod.Put : HttpMethod.Post,
+                        HttpRequestMessage requestMessage = new HttpRequestMessage(update ? HttpMethod.Put : HttpMethod.Post,
                                $"{ApiTargeturl}/bulk");
                         requestMessage.Content = new StringContent(newOrUpdatedLinksJson, Encoding.UTF8, "application/json");
 
@@ -247,18 +254,49 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links.src
                             {
                                 using (HttpResponseMessage response = await client.SendAsync(requestMessage))
                                 {
-                                    // Check for auth failures/bad request on POST (400, 401, and 403).
+                                    // Check for auth failures on POST (401, and 403).
                                     // No reason to retry here.
-                                    if (response.StatusCode == HttpStatusCode.BadRequest ||
-                                        response.StatusCode == HttpStatusCode.Unauthorized ||
+                                    if (response.StatusCode == HttpStatusCode.Unauthorized ||
                                         response.StatusCode == HttpStatusCode.Forbidden)
                                     {
                                         _log.LogError($"Error creating/updating aka.ms links: {response.Content.ReadAsStringAsync().Result}");
                                         return true;
                                     }
 
-                                    if ((!overwrite && response.StatusCode != HttpStatusCode.OK) ||
-                                        (overwrite && response.StatusCode != System.Net.HttpStatusCode.Accepted &&
+                                    // If it's bad request, then there are a couple paths:
+                                    // - We're attempting to create links (always overwrite) - The error is real.
+                                    // - We're attempting to update links, but some have not been created yet and we haven't bucketed.
+                                    //   In this case, we should bucket the links into exist/non-existent and then call this method
+                                    //   with update true/false
+                                    // - We're attempting to update links and have already bucketed them. In this case, the error is real.
+                                    if (response.StatusCode == HttpStatusCode.BadRequest)
+                                    {
+                                        if (update && !bucketed)
+                                        {
+                                            _log.LogMessage(MessageImportance.High, $"Failed to update aka.ms links: {response.StatusCode}\n" +
+                                                $"{response.Content.ReadAsStringAsync().Result}. Will bucket and create+update.");
+
+                                            (IEnumerable<AkaMSLink> linksToCreate, IEnumerable<AkaMSLink> linksToUpdate) = await BucketLinksAsync(batchOfLinksToCreateOrUpdate);
+
+                                            if (linksToCreate.Any())
+                                            {
+                                                await CreateOrUpateLinksImplAsync(linksToCreate, linkOwners, linkCreatedOrUpdatedBy, linkGroupOwner, false, true);
+                                            }
+                                            if (linksToUpdate.Any())
+                                            {
+                                                await CreateOrUpateLinksImplAsync(linksToUpdate, linkOwners, linkCreatedOrUpdatedBy, linkGroupOwner, true, true);
+                                            }
+                                            return true;
+                                        }
+                                        else
+                                        {
+                                            _log.LogError($"Error creating/updating aka.ms links: {response.Content.ReadAsStringAsync().Result}");
+                                            return true;
+                                        }
+                                    }
+
+                                    if ((!update && response.StatusCode != HttpStatusCode.OK) ||
+                                        (update && response.StatusCode != System.Net.HttpStatusCode.Accepted &&
                                          response.StatusCode != System.Net.HttpStatusCode.NoContent &&
                                          response.StatusCode != System.Net.HttpStatusCode.NotFound))
                                     {
