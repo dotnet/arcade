@@ -140,7 +140,17 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links.src
         public async Task CreateOrUpdateLinksAsync(IEnumerable<AkaMSLink> links, string linkOwners,
             string linkCreatedOrUpdatedBy, string linkGroupOwner, bool overwrite)
         {
-            await CreateOrUpateLinksImplAsync(links, linkOwners, linkCreatedOrUpdatedBy, linkGroupOwner, overwrite, false);
+            // Batch these up by the max batch size
+            List<IEnumerable<AkaMSLink>> linkBatches = new List<IEnumerable<AkaMSLink>>();
+            IEnumerable<AkaMSLink> remainingLinks = links;
+            while (remainingLinks.Any())
+            {
+                linkBatches.Add(remainingLinks.Take(BulkApiBatchSize));
+                remainingLinks = remainingLinks.Skip(BulkApiBatchSize);
+            }
+
+            await Task.WhenAll(linkBatches.Select(async batch =>
+                await CreateOrUpateLinkBatchAsync(batch, linkOwners, linkCreatedOrUpdatedBy, linkGroupOwner, overwrite, false)));
         }
 
         /// <summary>
@@ -217,7 +227,7 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links.src
         }
 
         /// <summary>
-        /// Create or update one or more links
+        /// Create or update a batch of links.
         /// </summary>
         /// <param name="links">Set of links to create or update</param>
         /// <param name="linkCreatedOrUpdatedBy">The alias of the link creator. Must be valid</param>
@@ -226,102 +236,95 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links.src
         /// <param name="update">If true, existing links will be overwritten.</param>
         /// <param name="bucketed">Are these links already bucketed?</param>
         /// <returns>Async task</returns>
-        private async Task CreateOrUpateLinksImplAsync(IEnumerable<AkaMSLink> links, string linkOwners,
+        private async Task CreateOrUpateLinkBatchAsync(IEnumerable<AkaMSLink> links, string linkOwners,
             string linkCreatedOrUpdatedBy, string linkGroupOwner, bool update, bool bucketed)
         {
             _log.LogMessage(MessageImportance.High, $"{(update ? "Updating" : "Creating")} {links.Count()} aka.ms links.");
 
             using (HttpClient client = CreateClient())
             {
-                IEnumerable<AkaMSLink> remainingLinks = links;
-                while (remainingLinks.Any())
+                string newOrUpdatedLinksJson = 
+                    GetCreateOrUpdateLinkJson(linkOwners, linkCreatedOrUpdatedBy, linkGroupOwner, update, links);
+
+                bool success = await RetryHandler.RunAsync(async attempt =>
                 {
-                    IEnumerable<AkaMSLink> batchOfLinksToCreateOrUpdate = remainingLinks.Take(BulkApiBatchSize);
-                    remainingLinks = remainingLinks.Skip(BulkApiBatchSize);
+                    HttpRequestMessage requestMessage = new HttpRequestMessage(update ? HttpMethod.Put : HttpMethod.Post,
+                            $"{ApiTargeturl}/bulk");
+                    requestMessage.Content = new StringContent(newOrUpdatedLinksJson, Encoding.UTF8, "application/json");
 
-                    string newOrUpdatedLinksJson = 
-                        GetCreateOrUpdateLinkJson(linkOwners, linkCreatedOrUpdatedBy, linkGroupOwner, update, batchOfLinksToCreateOrUpdate);
-
-                    bool success = await RetryHandler.RunAsync(async attempt =>
+                    using (requestMessage)
                     {
-                        HttpRequestMessage requestMessage = new HttpRequestMessage(update ? HttpMethod.Put : HttpMethod.Post,
-                               $"{ApiTargeturl}/bulk");
-                        requestMessage.Content = new StringContent(newOrUpdatedLinksJson, Encoding.UTF8, "application/json");
-
-                        using (requestMessage)
+                        try
                         {
-                            try
+                            using (HttpResponseMessage response = await client.SendAsync(requestMessage))
                             {
-                                using (HttpResponseMessage response = await client.SendAsync(requestMessage))
+                                // Check for auth failures on POST (401, and 403).
+                                // No reason to retry here.
+                                if (response.StatusCode == HttpStatusCode.Unauthorized ||
+                                    response.StatusCode == HttpStatusCode.Forbidden)
                                 {
-                                    // Check for auth failures on POST (401, and 403).
-                                    // No reason to retry here.
-                                    if (response.StatusCode == HttpStatusCode.Unauthorized ||
-                                        response.StatusCode == HttpStatusCode.Forbidden)
+                                    _log.LogError($"Error creating/updating aka.ms links: {response.Content.ReadAsStringAsync().Result}");
+                                    return true;
+                                }
+
+                                // If it's bad request, then there are a couple paths:
+                                // - We're attempting to create links (always overwrite) - The error is real.
+                                // - We're attempting to update links, but some have not been created yet and we haven't bucketed.
+                                //   In this case, we should bucket the links into exist/non-existent and then call this method
+                                //   with update true/false
+                                // - We're attempting to update links and have already bucketed them. In this case, the error is real.
+                                if (response.StatusCode == HttpStatusCode.BadRequest)
+                                {
+                                    if (update && !bucketed)
+                                    {
+                                        _log.LogMessage(MessageImportance.High, $"Failed to update aka.ms links: {response.StatusCode}\n" +
+                                            $"{response.Content.ReadAsStringAsync().Result}. Will bucket and create+update.");
+
+                                        (IEnumerable<AkaMSLink> linksToCreate, IEnumerable<AkaMSLink> linksToUpdate) = await BucketLinksAsync(links);
+
+                                        if (linksToCreate.Any())
+                                        {
+                                            await CreateOrUpateLinkBatchAsync(linksToCreate, linkOwners, linkCreatedOrUpdatedBy, linkGroupOwner, false, true);
+                                        }
+                                        if (linksToUpdate.Any())
+                                        {
+                                            await CreateOrUpateLinkBatchAsync(linksToUpdate, linkOwners, linkCreatedOrUpdatedBy, linkGroupOwner, true, true);
+                                        }
+                                        return true;
+                                    }
+                                    else
                                     {
                                         _log.LogError($"Error creating/updating aka.ms links: {response.Content.ReadAsStringAsync().Result}");
                                         return true;
                                     }
-
-                                    // If it's bad request, then there are a couple paths:
-                                    // - We're attempting to create links (always overwrite) - The error is real.
-                                    // - We're attempting to update links, but some have not been created yet and we haven't bucketed.
-                                    //   In this case, we should bucket the links into exist/non-existent and then call this method
-                                    //   with update true/false
-                                    // - We're attempting to update links and have already bucketed them. In this case, the error is real.
-                                    if (response.StatusCode == HttpStatusCode.BadRequest)
-                                    {
-                                        if (update && !bucketed)
-                                        {
-                                            _log.LogMessage(MessageImportance.High, $"Failed to update aka.ms links: {response.StatusCode}\n" +
-                                                $"{response.Content.ReadAsStringAsync().Result}. Will bucket and create+update.");
-
-                                            (IEnumerable<AkaMSLink> linksToCreate, IEnumerable<AkaMSLink> linksToUpdate) = await BucketLinksAsync(batchOfLinksToCreateOrUpdate);
-
-                                            if (linksToCreate.Any())
-                                            {
-                                                await CreateOrUpateLinksImplAsync(linksToCreate, linkOwners, linkCreatedOrUpdatedBy, linkGroupOwner, false, true);
-                                            }
-                                            if (linksToUpdate.Any())
-                                            {
-                                                await CreateOrUpateLinksImplAsync(linksToUpdate, linkOwners, linkCreatedOrUpdatedBy, linkGroupOwner, true, true);
-                                            }
-                                            return true;
-                                        }
-                                        else
-                                        {
-                                            _log.LogError($"Error creating/updating aka.ms links: {response.Content.ReadAsStringAsync().Result}");
-                                            return true;
-                                        }
-                                    }
-
-                                    if ((!update && response.StatusCode != HttpStatusCode.OK) ||
-                                        (update && response.StatusCode != System.Net.HttpStatusCode.Accepted &&
-                                         response.StatusCode != System.Net.HttpStatusCode.NoContent &&
-                                         response.StatusCode != System.Net.HttpStatusCode.NotFound))
-                                    {
-                                        _log.LogMessage(MessageImportance.High, $"Failed to create/update aka.ms links: {response.StatusCode}\n{response.Content.ReadAsStringAsync().Result}");
-                                        return false;
-                                    }
-
-                                    return true;
                                 }
-                            }
-                            catch (HttpRequestException e)
-                            {
-                                // Avoid failing in these cases.  We could have a timeout or other failure that
-                                // doesn't show up as a normal response status code. The case we typically see is
-                                // a client timeout.
-                                _log.LogMessage(MessageImportance.High, $"Failed to create/update aka.ms links: {e.Message}");
-                                return false;
+
+                                if ((!update && response.StatusCode != HttpStatusCode.OK) ||
+                                    (update && response.StatusCode != System.Net.HttpStatusCode.Accepted &&
+                                        response.StatusCode != System.Net.HttpStatusCode.NoContent &&
+                                        response.StatusCode != System.Net.HttpStatusCode.NotFound))
+                                {
+                                    _log.LogMessage(MessageImportance.High, $"Failed to create/update aka.ms links: {response.StatusCode}\n{response.Content.ReadAsStringAsync().Result}");
+                                    return false;
+                                }
+
+                                return true;
                             }
                         }
-                    });
-
-                    if (!success)
-                    {
-                        _log.LogError($"Failed to create/updating aka.ms links");
+                        catch (HttpRequestException e)
+                        {
+                            // Avoid failing in these cases.  We could have a timeout or other failure that
+                            // doesn't show up as a normal response status code. The case we typically see is
+                            // a client timeout.
+                            _log.LogMessage(MessageImportance.High, $"Failed to create/update aka.ms links: {e.Message}");
+                            return false;
+                        }
                     }
+                });
+
+                if (!success)
+                {
+                    _log.LogError($"Failed to create/updating aka.ms links");
                 }
             }
         }
