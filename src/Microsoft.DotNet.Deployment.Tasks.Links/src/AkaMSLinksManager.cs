@@ -28,7 +28,7 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links.src
         ///     Aka.ms max links per batch request. There are two maximums:
         ///         - Number of links per batch (300)
         ///         - Max content size per request (50k)
-        ///     It's really easy to go over 50k wafter content encoding is done if the
+        ///     It's really easy to go over 50k after content encoding is done if the
         ///     maximum number of links per requests is reached. So we limit the max size
         ///     to 100 which is typically ~70% of the overall allowable size. This has plenty of
         ///     breathing room if the link targets were to get a lot larger.
