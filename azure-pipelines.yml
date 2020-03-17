@@ -36,9 +36,6 @@ stages:
           manifests: true
       enableMicrobuild: true
       enablePublishUsingPipelines: true
-      graphFileGeneration:
-        enabled: true
-        includeToolset: true
       workspace:
         clean: all
       jobs:
