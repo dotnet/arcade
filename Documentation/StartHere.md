@@ -1,8 +1,8 @@
-# Jumping into .NET Core 3 Infrastructure
+# Jumping into .NET Infrastructure
 
 The purpose of this document is to provide a jumping off point for repository
-owners looking to start upgrading their infrastructure to .NET Core 3. It will
-provide a general overview of the direction .NET Core 3 infrastructure is going
+owners looking to start upgrading their infrastructure to .NET. It will
+provide a general overview of the direction .NET infrastructure is going
 and a general outline of steps you should take to get started with the upgrade,
 with links to appropriate detailed documentation.
 
@@ -10,9 +10,9 @@ with links to appropriate detailed documentation.
 
 With every new major product cycle, we take the chance to upgrade our
 infrastructure based on what we learned in the previous product cycle. The goal
-is to produce a better product more efficiently in the next product cycle.  .NET
-Core 3 is no different, though in many ways the infrastructure changes we are
-making are much more an overhaul than normal.  Generally, we are focusing in 3
+is to produce a better product more efficiently in the next product cycle. .NET
+is no different, though in many ways the infrastructure changes we are
+making are much more an overhaul than normal. Generally, we are focusing in 3
 areas:
 - **Shared tooling (Arcade)** - Striving to reduce duplication of tooling,
   improve development consistency between repos and drive tooling improvements
@@ -27,7 +27,7 @@ areas:
 
 ## Does my repository need to be involved?
 
-Generally, if your repo is shipping in .NET Core 3, yes.  For ['Tier
+Generally, if your repo is shipping in .NET, yes.  For ['Tier
 1'](TierOneRepos.md) repos a full transition is required.  While there exist
 some special cases (e.g. repos used as submodules in aspnet/universe), we're
 striving to move as many people towards the new infrastructure as possible.
@@ -45,7 +45,7 @@ See the [Arcade Onboarding](Onboarding.md) guide.
 
 Additionally, the WinForms team has documented their path to adopt Arcade from scratch, including moving their repositories public. Their guide can be found here: [Arcade - Starting from Scratch](https://microsoft.sharepoint.com/:w:/t/MerriesWinFormsandSetup/EdJpqtiLVdtFuS6p10E0o_IBVu2WsETAd4zBf6YdVKsLcQ?rtime=MyHzd7Rx1kg)
 
-## Where can I find general information on .NET Core 3 infrastructure?
+## Where can I find general information on .NET infrastructure?
 
 There is quite a bit of documentation living under the
 [Documentation](../Documentation/) folder in the dotnet/arcade repo.  Here are
@@ -55,8 +55,7 @@ some highlights
 
 - [Arcade overview](Overview.md)
 - [Arcade communications](./Policy/ArcadeCommunications.md)
-- [How dependency flow works in .NET Core
-  3](BranchesChannelsAndSubscriptions.md)
+- [How dependency flow works in .NET](BranchesChannelsAndSubscriptions.md)
 - [Guidance for defaults](./Policy/DefaultsGuidance.md)
 - [Versioning rules](CorePackages/Versioning.md)
 - [Dependencies Flow Plan](DependenciesFlowPlan.md): Flowing dependencies with Darc, Maestro and BAR.
