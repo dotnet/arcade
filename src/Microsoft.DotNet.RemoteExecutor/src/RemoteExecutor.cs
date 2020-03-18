@@ -58,7 +58,7 @@ namespace Microsoft.DotNet.RemoteExecutor
                 HostRunner = HostRunnerName;
                 s_extraParameter = "remote";
             }
-            else if (RuntimeInformation.FrameworkDescription.StartsWith(".NET Core", StringComparison.OrdinalIgnoreCase))
+            else if (Environment.Version.Major >= 5 || RuntimeInformation.FrameworkDescription.StartsWith(".NET Core", StringComparison.OrdinalIgnoreCase))
             {
                 Path = typeof(RemoteExecutor).Assembly.Location;
                 HostRunner = processFileName;
