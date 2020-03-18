@@ -134,7 +134,7 @@ Update frequencies
 How often does a source repo flows dependencies into a target repo.
 
 * everyDay. The target repo only gets the dependencies updated once a day.
-* twiceDaily. The target repo gets the dependecies updated twice a day.
+* twiceDaily. The target repo gets the dependencies updated twice a day.
 * everyBuild. The target repo gets the dependencies updated after every source repo build.
 * everyWeek. The target repo gets the dependencies updated once a week (On Mondays).
 * none. No updates will happen in the target repo.
