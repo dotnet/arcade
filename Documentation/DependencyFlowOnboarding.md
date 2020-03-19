@@ -28,55 +28,9 @@ This folder contains required version files as well as Pipeline templates used f
 
 For more information about version files go to: https://github.com/dotnet/arcade/blob/master/Documentation/DependencyDescriptionFormat.md
 
-#### 2. Enable Arcade publishing
+#### 2. Enable Arcade publishing and publishing to the Build Asset Registry
 
-https://github.com/dotnet/arcade/blob/master/Documentation/CorePackages/Publishing.md
-
-To enable Arcade publishing, you need to define some additional variables on the job which needs to publish.
-
-A typical publish job would look something like this...
-
-```json
-variables:
-  _BuildConfig: Debug
-  _DotNetPublishToBlobFeed : true
-  _PublishBlobFeedUrl: https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json
-  ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
-    _PublishArgs: /p:DotNetPublishBlobFeedKey=$(dotnetfeed-storage-access-key-1)
-      /p:DotNetPublishBlobFeedUrl=$(_PublishBlobFeedUrl)
-      /p:DotNetPublishToBlobFeed=$(_DotNetPublishToBlobFeed)
-      /p:DotNetSymbolServerTokenMsdl=$(microsoft-symbol-server-pat)
-      /p:DotNetSymbolServerTokenSymWeb=$(symweb-symbol-server-pat)
-    _OfficialBuildIdArgs: /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
-  ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
-    _PublishArgs: ''
-    _OfficialBuildIdArgs: ''
-steps:
-# publishing requires some secrets from key vault
-- ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
-  - task: AzureKeyVault@1
-    inputs:
-      azureSubscription: 'DotNet-Engineering-Services_KeyVault'
-      KeyVaultName: EngKeyVault
-      SecretsFilter: 'dotnetfeed-storage-access-key-1,microsoft-symbol-server-pat,symweb-symbol-server-pat'
-
-- script: eng\common\CIBuild.cmd $(_PublishArgs) /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
-```
-
-#### 3. Enable assets publishing to the Build Asset Registry (BAR)
-
-To enable asset publishing to BAR we need to add a closing phase to `azure-pipelines.yml`. To do this add the following snippet at the end of `azure-pipelines.yml` and update the `dependsOn` parameter with the names of **all** the previous **build** jobs:
-
-```json
-  - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
-    - template: /eng/common/templates/phases/publish-build-assets.yml
-      parameters:
-        dependsOn:
-          - job1
-          - job2
-        queue:
-          name: Hosted VS2017
-```
+To enable publishing of your assets, follow the instructions outlined in https://github.com/dotnet/arcade/blob/master/Documentation/CorePackages/Publishing.md#basic-onboarding-scenario
 
 ## Consuming
 
@@ -147,11 +101,8 @@ Target Repository URL: <your repository URL>
 Target Branch: <target branch for arcade updates, e.g. master>
 Update Frequency: everyDay
 Merge Policies:
-- Name: AllChecksSuccessful
-  Properties:
-    ignoreChecks:
-    - WIP
-    - license/cla
+- Name: standard
+  Properties: {}
 ```
 
 3. Save and close
@@ -175,13 +126,17 @@ The check name corresponds to the string that shows up in GitHub/Azure DevOps.
 * RequireChecks. Require that a specific set of checks pass. Check names need to be defined in
 the `checks` property. The check name corresponds to the string that shows up in GitHub/Azure DevOps.
 * NoExtraCommits. If additional non-bot commits appear in the PR, the PR should not be merged.
+* NoRequestedChanges - If changes are requested on the PR (or the PR is rejected), it will not be merged.
+* Standard. Combines the AllChecksSuccessful and NoRequestedChanges policies. This is the recommended merge policy to use unless there's a reason to use the others.
 
 Update frequencies
 
 How often does a source repo flows dependencies into a target repo.
 
 * everyDay. The target repo only gets the dependencies updated once a day.
+* twiceDaily. The target repo gets the dependencies updated twice a day.
 * everyBuild. The target repo gets the dependencies updated after every source repo build.
+* everyWeek. The target repo gets the dependencies updated once a week (On Mondays).
 * none. No updates will happen in the target repo.
 
 ##### 3.5. Create a channel (optional, typically not needed)
