@@ -3,25 +3,25 @@
   <ProductDependencies>
   </ProductDependencies>
   <ToolsetDependencies>
-    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="5.0.0-beta.20168.1">
+    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="5.0.0-beta.20168.2">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>a5981bea658fa46405eb39b59f8d8bbd2730a141</Sha>
+      <Sha>1ffbf7b1b3d4842d027aecda84e9ece2bb3855d0</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Build.Tasks.Feed" Version="5.0.0-beta.20168.1">
+    <Dependency Name="Microsoft.DotNet.Build.Tasks.Feed" Version="5.0.0-beta.20168.2">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>a5981bea658fa46405eb39b59f8d8bbd2730a141</Sha>
+      <Sha>1ffbf7b1b3d4842d027aecda84e9ece2bb3855d0</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.SignTool" Version="5.0.0-beta.20168.1">
+    <Dependency Name="Microsoft.DotNet.SignTool" Version="5.0.0-beta.20168.2">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>a5981bea658fa46405eb39b59f8d8bbd2730a141</Sha>
+      <Sha>1ffbf7b1b3d4842d027aecda84e9ece2bb3855d0</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Helix.Sdk" Version="5.0.0-beta.20168.1">
+    <Dependency Name="Microsoft.DotNet.Helix.Sdk" Version="5.0.0-beta.20168.2">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>a5981bea658fa46405eb39b59f8d8bbd2730a141</Sha>
+      <Sha>1ffbf7b1b3d4842d027aecda84e9ece2bb3855d0</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.SwaggerGenerator.MSBuild" Version="5.0.0-beta.20168.1">
+    <Dependency Name="Microsoft.DotNet.SwaggerGenerator.MSBuild" Version="5.0.0-beta.20168.2">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>a5981bea658fa46405eb39b59f8d8bbd2730a141</Sha>
+      <Sha>1ffbf7b1b3d4842d027aecda84e9ece2bb3855d0</Sha>
     </Dependency>
     <Dependency Name="Microsoft.DotNet.Maestro.Client" Version="1.1.0-beta.19556.4">
       <Uri>https://github.com/dotnet/arcade-services</Uri>
@@ -44,9 +44,9 @@
       <Uri>https://github.com/dotnet/symreader-converter</Uri>
       <Sha>c5ba7c88f92e2dde156c324a8c8edc04d9fa4fe0</Sha>
     </Dependency>
-    <Dependency Name="XliffTasks" Version="1.0.0-beta.20167.1">
+    <Dependency Name="XliffTasks" Version="1.0.0-beta.20168.1">
       <Uri>https://github.com/dotnet/xliff-tasks</Uri>
-      <Sha>37d701fee95773b980a0213e87696a7b9e5191f3</Sha>
+      <Sha>d998fc901131b7d51dae70287a90bd2fa1301c0c</Sha>
     </Dependency>
   </ToolsetDependencies>
 </Dependencies>
