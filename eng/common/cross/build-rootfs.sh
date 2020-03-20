@@ -5,7 +5,7 @@ usage()
     echo "Usage: $0 [BuildArch] [CodeName] [lldbx.y] [--skipunmount] --rootfsdir <directory>]"
     echo "BuildArch can be: arm(default), armel, arm64, x86"
     echo "CodeName - optional, Code name for Linux, can be: trusty, xenial(default), zesty, bionic, alpine. If BuildArch is armel, LinuxCodeName is jessie(default) or tizen."
-    echo "                              for FreeBSD can be: freebsd11, freebsd12 of freebsd to get current LTS."
+    echo "                              for FreeBSD can be: freebsd11 or freebsd12."
     echo "lldbx.y - optional, LLDB version, can be: lldb3.9(default), lldb4.0, lldb5.0, lldb6.0 no-lldb. Ignored for alpine and FReeBSD"
     echo "--skipunmount - optional, will skip the unmount of rootfs folder."
     exit 1
@@ -170,7 +170,7 @@ while :; do
         freebsd11)
             __FreeBSDBase="11.3-RELEASE"
             ;&
-        freebsd*)
+        freebsd12)
             __CodeName=freebsd
             __BuildArch=x64
             __SkipUnmount=1
@@ -239,7 +239,7 @@ if [[ "$__CodeName" == "alpine" ]]; then
 elif [[ "$__CodeName" == "freebsd" ]]; then
     mkdir -p $__RootfsDir/usr/local/etc
     wget -O - https://download.freebsd.org/ftp/releases/amd64/${__FreeBSDBase}/base.txz | tar -C $__RootfsDir -Jxf - ./lib ./usr/lib ./usr/libdata ./usr/include ./usr/share/keys ./etc ./bin/freebsd-version
-    # For now, ask for 11 ABI even on 12. This can be revisted later.
+    # For now, ask for 11 ABI even on 12. This can be revisited later.
     echo "ABI = \"FreeBSD:11:amd64\"; FINGERPRINTS = \"${__RootfsDir}/usr/share/keys\"; REPOS_DIR = [\"${__RootfsDir}/etc/pkg\"]; REPO_AUTOUPDATE = NO; RUN_SCRIPTS = NO;" > ${__RootfsDir}/usr/local/etc/pkg.conf
     echo "FreeBSD: { url: "pkg+http://pkg.FreeBSD.org/\${ABI}/quarterly", mirror_type: \"srv\", signature_type: \"fingerprints\", fingerprints: \"${__RootfsDir}/usr/share/keys/pkg\", enabled: yes }" > ${__RootfsDir}/etc/pkg/FreeBSD.conf
     mkdir -p $__RootfsDir/tmp
