@@ -45,6 +45,8 @@ is triggered. This will validate the version which was just “pushed” by Arca
 
 #### Validation Scenarios
 
+The following scenarios are a part of [Arcade Validation](https://github.com/dotnet/arcade-validation)'s build process.
+
 **Build**
 
 The code in the repo is built using the pushed in version of Arcade SDK and core packages. During this 
