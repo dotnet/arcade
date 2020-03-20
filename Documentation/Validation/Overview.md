@@ -7,6 +7,20 @@ Before this effort, we'd know something was broken until we manually updated a d
 things hard to track since the bug could have been introduced way in the past and could be already 
 buried in a lot of commits.
 
+## Arcade Validation Policy
+
+With the goal of being more transparent, eliminating surprises, and minimizing disruptions, we now will **only** deploy Arcade and/or machine (image) updates when the following criteria is met:
+- Each bell-weather repo (defined as runtime, sdk, asp) must be building green so build problems won’t be compounded by new Arcade versions or images.
+- Arcade updates has been tested with each bell-weather repo.
+
+Exceptions:
+- Servicing continues as is today, with possible conflicts arising with images which we’ll need to deal on a case by case basis.  (this should also go away w/ future plans)
+- If an Arcade or machine queue update (includes VS) is needed to unblock any build, then obviously we’ll do that.  (but with targeted changes)
+
+Future proposed updates coming which will also affect this policy:
+- The image used by the build is managed by Arcade.  This implies that images updates are only seen by a build with an Arcade update.
+- Help repos keep up with tooling (e.g. VS) by adding support to help them scout for issues earlier so that they are ready to move.
+
 ## The process
 
 ### Self-build
@@ -33,9 +47,9 @@ This repo contains the scenarios where we validate the last produced version of 
 1. On every Arcade build dependencies will be updated and auto-merged when all the checks pass
 2. Arcade validation [official build](https://dnceng.visualstudio.com/internal/_build?definitionId=282) 
 is triggered. This will validate the version which was just “pushed” by Arcade
-3. If all scenarios succeed, we move the build to “.NET Tools – Latest”
-4. Since consuming repos are still getting changes from “.NET Tools – Latest” channel, they get the latest 
-validated versions with no change on their side
+3. Within the Arcade validation process, Arcade will also be tested with the "Last Known Good" build within the last three days (or the latest passing build if there haven't been any builds of the repository in the last three days) of the following repositories: `dotnet/roslyn`, `dotnet/runtime`, `dotnet/aspnetcore`, and `dotnet/core-sdk`
+4. These builds of Arcade will NOT automatically move to ".NET Tools - Latest". Instead, three times a week, the Engineering Services team will review the Arcade validation builds (including the results of the additional repos built with the version of Arcade being validated) and determine if the latest Arcade build should be moved to ".NET Tools - Latest". 
+4. Since consuming repos are still getting changes from “.NET Tools – Latest” channel, they get the latest validated versions with no change on their side
 
 #### Validation Scenarios
 
