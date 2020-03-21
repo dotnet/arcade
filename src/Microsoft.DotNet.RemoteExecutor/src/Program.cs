@@ -22,7 +22,7 @@ namespace Microsoft.DotNet.RemoteExecutor
             // Any additional arguments are passed as strings to the method.
             if (args.Length < 4)
             {
-                Console.Error.WriteLine("Usage: {0} assemblyName typeName methodName exceptionFile [additionalArgs]", typeof(Program).GetTypeInfo().Assembly.GetName().Name);
+                Console.Error.WriteLine("Usage: {0} assemblyName typeName methodName exceptionFile [additionalArgType additionalArg]...", typeof(Program).GetTypeInfo().Assembly.GetName().Name);
                 Environment.Exit(-1);
                 return -1;
             }
@@ -31,9 +31,17 @@ namespace Microsoft.DotNet.RemoteExecutor
             string typeName = args[1];
             string methodName = args[2];
             string exceptionFile = args[3];
-            string[] additionalArgs = args.Length > 4 ?
-                args.Subarray(4, args.Length - 4) :
-                Array.Empty<string>();
+            ReadOnlySpan<string> additionalArgs = args.Length > 4 ?
+                args.AsSpan(4, args.Length - 4)
+                : ReadOnlySpan<string>.Empty;
+
+            object[] actualArgs  = new object[additionalArgs.Length / 2];
+            for (int i = 0; i < actualArgs.Length; i++)
+            {
+                string typeString = additionalArgs[i * 2];
+                string value = additionalArgs[i * 2 + 1];
+                actualArgs[i] = ConvertStringToArgument(typeString, value);
+            }
 
             // Load the specified assembly, type, and method, then invoke the method.
             // The program's exit code is the return value of the invoked method.
@@ -54,7 +62,7 @@ namespace Microsoft.DotNet.RemoteExecutor
                 }
 
                 // Invoke the test
-                object result = mi.Invoke(instance, additionalArgs);
+                object result = mi.Invoke(instance, actualArgs);
 
                 if (result is Task<int> task)
                 {
@@ -83,10 +91,10 @@ namespace Microsoft.DotNet.RemoteExecutor
                 output.AppendLine(string.Format("  {0} {1} {2}", a, t, mi));
                 output.AppendLine();
 
-                if (additionalArgs.Length > 0)
+                if (actualArgs.Length > 0)
                 {
                     output.AppendLine("Child arguments:");
-                    output.AppendLine("  " + string.Join(", ", additionalArgs));
+                    output.AppendLine("  " + string.Join(", ", actualArgs));
                 }
 
                 File.WriteAllText(exceptionFile, output.ToString());
@@ -112,11 +120,65 @@ namespace Microsoft.DotNet.RemoteExecutor
             return exitCode;
         }
 
-        private static T[] Subarray<T>(this T[] arr, int offset, int count)
+        private static string UnescapeString(string value)
         {
-            var newArr = new T[count];
-            Array.Copy(arr, offset, newArr, 0, count);
-            return newArr;
+            var stringBuilder = new StringBuilder();
+            for (int i = 0; i < value.Length; i++)
+            {
+                if (i < value.Length - 2 && value[i] == '$' && value[i + 1] == '\\')
+                {
+                    // Unescape this char. E.g. "$\\0" -> '\0'
+                    char nextChar = value[i + 2];
+                    if (nextChar == '0')
+                    {
+                        stringBuilder.Append('\0');
+                    }
+                    else
+                    {
+                        // Unknown escaped char.
+                        stringBuilder.Append('$');
+                        stringBuilder.Append('\\');
+                        stringBuilder.Append(nextChar);
+                    }
+
+                    i+= 2;
+                }
+                else
+                {
+                    stringBuilder.Append(value[i]);
+                }
+            }
+
+            return stringBuilder.ToString();
+        }
+
+        private static object ConvertStringToArgument(string typeString, string value)
+        {
+            if (typeString == "(null)")
+            {
+                return null;
+            }
+
+            Type type = Type.GetType(typeString);
+            if (type == null)
+            {
+                throw new Exception($"Can't create type \"{type.FullName}\"");
+            }
+            
+            if (type.IsEnum)
+            {
+                return Enum.Parse(type, value);
+            }
+            else if (type == typeof(string))
+            {
+                return UnescapeString(value);
+            }
+            else if (type == typeof(char))
+            {
+                return UnescapeString(value)[0];
+            }
+            
+            return Convert.ChangeType(value, type);
         }
     }
 }
