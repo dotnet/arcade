@@ -81,7 +81,7 @@ Once you are part of the `arcade-contrib` team
 
 ##### 3.3. Get all existing channels
 
-1. Run `darc get-channels` to display available channels.  Arcade builds are published to the '.NET Tools - Latest' channel.
+1. Run `darc get-channels` to display available channels.  Arcade builds are published to the '.NET Eng - Latest' channel.
 
 ##### 3.4. Create a subscription to get Arcade updates
 
@@ -95,21 +95,20 @@ Interactive will open an editor to modify the fields, while non-interactive expe
 2. Fill out the fields.  For Arcade, this typically looks like:
 
 ```
-Channel: .NET Tools - Latest
+Channel: .NET Eng - Latest
 Source Repository URL: https://github.com/dotnet/arcade
 Target Repository URL: <your repository URL>
 Target Branch: <target branch for arcade updates, e.g. master>
 Update Frequency: everyDay
-Merge Policies:
-- Name: standard
-  Properties: {}
+Batchable: False
+Merge Policies: []
 ```
 
 3. Save and close
 
 ###### Non-interactive mode
 
-1. Run `darc add-subscription --channel ".NET Tools - Latest" --source-repo https://github.com/dotnet/arcade --target-repo <your repo> --target-branch master --update-frequency everyDay --ignore-checks WIP,license/cla --all-checks-passed -q`
+1. Run `darc add-subscription --channel ".NET Eng - Latest" --source-repo https://github.com/dotnet/arcade --target-repo <your repo> --target-branch master --update-frequency everyDay --ignore-checks WIP,license/cla --all-checks-passed -q`
 
 These steps can be altered for additional subscriptions to other repositories.
 
@@ -186,7 +185,7 @@ To validate that created subscriptions and channels work as expected you'd need 
    You can use various parameters to filter the list and find the subscription you're interested in.  For instance:
    ```
    darc get-subscriptions --target-repo corefx
-   https://github.com/dotnet/arcade (.NET Tools - Latest) ==> 'https://github.com/dotnet/corefx' ('master')
+   https://github.com/dotnet/arcade (.NET Eng - Latest) ==> 'https://github.com/dotnet/corefx' ('master')
    - Id: c297d885-0692-40f8-6b97-08d61f281b4c
    - Update Frequency: everyDay
    - Merge Policies:
