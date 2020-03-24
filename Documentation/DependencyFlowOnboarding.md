@@ -101,7 +101,9 @@ Target Repository URL: <your repository URL>
 Target Branch: <target branch for arcade updates, e.g. master>
 Update Frequency: everyDay
 Batchable: False
-Merge Policies: []
+Merge Policies:
+- Name: standard
+  Properties: {}
 ```
 
 3. Save and close
