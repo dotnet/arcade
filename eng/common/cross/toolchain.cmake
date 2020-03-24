@@ -68,7 +68,6 @@ if("$ENV{__DistroRid}" MATCHES "android.*")
     # include official NDK toolchain script
     include(${CROSS_ROOTFS}/../build/cmake/android.toolchain.cmake)
 elseif (CMAKE_SYSTEM_NAME STREQUAL "FreeBSD")
-    set(CLR_CMAKE_TARGET_OS FreeBSD)
     # we cross-compile by instructing clang
     set(CMAKE_C_COMPILER_TARGET ${triple})
     set(CMAKE_CXX_COMPILER_TARGET ${triple})
