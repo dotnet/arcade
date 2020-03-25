@@ -21,7 +21,7 @@ if NOT EXIST %ENV_PATH%\Scripts\python.exe (
 set /a renameAttemptNumber+=1
 echo Error renaming venv folder; waiting 5 seconds and retrying up to 10x Attempt: %renameAttemptNumber% 
 ping -n 6 127.0.0.1 > nul
-rename %TMP_ENV_PATH% newname
+rename %TMP_ENV_PATH% .azdo-env
 IF %renameAttemptNumber% GEQ 10 GOTO :renamingdone
 GOTO :retryloop
 )
