@@ -11,8 +11,7 @@
 
   <!-- Strip away placeholder tfms and TargetFrameworkSuffix during the graph build. -->
   <PropertyGroup Condition="'$(IsGraphBuild)' == 'true' and '$(MSBuildRestoreSessionId)' != ''">
-    <TargetFrameworks Condition="'$(TargetFrameworks)' != ''">$([System.Text.RegularExpressions.Regex]::Replace('$(TargetFrameworks)', '_[^;]+;?', ''))</TargetFrameworks>
-    <TargetFrameworks Condition="'$(TargetFrameworks)' != ''">$([System.Text.RegularExpressions.Regex]::Replace('$(TargetFrameworks)', '-[^;]+', ''))</TargetFrameworks>
+    <TargetFrameworks Condition="'$(TargetFrameworks)' != ''">$([System.Text.RegularExpressions.Regex]::Replace('$(TargetFrameworks)', '(-[^;]+)|(;?_[^;]+)', ''))</TargetFrameworks>
   </PropertyGroup>
   
   <Target Name="RemovePlaceHolderConfigs"
