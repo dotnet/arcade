@@ -26,4 +26,10 @@ When a repo is renamed or moved, a number of things need to be done to ensure a 
   
   darc delete-subscriptions --target-repo <original repo url>
   ```
+- Add appropriate repository policies for the new repo name for any batched subscriptions
+  ```
+  darc get-repository-policies --repo <original repo url>
+  <for each original repository policy on active branches>
+  darc add-repository-policy
+  ```
 - Update the `repositories` variable in GatherDropOperation to point to the new repo name, if that repo is present in the list: https://github.com/dotnet/arcade-services/blob/d2ef862c8262c3945a0c2098c3307ae9e264124a/src/Microsoft.DotNet.Darc/src/Darc/Operations/GatherDropOperation.cs#L336-L380.
