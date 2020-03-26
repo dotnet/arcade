@@ -24,7 +24,7 @@ At first, the Auto Scaler team monitors these alerts but after the stabilization
 ## Scale in
 
 Custom Auto-Scale v2 scales to any capacity the service requires.
-For scaling in, the service uses Helix API to take machines offline and then deletes the machine from the corresponding scale set. It will delete the oldest idle machine in the queue trying to keep the machines as fresh as possibl
+For scaling in, the service uses Helix API to take machines offline and then deletes the machine from the corresponding scale set. It will delete the oldest idle machine in the queue trying to keep the machines as fresh as possible, it uses the information in the heartbeats table to get the creation date of each machine.
 
 ![](./assets/MachinesOffline.png)
 
