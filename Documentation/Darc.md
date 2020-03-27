@@ -144,7 +144,7 @@ PS C:\enlistments\arcade> darc get-channels
 .NET Core 3 Release
 .NET Core 3.1 Dev
 .NET Core 3.1 Release
-.NET Core 5 Dev
+.NET 5 Dev
 .NET Core 3.0 Internal Servicing
 .NET 3 Tools
 .NET 3 Tools - Validation
@@ -244,16 +244,16 @@ Versions.props) based on the newest information.
 Continuing with the example from [Adding dependencies to a
 repository](#Adding-dependencies-to-a-repository), let's say I just added a
 dependency on Microsoft.NETCore.App out of core-setup. I want to fill in the
-missing information prior to check-in.  I know that the channel that .NET Core 5
-day to day development for core-setup targeting is '.NET Core 5 Dev', so by
+missing information prior to check-in.  I know that the channel that .NET 5
+day to day development for core-setup targeting is '.NET 5 Dev', so by
 doing:
 
 ```
-PS C:\enlistments\arcade> darc update-dependencies --channel ".NET Core 5 Dev" --name "Microsoft.Netcore.app"
+PS C:\enlistments\arcade> darc update-dependencies --channel ".NET 5 Dev" --name "Microsoft.Netcore.app"
 
 Updating 'Microsoft.NETCore.App': '' => '3.0.0-preview-27401-3' (from build '20190201.3' of 'https://github.com/dotnet/core-setup')
   Dependency name normalized to 'Microsoft.NETCore.App'
-Local dependencies updated from channel '.NET Core 5 Dev'.
+Local dependencies updated from channel '.NET 5 Dev'.
 
 PS C:\enlistments\arcade> git diff
 diff --git a/eng/Version.Details.xml b/eng/Version.Details.xml
@@ -368,7 +368,7 @@ vs. Product Dependencies](#toolset-vs-product-dependencies)
 By default on each operation (e.g. subscription updates or `darc
 update-dependencies`), darc and Maestro will update all applicable dependencies
 in eng/Version.Details.xml and associated files.  For instance, if a
-subscription from core-setup's '.NET Core 5 Dev' channel to core-sdk's master
+subscription from core-setup's '.NET 5 Dev' channel to core-sdk's master
 branch produces 3 outputs, Maestro will attempt to update any matching inputs in
 core-sdk's eng/Version.Details.xml file. In some cases, it may be necessary to
 pin dependencies so they do not move (e.g. if a breaking change requires
@@ -544,8 +544,8 @@ operation for a specific repository+branch combination, mapping outputs of a
 repository that have been applied to a channel (virtual branch) onto matching
 inputs of the target repository+branch.
 
-For example, a build of dotnet/corefx might be applied to the ".NET Core 5 Dev"
-channel. dotnet/core-setup maps new outputs of dotnet/corefx on the ".NET Core 5 Dev"
+For example, a build of dotnet/corefx might be applied to the ".NET 5 Dev"
+channel. dotnet/core-setup maps new outputs of dotnet/corefx on the ".NET 5 Dev"
 channel onto its master branch.
 
 A subscription has a few parts:
@@ -570,13 +570,13 @@ every day (when there is a new source build) or on every new build.
 
 #### What input channel should be used?
 
-There are generally two channels for day to day use in .NET Core 5:
-- '.NET Core 5 Dev' - Day to day builds of .NET Core 5 repositories are placed on
+There are generally two channels for day to day use in .NET 5:
+- '.NET 5 Dev' - Day to day builds of .NET 5 repositories are placed on
   this channel.
 - '.NET Tools - Latest' - Arcade releases are placed on this channel.
 
 So, if you're not adding a dependency on the https://github.com/dotnet/arcade
-repo, the source channel should be '.NET Core 5 Dev'. If you have other specific
+repo, the source channel should be '.NET 5 Dev'. If you have other specific
 needs, contact @dnceng.
 
 ### Halting and restarting dependency flow
@@ -612,7 +612,7 @@ darc and Maestro++ have a few mechanisms to enable such scenarios:
   ```
   # Disable by repo+branch+channel
 
-  darc default-channel-status --disable --repo https://github.com/aspnet/Extensions --branch refs/heads/master --channel ".NET Core 5 Dev"
+  darc default-channel-status --disable --repo https://github.com/aspnet/Extensions --branch refs/heads/master --channel ".NET 5 Dev"
 
   # Disable by id.
   # Use get-default-channels to get the ID of the default channel association,
@@ -621,7 +621,7 @@ darc and Maestro++ have a few mechanisms to enable such scenarios:
   darc get-default-channels
 
   # Find id of association in list
-  (63)   https://github.com/aspnet/Extensions @ refs/heads/master -> .NET Core 5 Dev
+  (63)   https://github.com/aspnet/Extensions @ refs/heads/master -> .NET 5 Dev
 
   darc default-channel-status --disable --id 63
   ```
@@ -854,7 +854,7 @@ Sets a goal build time for the definition per channel in minutes. Only dnceng is
 
 **Sample**:
 ```
-PS D:\enlistments\arcade> darc set-goal --minutes 38 --definition-id 6 --channel ".Net Core 5 Dev"
+PS D:\enlistments\arcade> darc set-goal --minutes 38 --definition-id 6 --channel ".Net 5 Dev"
 
 38
 ```
@@ -870,7 +870,7 @@ Get the goal build time for a definition per channel in minutes. Only dnceng is 
 
 **Sample**:
 ```
-PS D:\enlistments\arcade> darc get-goal --definition-id 6 --channel ".Net Core 5 Dev"
+PS D:\enlistments\arcade> darc get-goal --definition-id 6 --channel ".Net 5 Dev"
 
 38
 ```
@@ -1012,7 +1012,7 @@ Default channel mappings can be deleted with [delete-default-channel](#delete-de
 
 **Sample**
 ```
-PS D:\enlistments\arcade> darc add-default-channel --channel ".Net Core 5 Dev" --branch refs/heads/master --repo https://github.com/dotnet/arcade
+PS D:\enlistments\arcade> darc add-default-channel --channel ".Net 5 Dev" --branch refs/heads/master --repo https://github.com/dotnet/arcade
 ```
 
 **See also**:
@@ -1031,8 +1031,8 @@ operation for a specific repository+branch combination, mapping outputs of a
 repository that have been applied to a channel (virtual branch) onto matching
 inputs of the target repository+branch.
 
-For example, a build of dotnet/corefx might be applied to the ".NET Core 5 Dev"
-channel. dotnet/core-setup maps new outputs of corefx on the ".NET Core 5 Dev"
+For example, a build of dotnet/corefx might be applied to the ".NET 5 Dev"
+channel. dotnet/core-setup maps new outputs of corefx on the ".NET 5 Dev"
 channel onto its master branch.
 
 A subscription has a few parts:
@@ -1324,7 +1324,7 @@ You can obtain a list of current default channel mappings with
 
 **Sample**
 ```
-PS D:\enlistments\arcade> darc delete-default-channel --channel ".Net Core 5 Dev" --branch refs/heads/master
+PS D:\enlistments\arcade> darc delete-default-channel --channel ".Net 5 Dev" --branch refs/heads/master
                           --repo https://github.com/dotnet/arcade
 ```
 
@@ -1707,7 +1707,7 @@ Date Produced: 6/5/2019 7:12 AM
 Build Link:    https://dev.azure.com/dnceng/internal/_build/results?buildId=212972
 BAR Build Id:  13386
 Channels:
-- .NET Core 5 Dev
+- .NET 5 Dev
 ```
 
 **See also**:
@@ -1722,11 +1722,11 @@ purpose of the outputs of that build. Channels are used as sources in a
 subscription, indicating that the repository wants dependency updates from
 builds meant for the purpose associated with the channel.
 
-For instance, there is a channel called `.NET Core 5 Dev`. Builds that appear on
-this channel are intended for day to day .NET Core 5 development. Repositories
+For instance, there is a channel called `.NET 5 Dev`. Builds that appear on
+this channel are intended for day to day .NET 5 development. Repositories
 may have dependencies on other .NET Core repositories when building their own
-part of the .NET Core 5 stack. By subscribing to that repository's `.NET Core 5
-Dev` channel, they map .NET Core 5 daily development outputs onto their own
+part of the .NET 5 stack. By subscribing to that repository's `.NET 5
+Dev` channel, they map .NET 5 daily development outputs onto their own
 target branch.
 
 **Parameters**
@@ -1744,7 +1744,7 @@ PS D:\enlistments\arcade> darc get-channels
 .NET Core 3 Release
 .NET Core 3.1 Dev
 .NET Core 3.1 Release
-.NET Core 5 Dev
+.NET 5 Dev
 .NET Core 3.0 Internal Servicing
 .NET 3 Tools
 .NET 3 Tools - Validation
@@ -2417,7 +2417,7 @@ check of what the latest build of a repository is, especially if it has not been
 
 **Sample**:
 ```
-PS D:\enlistments\arcade-services> darc get-latest-build --repo core-setup --channel ".NET Core 5 Dev"
+PS D:\enlistments\arcade-services> darc get-latest-build --repo core-setup --channel ".NET 5 Dev"
 Repository:    https://github.com/dotnet/core-setup
 Branch:        refs/heads/master
 Commit:        9042fe6c81aa3b47f58ccd94ff02e42f9f7a4e46
@@ -2426,7 +2426,7 @@ Date Produced: 9/16/2019 9:19 AM
 Build Link:    https://dev.azure.com/dnceng/internal/_build/results?buildId=356253
 BAR Build Id:  28440
 Channels:
-- .NET Core 5 Dev
+- .NET 5 Dev
 ```
 
 **See also**:
@@ -2475,9 +2475,9 @@ to obtain the id of a subscription for use in
 
 The top line of the listing shows the subscription mapping and is read:
 ```
-https://github.com/aspnet/AspNetCore (.NET Core 5 Dev) ==> 'https://github.com/dotnet/core-sdk' ('master')
+https://github.com/aspnet/AspNetCore (.NET 5 Dev) ==> 'https://github.com/dotnet/core-sdk' ('master')
 
-Builds of https://github.com/aspnet/AspNetCore that have been applied to channel ".NET Core 5 Dev" will be applied to the master branch of https://github.com/dotnet/core-sdk.
+Builds of https://github.com/aspnet/AspNetCore that have been applied to channel ".NET 5 Dev" will be applied to the master branch of https://github.com/dotnet/core-sdk.
 ```
 
 **Parameters**
@@ -2497,7 +2497,7 @@ to be more useful.
 ```
 PS D:\enlistments\arcade-services> darc get-subscriptions --target-repo core-sdk --source-repo aspnet
 
-https://github.com/aspnet/AspNetCore (.NET Core 5 Dev) ==> 'https://github.com/dotnet/core-sdk' ('master')
+https://github.com/aspnet/AspNetCore (.NET 5 Dev) ==> 'https://github.com/dotnet/core-sdk' ('master')
   - Id: 510286a9-8cd5-47bd-a259-08d68641480a
   - Update Frequency: EveryBuild
   - Enabled: True
@@ -2584,7 +2584,7 @@ PS D:\enlistments\websdk> darc subscription-status --id 1abbb4c1-19d8-4912-fab8-
 Successfully disabled subscription with id '1abbb4c1-19d8-4912-fab8-08d6a19aff91'.
 
 PS D:\enlistments\websdk> darc get-subscriptions --source-repo aspnetcore --target-repo websdk --channel Dev
-https://github.com/aspnet/AspNetCore (.NET Core 5 Dev) ==> 'https://github.com/aspnet/websdk' ('master')
+https://github.com/aspnet/AspNetCore (.NET 5 Dev) ==> 'https://github.com/aspnet/websdk' ('master')
   - Id: 1abbb4c1-19d8-4912-fab8-08d6a19aff91
   - Update Frequency: EveryDay
   - Enabled: False
@@ -2596,7 +2596,7 @@ PS D:\enlistments\websdk> darc subscription-status --id 1abbb4c1-19d8-4912-fab8-
 Successfully enabled subscription with id '1abbb4c1-19d8-4912-fab8-08d6a19aff91'.
 
 PS D:\enlistments\websdk> darc get-subscriptions --source-repo aspnetcore --target-repo websdk --channel Dev
-https://github.com/aspnet/AspNetCore (.NET Core 5 Dev) ==> 'https://github.com/aspnet/websdk' ('master')
+https://github.com/aspnet/AspNetCore (.NET 5 Dev) ==> 'https://github.com/aspnet/websdk' ('master')
   - Id: 1abbb4c1-19d8-4912-fab8-08d6a19aff91
   - Update Frequency: EveryDay
   - Enabled: True
@@ -2683,14 +2683,14 @@ information.
 
 **Sample**
 ```
-PS C:\enlistments\core-setup> darc update-dependencies --channel ".NET Core 5 Dev"
+PS C:\enlistments\core-setup> darc update-dependencies --channel ".NET 5 Dev"
 
-Looking up latest build of https://github.com/dotnet/corefx on .NET Core 5 Dev
-Looking up latest build of https://github.com/dotnet/standard on .NET Core 5 Dev
-Looking up latest build of https://github.com/dotnet/coreclr on .NET Core 5 Dev
-Looking up latest build of https://dev.azure.com/dnceng/internal/_git/dotnet-wpf-int on .NET Core 5 Dev
-Looking up latest build of https://github.com/dotnet/arcade on .NET Core 5 Dev
-Looking up latest build of https://github.com/dotnet/sourcelink on .NET Core 5 Dev
+Looking up latest build of https://github.com/dotnet/corefx on .NET 5 Dev
+Looking up latest build of https://github.com/dotnet/standard on .NET 5 Dev
+Looking up latest build of https://github.com/dotnet/coreclr on .NET 5 Dev
+Looking up latest build of https://dev.azure.com/dnceng/internal/_git/dotnet-wpf-int on .NET 5 Dev
+Looking up latest build of https://github.com/dotnet/arcade on .NET 5 Dev
+Looking up latest build of https://github.com/dotnet/sourcelink on .NET 5 Dev
 Updating 'System.Windows.Extensions': '5.0.0-alpha1.19462.7' => '5.0.0-alpha1.19467.1' (from build '20190917.1' of 'https://github.com/dotnet/corefx')
 Updating 'System.CodeDom': '5.0.0-alpha1.19462.7' => '5.0.0-alpha1.19467.1' (from build '20190917.1' of 'https://github.com/dotnet/corefx')
 Updating 'Microsoft.NETCore.Platforms': '5.0.0-alpha1.19462.7' => '5.0.0-alpha1.19467.1' (from build '20190917.1' of 'https://github.com/dotnet/corefx')
@@ -2722,7 +2722,7 @@ Updating 'NETStandard.Library': '2.2.0-prerelease.19462.3' => '2.2.0-prerelease.
 Checking for coherency updates...
 Updating 'Microsoft.Private.Winforms': '5.0.0-alpha1.19462.11' => '5.0.0-alpha1.19467.4' to ensure coherency with Microsoft.DotNet.Wpf.DncEng@5.0.0-alpha1.19467.8
 Updating 'Microsoft.DotNet.Wpf.GitHub': '5.0.0-alpha1.19462.16' => '5.0.0-alpha1.19467.4' to ensure coherency with Microsoft.DotNet.Wpf.DncEng@5.0.0-alpha1.19467.8
-Local dependencies updated from channel '.NET Core 5 Dev'.
+Local dependencies updated from channel '.NET 5 Dev'.
 ```
 
 **See Also**:
@@ -2744,7 +2744,7 @@ target branch) may not be edited.
 **Sample**:
 ```
 PS D:\enlistments\websdk> darc get-subscriptions --source-repo aspnetcore --target-repo websdk --channel Dev
-https://github.com/aspnet/AspNetCore (.NET Core 5 Dev) ==> 'https://github.com/aspnet/websdk' ('master')
+https://github.com/aspnet/AspNetCore (.NET 5 Dev) ==> 'https://github.com/aspnet/websdk' ('master')
   - Id: 1abbb4c1-19d8-4912-fab8-08d6a19aff91
   - Update Frequency: EveryDay
   - Enabled: True
@@ -2757,7 +2757,7 @@ PS D:\enlistments\websdk> darc update-subscription --id 1abbb4c1-19d8-4912-fab8-
 Successfully updated subscription with id '1abbb4c1-19d8-4912-fab8-08d6a19aff91'.
 
 PS D:\enlistments\websdk> darc get-subscriptions --source-repo aspnetcore --target-repo websdk --channel Dev
-https://github.com/aspnet/AspNetCore (.NET Core 5 Dev) ==> 'https://github.com/aspnet/websdk' ('master')
+https://github.com/aspnet/AspNetCore (.NET 5 Dev) ==> 'https://github.com/aspnet/websdk' ('master')
   - Id: 1abbb4c1-19d8-4912-fab8-08d6a19aff91
   - Update Frequency: EveryDay
   - Enabled: True
