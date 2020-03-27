@@ -37,6 +37,8 @@ parameters:
   NetEngServicesProdChannelId: 679
   Net5Preview1ChannelId: 737
   Net5Preview2ChannelId: 738
+  NetCoreSDK313xxChannelId: 759
+  NetCoreSDK313xxInternalChannelId: 760
   
 stages:
 - stage: Validate
@@ -360,7 +362,7 @@ stages:
     symbolPublishingAdditionalParameters: ${{ parameters.symbolPublishingAdditionalParameters }}
     stageName: 'NETCore_SDK_313xx_Publishing'
     channelName: '.NET Core SDK 3.1.3xx'
-    channelId: 759
+    channelId: ${{ parameters.NetCoreSDK313xxChannelId }}
     transportFeed: 'https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet3.1-transport/nuget/v3/index.json'
     shippingFeed: 'https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet3.1/nuget/v3/index.json'
     symbolsFeed: 'https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet3.1-symbols/nuget/v3/index.json'
@@ -372,7 +374,7 @@ stages:
     symbolPublishingAdditionalParameters: ${{ parameters.symbolPublishingAdditionalParameters }}
     stageName: 'NETCore_SDK_313xx_Internal_Publishing'
     channelName: '.NET Core SDK 3.1.3xx Internal'
-    channelId: 760
+    channelId: ${{ parameters.NetCoreSDK313xxInternalChannelId }}
     transportFeed: 'https://pkgs.dev.azure.com/dnceng/_packaging/dotnet3.1-internal-transport/nuget/v3/index.json'
     shippingFeed: 'https://pkgs.dev.azure.com/dnceng/_packaging/dotnet3.1-internal/nuget/v3/index.json'
     symbolsFeed: 'https://pkgs.dev.azure.com/dnceng/_packaging/dotnet3.1-internal-symbols/nuget/v3/index.json' 
