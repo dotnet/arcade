@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.Build.Framework;
 using Newtonsoft.Json;
@@ -85,7 +86,11 @@ namespace Microsoft.DotNet.Helix.Sdk
         {
             // Forces this task to run asynchronously
             await Task.Yield();
-            
+
+            string xUnitArguments = XUnitArguments ?? "";
+
+            xUnitArguments = SelectDefaultReporter(xUnitArguments);
+
             if (!xunitProject.GetRequiredMetadata(Log, "PublishDirectory", out string publishDirectory))
             {
                 return null;
@@ -120,7 +125,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                     $"--runtimeconfig {assemblyBaseName}.runtimeconfig.json --depsfile {assemblyBaseName}.deps.json ";
             }
 
-            string command = $"{driver}{xUnitRunner} {assemblyName}{(XUnitArguments != null ? " " + XUnitArguments : "")} -xml testResults.xml {arguments}";
+            string command = $"{driver}{xUnitRunner} {assemblyName} {xUnitArguments} -xml testResults.xml {arguments}";
 
             Log.LogMessage($"Creating work item with properties Identity: {assemblyName}, PayloadDirectory: {publishDirectory}, Command: {command}");
 
@@ -140,6 +145,26 @@ namespace Microsoft.DotNet.Helix.Sdk
                 { "Command", command },
                 { "Timeout", timeout.ToString() },
             });
+        }
+
+        private static string SelectDefaultReporter(string xUnitArguments)
+        {
+            string[] reporters = new[]
+            {
+                "-appveyor",
+                "-json",
+                "-quiet",
+                "-teamcity",
+                "-verbose",
+                "-vsts",
+            };
+
+            if (!reporters.Any(r => Regex.IsMatch(xUnitArguments, @$"\b{r}\b")))
+            {
+                xUnitArguments += " -verbose ";
+            }
+
+            return xUnitArguments;
         }
     }
 }
