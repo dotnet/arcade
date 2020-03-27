@@ -65,7 +65,7 @@ stages:
         inputs:
           filePath: $(Build.SourcesDirectory)/eng/common/post-build/check-channel-consistency.ps1
           arguments: -PromoteToChannels "$(InitialChannels)[$(PromoteToMaestroChannelId)]"
-            -AvailableChannelIds ${{parameters.NetEngLatestChannelId}},${{parameters.NetEngValidationChannelId}},${{parameters.NetDev5ChannelId}},${{parameters.GeneralTestingChannelId}},${{parameters.NETCoreToolingDevChannelId}},${{parameters.NETCoreToolingReleaseChannelId}},${{parameters.NETInternalToolingChannelId}},${{parameters.NETCoreExperimentalChannelId}},${{parameters.NetEngServicesIntChannelId}},${{parameters.NetEngServicesProdChannelId}},${{parameters.Net5Preview1ChannelId}},${{parameters.Net5Preview2ChannelId}}
+            -AvailableChannelIds ${{parameters.NetEngLatestChannelId}},${{parameters.NetEngValidationChannelId}},${{parameters.NetDev5ChannelId}},${{parameters.GeneralTestingChannelId}},${{parameters.NETCoreToolingDevChannelId}},${{parameters.NETCoreToolingReleaseChannelId}},${{parameters.NETInternalToolingChannelId}},${{parameters.NETCoreExperimentalChannelId}},${{parameters.NetEngServicesIntChannelId}},${{parameters.NetEngServicesProdChannelId}},${{parameters.Net5Preview1ChannelId}},${{parameters.Net5Preview2ChannelId}},${{parameters.NetCoreSDK313xxChannelId}},${{parameters.NetCoreSDK313xxInternalChannelId}}
 
   - job:
     displayName: NuGet Validation
@@ -358,6 +358,7 @@ stages:
 - template: \eng\common\templates\post-build\channels\generic-public-channel.yml
   parameters:
     artifactsPublishingAdditionalParameters: ${{ parameters.artifactsPublishingAdditionalParameters }}
+    dependsOn: ${{ parameters.publishDependsOn }}
     publishInstallersAndChecksums: ${{ parameters.publishInstallersAndChecksums }}
     symbolPublishingAdditionalParameters: ${{ parameters.symbolPublishingAdditionalParameters }}
     stageName: 'NETCore_SDK_313xx_Publishing'
@@ -370,6 +371,7 @@ stages:
 - template: \eng\common\templates\post-build\channels\generic-internal-channel.yml
   parameters:
     artifactsPublishingAdditionalParameters: ${{ parameters.artifactsPublishingAdditionalParameters }}
+    dependsOn: ${{ parameters.publishDependsOn }}
     publishInstallersAndChecksums: ${{ parameters.publishInstallersAndChecksums }}
     symbolPublishingAdditionalParameters: ${{ parameters.symbolPublishingAdditionalParameters }}
     stageName: 'NETCore_SDK_313xx_Internal_Publishing'
