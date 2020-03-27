@@ -159,7 +159,8 @@ namespace Microsoft.DotNet.Helix.Sdk
                 "-vsts",
             };
 
-            if (!reporters.Any(r => Regex.IsMatch(xUnitArguments, @$"\b{r}\b")))
+            // Find the argument with either a space before or after it, or touching the end of the string
+            if (!reporters.Any(r => Regex.IsMatch(xUnitArguments, @$"( |^){r}( |$)")))
             {
                 xUnitArguments += " -verbose ";
             }
