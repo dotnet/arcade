@@ -40,6 +40,7 @@ namespace Microsoft.DotNet.ApiCompat
             CommandOption implDirs = app.Option("-i|--impl-dirs", "Comma delimited list of directories to find the implementation assemblies for each contract assembly.", CommandOptionType.SingleValue);
             implDirs.IsRequired(allowEmptyStrings: true);
             CommandOption baseline = app.Option("-b|--baseline", "Comma delimited list of files to skip known diffs.", CommandOptionType.SingleValue);
+            CommandOption validateBaseline = app.Option("--validate-baseline", "Validates that baseline files don't have invalid/unused diffs.", CommandOptionType.NoValue);
             CommandOption mdil = app.Option("-m|--mdil", "Enforce MDIL servicing rules in addition to IL rules.", CommandOptionType.NoValue);
             CommandOption outFilePath = app.Option("-o|--out", "Output file path. Default is the console.", CommandOptionType.SingleValue);
             CommandOption leftOperand = app.Option("-l|--left-operand", "Name for left operand in comparison, default is 'contract'.", CommandOptionType.SingleValue);
@@ -94,7 +95,7 @@ namespace Microsoft.DotNet.ApiCompat
 
                     try
                     {
-                        BaselineDifferenceFilter filter = GetBaselineDifferenceFilter(HostEnvironment.SplitPaths(baseline.Value()));
+                        BaselineDifferenceFilter filter = GetBaselineDifferenceFilter(HostEnvironment.SplitPaths(baseline.Value()), validateBaseline.HasValue());
                         NameTable sharedNameTable = new NameTable();
                         HostEnvironment contractHost = new HostEnvironment(sharedNameTable);
                         contractHost.UnableToResolve += (sender, e) => Trace.TraceError($"Unable to resolve assembly '{e.Unresolved}' referenced by the {leftOperandValue} assembly '{e.Referrer}'.");
@@ -191,7 +192,7 @@ namespace Microsoft.DotNet.ApiCompat
                 Implementation = rightOperand
             };
             ExportCciSettings.StaticAttributeFilter = GetAttributeFilter(HostEnvironment.SplitPaths(excludeAttributes));
-            ExportCciSettings.StaticRuleSettings = new RuleSettings { AllowDefaultInterfaceMethods = allowDefaultInterfaceMethods};
+            ExportCciSettings.StaticRuleSettings = new RuleSettings { AllowDefaultInterfaceMethods = allowDefaultInterfaceMethods };
 
             // Always compose the diff writer to allow it to import or provide exports
             container.SatisfyImports(diffWriter);
@@ -199,12 +200,12 @@ namespace Microsoft.DotNet.ApiCompat
             return diffWriter;
         }
 
-        private static BaselineDifferenceFilter GetBaselineDifferenceFilter(string[] baselineFileNames)
+        private static BaselineDifferenceFilter GetBaselineDifferenceFilter(string[] baselineFileNames, bool validateBaseline)
         {
             BaselineDifferenceFilter baselineDifferenceFilter = null;
-            
-            AddFiles(baselineFileNames, (file) => 
-                (baselineDifferenceFilter ??= new BaselineDifferenceFilter(new DifferenceFilter<IncompatibleDifference>())).AddBaselineFile(file));
+
+            AddFiles(baselineFileNames, (file) =>
+                (baselineDifferenceFilter ??= new BaselineDifferenceFilter(new DifferenceFilter<IncompatibleDifference>(), validateBaseline)).AddBaselineFile(file));
 
             return baselineDifferenceFilter;
         }
