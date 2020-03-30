@@ -42,8 +42,7 @@ namespace Microsoft.Cci.Filters
                 if (filteredLine.StartsWith("Compat issues with assembly", StringComparison.OrdinalIgnoreCase))
                     continue;
 
-                if (!_ignoreDifferences.ContainsKey(filteredLine))
-                    _ignoreDifferences.Add(filteredLine, false);
+                _ignoreDifferences[filteredLine] = false;
             }
         }
 
