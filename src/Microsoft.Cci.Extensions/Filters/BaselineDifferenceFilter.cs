@@ -39,7 +39,8 @@ namespace Microsoft.Cci.Filters
                 if (string.IsNullOrWhiteSpace(filteredLine))
                     continue;
 
-                if (filteredLine.StartsWith("Compat issues with assembly", StringComparison.OrdinalIgnoreCase))
+                if (filteredLine.StartsWith("Compat issues with assembly", StringComparison.OrdinalIgnoreCase) || 
+                    filteredLine.StartsWith("Total Issues"))
                     continue;
 
                 _ignoreDifferences[filteredLine] = false;
