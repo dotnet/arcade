@@ -32,7 +32,7 @@
       <_SymStoreTargetFramework>$(TargetFramework)</_SymStoreTargetFramework>
       <_SymStoreTargetFramework Condition="'$(TargetFrameworkSuffix)' != ''">$(_SymStoreTargetFramework)-$(TargetFrameworkSuffix)</_SymStoreTargetFramework>
 
-      <_SymStoreOutputDir>$(ArtifactsSymStoreDirectory)$(MSBuildProjectName)\$(_SymStoreTargetFramework)\</_SymStoreOutputDir>
+      <_SymStoreOutputDir>$(ArtifactsSymStoreDirectory)$(OutDirName)\$(_SymStoreTargetFramework)\</_SymStoreOutputDir>
       <_SymStoreOutputDir Condition="'$(PlatformName)' != 'AnyCPU'">$(_SymStoreOutputDir)$(PlatformName)\</_SymStoreOutputDir>
 
       <_SymStorePdbPath>$(_SymStoreOutputDir)$(TargetName).pdb</_SymStorePdbPath>
