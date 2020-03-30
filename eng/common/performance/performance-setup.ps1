@@ -53,8 +53,9 @@ if ($Internal) {
 $CommonSetupArguments="--channel master --queue $Queue --build-number $BuildNumber --build-configs $Configurations --architecture $Architecture"
 $SetupArguments = "--repository https://github.com/$Repository --branch $Branch --get-perf-hash --commit-sha $CommitSha $CommonSetupArguments"
 
+
 #This grabs the LKG version number of dotnet and passes it to our scripts
-$VersionJSON = Invoke-WebRequest -UseBasicParsing https://raw.githubusercontent.com/dotnet/runtime/master/global.json | ConvertFrom-Json
+$VersionJSON = Get-Content global.json | ConvertFrom-Json
 $DotNetVersion = $VersionJSON.tools.dotnet
 $SetupArguments = "--dotnet-versions $DotNetVersion $SetupArguments"
 
