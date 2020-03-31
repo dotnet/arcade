@@ -139,7 +139,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
                     case Lang.CSharp:
                         if (AsConstants)
                         {
-                            strings.AppendLine($"{memberIndent}internal const string @{identifier} = \"{name}\");");
+                            strings.AppendLine($"{memberIndent}internal const string @{identifier} = \"{name}\";");
                         }
                         else
                         {
@@ -220,9 +220,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
 
                     case Lang.VisualBasic:
                         getStringMethod = $@"{memberIndent}Friend Shared Property Culture As Global.System.Globalization.CultureInfo
-#If Not NET20 Then
 {memberIndent}<Global.System.Runtime.CompilerServices.MethodImpl(Global.System.Runtime.CompilerServices.MethodImplOptions.AggressiveInlining)>
-#End If
 {memberIndent}Friend Shared Function GetResourceString(ByVal resourceKey As String, Optional ByVal defaultValue As String = Nothing) As String
 {memberIndent}    Return ResourceManager.GetString(resourceKey, Culture)
 {memberIndent}End Function";
