@@ -420,7 +420,7 @@ Note: defining `runtimes` in your global.json will signal to Arcade to install a
   <packageSources>
     <clear />
     <!-- Feed to use to restore the Arcade SDK from -->  
-    <add key="dotnet-core" value="https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json" />
+    <add key="dotnet-eng" value="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json" />
     <!-- Feeds to use to restore dependent packages from -->  
     <add key="my-feed" value="https://dotnet.myget.org/F/myfeed/api/v3/index.json" />
   </packageSources>
