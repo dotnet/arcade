@@ -60,7 +60,6 @@ __FreeBSDPackages="libunwind"
 __FreeBSDPackages+=" icu"
 __FreeBSDPackages+=" libinotify"
 __FreeBSDPackages+=" lttng-ust"
-__FreeBSDPackages+=" llvm-90"
 __FreeBSDPackages+=" krb5"
 
 __UnprocessedBuildArgs=
@@ -237,6 +236,7 @@ if [[ "$__CodeName" == "alpine" ]]; then
 
     rm -r $__ApkToolsDir
 elif [[ "$__CodeName" == "freebsd" ]]; then
+    set -e
     mkdir -p $__RootfsDir/usr/local/etc
     wget -O - https://download.freebsd.org/ftp/releases/amd64/${__FreeBSDBase}/base.txz | tar -C $__RootfsDir -Jxf - ./lib ./usr/lib ./usr/libdata ./usr/include ./usr/share/keys ./etc ./bin/freebsd-version
     # For now, ask for 11 ABI even on 12. This can be revisited later.
