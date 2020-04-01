@@ -6,6 +6,11 @@ param(
 try {
   . $PSScriptRoot\post-build-utils.ps1
 
+  if ($PromoteToChannels -eq "") {
+    Write-PipelineTaskError -Type 'warning' -Message "This build won't publish asset as it's not configured to any Maestro channel. If that wasn't intended use Darc to configure a default channel for the build or to promote it to a channel."
+    ExitWithExitCode 0
+  }
+
   # Check that every channel that Maestro told to promote the build to 
   # is available in YAML
   $PromoteToChannelsIds = $PromoteToChannels -split "\D" | Where-Object { $_ }
