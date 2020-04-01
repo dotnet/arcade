@@ -163,10 +163,10 @@ function CheckSymbolsAvailable {
       Write-Host
     }
 
-    if ($TotalFailures -ne 0) {
-      Write-PipelineTelemetryError -Category 'CheckSymbols' -Message "Symbols missing for $TotalFailures packages"
-      ExitWithExitCode 1
-    }
+  if ($TotalFailures -ne 0) {
+    Write-PipelineTelemetryError -Category 'CheckSymbols' -Message "Symbols missing for $TotalFailures packages"
+    ExitWithExitCode 1
+  }
 }
 
 function InstallDotnetSymbol {
