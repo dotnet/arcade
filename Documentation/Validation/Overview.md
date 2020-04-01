@@ -30,18 +30,22 @@ repos get Arcade dependencies from this channel, any introduced bug would break 
 
 Now, Arcade's builds go to the ".NET Tools - Validation" channel.
 
-### [Arcade-validation repo](https://github.com/dotnet/arcade-validation)
+### [Arcade-Validation Repository](https://github.com/dotnet/arcade-validation)
 
-This repo contains the scenarios where we validate the last produced version of the SDK as a consumer repo.
+This repository contains the scenarios where we validate the last produced version of the SDK as a consumer repository.
 
-#### Validation process
+#### Validation Process
 
 1. On every Arcade build dependencies will be updated and auto-merged when all the checks pass
 2. Arcade validation [official build](https://dnceng.visualstudio.com/internal/_build?definitionId=282) 
 is triggered. This will validate the version which was just “pushed” by Arcade
-3. Within the Arcade validation process, Arcade will also be tested with the "Last Known Good" build within the last three days (or the latest passing build if there haven't been any builds of the repository in the last three days) of the following repositories: `dotnet/roslyn`, `dotnet/runtime`, `dotnet/aspnetcore`, and `dotnet/core-sdk`
-4. The Engineering Services team will review the Arcade validation builds (including the results of the additional repos built with the version of Arcade being validated) three times a week, and determine if the latest Arcade build should be moved to ".NET Tools - Latest". This means the builds of Arcade will NOT automatically move to ".NET Tools - Latest". 
-4. Consuming repositories subscribed to ".NET Tools - Latest" channel will still get the latest validated version of Arcade with no change on their side.
+3. The following process updates are only valid for the current development branch of Arcade and will not affect release or servicing branches. 
+    1. Within the Arcade validation process, Arcade will also be tested with the "Last Known Good" build within the last three days (or the latest passing build if there haven't been any builds of the repository in the last three days) of the following repositories: `dotnet/runtime`, `dotnet/aspnetcore`, and `dotnet/installer`
+    2. If any of the builds of these repositories fails, the Engineering Services team will investigate the source of the failure.
+    3. If the source of the failure is due to an infrastructure failure in Arcade (e.g. dependency flow, publishing, machine images, et cetera), the team will correct the issue and publish a new version of Arcade to validate. 
+    4. If the source of the failure is due to a toolset failure that was flowed to Arcade (e.g. Roslyn, Nuget, MSBuild, et cetera), the team will inform the repository owner of the potential breaking change. 
+    5. When the team determines that the version of Arcade can be promoted (because all the builds were successful or any breaking changes are unrelated to infrastructure), we will promote the validated version of Arcade to ".NET Eng - Latest". Any repositories subscribed to that should receive the updated version as normal. 
+    6. Missy Messa will primarily handle the promotion of Arcade (Matt Mitchell will be the back-up promoter).
 
 #### Validation Scenarios
 
