@@ -54,23 +54,18 @@ namespace Microsoft.Cci.Filters
 
         public virtual bool Include(ITypeDefinitionMember member)
         {
-            // Include based on member visibility (simple cases).
-            switch (member.Visibility)
+            // Include internal and private protected members.
+            if (member.Visibility == TypeMemberVisibility.Family ||
+                member.Visibility == TypeMemberVisibility.FamilyAndAssembly)
             {
-                case TypeMemberVisibility.Assembly:
-                case TypeMemberVisibility.FamilyOrAssembly:
-                case TypeMemberVisibility.Public:
-                    return true;
-
-                case TypeMemberVisibility.Family:
-                case TypeMemberVisibility.FamilyAndAssembly:
-                    // Similar to special case in PublicOnlyCciFilter, include protected members even of a sealed type.
-                    // This is necessary to generate compilable code e.g. a derived type in current assembly may
-                    // override the protected member.
-                    return true;
+                // Similar to special case in PublicOnlyCciFilter, include protected members even of a sealed type.
+                // This is necessary to generate compilable code e.g. callers with IVT dependencies on this assembly
+                // may call internal methods in a sealed type. (IsVisibleToFriendAssemblies() includes the IsSealed
+                // check for other use cases besides this one.)
+                return true;
             }
 
-            // Include explicit interface implementations.
+            // Include public(-ish) members and explicit interface implementations.
             if (member.IsVisibleToFriendAssemblies())
             {
                 return true;
