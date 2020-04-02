@@ -54,7 +54,7 @@
       <PackagesToPublish Include="$(ArtifactsNonShippingPackagesDir)**/*.nupkg" IsShipping="false" />
       <PackagesToPublish Remove="@(ExistingSymbolPackages)" />
 
-      <PackagesToPublish Update="@(PackagesToPublish)">
+      <PackagesToPublish Update="@(PackagesToPublish)" Condition="'$(DotNetNupkgContainsPortablePdb)' == 'true'">
         <SymbolPackageToGenerate Condition="!Exists('%(RootDir)%(Directory)%(Filename).symbols.nupkg')">$(SymbolPackagesDir)%(Filename).symbols.nupkg</SymbolPackageToGenerate>
       </PackagesToPublish>
 
