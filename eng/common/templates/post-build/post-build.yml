@@ -9,7 +9,7 @@ parameters:
     continueOnError: false
     params: ''
     artifactNames: ''
-    downloadArtifacts: false
+    downloadArtifacts: true
 
   # These parameters let the user customize the call to sdk-task.ps1 for publishing
   # symbols & general artifacts as well as for signing validation
