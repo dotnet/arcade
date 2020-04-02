@@ -7,28 +7,29 @@ using Microsoft.Cci.Extensions;
 
 namespace Microsoft.Cci.Filters
 {
-    public class ExcludeAttributesFilter : PublicOnlyCciFilter
+    public class ExcludeAttributesFilter : ICciFilter
     {
         private readonly HashSet<string> _attributeDocIds;
 
-        public ExcludeAttributesFilter(IEnumerable<string> attributeDocIds, bool includeForwardedTypes = false)
-            : base(excludeAttributes: false, includeForwardedTypes: includeForwardedTypes)
+        public ExcludeAttributesFilter(IEnumerable<string> attributeDocIds)
         {
             _attributeDocIds = new HashSet<string>(attributeDocIds);
         }
 
-        public ExcludeAttributesFilter(string attributeDocIdFile, bool includeForwardedTypes = false)
-            : base(excludeAttributes: false, includeForwardedTypes: includeForwardedTypes)
+        public ExcludeAttributesFilter(string attributeDocIdFile)
         {
             _attributeDocIds = new HashSet<string>(DocIdExtensions.ReadDocIds(attributeDocIdFile));
         }
 
-        public override bool Include(ICustomAttribute attribute)
-        {
-            if (_attributeDocIds.Contains(attribute.DocId()))
-                return false;
+        public bool Include(INamespaceDefinition ns) => true;
 
-            return base.Include(attribute);
+        public bool Include(ITypeDefinition type) => true;
+
+        public bool Include(ITypeDefinitionMember member) => true;
+
+        public bool Include(ICustomAttribute attribute)
+        {
+            return !_attributeDocIds.Contains(attribute.DocId());
         }
     }
 }
