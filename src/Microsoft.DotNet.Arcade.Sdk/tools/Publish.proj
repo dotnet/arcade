@@ -26,6 +26,9 @@
     <IsStableBuild>false</IsStableBuild>
     <IsStableBuild Condition="'$(DotNetFinalVersionKind)' == 'release'">true</IsStableBuild>
 
+    <!-- If `DotNetNupkgContainsPortablePdb` is not set we default it to true. -->
+    <DotNetNupkgContainsPortablePdb Condition="'$(DotNetNupkgContainsPortablePdb)' == ''">true</DotNetNupkgContainsPortablePdb>
+
     <AssetManifestOS Condition="'$(AssetManifestOS)' == ''">$(OS)</AssetManifestOS>
 
     <AssetManifestFileName>$(AssetManifestOS)-$(PlatformName).xml</AssetManifestFileName>

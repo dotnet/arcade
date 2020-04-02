@@ -18,8 +18,6 @@
     DotNetSignType                  Specifies the signing type: 'real' (default), 'test'.
     DotNetRuntimeSourceFeed         Storage account to lookup for the .Net runtime files
     DotNetRuntimeSourceFeedKey      In case the storage account to fetch the .Net runtime files are private this should contain a SAS token.
-    DotNetNupkgContainsPortablePdb  Will the generated NuGet packages contain Portable PDBs. 
-                                    If true, .nupkg files will be duplicated as .symbols.nupkg if they don't exist already. Default to true.
 
     ContinuousIntegrationBuild      "true" when building on a CI server (PR build or official build)
     Restore                         "true" to restore toolset and solution
@@ -87,9 +85,6 @@
       <!-- IsRunningFromVisualStudio may be true even when running msbuild.exe from command line. This generally means that MSBUild is Visual Studio installation and therefore we need to find NuGet.targets in a different location.  -->
       <_NuGetRestoreTargets>$(MSBuildToolsPath)\NuGet.targets</_NuGetRestoreTargets>
       <_NuGetRestoreTargets Condition="'$([MSBuild]::IsRunningFromVisualStudio())' == 'true'">$(MSBuildToolsPath32)\..\..\..\Common7\IDE\CommonExtensions\Microsoft\NuGet\NuGet.targets</_NuGetRestoreTargets>
-
-      <!-- If `DotNetNupkgContainsPortablePdb` is not set we default it to true. -->
-      <DotNetNupkgContainsPortablePdb Condition="'$(DotNetNupkgContainsPortablePdb)' == ''">true</DotNetNupkgContainsPortablePdb>
 
       <!-- If `DotNetPublishUsingPipelines` is not set we default it to false. -->
       <DotNetPublishUsingPipelines Condition="'$(DotNetPublishUsingPipelines)' == ''">false</DotNetPublishUsingPipelines>
@@ -165,7 +160,6 @@
     <ItemGroup>
       <_PublishProps Include="@(_CommonProps)"/>
       <_PublishProps Include="DotNetOutputBlobFeedDir=$(_DotNetOutputBlobFeedDir)" Condition="'$(_DotNetOutputBlobFeedDir)' != ''" />
-      <_PublishProps Include="DotNetNupkgContainsPortablePdb=$(DotNetNupkgContainsPortablePdb)" />
 
       <!-- Used in a few places in the stack to decide if publishing was enabled or not. -->
       <_PublishProps Include="Publish=$(Publish)"/>
