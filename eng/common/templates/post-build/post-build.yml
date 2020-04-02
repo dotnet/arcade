@@ -9,6 +9,7 @@ parameters:
     continueOnError: false
     params: ''
     artifactNames: ''
+    downloadArtifacts: false
 
   # These parameters let the user customize the call to sdk-task.ps1 for publishing
   # symbols & general artifacts as well as for signing validation
@@ -192,6 +193,9 @@ stages:
       additionalParameters: ${{ parameters.SDLValidationParameters.params }}
       continueOnError: ${{ parameters.SDLValidationParameters.continueOnError }}
       artifactNames: ${{ parameters.SDLValidationParameters.artifactNames }}
+      downloadArtifacts: ${{ parameters.SDLValidationParameters.downloadArtifacts }}
+
+
 
 - template: \eng\common\templates\post-build\channels\generic-public-channel.yml
   parameters:
