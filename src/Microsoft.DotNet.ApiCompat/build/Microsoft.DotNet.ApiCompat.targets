@@ -68,7 +68,7 @@
       <ApiCompatArgs Condition="'$(ApiCompatExcludeAttributeList)' != ''">$(ApiCompatArgs) --exclude-attributes "$(ApiCompatExcludeAttributeList)"</ApiCompatArgs>
       <ApiCompatArgs Condition="'$(ApiCompatEnforceOptionalRules)' == 'true'">$(ApiCompatArgs) --enforce-optional-rules</ApiCompatArgs>
       <ApiCompatArgs Condition="'$(BaselineAllAPICompatError)' != 'true' and Exists('$(ApiCompatBaseline)')">$(ApiCompatArgs) --baseline "$(ApiCompatBaseline)"</ApiCompatArgs>
-      <ApiCompatArgs>$(ApiCompatArgs) --impl-dirs "$(IntermediateOutputPath),@(_DependencyDirectories, ','),"</ApiCompatArgs>
+      <ApiCompatArgs>$(ApiCompatArgs) --impl-dirs "@(_DependencyDirectories, ','),"</ApiCompatArgs>
       <ApiCompatArgs Condition=" '$(AdditionalApiCompatOptions)' != '' ">$(ApiCompatArgs) $(AdditionalApiCompatOptions)</ApiCompatArgs>
       <ApiCompatBaselineAll Condition="'$(BaselineAllAPICompatError)' == 'true'">&gt; "$(ApiCompatBaseline)"</ApiCompatBaselineAll>
       <ApiCompatExitCode>0</ApiCompatExitCode>
@@ -123,7 +123,7 @@
 
     <PropertyGroup>
       <MatchingRefApiCompatArgs>$(MatchingRefApiCompatArgs) "$(ImplementationAssemblyAsContract)"</MatchingRefApiCompatArgs>
-      <MatchingRefApiCompatArgs>$(MatchingRefApiCompatArgs) --contract-depends "$(IntermediateOutputPath),@(_ContractDependencyDirectories, ','),"</MatchingRefApiCompatArgs>
+      <MatchingRefApiCompatArgs>$(MatchingRefApiCompatArgs) --contract-depends "@(_ContractDependencyDirectories, ','),"</MatchingRefApiCompatArgs>
       <MatchingRefApiCompatArgs>$(MatchingRefApiCompatArgs) --left-operand implementation</MatchingRefApiCompatArgs>
       <MatchingRefApiCompatArgs>$(MatchingRefApiCompatArgs) --right-operand reference</MatchingRefApiCompatArgs>
       <MatchingRefApiCompatArgs Condition="'$(ApiCompatExcludeAttributeList)' != ''">$(MatchingRefApiCompatArgs) --exclude-attributes "$(ApiCompatExcludeAttributeList)"</MatchingRefApiCompatArgs>
