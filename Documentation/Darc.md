@@ -825,12 +825,13 @@ darc add-build-to-channel --id 46856 --channel ".NET Core SDK 3.1.3xx"
 
 There are a few interesting non-standard scenarios:
 - If you don't want to publish you can pass: `--skip-assets-publishing`. The build will immediately apply
-  to the new channel.
+  to the new channel. You should only do this if you know the assets from this build are already available
+  to downstream builds.
 - By default, the publishing pipeline will use the same version of arcade that was referenced in the build
-  you wish to assign. This may not be desirable if your repo is missing a required arcade fix. You can
+  you wish to assign. This may not be desirable if your repo is missing a required arcade fix. You can ask
   for the automation to use a different arcade version by passing `--source-branch` and `--source-sha`. These
   are the source branch and sha of arcade, not your repo. For instance, the following command will use arcade
-  at sha 09bb9d929120b402348c9a0e9c8c951e824059aa in context of branch master (this is required by AzDO, but not
+  at sha `09bb9d929120b402348c9a0e9c8c951e824059aa` in context of branch master (this is required by AzDO, but not
   particularly material to the functionality.)
   ```
   darc add-build-to-channel --id 46856 --channel ".NET Core SDK 3.1.3xx" --source-branch master
@@ -868,6 +869,7 @@ To locate the BAR build ID for a build
         https://github.com/dotnet/installer@master => (131) .NET Core 5 Dev
     Determined build will be added to the following channels: [131]
   ```
+4. The BAR build ID is `47814`
 
 ## Command Reference
 
@@ -1254,7 +1256,7 @@ parameters:
 - `--validate-SDL` - Perform SDL validation.
 - `--sdl-validation-parameters` - Custom parameters for SDL validation.
 - `--sdl-validation-continue-on-error` - Ignore SDL validation errors.
-- `--skip-assets-publishing` - Add the build to the channel without publishing assets to th
+- `--skip-assets-publishing` - Add the build to the channel without publishing assets to the
   channel's feeds.
 - `--no-wait` - If set, Darc won't wait for the asset publishing and channel assignment.
   The operation continues asynchronously in AzDO.
