@@ -5,7 +5,7 @@ parameters:
   enableNugetValidation: true
   publishInstallersAndChecksums: false
   SDLValidationParameters:
-    enable: false
+    enable: true
     continueOnError: false
     params: ''
     artifactNames: ''
