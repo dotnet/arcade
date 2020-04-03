@@ -88,7 +88,7 @@
 
       <!-- If `DotNetPublishUsingPipelines` is not set we default it to false. -->
       <DotNetPublishUsingPipelines Condition="'$(DotNetPublishUsingPipelines)' == ''">false</DotNetPublishUsingPipelines>
-      
+
       <!-- 
         If DotNetPublishUsingPipelines is set we don't publish symbols during the build stage,
         only in the Maestro post-build stages. If DotNetPublishUsingPipelines is NOT set then
