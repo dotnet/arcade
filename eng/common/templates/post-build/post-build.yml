@@ -193,8 +193,6 @@ stages:
       continueOnError: ${{ parameters.SDLValidationParameters.continueOnError }}
       artifactNames: ${{ parameters.SDLValidationParameters.artifactNames }}
 
-
-
 - template: \eng\common\templates\post-build\channels\generic-public-channel.yml
   parameters:
     artifactsPublishingAdditionalParameters: ${{ parameters.artifactsPublishingAdditionalParameters }}
