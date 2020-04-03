@@ -433,6 +433,12 @@ referenced in Microsoft.NETCore.App, issues may occur. Specifying a coherent
 parent that ties the corefx dependencies to Microsoft.NETCore.App will avoid
 this.
 
+The *subtree of the coherent parent* is the tree of builds that the parent
+depends on, including transitive dependencies. To perform a coherent parent
+update, Darc searches the assets in the subtree to find the newest-built asset
+matching the dependency that declared the coherent parent. Darc then assigns
+that version to the dependency.
+
 #### Specifying a coherent parent
 
 To specify a coherent parent, add "CoherentParentDependency" attributes in your
