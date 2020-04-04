@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -e
+
 usage()
 {
     echo "Usage: $0 [BuildArch] [CodeName] [lldbx.y] [--skipunmount] --rootfsdir <directory>]"
@@ -60,7 +62,6 @@ __FreeBSDPackages="libunwind"
 __FreeBSDPackages+=" icu"
 __FreeBSDPackages+=" libinotify"
 __FreeBSDPackages+=" lttng-ust"
-__FreeBSDPackages+=" llvm-90"
 __FreeBSDPackages+=" krb5"
 
 __UnprocessedBuildArgs=
@@ -205,7 +206,7 @@ fi
 
 if [ -d "$__RootfsDir" ]; then
     if [ $__SkipUnmount == 0 ]; then
-        umount $__RootfsDir/*
+        umount $__RootfsDir/* || true
     fi
     rm -rf $__RootfsDir
 fi
@@ -260,7 +261,7 @@ elif [[ -n $__CodeName ]]; then
     chroot $__RootfsDir symlinks -cr /usr
 
     if [ $__SkipUnmount == 0 ]; then
-        umount $__RootfsDir/*
+        umount $__RootfsDir/* || true
     fi
 
     if [[ "$__BuildArch" == "arm" && "$__CodeName" == "trusty" ]]; then
