@@ -181,6 +181,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         {
             try
             {
+                List<BuildModel> buildModels = new List<BuildModel>();
                 foreach (var assetManifestPath in AssetManifestPaths)
                 {
                     Log.LogMessage(MessageImportance.High, $"Publishing artifacts in {assetManifestPath.ItemSpec}.");
@@ -189,11 +190,16 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     {
                         Log.LogError($"Problem reading asset manifest path from '{fileName}'");
                     }
+                    else
+                    {
+                        buildModels.Add(BuildManifestUtil.ManifestFileToModel(assetManifestPath.ItemSpec, Log));
+                    }
                 }
 
-
-                IEnumerable<BuildModel> buildModels = AssetManifestPaths.Select(
-                    assetManifestPath => BuildManifestUtil.ManifestFileToModel(assetManifestPath.ItemSpec, Log));
+                if (Log.HasLoggedErrors)
+                {
+                    return false;
+                }
 
                 // Parsing the manifest may fail for several reasons
                 if (Log.HasLoggedErrors)
@@ -275,16 +281,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         /// <summary>
         ///     Build up a map of asset name -> asset list so that we can avoid n^2 lookups when processing assets.
-        ///     We use name only becuase blobs are only looked up by id (version is not recorded in the manifest).
+        ///     We use name only because blobs are only looked up by id (version is not recorded in the manifest).
         ///     This could mean that there might be multiple versions of the same asset in the build.
         /// </summary>
         /// <param name="buildInformation">Build information</param>
         /// <returns>Map of asset name -> list of assets with that name.</returns>
         private Dictionary<string, List<Asset>> CreateBuildAssetDictionary(Maestro.Client.Models.Build buildInformation)
         {
-            // Build up a map of asset name -> asset list so that we can avoid n^2 lookups when processing assets.
-            // We use name only becuase blobs are only looked up by id (version is not recorded in the manifest).
-            // This could mean that there might be multiple versions of the same asset in the build.
             Dictionary<string, List<Asset>> buildAssets = new Dictionary<string, List<Asset>>();
             foreach (var asset in buildInformation.Assets)
             {
@@ -600,6 +603,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         private async Task HandleBlobPublishingAsync(IMaestroApi client, Dictionary<string, List<Asset>> buildAssets)
         {
+            List<Task> publishTasks = new List<Task>();
+
             foreach (var blobsPerCategory in BlobsByCategory)
             {
                 var category = blobsPerCategory.Key;
@@ -622,10 +627,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         switch (feedConfig.Type)
                         {
                             case FeedType.AzDoNugetFeed:
-                                await PublishBlobsToAzDoNugetFeedAsync(filteredBlobs, client, buildAssets, feedConfig);
+                                publishTasks.Add(PublishBlobsToAzDoNugetFeedAsync(filteredBlobs, client, buildAssets, feedConfig));
                                 break;
                             case FeedType.AzureStorageFeed:
-                                await PublishBlobsToAzureStorageNugetFeedAsync(filteredBlobs, client, buildAssets, feedConfig);
+                                publishTasks.Add(PublishBlobsToAzureStorageNugetFeedAsync(filteredBlobs, client, buildAssets, feedConfig));
                                 break;
                             default:
                                 Log.LogError($"Unknown target feed type for category '{category}': '{feedConfig.Type}'.");
@@ -638,6 +643,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     Log.LogError($"No target feed configuration found for artifact category: '{category}'.");
                 }
             }
+
+            await Task.WhenAll(publishTasks);
         }
 
         /// <summary>
