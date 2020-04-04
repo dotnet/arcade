@@ -28,9 +28,10 @@ __UbuntuPackages="build-essential"
 __AlpinePackages="alpine-base"
 __AlpinePackages+=" build-base"
 __AlpinePackages+=" linux-headers"
-__AlpinePackagesEdgeTesting=" lldb-dev"
-__AlpinePackagesEdgeMain=" llvm9-libs"
+__AlpinePackagesEdgeCommunity=" lldb-dev"
+__AlpinePackagesEdgeMain=" llvm10-libs"
 __AlpinePackagesEdgeMain+=" python3"
+__AlpinePackagesEdgeMain+=" libedit"
 
 # symlinks fixer
 __UbuntuPackages+=" symlinks"
@@ -232,9 +233,9 @@ if [[ "$__CodeName" == "alpine" ]]; then
       add $__AlpinePackagesEdgeMain
 
     $__ApkToolsDir/apk-tools-$__ApkToolsVersion/apk \
-      -X http://dl-cdn.alpinelinux.org/alpine/edge/testing \
+      -X http://dl-cdn.alpinelinux.org/alpine/edge/community \
       -U --allow-untrusted --root $__RootfsDir --arch $__AlpineArch --initdb \
-      add $__AlpinePackagesEdgeTesting
+      add $__AlpinePackagesEdgeCommunity
 
     rm -r $__ApkToolsDir
 elif [[ "$__CodeName" == "freebsd" ]]; then
