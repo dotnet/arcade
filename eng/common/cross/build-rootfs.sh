@@ -17,6 +17,8 @@ __CodeName=xenial
 __CrossDir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 __InitialDir=$PWD
 __BuildArch=arm
+__AlpineArch=armv7
+__QEMUArch=arm
 __UbuntuArch=armhf
 __UbuntuRepo="http://ports.ubuntu.com/"
 __LLDB_Package="liblldb-3.9-dev"
@@ -80,7 +82,7 @@ while :; do
         arm)
             __BuildArch=arm
             __UbuntuArch=armhf
-            __AlpineArch=armhf
+            __AlpineArch=armv7
             __QEMUArch=arm
             ;;
         arm64)
