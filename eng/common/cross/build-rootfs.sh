@@ -17,6 +17,8 @@ __CodeName=xenial
 __CrossDir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 __InitialDir=$PWD
 __BuildArch=arm
+__AlpineArch=armv7
+__QEMUArch=arm
 __UbuntuArch=armhf
 __UbuntuRepo="http://ports.ubuntu.com/"
 __LLDB_Package="liblldb-3.9-dev"
@@ -28,9 +30,10 @@ __UbuntuPackages="build-essential"
 __AlpinePackages="alpine-base"
 __AlpinePackages+=" build-base"
 __AlpinePackages+=" linux-headers"
-__AlpinePackagesEdgeTesting=" lldb-dev"
-__AlpinePackagesEdgeMain=" llvm9-libs"
+__AlpinePackagesEdgeCommunity=" lldb-dev"
+__AlpinePackagesEdgeMain=" llvm10-libs"
 __AlpinePackagesEdgeMain+=" python3"
+__AlpinePackagesEdgeMain+=" libedit"
 
 # symlinks fixer
 __UbuntuPackages+=" symlinks"
@@ -79,7 +82,7 @@ while :; do
         arm)
             __BuildArch=arm
             __UbuntuArch=armhf
-            __AlpineArch=armhf
+            __AlpineArch=armv7
             __QEMUArch=arm
             ;;
         arm64)
@@ -232,9 +235,9 @@ if [[ "$__CodeName" == "alpine" ]]; then
       add $__AlpinePackagesEdgeMain
 
     $__ApkToolsDir/apk-tools-$__ApkToolsVersion/apk \
-      -X http://dl-cdn.alpinelinux.org/alpine/edge/testing \
+      -X http://dl-cdn.alpinelinux.org/alpine/edge/community \
       -U --allow-untrusted --root $__RootfsDir --arch $__AlpineArch --initdb \
-      add $__AlpinePackagesEdgeTesting
+      add $__AlpinePackagesEdgeCommunity
 
     rm -r $__ApkToolsDir
 elif [[ "$__CodeName" == "freebsd" ]]; then
