@@ -73,7 +73,9 @@ namespace Microsoft.Cci.Writers.CSharp
                 if (IncludeAttribute(s_methodImpl))
                 {
                     string typeName = _forCompilation ? s_methodImpl.FullTypeName : s_methodImpl.TypeName;
-                    string enumValue = _forCompilation ? string.Join("|", ops.ToString().Split('|').Select(x => "System.Runtime.CompilerServices.MethodImplOptions." + x)) : ops.ToString();
+                    string enumValue = _forCompilation ?
+                        string.Join("|", ops.ToString().Split(',').Select(x => "System.Runtime.CompilerServices.MethodImplOptions." + x.TrimStart())) :
+                        ops.ToString();
                     WriteFakeAttribute(typeName, writeInline: true, parameters: enumValue);
                 }
             }

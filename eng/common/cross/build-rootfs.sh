@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -e
+
 usage()
 {
     echo "Usage: $0 [BuildArch] [CodeName] [lldbx.y] [--skipunmount] --rootfsdir <directory>]"
@@ -15,6 +17,8 @@ __CodeName=xenial
 __CrossDir=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 __InitialDir=$PWD
 __BuildArch=arm
+__AlpineArch=armv7
+__QEMUArch=arm
 __UbuntuArch=armhf
 __UbuntuRepo="http://ports.ubuntu.com/"
 __LLDB_Package="liblldb-3.9-dev"
@@ -26,9 +30,10 @@ __UbuntuPackages="build-essential"
 __AlpinePackages="alpine-base"
 __AlpinePackages+=" build-base"
 __AlpinePackages+=" linux-headers"
-__AlpinePackagesEdgeTesting=" lldb-dev"
-__AlpinePackagesEdgeMain=" llvm9-libs"
+__AlpinePackagesEdgeCommunity=" lldb-dev"
+__AlpinePackagesEdgeMain=" llvm10-libs"
 __AlpinePackagesEdgeMain+=" python3"
+__AlpinePackagesEdgeMain+=" libedit"
 
 # symlinks fixer
 __UbuntuPackages+=" symlinks"
@@ -60,7 +65,6 @@ __FreeBSDPackages="libunwind"
 __FreeBSDPackages+=" icu"
 __FreeBSDPackages+=" libinotify"
 __FreeBSDPackages+=" lttng-ust"
-__FreeBSDPackages+=" llvm-90"
 __FreeBSDPackages+=" krb5"
 
 __UnprocessedBuildArgs=
@@ -78,7 +82,7 @@ while :; do
         arm)
             __BuildArch=arm
             __UbuntuArch=armhf
-            __AlpineArch=armhf
+            __AlpineArch=armv7
             __QEMUArch=arm
             ;;
         arm64)
@@ -205,7 +209,7 @@ fi
 
 if [ -d "$__RootfsDir" ]; then
     if [ $__SkipUnmount == 0 ]; then
-        umount $__RootfsDir/*
+        umount $__RootfsDir/* || true
     fi
     rm -rf $__RootfsDir
 fi
@@ -231,9 +235,9 @@ if [[ "$__CodeName" == "alpine" ]]; then
       add $__AlpinePackagesEdgeMain
 
     $__ApkToolsDir/apk-tools-$__ApkToolsVersion/apk \
-      -X http://dl-cdn.alpinelinux.org/alpine/edge/testing \
+      -X http://dl-cdn.alpinelinux.org/alpine/edge/community \
       -U --allow-untrusted --root $__RootfsDir --arch $__AlpineArch --initdb \
-      add $__AlpinePackagesEdgeTesting
+      add $__AlpinePackagesEdgeCommunity
 
     rm -r $__ApkToolsDir
 elif [[ "$__CodeName" == "freebsd" ]]; then
@@ -260,7 +264,7 @@ elif [[ -n $__CodeName ]]; then
     chroot $__RootfsDir symlinks -cr /usr
 
     if [ $__SkipUnmount == 0 ]; then
-        umount $__RootfsDir/*
+        umount $__RootfsDir/* || true
     fi
 
     if [[ "$__BuildArch" == "arm" && "$__CodeName" == "trusty" ]]; then

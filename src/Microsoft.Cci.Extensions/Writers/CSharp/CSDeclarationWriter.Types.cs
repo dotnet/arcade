@@ -6,8 +6,8 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
-using Microsoft.Cci.Extensions.CSharp;
 using Microsoft.Cci.Extensions;
+using Microsoft.Cci.Extensions.CSharp;
 
 namespace Microsoft.Cci.Writers.CSharp
 {
@@ -25,7 +25,8 @@ namespace Microsoft.Cci.Writers.CSharp
             // But we need also consider if this attribute is filtered out or not but I guess
             // we have the same problem with all the fake attributes at this point.
 
-            if ((type.IsStruct || type.IsClass) && type.Layout != LayoutKind.Auto)
+            if (type.IsClass && type.Layout != LayoutKind.Auto ||
+                type.IsStruct && (type.Layout != LayoutKind.Sequential || type.Alignment != 0 || type.SizeOf != 0 || type.StringFormat != StringFormatKind.Ansi))
             {
                 FakeCustomAttribute structLayout = new FakeCustomAttribute("System.Runtime.InteropServices", "StructLayoutAttribute");
                 string layoutKind = string.Format("System.Runtime.InteropServices.LayoutKind.{0}", type.Layout.ToString());
@@ -96,7 +97,7 @@ namespace Microsoft.Cci.Writers.CSharp
         {
             ITypeReference baseType = GetBaseType(type);
             IEnumerable<ITypeReference> interfaces = type.Interfaces.Where(IncludeBaseType).OrderBy(t => GetTypeName(t), StringComparer.OrdinalIgnoreCase);
-            
+
             if (baseType == null && !interfaces.Any())
                 return;
 

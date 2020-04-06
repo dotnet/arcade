@@ -18,6 +18,8 @@ use darc to achieve them, as well as a general reference guide to darc commands.
   - [Halting and restarting dependency flow](#halting-and-restarting-dependency-flow)
   - [Viewing the dependency graph](#viewing-the-dependency-graph)
   - [Gathering a build drop](#gathering-a-build-drop)
+  - [Assigning an individual build to a channel](#assigning-an-individual-build-to-a-channel)
+  - [Locating the BAR build ID for a build](#locating-the-bar-build-id-for-a-build)
 
 - [Command Reference](#command-reference)
   - [Common Parameters](#common-parameters)
@@ -126,7 +128,7 @@ PATs that may be used:
 - A GitHub PAT for downloading files from GitHub (e.g. eng/Version.Details.xml or
   arcade script files.  Required scopes: None
 - An Azure DevOps PAT for downloading files from Azure DevOps. (e.g.
-  eng/Version.Details.xml)  Required scopes: Code-Read
+  eng/Version.Details.xml)  Required scopes: Code-Read, Build-Read & Execute.
 - A Build Asset Registry (BAR) password for interacting with Maestro++/BAR (e.g.
   obtaining build information needed for a drop).
 
@@ -430,6 +432,12 @@ as specific corefx packages. If the corefx packages move ahead of what is
 referenced in Microsoft.NETCore.App, issues may occur. Specifying a coherent
 parent that ties the corefx dependencies to Microsoft.NETCore.App will avoid
 this.
+
+The *subtree of the coherent parent* is the tree of builds that the parent
+depends on, including transitive dependencies. To perform a coherent parent
+update, Darc searches the assets in the subtree to find the newest-built asset
+matching the dependency that declared the coherent parent. Darc then assigns
+that version to the dependency.
 
 #### Specifying a coherent parent
 
@@ -792,6 +800,82 @@ The root build can then be provided using --id
 ```
 PS C:\enlistments\core-sdk> darc gather-drop --id 1234 --output-dir C:\scratch\drop
 ```
+
+### Assigning an individual build to a channel
+
+Builds are assigned to channels in one of two ways:
+- A default channel
+- Manually adding the build to the channel
+
+A default channel is a note that says that every build of a repo on a specific branch should apply
+to that channel. This is useful because repositories generally do not change the purpose of some of their
+branches over time. For instance, core-setup's release/3.1 branch will like apply to servicing releases
+of .NET Core 3.1 forever. When a default channel is present, the necessary publishing steps will take place
+at the end of the build and assignment to the channel will take place once those are successful. Default
+channels can be added with the [add-default-channel](#add-default-channel) command.
+
+There is also a way to assign one-off builds to a channel. This can be useful if builds only ocassionally
+apply to a channel, or if a default channel assocation was missed prior to a build being launched. This command
+launches a pipeline which performs the standard publishing steps using the build's artifact inputs, and then
+assigns the build to the specified channel. To run this command you need your darc client configured with an AzDO
+PAT which can launch builds, as well as the standard GitHub PATs.  See
+[Setting up your darc client](#setting-up-your-darc-client) for more information.
+
+The default use case is shown below. The ID is the BAR build ID, which can be found in the Publish Build Assets
+task of the "Publish to Build Asset Registry" job in your build. See
+[Locating the BAR build ID for a build](#locating-the-bar-build-id-for-a-build).
+
+```
+darc add-build-to-channel --id 46856 --channel ".NET Core SDK 3.1.3xx"
+```
+
+There are a few interesting non-standard scenarios:
+- If you don't want to publish you can pass: `--skip-assets-publishing`. The build will immediately apply
+  to the new channel. You should only do this if you know the assets from this build are already available
+  to downstream builds.
+- By default, the publishing pipeline will use the same version of arcade that was referenced in the build
+  you wish to assign. This may not be desirable if your repo is missing a required arcade fix. You can ask
+  for the automation to use a different arcade version by passing `--source-branch` and `--source-sha`. These
+  are the source branch and sha of arcade, not your repo. For instance, the following command will use arcade
+  at sha `09bb9d929120b402348c9a0e9c8c951e824059aa` in context of branch master (this is required by AzDO, but not
+  particularly material to the functionality.)
+  ```
+  darc add-build-to-channel --id 46856 --channel ".NET Core SDK 3.1.3xx" --source-branch master
+    --source-sha 09bb9d929120b402348c9a0e9c8c951e824059aa
+  ```
+
+### Locating the BAR build ID for a build
+
+To locate the BAR build ID for a build
+1. Look for the **Publish to Build Asset Registry** job in your build.
+2. Find the Publish Build Assets task
+3. Look in the logs for that task, and note the build id:
+  ```
+  D:\a\1\s\.dotnet\sdk\5.0.100-preview.1.20154.9\MSBuild.dll /nologo -maxcpucount /m -verbosity:m ...
+    You are using a preview version of .NET Core. See: https://aka.ms/dotnet-core-preview
+    Starting build metadata push to the Build Asset Registry...
+    Getting a collection of dependencies from 'eng/Version.Details.xml' in repo 'D:\a\1\s\'...
+    Reading 'eng/Version.Details.xml' in repo 'D:\a\1\s\' and branch ''...
+    Reading 'eng/Version.Details.xml' from repo 'D:\a\1\s\' and branch '' succeeded!
+    Calculated Dependencies:
+        47406, IsProduct: True
+        46268, IsProduct: True
+        28178, IsProduct: True
+        46393, IsProduct: True
+        45658, IsProduct: True
+        46931, IsProduct: True
+        47770, IsProduct: True
+        46613, IsProduct: True
+        47380, IsProduct: True
+        47391, IsProduct: True
+        41865, IsProduct: True
+        47632, IsProduct: False
+    Metadata has been pushed. Build id in the Build Asset Registry is '47814'
+    Found the following default channels:
+        https://github.com/dotnet/installer@master => (131) .NET Core 5 Dev
+    Determined build will be added to the following channels: [131]
+  ```
+4. The BAR build ID is `47814`
 
 ## Command Reference
 
@@ -1170,6 +1254,18 @@ parameters:
 
 - `--id` - **(Required)**. BAR id of build to assign to channel.
 - `--channel` - **(Required)**. Channel to assign build to.
+- `--source-branch` - Branch that should be used as base for the promotion build.
+- `--source-sha` - SHA that should be used as base for the promotion build.
+- `--validate-signing` - Perform signing validation.
+- `--validate-nuget` - Perform NuGet metadata validation.
+- `--validate-sourcelink` - Perform SourceLink validation.
+- `--validate-SDL` - Perform SDL validation.
+- `--sdl-validation-parameters` - Custom parameters for SDL validation.
+- `--sdl-validation-continue-on-error` - Ignore SDL validation errors.
+- `--skip-assets-publishing` - Add the build to the channel without publishing assets to the
+  channel's feeds.
+- `--no-wait` - If set, Darc won't wait for the asset publishing and channel assignment.
+  The operation continues asynchronously in AzDO.
 
 **Sample**
 ```
