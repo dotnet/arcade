@@ -6,6 +6,7 @@ syntax: glob
 /[Tt]ools/
 .dotnet/
 .packages/
+.tools/
 
 # User-specific files
 *.suo

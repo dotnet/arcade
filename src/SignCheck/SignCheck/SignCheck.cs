@@ -188,7 +188,10 @@ namespace SignCheck
         {
             var inputFiles = new List<string>();
             var downloadFiles = new List<Uri>();
-
+            if (Options.InputFiles == null)
+            {
+                return inputFiles;
+            }
             foreach (string inputFile in Options.InputFiles)
             {
                 Uri uriResult;
@@ -287,7 +290,6 @@ namespace SignCheck
             {
                 inputFiles.Remove(Path.GetFullPath(Options.LogFile));
             }
-
             return inputFiles;
         }
 
@@ -369,7 +371,7 @@ namespace SignCheck
             }
         }
 
-        private int Run()
+        internal int Run()
         {
             try
             {
@@ -387,7 +389,7 @@ namespace SignCheck
 
                 ResultDetails = Options.Verbosity > LogVerbosity.Normal ? DetailKeys.ResultKeysVerbose : DetailKeys.ResultKeysNormal;
 
-                if (InputFiles.Count() > 0)
+                if (InputFiles != null && InputFiles.Count() > 0)
                 {
                     DateTime startTime = DateTime.Now;
                     IEnumerable<SignatureVerificationResult> results = signatureVerificationManager.VerifyFiles(InputFiles);

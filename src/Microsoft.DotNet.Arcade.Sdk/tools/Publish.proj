@@ -38,7 +38,8 @@
 
     <PublishDependsOnTargets Condition="$(PublishToSymbolServer)">$(PublishDependsOnTargets);PublishSymbols</PublishDependsOnTargets>
     <PublishDependsOnTargets Condition="$(PublishToSourceBuildStorage)">$(PublishDependsOnTargets);PublishToSourceBuildStorage</PublishDependsOnTargets>
-    <PublishDependsOnTargets Condition="$(DotNetPublishUsingPipelines)">$(PublishDependsOnTargets);PublishToAzureDevOpsArtifacts</PublishDependsOnTargets>
+    <PublishDependsOnTargets Condition="$(DotNetPublishUsingPipelines)">$(PublishDependsOnTargets);PublishToAzureDevOpsArtifacts;</PublishDependsOnTargets>
+    <PublishDependsOnTargets Condition="$(GenerateBuildManifest)">$(PublishDependsOnTargets);GenerateBuildManifest</PublishDependsOnTargets>
     <PublishDependsOnTargets>BeforePublish;$(PublishDependsOnTargets)</PublishDependsOnTargets>
   </PropertyGroup>
 
@@ -237,5 +238,5 @@
                     PdbConversionTreatAsWarning=""
                     Condition="$(PublishToSymbolServer)"/>
   </Target>
-
+  <Import Condition="$(GenerateBuildManifest)" Project="$(MSBuildThisFileDirectory)Manifest.targets" />
 </Project>
