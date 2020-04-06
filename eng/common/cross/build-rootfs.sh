@@ -60,7 +60,7 @@ __AlpinePackages+=" openssl-dev"
 __AlpinePackages+=" zlib-dev"
 
 __FreeBSDBase="12.1-RELEASE"
-__FreeBSDPkg="1.10.5"
+__FreeBSDPkg="1.12.0"
 __FreeBSDPackages="libunwind"
 __FreeBSDPackages+=" icu"
 __FreeBSDPackages+=" libinotify"
@@ -250,7 +250,9 @@ elif [[ "$__CodeName" == "freebsd" ]]; then
     # get and build package manager
     wget -O -  https://github.com/freebsd/pkg/archive/${__FreeBSDPkg}.tar.gz  |  tar -C $__RootfsDir/tmp -zxf -
     cd $__RootfsDir/tmp/pkg-${__FreeBSDPkg}
-    ./autogen.sh && ./configure --prefix=$__RootfsDir/host && make install
+    # needed for install to succeed
+    mkdir -p $__RootfsDir/host/etc
+    ./autogen.sh && ./configure --prefix=$__RootfsDir/host && make && make install
     rm -rf $__RootfsDir/tmp/pkg-${__FreeBSDPkg}
     # install packages we need.
     $__RootfsDir/host/sbin/pkg -r $__RootfsDir -C $__RootfsDir/usr/local/etc/pkg.conf update
