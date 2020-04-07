@@ -212,14 +212,6 @@
         Type="AzDoNugetFeed"
         Token="$(AzureDevOpsStaticTransportFeedKey)" />
 
-      <TargetFeedConfig
-        AssetSelection="NonShippingOnly"
-        Include="Symbols"
-        TargetURL="$(AzureDevOpsStaticSymbolsFeed)"
-        Isolated="false"
-        Type="AzDoNugetFeed"
-        Token="$(AzureDevOpsStaticSymbolsFeedKey)" />
-
       <!-- These feeds are marked as isolated even though they are not. We allow overwrite
            the old data with the new. -->
       <TargetFeedConfig
@@ -306,8 +298,15 @@
           - Installers and checksums to desired storage accounts.
     -->
     <ItemGroup Condition="'@(TargetFeedConfig)' == '' AND '$(IsStableBuild)' == 'false' AND '$(IsInternalBuild)' == 'false'">
-      <TargetFeedConfig
-        Include="Package;Symbols;OSX;Deb;Rpm;Node;BinaryLayout;Installer;Checksum;Maven;VSIX;Badge;Other"
+      <TargetFeedConfig Condition="'$(PublishInstallersAndChecksums)' == 'true'"
+        Include="Symbols"
+        TargetURL="$(TargetStaticFeed)"
+        Isolated="false"
+        Type="AzureStorageFeed"
+        Token="$(AzureStorageTargetFeedPAT)" />
+
+      <TargetFeedConfig Condition="'$(PublishInstallersAndChecksums)' != 'true'"
+        Include="Symbols;OSX;Deb;Rpm;Node;BinaryLayout;Installer;Checksum;Maven;VSIX;Badge;Other"
         TargetURL="$(TargetStaticFeed)"
         Isolated="false"
         Type="AzureStorageFeed"
@@ -344,13 +343,6 @@
         Type="AzDoNugetFeed"
         Token="$(AzureDevOpsStaticTransportFeedKey)"
         AssetSelection="NonShippingOnly" />
-
-      <TargetFeedConfig
-        Include="Symbols"
-        TargetURL="$(AzureDevOpsStaticSymbolsFeed)"
-        Isolated="false"
-        Type="AzDoNugetFeed"
-        Token="$(AzureDevOpsStaticSymbolsFeedKey)" />
     </ItemGroup>
 
     <Error
