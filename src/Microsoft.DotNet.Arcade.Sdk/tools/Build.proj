@@ -173,6 +173,12 @@
     -->
 
     <PropertyGroup>
+      <_SolutionRestoreProps Include="@(_SolutionBuildProps)" />
+      <_SolutionRestoreProps Include="__BuildPhase=SolutionRestore" />
+      <_SolutionRestoreProps Include="_NETCORE_ENGINEERING_TELEMETRY=Restore" />
+      <_SolutionRestoreProps Include="MSBuildRestoreSessionId=$([System.Guid]::NewGuid())" />
+      <_SolutionRestoreProps Include="RestoreUseStaticGraphEvaluation=true" Condition="'$(RestoreUseStaticGraphEvaluation)' == 'true'" />
+
       <!-- This can be set to false as an optimization for repos that don't use NuGet. -->
       <RestoreUsingNuGetTargets Condition="'$(RestoreUsingNuGetTargets)' == ''">true</RestoreUsingNuGetTargets>
 
@@ -188,7 +194,7 @@
       This helps MSBuild cache the result of _IsProjectRestoreSupported.
     -->
     <MSBuild Projects="@(ProjectToBuild)"
-             Properties="@(_SolutionBuildProps);__BuildPhase=SolutionRestore;_NETCORE_ENGINEERING_TELEMETRY=Restore"
+             Properties="@(_SolutionRestoreProps)"
              RemoveProperties="$(_RemoveProps)"
              Targets="_IsProjectRestoreSupported"
              SkipNonexistentTargets="true"
@@ -214,8 +220,8 @@
     </ItemGroup>
 
     <MSBuild Projects="@(_ProjectToRestore)"
-             Properties="@(_SolutionBuildProps);__BuildPhase=SolutionRestore;_NETCORE_ENGINEERING_TELEMETRY=Restore"
-             RemoveProperties="$(_RemoveProps)"
+             Properties="@(_SolutionRestoreProps)"
+             RemoveProperties="$(_RemoveProps);TreatWarningsAsErrors"
              Targets="Restore"
              SkipNonexistentTargets="true"
              BuildInParallel="%(_ProjectToRestore.RestoreInParallel)"
