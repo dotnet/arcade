@@ -33,7 +33,7 @@ stages:
           manifests: true
       enableMicrobuild: true
       enablePublishUsingPipelines: true
-      useBuildManifest: ${{ variables['_UseBuildManifest'] }}
+      useBuildManifest: ${{ variables['_PublishBuildManifest'] }}
       workspace:
         clean: all
       jobs:
@@ -193,4 +193,4 @@ stages:
         -TsaRepositoryName "Arcade"
         -TsaCodebaseName "Arcade"
         -TsaPublish $True'
-      useBuildManifest: ${{ variables['_UseBuildManifest'] }}
+      useBuildManifest: ${{ variables['_PublishBuildManifest'] }}
