@@ -50,8 +50,7 @@
       VerifyStrongName="$(EnableStrongNameCheck)"
       LogFile="$(SignCheckLog)"
       ErrorLogFile="$(SignCheckErrorLog)"
-      ArtifactFolder="$(SignCheckInputDir)"
-      Condition="'$(BuildManifestFile)' != ''"/>
+      ArtifactFolder="$(SignCheckInputDir)"/>
 
     <Error 
       Text="Signing validation failed. Check $(SignCheckErrorLog) for more information." 

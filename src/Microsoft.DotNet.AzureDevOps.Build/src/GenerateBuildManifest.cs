@@ -16,6 +16,7 @@ namespace Microsoft.DotNet.AzureDevOps.Build
         public string AzureDevOpsProject { get; set; }
         [Required]
         public int AzureDevOpsBuildId { get; set; }
+        [Required]
         public string ManifestPath { get; set; }
         public ITaskItem[] ItemsToSign { get; set; }
         public ITaskItem[] StrongNameSignInfo { get; set; }
@@ -38,9 +39,6 @@ namespace Microsoft.DotNet.AzureDevOps.Build
                     var filename = itemToSign.ItemSpec.Replace('\\', '/');
                     {
                         var metadata = itemToSign.CloneCustomMetadata() as Dictionary<string, string>;
-                        var fileExtensionSignInfo = FileExtensionSignInfo.FirstOrDefault(f => Path.GetExtension(itemToSign.ItemSpec).Equals(f.ItemSpec, StringComparison.InvariantCultureIgnoreCase));
-                        var fileSignInfo = FileSignInfo.FirstOrDefault(f => Path.GetFileName(itemToSign.ItemSpec).Equals(f.ItemSpec, StringComparison.InvariantCultureIgnoreCase));
-
                         itemGroup.AddItem("ItemsToSign", Path.GetFileName(itemToSign.ItemSpec), metadata);
                     }
                 }

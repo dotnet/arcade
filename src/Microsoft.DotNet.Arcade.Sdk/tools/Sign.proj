@@ -4,7 +4,7 @@
 
   <Import Project="$(NuGetPackageRoot)microsoft.dotnet.signtool\$(MicrosoftDotNetSignToolVersion)\build\Microsoft.DotNet.SignTool.props" />
 
-  <Import Project="$(MSBuildThisFileDirectory)Sign.props" />
+  <Import Project="Sign.props" />
 
   <Target Name="Sign">
     <Error Text="The value of DotNetSignType is invalid: '$(DotNetSignType)'"

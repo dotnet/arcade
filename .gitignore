@@ -3,7 +3,6 @@ syntax: glob
 ### VisualStudio ###
 
 # Tools directory
-/[Tt]ools/
 .dotnet/
 .packages/
 .tools/
