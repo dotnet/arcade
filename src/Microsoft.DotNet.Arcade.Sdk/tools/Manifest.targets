@@ -5,7 +5,7 @@
     <AzureDevOpsBuildTasksAssembly Condition="'$(MSBuildRuntimeType)' == 'Core'">$(NuGetPackageRoot)Microsoft.DotNet.AzureDevOps.Build\$(ArcadeSdkVersion)\tools\netcoreapp2.1\Microsoft.DotNet.AzureDevOps.Build.dll</AzureDevOpsBuildTasksAssembly>
   </PropertyGroup>
 
-  <Import Project="$(MSBuildThisFileDirectory)Sign.props" />
+  <Import Project="Sign.props" />
   <UsingTask TaskName="Microsoft.DotNet.AzureDevOps.Build.GenerateAzureDevOpsBuildManifest" AssemblyFile="$(AzureDevOpsBuildTasksAssembly)"/>
 
   <Target Name="GenerateBuildManifest">
@@ -18,6 +18,5 @@
       FileSignInfo="@(FileSignInfo)"
       FileExtensionSignInfo="@(FileExtensionSignInfo)"
       ManifestPath="$(ArtifactsLogDir)/manifest.props" />
-
   </Target>
 </Project>

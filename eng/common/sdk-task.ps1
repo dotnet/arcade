@@ -66,7 +66,7 @@ try {
       $GlobalJson.tools | Add-Member -Name "xcopy-msbuild" -Value "16.4.0-alpha" -MemberType NoteProperty
     }
 
-    InitializeVisualStudioMSBuild $true
+    InitializeXCopyMSBuild $GlobalJson.tools."xcopy-msbuild" -install $true
   }
 
   $taskProject = GetSdkTaskProject $task

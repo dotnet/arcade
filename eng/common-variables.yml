@@ -20,8 +20,6 @@ variables:
       value: True
     - name: _SignType
       value: real
-    - name: _UseBuildManifest
-      value: False
     # DotNet-Blob-Feed provides: dotnetfeed-storage-access-key-1
     # Publish-Build-Assets provides: MaestroAccessToken, BotAccount-dotnet-maestro-bot-PAT
     # DotNet-HelixApi-Access provides: HelixApiAccessToken
@@ -34,4 +32,3 @@ variables:
         /p:TeamName=$(_TeamName)
         /p:DotNetPublishUsingPipelines=true
         /p:OfficialBuildId=$(BUILD.BUILDNUMBER)
-        -manifest

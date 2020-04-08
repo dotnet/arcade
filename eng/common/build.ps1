@@ -20,7 +20,6 @@ Param(
   [switch] $publish,
   [switch] $clean,
   [switch][Alias('bl')]$binaryLog,
-  [switch] $manifest,
   [switch] $ci,
   [switch] $prepareMachine,
   [switch] $help,
@@ -62,7 +61,6 @@ function Print-Usage() {
   Write-Host "  -prepareMachine         Prepare machine for CI run, clean up processes after build"
   Write-Host "  -warnAsError <value>    Sets warnaserror msbuild parameter ('true' or 'false')"
   Write-Host "  -msbuildEngine <value>  Msbuild engine to use to run build ('dotnet', 'vs', or unspecified)."
-  Write-Host "  -manifest               Generates a build manifest, including signing metadata.  Requires '-sign' and 'publish' also be specified."
   Write-Host ""
 
   Write-Host "Command line arguments not listed above are passed thru to msbuild."
@@ -102,13 +100,6 @@ function Build {
     $properties = $msbuildArgs
   }
 
-  if ($manifest) {
-    if ((-not $sign) -or (-not $publish)) {
-      Write-Host "'-sign' and '-publish' are required if '-manifest' is specified."
-      ExitWithExitCode 1
-    }
-  }
-
   MSBuild $toolsetBuildProj `
     $bl `
     $platformArg `
@@ -125,7 +116,6 @@ function Build {
     /p:PerformanceTest=$performanceTest `
     /p:Sign=$sign `
     /p:Publish=$publish `
-    /p:GenerateBuildManifest=$manifest `
     @properties
 }
 
