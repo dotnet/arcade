@@ -8,6 +8,34 @@ Arcade is intended to provide well-understood and consistent mechanisms for cons
 
 Azure DevOps [![Build Status](https://dev.azure.com/dnceng/public/_apis/build/status/dotnet/arcade/arcade-ci)](https://dev.azure.com/dnceng/public/_build/latest?definitionId=208)
 
+## Validation & Dependency Flow Status
+
+### Current Version of Arcade in `.NET Eng - Latest`
+
+`Microsoft.DotNet.Arcade.Sdk @ 5.0.0-beta.20201.2`
+
+Look this up using [darc](/Documentation/Darc.md):
+
+```
+darc get-asset --name Microsoft.DotNet.Arcade.Sdk --channel ".NET Eng - Latest"
+```
+
+### Latest Version of Arcade Being Validated
+
+`Microsoft.DotNet.Arcade.Sdk @ 5.0.0-beta.20207.4` as of 4/8/2020 at 5:00pm PDT
+
+Look this up using [darc](/Documentation/Darc.md):
+
+```
+darc get-asset --name Microsoft.DotNet.Arcade.Sdk --channel ".NET Eng - Validation"
+```
+
+### Status of Latest Version of Arcade Being Validated
+
+- Could not validate against `dotnet/aspnetcore` at this time
+
+[Result](https://dnceng.visualstudio.com/internal/_build/results?buildId=593995&view=results) of latest Arcade Validation run on 4/8/2020 at 5:00pm PDT
+
 ## Getting Started
 
 Packages are published daily to our tools feed:
