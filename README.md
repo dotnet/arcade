@@ -12,23 +12,11 @@ Azure DevOps [![Build Status](https://dev.azure.com/dnceng/public/_apis/build/st
 
 ### Current Version of Arcade in `.NET Eng - Latest`
 
-`Microsoft.DotNet.Arcade.Sdk @ 5.0.0-beta.20201.2`
-
-Look this up using [darc](/Documentation/Darc.md):
-
-```
-darc get-asset --name Microsoft.DotNet.Arcade.Sdk --channel ".NET Eng - Latest"
-```
+[Link](https://maestro-prod.westus2.cloudapp.azure.com/2/https:%2F%2Fgithub.com%2Fdotnet%2Farcade/latest/graph) to BARViz
 
 ### Latest Version of Arcade Being Validated
 
-`Microsoft.DotNet.Arcade.Sdk @ 5.0.0-beta.20207.4` as of 4/8/2020 at 5:00pm PDT
-
-Look this up using [darc](/Documentation/Darc.md):
-
-```
-darc get-asset --name Microsoft.DotNet.Arcade.Sdk --channel ".NET Eng - Validation"
-```
+[Link](https://maestro-prod.westus2.cloudapp.azure.com/9/https:%2F%2Fdev.azure.com%2Fdnceng%2Finternal%2F_git%2Fdotnet-arcade/latest/graph) to BARViz. 
 
 ### Status of Latest Version of Arcade Being Validated
 
