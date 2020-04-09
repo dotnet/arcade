@@ -6,6 +6,7 @@ Param(
   [string[]] $ToolsList,
   [string] $UpdateBaseline,
   [string] $GuardianLoggerLevel='Standard',
+  [string[]] $BinSkimAdditionalRunConfigParams,
   [string[]] $CrScanAdditionalRunConfigParams,
   [string[]] $PoliCheckAdditionalRunConfigParams
 )
@@ -39,7 +40,7 @@ try {
     $gdnConfigFile = Join-Path $gdnConfigPath "$tool-configure.gdnconfig"
     Write-Host $tool
     # We have to manually configure tools that run on source to look at the source directory only
-    if ($tool -eq 'credscan') {
+    if ($tool -eq 'credscan' -or $tool -eq 'credscan2') {
       Write-Host "$GuardianCliLocation configure --working-directory $WorkingDirectory --tool $tool --output-path $gdnConfigFile --logger-level $GuardianLoggerLevel --noninteractive --force --args `" TargetDirectory < $TargetDirectory `" `" OutputType < pre `" $(If ($CrScanAdditionalRunConfigParams) {$CrScanAdditionalRunConfigParams})"
       & $GuardianCliLocation configure --working-directory $WorkingDirectory --tool $tool --output-path $gdnConfigFile --logger-level $GuardianLoggerLevel --noninteractive --force --args " TargetDirectory < $TargetDirectory " "OutputType < pre" $(If ($CrScanAdditionalRunConfigParams) {$CrScanAdditionalRunConfigParams})
       if ($LASTEXITCODE -ne 0) {
@@ -50,6 +51,14 @@ try {
     if ($tool -eq 'policheck') {
       Write-Host "$GuardianCliLocation configure --working-directory $WorkingDirectory --tool $tool --output-path $gdnConfigFile --logger-level $GuardianLoggerLevel --noninteractive --force --args `" Target < $TargetDirectory `" $(If ($PoliCheckAdditionalRunConfigParams) {$PoliCheckAdditionalRunConfigParams})"
       & $GuardianCliLocation configure --working-directory $WorkingDirectory --tool $tool --output-path $gdnConfigFile --logger-level $GuardianLoggerLevel --noninteractive --force --args " Target < $TargetDirectory " $(If ($PoliCheckAdditionalRunConfigParams) {$PoliCheckAdditionalRunConfigParams})
+      if ($LASTEXITCODE -ne 0) {
+        Write-PipelineTelemetryError -Force -Category 'Sdl' -Message "Guardian configure for $tool failed with exit code $LASTEXITCODE."
+        ExitWithExitCode $LASTEXITCODE
+      }
+    }
+    if ($tool -eq 'binskim') {
+      Write-Host "$GuardianCliLocation configure --working-directory $WorkingDirectory --tool $tool --output-path $gdnConfigFile --logger-level $GuardianLoggerLevel --noninteractive --force --args `" Target < $TargetDirectory\** `" $(If ($BinSkimAdditionalRunConfigParams) {$BinSkimAdditionalRunConfigParams})"
+      & $GuardianCliLocation configure --working-directory $WorkingDirectory --tool $tool --output-path $gdnConfigFile --logger-level $GuardianLoggerLevel --noninteractive --force --args " Target < $TargetDirectory " $(If ($BinSkimAdditionalRunConfigParams) {$BinSkimAdditionalRunConfigParams})
       if ($LASTEXITCODE -ne 0) {
         Write-PipelineTelemetryError -Force -Category 'Sdl' -Message "Guardian configure for $tool failed with exit code $LASTEXITCODE."
         ExitWithExitCode $LASTEXITCODE
