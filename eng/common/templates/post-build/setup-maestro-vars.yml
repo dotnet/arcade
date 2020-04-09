@@ -16,7 +16,7 @@ jobs:
 
     - task: DownloadBuildArtifacts@0
       displayName: Download Release Configs
-      condition: eq(variables.PromoteToChannelIds, 0)
+      condition: and(eq(variables.PromoteToMaestroChannels, 0), eq(variables.PromoteToMaestroChannel, 0))
       inputs:
         buildType: current
         artifactName: ReleaseConfigs
