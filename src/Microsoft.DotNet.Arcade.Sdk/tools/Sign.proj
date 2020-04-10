@@ -4,52 +4,7 @@
 
   <Import Project="$(NuGetPackageRoot)microsoft.dotnet.signtool\$(MicrosoftDotNetSignToolVersion)\build\Microsoft.DotNet.SignTool.props" />
 
-  <ItemGroup>
-    <!--
-      This is intended to hold information about the certificates used for signing.
-      For now the only information required is whether or not the certificate can be
-      used for signing already signed files - DualSigningAllowed==true.
-    -->
-    <CertificatesSignInfo Include="3PartyDual" DualSigningAllowed="true" />
-    <CertificatesSignInfo Include="3PartySHA2" DualSigningAllowed="true" />
-
-    <!-- List of container files that will be opened and checked for files that need to be signed. -->
-    <ItemsToSign Include="$(ArtifactsPackagesDir)**\*.nupkg" />
-    <ItemsToSign Include="$(VisualStudioSetupOutputPath)**\*.vsix" />
-    <ItemsToSign Include="$(VisualStudioBuildPackagesDir)**\*.nupkg" />
-
-    <!-- Default certificate/strong-name to be used for all files with PKT=="31bf3856ad364e35". -->
-    <StrongNameSignInfo Include="MsSharedLib72" PublicKeyToken="31bf3856ad364e35" CertificateName="Microsoft400" />
-    <StrongNameSignInfo Include="SilverlightCert121" PublicKeyToken="7cec85d7bea7798e" CertificateName="Microsoft400" />
-    <StrongNameSignInfo Include="StrongName" PublicKeyToken="b77a5c561934e089" CertificateName="Microsoft400" />
-    <StrongNameSignInfo Include="StrongName" PublicKeyToken="b03f5f7f11d50a3a" CertificateName="Microsoft400" />
-    <StrongNameSignInfo Include="$(MSBuildThisFileDirectory)snk\Open.snk" PublicKeyToken="cc7b13ffcd2ddd51" CertificateName="Microsoft400" />
-
-    <!--
-      Map of file extensions to default certificate name. Files with these extensions are
-      signed with the specified certificate. Particularly useful for files that don't have
-      a public key token.
-      The certificate can be overriden using the StrongNameSignInfo or the FileSignInfo item group.
-    -->
-    <FileExtensionSignInfo Include=".jar" CertificateName="MicrosoftJARSHA2" />
-    <FileExtensionSignInfo Include=".js;.ps1;.psd1;.psm1;.psc1;.py" CertificateName="Microsoft400" />
-    <FileExtensionSignInfo Include=".dll;.exe" CertificateName="Microsoft400" />
-    <FileExtensionSignInfo Include=".nupkg" CertificateName="NuGet" />
-    <FileExtensionSignInfo Include=".vsix" CertificateName="VsixSHA2" />
-    <FileExtensionSignInfo Include=".zip" CertificateName="None" />
-  </ItemGroup>
-
-  <PropertyGroup>
-    <!-- Control whether an empty ItemsToSign item group is allowed when calling SignToolTask. -->
-    <AllowEmptySignList>false</AllowEmptySignList>
-  </PropertyGroup>
-
-  <PropertyGroup>
-    <NETCORE_ENGINEERING_TELEMETRY>Signing</NETCORE_ENGINEERING_TELEMETRY>
-  </PropertyGroup>
-
-  <!-- Allow repository to customize signing configuration -->
-  <Import Project="$(RepositoryEngineeringDir)Signing.props" Condition="Exists('$(RepositoryEngineeringDir)Signing.props')" />
+  <Import Project="Sign.props" />
 
   <Target Name="Sign">
     <Error Text="The value of DotNetSignType is invalid: '$(DotNetSignType)'"
@@ -66,6 +21,9 @@
       <_DesktopMSBuildRequired Condition="'$(_DryRun)' != 'true' and '$(MSBuildRuntimeType)' == 'Core'">true</_DesktopMSBuildRequired>
     </PropertyGroup>
 
+    <Error Condition="'$(AllowEmptySignList)' != 'true' AND '@(ItemsToSign)' == ''" 
+           Text="List of files to sign is empty. Make sure that ItemsToSign is configured correctly." />
+
     <!-- We only need this if we are going to use the executable version. -->
     <Exec Command='"$(NuGetPackageRoot)vswhere\$(VSWhereVersion)\tools\vswhere.exe" -latest -prerelease -property installationPath -requires Microsoft.Component.MSBuild'
           ConsoleToMsBuild="true"
@@ -78,9 +36,6 @@
       <_DesktopMSBuildPath>$(_VSInstallDir)\MSBuild\Current\Bin\msbuild.exe</_DesktopMSBuildPath>
       <_DesktopMSBuildPath Condition="!Exists('$(_DesktopMSBuildPath)')">$(_VSInstallDir)\MSBuild\15.0\Bin\msbuild.exe</_DesktopMSBuildPath>
     </PropertyGroup>
-
-    <Error Condition="'$(AllowEmptySignList)' != 'true' AND '@(ItemsToSign)' == ''" 
-           Text="List of files to sign is empty. Make sure that ItemsToSign is configured correctly." />
 
     <Microsoft.DotNet.SignTool.SignToolTask
         DryRun="$(_DryRun)"
@@ -97,7 +52,5 @@
         MSBuildPath="$(_DesktopMSBuildPath)"
         SNBinaryPath="$(NuGetPackageRoot)sn\$(SNVersion)\sn.exe"
         MicroBuildCorePath="$(NuGetPackageRoot)microbuild.core\$(MicroBuildCoreVersion)"/>
-    
   </Target>
-
 </Project>

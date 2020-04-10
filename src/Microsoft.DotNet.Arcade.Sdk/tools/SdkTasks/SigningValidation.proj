@@ -15,44 +15,46 @@
   -->
 
   <PropertyGroup>
+    <BuildManifestFile Condition="Exists('$(BUILD_ARTIFACTSTAGINGDIRECTORY)/BuildManifests/manifest.props')">$(BUILD_ARTIFACTSTAGINGDIRECTORY)/BuildManifests/manifest.props</BuildManifestFile>
+  </PropertyGroup>
+
+  <Import Condition="'$(BuildManifestFile)' == ''" Project="$(RepositoryEngineeringDir)Signing.props" />
+  <Import Condition="Exists('$(BuildManifestFile)')" Project="$(BuildManifestFile)" />
+
+  <PropertyGroup>
     <TargetFramework>netcoreapp2.1</TargetFramework>
     <NETCORE_ENGINEERING_TELEMETRY>Build</NETCORE_ENGINEERING_TELEMETRY>
+    <SignCheckTaskAssembly>$(NuGetPackageRoot)Microsoft.DotNet.SignCheck\$(MicrosoftDotNetSignCheckVersion)\tools\Microsoft.DotNet.SignCheck.exe</SignCheckTaskAssembly>
   </PropertyGroup>
+
+  <UsingTask TaskName="SignCheck.SignCheckTask" AssemblyFile="$(SignCheckTaskAssembly)" />
 
   <Target Name="Execute">
     <PropertyGroup>
-      <SignCheckToolPath>$(NuGetPackageRoot)Microsoft.DotNet.SignCheck\$(MicrosoftDotNetSignCheckVersion)\tools\Microsoft.DotNet.SignCheck.exe</SignCheckToolPath>
-
       <SignCheckInputDir>$(PackageBasePath)</SignCheckInputDir>
       <SignCheckLog Condition="'$(SignCheckLog)' == ''">$(ArtifactsLogDir)\signcheck.log</SignCheckLog>
       <SignCheckErrorLog Condition="'$(SignCheckErrorLog)' == ''">$(ArtifactsLogDir)\signcheck.errors.log</SignCheckErrorLog>
+      <InputFiles Condition="'$(BuildManifestFile)' == ''">$(SignCheckInputDir)</InputFiles>
+      <InputFiles Condition="'$(BuildManifestFile)' != ''">@(ItemsToSign)</InputFiles>
     </PropertyGroup>
-    
-    <ItemGroup>
+
+    <Error Condition="'$(MSBuildRuntimeType)' == 'Core'" Text="Signing validation task does not run on core." />
+
+    <Message Text="Using build manifest file '$(BuildManifestFile)'" Condition="Exists('$(BuildManifestFile)')" />
       <!--
         Documentation for these arguments is available here:
         https://github.com/dotnet/arcade/tree/master/src/SignCheck
       -->
-      <SignCheckArgs Include="--recursive" />
-      <SignCheckArgs Include="--traverse-subfolders" />
-      <SignCheckArgs Include="--file-status AllFiles" />
-      <SignCheckArgs Include="--log-file $(SignCheckLog)" />
-      <SignCheckArgs Include="--error-log-file $(SignCheckErrorLog)" />
-      <SignCheckArgs Include="--input-files &quot;$(SignCheckInputDir)&quot;" />
-      
-      <SignCheckArgs Include="--exclusions-file &quot;$(SignCheckExclusionsFile)&quot;" Condition="'$(SignCheckExclusionsFile)' != '' and Exists($(SignCheckExclusionsFile))" />
-      <SignCheckArgs Include="--verify-jar" Condition="'$(EnableJarSigningCheck)' == 'true'" />
-      <SignCheckArgs Include="--verify-strongname" Condition="'$(EnableStrongNameCheck)' == 'true'" />
-    </ItemGroup>
-    
-    <!--
-      IgnoreExitCode='true' because the tool doesn't return '0' on success.
-    -->
-    <Exec 
-      Command="&quot;$(SignCheckToolPath)&quot; @(SignCheckArgs, ' ')"
-      IgnoreExitCode='true' 
-      ConsoleToMsBuild="false" 
-      StandardErrorImportance="high" />
+    <SignCheckTask 
+      Recursive="true"
+      FileStatus="AllFiles"
+      InputFiles="$(InputFiles)"
+      ExclusionsFile="$(SignCheckExclusionsFile)"
+      EnableJarSignatureVerification="$(EnableJarSigningCheck)"
+      VerifyStrongName="$(EnableStrongNameCheck)"
+      LogFile="$(SignCheckLog)"
+      ErrorLogFile="$(SignCheckErrorLog)"
+      ArtifactFolder="$(SignCheckInputDir)"/>
 
     <Error 
       Text="Signing validation failed. Check $(SignCheckErrorLog) for more information." 
@@ -61,7 +63,6 @@
     <Message
       Text="##vso[artifact.upload containerfolder=LogFiles;artifactname=LogFiles]{SignCheckErrorLog}"
       Condition="Exists($(SignCheckErrorLog)) and '$([System.IO.File]::ReadAllText($(SignCheckErrorLog)))' != ''" />
-    
   </Target>
 
   <ItemGroup>
