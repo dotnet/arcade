@@ -57,8 +57,9 @@ try {
       }
     }
     if ($tool -eq 'binskim') {
-      Write-Host "$GuardianCliLocation configure --working-directory $WorkingDirectory --tool $tool --output-path $gdnConfigFile --logger-level $GuardianLoggerLevel --noninteractive --force --args `" Target < $TargetDirectory\** `" $(If ($BinSkimAdditionalRunConfigParams) {$BinSkimAdditionalRunConfigParams})"
-      & $GuardianCliLocation configure --working-directory $WorkingDirectory --tool $tool --output-path $gdnConfigFile --logger-level $GuardianLoggerLevel --noninteractive --force --args " Target < $TargetDirectory " $(If ($BinSkimAdditionalRunConfigParams) {$BinSkimAdditionalRunConfigParams})
+      $fileFilters = "$(Join-Path $TargetDirectory '**\*.exe');$(Join-Path $TargetDirectory '**\*.dll')"
+      Write-Host "$GuardianCliLocation configure --working-directory $WorkingDirectory --tool $tool --output-path $gdnConfigFile --logger-level $GuardianLoggerLevel --noninteractive --force --args `" Target < $fileFilters `" $(If ($BinSkimAdditionalRunConfigParams) {$BinSkimAdditionalRunConfigParams})"
+      & $GuardianCliLocation configure --working-directory $WorkingDirectory --tool $tool --output-path $gdnConfigFile --logger-level $GuardianLoggerLevel --noninteractive --force --args " Target < $fileFilters " $(If ($BinSkimAdditionalRunConfigParams) {$BinSkimAdditionalRunConfigParams})
       if ($LASTEXITCODE -ne 0) {
         Write-PipelineTelemetryError -Force -Category 'Sdl' -Message "Guardian configure for $tool failed with exit code $LASTEXITCODE."
         ExitWithExitCode $LASTEXITCODE
