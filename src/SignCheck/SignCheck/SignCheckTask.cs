@@ -1,3 +1,7 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
 using Microsoft.Build.Framework;
 using Microsoft.SignCheck.Logging;
 using System;
@@ -41,6 +45,7 @@ namespace SignCheck
             get;
             set;
         }
+        
         public bool VerifyStrongName
         {
             get;
@@ -89,6 +94,7 @@ namespace SignCheck
             string[] filestatuses = FileStatus.Split(';', ',');
             options.FileStatus = filestatuses;
             options.Recursive = Recursive;
+            options.TraverseSubFolders = Recursive;
             options.SkipTimestamp = SkipTimestamp;
             options.VerifyStrongName = VerifyStrongName;
             options.LogFile = LogFile;
@@ -97,6 +103,9 @@ namespace SignCheck
             List<string> inputFiles = new List<string>();
             if (InputFiles != null)
             {
+                ArtifactFolder = ArtifactFolder ?? Environment.CurrentDirectory;
+                SearchOption fileSearchOptions = Recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
+
                 foreach (var checkFile in InputFiles.Select(s => s.ItemSpec).ToArray())
                 {
                     if (Path.IsPathRooted(checkFile))
@@ -105,8 +114,6 @@ namespace SignCheck
                     }
                     else
                     {
-                        ArtifactFolder = ArtifactFolder ?? Environment.CurrentDirectory;
-                        SearchOption fileSearchOptions = Recursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly;
                         var matchedFiles = Directory.GetFiles(ArtifactFolder, checkFile, fileSearchOptions);
 
                         if(matchedFiles.Length == 1)
@@ -130,8 +137,7 @@ namespace SignCheck
             }
             options.InputFiles = inputFiles.ToArray();
 
-            LogVerbosity verbosity;
-            if(Enum.TryParse<LogVerbosity>(Verbosity, out verbosity))
+            if(Enum.TryParse<LogVerbosity>(Verbosity, out LogVerbosity verbosity))
             {
                 options.Verbosity = verbosity;
             }
@@ -139,7 +145,7 @@ namespace SignCheck
             var sc = new SignCheck(new string[] { });
             sc.Options = options;
             int result = sc.Run();
-            return result != 0 || Log.HasLoggedErrors ? false: true;
+            return (result == 0 && !Log.HasLoggedErrors);
         }
     }
 }

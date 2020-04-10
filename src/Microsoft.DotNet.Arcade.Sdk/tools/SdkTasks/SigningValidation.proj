@@ -34,9 +34,13 @@
       <SignCheckInputDir>$(PackageBasePath)</SignCheckInputDir>
       <SignCheckLog Condition="'$(SignCheckLog)' == ''">$(ArtifactsLogDir)\signcheck.log</SignCheckLog>
       <SignCheckErrorLog Condition="'$(SignCheckErrorLog)' == ''">$(ArtifactsLogDir)\signcheck.errors.log</SignCheckErrorLog>
+      <InputFiles Condition="'$(BuildManifestFile)' == ''">$(SignCheckInputDir)</InputFiles>
+      <InputFiles Condition="'$(BuildManifestFile)' != ''">@(ItemsToSign)</InputFiles>
     </PropertyGroup>
 
     <Error Condition="'$(MSBuildRuntimeType)' == 'Core'" Text="Signing validation task does not run on core." />
+
+    <Message Text="Using build manifest file '$(BuildManifestFile)'" Condition="Exists('$(BuildManifestFile)')" />
       <!--
         Documentation for these arguments is available here:
         https://github.com/dotnet/arcade/tree/master/src/SignCheck
@@ -44,7 +48,7 @@
     <SignCheckTask 
       Recursive="true"
       FileStatus="AllFiles"
-      InputFiles="@(ItemsToSign)"
+      InputFiles="$(InputFiles)"
       ExclusionsFile="$(SignCheckExclusionsFile)"
       EnableJarSignatureVerification="$(EnableJarSigningCheck)"
       VerifyStrongName="$(EnableStrongNameCheck)"
