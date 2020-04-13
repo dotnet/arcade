@@ -30,18 +30,22 @@ Based on the rough amount of build work done in each repo, budgets for each buil
 of whether the repo will be within budge once those items are complete.*
 
 
-| Repo               | Owner    | Consolidated/Removed from flow       | Moved tests                          | Post-signing | Post-validation | Budget (mins)                   | Within budget                     |
-| ------------------ | -------- | ------------------------------------ | ------------------------------------ | ------------ | --------------- | ------------------------------- | --------------------------------- |
-| websdk             | vramak   | <span style="color:red">No</span>    | NA                                   | NA           | NA              | NA                              | NA                                |
-| aspnetcore         | kevinpi  | NA                                   | <span style="color:red">No</span>    | NYA          | NYA             | 45                              | <span style="color:red">No</span> |
-| aspnetcore-tooling | kevinpi  | <span style="color:red">No</span>    | NA                                   | NA           | NA              | NA                              | NA                                |
-| efcore             | kevinpi  | <span style="color:green">Yes</span> | <span style="color:green">No</span>  | NR           | NR              | NA                              | NA                                |
-| extensions         | kevinpi  | <span style="color:red">No</span>    | <span style="color:red">No</span>    | NR           | NR              | NA                              | NA                                |
-| installer          | dondr    | NA                                   | <span style="color:red">No</span>    | NYA          | NYA             | 30 (w/sdk)                      | <span style="color:red">No</span> |
-| runtime            | jaredpar | <span style="color:green">Yes</span> | <span style="color:green">Yes</span> | NYA          | NYA             | 45                              | <span style="color:red">No</span> |
-| sdk                | dondr    | NA                                   | <span style="color:green">Yes</span> | NYA          | NYA             | 30 (w/installer)                | <span style="color:red">No</span> |
-| templating         | joaguila | NA                                   | <span style="color:red">No</span>    | NYA          | NYA             | NA                              | NA                                |
-| windowsdesktop     | srivatsm | NA                                   | <span style="color:red">No</span>    | NYA          | NYA             | 45 (w/winforms + wpf)           | <span style="color:red">No</span> |
-| winforms           | srivatsm | NA                                   | <span style="color:red">No</span>    | NYA          | NYA             | 45 (w/wpf + wd)                 | <span style="color:red">No</span> |
-| wpf-int            | srivatsm | NA                                   | <span style="color:red">No</span>    | NYA          | NYA             | 45 (w/wpf + wd)                 | <span style="color:red">No</span> |
-| wpf                | srivatsm | NA                                   | <span style="color:red">No</span>    | NYA          | NYA             | 45 (w/winforms or wpf-int + wd) | <span style="color:red">No</span> |
+| Repo               | Owner    | Consolidated/Removed from flow | Moved tests | Post-signing | Post-validation | Budget (mins)                   | Within budget |
+| ------------------ | -------- | ------------------------------ | ----------- | ------------ | --------------- | ------------------------------- | ------------- |
+| websdk             | vramak   | ![][red]                       | NA          | NA           | NA              | NA                              | NA            |
+| aspnetcore         | kevinpi  | NA                             | ![][red]    | NYA          | NYA             | 45                              | ![][red]      |
+| aspnetcore-tooling | kevinpi  | ![][red]                       | NA          | NA           | NA              | NA                              | NA            |
+| efcore             | kevinpi  | ![][green]                     | ![][red]    | NR           | NR              | NA                              | NA            |
+| extensions         | kevinpi  | ![][red]                       | ![][red]    | NR           | NR              | NA                              | NA            |
+| installer          | dondr    | NA                             | ![][red]    | NYA          | NYA             | 30 (w/sdk)                      | ![][red]      |
+| runtime            | jaredpar | ![][green]                     | ![][green]  | NYA          | NYA             | 45                              | ![][red]      |
+| sdk                | dondr    | NA                             | ![][green]  | NYA          | NYA             | 30 (w/installer)                | ![][red]      |
+| templating         | joaguila | NA                             | ![][red]    | NYA          | NYA             | NA                              | NA            |
+| windowsdesktop     | srivatsm | NA                             | ![][red]    | NYA          | NYA             | 45 (w/winforms + wpf)           | ![][red]      |
+| winforms           | srivatsm | NA                             | ![][red]    | NYA          | NYA             | 45 (w/wpf + wd)                 | ![][red]      |
+| wpf-int            | srivatsm | NA                             | ![][red]    | NYA          | NYA             | 45 (w/wpf + wd)                 | ![][red]      |
+| wpf                | srivatsm | NA                             | ![][red]    | NYA          | NYA             | 45 (w/winforms or wpf-int + wd) | ![][red]      |
+
+[red]: https://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Red.png
+[green]: https://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png
+[yello]: https://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Yellow.png
