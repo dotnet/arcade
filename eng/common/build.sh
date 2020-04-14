@@ -208,7 +208,7 @@ function Build {
     /p:PerformanceTest=$performance_test \
     /p:Sign=$sign \
     /p:Publish=$publish \
-    /p:GenerateBuildManifest=$manifest
+    /p:GenerateBuildManifest=$manifest \
     $properties
 
   ExitWithExitCode 0
