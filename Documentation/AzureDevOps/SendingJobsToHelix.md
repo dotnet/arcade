@@ -140,3 +140,20 @@ Results will be available from https://mc.dot.net/#/user/dotnet-github-anon-kaon
 ### Internal test results
 
 Test results for "internal" projects are accessible via the link which is provided in the build output or via Azure DevOps Tests tab.
+
+### Helix Work Item Exit statuses:
+
+As surfaced by the Helix API and backing Kusto (Azure Data Explorer) database, here's an explanation of the statuses you may see from Helix work items.
+
+- Pass - Work item did everything as expected, and its exit code was 0.
+- Fail – Work item did everything as expected including reporting results, but had a non-zero exit code.
+- BadExit – A non-zero exit code, typically a crash, where also no results were reported
+- None – No network problems to Azure components, and stuff worked, but we were unable to start your work item.  Often this will be caused by problems like no space left on the device or a payload that is so large it cannot be downloaded within 10 minutes, but can also be indicative of a misconfigured machine.  We strive for 0 of these from machine configuration, but given we intentionally do not set limits on payloads this can and does happen for the former reasons.
+- Error – Same as None except that the Helix client catches it and sends telemetry saying it knew it was in error.
+- DeadLetter – Multiple Helix machines tried to run the work item “Max Delivery Count” times (typically configured as 3), and were unable to complete it, OR the queue is deprecated (end-of life: happening more in these core-reduction times).   No output is registered, and the console log is redirected to a page explaining what DeadLetter means.
+- InfraRetry – Work item completed as expected, but on the 2nd-Nth attempt; this can be a requested-by-the-workitem retry, machine being rebooted or deleted during execution, or any number of random Azure components being flaky.  Typically ignoreable for test runs.
+- PassOnRetry – Special legacy retry functionality which is purposefully obsoleted as it does not play well with Azure DevOps test reporting (reporting the same facts twice causes issues)
+- Timeout – Work Item did not complete within its specified timeout and was forcibly killed.  Corresponds to exit code -3 (made up value since the process never exited)
+
+
+
