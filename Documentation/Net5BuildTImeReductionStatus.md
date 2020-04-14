@@ -1,5 +1,9 @@
 # .NET 5 Build Time Reduction Status
 
+The goal for .NET 5 is to bring the E2E build time under two hours. To this end, a number of things should be done to help bring
+the time for each repo's build under a prescribed budget. This document tracks those changes. For more information on the changes, see
+[.NET 5 Build Shape](https://github.com/dotnet/arcade/blob/master/Documentation/Net5Builds.md).
+
 ## Budgets
 
 The expected potential critical paths of the build after consolidation is complete are:
@@ -17,6 +21,13 @@ Based on the rough amount of build work done in each repo, budgets for each buil
 | sdk + installer                      | 30            |
 | winforms + wpf + windowsdesktop (wd) | 45            |
 | wpf-int + wpf + windowsdesktop (wd)  | 45            |
+
+### Feasibility
+
+Based on the previous calculations of potential build times done when deciding what to do about repo consolidation,
+it is believed that these numbers are within the realm of possibility. Signing, tests and validation have an outsized impact
+on build, and VM size can potentially be increased to improve parallelism within a single build. For more information, see
+[.NET 5 Build Shape](https://github.com/dotnet/arcade/blob/master/Documentation/Net5Builds.md)
 
 ## Current Status
 
