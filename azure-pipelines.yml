@@ -33,6 +33,7 @@ stages:
           manifests: true
       enableMicrobuild: true
       enablePublishUsingPipelines: true
+      useBuildManifest: ${{ variables['_UseBuildManifest'] }}
       workspace:
         clean: all
       jobs:
@@ -57,7 +58,8 @@ stages:
           clean: true
         steps:
         - script: eng\common\cibuild.cmd
-            -configuration $(_BuildConfig) 
+            -configuration $(_BuildConfig)
+            -manifest
             -prepareMachine
             $(_InternalBuildArgs)
             /p:Test=false
@@ -192,3 +194,4 @@ stages:
         -TsaRepositoryName "Arcade"
         -TsaCodebaseName "Arcade"
         -TsaPublish $True'
+      useBuildManifest: ${{ variables['_UseBuildManifest'] }}

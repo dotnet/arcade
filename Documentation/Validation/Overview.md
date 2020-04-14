@@ -6,7 +6,7 @@ don't break any of the consuming repos or Arcade itself.
 ## Arcade Validation Policy
 
 With the goal of being more transparent, eliminating surprises, and minimizing disruptions, we now will **only** deploy Arcade and/or machine (image) updates when the following criteria is met:
-- Each bell-weather repo (defined as runtime, sdk, asp) must be building green so build problems won’t be compounded by new Arcade versions or images.
+- Each bell-weather repo (defined as runtime, aspnetcore, installer) must be building green so build problems won’t be compounded by new Arcade versions or images.
 - Arcade updates has been tested with each bell-weather repo.
 
 Exceptions:

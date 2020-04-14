@@ -74,7 +74,7 @@
       Text="No manifest file was found in the provided path: $(ManifestsBasePath)" />
 
     <!-- 
-      **Iterate** publishing assets from each manifest file. 
+      Publish artifacts from all manifests.
     -->
     <PublishArtifactsInManifest
       InternalBuild="$(IsInternalBuild)"
@@ -82,7 +82,7 @@
       BARBuildId="$(BARBuildId)"
       MaestroApiEndpoint="$(MaestroApiEndpoint)"
       BuildAssetRegistryToken="$(BuildAssetRegistryToken)"
-      AssetManifestPath="%(ManifestFiles.Identity)"
+      AssetManifestPaths="@(ManifestFiles)"
       BlobAssetsBasePath="$(BlobBasePath)"
       PackageAssetsBasePath="$(PackageBasePath)"
       NugetPath="$(NugetPath)"

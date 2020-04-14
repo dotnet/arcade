@@ -10,6 +10,8 @@ variables:
     value: False
   - name: _InternalBuildArgs
     value: ''
+  - name: _UseBuildManifest
+    value: False
 
   - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
     - name: _RunAsPublic
@@ -18,6 +20,8 @@ variables:
       value: True
     - name: _SignType
       value: real
+    - name: _UseBuildManifest
+      value: False
     # DotNet-Blob-Feed provides: dotnetfeed-storage-access-key-1
     # Publish-Build-Assets provides: MaestroAccessToken, BotAccount-dotnet-maestro-bot-PAT
     # DotNet-HelixApi-Access provides: HelixApiAccessToken
