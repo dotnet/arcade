@@ -1,0 +1,27 @@
+<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Library</OutputType>
+    <RootNamespace>Microsoft.Fx.ApiReviews.Differencing</RootNamespace>
+    <AssemblyName>Microsoft.Fx.ApiReviews.Differencing</AssemblyName>
+    <TargetFramework>net472</TargetFramework>
+    <RestoreProjectStyle>PackageReference</RestoreProjectStyle>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.ComponentModel.Composition" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Microsoft.Fx.Csv\Microsoft.Fx.Csv.csproj" />
+    <ProjectReference Include="..\Microsoft.Fx.Progress\Microsoft.Fx.Progress.csproj" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Cci.Extensions">
+      <Version>1.0.0-beta.19455.12</Version>
+    </PackageReference>
+  </ItemGroup>
+</Project>
