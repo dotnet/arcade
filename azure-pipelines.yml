@@ -45,7 +45,7 @@ stages:
             queue: BuildPool.Windows.VS2019.Pre.Scouting.Open
           ${{ if eq(variables._RunAsInternal, True) }}:
             name: NetCoreInternal-Pool
-            queue: BuildPool.Windows.VS2019.Pre.Scouting
+            queue: BuildPool.Server.Amd64.VS2017.Arcade
         strategy:
           matrix:
             Build_Release:
