@@ -30,7 +30,6 @@
     Pack                            "true" to build NuGet packages and VS insertion manifests
     Sign                            "true" to sign built binaries
     Publish                         "true" to publish artifacts (e.g. symbols)
-    GenerateBuildManifest           "true" to generate a build manifest during publish step.  Requires "Sign" and "Publish" are also true so that signing metadata can be included in the build manifest.
   -->
 
   <PropertyGroup>
@@ -161,7 +160,6 @@
     <ItemGroup>
       <_PublishProps Include="@(_CommonProps)"/>
       <_PublishProps Include="DotNetOutputBlobFeedDir=$(_DotNetOutputBlobFeedDir)" Condition="'$(_DotNetOutputBlobFeedDir)' != ''" />
-      <_PublishProps Include="GenerateBuildManifest=$(GenerateBuildManifest)" />
 
       <!-- Used in a few places in the stack to decide if publishing was enabled or not. -->
       <_PublishProps Include="Publish=$(Publish)"/>
