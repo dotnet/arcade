@@ -15,10 +15,6 @@
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
   </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\Microsoft.Fx.ApiReviews.Differencing\Microsoft.Fx.ApiReviews.Differencing.csproj" />
-  </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
   </ItemGroup>

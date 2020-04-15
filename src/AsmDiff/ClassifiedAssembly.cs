@@ -8,23 +8,14 @@ namespace Microsoft.Fx.ApiReviews.Differencing
 {
     public struct ClassifiedAssembly
     {
-        private readonly IAssemblyReference _reference;
-        private readonly AssemblyClassification _classification;
-
         public ClassifiedAssembly(IAssemblyReference reference, AssemblyClassification classification)
         {
-            _reference = reference;
-            _classification = classification;
+            Reference = reference;
+            Classification = classification;
         }
 
-        public IAssemblyReference Reference
-        {
-            get { return _reference; }
-        }
+        public IAssemblyReference Reference { get; }
 
-        public AssemblyClassification Classification
-        {
-            get { return _classification; }
-        }
+        public AssemblyClassification Classification { get; }
     }
 }

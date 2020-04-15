@@ -90,11 +90,6 @@ namespace Microsoft.Fx.ApiReviews.Differencing
             return FromPaths(paths.AsEnumerable(), null);
         }
 
-        public static AssemblySet FromPaths(IEnumerable<string> paths)
-        {
-            return FromPaths(paths, null);
-        }
-
         public static AssemblySet FromPaths(IEnumerable<string> paths, string name)
         {
             if (paths == null)
@@ -131,14 +126,6 @@ namespace Microsoft.Fx.ApiReviews.Differencing
             return new AssemblySet(Host, assembliesSnapshot, Name);
         }
 
-        public AssemblySet WithDependencies(IEnumerable<IAssembly> assemblies)
-        {
-            var assembliesSnapshot = GetSnapshotAndVerifyAssembliesAreInTheSameHost(assemblies);
-            var newDependencies = new HashSet<IAssembly>(assembliesSnapshot);
-            var newAssemblies = Assemblies.Where(a => !newDependencies.Contains(a));
-            return new AssemblySet(Host, newAssemblies, Name);
-        }
-
         public AssemblySet Remove(IEnumerable<IAssembly> assemblies)
         {
             var snapshot = assemblies.ToArray();
@@ -148,13 +135,6 @@ namespace Microsoft.Fx.ApiReviews.Differencing
             var newAssemblySet = FromPaths(allPaths, Name);
             var newAssemblies = assemblyPaths.Select(p => newAssemblySet.Host.LoadUnitFrom(p)).OfType<IAssembly>();
             return newAssemblySet.WithAssemblies(newAssemblies);
-        }
-
-        public AssemblySet RemoveNonRequiredAssemblies()
-        {
-            var requiredAssemblySet = new HashSet<IAssembly>(GetRequiredAssemblies());
-            var toBeRemoved = Dependencies.Where(d => !requiredAssemblySet.Contains(d));
-            return Remove(toBeRemoved);
         }
 
         private IEnumerable<IAssembly> GetSnapshotAndVerifyAssembliesAreInTheSameHost(IEnumerable<IAssembly> assemblies)
@@ -174,16 +154,6 @@ namespace Microsoft.Fx.ApiReviews.Differencing
             return assembliesSnapshot;
         }
 
-        public IEnumerable<IAssembly> GetAssembliesAndDependencies()
-        {
-            return Assemblies.Concat(Dependencies);
-        }
-
-        public IEnumerable<IAssembly> GetRequiredAssemblies()
-        {
-            return GetRequiredAssemblies(Assemblies);
-        }
-
         private static IEnumerable<IAssembly> GetRequiredAssemblies(IEnumerable<IAssembly> assemblies)
         {
             var queue = new Queue<IAssemblyReference>(assemblies);
@@ -201,11 +171,6 @@ namespace Microsoft.Fx.ApiReviews.Differencing
             }
 
             return processedSet.OrderByIdentity();
-        }
-
-        public IEnumerable<ClassifiedAssembly> ClassifyReferences()
-        {
-            return ClassifyReferences(Host, Assemblies);
         }
 
         private static IEnumerable<ClassifiedAssembly> ClassifyReferences(IMetadataHost host, IEnumerable<IAssembly> includedAssemblies)
