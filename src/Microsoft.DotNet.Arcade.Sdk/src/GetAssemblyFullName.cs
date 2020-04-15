@@ -13,7 +13,6 @@ namespace Microsoft.DotNet.Arcade.Sdk
         [Required]
         public ITaskItem[] Items { get; set; }
 
-        [Required]
         public string PathMetadata { get; set; }
 
         [Required]
@@ -28,7 +27,8 @@ namespace Microsoft.DotNet.Arcade.Sdk
 
             foreach (var item in Items)
             {
-                item.SetMetadata(FullNameMetadata, AssemblyName.GetAssemblyName(item.GetMetadata(PathMetadata)).FullName);
+                var assemblyPath = string.IsNullOrEmpty(PathMetadata) ? item.ItemSpec : item.GetMetadata(PathMetadata);
+                item.SetMetadata(FullNameMetadata, AssemblyName.GetAssemblyName(assemblyPath).FullName);
             }
 
             return true;
