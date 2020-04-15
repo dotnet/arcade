@@ -83,6 +83,7 @@ stages:
           - script: eng/common/cibuild.sh
               --configuration $(_BuildConfig)
               --prepareMachine
+              --manifest
               /p:Test=false
             displayName: Unix Build / Publish
 
