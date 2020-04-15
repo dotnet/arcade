@@ -240,8 +240,8 @@
   </Target>
 
   <PropertyGroup>
-    <AzureDevOpsBuildTasksAssembly Condition="'$(MSBuildRuntimeType)' != 'Core'">$(NuGetPackageRoot)Microsoft.DotNet.AzureDevOps.Build\$(ArcadeSdkVersion)\tools\net472\Microsoft.DotNet.AzureDevOps.Build.dll</AzureDevOpsBuildTasksAssembly>
-    <AzureDevOpsBuildTasksAssembly Condition="'$(MSBuildRuntimeType)' == 'Core'">$(NuGetPackageRoot)Microsoft.DotNet.AzureDevOps.Build\$(ArcadeSdkVersion)\tools\netcoreapp2.1\Microsoft.DotNet.AzureDevOps.Build.dll</AzureDevOpsBuildTasksAssembly>
+    <AzureDevOpsBuildTasksAssembly Condition="'$(MSBuildRuntimeType)' != 'Core'">$(NuGetPackageRoot)microsoft.dotnet.azuredevops.build\$(ArcadeSdkVersion)\tools\net472\Microsoft.DotNet.AzureDevOps.Build.dll</AzureDevOpsBuildTasksAssembly>
+    <AzureDevOpsBuildTasksAssembly Condition="'$(MSBuildRuntimeType)' == 'Core'">$(NuGetPackageRoot)microsoft.dotnet.azuredevops.build\$(ArcadeSdkVersion)\tools\netcoreapp2.1\Microsoft.DotNet.AzureDevOps.Build.dll</AzureDevOpsBuildTasksAssembly>
   </PropertyGroup>
 
   <Import Project="Sign.props" />
