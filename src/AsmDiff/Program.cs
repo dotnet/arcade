@@ -53,7 +53,7 @@ namespace AsmDiff
         public bool IncludePrivateApis { get; set; }
 
         [Option]
-        public DiffWriterType _diffWriter { get; set; }
+        public DiffWriterType DiffWriter { get; set; }
         [Option]
         public SyntaxWriterType SyntaxWriter { get; set; }
         
@@ -78,8 +78,10 @@ namespace AsmDiff
 
             DiffConfigurationOptions options = GetDiffOptions();
             DiffFormat diffFormat = GetDiffFormat();
+            
             AssemblySet oldAssemblies = AssemblySet.FromPaths(OldSet);
             AssemblySet newAssemblies = AssemblySet.FromPaths(NewSet);
+            
             DiffConfiguration diffConfiguration = new DiffConfiguration(oldAssemblies, newAssemblies, options);
             using (TextWriter output = GetOutput())
                 DiffEngine.Export(diffConfiguration, null, diffFormat, output);
@@ -141,7 +143,7 @@ namespace AsmDiff
 
         private  DiffFormat GetDiffFormat()
         {
-            switch (_diffWriter)
+            switch (DiffWriter)
             {
                 case DiffWriterType.CSharp:
                     switch (SyntaxWriter)
