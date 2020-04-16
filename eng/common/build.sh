@@ -35,7 +35,6 @@ usage()
   echo "  --prepareMachine         Prepare machine for CI run, clean up processes after build"
   echo "  --nodeReuse <value>      Sets nodereuse msbuild parameter ('true' or 'false')"
   echo "  --warnAsError <value>    Sets warnaserror msbuild parameter ('true' or 'false')"
-  echo "  --manifest               Generates a build manifest, including signing metadata.  Requires 'publish' also be specified."
   echo ""
   echo "Command line arguments not listed above are passed thru to msbuild."
   echo "Arguments can also be passed in with a single hyphen."
@@ -65,7 +64,6 @@ sign=false
 public=false
 ci=false
 clean=false
-manifest=false
 
 warn_as_error=true
 node_reuse=true
@@ -148,9 +146,6 @@ while [[ $# > 0 ]]; do
       node_reuse=$2
       shift
       ;;
-    -manifest)
-      manifest=true
-      ;;
     *)
       properties="$properties $1"
       ;;
@@ -188,13 +183,6 @@ function Build {
     bl="/bl:\"$log_dir/Build.binlog\""
   fi
 
-  if [[ "$manifest" == true ]]; then
-    if [[ ! "$publish" == true ]]; then
-      echo "'--publish' is required if '-manifest' is specified."
-      exit 0
-    fi
-  fi
-
   MSBuild $_InitializeToolset \
     $bl \
     /p:Configuration=$configuration \
@@ -208,7 +196,6 @@ function Build {
     /p:PerformanceTest=$performance_test \
     /p:Sign=$sign \
     /p:Publish=$publish \
-    /p:GenerateBuildManifest=$manifest \
     $properties
 
   ExitWithExitCode 0
