@@ -25,8 +25,7 @@ namespace Microsoft.Cci.Writers.CSharp
             // But we need also consider if this attribute is filtered out or not but I guess
             // we have the same problem with all the fake attributes at this point.
 
-            if (type.IsClass && type.Layout != LayoutKind.Auto ||
-                type.IsStruct && (type.Layout != LayoutKind.Sequential || type.Alignment != 0 || type.SizeOf != 0 || type.StringFormat != StringFormatKind.Ansi))
+            if ((type.IsStruct || type.IsClass) && type.Layout != LayoutKind.Auto)
             {
                 FakeCustomAttribute structLayout = new FakeCustomAttribute("System.Runtime.InteropServices", "StructLayoutAttribute");
                 string layoutKind = string.Format("System.Runtime.InteropServices.LayoutKind.{0}", type.Layout.ToString());
