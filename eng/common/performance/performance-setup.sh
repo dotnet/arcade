@@ -12,6 +12,7 @@ commit_sha=$BUILD_SOURCEVERSION
 build_number=$BUILD_BUILDNUMBER
 internal=false
 compare=false
+mono_dotnet=
 kind="micro"
 run_categories="Libraries Runtime"
 csproj="src\benchmarks\micro\MicroBenchmarks.csproj"
@@ -19,6 +20,7 @@ configurations="CompliationMode=$compilation_mode RunKind=$kind"
 run_from_perf_repo=false
 use_core_run=true
 use_baseline_core_run=true
+using_mono=false
 
 while (($# > 0)); do
   lowerI="$(echo $1 | awk '{print tolower($0)}')"
@@ -65,6 +67,7 @@ while (($# > 0)); do
       ;;
     --kind)
       kind=$2
+      configurations="CompliationMode=$compilation_mode RunKind=$kind"
       shift 2
       ;;
     --runcategories)
@@ -78,6 +81,10 @@ while (($# > 0)); do
     --internal)
       internal=true
       shift 1
+      ;;
+    --monodotnet)
+      mono_dotnet=$2
+      shift 2
       ;;
     --compare)
       compare=true
@@ -107,6 +114,7 @@ while (($# > 0)); do
       echo "  --kind <value>                 Related to csproj. The kind of benchmarks that should be run. Defaults to micro"
       echo "  --runcategories <value>        Related to csproj. Categories of benchmarks to run. Defaults to \"coreclr corefx\""
       echo "  --internal                     If the benchmarks are running as an official job."
+      echo "  --monodotnet                   Pass the path to the mono dotnet for mono performance testing."
       echo ""
       exit 0
       ;;
@@ -191,6 +199,12 @@ if [[ "$use_core_run" = true ]]; then
     mv $core_root_directory $new_core_root
 fi
 
+if [[ "$mono_dotnet" != "" ]]; then
+    using_mono=true
+    mono_dotnet_path=$payload_directory/dotnet-mono
+    mv $mono_dotnet $mono_dotnet_path
+fi
+
 if [[ "$use_baseline_core_run" = true ]]; then
   new_baseline_core_root=$payload_directory/Baseline_Core_Root
   mv $baseline_core_root_directory $new_baseline_core_root
@@ -221,3 +235,4 @@ Write-PipelineSetVariable -name "HelixSourcePrefix" -value "$helix_source_prefix
 Write-PipelineSetVariable -name "Kind" -value "$kind" -is_multi_job_variable false
 Write-PipelineSetVariable -name "_BuildConfig" -value "$architecture.$kind.$framework" -is_multi_job_variable false
 Write-PipelineSetVariable -name "Compare" -value "$compare" -is_multi_job_variable false
+Write-PipelineSetVariable -name "MonoDotnet" -value "$using_mono" -is_multi_job_variable false
