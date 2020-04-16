@@ -12,7 +12,6 @@ using Microsoft.Cci.Filters;
 using Microsoft.Cci.Mappings;
 using Microsoft.Cci.Writers;
 using Microsoft.Cci.Writers.Syntax;
-using Microsoft.Fx.Csv;
 
 namespace Microsoft.DotNet.Asmdiff
 {

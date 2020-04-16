@@ -8,7 +8,6 @@ using Microsoft.Cci;
 using Microsoft.Cci.Mappings;
 using Microsoft.Cci.Traversers;
 using Microsoft.Cci.Writers;
-using Microsoft.Fx.Csv;
 
 namespace Microsoft.DotNet.Asmdiff
 {

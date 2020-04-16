@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.Composition.Hosting;
+using System.Composition.Hosting.Core;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
@@ -18,7 +19,6 @@ using Microsoft.Cci.Traversers;
 using Microsoft.Cci.Writers;
 using Microsoft.Cci.Writers.CSharp;
 using Microsoft.Cci.Writers.Syntax;
-using Microsoft.DotNet.Asmdiff.Helpers;
 using Assembly = System.Reflection.Assembly;
 
 namespace Microsoft.DotNet.Asmdiff
