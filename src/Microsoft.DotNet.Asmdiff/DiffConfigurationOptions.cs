@@ -4,7 +4,7 @@
 
 using System;
 
-namespace Microsoft.DotNet.Asmdiff
+namespace Microsoft.DotNet.AsmDiff
 {
     [Flags]
     public enum DiffConfigurationOptions

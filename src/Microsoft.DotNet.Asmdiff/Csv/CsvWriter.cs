@@ -5,7 +5,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Microsoft.DotNet.Asmdiff
+namespace Microsoft.DotNet.AsmDiff.CSV
 {
     public abstract class CsvWriter : IDisposable
     {

@@ -5,7 +5,7 @@
 using System.IO;
 using System.Text;
 
-namespace Microsoft.DotNet.Asmdiff
+namespace Microsoft.DotNet.AsmDiff.CSV
 {
     public class CsvTextWriter : CsvWriter 
     {

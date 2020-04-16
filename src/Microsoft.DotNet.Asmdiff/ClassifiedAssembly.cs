@@ -4,7 +4,7 @@
 
 using Microsoft.Cci;
 
-namespace Microsoft.DotNet.Asmdiff
+namespace Microsoft.DotNet.AsmDiff
 {
     public struct ClassifiedAssembly
     {

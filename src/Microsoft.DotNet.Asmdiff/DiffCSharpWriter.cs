@@ -21,7 +21,7 @@ using Microsoft.Cci.Writers.CSharp;
 using Microsoft.Cci.Writers.Syntax;
 using Assembly = System.Reflection.Assembly;
 
-namespace Microsoft.DotNet.Asmdiff
+namespace Microsoft.DotNet.AsmDiff
 {
     public class DiffCSharpWriter : MappingsTypeMemberTraverser, IDiffingService, ICciDifferenceWriter
     {

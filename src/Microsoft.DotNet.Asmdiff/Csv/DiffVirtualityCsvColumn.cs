@@ -6,7 +6,7 @@ using System;
 using Microsoft.Cci;
 using Microsoft.Cci.Mappings;
 
-namespace Microsoft.DotNet.Asmdiff
+namespace Microsoft.DotNet.AsmDiff.CSV
 {
     public sealed class DiffVirtualityCsvColumn : DiffCsvColumn
     {

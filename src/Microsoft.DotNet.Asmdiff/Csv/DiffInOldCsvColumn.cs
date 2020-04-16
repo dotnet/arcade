@@ -6,11 +6,11 @@ using System;
 using Microsoft.Cci.Differs;
 using Microsoft.Cci.Mappings;
 
-namespace Microsoft.DotNet.Asmdiff
+namespace Microsoft.DotNet.AsmDiff.CSV
 {
-    public sealed class DiffDifferenceCsvColumn : DiffCsvColumn
+    public sealed class DiffInOldCsvColumn : DiffCsvColumn
     {
-        public DiffDifferenceCsvColumn(DiffConfiguration diffConfiguration)
+        public DiffInOldCsvColumn(DiffConfiguration diffConfiguration)
             : base(diffConfiguration)
         {
         }
@@ -22,21 +22,21 @@ namespace Microsoft.DotNet.Asmdiff
 
         public override string Name
         {
-            get { return "Difference"; }
+            get { return "In " + DiffConfiguration.Left.Name; }
         }
 
-        private static string Difference(DifferenceType differenceType)
+        private static string InOld(DifferenceType differenceType)
         {
             switch (differenceType)
             {
                 case DifferenceType.Unchanged:
-                    return "Unchanged";
-                case DifferenceType.Added:
-                    return "Added";
                 case DifferenceType.Removed:
-                    return "Removed";
                 case DifferenceType.Changed:
-                    return "Changed";
+                    return "Yes";
+
+                case DifferenceType.Added:
+                    return "No";
+
                 default:
                     throw new ArgumentOutOfRangeException("differenceType");
             }
@@ -44,17 +44,17 @@ namespace Microsoft.DotNet.Asmdiff
 
         public override string GetValue(NamespaceMapping mapping)
         {
-            return Difference(mapping.Difference);
+            return InOld(mapping.Difference);
         }
 
         public override string GetValue(TypeMapping mapping)
         {
-            return Difference(mapping.Difference);
+            return InOld(mapping.Difference);
         }
 
         public override string GetValue(MemberMapping mapping)
         {
-            return Difference(mapping.Difference);
+            return InOld(mapping.Difference);
         }
     }
 }

@@ -6,11 +6,11 @@ using System;
 using Microsoft.Cci.Differs;
 using Microsoft.Cci.Mappings;
 
-namespace Microsoft.DotNet.Asmdiff
+namespace Microsoft.DotNet.AsmDiff.CSV
 {
-    public sealed class DiffInOldCsvColumn : DiffCsvColumn
+    public sealed class DiffInNewCsvColumn : DiffCsvColumn
     {
-        public DiffInOldCsvColumn(DiffConfiguration diffConfiguration)
+        public DiffInNewCsvColumn(DiffConfiguration diffConfiguration)
             : base(diffConfiguration)
         {
         }
@@ -22,19 +22,19 @@ namespace Microsoft.DotNet.Asmdiff
 
         public override string Name
         {
-            get { return "In " + DiffConfiguration.Left.Name; }
+            get { return "In " + DiffConfiguration.Right.Name; }
         }
 
-        private static string InOld(DifferenceType differenceType)
+        private static string InNew(DifferenceType differenceType)
         {
             switch (differenceType)
             {
                 case DifferenceType.Unchanged:
-                case DifferenceType.Removed:
+                case DifferenceType.Added:
                 case DifferenceType.Changed:
                     return "Yes";
 
-                case DifferenceType.Added:
+                case DifferenceType.Removed:
                     return "No";
 
                 default:
@@ -44,17 +44,17 @@ namespace Microsoft.DotNet.Asmdiff
 
         public override string GetValue(NamespaceMapping mapping)
         {
-            return InOld(mapping.Difference);
+            return InNew(mapping.Difference);
         }
 
         public override string GetValue(TypeMapping mapping)
         {
-            return InOld(mapping.Difference);
+            return InNew(mapping.Difference);
         }
 
         public override string GetValue(MemberMapping mapping)
         {
-            return InOld(mapping.Difference);
+            return InNew(mapping.Difference);
         }
     }
 }

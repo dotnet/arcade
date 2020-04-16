@@ -7,7 +7,7 @@ using Microsoft.Cci;
 using Microsoft.Cci.Extensions.CSharp;
 using Microsoft.Cci.Mappings;
 
-namespace Microsoft.DotNet.Asmdiff
+namespace Microsoft.DotNet.AsmDiff.CSV
 {
     public sealed class DiffUnsafeCsvColumn : DiffCsvColumn
     {

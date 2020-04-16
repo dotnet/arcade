@@ -12,8 +12,9 @@ using Microsoft.Cci.Filters;
 using Microsoft.Cci.Mappings;
 using Microsoft.Cci.Writers;
 using Microsoft.Cci.Writers.Syntax;
+using Microsoft.DotNet.AsmDiff.CSV;
 
-namespace Microsoft.DotNet.Asmdiff
+namespace Microsoft.DotNet.AsmDiff
 {
     public static class DiffEngine
     {

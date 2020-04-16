@@ -8,7 +8,7 @@ using System.Composition.Hosting;
 using System.Composition.Hosting.Core;
 using System.Linq;
 
-namespace Microsoft.DotNet.Asmdiff
+namespace Microsoft.DotNet.AsmDiff
 {
     static class MefHelpers
     {

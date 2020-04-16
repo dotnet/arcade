@@ -2,38 +2,39 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using Microsoft.Cci.Extensions;
+using Microsoft.Cci.Extensions.CSharp;
 using Microsoft.Cci.Mappings;
 
-namespace Microsoft.DotNet.Asmdiff
+namespace Microsoft.DotNet.AsmDiff.CSV
 {
-    public sealed class DiffSubKindCsvColumn : DiffCsvColumn
+    public sealed class DiffOverrideCsvColumn : DiffCsvColumn
     {
-        public DiffSubKindCsvColumn(DiffConfiguration diffConfiguration)
+        public DiffOverrideCsvColumn(DiffConfiguration diffConfiguration)
             : base(diffConfiguration)
         {
         }
 
         public override string Name
         {
-            get { return "Sub Kind"; }
+            get { return "Override"; }
         }
 
         public override string GetValue(NamespaceMapping mapping)
         {
-            return ApiKind.Namespace.ToString();
+            return string.Empty;
         }
 
         public override string GetValue(TypeMapping mapping)
         {
-            var typeDefinition = mapping.Representative;
-            return typeDefinition.GetApiKind().ToString();
+            return string.Empty;
         }
 
         public override string GetValue(MemberMapping mapping)
         {
-            var member = mapping.Representative;
-            return member.GetApiKind().ToString();
+            var isOverride = mapping.Representative.IsOverride();
+            return isOverride
+                       ? "Yes"
+                       : "No";
         }
     }
 }

@@ -11,7 +11,7 @@ using Microsoft.Cci.Mappings;
 using Microsoft.Cci.Writers;
 using Microsoft.Cci.Writers.Syntax;
 
-namespace Microsoft.DotNet.Asmdiff
+namespace Microsoft.DotNet.AsmDiff.CSV
 {
     public sealed class DiffTokensCsvColumn : DiffCsvColumn
     {

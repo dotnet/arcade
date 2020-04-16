@@ -5,59 +5,58 @@
 using System;
 using System.IO;
 using System.Text;
-using Microsoft.DotNet.Asmdiff;
 using McMaster.Extensions.CommandLineUtils;
 
-namespace Microsoft.DotNet.Asmdiff
+namespace Microsoft.DotNet.AsmDiff
 {
     public class Program
     {
-        [Option]
+        [Option("-os|--OldSet")]
         public string OldSet { get; set; }
-        [Option]
+        [Option("-ns|--NewSet")]
         public string NewSet { get; set; }
-        
-        [Option]
+
+        [Option("-u|--Unchanged")]
         public bool Unchanged { get; set; }
-        [Option]
+        [Option("-r|--Removed")]
         public bool Removed { get; set; }
-        [Option]
+        [Option("-a|--Added")]
         public bool Added { get; set; }
-        [Option]
+        [Option("-c|--Changed")]
         public bool Changed { get; set; }
-        
-        [Option]
+
+        [Option("-to|--TypesOnly")]
         public bool TypesOnly { get; set; }
-        [Option]
+        [Option("-sr|--StrikeRemoved")]
         public bool StrikeRemoved { get; set; }
-        [Option]
+        [Option("-da|--DiffAttributes")]
         public bool DiffAttributes { get; set; }
-        [Option]
+        [Option("-dai|--DiffAssemblyInfo")]
         public bool DiffAssemblyInfo { get; set; }
-        [Option]
+        [Option("-ad|--AlwaysDiffMembers")]
         public bool AlwaysDiffMembers { get; set; }
-        [Option]
+        [Option("-hb|--HighlightBaseMembers")]
         public bool HighlightBaseMembers { get; set; }
-        
-        [Option]
+
+        [Option("-ft|--FlattenTypes")]
         public bool FlattenTypes { get; set; }
-        [Option]
+        [Option("-ga|--GroupByAssembly")]
         public bool GroupByAssembly { get; set; }
-        [Option]
+        [Option("-eat|--ExcludeAddedTypes")]
         public bool ExcludeAddedTypes { get; set; }
-        [Option]
+        [Option("-ert|--ExcludeRemovedTypes")]
         public bool ExcludeRemovedTypes { get; set; }
-        [Option]
+        [Option("-iia|--IncludeInternalApis")]
         public bool IncludeInternalApis { get; set; }
-        [Option]
+        [Option("-ipa|--IncludePrivateApis")]
         public bool IncludePrivateApis { get; set; }
 
-        [Option]
+        [Option("-dw|--DiffWriter")]
         public DiffWriterType DiffWriter { get; set; }
-        [Option]
+        [Option("-sw|--SyntaxWriter")]
         public SyntaxWriterType SyntaxWriter { get; set; }
-        
-        [Option]
+
+        [Option("-o|--OutFile")]
         public string OutFile { get; set; }
 
         public void OnExecute()

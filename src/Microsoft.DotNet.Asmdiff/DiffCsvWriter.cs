@@ -8,8 +8,9 @@ using Microsoft.Cci;
 using Microsoft.Cci.Mappings;
 using Microsoft.Cci.Traversers;
 using Microsoft.Cci.Writers;
+using Microsoft.DotNet.AsmDiff.CSV;
 
-namespace Microsoft.DotNet.Asmdiff
+namespace Microsoft.DotNet.AsmDiff
 {
     internal sealed class DiffCsvWriter : MappingsTypeMemberTraverser, ICciDifferenceWriter
     {

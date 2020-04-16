@@ -4,7 +4,7 @@
 
 using Microsoft.Cci.Mappings;
 
-namespace Microsoft.DotNet.Asmdiff
+namespace Microsoft.DotNet.AsmDiff.CSV
 {
     public interface IDiffCsvColumn
     {

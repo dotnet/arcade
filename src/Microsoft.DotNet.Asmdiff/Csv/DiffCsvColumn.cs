@@ -6,7 +6,7 @@ using System;
 using System.Collections.ObjectModel;
 using Microsoft.Cci.Mappings;
 
-namespace Microsoft.DotNet.Asmdiff
+namespace Microsoft.DotNet.AsmDiff.CSV
 {
     public abstract class DiffCsvColumn : IDiffCsvColumn
     {

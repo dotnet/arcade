@@ -11,7 +11,7 @@ using System.Linq;
 using Microsoft.Cci;
 using Microsoft.Cci.Extensions;
 
-namespace Microsoft.DotNet.Asmdiff
+namespace Microsoft.DotNet.AsmDiff
 {
     public sealed class AssemblySet : IEnumerable<IAssembly>, IDisposable
     {

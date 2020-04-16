@@ -7,7 +7,7 @@ using Microsoft.Cci;
 using Microsoft.Cci.Extensions;
 using Microsoft.Cci.Filters;
 
-namespace Microsoft.DotNet.Asmdiff
+namespace Microsoft.DotNet.AsmDiff
 {
     internal sealed class DiffCciFilter : ICciFilter
     {
