@@ -42,7 +42,7 @@ stages:
         pool:
           ${{ if eq(variables._RunAsPublic, True) }}:
             name: NetCorePublic-Pool
-            queue: BuildPool.Server.Amd64.VS2019.BT.Open
+            queue: BuildPool.Server.Amd64.VS2019.BT
           ${{ if eq(variables._RunAsInternal, True) }}:
             name: NetCoreInternal-Pool
             queue: BuildPool.Server.Amd64.VS2019.BT
