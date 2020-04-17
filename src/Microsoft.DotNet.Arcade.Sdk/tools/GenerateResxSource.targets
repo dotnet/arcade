@@ -18,8 +18,11 @@
     </EmbeddedResource>
   </ItemGroup>
 
+  <!--
+    Note: Targets that generate Compile items are expected to run before BeforeCompile targets (common targets convention).
+  -->
   <Target Name="_GenerateResxSource"
-          BeforeTargets="CoreCompile"
+          BeforeTargets="BeforeCompile;CoreCompile"
           DependsOnTargets="PrepareResourceNames;
                             _GetEmbeddedResourcesWithSourceGeneration;
                             _BatchGenerateResxSource">
