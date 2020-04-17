@@ -142,6 +142,9 @@ stages:
           - checkout: self
             clean: true
           steps:
+          - task: UseDotNet@2
+            inputs:
+              useGlobalJson: true
           - task: DotNetCoreCLI@2
             inputs:
               command: 'test'
