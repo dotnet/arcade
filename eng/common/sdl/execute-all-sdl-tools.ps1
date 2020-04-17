@@ -13,7 +13,6 @@ Param(
   [string] $TsaBranchName=$env:BUILD_SOURCEBRANCH,                                               # Optional: required for TSA publish; defaults to $(Build.SourceBranchName); TSA is the automated framework used to upload test results as bugs.
   [string] $TsaRepositoryName=$env:BUILD_REPOSITORY_NAME,                                        # Optional: TSA repository name; will be generated automatically if not submitted; TSA is the automated framework used to upload test results as bugs.
   [string] $BuildNumber=$env:BUILD_BUILDNUMBER,                                                  # Optional: required for TSA publish; defaults to $(Build.BuildNumber)
-  [bool] $UpdateBaseline=$False,                                                                 # Optional: if true, will update the baseline in the repository; should only be run after fixing any issues which need to be fixed
   [bool] $TsaOnboard=$False,                                                                     # Optional: if true, will onboard the repository to TSA; should only be run once; TSA is the automated framework used to upload test results as bugs.
   [string] $TsaInstanceUrl,                                                                      # Optional: only needed if TsaOnboard or TsaPublish is true; the instance-url registered with TSA; TSA is the automated framework used to upload test results as bugs.
   [string] $TsaCodebaseName,                                                                     # Optional: only needed if TsaOnboard or TsaPublish is true; the name of the codebase registered with TSA; TSA is the automated framework used to upload test results as bugs.
@@ -62,7 +61,7 @@ try {
     ExitWithExitCode 1
   }
 
-  & $(Join-Path $PSScriptRoot 'init-sdl.ps1') -GuardianCliLocation $guardianCliLocation -Repository $RepoName -BranchName $BranchName -WorkingDirectory $workingDirectory -AzureDevOpsAccessToken $AzureDevOpsAccessToken -GuardianLoggerLevel $GuardianLoggerLevel
+  & $(Join-Path $PSScriptRoot 'init-sdl.ps1') -GuardianCliLocation $guardianCliLocation -Repository $RepoName -BranchName $BranchName -WorkingDirectory $workingDirectory -GuardianLoggerLevel $GuardianLoggerLevel
   $gdnFolder = Join-Path $workingDirectory '.gdn'
 
   if ($TsaOnboard) {
@@ -80,14 +79,10 @@ try {
   }
 
   if ($ArtifactToolsList -and $ArtifactToolsList.Count -gt 0) {
-    & $(Join-Path $PSScriptRoot 'run-sdl.ps1') -GuardianCliLocation $guardianCliLocation -WorkingDirectory $workingDirectory -TargetDirectory $ArtifactsDirectory -GdnFolder $gdnFolder -ToolsList $ArtifactToolsList -AzureDevOpsAccessToken $AzureDevOpsAccessToken -UpdateBaseline $UpdateBaseline -GuardianLoggerLevel $GuardianLoggerLevel -CrScanAdditionalRunConfigParams $CrScanAdditionalRunConfigParams -PoliCheckAdditionalRunConfigParams $PoliCheckAdditionalRunConfigParams
+    & $(Join-Path $PSScriptRoot 'run-sdl.ps1') -GuardianCliLocation $guardianCliLocation -WorkingDirectory $workingDirectory -TargetDirectory $ArtifactsDirectory -GdnFolder $gdnFolder -ToolsList $ArtifactToolsList -GuardianLoggerLevel $GuardianLoggerLevel -CrScanAdditionalRunConfigParams $CrScanAdditionalRunConfigParams -PoliCheckAdditionalRunConfigParams $PoliCheckAdditionalRunConfigParams
   }
   if ($SourceToolsList -and $SourceToolsList.Count -gt 0) {
-    & $(Join-Path $PSScriptRoot 'run-sdl.ps1') -GuardianCliLocation $guardianCliLocation -WorkingDirectory $workingDirectory -TargetDirectory $SourceDirectory -GdnFolder $gdnFolder -ToolsList $SourceToolsList -AzureDevOpsAccessToken $AzureDevOpsAccessToken -UpdateBaseline $UpdateBaseline -GuardianLoggerLevel $GuardianLoggerLevel -CrScanAdditionalRunConfigParams $CrScanAdditionalRunConfigParams -PoliCheckAdditionalRunConfigParams $PoliCheckAdditionalRunConfigParams
-  }
-
-  if ($UpdateBaseline) {
-    & (Join-Path $PSScriptRoot 'push-gdn.ps1') -Repository $RepoName -BranchName $BranchName -GdnFolder $GdnFolder -AzureDevOpsAccessToken $AzureDevOpsAccessToken -PushReason 'Update baseline'
+    & $(Join-Path $PSScriptRoot 'run-sdl.ps1') -GuardianCliLocation $guardianCliLocation -WorkingDirectory $workingDirectory -TargetDirectory $SourceDirectory -GdnFolder $gdnFolder -ToolsList $SourceToolsList -GuardianLoggerLevel $GuardianLoggerLevel -CrScanAdditionalRunConfigParams $CrScanAdditionalRunConfigParams -PoliCheckAdditionalRunConfigParams $PoliCheckAdditionalRunConfigParams
   }
 
   if ($TsaPublish) {

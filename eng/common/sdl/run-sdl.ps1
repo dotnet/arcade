@@ -4,7 +4,6 @@ Param(
   [string] $TargetDirectory,
   [string] $GdnFolder,
   [string[]] $ToolsList,
-  [string] $UpdateBaseline,
   [string] $GuardianLoggerLevel='Standard',
   [string[]] $CrScanAdditionalRunConfigParams,
   [string[]] $PoliCheckAdditionalRunConfigParams
@@ -59,8 +58,8 @@ try {
     $configParam+=$gdnConfigFile
   }
 
-  Write-Host "$GuardianCliLocation run --working-directory $WorkingDirectory --baseline mainbaseline --update-baseline $UpdateBaseline --logger-level $GuardianLoggerLevel $configParam"
-  & $GuardianCliLocation run --working-directory $WorkingDirectory --tool $tool --baseline mainbaseline --update-baseline $UpdateBaseline --logger-level $GuardianLoggerLevel $configParam
+  Write-Host "$GuardianCliLocation run --working-directory $WorkingDirectory --baseline mainbaseline --logger-level $GuardianLoggerLevel $configParam"
+  & $GuardianCliLocation run --working-directory $WorkingDirectory --tool $tool --baseline mainbaseline --logger-level $GuardianLoggerLevel $configParam
   if ($LASTEXITCODE -ne 0) {
     Write-PipelineTelemetryError -Force -Category 'Sdl' -Message "Guardian run for $ToolsList using $configParam failed with exit code $LASTEXITCODE."
     ExitWithExitCode $LASTEXITCODE
