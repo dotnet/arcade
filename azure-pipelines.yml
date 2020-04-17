@@ -142,6 +142,10 @@ stages:
           - checkout: self
             clean: true
           steps:
+          - task: DotNetCoreCLI@2
+            inputs:
+              command: 'test'
+              projects: src/Microsoft.DotNet.SignTool.Tests/Microsoft.DotNet.SignTool.Tests.csproj
           - script: eng/common/build.sh
               --configuration $(_BuildConfig)
               --prepareMachine
