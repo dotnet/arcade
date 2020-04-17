@@ -11,52 +11,52 @@ namespace Microsoft.DotNet.AsmDiff
 {
     public class Program
     {
-        [Option("-os|--OldSet")]
+        [Option("-os|--OldSet", "Provide path to an assembly or directory for an assembly set to gather the old set of types. These types will be the baseline for the compare.", CommandOptionType.SingleValue)]
         public string OldSet { get; set; }
-        [Option("-ns|--NewSet")]
+        [Option("-ns|--NewSet", "Provide path to an assembly or directory for an assembly set to gather the new set of types. If this parameter is not provided the API's for the oldset will be printed instead of the diff.", CommandOptionType.SingleValue)]
         public string NewSet { get; set; }
 
-        [Option("-u|--Unchanged")]
+        [Option("-u|--Unchanged", "Include members, types, and namespaces that are unchanged.", CommandOptionType.NoValue)]
         public bool Unchanged { get; set; }
-        [Option("-r|--Removed")]
+        [Option("-r|--Removed", "Include members, types, and namespaces that were removed. (default is removed and added)", CommandOptionType.NoValue)]
         public bool Removed { get; set; }
-        [Option("-a|--Added")]
+        [Option("-a|--Added", "Include members, types, and namespaces that were removed. (default is removed and added)", CommandOptionType.NoValue)]
         public bool Added { get; set; }
-        [Option("-c|--Changed")]
+        [Option("-c|--Changed", "Include members, types, and namespaces that were removed. (default is removed and added)", CommandOptionType.NoValue)]
         public bool Changed { get; set; }
 
-        [Option("-to|--TypesOnly")]
+        [Option("-to|--TypesOnly", "Only show down to the type level not the member level.", CommandOptionType.NoValue)]
         public bool TypesOnly { get; set; }
-        [Option("-sr|--StrikeRemoved")]
+        [Option("-sr|--StrikeRemoved", "For removed API's also strike them out. This option currently only works with the HTML writer which is the default.", CommandOptionType.NoValue)]
         public bool StrikeRemoved { get; set; }
-        [Option("-da|--DiffAttributes")]
+        [Option("-da|--DiffAttributes", "Enables diffing of the attributes as well, by default all attributes are ignored. For CSV writer causes the assembly name to be included in the column for types.", CommandOptionType.NoValue)]
         public bool DiffAttributes { get; set; }
-        [Option("-dai|--DiffAssemblyInfo")]
+        [Option("-dai|--DiffAssemblyInfo", "Enables diffing of the assembly level information like version, key, etc.", CommandOptionType.NoValue)]
         public bool DiffAssemblyInfo { get; set; }
-        [Option("-ad|--AlwaysDiffMembers")]
+        [Option("-adm|--AlwaysDiffMembers", "By default if an entire class is added or removed we don't show the members, setting this option forces all the members to be shown instead.", CommandOptionType.NoValue)]
         public bool AlwaysDiffMembers { get; set; }
-        [Option("-hb|--HighlightBaseMembers")]
+        [Option("-hbm|--HighlightBaseMembers", "Highlight members that are interface implementations or overrides of a base member.", CommandOptionType.NoValue)]
         public bool HighlightBaseMembers { get; set; }
 
-        [Option("-ft|--FlattenTypes")]
+        [Option("-ft|--FlattenTypes", "Will flatten types so that all members available on the type show on the type not just the implemented ones.", CommandOptionType.NoValue)]
         public bool FlattenTypes { get; set; }
-        [Option("-ga|--GroupByAssembly")]
+        [Option("-gba|--GroupByAssembly", "Group the differences by assembly instead of flattening the namespaces.", CommandOptionType.NoValue)]
         public bool GroupByAssembly { get; set; }
-        [Option("-eat|--ExcludeAddedTypes")]
+        [Option("-eat|--ExcludeAddedTypes", "Do not show types that have been added to the new set of types.", CommandOptionType.NoValue)]
         public bool ExcludeAddedTypes { get; set; }
-        [Option("-ert|--ExcludeRemovedTypes")]
+        [Option("-ert|--ExcludeRemovedTypes", "Do not show types that have been removed from the new set of types.", CommandOptionType.NoValue)]
         public bool ExcludeRemovedTypes { get; set; }
-        [Option("-iia|--IncludeInternalApis")]
+        [Option("-iia|--IncludeInternalApis", "Include internal types and members as part of the diff.", CommandOptionType.NoValue)]
         public bool IncludeInternalApis { get; set; }
-        [Option("-ipa|--IncludePrivateApis")]
+        [Option("-ipa|--IncludePrivateApis", "Include private types and members as part of the diff.", CommandOptionType.NoValue)]
         public bool IncludePrivateApis { get; set; }
 
-        [Option("-dw|--DiffWriter")]
+        [Option("-w|--DiffWriter", "Type of difference writer to use, either CSharp code diffs or flat list of compat violations (default).", CommandOptionType.SingleValue)]
         public DiffWriterType DiffWriter { get; set; }
-        [Option("-sw|--SyntaxWriter")]
+        [Option("-s|--SyntaxWriter", "Specific the syntax writer type. Only used if the writer is CSDecl", CommandOptionType.SingleValue)]
         public SyntaxWriterType SyntaxWriter { get; set; }
 
-        [Option("-o|--OutFile")]
+        [Option("-o|--OutFile", "Output file path. Default is the console.", CommandOptionType.SingleValue)]
         public string OutFile { get; set; }
 
         public void OnExecute()
