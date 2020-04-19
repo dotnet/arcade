@@ -9,9 +9,15 @@
     <_OriginalTargetFrameworks>$(TargetFrameworks)</_OriginalTargetFrameworks>
   </PropertyGroup>
 
-  <!-- Strip away placeholder tfms and TargetFrameworkSuffix during the graph build. -->
-  <PropertyGroup Condition="'$(IsGraphBuild)' == 'true' and '$(MSBuildRestoreSessionId)' != ''">
-    <TargetFrameworks Condition="'$(TargetFrameworks)' != ''">$([System.Text.RegularExpressions.Regex]::Replace('$(TargetFrameworks)', '(-[^;]+)|(;?_[^;]+)', ''))</TargetFrameworks>
+  <!-- Modify TargetFrameworks during restore property evaluation. -->
+  <PropertyGroup Condition="'$(TargetFrameworks)' != '' and ('$(BuildingInsideVisualStudio)' == 'true' or '$(MSBuildRestoreSessionId)' != '')">
+    <!-- Strip away placeholder TFMs and TargetFrameworkSuffixes. -->
+    <TargetFrameworks>$([System.Text.RegularExpressions.Regex]::Replace('$(TargetFrameworks)', '(-[^;]+)|(;?_[^;]+)', ''))</TargetFrameworks>
+    <!-- Remove duplicate TargetFramework values. -->
+    <TargetFrameworks>$([System.Text.RegularExpressions.Regex]::Replace('$(TargetFrameworks);', '([^;]+)(?=.*;\1;)', ''))</TargetFrameworks>
+    <TargetFrameworks>$([System.Text.RegularExpressions.Regex]::Replace('$(TargetFrameworks);', ';;', ';'))</TargetFrameworks>
+    <!-- TargetFrameworks needs to be unescaped as Trim breaks item batching: https://github.com/microsoft/msbuild/issues/3940. -->
+    <TargetFrameworks>$([MSBuild]::Unescape($(TargetFrameworks.Trim(';'))))</TargetFrameworks>
   </PropertyGroup>
   
   <Target Name="RemovePlaceHolderConfigs"
@@ -47,7 +53,8 @@
 
   <!-- Attaching the TargetFrameworkSuffix after restore for build.-->
   <Target Name="AttachTargetFrameworkSuffixToTargetFrameworks"
-          AfterTargets="Restore">
+          Condition="'$(TargetFrameworks)' != '$(_OriginalTargetFrameworks)'"
+          AfterTargets="_GenerateRestoreGraph;Restore">
     <PropertyGroup>
       <TargetFrameworks>$(_OriginalTargetFrameworks)</TargetFrameworks>
     </PropertyGroup>
