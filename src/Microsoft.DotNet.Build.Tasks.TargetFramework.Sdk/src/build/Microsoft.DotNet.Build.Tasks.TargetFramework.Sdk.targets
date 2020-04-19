@@ -54,7 +54,7 @@
   <!-- Attaching the TargetFrameworkSuffix after restore for build.-->
   <Target Name="AttachTargetFrameworkSuffixToTargetFrameworks"
           Condition="'$(TargetFrameworks)' != '$(_OriginalTargetFrameworks)'"
-          AfterTargets="_GenerateRestoreGraph;Restore">
+          AfterTargets="Restore">
     <PropertyGroup>
       <TargetFrameworks>$(_OriginalTargetFrameworks)</TargetFrameworks>
     </PropertyGroup>
