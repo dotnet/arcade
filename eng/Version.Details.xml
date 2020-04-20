@@ -27,6 +27,10 @@
       <Uri>https://github.com/dotnet/arcade-services</Uri>
       <Sha>c08500f460f54a3bace4ee2b007ab2b2deb12e1b</Sha>
     </Dependency>
+    <Dependency Name="Microsoft.DotNet.Maestro.Tasks" Version="1.1.0-beta.19556.4">
+      <Uri>https://github.com/dotnet/arcade-services</Uri>
+      <Sha>c08500f460f54a3bace4ee2b007ab2b2deb12e1b</Sha>
+    </Dependency>
     <Dependency Name="Microsoft.Net.Compilers.Toolset" Version="3.7.0-1.20220.1">
       <Uri>https://github.com/dotnet/roslyn</Uri>
       <Sha>8eb05a084b01d1ebe3b2f4c9c84d21cd08635b09</Sha>
