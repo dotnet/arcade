@@ -20,6 +20,11 @@ $ci = $true
 # Don't display the console progress UI - it's a huge perf hit
 $ProgressPreference = 'SilentlyContinue'
 
+if (Test-Path $gdnFolder) {
+  # Remove the gdn folder if it exists (it shouldn't unless there's too much caching; this is just in case)
+  Remove-Item -Force -Recurse $gdnFolder
+}
+
 try {
   Write-Host 'Initializing Guardian...'
   Write-Host "$GuardianCliLocation init --working-directory $WorkingDirectory --logger-level $GuardianLoggerLevel"
