@@ -35,6 +35,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public bool IsStableBuild { get; set; }
 
+        /// <summary>
+        /// Which version should the build manifest be tagged with.
+        /// By default he latest version is used.
+        /// </summary>
+        public string PublishingVersion { get; set; }
+
         public override bool Execute()
         {
             try
@@ -144,7 +150,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         ManifestBranch,
                         ManifestCommit,
                         ManifestBuildData,
-                        IsStableBuild);
+                        IsStableBuild,
+                        PublishingVersion ?? BuildManifestUtil.LatestPublishingInfraVersion);
 
                     Log.LogMessage(MessageImportance.High,
                         $"##vso[artifact.upload containerfolder=AssetManifests;artifactname=AssetManifests]{AssetManifestPath}");
