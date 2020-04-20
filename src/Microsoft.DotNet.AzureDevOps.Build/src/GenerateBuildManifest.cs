@@ -10,11 +10,8 @@ namespace Microsoft.DotNet.AzureDevOps.Build
 {
     public class GenerateAzureDevOpsBuildManifest : Microsoft.Build.Utilities.Task
     {
-        [Required]
         public string AzureDevOpsCollectionUri { get; set; }
-        [Required]
         public string AzureDevOpsProject { get; set; }
-        [Required]
         public int AzureDevOpsBuildId { get; set; }
         [Required]
         public string ManifestPath { get; set; }
@@ -27,8 +24,8 @@ namespace Microsoft.DotNet.AzureDevOps.Build
             ProjectRootElement project = ProjectRootElement.Create();
             var propertyGroup = project.CreatePropertyGroupElement();
             project.AppendChild(propertyGroup);
-            propertyGroup.AddProperty("AzureDevOpsCollectionUri", AzureDevOpsCollectionUri);
-            propertyGroup.AddProperty("AzureDevOpsProject", AzureDevOpsProject);
+            propertyGroup.AddProperty("AzureDevOpsCollectionUri", AzureDevOpsCollectionUri ?? "undefined");
+            propertyGroup.AddProperty("AzureDevOpsProject", AzureDevOpsProject ?? "undefined");
             propertyGroup.AddProperty("AzureDevOpsBuildId", AzureDevOpsBuildId.ToString());
             var itemGroup = project.CreateItemGroupElement();
             project.AppendChild(itemGroup);
