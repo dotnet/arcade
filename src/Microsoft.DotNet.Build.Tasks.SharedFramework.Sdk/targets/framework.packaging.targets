@@ -221,7 +221,7 @@
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(BuildRidSpecificPacks)' == 'true'">
-      <RidSpecificPackProperties>BaseId=$(MSBuildProjectName).$(PackageBuildRID);IdPrefix=</RidSpecificPackProperties>
+      <RidSpecificPackProperties>BaseId=$(MSBuildProjectName)$(RuntimeSpecificFrameworkSuffix).$(PackageBuildRID);IdPrefix=</RidSpecificPackProperties>
     </PropertyGroup>
   </Target>
 
