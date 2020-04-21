@@ -12,16 +12,23 @@ validation checks.
 
 ## Release Rings
 
-### Build Ring
+### Prep Ring
 
 * Generate the file share by running `darc gather-drop`
-* Signing
-* Notarize PKGs
+* Notarize and replace PKGs
 
 **Promotion:** 
 * Contract is valid 
 * Version is coherent
 * Release Team approval
+
+### Source Validation Ring
+
+* Run SDL validation on each repo+sha from the candidate build generated in the Prep Ring
+
+**Promotion:**
+* All legs succeed (we'll provide a manual override in case legs fail but failures are known and/or
+  we don't want to block the pipeline due to this errors)
 
 ### [Build Validation Ring (Candidate Validation channel)](https://dnceng.visualstudio.com/internal/_git/dotnet-release?path=%2Fdocumentation%2Frelease-validation.md)
 
