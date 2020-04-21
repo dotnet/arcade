@@ -27,7 +27,7 @@ namespace Microsoft.DotNet.XUnitExtensions
 
         public IEnumerable<KeyValuePair<string, string>> GetTraits(IAttributeInfo traitAttribute)
         {
-            if (!SkipOnMonoDiscoverer.IsMonoRuntime)
+            if (!DiscovererHelpers.IsMonoRuntime)
             {
                 TestPlatforms testPlatforms = TestPlatforms.Any;
                 RuntimeTestModes stressMode = RuntimeTestModes.Any;

@@ -8,15 +8,6 @@ namespace Microsoft.DotNet.XUnitExtensions
 {
     public struct XunitConstants
     {
-        internal const string NonFreeBSDTest = "nonfreebsdtests";
-        internal const string NonLinuxTest = "nonlinuxtests";
-        internal const string NonNetBSDTest = "nonnetbsdtests";
-        internal const string NonOSXTest = "nonosxtests";
-        internal const string NonWindowsTest = "nonwindowstests";
-
-        internal static string NonNetcoreappTest = "nonnetcoreapptests";
-        internal static string NonNetfxTest = "nonnetfxtests";
-
         internal const string Failing = "failing";
         internal const string OuterLoop = "outerloop";
 
