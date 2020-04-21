@@ -129,11 +129,7 @@ namespace SignCheck
 
         public SignCheck(Options options)
         {
-            if(options == null)
-            {
-                options = new Options();
-            }
-            HandleOptions(options);
+            HandleOptions(options ?? new Options());
         }
 
         private void HandleOptions(Options options)
