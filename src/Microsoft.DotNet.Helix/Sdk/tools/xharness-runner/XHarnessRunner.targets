@@ -1,0 +1,63 @@
+<Project>
+
+  <Target Name="SpecifyXHarnessCliVersion"
+          Condition="'@(XHarnessProject)' != ''"
+          BeforeTargets="AddDotNetSdk">
+    <PropertyGroup>
+      <IncludeDotNetCli>true</IncludeDotNetCli>
+      <DotNetCliPackageType>sdk</DotNetCliPackageType>
+      <DotNetCliVersion>3.1.201</DotNetCliVersion>
+    </PropertyGroup>
+  </Target>
+
+  <Target Name="AddXHarnessRunner"
+          Condition="'@(XHarnessProject)' != ''"
+          BeforeTargets="CoreTest">
+
+    <!-- When using a dotnet 'tool' that is not installed globally, we must set DOTNET_ROOT. 
+         This is because a framework dependent dotnet tool only searches in program files folders for runtimes.
+         When .NET is not already installed there, we set DOTNET_ROOT to help it find the right one. -->
+    <PropertyGroup Condition="$(IsPosixShell)">
+      <HelixPreCommands>$(HelixPreCommands);export DOTNET_ROOT=$HELIX_CORRELATION_PAYLOAD/dotnet</HelixPreCommands>
+      <HelixPreCommands>$(HelixPreCommands);dotnet tool install --tool-path $HELIX_CORRELATION_PAYLOAD/xharness-cli --version $(_XHarnessPackageVersion) --add-source $(_XharnessRunnerPackageFeed) $(_XHarnessPackageName) </HelixPreCommands>
+      <HelixPreCommands>$(HelixPreCommands);export PATH=$HELIX_CORRELATION_PAYLOAD/xharness-cli:$PATH</HelixPreCommands>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="!$(IsPosixShell)">
+      <HelixPreCommands>$(HelixPreCommands);set DOTNET_ROOT=%HELIX_CORRELATION_PAYLOAD%\dotnet</HelixPreCommands>
+      <HelixPreCommands>$(HelixPreCommands);dotnet tool install --tool-path %HELIX_CORRELATION_PAYLOAD%\xharness-cli --version $(_XHarnessPackageVersion) --add-source $(_XharnessRunnerPackageFeed) $(_XHarnessPackageName) </HelixPreCommands>
+      <HelixPreCommands>$(HelixPreCommands);set PATH=%HELIX_CORRELATION_PAYLOAD%\xharness-cli%3B%PATH%</HelixPreCommands>
+    </PropertyGroup>
+  </Target>
+
+  <Target Name="BuildXHarnessProjects"
+          Condition="'@(XHarnessProject)' != ''"
+          BeforeTargets="CoreBuild"
+          Outputs="%(XHarnessProject.Identity)%(XHarnessProject.AdditionalProperties)">
+    <PropertyGroup>
+      <_CurrentXHarnessProject>%(XHarnessProject.Identity)</_CurrentXHarnessProject>
+      <_CurrentAdditionalProperties>%(XHarnessProject.AdditionalProperties)</_CurrentAdditionalProperties>
+    </PropertyGroup>
+    <MSBuild Projects="$(_CurrentXHarnessProject)" Targets="Build" Properties="$(_CurrentAdditionalProperties)">
+      <Output TaskParameter="TargetOutputs" ItemName="XHarnessPackageToTest" />
+    </MSBuild>
+  </Target>
+
+  <!-- These will tend to be mutually exclusive in the same build; but it's entirely possible for mac to support both at once... -->
+  <Target Name="CreateAndroidWorkItems"
+        Condition=" '@(XHarnessPackageToTest)' !=  '' "
+        BeforeTargets="CoreTest">
+    <CreateXHarnessAndroidWorkItems AppPackages="@(XHarnessPackageToTest)" IsPosixShell="$(IsPosixShell)" WorkItemTimeout="$(XHarnessWorkItemTimeout)">
+      <Output TaskParameter="WorkItems" ItemName="HelixWorkItem"/>
+    </CreateXHarnessAndroidWorkItems>
+  </Target>
+
+  <Target Name="CreateIosAppWorkItems"
+        Condition=" '@(XHarnessAppFolderToTest)' !=  '' "
+        BeforeTargets="CoreTest">
+    <CreateXHarnessIosWorkItems AppFolders="@(XHarnessAppFolderToTest)" IsPosixShell="$(IsPosixShell)" WorkItemTimeout="$(XHarnessWorkItemTimeout)">
+      <Output TaskParameter="WorkItems" ItemName="HelixWorkItem"/>
+    </CreateXHarnessIosWorkItems>
+  </Target>
+  
+</Project>
