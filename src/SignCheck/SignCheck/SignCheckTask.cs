@@ -142,8 +142,7 @@ namespace SignCheck
                 options.Verbosity = verbosity;
             }
             
-            var sc = new SignCheck(new string[] { });
-            sc.Options = options;
+            var sc = new SignCheck(options);
             int result = sc.Run();
             return (result == 0 && !Log.HasLoggedErrors);
         }

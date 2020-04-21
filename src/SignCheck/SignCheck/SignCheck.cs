@@ -127,6 +127,11 @@ namespace SignCheck
                 WithNotParsed<Options>(errors => HandleErrors(errors));
         }
 
+        public SignCheck(Options options)
+        {
+            HandleOptions(options ?? new Options());
+        }
+
         private void HandleOptions(Options options)
         {
             Options = options;
