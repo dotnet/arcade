@@ -3,7 +3,10 @@
   
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>netcoreapp3.1;net472</TargetFrameworks>
+    <TargetFrameworks>netcoreapp3.1</TargetFrameworks>
+    <IsPackable>true</IsPackable>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>dotnet-asmdiff</ToolCommandName>
   </PropertyGroup>
   
   <ItemGroup>
@@ -11,7 +14,6 @@
   </ItemGroup>
   
   <ItemGroup>
-    <PackageReference Include="System.IO.FileSystem" Version="4.3.0" />
     <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="$(McMasterExtensionsCommandLineUtils)" />
   </ItemGroup>
 </Project>
