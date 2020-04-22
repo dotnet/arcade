@@ -4,6 +4,8 @@
     <IsPackable>true</IsPackable>
     <!-- Build Tasks should not include any dependencies -->
     <SuppressDependenciesWhenPacking Condition="'$(SuppressDependenciesWhenPacking)' == ''">true</SuppressDependenciesWhenPacking>
+    <!-- Build Tasks should have this set per https://github.com/dotnet/arcade/blob/master/Documentation/CorePackages/Versioning.md#recommended-settings -->
+    <AutoGenerateAssemblyVersion>true</AutoGenerateAssemblyVersion>
   </PropertyGroup>
 
   <!--
