@@ -168,7 +168,7 @@ If build property `AutoGenerateAssemblyVersion` is _true_ then _File Version_ is
 It is recommended for **global tools** projects to build assemblies with auto-generated assembly version and pack as _release-only_ packages, 
 i.e. set `AutoGenerateAssemblyVersion` to _true_ and clear `PreReleaseVersionLabel`.
 
-It is recommended for **msbuild task** projects to build assemblies with auto-generated assembly version,
+It is recommended for **msbuild task** projects and projects building **analyzers** to build assemblies with auto-generated assembly version,
 i.e. set `AutoGenerateAssemblyVersion` to _true_.
 
 Library projects that target .NET Standard or .NET Framework shall keep `AutoGenerateAssemblyVersion` set to _false_ to avoid the need for updating binding redirects of the consuming .NET Framework apps every time a new build is consumed.

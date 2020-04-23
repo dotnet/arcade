@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>netcoreapp2.1</TargetFrameworks>
+    <LangVersion>Latest</LangVersion>
+    <SignAssembly>false</SignAssembly>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\src\Microsoft.DotNet.RemoteExecutor.csproj" />
+  </ItemGroup>
+ 
+</Project>

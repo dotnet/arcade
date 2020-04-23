@@ -205,7 +205,7 @@ namespace Microsoft.Cci.Writers.CSharp
                 case TypeMemberVisibility.FamilyOrAssembly:
                     WriteKeyword("protected"); WriteKeyword("internal"); break;
                 case TypeMemberVisibility.FamilyAndAssembly:
-                    WriteKeyword("internal"); WriteKeyword("protected"); break; // Is this right?
+                    WriteKeyword("private"); WriteKeyword("protected"); break;
                 default:
                     WriteKeyword("<Unknown-Visibility>"); break;
             }

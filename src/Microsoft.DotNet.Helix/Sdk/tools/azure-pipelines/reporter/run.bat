@@ -14,6 +14,18 @@ if NOT EXIST %ENV_PATH%\Scripts\python.exe (
   %HELIX_PYTHONPATH% -m virtualenv --no-site-packages %TMP_ENV_PATH%
   rename %TMP_ENV_PATH% .azdo-env
 )
+REM On certain slow machines python.exe keeps a handle open just long enough to break the rename; retry if so
+set /a renameAttemptNumber=1
+:retryloop
+if NOT EXIST %ENV_PATH%\Scripts\python.exe (
+set /a renameAttemptNumber+=1
+echo Error renaming venv folder; waiting 5 seconds and retrying up to 10x Attempt: %renameAttemptNumber% 
+ping -n 6 127.0.0.1 > nul
+rename %TMP_ENV_PATH% .azdo-env
+IF %renameAttemptNumber% GEQ 10 GOTO :renamingdone
+GOTO :retryloop
+)
+:renamingdone
 
 %ENV_PATH%\Scripts\python.exe -c "import azure.devops" || %ENV_PATH%\Scripts\python.exe -m pip install azure-devops==5.0.0b9
 

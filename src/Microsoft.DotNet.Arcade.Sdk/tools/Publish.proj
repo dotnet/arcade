@@ -26,6 +26,9 @@
     <IsStableBuild>false</IsStableBuild>
     <IsStableBuild Condition="'$(DotNetFinalVersionKind)' == 'release'">true</IsStableBuild>
 
+    <!-- If `AutoGenerateSymbolPackages` is not set we default it to true. -->
+    <AutoGenerateSymbolPackages Condition="'$(AutoGenerateSymbolPackages)' == ''">true</AutoGenerateSymbolPackages>
+
     <AssetManifestOS Condition="'$(AssetManifestOS)' == ''">$(OS)</AssetManifestOS>
 
     <AssetManifestFileName>$(AssetManifestOS)-$(PlatformName).xml</AssetManifestFileName>
@@ -36,7 +39,7 @@
     <PublishDependsOnTargets Condition="$(PublishToSymbolServer)">$(PublishDependsOnTargets);PublishSymbols</PublishDependsOnTargets>
     <PublishDependsOnTargets Condition="$(PublishToSourceBuildStorage)">$(PublishDependsOnTargets);PublishToSourceBuildStorage</PublishDependsOnTargets>
     <PublishDependsOnTargets Condition="$(DotNetPublishUsingPipelines)">$(PublishDependsOnTargets);PublishToAzureDevOpsArtifacts</PublishDependsOnTargets>
-    <PublishDependsOnTargets>BeforePublish;$(PublishDependsOnTargets)</PublishDependsOnTargets>
+    <PublishDependsOnTargets>BeforePublish;GenerateBuildManifest;$(PublishDependsOnTargets)</PublishDependsOnTargets>
   </PropertyGroup>
 
   <Import Project="$(NuGetPackageRoot)microsoft.dotnet.build.tasks.feed\$(MicrosoftDotNetBuildTasksFeedVersion)\build\Microsoft.DotNet.Build.Tasks.Feed.targets"/>
@@ -54,7 +57,7 @@
       <PackagesToPublish Include="$(ArtifactsNonShippingPackagesDir)**/*.nupkg" IsShipping="false" />
       <PackagesToPublish Remove="@(ExistingSymbolPackages)" />
 
-      <PackagesToPublish Update="@(PackagesToPublish)">
+      <PackagesToPublish Update="@(PackagesToPublish)" Condition="'$(AutoGenerateSymbolPackages)' == 'true'">
         <SymbolPackageToGenerate Condition="!Exists('%(RootDir)%(Directory)%(Filename).symbols.nupkg')">$(SymbolPackagesDir)%(Filename).symbols.nupkg</SymbolPackageToGenerate>
       </PackagesToPublish>
 
@@ -233,6 +236,26 @@
                     ConvertPortablePdbsToWindowsPdbs="false"
                     PdbConversionTreatAsWarning=""
                     Condition="$(PublishToSymbolServer)"/>
+  </Target>
+
+  <PropertyGroup>
+    <AzureDevOpsBuildTasksAssembly Condition="'$(MSBuildRuntimeType)' != 'Core'">$(NuGetPackageRoot)microsoft.dotnet.azuredevops.build\$(ArcadeSdkVersion)\tools\net472\Microsoft.DotNet.AzureDevOps.Build.dll</AzureDevOpsBuildTasksAssembly>
+    <AzureDevOpsBuildTasksAssembly Condition="'$(MSBuildRuntimeType)' == 'Core'">$(NuGetPackageRoot)microsoft.dotnet.azuredevops.build\$(ArcadeSdkVersion)\tools\netcoreapp2.1\Microsoft.DotNet.AzureDevOps.Build.dll</AzureDevOpsBuildTasksAssembly>
+  </PropertyGroup>
+
+  <Import Project="Sign.props" />
+  <UsingTask TaskName="Microsoft.DotNet.AzureDevOps.Build.GenerateAzureDevOpsBuildManifest" AssemblyFile="$(AzureDevOpsBuildTasksAssembly)"/>
+
+  <Target Name="GenerateBuildManifest">
+    <GenerateAzureDevOpsBuildManifest
+      AzureDevOpsCollectionUri="$(SYSTEM_TEAMFOUNDATIONCOLLECTIONURI)"
+      AzureDevOpsProject="$(SYSTEM_TEAMPROJECT)"
+      AzureDevOpsBuildId="$(BUILD_BUILDID)"
+      ItemsToSign="@(ItemsToSign)"
+      StrongNameSignInfo="@(StrongNameSignInfo)"
+      FileSignInfo="@(FileSignInfo)"
+      FileExtensionSignInfo="@(FileExtensionSignInfo)"
+      ManifestPath="$(ArtifactsLogDir)/manifest.props" />
   </Target>
 
 </Project>

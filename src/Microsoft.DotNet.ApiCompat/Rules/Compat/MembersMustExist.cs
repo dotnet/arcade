@@ -17,115 +17,89 @@ namespace Microsoft.Cci.Differs.Rules
         [Import]
         public IEqualityComparer<ITypeReference> _typeComparer { get; set; } = null;
 
-        public enum FindMethodResult
-        {
-            Found,
-            NotFound,
-            ReturnTypeChanged
-        }
-
         public override DifferenceType Diff(IDifferences differences, MemberMapping mapping)
         {
             ITypeDefinitionMember implMember = mapping[0];
             ITypeDefinitionMember contractMember = mapping[1];
-            IMethodDefinition foundMethod;
 
             if (!(implMember == null && contractMember != null))
                 return DifferenceType.Unknown;
 
             // Nested types are handled separately.
-            // @TODO: Events and Properties - should we consider these too (or rely on the fact that dropping one of these will also drop their accessors.) 
+            // @TODO: Events and Properties - should we consider these too (or rely on the fact that dropping one of these will also drop their accessors.)
             if (!(contractMember is IMethodDefinition || contractMember is IFieldDefinition))
                 return DifferenceType.Unknown;
 
-            string incompatibeDifferenceMessage = $"Member '{contractMember.FullName()}' does not exist in the {Implementation} but it does exist in the {Contract}.";
+            string incompatibleDifferenceMessage = contractMember.GetMemberViolationMessage("Member", $"does not exist in the {Implementation}", $"it does exist in the {Contract}");
 
             ITypeDefinition contractType = mapping.ContainingType[0];
             if (contractType != null)
             {
-                IMethodDefinition contractMethod = contractMember as IMethodDefinition;
-                if (contractMethod != null)
+                if (contractMember is IMethodDefinition contractMethod)
                 {
                     // If the contract is a Explicit Interface method, we don't need to check if the method is in implementation since that will be caught by different rule.
                     if (contractMethod.IsExplicitInterfaceMethod())
                         return DifferenceType.Unknown;
 
-
-
                     // It is valid to promote a member from a base type up so check to see if it member exits on a base type.
-                    var lookForMethodInBaseResult = FindMatchingBase(contractType, contractMethod, out foundMethod);
-                    if (lookForMethodInBaseResult == FindMethodResult.Found)
+                    if (FindMatchingMethodOnBase(contractType, contractMethod))
+                    {
                         return DifferenceType.Unknown;
-                    if (lookForMethodInBaseResult == FindMethodResult.ReturnTypeChanged)
-                        incompatibeDifferenceMessage += $" There does exist a member with return type '{foundMethod.GetReturnType().FullName()}' instead of '{contractMethod.GetReturnType().FullName()}'";
+                    }
                 }
             }
 
-            differences.AddIncompatibleDifference(this, incompatibeDifferenceMessage);
-
+            differences.AddIncompatibleDifference(this, incompatibleDifferenceMessage);
             return DifferenceType.Added;
         }
 
-        private FindMethodResult FindMatchingBase(ITypeDefinition type, IMethodDefinition method, out IMethodDefinition resultMethod)
+        private bool FindMatchingMethodOnBase(ITypeDefinition type, IMethodDefinition method)
         {
-            resultMethod = null;
             if (type == null || method.IsConstructor)
             {
-                return FindMethodResult.NotFound;
+                return false;
             }
-
-            bool foundMethodWithDifferentReturnType = false;
 
             foreach (var baseType in type.GetAllBaseTypes())
             {
-                FindMethodResult found = FindMethodInCollection(method, baseType.Methods, out resultMethod, false);
-                if (found == FindMethodResult.Found)
-                    return found;
-                if (found == FindMethodResult.ReturnTypeChanged)
-                    foundMethodWithDifferentReturnType = true;
+                if (FindMethodInCollection(method, baseType.Methods))
+                {
+                    return true;
+                }
             }
-            if (foundMethodWithDifferentReturnType)
-                return FindMethodResult.ReturnTypeChanged;
 
-            return FindMethodResult.NotFound;
+            return false;
         }
 
-        private FindMethodResult FindMethodInCollection(IMethodDefinition targetMethod, IEnumerable<IMethodDefinition> collectionOfMethods, out IMethodDefinition foundMethod, bool removeExplicitName)
+        private bool FindMethodInCollection(IMethodDefinition targetMethod, IEnumerable<IMethodDefinition> collectionOfMethods)
         {
-            string targetMethodName = (removeExplicitName) ? targetMethod.GetNameWithoutExplicitType() : targetMethod.Name.Value;
-            bool foundDifferentReturntype = false;
-            foundMethod = null;
+            string targetMethodName = targetMethod.Name.Value;
+
             foreach (IMethodDefinition potentialMatch in collectionOfMethods)
             {
-                if (removeExplicitName && potentialMatch.IsExplicitInterfaceMethod()) continue;
-
                 if (targetMethodName == potentialMatch.Name.Value)
                 {
                     if (ParameterTypesAreEqual(potentialMatch, targetMethod))
                     {
                         if (!ReturnTypesMatch(potentialMatch, targetMethod))
                         {
-                            foundDifferentReturntype = true;
-                            foundMethod = potentialMatch;
+                            return false;
                         }
 
                         if (!targetMethod.IsGeneric && !potentialMatch.IsGeneric)
                         {
-                            foundMethod = potentialMatch;
-                            return FindMethodResult.Found;
+                            return true;
                         }
 
                         if (targetMethod.GenericParameterCount == potentialMatch.GenericParameterCount)
                         {
-                            foundMethod = potentialMatch;
-                            return FindMethodResult.Found;
+                            return true;
                         }
                     }
                 }
             }
-            if (foundDifferentReturntype)
-                return FindMethodResult.ReturnTypeChanged;
-            return FindMethodResult.NotFound;
+
+            return false;
         }
 
         private bool ParameterTypesAreEqual(IMethodDefinition implMethod, IMethodDefinition contractMethod)

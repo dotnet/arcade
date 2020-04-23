@@ -9,8 +9,8 @@
       - [Switching service connections](#switching-service-connections)
     - [Git (internal) connections](#git-internal-connections)
   - [Agent queues](#agent-queues)
-    - [External : (Pool Provider: NetCorePublic-Int-Pool)](#external--pool-provider-netcorepublic-int-pool)
-    - [Internal : (Pool Provider: NetCoreInternal-Int-Pool)](#internal--pool-provider-netcoreinternal-int-pool)
+    - [External : (Pool Provider: NetCorePublic-Pool)](#external--pool-provider-netcorepublic-pool)
+    - [Internal : (Pool Provider: NetCoreInternal-Pool)](#internal--pool-provider-netcoreinternal-pool)
   - [CI badge link](#ci-badge-link)
   - [Signed Builds](#signed-builds)
   - [Generate Graph Files](#generate-graph-files)
@@ -27,7 +27,7 @@
 
 ## Project Guidance
 
-[Project guidance](./Policy/AzureDevOpsGuidance.md) - Covers guidance on naming conventions, folder structure, projects, Pipelines, etc...
+[Project guidance](./AzureDevOpsGuidance.md) - Covers guidance on naming conventions, folder structure, projects, Pipelines, etc...
 
 ## GitHub to DncEng Internal mirror
 

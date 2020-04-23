@@ -144,7 +144,7 @@ In order to use the new publishing mechanism, the easiest way to start is by tur
     * [Arcade-Validation](https://github.com/dotnet/arcade-validation/blob/master/azure-pipelines.yml)
     * [Arcade-Services](https://github.com/dotnet/arcade-services/blob/master/azure-pipelines.yml)
 
-The pipeline for a build with stages enabled will look like the one shown below. In this example the build was assigned to the *.Net Core 5 Dev* channel but not to *.Net Eng - Latest* one.
+The pipeline for a build with stages enabled will look like the one shown below. In this example the build was assigned to the *.Net 5 Dev* channel but not to *.Net Eng - Latest* one.
 
 **NOTE:** You need to have the AzDO <u>*Multi-stage pipelines*</u> preview feature enabled to see an UI like the one below. Take a [look here](https://docs.microsoft.com/en-us/azure/devops/project/navigation/preview-features?view=azure-devops) to see how to enable preview features in Azure DevOps.
 

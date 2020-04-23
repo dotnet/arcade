@@ -26,7 +26,7 @@ In phase 2, we will provide PKPI data about official build state.  Official buil
 
 ## Scope
 
-- Provide visualizations of PKPIs for all B.A.R. Channels with the specific focus on the ".NET Core 5 Dev Channel"
+- Provide visualizations of PKPIs for all B.A.R. Channels with the specific focus on the ".NET 5 Dev Channel"
 
 - Provide per repo insight into official build health.  Overall product health metrics are not specifically a goal of this epic but may become available metrics as a result of achieving goals that are in scope.
 

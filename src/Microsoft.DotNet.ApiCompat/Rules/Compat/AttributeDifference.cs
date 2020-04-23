@@ -142,11 +142,17 @@ namespace Microsoft.Cci.Differs.Rules
 
     public class AttributeFilter : IAttributeFilter
     {
-        private HashSet<string> ignorableAttributes;
+        private readonly HashSet<string> ignorableAttributes = new HashSet<string>();
 
-        public AttributeFilter(string docIdList)
+        public AttributeFilter()
+        { }
+
+        public void AddIgnoreAttributeFile(string filePath)
         {
-            ignorableAttributes = DocIdExtensions.ReadDocIds(docIdList);
+            foreach(string id in DocIdExtensions.ReadDocIds(filePath))
+            {
+                ignorableAttributes.Add(id);
+            }
         }
 
         public bool ShouldExclude(string attributeDocID)

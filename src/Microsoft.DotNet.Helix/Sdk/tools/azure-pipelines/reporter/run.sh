@@ -14,7 +14,7 @@ if [ ! -f $ENV_PATH/bin/python ]; then
   rm -rf $ENV_PATH
   rm -rf $TMP_ENV_PATH
   $HELIX_PYTHONPATH -m virtualenv --no-site-packages $TMP_ENV_PATH
-  mv -T $TMP_ENV_PATH $ENV_PATH
+  mv $TMP_ENV_PATH $ENV_PATH
 fi
 
 # Removing pythonpath forces a clean installation of the Azure DevOps client, but subsequent commands may use HELIX libraries

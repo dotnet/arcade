@@ -64,11 +64,11 @@ namespace Microsoft.Cci.Mappings
         {
             IReference reference = element as IReference;
             if (reference != null)
-                return reference.Attributes;
+                return reference.Attributes.Where(Filter.Include);
 
             IEnumerable<ICustomAttribute> attributes = element as IEnumerable<ICustomAttribute>;
             if (attributes != null)
-                return attributes;
+                return attributes.Where(Filter.Include);
 
             return null;
         }

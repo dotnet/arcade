@@ -1189,8 +1189,24 @@
   <Target Name="CleanAppxPackage" />
   <Target Name="GetPackagingOutputs" />
 
+  <!-- Target that allows targets consuming source control confirmation to establish a dependency on targets producing this information.
+       Normally provided by Microsoft.Common.CurrentVersion.targets, defined here for PkgProj.
+       Intentionally empty.  -->
+  <Target Name="InitializeSourceControlInformation" />
+
+  <!-- Initialize Repository* properties from properties set by a source control package, if available in the project.
+       Copied from https://github.com/NuGet/NuGet.Client/blob/c05f9afa9c2fcee7fbe10754521b3f6424bee128/src/NuGet.Core/NuGet.Build.Tasks.Pack/NuGet.Build.Tasks.Pack.targets#L260-L271 -->
+  <Target Name="_InitializeNuspecRepositoryInformationProperties"
+          DependsOnTargets="InitializeSourceControlInformation">
+    <PropertyGroup>
+      <!-- The project must specify PublishRepositoryUrl=true in order to publish the URL, in order to prevent inadvertent leak of internal URL. -->
+      <RepositoryUrl Condition="'$(RepositoryUrl)' == '' and '$(PublishRepositoryUrl)' == 'true'">$(PrivateRepositoryUrl)</RepositoryUrl>
+      <RepositoryCommit Condition="'$(RepositoryCommit)' == ''">$(SourceRevisionId)</RepositoryCommit>
+    </PropertyGroup>
+  </Target>
+  
   <Target Name="GenerateNuSpec"
-          DependsOnTargets="GetPackageDependencies;GetPackageFiles;GetPackageMetadata;GenerateRuntimeDependencies;EnsureEmptyPackage">
+          DependsOnTargets="GetPackageDependencies;GetPackageFiles;GetPackageMetadata;GenerateRuntimeDependencies;EnsureEmptyPackage;_InitializeNuspecRepositoryInformationProperties">
 
     <ItemGroup>
       <_packageFile Include="@(PackageFile)" />

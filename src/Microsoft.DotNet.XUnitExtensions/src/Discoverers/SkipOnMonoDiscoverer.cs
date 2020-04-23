@@ -13,11 +13,9 @@ namespace Microsoft.DotNet.XUnitExtensions
 {
     public class SkipOnMonoDiscoverer : ITraitDiscoverer
     {
-        private static readonly Lazy<bool> s_isMonoRuntime = new Lazy<bool>(() => Type.GetType("Mono.RuntimeStructs") != null);
-
         public IEnumerable<KeyValuePair<string, string>> GetTraits(IAttributeInfo traitAttribute)
         {
-            if (IsMonoRuntime)
+            if (DiscovererHelpers.IsMonoRuntime)
             {
                 TestPlatforms testPlatforms = TestPlatforms.Any;
 
@@ -35,7 +33,5 @@ namespace Microsoft.DotNet.XUnitExtensions
 
             return Array.Empty<KeyValuePair<string, string>>();
         }
-
-        public static bool IsMonoRuntime => s_isMonoRuntime.Value;
     }
 }

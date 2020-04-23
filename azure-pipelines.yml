@@ -4,17 +4,14 @@ trigger:
     include:
     - master
     - release/3.x
-    
+
 pr:
   branches:
     include:
     - master
     - release/3.x
     - templates
-  paths:
-    exclude:
-    - Documentation/*
-    
+
 variables:
 - template: eng/common-variables.yml
 
@@ -36,9 +33,7 @@ stages:
           manifests: true
       enableMicrobuild: true
       enablePublishUsingPipelines: true
-      graphFileGeneration:
-        enabled: true
-        includeToolset: true
+      useBuildManifest: ${{ variables['_UseBuildManifest'] }}
       workspace:
         clean: all
       jobs:
@@ -63,7 +58,7 @@ stages:
           clean: true
         steps:
         - script: eng\common\cibuild.cmd
-            -configuration $(_BuildConfig) 
+            -configuration $(_BuildConfig)
             -prepareMachine
             $(_InternalBuildArgs)
             /p:Test=false
@@ -198,3 +193,4 @@ stages:
         -TsaRepositoryName "Arcade"
         -TsaCodebaseName "Arcade"
         -TsaPublish $True'
+      useBuildManifest: ${{ variables['_UseBuildManifest'] }}

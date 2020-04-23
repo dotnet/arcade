@@ -6,8 +6,8 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
-using Microsoft.Cci.Extensions.CSharp;
 using Microsoft.Cci.Extensions;
+using Microsoft.Cci.Extensions.CSharp;
 
 namespace Microsoft.Cci.Writers.CSharp
 {
@@ -96,7 +96,7 @@ namespace Microsoft.Cci.Writers.CSharp
         {
             ITypeReference baseType = GetBaseType(type);
             IEnumerable<ITypeReference> interfaces = type.Interfaces.Where(IncludeBaseType).OrderBy(t => GetTypeName(t), StringComparer.OrdinalIgnoreCase);
-            
+
             if (baseType == null && !interfaces.Any())
                 return;
 

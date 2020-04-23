@@ -29,8 +29,7 @@
     information on specific packages.
 
 - Move out of .NET CI and into our new Azure DevOps project
-  (https://dev.azure.com/dnceng/public) for your public CI. - See [Onboarding
-  Azure DevOps](AzureDevOps/AzureDevOpsOnboarding.md).
+  (https://dev.azure.com/dnceng/public) for your public CI. - See [Onboarding Azure DevOps](AzureDevOps/AzureDevOpsOnboarding.md).
 - Move out of the devdiv Azure DevOps instance (https://dev.azure.com/devdiv/ or
   https://devdiv.visualstudio.com) and into the internal project for
   (https://dev.azure.com/dnceng/internal) internal CI and official builds. - See
@@ -42,6 +41,6 @@
 
 ## Which branches should I make these changes in?
 
-Prioritize branches that are producing bits for .NET Core 3.  Given the extended
-support lifecycle for .NET Core 2.1, backporting infrastructure to .NET Core 2.1
-release branches is desired, but .NET Core 3 branches should go first.
+Prioritize branches that are producing bits for .NET 5. Given the extended
+support lifecycle for .NET Core 3.1, backporting infrastructure to .NET Core 3.1
+release branches is desired, but .NET 5 branches should go first.

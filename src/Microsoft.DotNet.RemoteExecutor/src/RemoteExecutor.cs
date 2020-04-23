@@ -58,7 +58,7 @@ namespace Microsoft.DotNet.RemoteExecutor
                 HostRunner = HostRunnerName;
                 s_extraParameter = "remote";
             }
-            else if (RuntimeInformation.FrameworkDescription.StartsWith(".NET Core", StringComparison.OrdinalIgnoreCase))
+            else if (Environment.Version.Major >= 5 || RuntimeInformation.FrameworkDescription.StartsWith(".NET Core", StringComparison.OrdinalIgnoreCase))
             {
                 Path = typeof(RemoteExecutor).Assembly.Location;
                 HostRunner = processFileName;
@@ -156,14 +156,6 @@ namespace Microsoft.DotNet.RemoteExecutor
         /// <summary>Invokes the method from this assembly in another process using the specified arguments.</summary>
         /// <param name="method">The method to invoke.</param>
         /// <param name="options">Options to use for the invocation.</param>
-        public static RemoteInvokeHandle Invoke(Func<int> method, RemoteInvokeOptions options = null)
-        {
-            return Invoke(GetMethodInfo(method), Array.Empty<string>(), options);
-        }
-
-        /// <summary>Invokes the method from this assembly in another process using the specified arguments.</summary>
-        /// <param name="method">The method to invoke.</param>
-        /// <param name="options">Options to use for the invocation.</param>
         public static RemoteInvokeHandle Invoke(Func<Task<int>> method, RemoteInvokeOptions options = null)
         {
             return Invoke(GetMethodInfo(method), Array.Empty<string>(), options);
@@ -200,6 +192,71 @@ namespace Microsoft.DotNet.RemoteExecutor
             string arg2, string arg3, RemoteInvokeOptions options = null)
         {
             return Invoke(GetMethodInfo(method), new[] { arg1, arg2, arg3 }, options);
+        }
+
+        /// <summary>Invokes the method from this assembly in another process using the specified arguments.</summary>
+        /// <param name="method">The method to invoke.</param>
+        /// <param name="options">Options to use for the invocation.</param>
+        public static RemoteInvokeHandle Invoke(Func<Task> method, RemoteInvokeOptions options = null)
+        {
+            // There's no exit code to check
+            options = options ?? new RemoteInvokeOptions();
+            options.CheckExitCode = false;
+
+            return Invoke(GetMethodInfo(method), Array.Empty<string>(), options);
+        }
+
+        /// <summary>Invokes the method from this assembly in another process using the specified arguments.</summary>
+        /// <param name="method">The method to invoke.</param>
+        /// <param name="arg">The argument to pass to the method.</param>
+        /// <param name="options">Options to use for the invocation.</param>
+        public static RemoteInvokeHandle Invoke(Func<string, Task> method, string arg,
+            RemoteInvokeOptions options = null)
+        {
+            // There's no exit code to check
+            options = options ?? new RemoteInvokeOptions();
+            options.CheckExitCode = false;
+
+            return Invoke(GetMethodInfo(method), new[] { arg }, options);
+        }
+
+        /// <summary>Invokes the method from this assembly in another process using the specified arguments.</summary>
+        /// <param name="method">The method to invoke.</param>
+        /// <param name="arg1">The first argument to pass to the method.</param>
+        /// <param name="arg2">The second argument to pass to the method.</param>
+        /// <param name="options">Options to use for the invocation.</param>
+        public static RemoteInvokeHandle Invoke(Func<string, string, Task> method, string arg1, string arg2,
+            RemoteInvokeOptions options = null)
+        {
+            // There's no exit code to check
+            options = options ?? new RemoteInvokeOptions();
+            options.CheckExitCode = false;
+
+            return Invoke(GetMethodInfo(method), new[] { arg1, arg2 }, options);
+        }
+
+        /// <summary>Invokes the method from this assembly in another process using the specified arguments.</summary>
+        /// <param name="method">The method to invoke.</param>
+        /// <param name="arg1">The first argument to pass to the method.</param>
+        /// <param name="arg2">The second argument to pass to the method.</param>
+        /// <param name="arg3">The third argument to pass to the method.</param>
+        /// <param name="options">Options to use for the invocation.</param>
+        public static RemoteInvokeHandle Invoke(Func<string, string, string, Task> method, string arg1,
+            string arg2, string arg3, RemoteInvokeOptions options = null)
+        {
+            // There's no exit code to check
+            options = options ?? new RemoteInvokeOptions();
+            options.CheckExitCode = false;
+
+            return Invoke(GetMethodInfo(method), new[] { arg1, arg2, arg3 }, options);
+        }
+
+        /// <summary>Invokes the method from this assembly in another process using the specified arguments.</summary>
+        /// <param name="method">The method to invoke.</param>
+        /// <param name="options">Options to use for the invocation.</param>
+        public static RemoteInvokeHandle Invoke(Func<int> method, RemoteInvokeOptions options = null)
+        {
+            return Invoke(GetMethodInfo(method), Array.Empty<string>(), options);
         }
 
         /// <summary>Invokes the method from this assembly in another process using the specified arguments.</summary>
@@ -284,7 +341,10 @@ namespace Microsoft.DotNet.RemoteExecutor
 
             // Verify the specified method returns an int (the exit code) or nothing,
             // and that if it accepts any arguments, they're all strings.
-            Assert.True(method.ReturnType == typeof(void) || method.ReturnType == typeof(int) || method.ReturnType == typeof(Task<int>));
+            Assert.True(method.ReturnType == typeof(void)
+                || method.ReturnType == typeof(int)
+                || method.ReturnType == typeof(Task)
+                || method.ReturnType == typeof(Task<int>));
             Assert.All(method.GetParameters(), pi => Assert.Equal(typeof(string), pi.ParameterType));
 
             // And make sure it's in this assembly.  This isn't critical, but it helps with deployment to know

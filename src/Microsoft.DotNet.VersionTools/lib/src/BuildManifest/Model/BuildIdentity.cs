@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using Microsoft.DotNet.VersionTools.Util;
+using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
 
@@ -12,6 +13,7 @@ namespace Microsoft.DotNet.VersionTools.BuildManifest.Model
     {
         private static readonly string[] AttributeOrder =
         {
+            nameof(PublishingVersion),
             nameof(Name),
             nameof(BuildId),
             nameof(ProductVersion),
@@ -68,6 +70,19 @@ namespace Microsoft.DotNet.VersionTools.BuildManifest.Model
             set { Attributes[nameof(VersionStamp)] = value; }
         }
 
+        public string PublishingVersion
+        {
+            get { return Attributes.GetOrDefault(nameof(PublishingVersion)); }
+
+            set {
+                if (!IsValidPublishingInfraVersion(value))
+                {
+                    throw new ArgumentException($"`{value} not is in the format expected. Valid values are integers.");
+                }
+                Attributes[nameof(PublishingVersion)] = value; 
+            }
+        }
+
         public override string ToString()
         {
             string s = Name;
@@ -102,5 +117,15 @@ namespace Microsoft.DotNet.VersionTools.BuildManifest.Model
                 .CreateAttributeDictionary()
                 .ThrowIfMissingAttributes(RequiredAttributes)
         };
+
+        public static bool IsValidPublishingInfraVersion(string version)
+        {
+            if (string.IsNullOrEmpty(version))
+            {
+                return false;
+            }
+
+            return int.TryParse(version, out var _);
+        }
     }
 }

@@ -15,6 +15,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 {
     public static class BuildManifestUtil
     {
+        public const string LegacyPublishingInfraVersion = "1";
+        public const string LatestPublishingInfraVersion = "2";
+
         public const string AssetsVirtualDir = "assets/";
 
         public static void CreateBuildManifest(TaskLoggingHelper log,
@@ -26,7 +29,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             string manifestBranch,
             string manifestCommit,
             string[] manifestBuildData,
-            bool isStableBuild)
+            bool isStableBuild,
+            string publishingVersion)
         {
             CreateModel(
                 blobArtifacts,
@@ -37,6 +41,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 manifestBranch,
                 manifestCommit,
                 isStableBuild,
+                publishingVersion,
                 log)
                 .WriteAsXml(assetManifestPath, log);
         }
@@ -59,6 +64,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             string repoBranch,
             string repoCommit,
             bool isStableBuild,
+            string publishingVersion,
             TaskLoggingHelper log)
         {
             if (artifacts == null)
@@ -104,6 +110,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 repoBranch,
                 repoCommit,
                 isStableBuild,
+                publishingVersion,
                 log);
             return buildModel;
         }
@@ -116,6 +123,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             string manifestBranch,
             string manifestCommit,
             bool isStableBuild,
+            string publishingVersion,
             TaskLoggingHelper log)
         {
             var attributes = MSBuildListSplitter.GetNamedProperties(manifestBuildData);
@@ -131,7 +139,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         BuildId = manifestBuildId,
                         Branch = manifestBranch,
                         Commit = manifestCommit,
-                        IsStable = isStableBuild.ToString()
+                        IsStable = isStableBuild.ToString(),
+                        PublishingVersion = publishingVersion
                     });
 
             buildModel.Artifacts.Blobs.AddRange(blobArtifacts);

@@ -60,6 +60,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// Is this manifest for a stable build?
         /// </summary>
         public bool IsStableBuild { get; set; }
+        
+        /// <summary>
+        /// The version of the publishing infrastructure that should be tagged in the manifest.
+        /// </summary>
+        public string PublishingVersion { get; set; }
 
         public override bool Execute()
         {
@@ -73,6 +78,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     RepoBranch,
                     RepoCommit,
                     IsStableBuild,
+                    PublishingVersion ?? BuildManifestUtil.LegacyPublishingInfraVersion,
                     Log);
 
                 buildModel.WriteAsXml(OutputPath, Log);

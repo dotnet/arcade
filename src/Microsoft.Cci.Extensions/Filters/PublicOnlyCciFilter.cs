@@ -33,26 +33,20 @@ namespace Microsoft.Cci.Filters
 
         public virtual bool Include(ITypeDefinition type)
         {
-            if (type == null || Dummy.Type == type)
+            if (Dummy.Type == type)
                 return false;
             return type.IsVisibleOutsideAssembly();
         }
 
         public virtual bool Include(ITypeDefinitionMember member)
         {
-            if (member == null)
-                return false;
-
-            if (!member.ContainingTypeDefinition.IsVisibleOutsideAssembly())
-                return false;
-
             switch (member.Visibility)
             {
                 case TypeMemberVisibility.Public:
                     return true;
                 case TypeMemberVisibility.Family:
                 case TypeMemberVisibility.FamilyOrAssembly:
-                    // CCI's version of IsVisibleOutsideAssembly doesn't 
+                    // CCI's version of IsVisibleOutsideAssembly doesn't
                     // consider protected members as being visible but for
                     // our purposes which is to write CS files that can
                     // be compiled we always need the protected members
@@ -62,7 +56,7 @@ namespace Microsoft.Cci.Filters
             if (!member.IsVisibleOutsideAssembly())
             {
                 // If a type is public, abstract and has a public constructor,
-                // then it must expose all abstract members. 
+                // then it must expose all abstract members.
                 if (member.ContainingTypeDefinition.IsAbstract &&
                     member.IsAbstract() &&
                     member.ContainingTypeDefinition.IsConstructorVisible()
