@@ -38,6 +38,7 @@
 
     <!-- Default test runner -->
     <TestRunnerName Condition="'$(UsingToolXUnit)' == 'true'">XUnit</TestRunnerName>
+    <TestRunnerName Condition="'$(UsingToolMSTest)' == 'true'">MSTest</TestRunnerName>
 
     <!-- exclude test projects from source-build by default -->
     <ExcludeFromSourceBuild Condition="'$(ExcludeFromSourceBuild)' == ''">true</ExcludeFromSourceBuild>
