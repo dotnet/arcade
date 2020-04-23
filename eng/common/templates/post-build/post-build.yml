@@ -146,6 +146,28 @@ stages:
           filePath: eng\common\enable-cross-org-publishing.ps1
           arguments: -token $(dn-bot-dnceng-artifact-feeds-rw)
 
+      # Workaround required due this issue: https://github.com/dotnet/arcade/issues/5328
+      - task: PowerShell@2
+        name: setReleaseVars
+        displayName: Set Release Configs Vars
+        inputs:
+          targetType: inline
+          script: |
+            $CERT_NOT_BEFORE_FILETIME_PROP_ID = 126
+            $signature = @"
+            [DllImport("Crypt32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+            public static extern bool CertSetCertificateContextProperty(
+                IntPtr pCertContext,
+                int dwPropId,
+                uint dwFlags,
+                IntPtr pvData
+            );
+            "@
+
+            Add-Type -MemberDefinition $signature -Namespace PKI -Name Crypt32
+            $cert = Get-Item -Path Cert:\LocalMachine\Root\CDD4EEAE6000AC7F40C3802C171E30148030C072
+            [PKI.Crypt32]::CertSetCertificateContextProperty($cert.Handle, $CERT_NOT_BEFORE_FILETIME_PROP_ID, 0, [System.IntPtr]::Zero)
+
       # Signing validation will optionally work with the buildmanifest file which is downloaded from
       # Azure DevOps above.
       - task: PowerShell@2
