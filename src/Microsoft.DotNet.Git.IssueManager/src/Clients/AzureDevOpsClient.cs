@@ -21,7 +21,7 @@ namespace Microsoft.DotNet.Git.IssueManager.Clients
         private static readonly Regex LegacyRepositoryUriPattern = new Regex(
             @"^https://(?<account>[a-zA-Z0-9]+)\.visualstudio\.com/(?<project>[a-zA-Z0-9-]+)/_git/(?<repo>[a-zA-Z0-9-\.]+)");
 
-        private const string DefaultApiVersion = "5.0-preview.1";
+        private const string DefaultApiVersion = "5.0";
 
         public static async Task<string> GetCommitAuthorAsync(
             string repositoryUrl,

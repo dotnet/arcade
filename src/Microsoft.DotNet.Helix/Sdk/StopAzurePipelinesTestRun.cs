@@ -20,7 +20,7 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
                     using (var req =
                         new HttpRequestMessage(
                             new HttpMethod("PATCH"),
-                            $"{CollectionUri}{TeamProject}/_apis/test/runs/{TestRunId}?api-version=5.0-preview.2")
+                            $"{CollectionUri}{TeamProject}/_apis/test/runs/{TestRunId}?api-version=5.0")
                         {
                             Content = new StringContent(
                                 JsonConvert.SerializeObject(new JObject { ["state"] = "Completed", }),

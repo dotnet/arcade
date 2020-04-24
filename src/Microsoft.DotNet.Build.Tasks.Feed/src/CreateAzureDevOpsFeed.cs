@@ -41,7 +41,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         [Required]
         public string AzureDevOpsPersonalAccessToken { get; set; }
 
-        public string AzureDevOpsFeedsApiVersion { get; set; } = "5.0-preview.1";
+        public string AzureDevOpsFeedsApiVersion { get; set; } = "5.0";
 
         public static string AzureDevOpsOrg { get; set; } = "dnceng";
 
