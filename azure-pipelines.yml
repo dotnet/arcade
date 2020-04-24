@@ -170,6 +170,9 @@ stages:
 
   - template: eng\common\templates\post-build\post-build.yml
     parameters:
+      # Disabling signing validation until we can get the issues sorted. This should be re-enabled
+      # after https://github.com/dotnet/arcade/issues/5328 is resolved. 
+      enableSigningValidation: false
       # Symbol validation isn't being very reliable lately. This should be enabled back
       # once this issue is resolved: https://github.com/dotnet/arcade/issues/2871
       enableSymbolValidation: false
