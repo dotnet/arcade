@@ -416,8 +416,6 @@
 
       <NupkgOutputFile>$(ArtifactsNonShippingPackagesDir)$(VSInsertionComponentName).$(ProductVersion).nupkg</NupkgOutputFile>
 
-      <ProjectUrlForVS>https://github.com/dotnet/core-setup</ProjectUrlForVS>
-
       <!-- Work around NuGet silently ignoring nuspec files in PackTask by changing extension. https://github.com/NuGet/Home/issues/8637 -->
       <MangledNuspecFile>$(MSBuildThisFileDirectory)vs\VS.Redist.Common.Component.nuspec.txt</MangledNuspecFile>
       <VsInsertionNuspecFile>$(IntermediateOutputPath)vs\VS.Redist.Common.Component.nuspec</VsInsertionNuspecFile>
@@ -427,7 +425,7 @@
       <PackProperties>$(PackProperties)ARCH=$(MsiArch);</PackProperties>
       <PackProperties>$(PackProperties)COMPONENT_NAME=$(VSInsertionComponentName);</PackProperties>
       <PackProperties>$(PackProperties)FRIENDLY_NAME=$(VSInsertionComponentFriendlyName);</PackProperties>
-      <PackProperties>$(PackProperties)PROJECT_URL=$(ProjectUrlForVS);</PackProperties>
+      <PackProperties>$(PackProperties)PROJECT_URL=$(RepositoryUrl);</PackProperties>
 
       <PackArgs />
       <PackArgs>$(PackArgs) $(VsInsertionNuspecFile)</PackArgs>
