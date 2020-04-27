@@ -61,8 +61,8 @@ try {
     ExitWithExitCode 1
   }
 
-  & $(Join-Path $PSScriptRoot 'init-sdl.ps1') -GuardianCliLocation $guardianCliLocation -Repository $RepoName -BranchName $BranchName -WorkingDirectory $workingDirectory -GuardianLoggerLevel $GuardianLoggerLevel
   $gdnFolder = Join-Path $workingDirectory '.gdn'
+  & $(Join-Path $PSScriptRoot 'init-sdl.ps1') -GuardianCliLocation $guardianCliLocation -Repository $RepoName -BranchName $BranchName -WorkingDirectory $workingDirectory -GdnFolder $gdnFolder -GuardianLoggerLevel $GuardianLoggerLevel
 
   if ($TsaOnboard) {
     if ($TsaCodebaseName -and $TsaNotificationEmail -and $TsaCodebaseAdmin -and $TsaBugAreaPath) {

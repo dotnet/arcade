@@ -3,6 +3,7 @@ Param(
   [string] $Repository,
   [string] $BranchName='master',
   [string] $WorkingDirectory,
+  [string] $GdnFolder,
   [string] $GuardianLoggerLevel='Standard'
 )
 
@@ -20,9 +21,9 @@ $ci = $true
 # Don't display the console progress UI - it's a huge perf hit
 $ProgressPreference = 'SilentlyContinue'
 
-if (Test-Path $gdnFolder) {
+if (Test-Path $GdnFolder) {
   # Remove the gdn folder if it exists (it shouldn't unless there's too much caching; this is just in case)
-  Remove-Item -Force -Recurse $gdnFolder
+  Remove-Item -Force -Recurse $GdnFolder
 }
 
 try {
