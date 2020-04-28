@@ -18,7 +18,7 @@
     <BuildManifestFile Condition="Exists('$(BUILD_ARTIFACTSTAGINGDIRECTORY)/BuildManifests/manifest.props')">$(BUILD_ARTIFACTSTAGINGDIRECTORY)/BuildManifests/manifest.props</BuildManifestFile>
   </PropertyGroup>
 
-  <Import Condition="'$(BuildManifestFile)' == ''" Project="$(RepositoryEngineeringDir)Signing.props" />
+  <Import Condition="'$(BuildManifestFile)' == '' and Exists('$(RepositoryEngineeringDir)Signing.props')" Project="$(RepositoryEngineeringDir)Signing.props" />
   <Import Condition="Exists('$(BuildManifestFile)')" Project="$(BuildManifestFile)" />
 
   <PropertyGroup>
