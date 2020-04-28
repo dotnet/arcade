@@ -47,8 +47,8 @@ of whether the repo will be within budge once those items are complete.*
 | aspnetcore         | kevinpi  | NA                             | ![][red]    | NYA          | NYA             | 45                              | ![][red]      |
 | aspnetcore-tooling | kevinpi  | ![][red]                       | NA          | NA           | NA              | NA                              | NA            |
 | efcore             | kevinpi  | ![][green]                     | ![][red]    | NR           | NR              | NA                              | NA            |
-| extensions         | kevinpi  | ![][red]                       | ![][red]    | NR           | NR              | NA                              | NA            |
-| installer          | dondr    | NA                             | ![][red]    | NYA          | NYA             | 30 (w/sdk)                      | ![][red]      |
+| extensions         | kevinpi  | ![][green]                       | ![][red]    | NR           | NR              | NA                              | NA            |
+| installer          | dondr    | NA                             | ![][green]    | NYA          | NYA             | 30 (w/sdk)                      | ![][red]      |
 | runtime            | jaredpar | ![][green]                     | ![][green]  | NYA          | NYA             | 45                              | ![][red]      |
 | sdk                | dondr    | NA                             | ![][green]  | NYA          | NYA             | 30 (w/installer)                | ![][red]      |
 | templating         | joaguila | NA                             | ![][red]    | NYA          | NYA             | NA                              | NA            |
