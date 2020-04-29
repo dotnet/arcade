@@ -47,7 +47,6 @@ namespace Microsoft.DotNet.XUnitExtensions
                     throw new InvalidOperationException($"Unable to get MethodInfo, please check input for {entry}.");
                 }
 
-                // If one of the conditions is false, then return the category failing trait.
                 if (!(bool)conditionMethodInfo.Invoke(null, null)) return false;
             }
 
