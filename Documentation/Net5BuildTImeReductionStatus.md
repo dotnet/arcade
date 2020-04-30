@@ -54,8 +54,8 @@ of whether the repo will be within budge once those items are complete.*
 | templating         | joaguila | NA                             | ![][red]    | NYA          | NYA             | NA                              | NA            |
 | windowsdesktop     | kevinpi | NA                             | ![][red]    | NYA          | NYA             | 45 (w/winforms + wpf)           | ![][red]      |
 | winforms           | kevinpi | NA                             | ![][red]    | NYA          | NYA             | 45 (w/wpf + wd)                 | ![][red]      |
-| wpf-int            | kevinpi | NA                             | ![][red]    | NYA          | NYA             | 45 (w/wpf + wd)                 | ![][red]      |
-| wpf                | kevinpi | NA                             | ![][red]    | NYA          | NYA             | 45 (w/winforms or wpf-int + wd) | ![][red]      |
+| wpf-int            | fabiant | NA                             | ![][red]    | NYA          | NYA             | 45 (w/wpf + wd)                 | ![][red]      |
+| wpf                | fabiant | NA                             | ![][red]    | NYA          | NYA             | 45 (w/winforms or wpf-int + wd) | ![][red]      |
 
 [red]: https://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Red.png
 [green]: https://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png
