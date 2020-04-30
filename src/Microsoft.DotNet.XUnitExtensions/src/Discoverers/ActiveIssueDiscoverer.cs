@@ -32,6 +32,8 @@ namespace Microsoft.DotNet.XUnitExtensions
             TestPlatforms platforms = TestPlatforms.Any;
             TargetFrameworkMonikers frameworks = TargetFrameworkMonikers.Any;
             TestRuntimes runtimes = TestRuntimes.Any;
+            Type calleeType = null;
+            string[] conditionMemberNames = null;
             
             foreach (object arg in ctorArgs.Skip(1)) // First argument is the issue number.
             {
@@ -47,16 +49,29 @@ namespace Microsoft.DotNet.XUnitExtensions
                 {
                     runtimes = (TestRuntimes)arg;
                 }
+                else if (arg is Type)
+                {
+                    calleeType = (Type)arg;
+                }
+                else if (arg is string[])
+                {
+                    conditionMemberNames = (string[])arg;
+                }
             }
-        
-            if (DiscovererHelpers.TestPlatformApplies(platforms) &&
+
+            if (calleeType != null && conditionMemberNames != null)
+            {
+                if (!DiscovererHelpers.Evaluate(calleeType, conditionMemberNames))
+                {
+                    yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.Failing);
+                }
+            }        
+            else if (DiscovererHelpers.TestPlatformApplies(platforms) &&
                 DiscovererHelpers.TestRuntimeApplies(runtimes) &&
                 DiscovererHelpers.TestFrameworkApplies(frameworks))
             {
-                return new[] { new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.Failing) };
+                yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.Failing);
             }
-
-            return Array.Empty<KeyValuePair<string, string>>();
         }
     }
 }
