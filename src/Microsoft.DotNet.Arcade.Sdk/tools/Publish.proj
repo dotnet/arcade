@@ -174,19 +174,6 @@
       AssetManifestPath="$(AssetManifestFilePath)"
       AssetsTemporaryDirectory="$(TempWorkingDirectory)" />
 
-    <Message
-      Text="##vso[artifact.upload containerfolder=ReleaseConfigs;artifactname=ReleaseConfigs]$(RepositoryEngineeringDir)common/PublishToPackageFeed.proj"
-      Importance="high" />
-
-    <!--
-      The publishing pipeline (implemented by PublishToPackageFeed.proj) will use the Tasks.Feed package
-      to publish packages. The version of Tasks.Feed used will come from DefaultVersions.props
-    -->
-    <Message
-      Text="##vso[artifact.upload containerfolder=ReleaseConfigs;artifactname=ReleaseConfigs]$(MSBuildThisFileDirectory)DefaultVersions.props"
-      Condition="Exists('$(MSBuildThisFileDirectory)DefaultVersions.props')"
-      Importance="high" />
-
     <Copy 
       SourceFiles="$(AssetManifestFilePath)" 
       DestinationFolder="$(TempWorkingDirectory)\$(AssetManifestFileName)" />
@@ -200,11 +187,6 @@
       Lines="&lt;Project>&lt;PropertyGroup>&lt;ArtifactsCategory>$(ArtifactsCategory)&lt;/ArtifactsCategory>&lt;/PropertyGroup>&lt;/Project>"
       Overwrite="true"
       Encoding="Unicode" />
-
-    <Message
-      Text="##vso[artifact.upload containerfolder=ReleaseConfigs;artifactname=ReleaseConfigs]$(MSBuildThisFileDirectory)ArtifactsCategory.props"
-      Importance="high" />
-
 
     <!-- 
         Publish Windows PDBs produced by SymStore.targets (by default, only shipping PDBs are placed there).
@@ -235,15 +217,6 @@
       Text="##vso[artifact.upload containerfolder=PdbArtifacts;artifactname=PdbArtifacts]$(PDBsToPublishTempLocation)"
       Importance="high" 
       Condition="'@(FilesToPublishToSymbolServer)' != ''"/>
-
-    <Message
-      Text="##vso[artifact.upload containerfolder=ReleaseConfigs;artifactname=ReleaseConfigs]$(RepositoryEngineeringDir)common/PublishToSymbolServers.proj"
-      Importance="high" />
-
-    <Message
-      Text="##vso[artifact.upload containerfolder=ReleaseConfigs;artifactname=ReleaseConfigs]$(RepositoryEngineeringDir)common/CheckSymbols.ps1"
-      Importance="high" />
-
   </Target>
 
   <Target Name="PublishSymbols">
