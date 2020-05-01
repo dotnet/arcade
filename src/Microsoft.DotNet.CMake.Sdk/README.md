@@ -64,6 +64,22 @@ Here are a list of MSBuild properties that this SDK consumes:
 
 ### Simple Example Project
 
+To get started, add `Microsoft.DotNet.CMake.Sdk` under `msbuild-sdks` in `global.json`:
+```json
+{
+  ...
+  "msbuild-sdks": {
+    ...
+    "Microsoft.DotNet.CMake.Sdk": "version",
+    ...
+  },
+  ...
+}
+```
+
+To use this SDK, you need to define a native project and then reference it from your managed code project using NativeProjectReference.
+
+#### Defining Native Project
 If you want to drive a native CMake build with this SDK, add a .proj file next to your CMakeLists.txt with the following content:
 
 ```xml
@@ -76,7 +92,7 @@ If you want to drive a native CMake build with this SDK, add a .proj file next t
 
 Building this project will configure and build the CMakeLists.txt project with the default generator provided by the SDK (Visual Studio on Windows, Unix Makefiles off-Windows).
 
-### Using NativeProjectReference to reference Native assets
+#### Referencing Native assets with NativeProjectReference
 
 An important feature of the Microsoft.DotNet.CMake.Sdk is that it enables the user to reference their native assets from a managed project. This is the most valuable in a testing scenario such as the CoreCLR test tree since it does not currently do any special handling of multiple architectures.
 
