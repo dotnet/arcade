@@ -30,7 +30,7 @@ namespace Microsoft.DotNet.XUnitExtensions
 
             string issue = ctorArgs.First().ToString();
             TestPlatforms platforms = TestPlatforms.Any;
-            TargetFrameworkMonikers frameworks = (TargetFrameworkMonikers)0;
+            TargetFrameworkMonikers frameworks = TargetFrameworkMonikers.Any;
             TestRuntimes runtimes = TestRuntimes.Any;
             
             foreach (object arg in ctorArgs.Skip(1)) // First argument is the issue number.
