@@ -136,7 +136,7 @@
     <ItemGroup>
       <_CMakeArguments Include="-G &quot;$(CMakeGenerator)&quot;" />
       <_CMakeArguments Condition="'$(CMakeToolset)' != ''" Include="-T $(CMakeToolset)" />
-      <_CMakeArguments Condition="'$(_CMakePassArchitectureToGenerator)' != ''" Include="-A $(Platform)" />
+      <_CMakeArguments Condition="'$(_CMakePassArchitectureToGenerator)' == 'true'" Include="-A $(Platform)" />
       <_CMakeArguments Condition="'$(CMakeOutputDir)' != ''" Include="-B &quot;$(CMakeOutputDir)&quot;" />
       <_CMakeArguments Condition="'$(CMakeLists)' != ''" Include="-S &quot;$(_NormalizedCMakeListsDirectory)&quot;" />
       <_CMakeDefineArguments Include="@(CMakeDefines->'-D%(Identity)=%(Value)')" />
