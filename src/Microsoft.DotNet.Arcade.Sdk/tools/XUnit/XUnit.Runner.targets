@@ -2,6 +2,10 @@
   <PropertyGroup>
     <XUnitDesktopSettingsFile Condition="'$(XUnitDesktopSettingsFile)' == ''">$(MSBuildThisFileDirectory)xunit.runner.json</XUnitDesktopSettingsFile>
   </PropertyGroup>
+  
+  <ItemGroup>
+    <PackageReference Include="xunit.runner.console" Version="$(XUnitRunnerConsoleVersion)" IsImplicitlyDefined="true" PrivateAssets="all" Publish="true"/>
+  </ItemGroup>
 
   <!--
     Include settings file (xunit.runner.json) if specified.
