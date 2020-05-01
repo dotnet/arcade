@@ -20,17 +20,17 @@ try {
 
   if ("" -ne $SigningValidationAdditionalParameters) {
     $optionalParams.Add("--signing-validation-parameters") | Out-Null
-	  $optionalParams.Add($SigningValidationAdditionalParameters) | Out-Null
+    $optionalParams.Add($SigningValidationAdditionalParameters) | Out-Null
   }
 
   if ("" -ne $ArtifactsPublishingAdditionalParameters) {
     $optionalParams.Add("artifact-publishing-parameters") | Out-Null
-	  $optionalParams.Add($ArtifactsPublishingAdditionalParameters) | Out-Null
+    $optionalParams.Add($ArtifactsPublishingAdditionalParameters) | Out-Null
   }
 
   if ("false" -eq $WaitPublishingFinish) {
     $optionalParams.Add("--no-wait") | Out-Null
-	  $optionalParams.Add("true") | Out-Null
+    $optionalParams.Add("true") | Out-Null
   }
 
   & darc add-build-to-channel `
