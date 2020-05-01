@@ -109,7 +109,7 @@
     <ItemGroup>
       <DependencyVersionFile Content="$([System.IO.File]::ReadAllText('%(Identity)').Trim())" />
 
-      <_VersionsFileLines Include="core-setup $(LatestCommit)" />
+      <_VersionsFileLines Include="$(RepositoryUrl) $(LatestCommit)" />
       <_VersionsFileLines Include="@(DependencyVersionFile ->'%(Name) %(Content)')" />
     </ItemGroup>
 

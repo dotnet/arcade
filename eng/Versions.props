@@ -32,7 +32,7 @@
     <MicrosoftExtensionsDependencyModelVersion>2.1.0</MicrosoftExtensionsDependencyModelVersion>
     <MicrosoftExtensionsFileSystemGlobbingVersion>2.0.0</MicrosoftExtensionsFileSystemGlobbingVersion>
     <MicrosoftNETCorePlatformsVersion>2.1.0</MicrosoftNETCorePlatformsVersion>
-    <MicrosoftNetCompilersToolsetVersion>3.7.0-1.20220.1</MicrosoftNetCompilersToolsetVersion>
+    <MicrosoftNetCompilersToolsetVersion>3.7.0-1.20226.3</MicrosoftNetCompilersToolsetVersion>
     <MicrosoftNetTestSdkVersion>15.7.2</MicrosoftNetTestSdkVersion>
     <MoqVersion>4.8.3</MoqVersion>
     <MonoOptionsVersion>5.3.0.1</MonoOptionsVersion>
@@ -40,7 +40,7 @@
     <NewtonsoftJsonVersion>9.0.1</NewtonsoftJsonVersion>
     <SystemTextJsonVersion>4.7.0</SystemTextJsonVersion>
     <NuGetVersioningVersion>4.4.0</NuGetVersioningVersion>
-    <NuGetVersion>5.3.0</NuGetVersion>
+    <NuGetVersion>5.6.0-preview.2.6489</NuGetVersion>
     <OctokitVersion>0.32.0</OctokitVersion>
     <DotNetSleetLibVersion>2.2.143</DotNetSleetLibVersion>
     <SwashbuckleAspNetCoreSwaggerVersion>3.0.0</SwashbuckleAspNetCoreSwaggerVersion>
@@ -61,8 +61,8 @@
     <XUnitVersion>2.4.1</XUnitVersion>
     <XUnitAbstractionsVersion>2.0.3</XUnitAbstractionsVersion>
     <XUnitVSRunnerVersion>2.4.1</XUnitVSRunnerVersion>
-    <MicrosoftDotNetBuildTasksFeedVersion>5.0.0-beta.20201.2</MicrosoftDotNetBuildTasksFeedVersion>
-    <MicrosoftDotNetSignToolVersion>5.0.0-beta.20201.2</MicrosoftDotNetSignToolVersion>
+    <MicrosoftDotNetBuildTasksFeedVersion>5.0.0-beta.20228.4</MicrosoftDotNetBuildTasksFeedVersion>
+    <MicrosoftDotNetSignToolVersion>5.0.0-beta.20228.4</MicrosoftDotNetSignToolVersion>
     <MicrosoftAzureDocumentDBVersion>1.22.0</MicrosoftAzureDocumentDBVersion>
     <MicrosoftAzureCosmosDBTableVersion>1.1.2</MicrosoftAzureCosmosDBTableVersion>
     <MicrosoftAspNetCoreAllVersion>2.0.0</MicrosoftAspNetCoreAllVersion>
@@ -74,8 +74,8 @@
     <MicrosoftDiaSymReaderNativeVersion>1.7.0</MicrosoftDiaSymReaderNativeVersion>
     <MicrosoftDotNetMaestroClientVersion>1.1.0-beta.19556.4</MicrosoftDotNetMaestroClientVersion>
     <MicrosoftSourceLinkVersion>1.1.0-beta-20206-02</MicrosoftSourceLinkVersion>
-    <MicrosoftDotNetSwaggerGeneratorMSBuildVersion>5.0.0-beta.20201.2</MicrosoftDotNetSwaggerGeneratorMSBuildVersion>
+    <MicrosoftDotNetSwaggerGeneratorMSBuildVersion>5.0.0-beta.20228.4</MicrosoftDotNetSwaggerGeneratorMSBuildVersion>
     <XliffTasksVersion>1.0.0-beta.20206.1</XliffTasksVersion>
-    <MicrosoftDotNetMaestroTasksVersion>1.1.0-beta.20216.1</MicrosoftDotNetMaestroTasksVersion>
+    <MicrosoftDotNetMaestroTasksVersion>1.1.0-beta.20224.5</MicrosoftDotNetMaestroTasksVersion>
   </PropertyGroup>
 </Project>

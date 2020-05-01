@@ -47,15 +47,15 @@ of whether the repo will be within budge once those items are complete.*
 | aspnetcore         | kevinpi  | NA                             | ![][red]    | NYA          | NYA             | 45                              | ![][red]      |
 | aspnetcore-tooling | kevinpi  | ![][red]                       | NA          | NA           | NA              | NA                              | NA            |
 | efcore             | kevinpi  | ![][green]                     | ![][red]    | NR           | NR              | NA                              | NA            |
-| extensions         | kevinpi  | ![][red]                       | ![][red]    | NR           | NR              | NA                              | NA            |
-| installer          | dondr    | NA                             | ![][red]    | NYA          | NYA             | 30 (w/sdk)                      | ![][red]      |
+| extensions         | kevinpi  | ![][green]                       | ![][red]    | NR           | NR              | NA                              | NA            |
+| installer          | marcpop    | NA                             | ![][green]    | NYA          | NYA             | 30 (w/sdk)                      | ![][red]      |
 | runtime            | jaredpar | ![][green]                     | ![][green]  | NYA          | NYA             | 45                              | ![][red]      |
-| sdk                | dondr    | NA                             | ![][green]  | NYA          | NYA             | 30 (w/installer)                | ![][red]      |
+| sdk                | marcpop    | NA                             | ![][green]  | NYA          | NYA             | 30 (w/installer)                | ![][red]      |
 | templating         | joaguila | NA                             | ![][red]    | NYA          | NYA             | NA                              | NA            |
-| windowsdesktop     | srivatsm | NA                             | ![][red]    | NYA          | NYA             | 45 (w/winforms + wpf)           | ![][red]      |
-| winforms           | srivatsm | NA                             | ![][red]    | NYA          | NYA             | 45 (w/wpf + wd)                 | ![][red]      |
-| wpf-int            | srivatsm | NA                             | ![][red]    | NYA          | NYA             | 45 (w/wpf + wd)                 | ![][red]      |
-| wpf                | srivatsm | NA                             | ![][red]    | NYA          | NYA             | 45 (w/winforms or wpf-int + wd) | ![][red]      |
+| windowsdesktop     | kevinpi | NA                             | ![][red]    | NYA          | NYA             | 45 (w/winforms + wpf)           | ![][red]      |
+| winforms           | kevinpi | NA                             | ![][red]    | NYA          | NYA             | 45 (w/wpf + wd)                 | ![][red]      |
+| wpf-int            | fabiant | NA                             | ![][red]    | NYA          | NYA             | 45 (w/wpf + wd)                 | ![][red]      |
+| wpf                | fabiant | NA                             | ![][red]    | NYA          | NYA             | 45 (w/winforms or wpf-int + wd) | ![][red]      |
 
 [red]: https://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Red.png
 [green]: https://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png

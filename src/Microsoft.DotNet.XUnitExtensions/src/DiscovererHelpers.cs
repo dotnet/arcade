@@ -3,6 +3,10 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using Xunit;
 
@@ -29,5 +33,24 @@ namespace Microsoft.DotNet.XUnitExtensions
         public static bool TestFrameworkApplies(TargetFrameworkMonikers frameworks) =>
                 (frameworks.HasFlag(TargetFrameworkMonikers.Netcoreapp) && IsRunningOnNetCoreApp) ||
                 (frameworks.HasFlag(TargetFrameworkMonikers.NetFramework) && IsRunningOnNetFramework);
+
+        internal static bool Evaluate(Type calleeType, string[] conditionMemberNames)
+        {
+            foreach (string entry in conditionMemberNames)
+            {
+                // Null condition member names are silently tolerated.
+                if (string.IsNullOrWhiteSpace(entry)) continue;
+
+                MethodInfo conditionMethodInfo = ConditionalTestDiscoverer.LookupConditionalMethod(calleeType, entry);
+                if (conditionMethodInfo == null)
+                {
+                    throw new InvalidOperationException($"Unable to get MethodInfo, please check input for {entry}.");
+                }
+
+                if (!(bool)conditionMethodInfo.Invoke(null, null)) return false;
+            }
+
+            return true;
+        }
     }
 }

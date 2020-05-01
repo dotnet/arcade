@@ -35,7 +35,6 @@
   <PropertyGroup>
     <!-- Opt-out features -->
     <UsingToolXliff Condition="'$(UsingToolXliff)' == ''">true</UsingToolXliff>
-    <UsingToolXUnit Condition="'$(UsingToolXUnit)' == ''">true</UsingToolXUnit>
     <UsingToolPdbConverter Condition="'$(UsingToolPdbConverter)' == ''">true</UsingToolPdbConverter>
 
     <!-- Opt-in features -->
@@ -45,6 +44,13 @@
     <UsingToolNetFrameworkReferenceAssemblies Condition="'$(UsingToolNetFrameworkReferenceAssemblies)' == ''">false</UsingToolNetFrameworkReferenceAssemblies>
     <UsingToolNuGetRepack Condition="'$(UsingToolNuGetRepack)' == ''">false</UsingToolNuGetRepack>
     <UsingToolSymbolUploader Condition="'$(UsingToolSymbolUploader)' == ''">false</UsingToolSymbolUploader>
+
+    <!-- Deprecated features -->
+    <!--
+      The UsingToolXUnit property is deprecated,
+      use the TestRunnerName property to choose which test runner to use.
+    -->
+    <UsingToolXUnit Condition="'$(UsingToolXUnit)' == ''">true</UsingToolXUnit>
 
     <!--
       Use compilers from the Microsoft.Net.Compilers/Microsoft.NETCore.Compilers package.
@@ -78,11 +84,17 @@
     <MicrosoftVSSDKBuildToolsVersion Condition="'$(MicrosoftVSSDKBuildToolsVersion)' == ''">15.1.192</MicrosoftVSSDKBuildToolsVersion>
     <MicrosoftDotnetNuGetRepackTasksVersion Condition="'$(MicrosoftDotnetNuGetRepackTasksVersion)' == ''">$(ArcadeSdkVersion)</MicrosoftDotnetNuGetRepackTasksVersion>
     <MicrosoftDotNetSignToolVersion Condition="'$(MicrosoftDotNetSignToolVersion)' == ''">$(ArcadeSdkVersion)</MicrosoftDotNetSignToolVersion>
+    <MicrosoftTestPlatformVersion Condition="'$(MicrosoftTestPlatformVersion)' == ''">16.5.0</MicrosoftTestPlatformVersion>
     <XUnitVersion Condition="'$(XUnitVersion)' == ''">2.4.1</XUnitVersion>
     <XUnitRunnerConsoleVersion Condition="'$(XUnitRunnerConsoleVersion)' == ''">$(XUnitVersion)</XUnitRunnerConsoleVersion>
     <XUnitRunnerVisualStudioVersion Condition="'$(XUnitRunnerVisualStudioVersion)' == ''">$(XUnitVersion)</XUnitRunnerVisualStudioVersion>
+    <MSTestVersion Condition="'$(MSTestVersion)' == ''">2.0.0</MSTestVersion>
+    <MSTestTestAdapterVersion Condition="'$(MSTestTestAdapterVersion)' == ''">$(MSTestVersion)</MSTestTestAdapterVersion>
+    <MSTestTestFrameworkVersion Condition="'$(MSTestTestFrameworkVersion)' == ''">$(MSTestVersion)</MSTestTestFrameworkVersion>
     <MicrosoftDotNetBuildTasksFeedVersion Condition="'$(MicrosoftDotNetBuildTasksFeedVersion)' == ''">$(ArcadeSdkVersion)</MicrosoftDotNetBuildTasksFeedVersion>
     <MicrosoftSymbolUploaderBuildTaskVersion Condition="'$(MicrosoftSymbolUploaderBuildTaskVersion)' == ''">1.0.0-beta-65130-01</MicrosoftSymbolUploaderBuildTaskVersion>
+    <NUnitVersion Condition="'$(NUnitVersion)' == ''">3.12.0</NUnitVersion>
+    <NUnit3TestAdapterVersion Condition="'$(NUnit3TestAdapterVersion)' == ''">3.15.1</NUnit3TestAdapterVersion>
     <VSWhereVersion Condition="'$(VSWhereVersion)' == ''">2.6.7</VSWhereVersion>
     <SNVersion Condition="'$(SNVersion)' == ''">1.0.0</SNVersion>
     <MicrosoftDotNetBuildTasksVisualStudioVersion Condition="'$(MicrosoftDotNetBuildTasksVisualStudioVersion)' == ''">$(ArcadeSdkVersion)</MicrosoftDotNetBuildTasksVisualStudioVersion>

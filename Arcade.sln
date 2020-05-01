@@ -93,11 +93,15 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Build.Task
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Helix.JobSender.Tests", "src\Microsoft.DotNet.Helix\JobSender.Tests\Microsoft.DotNet.Helix.JobSender.Tests.csproj", "{3376C769-211F-4537-A156-5F841FF7840B}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.CMake.Sdk", "src\Microsoft.DotNet.CMake.Sdk\Microsoft.DotNet.CMake.Sdk.csproj", "{B1BFCB54-0FE7-4745-A471-2D7F21B5C7B9}"
+EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Build.Tasks.TargetFramework.Sdk", "src\Microsoft.DotNet.Build.Tasks.TargetFramework.Sdk\src\Microsoft.DotNet.Build.Tasks.TargetFramework.Sdk.csproj", "{E83B25A9-66C3-4E15-9BC3-E843CC471622}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Helix.Sdk.Tests", "src\Microsoft.DotNet.Helix\Sdk.Tests\Microsoft.DotNet.Helix.Sdk.Tests\Microsoft.DotNet.Helix.Sdk.Tests.csproj", "{03390E61-9DC1-4893-93A4-193D76C16034}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.AzureDevOps.Build", "src\Microsoft.DotNet.AzureDevOps.Build\Microsoft.DotNet.AzureDevOps.Build.csproj", "{107F83D6-3214-4713-898D-373FCF051366}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.AsmDiff", "src\Microsoft.DotNet.AsmDiff\Microsoft.DotNet.AsmDiff.csproj", "{FDCE3109-3EA0-4166-B6C0-BE7BB4196864}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -585,6 +589,18 @@ Global
 		{3376C769-211F-4537-A156-5F841FF7840B}.Release|x64.Build.0 = Release|Any CPU
 		{3376C769-211F-4537-A156-5F841FF7840B}.Release|x86.ActiveCfg = Release|Any CPU
 		{3376C769-211F-4537-A156-5F841FF7840B}.Release|x86.Build.0 = Release|Any CPU
+		{B1BFCB54-0FE7-4745-A471-2D7F21B5C7B9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B1BFCB54-0FE7-4745-A471-2D7F21B5C7B9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B1BFCB54-0FE7-4745-A471-2D7F21B5C7B9}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{B1BFCB54-0FE7-4745-A471-2D7F21B5C7B9}.Debug|x64.Build.0 = Debug|Any CPU
+		{B1BFCB54-0FE7-4745-A471-2D7F21B5C7B9}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{B1BFCB54-0FE7-4745-A471-2D7F21B5C7B9}.Debug|x86.Build.0 = Debug|Any CPU
+		{B1BFCB54-0FE7-4745-A471-2D7F21B5C7B9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B1BFCB54-0FE7-4745-A471-2D7F21B5C7B9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B1BFCB54-0FE7-4745-A471-2D7F21B5C7B9}.Release|x64.ActiveCfg = Release|Any CPU
+		{B1BFCB54-0FE7-4745-A471-2D7F21B5C7B9}.Release|x64.Build.0 = Release|Any CPU
+		{B1BFCB54-0FE7-4745-A471-2D7F21B5C7B9}.Release|x86.ActiveCfg = Release|Any CPU
+		{B1BFCB54-0FE7-4745-A471-2D7F21B5C7B9}.Release|x86.Build.0 = Release|Any CPU
 		{E83B25A9-66C3-4E15-9BC3-E843CC471622}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{E83B25A9-66C3-4E15-9BC3-E843CC471622}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E83B25A9-66C3-4E15-9BC3-E843CC471622}.Debug|x64.ActiveCfg = Debug|Any CPU
@@ -621,6 +637,18 @@ Global
 		{107F83D6-3214-4713-898D-373FCF051366}.Release|x64.Build.0 = Release|Any CPU
 		{107F83D6-3214-4713-898D-373FCF051366}.Release|x86.ActiveCfg = Release|Any CPU
 		{107F83D6-3214-4713-898D-373FCF051366}.Release|x86.Build.0 = Release|Any CPU
+		{FDCE3109-3EA0-4166-B6C0-BE7BB4196864}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FDCE3109-3EA0-4166-B6C0-BE7BB4196864}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FDCE3109-3EA0-4166-B6C0-BE7BB4196864}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{FDCE3109-3EA0-4166-B6C0-BE7BB4196864}.Debug|x64.Build.0 = Debug|Any CPU
+		{FDCE3109-3EA0-4166-B6C0-BE7BB4196864}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{FDCE3109-3EA0-4166-B6C0-BE7BB4196864}.Debug|x86.Build.0 = Debug|Any CPU
+		{FDCE3109-3EA0-4166-B6C0-BE7BB4196864}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FDCE3109-3EA0-4166-B6C0-BE7BB4196864}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FDCE3109-3EA0-4166-B6C0-BE7BB4196864}.Release|x64.ActiveCfg = Release|Any CPU
+		{FDCE3109-3EA0-4166-B6C0-BE7BB4196864}.Release|x64.Build.0 = Release|Any CPU
+		{FDCE3109-3EA0-4166-B6C0-BE7BB4196864}.Release|x86.ActiveCfg = Release|Any CPU
+		{FDCE3109-3EA0-4166-B6C0-BE7BB4196864}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
