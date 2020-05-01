@@ -13,6 +13,7 @@ param(
 )
 
 try {
+  . $PSScriptRoot\post-build-utils.ps1
   . $PSScriptRoot\..\darc-init.ps1
 
   $optionalParams = [System.Collections.ArrayList]::new()
