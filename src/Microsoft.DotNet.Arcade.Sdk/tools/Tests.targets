@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
-<Project>
+<Project InitialTargets="ErrorForMissingTestRunner">
 
   <PropertyGroup Condition="'$(IsTestProject)' == 'true'">
     <AutoGenerateBindingRedirects Condition="'$(TargetFrameworkIdentifier)' == '.NETFramework'">true</AutoGenerateBindingRedirects>
@@ -12,7 +12,17 @@
     <TestRuntime Condition="'$(TestRuntime)' == '' and '$(TargetFrameworkIdentifier)' == '.NETCoreApp'">Core</TestRuntime>
     <TestRuntime Condition="'$(TestRuntime)' == '' and '$(MSBuildRuntimeType)' == 'Mono'">Mono</TestRuntime>
     <TestRuntime Condition="'$(TestRuntime)' == '' and '$(OS)' == 'Windows_NT'">Full</TestRuntime>
+
+    <TestRunnerName Condition="'$(TestRunnerName)' == ''">XUnit</TestRunnerName>
+    <TestRunnerName Condition="'$(UsingToolXUnit)' == 'false'"></TestRunnerName>
+
+    <TestRunnerTargets>$(MSBuildThisFileDirectory)$(TestRunnerName)\$(TestRunnerName).targets</TestRunnerTargets>
   </PropertyGroup>
+
+  <Target Name="ErrorForMissingTestRunner"
+          Condition="'$(IsTestProject)' == 'true' AND '$(TestRunnerName)' != ''">
+    <Error Condition="!Exists($(TestRunnerTargets))" Text="Test runner $(TestRunnerName) is invalid."/>
+  </Target>
 
   <PropertyGroup Condition="'$(IsTestProject)' == 'true' and '$(TestArchitectures)' == ''">
     <TestArchitectures>$(PlatformTarget)</TestArchitectures>
@@ -28,8 +38,7 @@
 
   <!-- Using Inputs/Outputs just to loop over test architectures -->
   <Target Name="_InnerGetTestsToRun"
-          Inputs="*%(_TestArchitectureItems.Identity)"
-          Outputs="*%(_TestArchitectureItems.Identity)"
+          Outputs="%(_TestArchitectureItems.Identity)"
           Returns="@(TestToRun)"
           Condition="'$(TestRuntime)' != '' and '$(SkipTests)' != 'true' and
                      ('$(TestTargetFrameworks)' == '' or $([System.String]::new(';$(TestTargetFrameworks);').Contains(';$(TargetFramework);')))">
@@ -43,6 +52,7 @@
       <TestToRun Include="$(TargetPath)">
         <TargetFramework>$(TargetFramework)</TargetFramework>
         <TargetFrameworkIdentifier>$(TargetFrameworkIdentifier)</TargetFrameworkIdentifier>
+        <TargetFrameworkVersion>$(TargetFrameworkVersion)</TargetFrameworkVersion>
         <TestRuntime>$(TestRuntime)</TestRuntime>
         <TestTimeout>$(TestTimeout)</TestTimeout>
         <Architecture>$(_TestArchitecture)</Architecture>
