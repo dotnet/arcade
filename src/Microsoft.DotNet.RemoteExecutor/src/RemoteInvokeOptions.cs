@@ -50,15 +50,10 @@ namespace Microsoft.DotNet.RemoteExecutor
             }
         }
 
-        public bool ShouldSkipInvocation
-        {
-            get
-            {
-                return RuntimeInformation.IsOSPlatform(OSPlatform.Create("IOS")) ||
-                       RuntimeInformation.IsOSPlatform(OSPlatform.Create("ANDROID")) ||
-                       RuntimeInformation.IsOSPlatform(OSPlatform.Create("TVOS")) ||
-                       RuntimeInformation.IsOSPlatform(OSPlatform.Create("WATCHOS"));
-            }
-        }
+        public bool ShouldSkipInvocation { get; } =
+            RuntimeInformation.IsOSPlatform(OSPlatform.Create("IOS")) ||
+            RuntimeInformation.IsOSPlatform(OSPlatform.Create("ANDROID")) ||
+            RuntimeInformation.IsOSPlatform(OSPlatform.Create("TVOS")) ||
+            RuntimeInformation.IsOSPlatform(OSPlatform.Create("WATCHOS"));
     }
 }
