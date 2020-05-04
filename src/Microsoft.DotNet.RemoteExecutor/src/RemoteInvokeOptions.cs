@@ -49,5 +49,10 @@ namespace Microsoft.DotNet.RemoteExecutor
                 _runAsSudo = value;
             }
         }
+
+        public bool ShouldSkipInvocation
+        {
+            get => RuntimeInformation.IsOSPlatform(OSPlatform.Create("IOS"));
+        }
     }
 }

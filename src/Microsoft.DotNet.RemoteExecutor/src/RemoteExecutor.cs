@@ -339,6 +339,12 @@ namespace Microsoft.DotNet.RemoteExecutor
         {
             options = options ?? new RemoteInvokeOptions();
 
+            // For platforms that do not support RemoteExecutor
+            if (options.ShouldSkipInvocation)
+            {
+                throw new RemoteExecutorNotSupportedException();
+            }
+
             // Verify the specified method returns an int (the exit code) or nothing,
             // and that if it accepts any arguments, they're all strings.
             Assert.True(method.ReturnType == typeof(void)

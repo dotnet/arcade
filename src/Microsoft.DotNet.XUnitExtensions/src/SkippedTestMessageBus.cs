@@ -36,7 +36,7 @@ namespace Microsoft.DotNet.XUnitExtensions
             if (testFailed != null)
             {
                 var exceptionType = testFailed.ExceptionTypes.FirstOrDefault();
-                if (exceptionType == typeof(SkipTestException).FullName)
+                if (exceptionType == typeof(SkipTestException).FullName || exceptionType == "Microsoft.DotNet.RemoteExecutor.RemoteExecutorNotSupportedException")
                 {
                     SkippedTestCount++;
                     return innerBus.QueueMessage(new TestSkipped(testFailed.Test, testFailed.Messages.FirstOrDefault()));
