@@ -26,7 +26,6 @@
     <MicrosoftCodeAnalysisAnalyzersVersion>2.6.3</MicrosoftCodeAnalysisAnalyzersVersion>
     <MicrosoftCodeAnalysisCSharpVersion>2.9.0</MicrosoftCodeAnalysisCSharpVersion>
     <MsbuildTaskMicrosoftCodeAnalysisCSharpVersion>3.4.0</MsbuildTaskMicrosoftCodeAnalysisCSharpVersion>
-    <MicrosoftDotNetPlatformAbstractionsVersion>2.1.0</MicrosoftDotNetPlatformAbstractionsVersion>
     <MicrosoftIdentityModelClientsActiveDirectoryVersion>3.19.8</MicrosoftIdentityModelClientsActiveDirectoryVersion>
     <MicrosoftRestClientRuntimeVersion>2.3.13</MicrosoftRestClientRuntimeVersion>
     <MicrosoftExtensionsDependencyModelVersion>2.1.0</MicrosoftExtensionsDependencyModelVersion>
