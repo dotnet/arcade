@@ -21,7 +21,7 @@ Status Last Updated: May 4, 2020, 4:00 PM PDT
 
 ### Status of Latest Version of Arcade Being Validated
 
-- Working on mitigating on-going errors with .NET Core version upgrade to 5.0. 
+- Working on mitigating on-going errors with .NET Core version upgrade to 5.0. See https://github.com/dotnet/arcade/issues/5412
 
 [Result](https://dnceng.visualstudio.com/internal/_build/results?buildId=630001&view=results) of latest Arcade Validation run on May 4, 2020, 7:30 AM PDT
 
