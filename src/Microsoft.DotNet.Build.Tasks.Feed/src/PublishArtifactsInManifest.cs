@@ -452,7 +452,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// <param name="feedConfig">Configuration of where the asset was published.</param>
         /// <param name="assetLocationType">Type of feed location that is being added.</param>
         /// <returns>True if that asset didn't have the informed location recorded already.</returns>
-        private Task<bool> TryAddAssetLocationAsync(string assetId, string assetVersion, Dictionary<string, List<Asset>> buildAssets, FeedConfig feedConfig, AddAssetLocationToAssetAssetLocationType assetLocationType)
+        private bool TryAddAssetLocation(string assetId, string assetVersion, Dictionary<string, List<Asset>> buildAssets, FeedConfig feedConfig, AddAssetLocationToAssetAssetLocationType assetLocationType)
         {
             Asset assetRecord = string.IsNullOrEmpty(assetVersion) ? 
                 LookupAsset(assetId, buildAssets) : 
@@ -462,10 +462,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             {
                 string versionMsg = string.IsNullOrEmpty(assetVersion) ? string.Empty : $"and version {assetVersion}";
                 Log.LogError($"Asset with Id {assetId} {versionMsg} isn't registered on the BAR Build with ID {BARBuildId}");
-                return Task.FromResult(false);
+                return false;
             }
 
-            return Task.FromResult( NewAssetLocations.Add( (assetRecord.Id, feedConfig.TargetURL, assetLocationType) ) );
+            return NewAssetLocations.Add( (assetRecord.Id, feedConfig.TargetURL, assetLocationType) );
         }
 
         /// <summary>
@@ -768,10 +768,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         return;
                     }
 
-                    await Task.WhenAll(new Task[] {
-                        TryAddAssetLocationAsync(package.Id, package.Version, buildAssets, feedConfig, AddAssetLocationToAssetAssetLocationType.NugetFeed),
-                        PushNugetPackageAsync(feed, httpClient, localPackagePath, package.Id, package.Version, feedAccount, feedVisibility, feedName)
-                    });
+                    TryAddAssetLocation(package.Id, package.Version, buildAssets, feedConfig, AddAssetLocationToAssetAssetLocationType.NugetFeed);
+
+                    await PushNugetPackageAsync(feed, httpClient, localPackagePath, package.Id, package.Version, feedAccount, feedVisibility, feedName);
                 });
         }
 
@@ -1129,7 +1128,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             await PushNugetPackagesAsync<BlobArtifactModel>(packagesToPublish, feedConfig, maxClients: MaxClients,
                 async (feed, httpClient, blob, feedAccount, feedVisibility, feedName) =>
                 {
-                    if (await TryAddAssetLocationAsync(blob.Id, assetVersion: null, buildAssets, feedConfig, AddAssetLocationToAssetAssetLocationType.Container))
+                    if (TryAddAssetLocation(blob.Id, assetVersion: null, buildAssets, feedConfig, AddAssetLocationToAssetAssetLocationType.Container))
                     {
                         // Determine the local path to the blob
                         string fileName = Path.GetFileName(blob.Id);
@@ -1184,12 +1183,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 PassIfExistingItemIdentical = true
             };
 
-            Task[] tasks = packagesToPublish.Select(package => TryAddAssetLocationAsync(package.Id, package.Version, buildAssets, feedConfig, AddAssetLocationToAssetAssetLocationType.NugetFeed))
-                .ToArray();
+            packagesToPublish.Select(package => TryAddAssetLocation(package.Id, package.Version, buildAssets, feedConfig, AddAssetLocationToAssetAssetLocationType.NugetFeed));
 
-            tasks.Append(blobFeedAction.PushToFeedAsync(packages, pushOptions));
-
-            await Task.WhenAll(tasks);
+            await blobFeedAction.PushToFeedAsync(packages, pushOptions);
         }
 
         private async Task PublishBlobsToAzureStorageNugetFeedAsync(
@@ -1227,11 +1223,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 PassIfExistingItemIdentical = true
             };
 
-            Task[] tasks = blobsToPublish.Select(blob => TryAddAssetLocationAsync(blob.Id, assetVersion: null, buildAssets, feedConfig, AddAssetLocationToAssetAssetLocationType.Container)).ToArray();
+            blobsToPublish.Select(blob => TryAddAssetLocation(blob.Id, assetVersion: null, buildAssets, feedConfig, AddAssetLocationToAssetAssetLocationType.Container));
 
-            tasks.Append(blobFeedAction.PublishToFlatContainerAsync(blobs, maxClients: MaxClients, pushOptions));
-
-            await Task.WhenAll(tasks);
+            await blobFeedAction.PublishToFlatContainerAsync(blobs, maxClients: MaxClients, pushOptions);
 
             // The latest links should be updated only after the publishing is complete, to avoid
             // dead links in the interim.
