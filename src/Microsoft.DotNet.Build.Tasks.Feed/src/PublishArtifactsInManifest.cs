@@ -13,6 +13,7 @@ using Microsoft.DotNet.VersionTools.Util;
 using NuGet.Packaging.Core;
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -172,6 +173,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         private AkaMSLinkManager _linkManager = null;
 
+        private HashSet<(int AssetId, string AssetLocation, AddAssetLocationToAssetAssetLocationType LocationType)> NewAssetLocations = 
+            new HashSet<(int AssetId, string AssetLocation, AddAssetLocationToAssetAssetLocationType LocationType)>();
+
         public override bool Execute()
         {
             return ExecuteAsync().GetAwaiter().GetResult();
@@ -237,6 +241,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         HandleBlobPublishingAsync(client, buildAssets)
                     }
                 );
+
+                await PersistPendingAssetLocationAsync(client);
             }
             catch (Exception e)
             {
@@ -438,29 +444,41 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         }
 
         /// <summary>
-        /// Adds `feedConfig.TargetURL` to the list of locations of the asset pointed by `assetRecord`.
+        ///   Records the association of Asset -> AssetLocation to be persisted later in BAR.
         /// </summary>
-        /// <param name="client">Maestro++ API client</param>
-        /// <param name="assetRecord">Asset that will have location list updated</param>
-        /// <param name="feedConfig">Configuration of where the asset was published</param>
-        /// <param name="assetLocationType">Type of feed location that is being added</param>
-        /// <returns>Whether the location was added to the list or not.</returns>
-        private async Task<bool> TryAddAssetLocationAsync(IMaestroApi client, Asset assetRecord, FeedConfig feedConfig, AddAssetLocationToAssetAssetLocationType assetLocationType)
+        /// <param name="assetId">Id of the asset (i.e., name of the package) whose the location should be updated.</param>
+        /// <param name="assetVersion">Version of the asset whose the location should be updated.</param>
+        /// <param name="buildAssets">List of BAR Assets for the build that's being modified.</param>
+        /// <param name="feedConfig">Configuration of where the asset was published.</param>
+        /// <param name="assetLocationType">Type of feed location that is being added.</param>
+        /// <returns>True if that asset didn't have the informed location recorded already.</returns>
+        private Task<bool> TryAddAssetLocationAsync(string assetId, string assetVersion, Dictionary<string, List<Asset>> buildAssets, FeedConfig feedConfig, AddAssetLocationToAssetAssetLocationType assetLocationType)
         {
-            try
+            Asset assetRecord = string.IsNullOrEmpty(assetVersion) ? 
+                LookupAsset(assetId, buildAssets) : 
+                LookupAsset(assetId, assetVersion, buildAssets);
+
+            if (assetRecord == null)
             {
-                await client.Assets.AddAssetLocationToAssetAsync(assetRecord.Id, assetLocationType, feedConfig.TargetURL);
-            }
-            catch (RestApiException e) when (e.Response.StatusCode == System.Net.HttpStatusCode.NotModified)
-            {
-                // This is likely due to some concurrent operation trying to add same location to same asset.
-                // This is not frequent, but it's possible, for instance, when a build publishes to multiple 
-                // channels that target same feeds.
-                Log.LogMessage($"Asset with Id {assetRecord.Id}, Version {assetRecord.Version} already has location {feedConfig.TargetURL}");
-                return false;
+                string versionMsg = string.IsNullOrEmpty(assetVersion) ? string.Empty : $"and version {assetVersion}";
+                Log.LogError($"Asset with Id {assetId} {versionMsg} isn't registered on the BAR Build with ID {BARBuildId}");
+                return Task.FromResult(false);
             }
 
-            return true;
+            return Task.FromResult( NewAssetLocations.Add( (assetRecord.Id, feedConfig.TargetURL, assetLocationType) ) );
+        }
+
+        /// <summary>
+        ///   Persist in BAR all pending associations of Asset -> AssetLocation stored in `NewAssetLocations`.
+        /// </summary>
+        /// <param name="client">Maestro++ API client</param>
+        private Task PersistPendingAssetLocationAsync(IMaestroApi client)
+        {
+            var updates = NewAssetLocations.Select(nal => new AssetAndLocation(nal.AssetId, (LocationType)nal.LocationType) { 
+                    Location = nal.AssetLocation 
+                }).ToImmutableList();
+
+            return client.Assets.BulkAddLocationsAsync(updates);
         }
 
         /// <summary>
@@ -750,15 +768,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         return;
                     }
 
-                    Asset assetRecord = LookupAsset(package.Id, package.Version, buildAssets);
-                    if (assetRecord == null)
-                    {
-                        Log.LogError($"Asset with Id {package.Id}, Version {package.Version} isn't registered on the BAR Build with ID {BARBuildId}");
-                    }
-
                     await Task.WhenAll(new Task[] {
-                        TryAddAssetLocationAsync(client, assetRecord, feedConfig, AddAssetLocationToAssetAssetLocationType.NugetFeed),
-                        PushNugetPackageAsync(feed, httpClient, localPackagePath, package.Id, package.Version, feedAccount, feedVisibility, feedName),
+                        TryAddAssetLocationAsync(package.Id, package.Version, buildAssets, feedConfig, AddAssetLocationToAssetAssetLocationType.NugetFeed),
+                        PushNugetPackageAsync(feed, httpClient, localPackagePath, package.Id, package.Version, feedAccount, feedVisibility, feedName)
                     });
                 });
         }
@@ -1117,15 +1129,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             await PushNugetPackagesAsync<BlobArtifactModel>(packagesToPublish, feedConfig, maxClients: MaxClients,
                 async (feed, httpClient, blob, feedAccount, feedVisibility, feedName) =>
                 {
-                    // Lookup just by name
-                    Asset assetRecord = LookupAsset(blob.Id, buildAssets);
-                    if (assetRecord == null)
-                    {
-                        Log.LogError($"Asset with Id {blob.Id} isn't registered on the BAR Build with ID {BARBuildId}");
-                    }
-                    // Only attempt to push if the package doesn't have
-                    // that location already.
-                    else if (await TryAddAssetLocationAsync(client, assetRecord, feedConfig, AddAssetLocationToAssetAssetLocationType.Container))
+                    if (await TryAddAssetLocationAsync(blob.Id, assetVersion: null, buildAssets, feedConfig, AddAssetLocationToAssetAssetLocationType.Container))
                     {
                         // Determine the local path to the blob
                         string fileName = Path.GetFileName(blob.Id);
@@ -1180,22 +1184,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 PassIfExistingItemIdentical = true
             };
 
-            await Task.WhenAll(new Task[]
-            {
-                Task.WhenAll(packagesToPublish.Select(async package =>
-                {
-                    Asset assetRecord = LookupAsset(package.Id, package.Version, buildAssets);
-                    if (assetRecord == null)
-                    {
-                        Log.LogError($"Asset with Id {package.Id}, Version {package.Version} isn't registered on the BAR Build with ID {BARBuildId}");
-                    }
-                    else
-                    {
-                        await TryAddAssetLocationAsync(client, assetRecord, feedConfig, AddAssetLocationToAssetAssetLocationType.NugetFeed);
-                    }
-                })),
-                blobFeedAction.PushToFeedAsync(packages, pushOptions)
-            });
+            Task[] tasks = packagesToPublish.Select(package => TryAddAssetLocationAsync(package.Id, package.Version, buildAssets, feedConfig, AddAssetLocationToAssetAssetLocationType.NugetFeed))
+                .ToArray();
+
+            tasks.Append(blobFeedAction.PushToFeedAsync(packages, pushOptions));
+
+            await Task.WhenAll(tasks);
         }
 
         private async Task PublishBlobsToAzureStorageNugetFeedAsync(
@@ -1233,24 +1227,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 PassIfExistingItemIdentical = true
             };
 
-            await Task.WhenAll(new Task[]
-                {
-                    Task.WhenAll(blobsToPublish.Select(async blob =>
-                    {
-                        Asset assetRecord = LookupAsset(blob.Id, buildAssets);
+            Task[] tasks = blobsToPublish.Select(blob => TryAddAssetLocationAsync(blob.Id, assetVersion: null, buildAssets, feedConfig, AddAssetLocationToAssetAssetLocationType.Container)).ToArray();
 
-                        if (assetRecord == null)
-                        {
-                            Log.LogError($"Asset with Id {blob.Id} isn't registered on the BAR Build with ID {BARBuildId}");
-                        }
-                        else
-                        {
-                            await TryAddAssetLocationAsync(client, assetRecord, feedConfig, AddAssetLocationToAssetAssetLocationType.Container);
-                        }
-                    })),
-                    blobFeedAction.PublishToFlatContainerAsync(blobs, maxClients: MaxClients, pushOptions)
-                }
-            );
+            tasks.Append(blobFeedAction.PublishToFlatContainerAsync(blobs, maxClients: MaxClients, pushOptions));
+
+            await Task.WhenAll(tasks);
 
             // The latest links should be updated only after the publishing is complete, to avoid
             // dead links in the interim.
