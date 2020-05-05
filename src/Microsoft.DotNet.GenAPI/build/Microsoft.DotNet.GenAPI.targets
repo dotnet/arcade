@@ -30,6 +30,7 @@
   </ItemGroup>
 
   <Target Name="GenerateReferenceAssemblySource"
+          DependsOnTargets="ResolveAssemblyReferences"
           Inputs="$(TargetPath)"
           Outputs="$(GenAPITargetPath)">
 
