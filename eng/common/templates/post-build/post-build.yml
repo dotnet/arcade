@@ -198,15 +198,6 @@ stages:
             -SourcelinkCliVersion $(SourceLinkCLIVersion)
         continueOnError: true
 
-  - template: /eng/common/templates/job/execute-sdl.yml
-    parameters:
-      enable: ${{ parameters.SDLValidationParameters.enable }}
-      dependsOn: setupMaestroVars
-      additionalParameters: ${{ parameters.SDLValidationParameters.params }}
-      continueOnError: ${{ parameters.SDLValidationParameters.continueOnError }}
-      artifactNames: ${{ parameters.SDLValidationParameters.artifactNames }}
-      downloadArtifacts: ${{ parameters.SDLValidationParameters.downloadArtifacts }}
-
 - template: \eng\common\templates\post-build\channels\generic-public-channel.yml
   parameters:
     artifactsPublishingAdditionalParameters: ${{ parameters.artifactsPublishingAdditionalParameters }}
