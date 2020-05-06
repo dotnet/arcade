@@ -181,6 +181,7 @@ stages:
       - ValidateSdk
       # This is to enable SDL runs part of Post-Build Validation Stage
       SDLValidationParameters:
+        # Disabling SDL as TSA is down. Re-enable via https://github.com/dotnet/core-eng/issues/9762
         enable: false
         continueOnError: false
         params: ' -SourceToolsList @("policheck","credscan")
