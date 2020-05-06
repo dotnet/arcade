@@ -29,8 +29,14 @@
     </AssemblyMetadata>
   </ItemGroup>
 
+  <Target Name="SetBuildProjectReferences">
+    <PropertyGroup>
+      <BuildProjectReferences>false</BuildProjectReferences>
+    </PropertyGroup>
+  </Target>
+
   <Target Name="GenerateReferenceAssemblySource"
-          DependsOnTargets="ResolveAssemblyReferences"
+          DependsOnTargets="SetBuildProjectReferences;ResolveAssemblyReferences"
           Inputs="$(TargetPath)"
           Outputs="$(GenAPITargetPath)">
 
