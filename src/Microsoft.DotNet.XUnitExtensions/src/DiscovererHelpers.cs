@@ -20,6 +20,7 @@ namespace Microsoft.DotNet.XUnitExtensions
         public static bool IsRunningOnNetFramework { get; } = RuntimeInformation.FrameworkDescription.StartsWith(".NET Framework", StringComparison.OrdinalIgnoreCase);
 
         public static bool TestPlatformApplies(TestPlatforms platforms) =>
+                (platforms.HasFlag(TestPlatforms.Any) ||
                 (platforms.HasFlag(TestPlatforms.FreeBSD) && RuntimeInformation.IsOSPlatform(OSPlatform.Create("FREEBSD"))) ||
                 (platforms.HasFlag(TestPlatforms.Linux) && RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) ||
                 (platforms.HasFlag(TestPlatforms.NetBSD) && RuntimeInformation.IsOSPlatform(OSPlatform.Create("NETBSD"))) ||
