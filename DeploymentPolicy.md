@@ -45,7 +45,7 @@ See the sections [GitHub Issue Tagging](#GitHub-Issue-Tagging), [Rollbacks](#Rol
 ## GitHub Issue Tagging
 Every issue that arises as a result of a rollout must be filed on GitHub in dotnet/core-eng. These issues should include labels that specify the type of event and the repo in which it occurred.
 
-* The event type labels are: **Rollout Issue** for issues that arise as a result of the rollout, **Rollout Hotfix** for manual hotfixes, **Rollout Rollback** for manual rollbacks, and **Rollout Downtime** for downtime that occurs as a result of the deployment
+* The event type labels are: **Rollout Issue** for issues that arise as a result of the rollout, **Rollout Manual Hotfix** for manual hotfixes, **Rollout Manual Rollback** for manual rollbacks, and **Rollout Downtime** for downtime that occurs as a result of the deployment
   * Hotfixes and rollbacks that result in a deployment do not need to be filed on GitHub (i.e. only manual hotfixes and rollbacks should be filed)
   * Downtime issues may be automatically filed by telemetry
 * Additionally, all issues must contain a label indicating the repo affected:
@@ -61,7 +61,7 @@ Every issue that arises as a result of a rollout must be filed on GitHub in dotn
 * Workflow for Rollback:
     - When a service in production is discovered to be in a "downed" state (e.g. not taking work, constantly throwing errors, etc.) following a rollout, then rollback IMMEDIATELY to a previously known working deployment. Continue investigation in staging by reproing the failure.
     - Rollback PRs need to have a commit message which contains `[ROLLBACK]`, e.g. "[ROLLBACK] blah blah"
-    - Create a GitHub issue for tracking. If and only if this is a manual rollback, label it with the **Rollout Rollback** label and the appropriate rollout repo label
+    - Create a GitHub issue for tracking. If and only if this is a manual rollback, label it with the **Rollout Manual Rollback** label and the appropriate rollout repo label
     - Communicate the state of affairs to dncpartners@microsoft.com when the issue is identified along with the tracking GitHub issue, and when it's mitigated.
 
 ## Hotfixes
@@ -72,7 +72,7 @@ Every issue that arises as a result of a rollout must be filed on GitHub in dotn
 * Workflow for Hotfix:
     - When a service in production is discovered to be in a erroneous state following a rollout.
     - Hotfix PRs need to have a commit message which starts with `[HOTFIX]`, e.g. "[HOTFIX] blah blah"
-    - Create a GitHub issue for tracking. If and only if this is a manual hotfix, label it with the **Rollout Hotfix** label and the appropriate rollout repo label
+    - Create a GitHub issue for tracking. If and only if this is a manual hotfix, label it with the **Rollout Manual Hotfix** label and the appropriate rollout repo label
     - If the root cause of failure is determined, make the hotfix and deploy to prod.
     - Communicate the state of affairs to dncpartners@microsoft.com when the issue is identified along with the tracking GitHub issue, and when it's mitigated.
     - The hotfix needs to be communicated to the team and approved by management.
