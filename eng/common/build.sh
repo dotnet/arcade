@@ -162,7 +162,7 @@ done
 if [[ "$ci" == true ]]; then
   pipelines_log=true
   node_reuse=false
-  if [[ "$binary_log" == false ]]; then
+  if [[ "$no_binary_log" == false ]]; then
     binary_log=true
   fi
 fi

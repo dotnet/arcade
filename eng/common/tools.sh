@@ -21,13 +21,13 @@ configuration=${configuration:-'Debug'}
 # Set to true to output binary log from msbuild. Note that emitting binary log slows down the build.
 binary_log=${binary_log:-$ci}
 
-# Set to true to opt out of outputing binary log while running in CI
+# Set to true to opt out of outputting binary log while running in CI
 no_binary_log=${no_binary_log:-false}
 
 # Correct the value of $binaryLog if the user wants to opt out while running in CI
 if [[ "$ci" == true && "$no_binary_log" == true ]]; then
   binary_log=false
-}
+fi
 
 # Turns on machine preparation/clean up code that changes the machine state (e.g. kills build processes).
 prepare_machine=${prepare_machine:-false}
