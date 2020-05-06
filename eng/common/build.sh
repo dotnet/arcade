@@ -32,7 +32,7 @@ usage()
   echo "Advanced settings:"
   echo "  --projects <value>       Project or solution file(s) to build"
   echo "  --ci                     Set when running on CI server"
-  echo "  --noBinaryLog            Don't output binary log (useful when running on CI server) (short: -nobl)"
+  echo "  --noBinaryLog            Don't output binary log"
   echo "  --prepareMachine         Prepare machine for CI run, clean up processes after build"
   echo "  --nodeReuse <value>      Sets nodereuse msbuild parameter ('true' or 'false')"
   echo "  --warnAsError <value>    Sets warnaserror msbuild parameter ('true' or 'false')"
@@ -162,7 +162,7 @@ done
 if [[ "$ci" == true ]]; then
   pipelines_log=true
   node_reuse=false
-  if [[ "$binary_log=false" ]]; then
+  if [[ "$binary_log" == false ]]; then
     binary_log=true
   fi
 fi

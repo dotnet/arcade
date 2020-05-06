@@ -59,7 +59,7 @@ function Print-Usage() {
   Write-Host "Advanced settings:"
   Write-Host "  -projects <value>       Semi-colon delimited list of sln/proj's to build. Globbing is supported (*.sln)"
   Write-Host "  -ci                     Set when running on CI server"
-  Write-Host "  -noBinaryLog            Don't output binary log (useful when running on CI server) (short: -nobl)"
+  Write-Host "  -noBinaryLog            Don't output binary log (short: -nobl)"
   Write-Host "  -prepareMachine         Prepare machine for CI run, clean up processes after build"
   Write-Host "  -warnAsError <value>    Sets warnaserror msbuild parameter ('true' or 'false')"
   Write-Host "  -msbuildEngine <value>  Msbuild engine to use to run build ('dotnet', 'vs', or unspecified)."
