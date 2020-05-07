@@ -18,14 +18,14 @@ fi
 # Build configuration. Common values include 'Debug' and 'Release', but the repository may use other names.
 configuration=${configuration:-'Debug'}
 
-# Set to true to output binary log from msbuild. Note that emitting binary log slows down the build.
-binary_log=${binary_log:-$ci}
-
 # Set to true to opt out of outputting binary log while running in CI
-no_binary_log=${no_binary_log:-false}
+no_ci_binary_log=${no_ci_binary_log:-false}
+
+# Set to true to output binary log from msbuild. Note that emitting binary log slows down the build.
+binary_log=${binary_log:-$ci && -n $no_ci_binary_log}
 
 # Correct the value of $binaryLog if the user wants to opt out while running in CI
-if [[ "$ci" == true && "$no_binary_log" == true ]]; then
+if [[ "$ci" == true && "$no_ci_binary_log" == true ]]; then
   binary_log=false
 fi
 
@@ -411,7 +411,7 @@ function MSBuild {
 
 function MSBuild-Core {
   if [[ "$ci" == true ]]; then
-    if [[ "$binary_log" != true && "$no_binary_log" != true ]]; then
+    if [[ "$binary_log" != true && "$no_ci_binary_log" != true ]]; then
       Write-PipelineTelemetryError -category 'Build'  "Binary log must be enabled in CI build, or explicitly opted-out from with the -noBinaryLog switch."
       ExitWithExitCode 1
     fi
