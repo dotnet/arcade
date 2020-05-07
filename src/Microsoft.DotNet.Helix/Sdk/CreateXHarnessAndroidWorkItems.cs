@@ -113,8 +113,8 @@ namespace Microsoft.DotNet.Helix.Sdk
             string outputPathArg = string.IsNullOrEmpty(deviceOutputPath) ? string.Empty : $"--dev-out={deviceOutputPath}";
             string instrumentationArg = string.IsNullOrEmpty(androidInstrumentationName) ? string.Empty : $"-i={androidInstrumentationName}";
 
-            string outputUploadDirectory = IsPosixShell ? "$HELIX_WORKITEM_UPLOAD_ROOT" : "%HELIX_WORKITEM_UPLOAD_ROOT%";
-            string xharnessRunCommand = $"xharness android test --app {Path.GetFileName(appPackage.ItemSpec)} --output-directory={outputUploadDirectory} " +
+            string outputDirectory = IsPosixShell ? "$HELIX_WORKITEM_ROOT" : "%HELIX_WORKITEM_ROOT%";
+            string xharnessRunCommand = $"xharness android test --app {Path.GetFileName(appPackage.ItemSpec)} --output-directory={outputDirectory} " +
                                           $"--timeout={xHarnessTimeout.TotalSeconds} -p={androidPackageName} {outputPathArg} {instrumentationArg} {arguments} -v=1";
 
             Log.LogMessage(MessageImportance.Low, $"Generated XHarness command: {xharnessRunCommand}");
