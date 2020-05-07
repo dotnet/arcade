@@ -19,10 +19,10 @@ fi
 configuration=${configuration:-'Debug'}
 
 # Set to true to opt out of outputting binary log while running in CI
-no_ci_binary_log=${no_ci_binary_log:-false}
+exclude_ci_binary_log=${exclude_ci_binary_log:-false}
 
 # Set to true to output binary log from msbuild. Note that emitting binary log slows down the build.
-binary_log=${binary_log:-$ci && -n $no_ci_binary_log}
+binary_log=${binary_log:-$ci && -n $exclude_ci_binary_log}
 
 # Turns on machine preparation/clean up code that changes the machine state (e.g. kills build processes).
 prepare_machine=${prepare_machine:-false}
@@ -406,7 +406,7 @@ function MSBuild {
 
 function MSBuild-Core {
   if [[ "$ci" == true ]]; then
-    if [[ "$binary_log" != true && "$no_ci_binary_log" != true ]]; then
+    if [[ "$binary_log" != true && "$exclude_ci_binary_log" != true ]]; then
       Write-PipelineTelemetryError -category 'Build'  "Binary log must be enabled in CI build, or explicitly opted-out from with the -noBinaryLog switch."
       ExitWithExitCode 1
     fi
