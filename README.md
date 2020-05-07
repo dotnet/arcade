@@ -9,7 +9,7 @@ Arcade is intended to provide well-understood and consistent mechanisms for cons
 Azure DevOps [![Build Status](https://dev.azure.com/dnceng/public/_apis/build/status/dotnet/arcade/arcade-ci)](https://dev.azure.com/dnceng/public/_build/latest?definitionId=208)
 
 ## Validation & Dependency Flow Status
-Status Last Updated: May 4, 2020, 4:00 PM PDT
+Status Last Updated: May 7, 2020, 3:45 PM PDT
 
 ### Current Version of Arcade in `.NET Eng - Latest`
 
@@ -21,11 +21,15 @@ Status Last Updated: May 4, 2020, 4:00 PM PDT
 
 ### Status of Latest Version of Arcade Being Validated
 
-- Working on mitigating on-going errors with .NET Core version upgrade to 5.0. See https://github.com/dotnet/arcade/issues/5412
+- Promoted Arcade version 5.0.0-beta.20256.5 to `.NET Eng - Latest`
+- This version contains Preview 5 of .NET 5.0 SDK
 
-[Result](https://dnceng.visualstudio.com/internal/_build/results?buildId=630001&view=results) of latest Arcade Validation run on May 4, 2020, 7:30 AM PDT
+[Result](https://dnceng.visualstudio.com/internal/_build/results?buildId=634342&view=results) of latest Arcade Validation run on May 6, 2020, 7:00 PM PDT
 
-[Result](https://dnceng.visualstudio.com/internal/_build/results?buildId=630755&view=results) of latest Arcade run on May 4, 2020, 2:55 PM PDT
+Notes: 
+- Runtime and ASPNETCore had made significant changes in their repos that meant the LKG was not a good baseline to use for validation. This is being changed. 
+- Received sign-off from both Runtime and ASPNETCore teams to promote this version of Arcade despite the issues in validating against those repos. 
+
 
 ## Getting Started
 
