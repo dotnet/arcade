@@ -285,7 +285,7 @@ function InstallDotNet([string] $dotnetRoot,
 # Throws on failure.
 #
 function InitializeVisualStudioMSBuild([bool]$install, [object]$vsRequirements = $null) {
-  if (-not IsWindowsPlatform) {
+  if (-not (IsWindowsPlatform)) {
     throw "Cannot initialize Visual Studio on non-Windows"
   }
 
@@ -393,7 +393,7 @@ function InitializeXCopyMSBuild([string]$packageVersion, [bool]$install) {
 # or $null if no instance meeting the requirements is found on the machine.
 #
 function LocateVisualStudio([object]$vsRequirements = $null){
-  if (-not IsWindowsPlatform) {
+  if (-not (IsWindowsPlatform)) {
     throw "Cannot run vswhere on non-Windows platforms."
   }
 
@@ -677,7 +677,7 @@ function GetMSBuildBinaryLogCommandLineArgument($arguments) {
   return $null
 }
 
-function GetExecutableFileName($baseName)} {
+function GetExecutableFileName($baseName) {
   if (IsWindowsPlatform) {
     return "$baseName.exe"
   } else {
