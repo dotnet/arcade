@@ -22,6 +22,7 @@ Status Last Updated: May 7, 2020, 3:45 PM PDT
 ### Status of Latest Version of Arcade Being Validated
 
 - Promoted Arcade version 5.0.0-beta.20256.5 to `.NET Eng - Latest`
+- This version contains Preview 5 of .NET 5.0 SDK
 
 [Result](https://dnceng.visualstudio.com/internal/_build/results?buildId=634342&view=results) of latest Arcade Validation run on May 6, 2020, 7:00 PM PDT
 
