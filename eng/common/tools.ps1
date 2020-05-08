@@ -55,10 +55,8 @@ set-strictmode -version 2.0
 $ErrorActionPreference = 'Stop'
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 
-function Create-Directory([string[]] $path) {
-  if (!(Test-Path $path)) {
-    New-Item -path $path -force -itemType 'Directory' | Out-Null
-  }
+function Create-Directory ([string[]] $path) {
+    New-Item -Path $path -Force -ItemType 'Directory' | Out-Null
 }
 
 function Unzip([string]$zipfile, [string]$outpath) {
