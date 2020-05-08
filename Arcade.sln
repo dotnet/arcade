@@ -99,8 +99,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Build.Task
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Helix.Sdk.Tests", "src\Microsoft.DotNet.Helix\Sdk.Tests\Microsoft.DotNet.Helix.Sdk.Tests\Microsoft.DotNet.Helix.Sdk.Tests.csproj", "{03390E61-9DC1-4893-93A4-193D76C16034}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.AzureDevOps.Build", "src\Microsoft.DotNet.AzureDevOps.Build\Microsoft.DotNet.AzureDevOps.Build.csproj", "{107F83D6-3214-4713-898D-373FCF051366}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.AsmDiff", "src\Microsoft.DotNet.AsmDiff\Microsoft.DotNet.AsmDiff.csproj", "{FDCE3109-3EA0-4166-B6C0-BE7BB4196864}"
 EndProject
 Global
@@ -625,18 +623,6 @@ Global
 		{03390E61-9DC1-4893-93A4-193D76C16034}.Release|x64.Build.0 = Release|Any CPU
 		{03390E61-9DC1-4893-93A4-193D76C16034}.Release|x86.ActiveCfg = Release|Any CPU
 		{03390E61-9DC1-4893-93A4-193D76C16034}.Release|x86.Build.0 = Release|Any CPU
-		{107F83D6-3214-4713-898D-373FCF051366}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{107F83D6-3214-4713-898D-373FCF051366}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{107F83D6-3214-4713-898D-373FCF051366}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{107F83D6-3214-4713-898D-373FCF051366}.Debug|x64.Build.0 = Debug|Any CPU
-		{107F83D6-3214-4713-898D-373FCF051366}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{107F83D6-3214-4713-898D-373FCF051366}.Debug|x86.Build.0 = Debug|Any CPU
-		{107F83D6-3214-4713-898D-373FCF051366}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{107F83D6-3214-4713-898D-373FCF051366}.Release|Any CPU.Build.0 = Release|Any CPU
-		{107F83D6-3214-4713-898D-373FCF051366}.Release|x64.ActiveCfg = Release|Any CPU
-		{107F83D6-3214-4713-898D-373FCF051366}.Release|x64.Build.0 = Release|Any CPU
-		{107F83D6-3214-4713-898D-373FCF051366}.Release|x86.ActiveCfg = Release|Any CPU
-		{107F83D6-3214-4713-898D-373FCF051366}.Release|x86.Build.0 = Release|Any CPU
 		{FDCE3109-3EA0-4166-B6C0-BE7BB4196864}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{FDCE3109-3EA0-4166-B6C0-BE7BB4196864}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FDCE3109-3EA0-4166-B6C0-BE7BB4196864}.Debug|x64.ActiveCfg = Debug|Any CPU

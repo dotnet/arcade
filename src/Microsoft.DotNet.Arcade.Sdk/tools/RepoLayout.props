@@ -62,5 +62,6 @@
     <VisualStudioSetupInsertionPath>$([MSBuild]::NormalizeDirectory('$(VisualStudioSetupOutputPath)', 'Insertion'))</VisualStudioSetupInsertionPath>
     <VisualStudioSetupIntermediateOutputPath>$([MSBuild]::NormalizeDirectory('$(ArtifactsDir)', 'VSSetup.obj', '$(Configuration)'))</VisualStudioSetupIntermediateOutputPath>
     <VisualStudioBuildPackagesDir>$([MSBuild]::NormalizeDirectory('$(VisualStudioSetupOutputPath)', 'DevDivPackages'))</VisualStudioBuildPackagesDir>
+    <ModifiedMsiPackageDir>$(ArtifactsDir)ModifiedMsiPackage/</ModifiedMsiPackageDir>
   </PropertyGroup>
 </Project>
