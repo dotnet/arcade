@@ -30,7 +30,6 @@ try {
 
   if ("false" -eq $WaitPublishingFinish) {
     $optionalParams.Add("--no-wait") | Out-Null
-    $optionalParams.Add("true") | Out-Null
   }
 
   & darc add-build-to-channel `

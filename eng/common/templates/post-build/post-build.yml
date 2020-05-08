@@ -56,7 +56,7 @@ stages:
 - ${{ if ne(parameters.inline, 'true') }}:
   - stage: publish_using_darc
     dependsOn: ${{ parameters.validateDependsOn }}
-    displayName: Publishing using Darc
+    displayName: Publish using Darc
     variables:
       - template: common-variables.yml
     jobs:
