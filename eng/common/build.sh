@@ -32,7 +32,7 @@ usage()
   echo "Advanced settings:"
   echo "  --projects <value>       Project or solution file(s) to build"
   echo "  --ci                     Set when running on CI server"
-  echo "  --excludeCIBinlog          Don't output binary log (short: -nobl)"
+  echo "  --excludeCIBinarylog     Don't output binary log (short: -nobl)"
   echo "  --prepareMachine         Prepare machine for CI run, clean up processes after build"
   echo "  --nodeReuse <value>      Sets nodereuse msbuild parameter ('true' or 'false')"
   echo "  --warnAsError <value>    Sets warnaserror msbuild parameter ('true' or 'false')"
@@ -100,7 +100,7 @@ while [[ $# > 0 ]]; do
     -binarylog|-bl)
       binary_log=true
       ;;
-    -excludeCIBinlog|-nobl)
+    -excludeCIBinarylog|-nobl)
       exclude_ci_binary_log=true
       ;;
     -pipelineslog|-pl)

@@ -21,8 +21,14 @@ configuration=${configuration:-'Debug'}
 # Set to true to opt out of outputting binary log while running in CI
 exclude_ci_binary_log=${exclude_ci_binary_log:-false}
 
+if [[ "$ci" == true && "$exclude_ci_binary_log" == false ]]; then
+  binary_log_default=true
+else
+  binary_log_default=false
+fi
+
 # Set to true to output binary log from msbuild. Note that emitting binary log slows down the build.
-binary_log=${binary_log:-$ci && -n $exclude_ci_binary_log}
+binary_log=${binary_log:-$binary_log_default}
 
 # Turns on machine preparation/clean up code that changes the machine state (e.g. kills build processes).
 prepare_machine=${prepare_machine:-false}
