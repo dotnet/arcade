@@ -46,7 +46,7 @@ namespace Microsoft.DotNet.Build.Tasks.SharedFramework.Sdk
 
         public string[] TargetFilePrefixes { get; set; }
 
-        public string[] SingleFileHostIncludeList { get; set; }
+        public string[] SingleFileHostIncludeFilenames { get; set; }
 
         /// <summary>
         /// Extra attributes to place on the root node.
@@ -70,7 +70,7 @@ namespace Microsoft.DotNet.Build.Tasks.SharedFramework.Sdk
                     item => item,
                     StringComparer.OrdinalIgnoreCase);
 
-            var singleFileHostIncludeSet = SingleFileHostIncludeList?.ToHashSet();
+            var singleFileHostIncludeFilenames = SingleFileHostIncludeFilenames?.ToHashSet();
 
             var usedFileClasses = new HashSet<string>();
 
@@ -194,8 +194,8 @@ namespace Microsoft.DotNet.Build.Tasks.SharedFramework.Sdk
                 {
                     // presence of inclusion list indicates that 
                     // all other native files should be marked as "DropFromSingleFile"
-                    if (singleFileHostIncludeSet != null &&
-                        !singleFileHostIncludeSet.Contains(f.Filename))
+                    if (singleFileHostIncludeFilenames != null &&
+                        !singleFileHostIncludeFilenames.Contains(f.Filename))
                     {
                         element.Add(new XAttribute("DropFromSingleFile", "true"));
                     }
