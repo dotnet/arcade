@@ -142,7 +142,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
                 Directory.CreateDirectory(destRuntimeFileDir);
             }
 
-            JsonRuntimeFormat.WriteRuntimeGraph(destRuntimeFilePath, runtimeGraph);
+            NuGetUtility.WriteRuntimeGraph(destRuntimeFilePath, runtimeGraph);
 
             return true;
         }

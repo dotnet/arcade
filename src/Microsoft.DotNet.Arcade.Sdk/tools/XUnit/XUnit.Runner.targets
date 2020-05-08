@@ -23,7 +23,8 @@
   </ItemGroup>
 
   <Target Name="RunTests"
-          Outputs="%(TestToRun.ResultsStdOutPath)">
+          Outputs="%(TestToRun.ResultsStdOutPath)"
+          Condition="'@(TestToRun)' != ''">
     <Telemetry EventName="NETCORE_ENGINEERING_TELEMETRY" EventData="Category=Test" />
     <PropertyGroup>
       <_TestEnvironment>%(TestToRun.EnvironmentDisplay)</_TestEnvironment>

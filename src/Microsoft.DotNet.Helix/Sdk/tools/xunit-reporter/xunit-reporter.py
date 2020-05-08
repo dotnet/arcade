@@ -12,7 +12,8 @@ log = helix.logs.get_logger()
 acceptableXUnitFileNames = [
     "testResults.xml",
     "test-results.xml",
-    "test_results.xml"
+    "test_results.xml",
+    "TestResults.xUnit.xml"
 ]
 
 class HelixHelper:
