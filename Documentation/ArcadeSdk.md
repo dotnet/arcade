@@ -931,6 +931,14 @@ Set to `partial` or `full` in a shipping project to require IBC optimization dat
 
 Set to `true` in a test project to skip running tests.
 
+### `TestRunnerName` (`XUnit`, `NUnit`, or `MSTest`)
+
+Sets the test framework to use for a test project. This option controls what references are added to the project and what runner is used.
+
+### `UseVSTestRunner` (bool)
+
+If `TestRunnerName` is XUnit, this switches the test runner from xunit.console, to vstest. This property doesn't do anything for other test frameworks, they must use vstest.
+
 ### `TestArchitectures` (list of strings)
 
 List of test architectures (`x64`, `x86`) to run tests on.
@@ -956,7 +964,7 @@ msbuild Project.UnitTests.csproj /t:Test /p:TestTargetFrameworks="netcoreapp2.1;
 
 ### `TestRuntime` (string)
 
-Runtime to use for running tests. Currently supported values are: `Core` (.NET Core), `Full` (.NET Framework) and `Mono` (Mono runtime).
+Runtime to use for running tests. Currently supported values are: `Core` (.NET Core), `Full` (.NET Framework) and `Mono` (Mono runtime). Applicable only when `TestRunnerName` is `XUnit` and `UseVSTestRunner` is `false`.
 
 For example, the following runs .NET Framework tests using Mono runtime:
 
@@ -970,7 +978,7 @@ Additional command line arguments passed to the test runner (e.g. `xunit.console
 
 ### `TestRuntimeAdditionalArguments` (string)
 
-Additional command line arguments passed to the test runtime (i.e. `dotnet` or `mono`). Applicable only when `TestRuntime` is `Core` or `Mono`. 
+Additional command line arguments passed to the test runtime (i.e. `dotnet` or `mono`). Applicable only when `TestRuntime` is `Core` or `Mono`, `TestRunnerName` is `XUnit`, and `UseVSTestRunner` is `false`. 
 
 For example, to invoke Mono with debug flags `--debug` (to get stack traces with line number information), set `TestRuntimeAdditionalArguments` to `--debug`.
 To override the default Shared Framework version that is selected based on the test project TFM, set `TestRuntimeAdditionalArguments` to `--fx-version x.y.z`.
@@ -978,6 +986,10 @@ To override the default Shared Framework version that is selected based on the t
 ### `TestTimeout` (int)
 
 Timeout to apply to an individual invocation of the test runner (e.g. `xunit.console.exe`) for a single configuration. Integer number of milliseconds.
+
+### `VSTestRunSettingsFile` (`.runsettings` file)
+
+VSTest `.runsettings` file that will be passed to vstest. Applicable unless `TestRunnerName` is `XUnit` and `UseVSTestRunner` is `false`.
 
 ### `GenerateResxSource` (bool)
 
