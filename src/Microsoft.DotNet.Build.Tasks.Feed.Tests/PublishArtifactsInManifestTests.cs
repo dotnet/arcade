@@ -22,7 +22,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         public async Task FeedConfigParserTests1Async()
         {
             var buildEngine = new MockBuildEngine();
-            var task = new PublishArtifactsInManifest
+            var task = new PublishArtifactsInManifestV2
             {
                 // Create a single Microsoft.Build.Utilities.TaskItem for a simple feed config, then parse to FeedConfigs and
                 // check the expected values.
@@ -60,7 +60,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         public async Task FeedConfigParserTests2Async()
         {
             var buildEngine = new MockBuildEngine();
-            var task = new PublishArtifactsInManifest
+            var task = new PublishArtifactsInManifestV2
             {
                 TargetFeedConfig = new Microsoft.Build.Utilities.TaskItem[]
                 {
@@ -82,7 +82,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         public async Task FeedConfigParserTests3Async()
         {
             var buildEngine = new MockBuildEngine();
-            var task = new PublishArtifactsInManifest
+            var task = new PublishArtifactsInManifestV2
             {
                 TargetFeedConfig = new Microsoft.Build.Utilities.TaskItem[]
                 {
@@ -107,7 +107,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         public async Task FeedConfigParserTests4Async()
         {
             var buildEngine = new MockBuildEngine();
-            var task = new PublishArtifactsInManifest
+            var task = new PublishArtifactsInManifestV2
             {
                 TargetFeedConfig = new Microsoft.Build.Utilities.TaskItem[]
                 {
@@ -147,7 +147,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         public async Task FeedConfigParserTests5Async()
         {
             var buildEngine = new MockBuildEngine();
-            var task = new PublishArtifactsInManifest
+            var task = new PublishArtifactsInManifestV2
             {
                 InternalBuild = true,
                 TargetFeedConfig = new Microsoft.Build.Utilities.TaskItem[]
@@ -178,7 +178,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         public async Task FeedConfigParserTests6Async()
         {
             var buildEngine = new MockBuildEngine();
-            var task = new PublishArtifactsInManifest
+            var task = new PublishArtifactsInManifestV2
             {
                 InternalBuild = true,
                 TargetFeedConfig = new Microsoft.Build.Utilities.TaskItem[]
@@ -209,7 +209,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         [InlineData("https://pkgs.dev.azure.com/DevDiv/_packaging/1234.5/nuget/v3/index.json", "DevDiv", "", "1234.5")]
         public void NugetFeedParseTests(string uri, string account, string visibility, string feed)
         {
-            var matches = Regex.Match(uri, PublishArtifactsInManifest.AzDoNuGetFeedPattern);
+            var matches = Regex.Match(uri, PublishArtifactsInManifestV2.AzDoNuGetFeedPattern);
             Assert.Equal(account, matches.Groups["account"]?.Value);
             Assert.Equal(visibility, matches.Groups["visibility"]?.Value);
             Assert.Equal(feed, matches.Groups["feed"]?.Value);
@@ -240,7 +240,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             FakeStream fakeStreamA = new FakeStream(streamABytes, maxStreamABytesReturnedEachCall);
             FakeStream fakeStreamB = new FakeStream(streamBBytes, maxStreamBBytesReturnedEachCall);
 
-            Assert.Equal(streamA == streamB, await PublishArtifactsInManifest.CompareStreamsAsync(fakeStreamA, fakeStreamB, bufferSize));
+            Assert.Equal(streamA == streamB, await PublishArtifactsInManifestV2.CompareStreamsAsync(fakeStreamA, fakeStreamB, bufferSize));
         }
 
         class FakeStream : Stream
