@@ -21,6 +21,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         }
         public override async Task<bool> ExecuteAsync()
         {
+            if (string.IsNullOrEmpty(TargetChannels))
+            {
+                Log.LogError("The list of Maestro++ target channels ID that the build should be promoted to is required.");
+                return false;
+            }
+
             return await Task.FromResult(true);
         }
     }

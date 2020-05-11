@@ -150,7 +150,194 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         public string AkaMSGroupOwner { get; set; }
         #endregion
 
-        public readonly Dictionary<string, List<FeedConfig>> FeedConfigs = new Dictionary<string, List<FeedConfig>>();
+        #region Target Channel Configs
+        private const string FeedGeneralTesting = "https://pkgs.dev.azure.com/dnceng/public/_packaging/general-testing/nuget/v3/index.json";
+        private const string FeedGeneralTestingSymbols = "https://pkgs.dev.azure.com/dnceng/public/_packaging/general-testing-symbols/nuget/v3/index.json";
+
+        private const string FeedDotNetExperimental = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-experimental/nuget/v3/index.json";
+        private const string FeedDotNetExperimentalSymbols = ""https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-experimental-symbols/nuget/v3/index.json"";
+
+        private const string FeedDotNetEngShipping = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json";
+        private const string FeedDotNetEngTransport = FeedDotNetEngShipping;
+        private const string FeedDotNetEngSymbols = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng-symbols/nuget/v3/index.json";
+
+        private const string FeedDotNetToolsShipping = "https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet-tools/nuget/v3/index.json";
+        private const string FeedDotNetToolsTransport = FeedDotNetToolsShipping;
+        private const string FeedDotNetToolsSymbols = "https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet-tools-symbols/nuget/v3/index.json";
+
+        private const string FeedDotNetToolsInternalShipping = "https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet-tools-internal/nuget/v3/index.json";
+        private const string FeedDotNetToolsInternalTransport = FeedDotNetToolsInternalShipping;
+        private const string FeedDotNetToolsInternalSymbols = "https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet-tools-internal-symbols/nuget/v3/index.json";
+
+        private const string FeedDotNet31Shipping = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet3.1/nuget/v3/index.json";
+        private const string FeedDotNet31Transport = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet3.1-transport/nuget/v3/index.json";
+        private const string FeedDotNet31Symbols = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet3.1-symbols/nuget/v3/index.json";
+
+        private const string FeedDotNet31InternalShipping = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet3.1-internal/nuget/v3/index.json";
+        private const string FeedDotNet31InternalTransport = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet3.1-internal-transport/nuget/v3/index.json";
+        private const string FeedDotNet31InternalSymbols = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet3.1-internal-symbols/nuget/v3/index.json";
+
+        private const string FeedDotNet5Shipping = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet5/nuget/v3/index.json";
+        private const string FeedDotNet5Transport = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet5-transport/nuget/v3/index.json";
+        private const string FeedDotNet5Symbols = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet5-symbols/nuget/v3/index.json";
+
+        protected List<TargetChannelConfig> ChannelInfos = new List<TargetChannelConfig>() {
+            new TargetChannelConfig(
+                131,
+                PublishingInfraVersion.All,
+                ".NET 5 Dev",
+                "net5/dev",
+                FeedDotNet5Shipping,
+                FeedDotNet5Transport,
+                FeedDotNet5Symbols),
+
+            new TargetChannelConfig(
+                739,
+                PublishingInfraVersion.All,
+                ".NET 5 Preview 3",
+                "net5/preview3",
+                FeedDotNet5Shipping,
+                FeedDotNet5Transport,
+                FeedDotNet5Symbols),
+
+            new TargetChannelConfig(
+                856,
+                PublishingInfraVersion.All,
+                ".NET 5 Preview 4",
+                "net5/preview4",
+                FeedDotNet5Shipping,
+                FeedDotNet5Transport,
+                FeedDotNet5Symbols),
+
+            new TargetChannelConfig(
+                857,
+                PublishingInfraVersion.All,
+                ".NET 5 Preview 5",
+                "net5/preview5",
+                FeedDotNet5Shipping,
+                FeedDotNet5Transport,
+                FeedDotNet5Symbols),
+
+            new TargetChannelConfig(
+                2,
+                PublishingInfraVersion.All,
+                ".NET Eng - Latest",
+                "eng/daily",
+                FeedDotNetEngShipping,
+                FeedDotNetEngTransport,
+                FeedDotNetEngSymbols),
+
+            new TargetChannelConfig(
+                9,
+                PublishingInfraVersion.All,
+                ".NET Eng - Validation",
+                "eng/validation",
+                FeedDotNetEngShipping,
+                FeedDotNetEngTransport,
+                FeedDotNetEngSymbols),
+
+            new TargetChannelConfig(
+                529,
+                PublishingInfraVersion.All,
+                "General Testing",
+                "generaltesting",
+                FeedGeneralTesting,
+                FeedGeneralTesting,
+                FeedGeneralTestingSymbols),
+
+            new TargetChannelConfig(
+                548,
+                PublishingInfraVersion.All,
+                ".NET Core Tooling Dev",
+                akaMSChannelName: string.Empty,
+                FeedDotNetToolsShipping,
+                FeedDotNetToolsTransport,
+                FeedDotNetToolsSymbols),
+
+            new TargetChannelConfig(
+                549,
+                PublishingInfraVersion.All,
+                ".NET Core Tooling Release",
+                akaMSChannelName: string.Empty,
+                FeedDotNetToolsShipping,
+                FeedDotNetToolsTransport,
+                FeedDotNetToolsSymbols),
+
+            new TargetChannelConfig(
+                551,
+                PublishingInfraVersion.All,
+                ".NET Internal Tooling",
+                akaMSChannelName: string.Empty,
+                FeedDotNetToolsInternalShipping,
+                FeedDotNetToolsInternalTransport,
+                FeedDotNetToolsInternalSymbols),
+
+            new TargetChannelConfig(
+                562,
+                PublishingInfraVersion.All,
+                ".NET Core Experimental",
+                akaMSChannelName: string.Empty,
+                FeedDotNetExperimental,
+                FeedDotNetExperimental,
+                FeedDotNetExperimentalSymbols),
+
+            new TargetChannelConfig(
+                678,
+                PublishingInfraVersion.All,
+                ".NET Eng Services - Int",
+                akaMSChannelName: string.Empty,
+                FeedDotNetEngShipping,
+                FeedDotNetEngTransport,
+                FeedDotNetEngSymbols),
+
+            new TargetChannelConfig(
+                679,
+                PublishingInfraVersion.All,
+                ".NET Eng Services - Prod",
+                akaMSChannelName: string.Empty,
+                FeedDotNetEngShipping,
+                FeedDotNetEngTransport,
+                FeedDotNetEngSymbols),
+
+            new TargetChannelConfig(
+                921,
+                PublishingInfraVersion.All,
+                ".NET Core SDK 3.1.4xx",
+                akaMSChannelName: string.Empty,
+                FeedDotNet31Shipping,
+                FeedDotNet31Transport,
+                FeedDotNet31Symbols),
+
+            new TargetChannelConfig(
+                922,
+                PublishingInfraVersion.All,
+                ".NET Core SDK 3.1.4xx Internal",
+                akaMSChannelName: string.Empty,
+                FeedDotNet31InternalShipping,
+                FeedDotNet31InternalTransport,
+                FeedDotNet31InternalSymbols),
+
+            new TargetChannelConfig(
+                759,
+                PublishingInfraVersion.All,
+                ".NET Core SDK 3.1.3xx",
+                akaMSChannelName: string.Empty,
+                FeedDotNet31Shipping,
+                FeedDotNet31Transport,
+                FeedDotNet31Symbols),
+
+            new TargetChannelConfig(
+                760,
+                PublishingInfraVersion.All,
+                ".NET Core SDK 3.1.3xx Internal",
+                akaMSChannelName: string.Empty,
+                FeedDotNet31InternalShipping,
+                FeedDotNet31InternalTransport,
+                FeedDotNet31InternalSymbols),
+        };
+        #endregion
+
+        public readonly Dictionary<string, List<TargetFeedConfig>> FeedConfigs = new Dictionary<string, List<TargetFeedConfig>>();
 
         private readonly Dictionary<string, List<PackageArtifactModel>> PackagesByCategory = new Dictionary<string, List<PackageArtifactModel>>();
 
@@ -235,15 +422,15 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             {
                 foreach (var fc in TargetFeedConfig)
                 {
-                    string targetFeedUrl = fc.GetMetadata(nameof(FeedConfig.TargetURL));
-                    string feedKey = fc.GetMetadata(nameof(FeedConfig.Token));
-                    string type = fc.GetMetadata(nameof(FeedConfig.Type));
+                    string targetFeedUrl = fc.GetMetadata(nameof(Model.TargetFeedConfig.TargetURL));
+                    string feedKey = fc.GetMetadata(nameof(Model.TargetFeedConfig.Token));
+                    string type = fc.GetMetadata(nameof(Model.TargetFeedConfig.Type));
 
                     if (string.IsNullOrEmpty(targetFeedUrl) ||
                         string.IsNullOrEmpty(feedKey) ||
                         string.IsNullOrEmpty(type))
                     {
-                        Log.LogError($"Invalid FeedConfig entry. {nameof(FeedConfig.TargetURL)}='{targetFeedUrl}' {nameof(FeedConfig.Type)}='{type}' {nameof(FeedConfig.Token)}='{feedKey}'");
+                        Log.LogError($"Invalid FeedConfig entry. {nameof(Model.TargetFeedConfig.TargetURL)}='{targetFeedUrl}' {nameof(Model.TargetFeedConfig.Type)}='{type}' {nameof(Model.TargetFeedConfig.Token)}='{feedKey}'");
                         continue;
                     }
 
@@ -259,14 +446,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         continue;
                     }
 
-                    var feedConfig = new FeedConfig()
+                    var feedConfig = new TargetFeedConfig()
                     {
                         TargetURL = targetFeedUrl,
                         Type = feedType,
                         Token = feedKey
                     };
 
-                    string assetSelection = fc.GetMetadata(nameof(FeedConfig.AssetSelection));
+                    string assetSelection = fc.GetMetadata(nameof(Model.TargetFeedConfig.AssetSelection));
                     if (!string.IsNullOrEmpty(assetSelection))
                     {
                         if (!Enum.TryParse<AssetSelection>(assetSelection, true, out AssetSelection selection))
@@ -279,12 +466,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                     // To determine whether a feed is internal, we allow the user to
                     // specify the value explicitly.
-                    string feedIsInternal = fc.GetMetadata(nameof(FeedConfig.Internal));
+                    string feedIsInternal = fc.GetMetadata(nameof(Model.TargetFeedConfig.Internal));
                     if (!string.IsNullOrEmpty(feedIsInternal))
                     {
                         if (!bool.TryParse(feedIsInternal, out bool feedSetting))
                         {
-                            Log.LogError($"Invalid feed config '{nameof(FeedConfig.Internal)}' setting.  Must be 'true' or 'false'.");
+                            Log.LogError($"Invalid feed config '{nameof(Model.TargetFeedConfig.Internal)}' setting.  Must be 'true' or 'false'.");
                             continue;
                         }
                         feedConfig.Internal = feedSetting;
@@ -304,29 +491,29 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                     CheckForInternalBuildsOnPublicFeeds(feedConfig);
 
-                    string feedIsIsolated = fc.GetMetadata(nameof(FeedConfig.Isolated));
+                    string feedIsIsolated = fc.GetMetadata(nameof(Model.TargetFeedConfig.Isolated));
                     if (!string.IsNullOrEmpty(feedIsIsolated))
                     {
                         if (!bool.TryParse(feedIsIsolated, out bool feedSetting))
                         {
-                            Log.LogError($"Invalid feed config '{nameof(FeedConfig.Isolated)}' setting.  Must be 'true' or 'false'.");
+                            Log.LogError($"Invalid feed config '{nameof(Model.TargetFeedConfig.Isolated)}' setting.  Must be 'true' or 'false'.");
                             continue;
                         }
                         feedConfig.Isolated = feedSetting;
                     }
 
-                    string allowOverwriteOnFeed = fc.GetMetadata(nameof(FeedConfig.AllowOverwrite));
+                    string allowOverwriteOnFeed = fc.GetMetadata(nameof(Model.TargetFeedConfig.AllowOverwrite));
                     if (!string.IsNullOrEmpty(allowOverwriteOnFeed))
                     {
                         if (!bool.TryParse(allowOverwriteOnFeed, out bool feedSetting))
                         {
-                            Log.LogError($"Invalid feed config '{nameof(FeedConfig.AllowOverwrite)}' setting.  Must be 'true' or 'false'.");
+                            Log.LogError($"Invalid feed config '{nameof(Model.TargetFeedConfig.AllowOverwrite)}' setting.  Must be 'true' or 'false'.");
                             continue;
                         }
                         feedConfig.AllowOverwrite = feedSetting;
                     }
 
-                    string latestLinkShortUrlPrefix = fc.GetMetadata(nameof(FeedConfig.LatestLinkShortUrlPrefix));
+                    string latestLinkShortUrlPrefix = fc.GetMetadata(nameof(Model.TargetFeedConfig.LatestLinkShortUrlPrefix));
                     if (!string.IsNullOrEmpty(latestLinkShortUrlPrefix))
                     {
                         // Verify other inputs are provided
@@ -352,7 +539,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     string categoryKey = fc.ItemSpec.Trim().ToUpper();
                     if (!FeedConfigs.TryGetValue(categoryKey, out var feedsList))
                     {
-                        FeedConfigs[categoryKey] = new List<FeedConfig>();
+                        FeedConfigs[categoryKey] = new List<TargetFeedConfig>();
                     }
                     FeedConfigs[categoryKey].Add(feedConfig);
                 }
@@ -368,7 +555,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// <param name="feedConfig">Configuration of where the asset was published.</param>
         /// <param name="assetLocationType">Type of feed location that is being added.</param>
         /// <returns>True if that asset didn't have the informed location recorded already.</returns>
-        private bool TryAddAssetLocation(string assetId, string assetVersion, Dictionary<string, List<Asset>> buildAssets, FeedConfig feedConfig, AddAssetLocationToAssetAssetLocationType assetLocationType)
+        private bool TryAddAssetLocation(string assetId, string assetVersion, Dictionary<string, List<Asset>> buildAssets, TargetFeedConfig feedConfig, AddAssetLocationToAssetAssetLocationType assetLocationType)
         {
             Asset assetRecord = string.IsNullOrEmpty(assetVersion) ?
                 LookupAsset(assetId, buildAssets) :
@@ -402,7 +589,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// Protect against accidental publishing of internal assets to non-internal feeds.
         /// </summary>
         /// <returns></returns>
-        private void CheckForInternalBuildsOnPublicFeeds(FeedConfig feedConfig)
+        private void CheckForInternalBuildsOnPublicFeeds(TargetFeedConfig feedConfig)
         {
             // If separated out for clarity.
             if (!SkipSafetyChecks)
@@ -429,7 +616,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 var category = packagesPerCategory.Key;
                 var packages = packagesPerCategory.Value;
 
-                if (FeedConfigs.TryGetValue(category, out List<FeedConfig> feedConfigsForCategory))
+                if (FeedConfigs.TryGetValue(category, out List<TargetFeedConfig> feedConfigsForCategory))
                 {
                     foreach (var feedConfig in feedConfigsForCategory)
                     {
@@ -466,7 +653,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             await Task.WhenAll(publishTasks);
         }
 
-        private List<PackageArtifactModel> FilterPackages(List<PackageArtifactModel> packages, FeedConfig feedConfig)
+        private List<PackageArtifactModel> FilterPackages(List<PackageArtifactModel> packages, TargetFeedConfig feedConfig)
         {
             switch (feedConfig.AssetSelection)
             {
@@ -493,7 +680,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 var category = blobsPerCategory.Key;
                 var blobs = blobsPerCategory.Value;
 
-                if (FeedConfigs.TryGetValue(category, out List<FeedConfig> feedConfigsForCategory))
+                if (FeedConfigs.TryGetValue(category, out List<TargetFeedConfig> feedConfigsForCategory))
                 {
                     foreach (var feedConfig in feedConfigsForCategory)
                     {
@@ -536,7 +723,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// <param name="blobs"></param>
         /// <param name="feedConfig"></param>
         /// <returns></returns>
-        private List<BlobArtifactModel> FilterBlobs(List<BlobArtifactModel> blobs, FeedConfig feedConfig)
+        private List<BlobArtifactModel> FilterBlobs(List<BlobArtifactModel> blobs, TargetFeedConfig feedConfig)
         {
             // If the feed config wants further filtering, do that now.
             List<BlobArtifactModel> filteredBlobs = null;
@@ -620,7 +807,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         private async Task PublishPackagesToAzDoNugetFeedAsync(
             List<PackageArtifactModel> packagesToPublish,
             Dictionary<string, List<Asset>> buildAssets,
-            FeedConfig feedConfig)
+            TargetFeedConfig feedConfig)
         {
             await PushNugetPackagesAsync(packagesToPublish, feedConfig, maxClients: MaxClients,
                 async (feed, httpClient, package, feedAccount, feedVisibility, feedName) =>
@@ -644,8 +831,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// <param name="packagesToPublish">List of packages to publish</param>
         /// <param name="feedConfig">Information about feed to publish ot</param>
         /// <returns>Async task.</returns>
-        public async Task PushNugetPackagesAsync<T>(List<T> packagesToPublish, FeedConfig feedConfig, int maxClients,
-            Func<FeedConfig, HttpClient, T, string, string, string, Task> packagePublishAction)
+        public async Task PushNugetPackagesAsync<T>(List<T> packagesToPublish, TargetFeedConfig feedConfig, int maxClients,
+            Func<TargetFeedConfig, HttpClient, T, string, string, string, Task> packagePublishAction)
         {
             if (!packagesToPublish.Any())
             {
@@ -718,7 +905,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         ///     parsing the output of the push operation - which does a call to `nuget.exe` 
         ///     behind the scenes.
         /// </remarks>
-        private async Task PushNugetPackageAsync(FeedConfig feedConfig, HttpClient client, string localPackageLocation, string id, string version,
+        private async Task PushNugetPackageAsync(TargetFeedConfig feedConfig, HttpClient client, string localPackageLocation, string id, string version,
             string feedAccount, string feedVisibility, string feedName)
         {
             Log.LogMessage(MessageImportance.High, $"Pushing package '{localPackageLocation}' to feed {feedConfig.TargetURL}");
@@ -781,7 +968,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         private async Task PublishBlobsToAzDoNugetFeedAsync(
             List<BlobArtifactModel> blobsToPublish,
             Dictionary<string, List<Asset>> buildAssets,
-            FeedConfig feedConfig)
+            TargetFeedConfig feedConfig)
         {
             List<BlobArtifactModel> packagesToPublish = new List<BlobArtifactModel>();
 
@@ -830,7 +1017,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         private async Task PublishPackagesToAzureStorageNugetFeedAsync(
             List<PackageArtifactModel> packagesToPublish,
             Dictionary<string, List<Asset>> buildAssets,
-            FeedConfig feedConfig)
+            TargetFeedConfig feedConfig)
         {
             var packages = packagesToPublish.Select(p =>
             {
@@ -863,7 +1050,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         private async Task PublishBlobsToAzureStorageNugetFeedAsync(
             List<BlobArtifactModel> blobsToPublish,
             Dictionary<string, List<Asset>> buildAssets,
-            FeedConfig feedConfig)
+            TargetFeedConfig feedConfig)
         {
             var blobs = blobsToPublish
                 .Select(blob =>
@@ -903,7 +1090,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             await LinkManager.CreateOrUpdateLatestLinksAsync(blobsToPublish, feedConfig, ExpectedFeedUrlSuffix.Length);
         }
 
-        private BlobFeedAction CreateBlobFeedAction(FeedConfig feedConfig)
+        private BlobFeedAction CreateBlobFeedAction(TargetFeedConfig feedConfig)
         {
             var proxyBackedFeedMatch = Regex.Match(feedConfig.TargetURL, AzureStorageProxyFeedPattern);
             var proxyBackedStaticFeedMatch = Regex.Match(feedConfig.TargetURL, AzureStorageProxyFeedStaticPattern);

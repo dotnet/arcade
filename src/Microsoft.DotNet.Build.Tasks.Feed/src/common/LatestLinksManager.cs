@@ -46,7 +46,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public async System.Threading.Tasks.Task CreateOrUpdateLatestLinksAsync(
             List<BlobArtifactModel> blobsToPublish,
-            FeedConfig feedConfig,
+            TargetFeedConfig feedConfig,
             int expectedSuffixLength)
         {
             if (string.IsNullOrEmpty(feedConfig.LatestLinkShortUrlPrefix))
@@ -81,7 +81,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// <param name="blob">Blob</param>
         /// <returns>Short url prefix for the blob.</returns>
         /// <remarks>
-        public string GetLatestShortUrlForBlob(FeedConfig feedConfig, BlobArtifactModel blob)
+        public string GetLatestShortUrlForBlob(TargetFeedConfig feedConfig, BlobArtifactModel blob)
         {
             string blobIdWithoutVersions = VersionIdentifier.RemoveVersions(blob.Id);
 

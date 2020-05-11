@@ -15,10 +15,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 {
     public static class BuildManifestUtil
     {
-        public const string LegacyPublishingInfraVersion = "1";
-        public const string LatestPublishingInfraVersion = "2";
-        public const string NextPublishingInfraVersion = "3";
-
         public const string AssetsVirtualDir = "assets/";
 
         public static void CreateBuildManifest(TaskLoggingHelper log,

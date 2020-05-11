@@ -7,7 +7,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
     /// <summary>
     /// Hold properties of a target feed endpoint.
     /// </summary>
-    public class FeedConfig
+    public class TargetFeedConfig
     {
         public string TargetURL { get; set; }
         public FeedType Type { get; set; }
