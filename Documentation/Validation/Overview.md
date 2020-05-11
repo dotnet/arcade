@@ -40,7 +40,7 @@ This repository contains the scenarios where we validate the last produced versi
 2. Arcade validation [official build](https://dnceng.visualstudio.com/internal/_build?definitionId=282) 
 is triggered. This will validate the version which was just “pushed” by Arcade
 3. The following process updates are only valid for the current development branch of Arcade and will not affect release or servicing branches. 
-    1. During the Arcade validation process, we will use the latest build in the bell-weather repositories (e.g. `dotnet/runtime`, `dotnet/aspnetcore`, and `dotnet/installer`) to validate Arcade against. If the latest build in the repository is failing, we will not validate against that repository. 
+    1. During the Arcade validation process, we will use the latest build in the bellwether repositories (e.g. `dotnet/runtime`, `dotnet/aspnetcore`, and `dotnet/installer`) to validate Arcade against. If the latest build in the repository is failing, we will not validate against that repository. 
     2. If any of the builds of these repositories fails, the Engineering Services team will investigate the source of the failure.
     3. If the source of the failure is due to an infrastructure failure in Arcade (e.g. dependency flow, publishing, machine images, et cetera), the team will correct the issue and publish a new version of Arcade to validate. 
     4. If the source of the failure is due to a toolset failure that was flowed to Arcade (e.g. Roslyn, Nuget, MSBuild, et cetera), the team will inform the repository owner of the potential breaking change. 
