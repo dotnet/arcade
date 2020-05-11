@@ -16,7 +16,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed
 {
-    class GeneralUtils
+    public class GeneralUtils
     {
         public const string SymbolPackageSuffix = ".symbols.nupkg";
         public const string PackageSuffix = ".nupkg";
