@@ -31,9 +31,9 @@
       <Uri>https://github.com/dotnet/arcade-services</Uri>
       <Sha>a737c3adb903bcc7210be969dcc9cf860e33e17e</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.Net.Compilers.Toolset" Version="3.7.0-1.20254.1">
+    <Dependency Name="Microsoft.Net.Compilers.Toolset" Version="3.7.0-2.20259.1">
       <Uri>https://github.com/dotnet/roslyn</Uri>
-      <Sha>87e2b1e95e030928b33d6a54341ea342efbbdafa</Sha>
+      <Sha>d0ef8687ce735c8aa32035396f521705a8ff7392</Sha>
     </Dependency>
     <Dependency Name="Microsoft.SourceLink" Version="1.0.0-beta2-19554-01">
       <Uri>https://github.com/dotnet/sourcelink</Uri>
