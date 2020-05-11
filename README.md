@@ -11,7 +11,7 @@ Azure DevOps [![Build Status](https://dev.azure.com/dnceng/public/_apis/build/st
 ## Validation & Dependency Flow Status
 Status Last Updated: May 7, 2020, 3:45 PM PDT
 
-**[Arcade validation policy and process](https://github.com/dotnet/arcade/blob/master/Documentation/Validation/Overview.md)**
+**[Arcade validation policy and process](Documentation/Validation/Overview.md)**
 
 ### Current Version of Arcade in `.NET Eng - Latest`
 
