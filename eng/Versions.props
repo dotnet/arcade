@@ -71,7 +71,7 @@
     <MicrosoftDiaSymReaderConverterVersion>1.1.0-beta2-19575-01</MicrosoftDiaSymReaderConverterVersion>
     <MicrosoftDiaSymReaderPdb2PdbVersion>1.1.0-beta2-19575-01</MicrosoftDiaSymReaderPdb2PdbVersion>
     <MicrosoftDiaSymReaderNativeVersion>1.7.0</MicrosoftDiaSymReaderNativeVersion>
-    <MicrosoftDotNetMaestroClientVersion>1.1.0-beta.20254.1</MicrosoftDotNetMaestroClientVersion>
+    <MicrosoftDotNetMaestroClientVersion>1.1.0-beta.20258.6</MicrosoftDotNetMaestroClientVersion>
     <MicrosoftSourceLinkVersion>1.1.0-beta-20206-02</MicrosoftSourceLinkVersion>
     <MicrosoftDotNetSwaggerGeneratorMSBuildVersion>5.0.0-beta.20228.4</MicrosoftDotNetSwaggerGeneratorMSBuildVersion>
     <XliffTasksVersion>1.0.0-beta.20206.1</XliffTasksVersion>
