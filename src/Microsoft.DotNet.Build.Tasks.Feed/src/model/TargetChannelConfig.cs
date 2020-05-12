@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using Microsoft.DotNet.VersionTools.BuildManifest.Model;
+
 namespace Microsoft.DotNet.Build.Tasks.Feed.Model
 {
     public struct TargetChannelConfig
@@ -13,6 +15,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
         public string ShippingFeed { get; }
         public string TransportFeed { get; }
         public string SymbolsFeed { get; }
+        public string ChecksumsFeed { get; }
+        public string InstallersFeed { get; }
 
         public TargetChannelConfig(
             int id,
@@ -21,7 +25,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             string akaMSChannelName,
             string shippingFeed,
             string transportFeed,
-            string symbolsFeed)
+            string symbolsFeed,
+            string checksumsFeed,
+            string installersFeed)
         {
             Id = id;
             PublishingInfraVersion = publishingInfraVersion;
@@ -30,6 +36,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             ShippingFeed = shippingFeed;
             TransportFeed = transportFeed;
             SymbolsFeed = symbolsFeed;
+            ChecksumsFeed = checksumsFeed;
+            InstallersFeed = installersFeed;
         }
     }
 }

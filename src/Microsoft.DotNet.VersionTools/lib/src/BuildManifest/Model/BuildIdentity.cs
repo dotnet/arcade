@@ -9,6 +9,18 @@ using System.Xml.Linq;
 
 namespace Microsoft.DotNet.VersionTools.BuildManifest.Model
 {
+    public enum PublishingInfraVersion
+    {
+        /// <summary>
+        ///   This flag is usually used when we are creating a configuration
+        ///   that is applicable to all versions of the infra.
+        /// </summary>
+        All = 0,
+        Legacy = 1,
+        Latest = 2,
+        Next = 3
+    }
+
     public class BuildIdentity
     {
         private static readonly string[] AttributeOrder =
@@ -70,12 +82,23 @@ namespace Microsoft.DotNet.VersionTools.BuildManifest.Model
             set { Attributes[nameof(VersionStamp)] = value; }
         }
 
-        public int PublishingVersion
+        public PublishingInfraVersion PublishingVersion
         {
-            get { return int.Parse(Attributes.GetOrDefault(nameof(PublishingVersion))); }
+            get {
+                string value = Attributes.GetOrDefault(nameof(PublishingVersion));
+                
+                if (string.IsNullOrEmpty(value))
+                {
+                    return PublishingInfraVersion.Legacy;
+                }
+                else
+                {
+                    return (PublishingInfraVersion)Enum.Parse(typeof(PublishingInfraVersion), value, true);
+                }
+            }
 
             set {
-                Attributes[nameof(PublishingVersion)] = value.ToString(); 
+                Attributes[nameof(PublishingVersion)] = ((int)value).ToString(); 
             }
         }
 

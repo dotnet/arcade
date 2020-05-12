@@ -4,6 +4,7 @@
 
 using Microsoft.Build.Framework;
 using Microsoft.DotNet.Build.Tasks.Feed.Model;
+using Microsoft.DotNet.VersionTools.BuildManifest.Model;
 using System;
 using MSBuild = Microsoft.Build.Utilities;
 
@@ -75,7 +76,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                 if (!string.IsNullOrEmpty(PublishingVersion)) 
                 {
-                    Enum.TryParse(PublishingVersion, true, out targetPublishingVersion);
+                    Enum.TryParse(PublishingVersion, ignoreCase: true, out targetPublishingVersion);
                 }
 
                 var buildModel = BuildManifestUtil.CreateModelFromItems(

@@ -138,7 +138,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         Branch = manifestBranch,
                         Commit = manifestCommit,
                         IsStable = isStableBuild.ToString(),
-                        PublishingVersion = (int)publishingVersion
+                        PublishingVersion = publishingVersion
                     });
 
             buildModel.Artifacts.Blobs.AddRange(blobArtifacts);
