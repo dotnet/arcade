@@ -6,7 +6,7 @@
     this file and switch to wixproj. See https://github.com/wixtoolset/issues/issues/5627
   -->
 
-  <UsingTask TaskName="CreateMsiPackageDrop" AssemblyFile="$(DotNetBuildTasksSharedFrameworkTaskFile)" />
+  <UsingTask TaskName="CreateLightCommandPackageDrop" AssemblyFile="$(DotNetBuildTasksSharedFrameworkTaskFile)" />
   <UsingTask TaskName="ExecWithRetries" AssemblyFile="$(DotNetBuildTasksSharedFrameworkTaskFile)" />
   <UsingTask TaskName="StabilizeWixFileId" AssemblyFile="$(DotNetBuildTasksSharedFrameworkTaskFile)" />
 
@@ -327,15 +327,15 @@
       IgnoreStandardErrorWarningFormat="true"
       RetryDelayBase="2" />
 
-    <CreateMsiPackageDrop
+    <CreateLightCommandPackageDrop
       OriginalLightCommand="$(_lightCommand)"
-      WixObjPackageDir="$(ModifiedMsiPackageDir)"
-      NoLogo="$(NoLogo)"
-      Culture="$(Culture)"
-      OutFile="$(OutInstallerFile)"
+      LightCommandPackageDir="$(LightCommandPackagesDir)"
+      NoLogo="true"
+      Cultures="en-us"
+      Out="$(OutInstallerFile)"
       WixExtensions="@(WixExtensions)"
       WixSrcFiles="@(WixSrcFile -> '$(WixObjDir)%(Filename).wixobj');@(DirectoryToHarvest -> '%(WixObjFile)')"
-      Condition="'$(EnableCreateMsiPackageDrop)' == 'true'" />
+      Condition="'$(EnableCreateLightCommandPackageDrop)' == 'true'" />
   </Target>
 
   <!--

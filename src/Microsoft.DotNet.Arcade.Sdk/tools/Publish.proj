@@ -40,7 +40,7 @@
     <PublishDependsOnTargets Condition="$(PublishToSourceBuildStorage)">$(PublishDependsOnTargets);PublishToSourceBuildStorage</PublishDependsOnTargets>
     <PublishDependsOnTargets Condition="$(DotNetPublishUsingPipelines)">$(PublishDependsOnTargets);PublishToAzureDevOpsArtifacts</PublishDependsOnTargets>
 
-    <PublishDependsOnTargets>BeforePublish;CreateModifiedMsiPackageZip;GenerateBuildManifest;$(PublishDependsOnTargets)</PublishDependsOnTargets>
+    <PublishDependsOnTargets>BeforePublish;GenerateBuildManifest;$(PublishDependsOnTargets)</PublishDependsOnTargets>
   </PropertyGroup>
 
   <Import Project="$(NuGetPackageRoot)microsoft.dotnet.build.tasks.feed\$(MicrosoftDotNetBuildTasksFeedVersion)\build\Microsoft.DotNet.Build.Tasks.Feed.targets"/>
@@ -253,14 +253,6 @@
       FileSignInfo="@(FileSignInfo)"
       FileExtensionSignInfo="@(FileExtensionSignInfo)"
       ManifestPath="$(ArtifactsLogDir)/manifest.props" />
-  </Target>
-
-  <Target Name="CreateModifiedMsiPackageZip"
-          Condition="Exists('$(ModifiedMsiPackageDir)')">
-    <ZipDirectory
-      DestinationFile="$(ArtifactsDir)ModifiedMsiPackage.zip"
-      Overwrite="true"
-      SourceDirectory="$(ModifiedMsiPackageDir)" />
   </Target>
 
 </Project>

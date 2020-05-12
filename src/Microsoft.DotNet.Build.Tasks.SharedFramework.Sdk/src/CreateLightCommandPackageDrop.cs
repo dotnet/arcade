@@ -1,3 +1,7 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+// See the LICENSE file in the project root for more information.
+
 using Microsoft.Build.Framework;
 using System;
 using System.Collections.Generic;
@@ -9,18 +13,26 @@ using System.Xml.XPath;
 
 namespace Microsoft.DotNet.Build.Tasks.SharedFramework.Sdk.src
 {
-    public class CreateMsiPackageDrop : BuildTask
+    public class CreateLightCommandPackageDrop : BuildTask
     {
         private const int _fieldsArtifactId = 0;
         private const int _fieldsArtifactPath1 = 6;
         private const int _fieldsArtifactPath2 = 1;
 
         [Required]
-        public string WixObjPackageDir { get; set; }
+        public string LightCommandPackageDir { get; set; }
         public bool NoLogo { get; set; }
-        public string Culture { get; set; }
+        public bool Fv { get; set; }
+        public string PdbOut { get; set; }
+        public string Cultures { get; set; }
+        public string WixProjectFile { get; set; }
+        public string ContentsFile { get; set; }
+        public string OutputsFile { get; set; }
+        public string BuiltOutputsFile { get; set; }
+        public ITaskItem [] Loc { get; set; }
+        public ITaskItem [] Sice { get; set; }
         [Required]
-        public string OutFile { get; set; }
+        public string Out { get; set; }
         public ITaskItem [] WixExtensions { get; set; }
         [Required]
         public ITaskItem [] WixSrcFiles { get; set; }
@@ -31,7 +43,7 @@ namespace Microsoft.DotNet.Build.Tasks.SharedFramework.Sdk.src
 
         public override bool ExecuteCore()
         {
-            string packageDropOutputFolder = Path.Combine(WixObjPackageDir, Path.GetFileNameWithoutExtension(OutFile));
+            string packageDropOutputFolder = Path.Combine(LightCommandPackageDir, Path.GetFileNameWithoutExtension(Out));
             if (!Directory.Exists(packageDropOutputFolder))
             {
                 Directory.CreateDirectory(packageDropOutputFolder);
@@ -44,12 +56,7 @@ namespace Microsoft.DotNet.Build.Tasks.SharedFramework.Sdk.src
                 // copy the file to outputPath
                 string newWixObjFile = Path.Combine(packageDropOutputFolder, Path.GetFileName(wixobj.ItemSpec));
                 Log.LogMessage(MessageImportance.Normal, $"Creating modified wixobj file '{newWixObjFile}'...");
-                if (File.Exists(newWixObjFile))
-                {
-                    Log.LogMessage(MessageImportance.Low, $"wixobj '{newWixObjFile}' file already exists, skipping");
-                    continue;
-                }
-                File.Copy(wixobj.ItemSpec, newWixObjFile);
+                File.Copy(wixobj.ItemSpec, newWixObjFile, true);
 
                 XDocument doc = XDocument.Load(newWixObjFile);
                 if (doc == null)
@@ -85,6 +92,14 @@ namespace Microsoft.DotNet.Build.Tasks.SharedFramework.Sdk.src
 
                 doc.Save(newWixObjFile);
             }
+            if (Loc != null)
+            {
+                foreach (var locItem in Loc)
+                {
+                    var destinationPath = Path.Combine(packageDropOutputFolder, Path.GetFileName(locItem.ItemSpec));
+                    File.Copy(locItem.ItemSpec, destinationPath, true);
+                }
+            }
 
             // Write Light command to file
             string commandFilename = Path.Combine(packageDropOutputFolder, "light.cmd");
@@ -96,15 +111,55 @@ namespace Microsoft.DotNet.Build.Tasks.SharedFramework.Sdk.src
             }
             commandString += "REM Modified light command" + Environment.NewLine;
             commandString += "light.exe";
-            if(NoLogo)
+            commandString += $" -out {Path.GetFileName(Out)}";
+            if (NoLogo)
             {
                 commandString += " -nologo";
             }
-            if (Culture != null)
+            if (Cultures != null)
             {
-                commandString += $" -culture:{Culture}";
+                commandString += $" -culture:{Cultures}";
             }
-            commandString += $" -out {OutFile}";
+            if (Loc != null)
+            {
+                foreach (var locItem in Loc)
+                {
+                    commandString += $" -loc:{Path.GetFileName(locItem.ItemSpec)}";
+                }
+            }
+            if(Fv)
+            {
+                commandString += " -fv";
+            }
+            if(PdbOut != null)
+            {
+                commandString += $" -pdbout {PdbOut}";
+            }
+            if(WixProjectFile != null)
+            {
+                var destinationPath = Path.Combine(packageDropOutputFolder, Path.GetFileName(WixProjectFile));
+                File.Copy(WixProjectFile, destinationPath, true);
+                commandString += $" -wixprojectfile {Path.GetFileName(WixProjectFile)}";
+            }
+            if(ContentsFile != null)
+            {
+                commandString += $" -contentsfile {Path.GetFileName(ContentsFile)}";
+            }
+            if (OutputsFile != null)
+            {
+                commandString += $" -outputsfile {Path.GetFileName(OutputsFile)}";
+            }
+            if (BuiltOutputsFile != null)
+            {
+                commandString += $" -builtoutputsfile {Path.GetFileName(BuiltOutputsFile)}";
+            }
+            if (Sice != null)
+            {
+                foreach (var siceItem in Sice)
+                {
+                    commandString += $" -sice:{siceItem.ItemSpec}";
+                }
+            }
             if(WixExtensions != null)
             {
                 foreach(var wixExtension in WixExtensions)
@@ -128,15 +183,13 @@ namespace Microsoft.DotNet.Build.Tasks.SharedFramework.Sdk.src
             IEnumerable<XElement> iels = doc.XPathSelectElements(xpath, nsmgr);
             if (iels != null && iels.Count() > 0)
             {
-                // there are 7 <field> child elements in every 'row'
-                // first one is an ID - will use if for folder name
-                // third and six fields are full paths - the same value - update both
+
                 foreach (XElement row in iels)
                 {
                     IEnumerable<XElement> fields = row.XPathSelectElements("wix:field", nsmgr);
                     if (fields == null || fields.Count() == 0)
                     {
-                        // no fields in payload's row?!
+                        Log.LogError($"No fields in row ('{xpath}') of document '{doc.BaseUri}'");
                         continue;
                     }
 
@@ -154,7 +207,6 @@ namespace Microsoft.DotNet.Build.Tasks.SharedFramework.Sdk.src
                         }
                         else if (count == pathField1)
                         {
-                            // TODO: any checks?
                             oldPath = field.Value;
                             if (!File.Exists(oldPath))
                             {
@@ -167,7 +219,6 @@ namespace Microsoft.DotNet.Build.Tasks.SharedFramework.Sdk.src
                         }
                         else if (pathField2 != 0 && count == pathField2)
                         {
-                            // TODO: any checks?
                             field.Value = newRelativePath;
                             break;
                         }
@@ -182,7 +233,7 @@ namespace Microsoft.DotNet.Build.Tasks.SharedFramework.Sdk.src
                             Directory.CreateDirectory(newFolder);
                         }
 
-                        File.Copy(oldPath, Path.Combine(outputPath, newRelativePath));
+                        File.Copy(oldPath, Path.Combine(outputPath, newRelativePath), true);
                     }
                 }
             }
