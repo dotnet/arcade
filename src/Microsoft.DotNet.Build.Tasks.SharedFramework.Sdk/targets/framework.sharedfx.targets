@@ -219,6 +219,8 @@
       <RuntimeGraphGeneratorRuntime Condition="$([MSBuild]::IsOSPlatform('windows'))">win</RuntimeGraphGeneratorRuntime>
       <RuntimeGraphGeneratorRuntime Condition="$([MSBuild]::IsOSPlatform('osx'))">osx</RuntimeGraphGeneratorRuntime>
       <RuntimeGraphGeneratorRuntime Condition="$([MSBuild]::IsOSPlatform('freebsd'))">freebsd</RuntimeGraphGeneratorRuntime>
+      <RuntimeGraphGeneratorRuntime Condition="$([MSBuild]::IsOSPlatform('netbsd'))">netbsd</RuntimeGraphGeneratorRuntime>
+      <RuntimeGraphGeneratorRuntime Condition="$([MSBuild]::IsOSPlatform('sunos'))">sunos</RuntimeGraphGeneratorRuntime>
       <RuntimeGraphGeneratorRuntime Condition="'$(RuntimeGraphGeneratorRuntime)'==''">linux</RuntimeGraphGeneratorRuntime>
     </PropertyGroup>
 

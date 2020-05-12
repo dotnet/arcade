@@ -25,6 +25,7 @@ namespace Microsoft.DotNet.XUnitExtensions
                 (platforms.HasFlag(TestPlatforms.Linux) && RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) ||
                 (platforms.HasFlag(TestPlatforms.NetBSD) && RuntimeInformation.IsOSPlatform(OSPlatform.Create("NETBSD"))) ||
                 (platforms.HasFlag(TestPlatforms.OSX) && RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) ||
+                (platforms.HasFlag(TestPlatforms.SunOS) && RuntimeInformation.IsOSPlatform(OSPlatform.Create("SUNOS"))) ||
                 (platforms.HasFlag(TestPlatforms.Windows) && RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
         
         public static bool TestRuntimeApplies(TestRuntimes runtimes) =>
