@@ -462,7 +462,7 @@ function InitializeBuildTool() {
       Write-PipelineTelemetryError -Category 'InitializeToolset' -Message "/global.json must specify 'tools.dotnet'."
       ExitWithExitCode 1
     }
-    $dotnetPath = GetExecutableFileName 'dotnet'
+    $dotnetPath = Join-Path $dotnetRoot (GetExecutableFileName 'dotnet')
     $buildTool = @{ Path = $dotnetPath; Command = 'msbuild'; Tool = 'dotnet'; Framework = 'netcoreapp2.1' }
   } elseif ($msbuildEngine -eq "vs") {
     try {
@@ -678,10 +678,10 @@ function GetMSBuildBinaryLogCommandLineArgument($arguments) {
 }
 
 function GetExecutableFileName($baseName) {
-  if (IsWindowsPlatform) {
-    return "$baseName.exe"
+  return if (IsWindowsPlatform) {
+    "$baseName.exe"
   } else {
-    return $baseName
+    $baseName
   }
 }
 
