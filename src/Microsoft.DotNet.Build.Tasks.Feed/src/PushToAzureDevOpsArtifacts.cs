@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for more information.
 
 using Microsoft.Build.Framework;
-using Microsoft.DotNet.Build.Tasks.Feed.Model;
 using Microsoft.DotNet.VersionTools.BuildManifest.Model;
 using System;
 using System.Collections.Generic;
@@ -146,7 +145,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                     if (!string.IsNullOrEmpty(PublishingVersion))
                     {
-                        Enum.TryParse(PublishingVersion, true, out targetPublishingVersion);
+                        if (!Enum.TryParse(PublishingVersion, true, out targetPublishingVersion))
+                        {
+                            Log.LogError($"Could not parse publishing infra version '{PublishingVersion}'");
+                        }
                     }
 
                     BuildManifestUtil.CreateBuildManifest(Log,

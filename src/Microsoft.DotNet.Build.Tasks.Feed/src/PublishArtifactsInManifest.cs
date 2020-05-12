@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for more information.
 
 using Microsoft.Build.Framework;
-using Microsoft.DotNet.Build.Tasks.Feed.Model;
 using Microsoft.DotNet.VersionTools.BuildManifest.Model;
 using System;
 using System.IO;
@@ -19,6 +18,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
     public class PublishArtifactsInManifest : Microsoft.Build.Utilities.Task
     {
         #region MSBuild Task Parameters
+        /// <summary>
+        /// Comma separated list of Maestro++ Channel IDs to which the build should
+        /// be assigned to once the assets are published.
+        /// </summary>
+        public string TargetChannels { get; set; }
+
         /// <summary>
         /// Configuration telling which target feed to use for each artifact category.
         /// ItemSpec: ArtifactCategory
@@ -152,18 +157,17 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             }
 
             BuildModel buildModel = BuildManifestUtil.ManifestFileToModel(manifestFullPath, Log);
-            PublishingInfraVersion targetInfraVersion = (PublishingInfraVersion) buildModel.Identity.PublishingVersion;
             
-            if (targetInfraVersion == PublishingInfraVersion.Legacy)
+            if (buildModel.Identity.PublishingVersion == PublishingInfraVersion.Legacy)
             {
                 Log.LogError("This task is not able to handle legacy manifests.");
                 return Task.CompletedTask;
             }
-            else if (targetInfraVersion == PublishingInfraVersion.Latest)
+            else if (buildModel.Identity.PublishingVersion == PublishingInfraVersion.Latest)
             {
                 return ConstructLatestPublishingTask();
             }
-            else if (targetInfraVersion == PublishingInfraVersion.Next)
+            else if (buildModel.Identity.PublishingVersion == PublishingInfraVersion.Next)
             {
                 return ConstructNextPublishingTask();
             }
@@ -203,7 +207,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         {
             return new PublishArtifactsInManifestV3()
             {
-                BuildEngine = this.BuildEngine
+                BuildEngine = this.BuildEngine,
+                TargetChannels = this.TargetChannels
             }.ExecuteAsync();
         }
     }
