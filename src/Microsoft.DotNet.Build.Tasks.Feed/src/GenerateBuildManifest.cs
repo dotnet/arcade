@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using Microsoft.Build.Framework;
+using Microsoft.DotNet.Build.Tasks.Feed.Model;
 using System;
 using MSBuild = Microsoft.Build.Utilities;
 
@@ -70,6 +71,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         {
             try
             {
+                PublishingInfraVersion targetPublishingVersion = PublishingInfraVersion.Legacy;
+
+                if (!string.IsNullOrEmpty(PublishingVersion)) 
+                {
+                    Enum.TryParse(PublishingVersion, true, out targetPublishingVersion);
+                }
+
                 var buildModel = BuildManifestUtil.CreateModelFromItems(
                     Artifacts,
                     BuildId,
@@ -78,7 +86,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     RepoBranch,
                     RepoCommit,
                     IsStableBuild,
-                    PublishingVersion ?? BuildManifestUtil.LegacyPublishingInfraVersion,
+                    targetPublishingVersion,
                     Log);
 
                 buildModel.WriteAsXml(OutputPath, Log);

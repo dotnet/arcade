@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using Microsoft.Build.Framework;
+using Microsoft.DotNet.Build.Tasks.Feed.Model;
 using Microsoft.DotNet.VersionTools.BuildManifest.Model;
 using System;
 using System.Collections.Generic;
@@ -141,6 +142,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         blobArtifacts = blobItems.Select(BuildManifestUtil.CreateBlobArtifactModel).Where(blob => blob != null);
                     }
 
+                    PublishingInfraVersion targetPublishingVersion = PublishingInfraVersion.Latest;
+
+                    if (!string.IsNullOrEmpty(PublishingVersion))
+                    {
+                        Enum.TryParse(PublishingVersion, true, out targetPublishingVersion);
+                    }
+
                     BuildManifestUtil.CreateBuildManifest(Log,
                         blobArtifacts,
                         packageArtifacts,
@@ -151,7 +159,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         ManifestCommit,
                         ManifestBuildData,
                         IsStableBuild,
-                        PublishingVersion ?? BuildManifestUtil.LatestPublishingInfraVersion);
+                        targetPublishingVersion);
 
                     Log.LogMessage(MessageImportance.High,
                         $"##vso[artifact.upload containerfolder=AssetManifests;artifactname=AssetManifests]{AssetManifestPath}");

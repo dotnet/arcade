@@ -70,16 +70,12 @@ namespace Microsoft.DotNet.VersionTools.BuildManifest.Model
             set { Attributes[nameof(VersionStamp)] = value; }
         }
 
-        public string PublishingVersion
+        public int PublishingVersion
         {
-            get { return Attributes.GetOrDefault(nameof(PublishingVersion)); }
+            get { return int.Parse(Attributes.GetOrDefault(nameof(PublishingVersion))); }
 
             set {
-                if (!IsValidPublishingInfraVersion(value))
-                {
-                    throw new ArgumentException($"`{value} not is in the format expected. Valid values are integers.");
-                }
-                Attributes[nameof(PublishingVersion)] = value; 
+                Attributes[nameof(PublishingVersion)] = value.ToString(); 
             }
         }
 
@@ -117,15 +113,5 @@ namespace Microsoft.DotNet.VersionTools.BuildManifest.Model
                 .CreateAttributeDictionary()
                 .ThrowIfMissingAttributes(RequiredAttributes)
         };
-
-        public static bool IsValidPublishingInfraVersion(string version)
-        {
-            if (string.IsNullOrEmpty(version))
-            {
-                return false;
-            }
-
-            return int.TryParse(version, out var _);
-        }
     }
 }

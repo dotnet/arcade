@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using Microsoft.Build.Framework;
+using Microsoft.DotNet.Build.Tasks.Feed.Model;
 using Microsoft.DotNet.VersionTools.BuildManifest.Model;
 using System;
 using System.IO;
@@ -151,17 +152,18 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             }
 
             BuildModel buildModel = BuildManifestUtil.ManifestFileToModel(manifestFullPath, Log);
-
-            if (buildModel.Identity.PublishingVersion == BuildManifestUtil.LegacyPublishingInfraVersion)
+            PublishingInfraVersion targetInfraVersion = (PublishingInfraVersion) buildModel.Identity.PublishingVersion;
+            
+            if (targetInfraVersion == PublishingInfraVersion.Legacy)
             {
                 Log.LogError("This task is not able to handle legacy manifests.");
                 return Task.CompletedTask;
             }
-            else if (buildModel.Identity.PublishingVersion == BuildManifestUtil.LatestPublishingInfraVersion)
+            else if (targetInfraVersion == PublishingInfraVersion.Latest)
             {
                 return ConstructLatestPublishingTask();
             }
-            else if (buildModel.Identity.PublishingVersion == BuildManifestUtil.NextPublishingInfraVersion)
+            else if (targetInfraVersion == PublishingInfraVersion.Next)
             {
                 return ConstructNextPublishingTask();
             }

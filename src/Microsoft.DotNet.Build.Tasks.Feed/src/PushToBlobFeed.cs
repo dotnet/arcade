@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using Microsoft.Build.Framework;
+using Microsoft.DotNet.Build.Tasks.Feed.Model;
 using Microsoft.DotNet.VersionTools.BuildManifest.Model;
 using System;
 using System.Collections.Generic;
@@ -166,7 +167,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     ManifestCommit,
                     ManifestBuildData,
                     IsStableBuild,
-                    BuildManifestUtil.LegacyPublishingInfraVersion);
+                    PublishingInfraVersion.Legacy);
             }
             catch (Exception e)
             {

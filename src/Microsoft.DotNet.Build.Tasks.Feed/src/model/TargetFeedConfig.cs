@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
+
 namespace Microsoft.DotNet.Build.Tasks.Feed.Model
 {
     /// <summary>
@@ -9,6 +11,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
     /// </summary>
     public class TargetFeedConfig
     {
+        public TargetFeedContentType ContentType { get; set; }
         public string TargetURL { get; set; }
         public FeedType Type { get; set; }
         public string Token { get; set; }
@@ -36,6 +39,24 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
         ///      [LatestLinkShortUrlPrefix]/aspnetcore/Runtime/dotnet-hosting-win.exe -> aspnetcore/Runtime/3.1.0-preview2.19511.6/dotnet-hosting-3.1.0-preview2.19511.6-win.exe
         /// </summary>
         public string LatestLinkShortUrlPrefix { get; set; }
+    }
+
+    [Flags]
+    public enum TargetFeedContentType
+    {
+        Package         = 1,
+        Symbols         = 2,
+        Checksum        = 4,
+        OSX             = 8,
+        Deb             = 16,
+        Rpm             = 32,
+        Node            = 64,
+        BinaryLayout    = 128,
+        Installer       = 256,
+        Maven           = 512,
+        VSIX            = 1024,
+        Badge           = 2048,
+        Other           = 4096
     }
 
     /// <summary>

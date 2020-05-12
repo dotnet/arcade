@@ -4,6 +4,7 @@
 
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
+using Microsoft.DotNet.Build.Tasks.Feed.Model;
 using Microsoft.DotNet.VersionTools.Automation;
 using Microsoft.DotNet.VersionTools.BuildManifest.Model;
 using System;
@@ -27,7 +28,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             string manifestCommit,
             string[] manifestBuildData,
             bool isStableBuild,
-            string publishingVersion)
+            PublishingInfraVersion publishingVersion)
         {
             CreateModel(
                 blobArtifacts,
@@ -61,7 +62,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             string repoBranch,
             string repoCommit,
             bool isStableBuild,
-            string publishingVersion,
+            PublishingInfraVersion publishingVersion,
             TaskLoggingHelper log)
         {
             if (artifacts == null)
@@ -120,7 +121,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             string manifestBranch,
             string manifestCommit,
             bool isStableBuild,
-            string publishingVersion,
+            PublishingInfraVersion publishingVersion,
             TaskLoggingHelper log)
         {
             var attributes = MSBuildListSplitter.GetNamedProperties(manifestBuildData);
@@ -137,7 +138,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         Branch = manifestBranch,
                         Commit = manifestCommit,
                         IsStable = isStableBuild.ToString(),
-                        PublishingVersion = publishingVersion
+                        PublishingVersion = (int)publishingVersion
                     });
 
             buildModel.Artifacts.Blobs.AddRange(blobArtifacts);
