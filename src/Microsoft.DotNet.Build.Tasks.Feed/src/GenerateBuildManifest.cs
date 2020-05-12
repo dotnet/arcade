@@ -4,6 +4,7 @@
 
 using Microsoft.Build.Framework;
 using Microsoft.DotNet.Build.Tasks.Feed.Model;
+using Microsoft.DotNet.VersionTools.BuildManifest.Model;
 using System;
 using MSBuild = Microsoft.Build.Utilities;
 
