@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Dependencies>
   <ProductDependencies>
+    <Dependency Name="Microsoft.SymbolUploader.Build.Task" Version="1.1.125701">
+      <Uri>https://dev.azure.com/dnceng/internal/_git/dotnet-symuploader</Uri>
+      <Sha>71c97909cc6128457dbb3a4a321d46a48cc71f31</Sha>
+    </Dependency>
   </ProductDependencies>
   <ToolsetDependencies>
     <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="5.0.0-beta.20258.8">
