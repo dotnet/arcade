@@ -335,13 +335,16 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         };
         #endregion
 
-        public readonly Dictionary<string, List<TargetFeedConfig>> FeedConfigs = new Dictionary<string, List<TargetFeedConfig>>();
+        public readonly Dictionary<TargetFeedContentType, List<TargetFeedConfig>> FeedConfigs = 
+            new Dictionary<TargetFeedContentType, List<TargetFeedConfig>>();
 
-        private readonly Dictionary<string, List<PackageArtifactModel>> PackagesByCategory = new Dictionary<string, List<PackageArtifactModel>>();
+        private readonly Dictionary<TargetFeedContentType, List<PackageArtifactModel>> PackagesByCategory = 
+            new Dictionary<TargetFeedContentType, List<PackageArtifactModel>>();
 
-        private readonly Dictionary<string, List<BlobArtifactModel>> BlobsByCategory = new Dictionary<string, List<BlobArtifactModel>>();
+        private readonly Dictionary<TargetFeedContentType, List<BlobArtifactModel>> BlobsByCategory = 
+            new Dictionary<TargetFeedContentType, List<BlobArtifactModel>>();
 
-        private HashSet<(int AssetId, string AssetLocation, AddAssetLocationToAssetAssetLocationType LocationType)> NewAssetLocations =
+        private readonly HashSet<(int AssetId, string AssetLocation, AddAssetLocationToAssetAssetLocationType LocationType)> NewAssetLocations =
             new HashSet<(int AssetId, string AssetLocation, AddAssetLocationToAssetAssetLocationType LocationType)>();
 
         private LatestLinksManager LinkManager { get; set; } = null;
@@ -384,6 +387,27 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 return null;
             }
             return assetsWithName.Single();
+        }
+
+        protected List<BuildModel> CreateBuildModels()
+        {
+            List<BuildModel> buildModels = new List<BuildModel>();
+            foreach (var assetManifestPath in AssetManifestPaths)
+            {
+                Log.LogMessage(MessageImportance.High, $"Publishing artifacts in {assetManifestPath.ItemSpec}.");
+                string fileName = assetManifestPath.ItemSpec;
+
+                if (string.IsNullOrWhiteSpace(fileName) || !File.Exists(fileName))
+                {
+                    Log.LogError($"Problem reading asset manifest path from '{fileName}'");
+                }
+                else
+                {
+                    buildModels.Add(BuildManifestUtil.ManifestFileToModel(assetManifestPath.ItemSpec, Log));
+                }
+            }
+
+            return buildModels;
         }
 
         /// <summary>
@@ -534,11 +558,16 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         }
                     }
 
-                    string categoryKey = fc.ItemSpec.Trim().ToUpper();
+                    if (!Enum.TryParse(fc.ItemSpec, out TargetFeedContentType categoryKey))
+                    {
+                        Log.LogError($"Invalid target feed config category '{fc.ItemSpec}'.");
+                    }
+
                     if (!FeedConfigs.TryGetValue(categoryKey, out _))
                     {
                         FeedConfigs[categoryKey] = new List<TargetFeedConfig>();
                     }
+
                     FeedConfigs[categoryKey].Add(feedConfig);
                 }
             }
@@ -768,13 +797,18 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                 foreach (var category in categories.Split(';').Select(c => c.ToUpper()))
                 {
-                    if (PackagesByCategory.ContainsKey(category))
+                    if (!Enum.TryParse(category, out TargetFeedContentType categoryKey))
                     {
-                        PackagesByCategory[category].Add(packageAsset);
+                        Log.LogError($"Invalid target feed config category '{category}'.");
+                    }
+
+                    if (PackagesByCategory.ContainsKey(categoryKey))
+                    {
+                        PackagesByCategory[categoryKey].Add(packageAsset);
                     }
                     else
                     {
-                        PackagesByCategory[category] = new List<PackageArtifactModel>() { packageAsset };
+                        PackagesByCategory[categoryKey] = new List<PackageArtifactModel>() { packageAsset };
                     }
                 }
             }
@@ -790,13 +824,18 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                 foreach (var category in categories.Split(';'))
                 {
-                    if (BlobsByCategory.ContainsKey(category))
+                    if (!Enum.TryParse(category, out TargetFeedContentType categoryKey))
                     {
-                        BlobsByCategory[category].Add(blobAsset);
+                        Log.LogError($"Invalid target feed config category '{category}'.");
+                    }
+
+                    if (BlobsByCategory.ContainsKey(categoryKey))
+                    {
+                        BlobsByCategory[categoryKey].Add(blobAsset);
                     }
                     else
                     {
-                        BlobsByCategory[category] = new List<BlobArtifactModel>() { blobAsset };
+                        BlobsByCategory[categoryKey] = new List<BlobArtifactModel>() { blobAsset };
                     }
                 }
             }

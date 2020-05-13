@@ -28,20 +28,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         {
             try
             {
-                List<BuildModel> buildModels = new List<BuildModel>();
-                foreach (var assetManifestPath in AssetManifestPaths)
-                {
-                    Log.LogMessage(MessageImportance.High, $"Publishing artifacts in {assetManifestPath.ItemSpec}.");
-                    string fileName = assetManifestPath.ItemSpec;
-                    if (string.IsNullOrWhiteSpace(fileName) || !File.Exists(fileName))
-                    {
-                        Log.LogError($"Problem reading asset manifest path from '{fileName}'");
-                    }
-                    else
-                    {
-                        buildModels.Add(BuildManifestUtil.ManifestFileToModel(assetManifestPath.ItemSpec, Log));
-                    }
-                }
+                List<BuildModel> buildModels = CreateBuildModels();
 
                 if (Log.HasLoggedErrors)
                 {

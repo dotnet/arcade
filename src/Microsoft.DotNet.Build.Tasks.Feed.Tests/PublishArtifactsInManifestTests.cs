@@ -29,7 +29,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 // check the expected values.
                 TargetFeedConfig = new Microsoft.Build.Utilities.TaskItem[]
                 {
-                    new Microsoft.Build.Utilities.TaskItem("FOOPACKAGES", new Dictionary<string, string> {
+                    new Microsoft.Build.Utilities.TaskItem(TargetFeedContentType.BinaryLayout.ToString(), new Dictionary<string, string> {
                         { "TargetUrl", BlobFeedUrl },
                         { "Token", RandomToken },
                         { "Type", "AzDoNugetFeed" },
@@ -45,7 +45,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             Assert.Collection(task.FeedConfigs,
                 configList =>
                 {
-                    Assert.Equal("FOOPACKAGES", configList.Key);
+                    Assert.Equal(TargetFeedContentType.BinaryLayout, configList.Key);
                     Assert.Collection(configList.Value, config =>
                     {
                         Assert.Equal(RandomToken, config.Token);
@@ -112,7 +112,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             {
                 TargetFeedConfig = new Microsoft.Build.Utilities.TaskItem[]
                 {
-                    new Microsoft.Build.Utilities.TaskItem("FOOPACKAGES", new Dictionary<string, string> {
+                    new Microsoft.Build.Utilities.TaskItem(TargetFeedContentType.BinaryLayout.ToString(), new Dictionary<string, string> {
                         { "TargetUrl", BlobFeedUrl },
                         { "Token", RandomToken },
                         // Use different casing here to make sure that parsing
@@ -130,7 +130,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             Assert.Collection(task.FeedConfigs,
                 configList =>
                 {
-                    Assert.Equal("FOOPACKAGES", configList.Key);
+                    Assert.Equal(TargetFeedContentType.BinaryLayout, configList.Key);
                     Assert.Collection(configList.Value, config =>
                     {
                         Assert.Equal(RandomToken, config.Token);
@@ -184,13 +184,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 InternalBuild = true,
                 TargetFeedConfig = new Microsoft.Build.Utilities.TaskItem[]
                 {
-                    new Microsoft.Build.Utilities.TaskItem("FOOPACKAGES", new Dictionary<string, string> {
+                    new Microsoft.Build.Utilities.TaskItem(TargetFeedContentType.Checksum.ToString(), new Dictionary<string, string> {
                         { "TargetUrl", BlobFeedUrl },
                         { "Token", RandomToken },
                         { "Type", "AZURESTORAGEFEED" },
                         { "AssetSelection", "SHIPPINGONLY" },
                         { "Internal", "true" }}),
-                    new Microsoft.Build.Utilities.TaskItem("FOOPACKAGES", new Dictionary<string, string> {
+                    new Microsoft.Build.Utilities.TaskItem(TargetFeedContentType.Maven.ToString(), new Dictionary<string, string> {
                         { "TargetUrl", BlobFeedUrl },
                         { "Token", RandomToken },
                         { "Type", "AZURESTORAGEFEED" },
