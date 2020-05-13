@@ -103,7 +103,7 @@ Arcade provides common build scripts in the [eng/common](https://github.com/dotn
 
   Defined global variables and functions used in all builds scripts. This include helpers that install .NET SDK, invoke MSBuild, locate Visual Studio, report build telemetry, etc.
 
-- eng/common/[CIBuild.cmd](https://github.com/dotnet/arcade/tree/master/eng/common/tools.ps1)|[cibuild.sh](https://github.com/dotnet/arcade/tree/master/eng/common/cibuild.sh)
+- eng/common/[CIBuild.cmd](https://github.com/dotnet/arcade/tree/master/eng/common/CIBuild.cmd)|[cibuild.sh](https://github.com/dotnet/arcade/tree/master/eng/common/cibuild.sh)
 
   Repositories that use `eng/common/build.ps1|sh` (as opposed to a customized `eng/build.ps1|sh`) should use this build script for the main build step in their pipeline definition. Repositories with custom `eng/build.ps1|sh` should also add the corresponding `eng/CIBuild.cmd|cibuild.sh` for use in their pipeline definition.
    
