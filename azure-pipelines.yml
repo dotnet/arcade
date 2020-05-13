@@ -128,19 +128,20 @@ stages:
             env:
               SYSTEM_ACCESSTOKEN: $(System.AccessToken)
               HelixAccessToken: ''
-          - powershell: eng\common\build.ps1
-              -configuration $(_BuildConfig) 
-              -prepareMachine
-              -ci
-              -restore
-              -test
-              -projects $(Build.SourcesDirectory)\tests\UnitTests.XHarness.Android.proj
-              /bl:$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)\Helix.XHarness.binlog
-              /p:RestoreUsingNuGetTargets=false
-            displayName: XHarness Android Helix Testing
-            env:
-              SYSTEM_ACCESSTOKEN: $(System.AccessToken)
-              HelixAccessToken: ''              
+# Disabled until https://github.com/dotnet/core-eng/issues/9820 is addressed              
+#          - powershell: eng\common\build.ps1
+#              -configuration $(_BuildConfig) 
+#              -prepareMachine
+#              -ci
+#              -restore
+#              -test
+#              -projects $(Build.SourcesDirectory)\tests\UnitTests.XHarness.Android.proj
+#              /bl:$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)\Helix.XHarness.binlog
+#              /p:RestoreUsingNuGetTargets=false
+#            displayName: XHarness Android Helix Testing
+#            env:
+#              SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+#              HelixAccessToken: ''              
         - job: Linux
           container: LinuxContainer
           pool:
