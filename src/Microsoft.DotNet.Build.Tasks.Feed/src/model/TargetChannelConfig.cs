@@ -15,6 +15,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
         public string ShippingFeed { get; }
         public string TransportFeed { get; }
         public string SymbolsFeed { get; }
+        public string ChecksumsFeed { get; }
+        public string InstallersFeed { get; }
 
         public TargetChannelConfig(
             int id,
@@ -23,7 +25,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             string akaMSChannelName,
             string shippingFeed,
             string transportFeed,
-            string symbolsFeed)
+            string symbolsFeed,
+            string checksumsFeed,
+            string installersFeed)
         {
             Id = id;
             PublishingInfraVersion = publishingInfraVersion;
@@ -32,6 +36,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             ShippingFeed = shippingFeed;
             TransportFeed = transportFeed;
             SymbolsFeed = symbolsFeed;
+            ChecksumsFeed = checksumsFeed;
+            InstallersFeed = installersFeed;
         }
     }
 }

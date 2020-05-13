@@ -2,13 +2,11 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using Microsoft.Build.Framework;
 using Microsoft.DotNet.Build.Tasks.Feed.Model;
 using Microsoft.DotNet.Maestro.Client;
 using Microsoft.DotNet.Maestro.Client.Models;
 using Microsoft.DotNet.VersionTools.BuildManifest.Model;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -21,6 +19,18 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// be assigned to once the assets are published.
         /// </summary>
         public string TargetChannels { get; set; }
+
+        public bool PublishInstallersAndChecksums { get; set; }
+
+        public string AzureDevOpsFeedsKey { get; set; }
+
+        public string ArtifactsCategory { get; set; }
+        
+        public string AzureStorageTargetFeedKey { get; }
+        
+        public string InstallersFeedKey { get; }
+        
+        public string CheckSumsFeedKey { get; }
 
         public override bool Execute()
         {
@@ -58,21 +68,18 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         build.Identity.IsStable.Equals("true", System.StringComparison.OrdinalIgnoreCase),
                         build.Identity.Name,
                         build.Identity.Commit,
-                        "artifact category",
-                        "azure storage pat",
-                        false, //"publish installers and checksums",
-                        "installers target static feed",
-                        "installers azure account key",
-                        "checksums target static feed",
-                        "checksums azure account key",
+                        ArtifactsCategory,
+                        AzureStorageTargetFeedKey,
+                        PublishInstallersAndChecksums,
+                        targetChannelConfig.InstallersFeed,
+                        InstallersFeedKey,
+                        targetChannelConfig.ChecksumsFeed,
+                        CheckSumsFeedKey,
                         targetChannelConfig.ShippingFeed,
-                        "azdo shipping feed key",
                         targetChannelConfig.TransportFeed,
-                        "azdo transport feed key",
                         targetChannelConfig.SymbolsFeed,
-                        "azdo symbols feed key",
                         targetChannelConfig.AkaMSChannelName,
-                        "azdo target feed pat",
+                        AzureDevOpsFeedsKey,
                         BuildEngine = this.BuildEngine);
 
                     // Fetch Maestro record of the build. We're going to use it to get the BAR ID

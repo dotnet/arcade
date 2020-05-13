@@ -21,13 +21,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         protected string ChecksumsTargetStaticFeed { get; set; }
         protected string ChecksumsAzureAccountKey { get; set; }
         protected string AzureDevOpsStaticShippingFeed { get; set; }
-        protected string AzureDevOpsStaticShippingFeedKey { get; set; }
         protected string AzureDevOpsStaticTransportFeed { get; set; }
-        protected string AzureDevOpsStaticTransportFeedKey { get; set; }
         protected string AzureDevOpsStaticSymbolsFeed { get; set; }
-        protected string AzureDevOpsStaticSymbolsFeedKey { get; set; }
         protected string LatestLinkShortUrlPrefix { get; set; }
-        protected string AzdoTargetFeedPAT { get; set; }
+        protected string AzureDevOpsFeedsKey { get; set; }
 
         protected SetupTargetFeedConfigBase(bool isInternalBuild,
             bool isStableBuild,
@@ -41,13 +38,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             string checksumsTargetStaticFeed,
             string checksumsAzureAccountKey,
             string azureDevOpsStaticShippingFeed,
-            string azureDevOpsStaticShippingFeedKey,
             string azureDevOpsStaticTransportFeed,
-            string azureDevOpsStaticTransportFeedKey,
             string azureDevOpsStaticSymbolsFeed,
-            string azureDevOpsStaticSymbolsFeedKey,
             string latestLinkShortUrlPrefix,
-            string azdoTargetFeedPAT)
+            string azureDevOpsFeedsKey)
         {
             IsInternalBuild = isInternalBuild;
             IsStableBuild = isStableBuild;
@@ -61,13 +55,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             ChecksumsTargetStaticFeed = checksumsTargetStaticFeed;
             ChecksumsAzureAccountKey = checksumsAzureAccountKey;
             AzureDevOpsStaticShippingFeed = azureDevOpsStaticShippingFeed;
-            AzureDevOpsStaticShippingFeedKey = azureDevOpsStaticShippingFeedKey;
             AzureDevOpsStaticTransportFeed = azureDevOpsStaticTransportFeed;
-            AzureDevOpsStaticTransportFeedKey = azureDevOpsStaticTransportFeedKey;
             AzureDevOpsStaticSymbolsFeed = azureDevOpsStaticSymbolsFeed;
-            AzureDevOpsStaticSymbolsFeedKey = azureDevOpsStaticSymbolsFeedKey;
             LatestLinkShortUrlPrefix = latestLinkShortUrlPrefix;
-            AzdoTargetFeedPAT = azdoTargetFeedPAT;
+            AzureDevOpsFeedsKey = azureDevOpsFeedsKey;
         }
         public abstract List<TargetFeedConfig> Setup();
     }

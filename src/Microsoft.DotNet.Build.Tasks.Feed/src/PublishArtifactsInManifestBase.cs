@@ -149,6 +149,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         #endregion
 
         #region Target Channel Configs
+        private const string FeedForChecksums = "https://dotnetclichecksums.blob.core.windows.net/dotnet/index.json";
+        private const string FeedForInstallers = "https://dotnetcli.blob.core.windows.net/dotnet/index.json";
+
+        private const string FeedInternalForChecksums = "https://dotnetclichecksumsmsrc.blob.core.windows.net/dotnet/index.json";
+        private const string FeedInternalForInstallers = "https://dotnetclimsrc.blob.core.windows.net/dotnet/index.json";
+
         private const string FeedGeneralTesting = "https://pkgs.dev.azure.com/dnceng/public/_packaging/general-testing/nuget/v3/index.json";
         private const string FeedGeneralTestingSymbols = "https://pkgs.dev.azure.com/dnceng/public/_packaging/general-testing-symbols/nuget/v3/index.json";
 
@@ -187,7 +193,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 "net5/dev",
                 FeedDotNet5Shipping,
                 FeedDotNet5Transport,
-                FeedDotNet5Symbols),
+                FeedDotNet5Symbols,
+                FeedForChecksums,
+                FeedForInstallers),
 
             new TargetChannelConfig(
                 739,
@@ -196,7 +204,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 "net5/preview3",
                 FeedDotNet5Shipping,
                 FeedDotNet5Transport,
-                FeedDotNet5Symbols),
+                FeedDotNet5Symbols,
+                FeedForChecksums,
+                FeedForInstallers),
 
             new TargetChannelConfig(
                 856,
@@ -205,7 +215,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 "net5/preview4",
                 FeedDotNet5Shipping,
                 FeedDotNet5Transport,
-                FeedDotNet5Symbols),
+                FeedDotNet5Symbols,
+                FeedForChecksums,
+                FeedForInstallers),
 
             new TargetChannelConfig(
                 857,
@@ -214,7 +226,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 "net5/preview5",
                 FeedDotNet5Shipping,
                 FeedDotNet5Transport,
-                FeedDotNet5Symbols),
+                FeedDotNet5Symbols,
+                FeedForChecksums,
+                FeedForInstallers),
 
             new TargetChannelConfig(
                 2,
@@ -223,7 +237,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 "eng/daily",
                 FeedDotNetEngShipping,
                 FeedDotNetEngTransport,
-                FeedDotNetEngSymbols),
+                FeedDotNetEngSymbols,
+                FeedForChecksums,
+                FeedForInstallers),
 
             new TargetChannelConfig(
                 9,
@@ -232,7 +248,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 "eng/validation",
                 FeedDotNetEngShipping,
                 FeedDotNetEngTransport,
-                FeedDotNetEngSymbols),
+                FeedDotNetEngSymbols,
+                FeedForChecksums,
+                FeedForInstallers),
 
             new TargetChannelConfig(
                 529,
@@ -241,7 +259,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 "generaltesting",
                 FeedGeneralTesting,
                 FeedGeneralTesting,
-                FeedGeneralTestingSymbols),
+                FeedGeneralTestingSymbols,
+                FeedForChecksums,
+                FeedForInstallers),
 
             new TargetChannelConfig(
                 548,
@@ -250,7 +270,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 akaMSChannelName: string.Empty,
                 FeedDotNetToolsShipping,
                 FeedDotNetToolsTransport,
-                FeedDotNetToolsSymbols),
+                FeedDotNetToolsSymbols,
+                FeedForChecksums,
+                FeedForInstallers),
 
             new TargetChannelConfig(
                 549,
@@ -259,7 +281,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 akaMSChannelName: string.Empty,
                 FeedDotNetToolsShipping,
                 FeedDotNetToolsTransport,
-                FeedDotNetToolsSymbols),
+                FeedDotNetToolsSymbols,
+                FeedForChecksums,
+                FeedForInstallers),
 
             new TargetChannelConfig(
                 551,
@@ -268,7 +292,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 akaMSChannelName: string.Empty,
                 FeedDotNetToolsInternalShipping,
                 FeedDotNetToolsInternalTransport,
-                FeedDotNetToolsInternalSymbols),
+                FeedDotNetToolsInternalSymbols,
+                FeedInternalForChecksums,
+                FeedInternalForInstallers),
 
             new TargetChannelConfig(
                 562,
@@ -277,7 +303,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 akaMSChannelName: string.Empty,
                 FeedDotNetExperimental,
                 FeedDotNetExperimental,
-                FeedDotNetExperimentalSymbols),
+                FeedDotNetExperimentalSymbols,
+                FeedForChecksums,
+                FeedForInstallers),
 
             new TargetChannelConfig(
                 678,
@@ -286,7 +314,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 akaMSChannelName: string.Empty,
                 FeedDotNetEngShipping,
                 FeedDotNetEngTransport,
-                FeedDotNetEngSymbols),
+                FeedDotNetEngSymbols,
+                FeedForChecksums,
+                FeedForInstallers),
 
             new TargetChannelConfig(
                 679,
@@ -295,7 +325,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 akaMSChannelName: string.Empty,
                 FeedDotNetEngShipping,
                 FeedDotNetEngTransport,
-                FeedDotNetEngSymbols),
+                FeedDotNetEngSymbols,
+                FeedForChecksums,
+                FeedForInstallers),
 
             new TargetChannelConfig(
                 921,
@@ -304,7 +336,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 akaMSChannelName: string.Empty,
                 FeedDotNet31Shipping,
                 FeedDotNet31Transport,
-                FeedDotNet31Symbols),
+                FeedDotNet31Symbols,
+                FeedForChecksums,
+                FeedForInstallers),
 
             new TargetChannelConfig(
                 922,
@@ -313,7 +347,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 akaMSChannelName: string.Empty,
                 FeedDotNet31InternalShipping,
                 FeedDotNet31InternalTransport,
-                FeedDotNet31InternalSymbols),
+                FeedDotNet31InternalSymbols,
+                FeedInternalForChecksums,
+                FeedInternalForInstallers),
 
             new TargetChannelConfig(
                 759,
@@ -322,7 +358,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 akaMSChannelName: string.Empty,
                 FeedDotNet31Shipping,
                 FeedDotNet31Transport,
-                FeedDotNet31Symbols),
+                FeedDotNet31Symbols,
+                FeedForChecksums,
+                FeedForInstallers),
 
             new TargetChannelConfig(
                 760,
@@ -331,7 +369,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 akaMSChannelName: string.Empty,
                 FeedDotNet31InternalShipping,
                 FeedDotNet31InternalTransport,
-                FeedDotNet31InternalSymbols),
+                FeedDotNet31InternalSymbols,
+                FeedForChecksums,
+                FeedForInstallers),
         };
         #endregion
 

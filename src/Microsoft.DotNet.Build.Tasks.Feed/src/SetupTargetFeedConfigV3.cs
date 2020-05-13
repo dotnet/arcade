@@ -4,22 +4,9 @@
 
 using Microsoft.Build.Framework;
 using Microsoft.DotNet.Build.Tasks.Feed.Model;
-using Microsoft.DotNet.Maestro.Client;
-using Microsoft.DotNet.Maestro.Client.Models;
-using Microsoft.DotNet.VersionTools.BuildManifest.Model;
-using NuGet.Packaging.Core;
-using Sleet;
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
-using System.IO;
 using System.Linq;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed
 {
@@ -52,15 +39,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             string checksumsTargetStaticFeed,
             string checksumsAzureAccountKey,
             string azureDevOpsStaticShippingFeed,
-            string azureDevOpsStaticShippingFeedKey,
             string azureDevOpsStaticTransportFeed,
-            string azureDevOpsStaticTransportFeedKey,
             string azureDevOpsStaticSymbolsFeed,
-            string azureDevOpsStaticSymbolsFeedKey,
             string latestLinkShortUrlPrefix,
-            string azdoTargetFeedPAT,
+            string azureDevOpsFeedsKey,
             IBuildEngine buildEngine) 
-            : base(isInternalBuild, isStableBuild, repositoryName, commitSha, artifactsCategory, azureStorageTargetFeedPAT, publishInstallersAndChecksums, installersTargetStaticFeed, installersAzureAccountKey, checksumsTargetStaticFeed, checksumsAzureAccountKey, azureDevOpsStaticShippingFeed, azureDevOpsStaticShippingFeedKey, azureDevOpsStaticTransportFeed, azureDevOpsStaticTransportFeedKey, azureDevOpsStaticSymbolsFeed, azureDevOpsStaticSymbolsFeedKey, latestLinkShortUrlPrefix, azdoTargetFeedPAT)
+            : base(isInternalBuild, isStableBuild, repositoryName, commitSha, artifactsCategory, azureStorageTargetFeedPAT, publishInstallersAndChecksums, installersTargetStaticFeed, installersAzureAccountKey, checksumsTargetStaticFeed, checksumsAzureAccountKey, azureDevOpsStaticShippingFeed, azureDevOpsStaticTransportFeed, azureDevOpsStaticSymbolsFeed, latestLinkShortUrlPrefix, azureDevOpsFeedsKey)
         {
             BuildEngine = buildEngine;
         }
@@ -69,31 +53,16 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         {
             List<TargetFeedConfig> targetFeedConfigs = new List<TargetFeedConfig>();
             string targetStaticFeed = WhichTargetStaticFeed();
-            if (string.IsNullOrEmpty(InstallersTargetStaticFeed) || string.IsNullOrEmpty(InstallersAzureAccountKey))
+           
+            if (string.IsNullOrEmpty(InstallersAzureAccountKey))
             {
-                throw new ArgumentException("Parameters 'InstallersTargetStaticFeed/Key' are empty.");
+                throw new ArgumentException("Parameters 'InstallersTargetStaticKey' is empty.");
             }
 
-            if (string.IsNullOrEmpty(ChecksumsTargetStaticFeed) || string.IsNullOrEmpty(ChecksumsAzureAccountKey))
+            if (string.IsNullOrEmpty(ChecksumsAzureAccountKey))
             {
-                throw new ArgumentException("Parameters 'ChecksumsTargetStaticFeed/Key' are empty.");
+                throw new ArgumentException("Parameters 'ChecksumsTargetStaticFeedKey' is empty.");
             }
-
-            if (string.IsNullOrEmpty(AzureDevOpsStaticShippingFeed) || string.IsNullOrEmpty(AzureDevOpsStaticShippingFeedKey))
-            {
-                throw new ArgumentException("Parameters 'AzureDevOpsStaticShippingFeed/AzureDevOpsStaticShippingFeedKey' are empty.");
-            }
-
-            if (string.IsNullOrEmpty(AzureDevOpsStaticTransportFeed) || string.IsNullOrEmpty(AzureDevOpsStaticTransportFeedKey))
-            {
-                throw new ArgumentException("Parameters 'AzureDevOpsStaticTransportFeed/AzureDevOpsStaticTransportFeedKey' are empty.");
-            }
-
-            if (string.IsNullOrEmpty(AzureDevOpsStaticSymbolsFeed) || string.IsNullOrEmpty(AzureDevOpsStaticSymbolsFeedKey))
-            {
-                throw new ArgumentException("Parameters 'AzureDevOpsStaticSymbolsFeed/AzureDevOpsStaticSymbolsFeedKey' are empty.");
-            }
-
 
             // New feeds are created whenever we are publishing a stable build
             if (IsStableBuild)
@@ -102,7 +71,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 {
                     BuildEngine = BuildEngine,
                     IsInternal = IsInternalBuild,
-                    AzureDevOpsPersonalAccessToken = AzdoTargetFeedPAT,
+                    AzureDevOpsPersonalAccessToken = AzureDevOpsFeedsKey,
                     RepositoryName = RepositoryName,
                     CommitSha = CommitSha
                 };
@@ -116,7 +85,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 {
                     BuildEngine = BuildEngine,
                     IsInternal = IsInternalBuild,
-                    AzureDevOpsPersonalAccessToken = AzdoTargetFeedPAT,
+                    AzureDevOpsPersonalAccessToken = AzureDevOpsFeedsKey,
                     RepositoryName = RepositoryName,
                     CommitSha = CommitSha,
                     ContentIdentifier = "sym"
@@ -135,7 +104,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         TargetURL = packagesFeedTask.TargetFeedURL,
                         Isolated = true,
                         Type = FeedType.AzDoNugetFeed,
-                        Token = AzdoTargetFeedPAT
+                        Token = AzureDevOpsFeedsKey
                     });
 
                 targetFeedConfigs.Add(
@@ -146,7 +115,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         TargetURL = symbolsFeedTask.TargetFeedURL,
                         Isolated = true,
                         Type = FeedType.AzDoNugetFeed,
-                        Token = AzdoTargetFeedPAT
+                        Token = AzureDevOpsFeedsKey
                     });
 
                 targetFeedConfigs.Add(
@@ -157,7 +126,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         TargetURL = "$(AzureDevOpsStaticTransportFeed)",
                         Isolated = false,
                         Type = FeedType.AzDoNugetFeed,
-                        Token = AzureDevOpsStaticTransportFeedKey
+                        Token = AzureDevOpsFeedsKey
                     });
 
                 if (IsInternalBuild)
@@ -225,7 +194,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             TargetURL = AzureDevOpsStaticShippingFeed,
                             Isolated = false,
                             Type = FeedType.AzDoNugetFeed,
-                            Token = AzureDevOpsStaticShippingFeedKey
+                            Token = AzureDevOpsFeedsKey
                         });
 
                     targetFeedConfigs.Add(
@@ -236,7 +205,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             TargetURL = AzureDevOpsStaticTransportFeed,
                             Isolated = false,
                             Type = FeedType.AzDoNugetFeed,
-                            Token = AzureDevOpsStaticTransportFeedKey
+                            Token = AzureDevOpsFeedsKey
                         });
 
                     targetFeedConfigs.Add(
@@ -246,7 +215,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             TargetURL = AzureDevOpsStaticSymbolsFeed,
                             Isolated = false,
                             Type = FeedType.AzDoNugetFeed,
-                            Token = AzureDevOpsStaticSymbolsFeedKey
+                            Token = AzureDevOpsFeedsKey
                         });
 
                     if (PublishInstallersAndChecksums)
@@ -349,7 +318,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             TargetURL = AzureDevOpsStaticShippingFeed,
                             Isolated = false,
                             Type = FeedType.AzDoNugetFeed,
-                            Token = AzureDevOpsStaticShippingFeedKey,
+                            Token = AzureDevOpsFeedsKey,
                             AssetSelection = AssetSelection.ShippingOnly
                         });
 
@@ -360,7 +329,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             TargetURL = AzureDevOpsStaticTransportFeed,
                             Isolated = false,
                             Type = FeedType.AzDoNugetFeed,
-                            Token = AzureDevOpsStaticTransportFeedKey,
+                            Token = AzureDevOpsFeedsKey,
                             AssetSelection = AssetSelection.NonShippingOnly
                         });
                 }
