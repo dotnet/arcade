@@ -27,6 +27,7 @@ When API Compat identifies an error it will log the error and fail the build.  I
 - `$(RunMatchingRefApiCompat)` - true to run APICompat treating project output as *contract* and  `@(ResolvedMatchingContract)` as *implementation*, defaults to false.  This is also known as reverse API compat and can help ensure that every public API defined in a project is exposed in `@(ResolvedMatchingContract)`.
 - `$(ApiCompatExcludeAttributeList)` - Attributes to exclude from APICompat checks.  This is a text file containing types in DocID format, EG: T:Namespace.TypeName.
 - `$(ApiCompatEnforceOptionalRules)` - true to enforce optional rules, default is false.  An example of an optional rule is parameter naming which can break source compatibility but not binary compatibility.
+- `$(ApiCompatExcludeNonBrowsable)` - true to exclude types marked with EditorBrowsable(EditorBrowsableState.Never), default is false.
 - `$(ApiCompatBaseline)` - path to baseline file used to suppress errors, defaults to a file in the project directory.
 - `$(BaselineAllAPICompatError)` - true to indicate that the baseline file should be rewritten suppressing all API compat errors.  You may set this when building the project to conveniently update the baseline when you wish to suppress them, eg: `dotnet msbuild /p:BaselineAllAPICompatError=true`
 - `$(MatchingRefApiCompatBaseline)` - same as `$(ApiCompatBaseline)` but for reverse API compat.
