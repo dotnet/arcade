@@ -93,15 +93,23 @@ Having a common output directory structure makes it possible to unify MicroBuild
 
 ### Build scripts
 
-Some common build scripts for using Arcade are provided in the [eng/common](https://github.com/dotnet/arcade/tree/master/eng/common) folder.  The general entry points are `cmd` or `sh` files and they provide common arguments to the `build.ps1` or `build.sh` files.
+Arcade provides common build scripts in the [eng/common](https://github.com/dotnet/arcade/tree/master/eng/common) folder:
 
-Common build scripts include:
+- eng/common/[build.ps1](https://github.com/dotnet/arcade/tree/master/eng/common/build.ps1)|[build.sh](https://github.com/dotnet/arcade/tree/master/eng/common/build.sh)
 
-- [CIBuild.cmd](https://github.com/dotnet/arcade/blob/master/eng/common/CIBuild.cmd) | [cibuild.sh](https://github.com/dotnet/arcade/blob/master/eng/common/cibuild.sh) - build script for running an Arcade build in CI or official builds
+  The scripts are designed to be used by repos that need a single `MSBuild` invocation to restore, build, package and test all projects in the repo. These scripts are thin wrappers calling into functions defined in `eng/common/tools.ps1|sh`. If the repository needs to run additional builds or commands it is recommended to create `eng/build.ps1|sh` scripts in the repository using `eng/common/build.ps1|sh` as a template and customize the implementation as necessary. These custom scripts should use common helpers and global variables defined in `eng/common/tools.ps1|sh` and provide command line switches that are a superset of the ones provided by `eng/common/build.ps1|sh`. 
 
-Most repos additionally create repo specific build scripts which reference the `eng/common/build.ps1` or `eng/common/build.sh` files.  They provide default arguments to those scripts but pass along any additional arguments you specify.
+- eng/common/[tools.ps1](https://github.com/dotnet/arcade/tree/master/eng/common/tools.ps1)|[tools.sh](https://github.com/dotnet/arcade/tree/master/eng/common/tools.sh)
 
-Repo script examples include:
+  Defines global variables and functions used in all builds scripts. This includes helpers that install .NET SDK, invoke MSBuild, locate Visual Studio, report build telemetry, etc.
+
+- eng/common/[CIBuild.cmd](https://github.com/dotnet/arcade/tree/master/eng/common/CIBuild.cmd)|[cibuild.sh](https://github.com/dotnet/arcade/tree/master/eng/common/cibuild.sh)
+
+  Repositories that use `eng/common/build.ps1|sh` (as opposed to a customized `eng/build.ps1|sh`) should use this build script for the main build step in their pipeline definition. Repositories with custom `eng/build.ps1|sh` should also add the corresponding `eng/CIBuild.cmd|cibuild.sh` for use in their pipeline definition.
+   
+> Since YAML pipeline definition is only executable in CI and not locally on a dev machine the repositories shall minimize the logic implemented in their pipeline definition. Instead of adding more build steps to the pipeline definition that follow `eng/common/CIBuild.cmd` repositories should opt for using the customized build scripts (`eng/build.ps1|sh`) and add the logic there. 
+
+Repos may also provide a few convenience build scripts in the repository root that dispatch to either `eng/common/build.ps1|sh` or `eng/build.ps1|sh` (if repo uses customized build scripts) but do not implement any logic:
 
 - [Build.cmd](https://github.com/dotnet/arcade/blob/master/Build.cmd) | [build.sh](https://github.com/dotnet/arcade/blob/master/build.sh) - default wrapper script for building and restoring the repo.
 - [Restore.cmd](https://github.com/dotnet/arcade/blob/master/Restore.cmd) | [restore.sh](https://github.com/dotnet/arcade/blob/master/restore.sh) - default wrapper script for restoring the repo.
