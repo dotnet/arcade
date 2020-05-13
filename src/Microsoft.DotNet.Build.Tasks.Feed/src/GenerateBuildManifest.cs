@@ -76,7 +76,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                 if (!string.IsNullOrEmpty(PublishingVersion)) 
                 {
-                    Enum.TryParse(PublishingVersion, true, out targetPublishingVersion);
+                    Enum.TryParse(PublishingVersion, ignoreCase: true, out targetPublishingVersion);
                 }
 
                 var buildModel = BuildManifestUtil.CreateModelFromItems(

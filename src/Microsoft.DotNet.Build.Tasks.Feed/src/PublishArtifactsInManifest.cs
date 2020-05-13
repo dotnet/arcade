@@ -106,6 +106,16 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         [Required]
         public bool InternalBuild { get; set; }
 
+        public string ArtifactsCategory { get; set; }
+
+        public string ChecksumsFeedKey { get; set; }
+
+        public string InstallersFeedKey { get; set; }
+
+        public string AzureStorageTargetFeedKey { get; set; }
+
+        public string AzureDevOpsFeedsKey { get; set; }
+
         /// <summary>
         /// If true, safety checks only print messages and do not error
         /// - Internal asset to public feed
@@ -128,32 +138,38 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public override bool Execute()
         {
-            ExecuteAsync().GetAwaiter().GetResult();
-            return !Log.HasLoggedErrors;
+            return ExecuteAsync().GetAwaiter().GetResult();
         }
 
-        public async Task ExecuteAsync()
+        public async Task<bool> ExecuteAsync()
         {
             try
             {
-                await 
-                    Task.WhenAll(AssetManifestPaths.Select(manifestParam => WhichPublishingTask(manifestParam.ItemSpec))
-                    .ToArray());
+                var tasks = AssetManifestPaths
+                            .Select(manifestParam => WhichPublishingTask(manifestParam.ItemSpec))
+                            .ToArray();
+
+                // Wait for tasks in parallel
+                await Task.WhenAll(tasks);
+
+                // Make sure all tasks returned true
+                return tasks.All(t => t.Result);
             }
             catch (Exception e)
             {
                 Log.LogErrorFromException(e, true);
+                return false;
             }
         }
 
-        internal Task WhichPublishingTask(string manifestFullPath)
+        internal Task<bool> WhichPublishingTask(string manifestFullPath)
         {
             Log.LogMessage(MessageImportance.High, $"Reading manifest from {manifestFullPath}");
 
             if (!File.Exists(manifestFullPath))
             {
                 Log.LogError($"Problem reading asset manifest path from '{manifestFullPath}'");
-                return Task.CompletedTask;
+                return Task.FromResult(false);
             }
 
             BuildModel buildModel = BuildManifestUtil.ManifestFileToModel(manifestFullPath, Log);
@@ -161,7 +177,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             if (buildModel.Identity.PublishingVersion == PublishingInfraVersion.Legacy)
             {
                 Log.LogError("This task is not able to handle legacy manifests.");
-                return Task.CompletedTask;
+                return Task.FromResult(false);
             }
             else if (buildModel.Identity.PublishingVersion == PublishingInfraVersion.Latest)
             {
@@ -174,11 +190,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             else
             {
                 Log.LogError($"The manifest version '{buildModel.Identity.PublishingVersion}' is not recognized by the publishing task.");
-                return Task.CompletedTask;
+                return Task.FromResult(false);
             }
         }
 
-        internal Task ConstructLatestPublishingTask()
+        internal Task<bool> ConstructLatestPublishingTask()
         {
             return new PublishArtifactsInManifestV2()
             {
@@ -203,12 +219,33 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             }.ExecuteAsync();
         }
 
-        internal Task ConstructNextPublishingTask()
+        internal Task<bool> ConstructNextPublishingTask()
         {
             return new PublishArtifactsInManifestV3()
             {
                 BuildEngine = this.BuildEngine,
-                TargetChannels = this.TargetChannels
+                TargetChannels = this.TargetChannels,
+                ArtifactsCategory = this.ArtifactsCategory,
+                AssetManifestPaths = this.AssetManifestPaths,
+                BlobAssetsBasePath = this.BlobAssetsBasePath,
+                PackageAssetsBasePath = this.PackageAssetsBasePath,
+                BARBuildId = this.BARBuildId,
+                MaestroApiEndpoint = this.MaestroApiEndpoint,
+                BuildAssetRegistryToken = this.BuildAssetRegistryToken,
+                MaxClients = this.MaxClients,
+                NugetPath = this.NugetPath,
+                InternalBuild = this.InternalBuild,
+                SkipSafetyChecks = this.SkipSafetyChecks,
+                AkaMSClientId = this.AkaMSClientId,
+                AkaMSClientSecret = this.AkaMSClientSecret,
+                AkaMSCreatedBy = this.AkaMSCreatedBy,
+                AkaMSGroupOwner = this.AkaMSGroupOwner,
+                AkaMsOwners = this.AkaMsOwners,
+                AkaMSTenant = this.AkaMSTenant,
+                AzureStorageTargetFeedKey = this.AzureStorageTargetFeedKey,
+                AzureDevOpsFeedsKey = this.AzureDevOpsFeedsKey,
+                InstallersFeedKey = this.InstallersFeedKey,
+                CheckSumsFeedKey = this.ChecksumsFeedKey,
             }.ExecuteAsync();
         }
     }

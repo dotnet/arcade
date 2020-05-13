@@ -598,7 +598,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         }
                     }
 
-                    if (!Enum.TryParse(fc.ItemSpec, out TargetFeedContentType categoryKey))
+                    if (!Enum.TryParse(fc.ItemSpec, ignoreCase: true, out TargetFeedContentType categoryKey))
                     {
                         Log.LogError($"Invalid target feed config category '{fc.ItemSpec}'.");
                     }
@@ -835,9 +835,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     categories = GeneralUtils.PackagesCategory;
                 }
 
-                foreach (var category in categories.Split(';').Select(c => c.ToUpper()))
+                foreach (var category in categories.Split(';'))
                 {
-                    if (!Enum.TryParse(category, out TargetFeedContentType categoryKey))
+                    if (!Enum.TryParse(category, ignoreCase: true, out TargetFeedContentType categoryKey))
                     {
                         Log.LogError($"Invalid target feed config category '{category}'.");
                     }
@@ -864,7 +864,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                 foreach (var category in categories.Split(';'))
                 {
-                    if (!Enum.TryParse(category, out TargetFeedContentType categoryKey))
+                    if (!Enum.TryParse(category, ignoreCase: true, out TargetFeedContentType categoryKey))
                     {
                         Log.LogError($"Invalid target feed config category '{category}'.");
                     }
@@ -1161,6 +1161,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             blobsToPublish.Select(blob => TryAddAssetLocation(blob.Id, assetVersion: null, buildAssets, feedConfig, AddAssetLocationToAssetAssetLocationType.Container));
 
             await blobFeedAction.PublishToFlatContainerAsync(blobs, maxClients: MaxClients, pushOptions);
+
+            if (LinkManager == null)
+            {
+                LinkManager = new LatestLinksManager(AkaMSClientId, AkaMSClientSecret, AkaMSTenant, AkaMSGroupOwner, AkaMSCreatedBy, AkaMsOwners, Log);
+            }
 
             // The latest links should be updated only after the publishing is complete, to avoid
             // dead links in the interim.

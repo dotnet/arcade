@@ -26,11 +26,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public string ArtifactsCategory { get; set; }
         
-        public string AzureStorageTargetFeedKey { get; }
+        public string AzureStorageTargetFeedKey { get; set; }
         
-        public string InstallersFeedKey { get; }
+        public string InstallersFeedKey { get; set; }
         
-        public string CheckSumsFeedKey { get; }
+        public string CheckSumsFeedKey { get; set;  }
 
         public override bool Execute()
         {
@@ -118,10 +118,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     }
 
                     await Task.WhenAll(new Task[] {
-                        HandlePackagePublishingAsync(buildAssets),
+                        //HandlePackagePublishingAsync(buildAssets),
                         HandleBlobPublishingAsync(buildAssets)
-                    }
-                    );
+                    });
 
                     await PersistPendingAssetLocationAsync(client);
                 }

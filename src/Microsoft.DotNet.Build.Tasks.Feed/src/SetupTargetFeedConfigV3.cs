@@ -56,12 +56,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
            
             if (string.IsNullOrEmpty(InstallersAzureAccountKey))
             {
-                throw new ArgumentException("Parameters 'InstallersTargetStaticKey' is empty.");
+                throw new ArgumentException("Parameters 'InstallersAzureAccountKey' is empty.");
             }
 
             if (string.IsNullOrEmpty(ChecksumsAzureAccountKey))
             {
-                throw new ArgumentException("Parameters 'ChecksumsTargetStaticFeedKey' is empty.");
+                throw new ArgumentException("Parameters 'ChecksumsAzureAccountKey' is empty.");
             }
 
             // New feeds are created whenever we are publishing a stable build
@@ -123,7 +123,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     {
                         AssetSelection = AssetSelection.NonShippingOnly,
                         ContentType = TargetFeedContentType.Package,
-                        TargetURL = "$(AzureDevOpsStaticTransportFeed)",
+                        TargetURL = AzureDevOpsStaticTransportFeed,
                         Isolated = false,
                         Type = FeedType.AzDoNugetFeed,
                         Token = AzureDevOpsFeedsKey
@@ -220,8 +220,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                     if (PublishInstallersAndChecksums)
                     {
-
-
                         foreach (var ct in Installers)
                         {
                             targetFeedConfigs.Add(
@@ -347,6 +345,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         {
             return ArtifactsCategory.ToUpper() switch
             {
+                ".CESARTEST" => "https://cesarfeed.blob.core.windows.net/testfeed1/index.json",
                 ".NETCORE" => "https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json",
                 ".NETCOREVALIDATION" => "https://dotnetfeed.blob.core.windows.net/arcade-validation/index.json",
                 "ASPNETCORE" => "https://dotnetfeed.blob.core.windows.net/aspnet-aspnetcore/index.json",

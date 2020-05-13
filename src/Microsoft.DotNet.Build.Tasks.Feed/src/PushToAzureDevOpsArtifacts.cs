@@ -145,7 +145,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                     if (!string.IsNullOrEmpty(PublishingVersion))
                     {
-                        if (!Enum.TryParse(PublishingVersion, true, out targetPublishingVersion))
+                        if (!Enum.TryParse(PublishingVersion, ignoreCase: true, out targetPublishingVersion))
                         {
                             Log.LogError($"Could not parse publishing infra version '{PublishingVersion}'");
                         }

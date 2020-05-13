@@ -59,10 +59,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 }
 
                 await Task.WhenAll(new Task[] {
-                        HandlePackagePublishingAsync(buildAssets),
-                        HandleBlobPublishingAsync(buildAssets)
-                    }
-                );
+                    HandlePackagePublishingAsync(buildAssets),
+                    HandleBlobPublishingAsync(buildAssets)
+                });
 
                 await PersistPendingAssetLocationAsync(client);
             }
