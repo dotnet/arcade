@@ -678,10 +678,11 @@ function GetMSBuildBinaryLogCommandLineArgument($arguments) {
 }
 
 function GetExecutableFileName($baseName) {
-  return if (IsWindowsPlatform) {
-    "$baseName.exe"
-  } else {
-    $baseName
+  if (IsWindowsPlatform) {
+    return "$baseName.exe"
+  }
+  else {
+    return $baseName
   }
 }
 
