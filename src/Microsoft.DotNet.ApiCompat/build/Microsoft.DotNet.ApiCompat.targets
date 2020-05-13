@@ -67,6 +67,7 @@
       <ApiCompatArgs>$(ApiCompatArgs) --contract-depends "@(_ContractDependencyDirectories, ','),"</ApiCompatArgs>
       <ApiCompatArgs Condition="'$(ApiCompatExcludeAttributeList)' != ''">$(ApiCompatArgs) --exclude-attributes "$(ApiCompatExcludeAttributeList)"</ApiCompatArgs>
       <ApiCompatArgs Condition="'$(ApiCompatEnforceOptionalRules)' == 'true'">$(ApiCompatArgs) --enforce-optional-rules</ApiCompatArgs>
+      <ApiCompatArgs Condition="'$(ApiCompatExcludeNonBrowsable)' == 'true'">$(ApiCompatArgs) --exclude-non-browsable</ApiCompatArgs>
       <ApiCompatArgs Condition="'$(BaselineAllAPICompatError)' != 'true' and Exists('$(ApiCompatBaseline)')">$(ApiCompatArgs) --baseline "$(ApiCompatBaseline)"</ApiCompatArgs>
       <ApiCompatArgs>$(ApiCompatArgs) --impl-dirs "$(IntermediateOutputPath),@(_DependencyDirectories, ','),"</ApiCompatArgs>
       <ApiCompatArgs Condition=" '$(AdditionalApiCompatOptions)' != '' ">$(ApiCompatArgs) $(AdditionalApiCompatOptions)</ApiCompatArgs>
@@ -128,6 +129,7 @@
       <MatchingRefApiCompatArgs>$(MatchingRefApiCompatArgs) --right-operand reference</MatchingRefApiCompatArgs>
       <MatchingRefApiCompatArgs Condition="'$(ApiCompatExcludeAttributeList)' != ''">$(MatchingRefApiCompatArgs) --exclude-attributes "$(ApiCompatExcludeAttributeList)"</MatchingRefApiCompatArgs>
       <MatchingRefApiCompatArgs Condition="'$(ApiCompatEnforceOptionalRules)' == 'true'">$(MatchingRefApiCompatArgs) --enforce-optional-rules</MatchingRefApiCompatArgs>
+      <MatchingRefApiCompatArgs Condition="'$(ApiCompatExcludeNonBrowsable)' == 'true'">$(MatchingRefApiCompatArgs) --exclude-non-browsable</MatchingRefApiCompatArgs>
       <MatchingRefApiCompatArgs Condition="'$(BaselineAllMatchingRefApiCompatError)' != 'true' and Exists('$(MatchingRefApiCompatBaseline)')">$(MatchingRefApiCompatArgs) --baseline "$(MatchingRefApiCompatBaseline)"</MatchingRefApiCompatArgs>
       <MatchingRefApiCompatArgs>$(MatchingRefApiCompatArgs) --impl-dirs "@(_ImplementationDependencyDirectories, ','),"</MatchingRefApiCompatArgs>
       <MatchingRefApiCompatArgs
