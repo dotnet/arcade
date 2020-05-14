@@ -10,6 +10,7 @@
     <IsPackable>true</IsPackable>
     <VersionPrefix>2.5.1</VersionPrefix>
     <ExcludeFromSourceBuild>true</ExcludeFromSourceBuild>
+    <RollForward>Major</RollForward>
   </PropertyGroup>
 
   <ItemGroup>
