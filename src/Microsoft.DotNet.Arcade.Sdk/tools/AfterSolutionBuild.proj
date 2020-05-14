@@ -10,26 +10,6 @@
   <Target Name="IntegrationTest" />
   <Target Name="PerformanceTest" />
 
-  <Import Project="Version.BeforeCommonTargets.targets" />
-  <Import Project="$(RepoRoot)/eng/AfterSolutionBuild.props" Condition="Exists('$(RepoRoot)/eng/AfterSolutionBuild.props')" />
-  <!-- LightCommandPackagesDir is created by the "CreateLightCommandPackageDrop" task which runs in the wix targets
-       https://github.com/dotnet/arcade/blob/master/src/Microsoft.DotNet.Build.Tasks.SharedFramework.Sdk/targets/windows/wix.targets.  A default value
-       is defined in Arcade, https://github.com/dotnet/arcade/blob/master/src/Microsoft.DotNet.Arcade.Sdk/tools/RepoLayout.props -->
-  <Target Name="CreateLightCommandPackageZip"
-          Condition="Exists('$(LightCommandPackagesDir)')"
-          AfterTargets="Build">
-    <PropertyGroup>
-      <LightCommandPackagesName>LightCommandPackages</LightCommandPackagesName>
-      <LightCommandPackagesName Condition="'$(Version)' != ''">$(LightCommandPackagesName)-$(Version)</LightCommandPackagesName>
-      <LightCommandPackagesName Condition="'$(LightCommandPackagesNameSuffix)' != ''">$(LightCommandPackagesName)-$(LightCommandPackagesNameSuffix)</LightCommandPackagesName>
-      <LightCommandPackagesName>$(LightCommandPackagesName).zip</LightCommandPackagesName>
-    </PropertyGroup>
-    <ZipDirectory
-      DestinationFile="$(ArtifactsDir)$(LightCommandPackagesName)"
-      Overwrite="true"
-      SourceDirectory="$(LightCommandPackagesDir)" />
-  </Target>
-
   <Import Project="BuildReleasePackages.targets" Condition="'$(UsingToolNuGetRepack)' == 'true'" />
 
   <!-- Repository extension point -->
