@@ -40,7 +40,6 @@ try {
 	--bar-uri $MaestroApiEndPoint `
 	--password $MaestroToken `
 	--publish-installers-and-checksums $PublishInstallersAndChecksums `
-	--validate-SDL false `
 	--validate-nuget $EnableNugetValidation `
 	--validate-sourcelink $EnableSourceLinkValidation `
 	--validate-signing $EnableSigningValidation `
