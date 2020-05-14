@@ -123,6 +123,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// </summary>
         public bool SkipSafetyChecks { get; set; } = false;
 
+        public bool PublishInstallersAndChecksums { get; set; } = false;
+
         public string AkaMSClientId { get; set; }
 
         public string AkaMSClientSecret { get; set; }
@@ -181,11 +183,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             }
             else if (buildModel.Identity.PublishingVersion == PublishingInfraVersion.Latest)
             {
-                return ConstructLatestPublishingTask(buildModel);
+                return ConstructPublishingV2Task(buildModel);
             }
             else if (buildModel.Identity.PublishingVersion == PublishingInfraVersion.Next)
             {
-                return ConstructNextPublishingTask(buildModel);
+                return ConstructPublishingV3Task(buildModel);
             }
             else
             {
@@ -194,7 +196,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             }
         }
 
-        internal Task<bool> ConstructLatestPublishingTask(BuildModel buildModel)
+        internal Task<bool> ConstructPublishingV2Task(BuildModel buildModel)
         {
             return new PublishArtifactsInManifestV2()
             {
@@ -219,7 +221,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             }.ExecuteAsync();
         }
 
-        internal Task<bool> ConstructNextPublishingTask(BuildModel buildModel)
+        internal Task<bool> ConstructPublishingV3Task(BuildModel buildModel)
         {
             return new PublishArtifactsInManifestV3()
             {

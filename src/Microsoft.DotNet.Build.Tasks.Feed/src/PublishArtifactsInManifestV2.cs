@@ -90,9 +90,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         continue;
                     }
 
-                    if (!targetFeedUrl.EndsWith(PublishingContants.ExpectedFeedUrlSuffix))
+                    if (!targetFeedUrl.EndsWith(PublishingConstants.ExpectedFeedUrlSuffix))
                     {
-                        Log.LogError($"Exepcted that feed '{targetFeedUrl}' would end in {PublishingContants.ExpectedFeedUrlSuffix}");
+                        Log.LogError($"Exepcted that feed '{targetFeedUrl}' would end in {PublishingConstants.ExpectedFeedUrlSuffix}");
                         continue;
                     }
 

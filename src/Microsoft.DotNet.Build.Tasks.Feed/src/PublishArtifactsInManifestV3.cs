@@ -51,7 +51,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
             foreach (var targetChannelId in targetChannelsIds)
             {
-                TargetChannelConfig targetChannelConfig = PublishingContants.ChannelInfos
+                TargetChannelConfig targetChannelConfig = PublishingConstants.ChannelInfos
                     .Where(ci => ci.Id == targetChannelId)
                     .FirstOrDefault();
 

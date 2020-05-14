@@ -8,7 +8,7 @@ using System.Collections.Generic;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed.model
 {
-    class PublishingContants
+    public class PublishingConstants
     {
         public static readonly string ExpectedFeedUrlSuffix = "index.json";
 

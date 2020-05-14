@@ -90,16 +90,26 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// </summary>
         public bool SkipSafetyChecks { get; set; } = false;
 
+        [Required]
         public BuildModel BuildModel { get; set; }
 
-        #region Information for AKA MS link generation
+        [Required]
         public string AkaMSClientId { get; set; }
+
+        [Required]
         public string AkaMSClientSecret { get; set; }
+
+        [Required]
         public string AkaMSTenant { get; set; }
+
+        [Required]
         public string AkaMsOwners { get; set; }
+
+        [Required]
         public string AkaMSCreatedBy { get; set; }
+
+        [Required]
         public string AkaMSGroupOwner { get; set; }
-        #endregion
 
         public readonly Dictionary<TargetFeedContentType, List<TargetFeedConfig>> FeedConfigs = 
             new Dictionary<TargetFeedContentType, List<TargetFeedConfig>>();
@@ -488,10 +498,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 return;
             }
 
-            var parsedUri = Regex.Match(feedConfig.TargetURL, PublishingContants.AzDoNuGetFeedPattern);
+            var parsedUri = Regex.Match(feedConfig.TargetURL, PublishingConstants.AzDoNuGetFeedPattern);
             if (!parsedUri.Success)
             {
-                Log.LogError($"Azure DevOps NuGetFeed was not in the expected format '{PublishingContants.AzDoNuGetFeedPattern}'");
+                Log.LogError($"Azure DevOps NuGetFeed was not in the expected format '{PublishingConstants.AzDoNuGetFeedPattern}'");
                 return;
             }
             string feedAccount = parsedUri.Groups["account"].Value;
@@ -741,14 +751,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
             // The latest links should be updated only after the publishing is complete, to avoid
             // dead links in the interim.
-            await LinkManager.CreateOrUpdateLatestLinksAsync(blobsToPublish, feedConfig, PublishingContants.ExpectedFeedUrlSuffix.Length);
+            await LinkManager.CreateOrUpdateLatestLinksAsync(blobsToPublish, feedConfig, PublishingConstants.ExpectedFeedUrlSuffix.Length);
         }
 
         private BlobFeedAction CreateBlobFeedAction(TargetFeedConfig feedConfig)
         {
-            var proxyBackedFeedMatch = Regex.Match(feedConfig.TargetURL, PublishingContants.AzureStorageProxyFeedPattern);
-            var proxyBackedStaticFeedMatch = Regex.Match(feedConfig.TargetURL, PublishingContants.AzureStorageProxyFeedStaticPattern);
-            var azureStorageStaticBlobFeedMatch = Regex.Match(feedConfig.TargetURL, PublishingContants.AzureStorageStaticBlobFeedPattern);
+            var proxyBackedFeedMatch = Regex.Match(feedConfig.TargetURL, PublishingConstants.AzureStorageProxyFeedPattern);
+            var proxyBackedStaticFeedMatch = Regex.Match(feedConfig.TargetURL, PublishingConstants.AzureStorageProxyFeedStaticPattern);
+            var azureStorageStaticBlobFeedMatch = Regex.Match(feedConfig.TargetURL, PublishingConstants.AzureStorageStaticBlobFeedPattern);
 
             if (proxyBackedFeedMatch.Success || proxyBackedStaticFeedMatch.Success)
             {
