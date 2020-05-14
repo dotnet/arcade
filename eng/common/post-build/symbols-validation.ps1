@@ -141,7 +141,7 @@ $CountMissingSymbols = {
 
   if ($MissingSymbols -ne 0)
   {
-    Write-PipelineTelemetryError -Category 'CheckSymbols' -Message "Missing symbols for $Status modules in the package $FileName"
+    Write-PipelineTelemetryError -Category 'CheckSymbols' -Message "Missing symbols for $MissingSymbols modules in the package $FileName"
   }
   
   Pop-Location
@@ -177,7 +177,7 @@ function CheckSymbolsAvailable {
 
       Write-Host "Validating $FileName "
 
-      Start-Job -ScriptBlock $CountMissingSymbols -ArgumentList $FullName
+      Start-Job -ScriptBlock $CountMissingSymbols -ArgumentList $FullName | Out-Null
 
       $NumJobs = @(Get-Job -State 'Running').Count
       Write-Host $NumJobs
@@ -190,7 +190,6 @@ function CheckSymbolsAvailable {
 
       foreach ($Job in @(Get-Job -State 'Completed')) {
         Receive-Job -Id $Job.Id
-        Remove-Job -Id $Job.Id
       }
       Write-Host
     }
