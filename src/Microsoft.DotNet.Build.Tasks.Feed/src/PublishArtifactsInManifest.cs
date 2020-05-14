@@ -181,11 +181,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             }
             else if (buildModel.Identity.PublishingVersion == PublishingInfraVersion.Latest)
             {
-                return ConstructLatestPublishingTask();
+                return ConstructLatestPublishingTask(buildModel);
             }
             else if (buildModel.Identity.PublishingVersion == PublishingInfraVersion.Next)
             {
-                return ConstructNextPublishingTask();
+                return ConstructNextPublishingTask(buildModel);
             }
             else
             {
@@ -194,13 +194,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             }
         }
 
-        internal Task<bool> ConstructLatestPublishingTask()
+        internal Task<bool> ConstructLatestPublishingTask(BuildModel buildModel)
         {
             return new PublishArtifactsInManifestV2()
             {
                 BuildEngine = this.BuildEngine,
                 TargetFeedConfig = this.TargetFeedConfig,
-                AssetManifestPaths = this.AssetManifestPaths,
+                BuildModel = buildModel,
                 BlobAssetsBasePath = this.BlobAssetsBasePath,
                 PackageAssetsBasePath = this.PackageAssetsBasePath,
                 BARBuildId = this.BARBuildId,
@@ -219,14 +219,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             }.ExecuteAsync();
         }
 
-        internal Task<bool> ConstructNextPublishingTask()
+        internal Task<bool> ConstructNextPublishingTask(BuildModel buildModel)
         {
             return new PublishArtifactsInManifestV3()
             {
                 BuildEngine = this.BuildEngine,
                 TargetChannels = this.TargetChannels,
                 ArtifactsCategory = this.ArtifactsCategory,
-                AssetManifestPaths = this.AssetManifestPaths,
+                BuildModel = buildModel,
                 BlobAssetsBasePath = this.BlobAssetsBasePath,
                 PackageAssetsBasePath = this.PackageAssetsBasePath,
                 BARBuildId = this.BARBuildId,

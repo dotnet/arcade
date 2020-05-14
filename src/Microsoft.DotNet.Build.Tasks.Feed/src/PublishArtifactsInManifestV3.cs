@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using Microsoft.DotNet.Build.Tasks.Feed.model;
 using Microsoft.DotNet.Build.Tasks.Feed.Model;
 using Microsoft.DotNet.Maestro.Client;
 using Microsoft.DotNet.Maestro.Client.Models;
@@ -48,82 +49,62 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
             var targetChannelsIds = TargetChannels.Split(',').Select(ci => int.Parse(ci));
 
-            foreach (var targetChannelid in targetChannelsIds)
+            foreach (var targetChannelId in targetChannelsIds)
             {
-                TargetChannelConfig targetChannelConfig = ChannelInfos
-                    .Where(ci => ci.Id == targetChannelid)
+                TargetChannelConfig targetChannelConfig = PublishingContants.ChannelInfos
+                    .Where(ci => ci.Id == targetChannelId)
                     .FirstOrDefault();
 
-                List<BuildModel> buildModels = CreateBuildModels();
+                var targetFeedsSetup = new SetupTargetFeedConfigV3(
+                    false, // TODO: this need to be patched
+                    BuildModel.Identity.IsStable.Equals("true", System.StringComparison.OrdinalIgnoreCase),
+                    BuildModel.Identity.Name,
+                    BuildModel.Identity.Commit,
+                    ArtifactsCategory,
+                    AzureStorageTargetFeedKey,
+                    PublishInstallersAndChecksums,
+                    targetChannelConfig.InstallersFeed,
+                    InstallersFeedKey,
+                    targetChannelConfig.ChecksumsFeed,
+                    CheckSumsFeedKey,
+                    targetChannelConfig.ShippingFeed,
+                    targetChannelConfig.TransportFeed,
+                    targetChannelConfig.SymbolsFeed,
+                    targetChannelConfig.AkaMSChannelName,
+                    AzureDevOpsFeedsKey,
+                    BuildEngine = this.BuildEngine);
+
+                // Fetch Maestro record of the build. We're going to use it to get the BAR ID
+                // of the assets being published so we can add a new location for them.
+                IMaestroApi client = ApiFactory.GetAuthenticated(MaestroApiEndpoint, BuildAssetRegistryToken);
+                Maestro.Client.Models.Build buildInformation = await client.Builds.GetBuildAsync(BARBuildId);
+                Dictionary<string, List<Asset>> buildAssets = CreateBuildAssetDictionary(buildInformation);
+
+                var targetFeedConfigs = targetFeedsSetup.Setup();
+
+                foreach (var feedConfig in targetFeedConfigs)
+                {
+                    TargetFeedContentType categoryKey = feedConfig.ContentType;
+                    if (!FeedConfigs.TryGetValue(categoryKey, out _))
+                    {
+                        FeedConfigs[categoryKey] = new List<TargetFeedConfig>();
+                    }
+                    FeedConfigs[categoryKey].Add(feedConfig);
+                }
+
+                SplitArtifactsInCategories(BuildModel);
 
                 if (Log.HasLoggedErrors)
                 {
                     return false;
                 }
 
-                foreach (var build in buildModels)
-                {
-                    var targetFeedsSetup = new SetupTargetFeedConfigV3(
-                        false,
-                        build.Identity.IsStable.Equals("true", System.StringComparison.OrdinalIgnoreCase),
-                        build.Identity.Name,
-                        build.Identity.Commit,
-                        ArtifactsCategory,
-                        AzureStorageTargetFeedKey,
-                        PublishInstallersAndChecksums,
-                        targetChannelConfig.InstallersFeed,
-                        InstallersFeedKey,
-                        targetChannelConfig.ChecksumsFeed,
-                        CheckSumsFeedKey,
-                        targetChannelConfig.ShippingFeed,
-                        targetChannelConfig.TransportFeed,
-                        targetChannelConfig.SymbolsFeed,
-                        targetChannelConfig.AkaMSChannelName,
-                        AzureDevOpsFeedsKey,
-                        BuildEngine = this.BuildEngine);
+                await Task.WhenAll(new Task[] {
+                    HandlePackagePublishingAsync(buildAssets),
+                    HandleBlobPublishingAsync(buildAssets)
+                });
 
-                    // Fetch Maestro record of the build. We're going to use it to get the BAR ID
-                    // of the assets being published so we can add a new location for them.
-                    IMaestroApi client = ApiFactory.GetAuthenticated(MaestroApiEndpoint, BuildAssetRegistryToken);
-                    Maestro.Client.Models.Build buildInformation = await client.Builds.GetBuildAsync(BARBuildId);
-                    Dictionary<string, List<Asset>> buildAssets = CreateBuildAssetDictionary(buildInformation);
-
-                    var targetFeedConfigs = targetFeedsSetup.Setup();
-
-                    foreach (var feedConfig in targetFeedConfigs)
-                    {
-                        TargetFeedContentType categoryKey = feedConfig.ContentType;
-                        if (!FeedConfigs.TryGetValue(categoryKey, out _))
-                        {
-                            FeedConfigs[categoryKey] = new List<TargetFeedConfig>();
-                        }
-                        FeedConfigs[categoryKey].Add(feedConfig);
-                    }
-
-                    // Return errors from parsing FeedConfig
-                    if (Log.HasLoggedErrors)
-                    {
-                        return false;
-                    }
-
-                    foreach (var buildModel in buildModels)
-                    {
-                        SplitArtifactsInCategories(buildModel);
-                    }
-
-                    // Return errors from the safety checks
-                    if (Log.HasLoggedErrors)
-                    {
-                        return false;
-                    }
-
-                    await Task.WhenAll(new Task[] {
-                        //HandlePackagePublishingAsync(buildAssets),
-                        HandleBlobPublishingAsync(buildAssets)
-                    });
-
-                    await PersistPendingAssetLocationAsync(client);
-                }
+                await PersistPendingAssetLocationAsync(client);
             }
 
             return await Task.FromResult(true);

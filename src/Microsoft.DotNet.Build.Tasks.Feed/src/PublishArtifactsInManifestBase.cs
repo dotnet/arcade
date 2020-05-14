@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using Microsoft.Build.Framework;
+using Microsoft.DotNet.Build.Tasks.Feed.model;
 using Microsoft.DotNet.Build.Tasks.Feed.Model;
 using Microsoft.DotNet.Maestro.Client;
 using Microsoft.DotNet.Maestro.Client.Models;
@@ -28,56 +29,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
     /// </summary>
     public abstract class PublishArtifactsInManifestBase : Microsoft.Build.Utilities.Task
     {
-        private const string ExpectedFeedUrlSuffix = "index.json";
-
-        // Matches package feeds like
-        // https://dotnet-feed-internal.azurewebsites.net/container/dotnet-core-internal/sig/dsdfasdfasdf234234s/se/2020-02-02/darc-int-dotnet-arcade-services-babababababe-08/index.json
-        private const string AzureStorageProxyFeedPattern =
-            @"(?<feedURL>https://([a-z-]+).azurewebsites.net/container/(?<container>[^/]+)/sig/\w+/se/([0-9]{4}-[0-9]{2}-[0-9]{2})/(?<baseFeedName>darc-(?<type>int|pub)-(?<repository>.+?)-(?<sha>[A-Fa-f0-9]{7,40})-?(?<subversion>\d*)/))index.json";
-
-        // Matches package feeds like the one below. Special case for static internal proxy-backed feed
-        // https://dotnet-feed-internal.azurewebsites.net/container/dotnet-core-internal/sig/dsdfasdfasdf234234s/se/2020-02-02/darc-int-dotnet-arcade-services-babababababe-08/index.json
-        private const string AzureStorageProxyFeedStaticPattern =
-            @"(?<feedURL>https://([a-z-]+).azurewebsites.net/container/(?<container>[^/]+)/sig/\w+/se/([0-9]{4}-[0-9]{2}-[0-9]{2})/(?<baseFeedName>[^/]+/))index.json";
-
-        // Matches package feeds like
-        // https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json
-        private const string AzureStorageStaticBlobFeedPattern =
-            @"https://([a-z-]+).blob.core.windows.net/[^/]+/index.json";
-
-        // Matches package feeds like
-        // https://pkgs.dev.azure.com/dnceng/public/_packaging/public-feed-name/nuget/v3/index.json
-        // or https://pkgs.dev.azure.com/dnceng/_packaging/internal-feed-name/nuget/v3/index.json
-        public const string AzDoNuGetFeedPattern =
-            @"https://pkgs.dev.azure.com/(?<account>[a-zA-Z0-9]+)/(?<visibility>[a-zA-Z0-9-]+/)?_packaging/(?<feed>.+)/nuget/v3/index.json";
-
-        /// <summary>
-        /// Configuration telling which target feed to use for each artifact category.
-        /// ItemSpec: ArtifactCategory
-        /// Metadata TargetURL: target URL where assets of this category should be published to.
-        /// Metadata Type: type of the target feed.
-        /// Metadata Token: token to be used for publishing to target feed.
-        /// Metadata AssetSelection (optional): Can be "All", "ShippingOnly" or "NonShippingOnly"
-        ///                                     Determines which assets are pushed to this feed config
-        /// Metadata Internal (optional): If true, the feed is only internally accessible.
-        ///                               If false, the feed is publicly visible and internal builds wwill be rejected.
-        ///                               If not provided, then this task will attempt to determine whether the feed URL is publicly visible or not.
-        ///                               Unless SkipSafetyChecks is passed, the publishing infrastructure will check the accessibility of the feed.
-        /// Metadata Isolated (optional): If true, stable packages can be pushed to this feed.
-        ///                               If false, stable packages will be rejected.
-        ///                               If not provided then defaults to false.
-        /// Metadata AllowOverwrite (optional): If true, existing azure blob storage assets can be overwritten
-        ///                                     If false, an error is thrown if an asset already exists
-        ///                                     If not provided then defaults to false.
-        ///                                     Azure DevOps feeds can never be overwritten.
-        /// Metadata LatestLinkShortUrlPrefix (optional): If provided, AKA ms links are generated (for artifacts blobs only)
-        ///                                               that target this short url path. The link is construct as such:
-        ///                                               aka.ms/AkaShortUrlPath/BlobArtifactPath -> Target blob url
-        ///                                               If specified, then AkaMSClientId, AkaMSClientSecret and AkaMSTenant must be provided.
-        ///                                               The version information is stripped away from the file and blob artifact path.
-        /// </summary>
-        public ITaskItem[] TargetFeedConfig { get; set; }
-
         /// <summary>
         /// Full path to the assets to publish manifest(s)
         /// </summary>
@@ -130,7 +81,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// Whether this build is internal or not. If true, extra checks are done to avoid accidental
         /// publishing of assets to public feeds or storage accounts.
         /// </summary>
-        public bool InternalBuild { get; set; }
+        public bool InternalBuild { get; set; } = false;
 
         /// <summary>
         /// If true, safety checks only print messages and do not error
@@ -139,6 +90,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// </summary>
         public bool SkipSafetyChecks { get; set; } = false;
 
+        public BuildModel BuildModel { get; set; }
+
         #region Information for AKA MS link generation
         public string AkaMSClientId { get; set; }
         public string AkaMSClientSecret { get; set; }
@@ -146,233 +99,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         public string AkaMsOwners { get; set; }
         public string AkaMSCreatedBy { get; set; }
         public string AkaMSGroupOwner { get; set; }
-        #endregion
-
-        #region Target Channel Configs
-        private const string FeedForChecksums = "https://dotnetclichecksums.blob.core.windows.net/dotnet/index.json";
-        private const string FeedForInstallers = "https://dotnetcli.blob.core.windows.net/dotnet/index.json";
-
-        private const string FeedInternalForChecksums = "https://dotnetclichecksumsmsrc.blob.core.windows.net/dotnet/index.json";
-        private const string FeedInternalForInstallers = "https://dotnetclimsrc.blob.core.windows.net/dotnet/index.json";
-
-        private const string FeedGeneralTesting = "https://pkgs.dev.azure.com/dnceng/public/_packaging/general-testing/nuget/v3/index.json";
-        private const string FeedGeneralTestingSymbols = "https://pkgs.dev.azure.com/dnceng/public/_packaging/general-testing-symbols/nuget/v3/index.json";
-
-        private const string FeedDotNetExperimental = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-experimental/nuget/v3/index.json";
-        private const string FeedDotNetExperimentalSymbols = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-experimental-symbols/nuget/v3/index.json";
-
-        private const string FeedDotNetEngShipping = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json";
-        private const string FeedDotNetEngTransport = FeedDotNetEngShipping;
-        private const string FeedDotNetEngSymbols = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng-symbols/nuget/v3/index.json";
-
-        private const string FeedDotNetToolsShipping = "https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet-tools/nuget/v3/index.json";
-        private const string FeedDotNetToolsTransport = FeedDotNetToolsShipping;
-        private const string FeedDotNetToolsSymbols = "https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet-tools-symbols/nuget/v3/index.json";
-
-        private const string FeedDotNetToolsInternalShipping = "https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet-tools-internal/nuget/v3/index.json";
-        private const string FeedDotNetToolsInternalTransport = FeedDotNetToolsInternalShipping;
-        private const string FeedDotNetToolsInternalSymbols = "https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet-tools-internal-symbols/nuget/v3/index.json";
-
-        private const string FeedDotNet31Shipping = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet3.1/nuget/v3/index.json";
-        private const string FeedDotNet31Transport = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet3.1-transport/nuget/v3/index.json";
-        private const string FeedDotNet31Symbols = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet3.1-symbols/nuget/v3/index.json";
-
-        private const string FeedDotNet31InternalShipping = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet3.1-internal/nuget/v3/index.json";
-        private const string FeedDotNet31InternalTransport = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet3.1-internal-transport/nuget/v3/index.json";
-        private const string FeedDotNet31InternalSymbols = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet3.1-internal-symbols/nuget/v3/index.json";
-
-        private const string FeedDotNet5Shipping = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet5/nuget/v3/index.json";
-        private const string FeedDotNet5Transport = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet5-transport/nuget/v3/index.json";
-        private const string FeedDotNet5Symbols = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet5-symbols/nuget/v3/index.json";
-
-        protected List<TargetChannelConfig> ChannelInfos = new List<TargetChannelConfig>() {
-            new TargetChannelConfig(
-                131,
-                PublishingInfraVersion.All,
-                ".NET 5 Dev",
-                "net5/dev",
-                FeedDotNet5Shipping,
-                FeedDotNet5Transport,
-                FeedDotNet5Symbols,
-                FeedForChecksums,
-                FeedForInstallers),
-
-            new TargetChannelConfig(
-                739,
-                PublishingInfraVersion.All,
-                ".NET 5 Preview 3",
-                "net5/preview3",
-                FeedDotNet5Shipping,
-                FeedDotNet5Transport,
-                FeedDotNet5Symbols,
-                FeedForChecksums,
-                FeedForInstallers),
-
-            new TargetChannelConfig(
-                856,
-                PublishingInfraVersion.All,
-                ".NET 5 Preview 4",
-                "net5/preview4",
-                FeedDotNet5Shipping,
-                FeedDotNet5Transport,
-                FeedDotNet5Symbols,
-                FeedForChecksums,
-                FeedForInstallers),
-
-            new TargetChannelConfig(
-                857,
-                PublishingInfraVersion.All,
-                ".NET 5 Preview 5",
-                "net5/preview5",
-                FeedDotNet5Shipping,
-                FeedDotNet5Transport,
-                FeedDotNet5Symbols,
-                FeedForChecksums,
-                FeedForInstallers),
-
-            new TargetChannelConfig(
-                2,
-                PublishingInfraVersion.All,
-                ".NET Eng - Latest",
-                "eng/daily",
-                FeedDotNetEngShipping,
-                FeedDotNetEngTransport,
-                FeedDotNetEngSymbols,
-                FeedForChecksums,
-                FeedForInstallers),
-
-            new TargetChannelConfig(
-                9,
-                PublishingInfraVersion.All,
-                ".NET Eng - Validation",
-                "eng/validation",
-                FeedDotNetEngShipping,
-                FeedDotNetEngTransport,
-                FeedDotNetEngSymbols,
-                FeedForChecksums,
-                FeedForInstallers),
-
-            new TargetChannelConfig(
-                529,
-                PublishingInfraVersion.All,
-                "General Testing",
-                "generaltesting",
-                FeedGeneralTesting,
-                FeedGeneralTesting,
-                FeedGeneralTestingSymbols,
-                FeedForChecksums,
-                FeedForInstallers),
-
-            new TargetChannelConfig(
-                548,
-                PublishingInfraVersion.All,
-                ".NET Core Tooling Dev",
-                akaMSChannelName: string.Empty,
-                FeedDotNetToolsShipping,
-                FeedDotNetToolsTransport,
-                FeedDotNetToolsSymbols,
-                FeedForChecksums,
-                FeedForInstallers),
-
-            new TargetChannelConfig(
-                549,
-                PublishingInfraVersion.All,
-                ".NET Core Tooling Release",
-                akaMSChannelName: string.Empty,
-                FeedDotNetToolsShipping,
-                FeedDotNetToolsTransport,
-                FeedDotNetToolsSymbols,
-                FeedForChecksums,
-                FeedForInstallers),
-
-            new TargetChannelConfig(
-                551,
-                PublishingInfraVersion.All,
-                ".NET Internal Tooling",
-                akaMSChannelName: string.Empty,
-                FeedDotNetToolsInternalShipping,
-                FeedDotNetToolsInternalTransport,
-                FeedDotNetToolsInternalSymbols,
-                FeedInternalForChecksums,
-                FeedInternalForInstallers),
-
-            new TargetChannelConfig(
-                562,
-                PublishingInfraVersion.All,
-                ".NET Core Experimental",
-                akaMSChannelName: string.Empty,
-                FeedDotNetExperimental,
-                FeedDotNetExperimental,
-                FeedDotNetExperimentalSymbols,
-                FeedForChecksums,
-                FeedForInstallers),
-
-            new TargetChannelConfig(
-                678,
-                PublishingInfraVersion.All,
-                ".NET Eng Services - Int",
-                akaMSChannelName: string.Empty,
-                FeedDotNetEngShipping,
-                FeedDotNetEngTransport,
-                FeedDotNetEngSymbols,
-                FeedForChecksums,
-                FeedForInstallers),
-
-            new TargetChannelConfig(
-                679,
-                PublishingInfraVersion.All,
-                ".NET Eng Services - Prod",
-                akaMSChannelName: string.Empty,
-                FeedDotNetEngShipping,
-                FeedDotNetEngTransport,
-                FeedDotNetEngSymbols,
-                FeedForChecksums,
-                FeedForInstallers),
-
-            new TargetChannelConfig(
-                921,
-                PublishingInfraVersion.All,
-                ".NET Core SDK 3.1.4xx",
-                akaMSChannelName: string.Empty,
-                FeedDotNet31Shipping,
-                FeedDotNet31Transport,
-                FeedDotNet31Symbols,
-                FeedForChecksums,
-                FeedForInstallers),
-
-            new TargetChannelConfig(
-                922,
-                PublishingInfraVersion.All,
-                ".NET Core SDK 3.1.4xx Internal",
-                akaMSChannelName: string.Empty,
-                FeedDotNet31InternalShipping,
-                FeedDotNet31InternalTransport,
-                FeedDotNet31InternalSymbols,
-                FeedInternalForChecksums,
-                FeedInternalForInstallers),
-
-            new TargetChannelConfig(
-                759,
-                PublishingInfraVersion.All,
-                ".NET Core SDK 3.1.3xx",
-                akaMSChannelName: string.Empty,
-                FeedDotNet31Shipping,
-                FeedDotNet31Transport,
-                FeedDotNet31Symbols,
-                FeedForChecksums,
-                FeedForInstallers),
-
-            new TargetChannelConfig(
-                760,
-                PublishingInfraVersion.All,
-                ".NET Core SDK 3.1.3xx Internal",
-                akaMSChannelName: string.Empty,
-                FeedDotNet31InternalShipping,
-                FeedDotNet31InternalTransport,
-                FeedDotNet31InternalSymbols,
-                FeedForChecksums,
-                FeedForInstallers),
-        };
         #endregion
 
         public readonly Dictionary<TargetFeedContentType, List<TargetFeedConfig>> FeedConfigs = 
@@ -387,7 +113,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         private readonly HashSet<(int AssetId, string AssetLocation, AddAssetLocationToAssetAssetLocationType LocationType)> NewAssetLocations =
             new HashSet<(int AssetId, string AssetLocation, AddAssetLocationToAssetAssetLocationType LocationType)>();
 
-        private LatestLinksManager LinkManager { get; set; } = null;
+        protected LatestLinksManager LinkManager { get; set; } = null;
 
         public override bool Execute()
         {
@@ -476,144 +202,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         }
 
         /// <summary>
-        ///     Parse out the input TargetFeedConfig into a dictionary of FeedConfig types
-        /// </summary>
-        public async Task ParseTargetFeedConfigAsync()
-        {
-            using (HttpClient httpClient = new HttpClient(new HttpClientHandler { CheckCertificateRevocationList = true }))
-            {
-                foreach (var fc in TargetFeedConfig)
-                {
-                    string targetFeedUrl = fc.GetMetadata(nameof(Model.TargetFeedConfig.TargetURL));
-                    string feedKey = fc.GetMetadata(nameof(Model.TargetFeedConfig.Token));
-                    string type = fc.GetMetadata(nameof(Model.TargetFeedConfig.Type));
-
-                    if (string.IsNullOrEmpty(targetFeedUrl) ||
-                        string.IsNullOrEmpty(feedKey) ||
-                        string.IsNullOrEmpty(type))
-                    {
-                        Log.LogError($"Invalid FeedConfig entry. {nameof(Model.TargetFeedConfig.TargetURL)}='{targetFeedUrl}' {nameof(Model.TargetFeedConfig.Type)}='{type}' {nameof(Model.TargetFeedConfig.Token)}='{feedKey}'");
-                        continue;
-                    }
-
-                    if (!targetFeedUrl.EndsWith(ExpectedFeedUrlSuffix))
-                    {
-                        Log.LogError($"Exepcted that feed '{targetFeedUrl}' would end in {ExpectedFeedUrlSuffix}");
-                        continue;
-                    }
-
-                    if (!Enum.TryParse<FeedType>(type, true, out FeedType feedType))
-                    {
-                        Log.LogError($"Invalid feed config type '{type}'. Possible values are: {string.Join(", ", Enum.GetNames(typeof(FeedType)))}");
-                        continue;
-                    }
-
-                    var feedConfig = new TargetFeedConfig()
-                    {
-                        TargetURL = targetFeedUrl,
-                        Type = feedType,
-                        Token = feedKey
-                    };
-
-                    string assetSelection = fc.GetMetadata(nameof(Model.TargetFeedConfig.AssetSelection));
-                    if (!string.IsNullOrEmpty(assetSelection))
-                    {
-                        if (!Enum.TryParse<AssetSelection>(assetSelection, true, out AssetSelection selection))
-                        {
-                            Log.LogError($"Invalid feed config asset selection '{type}'. Possible values are: {string.Join(", ", Enum.GetNames(typeof(AssetSelection)))}");
-                            continue;
-                        }
-                        feedConfig.AssetSelection = selection;
-                    }
-
-                    // To determine whether a feed is internal, we allow the user to
-                    // specify the value explicitly.
-                    string feedIsInternal = fc.GetMetadata(nameof(Model.TargetFeedConfig.Internal));
-                    if (!string.IsNullOrEmpty(feedIsInternal))
-                    {
-                        if (!bool.TryParse(feedIsInternal, out bool feedSetting))
-                        {
-                            Log.LogError($"Invalid feed config '{nameof(Model.TargetFeedConfig.Internal)}' setting.  Must be 'true' or 'false'.");
-                            continue;
-                        }
-                        feedConfig.Internal = feedSetting;
-                    }
-                    else
-                    {
-                        bool? isPublicFeed = await GeneralUtils.IsFeedPublicAsync(feedConfig.TargetURL, httpClient, Log);
-                        if (!isPublicFeed.HasValue)
-                        {
-                            continue;
-                        }
-                        else
-                        {
-                            feedConfig.Internal = !isPublicFeed.Value;
-                        }
-                    }
-
-                    CheckForInternalBuildsOnPublicFeeds(feedConfig);
-
-                    string feedIsIsolated = fc.GetMetadata(nameof(Model.TargetFeedConfig.Isolated));
-                    if (!string.IsNullOrEmpty(feedIsIsolated))
-                    {
-                        if (!bool.TryParse(feedIsIsolated, out bool feedSetting))
-                        {
-                            Log.LogError($"Invalid feed config '{nameof(Model.TargetFeedConfig.Isolated)}' setting.  Must be 'true' or 'false'.");
-                            continue;
-                        }
-                        feedConfig.Isolated = feedSetting;
-                    }
-
-                    string allowOverwriteOnFeed = fc.GetMetadata(nameof(Model.TargetFeedConfig.AllowOverwrite));
-                    if (!string.IsNullOrEmpty(allowOverwriteOnFeed))
-                    {
-                        if (!bool.TryParse(allowOverwriteOnFeed, out bool feedSetting))
-                        {
-                            Log.LogError($"Invalid feed config '{nameof(Model.TargetFeedConfig.AllowOverwrite)}' setting.  Must be 'true' or 'false'.");
-                            continue;
-                        }
-                        feedConfig.AllowOverwrite = feedSetting;
-                    }
-
-                    string latestLinkShortUrlPrefix = fc.GetMetadata(nameof(Model.TargetFeedConfig.LatestLinkShortUrlPrefix));
-                    if (!string.IsNullOrEmpty(latestLinkShortUrlPrefix))
-                    {
-                        // Verify other inputs are provided
-                        if (string.IsNullOrEmpty(AkaMSClientId) ||
-                            string.IsNullOrEmpty(AkaMSClientSecret) ||
-                            string.IsNullOrEmpty(AkaMSTenant) ||
-                            string.IsNullOrEmpty(AkaMsOwners) ||
-                            string.IsNullOrEmpty(AkaMSCreatedBy))
-                        {
-                            Log.LogError($"If a short url path is provided, please provide {nameof(AkaMSClientId)}, {nameof(AkaMSClientSecret)}, " +
-                                $"{nameof(AkaMSTenant)}, {nameof(AkaMsOwners)}, {nameof(AkaMSCreatedBy)}");
-                            continue;
-                        }
-                        feedConfig.LatestLinkShortUrlPrefix = latestLinkShortUrlPrefix;
-
-                        // Set up the link manager if it hasn't already been done
-                        if (LinkManager == null)
-                        {
-                            LinkManager = new LatestLinksManager(AkaMSClientId, AkaMSClientSecret, AkaMSTenant, AkaMSGroupOwner, AkaMSCreatedBy, AkaMsOwners, Log);
-                        }
-                    }
-
-                    if (!Enum.TryParse(fc.ItemSpec, ignoreCase: true, out TargetFeedContentType categoryKey))
-                    {
-                        Log.LogError($"Invalid target feed config category '{fc.ItemSpec}'.");
-                    }
-
-                    if (!FeedConfigs.TryGetValue(categoryKey, out _))
-                    {
-                        FeedConfigs[categoryKey] = new List<TargetFeedConfig>();
-                    }
-
-                    FeedConfigs[categoryKey].Add(feedConfig);
-                }
-            }
-        }
-
-        /// <summary>
         ///   Records the association of Asset -> AssetLocation to be persisted later in BAR.
         /// </summary>
         /// <param name="assetId">Id of the asset (i.e., name of the package) whose the location should be updated.</param>
@@ -656,7 +244,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// Protect against accidental publishing of internal assets to non-internal feeds.
         /// </summary>
         /// <returns></returns>
-        private void CheckForInternalBuildsOnPublicFeeds(TargetFeedConfig feedConfig)
+        protected void CheckForInternalBuildsOnPublicFeeds(TargetFeedConfig feedConfig)
         {
             // If separated out for clarity.
             if (!SkipSafetyChecks)
@@ -722,20 +310,16 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         private List<PackageArtifactModel> FilterPackages(List<PackageArtifactModel> packages, TargetFeedConfig feedConfig)
         {
-            switch (feedConfig.AssetSelection)
+            return feedConfig.AssetSelection switch
             {
-                case AssetSelection.All:
-                    // No filtering needed
-                    return packages;
-                case AssetSelection.NonShippingOnly:
-                    return packages.Where(p => p.NonShipping).ToList();
-                case AssetSelection.ShippingOnly:
-                    return packages.Where(p => !p.NonShipping).ToList();
-                default:
-                    // Throw NYI here instead of logging an error because error would have already been logged in the
-                    // parser for the user.
-                    throw new NotImplementedException("Unknown asset selection type '{feedConfig.AssetSelection}'");
-            }
+                AssetSelection.All => packages,
+                AssetSelection.NonShippingOnly => packages.Where(p => p.NonShipping).ToList(),
+                AssetSelection.ShippingOnly => packages.Where(p => !p.NonShipping).ToList(),
+
+                // Throw NIE here instead of logging an error because error would have already been logged in the
+                // parser for the user.
+                _ => throw new NotImplementedException($"Unknown asset selection type '{feedConfig.AssetSelection}'")
+            };
         }
 
         protected async Task HandleBlobPublishingAsync(Dictionary<string, List<Asset>> buildAssets)
@@ -792,27 +376,16 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// <returns></returns>
         private List<BlobArtifactModel> FilterBlobs(List<BlobArtifactModel> blobs, TargetFeedConfig feedConfig)
         {
-            // If the feed config wants further filtering, do that now.
-            List<BlobArtifactModel> filteredBlobs = null;
-            switch (feedConfig.AssetSelection)
+            return feedConfig.AssetSelection switch
             {
-                case AssetSelection.All:
-                    // No filtering needed
-                    filteredBlobs = blobs;
-                    break;
-                case AssetSelection.NonShippingOnly:
-                    filteredBlobs = blobs.Where(p => p.NonShipping).ToList();
-                    break;
-                case AssetSelection.ShippingOnly:
-                    filteredBlobs = blobs.Where(p => !p.NonShipping).ToList();
-                    break;
-                default:
-                    // Throw NYI here instead of logging an error because error would have already been logged in the
-                    // parser for the user.
-                    throw new NotImplementedException("Unknown asset selection type '{feedConfig.AssetSelection}'");
-            }
+                AssetSelection.All => blobs,
+                AssetSelection.NonShippingOnly => blobs.Where(p => p.NonShipping).ToList(),
+                AssetSelection.ShippingOnly => blobs.Where(p => !p.NonShipping).ToList(),
 
-            return filteredBlobs;
+                // Throw NYI here instead of logging an error because error would have already been logged in the
+                // parser for the user.
+                _ => throw new NotImplementedException("Unknown asset selection type '{feedConfig.AssetSelection}'")
+            };
         }
 
         /// <summary>
@@ -907,7 +480,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// </summary>
         /// <param name="packagesToPublish">List of packages to publish</param>
         /// <param name="feedConfig">Information about feed to publish ot</param>
-        /// <returns>Async task.</returns>
         public async Task PushNugetPackagesAsync<T>(List<T> packagesToPublish, TargetFeedConfig feedConfig, int maxClients,
             Func<TargetFeedConfig, HttpClient, T, string, string, string, Task> packagePublishAction)
         {
@@ -916,10 +488,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 return;
             }
 
-            var parsedUri = Regex.Match(feedConfig.TargetURL, PublishArtifactsInManifestV2.AzDoNuGetFeedPattern);
+            var parsedUri = Regex.Match(feedConfig.TargetURL, PublishingContants.AzDoNuGetFeedPattern);
             if (!parsedUri.Success)
             {
-                Log.LogError($"Azure DevOps NuGetFeed was not in the expected format '{PublishArtifactsInManifestV2.AzDoNuGetFeedPattern}'");
+                Log.LogError($"Azure DevOps NuGetFeed was not in the expected format '{PublishingContants.AzDoNuGetFeedPattern}'");
                 return;
             }
             string feedAccount = parsedUri.Groups["account"].Value;
@@ -1169,14 +741,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
             // The latest links should be updated only after the publishing is complete, to avoid
             // dead links in the interim.
-            await LinkManager.CreateOrUpdateLatestLinksAsync(blobsToPublish, feedConfig, ExpectedFeedUrlSuffix.Length);
+            await LinkManager.CreateOrUpdateLatestLinksAsync(blobsToPublish, feedConfig, PublishingContants.ExpectedFeedUrlSuffix.Length);
         }
 
         private BlobFeedAction CreateBlobFeedAction(TargetFeedConfig feedConfig)
         {
-            var proxyBackedFeedMatch = Regex.Match(feedConfig.TargetURL, AzureStorageProxyFeedPattern);
-            var proxyBackedStaticFeedMatch = Regex.Match(feedConfig.TargetURL, AzureStorageProxyFeedStaticPattern);
-            var azureStorageStaticBlobFeedMatch = Regex.Match(feedConfig.TargetURL, AzureStorageStaticBlobFeedPattern);
+            var proxyBackedFeedMatch = Regex.Match(feedConfig.TargetURL, PublishingContants.AzureStorageProxyFeedPattern);
+            var proxyBackedStaticFeedMatch = Regex.Match(feedConfig.TargetURL, PublishingContants.AzureStorageProxyFeedStaticPattern);
+            var azureStorageStaticBlobFeedMatch = Regex.Match(feedConfig.TargetURL, PublishingContants.AzureStorageStaticBlobFeedPattern);
 
             if (proxyBackedFeedMatch.Success || proxyBackedStaticFeedMatch.Success)
             {

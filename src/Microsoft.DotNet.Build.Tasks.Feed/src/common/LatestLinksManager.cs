@@ -14,7 +14,7 @@ using System.Linq;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed
 {
-    class LatestLinksManager
+    public class LatestLinksManager
     {
         private TaskLoggingHelper Logger { get; }
         private AkaMSLinkManager LinkManager { get; } = null;
