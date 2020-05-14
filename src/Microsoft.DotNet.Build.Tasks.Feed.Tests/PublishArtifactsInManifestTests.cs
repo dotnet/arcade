@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using Microsoft.DotNet.Build.Tasks.Feed.model;
 using Microsoft.DotNet.Build.Tasks.Feed.Model;
 using Microsoft.DotNet.VersionTools.BuildManifest.Model;
 using System;
@@ -210,7 +211,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         [InlineData("https://pkgs.dev.azure.com/DevDiv/_packaging/1234.5/nuget/v3/index.json", "DevDiv", "", "1234.5")]
         public void NugetFeedParseTests(string uri, string account, string visibility, string feed)
         {
-            var matches = Regex.Match(uri, PublishArtifactsInManifestV2.AzDoNuGetFeedPattern);
+            var matches = Regex.Match(uri, PublishingConstants.AzDoNuGetFeedPattern);
             Assert.Equal(account, matches.Groups["account"]?.Value);
             Assert.Equal(visibility, matches.Groups["visibility"]?.Value);
             Assert.Equal(feed, matches.Groups["feed"]?.Value);
