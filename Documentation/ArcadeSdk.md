@@ -669,7 +669,7 @@ The Build Pipeline needs to link the following variable group:
 ### Publishing test results
 
 ```yml
-- task: PublishTestResults@1
+- task: PublishTestResults@2
   displayName: Publish Test Results
   inputs:
     testRunner: XUnit
