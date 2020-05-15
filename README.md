@@ -9,7 +9,7 @@ Arcade is intended to provide well-understood and consistent mechanisms for cons
 Azure DevOps [![Build Status](https://dev.azure.com/dnceng/public/_apis/build/status/dotnet/arcade/arcade-ci)](https://dev.azure.com/dnceng/public/_build/latest?definitionId=208)
 
 ## Validation & Dependency Flow Status
-Status Last Updated: May 13, 2020, 8:30 AM PDT
+Status Last Updated: May 15, 2020, 9:30 AM PDT
 
 **[Arcade validation policy and process](Documentation/Validation/Overview.md)**
 
@@ -23,9 +23,8 @@ Status Last Updated: May 13, 2020, 8:30 AM PDT
 
 ### Status of Latest Version of Arcade Being Validated
 
-- Promoted Arcade version 5.0.0-beta.20261.9 to `.NET Eng - Latest`
-- [Diff of Arcade](https://github.com/dotnet/arcade/compare/8078d8f3f77b7e8b7f6e289cf82cfdfa9c7a9355...898e51ed5fdcc4871087ac5754ca9056e58e575d) between last promoted version and this one. 
-- [Result from May 11th, 2020 at 6:33 PM PDT](https://dev.azure.com/dnceng/internal/_build/results?buildId=640649&view=results) and [failure investigation](https://github.com/dotnet/core-eng/issues/9810)
+- Arcade is not being promoted due to bellwether repos not being green. 
+- [Arcade Validation build result from May 14th, 2020 at 6:35 PM PDT](https://dev.azure.com/dnceng/internal/_build/results?buildId=646076&view=results) and [failure investigation](https://github.com/dotnet/core-eng/issues/9864)
 
 ## Getting Started
 
