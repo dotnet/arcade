@@ -6,7 +6,6 @@ using Microsoft.Build.Framework;
 using Microsoft.DotNet.Build.Tasks.Feed.Model;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed
 {
@@ -51,9 +50,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public override List<TargetFeedConfig> Setup()
         {
-            List<TargetFeedConfig> targetFeedConfigs = new List<TargetFeedConfig>();
-            string targetStaticFeed = WhichTargetStaticFeed();
-           
             if (string.IsNullOrEmpty(InstallersAzureAccountKey))
             {
                 throw new ArgumentException("Parameters 'InstallersAzureAccountKey' is empty.");
@@ -64,278 +60,295 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 throw new ArgumentException("Parameters 'ChecksumsAzureAccountKey' is empty.");
             }
 
-            // New feeds are created whenever we are publishing a stable build
             if (IsStableBuild)
             {
-                var packagesFeedTask = new CreateAzureDevOpsFeed()
+                return StableFeeds(WhichTargetStaticFeed());
+            }
+            else
+            {
+                if (IsInternalBuild)
                 {
-                    BuildEngine = BuildEngine,
-                    IsInternal = IsInternalBuild,
-                    AzureDevOpsPersonalAccessToken = AzureDevOpsFeedsKey,
-                    RepositoryName = RepositoryName,
-                    CommitSha = CommitSha
-                };
-
-                if (packagesFeedTask.Execute())
-                {
-                    throw new Exception($"Problems creating an AzureDevOps feed for repository '{RepositoryName}' and commit '{CommitSha}'.");
+                    return NonStableInternalFeeds();
                 }
-
-                var symbolsFeedTask = new CreateAzureDevOpsFeed()
+                else
                 {
-                    BuildEngine = BuildEngine,
-                    IsInternal = IsInternalBuild,
-                    AzureDevOpsPersonalAccessToken = AzureDevOpsFeedsKey,
-                    RepositoryName = RepositoryName,
-                    CommitSha = CommitSha,
-                    ContentIdentifier = "sym"
-                };
-
-                if (!symbolsFeedTask.Execute())
-                {
-                    throw new Exception($"Problems creating an AzureDevOps (symbols) feed for repository '{RepositoryName}' and commit '{CommitSha}'.");
+                    return NonStablePublicFeeds(WhichTargetStaticFeed());
                 }
+            }
+        }
 
+        private List<TargetFeedConfig> NonStablePublicFeeds(string targetStaticFeed)
+        {
+            List<TargetFeedConfig> targetFeedConfigs = new List<TargetFeedConfig>();
+
+            if (PublishInstallersAndChecksums)
+            {
                 targetFeedConfigs.Add(
                     new TargetFeedConfig()
                     {
-                        ContentType = TargetFeedContentType.Package,
-                        AssetSelection = AssetSelection.ShippingOnly,
-                        TargetURL = packagesFeedTask.TargetFeedURL,
-                        Isolated = true,
-                        Type = FeedType.AzDoNugetFeed,
-                        Token = AzureDevOpsFeedsKey
+                        ContentType = TargetFeedContentType.Symbols,
+                        TargetURL = targetStaticFeed,
+                        Isolated = false,
+                        Type = FeedType.AzureStorageFeed,
+                        Token = AzureStorageTargetFeedPAT,
                     });
 
                 targetFeedConfigs.Add(
                     new TargetFeedConfig()
                     {
-                        AssetSelection = AssetSelection.ShippingOnly,
+                        ContentType = TargetFeedContentType.Checksum,
+                        TargetURL = ChecksumsTargetStaticFeed,
+                        Isolated = false,
+                        Type = FeedType.AzureStorageFeed,
+                        Token = ChecksumsAzureAccountKey,
+                        LatestLinkShortUrlPrefix = LatestLinkShortUrlPrefix
+                    });
+
+                foreach (var ct in Installers)
+                {
+                    targetFeedConfigs.Add(
+                        new TargetFeedConfig()
+                        {
+                            ContentType = ct,
+                            TargetURL = InstallersTargetStaticFeed,
+                            Isolated = false,
+                            Type = FeedType.AzureStorageFeed,
+                            Token = InstallersAzureAccountKey,
+                            LatestLinkShortUrlPrefix = LatestLinkShortUrlPrefix
+                        });
+                }
+            }
+            else
+            {
+                foreach (var ct in Installers)
+                {
+                    targetFeedConfigs.Add(
+                        new TargetFeedConfig()
+                        {
+                            ContentType = ct,
+                            TargetURL = targetStaticFeed,
+                            Isolated = false,
+                            Type = FeedType.AzureStorageFeed,
+                            Token = AzureStorageTargetFeedPAT
+                        });
+                }
+
+                targetFeedConfigs.Add(
+                    new TargetFeedConfig()
+                    {
                         ContentType = TargetFeedContentType.Symbols,
-                        TargetURL = symbolsFeedTask.TargetFeedURL,
-                        Isolated = true,
-                        Type = FeedType.AzDoNugetFeed,
-                        Token = AzureDevOpsFeedsKey
+                        TargetURL = targetStaticFeed,
+                        Isolated = false,
+                        Type = FeedType.AzureStorageFeed,
+                        Token = AzureStorageTargetFeedPAT
+                    });
+            }
+
+            targetFeedConfigs.Add(
+                new TargetFeedConfig()
+                {
+                    ContentType = TargetFeedContentType.Package,
+                    TargetURL = AzureDevOpsStaticShippingFeed,
+                    Isolated = false,
+                    Type = FeedType.AzDoNugetFeed,
+                    Token = AzureDevOpsFeedsKey,
+                    AssetSelection = AssetSelection.ShippingOnly
+                });
+
+            targetFeedConfigs.Add(
+                new TargetFeedConfig()
+                {
+                    ContentType = TargetFeedContentType.Package,
+                    TargetURL = AzureDevOpsStaticTransportFeed,
+                    Isolated = false,
+                    Type = FeedType.AzDoNugetFeed,
+                    Token = AzureDevOpsFeedsKey,
+                    AssetSelection = AssetSelection.NonShippingOnly
+                });
+
+            return targetFeedConfigs;
+        }
+
+        private List<TargetFeedConfig>  NonStableInternalFeeds()
+        {
+            List<TargetFeedConfig> targetFeedConfigs = new List<TargetFeedConfig>
+            {
+                new TargetFeedConfig()
+                {
+                    AssetSelection = AssetSelection.ShippingOnly,
+                    ContentType = TargetFeedContentType.Package,
+                    TargetURL = AzureDevOpsStaticShippingFeed,
+                    Isolated = false,
+                    Type = FeedType.AzDoNugetFeed,
+                    Token = AzureDevOpsFeedsKey
+                },
+
+                new TargetFeedConfig()
+                {
+                    AssetSelection = AssetSelection.NonShippingOnly,
+                    ContentType = TargetFeedContentType.Package,
+                    TargetURL = AzureDevOpsStaticTransportFeed,
+                    Isolated = false,
+                    Type = FeedType.AzDoNugetFeed,
+                    Token = AzureDevOpsFeedsKey
+                },
+
+                new TargetFeedConfig()
+                {
+                    ContentType = TargetFeedContentType.Symbols,
+                    TargetURL = AzureDevOpsStaticSymbolsFeed,
+                    Isolated = false,
+                    Type = FeedType.AzDoNugetFeed,
+                    Token = AzureDevOpsFeedsKey
+                }
+            };
+
+            if (PublishInstallersAndChecksums)
+            {
+                foreach (var ct in Installers)
+                {
+                    targetFeedConfigs.Add(
+                        new TargetFeedConfig()
+                        {
+                            ContentType = ct,
+                            TargetURL = InstallersTargetStaticFeed,
+                            Isolated = false,
+                            Type = FeedType.AzureStorageFeed,
+                            Token = InstallersAzureAccountKey
+                        });
+                }
+
+                targetFeedConfigs.Add(
+                    new TargetFeedConfig()
+                    {
+                        ContentType = TargetFeedContentType.Checksum,
+                        TargetURL = ChecksumsTargetStaticFeed,
+                        Isolated = false,
+                        Type = FeedType.AzureStorageFeed,
+                        Token = ChecksumsAzureAccountKey
+                    });
+            }
+
+            return targetFeedConfigs;
+        }
+
+        private List<TargetFeedConfig> StableFeeds(string targetStaticFeed)
+        {
+            List<TargetFeedConfig> targetFeedConfigs = new List<TargetFeedConfig>();
+
+            var packagesFeedTask = new CreateAzureDevOpsFeed()
+            {
+                BuildEngine = BuildEngine,
+                IsInternal = IsInternalBuild,
+                AzureDevOpsPersonalAccessToken = AzureDevOpsFeedsKey,
+                RepositoryName = RepositoryName,
+                CommitSha = CommitSha
+            };
+
+            if (packagesFeedTask.Execute())
+            {
+                throw new Exception($"Problems creating an AzureDevOps feed for repository '{RepositoryName}' and commit '{CommitSha}'.");
+            }
+
+            var symbolsFeedTask = new CreateAzureDevOpsFeed()
+            {
+                BuildEngine = BuildEngine,
+                IsInternal = IsInternalBuild,
+                AzureDevOpsPersonalAccessToken = AzureDevOpsFeedsKey,
+                RepositoryName = RepositoryName,
+                CommitSha = CommitSha,
+                ContentIdentifier = "sym"
+            };
+
+            if (!symbolsFeedTask.Execute())
+            {
+                throw new Exception($"Problems creating an AzureDevOps (symbols) feed for repository '{RepositoryName}' and commit '{CommitSha}'.");
+            }
+
+            targetFeedConfigs.Add(
+                new TargetFeedConfig()
+                {
+                    ContentType = TargetFeedContentType.Package,
+                    AssetSelection = AssetSelection.ShippingOnly,
+                    TargetURL = packagesFeedTask.TargetFeedURL,
+                    Isolated = true,
+                    Type = FeedType.AzDoNugetFeed,
+                    Token = AzureDevOpsFeedsKey
+                });
+
+            targetFeedConfigs.Add(
+                new TargetFeedConfig()
+                {
+                    AssetSelection = AssetSelection.ShippingOnly,
+                    ContentType = TargetFeedContentType.Symbols,
+                    TargetURL = symbolsFeedTask.TargetFeedURL,
+                    Isolated = true,
+                    Type = FeedType.AzDoNugetFeed,
+                    Token = AzureDevOpsFeedsKey
+                });
+
+            targetFeedConfigs.Add(
+                new TargetFeedConfig()
+                {
+                    AssetSelection = AssetSelection.NonShippingOnly,
+                    ContentType = TargetFeedContentType.Package,
+                    TargetURL = AzureDevOpsStaticTransportFeed,
+                    Isolated = false,
+                    Type = FeedType.AzDoNugetFeed,
+                    Token = AzureDevOpsFeedsKey
+                });
+
+            if (IsInternalBuild)
+            {
+                targetFeedConfigs.Add(
+                    new TargetFeedConfig()
+                    {
+                        AssetSelection = AssetSelection.NonShippingOnly,
+                        ContentType = TargetFeedContentType.Package,
+                        TargetURL = targetStaticFeed,
+                        Isolated = false,
+                        Type = FeedType.AzureStorageFeed,
+                        Token = AzureStorageTargetFeedPAT
                     });
 
                 targetFeedConfigs.Add(
                     new TargetFeedConfig()
                     {
                         AssetSelection = AssetSelection.NonShippingOnly,
-                        ContentType = TargetFeedContentType.Package,
-                        TargetURL = AzureDevOpsStaticTransportFeed,
+                        ContentType = TargetFeedContentType.Symbols,
+                        TargetURL = targetStaticFeed,
                         Isolated = false,
-                        Type = FeedType.AzDoNugetFeed,
-                        Token = AzureDevOpsFeedsKey
+                        Type = FeedType.AzureStorageFeed,
+                        Token = AzureStorageTargetFeedPAT
                     });
+            }
 
-                if (IsInternalBuild)
+            if (PublishInstallersAndChecksums)
+            {
+                foreach (var ct in Installers)
                 {
                     targetFeedConfigs.Add(
                         new TargetFeedConfig()
                         {
-                            AssetSelection = AssetSelection.NonShippingOnly,
-                            ContentType = TargetFeedContentType.Package,
-                            TargetURL = targetStaticFeed,
-                            Isolated = false,
-                            Type = FeedType.AzureStorageFeed,
-                            Token = AzureStorageTargetFeedPAT
-                        });
-
-                    targetFeedConfigs.Add(
-                        new TargetFeedConfig()
-                        {
-                            AssetSelection = AssetSelection.NonShippingOnly,
-                            ContentType = TargetFeedContentType.Symbols,
-                            TargetURL = targetStaticFeed,
-                            Isolated = false,
-                            Type = FeedType.AzureStorageFeed,
-                            Token = AzureStorageTargetFeedPAT
-                        });
-                }
-
-                if (PublishInstallersAndChecksums)
-                {
-                    foreach (var ct in Installers)
-                    {
-                        targetFeedConfigs.Add(
-                            new TargetFeedConfig()
-                            {
-                                ContentType = ct,
-                                TargetURL = InstallersTargetStaticFeed,
-                                Isolated = true,
-                                AllowOverwrite = true,
-                                Type = FeedType.AzureStorageFeed,
-                                Token = InstallersAzureAccountKey
-                            });
-                    }
-
-                    targetFeedConfigs.Add(
-                        new TargetFeedConfig()
-                        {
-                            ContentType = TargetFeedContentType.Checksum,
-                            TargetURL = ChecksumsTargetStaticFeed,
+                            ContentType = ct,
+                            TargetURL = InstallersTargetStaticFeed,
                             Isolated = true,
                             AllowOverwrite = true,
                             Type = FeedType.AzureStorageFeed,
-                            Token = ChecksumsAzureAccountKey
+                            Token = InstallersAzureAccountKey
                         });
                 }
-            }
-            else
-            {
-                if (IsInternalBuild)
-                {
-                    targetFeedConfigs.Add(
-                        new TargetFeedConfig()
-                        {
-                            AssetSelection = AssetSelection.ShippingOnly,
-                            ContentType = TargetFeedContentType.Package,
-                            TargetURL = AzureDevOpsStaticShippingFeed,
-                            Isolated = false,
-                            Type = FeedType.AzDoNugetFeed,
-                            Token = AzureDevOpsFeedsKey
-                        });
 
-                    targetFeedConfigs.Add(
-                        new TargetFeedConfig()
-                        {
-                            AssetSelection = AssetSelection.NonShippingOnly,
-                            ContentType = TargetFeedContentType.Package,
-                            TargetURL = AzureDevOpsStaticTransportFeed,
-                            Isolated = false,
-                            Type = FeedType.AzDoNugetFeed,
-                            Token = AzureDevOpsFeedsKey
-                        });
-
-                    targetFeedConfigs.Add(
-                        new TargetFeedConfig()
-                        {
-                            ContentType = TargetFeedContentType.Symbols,
-                            TargetURL = AzureDevOpsStaticSymbolsFeed,
-                            Isolated = false,
-                            Type = FeedType.AzDoNugetFeed,
-                            Token = AzureDevOpsFeedsKey
-                        });
-
-                    if (PublishInstallersAndChecksums)
+                targetFeedConfigs.Add(
+                    new TargetFeedConfig()
                     {
-                        foreach (var ct in Installers)
-                        {
-                            targetFeedConfigs.Add(
-                                new TargetFeedConfig()
-                                {
-                                    ContentType = ct,
-                                    TargetURL = InstallersTargetStaticFeed,
-                                    Isolated = false,
-                                    Type = FeedType.AzureStorageFeed,
-                                    Token = InstallersAzureAccountKey
-                                });
-                        }
-
-                        targetFeedConfigs.Add(
-                            new TargetFeedConfig()
-                            {
-                                ContentType = TargetFeedContentType.Checksum,
-                                TargetURL = ChecksumsTargetStaticFeed,
-                                Isolated = false,
-                                Type = FeedType.AzureStorageFeed,
-                                Token = ChecksumsAzureAccountKey
-                            });
-                    }
-                }
-                else
-                {
-                    if (PublishInstallersAndChecksums)
-                    {
-                        targetFeedConfigs.Add(
-                            new TargetFeedConfig()
-                            {
-                                ContentType = TargetFeedContentType.Symbols,
-                                TargetURL = targetStaticFeed,
-                                Isolated = false,
-                                Type = FeedType.AzureStorageFeed,
-                                Token = AzureStorageTargetFeedPAT,
-                            });
-
-                        targetFeedConfigs.Add(
-                            new TargetFeedConfig()
-                            {
-                                ContentType = TargetFeedContentType.Checksum,
-                                TargetURL = ChecksumsTargetStaticFeed,
-                                Isolated = false,
-                                Type = FeedType.AzureStorageFeed,
-                                Token = ChecksumsAzureAccountKey,
-                                LatestLinkShortUrlPrefix = LatestLinkShortUrlPrefix
-                            });
-
-                        foreach (var ct in Installers)
-                        {
-                            targetFeedConfigs.Add(
-                                new TargetFeedConfig()
-                                {
-                                    ContentType = ct,
-                                    TargetURL = InstallersTargetStaticFeed,
-                                    Isolated = false,
-                                    Type = FeedType.AzureStorageFeed,
-                                    Token = InstallersAzureAccountKey,
-                                    LatestLinkShortUrlPrefix = LatestLinkShortUrlPrefix
-                                });
-                        }
-                    }
-                    else
-                    {
-                        foreach (var ct in Installers)
-                        {
-                            targetFeedConfigs.Add(
-                                new TargetFeedConfig()
-                                {
-                                    ContentType = ct,
-                                    TargetURL = targetStaticFeed,
-                                    Isolated = false,
-                                    Type = FeedType.AzureStorageFeed,
-                                    Token = AzureStorageTargetFeedPAT
-                                });
-                        }
-
-                        targetFeedConfigs.Add(
-                            new TargetFeedConfig()
-                            {
-                                ContentType = TargetFeedContentType.Symbols,
-                                TargetURL = targetStaticFeed,
-                                Isolated = false,
-                                Type = FeedType.AzureStorageFeed,
-                                Token = AzureStorageTargetFeedPAT
-                            });
-                    }
-
-                    targetFeedConfigs.Add(
-                        new TargetFeedConfig()
-                        {
-                            ContentType = TargetFeedContentType.Package,
-                            TargetURL = AzureDevOpsStaticShippingFeed,
-                            Isolated = false,
-                            Type = FeedType.AzDoNugetFeed,
-                            Token = AzureDevOpsFeedsKey,
-                            AssetSelection = AssetSelection.ShippingOnly
-                        });
-
-                    targetFeedConfigs.Add(
-                        new TargetFeedConfig()
-                        {
-                            ContentType = TargetFeedContentType.Package,
-                            TargetURL = AzureDevOpsStaticTransportFeed,
-                            Isolated = false,
-                            Type = FeedType.AzDoNugetFeed,
-                            Token = AzureDevOpsFeedsKey,
-                            AssetSelection = AssetSelection.NonShippingOnly
-                        });
-                }
-            }
-
-            if (targetFeedConfigs.Count() == 0)
-            {
-                throw new Exception("It wasn't possible to determine which target feed configuration to use.");
+                        ContentType = TargetFeedContentType.Checksum,
+                        TargetURL = ChecksumsTargetStaticFeed,
+                        Isolated = true,
+                        AllowOverwrite = true,
+                        Type = FeedType.AzureStorageFeed,
+                        Token = ChecksumsAzureAccountKey
+                    });
             }
 
             return targetFeedConfigs;

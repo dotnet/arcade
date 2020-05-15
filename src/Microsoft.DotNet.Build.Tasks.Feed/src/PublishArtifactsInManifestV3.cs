@@ -56,7 +56,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     .FirstOrDefault();
 
                 var targetFeedsSetup = new SetupTargetFeedConfigV3(
-                    false, // TODO: this need to be patched
+                    InternalBuild,
                     BuildModel.Identity.IsStable.Equals("true", System.StringComparison.OrdinalIgnoreCase),
                     BuildModel.Identity.Name,
                     BuildModel.Identity.Commit,

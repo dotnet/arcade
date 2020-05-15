@@ -165,27 +165,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             return assetsWithName.Single();
         }
 
-        protected List<BuildModel> CreateBuildModels()
-        {
-            List<BuildModel> buildModels = new List<BuildModel>();
-            foreach (var assetManifestPath in AssetManifestPaths)
-            {
-                Log.LogMessage(MessageImportance.High, $"Publishing artifacts in {assetManifestPath.ItemSpec}.");
-                string fileName = assetManifestPath.ItemSpec;
-
-                if (string.IsNullOrWhiteSpace(fileName) || !File.Exists(fileName))
-                {
-                    Log.LogError($"Problem reading asset manifest path from '{fileName}'");
-                }
-                else
-                {
-                    buildModels.Add(BuildManifestUtil.ManifestFileToModel(assetManifestPath.ItemSpec, Log));
-                }
-            }
-
-            return buildModels;
-        }
-
         /// <summary>
         ///     Build up a map of asset name -> asset list so that we can avoid n^2 lookups when processing assets.
         ///     We use name only because blobs are only looked up by id (version is not recorded in the manifest).

@@ -66,6 +66,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.model
         private const string FeedDotNet31InternalTransport = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet3.1-internal-transport/nuget/v3/index.json";
         private const string FeedDotNet31InternalSymbols = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet3.1-internal-symbols/nuget/v3/index.json";
 
+        private const string FeedDotNet31BlazorShipping = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet3.1-blazor/nuget/v3/index.json";
+        private const string FeedDotNet31BlazorTransport = FeedDotNet31BlazorShipping;
+        private const string FeedDotNet31BlazorSymbols = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet3.1-blazor-symbols/nuget/v3/index.json";
+
         private const string FeedDotNet5Shipping = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet5/nuget/v3/index.json";
         private const string FeedDotNet5Transport = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet5-transport/nuget/v3/index.json";
         private const string FeedDotNet5Symbols = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet5-symbols/nuget/v3/index.json";
@@ -255,6 +259,182 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.model
                 FeedDotNet31InternalShipping,
                 FeedDotNet31InternalTransport,
                 FeedDotNet31InternalSymbols,
+                FeedForChecksums,
+                FeedForInstallers),
+
+            new TargetChannelConfig(
+                344,
+                PublishingInfraVersion.All,
+                ".NET 3 Tools",
+                akaMSChannelName: string.Empty,
+                FeedDotNetEngShipping,
+                FeedDotNetEngTransport,
+                FeedDotNetEngSymbols,
+                FeedForChecksums,
+                FeedForInstallers),
+
+            new TargetChannelConfig(
+                390,
+                PublishingInfraVersion.All,
+                ".NET 3 Tools - Validation",
+                akaMSChannelName: string.Empty,
+                FeedDotNetEngShipping,
+                FeedDotNetEngTransport,
+                FeedDotNetEngSymbols,
+                FeedForChecksums,
+                FeedForInstallers),
+
+            new TargetChannelConfig(
+                548,
+                PublishingInfraVersion.All,
+                ".NET Core Tooling Dev",
+                akaMSChannelName: string.Empty,
+                FeedDotNetToolsShipping,
+                FeedDotNetToolsTransport,
+                FeedDotNetToolsSymbols,
+                FeedForChecksums,
+                FeedForInstallers),
+
+            new TargetChannelConfig(
+                549,
+                PublishingInfraVersion.All,
+                ".NET Core Tooling Release",
+                akaMSChannelName: string.Empty,
+                FeedDotNetToolsShipping,
+                FeedDotNetToolsTransport,
+                FeedDotNetToolsSymbols,
+                FeedForChecksums,
+                FeedForInstallers),
+
+            new TargetChannelConfig(
+                128,
+                PublishingInfraVersion.All,
+                ".NET Core 3.1 Dev",
+                akaMSChannelName: string.Empty,
+                FeedDotNet31Shipping,
+                FeedDotNet31Transport,
+                FeedDotNet31Symbols,
+                FeedForChecksums,
+                FeedForInstallers),
+
+            new TargetChannelConfig(
+                129,
+                PublishingInfraVersion.All,
+                ".NET Core 3.1 Release",
+                akaMSChannelName: string.Empty,
+                FeedDotNet31Shipping,
+                FeedDotNet31Transport,
+                FeedDotNet31Symbols,
+                FeedForChecksums,
+                FeedForInstallers),
+
+            new TargetChannelConfig(
+                558,
+                PublishingInfraVersion.All,
+                ".NET Core SDK 3.1.2xx",
+                akaMSChannelName: string.Empty,
+                FeedDotNet31Shipping,
+                FeedDotNet31Transport,
+                FeedDotNet31Symbols,
+                FeedForChecksums,
+                FeedForInstallers),
+
+            new TargetChannelConfig(
+                560,
+                PublishingInfraVersion.All,
+                "NET Core SDK 3.1.1xx",
+                akaMSChannelName: string.Empty,
+                FeedDotNet31Shipping,
+                FeedDotNet31Transport,
+                FeedDotNet31Symbols,
+                FeedForChecksums,
+                FeedForInstallers),
+
+            new TargetChannelConfig(
+                759,
+                PublishingInfraVersion.All,
+                ".NET Core SDK 3.1.3xx",
+                akaMSChannelName: string.Empty,
+                FeedDotNet31Shipping,
+                FeedDotNet31Transport,
+                FeedDotNet31Symbols,
+                FeedForChecksums,
+                FeedForInstallers),
+
+            new TargetChannelConfig(
+                921,
+                PublishingInfraVersion.All,
+                ".NET Core SDK 3.1.4xx",
+                akaMSChannelName: string.Empty,
+                FeedDotNet31Shipping,
+                FeedDotNet31Transport,
+                FeedDotNet31Symbols,
+                FeedForChecksums,
+                FeedForInstallers),
+
+            new TargetChannelConfig(
+                760,
+                PublishingInfraVersion.All,
+                ".NET Core SDK 3.1.3xx Internal",
+                akaMSChannelName: string.Empty,
+                FeedDotNet31InternalShipping,
+                FeedDotNet31InternalTransport,
+                FeedDotNet31InternalSymbols,
+                FeedForChecksums,
+                FeedForInstallers),
+
+            new TargetChannelConfig(
+                550,
+                PublishingInfraVersion.All,
+                ".NET Core 3.1 Internal Servicing",
+                akaMSChannelName: string.Empty,
+                FeedDotNet31InternalShipping,
+                FeedDotNet31InternalTransport,
+                FeedDotNet31InternalSymbols,
+                FeedForChecksums,
+                FeedForInstallers),
+
+            new TargetChannelConfig(
+                557,
+                PublishingInfraVersion.All,
+                ".NET Core SDK 3.1.2xx Internal",
+                akaMSChannelName: string.Empty,
+                FeedDotNet31InternalShipping,
+                FeedDotNet31InternalTransport,
+                FeedDotNet31InternalSymbols,
+                FeedForChecksums,
+                FeedForInstallers),
+
+            new TargetChannelConfig(
+                559,
+                PublishingInfraVersion.All,
+                ".NET Core SDK 3.1.1xx Internal",
+                akaMSChannelName: string.Empty,
+                FeedDotNet31InternalShipping,
+                FeedDotNet31InternalTransport,
+                FeedDotNet31InternalSymbols,
+                FeedForChecksums,
+                FeedForInstallers),
+
+            new TargetChannelConfig(
+                922,
+                PublishingInfraVersion.All,
+                ".NET Core SDK 3.1.4xx Internal",
+                akaMSChannelName: string.Empty,
+                FeedDotNet31InternalShipping,
+                FeedDotNet31InternalTransport,
+                FeedDotNet31InternalSymbols,
+                FeedForChecksums,
+                FeedForInstallers),
+
+            new TargetChannelConfig(
+                531,
+                PublishingInfraVersion.All,
+                ".NET Core 3.1 Blazor Features",
+                akaMSChannelName: string.Empty,
+                FeedDotNet31BlazorShipping,
+                FeedDotNet31BlazorTransport,
+                FeedDotNet31BlazorSymbols,
                 FeedForChecksums,
                 FeedForInstallers),
         };

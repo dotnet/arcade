@@ -21,6 +21,65 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         const string BlobFeedUrl = "https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json";
 
         [Fact]
+        public void TestAll()
+        {
+            var buildEngine = new MockBuildEngine();
+            var task = new PublishArtifactsInManifest
+            {
+                BuildEngine = buildEngine,
+                AssetManifestPaths = new Microsoft.Build.Framework.ITaskItem[] {
+                    new Microsoft.Build.Utilities.TaskItem(@"C:\wf\tmp\Manifests\Arcade-V2.xml"),
+                    new Microsoft.Build.Utilities.TaskItem(@"C:\wf\tmp\Manifests\Arcade-V3.xml")
+                },
+                PackageAssetsBasePath = @"C:\wf\tmp\Manifests\PackageArtifacts",
+                BlobAssetsBasePath = @"C:\wf\tmp\Manifests\BlobArtifacts",
+                TargetFeedConfig = new Microsoft.Build.Utilities.TaskItem[]
+                {
+                    new Microsoft.Build.Utilities.TaskItem(TargetFeedContentType.Package.ToString(), new Dictionary<string, string> {
+                        { "TargetUrl", "https://cesarfeed.blob.core.windows.net/testfeed1/index.json" },
+                        { "Token", "n7/qZXO3OTabUPuZnXxOJvw93u7EmWWM8Coe0+q5TRpUGgosHfjojDwn+zN9gMeT/QPI7WVntLlhMpGOIwK1pw==" },
+                        { "Type", "AZURESTORAGEFEED" },
+                        { "AssetSelection", "NONSHIPPINGONLY" },
+                        { "Internal", "false" }}),
+
+                    new Microsoft.Build.Utilities.TaskItem(TargetFeedContentType.Symbols.ToString(), new Dictionary<string, string> {
+                        { "TargetUrl", "https://cesarfeed.blob.core.windows.net/testfeed1/index.json" },
+                        { "Token", "n7/qZXO3OTabUPuZnXxOJvw93u7EmWWM8Coe0+q5TRpUGgosHfjojDwn+zN9gMeT/QPI7WVntLlhMpGOIwK1pw==" },
+                        { "Type", "AZURESTORAGEFEED" },
+                        { "AssetSelection", "NONSHIPPINGONLY" },
+                        { "Internal", "false" }}),
+                },
+                BARBuildId = 51323,
+                MaestroApiEndpoint = "https://maestro-prod.westus2.cloudapp.azure.com",
+                BuildAssetRegistryToken = File.ReadAllText(@"C:\wf\tmp\maestroprod.txt"),
+                TargetChannels = "529",
+                ArtifactsCategory = ".CesarTest",
+                AkaMSClientId = File.ReadAllText(@"C:\wf\tmp\akamsid.txt"),
+                AkaMSClientSecret = File.ReadAllText(@"C:\wf\tmp\akamssecret.txt"),
+                AkaMSTenant = "ncd",
+                AkaMsOwners = "dn-bot",
+                AkaMSCreatedBy = "dn-bot-cesar-test",
+                NugetPath = @"C:\tools\nuget.exe",
+                AzureDevOpsFeedsKey = File.ReadAllText(@"C:\wf\tmp\dnceng.txt"),
+                AzureStorageTargetFeedKey = "n7/qZXO3OTabUPuZnXxOJvw93u7EmWWM8Coe0+q5TRpUGgosHfjojDwn+zN9gMeT/QPI7WVntLlhMpGOIwK1pw==",
+                InstallersFeedKey = "n7/qZXO3OTabUPuZnXxOJvw93u7EmWWM8Coe0+q5TRpUGgosHfjojDwn+zN9gMeT/QPI7WVntLlhMpGOIwK1pw==",
+                ChecksumsFeedKey = "n7/qZXO3OTabUPuZnXxOJvw93u7EmWWM8Coe0+q5TRpUGgosHfjojDwn+zN9gMeT/QPI7WVntLlhMpGOIwK1pw=="
+            };
+
+            var result = task.Execute();
+
+            if (File.Exists(@"C:\wf\tmp\Manifests\TestLogs.txt"))
+                File.Delete(@"C:\wf\tmp\Manifests\TestLogs.txt");
+
+            foreach (var item in buildEngine.BuildErrorEvents)
+            {
+                File.AppendAllText(@"C:\wf\tmp\Manifests\TestLogs.txt", $"{item.Message}\n\n");
+            }
+
+            Assert.True(result);
+        }
+
+        [Fact]
         public async Task FeedConfigParserTests1Async()
         {
             var buildEngine = new MockBuildEngine();
