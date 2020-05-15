@@ -1,4 +1,4 @@
-﻿<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
+<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
 <Project>
   <Import Project="BuildStep.props" />
 
@@ -9,18 +9,6 @@
   <Target Name="Pack" />
   <Target Name="IntegrationTest" />
   <Target Name="PerformanceTest" />
-
-  <!-- LightCommandPackagesDir is created by the "CreateLightCommandPackageDrop" task which runs in the wix targets
-       https://github.com/dotnet/arcade/blob/master/src/Microsoft.DotNet.Build.Tasks.SharedFramework.Sdk/targets/windows/wix.targets.  A default value
-       is defined in Arcade, https://github.com/dotnet/arcade/blob/master/src/Microsoft.DotNet.Arcade.Sdk/tools/RepoLayout.props -->
-  <Target Name="CreateLightCommandPackageZip"
-          Condition="Exists('$(LightCommandPackagesDir)')"
-          AfterTargets="Build">
-    <ZipDirectory
-      DestinationFile="$(ArtifactsDir)LightCommandPackages.zip"
-      Overwrite="true"
-      SourceDirectory="$(LightCommandPackagesDir)" />
-  </Target>
 
   <Import Project="BuildReleasePackages.targets" Condition="'$(UsingToolNuGetRepack)' == 'true'" />
 
