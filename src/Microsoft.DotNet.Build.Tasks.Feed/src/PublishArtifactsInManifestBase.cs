@@ -3,7 +3,6 @@
 // See the LICENSE file in the project root for more information.
 
 using Microsoft.Build.Framework;
-using Microsoft.DotNet.Build.Tasks.Feed.model;
 using Microsoft.DotNet.Build.Tasks.Feed.Model;
 using Microsoft.DotNet.Maestro.Client;
 using Microsoft.DotNet.Maestro.Client.Models;
@@ -90,25 +89,18 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// </summary>
         public bool SkipSafetyChecks { get; set; } = false;
 
-        [Required]
         public BuildModel BuildModel { get; set; }
 
-        [Required]
         public string AkaMSClientId { get; set; }
 
-        [Required]
         public string AkaMSClientSecret { get; set; }
 
-        [Required]
         public string AkaMSTenant { get; set; }
 
-        [Required]
         public string AkaMsOwners { get; set; }
 
-        [Required]
         public string AkaMSCreatedBy { get; set; }
 
-        [Required]
         public string AkaMSGroupOwner { get; set; }
 
         public readonly Dictionary<TargetFeedContentType, List<TargetFeedConfig>> FeedConfigs = 
@@ -555,7 +547,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 /// null - Package DOES NOT EXIST on the feed.
                 bool? packageExistIsIdentical = null;
 
-                const int maxNuGetPushAttempts = 3;
+                const int maxNuGetPushAttempts = 1;
                 const int delayInSecondsBetweenAttempts = 3;
                 int attemptIndex = 0;
 

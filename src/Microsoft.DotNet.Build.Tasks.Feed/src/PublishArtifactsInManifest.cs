@@ -3,21 +3,22 @@
 // See the LICENSE file in the project root for more information.
 
 using Microsoft.Build.Framework;
+using Microsoft.DotNet.Maestro.Client;
 using Microsoft.DotNet.VersionTools.BuildManifest.Model;
 using System;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed
 {
     /// <summary>
     ///     The intended use of this task is to push artifacts described in
-    ///     a build manifest to a static package feed.
+    ///     a build manifest to package feeds.
     /// </summary>
     public class PublishArtifactsInManifest : Microsoft.Build.Utilities.Task
     {
-        #region MSBuild Task Parameters
         /// <summary>
         /// Comma separated list of Maestro++ Channel IDs to which the build should
         /// be assigned to once the assets are published.
@@ -116,6 +117,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public string AzureDevOpsFeedsKey { get; set; }
 
+        private static bool PublishedV3Manifest { get; set; }
+
         /// <summary>
         /// If true, safety checks only print messages and do not error
         /// - Internal asset to public feed
@@ -136,7 +139,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         public string AkaMSCreatedBy { get; set; }
 
         public string AkaMSGroupOwner { get; set; }
-        #endregion
 
         public override bool Execute()
         {
@@ -148,14 +150,50 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             try
             {
                 var tasks = AssetManifestPaths
-                            .Select(manifestParam => WhichPublishingTask(manifestParam.ItemSpec))
-                            .ToArray();
+                    .Select(manifestParam => WhichPublishingTask(manifestParam.ItemSpec))
+                    .ToArray();
 
-                // Wait for tasks in parallel
-                await Task.WhenAll(tasks);
+                // Check that was possible to construct a publishing task for all manifests
+                if (tasks.Any(t => t == null))
+                {
+                    return false;
+                }
 
-                // Make sure all tasks returned true
-                return tasks.All(t => t.Result);
+                // Process all manifests in parallel
+                var results = await Task.WhenAll(
+                    tasks.Select(t => t.ExecuteAsync())
+                );
+
+                // Check that all tasks returned true
+                if (results.All(t => t))
+                {
+                    // Currently a build can produce several build manifests and publish them independently.
+                    // It's also possible that somehow we have manifests using different versions of the publishing infra.
+                    //
+                    // The V3 infra, once all assets have been published, promotes the build to the target channels informed. 
+                    // Since we can have multiple manifests (perhaps using different versions), things
+                    // get a bit more complicated. For now, we are going to just promote the build to the target 
+                    // channels if it creates at least one V3 manifest.
+                    //
+                    // There is an issue to merge all build manifests into a single one before publishing:
+                    //         https://github.com/dotnet/arcade/issues/5489
+                    if (PublishedV3Manifest)
+                    {
+                        IMaestroApi client = ApiFactory.GetAuthenticated(MaestroApiEndpoint, BuildAssetRegistryToken);
+                        Maestro.Client.Models.Build buildInformation = await client.Builds.GetBuildAsync(BARBuildId);
+
+                        var targetChannelsIds = TargetChannels.Split(',').Select(ci => int.Parse(ci));
+
+                        foreach (var targetChannelId in targetChannelsIds)
+                        {
+                            await client.Channels.AddBuildToChannelAsync(BARBuildId, targetChannelId);
+                        }
+                    }
+
+                    return true;
+                }
+
+                return false;
             }
             catch (Exception e)
             {
@@ -164,14 +202,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             }
         }
 
-        internal Task<bool> WhichPublishingTask(string manifestFullPath)
+        public PublishArtifactsInManifestBase WhichPublishingTask(string manifestFullPath)
         {
             Log.LogMessage(MessageImportance.High, $"Reading manifest from {manifestFullPath}");
 
             if (!File.Exists(manifestFullPath))
             {
                 Log.LogError($"Problem reading asset manifest path from '{manifestFullPath}'");
-                return Task.FromResult(false);
+                return null;
             }
 
             BuildModel buildModel = BuildManifestUtil.ManifestFileToModel(manifestFullPath, Log);
@@ -179,7 +217,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             if (buildModel.Identity.PublishingVersion == PublishingInfraVersion.Legacy)
             {
                 Log.LogError("This task is not able to handle legacy manifests.");
-                return Task.FromResult(false);
+                return null;
             }
             else if (buildModel.Identity.PublishingVersion == PublishingInfraVersion.Latest)
             {
@@ -192,11 +230,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             else
             {
                 Log.LogError($"The manifest version '{buildModel.Identity.PublishingVersion}' is not recognized by the publishing task.");
-                return Task.FromResult(false);
+                return null;
             }
         }
 
-        internal Task<bool> ConstructPublishingV2Task(BuildModel buildModel)
+        internal PublishArtifactsInManifestBase ConstructPublishingV2Task(BuildModel buildModel)
         {
             return new PublishArtifactsInManifestV2()
             {
@@ -218,11 +256,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 AkaMSGroupOwner = this.AkaMSGroupOwner,
                 AkaMsOwners = this.AkaMsOwners,
                 AkaMSTenant = this.AkaMSTenant
-            }.ExecuteAsync();
+            };
         }
 
-        internal Task<bool> ConstructPublishingV3Task(BuildModel buildModel)
+        internal PublishArtifactsInManifestBase ConstructPublishingV3Task(BuildModel buildModel)
         {
+            PublishedV3Manifest = true;
+
             return new PublishArtifactsInManifestV3()
             {
                 BuildEngine = this.BuildEngine,
@@ -244,11 +284,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 AkaMSGroupOwner = this.AkaMSGroupOwner,
                 AkaMsOwners = this.AkaMsOwners,
                 AkaMSTenant = this.AkaMSTenant,
+                PublishInstallersAndChecksums = this.PublishInstallersAndChecksums,
                 AzureStorageTargetFeedKey = this.AzureStorageTargetFeedKey,
                 AzureDevOpsFeedsKey = this.AzureDevOpsFeedsKey,
                 InstallersFeedKey = this.InstallersFeedKey,
                 CheckSumsFeedKey = this.ChecksumsFeedKey,
-            }.ExecuteAsync();
+            };
         }
     }
 }

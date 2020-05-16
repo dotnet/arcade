@@ -21,7 +21,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         public const string SymbolPackageSuffix = ".symbols.nupkg";
         public const string PackageSuffix = ".nupkg";
         public const string PackagesCategory = "PACKAGE";
-        public const int MaxRetries = 5;
+        public const int MaxRetries = 1;
 
         /// <summary>
         ///     Compare a local stream and a remote stream for quality

@@ -2,9 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using Microsoft.DotNet.Build.Tasks.Feed.model;
 using Microsoft.DotNet.Build.Tasks.Feed.Model;
-using Microsoft.DotNet.VersionTools.BuildManifest.Model;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -28,7 +26,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             {
                 BuildEngine = buildEngine,
                 AssetManifestPaths = new Microsoft.Build.Framework.ITaskItem[] {
-                    new Microsoft.Build.Utilities.TaskItem(@"C:\wf\tmp\Manifests\Arcade-V2.xml"),
+//                    new Microsoft.Build.Utilities.TaskItem(@"C:\wf\tmp\Manifests\Arcade-V2.xml"),
                     new Microsoft.Build.Utilities.TaskItem(@"C:\wf\tmp\Manifests\Arcade-V3.xml")
                 },
                 PackageAssetsBasePath = @"C:\wf\tmp\Manifests\PackageArtifacts",
@@ -37,14 +35,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 {
                     new Microsoft.Build.Utilities.TaskItem(TargetFeedContentType.Package.ToString(), new Dictionary<string, string> {
                         { "TargetUrl", "https://cesarfeed.blob.core.windows.net/testfeed1/index.json" },
-                        { "Token", "n7/qZXO3OTabUPuZnXxOJvw93u7EmWWM8Coe0+q5TRpUGgosHfjojDwn+zN9gMeT/QPI7WVntLlhMpGOIwK1pw==" },
+                        { "Token", File.ReadAllText(@"C:\wf\tmp\cesarfeed.txt") },
                         { "Type", "AZURESTORAGEFEED" },
                         { "AssetSelection", "NONSHIPPINGONLY" },
                         { "Internal", "false" }}),
 
                     new Microsoft.Build.Utilities.TaskItem(TargetFeedContentType.Symbols.ToString(), new Dictionary<string, string> {
                         { "TargetUrl", "https://cesarfeed.blob.core.windows.net/testfeed1/index.json" },
-                        { "Token", "n7/qZXO3OTabUPuZnXxOJvw93u7EmWWM8Coe0+q5TRpUGgosHfjojDwn+zN9gMeT/QPI7WVntLlhMpGOIwK1pw==" },
+                        { "Token", File.ReadAllText(@"C:\wf\tmp\cesarfeed.txt") },
                         { "Type", "AZURESTORAGEFEED" },
                         { "AssetSelection", "NONSHIPPINGONLY" },
                         { "Internal", "false" }}),
@@ -61,9 +59,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 AkaMSCreatedBy = "dn-bot-cesar-test",
                 NugetPath = @"C:\tools\nuget.exe",
                 AzureDevOpsFeedsKey = File.ReadAllText(@"C:\wf\tmp\dnceng.txt"),
-                AzureStorageTargetFeedKey = "n7/qZXO3OTabUPuZnXxOJvw93u7EmWWM8Coe0+q5TRpUGgosHfjojDwn+zN9gMeT/QPI7WVntLlhMpGOIwK1pw==",
-                InstallersFeedKey = "n7/qZXO3OTabUPuZnXxOJvw93u7EmWWM8Coe0+q5TRpUGgosHfjojDwn+zN9gMeT/QPI7WVntLlhMpGOIwK1pw==",
-                ChecksumsFeedKey = "n7/qZXO3OTabUPuZnXxOJvw93u7EmWWM8Coe0+q5TRpUGgosHfjojDwn+zN9gMeT/QPI7WVntLlhMpGOIwK1pw=="
+                AzureStorageTargetFeedKey = File.ReadAllText(@"C:\wf\tmp\cesarfeed.txt"),
+                InstallersFeedKey = File.ReadAllText(@"C:\wf\tmp\cesarfeed.txt"),
+                ChecksumsFeedKey = File.ReadAllText(@"C:\wf\tmp\cesarfeed.txt")
             };
 
             var result = task.Execute();
@@ -77,6 +75,42 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             }
 
             Assert.True(result);
+        }
+
+        [Fact]
+        public void ConstructV2PublishingTask()
+        {
+            var testInputs = Path.Combine(Path.GetDirectoryName(typeof(PublishArtifactsInManifestTests).Assembly.Location), "TestInputs", "Manifests");
+            var manifestFullPath = Path.Combine(testInputs, "SampleV2.xml");
+
+            var buildEngine = new MockBuildEngine();
+            var task = new PublishArtifactsInManifest()
+            {
+                BuildEngine = buildEngine,
+                TargetChannels = "999999"
+            };
+
+            var which = task.WhichPublishingTask(manifestFullPath);
+
+            Assert.IsType<PublishArtifactsInManifestV2>(which);
+        }
+
+        [Fact]
+        public void ConstructV3PublishingTask()
+        {
+            var testInputs = Path.Combine(Path.GetDirectoryName(typeof(PublishArtifactsInManifestTests).Assembly.Location), "TestInputs", "Manifests");
+            var manifestFullPath = Path.Combine(testInputs, "SampleV3.xml");
+
+            var buildEngine = new MockBuildEngine();
+            var task = new PublishArtifactsInManifest()
+            {
+                BuildEngine = buildEngine,
+                TargetChannels = "999999"
+            };
+
+            var which = task.WhichPublishingTask(manifestFullPath);
+
+            Assert.IsType<PublishArtifactsInManifestV3>(which);
         }
 
         [Fact]

@@ -2,7 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using Microsoft.DotNet.Build.Tasks.Feed.model;
 using Microsoft.DotNet.Build.Tasks.Feed.Model;
 using Microsoft.DotNet.Maestro.Client;
 using Microsoft.DotNet.Maestro.Client.Models;
@@ -52,8 +51,17 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             foreach (var targetChannelId in targetChannelsIds)
             {
                 TargetChannelConfig targetChannelConfig = PublishingConstants.ChannelInfos
-                    .Where(ci => ci.Id == targetChannelId)
+                    .Where(ci => 
+                        ci.Id == targetChannelId && 
+                        (ci.PublishingInfraVersion == PublishingInfraVersion.All || ci.PublishingInfraVersion == PublishingInfraVersion.Next))
                     .FirstOrDefault();
+
+                // Invalid channel ID was supplied
+                if (targetChannelConfig.Equals(default(TargetChannelConfig)))
+                {
+                    Log.LogError($"Channel with ID '{targetChannelId}' is not configured to be published to.");
+                    return false;
+                }
 
                 var targetFeedsSetup = new SetupTargetFeedConfigV3(
                     InternalBuild,
@@ -81,6 +89,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 Dictionary<string, List<Asset>> buildAssets = CreateBuildAssetDictionary(buildInformation);
 
                 var targetFeedConfigs = targetFeedsSetup.Setup();
+
+                // No target feeds to publish to, very likely this is an error
+                if (targetFeedConfigs.Count() == 0)
+                {
+                    Log.LogError($"No target feeds were found to publish the assets to.");
+                    return false;
+                }
 
                 foreach (var feedConfig in targetFeedConfigs)
                 {
