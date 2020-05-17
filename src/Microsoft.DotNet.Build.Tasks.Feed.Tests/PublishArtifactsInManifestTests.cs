@@ -87,7 +87,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             var task = new PublishArtifactsInManifest()
             {
                 BuildEngine = buildEngine,
-                TargetChannels = "999999"
+                TargetChannels = "529"
             };
 
             var which = task.WhichPublishingTask(manifestFullPath);
@@ -105,7 +105,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             var task = new PublishArtifactsInManifest()
             {
                 BuildEngine = buildEngine,
-                TargetChannels = "999999"
+                TargetChannels = "529"
             };
 
             var which = task.WhichPublishingTask(manifestFullPath);

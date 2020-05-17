@@ -25,6 +25,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         };
 
         private IBuildEngine BuildEngine { get; }
+        
+        private string StablePackagesFeed { get; set; }
+        
+        private string StableSymbolsFeed { get; set; }
 
         public SetupTargetFeedConfigV3(bool isInternalBuild,
             bool isStableBuild,
@@ -42,10 +46,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             string azureDevOpsStaticSymbolsFeed,
             string latestLinkShortUrlPrefix,
             string azureDevOpsFeedsKey,
-            IBuildEngine buildEngine) 
+            IBuildEngine buildEngine,
+            string stablePackagesFeed = null,
+            string stableSymbolsFeed = null) 
             : base(isInternalBuild, isStableBuild, repositoryName, commitSha, artifactsCategory, azureStorageTargetFeedPAT, publishInstallersAndChecksums, installersTargetStaticFeed, installersAzureAccountKey, checksumsTargetStaticFeed, checksumsAzureAccountKey, azureDevOpsStaticShippingFeed, azureDevOpsStaticTransportFeed, azureDevOpsStaticSymbolsFeed, latestLinkShortUrlPrefix, azureDevOpsFeedsKey)
         {
             BuildEngine = buildEngine;
+            StableSymbolsFeed = stableSymbolsFeed;
+            StablePackagesFeed = stablePackagesFeed;
         }
 
         public override List<TargetFeedConfig> Setup()
@@ -137,6 +145,17 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     new TargetFeedConfig()
                     {
                         ContentType = TargetFeedContentType.Symbols,
+                        TargetURL = targetStaticFeed,
+                        Isolated = false,
+                        Type = FeedType.AzureStorageFeed,
+                        Token = AzureStorageTargetFeedPAT
+                    });
+
+
+                targetFeedConfigs.Add(
+                    new TargetFeedConfig()
+                    {
+                        ContentType = TargetFeedContentType.Checksum,
                         TargetURL = targetStaticFeed,
                         Isolated = false,
                         Type = FeedType.AzureStorageFeed,
@@ -236,33 +255,43 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         {
             List<TargetFeedConfig> targetFeedConfigs = new List<TargetFeedConfig>();
 
-            var packagesFeedTask = new CreateAzureDevOpsFeed()
+            if (string.IsNullOrEmpty(StablePackagesFeed))
             {
-                BuildEngine = BuildEngine,
-                IsInternal = IsInternalBuild,
-                AzureDevOpsPersonalAccessToken = AzureDevOpsFeedsKey,
-                RepositoryName = RepositoryName,
-                CommitSha = CommitSha
-            };
+                var packagesFeedTask = new CreateAzureDevOpsFeed()
+                {
+                    BuildEngine = BuildEngine,
+                    IsInternal = IsInternalBuild,
+                    AzureDevOpsPersonalAccessToken = AzureDevOpsFeedsKey,
+                    RepositoryName = RepositoryName,
+                    CommitSha = CommitSha
+                };
 
-            if (packagesFeedTask.Execute())
-            {
-                throw new Exception($"Problems creating an AzureDevOps feed for repository '{RepositoryName}' and commit '{CommitSha}'.");
+                if (packagesFeedTask.Execute())
+                {
+                    throw new Exception($"Problems creating an AzureDevOps feed for repository '{RepositoryName}' and commit '{CommitSha}'.");
+                }
+
+                StablePackagesFeed = packagesFeedTask.TargetFeedURL;
             }
 
-            var symbolsFeedTask = new CreateAzureDevOpsFeed()
+            if (string.IsNullOrEmpty(StableSymbolsFeed))
             {
-                BuildEngine = BuildEngine,
-                IsInternal = IsInternalBuild,
-                AzureDevOpsPersonalAccessToken = AzureDevOpsFeedsKey,
-                RepositoryName = RepositoryName,
-                CommitSha = CommitSha,
-                ContentIdentifier = "sym"
-            };
+                var symbolsFeedTask = new CreateAzureDevOpsFeed()
+                {
+                    BuildEngine = BuildEngine,
+                    IsInternal = IsInternalBuild,
+                    AzureDevOpsPersonalAccessToken = AzureDevOpsFeedsKey,
+                    RepositoryName = RepositoryName,
+                    CommitSha = CommitSha,
+                    ContentIdentifier = "sym"
+                };
 
-            if (!symbolsFeedTask.Execute())
-            {
-                throw new Exception($"Problems creating an AzureDevOps (symbols) feed for repository '{RepositoryName}' and commit '{CommitSha}'.");
+                if (!symbolsFeedTask.Execute())
+                {
+                    throw new Exception($"Problems creating an AzureDevOps (symbols) feed for repository '{RepositoryName}' and commit '{CommitSha}'.");
+                }
+
+                StableSymbolsFeed = symbolsFeedTask.TargetFeedURL;
             }
 
             targetFeedConfigs.Add(
@@ -270,7 +299,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 {
                     ContentType = TargetFeedContentType.Package,
                     AssetSelection = AssetSelection.ShippingOnly,
-                    TargetURL = packagesFeedTask.TargetFeedURL,
+                    TargetURL = StablePackagesFeed,
                     Isolated = true,
                     Type = FeedType.AzDoNugetFeed,
                     Token = AzureDevOpsFeedsKey
@@ -281,7 +310,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 {
                     AssetSelection = AssetSelection.ShippingOnly,
                     ContentType = TargetFeedContentType.Symbols,
-                    TargetURL = symbolsFeedTask.TargetFeedURL,
+                    TargetURL = StableSymbolsFeed,
                     Isolated = true,
                     Type = FeedType.AzDoNugetFeed,
                     Token = AzureDevOpsFeedsKey
@@ -298,7 +327,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     Token = AzureDevOpsFeedsKey
                 });
 
-            if (IsInternalBuild)
+            if (IsInternalBuild == false)
             {
                 targetFeedConfigs.Add(
                     new TargetFeedConfig()
@@ -358,7 +387,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         {
             return ArtifactsCategory.ToUpper() switch
             {
-                ".CESARTEST" => "https://cesarfeed.blob.core.windows.net/testfeed1/index.json",
                 ".NETCORE" => "https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json",
                 ".NETCOREVALIDATION" => "https://dotnetfeed.blob.core.windows.net/arcade-validation/index.json",
                 "ASPNETCORE" => "https://dotnetfeed.blob.core.windows.net/aspnet-aspnetcore/index.json",

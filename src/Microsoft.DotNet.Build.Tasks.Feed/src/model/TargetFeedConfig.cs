@@ -38,7 +38,45 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
         /// E.g. 
         ///      [LatestLinkShortUrlPrefix]/aspnetcore/Runtime/dotnet-hosting-win.exe -> aspnetcore/Runtime/3.1.0-preview2.19511.6/dotnet-hosting-3.1.0-preview2.19511.6-win.exe
         /// </summary>
-        public string LatestLinkShortUrlPrefix { get; set; }
+        public string LatestLinkShortUrlPrefix { get; set; } = string.Empty;
+
+        public override bool Equals(object obj)
+        {
+            if (obj == null)
+            {
+                return false;
+            }
+
+            TargetFeedConfig other = (TargetFeedConfig)obj;
+
+            var result =  
+                TargetURL.Equals(other.TargetURL, StringComparison.OrdinalIgnoreCase) &&
+                Token.Equals(other.Token) &&
+                LatestLinkShortUrlPrefix.Equals(other.LatestLinkShortUrlPrefix, StringComparison.OrdinalIgnoreCase) &&
+                (ContentType == other.ContentType) &&
+                (Type == other.Type) &&
+                (AssetSelection == other.AssetSelection) &&
+                (Isolated == other.Isolated) &&
+                (Internal == other.Internal) &&
+                (AllowOverwrite == other.AllowOverwrite);
+
+            if (result == false)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        public override int GetHashCode()
+        {
+            return (ContentType, Type, AssetSelection, Isolated, Internal, AllowOverwrite, LatestLinkShortUrlPrefix, TargetURL,  Token).GetHashCode();
+        }
+
+        public override string ToString()
+        {
+            return $"{ContentType} {Type} {AssetSelection} {Isolated} {Internal} {AllowOverwrite} '{LatestLinkShortUrlPrefix}' {TargetURL} {Token}";
+        }
     }
 
     [Flags]
