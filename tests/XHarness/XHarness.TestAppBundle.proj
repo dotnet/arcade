@@ -1,0 +1,27 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" />
+
+  <PropertyGroup>
+    <XHarnessAppBundleUrl>https://netcorenativeassets.blob.core.windows.net/resource-packages/external/macos/test-ios-app/System.Numerics.Vectors.Tests.app.zip</XHarnessX64TestApkUrl>
+  </PropertyGroup>
+
+  <Target Name="Build" Returns="@(XHarnessPackageToTest)" >
+    <Error Condition=" '$(BaseOutputPath)' == ''" Text="Not downloading AppBundle because BaseOutputPath property is unset" />
+    <DownloadFile SourceUrl="$(XHarnessAppBundleUrl)" DestinationFolder="$(BaseOutputPath)zippedappbundle" SkipUnchangedFiles="True" Retries="5">
+      <Output TaskParameter="DownloadedFile" ItemName="DownloadedZippedAppBundle" />
+    </DownloadFile>
+
+    <Message Text="Downloaded @(DownloadedZippedAppBundle) for XHarness Test purposes" Importance="High" />
+
+    <Unzip SourceFiles="@(DownloadedZippedAppBundle)" DestinationFolder="$(BaseOutputPath)appbundle" OverwriteReadOnlyFiles="true" SkipUnchangedFiles="true" />
+
+    <ItemGroup>
+      <!-- We're not set up currently to build APK files as part of normal builds, so this downloads existing ones for now -->
+      <XHarnessAppFolderToTest Include="$(BaseOutputPath)appbundle/*">
+        <Targets>ios-simulator-64</Targets>
+      </XHarnessPackageToTest>
+    </ItemGroup>
+  </Target>
+
+</Project>
