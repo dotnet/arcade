@@ -17,9 +17,9 @@
     <HelixBaseUri>https://helix.int-dot.net</HelixBaseUri>
   </PropertyGroup>
 
-  <!-- New Test Projects which build packages to run through XHarness/XHarness go here -->
+  <!-- New Test Projects which build app bundles to run through XHarness/XHarness go here -->
   <ItemGroup>
-    <XHarnessProject Include="$(MSBuildThisFileDirectory)XHarness/XHarness.TestApk.proj" />
+    <XHarnessProject Include="$(MSBuildThisFileDirectory)XHarness/XHarness.TestBundle.proj" />
   </ItemGroup>
 
   <!-- <ItemGroup Condition=" '$(HelixAccessToken)' != '' ">

@@ -93,9 +93,8 @@ namespace Microsoft.DotNet.Helix.Sdk
                 return null;
             }
 
-            string workDirectory = "$HELIX_WORKITEM_ROOT";
             string xharnessRunCommand = $"xharness ios test " +
-                                        $"--app {workDirectory}/{Path.GetFileName(appFolderPath.ItemSpec)} " +
+                                        $"--app $HELIX_WORKITEM_ROOT/{Path.GetFileName(appFolderPath.ItemSpec)} " +
                                         $"--output-directory=$HELIX_WORKITEM_UPLOAD_ROOT" +
                                         $"--targets={targets} " +
                                         $"--timeout={xHarnessTimeout.TotalSeconds}" +
