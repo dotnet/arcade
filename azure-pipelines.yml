@@ -151,7 +151,7 @@ stages:
              -projects $(Build.SourcesDirectory)\tests\UnitTests.XHarness.iOS.proj
              /bl:$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)\Helix.XHarness.binlog
              /p:RestoreUsingNuGetTargets=false
-           displayName: XHarness Android Helix Testing
+           displayName: XHarness iOS Helix Testing
            env:
              SYSTEM_ACCESSTOKEN: $(System.AccessToken)
              HelixAccessToken: ''
