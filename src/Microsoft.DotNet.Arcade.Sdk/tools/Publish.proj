@@ -28,7 +28,7 @@
 
     <!-- If `AutoGenerateSymbolPackages` is not set we default it to true. -->
     <AutoGenerateSymbolPackages Condition="'$(AutoGenerateSymbolPackages)' == ''">true</AutoGenerateSymbolPackages>
-
+    
     <AssetManifestOS Condition="'$(AssetManifestOS)' == ''">$(OS)</AssetManifestOS>
 
     <AssetManifestFileName>$(AssetManifestOS)-$(PlatformName).xml</AssetManifestFileName>
@@ -135,6 +135,9 @@
       <ManifestBuildData Include="AzureDevOpsBranch=$(BUILD_SOURCEBRANCH)" />
     </ItemGroup>
     
+    <!--
+      The user can set `PublishingVersion` via eng\Publishing.props
+    -->
     <PushToAzureDevOpsArtifacts 
       ItemsToPush="@(ItemsToPushToBlobFeed)"
       ManifestBuildData="@(ManifestBuildData)"
@@ -143,6 +146,7 @@
       ManifestBuildId="$(BUILD_BUILDNUMBER)"
       ManifestCommit="$(BUILD_SOURCEVERSION)"
       IsStableBuild="$(IsStableBuild)"
+      PublishingVersion="$(PublishingVersion)"
       AssetManifestPath="$(AssetManifestFilePath)" />
 
     <!-- 
