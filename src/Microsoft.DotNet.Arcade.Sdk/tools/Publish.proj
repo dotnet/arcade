@@ -39,6 +39,7 @@
     <PublishDependsOnTargets Condition="$(PublishToSymbolServer)">$(PublishDependsOnTargets);PublishSymbols</PublishDependsOnTargets>
     <PublishDependsOnTargets Condition="$(PublishToSourceBuildStorage)">$(PublishDependsOnTargets);PublishToSourceBuildStorage</PublishDependsOnTargets>
     <PublishDependsOnTargets Condition="$(DotNetPublishUsingPipelines)">$(PublishDependsOnTargets);PublishToAzureDevOpsArtifacts</PublishDependsOnTargets>
+
     <PublishDependsOnTargets>BeforePublish;GenerateBuildManifest;$(PublishDependsOnTargets)</PublishDependsOnTargets>
   </PropertyGroup>
 
@@ -238,13 +239,9 @@
                     Condition="$(PublishToSymbolServer)"/>
   </Target>
 
-  <PropertyGroup>
-    <AzureDevOpsBuildTasksAssembly Condition="'$(MSBuildRuntimeType)' != 'Core'">$(NuGetPackageRoot)microsoft.dotnet.azuredevops.build\$(ArcadeSdkVersion)\tools\net472\Microsoft.DotNet.AzureDevOps.Build.dll</AzureDevOpsBuildTasksAssembly>
-    <AzureDevOpsBuildTasksAssembly Condition="'$(MSBuildRuntimeType)' == 'Core'">$(NuGetPackageRoot)microsoft.dotnet.azuredevops.build\$(ArcadeSdkVersion)\tools\netcoreapp2.1\Microsoft.DotNet.AzureDevOps.Build.dll</AzureDevOpsBuildTasksAssembly>
-  </PropertyGroup>
-
   <Import Project="Sign.props" />
-  <UsingTask TaskName="Microsoft.DotNet.AzureDevOps.Build.GenerateAzureDevOpsBuildManifest" AssemblyFile="$(AzureDevOpsBuildTasksAssembly)"/>
+
+  <UsingTask TaskName="Microsoft.DotNet.Arcade.Sdk.GenerateAzureDevOpsBuildManifest" AssemblyFile="$(ArcadeSdkBuildTasksAssembly)"/>
 
   <Target Name="GenerateBuildManifest">
     <GenerateAzureDevOpsBuildManifest

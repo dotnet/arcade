@@ -14,7 +14,12 @@ namespace Xunit
         OSX = 4,
         FreeBSD = 8,
         NetBSD = 16,
-        AnyUnix = FreeBSD | Linux | NetBSD | OSX,
+        SunOS = 32,
+        iOS = 64,
+        tvOS = 128,
+        Android = 256,
+        Browser = 512,
+        AnyUnix = FreeBSD | Linux | NetBSD | OSX | SunOS | iOS | tvOS | Android | Browser,
         Any = ~0
     }
 }

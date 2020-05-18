@@ -2,10 +2,12 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using Newtonsoft.Json;
 using NuGet.Common;
 using NuGet.Configuration;
 using NuGet.Protocol;
 using NuGet.Protocol.Core.Types;
+using NuGet.RuntimeModel;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -83,6 +85,24 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
             return versions.Where(v => VersionUtility.As2PartVersion(v) == new Version(eraMajorVersion, eraMinorVersion))
                            .OrderByDescending(v => v)
                            .FirstOrDefault();
+        }
+
+        public static void WriteRuntimeGraph(string filePath, RuntimeGraph runtimeGraph)
+        {
+            using (var fileStream = new FileStream(filePath, FileMode.Create))
+            using (var textWriter = new StreamWriter(fileStream))
+            using (var jsonWriter = new JsonTextWriter(textWriter))
+            using (var writer = new JsonObjectWriter(jsonWriter))
+            {
+                jsonWriter.Formatting = Formatting.Indented;
+
+                // workaround https://github.com/NuGet/Home/issues/9532
+                writer.WriteObjectStart();
+
+                JsonRuntimeFormat.WriteRuntimeGraph(writer, runtimeGraph);
+
+                writer.WriteObjectEnd();
+            }
         }
 
         internal class NuGetLogger : ILogger

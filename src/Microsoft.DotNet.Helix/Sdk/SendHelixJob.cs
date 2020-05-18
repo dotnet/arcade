@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -202,6 +201,12 @@ namespace Microsoft.DotNet.Helix.Sdk
                     }
                 }
 
+                def = AddBuildVariableProperty(def, "BuildNumber", "Build.BuildNumber");
+                def = AddBuildVariableProperty(def, "BuildUri", "Build.BuildUri");
+                def = AddBuildVariableProperty(def, "DefinitionName", "Build.DefinitionName");
+                def = AddBuildVariableProperty(def, "DefinitionId", "System.DefinitionId");
+                def = AddBuildVariableProperty(def, "Reason", "Build.Reason");
+
                 // don't send the job if we have errors
                 if (Log.HasLoggedErrors)
                 {
@@ -219,6 +224,26 @@ namespace Microsoft.DotNet.Helix.Sdk
             }
 
             cancellationToken.ThrowIfCancellationRequested();
+        }
+
+        private IJobDefinition AddBuildVariableProperty(IJobDefinition def, string key, string azdoVariableName)
+        {
+            string envName = FromAzdoVariableNameToEnvironmentVariableName(azdoVariableName);
+
+            var value = Environment.GetEnvironmentVariable(envName);
+            if (string.IsNullOrEmpty(value))
+            {
+                return def;
+            }
+
+            def.WithProperty(key, value);
+            Log.LogMessage($"Added build variable property '{key}' (value: '{value}') to job definition.");
+            return def;
+        }
+
+        private static string FromAzdoVariableNameToEnvironmentVariableName(string name)
+        {
+            return name.Replace('.', '_').ToUpper();
         }
 
         private IJobDefinition AddProperty(IJobDefinition def, ITaskItem property)

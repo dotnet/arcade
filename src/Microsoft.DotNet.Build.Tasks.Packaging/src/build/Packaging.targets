@@ -957,7 +957,7 @@
       <RuntimeIDs>@(NETCoreApp30RIDs)</RuntimeIDs>
     </DefaultValidateFramework>
     <NETCoreApp50RIDs Condition="'@(NETCoreApp50RIDs)' == ''" Include="@(NETCoreApp30RIDs)" />
-    <DefaultValidateFramework Include="netcoreapp5.0">
+    <DefaultValidateFramework Include="net5.0">
       <RuntimeIDs>@(NETCoreApp50RIDs)</RuntimeIDs>
     </DefaultValidateFramework>
 

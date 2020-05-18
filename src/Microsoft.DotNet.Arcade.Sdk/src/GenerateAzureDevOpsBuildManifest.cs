@@ -1,12 +1,9 @@
 using Microsoft.Build.Construction;
 using Microsoft.Build.Framework;
-using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Threading.Tasks;
 
-namespace Microsoft.DotNet.AzureDevOps.Build
+namespace Microsoft.DotNet.Arcade.Sdk
 {
     public class GenerateAzureDevOpsBuildManifest : Microsoft.Build.Utilities.Task
     {

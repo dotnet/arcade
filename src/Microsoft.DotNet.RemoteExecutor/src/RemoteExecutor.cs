@@ -11,6 +11,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Xunit;
+using Microsoft.DotNet.XUnitExtensions;
 
 namespace Microsoft.DotNet.RemoteExecutor
 {
@@ -338,6 +339,12 @@ namespace Microsoft.DotNet.RemoteExecutor
             RemoteInvokeOptions options, bool pasteArguments = true)
         {
             options = options ?? new RemoteInvokeOptions();
+
+            // For platforms that do not support RemoteExecutor
+            if (options.ShouldSkipInvocation)
+            {
+                throw new SkipTestException("RemoteExecutor is not supported on this platform.");
+            }
 
             // Verify the specified method returns an int (the exit code) or nothing,
             // and that if it accepts any arguments, they're all strings.

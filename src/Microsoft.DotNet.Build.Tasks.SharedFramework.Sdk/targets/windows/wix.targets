@@ -6,6 +6,7 @@
     this file and switch to wixproj. See https://github.com/wixtoolset/issues/issues/5627
   -->
 
+  <UsingTask TaskName="CreateLightCommandPackageDrop" AssemblyFile="$(DotNetBuildTasksSharedFrameworkTaskFile)" />
   <UsingTask TaskName="ExecWithRetries" AssemblyFile="$(DotNetBuildTasksSharedFrameworkTaskFile)" />
   <UsingTask TaskName="StabilizeWixFileId" AssemblyFile="$(DotNetBuildTasksSharedFrameworkTaskFile)" />
 
@@ -310,6 +311,7 @@
       <_wixArgs>$(_wixArgs) @(WixExtensions -> '-ext %(Identity)', ' ')</_wixArgs>
       <_wixArgs>$(_wixArgs) @(WixSrcFile -> '"$(WixObjDir)%(Filename).wixobj"', ' ')</_wixArgs>
       <_wixArgs>$(_wixArgs) @(DirectoryToHarvest -> '"%(WixObjFile)"', ' ')</_wixArgs>
+      <_lightCommand>light.exe $(_wixArgs)</_lightCommand>
     </PropertyGroup>
 
     <!--
@@ -319,11 +321,28 @@
       don't want to delay the build very long if it's an actual build authoring error.
     -->
     <ExecWithRetries
-      Command="light.exe $(_wixArgs)"
+      Command="$(_lightCommand)"
       WorkingDirectory="$(WixToolsDir)"
       StandardOutputImportance="normal"
       IgnoreStandardErrorWarningFormat="true"
       RetryDelayBase="2" />
+
+    <CreateLightCommandPackageDrop
+      OriginalLightCommand="$(_lightCommand)"
+      LightCommandWorkingDir="$(LightCommandObjDir)"
+      NoLogo="true"
+      Cultures="en-us"
+      Out="$(OutInstallerFile)"
+      WixExtensions="@(WixExtensions)"
+      WixSrcFiles="@(WixSrcFile -> '$(WixObjDir)%(Filename).wixobj');@(DirectoryToHarvest -> '%(WixObjFile)')"
+      Condition="'$(EnableCreateLightCommandPackageDrop)' == 'true'">
+      <Output TaskParameter="LightCommandPackageNameOutput" PropertyName="_LightCommandPackageNameOutput" />
+    </CreateLightCommandPackageDrop>
+
+    <ZipDirectory
+      DestinationFile="$(LightCommandPackagesDir)/LightCommandPackage-$(_LightCommandPackageNameOutput).zip"
+      Overwrite="true"
+      SourceDirectory="$(LightCommandObjDir)/$(_LightCommandPackageNameOutput)" />
   </Target>
 
   <!--
