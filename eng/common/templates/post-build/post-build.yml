@@ -68,6 +68,8 @@ stages:
       variables:
         - name: BARBuildId
           value: $[ dependencies.setupMaestroVars.outputs['setReleaseVars.BARBuildId'] ]
+      pool:
+        vmImage: 'windows-2019'
       steps:
         - task: PowerShell@2
           displayName: Publish Using Darc
