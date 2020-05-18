@@ -26,8 +26,8 @@ namespace Microsoft.DotNet.XUnitExtensions
                 (platforms.HasFlag(TestPlatforms.NetBSD) && RuntimeInformation.IsOSPlatform(OSPlatform.Create("NETBSD"))) ||
                 (platforms.HasFlag(TestPlatforms.OSX) && RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) ||
                 (platforms.HasFlag(TestPlatforms.SunOS) && RuntimeInformation.IsOSPlatform(OSPlatform.Create("SUNOS"))) ||
-                (platforms.HasFlag(TestPlatforms.IOS) && RuntimeInformation.IsOSPlatform(OSPlatform.Create("IOS"))) ||
-                (platforms.HasFlag(TestPlatforms.TvOS) && RuntimeInformation.IsOSPlatform(OSPlatform.Create("TVOS"))) ||
+                (platforms.HasFlag(TestPlatforms.iOS) && RuntimeInformation.IsOSPlatform(OSPlatform.Create("IOS"))) ||
+                (platforms.HasFlag(TestPlatforms.tvOS) && RuntimeInformation.IsOSPlatform(OSPlatform.Create("TVOS"))) ||
                 (platforms.HasFlag(TestPlatforms.Android) && RuntimeInformation.IsOSPlatform(OSPlatform.Create("ANDROID"))) ||
                 (platforms.HasFlag(TestPlatforms.Browser) && RuntimeInformation.IsOSPlatform(OSPlatform.Create("BROWSER"))) ||
                 (platforms.HasFlag(TestPlatforms.Windows) && RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
