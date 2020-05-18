@@ -115,7 +115,7 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             string outputDirectory = IsPosixShell ? "$HELIX_WORKITEM_ROOT" : "%HELIX_WORKITEM_ROOT%";
             string xharnessRunCommand = $"xharness android test --app {Path.GetFileName(appPackage.ItemSpec)} --output-directory={outputDirectory} " +
-                                          $"--timeout={xHarnessTimeout.TotalSeconds} -p={androidPackageName} {outputPathArg} {instrumentationArg} {arguments} -v";
+                                        $"--timeout={xHarnessTimeout.TotalSeconds} -p={androidPackageName} {outputPathArg} {instrumentationArg} {arguments} -v";
 
             Log.LogMessage(MessageImportance.Low, $"Generated XHarness command: {xharnessRunCommand}");
 
