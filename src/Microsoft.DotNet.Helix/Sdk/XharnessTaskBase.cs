@@ -1,9 +1,4 @@
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.IO.Compression;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.Build.Framework;
 using Newtonsoft.Json;
 
@@ -32,5 +27,20 @@ namespace Microsoft.DotNet.Helix.Sdk
         /// </summary>
         [Output]
         public ITaskItem[] WorkItems { get; set; }
+
+        protected TimeSpan ParseTimeout()
+        {
+            TimeSpan timeout = TimeSpan.FromMinutes(15);
+            if (!string.IsNullOrEmpty(WorkItemTimeout))
+            {
+                if (!TimeSpan.TryParse(WorkItemTimeout, out timeout))
+                {
+                    Log.LogWarning($"Invalid value \"{WorkItemTimeout}\" provided for XHarnessWorkItemTimeout; falling back to default value of \"00:015:00\" (15 minutes)");
+                    timeout = TimeSpan.FromMinutes(15);
+                }
+            }
+
+            return timeout;
+        }
     }
 }

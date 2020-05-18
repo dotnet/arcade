@@ -5,7 +5,6 @@ using System.IO.Compression;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Build.Framework;
-using Newtonsoft.Json;
 
 namespace Microsoft.DotNet.Helix.Sdk
 {
@@ -16,9 +15,7 @@ namespace Microsoft.DotNet.Helix.Sdk
     {
         /// <summary>
         /// An array of one or more paths to application packages (.apk for Android)
-        /// that will be used to create Helix work items.  
-        /// [Optional] Arguments: a string of arguments to be passed directly to the XHarness runner
-        /// [Optional] DeviceOutputPath: Location on the device where output files are generated
+        /// that will be used to create Helix work items.
         /// </summary>
         public ITaskItem[] AppFolders { get; set; }
 
@@ -58,15 +55,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             await Task.Yield();
             string workItemName = $"xharness-{Path.GetDirectoryName(appFolderPath.ItemSpec)}";
 
-            TimeSpan timeout = TimeSpan.FromMinutes(15);
-            if (!string.IsNullOrEmpty(WorkItemTimeout))
-            {
-                if (!TimeSpan.TryParse(WorkItemTimeout, out timeout))
-                {
-                    Log.LogWarning($"Invalid value \"{WorkItemTimeout}\" provided for XHarnessWorkItemTimeout; falling back to default value of \"00:015:00\" (15 minutes)");
-                    timeout = TimeSpan.FromMinutes(15);
-                }
-            }
+            TimeSpan timeout = ParseTimeout();
 
             string command = ValidateMetadataAndGetXHarnessIosCommand(appFolderPath, timeout);
 
@@ -105,9 +94,11 @@ namespace Microsoft.DotNet.Helix.Sdk
             }
 
             string workDirectory = "$HELIX_WORKITEM_ROOT";
-            string xharnessRunCommand = $"xharness ios test --app {workDirectory}/{Path.GetFileName(appFolderPath.ItemSpec)} +" +
-                                        $" --output-directory=$HELIX_WORKITEM_UPLOAD_ROOT --targets={targets}" +
-                                        $"--timeout={xHarnessTimeout.TotalSeconds} --working-directory={workDirectory} " +
+            string xharnessRunCommand = $"xharness ios test " +
+                                        $"--app {workDirectory}/{Path.GetFileName(appFolderPath.ItemSpec)} " +
+                                        $"--output-directory=$HELIX_WORKITEM_UPLOAD_ROOT" +
+                                        $"--targets={targets} " +
+                                        $"--timeout={xHarnessTimeout.TotalSeconds}" +
                                         $"-v";
 
             Log.LogMessage(MessageImportance.Low, $"Generated XHarness command: {xharnessRunCommand}");
