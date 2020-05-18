@@ -3,7 +3,7 @@
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" />
 
   <PropertyGroup>
-    <XHarnessAppBundleUrl>https://netcorenativeassets.blob.core.windows.net/resource-packages/external/macos/test-ios-app/System.Numerics.Vectors.Tests.app.zip</XHarnessX64TestApkUrl>
+    <XHarnessAppBundleUrl>https://netcorenativeassets.blob.core.windows.net/resource-packages/external/macos/test-ios-app/System.Numerics.Vectors.Tests.app.zip</XHarnessAppBundleUrl>
   </PropertyGroup>
 
   <Target Name="Build" Returns="@(XHarnessPackageToTest)" >
@@ -20,7 +20,7 @@
       <!-- We're not set up currently to build APK files as part of normal builds, so this downloads existing ones for now -->
       <XHarnessAppFolderToTest Include="$(BaseOutputPath)appbundle/*">
         <Targets>ios-simulator-64</Targets>
-      </XHarnessPackageToTest>
+      </XHarnessAppFolderToTest>
     </ItemGroup>
   </Target>
 

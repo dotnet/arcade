@@ -53,7 +53,7 @@
   </Target>
 
   <Target Name="CreateIosAppWorkItems"
-        Condition=" '@(XHarnessAppFolderToTest)' !=  '' "
+        Condition=" '@(XHarnessAppFolderToTest)' != '' "
         BeforeTargets="CoreTest">
     <CreateXHarnessiOSWorkItems AppFolders="@(XHarnessAppFolderToTest)" IsPosixShell="$(IsPosixShell)" WorkItemTimeout="$(XHarnessWorkItemTimeout)">
       <Output TaskParameter="WorkItems" ItemName="HelixWorkItem"/>
