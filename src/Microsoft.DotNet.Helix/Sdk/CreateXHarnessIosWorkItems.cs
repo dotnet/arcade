@@ -11,7 +11,7 @@ namespace Microsoft.DotNet.Helix.Sdk
     /// <summary>
     /// MSBuild custom task to create HelixWorkItems for provided iOS application folder paths.
     /// </summary>
-    public class CreateXHarnessIosWorkItems : XHarnessTaskBase
+    public class CreateXHarnessiOSWorkItems : XHarnessTaskBase
     {
         /// <summary>
         /// An array of one or more paths to application packages (.apk for Android)
@@ -57,7 +57,7 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             TimeSpan timeout = ParseTimeout();
 
-            string command = ValidateMetadataAndGetXHarnessIosCommand(appFolderPath, timeout);
+            string command = ValidateMetadataAndGetXHarnessiOSCommand(appFolderPath, timeout);
 
             Log.LogMessage($"Creating work item with properties Identity: {workItemName}, Payload: {appFolderPath.ItemSpec}, Command: {command}");
 
@@ -84,7 +84,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             return outputZipAbsolutePath;
         }
 
-        private string ValidateMetadataAndGetXHarnessIosCommand(ITaskItem appFolderPath, TimeSpan xHarnessTimeout)
+        private string ValidateMetadataAndGetXHarnessiOSCommand(ITaskItem appFolderPath, TimeSpan xHarnessTimeout)
         {
             // Validation of any metadata specific to iOS stuff goes here
             if (!appFolderPath.GetRequiredMetadata(Log, "Targets", out string targets))
