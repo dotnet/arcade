@@ -29,7 +29,7 @@ namespace Microsoft.DotNet.XUnitExtensions
                 (platforms.HasFlag(TestPlatforms.IOS) && RuntimeInformation.IsOSPlatform(OSPlatform.Create("IOS"))) ||
                 (platforms.HasFlag(TestPlatforms.TvOS) && RuntimeInformation.IsOSPlatform(OSPlatform.Create("TVOS"))) ||
                 (platforms.HasFlag(TestPlatforms.Android) && RuntimeInformation.IsOSPlatform(OSPlatform.Create("ANDROID"))) ||
-                (platforms.HasFlag(TestPlatforms.Wasm) && RuntimeInformation.IsOSPlatform(OSPlatform.Create("WEBASSEMBLY"))) ||
+                (platforms.HasFlag(TestPlatforms.Browser) && RuntimeInformation.IsOSPlatform(OSPlatform.Create("BROWSER"))) ||
                 (platforms.HasFlag(TestPlatforms.Windows) && RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
         
         public static bool TestRuntimeApplies(TestRuntimes runtimes) =>
