@@ -19,6 +19,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
     /// </summary>
     public class PublishArtifactsInManifestV2 : PublishArtifactsInManifestBase
     {
+        [Required]
         public ITaskItem[] TargetFeedConfig { get; set; }
 
         public override bool Execute()
@@ -28,6 +29,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public override async Task<bool> ExecuteAsync()
         {
+            if (!AreAllRequiredPropertiesSet())
+            {
+                Log.LogError("Missing required properties. Aborting execution.");
+                return false;
+            }
+
             try
             {
                 // Fetch Maestro record of the build. We're going to use it to get the BAR ID

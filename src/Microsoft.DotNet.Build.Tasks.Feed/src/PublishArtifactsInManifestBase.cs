@@ -15,6 +15,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -28,12 +29,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
     /// </summary>
     public abstract class PublishArtifactsInManifestBase : Microsoft.Build.Utilities.Task
     {
-        /// <summary>
-        /// Full path to the assets to publish manifest(s)
-        /// </summary>
-        [Required]
-        public ITaskItem[] AssetManifestPaths { get; set; }
-
         /// <summary>
         /// Full path to the folder containing blob assets.
         /// </summary>
@@ -66,15 +61,15 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         public string BuildAssetRegistryToken { get; set; }
 
         /// <summary>
-        /// Maximum number of parallel uploads for the upload tasks
-        /// </summary>
-        public int MaxClients { get; set; } = 16;
-
-        /// <summary>
         /// Directory where "nuget.exe" is installed. This will be used to publish packages.
         /// </summary>
         [Required]
         public string NugetPath { get; set; }
+
+        /// <summary>
+        /// Maximum number of parallel uploads for the upload tasks
+        /// </summary>
+        public int MaxClients { get; set; } = 16;
 
         /// <summary>
         /// Whether this build is internal or not. If true, extra checks are done to avoid accidental
@@ -89,6 +84,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// </summary>
         public bool SkipSafetyChecks { get; set; } = false;
 
+        /// <summary>
+        /// Which build model (i.e., parsed build manifest) the publishing task will operate on.
+        /// This is set by the main publishing task before dispatching the execution to one of
+        /// the version specific publishing task.
+        /// </summary>
         public BuildModel BuildModel { get; set; }
 
         public string AkaMSClientId { get; set; }
@@ -762,6 +762,27 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 Log.LogError($"Could not parse Azure feed URL: '{feedConfig.TargetURL}'");
                 return null;
             }
+        }
+
+        protected bool AreAllRequiredPropertiesSet()
+        {
+            foreach (PropertyInfo prop in this.GetType().GetProperties())
+            {
+                RequiredAttribute attribute =
+                    (RequiredAttribute)Attribute.GetCustomAttribute(prop, typeof(RequiredAttribute));
+
+                if (attribute != null)
+                {
+                    string value = prop.GetValue(this, null).ToString();
+
+                    if (string.IsNullOrEmpty(value))
+                    {
+                        Log.LogError($"The property {prop.Name} is required but doesn't have a value set.");
+                    }
+                }
+            }
+
+            return Log.HasLoggedErrors;
         }
     }
 }
