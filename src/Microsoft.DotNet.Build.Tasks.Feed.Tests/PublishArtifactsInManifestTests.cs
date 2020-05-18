@@ -2,7 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using Microsoft.DotNet.VersionTools.BuildManifest.Model;
+using Microsoft.DotNet.Build.Tasks.Feed.Model;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -19,16 +19,52 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         const string BlobFeedUrl = "https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json";
 
         [Fact]
+        public void ConstructV2PublishingTask()
+        {
+            var testInputs = Path.Combine(Path.GetDirectoryName(typeof(PublishArtifactsInManifestTests).Assembly.Location), "TestInputs", "Manifests");
+            var manifestFullPath = Path.Combine(testInputs, "SampleV2.xml");
+
+            var buildEngine = new MockBuildEngine();
+            var task = new PublishArtifactsInManifest()
+            {
+                BuildEngine = buildEngine,
+                TargetChannels = "529"
+            };
+
+            var which = task.WhichPublishingTask(manifestFullPath);
+
+            Assert.IsType<PublishArtifactsInManifestV2>(which);
+        }
+
+        [Fact]
+        public void ConstructV3PublishingTask()
+        {
+            var testInputs = Path.Combine(Path.GetDirectoryName(typeof(PublishArtifactsInManifestTests).Assembly.Location), "TestInputs", "Manifests");
+            var manifestFullPath = Path.Combine(testInputs, "SampleV3.xml");
+
+            var buildEngine = new MockBuildEngine();
+            var task = new PublishArtifactsInManifest()
+            {
+                BuildEngine = buildEngine,
+                TargetChannels = "529"
+            };
+
+            var which = task.WhichPublishingTask(manifestFullPath);
+
+            Assert.IsType<PublishArtifactsInManifestV3>(which);
+        }
+
+        [Fact]
         public async Task FeedConfigParserTests1Async()
         {
             var buildEngine = new MockBuildEngine();
-            var task = new PublishArtifactsInManifest
+            var task = new PublishArtifactsInManifestV2
             {
                 // Create a single Microsoft.Build.Utilities.TaskItem for a simple feed config, then parse to FeedConfigs and
                 // check the expected values.
                 TargetFeedConfig = new Microsoft.Build.Utilities.TaskItem[]
                 {
-                    new Microsoft.Build.Utilities.TaskItem("FOOPACKAGES", new Dictionary<string, string> {
+                    new Microsoft.Build.Utilities.TaskItem(TargetFeedContentType.BinaryLayout.ToString(), new Dictionary<string, string> {
                         { "TargetUrl", BlobFeedUrl },
                         { "Token", RandomToken },
                         { "Type", "AzDoNugetFeed" },
@@ -44,7 +80,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             Assert.Collection(task.FeedConfigs,
                 configList =>
                 {
-                    Assert.Equal("FOOPACKAGES", configList.Key);
+                    Assert.Equal(TargetFeedContentType.BinaryLayout, configList.Key);
                     Assert.Collection(configList.Value, config =>
                     {
                         Assert.Equal(RandomToken, config.Token);
@@ -60,7 +96,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         public async Task FeedConfigParserTests2Async()
         {
             var buildEngine = new MockBuildEngine();
-            var task = new PublishArtifactsInManifest
+            var task = new PublishArtifactsInManifestV2
             {
                 TargetFeedConfig = new Microsoft.Build.Utilities.TaskItem[]
                 {
@@ -82,7 +118,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         public async Task FeedConfigParserTests3Async()
         {
             var buildEngine = new MockBuildEngine();
-            var task = new PublishArtifactsInManifest
+            var task = new PublishArtifactsInManifestV2
             {
                 TargetFeedConfig = new Microsoft.Build.Utilities.TaskItem[]
                 {
@@ -107,11 +143,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         public async Task FeedConfigParserTests4Async()
         {
             var buildEngine = new MockBuildEngine();
-            var task = new PublishArtifactsInManifest
+            var task = new PublishArtifactsInManifestV2
             {
                 TargetFeedConfig = new Microsoft.Build.Utilities.TaskItem[]
                 {
-                    new Microsoft.Build.Utilities.TaskItem("FOOPACKAGES", new Dictionary<string, string> {
+                    new Microsoft.Build.Utilities.TaskItem(TargetFeedContentType.BinaryLayout.ToString(), new Dictionary<string, string> {
                         { "TargetUrl", BlobFeedUrl },
                         { "Token", RandomToken },
                         // Use different casing here to make sure that parsing
@@ -129,7 +165,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             Assert.Collection(task.FeedConfigs,
                 configList =>
                 {
-                    Assert.Equal("FOOPACKAGES", configList.Key);
+                    Assert.Equal(TargetFeedContentType.BinaryLayout, configList.Key);
                     Assert.Collection(configList.Value, config =>
                     {
                         Assert.Equal(RandomToken, config.Token);
@@ -147,7 +183,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         public async Task FeedConfigParserTests5Async()
         {
             var buildEngine = new MockBuildEngine();
-            var task = new PublishArtifactsInManifest
+            var task = new PublishArtifactsInManifestV2
             {
                 InternalBuild = true,
                 TargetFeedConfig = new Microsoft.Build.Utilities.TaskItem[]
@@ -178,18 +214,18 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         public async Task FeedConfigParserTests6Async()
         {
             var buildEngine = new MockBuildEngine();
-            var task = new PublishArtifactsInManifest
+            var task = new PublishArtifactsInManifestV2
             {
                 InternalBuild = true,
                 TargetFeedConfig = new Microsoft.Build.Utilities.TaskItem[]
                 {
-                    new Microsoft.Build.Utilities.TaskItem("FOOPACKAGES", new Dictionary<string, string> {
+                    new Microsoft.Build.Utilities.TaskItem(TargetFeedContentType.Checksum.ToString(), new Dictionary<string, string> {
                         { "TargetUrl", BlobFeedUrl },
                         { "Token", RandomToken },
                         { "Type", "AZURESTORAGEFEED" },
                         { "AssetSelection", "SHIPPINGONLY" },
                         { "Internal", "true" }}),
-                    new Microsoft.Build.Utilities.TaskItem("FOOPACKAGES", new Dictionary<string, string> {
+                    new Microsoft.Build.Utilities.TaskItem(TargetFeedContentType.Maven.ToString(), new Dictionary<string, string> {
                         { "TargetUrl", BlobFeedUrl },
                         { "Token", RandomToken },
                         { "Type", "AZURESTORAGEFEED" },
@@ -209,7 +245,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         [InlineData("https://pkgs.dev.azure.com/DevDiv/_packaging/1234.5/nuget/v3/index.json", "DevDiv", "", "1234.5")]
         public void NugetFeedParseTests(string uri, string account, string visibility, string feed)
         {
-            var matches = Regex.Match(uri, PublishArtifactsInManifest.AzDoNuGetFeedPattern);
+            var matches = Regex.Match(uri, PublishingConstants.AzDoNuGetFeedPattern);
             Assert.Equal(account, matches.Groups["account"]?.Value);
             Assert.Equal(visibility, matches.Groups["visibility"]?.Value);
             Assert.Equal(feed, matches.Groups["feed"]?.Value);
@@ -240,7 +276,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             FakeStream fakeStreamA = new FakeStream(streamABytes, maxStreamABytesReturnedEachCall);
             FakeStream fakeStreamB = new FakeStream(streamBBytes, maxStreamBBytesReturnedEachCall);
 
-            Assert.Equal(streamA == streamB, await PublishArtifactsInManifest.CompareStreamsAsync(fakeStreamA, fakeStreamB, bufferSize));
+            Assert.Equal(streamA == streamB, await GeneralUtils.CompareStreamsAsync(fakeStreamA, fakeStreamB, bufferSize));
         }
 
         class FakeStream : Stream
