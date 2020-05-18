@@ -97,21 +97,21 @@ stages:
     jobs:
     - template: setup-maestro-vars.yml
 
-  - job:
-    displayName: Post-build Checks
-    dependsOn: setupMaestroVars
-    variables:
-      - name: TargetChannels
-        value: $[ dependencies.setupMaestroVars.outputs['setReleaseVars.TargetChannels'] ]
-    pool:
-      vmImage: 'windows-2019'
-    steps:
-      - task: PowerShell@2
-        displayName: Maestro Channels Consistency
-        inputs:
-          filePath: $(Build.SourcesDirectory)/eng/common/post-build/check-channel-consistency.ps1
-          arguments: -PromoteToChannels "$(TargetChannels)"
-            -AvailableChannelIds ${{parameters.NetEngLatestChannelId}},${{parameters.NetEngValidationChannelId}},${{parameters.NetDev5ChannelId}},${{parameters.GeneralTestingChannelId}},${{parameters.NETCoreToolingDevChannelId}},${{parameters.NETCoreToolingReleaseChannelId}},${{parameters.NETInternalToolingChannelId}},${{parameters.NETCoreExperimentalChannelId}},${{parameters.NetEngServicesIntChannelId}},${{parameters.NetEngServicesProdChannelId}},${{parameters.Net5Preview3ChannelId}},${{parameters.Net5Preview4ChannelId}},${{parameters.Net5Preview5ChannelId}},${{parameters.NetCoreSDK313xxChannelId}},${{parameters.NetCoreSDK313xxInternalChannelId}},${{parameters.NetCoreSDK314xxChannelId}},${{parameters.NetCoreSDK314xxInternalChannelId}}
+    - job:
+      displayName: Post-build Checks
+      dependsOn: setupMaestroVars
+      variables:
+        - name: TargetChannels
+          value: $[ dependencies.setupMaestroVars.outputs['setReleaseVars.TargetChannels'] ]
+      pool:
+        vmImage: 'windows-2019'
+      steps:
+        - task: PowerShell@2
+          displayName: Maestro Channels Consistency
+          inputs:
+            filePath: $(Build.SourcesDirectory)/eng/common/post-build/check-channel-consistency.ps1
+            arguments: -PromoteToChannels "$(TargetChannels)"
+              -AvailableChannelIds ${{parameters.NetEngLatestChannelId}},${{parameters.NetEngValidationChannelId}},${{parameters.NetDev5ChannelId}},${{parameters.GeneralTestingChannelId}},${{parameters.NETCoreToolingDevChannelId}},${{parameters.NETCoreToolingReleaseChannelId}},${{parameters.NETInternalToolingChannelId}},${{parameters.NETCoreExperimentalChannelId}},${{parameters.NetEngServicesIntChannelId}},${{parameters.NetEngServicesProdChannelId}},${{parameters.Net5Preview3ChannelId}},${{parameters.Net5Preview4ChannelId}},${{parameters.Net5Preview5ChannelId}},${{parameters.NetCoreSDK313xxChannelId}},${{parameters.NetCoreSDK313xxInternalChannelId}},${{parameters.NetCoreSDK314xxChannelId}},${{parameters.NetCoreSDK314xxInternalChannelId}}
 
     - job:
       displayName: NuGet Validation
