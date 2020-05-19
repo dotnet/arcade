@@ -234,12 +234,12 @@ stages:
     dependsOn: ${{ parameters.publishDependsOn }}
     variables:
       - template: common-variables.yml
-    displayName: Asset Publishing
+    displayName: Publishing
     jobs:
     - template: setup-maestro-vars.yml
 
     - job: publish_symbols
-      displayName: Symbol Publishing
+      displayName: Symbols Publishing
       dependsOn: setupMaestroVars
       variables:
         - group: DotNet-Symbol-Server-Pats
@@ -348,7 +348,7 @@ stages:
             arguments: -token $(dn-bot-dnceng-artifact-feeds-rw)
 
         - task: PowerShell@2
-          displayName: Publish Assets
+          displayName: Packages & Blobs Publishing
           inputs:
             filePath: eng\common\sdk-task.ps1
             arguments: -task PublishArtifactsInManifest -restore -msbuildEngine dotnet
