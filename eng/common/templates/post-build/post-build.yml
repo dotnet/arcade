@@ -233,10 +233,10 @@ stages:
   - stage: publish
     dependsOn: ${{ parameters.publishDependsOn }}
     variables:
-      - template: ../common-variables.yml
+      - template: common-variables.yml
     displayName: Asset Publishing
     jobs:
-    - template: ../setup-maestro-vars.yml
+    - template: setup-maestro-vars.yml
 
     - job: publish_symbols
       displayName: Symbol Publishing
@@ -293,7 +293,7 @@ stages:
               /p:PublishToMSDL=false
               ${{ parameters.symbolPublishingAdditionalParameters }}
 
-        - template: ../../steps/publish-logs.yml
+        - template: ../steps/publish-logs.yml
           parameters:
             StageLabel: '${{ parameters.stageName }}'
             JobLabel: 'SymbolPublishing'
@@ -373,7 +373,7 @@ stages:
               /p:AkaMSClientSecret=$(akams-client-secret)
               ${{ parameters.artifactsPublishingAdditionalParameters }}
 
-        - template: ../../steps/publish-logs.yml
+        - template: ../steps/publish-logs.yml
           parameters:
             StageLabel: '${{ parameters.stageName }}'
             JobLabel: 'AssetsPublishing'
