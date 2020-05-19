@@ -76,7 +76,7 @@ def add_logs(tr, log_list):
         total_added_logs += 1
     return tr
 
-def read_results(dirs: List[str]) -> Iterable[TestResult]:
+def read_results(dirs_to_check: List[str]) -> Iterable[TestResult]:
 
     log_files = list(get_log_files(os.path.join(get_env("HELIX_WORKITEM_ROOT"), "..")))
     log_list = construct_log_list(log_files)
@@ -85,7 +85,7 @@ def read_results(dirs: List[str]) -> Iterable[TestResult]:
 
     found = False
 
-    for dir in dirs:
+    for dir in dirs_to_check:
         for root, dirs, files in os.walk(dir):
             for file_name in files:
                 for f in all_formats:
