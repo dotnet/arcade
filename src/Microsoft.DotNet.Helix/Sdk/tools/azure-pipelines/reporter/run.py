@@ -89,8 +89,8 @@ def main():
     log.info("Beginning reading of test results.")
 
     # In case the user puts the results in HELIX_WORKITEM_UPLOAD_ROOT for upload, check there too.
-    all_results = read_results(os.getcwd(),
-                               get_env("HELIX_WORKITEM_UPLOAD_ROOT"))
+    all_results = read_results([os.getcwd(),
+                                get_env("HELIX_WORKITEM_UPLOAD_ROOT")])
 
     batch_size = 1000
     batches = batch(all_results, batch_size)
