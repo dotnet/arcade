@@ -76,20 +76,20 @@ stages:
     jobs:
     - template: setup-maestro-vars.yml
 
-  - job:
-    displayName: Post-build Checks
-    dependsOn: setupMaestroVars
-    variables:
-      - name: TargetChannels
-        value: $[ dependencies.setupMaestroVars.outputs['setReleaseVars.TargetChannels'] ]
-    pool:
-      vmImage: 'windows-2019'
-    steps:
-      - task: PowerShell@2
-        displayName: Maestro Channels Consistency
-        inputs:
-          filePath: $(Build.SourcesDirectory)/eng/common/post-build/check-channel-consistency.ps1
-          arguments: -PromoteToChannels "$(TargetChannels)"
+    - job:
+      displayName: Post-build Checks
+      dependsOn: setupMaestroVars
+      variables:
+        - name: TargetChannels
+          value: $[ dependencies.setupMaestroVars.outputs['setReleaseVars.TargetChannels'] ]
+      pool:
+        vmImage: 'windows-2019'
+      steps:
+        - task: PowerShell@2
+          displayName: Maestro Channels Consistency
+          inputs:
+            filePath: $(Build.SourcesDirectory)/eng/common/post-build/check-channel-consistency.ps1
+            arguments: -PromoteToChannels "$(TargetChannels)"
 
     - job:
       displayName: NuGet Validation
