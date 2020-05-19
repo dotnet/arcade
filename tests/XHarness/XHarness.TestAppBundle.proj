@@ -8,17 +8,17 @@
 
   <Target Name="Build" Returns="@(XHarnessPackageToTest)" >
     <Error Condition=" '$(BaseOutputPath)' == ''" Text="Not downloading AppBundle because BaseOutputPath property is unset" />
-    <DownloadFile SourceUrl="$(XHarnessAppBundleUrl)" DestinationFolder="$(BaseOutputPath)zippedappbundle" SkipUnchangedFiles="True" Retries="5">
+    <DownloadFile SourceUrl="$(XHarnessAppBundleUrl)" DestinationFolder="$(BaseOutputPath)appbundle" SkipUnchangedFiles="True" Retries="5">
       <Output TaskParameter="DownloadedFile" ItemName="DownloadedZippedAppBundle" />
     </DownloadFile>
 
     <Message Text="Downloaded @(DownloadedZippedAppBundle) for XHarness Test purposes" Importance="High" />
 
-    <Unzip SourceFiles="@(DownloadedZippedAppBundle)" DestinationFolder="$(BaseOutputPath)appbundle" OverwriteReadOnlyFiles="true" SkipUnchangedFiles="true" />
+    <Exec Command="tar -xzf @(DownloadedZippedAppBundle)" />
 
     <ItemGroup>
       <!-- We're not set up currently to build APK files as part of normal builds, so this downloads existing ones for now -->
-      <XHarnessAppFolderToTest Include="$(BaseOutputPath)appbundle/*">
+      <XHarnessAppFolderToTest Include="$(BaseOutputPath)appbundle/System.Numerics.Vectors.Tests.app">
         <Targets>ios-simulator-64</Targets>
       </XHarnessAppFolderToTest>
     </ItemGroup>
