@@ -168,13 +168,13 @@ stages:
             env:
               SYSTEM_ACCESSTOKEN: $(System.AccessToken)
               HelixAccessToken: ''
-          - script: eng\common\build.sh
+          - script: eng/common/build.sh
               -configuration $(_BuildConfig)
               -prepareMachine
               -ci
               -restore
               -test
-              -projects $(Build.SourcesDirectory)\tests\UnitTests.XHarness.iOS.proj
+              -projects $(Build.SourcesDirectory)/tests/UnitTests.XHarness.iOS.proj
               /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.XHarness.binlog
               /p:RestoreUsingNuGetTargets=false
             displayName: XHarness iOS Helix Testing
