@@ -58,6 +58,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public static BuildModel CreateModelFromItems(
             ITaskItem[] artifacts,
+            ITaskItem[] itemsToSign,
+            ITaskItem[] strongNameSignInfo,
+            ITaskItem[] fileSignInfo,
+            ITaskItem[] fileExtensionSignInfo,
             string buildId,
             string[] BuildProperties,
             string repoUri,
@@ -101,7 +105,56 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 }
             }
 
-            var buildModel = BuildManifestUtil.CreateModel(
+            List<ItemToSignModel> parsedItemsToSign = new List<ItemToSignModel>();
+            List<StrongNameSignInfoModel> parsedStrongNameSignInfo = new List<StrongNameSignInfoModel>();
+            List<FileSignInfoModel> parsedFileSignInfo = new List<FileSignInfoModel>();
+            List<FileExtensionSignInfoModel> parsedFileExtensionSignInfoModel = new List<FileExtensionSignInfoModel>();
+
+            if (itemsToSign != null)
+            {
+                foreach (var itemToSign in itemsToSign)
+                {
+                    var filename = itemToSign.ItemSpec.Replace('\\', '/');
+                    {
+                        var metadata = itemToSign.CloneCustomMetadata() as Dictionary<string, string>;
+                        parsedItemsToSign.Add(new ItemToSignModel { File = Path.GetFileName(itemToSign.ItemSpec) });
+                    }
+                }
+            }
+            if (strongNameSignInfo != null)
+            {
+                foreach (var signInfo in strongNameSignInfo)
+                {
+                    var attributes = signInfo.CloneCustomMetadata() as Dictionary<string, string>;
+                    parsedStrongNameSignInfo.Add(new StrongNameSignInfoModel { File = Path.GetFileName(signInfo.ItemSpec), CertificateName = attributes["CertificateName"], PublicKeyToken = attributes["PublicKeyToken"] });
+                }
+            }
+            if (fileSignInfo != null)
+            {
+                foreach (var signInfo in fileSignInfo)
+                {
+                    var attributes = signInfo.CloneCustomMetadata() as Dictionary<string, string>;
+                    parsedFileSignInfo.Add(new FileSignInfoModel { File = signInfo.ItemSpec, CertificateName = attributes["CertificateName"] });
+                }
+            }
+            if (fileExtensionSignInfo != null)
+            {
+                foreach (var signInfo in fileExtensionSignInfo)
+                {
+                    var attributes = signInfo.CloneCustomMetadata() as Dictionary<string, string>;
+                    parsedFileExtensionSignInfoModel.Add(new FileExtensionSignInfoModel { Extension = signInfo.ItemSpec, CertificateName = attributes["CertificateName"] });
+                }
+            }
+
+            SigningInformationModel signingInformationModel = new SigningInformationModel
+            {
+                ItemsToSign = parsedItemsToSign,
+                StrongNameSignInfo = parsedStrongNameSignInfo,
+                FileSignInfo = parsedFileSignInfo,
+                FileExtensionSignInfo = parsedFileExtensionSignInfoModel
+            };
+
+            var buildModel = CreateModel(
                 blobArtifacts,
                 packageArtifacts,
                 buildId,
@@ -111,7 +164,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 repoCommit,
                 isStableBuild,
                 publishingVersion,
-                log);
+                log,
+                signingInformationModel: signingInformationModel);
             return buildModel;
         }
 
@@ -124,10 +178,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             string manifestCommit,
             bool isStableBuild,
             string publishingVersion,
-            TaskLoggingHelper log)
+            TaskLoggingHelper log,
+            SigningInformationModel signingInformationModel = null)
         {
             var attributes = MSBuildListSplitter.GetNamedProperties(manifestBuildData);
-            if(!ManifestBuildDataHasLocationInformation(attributes))
+            if (!ManifestBuildDataHasLocationInformation(attributes))
             {
                 log.LogError($"Missing 'location' property from ManifestBuildData");
             }
@@ -145,10 +200,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
             buildModel.Artifacts.Blobs.AddRange(blobArtifacts);
             buildModel.Artifacts.Packages.AddRange(packageArtifacts);
+            buildModel.SingingInformation = signingInformationModel;
             return buildModel;
         }
 
-        internal static bool ManifestBuildDataHasLocationInformation(string [] manifestBuildData)
+        internal static bool ManifestBuildDataHasLocationInformation(string[] manifestBuildData)
         {
             return ManifestBuildDataHasLocationInformation(MSBuildListSplitter.GetNamedProperties(manifestBuildData));
         }

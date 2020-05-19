@@ -32,6 +32,26 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         public string OutputPath { get; set; }
 
         /// <summary>
+        /// List of files that need to be signed
+        /// </summary>
+        public ITaskItem[] ItemsToSign { get; set; }
+
+        /// <summary>
+        /// List of files with strong name sign info and said info
+        /// </summary>
+        public ITaskItem[] StrongNameSignInfo { get; set; }
+        
+        /// <summary>
+        /// List of which certificates to use when signing individual files
+        /// </summary>
+        public ITaskItem[] FileSignInfo { get; set; }
+
+        /// <summary>
+        /// List of which certificates to use when signing files with particular extensions
+        /// </summary>
+        public ITaskItem[] FileExtensionSignInfo { get; set; }
+
+        /// <summary>
         /// The CI build ID.
         /// </summary>
         public string BuildId { get; set; } = "no build id provided";
@@ -72,6 +92,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             {
                 var buildModel = BuildManifestUtil.CreateModelFromItems(
                     Artifacts,
+                    ItemsToSign,
+                    StrongNameSignInfo,
+                    FileSignInfo,
+                    FileExtensionSignInfo,
                     BuildId,
                     BuildData,
                     RepoUri,

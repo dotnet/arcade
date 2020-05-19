@@ -31,6 +31,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public string[] ManifestBuildData { get; set; }
 
+        public string[] SigningManifestPaths { get; set; }
+
         public string AssetManifestPath { get; set; }
 
         public bool IsStableBuild { get; set; }
