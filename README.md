@@ -23,7 +23,7 @@ Status Last Updated: May 19, 2020, 10:00 AM PDT
 
 ### Status of Latest Version of Arcade Being Validated
 
-- Arcade is not being promoted due to bellwether repos not being green. 
+- Arcade is not being promoted due to [Runtime](https://dnceng.visualstudio.com/internal/_build?definitionId=679&_a=summary) (a bellweather repo) not having successful builds on `master` to validate Arcade with. 
 - [Arcade Validation build result from May 18th, 2020 at 1:09 PM PDT](https://dev.azure.com/dnceng/internal/_build/results?buildId=650179&view=results) and [failure investigation](https://github.com/dotnet/core-eng/issues/9887)
 
 ## Getting Started
