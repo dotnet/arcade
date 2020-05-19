@@ -59,14 +59,6 @@ function Assign-BuildToChannel([int]$BuildId, [int]$ChannelId) {
   Invoke-WebRequest -Method Post -Uri $apiEndpoint -Headers $apiHeaders | Out-Null
 }
 
-function Trigger-Subscription([string]$SubscriptionId) {
-  Validate-MaestroVars
-
-  $apiHeaders = Create-MaestroApiRequestHeaders -AuthToken $MaestroApiAccessToken
-  $apiEndpoint = "$MaestroApiEndPoint/api/subscriptions/$SubscriptionId/trigger?api-version=$MaestroApiVersion"
-  Invoke-WebRequest -Uri $apiEndpoint -Headers $apiHeaders -Method Post | Out-Null
-}
-
 function Validate-MaestroVars {
   try {
     Get-Variable MaestroApiEndPoint -Scope Global | Out-Null
