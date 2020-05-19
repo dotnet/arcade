@@ -81,11 +81,10 @@ def read_results(dirs_to_check: List[str]) -> Iterable[TestResult]:
     log_files = list(get_log_files(os.path.join(get_env("HELIX_WORKITEM_ROOT"), "..")))
     log_list = construct_log_list(log_files)
 
-    print("Searching '{}' for test results files".format(dir))
-
     found = False
 
     for dir in dirs_to_check:
+        print("Searching '{}' for test results files".format(dir))
         for root, dirs, files in os.walk(dir):
             for file_name in files:
                 for f in all_formats:
