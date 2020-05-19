@@ -49,11 +49,14 @@ namespace Microsoft.DotNet.Helix.Sdk
         /// </summary>
         /// <param name="appFolderPath">Path to application package</param>
         /// <returns>An ITaskItem instance representing the prepared HelixWorkItem.</returns>
-        private async Task<ITaskItem> PrepareWorkItem(ITaskItem appFolderPath)
+        private async Task<ITaskItem> PrepareWorkItem(ITaskItem appFolderItem)
         {
             // Forces this task to run asynchronously
             await Task.Yield();
-            string workItemName = $"xharness-{Path.GetFileName(appFolderPath.ItemSpec)}";
+            
+            string appFolderPath = appFolderItem.ItemSpec;
+            
+            string workItemName = $"xharness-{Path.GetFileName(appFolderPath)}";
             if (workItemName.EndsWith(".app"))
             {
                 workItemName = workItemName.Substring(0, workItemName.Length - 4);
@@ -61,14 +64,14 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             TimeSpan timeout = ParseTimeout();
 
-            string command = ValidateMetadataAndGetXHarnessiOSCommand(appFolderPath, timeout);
+            string command = ValidateMetadataAndGetXHarnessiOSCommand(appFolderItem, timeout);
 
-            Log.LogMessage($"Creating work item with properties Identity: {workItemName}, Payload: {appFolderPath.ItemSpec}, Command: {command}");
+            Log.LogMessage($"Creating work item with properties Identity: {workItemName}, Payload: {appFolderPath}, Command: {command}");
 
             return new Microsoft.Build.Utilities.TaskItem(workItemName, new Dictionary<string, string>()
             {
                 { "Identity", workItemName },
-                { "PayloadArchive", CreateZipArchiveOfFolder(appFolderPath.ItemSpec, "./") },
+                { "PayloadArchive", CreateZipArchiveOfFolder(appFolderPath, "./") },
                 { "Command", command },
                 { "Timeout", timeout.ToString() },
             });
@@ -82,7 +85,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                 return string.Empty;
             }
 
-            string fileName = $"xharness-ios-app-payload-{Path.GetDirectoryName(folderToZip).ToLowerInvariant()}.zip";
+            string fileName = $"xharness-ios-app-payload-{Path.GetFileName(folderToZip).ToLowerInvariant()}.zip";
             string outputZipAbsolutePath = Path.Combine(outputFolder, fileName);
             ZipFile.CreateFromDirectory(folderToZip, outputZipAbsolutePath);
             return outputZipAbsolutePath;
