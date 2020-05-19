@@ -221,6 +221,10 @@
       <RuntimeGraphGeneratorRuntime Condition="$([MSBuild]::IsOSPlatform('freebsd'))">freebsd</RuntimeGraphGeneratorRuntime>
       <RuntimeGraphGeneratorRuntime Condition="$([MSBuild]::IsOSPlatform('netbsd'))">netbsd</RuntimeGraphGeneratorRuntime>
       <RuntimeGraphGeneratorRuntime Condition="$([MSBuild]::IsOSPlatform('sunos'))">sunos</RuntimeGraphGeneratorRuntime>
+      <RuntimeGraphGeneratorRuntime Condition="$([MSBuild]::IsOSPlatform('ios'))">ios</RuntimeGraphGeneratorRuntime>
+      <RuntimeGraphGeneratorRuntime Condition="$([MSBuild]::IsOSPlatform('tvos'))">tvos</RuntimeGraphGeneratorRuntime>
+      <RuntimeGraphGeneratorRuntime Condition="$([MSBuild]::IsOSPlatform('android'))">android</RuntimeGraphGeneratorRuntime>
+      <RuntimeGraphGeneratorRuntime Condition="$([MSBuild]::IsOSPlatform('browser'))">browser</RuntimeGraphGeneratorRuntime>
       <RuntimeGraphGeneratorRuntime Condition="'$(RuntimeGraphGeneratorRuntime)'==''">linux</RuntimeGraphGeneratorRuntime>
     </PropertyGroup>
 

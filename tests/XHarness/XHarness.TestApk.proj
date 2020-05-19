@@ -13,11 +13,9 @@
       <Output TaskParameter="DownloadedFile" ItemName="DownloadedApkFile" />
     </DownloadFile>
 
-    <!-- Disabled until we have both kinds of emulator available, otherwise this will fail
     <DownloadFile SourceUrl="$(XHarnessX64TestApkUrl)" DestinationFolder="$(BaseOutputPath)apk/x86_64" SkipUnchangedFiles="True" Retries="5">
       <Output TaskParameter="DownloadedFile" ItemName="DownloadedApkFile" />
     </DownloadFile> 
-    -->
 
     <Message Text="Downloaded @(DownloadedApkFile) for XHarness Test purposes" Importance="High" />
 
