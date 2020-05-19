@@ -52,10 +52,10 @@
     </CreateXHarnessAndroidWorkItems>
   </Target>
 
-  <Target Name="CreateIosAppWorkItems"
-        Condition=" '@(XHarnessAppFolderToTest)' != '' "
+  <Target Name="CreateiOSWorkItems"
+        Condition=" '@(XHarnessAppFoldersToTest)' != '' "
         BeforeTargets="CoreTest">
-    <CreateXHarnessiOSWorkItems AppFolders="@(XHarnessAppFolderToTest)" IsPosixShell="$(IsPosixShell)" WorkItemTimeout="$(XHarnessWorkItemTimeout)">
+    <CreateXHarnessiOSWorkItems AppFolders="@(XHarnessAppFoldersToTest)" IsPosixShell="$(IsPosixShell)" WorkItemTimeout="$(XHarnessWorkItemTimeout)">
       <Output TaskParameter="WorkItems" ItemName="HelixWorkItem"/>
     </CreateXHarnessiOSWorkItems>
   </Target>

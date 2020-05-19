@@ -6,7 +6,8 @@
     <XHarnessAppBundleUrl>https://netcorenativeassets.blob.core.windows.net/resource-packages/external/macos/test-ios-app/System.Numerics.Vectors.Tests.app.zip</XHarnessAppBundleUrl>
   </PropertyGroup>
 
-  <Target Name="Build" Returns="@(XHarnessPackageToTest)" >
+  <!-- We're not set up currently to build app bundles as part of normal builds, so this downloads existing ones for now -->
+  <Target Name="Build" Returns="@(XHarnessAppFoldersToTest)" >
     <Error Condition=" '$(BaseOutputPath)' == ''" Text="Not downloading AppBundle because BaseOutputPath property is unset" />
     <DownloadFile SourceUrl="$(XHarnessAppBundleUrl)" DestinationFolder="$(BaseOutputPath)appbundle" SkipUnchangedFiles="True" Retries="5">
       <Output TaskParameter="DownloadedFile" ItemName="DownloadedZippedAppBundle" />
@@ -14,13 +15,12 @@
 
     <Message Text="Downloaded @(DownloadedZippedAppBundle) for XHarness Test purposes" Importance="High" />
 
-    <Exec Command="tar -xzf @(DownloadedZippedAppBundle)" />
+    <Exec Command="tar -xzf @(DownloadedZippedAppBundle) -C $(BaseOutputPath)appbundle" />
 
     <ItemGroup>
-      <!-- We're not set up currently to build APK files as part of normal builds, so this downloads existing ones for now -->
-      <XHarnessAppFolderToTest Include="$(BaseOutputPath)appbundle/System.Numerics.Vectors.Tests.app">
+      <XHarnessAppFoldersToTest Include="$(BaseOutputPath)appbundle/System.Numerics.Vectors.Tests.app">
         <Targets>ios-simulator-64</Targets>
-      </XHarnessAppFolderToTest>
+      </XHarnessAppFoldersToTest>
     </ItemGroup>
   </Target>
 

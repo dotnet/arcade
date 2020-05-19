@@ -13,7 +13,7 @@
     <DotNetCliPackageType>sdk</DotNetCliPackageType>
     <TestRunNamePrefix>$(AGENT_JOBNAME)</TestRunNamePrefix>
     <EnableXUnitReporter>true</EnableXUnitReporter>
-    <EnableAzurePipelinesReporter>true</EnableAzurePipelinesReporter>
+    <EnableAzurePipelinesReporter>false</EnableAzurePipelinesReporter><!-- TODO: Switch to true -->
     <HelixBaseUri>https://helix.int-dot.net</HelixBaseUri>
   </PropertyGroup>
 
