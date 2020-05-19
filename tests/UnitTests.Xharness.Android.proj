@@ -19,7 +19,7 @@
 
   <!-- New Test Projects which build packages to run through XHarness/XHarness go here -->
   <ItemGroup>
-    <XHarnessProject Include="$(MSBuildThisFileDirectory)XHarness/XHarness.TestApk.proj" />
+    <XHarnessAndroidProject Include="$(MSBuildThisFileDirectory)XHarness/XHarness.TestApk.proj" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(HelixAccessToken)' != '' ">

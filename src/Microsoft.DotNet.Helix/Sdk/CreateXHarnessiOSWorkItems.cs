@@ -53,7 +53,11 @@ namespace Microsoft.DotNet.Helix.Sdk
         {
             // Forces this task to run asynchronously
             await Task.Yield();
-            string workItemName = $"xharness-{Path.GetDirectoryName(appFolderPath.ItemSpec)}";
+            string workItemName = $"xharness-{Path.GetFileName(appFolderPath.ItemSpec)}";
+            if (workItemName.EndsWith(".app"))
+            {
+                workItemName = workItemName.Substring(0, workItemName.Length - 4);
+            }
 
             TimeSpan timeout = ParseTimeout();
 

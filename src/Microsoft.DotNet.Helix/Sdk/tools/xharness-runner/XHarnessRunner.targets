@@ -30,16 +30,29 @@
     </PropertyGroup>
   </Target>
 
-  <Target Name="BuildXHarnessProjects"
-          Condition="'@(XHarnessProject)' != ''"
+  <Target Name="BuildXHarnessAndroidProjects"
+          Condition="'@(XHarnessAndroidProject)' != ''"
           BeforeTargets="CoreBuild"
-          Outputs="%(XHarnessProject.Identity)%(XHarnessProject.AdditionalProperties)">
+          Outputs="%(XHarnessAndroidProject.Identity)%(XHarnessAndroidProject.AdditionalProperties)">
     <PropertyGroup>
-      <_CurrentXHarnessProject>%(XHarnessProject.Identity)</_CurrentXHarnessProject>
-      <_CurrentAdditionalProperties>%(XHarnessProject.AdditionalProperties)</_CurrentAdditionalProperties>
+      <_CurrentXHarnessAndroidProject>%(XHarnessAndroidProject.Identity)</_CurrentXHarnessAndroidProject>
+      <_CurrentAdditionalProperties>%(XHarnessAndroidProject.AdditionalProperties)</_CurrentAdditionalProperties>
     </PropertyGroup>
-    <MSBuild Projects="$(_CurrentXHarnessProject)" Targets="Build" Properties="$(_CurrentAdditionalProperties)">
+    <MSBuild Projects="$(_CurrentXHarnessAndroidProject)" Targets="Build" Properties="$(_CurrentAdditionalProperties)">
       <Output TaskParameter="TargetOutputs" ItemName="XHarnessPackageToTest" />
+    </MSBuild>
+  </Target>
+
+  <Target Name="BuildXHarnessiOSProjects"
+          Condition="'@(XHarnessiOSProject)' != ''"
+          BeforeTargets="CoreBuild"
+          Outputs="%(XHarnessiOSProject.Identity)%(XHarnessiOSProject.AdditionalProperties)">
+    <PropertyGroup>
+      <_CurrentXHarnessiOSProject>%(XHarnessiOSProject.Identity)</_CurrentXHarnessiOSProject>
+      <_CurrentAdditionalProperties>%(XHarnessiOSProject.AdditionalProperties)</_CurrentAdditionalProperties>
+    </PropertyGroup>
+    <MSBuild Projects="$(_CurrentXHarnessiOSProject)" Targets="Build" Properties="$(_CurrentAdditionalProperties)">
+      <Output TaskParameter="TargetOutputs" ItemName="XHarnessAppFolderToTest" />
     </MSBuild>
   </Target>
 
@@ -53,9 +66,9 @@
   </Target>
 
   <Target Name="CreateiOSWorkItems"
-        Condition=" '@(XHarnessAppFoldersToTest)' != '' "
+        Condition=" '@(XHarnessAppFolderToTest)' != '' "
         BeforeTargets="CoreTest">
-    <CreateXHarnessiOSWorkItems AppFolders="@(XHarnessAppFoldersToTest)" IsPosixShell="$(IsPosixShell)" WorkItemTimeout="$(XHarnessWorkItemTimeout)">
+    <CreateXHarnessiOSWorkItems AppFolders="@(XHarnessAppFolderToTest)" IsPosixShell="$(IsPosixShell)" WorkItemTimeout="$(XHarnessWorkItemTimeout)">
       <Output TaskParameter="WorkItems" ItemName="HelixWorkItem"/>
     </CreateXHarnessiOSWorkItems>
   </Target>

@@ -19,7 +19,7 @@
 
   <!-- New Test Projects which build app bundles to run through XHarness/XHarness go here -->
   <ItemGroup>
-    <XHarnessProject Include="$(MSBuildThisFileDirectory)XHarness\XHarness.TestAppBundle.proj" />
+    <XHarnessiOSProject Include="$(MSBuildThisFileDirectory)XHarness\XHarness.TestAppBundle.proj" />
   </ItemGroup>
 
   <!-- <ItemGroup Condition=" '$(HelixAccessToken)' != '' ">
