@@ -34,7 +34,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             string akaMsOwners,
             TaskLoggingHelper logger)
         {
-            LinkManager = new AkaMSLinkManager(AkaMSClientId, AkaMSClientSecret, AkaMSTenant, logger);
             Logger = logger;
             AkaMSClientId = akaMSClientId;
             AkaMSClientSecret = akaMSClientSecret;
@@ -42,6 +41,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             AkaMSGroupOwner = akaMSGroupOwner;
             AkaMSCreatedBy = akaMSCreatedBy;
             AkaMsOwners = akaMsOwners;
+            LinkManager = new AkaMSLinkManager(AkaMSClientId, AkaMSClientSecret, AkaMSTenant, Logger);
         }
 
         public async System.Threading.Tasks.Task CreateOrUpdateLatestLinksAsync(
