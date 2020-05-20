@@ -122,6 +122,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                 return null;
             }
 
+            // We need to call 'sudo launchctl' to spawn the process in a user session with GUI rendering capabilities
             string xharnessRunCommand = $"sudo launchctl asuser `id -u` sh \"{PayloadScriptName}\" " +
                                         $"--app \"$HELIX_WORKITEM_ROOT/{Path.GetFileName(appFolderPath.ItemSpec)}\" " +
                                         $"--output-directory \"$HELIX_WORKITEM_UPLOAD_ROOT\" " +

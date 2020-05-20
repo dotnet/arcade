@@ -1,7 +1,6 @@
 #!/bin/bash
 
-set -x
-set -e
+set -ex
 
 while [[ $# > 0 ]]; do
     opt="$(echo "$1" | awk '{print tolower($0)}')"
@@ -86,3 +85,10 @@ export XHARNESS_LOG_WITH_TIMESTAMPS=true
     --targets="$targets"                   \
     --timeout="$timeout"                   \
     -v
+
+exit_code=$?
+
+# The simulator logs comming from the sudo-spawned Simulator.app are not readable by the helix uploader
+chmod 0644 "$output_directory"/*.log
+
+exit $exit_code

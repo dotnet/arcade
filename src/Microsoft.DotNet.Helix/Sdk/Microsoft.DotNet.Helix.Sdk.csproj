@@ -28,13 +28,10 @@
     <None Include="**\*.py;**\*.bat;**\*.sh" Pack="true">
       <PackagePath>%(RecursiveDir)%(Filename)%(Extension)</PackagePath>
     </None>
-  </ItemGroup> 
+  </ItemGroup>
 
   <ItemGroup>
     <None Remove="tools\xharness-runner\ios-helix-job-payload.sh" />
-  </ItemGroup> 
-
-  <ItemGroup>
     <EmbeddedResource Include="tools\xharness-runner\ios-helix-job-payload.sh">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </EmbeddedResource>
