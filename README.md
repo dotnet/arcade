@@ -25,11 +25,11 @@ Status Last Updated: May 20, 2020, 9:00 AM PDT
 
 |Repo Name|Current Build Status|
 |---|---|
-|Runtime|![runtime-badge](https://dnceng.visualstudio.com/internal/_apis/build/status/dotnet/runtime/dotnet-runtime-official?branchName=master)|
-|ASPNETCore|![aspnetcore-badge](https://dnceng.visualstudio.com/internal/_apis/build/status/dotnet/aspnetcore/aspnetcore-ci-official?branchName=master)|
-|Installer|![installer-badge](https://dnceng.visualstudio.com/internal/_apis/build/status/dotnet/installer/DotNet%20Core%20SDK%20(Official)?branchName=master)|
-|Arcade|![arcade-badge](https://dnceng.visualstudio.com/internal/_apis/build/status/dotnet/arcade/arcade-official-ci?branchName=master)| 
-|Arcade Validation|![arcade-validation-badge](https://dnceng.visualstudio.com/internal/_apis/build/status/dotnet/arcade-validation/dotnet-arcade-validation-official?branchName=master)|
+|Runtime|[![runtime-badge](https://dnceng.visualstudio.com/internal/_apis/build/status/dotnet/runtime/dotnet-runtime-official?branchName=master)](https://dnceng.visualstudio.com/internal/_build?definitionId=679&_a=summary)|
+|ASPNETCore|[![aspnetcore-badge](https://dnceng.visualstudio.com/internal/_apis/build/status/dotnet/aspnetcore/aspnetcore-ci-official?branchName=master)](https://dnceng.visualstudio.com/internal/_build?definitionId=21&_a=summary)|
+|Installer|[![installer-badge](https://dnceng.visualstudio.com/internal/_apis/build/status/dotnet/installer/DotNet%20Core%20SDK%20(Official)?branchName=master)](https://dnceng.visualstudio.com/internal/_build?definitionId=286&_a=summary)|
+|Arcade|[![arcade-badge](https://dnceng.visualstudio.com/internal/_apis/build/status/dotnet/arcade/arcade-official-ci?branchName=master)](https://dnceng.visualstudio.com/internal/_build?definitionId=6&_a=summary)| 
+|Arcade Validation|[![arcade-validation-badge](https://dnceng.visualstudio.com/internal/_apis/build/status/dotnet/arcade-validation/dotnet-arcade-validation-official?branchName=master)](https://dnceng.visualstudio.com/internal/_build?definitionId=282&_a=summary)|
 
 ### Status of Latest Version of Arcade Being Validated
 
