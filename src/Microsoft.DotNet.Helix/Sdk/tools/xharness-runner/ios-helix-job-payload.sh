@@ -26,6 +26,10 @@ while [[ $# > 0 ]]; do
         dotnet_root="$2"
         shift
         ;;
+      --xharness)
+        xharness="$2"
+        shift
+        ;;
       *)
         echo "Invalid argument: $1"
         exit 1
@@ -60,15 +64,23 @@ if [ -z "$dotnet_root" ]; then
     die "DotNet root path wasn't provided";
 fi
 
+if [ -z "$xharness" ]; then
+    die "XHarness path wasn't provided";
+fi
+
 # Restart the simulator to make sure it is tied to the right user session
 xcode_path=`xcode-select -p`
-pid=`ps aux | grep $xcode_path/Applications/Simulator.app | grep -v grep | tr -s ' ' | cut -d ' ' -f 2`
+pid=`ps aux | grep "$xcode_path/Applications/Simulator.app" | grep -v grep | tr -s ' ' | cut -d ' ' -f 2`
 if [ ! -z "$pid" ]; then
-    sudo kill $pid
+    sudo kill "$pid"
 fi
-open -a $xcode_path/Applications/Simulator.app
+open -a "$xcode_path/Applications/Simulator.app"
 
-"$dotnet_root/dotnet" xharness ios test    \
+export DOTNET_ROOT="$dotnet_root"
+export XHARNESS_DISABLE_COLORED_OUTPUT=true
+export XHARNESS_LOG_WITH_TIMESTAMPS=true
+
+"$xharness" ios test                       \
     --app="$app"                           \
     --output-directory="$output_directory" \
     --targets="$targets"                   \

@@ -127,7 +127,8 @@ namespace Microsoft.DotNet.Helix.Sdk
                                         $"--output-directory \"$HELIX_WORKITEM_UPLOAD_ROOT\" " +
                                         $"--targets \"{targets}\" " +
                                         $"--timeout \"{xHarnessTimeout.TotalSeconds}\" " +
-                                        $"--dotnet-root \"$DOTNET_ROOT\" ";
+                                        $"--dotnet-root \"$DOTNET_ROOT\" " +
+                                        $"--xharness \"$HELIX_CORRELATION_PAYLOAD/xharness-cli/xharness\"";
 
             Log.LogMessage(MessageImportance.Low, $"Generated XHarness command: {xharnessRunCommand}");
 
