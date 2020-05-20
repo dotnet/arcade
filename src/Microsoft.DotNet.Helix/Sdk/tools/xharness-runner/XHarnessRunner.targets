@@ -11,7 +11,7 @@
   </Target>
 
   <Target Name="AddXHarnessRunner"
-          Condition="'@(XHarnessProject)' != ''"
+          Condition=" ('@(XHarnessAndroidProject)' != '') OR ('@(XHarnessiOSProject)' != '') "
           BeforeTargets="CoreTest">
 
     <!-- When using a dotnet 'tool' that is not installed globally, we must set DOTNET_ROOT. 

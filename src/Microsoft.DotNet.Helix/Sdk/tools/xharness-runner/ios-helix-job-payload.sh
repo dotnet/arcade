@@ -1,4 +1,10 @@
-#!/bin/bash -ex
+#!/bin/bash
+
+set -x
+set -e
+
+# TODO: Remove before check-in
+dotnet --version
 
 while [[ $# > 0 ]]; do
     opt="$(echo "$1" | awk '{print tolower($0)}')"
@@ -17,6 +23,10 @@ while [[ $# > 0 ]]; do
         ;;
       --timeout)
         timeout="$2"
+        shift
+        ;;
+      --dotnet-root)
+        dotnet_root="$2"
         shift
         ;;
       *)
@@ -49,6 +59,10 @@ if [ -z "$timeout" ]; then
     die "Test timeout wasn't provided";
 fi
 
+if [ -z "$dotnet_root" ]; then
+    die "DotNet root path wasn't provided";
+fi
+
 export XHARNESS_DISABLE_COLORED_OUTPUT=true
 export XHARNESS_LOG_WITH_TIMESTAMPS=true
 
@@ -60,7 +74,7 @@ if [ ! -z "$pid" ]; then
 fi
 open -a $xcode_path/Applications/Simulator.app
 
-dotnet xharness ios test                   \
+"$dotnet_root/dotnet" xharness ios test    \
     --app="$app"                           \
     --output-directory="$output_directory" \
     --targets="$targets"                   \
