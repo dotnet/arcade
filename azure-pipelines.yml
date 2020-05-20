@@ -37,32 +37,32 @@ stages:
       workspace:
         clean: all
       jobs:
-      # - job: Windows_NT
-      #   timeoutInMinutes: 90
-      #   pool:
-      #     ${{ if eq(variables._RunAsPublic, True) }}:
-      #       name: NetCorePublic-Pool
-      #       queue: BuildPool.Server.Amd64.VS2017.Arcade.Open
-      #     ${{ if eq(variables._RunAsInternal, True) }}:
-      #       name: NetCoreInternal-Pool
-      #       queue: BuildPool.Server.Amd64.VS2017.Arcade
-      #   strategy:
-      #     matrix:
-      #       Build_Release:
-      #         _BuildConfig: Release
-      #       ${{ if eq(variables._RunAsPublic, True) }}:
-      #         Build_Debug:
-      #           _BuildConfig: Debug
-      #   preSteps:
-      #   - checkout: self
-      #     clean: true
-      #   steps:
-      #   - script: eng\common\cibuild.cmd
-      #       -configuration $(_BuildConfig)
-      #       -prepareMachine
-      #       $(_InternalBuildArgs)
-      #       /p:Test=false
-      #     displayName: Windows Build / Publish
+      - job: Windows_NT
+        timeoutInMinutes: 90
+        pool:
+          ${{ if eq(variables._RunAsPublic, True) }}:
+            name: NetCorePublic-Pool
+            queue: BuildPool.Server.Amd64.VS2017.Arcade.Open
+          ${{ if eq(variables._RunAsInternal, True) }}:
+            name: NetCoreInternal-Pool
+            queue: BuildPool.Server.Amd64.VS2017.Arcade
+        strategy:
+          matrix:
+            Build_Release:
+              _BuildConfig: Release
+            ${{ if eq(variables._RunAsPublic, True) }}:
+              Build_Debug:
+                _BuildConfig: Debug
+        preSteps:
+        - checkout: self
+          clean: true
+        steps:
+        - script: eng\common\cibuild.cmd
+            -configuration $(_BuildConfig)
+            -prepareMachine
+            $(_InternalBuildArgs)
+            /p:Test=false
+          displayName: Windows Build / Publish
       - ${{ if eq(variables._RunAsPublic, True) }}:
         - job: Linux
           container: LinuxContainer
@@ -101,46 +101,46 @@ stages:
         workspace:
           clean: all
         jobs:
-        # - job: Windows_NT
-        #   timeoutInMinutes: 90
-        #   pool:
-        #     vmimage: windows-latest
-        #   strategy:
-        #     matrix:
-        #       Build_Release:
-        #         _BuildConfig: Release
-        #       Build_Debug:
-        #         _BuildConfig: Debug
-        #   preSteps:
-        #   - checkout: self
-        #     clean: true
-        #   steps:
-        #   - powershell: eng\common\build.ps1
-        #       -configuration $(_BuildConfig) 
-        #       -prepareMachine
-        #       -ci
-        #       -restore
-        #       -test
-        #       -projects $(Build.SourcesDirectory)\tests\UnitTests.proj
-        #       /bl:$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)\Helix.binlog
-        #       /p:RestoreUsingNuGetTargets=false
-        #     displayName: Run Helix Tests
-        #     env:
-        #       SYSTEM_ACCESSTOKEN: $(System.AccessToken)
-        #       HelixAccessToken: ''
-        #   - powershell: eng\common\build.ps1
-        #       -configuration $(_BuildConfig) 
-        #       -prepareMachine
-        #       -ci
-        #       -restore
-        #       -test
-        #       -projects $(Build.SourcesDirectory)\tests\UnitTests.XHarness.Android.proj
-        #       /bl:$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)\Helix.XHarness.binlog
-        #       /p:RestoreUsingNuGetTargets=false
-        #     displayName: XHarness Android Helix Testing
-        #     env:
-        #       SYSTEM_ACCESSTOKEN: $(System.AccessToken)
-        #       HelixAccessToken: ''
+        - job: Windows_NT
+          timeoutInMinutes: 90
+          pool:
+            vmimage: windows-latest
+          strategy:
+            matrix:
+              Build_Release:
+                _BuildConfig: Release
+              Build_Debug:
+                _BuildConfig: Debug
+          preSteps:
+          - checkout: self
+            clean: true
+          steps:
+          - powershell: eng\common\build.ps1
+              -configuration $(_BuildConfig) 
+              -prepareMachine
+              -ci
+              -restore
+              -test
+              -projects $(Build.SourcesDirectory)\tests\UnitTests.proj
+              /bl:$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)\Helix.binlog
+              /p:RestoreUsingNuGetTargets=false
+            displayName: Run Helix Tests
+            env:
+              SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+              HelixAccessToken: ''
+          - powershell: eng\common\build.ps1
+              -configuration $(_BuildConfig) 
+              -prepareMachine
+              -ci
+              -restore
+              -test
+              -projects $(Build.SourcesDirectory)\tests\UnitTests.XHarness.Android.proj
+              /bl:$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)\Helix.XHarness.binlog
+              /p:RestoreUsingNuGetTargets=false
+            displayName: XHarness Android Helix Testing
+            env:
+              SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+              HelixAccessToken: ''
         - job: Linux
           container: LinuxContainer
           pool:
@@ -155,19 +155,19 @@ stages:
           - checkout: self
             clean: true
           steps:
-          # - script: eng/common/build.sh
-          #     --configuration $(_BuildConfig)
-          #     --prepareMachine
-          #     --ci
-          #     --restore
-          #     --test
-          #     --projects $(Build.SourcesDirectory)/tests/UnitTests.proj
-          #     /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.binlog
-          #     /p:RestoreUsingNuGetTargets=false
-          #   displayName: Run Helix Tests
-          #   env:
-          #     SYSTEM_ACCESSTOKEN: $(System.AccessToken)
-          #     HelixAccessToken: ''
+          - script: eng/common/build.sh
+              --configuration $(_BuildConfig)
+              --prepareMachine
+              --ci
+              --restore
+              --test
+              --projects $(Build.SourcesDirectory)/tests/UnitTests.proj
+              /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.binlog
+              /p:RestoreUsingNuGetTargets=false
+            displayName: Run Helix Tests
+            env:
+              SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+              HelixAccessToken: ''
           - script: eng/common/build.sh
               -configuration $(_BuildConfig)
               -prepareMachine
