@@ -32,9 +32,7 @@
 
   <ItemGroup>
     <None Remove="tools\xharness-runner\ios-helix-job-payload.sh" />
-    <EmbeddedResource Include="tools\xharness-runner\ios-helix-job-payload.sh">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </EmbeddedResource>
+    <EmbeddedResource Include="tools\xharness-runner\ios-helix-job-payload.sh" />
   </ItemGroup>
 
   <Import Project="$(RepoRoot)eng\BuildTask.targets" />

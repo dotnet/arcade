@@ -10,7 +10,7 @@ using Microsoft.Build.Framework;
 namespace Microsoft.DotNet.Helix.Sdk
 {
     /// <summary>
-    /// MSBuild custom task to create HelixWorkItems for provided iOS application folder paths.
+    /// MSBuild custom task to create HelixWorkItems for provided iOS app bundle paths.
     /// </summary>
     public class CreateXHarnessiOSWorkItems : XHarnessTaskBase
     {
