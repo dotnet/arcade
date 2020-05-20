@@ -773,7 +773,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                 if (attribute != null)
                 {
-                    string value = prop.GetValue(this, null).ToString();
+                    string value = prop.GetValue(this, null)?.ToString();
 
                     if (string.IsNullOrEmpty(value))
                     {
