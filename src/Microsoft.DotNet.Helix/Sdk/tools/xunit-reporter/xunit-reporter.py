@@ -111,7 +111,7 @@ def main():
         # This prevents duplicate uploads and errors from them in logs
         result_url = '{container}{file}?{sas}'.format(
             container=settings.output_uri,
-            file=urllib.parse.quote(results_path.replace('\\', '/')),
+            file=os.path.basename(results_path),
             sas=settings.output_read_token)
     
     helper.xunit_event(result_url, test_count, os.path.basename(results_path))
