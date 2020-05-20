@@ -21,12 +21,16 @@
       <HelixPreCommands>$(HelixPreCommands);export DOTNET_ROOT=$HELIX_CORRELATION_PAYLOAD/dotnet</HelixPreCommands>
       <HelixPreCommands>$(HelixPreCommands);"$HELIX_CORRELATION_PAYLOAD/dotnet/dotnet" tool install --tool-path $HELIX_CORRELATION_PAYLOAD/xharness-cli --version $(_XHarnessPackageVersion) --add-source $(_XharnessRunnerPackageFeed) $(_XHarnessPackageName) </HelixPreCommands>
       <HelixPreCommands>$(HelixPreCommands);export PATH=$HELIX_CORRELATION_PAYLOAD/xharness-cli:$PATH</HelixPreCommands>
+      <HelixPreCommands>$(HelixPreCommands);export XHARNESS_DISABLE_COLORED_OUTPUT=true</HelixPreCommands>
+      <HelixPreCommands>$(HelixPreCommands);export XHARNESS_LOG_WITH_TIMESTAMPS=true</HelixPreCommands>
     </PropertyGroup>
 
     <PropertyGroup Condition="!$(IsPosixShell)">
       <HelixPreCommands>$(HelixPreCommands);set DOTNET_ROOT=%HELIX_CORRELATION_PAYLOAD%\dotnet</HelixPreCommands>
       <HelixPreCommands>$(HelixPreCommands);%HELIX_CORRELATION_PAYLOAD%\dotnet\dotnet tool install --tool-path %HELIX_CORRELATION_PAYLOAD%\xharness-cli --version $(_XHarnessPackageVersion) --add-source $(_XharnessRunnerPackageFeed) $(_XHarnessPackageName) </HelixPreCommands>
       <HelixPreCommands>$(HelixPreCommands);set PATH=%HELIX_CORRELATION_PAYLOAD%\xharness-cli%3B%PATH%</HelixPreCommands>
+      <HelixPreCommands>$(HelixPreCommands);set XHARNESS_DISABLE_COLORED_OUTPUT=true</HelixPreCommands>
+      <HelixPreCommands>$(HelixPreCommands);set XHARNESS_LOG_WITH_TIMESTAMPS=true</HelixPreCommands>
     </PropertyGroup>
   </Target>
 

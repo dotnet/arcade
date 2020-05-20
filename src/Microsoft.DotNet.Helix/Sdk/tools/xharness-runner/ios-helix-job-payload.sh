@@ -3,9 +3,6 @@
 set -x
 set -e
 
-# TODO: Remove before check-in
-dotnet --version
-
 while [[ $# > 0 ]]; do
     opt="$(echo "$1" | awk '{print tolower($0)}')"
     case "$opt" in
@@ -62,9 +59,6 @@ fi
 if [ -z "$dotnet_root" ]; then
     die "DotNet root path wasn't provided";
 fi
-
-export XHARNESS_DISABLE_COLORED_OUTPUT=true
-export XHARNESS_LOG_WITH_TIMESTAMPS=true
 
 # Restart the simulator to make sure it is tied to the right user session
 xcode_path=`xcode-select -p`
