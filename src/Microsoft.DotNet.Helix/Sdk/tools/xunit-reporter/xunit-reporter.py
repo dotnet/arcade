@@ -109,7 +109,7 @@ def main():
     else:
         # Will be uploaded, but we still need to send events.
         # This prevents duplicate uploads and errors from them in logs
-        result_url = '{container}/{file}?{sas}'.format(
+        result_url = '{container}/{file}{sas}'.format(
             container=settings.output_uri,
             file=os.path.basename(results_path),
             sas=settings.output_read_token)
