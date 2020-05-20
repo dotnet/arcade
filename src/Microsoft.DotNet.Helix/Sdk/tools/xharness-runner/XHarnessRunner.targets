@@ -20,7 +20,7 @@
     <PropertyGroup Condition="$(IsPosixShell)">
       <HelixPreCommands>$(HelixPreCommands);export DOTNET_ROOT=$HELIX_CORRELATION_PAYLOAD/dotnet</HelixPreCommands>
       <HelixPreCommands>$(HelixPreCommands);dotnet tool install --tool-path $HELIX_CORRELATION_PAYLOAD/xharness-cli --version $(_XHarnessPackageVersion) --add-source $(_XharnessRunnerPackageFeed) $(_XHarnessPackageName) </HelixPreCommands>
-      <HelixPreCommands>$(HelixPreCommands);export PATH=$HELIX_CORRELATION_PAYLOAD/xharness-cli:$PATH</HelixPreCommands>
+      <HelixPreCommands>$(HelixPreCommands);export PATH=$HELIX_CORRELATION_PAYLOAD/xharness-cli:$PATH;export XHARNESS_DISABLE_COLORED_OUTPUT=true;export XHARNESS_LOG_WITH_TIMESTAMPS=true;sudo kill %24(ps aux | grep %24(xcode-select -p)/Applications/Simulator.app | grep -v grep | tr -s ' ' | cut -d ' ' -f 2);open -a %24(xcode-select -p)/Applications/Simulator.app</HelixPreCommands>
     </PropertyGroup>
 
     <PropertyGroup Condition="!$(IsPosixShell)">
