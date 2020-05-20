@@ -130,11 +130,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             {
                 using (var clientThrottle = new SemaphoreSlim(maxClients, maxClients))
                 {
-                    Log.LogMessage(MessageImportance.High, $"Uploading {taskItems.Count()} items:");
                     await System.Threading.Tasks.Task.WhenAll(taskItems.Select(
                         item =>
                         {
-                            Log.LogMessage(MessageImportance.High, $"Async uploading {item.ItemSpec}");
                             return UploadAssetAsync(item, clientThrottle, pushOptions);
                         }
                     ));

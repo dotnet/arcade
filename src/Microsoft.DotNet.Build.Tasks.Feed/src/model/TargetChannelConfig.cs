@@ -39,5 +39,18 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             ChecksumsFeed = checksumsFeed;
             InstallersFeed = installersFeed;
         }
+
+        public override string ToString()
+        {
+            return $"Channel ID: '{Id}' " +
+                $"Channel-name: '{Name}' " +
+                $"Infra-version: '{PublishingInfraVersion}' " +
+                $"AkaMSChannelName: '{AkaMSChannelName}' " +
+                $"Shipping-feed: '{ShippingFeed}' " +
+                $"Transport-feed: '{TransportFeed}' " +
+                $"Symbols-feed: '{SymbolsFeed}' " +
+                $"Installers-feed: '{InstallersFeed}' " +
+                $"Checksums-feed: '{ChecksumsFeed}' ";
+        }
     }
 }

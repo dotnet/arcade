@@ -29,7 +29,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public override async Task<bool> ExecuteAsync()
         {
-            if (!AreAllRequiredPropertiesSet())
+            if (AnyMissingRequiredProperty())
             {
                 Log.LogError("Missing required properties. Aborting execution.");
                 return false;

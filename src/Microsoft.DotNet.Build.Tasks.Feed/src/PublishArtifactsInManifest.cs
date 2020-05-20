@@ -109,6 +109,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public string ArtifactsCategory { get; set; }
 
+        public bool PublishInstallersAndChecksums { get; set; } = false;
+
         public string ChecksumsFeedKey { get; set; }
 
         public string InstallersFeedKey { get; set; }
@@ -117,16 +119,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public string AzureDevOpsFeedsKey { get; set; }
 
-        private static bool PublishedV3Manifest { get; set; }
-
         /// <summary>
         /// If true, safety checks only print messages and do not error
         /// - Internal asset to public feed
         /// - Stable packages to non-isolated feeds
         /// </summary>
         public bool SkipSafetyChecks { get; set; } = false;
-
-        public bool PublishInstallersAndChecksums { get; set; } = false;
 
         public string AkaMSClientId { get; set; }
 
@@ -139,6 +137,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         public string AkaMSCreatedBy { get; set; }
 
         public string AkaMSGroupOwner { get; set; }
+
+        /// <summary>
+        /// Just an internal flag to keep track whether we published assets via a V3 manifest or not.
+        /// </summary>
+        private static bool PublishedV3Manifest { get; set; }
 
         public override bool Execute()
         {
@@ -204,7 +207,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public PublishArtifactsInManifestBase WhichPublishingTask(string manifestFullPath)
         {
-            Log.LogMessage(MessageImportance.High, $"Reading manifest from {manifestFullPath}");
+            Log.LogMessage(MessageImportance.High, $"Creating a publishing task to publish assets from {manifestFullPath}");
 
             if (!File.Exists(manifestFullPath))
             {

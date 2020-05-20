@@ -48,7 +48,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public override async Task<bool> ExecuteAsync()
         {
-            if (!AreAllRequiredPropertiesSet())
+            if (AnyMissingRequiredProperty())
             {
                 Log.LogError("Missing required properties. Aborting execution.");
                 return false;
@@ -73,6 +73,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         return false;
                     }
 
+                    Log.LogMessage(MessageImportance.High, $"Publishing to this target channel: {targetChannelConfig}");
+
                     var targetFeedsSetup = new SetupTargetFeedConfigV3(
                         InternalBuild,
                         BuildModel.Identity.IsStable.Equals("true", System.StringComparison.OrdinalIgnoreCase),
@@ -88,7 +90,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         targetChannelConfig.ShippingFeed,
                         targetChannelConfig.TransportFeed,
                         targetChannelConfig.SymbolsFeed,
-                        targetChannelConfig.AkaMSChannelName,
+                        $"dotnet/{targetChannelConfig.AkaMSChannelName}",
                         AzureDevOpsFeedsKey,
                         BuildEngine = this.BuildEngine);
 
@@ -109,6 +111,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                     foreach (var feedConfig in targetFeedConfigs)
                     {
+                        Log.LogMessage(MessageImportance.High, $"Target feed config: {feedConfig}");
+
                         TargetFeedContentType categoryKey = feedConfig.ContentType;
                         if (!FeedConfigs.TryGetValue(categoryKey, out _))
                         {
@@ -135,6 +139,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             catch (Exception e)
             {
                 Log.LogErrorFromException(e, true);
+            }
+
+            if (!Log.HasLoggedErrors)
+            {
+                Log.LogMessage(MessageImportance.High, "Publishing finished with success.");
             }
 
             return !Log.HasLoggedErrors;

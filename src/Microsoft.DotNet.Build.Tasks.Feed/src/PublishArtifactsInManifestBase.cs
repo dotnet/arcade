@@ -263,7 +263,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             string isolatedString = feedConfig.Isolated ? "Isolated" : "Non-Isolated";
                             string internalString = feedConfig.Internal ? $", Internal" : ", Public";
                             string shippingString = package.NonShipping ? "NonShipping" : "Shipping";
-                            Log.LogMessage(MessageImportance.High, $"{package.Id}@{package.Version} ({shippingString}) -> {feedConfig.TargetURL} ({isolatedString}{internalString})");
+                            Log.LogMessage(MessageImportance.High, $"Package {package.Id}@{package.Version} ({shippingString}) should go to {feedConfig.TargetURL} ({isolatedString}{internalString})");
                         }
 
                         switch (feedConfig.Type)
@@ -323,7 +323,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             string isolatedString = feedConfig.Isolated ? "Isolated" : "Non-Isolated";
                             string internalString = feedConfig.Internal ? $", Internal" : ", Public";
                             string shippingString = blob.NonShipping ? "NonShipping" : "Shipping";
-                            Log.LogMessage(MessageImportance.High, $"{blob.Id} ({shippingString}) -> {feedConfig.TargetURL} ({isolatedString}{internalString})");
+                            Log.LogMessage(MessageImportance.High, $"Blob {blob.Id} ({shippingString}) should go to {feedConfig.TargetURL} ({isolatedString}{internalString})");
                         }
 
                         switch (feedConfig.Type)
@@ -488,7 +488,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         "Basic",
                         Convert.ToBase64String(Encoding.ASCII.GetBytes(string.Format("{0}:{1}", "", feedConfig.Token))));
 
-                    Log.LogMessage(MessageImportance.High, $"Pushing {packagesToPublish.Count()} packages.");
                     await System.Threading.Tasks.Task.WhenAll(packagesToPublish.Select(async packageToPublish =>
                     {
                         try
@@ -538,15 +537,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         private async Task PushNugetPackageAsync(TargetFeedConfig feedConfig, HttpClient client, string localPackageLocation, string id, string version,
             string feedAccount, string feedVisibility, string feedName)
         {
-            Log.LogMessage(MessageImportance.High, $"Pushing package '{localPackageLocation}' to feed {feedConfig.TargetURL}");
-
             try
             {
                 /// true - Package exists on the feed AND is identical to local one.
                 /// false - Package exists on the feed AND is not identical to local one.
                 /// null - Package DOES NOT EXIST on the feed.
                 bool? packageExistIsIdentical = null;
-
                 const int maxNuGetPushAttempts = 1;
                 const int delayInSecondsBetweenAttempts = 3;
                 int attemptIndex = 0;
@@ -587,6 +583,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 if (attemptIndex > maxNuGetPushAttempts)
                 {
                     Log.LogError($"Failed to publish package '{id}@{version}' after {maxNuGetPushAttempts} attempts.");
+                }
+                else if (!Log.HasLoggedErrors)
+                {
+                    Log.LogMessage(MessageImportance.High, $"Succeeded publishing package '{localPackageLocation}' to feed {feedConfig.TargetURL}");
                 }
             }
             catch (Exception e)
@@ -764,7 +764,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             }
         }
 
-        protected bool AreAllRequiredPropertiesSet()
+        protected bool AnyMissingRequiredProperty()
         {
             foreach (PropertyInfo prop in this.GetType().GetProperties())
             {
