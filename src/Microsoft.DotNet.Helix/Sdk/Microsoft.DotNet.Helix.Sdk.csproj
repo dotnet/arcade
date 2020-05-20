@@ -28,6 +28,12 @@
     <None Include="**\*.py;**\*.bat;**\*.sh" Pack="true">
       <PackagePath>%(RecursiveDir)%(Filename)%(Extension)</PackagePath>
     </None>
+  </ItemGroup> 
+
+  <ItemGroup>
+    <None Update="tools\xharness-runner\ios-helix-job-payload.sh">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
   <Import Project="$(RepoRoot)eng\BuildTask.targets" />

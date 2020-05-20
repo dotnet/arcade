@@ -13,6 +13,9 @@ namespace Microsoft.DotNet.Helix.Sdk
     /// </summary>
     public class CreateXHarnessiOSWorkItems : XHarnessTaskBase
     {
+        private const string PayloadScriptName = "ios-helix-job-payload.sh";
+        private const string PayloadScriptLocalPath = PayloadScriptName;
+
         /// <summary>
         /// An array of one or more paths to application packages (.apk for Android)
         /// that will be used to create Helix work items.
@@ -71,23 +74,32 @@ namespace Microsoft.DotNet.Helix.Sdk
             return new Microsoft.Build.Utilities.TaskItem(workItemName, new Dictionary<string, string>()
             {
                 { "Identity", workItemName },
-                { "PayloadArchive", CreateZipArchiveOfFolder(appFolderPath, "./") },
+                { "PayloadArchive", await CreateZipArchiveOfFolder(appFolderPath, "./") },
                 { "Command", command },
                 { "Timeout", timeout.ToString() },
             });
         }
 
-        private string CreateZipArchiveOfFolder(string folderToZip, string outputFolder)
+        private async Task<string> CreateZipArchiveOfFolder(string folderToZip, string outputFolder)
         {
             if (!Directory.Exists(folderToZip))
             {
-                Log.LogError($"Cannot find path containing app: {folderToZip}");
+                Log.LogError($"Cannot find path containing app: '{folderToZip}'");
                 return string.Empty;
             }
 
             string fileName = $"xharness-ios-app-payload-{Path.GetFileName(folderToZip).ToLowerInvariant()}.zip";
             string outputZipAbsolutePath = Path.Combine(outputFolder, fileName);
+
             ZipFile.CreateFromDirectory(folderToZip, outputZipAbsolutePath);
+
+            // Add the payload script
+            using FileStream zipToOpen = new FileStream(outputZipAbsolutePath, FileMode.Open);
+            using ZipArchive archive = new ZipArchive(zipToOpen, ZipArchiveMode.Update);
+            ZipArchiveEntry entry = archive.CreateEntry(PayloadScriptName);
+            using StreamWriter writer = new StreamWriter(entry.Open());
+            await writer.WriteAsync(File.ReadAllText(PayloadScriptLocalPath));
+
             return outputZipAbsolutePath;
         }
 
@@ -100,12 +112,11 @@ namespace Microsoft.DotNet.Helix.Sdk
                 return null;
             }
 
-            string xharnessRunCommand = $"xharness ios test " +
-                                        $"--app $HELIX_WORKITEM_ROOT/{Path.GetFileName(appFolderPath.ItemSpec)} " +
-                                        $"--output-directory=$HELIX_WORKITEM_UPLOAD_ROOT " +
-                                        $"--targets={targets} " +
-                                        $"--timeout={xHarnessTimeout.TotalSeconds} " +
-                                        $"-v";
+            string xharnessRunCommand = $"sudo launchctl asuser `id -u` sh {PayloadScriptName} " +
+                                        $"--app \"$HELIX_WORKITEM_ROOT/{Path.GetFileName(appFolderPath.ItemSpec)}\" " +
+                                        $"--output-directory=\"$HELIX_WORKITEM_UPLOAD_ROOT \"" +
+                                        $"--targets=\"{targets}\" " +
+                                        $"--timeout=\"{xHarnessTimeout.TotalSeconds}\"";
 
             Log.LogMessage(MessageImportance.Low, $"Generated XHarness command: {xharnessRunCommand}");
 
