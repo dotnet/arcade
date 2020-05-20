@@ -1,7 +1,7 @@
 <Project>
 
   <Target Name="SpecifyXHarnessCliVersion"
-          Condition=" ('@(XHarnessAndroidProject)' != '') OR ('@(XHarnessiOSProject)' != '') "
+          Condition="'@(XHarnessAndroidProject)' != '' OR '@(XHarnessiOSProject)' != ''"
           BeforeTargets="AddDotNetSdk">
     <PropertyGroup>
       <IncludeDotNetCli>true</IncludeDotNetCli>
@@ -11,7 +11,7 @@
   </Target>
 
   <Target Name="AddXHarnessRunner"
-          Condition=" ('@(XHarnessAndroidProject)' != '') OR ('@(XHarnessiOSProject)' != '') "
+          Condition="'@(XHarnessAndroidProject)' != '' OR '@(XHarnessiOSProject)' != ''"
           BeforeTargets="CoreTest">
 
     <!-- When using a dotnet 'tool' that is not installed globally, we must set DOTNET_ROOT. 

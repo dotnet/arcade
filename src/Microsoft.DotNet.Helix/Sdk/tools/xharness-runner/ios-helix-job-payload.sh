@@ -39,7 +39,7 @@ done
 
 function die ()
 {
-    echo $2 1>&2
+    echo $1 1>&2
     exit 1
 }
 
@@ -90,5 +90,18 @@ exit_code=$?
 
 # The simulator logs comming from the sudo-spawned Simulator.app are not readable by the helix uploader
 chmod 0644 "$output_directory"/*.log
+
+test_results=`ls $output_directory/xunit-*.xml`
+
+if [ ! -f "$test_results" ]; then
+    echo "Failed to find xUnit tests results in the output directory. Existing files:"
+    ls -la $output_directory
+    exit 1
+fi
+
+echo "Found test results in $output_directory/$test_results. Renaming to testResults.xml"
+
+# Prepare test results for Helix to pick up
+cp $test_results $output_directory/testResults.xml
 
 exit $exit_code
