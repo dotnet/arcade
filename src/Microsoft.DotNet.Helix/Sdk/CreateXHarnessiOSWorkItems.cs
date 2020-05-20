@@ -101,14 +101,14 @@ namespace Microsoft.DotNet.Helix.Sdk
             ZipFile.CreateFromDirectory(folderToZip, outputZipPath, CompressionLevel.Fastest, includeBaseDirectory: true);
 
             // Add the payload script
-            //Log.LogMessage($"Adding the Helix job payload script into the ziparchive");
+            Log.LogMessage($"Adding the Helix job payload script into the ziparchive");
 
-            //using FileStream zipToOpen = new FileStream(outputZipPath, FileMode.Open);
-            //using ZipArchive archive = new ZipArchive(zipToOpen, ZipArchiveMode.Update);
-            //ZipArchiveEntry entry = archive.CreateEntry(PayloadScriptName);
-            //using StreamWriter zipEntryWriter = new StreamWriter(entry.Open());
-            //using Stream payloadScriptStream = GetPayloadScriptStream();
-            //await payloadScriptStream.CopyToAsync(zipEntryWriter.BaseStream);
+            using FileStream zipToOpen = new FileStream(outputZipPath, FileMode.Open);
+            using ZipArchive archive = new ZipArchive(zipToOpen, ZipArchiveMode.Update);
+            ZipArchiveEntry entry = archive.CreateEntry(PayloadScriptName);
+            using StreamWriter zipEntryWriter = new StreamWriter(entry.Open());
+            using Stream payloadScriptStream = GetPayloadScriptStream();
+            await payloadScriptStream.CopyToAsync(zipEntryWriter.BaseStream);
 
             return outputZipPath;
         }
@@ -122,12 +122,12 @@ namespace Microsoft.DotNet.Helix.Sdk
                 return null;
             }
 
-            string xharnessRunCommand = $"xharness ios test " +
-                                        $"--app $HELIX_WORKITEM_ROOT/{Path.GetFileName(appFolderPath.ItemSpec)} " +
-                                        $"--output-directory=$HELIX_WORKITEM_UPLOAD_ROOT " +
-                                        $"--targets={targets} " +
-                                        $"--timeout={xHarnessTimeout.TotalSeconds} " +
-                                        $"-v";
+            string xharnessRunCommand = $"sudo launchctl asuser `id -u` sh \"{PayloadScriptName}\" " +
+                                        $"--app \"$HELIX_WORKITEM_ROOT/{Path.GetFileName(appFolderPath.ItemSpec)}\" " +
+                                        $"--output-directory \"$HELIX_WORKITEM_UPLOAD_ROOT\" " +
+                                        $"--targets \"{targets}\" " +
+                                        $"--timeout \"{xHarnessTimeout.TotalSeconds}\" " +
+                                        $"--dotnet-root \"$DOTNET_ROOT\" ";
 
             Log.LogMessage(MessageImportance.Low, $"Generated XHarness command: {xharnessRunCommand}");
 
