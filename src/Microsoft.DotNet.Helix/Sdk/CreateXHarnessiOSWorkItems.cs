@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.Build.Framework;
 
@@ -14,7 +15,6 @@ namespace Microsoft.DotNet.Helix.Sdk
     public class CreateXHarnessiOSWorkItems : XHarnessTaskBase
     {
         private const string PayloadScriptName = "ios-helix-job-payload.sh";
-        private const string PayloadScriptLocalPath = PayloadScriptName;
 
         /// <summary>
         /// An array of one or more paths to application packages (.apk for Android)
@@ -74,13 +74,13 @@ namespace Microsoft.DotNet.Helix.Sdk
             return new Microsoft.Build.Utilities.TaskItem(workItemName, new Dictionary<string, string>()
             {
                 { "Identity", workItemName },
-                { "PayloadArchive", await CreateZipArchiveOfFolder(appFolderPath, "./") },
+                { "PayloadArchive", await CreateZipArchiveOfFolder(appFolderPath) },
                 { "Command", command },
                 { "Timeout", timeout.ToString() },
             });
         }
 
-        private async Task<string> CreateZipArchiveOfFolder(string folderToZip, string outputFolder)
+        private async Task<string> CreateZipArchiveOfFolder(string folderToZip)
         {
             if (!Directory.Exists(folderToZip))
             {
@@ -88,8 +88,9 @@ namespace Microsoft.DotNet.Helix.Sdk
                 return string.Empty;
             }
 
+            string appFolderDirectory = Path.GetDirectoryName(folderToZip);
             string fileName = $"xharness-ios-app-payload-{Path.GetFileName(folderToZip).ToLowerInvariant()}.zip";
-            string outputZipAbsolutePath = Path.Combine(outputFolder, fileName);
+            string outputZipAbsolutePath = Path.Combine(appFolderDirectory, fileName);
 
             ZipFile.CreateFromDirectory(folderToZip, outputZipAbsolutePath);
 
@@ -97,8 +98,9 @@ namespace Microsoft.DotNet.Helix.Sdk
             using FileStream zipToOpen = new FileStream(outputZipAbsolutePath, FileMode.Open);
             using ZipArchive archive = new ZipArchive(zipToOpen, ZipArchiveMode.Update);
             ZipArchiveEntry entry = archive.CreateEntry(PayloadScriptName);
-            using StreamWriter writer = new StreamWriter(entry.Open());
-            await writer.WriteAsync(File.ReadAllText(PayloadScriptLocalPath));
+            using StreamWriter zipEntryWriter = new StreamWriter(entry.Open());
+            using Stream payloadScriptStream = GetPayloadScriptStream();
+            await payloadScriptStream.CopyToAsync(zipEntryWriter.BaseStream);
 
             return outputZipAbsolutePath;
         }
@@ -121,6 +123,13 @@ namespace Microsoft.DotNet.Helix.Sdk
             Log.LogMessage(MessageImportance.Low, $"Generated XHarness command: {xharnessRunCommand}");
 
             return xharnessRunCommand;
+        }
+
+        private static Stream GetPayloadScriptStream()
+        {
+            var assembly = Assembly.GetExecutingAssembly();
+            string resourceName = assembly.GetManifestResourceNames().Single(str => str.EndsWith(PayloadScriptName));
+            return assembly.GetManifestResourceStream(resourceName);
         }
     }
 }
