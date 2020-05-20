@@ -13,8 +13,8 @@
     <DotNetCliPackageType>sdk</DotNetCliPackageType>
     <TestRunNamePrefix>$(AGENT_JOBNAME)</TestRunNamePrefix>
     <EnableXUnitReporter>true</EnableXUnitReporter>
-    <EnableAzurePipelinesReporter>false</EnableAzurePipelinesReporter><!-- TODO: Switch to true -->
-    <HelixBaseUri>https://helix.int-dot.net</HelixBaseUri>
+    <EnableAzurePipelinesReporter>false</EnableAzurePipelinesReporter><!-- TODO: Switch to true before checking in -->
+    <HelixBaseUri>https://helix.int-dot.net</HelixBaseUri> <!-- TODO: Move onto production when we roll out Xcode https://github.com/dotnet/core-eng/issues/9879 -->
   </PropertyGroup>
 
   <!-- New Test Projects which build app bundles to run through XHarness/XHarness go here -->
@@ -22,13 +22,18 @@
     <XHarnessiOSProject Include="$(MSBuildThisFileDirectory)XHarness\XHarness.TestAppBundle.proj" />
   </ItemGroup>
 
-  <!-- <ItemGroup Condition=" '$(HelixAccessToken)' != '' ">
-    <HelixTargetQueue Include="osx.1015.amd64.ios"/>
+  <!--
+    TODO: Move onto these queues when we roll out Xcode
+          https://github.com/dotnet/core-eng/issues/9879
+
+  <ItemGroup Condition=" '$(HelixAccessToken)' != '' ">
+    <HelixTargetQueue Include="osx.1015.amd64"/>
   </ItemGroup>
   
   <ItemGroup Condition=" '$(HelixAccessToken)' == '' ">
-    <HelixTargetQueue Include="osx.1015.amd64.ios.open"/>
-  </ItemGroup> -->
+    <HelixTargetQueue Include="osx.1015.amd64.open"/>
+  </ItemGroup>
+  -->
   
   <ItemGroup>
     <HelixTargetQueue Include="osx.1015.amd64.ios.open"/>
@@ -44,6 +49,7 @@
   <PropertyGroup>
     <Language>msbuild</Language>
   </PropertyGroup>
+
   <Target Name="Pack"/>
 
   <!-- See UnitTests.proj in above folder for why this is included directly-from-repo -->
