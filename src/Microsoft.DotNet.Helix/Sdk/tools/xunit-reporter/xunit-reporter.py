@@ -2,6 +2,7 @@
 
 import re
 import os
+import urllib
 import helix.azure_storage
 import helix.event
 import helix.settings
@@ -25,7 +26,7 @@ class HelixHelper:
     def error(self, error_type, message, log_uri=None):
         self.event_client.error(self.settings, error_type, message, log_uri)
 
-    def xunit(self, results_uri, test_count, file_name):
+    def xunit_event(self, results_uri, test_count, file_name):
         self.event_client.send(
             {
                 'Type': 'XUnitTestResult',
@@ -37,6 +38,7 @@ class HelixHelper:
             }
         )
 
+    def file_event(self, results_uri, file_name):
         self.event_client.send(
             {
                 'Type': 'File',
@@ -100,11 +102,19 @@ def main():
                     test_count = int(match.groups()[0])
                 break
 
+    log.info("Sending XUnit test result events")
     if need_to_upload_results:
         result_url = helper.upload_file_to_storage(results_path)
-
-    log.info("Sending XUnit test result events")
-    helper.xunit(result_url, test_count, os.path.basename(results_path))
+        helper.file_event(result_url, os.path.basename(results_path))
+    else:
+        # Will be uploaded, but we still need to send events.
+        # This prevents duplicate uploads and errors from them in logs
+        result_url = '{container}{file}?{sas}'.format(
+            container=settings.output_uri,
+            file=urllib.parse.quote(results_path.replace('\\', '/')),
+            sas=settings.output_read_token)
+    
+    helper.xunit_event(result_url, test_count, os.path.basename(results_path))
 
     return 0
 
