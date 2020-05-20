@@ -363,8 +363,10 @@ stages:
               /p:BlobBasePath='$(Build.ArtifactStagingDirectory)/BlobArtifacts/'
               /p:PackageBasePath='$(Build.ArtifactStagingDirectory)/PackageArtifacts/'
               /p:PublishInstallersAndChecksums=${{ parameters.publishInstallersAndChecksums }}
-              /p:InstallersFeedKey=$(dotnetcli-storage-key)
-              /p:ChecksumsFeedKey=$(dotnetclichecksums-storage-key)
+              /p:InstallersAzureAccountKey=$(dotnetcli-storage-key)
+              /p:InternalInstallersAzureAccountKey=$(dotnetclichecksumsmsrc-storage-key)
+              /p:ChecksumsAzureAccountKey=$(dotnetclichecksums-storage-key)
+              /p:InternalChecksumsAzureAccountKey=$(dotnetclimsrc-access-key)
               /p:AzureStorageTargetFeedKey='$(dotnetfeed-storage-access-key-1)'
               /p:AzureDevOpsFeedsKey='$(dn-bot-dnceng-artifact-feeds-rw)'
               /p:AkaMSClientId=$(akams-client-id)

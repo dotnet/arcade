@@ -22,12 +22,6 @@ variables:
   - name: SymbolToolVersion
     value: 1.0.1
 
-  # Keys for accessing private installers/checksums feeds
-  - name: InternalChecksumsBlobFeedKey
-    value: $(dotnetclichecksumsmsrc-storage-key)
-  - name: InternalInstallersBlobFeedKey
-    value: $(dotnetclimsrc-access-key)
-
   # Skip component governance and codesign validation for SDL. These jobs
   # create no content.
   - name: skipComponentGovernanceDetection
