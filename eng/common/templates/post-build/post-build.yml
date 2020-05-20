@@ -352,22 +352,20 @@ stages:
           inputs:
             filePath: eng\common\sdk-task.ps1
             arguments: -task PublishArtifactsInManifest -restore -msbuildEngine dotnet
+              /p:BARBuildId=$(BARBuildId)
               /p:TargetChannels='$(TargetChannels)'
               /p:ArtifactsCategory=$(ArtifactsCategory)
               /p:IsInternalBuild=$(IsInternalBuild)
               /p:NugetPath=$(NuGetExeToolPath)
-              /p:AzdoTargetFeedPAT='$(dn-bot-dnceng-universal-packages-rw)'
-              /p:AzureStorageTargetFeedKey='$(dotnetfeed-storage-access-key-1)'
-              /p:BARBuildId=$(BARBuildId)
               /p:MaestroApiEndpoint='$(MaestroApiEndPoint)'
               /p:BuildAssetRegistryToken='$(MaestroApiAccessToken)'
               /p:ManifestsBasePath='$(Build.ArtifactStagingDirectory)/AssetManifests/'
               /p:BlobBasePath='$(Build.ArtifactStagingDirectory)/BlobArtifacts/'
               /p:PackageBasePath='$(Build.ArtifactStagingDirectory)/PackageArtifacts/'
               /p:PublishInstallersAndChecksums=${{ parameters.publishInstallersAndChecksums }}
-              /p:InstallersTargetStaticFeed=$(InstallersBlobFeedUrl)
-              /p:InstallersAzureAccountKey=$(dotnetcli-storage-key)
-              /p:ChecksumsAzureAccountKey=$(dotnetclichecksums-storage-key)
+              /p:InstallersFeedKey=$(dotnetcli-storage-key)
+              /p:ChecksumsFeedKey=$(dotnetclichecksums-storage-key)
+              /p:AzureStorageTargetFeedKey='$(dotnetfeed-storage-access-key-1)'
               /p:AzureDevOpsFeedsKey='$(dn-bot-dnceng-artifact-feeds-rw)'
               /p:AkaMSClientId=$(akams-client-id)
               /p:AkaMSClientSecret=$(akams-client-secret)
