@@ -13,7 +13,7 @@
   </PropertyGroup>
 
   <Import Project="DefaultVersions.Generated.props"/>
-  <Import Project="$(VersionsPropsPath)"/>
+  <Import Project="$(VersionsPropsPath)" Condition="Exists('$(VersionsPropsPath)')"/>
 
   <!-- TODO: remove once all repos remove RestoreSources from their Version.props files -->
   <PropertyGroup>
