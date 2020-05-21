@@ -91,7 +91,7 @@ exit_code=$?
 # The simulator logs comming from the sudo-spawned Simulator.app are not readable by the helix uploader
 chmod 0644 "$output_directory"/*.log
 
-test_results=`ls "$output_directory/xunit-*.xml"`
+test_results=`ls "$output_directory"/xunit-*.xml`
 
 if [ ! -f "$test_results" ]; then
     echo "Failed to find xUnit tests results in the output directory. Existing files:"
