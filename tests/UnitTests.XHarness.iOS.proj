@@ -14,7 +14,7 @@
     <TestRunNamePrefix>$(AGENT_JOBNAME)</TestRunNamePrefix>
     <EnableXUnitReporter>true</EnableXUnitReporter>
     <EnableAzurePipelinesReporter>true</EnableAzurePipelinesReporter>
-    <HelixBaseUri>https://helix.int-dot.net</HelixBaseUri> <!-- TODO: Move onto production when we roll out Xcode https://github.com/dotnet/core-eng/issues/9879 -->
+    <HelixBaseUri>https://helix.dot.net</HelixBaseUri>
   </PropertyGroup>
 
   <!-- New Test Projects which build app bundles to run through XHarness/XHarness go here -->
@@ -22,21 +22,12 @@
     <XHarnessiOSProject Include="$(MSBuildThisFileDirectory)XHarness\XHarness.TestAppBundle.proj" />
   </ItemGroup>
 
-  <!--
-    TODO: Move onto these queues when we roll out Xcode
-          https://github.com/dotnet/core-eng/issues/9879
-
   <ItemGroup Condition=" '$(HelixAccessToken)' != '' ">
     <HelixTargetQueue Include="osx.1015.amd64"/>
   </ItemGroup>
-  
+
   <ItemGroup Condition=" '$(HelixAccessToken)' == '' ">
     <HelixTargetQueue Include="osx.1015.amd64.open"/>
-  </ItemGroup>
-  -->
-  
-  <ItemGroup>
-    <HelixTargetQueue Include="osx.1015.amd64.ios.open"/>
   </ItemGroup>
 
   <PropertyGroup Condition=" '$(HelixAccessToken)' == '' ">
