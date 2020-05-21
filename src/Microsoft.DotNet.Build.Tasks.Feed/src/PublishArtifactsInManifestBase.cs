@@ -247,6 +247,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         {
             List<Task> publishTasks = new List<Task>();
 
+            // Just log a empty line for better visualization of the logs
+            Log.LogMessage(MessageImportance.High, "\nPublishing packages: ");
+
             foreach (var packagesPerCategory in PackagesByCategory)
             {
                 var category = packagesPerCategory.Key;
@@ -306,6 +309,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         protected async Task HandleBlobPublishingAsync(Dictionary<string, List<Asset>> buildAssets)
         {
             List<Task> publishTasks = new List<Task>();
+
+            // Just log a empty line for better visualization of the logs
+            Log.LogMessage(MessageImportance.High, "\nPublishing blobs: ");
 
             foreach (var blobsPerCategory in BlobsByCategory)
             {
@@ -550,7 +556,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 do
                 {
                     // The feed key when pushing to AzDo feeds is "AzureDevOps" (works with the credential helper).
-                    int result = await GeneralUtils.StartProcessAsync(NugetPath, $"push \"{localPackageLocation}\" -Source \"{feedConfig.TargetURL}\" -NonInteractive -ApiKey AzureDevOps");
+                    int result = await GeneralUtils.StartProcessAsync(NugetPath, $"push \"{localPackageLocation}\" -Source \"{feedConfig.TargetURL}\" -NonInteractive -ApiKey AzureDevOps -Verbosity quiet");
 
                     if (result == 0)
                     {

@@ -207,7 +207,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public PublishArtifactsInManifestBase WhichPublishingTask(string manifestFullPath)
         {
-            Log.LogMessage(MessageImportance.High, $"Creating a publishing task to publish assets from {manifestFullPath}");
+            Log.LogMessage(MessageImportance.High, $"Creating a task to publish assets from {manifestFullPath}");
 
             if (!File.Exists(manifestFullPath))
             {

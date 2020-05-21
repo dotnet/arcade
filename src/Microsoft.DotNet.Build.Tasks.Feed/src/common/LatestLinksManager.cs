@@ -54,7 +54,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 return;
             }
 
-            Logger.LogMessage(MessageImportance.High, "The following aka.ms links for blobs will be created:");
+            Logger.LogMessage(MessageImportance.High, "\nThe following aka.ms links for blobs will be created:");
             IEnumerable<AkaMSLink> linksToCreate = blobsToPublish.Select(blob =>
             {
                 // Strip away the feed expected suffix (index.json) and append on the
@@ -69,7 +69,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 };
                 Logger.LogMessage(MessageImportance.High, $"  aka.ms/{newLink.ShortUrl} -> {newLink.TargetUrl}");
                 return newLink;
-            });
+            }).ToList();
 
             await LinkManager.CreateOrUpdateLinksAsync(linksToCreate, AkaMsOwners, AkaMSCreatedBy, AkaMSGroupOwner, true);
         }

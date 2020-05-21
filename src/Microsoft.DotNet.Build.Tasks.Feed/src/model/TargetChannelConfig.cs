@@ -42,15 +42,16 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
 
         public override string ToString()
         {
-            return $"Channel ID: '{Id}' " +
-                $"Channel-name: '{Name}' " +
-                $"Infra-version: '{PublishingInfraVersion}' " +
-                $"AkaMSChannelName: '{AkaMSChannelName}' " +
-                $"Shipping-feed: '{ShippingFeed}' " +
-                $"Transport-feed: '{TransportFeed}' " +
-                $"Symbols-feed: '{SymbolsFeed}' " +
-                $"Installers-feed: '{InstallersFeed}' " +
-                $"Checksums-feed: '{ChecksumsFeed}' ";
+            return 
+                $"\n Channel ID: '{Id}' " +
+                $"\n Channel-name: '{Name}' " +
+                $"\n Infra-version: '{PublishingInfraVersion}' " +
+                $"\n AkaMSChannelName: '{AkaMSChannelName}' " +
+                $"\n Shipping-feed: '{ShippingFeed}' " +
+                $"\n Transport-feed: '{TransportFeed}' " +
+                $"\n Symbols-feed: '{SymbolsFeed}' " +
+                $"\n Installers-feed: '{InstallersFeed}' " +
+                $"\n Checksums-feed: '{ChecksumsFeed}' ";
         }
     }
 }

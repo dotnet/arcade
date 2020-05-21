@@ -75,14 +75,15 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
 
         public override string ToString()
         {
-            return $"Content-type: '{ContentType}' " +
-                $"Feed-type: '{Type}' " +
-                $"AssetSelection: '{AssetSelection}' " +
-                $"Isolated? '{Isolated}' " +
-                $"Internal? '{Internal}' " +
-                $"AllowOverwrite? '{AllowOverwrite}' " +
-                $"ShortUrlPrefix: '{LatestLinkShortUrlPrefix}' " +
-                $"TargetURL: '{TargetURL}'";
+            return 
+                $"\n Content-type: '{ContentType}' " +
+                $"\n Feed-type: '{Type}' " +
+                $"\n AssetSelection: '{AssetSelection}' " +
+                $"\n Isolated? '{Isolated}' " +
+                $"\n Internal? '{Internal}' " +
+                $"\n AllowOverwrite? '{AllowOverwrite}' " +
+                $"\n ShortUrlPrefix: '{LatestLinkShortUrlPrefix}' " +
+                $"\n TargetURL: '{TargetURL}'";
         }
     }
 
