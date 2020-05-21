@@ -22,7 +22,7 @@ namespace Microsoft.DotNet.VersionTools.BuildManifest.Model
 
         public ArtifactSet Artifacts { get; set; } = new ArtifactSet();
 
-        public SigningInformationModel SingingInformation { get; set; } = new SigningInformationModel();
+        public SigningInformationModel SigningInformation { get; set; } = new SigningInformationModel();
 
         public override string ToString() => $"Build {Identity}";
 
@@ -30,12 +30,12 @@ namespace Microsoft.DotNet.VersionTools.BuildManifest.Model
             "Build",
             Identity.ToXmlAttributes(),
             Artifacts.ToXml(),
-            SingingInformation?.ToXml());
+            SigningInformation?.ToXml());
 
         public static BuildModel Parse(XElement xml) => new BuildModel(BuildIdentity.Parse(xml))
         {
             Artifacts = ArtifactSet.Parse(xml),
-            SingingInformation = SigningInformationModel.Parse(xml.Element("SigningInformation")),
+            SigningInformation = SigningInformationModel.Parse(xml.Element("SigningInformation")),
         };
     }
 }

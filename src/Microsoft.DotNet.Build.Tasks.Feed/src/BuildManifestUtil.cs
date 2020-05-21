@@ -200,7 +200,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
             buildModel.Artifacts.Blobs.AddRange(blobArtifacts);
             buildModel.Artifacts.Packages.AddRange(packageArtifacts);
-            buildModel.SingingInformation = signingInformationModel;
+            buildModel.SigningInformation = signingInformationModel;
             return buildModel;
         }
 

@@ -28,7 +28,7 @@ namespace Microsoft.DotNet.VersionTools.BuildManifest.Model
             StrongNameSignInfo.AddRange(source.StrongNameSignInfo);
         }
 
-        public XElement ToXml() => new XElement(
+        public XElement ToXml() => IsEmpty() ? null : new XElement(
             "SigningInformation",
             Enumerable.Concat(
             FileExtensionSignInfo
@@ -46,6 +46,9 @@ namespace Microsoft.DotNet.VersionTools.BuildManifest.Model
                 .OrderBy(s => s.File, StringComparer.OrdinalIgnoreCase)
                 .ThenBy(s => s.PublicKeyToken, StringComparer.OrdinalIgnoreCase)
                 .Select(s => s.ToXml())));
+
+        public bool IsEmpty() => FileExtensionSignInfo.Count == 0 && FileSignInfo.Count == 0
+            && ItemsToSign.Count == 0 && StrongNameSignInfo.Count == 0;
 
         public static SigningInformationModel Parse(XElement xml) => xml == null ? null : new SigningInformationModel
         {
