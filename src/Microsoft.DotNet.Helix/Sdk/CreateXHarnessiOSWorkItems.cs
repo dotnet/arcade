@@ -107,7 +107,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             using ZipArchive archive = new ZipArchive(zipToOpen, ZipArchiveMode.Update);
             ZipArchiveEntry entry = archive.CreateEntry(PayloadScriptName);
             using StreamWriter zipEntryWriter = new StreamWriter(entry.Open());
-            using Stream payloadScriptStream = GetPayloadScriptStream();
+            using FileStream payloadScriptStream = GetPayloadScriptStream();
             await payloadScriptStream.CopyToAsync(zipEntryWriter.BaseStream);
 
             return outputZipPath;
@@ -118,7 +118,8 @@ namespace Microsoft.DotNet.Helix.Sdk
             // Validation of any metadata specific to iOS stuff goes here
             if (!appFolderPath.GetRequiredMetadata(Log, "Targets", out string targets))
             {
-                Log.LogError("'Targets' metadata must be specified; this may match, but can vary from file name");
+                Log.LogError("'Targets' metadata must be specified - " +
+                    "expecting list of target device/simulator platforms to execute tests on (e.g. ios-simulator-64)");
                 return null;
             }
 
@@ -136,11 +137,11 @@ namespace Microsoft.DotNet.Helix.Sdk
             return xharnessRunCommand;
         }
 
-        private static Stream GetPayloadScriptStream()
+        private static FileStream GetPayloadScriptStream()
         {
-            var assembly = Assembly.GetExecutingAssembly();
-            string resourceName = assembly.GetManifestResourceNames().Single(str => str.EndsWith(PayloadScriptName));
-            return assembly.GetManifestResourceStream(resourceName);
+            var assemblyDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+            var scriptPath = Path.Combine(assemblyDirectory, "tools", "xharness-runner", PayloadScriptName);
+            return File.OpenRead(scriptPath);
         }
     }
 }
