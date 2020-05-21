@@ -17,7 +17,7 @@ namespace Microsoft.DotNet.Helix.Sdk
         private const string PayloadScriptName = "ios-helix-job-payload.sh";
 
         /// <summary>
-        /// An array of one or more paths to application packages (.apk for Android)
+        /// An array of one or more paths to iOS app bundles (folders ending with ".app" usually)
         /// that will be used to create Helix work items.
         /// </summary>
         public ITaskItem[] AppFolders { get; set; }
