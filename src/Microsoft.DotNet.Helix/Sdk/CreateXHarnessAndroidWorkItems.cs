@@ -53,15 +53,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             await Task.Yield();
             string workItemName = $"xharness-{Path.GetFileNameWithoutExtension(appPackage.ItemSpec)}";
 
-            TimeSpan timeout = TimeSpan.FromMinutes(15);
-            if (!string.IsNullOrEmpty(WorkItemTimeout))
-            {
-                if (!TimeSpan.TryParse(WorkItemTimeout, out timeout))
-                {
-                    Log.LogWarning($"Invalid value \"{WorkItemTimeout}\" provided for XHarnessWorkItemTimeout; falling back to default value of \"00:015:00\" (15 minutes)");
-                    timeout = TimeSpan.FromMinutes(15);
-                }
-            }
+            TimeSpan timeout = ParseTimeout();
 
             string command = ValidateMetadataAndGetXHarnessAndroidCommand(appPackage, timeout);
 

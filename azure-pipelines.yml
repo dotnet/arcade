@@ -140,7 +140,7 @@ stages:
             displayName: XHarness Android Helix Testing
             env:
               SYSTEM_ACCESSTOKEN: $(System.AccessToken)
-              HelixAccessToken: ''              
+              HelixAccessToken: ''
         - job: Linux
           container: LinuxContainer
           pool:
@@ -165,6 +165,19 @@ stages:
               /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.binlog
               /p:RestoreUsingNuGetTargets=false
             displayName: Run Helix Tests
+            env:
+              SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+              HelixAccessToken: ''
+          - script: eng/common/build.sh
+              -configuration $(_BuildConfig)
+              -prepareMachine
+              -ci
+              -restore
+              -test
+              -projects $(Build.SourcesDirectory)/tests/UnitTests.XHarness.iOS.proj
+              /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.XHarness.binlog
+              /p:RestoreUsingNuGetTargets=false
+            displayName: XHarness iOS Helix Testing
             env:
               SYSTEM_ACCESSTOKEN: $(System.AccessToken)
               HelixAccessToken: ''
