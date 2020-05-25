@@ -1,9 +1,9 @@
 <Project>
   <PropertyGroup>
     <_XHarnessPackageName>Microsoft.DotNet.XHarness.CLI</_XHarnessPackageName>
-    <_XharnessRunnerPackageFeed Condition="'$(_XharnessRunnerPackageFeed)'==''">https://dnceng.pkgs.visualstudio.com/public/_packaging/dotnet-eng/nuget/v3/index.json</_XharnessRunnerPackageFeed>
+    <_XHarnessRunnerPackageFeed Condition="'$(_XHarnessRunnerPackageFeed)'==''">https://dnceng.pkgs.visualstudio.com/public/_packaging/dotnet-eng/nuget/v3/index.json</_XHarnessRunnerPackageFeed>
     <!-- MicrosoftDotNetXHarnessCLIVersion comes from eng\Versions.props -->
-    <_XHarnessPackageVersion Condition="'$(XHarnessPackageVersion)' == ''">$(MicrosoftDotNetXHarnessCLIVersion)</_XHarnessPackageVersion>
+    <_XHarnessPackageVersion Condition="'$(_XHarnessPackageVersion)' == ''">$(MicrosoftDotNetXHarnessCLIVersion)</_XHarnessPackageVersion>
     <_HelixMonoQueueTargets>$(_HelixMonoQueueTargets);$(MSBuildThisFileDirectory)XHarnessRunner.targets</_HelixMonoQueueTargets>
   </PropertyGroup>
 </Project>
