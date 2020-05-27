@@ -32,7 +32,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
             // preserve all of the TFM-specific dependencies that are not NETStandard.
             List<ITaskItem> splitDependencies = new List<ITaskItem>(dependencies.Where(d => d.TargetFramework != null && d.TargetFramework.Framework != FrameworkConstants.FrameworkIdentifiers.NetStandard).Select(d => d.OriginalItem));
 
-            // for any dependency with unspecified TFM, get it's minimum supported netstandard version
+            // for any dependency with unspecified TFM, get its minimum supported netstandard version
             // and treat it as targeting that.
             var unspecDeps = dependencies.Where(d => d.TargetFramework == null).ToArray();
             foreach (var unspecDep in unspecDeps)

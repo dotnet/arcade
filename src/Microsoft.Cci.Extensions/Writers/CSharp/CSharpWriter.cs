@@ -181,11 +181,11 @@ namespace Microsoft.Cci.Writers
 
                 // Note: By "private", we mean not visible outside the assembly.
 
-                // For more details see issue https://github.com/dotnet/corefx/issues/6185 
+                // For more details see issue https://github.com/dotnet/corefx/issues/6185
                 // this blog is helpful as well http://blog.paranoidcoding.com/2016/02/15/are-private-members-api-surface.html
 
                 List<IFieldDefinition> newFields = new List<IFieldDefinition>();
-                var includedVisibleFields = fields.Where(f => f.IsVisibleOutsideAssembly()).Where(_cciFilter.Include);
+                var includedVisibleFields = fields.Where(f => _cciFilter.Include(f));
                 includedVisibleFields = includedVisibleFields.OrderBy(GetMemberKey, StringComparer.OrdinalIgnoreCase);
 
                 var excludedFields = fields.Except(includedVisibleFields).Where(f => !f.IsStatic);

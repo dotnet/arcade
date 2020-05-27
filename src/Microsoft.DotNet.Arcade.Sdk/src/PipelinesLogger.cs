@@ -242,7 +242,10 @@ namespace Microsoft.DotNet.Arcade.Sdk
             }
 
             string propertyCategory = e.Properties?.Cast<DictionaryEntry>().LastOrDefault(p => p.Key.ToString().Equals(s_TelemetryMarker)).Value?.ToString();
-
+            if(string.IsNullOrWhiteSpace(propertyCategory))
+            {
+                propertyCategory = e.GlobalProperties?.LastOrDefault(p => p.Key.ToString().Equals($"_{s_TelemetryMarker}")).Value;
+            }
             var parentId = _buildEventContextMap.TryGetValue(e.ParentProjectBuildEventContext, out var guid)
             ? (Guid?)guid
             : null;

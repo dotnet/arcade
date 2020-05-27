@@ -14,9 +14,17 @@ namespace Xunit
     [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class | AttributeTargets.Assembly, AllowMultiple = true)]
     public class ActiveIssueAttribute : Attribute, ITraitAttribute
     {
+        public Type CalleeType { get; private set; }
+        public string[] ConditionMemberNames { get; private set; }
+
         public ActiveIssueAttribute(string issue, TestPlatforms platforms) { }
         public ActiveIssueAttribute(string issue, TargetFrameworkMonikers framework) { }
         public ActiveIssueAttribute(string issue, TestRuntimes runtimes) { }
-        public ActiveIssueAttribute(string issue, TestPlatforms platforms = TestPlatforms.Any, TargetFrameworkMonikers framework = (TargetFrameworkMonikers)0, TestRuntimes runtimes = TestRuntimes.Any) { }
+        public ActiveIssueAttribute(string issue, TestPlatforms platforms = TestPlatforms.Any, TargetFrameworkMonikers framework = TargetFrameworkMonikers.Any, TestRuntimes runtimes = TestRuntimes.Any) { }
+        public ActiveIssueAttribute(string issue, Type calleeType, params string[] conditionMemberNames)
+        {
+            CalleeType = calleeType;
+            ConditionMemberNames = conditionMemberNames;
+        }
     }
 }

@@ -2,14 +2,16 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using System.Collections.Generic;
+using System.Composition;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using Microsoft.Cci.Differs;
 using Microsoft.Cci.Filters;
 using Microsoft.Cci.Mappings;
 using Microsoft.Cci.Traversers;
-using System.Composition;
 
 namespace Microsoft.Cci.Writers
 {
@@ -42,6 +44,20 @@ namespace Microsoft.Cci.Writers
                     OutputDifferences(header, _differences);
                     _totalDifferences += _differences.Count;
                     _differences.Clear();
+                }
+            }
+
+            if (DifferenceFilter is BaselineDifferenceFilter filter)
+            {
+                var unusedBaselineDifferences = filter.GetUnusedBaselineDifferences();
+                if (unusedBaselineDifferences.Any())
+                {
+                    _writer.WriteLine($"{Environment.NewLine}*** Invalid/Unused baseline differences ***");
+                    foreach (var diff in unusedBaselineDifferences)
+                    {
+                        _writer.WriteLine(diff);
+                        _totalDifferences++;
+                    }
                 }
             }
 

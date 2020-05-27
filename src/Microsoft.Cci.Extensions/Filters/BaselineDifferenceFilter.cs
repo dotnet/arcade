@@ -2,20 +2,24 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Microsoft.Cci.Differs;
 
 namespace Microsoft.Cci.Filters
 {
     public class BaselineDifferenceFilter : IDifferenceFilter
     {
-        private readonly HashSet<string> _ignoreDifferences = new HashSet<string>();
+        private readonly Dictionary<string, bool> _ignoreDifferences = new Dictionary<string, bool>();
         private readonly IDifferenceFilter _filter;
+        private readonly bool _treatUnusedDifferencesAsIssues;
 
-        public BaselineDifferenceFilter(IDifferenceFilter filter)
+        public BaselineDifferenceFilter(IDifferenceFilter filter, bool treatUnusedDifferencesAsIssues)
         {
             _filter = filter;
+            _treatUnusedDifferencesAsIssues = treatUnusedDifferencesAsIssues;
         }
 
         public void AddBaselineFile(string baselineFile)
@@ -35,21 +39,40 @@ namespace Microsoft.Cci.Filters
                 if (string.IsNullOrWhiteSpace(filteredLine))
                     continue;
 
-                _ignoreDifferences.Add(filteredLine);
+                if (filteredLine.StartsWith("Compat issues with assembly", StringComparison.OrdinalIgnoreCase) || 
+                    filteredLine.StartsWith("Total Issues"))
+                    continue;
+
+                _ignoreDifferences[filteredLine] = false;
             }
         }
 
         public bool Include(Difference difference)
         {
             // Is the entire rule ignored?
-            if (_ignoreDifferences.Contains(difference.Id))
+            if (_ignoreDifferences.ContainsKey(difference.Id))
+            {
+                _ignoreDifferences[difference.Id] = true;
                 return false;
+            }
 
             // Is the specific violation of the rule ignored?
-            if (_ignoreDifferences.Contains(difference.ToString()))
+            var diff = difference.ToString();
+            if (_ignoreDifferences.ContainsKey(diff))
+            {
+                _ignoreDifferences[diff] = true;
                 return false;
+            }
 
             return _filter.Include(difference);
+        }
+
+        public IEnumerable<string> GetUnusedBaselineDifferences()
+        {
+            if (!_treatUnusedDifferencesAsIssues)
+                return Enumerable.Empty<string>();
+
+            return _ignoreDifferences.Where(i => !i.Value).Select(i => i.Key);
         }
     }
 }

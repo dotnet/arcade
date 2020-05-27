@@ -74,5 +74,7 @@ namespace Microsoft.Cci.Traversers
         public virtual void Visit(Difference difference)
         {
         }
+
+        protected IDifferenceFilter DifferenceFilter => _filter;
     }
 }

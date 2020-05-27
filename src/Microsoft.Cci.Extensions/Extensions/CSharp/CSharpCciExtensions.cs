@@ -2,9 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using Microsoft.Cci.Filters;
-using Microsoft.Cci.Writers.CSharp;
-using Microsoft.Cci.Writers.Syntax;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -13,9 +10,10 @@ using System.IO;
 using System.Linq;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
-using System.Reflection.PortableExecutable;
 using System.Text.RegularExpressions;
-using System.Xml.Linq;
+using Microsoft.Cci.Filters;
+using Microsoft.Cci.Writers.CSharp;
+using Microsoft.Cci.Writers.Syntax;
 using SRMetadataReader = System.Reflection.Metadata.MetadataReader;
 
 namespace Microsoft.Cci.Extensions.CSharp
@@ -782,7 +780,7 @@ namespace Microsoft.Cci.Extensions.CSharp
         public static string[] GetValueTupleNames(this IEnumerable<ICustomAttribute> attributes)
         {
             string[] names = null;
-            var attribute = attributes.GetAttributeOfType("System.Runtime.CompilerServices.TupleElementNamesAttribute");
+            var attribute = attributes?.GetAttributeOfType("System.Runtime.CompilerServices.TupleElementNamesAttribute");
             if (attribute != null && attribute.Arguments.Single() is IMetadataCreateArray createArray)
             {
                 names = new string[createArray.Sizes.Single()];

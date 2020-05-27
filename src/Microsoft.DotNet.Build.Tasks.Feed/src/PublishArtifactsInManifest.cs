@@ -12,7 +12,9 @@ using Microsoft.DotNet.VersionTools.BuildManifest.Model;
 using Microsoft.DotNet.VersionTools.Util;
 using NuGet.Packaging.Core;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -88,10 +90,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         public ITaskItem[] TargetFeedConfig { get; set; }
 
         /// <summary>
-        /// Full path to the assets to publish manifest.
+        /// Full path to the assets to publish manifest(s)
         /// </summary>
         [Required]
-        public string AssetManifestPath { get; set; }
+        public ITaskItem[] AssetManifestPaths { get; set; }
 
         /// <summary>
         /// Full path to the folder containing blob assets.
@@ -127,7 +129,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// <summary>
         /// Maximum number of parallel uploads for the upload tasks
         /// </summary>
-        public int MaxClients { get; set; } = 8;
+        public int MaxClients { get; set; } = 16;
 
         /// <summary>
         /// Directory where "nuget.exe" is installed. This will be used to publish packages.
@@ -172,6 +174,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         private AkaMSLinkManager _linkManager = null;
 
+        private ConcurrentDictionary<(int AssetId, string AssetLocation, AddAssetLocationToAssetAssetLocationType LocationType), ValueTuple> NewAssetLocations = 
+            new ConcurrentDictionary<(int AssetId, string AssetLocation, AddAssetLocationToAssetAssetLocationType LocationType), ValueTuple>();
+
         public override bool Execute()
         {
             return ExecuteAsync().GetAwaiter().GetResult();
@@ -181,14 +186,25 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         {
             try
             {
-                Log.LogMessage(MessageImportance.High, "Publishing artifacts to feed.");
-
-                if (string.IsNullOrWhiteSpace(AssetManifestPath) || !File.Exists(AssetManifestPath))
+                List<BuildModel> buildModels = new List<BuildModel>();
+                foreach (var assetManifestPath in AssetManifestPaths)
                 {
-                    Log.LogError($"Problem reading asset manifest path from '{AssetManifestPath}'");
+                    Log.LogMessage(MessageImportance.High, $"Publishing artifacts in {assetManifestPath.ItemSpec}.");
+                    string fileName = assetManifestPath.ItemSpec;
+                    if (string.IsNullOrWhiteSpace(fileName) || !File.Exists(fileName))
+                    {
+                        Log.LogError($"Problem reading asset manifest path from '{fileName}'");
+                    }
+                    else
+                    {
+                        buildModels.Add(BuildManifestUtil.ManifestFileToModel(assetManifestPath.ItemSpec, Log));
+                    }
                 }
 
-                var buildModel = BuildManifestUtil.ManifestFileToModel(AssetManifestPath, Log);
+                if (Log.HasLoggedErrors)
+                {
+                    return false;
+                }
 
                 // Parsing the manifest may fail for several reasons
                 if (Log.HasLoggedErrors)
@@ -200,6 +216,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 // of the assets being published so we can add a new location for them.
                 IMaestroApi client = ApiFactory.GetAuthenticated(MaestroApiEndpoint, BuildAssetRegistryToken);
                 Maestro.Client.Models.Build buildInformation = await client.Builds.GetBuildAsync(BARBuildId);
+                Dictionary<string, List<Asset>> buildAssets = CreateBuildAssetDictionary(buildInformation);
 
                 await ParseTargetFeedConfigAsync();
 
@@ -209,7 +226,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     return false;
                 }
 
-                SplitArtifactsInCategories(buildModel);
+                foreach (var buildModel in buildModels)
+                {
+                    SplitArtifactsInCategories(buildModel);
+                }
 
                 // Return errors from the safety checks
                 if (Log.HasLoggedErrors)
@@ -217,9 +237,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     return false;
                 }
 
-                await HandlePackagePublishingAsync(client, buildInformation);
+                await Task.WhenAll(new Task[] {
+                        HandlePackagePublishingAsync(client, buildAssets),
+                        HandleBlobPublishingAsync(client, buildAssets)
+                    }
+                );
 
-                await HandleBlobPublishingAsync(client, buildInformation);
+                await PersistPendingAssetLocationAsync(client);
             }
             catch (Exception e)
             {
@@ -227,6 +251,64 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             }
 
             return !Log.HasLoggedErrors;
+        }
+
+        /// <summary>
+        ///     Lookup an asset in the build asset dictionary by name and version
+        /// </summary>
+        /// <param name="name">Name of asset</param>
+        /// <param name="version">Version of asset</param>
+        /// <returns>Asset if one with the name and version exists, null otherwise</returns>
+        private Asset LookupAsset(string name, string version, Dictionary<string, List<Asset>> buildAssets)
+        {
+            if (!buildAssets.TryGetValue(name, out List<Asset> assetsWithName))
+            {
+                return null;
+            }
+            return assetsWithName.FirstOrDefault(asset => asset.Version == version);
+        }
+
+        /// <summary>
+        ///     Lookup an asset in the build asset dictionary by name only.
+        ///     This is for blob lookup purposes.
+        /// </summary>
+        /// <param name="name">Name of asset</param>
+        /// <returns>
+        ///     Asset if one with the name exists and is the only asset with the name.
+        ///     Throws if there is more than one asset with that name.
+        /// </returns>
+        private Asset LookupAsset(string name, Dictionary<string, List<Asset>> buildAssets)
+        {
+            if (!buildAssets.TryGetValue(name, out List<Asset> assetsWithName))
+            {
+                return null;
+            }
+            return assetsWithName.Single();
+        }
+
+        /// <summary>
+        ///     Build up a map of asset name -> asset list so that we can avoid n^2 lookups when processing assets.
+        ///     We use name only because blobs are only looked up by id (version is not recorded in the manifest).
+        ///     This could mean that there might be multiple versions of the same asset in the build.
+        /// </summary>
+        /// <param name="buildInformation">Build information</param>
+        /// <returns>Map of asset name -> list of assets with that name.</returns>
+        private Dictionary<string, List<Asset>> CreateBuildAssetDictionary(Maestro.Client.Models.Build buildInformation)
+        {
+            Dictionary<string, List<Asset>> buildAssets = new Dictionary<string, List<Asset>>();
+            foreach (var asset in buildInformation.Assets)
+            {
+                if (buildAssets.TryGetValue(asset.Name, out List<Asset> assetsWithName))
+                {
+                    assetsWithName.Add(asset);
+                }
+                else
+                {
+                    buildAssets.Add(asset.Name, new List<Asset>() { asset });
+                }
+            }
+
+            return buildAssets;
         }
 
         /// <summary>
@@ -363,29 +445,41 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         }
 
         /// <summary>
-        /// Adds `feedConfig.TargetURL` to the list of locations of the asset pointed by `assetRecord`.
+        ///   Records the association of Asset -> AssetLocation to be persisted later in BAR.
         /// </summary>
-        /// <param name="client">Maestro++ API client</param>
-        /// <param name="assetRecord">Asset that will have location list updated</param>
-        /// <param name="feedConfig">Configuration of where the asset was published</param>
-        /// <param name="assetLocationType">Type of feed location that is being added</param>
-        /// <returns>Whether the location was added to the list or not.</returns>
-        private async Task<bool> TryAddAssetLocationAsync(IMaestroApi client, Asset assetRecord, FeedConfig feedConfig, AddAssetLocationToAssetAssetLocationType assetLocationType)
+        /// <param name="assetId">Id of the asset (i.e., name of the package) whose the location should be updated.</param>
+        /// <param name="assetVersion">Version of the asset whose the location should be updated.</param>
+        /// <param name="buildAssets">List of BAR Assets for the build that's being modified.</param>
+        /// <param name="feedConfig">Configuration of where the asset was published.</param>
+        /// <param name="assetLocationType">Type of feed location that is being added.</param>
+        /// <returns>True if that asset didn't have the informed location recorded already.</returns>
+        private bool TryAddAssetLocation(string assetId, string assetVersion, Dictionary<string, List<Asset>> buildAssets, FeedConfig feedConfig, AddAssetLocationToAssetAssetLocationType assetLocationType)
         {
-            try
+            Asset assetRecord = string.IsNullOrEmpty(assetVersion) ? 
+                LookupAsset(assetId, buildAssets) : 
+                LookupAsset(assetId, assetVersion, buildAssets);
+
+            if (assetRecord == null)
             {
-                await client.Assets.AddAssetLocationToAssetAsync(assetRecord.Id, assetLocationType, feedConfig.TargetURL);
-            }
-            catch (RestApiException e) when (e.Response.StatusCode == System.Net.HttpStatusCode.NotModified)
-            {
-                // This is likely due to some concurrent operation trying to add same location to same asset.
-                // This is not frequent, but it's possible, for instance, when a build publishes to multiple 
-                // channels that target same feeds.
-                Log.LogMessage($"Asset with Id {assetRecord.Id}, Version {assetRecord.Version} already has location {feedConfig.TargetURL}");
+                string versionMsg = string.IsNullOrEmpty(assetVersion) ? string.Empty : $"and version {assetVersion}";
+                Log.LogError($"Asset with Id {assetId} {versionMsg} isn't registered on the BAR Build with ID {BARBuildId}");
                 return false;
             }
 
-            return true;
+            return NewAssetLocations.TryAdd( (assetRecord.Id, feedConfig.TargetURL, assetLocationType), ValueTuple.Create() );
+        }
+
+        /// <summary>
+        ///   Persist in BAR all pending associations of Asset -> AssetLocation stored in `NewAssetLocations`.
+        /// </summary>
+        /// <param name="client">Maestro++ API client</param>
+        private Task PersistPendingAssetLocationAsync(IMaestroApi client)
+        {
+            var updates = NewAssetLocations.Keys.Select(nal => new AssetAndLocation(nal.AssetId, (LocationType)nal.LocationType) { 
+                    Location = nal.AssetLocation 
+                }).ToImmutableList();
+
+            return client.Assets.BulkAddLocationsAsync(updates);
         }
 
         /// <summary>
@@ -456,8 +550,16 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             return isPublic;
         }
 
-        private async Task HandlePackagePublishingAsync(IMaestroApi client, Maestro.Client.Models.Build buildInformation)
+        /// <summary>
+        ///     Handle package publishing for all the feed configs.
+        /// </summary>
+        /// <param name="client">Maestro API client</param>
+        /// <param name="buildAssets">Assets information about build being published.</param>
+        /// <returns>Task</returns>
+        private async Task HandlePackagePublishingAsync(IMaestroApi client, Dictionary<string, List<Asset>> buildAssets)
         {
+            List<Task> publishTasks = new List<Task>();
+
             foreach (var packagesPerCategory in PackagesByCategory)
             {
                 var category = packagesPerCategory.Key;
@@ -480,10 +582,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         switch (feedConfig.Type)
                         {
                             case FeedType.AzDoNugetFeed:
-                                await PublishPackagesToAzDoNugetFeedAsync(filteredPackages, client, buildInformation, feedConfig);
+                                publishTasks.Add(PublishPackagesToAzDoNugetFeedAsync(filteredPackages, client, buildAssets, feedConfig));
                                 break;
                             case FeedType.AzureStorageFeed:
-                                await PublishPackagesToAzureStorageNugetFeedAsync(filteredPackages, client, buildInformation, feedConfig);
+                                publishTasks.Add(PublishPackagesToAzureStorageNugetFeedAsync(filteredPackages, client, buildAssets, feedConfig));
                                 break;
                             default:
                                 Log.LogError($"Unknown target feed type for category '{category}': '{feedConfig.Type}'.");
@@ -496,6 +598,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     Log.LogError($"No target feed configuration found for artifact category: '{category}'.");
                 }
             }
+
+            await Task.WhenAll(publishTasks);
         }
 
         private List<PackageArtifactModel> FilterPackages(List<PackageArtifactModel> packages, FeedConfig feedConfig)
@@ -516,8 +620,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             }
         }
 
-        private async Task HandleBlobPublishingAsync(IMaestroApi client, Maestro.Client.Models.Build buildInformation)
+        private async Task HandleBlobPublishingAsync(IMaestroApi client, Dictionary<string, List<Asset>> buildAssets)
         {
+            List<Task> publishTasks = new List<Task>();
+
             foreach (var blobsPerCategory in BlobsByCategory)
             {
                 var category = blobsPerCategory.Key;
@@ -540,10 +646,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         switch (feedConfig.Type)
                         {
                             case FeedType.AzDoNugetFeed:
-                                await PublishBlobsToAzDoNugetFeedAsync(filteredBlobs, client, buildInformation, feedConfig);
+                                publishTasks.Add(PublishBlobsToAzDoNugetFeedAsync(filteredBlobs, client, buildAssets, feedConfig));
                                 break;
                             case FeedType.AzureStorageFeed:
-                                await PublishBlobsToAzureStorageNugetFeedAsync(filteredBlobs, client, buildInformation, feedConfig);
+                                publishTasks.Add(PublishBlobsToAzureStorageNugetFeedAsync(filteredBlobs, client, buildAssets, feedConfig));
                                 break;
                             default:
                                 Log.LogError($"Unknown target feed type for category '{category}': '{feedConfig.Type}'.");
@@ -556,6 +662,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     Log.LogError($"No target feed configuration found for artifact category: '{category}'.");
                 }
             }
+
+            await Task.WhenAll(publishTasks);
         }
 
         /// <summary>
@@ -648,24 +756,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         private async Task PublishPackagesToAzDoNugetFeedAsync(
             List<PackageArtifactModel> packagesToPublish,
             IMaestroApi client,
-            Maestro.Client.Models.Build buildInformation,
+            Dictionary<string, List<Asset>> buildAssets,
             FeedConfig feedConfig)
         {
-            foreach (var package in packagesToPublish)
-            {
-                var assetRecord = buildInformation.Assets
-                    .Where(a => a.Name.Equals(package.Id) && a.Version.Equals(package.Version))
-                    .FirstOrDefault();
-
-                if (assetRecord == null)
-                {
-                    Log.LogError($"Asset with Id {package.Id}, Version {package.Version} isn't registered on the BAR Build with ID {BARBuildId}");
-                    continue;
-                }
-
-                await TryAddAssetLocationAsync(client, assetRecord, feedConfig, AddAssetLocationToAssetAssetLocationType.NugetFeed);
-            }
-
             await PushNugetPackagesAsync(packagesToPublish, feedConfig, maxClients: MaxClients,
                 async (feed, httpClient, package, feedAccount, feedVisibility, feedName) =>
                 {
@@ -675,6 +768,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         Log.LogError($"Could not locate '{package.Id}.{package.Version}' at '{localPackagePath}'");
                         return;
                     }
+
+                    TryAddAssetLocation(package.Id, package.Version, buildAssets, feedConfig, AddAssetLocationToAssetAssetLocationType.NugetFeed);
 
                     await PushNugetPackageAsync(feed, httpClient, localPackagePath, package.Id, package.Version, feedAccount, feedVisibility, feedName);
                 });
@@ -1013,28 +1108,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         private async Task PublishBlobsToAzDoNugetFeedAsync(
             List<BlobArtifactModel> blobsToPublish,
             IMaestroApi client,
-            Maestro.Client.Models.Build buildInformation,
+            Dictionary<string, List<Asset>> buildAssets,
             FeedConfig feedConfig)
         {
             List<BlobArtifactModel> packagesToPublish = new List<BlobArtifactModel>();
 
             foreach (var blob in blobsToPublish)
             {
-                var assetRecord = buildInformation.Assets
-                    .Where(a => a.Name.Equals(blob.Id))
-                    .FirstOrDefault();
-
-                if (assetRecord == null)
-                {
-                    Log.LogError($"Asset with Id {blob.Id} isn't registered on the BAR Build with ID {BARBuildId}");
-                    continue;
-                }
-
-                if (await TryAddAssetLocationAsync(client, assetRecord, feedConfig, AddAssetLocationToAssetAssetLocationType.Container) == false)
-                {
-                    continue;
-                }
-
                 // Applies to symbol packages and core-sdk's VS feed packages
                 if (blob.Id.EndsWith(PackageSuffix, StringComparison.OrdinalIgnoreCase))
                 {
@@ -1049,33 +1129,36 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             await PushNugetPackagesAsync<BlobArtifactModel>(packagesToPublish, feedConfig, maxClients: MaxClients,
                 async (feed, httpClient, blob, feedAccount, feedVisibility, feedName) =>
                 {
-                    // Determine the local path to the blob
-                    string fileName = Path.GetFileName(blob.Id);
-                    string localBlobPath = Path.Combine(BlobAssetsBasePath, fileName);
-                    if (!File.Exists(localBlobPath))
+                    if (TryAddAssetLocation(blob.Id, assetVersion: null, buildAssets, feedConfig, AddAssetLocationToAssetAssetLocationType.Container))
                     {
-                        Log.LogError($"Could not locate '{blob.Id} at '{localBlobPath}'");
-                        return;
-                    }
+                        // Determine the local path to the blob
+                        string fileName = Path.GetFileName(blob.Id);
+                        string localBlobPath = Path.Combine(BlobAssetsBasePath, fileName);
+                        if (!File.Exists(localBlobPath))
+                        {
+                            Log.LogError($"Could not locate '{blob.Id} at '{localBlobPath}'");
+                            return;
+                        }
 
-                    string id;
-                    string version;
-                    // Determine package ID and version by asking the nuget libraries
-                    using (var packageReader = new NuGet.Packaging.PackageArchiveReader(localBlobPath))
-                    {
-                        PackageIdentity packageIdentity = packageReader.GetIdentity();
-                        id = packageIdentity.Id;
-                        version = packageIdentity.Version.ToString();
-                    }
+                        string id;
+                        string version;
+                        // Determine package ID and version by asking the nuget libraries
+                        using (var packageReader = new NuGet.Packaging.PackageArchiveReader(localBlobPath))
+                        {
+                            PackageIdentity packageIdentity = packageReader.GetIdentity();
+                            id = packageIdentity.Id;
+                            version = packageIdentity.Version.ToString();
+                        }
 
-                    await PushNugetPackageAsync(feed, httpClient, localBlobPath, id, version, feedAccount, feedVisibility, feedName);
+                        await PushNugetPackageAsync(feed, httpClient, localBlobPath, id, version, feedAccount, feedVisibility, feedName);
+                    }
                 });
         }
 
         private async Task PublishPackagesToAzureStorageNugetFeedAsync(
             List<PackageArtifactModel> packagesToPublish,
             IMaestroApi client,
-            Maestro.Client.Models.Build buildInformation,
+            Dictionary<string, List<Asset>> buildAssets,
             FeedConfig feedConfig)
         {
             var packages = packagesToPublish.Select(p =>
@@ -1101,20 +1184,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 PassIfExistingItemIdentical = true
             };
 
-            foreach (var package in packagesToPublish)
-            {
-                var assetRecord = buildInformation.Assets
-                    .Where(a => a.Name.Equals(package.Id) && a.Version.Equals(package.Version))
-                    .FirstOrDefault();
-
-                if (assetRecord == null)
-                {
-                    Log.LogError($"Asset with Id {package.Id}, Version {package.Version} isn't registered on the BAR Build with ID {BARBuildId}");
-                    continue;
-                }
-
-                await TryAddAssetLocationAsync(client, assetRecord, feedConfig, AddAssetLocationToAssetAssetLocationType.NugetFeed);
-            }
+            packagesToPublish.Select(package => TryAddAssetLocation(package.Id, package.Version, buildAssets, feedConfig, AddAssetLocationToAssetAssetLocationType.NugetFeed));
 
             await blobFeedAction.PushToFeedAsync(packages, pushOptions);
         }
@@ -1122,7 +1192,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         private async Task PublishBlobsToAzureStorageNugetFeedAsync(
             List<BlobArtifactModel> blobsToPublish,
             IMaestroApi client,
-            Maestro.Client.Models.Build buildInformation,
+            Dictionary<string, List<Asset>> buildAssets,
             FeedConfig feedConfig)
         {
             var blobs = blobsToPublish
@@ -1154,22 +1224,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 PassIfExistingItemIdentical = true
             };
 
-            foreach (BlobArtifactModel blob in blobsToPublish)
-            {
-                Asset assetRecord = buildInformation.Assets
-                    .Where(a => a.Name.Equals(blob.Id))
-                    .SingleOrDefault();
-
-                if (assetRecord == null)
-                {
-                    Log.LogError($"Asset with Id {blob.Id} isn't registered on the BAR Build with ID {BARBuildId}");
-                    continue;
-                }
-
-                await TryAddAssetLocationAsync(client, assetRecord, feedConfig, AddAssetLocationToAssetAssetLocationType.Container);
-            }
+            blobsToPublish.Select(blob => TryAddAssetLocation(blob.Id, assetVersion: null, buildAssets, feedConfig, AddAssetLocationToAssetAssetLocationType.Container));
 
             await blobFeedAction.PublishToFlatContainerAsync(blobs, maxClients: MaxClients, pushOptions);
+
+            // The latest links should be updated only after the publishing is complete, to avoid
+            // dead links in the interim.
             await CreateOrUpdateLatestLinksAsync(blobsToPublish, feedConfig);
         }
 

@@ -7,7 +7,7 @@ from threading import Thread
 from typing import Tuple, Optional
 
 from test_results_reader import read_results
-from helpers import batch
+from helpers import batch, get_env
 from azure_devops_result_publisher import AzureDevOpsTestResultPublisher
 
 class UploadWorker(Thread):
@@ -88,7 +88,10 @@ def main():
 
     log.info("Beginning reading of test results.")
 
-    all_results = read_results(os.getcwd())
+    # In case the user puts the results in HELIX_WORKITEM_UPLOAD_ROOT for upload, check there too.
+    all_results = read_results([os.getcwd(),
+                                get_env("HELIX_WORKITEM_UPLOAD_ROOT")])
+
     batch_size = 1000
     batches = batch(all_results, batch_size)
 

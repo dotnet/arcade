@@ -1,0 +1,36 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" />
+
+  <PropertyGroup>
+    <XHarnessX86TestApkUrl>https://netcorenativeassets.blob.core.windows.net/resource-packages/external/android/test-apk/x86/System.Numerics.Vectors.Tests-x86.apk</XHarnessX86TestApkUrl>
+    <XHarnessX64TestApkUrl>https://netcorenativeassets.blob.core.windows.net/resource-packages/external/android/test-apk/x86_64/System.Numerics.Vectors.Tests-x64.apk</XHarnessX64TestApkUrl>
+  </PropertyGroup>
+
+  <Target Name="Build" Returns="@(XHarnessPackageToTest)" >
+    <Error Condition=" '$(BaseOutputPath)' == ''" Text="Not downloading APK because BaseOutputPath property is unset" />
+    <DownloadFile SourceUrl="$(XHarnessX86TestApkUrl)" DestinationFolder="$(BaseOutputPath)apk/x86" SkipUnchangedFiles="True" Retries="5">
+      <Output TaskParameter="DownloadedFile" ItemName="DownloadedApkFile" />
+    </DownloadFile>
+
+    <DownloadFile SourceUrl="$(XHarnessX64TestApkUrl)" DestinationFolder="$(BaseOutputPath)apk/x86_64" SkipUnchangedFiles="True" Retries="5">
+      <Output TaskParameter="DownloadedFile" ItemName="DownloadedApkFile" />
+    </DownloadFile> 
+
+    <Message Text="Downloaded @(DownloadedApkFile) for XHarness Test purposes" Importance="High" />
+
+    <ItemGroup>
+      <!-- We're not set up currently to build APK files as part of normal builds, so this downloads existing ones for now -->
+      <XHarnessPackageToTest Include="@(DownloadedApkFile)">
+
+        <!-- Package name: this comes from metadata inside the apk itself -->
+        <AndroidPackageName>net.dot.System.Numerics.Vectors.Tests</AndroidPackageName>
+
+        <!-- If there are > 1 instrumentation class inside the package, we need to know the name of which to use -->
+        <AndroidInstrumentationName>net.dot.MonoRunner</AndroidInstrumentationName>
+
+      </XHarnessPackageToTest>      
+    </ItemGroup>
+  </Target>
+  
+</Project>

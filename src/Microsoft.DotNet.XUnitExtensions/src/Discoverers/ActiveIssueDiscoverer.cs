@@ -2,10 +2,10 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Runtime.InteropServices;
 using Xunit;
 using Xunit.Abstractions;
 using Xunit.Sdk;
@@ -30,8 +30,10 @@ namespace Microsoft.DotNet.XUnitExtensions
 
             string issue = ctorArgs.First().ToString();
             TestPlatforms platforms = TestPlatforms.Any;
-            TargetFrameworkMonikers frameworks = (TargetFrameworkMonikers)0;
+            TargetFrameworkMonikers frameworks = TargetFrameworkMonikers.Any;
             TestRuntimes runtimes = TestRuntimes.Any;
+            Type calleeType = null;
+            string[] conditionMemberNames = null;
             
             foreach (object arg in ctorArgs.Skip(1)) // First argument is the issue number.
             {
@@ -47,16 +49,28 @@ namespace Microsoft.DotNet.XUnitExtensions
                 {
                     runtimes = (TestRuntimes)arg;
                 }
+                else if (arg is Type)
+                {
+                    calleeType = (Type)arg;
+                }
+                else if (arg is string[])
+                {
+                    conditionMemberNames = (string[])arg;
+                }
             }
-        
-            if (DiscovererHelpers.TestPlatformApplies(platforms) && DiscovererHelpers.TestRuntimeApplies(runtimes))
+
+            if (calleeType != null && conditionMemberNames != null)
             {
-                if (frameworks.HasFlag(TargetFrameworkMonikers.Netcoreapp))
-                    yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.NonNetcoreappTest);
-                if (frameworks.HasFlag(TargetFrameworkMonikers.NetFramework))
-                    yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.NonNetfxTest);
-                if (frameworks == (TargetFrameworkMonikers)0)
+                if (!DiscovererHelpers.Evaluate(calleeType, conditionMemberNames))
+                {
                     yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.Failing);
+                }
+            }        
+            else if (DiscovererHelpers.TestPlatformApplies(platforms) &&
+                DiscovererHelpers.TestRuntimeApplies(runtimes) &&
+                DiscovererHelpers.TestFrameworkApplies(frameworks))
+            {
+                yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.Failing);
             }
         }
     }
