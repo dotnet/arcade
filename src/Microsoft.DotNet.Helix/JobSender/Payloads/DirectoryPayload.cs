@@ -29,40 +29,10 @@ namespace Microsoft.DotNet.Helix.Client
         public string ArchiveEntryPrefix { get; }
 
         public Task<string> UploadAsync(IBlobContainer payloadContainer, Action<string> log, CancellationToken cancellationToken)
-        {
-            string dirHash;
-            using (var hasher = SHA256.Create())
-            {
-                dirHash = Convert.ToBase64String(hasher.ComputeHash(Encoding.UTF8.GetBytes(NormalizedDirectoryPath)));
-                dirHash = dirHash.TrimEnd('='); // base64 url encode it.
-                dirHash = dirHash.Replace('+', '-');
-                dirHash = dirHash.Replace('/', '_');
-            }
-            using (var mutex = new Mutex(false, $"Global\\{dirHash}"))
-            {
-                bool hasMutex = false;
-                try
-                {
-                    try
-                    {
-                        mutex.WaitOne();
-                    }
-                    catch (AbandonedMutexException)
-                    {
-                    }
-
-                    hasMutex = true;
-                    return Task.FromResult(DoUploadAsync(payloadContainer, log, cancellationToken).GetAwaiter().GetResult()); // Can't await because of mutex
-                }
-                finally
-                {
-                    if (hasMutex)
-                    {
-                        mutex.ReleaseMutex();
-                    }
-                }
-            }
-        }
+            => Task.FromResult(
+                Helpers.MutexExec(
+                    () => DoUploadAsync(payloadContainer, log, cancellationToken),
+                    $"Global\\{Helpers.ComputeSha256Hash(NormalizedDirectoryPath)}"));
 
         private async Task<string> DoUploadAsync(IBlobContainer payloadContainer, Action<string> log, CancellationToken cancellationToken)
         {
