@@ -19,7 +19,13 @@ namespace Microsoft.DotNet.Helix.Client
             }
         }
 
-        public async Task<string> UploadAsync(IBlobContainer payloadContainer, Action<string> log, CancellationToken cancellationToken)
+        public Task<string> UploadAsync(IBlobContainer payloadContainer, Action<string> log, CancellationToken cancellationToken)
+            => Task.FromResult(
+                Helpers.MutexExec(
+                    () => DoUploadAsync(payloadContainer, log, cancellationToken),
+                    $"Global\\{Helpers.ComputeSha256Hash(Archive.FullName)}"));
+
+        private async Task<string> DoUploadAsync(IBlobContainer payloadContainer, Action<string> log, CancellationToken cancellationToken)
         {
             var alreadyUploadedFile = new FileInfo($"{Archive.FullName}.payload");
             if (alreadyUploadedFile.Exists && IsUpToDate(alreadyUploadedFile))
