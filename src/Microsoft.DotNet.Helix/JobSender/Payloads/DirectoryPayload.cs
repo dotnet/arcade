@@ -32,7 +32,7 @@ namespace Microsoft.DotNet.Helix.Client
             => Task.FromResult(
                 Helpers.MutexExec(
                     () => DoUploadAsync(payloadContainer, log, cancellationToken),
-                    $"Global\\{Helpers.ComputePathHash(NormalizedDirectoryPath)}"));
+                    $"Global\\{Helpers.ComputeSha256Hash(NormalizedDirectoryPath)}"));
 
         private async Task<string> DoUploadAsync(IBlobContainer payloadContainer, Action<string> log, CancellationToken cancellationToken)
         {
