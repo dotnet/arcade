@@ -92,6 +92,11 @@ try {
 
   Write-Host "Updating Dependencies using Darc..."
 
+  # Initialize the cli so the runtime is on the path. Should just use the same version installed
+  # when common\cibuild.cmd was run.
+  $dotNetRoot = InitializeDotNetCli $true
+  $env:PATH = "$dotNetRoot;$env:PATH"
+
   . .\common\darc-init.ps1
   CheckExitCode "Running darc-init"
 
