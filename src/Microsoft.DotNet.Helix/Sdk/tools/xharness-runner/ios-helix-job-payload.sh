@@ -84,6 +84,7 @@ export XHARNESS_LOG_WITH_TIMESTAMPS=true
     --output-directory="$output_directory" \
     --targets="$targets"                   \
     --timeout="$timeout"                   \
+    --xcode="/Applications/Xcode114.app"   \
     -v
 
 exit_code=$?
