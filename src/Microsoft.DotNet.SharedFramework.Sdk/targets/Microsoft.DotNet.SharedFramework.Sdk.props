@@ -1,0 +1,4 @@
+<Project>
+  <Import Project="$(MSBuildThisFileDirectory)sharedfx.props" />
+  <Import Project="$(MSBuildThisFileDirectory)installer.props" />
+</Project>

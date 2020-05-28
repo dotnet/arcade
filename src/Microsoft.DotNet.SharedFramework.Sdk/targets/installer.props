@@ -1,0 +1,6 @@
+<Project>
+  <PropertyGroup>
+    <VersionInstallerName>true</VersionInstallerName>
+    <IncludeVersionInMacOSComponentName>true</IncludeVersionInMacOSComponentName>
+  </PropertyGroup>
+</Project>
