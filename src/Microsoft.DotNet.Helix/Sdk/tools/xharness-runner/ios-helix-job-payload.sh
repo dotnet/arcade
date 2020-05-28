@@ -2,6 +2,14 @@
 
 set -ex
 
+app=''
+output_directory=''
+targets=''
+timeout=''
+dotnet_root=''
+xharness=''
+xcode_version=''
+
 while [[ $# > 0 ]]; do
     opt="$(echo "$1" | awk '{print tolower($0)}')"
     case "$opt" in
@@ -27,6 +35,10 @@ while [[ $# > 0 ]]; do
         ;;
       --xharness)
         xharness="$2"
+        shift
+        ;;
+      --xcode-version)
+        xcode_version="$2"
         shift
         ;;
       *)
@@ -67,13 +79,18 @@ if [ -z "$xharness" ]; then
     die "XHarness path wasn't provided";
 fi
 
+if [ -z "$xcode_version" ]; then
+    die "Xcode version wasn't provided";
+fi
+
 # Restart the simulator to make sure it is tied to the right user session
-xcode_path=`xcode-select -p`
-pid=`ps aux | grep "$xcode_path/Applications/Simulator.app" | grep -v grep | tr -s ' ' | cut -d ' ' -f 2`
+xcode_path="/Applications/Xcode${xcode_version/./}.app"
+simulator_app="$xcode_path/Contents/Developer/Applications/Simulator.app"
+pid=`ps aux | grep "$simulator_app" | grep -v grep | tr -s ' ' | cut -d ' ' -f 2`
 if [ ! -z "$pid" ]; then
     sudo kill "$pid"
 fi
-open -a "$xcode_path/Applications/Simulator.app"
+open -a "$simulator_app"
 
 export DOTNET_ROOT="$dotnet_root"
 export XHARNESS_DISABLE_COLORED_OUTPUT=true
@@ -84,7 +101,7 @@ export XHARNESS_LOG_WITH_TIMESTAMPS=true
     --output-directory="$output_directory" \
     --targets="$targets"                   \
     --timeout="$timeout"                   \
-    --xcode="/Applications/Xcode114.app"   \
+    --xcode="$xcode_path"                  \
     -v
 
 exit_code=$?
@@ -100,9 +117,9 @@ if [ ! -f "$test_results" ]; then
     exit 1
 fi
 
-echo "Found test results in $output_directory/$test_results. Renaming to testResults.xml"
+echo "Found test results in $output_directory/$test_results. Renaming to testResults.xml to prepare for Helix upload"
 
 # Prepare test results for Helix to pick up
-cp "$test_results" "$output_directory/testResults.xml"
+mv "$test_results" "$output_directory/testResults.xml"
 
 exit $exit_code
