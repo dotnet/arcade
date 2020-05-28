@@ -138,6 +138,7 @@ stages:
               /bl:$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)\Helix.XHarness.binlog
               /p:RestoreUsingNuGetTargets=false
             displayName: XHarness Android Helix Testing
+            continueOnError: true
             env:
               SYSTEM_ACCESSTOKEN: $(System.AccessToken)
               HelixAccessToken: ''
