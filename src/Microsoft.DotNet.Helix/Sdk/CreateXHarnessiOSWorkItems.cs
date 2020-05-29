@@ -4,6 +4,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.Build.Framework;
 
@@ -23,6 +24,11 @@ namespace Microsoft.DotNet.Helix.Sdk
         public ITaskItem[] AppFolders { get; set; }
 
         /// <summary>
+        /// Xcode version to use in the [major].[minor] format, e.g. 11.4
+        /// </summary>
+        public string XcodeVersion { get; set; }
+
+        /// <summary>
         /// The main method of this MSBuild task which calls the asynchronous execution method and
         /// collates logged errors in order to determine the success of HelixWorkItems
         /// </summary>
@@ -34,6 +40,19 @@ namespace Microsoft.DotNet.Helix.Sdk
                 Log.LogError("IsPosixShell was specified as false for an iOS work item; these can only run on MacOS devices currently.");
                 return false;
             }
+
+            if (string.IsNullOrEmpty(XcodeVersion))
+            {
+                Log.LogError("No Xcode version was specified.");
+                return false;
+            }
+
+            if (!Regex.IsMatch(XcodeVersion, "[0-9]+\\.[0-9]+"))
+            {
+                Log.LogError($"Xcode version '{XcodeVersion}' was in an invalid format. Expected format is [major].[minor] format, e.g. 11.4.");
+                return false;
+            }
+
             ExecuteAsync().GetAwaiter().GetResult();
             return !Log.HasLoggedErrors;
         }
@@ -130,7 +149,8 @@ namespace Microsoft.DotNet.Helix.Sdk
                                         $"--targets \"{targets}\" " +
                                         $"--timeout \"{xHarnessTimeout.TotalSeconds}\" " +
                                         $"--dotnet-root \"$DOTNET_ROOT\" " +
-                                        $"--xharness \"$HELIX_CORRELATION_PAYLOAD/xharness-cli/xharness\"";
+                                        $"--xharness \"$HELIX_CORRELATION_PAYLOAD/xharness-cli/xharness\" " +
+                                        $"--xcode-version {XcodeVersion}";
 
             Log.LogMessage(MessageImportance.Low, $"Generated XHarness command: {xharnessRunCommand}");
 
