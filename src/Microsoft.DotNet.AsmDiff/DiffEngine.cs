@@ -273,4 +273,16 @@ namespace Microsoft.DotNet.AsmDiff
             return tokens.Where(t => t.HasStyle(diffStyle)).Any();
         }
     }
+
+    public static class DiffExtensions
+    {
+        public static bool HasStyle(this DiffToken token, DiffStyle diffStyle)
+        {
+            // Special case the zero-flag.
+            if (diffStyle == DiffStyle.None)
+                return token.Style == DiffStyle.None;
+
+            return (token.Style & diffStyle) == diffStyle;
+        }
+    }
 }

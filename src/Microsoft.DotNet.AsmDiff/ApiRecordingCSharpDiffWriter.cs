@@ -206,14 +206,13 @@ namespace Microsoft.DotNet.AsmDiff
 
         public void Write(string str)
         {
-            // HACK: Work around issue where member attributes are emitted
-            //       using a textual linebreak
+            // Work around issue where member attributes are emitted using a textual linebreak.
             if (str == "\r\n" || str == "\r" || str == "\n")
             {
-                // HACK: We should ignore the next whitespace text to avoid double indenting.
-                //       However, setting _needIndent to false is not a good solution either
-                //       as it assumes that the writer uses the same level of indentation as
-                //       we are (which is not the case).
+                // We should ignore the next whitespace text to avoid double indenting.
+                // However, setting _needIndent to false is not a good solution either
+                // as it assumes that the writer uses the same level of indentation as
+                // we are (which is not the case).
                 WriteLine();
                 _skipNextWithspace = true;
                 return;
@@ -226,8 +225,7 @@ namespace Microsoft.DotNet.AsmDiff
                 return;
             }
 
-            // HACK: Work around issue where member attributes are emitted
-            //       using a textual indent
+            // Work around issue where member attributes are emitted using a textual indent.
             if (_lastTokenWasLineBreak && str.Trim().Length == 0)
             {
                 return;
@@ -305,18 +303,6 @@ namespace Microsoft.DotNet.AsmDiff
                 default:
                     throw new ArgumentOutOfRangeException("style");
             }
-        }
-    }
-    
-    public static class DiffExtensions
-    {
-        public static bool HasStyle(this DiffToken token, DiffStyle diffStyle)
-        {
-            // Special case the zero-flag.
-            if (diffStyle == DiffStyle.None)
-                return token.Style == DiffStyle.None;
-
-            return (token.Style & diffStyle) == diffStyle;
         }
     }
 
