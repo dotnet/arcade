@@ -49,13 +49,11 @@ namespace Microsoft.DotNet.RemoteExecutor
 
         static RemoteExecutor()
         {
-            ProcessModule mainModule = Process.GetCurrentProcess().MainModule;
-            if (mainModule == null)
+            string processFileName = Process.GetCurrentProcess().MainModule?.FileName;
+            if (processFileName == null)
             {
                 return;
             }
-
-            string processFileName = mainModule.FileName;
             HostRunnerName = System.IO.Path.GetFileName(processFileName);
 
             if (PlatformDetection.IsInAppContainer)
