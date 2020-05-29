@@ -200,9 +200,10 @@ namespace Microsoft.DotNet.Helix.Sdk
                         def = AddProperty(def, helixProperty);
                     }
                 }
-
+                
+                def = AddBuildVariableProperty(def, "Project", "System.TeamProject");
                 def = AddBuildVariableProperty(def, "BuildNumber", "Build.BuildNumber");
-                def = AddBuildVariableProperty(def, "BuildUri", "Build.BuildUri");
+                def = AddBuildVariableProperty(def, "BuildId", "Build.BuildId");
                 def = AddBuildVariableProperty(def, "DefinitionName", "Build.DefinitionName");
                 def = AddBuildVariableProperty(def, "DefinitionId", "System.DefinitionId");
                 def = AddBuildVariableProperty(def, "Reason", "Build.Reason");

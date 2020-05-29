@@ -345,7 +345,7 @@ namespace SignCheck
                     ((!result.IsSigned) && (!result.IsSkipped) && (!result.IsExcluded) && ((FileStatus & FileStatus.UnsignedFiles) != 0)))
                 {
                     LoggedResults = true;
-                    Log.WriteMessage(LogVerbosity.Minimum, String.Empty.PadLeft(indent) + result.ToString(ResultDetails));
+                    Log.WriteMessage(LogVerbosity.Minimum, String.Empty.PadLeft(indent) + result.ToString(result.IsExcluded ? DetailKeys.ResultKeysExcluded : ResultDetails));
                 }
 
                 if (((!result.IsSigned) && (!(result.IsSkipped || result.IsExcluded))) || (result.IsSigned && result.IsDoNotSign))

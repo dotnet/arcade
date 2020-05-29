@@ -334,10 +334,11 @@
       Cultures="en-us"
       Out="$(OutInstallerFile)"
       WixExtensions="@(WixExtensions)"
-      WixSrcFiles="@(WixSrcFile -> '$(WixObjDir)%(Filename).wixobj');@(DirectoryToHarvest -> '%(WixObjFile)')"
-      Condition="'$(EnableCreateLightCommandPackageDrop)' == 'true'">
+      WixSrcFiles="@(WixSrcFile -> '$(WixObjDir)%(Filename).wixobj');@(DirectoryToHarvest -> '%(WixObjFile)')">
       <Output TaskParameter="LightCommandPackageNameOutput" PropertyName="_LightCommandPackageNameOutput" />
     </CreateLightCommandPackageDrop>
+
+    <MakeDir Directories="$(LightCommandPackagesDir)" />
 
     <ZipDirectory
       DestinationFile="$(LightCommandPackagesDir)/LightCommandPackage-$(_LightCommandPackageNameOutput).zip"

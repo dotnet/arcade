@@ -1,7 +1,7 @@
 <Project>
 
   <Target Name="SpecifyXHarnessCliVersion"
-          Condition="'@(XHarnessProject)' != ''"
+          Condition="'@(XHarnessAndroidProject)' != '' OR '@(XHarnessiOSProject)' != ''"
           BeforeTargets="AddDotNetSdk">
     <PropertyGroup>
       <IncludeDotNetCli>true</IncludeDotNetCli>
@@ -11,7 +11,7 @@
   </Target>
 
   <Target Name="AddXHarnessRunner"
-          Condition="'@(XHarnessProject)' != ''"
+          Condition="'@(XHarnessAndroidProject)' != '' OR '@(XHarnessiOSProject)' != ''"
           BeforeTargets="CoreTest">
 
     <!-- When using a dotnet 'tool' that is not installed globally, we must set DOTNET_ROOT. 
@@ -19,27 +19,44 @@
          When .NET is not already installed there, we set DOTNET_ROOT to help it find the right one. -->
     <PropertyGroup Condition="$(IsPosixShell)">
       <HelixPreCommands>$(HelixPreCommands);export DOTNET_ROOT=$HELIX_CORRELATION_PAYLOAD/dotnet</HelixPreCommands>
-      <HelixPreCommands>$(HelixPreCommands);dotnet tool install --tool-path $HELIX_CORRELATION_PAYLOAD/xharness-cli --version $(_XHarnessPackageVersion) --add-source $(_XharnessRunnerPackageFeed) $(_XHarnessPackageName) </HelixPreCommands>
+      <HelixPreCommands>$(HelixPreCommands);dotnet tool install --tool-path $HELIX_CORRELATION_PAYLOAD/xharness-cli --version $(_XHarnessPackageVersion) --add-source $(_XHarnessRunnerPackageFeed) $(_XHarnessPackageName) </HelixPreCommands>
       <HelixPreCommands>$(HelixPreCommands);export PATH=$HELIX_CORRELATION_PAYLOAD/xharness-cli:$PATH</HelixPreCommands>
+      <HelixPreCommands>$(HelixPreCommands);export XHARNESS_DISABLE_COLORED_OUTPUT=true</HelixPreCommands>
+      <HelixPreCommands>$(HelixPreCommands);export XHARNESS_LOG_WITH_TIMESTAMPS=true</HelixPreCommands>
     </PropertyGroup>
 
     <PropertyGroup Condition="!$(IsPosixShell)">
       <HelixPreCommands>$(HelixPreCommands);set DOTNET_ROOT=%HELIX_CORRELATION_PAYLOAD%\dotnet</HelixPreCommands>
-      <HelixPreCommands>$(HelixPreCommands);dotnet tool install --tool-path %HELIX_CORRELATION_PAYLOAD%\xharness-cli --version $(_XHarnessPackageVersion) --add-source $(_XharnessRunnerPackageFeed) $(_XHarnessPackageName) </HelixPreCommands>
+      <HelixPreCommands>$(HelixPreCommands);dotnet tool install --tool-path %HELIX_CORRELATION_PAYLOAD%\xharness-cli --version $(_XHarnessPackageVersion) --add-source $(_XHarnessRunnerPackageFeed) $(_XHarnessPackageName) </HelixPreCommands>
       <HelixPreCommands>$(HelixPreCommands);set PATH=%HELIX_CORRELATION_PAYLOAD%\xharness-cli%3B%PATH%</HelixPreCommands>
+      <HelixPreCommands>$(HelixPreCommands);set XHARNESS_DISABLE_COLORED_OUTPUT=true</HelixPreCommands>
+      <HelixPreCommands>$(HelixPreCommands);set XHARNESS_LOG_WITH_TIMESTAMPS=true</HelixPreCommands>
     </PropertyGroup>
   </Target>
 
-  <Target Name="BuildXHarnessProjects"
-          Condition="'@(XHarnessProject)' != ''"
+  <Target Name="BuildXHarnessAndroidProjects"
+          Condition="'@(XHarnessAndroidProject)' != ''"
           BeforeTargets="CoreBuild"
-          Outputs="%(XHarnessProject.Identity)%(XHarnessProject.AdditionalProperties)">
+          Outputs="%(XHarnessAndroidProject.Identity)%(XHarnessAndroidProject.AdditionalProperties)">
     <PropertyGroup>
-      <_CurrentXHarnessProject>%(XHarnessProject.Identity)</_CurrentXHarnessProject>
-      <_CurrentAdditionalProperties>%(XHarnessProject.AdditionalProperties)</_CurrentAdditionalProperties>
+      <_CurrentXHarnessAndroidProject>%(XHarnessAndroidProject.Identity)</_CurrentXHarnessAndroidProject>
+      <_CurrentAdditionalProperties>%(XHarnessAndroidProject.AdditionalProperties)</_CurrentAdditionalProperties>
     </PropertyGroup>
-    <MSBuild Projects="$(_CurrentXHarnessProject)" Targets="Build" Properties="$(_CurrentAdditionalProperties)">
+    <MSBuild Projects="$(_CurrentXHarnessAndroidProject)" Targets="Build" Properties="$(_CurrentAdditionalProperties)">
       <Output TaskParameter="TargetOutputs" ItemName="XHarnessPackageToTest" />
+    </MSBuild>
+  </Target>
+
+  <Target Name="BuildXHarnessiOSProjects"
+          Condition="'@(XHarnessiOSProject)' != ''"
+          BeforeTargets="CoreBuild"
+          Outputs="%(XHarnessiOSProject.Identity)%(XHarnessiOSProject.AdditionalProperties)">
+    <PropertyGroup>
+      <_CurrentXHarnessiOSProject>%(XHarnessiOSProject.Identity)</_CurrentXHarnessiOSProject>
+      <_CurrentAdditionalProperties>%(XHarnessiOSProject.AdditionalProperties)</_CurrentAdditionalProperties>
+    </PropertyGroup>
+    <MSBuild Projects="$(_CurrentXHarnessiOSProject)" Targets="Build" Properties="$(_CurrentAdditionalProperties)">
+      <Output TaskParameter="TargetOutputs" ItemName="XHarnessAppFolderToTest" />
     </MSBuild>
   </Target>
 
@@ -52,12 +69,12 @@
     </CreateXHarnessAndroidWorkItems>
   </Target>
 
-  <Target Name="CreateIosAppWorkItems"
-        Condition=" '@(XHarnessAppFolderToTest)' !=  '' "
+  <Target Name="CreateiOSWorkItems"
+        Condition=" '@(XHarnessAppFolderToTest)' != '' "
         BeforeTargets="CoreTest">
-    <CreateXHarnessIosWorkItems AppFolders="@(XHarnessAppFolderToTest)" IsPosixShell="$(IsPosixShell)" WorkItemTimeout="$(XHarnessWorkItemTimeout)">
+    <CreateXHarnessiOSWorkItems AppFolders="@(XHarnessAppFolderToTest)" IsPosixShell="$(IsPosixShell)" WorkItemTimeout="$(XHarnessWorkItemTimeout)" XcodeVersion="$(XHarnessXcodeVersion)">
       <Output TaskParameter="WorkItems" ItemName="HelixWorkItem"/>
-    </CreateXHarnessIosWorkItems>
+    </CreateXHarnessiOSWorkItems>
   </Target>
   
 </Project>

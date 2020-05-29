@@ -53,15 +53,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             await Task.Yield();
             string workItemName = $"xharness-{Path.GetFileNameWithoutExtension(appPackage.ItemSpec)}";
 
-            TimeSpan timeout = TimeSpan.FromMinutes(15);
-            if (!string.IsNullOrEmpty(WorkItemTimeout))
-            {
-                if (!TimeSpan.TryParse(WorkItemTimeout, out timeout))
-                {
-                    Log.LogWarning($"Invalid value \"{WorkItemTimeout}\" provided for XHarnessWorkItemTimeout; falling back to default value of \"00:015:00\" (15 minutes)");
-                    timeout = TimeSpan.FromMinutes(15);
-                }
-            }
+            TimeSpan timeout = ParseTimeout();
 
             string command = ValidateMetadataAndGetXHarnessAndroidCommand(appPackage, timeout);
 
@@ -113,7 +105,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             string outputPathArg = string.IsNullOrEmpty(deviceOutputPath) ? string.Empty : $"--dev-out={deviceOutputPath}";
             string instrumentationArg = string.IsNullOrEmpty(androidInstrumentationName) ? string.Empty : $"-i={androidInstrumentationName}";
 
-            string outputDirectory = IsPosixShell ? "$HELIX_WORKITEM_ROOT" : "%HELIX_WORKITEM_ROOT%";
+            string outputDirectory = IsPosixShell ? "$HELIX_WORKITEM_UPLOAD_ROOT" : "%HELIX_WORKITEM_UPLOAD_ROOT%";
             string xharnessRunCommand = $"xharness android test --app {Path.GetFileName(appPackage.ItemSpec)} --output-directory={outputDirectory} " +
                                         $"--timeout={xHarnessTimeout.TotalSeconds} -p={androidPackageName} {outputPathArg} {instrumentationArg} {arguments} -v";
 

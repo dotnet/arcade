@@ -17,13 +17,17 @@
     <HelixBaseUri>https://helix.dot.net</HelixBaseUri>
   </PropertyGroup>
 
-  <!-- New Test Projects which build packages to run through XHarness/XHarness go here -->
+  <!-- New Test Projects which build app bundles to run through XHarness/XHarness go here -->
   <ItemGroup>
-    <XHarnessAndroidProject Include="$(MSBuildThisFileDirectory)XHarness/XHarness.TestApk.proj" />
+    <XHarnessiOSProject Include="$(MSBuildThisFileDirectory)XHarness\XHarness.TestAppBundle.proj" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(HelixAccessToken)' != '' ">
-    <HelixTargetQueue Include="ubuntu.1804.amd64.android"/>
+    <HelixTargetQueue Include="osx.1015.amd64"/>
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(HelixAccessToken)' == '' ">
+    <HelixTargetQueue Include="osx.1015.amd64.open"/>
   </ItemGroup>
 
   <PropertyGroup Condition=" '$(HelixAccessToken)' == '' ">
@@ -32,14 +36,11 @@
     <Creator Condition=" '$(Creator)' == ''">anon</Creator>
   </PropertyGroup>
 
-  <ItemGroup Condition=" '$(HelixAccessToken)' == '' ">
-    <HelixTargetQueue Include="ubuntu.1804.amd64.android.open"/>
-  </ItemGroup>
-
   <!-- Useless stuff to make Arcade SDK happy -->
   <PropertyGroup>
     <Language>msbuild</Language>
   </PropertyGroup>
+
   <Target Name="Pack"/>
 
   <!-- See UnitTests.proj in above folder for why this is included directly-from-repo -->
