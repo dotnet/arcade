@@ -69,7 +69,7 @@ try {
         $xcopyMSBuildToolsFolder = InitializeXCopyMSBuild $GlobalJson.tools."xcopy-msbuild" -install $true
     }
     if ($xcopyMSBuildToolsFolder -eq $null) {
-      throw 'Unable to find Visual Studio that has required version and components installed'
+      throw 'Unable to get xcopy downloadable version of msbuild'
     }
 
     $global:_MSBuildExe = "$($xcopyMSBuildToolsFolder)\MSBuild\Current\Bin\MSBuild.exe"
