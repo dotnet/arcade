@@ -90,17 +90,17 @@ elseif(ILLUMOS)
         if(NOT "$ENV{CLR_${EXEC_UPPERCASE}}" STREQUAL "")
             set(${var} "$ENV{CLR_${EXEC_UPPERCASE}}" PARENT_SCOPE)
             return()
-            endif()
+        endif()
 
-            find_program(EXEC_LOCATION_${exec}
-                NAMES
-                "${TOOLSET_PREFIX}${exec}${CLR_CMAKE_COMPILER_FILE_NAME_VERSION}"
-                "${TOOLSET_PREFIX}${exec}")
+        find_program(EXEC_LOCATION_${exec}
+            NAMES
+            "${TOOLSET_PREFIX}${exec}${CLR_CMAKE_COMPILER_FILE_NAME_VERSION}"
+            "${TOOLSET_PREFIX}${exec}")
 
-            if (EXEC_LOCATION_${exec} STREQUAL "EXEC_LOCATION_${exec}-NOTFOUND")
-                message(FATAL_ERROR "Unable to find toolchain executable. Name: ${exec}, Prefix: ${TOOLSET_PREFIX}.")
-            endif()
-            set(${var} ${EXEC_LOCATION_${exec}} PARENT_SCOPE)
+        if (EXEC_LOCATION_${exec} STREQUAL "EXEC_LOCATION_${exec}-NOTFOUND")
+            message(FATAL_ERROR "Unable to find toolchain executable. Name: ${exec}, Prefix: ${TOOLSET_PREFIX}.")
+        endif()
+        set(${var} ${EXEC_LOCATION_${exec}} PARENT_SCOPE)
     endfunction()
 
     set(CMAKE_SYSTEM_PREFIX_PATH "${CROSS_ROOTFS}")
@@ -194,7 +194,6 @@ if(TARGET_ARCH_NAME MATCHES "^(arm|armel|x86)$")
     endif()
   endif()
 endif()
-
 
 set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
 set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
