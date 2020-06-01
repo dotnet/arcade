@@ -104,6 +104,12 @@ stages:
         steps:
         - checkout: self
           clean: true
+        - task: UseDotNet@2
+          displayName: 'Install .NET Core 3.1'
+          inputs:
+            packageType: sdk
+            version: 3.1.300
+            installationPath: $(Agent.ToolsDirectory)/dotnet
         # Use utility script to run script command dependent on agent OS.
         - script: $(_Script)
             -configuration $(_BuildConfig) 
