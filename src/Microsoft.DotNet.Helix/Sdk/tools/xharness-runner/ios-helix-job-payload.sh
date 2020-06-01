@@ -96,6 +96,8 @@ export DOTNET_ROOT="$dotnet_root"
 export XHARNESS_DISABLE_COLORED_OUTPUT=true
 export XHARNESS_LOG_WITH_TIMESTAMPS=true
 
+set +e
+
 "$xharness" ios test                       \
     --app="$app"                           \
     --output-directory="$output_directory" \
