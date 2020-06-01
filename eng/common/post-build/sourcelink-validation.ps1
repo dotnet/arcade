@@ -210,7 +210,7 @@ function ValidateSourceLinkLinks {
         $NumJobs = @(Get-Job -State 'Running').Count
       }
 
-      fforeach ($Job in @(Get-Job -State 'Completed')) {
+      foreach ($Job in @(Get-Job -State 'Completed')) {
         $jobResult = Receive-Job -Id $Job.Id
         if ($jobResult -ne '0') {
           $ValidationFailures++
