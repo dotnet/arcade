@@ -9,6 +9,7 @@ using Microsoft.DotNet.Maestro.Client.Models;
 using Microsoft.DotNet.VersionTools.BuildManifest.Model;
 using NuGet.Packaging.Core;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
@@ -112,8 +113,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         private readonly Dictionary<TargetFeedContentType, List<BlobArtifactModel>> BlobsByCategory = 
             new Dictionary<TargetFeedContentType, List<BlobArtifactModel>>();
 
-        private readonly HashSet<(int AssetId, string AssetLocation, AddAssetLocationToAssetAssetLocationType LocationType)> NewAssetLocations =
-            new HashSet<(int AssetId, string AssetLocation, AddAssetLocationToAssetAssetLocationType LocationType)>();
+        private readonly ConcurrentDictionary<(int AssetId, string AssetLocation, AddAssetLocationToAssetAssetLocationType LocationType), ValueTuple> NewAssetLocations =
+            new ConcurrentDictionary<(int AssetId, string AssetLocation, AddAssetLocationToAssetAssetLocationType LocationType), ValueTuple>();
 
         protected LatestLinksManager LinkManager { get; set; } = null;
 
@@ -204,7 +205,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 return false;
             }
 
-            return NewAssetLocations.Add((assetRecord.Id, feedConfig.TargetURL, assetLocationType));
+            return NewAssetLocations.TryAdd((assetRecord.Id, feedConfig.TargetURL, assetLocationType), ValueTuple.Create());
         }
 
         /// <summary>
@@ -213,7 +214,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// <param name="client">Maestro++ API client</param>
         protected Task PersistPendingAssetLocationAsync(IMaestroApi client)
         {
-            var updates = NewAssetLocations.Select(nal => new AssetAndLocation(nal.AssetId, (LocationType)nal.LocationType)
+            var updates = NewAssetLocations.Keys.Select(nal => new AssetAndLocation(nal.AssetId, (LocationType)nal.LocationType)
             {
                 Location = nal.AssetLocation
             }).ToImmutableList();
@@ -588,7 +589,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                 if (attemptIndex > maxNuGetPushAttempts)
                 {
-                    Log.LogError($"Failed to publish package '{id}@{version}' after {maxNuGetPushAttempts} attempts.");
+                    Log.LogError($"Failed to publish package '{id}@{version}' to '{feedConfig.TargetURL}' after {maxNuGetPushAttempts} attempts.");
                 }
                 else if (!Log.HasLoggedErrors)
                 {
