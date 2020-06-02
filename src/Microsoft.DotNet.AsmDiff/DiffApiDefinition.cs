@@ -25,7 +25,7 @@ namespace Microsoft.DotNet.AsmDiff
         public DiffApiDefinition(IDefinition left, IDefinition right, DifferenceType difference, IList<DiffApiDefinition> children)
         {
             IDefinition representative = left ?? right;
-            Name = NameHelper.GetName(representative);
+            Name = GetName(representative);
             Definition = representative;
             Left = left;
             Right = right;
@@ -37,11 +37,8 @@ namespace Microsoft.DotNet.AsmDiff
         {
             return Difference.ToString().Substring(0, 1) + " " + Definition.UniqueId();
         }
-    }
 
-    internal static class NameHelper
-    {
-        public static string GetName(object obj)
+        private static string GetName(object obj)
         {
             var assembly = obj as IAssembly;
             if (assembly != null)

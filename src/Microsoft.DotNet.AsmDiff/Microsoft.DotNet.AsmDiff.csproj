@@ -11,6 +11,7 @@
   </PropertyGroup>
   
   <ItemGroup>
+    <Compile Include="..\Common\Internal\DisposeAction.cs" Link="Internal\DisposeAction.cs"/>
     <ProjectReference Include="..\Microsoft.Cci.Extensions\Microsoft.Cci.Extensions.csproj" />
   </ItemGroup>
   
