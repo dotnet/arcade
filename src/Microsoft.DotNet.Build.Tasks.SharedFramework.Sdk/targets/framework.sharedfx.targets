@@ -220,7 +220,8 @@
       <RuntimeGraphGeneratorRuntime Condition="$([MSBuild]::IsOSPlatform('osx'))">osx</RuntimeGraphGeneratorRuntime>
       <RuntimeGraphGeneratorRuntime Condition="$([MSBuild]::IsOSPlatform('freebsd'))">freebsd</RuntimeGraphGeneratorRuntime>
       <RuntimeGraphGeneratorRuntime Condition="$([MSBuild]::IsOSPlatform('netbsd'))">netbsd</RuntimeGraphGeneratorRuntime>
-      <RuntimeGraphGeneratorRuntime Condition="$([MSBuild]::IsOSPlatform('sunos'))">sunos</RuntimeGraphGeneratorRuntime>
+      <RuntimeGraphGeneratorRuntime Condition="$([MSBuild]::IsOSPlatform('illumos'))">illumos</RuntimeGraphGeneratorRuntime>
+      <RuntimeGraphGeneratorRuntime Condition="$([MSBuild]::IsOSPlatform('solaris'))">solaris</RuntimeGraphGeneratorRuntime>
       <RuntimeGraphGeneratorRuntime Condition="$([MSBuild]::IsOSPlatform('ios'))">ios</RuntimeGraphGeneratorRuntime>
       <RuntimeGraphGeneratorRuntime Condition="$([MSBuild]::IsOSPlatform('tvos'))">tvos</RuntimeGraphGeneratorRuntime>
       <RuntimeGraphGeneratorRuntime Condition="$([MSBuild]::IsOSPlatform('android'))">android</RuntimeGraphGeneratorRuntime>
