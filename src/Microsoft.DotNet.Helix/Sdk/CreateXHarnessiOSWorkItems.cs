@@ -29,11 +29,6 @@ namespace Microsoft.DotNet.Helix.Sdk
         public string XcodeVersion { get; set; }
 
         /// <summary>
-        /// Path to a NuGet package in case we want to install the XHarness tool from .nupkg instead of a feed.
-        /// </summary>
-        public string XHarnessNupkgPath { get; set; }
-
-        /// <summary>
         /// The main method of this MSBuild task which calls the asynchronous execution method and
         /// collates logged errors in order to determine the success of HelixWorkItems
         /// </summary>
@@ -55,12 +50,6 @@ namespace Microsoft.DotNet.Helix.Sdk
             if (!Regex.IsMatch(XcodeVersion, "[0-9]+\\.[0-9]+"))
             {
                 Log.LogError($"Xcode version '{XcodeVersion}' was in an invalid format. Expected format is [major].[minor] format, e.g. 11.4.");
-                return false;
-            }
-
-            if (!string.IsNullOrEmpty(XHarnessNupkgPath) && !File.Exists(XHarnessNupkgPath))
-            {
-                Log.LogError($"Failed to find the XHarness .nupkg at '{XHarnessNupkgPath}'");
                 return false;
             }
 
@@ -139,17 +128,6 @@ namespace Microsoft.DotNet.Helix.Sdk
             using StreamWriter zipEntryWriter = new StreamWriter(entry.Open());
             using FileStream payloadScriptStream = GetPayloadScriptStream();
             await payloadScriptStream.CopyToAsync(zipEntryWriter.BaseStream);
-
-            // Add the .nupkg
-            if (!string.IsNullOrEmpty(XHarnessNupkgPath))
-            {
-                Log.LogMessage($"Adding the XHarness CLI .nupkg into the ziparchive");
-
-                entry = archive.CreateEntry(Path.GetFileName(XHarnessNupkgPath));
-                using StreamWriter zipWriter = new StreamWriter(entry.Open());
-                using FileStream nupkgStream = new FileStream(XHarnessNupkgPath, FileMode.Open);
-                await nupkgStream.CopyToAsync(zipWriter.BaseStream);
-            }
 
             return outputZipPath;
         }
