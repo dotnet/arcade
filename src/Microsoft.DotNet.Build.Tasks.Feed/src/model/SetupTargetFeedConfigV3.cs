@@ -70,7 +70,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
             if (IsStableBuild)
             {
-                return StableFeeds(WhichTargetStaticFeed());
+                return StableFeeds();
             }
             else
             {
@@ -251,7 +251,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             return targetFeedConfigs;
         }
 
-        private List<TargetFeedConfig> StableFeeds(string targetStaticFeed)
+        private List<TargetFeedConfig> StableFeeds()
         {
             List<TargetFeedConfig> targetFeedConfigs = new List<TargetFeedConfig>();
 
@@ -308,7 +308,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             targetFeedConfigs.Add(
                 new TargetFeedConfig()
                 {
-                    AssetSelection = AssetSelection.ShippingOnly,
+                    AssetSelection = AssetSelection.All,
                     ContentType = TargetFeedContentType.Symbols,
                     TargetURL = StableSymbolsFeed,
                     Isolated = true,
@@ -326,31 +326,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     Type = FeedType.AzDoNugetFeed,
                     Token = AzureDevOpsFeedsKey
                 });
-
-            if (IsInternalBuild == false)
-            {
-                targetFeedConfigs.Add(
-                    new TargetFeedConfig()
-                    {
-                        AssetSelection = AssetSelection.NonShippingOnly,
-                        ContentType = TargetFeedContentType.Package,
-                        TargetURL = targetStaticFeed,
-                        Isolated = false,
-                        Type = FeedType.AzureStorageFeed,
-                        Token = AzureStorageTargetFeedPAT
-                    });
-
-                targetFeedConfigs.Add(
-                    new TargetFeedConfig()
-                    {
-                        AssetSelection = AssetSelection.NonShippingOnly,
-                        ContentType = TargetFeedContentType.Symbols,
-                        TargetURL = targetStaticFeed,
-                        Isolated = false,
-                        Type = FeedType.AzureStorageFeed,
-                        Token = AzureStorageTargetFeedPAT
-                    });
-            }
 
             if (PublishInstallersAndChecksums)
             {

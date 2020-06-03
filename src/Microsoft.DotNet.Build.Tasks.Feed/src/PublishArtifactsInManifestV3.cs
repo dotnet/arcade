@@ -56,7 +56,29 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
             try 
             {
-                var targetChannelsIds = TargetChannels.Split(',').Select(ci => int.Parse(ci));
+                List<int> targetChannelsIds = new List<int>();
+
+                foreach (var channelIdStr in TargetChannels.Split(','))
+                {
+                    if (!int.TryParse(channelIdStr, out var channelId))
+                    {
+                        Log.LogError($"Value '{channelIdStr}' isn't recognized as a valid Maestro++ channel ID.");
+                        continue;
+                    }
+                    targetChannelsIds.Add(channelId);
+                }
+
+                if (Log.HasLoggedErrors)
+                {
+                    Log.LogError($"Could not parse the target channels list '{TargetChannels}'. It should be a comma separated list of integers.");
+                    return false;
+                }
+
+                // Fetch Maestro record of the build. We're going to use it to get the BAR ID
+                // of the assets being published so we can add a new location for them.
+                IMaestroApi client = ApiFactory.GetAuthenticated(MaestroApiEndpoint, BuildAssetRegistryToken);
+                Maestro.Client.Models.Build buildInformation = await client.Builds.GetBuildAsync(BARBuildId);
+                Dictionary<string, List<Asset>> buildAssets = CreateBuildAssetDictionary(buildInformation);
 
                 foreach (var targetChannelId in targetChannelsIds)
                 {
@@ -93,12 +115,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         $"dotnet/{targetChannelConfig.AkaMSChannelName}",
                         AzureDevOpsFeedsKey,
                         BuildEngine = this.BuildEngine);
-
-                    // Fetch Maestro record of the build. We're going to use it to get the BAR ID
-                    // of the assets being published so we can add a new location for them.
-                    IMaestroApi client = ApiFactory.GetAuthenticated(MaestroApiEndpoint, BuildAssetRegistryToken);
-                    Maestro.Client.Models.Build buildInformation = await client.Builds.GetBuildAsync(BARBuildId);
-                    Dictionary<string, List<Asset>> buildAssets = CreateBuildAssetDictionary(buildInformation);
 
                     var targetFeedConfigs = targetFeedsSetup.Setup();
 
