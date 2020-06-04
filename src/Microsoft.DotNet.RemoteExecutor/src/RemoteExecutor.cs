@@ -11,7 +11,6 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Xunit;
-using Microsoft.DotNet.XUnitExtensions;
 
 namespace Microsoft.DotNet.RemoteExecutor
 {
@@ -93,6 +92,14 @@ namespace Microsoft.DotNet.RemoteExecutor
                 throw new PlatformNotSupportedException();
             }
         }
+
+        /// <summary>Returns true if the RemoteExecutor works on the current platform, otherwise false.</summary>
+        public static bool IsSupported { get; } =
+            !RuntimeInformation.IsOSPlatform(OSPlatform.Create("IOS")) &&
+            !RuntimeInformation.IsOSPlatform(OSPlatform.Create("ANDROID")) &&
+            !RuntimeInformation.IsOSPlatform(OSPlatform.Create("TVOS")) &&
+            !RuntimeInformation.IsOSPlatform(OSPlatform.Create("WATCHOS")) &&
+            !RuntimeInformation.IsOSPlatform(OSPlatform.Create("BROWSER"));
 
         /// <summary>Invokes the method from this assembly in another process using the specified arguments.</summary>
         /// <param name="method">The method to invoke.</param>
@@ -345,9 +352,9 @@ namespace Microsoft.DotNet.RemoteExecutor
             options = options ?? new RemoteInvokeOptions();
 
             // For platforms that do not support RemoteExecutor
-            if (options.ShouldSkipInvocation)
+            if (!IsSupported)
             {
-                throw new SkipTestException("RemoteExecutor is not supported on this platform.");
+                throw new PlatformNotSupportedException("RemoteExecutor is not supported on this platform.");
             }
 
             // Verify the specified method returns an int (the exit code) or nothing,
