@@ -75,12 +75,8 @@ namespace Microsoft.DotNet.Helix.Sdk
         {
             // Forces this task to run asynchronously
             await Task.Yield();
-            
-            string appFolderPath = appFolderItem.ItemSpec;
-            if (appFolderPath.EndsWith("/"))
-            {
-                appFolderPath = appFolderPath.Substring(0, appFolderPath.Length - 1);
-            }
+
+            string appFolderPath = appFolderItem.ItemSpec.TrimEnd(Path.DirectorySeparatorChar);
             
             string workItemName = $"xharness-{Path.GetFileName(appFolderPath)}";
             if (workItemName.EndsWith(".app"))
