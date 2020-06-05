@@ -131,7 +131,7 @@
     </HelixWorkItem>
   </ItemGroup>
 
-  <ItemGroup>
+  <ItemGroup Condition="'$(AGENT_OS)' == 'Windows_NT' and '$(Architecture)' == 'x64'">
     <HelixWorkItem Include="Crossgen2 System.Private.Xml.dll">
       <PayloadDirectory>$(WorkItemDirectory)\ScenarioCorrelation</PayloadDirectory>
       <Command>$(Python) %HELIX_CORRELATION_PAYLOAD%\performance\src\scenarios\crossgen2\test.py crossgen2 --single System.Private.Xml.dll --core-root %HELIX_CORRELATION_PAYLOAD%\Core_Root</Command>
