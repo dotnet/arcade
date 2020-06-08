@@ -55,14 +55,7 @@ namespace Microsoft.DotNet.RemoteExecutor
             }
             HostRunnerName = System.IO.Path.GetFileName(processFileName);
 
-            if (PlatformDetection.IsInAppContainer)
-            {
-                // Host is required to have a remote execution feature integrated, i.e. UWP.
-                Path = processFileName;
-                HostRunner = HostRunnerName;
-                s_extraParameter = new Lazy<string>(() => "remote");
-            }
-            else if (Environment.Version.Major >= 5 || RuntimeInformation.FrameworkDescription.StartsWith(".NET Core", StringComparison.OrdinalIgnoreCase))
+            if (Environment.Version.Major >= 5 || RuntimeInformation.FrameworkDescription.StartsWith(".NET Core", StringComparison.OrdinalIgnoreCase))
             {
                 Path = typeof(RemoteExecutor).Assembly.Location;
                 HostRunner = processFileName;
@@ -91,10 +84,6 @@ namespace Microsoft.DotNet.RemoteExecutor
             {
                 Path = typeof(RemoteExecutor).Assembly.Location;
                 HostRunner = Path;
-            }
-            else
-            {
-                throw new PlatformNotSupportedException();
             }
         }
 
