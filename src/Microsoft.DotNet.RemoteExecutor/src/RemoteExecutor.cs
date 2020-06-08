@@ -53,18 +53,12 @@ namespace Microsoft.DotNet.RemoteExecutor
             {
                 return;
             }
-            HostRunnerName = System.IO.Path.GetFileName(processFileName);
 
-            if (PlatformDetection.IsInAppContainer)
+            HostRunnerName = System.IO.Path.GetFileName(processFileName);
+            Path = typeof(RemoteExecutor).Assembly.Location;
+
+            if (Environment.Version.Major >= 5 || RuntimeInformation.FrameworkDescription.StartsWith(".NET Core", StringComparison.OrdinalIgnoreCase))
             {
-                // Host is required to have a remote execution feature integrated, i.e. UWP.
-                Path = processFileName;
-                HostRunner = HostRunnerName;
-                s_extraParameter = new Lazy<string>(() => "remote");
-            }
-            else if (Environment.Version.Major >= 5 || RuntimeInformation.FrameworkDescription.StartsWith(".NET Core", StringComparison.OrdinalIgnoreCase))
-            {
-                Path = typeof(RemoteExecutor).Assembly.Location;
                 HostRunner = processFileName;
 
                 // we need to lazy-initialize this as GetAppRuntimeOptions() returns null for the runtimeConfigPath when the static ctor runs during xunit test discovery
@@ -89,12 +83,8 @@ namespace Microsoft.DotNet.RemoteExecutor
             }
             else if (RuntimeInformation.FrameworkDescription.StartsWith(".NET Framework", StringComparison.OrdinalIgnoreCase))
             {
-                Path = typeof(RemoteExecutor).Assembly.Location;
                 HostRunner = Path;
-            }
-            else
-            {
-                throw new PlatformNotSupportedException();
+                s_extraParameter = new Lazy<string>(() => string.Empty);
             }
         }
 
