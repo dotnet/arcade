@@ -44,7 +44,7 @@ namespace Microsoft.DotNet.RemoteExecutor
         /// <summary>
         /// Optional additional arguments.
         /// </summary>
-        private static readonly string s_extraParameter;
+        private static readonly Lazy<string> s_extraParameter;
 
         static RemoteExecutor()
         {
@@ -60,27 +60,32 @@ namespace Microsoft.DotNet.RemoteExecutor
                 // Host is required to have a remote execution feature integrated, i.e. UWP.
                 Path = processFileName;
                 HostRunner = HostRunnerName;
-                s_extraParameter = "remote";
+                s_extraParameter = new Lazy<string>(() => "remote");
             }
             else if (Environment.Version.Major >= 5 || RuntimeInformation.FrameworkDescription.StartsWith(".NET Core", StringComparison.OrdinalIgnoreCase))
             {
                 Path = typeof(RemoteExecutor).Assembly.Location;
                 HostRunner = processFileName;
-                s_extraParameter = "exec";
 
-                (string runtimeConfigPath, string depsJsonPath) = GetAppRuntimeOptions();
-
-                if (runtimeConfigPath != null)
+                // we need to lazy-initialize this as GetAppRuntimeOptions() returns null for the runtimeConfigPath when the static ctor runs during xunit test discovery
+                s_extraParameter = new Lazy<string>(() =>
                 {
-                    s_extraParameter += $" --runtimeconfig \"{runtimeConfigPath}\"";
-                }
+                    string options = "exec";
+                    (string runtimeConfigPath, string depsJsonPath) = GetAppRuntimeOptions();
 
-                if (depsJsonPath != null)
-                {
-                    s_extraParameter += $" --depsfile \"{depsJsonPath}\"";
-                }
+                    if (runtimeConfigPath != null)
+                    {
+                        options += $" --runtimeconfig \"{runtimeConfigPath}\"";
+                    }
 
-                s_extraParameter += $" \"{Path}\"";
+                    if (depsJsonPath != null)
+                    {
+                        options += $" --depsfile \"{depsJsonPath}\"";
+                    }
+
+                    options += $" \"{Path}\"";
+                    return options;
+                });
             }
             else if (RuntimeInformation.FrameworkDescription.StartsWith(".NET Framework", StringComparison.OrdinalIgnoreCase))
             {
@@ -389,7 +394,7 @@ namespace Microsoft.DotNet.RemoteExecutor
             // If we need the host (if it exists), use it, otherwise target the console app directly.
             string metadataArgs = PasteArguments.Paste(new string[] { a.FullName, t.FullName, method.Name, options.ExceptionFile }, pasteFirstArgumentUsingArgV0Rules: false);
             string passedArgs = pasteArguments ? PasteArguments.Paste(args, pasteFirstArgumentUsingArgV0Rules: false) : string.Join(" ", args);
-            string testConsoleAppArgs = s_extraParameter + " " + metadataArgs + " " + passedArgs;
+            string testConsoleAppArgs = s_extraParameter.Value + " " + metadataArgs + " " + passedArgs;
 
             if (options.RunAsSudo)
             {
