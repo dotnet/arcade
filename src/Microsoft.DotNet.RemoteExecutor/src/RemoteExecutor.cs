@@ -84,6 +84,7 @@ namespace Microsoft.DotNet.RemoteExecutor
             else if (RuntimeInformation.FrameworkDescription.StartsWith(".NET Framework", StringComparison.OrdinalIgnoreCase))
             {
                 HostRunner = Path;
+                s_extraParameter = new Lazy<string>(() => string.Empty);
             }
         }
 
