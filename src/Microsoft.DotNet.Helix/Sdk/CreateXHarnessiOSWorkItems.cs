@@ -78,7 +78,7 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             string appFolderPath = appFolderItem.ItemSpec.TrimEnd(Path.DirectorySeparatorChar);
             
-            string workItemName = $"xharness-{Path.GetFileName(appFolderPath)}";
+            string workItemName = Path.GetFileName(appFolderPath);
             if (workItemName.EndsWith(".app"))
             {
                 workItemName = workItemName.Substring(0, workItemName.Length - 4);
