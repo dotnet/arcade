@@ -86,10 +86,7 @@ fi
 # Restart the simulator to make sure it is tied to the right user session
 xcode_path="/Applications/Xcode${xcode_version/./}.app"
 simulator_app="$xcode_path/Contents/Developer/Applications/Simulator.app"
-pid=`ps aux | grep "$simulator_app" | grep -v grep | tr -s ' ' | cut -d ' ' -f 2`
-if [ ! -z "$pid" ]; then
-    sudo kill "$pid"
-fi
+pgrep "$simulator_app" | xargs sudo kill
 open -a "$simulator_app"
 
 export DOTNET_ROOT="$dotnet_root"
@@ -109,10 +106,7 @@ set +e
 exit_code=$?
 
 # Kill the simulator after we're done
-pid=`ps aux | grep "$simulator_app" | grep -v grep | tr -s ' ' | cut -d ' ' -f 2`
-if [ ! -z "$pid" ]; then
-    sudo kill "$pid"
-fi
+pgrep "$simulator_app" | xargs sudo kill
 
 # The simulator logs comming from the sudo-spawned Simulator.app are not readable by the helix uploader
 chmod 0644 "$output_directory"/*.log
