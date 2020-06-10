@@ -108,6 +108,12 @@ set +e
 
 exit_code=$?
 
+# Kill the simulator after we're done
+pid=`ps aux | grep "$simulator_app" | grep -v grep | tr -s ' ' | cut -d ' ' -f 2`
+if [ ! -z "$pid" ]; then
+    sudo kill "$pid"
+fi
+
 # The simulator logs comming from the sudo-spawned Simulator.app are not readable by the helix uploader
 chmod 0644 "$output_directory"/*.log
 
