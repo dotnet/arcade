@@ -150,7 +150,8 @@ namespace Microsoft.DotNet.Helix.Sdk
                                         $"--timeout \"{xHarnessTimeout.TotalSeconds}\" " +
                                         $"--dotnet-root \"$DOTNET_ROOT\" " +
                                         $"--xharness \"$HELIX_CORRELATION_PAYLOAD/xharness-cli/xharness\" " +
-                                        $"--xcode-version {XcodeVersion}";
+                                        $"--xcode-version {XcodeVersion}" +
+                                        (!string.IsNullOrEmpty(AppArguments) ? $" --app-arguments \"{AppArguments}\"" : string.Empty);
 
             Log.LogMessage(MessageImportance.Low, $"Generated XHarness command: {xharnessRunCommand}");
 

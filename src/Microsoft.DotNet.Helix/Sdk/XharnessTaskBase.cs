@@ -23,6 +23,11 @@ namespace Microsoft.DotNet.Helix.Sdk
         public string WorkItemTimeout { get; set; }
 
         /// <summary>
+        /// Extra arguments that will be passed to the iOS/Android/... app that is being run
+        /// </summary>
+        public string AppArguments { get; set; }
+
+        /// <summary>
         /// An array of ITaskItems of type HelixWorkItem
         /// </summary>
         [Output]
@@ -35,8 +40,10 @@ namespace Microsoft.DotNet.Helix.Sdk
             {
                 if (!TimeSpan.TryParse(WorkItemTimeout, out timeout))
                 {
-                    Log.LogWarning($"Invalid value \"{WorkItemTimeout}\" provided for XHarnessWorkItemTimeout; falling back to default value of \"00:015:00\" (15 minutes)");
-                    timeout = TimeSpan.FromMinutes(15);
+                    const int defaultTimeoutInMinutes = 15;
+                    Log.LogWarning($"Invalid value \"{WorkItemTimeout}\" provided for XHarnessWorkItemTimeout; " +
+                        $"falling back to default value of \"00:{defaultTimeoutInMinutes}:00\" ({defaultTimeoutInMinutes} minutes)");
+                    timeout = TimeSpan.FromMinutes(defaultTimeoutInMinutes);
                 }
             }
 
