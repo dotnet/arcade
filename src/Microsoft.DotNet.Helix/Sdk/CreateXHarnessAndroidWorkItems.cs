@@ -51,7 +51,7 @@ namespace Microsoft.DotNet.Helix.Sdk
         {
             // Forces this task to run asynchronously
             await Task.Yield();
-            string workItemName = $"xharness-{Path.GetFileNameWithoutExtension(appPackage.ItemSpec)}";
+            string workItemName = Path.GetFileNameWithoutExtension(appPackage.ItemSpec);
 
             TimeSpan timeout = ParseTimeout();
 
