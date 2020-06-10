@@ -9,7 +9,7 @@ Arcade is intended to provide well-understood and consistent mechanisms for cons
 Status of Arcade public CI builds: [![Build Status](https://dev.azure.com/dnceng/public/_apis/build/status/dotnet/arcade/arcade-ci)](https://dev.azure.com/dnceng/public/_build/latest?definitionId=208)
 
 ## Validation & Dependency Flow Status
-Status Last Updated: June 8, 2020, 12:00 PM PDT
+Status Last Updated: June 10, 2020, 12:30 PM PDT
 
 **[Arcade validation policy and process](Documentation/Validation/Overview.md)**
 
@@ -31,11 +31,13 @@ Status Last Updated: June 8, 2020, 12:00 PM PDT
 |Arcade Official Build|[![Build Status](https://dnceng.visualstudio.com/internal/_apis/build/status/dotnet/arcade/arcade-official-ci?branchName=master)](https://dnceng.visualstudio.com/internal/_build/latest?definitionId=6&branchName=master)| 
 |Arcade Validation|[![Build Status](https://dnceng.visualstudio.com/internal/_apis/build/status/dotnet/arcade-validation/dotnet-arcade-validation-official?branchName=master)](https://dnceng.visualstudio.com/internal/_build/latest?definitionId=282&branchName=master)|
 
+(**Note**: The badge links are currently broken and it is a [known issue](https://developercommunity.visualstudio.com/content/problem/1064899/status-badge-of-build-pipeline-leads-to-404-not-fo.html) that has been reported to Azure DevOps)
 
 ### Status of Latest Version of Arcade Being Validated
 
-- Arcade is not being promoted due to [Runtime](https://dnceng.visualstudio.com/internal/_build?definitionId=679&_a=summary) (bellwether repo) not having successful builds on `master` to validate Arcade with. 
-- [Arcade Validation For Promotion build result from June 8, 2020 at 1:00 AM PDT](https://dnceng.visualstudio.com/internal/_build/results?buildId=675929&view=results)
+- Arcade version 5.0.0-beta.20309.1 has been promoted to `.NET Eng - Latest`
+- [List of changes](https://github.com/dotnet/arcade/compare/fef373440d604c428950236fbc2b99ce0df368a9...54d096ee50a9bcf7ac6efd16a07d51af651d20a1) between this version and the previously promoted version. 
+- [Arcade Validation For Promotion build result from June 10th, 2020 at 7:57 AM PDT](https://dnceng.visualstudio.com/internal/_build/results?buildId=680587&view=results).
 
 ## Getting Started
 
