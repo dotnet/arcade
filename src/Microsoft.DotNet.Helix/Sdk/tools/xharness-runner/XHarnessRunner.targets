@@ -35,7 +35,7 @@
          When .NET is not already installed there, we set DOTNET_ROOT to help it find the right one. -->
     <PropertyGroup Condition="$(IsPosixShell)">
       <HelixPreCommands>$(HelixPreCommands);export DOTNET_ROOT=$HELIX_CORRELATION_PAYLOAD/dotnet</HelixPreCommands>
-      <HelixPreCommands>$(HelixPreCommands);dotnet tool install --tool-path $HELIX_CORRELATION_PAYLOAD/xharness-cli --version $(_XHarnessPackageVersion) --add-source $(XHarnessPackageSource) $(_XHarnessPackageName) || exit 1</HelixPreCommands>
+      <HelixPreCommands>$(HelixPreCommands);dotnet tool install --tool-path $HELIX_CORRELATION_PAYLOAD/xharness-cli --version $(_XHarnessPackageVersion) --add-source $(XHarnessPackageSource) $(_XHarnessPackageName)</HelixPreCommands>
       <HelixPreCommands>$(HelixPreCommands);export PATH=$HELIX_CORRELATION_PAYLOAD/xharness-cli:$PATH</HelixPreCommands>
       <HelixPreCommands>$(HelixPreCommands);export XHARNESS_DISABLE_COLORED_OUTPUT=true</HelixPreCommands>
       <HelixPreCommands>$(HelixPreCommands);export XHARNESS_LOG_WITH_TIMESTAMPS=true</HelixPreCommands>
@@ -43,7 +43,7 @@
 
     <PropertyGroup Condition="!$(IsPosixShell)">
       <HelixPreCommands>$(HelixPreCommands);set DOTNET_ROOT=%HELIX_CORRELATION_PAYLOAD%\dotnet</HelixPreCommands>
-      <HelixPreCommands>$(HelixPreCommands);dotnet tool install --tool-path %HELIX_CORRELATION_PAYLOAD%\xharness-cli --version $(_XHarnessPackageVersion) --add-source $(XHarnessPackageSource) $(_XHarnessPackageName) || exit /b</HelixPreCommands>
+      <HelixPreCommands>$(HelixPreCommands);dotnet tool install --tool-path %HELIX_CORRELATION_PAYLOAD%\xharness-cli --version $(_XHarnessPackageVersion) --add-source $(XHarnessPackageSource) $(_XHarnessPackageName)</HelixPreCommands>
       <HelixPreCommands>$(HelixPreCommands);set PATH=%HELIX_CORRELATION_PAYLOAD%\xharness-cli%3B%PATH%</HelixPreCommands>
       <HelixPreCommands>$(HelixPreCommands);set XHARNESS_DISABLE_COLORED_OUTPUT=true</HelixPreCommands>
       <HelixPreCommands>$(HelixPreCommands);set XHARNESS_LOG_WITH_TIMESTAMPS=true</HelixPreCommands>
