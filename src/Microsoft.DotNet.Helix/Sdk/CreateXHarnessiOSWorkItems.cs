@@ -78,7 +78,7 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             string appFolderPath = appFolderItem.ItemSpec.TrimEnd(Path.DirectorySeparatorChar);
             
-            string workItemName = $"xharness-{Path.GetFileName(appFolderPath)}";
+            string workItemName = Path.GetFileName(appFolderPath);
             if (workItemName.EndsWith(".app"))
             {
                 workItemName = workItemName.Substring(0, workItemName.Length - 4);
@@ -150,7 +150,8 @@ namespace Microsoft.DotNet.Helix.Sdk
                                         $"--timeout \"{xHarnessTimeout.TotalSeconds}\" " +
                                         $"--dotnet-root \"$DOTNET_ROOT\" " +
                                         $"--xharness \"$HELIX_CORRELATION_PAYLOAD/xharness-cli/xharness\" " +
-                                        $"--xcode-version {XcodeVersion}";
+                                        $"--xcode-version {XcodeVersion}" +
+                                        (!string.IsNullOrEmpty(AppArguments) ? $" --app-arguments \"{AppArguments}\"" : string.Empty);
 
             Log.LogMessage(MessageImportance.Low, $"Generated XHarness command: {xharnessRunCommand}");
 

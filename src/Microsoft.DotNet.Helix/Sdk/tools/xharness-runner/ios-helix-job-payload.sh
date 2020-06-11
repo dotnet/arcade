@@ -9,6 +9,7 @@ timeout=''
 dotnet_root=''
 xharness=''
 xcode_version=''
+app_arguments=''
 
 while [[ $# > 0 ]]; do
     opt="$(echo "$1" | awk '{print tolower($0)}')"
@@ -39,6 +40,10 @@ while [[ $# > 0 ]]; do
         ;;
       --xcode-version)
         xcode_version="$2"
+        shift
+        ;;
+      --app-arguments)
+        app_arguments="$2"
         shift
         ;;
       *)
@@ -83,6 +88,10 @@ if [ -z "$xcode_version" ]; then
     die "Xcode version wasn't provided";
 fi
 
+if [ ! -z "$app_arguments" ]; then
+    app_arguments="-- $app_arguments";
+fi
+
 set +e
 
 # Restart the simulator to make sure it is tied to the right user session
@@ -101,7 +110,8 @@ export XHARNESS_LOG_WITH_TIMESTAMPS=true
     --targets="$targets"                   \
     --timeout="$timeout"                   \
     --xcode="$xcode_path"                  \
-    -v
+    -v \
+    $app_arguments
 
 exit_code=$?
 
