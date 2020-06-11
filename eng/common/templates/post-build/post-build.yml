@@ -48,7 +48,7 @@ parameters:
   NetEngServicesProdChannelId: 679
   Net5Preview5ChannelId: 857
   Net5Preview6ChannelId: 1013
-  Net5Preview7ChannelId: 1014
+  Net5Preview7ChannelId: 1065
   NetCoreSDK313xxChannelId: 759
   NetCoreSDK313xxInternalChannelId: 760
   NetCoreSDK314xxChannelId: 921
