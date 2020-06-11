@@ -83,6 +83,8 @@ if [ -z "$xcode_version" ]; then
     die "Xcode version wasn't provided";
 fi
 
+set +e
+
 # Restart the simulator to make sure it is tied to the right user session
 xcode_path="/Applications/Xcode${xcode_version/./}.app"
 simulator_app="$xcode_path/Contents/Developer/Applications/Simulator.app"
@@ -92,8 +94,6 @@ open -a "$simulator_app"
 export DOTNET_ROOT="$dotnet_root"
 export XHARNESS_DISABLE_COLORED_OUTPUT=true
 export XHARNESS_LOG_WITH_TIMESTAMPS=true
-
-set +e
 
 "$xharness" ios test                       \
     --app="$app"                           \
