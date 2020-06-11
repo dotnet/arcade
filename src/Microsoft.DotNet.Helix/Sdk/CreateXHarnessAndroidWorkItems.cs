@@ -102,12 +102,20 @@ namespace Microsoft.DotNet.Helix.Sdk
             appPackage.TryGetMetadata("AndroidInstrumentationName", out string androidInstrumentationName);
             appPackage.TryGetMetadata("DeviceOutputPath", out string deviceOutputPath);
 
-            string outputPathArg = string.IsNullOrEmpty(deviceOutputPath) ? string.Empty : $"--dev-out={deviceOutputPath}";
-            string instrumentationArg = string.IsNullOrEmpty(androidInstrumentationName) ? string.Empty : $"-i={androidInstrumentationName}";
+            string outputPathArg = string.IsNullOrEmpty(deviceOutputPath) ? string.Empty : $"--dev-out={deviceOutputPath} ";
+            string instrumentationArg = string.IsNullOrEmpty(androidInstrumentationName) ? string.Empty : $"-i={androidInstrumentationName} ";
 
             string outputDirectory = IsPosixShell ? "$HELIX_WORKITEM_UPLOAD_ROOT" : "%HELIX_WORKITEM_UPLOAD_ROOT%";
-            string xharnessRunCommand = $"xharness android test --app {Path.GetFileName(appPackage.ItemSpec)} --output-directory={outputDirectory} " +
-                                        $"--timeout={xHarnessTimeout.TotalSeconds} -p={androidPackageName} {outputPathArg} {instrumentationArg} {arguments} -v";
+            string xharnessRunCommand = "xharness android test " +
+                                        $"--app {Path.GetFileName(appPackage.ItemSpec)} " +
+                                        $"--output-directory={outputDirectory} " +
+                                        $"--timeout={xHarnessTimeout.TotalSeconds} " +
+                                        $"-p={androidPackageName} " +
+                                        "-v " +
+                                        outputPathArg +
+                                        instrumentationArg +
+                                        arguments +
+                                        (!string.IsNullOrEmpty(AppArguments) ? $" -- {AppArguments}" : string.Empty);
 
             Log.LogMessage(MessageImportance.Low, $"Generated XHarness command: {xharnessRunCommand}");
 
