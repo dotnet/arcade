@@ -1,18 +1,20 @@
 <Project>
 
-  <Target Name="SpecifyXHarnessCliVersion"
-          Condition=" '@(XHarnessAppFolderToTest)' != '' OR '@(XHarnessPackageToTest)' != '' OR '@(XHarnessAndroidProject)' != '' OR '@(XHarnessiOSProject)' != '' "
-          BeforeTargets="AddDotNetSdk">
+  <Target Name="DetectXHarnessRequest"
+          Condition=" '@(XHarnessAppFolderToTest)' != '' OR '@(XHarnessPackageToTest)' != '' OR '@(XHarnessAndroidProject)' != '' OR '@(XHarnessiOSProject)' != '' OR '$(IncludeXHarnessCli)' == 'true' "
+          BeforeTargets="AddDotNetSdk;AddXHarnessCli">
     <PropertyGroup>
       <IncludeDotNetCli>true</IncludeDotNetCli>
+      <IncludeXHarnessCli>true</IncludeXHarnessCli>
       <DotNetCliPackageType>sdk</DotNetCliPackageType>
       <DotNetCliVersion>3.1.201</DotNetCliVersion>
     </PropertyGroup>
   </Target>
 
-  <Target Name="AddXHarnessRunner"
-          Condition=" '@(XHarnessAppFolderToTest)' != '' OR '@(XHarnessPackageToTest)' != '' OR '@(XHarnessAndroidProject)' != '' OR '@(XHarnessiOSProject)' != '' "
-          BeforeTargets="CoreTest">
+  <Target Name="AddXHarnessCli"
+          Condition=" '$(IncludeXHarnessCli)' == 'true' "
+          BeforeTargets="CoreTest"
+          DependsOnTargets="AddDotNetSdk">
 
     <Error Condition=" '$(_XHarnessPackageVersion)' == '' " Text="XHarness CLI version not defined! Please specify it using the MicrosoftDotNetXHarnessCLIVersion property" />
 
@@ -30,7 +32,7 @@
       <HelixCorrelationPayload Include="$(XHarnessNupkgPath)" />
     </ItemGroup>
 
-    <!-- When using a dotnet 'tool' that is not installed globally, we must set DOTNET_ROOT. 
+    <!-- When using a dotnet 'tool' that is not installed globally, we must set DOTNET_ROOT.
          This is because a framework dependent dotnet tool only searches in program files folders for runtimes.
          When .NET is not already installed there, we set DOTNET_ROOT to help it find the right one. -->
     <PropertyGroup Condition="$(IsPosixShell)">
@@ -96,5 +98,5 @@
       <Output TaskParameter="WorkItems" ItemName="HelixWorkItem"/>
     </CreateXHarnessiOSWorkItems>
   </Target>
-  
+
 </Project>
