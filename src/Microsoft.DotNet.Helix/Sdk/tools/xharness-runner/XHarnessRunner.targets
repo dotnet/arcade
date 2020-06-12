@@ -99,6 +99,4 @@
     </CreateXHarnessiOSWorkItems>
   </Target>
 
-  <Import Project="$(MSBuildThisFileDirectory)..\dotnet-cli\DotnetCli.targets" />
-
 </Project>
