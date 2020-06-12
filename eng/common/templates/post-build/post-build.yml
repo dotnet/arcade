@@ -515,7 +515,7 @@ stages:
       dependsOn: ${{ parameters.publishDependsOn }}
       publishInstallersAndChecksums: ${{ parameters.publishInstallersAndChecksums }}
       symbolPublishingAdditionalParameters: ${{ parameters.symbolPublishingAdditionalParameters }}
-      stageName: 'VS16_Master_Publishing'
+      stageName: 'VS_Master_Publishing'
       channelName: 'VS Master'
       channelId: ${{ parameters.VSMasterChannelId }}
       transportFeed: 'https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools-transport/nuget/v3/index.json'
