@@ -105,12 +105,16 @@
   <Target Name="Build"
           DependsOnTargets="$(BuildDependsOn)">
 
-    <Message Condition="'$(ShouldGenerateNuSpec)' == 'true'"
+    <Message Condition="'$(ShouldCreatePackage)' == 'true'"
+             Text="$(MSBuildProjectName) -> $(PackageOutputPath)$(Id).$(PackageVersion).nupkg"
+             Importance="high" />
+
+    <Message Condition="'$(ShouldCreatePackage)' != 'true' AND '$(ShouldGenerateNuSpec)' == 'true'"
              Text="$(MSBuildProjectName) -> $(NuSpecPath)"
              Importance="high" />
 
-    <Message Condition="'$(ShouldGenerateNuSpec)' != 'true'"
-             Text="Skipping nuspec generation for this platform."
+    <Message Condition="'$(ShouldCreatePackage)' != 'true' AND '$(ShouldGenerateNuSpec)' != 'true'" 
+             Text="$(MSBuildProjectName) -> Skipping for this platform."
              Importance="high" />
   </Target>
 
