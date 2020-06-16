@@ -83,7 +83,8 @@
           BeforeTargets="CoreTest">
     <CreateXHarnessAndroidWorkItems AppPackages="@(XHarnessPackageToTest)"
                                     IsPosixShell="$(IsPosixShell)"
-                                    WorkItemTimeout="$(XHarnessWorkItemTimeout)">
+                                    WorkItemTimeout="%(XHarnessPackageToTest.WorkItemTimeout)"
+                                    TestTimeout="%(XHarnessPackageToTest.TestTimeout)">
       <Output TaskParameter="WorkItems" ItemName="HelixWorkItem"/>
     </CreateXHarnessAndroidWorkItems>
   </Target>
@@ -93,8 +94,9 @@
           BeforeTargets="CoreTest">
     <CreateXHarnessiOSWorkItems AppFolders="@(XHarnessAppFolderToTest)"
                                 IsPosixShell="$(IsPosixShell)"
-                                WorkItemTimeout="$(XHarnessWorkItemTimeout)"
-                                XcodeVersion="$(XHarnessXcodeVersion)">
+                                XcodeVersion="$(XHarnessXcodeVersion)"
+                                WorkItemTimeout="%(XHarnessAppFolderToTest.WorkItemTimeout)"
+                                TestTimeout="%(XHarnessAppFolderToTest.TestTimeout)">
       <Output TaskParameter="WorkItems" ItemName="HelixWorkItem"/>
     </CreateXHarnessiOSWorkItems>
   </Target>

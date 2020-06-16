@@ -84,9 +84,9 @@ namespace Microsoft.DotNet.Helix.Sdk
                 workItemName = workItemName.Substring(0, workItemName.Length - 4);
             }
 
-            TimeSpan timeout = ParseTimeout();
+            var timeouts = ParseTimeouts();
 
-            string command = ValidateMetadataAndGetXHarnessiOSCommand(appFolderItem, timeout);
+            string command = ValidateMetadataAndGetXHarnessiOSCommand(appFolderItem, timeouts.TestTimeout);
 
             Log.LogMessage($"Creating work item with properties Identity: {workItemName}, Payload: {appFolderPath}, Command: {command}");
 
@@ -95,7 +95,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                 { "Identity", workItemName },
                 { "PayloadArchive", await CreateZipArchiveOfFolder(appFolderPath) },
                 { "Command", command },
-                { "Timeout", timeout.ToString() },
+                { "Timeout", timeouts.WorkItemTimeout.ToString() },
             });
         }
 
