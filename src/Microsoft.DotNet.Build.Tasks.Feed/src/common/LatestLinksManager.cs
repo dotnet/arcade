@@ -45,7 +45,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         }
 
         public async System.Threading.Tasks.Task CreateOrUpdateLatestLinksAsync(
-            List<BlobArtifactModel> blobsToPublish,
+            HashSet<BlobArtifactModel> blobsToPublish,
             TargetFeedConfig feedConfig,
             int expectedSuffixLength)
         {

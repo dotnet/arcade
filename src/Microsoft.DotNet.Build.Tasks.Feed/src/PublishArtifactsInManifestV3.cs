@@ -74,6 +74,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     return false;
                 }
 
+                SplitArtifactsInCategories(BuildModel);
+
+                if (Log.HasLoggedErrors)
+                {
+                    return false;
+                }
+
                 // Fetch Maestro record of the build. We're going to use it to get the BAR ID
                 // of the assets being published so we can add a new location for them.
                 IMaestroApi client = ApiFactory.GetAuthenticated(MaestroApiEndpoint, BuildAssetRegistryToken);
@@ -102,7 +109,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         BuildModel.Identity.IsStable.Equals("true", System.StringComparison.OrdinalIgnoreCase),
                         BuildModel.Identity.Name,
                         BuildModel.Identity.Commit,
-                        ArtifactsCategory,
                         AzureStorageTargetFeedKey,
                         PublishInstallersAndChecksums,
                         targetChannelConfig.InstallersFeed,
@@ -132,25 +138,18 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         TargetFeedContentType categoryKey = feedConfig.ContentType;
                         if (!FeedConfigs.TryGetValue(categoryKey, out _))
                         {
-                            FeedConfigs[categoryKey] = new List<TargetFeedConfig>();
+                            FeedConfigs[categoryKey] = new HashSet<TargetFeedConfig>();
                         }
                         FeedConfigs[categoryKey].Add(feedConfig);
                     }
+                }
 
-                    SplitArtifactsInCategories(BuildModel);
-
-                    if (Log.HasLoggedErrors)
-                    {
-                        return false;
-                    }
-
-                    await Task.WhenAll(new Task[] {
+                await Task.WhenAll(new Task[] {
                         HandlePackagePublishingAsync(buildAssets),
                         HandleBlobPublishingAsync(buildAssets)
                     });
 
-                    await PersistPendingAssetLocationAsync(client);
-                }
+                await PersistPendingAssetLocationAsync(client);
             }
             catch (Exception e)
             {

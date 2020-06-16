@@ -204,7 +204,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                     if (!FeedConfigs.TryGetValue(categoryKey, out _))
                     {
-                        FeedConfigs[categoryKey] = new List<TargetFeedConfig>();
+                        FeedConfigs[categoryKey] = new HashSet<TargetFeedConfig>();
                     }
 
                     FeedConfigs[categoryKey].Add(feedConfig);

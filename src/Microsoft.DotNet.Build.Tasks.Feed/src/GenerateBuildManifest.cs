@@ -76,7 +76,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                 if (!string.IsNullOrEmpty(PublishingVersion)) 
                 {
-                    Enum.TryParse(PublishingVersion, ignoreCase: true, out targetPublishingVersion);
+                    if (Enum.TryParse(PublishingVersion, ignoreCase: true, out targetPublishingVersion))
+                    {
+                        Log.LogError($"Could not parse '{PublishingVersion}' as a valid publishing infrastructure version.");
+                        return false;
+                    }
                 }
 
                 var buildModel = BuildManifestUtil.CreateModelFromItems(

@@ -107,8 +107,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         [Required]
         public bool InternalBuild { get; set; }
 
-        public string ArtifactsCategory { get; set; }
-
         public bool PublishInstallersAndChecksums { get; set; } = false;
 
         public string ChecksumsFeedKey { get; set; }
@@ -270,7 +268,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             {
                 BuildEngine = this.BuildEngine,
                 TargetChannels = this.TargetChannels,
-                ArtifactsCategory = this.ArtifactsCategory,
                 BuildModel = buildModel,
                 BlobAssetsBasePath = this.BlobAssetsBasePath,
                 PackageAssetsBasePath = this.PackageAssetsBasePath,

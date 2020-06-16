@@ -104,14 +104,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public string AkaMSGroupOwner { get; set; }
 
-        public readonly Dictionary<TargetFeedContentType, List<TargetFeedConfig>> FeedConfigs = 
-            new Dictionary<TargetFeedContentType, List<TargetFeedConfig>>();
+        public readonly Dictionary<TargetFeedContentType, HashSet<TargetFeedConfig>> FeedConfigs = 
+            new Dictionary<TargetFeedContentType, HashSet<TargetFeedConfig>>();
 
-        private readonly Dictionary<TargetFeedContentType, List<PackageArtifactModel>> PackagesByCategory = 
-            new Dictionary<TargetFeedContentType, List<PackageArtifactModel>>();
+        private readonly Dictionary<TargetFeedContentType, HashSet<PackageArtifactModel>> PackagesByCategory = 
+            new Dictionary<TargetFeedContentType, HashSet<PackageArtifactModel>>();
 
-        private readonly Dictionary<TargetFeedContentType, List<BlobArtifactModel>> BlobsByCategory = 
-            new Dictionary<TargetFeedContentType, List<BlobArtifactModel>>();
+        private readonly Dictionary<TargetFeedContentType, HashSet<BlobArtifactModel>> BlobsByCategory = 
+            new Dictionary<TargetFeedContentType, HashSet<BlobArtifactModel>>();
 
         private readonly ConcurrentDictionary<(int AssetId, string AssetLocation, AddAssetLocationToAssetAssetLocationType LocationType), ValueTuple> NewAssetLocations =
             new ConcurrentDictionary<(int AssetId, string AssetLocation, AddAssetLocationToAssetAssetLocationType LocationType), ValueTuple>();
@@ -256,11 +256,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 var category = packagesPerCategory.Key;
                 var packages = packagesPerCategory.Value;
 
-                if (FeedConfigs.TryGetValue(category, out List<TargetFeedConfig> feedConfigsForCategory))
+                if (FeedConfigs.TryGetValue(category, out HashSet<TargetFeedConfig> feedConfigsForCategory))
                 {
                     foreach (var feedConfig in feedConfigsForCategory)
                     {
-                        List<PackageArtifactModel> filteredPackages = FilterPackages(packages, feedConfig);
+                        HashSet<PackageArtifactModel> filteredPackages = FilterPackages(packages, feedConfig);
 
                         foreach (var package in filteredPackages)
                         {
@@ -293,13 +293,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             await Task.WhenAll(publishTasks);
         }
 
-        private List<PackageArtifactModel> FilterPackages(List<PackageArtifactModel> packages, TargetFeedConfig feedConfig)
+        private HashSet<PackageArtifactModel> FilterPackages(HashSet<PackageArtifactModel> packages, TargetFeedConfig feedConfig)
         {
             return feedConfig.AssetSelection switch
             {
                 AssetSelection.All => packages,
-                AssetSelection.NonShippingOnly => packages.Where(p => p.NonShipping).ToList(),
-                AssetSelection.ShippingOnly => packages.Where(p => !p.NonShipping).ToList(),
+                AssetSelection.NonShippingOnly => packages.Where(p => p.NonShipping).ToHashSet(),
+                AssetSelection.ShippingOnly => packages.Where(p => !p.NonShipping).ToHashSet(),
 
                 // Throw NIE here instead of logging an error because error would have already been logged in the
                 // parser for the user.
@@ -319,11 +319,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 var category = blobsPerCategory.Key;
                 var blobs = blobsPerCategory.Value;
 
-                if (FeedConfigs.TryGetValue(category, out List<TargetFeedConfig> feedConfigsForCategory))
+                if (FeedConfigs.TryGetValue(category, out HashSet<TargetFeedConfig> feedConfigsForCategory))
                 {
                     foreach (var feedConfig in feedConfigsForCategory)
                     {
-                        List<BlobArtifactModel> filteredBlobs = FilterBlobs(blobs, feedConfig);
+                        HashSet<BlobArtifactModel> filteredBlobs = FilterBlobs(blobs, feedConfig);
 
                         foreach (var blob in filteredBlobs)
                         {
@@ -362,13 +362,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// <param name="blobs"></param>
         /// <param name="feedConfig"></param>
         /// <returns></returns>
-        private List<BlobArtifactModel> FilterBlobs(List<BlobArtifactModel> blobs, TargetFeedConfig feedConfig)
+        private HashSet<BlobArtifactModel> FilterBlobs(HashSet<BlobArtifactModel> blobs, TargetFeedConfig feedConfig)
         {
             return feedConfig.AssetSelection switch
             {
                 AssetSelection.All => blobs,
-                AssetSelection.NonShippingOnly => blobs.Where(p => p.NonShipping).ToList(),
-                AssetSelection.ShippingOnly => blobs.Where(p => !p.NonShipping).ToList(),
+                AssetSelection.NonShippingOnly => blobs.Where(p => p.NonShipping).ToHashSet(),
+                AssetSelection.ShippingOnly => blobs.Where(p => !p.NonShipping).ToHashSet(),
 
                 // Throw NYI here instead of logging an error because error would have already been logged in the
                 // parser for the user.
@@ -409,7 +409,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     }
                     else
                     {
-                        PackagesByCategory[categoryKey] = new List<PackageArtifactModel>() { packageAsset };
+                        PackagesByCategory[categoryKey] = new HashSet<PackageArtifactModel>() { packageAsset };
                     }
                 }
             }
@@ -436,14 +436,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     }
                     else
                     {
-                        BlobsByCategory[categoryKey] = new List<BlobArtifactModel>() { blobAsset };
+                        BlobsByCategory[categoryKey] = new HashSet<BlobArtifactModel>() { blobAsset };
                     }
                 }
             }
         }
 
         private async Task PublishPackagesToAzDoNugetFeedAsync(
-            List<PackageArtifactModel> packagesToPublish,
+            HashSet<PackageArtifactModel> packagesToPublish,
             Dictionary<string, List<Asset>> buildAssets,
             TargetFeedConfig feedConfig)
         {
@@ -468,7 +468,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// </summary>
         /// <param name="packagesToPublish">List of packages to publish</param>
         /// <param name="feedConfig">Information about feed to publish ot</param>
-        public async Task PushNugetPackagesAsync<T>(List<T> packagesToPublish, TargetFeedConfig feedConfig, int maxClients,
+        public async Task PushNugetPackagesAsync<T>(HashSet<T> packagesToPublish, TargetFeedConfig feedConfig, int maxClients,
             Func<TargetFeedConfig, HttpClient, T, string, string, string, Task> packagePublishAction)
         {
             if (!packagesToPublish.Any())
@@ -603,11 +603,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         }
 
         private async Task PublishBlobsToAzDoNugetFeedAsync(
-            List<BlobArtifactModel> blobsToPublish,
+            HashSet<BlobArtifactModel> blobsToPublish,
             Dictionary<string, List<Asset>> buildAssets,
             TargetFeedConfig feedConfig)
         {
-            List<BlobArtifactModel> packagesToPublish = new List<BlobArtifactModel>();
+            HashSet<BlobArtifactModel> packagesToPublish = new HashSet<BlobArtifactModel>();
 
             foreach (var blob in blobsToPublish)
             {
@@ -652,7 +652,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         }
 
         private async Task PublishPackagesToAzureStorageNugetFeedAsync(
-            List<PackageArtifactModel> packagesToPublish,
+            HashSet<PackageArtifactModel> packagesToPublish,
             Dictionary<string, List<Asset>> buildAssets,
             TargetFeedConfig feedConfig)
         {
@@ -685,7 +685,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         }
 
         private async Task PublishBlobsToAzureStorageNugetFeedAsync(
-            List<BlobArtifactModel> blobsToPublish,
+            HashSet<BlobArtifactModel> blobsToPublish,
             Dictionary<string, List<Asset>> buildAssets,
             TargetFeedConfig feedConfig)
         {

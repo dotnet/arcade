@@ -16,21 +16,25 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
         public FeedType Type { get; set; }
         public string Token { get; set; }
         public AssetSelection AssetSelection { get; set; } = AssetSelection.All;
+        
         /// <summary>
         /// If true, the feed is treated as 'isolated', meaning nuget packages pushed
         /// to it may be stable.
         /// </summary>
         public bool Isolated { get; set; } = false;
+        
         /// <summary>
         /// If true, the feed is treated as 'internal', meaning artifacts from an internal build
         /// can be published here.
         /// </summary>
         public bool Internal { get; set; } = false;
+        
         /// <summary>
         /// If true, the items on the feed can be overwritten. This is only
         /// valid for azure blob storage feeds.
         /// </summary>
         public bool AllowOverwrite { get; set; } = false;
+        
         /// <summary>
         /// Prefix of aka.ms links that should be generated for blobs.
         /// Not applicable to packages
@@ -49,23 +53,16 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
 
             TargetFeedConfig other = (TargetFeedConfig)obj;
 
-            var result =  
+            return  
+                (ContentType == other.ContentType) &&
                 TargetURL.Equals(other.TargetURL, StringComparison.OrdinalIgnoreCase) &&
+                (Type == other.Type) &&
                 Token.Equals(other.Token) &&
                 LatestLinkShortUrlPrefix.Equals(other.LatestLinkShortUrlPrefix, StringComparison.OrdinalIgnoreCase) &&
-                (ContentType == other.ContentType) &&
-                (Type == other.Type) &&
                 (AssetSelection == other.AssetSelection) &&
                 (Isolated == other.Isolated) &&
                 (Internal == other.Internal) &&
                 (AllowOverwrite == other.AllowOverwrite);
-
-            if (result == false)
-            {
-                return false;
-            }
-
-            return true;
         }
 
         public override int GetHashCode()

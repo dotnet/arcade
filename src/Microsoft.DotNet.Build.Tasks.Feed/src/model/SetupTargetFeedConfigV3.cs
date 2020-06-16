@@ -34,7 +34,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             bool isStableBuild,
             string repositoryName,
             string commitSha,
-            string artifactsCategory,
             string azureStorageTargetFeedPAT,
             bool publishInstallersAndChecksums,
             string installersTargetStaticFeed,
@@ -49,7 +48,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             IBuildEngine buildEngine,
             string stablePackagesFeed = null,
             string stableSymbolsFeed = null) 
-            : base(isInternalBuild, isStableBuild, repositoryName, commitSha, artifactsCategory, azureStorageTargetFeedPAT, publishInstallersAndChecksums, installersTargetStaticFeed, installersAzureAccountKey, checksumsTargetStaticFeed, checksumsAzureAccountKey, azureDevOpsStaticShippingFeed, azureDevOpsStaticTransportFeed, azureDevOpsStaticSymbolsFeed, latestLinkShortUrlPrefix, azureDevOpsFeedsKey)
+            : base(isInternalBuild, isStableBuild, repositoryName, commitSha, azureStorageTargetFeedPAT, publishInstallersAndChecksums, installersTargetStaticFeed, installersAzureAccountKey, checksumsTargetStaticFeed, checksumsAzureAccountKey, azureDevOpsStaticShippingFeed, azureDevOpsStaticTransportFeed, azureDevOpsStaticSymbolsFeed, latestLinkShortUrlPrefix, azureDevOpsFeedsKey)
         {
             BuildEngine = buildEngine;
             StableSymbolsFeed = stableSymbolsFeed;
@@ -80,27 +79,17 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 }
                 else
                 {
-                    return NonStablePublicFeeds(WhichTargetStaticFeed());
+                    return NonStablePublicFeeds();
                 }
             }
         }
 
-        private List<TargetFeedConfig> NonStablePublicFeeds(string targetStaticFeed)
+        private List<TargetFeedConfig> NonStablePublicFeeds()
         {
             List<TargetFeedConfig> targetFeedConfigs = new List<TargetFeedConfig>();
 
             if (PublishInstallersAndChecksums)
             {
-                targetFeedConfigs.Add(
-                    new TargetFeedConfig()
-                    {
-                        ContentType = TargetFeedContentType.Symbols,
-                        TargetURL = targetStaticFeed,
-                        Isolated = false,
-                        Type = FeedType.AzureStorageFeed,
-                        Token = AzureStorageTargetFeedPAT,
-                    });
-
                 targetFeedConfigs.Add(
                     new TargetFeedConfig()
                     {
@@ -125,42 +114,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             LatestLinkShortUrlPrefix = LatestLinkShortUrlPrefix
                         });
                 }
-            }
-            else
-            {
-                foreach (var ct in Installers)
-                {
-                    targetFeedConfigs.Add(
-                        new TargetFeedConfig()
-                        {
-                            ContentType = ct,
-                            TargetURL = targetStaticFeed,
-                            Isolated = false,
-                            Type = FeedType.AzureStorageFeed,
-                            Token = AzureStorageTargetFeedPAT
-                        });
-                }
-
-                targetFeedConfigs.Add(
-                    new TargetFeedConfig()
-                    {
-                        ContentType = TargetFeedContentType.Symbols,
-                        TargetURL = targetStaticFeed,
-                        Isolated = false,
-                        Type = FeedType.AzureStorageFeed,
-                        Token = AzureStorageTargetFeedPAT
-                    });
-
-
-                targetFeedConfigs.Add(
-                    new TargetFeedConfig()
-                    {
-                        ContentType = TargetFeedContentType.Checksum,
-                        TargetURL = targetStaticFeed,
-                        Isolated = false,
-                        Type = FeedType.AzureStorageFeed,
-                        Token = AzureStorageTargetFeedPAT
-                    });
             }
 
             targetFeedConfigs.Add(
@@ -356,30 +309,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             }
 
             return targetFeedConfigs;
-        }
-
-        private string WhichTargetStaticFeed()
-        {
-            return ArtifactsCategory.ToUpper() switch
-            {
-                ".NETCORE" => "https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json",
-                ".NETCOREVALIDATION" => "https://dotnetfeed.blob.core.windows.net/arcade-validation/index.json",
-                "ASPNETCORE" => "https://dotnetfeed.blob.core.windows.net/aspnet-aspnetcore/index.json",
-                "ASPNETCORETOOLING" => "https://dotnetfeed.blob.core.windows.net/aspnet-aspnetcore-tooling/index.json",
-                "ENTITYFRAMEWORKCORE" => "https://dotnetfeed.blob.core.windows.net/aspnet-entityframeworkcore/index.json",
-                "ASPNETEXTENSIONS" => "https://dotnetfeed.blob.core.windows.net/aspnet-extensions/index.json",
-                "CORECLR" => "https://dotnetfeed.blob.core.windows.net/dotnet-coreclr/index.json",
-                "CORESDK" => "https://dotnetfeed.blob.core.windows.net/dotnet-sdk/index.json",
-                "TOOLSINTERNAL" => "https://dotnetfeed.blob.core.windows.net/dotnet-tools-internal/index.json",
-                "TOOLSET" => "https://dotnetfeed.blob.core.windows.net/dotnet-toolset/index.json",
-                "WINDOWSDESKTOP" => "https://dotnetfeed.blob.core.windows.net/dotnet-windowsdesktop/index.json",
-                "NUGETCLIENT" => "https://dotnetfeed.blob.core.windows.net/nuget-nugetclient/index.json",
-                "ASPNETENTITYFRAMEWORK6" => "https://dotnetfeed.blob.core.windows.net/aspnet-entityframework6/index.json",
-                "ASPNETBLAZOR" => "https://dotnetfeed.blob.core.windows.net/aspnet-blazor/index.json",
-                "IOT" => "https://dotnetfeed.blob.core.windows.net/dotnet-iot/index.json",
-                "EXPERIMENTAL" => "https://dotnetfeed.blob.core.windows.net/dotnet-experimental/index.json",
-                _ => "https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json",
-            };
         }
     }
 }

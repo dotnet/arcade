@@ -30,7 +30,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             bool isStableBuild,
             string repositoryName,
             string commitSha,
-            string artifactsCategory,
             string azureStorageTargetFeedPAT,
             bool publishInstallersAndChecksums,
             string installersTargetStaticFeed,
@@ -47,7 +46,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             IsStableBuild = isStableBuild;
             RepositoryName = repositoryName;
             CommitSha = commitSha;
-            ArtifactsCategory = artifactsCategory;
             AzureStorageTargetFeedPAT = azureStorageTargetFeedPAT;
             PublishInstallersAndChecksums = publishInstallersAndChecksums;
             InstallersTargetStaticFeed = installersTargetStaticFeed;
