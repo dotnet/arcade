@@ -15,19 +15,19 @@ try {
   # is available in YAML
   $PromoteToChannelsIds = $PromoteToChannels -split "\D" | Where-Object { $_ }
 
-  $HasErrors = $false
+  $hasErrors = $false
 
   foreach ($id in $PromoteToChannelsIds) {
     if (($id -ne 0) -and ($id -notin $AvailableChannelIds)) {
       Write-PipelineTaskError -Message "Channel $id is not present in the post-build YAML configuration! This is an error scenario. Please contact @dnceng."
-      $HasErrors = $true
+      $hasErrors = $true
     }
   }
 
   # The `Write-PipelineTaskError` doesn't error the script and we might report several errors
   # in the previous lines. The check below makes sure that we return an error state from the
   # script if we reported any validation error
-  if ($HasErrors) {
+  if ($hasErrors) {
     ExitWithExitCode 1 
   }
 
