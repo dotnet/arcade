@@ -12,9 +12,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
 {
     public class SetupTargetFeedConfigV3Tests
     {
-        private const string ArtifactsCategory = ".NetCoreValidation";
-        private const string TargetStaticFeed = "https://dotnetfeed.blob.core.windows.net/arcade-validation/index.json";
-
         private const string AzureStorageTargetFeedPAT = "AzureStorageTargetFeedPAT";
         private const string LatestLinkShortUrlPrefix = "LatestLinkShortUrlPrefix";
         private const string AzureDevOpsFeedsKey = "AzureDevOpsFeedsKey";
@@ -95,37 +92,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 }
             }
 
-            if (isInternalBuild == false)
-            {
-                expectedFeeds.Add(
-                    new TargetFeedConfig()
-                    {
-                        ContentType = TargetFeedContentType.Package,
-                        TargetURL = TargetStaticFeed,
-                        Isolated = false,
-                        Internal = false,
-                        AllowOverwrite = false,
-                        Type = FeedType.AzureStorageFeed,
-                        Token = AzureStorageTargetFeedPAT,
-                        AssetSelection = AssetSelection.NonShippingOnly,
-                        LatestLinkShortUrlPrefix = string.Empty
-                    });
-
-                expectedFeeds.Add(
-                    new TargetFeedConfig()
-                    {
-                        ContentType = TargetFeedContentType.Symbols,
-                        TargetURL = TargetStaticFeed,
-                        Isolated = false,
-                        Internal = false,
-                        AllowOverwrite = false,
-                        Type = FeedType.AzureStorageFeed,
-                        Token = AzureStorageTargetFeedPAT,
-                        AssetSelection = AssetSelection.NonShippingOnly,
-                        LatestLinkShortUrlPrefix = string.Empty
-                    });
-            }
-
             expectedFeeds.Add(
                 new TargetFeedConfig()
                 {
@@ -150,7 +116,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     AllowOverwrite = false,
                     Type = FeedType.AzDoNugetFeed,
                     Token = AzureDevOpsFeedsKey,
-                    AssetSelection = AssetSelection.ShippingOnly,
+                    AssetSelection = AssetSelection.All,
                     LatestLinkShortUrlPrefix = string.Empty
                 });
 
@@ -174,7 +140,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     isStableBuild: true,
                     repositoryName: "test-repo",
                     commitSha: "c0c0c0c0",
-                    ArtifactsCategory,
                     AzureStorageTargetFeedPAT,
                     publishInstallersAndChecksums,
                     InstallersTargetStaticFeed,
@@ -286,7 +251,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     isStableBuild: false,
                     repositoryName: "test-repo",
                     commitSha: "c0c0c0c0",
-                    ArtifactsCategory,
                     AzureStorageTargetFeedPAT,
                     publishInstallersAndChecksums,
                     InstallersTargetStaticFeed,
@@ -318,20 +282,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 expectedFeeds.Add(
                     new TargetFeedConfig()
                     {
-                        ContentType = TargetFeedContentType.Symbols,
-                        TargetURL = TargetStaticFeed,
-                        Isolated = false,
-                        Internal = false,
-                        AllowOverwrite = false,
-                        Type = FeedType.AzureStorageFeed,
-                        Token = AzureStorageTargetFeedPAT,
-                        AssetSelection = AssetSelection.All,
-                        LatestLinkShortUrlPrefix = string.Empty
-                    });
-
-                expectedFeeds.Add(
-                    new TargetFeedConfig()
-                    {
                         ContentType = TargetFeedContentType.Checksum,
                         TargetURL = ChecksumsTargetStaticFeed,
                         Isolated = false,
@@ -359,53 +309,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                             LatestLinkShortUrlPrefix = LatestLinkShortUrlPrefix
                         });
                 }
-            }
-            else
-            {
-                foreach (var contentType in Installers)
-                {
-                    expectedFeeds.Add(
-                        new TargetFeedConfig()
-                        {
-                            ContentType = contentType,
-                            TargetURL = TargetStaticFeed,
-                            Isolated = false,
-                            Internal = false,
-                            AllowOverwrite = false,
-                            Type = FeedType.AzureStorageFeed,
-                            Token = AzureStorageTargetFeedPAT,
-                            AssetSelection = AssetSelection.All,
-                            LatestLinkShortUrlPrefix = string.Empty
-                        });
-                }
-
-                expectedFeeds.Add(
-                    new TargetFeedConfig()
-                    {
-                        ContentType = TargetFeedContentType.Symbols,
-                        TargetURL = TargetStaticFeed,
-                        Isolated = false,
-                        Internal = false,
-                        AllowOverwrite = false,
-                        Type = FeedType.AzureStorageFeed,
-                        Token = AzureStorageTargetFeedPAT,
-                        AssetSelection = AssetSelection.All,
-                        LatestLinkShortUrlPrefix = string.Empty
-                    });
-
-                expectedFeeds.Add(
-                    new TargetFeedConfig()
-                    {
-                        ContentType = TargetFeedContentType.Checksum,
-                        TargetURL = TargetStaticFeed,
-                        Isolated = false,
-                        Internal = false,
-                        AllowOverwrite = false,
-                        Type = FeedType.AzureStorageFeed,
-                        Token = AzureStorageTargetFeedPAT,
-                        AssetSelection = AssetSelection.All,
-                        LatestLinkShortUrlPrefix = string.Empty
-                    });
             }
 
             expectedFeeds.Add(
@@ -442,7 +345,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     isStableBuild: false,
                     repositoryName: "test-repo",
                     commitSha: "c0c0c0c0",
-                    ArtifactsCategory,
                     AzureStorageTargetFeedPAT,
                     publishInstallersAndChecksums,
                     InstallersTargetStaticFeed,

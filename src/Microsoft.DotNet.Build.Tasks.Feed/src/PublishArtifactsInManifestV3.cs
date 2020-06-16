@@ -102,6 +102,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         return false;
                     }
 
+                    if (await client.Channels.GetChannelAsync(targetChannelId) == null)
+                    {
+                        Log.LogError($"Channel with ID '{targetChannelId}' does not exist in BAR.");
+                        return false;
+                    }
+
                     Log.LogMessage(MessageImportance.High, $"Publishing to this target channel: {targetChannelConfig}");
 
                     var targetFeedsSetup = new SetupTargetFeedConfigV3(

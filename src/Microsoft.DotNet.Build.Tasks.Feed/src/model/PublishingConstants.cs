@@ -75,10 +75,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
         private const string FeedDotNet5Symbols = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet5-symbols/nuget/v3/index.json";
 
         public static readonly List<TargetChannelConfig> ChannelInfos = new List<TargetChannelConfig>() {
+            // ".NET 5 Dev",
             new TargetChannelConfig(
                 131,
                 PublishingInfraVersion.All,
-                ".NET 5 Dev",
                 "net5/dev",
                 FeedDotNet5Shipping,
                 FeedDotNet5Transport,
@@ -86,10 +86,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedForChecksums,
                 FeedForInstallers),
 
+            // ".NET 5 Preview 3",
             new TargetChannelConfig(
                 739,
                 PublishingInfraVersion.All,
-                ".NET 5 Preview 3",
                 "net5/preview3",
                 FeedDotNet5Shipping,
                 FeedDotNet5Transport,
@@ -97,10 +97,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedForChecksums,
                 FeedForInstallers),
 
+            // ".NET 5 Preview 4",
             new TargetChannelConfig(
                 856,
                 PublishingInfraVersion.All,
-                ".NET 5 Preview 4",
                 "net5/preview4",
                 FeedDotNet5Shipping,
                 FeedDotNet5Transport,
@@ -108,10 +108,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedForChecksums,
                 FeedForInstallers),
 
+            // ".NET 5 Preview 5",
             new TargetChannelConfig(
                 857,
                 PublishingInfraVersion.All,
-                ".NET 5 Preview 5",
                 "net5/preview5",
                 FeedDotNet5Shipping,
                 FeedDotNet5Transport,
@@ -119,10 +119,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedForChecksums,
                 FeedForInstallers),
 
+            // ".NET Eng - Latest",
             new TargetChannelConfig(
                 2,
                 PublishingInfraVersion.All,
-                ".NET Eng - Latest",
                 "eng/daily",
                 FeedDotNetEngShipping,
                 FeedDotNetEngTransport,
@@ -130,10 +130,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedForChecksums,
                 FeedForInstallers),
 
+            // ".NET Eng - Validation",
             new TargetChannelConfig(
                 9,
                 PublishingInfraVersion.All,
-                ".NET Eng - Validation",
                 "eng/validation",
                 FeedDotNetEngShipping,
                 FeedDotNetEngTransport,
@@ -141,10 +141,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedForChecksums,
                 FeedForInstallers),
 
+            // "General Testing",
             new TargetChannelConfig(
                 529,
                 PublishingInfraVersion.All,
-                "General Testing",
                 "generaltesting",
                 FeedGeneralTesting,
                 FeedGeneralTesting,
@@ -152,10 +152,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedForChecksums,
                 FeedForInstallers),
 
+            // ".NET Core Tooling Dev",
             new TargetChannelConfig(
                 548,
                 PublishingInfraVersion.All,
-                ".NET Core Tooling Dev",
                 akaMSChannelName: string.Empty,
                 FeedDotNetToolsShipping,
                 FeedDotNetToolsTransport,
@@ -163,10 +163,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedForChecksums,
                 FeedForInstallers),
 
+            // ".NET Core Tooling Release",
             new TargetChannelConfig(
                 549,
                 PublishingInfraVersion.All,
-                ".NET Core Tooling Release",
                 akaMSChannelName: string.Empty,
                 FeedDotNetToolsShipping,
                 FeedDotNetToolsTransport,
@@ -174,10 +174,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedForChecksums,
                 FeedForInstallers),
 
+            // ".NET Internal Tooling",
             new TargetChannelConfig(
                 551,
                 PublishingInfraVersion.All,
-                ".NET Internal Tooling",
                 akaMSChannelName: string.Empty,
                 FeedDotNetToolsInternalShipping,
                 FeedDotNetToolsInternalTransport,
@@ -185,10 +185,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedInternalForChecksums,
                 FeedInternalForInstallers),
 
+            // ".NET Core Experimental",
             new TargetChannelConfig(
                 562,
                 PublishingInfraVersion.All,
-                ".NET Core Experimental",
                 akaMSChannelName: string.Empty,
                 FeedDotNetExperimental,
                 FeedDotNetExperimental,
@@ -196,10 +196,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedForChecksums,
                 FeedForInstallers),
 
+            // ".NET Eng Services - Int",
             new TargetChannelConfig(
                 678,
                 PublishingInfraVersion.All,
-                ".NET Eng Services - Int",
                 akaMSChannelName: string.Empty,
                 FeedDotNetEngShipping,
                 FeedDotNetEngTransport,
@@ -207,10 +207,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedForChecksums,
                 FeedForInstallers),
 
+            // ".NET Eng Services - Prod",
             new TargetChannelConfig(
                 679,
                 PublishingInfraVersion.All,
-                ".NET Eng Services - Prod",
                 akaMSChannelName: string.Empty,
                 FeedDotNetEngShipping,
                 FeedDotNetEngTransport,
@@ -218,10 +218,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedForChecksums,
                 FeedForInstallers),
 
+            // ".NET Core SDK 3.1.4xx",
             new TargetChannelConfig(
                 921,
                 PublishingInfraVersion.All,
-                ".NET Core SDK 3.1.4xx",
                 akaMSChannelName: string.Empty,
                 FeedDotNet31Shipping,
                 FeedDotNet31Transport,
@@ -229,10 +229,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedForChecksums,
                 FeedForInstallers),
 
+            // ".NET Core SDK 3.1.4xx Internal",
             new TargetChannelConfig(
                 922,
                 PublishingInfraVersion.All,
-                ".NET Core SDK 3.1.4xx Internal",
                 akaMSChannelName: string.Empty,
                 FeedDotNet31InternalShipping,
                 FeedDotNet31InternalTransport,
@@ -240,10 +240,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedInternalForChecksums,
                 FeedInternalForInstallers),
 
+            // ".NET Core SDK 3.1.3xx",
             new TargetChannelConfig(
                 759,
                 PublishingInfraVersion.All,
-                ".NET Core SDK 3.1.3xx",
                 akaMSChannelName: string.Empty,
                 FeedDotNet31Shipping,
                 FeedDotNet31Transport,
@@ -251,10 +251,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedForChecksums,
                 FeedForInstallers),
 
+            // ".NET Core SDK 3.1.3xx Internal",
             new TargetChannelConfig(
                 760,
                 PublishingInfraVersion.All,
-                ".NET Core SDK 3.1.3xx Internal",
                 akaMSChannelName: string.Empty,
                 FeedDotNet31InternalShipping,
                 FeedDotNet31InternalTransport,
@@ -262,10 +262,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedForChecksums,
                 FeedForInstallers),
 
+            // ".NET 3 Tools",
             new TargetChannelConfig(
                 344,
                 PublishingInfraVersion.All,
-                ".NET 3 Tools",
                 akaMSChannelName: string.Empty,
                 FeedDotNetEngShipping,
                 FeedDotNetEngTransport,
@@ -273,10 +273,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedForChecksums,
                 FeedForInstallers),
 
+            // ".NET 3 Tools - Validation",
             new TargetChannelConfig(
                 390,
                 PublishingInfraVersion.All,
-                ".NET 3 Tools - Validation",
                 akaMSChannelName: string.Empty,
                 FeedDotNetEngShipping,
                 FeedDotNetEngTransport,
@@ -284,10 +284,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedForChecksums,
                 FeedForInstallers),
 
+            // ".NET Core Tooling Dev",
             new TargetChannelConfig(
                 548,
                 PublishingInfraVersion.All,
-                ".NET Core Tooling Dev",
                 akaMSChannelName: string.Empty,
                 FeedDotNetToolsShipping,
                 FeedDotNetToolsTransport,
@@ -295,10 +295,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedForChecksums,
                 FeedForInstallers),
 
+            // ".NET Core Tooling Release",
             new TargetChannelConfig(
                 549,
                 PublishingInfraVersion.All,
-                ".NET Core Tooling Release",
                 akaMSChannelName: string.Empty,
                 FeedDotNetToolsShipping,
                 FeedDotNetToolsTransport,
@@ -306,10 +306,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedForChecksums,
                 FeedForInstallers),
 
+            // ".NET Core 3.1 Dev",
             new TargetChannelConfig(
                 128,
                 PublishingInfraVersion.All,
-                ".NET Core 3.1 Dev",
                 akaMSChannelName: string.Empty,
                 FeedDotNet31Shipping,
                 FeedDotNet31Transport,
@@ -317,10 +317,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedForChecksums,
                 FeedForInstallers),
 
+            // ".NET Core 3.1 Release",
             new TargetChannelConfig(
                 129,
                 PublishingInfraVersion.All,
-                ".NET Core 3.1 Release",
                 akaMSChannelName: string.Empty,
                 FeedDotNet31Shipping,
                 FeedDotNet31Transport,
@@ -328,10 +328,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedForChecksums,
                 FeedForInstallers),
 
+            // ".NET Core SDK 3.1.2xx",
             new TargetChannelConfig(
                 558,
                 PublishingInfraVersion.All,
-                ".NET Core SDK 3.1.2xx",
                 akaMSChannelName: string.Empty,
                 FeedDotNet31Shipping,
                 FeedDotNet31Transport,
@@ -339,10 +339,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedForChecksums,
                 FeedForInstallers),
 
+            // "NET Core SDK 3.1.1xx",
             new TargetChannelConfig(
                 560,
                 PublishingInfraVersion.All,
-                "NET Core SDK 3.1.1xx",
                 akaMSChannelName: string.Empty,
                 FeedDotNet31Shipping,
                 FeedDotNet31Transport,
@@ -350,10 +350,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedForChecksums,
                 FeedForInstallers),
 
+            // ".NET Core SDK 3.1.3xx",
             new TargetChannelConfig(
                 759,
                 PublishingInfraVersion.All,
-                ".NET Core SDK 3.1.3xx",
                 akaMSChannelName: string.Empty,
                 FeedDotNet31Shipping,
                 FeedDotNet31Transport,
@@ -361,10 +361,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedForChecksums,
                 FeedForInstallers),
 
+            // ".NET Core SDK 3.1.4xx",
             new TargetChannelConfig(
                 921,
                 PublishingInfraVersion.All,
-                ".NET Core SDK 3.1.4xx",
                 akaMSChannelName: string.Empty,
                 FeedDotNet31Shipping,
                 FeedDotNet31Transport,
@@ -372,10 +372,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedForChecksums,
                 FeedForInstallers),
 
+            // ".NET Core SDK 3.1.3xx Internal",
             new TargetChannelConfig(
                 760,
                 PublishingInfraVersion.All,
-                ".NET Core SDK 3.1.3xx Internal",
                 akaMSChannelName: string.Empty,
                 FeedDotNet31InternalShipping,
                 FeedDotNet31InternalTransport,
@@ -383,10 +383,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedForChecksums,
                 FeedForInstallers),
 
+            // ".NET Core 3.1 Internal Servicing",
             new TargetChannelConfig(
                 550,
                 PublishingInfraVersion.All,
-                ".NET Core 3.1 Internal Servicing",
                 akaMSChannelName: string.Empty,
                 FeedDotNet31InternalShipping,
                 FeedDotNet31InternalTransport,
@@ -394,10 +394,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedForChecksums,
                 FeedForInstallers),
 
+            // ".NET Core SDK 3.1.2xx Internal",
             new TargetChannelConfig(
                 557,
                 PublishingInfraVersion.All,
-                ".NET Core SDK 3.1.2xx Internal",
                 akaMSChannelName: string.Empty,
                 FeedDotNet31InternalShipping,
                 FeedDotNet31InternalTransport,
@@ -405,10 +405,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedForChecksums,
                 FeedForInstallers),
 
+            // ".NET Core SDK 3.1.1xx Internal",
             new TargetChannelConfig(
                 559,
                 PublishingInfraVersion.All,
-                ".NET Core SDK 3.1.1xx Internal",
                 akaMSChannelName: string.Empty,
                 FeedDotNet31InternalShipping,
                 FeedDotNet31InternalTransport,
@@ -416,10 +416,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedForChecksums,
                 FeedForInstallers),
 
+            // ".NET Core SDK 3.1.4xx Internal",
             new TargetChannelConfig(
                 922,
                 PublishingInfraVersion.All,
-                ".NET Core SDK 3.1.4xx Internal",
                 akaMSChannelName: string.Empty,
                 FeedDotNet31InternalShipping,
                 FeedDotNet31InternalTransport,
@@ -427,10 +427,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedForChecksums,
                 FeedForInstallers),
 
+            // ".NET Core 3.1 Blazor Features",
             new TargetChannelConfig(
                 531,
                 PublishingInfraVersion.All,
-                ".NET Core 3.1 Blazor Features",
                 akaMSChannelName: string.Empty,
                 FeedDotNet31BlazorShipping,
                 FeedDotNet31BlazorTransport,

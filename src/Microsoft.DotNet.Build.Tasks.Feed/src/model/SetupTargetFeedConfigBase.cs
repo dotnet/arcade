@@ -13,7 +13,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         protected bool IsStableBuild { get; set; }
         protected string RepositoryName { get; set; }
         protected string CommitSha { get; set; }
-        protected string ArtifactsCategory { get; set; }
         protected string AzureStorageTargetFeedPAT { get; set; }
         protected bool PublishInstallersAndChecksums { get; set; }
         protected string InstallersTargetStaticFeed { get; set; }
