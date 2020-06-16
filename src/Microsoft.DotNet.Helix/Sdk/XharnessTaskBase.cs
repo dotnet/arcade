@@ -9,6 +9,8 @@ namespace Microsoft.DotNet.Helix.Sdk
     /// </summary>
     public abstract class XHarnessTaskBase : BaseTask
     {
+        private const int DefaultTimeoutInMinutes = 15;
+
         /// <summary>
         /// Boolean true if this is a posix shell, false if not.
         /// This does not need to be set by a user; it is automatically determined in Microsoft.DotNet.Helix.Sdk.MonoQueue.targets
@@ -23,6 +25,11 @@ namespace Microsoft.DotNet.Helix.Sdk
         public string WorkItemTimeout { get; set; }
 
         /// <summary>
+        /// Extra arguments that will be passed to the iOS/Android/... app that is being run
+        /// </summary>
+        public string AppArguments { get; set; }
+
+        /// <summary>
         /// An array of ITaskItems of type HelixWorkItem
         /// </summary>
         [Output]
@@ -35,8 +42,9 @@ namespace Microsoft.DotNet.Helix.Sdk
             {
                 if (!TimeSpan.TryParse(WorkItemTimeout, out timeout))
                 {
-                    Log.LogWarning($"Invalid value \"{WorkItemTimeout}\" provided for XHarnessWorkItemTimeout; falling back to default value of \"00:015:00\" (15 minutes)");
-                    timeout = TimeSpan.FromMinutes(15);
+                    Log.LogWarning($"Invalid value \"{WorkItemTimeout}\" provided for XHarnessWorkItemTimeout; " +
+                        $"falling back to default value of \"00:{DefaultTimeoutInMinutes}:00\" ({DefaultTimeoutInMinutes} minutes)");
+                    timeout = TimeSpan.FromMinutes(DefaultTimeoutInMinutes);
                 }
             }
 

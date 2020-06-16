@@ -2,15 +2,18 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
+
 namespace Microsoft.DotNet.AsmDiff
 {
-    public enum DiffFormat
+    [Flags]
+    public enum DiffStyle
     {
-        Csv,
-        Html,
-        WordXml,
-        Text,
-        UnifiedDiff,
-        Md
+        None = 0x00,
+        Added = 0x01,
+        Removed = 0x02,
+        InterfaceMember = 0x04,
+        InheritedMember = 0x08,
+        NotCompatible = 0x10,
     }
 }

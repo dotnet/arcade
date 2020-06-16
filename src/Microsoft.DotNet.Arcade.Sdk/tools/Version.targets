@@ -82,7 +82,7 @@
 #undef VER_PRODUCTVERSION
 #define VER_PRODUCTVERSION          $(_WindowsFileVersion)
 #undef VER_PRODUCTVERSION_STR
-#define VER_PRODUCTVERSION_STR      "$(_WindowsFileVersion)$(_SourceBuildInfo)"
+#define VER_PRODUCTVERSION_STR      "$(Version)$(_SourceBuildInfo)"
 #undef VER_FILEVERSION
 #define VER_FILEVERSION             $(_WindowsFileVersion)
 #undef VER_FILEVERSION_STR

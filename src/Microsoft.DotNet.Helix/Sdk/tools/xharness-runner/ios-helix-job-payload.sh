@@ -9,6 +9,7 @@ timeout=''
 dotnet_root=''
 xharness=''
 xcode_version=''
+app_arguments=''
 
 while [[ $# > 0 ]]; do
     opt="$(echo "$1" | awk '{print tolower($0)}')"
@@ -39,6 +40,10 @@ while [[ $# > 0 ]]; do
         ;;
       --xcode-version)
         xcode_version="$2"
+        shift
+        ;;
+      --app-arguments)
+        app_arguments="$2"
         shift
         ;;
       *)
@@ -83,13 +88,16 @@ if [ -z "$xcode_version" ]; then
     die "Xcode version wasn't provided";
 fi
 
+if [ ! -z "$app_arguments" ]; then
+    app_arguments="-- $app_arguments";
+fi
+
+set +e
+
 # Restart the simulator to make sure it is tied to the right user session
 xcode_path="/Applications/Xcode${xcode_version/./}.app"
 simulator_app="$xcode_path/Contents/Developer/Applications/Simulator.app"
-pid=`ps aux | grep "$simulator_app" | grep -v grep | tr -s ' ' | cut -d ' ' -f 2`
-if [ ! -z "$pid" ]; then
-    sudo kill "$pid"
-fi
+sudo pkill -9 -f "$simulator_app"
 open -a "$simulator_app"
 
 export DOTNET_ROOT="$dotnet_root"
@@ -102,9 +110,13 @@ export XHARNESS_LOG_WITH_TIMESTAMPS=true
     --targets="$targets"                   \
     --timeout="$timeout"                   \
     --xcode="$xcode_path"                  \
-    -v
+    -v \
+    $app_arguments
 
 exit_code=$?
+
+# Kill the simulator after we're done
+sudo pkill -9 -f "$simulator_app"
 
 # The simulator logs comming from the sudo-spawned Simulator.app are not readable by the helix uploader
 chmod 0644 "$output_directory"/*.log

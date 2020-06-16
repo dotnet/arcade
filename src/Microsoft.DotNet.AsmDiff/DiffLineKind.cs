@@ -4,13 +4,11 @@
 
 namespace Microsoft.DotNet.AsmDiff
 {
-    public enum DiffFormat
+    public enum DiffLineKind
     {
-        Csv,
-        Html,
-        WordXml,
-        Text,
-        UnifiedDiff,
-        Md
+        Same,
+        Added,
+        Removed,
+        Changed
     }
 }

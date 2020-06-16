@@ -2,10 +2,10 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using McMaster.Extensions.CommandLineUtils;
 using System;
 using System.IO;
 using System.Text;
-using McMaster.Extensions.CommandLineUtils;
 
 namespace Microsoft.DotNet.AsmDiff
 {
@@ -49,7 +49,12 @@ namespace Microsoft.DotNet.AsmDiff
         [Option("-iia|--IncludeInternalApis", "Include internal types and members as part of the diff.", CommandOptionType.NoValue)]
         public bool IncludeInternalApis { get; set; }
         [Option("-ipa|--IncludePrivateApis", "Include private types and members as part of the diff.", CommandOptionType.NoValue)]
-        public bool IncludePrivateApis { get; set; }
+        public bool IncludePrivateApis { get; set; }        
+        
+        [Option("-itc|--IncludeTableOfContents", "Include table of contents as part of the diff.", CommandOptionType.NoValue)]
+        public bool IncludeTableOfContents { get; set; }
+        [Option("-cfn|--CreateFilePerNamespace", "Create files per namespace.", CommandOptionType.NoValue)]
+        public bool CreateFilePerNamespace { get; set; }
 
         [Option("-w|--DiffWriter", "Type of difference writer to use, either CSharp code diffs or flat list of compat violations (default).", CommandOptionType.SingleValue)]
         public DiffWriterType DiffWriter { get; set; }
@@ -82,8 +87,18 @@ namespace Microsoft.DotNet.AsmDiff
             AssemblySet newAssemblies = AssemblySet.FromPaths(NewSet);
             
             DiffConfiguration diffConfiguration = new DiffConfiguration(oldAssemblies, newAssemblies, options);
-            using (TextWriter output = GetOutput())
-                DiffEngine.Export(diffConfiguration, null, diffFormat, output);
+
+            if (diffFormat == DiffFormat.Md)
+            {
+                DiffDocument diffDocument = DiffEngine.BuildDiffDocument(diffConfiguration);
+                var markdownDiffExporter = new MarkdownDiffExporter(diffDocument, OutFile, IncludeTableOfContents, CreateFilePerNamespace);
+                markdownDiffExporter.Export();
+            }
+            else
+            {
+                using (TextWriter output = GetOutput())
+                    DiffEngine.Export(diffConfiguration, null, diffFormat, output);
+            }
         }
 
         public static int Main(string[] args) => CommandLineApplication.Execute<Program>(args);
@@ -160,6 +175,8 @@ namespace Microsoft.DotNet.AsmDiff
                     }
                 case DiffWriterType.CSV:
                     return DiffFormat.Csv;
+                case DiffWriterType.Markdown:
+                    return DiffFormat.Md;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
@@ -186,5 +203,6 @@ namespace Microsoft.DotNet.AsmDiff
     {
         CSharp,
         CSV,
+        Markdown
     }
 }
