@@ -9,7 +9,7 @@ Arcade is intended to provide well-understood and consistent mechanisms for cons
 Status of Arcade public CI builds: [![Build Status](https://dev.azure.com/dnceng/public/_apis/build/status/dotnet/arcade/arcade-ci)](https://dev.azure.com/dnceng/public/_build/latest?definitionId=208)
 
 ## Validation & Dependency Flow Status
-Status Last Updated: June 12, 2020, 8:30 AM PDT
+Status Last Updated: June 15, 2020, 3:15 PM PDT
 
 **[Arcade validation policy and process](Documentation/Validation/Overview.md)**
 
@@ -36,7 +36,7 @@ Status Last Updated: June 12, 2020, 8:30 AM PDT
 ### Status of Latest Version of Arcade Being Validated
 
 - Arcade is not being promoted due to [Runtime](https://dnceng.visualstudio.com/internal/_build?definitionId=679&_a=summary) (bellwether repo) not having successful builds on `master` to validate Arcade with. 
-- [Arcade Validation For Promotion build result from June 12, 2020 at 1:00 AM PDT](https://dnceng.visualstudio.com/internal/_build/results?buildId=684462&view=results)
+- [Arcade Validation For Promotion build result from June 15, 2020 at 1:00 AM PDT](https://dnceng.visualstudio.com/internal/_build/results?buildId=687543&view=results)
 
 ## Getting Started
 
