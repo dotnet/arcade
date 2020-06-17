@@ -41,7 +41,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 // of the assets being published so we can add a new location for them.
                 IMaestroApi client = ApiFactory.GetAuthenticated(MaestroApiEndpoint, BuildAssetRegistryToken);
                 Maestro.Client.Models.Build buildInformation = await client.Builds.GetBuildAsync(BARBuildId);
-                Dictionary<string, List<Asset>> buildAssets = CreateBuildAssetDictionary(buildInformation);
+                Dictionary<string, HashSet<Asset>> buildAssets = CreateBuildAssetDictionary(buildInformation);
 
                 await ParseTargetFeedConfigAsync();
 

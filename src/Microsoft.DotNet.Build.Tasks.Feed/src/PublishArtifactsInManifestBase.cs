@@ -131,9 +131,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// <param name="name">Name of asset</param>
         /// <param name="version">Version of asset</param>
         /// <returns>Asset if one with the name and version exists, null otherwise</returns>
-        private Asset LookupAsset(string name, string version, Dictionary<string, List<Asset>> buildAssets)
+        private Asset LookupAsset(string name, string version, Dictionary<string, HashSet<Asset>> buildAssets)
         {
-            if (!buildAssets.TryGetValue(name, out List<Asset> assetsWithName))
+            if (!buildAssets.TryGetValue(name, out HashSet<Asset> assetsWithName))
             {
                 return null;
             }
@@ -149,9 +149,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         ///     Asset if one with the name exists and is the only asset with the name.
         ///     Throws if there is more than one asset with that name.
         /// </returns>
-        private Asset LookupAsset(string name, Dictionary<string, List<Asset>> buildAssets)
+        private Asset LookupAsset(string name, Dictionary<string, HashSet<Asset>> buildAssets)
         {
-            if (!buildAssets.TryGetValue(name, out List<Asset> assetsWithName))
+            if (!buildAssets.TryGetValue(name, out HashSet<Asset> assetsWithName))
             {
                 return null;
             }
@@ -165,18 +165,19 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// </summary>
         /// <param name="buildInformation">Build information</param>
         /// <returns>Map of asset name -> list of assets with that name.</returns>
-        protected Dictionary<string, List<Asset>> CreateBuildAssetDictionary(Maestro.Client.Models.Build buildInformation)
+        protected Dictionary<string, HashSet<Asset>> CreateBuildAssetDictionary(Maestro.Client.Models.Build buildInformation)
         {
-            Dictionary<string, List<Asset>> buildAssets = new Dictionary<string, List<Asset>>();
+            Dictionary<string, HashSet<Asset>> buildAssets = new Dictionary<string, HashSet<Asset>>();
+
             foreach (var asset in buildInformation.Assets)
             {
-                if (buildAssets.TryGetValue(asset.Name, out List<Asset> assetsWithName))
+                if (buildAssets.TryGetValue(asset.Name, out HashSet<Asset> assetsWithName))
                 {
                     assetsWithName.Add(asset);
                 }
                 else
                 {
-                    buildAssets.Add(asset.Name, new List<Asset>() { asset });
+                    buildAssets.Add(asset.Name, new HashSet<Asset>(new AssetComparer()) { asset });
                 }
             }
 
@@ -192,7 +193,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// <param name="feedConfig">Configuration of where the asset was published.</param>
         /// <param name="assetLocationType">Type of feed location that is being added.</param>
         /// <returns>True if that asset didn't have the informed location recorded already.</returns>
-        private bool TryAddAssetLocation(string assetId, string assetVersion, Dictionary<string, List<Asset>> buildAssets, TargetFeedConfig feedConfig, AddAssetLocationToAssetAssetLocationType assetLocationType)
+        private bool TryAddAssetLocation(string assetId, string assetVersion, Dictionary<string, HashSet<Asset>> buildAssets, TargetFeedConfig feedConfig, AddAssetLocationToAssetAssetLocationType assetLocationType)
         {
             Asset assetRecord = string.IsNullOrEmpty(assetVersion) ?
                 LookupAsset(assetId, buildAssets) :
@@ -244,7 +245,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// <param name="client">Maestro API client</param>
         /// <param name="buildAssets">Assets information about build being published.</param>
         /// <returns>Task</returns>
-        protected async Task HandlePackagePublishingAsync(Dictionary<string, List<Asset>> buildAssets)
+        protected async Task HandlePackagePublishingAsync(Dictionary<string, HashSet<Asset>> buildAssets)
         {
             List<Task> publishTasks = new List<Task>();
 
@@ -307,7 +308,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             };
         }
 
-        protected async Task HandleBlobPublishingAsync(Dictionary<string, List<Asset>> buildAssets)
+        protected async Task HandleBlobPublishingAsync(Dictionary<string, HashSet<Asset>> buildAssets)
         {
             List<Task> publishTasks = new List<Task>();
 
@@ -444,7 +445,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         private async Task PublishPackagesToAzDoNugetFeedAsync(
             HashSet<PackageArtifactModel> packagesToPublish,
-            Dictionary<string, List<Asset>> buildAssets,
+            Dictionary<string, HashSet<Asset>> buildAssets,
             TargetFeedConfig feedConfig)
         {
             await PushNugetPackagesAsync(packagesToPublish, feedConfig, maxClients: MaxClients,
@@ -604,7 +605,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         private async Task PublishBlobsToAzDoNugetFeedAsync(
             HashSet<BlobArtifactModel> blobsToPublish,
-            Dictionary<string, List<Asset>> buildAssets,
+            Dictionary<string, HashSet<Asset>> buildAssets,
             TargetFeedConfig feedConfig)
         {
             HashSet<BlobArtifactModel> packagesToPublish = new HashSet<BlobArtifactModel>();
@@ -653,7 +654,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         private async Task PublishPackagesToAzureStorageNugetFeedAsync(
             HashSet<PackageArtifactModel> packagesToPublish,
-            Dictionary<string, List<Asset>> buildAssets,
+            Dictionary<string, HashSet<Asset>> buildAssets,
             TargetFeedConfig feedConfig)
         {
             var packages = packagesToPublish.Select(p =>
@@ -688,7 +689,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         private async Task PublishBlobsToAzureStorageNugetFeedAsync(
             HashSet<BlobArtifactModel> blobsToPublish,
-            Dictionary<string, List<Asset>> buildAssets,
+            Dictionary<string, HashSet<Asset>> buildAssets,
             TargetFeedConfig feedConfig)
         {
             var blobs = blobsToPublish
