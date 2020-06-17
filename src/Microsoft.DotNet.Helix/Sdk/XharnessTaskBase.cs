@@ -20,14 +20,15 @@ namespace Microsoft.DotNet.Helix.Sdk
         public bool IsPosixShell { get; set; }
 
         /// <summary>
-        /// Optional timeout for the actual test execution.
-        /// Defaults to 12 minutes.
+        /// Optional timeout for the actual test execution in the TimeSpan format (e.g. 00:45:00 for 45 minutes).
+        /// Defaults to 00:12:00.
         /// </summary>
         public string TestTimeout { get; set; }
 
         /// <summary>
-        /// Optional timeout for the whole Helix work item run (includes SDK and tool installation).
-        /// Defaults to 20 minutes.
+        /// Optional timeout for the whole Helix work item run (includes SDK and tool installation)
+        /// in the TimeSpan format (e.g. 00:45:00 for 45 minutes).
+        /// Defaults to 00:20:00.
         /// </summary>
         public string WorkItemTimeout { get; set; }
 
@@ -47,9 +48,9 @@ namespace Microsoft.DotNet.Helix.Sdk
             TimeSpan testTimeout = TimeSpan.FromMinutes(DefaultTestTimeoutInMinutes);
             if (!string.IsNullOrEmpty(TestTimeout))
             {
-                if (!TimeSpan.TryParse(TestTimeout, out testTimeout))
+                if (!TimeSpan.TryParse(TestTimeout, out testTimeout) || testTimeout.Ticks < 0)
                 {
-                    Log.LogWarning($"Invalid value \"{TestTimeout}\" provided in WorkItemTimeout; " +
+                    Log.LogWarning($"Invalid value \"{TestTimeout}\" provided in TestTimeout; " +
                         $"falling back to default value of \"00:{DefaultTestTimeoutInMinutes}:00\" ({DefaultTestTimeoutInMinutes} minutes)");
                     testTimeout = TimeSpan.FromMinutes(DefaultTestTimeoutInMinutes);
                 }
@@ -58,7 +59,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             TimeSpan workItemTimeout = TimeSpan.FromMinutes(DefaultWorkItemTimeoutInMinutes);
             if (!string.IsNullOrEmpty(WorkItemTimeout))
             {
-                if (!TimeSpan.TryParse(WorkItemTimeout, out workItemTimeout))
+                if (!TimeSpan.TryParse(WorkItemTimeout, out workItemTimeout) || workItemTimeout.Ticks < 0)
                 {
                     Log.LogWarning($"Invalid value \"{WorkItemTimeout}\" provided in WorkItemTimeout; " +
                         $"falling back to default value of \"00:{DefaultWorkItemTimeoutInMinutes}:00\" ({DefaultWorkItemTimeoutInMinutes} minutes)");
