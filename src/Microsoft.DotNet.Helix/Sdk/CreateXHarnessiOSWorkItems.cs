@@ -148,6 +148,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                                         $"--output-directory \"$HELIX_WORKITEM_UPLOAD_ROOT\" " +
                                         $"--targets \"{targets}\" " +
                                         $"--timeout \"{xHarnessTimeout.TotalSeconds}\" " +
+                                        $"--launch-timeout 600 " +
                                         $"--dotnet-root \"$DOTNET_ROOT\" " +
                                         $"--xharness \"$HELIX_CORRELATION_PAYLOAD/xharness-cli/xharness\" " +
                                         $"--xcode-version {XcodeVersion}" +
