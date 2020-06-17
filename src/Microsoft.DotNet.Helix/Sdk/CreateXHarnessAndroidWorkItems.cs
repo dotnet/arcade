@@ -5,7 +5,6 @@ using System.IO.Compression;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Build.Framework;
-using Newtonsoft.Json;
 
 namespace Microsoft.DotNet.Helix.Sdk
 {
@@ -53,9 +52,9 @@ namespace Microsoft.DotNet.Helix.Sdk
             await Task.Yield();
             string workItemName = Path.GetFileNameWithoutExtension(appPackage.ItemSpec);
 
-            TimeSpan timeout = ParseTimeout();
+            var timeouts = ParseTimeouts();
 
-            string command = ValidateMetadataAndGetXHarnessAndroidCommand(appPackage, timeout);
+            string command = ValidateMetadataAndGetXHarnessAndroidCommand(appPackage, timeouts.TestTimeout);
 
             if (!Path.GetExtension(appPackage.ItemSpec).Equals(".apk", StringComparison.OrdinalIgnoreCase))
             {
@@ -70,7 +69,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                 { "Identity", workItemName },
                 { "PayloadArchive", CreateZipArchiveOfPackage(appPackage.ItemSpec) },
                 { "Command", command },
-                { "Timeout", timeout.ToString() },
+                { "Timeout", timeouts.WorkItemTimeout.ToString() },
             });
         }
 
