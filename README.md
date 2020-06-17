@@ -38,7 +38,7 @@ Status Last Updated: June 17, 2020, 9:15 AM PDT
 - Arcade version 5.0.0-beta.20316.1 has been promoted to `.NET Eng - Latest`
 - [List of changes](https://github.com/dotnet/arcade/compare/54d096ee50a9bcf7ac6efd16a07d51af651d20a1...71b580038fb704df63e03c6b7ae7d2c6a4fdd71d) between this version and the previously promoted version. 
 - [Arcade Validation For Promotion build result from June 17th, 2020 at 1:00 AM PDT](https://dnceng.visualstudio.com/internal/_build/results?buildId=691113&view=results) (Runtime and ASPNETCore passed, Installer failed).
-- - [Arcade Validation For Promotion build result from June 17th, 2020 at 6:55 AM PDT](https://dnceng.visualstudio.com/internal/_build/results?buildId=691714&view=results) (Same version validated, but Installer passed).
+- [Arcade Validation For Promotion build result from June 17th, 2020 at 6:55 AM PDT](https://dnceng.visualstudio.com/internal/_build/results?buildId=691714&view=results) (Same version validated, but Installer passed).
 
 ## Getting Started
 
