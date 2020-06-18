@@ -137,8 +137,12 @@
       <ManifestBuildData Include="AzureDevOpsBranch=$(BUILD_SOURCEBRANCH)" />
     </ItemGroup>
     
-    <PushToAzureDevOpsArtifacts 
+    <PushToAzureDevOpsArtifacts
       ItemsToPush="@(ItemsToPushToBlobFeed)"
+      ItemsToSign="@(ItemsToSign)"
+      StrongNameSignInfo="@(StrongNameSignInfo)"
+      FileSignInfo="@(FileSignInfo)"
+      FileExtensionSignInfo="@(FileExtensionSignInfo)"
       ManifestBuildData="@(ManifestBuildData)"
       ManifestRepoUri="$(BUILD_REPOSITORY_URI)"
       ManifestBranch="$(BUILD_SOURCEBRANCH)"
