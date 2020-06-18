@@ -87,6 +87,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
     [Flags]
     public enum TargetFeedContentType
     {
+        None            = 0,
         Package         = 1,
         Symbols         = 2,
         Checksum        = 4,

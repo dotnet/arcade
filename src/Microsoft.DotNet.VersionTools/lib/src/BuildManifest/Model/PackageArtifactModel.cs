@@ -65,9 +65,14 @@ namespace Microsoft.DotNet.VersionTools.BuildManifest.Model
                 return false;
             }
 
+            if (ReferenceEquals(this, obj))
+            {
+                return true;
+            }
+
             PackageArtifactModel other = (PackageArtifactModel)obj;
 
-            if (Attributes.Count() != other.Attributes.Count())
+            if (other == null || Attributes.Count() != other.Attributes.Count())
             {
                 return false;
             }

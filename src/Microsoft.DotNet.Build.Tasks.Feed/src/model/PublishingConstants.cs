@@ -119,6 +119,28 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedForChecksums,
                 FeedForInstallers),
 
+            // ".NET 5 Preview 6",
+            new TargetChannelConfig(
+                1013,
+                PublishingInfraVersion.All,
+                "net5/preview6",
+                FeedDotNet5Shipping,
+                FeedDotNet5Transport,
+                FeedDotNet5Symbols,
+                FeedForChecksums,
+                FeedForInstallers),
+
+            // ".NET 5 Preview 7",
+            new TargetChannelConfig(
+                1065,
+                PublishingInfraVersion.All,
+                "net5/preview7",
+                FeedDotNet5Shipping,
+                FeedDotNet5Transport,
+                FeedDotNet5Symbols,
+                FeedForChecksums,
+                FeedForInstallers),
+
             // ".NET Eng - Latest",
             new TargetChannelConfig(
                 2,
@@ -435,6 +457,39 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedDotNet31BlazorShipping,
                 FeedDotNet31BlazorTransport,
                 FeedDotNet31BlazorSymbols,
+                FeedForChecksums,
+                FeedForInstallers),
+
+            // "VS 16.6",
+            new TargetChannelConfig(
+                1010,
+                PublishingInfraVersion.All,
+                string.Empty,
+                FeedDotNetToolsShipping,
+                FeedDotNetToolsTransport,
+                FeedDotNetToolsSymbols,
+                FeedForChecksums,
+                FeedForInstallers),
+
+            // "VS 16.7",
+            new TargetChannelConfig(
+                1011,
+                PublishingInfraVersion.All,
+                string.Empty,
+                FeedDotNetToolsShipping,
+                FeedDotNetToolsTransport,
+                FeedDotNetToolsSymbols,
+                FeedForChecksums,
+                FeedForInstallers),
+
+            // "VS Master",
+            new TargetChannelConfig(
+                1012,
+                PublishingInfraVersion.All,
+                string.Empty,
+                FeedDotNetToolsShipping,
+                FeedDotNetToolsTransport,
+                FeedDotNetToolsSymbols,
                 FeedForChecksums,
                 FeedForInstallers),
         };
