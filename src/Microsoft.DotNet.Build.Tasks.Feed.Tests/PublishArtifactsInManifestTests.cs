@@ -15,8 +15,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
 {
     public class PublishArtifactsInManifestTests
     {
-        const string RandomToken = "abcd";
-        const string BlobFeedUrl = "https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json";
+        private const string GeneralTestingChannelId = "529";
+        private const string RandomToken = "abcd";
+        private const string BlobFeedUrl = "https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json";
 
         [Fact]
         public void ConstructV2PublishingTask()
@@ -28,7 +29,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             var task = new PublishArtifactsInManifest()
             {
                 BuildEngine = buildEngine,
-                TargetChannels = "529"
+                TargetChannels = GeneralTestingChannelId
             };
 
             var which = task.WhichPublishingTask(manifestFullPath);
@@ -46,7 +47,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             var task = new PublishArtifactsInManifest()
             {
                 BuildEngine = buildEngine,
-                TargetChannels = "529"
+                TargetChannels = GeneralTestingChannelId
             };
 
             var which = task.WhichPublishingTask(manifestFullPath);

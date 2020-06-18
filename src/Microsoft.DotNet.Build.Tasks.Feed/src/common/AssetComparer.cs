@@ -7,15 +7,23 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
     {
         public bool Equals(Asset obj1, Asset obj2)
         {
+            // if both are null this will return true
             if (ReferenceEquals(obj1, obj2))
             {
                 return true;
+            }
+
+            if (obj1 == null || obj2 == null)
+            {
+                return false;
             }
 
             Asset assetA = (Asset)obj1;
             Asset assetB = (Asset)obj2;
 
             return
+                (assetA != null) &&
+                (assetB != null) &&
                 (assetA.Id == assetB.Id) &&
                 (assetA.Name == assetB.Name) &&
                 (assetA.Version == assetB.Version);

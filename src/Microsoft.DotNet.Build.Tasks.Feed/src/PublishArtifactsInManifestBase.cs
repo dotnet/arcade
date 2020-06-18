@@ -468,7 +468,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         ///     Push nuget packages to the azure devops feed.
         /// </summary>
         /// <param name="packagesToPublish">List of packages to publish</param>
-        /// <param name="feedConfig">Information about feed to publish ot</param>
+        /// <param name="feedConfig">Information about feed to publish to</param>
         public async Task PushNugetPackagesAsync<T>(HashSet<T> packagesToPublish, TargetFeedConfig feedConfig, int maxClients,
             Func<TargetFeedConfig, HttpClient, T, string, string, string, Task> packagePublishAction)
         {
