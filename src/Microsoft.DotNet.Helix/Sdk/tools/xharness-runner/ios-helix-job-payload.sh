@@ -6,6 +6,7 @@ app=''
 output_directory=''
 targets=''
 timeout=''
+launch_timeout=''
 dotnet_root=''
 xharness=''
 xcode_version=''
@@ -28,6 +29,10 @@ while [[ $# > 0 ]]; do
         ;;
       --timeout)
         timeout="$2"
+        shift
+        ;;
+      --launch-timeout)
+        launch_timeout="$2"
         shift
         ;;
       --dotnet-root)
@@ -76,6 +81,10 @@ if [ -z "$timeout" ]; then
     die "Test timeout wasn't provided";
 fi
 
+if [ -z "$launch_timeout" ]; then
+    die "Launch timeout wasn't provided";
+fi
+
 if [ -z "$dotnet_root" ]; then
     die "DotNet root path wasn't provided";
 fi
@@ -108,7 +117,8 @@ export XHARNESS_LOG_WITH_TIMESTAMPS=true
     --app="$app"                           \
     --output-directory="$output_directory" \
     --targets="$targets"                   \
-    --timeout="$timeout"                   \
+    --timeout=$timeout                     \
+    --launch-timeout=$launch_timeout       \
     --xcode="$xcode_path"                  \
     -v \
     $app_arguments

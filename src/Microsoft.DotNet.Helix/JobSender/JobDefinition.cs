@@ -168,7 +168,7 @@ namespace Microsoft.DotNet.Helix.Client
                 }
                 ))).ToList();
 
-            string jobListJson = JsonConvert.SerializeObject(jobList);
+            string jobListJson = JsonConvert.SerializeObject(jobList, Formatting.Indented);
             Uri jobListUri = await storageContainer.UploadTextAsync(
                 jobListJson,
                 $"job-list-{Guid.NewGuid()}.json",
