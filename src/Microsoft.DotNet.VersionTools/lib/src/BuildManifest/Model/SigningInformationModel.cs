@@ -28,6 +28,8 @@ namespace Microsoft.DotNet.VersionTools.BuildManifest.Model
             StrongNameSignInfo.AddRange(source.StrongNameSignInfo);
         }
 
+        // The IsEmpty() check ensures that we dont' return a blank <SigningInformation> XElement
+        // when there is no signing information, maintaining parity with the old asset manifest structure
         public XElement ToXml() => IsEmpty() ? null : new XElement(
             "SigningInformation",
             Enumerable.Concat(
@@ -47,8 +49,8 @@ namespace Microsoft.DotNet.VersionTools.BuildManifest.Model
                 .ThenBy(s => s.PublicKeyToken, StringComparer.OrdinalIgnoreCase)
                 .Select(s => s.ToXml())));
 
-        public bool IsEmpty() => FileExtensionSignInfo.Count == 0 && FileSignInfo.Count == 0
-            && ItemsToSign.Count == 0 && StrongNameSignInfo.Count == 0;
+        public bool IsEmpty() => !FileExtensionSignInfo.Any() && !FileSignInfo.Any()
+            && !ItemsToSign.Any() && !StrongNameSignInfo.Any();
 
         public static SigningInformationModel Parse(XElement xml) => xml == null ? null : new SigningInformationModel
         {
@@ -58,6 +60,7 @@ namespace Microsoft.DotNet.VersionTools.BuildManifest.Model
             StrongNameSignInfo = xml.Elements("StrongNameSignInfo").Select(StrongNameSignInfoModel.Parse).ToList(),
         };
     }
+
     public class FileExtensionSignInfoModel
     {
         private static readonly string[] RequiredAttributes =

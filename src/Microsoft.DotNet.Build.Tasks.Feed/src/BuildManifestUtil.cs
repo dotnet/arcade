@@ -116,8 +116,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 {
                     var filename = itemToSign.ItemSpec.Replace('\\', '/');
                     {
-                        var metadata = itemToSign.CloneCustomMetadata() as Dictionary<string, string>;
-                        parsedItemsToSign.Add(new ItemToSignModel { File = Path.GetFileName(itemToSign.ItemSpec) });
+                        parsedItemsToSign.Add(new ItemToSignModel { File = Path.GetFileName(filename) });
                     }
                 }
             }
