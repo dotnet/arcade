@@ -120,6 +120,8 @@
       <PDBsToPublishTempLocation>$(ArtifactsTmpDir)PDBsToPublish/</PDBsToPublishTempLocation>
     </PropertyGroup>
 
+    <Import Project="Sign.props" />
+    
     <!--
       The new Maestro/BAR build model keeps separate Azure DevOps and GitHub build information.
       The GitHub information will be extracted based on the Azure DevOps repository.
@@ -238,8 +240,6 @@
                     PdbConversionTreatAsWarning=""
                     Condition="$(PublishToSymbolServer)"/>
   </Target>
-
-  <Import Project="Sign.props" />
 
   <UsingTask TaskName="Microsoft.DotNet.Arcade.Sdk.GenerateAzureDevOpsBuildManifest" AssemblyFile="$(ArcadeSdkBuildTasksAssembly)"/>
 

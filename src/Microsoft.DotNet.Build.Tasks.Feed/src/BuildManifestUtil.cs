@@ -30,7 +30,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             string manifestCommit,
             string[] manifestBuildData,
             bool isStableBuild,
-            string publishingVersion)
+            string publishingVersion,
+            SigningInformationModel signingInformationModel = null)
         {
             CreateModel(
                 blobArtifacts,
@@ -42,7 +43,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 manifestCommit,
                 isStableBuild,
                 publishingVersion,
-                log)
+                log,
+                signingInformationModel: signingInformationModel)
                 .WriteAsXml(assetManifestPath, log);
         }
 
@@ -105,6 +107,23 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 }
             }
 
+            var buildModel = CreateModel(
+                blobArtifacts,
+                packageArtifacts,
+                buildId,
+                BuildProperties,
+                repoUri,
+                repoBranch,
+                repoCommit,
+                isStableBuild,
+                publishingVersion,
+                log,
+                signingInformationModel: CreateSigningInformationModelFromItems(itemsToSign, strongNameSignInfo, fileSignInfo, fileExtensionSignInfo));
+            return buildModel;
+        }
+
+        public static SigningInformationModel CreateSigningInformationModelFromItems(ITaskItem[] itemsToSign, ITaskItem[] strongNameSignInfo, ITaskItem[] fileSignInfo, ITaskItem[] fileExtensionSignInfo)
+        {
             List<ItemToSignModel> parsedItemsToSign = new List<ItemToSignModel>();
             List<StrongNameSignInfoModel> parsedStrongNameSignInfo = new List<StrongNameSignInfoModel>();
             List<FileSignInfoModel> parsedFileSignInfo = new List<FileSignInfoModel>();
@@ -145,27 +164,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 }
             }
 
-            SigningInformationModel signingInformationModel = new SigningInformationModel
+            return new SigningInformationModel
             {
                 ItemsToSign = parsedItemsToSign,
                 StrongNameSignInfo = parsedStrongNameSignInfo,
                 FileSignInfo = parsedFileSignInfo,
                 FileExtensionSignInfo = parsedFileExtensionSignInfoModel
             };
-
-            var buildModel = CreateModel(
-                blobArtifacts,
-                packageArtifacts,
-                buildId,
-                BuildProperties,
-                repoUri,
-                repoBranch,
-                repoCommit,
-                isStableBuild,
-                publishingVersion,
-                log,
-                signingInformationModel: signingInformationModel);
-            return buildModel;
         }
 
         private static BuildModel CreateModel(IEnumerable<BlobArtifactModel> blobArtifacts,
