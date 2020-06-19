@@ -15,6 +15,7 @@
   <Target Name="AddXHarnessCli"
           Condition=" '$(IncludeXHarnessCli)' == 'true' "
           BeforeTargets="CoreTest"
+          AfterTargets="DetectXHarnessRequest"
           DependsOnTargets="AddDotNetSdk">
 
     <Error Condition=" '$(_XHarnessPackageVersion)' == '' " Text="XHarness CLI version not defined! Please specify it using the MicrosoftDotNetXHarnessCLIVersion property" />
@@ -22,16 +23,9 @@
     <!-- When XHarnessNupkgPath is set, we send the .nupkg with the job and install the tool from there -->
     <Message Condition=" '$(XHarnessNupkgPath)' != '' " Text="XHarnessNupkgPath is set so XHarnessPackageSource will be ignored" Importance="normal" />
 
-    <PropertyGroup Condition=" '$(XHarnessNupkgPath)' != '' AND $(IsPosixShell) ">
-      <XHarnessPackageSource>$HELIX_CORRELATION_ARCHIVE_ROOT --no-cache</XHarnessPackageSource>
+    <PropertyGroup Condition=" '$(XHarnessNupkgPath)' != '' ">
+      <XHarnessPackageSource>$([System.IO.Path]::GetDirectoryName($(XHarnessNupkgPath))) --no-cache</XHarnessPackageSource>
     </PropertyGroup>
-    <PropertyGroup Condition=" '$(XHarnessNupkgPath)' != '' AND !$(IsPosixShell) ">
-      <XHarnessPackageSource>%HELIX_CORRELATION_ARCHIVE_ROOT% --no-cache</XHarnessPackageSource>
-    </PropertyGroup>
-
-    <ItemGroup Condition=" '$(XHarnessNupkgPath)' != '' ">
-      <HelixCorrelationPayload Include="$(XHarnessNupkgPath)" />
-    </ItemGroup>
 
     <!-- We install the tool locally on the build machine, then, installed as-is, we zip it up and send as a correlation payload -->
     <PropertyGroup>
@@ -39,8 +33,7 @@
     </PropertyGroup>
 
     <RemoveDir Directories="$(_XHarnessLocalToolPath)" />
-    <Exec Command="dotnet tool install --tool-path $(_XHarnessLocalToolPath) --version $(_XHarnessPackageVersion) --add-source $(XHarnessPackageSource) $(_XHarnessPackageName)"
-          IgnoreExitCode="true" />
+    <Exec Command="dotnet tool install --tool-path $(_XHarnessLocalToolPath) --version $(_XHarnessPackageVersion) --add-source $(XHarnessPackageSource) $(_XHarnessPackageName)" />
     
     <ItemGroup>
       <_XHarnessExtraToolFiles Include="$(ArtifactsTmpDir)\Microsoft.DotNet.XHarness.CLI\.store\microsoft.dotnet.xharness.cli\$(_XHarnessPackageVersion)\microsoft.dotnet.xharness.cli\$(_XHarnessPackageVersion)\*.*" />
