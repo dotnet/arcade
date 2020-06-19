@@ -13,9 +13,8 @@
   </Target>
 
   <Target Name="AddXHarnessCli"
-          Condition=" '$(IncludeXHarnessCli)' == 'true' "
+          Condition=" '@(XHarnessAppFolderToTest)' != '' OR '@(XHarnessPackageToTest)' != '' OR '@(XHarnessAndroidProject)' != '' OR '@(XHarnessiOSProject)' != '' OR '$(IncludeXHarnessCli)' == 'true' "
           BeforeTargets="CoreTest"
-          AfterTargets="DetectXHarnessRequest"
           DependsOnTargets="AddDotNetSdk">
 
     <Error Condition=" '$(_XHarnessPackageVersion)' == '' " Text="XHarness CLI version not defined! Please specify it using the MicrosoftDotNetXHarnessCLIVersion property" />
