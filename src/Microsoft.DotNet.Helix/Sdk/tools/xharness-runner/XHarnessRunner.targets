@@ -4,10 +4,11 @@
           Condition=" '@(XHarnessAppFolderToTest)' != '' OR '@(XHarnessPackageToTest)' != '' OR '@(XHarnessAndroidProject)' != '' OR '@(XHarnessiOSProject)' != '' OR '$(IncludeXHarnessCli)' == 'true' "
           BeforeTargets="AddDotNetSdk;AddXHarnessCli">
     <PropertyGroup>
+      <!-- We then invoke the CLI DLL directly using .NET runtime without the need for .NET SDK -->
       <IncludeDotNetCli>true</IncludeDotNetCli>
       <IncludeXHarnessCli>true</IncludeXHarnessCli>
-      <DotNetCliPackageType>sdk</DotNetCliPackageType>
-      <DotNetCliVersion>3.1.201</DotNetCliVersion>
+      <DotNetCliPackageType>runtime</DotNetCliPackageType>
+      <DotNetCliVersion>3.1.5</DotNetCliVersion>
     </PropertyGroup>
   </Target>
 
@@ -22,30 +23,56 @@
     <Message Condition=" '$(XHarnessNupkgPath)' != '' " Text="XHarnessNupkgPath is set so XHarnessPackageSource will be ignored" Importance="normal" />
 
     <PropertyGroup Condition=" '$(XHarnessNupkgPath)' != '' AND $(IsPosixShell) ">
-      <XHarnessPackageSource>$HELIX_CORRELATION_ARCHIVE_ROOT</XHarnessPackageSource>
+      <XHarnessPackageSource>$HELIX_CORRELATION_ARCHIVE_ROOT --no-cache</XHarnessPackageSource>
     </PropertyGroup>
     <PropertyGroup Condition=" '$(XHarnessNupkgPath)' != '' AND !$(IsPosixShell) ">
-      <XHarnessPackageSource>%HELIX_CORRELATION_ARCHIVE_ROOT%</XHarnessPackageSource>
+      <XHarnessPackageSource>%HELIX_CORRELATION_ARCHIVE_ROOT% --no-cache</XHarnessPackageSource>
     </PropertyGroup>
 
     <ItemGroup Condition=" '$(XHarnessNupkgPath)' != '' ">
       <HelixCorrelationPayload Include="$(XHarnessNupkgPath)" />
     </ItemGroup>
 
+    <!-- We install the tool locally on the build machine, then, installed as-is, we zip it up and send as a correlation payload -->
+    <PropertyGroup>
+      <_XHarnessLocalToolPath>$(ArtifactsTmpDir)Microsoft.DotNet.XHarness.CLI</_XHarnessLocalToolPath>
+    </PropertyGroup>
+
+    <RemoveDir Directories="$(_XHarnessLocalToolPath)" />
+    <Exec Command="dotnet tool install --tool-path $(_XHarnessLocalToolPath) --version $(_XHarnessPackageVersion) --add-source $(XHarnessPackageSource) $(_XHarnessPackageName)"
+          IgnoreExitCode="true" />
+    
+    <ItemGroup>
+      <_XHarnessExtraToolFiles Include="$(ArtifactsTmpDir)\Microsoft.DotNet.XHarness.CLI\.store\microsoft.dotnet.xharness.cli\$(_XHarnessPackageVersion)\microsoft.dotnet.xharness.cli\$(_XHarnessPackageVersion)\*.*" />
+    </ItemGroup>
+    <Delete Files="@(_XHarnessExtraToolFiles)" />
+
+    <ItemGroup>
+      <HelixCorrelationPayload Include="$(_XHarnessLocalToolPath)\.store\microsoft.dotnet.xharness.cli\$(_XHarnessPackageVersion)\microsoft.dotnet.xharness.cli\$(_XHarnessPackageVersion)">
+        <Destination>microsoft.dotnet.xharness.cli</Destination>
+        <IncludeDirectoryName>true</IncludeDirectoryName>
+      </HelixCorrelationPayload>
+    </ItemGroup>
+
+    <!-- On the build machine, we then invoke the CLI DLL directly using .NET runtime without the need for .NET SDK -->
+    <PropertyGroup Condition="$(IsPosixShell)">
+      <XHarnessCliPath>$HELIX_CORRELATION_PAYLOAD/microsoft.dotnet.xharness.cli/$(_XHarnessPackageVersion)/tools/netcoreapp3.1/any/Microsoft.DotNet.XHarness.CLI.dll</XHarnessCliPath>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="!$(IsPosixShell)">
+      <XHarnessCliPath>$HELIX_CORRELATION_PAYLOAD\microsoft.dotnet.xharness.cli\$(_XHarnessPackageVersion)\tools\netcoreapp3.1\any\Microsoft.DotNet.XHarness.CLI.dll</XHarnessCliPath>
+    </PropertyGroup>
+
     <!-- When using a dotnet 'tool' that is not installed globally, we must set DOTNET_ROOT.
          This is because a framework dependent dotnet tool only searches in program files folders for runtimes.
          When .NET is not already installed there, we set DOTNET_ROOT to help it find the right one. -->
     <PropertyGroup Condition="$(IsPosixShell)">
-      <HelixPreCommands>$(HelixPreCommands);export DOTNET_ROOT=$HELIX_CORRELATION_PAYLOAD/dotnet</HelixPreCommands>
-      <HelixPreCommands>$(HelixPreCommands);dotnet tool install --tool-path $HELIX_CORRELATION_PAYLOAD/xharness-cli --version $(_XHarnessPackageVersion) --add-source $(XHarnessPackageSource) $(_XHarnessPackageName)</HelixPreCommands>
       <HelixPreCommands>$(HelixPreCommands);export PATH=$HELIX_CORRELATION_PAYLOAD/xharness-cli:$PATH</HelixPreCommands>
       <HelixPreCommands>$(HelixPreCommands);export XHARNESS_DISABLE_COLORED_OUTPUT=true</HelixPreCommands>
       <HelixPreCommands>$(HelixPreCommands);export XHARNESS_LOG_WITH_TIMESTAMPS=true</HelixPreCommands>
     </PropertyGroup>
 
     <PropertyGroup Condition="!$(IsPosixShell)">
-      <HelixPreCommands>$(HelixPreCommands);set DOTNET_ROOT=%HELIX_CORRELATION_PAYLOAD%\dotnet</HelixPreCommands>
-      <HelixPreCommands>$(HelixPreCommands);dotnet tool install --tool-path %HELIX_CORRELATION_PAYLOAD%\xharness-cli --version $(_XHarnessPackageVersion) --add-source $(XHarnessPackageSource) $(_XHarnessPackageName)</HelixPreCommands>
       <HelixPreCommands>$(HelixPreCommands);set PATH=%HELIX_CORRELATION_PAYLOAD%\xharness-cli%3B%PATH%</HelixPreCommands>
       <HelixPreCommands>$(HelixPreCommands);set XHARNESS_DISABLE_COLORED_OUTPUT=true</HelixPreCommands>
       <HelixPreCommands>$(HelixPreCommands);set XHARNESS_LOG_WITH_TIMESTAMPS=true</HelixPreCommands>
@@ -82,6 +109,7 @@
           Condition=" '@(XHarnessPackageToTest)' != '' "
           BeforeTargets="CoreTest">
     <CreateXHarnessAndroidWorkItems AppPackages="@(XHarnessPackageToTest)"
+                                    XHarnessCliPath="$(XHarnessCliPath)"
                                     IsPosixShell="$(IsPosixShell)"
                                     WorkItemTimeout="%(XHarnessPackageToTest.WorkItemTimeout)"
                                     TestTimeout="%(XHarnessPackageToTest.TestTimeout)">
@@ -93,6 +121,7 @@
           Condition=" '@(XHarnessAppFolderToTest)' != '' "
           BeforeTargets="CoreTest">
     <CreateXHarnessiOSWorkItems AppFolders="@(XHarnessAppFolderToTest)"
+                                XHarnessCliPath="$(XHarnessCliPath)"
                                 IsPosixShell="$(IsPosixShell)"
                                 XcodeVersion="$(XHarnessXcodeVersion)"
                                 WorkItemTimeout="%(XHarnessAppFolderToTest.WorkItemTimeout)"

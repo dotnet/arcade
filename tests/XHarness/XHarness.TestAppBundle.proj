@@ -20,7 +20,7 @@
 
     <ItemGroup>
       <XHarnessAppFoldersToTest Include="$(BaseOutputPath)appbundle/$(XHarnessAppBundleName)">
-        <Targets>ios-simulator-64</Targets>
+        <Targets>ios-simulator-64_13.5</Targets>
         <TestTimeout>00:20:00</TestTimeout>
       </XHarnessAppFoldersToTest>
     </ItemGroup>
