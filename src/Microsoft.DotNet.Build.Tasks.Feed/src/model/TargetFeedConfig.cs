@@ -46,14 +46,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
 
         public override bool Equals(object obj)
         {
-            if (obj == null)
-            {
-                return false;
-            }
-
-            TargetFeedConfig other = (TargetFeedConfig)obj;
-
             return  
+                obj is TargetFeedConfig other &&
                 (ContentType == other.ContentType) &&
                 TargetURL.Equals(other.TargetURL, StringComparison.OrdinalIgnoreCase) &&
                 (Type == other.Type) &&

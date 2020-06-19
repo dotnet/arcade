@@ -60,42 +60,38 @@ namespace Microsoft.DotNet.VersionTools.BuildManifest.Model
 
         public override bool Equals(object obj)
         {
-            if (obj == null)
+            if (obj is PackageArtifactModel other)
             {
-                return false;
-            }
-
-            if (ReferenceEquals(this, obj))
-            {
-                return true;
-            }
-
-            PackageArtifactModel other = (PackageArtifactModel)obj;
-
-            if (other == null || Attributes.Count() != other.Attributes.Count())
-            {
-                return false;
-            }
-
-            foreach (var localAttr in Attributes)
-            {
-                if (localAttr.Value == null)
+                if (ReferenceEquals(this, obj))
                 {
-                    if (other.Attributes.GetOrDefault(localAttr.Key) != null)
+                    return true;
+                }
+
+                if (Attributes.Count() != other.Attributes.Count())
+                {
+                    return false;
+                }
+
+                foreach (var localAttr in Attributes)
+                {
+                    if (localAttr.Value == null)
+                    {
+                        if (other.Attributes.GetOrDefault(localAttr.Key) != null)
+                        {
+                            return false;
+                        }
+                    }
+
+                    if (localAttr.Value.Equals(
+                        other.Attributes.GetOrDefault(localAttr.Key),
+                        StringComparison.OrdinalIgnoreCase) == false)
                     {
                         return false;
                     }
                 }
-
-                if (localAttr.Value.Equals(
-                    other.Attributes.GetOrDefault(localAttr.Key), 
-                    StringComparison.OrdinalIgnoreCase) == false)
-                {
-                    return false;
-                }
             }
 
-            return true;
+            return false;
         }
 
         public override int GetHashCode()
