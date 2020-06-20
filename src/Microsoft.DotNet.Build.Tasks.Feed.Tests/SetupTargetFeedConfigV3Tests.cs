@@ -61,78 +61,68 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             if (publishInstallersAndChecksums)
             {
                 expectedFeeds.Add(
-                    new TargetFeedConfig()
-                    {
-                        ContentType = TargetFeedContentType.Checksum,
-                        TargetURL = ChecksumsTargetStaticFeed,
-                        Isolated = true,
-                        Internal = false,
-                        AllowOverwrite = true,
-                        Type = FeedType.AzureStorageFeed,
-                        Token = ChecksumsTargetStaticFeedKey,
-                        AssetSelection = AssetSelection.All,
-                        LatestLinkShortUrlPrefix = string.Empty
-                    });
+                    new TargetFeedConfig(
+                        TargetFeedContentType.Checksum,
+                        ChecksumsTargetStaticFeed,
+                        FeedType.AzureStorageFeed,
+                        ChecksumsTargetStaticFeedKey,
+                        string.Empty,
+                        AssetSelection.All,
+                        isolated: true,
+                        @internal: false,
+                        allowOverwrite: true));
 
                 foreach (var contentType in Installers)
                 {
                     expectedFeeds.Add(
-                        new TargetFeedConfig()
-                        {
-                            ContentType = contentType,
-                            TargetURL = InstallersTargetStaticFeed,
-                            Isolated = true,
-                            Internal = false,
-                            AllowOverwrite = true,
-                            Type = FeedType.AzureStorageFeed,
-                            Token = InstallersTargetStaticFeedKey,
-                            AssetSelection = AssetSelection.All,
-                            LatestLinkShortUrlPrefix = string.Empty
-                        });
+                        new TargetFeedConfig(
+                            contentType,
+                            InstallersTargetStaticFeed,
+                            FeedType.AzureStorageFeed,
+                            InstallersTargetStaticFeedKey,
+                            string.Empty,
+                            AssetSelection.All,
+                            isolated: true,
+                            @internal: false,
+                            allowOverwrite: true));
                 }
             }
 
             expectedFeeds.Add(
-                new TargetFeedConfig()
-                {
-                    ContentType = TargetFeedContentType.Package,
-                    TargetURL = StablePackageFeed,
-                    Isolated = true,
-                    Internal = false,
-                    AllowOverwrite = false,
-                    Type = FeedType.AzDoNugetFeed,
-                    Token = AzureDevOpsFeedsKey,
-                    AssetSelection = AssetSelection.ShippingOnly,
-                    LatestLinkShortUrlPrefix = string.Empty
-                });
+                new TargetFeedConfig(
+                    TargetFeedContentType.Package,
+                    StablePackageFeed,
+                    FeedType.AzDoNugetFeed,
+                    AzureDevOpsFeedsKey,
+                    string.Empty,
+                    AssetSelection.ShippingOnly,
+                    isolated: true,
+                    @internal: false,
+                    allowOverwrite: false));
 
             expectedFeeds.Add(
-                new TargetFeedConfig()
-                {
-                    ContentType = TargetFeedContentType.Symbols,
-                    TargetURL = StableSymbolsFeed,
-                    Isolated = true,
-                    Internal = false,
-                    AllowOverwrite = false,
-                    Type = FeedType.AzDoNugetFeed,
-                    Token = AzureDevOpsFeedsKey,
-                    AssetSelection = AssetSelection.All,
-                    LatestLinkShortUrlPrefix = string.Empty
-                });
+                new TargetFeedConfig(
+                    TargetFeedContentType.Symbols,
+                    StableSymbolsFeed,
+                    FeedType.AzDoNugetFeed,
+                    AzureDevOpsFeedsKey,
+                    string.Empty,
+                    AssetSelection.All,
+                    isolated: true,
+                    @internal: false,
+                    allowOverwrite: false));
 
             expectedFeeds.Add(
-                new TargetFeedConfig()
-                {
-                    ContentType = TargetFeedContentType.Package,
-                    TargetURL = AzureDevOpsStaticTransportFeed,
-                    Isolated = false,
-                    Internal = false,
-                    AllowOverwrite = false,
-                    Type = FeedType.AzDoNugetFeed,
-                    Token = AzureDevOpsFeedsKey,
-                    AssetSelection = AssetSelection.NonShippingOnly,
-                    LatestLinkShortUrlPrefix = string.Empty
-                });
+                new TargetFeedConfig(
+                    TargetFeedContentType.Package,
+                    AzureDevOpsStaticTransportFeed,
+                    FeedType.AzDoNugetFeed,
+                    AzureDevOpsFeedsKey,
+                    string.Empty,
+                    AssetSelection.NonShippingOnly,
+                    isolated: false,
+                    @internal: false,
+                    allowOverwrite: false));
 
             var buildEngine = new MockBuildEngine();
             var config = new SetupTargetFeedConfigV3(
@@ -173,77 +163,67 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 foreach (var contentType in Installers)
                 {
                     expectedFeeds.Add(
-                        new TargetFeedConfig()
-                        {
-                            ContentType = contentType,
-                            TargetURL = InstallersTargetStaticFeed,
-                            Isolated = false,
-                            Internal = false,
-                            AllowOverwrite = false,
-                            Type = FeedType.AzureStorageFeed,
-                            Token = InstallersTargetStaticFeedKey,
-                            AssetSelection = AssetSelection.All,
-                            LatestLinkShortUrlPrefix = string.Empty
-                        });
+                        new TargetFeedConfig(
+                            contentType,
+                            InstallersTargetStaticFeed,
+                            FeedType.AzureStorageFeed,
+                            InstallersTargetStaticFeedKey,
+                            string.Empty,
+                            AssetSelection.All,
+                            isolated: false,
+                            @internal: false,
+                            allowOverwrite: false));
                 }
 
                 expectedFeeds.Add(
-                    new TargetFeedConfig()
-                    {
-                        ContentType = TargetFeedContentType.Checksum,
-                        TargetURL = ChecksumsTargetStaticFeed,
-                        Isolated = false,
-                        Internal = false,
-                        AllowOverwrite = false,
-                        Type = FeedType.AzureStorageFeed,
-                        Token = ChecksumsTargetStaticFeedKey,
-                        AssetSelection = AssetSelection.All,
-                        LatestLinkShortUrlPrefix = string.Empty
-                    });
+                    new TargetFeedConfig(
+                        TargetFeedContentType.Checksum,
+                        ChecksumsTargetStaticFeed,
+                        FeedType.AzureStorageFeed,
+                        ChecksumsTargetStaticFeedKey,
+                        string.Empty,
+                        AssetSelection.All,
+                        isolated: false,
+                        @internal: false,
+                        allowOverwrite: false));
 
             }
 
             expectedFeeds.Add(
-                new TargetFeedConfig()
-                {
-                    ContentType = TargetFeedContentType.Package,
-                    TargetURL = AzureDevOpsStaticShippingFeed,
-                    Isolated = false,
-                    Internal = false,
-                    AllowOverwrite = false,
-                    Type = FeedType.AzDoNugetFeed,
-                    Token = AzureDevOpsFeedsKey,
-                    AssetSelection = AssetSelection.ShippingOnly,
-                    LatestLinkShortUrlPrefix = string.Empty
-                });
+                new TargetFeedConfig(
+                    TargetFeedContentType.Package,
+                    AzureDevOpsStaticShippingFeed,
+                    FeedType.AzDoNugetFeed,
+                    AzureDevOpsFeedsKey,
+                    string.Empty,
+                    AssetSelection.ShippingOnly,
+                    isolated: false,
+                    @internal: false,
+                    allowOverwrite: false));
 
             expectedFeeds.Add(
-                new TargetFeedConfig()
-                {
-                    ContentType = TargetFeedContentType.Package,
-                    TargetURL = AzureDevOpsStaticTransportFeed,
-                    Isolated = false,
-                    Internal = false,
-                    AllowOverwrite = false,
-                    Type = FeedType.AzDoNugetFeed,
-                    Token = AzureDevOpsFeedsKey,
-                    AssetSelection = AssetSelection.NonShippingOnly,
-                    LatestLinkShortUrlPrefix = string.Empty
-                });
+                new TargetFeedConfig(
+                    TargetFeedContentType.Package,
+                    AzureDevOpsStaticTransportFeed,
+                    FeedType.AzDoNugetFeed,
+                    AzureDevOpsFeedsKey,
+                    string.Empty,
+                    AssetSelection.NonShippingOnly,
+                    isolated: false,
+                    @internal: false,
+                    allowOverwrite: false));
 
             expectedFeeds.Add(
-                new TargetFeedConfig()
-                {
-                    ContentType = TargetFeedContentType.Symbols,
-                    TargetURL = AzureDevOpsStaticSymbolsFeed,
-                    Isolated = false,
-                    Internal = false,
-                    AllowOverwrite = false,
-                    Type = FeedType.AzDoNugetFeed,
-                    Token = AzureDevOpsFeedsKey,
-                    AssetSelection = AssetSelection.All,
-                    LatestLinkShortUrlPrefix = string.Empty
-                });
+                new TargetFeedConfig(
+                    TargetFeedContentType.Symbols,
+                    AzureDevOpsStaticSymbolsFeed,
+                    FeedType.AzDoNugetFeed,
+                    AzureDevOpsFeedsKey,
+                    string.Empty,
+                    AssetSelection.All,
+                    isolated: false,
+                    @internal: false,
+                    allowOverwrite: false));
 
             var buildEngine = new MockBuildEngine();
             var config = new SetupTargetFeedConfigV3(
@@ -280,64 +260,56 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             if (publishInstallersAndChecksums)
             {
                 expectedFeeds.Add(
-                    new TargetFeedConfig()
-                    {
-                        ContentType = TargetFeedContentType.Checksum,
-                        TargetURL = ChecksumsTargetStaticFeed,
-                        Isolated = false,
-                        Internal = false,
-                        AllowOverwrite = false,
-                        Type = FeedType.AzureStorageFeed,
-                        Token = ChecksumsTargetStaticFeedKey,
-                        AssetSelection = AssetSelection.All,
-                        LatestLinkShortUrlPrefix = LatestLinkShortUrlPrefix
-                    });
+                    new TargetFeedConfig(
+                        TargetFeedContentType.Checksum,
+                        ChecksumsTargetStaticFeed,
+                        FeedType.AzureStorageFeed,
+                        ChecksumsTargetStaticFeedKey,
+                        LatestLinkShortUrlPrefix,
+                        AssetSelection.All,
+                        isolated: false,
+                        @internal: false,
+                        allowOverwrite: false));
 
                 foreach (var contentType in Installers)
                 {
                     expectedFeeds.Add(
-                        new TargetFeedConfig()
-                        {
-                            ContentType = contentType,
-                            TargetURL = InstallersTargetStaticFeed,
-                            Isolated = false,
-                            Internal = false,
-                            AllowOverwrite = false,
-                            Type = FeedType.AzureStorageFeed,
-                            Token = InstallersTargetStaticFeedKey,
-                            AssetSelection = AssetSelection.All,
-                            LatestLinkShortUrlPrefix = LatestLinkShortUrlPrefix
-                        });
+                        new TargetFeedConfig(
+                            contentType,
+                            InstallersTargetStaticFeed,
+                            FeedType.AzureStorageFeed,
+                            InstallersTargetStaticFeedKey,
+                            LatestLinkShortUrlPrefix,
+                            AssetSelection.All,
+                            isolated: false,
+                            @internal: false,
+                            allowOverwrite: false));
                 }
             }
 
             expectedFeeds.Add(
-                new TargetFeedConfig()
-                {
-                    ContentType = TargetFeedContentType.Package,
-                    TargetURL = AzureDevOpsStaticShippingFeed,
-                    Isolated = false,
-                    Internal = false,
-                    AllowOverwrite = false,
-                    Type = FeedType.AzDoNugetFeed,
-                    Token = AzureDevOpsFeedsKey,
-                    AssetSelection = AssetSelection.ShippingOnly,
-                    LatestLinkShortUrlPrefix = string.Empty
-                });
+                new TargetFeedConfig(
+                    TargetFeedContentType.Package,
+                    AzureDevOpsStaticShippingFeed,
+                    FeedType.AzDoNugetFeed,
+                    AzureDevOpsFeedsKey,
+                    string.Empty,
+                    AssetSelection.ShippingOnly,
+                    isolated: false,
+                    @internal: false,
+                    allowOverwrite: false));
 
             expectedFeeds.Add(
-                new TargetFeedConfig()
-                {
-                    ContentType = TargetFeedContentType.Package,
-                    TargetURL = AzureDevOpsStaticTransportFeed,
-                    Isolated = false,
-                    Internal = false,
-                    AllowOverwrite = false,
-                    Type = FeedType.AzDoNugetFeed,
-                    Token = AzureDevOpsFeedsKey,
-                    AssetSelection = AssetSelection.NonShippingOnly,
-                    LatestLinkShortUrlPrefix = string.Empty
-                });
+                new TargetFeedConfig(
+                    TargetFeedContentType.Package,
+                    AzureDevOpsStaticTransportFeed,
+                    FeedType.AzDoNugetFeed,
+                    AzureDevOpsFeedsKey,
+                    string.Empty,
+                    AssetSelection.NonShippingOnly,
+                    isolated: false,
+                    @internal: false,
+                    allowOverwrite: false));
 
             var buildEngine = new MockBuildEngine();
             var config = new SetupTargetFeedConfigV3(

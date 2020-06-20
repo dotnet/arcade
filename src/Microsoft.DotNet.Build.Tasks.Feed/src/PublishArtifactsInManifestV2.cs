@@ -86,6 +86,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     string targetFeedUrl = fc.GetMetadata(nameof(Model.TargetFeedConfig.TargetURL));
                     string feedKey = fc.GetMetadata(nameof(Model.TargetFeedConfig.Token));
                     string type = fc.GetMetadata(nameof(Model.TargetFeedConfig.Type));
+                    AssetSelection assetSelection = AssetSelection.All;
+                    bool isInternalFeed = false;
+                    bool isIsolatedFeed = false;
+                    bool isOverridableFeed = false;
 
                     if (string.IsNullOrEmpty(targetFeedUrl) ||
                         string.IsNullOrEmpty(feedKey) ||
@@ -107,71 +111,58 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         continue;
                     }
 
-                    var feedConfig = new TargetFeedConfig()
+                    string assetSelectionStr = fc.GetMetadata(nameof(Model.TargetFeedConfig.AssetSelection));
+                    if (!string.IsNullOrEmpty(assetSelectionStr))
                     {
-                        TargetURL = targetFeedUrl,
-                        Type = feedType,
-                        Token = feedKey
-                    };
-
-                    string assetSelection = fc.GetMetadata(nameof(Model.TargetFeedConfig.AssetSelection));
-                    if (!string.IsNullOrEmpty(assetSelection))
-                    {
-                        if (!Enum.TryParse<AssetSelection>(assetSelection, true, out AssetSelection selection))
+                        if (!Enum.TryParse<AssetSelection>(assetSelectionStr, true, out assetSelection))
                         {
                             Log.LogError($"Invalid feed config asset selection '{type}'. Possible values are: {string.Join(", ", Enum.GetNames(typeof(AssetSelection)))}");
                             continue;
                         }
-                        feedConfig.AssetSelection = selection;
                     }
 
                     // To determine whether a feed is internal, we allow the user to
                     // specify the value explicitly.
-                    string feedIsInternal = fc.GetMetadata(nameof(Model.TargetFeedConfig.Internal));
-                    if (!string.IsNullOrEmpty(feedIsInternal))
+                    string isInternalFeedStr = fc.GetMetadata(nameof(Model.TargetFeedConfig.Internal));
+                    if (!string.IsNullOrEmpty(isInternalFeedStr))
                     {
-                        if (!bool.TryParse(feedIsInternal, out bool feedSetting))
+                        if (!bool.TryParse(isInternalFeedStr, out isInternalFeed))
                         {
                             Log.LogError($"Invalid feed config '{nameof(Model.TargetFeedConfig.Internal)}' setting.  Must be 'true' or 'false'.");
                             continue;
                         }
-                        feedConfig.Internal = feedSetting;
                     }
                     else
                     {
-                        bool? isPublicFeed = await GeneralUtils.IsFeedPublicAsync(feedConfig.TargetURL, httpClient, Log);
+                        bool? isPublicFeed = await GeneralUtils.IsFeedPublicAsync(targetFeedUrl, httpClient, Log);
                         if (!isPublicFeed.HasValue)
                         {
                             continue;
                         }
                         else
                         {
-                            feedConfig.Internal = !isPublicFeed.Value;
+                            isInternalFeed = !isPublicFeed.Value;
                         }
                     }
 
-                    CheckForInternalBuildsOnPublicFeeds(feedConfig);
-
-                    string feedIsIsolated = fc.GetMetadata(nameof(Model.TargetFeedConfig.Isolated));
-                    if (!string.IsNullOrEmpty(feedIsIsolated))
+                    string isIsolatedFeedStr = fc.GetMetadata(nameof(Model.TargetFeedConfig.Isolated));
+                    if (!string.IsNullOrEmpty(isIsolatedFeedStr))
                     {
-                        if (!bool.TryParse(feedIsIsolated, out bool feedSetting))
+                        if (!bool.TryParse(isIsolatedFeedStr, out isIsolatedFeed))
                         {
                             Log.LogError($"Invalid feed config '{nameof(Model.TargetFeedConfig.Isolated)}' setting.  Must be 'true' or 'false'.");
                             continue;
                         }
-                        feedConfig.Isolated = feedSetting;
                     }
 
                     string allowOverwriteOnFeed = fc.GetMetadata(nameof(Model.TargetFeedConfig.AllowOverwrite));
                     if (!string.IsNullOrEmpty(allowOverwriteOnFeed))
                     {
-                        if (!bool.TryParse(allowOverwriteOnFeed, out bool feedSetting))
+                        if (!bool.TryParse(allowOverwriteOnFeed, out isOverridableFeed))
                         {
                             Log.LogError($"Invalid feed config '{nameof(Model.TargetFeedConfig.AllowOverwrite)}' setting.  Must be 'true' or 'false'.");
                             continue;
                         }
-                        feedConfig.AllowOverwrite = feedSetting;
                     }
 
                     string latestLinkShortUrlPrefix = fc.GetMetadata(nameof(Model.TargetFeedConfig.LatestLinkShortUrlPrefix));
@@ -188,7 +179,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                                 $"{nameof(AkaMSTenant)}, {nameof(AkaMsOwners)}, {nameof(AkaMSCreatedBy)}");
                             continue;
                         }
-                        feedConfig.LatestLinkShortUrlPrefix = latestLinkShortUrlPrefix;
 
                         // Set up the link manager if it hasn't already been done
                         if (LinkManager == null)
@@ -206,6 +196,19 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     {
                         FeedConfigs[categoryKey] = new HashSet<TargetFeedConfig>();
                     }
+
+                    TargetFeedConfig feedConfig = new TargetFeedConfig(
+                            categoryKey,
+                            targetFeedUrl,
+                            feedType,
+                            feedKey,
+                            latestLinkShortUrlPrefix,
+                            assetSelection,
+                            isIsolatedFeed,
+                            isInternalFeed,
+                            isOverridableFeed);
+
+                    CheckForInternalBuildsOnPublicFeeds(feedConfig);
 
                     FeedConfigs[categoryKey].Add(feedConfig);
                 }

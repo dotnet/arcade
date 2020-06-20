@@ -11,29 +11,33 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
     /// </summary>
     public class TargetFeedConfig
     {
-        public TargetFeedContentType ContentType { get; set; }
-        public string TargetURL { get; set; }
-        public FeedType Type { get; set; }
-        public string Token { get; set; }
-        public AssetSelection AssetSelection { get; set; } = AssetSelection.All;
+        public TargetFeedContentType ContentType { get; }
+
+        public string TargetURL { get; }
+
+        public FeedType Type { get; }
+
+        public string Token { get; }
+
+        public AssetSelection AssetSelection { get; }
         
         /// <summary>
         /// If true, the feed is treated as 'isolated', meaning nuget packages pushed
         /// to it may be stable.
         /// </summary>
-        public bool Isolated { get; set; } = false;
+        public bool Isolated { get; }
         
         /// <summary>
         /// If true, the feed is treated as 'internal', meaning artifacts from an internal build
         /// can be published here.
         /// </summary>
-        public bool Internal { get; set; } = false;
+        public bool Internal { get; }
         
         /// <summary>
         /// If true, the items on the feed can be overwritten. This is only
         /// valid for azure blob storage feeds.
         /// </summary>
-        public bool AllowOverwrite { get; set; } = false;
+        public bool AllowOverwrite { get; }
         
         /// <summary>
         /// Prefix of aka.ms links that should be generated for blobs.
@@ -42,7 +46,20 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
         /// E.g. 
         ///      [LatestLinkShortUrlPrefix]/aspnetcore/Runtime/dotnet-hosting-win.exe -> aspnetcore/Runtime/3.1.0-preview2.19511.6/dotnet-hosting-3.1.0-preview2.19511.6-win.exe
         /// </summary>
-        public string LatestLinkShortUrlPrefix { get; set; } = string.Empty;
+        public string LatestLinkShortUrlPrefix { get; }
+
+        public TargetFeedConfig(TargetFeedContentType contentType, string targetURL, FeedType type, string token, string latestLinkShortUrlPrefix = null, AssetSelection assetSelection = AssetSelection.All, bool isolated = false, bool @internal = false, bool allowOverwrite = false)
+        {
+            ContentType = contentType;
+            TargetURL = targetURL;
+            Type = type;
+            Token = token;
+            AssetSelection = assetSelection;
+            Isolated = isolated;
+            Internal = @internal;
+            AllowOverwrite = allowOverwrite;
+            LatestLinkShortUrlPrefix = latestLinkShortUrlPrefix ?? string.Empty;
+        }
 
         public override bool Equals(object obj)
         {
