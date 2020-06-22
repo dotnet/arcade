@@ -70,3 +70,12 @@ jobs:
           - Asset_Registry_Publish
         pool:
           vmImage: vs2017-win2016
+
+  - ${{ if and(eq(variables.EnableRichCodeNavigation, true), eq(parameters.enablePublishBuildAssets, true)) }}:
+    - task: RichCodeNavIndexer@0
+      displayName: RichCodeNav Upload
+      inputs:
+        languages: 'csharp'
+        environment: production
+        richNavLogOutputDirectory: $(Build.SourcesDirectory)/artifacts/bin
+      continueOnError: true
