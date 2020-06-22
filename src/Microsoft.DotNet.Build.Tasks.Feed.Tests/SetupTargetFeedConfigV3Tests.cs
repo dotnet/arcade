@@ -171,7 +171,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                             string.Empty,
                             AssetSelection.All,
                             isolated: false,
-                            @internal: false,
+                            @internal: true,
                             allowOverwrite: false));
                 }
 
@@ -184,7 +184,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                         string.Empty,
                         AssetSelection.All,
                         isolated: false,
-                        @internal: false,
+                        @internal: true,
                         allowOverwrite: false));
 
             }
@@ -198,7 +198,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     string.Empty,
                     AssetSelection.ShippingOnly,
                     isolated: false,
-                    @internal: false,
+                    @internal: true,
                     allowOverwrite: false));
 
             expectedFeeds.Add(
@@ -210,7 +210,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     string.Empty,
                     AssetSelection.NonShippingOnly,
                     isolated: false,
-                    @internal: false,
+                    @internal: true,
                     allowOverwrite: false));
 
             expectedFeeds.Add(
@@ -222,7 +222,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     string.Empty,
                     AssetSelection.All,
                     isolated: false,
-                    @internal: false,
+                    @internal: true,
                     allowOverwrite: false));
 
             var buildEngine = new MockBuildEngine();
