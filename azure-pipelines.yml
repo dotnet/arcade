@@ -199,15 +199,12 @@ stages:
 
   - template: eng\common\templates\post-build\post-build.yml
     parameters:
-      # Symbol validation isn't being very reliable lately. This should be enabled back
-      # once this issue is resolved: https://github.com/dotnet/arcade/issues/2871
-      enableSymbolValidation: false
+      publishingInfraVersion: 3
+
       # Sourcelink validation isn't passing for Arcade due to some regressions. This should be
       # enabled back once this issue is resolved: https://github.com/dotnet/arcade/issues/2912
       enableSourceLinkValidation: false
-      publishDependsOn:
-      - Validate
-      - ValidateSdk
+
       # This is to enable SDL runs part of Post-Build Validation Stage
       SDLValidationParameters:
         enable: true

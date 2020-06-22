@@ -1,4 +1,9 @@
 parameters:
+  # Which publishing infra should be used. THIS SHOULD MATCH THE VERSION ON THE BUILD MANIFEST.
+  # Publishing V2 accepts optionally outlining the publishing stages - default is inline.
+  # Publishing V3 DOES NOT accept inlining the publishing stages.
+  publishingInfraVersion: 2
+
   # When set to true the publishing templates from the repo will be used
   # otherwise Darc add-build-to-channel will be used to trigger the promotion pipeline
   inline: true
@@ -8,9 +13,11 @@ parameters:
   # execution concurrently with the promotion build.
   waitPublishingFinish: true
 
+  BARBuildId: ''
+  PromoteToChannelIds: ''
+
   enableSourceLinkValidation: false
   enableSigningValidation: true
-  enableSymbolValidation: false
   enableNugetValidation: true
   publishInstallersAndChecksums: false
   SDLValidationParameters:
@@ -58,7 +65,7 @@ parameters:
   VSMasterChannelId: 1012
   
 stages:
-- ${{ if ne(parameters.inline, 'true') }}:
+- ${{ if or(ge(parameters.publishingInfraVersion, 3), eq(parameters.inline, 'false')) }}:
   - stage: publish_using_darc
     dependsOn: ${{ parameters.validateDependsOn }}
     displayName: Publish using Darc
@@ -66,7 +73,10 @@ stages:
       - template: common-variables.yml
     jobs:
     - template: setup-maestro-vars.yml
-
+      parameters:
+        BARBuildId: ${{ parameters.BARBuildId }}
+        PromoteToChannelIds: ${{ parameters.PromoteToChannelIds }}
+        
     - job:
       displayName: Publish Using Darc
       dependsOn: setupMaestroVars
@@ -81,6 +91,7 @@ stages:
           inputs:
             filePath: $(Build.SourcesDirectory)/eng/common/post-build/publish-using-darc.ps1
             arguments: -BuildId $(BARBuildId) 
+              -PublishingInfraVersion ${{ parameters.PublishingInfraVersion }}
               -AzdoToken '$(publishing-dnceng-devdiv-code-r-build-re)'
               -MaestroToken '$(MaestroApiAccessToken)'
               -WaitPublishingFinish ${{ parameters.waitPublishingFinish }}
@@ -91,7 +102,7 @@ stages:
               -ArtifactsPublishingAdditionalParameters '${{ parameters.artifactsPublishingAdditionalParameters }}'
               -SigningValidationAdditionalParameters '${{ parameters.signingValidationAdditionalParameters }}'
 
-- ${{ if eq(parameters.inline, 'true') }}:
+- ${{ if and(le(parameters.publishingInfraVersion, 2), eq(parameters.inline, 'true')) }}:
   - stage: Validate
     dependsOn: ${{ parameters.validateDependsOn }}
     displayName: Validate Build Assets
@@ -99,7 +110,10 @@ stages:
       - template: common-variables.yml
     jobs:
     - template: setup-maestro-vars.yml
-
+      parameters:
+        BARBuildId: ${{ parameters.BARBuildId }}
+        PromoteToChannelIds: ${{ parameters.PromoteToChannelIds }}
+        
     - job:
       displayName: Post-build Checks
       dependsOn: setupMaestroVars
@@ -271,6 +285,8 @@ stages:
 
   - template: \eng\common\templates\post-build\channels\generic-public-channel.yml
     parameters:
+      BARBuildId: ${{ parameters.BARBuildId }}
+      PromoteToChannelIds: ${{ parameters.PromoteToChannelIds }}
       artifactsPublishingAdditionalParameters: ${{ parameters.artifactsPublishingAdditionalParameters }}
       dependsOn: ${{ parameters.publishDependsOn }}
       publishInstallersAndChecksums: ${{ parameters.publishInstallersAndChecksums }}
@@ -285,6 +301,8 @@ stages:
 
   - template: \eng\common\templates\post-build\channels\generic-public-channel.yml
     parameters:
+      BARBuildId: ${{ parameters.BARBuildId }}
+      PromoteToChannelIds: ${{ parameters.PromoteToChannelIds }}
       artifactsPublishingAdditionalParameters: ${{ parameters.artifactsPublishingAdditionalParameters }}
       dependsOn: ${{ parameters.publishDependsOn }}
       publishInstallersAndChecksums: ${{ parameters.publishInstallersAndChecksums }}
@@ -299,6 +317,8 @@ stages:
 
   - template: \eng\common\templates\post-build\channels\generic-public-channel.yml
     parameters:
+      BARBuildId: ${{ parameters.BARBuildId }}
+      PromoteToChannelIds: ${{ parameters.PromoteToChannelIds }}
       artifactsPublishingAdditionalParameters: ${{ parameters.artifactsPublishingAdditionalParameters }}
       dependsOn: ${{ parameters.publishDependsOn }}
       publishInstallersAndChecksums: ${{ parameters.publishInstallersAndChecksums }}
@@ -313,6 +333,8 @@ stages:
 
   - template: \eng\common\templates\post-build\channels\generic-public-channel.yml
     parameters:
+      BARBuildId: ${{ parameters.BARBuildId }}
+      PromoteToChannelIds: ${{ parameters.PromoteToChannelIds }}
       artifactsPublishingAdditionalParameters: ${{ parameters.artifactsPublishingAdditionalParameters }}
       dependsOn: ${{ parameters.publishDependsOn }}
       publishInstallersAndChecksums: ${{ parameters.publishInstallersAndChecksums }}
@@ -327,6 +349,8 @@ stages:
 
   - template: \eng\common\templates\post-build\channels\generic-public-channel.yml
     parameters:
+      BARBuildId: ${{ parameters.BARBuildId }}
+      PromoteToChannelIds: ${{ parameters.PromoteToChannelIds }}
       artifactsPublishingAdditionalParameters: ${{ parameters.artifactsPublishingAdditionalParameters }}
       dependsOn: ${{ parameters.publishDependsOn }}
       publishInstallersAndChecksums: ${{ parameters.publishInstallersAndChecksums }}
@@ -341,6 +365,8 @@ stages:
 
   - template: \eng\common\templates\post-build\channels\generic-public-channel.yml
     parameters:
+      BARBuildId: ${{ parameters.BARBuildId }}
+      PromoteToChannelIds: ${{ parameters.PromoteToChannelIds }}
       artifactsPublishingAdditionalParameters: ${{ parameters.artifactsPublishingAdditionalParameters }}
       dependsOn: ${{ parameters.publishDependsOn }}
       publishInstallersAndChecksums: ${{ parameters.publishInstallersAndChecksums }}
@@ -355,6 +381,8 @@ stages:
 
   - template: \eng\common\templates\post-build\channels\generic-public-channel.yml
     parameters:
+      BARBuildId: ${{ parameters.BARBuildId }}
+      PromoteToChannelIds: ${{ parameters.PromoteToChannelIds }}
       artifactsPublishingAdditionalParameters: ${{ parameters.artifactsPublishingAdditionalParameters }}
       dependsOn: ${{ parameters.publishDependsOn }}
       publishInstallersAndChecksums: ${{ parameters.publishInstallersAndChecksums }}
@@ -368,6 +396,8 @@ stages:
 
   - template: \eng\common\templates\post-build\channels\generic-public-channel.yml
     parameters:
+      BARBuildId: ${{ parameters.BARBuildId }}
+      PromoteToChannelIds: ${{ parameters.PromoteToChannelIds }}
       artifactsPublishingAdditionalParameters: ${{ parameters.artifactsPublishingAdditionalParameters }}
       dependsOn: ${{ parameters.publishDependsOn }}
       publishInstallersAndChecksums: ${{ parameters.publishInstallersAndChecksums }}
@@ -381,6 +411,8 @@ stages:
 
   - template: \eng\common\templates\post-build\channels\generic-internal-channel.yml
     parameters:
+      BARBuildId: ${{ parameters.BARBuildId }}
+      PromoteToChannelIds: ${{ parameters.PromoteToChannelIds }}
       artifactsPublishingAdditionalParameters: ${{ parameters.artifactsPublishingAdditionalParameters }}
       dependsOn: ${{ parameters.publishDependsOn }}
       publishInstallersAndChecksums: ${{ parameters.publishInstallersAndChecksums }}
@@ -394,6 +426,8 @@ stages:
 
   - template: \eng\common\templates\post-build\channels\generic-public-channel.yml
     parameters:
+      BARBuildId: ${{ parameters.BARBuildId }}
+      PromoteToChannelIds: ${{ parameters.PromoteToChannelIds }}
       artifactsPublishingAdditionalParameters: ${{ parameters.artifactsPublishingAdditionalParameters }}
       dependsOn: ${{ parameters.publishDependsOn }}
       publishInstallersAndChecksums: ${{ parameters.publishInstallersAndChecksums }}
@@ -407,6 +441,8 @@ stages:
 
   - template: \eng\common\templates\post-build\channels\generic-public-channel.yml
     parameters:
+      BARBuildId: ${{ parameters.BARBuildId }}
+      PromoteToChannelIds: ${{ parameters.PromoteToChannelIds }}
       artifactsPublishingAdditionalParameters: ${{ parameters.artifactsPublishingAdditionalParameters }}
       dependsOn: ${{ parameters.publishDependsOn }}
       publishInstallersAndChecksums: ${{ parameters.publishInstallersAndChecksums }}
@@ -420,6 +456,8 @@ stages:
 
   - template: \eng\common\templates\post-build\channels\generic-public-channel.yml
     parameters:
+      BARBuildId: ${{ parameters.BARBuildId }}
+      PromoteToChannelIds: ${{ parameters.PromoteToChannelIds }}
       artifactsPublishingAdditionalParameters: ${{ parameters.artifactsPublishingAdditionalParameters }}
       dependsOn: ${{ parameters.publishDependsOn }}
       publishInstallersAndChecksums: ${{ parameters.publishInstallersAndChecksums }}
@@ -433,6 +471,8 @@ stages:
 
   - template: \eng\common\templates\post-build\channels\generic-public-channel.yml
     parameters:
+      BARBuildId: ${{ parameters.BARBuildId }}
+      PromoteToChannelIds: ${{ parameters.PromoteToChannelIds }}
       artifactsPublishingAdditionalParameters: ${{ parameters.artifactsPublishingAdditionalParameters }}
       dependsOn: ${{ parameters.publishDependsOn }}
       publishInstallersAndChecksums: ${{ parameters.publishInstallersAndChecksums }}
@@ -446,6 +486,8 @@ stages:
 
   - template: \eng\common\templates\post-build\channels\generic-internal-channel.yml
     parameters:
+      BARBuildId: ${{ parameters.BARBuildId }}
+      PromoteToChannelIds: ${{ parameters.PromoteToChannelIds }}
       artifactsPublishingAdditionalParameters: ${{ parameters.artifactsPublishingAdditionalParameters }}
       dependsOn: ${{ parameters.publishDependsOn }}
       publishInstallersAndChecksums: ${{ parameters.publishInstallersAndChecksums }}
@@ -459,6 +501,8 @@ stages:
 
   - template: \eng\common\templates\post-build\channels\generic-public-channel.yml
     parameters:
+      BARBuildId: ${{ parameters.BARBuildId }}
+      PromoteToChannelIds: ${{ parameters.PromoteToChannelIds }}
       artifactsPublishingAdditionalParameters: ${{ parameters.artifactsPublishingAdditionalParameters }}
       dependsOn: ${{ parameters.publishDependsOn }}
       publishInstallersAndChecksums: ${{ parameters.publishInstallersAndChecksums }}
@@ -472,6 +516,8 @@ stages:
 
   - template: \eng\common\templates\post-build\channels\generic-internal-channel.yml
     parameters:
+      BARBuildId: ${{ parameters.BARBuildId }}
+      PromoteToChannelIds: ${{ parameters.PromoteToChannelIds }}
       artifactsPublishingAdditionalParameters: ${{ parameters.artifactsPublishingAdditionalParameters }}
       dependsOn: ${{ parameters.publishDependsOn }}
       publishInstallersAndChecksums: ${{ parameters.publishInstallersAndChecksums }}
@@ -485,6 +531,8 @@ stages:
 
   - template: \eng\common\templates\post-build\channels\generic-public-channel.yml
     parameters:
+      BARBuildId: ${{ parameters.BARBuildId }}
+      PromoteToChannelIds: ${{ parameters.PromoteToChannelIds }}
       artifactsPublishingAdditionalParameters: ${{ parameters.artifactsPublishingAdditionalParameters }}
       dependsOn: ${{ parameters.publishDependsOn }}
       publishInstallersAndChecksums: ${{ parameters.publishInstallersAndChecksums }}
@@ -498,6 +546,8 @@ stages:
 
   - template: \eng\common\templates\post-build\channels\generic-public-channel.yml
     parameters:
+      BARBuildId: ${{ parameters.BARBuildId }}
+      PromoteToChannelIds: ${{ parameters.PromoteToChannelIds }}
       artifactsPublishingAdditionalParameters: ${{ parameters.artifactsPublishingAdditionalParameters }}
       dependsOn: ${{ parameters.publishDependsOn }}
       publishInstallersAndChecksums: ${{ parameters.publishInstallersAndChecksums }}
@@ -511,6 +561,8 @@ stages:
       
   - template: \eng\common\templates\post-build\channels\generic-public-channel.yml
     parameters:
+      BARBuildId: ${{ parameters.BARBuildId }}
+      PromoteToChannelIds: ${{ parameters.PromoteToChannelIds }}
       artifactsPublishingAdditionalParameters: ${{ parameters.artifactsPublishingAdditionalParameters }}
       dependsOn: ${{ parameters.publishDependsOn }}
       publishInstallersAndChecksums: ${{ parameters.publishInstallersAndChecksums }}

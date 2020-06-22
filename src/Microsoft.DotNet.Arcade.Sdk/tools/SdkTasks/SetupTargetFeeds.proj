@@ -70,39 +70,6 @@
       Condition="'$(IsInternalBuild)' == ''"
       Text="Parameter 'IsInternalBuild' is empty. A boolean value is required." />
 
-    <Error
-      Condition="('$(InstallersTargetStaticFeed)' == '' or '$(InstallersAzureAccountKey)' == '') and '$(PublishInstallersAndChecksums)' == 'true'"
-      Text="Parameters 'InstallersTargetStaticFeed/Key' are empty." />
-
-    <Error
-      Condition="('$(ChecksumsTargetStaticFeed)' == '' or '$(ChecksumsAzureAccountKey)' == '') and '$(PublishInstallersAndChecksums)' == 'true'"
-      Text="Parameters 'ChecksumsTargetStaticFeed/Key' are empty." />
-
-    <Error
-      Condition="('$(AzureDevOpsStaticShippingFeed)' == '' or '$(AzureDevOpsStaticShippingFeedKey)' == '')"
-      Text="Parameters 'AzureDevOpsStaticShippingFeed/AzureDevOpsStaticShippingFeedKey' are empty." />
-
-    <Error
-      Condition="('$(AzureDevOpsStaticTransportFeed)' == '' or '$(AzureDevOpsStaticTransportFeedKey)' == '')"
-      Text="Parameters 'AzureDevOpsStaticTransportFeed/AzureDevOpsStaticTransportFeedKey' are empty." />
-
-    <Error
-      Condition="('$(AzureDevOpsStaticSymbolsFeed)' == '' or '$(AzureDevOpsStaticSymbolsFeedKey)' == '')"
-      Text="Parameters 'AzureDevOpsStaticSymbolsFeed/AzureDevOpsStaticSymbolsFeedKey' are empty." />
-
-    <!--
-      If the user wants to use a test configuration we'll create a TargetFeedConfig using
-      optional parameters passed as properties. This should prevent all the other
-      cases below from being activated.
-    -->
-    <ItemGroup Condition="'$(CreateTestConfig)' == 'true'">
-      <TargetFeedConfig
-        Include="$(TestFeedCategories)"
-        TargetURL="$(TestFeedURL)"
-        Type="$(TestFeedType)"
-        Token="$(TestFeedToken)" />
-    </ItemGroup>
-
     <!--
       - Adding this to let repos that want to override the TargetFeed be able to do so.
       - I'm reusing the parameter that was introduced by RM pipelines so that no further
@@ -154,10 +121,6 @@
         ContentIdentifier="sym">
       <Output TaskParameter="TargetFeedURL" PropertyName="NewAzDoIsolatedSymbolsFeedURL"/>
     </CreateAzureDevOpsFeed>
-
-    <Error
-      Condition="'@(TargetFeedConfig)' == '' AND '$(AzureStorageTargetFeedPAT)' == '' AND '$(IsInternalBuild)' == 'false'"
-      Text="Parameter 'AzureStorageTargetFeedPAT' is empty. A valid storage account key for $(TargetStaticFeed) is required." />
 
     <!--
         Config for:
@@ -348,9 +311,5 @@
     <Error
       Condition="'@(TargetFeedConfig)' == ''"
       Text="It wasn't possible to determine which target feed configuration to use." />
-
-    <Message
-      Text="Artifacts with category '%(TargetFeedConfig.Identity)', Isolated='%(TargetFeedConfig.Isolated)', Internal='%(TargetFeedConfig.Internal)', AssetSelection='%(TargetFeedConfig.AssetSelection)' should go to %(TargetFeedConfig.Type) -> '%(TargetFeedConfig.TargetURL)'"
-      Importance="high" />
   </Target>
 </Project>
