@@ -9,7 +9,7 @@ Arcade is intended to provide well-understood and consistent mechanisms for cons
 Status of Arcade public CI builds: [![Build Status](https://dev.azure.com/dnceng/public/_apis/build/status/dotnet/arcade/arcade-ci)](https://dev.azure.com/dnceng/public/_build/latest?definitionId=208)
 
 ## Validation & Dependency Flow Status
-Status Last Updated: June 19, 2020, 3:00 PM PDT
+Status Last Updated: June 22, 2020, 9:15 AM PDT
 
 **[Arcade validation policy and process](Documentation/Validation/Overview.md)**
 
@@ -31,13 +31,11 @@ Status Last Updated: June 19, 2020, 3:00 PM PDT
 |Arcade Official Build|[![Build Status](https://dnceng.visualstudio.com/internal/_apis/build/status/dotnet/arcade/arcade-official-ci?branchName=master)](https://dnceng.visualstudio.com/internal/_build/latest?definitionId=6&branchName=master)| 
 |Arcade Validation|[![Build Status](https://dnceng.visualstudio.com/internal/_apis/build/status/dotnet/arcade-validation/dotnet-arcade-validation-official?branchName=master)](https://dnceng.visualstudio.com/internal/_build/latest?definitionId=282&branchName=master)|
 
-(**Note**: The badge links are currently broken and it is a [known issue](https://developercommunity.visualstudio.com/content/problem/1064899/status-badge-of-build-pipeline-leads-to-404-not-fo.html) that has been reported to Azure DevOps)
-
 ### Status of Latest Version of Arcade Being Validated
 
-- Arcade is not being promoted due to errors occuring on Runtime likely due to changes in Arcade that need to be investigated and mitigated. [Link to build](https://dev.azure.com/dnceng/internal/_build/results?buildId=696071&view=results)
+- Arcade is not being promoted due to errors occuring on Runtime likely due to changes in Arcade that are currently being investigated and a fix is being validated. [Link to build](https://dev.azure.com/dnceng/internal/_build/results?buildId=698171&view=results)
 - [GitHub issue](https://github.com/dotnet/arcade/issues/5678) that is tracking the errors and mitigation
-- [Arcade Validation For Promotion build result from June 19, 2020 at 7:13 AM PDT](https://dnceng.visualstudio.com/internal/_build/results?buildId=696065&view=results)
+- [Arcade Validation For Promotion build result from June 22, 2020 at 1:00 AM PDT](https://dnceng.visualstudio.com/internal/_build/results?buildId=698159&view=results)
 
 ## Getting Started
 
