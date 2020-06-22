@@ -10,7 +10,6 @@
   <PropertyGroup>
     <HelixType>test/product/</HelixType>
     <TestRunNamePrefix>$(AGENT_JOBNAME)</TestRunNamePrefix>
-    <IncludeDotNetCli>true</IncludeDotNetCli>
     <EnableXUnitReporter>true</EnableXUnitReporter>
     <EnableAzurePipelinesReporter>true</EnableAzurePipelinesReporter>
     <HelixBaseUri>https://helix.dot.net</HelixBaseUri>
