@@ -13,6 +13,7 @@ using NuGet.Packaging.Core;
 using Sleet;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -130,11 +131,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             {
                 using (var clientThrottle = new SemaphoreSlim(maxClients, maxClients))
                 {
-                    Log.LogMessage(MessageImportance.High, $"Uploading {taskItems.Count()} items:");
                     await System.Threading.Tasks.Task.WhenAll(taskItems.Select(
                         item =>
                         {
-                            Log.LogMessage(MessageImportance.High, $"Async uploading {item.ItemSpec}");
                             return UploadAssetAsync(item, clientThrottle, pushOptions);
                         }
                     ));
@@ -198,7 +197,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             }
             catch (Exception exc)
             {
-                Log.LogError($"Unable to upload to {relativeBlobPath} due to {exc}.");
+                Log.LogError($"Unable to upload to {relativeBlobPath} in Azure Storage account {AccountName}/{ContainerName} due to {exc}.");
                 throw;
             }
             finally
