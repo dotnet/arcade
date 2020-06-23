@@ -183,12 +183,12 @@
             GetBundleWixConfiguration">
     <PropertyGroup>
       <OutInstallerFile Condition="'$(OutInstallerFile)' == ''">$(InstallerFile)</OutInstallerFile>
-      <InstallerVersion>200</InstallerVersion>
       <!--
         Native arm64 MSI packages require version 500 of MSI database schema, see:
         https://docs.microsoft.com/en-us/windows/win32/msi/using-64-bit-windows-installer-packages
       -->
-      <InstallerVersion Condition="'$(MsiArch)' == 'arm64'">500</InstallerVersion>
+      <InstallerVersion Condition="'$(InstallerVersion)' == '' and '$(MsiArch)' == 'arm64'">500</InstallerVersion>
+      <InstallerVersion Condition="'$(InstallerVersion)' == ''">200</InstallerVersion>
     </PropertyGroup>
 
     <ItemGroup>
