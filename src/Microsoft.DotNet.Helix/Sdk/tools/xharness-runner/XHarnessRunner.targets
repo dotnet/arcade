@@ -54,7 +54,7 @@
     </PropertyGroup>
 
     <PropertyGroup Condition="!$(IsPosixShell)">
-      <XHarnessCliPath>$HELIX_CORRELATION_PAYLOAD\microsoft.dotnet.xharness.cli\$(_XHarnessPackageVersion)\tools\netcoreapp3.1\any\Microsoft.DotNet.XHarness.CLI.dll</XHarnessCliPath>
+      <XHarnessCliPath>%HELIX_CORRELATION_PAYLOAD%\microsoft.dotnet.xharness.cli\$(_XHarnessPackageVersion)\tools\netcoreapp3.1\any\Microsoft.DotNet.XHarness.CLI.dll</XHarnessCliPath>
     </PropertyGroup>
 
     <!-- When using a dotnet 'tool' that is not installed globally, we must set DOTNET_ROOT.
