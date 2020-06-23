@@ -9,6 +9,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -384,7 +385,8 @@ namespace Microsoft.DotNet.RemoteExecutor
             // If we need the host (if it exists), use it, otherwise target the console app directly.
             string metadataArgs = PasteArguments.Paste(new string[] { a.FullName, t.FullName, method.Name, options.ExceptionFile }, pasteFirstArgumentUsingArgV0Rules: false);
             string passedArgs = pasteArguments ? PasteArguments.Paste(args, pasteFirstArgumentUsingArgV0Rules: false) : string.Join(" ", args);
-            string testConsoleAppArgs = s_extraParameter.Value + " " + metadataArgs + " " + passedArgs;
+            string consoleAppArgs = GetConsoleAppArgs(options, out IEnumerable<IDisposable> toDispose);
+            string testConsoleAppArgs = consoleAppArgs + " " + metadataArgs + " " + passedArgs;
 
             if (options.RunAsSudo)
             {
@@ -402,7 +404,79 @@ namespace Microsoft.DotNet.RemoteExecutor
 
             // Return the handle to the process, which may or not be started
             return new RemoteInvokeHandle(options.Start ? Process.Start(psi) : new Process() { StartInfo = psi },
-                options, a.FullName, t.FullName, method.Name);
+                options, a.FullName, t.FullName, method.Name, toDispose);
+        }
+
+        private static string GetConsoleAppArgs(RemoteInvokeOptions options, out IEnumerable<IDisposable> toDispose)
+        {
+            if (options.RuntimeConfigurationOptions?.Any() != true)
+            {
+                toDispose = null;
+                return s_extraParameter.Value;
+            }
+
+            if (!(Environment.Version.Major >= 5 || RuntimeInformation.FrameworkDescription.StartsWith(".NET Core", StringComparison.OrdinalIgnoreCase)))
+            {
+                throw new InvalidOperationException("RuntimeConfigurationOptions are only supported on .NET Core");
+            }
+
+            // to support RuntimeConfigurationOptions, copy the runtimeconfig.json file to
+            // a temp file and add the options to the runtimeconfig.dev.json file.
+
+            // NOTE: using the dev.json file so we don't need to parse and edit the runtimeconfig.json
+            // which would require a reference to System.Text.Json.
+
+            string tempFile = System.IO.Path.GetTempFileName();
+            string configFile = tempFile + ".runtimeconfig.json";
+            string devConfigFile = System.IO.Path.ChangeExtension(configFile, "dev.json");
+
+            string consoleAppArgs = s_extraParameter.Value;
+
+            const string runtimeconfigRegex = "--runtimeconfig \"(?<file>.*?)\"";
+            Match match = Regex.Match(consoleAppArgs, runtimeconfigRegex);
+            string originalRuntimeConfigFile = match.Groups["file"].Value;
+            consoleAppArgs = Regex.Replace(consoleAppArgs, runtimeconfigRegex, $"--runtimeconfig \"{configFile}\"");
+
+            File.Copy(originalRuntimeConfigFile, configFile);
+
+            string configProperties = string.Join(
+                "," + Environment.NewLine,
+                options.RuntimeConfigurationOptions.Select(kvp => $"\"{kvp.Key}\": {kvp.Value}"));
+
+            string devConfigFileContents =
+@"
+{
+  ""runtimeOptions"": {
+    ""configProperties"": {
+"
++ configProperties +
+@"
+    }
+  }
+}";
+
+            File.WriteAllText(devConfigFile, devConfigFileContents);
+            
+            toDispose = new IDisposable[] { new FileDeleter(tempFile, configFile, devConfigFile) };
+            return consoleAppArgs;
+        }
+
+        private class FileDeleter : IDisposable
+        {
+            private string[] _filesToDelete;
+
+            public FileDeleter(params string[] filesToDelete)
+            {
+                _filesToDelete = filesToDelete;
+            }
+
+            public void Dispose()
+            {
+                foreach (string file in _filesToDelete)
+                {
+                    File.Delete(file);
+                }
+            }
         }
 
         private static MethodInfo GetMethodInfo(Delegate d)
