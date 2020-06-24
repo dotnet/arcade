@@ -57,17 +57,25 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             Logger.LogMessage(MessageImportance.High, "\nThe following aka.ms links for blobs will be created:");
             IEnumerable<AkaMSLink> linksToCreate = blobsToPublish.Select(blob =>
             {
+
                 // Strip away the feed expected suffix (index.json) and append on the
                 // blob path.
                 string actualTargetUrl = feedConfig.TargetURL.Substring(0,
                     feedConfig.TargetURL.Length - expectedSuffixLength) + blob.Id;
+
+                // The dotnetcli storage account is in a single datacenter in the US and thus download 
+                // times can be painful elsewhere. The CDN helps with this thefore we point the target 
+                // of the aka.ms links to the CDN.
+                actualTargetUrl = actualTargetUrl.Replace("//dotnetcli.blob.core,windows.net/", "//dotnetcli.azureedge.net/");
 
                 AkaMSLink newLink = new AkaMSLink
                 {
                     ShortUrl = GetLatestShortUrlForBlob(feedConfig, blob),
                     TargetUrl = actualTargetUrl
                 };
+
                 Logger.LogMessage(MessageImportance.High, $"  aka.ms/{newLink.ShortUrl} -> {newLink.TargetUrl}");
+
                 return newLink;
             }).ToList();
 
