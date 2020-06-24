@@ -13,11 +13,15 @@
     <EnableXUnitReporter>true</EnableXUnitReporter>
     <EnableAzurePipelinesReporter>true</EnableAzurePipelinesReporter>
     <HelixBaseUri>https://helix.dot.net</HelixBaseUri>
+    <IncludeXHarnessCli>true</IncludeXHarnessCli>
   </PropertyGroup>
 
-  <!-- Test project which builds app bundle to run via XHarness -->
+  <!-- We test that the XHarness CLI is pre-installed and issue the state command -->
   <ItemGroup>
-    <XHarnessiOSProject Include="$(MSBuildThisFileDirectory)XHarness\XHarness.TestAppBundle.proj" />
+    <HelixWorkItem Include="xharness-ios-state">
+      <Command>dotnet exec "$XHARNESS_CLI_PATH" ios state</Command>
+      <Timeout>00:03:00</Timeout>
+    </HelixWorkItem>
   </ItemGroup>
 
   <ItemGroup Condition=" '$(HelixAccessToken)' != '' ">

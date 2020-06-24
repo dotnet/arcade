@@ -13,12 +13,6 @@ namespace Microsoft.DotNet.Helix.Sdk
         private const int DefaultTestTimeoutInMinutes = 12;
 
         /// <summary>
-        /// Location of the XHarness CLI DLL since we are now extracting the tool and invoking the CLI DLL directly
-        /// </summary>
-        [Required]
-        public string XHarnessCliPath { get; set; }
-
-        /// <summary>
         /// Boolean true if this is a posix shell, false if not
         /// This does not need to be set by a user; it is automatically determined in Microsoft.DotNet.Helix.Sdk.MonoQueue.targets
         /// </summary>

@@ -13,19 +13,19 @@
     <EnableXUnitReporter>true</EnableXUnitReporter>
     <EnableAzurePipelinesReporter>true</EnableAzurePipelinesReporter>
     <HelixBaseUri>https://helix.dot.net</HelixBaseUri>
+    <IncludeXHarnessCli>true</IncludeXHarnessCli>
   </PropertyGroup>
 
-  <!-- Test project which builds app bundle to run via XHarness -->
+  <!-- We test that the XHarness CLI is pre-installed and issue the state command -->
   <ItemGroup>
-    <XHarnessiOSProject Include="$(MSBuildThisFileDirectory)XHarness\XHarness.TestAppBundle.proj" />
+    <HelixWorkItem Include="xharness-android-state">
+      <Command>dotnet exec %XHARNESS_CLI_PATH% android state</Command>
+      <Timeout>00:03:00</Timeout>
+    </HelixWorkItem>
   </ItemGroup>
 
   <ItemGroup Condition=" '$(HelixAccessToken)' != '' ">
-    <HelixTargetQueue Include="osx.1015.amd64"/>
-  </ItemGroup>
-
-  <ItemGroup Condition=" '$(HelixAccessToken)' == '' ">
-    <HelixTargetQueue Include="osx.1015.amd64.open"/>
+    <HelixTargetQueue Include="ubuntu.1804.amd64.android"/>
   </ItemGroup>
 
   <PropertyGroup Condition=" '$(HelixAccessToken)' == '' ">
@@ -34,11 +34,14 @@
     <Creator Condition=" '$(Creator)' == ''">anon</Creator>
   </PropertyGroup>
 
+  <ItemGroup Condition=" '$(HelixAccessToken)' == '' ">
+    <HelixTargetQueue Include="ubuntu.1804.amd64.android.open"/>
+  </ItemGroup>
+
   <!-- Useless stuff to make Arcade SDK happy -->
   <PropertyGroup>
     <Language>msbuild</Language>
   </PropertyGroup>
-
   <Target Name="Pack"/>
 
   <!-- See UnitTests.proj in above folder for why this is included directly-from-repo -->
