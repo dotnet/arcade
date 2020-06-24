@@ -44,7 +44,7 @@ of whether the repo will be within budge once those items are complete.*
 | Repo               | Owner    | Consolidated/Removed from flow | Moved tests | Post-signing | Post-validation | Budget (mins)                   | Within budget |
 | ------------------ | -------- | ------------------------------ | ----------- | ------------ | --------------- | ------------------------------- | ------------- |
 | websdk             | vramak   | ![][green]                       | NA          | NA           | NA              | NA                              | NA            |
-| aspnetcore         | kevinpi  | NA                             | ![][red]    | NYA          | NYA             | 45                              | ![][red]      |
+| aspnetcore         | kevinpi  | NA                             | ![][green]    | NYA          | NYA             | 45                              | ![][red]      |
 | aspnetcore-tooling | kevinpi  | ![][green]                       | NA          | NA           | NA              | NA                              | NA            |
 | efcore             | kevinpi  | ![][green]                     | ![][red]    | NR           | NR              | NA                              | NA            |
 | extensions         | ericstj  | ![][green]                       | ![][green]    | NR           | NR              | NA                              | NA            |
