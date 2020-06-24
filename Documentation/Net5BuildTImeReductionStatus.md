@@ -10,7 +10,7 @@ The expected potential critical paths of the build after consolidation is comple
 
 - runtime -> aspnetcore -> sdk -> installer
 - runtime -> winforms -> wpf -> windowsdesktop -> sdk -> installer
-- runtime -> wpf-int -> wpf -> windowsdesktop -> sdk -> installer
+- wpf-int -> wpf -> windowsdesktop -> sdk -> installer
 
 Based on the rough amount of build work done in each repo, budgets for each build leg, to fit within the overall 2 hour official time goal, have been set as follows:
 
