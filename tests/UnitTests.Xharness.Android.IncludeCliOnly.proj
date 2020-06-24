@@ -19,7 +19,7 @@
   <!-- We test that the XHarness CLI is pre-installed and issue the state command -->
   <ItemGroup>
     <HelixWorkItem Include="xharness-android-state">
-      <Command>dotnet exec %XHARNESS_CLI_PATH% android state</Command>
+      <Command>dotnet exec "%XHARNESS_CLI_PATH%" android state</Command>
       <Timeout>00:03:00</Timeout>
     </HelixWorkItem>
   </ItemGroup>
