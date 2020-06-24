@@ -44,18 +44,18 @@ of whether the repo will be within budge once those items are complete.*
 | Repo               | Owner    | Consolidated/Removed from flow | Moved tests | Post-signing | Post-validation | Budget (mins)                   | Within budget |
 | ------------------ | -------- | ------------------------------ | ----------- | ------------ | --------------- | ------------------------------- | ------------- |
 | websdk             | vramak   | ![][green]                       | NA          | NA           | NA              | NA                              | NA            |
-| aspnetcore         | kevinpi  | NA                             | ![][green]    | NYA          | NYA             | 45                              | ![][red]      |
+| aspnetcore         | kevinpi  | NA                             | ![][green]    | NYA          | ![][green]             | 45                              | ![][red]      |
 | aspnetcore-tooling | kevinpi  | ![][green]                       | NA          | NA           | NA              | NA                              | NA            |
 | efcore             | kevinpi  | ![][green]                     | ![][red]    | NR           | NR              | NA                              | NA            |
 | extensions         | ericstj  | ![][green]                       | ![][green]    | NR           | NR              | NA                              | NA            |
-| installer          | marcpop    | NA                             | ![][green]    | NYA          | NYA             | 30 (w/sdk)                      | ![][red]      |
-| runtime            | jaredpar | ![][green]                     | ![][green]  | NYA          | NYA             | 45                              | ![][red]      |
-| sdk                | marcpop    | NA                             | ![][green]  | NYA          | NYA             | 30 (w/installer)                | ![][red]      |
-| templating         | joaguila | NA                             | ![][red]    | NYA          | NYA             | NA                              | NA            |
-| windowsdesktop     | fabiant | NA                             | ![][red]    | NYA          | NYA             | 45 (w/winforms + wpf)           | ![][red]      |
-| winforms           | mmcgaw | NA                             | ![][red]    | NYA          | NYA             | 45 (w/wpf + wd)                 | ![][red]      |
-| wpf-int            | fabiant | NA                             | ![][red]    | NYA          | NYA             | 45 (w/wpf + wd)                 | ![][red]      |
-| wpf                | fabiant | NA                             | ![][red]    | NYA          | NYA             | 45 (w/winforms or wpf-int + wd) | ![][red]      |
+| installer          | marcpop    | NA                             | ![][green]    | NYA          | ![][red]             | 30 (w/sdk)                      | ![][red]      |
+| runtime            | jaredpar | ![][green]                     | ![][green]  | NYA          | ![][green]             | 45                              | ![][red]      |
+| sdk                | marcpop    | NA                             | ![][green]  | NYA          | ![][red]             | 30 (w/installer)                | ![][red]      |
+| templating         | joaguila | NA                             | ![][red]    | NYA          | ![][red]             | NA                              | NA            |
+| windowsdesktop     | fabiant | NA                             | ![][red]    | NYA          | ![][red]             | 45 (w/winforms + wpf)           | ![][red]      |
+| winforms           | mmcgaw | NA                             | ![][red]    | NYA          | ![][red]             | 45 (w/wpf + wd)                 | ![][red]      |
+| wpf-int            | fabiant | NA                             | ![][red]    | NYA          | ![][red]             | 45 (w/wpf + wd)                 | ![][red]      |
+| wpf                | fabiant | NA                             | ![][red]    | NYA          | ![][red]             | 45 (w/winforms or wpf-int + wd) | ![][red]      |
 
 [red]: https://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Red.png
 [green]: https://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png
