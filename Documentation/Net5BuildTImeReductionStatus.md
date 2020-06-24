@@ -52,8 +52,8 @@ of whether the repo will be within budge once those items are complete.*
 | runtime            | jaredpar | ![][green]                     | ![][green]  | NYA          | NYA             | 45                              | ![][red]      |
 | sdk                | marcpop    | NA                             | ![][green]  | NYA          | NYA             | 30 (w/installer)                | ![][red]      |
 | templating         | joaguila | NA                             | ![][red]    | NYA          | NYA             | NA                              | NA            |
-| windowsdesktop     | kevinpi | NA                             | ![][red]    | NYA          | NYA             | 45 (w/winforms + wpf)           | ![][red]      |
-| winforms           | kevinpi | NA                             | ![][red]    | NYA          | NYA             | 45 (w/wpf + wd)                 | ![][red]      |
+| windowsdesktop     | fabiant | NA                             | ![][red]    | NYA          | NYA             | 45 (w/winforms + wpf)           | ![][red]      |
+| winforms           | mmcgaw | NA                             | ![][red]    | NYA          | NYA             | 45 (w/wpf + wd)                 | ![][red]      |
 | wpf-int            | fabiant | NA                             | ![][red]    | NYA          | NYA             | 45 (w/wpf + wd)                 | ![][red]      |
 | wpf                | fabiant | NA                             | ![][red]    | NYA          | NYA             | 45 (w/winforms or wpf-int + wd) | ![][red]      |
 
