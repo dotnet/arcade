@@ -13,14 +13,14 @@ namespace Microsoft.DotNet.Helix.Sdk
         private const int DefaultTestTimeoutInMinutes = 12;
 
         /// <summary>
-        /// Boolean true if this is a posix shell, false if not
+        /// Boolean true if this is a posix shell, false if not.
         /// This does not need to be set by a user; it is automatically determined in Microsoft.DotNet.Helix.Sdk.MonoQueue.targets
         /// </summary>
         [Required]
         public bool IsPosixShell { get; set; }
 
         /// <summary>
-        /// Optional timeout for the actual test execution in the TimeSpan format (e.g. 00:45:00 for 45 minutes)
+        /// Optional timeout for the actual test execution in the TimeSpan format (e.g. 00:45:00 for 45 minutes).
         /// Defaults to 00:12:00.
         /// </summary>
         public string TestTimeout { get; set; }
