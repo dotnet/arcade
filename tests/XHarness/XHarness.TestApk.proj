@@ -9,7 +9,7 @@
 
   <Target Name="Build" Returns="@(XHarnessPackageToTest)" >
     <Error Condition=" '$(ArtifactsTmpDir)' == ''" Text="Not downloading APK because ArtifactsTmpDir property is unset" />
-    <DownloadFile SourceUrl="$(XHarnessX86TestApkUrl)" DestinationFolder="$(ArtifactsTmpDir)/XHarness.TestApk\x86" SkipUnchangedFiles="True" Retries="5">
+    <DownloadFile SourceUrl="$(XHarnessX86TestApkUrl)" DestinationFolder="$(ArtifactsTmpDir)XHarness.TestApk\x86" SkipUnchangedFiles="True" Retries="5">
       <Output TaskParameter="DownloadedFile" ItemName="DownloadedApkFile" />
     </DownloadFile>
 
