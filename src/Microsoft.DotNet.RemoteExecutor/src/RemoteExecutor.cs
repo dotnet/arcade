@@ -58,7 +58,7 @@ namespace Microsoft.DotNet.RemoteExecutor
             HostRunnerName = System.IO.Path.GetFileName(processFileName);
             Path = typeof(RemoteExecutor).Assembly.Location;
 
-            if (Environment.Version.Major >= 5 || RuntimeInformation.FrameworkDescription.StartsWith(".NET Core", StringComparison.OrdinalIgnoreCase))
+            if (IsNetCore())
             {
                 HostRunner = processFileName;
 
@@ -88,6 +88,9 @@ namespace Microsoft.DotNet.RemoteExecutor
                 s_extraParameter = new Lazy<string>(() => string.Empty);
             }
         }
+
+        private static bool IsNetCore() =>
+            Environment.Version.Major >= 5 || RuntimeInformation.FrameworkDescription.StartsWith(".NET Core", StringComparison.OrdinalIgnoreCase);
 
         /// <summary>Returns true if the RemoteExecutor works on the current platform, otherwise false.</summary>
         public static bool IsSupported { get; } =
@@ -415,7 +418,7 @@ namespace Microsoft.DotNet.RemoteExecutor
                 return s_extraParameter.Value;
             }
 
-            if (!(Environment.Version.Major >= 5 || RuntimeInformation.FrameworkDescription.StartsWith(".NET Core", StringComparison.OrdinalIgnoreCase)))
+            if (!IsNetCore())
             {
                 throw new InvalidOperationException("RuntimeConfigurationOptions are only supported on .NET Core");
             }
@@ -441,7 +444,7 @@ namespace Microsoft.DotNet.RemoteExecutor
 
             string configProperties = string.Join(
                 "," + Environment.NewLine,
-                options.RuntimeConfigurationOptions.Select(kvp => $"\"{kvp.Key}\": {kvp.Value}"));
+                options.RuntimeConfigurationOptions.Select(kvp => $"\"{kvp.Key}\": {ToJsonString(kvp.Value)}"));
 
             string devConfigFileContents =
 @"
@@ -456,10 +459,18 @@ namespace Microsoft.DotNet.RemoteExecutor
 }";
 
             File.WriteAllText(devConfigFile, devConfigFileContents);
-            
+
             toDispose = new IDisposable[] { new FileDeleter(tempFile, configFile, devConfigFile) };
             return consoleAppArgs;
         }
+
+        private static string ToJsonString(object value) =>
+            value switch
+            {
+                string s => $"\"{s}\"",
+                bool b => b ? "true" : "false",
+                _ => value.ToString(),
+            };
 
         private class FileDeleter : IDisposable
         {
@@ -521,7 +532,7 @@ namespace Microsoft.DotNet.RemoteExecutor
                 .Select(asm => System.IO.Path.Combine(AppContext.BaseDirectory, asm.GetName().Name + ".deps.json"))
                 .Where(File.Exists)
                 .FirstOrDefault();
-            
+
             return (runtimeConfigPath, depsJsonPath);
         }
     }

@@ -43,7 +43,7 @@ namespace Microsoft.DotNet.RemoteExecutor
         /// <remarks>
         /// This option only works with .NET Core processes.
         /// </remarks>
-        public IDictionary<string, string> RuntimeConfigurationOptions { get; } = new Dictionary<string, string>();
+        public IDictionary<string, object> RuntimeConfigurationOptions { get; } = new Dictionary<string, object>();
 
         public bool RunAsSudo
         {
