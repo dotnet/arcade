@@ -134,12 +134,13 @@ In case you decide to request the SDK to pre-install the XHarness tool only with
 </PropertyGroup>
 ```
 
-There will be an MSBuild property `XHarnessCliPath` set that will point to the XHarness CLI dll that needs to be run:
+There will be an environmental variable set called `XHARNESS_CLI_PATH` set that will point to the XHarness CLI DLL that needs to be run:
 
 ```xml
 <ItemGroup>
   <HelixWorkItem Include="Run WASM tests">
-    <Command>dotnet exec $(XHarnessCliPath) wasm test --engine ...</Command>
+    <!-- %XHARNESS_CLI_PATH% for Windows which can be derived from $(IsPosixShell) property -->
+    <Command>dotnet exec $XHARNESS_CLI_PATH wasm test --engine ...</Command>
   </HelixWorkItem>
 </ItemGroup>
 ```
