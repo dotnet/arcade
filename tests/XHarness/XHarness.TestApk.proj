@@ -8,14 +8,14 @@
   </PropertyGroup>
 
   <Target Name="Build" Returns="@(XHarnessPackageToTest)" >
-    <Error Condition=" '$(BaseOutputPath)' == ''" Text="Not downloading APK because BaseOutputPath property is unset" />
-    <DownloadFile SourceUrl="$(XHarnessX86TestApkUrl)" DestinationFolder="$(BaseOutputPath)apk/x86" SkipUnchangedFiles="True" Retries="5">
+    <Error Condition=" '$(ArtifactsTmpDir)' == ''" Text="Not downloading APK because ArtifactsTmpDir property is unset" />
+    <DownloadFile SourceUrl="$(XHarnessX86TestApkUrl)" DestinationFolder="$(ArtifactsTmpDir)XHarness.TestApk\x86" SkipUnchangedFiles="True" Retries="5">
       <Output TaskParameter="DownloadedFile" ItemName="DownloadedApkFile" />
     </DownloadFile>
 
-    <DownloadFile SourceUrl="$(XHarnessX64TestApkUrl)" DestinationFolder="$(BaseOutputPath)apk/x86_64" SkipUnchangedFiles="True" Retries="5">
+    <DownloadFile SourceUrl="$(XHarnessX64TestApkUrl)" DestinationFolder="$(ArtifactsTmpDir)XHarness.TestApk\x86_64" SkipUnchangedFiles="True" Retries="5">
       <Output TaskParameter="DownloadedFile" ItemName="DownloadedApkFile" />
-    </DownloadFile> 
+    </DownloadFile>
 
     <Message Text="Downloaded @(DownloadedApkFile) for XHarness Test purposes" Importance="High" />
 
@@ -29,8 +29,8 @@
         <!-- If there are > 1 instrumentation class inside the package, we need to know the name of which to use -->
         <AndroidInstrumentationName>net.dot.MonoRunner</AndroidInstrumentationName>
 
-      </XHarnessPackageToTest>      
+      </XHarnessPackageToTest>
     </ItemGroup>
   </Target>
-  
+
 </Project>

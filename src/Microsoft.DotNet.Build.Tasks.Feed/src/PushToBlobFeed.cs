@@ -166,7 +166,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     ManifestCommit,
                     ManifestBuildData,
                     IsStableBuild,
-                    BuildManifestUtil.LegacyPublishingInfraVersion);
+                    PublishingInfraVersion.Legacy);
             }
             catch (Exception e)
             {
