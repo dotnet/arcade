@@ -91,19 +91,6 @@
       Text="Parameters 'AzureDevOpsStaticSymbolsFeed/AzureDevOpsStaticSymbolsFeedKey' are empty." />
 
     <!--
-      If the user wants to use a test configuration we'll create a TargetFeedConfig using
-      optional parameters passed as properties. This should prevent all the other
-      cases below from being activated.
-    -->
-    <ItemGroup Condition="'$(CreateTestConfig)' == 'true'">
-      <TargetFeedConfig
-        Include="$(TestFeedCategories)"
-        TargetURL="$(TestFeedURL)"
-        Type="$(TestFeedType)"
-        Token="$(TestFeedToken)" />
-    </ItemGroup>
-
-    <!--
       - Adding this to let repos that want to override the TargetFeed be able to do so.
       - I'm reusing the parameter that was introduced by RM pipelines so that no further
         changes are needed in customer repos.
