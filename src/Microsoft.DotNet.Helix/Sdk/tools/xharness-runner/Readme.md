@@ -21,12 +21,12 @@ This is automatically included as a Helix Correlation Payload for the job when X
 ## How to use
 
 There are three main ways how to use XHarness through the Helix SDK:
-- Specify the apks/app bundles as described above and everything will be taken care of from there. You no longer specify the `HelixCommand` to be executed. Each apk/app bundle you specify will be processed as a separate Helix work item.
-- Specify the `XHarnessAndroidProject` or `XHarnessiOSProject` task items which will produce apks/app bundles from the `Build` target.
+- Specify the apks/app bundles using the `XHarnessPackageToTest` and `XHarnessAppFolderToTest` items as described below and everything will be taken care of from there. You no longer specify the `HelixCommand` to be executed. Each apk/app bundle will be processed as a separate Helix work item.
+- Specify the `XHarnessAndroidProject` or `XHarnessiOSProject` task items which will point to projects that produce apks/app bundles from their `Build` target.
   - Examples - [iOS](https://github.com/dotnet/arcade/blob/master/tests/XHarness/XHarness.TestAppBundle.proj) and [Android](https://github.com/dotnet/arcade/blob/master/tests/XHarness/XHarness.TestApk.proj)
-- Only request the XHarness dotnet tool to be pre-installed for the Helix job for you and then call it yourself from bash/cmd - see [XHarness tool pre-installation only](#xharness-tool-pre-installation-only).
+- Only request the XHarness dotnet tool to be pre-installed for the Helix job for you and then call the XHarness tool yourself as shown below.
 
-There are some required/optional configuration properties that need to/can be set in any case:
+There are some required configuration properties that need to be set for XHarness to work and some optional to customize the run further:
 
 ```xml
 <PropertyGroup>
@@ -47,6 +47,20 @@ There are some required/optional configuration properties that need to/can be se
 <!-- Required: Configuration that is already needed for the Helix SDK -->
 <ItemGroup Condition=" '$(HelixAccessToken)' == '' ">
   <HelixTargetQueue Include="osx.1015.amd64.open"/>
+</ItemGroup>
+```
+
+### Calling the XHarness tool directly
+
+In case you decide to request the SDK to pre-install the XHarness tool only without any specific payload, you just don't specify `XHarnessPackageToTest` or `XHarnessAppFolderToTest` items and you specify the Helix command directly.
+There will be an environmental variable called `XHARNESS_CLI_PATH` set that will point to the XHarness CLI DLL that needs to be run using `dotnet exec` like so:
+
+```xml
+<ItemGroup>
+  <HelixWorkItem Include="Run WASM tests">
+    <Command Condition="$(IsPosixShell)">dotnet exec $XHARNESS_CLI_PATH wasm test --engine ...</Command>
+    <Command Condition="!$(IsPosixShell)">dotnet exec %XHARNESS_CLI_PATH% wasm test --engine ...</Command>
+  </HelixWorkItem>
 </ItemGroup>
 ```
 
@@ -124,19 +138,4 @@ You can also specify some metadata that will help you configure the run better:
 
 ### WASM payloads
 
-We currently do not support execution of WASM workloads directly, please refer to [XHarness tool pre-installation only](#xharness-tool-pre-installation-only) and call the `xharness wasm test` command manually.
-
-### XHarness tool pre-installation only
-
-In case you decide to request the SDK to pre-install the XHarness tool only without any specific payload, you just don't specify `XHarnessPackageToTest` or `XHarnessAppFolderToTest`
-items and in that case you need to specify the Helix command.
-There will be an environmental variable `XHARNESS_CLI_PATH` set that will point to the XHarness CLI DLL that needs to be run using `dotnet exec` like so:
-
-```xml
-<ItemGroup>
-  <HelixWorkItem Include="Run WASM tests">
-    <!-- Note: Use %XHARNESS_CLI_PATH% for Windows which can be derived from $(IsPosixShell) property -->
-    <Command>dotnet exec $XHARNESS_CLI_PATH wasm test --engine ...</Command>
-  </HelixWorkItem>
-</ItemGroup>
-```
+We currently do not support execution of WASM workloads directly, please call the `xharness wasm test` command manually.
