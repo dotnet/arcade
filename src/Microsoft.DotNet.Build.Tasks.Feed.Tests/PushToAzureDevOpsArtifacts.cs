@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using Microsoft.DotNet.Build.Tasks.Feed.Model;
+using Microsoft.DotNet.VersionTools.BuildManifest.Model;
 using System;
 using System.IO;
 using Xunit;
@@ -17,7 +19,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             var buildId = "1.2.3";
             var initialAssetsLocation = "cloud";
             var isStable = false;
-            var expectedManifestContent = $"<Build PublishingVersion=\"{BuildManifestUtil.LatestPublishingInfraVersion}\" BuildId=\"{buildId}\" InitialAssetsLocation=\"{initialAssetsLocation}\" IsStable=\"{isStable}\" />";
+            var expectedManifestContent = $"<Build PublishingVersion=\"{(int)PublishingInfraVersion.Latest}\" BuildId=\"{buildId}\" InitialAssetsLocation=\"{initialAssetsLocation}\" IsStable=\"{isStable}\" />";
 
             var buildEngine = new MockBuildEngine();
             var task = new PushToAzureDevOpsArtifacts
