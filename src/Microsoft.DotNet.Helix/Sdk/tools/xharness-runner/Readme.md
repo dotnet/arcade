@@ -31,6 +31,9 @@ There are some required/optional configuration properties that need to/can be se
 ```xml
 <PropertyGroup>
   <!-- Required: Version of XHarness CLI to use -->
+  <IncludeXHarnessCli>true</IncludeXHarnessCli>
+
+  <!-- Required: Version of XHarness CLI to use -->
   <MicrosoftDotNetXHarnessCLIVersion>1.0.0-prerelease.20322.1</MicrosoftDotNetXHarnessCLIVersion>
 
   <!-- Optional: Properties that are also valid for the Arcade Helix SDK (some might be needed for CI runs only) -->
@@ -125,21 +128,14 @@ We currently do not support execution of WASM workloads directly, please refer t
 
 ### XHarness tool pre-installation only
 
-In case you decide to request the SDK to pre-install the XHarness tool only without any specific payload, you can do so by setting the `IncludeXHarnessCli` property to `true`:
-
-```xml
-<PropertyGroup>
-  <IncludeXHarnessCli>true</IncludeXHarnessCli>
-  <MicrosoftDotNetXHarnessCLIVersion>1.0.0-prerelease.20322.1</MicrosoftDotNetXHarnessCLIVersion>
-</PropertyGroup>
-```
-
-There will be an environmental variable set called `XHARNESS_CLI_PATH` set that will point to the XHarness CLI DLL that needs to be run:
+In case you decide to request the SDK to pre-install the XHarness tool only without any specific payload, you just don't specify `XHarnessPackageToTest` or `XHarnessAppFolderToTest`
+items and in that case you need to specify the Helix command.
+There will be an environmental variable `XHARNESS_CLI_PATH` set that will point to the XHarness CLI DLL that needs to be run using `dotnet exec` like so:
 
 ```xml
 <ItemGroup>
   <HelixWorkItem Include="Run WASM tests">
-    <!-- %XHARNESS_CLI_PATH% for Windows which can be derived from $(IsPosixShell) property -->
+    <!-- Note: Use %XHARNESS_CLI_PATH% for Windows which can be derived from $(IsPosixShell) property -->
     <Command>dotnet exec $XHARNESS_CLI_PATH wasm test --engine ...</Command>
   </HelixWorkItem>
 </ItemGroup>
