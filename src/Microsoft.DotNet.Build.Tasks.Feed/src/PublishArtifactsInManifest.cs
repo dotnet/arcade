@@ -8,7 +8,6 @@ using Microsoft.DotNet.VersionTools.BuildManifest.Model;
 using System;
 using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed
@@ -112,8 +111,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         public string ChecksumsFeedKey { get; set; }
 
         public string InstallersFeedKey { get; set; }
-
-        public string AzureStorageTargetFeedKey { get; set; }
 
         public string AzureDevOpsFeedsKey { get; set; }
 
@@ -285,7 +282,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 AkaMsOwners = this.AkaMsOwners,
                 AkaMSTenant = this.AkaMSTenant,
                 PublishInstallersAndChecksums = this.PublishInstallersAndChecksums,
-                AzureStorageTargetFeedKey = this.AzureStorageTargetFeedKey,
                 AzureDevOpsFeedsKey = this.AzureDevOpsFeedsKey,
                 InstallersFeedKey = this.InstallersFeedKey,
                 CheckSumsFeedKey = this.ChecksumsFeedKey,
