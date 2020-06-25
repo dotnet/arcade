@@ -148,7 +148,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                                          "--output-directory \"$HELIX_WORKITEM_UPLOAD_ROOT\" " +
                                         $"--targets \"{targets}\" " +
                                         $"--timeout \"{xHarnessTimeout.TotalSeconds}\" " +
-                                         "--launch-timeout 600 " +
+                                         "--launch-timeout 900 " +
                                          "--xharness-cli-path \"$XHARNESS_CLI_PATH\" " +
                                         $"--xcode-version {XcodeVersion}" +
                                         (!string.IsNullOrEmpty(AppArguments) ? $" --app-arguments \"{AppArguments}\"" : string.Empty);

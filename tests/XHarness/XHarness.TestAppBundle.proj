@@ -21,7 +21,8 @@
     <ItemGroup>
       <XHarnessAppFoldersToTest Include="$(ArtifactsTmpDir)XHarness.TestAppBundle/$(XHarnessAppBundleName)">
         <Targets>ios-simulator-64_13.5</Targets>
-        <TestTimeout>00:20:00</TestTimeout>
+        <TestTimeout>00:15:00</TestTimeout>
+        <WorkItemTimeout>00:30:00</WorkItemTimeout>
       </XHarnessAppFoldersToTest>
     </ItemGroup>
   </Target>
