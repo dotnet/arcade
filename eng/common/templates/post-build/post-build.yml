@@ -271,6 +271,8 @@ stages:
 
   - template: \eng\common\templates\post-build\channels\generic-public-channel.yml
     parameters:
+      BARBuildId: ${{ parameters.BARBuildId }}
+      PromoteToChannelIds: ${{ parameters.PromoteToChannelIds }}
       artifactsPublishingAdditionalParameters: ${{ parameters.artifactsPublishingAdditionalParameters }}
       dependsOn: ${{ parameters.publishDependsOn }}
       publishInstallersAndChecksums: ${{ parameters.publishInstallersAndChecksums }}
