@@ -9,7 +9,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -42,10 +41,8 @@ namespace Microsoft.DotNet.RemoteExecutor
         /// </summary>
         public static readonly string HostRunner;
 
-        /// <summary>
-        /// Optional additional arguments.
-        /// </summary>
-        private static readonly Lazy<string> s_extraParameter;
+        private static string s_runtimeConfigPath;
+        private static string s_depsJsonPath;
 
         static RemoteExecutor()
         {
@@ -61,31 +58,10 @@ namespace Microsoft.DotNet.RemoteExecutor
             if (IsNetCore())
             {
                 HostRunner = processFileName;
-
-                // we need to lazy-initialize this as GetAppRuntimeOptions() returns null for the runtimeConfigPath when the static ctor runs during xunit test discovery
-                s_extraParameter = new Lazy<string>(() =>
-                {
-                    string options = "exec";
-                    (string runtimeConfigPath, string depsJsonPath) = GetAppRuntimeOptions();
-
-                    if (runtimeConfigPath != null)
-                    {
-                        options += $" --runtimeconfig \"{runtimeConfigPath}\"";
-                    }
-
-                    if (depsJsonPath != null)
-                    {
-                        options += $" --depsfile \"{depsJsonPath}\"";
-                    }
-
-                    options += $" \"{Path}\"";
-                    return options;
-                });
             }
             else if (RuntimeInformation.FrameworkDescription.StartsWith(".NET Framework", StringComparison.OrdinalIgnoreCase))
             {
                 HostRunner = Path;
-                s_extraParameter = new Lazy<string>(() => string.Empty);
             }
         }
 
@@ -412,15 +388,41 @@ namespace Microsoft.DotNet.RemoteExecutor
 
         private static string GetConsoleAppArgs(RemoteInvokeOptions options, out IEnumerable<IDisposable> toDispose)
         {
+            bool isNetCore = IsNetCore();
+            if (options.RuntimeConfigurationOptions?.Any() == true&& !isNetCore)
+            {
+                throw new InvalidOperationException("RuntimeConfigurationOptions are only supported on .NET Core");
+            }
+
+            if (!isNetCore)
+            {
+                toDispose = null;
+                return string.Empty;
+            }
+
+            string args = "exec";
+            
+            string runtimeConfigPath = GetRuntimeConfigPath(options, out toDispose);
+            if (runtimeConfigPath != null)
+            {
+                args += $" --runtimeconfig \"{runtimeConfigPath}\"";
+            }
+
+            if (DepsJsonPath != null)
+            {
+                args += $" --depsfile \"{DepsJsonPath}\"";
+            }
+
+            args += $" \"{Path}\"";
+            return args;
+        }
+
+        private static string GetRuntimeConfigPath(RemoteInvokeOptions options, out IEnumerable<IDisposable> toDispose)
+        {
             if (options.RuntimeConfigurationOptions?.Any() != true)
             {
                 toDispose = null;
-                return s_extraParameter.Value;
-            }
-
-            if (!IsNetCore())
-            {
-                throw new InvalidOperationException("RuntimeConfigurationOptions are only supported on .NET Core");
+                return RuntimeConfigPath;
             }
 
             // to support RuntimeConfigurationOptions, copy the runtimeconfig.json file to
@@ -433,14 +435,7 @@ namespace Microsoft.DotNet.RemoteExecutor
             string configFile = tempFile + ".runtimeconfig.json";
             string devConfigFile = System.IO.Path.ChangeExtension(configFile, "dev.json");
 
-            string consoleAppArgs = s_extraParameter.Value;
-
-            const string runtimeconfigRegex = "--runtimeconfig \"(?<file>.*?)\"";
-            Match match = Regex.Match(consoleAppArgs, runtimeconfigRegex);
-            string originalRuntimeConfigFile = match.Groups["file"].Value;
-            consoleAppArgs = Regex.Replace(consoleAppArgs, runtimeconfigRegex, $"--runtimeconfig \"{configFile}\"");
-
-            File.Copy(originalRuntimeConfigFile, configFile);
+            File.Copy(RuntimeConfigPath, configFile);
 
             string configProperties = string.Join(
                 "," + Environment.NewLine,
@@ -461,7 +456,7 @@ namespace Microsoft.DotNet.RemoteExecutor
             File.WriteAllText(devConfigFile, devConfigFileContents);
 
             toDispose = new IDisposable[] { new FileDeleter(tempFile, configFile, devConfigFile) };
-            return consoleAppArgs;
+            return configFile;
         }
 
         private static string ToJsonString(object value) =>
@@ -512,7 +507,33 @@ namespace Microsoft.DotNet.RemoteExecutor
             return d.GetMethodInfo();
         }
 
-        private static (string runtimeConfigPath, string depsJsonPath) GetAppRuntimeOptions()
+        private static string RuntimeConfigPath
+        {
+            get
+            {
+                if (s_runtimeConfigPath == null)
+                {
+                    InitializePaths();
+                }
+
+                return s_runtimeConfigPath;
+            }
+        }
+
+        private static string DepsJsonPath
+        {
+            get
+            {
+                if (s_depsJsonPath == null)
+                {
+                    InitializePaths();
+                }
+
+                return s_depsJsonPath;
+            }
+        }
+
+        private static void InitializePaths()
         {
             Assembly currentAssembly = typeof(RemoteExecutor).Assembly;
 
@@ -523,17 +544,15 @@ namespace Microsoft.DotNet.RemoteExecutor
                 .Where(asm => asm != null && asm != currentAssembly)
                 .Distinct();
 
-            string runtimeConfigPath = assemblies
+            s_runtimeConfigPath = assemblies
                 .Select(asm => System.IO.Path.Combine(AppContext.BaseDirectory, asm.GetName().Name + ".runtimeconfig.json"))
                 .Where(File.Exists)
                 .FirstOrDefault();
 
-            string depsJsonPath = assemblies
+            s_depsJsonPath = assemblies
                 .Select(asm => System.IO.Path.Combine(AppContext.BaseDirectory, asm.GetName().Name + ".deps.json"))
                 .Where(File.Exists)
                 .FirstOrDefault();
-
-            return (runtimeConfigPath, depsJsonPath);
         }
     }
 }
