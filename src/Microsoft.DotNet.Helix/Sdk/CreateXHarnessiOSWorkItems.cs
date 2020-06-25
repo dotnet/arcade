@@ -149,6 +149,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                                         $"--targets \"{targets}\" " +
                                         $"--timeout \"{xHarnessTimeout.TotalSeconds}\" " +
                                          "--launch-timeout 600 " +
+                                         "--xharness-cli-path \"$XHARNESS_CLI_PATH\" " +
                                         $"--xcode-version {XcodeVersion}" +
                                         (!string.IsNullOrEmpty(AppArguments) ? $" --app-arguments \"{AppArguments}\"" : string.Empty);
 

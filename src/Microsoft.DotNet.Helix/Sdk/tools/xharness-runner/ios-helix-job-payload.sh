@@ -7,6 +7,7 @@ output_directory=''
 targets=''
 timeout=''
 launch_timeout=''
+xharness_cli_path=''
 xcode_version=''
 app_arguments=''
 
@@ -31,6 +32,10 @@ while [[ $# > 0 ]]; do
         ;;
       --launch-timeout)
         launch_timeout="$2"
+        shift
+        ;;
+      --xharness-cli-path)
+        xharness_cli_path="$2"
         shift
         ;;
       --xcode-version)
@@ -75,8 +80,8 @@ if [ -z "$launch_timeout" ]; then
     die "Launch timeout wasn't provided";
 fi
 
-if [ -z "$XHARNESS_CLI_PATH" ]; then
-    die "\$XHARNESS_CLI_PATH wasn't set";
+if [ -z "$xharness_cli_path" ]; then
+    die "XHarness path wasn't provided";
 fi
 
 if [ -z "$xcode_version" ]; then
@@ -98,7 +103,7 @@ open -a "$simulator_app"
 export XHARNESS_DISABLE_COLORED_OUTPUT=true
 export XHARNESS_LOG_WITH_TIMESTAMPS=true
 
-dotnet exec "$XHARNESS_CLI_PATH" ios test  \
+dotnet exec "$xharness_cli_path" ios test  \
     --app="$app"                           \
     --output-directory="$output_directory" \
     --targets="$targets"                   \

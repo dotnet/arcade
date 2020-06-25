@@ -1,21 +1,17 @@
 <Project>
 
-  <Target Name="DetectXHarnessRequest"
-          Condition=" '@(XHarnessAppFolderToTest)' != '' OR '@(XHarnessPackageToTest)' != '' OR '@(XHarnessAndroidProject)' != '' OR '@(XHarnessiOSProject)' != '' OR '$(IncludeXHarnessCli)' == 'true' "
-          BeforeTargets="AddDotNetSdk;AddXHarnessCli">
-    <PropertyGroup>
-      <!-- We then invoke the CLI DLL directly using .NET runtime without the need for .NET SDK -->
-      <IncludeDotNetCli>true</IncludeDotNetCli>
-      <IncludeXHarnessCli>true</IncludeXHarnessCli>
-      <DotNetCliPackageType>runtime</DotNetCliPackageType>
-      <DotNetCliVersion>3.1.5</DotNetCliVersion>
-    </PropertyGroup>
-  </Target>
+  <PropertyGroup Condition=" '$(IncludeXHarnessCli)' == 'true' ">
+    <!-- We then invoke the CLI DLL directly using .NET runtime without the need for .NET SDK -->
+    <IncludeDotNetCli>true</IncludeDotNetCli>
+    <IncludeXHarnessCli>true</IncludeXHarnessCli>
+    <DotNetCliPackageType>runtime</DotNetCliPackageType>
+    <DotNetCliVersion>3.1.5</DotNetCliVersion>
+  </PropertyGroup>
 
   <Target Name="AddXHarnessCli"
-          Condition=" '@(XHarnessAppFolderToTest)' != '' OR '@(XHarnessPackageToTest)' != '' OR '@(XHarnessAndroidProject)' != '' OR '@(XHarnessiOSProject)' != '' OR '$(IncludeXHarnessCli)' == 'true' "
+          Condition=" '$(IncludeXHarnessCli)' == 'true' "
           BeforeTargets="CoreTest"
-          DependsOnTargets="AddDotNetSdk">
+          AfterTargets="AddDotNetSdk">
 
     <Error Condition=" '$(_XHarnessPackageVersion)' == '' " Text="XHarness CLI version not defined! Please specify it using the MicrosoftDotNetXHarnessCLIVersion property" />
 
