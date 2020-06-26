@@ -6,8 +6,6 @@
     task (from Tasks.Feed) to publish the artifacts described in the informed build manifest.
     
     Parameters:
-      - TargetChannels                          : Comma-separated list of Maestro++ Channel IDs to which the build should
-                                                  be assigned to once the assets are published.
       - ManifestsBasePath
       - BlobBasePath
       - PackageBasePath
@@ -15,8 +13,6 @@
       - MaestroApiEndpoint
       - BuildAssetRegistryToken
       - NugetPath
-      - PublishInstallersAndChecksums
-      - AzureDevOpsFeedsKey
 
     Parameters required by SetupTargetFeeds.proj:
       - IsInternalBuild
@@ -71,12 +67,6 @@
       <AkaMSTenant Condition="'$(AkaMSTenant)' == ''">ncd</AkaMSTenant>
       <AkaMSOwners Condition="'$(AkaMSOwners)' == ''">dn-bot</AkaMSOwners>
       <AkaMSCreatedBy Condition="'$(AkaMSCreatedBy)' == ''">dn-bot</AkaMSCreatedBy>
-
-      <InstallersFeedKey>$(InstallersAzureAccountKey)</InstallersFeedKey>
-      <InstallersFeedKey Condition="'$(InternalBuild)' == 'true'">$(InternalInstallersTargetStaticFeedKey)</InstallersFeedKey>
-
-      <ChecksumsFeedKey>$(ChecksumsAzureAccountKey)</ChecksumsFeedKey>
-      <ChecksumsFeedKey Condition="'$(InternalBuild)' == 'true'">$(InternalChecksumsTargetStaticFeedKey)</ChecksumsFeedKey>
     </PropertyGroup>
 
     <Error
@@ -89,14 +79,9 @@
     <PublishArtifactsInManifest
       InternalBuild="$(IsInternalBuild)"
       TargetFeedConfig="@(TargetFeedConfig)"
-      TargetChannels="$(TargetChannels)"
       BARBuildId="$(BARBuildId)"
       MaestroApiEndpoint="$(MaestroApiEndpoint)"
       BuildAssetRegistryToken="$(BuildAssetRegistryToken)"
-      PublishInstallersAndChecksums="$(PublishInstallersAndChecksums)"
-      ChecksumsFeedKey="$(ChecksumsFeedKey)"
-      InstallersFeedKey="$(InstallersFeedKey)"
-      AzureDevOpsFeedsKey="$(AzureDevOpsFeedsKey)"
       AssetManifestPaths="@(ManifestFiles)"
       BlobAssetsBasePath="$(BlobBasePath)"
       PackageAssetsBasePath="$(PackageBasePath)"

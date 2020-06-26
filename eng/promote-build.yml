@@ -76,7 +76,6 @@ stages:
             script: |
               # Keeping this script inline so that we don't need to checkout the whole repo to use just one file
               try {
-                  dir Env:
                   $buildApiEndpoint = "$(MaestroApiEndPoint)/api/builds/${Env:BARBuildId}?api-version=$(MaestroApiVersion)"
 
                   $apiHeaders = New-Object 'System.Collections.Generic.Dictionary[[String],[String]]'

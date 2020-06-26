@@ -14,7 +14,6 @@ jobs:
         targetType: inline
         script: |
           try {
-            dir Env:
             $ErrorActionPreference = 'Stop'
             Set-StrictMode -Version 2.0
 
