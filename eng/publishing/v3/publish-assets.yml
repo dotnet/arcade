@@ -72,6 +72,7 @@ jobs:
           /p:ChecksumsAzureAccountKey=$(dotnetclichecksums-storage-key)
           /p:InternalChecksumsAzureAccountKey=$(dotnetclichecksumsmsrc-storage-key)
           /p:AzureDevOpsFeedsKey='$(dn-bot-dnceng-artifact-feeds-rw)'
+          /p:AzureStorageTargetFeedPAT='$(dotnetfeed-storage-access-key-1)'
           /p:AkaMSClientId=$(akams-client-id)
           /p:AkaMSClientSecret=$(akams-client-secret)
           ${{ parameters.artifactsPublishingAdditionalParameters }}
