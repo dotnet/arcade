@@ -108,6 +108,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public bool PublishInstallersAndChecksums { get; set; } = false;
 
+        public string AzureStorageTargetFeedKey { get; set; }
+
         public string ChecksumsFeedKey { get; set; }
 
         public string InstallersFeedKey { get; set; }
@@ -285,6 +287,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 AzureDevOpsFeedsKey = this.AzureDevOpsFeedsKey,
                 InstallersFeedKey = this.InstallersFeedKey,
                 CheckSumsFeedKey = this.ChecksumsFeedKey,
+                AzureStorageTargetFeedKey = this.AzureStorageTargetFeedKey
             };
         }
     }

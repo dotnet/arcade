@@ -35,7 +35,7 @@
       - AzureStorageAccountKey
       - AzureDevOpsFeedsBaseUrl
       - ArtifactsCategory
-      - AzureStorageTargetFeedPAT
+      - AzureStorageTargetFeedPAT               : PAT for accessing dotnetfeed Azure Storage
 
     Optional parameters for SetupTargetFeeds.proj
       - PublishInstallersAndChecksums   : This control whether installers & checksums should be published to public feeds on public builds
@@ -63,7 +63,9 @@
 
   <Import Project="SetupTargetFeeds.proj" Condition="'$(PublishingInfraVersion)' == '2'" />
 
-  <Target Name="Execute" DependsOnTargets="SetupTargetFeeds">
+  <Target Name="Execute">
+    <CallTarget Targets="SetupTargetFeeds" Condition="'$(PublishingInfraVersion)' == '2'" />
+
     <Error Condition="'$(ManifestsBasePath)' == ''" Text="ManifestsBasePath is empty. Please provide the full path to asset manifest(s) directory." />
     <Error Condition="'$(BlobBasePath)' == '' OR '$(PackageBasePath)' == ''" Text="A valid full path to BlobBasePath and PackageBasePath is required." />
 
@@ -101,6 +103,7 @@
       ChecksumsFeedKey="$(ChecksumsFeedKey)"
       InstallersFeedKey="$(InstallersFeedKey)"
       AzureDevOpsFeedsKey="$(AzureDevOpsFeedsKey)"
+      AzureStorageTargetFeedKey="$(AzureStorageTargetFeedPAT)"
       AssetManifestPaths="@(ManifestFiles)"
       BlobAssetsBasePath="$(BlobBasePath)"
       PackageAssetsBasePath="$(PackageBasePath)"
