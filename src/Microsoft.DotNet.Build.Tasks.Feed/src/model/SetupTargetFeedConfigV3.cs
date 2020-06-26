@@ -34,7 +34,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             bool isStableBuild,
             string repositoryName,
             string commitSha,
-            string azureStorageTargetFeedPAT,
             bool publishInstallersAndChecksums,
             string installersTargetStaticFeed,
             string installersAzureAccountKey,
@@ -48,7 +47,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             IBuildEngine buildEngine,
             string stablePackagesFeed = null,
             string stableSymbolsFeed = null) 
-            : base(isInternalBuild, isStableBuild, repositoryName, commitSha, azureStorageTargetFeedPAT, publishInstallersAndChecksums, installersTargetStaticFeed, installersAzureAccountKey, checksumsTargetStaticFeed, checksumsAzureAccountKey, azureDevOpsStaticShippingFeed, azureDevOpsStaticTransportFeed, azureDevOpsStaticSymbolsFeed, latestLinkShortUrlPrefix, azureDevOpsFeedsKey)
+            : base(isInternalBuild, isStableBuild, repositoryName, commitSha, publishInstallersAndChecksums, installersTargetStaticFeed, installersAzureAccountKey, checksumsTargetStaticFeed, checksumsAzureAccountKey, azureDevOpsStaticShippingFeed, azureDevOpsStaticTransportFeed, azureDevOpsStaticSymbolsFeed, latestLinkShortUrlPrefix, azureDevOpsFeedsKey)
         {
             BuildEngine = buildEngine;
             StableSymbolsFeed = stableSymbolsFeed;
