@@ -66,7 +66,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 // The dotnetcli storage account is in a single datacenter in the US and thus download 
                 // times can be painful elsewhere. The CDN helps with this thefore we point the target 
                 // of the aka.ms links to the CDN.
-                actualTargetUrl = actualTargetUrl.Replace("//dotnetcli.blob.core,windows.net/", "//dotnetcli.azureedge.net/");
+                actualTargetUrl = actualTargetUrl.Replace("//dotnetcli.blob.core.windows.net/", "//dotnetcli.azureedge.net/");
 
                 AkaMSLink newLink = new AkaMSLink
                 {
