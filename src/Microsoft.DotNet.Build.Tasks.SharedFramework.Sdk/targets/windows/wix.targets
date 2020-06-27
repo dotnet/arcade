@@ -27,7 +27,7 @@
       Text="IntermediateOutputRootPath not specified" />
 
     <PropertyGroup>
-      <WixVersion>3.10.4</WixVersion>
+      <WixVersion>3.14.0.4118</WixVersion>
       <WixToolsDir>$(IntermediateOutputRootPath)WixTools.$(WixVersion)/</WixToolsDir>
       <!-- Used in WiX targets to locate files. -->
       <WixInstallPath>$(WixToolsDir)</WixInstallPath>
@@ -183,10 +183,17 @@
             GetBundleWixConfiguration">
     <PropertyGroup>
       <OutInstallerFile Condition="'$(OutInstallerFile)' == ''">$(InstallerFile)</OutInstallerFile>
+      <!--
+        Native arm64 MSI packages require version 500 of MSI database schema, see:
+        https://docs.microsoft.com/en-us/windows/win32/msi/using-64-bit-windows-installer-packages
+      -->
+      <InstallerVersion Condition="'$(InstallerVersion)' == '' and '$(MsiArch)' == 'arm64'">500</InstallerVersion>
+      <InstallerVersion Condition="'$(InstallerVersion)' == ''">200</InstallerVersion>
     </PropertyGroup>
 
     <ItemGroup>
       <CandleVariables Include="MicrosoftEula" Value="$(MSBuildThisFileDirectory)eula.rtf" />
+      <CandleVariables Include="InstallerVersion" Value="$(InstallerVersion)" />
     </ItemGroup>
   </Target>
 

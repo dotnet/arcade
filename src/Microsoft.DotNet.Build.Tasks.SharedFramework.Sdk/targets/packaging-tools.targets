@@ -22,7 +22,7 @@
       <_osSupportsWixBasedInstallers Condition="'$(OS)' != 'Windows_NT'">false</_osSupportsWixBasedInstallers>
 
       <_osArchSupportsWixBasedInstallers>$(_osSupportsWixBasedInstallers)</_osArchSupportsWixBasedInstallers>
-      <_osArchSupportsWixBasedInstallers Condition="'$(TargetArchitecture)' == 'arm' or '$(TargetArchitecture)' == 'arm64'">false</_osArchSupportsWixBasedInstallers>
+      <_osArchSupportsWixBasedInstallers Condition="'$(TargetArchitecture)' == 'arm'">false</_osArchSupportsWixBasedInstallers>
 
       <!--
         Save the project's GenerateMSI setting. It's possible the current arch of the current OS
