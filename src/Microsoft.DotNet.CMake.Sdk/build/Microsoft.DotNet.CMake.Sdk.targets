@@ -43,7 +43,7 @@
       StandardOutputImportance="Low">
       <Output TaskParameter="ConsoleOutput" PropertyName="_HighestCompatibleVSVersion" />
     </Exec>
-    
+
     <Error Condition="'$(_HighestCompatibleVSVersion)' == ''" Text="Unable to find a VS installation with the MSVC tools for the '$(Platform)' architecture." />
 
     <PropertyGroup>
@@ -116,7 +116,7 @@
     <Error Condition="$([MSBuild]::IsOsPlatform(Windows))" Text="This SDK does not support using non-MSVC toolchains on Windows." />
     <PropertyGroup>
       <CMakeCompilerSearchScript>
-      . $([MSBuild]::MakeRelative('$(MSBuildProjectDirectory)', '$(RepositoryEngineeringDir)common/native/find-native-compiler.sh') $(CMakeCompilerToolchain) $(CMakeCompilerMajorVersion) $(CMakeCompilerMinorVersion)
+      . $([MSBuild]::MakeRelative('$(MSBuildProjectDirectory)', '$(RepositoryEngineeringDir)common/native/find-native-compiler.sh')) $(CMakeCompilerToolchain) $(CMakeCompilerMajorVersion) $(CMakeCompilerMinorVersion)
       </CMakeCompilerSearchScript>
     </PropertyGroup>
   </Target>
@@ -136,7 +136,7 @@
     <ItemGroup>
       <_CMakeArguments Include="-G &quot;$(CMakeGenerator)&quot;" />
       <_CMakeArguments Condition="'$(CMakeToolset)' != ''" Include="-T $(CMakeToolset)" />
-      <_CMakeArguments Condition="'$(_CMakePassArchitectureToGenerator)' != ''" Include="-A $(Platform)" />
+      <_CMakeArguments Condition="'$(_CMakePassArchitectureToGenerator)' == 'true'" Include="-A $(Platform)" />
       <_CMakeArguments Condition="'$(CMakeOutputDir)' != ''" Include="-B &quot;$(CMakeOutputDir)&quot;" />
       <_CMakeArguments Condition="'$(CMakeLists)' != ''" Include="-S &quot;$(_NormalizedCMakeListsDirectory)&quot;" />
       <_CMakeDefineArguments Include="@(CMakeDefines->'-D%(Identity)=%(Value)')" />
@@ -169,7 +169,7 @@
 
   <Target Name="Configure"
     DependsOnTargets="GetConfigScript">
-    <Exec Command="
+    <Exec WorkingDirectory="$(MSBuildProjectDirectory)" Command="
       $(CMakeCompilerSearchScript)
       $(CMakeConfigScript)" />
   </Target>
@@ -179,11 +179,11 @@
       <!-- Don't set IntermediateAssembly since this is not produced -->
       <IntermediateAssembly Remove="@(IntermediateAssembly)" />
     </ItemGroup>
-    <Exec Command="
+    <Exec WorkingDirectory="$(MSBuildProjectDirectory)" Command="
       $(CMakeCompilerSearchScript)
       $(CMakeBuildScript)" />
   </Target>
-  
+
   <Target Name="GenerateBringupScript" DependsOnTargets="GetConfigScript;GetBuildScript">
     <Error Condition="'$(BringupScriptOutputFile)' == ''" Text="An output file for the bringup script must be specified" />
     <PropertyGroup>

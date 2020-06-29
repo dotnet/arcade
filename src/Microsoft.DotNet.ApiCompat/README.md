@@ -31,3 +31,4 @@ When API Compat identifies an error it will log the error and fail the build.  I
 - `$(BaselineAllAPICompatError)` - true to indicate that the baseline file should be rewritten suppressing all API compat errors.  You may set this when building the project to conveniently update the baseline when you wish to suppress them, eg: `dotnet msbuild /p:BaselineAllAPICompatError=true`
 - `$(MatchingRefApiCompatBaseline)` - same as `$(ApiCompatBaseline)` but for reverse API compat.
 - `$(BaselineAllMatchingRefApiCompatError)` - same as `$(BaselineAllAPICompatError)` but for reverse API compat.
+- `$(AdditionalApiCompatOptions)` - allows you to pass additional parameters as command line parameters, for example `--exclude-non-browsable`.

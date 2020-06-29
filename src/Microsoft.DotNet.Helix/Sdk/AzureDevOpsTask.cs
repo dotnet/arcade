@@ -117,11 +117,11 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
 
         protected async Task HandleFailedRequest(HttpRequestMessage req, HttpResponseMessage res)
         {
-            if (res.StatusCode == HttpStatusCode.Found)
+            if (res.StatusCode == HttpStatusCode.Unauthorized || res.StatusCode == HttpStatusCode.Found)
             {
                 Log.LogError(
                     FailureCategory.Build,
-                    "A call to an Azure DevOps api returned 302 Indicating a bad 'System.AccessToken' value.\n\nPlease Check the 'Make secrets available to builds of forks' in the pipeline pull request validation trigger settings.\nWe have evaluated the security considerations of this setting and have determined that it is fine to use for our public PR validation builds.");
+                    $"A call to an Azure DevOps api returned {(int)res.StatusCode}, which may indicate a bad 'System.AccessToken' value.\n\nPlease Check the 'Make secrets available to builds of forks' in the pipeline pull request validation trigger settings.\nWe have evaluated the security considerations of this setting and have determined that it is fine to use for our public PR validation builds.");
                 return;
             }
 

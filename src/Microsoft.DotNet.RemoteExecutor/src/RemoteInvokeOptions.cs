@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
@@ -36,6 +37,14 @@ namespace Microsoft.DotNet.RemoteExecutor
 
         public string ExceptionFile { get; } = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
 
+        /// <summary>
+        /// Gets the runtimeconfig options (or AppContext settings) to set for the remote process.
+        /// </summary>
+        /// <remarks>
+        /// This option only works with .NET Core processes.
+        /// </remarks>
+        public IDictionary<string, object> RuntimeConfigurationOptions { get; } = new Dictionary<string, object>();
+
         public bool RunAsSudo
         {
             get => _runAsSudo;
@@ -49,11 +58,5 @@ namespace Microsoft.DotNet.RemoteExecutor
                 _runAsSudo = value;
             }
         }
-
-        public bool ShouldSkipInvocation { get; } =
-            RuntimeInformation.IsOSPlatform(OSPlatform.Create("IOS")) ||
-            RuntimeInformation.IsOSPlatform(OSPlatform.Create("ANDROID")) ||
-            RuntimeInformation.IsOSPlatform(OSPlatform.Create("TVOS")) ||
-            RuntimeInformation.IsOSPlatform(OSPlatform.Create("WATCHOS"));
     }
 }

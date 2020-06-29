@@ -10,6 +10,7 @@ namespace Microsoft.DotNet.AsmDiff
         Html,
         WordXml,
         Text,
-        UnifiedDiff
+        UnifiedDiff,
+        Md
     }
 }

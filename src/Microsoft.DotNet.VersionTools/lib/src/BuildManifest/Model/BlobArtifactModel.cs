@@ -3,7 +3,9 @@
 // See the LICENSE file in the project root for more information.
 
 using Microsoft.DotNet.VersionTools.Util;
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace Microsoft.DotNet.VersionTools.BuildManifest.Model
@@ -37,6 +39,54 @@ namespace Microsoft.DotNet.VersionTools.BuildManifest.Model
         }
 
         public override string ToString() => $"Blob {Id}";
+
+        public override bool Equals(object obj)
+        {
+            if (obj is BlobArtifactModel other)
+            {
+                if (ReferenceEquals(this, obj))
+                {
+                    return true;
+                }
+
+                if (Attributes.Count() != other.Attributes.Count())
+                {
+                    return false;
+                }
+
+                foreach (var localAttr in Attributes)
+                {
+                    if (localAttr.Value == null)
+                    {
+                        if (other.Attributes.GetOrDefault(localAttr.Key) != null)
+                        {
+                            return false;
+                        }
+                    }
+
+                    if (localAttr.Value.Equals(
+                        other.Attributes.GetOrDefault(localAttr.Key),
+                        StringComparison.OrdinalIgnoreCase) == false)
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        public override int GetHashCode()
+        {
+            int hash = 1;
+
+            foreach (var item in Attributes)
+            {
+                hash *= (item.Key, item.Value).GetHashCode();
+            }
+
+            return hash;
+        }
 
         public XElement ToXml() => new XElement(
             "Blob",
