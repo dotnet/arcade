@@ -32,7 +32,7 @@
     </PropertyGroup>
 
     <PropertyGroup>
-      <WixVersion>3.10.4</WixVersion>
+      <WixVersion>3.14.0.4118</WixVersion>
       <WixToolsDir>$(BaseIntermediateOutputPath)WixTools.$(WixVersion)/</WixToolsDir>
       <!-- Used in WiX targets to locate files. -->
       <WixInstallPath>$(WixToolsDir)</WixInstallPath>
@@ -222,9 +222,18 @@
     <PropertyGroup>
       <_OutInstallerFile Condition="'$(_OutInstallerFile)' == ''">$(_InstallerFile)</_OutInstallerFile>
     </PropertyGroup>
+    <PropertyGroup>
+      <!--
+        Native arm64 MSI packages require version 500 of MSI database schema, see:
+        https://docs.microsoft.com/en-us/windows/win32/msi/using-64-bit-windows-installer-packages
+      -->
+      <WixInstallerVersion Condition="'$(WixInstallerVersion)' == '' and '$(MsiArch)' == 'arm64'">500</WixInstallerVersion>
+      <WixInstallerVersion Condition="'$(WixInstallerVersion)' == ''">200</WixInstallerVersion>
+    </PropertyGroup>
 
     <ItemGroup>
       <CandleVariables Include="MicrosoftEula" Value="$(MSBuildThisFileDirectory)eula.rtf" />
+      <CandleVariables Include="InstallerVersion" Value="$(WixInstallerVersion)" />
     </ItemGroup>
   </Target>
 
