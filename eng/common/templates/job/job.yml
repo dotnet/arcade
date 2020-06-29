@@ -127,7 +127,7 @@ jobs:
   - ${{ each step in parameters.steps }}:
     - ${{ step }}
 
-  - ${{ if and(eq(parameters.enableRichCodeNavigation, true), eq(parameters.enablePublishBuildAssets, true)) }}:
+  - ${{ if eq(parameters.enableRichCodeNavigation, true) }}:
     - task: RichCodeNavIndexer@0
       displayName: RichCodeNav Upload
       inputs:
