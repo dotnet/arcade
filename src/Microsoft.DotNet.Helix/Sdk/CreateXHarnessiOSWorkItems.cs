@@ -145,12 +145,11 @@ namespace Microsoft.DotNet.Helix.Sdk
             // We need to call 'sudo launchctl' to spawn the process in a user session with GUI rendering capabilities
             string xharnessRunCommand = $"sudo launchctl asuser `id -u` sh \"{PayloadScriptName}\" " +
                                         $"--app \"$HELIX_WORKITEM_ROOT/{Path.GetFileName(appFolderPath.ItemSpec)}\" " +
-                                        $"--output-directory \"$HELIX_WORKITEM_UPLOAD_ROOT\" " +
+                                         "--output-directory \"$HELIX_WORKITEM_UPLOAD_ROOT\" " +
                                         $"--targets \"{targets}\" " +
                                         $"--timeout \"{xHarnessTimeout.TotalSeconds}\" " +
-                                        $"--launch-timeout 600 " +
-                                        $"--dotnet-root \"$DOTNET_ROOT\" " +
-                                        $"--xharness \"$HELIX_CORRELATION_PAYLOAD/xharness-cli/xharness\" " +
+                                         "--launch-timeout 900 " +
+                                         "--xharness-cli-path \"$XHARNESS_CLI_PATH\" " +
                                         $"--xcode-version {XcodeVersion}" +
                                         (!string.IsNullOrEmpty(AppArguments) ? $" --app-arguments \"{AppArguments}\"" : string.Empty);
 
