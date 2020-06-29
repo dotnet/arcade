@@ -135,7 +135,10 @@
       <ManifestBuildData Include="AzureDevOpsBranch=$(BUILD_SOURCEBRANCH)" />
     </ItemGroup>
     
-    <PushToAzureDevOpsArtifacts
+    <!--
+      The user can set `PublishingVersion` via eng\Publishing.props
+    -->
+    <PushToAzureDevOpsArtifacts 
       ItemsToPush="@(ItemsToPushToBlobFeed)"
       ItemsToSign="@(ItemsToSign)"
       StrongNameSignInfo="@(StrongNameSignInfo)"
@@ -147,6 +150,7 @@
       ManifestBuildId="$(BUILD_BUILDNUMBER)"
       ManifestCommit="$(BUILD_SOURCEVERSION)"
       IsStableBuild="$(IsStableBuild)"
+      PublishingVersion="$(PublishingVersion)"
       AssetManifestPath="$(AssetManifestFilePath)" />
 
     <!-- 

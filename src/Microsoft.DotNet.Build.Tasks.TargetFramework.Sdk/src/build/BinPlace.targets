@@ -3,7 +3,7 @@
   <UsingTask TaskName="ChooseBestTargetFrameworksTask" AssemblyFile="$(DotNetBuildTasksTargetFrameworkSdkAssembly)"/>
   <PropertyGroup>
     <BinPlaceUseHardlinksIfPossible Condition="'$(BinPlaceUseHardlinksIfPossible)' == ''">true</BinPlaceUseHardlinksIfPossible>
-    <EnableBinPlacing Condition="'$(EnableBinPlacing)' == '' AND ('$(BinPlaceRef)' == 'true' OR '$(BinPlaceRuntime)' == 'true' OR '$(BinPlaceTest)' == 'true')">true</EnableBinPlacing>
+    <EnableBinPlacing Condition="'$(EnableBinPlacing)' == '' and ('$(BinPlaceNative)' == 'true' or '$(BinPlaceRef)' == 'true' or '$(BinPlaceRuntime)' == 'true' or '$(BinPlaceTest)' == 'true')">true</EnableBinPlacing>
   </PropertyGroup>
 
   <Target Name="BinPlace"
@@ -50,7 +50,7 @@
           Condition="'@(PackageFileDir)' != ''"
           DependsOnTargets="GetBinPlaceItems"
           Inputs="%(PackageFileDir.Identity);%(PackageFileDir.ItemName)"
-          Outputs="unused"  >
+          Outputs="unused">
     <ItemGroup>
       <!-- in the case of an overlapping batch (eg: multiple configurations using same directory)
            use the first -->
@@ -72,7 +72,7 @@
     <ItemGroup>
       <_itemsToSave Include="@($(_BinPlaceItemName))">
         <!-- intentionally empty: to be set by pkgproj -->
-        <TargetPath></TargetPath>
+        <TargetPath />
         <TargetFramework>%(_packageFileDir.BuildConfiguration_NuGetTargetMonikerShort)</TargetFramework>
       </_itemsToSave>
 
@@ -85,7 +85,6 @@
         <TargetFramework>%(_packageFileDir.BuildConfiguration_NuGetTargetMonikerShort)</TargetFramework>
       </_docFiles>
       <_itemsToSave Include="@(_docFiles)"/>
-
     </ItemGroup>
 
     <Message Importance="low" Text="PackageFileDir: @(PackageFileDir)" />
@@ -132,15 +131,19 @@
     <ItemGroup>
       <_currentBinPlaceTargetFrameworks Include="@(_bestBinlaceTargetFrameworks)" Condition="'%(Identity)' == '$(_OriginalTargetFramework)'" />
 
-      <BinPlaceDir Condition="'$(BinPlaceTest)' == 'true'" Include="@(_currentBinPlaceTargetFrameworks->'%(TestPath)')" />
-      <BinPlaceDir Condition="'$(BinPlaceRuntime)' == 'true'" Include="@(_currentBinPlaceTargetFrameworks->'%(RuntimePath)')" />
+      <BinPlaceDir Condition="'$(BinPlaceNative)' == 'true'" Include="@(_currentBinPlaceTargetFrameworks->'%(NativePath)')" />
       <BinPlaceDir Condition="'$(BinPlaceRef)' == 'true'" Include="@(_currentBinPlaceTargetFrameworks->'%(RefPath)')" />
+      <BinPlaceDir Condition="'$(BinPlaceRuntime)' == 'true'" Include="@(_currentBinPlaceTargetFrameworks->'%(RuntimePath)')" />
+      <BinPlaceDir Condition="'$(BinPlaceTest)' == 'true'" Include="@(_currentBinPlaceTargetFrameworks->'%(TestPath)')" />
 
-      <PackageFileDir Condition="'$(BinPlaceRuntime)' == 'true'" Include="@(_currentBinPlaceTargetFrameworks->'%(PackageFileRuntimePath)')">
-        <SaveItemName Condition="'%(_currentBinPlaceTargetFrameworks.SaveItemName)' == ''">LibFile</SaveItemName>
+      <PackageFileDir Condition="'$(BinPlaceNative)' == 'true'" Include="@(_currentBinPlaceTargetFrameworks->'%(PackageFileNativePath)')">
+        <SaveItemName Condition="'%(_currentBinPlaceTargetFrameworks.SaveItemName)' == ''">NativeFile</SaveItemName>
       </PackageFileDir>
       <PackageFileDir Condition="'$(BinPlaceRef)' == 'true'" Include="@(_currentBinPlaceTargetFrameworks->'%(PackageFileRefPath)')">
         <SaveItemName Condition="'%(_currentBinPlaceTargetFrameworks.SaveItemName)' == ''">RefFile</SaveItemName>
+      </PackageFileDir>
+      <PackageFileDir Condition="'$(BinPlaceRuntime)' == 'true'" Include="@(_currentBinPlaceTargetFrameworks->'%(PackageFileRuntimePath)')">
+        <SaveItemName Condition="'%(_currentBinPlaceTargetFrameworks.SaveItemName)' == ''">LibFile</SaveItemName>
       </PackageFileDir>
 
       <!-- permit BinplaceConfigurations to define SetProperties metadata,
@@ -160,8 +163,10 @@
 
   <!-- IncrementalClean and CoreClean only clean paths under Intermediate or OutDir, handle additional paths -->
   <ItemGroup>
+    <AdditionalCleanDirectories Include="@(BinPlaceTargetFrameworks->'%(NativePath)')" />
     <AdditionalCleanDirectories Include="@(BinPlaceTargetFrameworks->'%(RefPath)')" />
     <AdditionalCleanDirectories Include="@(BinPlaceTargetFrameworks->'%(RuntimePath)')" />
+    <AdditionalCleanDirectories Include="@(BinPlaceTargetFrameworks->'%(PackageFileNativePath)')" />
     <AdditionalCleanDirectories Include="@(BinPlaceTargetFrameworks->'%(PackageFileRefPath)')" />
     <AdditionalCleanDirectories Include="@(BinPlaceTargetFrameworks->'%(PackageFileRuntimePath)')" />
     <AdditionalCleanDirectories Include="@(BinPlaceTargetFrameworks->'%(TestPath)')" />

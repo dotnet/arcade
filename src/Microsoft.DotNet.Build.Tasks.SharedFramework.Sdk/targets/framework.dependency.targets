@@ -215,7 +215,10 @@
           BeforeTargets="CollectPackageReferences">
     <ItemGroup>
       <CrossgenToolPackageReference Include="$(MicrosoftNETCoreAppRuntimePackage).$(PackageRID)" Version="$(MicrosoftNETCoreAppRuntimewinx64Version)" />
-      <CrossgenToolPackageReference Include="$(MicrosoftTargetingPackPrivateWinRTPackage)" Version="$(MicrosoftTargetingPackPrivateWinRTVersion)" />
+      <CrossgenToolPackageReference
+        Condition="'$(MicrosoftTargetingPackPrivateWinRTPackage)' != '' and '$(MicrosoftTargetingPackPrivateWinRTVersion)' != ''"
+        Include="$(MicrosoftTargetingPackPrivateWinRTPackage)"
+        Version="$(MicrosoftTargetingPackPrivateWinRTVersion)" />
 
       <!-- This tool is a prebuilt not buildable from source. -->
       <CrossgenToolPackageReference
@@ -241,7 +244,7 @@
           DependsOnTargets="ResolveReferences">
     <PropertyGroup>
       <_runtimePackageDir>$(NuGetPackageRoot)$(MicrosoftNETCoreAppRuntimePackage).$(PackageRID)/$(MicrosoftNETCoreAppRuntimewinx64Version)/</_runtimePackageDir>
-      <_winmdPackageDir>$(NuGetPackageRoot)$(MicrosoftTargetingPackPrivateWinRTPackage.ToLowerInvariant())/$(MicrosoftTargetingPackPrivateWinRTVersion)/</_winmdPackageDir>
+      <_winmdPackageDir Condition="'$(MicrosoftTargetingPackPrivateWinRTPackage)' != '' and '$(MicrosoftTargetingPackPrivateWinRTVersion)' != ''">$(NuGetPackageRoot)$(MicrosoftTargetingPackPrivateWinRTPackage.ToLowerInvariant())/$(MicrosoftTargetingPackPrivateWinRTVersion)/</_winmdPackageDir>
       <_diaSymReaderPackageDir>$(NuGetPackageRoot)microsoft.diasymreader.native/$(MicrosoftDiaSymReaderNativeVersion)/</_diaSymReaderPackageDir>
     </PropertyGroup>
 
@@ -259,7 +262,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <_requiredProperty Include="_runtimePackageDir;_winmdPackageDir" />
+      <_requiredProperty Include="_runtimePackageDir" />
     </ItemGroup>
 
     <Message Text="%(_requiredProperty.Identity): $(%(_requiredProperty.Identity))" />
@@ -274,7 +277,7 @@
       <_runtimeCLR Include="$(_runtimePackageDir)**/$(LibraryFilePrefix)coreclr$(LibraryFileExtension)" />
       <_runtimeCoreLib Include="$(_runtimePackageDir)**/native/System.Private.CoreLib.dll" />
       <_fxSystemRuntime Include="$(_runtimePackageDir)**/System.Runtime.dll" />
-      <_windowsWinMD Include="$(_winmdPackageDir)**/Windows.winmd" />
+      <_windowsWinMD Condition="'$(_winmdPackageDir)' != ''" Include="$(_winmdPackageDir)**/Windows.winmd" />
       <_diaSymReaderAssembly Include="$(_diaSymReaderPackageDir)**\Microsoft.DiaSymReader.Native.*.dll" />
     </ItemGroup>
 
@@ -313,7 +316,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <_requiredProperty Include="_runtimeDirectory;_coreLibDirectory;_crossGenPath;_jitPath;_fxLibDirectory;_windowsWinMDDirectory;_diaSymReaderToolDir" />
+      <_requiredProperty Include="_runtimeDirectory;_coreLibDirectory;_crossGenPath;_jitPath;_fxLibDirectory;_diaSymReaderToolDir" />
     </ItemGroup>
 
     <Message Text="%(_requiredProperty.Identity): $(%(_requiredProperty.Identity))" />
@@ -415,7 +418,7 @@
       <_crossGenArgs Include="-in %(_filesToCrossGen.FullPath)" />
       <_crossGenArgs Include="-out %(_filesToCrossGen.CrossGenedPath)" />
       <_crossGenArgs Include="-platform_assemblies_paths $(_crossgenPlatformAssemblies)" />
-      <_crossGenArgs Include="-Platform_Winmd_Paths $(_windowsWinMDDirectory)" Condition="'$(OS)'=='Windows_NT'" />
+      <_crossGenArgs Include="-Platform_Winmd_Paths $(_windowsWinMDDirectory)" Condition="'$(OS)'=='Windows_NT' and '$(_windowsWinMDDirectory)' != ''" />
       <_crossGenArgs Include="-JITPath $(_jitPath)" />
     </ItemGroup>
 
@@ -462,7 +465,7 @@
       <_crossGenSymbolsArgs Include="-nologo" />
       <_crossGenSymbolsArgs Include="-readytorun" />
       <_crossGenSymbolsArgs Include="-platform_assemblies_paths %(_filesToCrossGen.CrossGenedDirectory)$(_pathSeparatorEscaped)$(_coreLibDirectory)$(_pathSeparatorEscaped)$(_fxLibDirectory)" />
-      <_crossGenSymbolsArgs Include="-Platform_Winmd_Paths $(_windowsWinMDDirectory)" Condition="'$(OS)'=='Windows_NT'"/>
+      <_crossGenSymbolsArgs Include="-Platform_Winmd_Paths $(_windowsWinMDDirectory)" Condition="'$(OS)'=='Windows_NT' and '$(_windowsWinMDDirectory)' != ''"/>
       <_crossGenSymbolsArgs Include="-$(_crossGenSymbolsOptionName)" />
       <_crossGenSymbolsArgs Include="$(_crossGenSymbolsOutputDirectory)" />
       <_crossGenSymbolsArgs Include="%(_filesToCrossGen.CrossGenedPath)" />

@@ -16,5 +16,6 @@ namespace Microsoft.SignCheck.Verification
 
         public static readonly string[] ResultKeysVerbose = { File, Error, AuthentiCode, StrongName, Signature, Misc };
         public static readonly string[] ResultKeysNormal = { File, Error };
+        public static readonly string[] ResultKeysExcluded = { File };
     }
 }

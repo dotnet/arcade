@@ -1,0 +1,49 @@
+<Project DefaultTargets="Test">
+  <!-- See UnitTests.proj in above folder for why this is included directly-from-repo -->
+  <Import Project="$(MSBuildThisFileDirectory)\..\src\Microsoft.DotNet.Helix\Sdk\sdk\Sdk.props"/>
+
+  <PropertyGroup>
+    <MicrosoftDotNetHelixSdkTasksAssembly Condition="'$(MSBuildRuntimeType)' == 'Core'">$(MSBuildThisFileDirectory)../artifacts/bin/Microsoft.DotNet.Helix.Sdk/$(Configuration)/netcoreapp2.1/publish/Microsoft.DotNet.Helix.Sdk.dll</MicrosoftDotNetHelixSdkTasksAssembly>
+    <MicrosoftDotNetHelixSdkTasksAssembly Condition="'$(MSBuildRuntimeType)' != 'Core'">$(MSBuildThisFileDirectory)../artifacts/bin/Microsoft.DotNet.Helix.Sdk/$(Configuration)/net472/publish/Microsoft.DotNet.Helix.Sdk.dll</MicrosoftDotNetHelixSdkTasksAssembly>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <HelixType>test/product/</HelixType>
+    <TestRunNamePrefix>$(AGENT_JOBNAME)</TestRunNamePrefix>
+    <EnableAzurePipelinesReporter>true</EnableAzurePipelinesReporter>
+    <HelixBaseUri>https://helix.dot.net</HelixBaseUri>
+    <IncludeXHarnessCli>true</IncludeXHarnessCli>
+  </PropertyGroup>
+
+  <!-- We test that the XHarness CLI is pre-installed and issue the state command -->
+  <ItemGroup>
+    <HelixWorkItem Include="xharness-ios-state">
+      <Command>dotnet exec "$XHARNESS_CLI_PATH" ios state</Command>
+      <Timeout>00:03:00</Timeout>
+    </HelixWorkItem>
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(HelixAccessToken)' != '' ">
+    <HelixTargetQueue Include="osx.1015.amd64"/>
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(HelixAccessToken)' == '' ">
+    <HelixTargetQueue Include="osx.1015.amd64.open"/>
+  </ItemGroup>
+
+  <PropertyGroup Condition=" '$(HelixAccessToken)' == '' ">
+    <IsExternal>true</IsExternal>
+    <Creator>$(BUILD_SOURCEVERSIONAUTHOR)</Creator>
+    <Creator Condition=" '$(Creator)' == ''">anon</Creator>
+  </PropertyGroup>
+
+  <!-- Useless stuff to make Arcade SDK happy -->
+  <PropertyGroup>
+    <Language>msbuild</Language>
+  </PropertyGroup>
+
+  <Target Name="Pack"/>
+
+  <!-- See UnitTests.proj in above folder for why this is included directly-from-repo -->
+  <Import Project="$(MSBuildThisFileDirectory)\..\src\Microsoft.DotNet.Helix\Sdk\sdk\Sdk.targets"/>
+</Project>

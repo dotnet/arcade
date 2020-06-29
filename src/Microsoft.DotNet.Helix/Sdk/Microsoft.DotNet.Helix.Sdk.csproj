@@ -30,5 +30,11 @@
     </None>
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="tools\xharness-runner\ios-helix-job-payload.sh">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
   <Import Project="$(RepoRoot)eng\BuildTask.targets" />
 </Project>
