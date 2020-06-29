@@ -28,7 +28,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             string manifestCommit,
             string[] manifestBuildData,
             bool isStableBuild,
-            PublishingInfraVersion publishingVersion
+            PublishingInfraVersion publishingVersion,
             SigningInformationModel signingInformationModel = null)
         {
             CreateModel(
@@ -179,14 +179,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             string manifestBranch,
             string manifestCommit,
             bool isStableBuild,
-<<<<<<< HEAD
-            string publishingVersion,
+            PublishingInfraVersion publishingVersion,
             TaskLoggingHelper log,
             SigningInformationModel signingInformationModel = null)
-=======
-            PublishingInfraVersion publishingVersion,
-            TaskLoggingHelper log)
->>>>>>> master
         {
             var attributes = MSBuildListSplitter.GetNamedProperties(manifestBuildData);
             if (!ManifestBuildDataHasLocationInformation(attributes))
