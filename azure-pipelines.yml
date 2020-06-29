@@ -138,6 +138,8 @@ stages:
               /bl:$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)\Helix.XHarness.binlog
               /p:RestoreUsingNuGetTargets=false
             displayName: XHarness Android Helix Testing
+            # Workaround until https://github.com/dotnet/xharness/issues/232 is fixed
+            continueOnError: true
             env:
               SYSTEM_ACCESSTOKEN: $(System.AccessToken)
               HelixAccessToken: ''
@@ -178,6 +180,21 @@ stages:
               /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.XHarness.binlog
               /p:RestoreUsingNuGetTargets=false
             displayName: XHarness iOS Helix Testing
+            continueOnError: true
+            env:
+              SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+              HelixAccessToken: ''
+          - script: eng/common/build.sh
+              -configuration $(_BuildConfig)
+              -prepareMachine
+              -ci
+              -restore
+              -test
+              -projects $(Build.SourcesDirectory)/tests/UnitTests.XHarness.iOS.IncludeCliOnly.proj
+              /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.XHarness.binlog
+              /p:RestoreUsingNuGetTargets=false
+            displayName: XHarness CLI pre-install Helix Testing
+            continueOnError: true
             env:
               SYSTEM_ACCESSTOKEN: $(System.AccessToken)
               HelixAccessToken: ''

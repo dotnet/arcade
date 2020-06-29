@@ -2,8 +2,8 @@
 
   <PropertyGroup>
     <!-- On .NET Framework and .NET Core we use this assembly as both a library and as an executable. -->
-    <OutputType Condition="'$(TargetFrameworkIdentifier)' != '.NETStandard'">Exe</OutputType>
-    <TargetFrameworks>netcoreapp2.1;net472;netstandard2.0</TargetFrameworks>
+    <OutputType>Exe</OutputType>
+    <TargetFrameworks>netcoreapp2.1;net472</TargetFrameworks>
     <Description>This package provides support for running tests out-of-process.</Description>
     <ExcludeFromSourceBuild>true</ExcludeFromSourceBuild>
     <IsPackable>true</IsPackable>

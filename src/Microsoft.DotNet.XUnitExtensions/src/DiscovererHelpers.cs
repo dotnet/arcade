@@ -25,13 +25,14 @@ namespace Microsoft.DotNet.XUnitExtensions
                 (platforms.HasFlag(TestPlatforms.Linux) && RuntimeInformation.IsOSPlatform(OSPlatform.Linux)) ||
                 (platforms.HasFlag(TestPlatforms.NetBSD) && RuntimeInformation.IsOSPlatform(OSPlatform.Create("NETBSD"))) ||
                 (platforms.HasFlag(TestPlatforms.OSX) && RuntimeInformation.IsOSPlatform(OSPlatform.OSX)) ||
-                (platforms.HasFlag(TestPlatforms.SunOS) && RuntimeInformation.IsOSPlatform(OSPlatform.Create("SUNOS"))) ||
+                (platforms.HasFlag(TestPlatforms.illumos) && RuntimeInformation.IsOSPlatform(OSPlatform.Create("ILLUMOS"))) ||
+                (platforms.HasFlag(TestPlatforms.Solaris) && RuntimeInformation.IsOSPlatform(OSPlatform.Create("SOLARIS"))) ||
                 (platforms.HasFlag(TestPlatforms.iOS) && RuntimeInformation.IsOSPlatform(OSPlatform.Create("IOS"))) ||
                 (platforms.HasFlag(TestPlatforms.tvOS) && RuntimeInformation.IsOSPlatform(OSPlatform.Create("TVOS"))) ||
                 (platforms.HasFlag(TestPlatforms.Android) && RuntimeInformation.IsOSPlatform(OSPlatform.Create("ANDROID"))) ||
                 (platforms.HasFlag(TestPlatforms.Browser) && RuntimeInformation.IsOSPlatform(OSPlatform.Create("BROWSER"))) ||
                 (platforms.HasFlag(TestPlatforms.Windows) && RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
-        
+
         public static bool TestRuntimeApplies(TestRuntimes runtimes) =>
                 (runtimes.HasFlag(TestRuntimes.Mono) && IsMonoRuntime) ||
                 (runtimes.HasFlag(TestRuntimes.CoreCLR) && !IsMonoRuntime); // assume CoreCLR if it's not Mono

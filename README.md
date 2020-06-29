@@ -9,7 +9,7 @@ Arcade is intended to provide well-understood and consistent mechanisms for cons
 Status of Arcade public CI builds: [![Build Status](https://dev.azure.com/dnceng/public/_apis/build/status/dotnet/arcade/arcade-ci)](https://dev.azure.com/dnceng/public/_build/latest?definitionId=208)
 
 ## Validation & Dependency Flow Status
-Status Last Updated: May 27, 2020, 7:45 AM PDT
+Status Last Updated: June 26, 2020, 8:30 AM PDT
 
 **[Arcade validation policy and process](Documentation/Validation/Overview.md)**
 
@@ -31,11 +31,10 @@ Status Last Updated: May 27, 2020, 7:45 AM PDT
 |Arcade Official Build|[![Build Status](https://dnceng.visualstudio.com/internal/_apis/build/status/dotnet/arcade/arcade-official-ci?branchName=master)](https://dnceng.visualstudio.com/internal/_build/latest?definitionId=6&branchName=master)| 
 |Arcade Validation|[![Build Status](https://dnceng.visualstudio.com/internal/_apis/build/status/dotnet/arcade-validation/dotnet-arcade-validation-official?branchName=master)](https://dnceng.visualstudio.com/internal/_build/latest?definitionId=282&branchName=master)|
 
-
 ### Status of Latest Version of Arcade Being Validated
 
-- Arcade is not being promoted due to [Runtime](https://dnceng.visualstudio.com/internal/_build?definitionId=679&_a=summary) and [ASPNETCore](https://dnceng.visualstudio.com/internal/_build?definitionId=21&_a=summary) (bellwether repos) not having successful builds on `master` to validate Arcade with. 
-- [Arcade Validation For Promotion build result from May 27th, 2020 at 1:00 AM PDT](https://dnceng.visualstudio.com/internal/_build/results?buildId=660972&view=results).
+- Arcade is not being promoted due to Runtime and Installer (bellwether repos) not being in a green state at the time Arcade Validation for Promotion pipeline was kicked off. 
+- [Arcade Validation For Promotion build result from June 26, 2020 at 1:00 AM PDT](https://dnceng.visualstudio.com/internal/_build/results?buildId=705814&view=results)
 
 ## Getting Started
 

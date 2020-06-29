@@ -2,13 +2,13 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
-
-namespace Microsoft.DotNet.XUnitExtensions
+namespace Microsoft.DotNet.AsmDiff
 {
-    internal class SkipTestException : Exception
+    public enum DiffLineKind
     {
-        public SkipTestException(string reason)
-            : base(reason) { }
+        Same,
+        Added,
+        Removed,
+        Changed
     }
 }

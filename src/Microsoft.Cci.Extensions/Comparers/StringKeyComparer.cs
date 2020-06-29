@@ -41,7 +41,7 @@ namespace Microsoft.Cci.Comparers
 
         public virtual int Compare(T x, T y)
         {
-            return string.Compare(GetKey(x), GetKey(y));
+            return string.Compare(GetKey(x), GetKey(y), StringComparison.Ordinal);
         }
     }
 }

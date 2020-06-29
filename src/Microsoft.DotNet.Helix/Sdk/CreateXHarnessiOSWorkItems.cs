@@ -4,6 +4,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.Build.Framework;
 
@@ -23,6 +24,11 @@ namespace Microsoft.DotNet.Helix.Sdk
         public ITaskItem[] AppFolders { get; set; }
 
         /// <summary>
+        /// Xcode version to use in the [major].[minor] format, e.g. 11.4
+        /// </summary>
+        public string XcodeVersion { get; set; }
+
+        /// <summary>
         /// The main method of this MSBuild task which calls the asynchronous execution method and
         /// collates logged errors in order to determine the success of HelixWorkItems
         /// </summary>
@@ -34,6 +40,19 @@ namespace Microsoft.DotNet.Helix.Sdk
                 Log.LogError("IsPosixShell was specified as false for an iOS work item; these can only run on MacOS devices currently.");
                 return false;
             }
+
+            if (string.IsNullOrEmpty(XcodeVersion))
+            {
+                Log.LogError("No Xcode version was specified.");
+                return false;
+            }
+
+            if (!Regex.IsMatch(XcodeVersion, "[0-9]+\\.[0-9]+"))
+            {
+                Log.LogError($"Xcode version '{XcodeVersion}' was in an invalid format. Expected format is [major].[minor] format, e.g. 11.4.");
+                return false;
+            }
+
             ExecuteAsync().GetAwaiter().GetResult();
             return !Log.HasLoggedErrors;
         }
@@ -56,18 +75,18 @@ namespace Microsoft.DotNet.Helix.Sdk
         {
             // Forces this task to run asynchronously
             await Task.Yield();
+
+            string appFolderPath = appFolderItem.ItemSpec.TrimEnd(Path.DirectorySeparatorChar);
             
-            string appFolderPath = appFolderItem.ItemSpec;
-            
-            string workItemName = $"xharness-{Path.GetFileName(appFolderPath)}";
+            string workItemName = Path.GetFileName(appFolderPath);
             if (workItemName.EndsWith(".app"))
             {
                 workItemName = workItemName.Substring(0, workItemName.Length - 4);
             }
 
-            TimeSpan timeout = ParseTimeout();
+            var timeouts = ParseTimeouts();
 
-            string command = ValidateMetadataAndGetXHarnessiOSCommand(appFolderItem, timeout);
+            string command = ValidateMetadataAndGetXHarnessiOSCommand(appFolderItem, timeouts.TestTimeout);
 
             Log.LogMessage($"Creating work item with properties Identity: {workItemName}, Payload: {appFolderPath}, Command: {command}");
 
@@ -76,7 +95,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                 { "Identity", workItemName },
                 { "PayloadArchive", await CreateZipArchiveOfFolder(appFolderPath) },
                 { "Command", command },
-                { "Timeout", timeout.ToString() },
+                { "Timeout", timeouts.WorkItemTimeout.ToString() },
             });
         }
 
@@ -126,11 +145,13 @@ namespace Microsoft.DotNet.Helix.Sdk
             // We need to call 'sudo launchctl' to spawn the process in a user session with GUI rendering capabilities
             string xharnessRunCommand = $"sudo launchctl asuser `id -u` sh \"{PayloadScriptName}\" " +
                                         $"--app \"$HELIX_WORKITEM_ROOT/{Path.GetFileName(appFolderPath.ItemSpec)}\" " +
-                                        $"--output-directory \"$HELIX_WORKITEM_UPLOAD_ROOT\" " +
+                                         "--output-directory \"$HELIX_WORKITEM_UPLOAD_ROOT\" " +
                                         $"--targets \"{targets}\" " +
                                         $"--timeout \"{xHarnessTimeout.TotalSeconds}\" " +
-                                        $"--dotnet-root \"$DOTNET_ROOT\" " +
-                                        $"--xharness \"$HELIX_CORRELATION_PAYLOAD/xharness-cli/xharness\"";
+                                         "--launch-timeout 900 " +
+                                         "--xharness-cli-path \"$XHARNESS_CLI_PATH\" " +
+                                        $"--xcode-version {XcodeVersion}" +
+                                        (!string.IsNullOrEmpty(AppArguments) ? $" --app-arguments \"{AppArguments}\"" : string.Empty);
 
             Log.LogMessage(MessageImportance.Low, $"Generated XHarness command: {xharnessRunCommand}");
 

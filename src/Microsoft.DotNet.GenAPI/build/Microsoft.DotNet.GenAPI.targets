@@ -37,8 +37,12 @@
 
   <Target Name="GenerateReferenceAssemblySource"
           DependsOnTargets="SetBuildProjectReferences;ResolveAssemblyReferences"
-          Inputs="$(TargetPath)"
+          Inputs="@(IntermediateAssembly)"
           Outputs="$(GenAPITargetPath)">
+
+    <PropertyGroup>
+      <IntermediateTargetPath Condition="'$(IntermediateTargetPath)' == ''">$(IntermediateOutputPath)$(TargetName)$(TargetExt)</IntermediateTargetPath>
+    </PropertyGroup>
 
     <ItemGroup Condition="'$(GenAPILibPath)' == ''">
       <!-- build out a list of directories where dependencies are located -->
@@ -51,7 +55,7 @@
       <GenAPILibPath>@(_referencePathDirectories)</GenAPILibPath>
     </PropertyGroup>
 
-    <Exec Command="$(_GenAPICommand) &quot;$(TargetPath)&quot; --lib-path &quot;$(GenAPILibPath)&quot; --out &quot;$(GenAPITargetPath)&quot; $(GenAPIAdditionalParameters)" />
+    <Exec Command="$(_GenAPICommand) &quot;$(IntermediateTargetPath)&quot; --lib-path &quot;$(GenAPILibPath)&quot; --out &quot;$(GenAPITargetPath)&quot; $(GenAPIAdditionalParameters)" />
 
     <ItemGroup>
       <FileWrites Condition="'$(SkipGenAPITargetPathFileWrite)' != 'true'" Include="$(GenAPITargetPath)"/>
@@ -99,6 +103,7 @@
       <GenAPIArgs Condition="'$(GeneratePlatformNotSupportedAssembly)' == 'true' or '$(GeneratePlatformNotSupportedAssemblyMessage)' != ''">$(GenAPIArgs) --throw "$(GeneratePlatformNotSupportedAssemblyMessage)"</GenAPIArgs>
       <GenAPIArgs Condition="'$(GeneratePlatformNotSupportedAssemblyWithGlobalPrefix)' == 'true'">$(GenAPIArgs) --global</GenAPIArgs>
       <GenAPIArgs Condition="'$(GeneratePlatformNotSupportedAssemblyHeaderFile)' != ''">$(GenAPIArgs) --header-file "$(GeneratePlatformNotSupportedAssemblyHeaderFile)"</GenAPIArgs>
+      <GenAPIArgs Condition="'$(GeneratePlatformNotSupportedAdditionalParameters)' != ''">$(GenAPIArgs) $(GeneratePlatformNotSupportedAdditionalParameters)</GenAPIArgs>
     </PropertyGroup>
 
     <Exec Command="$(_GenAPICommand) $(GenAPIArgs)" 

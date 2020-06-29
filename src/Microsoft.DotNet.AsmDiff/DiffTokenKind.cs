@@ -2,11 +2,17 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-namespace Microsoft.DotNet.GitHub.IssueLabeler
+namespace Microsoft.DotNet.AsmDiff
 {
-    public enum GithubObjectType 
+    public enum DiffTokenKind
     {
-        PullRequest,
-        Issue
+        Text,
+        Symbol,
+        Identifier,
+        Keyword,
+        TypeName,
+        LineBreak,
+        Indent,
+        Whitespace
     }
 }
