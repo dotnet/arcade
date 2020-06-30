@@ -24,4 +24,13 @@
     -->
     <NewtonsoftJsonVersion>9.0.1</NewtonsoftJsonVersion>
   </PropertyGroup>
+
+  <PropertyGroup Condition="'$(DotNetBuildOffline)' == 'true'">
+    <!--
+      Arcade has a special version prop for CodeAnalysis.CSharp in GenFacades
+      to try to match the version loaded by msbuild.  In the offline build, this
+      is simply the source-built version.
+    -->
+    <MsbuildTaskMicrosoftCodeAnalysisCSharpVersion>$(MicrosoftCodeAnalysisCSharpVersion)</MsbuildTaskMicrosoftCodeAnalysisCSharpVersion>
+  </PropertyGroup>
 </Project>
