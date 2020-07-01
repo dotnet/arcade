@@ -15,6 +15,16 @@
   <Choose>
     <When Condition=" '$(DotNetCliRuntime)' != '' ">
     </When>
+    <When Condition="$(HelixTargetQueue.ToLowerInvariant().StartsWith('windows')) AND $(HelixTargetQueue.ToLowerInvariant().Contains('arm64'))">
+      <PropertyGroup>
+        <DotNetCliRuntime>win-arm64</DotNetCliRuntime>
+      </PropertyGroup>
+    </When>
+    <When Condition="$(HelixTargetQueue.ToLowerInvariant().StartsWith('windows')) AND $(HelixTargetQueue.ToLowerInvariant().Contains('arm32'))">
+      <PropertyGroup>
+        <DotNetCliRuntime>win-arm</DotNetCliRuntime>
+      </PropertyGroup>
+    </When>
     <When Condition="$(HelixTargetQueue.ToLowerInvariant().StartsWith('windows'))">
       <PropertyGroup>
         <DotNetCliRuntime>win-x64</DotNetCliRuntime>
