@@ -1,6 +1,6 @@
 # Microsoft.DotNet.SharedFramework.Sdk
 
-Common toolset for building shared frameworks and framework packs.
+This package provides a common set of tools for authoring framework packs, shared frameworks, and packages and installers for packs and frameworks.
 
 ## Building Framework Packs
 
@@ -103,10 +103,14 @@ To use, set `UseTemplatedPlatformManifes`t to true and define a set of `Platform
 
 `PlatformManifestFileEntry` metadata:
 
-- `ItemSpec`/`Identity`: File name and extension of file in the shared framework.
-- `IsNative`: true when the file is a native file
-- `FallbackAssemblyVersion`: An assembly version for this file if it is not present in the ref-pack build.
-- `FallbackFileVersion`: A file version for this file if it is not present in the ref-pack build.
+- `ItemSpec`/`Identity`
+  - File name and extension of file in the shared framework.
+- `IsNative`
+  - true when the file is a native file
+- `FallbackAssemblyVersion`
+  - An assembly version for this file if it is not present in the ref-pack build.
+- `FallbackFileVersion`
+  - A file version for this file if it is not present in the ref-pack build.
 
 Properties for these targets:
 `UseTemplatedPlatformManifest`: Set to true to enable the templated platform manifest generation
@@ -121,6 +125,8 @@ If your shared framework has various profiles, you can use `<FrameworkListFileCl
 
 If your shared framework can drop some files from the single-file bundle, you can specify `<SingleFileHostIncludeFilename>` items that specify which files by name are **included** in the single file bundle. Once one `SingleFileHostIncludeFilename` item is specified, all files without corresponding `SingleFileHostIncludeFilename` elements will be marked as droppable from a single file build.
 
+The name of the framework/runtime is specified in the `SharedFrameworkFriendlyName` property, which defaults to the value of `SharedFrameworkName`.
+
 ### Archives
 
 By default, this SDK also generates an archive that can be extracted on top of an existing .NET SDK or Runtime layout. The name of this file is derived from the `SharedFrameworkArchiveName` property and the RID. By default, `SharedFrameworkArchiveName` is set to the value of `SharedFrameworkName`.
@@ -131,4 +137,57 @@ This SDK provides a custom target named `PublishSharedFrameworkToDisk` that publ
 
 ## Building Installers
 
+In addition to producing framework packs this SDK also supports generating installers for the shared framework in .msi, .deb, .rpm, and .pkg formats. This support is opt-in by setting the `GenerateInstallers` property to `true`. In addition, to enable the .deb and .rpm support, the `GenerateDebPackage` and `GenerateRpmPackage` properties respectively need to be set to true. This support acts independently of the shared framework support and only depends on the `PublishSharedFrameworkToDisk` target. So, you can use the SDK with a project that has a non-`.sfxproj` extension such as `.proj` or `.installproj` and set `GenerateInstallers` to `true` to opt into only installer generation, as long as you define the `PublishSharedFrameworkToDisk` target.
+
+There are a few common properties used by all of the installer types and the bundle installers (documented after the installers):
+
+- `SharedFrameworkInstallerName`
+  - The name of the installer file without an extension. This defaults to `SharedFrameworkArchiveName`.
+- `ProductBrandPrefix`
+  - The branding name of this component, such as "Microsoft Windows Desktop"
+- `PackageBrandNameSuffix` (`ToolPack` installers only)
+  - The type of package, for example "Shared Host" or "AppHost Pack". This is set automatically for any non-ToolPack package types.
+
+For correct branding and versioning, this SDK has a dependency on Arcade's versioning setup, including the `MajorVersion`, `MinorVersion`, `PreReleaseVersionLabel`, `PreReleaseVersionIteration` and `DotNetFinalVersionKind` properties.
+
+Since some framework packs do not use `RuntimeIdentifier`s in their build, for example targeting packs, for the installer build you can define `InstallerRuntimeIdentifiers` and the build will fan out for the installer build across those target RIDs. In addition, the `InstallerRuntimeIdentifier` property will default to the value of `RuntimeIdentifier` if it is not set.
+
+### Wix MSI configuration
+
+If you have files that need to have a stabilized identity in the MSI file, you can add items to the `HeatOutputFileElementToStabilize` item group. Each item in this group specifies a unique suffix of a path (enough to identify a single file) and a value for the `ReplacementId` metadata as the id to set in the MSI for this file.
+
+If you want to create MSIs for the target RID that target other architecture install locations, you can add `CrossArchSdkMsiInstallerArch` items for all of the target architecture install locations you want to generate installers of the current build for.
+
+### Linux package configuration
+
+To add package dependencies for linux packages, add a `LinuxPackageDependency` item with the version in the `Version` metadata.
+
+#### Deb package configuration
+
+To add additional properties for the deb package tool, add items to the `DebJsonProperty` item group.
+
+#### Rpm package configuration
+
+To add additional properties for the deb package tool, add items to the `RpmJsonProperty` item group.
+
+### MacOS Pkg configuration
+
+To specify a directory where `pkgbuild` should look for scripts, set the `MacOSScriptsDirectory` to the path to the scripts.
+
+If you are building a `ToolPack` pack, you need to specify the `MacOSComponentNamePackType` property to create the component name for the `.pkg` package. If you want the component name to not include the version (for example you are building the shared host), you can set the `IncludeVersionInMacOSComponentName` property to false.
+
+If your `pkg` is later going to be bundled in a macOS `pkg` bundle created by `productbuild`, you should also specify the `MacOSPackageDescription` property, which will set the package description in the bundle distribution file.
+
+### Visual Studio Insertion Package configuration
+
+Visual Studio insertion packages generated by the SDK are named in the form `VS.Redist.Common.$(VSInsertionShortComponentName).$(InstallerTargetArchitecture)$(CrossArchContentsBuildPart).$(MajorVersion).$(MinorVersion)`
+
+The `InstallerTargetArchitecture` and later properties are automatically calculated by the SDK or are version properties. You are required to provide the `VSInsertionShortComponentName` property value yourself.
+
 ## Building Installer Bundles
+
+As part of the installer support, the SDK supports building Wix bundle installers and macOS pkg bundles. These bundles are defined in a separate project with a `.bundleproj` extension that includes the .NET SDK and this SDK as shown in the example project.
+
+### Wix Bundle configuration
+
+### MacOS Pkg bundle configuration
