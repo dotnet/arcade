@@ -471,9 +471,14 @@
       <Output TaskParameter="Json" PropertyName="_JsonLicenseObject" />
     </GenerateJsonObjectString>
 
+    <PropertyGroup>
+      <_ShortDescription>$(MSBuildProjectName) $(InstallerPackageVersion)</_ShortDescription>
+      <_ShortDescription Condition="'$(UseBrandingNameInLinuxPackageDescription)' == 'true'">$(ProductBrandName)</_ShortDescription>
+    </PropertyGroup>
+
     <ItemGroup>
       <_CommonLinuxPackageProperty Include="package_name" String="$(VersionedInstallerName)" />
-      <_CommonLinuxPackageProperty Include="short_description" String="$(MSBuildProjectName) $(InstallerPackageVersion)" />
+      <_CommonLinuxPackageProperty Include="short_description" String="$(_ShortDescription)" />
       <_CommonLinuxPackageProperty Include="maintainer_name" String=".NET Team" />
       <_CommonLinuxPackageProperty Include="maintainer_email" String="dotnetpackages@dotnetfoundation.org" />
       <_CommonLinuxPackageProperty Include="install_root" String="/usr/share/dotnet" />
