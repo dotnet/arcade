@@ -253,20 +253,16 @@
       <File Include="@(_FilesToPackage)">
         <PackageId>$(Id)</PackageId>
         <PackageVersion>$(PackageVersion)</PackageVersion>
-        <!-- Some packages support legacy portable profiles where dependencies are provided by targeting pack -->
-        <HarvestDependencies Condition="!$([System.String]::Copy('%(_FilesToPackage.TargetFramework)').StartsWith('portable-'))">true</HarvestDependencies>
+      </File>
+
+      <!-- Some packages support legacy portable profiles where dependencies are provided by targeting pack -->
+      <File Condition="'%(File.HarvestDependencies)' == '' AND !$([System.String]::Copy('%(File.TargetFramework)').StartsWith('portable-'))">
+        <!-- Only harvest files from ref/lib/runtimes dir-->
+        <HarvestDependencies Condition="$([System.String]::Copy('%(File.TargetPath)').StartsWith('ref')) OR
+                                        $([System.String]::Copy('%(File.TargetPath)').StartsWith('lib')) OR
+                                        $([System.String]::Copy('%(File.TargetPath)').StartsWith('runtimes'))">true</HarvestDependencies>
       </File>
     </ItemGroup>
-
-    <Error Condition="'$(SkipPackageFileCheck)' != 'true' AND
-                      '$(IsFrameworkPackage)' != 'true' AND
-                      '%(File.SkipPackageFileCheck)' != 'true' AND
-                      '%(File.FileName)' != '_' AND
-                      '%(File.FileName)%(File.Extension)' != 'runtime.json' AND
-                      '%(File.Extension)' != '.cs' AND
-                      '%(File.Extension)' != '.vb' AND
-                      !$(ID.Contains('%(File.FileName)'))"
-           Text="Package $(ID) contains file with name %(File.FileName).  If this is expected you can disable this filename checking for this item or package by setting SkipPackageFileCheck = true" />
   </Target>
   <!-- END project refs-->
 
