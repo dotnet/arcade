@@ -186,8 +186,37 @@ The `InstallerTargetArchitecture` and later properties are automatically calcula
 
 ## Building Installer Bundles
 
-As part of the installer support, the SDK supports building Wix bundle installers and macOS pkg bundles. These bundles are defined in a separate project with a `.bundleproj` extension that includes the .NET SDK and this SDK as shown in the example project.
+As part of the installer support, the SDK supports building Wix bundle installers and macOS pkg bundles. These bundles are defined in a separate project with a `.bundleproj` extension that includes the .NET SDK and this SDK as shown in the example project. Like the installer targets, the bundle targets also use the `SharedFrameworkName` and `SharedFrameworkInstallerName` properties, as well as the support for `RuntimeIdentifiers` to identify target architectures for the bundle. The bundle targets verify that the RID is targeting an OS that supports an installer bundle, so be sure to limit the RID list to platforms that support bundles (Windows and macOS today).
+
+The bundle installers also require the `ProductBrandPrefix` property and a `BundleNameSuffix` property in the place of the `PackageBrandNameSuffix` property used by the installer targets.
+
+To include installers in the bundle, add `BundleComponentReference` items that point to the projects that produce the installers.
 
 ### Wix Bundle configuration
 
+A number of properties are required to configure the Wix bundle generation:
+
+- `BundleInstallerUpgradeCodeSeed`
+  - This property specifies a seed for generating the bundle upgrade GUID. This must not change within a product band, otherwise the upgrade code will not match.
+- `BundleThemeDirectory`
+  - This property should point to a directory that contains the following files and folders:
+    - `bundle.thm`
+    - `bundle.wxl`
+    - A `theme` directory that contains subdirectories with resources per codepage.
+
 ### MacOS Pkg bundle configuration
+
+A number of properties are required to configure the MacOS Pkg bundle generation:
+
+- `MacOSBundleIdentifierName`
+  - The identifier of the pkg bundle.
+- `MacOSBundleResourcesPath`
+  - The folder with the resources for the bundle, including various HTML and RTF files that the installer shows the user.
+- `MacOSBundleTemplate`
+  - A partial [macOS Distribution XML file](https://developer.apple.com/library/archive/documentation/DeveloperTools/Reference/DistributionDefinitionRef/Chapters/Distribution_XML_Ref.html). The build system will add the `<title>`, `<choices-outline>`, `<choice>`, and `<pkg-ref>` elements automatically to the provided XML file based on the provided properties and the bundled `.pkg` files defined in the project file.
+
+## Build Skip Support for Unsupported Platforms and Servicing
+
+This SDK also supports automatically skipping builds on unsupported platforms or in servicing releases. If a project with a list of provided RIDs in `RuntimeIdentifiers` or `InstallerRuntimeIdentifiers` is built with the `RuntimeIdentifier` property or `InstallerRuntimeIdentifier` property set to a RID that is not in the `RuntimeIdentifiers` or `InstallerRuntimeIdentifiers` list respectively, the build will be skipped. This enables cleanly skipping optional packs, installers, or bundles that only exist on specific platforms. 
+
+Additionally, if a `ProjectServicingConfiguration` item is provided with the identity of the project name and the `PatchVersion` metadata on the item is not equal to the current `PatchVersion`, the build will be skipped. This support enables a repository to disable building targeting packs in servicing releases if that is desired.
