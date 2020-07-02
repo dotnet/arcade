@@ -71,7 +71,7 @@
       <_CurrentAdditionalProperties>%(XHarnessAndroidProject.AdditionalProperties)</_CurrentAdditionalProperties>
     </PropertyGroup>
     <MSBuild Projects="$(_CurrentXHarnessAndroidProject)" Targets="Build" Properties="$(_CurrentAdditionalProperties)">
-      <Output TaskParameter="TargetOutputs" ItemName="XHarnessPackageToTest" />
+      <Output TaskParameter="TargetOutputs" ItemName="XHarnessApkToTest" />
     </MSBuild>
   </Target>
 
@@ -84,29 +84,29 @@
       <_CurrentAdditionalProperties>%(XHarnessiOSProject.AdditionalProperties)</_CurrentAdditionalProperties>
     </PropertyGroup>
     <MSBuild Projects="$(_CurrentXHarnessiOSProject)" Targets="Build" Properties="$(_CurrentAdditionalProperties)">
-      <Output TaskParameter="TargetOutputs" ItemName="XHarnessAppFolderToTest" />
+      <Output TaskParameter="TargetOutputs" ItemName="XHarnessAppBundleToTest" />
     </MSBuild>
   </Target>
 
   <Target Name="CreateAndroidWorkItems"
-          Condition=" '@(XHarnessPackageToTest)' != '' "
+          Condition=" '@(XHarnessApkToTest)' != '' "
           BeforeTargets="CoreTest">
-    <CreateXHarnessAndroidWorkItems AppPackages="@(XHarnessPackageToTest)"
+    <CreateXHarnessAndroidWorkItems Apks="@(XHarnessApkToTest)"
                                     IsPosixShell="$(IsPosixShell)"
-                                    WorkItemTimeout="%(XHarnessPackageToTest.WorkItemTimeout)"
-                                    TestTimeout="%(XHarnessPackageToTest.TestTimeout)">
+                                    WorkItemTimeout="%(XHarnessApkToTest.WorkItemTimeout)"
+                                    TestTimeout="%(XHarnessApkToTest.TestTimeout)">
       <Output TaskParameter="WorkItems" ItemName="HelixWorkItem"/>
     </CreateXHarnessAndroidWorkItems>
   </Target>
 
   <Target Name="CreateiOSWorkItems"
-          Condition=" '@(XHarnessAppFolderToTest)' != '' "
+          Condition=" '@(XHarnessAppBundleToTest)' != '' "
           BeforeTargets="CoreTest">
-    <CreateXHarnessiOSWorkItems AppFolders="@(XHarnessAppFolderToTest)"
+    <CreateXHarnessiOSWorkItems AppBundles="@(XHarnessAppBundleToTest)"
                                 IsPosixShell="$(IsPosixShell)"
                                 XcodeVersion="$(XHarnessXcodeVersion)"
-                                WorkItemTimeout="%(XHarnessAppFolderToTest.WorkItemTimeout)"
-                                TestTimeout="%(XHarnessAppFolderToTest.TestTimeout)">
+                                WorkItemTimeout="%(XHarnessAppBundleToTest.WorkItemTimeout)"
+                                TestTimeout="%(XHarnessAppBundleToTest.TestTimeout)">
       <Output TaskParameter="WorkItems" ItemName="HelixWorkItem"/>
     </CreateXHarnessiOSWorkItems>
   </Target>

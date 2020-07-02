@@ -15,11 +15,9 @@ namespace Microsoft.DotNet.Helix.Sdk
     {
         /// <summary>
         /// An array of one or more paths to application packages (.apk for Android)
-        /// that will be used to create Helix work items.  
-        /// [Optional] Arguments: a string of arguments to be passed directly to the XHarness runner
-        /// [Optional] DeviceOutputPath: Location on the device where output files are generated
+        /// that will be used to create Helix work items.
         /// </summary>
-        public ITaskItem[] AppPackages { get; set; }
+        public ITaskItem[] Apks { get; set; }
 
         /// <summary>
         /// The main method of this MSBuild task which calls the asynchronous execution method and
@@ -38,7 +36,7 @@ namespace Microsoft.DotNet.Helix.Sdk
         /// <returns></returns>
         private async Task ExecuteAsync()
         {
-            WorkItems = (await Task.WhenAll(AppPackages.Select(PrepareWorkItem))).Where(wi => wi != null).ToArray();
+            WorkItems = (await Task.WhenAll(Apks.Select(PrepareWorkItem))).Where(wi => wi != null).ToArray();
         }
 
         /// <summary>

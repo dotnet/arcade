@@ -21,7 +21,7 @@ namespace Microsoft.DotNet.Helix.Sdk
         /// An array of one or more paths to iOS app bundles (folders ending with ".app" usually)
         /// that will be used to create Helix work items.
         /// </summary>
-        public ITaskItem[] AppFolders { get; set; }
+        public ITaskItem[] AppBundles { get; set; }
 
         /// <summary>
         /// Xcode version to use in the [major].[minor] format, e.g. 11.4
@@ -63,7 +63,7 @@ namespace Microsoft.DotNet.Helix.Sdk
         /// <returns></returns>
         private async Task ExecuteAsync()
         {
-            WorkItems = (await Task.WhenAll(AppFolders.Select(PrepareWorkItem))).Where(wi => wi != null).ToArray();
+            WorkItems = (await Task.WhenAll(AppBundles.Select(PrepareWorkItem))).Where(wi => wi != null).ToArray();
         }
 
         /// <summary>
