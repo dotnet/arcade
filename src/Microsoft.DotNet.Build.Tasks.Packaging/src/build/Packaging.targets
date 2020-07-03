@@ -250,17 +250,17 @@
 
     <ItemGroup>
       <_FilesToPackage Remove="@(_FilesToPackage)" Condition="'$(ExcludeReferenceAssets)' == 'true' AND '%(_FilesToPackage.IsReferenceAsset)' == 'true'" />
+      
+      <!-- Some packages support legacy portable profiles where dependencies are provided by targeting pack -->
+      <_FilesToPackage Condition="'%(_FilesToPackage.HarvestDependencies)' == '' AND !$([System.String]::Copy('%(_FilesToPackage.TargetFramework)').StartsWith('portable-'))">
+        <!-- Only harvest files from ref/lib/runtimes dir-->
+        <HarvestDependencies Condition="$([System.String]::Copy('%(_FilesToPackage.TargetPath)').StartsWith('ref')) OR
+                                        $([System.String]::Copy('%(_FilesToPackage.TargetPath)').StartsWith('lib')) OR
+                                        $([System.String]::Copy('%(_FilesToPackage.TargetPath)').StartsWith('runtimes'))">true</HarvestDependencies>
+      </_FilesToPackage>
       <File Include="@(_FilesToPackage)">
         <PackageId>$(Id)</PackageId>
         <PackageVersion>$(PackageVersion)</PackageVersion>
-      </File>
-
-      <!-- Some packages support legacy portable profiles where dependencies are provided by targeting pack -->
-      <File Condition="'%(File.HarvestDependencies)' == '' AND !$([System.String]::Copy('%(File.TargetFramework)').StartsWith('portable-'))">
-        <!-- Only harvest files from ref/lib/runtimes dir-->
-        <HarvestDependencies Condition="$([System.String]::Copy('%(File.TargetPath)').StartsWith('ref')) OR
-                                        $([System.String]::Copy('%(File.TargetPath)').StartsWith('lib')) OR
-                                        $([System.String]::Copy('%(File.TargetPath)').StartsWith('runtimes'))">true</HarvestDependencies>
       </File>
     </ItemGroup>
   </Target>
