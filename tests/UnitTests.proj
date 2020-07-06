@@ -11,6 +11,7 @@
     <HelixType>test/product/</HelixType>
 
     <IncludeDotNetCli>true</IncludeDotNetCli>
+    <DotNetCliPackageType>sdk</DotNetCliPackageType>
 
     <TestRunNamePrefix>$(AGENT_JOBNAME)</TestRunNamePrefix>
   </PropertyGroup>

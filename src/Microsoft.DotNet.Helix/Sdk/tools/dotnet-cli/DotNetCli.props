@@ -1,9 +1,11 @@
 <Project>
   <PropertyGroup>
     <IncludeDotNetCli Condition=" '$(IncludeDotNetCli)' != 'true' ">false</IncludeDotNetCli>
-    <DotNetCliPackageType Condition=" '$(DotNetCliPackageType)' == '' ">sdk</DotNetCliPackageType>
-    <DotNetCliVersion Condition=" '$(DotNetCliVersion)' == ''">$(NETCoreSdkVersion)</DotNetCliVersion>
-    <DotNetCliVersion Condition=" '$(DotNetCliVersion)' == ''">3.1.301</DotNetCliVersion>
+    <DotNetCliPackageType Condition=" '$(DotNetCliPackageType)' == '' ">runtime</DotNetCliPackageType>
+    <DotNetCliVersion Condition=" '$(DotNetCliVersion)' == '' AND '$(DotNetCliPackageType)' == 'runtime' ">$(BundledNETCoreAppPackageVersion)</DotNetCliVersion>
+    <DotNetCliVersion Condition=" '$(DotNetCliVersion)' == '' AND '$(DotNetCliPackageType)' == 'sdk' ">$(NETCoreSdkVersion)</DotNetCliVersion>
+    <DotNetCliVersion Condition=" '$(DotNetCliVersion)' == '' AND '$(DotNetCliPackageType)' == 'runtime' ">3.1.5</DotNetCliVersion>
+    <DotNetCliVersion Condition=" '$(DotNetCliVersion)' == '' AND '$(DotNetCliPackageType)' == 'sdk' ">3.1.301</DotNetCliVersion>
     <DotNetCliChannel Condition=" '$(DotNetCliChannel)' == '' ">Current</DotNetCliChannel>
     <_HelixMonoQueueTargets>$(_HelixMonoQueueTargets);$(MSBuildThisFileDirectory)DotNetCli.targets</_HelixMonoQueueTargets>
   </PropertyGroup>
