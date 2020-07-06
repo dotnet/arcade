@@ -1,12 +1,5 @@
 trigger: none
 
-pr:
-  branches:
-    include:
-    - master
-    - release/3.x
-    - templates
-
 variables:
 - template: eng/common-variables.yml
 - name: EnableRichCodeNavigation
@@ -18,7 +11,7 @@ stages:
   jobs:
   - template: /eng/common/templates/jobs/jobs.yml
     parameters:
-      enableMicrobuild: true
+      enableMicrobuild: false
       enablePublishUsingPipelines: false
       useBuildManifest: ${{ variables['_UseBuildManifest'] }}
       workspace:
