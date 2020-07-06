@@ -117,7 +117,7 @@ namespace Microsoft.DotNet.Helix.Sdk
 
                 Log.LogMessage($"Adding runtimeconfig and depsfile parameters for assembly {assemblyBaseName}.");
                 driver +=
-                    $"--runtimeconfig {assemblyBaseName}.runtimeconfig.json --depsfile {assemblyBaseName}.deps.json ";
+                    $"--roll-forward Major --runtimeconfig {assemblyBaseName}.runtimeconfig.json --depsfile {assemblyBaseName}.deps.json ";
             }
 
             string command = $"{driver}{xUnitRunner} {assemblyName}{(XUnitArguments != null ? " " + XUnitArguments : "")} -xml testResults.xml {arguments}";
