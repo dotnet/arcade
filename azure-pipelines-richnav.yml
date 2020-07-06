@@ -18,13 +18,8 @@ stages:
   jobs:
   - template: /eng/common/templates/jobs/jobs.yml
     parameters:
-      artifacts:
-        publish:
-          artifacts: true
-          logs: true
-          manifests: true
       enableMicrobuild: true
-      enablePublishUsingPipelines: true
+      enablePublishUsingPipelines: false
       useBuildManifest: ${{ variables['_UseBuildManifest'] }}
       workspace:
         clean: all
@@ -52,4 +47,4 @@ stages:
             -prepareMachine
             $(_InternalBuildArgs)
             /p:Test=false
-          displayName: Windows Build / Publish
+          displayName: Windows Build
