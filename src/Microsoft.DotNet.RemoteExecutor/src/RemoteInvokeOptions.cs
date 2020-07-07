@@ -58,5 +58,10 @@ namespace Microsoft.DotNet.RemoteExecutor
                 _runAsSudo = value;
             }
         }
+
+        /// <summary>
+        /// Specifies the roll-forward policy for dotnet cli to use. Only applies when running .NET Core
+        /// </summary>
+        public string RollForward { get; set; }
     }
 }
