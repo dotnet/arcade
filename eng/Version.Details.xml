@@ -35,13 +35,13 @@
       <Uri>https://github.com/dotnet/arcade-services</Uri>
       <Sha>a737c3adb903bcc7210be969dcc9cf860e33e17e</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.XHarness.CLI" Version="1.0.0-prerelease.20352.2">
+    <Dependency Name="Microsoft.DotNet.XHarness.CLI" Version="1.0.0-prerelease.20352.3">
       <Uri>https://github.com/dotnet/xharness</Uri>
-      <Sha>0a072cef921d1aa5fa084d3f7b08aaf658bba04d</Sha>
+      <Sha>5c95b40b725e1aa9d596411c453900385cf6f84c</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.Net.Compilers.Toolset" Version="3.7.0-4.20324.3">
+    <Dependency Name="Microsoft.Net.Compilers.Toolset" Version="3.8.0-1.20353.1">
       <Uri>https://github.com/dotnet/roslyn</Uri>
-      <Sha>1462b1e9c78a7efe338a6859ee5f88fa07d4adc8</Sha>
+      <Sha>09f75b83754732a74e0815976b80ecffd94c0dde</Sha>
     </Dependency>
     <Dependency Name="Microsoft.SourceLink" Version="1.0.0-beta2-19554-01">
       <Uri>https://github.com/dotnet/sourcelink</Uri>
