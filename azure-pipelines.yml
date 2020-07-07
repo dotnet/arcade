@@ -67,6 +67,7 @@ stages:
         - job: Linux
           container: LinuxContainer
           pool:
+            # Adding a comment to trigger it again
             name:  NetCorePublic-Int-Pool
             queue: BuildPool.Ubuntu.1604.Amd64.Arcade.Open
           strategy:
