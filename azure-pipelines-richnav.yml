@@ -11,7 +11,7 @@ stages:
   jobs:
   - template: /eng/common/templates/jobs/jobs.yml
     parameters:
-      enableMicrobuild: false
+      enableMicrobuild: true
       enablePublishUsingPipelines: false
       useBuildManifest: ${{ variables['_UseBuildManifest'] }}
       workspace:
