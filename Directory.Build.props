@@ -17,10 +17,11 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(DotNetBuildFromSource)' == 'true'">
-    <!--
-      Source-build builds 2 versions, 9.0.1 and and 12.0.2
-      and the latter is written to Versions.props. Arcade uses
-      the older version, so the Version.props version needs to be updated.
+    <!--    
+      When building using source-build the process is:
+      - Newtonsoft.Json versions 9.0.1 and 12.0.2 are built by source-build
+      - Version 12.0.2 is written to Version.props
+      - Arcade needs to use 9.0.1 so we need to override Version.props value here
     -->
     <NewtonsoftJsonVersion>9.0.1</NewtonsoftJsonVersion>
   </PropertyGroup>
