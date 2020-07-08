@@ -20,6 +20,7 @@ stages:
       - job: Windows_NT
         timeoutInMinutes: 90
         enableRichCodeNavigation: true
+        richCodeNavigationEnvironment: int
         pool:
           ${{ if eq(variables._RunAsPublic, True) }}:
             name: NetCorePublic-Pool
