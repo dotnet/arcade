@@ -1,54 +1,64 @@
 <Project>
 
-  <Target Name="DetectXHarnessRequest"
-          Condition=" '@(XHarnessAppFolderToTest)' != '' OR '@(XHarnessPackageToTest)' != '' OR '@(XHarnessAndroidProject)' != '' OR '@(XHarnessiOSProject)' != '' OR '$(IncludeXHarnessCli)' == 'true' "
-          BeforeTargets="AddDotNetSdk;AddXHarnessCli">
-    <PropertyGroup>
-      <IncludeDotNetCli>true</IncludeDotNetCli>
-      <IncludeXHarnessCli>true</IncludeXHarnessCli>
-      <DotNetCliPackageType>sdk</DotNetCliPackageType>
-      <DotNetCliVersion>3.1.201</DotNetCliVersion>
-    </PropertyGroup>
-  </Target>
+  <PropertyGroup Condition=" '$(IncludeXHarnessCli)' == 'true' ">
+    <!-- We then invoke the CLI DLL directly using .NET runtime without the need for .NET SDK -->
+    <IncludeDotNetCli>true</IncludeDotNetCli>
+    <IncludeXHarnessCli>true</IncludeXHarnessCli>
+    <DotNetCliPackageType>runtime</DotNetCliPackageType>
+    <DotNetCliVersion>3.1.5</DotNetCliVersion>
+  </PropertyGroup>
 
   <Target Name="AddXHarnessCli"
           Condition=" '$(IncludeXHarnessCli)' == 'true' "
           BeforeTargets="CoreTest"
-          DependsOnTargets="AddDotNetSdk">
+          AfterTargets="AddDotNetSdk">
 
     <Error Condition=" '$(_XHarnessPackageVersion)' == '' " Text="XHarness CLI version not defined! Please specify it using the MicrosoftDotNetXHarnessCLIVersion property" />
 
     <!-- When XHarnessNupkgPath is set, we send the .nupkg with the job and install the tool from there -->
     <Message Condition=" '$(XHarnessNupkgPath)' != '' " Text="XHarnessNupkgPath is set so XHarnessPackageSource will be ignored" Importance="normal" />
 
-    <PropertyGroup Condition=" '$(XHarnessNupkgPath)' != '' AND $(IsPosixShell) ">
-      <XHarnessPackageSource>$HELIX_CORRELATION_ARCHIVE_ROOT</XHarnessPackageSource>
-    </PropertyGroup>
-    <PropertyGroup Condition=" '$(XHarnessNupkgPath)' != '' AND !$(IsPosixShell) ">
-      <XHarnessPackageSource>%HELIX_CORRELATION_ARCHIVE_ROOT%</XHarnessPackageSource>
+    <PropertyGroup Condition=" '$(XHarnessNupkgPath)' != '' ">
+      <XHarnessPackageSource>$([System.IO.Path]::GetDirectoryName($(XHarnessNupkgPath))) --no-cache</XHarnessPackageSource>
     </PropertyGroup>
 
-    <ItemGroup Condition=" '$(XHarnessNupkgPath)' != '' ">
-      <HelixCorrelationPayload Include="$(XHarnessNupkgPath)" />
+    <!-- We install the tool locally on the build machine, then, installed as-is, we zip it up and send as a correlation payload -->
+    <PropertyGroup>
+      <_XHarnessLocalToolPath>$(ArtifactsTmpDir)Microsoft.DotNet.XHarness.CLI</_XHarnessLocalToolPath>
+    </PropertyGroup>
+
+    <RemoveDir Directories="$(_XHarnessLocalToolPath)" />
+    <Exec Command="dotnet tool install --tool-path $(_XHarnessLocalToolPath) --version $(_XHarnessPackageVersion) --add-source $(XHarnessPackageSource) $(_XHarnessPackageName)"
+          WorkingDirectory="$(ArtifactsTmpDir)" />
+
+    <!-- There are files we don't need extracted inside of the extracted tool dir (such as the original .nupkg) that blow up the size 3x, so we remove them -->
+    <ItemGroup>
+      <_XHarnessExtraToolFiles Include="$(ArtifactsTmpDir)\Microsoft.DotNet.XHarness.CLI\.store\microsoft.dotnet.xharness.cli\$(_XHarnessPackageVersion)\microsoft.dotnet.xharness.cli\$(_XHarnessPackageVersion)\*.*" />
+    </ItemGroup>
+    <Delete Files="@(_XHarnessExtraToolFiles)" />
+
+    <ItemGroup>
+      <HelixCorrelationPayload Include="$(_XHarnessLocalToolPath)\.store\microsoft.dotnet.xharness.cli\$(_XHarnessPackageVersion)\microsoft.dotnet.xharness.cli\$(_XHarnessPackageVersion)">
+        <Destination>microsoft.dotnet.xharness.cli</Destination>
+        <IncludeDirectoryName>true</IncludeDirectoryName>
+      </HelixCorrelationPayload>
     </ItemGroup>
 
     <!-- When using a dotnet 'tool' that is not installed globally, we must set DOTNET_ROOT.
          This is because a framework dependent dotnet tool only searches in program files folders for runtimes.
          When .NET is not already installed there, we set DOTNET_ROOT to help it find the right one. -->
     <PropertyGroup Condition="$(IsPosixShell)">
-      <HelixPreCommands>$(HelixPreCommands);export DOTNET_ROOT=$HELIX_CORRELATION_PAYLOAD/dotnet</HelixPreCommands>
-      <HelixPreCommands>$(HelixPreCommands);dotnet tool install --tool-path $HELIX_CORRELATION_PAYLOAD/xharness-cli --version $(_XHarnessPackageVersion) --add-source $(XHarnessPackageSource) $(_XHarnessPackageName)</HelixPreCommands>
       <HelixPreCommands>$(HelixPreCommands);export PATH=$HELIX_CORRELATION_PAYLOAD/xharness-cli:$PATH</HelixPreCommands>
       <HelixPreCommands>$(HelixPreCommands);export XHARNESS_DISABLE_COLORED_OUTPUT=true</HelixPreCommands>
       <HelixPreCommands>$(HelixPreCommands);export XHARNESS_LOG_WITH_TIMESTAMPS=true</HelixPreCommands>
+      <HelixPreCommands>$(HelixPreCommands);export XHARNESS_CLI_PATH=$HELIX_CORRELATION_PAYLOAD/microsoft.dotnet.xharness.cli/$(_XHarnessPackageVersion)/tools/netcoreapp3.1/any/Microsoft.DotNet.XHarness.CLI.dll</HelixPreCommands>
     </PropertyGroup>
 
     <PropertyGroup Condition="!$(IsPosixShell)">
-      <HelixPreCommands>$(HelixPreCommands);set DOTNET_ROOT=%HELIX_CORRELATION_PAYLOAD%\dotnet</HelixPreCommands>
-      <HelixPreCommands>$(HelixPreCommands);dotnet tool install --tool-path %HELIX_CORRELATION_PAYLOAD%\xharness-cli --version $(_XHarnessPackageVersion) --add-source $(XHarnessPackageSource) $(_XHarnessPackageName)</HelixPreCommands>
       <HelixPreCommands>$(HelixPreCommands);set PATH=%HELIX_CORRELATION_PAYLOAD%\xharness-cli%3B%PATH%</HelixPreCommands>
       <HelixPreCommands>$(HelixPreCommands);set XHARNESS_DISABLE_COLORED_OUTPUT=true</HelixPreCommands>
       <HelixPreCommands>$(HelixPreCommands);set XHARNESS_LOG_WITH_TIMESTAMPS=true</HelixPreCommands>
+      <HelixPreCommands>$(HelixPreCommands);set XHARNESS_CLI_PATH=%HELIX_CORRELATION_PAYLOAD%\microsoft.dotnet.xharness.cli\$(_XHarnessPackageVersion)\tools\netcoreapp3.1\any\Microsoft.DotNet.XHarness.CLI.dll</HelixPreCommands>
     </PropertyGroup>
   </Target>
 
@@ -61,7 +71,7 @@
       <_CurrentAdditionalProperties>%(XHarnessAndroidProject.AdditionalProperties)</_CurrentAdditionalProperties>
     </PropertyGroup>
     <MSBuild Projects="$(_CurrentXHarnessAndroidProject)" Targets="Build" Properties="$(_CurrentAdditionalProperties)">
-      <Output TaskParameter="TargetOutputs" ItemName="XHarnessPackageToTest" />
+      <Output TaskParameter="TargetOutputs" ItemName="XHarnessApkToTest" />
     </MSBuild>
   </Target>
 
@@ -74,29 +84,29 @@
       <_CurrentAdditionalProperties>%(XHarnessiOSProject.AdditionalProperties)</_CurrentAdditionalProperties>
     </PropertyGroup>
     <MSBuild Projects="$(_CurrentXHarnessiOSProject)" Targets="Build" Properties="$(_CurrentAdditionalProperties)">
-      <Output TaskParameter="TargetOutputs" ItemName="XHarnessAppFolderToTest" />
+      <Output TaskParameter="TargetOutputs" ItemName="XHarnessAppBundleToTest" />
     </MSBuild>
   </Target>
 
   <Target Name="CreateAndroidWorkItems"
-          Condition=" '@(XHarnessPackageToTest)' != '' "
+          Condition=" '@(XHarnessApkToTest)' != '' "
           BeforeTargets="CoreTest">
-    <CreateXHarnessAndroidWorkItems AppPackages="@(XHarnessPackageToTest)"
+    <CreateXHarnessAndroidWorkItems Apks="@(XHarnessApkToTest)"
                                     IsPosixShell="$(IsPosixShell)"
-                                    WorkItemTimeout="%(XHarnessPackageToTest.WorkItemTimeout)"
-                                    TestTimeout="%(XHarnessPackageToTest.TestTimeout)">
+                                    WorkItemTimeout="%(XHarnessApkToTest.WorkItemTimeout)"
+                                    TestTimeout="%(XHarnessApkToTest.TestTimeout)">
       <Output TaskParameter="WorkItems" ItemName="HelixWorkItem"/>
     </CreateXHarnessAndroidWorkItems>
   </Target>
 
   <Target Name="CreateiOSWorkItems"
-          Condition=" '@(XHarnessAppFolderToTest)' != '' "
+          Condition=" '@(XHarnessAppBundleToTest)' != '' "
           BeforeTargets="CoreTest">
-    <CreateXHarnessiOSWorkItems AppFolders="@(XHarnessAppFolderToTest)"
+    <CreateXHarnessiOSWorkItems AppBundles="@(XHarnessAppBundleToTest)"
                                 IsPosixShell="$(IsPosixShell)"
                                 XcodeVersion="$(XHarnessXcodeVersion)"
-                                WorkItemTimeout="%(XHarnessAppFolderToTest.WorkItemTimeout)"
-                                TestTimeout="%(XHarnessAppFolderToTest.TestTimeout)">
+                                WorkItemTimeout="%(XHarnessAppBundleToTest.WorkItemTimeout)"
+                                TestTimeout="%(XHarnessAppBundleToTest.TestTimeout)">
       <Output TaskParameter="WorkItems" ItemName="HelixWorkItem"/>
     </CreateXHarnessiOSWorkItems>
   </Target>

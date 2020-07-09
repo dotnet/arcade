@@ -7,8 +7,7 @@ output_directory=''
 targets=''
 timeout=''
 launch_timeout=''
-dotnet_root=''
-xharness=''
+xharness_cli_path=''
 xcode_version=''
 app_arguments=''
 
@@ -35,12 +34,8 @@ while [[ $# > 0 ]]; do
         launch_timeout="$2"
         shift
         ;;
-      --dotnet-root)
-        dotnet_root="$2"
-        shift
-        ;;
-      --xharness)
-        xharness="$2"
+      --xharness-cli-path)
+        xharness_cli_path="$2"
         shift
         ;;
       --xcode-version)
@@ -85,11 +80,7 @@ if [ -z "$launch_timeout" ]; then
     die "Launch timeout wasn't provided";
 fi
 
-if [ -z "$dotnet_root" ]; then
-    die "DotNet root path wasn't provided";
-fi
-
-if [ -z "$xharness" ]; then
+if [ -z "$xharness_cli_path" ]; then
     die "XHarness path wasn't provided";
 fi
 
@@ -109,18 +100,17 @@ simulator_app="$xcode_path/Contents/Developer/Applications/Simulator.app"
 sudo pkill -9 -f "$simulator_app"
 open -a "$simulator_app"
 
-export DOTNET_ROOT="$dotnet_root"
 export XHARNESS_DISABLE_COLORED_OUTPUT=true
 export XHARNESS_LOG_WITH_TIMESTAMPS=true
 
-"$xharness" ios test                       \
+dotnet exec "$xharness_cli_path" ios test  \
     --app="$app"                           \
     --output-directory="$output_directory" \
     --targets="$targets"                   \
     --timeout=$timeout                     \
     --launch-timeout=$launch_timeout       \
     --xcode="$xcode_path"                  \
-    -v \
+    -v                                     \
     $app_arguments
 
 exit_code=$?
