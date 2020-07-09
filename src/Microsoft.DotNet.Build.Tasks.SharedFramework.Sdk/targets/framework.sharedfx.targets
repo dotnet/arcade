@@ -146,7 +146,7 @@
 
     <!-- Ensure the host is executable. See https://github.com/NuGet/Home/issues/4424 -->
     <Exec Command="chmod u+x $(SharedFrameworkLayoutDir)dotnet$(ExeSuffix)"
-          Condition="'$(OSGroup)' != 'Windows_NT'" />
+          Condition="'$(OS)' != 'Windows_NT'" />
   </Target>
 
   <!-- Clean up artifacts that dotnet-publish generates which we don't need -->
@@ -216,9 +216,16 @@
           DependsOnTargets="FixDepsJsonFileName"
           AfterTargets="Publish">
     <PropertyGroup>
-      <RuntimeGraphGeneratorRuntime Condition="'$(OSGroup)'=='Windows_NT'">win</RuntimeGraphGeneratorRuntime>
-      <RuntimeGraphGeneratorRuntime Condition="'$(OSGroup)'=='OSX'">osx</RuntimeGraphGeneratorRuntime>
-      <RuntimeGraphGeneratorRuntime Condition="'$(OSGroup)'=='FreeBSD'">freebsd</RuntimeGraphGeneratorRuntime>
+      <RuntimeGraphGeneratorRuntime Condition="$([MSBuild]::IsOSPlatform('windows'))">win</RuntimeGraphGeneratorRuntime>
+      <RuntimeGraphGeneratorRuntime Condition="$([MSBuild]::IsOSPlatform('osx'))">osx</RuntimeGraphGeneratorRuntime>
+      <RuntimeGraphGeneratorRuntime Condition="$([MSBuild]::IsOSPlatform('freebsd'))">freebsd</RuntimeGraphGeneratorRuntime>
+      <RuntimeGraphGeneratorRuntime Condition="$([MSBuild]::IsOSPlatform('netbsd'))">netbsd</RuntimeGraphGeneratorRuntime>
+      <RuntimeGraphGeneratorRuntime Condition="$([MSBuild]::IsOSPlatform('illumos'))">illumos</RuntimeGraphGeneratorRuntime>
+      <RuntimeGraphGeneratorRuntime Condition="$([MSBuild]::IsOSPlatform('solaris'))">solaris</RuntimeGraphGeneratorRuntime>
+      <RuntimeGraphGeneratorRuntime Condition="$([MSBuild]::IsOSPlatform('ios'))">ios</RuntimeGraphGeneratorRuntime>
+      <RuntimeGraphGeneratorRuntime Condition="$([MSBuild]::IsOSPlatform('tvos'))">tvos</RuntimeGraphGeneratorRuntime>
+      <RuntimeGraphGeneratorRuntime Condition="$([MSBuild]::IsOSPlatform('android'))">android</RuntimeGraphGeneratorRuntime>
+      <RuntimeGraphGeneratorRuntime Condition="$([MSBuild]::IsOSPlatform('browser'))">browser</RuntimeGraphGeneratorRuntime>
       <RuntimeGraphGeneratorRuntime Condition="'$(RuntimeGraphGeneratorRuntime)'==''">linux</RuntimeGraphGeneratorRuntime>
     </PropertyGroup>
 

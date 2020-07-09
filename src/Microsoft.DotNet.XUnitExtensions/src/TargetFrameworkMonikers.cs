@@ -9,9 +9,8 @@ namespace Xunit
     [Flags]
     public enum TargetFrameworkMonikers
     {
-        Netcoreapp = 0x1,
-        NetFramework = 0x2,
-        Uap = 0x4,
-        Mono = 0x8
+        Netcoreapp = 1,
+        NetFramework = 2,
+        Any = ~0
     }
 }

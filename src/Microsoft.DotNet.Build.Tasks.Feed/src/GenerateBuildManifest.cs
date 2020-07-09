@@ -3,6 +3,8 @@
 // See the LICENSE file in the project root for more information.
 
 using Microsoft.Build.Framework;
+using Microsoft.DotNet.Build.Tasks.Feed.Model;
+using Microsoft.DotNet.VersionTools.BuildManifest.Model;
 using System;
 using MSBuild = Microsoft.Build.Utilities;
 
@@ -60,11 +62,27 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// Is this manifest for a stable build?
         /// </summary>
         public bool IsStableBuild { get; set; }
+        
+        /// <summary>
+        /// The version of the publishing infrastructure that should be tagged in the manifest.
+        /// </summary>
+        public string PublishingVersion { get; set; }
 
         public override bool Execute()
         {
             try
             {
+                PublishingInfraVersion targetPublishingVersion = PublishingInfraVersion.Legacy;
+
+                if (!string.IsNullOrEmpty(PublishingVersion)) 
+                {
+                    if (Enum.TryParse(PublishingVersion, ignoreCase: true, out targetPublishingVersion))
+                    {
+                        Log.LogError($"Could not parse '{PublishingVersion}' as a valid publishing infrastructure version.");
+                        return false;
+                    }
+                }
+
                 var buildModel = BuildManifestUtil.CreateModelFromItems(
                     Artifacts,
                     BuildId,
@@ -73,6 +91,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     RepoBranch,
                     RepoCommit,
                     IsStableBuild,
+                    targetPublishingVersion,
                     Log);
 
                 buildModel.WriteAsXml(OutputPath, Log);

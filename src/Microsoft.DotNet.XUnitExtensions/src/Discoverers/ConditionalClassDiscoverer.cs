@@ -47,22 +47,7 @@ namespace Microsoft.DotNet.XUnitExtensions
                 return true;
             }
 
-            foreach (string entry in conditionMemberNames)
-            {
-                // Null condition member names are silently tolerated.
-                if (string.IsNullOrWhiteSpace(entry)) continue;
-
-                MethodInfo conditionMethodInfo = ConditionalTestDiscoverer.LookupConditionalMethod(calleeType, entry);
-                if (conditionMethodInfo == null)
-                {
-                    throw new InvalidOperationException($"Unable to get MethodInfo, please check input for {entry}.");
-                }
-
-                // If one of the conditions is false, then return the category failing trait.
-                if (!(bool)conditionMethodInfo.Invoke(null, null)) return false;
-            }
-
-            return true;
+            return DiscovererHelpers.Evaluate(calleeType, conditionMemberNames);
         }
     }
 }

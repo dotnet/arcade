@@ -35,6 +35,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public bool IsStableBuild { get; set; }
 
+        /// <summary>
+        /// Which version should the build manifest be tagged with.
+        /// By default he latest version is used.
+        /// </summary>
+        public string PublishingVersion { get; set; }
+
         public override bool Execute()
         {
             try
@@ -135,6 +141,16 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         blobArtifacts = blobItems.Select(BuildManifestUtil.CreateBlobArtifactModel).Where(blob => blob != null);
                     }
 
+                    PublishingInfraVersion targetPublishingVersion = PublishingInfraVersion.Latest;
+
+                    if (!string.IsNullOrEmpty(PublishingVersion))
+                    {
+                        if (!Enum.TryParse(PublishingVersion, ignoreCase: true, out targetPublishingVersion))
+                        {
+                            Log.LogError($"Could not parse publishing infra version '{PublishingVersion}'");
+                        }
+                    }
+
                     BuildManifestUtil.CreateBuildManifest(Log,
                         blobArtifacts,
                         packageArtifacts,
@@ -144,7 +160,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         ManifestBranch,
                         ManifestCommit,
                         ManifestBuildData,
-                        IsStableBuild);
+                        IsStableBuild,
+                        targetPublishingVersion);
 
                     Log.LogMessage(MessageImportance.High,
                         $"##vso[artifact.upload containerfolder=AssetManifests;artifactname=AssetManifests]{AssetManifestPath}");

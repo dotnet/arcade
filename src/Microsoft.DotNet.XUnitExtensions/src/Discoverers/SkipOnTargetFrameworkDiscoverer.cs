@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Xunit.Abstractions;
@@ -24,14 +25,10 @@ namespace Microsoft.DotNet.XUnitExtensions
         public IEnumerable<KeyValuePair<string, string>> GetTraits(IAttributeInfo traitAttribute)
         {
             TargetFrameworkMonikers frameworks = (TargetFrameworkMonikers)traitAttribute.GetConstructorArguments().First();
-            if (frameworks.HasFlag(TargetFrameworkMonikers.Netcoreapp))
-                yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.NonNetcoreappTest);
-            if (frameworks.HasFlag(TargetFrameworkMonikers.NetFramework))
-                yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.NonNetfxTest);
-            if (frameworks.HasFlag(TargetFrameworkMonikers.Uap))
-                yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.NonUapTest);
-            if (frameworks.HasFlag(TargetFrameworkMonikers.Mono))
-                yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.NonMonoTest);
+
+            return DiscovererHelpers.TestFrameworkApplies(frameworks) ?
+                new[] { new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.Failing) } :
+                Array.Empty<KeyValuePair<string, string>>();
         }
     }
 }

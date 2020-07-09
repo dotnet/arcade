@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
@@ -6,12 +6,13 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using Microsoft.Cci.Comparers;
 using Microsoft.Cci.Extensions;
 using Microsoft.Cci.Extensions.CSharp;
 
 namespace Microsoft.Cci.Differs.Rules
 {
-    // Look for differences in a parameter's marshaling attributes like in, out, & ref, as well as 
+    // Look for differences in a parameter's marshaling attributes like in, out, & ref, as well as
     // potentially custom modifiers like const & volatile.
     [ExportDifferenceRule]
     internal class ParameterModifiersCannotChange : CompatDifferenceRule
@@ -63,7 +64,8 @@ namespace Microsoft.Cci.Differs.Rules
                 // Now check custom modifiers, primarily focused on const & volatile
                 if (implParam.IsModified || contractParam.IsModified)
                 {
-                    var union = implParam.CustomModifiers.Union(contractParam.CustomModifiers);
+                    var union = implParam.CustomModifiers
+                        .Union(contractParam.CustomModifiers, ModifierComparer.Default);
                     if (implParam.CustomModifiers.Count() != union.Count())
                     {
                         differences.AddIncompatibleDifference(this,
@@ -124,6 +126,37 @@ namespace Microsoft.Cci.Differs.Rules
                     modifier += " readonly";
             }
             return modifier;
+        }
+
+        private class ModifierComparer : IEqualityComparer<ICustomModifier>
+        {
+            private readonly static IEqualityComparer<ITypeDefinition> TypeComparer =
+                CciComparers.Default.GetEqualityComparer<ITypeDefinition>();
+
+            private ModifierComparer() { }
+
+            public static ModifierComparer Default = new ModifierComparer();
+
+            public bool Equals(ICustomModifier x, ICustomModifier y)
+            {
+                if (x == null || y == null)
+                {
+                    return x == null && y == null;
+                }
+
+                return x.IsOptional == y.IsOptional &&
+                    TypeComparer.Equals(x.Modifier.ResolvedType, y.Modifier.ResolvedType);
+            }
+
+            public int GetHashCode(ICustomModifier obj)
+            {
+                if (obj == null)
+                {
+                    return 0;
+                }
+
+                return (obj.IsOptional ? 1 : 0) | TypeComparer.GetHashCode(obj.Modifier.ResolvedType) << 1;
+            }
         }
     }
 }

@@ -2,10 +2,6 @@ variables:
   # Cannot use key:value syntax in root defined variables
   - name: _TeamName
     value: DotNetCore
-  - name: _DotNetArtifactsCategory
-    value: .NETCore
-  - name: _DotNetValidationArtifactsCategory
-    value: .NETCoreValidation
   - name: HelixApiAccessToken
     value: ''
   - name: _RunAsPublic
@@ -14,6 +10,8 @@ variables:
     value: False
   - name: _InternalBuildArgs
     value: ''
+  - name: _UseBuildManifest
+    value: False
 
   - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
     - name: _RunAsPublic
@@ -22,6 +20,8 @@ variables:
       value: True
     - name: _SignType
       value: real
+    - name: _UseBuildManifest
+      value: False
     # DotNet-Blob-Feed provides: dotnetfeed-storage-access-key-1
     # Publish-Build-Assets provides: MaestroAccessToken, BotAccount-dotnet-maestro-bot-PAT
     # DotNet-HelixApi-Access provides: HelixApiAccessToken
@@ -30,10 +30,7 @@ variables:
     - group: DotNet-HelixApi-Access
     - group: SDL_Settings
     - name: _InternalBuildArgs
-      value: /p:DotNetSignType=$(_SignType) /p:TeamName=$(_TeamName)
-        /p:DotNetPublishBlobFeedKey=$(dotnetfeed-storage-access-key-1)
-        /p:DotNetPublishBlobFeedUrl=https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json
-        /p:DotNetPublishToBlobFeed=true
+      value: /p:DotNetSignType=$(_SignType) 
+        /p:TeamName=$(_TeamName)
         /p:DotNetPublishUsingPipelines=true
-        /p:DotNetArtifactsCategory=$(_DotNetArtifactsCategory)
         /p:OfficialBuildId=$(BUILD.BUILDNUMBER)

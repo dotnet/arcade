@@ -9,8 +9,8 @@
       - [Switching service connections](#switching-service-connections)
     - [Git (internal) connections](#git-internal-connections)
   - [Agent queues](#agent-queues)
-    - [External : (Pool Provider: NetCorePublic-Int-Pool)](#external--pool-provider-netcorepublic-int-pool)
-    - [Internal : (Pool Provider: NetCoreInternal-Int-Pool)](#internal--pool-provider-netcoreinternal-int-pool)
+    - [External : (Pool Provider: NetCorePublic-Pool)](#external--pool-provider-netcorepublic-pool)
+    - [Internal : (Pool Provider: NetCoreInternal-Pool)](#internal--pool-provider-netcoreinternal-pool)
   - [CI badge link](#ci-badge-link)
   - [Signed Builds](#signed-builds)
   - [Generate Graph Files](#generate-graph-files)
@@ -27,11 +27,11 @@
 
 ## Project Guidance
 
-[Project guidance](./Policy/AzureDevOpsGuidance.md) - Covers guidance on naming conventions, folder structure, projects, Pipelines, etc...
+[Project guidance](./AzureDevOpsGuidance.md) - Covers guidance on naming conventions, folder structure, projects, Pipelines, etc...
 
 ## GitHub to DncEng Internal mirror
 
-If your repository has internal builds (that is, the repo authenticode signs), you will need to set up a DncEng Internal mirror. This is *required* for internal builds; if your repository only does PR or public CI builds, you can skip this step.
+If your repository has internal builds (that is, the repo Authenticode signs its outputs), you will need to set up a DncEng Internal mirror. This is *required* for internal builds; if your repository only does PR or public CI builds, you can skip this step.
 
 Instructions for setting up the GitHub to dev.azure.com/dnceng/internal mirror are available in the [dev.azure.com/dnceng internal mirror documentation](./internal-mirror.md)
 
@@ -61,7 +61,7 @@ See the [dotnet-bot-github-service-endpoint documentation](https://github.com/do
 
 ## Agent queues
 
-We now use Azure Pool Providers to deploy VMs as build agents.  Workflows defined in yaml that still use the "phases" syntax will not able to take advantage of this feature.  See [this document](https://github.com/dotnet/arcade/blob/master/Documentation/AzureDevOps/PhaseToJobSchemaChange.md) for details how to migrate if you are in this scenario.
+We now use Azure Pool Providers to deploy VMs as build agents. Workflows defined in yaml that still use the "phases" syntax will not able to take advantage of this feature.  See [this document](https://github.com/dotnet/arcade/blob/master/Documentation/AzureDevOps/PhaseToJobSchemaChange.md) for details how to migrate if you are in this scenario.
 
 To use an Azure Pool provider, you need to specify both the name of the pool provider and the Helix Queue it uses.  This looks something like:
 ``` yaml
@@ -71,26 +71,45 @@ To use an Azure Pool provider, you need to specify both the name of the pool pro
 
 Current machine pool recommendations:
 
-### External : (Pool Provider: NetCorePublic-Int-Pool)
-
+### External : (Pool Provider: NetCorePublic-Pool)
 | OS         | Recommended pool     | Pool Provider Queue(s)     | Notes | 
 | ---------- | -------------------- | -------------------------- | ----- |
-| Windows_NT | Hosted VS2017        | buildpool.windows.10.amd64.vs2017.open  | |
-|            |                      | buildpool.windows.10.amd64.vs2019.open     | Not available yet |
-|            |                      | buildpool.windows.10.amd64.vs2019.bt.open  | BuildTools SKU: No interactive VS components |
-|            |                      | buildpool.windows.10.amd64.es.vs2017.open  | Spanish OS, VS2017 |
+| Windows_NT | Hosted VS2017 or 2019| BuildPool.Server.Amd64.Open  | Plain Windows: No VS install |
+|            |                      | BuildPool.Server.Amd64.ES.VS2017.Open | Spanish OS, Server Sku, VS2017 |
+|            |                      | BuildPool.Server.Amd64.VS2017.Open |  |
+|            |                      | BuildPool.Server.Amd64.VS2019.Open |  |
+|            |                      | BuildPool.Server.Amd64.VS2019.Pre.Open | Latest public preview VS 2019 |
+|            |                      | BuildPool.Server.Amd64.VS2019.Pre.ES.Open | Latest public preview VS 2019, Spanish OS |
+|            |                      | BuildPool.Server.Amd64.VS2019.BT.Open |  |
+|            |                      | BuildPool.Server.Wasm.Open | Web Assembly Build Configuration |
+|            |                      | BuildPool.Windows.10.Amd64.Open |  |
+|            |                      | BuildPool.Windows.10.Amd64.ES.VS2017.Open |  |
+|            |                      | BuildPool.Windows.10.Amd64.VS2017.Open |  |
+|            |                      | BuildPool.Windows.10.Amd64.VS2019.Open |  |
+|            |                      | BuildPool.Windows.10.Amd64.VS2019.Pre.Open | Latest public preview VS 2019 |
+|            |                      | BuildPool.Windows.Amd64.VS2019.Pre.ES.Open | Latest public preview VS 2019, Spanish OS |
+|            |                      | BuildPool.Windows.10.Amd64.VS2019.BT.Open |  |
+|            |                      | BuildPool.Windows.10.Wasm.Open | Web Assembly Build Configuration |
 | Linux      | Hosted Ubuntu 1604   | buildpool.ubuntu.1604.amd64.open | |
-| OSX        | Hosted MacOS         | n/a | |
+| MacOS      | Hosted MacOS         | n/a | |
 
-### Internal : (Pool Provider: NetCoreInternal-Int-Pool)
+### Internal : (Pool Provider: NetCoreInternal-Pool)
 
 | OS         | Recommended pool     | Pool Provider Queue(s)      | Notes | 
 | ---------- | -------------------- | --------------------------- | ----- |
-| Windows_NT | Use Pool Provider -> | buildpool.windows.10.amd64.vs2017  | |
-|            |                      | buildpool.windows.10.amd64.vs2019     | Not available yet |
-|            |                      | buildpool.windows.10.amd64.vs2019.bt  | BuildTools SKU: No interactive VS components other than IIS Express |
+| Windows_NT | Use Pool Provider -> | BuildPool.Server.Amd64.VS2017 |     |
+|            |                      | BuildPool.Server.Amd64.VS2019 |     |
+|            |                      | BuildPool.Server.Amd64.VS2017 |     |
+|            |                      | BuildPool.Server.Amd64.VS2019 |     |
+|            |                      | BuildPool.Server.Amd64.VS2019.BT |  |
+|            |                      | BuildPool.Server.Amd64.VS2019.Pre | |
+|            |                      | BuildPool.Windows.10.Amd64.VS2017 | |
+|            |                      | BuildPool.Windows.10.Amd64.VS2019 | |
+|            |                      | BuildPool.Windows.10.Amd64.VS2019.BT| |
+|            |                      | BuildPool.Windows.10.Amd64.VS2019.Pre | |
+|            |                      | BuildPool.Windows.10.Amd64.VS2019.Xaml| |
 | Linux      | Hosted Ubuntu 1604   | buildpool.ubuntu.1604.amd64 |
-| OSX        | Hosted Mac Internal  | |
+| MacOS      | Hosted MacOs Internal| n/a | |
 
 A couple of notes:
 
@@ -102,17 +121,21 @@ A couple of notes:
 
 - BuildPool.Windows queues:
 
-  - Windows Client RS4 or higher
+  - Visual Studio versions are updated to "latest public GA" version on a roughly monthly cadence.  
+  - Windows Client RS4 or higher for "*.Windows.10*," or Server 2019 Images used for "*.Server.*" queues
   - 4 cores
   - 512 GB disk space capacity (not SSD)
-  - BuildPool.Windows.10.Amd64.VS2017 - Visual Studio 2017 15.9
-  - Buildpool.Windows.10.Amd64.ES.VS2017.Open  - Visual Studio 2017 15.9 EN-US on ES-ES OS
-  - BuildPool.Windows.10.Amd64.VS2019 - Visual Studio 2019 16.0
-  - BuildPool.Windows.10.Amd64.VS2019.BT - Visual Studio 2017 16.0 'BuildTools' SKU (no UI)
+  - BuildPool.*.Amd64.VS2017 - Visual Studio 2017 15.X
+  - Buildpool.*.Amd64.ES.VS2017.Open  - Visual Studio 2017 15.X EN-US on an ES-ES OS
+  - BuildPool.*.Amd64.VS2019 - Visual Studio 2019 Enterprise 16.X
+  - BuildPool.*.Amd64.VS2019.ES - Visual Studio 2019 Enterprise 16.X on an ES-ES OS.
+  - BuildPool.*.Amd64.VS2019.Pre - Visual Studio 2019 Enterprise Preview 16.X
+  - BuildPool.*.Amd64.VS2019.BT - Visual Studio 2019 16.X 'BuildTools' SKU (no UI)
+  - BuildPool.*.Wasm - Web Assembly Build Configuration
 
 - BuildPool.Ubuntu queues:
   - Ubuntu 16.04
-  - Docker 18.09.2
+  - Docker 18.09.6
   - 4 cores
   - 512 GB disk space capacity (not SSD)
 

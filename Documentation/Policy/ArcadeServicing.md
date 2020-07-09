@@ -10,6 +10,8 @@ Mechanically, this is done in two ways:
 - Branch our tools (Arcade) with the product.
 - Rev the APIs of our services as needed.
 
+**For those inserting into Visual Studio, careful consideration should be given to which Arcade to take a dependency on.  If latest features are needed, then 'n' (or master) might make sense, otherwise 'n-1' (servicing) will be more stable and have much less churn.**
+
 **It's important to note that we *must* continue to validate any supported versions
 of Arcade or services.**
 
@@ -39,7 +41,7 @@ of Arcade or services.**
     - Security
     - Exceptionally high impact issues reported by customers.
     - External dependencies change.
-- See [Change Bar](#ChangeBar.md) and [Changes Policy](#ChangesPolicy.md) for
+- See [Change Bar](./ChangeBar.md) and [Changes Policy](./ChangesPolicy.md) for
   additional details on change bars and communication policies.
 
 ### When can Arcade servicing changes be merged?
@@ -59,7 +61,7 @@ It is the repsonsibility of the coherency QB to ensure that the correct changes 
     - Security
     - Exceptionally high impact issues reported by customers.
     - External dependencies change.
-- See [Change Bar](#ChangeBar.md) and [Changes Policy](#ChangesPolicy.md) for
+- See [Change Bar](./ChangeBar.md) and [Changes Policy](./ChangesPolicy.md) for
   additional details on change bars and communication policies.
 
 ## Mechanics of branching Arcade and services?

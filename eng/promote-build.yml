@@ -1,14 +1,19 @@
 # This file is the main entry point for the Build Promotion build definition.
 # These variables should be declared at build queue time:
 #
-#   - BARBuildId                        ; Maestro++/BAR ID of the build to be promoted
-#   - PromoteToMaestroChannelId         ; To which Maestro++ the build should be promoted to
-#   - EnableSourceLinkValidation        ; Whether source link validation should be performed
-#   - enableNugetValidation             ; Whether NuGet metadata validation should be performed
-#   - EnableSigningValidation           ; Whether signing validation should be performed
-#   - EnableSDLValidation               ; Whether SDL validation should be performed
-#   -   SDLValidationContinueOnError    ; Whether SDL validation errors should be ignored
-#   -   SDLValidationCustomParams       ; Custom parameters for SDL validation
+#   - BARBuildId                                    ; Maestro++/BAR ID of the build to be promoted
+#   - PromoteToMaestroChannelId                     ; To which Maestro++ the build should be promoted to
+#   - PromoteToChannelIds                           ; Comma-separated list of Maestro++ channel's ID that the build must be promoted to
+#   - EnableSourceLinkValidation                    ; Whether source link validation should be performed
+#   - EnableNugetValidation                         ; Whether NuGet metadata validation should be performed
+#   - EnableSigningValidation                       ; Whether signing validation should be performed
+#   -   SigningValidationAdditionalParameters       ; Additional (MSBuild) properties to be passed to signing validation
+#   - EnableSDLValidation                           ; Whether SDL validation should be performed
+#   -   SDLValidationContinueOnError                ; Whether SDL validation errors should be ignored
+#   -   SDLValidationCustomParams                   ; Custom parameters for SDL validation
+#   - PublishInstallersAndChecksums                 ; Whether installers and checksums should be published
+#   - SymbolPublishingAdditionalParameters          ; Additional (MSBuild) properties to be passed to symbol publishing
+#   - ArtifactsPublishingAdditionalParameters       ; Additional (MSBuild) properties to be passed to asset publishing
 
 trigger: none
 
@@ -34,7 +39,6 @@ stages:
               # Keeping this script inline so that we don't need to checkout the whole repo to use just one file
               try {
                   $buildApiEndpoint = "$(MaestroApiEndPoint)/api/builds/$(BARBuildId)?api-version=$(MaestroApiVersion)"
-                  $channelApiEndpoint = "$(MaestroApiEndPoint)/api/channels/$(PromoteToMaestroChannelId)?api-version=$(MaestroApiVersion)"
 
                   $apiHeaders = New-Object 'System.Collections.Generic.Dictionary[[String],[String]]'
                   $apiHeaders.Add('Accept', 'application/json')
@@ -47,11 +51,15 @@ stages:
                     exit 1
                   }
 
-                  $channelInfo = try { Invoke-WebRequest -Method Get -Uri $channelApiEndpoint -Headers $apiHeaders | ConvertFrom-Json } catch { Write-Host "Error: $_" }
+                  $channels = $(PromoteToChannelIds) -split ","
+                  foreach ($channelId in $channels) {
+                    $channelApiEndpoint = "$(MaestroApiEndPoint)/api/channels/${channelId}?api-version=$(MaestroApiVersion)"
+                    $channelInfo = try { Invoke-WebRequest -Method Get -Uri $channelApiEndpoint -Headers $apiHeaders | ConvertFrom-Json } catch { Write-Host "Error: $_" }
 
-                  if (!$channelInfo) {
-                    Write-Host "Channel with ID $(PromoteToMaestroChannelId) was not found in BAR. Aborting."
-                    exit 1
+                    if (!$channelInfo) {
+                      Write-Host "Channel with ID ${channelId} was not found in BAR. Aborting."
+                      exit 1
+                    }
                   }
                   
                   $azureDevOpsBuildNumber = $buildInfo.azureDevOpsBuildNumber
@@ -66,7 +74,7 @@ stages:
                     $azureDevOpsRepository = $azureDevOpsRepository -replace '["/:<>\\|?@*"]', '_'
                   }
 
-                  $buildNumberName = "Promoting $azureDevOpsRepository build $azureDevOpsBuildNumber to channel ${channelName}#"
+                  $buildNumberName = "Promoting $azureDevOpsRepository build $azureDevOpsBuildNumber to channel(s) $(PromoteToChannelIds)#"
 
                   # Maximum buildnumber length is 255 chars
                   if ($buildNumberName.Length -GT 255) {
@@ -85,7 +93,7 @@ stages:
           env:
             MAESTRO_API_TOKEN: $(MaestroApiAccessToken)
 
-
+# Parameters used on conditions need to be passed as variables['ParameterName']
 - template: \eng\common\templates\post-build\post-build.yml
   parameters:
     enableSourceLinkValidation: variables['EnableSourceLinkValidation']
@@ -100,5 +108,9 @@ stages:
       continueOnError: $(SDLValidationContinueOnError)
       params: $(SDLValidationCustomParams)
     
+    publishInstallersAndChecksums: $(PublishInstallersAndChecksums)
+    symbolPublishingAdditionalParameters: $(SymbolPublishingAdditionalParameters)
+    artifactsPublishingAdditionalParameters: $(ArtifactsPublishingAdditionalParameters)
+    signingValidationAdditionalParameters: $(SigningValidationAdditionalParameters)
+
     BARBuildId: $(BARBuildId)
-    PromoteToMaestroChannelId: $(PromoteToMaestroChannelId)

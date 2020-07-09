@@ -23,9 +23,9 @@ namespace Microsoft.Cci.Filters
             _excludeMembers = excludeMembers;
         }
 
-        public DocIdExcludeListFilter(string whiteListFilePath, bool excludeMembers)
+        public DocIdExcludeListFilter(string excludeListFilePath, bool excludeMembers)
         {
-            _docIds = DocIdExtensions.ReadDocIds(whiteListFilePath);
+            _docIds = new HashSet<string>(DocIdExtensions.ReadDocIds(excludeListFilePath));
             _excludeMembers = excludeMembers;
         }
 

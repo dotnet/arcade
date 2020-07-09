@@ -28,8 +28,8 @@ namespace Microsoft.DotNet.CodeAnalysis.Analyzers
 
         public override void OnCompilationStart(CompilationStartAnalysisContext obj)
         {
-            _allowedPinvokeFile = obj.Options.AdditionalFiles.FirstOrDefault(f => Path.GetFileName(f.Path).Contains("PinvokeAnalyzer_"));
-            _exceptionFile = obj.Options.AdditionalFiles.FirstOrDefault(f => Path.GetFileName(f.Path).Contains("PinvokeAnalyzerExceptionList.analyzerdata"));
+            _allowedPinvokeFile = obj.Options.AdditionalFiles.FirstOrDefault(f => Path.GetFileName(f.Path).IndexOf("PinvokeAnalyzer_", StringComparison.OrdinalIgnoreCase) >= 0);
+            _exceptionFile = obj.Options.AdditionalFiles.FirstOrDefault(f => Path.GetFileName(f.Path).IndexOf("PinvokeAnalyzerExceptionList.analyzerdata", StringComparison.OrdinalIgnoreCase) >= 0);
             obj.RegisterSymbolAction(AnalyzeMethod, SymbolKind.Method);
         }
 

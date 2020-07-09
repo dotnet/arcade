@@ -4,6 +4,7 @@
 
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
+using Microsoft.DotNet.Build.Tasks.Feed.Model;
 using Microsoft.DotNet.VersionTools.Automation;
 using Microsoft.DotNet.VersionTools.BuildManifest.Model;
 using System;
@@ -26,7 +27,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             string manifestBranch,
             string manifestCommit,
             string[] manifestBuildData,
-            bool isStableBuild)
+            bool isStableBuild,
+            PublishingInfraVersion publishingVersion)
         {
             CreateModel(
                 blobArtifacts,
@@ -37,6 +39,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 manifestBranch,
                 manifestCommit,
                 isStableBuild,
+                publishingVersion,
                 log)
                 .WriteAsXml(assetManifestPath, log);
         }
@@ -59,6 +62,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             string repoBranch,
             string repoCommit,
             bool isStableBuild,
+            PublishingInfraVersion publishingVersion,
             TaskLoggingHelper log)
         {
             if (artifacts == null)
@@ -104,6 +108,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 repoBranch,
                 repoCommit,
                 isStableBuild,
+                publishingVersion,
                 log);
             return buildModel;
         }
@@ -116,10 +121,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             string manifestBranch,
             string manifestCommit,
             bool isStableBuild,
+            PublishingInfraVersion publishingVersion,
             TaskLoggingHelper log)
         {
             var attributes = MSBuildListSplitter.GetNamedProperties(manifestBuildData);
-            if(!ManifestBuildDataHasLocationProperty(attributes))
+            if(!ManifestBuildDataHasLocationInformation(attributes))
             {
                 log.LogError($"Missing 'location' property from ManifestBuildData");
             }
@@ -131,7 +137,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         BuildId = manifestBuildId,
                         Branch = manifestBranch,
                         Commit = manifestCommit,
-                        IsStable = isStableBuild.ToString()
+                        IsStable = isStableBuild.ToString(),
+                        PublishingVersion = publishingVersion
                     });
 
             buildModel.Artifacts.Blobs.AddRange(blobArtifacts);
@@ -139,14 +146,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             return buildModel;
         }
 
-        internal static bool ManifestBuildDataHasLocationProperty(string [] manifestBuildData)
+        internal static bool ManifestBuildDataHasLocationInformation(string [] manifestBuildData)
         {
-            return ManifestBuildDataHasLocationProperty(MSBuildListSplitter.GetNamedProperties(manifestBuildData));
+            return ManifestBuildDataHasLocationInformation(MSBuildListSplitter.GetNamedProperties(manifestBuildData));
         }
 
-        internal static bool ManifestBuildDataHasLocationProperty(IDictionary<string, string> attributes)
+        internal static bool ManifestBuildDataHasLocationInformation(IDictionary<string, string> attributes)
         {
-            return attributes.ContainsKey("Location");
+            return attributes.ContainsKey("Location") || attributes.ContainsKey("InitialAssetsLocation");
         }
 
         public static BuildModel ManifestFileToModel(string assetManifestPath, TaskLoggingHelper log)

@@ -163,7 +163,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
                 if (UpdateRuntimeFiles)
                 {
                     EnsureWritable(RuntimeJson);
-                    JsonRuntimeFormat.WriteRuntimeGraph(RuntimeJson, runtimeGraph);
+                    NuGetUtility.WriteRuntimeGraph(RuntimeJson, runtimeGraph);
                 }
                 else
                 {

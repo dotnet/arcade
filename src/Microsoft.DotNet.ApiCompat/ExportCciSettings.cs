@@ -16,11 +16,14 @@ namespace Microsoft.DotNet.ApiCompat
         public static IDifferenceOperands  StaticOperands { get; set; }
         public static IAttributeFilter StaticAttributeFilter { get; set; }
 
+        public static IRuleSettings StaticRuleSettings { get; set; }
+
         public ExportCciSettings()
         {
             Settings = StaticSettings;
             Operands = StaticOperands;
             AttributeFilter = StaticAttributeFilter;
+            RuleSettings = StaticRuleSettings;
         }
 
         [Export(typeof(IEqualityComparer<ITypeReference>))]
@@ -31,5 +34,8 @@ namespace Microsoft.DotNet.ApiCompat
 
         [Export(typeof(IAttributeFilter))]
         public IAttributeFilter AttributeFilter { get; }
+
+        [Export(typeof(IRuleSettings))]
+        public IRuleSettings RuleSettings { get; }
     }
 }

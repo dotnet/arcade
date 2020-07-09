@@ -14,8 +14,8 @@ Public code should be mirrored to dev.azure.com/dnceng/internal (see [Azure DevO
         "https://github.com/dotnet/roslyn/blob/master/**/*",
         "https://github.com/dotnet/roslyn/blob/release/**/*",
         "https://github.com/{org}/{repo}/blob/{branch}/**/*" // <-- insert your URI here, in alpha order.
-        "https://github.com/Microsoft/msbuild/blob/master/**/*",
-        "https://github.com/Microsoft/msbuild/blob/release/**/*",
+        "https://github.com/microsoft/msbuild/blob/master/**/*",
+        "https://github.com/microsoft/msbuild/blob/release/**/*",
       ],
       "action": "github-dnceng-azdo-mirror",
       "actionArguments": {

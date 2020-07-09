@@ -26,7 +26,7 @@ In phase 2, we will provide PKPI data about official build state.  Official buil
 
 ## Scope
 
-- Provide visualizations of PKPIs for all B.A.R. Channels with the specific focus on the ".NET Core 5 Dev Channel"
+- Provide visualizations of PKPIs for all B.A.R. Channels with the specific focus on the ".NET 5 Dev Channel"
 
 - Provide per repo insight into official build health.  Overall product health metrics are not specifically a goal of this epic but may become available metrics as a result of achieving goals that are in scope.
 
@@ -109,6 +109,6 @@ See [features](#features) for which features are being delivered in phase 2.
 | Done  | [Existence of product dependency cycles](https://github.com/dotnet/arcade/issues/3905) | Available in barviz |
 | 10/18 | [Disabled subscriptions](https://github.com/dotnet/arcade/issues/4023) | done |
 | 11/19 | [Longest build path visualization](https://github.com/dotnet/arcade/issues/4071) | Michelle McDaniel on FR 11/4-11/15 |
-| ~11/1~ 11/6  | [Split subscriptions view into product and toolset](https://github.com/dotnet/arcade/issues/4138) ||
-| 11/6  | [Superfluous input subscriptions](https://github.com/dotnet/arcade/issues/3906) ||
-| ~11/13~ 11/6 | [Conflicting input subscriptions](https://github.com/dotnet/arcade/issues/2801) ||
+| ~11/1~ ~11/6~ 11/22  | [Split subscriptions view into product and toolset](https://github.com/dotnet/arcade/issues/4138) ||
+| ~11/6~ 11/22  | [Superfluous input subscriptions](https://github.com/dotnet/arcade/issues/3906) ||
+| ~11/13~ ~11/6~ 11/22 | [Conflicting input subscriptions](https://github.com/dotnet/arcade/issues/2801) ||

@@ -3,10 +3,14 @@
   <UsingTask TaskName="ChooseBestP2PTargetFrameworkTask" AssemblyFile="$(DotNetBuildTasksTargetFrameworkSdkAssembly)" />
   <UsingTask TaskName="ChooseBestTargetFrameworksTask" AssemblyFile="$(DotNetBuildTasksTargetFrameworkSdkAssembly)" />
   <UsingTask TaskName="AddTargetFrameworksToProjectTask" AssemblyFile="$(DotNetBuildTasksTargetFrameworkSdkAssembly)" />
-  <UsingTask TaskName="GenerateRuntimeOSPropsFile" AssemblyFile="$(DotNetBuildTasksTargetFrameworkSdkAssembly)" />
   
   <PropertyGroup>
     <_OriginalTargetFrameworks>$(TargetFrameworks)</_OriginalTargetFrameworks>
+  </PropertyGroup>
+
+  <!-- Strip away placeholder tfms and TargetFrameworkSuffix during the graph build. -->
+  <PropertyGroup Condition="'$(IsGraphBuild)' == 'true' and '$(MSBuildRestoreSessionId)' != ''">
+    <TargetFrameworks Condition="'$(TargetFrameworks)' != ''">$([System.Text.RegularExpressions.Regex]::Replace('$(TargetFrameworks)', '(-[^;]+)|(;?_[^;]+)', ''))</TargetFrameworks>
   </PropertyGroup>
   
   <Target Name="RemovePlaceHolderConfigs"
@@ -28,7 +32,7 @@
   </Target>
   
   <Target Name="GetProjectWithBestTargetFrameworks">
-    <ChooseBestTargetFrameworksTask BuildTargetFrameworks="$(BuildTargetFramework)-$(OSGroup);$(AdditionalBuildTargetFrameworks)"
+    <ChooseBestTargetFrameworksTask BuildTargetFrameworks="$(BuildTargetFramework)-$(TargetOS);$(AdditionalBuildTargetFrameworks)"
                                     SupportedTargetFrameworks="$(TargetFrameworks)"
                                     RuntimeGraph="$(RuntimeGraph)" >
       <Output TaskParameter="BestTargetFrameworks" ItemName="_BestTargetFramework" />
@@ -40,32 +44,22 @@
     </AddTargetFrameworksToProjectTask>
   </Target>
 
-  <!-- Restore does not take into account TargetFrameworkSuffix, so we remove the it from the TargetFramework before restore.-->
-  <Target Name="StripTargetFrameworkSuffixFromTargetFrameworks"
-          Condition="'$(TargetFrameworks)' != ''"
-          BeforeTargets="CollectPackageReferences">
-    <ItemGroup>
-      <_TargetFrameworks Include="$(TargetFrameworks)" />
-      <_TargetFrameworks Length="$([System.String]::new('%(Identity)').IndexOf('-'))"/>
-      <_TargetFrameworks Condition="'%(Length)' == '-1'" Length="$([System.String]::new('%(Identity)').Length)"/>
-      <_TargetFrameworksWithoutTargetFrameworkSuffix Include="$([System.String]::new('%(_TargetFrameworks.Identity)').Substring(0, '%(_TargetFrameworks.Length)'))" />
-    </ItemGroup>
-    
-    <PropertyGroup>
-      <TargetFrameworks>@(_TargetFrameworksWithoutTargetFrameworkSuffix->Distinct())</TargetFrameworks>
-    </PropertyGroup>
-  </Target>
-
   <!-- Attaching the TargetFrameworkSuffix after restore for build.-->
   <Target Name="AttachTargetFrameworkSuffixToTargetFrameworks"
-          AfterTargets="Restore">    
+          AfterTargets="Restore">
     <PropertyGroup>
       <TargetFrameworks>$(_OriginalTargetFrameworks)</TargetFrameworks>
     </PropertyGroup>
   </Target>
 
+  <!--
+    Runs in a leaf project (csproj) to determine best configuration for ProjectReferences.
+    Make sure to run late enough for transitive dependencies which runs before AssignProjectConfiguration.
+  -->
   <Target Name="ResolveP2PReferences"
-          BeforeTargets="AssignProjectConfiguration">
+          Condition="'@(ProjectReference)' != ''"
+          BeforeTargets="AssignProjectConfiguration"
+          DependsOnTargets="ResolvePackageDependenciesForBuild">
     <MSBuild Projects="@(ProjectReference)"
              Targets="GetTargetFrameworks"
              ContinueOnError="true"
@@ -73,6 +67,10 @@
       <Output TaskParameter="TargetOutputs" ItemName="_ProjectRefWithTfms"/>
     </MSBuild>
      
+    <PropertyGroup>
+      <_OriginalTargetFramework Condition="'$(_OriginalTargetFramework)' == ''">$(TargetFramework)</_OriginalTargetFramework>
+    </PropertyGroup>
+
     <ChooseBestP2PTargetFrameworkTask TargetFramework="$(_OriginalTargetFramework)"
                                       ProjectReferencesWithTargetFrameworks="@(_ProjectRefWithTfms)"
                                       RuntimeGraph="$(RuntimeGraph)" >
@@ -119,10 +117,6 @@
     <PropertyGroup>
       <PackageTargetFrameworks>@(PackageTargetFrameworksList)</PackageTargetFrameworks>
     </PropertyGroup>
-  </Target>
-
-  <Target Name="GenerateRuntimeOSPropsFile">
-    <GenerateRuntimeOSPropsFile RuntimePropsFilePath="$(RuntimePropsFile)" />
   </Target>
 
 </Project>

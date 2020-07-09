@@ -6,6 +6,7 @@
     this file and switch to wixproj. See https://github.com/wixtoolset/issues/issues/5627
   -->
 
+  <UsingTask TaskName="CreateLightCommandPackageDrop" AssemblyFile="$(DotNetBuildTasksSharedFrameworkTaskFile)" />
   <UsingTask TaskName="ExecWithRetries" AssemblyFile="$(DotNetBuildTasksSharedFrameworkTaskFile)" />
   <UsingTask TaskName="StabilizeWixFileId" AssemblyFile="$(DotNetBuildTasksSharedFrameworkTaskFile)" />
 
@@ -26,7 +27,7 @@
       Text="IntermediateOutputRootPath not specified" />
 
     <PropertyGroup>
-      <WixVersion>3.10.4</WixVersion>
+      <WixVersion>3.14.0.4118</WixVersion>
       <WixToolsDir>$(IntermediateOutputRootPath)WixTools.$(WixVersion)/</WixToolsDir>
       <!-- Used in WiX targets to locate files. -->
       <WixInstallPath>$(WixToolsDir)</WixInstallPath>
@@ -182,10 +183,17 @@
             GetBundleWixConfiguration">
     <PropertyGroup>
       <OutInstallerFile Condition="'$(OutInstallerFile)' == ''">$(InstallerFile)</OutInstallerFile>
+      <!--
+        Native arm64 MSI packages require version 500 of MSI database schema, see:
+        https://docs.microsoft.com/en-us/windows/win32/msi/using-64-bit-windows-installer-packages
+      -->
+      <InstallerVersion Condition="'$(InstallerVersion)' == '' and '$(MsiArch)' == 'arm64'">500</InstallerVersion>
+      <InstallerVersion Condition="'$(InstallerVersion)' == ''">200</InstallerVersion>
     </PropertyGroup>
 
     <ItemGroup>
       <CandleVariables Include="MicrosoftEula" Value="$(MSBuildThisFileDirectory)eula.rtf" />
+      <CandleVariables Include="InstallerVersion" Value="$(InstallerVersion)" />
     </ItemGroup>
   </Target>
 
@@ -220,7 +228,7 @@
           -nologo ^
           -template fragment ^
           -sreg ^
-          -gg ^
+          -ag ^
           -var var.%(SubstituteVar) ^
           -cg %(ComponentGroupName) ^
           -srd ^
@@ -310,6 +318,7 @@
       <_wixArgs>$(_wixArgs) @(WixExtensions -> '-ext %(Identity)', ' ')</_wixArgs>
       <_wixArgs>$(_wixArgs) @(WixSrcFile -> '"$(WixObjDir)%(Filename).wixobj"', ' ')</_wixArgs>
       <_wixArgs>$(_wixArgs) @(DirectoryToHarvest -> '"%(WixObjFile)"', ' ')</_wixArgs>
+      <_lightCommand>light.exe $(_wixArgs)</_lightCommand>
     </PropertyGroup>
 
     <!--
@@ -319,11 +328,29 @@
       don't want to delay the build very long if it's an actual build authoring error.
     -->
     <ExecWithRetries
-      Command="light.exe $(_wixArgs)"
+      Command="$(_lightCommand)"
       WorkingDirectory="$(WixToolsDir)"
       StandardOutputImportance="normal"
       IgnoreStandardErrorWarningFormat="true"
       RetryDelayBase="2" />
+
+    <CreateLightCommandPackageDrop
+      OriginalLightCommand="$(_lightCommand)"
+      LightCommandWorkingDir="$(LightCommandObjDir)"
+      NoLogo="true"
+      Cultures="en-us"
+      Out="$(OutInstallerFile)"
+      WixExtensions="@(WixExtensions)"
+      WixSrcFiles="@(WixSrcFile -> '$(WixObjDir)%(Filename).wixobj');@(DirectoryToHarvest -> '%(WixObjFile)')">
+      <Output TaskParameter="LightCommandPackageNameOutput" PropertyName="_LightCommandPackageNameOutput" />
+    </CreateLightCommandPackageDrop>
+
+    <MakeDir Directories="$(LightCommandPackagesDir)" />
+
+    <ZipDirectory
+      DestinationFile="$(LightCommandPackagesDir)/LightCommandPackage-$(_LightCommandPackageNameOutput).zip"
+      Overwrite="true"
+      SourceDirectory="$(LightCommandObjDir)/$(_LightCommandPackageNameOutput)" />
   </Target>
 
   <!--
@@ -416,8 +443,6 @@
 
       <NupkgOutputFile>$(ArtifactsNonShippingPackagesDir)$(VSInsertionComponentName).$(ProductVersion).nupkg</NupkgOutputFile>
 
-      <ProjectUrlForVS>https://github.com/dotnet/core-setup</ProjectUrlForVS>
-
       <!-- Work around NuGet silently ignoring nuspec files in PackTask by changing extension. https://github.com/NuGet/Home/issues/8637 -->
       <MangledNuspecFile>$(MSBuildThisFileDirectory)vs\VS.Redist.Common.Component.nuspec.txt</MangledNuspecFile>
       <VsInsertionNuspecFile>$(IntermediateOutputPath)vs\VS.Redist.Common.Component.nuspec</VsInsertionNuspecFile>
@@ -427,7 +452,7 @@
       <PackProperties>$(PackProperties)ARCH=$(MsiArch);</PackProperties>
       <PackProperties>$(PackProperties)COMPONENT_NAME=$(VSInsertionComponentName);</PackProperties>
       <PackProperties>$(PackProperties)FRIENDLY_NAME=$(VSInsertionComponentFriendlyName);</PackProperties>
-      <PackProperties>$(PackProperties)PROJECT_URL=$(ProjectUrlForVS);</PackProperties>
+      <PackProperties>$(PackProperties)PROJECT_URL=$(RepositoryUrl);</PackProperties>
 
       <PackArgs />
       <PackArgs>$(PackArgs) $(VsInsertionNuspecFile)</PackArgs>

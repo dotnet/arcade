@@ -2,9 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using Microsoft.Cci.Filters;
-using Microsoft.Cci.Writers.CSharp;
-using Microsoft.Cci.Writers.Syntax;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -13,9 +10,10 @@ using System.IO;
 using System.Linq;
 using System.Reflection.Metadata;
 using System.Reflection.Metadata.Ecma335;
-using System.Reflection.PortableExecutable;
 using System.Text.RegularExpressions;
-using System.Xml.Linq;
+using Microsoft.Cci.Filters;
+using Microsoft.Cci.Writers.CSharp;
+using Microsoft.Cci.Writers.Syntax;
 using SRMetadataReader = System.Reflection.Metadata.MetadataReader;
 
 namespace Microsoft.Cci.Extensions.CSharp
@@ -466,6 +464,17 @@ namespace Microsoft.Cci.Extensions.CSharp
             return null;
         }
 
+        public static string GetReturnTypeName(this ITypeDefinitionMember member)
+        {
+            var returnType = member.GetReturnType();
+            if (TypeHelper.TypesAreEquivalent(returnType, member.ContainingTypeDefinition.PlatformType.SystemVoid))
+            {
+                return "void";
+            }
+
+            return returnType.FullName();
+        }
+
         public static IFieldDefinition GetHiddenBaseField(this IFieldDefinition field, ICciFilter filter = null)
         {
             foreach (ITypeReference baseClassRef in field.ContainingTypeDefinition.GetAllBaseTypes())
@@ -771,7 +780,7 @@ namespace Microsoft.Cci.Extensions.CSharp
         public static string[] GetValueTupleNames(this IEnumerable<ICustomAttribute> attributes)
         {
             string[] names = null;
-            var attribute = attributes.GetAttributeOfType("System.Runtime.CompilerServices.TupleElementNamesAttribute");
+            var attribute = attributes?.GetAttributeOfType("System.Runtime.CompilerServices.TupleElementNamesAttribute");
             if (attribute != null && attribute.Arguments.Single() is IMetadataCreateArray createArray)
             {
                 names = new string[createArray.Sizes.Single()];
@@ -940,5 +949,33 @@ namespace Microsoft.Cci.Extensions.CSharp
 
             return (false, null);
         };
+
+        public static string GetVisibilityName(this TypeMemberVisibility visibility)
+        {
+            return visibility switch
+            {
+                TypeMemberVisibility.Assembly => "internal",
+                TypeMemberVisibility.Family => "protected",
+                TypeMemberVisibility.FamilyOrAssembly => "protected internal",
+                TypeMemberVisibility.FamilyAndAssembly => "private protected",
+                _ => visibility.ToString().ToLowerInvariant(),
+            };
+        }
+
+        public static string GetVisibilityName(this ITypeDefinition type)
+        {
+            return TypeHelper.TypeVisibilityAsTypeMemberVisibility(type).GetVisibilityName();
+        }
+
+        public static string GetVisibilityName(this ITypeDefinitionMember member)
+        {
+            Contract.Requires(member != null);
+            return member.Visibility.GetVisibilityName();
+        }
+
+        public static string GetMemberViolationMessage(this ITypeDefinitionMember member, string memberMessage, string message1, string message2)
+        {
+            return $"{memberMessage} '{member.GetVisibilityName()} {member.GetReturnTypeName()} {member.FullName()}' {message1} but {message2}.";
+        }
     }
 }

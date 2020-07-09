@@ -41,53 +41,40 @@ namespace Microsoft.DotNet.RemoteExecutor
         /// </summary>
         public static readonly string HostRunner;
 
-        /// <summary>
-        /// Optional additional arguments.
-        /// </summary>
-        private static readonly string s_extraParameter;
+        private static string s_runtimeConfigPath;
+        private static string s_depsJsonPath;
 
         static RemoteExecutor()
         {
-            string processFileName = Process.GetCurrentProcess().MainModule.FileName;
-            HostRunnerName = System.IO.Path.GetFileName(processFileName);
-
-            if (PlatformDetection.IsInAppContainer)
+            string processFileName = Process.GetCurrentProcess().MainModule?.FileName;
+            if (processFileName == null)
             {
-                // Host is required to have a remote execution feature integrated, i.e. UWP.
-                Path = processFileName;
-                HostRunner = HostRunnerName;
-                s_extraParameter = "remote";
+                return;
             }
-            else if (RuntimeInformation.FrameworkDescription.StartsWith(".NET Core", StringComparison.OrdinalIgnoreCase))
+
+            HostRunnerName = System.IO.Path.GetFileName(processFileName);
+            Path = typeof(RemoteExecutor).Assembly.Location;
+
+            if (IsNetCore())
             {
-                Path = typeof(RemoteExecutor).Assembly.Location;
                 HostRunner = processFileName;
-                s_extraParameter = "exec";
-
-                (string runtimeConfigPath, string depsJsonPath) = GetAppRuntimeOptions();
-
-                if (runtimeConfigPath != null)
-                {
-                    s_extraParameter += $" --runtimeconfig \"{runtimeConfigPath}\"";
-                }
-
-                if (depsJsonPath != null)
-                {
-                    s_extraParameter += $" --depsfile \"{depsJsonPath}\"";
-                }
-
-                s_extraParameter += $" \"{Path}\"";
             }
             else if (RuntimeInformation.FrameworkDescription.StartsWith(".NET Framework", StringComparison.OrdinalIgnoreCase))
             {
-                Path = typeof(RemoteExecutor).Assembly.Location;
                 HostRunner = Path;
             }
-            else
-            {
-                throw new PlatformNotSupportedException();
-            }
         }
+
+        private static bool IsNetCore() =>
+            Environment.Version.Major >= 5 || RuntimeInformation.FrameworkDescription.StartsWith(".NET Core", StringComparison.OrdinalIgnoreCase);
+
+        /// <summary>Returns true if the RemoteExecutor works on the current platform, otherwise false.</summary>
+        public static bool IsSupported { get; } =
+            !RuntimeInformation.IsOSPlatform(OSPlatform.Create("IOS")) &&
+            !RuntimeInformation.IsOSPlatform(OSPlatform.Create("ANDROID")) &&
+            !RuntimeInformation.IsOSPlatform(OSPlatform.Create("TVOS")) &&
+            !RuntimeInformation.IsOSPlatform(OSPlatform.Create("WATCHOS")) &&
+            !RuntimeInformation.IsOSPlatform(OSPlatform.Create("BROWSER"));
 
         /// <summary>Invokes the method from this assembly in another process using the specified arguments.</summary>
         /// <param name="method">The method to invoke.</param>
@@ -156,14 +143,6 @@ namespace Microsoft.DotNet.RemoteExecutor
         /// <summary>Invokes the method from this assembly in another process using the specified arguments.</summary>
         /// <param name="method">The method to invoke.</param>
         /// <param name="options">Options to use for the invocation.</param>
-        public static RemoteInvokeHandle Invoke(Func<int> method, RemoteInvokeOptions options = null)
-        {
-            return Invoke(GetMethodInfo(method), Array.Empty<string>(), options);
-        }
-
-        /// <summary>Invokes the method from this assembly in another process using the specified arguments.</summary>
-        /// <param name="method">The method to invoke.</param>
-        /// <param name="options">Options to use for the invocation.</param>
         public static RemoteInvokeHandle Invoke(Func<Task<int>> method, RemoteInvokeOptions options = null)
         {
             return Invoke(GetMethodInfo(method), Array.Empty<string>(), options);
@@ -200,6 +179,71 @@ namespace Microsoft.DotNet.RemoteExecutor
             string arg2, string arg3, RemoteInvokeOptions options = null)
         {
             return Invoke(GetMethodInfo(method), new[] { arg1, arg2, arg3 }, options);
+        }
+
+        /// <summary>Invokes the method from this assembly in another process using the specified arguments.</summary>
+        /// <param name="method">The method to invoke.</param>
+        /// <param name="options">Options to use for the invocation.</param>
+        public static RemoteInvokeHandle Invoke(Func<Task> method, RemoteInvokeOptions options = null)
+        {
+            // There's no exit code to check
+            options = options ?? new RemoteInvokeOptions();
+            options.CheckExitCode = false;
+
+            return Invoke(GetMethodInfo(method), Array.Empty<string>(), options);
+        }
+
+        /// <summary>Invokes the method from this assembly in another process using the specified arguments.</summary>
+        /// <param name="method">The method to invoke.</param>
+        /// <param name="arg">The argument to pass to the method.</param>
+        /// <param name="options">Options to use for the invocation.</param>
+        public static RemoteInvokeHandle Invoke(Func<string, Task> method, string arg,
+            RemoteInvokeOptions options = null)
+        {
+            // There's no exit code to check
+            options = options ?? new RemoteInvokeOptions();
+            options.CheckExitCode = false;
+
+            return Invoke(GetMethodInfo(method), new[] { arg }, options);
+        }
+
+        /// <summary>Invokes the method from this assembly in another process using the specified arguments.</summary>
+        /// <param name="method">The method to invoke.</param>
+        /// <param name="arg1">The first argument to pass to the method.</param>
+        /// <param name="arg2">The second argument to pass to the method.</param>
+        /// <param name="options">Options to use for the invocation.</param>
+        public static RemoteInvokeHandle Invoke(Func<string, string, Task> method, string arg1, string arg2,
+            RemoteInvokeOptions options = null)
+        {
+            // There's no exit code to check
+            options = options ?? new RemoteInvokeOptions();
+            options.CheckExitCode = false;
+
+            return Invoke(GetMethodInfo(method), new[] { arg1, arg2 }, options);
+        }
+
+        /// <summary>Invokes the method from this assembly in another process using the specified arguments.</summary>
+        /// <param name="method">The method to invoke.</param>
+        /// <param name="arg1">The first argument to pass to the method.</param>
+        /// <param name="arg2">The second argument to pass to the method.</param>
+        /// <param name="arg3">The third argument to pass to the method.</param>
+        /// <param name="options">Options to use for the invocation.</param>
+        public static RemoteInvokeHandle Invoke(Func<string, string, string, Task> method, string arg1,
+            string arg2, string arg3, RemoteInvokeOptions options = null)
+        {
+            // There's no exit code to check
+            options = options ?? new RemoteInvokeOptions();
+            options.CheckExitCode = false;
+
+            return Invoke(GetMethodInfo(method), new[] { arg1, arg2, arg3 }, options);
+        }
+
+        /// <summary>Invokes the method from this assembly in another process using the specified arguments.</summary>
+        /// <param name="method">The method to invoke.</param>
+        /// <param name="options">Options to use for the invocation.</param>
+        public static RemoteInvokeHandle Invoke(Func<int> method, RemoteInvokeOptions options = null)
+        {
+            return Invoke(GetMethodInfo(method), Array.Empty<string>(), options);
         }
 
         /// <summary>Invokes the method from this assembly in another process using the specified arguments.</summary>
@@ -282,9 +326,18 @@ namespace Microsoft.DotNet.RemoteExecutor
         {
             options = options ?? new RemoteInvokeOptions();
 
+            // For platforms that do not support RemoteExecutor
+            if (!IsSupported)
+            {
+                throw new PlatformNotSupportedException("RemoteExecutor is not supported on this platform.");
+            }
+
             // Verify the specified method returns an int (the exit code) or nothing,
             // and that if it accepts any arguments, they're all strings.
-            Assert.True(method.ReturnType == typeof(void) || method.ReturnType == typeof(int) || method.ReturnType == typeof(Task<int>));
+            Assert.True(method.ReturnType == typeof(void)
+                || method.ReturnType == typeof(int)
+                || method.ReturnType == typeof(Task)
+                || method.ReturnType == typeof(Task<int>));
             Assert.All(method.GetParameters(), pi => Assert.Equal(typeof(string), pi.ParameterType));
 
             // And make sure it's in this assembly.  This isn't critical, but it helps with deployment to know
@@ -311,7 +364,8 @@ namespace Microsoft.DotNet.RemoteExecutor
             // If we need the host (if it exists), use it, otherwise target the console app directly.
             string metadataArgs = PasteArguments.Paste(new string[] { a.FullName, t.FullName, method.Name, options.ExceptionFile }, pasteFirstArgumentUsingArgV0Rules: false);
             string passedArgs = pasteArguments ? PasteArguments.Paste(args, pasteFirstArgumentUsingArgV0Rules: false) : string.Join(" ", args);
-            string testConsoleAppArgs = s_extraParameter + " " + metadataArgs + " " + passedArgs;
+            string consoleAppArgs = GetConsoleAppArgs(options, out IEnumerable<IDisposable> toDispose);
+            string testConsoleAppArgs = consoleAppArgs + " " + metadataArgs + " " + passedArgs;
 
             if (options.RunAsSudo)
             {
@@ -329,7 +383,111 @@ namespace Microsoft.DotNet.RemoteExecutor
 
             // Return the handle to the process, which may or not be started
             return new RemoteInvokeHandle(options.Start ? Process.Start(psi) : new Process() { StartInfo = psi },
-                options, a.FullName, t.FullName, method.Name);
+                options, a.FullName, t.FullName, method.Name, toDispose);
+        }
+
+        private static string GetConsoleAppArgs(RemoteInvokeOptions options, out IEnumerable<IDisposable> toDispose)
+        {
+            bool isNetCore = IsNetCore();
+            if (options.RuntimeConfigurationOptions?.Any() == true&& !isNetCore)
+            {
+                throw new InvalidOperationException("RuntimeConfigurationOptions are only supported on .NET Core");
+            }
+
+            if (!isNetCore)
+            {
+                toDispose = null;
+                return string.Empty;
+            }
+
+            string args = "exec";
+            
+            string runtimeConfigPath = GetRuntimeConfigPath(options, out toDispose);
+            if (runtimeConfigPath != null)
+            {
+                args += $" --runtimeconfig \"{runtimeConfigPath}\"";
+            }
+
+            if (DepsJsonPath != null)
+            {
+                args += $" --depsfile \"{DepsJsonPath}\"";
+            }
+
+            if (!string.IsNullOrEmpty(options.RollForward))
+            {
+                args += $" --roll-forward {options.RollForward}";
+            }
+
+            args += $" \"{Path}\"";
+            return args;
+        }
+
+        private static string GetRuntimeConfigPath(RemoteInvokeOptions options, out IEnumerable<IDisposable> toDispose)
+        {
+            if (options.RuntimeConfigurationOptions?.Any() != true)
+            {
+                toDispose = null;
+                return RuntimeConfigPath;
+            }
+
+            // to support RuntimeConfigurationOptions, copy the runtimeconfig.json file to
+            // a temp file and add the options to the runtimeconfig.dev.json file.
+
+            // NOTE: using the dev.json file so we don't need to parse and edit the runtimeconfig.json
+            // which would require a reference to System.Text.Json.
+
+            string tempFile = System.IO.Path.GetTempFileName();
+            string configFile = tempFile + ".runtimeconfig.json";
+            string devConfigFile = System.IO.Path.ChangeExtension(configFile, "dev.json");
+
+            File.Copy(RuntimeConfigPath, configFile);
+
+            string configProperties = string.Join(
+                "," + Environment.NewLine,
+                options.RuntimeConfigurationOptions.Select(kvp => $"\"{kvp.Key}\": {ToJsonString(kvp.Value)}"));
+
+            string devConfigFileContents =
+@"
+{
+  ""runtimeOptions"": {
+    ""configProperties"": {
+"
++ configProperties +
+@"
+    }
+  }
+}";
+
+            File.WriteAllText(devConfigFile, devConfigFileContents);
+
+            toDispose = new IDisposable[] { new FileDeleter(tempFile, configFile, devConfigFile) };
+            return configFile;
+        }
+
+        private static string ToJsonString(object value) =>
+            value switch
+            {
+                string s => $"\"{s}\"",
+                bool b => b ? "true" : "false",
+                _ => value.ToString(),
+            };
+
+        private class FileDeleter : IDisposable
+        {
+            private string[] _filesToDelete;
+
+            public FileDeleter(params string[] filesToDelete)
+            {
+                _filesToDelete = filesToDelete;
+            }
+
+            public void Dispose()
+            {
+                foreach (string file in _filesToDelete)
+                {
+                    File.Delete(file);
+                }
+            }
         }
 
         private static MethodInfo GetMethodInfo(Delegate d)
@@ -354,7 +512,33 @@ namespace Microsoft.DotNet.RemoteExecutor
             return d.GetMethodInfo();
         }
 
-        private static (string runtimeConfigPath, string depsJsonPath) GetAppRuntimeOptions()
+        private static string RuntimeConfigPath
+        {
+            get
+            {
+                if (s_runtimeConfigPath == null)
+                {
+                    InitializePaths();
+                }
+
+                return s_runtimeConfigPath;
+            }
+        }
+
+        private static string DepsJsonPath
+        {
+            get
+            {
+                if (s_depsJsonPath == null)
+                {
+                    InitializePaths();
+                }
+
+                return s_depsJsonPath;
+            }
+        }
+
+        private static void InitializePaths()
         {
             Assembly currentAssembly = typeof(RemoteExecutor).Assembly;
 
@@ -365,17 +549,15 @@ namespace Microsoft.DotNet.RemoteExecutor
                 .Where(asm => asm != null && asm != currentAssembly)
                 .Distinct();
 
-            string runtimeConfigPath = assemblies
+            s_runtimeConfigPath = assemblies
                 .Select(asm => System.IO.Path.Combine(AppContext.BaseDirectory, asm.GetName().Name + ".runtimeconfig.json"))
                 .Where(File.Exists)
                 .FirstOrDefault();
 
-            string depsJsonPath = assemblies
+            s_depsJsonPath = assemblies
                 .Select(asm => System.IO.Path.Combine(AppContext.BaseDirectory, asm.GetName().Name + ".deps.json"))
                 .Where(File.Exists)
                 .FirstOrDefault();
-            
-            return (runtimeConfigPath, depsJsonPath);
         }
     }
 }

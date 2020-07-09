@@ -150,7 +150,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     blobArtifacts = ConcatBlobArtifacts(blobArtifacts, symbolItems);
                 }
 
-                if(!BuildManifestUtil.ManifestBuildDataHasLocationProperty(ManifestBuildData))
+                if(!BuildManifestUtil.ManifestBuildDataHasLocationInformation(ManifestBuildData))
                 {
                     string[] locationAttribute = new string[] { $"Location={ExpectedFeedUrl}" };
                     ManifestBuildData = ManifestBuildData == null ? locationAttribute : ManifestBuildData.Concat(locationAttribute).ToArray();
@@ -165,7 +165,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     ManifestBranch,
                     ManifestCommit,
                     ManifestBuildData,
-                    IsStableBuild);
+                    IsStableBuild,
+                    PublishingInfraVersion.Legacy);
             }
             catch (Exception e)
             {

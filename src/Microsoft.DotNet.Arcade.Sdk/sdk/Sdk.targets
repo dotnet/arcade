@@ -4,10 +4,15 @@
   <!--
     If a project specifies ExcludeFromSourceBuild=true during a source build suppress all targets and emulate a no-op
     (empty common targets like Restore, Build, Pack, etc.).
+    
+    It's also possible to set ExcludeFromBuild prior to importing the Sdk.targets
+    to skip building as desired in non-source build scenarios. This might be done to
+    avoid building tests in certain product build scenarios.
   -->
   <PropertyGroup>
     <_SuppressAllTargets>false</_SuppressAllTargets>
     <_SuppressAllTargets Condition="'$(DotNetBuildFromSource)' == 'true' and '$(ExcludeFromSourceBuild)' == 'true'">true</_SuppressAllTargets>
+    <_SuppressAllTargets Condition="'$(ExcludeFromBuild)' == 'true'">true</_SuppressAllTargets>
   </PropertyGroup>
 
   <!-- 

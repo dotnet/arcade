@@ -4,6 +4,9 @@
     <IsPackable>true</IsPackable>
     <!-- Build Tasks should not include any dependencies -->
     <SuppressDependenciesWhenPacking Condition="'$(SuppressDependenciesWhenPacking)' == ''">true</SuppressDependenciesWhenPacking>
+    <PackTasks Condition="'$(PackTasks)' == ''">true</PackTasks>
+    <!-- Build Tasks should have this set per https://github.com/dotnet/arcade/blob/master/Documentation/CorePackages/Versioning.md#recommended-settings -->
+    <AutoGenerateAssemblyVersion>true</AutoGenerateAssemblyVersion>
   </PropertyGroup>
 
   <!--
@@ -60,7 +63,7 @@
     <PackageReference Update="System.Threading.Tasks.Dataflow" PrivateAssets="All" Publish="false" ExcludeAssets="runtime" />
   </ItemGroup>
 
-  <PropertyGroup>
+  <PropertyGroup Condition="'$(PackTasks)' == 'true'">
     <TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_AddBuildOutputToPackageCore;_AddBuildOutputToPackageDesktop</TargetsForTfmSpecificContentInPackage>
   </PropertyGroup>
   

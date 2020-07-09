@@ -6,6 +6,8 @@ function Test-FilesUseTelemetryOutput {
         'eng/common/cibuild.sh'
         'eng/common/cross/armel/tizen-build-rootfs.sh'
         'eng/common/cross/armel/tizen-fetch.sh'
+        'eng/common/cross/arm64/tizen-build-rootfs.sh'
+        'eng/common/cross/arm64/tizen-fetch.sh'
         'eng/common/cross/build-android-rootfs.sh'
         'eng/common/cross/build-rootfs.sh'
         'eng/common/darc-init.sh'
@@ -13,7 +15,7 @@ function Test-FilesUseTelemetryOutput {
         'eng/common/performance/performance-setup.sh'
     )
 
-    local file_list=`grep --files-without-match --dereference-recursive --include=*.sh "Write-PipelineTelemetryError" $scriptroot`
+    local file_list=`grep --files-without-match --recursive --include=*.sh "Write-PipelineTelemetryError" $scriptroot`
     for file in $file_list; do
         for remove_file in ${require_telmetry_exclude_files[@]}; do
             if [[ $file =~ .*"$remove_file" ]]; then
