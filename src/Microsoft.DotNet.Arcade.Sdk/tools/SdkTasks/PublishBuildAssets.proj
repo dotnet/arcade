@@ -47,26 +47,10 @@
       <AzureDevOpsAccount Condition="$(CollectionUri.IndexOf('visualstudio.com')) >= 0">$(CollectionUri.Split('.')[0].Split('/')[2])</AzureDevOpsAccount>
     </PropertyGroup>
 
-    <!--
-      The new Maestro/BAR build model keeps separate Azure DevOps and GitHub build information.
-      The GitHub information will be extracted based on the Azure DevOps repository.
-    -->
-    <ItemGroup>
-      <ManifestBuildData Include="InitialAssetsLocation=$(SYSTEM_TEAMFOUNDATIONCOLLECTIONURI)$(SYSTEM_TEAMPROJECT)/_apis/build/builds/$(BUILD_BUILDID)/artifacts" />
-      <ManifestBuildData Include="AzureDevOpsBuildId=$(BUILD_BUILDID)" />
-      <ManifestBuildData Include="AzureDevOpsBuildDefinitionId=$(SYSTEM_DEFINITIONID)" />
-      <ManifestBuildData Include="AzureDevOpsAccount=$(AzureDevOpsAccount)" />
-      <ManifestBuildData Include="AzureDevOpsProject=$(SYSTEM_TEAMPROJECT)" />
-      <ManifestBuildData Include="AzureDevOpsBuildNumber=$(BUILD_BUILDNUMBER)" />
-      <ManifestBuildData Include="AzureDevOpsRepository=$(BUILD_REPOSITORY_URI)" />
-      <ManifestBuildData Include="AzureDevOpsBranch=$(BUILD_SOURCEBRANCH)" />
-    </ItemGroup>
-
     <PushMetadataToBuildAssetRegistry ManifestsPath="$(ManifestsPath)"
                                       BuildAssetRegistryToken="$(BuildAssetRegistryToken)"
                                       MaestroApiEndpoint="$(MaestroApiEndpoint)"
                                       RepoRoot="$(RepoRoot)"
-                                      ManifestBuildData="@(ManifestBuildData)"
                                       AssetVersion="$(Version)"/>
   </Target>
 </Project>
