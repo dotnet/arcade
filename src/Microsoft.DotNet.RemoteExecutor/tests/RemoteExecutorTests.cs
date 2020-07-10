@@ -21,7 +21,7 @@ namespace Microsoft.DotNet.RemoteExecutor.Tests
                 {
                     Assert.True(false);
                     await Task.Delay(1);
-                }).Dispose()
+                }, new RemoteInvokeOptions { RollForward = "Major" }).Dispose()
             );
         }
 
@@ -31,7 +31,7 @@ namespace Microsoft.DotNet.RemoteExecutor.Tests
             RemoteExecutor.Invoke(async () =>
             {
                 await Task.Delay(1);
-            }).Dispose();
+            }, new RemoteInvokeOptions { RollForward = "Major" }).Dispose();
         }
 
         [Fact]
@@ -43,7 +43,7 @@ namespace Microsoft.DotNet.RemoteExecutor.Tests
                     Assert.True(false);
                     await Task.Delay(1);
                     return 1;
-                }).Dispose()
+                }, new RemoteInvokeOptions { RollForward = "Major" }).Dispose()
             );
         }
 
@@ -55,7 +55,7 @@ namespace Microsoft.DotNet.RemoteExecutor.Tests
                 {
                     await Task.Delay(1);
                     return 1;
-                }).Dispose()
+                }, new RemoteInvokeOptions { RollForward = "Major" }).Dispose()
             );
         }
 
@@ -66,7 +66,7 @@ namespace Microsoft.DotNet.RemoteExecutor.Tests
             {
                 await Task.Delay(1);
                 return RemoteExecutor.SuccessExitCode;
-            }).Dispose();
+            }, new RemoteInvokeOptions { RollForward = "Major" }).Dispose();
         }
     }
 }
