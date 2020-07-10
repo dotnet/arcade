@@ -8,7 +8,7 @@ the time for each repo's build under a prescribed budget. This document tracks t
 
 The expected potential critical paths of the build after consolidation is complete are:
 
-- runtime -> aspnetcore -> sdk -> installer
+- runtime -> efcore -> aspnetcore -> sdk -> installer
 - runtime -> winforms -> wpf -> windowsdesktop -> sdk -> installer
 - wpf-int -> wpf -> windowsdesktop -> sdk -> installer
 
@@ -17,7 +17,7 @@ Based on the rough amount of build work done in each repo, budgets for each buil
 | Repo                                 | Budget (mins) |
 | ------------------------------------ | ------------- |
 | runtime                              | 45            |
-| aspnetcore                           | 45            |
+| aspnetcore + efcore                  | 45            |
 | sdk + installer                      | 30            |
 | winforms + wpf + windowsdesktop (wd) | 45            |
 | wpf-int + wpf + windowsdesktop (wd)  | 45            |
@@ -43,10 +43,10 @@ of whether the repo will be within budge once those items are complete.*
 
 | Repo               | Owner    | Consolidated/Removed from flow | Moved tests | Post-signing | Post-validation | Budget (mins)                   | Within budget |
 | ------------------ | -------- | ------------------------------ | ----------- | ------------ | --------------- | ------------------------------- | ------------- |
-| websdk             | vramak   | ![][green]                       | NA          | NA           | NA              | NA                              | NA            |
-| aspnetcore         | kevinpi  | NA                             | ![][green]    | NYA          | ![][green]             | 45                              | ![][red]      |
+| websdk             | vramak   | ![][green]                       | NA          | NA           | NA            | NA                              | NA            |
+| aspnetcore         | kevinpi  | NA                             | ![][green]    | NYA          | ![][green]    | 45 (w /efcore)                   | ![][red]      |
 | aspnetcore-tooling | kevinpi  | ![][green]                       | NA          | NA           | NA              | NA                              | NA            |
-| efcore             | kevinpi  | ![][green]                     | ![][red]    | NR           | NR              | NA                              | NA            |
+| efcore             | kevinpi  | ![][red]                       | ![][red]    | NYA           | ![][red]            | 45 (w/ aspnetcore)           | NA            |
 | extensions         | ericstj  | ![][green]                       | ![][green]    | NR           | NR              | NA                              | NA            |
 | installer          | marcpop    | NA                             | ![][green]    | NYA          | ![][red]             | 30 (w/sdk)                      | ![][red]      |
 | runtime            | jaredpar | ![][green]                     | ![][green]  | NYA          | ![][green]             | 45                              | ![][red]      |
