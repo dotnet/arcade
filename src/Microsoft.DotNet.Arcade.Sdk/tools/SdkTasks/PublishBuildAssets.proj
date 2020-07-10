@@ -6,6 +6,15 @@
       BuildAssetRegistryToken           Token required to insert metadata into BAR.
       MaestroApiEndpoint                Maestro's endpoint.
   -->
+  
+  <PropertyGroup>
+    <OfficialBuild>false</OfficialBuild>
+    <OfficialBuild Condition="'$(OfficialBuildId)' != ''">true</OfficialBuild>
+  </PropertyGroup>
+  
+  <Import Project="$(RepoRoot)eng\Versions.props" />
+  <Import Project="..\Version.BeforeCommonTargets.targets" />
+
   <PropertyGroup>
     <TargetFramework>net472</TargetFramework>
     <NETCORE_ENGINEERING_TELEMETRY>Publish</NETCORE_ENGINEERING_TELEMETRY>
@@ -18,7 +27,7 @@
   <PropertyGroup>
     <_MicrosoftDotNetMaestroTasksBaseDir>$(NuGetPackageRoot)microsoft.dotnet.maestro.tasks\$(MicrosoftDotNetMaestroTasksVersion)\tools\</_MicrosoftDotNetMaestroTasksBaseDir>
     <_MicrosoftDotNetMaestroTasksDir>$(_MicrosoftDotNetMaestroTasksBaseDir)net472</_MicrosoftDotNetMaestroTasksDir>
-    <_MicrosoftDotNetMaestroTasksDir Condition="'$(MSBuildRuntimeType)' == 'Core'">$(_MicrosoftDotNetMaestroTasksBaseDir)netcoreapp2.1</_MicrosoftDotNetMaestroTasksDir>
+    <_MicrosoftDotNetMaestroTasksDir Condition="'$(MSBuildRuntimeType)' == 'Core'">$(_MicrosoftDotNetMaestroTasksBaseDir)netcoreapp3.1</_MicrosoftDotNetMaestroTasksDir>
   </PropertyGroup>
   
   <UsingTask TaskName="PushMetadataToBuildAssetRegistry" AssemblyFile="$(_MicrosoftDotNetMaestroTasksDir)\Microsoft.DotNet.Maestro.Tasks.dll"/>
@@ -31,7 +40,7 @@
     <PushMetadataToBuildAssetRegistry ManifestsPath="$(ManifestsPath)"
                                       BuildAssetRegistryToken="$(BuildAssetRegistryToken)"
                                       MaestroApiEndpoint="$(MaestroApiEndpoint)"
-                                      PublishUsingPipelines="$(PublishUsingPipelines)"
-                                      RepoRoot="$(RepoRoot)"/>
+                                      RepoRoot="$(RepoRoot)"
+                                      AssetVersion="$(Version)"/>
   </Target>
 </Project>
