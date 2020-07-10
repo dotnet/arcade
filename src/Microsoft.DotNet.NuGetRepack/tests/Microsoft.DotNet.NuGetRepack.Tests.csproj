@@ -2,7 +2,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netcoreapp2.1</TargetFramework>
-    <ExcludeFromSourceBuild>true</ExcludeFromSourceBuild>
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="Resources\*.cs" />

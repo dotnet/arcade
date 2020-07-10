@@ -4,7 +4,6 @@
     <LangVersion>Latest</LangVersion>
     <SignAssembly>false</SignAssembly>
     <NoWarn>xUnit2013</NoWarn>
-    <ExcludeFromSourceBuild>true</ExcludeFromSourceBuild>
   </PropertyGroup>
   <ItemGroup>
     <Content Include="packageIndex.json" CopyToOutputDirectory="Always"/>
