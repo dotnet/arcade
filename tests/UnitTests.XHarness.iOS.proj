@@ -9,15 +9,14 @@
 
   <PropertyGroup>
     <HelixType>test/product/</HelixType>
-    <IncludeDotNetCli>true</IncludeDotNetCli>
-    <DotNetCliPackageType>sdk</DotNetCliPackageType>
     <TestRunNamePrefix>$(AGENT_JOBNAME)</TestRunNamePrefix>
+    <IncludeXHarnessCli>true</IncludeXHarnessCli>
     <EnableXUnitReporter>true</EnableXUnitReporter>
     <EnableAzurePipelinesReporter>true</EnableAzurePipelinesReporter>
     <HelixBaseUri>https://helix.dot.net</HelixBaseUri>
   </PropertyGroup>
 
-  <!-- New Test Projects which build app bundles to run through XHarness/XHarness go here -->
+  <!-- Test project which builds app bundle to run via XHarness -->
   <ItemGroup>
     <XHarnessiOSProject Include="$(MSBuildThisFileDirectory)XHarness\XHarness.TestAppBundle.proj" />
   </ItemGroup>

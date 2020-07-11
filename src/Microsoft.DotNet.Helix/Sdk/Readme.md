@@ -196,6 +196,9 @@ Given a local folder `$(TestFolder)` containing `runtests.cmd`, this will run `r
 </Project>
 ```
 
+### iOS/Android/WASM workload support (XHarness)
+The Helix SDK also supports execution of Android/iOS/WASM workloads where you only need to point it to an Android .apk or an iOS/tvOS/WatchOS .app bundle and it will execute these using a tool called XHarness on a specified emulator/device/JS engine. The workloads have to run on Helix queues that are ready for these types of jobs, meaning they have emulators installed, devices connected or JS engine installed. You can read more about this [here](https://github.com/dotnet/arcade/blob/master/src/Microsoft.DotNet.Helix/Sdk/tools/xharness-runner/Readme.md).
+
 ### Custom Helix WorkItem functionality
 There are times when a work item may detect that the machine being executed on is in a (possibly transient) undesirable state.  Additionally there can be times when a work item would like to request its machine be rebooted after execution (for instance, when a file handle is mysteriously open from another process).  The following functionality has been added to request both of these and can be used either from within a python script or any command line.
 
@@ -238,4 +241,22 @@ request_reboot('Optional reason string')
 Linux / OSX: `$HELIX_PYTHONPATH -c "from helix.workitemutil import request_reboot; request_reboot('Optional reason string')"`
 
 Windows: `%HELIX_PYTHONPATH% -c "from helix.workitemutil import request_reboot; request_reboot('Optional reason string')"`
+
+### Common Helix client environment variables
+
+When possible, constructing paths for scripts / commands executed within Helix work items should be done using the provided environment variables, allowing for the engineering team to move and optimize placement of these folders without breaking execution.
+
+You may assume that all the following variables are set on any given Helix client. (Use appropriate-for-OS means to access, i.e. %WINDOWS% or $Linux, $OSX).  The list is not exhaustive but most other variables are simply uninteresting from the perspective of the work item.
+
+- **HELIX_CORRELATION_ID** : GUID identifier for a helix run (include this if sending mail to or tagging dnceng)
+- **HELIX_CORRELATION_PAYLOAD** : Correlation payload folder;  root of where all correlation payloads are unzipped.
+- **HELIX_PYTHONPATH** : Path to a python 3.x executable (Due to OS constraints, this is only guaranteed to be >= 3.4)
+- **HELIX_WORKITEM_FRIENDLYNAME** - "Friendly" name of work item as provided at queue time (include this if relevant when sending mail to or tagging dnceng)
+- **HELIX_WORKITEM_ID** : GUID identifier for a helix work item 
+- **HELIX_WORKITEM_PAYLOAD** : "Unzip" folder of helix workitem, where its payload was unpacked
+- **HELIX_WORKITEM_ROOT** : "Execution" folder of helix workitem, where its payload is copied to and run
+- **HELIX_WORKITEM_UPLOAD_ROOT** : Any file in this folder at the end of the work item will be uploaded to result storage and made available via Helix API / backing database.
+- **HELIX_DUMP_FOLDER** : Process dumps created here will get uploaded and automatically cleaned up
+- **HELIX_CURRENT_LOG** : Path to the current work item's console log (note: will typically have file handles open)
+
 

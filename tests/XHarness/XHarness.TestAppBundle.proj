@@ -8,21 +8,22 @@
   </PropertyGroup>
 
   <!-- We're not set up currently to build app bundles as part of normal builds, so this downloads existing ones for now -->
-  <Target Name="Build" Returns="@(XHarnessAppFoldersToTest)">
-    <Error Condition=" '$(BaseOutputPath)' == ''" Text="Not downloading AppBundle because BaseOutputPath property is unset" />
-    <DownloadFile SourceUrl="$(XHarnessAppBundleUrl)" DestinationFolder="$(BaseOutputPath)appbundle" SkipUnchangedFiles="True" Retries="5">
+  <Target Name="Build" Returns="@(XHarnessAppBundleToTest)">
+    <Error Condition=" '$(ArtifactsTmpDir)' == ''" Text="Not downloading AppBundle because ArtifactsTmpDir property is unset" />
+    <DownloadFile SourceUrl="$(XHarnessAppBundleUrl)" DestinationFolder="$(ArtifactsTmpDir)XHarness.TestAppBundle" SkipUnchangedFiles="True" Retries="5">
       <Output TaskParameter="DownloadedFile" ItemName="ZippedAppBundle" />
     </DownloadFile>
 
     <Message Text="Downloaded @(ZippedAppBundle) for XHarness Test purposes" Importance="High" />
 
-    <Exec Command="tar -xzf @(ZippedAppBundle) -C $(BaseOutputPath)appbundle" />
+    <Exec Command="tar -xzf @(ZippedAppBundle) -C $(ArtifactsTmpDir)XHarness.TestAppBundle" />
 
     <ItemGroup>
-      <XHarnessAppFoldersToTest Include="$(BaseOutputPath)appbundle/$(XHarnessAppBundleName)">
-        <Targets>ios-simulator-64</Targets>
-        <TestTimeout>00:20:00</TestTimeout>
-      </XHarnessAppFoldersToTest>
+      <XHarnessAppBundleToTest Include="$(ArtifactsTmpDir)XHarness.TestAppBundle/$(XHarnessAppBundleName)">
+        <Targets>ios-simulator-64_13.5</Targets>
+        <TestTimeout>00:15:00</TestTimeout>
+        <WorkItemTimeout>00:30:00</WorkItemTimeout>
+      </XHarnessAppBundleToTest>
     </ItemGroup>
   </Target>
 

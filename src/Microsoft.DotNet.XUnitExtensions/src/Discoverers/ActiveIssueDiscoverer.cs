@@ -61,11 +61,11 @@ namespace Microsoft.DotNet.XUnitExtensions
 
             if (calleeType != null && conditionMemberNames != null)
             {
-                if (!DiscovererHelpers.Evaluate(calleeType, conditionMemberNames))
+                if (DiscovererHelpers.Evaluate(calleeType, conditionMemberNames))
                 {
                     yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.Failing);
                 }
-            }        
+            }
             else if (DiscovererHelpers.TestPlatformApplies(platforms) &&
                 DiscovererHelpers.TestRuntimeApplies(runtimes) &&
                 DiscovererHelpers.TestFrameworkApplies(frameworks))
