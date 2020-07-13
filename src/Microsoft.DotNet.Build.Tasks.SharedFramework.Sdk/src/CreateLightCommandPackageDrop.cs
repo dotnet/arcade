@@ -122,7 +122,7 @@ namespace Microsoft.DotNet.Build.Tasks.SharedFramework.Sdk.src
             }
             if (Cultures != null)
             {
-                commandString += $" -culture:{Cultures}";
+                commandString += $" -cultures:{Cultures}";
             }
             if (Loc != null)
             {
