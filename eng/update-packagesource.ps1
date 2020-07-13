@@ -61,8 +61,6 @@ try {
   AddSourceToNugetConfig $nugetConfigPath $packagesSource
   CheckExitCode "Adding source to NuGet.config" $?
 
-  Get-Content $nugetConfigPath
-
   Write-Host "Updating dependencies using Darc..."
   $dotnetRoot = InitializeDotNetCli -install:$true
   $DarcExe = "$dotnetRoot\tools"
