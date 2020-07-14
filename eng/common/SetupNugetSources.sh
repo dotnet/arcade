@@ -110,7 +110,7 @@ if [ "$?" == "0" ]; then
     if [ "$?" != "0" ]; then
         echo "Adding dotnet5-internal to the packageSources."
         PackageSourcesNodeFooter="</packageSources>"
-        PackageSourceTemplate="${TB}<add key=\"dotnet5-internal\" value=\"https://pkgs.dev.azure.com/dnceng/_packaging/dotnet5-internal/nuget/v2\" />"
+        PackageSourceTemplate="${TB}<add key=\"dotnet5-internal\" value=\"https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet5-internal/nuget/v2\" />"
 
         sed -i.bak "s|$PackageSourcesNodeFooter|$PackageSourceTemplate${NL}$PackageSourcesNodeFooter|" $ConfigFile
     fi
@@ -120,7 +120,7 @@ if [ "$?" == "0" ]; then
     if [ "$?" != "0" ]; then
         echo "Adding dotnet5-internal-transport to the packageSources."
         PackageSourcesNodeFooter="</packageSources>"
-        PackageSourceTemplate="${TB}<add key=\"dotnet5-internal-transport\" value=\"https://pkgs.dev.azure.com/dnceng/_packaging/dotnet5-internal-transport/nuget/v2\" />"
+        PackageSourceTemplate="${TB}<add key=\"dotnet5-internal-transport\" value=\"https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet5-internal-transport/nuget/v2\" />"
 
         sed -i.bak "s|$PackageSourcesNodeFooter|$PackageSourceTemplate${NL}$PackageSourcesNodeFooter|" $ConfigFile
     fi
