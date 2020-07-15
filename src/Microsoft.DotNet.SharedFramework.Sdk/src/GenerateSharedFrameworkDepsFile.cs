@@ -36,6 +36,8 @@ namespace Microsoft.DotNet.SharedFramework.Sdk
         [Required]
         public string IntermediateOutputPath { get; set; }
 
+        public string SharedFrameworkDepsNameOverride { get; set; }
+
         [Output]
         public ITaskItem GeneratedDepsFile { get; set; }
 
@@ -62,7 +64,7 @@ namespace Microsoft.DotNet.SharedFramework.Sdk
                     var nativeFile = new RuntimeFile(fileName, null, fileVersion);
                     nativeFiles.Add(nativeFile);
                 }
-                else
+                else if (string.IsNullOrEmpty(file.GetMetadata("GeneratedBuildFile")))
                 {
                     var runtimeFile = new RuntimeFile(fileName,
                         fileVersion: fileVersion,
@@ -89,7 +91,9 @@ namespace Microsoft.DotNet.SharedFramework.Sdk
                 new[] { runtimeLibrary },
                 Enumerable.Empty<RuntimeFallbacks>());
 
-            var depsFilePath = Path.Combine(IntermediateOutputPath, $"{SharedFrameworkName}.deps.json");
+            var depsFileName = string.IsNullOrEmpty(SharedFrameworkDepsNameOverride) ? $"{SharedFrameworkName}.deps.json" : $"{SharedFrameworkDepsNameOverride}.deps.json";
+
+            var depsFilePath = Path.Combine(IntermediateOutputPath, depsFileName);
             try
             {
                 using var depsStream = File.Create(depsFilePath);

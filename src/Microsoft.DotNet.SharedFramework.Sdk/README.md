@@ -44,6 +44,14 @@ This SDK uses the standard mechanisms in the .NET SDK for referencing packages, 
 
 If you need to resolve additional managed assemblies, you can add them to the `ReferenceCopyLocalPaths` item group for runtime packs or `ReferencePath` for targeting packs. XML documentation files can be added to the `DocFilesToPackage` item group. If you need to resolve your assemblies in a target, you can define your own target to resolve them. To enable these files to have ReadyToRun code generated for them for a runtime pack, update the `GetSharedFrameworkFilesForReadyToRunDependsOn` property to include your targets in a semicolon-delimited list. If you are adding additional files to a targeting pack, add `BeforeTargets="GetFilesToPackage"` to the target definition.
 
+### Deps file generation
+
+By default, the SDK will generate a .deps.json file for runtime packs named `$(SharedFrameworkName).deps.json`. You can set the `$(SharedFrameworkHostFileNameOverride)` property to instead generate the deps file with the name `$(SharedFrameworkHostFileNameOverride).deps.json`.
+
+### Runtimeconfig file generation
+
+This SDK uses the built-in .NET SDK generation for .runtimeconfig.json files for runtime packs. By default, the output file will be named `$(SharedFrameworkName).runtimeconfig.json`. You can override it to be named `$(SharedFrameworkHostFileNameOverride).runtimeconfig.json`.
+
 ### Platform Manifest generation
 
 Since platform manifest generation can be tricky at times when a shared framework has differing files per platform, this SDK provides two different mechanisms for generating a platform manifest, templating or harvesting.

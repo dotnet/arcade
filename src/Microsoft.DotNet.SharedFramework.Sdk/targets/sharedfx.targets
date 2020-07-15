@@ -138,7 +138,8 @@
                                      SharedFrameworkPackName="$(PackageId)"
                                      Version="$(Version)"
                                      Files="@(_FilesForDepsFile)"
-                                     IntermediateOutputPath="$(IntermediateOutputPath)">
+                                     IntermediateOutputPath="$(IntermediateOutputPath)"
+                                     SharedFrameworkDepsNameOverride="$(SharedFrameworkHostFileNameOverride)">
       <Output TaskParameter="GeneratedDepsFile" ItemName="_SharedFrameworkDepsFile" />
     </GenerateSharedFrameworkDepsFile>
     <ItemGroup>
@@ -156,6 +157,7 @@
       <GenerateRuntimeConfigurationFiles>true</GenerateRuntimeConfigurationFiles>
       <ProjectRuntimeConfigDevFilePath></ProjectRuntimeConfigDevFilePath>
       <ProjectRuntimeConfigFilePath>$(IntermediateOutputPath)$(SharedFrameworkName).runtimeconfig.json</ProjectRuntimeConfigFilePath>
+      <ProjectRuntimeConfigFilePath Condition="'$(SharedFrameworkHostFileNameOverride)' != ''">$(IntermediateOutputPath)$(SharedFrameworkHostFileNameOverride).runtimeconfig.json</ProjectRuntimeConfigFilePath>
     </PropertyGroup>
   </Target>
 
