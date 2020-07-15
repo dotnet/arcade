@@ -130,9 +130,12 @@
       <_InstallerIntermediatesDir>$(IntermediateOutputPath)$(InstallerName)/$(InstallerPackageVersion)/</_InstallerIntermediatesDir>
 
       <InstallerBuildPart>$(Version)-$(TargetRuntimeOS)-$(InstallerTargetArchitecture)</InstallerBuildPart>
-      <InstallerBuildPart Condition="'$(GenerateDeb)' == 'true' or '$(GenerateRpm)' == 'true'"
-        >$(ProductVersion)-$(InstallerTargetArchitecture)</InstallerBuildPart>
-
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(GenerateDeb)' == 'true' or '$(GenerateRpm)' == 'true'">
+      <InstallerBuildPart>$(ProductVersion)-$(InstallerTargetArchitecture)</InstallerBuildPart>
+      <InstallerBuildPart Condition="'$(PackageTargetOS)' != ''">$(ProductVersion)-$(PackageTargetOS)-$(InstallerTargetArchitecture)</InstallerBuildPart>
+    </PropertyGroup>
+    <PropertyGroup>
       <!-- Location to place the installer, in artifacts. -->
       <InstallerFileNameWithoutExtension>$(SharedFrameworkInstallerName)-$(InstallerBuildPart)$(CrossArchContentsBuildPart)</InstallerFileNameWithoutExtension>
       <_InstallerFile Condition="'$(_InstallerFile)' == ''">$(PackageOutputPath)$(InstallerFileNameWithoutExtension)$(InstallerExtension)</_InstallerFile>
