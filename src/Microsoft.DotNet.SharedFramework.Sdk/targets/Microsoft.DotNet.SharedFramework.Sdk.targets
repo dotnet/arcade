@@ -133,6 +133,9 @@
     
   <Import Project="$(MSBuildThisFileDirectory)sharedfx.targets"
           Condition="'$(MSBuildProjectExtension)' == '.sfxproj'" />
+
+  <Import Project="$(MSBuildThisFileDirectory)archive.targets"
+          Condition="'$(GenerateArchive)' == 'true'" />
   
   <Target Name="_GetTargetOSArchInfo">
     <Error Condition="'$(InstallerRuntimeIdentifier)' == ''"
