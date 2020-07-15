@@ -109,7 +109,7 @@ stages:
           inputs:
             packageType: sdk
             version: 3.1.300
-            installationPath: $(Agent.ToolsDirectory)/dotnet
+            installationPath: $(Build.SourcesDirectory)/.dotnet
         # Use utility script to run script command dependent on agent OS.
         - script: $(_Script)
             -configuration $(_BuildConfig) 
