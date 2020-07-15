@@ -50,6 +50,10 @@ namespace Microsoft.DotNet.SharedFramework.Sdk
 
             foreach (var file in Files)
             {
+                if (!string.IsNullOrEmpty(file.GetMetadata("GeneratedBuildFile")))
+                {
+                    continue;
+                }
                 var filePath = file.ItemSpec;
                 var fileName = Path.GetFileName(filePath);
                 var fileVersion = FileUtilities.GetFileVersion(filePath)?.ToString() ?? string.Empty;
@@ -64,7 +68,7 @@ namespace Microsoft.DotNet.SharedFramework.Sdk
                     var nativeFile = new RuntimeFile(fileName, null, fileVersion);
                     nativeFiles.Add(nativeFile);
                 }
-                else if (string.IsNullOrEmpty(file.GetMetadata("GeneratedBuildFile")))
+                else
                 {
                     var runtimeFile = new RuntimeFile(fileName,
                         fileVersion: fileVersion,
