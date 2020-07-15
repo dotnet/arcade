@@ -184,7 +184,7 @@
       Condition="'$(ProductBrandPrefix)' == ''" />
     <Error
       Text="When building installers for a tool pack a PackageBrandNameSuffix is required."
-      Condition="'$(PackageBrandNameSuffix)' == '' and '$(PlatformPackageType)' == 'ToolPack'" />
+      Condition="'$(PackageBrandNameSuffix)' == '' and '$(PlatformPackageType)' == 'ToolPack' and '$(MSBuildProjectExtension)' != '.bundleproj'" />
     <Error
       Text="When building a bundle installer, a BundleNameSuffix must be specified."
       Condition="'$(BundleNameSuffix)' == '' and '$(MSBuildProjectExtension)' == '.bundleproj'" />
