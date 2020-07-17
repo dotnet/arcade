@@ -114,10 +114,10 @@ function InitializeDotNetCli([bool]$install, [bool]$createSdkLocationFile) {
 
   # On CI:
   # Disable telemetry
-  # Set the CLI home directory to the build machine's workspace.
+  # Set the CLI home directory to the repo root.
   if ($ci) {
     $env:DOTNET_CLI_TELEMETRY_OPTOUT=1
-    $env:DOTNET_CLI_HOME=$env:AGENT_BUILDDIRECTORY
+    $env:DOTNET_CLI_HOME=$RepoRoot
   }
 
   # Source Build uses DotNetCoreSdkDir variable
