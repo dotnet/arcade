@@ -33,7 +33,7 @@ Status Last Updated: July 17, 2020, 11:15 AM PDT
 
 ### Status of Latest Version of Arcade Being Validated
 
-- Arcade is not being promoted due to Runtime and Installer (bellwether repos) not being in a green state at the time Arcade Validation for Promotion pipeline was kicked off. \
+- Arcade is not being promoted due to Runtime and Installer (bellwether repos) not being in a green state at the time Arcade Validation for Promotion pipeline was kicked off. 
 - A bug was discovered while validating against ASPNETCore. 
 - For validation information, please see this tracking issue: https://github.com/dotnet/core-eng/issues/10266
 
