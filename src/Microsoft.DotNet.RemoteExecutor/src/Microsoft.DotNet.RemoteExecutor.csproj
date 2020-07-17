@@ -26,8 +26,8 @@
   <Target Name="PackBuildOutputs"
           DependsOnTargets="CopyFilesToOutputDirectory">
     <ItemGroup>
-      <TfmSpecificPackageFile Include="$(ProjectDepsFilePath)" Condition="'$(TargetFramework)' != 'net472'" PackagePath="lib\$(TargetFramework)\" />
-      <TfmSpecificPackageFile Include="@(AppConfigWithTargetPath->'$(OutDir)%(TargetPath)')" Condition="'$(TargetFramework)' == 'net472'" PackagePath="lib\$(TargetFramework)\" />
+      <TfmSpecificPackageFile Include="$(ProjectDepsFilePath)" Condition="'$(TargetFramework)' != 'net461'" PackagePath="lib\$(TargetFramework)\" />
+      <TfmSpecificPackageFile Include="@(AppConfigWithTargetPath->'$(OutDir)%(TargetPath)')" Condition="'$(TargetFramework)' == 'net461'" PackagePath="lib\$(TargetFramework)\" />
     </ItemGroup>
   </Target>
 
