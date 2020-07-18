@@ -119,7 +119,7 @@
       <!-- Directory where pdbs pointed in `FilesToPublishToSymbolServer` are copied before publishing to AzDO artifacts. -->
       <PDBsToPublishTempLocation>$(ArtifactsTmpDir)PDBsToPublish/</PDBsToPublishTempLocation>
     </PropertyGroup>
-
+    
     <!--
       The new Maestro/BAR build model keeps separate Azure DevOps and GitHub build information.
       The GitHub information will be extracted based on the Azure DevOps repository.
@@ -140,6 +140,10 @@
     -->
     <PushToAzureDevOpsArtifacts 
       ItemsToPush="@(ItemsToPushToBlobFeed)"
+      ItemsToSign="@(ItemsToSign)"
+      StrongNameSignInfo="@(StrongNameSignInfo)"
+      FileSignInfo="@(FileSignInfo)"
+      FileExtensionSignInfo="@(FileExtensionSignInfo)"
       ManifestBuildData="@(ManifestBuildData)"
       ManifestRepoUri="$(BUILD_REPOSITORY_URI)"
       ManifestBranch="$(BUILD_SOURCEBRANCH)"
