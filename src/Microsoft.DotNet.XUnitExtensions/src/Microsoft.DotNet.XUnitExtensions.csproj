@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;net472</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;net461</TargetFrameworks>
     <AssemblyName>Microsoft.DotNet.XUnitExtensions</AssemblyName>
     <IsPackable>true</IsPackable>
     <Description>This package provides things like various traits and discovers like OuterLoop/ActiveIssue that are used by .NET test projects.</Description>
@@ -10,6 +10,7 @@
   <ItemGroup>
     <PackageReference Include="xunit.extensibility.core" Version="$(XUnitVersion)" />
     <PackageReference Include="xunit.extensibility.execution" Version="$(XUnitVersion)" />
+    <PackageReference Include="System.Runtime.InteropServices.RuntimeInformation" Version="$(SystemRuntimeInteropServicesRuntimeInformation)" Condition="'$(TargetFramework)' == 'net461'" />
   </ItemGroup>
 
   <ItemGroup>
