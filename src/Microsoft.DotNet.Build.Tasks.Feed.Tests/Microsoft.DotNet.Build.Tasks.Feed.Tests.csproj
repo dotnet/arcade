@@ -2,7 +2,6 @@
 
   <PropertyGroup>
     <TargetFrameworks>netcoreapp2.1</TargetFrameworks>
-    <ExcludeFromSourceBuild>true</ExcludeFromSourceBuild>
   </PropertyGroup>
 
   <ItemGroup>

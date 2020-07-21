@@ -14,7 +14,7 @@
     <HandlebarsNetVersion>1.10.1</HandlebarsNetVersion>
     <LibGit2SharpVersion>0.25.2</LibGit2SharpVersion>
     <log4netVersion>2.0.8</log4netVersion>
-    <SystemNetHttpVersion>4.3.3</SystemNetHttpVersion>
+    <SystemNetHttpVersion>4.3.4</SystemNetHttpVersion>
     <AzureStorageBlobsVersion>12.3.0</AzureStorageBlobsVersion>
     <MicrosoftAzureKeyVaultVersion>3.0.0</MicrosoftAzureKeyVaultVersion>
     <MicrosoftAzureServicesAppAuthenticationVersion>1.3.1</MicrosoftAzureServicesAppAuthenticationVersion>
@@ -43,14 +43,14 @@
     <DotNetSleetLibVersion>2.2.143</DotNetSleetLibVersion>
     <SwashbuckleAspNetCoreSwaggerVersion>3.0.0</SwashbuckleAspNetCoreSwaggerVersion>
     <SystemBuffersVersion>4.5.0</SystemBuffersVersion>
-    <SystemCollectionsImmutableVersion>1.3.1</SystemCollectionsImmutableVersion>
+    <SystemCollectionsImmutableVersion>1.5.0</SystemCollectionsImmutableVersion>
     <SystemDiagnosticsTraceSourceVersion>4.0.0</SystemDiagnosticsTraceSourceVersion>
     <SystemIOCompressionVersion>4.3.0</SystemIOCompressionVersion>
     <SystemIOPackagingVersion>4.5.0</SystemIOPackagingVersion>
     <SystemIOFileSystemPrimitivesVersion>4.3.0</SystemIOFileSystemPrimitivesVersion>
     <SystemMemoryVersion>4.5.3</SystemMemoryVersion>
     <SystemNumericsVectorsVersion>4.5.0</SystemNumericsVectorsVersion>
-    <SystemReflectionMetadataVersion>1.4.2</SystemReflectionMetadataVersion>
+    <SystemReflectionMetadataVersion>1.6.0</SystemReflectionMetadataVersion>
     <SystemRuntimeCompilerServicesUnsafeVersion>4.7.0</SystemRuntimeCompilerServicesUnsafeVersion>
     <SystemRuntimeInteropServicesRuntimeInformation>4.3.0</SystemRuntimeInteropServicesRuntimeInformation>
     <SystemTextEncodingsWebVersion>4.5.0</SystemTextEncodingsWebVersion>
