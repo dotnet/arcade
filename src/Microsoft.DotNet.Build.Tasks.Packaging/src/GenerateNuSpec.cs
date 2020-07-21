@@ -205,7 +205,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
             }
             if (!string.IsNullOrEmpty(Icon))
             {
-                manifestMetadata.Icon = Path.GetFileName(Icon);
+                manifestMetadata.Icon = Icon;
             }
             manifestMetadata.UpdateMember(x => x.Id, Id);
             manifestMetadata.UpdateMember(x => x.Language, Language);
@@ -260,12 +260,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
                     Target = f.GetMetadata(Metadata.FileTarget).Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar),
                     Exclude = f.GetMetadata(Metadata.FileExclude)
                 };
-            
-            if (!string.IsNullOrEmpty(Icon))
-            {
-                manifestFiles = manifestFiles.Append(new ManifestFile { Source = Icon, Target = Path.GetFileName(Icon) });
-            }
-            
+
             return manifestFiles.OrderBy(f => f.Target, StringComparer.OrdinalIgnoreCase).ToList();
         }
 
