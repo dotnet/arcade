@@ -20,12 +20,15 @@
   </Target>
   
   <Target Name="GetProjectWithBestTargetFrameworks">
-    <PropertyGroup>
-      <_BuildTargetFrameworksWithTargetOS Condition="'$(BuildTargetFramework)' != ''">$(BuildTargetFramework)-$(TargetOS)</_BuildTargetFrameworksWithTargetOS>
-      <_BuildTargetFrameworksWithTargetOS Condition="'$(BuildTargetFramework)' == ''">$([System.Text.RegularExpressions.Regex]::Replace('$(TargetFrameworks)', '(-[^;]+)', '-$(TargetOS)'))</_BuildTargetFrameworksWithTargetOS>
-    </PropertyGroup>
+    <ItemGroup Condition="'$(BuildTargetFramework)' != ''">
+      <_BuildTargetFrameworkWithTargetOS Include="$(BuildTargetFramework)-$(TargetOS)" />
+    </ItemGroup>
+    <ItemGroup Condition="'$(BuildTargetFramework)' == ''">
+      <_BuildTargetFrameworkWithoutOS Include="$([System.Text.RegularExpressions.Regex]::Replace('$(TargetFrameworks)', '(-[^;]+)', ''))" />
+      <_BuildTargetFrameworkWithTargetOS Include="%(_BuildTargetFrameworkWithoutOS)-$(TargetOS)" />
+    </ItemGroup>
     
-    <ChooseBestTargetFrameworksTask BuildTargetFrameworks="$(_BuildTargetFrameworksWithTargetOS);$(AdditionalBuildTargetFrameworks)"
+    <ChooseBestTargetFrameworksTask BuildTargetFrameworks="@(_BuildTargetFrameworkWithTargetOS);$(AdditionalBuildTargetFrameworks)"
                                     SupportedTargetFrameworks="$(TargetFrameworks)"
                                     RuntimeGraph="$(RuntimeGraph)">
       <Output TaskParameter="BestTargetFrameworks" ItemName="_BestTargetFramework" />
