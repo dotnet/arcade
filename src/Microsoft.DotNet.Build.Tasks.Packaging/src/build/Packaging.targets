@@ -41,8 +41,10 @@
   <PropertyGroup>
     <BaseId>$(MSBuildProjectName)</BaseId>
     <Id>$(IdPrefix)$(BaseId)</Id>
+    <PackageId>$(Id)</PackageId>
     <PackedPackageNamePrefix Condition="'$(PackedPackageNamePrefix)' == ''">transport</PackedPackageNamePrefix>
     <PackedPackageId>$(PackedPackageNamePrefix).$(Id)</PackedPackageId>
+    <PackageProjectUrl>$(ProjectUrl)</PackageProjectUrl>
     <!-- It is by design that the Title matches the Id. We want users to get an assembly view. -->
     <Title>$(Id)</Title>
     <Authors>Microsoft</Authors>
@@ -69,7 +71,6 @@
     <RuntimeFilePath Condition="'$(RuntimeFilePath)' == ''">$(NuSpecOutputPath)$(Id)$(NuspecSuffix)/runtime.json</RuntimeFilePath>
     <PackedPackageRuntimeFilePath Condition="'$(PackedPackageRuntimeFilePath)' == ''">$(NuSpecOutputPath)$(Id)$(NuspecSuffix)/$(PackedPackageNamePrefix).runtime.json</PackedPackageRuntimeFilePath>
     <PlaceholderFile>$(MSBuildThisFileDirectory)content/_._</PlaceholderFile>
-    <PackageIconFile Condition="'$(PackageIconFile)' == ''">$(MSBuildThisFileDirectory)Icon.png</PackageIconFile>
     <PackageDescriptionFile Condition="'$(PackageDescriptionFile)' == ''">path to descriptions.json must be specified</PackageDescriptionFile>
     <ValidationSuppressionFile Condition="'$(ValidationSuppressionFile)' == ''">ValidationSuppression.txt</ValidationSuppressionFile>
     <SyncInfoFile Condition="'$(SyncInfoFile)' == ''">unspecified</SyncInfoFile>
@@ -105,12 +106,16 @@
   <Target Name="Build"
           DependsOnTargets="$(BuildDependsOn)">
 
-    <Message Condition="'$(ShouldGenerateNuSpec)' == 'true'"
+    <Message Condition="'$(ShouldCreatePackage)' == 'true'"
+             Text="$(MSBuildProjectName) -> $(PackageOutputPath)$(Id).$(PackageVersion).nupkg"
+             Importance="high" />
+
+    <Message Condition="'$(ShouldCreatePackage)' != 'true' AND '$(ShouldGenerateNuSpec)' == 'true'"
              Text="$(MSBuildProjectName) -> $(NuSpecPath)"
              Importance="high" />
 
-    <Message Condition="'$(ShouldGenerateNuSpec)' != 'true'"
-             Text="Skipping nuspec generation for this platform."
+    <Message Condition="'$(ShouldCreatePackage)' != 'true' AND '$(ShouldGenerateNuSpec)' != 'true'" 
+             Text="$(MSBuildProjectName) -> Skipping for this platform."
              Importance="high" />
   </Target>
 
@@ -244,23 +249,19 @@
 
     <ItemGroup>
       <_FilesToPackage Remove="@(_FilesToPackage)" Condition="'$(ExcludeReferenceAssets)' == 'true' AND '%(_FilesToPackage.IsReferenceAsset)' == 'true'" />
+      
+      <!-- Some packages support legacy portable profiles where dependencies are provided by targeting pack -->
+      <_FilesToPackage Condition="'%(_FilesToPackage.HarvestDependencies)' == '' AND !$([System.String]::Copy('%(_FilesToPackage.TargetFramework)').StartsWith('portable-'))">
+        <!-- Only harvest files from ref/lib/runtimes dir-->
+        <HarvestDependencies Condition="$([System.String]::Copy('%(_FilesToPackage.TargetPath)').StartsWith('ref')) OR
+                                        $([System.String]::Copy('%(_FilesToPackage.TargetPath)').StartsWith('lib')) OR
+                                        $([System.String]::Copy('%(_FilesToPackage.TargetPath)').StartsWith('runtimes'))">true</HarvestDependencies>
+      </_FilesToPackage>
       <File Include="@(_FilesToPackage)">
         <PackageId>$(Id)</PackageId>
         <PackageVersion>$(PackageVersion)</PackageVersion>
-        <!-- Some packages support legacy portable profiles where dependencies are provided by targeting pack -->
-        <HarvestDependencies Condition="!$([System.String]::Copy('%(_FilesToPackage.TargetFramework)').StartsWith('portable-'))">true</HarvestDependencies>
       </File>
     </ItemGroup>
-
-    <Error Condition="'$(SkipPackageFileCheck)' != 'true' AND
-                      '$(IsFrameworkPackage)' != 'true' AND
-                      '%(File.SkipPackageFileCheck)' != 'true' AND
-                      '%(File.FileName)' != '_' AND
-                      '%(File.FileName)%(File.Extension)' != 'runtime.json' AND
-                      '%(File.Extension)' != '.cs' AND
-                      '%(File.Extension)' != '.vb' AND
-                      !$(ID.Contains('%(File.FileName)'))"
-           Text="Package $(ID) contains file with name %(File.FileName).  If this is expected you can disable this filename checking for this item or package by setting SkipPackageFileCheck = true" />
   </Target>
   <!-- END project refs-->
 
@@ -327,47 +328,15 @@
   </Target>
 
   <Target Name="ConvertItems"
-          DependsOnTargets="ExpandProjectReferences;AddPlaceholders">
-    <CreateItem Include="@(ProjectReferenceOutput)">
-      <Output TaskParameter="Include"
-              ItemName="File"/>
-    </CreateItem>
+          DependsOnTargets="$(BeforePack);ExpandProjectReferences;AddPlaceholders">
     <ItemGroup>
-      <_LinkedContentFiles Include="@(Content)"
-                           Condition="'%(Content.Link)' != ''" />
-      <_UnlinkedContentFiles Include="@(Content)"
-                             Condition="'%(Content.Link)' == ''" />
-    </ItemGroup>
-    <CreateItem Include="@(_LinkedContentFiles)"
-                AdditionalMetadata="TargetPath=%(Link)">
-      <Output TaskParameter="Include"
-              ItemName="File"/>
-    </CreateItem>
-    <CreateItem Include="@(_UnlinkedContentFiles)"
-                AdditionalMetadata="TargetPath=%(RelativeDir)">
-      <Output TaskParameter="Include"
-              ItemName="File"/>
-    </CreateItem>
-
-    <!-- We need to special case library files in later phases. In order to make this
-         easier, we add custom metadata 'IsLibrary' that indicates whether the file is
-         targeting the lib folder or not. -->
-
-    <ItemGroup>
-      <_FileWithIsLibrary Include="@(File)"
-                          Condition="'%(File.TargetPath)' == 'lib' OR
-                                     $([System.String]::Copy('%(File.TargetPath)').ToLower().StartsWith('lib\')) OR
-                                     $([System.String]::Copy('%(File.TargetPath)').ToLower().StartsWith('lib/'))">
-        <PackageDirectory>Lib</PackageDirectory>
-      </_FileWithIsLibrary>
-      <_FileWithIsLibrary Include="@(File)"
-                          Condition="'%(File.TargetPath)' != 'lib' AND
-                                     !$([System.String]::Copy('%(File.TargetPath)').ToLower().StartsWith('lib\')) AND
-                                     !$([System.String]::Copy('%(File.TargetPath)').ToLower().StartsWith('lib/'))">
-        <PackageDirectory></PackageDirectory>
-      </_FileWithIsLibrary>
-      <File Remove="@(File)" />
-      <File Include="@(_FileWithIsLibrary)" />
+      <!-- PkgProj includes all Content, and None only when Pack=True-->
+      <_additionalFiles Include="@(Content)" />
+      <_additionalFiles Include="@(None)" Condition="'%(None.Pack)' == 'true'" />
+      
+      <File Include="@(_additionalFiles)" Condition="'%(_additionalFiles.PackagePath)' != ''" TargetPath="%(_additionalFiles.PackagePath)" />
+      <File Include="@(_additionalFiles)" Condition="'%(_additionalFiles.PackagePath)' == '' AND '%(_additionalFiles.Link)' != ''" TargetPath="%(_additionalFiles.Link)" />
+      <File Include="@(_additionalFiles)" Condition="'%(_additionalFiles.PackagePath)' == '' AND '%(_additionalFiles.Link)' == ''" TargetPath="%(_additionalFiles.RelativeDir)" />
     </ItemGroup>
   </Target>
 
@@ -919,6 +888,7 @@
       <Description Condition="'$(UseRuntimePackageDescription)' != 'true' AND '$(RuntimeDisclaimer)' != ''">$(RuntimeDisclaimer) %0A$(Description)</Description>
       <Description Condition="'@(SyncInfoLines)' != ''">$(Description) %0A%(SyncInfoLines.Identity)</Description>
       <Description Condition="'$(MinClientVersion3)' != ''">$(Description) %0A$([System.String]::Format('$(NuGet3MinVersionMessage)', '$(MinClientVersion3)'))</Description>
+      <PackageDescription>$(Description)</PackageDescription>
     </PropertyGroup>
   </Target>
 
@@ -1240,7 +1210,7 @@
                     Language="$(Language)"
                     ProjectUrl="$(ProjectUrl)"
                     IconUrl="$(IconUrl)"
-                    Icon="$(PackageIconFile)"
+                    Icon="$(PackageIcon)"
                     LicenseUrl="$(LicenseUrl)"
                     PackageLicenseExpression="$(PackageLicenseExpression)"
                     Copyright="$(Copyright)"

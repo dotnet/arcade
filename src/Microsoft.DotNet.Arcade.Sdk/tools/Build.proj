@@ -82,9 +82,9 @@
     <Error Text="File 'global.json' must exist in directory specified by RepoRoot: '$(_RepoRootOriginal)'" Condition="'$(_RepoRootOriginal)' != '' and !Exists('$(RepoRoot)global.json')"/>
 
     <PropertyGroup>
-      <!-- IsRunningFromVisualStudio may be true even when running msbuild.exe from command line. This generally means that MSBUild is Visual Studio installation and therefore we need to find NuGet.targets in a different location.  -->
-      <_NuGetRestoreTargets>$(MSBuildToolsPath)\NuGet.targets</_NuGetRestoreTargets>
-      <_NuGetRestoreTargets Condition="'$([MSBuild]::IsRunningFromVisualStudio())' == 'true'">$(MSBuildToolsPath32)\..\..\..\Common7\IDE\CommonExtensions\Microsoft\NuGet\NuGet.targets</_NuGetRestoreTargets>
+      <!-- 'IsRunningFromVisualStudio' may be true even when running msbuild.exe from command line. This generally means that MSBuild is from a Visual Studio installation and therefore we need to find NuGet.targets in a different location. -->
+      <_NuGetRestoreTargets Condition="Exists('$(MSBuildToolsPath)\NuGet.targets')" >$(MSBuildToolsPath)\NuGet.targets</_NuGetRestoreTargets>
+      <_NuGetRestoreTargets Condition="'$([MSBuild]::IsRunningFromVisualStudio())' == 'true' And Exists('$(MSBuildToolsPath32)\..\..\..\Common7\IDE\CommonExtensions\Microsoft\NuGet\NuGet.targets')">$(MSBuildToolsPath32)\..\..\..\Common7\IDE\CommonExtensions\Microsoft\NuGet\NuGet.targets</_NuGetRestoreTargets>
 
       <!-- If `DotNetPublishUsingPipelines` is not set we default it to false. -->
       <DotNetPublishUsingPipelines Condition="'$(DotNetPublishUsingPipelines)' == ''">false</DotNetPublishUsingPipelines>
@@ -225,7 +225,7 @@
              Targets="_IsProjectRestoreSupported"
              SkipNonexistentTargets="true"
              BuildInParallel="true"
-             Condition="'$(RestoreUsingNuGetTargets)' != 'false' and '%(ProjectToBuild.Extension)' != '.sln' and '$(RestoreUseStaticGraphEvaluation)' != 'true' and '$(Restore)' == 'true'">
+             Condition="'$(RestoreUsingNuGetTargets)' != 'false' and '%(ProjectToBuild.Extension)' != '.sln' and '%(ProjectToBuild.Extension)' != '.slnf' and '$(RestoreUseStaticGraphEvaluation)' != 'true' and '$(Restore)' == 'true'">
 
       <Output TaskParameter="TargetOutputs" ItemName="_ProjectToRestoreWithNuGet" />
     </MSBuild>

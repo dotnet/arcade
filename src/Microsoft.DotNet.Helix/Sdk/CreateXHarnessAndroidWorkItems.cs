@@ -5,7 +5,6 @@ using System.IO.Compression;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Build.Framework;
-using Newtonsoft.Json;
 
 namespace Microsoft.DotNet.Helix.Sdk
 {
@@ -16,11 +15,9 @@ namespace Microsoft.DotNet.Helix.Sdk
     {
         /// <summary>
         /// An array of one or more paths to application packages (.apk for Android)
-        /// that will be used to create Helix work items.  
-        /// [Optional] Arguments: a string of arguments to be passed directly to the XHarness runner
-        /// [Optional] DeviceOutputPath: Location on the device where output files are generated
+        /// that will be used to create Helix work items.
         /// </summary>
-        public ITaskItem[] AppPackages { get; set; }
+        public ITaskItem[] Apks { get; set; }
 
         /// <summary>
         /// The main method of this MSBuild task which calls the asynchronous execution method and
@@ -39,7 +36,7 @@ namespace Microsoft.DotNet.Helix.Sdk
         /// <returns></returns>
         private async Task ExecuteAsync()
         {
-            WorkItems = (await Task.WhenAll(AppPackages.Select(PrepareWorkItem))).Where(wi => wi != null).ToArray();
+            WorkItems = (await Task.WhenAll(Apks.Select(PrepareWorkItem))).Where(wi => wi != null).ToArray();
         }
 
         /// <summary>
@@ -51,19 +48,11 @@ namespace Microsoft.DotNet.Helix.Sdk
         {
             // Forces this task to run asynchronously
             await Task.Yield();
-            string workItemName = $"xharness-{Path.GetFileNameWithoutExtension(appPackage.ItemSpec)}";
+            string workItemName = Path.GetFileNameWithoutExtension(appPackage.ItemSpec);
 
-            TimeSpan timeout = TimeSpan.FromMinutes(15);
-            if (!string.IsNullOrEmpty(WorkItemTimeout))
-            {
-                if (!TimeSpan.TryParse(WorkItemTimeout, out timeout))
-                {
-                    Log.LogWarning($"Invalid value \"{WorkItemTimeout}\" provided for XHarnessWorkItemTimeout; falling back to default value of \"00:015:00\" (15 minutes)");
-                    timeout = TimeSpan.FromMinutes(15);
-                }
-            }
+            var timeouts = ParseTimeouts();
 
-            string command = ValidateMetadataAndGetXHarnessAndroidCommand(appPackage, timeout);
+            string command = ValidateMetadataAndGetXHarnessAndroidCommand(appPackage, timeouts.TestTimeout);
 
             if (!Path.GetExtension(appPackage.ItemSpec).Equals(".apk", StringComparison.OrdinalIgnoreCase))
             {
@@ -78,7 +67,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                 { "Identity", workItemName },
                 { "PayloadArchive", CreateZipArchiveOfPackage(appPackage.ItemSpec) },
                 { "Command", command },
-                { "Timeout", timeout.ToString() },
+                { "Timeout", timeouts.WorkItemTimeout.ToString() },
             });
         }
 
@@ -110,12 +99,20 @@ namespace Microsoft.DotNet.Helix.Sdk
             appPackage.TryGetMetadata("AndroidInstrumentationName", out string androidInstrumentationName);
             appPackage.TryGetMetadata("DeviceOutputPath", out string deviceOutputPath);
 
-            string outputPathArg = string.IsNullOrEmpty(deviceOutputPath) ? string.Empty : $"--dev-out={deviceOutputPath}";
-            string instrumentationArg = string.IsNullOrEmpty(androidInstrumentationName) ? string.Empty : $"-i={androidInstrumentationName}";
+            string outputPathArg = string.IsNullOrEmpty(deviceOutputPath) ? string.Empty : $"--dev-out={deviceOutputPath} ";
+            string instrumentationArg = string.IsNullOrEmpty(androidInstrumentationName) ? string.Empty : $"-i={androidInstrumentationName} ";
 
-            string outputDirectory = IsPosixShell ? "$HELIX_WORKITEM_ROOT" : "%HELIX_WORKITEM_ROOT%";
-            string xharnessRunCommand = $"xharness android test --app {Path.GetFileName(appPackage.ItemSpec)} --output-directory={outputDirectory} " +
-                                          $"--timeout={xHarnessTimeout.TotalSeconds} -p={androidPackageName} {outputPathArg} {instrumentationArg} {arguments} -v";
+            string outputDirectory = IsPosixShell ? "$HELIX_WORKITEM_UPLOAD_ROOT" : "%HELIX_WORKITEM_UPLOAD_ROOT%";
+            string xharnessRunCommand = $"dotnet exec \"{(IsPosixShell ? "$XHARNESS_CLI_PATH" : "%XHARNESS_CLI_PATH%")}\" android test " +
+                                        $"--app \"{Path.GetFileName(appPackage.ItemSpec)}\" " +
+                                        $"--output-directory \"{outputDirectory}\" " +
+                                        $"--timeout {xHarnessTimeout.TotalSeconds} " +
+                                        $"-p=\"{androidPackageName}\" " +
+                                        "-v " +
+                                        outputPathArg +
+                                        instrumentationArg +
+                                        arguments +
+                                        (!string.IsNullOrEmpty(AppArguments) ? $" -- {AppArguments}" : string.Empty);
 
             Log.LogMessage(MessageImportance.Low, $"Generated XHarness command: {xharnessRunCommand}");
 

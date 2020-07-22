@@ -20,7 +20,7 @@ namespace Microsoft.DotNet.Build.Tasks.SharedFramework.Sdk.src
         private const int _fieldsArtifactPath2 = 1;
 
         [Required]
-        public string LightCommandPackageDir { get; set; }
+        public string LightCommandWorkingDir { get; set; }
         public bool NoLogo { get; set; }
         public bool Fv { get; set; }
         public string PdbOut { get; set; }
@@ -37,13 +37,17 @@ namespace Microsoft.DotNet.Build.Tasks.SharedFramework.Sdk.src
         [Required]
         public ITaskItem [] WixSrcFiles { get; set; }
 
+        [Output]
+        public string LightCommandPackageNameOutput { get; set; }
         // The light command that was originally used to generate the MSI.  This is purely used for informational purposes
         // and to validate that the light command being created by this task is correct (assist with debugging).
         public string OriginalLightCommand { get; set; }
 
         public override bool ExecuteCore()
         {
-            string packageDropOutputFolder = Path.Combine(LightCommandPackageDir, Path.GetFileNameWithoutExtension(Out));
+            LightCommandPackageNameOutput = Path.GetFileNameWithoutExtension(Out);
+            string packageDropOutputFolder = Path.Combine(LightCommandWorkingDir, LightCommandPackageNameOutput);
+
             if (!Directory.Exists(packageDropOutputFolder))
             {
                 Directory.CreateDirectory(packageDropOutputFolder);
@@ -118,7 +122,7 @@ namespace Microsoft.DotNet.Build.Tasks.SharedFramework.Sdk.src
             }
             if (Cultures != null)
             {
-                commandString += $" -culture:{Cultures}";
+                commandString += $" -cultures:{Cultures}";
             }
             if (Loc != null)
             {

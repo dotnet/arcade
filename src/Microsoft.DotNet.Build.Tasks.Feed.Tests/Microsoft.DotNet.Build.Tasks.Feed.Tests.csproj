@@ -2,7 +2,6 @@
 
   <PropertyGroup>
     <TargetFrameworks>netcoreapp2.1</TargetFrameworks>
-    <ExcludeFromSourceBuild>true</ExcludeFromSourceBuild>
   </PropertyGroup>
 
   <ItemGroup>
@@ -12,10 +11,18 @@
     <!-- This is here so that we agree with the feed tasks project's transitive reference to NewtonSoft.Json and Azure.Core -->
     <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
     <PackageReference Include="Azure.Core" Version="1.0.2.0" />
+    <PackageReference Include="DotNet.SleetLib" Version="$(DotNetSleetLibVersion)" />
+    <PackageReference Include="Azure.Storage.Blobs" Version="$(AzureStorageBlobsVersion)" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Microsoft.DotNet.Build.Tasks.Feed\Microsoft.DotNet.Build.Tasks.Feed.csproj" />
     <ProjectReference Include="..\Microsoft.DotNet.VersionTools\lib\Microsoft.DotNet.VersionTools.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="TestInputs\**">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 </Project>

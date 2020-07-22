@@ -31,6 +31,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public string[] ManifestBuildData { get; set; }
 
+        public ITaskItem[] ItemsToSign { get; set; }
+
+        public ITaskItem[] StrongNameSignInfo { get; set; }
+
+        public ITaskItem[] FileSignInfo { get; set; }
+
+        public ITaskItem[] FileExtensionSignInfo { get; set; }
+
         public string AssetManifestPath { get; set; }
 
         public bool IsStableBuild { get; set; }
@@ -141,6 +149,18 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         blobArtifacts = blobItems.Select(BuildManifestUtil.CreateBlobArtifactModel).Where(blob => blob != null);
                     }
 
+                    PublishingInfraVersion targetPublishingVersion = PublishingInfraVersion.Latest;
+
+                    if (!string.IsNullOrEmpty(PublishingVersion))
+                    {
+                        if (!Enum.TryParse(PublishingVersion, ignoreCase: true, out targetPublishingVersion))
+                        {
+                            Log.LogError($"Could not parse publishing infra version '{PublishingVersion}'");
+                        }
+                    }
+                    
+                    SigningInformationModel signingInformationModel = BuildManifestUtil.CreateSigningInformationModelFromItems(ItemsToSign, StrongNameSignInfo, FileSignInfo, FileExtensionSignInfo);
+
                     BuildManifestUtil.CreateBuildManifest(Log,
                         blobArtifacts,
                         packageArtifacts,
@@ -151,7 +171,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         ManifestCommit,
                         ManifestBuildData,
                         IsStableBuild,
-                        PublishingVersion ?? BuildManifestUtil.LatestPublishingInfraVersion);
+                        targetPublishingVersion,
+                        signingInformationModel: signingInformationModel);
 
                     Log.LogMessage(MessageImportance.High,
                         $"##vso[artifact.upload containerfolder=AssetManifests;artifactname=AssetManifests]{AssetManifestPath}");
