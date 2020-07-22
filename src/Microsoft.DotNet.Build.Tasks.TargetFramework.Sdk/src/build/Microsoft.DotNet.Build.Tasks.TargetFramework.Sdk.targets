@@ -24,8 +24,8 @@
       <_BuildTargetFrameworkWithTargetOS Include="$(BuildTargetFramework)-$(TargetOS)" />
     </ItemGroup>
     <ItemGroup Condition="'$(BuildTargetFramework)' == ''">
-      <_BuildTargetFrameworkWithoutOS Include="$([System.Text.RegularExpressions.Regex]::Replace('$(TargetFrameworks)', '(-[^;]+)', ''))" />
-      <_BuildTargetFrameworkWithTargetOS Include="%(_BuildTargetFrameworkWithoutOS)-$(TargetOS)" />
+      <_BuildTargetFrameworkWithoutOS Include="$([MSBuild]::Unescape($([System.Text.RegularExpressions.Regex]::Replace('$(TargetFrameworks)', '(-[^;]+)', ''))))" />
+      <_BuildTargetFrameworkWithTargetOS Include="@(_BuildTargetFrameworkWithoutOS->Distinct()->'%(Identity)-$(TargetOS)')" />
     </ItemGroup>
     
     <ChooseBestTargetFrameworksTask BuildTargetFrameworks="@(_BuildTargetFrameworkWithTargetOS);$(AdditionalBuildTargetFrameworks)"
