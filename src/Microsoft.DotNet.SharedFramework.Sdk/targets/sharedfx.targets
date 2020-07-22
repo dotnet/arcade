@@ -130,7 +130,9 @@
           DependsOnTargets="GetFilesToPackage"
           Condition="'$(PlatformPackageType)' == 'RuntimePack'">
     <ItemGroup>
-      <_FilesForDepsFile Include="@(FilesToPackage)" Condition="'%(FilesToPackage.IsSymbolFile)' != 'true'" />
+      <_FilesForDepsFile Include="@(FilesToPackage)"
+                         Condition="'%(FilesToPackage.IsSymbolFile)' != 'true' and
+                                    $([System.String]::new('%(FilesToPackage.TargetPath)').StartsWith('runtimes/$(RuntimeIdentifier)'))" />
     </ItemGroup>
     <GenerateSharedFrameworkDepsFile TargetFrameworkMoniker="$(TargetFrameworkMoniker)"
                                      RuntimeIdentifier="$(RuntimeIdentifier)"
