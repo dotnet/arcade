@@ -21,8 +21,8 @@
   
   <Target Name="GetProjectWithBestTargetFrameworks">
     <PropertyGroup>
-      <_BuildTargetFrameworksWithTargetOS Condition="'$(BuildTargetFramework)' != ''>$(BuildTargetFramework)-$(TargetOS)</_BuildTargetFrameworksWithTargetOS>
-      <_BuildTargetFrameworksWithTargetOS Condition="'$(BuildTargetFramework)' == ''>$([System.Text.RegularExpressions.Regex]::Replace('$(TargetFrameworks)', '(-[^;]+)', '-$(TargetOS)'))</_BuildTargetFrameworksWithTargetOS>
+      <_BuildTargetFrameworksWithTargetOS Condition="'$(BuildTargetFramework)' != ''">$(BuildTargetFramework)-$(TargetOS)</_BuildTargetFrameworksWithTargetOS>
+      <_BuildTargetFrameworksWithTargetOS Condition="'$(BuildTargetFramework)' == ''">$([System.Text.RegularExpressions.Regex]::Replace('$(TargetFrameworks)', '(-[^;]+)', '-$(TargetOS)'))</_BuildTargetFrameworksWithTargetOS>
     </PropertyGroup>
     
     <ChooseBestTargetFrameworksTask BuildTargetFrameworks="$(_BuildTargetFrameworksWithTargetOS);$(AdditionalBuildTargetFrameworks)"
