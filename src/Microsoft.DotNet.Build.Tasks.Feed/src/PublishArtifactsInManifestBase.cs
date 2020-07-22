@@ -496,7 +496,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         "Basic",
                         Convert.ToBase64String(Encoding.ASCII.GetBytes(string.Format("{0}:{1}", "", feedConfig.Token))));
 
-                    await System.Threading.Tasks.Task.WhenAll(packagesToPublish.Select(async packageToPublish =>
+                    await Task.WhenAll(packagesToPublish.Select(async packageToPublish =>
                     {
                         try
                         {
@@ -514,7 +514,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         }
 
         /// <summary>
-        ///     Push a single package to the azure devops nuget feed.
+        ///     Push a single package to an Azure DevOps nuget feed.
         /// </summary>
         /// <param name="feedConfig">Infos about the target feed</param>
         /// <param name="packageToPublish">Package to push</param>
@@ -522,75 +522,81 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// <remarks>
         ///     This method attempts to take the most efficient path to push the package.
         ///     
-        ///     There are three cases:
-        ///         - The package does not exist, and is pushed normally
-        ///         - The package exists, and its contents may or may not be equivalent.
-        ///         - Azure DevOps is having some issue and we didn't succeed to publish at first.
+        ///     There are four cases:
+        ///         - Package does not exist on the target feed, and is pushed normally
+        ///         - Package exists with bitwise-identical contents
+        ///         - Package exists with non-matching contents
+        ///         - Azure DevOps is having some issue meaning we didn't succeed to publish at first.
         ///         
         ///     The second case is by far the most common. So, we first attempt to push the 
         ///     package normally using nuget.exe. If this fails, this could mean any number of 
         ///     things (like failed auth). But in normal circumstances, this might mean the 
         ///     package already exists. This either means that we are attempting to push the 
         ///     same package, or attemtping to push a different package with the same id and 
-        ///     version. The second case is an error, as azure devops feeds are immutable, 
+        ///     version. The second case is an error, as Azure DevOps feeds are immutable, 
         ///     the former is simply a case where we should continue onward.
         ///     
         ///     To handle the third case we rely on the call to compare file contents 
-        ///     `IsLocalPackageIdenticalToFeedPackage` to return null - meaning that it got 
-        ///     a 404 when looking up the file in the feed - to trigger a retry on the publish 
-        ///     operation. This was implemented this way becase we didn't want to rely on 
-        ///     parsing the output of the push operation - which does a call to `nuget.exe` 
-        ///     behind the scenes.
+        ///     `CompareLocalPackageToFeedPackage` to return PackageFeedStatus.DoesNotExist,
+        ///     meaning that it got a 404 when looking up the file in the feed - to trigger 
+        ///     a retry on the publish operation. This was implemented this way because we 
+        ///     didn't want to rely on parsing the output of the push operation - which does 
+        ///     a call to `nuget.exe` behind the scenes.
         /// </remarks>
         private async Task PushNugetPackageAsync(TargetFeedConfig feedConfig, HttpClient client, string localPackageLocation, string id, string version,
             string feedAccount, string feedVisibility, string feedName)
         {
             try
             {
-                /// true - Package exists on the feed AND is identical to local one.
-                /// false - Package exists on the feed AND is not identical to local one.
-                /// null - Package DOES NOT EXIST on the feed.
-                bool? packageExistIsIdentical = null;
-                const int maxNuGetPushAttempts = 1;
+                var packageStatus = GeneralUtils.PackageFeedStatus.Unknown;
+                const int maxNuGetPushAttempts = 5;
                 const int delayInSecondsBetweenAttempts = 3;
                 int attemptIndex = 0;
 
                 do
                 {
+                    attemptIndex++;
                     // The feed key when pushing to AzDo feeds is "AzureDevOps" (works with the credential helper).
-                    int result = await GeneralUtils.StartProcessAsync(NugetPath, $"push \"{localPackageLocation}\" -Source \"{feedConfig.TargetURL}\" -NonInteractive -ApiKey AzureDevOps -Verbosity quiet");
+                    int nugetExitCode = await GeneralUtils.StartProcessAsync(NugetPath, $"push \"{localPackageLocation}\" -Source \"{feedConfig.TargetURL}\" -NonInteractive -ApiKey AzureDevOps -Verbosity quiet");
 
-                    if (result == 0)
+                    if (nugetExitCode == 0)
                     {
+                        // We have just pushed this package so we know it exists and is identical to our local copy
+                        packageStatus = GeneralUtils.PackageFeedStatus.ExistsAndIdenticalToLocal;
                         break;
                     }
 
-                    Log.LogMessage(MessageImportance.Low, $"Failed to push {localPackageLocation}, attempting to determine whether the package already exists on the feed with the same content.");
+                    Log.LogMessage(MessageImportance.Low, $"Attempt # {attemptIndex} failed to push {localPackageLocation}, attempting to determine whether the package already existed on the feed with the same content. Nuget exit code = {nugetExitCode}");
 
                     string packageContentUrl = $"https://pkgs.dev.azure.com/{feedAccount}/{feedVisibility}_apis/packaging/feeds/{feedName}/nuget/packages/{id}/versions/{version}/content";
-                    packageExistIsIdentical = await GeneralUtils.IsLocalPackageIdenticalToFeedPackage(localPackageLocation, packageContentUrl, client, Log);
+                    packageStatus = await GeneralUtils.CompareLocalPackageToFeedPackage(localPackageLocation, packageContentUrl, client, Log);
 
-                    if (packageExistIsIdentical == true)
+                    switch (packageStatus)
                     {
-                        Log.LogMessage(MessageImportance.Normal, $"Package '{localPackageLocation}' already exists on '{feedConfig.TargetURL}' but has the same content. Skipping.");
-                    }
-                    else if (packageExistIsIdentical == false)
-                    {
-                        Log.LogError($"Package '{localPackageLocation}' already exists on '{feedConfig.TargetURL}' with different content.");
-                    }
-                    else
-                    {
-                        // packageExist == null, which means we didn't find the package on the feed
-                        // will retry the push and check again
-                        await Task.Delay(TimeSpan.FromSeconds(delayInSecondsBetweenAttempts))
-                            .ConfigureAwait(false);
+                        case GeneralUtils.PackageFeedStatus.ExistsAndIdenticalToLocal:
+                        {
+                            Log.LogMessage(MessageImportance.Normal, $"Package '{localPackageLocation}' already exists on '{feedConfig.TargetURL}' but has the same content; skipping push");
+                            break;
+                        }
+                        case GeneralUtils.PackageFeedStatus.ExistsAndDifferent:
+                        {
+                            Log.LogError($"Package '{localPackageLocation}' already exists on '{feedConfig.TargetURL}' with different content.");
+                            break;
+                        }
+                        default:
+                        {
+                            // For either case (unknown exception or 404, we will retry the push and check again.  Linearly increase back-off time on each retry.
+                            Log.LogMessage(MessageImportance.Low, $"Hit error checking package status after failed push: '{packageStatus}'. Will retry after {delayInSecondsBetweenAttempts * attemptIndex} seconds.");
+                            await Task.Delay(TimeSpan.FromSeconds(delayInSecondsBetweenAttempts * attemptIndex)).ConfigureAwait(false);
+                            break;
+                        }
                     }
                 }
-                while (packageExistIsIdentical == null && attemptIndex++ <= maxNuGetPushAttempts);
+                while (packageStatus != GeneralUtils.PackageFeedStatus.ExistsAndIdenticalToLocal && attemptIndex <= maxNuGetPushAttempts);
 
-                if (attemptIndex > maxNuGetPushAttempts)
+                if (packageStatus != GeneralUtils.PackageFeedStatus.ExistsAndIdenticalToLocal)
                 {
-                    Log.LogError($"Failed to publish package '{id}@{version}' to '{feedConfig.TargetURL}' after {maxNuGetPushAttempts} attempts.");
+                    Log.LogError($"Failed to publish package '{id}@{version}' to '{feedConfig.TargetURL}' after {maxNuGetPushAttempts} attempts. (Final status: {packageStatus})");
                 }
                 else if (!Log.HasLoggedErrors)
                 {
