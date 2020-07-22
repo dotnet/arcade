@@ -3,10 +3,6 @@
   <UsingTask TaskName="ChooseBestP2PTargetFrameworkTask" AssemblyFile="$(DotNetBuildTasksTargetFrameworkSdkAssembly)" />
   <UsingTask TaskName="ChooseBestTargetFrameworksTask" AssemblyFile="$(DotNetBuildTasksTargetFrameworkSdkAssembly)" />
   <UsingTask TaskName="AddTargetFrameworksToProjectTask" AssemblyFile="$(DotNetBuildTasksTargetFrameworkSdkAssembly)" />
-  
-  <PropertyGroup>
-    <_OriginalTargetFrameworks>$(TargetFrameworks)</_OriginalTargetFrameworks>
-  </PropertyGroup>
 
   <!-- Strip away the TargetFrameworkSuffix during the graph build. -->
   <PropertyGroup Condition="'$(IsGraphBuild)' == 'true' and '$(MSBuildRestoreSessionId)' != ''">
@@ -24,9 +20,19 @@
   </Target>
   
   <Target Name="GetProjectWithBestTargetFrameworks">
-    <ChooseBestTargetFrameworksTask BuildTargetFrameworks="$(BuildTargetFramework)-$(TargetOS);$(AdditionalBuildTargetFrameworks)"
+    <ItemGroup Condition="'$(BuildTargetFramework)' != ''">
+      <_BuildTargetFrameworkWithTargetOS Include="$(BuildTargetFramework)-$(TargetOS)" />
+    </ItemGroup>
+    <ItemGroup Condition="'$(BuildTargetFramework)' == ''">
+      <_BuildTargetFrameworkWithoutOS Include="$([MSBuild]::Unescape($([System.Text.RegularExpressions.Regex]::Replace('$(TargetFrameworks)', '(-[^;]+)', ''))))" />
+      <!-- TODO: Find a better way to filter out non applicable TargetOS values for .NET Framework. -->
+      <_BuildTargetFrameworkWithTargetOS Include="@(_BuildTargetFrameworkWithoutOS->Distinct()->'%(Identity)-$(TargetOS)')"
+                                         Condition="'$(TargetOS)' == 'Windows_NT' or !$([System.String]::Copy('%(Identity)').StartsWith('net4'))" />
+    </ItemGroup>
+    
+    <ChooseBestTargetFrameworksTask BuildTargetFrameworks="@(_BuildTargetFrameworkWithTargetOS);$(AdditionalBuildTargetFrameworks)"
                                     SupportedTargetFrameworks="$(TargetFrameworks)"
-                                    RuntimeGraph="$(RuntimeGraph)" >
+                                    RuntimeGraph="$(RuntimeGraph)">
       <Output TaskParameter="BestTargetFrameworks" ItemName="_BestTargetFramework" />
     </ChooseBestTargetFrameworksTask>
 
@@ -34,14 +40,6 @@
                                       BestTargetFrameworks="@(_BestTargetFramework)" >
       <Output TaskParameter="InnerBuildProjects" ItemName="InnerBuildProjectsWithBestTargetFramework" />
     </AddTargetFrameworksToProjectTask>
-  </Target>
-
-  <!-- Attaching the TargetFrameworkSuffix after restore for build.-->
-  <Target Name="AttachTargetFrameworkSuffixToTargetFrameworks"
-          AfterTargets="Restore">
-    <PropertyGroup>
-      <TargetFrameworks>$(_OriginalTargetFrameworks)</TargetFrameworks>
-    </PropertyGroup>
   </Target>
 
   <!--
