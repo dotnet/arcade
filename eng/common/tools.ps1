@@ -112,9 +112,12 @@ function InitializeDotNetCli([bool]$install, [bool]$createSdkLocationFile) {
   # Disable first run since we do not need all ASP.NET packages restored.
   $env:DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1
 
-  # Disable telemetry on CI.
+  # On CI:
+  # Disable telemetry
+  # Set the CLI home directory to the build machine's workspace.
   if ($ci) {
     $env:DOTNET_CLI_TELEMETRY_OPTOUT=1
+    $env:DOTNET_CLI_HOME=$env:AGENT_BUILDDIRECTORY
   }
 
   # Source Build uses DotNetCoreSdkDir variable
@@ -385,7 +388,7 @@ function InitializeXCopyMSBuild([string]$packageVersion, [bool]$install) {
     Create-Directory $packageDir
     Write-Host "Downloading $packageName $packageVersion"
     $ProgressPreference = 'SilentlyContinue' # Don't display the console progress UI - it's a huge perf hit
-    Invoke-WebRequest "https://dotnet.myget.org/F/roslyn-tools/api/v2/package/$packageName/$packageVersion/" -OutFile $packagePath
+    Invoke-WebRequest "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/flat2/$packageName/$packageVersion/$packageName.$packageVersion.nupkg" -OutFile $packagePath
     Unzip $packagePath $packageDir
   }
 

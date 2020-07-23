@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project>
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.NETCoreSdk.BundledVersions.props" Condition="Exists('$(MSBuildToolsPath)\Microsoft.NETCoreSdk.BundledVersions.props')" />
 
   <PropertyGroup Condition="'$(MicrosoftDotNetHelixSdkTasksAssembly)' == ''">
     <MicrosoftDotNetHelixSdkTasksAssembly Condition="'$(MSBuildRuntimeType)' == 'Core'">$(MSBuildThisFileDirectory)netcoreapp2.1/Microsoft.DotNet.Helix.Sdk.dll</MicrosoftDotNetHelixSdkTasksAssembly>

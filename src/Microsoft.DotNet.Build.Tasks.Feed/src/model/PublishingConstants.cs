@@ -74,6 +74,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
         private const string FeedDotNet5Transport = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet5-transport/nuget/v3/index.json";
         private const string FeedDotNet5Symbols = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet5-symbols/nuget/v3/index.json";
 
+        private const string FeedDotNet5InternalShipping = "https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet5-internal/nuget/v3/index.json";
+        private const string FeedDotNet5InternalTransport = "https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet5-internal-transport/nuget/v3/index.json";
+        private const string FeedDotNet5InternalSymbols = "https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet5-internal-symbols/nuget/v3/index.json";
+
         public static readonly List<TargetChannelConfig> ChannelInfos = new List<TargetChannelConfig>() {
             // ".NET 5 Dev",
             new TargetChannelConfig(
@@ -140,6 +144,28 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedDotNet5Symbols,
                 FeedForChecksums,
                 FeedForInstallers),
+
+            // ".NET 5 Preview 8 (internal)",
+            new TargetChannelConfig(
+                1155,
+                PublishingInfraVersion.All,
+                akaMSChannelName: "net5/preview8",
+                FeedDotNet5InternalShipping,
+                FeedDotNet5InternalTransport,
+                FeedDotNet5InternalSymbols,
+                FeedInternalForChecksums,
+                FeedInternalForInstallers),
+
+            // ".NET 5 RC 1 (internal)",
+            new TargetChannelConfig(
+                1157,
+                PublishingInfraVersion.All,
+                akaMSChannelName: "net5/rc1",
+                FeedDotNet5InternalShipping,
+                FeedDotNet5InternalTransport,
+                FeedDotNet5InternalSymbols,
+                FeedInternalForChecksums,
+                FeedInternalForInstallers),
 
             // ".NET Eng - Latest",
             new TargetChannelConfig(
@@ -474,6 +500,17 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             // "VS 16.7",
             new TargetChannelConfig(
                 1011,
+                PublishingInfraVersion.All,
+                string.Empty,
+                FeedDotNetToolsShipping,
+                FeedDotNetToolsTransport,
+                FeedDotNetToolsSymbols,
+                FeedForChecksums,
+                FeedForInstallers),
+
+            // "VS 16.8",
+            new TargetChannelConfig(
+                1154,
                 PublishingInfraVersion.All,
                 string.Empty,
                 FeedDotNetToolsShipping,

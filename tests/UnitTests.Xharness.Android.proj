@@ -9,9 +9,8 @@
 
   <PropertyGroup>
     <HelixType>test/product/</HelixType>
-    <IncludeDotNetCli>true</IncludeDotNetCli>
-    <DotNetCliPackageType>sdk</DotNetCliPackageType>
     <TestRunNamePrefix>$(AGENT_JOBNAME)</TestRunNamePrefix>
+    <IncludeXHarnessCli>true</IncludeXHarnessCli>
     <EnableXUnitReporter>true</EnableXUnitReporter>
     <EnableAzurePipelinesReporter>true</EnableAzurePipelinesReporter>
     <HelixBaseUri>https://helix.dot.net</HelixBaseUri>

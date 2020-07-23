@@ -16,7 +16,7 @@
   <?if $(var.Platform)=x86?>
     <?define Program_Files="ProgramFilesFolder"?>
     <?define Win64AttributeValue=no?>
-  <?elseif $(var.Platform)=x64?>
+  <?elseif $(var.Platform)=x64 or $(var.Platform)=arm64?>
     <?define Program_Files="ProgramFiles64Folder"?>
     <?define Win64AttributeValue=yes?>
   <?else?>

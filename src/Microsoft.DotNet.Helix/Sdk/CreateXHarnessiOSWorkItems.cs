@@ -21,7 +21,7 @@ namespace Microsoft.DotNet.Helix.Sdk
         /// An array of one or more paths to iOS app bundles (folders ending with ".app" usually)
         /// that will be used to create Helix work items.
         /// </summary>
-        public ITaskItem[] AppFolders { get; set; }
+        public ITaskItem[] AppBundles { get; set; }
 
         /// <summary>
         /// Xcode version to use in the [major].[minor] format, e.g. 11.4
@@ -63,7 +63,7 @@ namespace Microsoft.DotNet.Helix.Sdk
         /// <returns></returns>
         private async Task ExecuteAsync()
         {
-            WorkItems = (await Task.WhenAll(AppFolders.Select(PrepareWorkItem))).Where(wi => wi != null).ToArray();
+            WorkItems = (await Task.WhenAll(AppBundles.Select(PrepareWorkItem))).Where(wi => wi != null).ToArray();
         }
 
         /// <summary>
@@ -145,12 +145,11 @@ namespace Microsoft.DotNet.Helix.Sdk
             // We need to call 'sudo launchctl' to spawn the process in a user session with GUI rendering capabilities
             string xharnessRunCommand = $"sudo launchctl asuser `id -u` sh \"{PayloadScriptName}\" " +
                                         $"--app \"$HELIX_WORKITEM_ROOT/{Path.GetFileName(appFolderPath.ItemSpec)}\" " +
-                                        $"--output-directory \"$HELIX_WORKITEM_UPLOAD_ROOT\" " +
+                                         "--output-directory \"$HELIX_WORKITEM_UPLOAD_ROOT\" " +
                                         $"--targets \"{targets}\" " +
                                         $"--timeout \"{xHarnessTimeout.TotalSeconds}\" " +
-                                        $"--launch-timeout 600 " +
-                                        $"--dotnet-root \"$DOTNET_ROOT\" " +
-                                        $"--xharness \"$HELIX_CORRELATION_PAYLOAD/xharness-cli/xharness\" " +
+                                         "--launch-timeout 900 " +
+                                         "--xharness-cli-path \"$XHARNESS_CLI_PATH\" " +
                                         $"--xcode-version {XcodeVersion}" +
                                         (!string.IsNullOrEmpty(AppArguments) ? $" --app-arguments \"{AppArguments}\"" : string.Empty);
 

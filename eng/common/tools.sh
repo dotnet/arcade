@@ -110,9 +110,12 @@ function InitializeDotNetCli {
   # Disable first run since we want to control all package sources
   export DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1
 
-  # Disable telemetry on CI
+  # On CI:
+  # Disable telemetry
+  # Set the CLI home directory to the build machine's workspace.
   if [[ $ci == true ]]; then
     export DOTNET_CLI_TELEMETRY_OPTOUT=1
+    export DOTNET_CLI_HOME=$AGENT_BUILDDIRECTORY
   fi
 
   # LTTNG is the logging infrastructure used by Core CLR. Need this variable set

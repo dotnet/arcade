@@ -71,7 +71,6 @@
     <RuntimeFilePath Condition="'$(RuntimeFilePath)' == ''">$(NuSpecOutputPath)$(Id)$(NuspecSuffix)/runtime.json</RuntimeFilePath>
     <PackedPackageRuntimeFilePath Condition="'$(PackedPackageRuntimeFilePath)' == ''">$(NuSpecOutputPath)$(Id)$(NuspecSuffix)/$(PackedPackageNamePrefix).runtime.json</PackedPackageRuntimeFilePath>
     <PlaceholderFile>$(MSBuildThisFileDirectory)content/_._</PlaceholderFile>
-    <PackageIconFile Condition="'$(PackageIconFile)' == ''">$(MSBuildThisFileDirectory)Icon.png</PackageIconFile>
     <PackageDescriptionFile Condition="'$(PackageDescriptionFile)' == ''">path to descriptions.json must be specified</PackageDescriptionFile>
     <ValidationSuppressionFile Condition="'$(ValidationSuppressionFile)' == ''">ValidationSuppression.txt</ValidationSuppressionFile>
     <SyncInfoFile Condition="'$(SyncInfoFile)' == ''">unspecified</SyncInfoFile>
@@ -250,23 +249,19 @@
 
     <ItemGroup>
       <_FilesToPackage Remove="@(_FilesToPackage)" Condition="'$(ExcludeReferenceAssets)' == 'true' AND '%(_FilesToPackage.IsReferenceAsset)' == 'true'" />
+      
+      <!-- Some packages support legacy portable profiles where dependencies are provided by targeting pack -->
+      <_FilesToPackage Condition="'%(_FilesToPackage.HarvestDependencies)' == '' AND !$([System.String]::Copy('%(_FilesToPackage.TargetFramework)').StartsWith('portable-'))">
+        <!-- Only harvest files from ref/lib/runtimes dir-->
+        <HarvestDependencies Condition="$([System.String]::Copy('%(_FilesToPackage.TargetPath)').StartsWith('ref')) OR
+                                        $([System.String]::Copy('%(_FilesToPackage.TargetPath)').StartsWith('lib')) OR
+                                        $([System.String]::Copy('%(_FilesToPackage.TargetPath)').StartsWith('runtimes'))">true</HarvestDependencies>
+      </_FilesToPackage>
       <File Include="@(_FilesToPackage)">
         <PackageId>$(Id)</PackageId>
         <PackageVersion>$(PackageVersion)</PackageVersion>
-        <!-- Some packages support legacy portable profiles where dependencies are provided by targeting pack -->
-        <HarvestDependencies Condition="!$([System.String]::Copy('%(_FilesToPackage.TargetFramework)').StartsWith('portable-'))">true</HarvestDependencies>
       </File>
     </ItemGroup>
-
-    <Error Condition="'$(SkipPackageFileCheck)' != 'true' AND
-                      '$(IsFrameworkPackage)' != 'true' AND
-                      '%(File.SkipPackageFileCheck)' != 'true' AND
-                      '%(File.FileName)' != '_' AND
-                      '%(File.FileName)%(File.Extension)' != 'runtime.json' AND
-                      '%(File.Extension)' != '.cs' AND
-                      '%(File.Extension)' != '.vb' AND
-                      !$(ID.Contains('%(File.FileName)'))"
-           Text="Package $(ID) contains file with name %(File.FileName).  If this is expected you can disable this filename checking for this item or package by setting SkipPackageFileCheck = true" />
   </Target>
   <!-- END project refs-->
 
@@ -1215,7 +1210,7 @@
                     Language="$(Language)"
                     ProjectUrl="$(ProjectUrl)"
                     IconUrl="$(IconUrl)"
-                    Icon="$(PackageIconFile)"
+                    Icon="$(PackageIcon)"
                     LicenseUrl="$(LicenseUrl)"
                     PackageLicenseExpression="$(PackageLicenseExpression)"
                     Copyright="$(Copyright)"
