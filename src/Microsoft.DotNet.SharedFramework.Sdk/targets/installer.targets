@@ -164,8 +164,7 @@
     </PropertyGroup>
 
     <Error Condition=" '$(_DebuildPresent)'  != 'true' "
-             Text="Debuild Not found, Debian packages will not be built."
-             Importance="High" />
+             Text="Debuild Not found, Debian packages will not be built." />
   </Target>
 
   <!--
@@ -188,8 +187,7 @@
     </PropertyGroup>
 
     <Error Condition=" '$(_FPMPresent)'  != 'true' "
-             Text="FPM tool Not found, RPM packages will not be built."
-             Importance="High" />
+             Text="FPM tool Not found, RPM packages will not be built." />
   </Target>
   
   <!--
