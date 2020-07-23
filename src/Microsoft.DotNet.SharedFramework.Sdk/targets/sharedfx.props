@@ -11,6 +11,7 @@
     <IsPackable>true</IsPackable>
     <IncludeSymbols>true</IncludeSymbols>
     <NoWarn>$(NoWarn);NU5128;NU5131</NoWarn>
+    <PackageType>DotnetPlatform</PackageType>
   </PropertyGroup>
 
   <!-- Stub out the CreatePackageOverrides target. Each repo uses their own implementation. -->
