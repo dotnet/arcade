@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using Microsoft.DotNet.Build.Tasks.Feed.Model;
+using MsBuildUtils = Microsoft.Build.Utilities;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -10,6 +11,9 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
+using System.Net.Http;
+using static Microsoft.DotNet.Build.Tasks.Feed.GeneralUtils;
+using System.Diagnostics;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
 {
@@ -251,6 +255,87 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             Assert.Equal(visibility, matches.Groups["visibility"]?.Value);
             Assert.Equal(feed, matches.Groups["feed"]?.Value);
         }
+
+
+        [Theory]
+        // Test cases:
+        // Succeeds on first try, not already on feed
+        [InlineData(1, false, true)]
+        // Succeeds on second try, turns out to be already on the feed
+        [InlineData(2, true, true)]
+        // Succeeds on last possible try (for retry logic)
+        [InlineData(5, false, true)]
+        // Succeeds by determining streams match and takes no action.
+        [InlineData(1, true, true)]
+        // Fails due to too many retries
+        [InlineData(7, false, true, true)]
+        // Fails and gives up due to non-matching streams (CompareLocalPackageToFeedPackage says no match)
+        [InlineData(10, true, false, true)]
+        public async Task PushNugetPackageTestsAsync(int pushAttemptsBeforeSuccess, bool packageAlreadyOnFeed,  bool localPackageMatchesFeed, bool expectedFailure = false)
+        {
+            // Setup
+            var buildEngine = new MockBuildEngine();
+            // May as well check that the exe is plumbed through from the task.
+            string fakeNugetExeName = $"{Path.GetRandomFileName()}.exe";
+            int timesNugetExeCalled = 0;
+
+            // Functionality is the same as this is in the base class, create a v2 object to test. 
+            var task = new PublishArtifactsInManifestV2
+            {
+                InternalBuild = true,
+                BuildEngine = buildEngine,
+                NugetPath = fakeNugetExeName,
+                MaxRetryCount = 5, // In case the default changes, lock to 5 so the test data works
+                RetryDelayMilliseconds = 10 // retry faster in test
+            };
+            TargetFeedConfig config = new TargetFeedConfig(TargetFeedContentType.Package, "testUrl", FeedType.AzDoNugetFeed, "tokenValue");
+
+            Func<string, string, HttpClient, MsBuildUtils.TaskLoggingHelper, Task<PackageFeedStatus>> testCompareLocalPackage = async (string localPackageFullPath, string packageContentUrl, HttpClient client, MsBuildUtils.TaskLoggingHelper log) =>
+            {
+                await (Task.Delay(10)); // To make this actually async
+                Debug.WriteLine($"Called mocked CompareLocalPackageToFeedPackage() :  localPackageFullPath = {localPackageFullPath}, packageContentUrl = {packageContentUrl}");
+                if (packageAlreadyOnFeed)
+                {
+                    return localPackageMatchesFeed ? PackageFeedStatus.ExistsAndIdenticalToLocal : PackageFeedStatus.ExistsAndDifferent;
+                }
+                else
+                {
+                    return PackageFeedStatus.DoesNotExist;
+                }
+            };
+
+            Func<string, string, Task<int>> testStartProcessAsync = async (string fakeExePath, string fakeExeArgs) =>
+            {
+                await (Task.Delay(10)); // To make this actually async
+                Debug.WriteLine($"Called mocked StartProcessAsync() :  ExePath = {fakeExePath}, ExeArgs = {fakeExeArgs}");
+                Assert.Equal(fakeExePath, fakeNugetExeName); 
+                timesNugetExeCalled++;
+                if (timesNugetExeCalled >= pushAttemptsBeforeSuccess)
+                {
+                    return 0;
+                }
+                return 1;
+            };
+
+            await task.PushNugetPackageAsync(
+                config, 
+                null, 
+                "localPackageLocation", 
+                "1234", 
+                "version", 
+                "feedaccount", 
+                "feedvisibility", 
+                "feedname",
+                testCompareLocalPackage,
+                testStartProcessAsync);
+            if (!expectedFailure && localPackageMatchesFeed)
+            {
+                // Successful retry scenario; make sure we ran the # of retries we thought.
+                Assert.True(timesNugetExeCalled <= task.MaxRetryCount);
+            }
+            Assert.Equal(task.Log.HasLoggedErrors, expectedFailure);
+        }
+
 
         [Theory]
         // Simple case where we fill the whole buffer on each stream call and the streams match
