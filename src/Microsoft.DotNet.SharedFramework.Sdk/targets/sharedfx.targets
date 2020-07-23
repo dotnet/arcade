@@ -133,6 +133,7 @@
       <_FilesForDepsFile Include="@(FilesToPackage)"
                          Condition="'%(FilesToPackage.IsSymbolFile)' != 'true' and
                                     '%(FilesToPackage.PackOnly)' != 'true' and
+                                    '%(FilesToPackage.ExcludeFromDataFiles)' != 'true' and
                                     $([System.String]::new('%(FilesToPackage.TargetPath)').StartsWith('runtimes/$(RuntimeIdentifier)'))" />
     </ItemGroup>
     <GenerateSharedFrameworkDepsFile TargetFrameworkMoniker="$(TargetFrameworkMoniker)"
@@ -183,9 +184,10 @@
            participate in reference resolution.
            We also don't want to include generated json files since they're not included in reference resolution.-->
       <_PackagedFileNames Include="@(FilesToPackage->'%(Filename)%(Extension)')"
-                          Condition="'%(FilesToPackage.IsSymbolFile)' != 'true'
-                                      and '%(FilesToPackage.GeneratedBuildFile)' != 'true'
-                                      and $([System.String]::new('%(FilesToPackage.TargetPath)').StartsWith('runtimes/'))"
+                          Condition="'%(FilesToPackage.IsSymbolFile)' != 'true' and
+                                      '%(FilesToPackage.GeneratedBuildFile)' != 'true' and
+                                      '%(FilesToPackage.ExcludeFromDataFiles)' != 'true' and
+                                      $([System.String]::new('%(FilesToPackage.TargetPath)').StartsWith('runtimes/'))"
                           OriginalFilePath="$([System.IO.Path]::Combine('$(MSBuildProjectDirectory)', '%(Identity)'))" />
     </ItemGroup>
 
