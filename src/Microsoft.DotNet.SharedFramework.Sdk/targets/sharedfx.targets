@@ -132,6 +132,7 @@
     <ItemGroup>
       <_FilesForDepsFile Include="@(FilesToPackage)"
                          Condition="'%(FilesToPackage.IsSymbolFile)' != 'true' and
+                                    '%(FilesToPackage.PackOnly)' != 'true' and
                                     $([System.String]::new('%(FilesToPackage.TargetPath)').StartsWith('runtimes/$(RuntimeIdentifier)'))" />
     </ItemGroup>
     <GenerateSharedFrameworkDepsFile TargetFrameworkMoniker="$(TargetFrameworkMoniker)"
