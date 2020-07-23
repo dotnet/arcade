@@ -21,6 +21,8 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using static Microsoft.DotNet.Build.Tasks.Feed.GeneralUtils;
+using MsBuildUtils = Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed
 {
@@ -117,6 +119,16 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             new ConcurrentDictionary<(int AssetId, string AssetLocation, AddAssetLocationToAssetAssetLocationType LocationType), ValueTuple>();
 
         protected LatestLinksManager LinkManager { get; set; } = null;
+
+        /// <summary>
+        /// For functions where retry is possible, max number of retries to perform
+        /// </summary>
+        public int MaxRetryCount { get; set; } = 5;
+
+        /// <summary>
+        /// For functions where retry is possible, base value for waiting between retries (may be multiplied in 2nd-Nth retry)
+        /// </summary>
+        public int RetryDelayMilliseconds { get; set; } = 5000;
 
         public override bool Execute()
         {
@@ -543,21 +555,33 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         ///     didn't want to rely on parsing the output of the push operation - which does 
         ///     a call to `nuget.exe` behind the scenes.
         /// </remarks>
-        private async Task PushNugetPackageAsync(TargetFeedConfig feedConfig, HttpClient client, string localPackageLocation, string id, string version,
-            string feedAccount, string feedVisibility, string feedName)
+        public async Task PushNugetPackageAsync(
+            TargetFeedConfig feedConfig,
+            HttpClient client,
+            string localPackageLocation,
+            string id,
+            string version,
+            string feedAccount,
+            string feedVisibility,
+            string feedName,
+            Func<string, string, HttpClient, MsBuildUtils.TaskLoggingHelper, Task<PackageFeedStatus>> CompareLocalPackageToFeedPackageCallBack = null,
+            Func<string, string, Task<int>> StartProcessAsyncCallBack = null
+            )
         {
+            // Using these callbacks we can mock up functionality when testing.
+            CompareLocalPackageToFeedPackageCallBack ??= GeneralUtils.CompareLocalPackageToFeedPackage;
+            StartProcessAsyncCallBack ??= GeneralUtils.StartProcessAsync;
+
             try
             {
                 var packageStatus = GeneralUtils.PackageFeedStatus.Unknown;
-                const int maxNuGetPushAttempts = 5;
-                const int delayInSecondsBetweenAttempts = 3;
                 int attemptIndex = 0;
 
                 do
                 {
                     attemptIndex++;
                     // The feed key when pushing to AzDo feeds is "AzureDevOps" (works with the credential helper).
-                    int nugetExitCode = await GeneralUtils.StartProcessAsync(NugetPath, $"push \"{localPackageLocation}\" -Source \"{feedConfig.TargetURL}\" -NonInteractive -ApiKey AzureDevOps -Verbosity quiet");
+                    int nugetExitCode = await StartProcessAsyncCallBack(NugetPath, $"push \"{localPackageLocation}\" -Source \"{feedConfig.TargetURL}\" -NonInteractive -ApiKey AzureDevOps -Verbosity quiet");
 
                     if (nugetExitCode == 0)
                     {
@@ -569,7 +593,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     Log.LogMessage(MessageImportance.Low, $"Attempt # {attemptIndex} failed to push {localPackageLocation}, attempting to determine whether the package already existed on the feed with the same content. Nuget exit code = {nugetExitCode}");
 
                     string packageContentUrl = $"https://pkgs.dev.azure.com/{feedAccount}/{feedVisibility}_apis/packaging/feeds/{feedName}/nuget/packages/{id}/versions/{version}/content";
-                    packageStatus = await GeneralUtils.CompareLocalPackageToFeedPackage(localPackageLocation, packageContentUrl, client, Log);
+                    packageStatus = await CompareLocalPackageToFeedPackageCallBack(localPackageLocation, packageContentUrl, client, Log);
 
                     switch (packageStatus)
                     {
@@ -586,17 +610,19 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         default:
                         {
                             // For either case (unknown exception or 404, we will retry the push and check again.  Linearly increase back-off time on each retry.
-                            Log.LogMessage(MessageImportance.Low, $"Hit error checking package status after failed push: '{packageStatus}'. Will retry after {delayInSecondsBetweenAttempts * attemptIndex} seconds.");
-                            await Task.Delay(TimeSpan.FromSeconds(delayInSecondsBetweenAttempts * attemptIndex)).ConfigureAwait(false);
+                            Log.LogMessage(MessageImportance.Low, $"Hit error checking package status after failed push: '{packageStatus}'. Will retry after {RetryDelayMilliseconds * attemptIndex} ms.");
+                            await Task.Delay(RetryDelayMilliseconds * attemptIndex).ConfigureAwait(false);
                             break;
                         }
                     }
                 }
-                while (packageStatus != GeneralUtils.PackageFeedStatus.ExistsAndIdenticalToLocal && attemptIndex <= maxNuGetPushAttempts);
+                while (packageStatus != GeneralUtils.PackageFeedStatus.ExistsAndIdenticalToLocal && // Success
+                       packageStatus != GeneralUtils.PackageFeedStatus.ExistsAndDifferent &&        // Give up: Non-retriable error
+                       attemptIndex <= MaxRetryCount);                                              // Give up: Too many retries
 
                 if (packageStatus != GeneralUtils.PackageFeedStatus.ExistsAndIdenticalToLocal)
                 {
-                    Log.LogError($"Failed to publish package '{id}@{version}' to '{feedConfig.TargetURL}' after {maxNuGetPushAttempts} attempts. (Final status: {packageStatus})");
+                    Log.LogError($"Failed to publish package '{id}@{version}' to '{feedConfig.TargetURL}' after {MaxRetryCount} attempts. (Final status: {packageStatus})");
                 }
                 else if (!Log.HasLoggedErrors)
                 {
