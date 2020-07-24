@@ -8,21 +8,13 @@
     <_OriginalTargetFrameworks>$(TargetFrameworks)</_OriginalTargetFrameworks>
   </PropertyGroup>
 
-  <!-- Strip away placeholder tfms and TargetFrameworkSuffix during the graph build. -->
+  <!-- Strip away the TargetFrameworkSuffix during the graph build. -->
   <PropertyGroup Condition="'$(IsGraphBuild)' == 'true' and '$(MSBuildRestoreSessionId)' != ''">
-    <TargetFrameworks Condition="'$(TargetFrameworks)' != ''">$([System.Text.RegularExpressions.Regex]::Replace('$(TargetFrameworks)', '(-[^;]+)|(;?_[^;]+)', ''))</TargetFrameworks>
+    <TargetFrameworks Condition="'$(TargetFrameworks)' != ''">$([System.Text.RegularExpressions.Regex]::Replace('$(TargetFrameworks)', '(-[^;]+)', ''))</TargetFrameworks>
   </PropertyGroup>
-  
-  <Target Name="RemovePlaceHolderConfigs"
-          Condition="'$(MSBuildProjectExtension)' != '.pkgproj'"
-          BeforeTargets="DispatchToInnerBuilds;Clean">
-    <ItemGroup>
-      <_InnerBuildProjects Remove="@(_InnerBuildProjects)" Condition="$([System.String]::Copy('%(_InnerBuildProjects.AdditionalProperties)').Contains('TargetFramework=_'))" />
-    </ItemGroup>
-  </Target>
      
   <Target Name="RunOnlyBestTargetFrameworks"
-          Condition="'$(BuildAllConfigurations)' != 'true' or '$(MSBuildProjectExtension)' == '.pkgproj'" 
+          Condition="'$(BuildTargetFramework)' != '' or '$(MSBuildProjectExtension)' == '.pkgproj'" 
           BeforeTargets="DispatchToInnerBuilds"
           DependsOnTargets="GetProjectWithBestTargetFrameworks">
     <ItemGroup>

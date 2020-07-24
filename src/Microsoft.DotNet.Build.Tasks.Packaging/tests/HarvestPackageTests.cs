@@ -91,7 +91,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
                 HarvestAssets = true,
                 IncludeAllPaths = true,
                 PackageId = "System.Collections.Immutable",
-                PackageVersion = "1.3.1",
+                PackageVersion = "1.5.0",
                 RuntimeFile = "runtime.json"
             };
 
@@ -102,10 +102,10 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
 
             Assert.Equal(0, _log.ErrorsLogged);
             Assert.Equal(0, _log.WarningsLogged);
-            Assert.Equal(4, task.HarvestedFiles.Length);
+            Assert.Equal(8, task.HarvestedFiles.Length);
             var ns10asset = task.HarvestedFiles.FirstOrDefault(f => f.GetMetadata("TargetFramework") == "netstandard1.0" );
             Assert.NotNull(ns10asset);
-            Assert.Equal("1.2.1.0", ns10asset.GetMetadata("AssemblyVersion"));
+            Assert.Equal("1.2.3.0", ns10asset.GetMetadata("AssemblyVersion"));
             Assert.Equal(_frameworks.Length, task.SupportedFrameworks.Length);
         }
 
