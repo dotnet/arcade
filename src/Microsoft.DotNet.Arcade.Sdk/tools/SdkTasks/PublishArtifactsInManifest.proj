@@ -6,13 +6,25 @@
     task (from Tasks.Feed) to publish the artifacts described in the informed build manifest.
     
     Parameters:
-      - ManifestsBasePath
-      - BlobBasePath
-      - PackageBasePath
-      - BARBuildId
-      - MaestroApiEndpoint
+      - PublishingInfraVersion                  : Which version of the publishing infra should be used.
+      - TargetChannels                          : Comma-separated list of Maestro++ Channel IDs to which the build should
+                                                  be assigned to once the assets are published.
+      - ManifestsBasePath                       : Full path to place where build manifests are stored.
+      - BlobBasePath                            : Full path to place where all packages/blobs, from all manifests, are stored.
+      - PackageBasePath                         
+      - BARBuildId                              : BAR ID of the build being published.
+      - MaestroApiEndpoint                      : Maestro API/Token. Used for updating asset locations.
       - BuildAssetRegistryToken
-      - NugetPath
+      - NugetPath                               : Full path to nuget.exe. Used for pushing to AzDO feeds.
+      - PublishInstallersAndChecksums           : Whether installers & checksums should be published.
+      - AzureDevOpsFeedsKey                     : Token used to publish to *any* AzDO feed in dnceng.
+
+      Optional aka.ms link generation parameters:
+        - AkaMSClientId                         : Client ID for the aka.ms AD application
+        - AkaMSClientSecret                     : Client secret for the aka.ms AD application
+        - AkaMSTenant                           : Tenant ID for aka.ms link generation. Defaults to ncd
+        - AkaMSOwners                           : Semi-colon delimited list of aliases of the owners of generated links. Defaults to dn-bot
+        - AkaMSCreatedBy                        : Semi-colon delimited list of aliases of the creator/updator links. Defaults to dn-bot
 
     Parameters required by SetupTargetFeeds.proj:
       - IsInternalBuild
@@ -23,18 +35,11 @@
       - AzureStorageAccountKey
       - AzureDevOpsFeedsBaseUrl
       - ArtifactsCategory
-      - AzureStorageTargetFeedPAT
+      - AzureStorageTargetFeedPAT               : PAT for accessing dotnetfeed Azure Storage
 
     Optional parameters for SetupTargetFeeds.proj
       - PublishInstallersAndChecksums   : This control whether installers & checksums should be published to public feeds on public builds
-      
-      Optional aka.ms link generation parameters:
-        - AkaMSClientId                 : Client ID for the aka.ms AD application
-        - AkaMSClientSecret             : Client secret for the aka.ms AD application
-        - AkaMSTenant                   : Tenant ID for aka.ms link generation. Defaults to ncd
-        - AkaMSOwners                   : Semi-colon delimited list of aliases of the owners of generated links. Defaults to dn-bot
-        - AkaMSCreatedBy                : Semi-colon delimited list of aliases of the creator/updator links. Defaults to dn-bot
-      
+     
       Parameters for public builds:
           - InstallersTargetStaticFeed
           - InstallersAzureAccountKey
@@ -51,11 +56,18 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp2.1</TargetFramework>
     <NETCORE_ENGINEERING_TELEMETRY>Publish</NETCORE_ENGINEERING_TELEMETRY>
+
+    <!-- Default publishing infra target is 2. -->
+    <PublishingInfraVersion Condition="'$(PublishingInfraVersion)' == ''">2</PublishingInfraVersion>
   </PropertyGroup>
 
-  <Import Project="SetupTargetFeeds.proj" />
+  <Import Project="SetupTargetFeeds.proj" Condition="'$(PublishingInfraVersion)' == '2'" />
 
-  <Target Name="Execute" DependsOnTargets="SetupTargetFeeds">
+  <Target Name="Execute">
+    <CallTarget Targets="SetupTargetFeeds" Condition="'$(PublishingInfraVersion)' == '2'">
+      <Output TaskParameter="TargetOutputs" ItemName="TargetFeedConfig"/>
+    </CallTarget>
+
     <Error Condition="'$(ManifestsBasePath)' == ''" Text="ManifestsBasePath is empty. Please provide the full path to asset manifest(s) directory." />
     <Error Condition="'$(BlobBasePath)' == '' OR '$(PackageBasePath)' == ''" Text="A valid full path to BlobBasePath and PackageBasePath is required." />
 
@@ -67,6 +79,12 @@
       <AkaMSTenant Condition="'$(AkaMSTenant)' == ''">ncd</AkaMSTenant>
       <AkaMSOwners Condition="'$(AkaMSOwners)' == ''">dn-bot</AkaMSOwners>
       <AkaMSCreatedBy Condition="'$(AkaMSCreatedBy)' == ''">dn-bot</AkaMSCreatedBy>
+
+      <InstallersFeedKey>$(InstallersAzureAccountKey)</InstallersFeedKey>
+      <InstallersFeedKey Condition="'$(InternalBuild)' == 'true'">$(InternalInstallersTargetStaticFeedKey)</InstallersFeedKey>
+
+      <ChecksumsFeedKey>$(ChecksumsAzureAccountKey)</ChecksumsFeedKey>
+      <ChecksumsFeedKey Condition="'$(InternalBuild)' == 'true'">$(InternalChecksumsTargetStaticFeedKey)</ChecksumsFeedKey>
     </PropertyGroup>
 
     <Error
@@ -79,9 +97,15 @@
     <PublishArtifactsInManifest
       InternalBuild="$(IsInternalBuild)"
       TargetFeedConfig="@(TargetFeedConfig)"
+      TargetChannels="$(TargetChannels)"
       BARBuildId="$(BARBuildId)"
       MaestroApiEndpoint="$(MaestroApiEndpoint)"
       BuildAssetRegistryToken="$(BuildAssetRegistryToken)"
+      PublishInstallersAndChecksums="$(PublishInstallersAndChecksums)"
+      ChecksumsFeedKey="$(ChecksumsFeedKey)"
+      InstallersFeedKey="$(InstallersFeedKey)"
+      AzureDevOpsFeedsKey="$(AzureDevOpsFeedsKey)"
+      AzureStorageTargetFeedKey="$(AzureStorageTargetFeedPAT)"
       AssetManifestPaths="@(ManifestFiles)"
       BlobAssetsBasePath="$(BlobBasePath)"
       PackageAssetsBasePath="$(PackageBasePath)"
