@@ -58,7 +58,7 @@
     <NETCORE_ENGINEERING_TELEMETRY>Publish</NETCORE_ENGINEERING_TELEMETRY>
 
     <!-- Default publishing infra target is 2. -->
-    <publishingInfraVersion Condition="'$(PublishingInfraVersion)' == ''">2</publishingInfraVersion>
+    <PublishingInfraVersion Condition="'$(PublishingInfraVersion)' == ''">2</PublishingInfraVersion>
   </PropertyGroup>
 
   <Import Project="SetupTargetFeeds.proj" Condition="'$(PublishingInfraVersion)' == '2'" />
