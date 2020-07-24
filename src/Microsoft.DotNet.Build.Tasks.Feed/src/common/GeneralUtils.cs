@@ -24,6 +24,17 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         public const int MaxRetries = 1;
 
         /// <summary>
+        ///  Enum describing the states of a given package on a feed
+        /// </summary>
+        public enum PackageFeedStatus
+        {
+            DoesNotExist,
+            ExistsAndIdenticalToLocal,
+            ExistsAndDifferent,
+            Unknown
+        }
+
+        /// <summary>
         ///     Compare a local stream and a remote stream for quality
         /// </summary>
         /// <param name="localFileStream">Local stream</param>
@@ -116,11 +127,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         ///       the streams make no gaurantee that they will return a full block each time when read operations are performed, so we
         ///       must be sure to only compare the minimum number of bytes returned.
         /// </remarks>
-        public static async Task<bool?> IsLocalPackageIdenticalToFeedPackage(string localPackageFullPath, string packageContentUrl, HttpClient client, TaskLoggingHelper log)
+        public static async Task<PackageFeedStatus> CompareLocalPackageToFeedPackage(string localPackageFullPath, string packageContentUrl, HttpClient client, TaskLoggingHelper log)
         {
             log.LogMessage($"Getting package content from {packageContentUrl} and comparing to {localPackageFullPath}");
 
-            bool? result = null;
+            PackageFeedStatus result = PackageFeedStatus.Unknown;
 
             ExponentialRetry RetryHandler = new ExponentialRetry
             {
@@ -136,14 +147,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     {
                         response.EnsureSuccessStatusCode();
 
-                        // Check the headers for content length and md5
+                        // Check the headers for content length and md5 
                         bool md5HeaderAvailable = response.Headers.TryGetValues("Content-MD5", out var md5);
                         bool lengthHeaderAvailable = response.Headers.TryGetValues("Content-Length", out var contentLength);
 
                         if (lengthHeaderAvailable && long.Parse(contentLength.Single()) != localFileStream.Length)
                         {
                             log.LogMessage(MessageImportance.Low, $"Package '{localPackageFullPath}' has different length than remote package '{packageContentUrl}'.");
-                            result = false;
+                            result = PackageFeedStatus.ExistsAndDifferent;
                             return true;
                         }
 
@@ -155,7 +166,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                                 log.LogMessage(MessageImportance.Low, $"Package '{localPackageFullPath}' has different MD5 hash than remote package '{packageContentUrl}'.");
                             }
 
-                            result = true;
+                            result = PackageFeedStatus.ExistsAndDifferent;
                             return true;
                         }
 
@@ -163,7 +174,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                         // Otherwise, compare the streams
                         var remoteStream = await response.Content.ReadAsStreamAsync();
-                        result = await GeneralUtils.CompareStreamsAsync(localFileStream, remoteStream, BufferSize);
+                        var streamsMatch = await GeneralUtils.CompareStreamsAsync(localFileStream, remoteStream, BufferSize);
+                        result = streamsMatch ? PackageFeedStatus.ExistsAndIdenticalToLocal : PackageFeedStatus.ExistsAndDifferent;
                         return true;
                     }
                 }
@@ -173,7 +185,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 {
                     if (e.Message.Contains("404 (Not Found)"))
                     {
-                        result = null;
+                        result = PackageFeedStatus.DoesNotExist;
                         return true;
                     }
 
