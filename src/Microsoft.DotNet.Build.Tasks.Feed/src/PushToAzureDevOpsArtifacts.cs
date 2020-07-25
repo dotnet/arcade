@@ -165,7 +165,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         }
                     }
                     
-                    SigningInformationModel signingInformationModel = BuildManifestUtil.CreateSigningInformationModelFromItems(ItemsToSign, StrongNameSignInfo, FileSignInfo, FileExtensionSignInfo);
+                    SigningInformationModel signingInformationModel = BuildManifestUtil.CreateSigningInformationModelFromItems(AzureDevOpsCollectionUri, AzureDevOpsProject, AzureDevOpsBuildId,
+                        ItemsToSign, StrongNameSignInfo, FileSignInfo, FileExtensionSignInfo);
 
                     BuildManifestUtil.CreateBuildManifest(Log,
                         blobArtifacts,
