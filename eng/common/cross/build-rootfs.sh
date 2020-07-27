@@ -111,6 +111,16 @@ while :; do
             __UbuntuArch=i386
             __UbuntuRepo="http://archive.ubuntu.com/ubuntu/"
             ;;
+        ppc64)
+            __BuildArch=ppc64
+            __UbuntuArch=ppc64
+            __UbuntuRepo="http://deb.debian.org/debian-ports"
+            __UbuntuExtraKeyring="/usr/share/keyrings/debian-ports-archive-keyring.gpg"
+            __UbuntuExtraArgs="--variant=buildd --keyring=$__UbuntuExtraKeyring"
+            __LLDB_Package=""
+            __CodeName=sid
+            unset __LLDB_Package
+            ;;
         lldb3.6)
             __LLDB_Package="lldb-3.6-dev"
             ;;
@@ -323,8 +333,11 @@ elif [[ "$__CodeName" == "illumos" ]]; then
     wget -P "$__RootfsDir"/usr/include/netpacket https://raw.githubusercontent.com/illumos/illumos-gate/master/usr/src/uts/common/inet/sockmods/netpacket/packet.h
     wget -P "$__RootfsDir"/usr/include/sys https://raw.githubusercontent.com/illumos/illumos-gate/master/usr/src/uts/common/sys/sdt.h
 elif [[ -n $__CodeName ]]; then
-    qemu-debootstrap --arch $__UbuntuArch $__CodeName $__RootfsDir $__UbuntuRepo
+    qemu-debootstrap --arch=$__UbuntuArch $__UbuntuExtraArgs $__CodeName $__RootfsDir $__UbuntuRepo
     cp $__CrossDir/$__BuildArch/sources.list.$__CodeName $__RootfsDir/etc/apt/sources.list
+    if [[ -n $__UbuntuExtraKeyring ]]; then
+      cp $__UbuntuExtraKeyring $__RootfsDir/etc/apt/trusted.gpg.d
+    fi
     chroot $__RootfsDir apt-get update
     chroot $__RootfsDir apt-get -f -y install
     chroot $__RootfsDir apt-get -y install $__UbuntuPackages
