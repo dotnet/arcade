@@ -398,15 +398,6 @@
   -->
   <Target Name="_CreateInstallerLayout">
     <PropertyGroup>
-      <_SharedFrameworkOutputPathRoot>$(IntermediateOutputPath)sharedFramework/</_SharedFrameworkOutputPathRoot>
-    </PropertyGroup>
-
-    <MSBuild Projects="$(MSBuildProjectFullPath)"
-             Targets="PublishSharedFrameworkToDisk"
-             Properties="SharedFrameworkOutputPath=$(_SharedFrameworkOutputPathRoot)"
-             RemoveProperties="@(_GlobalPropertiesToRemoveForPublish)"  />
-
-    <PropertyGroup>
       <_LayoutDirectory>$(IntermediateOutputPath)installer/layoutDirectory/</_LayoutDirectory>
       <_LayoutPackageRoot>$(_LayoutDirectory)package_root</_LayoutPackageRoot>
       <_LayoutAbsolute>$(_LayoutDirectory)$</_LayoutAbsolute>
@@ -425,15 +416,10 @@
     <MakeDir Directories="$(_LayoutSamples)" />
     <MakeDir Directories="$(_LayoutDocs)" />
     
-    <ItemGroup>
-      <_LayoutFiles Include="$(_SharedFrameworkOutputPathRoot)/**/*" />
-    </ItemGroup>
-
-    <Error Text="No pack layout files found, expected > 0." Condition="@(_LayoutFiles->Count()) == 0" />
-
-    <Copy
-      SourceFiles="@(_LayoutFiles)"
-      DestinationFiles="@(_LayoutFiles->'$(_LayoutPackageRoot)/%(RecursiveDir)%(Filename)%(Extension)')" />
+    <MSBuild Projects="$(MSBuildProjectFullPath)"
+             Targets="PublishSharedFrameworkToDisk"
+             Properties="SharedFrameworkOutputPath=$(_LayoutPackageRoot)"
+             RemoveProperties="@(_GlobalPropertiesToRemoveForPublish)"  />
     
     <Copy
       SourceFiles="@(Manpage)"
