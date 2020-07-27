@@ -22,7 +22,7 @@ These pre-requisites are not hard requirements, but enabling dependency flow wil
 
 #### 1. Copy files from eng/ folder
 
-Copy `Versions.props`, `Versions.Details.xml` and `common/` folder from the `eng/` folder of [arcade-validation](https://github.com/dotnet/arcade-validation/tree/master/eng) repo. 
+Copy `Versions.props`, `Versions.Details.xml` and the `common/` folder from the `eng/` folder of the [arcade-validation](https://github.com/dotnet/arcade-validation/tree/master/eng) repo. 
 
 This folder contains required version files as well as Pipeline templates used for publishing assets.
 
