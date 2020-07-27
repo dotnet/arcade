@@ -46,7 +46,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         public string AzureDevOpsProject { get; set; }
 
         /// <summary>
-        /// The Azure DevOps project of this build
+        /// The Azure DevOps build ID
         /// </summary>
         [Required]
         public int AzureDevOpsBuildId { get; set; }
