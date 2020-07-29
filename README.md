@@ -19,7 +19,7 @@ Status Last Updated: July 27, 2020, 1:20 PM PDT
 
 ### Latest Version of Arcade Being Validated
 
-[Link](https://maestro-prod.westus2.cloudapp.azure.com/9/https:%2F%2Fdev.azure.com%2Fdnceng%2Finternal%2F_git%2Fdotnet-arcade/latest/graph) to BARViz. 
+[Link](https://maestro-prod.westus2.cloudapp.azure.com/9/https:%2F%2Fdev.azure.com%2Fdnceng%2Finternal%2F_git%2Fdotnet-arcade/latest/graph) to  BARViz. 
 
 ### Build Statuses
 
