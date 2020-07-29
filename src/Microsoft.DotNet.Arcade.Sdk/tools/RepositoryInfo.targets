@@ -19,8 +19,8 @@
   </ItemGroup>
 
   <PropertyGroup Condition="'$(EnableSourceControlManagerQueries)' != 'true' and '$(RepositoryUrl)' == ''">
-    <RepositoryUrl Condition="'$(BUILD_REPOSITORY_URI)' != '' And '$(DisableSourceLinkUrlTranslation)' != 'true' ">$([System.Text.RegularExpressions.Regex]::Replace($(BUILD_REPOSITORY_URI), $(_TranslateUrlPattern), $(_TranslateUrlReplacement)))</RepositoryUrl>
-    <RepositoryUrl Condition="'$(BUILD_REPOSITORY_URI)' != '' And '$(DisableSourceLinkUrlTranslation)' == 'true' ">$(BUILD_REPOSITORY_URI)</RepositoryUrl>
+    <RepositoryUrl Condition="'$(BUILD_REPOSITORY_URI)' != '' and '$(DisableSourceLinkUrlTranslation)' != 'true'">$([System.Text.RegularExpressions.Regex]::Replace($(BUILD_REPOSITORY_URI), $(_TranslateUrlPattern), $(_TranslateUrlReplacement)))</RepositoryUrl>
+    <RepositoryUrl Condition="'$(BUILD_REPOSITORY_URI)' != '' and '$(DisableSourceLinkUrlTranslation)' == 'true'">$(BUILD_REPOSITORY_URI)</RepositoryUrl>
     <RepositoryUrl Condition="'$(BUILD_REPOSITORY_URI)' == ''">file://$(RepoRoot)</RepositoryUrl>
   </PropertyGroup>
 
@@ -51,7 +51,7 @@
   </PropertyGroup>
 
   <Target Name="_TranslateAzureDevOpsUrlToGitHubUrl"
-          Condition=" '$(DisableSourceLinkUrlTranslation)' == 'false' "
+          Condition="'$(DisableSourceLinkUrlTranslation)' == 'false'"
           DependsOnTargets="$(SourceControlManagerUrlTranslationTargets)"
           BeforeTargets="SourceControlManagerPublishTranslatedUrls">
 
