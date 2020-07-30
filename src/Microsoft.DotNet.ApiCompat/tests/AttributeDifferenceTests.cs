@@ -28,6 +28,20 @@ namespace Microsoft.DotNet.ApiCompat.Tests
         }
 
         [Fact]
+        public void AttributeDifferenceIsFoundWithExcludeAttributesFile()
+        {
+            using TempFile implementation = TempFile.CreateFromPath(_implementationPath);
+            using TempFile contract = TempFile.CreateFromPath(_contractPath);
+            using TempFile excludeAttributesFile = TempFile.Create();
+
+            File.WriteAllText(excludeAttributesFile.Path, "T:System.ComponentModel.DisplayNameAttribute");
+
+            string runOutput = Helpers.RunApiCompat(implementation.Path, new string[] { Path.GetDirectoryName(contract.Path) }, new string[] { excludeAttributesFile.Path }, "implementation", "contract");
+            Assert.Contains("CannotRemoveAttribute : Attribute 'System.ComponentModel.DesignerAttribute' exists on 'AttributeDifference.AttributeDifferenceClass1' in the implementation but not the contract.", runOutput);
+            Assert.Contains("Total Issues: 1", runOutput);
+        }
+
+        [Fact]
         public void NoIssuesWithExcludeAttributesFile()
         {
             using TempFile implementation = TempFile.CreateFromPath(_implementationPath);
