@@ -106,6 +106,11 @@ while :; do
             __UbuntuRepo="http://ftp.debian.org/debian/"
             __CodeName=jessie
             ;;
+        s390x)
+            __BuildArch=s390x
+            __UbuntuArch=s390x
+            __UbuntuRepo="http://ports.ubuntu.com/ubuntu-ports/"
+            ;;
         x86)
             __BuildArch=x86
             __UbuntuArch=i386
