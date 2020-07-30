@@ -24,7 +24,8 @@ namespace Microsoft.DotNet.ApiCompat.Tests
             string runOutput = Helpers.RunApiCompat(implementation.Path, Path.GetDirectoryName(contract.Path), "implementation", "contract");
 
             Assert.Contains("CannotRemoveAttribute : Attribute 'System.ComponentModel.DesignerAttribute' exists on 'AttributeDifference.AttributeDifferenceClass1' in the implementation but not the contract.", runOutput);
-            Assert.Contains("Total Issues: 1", runOutput);
+            Assert.Contains("CannotRemoveAttribute : Attribute 'AttributeDifference.FooAttribute' exists on 'AttributeDifference.AttributeDifferenceClass1' in the implementation but not the contract.", runOutput);
+            Assert.Contains("Total Issues: 2", runOutput);
         }
 
         [Fact]
@@ -34,7 +35,7 @@ namespace Microsoft.DotNet.ApiCompat.Tests
             using TempFile contract = TempFile.CreateFromPath(_contractPath);
             using TempFile excludeAttributesFile = TempFile.Create();
 
-            File.WriteAllText(excludeAttributesFile.Path, "T:System.ComponentModel.DisplayNameAttribute");
+            File.WriteAllLines(excludeAttributesFile.Path, new string[] { "T:System.ComponentModel.DisplayNameAttribute", "T:AttributeDifference.FooAttribute" });
 
             string runOutput = Helpers.RunApiCompat(implementation.Path, new string[] { Path.GetDirectoryName(contract.Path) }, new string[] { excludeAttributesFile.Path }, "implementation", "contract");
             Assert.Contains("CannotRemoveAttribute : Attribute 'System.ComponentModel.DesignerAttribute' exists on 'AttributeDifference.AttributeDifferenceClass1' in the implementation but not the contract.", runOutput);
@@ -48,11 +49,12 @@ namespace Microsoft.DotNet.ApiCompat.Tests
             using TempFile contract = TempFile.CreateFromPath(_contractPath);
             using TempFile excludeAttributesFile = TempFile.Create();
 
-            File.WriteAllText(excludeAttributesFile.Path, "T:System.ComponentModel.DesignerAttribute");
+            File.WriteAllLines(excludeAttributesFile.Path, new string[] { "T:System.ComponentModel.DesignerAttribute", "T:AttributeDifference.FooAttribute" });
 
             string runOutput = Helpers.RunApiCompat(implementation.Path, new string[] { Path.GetDirectoryName(contract.Path) }, new string[] { excludeAttributesFile.Path }, null, null);
 
             Assert.Contains("Total Issues: 0", runOutput);
         }
+
     }
 }

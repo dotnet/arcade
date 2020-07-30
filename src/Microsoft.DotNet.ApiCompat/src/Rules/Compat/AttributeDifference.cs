@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using Microsoft.Cci.Mappings;
 using System.Composition;
 using Microsoft.Cci.Comparers;
+using Microsoft.Cci.Filters;
 
 namespace Microsoft.Cci.Differs.Rules
 {
@@ -34,7 +35,10 @@ namespace Microsoft.Cci.Differs.Rules
     [ExportDifferenceRule]
     internal class AttributeDifference : CompatDifferenceRule
     {
-        private MappingSettings _settings = new MappingSettings(excludeAttributes: false);
+        private MappingSettings _settings = new MappingSettings()
+        {
+            Filter = new AttributesFilter(includeAttributes: true)
+        };
 
         [Import]
         public IAttributeFilter AttributeFilter { get; set; }
