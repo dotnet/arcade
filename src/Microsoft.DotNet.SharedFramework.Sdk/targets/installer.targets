@@ -27,8 +27,8 @@
     <PropertyGroup>
       <GenerateDeb>$(GenerateInstallers)</GenerateDeb>
       <GenerateRpm>$(GenerateInstallers)</GenerateRpm>
-      <GenerateDeb Condition="'$(BuildDebPackage)' != 'true'">false</GenerateDeb>
-      <GenerateRpm Condition="'$(BuildRpmPackage)' != 'true'">false</GenerateRpm>
+      <GenerateDeb Condition="'$(GenerateDeb)' == 'true' and '$(BuildDebPackage)' != 'true'">false</GenerateDeb>
+      <GenerateRpm Condition="'$(GenerateRpm)' == 'true' and '$(BuildRpmPackage)' != 'true'">false</GenerateRpm>
     </PropertyGroup>
   </Target>
 
@@ -41,7 +41,7 @@
 
   <Import Project="$(MSBuildThisFileDirectory)windows/wix.targets" />
 
-  <Target Name="GenerateInstallers" DependsOnTargets="GetInstallerGenerationFlags" Condition="'$(SkipBuild)' != 'true'">
+  <Target Name="GenerateInstallers" DependsOnTargets="GetInstallerGenerationFlags" Condition="'$(SkipBuild)' != 'true' and '$(GenerateInstallers)' == 'true'">
     <ItemGroup>
       <_InstallerBuildProject Include="$(MSBuildProjectFile)"
                Targets="GenerateDeb"
