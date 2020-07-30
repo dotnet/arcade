@@ -111,6 +111,7 @@ while :; do
             __UbuntuArch=s390x
             __UbuntuRepo="http://ports.ubuntu.com/ubuntu-ports/"
             __UbuntuPackages=$(echo ${__UbuntuPackages} | sed 's/ libunwind8-dev//')
+            unset __LLDB_Package
             ;;
         x86)
             __BuildArch=x86
