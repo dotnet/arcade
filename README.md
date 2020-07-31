@@ -9,7 +9,7 @@ Arcade is intended to provide well-understood and consistent mechanisms for cons
 Status of Arcade public CI builds: [![Build Status](https://dev.azure.com/dnceng/public/_apis/build/status/dotnet/arcade/arcade-ci)](https://dev.azure.com/dnceng/public/_build/latest?definitionId=208)
 
 ## Validation & Dependency Flow Status
-Status Last Updated: July 29, 2020, 1:45 PM PDT
+Status Last Updated: July 31, 2020, 9:00 AM PDT
 
 **[Arcade validation policy and process](Documentation/Validation/Overview.md)**
 
@@ -33,8 +33,8 @@ Status Last Updated: July 29, 2020, 1:45 PM PDT
 
 ### Status of Latest Version of Arcade Being Validated
 
-- Arcade version `20374.1` was promoted to `.NET Eng - Latest` on July 28th, 2020
-- For validation information, please see this tracking issue: https://github.com/dotnet/core-eng/issues/10339
+- Arcade will not be promoted due to conflicts between a version of Roslyn in Arcade and Runtime. 
+- For validation information, please see this tracking issue: https://github.com/dotnet/core-eng/issues/10360
 
 ## Getting Started
 
