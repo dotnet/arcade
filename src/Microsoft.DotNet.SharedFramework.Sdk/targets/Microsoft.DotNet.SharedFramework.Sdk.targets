@@ -81,17 +81,17 @@
            Text="Unknown PlatformPackageType '$(PlatformPackageType)'" />
     <Error Condition="'$(_PackageTypeRequiresRid)' == 'true' and '$(RuntimeIdentifier)' == ''" Text="Producing a $(PlatformPackageType) requires a runtime-identifier to be specified." />
     <PropertyGroup Condition="'$(PlatformPackageType)' == 'TargetingPack'">
-      <PackageId>$(SharedFrameworkName).Ref</PackageId>
+      <PackageId Condition="'$(PackageId)' == ''">$(SharedFrameworkName).Ref</PackageId>
       <SharedFrameworkArchiveName Condition="'$(SharedFrameworkArchiveName)' == ''">$(SharedFrameworkName).Ref</SharedFrameworkArchiveName>
       <MacOSComponentNamePackType>pack.targeting</MacOSComponentNamePackType>
     </PropertyGroup>
     <PropertyGroup Condition="'$(PlatformPackageType)' == 'RuntimePack'">
-      <PackageId>$(SharedFrameworkName).Runtime.$(RuntimeIdentifier)</PackageId>
+      <PackageId Condition="'$(PackageId)' == ''">$(SharedFrameworkName).Runtime.$(RuntimeIdentifier)</PackageId>
       <SharedFrameworkArchiveName Condition="'$(SharedFrameworkArchiveName)' == ''">$(SharedFrameworkName).Runtime</SharedFrameworkArchiveName>
       <MacOSComponentNamePackType>sharedframework.$(SharedFrameworkName)</MacOSComponentNamePackType>
     </PropertyGroup>
     <PropertyGroup Condition="'$(PlatformPackageType)' == 'AppHostPack'">
-      <PackageId>$(SharedFrameworkName).Host.$(RuntimeIdentifier)</PackageId>
+      <PackageId Condition="'$(PackageId)' == ''">$(SharedFrameworkName).Host.$(RuntimeIdentifier)</PackageId>
       <SharedFrameworkArchiveName Condition="'$(SharedFrameworkArchiveName)' == ''">$(SharedFrameworkName).Host</SharedFrameworkArchiveName>
       <MacOSComponentNamePackType>pack.apphost</MacOSComponentNamePackType>
     </PropertyGroup>
