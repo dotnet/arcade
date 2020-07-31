@@ -2,7 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System.Runtime.CompilerServices;
-using Xunit;
 
 namespace System.IO
 {
@@ -25,13 +24,6 @@ namespace System.IO
         public static TempFile Create([CallerMemberName] string memberName = null, [CallerLineNumber] int lineNumber = 0)
         {
             return new TempFile(GetFilePath($"{IO.Path.GetRandomFileName()}_{memberName}_{lineNumber}"));
-        }
-
-        public static TempFile CreateFromPath(string path, [CallerMemberName] string memberName = null, [CallerLineNumber] int lineNumber = 0)
-        {
-            TempFile newFile = new TempFile(GetFilePath(IO.Path.GetFileName(path)));
-            File.Copy(path, newFile.Path);
-            return newFile;
         }
 
         public void Dispose()
