@@ -7,13 +7,13 @@ using Xunit.Sdk;
 
 namespace Xunit
 {
-    [TraitDiscoverer("Microsoft.DotNet.XUnitExtensions.SkipOnCiDiscoverer", "Microsoft.DotNet.XUnitExtensions")]
+    [TraitDiscoverer("Microsoft.DotNet.XUnitExtensions.SkipOnCIDiscoverer", "Microsoft.DotNet.XUnitExtensions")]
     [AttributeUsage(AttributeTargets.Method | AttributeTargets.Class | AttributeTargets.Assembly, AllowMultiple = false)]
-    public sealed class SkipOnCiAttribute : Attribute, ITraitAttribute
+    public sealed class SkipOnCIAttribute : Attribute, ITraitAttribute
     {
         public string Reason { get; private set; }
 
-        public SkipOnCiAttribute(string reason)
+        public SkipOnCIAttribute(string reason)
         {
             Reason = reason;
         }

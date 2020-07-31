@@ -13,7 +13,7 @@ namespace Microsoft.DotNet.XUnitExtensions
     /// This class discovers all of the tests and test classes that have
     /// applied the SkipOnCIAttribute
     /// </summary>
-    public class SkipOnCiDiscoverer : ITraitDiscoverer
+    public class SkipOnCIDiscoverer : ITraitDiscoverer
     {
         public IEnumerable<KeyValuePair<string, string>> GetTraits(IAttributeInfo traitAttribute)
         {
