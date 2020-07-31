@@ -488,6 +488,7 @@ namespace SignCheck
             await Task.WhenAll(uris.Select(u => DownloadFileAsync(u)));
         }
 
+        [STAThread]
         static int Main(string[] args)
         {
             // Exit code 3 for help output

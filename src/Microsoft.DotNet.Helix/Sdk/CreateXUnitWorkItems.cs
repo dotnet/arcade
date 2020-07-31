@@ -45,6 +45,8 @@ namespace Microsoft.DotNet.Helix.Sdk
 
         public string XUnitArguments { get; set; }
 
+        public string DotNetCliVersion { get; set; }
+
         /// <summary>
         /// An array of ITaskItems of type HelixWorkItem
         /// </summary>
@@ -109,6 +111,15 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             if (runtimeTargetFramework.Contains("core"))
             {
+                // If we don't know what version we are, or it isn't 1.x or 2.x, add --roll-forward
+                if (string.IsNullOrEmpty(DotNetCliVersion) ||
+                    !(DotNetCliVersion.StartsWith("1.") ||
+                      DotNetCliVersion.StartsWith("2.")))
+                {
+                    Log.LogMessage("Adding dotnet cli roll-forward policy.");
+                    driver += "--roll-forward Major ";
+                }
+
                 var assemblyBaseName = assemblyName;
                 if (assemblyBaseName.EndsWith(".dll"))
                 {
@@ -116,8 +127,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                 }
 
                 Log.LogMessage($"Adding runtimeconfig and depsfile parameters for assembly {assemblyBaseName}.");
-                driver +=
-                    $"--runtimeconfig {assemblyBaseName}.runtimeconfig.json --depsfile {assemblyBaseName}.deps.json ";
+                driver += $"--runtimeconfig {assemblyBaseName}.runtimeconfig.json --depsfile {assemblyBaseName}.deps.json ";
             }
 
             string command = $"{driver}{xUnitRunner} {assemblyName}{(XUnitArguments != null ? " " + XUnitArguments : "")} -xml testResults.xml {arguments}";

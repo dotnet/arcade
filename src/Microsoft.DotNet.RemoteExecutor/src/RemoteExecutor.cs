@@ -413,6 +413,11 @@ namespace Microsoft.DotNet.RemoteExecutor
                 args += $" --depsfile \"{DepsJsonPath}\"";
             }
 
+            if (!string.IsNullOrEmpty(options.RollForward))
+            {
+                args += $" --roll-forward {options.RollForward}";
+            }
+
             args += $" \"{Path}\"";
             return args;
         }

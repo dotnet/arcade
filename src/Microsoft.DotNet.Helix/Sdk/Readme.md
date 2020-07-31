@@ -242,3 +242,21 @@ Linux / OSX: `$HELIX_PYTHONPATH -c "from helix.workitemutil import request_reboo
 
 Windows: `%HELIX_PYTHONPATH% -c "from helix.workitemutil import request_reboot; request_reboot('Optional reason string')"`
 
+### Common Helix client environment variables
+
+When possible, constructing paths for scripts / commands executed within Helix work items should be done using the provided environment variables, allowing for the engineering team to move and optimize placement of these folders without breaking execution.
+
+You may assume that all the following variables are set on any given Helix client. (Use appropriate-for-OS means to access, i.e. %WINDOWS% or $Linux, $OSX).  The list is not exhaustive but most other variables are simply uninteresting from the perspective of the work item.
+
+- **HELIX_CORRELATION_ID** : GUID identifier for a helix run (include this if sending mail to or tagging dnceng)
+- **HELIX_CORRELATION_PAYLOAD** : Correlation payload folder;  root of where all correlation payloads are unzipped.
+- **HELIX_PYTHONPATH** : Path to a python 3.x executable (Due to OS constraints, this is only guaranteed to be >= 3.4)
+- **HELIX_WORKITEM_FRIENDLYNAME** - "Friendly" name of work item as provided at queue time (include this if relevant when sending mail to or tagging dnceng)
+- **HELIX_WORKITEM_ID** : GUID identifier for a helix work item 
+- **HELIX_WORKITEM_PAYLOAD** : "Unzip" folder of helix workitem, where its payload was unpacked
+- **HELIX_WORKITEM_ROOT** : "Execution" folder of helix workitem, where its payload is copied to and run
+- **HELIX_WORKITEM_UPLOAD_ROOT** : Any file in this folder at the end of the work item will be uploaded to result storage and made available via Helix API / backing database.
+- **HELIX_DUMP_FOLDER** : Process dumps created here will get uploaded and automatically cleaned up
+- **HELIX_CURRENT_LOG** : Path to the current work item's console log (note: will typically have file handles open)
+
+

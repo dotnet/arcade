@@ -3,7 +3,7 @@
   <PropertyGroup>
     <!-- On .NET Framework and .NET Core we use this assembly as both a library and as an executable. -->
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>netcoreapp2.1;net472</TargetFrameworks>
+    <TargetFrameworks>netcoreapp2.1;net461</TargetFrameworks>
     <Description>This package provides support for running tests out-of-process.</Description>
     <ExcludeFromSourceBuild>true</ExcludeFromSourceBuild>
     <IsPackable>true</IsPackable>
@@ -14,6 +14,7 @@
   <ItemGroup>
     <PackageReference Include="xunit.assert" Version="$(XUnitVersion)" />
     <PackageReference Include="Microsoft.Diagnostics.Runtime" Version="1.0.5" />
+    <PackageReference Include="System.Runtime.InteropServices.RuntimeInformation" Version="$(SystemRuntimeInteropServicesRuntimeInformation)" Condition="'$(TargetFramework)' == 'net461'" />
   </ItemGroup>
 
   <ItemGroup>
@@ -25,8 +26,8 @@
   <Target Name="PackBuildOutputs"
           DependsOnTargets="CopyFilesToOutputDirectory">
     <ItemGroup>
-      <TfmSpecificPackageFile Include="$(ProjectDepsFilePath)" Condition="'$(TargetFramework)' != 'net472'" PackagePath="lib\$(TargetFramework)\" />
-      <TfmSpecificPackageFile Include="@(AppConfigWithTargetPath->'$(OutDir)%(TargetPath)')" Condition="'$(TargetFramework)' == 'net472'" PackagePath="lib\$(TargetFramework)\" />
+      <TfmSpecificPackageFile Include="$(ProjectDepsFilePath)" Condition="'$(TargetFramework)' != 'net461'" PackagePath="lib\$(TargetFramework)\" />
+      <TfmSpecificPackageFile Include="@(AppConfigWithTargetPath->'$(OutDir)%(TargetPath)')" Condition="'$(TargetFramework)' == 'net461'" PackagePath="lib\$(TargetFramework)\" />
     </ItemGroup>
   </Target>
 

@@ -21,7 +21,7 @@ This is automatically included as a Helix Correlation Payload for the job when X
 ## How to use
 
 There are three main ways how to use XHarness through the Helix SDK:
-- Specify the apks/app bundles using the `XHarnessPackageToTest` and `XHarnessAppFolderToTest` items as described below and everything will be taken care of from there. You no longer specify the `HelixCommand` to be executed. Each apk/app bundle will be processed as a separate Helix work item.
+- Specify the apks/app bundles using the `XHarnessApkToTest` and `XHarnessAppBundleToTest` items as described below and everything will be taken care of from there. You no longer specify the `HelixCommand` to be executed. Each apk/app bundle will be processed as a separate Helix work item.
 - Specify the `XHarnessAndroidProject` or `XHarnessiOSProject` task items which will point to projects that produce apks/app bundles from their `Build` target.
   - Examples - [iOS](https://github.com/dotnet/arcade/blob/master/tests/XHarness/XHarness.TestAppBundle.proj) and [Android](https://github.com/dotnet/arcade/blob/master/tests/XHarness/XHarness.TestApk.proj)
 - Only request the XHarness dotnet tool to be pre-installed for the Helix job for you and then call the XHarness tool yourself as shown below.
@@ -52,7 +52,7 @@ There are some required configuration properties that need to be set for XHarnes
 
 ### Calling the XHarness tool directly
 
-In case you decide to request the SDK to pre-install the XHarness tool only without any specific payload, you just don't specify `XHarnessPackageToTest` or `XHarnessAppFolderToTest` items and you specify the Helix command directly.
+In case you decide to request the SDK to pre-install the XHarness tool only without any specific payload, you just don't specify `XHarnessApkToTest` or `XHarnessAppBundleToTest` items and you specify the Helix command directly.
 There will be an environmental variable called `XHARNESS_CLI_PATH` set that will point to the XHarness CLI DLL that needs to be run using `dotnet exec` like so:
 
 ```xml
@@ -66,15 +66,15 @@ There will be an environmental variable called `XHARNESS_CLI_PATH` set that will
 
 ### iOS/tvOS/WatchOS .app bundle payloads
 
-To execute .app bundles, declare one or more `XHarnessAppFolderToTest` items:
+To execute .app bundles, declare one or more `XHarnessAppBundleToTest` items:
 
 ```xml
 <ItemGroup>
   <!-- Find all directories named *.app -->
-  <XHarnessAppFolderToTest Include="$([System.IO.Directory]::GetDirectories('$(TestArchiveTestsRoot)', '*.app', System.IO.SearchOption.AllDirectories))">
+  <XHarnessAppBundleToTest Include="$([System.IO.Directory]::GetDirectories('$(TestArchiveTestsRoot)', '*.app', System.IO.SearchOption.AllDirectories))">
     <Targets>ios-device</Targets>
     <Targets>ios-simulator-64_13.5</Targets>
-  </XHarnessAppFolderToTest>
+  </XHarnessAppBundleToTest>
 </ItemGroup>
 ```
 
@@ -85,14 +85,14 @@ You can also specify some metadata that will help you configure the run better:
 
 ```xml
 <ItemGroup>
-  <XHarnessAppFolderToTest Include=".\appbundles\Contoso.Example.Tests.app">
+  <XHarnessAppBundleToTest Include=".\appbundles\Contoso.Example.Tests.app">
     <!-- Timeout for the overall run of the whole Helix work item (including Simulator booting, app installation..) -->
     <WorkItemTimeout>00:20:00</WorkItemTimeout>
 
     <!-- Timeout for the actual test run (when TestRunner starts execution of tests) -->
     <!-- Should be smaller than WorkItemTimeout by several minutes -->
     <TestTimeout>00:12:00</TestTimeout>
-  </XHarnessAppFolderToTest>
+  </XHarnessAppBundleToTest>
 </ItemGroup>
 ```
 
@@ -107,17 +107,17 @@ You can configure the execution further via MSBuild properties:
 
 ### Android .apk payloads
 
-To execute .apks, declare one or more `XHarnessPackageToTest` items:
+To execute .apks, declare one or more `XHarnessApkToTest` items:
 
 ```xml
 <ItemGroup>
-  <XHarnessPackageToTest Include="$(TestArchiveTestsRoot)apk\x64\System.Numerics.Vectors.Tests.apk">
+  <XHarnessApkToTest Include="$(TestArchiveTestsRoot)apk\x64\System.Numerics.Vectors.Tests.apk">
     <!-- Package name: this comes from metadata inside the apk itself -->
     <AndroidPackageName>net.dot.System.Numerics.Vectors.Tests</AndroidPackageName>
 
     <!-- If there are > 1 instrumentation class inside the package, we need to know the name of which to use -->
     <AndroidInstrumentationName>net.dot.MonoRunner</AndroidInstrumentationName>
-  </XHarnessPackageToTest>
+  </XHarnessApkToTest>
 </ItemGroup>
 ```
 
@@ -125,14 +125,14 @@ You can also specify some metadata that will help you configure the run better:
 
 ```xml
 <ItemGroup>
-  <XHarnessAppFolderToTest Include="$(TestArchiveTestsRoot)**\*.apk">
+  <XHarnessAppBundleToTest Include="$(TestArchiveTestsRoot)**\*.apk">
     <!-- Timeout for the overall run of the whole Helix work item (including Simulator booting, app installation..) -->
     <WorkItemTimeout>00:20:00</WorkItemTimeout>
 
     <!-- Timeout for the actual test run (when TestRunner starts execution of tests) -->
     <!-- Should be smaller than WorkItemTimeout by several minutes -->
     <TestTimeout>00:12:00</TestTimeout>
-  </XHarnessAppFolderToTest>
+  </XHarnessAppBundleToTest>
 </ItemGroup>
 ```
 

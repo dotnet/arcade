@@ -3,26 +3,14 @@
   <UsingTask TaskName="ChooseBestP2PTargetFrameworkTask" AssemblyFile="$(DotNetBuildTasksTargetFrameworkSdkAssembly)" />
   <UsingTask TaskName="ChooseBestTargetFrameworksTask" AssemblyFile="$(DotNetBuildTasksTargetFrameworkSdkAssembly)" />
   <UsingTask TaskName="AddTargetFrameworksToProjectTask" AssemblyFile="$(DotNetBuildTasksTargetFrameworkSdkAssembly)" />
-  
-  <PropertyGroup>
-    <_OriginalTargetFrameworks>$(TargetFrameworks)</_OriginalTargetFrameworks>
-  </PropertyGroup>
 
-  <!-- Strip away placeholder tfms and TargetFrameworkSuffix during the graph build. -->
+  <!-- Strip away the TargetFrameworkSuffix during the graph build. -->
   <PropertyGroup Condition="'$(IsGraphBuild)' == 'true' and '$(MSBuildRestoreSessionId)' != ''">
-    <TargetFrameworks Condition="'$(TargetFrameworks)' != ''">$([System.Text.RegularExpressions.Regex]::Replace('$(TargetFrameworks)', '(-[^;]+)|(;?_[^;]+)', ''))</TargetFrameworks>
+    <TargetFrameworks Condition="'$(TargetFrameworks)' != ''">$([System.Text.RegularExpressions.Regex]::Replace('$(TargetFrameworks)', '(-[^;]+)', ''))</TargetFrameworks>
   </PropertyGroup>
-  
-  <Target Name="RemovePlaceHolderConfigs"
-          Condition="'$(MSBuildProjectExtension)' != '.pkgproj'"
-          BeforeTargets="DispatchToInnerBuilds;Clean">
-    <ItemGroup>
-      <_InnerBuildProjects Remove="@(_InnerBuildProjects)" Condition="$([System.String]::Copy('%(_InnerBuildProjects.AdditionalProperties)').Contains('TargetFramework=_'))" />
-    </ItemGroup>
-  </Target>
      
   <Target Name="RunOnlyBestTargetFrameworks"
-          Condition="'$(BuildAllConfigurations)' != 'true' or '$(MSBuildProjectExtension)' == '.pkgproj'" 
+          Condition="'$(BuildTargetFramework)' != '' or '$(MSBuildProjectExtension)' == '.pkgproj'" 
           BeforeTargets="DispatchToInnerBuilds"
           DependsOnTargets="GetProjectWithBestTargetFrameworks">
     <ItemGroup>
@@ -32,9 +20,19 @@
   </Target>
   
   <Target Name="GetProjectWithBestTargetFrameworks">
-    <ChooseBestTargetFrameworksTask BuildTargetFrameworks="$(BuildTargetFramework)-$(TargetOS);$(AdditionalBuildTargetFrameworks)"
+    <ItemGroup Condition="'$(BuildTargetFramework)' != ''">
+      <_BuildTargetFrameworkWithTargetOS Include="$(BuildTargetFramework)-$(TargetOS)" />
+    </ItemGroup>
+    <ItemGroup Condition="'$(BuildTargetFramework)' == ''">
+      <_BuildTargetFrameworkWithoutOS Include="$([MSBuild]::Unescape($([System.Text.RegularExpressions.Regex]::Replace('$(TargetFrameworks)', '(-[^;]+)', ''))))" />
+      <!-- TODO: Find a better way to filter out non applicable TargetOS values for .NET Framework. -->
+      <_BuildTargetFrameworkWithTargetOS Include="@(_BuildTargetFrameworkWithoutOS->Distinct()->'%(Identity)-$(TargetOS)')"
+                                         Condition="'$(TargetOS)' == 'Windows_NT' or !$([System.String]::Copy('%(Identity)').StartsWith('net4'))" />
+    </ItemGroup>
+    
+    <ChooseBestTargetFrameworksTask BuildTargetFrameworks="@(_BuildTargetFrameworkWithTargetOS);$(AdditionalBuildTargetFrameworks)"
                                     SupportedTargetFrameworks="$(TargetFrameworks)"
-                                    RuntimeGraph="$(RuntimeGraph)" >
+                                    RuntimeGraph="$(RuntimeGraph)">
       <Output TaskParameter="BestTargetFrameworks" ItemName="_BestTargetFramework" />
     </ChooseBestTargetFrameworksTask>
 
@@ -42,14 +40,6 @@
                                       BestTargetFrameworks="@(_BestTargetFramework)" >
       <Output TaskParameter="InnerBuildProjects" ItemName="InnerBuildProjectsWithBestTargetFramework" />
     </AddTargetFrameworksToProjectTask>
-  </Target>
-
-  <!-- Attaching the TargetFrameworkSuffix after restore for build.-->
-  <Target Name="AttachTargetFrameworkSuffixToTargetFrameworks"
-          AfterTargets="Restore">
-    <PropertyGroup>
-      <TargetFrameworks>$(_OriginalTargetFrameworks)</TargetFrameworks>
-    </PropertyGroup>
   </Target>
 
   <!--
