@@ -80,23 +80,27 @@
                       '$(PlatformPackageType)' != 'ToolPack'"
            Text="Unknown PlatformPackageType '$(PlatformPackageType)'" />
     <Error Condition="'$(_PackageTypeRequiresRid)' == 'true' and '$(RuntimeIdentifier)' == ''" Text="Producing a $(PlatformPackageType) requires a runtime-identifier to be specified." />
+    <PropertyGroup>
+      <PackageId Condition="'$(OverridePackageId)' != ''">$(OverridePackageId)</PackageId>
+    </PropertyGroup>
+
     <PropertyGroup Condition="'$(PlatformPackageType)' == 'TargetingPack'">
-      <PackageId Condition="'$(PackageId)' == ''">$(SharedFrameworkName).Ref</PackageId>
+      <PackageId Condition="'$(OverridePackageId)' == ''">$(SharedFrameworkName).Ref</PackageId>
       <SharedFrameworkArchiveName Condition="'$(SharedFrameworkArchiveName)' == ''">$(SharedFrameworkName).Ref</SharedFrameworkArchiveName>
       <MacOSComponentNamePackType>pack.targeting</MacOSComponentNamePackType>
     </PropertyGroup>
     <PropertyGroup Condition="'$(PlatformPackageType)' == 'RuntimePack'">
-      <PackageId Condition="'$(PackageId)' == ''">$(SharedFrameworkName).Runtime.$(RuntimeIdentifier)</PackageId>
+      <PackageId Condition="'$(OverridePackageId)' == ''">$(SharedFrameworkName).Runtime.$(RuntimeIdentifier)</PackageId>
       <SharedFrameworkArchiveName Condition="'$(SharedFrameworkArchiveName)' == ''">$(SharedFrameworkName).Runtime</SharedFrameworkArchiveName>
       <MacOSComponentNamePackType>sharedframework.$(SharedFrameworkName)</MacOSComponentNamePackType>
     </PropertyGroup>
     <PropertyGroup Condition="'$(PlatformPackageType)' == 'AppHostPack'">
-      <PackageId Condition="'$(PackageId)' == ''">$(SharedFrameworkName).Host.$(RuntimeIdentifier)</PackageId>
+      <PackageId Condition="'$(OverridePackageId)' == ''">$(SharedFrameworkName).Host.$(RuntimeIdentifier)</PackageId>
       <SharedFrameworkArchiveName Condition="'$(SharedFrameworkArchiveName)' == ''">$(SharedFrameworkName).Host</SharedFrameworkArchiveName>
       <MacOSComponentNamePackType>pack.apphost</MacOSComponentNamePackType>
     </PropertyGroup>
     <PropertyGroup>
-      <PackageId Condition="'$(PackageId)' == ''">$(SharedFrameworkName)</PackageId>
+      <PackageId Condition="'$(OverridePackageId)' == ''">$(SharedFrameworkName)</PackageId>
       <SharedFrameworkArchiveName Condition="'$(SharedFrameworkArchiveName)' == ''">$(PackageId)</SharedFrameworkArchiveName>
       <MacOSComponentNamePackType Condition="'$(MacOSComponentNamePackType)' == ''">pack.$(PlatformPackageType.ToLower())</MacOSComponentNamePackType>
     </PropertyGroup>
