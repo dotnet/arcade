@@ -12,6 +12,24 @@ namespace Microsoft.DotNet.VersionTools.BuildManifest.Model
 {
     public class SigningInformationModel
     {
+        public string AzureDevOpsCollectionUri
+        {
+            get { return Attributes.GetOrDefault(nameof(AzureDevOpsCollectionUri)); }
+            set { Attributes[nameof(AzureDevOpsCollectionUri)] = value; }
+        }
+
+        public string AzureDevOpsProject
+        {
+            get { return Attributes.GetOrDefault(nameof(AzureDevOpsProject)); }
+            set { Attributes[nameof(AzureDevOpsProject)] = value; }
+        }
+
+        public int AzureDevOpsBuildId
+        {
+            get { return int.Parse(Attributes.GetOrDefault(nameof(AzureDevOpsBuildId))); }
+            set { Attributes[nameof(AzureDevOpsBuildId)] = value.ToString(); }
+        }
+
         public List<FileExtensionSignInfoModel> FileExtensionSignInfo { get; set; } = new List<FileExtensionSignInfoModel>();
 
         public List<FileSignInfoModel> FileSignInfo { get; set; } = new List<FileSignInfoModel>();
@@ -28,10 +46,21 @@ namespace Microsoft.DotNet.VersionTools.BuildManifest.Model
             StrongNameSignInfo.AddRange(source.StrongNameSignInfo);
         }
 
+        private static readonly string[] RequiredAttributes =
+        {
+            nameof(AzureDevOpsCollectionUri),
+            nameof(AzureDevOpsProject),
+            nameof(AzureDevOpsBuildId),
+        };
+        public IDictionary<string, string> Attributes { get; set; } = new Dictionary<string, string>();
+
         // The IsEmpty() check ensures that we dont' return a blank <SigningInformation> XElement
         // when there is no signing information, maintaining parity with the old asset manifest structure
         public XElement ToXml() => IsEmpty() ? null : new XElement(
             "SigningInformation",
+            Attributes
+                .ThrowIfMissingAttributes(RequiredAttributes)
+                .CreateXmlAttributes(RequiredAttributes),
             Enumerable.Concat(
             FileExtensionSignInfo
                 .OrderBy(fe => fe.Extension, StringComparer.OrdinalIgnoreCase)
@@ -54,6 +83,9 @@ namespace Microsoft.DotNet.VersionTools.BuildManifest.Model
 
         public static SigningInformationModel Parse(XElement xml) => xml == null ? null : new SigningInformationModel
         {
+            Attributes = xml
+                .CreateAttributeDictionary()
+                .ThrowIfMissingAttributes(RequiredAttributes),
             FileExtensionSignInfo = xml.Elements("FileExtensionSignInfo").Select(FileExtensionSignInfoModel.Parse).ToList(),
             FileSignInfo = xml.Elements("FileSignInfo").Select(FileSignInfoModel.Parse).ToList(),
             ItemsToSign = xml.Elements("ItemsToSign").Select(ItemToSignModel.Parse).ToList(),

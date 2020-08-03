@@ -58,6 +58,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public static BuildModel CreateModelFromItems(
             ITaskItem[] artifacts,
+            string azureDevOpsCollectionUri,
+            string azureDevOpsProject,
+            int azureDevOpsBuildId,
             ITaskItem[] itemsToSign,
             ITaskItem[] strongNameSignInfo,
             ITaskItem[] fileSignInfo,
@@ -116,11 +119,18 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 isStableBuild,
                 publishingVersion,
                 log,
-                signingInformationModel: CreateSigningInformationModelFromItems(itemsToSign, strongNameSignInfo, fileSignInfo, fileExtensionSignInfo));
+                signingInformationModel: CreateSigningInformationModelFromItems(azureDevOpsCollectionUri, azureDevOpsProject, azureDevOpsBuildId, itemsToSign, strongNameSignInfo, fileSignInfo, fileExtensionSignInfo));
             return buildModel;
         }
 
-        public static SigningInformationModel CreateSigningInformationModelFromItems(ITaskItem[] itemsToSign, ITaskItem[] strongNameSignInfo, ITaskItem[] fileSignInfo, ITaskItem[] fileExtensionSignInfo)
+        public static SigningInformationModel CreateSigningInformationModelFromItems(
+            string azureDevOpsCollectionUri,
+            string azureDevOpsProject,
+            int azureDevOpsBuildId,
+            ITaskItem[] itemsToSign,
+            ITaskItem[] strongNameSignInfo,
+            ITaskItem[] fileSignInfo,
+            ITaskItem[] fileExtensionSignInfo)
         {
             List<ItemToSignModel> parsedItemsToSign = new List<ItemToSignModel>();
             List<StrongNameSignInfoModel> parsedStrongNameSignInfo = new List<StrongNameSignInfoModel>();
@@ -164,6 +174,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
             return new SigningInformationModel
             {
+                AzureDevOpsCollectionUri = azureDevOpsCollectionUri,
+                AzureDevOpsProject = azureDevOpsProject,
+                AzureDevOpsBuildId = azureDevOpsBuildId,
                 ItemsToSign = parsedItemsToSign,
                 StrongNameSignInfo = parsedStrongNameSignInfo,
                 FileSignInfo = parsedFileSignInfo,
