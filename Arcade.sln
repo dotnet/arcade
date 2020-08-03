@@ -99,6 +99,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Helix.Sdk.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.AsmDiff", "src\Microsoft.DotNet.AsmDiff\Microsoft.DotNet.AsmDiff.csproj", "{FDCE3109-3EA0-4166-B6C0-BE7BB4196864}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Build.Tasks.Installers", "src\Microsoft.DotNet.Build.Tasks.Installers\Microsoft.DotNet.Build.Tasks.Installers.csproj", "{32070F78-5045-4402-BCB5-D8A2D479770A}"
+EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.RemoteExecutor.Tests", "src\Microsoft.DotNet.RemoteExecutor\tests\Microsoft.DotNet.RemoteExecutor.Tests.csproj", "{D6AC20A4-1719-49FE-B112-B2AB564496F8}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.ApiCompat.Tests", "src\Microsoft.DotNet.ApiCompat\tests\Microsoft.DotNet.ApiCompat.Tests.csproj", "{61041759-64FE-425F-8984-BA876428A595}"
@@ -633,6 +635,18 @@ Global
 		{FDCE3109-3EA0-4166-B6C0-BE7BB4196864}.Release|x64.Build.0 = Release|Any CPU
 		{FDCE3109-3EA0-4166-B6C0-BE7BB4196864}.Release|x86.ActiveCfg = Release|Any CPU
 		{FDCE3109-3EA0-4166-B6C0-BE7BB4196864}.Release|x86.Build.0 = Release|Any CPU
+		{32070F78-5045-4402-BCB5-D8A2D479770A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{32070F78-5045-4402-BCB5-D8A2D479770A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{32070F78-5045-4402-BCB5-D8A2D479770A}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{32070F78-5045-4402-BCB5-D8A2D479770A}.Debug|x64.Build.0 = Debug|Any CPU
+		{32070F78-5045-4402-BCB5-D8A2D479770A}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{32070F78-5045-4402-BCB5-D8A2D479770A}.Debug|x86.Build.0 = Debug|Any CPU
+		{32070F78-5045-4402-BCB5-D8A2D479770A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{32070F78-5045-4402-BCB5-D8A2D479770A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{32070F78-5045-4402-BCB5-D8A2D479770A}.Release|x64.ActiveCfg = Release|Any CPU
+		{32070F78-5045-4402-BCB5-D8A2D479770A}.Release|x64.Build.0 = Release|Any CPU
+		{32070F78-5045-4402-BCB5-D8A2D479770A}.Release|x86.ActiveCfg = Release|Any CPU
+		{32070F78-5045-4402-BCB5-D8A2D479770A}.Release|x86.Build.0 = Release|Any CPU
 		{D6AC20A4-1719-49FE-B112-B2AB564496F8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{D6AC20A4-1719-49FE-B112-B2AB564496F8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D6AC20A4-1719-49FE-B112-B2AB564496F8}.Debug|x64.ActiveCfg = Debug|Any CPU
