@@ -100,7 +100,7 @@
       <MacOSComponentNamePackType>pack.apphost</MacOSComponentNamePackType>
     </PropertyGroup>
     <PropertyGroup>
-      <PackageId Condition="'$(OverridePackageId)' == ''">$(SharedFrameworkName)</PackageId>
+      <PackageId Condition="'$(OverridePackageId)' == '' and '$(PackageId)' == ''">$(SharedFrameworkName)</PackageId>
       <SharedFrameworkArchiveName Condition="'$(SharedFrameworkArchiveName)' == ''">$(PackageId)</SharedFrameworkArchiveName>
       <MacOSComponentNamePackType Condition="'$(MacOSComponentNamePackType)' == ''">pack.$(PlatformPackageType.ToLower())</MacOSComponentNamePackType>
     </PropertyGroup>
