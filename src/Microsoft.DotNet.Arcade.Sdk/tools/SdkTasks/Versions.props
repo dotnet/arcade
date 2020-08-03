@@ -9,6 +9,7 @@
     <MicrosoftDotNetBuildTasksFeedVersion Condition="'$(MicrosoftDotNetBuildTasksFeedVersion)' == ''">$(ArcadeSdkVersion)</MicrosoftDotNetBuildTasksFeedVersion>
     <MicrosoftDotNetSignCheckVersion Condition="'$(MicrosoftDotNetSignCheckVersion)' == ''">$(ArcadeSdkVersion)</MicrosoftDotNetSignCheckVersion>
     <MicrosoftSymbolUploaderBuildTaskVersion>$(MicrosoftSymbolUploaderBuildTaskVersion)</MicrosoftSymbolUploaderBuildTaskVersion>
+    <MicrosoftDotNetSignToolVersion Condition="'$(MicrosoftDotNetSignToolVersion)' == ''">$(ArcadeSdkVersion)</MicrosoftDotNetSignToolVersion>
   </PropertyGroup>
 
   <PropertyGroup>

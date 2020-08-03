@@ -1,0 +1,19 @@
+<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
+<Project Sdk="Microsoft.NET.Sdk" DefaultTargets="Execute">
+  
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <NETCORE_ENGINEERING_TELEMETRY>Build</NETCORE_ENGINEERING_TELEMETRY>
+  </PropertyGroup>
+
+  <Target Name="Execute">
+        <MSBuild Projects="..\Sign.proj"
+             Properties="@(_CommonProps)"
+             Targets="Sign"/>
+  </Target>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.DotNet.SignTool" Version="$(MicrosoftDotNetSignToolVersion)" />
+  </ItemGroup>
+
+</Project>

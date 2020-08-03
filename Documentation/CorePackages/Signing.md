@@ -204,7 +204,7 @@ The tool assumes that you will be able to differentiate the files using name, pu
 ```
 #### 7. How should I call the SignToolTask?
 
-Click [here](../src/Microsoft.DotNet.Arcade.Sdk/tools/Sign.proj) to see how the Arcade SDK calls the `SignToolTask`. Here's a snippet:
+Click [here](../../src/Microsoft.DotNet.Arcade.Sdk/tools/Sign.proj) to see how the Arcade SDK calls the `SignToolTask`. Here's a snippet:
 
 ```xml
 ...
