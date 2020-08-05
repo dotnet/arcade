@@ -5,7 +5,6 @@
   </PropertyGroup>
 
   <Target Name="_CreateArchive"
-          DependsOnTargets="_ValidatePackageInformation"
           Condition="'$(SkipBuild)' != 'true'">
     <PropertyGroup>
       <_OutputPathRoot>$(IntermediateOutputPath)output/</_OutputPathRoot>
@@ -28,7 +27,6 @@
   </Target>
 
   <Target Name="_CreateSymbolsArchive"
-          DependsOnTargets="_ValidatePackageInformation"
           Condition="'$(CreateSymbolsArchive)' == 'true' and '$(SkipBuild)' != 'true'">
     <PropertyGroup>
       <_SymbolsOutputPathRoot>$(IntermediateOutputPath)symbols/</_SymbolsOutputPathRoot>

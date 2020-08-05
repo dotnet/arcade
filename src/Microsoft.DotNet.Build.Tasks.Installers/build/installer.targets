@@ -35,10 +35,6 @@
   <!--
     Shared targets to build installers and distro packages.
   -->
-
-  <UsingTask TaskName="BuildFPMToolPreReqs" AssemblyFile="$(MicrosoftDotNetBuildTasksInstallersTaskAssembly)"/>
-  <UsingTask TaskName="GenerateJsonObjectString" AssemblyFile="$(MicrosoftDotNetBuildTasksInstallersTaskAssembly)"/>
-
   <Import Project="$(MSBuildThisFileDirectory)windows/wix.targets" />
 
   <Target Name="GenerateInstallers" DependsOnTargets="GetInstallerGenerationFlags" Condition="'$(SkipBuild)' != 'true' and '$(GenerateInstallers)' == 'true'">
@@ -84,13 +80,8 @@
     targets that use BeforeTargets="_GetInstallerProperties".
   -->
   <Target Name="_GetInstallerProperties"
-          DependsOnTargets="_CalculatePackageInformation;
-                            _GetTargetOSArchInfo;
+          DependsOnTargets="_GetTargetOSArchInfo;
                             _GetProductBrandName">
-    <PropertyGroup>
-      <InstallerName Condition="'$(InstallerName)' == ''">$(ArchiveName)</InstallerName>
-    </PropertyGroup>
-      
     <Error
       Text="InstallerName '$(InstallerName)' is empty or starts with a '-': expected a value like 'dotnet-runtime'."
       Condition="'$(InstallerName)' == '' or $(InstallerName.StartsWith('-'))" />
@@ -364,7 +355,7 @@
     
     <!-- Copy files to layout. -->
     <PropertyGroup>
-      <_OutputPathRoot>$(IntermediateOutputPath)/output</_OutputPathRoot>
+      <_OutputPathRoot>$(IntermediateOutputPath)output/</_OutputPathRoot>
     </PropertyGroup>
 
     <MSBuild Projects="$(MSBuildProjectFullPath)"

@@ -8,7 +8,5 @@
     <GenerateInstallers>true</GenerateInstallers>
   </PropertyGroup>
 
-  <Import Project="$(MSBuildThisFileDirectory)..\..\sdk\Sdk.targets" />
   <Import Project="$(MSBuildThisFileDirectory)..\installer.targets" Condition="'$(_InstallerTargetsImported)' != 'true'" />
-
 </Project>

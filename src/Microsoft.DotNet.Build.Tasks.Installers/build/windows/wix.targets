@@ -6,13 +6,6 @@
     this file and switch to wixproj. See https://github.com/wixtoolset/issues/issues/5627
   -->
 
-  <UsingTask TaskName="CreateLightCommandPackageDrop" AssemblyFile="$(MicrosoftDotNetBuildTasksInstallersTaskAssembly)" />
-  <UsingTask TaskName="ExecWithRetries" AssemblyFile="$(MicrosoftDotNetBuildTasksInstallersTaskAssembly)" />
-  <UsingTask TaskName="StabilizeWixFileId" AssemblyFile="$(MicrosoftDotNetBuildTasksInstallersTaskAssembly)" />
-  <UsingTask TaskName="GenerateCurrentVersion" AssemblyFile="$(MicrosoftDotNetBuildTasksInstallersTaskAssembly)" />
-  <UsingTask TaskName="GenerateMsiVersion" AssemblyFile="$(MicrosoftDotNetBuildTasksInstallersTaskAssembly)" />
-  <UsingTask TaskName="GenerateGuidFromName" AssemblyFile="$(MicrosoftDotNetBuildTasksInstallersTaskAssembly)" />
-
   <!--
     Acquire WiX tools, if not present.
   -->
@@ -131,7 +124,7 @@
 
   <Target Name="PublishFilesForWixInstaller">
     <PropertyGroup>
-      <FilesOutputPathRoot>$(IntermediateOutputPath)/output</FilesOutputPathRoot>
+      <FilesOutputPathRoot>$(IntermediateOutputPath)output/</FilesOutputPathRoot>
       </PropertyGroup>
 
     <MSBuild Projects="$(MSBuildProjectFullPath)"
@@ -143,24 +136,19 @@
   <Target Name="GetInstallerWixConfiguration"
           DependsOnTargets="_UseProductWixProject;PublishFilesForWixInstaller"
           Condition="'$(GenerateExeBundle)' != 'true'">
-
-    <PropertyGroup>
-      <OutputFilesCandleVariable Condition="'$(OutputFilesCandleVariable)' == ''">PackSrc</OutputFilesCandleVariable>
-    </PropertyGroup>
-
-    <ItemGroup Condition="'$(UseCustomDirectoryHarvesting)' != 'true'">
+    <ItemGroup>
       <DirectoryToHarvest
         Include="$(FilesOutputPathRoot)"
         Condition="'$(UseCustomDirectoryHarvesting)' != 'true'"
         Name="install-files"
-        SubstituteVar="$(OutputFilesCandleVariable)"
+        SubstituteVar="PackSrc"
         ComponentGroupName="InstallFiles"
         DirectoryRef="DOTNETHOME" />
       <CandleVariables Include="$(OutputFilesCandleVariable)" Value="$(FilesOutputPathRoot)"
-                       Condition="'$(UseCustomDirectoryHarvesting)' == 'true'" />
+                       Condition="'$(UseCustomDirectoryHarvesting)' == 'true' and '$(OutputFilesCandleVariable)' != ''" />
     </ItemGroup>
 
-    <ItemGroup Condition="$(IncludeWerRelatedKeys)' == 'true'">
+    <ItemGroup Condition="'$(IncludeWerRelatedKeys)' == 'true'">
       <WixSrcFile Include="$(MSBuildThisFileDirectory)product/werrelatedkeys.wxs" />
       <CandleVariables Include="WerRelatedKeys" Value="true" />
     </ItemGroup>

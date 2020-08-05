@@ -4,6 +4,7 @@
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     <PublishReadyToRun Condition="'$(PublishReadyToRun)' == '' and '$(PlatformPackageType)' == 'RuntimePack' and '$(Configuration)' == 'Release'">true</PublishReadyToRun>
     <PublishReadyToRunEmitSymbols>true</PublishReadyToRunEmitSymbols>
+    <PublishReadyToRunShowWarnings>true</PublishReadyToRunShowWarnings>
     <AllowedOutputExtensionsInSymbolsPackageBuildOutputFolder>$(AllowedOutputExtensionsInSymbolsPackageBuildOutputFolder);.map</AllowedOutputExtensionsInSymbolsPackageBuildOutputFolder>
   </PropertyGroup>
 

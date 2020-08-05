@@ -7,7 +7,7 @@
     <IsPackable>true</IsPackable>
     <PackTasks>false</PackTasks>
 
-    <Description>Common toolset for calling into CMake from MSBuild and easily reference native assets from managed projects.</Description>
+    <Description>Targets for producing an archive of file outputs.</Description>
     <PackageType>MSBuildSdk</PackageType>
 
     <EnableGeneratedPackageContent>false</EnableGeneratedPackageContent>
