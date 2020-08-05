@@ -63,7 +63,7 @@ if [ "$?" != "0" ]; then
     ConfigNodeHeader="<configuration>"
     PackageSourcesTemplate="${TB}<packageSources>${NL}${TB}</packageSources>"
 
-    sed -i.bak "s|$ConfigNodeHeader|$ConfigNodeHeader${NL}$PackageSourcesTemplate|" NuGet.config
+    sed -i.bak "s|$ConfigNodeHeader|$ConfigNodeHeader${NL}$PackageSourcesTemplate|" $ConfigFile
 fi
 
 # Ensure there is a <packageSourceCredentials>...</packageSourceCredentials> section. 
@@ -74,7 +74,7 @@ if [ "$?" != "0" ]; then
     PackageSourcesNodeFooter="</packageSources>"
     PackageSourceCredentialsTemplate="${TB}<packageSourceCredentials>${NL}${TB}</packageSourceCredentials>"
 
-    sed -i.bak "s|$PackageSourcesNodeFooter|$PackageSourcesNodeFooter${NL}$PackageSourceCredentialsTemplate|" NuGet.config
+    sed -i.bak "s|$PackageSourcesNodeFooter|$PackageSourcesNodeFooter${NL}$PackageSourceCredentialsTemplate|" $ConfigFile
 fi
 
 PackageSources=()
@@ -146,3 +146,21 @@ for FeedName in ${PackageSources[@]} ; do
         sed -i.bak "s|$PackageSourceCredentialsNodeFooter|$NewCredential${NL}$PackageSourceCredentialsNodeFooter|" $ConfigFile
     fi
 done
+
+# Re-enable any entries in disabledPackageSources where the feed name contains darc-int
+# See https://github.com/dotnet/arcade/issues/5890 for context
+grep -i "<disabledPackageSources>" $ConfigFile
+if [ "$?" == "0" ]; then
+    DisabledDarcIntSources=()
+    echo "Re-enabling any disabled package sources in $ConfigFile"
+    DisabledDarcIntSources+=$(grep -oh '"darc-int-[^"]*" value="true"' $ConfigFile  | tr -d '"')
+    for DisabledSourceName in ${DisabledDarcIntSources[@]} ; do
+        if [[ $DisabledSourceName == darc-int* ]]
+            then
+                OldDisableValue="add key=\"$DisabledSourceName\" value=\"true\""
+                NewDisableValue="add key=\"$DisabledSourceName\" value=\"false\""
+                sed -i.bak "s|$OldDisableValue|$NewDisableValue|" $ConfigFile
+                echo "Neutralized disablePackageSources entry for '$DisabledSourceName'"
+        fi
+    done
+fi
