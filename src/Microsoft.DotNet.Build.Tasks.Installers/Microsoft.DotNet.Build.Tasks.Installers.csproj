@@ -9,6 +9,8 @@
     <Description>Installer task package</Description>
     <PackageTags>Arcade Build Tool Installer</PackageTags>
     <DevelopmentDependency>true</DevelopmentDependency>
+    <NoWarn>$(NoWarn);NU5127;NU5129</NoWarn>
+    <EnableDefaultNoneItems>false</EnableDefaultNoneItems>
   </PropertyGroup>
 
   <ItemGroup>
@@ -17,6 +19,12 @@
     <PackageReference Include="Microsoft.Build.Tasks.Core" Version="$(MicrosoftBuildTasksCoreVersion)" />
     <PackageReference Include="Microsoft.Build.Framework" Version="$(MicrosoftBuildFrameworkVersion)" />
     <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonVersion)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="build/**/*.*" Pack="true">
+      <PackagePath>build</PackagePath>
+    </None>
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
