@@ -426,7 +426,7 @@
 
     <MSBuild Projects="$(MSBuildProjectFullPath)"
           Targets="_GetAllSharedFrameworkFiles"
-          RemoveProperties="SharedFrameworkOutputPath;SharedFrameworkSymbolsOutputPath">
+          RemoveProperties="OutputPath;SymbolsOutputPath">
       <Output TaskParameter="TargetOutputs" ItemName="_FilesToPackage" />
     </MSBuild>
       
