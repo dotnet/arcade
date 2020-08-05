@@ -6,7 +6,7 @@ using Microsoft.Build.Framework;
 using System;
 using System.Security.Cryptography;
 
-namespace Microsoft.DotNet.Build.Tasks.SharedFramework.Sdk
+namespace Microsoft.DotNet.Build.Tasks.Installers
 {
     public class GenerateGuidFromName : BuildTask
     {

@@ -58,7 +58,6 @@
 
     <ItemGroup>
       <_TargetRuntimeIdentifiers Include="$(RuntimeIdentifiers)" />
-      <_TargetInstallerRuntimeIdentifiers Include="$(InstallerRuntimeIdentifiers)" />
     </ItemGroup>
 
     <PropertyGroup Condition="'$(RuntimeIdentifiers)' != ''">
@@ -66,153 +65,57 @@
       <_RidInRidList Condition="'%(_TargetRuntimeIdentifiers.Identity)' == '$(RuntimeIdentifier)'">true</_RidInRidList>
       <SkipBuild Condition="'$(_RidInRidList)' != 'true'">true</SkipBuild>
     </PropertyGroup>
-    <PropertyGroup Condition="'$(InstallerRuntimeIdentifiers)' != '' and '$(InstallerRuntimeIdentifier)' != ''">
-      <!-- Avoid building a project when none of the possible InstallerRuntimeIdentifiers is the current InstallerRuntimeIdentifier. -->
-      <_InstallerRidInInstallerRidList Condition="'%(_TargetInstallerRuntimeIdentifiers.Identity)' == '$(InstallerRuntimeIdentifier)'">true</_InstallerRidInInstallerRidList>
-      <SkipBuild Condition="'$(_InstallerRidInInstallerRidList)' != 'true'">true</SkipBuild>
-    </PropertyGroup>
   </Target>
 
-  <Target Name="_CalculatePackageInformation">
+  <Target Name="_ValidatePackageInformation">
     <Error Condition="'$(PlatformPackageType)' != 'TargetingPack' and
                       '$(PlatformPackageType)' != 'RuntimePack' and
                       '$(PlatformPackageType)' != 'AppHostPack' and
                       '$(PlatformPackageType)' != 'ToolPack'"
            Text="Unknown PlatformPackageType '$(PlatformPackageType)'" />
     <Error Condition="'$(_PackageTypeRequiresRid)' == 'true' and '$(RuntimeIdentifier)' == ''" Text="Producing a $(PlatformPackageType) requires a runtime-identifier to be specified." />
-    <PropertyGroup>
-      <PackageId Condition="'$(OverridePackageId)' != ''">$(OverridePackageId)</PackageId>
-    </PropertyGroup>
 
-    <PropertyGroup Condition="'$(PlatformPackageType)' == 'TargetingPack'">
-      <PackageId Condition="'$(OverridePackageId)' == ''">$(SharedFrameworkName).Ref</PackageId>
-      <SharedFrameworkArchiveName Condition="'$(SharedFrameworkArchiveName)' == ''">$(SharedFrameworkName).Ref</SharedFrameworkArchiveName>
-      <MacOSComponentNamePackType>pack.targeting</MacOSComponentNamePackType>
-    </PropertyGroup>
-    <PropertyGroup Condition="'$(PlatformPackageType)' == 'RuntimePack'">
-      <PackageId Condition="'$(OverridePackageId)' == ''">$(SharedFrameworkName).Runtime.$(RuntimeIdentifier)</PackageId>
-      <SharedFrameworkArchiveName Condition="'$(SharedFrameworkArchiveName)' == ''">$(SharedFrameworkName).Runtime</SharedFrameworkArchiveName>
-      <MacOSComponentNamePackType>sharedframework.$(SharedFrameworkName)</MacOSComponentNamePackType>
-    </PropertyGroup>
-    <PropertyGroup Condition="'$(PlatformPackageType)' == 'AppHostPack'">
-      <PackageId Condition="'$(OverridePackageId)' == ''">$(SharedFrameworkName).Host.$(RuntimeIdentifier)</PackageId>
-      <SharedFrameworkArchiveName Condition="'$(SharedFrameworkArchiveName)' == ''">$(SharedFrameworkName).Host</SharedFrameworkArchiveName>
-      <MacOSComponentNamePackType>pack.apphost</MacOSComponentNamePackType>
-    </PropertyGroup>
-    <PropertyGroup>
-      <PackageId Condition="'$(OverridePackageId)' == '' and '$(PackageId)' == ''">$(SharedFrameworkName)</PackageId>
-      <SharedFrameworkArchiveName Condition="'$(SharedFrameworkArchiveName)' == ''">$(PackageId)</SharedFrameworkArchiveName>
-      <MacOSComponentNamePackType Condition="'$(MacOSComponentNamePackType)' == ''">pack.$(PlatformPackageType.ToLower())</MacOSComponentNamePackType>
-    </PropertyGroup>
   </Target>
   
   <PropertyGroup>
     <_PackageTypeRequiresRid Condition="'$(PlatformPackageType)' == 'RuntimePack' or '$(PlatformPackageType)' == 'AppHostPack'">true</_PackageTypeRequiresRid>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(MSBuildProjectExtension)' == '.sfxproj' or '$(MSBuildProjectExtension)' == '.bundleproj'">
+  <PropertyGroup>
+    <PackageId Condition="'$(OverridePackageId)' != ''">$(OverridePackageId)</PackageId>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(PlatformPackageType)' == 'TargetingPack'">
+    <PackageId Condition="'$(OverridePackageId)' == ''">$(SharedFrameworkName).Ref</PackageId>
+    <SharedFrameworkArchiveName Condition="'$(SharedFrameworkArchiveName)' == ''">$(SharedFrameworkName).Ref</SharedFrameworkArchiveName>
+    <MacOSComponentNamePackType>pack.targeting</MacOSComponentNamePackType>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(PlatformPackageType)' == 'RuntimePack'">
+    <PackageId Condition="'$(OverridePackageId)' == ''">$(SharedFrameworkName).Runtime.$(RuntimeIdentifier)</PackageId>
+    <SharedFrameworkArchiveName Condition="'$(SharedFrameworkArchiveName)' == ''">$(SharedFrameworkName).Runtime</SharedFrameworkArchiveName>
+    <MacOSComponentNamePackType>sharedframework.$(SharedFrameworkName)</MacOSComponentNamePackType>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(PlatformPackageType)' == 'AppHostPack'">
+    <PackageId Condition="'$(OverridePackageId)' == ''">$(SharedFrameworkName).Host.$(RuntimeIdentifier)</PackageId>
+    <SharedFrameworkArchiveName Condition="'$(SharedFrameworkArchiveName)' == ''">$(SharedFrameworkName).Host</SharedFrameworkArchiveName>
+    <MacOSComponentNamePackType>pack.apphost</MacOSComponentNamePackType>
+  </PropertyGroup>
+  <PropertyGroup>
+    <PackageId Condition="'$(OverridePackageId)' == '' and '$(PackageId)' == ''">$(SharedFrameworkName)</PackageId>
+    <SharedFrameworkArchiveName Condition="'$(SharedFrameworkArchiveName)' == ''">$(PackageId)</SharedFrameworkArchiveName>
+    <MacOSComponentNamePackType Condition="'$(MacOSComponentNamePackType)' == ''">pack.$(PlatformPackageType.ToLower())</MacOSComponentNamePackType>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(MSBuildProjectExtension)' == '.sfxproj'">
     <!-- Reset BuildDependsOn for project types we know. We update it in the following targets files.  -->
     <BuildDependsOn></BuildDependsOn>
   </PropertyGroup>
 
-  <PropertyGroup>
-    <BuildDependsOn>$(BuildDependsOn);_GetSkipBuildProps</BuildDependsOn>
-    <_GlobalPropertiesToRemoveForPublish>
-      GenerateCrossArchMsi;
-      GenerateMSI;
-      GeneratePkg;
-      GenerateDeb;
-      GenerateRpm;
-      IsShipping;
-      ComponentMsiFile;
-      InstallerRuntimeIdentifier;
-      InstallerTargetArchitecture;
-      CrossArchContentsArch
-    </_GlobalPropertiesToRemoveForPublish>
-  </PropertyGroup>
-  
-  <ItemGroup>
-    <_GlobalPropertiesToRemoveForPublish Include="$(_GlobalPropertiesToRemoveForPublish)" />
-  </ItemGroup>
-    
   <Import Project="$(MSBuildThisFileDirectory)sharedfx.targets"
           Condition="'$(MSBuildProjectExtension)' == '.sfxproj'" />
 
   <Import Project="$(MSBuildThisFileDirectory)archive.targets"
           Condition="'$(GenerateArchive)' == 'true'" />
   
-  <Target Name="_GetTargetOSArchInfo">
-    <Error Condition="'$(InstallerRuntimeIdentifier)' == ''"
-           Text="An InstallerRuntimeIdentifier must be specified when building installers." />
-    <PropertyGroup>
-      <TargetRuntimeOS>$(InstallerRuntimeIdentifier.Substring(0, $(InstallerRuntimeIdentifier.LastIndexOf('-'))))</TargetRuntimeOS>
-      <TargetArchitecture Condition="'$(TargetArchitecture)' == ''">$(InstallerRuntimeIdentifier.Substring($(InstallerRuntimeIdentifier.LastIndexOf('-'))).TrimStart('-'))</TargetArchitecture>
-      <InstallerTargetArchitecture Condition="'$(InstallerTargetArchitecture)' == ''">$(TargetArchitecture)</InstallerTargetArchitecture>
-    </PropertyGroup>
-    <ItemGroup>
-      <CrossArchMsiToBuild Include="@(CrossArchSdkMsiInstallerArch)" Exclude="$(TargetArchitecture)" />
-    </ItemGroup>
-    <PropertyGroup>
-      <_osSupportsWixBasedInstallers Condition="$([MSBuild]::IsOsPlatform(Windows)) and '$(TargetRuntimeOS)' == 'win'">true</_osSupportsWixBasedInstallers>
-
-      <_osArchSupportsWixBasedInstallers>$(_osSupportsWixBasedInstallers)</_osArchSupportsWixBasedInstallers>
-      <_osArchSupportsWixBasedInstallers Condition="'$(TargetArchitecture)' == 'arm'">false</_osArchSupportsWixBasedInstallers>
-    </PropertyGroup>
-  </Target>
-
-  <Target Name="_GetVersionInfo">
-    <PropertyGroup>
-      <IncludePreReleaseLabelInPackageVersion Condition="'$(DotNetFinalVersionKind)' != 'release'">true</IncludePreReleaseLabelInPackageVersion>
-      <IncludePreReleaseLabelInPackageVersion Condition="'$(SuppressFinalPackageVersion)' == 'true'">true</IncludePreReleaseLabelInPackageVersion>
-      <IncludePreReleaseLabelInPackageVersion Condition="'$(IsShipping)' != 'true'">true</IncludePreReleaseLabelInPackageVersion>
-    </PropertyGroup>
-  </Target>
-
-  <Target Name="_GetProductBrandName" DependsOnTargets="_GetVersionInfo">
-    <PropertyGroup
-      Condition="
-        '$(ReleaseBrandSuffix)' == '' and
-        '$(PreReleaseVersionLabel)' != '' and
-        '$(PreReleaseVersionIteration)' != ''">
-      <!-- Convert 'preview.7' to 'Preview 7'.
-          'preview' will come from the pre-release version iteration and the numeric value
-          will be the PreReleaseVersionIteration. -->
-
-      <ReleaseBrandSuffix>$(PreReleaseVersionLabel.Substring(0,1).ToUpperInvariant())</ReleaseBrandSuffix>
-      <ReleaseBrandSuffix>$(ReleaseBrandSuffix)$(PreReleaseVersionLabel.Substring(1))</ReleaseBrandSuffix>
-      <ReleaseBrandSuffix>$(ReleaseBrandSuffix) $(PreReleaseVersionIteration)</ReleaseBrandSuffix>
-    </PropertyGroup>
-
-    <Error
-      Text="When building installers a ProductBrandPrefix is required."
-      Condition="'$(ProductBrandPrefix)' == ''" />
-    <Error
-      Text="When building installers for a tool pack a PackageBrandNameSuffix is required."
-      Condition="'$(PackageBrandNameSuffix)' == '' and '$(PlatformPackageType)' == 'ToolPack' and '$(MSBuildProjectExtension)' != '.bundleproj'" />
-    <Error
-      Text="When building a bundle installer, a BundleNameSuffix must be specified."
-      Condition="'$(BundleNameSuffix)' == '' and '$(MSBuildProjectExtension)' == '.bundleproj'" />
-
-    <PropertyGroup>
-      <ProductBrandSuffix>$(VersionPrefix)</ProductBrandSuffix>
-      <ProductBrandSuffix Condition="'$(ReleaseBrandSuffix)'!=''">$(VersionPrefix) $(ReleaseBrandSuffix)</ProductBrandSuffix>
-
-      <ProductBrandName Condition="'$(PlatformPackageType)' == 'TargetingPack'">$(ProductBrandPrefix) Targeting Pack - $(ProductBrandSuffix)</ProductBrandName>
-      <ProductBrandName Condition="'$(PlatformPackageType)' == 'RuntimePack'">$(ProductBrandPrefix) Runtime - $(ProductBrandSuffix)</ProductBrandName>
-      <ProductBrandName Condition="'$(PlatformPackageType)' == 'AppHostPack'">$(ProductBrandPrefix) AppHost Pack - $(ProductBrandSuffix)</ProductBrandName>
-      <ProductBrandName Condition="'$(MSBuildProjectExtension)' == '.bundleproj'">$(ProductBrandPrefix) $(BundleNameSuffix) - $(ProductBrandSuffix)</ProductBrandName>
-      <ProductBrandName Condition="'$(ProductBrandName)' == ''">$(ProductBrandPrefix) $(PackageBrandNameSuffix) - $(ProductBrandSuffix)</ProductBrandName>
-    </PropertyGroup>
-  </Target>
-  
-  <PropertyGroup>
-    <InstallerRuntimeIdentifier Condition="'$(InstallerRuntimeIdentifier)' == ''">$(RuntimeIdentifier)</InstallerRuntimeIdentifier>
-  </PropertyGroup>
-  
-  <Import Project="$(MSBuildThisFileDirectory)installer.targets"
-          Condition="'$(MSBuildProjectExtension)' != '.bundleproj' and '$(GenerateInstallers)' == 'true' and '$(InstallerRuntimeIdentifier)' != ''" />
-  <Import Project="$(MSBuildThisFileDirectory)installer.multirid.targets"
-          Condition="'$(MSBuildProjectExtension)' != '.bundleproj' and '$(GenerateInstallers)' == 'true' and '$(InstallerRuntimeIdentifier)' == ''" />
-  <Import Project="$(MSBuildThisFileDirectory)bundle.targets"
-          Condition="'$(MSBuildProjectExtension)' == '.bundleproj'" />
+  <Import Project="windows/wix.targets" />
 </Project>

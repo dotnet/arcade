@@ -8,7 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace Microsoft.DotNet.Build.Tasks.SharedFramework.Sdk
+namespace Microsoft.DotNet.Build.Tasks.Installers
 {
     public class GenerateJsonObjectString : BuildTask
     {

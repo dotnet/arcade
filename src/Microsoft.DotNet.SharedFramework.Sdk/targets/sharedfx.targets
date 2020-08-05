@@ -27,7 +27,7 @@
   </Target>
 
   <Target Name="_PrepareSharedFrameworkForReadyToRun"
-          DependsOnTargets="_CalculatePackageInformation;
+          DependsOnTargets="_ValidatePackageInformation;
                             GetSharedFrameworkFilesForReadyToRun"
           Condition="'$(PlatformPackageType)' == 'RuntimePack'">
     <ItemGroup>
@@ -57,7 +57,7 @@
   </Target>
 
   <Target Name="GetFilesToPackage"
-          DependsOnTargets="_CalculatePackageInformation;
+          DependsOnTargets="_ValidatePackageInformation;
                             ResolveFrameworkReferences;
                             ResolveLockFileCopyLocalFiles;
                             ResolveReferences;
@@ -269,7 +269,7 @@
   -->
   <UsingTask TaskName="GeneratePlatformManifestEntriesFromFileList" AssemblyFile="$(DotNetSharedFrameworkTaskFile)" />
   <Target Name="_GeneratePlatformManifestFromRuntimePack"
-          DependsOnTargets="_CalculatePackageInformation"
+          DependsOnTargets="_ValidatePackageInformation"
           Condition="'$(PlatformPackageType)' == 'TargetingPack' and '$(UseTemplatedPlatformManifest)' != 'true'">
 
     <PropertyGroup>
@@ -445,32 +445,32 @@
     </ItemGroup>
   </Target>
 
-  <Target Name="PublishSharedFrameworkToDisk"
+  <Target Name="PublishToDisk"
           DependsOnTargets="GetFilesToPublish">
-    <Error Condition="'$(SharedFrameworkOutputPath)' == ''" Text="Publishing a shared framework to disk requires the SharedFrameworkOutputPath to be set to the root of the path to write to." />
+    <Error Condition="'$(OutputPath)' == ''" Text="Publishing a shared framework to disk requires the OutputPath to be set to the root of the path to write to." />
     <Copy
       SourceFiles="@(FilesToPublish)"
-      DestinationFolder="$(SharedFrameworkOutputPath)%(FilesToPublish.TargetPath)%(FilesToPublish.Culture)"
+      DestinationFolder="$(OutputPath)%(FilesToPublish.TargetPath)%(FilesToPublish.Culture)"
       Condition="'%(FilesToPublish.IsSymbolFile)' != 'true'"
       OverwriteReadOnlyFiles="true"
       SkipUnchangedFiles="true" />
 
     <!-- Fix file permissions in the layout dir. -->
     <!-- Reset everything to user readable/writeable and group and world readable. -->
-    <Exec Condition="!$([MSBuild]::IsOsPlatform(Windows))" Command='find "$(SharedFrameworkOutputPath)" -type f -name "*" -exec chmod 644 {} \;' />
+    <Exec Condition="!$([MSBuild]::IsOsPlatform(Windows))" Command='find "$(OutputPath)" -type f -name "*" -exec chmod 644 {} \;' />
     <!-- Generally, dylibs and sos have 'x'. -->
-    <Exec Condition="!$([MSBuild]::IsOsPlatform(Windows))" Command='find "$(SharedFrameworkOutputPath)" -type f -name "*.dylib" -exec chmod 755 {} \;' />
-    <Exec Condition="!$([MSBuild]::IsOsPlatform(Windows))" Command='find "$(SharedFrameworkOutputPath)" -type f -name "*.so" -exec chmod 755 {} \;' />
+    <Exec Condition="!$([MSBuild]::IsOsPlatform(Windows))" Command='find "$(OutputPath)" -type f -name "*.dylib" -exec chmod 755 {} \;' />
+    <Exec Condition="!$([MSBuild]::IsOsPlatform(Windows))" Command='find "$(OutputPath)" -type f -name "*.so" -exec chmod 755 {} \;' />
     <!-- Executables (those without dots) are executable. -->
-    <Exec Condition="!$([MSBuild]::IsOsPlatform(Windows))" Command='find "$(SharedFrameworkOutputPath)" -type f ! -name "*.*" -exec chmod 755 {} \;' />
+    <Exec Condition="!$([MSBuild]::IsOsPlatform(Windows))" Command='find "$(OutputPath)" -type f ! -name "*.*" -exec chmod 755 {} \;' />
   </Target>
 
-  <Target Name="PublishSharedFrameworkSymbolsToDisk"
+  <Target Name="PublishSymbolsToDisk"
           DependsOnTargets="GetFilesToPublish">
-    <Error Condition="'$(SharedFrameworkSymbolsOutputPath)' == ''" Text="Publishing a shared framework to disk requires the SharedFrameworkOutputPath to be set to the root of the path to write to." />
+    <Error Condition="'$(SymbolsOutputPath)' == ''" Text="Publishing a shared framework to disk requires the OutputPath to be set to the root of the path to write to." />
     <Copy
       SourceFiles="@(FilesToPublish)"
-      DestinationFolder="$(SharedFrameworkSymbolsOutputPath)%(FilesToPublish.Culture)"
+      DestinationFolder="$(SymbolsOutputPath)%(FilesToPublish.Culture)"
       Condition="'%(FilesToPublish.IsSymbolFile)' == 'true'"
       OverwriteReadOnlyFiles="true"
       SkipUnchangedFiles="true" />

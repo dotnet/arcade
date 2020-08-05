@@ -39,15 +39,15 @@
           DependsOnTargets="_GetTargetOSArchInfo;
                             _GetProductBrandName">
     <PropertyGroup>
-      <SharedFrameworkInstallerName Condition="'$(SharedFrameworkInstallerName)' == ''">$(SharedFrameworkArchiveName)</SharedFrameworkInstallerName>
+      <InstallerName Condition="'$(InstallerName)' == ''">$(ArchiveName)</InstallerName>
     </PropertyGroup>
 
     <Error
-      Text="SharedFrameworkInstallerName '$(SharedFrameworkInstallerName)' is empty or starts with a '-': expected a value like 'dotnet-runtime'."
-      Condition="'$(SharedFrameworkInstallerName)' == '' or $(SharedFrameworkInstallerName.StartsWith('-'))" />
+      Text="InstallerName '$(InstallerName)' is empty or starts with a '-': expected a value like 'dotnet-runtime'."
+      Condition="'$(InstallerName)' == '' or $(InstallerName.StartsWith('-'))" />
 
     <PropertyGroup>
-      <VersionedInstallerName>$(SharedFrameworkInstallerName)-$(MajorVersion).$(MinorVersion)</VersionedInstallerName>
+      <VersionedInstallerName>$(InstallerName)-$(MajorVersion).$(MinorVersion)</VersionedInstallerName>
       <VersionedInstallerName>$(VersionedInstallerName.ToLowerInvariant())</VersionedInstallerName>
       <InstallerPackageRelease>1</InstallerPackageRelease>
       <InstallerPackageVersion>$(VersionPrefix)</InstallerPackageVersion>
@@ -64,7 +64,7 @@
       <InstallerBuildPart>$(Version)-$(TargetRuntimeOS)-$(InstallerTargetArchitecture)</InstallerBuildPart>
 
       <!-- Location to place the installer, in artifacts. -->
-      <InstallerFileNameWithoutExtension>$(SharedFrameworkInstallerName)-$(InstallerBuildPart)</InstallerFileNameWithoutExtension>
+      <InstallerFileNameWithoutExtension>$(InstallerName)-$(InstallerBuildPart)</InstallerFileNameWithoutExtension>
       <_InstallerFile Condition="'$(_InstallerFile)' == ''">$(PackageOutputPath)$(InstallerFileNameWithoutExtension)$(InstallerExtension)</_InstallerFile>
       <ExeBundleInstallerEngineFile>$(PackageOutputPath)$(InstallerFileNameWithoutExtension)-engine.exe</ExeBundleInstallerEngineFile>
     </PropertyGroup>
@@ -105,7 +105,7 @@
   <!--
     Create macOS pkg installer.
   -->
-  <UsingTask TaskName="GenerateMacOSDistributionFile" AssemblyFile="$(DotNetSharedFrameworkTaskFile)"/>
+  <UsingTask TaskName="GenerateMacOSDistributionFile" AssemblyFile="$(MicrosoftDotNetBuildTasksInstallersTaskAssembly)"/>
   <Target Name="CreatePkgBundle"
           DependsOnTargets="
             _GetInstallerProperties;

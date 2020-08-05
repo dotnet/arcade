@@ -12,7 +12,7 @@
 
   <Target Name="GenerateInstallers"
           Condition="'$(SkipBuild)' != 'true'"
-          DependsOnTargets="_GetSkipBuildProps;_ComputeInstallerItems"
+          DependsOnTargets="_GetInstallerSkipBuildProps;_ComputeInstallerItems"
           Returns="@(InnerOutput)">
     <Error Condition="'$(InstallerRuntimeIdentifiers)' == ''"
            Text="At least one RID must be specified via InstallerRuntimeIdentifiers to build installers." />

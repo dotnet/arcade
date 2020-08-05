@@ -1,6 +1,6 @@
 <Project>
   <PropertyGroup>
     <!-- Don't generate archives for bundles by default.  -->
-    <GenerateArchive Condition="'$(MSBuildProjectExtension)' != '.bundleproj'">true</GenerateArchive>
+    <GenerateArchive>true</GenerateArchive>
   </PropertyGroup>
 </Project>

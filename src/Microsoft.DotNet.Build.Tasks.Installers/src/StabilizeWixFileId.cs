@@ -7,7 +7,7 @@ using System;
 using System.Linq;
 using System.Xml.Linq;
 
-namespace Microsoft.DotNet.Build.Tasks.SharedFramework.Sdk
+namespace Microsoft.DotNet.Build.Tasks.Installers
 {
     /// <summary>
     /// In a WiX source file, replaces the Id of a File with some given string in order to stabilize

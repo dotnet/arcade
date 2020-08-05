@@ -1,6 +1,6 @@
 <Project>
   <Target Name="_CreateSharedFrameworkArchive"
-          DependsOnTargets="_CalculatePackageInformation"
+          DependsOnTargets="_ValidatePackageInformation"
           Condition="'$(SkipBuild)' != 'true'">
     <PropertyGroup>
       <_SharedFrameworkOutputPathRoot>$(IntermediateOutputPath)sharedFramework/</_SharedFrameworkOutputPathRoot>
@@ -8,9 +8,8 @@
       <_ArchiveFileName Condition="'$(RuntimeIdentifier)' != ''">$(SharedFrameworkArchiveName)-$(RuntimeIdentifier)-$(Version)</_ArchiveFileName>
     </PropertyGroup>
     <MSBuild Projects="$(MSBuildProjectFullPath)"
-             Targets="PublishSharedFrameworkToDisk"
-             Properties="SharedFrameworkOutputPath=$(_SharedFrameworkOutputPathRoot)"
-             RemoveProperties="@(_GlobalPropertiesToRemoveForPublish)" />
+             Targets="PublishToDisk"
+             Properties="OutputPath=$(_SharedFrameworkOutputPathRoot)" />
 
     <MakeDir Directories="$(PackageOutputPath)" />
     <ZipDirectory SourceDirectory="$(_SharedFrameworkOutputPathRoot)"
@@ -24,7 +23,7 @@
   </Target>
 
   <Target Name="_CreateSharedFrameworkSymbolsArchive"
-          DependsOnTargets="_CalculatePackageInformation"
+          DependsOnTargets="_ValidatePackageInformation"
           Condition="'$(CreateSharedFrameworkSymbolsArchive)' == 'true' and '$(SkipBuild)' != 'true'">
     <PropertyGroup>
       <_SharedFrameworkSymbolsOutputPathRoot>$(IntermediateOutputPath)sharedFrameworkSymbols/</_SharedFrameworkSymbolsOutputPathRoot>
@@ -32,8 +31,8 @@
       <_ArchiveFileName Condition="'$(RuntimeIdentifier)' != ''">$(SharedFrameworkArchiveName)-$(RuntimeIdentifier)-$(Version)</_ArchiveFileName>
     </PropertyGroup>
     <MSBuild Projects="$(MSBuildProjectFullPath)"
-             Targets="PublishSharedFrameworkSymbolsToDisk"
-             Properties="SharedFrameworkSymbolsOutputPath=$(_SharedFrameworkSymbolsOutputPathRoot)" />
+             Targets="PublishSymbolsToDisk"
+             Properties="SymbolsOutputPath=$(_SharedFrameworkSymbolsOutputPathRoot)" />
 
     <MakeDir Directories="$(PackageOutputPath)" />
     <ZipDirectory SourceDirectory="$(_SharedFrameworkSymbolsOutputPathRoot)"

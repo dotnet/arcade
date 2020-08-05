@@ -7,7 +7,7 @@ using System;
 using System.Globalization;
 using System.Text.RegularExpressions;
 
-namespace Microsoft.DotNet.Build.Tasks.SharedFramework.Sdk
+namespace Microsoft.DotNet.Build.Tasks.Installers
 {
     public sealed class GenerateCurrentVersion : BuildTask
     {
