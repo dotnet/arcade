@@ -31,6 +31,9 @@
   
   <Target Name="Execute">
     <GenerateBuildManifest Artifacts="@(ItemsToPush)"
+                           AzureDevOpsCollectionUri="$(SYSTEM_TEAMFOUNDATIONCOLLECTIONURI)"
+                           AzureDevOpsProject="$(SYSTEM_TEAMPROJECT)"
+                           AzureDevOpsBuildId="$(BUILD_BUILDID)"
                            ItemsToSign="@(ItemsToSign)"
                            StrongNameSignInfo="@(StrongNameSignInfo)"
                            FileSignInfo="@(FileSignInfo)"

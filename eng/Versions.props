@@ -31,7 +31,7 @@
     <MicrosoftExtensionsDependencyModelVersion>2.1.0</MicrosoftExtensionsDependencyModelVersion>
     <MicrosoftExtensionsFileSystemGlobbingVersion>2.0.0</MicrosoftExtensionsFileSystemGlobbingVersion>
     <MicrosoftNETCorePlatformsVersion>2.1.0</MicrosoftNETCorePlatformsVersion>
-    <MicrosoftNetCompilersToolsetVersion>3.8.0-2.20378.3</MicrosoftNetCompilersToolsetVersion>
+    <MicrosoftNetCompilersToolsetVersion>3.8.0-2.20403.2</MicrosoftNetCompilersToolsetVersion>
     <MoqVersion>4.8.3</MoqVersion>
     <MonoOptionsVersion>5.3.0.1</MonoOptionsVersion>
     <McMasterExtensionsCommandLineUtils>2.3.0</McMasterExtensionsCommandLineUtils>
@@ -76,7 +76,7 @@
     <MicrosoftDotNetSwaggerGeneratorMSBuildVersion>5.0.0-beta.20374.1</MicrosoftDotNetSwaggerGeneratorMSBuildVersion>
     <XliffTasksVersion>1.0.0-beta.20206.1</XliffTasksVersion>
     <MicrosoftDotNetMaestroTasksVersion>1.1.0-beta.20373.2</MicrosoftDotNetMaestroTasksVersion>
-    <MicrosoftDotNetXHarnessCLIVersion>1.0.0-prerelease.20380.2</MicrosoftDotNetXHarnessCLIVersion>
-    <MicrosoftSymbolUploaderBuildTaskVersion>1.1.137902</MicrosoftSymbolUploaderBuildTaskVersion>
+    <MicrosoftDotNetXHarnessCLIVersion>1.0.0-prerelease.20402.1</MicrosoftDotNetXHarnessCLIVersion>
+    <MicrosoftSymbolUploaderBuildTaskVersion>1.1.140302</MicrosoftSymbolUploaderBuildTaskVersion>
   </PropertyGroup>
 </Project>

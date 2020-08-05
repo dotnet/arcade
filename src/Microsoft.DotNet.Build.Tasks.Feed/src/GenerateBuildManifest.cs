@@ -34,6 +34,24 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         public string OutputPath { get; set; }
 
         /// <summary>
+        /// The collection URI of the Azure DevOps instance
+        /// </summary>
+        [Required]
+        public string AzureDevOpsCollectionUri { get; set; }
+
+        /// <summary>
+        /// The Azure DevOps project of this build
+        /// </summary>
+        [Required]
+        public string AzureDevOpsProject { get; set; }
+
+        /// <summary>
+        /// The Azure DevOps build ID
+        /// </summary>
+        [Required]
+        public int AzureDevOpsBuildId { get; set; }
+
+        /// <summary>
         /// List of files that need to be signed
         /// </summary>
         public ITaskItem[] ItemsToSign { get; set; }
@@ -105,6 +123,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                 var buildModel = BuildManifestUtil.CreateModelFromItems(
                     Artifacts,
+                    AzureDevOpsCollectionUri,
+                    AzureDevOpsProject,
+                    AzureDevOpsBuildId,
                     ItemsToSign,
                     StrongNameSignInfo,
                     FileSignInfo,

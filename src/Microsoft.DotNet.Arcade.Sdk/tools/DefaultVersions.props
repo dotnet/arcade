@@ -91,6 +91,7 @@
     <MSTestTestAdapterVersion Condition="'$(MSTestTestAdapterVersion)' == ''">$(MSTestVersion)</MSTestTestAdapterVersion>
     <MSTestTestFrameworkVersion Condition="'$(MSTestTestFrameworkVersion)' == ''">$(MSTestVersion)</MSTestTestFrameworkVersion>
     <MicrosoftDotNetBuildTasksFeedVersion Condition="'$(MicrosoftDotNetBuildTasksFeedVersion)' == ''">$(ArcadeSdkVersion)</MicrosoftDotNetBuildTasksFeedVersion>
+    <MicrosoftDotNetBuildTasksInstallersVersion Condition="'$(MicrosoftDotNetBuildTasksInstallersVersion)' == ''">$(ArcadeSdkVersion)</MicrosoftDotNetBuildTasksInstallersVersion>
     <NUnitVersion Condition="'$(NUnitVersion)' == ''">3.12.0</NUnitVersion>
     <NUnit3TestAdapterVersion Condition="'$(NUnit3TestAdapterVersion)' == ''">3.15.1</NUnit3TestAdapterVersion>
     <VSWhereVersion Condition="'$(VSWhereVersion)' == ''">2.6.7</VSWhereVersion>

@@ -11,7 +11,7 @@ using System.Xml;
 using System.Xml.Linq;
 using System.Xml.XPath;
 
-namespace Microsoft.DotNet.Build.Tasks.SharedFramework.Sdk.src
+namespace Microsoft.DotNet.Build.Tasks.Installers
 {
     public class CreateLightCommandPackageDrop : BuildTask
     {
@@ -43,7 +43,7 @@ namespace Microsoft.DotNet.Build.Tasks.SharedFramework.Sdk.src
         // and to validate that the light command being created by this task is correct (assist with debugging).
         public string OriginalLightCommand { get; set; }
 
-        public override bool ExecuteCore()
+        public override bool Execute()
         {
             LightCommandPackageNameOutput = Path.GetFileNameWithoutExtension(Out);
             string packageDropOutputFolder = Path.Combine(LightCommandWorkingDir, LightCommandPackageNameOutput);
@@ -59,7 +59,7 @@ namespace Microsoft.DotNet.Build.Tasks.SharedFramework.Sdk.src
             {
                 // copy the file to outputPath
                 string newWixObjFile = Path.Combine(packageDropOutputFolder, Path.GetFileName(wixobj.ItemSpec));
-                Log.LogMessage(MessageImportance.Normal, $"Creating modified wixobj file '{newWixObjFile}'...");
+                Log.LogMessage(LogImportance.Normal, $"Creating modified wixobj file '{newWixObjFile}'...");
                 File.Copy(wixobj.ItemSpec, newWixObjFile, true);
 
                 XDocument doc = XDocument.Load(newWixObjFile);
