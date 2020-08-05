@@ -96,7 +96,6 @@ function InsertMaestroPrivateFeedCredentials($Sources, $Creds, $Username, $Passw
     }
 }
 
-# See https://github.com/dotnet/arcade/issues/5890 for context
 function EnablePrivatePackageSources($DisabledPackageSources) {
     $maestroPrivateSources = $DisabledPackageSources.SelectNodes("add[contains(@key,'darc-int')]")
     ForEach ($DisabledPackageSource in $maestroPrivateSources) {
