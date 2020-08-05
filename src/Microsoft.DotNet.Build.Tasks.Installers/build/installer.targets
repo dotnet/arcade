@@ -2,7 +2,7 @@
   <PropertyGroup>
     <_InstallerTargetsImported>true</_InstallerTargetsImported>
   </PropertyGroup>
-  <Target Name="GetInstallerGenerationFlags" DependsOnTargets="_GetTargetOSArchInfo">
+  <Target Name="GetInstallerGenerationFlags" DependsOnTargets="_GetTargetOSArchInfo;_GetInstallerSkipBuildProps">
     <!-- Filter the installer generation/build flags for the current build machine. -->
     <PropertyGroup>
       <!--
