@@ -5,7 +5,7 @@
     <PublishReadyToRun Condition="'$(PublishReadyToRun)' == '' and '$(PlatformPackageType)' == 'RuntimePack' and '$(Configuration)' == 'Release'">true</PublishReadyToRun>
     <PublishReadyToRunEmitSymbols>true</PublishReadyToRunEmitSymbols>
     <PublishReadyToRunShowWarnings>true</PublishReadyToRunShowWarnings>
-    <AllowedOutputExtensionsInSymbolsPackageBuildOutputFolder>$(AllowedOutputExtensionsInSymbolsPackageBuildOutputFolder);.map</AllowedOutputExtensionsInSymbolsPackageBuildOutputFolder>
+    <AllowedOutputExtensionsInSymbolsPackageBuildOutputFolder>$(AllowedOutputExtensionsInSymbolsPackageBuildOutputFolder);.map;.dbg;.debug;.dwarf</AllowedOutputExtensionsInSymbolsPackageBuildOutputFolder>
   </PropertyGroup>
 
   <Target Name="GetSharedFrameworkFilesForReadyToRun" DependsOnTargets="$(GetSharedFrameworkFilesForReadyToRunDependsOn)" Returns="@(ReferenceCopyLocalPaths)" />
@@ -53,7 +53,7 @@
     </PropertyGroup>
     <ItemGroup>
       <FilesToPackage Include="@(_r2rSymbolFiles)" Condition="Exists('%(Identity)')" IsSymbolFile="true" />
-      <FilesToPackage Include="@(_r2rSymbolFilePattern)" IsSymbolFile="true" />
+      <FilesToPackage Include="$(_r2rSymbolFilePattern)" IsSymbolFile="true" />
     </ItemGroup>
   </Target>
 
