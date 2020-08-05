@@ -115,6 +115,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestProjects", "TestProject
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AttributeDifference.Contract", "src\Microsoft.DotNet.ApiCompat\tests\TestProjects\AttributeDifference\Contract\AttributeDifference.Contract.csproj", "{1CC55B23-6212-4120-BF52-8DED9CFF9FBC}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Build.Tasks.Archives", "src\Microsoft.DotNet.Build.Tasks.Archives\Microsoft.DotNet.Build.Tasks.Archives.csproj", "{5579768A-CC07-477C-ACE4-06FE9B0686A7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -709,6 +711,18 @@ Global
 		{1CC55B23-6212-4120-BF52-8DED9CFF9FBC}.Release|x64.Build.0 = Release|Any CPU
 		{1CC55B23-6212-4120-BF52-8DED9CFF9FBC}.Release|x86.ActiveCfg = Release|Any CPU
 		{1CC55B23-6212-4120-BF52-8DED9CFF9FBC}.Release|x86.Build.0 = Release|Any CPU
+		{5579768A-CC07-477C-ACE4-06FE9B0686A7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5579768A-CC07-477C-ACE4-06FE9B0686A7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5579768A-CC07-477C-ACE4-06FE9B0686A7}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{5579768A-CC07-477C-ACE4-06FE9B0686A7}.Debug|x64.Build.0 = Debug|Any CPU
+		{5579768A-CC07-477C-ACE4-06FE9B0686A7}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{5579768A-CC07-477C-ACE4-06FE9B0686A7}.Debug|x86.Build.0 = Debug|Any CPU
+		{5579768A-CC07-477C-ACE4-06FE9B0686A7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5579768A-CC07-477C-ACE4-06FE9B0686A7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5579768A-CC07-477C-ACE4-06FE9B0686A7}.Release|x64.ActiveCfg = Release|Any CPU
+		{5579768A-CC07-477C-ACE4-06FE9B0686A7}.Release|x64.Build.0 = Release|Any CPU
+		{5579768A-CC07-477C-ACE4-06FE9B0686A7}.Release|x86.ActiveCfg = Release|Any CPU
+		{5579768A-CC07-477C-ACE4-06FE9B0686A7}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,5 +1,3 @@
 <Project>
   <Import Project="$(MSBuildThisFileDirectory)sharedfx.props" />
-  <Import Project="$(MSBuildThisFileDirectory)archive.props" />
-  <Import Project="$(MSBuildThisFileDirectory)installer.props" />
 </Project>

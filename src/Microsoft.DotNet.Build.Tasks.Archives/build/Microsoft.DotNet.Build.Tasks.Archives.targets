@@ -1,0 +1,60 @@
+<Project>
+  <PropertyGroup>
+    <ArchiveName Condition="'$(ArchiveName)' == ''">$([System.IO.Path]::GetFileNameWithoutExtension($(MSBuildProjectFile)))</ArchiveName>
+    <SymbolsArchiveName Condition="'$(SymbolsArchiveName)' == ''">$(ArchiveName)-symbols</SymbolsArchiveName>
+  </PropertyGroup>
+
+  <Target Name="_CreateArchive"
+          DependsOnTargets="_ValidatePackageInformation"
+          Condition="'$(SkipBuild)' != 'true'">
+    <PropertyGroup>
+      <_OutputPathRoot>$(IntermediateOutputPath)output/</_OutputPathRoot>
+      <_ArchiveFileName>$(ArchiveName)-$(Version)</_ArchiveFileName>
+      <_ArchiveFileName Condition="'$(RuntimeIdentifier)' != ''">$(ArchiveName)-$(RuntimeIdentifier)-$(Version)</_ArchiveFileName>
+    </PropertyGroup>
+    <MSBuild Projects="$(MSBuildProjectFullPath)"
+             Targets="PublishToDisk"
+             Properties="OutputPath=$(_OutputPathRoot)" />
+
+    <MakeDir Directories="$(PackageOutputPath)" />
+    <ZipDirectory SourceDirectory="$(_OutputPathRoot)"
+                  Overwrite="true"
+                  DestinationFile="$(PackageOutputPath)/$(_ArchiveFileName).zip"
+                  Condition="$([MSBuild]::IsOSPlatform(Windows))"/>
+    <Exec Command="tar -C '$(_OutputPathRoot)' -czf $(PackageOutputPath)/$(_ArchiveFileName).tar.gz ."
+          IgnoreExitCode="true"
+          IgnoreStandardErrorWarningFormat="true"
+          Condition="!$([MSBuild]::IsOSPlatform(Windows))"/>
+  </Target>
+
+  <Target Name="_CreateSymbolsArchive"
+          DependsOnTargets="_ValidatePackageInformation"
+          Condition="'$(CreateSymbolsArchive)' == 'true' and '$(SkipBuild)' != 'true'">
+    <PropertyGroup>
+      <_SymbolsOutputPathRoot>$(IntermediateOutputPath)symbols/</_SymbolsOutputPathRoot>
+      <_ArchiveFileName>$(SymbolsArchiveName)-$(Version)</_ArchiveFileName>
+      <_ArchiveFileName Condition="'$(RuntimeIdentifier)' != ''">$(SymbolsArchiveName)-$(RuntimeIdentifier)-$(Version)</_ArchiveFileName>
+    </PropertyGroup>
+    <MSBuild Projects="$(MSBuildProjectFullPath)"
+             Targets="PublishSymbolsToDisk"
+             Properties="SymbolsOutputPath=$(_SymbolsOutputPathRoot)" />
+
+    <MakeDir Directories="$(PackageOutputPath)" />
+    <ZipDirectory SourceDirectory="$(_SymbolsOutputPathRoot)"
+                  Overwrite="true"
+                  DestinationFile="$(PackageOutputPath)/$(_ArchiveFileName).zip"
+                  Condition="$([MSBuild]::IsOSPlatform(Windows))"/>
+    <Exec Command="tar -C '$(_SymbolsOutputPathRoot)' -czf $(PackageOutputPath)/$(_ArchiveFileName).tar.gz ."
+          IgnoreExitCode="true"
+          IgnoreStandardErrorWarningFormat="true"
+          Condition="!$([MSBuild]::IsOSPlatform(Windows))"/>
+  </Target>
+
+  <PropertyGroup>
+    <BuildDependsOn>
+      $(BuildDependsOn);
+      _CreateArchive;
+      _CreateSymbolsArchive
+    </BuildDependsOn>
+  </PropertyGroup>
+</Project>

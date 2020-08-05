@@ -73,8 +73,8 @@
                       '$(PlatformPackageType)' != 'AppHostPack' and
                       '$(PlatformPackageType)' != 'ToolPack'"
            Text="Unknown PlatformPackageType '$(PlatformPackageType)'" />
-    <Error Condition="'$(_PackageTypeRequiresRid)' == 'true' and '$(RuntimeIdentifier)' == ''" Text="Producing a $(PlatformPackageType) requires a runtime-identifier to be specified." />
-
+    <Error Condition="'$(_PackageTypeRequiresRid)' == 'true' and '$(RuntimeIdentifier)' == ''"
+           Text="Producing a $(PlatformPackageType) requires a runtime-identifier to be specified." />
   </Target>
   
   <PropertyGroup>
@@ -87,35 +87,29 @@
 
   <PropertyGroup Condition="'$(PlatformPackageType)' == 'TargetingPack'">
     <PackageId Condition="'$(OverridePackageId)' == ''">$(SharedFrameworkName).Ref</PackageId>
-    <SharedFrameworkArchiveName Condition="'$(SharedFrameworkArchiveName)' == ''">$(SharedFrameworkName).Ref</SharedFrameworkArchiveName>
+    <PackageBrandNameSuffix>Targeting Pack</PackageBrandNameSuffix>
     <MacOSComponentNamePackType>pack.targeting</MacOSComponentNamePackType>
   </PropertyGroup>
   <PropertyGroup Condition="'$(PlatformPackageType)' == 'RuntimePack'">
     <PackageId Condition="'$(OverridePackageId)' == ''">$(SharedFrameworkName).Runtime.$(RuntimeIdentifier)</PackageId>
-    <SharedFrameworkArchiveName Condition="'$(SharedFrameworkArchiveName)' == ''">$(SharedFrameworkName).Runtime</SharedFrameworkArchiveName>
+    <PackageBrandNameSuffix>Runtime</PackageBrandNameSuffix>
     <MacOSComponentNamePackType>sharedframework.$(SharedFrameworkName)</MacOSComponentNamePackType>
   </PropertyGroup>
   <PropertyGroup Condition="'$(PlatformPackageType)' == 'AppHostPack'">
     <PackageId Condition="'$(OverridePackageId)' == ''">$(SharedFrameworkName).Host.$(RuntimeIdentifier)</PackageId>
-    <SharedFrameworkArchiveName Condition="'$(SharedFrameworkArchiveName)' == ''">$(SharedFrameworkName).Host</SharedFrameworkArchiveName>
+    <PackageBrandNameSuffix>AppHost Pack</PackageBrandNameSuffix>
     <MacOSComponentNamePackType>pack.apphost</MacOSComponentNamePackType>
   </PropertyGroup>
   <PropertyGroup>
     <PackageId Condition="'$(OverridePackageId)' == '' and '$(PackageId)' == ''">$(SharedFrameworkName)</PackageId>
-    <SharedFrameworkArchiveName Condition="'$(SharedFrameworkArchiveName)' == ''">$(PackageId)</SharedFrameworkArchiveName>
     <MacOSComponentNamePackType Condition="'$(MacOSComponentNamePackType)' == ''">pack.$(PlatformPackageType.ToLower())</MacOSComponentNamePackType>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(MSBuildProjectExtension)' == '.sfxproj'">
-    <!-- Reset BuildDependsOn for project types we know. We update it in the following targets files.  -->
+  <PropertyGroup>
     <BuildDependsOn></BuildDependsOn>
   </PropertyGroup>
 
-  <Import Project="$(MSBuildThisFileDirectory)sharedfx.targets"
-          Condition="'$(MSBuildProjectExtension)' == '.sfxproj'" />
-
-  <Import Project="$(MSBuildThisFileDirectory)archive.targets"
-          Condition="'$(GenerateArchive)' == 'true'" />
+  <Import Project="$(MSBuildThisFileDirectory)sharedfx.targets" />
   
   <Import Project="windows/wix.targets" />
 </Project>
