@@ -13,6 +13,8 @@
 # See example YAML call for this script below. Note the use of the variable `$(dn-bot-dnceng-artifact-feeds-rw)`
 # from the AzureDevOps-Artifact-Feeds-Pats variable group.
 #
+# Any disabledPackageSources entries which start with "darc-int" will be re-enabled as part of this script executing.
+#
 #  - task: Bash@3
 #    displayName: Setup Private Feeds Credentials
 #    inputs:
@@ -148,11 +150,10 @@ for FeedName in ${PackageSources[@]} ; do
 done
 
 # Re-enable any entries in disabledPackageSources where the feed name contains darc-int
-# See https://github.com/dotnet/arcade/issues/5890 for context
 grep -i "<disabledPackageSources>" $ConfigFile
 if [ "$?" == "0" ]; then
     DisabledDarcIntSources=()
-    echo "Re-enabling any disabled package sources in $ConfigFile"
+    echo "Re-enabling any disabled \"darc-int\" package sources in $ConfigFile"
     DisabledDarcIntSources+=$(grep -oh '"darc-int-[^"]*" value="true"' $ConfigFile  | tr -d '"')
     for DisabledSourceName in ${DisabledDarcIntSources[@]} ; do
         if [[ $DisabledSourceName == darc-int* ]]

@@ -11,6 +11,8 @@
 # See example YAML call for this script below. Note the use of the variable `$(dn-bot-dnceng-artifact-feeds-rw)`
 # from the AzureDevOps-Artifact-Feeds-Pats variable group.
 #
+# Any disabledPackageSources entries which start with "darc-int" will be re-enabled as part of this script executing
+#
 #  - task: PowerShell@2
 #    displayName: Setup Private Feeds Credentials
 #    condition: eq(variables['Agent.OS'], 'Windows_NT')
