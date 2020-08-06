@@ -1,0 +1,9 @@
+<Project>
+
+  <!-- Set up build infra for the acquire-* projects. -->
+
+  <Import Project="Sdk.targets" Sdk="Microsoft.DotNet.Arcade.Sdk" />
+
+  <Import Project="$(MSBuildThisFileDirectory)..\sdk\Sdk.targets" />
+
+</Project>

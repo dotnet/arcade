@@ -14,7 +14,7 @@
   <UsingTask TaskName="Microsoft.DotNet.Build.Tasks.VisualStudio.GenerateTrainingInputFiles" AssemblyFile="$(_VisualStudioBuildTasksAssembly)" />
   <UsingTask TaskName="Microsoft.DotNet.Build.Tasks.VisualStudio.GenerateTrainingPropsFile" AssemblyFile="$(_VisualStudioBuildTasksAssembly)" />
 
-  <Target Name="_BuildTrainingInputs" AfterTargets="Build">
+  <Target Name="_BuildTrainingInputs" BeforeTargets="AfterBuild">
     <Error Condition="('$(VisualStudioDropName)' == '' or '$(RepositoryName)' == '') and '$(OfficialBuild)' == 'true'"
            Text="Properties VisualStudioDropName and RepositoryName must be specified in official build that produces Visual Studio insertion components." />
 

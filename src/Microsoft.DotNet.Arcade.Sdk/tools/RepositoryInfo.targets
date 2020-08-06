@@ -4,29 +4,23 @@
   <!--
     Include both GitHub and Azure DevOps packages to enable SourceLink in repositories that mirror to Azure DevOps.
   -->
-  <ItemGroup Condition="'$(DotNetBuildFromSource)' != 'true'">
+  <ItemGroup>
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="$(MicrosoftSourceLinkVersion)" PrivateAssets="all" IsImplicitlyDefined="true" />
     <PackageReference Include="Microsoft.SourceLink.AzureRepos.Git" Version="$(MicrosoftSourceLinkVersion)" PrivateAssets="all" IsImplicitlyDefined="true" />
   </ItemGroup>
 
   <!--
-    Workarounds for Source Link not being available for source build.
     Set the SourceRoot to repo root to facilitate deterministic source paths when SCM queries are disabled.
     Set the RepositoryUrl to the Build.Repository.Uri Azure DevOps build variable if on CI, otherwise to local repo path.
   -->
-
-  <!-- Disable SourceLink when building from source -->
-  <PropertyGroup Condition="'$(DotNetBuildFromSource)' == 'true'">
-    <EnableSourceControlManagerQueries>false</EnableSourceControlManagerQueries>
-    <EnableSourceLink>false</EnableSourceLink>
-  </PropertyGroup>
 
   <ItemGroup Condition="'$(EnableSourceControlManagerQueries)' != 'true'">
     <SourceRoot Include="$(RepoRoot)" />
   </ItemGroup>
 
   <PropertyGroup Condition="'$(EnableSourceControlManagerQueries)' != 'true' and '$(RepositoryUrl)' == ''">
-    <RepositoryUrl Condition="'$(BUILD_REPOSITORY_URI)' != ''">$([System.Text.RegularExpressions.Regex]::Replace($(BUILD_REPOSITORY_URI), $(_TranslateUrlPattern), $(_TranslateUrlReplacement)))</RepositoryUrl>
+    <RepositoryUrl Condition="'$(BUILD_REPOSITORY_URI)' != '' and '$(DisableSourceLinkUrlTranslation)' != 'true'">$([System.Text.RegularExpressions.Regex]::Replace($(BUILD_REPOSITORY_URI), $(_TranslateUrlPattern), $(_TranslateUrlReplacement)))</RepositoryUrl>
+    <RepositoryUrl Condition="'$(BUILD_REPOSITORY_URI)' != '' and '$(DisableSourceLinkUrlTranslation)' == 'true'">$(BUILD_REPOSITORY_URI)</RepositoryUrl>
     <RepositoryUrl Condition="'$(BUILD_REPOSITORY_URI)' == ''">file://$(RepoRoot)</RepositoryUrl>
   </PropertyGroup>
 
@@ -50,11 +44,14 @@
       dnceng@vs-ssh.visualstudio.com:v3/dnceng/internal/dotnet-arcade-services
       git@ssh.dev.azure.com:v3/dnceng/internal/dotnet-arcade-services
     -->
+    <!-- Set DisableSourceLinkUrlTranslation to true when building a tool for internal use where sources only come from internal URIs -->
+    <DisableSourceLinkUrlTranslation Condition="'$(DisableSourceLinkUrlTranslation)' == ''">false</DisableSourceLinkUrlTranslation>
     <_TranslateUrlPattern>(https://dnceng%40dev\.azure\.com/dnceng/internal/_git|https://dev\.azure\.com/dnceng/internal/_git|https://dnceng\.visualstudio\.com/internal/_git|dnceng%40vs-ssh\.visualstudio\.com:v3/dnceng/internal|git%40ssh\.dev\.azure\.com:v3/dnceng/internal)/([^/-]+)-(.+)</_TranslateUrlPattern>
     <_TranslateUrlReplacement>https://github.com/$2/$3</_TranslateUrlReplacement>
   </PropertyGroup>
 
   <Target Name="_TranslateAzureDevOpsUrlToGitHubUrl"
+          Condition="'$(DisableSourceLinkUrlTranslation)' == 'false'"
           DependsOnTargets="$(SourceControlManagerUrlTranslationTargets)"
           BeforeTargets="SourceControlManagerPublishTranslatedUrls">
 

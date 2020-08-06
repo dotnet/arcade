@@ -8,7 +8,9 @@
       <Output>
         <StdOut>This is an intentional failure.</StdOut>
         <ErrorInfo>
-          <Message>Intentional Failure</Message>
+          <Message>
+              This failure is expected and is not the reason why your PR failed. This test is always failing in order to test failure reporting infrastructure. If your PR is blocked there must be another test or build error that is blocking your PR.
+          </Message>
           <StackTrace>   at tests.UnitTest2.ExpectedFailureTheoryTest(Int32 i) in UnitTest2.cs:line 16</StackTrace>
         </ErrorInfo>
       </Output>
@@ -19,7 +21,9 @@
       <Output>
         <StdOut>This is an intentional failure.</StdOut>
         <ErrorInfo>
-          <Message>Intentional Failure</Message>
+          <Message>
+              This failure is expected and is not the reason why your PR failed. This test is always failing in order to test failure reporting infrastructure. If your PR is blocked there must be another test or build error that is blocking your PR.
+          </Message>
           <StackTrace>   at tests.UnitTest2.ExpectedFailureTheoryTest(Int32 i) in UnitTest2.cs:line 16</StackTrace>
         </ErrorInfo>
       </Output>

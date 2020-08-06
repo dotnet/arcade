@@ -1,8 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
@@ -21,7 +16,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             value = item.GetMetadata(key);
             if (string.IsNullOrEmpty(value))
             {
-                log.LogError($"Item '{item.ItemSpec}' missing required metadata '{key}'.");
+                log.LogError(FailureCategory.Build, $"Item '{item.ItemSpec}' missing required metadata '{key}'.");
                 return false;
             }
 

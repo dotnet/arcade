@@ -61,6 +61,10 @@ namespace Microsoft.DotNet.RemoteExecutor
                 {
                     exitCode = task.GetAwaiter().GetResult();
                 }
+                else if (result is Task resultValueTask)
+                {
+                    resultValueTask.GetAwaiter().GetResult();
+                }
                 else if (result is int exit)
                 {
                     exitCode = exit;
@@ -105,7 +109,7 @@ namespace Microsoft.DotNet.RemoteExecutor
             catch (PlatformNotSupportedException)
             {
             }
-            
+
             return exitCode;
         }
 

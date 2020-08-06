@@ -1,4 +1,4 @@
-# Arcade SDK
+﻿# Arcade SDK
 
 Arcade SDK is a set of msbuild props and targets files and packages that provide common build features used across multiple repos, such as CI integration, packaging, VSIX and VS setup authoring, testing, and signing via Microbuild.
 
@@ -53,6 +53,8 @@ artifacts
         $(VsixPackageId).vsmand
         $(VsixContainerName).vsix
         $(VisualStudioInsertionComponent).vsman
+      DevDivPackages
+        $(MSBuildProjectName).$(PackageVersion).nupkg
       $(VsixPackageId).json
       $(VsixContainerName).vsix
   VSSetup.obj
@@ -91,15 +93,23 @@ Having a common output directory structure makes it possible to unify MicroBuild
 
 ### Build scripts
 
-Some common build scripts for using Arcade are provided in the [eng/common](https://github.com/dotnet/arcade/tree/master/eng/common) folder.  The general entry points are `cmd` or `sh` files and they provide common arguments to the `build.ps1` or `build.sh` files.
+Arcade provides common build scripts in the [eng/common](https://github.com/dotnet/arcade/tree/master/eng/common) folder:
 
-Common build scripts include:
+- eng/common/[build.ps1](https://github.com/dotnet/arcade/tree/master/eng/common/build.ps1)|[build.sh](https://github.com/dotnet/arcade/tree/master/eng/common/build.sh)
 
-- [CIBuild.cmd](https://github.com/dotnet/arcade/blob/master/eng/common/CIBuild.cmd) | [cibuild.sh](https://github.com/dotnet/arcade/blob/master/eng/common/cibuild.sh) - build script for running an Arcade build in CI or official builds
+  The scripts are designed to be used by repos that need a single `MSBuild` invocation to restore, build, package and test all projects in the repo. These scripts are thin wrappers calling into functions defined in `eng/common/tools.ps1|sh`. If the repository needs to run additional builds or commands it is recommended to create `eng/build.ps1|sh` scripts in the repository using `eng/common/build.ps1|sh` as a template and customize the implementation as necessary. These custom scripts should use common helpers and global variables defined in `eng/common/tools.ps1|sh` and provide command line switches that are a superset of the ones provided by `eng/common/build.ps1|sh`. 
 
-Most repos additionally create repo specific build scripts which reference the `eng/common/build.ps1` or `eng/common/build.sh` files.  They provide default arguments to those scripts but pass along any additional arguments you specify.
+- eng/common/[tools.ps1](https://github.com/dotnet/arcade/tree/master/eng/common/tools.ps1)|[tools.sh](https://github.com/dotnet/arcade/tree/master/eng/common/tools.sh)
 
-Repo script examples include:
+  Defines global variables and functions used in all builds scripts. This includes helpers that install .NET SDK, invoke MSBuild, locate Visual Studio, report build telemetry, etc.
+
+- eng/common/[CIBuild.cmd](https://github.com/dotnet/arcade/tree/master/eng/common/CIBuild.cmd)|[cibuild.sh](https://github.com/dotnet/arcade/tree/master/eng/common/cibuild.sh)
+
+  Repositories that use `eng/common/build.ps1|sh` (as opposed to a customized `eng/build.ps1|sh`) should use this build script for the main build step in their pipeline definition. Repositories with custom `eng/build.ps1|sh` should also add the corresponding `eng/CIBuild.cmd|cibuild.sh` for use in their pipeline definition.
+   
+> Since YAML pipeline definition is only executable in CI and not locally on a dev machine the repositories shall minimize the logic implemented in their pipeline definition. Instead of adding more build steps to the pipeline definition that follow `eng/common/CIBuild.cmd` repositories should opt for using the customized build scripts (`eng/build.ps1|sh`) and add the logic there. 
+
+Repos may also provide a few convenience build scripts in the repository root that dispatch to either `eng/common/build.ps1|sh` or `eng/build.ps1|sh` (if repo uses customized build scripts) but do not implement any logic:
 
 - [Build.cmd](https://github.com/dotnet/arcade/blob/master/Build.cmd) | [build.sh](https://github.com/dotnet/arcade/blob/master/build.sh) - default wrapper script for building and restoring the repo.
 - [Restore.cmd](https://github.com/dotnet/arcade/blob/master/Restore.cmd) | [restore.sh](https://github.com/dotnet/arcade/blob/master/restore.sh) - default wrapper script for restoring the repo.
@@ -221,8 +231,10 @@ The file is present in the repo and defines versions of all dependencies used in
   <PropertyGroup>
     <!-- Base three-part version used for all outputs of the repo (assemblies, packages, vsixes) -->
     <VersionPrefix>1.0.0</VersionPrefix>
-    <!-- Package pre-release suffix not including build number -->
-    <PreReleaseVersionLabel>rc2</PreReleaseVersionLabel>
+    <!-- Package pre-release label not including build number or the pre-release iteration-->
+    <PreReleaseVersionLabel>rc</PreReleaseVersionLabel>
+    <!-- Package pre-release version iteration. Combines with the label to produce a final pre-release suffix. -->
+    <PreReleaseVersionIteration>2</PreReleaseVersionIteration>
     <!-- Optional: base short date used for calculating version numbers of release-only packages (e.g. global tools) -->
     <VersionBaseShortDate>19000</VersionBaseShortDate>
 
@@ -271,6 +283,8 @@ Properties:
   True to allow ItemsToSign to be empty (the repository doesn't have any file to sign).
 
 See [Signing.md](https://github.com/dotnet/arcade/blob/master/Documentation/CorePackages/Signing.md#arguments-metadata) for details.
+
+To change the key used for strong-naming assemblies see `StrongNameKeyId` property.
 
 ### /eng/Publishing.props (optional)
 
@@ -339,6 +353,19 @@ The version of `RoslynTools.MSBuild` package can be specified in `global.json` f
 
 If it is not specified the build script attempts to find `RoslynTools.MSBuild` version `{VSMajor}.{VSMinor}.0-alpha` where `VSMajor.VSMinor` is the value of `tools.vs.version`.
 
+If the fallback behavior to use xcopy-deployable MSBuild package is not desirable, then a version of `none` should be indicated in `global.json`, like this: 
+
+```json
+{
+  "tools": {
+    "vs": {
+      "version": "16.4"
+    },
+    "xcopy-msbuild": "none"
+  }
+}
+```
+
 #### Example: Restoring multiple .NET Core Runtimes for running tests
 
 In /global.json, specify a `runtimes` section and list the [shared runtime versions](https://dotnet.microsoft.com/download/dotnet-core) you want installed.
@@ -401,7 +428,7 @@ Note: defining `runtimes` in your global.json will signal to Arcade to install a
   <packageSources>
     <clear />
     <!-- Feed to use to restore the Arcade SDK from -->  
-    <add key="dotnet-core" value="https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json" />
+    <add key="dotnet-eng" value="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json" />
     <!-- Feeds to use to restore dependent packages from -->  
     <add key="my-feed" value="https://dotnet.myget.org/F/myfeed/api/v3/index.json" />
   </packageSources>
@@ -429,6 +456,11 @@ It is a common practice to specify properties applicable to all (most) projects 
       Use PackageLicenseExpressionInternal for closed-source licenses.
     -->
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    
+    <!--
+      Specify an id of the key used to generate strong names of assemblies built from this repo.
+    -->
+    <StrongNameKeyId>Microsoft</StrongNameKeyId>
   </PropertyGroup>
 </Project>
 ```
@@ -637,7 +669,7 @@ The Build Pipeline needs to link the following variable group:
 ### Publishing test results
 
 ```yml
-- task: PublishTestResults@1
+- task: PublishTestResults@2
   displayName: Publish Test Results
   inputs:
     testRunner: XUnit
@@ -856,6 +888,14 @@ build -configuration Release -restore -ci /p:EnableNgenOptimization=true /p:Repo
 
 `true` if `Version` needs to respect SemVer 1.0. Default is `false`, which means format following SemVer 2.0.
 
+### `StrongNameKeyId` (string)
+
+The id of the key used to generate assembly strong name for signed assemblies (`SignAssembly` is `true`).
+By default, `SignAssembly` is set to `true` and `StrongNameKeyId` is set to `MicrosoftShared`.
+Available values are listed in [StrongName.targets](https://github.com/dotnet/arcade/blob/master/src/Microsoft.DotNet.Arcade.Sdk/tools/StrongName.targets).
+
+`AssemblyOriginatorKeyFile`, `PublicKey`, `PublicKeyToken`, `DelaySign`, `PublicSign` properties are set based on the value of `StrongNameKeyId`.
+
 ### `IsShipping`, `IsShippingAssembly`, `IsShippingPackage`, `IsShippingVsix` (bool)
 
 `IsShipping-` properties are project properties that determine which (if any) assets produced by the project are _shipping_. An asset is considered _shipping_ if it is intended to be delivered to customers via an official channel. This channel can be NuGet.org, an official installer, etc. Setting this flag to `true` does not guarantee that the asset will actually ship in the next release of the product. It might be decided after the build is complete that although the artifact is ready for shipping it won't be shipped this release cycle.
@@ -942,6 +982,10 @@ Additional command line arguments passed to the test runtime (i.e. `dotnet` or `
 
 For example, to invoke Mono with debug flags `--debug` (to get stack traces with line number information), set `TestRuntimeAdditionalArguments` to `--debug`.
 To override the default Shared Framework version that is selected based on the test project TFM, set `TestRuntimeAdditionalArguments` to `--fx-version x.y.z`.
+
+### `TestTimeout` (int)
+
+Timeout to apply to an individual invocation of the test runner (e.g. `xunit.console.exe`) for a single configuration. Integer number of milliseconds.
 
 ### `GenerateResxSource` (bool)
 

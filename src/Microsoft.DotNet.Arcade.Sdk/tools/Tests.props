@@ -36,13 +36,7 @@
     <!-- Treat test assemblies as non-shipping (do not publish or sign them). -->
     <IsShipping Condition="'$(IsShipping)' == ''">false</IsShipping>
 
-    <!-- Default test runner -->
-    <TestRunnerName Condition="'$(UsingToolXUnit)' == 'true'">XUnit</TestRunnerName>
-
     <!-- exclude test projects from source-build by default -->
     <ExcludeFromSourceBuild Condition="'$(ExcludeFromSourceBuild)' == ''">true</ExcludeFromSourceBuild>
   </PropertyGroup>
-
-  <!-- Import specialized props files of supported test runners -->
-  <Import Project="$(MSBuildThisFileDirectory)$(TestRunnerName)\$(TestRunnerName).props" Condition="'$(TestRunnerName)' != '' and Exists('$(MSBuildThisFileDirectory)$(TestRunnerName)\$(TestRunnerName).props')"/>
 </Project>

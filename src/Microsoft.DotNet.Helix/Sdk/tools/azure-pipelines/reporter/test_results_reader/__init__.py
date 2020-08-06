@@ -1,6 +1,6 @@
 import os
 from defs import TestResult, TestResultAttachment
-from typing import Iterable
+from typing import Iterable, List
 from formats import all_formats
 from helpers import get_env
 
@@ -55,11 +55,11 @@ def get_log_files(dir):
 
 def construct_log_list(log_files):
     def line(name, url):
-        return u"<li><a href='{}' target='_blank'>{}</a></li>".format(url, name)
+        return u"{}:\n  {}\n".format(name, url)
 
     lines = [line(name, url) for name, url in log_files]
 
-    output = u"<ul>" + u"".join(lines) + u"</ul>"
+    output = u"\n".join(lines)
     print("Generated log list: {}".format(output))
     return output
 
@@ -70,31 +70,31 @@ def add_logs(tr, log_list):
     global total_added_logs
     if tr is not None and tr.result != "Pass" and total_added_logs < 50:
         tr.attachments.append(TestResultAttachment(
-            name=u"Logs.html",
+            name=u"Logs.txt",
             text=log_list,
         ))
         total_added_logs += 1
     return tr
 
-def read_results(dir: str) -> Iterable[TestResult]:
+def read_results(dirs_to_check: List[str]) -> Iterable[TestResult]:
 
     log_files = list(get_log_files(os.path.join(get_env("HELIX_WORKITEM_ROOT"), "..")))
     log_list = construct_log_list(log_files)
 
-    print("Searching '{}' for test results files".format(dir))
-
     found = False
 
-    for root, dirs, files in os.walk(dir):
-        for file_name in files:
-            for f in all_formats:
-                if file_name.endswith(tuple(f.acceptable_file_suffixes)):
-                    file_path = os.path.join(root, file_name)
-                    print('Found results file {} with format {}'.format(file_path, f.name))
-                    found = True
-                    file_results = (add_logs(tr, log_list) for tr in f.read_results(file_path))
-                    for result in file_results:
-                        yield result
+    for dir in dirs_to_check:
+        print("Searching '{}' for test results files".format(dir))
+        for root, dirs, files in os.walk(dir):
+            for file_name in files:
+                for f in all_formats:
+                    if file_name.endswith(tuple(f.acceptable_file_suffixes)):
+                        file_path = os.path.join(root, file_name)
+                        print('Found results file {} with format {}'.format(file_path, f.name))
+                        found = True
+                        file_results = (add_logs(tr, log_list) for tr in f.read_results(file_path))
+                        for result in file_results:
+                            yield result
 
     if not found:
         print('No results file found in any of the following formats: {}'.format(', '.join((f.name for f in all_formats))))

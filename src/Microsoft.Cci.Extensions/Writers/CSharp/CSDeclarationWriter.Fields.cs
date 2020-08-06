@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System.Collections;
 using System.Collections.Generic;
 using Microsoft.Cci.Extensions.CSharp;
 
@@ -51,7 +52,8 @@ namespace Microsoft.Cci.Writers.CSharp
                 if (!field.IsCompileTimeConstant && field.GetHiddenBaseField(_filter) != Dummy.Field)
                     WriteKeyword("new");
 
-                WriteTypeName(field.Type);
+                // If it is a dummy field we call the override that ignores reference type nullability
+                WriteTypeName(field.Type, field.Attributes, includeReferenceTypeNullability: !(field is DummyPrivateField));
 
                 string name = field.Name.Value;
                 if (name.Contains("<") || name.Contains(">"))
@@ -95,12 +97,20 @@ namespace Microsoft.Cci.Writers.CSharp
         private ITypeDefinition _parentType;
         private ITypeReference _type;
         private IName _name;
+        private IEnumerable<ICustomAttribute> _attributes = System.Linq.Enumerable.Empty<ICustomAttribute>();
+        private bool _isReadOnly;
 
         public DummyPrivateField(ITypeDefinition parentType, ITypeReference type, string name)
         {
             _parentType = parentType;
             _type = type;
             _name = new NameTable().GetNameFor(name);
+        }
+
+        public DummyPrivateField(ITypeDefinition parentType, ITypeReference type, string name, IEnumerable<ICustomAttribute> attributes, bool isReadOnly) : this(parentType, type, name)
+        {
+            _attributes = attributes;
+            _isReadOnly = isReadOnly;
         }
 
         public uint BitLength => 0;
@@ -119,7 +129,7 @@ namespace Microsoft.Cci.Writers.CSharp
 
         public bool IsNotSerialized => false;
 
-        public bool IsReadOnly => _parentType.Attributes.HasIsReadOnlyAttribute();
+        public bool IsReadOnly => _isReadOnly || _parentType.Attributes.HasIsReadOnlyAttribute();
 
         public bool IsRuntimeSpecial => false;
 
@@ -157,7 +167,7 @@ namespace Microsoft.Cci.Writers.CSharp
 
         public ITypeDefinitionMember ResolvedTypeDefinitionMember { get { throw new System.NotImplementedException(); } }
 
-        public IEnumerable<ICustomAttribute> Attributes => System.Linq.Enumerable.Empty<ICustomAttribute>();
+        public IEnumerable<ICustomAttribute> Attributes => _attributes;
 
         public IEnumerable<ILocation> Locations { get { throw new System.NotImplementedException(); } }
 

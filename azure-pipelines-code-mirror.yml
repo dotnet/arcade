@@ -42,7 +42,59 @@ jobs:
           git reset --hard origin/$(BranchToMirror)
         displayName: Hard reset local branch to GitHub branch
         workingDirectory: $(WorkingDirectoryName)
-      - script: |
-          git push azdo-mirror $(BranchToMirror) $(ExtraPushArgs)
+      - task: PowerShell@2
         displayName: Push changes to Azure DevOps repo
-        workingDirectory: $(WorkingDirectoryName)
+        inputs:
+          targetType: inline
+          workingDirectory: $(WorkingDirectoryName)
+          script: |
+            git push azdo-mirror $(BranchToMirror) $(ExtraPushArgs)
+
+            if ($LASTEXITCODE -EQ 0) {
+              Write-Host "Push was successful"
+              exit
+            }
+
+            git fetch azdo-mirror
+            git fetch origin
+            $commits = (git --no-pager rev-list origin/$(BranchToMirror)..azdo-mirror/$(BranchToMirror) | Measure-Object -line).Lines
+            if ($commits -NE 0) {
+              Write-Host "##vso[task.LogIssue type=error;]Mirror repository $(AzDORepoName) has unexpected commits"
+              git --no-pager log origin/$(BranchToMirror)..azdo-mirror/$(BranchToMirror)
+              exit 1
+            }
+
+            Write-Host "##vso[task.LogIssue type=warning;]Push failed for unknown reason"
+
+            $retryattempt=0
+            while ($retryattempt -LT 3) {
+              $retryattempt+=1
+              Write-Host "Retry attempt $retryattempt of 3 in 5 seconds..."
+              Start-Sleep -Seconds 5
+
+              git push azdo-mirror $(BranchToMirror) $(ExtraPushArgs)
+              if ($LASTEXITCODE -EQ 0) {
+                Write-Host "Push successful"
+                exit
+              }
+            }
+
+            Write-Host "##vso[task.LogIssue type=error;]git failed to push to Azure DevOps mirror"
+            exit 1
+
+      - task: PowerShell@1
+        displayName: Broadcast target, branch, commit in metadata
+        continueOnError: true
+        condition: always()
+        inputs:
+          scriptType: inlineScript
+          arguments: '$(GithubRepo) $(BranchToMirror)'
+          workingDirectory: $(WorkingDirectoryName)
+          inlineScript: |
+            param([string]$repo, [string]$branch)
+
+            $commit = (git rev-parse HEAD).Substring(0, 7)
+            $target = "$repo $branch".Replace('/', ' ')
+
+            Write-Host "##vso[build.updatebuildnumber]$target $commit"
+            Write-Host "##vso[build.addbuildtag]$target"

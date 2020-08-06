@@ -3,6 +3,8 @@
 // See the LICENSE file in the project root for more information.
 
 using Microsoft.Build.Framework;
+using Microsoft.DotNet.Build.Tasks.Feed.Model;
+using Microsoft.DotNet.VersionTools.BuildManifest.Model;
 using System;
 using MSBuild = Microsoft.Build.Utilities;
 
@@ -30,6 +32,44 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// </summary>
         [Required]
         public string OutputPath { get; set; }
+
+        /// <summary>
+        /// The collection URI of the Azure DevOps instance
+        /// </summary>
+        [Required]
+        public string AzureDevOpsCollectionUri { get; set; }
+
+        /// <summary>
+        /// The Azure DevOps project of this build
+        /// </summary>
+        [Required]
+        public string AzureDevOpsProject { get; set; }
+
+        /// <summary>
+        /// The Azure DevOps build ID
+        /// </summary>
+        [Required]
+        public int AzureDevOpsBuildId { get; set; }
+
+        /// <summary>
+        /// List of files that need to be signed
+        /// </summary>
+        public ITaskItem[] ItemsToSign { get; set; }
+
+        /// <summary>
+        /// List of files with strong name sign info and said info
+        /// </summary>
+        public ITaskItem[] StrongNameSignInfo { get; set; }
+        
+        /// <summary>
+        /// List of which certificates to use when signing individual files
+        /// </summary>
+        public ITaskItem[] FileSignInfo { get; set; }
+
+        /// <summary>
+        /// List of which certificates to use when signing files with particular extensions
+        /// </summary>
+        public ITaskItem[] FileExtensionSignInfo { get; set; }
 
         /// <summary>
         /// The CI build ID.
@@ -60,19 +100,43 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// Is this manifest for a stable build?
         /// </summary>
         public bool IsStableBuild { get; set; }
+        
+        /// <summary>
+        /// The version of the publishing infrastructure that should be tagged in the manifest.
+        /// </summary>
+        public string PublishingVersion { get; set; }
 
         public override bool Execute()
         {
             try
             {
+                PublishingInfraVersion targetPublishingVersion = PublishingInfraVersion.Legacy;
+
+                if (!string.IsNullOrEmpty(PublishingVersion)) 
+                {
+                    if (Enum.TryParse(PublishingVersion, ignoreCase: true, out targetPublishingVersion))
+                    {
+                        Log.LogError($"Could not parse '{PublishingVersion}' as a valid publishing infrastructure version.");
+                        return false;
+                    }
+                }
+
                 var buildModel = BuildManifestUtil.CreateModelFromItems(
                     Artifacts,
+                    AzureDevOpsCollectionUri,
+                    AzureDevOpsProject,
+                    AzureDevOpsBuildId,
+                    ItemsToSign,
+                    StrongNameSignInfo,
+                    FileSignInfo,
+                    FileExtensionSignInfo,
                     BuildId,
                     BuildData,
                     RepoUri,
                     RepoBranch,
                     RepoCommit,
                     IsStableBuild,
+                    targetPublishingVersion,
                     Log);
 
                 buildModel.WriteAsXml(OutputPath, Log);

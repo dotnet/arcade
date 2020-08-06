@@ -1,12 +1,11 @@
 using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Net.Http;
-using System.Net.Http.Headers;
+using System.IO;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Rest;
+using Azure;
+using Azure.Core;
 using Microsoft.DotNet.Helix.Client.Models;
 
 namespace Microsoft.DotNet.Helix.Client
@@ -45,87 +44,75 @@ namespace Microsoft.DotNet.Helix.Client
             CancellationToken cancellationToken = default
         )
         {
-            using (var _res = await GetDetailedVMScalingHistoryInternalAsync(
-                date,
-                scaleSet,
-                cancellationToken
-            ).ConfigureAwait(false))
-            {
-                return _res.Body;
-            }
-        }
-
-        internal async Task OnGetDetailedVMScalingHistoryFailed(HttpRequestMessage req, HttpResponseMessage res)
-        {
-            var content = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
-            var ex = new RestApiException(
-                new HttpRequestMessageWrapper(req, null),
-                new HttpResponseMessageWrapper(res, content));
-            HandleFailedGetDetailedVMScalingHistoryRequest(ex);
-            HandleFailedRequest(ex);
-            Client.OnFailedRequest(ex);
-            throw ex;
-        }
-
-        internal async Task<HttpOperationResponse<IImmutableList<DetailedVMScalingHistory>>> GetDetailedVMScalingHistoryInternalAsync(
-            DateTimeOffset date,
-            string scaleSet = default,
-            CancellationToken cancellationToken = default
-        )
-        {
-            if (date == default)
+            if (date == default(DateTimeOffset))
             {
                 throw new ArgumentNullException(nameof(date));
             }
 
 
-            var _path = "/api/2019-06-17/scalesets/detailedHistory";
+            var _baseUri = Client.Options.BaseUri;
+            var _url = new RequestUriBuilder();
+            _url.Reset(_baseUri);
+            _url.AppendPath(
+                "/api/2019-06-17/scalesets/detailedHistory",
+                false);
 
-            var _query = new QueryBuilder();
-            if (date != default)
+            if (date != default(DateTimeOffset))
             {
-                _query.Add("date", Client.Serialize(date));
+                _url.AppendQuery("date", Client.Serialize(date));
             }
             if (!string.IsNullOrEmpty(scaleSet))
             {
-                _query.Add("scaleSet", Client.Serialize(scaleSet));
+                _url.AppendQuery("scaleSet", Client.Serialize(scaleSet));
             }
 
-            var _uriBuilder = new UriBuilder(Client.BaseUri);
-            _uriBuilder.Path = _uriBuilder.Path.TrimEnd('/') + _path;
-            _uriBuilder.Query = _query.ToString();
-            var _url = _uriBuilder.Uri;
 
-            HttpRequestMessage _req = null;
-            HttpResponseMessage _res = null;
-            try
+            using (var _req = Client.Pipeline.CreateRequest())
             {
-                _req = new HttpRequestMessage(HttpMethod.Get, _url);
+                _req.Uri = _url;
+                _req.Method = RequestMethod.Get;
 
-                if (Client.Credentials != null)
+                using (var _res = await Client.SendAsync(_req, cancellationToken).ConfigureAwait(false))
                 {
-                    await Client.Credentials.ProcessHttpRequestAsync(_req, cancellationToken).ConfigureAwait(false);
-                }
+                    if (_res.Status < 200 || _res.Status >= 300)
+                    {
+                        await OnGetDetailedVMScalingHistoryFailed(_req, _res).ConfigureAwait(false);
+                    }
 
-                _res = await Client.SendAsync(_req, cancellationToken).ConfigureAwait(false);
-                if (!_res.IsSuccessStatusCode)
-                {
-                    await OnGetDetailedVMScalingHistoryFailed(_req, _res);
+                    if (_res.ContentStream == null)
+                    {
+                        await OnGetDetailedVMScalingHistoryFailed(_req, _res).ConfigureAwait(false);
+                    }
+
+                    using (var _reader = new StreamReader(_res.ContentStream))
+                    {
+                        var _content = await _reader.ReadToEndAsync().ConfigureAwait(false);
+                        var _body = Client.Deserialize<IImmutableList<DetailedVMScalingHistory>>(_content);
+                        return _body;
+                    }
                 }
-                string _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
-                return new HttpOperationResponse<IImmutableList<DetailedVMScalingHistory>>
-                {
-                    Request = _req,
-                    Response = _res,
-                    Body = Client.Deserialize<IImmutableList<DetailedVMScalingHistory>>(_responseContent),
-                };
             }
-            catch (Exception)
+        }
+
+        internal async Task OnGetDetailedVMScalingHistoryFailed(Request req, Response res)
+        {
+            string content = null;
+            if (res.ContentStream != null)
             {
-                _req?.Dispose();
-                _res?.Dispose();
-                throw;
+                using (var reader = new StreamReader(res.ContentStream))
+                {
+                    content = await reader.ReadToEndAsync().ConfigureAwait(false);
+                }
             }
+
+            var ex = new RestApiException(
+                req,
+                res,
+                content);
+            HandleFailedGetDetailedVMScalingHistoryRequest(ex);
+            HandleFailedRequest(ex);
+            Client.OnFailedRequest(ex);
+            throw ex;
         }
 
         partial void HandleFailedGetAggregatedVMScalingHistoryRequest(RestApiException ex);
@@ -135,81 +122,71 @@ namespace Microsoft.DotNet.Helix.Client
             CancellationToken cancellationToken = default
         )
         {
-            using (var _res = await GetAggregatedVMScalingHistoryInternalAsync(
-                date,
-                cancellationToken
-            ).ConfigureAwait(false))
-            {
-                return _res.Body;
-            }
-        }
-
-        internal async Task OnGetAggregatedVMScalingHistoryFailed(HttpRequestMessage req, HttpResponseMessage res)
-        {
-            var content = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
-            var ex = new RestApiException(
-                new HttpRequestMessageWrapper(req, null),
-                new HttpResponseMessageWrapper(res, content));
-            HandleFailedGetAggregatedVMScalingHistoryRequest(ex);
-            HandleFailedRequest(ex);
-            Client.OnFailedRequest(ex);
-            throw ex;
-        }
-
-        internal async Task<HttpOperationResponse<IImmutableList<AggregatedVMScalingHistory>>> GetAggregatedVMScalingHistoryInternalAsync(
-            DateTimeOffset date,
-            CancellationToken cancellationToken = default
-        )
-        {
-            if (date == default)
+            if (date == default(DateTimeOffset))
             {
                 throw new ArgumentNullException(nameof(date));
             }
 
 
-            var _path = "/api/2019-06-17/scalesets/aggregatedHistory";
+            var _baseUri = Client.Options.BaseUri;
+            var _url = new RequestUriBuilder();
+            _url.Reset(_baseUri);
+            _url.AppendPath(
+                "/api/2019-06-17/scalesets/aggregatedHistory",
+                false);
 
-            var _query = new QueryBuilder();
-            if (date != default)
+            if (date != default(DateTimeOffset))
             {
-                _query.Add("date", Client.Serialize(date));
+                _url.AppendQuery("date", Client.Serialize(date));
             }
 
-            var _uriBuilder = new UriBuilder(Client.BaseUri);
-            _uriBuilder.Path = _uriBuilder.Path.TrimEnd('/') + _path;
-            _uriBuilder.Query = _query.ToString();
-            var _url = _uriBuilder.Uri;
 
-            HttpRequestMessage _req = null;
-            HttpResponseMessage _res = null;
-            try
+            using (var _req = Client.Pipeline.CreateRequest())
             {
-                _req = new HttpRequestMessage(HttpMethod.Get, _url);
+                _req.Uri = _url;
+                _req.Method = RequestMethod.Get;
 
-                if (Client.Credentials != null)
+                using (var _res = await Client.SendAsync(_req, cancellationToken).ConfigureAwait(false))
                 {
-                    await Client.Credentials.ProcessHttpRequestAsync(_req, cancellationToken).ConfigureAwait(false);
+                    if (_res.Status < 200 || _res.Status >= 300)
+                    {
+                        await OnGetAggregatedVMScalingHistoryFailed(_req, _res).ConfigureAwait(false);
+                    }
+
+                    if (_res.ContentStream == null)
+                    {
+                        await OnGetAggregatedVMScalingHistoryFailed(_req, _res).ConfigureAwait(false);
+                    }
+
+                    using (var _reader = new StreamReader(_res.ContentStream))
+                    {
+                        var _content = await _reader.ReadToEndAsync().ConfigureAwait(false);
+                        var _body = Client.Deserialize<IImmutableList<AggregatedVMScalingHistory>>(_content);
+                        return _body;
+                    }
                 }
+            }
+        }
 
-                _res = await Client.SendAsync(_req, cancellationToken).ConfigureAwait(false);
-                if (!_res.IsSuccessStatusCode)
-                {
-                    await OnGetAggregatedVMScalingHistoryFailed(_req, _res);
-                }
-                string _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
-                return new HttpOperationResponse<IImmutableList<AggregatedVMScalingHistory>>
-                {
-                    Request = _req,
-                    Response = _res,
-                    Body = Client.Deserialize<IImmutableList<AggregatedVMScalingHistory>>(_responseContent),
-                };
-            }
-            catch (Exception)
+        internal async Task OnGetAggregatedVMScalingHistoryFailed(Request req, Response res)
+        {
+            string content = null;
+            if (res.ContentStream != null)
             {
-                _req?.Dispose();
-                _res?.Dispose();
-                throw;
+                using (var reader = new StreamReader(res.ContentStream))
+                {
+                    content = await reader.ReadToEndAsync().ConfigureAwait(false);
+                }
             }
+
+            var ex = new RestApiException(
+                req,
+                res,
+                content);
+            HandleFailedGetAggregatedVMScalingHistoryRequest(ex);
+            HandleFailedRequest(ex);
+            Client.OnFailedRequest(ex);
+            throw ex;
         }
     }
 }

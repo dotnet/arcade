@@ -10,6 +10,7 @@
 
   <PropertyGroup>
     <TargetFramework>net472</TargetFramework>
+    <NETCORE_ENGINEERING_TELEMETRY>Publish</NETCORE_ENGINEERING_TELEMETRY>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -26,8 +27,17 @@
   </ItemGroup>
   <UsingTask TaskName="GenerateBuildManifest" AssemblyFile="$(PkgMicrosoft_DotNet_Build_Tasks_Feed)\tools\netcoreapp2.1\Microsoft.DotNet.Build.Tasks.Feed.dll" />
 
+  <Import Project="../Sign.props" />
+  
   <Target Name="Execute">
     <GenerateBuildManifest Artifacts="@(ItemsToPush)"
+                           AzureDevOpsCollectionUri="$(SYSTEM_TEAMFOUNDATIONCOLLECTIONURI)"
+                           AzureDevOpsProject="$(SYSTEM_TEAMPROJECT)"
+                           AzureDevOpsBuildId="$(BUILD_BUILDID)"
+                           ItemsToSign="@(ItemsToSign)"
+                           StrongNameSignInfo="@(StrongNameSignInfo)"
+                           FileSignInfo="@(FileSignInfo)"
+                           FileExtensionSignInfo="@(FileExtensionSignInfo)"
                            OutputPath="$(AssetManifestFilePath)"
                            BuildId="$(BUILD_BUILDNUMBER)"
                            BuildData="$(ManifestBuildData)"

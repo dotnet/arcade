@@ -1,12 +1,11 @@
 using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Net.Http;
-using System.Net.Http.Headers;
+using System.IO;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Rest;
+using Azure;
+using Azure.Core;
 using Microsoft.DotNet.Helix.Client.Models;
 
 namespace Microsoft.DotNet.Helix.Client
@@ -54,40 +53,6 @@ namespace Microsoft.DotNet.Helix.Client
             CancellationToken cancellationToken = default
         )
         {
-            using (await SetReasonInternalAsync(
-                analysisName,
-                analysisType,
-                body,
-                job,
-                workitem,
-                cancellationToken
-            ).ConfigureAwait(false))
-            {
-                return;
-            }
-        }
-
-        internal async Task OnSetReasonFailed(HttpRequestMessage req, HttpResponseMessage res)
-        {
-            var content = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
-            var ex = new RestApiException(
-                new HttpRequestMessageWrapper(req, content),
-                new HttpResponseMessageWrapper(res, content));
-            HandleFailedSetReasonRequest(ex);
-            HandleFailedRequest(ex);
-            Client.OnFailedRequest(ex);
-            throw ex;
-        }
-
-        internal async Task<HttpOperationResponse> SetReasonInternalAsync(
-            string analysisName,
-            string analysisType,
-            FailureReason body,
-            string job,
-            string workitem,
-            CancellationToken cancellationToken = default
-        )
-        {
             if (string.IsNullOrEmpty(analysisName))
             {
                 throw new ArgumentNullException(nameof(analysisName));
@@ -98,7 +63,7 @@ namespace Microsoft.DotNet.Helix.Client
                 throw new ArgumentNullException(nameof(analysisType));
             }
 
-            if (body == default)
+            if (body == default(FailureReason))
             {
                 throw new ArgumentNullException(nameof(body));
             }
@@ -114,104 +79,71 @@ namespace Microsoft.DotNet.Helix.Client
             }
 
 
-            var _path = "/api/2019-06-17/analysis/{job}/{analysisType}/reason";
-            _path = _path.Replace("{job}", Client.Serialize(job));
-            _path = _path.Replace("{analysisType}", Client.Serialize(analysisType));
+            var _baseUri = Client.Options.BaseUri;
+            var _url = new RequestUriBuilder();
+            _url.Reset(_baseUri);
+            _url.AppendPath(
+                "/api/2019-06-17/analysis/{job}/{analysisType}/reason".Replace("{job}", Uri.EscapeDataString(Client.Serialize(job))).Replace("{analysisType}", Uri.EscapeDataString(Client.Serialize(analysisType))),
+                false);
 
-            var _query = new QueryBuilder();
             if (!string.IsNullOrEmpty(workitem))
             {
-                _query.Add("workitem", Client.Serialize(workitem));
+                _url.AppendQuery("workitem", Client.Serialize(workitem));
             }
             if (!string.IsNullOrEmpty(analysisName))
             {
-                _query.Add("analysisName", Client.Serialize(analysisName));
+                _url.AppendQuery("analysisName", Client.Serialize(analysisName));
             }
 
-            var _uriBuilder = new UriBuilder(Client.BaseUri);
-            _uriBuilder.Path = _uriBuilder.Path.TrimEnd('/') + _path;
-            _uriBuilder.Query = _query.ToString();
-            var _url = _uriBuilder.Uri;
 
-            HttpRequestMessage _req = null;
-            HttpResponseMessage _res = null;
-            try
+            using (var _req = Client.Pipeline.CreateRequest())
             {
-                _req = new HttpRequestMessage(HttpMethod.Put, _url);
+                _req.Uri = _url;
+                _req.Method = RequestMethod.Put;
 
-                string _requestContent = null;
-                if (body != default)
+                if (body != default(FailureReason))
                 {
-                    _requestContent = Client.Serialize(body);
-                    _req.Content = new StringContent(_requestContent, Encoding.UTF8)
+                    _req.Content = RequestContent.Create(Encoding.UTF8.GetBytes(Client.Serialize(body)));
+                    _req.Headers.Add("Content-Type", "application/json; charset=utf-8");
+                }
+
+                using (var _res = await Client.SendAsync(_req, cancellationToken).ConfigureAwait(false))
+                {
+                    if (_res.Status < 200 || _res.Status >= 300)
                     {
-                        Headers =
-                        {
-                            ContentType = MediaTypeHeaderValue.Parse("application/json; charset=utf-8"),
-                        },
-                    };
-                }
+                        await OnSetReasonFailed(_req, _res).ConfigureAwait(false);
+                    }
 
-                if (Client.Credentials != null)
-                {
-                    await Client.Credentials.ProcessHttpRequestAsync(_req, cancellationToken).ConfigureAwait(false);
-                }
 
-                _res = await Client.SendAsync(_req, cancellationToken).ConfigureAwait(false);
-                if (!_res.IsSuccessStatusCode)
-                {
-                    await OnSetReasonFailed(_req, _res);
+                    return;
                 }
-                string _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
-                return new HttpOperationResponse
-                {
-                    Request = _req,
-                    Response = _res,
-                };
-            }
-            catch (Exception)
-            {
-                _req?.Dispose();
-                _res?.Dispose();
-                throw;
             }
         }
 
-        partial void HandleFailedGetDetailsRequest(RestApiException ex);
-
-        public async Task<Newtonsoft.Json.Linq.JToken> GetDetailsAsync(
-            string analysisName,
-            string analysisType,
-            string job,
-            string workitem,
-            CancellationToken cancellationToken = default
-        )
+        internal async Task OnSetReasonFailed(Request req, Response res)
         {
-            using (var _res = await GetDetailsInternalAsync(
-                analysisName,
-                analysisType,
-                job,
-                workitem,
-                cancellationToken
-            ).ConfigureAwait(false))
+            string content = null;
+            if (res.ContentStream != null)
             {
-                return _res.Body;
+                using (var reader = new StreamReader(res.ContentStream))
+                {
+                    content = await reader.ReadToEndAsync().ConfigureAwait(false);
+                }
             }
-        }
 
-        internal async Task OnGetDetailsFailed(HttpRequestMessage req, HttpResponseMessage res)
-        {
-            var content = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
             var ex = new RestApiException(
-                new HttpRequestMessageWrapper(req, null),
-                new HttpResponseMessageWrapper(res, content));
-            HandleFailedGetDetailsRequest(ex);
+                req,
+                res,
+                content);
+            HandleFailedSetReasonRequest(ex);
             HandleFailedRequest(ex);
             Client.OnFailedRequest(ex);
             throw ex;
         }
 
-        internal async Task<HttpOperationResponse<Newtonsoft.Json.Linq.JToken>> GetDetailsInternalAsync(
+        partial void HandleFailedGetDetailsRequest(RestApiException ex);
+
+        public async Task<Newtonsoft.Json.Linq.JToken> GetDetailsAsync(
             string analysisName,
             string analysisType,
             string job,
@@ -240,55 +172,69 @@ namespace Microsoft.DotNet.Helix.Client
             }
 
 
-            var _path = "/api/2019-06-17/analysis/{job}/{analysisType}";
-            _path = _path.Replace("{job}", Client.Serialize(job));
-            _path = _path.Replace("{analysisType}", Client.Serialize(analysisType));
+            var _baseUri = Client.Options.BaseUri;
+            var _url = new RequestUriBuilder();
+            _url.Reset(_baseUri);
+            _url.AppendPath(
+                "/api/2019-06-17/analysis/{job}/{analysisType}".Replace("{job}", Uri.EscapeDataString(Client.Serialize(job))).Replace("{analysisType}", Uri.EscapeDataString(Client.Serialize(analysisType))),
+                false);
 
-            var _query = new QueryBuilder();
             if (!string.IsNullOrEmpty(workitem))
             {
-                _query.Add("workitem", Client.Serialize(workitem));
+                _url.AppendQuery("workitem", Client.Serialize(workitem));
             }
             if (!string.IsNullOrEmpty(analysisName))
             {
-                _query.Add("analysisName", Client.Serialize(analysisName));
+                _url.AppendQuery("analysisName", Client.Serialize(analysisName));
             }
 
-            var _uriBuilder = new UriBuilder(Client.BaseUri);
-            _uriBuilder.Path = _uriBuilder.Path.TrimEnd('/') + _path;
-            _uriBuilder.Query = _query.ToString();
-            var _url = _uriBuilder.Uri;
 
-            HttpRequestMessage _req = null;
-            HttpResponseMessage _res = null;
-            try
+            using (var _req = Client.Pipeline.CreateRequest())
             {
-                _req = new HttpRequestMessage(HttpMethod.Get, _url);
+                _req.Uri = _url;
+                _req.Method = RequestMethod.Get;
 
-                if (Client.Credentials != null)
+                using (var _res = await Client.SendAsync(_req, cancellationToken).ConfigureAwait(false))
                 {
-                    await Client.Credentials.ProcessHttpRequestAsync(_req, cancellationToken).ConfigureAwait(false);
-                }
+                    if (_res.Status < 200 || _res.Status >= 300)
+                    {
+                        await OnGetDetailsFailed(_req, _res).ConfigureAwait(false);
+                    }
 
-                _res = await Client.SendAsync(_req, cancellationToken).ConfigureAwait(false);
-                if (!_res.IsSuccessStatusCode)
-                {
-                    await OnGetDetailsFailed(_req, _res);
+                    if (_res.ContentStream == null)
+                    {
+                        await OnGetDetailsFailed(_req, _res).ConfigureAwait(false);
+                    }
+
+                    using (var _reader = new StreamReader(_res.ContentStream))
+                    {
+                        var _content = await _reader.ReadToEndAsync().ConfigureAwait(false);
+                        var _body = Client.Deserialize<Newtonsoft.Json.Linq.JToken>(_content);
+                        return _body;
+                    }
                 }
-                string _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
-                return new HttpOperationResponse<Newtonsoft.Json.Linq.JToken>
-                {
-                    Request = _req,
-                    Response = _res,
-                    Body = Client.Deserialize<Newtonsoft.Json.Linq.JToken>(_responseContent),
-                };
             }
-            catch (Exception)
+        }
+
+        internal async Task OnGetDetailsFailed(Request req, Response res)
+        {
+            string content = null;
+            if (res.ContentStream != null)
             {
-                _req?.Dispose();
-                _res?.Dispose();
-                throw;
+                using (var reader = new StreamReader(res.ContentStream))
+                {
+                    content = await reader.ReadToEndAsync().ConfigureAwait(false);
+                }
             }
+
+            var ex = new RestApiException(
+                req,
+                res,
+                content);
+            HandleFailedGetDetailsRequest(ex);
+            HandleFailedRequest(ex);
+            Client.OnFailedRequest(ex);
+            throw ex;
         }
     }
 }

@@ -27,7 +27,7 @@ namespace Microsoft.DotNet.VersionTools.Automation.VstsApi
     /// </summary>
     public class VstsAdapterClient : IGitHubClient
     {
-        private const string DefaultVstsApiVersion = "5.0-preview.1";
+        private const string DefaultVstsApiVersion = "5.0";
 
         private static JsonSerializerSettings s_jsonSettings = new JsonSerializerSettings
         {

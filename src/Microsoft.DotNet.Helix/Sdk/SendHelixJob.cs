@@ -3,17 +3,12 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Net;
-using System.Net.Http;
 using System.Text;
-using System.Text.Encodings.Web;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.DotNet.Helix.Client;
-using Microsoft.WindowsAzure.Storage;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 
 namespace Microsoft.DotNet.Helix.Sdk
 {
@@ -65,13 +60,17 @@ namespace Microsoft.DotNet.Helix.Sdk
 
         /// <summary>
         ///   A collection of commands that will run for each work item before any work item commands.
-        ///   Use ';' to separate commands and escape a ';' with ';;'
+        ///   Use a semicolon to delimit these and escape semicolons by percent coding them ('%3B').
+        ///   NOTE: This is different behavior from the WorkItem PreCommands, where semicolons are escaped
+        ///   by using double semicolons (';;').
         /// </summary>
         public string[] PreCommands { get; set; }
 
         /// <summary>
         ///   A collection of commands that will run for each work item after any work item commands.
-        ///   Use ';' to separate commands and escape a ';' with ';;'
+        ///   Use a semicolon to delimit these and escape semicolons by percent coding them ('%3B').
+        ///   NOTE: This is different behavior from the WorkItem PostCommands, where semicolons are escaped
+        ///   by using double semicolons (';;').
         /// </summary>
         public string[] PostCommands { get; set; }
 
@@ -102,9 +101,13 @@ namespace Microsoft.DotNet.Helix.Sdk
         ///     PreCommands
         ///       A collection of commands that will run for this work item before the 'Command' Runs
         ///       Use ';' to separate commands and escape a ';' with ';;'
+        ///       NOTE: This is different behavior from the Helix PreCommands, where semicolons are escaped
+        ///       with percent coding.
         ///     PostCommands
         ///       A collection of commands that will run for this work item after the 'Command' Runs
         ///       Use ';' to separate commands and escape a ';' with ';;'
+        ///       NOTE: This is different behavior from the Helix PostCommands, where semicolons are escaped
+        ///       with percent coding.
         ///     Destination
         ///       The directory in which to unzip the correlation payload on the Helix agent
         /// </remarks>
@@ -131,13 +134,13 @@ namespace Microsoft.DotNet.Helix.Sdk
         {
             if (string.IsNullOrEmpty(AccessToken) && string.IsNullOrEmpty(Creator))
             {
-                Log.LogError("Creator is required when using anonymous access.");
+                Log.LogError(FailureCategory.Build, "Creator is required when using anonymous access.");
                 return;
             }
 
             if (!string.IsNullOrEmpty(AccessToken) && !string.IsNullOrEmpty(Creator))
             {
-                Log.LogError("Creator is forbidden when using authenticated access.");
+                Log.LogError(FailureCategory.Build, "Creator is forbidden when using authenticated access.");
                 return;
             }
 
@@ -180,7 +183,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                 }
                 else
                 {
-                    Log.LogError("SendHelixJob given no WorkItems to send.");
+                    Log.LogError(FailureCategory.Build, "SendHelixJob given no WorkItems to send.");
                 }
 
                 if (_commandPayload.TryGetPayloadDirectory(out string directory))
@@ -197,6 +200,13 @@ namespace Microsoft.DotNet.Helix.Sdk
                         def = AddProperty(def, helixProperty);
                     }
                 }
+                
+                def = AddBuildVariableProperty(def, "Project", "System.TeamProject");
+                def = AddBuildVariableProperty(def, "BuildNumber", "Build.BuildNumber");
+                def = AddBuildVariableProperty(def, "BuildId", "Build.BuildId");
+                def = AddBuildVariableProperty(def, "DefinitionName", "Build.DefinitionName");
+                def = AddBuildVariableProperty(def, "DefinitionId", "System.DefinitionId");
+                def = AddBuildVariableProperty(def, "Reason", "Build.Reason");
 
                 // don't send the job if we have errors
                 if (Log.HasLoggedErrors)
@@ -207,7 +217,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                 Log.LogMessage(MessageImportance.High, $"Sending Job to {TargetQueue}...");
 
                 cancellationToken.ThrowIfCancellationRequested();
-                ISentJob job = await def.SendAsync(msg => Log.LogMessage(msg));
+                ISentJob job = await def.SendAsync(msg => Log.LogMessage(msg), cancellationToken);
                 JobCorrelationId = job.CorrelationId;
                 ResultsContainerUri = job.ResultsContainerUri;
                 ResultsContainerReadSAS = job.ResultsContainerReadSAS;
@@ -215,6 +225,26 @@ namespace Microsoft.DotNet.Helix.Sdk
             }
 
             cancellationToken.ThrowIfCancellationRequested();
+        }
+
+        private IJobDefinition AddBuildVariableProperty(IJobDefinition def, string key, string azdoVariableName)
+        {
+            string envName = FromAzdoVariableNameToEnvironmentVariableName(azdoVariableName);
+
+            var value = Environment.GetEnvironmentVariable(envName);
+            if (string.IsNullOrEmpty(value))
+            {
+                return def;
+            }
+
+            def.WithProperty(key, value);
+            Log.LogMessage($"Added build variable property '{key}' (value: '{value}') to job definition.");
+            return def;
+        }
+
+        private static string FromAzdoVariableNameToEnvironmentVariableName(string name)
+        {
+            return name.Replace('.', '_').ToUpper();
         }
 
         private IJobDefinition AddProperty(IJobDefinition def, ITaskItem property)
@@ -240,6 +270,20 @@ namespace Microsoft.DotNet.Helix.Sdk
             {
                 return def;
             }
+
+            if(name.Contains('%'))
+            {
+                Log.LogWarning($"Work Item named '{name}' contains encoded characters which is not recommended.");
+            }
+
+            var cleanedName = Helpers.CleanWorkItemName(name);
+
+            if (name != cleanedName)
+            {
+                Log.LogWarning($"Work Item named '{name}' contains unsupported characters and has been renamed to '{cleanedName}'.");
+            }
+
+            name = cleanedName;
 
             if (!workItem.GetRequiredMetadata(Log, "Command", out string command))
             {
@@ -443,7 +487,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                 return def.WithCorrelationPayloadArchive(path, destination);
             }
 
-            Log.LogError($"Correlation Payload '{path}' not found.");
+            Log.LogError(FailureCategory.Build, $"Correlation Payload '{path}' not found.");
             return def;
         }
     }

@@ -154,6 +154,9 @@ namespace Microsoft.Cci.Extensions.Experimental
                     break;
 
                 case TypeMemberVisibility.FamilyAndAssembly:
+                    EmitKeyword("private protected");
+                    break;
+
                 default:
                     EmitKeyword("<Unknown-Visibility>");
                     break;

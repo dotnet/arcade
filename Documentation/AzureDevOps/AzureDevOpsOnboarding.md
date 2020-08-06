@@ -9,8 +9,8 @@
       - [Switching service connections](#switching-service-connections)
     - [Git (internal) connections](#git-internal-connections)
   - [Agent queues](#agent-queues)
-    - [External : (Pool Provider: NetCorePublic-Int-Pool)](#external--pool-provider-netcorepublic-int-pool)
-    - [Internal : (Pool Provider: NetCoreInternal-Int-Pool)](#internal--pool-provider-netcoreinternal-int-pool)
+    - [External : (Pool Provider: NetCorePublic-Pool)](#external--pool-provider-netcorepublic-pool)
+    - [Internal : (Pool Provider: NetCoreInternal-Pool)](#internal--pool-provider-netcoreinternal-pool)
   - [CI badge link](#ci-badge-link)
   - [Signed Builds](#signed-builds)
   - [Generate Graph Files](#generate-graph-files)
@@ -27,7 +27,7 @@
 
 ## Project Guidance
 
-[Project guidance](./Policy/AzureDevOpsGuidance.md) - Covers guidance on naming conventions, folder structure, projects, Pipelines, etc...
+[Project guidance](./AzureDevOpsGuidance.md) - Covers guidance on naming conventions, folder structure, projects, Pipelines, etc...
 
 ## GitHub to DncEng Internal mirror
 
@@ -39,7 +39,7 @@ Instructions for setting up the GitHub to dev.azure.com/dnceng/internal mirror a
 
 Azure DevOps has detailed documentation on how to create builds that are linked from GitHub repositories which can be found [here](https://docs.microsoft.com/en-us/azure/devops/build-release/actions/ci-build-github?view=vsts); however, before going through those steps, keep in mind that our process differs from the steps in the official documentation in a few key places:
 
-* The YAML tutorial links to a .NET Core sample repository for an example of a simple `azure-pipelines.yml` file. Instead of using that repository, use [our sample repository](https://github.com/dotnet/arcade-minimalci-sample).
+* The YAML tutorial links to a .NET Core sample repository for an example of a simple `azure-pipelines.yml` file. Instead of using that repository, use [our sample repository](https://github.com/dotnet/arcade-validation).
 
 ## Azure DevOps service connection
 
@@ -153,7 +153,7 @@ https://dev.azure.com/dnceng/public/_build?definitionId=208&branchName=master
 
 ## Signed Builds
 
-dev.azure.com/dnceng now has support for signed builds.  Code should be mirrored to dev.azure.com/dnceng/internal as outlined in the [Azure DevOps Guidance](./Policy/AzureDevOpsGuidance.md#projects).  See [MovingFromDevDivToDncEng.md](./MovingFromDevDivToDncEng.md) for information about moving signed builds from DevDiv to DncEng.
+dev.azure.com/dnceng now has support for signed builds.  Code should be mirrored to dev.azure.com/dnceng/internal as outlined in the [Azure DevOps Guidance](./AzureDevOpsGuidance.md#projects).  See [MovingFromDevDivToDncEng.md](./MovingFromDevDivToDncEng.md) for information about moving signed builds from DevDiv to DncEng.
 
 ## Generate Graph Files
 
@@ -179,7 +179,7 @@ It is recommended that you do **NOT** enable the checkbox labeled "Make secrets 
 
 - Variable groups
 
-  Variable groups are not yet supported in Yaml.  They are scheduled to be available soon (June 2018), in the interim if you need to access a key vault secret, you can explicitly reference a key vault secret using the Azure DevOps key vault task.
+  Build definitions using variable groups in the DevDiv Organization must first be authorized by manually queuing a build and following instructions presented in the portal. Without authorization, the variables will not be set in the build environment. See [Variable groups for Azure Pipelines](https://docs.microsoft.com/en-us/azure/devops/pipelines/library/variable-groups) for more information.
 
 Notes about templates:
 

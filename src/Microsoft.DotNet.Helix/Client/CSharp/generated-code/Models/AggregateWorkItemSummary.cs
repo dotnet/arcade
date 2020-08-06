@@ -23,11 +23,11 @@ namespace Microsoft.DotNet.Helix.Client.Models
         {
             get
             {
-                if (WorkItems == default)
+                if (WorkItems == default(IImmutableList<WorkItemAggregateSummary>))
                 {
                     return false;
                 }
-                if (Analyses == default)
+                if (Analyses == default(IImmutableList<KeyedData>))
                 {
                     return false;
                 }

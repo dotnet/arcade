@@ -39,6 +39,9 @@ namespace Microsoft.DotNet.Helix.Client.Models
         [JsonProperty("Logs")]
         public IImmutableList<WorkItemLog> Logs { get; set; }
 
+        [JsonProperty("Files")]
+        public IImmutableList<WorkItemFile> Files { get; set; }
+
         [JsonProperty("Analysis")]
         public AnalysisReport Analysis { get; set; }
 
