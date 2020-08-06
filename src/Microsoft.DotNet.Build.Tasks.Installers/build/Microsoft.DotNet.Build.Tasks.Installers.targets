@@ -56,6 +56,9 @@
       <_InstallerRidInInstallerRidList Condition="'%(_TargetInstallerRuntimeIdentifiers.Identity)' == '$(InstallerRuntimeIdentifier)'">true</_InstallerRidInInstallerRidList>
       <SkipInstallerBuild Condition="'$(_InstallerRidInInstallerRidList)' != 'true'">true</SkipInstallerBuild>
     </PropertyGroup>
+    <PropertyGroup Condition="'$(SkipBuild)' == 'true'">
+      <SkipInstallerBuild>true</SkipInstallerBuild>
+    </PropertyGroup>
   </Target>
 
   <PropertyGroup>
