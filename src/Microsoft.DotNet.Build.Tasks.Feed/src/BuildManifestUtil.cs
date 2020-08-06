@@ -152,7 +152,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 foreach (var signInfo in strongNameSignInfo)
                 {
                     var attributes = signInfo.CloneCustomMetadata() as Dictionary<string, string>;
-                    parsedStrongNameSignInfo.Add(new StrongNameSignInfoModel { File = Path.GetFileName(signInfo.ItemSpec), CertificateName = attributes["CertificateName"], PublicKeyToken = attributes["PublicKeyToken"] });
+                    parsedStrongNameSignInfo.Add(new StrongNameSignInfoModel { Include = Path.GetFileName(signInfo.ItemSpec), CertificateName = attributes["CertificateName"], PublicKeyToken = attributes["PublicKeyToken"] });
                 }
             }
             if (fileSignInfo != null)
@@ -168,7 +168,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 foreach (var signInfo in fileExtensionSignInfo)
                 {
                     var attributes = signInfo.CloneCustomMetadata() as Dictionary<string, string>;
-                    parsedFileExtensionSignInfoModel.Add(new FileExtensionSignInfoModel { Extension = signInfo.ItemSpec, CertificateName = attributes["CertificateName"] });
+                    parsedFileExtensionSignInfoModel.Add(new FileExtensionSignInfoModel { Include = signInfo.ItemSpec, CertificateName = attributes["CertificateName"] });
                 }
             }
 
