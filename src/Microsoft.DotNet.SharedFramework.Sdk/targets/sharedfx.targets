@@ -399,7 +399,8 @@
   <Target Name="_AddFilesToNuGetPackage" BeforeTargets="_GetPackageFiles">
     
     <MSBuild Projects="$(MSBuildProjectFullPath)"
-          Targets="_GetAllSharedFrameworkFiles">
+          Targets="_GetAllSharedFrameworkFiles"
+          RemoveProperties="NoBuild">
       <Output TaskParameter="TargetOutputs" ItemName="_FilesToPackage" />
     </MSBuild>
 
@@ -421,7 +422,11 @@
     </ItemGroup>
   </Target>
 
-  <Target Name="_CreateNuGetPackage" AfterTargets="Build" DependsOnTargets="Pack" Condition="'$(SkipBuild)' != 'true'" />
+  <Target Name="_CreateNuGetPackage" DependsOnTargets="_GetSkipBuildProps" Condition="'$(SkipBuild)' != 'true'">
+    <MSBuild Projects="$(MSBuildProjectFullPath)"
+             Targets="Pack"
+             Properties="NoBuild=true" />
+  </Target>
 
   <Target Name="GetFilesToPublish">
 
@@ -476,4 +481,8 @@
       OverwriteReadOnlyFiles="true"
       SkipUnchangedFiles="true" />
   </Target>
+
+  <PropertyGroup>
+    <BuildDependsOn>$(BuildDependsOn);_CreateNuGetPackage</BuildDependsOn>
+  </PropertyGroup>
 </Project>
