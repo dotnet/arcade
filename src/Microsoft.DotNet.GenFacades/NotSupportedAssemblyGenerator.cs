@@ -52,17 +52,17 @@ namespace Microsoft.DotNet.GenFacades
 
         public static string GenerateNotSupportedAssemblyForSourceFile(string sourceFile, string Message, string apiExclusionListPath)
         {
-            string[] temp;
+            string[] apiExclusions;
             SyntaxTree syntaxTree = CSharpSyntaxTree.ParseText(File.ReadAllText(sourceFile));
             if (apiExclusionListPath == null)
             {
-                temp = null;
+                apiExclusions = null;
             }
             else
             {
-                temp = File.ReadAllLines(Path.GetFullPath(apiExclusionListPath));
+                apiExclusions = File.ReadAllLines(Path.GetFullPath(apiExclusionListPath));
             }
-            var rewriter = new NotSupportedAssmblyRewriter(Message, temp);
+            var rewriter = new NotSupportedAssmblyRewriter(Message, apiExclusions);
             SyntaxNode root = rewriter.Visit(syntaxTree.GetRoot());
             return root.GetText().ToString();
         }
@@ -88,8 +88,9 @@ namespace Microsoft.DotNet.GenFacades
                 return null;
 
             string message = "{ throw new System.PlatformNotSupportedException(" + $"{ _message }); "+ " }\n";  
-            var block = (BlockSyntax)SyntaxFactory.ParseStatement(message);
-            var newNode = node.Update(node.AttributeLists,
+            BlockSyntax block = (BlockSyntax)SyntaxFactory.ParseStatement(message);
+
+            return node.Update(node.AttributeLists,
                 node.Modifiers,
                 node.ReturnType,
                 node.ExplicitInterfaceSpecifier,
@@ -99,37 +100,35 @@ namespace Microsoft.DotNet.GenFacades
                 node.ConstraintClauses,
                 block,
                 node.SemicolonToken);
-            return newNode;
         }
 
         public override SyntaxNode VisitConstructorDeclaration(ConstructorDeclarationSyntax node)
         {
             string message = "{ throw new System.PlatformNotSupportedException(" + $"{ _message }); "+ " }\n";        
-            var block = (BlockSyntax)SyntaxFactory.ParseStatement(message);
-            var newNode = node.Update(node.AttributeLists,
+            BlockSyntax block = (BlockSyntax)SyntaxFactory.ParseStatement(message);
+
+            return node.Update(node.AttributeLists,
                 node.Modifiers,
                 node.Identifier,
                 node.ParameterList,
                 node.Initializer,
                 block,
                 node.SemicolonToken);
-
-            return newNode;
         }
 
         public override SyntaxNode VisitAccessorDeclaration(AccessorDeclarationSyntax node)
         {
             if (node.Keyword.Text == "set" || node.Body == null)
                 return node;
+
             string message = "{ throw new System.PlatformNotSupportedException(" + $"{ _message }); "+ " } ";       
-            var block = (BlockSyntax)SyntaxFactory.ParseStatement(message);
-            var newNode = node.Update(node.AttributeLists,
+            BlockSyntax block = (BlockSyntax)SyntaxFactory.ParseStatement(message);
+
+            return node.Update(node.AttributeLists,
                 node.Modifiers,
                 node.Keyword,
                 block,
                 node.SemicolonToken);
-
-            return newNode;
         }
 
         private string GetFullyQualifiedName(TypeDeclarationSyntax node)
@@ -143,18 +142,12 @@ namespace Microsoft.DotNet.GenFacades
             {
                 parent = GetFullyQualifiedName((TypeDeclarationSyntax)node.Parent);
             }
+
             return parent + "." + node.Identifier.ValueText.Trim();
         }
 
-        private string GetFullyQualifiedName(NamespaceDeclarationSyntax node)
-        {
-            return node.Name.ToFullString().Trim();        
-        }
+        private string GetFullyQualifiedName(NamespaceDeclarationSyntax node) => node.Name.ToFullString().Trim();
 
-        private string GetMethodDefination(MethodDeclarationSyntax node)
-        {
-            string methodName = GetFullyQualifiedName((TypeDeclarationSyntax)node.Parent) + "." + node.Identifier.ValueText;
-            return methodName;
-        }
+        private string GetMethodDefination(MethodDeclarationSyntax node) => GetFullyQualifiedName((TypeDeclarationSyntax)node.Parent) + "." + node.Identifier.ValueText;
     }
 }

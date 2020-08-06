@@ -21,6 +21,7 @@
   <Target Name="GetCompileItems"
           Returns="@(CompileItemsWithFullPath)">
     <ItemGroup>
+      <!-- Filtering out the files in the ref folder. -->
       <CompileItemsWithRootedPath Include="@(Compile -> '$([System.IO.Path]::GetFullPath('%(Compile.Identity)'))')" IsRooted="$([System.IO.Path]::IsPathRooted('%(Compile.Identity)'))" />    
       <CompileItemsWithFullPath Include="@(CompileItemsWithRootedPath)" Condition="'%(IsRooted)' == 'false'" />      
     </ItemGroup>
