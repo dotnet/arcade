@@ -2,7 +2,7 @@
   <PropertyGroup>
     <_InstallerTargetsImported>true</_InstallerTargetsImported>
   </PropertyGroup>
-  <Target Name="GetInstallerGenerationFlags" DependsOnTargets="_GetTargetOSArchInfo;_GetInstallerSkipBuildProps">
+  <Target Name="GetInstallerGenerationFlags" DependsOnTargets="_GetTargetOSArchInfo">
     <!-- Filter the installer generation/build flags for the current build machine. -->
     <PropertyGroup>
       <!--
@@ -37,7 +37,7 @@
   -->
   <Import Project="$(MSBuildThisFileDirectory)windows/wix.targets" />
 
-  <Target Name="GenerateInstallers" DependsOnTargets="GetInstallerGenerationFlags" Condition="'$(SkipBuild)' != 'true' and '$(GenerateInstallers)' == 'true'">
+  <Target Name="GenerateInstallers" DependsOnTargets="GetInstallerGenerationFlags" Condition="'$(SkipInstallerBuild)' != 'true' and '$(GenerateInstallers)' == 'true'">
     <ItemGroup>
       <_InstallerBuildProject Include="$(MSBuildProjectFile)"
                Targets="GenerateDeb"
@@ -470,6 +470,6 @@
   </Target>
 
   <PropertyGroup>
-    <BuildDependsOn>$(BuildDependsOn);GenerateInstallers</BuildDependsOn>
+    <BuildDependsOn>$(BuildDependsOn);_GetSkipInstallerBuildProps;GenerateInstallers</BuildDependsOn>
   </PropertyGroup>
 </Project>

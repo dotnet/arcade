@@ -1,5 +1,5 @@
 <Project>    
-  <Target Name="GetBundleGenerationFlags" DependsOnTargets="_GetTargetOSArchInfo;_GetInstallerSkipBuildProps" Condition="'$(SkipBuild)' != 'true'">
+  <Target Name="GetBundleGenerationFlags" DependsOnTargets="_GetTargetOSArchInfo" Condition="'$(SkipInstallerBuild)' != 'true'">
     <Error
       Text="Unable to build a bundle installer for a non-Windows, non-macOS platform."
       Condition="'$(TargetRuntimeOS)' != 'win' and '$(TargetRuntimeOS)' != 'osx'" />
@@ -12,7 +12,7 @@
 
   <Import Project="$(MSBuildThisFileDirectory)windows/wix.targets" />
 
-  <Target Name="GenerateBundles" DependsOnTargets="GetBundleGenerationFlags" Condition="'$(SkipBuild)' != 'true'">
+  <Target Name="GenerateBundles" DependsOnTargets="GetBundleGenerationFlags" Condition="'$(SkipInstallerBuild)' != 'true'">
     <ItemGroup>
       <_InstallerBuildProject Include="$(MSBuildProjectFile)"
                Targets="GenerateExeBundle"
@@ -159,6 +159,6 @@
   </Target>
 
   <PropertyGroup>
-    <BuildDependsOn>$(BuildDependsOn);GenerateBundles</BuildDependsOn>
+    <BuildDependsOn>$(BuildDependsOn);_GetSkipInstallerBuildProps;GenerateBundles</BuildDependsOn>
   </PropertyGroup>
 </Project>

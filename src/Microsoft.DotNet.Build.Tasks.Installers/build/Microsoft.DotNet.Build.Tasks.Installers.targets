@@ -35,7 +35,7 @@
     </PropertyGroup>
   </Target>
 
-  <Target Name="_GetInstallerSkipBuildProps"
+  <Target Name="_GetSkipInstallerBuildProps"
           DependsOnTargets="
             _GetCurrentProjectServicingConfiguration;
             SetLastReleasedVersionForSourceBuild">
@@ -44,7 +44,7 @@
       configuration indicates this project shouldn't build for this patch version.
     -->
     <PropertyGroup Condition="'@(CurrentProjectServicingConfiguration)' != ''">
-      <SkipBuild Condition="'%(CurrentProjectServicingConfiguration.PatchVersion)' != '$(PatchVersion)'">true</SkipBuild>
+      <SkipInstallerBuild Condition="'%(CurrentProjectServicingConfiguration.PatchVersion)' != '$(PatchVersion)'">true</SkipInstallerBuild>
     </PropertyGroup>
 
     <ItemGroup>
@@ -54,12 +54,12 @@
     <PropertyGroup Condition="'$(InstallerRuntimeIdentifiers)' != '' and '$(InstallerRuntimeIdentifier)' != ''">
       <!-- Avoid building a project when none of the possible InstallerRuntimeIdentifiers is the current InstallerRuntimeIdentifier. -->
       <_InstallerRidInInstallerRidList Condition="'%(_TargetInstallerRuntimeIdentifiers.Identity)' == '$(InstallerRuntimeIdentifier)'">true</_InstallerRidInInstallerRidList>
-      <SkipBuild Condition="'$(_InstallerRidInInstallerRidList)' != 'true'">true</SkipBuild>
+      <SkipInstallerBuild Condition="'$(_InstallerRidInInstallerRidList)' != 'true'">true</SkipInstallerBuild>
     </PropertyGroup>
   </Target>
 
   <PropertyGroup>
-    <BuildDependsOn>$(BuildDependsOn);_GetInstallerSkipBuildProps</BuildDependsOn>
+    <BuildDependsOn>$(BuildDependsOn);_GetSkipInstallerBuildProps</BuildDependsOn>
     <_GlobalPropertiesToRemoveForPublish>
       GenerateCrossArchMsi;
       GenerateMSI;
@@ -139,6 +139,7 @@
   </Target>
   
   <PropertyGroup>
+    <InstallerRuntimeIdentifiers Condition="'$(InstallerRuntimeIdentifiers)' == ''">$(RuntimeIdentifiers)</InstallerRuntimeIdentifiers>
     <InstallerRuntimeIdentifier Condition="'$(InstallerRuntimeIdentifier)' == ''">$(RuntimeIdentifier)</InstallerRuntimeIdentifier>
   </PropertyGroup>
   

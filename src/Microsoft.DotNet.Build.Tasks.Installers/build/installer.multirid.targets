@@ -11,8 +11,8 @@
   </Target>
 
   <Target Name="GenerateInstallers"
-          Condition="'$(SkipBuild)' != 'true'"
-          DependsOnTargets="_GetInstallerSkipBuildProps;_ComputeInstallerItems"
+          Condition="'$(SkipInstallerBuild)' != 'true'"
+          DependsOnTargets="_ComputeInstallerItems"
           Returns="@(InnerOutput)">
     <Error Condition="'$(InstallerRuntimeIdentifiers)' == ''"
            Text="At least one RID must be specified via InstallerRuntimeIdentifiers to build installers." />
@@ -26,6 +26,6 @@
   </Target>
 
   <PropertyGroup>
-    <BuildDependsOn>$(BuildDependsOn);GenerateInstallers</BuildDependsOn>
+    <BuildDependsOn>$(BuildDependsOn);_GetSkipInstallerBuildProps;GenerateInstallers</BuildDependsOn>
   </PropertyGroup>
 </Project>

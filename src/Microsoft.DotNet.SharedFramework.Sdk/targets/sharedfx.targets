@@ -422,7 +422,7 @@
     </ItemGroup>
   </Target>
 
-  <Target Name="_CreateNuGetPackage" DependsOnTargets="_GetSkipBuildProps" Condition="'$(SkipBuild)' != 'true'">
+  <Target Name="_CreateNuGetPackage" Condition="'$(SkipBuild)' != 'true'">
     <MSBuild Projects="$(MSBuildProjectFullPath)"
              Targets="Pack"
              Properties="NoBuild=true" />
@@ -483,6 +483,6 @@
   </Target>
 
   <PropertyGroup>
-    <BuildDependsOn>$(BuildDependsOn);_CreateNuGetPackage</BuildDependsOn>
+    <BuildDependsOn>$(BuildDependsOn);_GetSkipBuildProps;_CreateNuGetPackage</BuildDependsOn>
   </PropertyGroup>
 </Project>
