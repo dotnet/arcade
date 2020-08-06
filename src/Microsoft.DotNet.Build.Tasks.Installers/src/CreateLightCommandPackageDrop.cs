@@ -55,17 +55,26 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
             XmlNamespaceManager nsmgr = new XmlNamespaceManager(new NameTable());
             nsmgr.AddNamespace("wix", "http://schemas.microsoft.com/wix/2006/objects");
 
-            foreach (var wixobj in WixSrcFiles)
+            foreach (var wixSrcFile in WixSrcFiles)
             {
                 // copy the file to outputPath
-                string newWixObjFile = Path.Combine(packageDropOutputFolder, Path.GetFileName(wixobj.ItemSpec));
-                Log.LogMessage(LogImportance.Normal, $"Creating modified wixobj file '{newWixObjFile}'...");
-                File.Copy(wixobj.ItemSpec, newWixObjFile, true);
+                string newWixSrcFilePath = Path.Combine(packageDropOutputFolder, Path.GetFileName(wixSrcFile.ItemSpec));
+                Log.LogMessage(LogImportance.Normal, $"Creating modified wixobj file '{newWixSrcFilePath}'...");
+                File.Copy(wixSrcFile.ItemSpec, newWixSrcFilePath, true);
 
-                XDocument doc = XDocument.Load(newWixObjFile);
+                // These files are typically .wixobj. Occasionally we have a wixlib as input, which
+                // is created using light and is a binary file. When doing post-build signing,
+                // it's replaced in the inputs to the light command after being reconstructed from
+                // its own light command drop.
+                if (Path.GetExtension(wixSrcFile.ItemSpec) == ".wixlib")
+                {
+                    continue;
+                }
+
+                XDocument doc = XDocument.Load(newWixSrcFilePath);
                 if (doc == null)
                 {
-                    Log.LogError($"Failed to open the wixobj file '{newWixObjFile}'");
+                    Log.LogError($"Failed to open the wixobj file '{newWixSrcFilePath}'");
                     continue;
                 }
 
@@ -94,7 +103,7 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
                 xpath = "//wix:wixObject/wix:section[@type='product']/wix:table[@name='WixVariable']/wix:row";
                 ProcessXPath(doc, xpath, packageDropOutputFolder, nsmgr, _fieldsArtifactPath2);
 
-                doc.Save(newWixObjFile);
+                doc.Save(newWixSrcFilePath);
             }
             if (Loc != null)
             {
