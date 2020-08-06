@@ -59,17 +59,24 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
             {
                 // copy the file to outputPath
                 string newWixSrcFilePath = Path.Combine(packageDropOutputFolder, Path.GetFileName(wixSrcFile.ItemSpec));
-                Log.LogMessage(LogImportance.Normal, $"Creating modified wixobj file '{newWixSrcFilePath}'...");
                 File.Copy(wixSrcFile.ItemSpec, newWixSrcFilePath, true);
 
+                string wixSrcFileExtension = Path.GetExtension(wixSrcFile.ItemSpec);
                 // These files are typically .wixobj. Occasionally we have a wixlib as input, which
                 // is created using light and is a binary file. When doing post-build signing,
                 // it's replaced in the inputs to the light command after being reconstructed from
                 // its own light command drop.
-                if (Path.GetExtension(wixSrcFile.ItemSpec) == ".wixlib")
+                if (wixSrcFileExtension == ".wixlib")
                 {
                     continue;
                 }
+                else if (wixSrcFileExtension != ".wixobj")
+                {
+                    Log.LogError($"Wix source file extension {wixSrcFileExtension} is not supported.");
+                    continue;
+                }
+
+                Log.LogMessage(LogImportance.Normal, $"Creating modified wixobj file '{newWixSrcFilePath}'...");
 
                 XDocument doc = XDocument.Load(newWixSrcFilePath);
                 if (doc == null)
