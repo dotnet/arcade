@@ -143,7 +143,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 {
                     var filename = itemToSign.ItemSpec.Replace('\\', '/');
                     {
-                        parsedItemsToSign.Add(new ItemToSignModel { File = Path.GetFileName(filename) });
+                        parsedItemsToSign.Add(new ItemToSignModel { Include = Path.GetFileName(filename) });
                     }
                 }
             }
@@ -160,7 +160,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 foreach (var signInfo in fileSignInfo)
                 {
                     var attributes = signInfo.CloneCustomMetadata() as Dictionary<string, string>;
-                    parsedFileSignInfo.Add(new FileSignInfoModel { File = signInfo.ItemSpec, CertificateName = attributes["CertificateName"] });
+                    parsedFileSignInfo.Add(new FileSignInfoModel { Include = signInfo.ItemSpec, CertificateName = attributes["CertificateName"] });
                 }
             }
             if (fileExtensionSignInfo != null)

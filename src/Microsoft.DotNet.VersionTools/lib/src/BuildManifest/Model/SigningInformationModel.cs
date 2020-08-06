@@ -67,11 +67,11 @@ namespace Microsoft.DotNet.VersionTools.BuildManifest.Model
                 .ThenBy(fe => fe.CertificateName, StringComparer.OrdinalIgnoreCase)
                 .Select(fe => fe.ToXml()),
             FileSignInfo
-                .OrderBy(f => f.File, StringComparer.OrdinalIgnoreCase)
+                .OrderBy(f => f.Include, StringComparer.OrdinalIgnoreCase)
                 .ThenBy(f => f.CertificateName, StringComparer.OrdinalIgnoreCase)
                 .Select(f => f.ToXml()))
             .Concat(ItemsToSign
-                .OrderBy(i => i.File, StringComparer.OrdinalIgnoreCase)
+                .OrderBy(i => i.Include, StringComparer.OrdinalIgnoreCase)
                 .Select(i => i.ToXml()))
             .Concat(StrongNameSignInfo
                 .OrderBy(s => s.Include, StringComparer.OrdinalIgnoreCase)
@@ -133,15 +133,15 @@ namespace Microsoft.DotNet.VersionTools.BuildManifest.Model
     {
         private static readonly string[] RequiredAttributes =
         {
-            nameof(File),
+            nameof(Include),
             nameof(CertificateName)
         };
         public IDictionary<string, string> Attributes { get; set; } = new Dictionary<string, string>();
 
-        public string File
+        public string Include
         {
-            get { return Attributes.GetOrDefault(nameof(File)); }
-            set { Attributes[nameof(File)] = value; }
+            get { return Attributes.GetOrDefault(nameof(Include)); }
+            set { Attributes[nameof(Include)] = value; }
         }
 
         public string CertificateName
@@ -149,7 +149,7 @@ namespace Microsoft.DotNet.VersionTools.BuildManifest.Model
             get { return Attributes.GetOrDefault(nameof(CertificateName)); }
             set { Attributes[nameof(CertificateName)] = value; }
         }
-        public override string ToString() => $"File \"{File}\" is signed with {CertificateName}";
+        public override string ToString() => $"File \"{Include}\" is signed with {CertificateName}";
 
         public XElement ToXml() => new XElement(
             "FileSignInfo",
@@ -169,16 +169,16 @@ namespace Microsoft.DotNet.VersionTools.BuildManifest.Model
     {
         private static readonly string[] RequiredAttributes =
         {
-            nameof(File)
+            nameof(Include)
         };
         public IDictionary<string, string> Attributes { get; set; } = new Dictionary<string, string>();
 
-        public string File
+        public string Include
         {
-            get { return Attributes.GetOrDefault(nameof(File)); }
-            set { Attributes[nameof(File)] = value; }
+            get { return Attributes.GetOrDefault(nameof(Include)); }
+            set { Attributes[nameof(Include)] = value; }
         }
-        public override string ToString() => $"Signed: {File}";
+        public override string ToString() => $"Signed: {Include}";
 
         public XElement ToXml() => new XElement(
             "ItemsToSign",
