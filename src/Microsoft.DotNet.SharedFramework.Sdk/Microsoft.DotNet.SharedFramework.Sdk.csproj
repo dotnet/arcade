@@ -36,9 +36,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="..\Common\AssemblyResolver.cs" Link="src\AssemblyResolver.cs" />
     <Compile Include="..\Common\BuildTask.cs" Link="src\BuildTask.cs" />
-    <Compile Include="..\Common\BuildTask.Desktop.cs" Link="src\BuildTask.Desktop.cs" />
+  </ItemGroup>
+  
+  <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
+    <Compile Include="..\Common\AssemblyResolver.cs" />
+    <Compile Include="..\Common\BuildTask.Desktop.cs" />
   </ItemGroup>
   
   <Import Project="$(RepoRoot)eng\BuildTask.targets" />
