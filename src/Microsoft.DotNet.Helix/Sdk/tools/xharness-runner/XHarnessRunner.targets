@@ -27,9 +27,9 @@
       <_XHarnessLocalToolPath>$(ArtifactsTmpDir)Microsoft.DotNet.XHarness.CLI</_XHarnessLocalToolPath>
     </PropertyGroup>
 
-    <RemoveDir Directories="$(_XHarnessLocalToolPath)" />
     <Exec Command="dotnet tool install --tool-path $(_XHarnessLocalToolPath) --version $(_XHarnessPackageVersion) --add-source $(XHarnessPackageSource) $(_XHarnessPackageName)"
-          WorkingDirectory="$(ArtifactsTmpDir)" />
+          WorkingDirectory="$(ArtifactsTmpDir)"
+          Condition=" !Exists('$(_XHarnessLocalToolPath)\.store\microsoft.dotnet.xharness.cli\$(_XHarnessPackageVersion)') " />
 
     <!-- There are files we don't need extracted inside of the extracted tool dir (such as the original .nupkg) that blow up the size 3x, so we remove them -->
     <ItemGroup>
