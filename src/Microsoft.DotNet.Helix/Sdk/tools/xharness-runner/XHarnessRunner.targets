@@ -25,20 +25,22 @@
     <!-- We install the tool locally on the build machine, then, installed as-is, we zip it up and send as a correlation payload -->
     <PropertyGroup>
       <_XHarnessLocalToolPath>$(ArtifactsTmpDir)Microsoft.DotNet.XHarness.CLI</_XHarnessLocalToolPath>
+      <_XHarnessCliPath>$(_XHarnessLocalToolPath)\.store\microsoft.dotnet.xharness.cli\$(_XHarnessPackageVersion)\microsoft.dotnet.xharness.cli\$(_XHarnessPackageVersion)</_XHarnessCliPath>
     </PropertyGroup>
 
+    <!-- It can happen that the SDK is invoke in parallel and we have to make sure we don't install the tool twice -->
     <Exec Command="dotnet tool install --tool-path $(_XHarnessLocalToolPath) --version $(_XHarnessPackageVersion) --add-source $(XHarnessPackageSource) $(_XHarnessPackageName)"
           WorkingDirectory="$(ArtifactsTmpDir)"
-          Condition=" !Exists('$(_XHarnessLocalToolPath)\.store\microsoft.dotnet.xharness.cli\$(_XHarnessPackageVersion)') " />
+          IgnoreExitCode="true" />
 
     <!-- There are files we don't need extracted inside of the extracted tool dir (such as the original .nupkg) that blow up the size 3x, so we remove them -->
     <ItemGroup>
-      <_XHarnessExtraToolFiles Include="$(ArtifactsTmpDir)\Microsoft.DotNet.XHarness.CLI\.store\microsoft.dotnet.xharness.cli\$(_XHarnessPackageVersion)\microsoft.dotnet.xharness.cli\$(_XHarnessPackageVersion)\*.*" />
+      <_XHarnessExtraToolFiles Include="$(_XHarnessCliPath)\*.*" />
     </ItemGroup>
     <Delete Files="@(_XHarnessExtraToolFiles)" />
 
     <ItemGroup>
-      <HelixCorrelationPayload Include="$(_XHarnessLocalToolPath)\.store\microsoft.dotnet.xharness.cli\$(_XHarnessPackageVersion)\microsoft.dotnet.xharness.cli\$(_XHarnessPackageVersion)">
+      <HelixCorrelationPayload Include="$(_XHarnessCliPath)">
         <Destination>microsoft.dotnet.xharness.cli</Destination>
         <IncludeDirectoryName>true</IncludeDirectoryName>
       </HelixCorrelationPayload>
