@@ -47,7 +47,7 @@
       -->
     <SignCheckTask 
       Recursive="true"
-      FileStatus="AllFiles"
+      FileStatus="UnsignedFiles"
       InputFiles="$(InputFiles)"
       ExclusionsFile="$(SignCheckExclusionsFile)"
       EnableJarSignatureVerification="$(EnableJarSigningCheck)"
