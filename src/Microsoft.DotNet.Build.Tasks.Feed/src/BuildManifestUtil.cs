@@ -143,7 +143,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 {
                     var filename = itemToSign.ItemSpec.Replace('\\', '/');
                     {
-                        parsedItemsToSign.Add(new ItemToSignModel { File = Path.GetFileName(filename) });
+                        parsedItemsToSign.Add(new ItemToSignModel { Include = Path.GetFileName(filename) });
                     }
                 }
             }
@@ -152,7 +152,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 foreach (var signInfo in strongNameSignInfo)
                 {
                     var attributes = signInfo.CloneCustomMetadata() as Dictionary<string, string>;
-                    parsedStrongNameSignInfo.Add(new StrongNameSignInfoModel { File = Path.GetFileName(signInfo.ItemSpec), CertificateName = attributes["CertificateName"], PublicKeyToken = attributes["PublicKeyToken"] });
+                    parsedStrongNameSignInfo.Add(new StrongNameSignInfoModel { Include = Path.GetFileName(signInfo.ItemSpec), CertificateName = attributes["CertificateName"], PublicKeyToken = attributes["PublicKeyToken"] });
                 }
             }
             if (fileSignInfo != null)
@@ -160,7 +160,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 foreach (var signInfo in fileSignInfo)
                 {
                     var attributes = signInfo.CloneCustomMetadata() as Dictionary<string, string>;
-                    parsedFileSignInfo.Add(new FileSignInfoModel { File = signInfo.ItemSpec, CertificateName = attributes["CertificateName"] });
+                    parsedFileSignInfo.Add(new FileSignInfoModel { Include = signInfo.ItemSpec, CertificateName = attributes["CertificateName"] });
                 }
             }
             if (fileExtensionSignInfo != null)
@@ -168,7 +168,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 foreach (var signInfo in fileExtensionSignInfo)
                 {
                     var attributes = signInfo.CloneCustomMetadata() as Dictionary<string, string>;
-                    parsedFileExtensionSignInfoModel.Add(new FileExtensionSignInfoModel { Extension = signInfo.ItemSpec, CertificateName = attributes["CertificateName"] });
+                    parsedFileExtensionSignInfoModel.Add(new FileExtensionSignInfoModel { Include = signInfo.ItemSpec, CertificateName = attributes["CertificateName"] });
                 }
             }
 
