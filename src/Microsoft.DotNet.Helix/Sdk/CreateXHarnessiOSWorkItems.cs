@@ -89,7 +89,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             var (testTimeout, workItemTimeout) = ParseTimeouts(appBundleItem);
 
             // Validation of any metadata specific to iOS stuff goes here
-            if (!appBundleItem.GetRequiredMetadata(Log, "Targets", out string targets))
+            if (!appBundleItem.TryGetMetadata("Targets", out string targets))
             {
                 Log.LogError("'Targets' metadata must be specified - " +
                     "expecting list of target device/simulator platforms to execute tests on (e.g. ios-simulator-64)");
@@ -98,7 +98,7 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             // Optional timeout for the how long it takes for the app to be installed, booted and tests start executing
             TimeSpan launchTimeout = TimeSpan.FromMinutes(DefaultLaunchTimeoutInMinutes);
-            if (!appBundleItem.GetRequiredMetadata(Log, LaunchTimeoutPropName, out string launchTimeoutProp))
+            if (!appBundleItem.TryGetMetadata(LaunchTimeoutPropName, out string launchTimeoutProp))
             {
                 if (!TimeSpan.TryParse(launchTimeoutProp, out launchTimeout) || launchTimeout.Ticks < 0)
                 {

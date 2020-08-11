@@ -46,7 +46,7 @@ namespace Microsoft.DotNet.Helix.Sdk
         {
             // Optional timeout for the actual test execution in the TimeSpan format
             TimeSpan testTimeout = TimeSpan.FromMinutes(DefaultTestTimeoutInMinutes);
-            if (xHarnessAppItem.GetRequiredMetadata(Log, TestTimeoutPropName, out string testTimeoutProp))
+            if (xHarnessAppItem.TryGetMetadata(TestTimeoutPropName, out string testTimeoutProp))
             {
                 if (!TimeSpan.TryParse(testTimeoutProp, out testTimeout) || testTimeout.Ticks < 0)
                 {
@@ -56,7 +56,7 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             // Optional timeout for the whole Helix work item run (includes SDK and tool installation)
             TimeSpan workItemTimeout = TimeSpan.FromMinutes(DefaultWorkItemTimeoutInMinutes);
-            if (xHarnessAppItem.GetRequiredMetadata(Log, WorkItemTimeoutPropName, out string workItemTimeoutProp))
+            if (xHarnessAppItem.TryGetMetadata(WorkItemTimeoutPropName, out string workItemTimeoutProp))
             {
                 if (!TimeSpan.TryParse(workItemTimeoutProp, out workItemTimeout) || workItemTimeout.Ticks < 0)
                 {
