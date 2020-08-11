@@ -7,6 +7,7 @@
     <CoreCompileDependsOn>UpdateRefToNonSupportedAssembly;$(CoreCompileDependsOn)</CoreCompileDependsOn>
     <!-- Not supported sources are created from the ref assembly, we currently don't produce finalizers in dummy assemblies, so we disable ApiCompat to not fail. -->
     <RunApiCompat>false</RunApiCompat>
+    <!-- The refs contains some unsed private fields and empty finalizers.-->
     <NoWarn>$(NoWarn);CA1823;CA1821;CS0169</NoWarn>
   </PropertyGroup>
 
@@ -27,7 +28,7 @@
     </ItemGroup>
   </Target>
 
-  <Target Name="GenerateNotSupportedAssemblySourceFromRef">    
+  <Target Name="GenerateNotSupportedAssemblySourceFromRef">
     <ItemGroup>
       <UpdateReferencePaths Include="@(ReferenceSources)" NotSupportedPath="$(IntermediateOutputPath)\%(Filename).notsupported%(Extension)"/>
     </ItemGroup>
