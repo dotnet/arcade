@@ -61,22 +61,23 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
 
             if (SuppressMetaPackages != null)
             {
-                foreach (var metapackage in SuppressMetaPackages)
+                foreach (ITaskItem metapackage in SuppressMetaPackages)
                 {
-                    if (!suppressMetaPackages.ContainsKey(metapackage.ItemSpec))
+                    if (!suppressMetaPackages.TryGetValue(metapackage.ItemSpec, out var value))
                     {
-                        suppressMetaPackages.Add(metapackage.ItemSpec, new HashSet<string>());
+                        value = new HashSet<string>();
+                        suppressMetaPackages.Add(metapackage.ItemSpec, value);
                     }
                     var tfmSpecificSupression = metapackage.GetMetadata("TargetFramework");
                     if (string.IsNullOrEmpty(tfmSpecificSupression))
                     {
                         // If the supression doesn't specify a TargetFramework, then it applies to all.
-                        suppressMetaPackages[metapackage.ItemSpec].Add("All");
+                        value.Add("All");
                     }
                     else
                     {
                         var fx = NuGetFramework.Parse(tfmSpecificSupression);
-                        suppressMetaPackages[metapackage.ItemSpec].Add(fx.DotNetFrameworkName);
+                        value.Add(fx.DotNetFrameworkName);
                     }
                 }
             }
@@ -123,15 +124,9 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
             return !Log.HasLoggedErrors;
         }
 
-        private bool ShouldSuppressMetapackage(Dictionary<string, HashSet<string>> suppressedMetaPackages, string metaPackage, NuGetFramework tfm)
-        {
-            if (suppressedMetaPackages.ContainsKey(metaPackage) &&
-                (suppressedMetaPackages[metaPackage].Contains("All") || suppressedMetaPackages[metaPackage].Contains(tfm.DotNetFrameworkName)))
-            {
-                return true;
-            }
-            return false;
-        }
+        private bool ShouldSuppressMetapackage(Dictionary<string, HashSet<string>> suppressedMetaPackages, string metaPackage, NuGetFramework tfm) =>
+            suppressedMetaPackages.TryGetValue(metaPackage, out var value) &&
+                (value.Contains("All") || value.Contains(tfm.DotNetFrameworkName));
 
         private ITaskItem CreateDependency(string id, NuGetFramework targetFramework)
         {
