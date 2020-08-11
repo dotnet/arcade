@@ -1,11 +1,10 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using NuGet.Frameworks;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -33,9 +32,11 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
         public ITaskItem[] PackageIndexes { get; set; }
 
         /// <summary>
-        /// List of package IDs which should be suppressed from remapping
+        /// List of package IDs which should be suppressed from remapping. You can pass in
+        /// TargetFramework metadata on the item if we only need to supress the metapackage on
+        /// specific TFMs.
         /// </summary>
-        public string[] SuppressMetaPackages { get; set; }
+        public ITaskItem[] SuppressMetaPackages { get; set; }
 
         /// <summary>
         /// Set to true to apply the meta-package remapping
@@ -56,13 +57,35 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
             var index = PackageIndex.Load(PackageIndexes.Select(pi => pi.GetMetadata("FullPath")));
             List<ITaskItem> updatedDependencies = new List<ITaskItem>();
 
-            var suppressMetaPackages = new HashSet<string>(SuppressMetaPackages.NullAsEmpty(), StringComparer.OrdinalIgnoreCase);
+            var suppressMetaPackages = new Dictionary<string, HashSet<string>>();
+
+            if (SuppressMetaPackages != null)
+            {
+                foreach (var metapackage in SuppressMetaPackages)
+                {
+                    if (!suppressMetaPackages.ContainsKey(metapackage.ItemSpec))
+                    {
+                        suppressMetaPackages.Add(metapackage.ItemSpec, new HashSet<string>());
+                    }
+                    var tfmSpecificSupression = metapackage.GetMetadata("TargetFramework");
+                    if (string.IsNullOrEmpty(tfmSpecificSupression))
+                    {
+                        // If the supression doesn't specify a TargetFramework, then it applies to all.
+                        suppressMetaPackages[metapackage.ItemSpec].Add("All");
+                    }
+                    else
+                    {
+                        var fx = NuGetFramework.Parse(tfmSpecificSupression);
+                        suppressMetaPackages[metapackage.ItemSpec].Add(fx.DotNetFrameworkName);
+                    }
+                }
+            }
 
             // We cannot add a dependency to a meta-package from a package that itself is part of the meta-package otherwise we create a cycle
             var metaPackageThisPackageIsIn = index.MetaPackages.GetMetaPackageId(PackageId);
             if (metaPackageThisPackageIsIn != null)
             {
-                suppressMetaPackages.Add(metaPackageThisPackageIsIn);
+                suppressMetaPackages.Add(metaPackageThisPackageIsIn, new HashSet<string> { "All" } );
             }
 
             // keep track of meta-package dependencies to add by framework so that we only add them once per framework.
@@ -72,12 +95,12 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
             {
                 var metaPackage = index.MetaPackages.GetMetaPackageId(originalDependency.ItemSpec);
 
-                if (metaPackage != null && !suppressMetaPackages.Contains(metaPackage))
-                {
-                    // convert to meta-package dependency
-                    var tfm = originalDependency.GetMetadata("TargetFramework");
-                    var fx = NuGetFramework.Parse(tfm);
+                // convert to meta-package dependency
+                var tfm = originalDependency.GetMetadata("TargetFramework");
+                var fx = NuGetFramework.Parse(tfm);
 
+                if (metaPackage != null && !ShouldSuppressMetapackage(suppressMetaPackages, metaPackage, fx))
+                {
                     HashSet<NuGetFramework> metaPackageFrameworks;
 
                     if (!metaPackagesToAdd.TryGetValue(metaPackage, out metaPackageFrameworks))
@@ -98,6 +121,16 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
             UpdatedDependencies = updatedDependencies.ToArray();
 
             return !Log.HasLoggedErrors;
+        }
+
+        private bool ShouldSuppressMetapackage(Dictionary<string, HashSet<string>> suppressedMetaPackages, string metaPackage, NuGetFramework tfm)
+        {
+            if (suppressedMetaPackages.ContainsKey(metaPackage) &&
+                (suppressedMetaPackages[metaPackage].Contains("All") || suppressedMetaPackages[metaPackage].Contains(tfm.DotNetFrameworkName)))
+            {
+                return true;
+            }
+            return false;
         }
 
         private ITaskItem CreateDependency(string id, NuGetFramework targetFramework)
