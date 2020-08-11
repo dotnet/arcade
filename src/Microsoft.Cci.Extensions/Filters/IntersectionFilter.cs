@@ -2,11 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Microsoft.Cci.Filters
 {
@@ -17,10 +14,23 @@ namespace Microsoft.Cci.Filters
     {
         public IntersectionFilter(params ICciFilter[] filters)
         {
-            Filters = new List<ICciFilter>(filters);
+            // Flatten Filters collection for efficient use below and when querying.
+            var filterList = new List<ICciFilter>();
+            foreach (var filter in filters)
+            {
+                if (filter is IntersectionFilter intersection)
+                {
+                    filterList.AddRange(intersection.Filters);
+                    continue;
+                }
+
+                filterList.Add(filter);
+            }
+
+            Filters = filterList;
         }
 
-        public IList<ICciFilter> Filters { get; private set; }
+        public IList<ICciFilter> Filters { get; }
 
         public bool Include(ITypeDefinitionMember member)
         {

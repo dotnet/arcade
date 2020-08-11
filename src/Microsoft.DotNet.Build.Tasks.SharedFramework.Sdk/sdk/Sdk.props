@@ -1,0 +1,26 @@
+<Project>
+
+  <!--
+    Like the Arcade SDK, this SDK doesn't import its dependencies here like a typical SDK would.
+    Rather, the repo must import the Arcade SDK and the Arcade SDK's dependencies.
+
+    See https://github.com/dotnet/arcade/blob/238f1bbb23ba67616818d0b242c5b55a18edec55/Documentation/ArcadeSdk.md#directorybuildprops
+  -->
+
+  <PropertyGroup Condition="'$(DotNetBuildTasksSharedFrameworkTaskDir)' == ''">
+    <DotNetBuildTasksSharedFrameworkTaskDir Condition="'$(MSBuildRuntimeType)' == 'core'">$(MSBuildThisFileDirectory)../tools/netcoreapp2.1/</DotNetBuildTasksSharedFrameworkTaskDir>
+    <DotNetBuildTasksSharedFrameworkTaskDir Condition="'$(MSBuildRuntimeType)' != 'core'">$(MSBuildThisFileDirectory)../tools/net472/</DotNetBuildTasksSharedFrameworkTaskDir>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <DotNetBuildTasksSharedFrameworkTaskFile>$(DotNetBuildTasksSharedFrameworkTaskDir)Microsoft.DotNet.Build.Tasks.SharedFramework.Sdk.dll</DotNetBuildTasksSharedFrameworkTaskFile>
+  </PropertyGroup>
+
+  <!-- Allow setting a property to use targets from a development dir for faster iteration. -->
+  <PropertyGroup>
+    <DotNetBuildTasksSharedFrameworkMSBuildDir Condition="'$(DotNetBuildTasksSharedFrameworkMSBuildDir)' == ''">$(MSBuildThisFileDirectory)..\targets\</DotNetBuildTasksSharedFrameworkMSBuildDir>
+  </PropertyGroup>
+
+  <Import Project="$(DotNetBuildTasksSharedFrameworkMSBuildDir)packaging-tools.props" />
+
+</Project>

@@ -9,8 +9,8 @@
     <TargetFramework>netcoreapp2.1</TargetFramework>
     <IsPackable>true</IsPackable>
     <VersionPrefix>2.5.1</VersionPrefix>
-    <DefaultItemExcludes Condition="'$(DefineConstants)' == 'WINDOWS_UWP'">common\AssemblyResolution\**;$(DefaultItemExcludes)</DefaultItemExcludes>
     <ExcludeFromSourceBuild>true</ExcludeFromSourceBuild>
+    <RollForward>Major</RollForward>
   </PropertyGroup>
 
   <ItemGroup>

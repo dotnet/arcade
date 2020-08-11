@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System;
 using System.Linq;
 using System.Collections.Generic;
 using Xunit.Abstractions;
@@ -24,16 +25,10 @@ namespace Microsoft.DotNet.XUnitExtensions
         public IEnumerable<KeyValuePair<string, string>> GetTraits(IAttributeInfo traitAttribute)
         {
             TestPlatforms platforms = (TestPlatforms)traitAttribute.GetConstructorArguments().First();
-            if (!platforms.HasFlag(TestPlatforms.Windows))
-                yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.NonWindowsTest);
-            if (!platforms.HasFlag(TestPlatforms.Linux))
-                yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.NonLinuxTest);
-            if (!platforms.HasFlag(TestPlatforms.OSX))
-                yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.NonOSXTest);
-            if (!platforms.HasFlag(TestPlatforms.FreeBSD))
-                yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.NonFreeBSDTest);
-            if (!platforms.HasFlag(TestPlatforms.NetBSD))
-                yield return new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.NonNetBSDTest);
+
+            return DiscovererHelpers.TestPlatformApplies(platforms) ?
+                Array.Empty<KeyValuePair<string, string>>() :
+                new[] { new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.Failing) };
         }
     }
 }

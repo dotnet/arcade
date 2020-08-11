@@ -1,0 +1,11 @@
+<Project>
+  <PropertyGroup>
+    <_XHarnessPackageName>Microsoft.DotNet.XHarness.CLI</_XHarnessPackageName>
+    <!-- MicrosoftDotNetXHarnessCLIVersion comes from eng\Versions.props -->
+    <_XHarnessPackageVersion Condition=" '$(_XHarnessPackageVersion)' == '' ">$(MicrosoftDotNetXHarnessCLIVersion)</_XHarnessPackageVersion>
+    <_HelixMonoQueueTargets>$(_HelixMonoQueueTargets);$(MSBuildThisFileDirectory)XHarnessRunner.targets</_HelixMonoQueueTargets>
+
+    <XHarnessPackageSource Condition=" '$(XHarnessPackageSource)' == '' ">https://dnceng.pkgs.visualstudio.com/public/_packaging/dotnet-eng/nuget/v3/index.json</XHarnessPackageSource>
+    <XHarnessXcodeVersion Condition=" '$(XHarnessXcodeVersion)' == '' ">11.5</XHarnessXcodeVersion>
+  </PropertyGroup>
+</Project>

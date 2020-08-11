@@ -52,7 +52,15 @@ namespace Microsoft.DotNet.Build.Tasks.VisualStudio
         {
             JObject candidate = null;
             DateTime latest = default;
-            foreach (JObject item in JArray.Parse(json))
+
+            JArray drops = JArray.Parse(json);
+
+            if (drops.Count == 0)
+            {
+                throw new ApplicationException("No drops matching the specified prefix were returned");
+            }
+
+            foreach (JObject item in drops)
             {
                 if (!DateTime.TryParse((string)item["CreatedDateUtc"], out var timestamp))
                 {
@@ -73,7 +81,7 @@ namespace Microsoft.DotNet.Build.Tasks.VisualStudio
 
             if (candidate == null)
             {
-                throw new ApplicationException($"No drop name found");
+                throw new ApplicationException($"No complete, undeleted drops found");
             }
 
             return (string)candidate["Name"];

@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
@@ -35,9 +35,6 @@ namespace Microsoft.Cci.Filters
 
         public bool Include(ITypeDefinitionMember member)
         {
-            if (!Include(member.ContainingTypeDefinition))
-                return false;
-
             return member.Visibility == TypeMemberVisibility.Public ||
                    member.Visibility == TypeMemberVisibility.Family ||
                    member.Visibility == TypeMemberVisibility.FamilyOrAssembly;

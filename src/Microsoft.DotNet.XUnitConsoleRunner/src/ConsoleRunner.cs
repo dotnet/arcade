@@ -28,14 +28,6 @@ namespace Xunit.ConsoleClient
 
         public int EntryPoint(string[] args)
         {
-#if WINDOWS_UWP
-            // Handle RemoteExecutor
-            if (args.Length > 0 && args[0] == "remote")
-            {
-                return RemoteExecutor.Execute(args.Skip(1).ToArray());
-            }
-#endif
-
             commandLine = CommandLine.Parse(args);
 
             try
@@ -367,9 +359,7 @@ namespace Xunit.ConsoleClient
                 var shadowCopy = assembly.Configuration.ShadowCopyOrDefault;
                 var longRunningSeconds = assembly.Configuration.LongRunningTestSecondsOrDefault;
 
-#if !WINDOWS_UWP
                 using (AssemblyHelper.SubscribeResolveForAssembly(assembly.AssemblyFilename, internalDiagnosticsMessageSink))
-#endif
                 using (var controller = new XunitFrontController(appDomainSupport, assembly.AssemblyFilename, assembly.ConfigFilename, shadowCopy, diagnosticMessageSink: diagnosticMessageSink))
                 using (var discoverySink = new TestDiscoverySink(() => cancel))
                 {

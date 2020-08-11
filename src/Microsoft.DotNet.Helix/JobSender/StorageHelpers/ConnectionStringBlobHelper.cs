@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.DotNet.Helix.Client.Models;
 using Microsoft.WindowsAzure.Storage;
@@ -20,7 +21,7 @@ namespace Microsoft.DotNet.Helix.Client
             _connectionString = connectionString;
         }
 
-        public async Task<IBlobContainer> GetContainerAsync(string requestedName, string targetQueue)
+        public async Task<IBlobContainer> GetContainerAsync(string requestedName, string targetQueue, CancellationToken cancellationToken)
         {
             CloudStorageAccount account = CloudStorageAccount.Parse(_connectionString);
             CloudBlobClient client = account.CreateCloudBlobClient();

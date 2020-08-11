@@ -2,9 +2,13 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using Microsoft.Azure.Storage;
-using Microsoft.Azure.Storage.Auth;
-using Microsoft.Azure.Storage.Blob;
+using Azure;
+using Azure.Storage;
+using Azure.Storage.Blobs;
+using Azure.Storage.Blobs.Models;
+using Azure.Storage.Blobs.Specialized;
+using Azure.Storage.Sas;
+using Microsoft.DotNet.VersionTools.Util;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -16,21 +20,35 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
 {
     public class AzureStorageUtils
     {
-        public CloudBlobContainer Container { get; set; }
+        private readonly Dictionary<string, string> MimeMappings = new Dictionary<string, string>()
+        {
+            {".svg", "image/svg+xml"},
+            {".version", "text/plain"}
+        };
+
+        private readonly Dictionary<string, string> CacheMappings = new Dictionary<string, string>()
+        {
+            {".svg", "no-cache"}
+        };
+
+        // Save the credential so we can sign SAS tokens
+        private readonly StorageSharedKeyCredential _credential;
+
+        public BlobContainerClient Container { get; set; }
 
         public AzureStorageUtils(string AccountName, string AccountKey, string ContainerName)
         {
-            StorageCredentials credentials = new StorageCredentials(AccountName, AccountKey);
-            CloudStorageAccount storageAccount = new CloudStorageAccount(credentials, true);
-            CloudBlobClient cloudBlobClient = storageAccount.CreateCloudBlobClient();
-
-            Container = cloudBlobClient.GetContainerReference(ContainerName);
+            _credential = new StorageSharedKeyCredential(AccountName, AccountKey);
+            Uri endpoint = new Uri($"https://{AccountName}.blob.core.windows.net");
+            BlobServiceClient service = new BlobServiceClient(endpoint, _credential);
+            Container = service.GetBlobContainerClient(ContainerName);
         }
 
-        public CloudBlockBlob GetBlockBlob(string destinationBlob)
-        {
-            return Container.GetBlockBlobReference(destinationBlob);
-        }
+        public BlobClient GetBlob(string destinationBlob) =>
+            Container.GetBlobClient(destinationBlob);
+
+        public BlockBlobClient GetBlockBlob(string destinationBlob) =>
+            Container.GetBlockBlobClient(destinationBlob);
 
         public static string CalculateMD5(string filename)
         {
@@ -46,124 +64,162 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
 
         public async Task UploadBlockBlobAsync(string filePath, string blobPath)
         {
-            CloudBlockBlob cloudBlockBlob = GetBlockBlob(blobPath.Replace("\\", "/"));
+            BlobClient blob = GetBlob(blobPath.Replace("\\", "/"));
+            BlobHttpHeaders headers = GetBlobHeadersByExtension(filePath);
 
-            cloudBlockBlob.Properties.ContentType = GetMimeMapping(filePath);
+            // This function can sporadically throw 
+            // "System.Net.Http.HttpRequestException: Error while copying content to a stream."
+            // Ideally it should retry for itself internally, but the existing retry seems 
+            // to be intended for throttling only.
+            var retryHandler = new ExponentialRetry
+            {
+                MaxAttempts = 5,
+                DelayBase = 2.5 // 2.5 ^ 5 = ~1.5 minutes max wait between retries
+            };
 
-            await cloudBlockBlob.UploadFromFileAsync(filePath);
+            Exception mostRecentlyCaughtException = null;
+
+            bool success = await retryHandler.RunAsync(async attempt =>
+            {
+                try
+                {
+                    await blob.UploadAsync(
+                        filePath,
+                        headers)
+                        .ConfigureAwait(false);
+                    return true;
+                }
+                catch (System.Net.Http.HttpRequestException toStore)
+                {
+                    mostRecentlyCaughtException = toStore;
+                    return false;
+                }
+            }).ConfigureAwait(false);
+
+            // If retry failed print out a nice looking exception
+            if (!success)
+            {
+                throw new Exception($"Failed to upload local file '{filePath}' to '{blobPath} in  {retryHandler.MaxAttempts} attempts.  See inner exception for details.", mostRecentlyCaughtException);
+            }
         }
 
-        public async Task<bool> IsFileIdenticalToBlobAsync(string blobPath, string localFileFullPath)
-        {
-            CloudBlockBlob blobReference = GetBlockBlob(blobPath);
-
-            return await IsFileIdenticalToBlob(localFileFullPath, blobReference);
-        }
+        public async Task<bool> IsFileIdenticalToBlobAsync(string localFileFullPath, string blobPath) =>
+            await IsFileIdenticalToBlobAsync(localFileFullPath, GetBlob(blobPath)).ConfigureAwait(false);
 
         /// <summary>
-        /// Return a bool indicating whether a local file content is same as 
-        /// the content of the pointed blob. If the blob has the ContentMD5
-        /// property set the comparison is performed uniquely using that.
-        /// Otherwise a byte-per-byte comparison with the content of the file
-        /// is performed.
+        /// Return a bool indicating whether a local file's content is the same as 
+        /// the content of a given blob. 
+        /// 
+        /// If the blob has the ContentHash property set, the comparison is performed using 
+        /// that (MD5 hash).  All recently-uploaded blobs or those uploaded by these libraries
+        /// should; some blob clients older than ~2012 may upload without the property set.
+        /// 
+        /// When the ContentHash property is unset, a byte-by-byte comparison is performed.
         /// </summary>
-        public async Task<bool> IsFileIdenticalToBlob(string localFileFullPath, CloudBlockBlob blobReference)
+        public async Task<bool> IsFileIdenticalToBlobAsync(string localFileFullPath, BlobClient blob)
         {
-            blobReference.FetchAttributes();
-
-            if (!string.IsNullOrEmpty(blobReference.Properties.ContentMD5))
+            BlobProperties properties = await blob.GetPropertiesAsync();
+            if (properties.ContentHash != null)
             {
                 var localMD5 = CalculateMD5(localFileFullPath);
-                var blobMD5 = blobReference.Properties.ContentMD5;
-
+                var blobMD5 = Convert.ToBase64String(properties.ContentHash);
                 return blobMD5.Equals(localMD5, StringComparison.OrdinalIgnoreCase);
             }
             else
             {
-                int OneMegaBytes = 1 * 1024 * 1024;
-
-                if (blobReference.Properties.Length < OneMegaBytes) {
-                    byte[] existingBytes = new byte[blobReference.Properties.Length];
+                int bytesPerMegabyte = 1 * 1024 * 1024;
+                if (properties.ContentLength < bytesPerMegabyte)
+                {
+                    byte[] existingBytes = new byte[properties.ContentLength];
                     byte[] localBytes = File.ReadAllBytes(localFileFullPath);
 
-                    blobReference.DownloadToByteArray(existingBytes, 0);
-
+                    using (MemoryStream stream = new MemoryStream(existingBytes, true))
+                    {
+                        await blob.DownloadToAsync(stream).ConfigureAwait(false);
+                    }
                     return localBytes.SequenceEqual(existingBytes);
                 }
                 else
                 {
                     using (Stream localFileStream = File.OpenRead(localFileFullPath))
-                    using (Stream blobStream = await blobReference.OpenReadAsync())
                     {
-                        byte[] localBuffer = new byte[OneMegaBytes];
-                        byte[] remoteBuffer = new byte[OneMegaBytes];
+                        byte[] localBuffer = new byte[bytesPerMegabyte];
+                        byte[] remoteBuffer = new byte[bytesPerMegabyte];
                         int bytesLocalFile = 0;
 
                         do
                         {
-                            bytesLocalFile = await blobStream.ReadAsync(remoteBuffer, 0, OneMegaBytes);
-                            int bytesBlobFile = await localFileStream.ReadAsync(localBuffer, 0, OneMegaBytes);
+                            long start = localFileStream.Position;
+                            int localBytesRead = await localFileStream.ReadAsync(localBuffer, 0, bytesPerMegabyte);
 
-                            if ((bytesLocalFile != bytesBlobFile) || !remoteBuffer.SequenceEqual(localBuffer))
+                            HttpRange range = new HttpRange(start, localBytesRead);
+                            BlobDownloadInfo download = await blob.DownloadAsync(range).ConfigureAwait(false);
+                            if (download.ContentLength != localBytesRead)
+                            {
+                                return false;
+                            }
+                            using (MemoryStream stream = new MemoryStream(remoteBuffer, true))
+                            {
+                                await download.Content.CopyToAsync(stream).ConfigureAwait(false);
+                            }
+                            if (!remoteBuffer.SequenceEqual(localBuffer))
                             {
                                 return false;
                             }
                         }
                         while (bytesLocalFile > 0);
-
-                        return true;
                     }
+                    return true;
                 }
             }
         }
 
-        public async Task<string> CreateContainerAsync(BlobContainerPermissions permissions)
+        public async Task<string> CreateContainerAsync(PublicAccessType publicAccess)
         {
-            await Container.CreateIfNotExistsAsync();
-            await Container.SetPermissionsAsync(permissions);
-
+            await Container.CreateIfNotExistsAsync(publicAccess).ConfigureAwait(false);
             return Container.Uri.ToString();
         }
 
-        public string CreateSASToken(int tokenExpirationInDays, SharedAccessBlobPermissions containerPermissions)
+        public string CreateSASToken(int tokenExpirationInDays, BlobContainerSasPermissions containerPermissions)
         {
-            SharedAccessBlobPolicy sasConstraints = new SharedAccessBlobPolicy
+            BlobSasBuilder builder = new BlobSasBuilder
             {
-                SharedAccessExpiryTime = DateTimeOffset.UtcNow.AddDays(tokenExpirationInDays),
-                Permissions = containerPermissions
+                BlobContainerName = Container.Name,
+                ExpiresOn = DateTimeOffset.UtcNow.AddDays(tokenExpirationInDays)
             };
-
-            //Generate the shared access signature on the container, setting the constraints directly on the signature.
-            return Container.GetSharedAccessSignature(sasConstraints);
+            builder.SetPermissions(containerPermissions);
+            return builder.ToSasQueryParameters(_credential).ToString();
         }
 
-        public async Task<bool> CheckIfContainerExistsAsync()
+        public async Task<bool> CheckIfContainerExistsAsync() =>
+            await Container.ExistsAsync().ConfigureAwait(false);
+
+        public async Task<bool> CheckIfBlobExistsAsync(string blobPath) =>
+            await GetBlob(blobPath).ExistsAsync().ConfigureAwait(false);
+
+
+        private BlobHttpHeaders GetBlobHeadersByExtension(string filePath)
         {
-            return await Container.ExistsAsync();
-        }
-
-        public async Task<bool> CheckIfBlobExistsAsync(string blobPath)
-        {
-            var blob = GetBlockBlob(blobPath);
-
-            return await blob.ExistsAsync();
-        }
-
-        private string GetMimeMapping(string filePath)
-        {
-            var mimeMappings = new Dictionary<string, string>()
-            {
-                {".svg", "image/svg+xml"}
-            };
-
             if (string.IsNullOrWhiteSpace(filePath))
             {
                 throw new ArgumentException("An attempt to get the MIME mapping of an empty path was made.");
             }
 
-            return mimeMappings.TryGetValue(Path.GetExtension(filePath).ToLower(), out string mime) ?
-                mime :
-                "application/octet-stream";
+            var fileExtension = Path.GetExtension(filePath).ToLowerInvariant();
+
+            BlobHttpHeaders headers = new BlobHttpHeaders
+            {
+                ContentType = MimeMappings.TryGetValue(fileExtension, out string cttType) ?
+                cttType :
+                "application/octet-stream"
+            };
+
+            if (CacheMappings.TryGetValue(fileExtension, out string cacheCtrl))
+            {
+                headers.CacheControl = cacheCtrl;
+            }
+
+            return headers;
         }
     }
 }

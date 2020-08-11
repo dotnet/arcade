@@ -28,43 +28,13 @@ namespace Microsoft.DotNet.Helix.Client
 
         public string ArchiveEntryPrefix { get; }
 
-        public Task<string> UploadAsync(IBlobContainer payloadContainer, Action<string> log)
-        {
-            string dirHash;
-            using (var hasher = SHA256.Create())
-            {
-                dirHash = Convert.ToBase64String(hasher.ComputeHash(Encoding.UTF8.GetBytes(NormalizedDirectoryPath)));
-                dirHash = dirHash.TrimEnd('='); // base64 url encode it.
-                dirHash = dirHash.Replace('+', '-');
-                dirHash = dirHash.Replace('/', '_');
-            }
-            using (var mutex = new Mutex(false, $"Global\\{dirHash}"))
-            {
-                bool hasMutex = false;
-                try
-                {
-                    try
-                    {
-                        mutex.WaitOne();
-                    }
-                    catch (AbandonedMutexException)
-                    {
-                    }
+        public Task<string> UploadAsync(IBlobContainer payloadContainer, Action<string> log, CancellationToken cancellationToken)
+            => Task.FromResult(
+                Helpers.MutexExec(
+                    () => DoUploadAsync(payloadContainer, log, cancellationToken),
+                    $"Global\\{Helpers.ComputeSha256Hash(NormalizedDirectoryPath)}"));
 
-                    hasMutex = true;
-                    return Task.FromResult(DoUploadAsync(payloadContainer, log).GetAwaiter().GetResult()); // Can't await because of mutex
-                }
-                finally
-                {
-                    if (hasMutex)
-                    {
-                        mutex.ReleaseMutex();
-                    }
-                }
-            }
-        }
-
-        private async Task<string> DoUploadAsync(IBlobContainer payloadContainer, Action<string> log)
+        private async Task<string> DoUploadAsync(IBlobContainer payloadContainer, Action<string> log, CancellationToken cancellationToken)
         {
             await Task.Yield();
             string basePath = NormalizedDirectoryPath;
@@ -97,7 +67,7 @@ namespace Microsoft.DotNet.Helix.Client
                 }
 
                 stream.Position = 0;
-                Uri zipUri = await payloadContainer.UploadFileAsync(stream, $"{Guid.NewGuid()}.zip");
+                Uri zipUri = await payloadContainer.UploadFileAsync(stream, $"{Guid.NewGuid()}.zip", cancellationToken);
                 File.WriteAllText(alreadyUploadedFile.FullName, zipUri.AbsoluteUri);
                 return zipUri.AbsoluteUri;
             }

@@ -3,15 +3,29 @@
 // See the LICENSE file in the project root for more information.
 
 using Microsoft.DotNet.VersionTools.Util;
+using System;
 using System.Collections.Generic;
 using System.Xml.Linq;
 
 namespace Microsoft.DotNet.VersionTools.BuildManifest.Model
 {
+    public enum PublishingInfraVersion
+    {
+        /// <summary>
+        ///   This flag is usually used when we are creating a configuration
+        ///   that is applicable to all versions of the infra.
+        /// </summary>
+        All = 0,
+        Legacy = 1,
+        Latest = 2,
+        Next = 3
+    }
+
     public class BuildIdentity
     {
         private static readonly string[] AttributeOrder =
         {
+            nameof(PublishingVersion),
             nameof(Name),
             nameof(BuildId),
             nameof(ProductVersion),
@@ -66,6 +80,26 @@ namespace Microsoft.DotNet.VersionTools.BuildManifest.Model
         {
             get { return Attributes.GetOrDefault(nameof(VersionStamp)); }
             set { Attributes[nameof(VersionStamp)] = value; }
+        }
+
+        public PublishingInfraVersion PublishingVersion
+        {
+            get {
+                string value = Attributes.GetOrDefault(nameof(PublishingVersion));
+                
+                if (string.IsNullOrEmpty(value))
+                {
+                    return PublishingInfraVersion.Legacy;
+                }
+                else
+                {
+                    return (PublishingInfraVersion)Enum.Parse(typeof(PublishingInfraVersion), value, true);
+                }
+            }
+
+            set {
+                Attributes[nameof(PublishingVersion)] = ((int)value).ToString(); 
+            }
         }
 
         public override string ToString()

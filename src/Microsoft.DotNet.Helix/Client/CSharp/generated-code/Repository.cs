@@ -1,12 +1,11 @@
 using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Net.Http;
-using System.Net.Http.Headers;
+using System.IO;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Rest;
+using Azure;
+using Azure.Core;
 using Microsoft.DotNet.Helix.Client.Models;
 
 namespace Microsoft.DotNet.Helix.Client
@@ -38,76 +37,66 @@ namespace Microsoft.DotNet.Helix.Client
             CancellationToken cancellationToken = default
         )
         {
-            using (var _res = await GetRepositoriesInternalAsync(
-                vcb,
-                cancellationToken
-            ).ConfigureAwait(false))
+
+            var _baseUri = Client.Options.BaseUri;
+            var _url = new RequestUriBuilder();
+            _url.Reset(_baseUri);
+            _url.AppendPath(
+                "/api/2019-06-17/repo",
+                false);
+
+            if (!string.IsNullOrEmpty(vcb))
             {
-                return _res.Body;
+                _url.AppendQuery("_vcb", Client.Serialize(vcb));
+            }
+
+
+            using (var _req = Client.Pipeline.CreateRequest())
+            {
+                _req.Uri = _url;
+                _req.Method = RequestMethod.Get;
+
+                using (var _res = await Client.SendAsync(_req, cancellationToken).ConfigureAwait(false))
+                {
+                    if (_res.Status < 200 || _res.Status >= 300)
+                    {
+                        await OnGetRepositoriesFailed(_req, _res).ConfigureAwait(false);
+                    }
+
+                    if (_res.ContentStream == null)
+                    {
+                        await OnGetRepositoriesFailed(_req, _res).ConfigureAwait(false);
+                    }
+
+                    using (var _reader = new StreamReader(_res.ContentStream))
+                    {
+                        var _content = await _reader.ReadToEndAsync().ConfigureAwait(false);
+                        var _body = Client.Deserialize<ViewConfiguration>(_content);
+                        return _body;
+                    }
+                }
             }
         }
 
-        internal async Task OnGetRepositoriesFailed(HttpRequestMessage req, HttpResponseMessage res)
+        internal async Task OnGetRepositoriesFailed(Request req, Response res)
         {
-            var content = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
+            string content = null;
+            if (res.ContentStream != null)
+            {
+                using (var reader = new StreamReader(res.ContentStream))
+                {
+                    content = await reader.ReadToEndAsync().ConfigureAwait(false);
+                }
+            }
+
             var ex = new RestApiException(
-                new HttpRequestMessageWrapper(req, null),
-                new HttpResponseMessageWrapper(res, content));
+                req,
+                res,
+                content);
             HandleFailedGetRepositoriesRequest(ex);
             HandleFailedRequest(ex);
             Client.OnFailedRequest(ex);
             throw ex;
-        }
-
-        internal async Task<HttpOperationResponse<ViewConfiguration>> GetRepositoriesInternalAsync(
-            string vcb = default,
-            CancellationToken cancellationToken = default
-        )
-        {
-
-            var _path = "/api/2019-06-17/repo";
-
-            var _query = new QueryBuilder();
-            if (!string.IsNullOrEmpty(vcb))
-            {
-                _query.Add("_vcb", Client.Serialize(vcb));
-            }
-
-            var _uriBuilder = new UriBuilder(Client.BaseUri);
-            _uriBuilder.Path = _uriBuilder.Path.TrimEnd('/') + _path;
-            _uriBuilder.Query = _query.ToString();
-            var _url = _uriBuilder.Uri;
-
-            HttpRequestMessage _req = null;
-            HttpResponseMessage _res = null;
-            try
-            {
-                _req = new HttpRequestMessage(HttpMethod.Get, _url);
-
-                if (Client.Credentials != null)
-                {
-                    await Client.Credentials.ProcessHttpRequestAsync(_req, cancellationToken).ConfigureAwait(false);
-                }
-
-                _res = await Client.SendAsync(_req, cancellationToken).ConfigureAwait(false);
-                if (!_res.IsSuccessStatusCode)
-                {
-                    await OnGetRepositoriesFailed(_req, _res);
-                }
-                string _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
-                return new HttpOperationResponse<ViewConfiguration>
-                {
-                    Request = _req,
-                    Response = _res,
-                    Body = Client.Deserialize<ViewConfiguration>(_responseContent),
-                };
-            }
-            catch (Exception)
-            {
-                _req?.Dispose();
-                _res?.Dispose();
-                throw;
-            }
         }
     }
 }

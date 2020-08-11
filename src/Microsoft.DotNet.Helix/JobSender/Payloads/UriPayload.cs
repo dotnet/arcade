@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Helix.Client
@@ -12,7 +13,7 @@ namespace Microsoft.DotNet.Helix.Client
             _payloadUri = payloadUri;
         }
 
-        public Task<string> UploadAsync(IBlobContainer payloadContainer, Action<string> log)
+        public Task<string> UploadAsync(IBlobContainer payloadContainer, Action<string> log, CancellationToken cancellationToken)
         {
             return Task.FromResult(_payloadUri.AbsoluteUri);
         }

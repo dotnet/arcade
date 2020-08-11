@@ -4,6 +4,7 @@
 
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
+using Microsoft.DotNet.Build.Tasks.Feed.Model;
 using Microsoft.DotNet.VersionTools.Automation;
 using Microsoft.DotNet.VersionTools.BuildManifest.Model;
 using System;
@@ -26,7 +27,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             string manifestBranch,
             string manifestCommit,
             string[] manifestBuildData,
-            bool isStableBuild)
+            bool isStableBuild,
+            PublishingInfraVersion publishingVersion,
+            SigningInformationModel signingInformationModel = null)
         {
             CreateModel(
                 blobArtifacts,
@@ -37,7 +40,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 manifestBranch,
                 manifestCommit,
                 isStableBuild,
-                log)
+                publishingVersion,
+                log,
+                signingInformationModel: signingInformationModel)
                 .WriteAsXml(assetManifestPath, log);
         }
 
@@ -53,12 +58,20 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public static BuildModel CreateModelFromItems(
             ITaskItem[] artifacts,
+            string azureDevOpsCollectionUri,
+            string azureDevOpsProject,
+            int azureDevOpsBuildId,
+            ITaskItem[] itemsToSign,
+            ITaskItem[] strongNameSignInfo,
+            ITaskItem[] fileSignInfo,
+            ITaskItem[] fileExtensionSignInfo,
             string buildId,
             string[] BuildProperties,
             string repoUri,
             string repoBranch,
             string repoCommit,
             bool isStableBuild,
+            PublishingInfraVersion publishingVersion,
             TaskLoggingHelper log)
         {
             if (artifacts == null)
@@ -95,7 +108,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 }
             }
 
-            var buildModel = BuildManifestUtil.CreateModel(
+            var buildModel = CreateModel(
                 blobArtifacts,
                 packageArtifacts,
                 buildId,
@@ -104,8 +117,71 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 repoBranch,
                 repoCommit,
                 isStableBuild,
-                log);
+                publishingVersion,
+                log,
+                signingInformationModel: CreateSigningInformationModelFromItems(azureDevOpsCollectionUri, azureDevOpsProject, azureDevOpsBuildId, itemsToSign, strongNameSignInfo, fileSignInfo, fileExtensionSignInfo));
             return buildModel;
+        }
+
+        public static SigningInformationModel CreateSigningInformationModelFromItems(
+            string azureDevOpsCollectionUri,
+            string azureDevOpsProject,
+            int azureDevOpsBuildId,
+            ITaskItem[] itemsToSign,
+            ITaskItem[] strongNameSignInfo,
+            ITaskItem[] fileSignInfo,
+            ITaskItem[] fileExtensionSignInfo)
+        {
+            List<ItemToSignModel> parsedItemsToSign = new List<ItemToSignModel>();
+            List<StrongNameSignInfoModel> parsedStrongNameSignInfo = new List<StrongNameSignInfoModel>();
+            List<FileSignInfoModel> parsedFileSignInfo = new List<FileSignInfoModel>();
+            List<FileExtensionSignInfoModel> parsedFileExtensionSignInfoModel = new List<FileExtensionSignInfoModel>();
+
+            if (itemsToSign != null)
+            {
+                foreach (var itemToSign in itemsToSign)
+                {
+                    var filename = itemToSign.ItemSpec.Replace('\\', '/');
+                    {
+                        parsedItemsToSign.Add(new ItemToSignModel { Include = Path.GetFileName(filename) });
+                    }
+                }
+            }
+            if (strongNameSignInfo != null)
+            {
+                foreach (var signInfo in strongNameSignInfo)
+                {
+                    var attributes = signInfo.CloneCustomMetadata() as Dictionary<string, string>;
+                    parsedStrongNameSignInfo.Add(new StrongNameSignInfoModel { Include = Path.GetFileName(signInfo.ItemSpec), CertificateName = attributes["CertificateName"], PublicKeyToken = attributes["PublicKeyToken"] });
+                }
+            }
+            if (fileSignInfo != null)
+            {
+                foreach (var signInfo in fileSignInfo)
+                {
+                    var attributes = signInfo.CloneCustomMetadata() as Dictionary<string, string>;
+                    parsedFileSignInfo.Add(new FileSignInfoModel { Include = signInfo.ItemSpec, CertificateName = attributes["CertificateName"] });
+                }
+            }
+            if (fileExtensionSignInfo != null)
+            {
+                foreach (var signInfo in fileExtensionSignInfo)
+                {
+                    var attributes = signInfo.CloneCustomMetadata() as Dictionary<string, string>;
+                    parsedFileExtensionSignInfoModel.Add(new FileExtensionSignInfoModel { Include = signInfo.ItemSpec, CertificateName = attributes["CertificateName"] });
+                }
+            }
+
+            return new SigningInformationModel
+            {
+                AzureDevOpsCollectionUri = azureDevOpsCollectionUri,
+                AzureDevOpsProject = azureDevOpsProject,
+                AzureDevOpsBuildId = azureDevOpsBuildId,
+                ItemsToSign = parsedItemsToSign,
+                StrongNameSignInfo = parsedStrongNameSignInfo,
+                FileSignInfo = parsedFileSignInfo,
+                FileExtensionSignInfo = parsedFileExtensionSignInfoModel
+            };
         }
 
         private static BuildModel CreateModel(IEnumerable<BlobArtifactModel> blobArtifacts,
@@ -116,10 +192,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             string manifestBranch,
             string manifestCommit,
             bool isStableBuild,
-            TaskLoggingHelper log)
+            PublishingInfraVersion publishingVersion,
+            TaskLoggingHelper log,
+            SigningInformationModel signingInformationModel = null)
         {
             var attributes = MSBuildListSplitter.GetNamedProperties(manifestBuildData);
-            if(!ManifestBuildDataHasLocationProperty(attributes))
+            if (!ManifestBuildDataHasLocationInformation(attributes))
             {
                 log.LogError($"Missing 'location' property from ManifestBuildData");
             }
@@ -131,22 +209,24 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         BuildId = manifestBuildId,
                         Branch = manifestBranch,
                         Commit = manifestCommit,
-                        IsStable = isStableBuild.ToString()
+                        IsStable = isStableBuild.ToString(),
+                        PublishingVersion = publishingVersion
                     });
 
             buildModel.Artifacts.Blobs.AddRange(blobArtifacts);
             buildModel.Artifacts.Packages.AddRange(packageArtifacts);
+            buildModel.SigningInformation = signingInformationModel;
             return buildModel;
         }
 
-        internal static bool ManifestBuildDataHasLocationProperty(string [] manifestBuildData)
+        internal static bool ManifestBuildDataHasLocationInformation(string[] manifestBuildData)
         {
-            return ManifestBuildDataHasLocationProperty(MSBuildListSplitter.GetNamedProperties(manifestBuildData));
+            return ManifestBuildDataHasLocationInformation(MSBuildListSplitter.GetNamedProperties(manifestBuildData));
         }
 
-        internal static bool ManifestBuildDataHasLocationProperty(IDictionary<string, string> attributes)
+        internal static bool ManifestBuildDataHasLocationInformation(IDictionary<string, string> attributes)
         {
-            return attributes.ContainsKey("Location");
+            return attributes.ContainsKey("Location") || attributes.ContainsKey("InitialAssetsLocation");
         }
 
         public static BuildModel ManifestFileToModel(string assetManifestPath, TaskLoggingHelper log)

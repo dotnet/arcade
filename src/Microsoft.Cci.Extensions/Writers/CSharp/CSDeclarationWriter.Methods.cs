@@ -7,6 +7,7 @@ using System.Diagnostics.Contracts;
 using System.Linq;
 using Microsoft.Cci.Extensions;
 using Microsoft.Cci.Extensions.CSharp;
+using Microsoft.Cci.Filters;
 using Microsoft.Cci.Writers.Syntax;
 
 namespace Microsoft.Cci.Writers.CSharp
@@ -22,24 +23,36 @@ namespace Microsoft.Cci.Writers.CSharp
 
             WriteAttributes(method.Attributes);
             WriteAttributes(method.SecurityAttributes);
+            WriteAttributes(method.ReturnValueAttributes, prefix: "return");
 
             if (method.IsDestructor())
             {
                 // If platformNotSupportedExceptionMessage is != null we're generating a dummy assembly which means we don't need a destructor at all.
-                if(_platformNotSupportedExceptionMessage == null)
+                if (_platformNotSupportedExceptionMessage == null)
                     WriteDestructor(method);
 
                 return;
             }
-            string name = method.GetMethodName();
 
-            if (!method.ContainingTypeDefinition.IsInterface)
+            if (method.ContainingTypeDefinition.IsInterface)
             {
-                if (!method.IsExplicitInterfaceMethod()) WriteVisibility(method.Visibility);
+                if (method.IsMethodUnsafe())
+                {
+                    WriteKeyword("unsafe");
+                }
+            }
+            else
+            {
+                if (!method.IsExplicitInterfaceMethod() && !method.IsStaticConstructor)
+                {
+                    WriteVisibility(method.Visibility);
+                }
+
                 WriteMethodModifiers(method);
             }
+
             WriteInterfaceMethodModifiers(method);
-            WriteMethodDefinitionSignature(method, name);
+            WriteMethodDefinitionSignature(method);
             WriteMethodBody(method);
         }
 
@@ -53,21 +66,82 @@ namespace Microsoft.Cci.Writers.CSharp
         }
 
 
-        private void WriteTypeName(ITypeReference type, ITypeReference containingType, IEnumerable<ICustomAttribute> attributes = null)
+        private void WriteTypeName(ITypeReference type, ITypeReference containingType, IEnumerable<ICustomAttribute> attributes = null, byte? methodNullableContextValue = null)
         {
             var useKeywords = containingType.GetTypeName() != type.GetTypeName();
 
-            WriteTypeName(type, attributes: attributes, useTypeKeywords: useKeywords);
+            WriteTypeName(type, attributes: attributes, useTypeKeywords: useKeywords, methodNullableContextValue: methodNullableContextValue);
         }
 
-        private void WriteMethodDefinitionSignature(IMethodDefinition method, string name)
+        private string GetNormalizedMethodName(IName name)
         {
+            switch (name.Value)
+            {
+                case "op_Decrement": return "operator --";
+                case "op_Increment": return "operator ++";
+                case "op_UnaryNegation": return "operator -";
+                case "op_UnaryPlus": return "operator +";
+                case "op_LogicalNot": return "operator !";
+                case "op_OnesComplement": return "operator ~";
+                case "op_True": return "operator true";
+                case "op_False": return "operator false";
+                case "op_Addition": return "operator +";
+                case "op_Subtraction": return "operator -";
+                case "op_Multiply": return "operator *";
+                case "op_Division": return "operator /";
+                case "op_Modulus": return "operator %";
+                case "op_ExclusiveOr": return "operator ^";
+                case "op_BitwiseAnd": return "operator &";
+                case "op_BitwiseOr": return "operator |";
+                case "op_LeftShift": return "operator <<";
+                case "op_RightShift": return "operator >>";
+                case "op_Equality": return "operator ==";
+                case "op_GreaterThan": return "operator >";
+                case "op_LessThan": return "operator <";
+                case "op_Inequality": return "operator !=";
+                case "op_GreaterThanOrEqual": return "operator >=";
+                case "op_LessThanOrEqual": return "operator <=";
+                case "op_Explicit": return "explicit operator";
+                case "op_Implicit": return "implicit operator";
+                default: return name.Value; // return just the name
+            }
+        }
+
+        private void WriteMethodName(IMethodDefinition method)
+        {
+            if (method.IsConstructor || method.IsStaticConstructor)
+            {
+                INamedEntity named = method.ContainingTypeDefinition.UnWrap() as INamedEntity;
+                if (named != null)
+                {
+                    WriteIdentifier(named.Name.Value);
+                    return;
+                }
+            }
+
+            if (method.IsExplicitInterfaceMethod())
+            {
+                IMethodImplementation methodImplementation = method.GetMethodImplementation();
+                object nullableAttributeArgument = methodImplementation.GetExplicitInterfaceMethodNullableAttributeArgument(_metadataReaderCache);
+                if (nullableAttributeArgument != null)
+                {
+                    WriteTypeName(methodImplementation.ImplementedMethod.ContainingType, noSpace: true, nullableAttributeArgument: nullableAttributeArgument);
+                    WriteSymbol(".");
+                    WriteIdentifier(methodImplementation.ImplementedMethod.Name);
+                    return;
+                }
+            }
+
+            WriteIdentifier(GetNormalizedMethodName(method.Name));
+        }
+
+        private void WriteMethodDefinitionSignature(IMethodDefinition method)
+        {
+            byte? nullableContextValue = method.Attributes.GetCustomAttributeArgumentValue<byte?>(CSharpCciExtensions.NullableContextAttributeFullName);
             bool isOperator = method.IsConversionOperator();
 
-            if (!isOperator && !method.IsConstructor)
+            if (!isOperator && !method.IsConstructor && !method.IsStaticConstructor)
             {
-                WriteAttributes(method.ReturnValueAttributes, true);
-
                 if (method.Attributes.HasIsReadOnlyAttribute() && (LangVersion >= LangVersion8_0))
                 {
                     WriteKeyword("readonly");
@@ -82,31 +156,31 @@ namespace Microsoft.Cci.Writers.CSharp
                 }
 
                 // We are ignoring custom modifiers right now, we might need to add them later.
-                WriteTypeName(method.Type, method.ContainingType, method.ReturnValueAttributes);
+                WriteTypeName(method.Type, method.ContainingType, method.ReturnValueAttributes, nullableContextValue);
             }
 
             if (method.IsExplicitInterfaceMethod() && _forCompilationIncludeGlobalprefix)
                 Write("global::");
 
-            WriteIdentifier(name);
+            WriteMethodName(method);
 
             if (isOperator)
             {
                 WriteSpace();
 
-                WriteTypeName(method.Type, method.ContainingType);
+                WriteTypeName(method.Type, method.ContainingType, methodNullableContextValue: nullableContextValue);
             }
 
             Contract.Assert(!(method is IGenericMethodInstance), "Currently don't support generic method instances");
             if (method.IsGeneric)
                 WriteGenericParameters(method.GenericParameters);
 
-            WriteParameters(method.Parameters, method.ContainingType, extensionMethod: method.IsExtensionMethod(), acceptsExtraArguments: method.AcceptsExtraArguments);
+            WriteParameters(method.Parameters, method.ContainingType, nullableContextValue, extensionMethod: method.IsExtensionMethod(), acceptsExtraArguments: method.AcceptsExtraArguments);
             if (method.IsGeneric && !method.IsOverride() && !method.IsExplicitInterfaceMethod())
-                WriteGenericContraints(method.GenericParameters);
+                WriteGenericContraints(method.GenericParameters, nullableContextValue);
         }
 
-        private void WriteParameters(IEnumerable<IParameterDefinition> parameters, ITypeReference containingType, bool property = false, bool extensionMethod = false, bool acceptsExtraArguments = false)
+        private void WriteParameters(IEnumerable<IParameterDefinition> parameters, ITypeReference containingType, byte? methodNullableContextValue, bool property = false, bool extensionMethod = false, bool acceptsExtraArguments = false)
         {
             string start = property ? "[" : "(";
             string end = property ? "]" : ")";
@@ -114,7 +188,7 @@ namespace Microsoft.Cci.Writers.CSharp
             WriteSymbol(start);
             _writer.WriteList(parameters, p =>
             {
-                WriteParameter(p, containingType, extensionMethod);
+                WriteParameter(p, containingType, extensionMethod, methodNullableContextValue);
                 extensionMethod = false;
             });
 
@@ -129,7 +203,7 @@ namespace Microsoft.Cci.Writers.CSharp
             WriteSymbol(end);
         }
 
-        private void WriteParameter(IParameterDefinition parameter, ITypeReference containingType, bool extensionMethod)
+        private void WriteParameter(IParameterDefinition parameter, ITypeReference containingType, bool extensionMethod, byte? methodNullableContextValue)
         {
             WriteAttributes(parameter.Attributes, true);
 
@@ -163,7 +237,7 @@ namespace Microsoft.Cci.Writers.CSharp
                 }
             }
 
-            WriteTypeName(parameter.Type, containingType, parameter.Attributes);
+            WriteTypeName(parameter.Type, containingType, parameter.Attributes, methodNullableContextValue);
             WriteIdentifier(parameter.Name);
             if (parameter.IsOptional && parameter.HasDefaultValue)
             {
@@ -180,8 +254,11 @@ namespace Microsoft.Cci.Writers.CSharp
 
         private void WriteMethodModifiers(IMethodDefinition method)
         {
-            if (method.IsMethodUnsafe())
+            if (method.IsMethodUnsafe() ||
+                (method.IsConstructor && IsBaseConstructorCallUnsafe(method.ContainingTypeDefinition)))
+            {
                 WriteKeyword("unsafe");
+            }
 
             if (method.IsStatic)
                 WriteKeyword("static");
@@ -241,7 +318,7 @@ namespace Microsoft.Cci.Writers.CSharp
                 else if (_platformNotSupportedExceptionMessage.Length > 0)
                     Write($"\"{_platformNotSupportedExceptionMessage}\"");
 
-                 Write("); ");
+                Write("); ");
             }
             else if (NeedsMethodBodyForCompilation(method))
             {
@@ -278,7 +355,23 @@ namespace Microsoft.Cci.Writers.CSharp
                 type.IsStatic)
                 return;
 
-            WriteVisibility(TypeMemberVisibility.Assembly);
+            var visibility = Filter switch
+            {
+                IncludeAllFilter _ => TypeMemberVisibility.Private,
+                InternalsAndPublicCciFilter _ => TypeMemberVisibility.Private,
+                IntersectionFilter intersection => intersection.Filters.Any(
+                        f => f is IncludeAllFilter || f is InternalsAndPublicCciFilter) ?
+                    TypeMemberVisibility.Private :
+                    TypeMemberVisibility.Assembly,
+                _ => TypeMemberVisibility.Assembly
+            };
+
+            WriteVisibility(visibility);
+            if (IsBaseConstructorCallUnsafe(type))
+            {
+                WriteKeyword("unsafe");
+            }
+
             WriteIdentifier(((INamedEntity)type).Name);
             WriteSymbol("(");
             WriteSymbol(")");
@@ -288,24 +381,7 @@ namespace Microsoft.Cci.Writers.CSharp
 
         private void WriteBaseConstructorCall(ITypeDefinition type)
         {
-            if (!_forCompilation)
-                return;
-
-            ITypeDefinition baseType = type.BaseClasses.FirstOrDefault().GetDefinitionOrNull();
-
-            if (baseType == null)
-                return;
-
-            var ctors = baseType.Methods.Where(m => m.IsConstructor && _filter.Include(m) && !m.Attributes.Any(a => a.IsObsoleteWithUsageTreatedAsCompilationError()));
-
-            var defaultCtor = ctors.Where(c => c.ParameterCount == 0);
-
-            // Don't need a base call if we have a default constructor
-            if (defaultCtor.Any())
-                return;
-
-            var ctor = ctors.FirstOrDefault();
-
+            var ctor = GetBaseConstructorForCall(type);
             if (ctor == null)
                 return;
 
@@ -313,9 +389,67 @@ namespace Microsoft.Cci.Writers.CSharp
             WriteSymbol(":", true);
             WriteKeyword("base");
             WriteSymbol("(");
-            _writer.WriteList(ctor.Parameters, p => WriteDefaultOf(p.Type));
+            _writer.WriteList(ctor.Parameters, p => WriteDefaultOf(p.Type, ShouldSuppressNullCheck()));
             WriteSymbol(")");
         }
+
+        private bool IsBaseConstructorCallUnsafe(ITypeDefinition type)
+        {
+            var constructor = GetBaseConstructorForCall(type);
+            if (constructor == null)
+            {
+                return false;
+            }
+
+            foreach (var parameter in constructor.Parameters)
+            {
+                if (parameter.Type.IsUnsafeType())
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private IMethodDefinition GetBaseConstructorForCall(ITypeDefinition type)
+        {
+            if (!_forCompilation)
+            {
+                // No need to generate a call to a base constructor.
+                return null;
+            }
+
+            var baseType = type.BaseClasses.FirstOrDefault().GetDefinitionOrNull();
+            if (baseType == null)
+            {
+                // No base type to worry about.
+                return null;
+            }
+
+            var constructors = baseType.Methods.Where(
+                m => m.IsConstructor && _filter.Include(m) && !m.Attributes.Any(a => a.IsObsoleteWithUsageTreatedAsCompilationError()));
+
+            if (constructors.Any(c => c.ParameterCount == 0))
+            {
+                // Don't need a base call if base class has a default constructor.
+                return null;
+            }
+
+            return constructors.FirstOrDefault();
+        }
+
+        /// <summary>
+        /// When generated .notsupported.cs files, we need to generate calls to the base constructor.
+        /// However, if the base constructor doesn't accept null, passing default(T) will cause a compile
+        /// error. In this case, suppress the null check.
+        /// NOTE: It was deemed too much work to dynamically check if the base constructor accepts null
+        /// or not, until we update GenAPI to be based on Roslyn instead of CCI. For now, just always
+        /// suppress the null check.
+        /// </summary>
+        private bool ShouldSuppressNullCheck() =>
+            LangVersion >= LangVersion8_0 &&
+            _platformNotSupportedExceptionMessage != null;
 
         private void WriteEmptyBody()
         {
@@ -331,12 +465,17 @@ namespace Microsoft.Cci.Writers.CSharp
             }
         }
 
-        private void WriteDefaultOf(ITypeReference type)
+        private void WriteDefaultOf(ITypeReference type, bool suppressNullCheck = false)
         {
             WriteKeyword("default", true);
             WriteSymbol("(");
             WriteTypeName(type, noSpace: true);
             WriteSymbol(")");
+
+            if (suppressNullCheck && !type.IsValueType)
+            {
+                WriteSymbol("!");
+            }
         }
 
         public static IDefinition GetDummyConstructor(ITypeDefinition type)

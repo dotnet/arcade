@@ -9,6 +9,8 @@ using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
+using System.Net.Http.Headers;
+using System.Reflection.PortableExecutable;
 using Microsoft.Cci;
 
 namespace Microsoft.Cci.Extensions

@@ -31,7 +31,7 @@ namespace Microsoft.Cci.Writers.CSharp
             }
 
             WriteKeyword("event");
-            WriteTypeName(evnt.Type);
+            WriteTypeName(evnt.Type, evnt.Attributes);
             WriteIdentifier(evnt.Name);
 
             if (_forCompilation && !evnt.IsAbstract())

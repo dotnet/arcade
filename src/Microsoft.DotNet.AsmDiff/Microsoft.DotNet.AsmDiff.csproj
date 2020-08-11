@@ -1,0 +1,21 @@
+<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
+<Project Sdk="Microsoft.NET.Sdk">
+  
+  <!-- Most of the code has been ported from https://devdiv.visualstudio.com/DevDiv/_git/CoreFxTools repo.-->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFrameworks>netcoreapp3.1</TargetFrameworks>
+    <IsPackable>true</IsPackable>
+    <PackAsTool>true</PackAsTool>
+    <ToolCommandName>dotnet-asmdiff</ToolCommandName>
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <Compile Include="..\Common\Internal\DisposeAction.cs" Link="Internal\DisposeAction.cs"/>
+    <ProjectReference Include="..\Microsoft.Cci.Extensions\Microsoft.Cci.Extensions.csproj" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="$(McMasterExtensionsCommandLineUtils)" />
+  </ItemGroup>
+</Project>

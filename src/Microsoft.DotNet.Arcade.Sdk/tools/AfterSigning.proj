@@ -4,9 +4,33 @@
 
   <Target Name="Rebuild" DependsOnTargets="Clean;Build" />
   <Target Name="Clean" />
-  <Target Name="Build" />
+
+  <PropertyGroup>
+    <BuildDependsOn>
+      BeforeBuild;
+      CoreBuild;
+      AfterBuild
+    </BuildDependsOn>
+  </PropertyGroup>
+  <Target Name="Build" DependsOnTargets="$(BuildDependsOn)" />
+  <Target Name="BeforeBuild"/>
+  <Target Name="CoreBuild"/>
+  <Target Name="AfterBuild"/>
+  
   <Target Name="Test" />
-  <Target Name="Pack" />
+  
+  <PropertyGroup>
+    <PackDependsOn>
+      BeforePack;
+      CorePack;
+      AfterPack
+    </PackDependsOn>
+  </PropertyGroup>
+  <Target Name="Pack" DependsOnTargets="$(PackDependsOn)" />
+  <Target Name="BeforePack"/>
+  <Target Name="CorePack"/>
+  <Target Name="AfterPack"/>
+  
   <Target Name="IntegrationTest" />
   <Target Name="PerformanceTest" />
 

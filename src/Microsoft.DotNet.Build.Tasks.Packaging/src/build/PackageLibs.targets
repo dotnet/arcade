@@ -9,7 +9,7 @@
         <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
         <Targets>GetPackageAssets</Targets>
         <OutputItemType>PkgProjAsset</OutputItemType>
-        <UndefineProperties>%(ProjectReference.UndefineProperties);OSGroup;TargetGroup</UndefineProperties>
+        <UndefineProperties>%(ProjectReference.UndefineProperties)</UndefineProperties>
       </ProjectReference>
     </ItemGroup>
   </Target>
@@ -36,7 +36,8 @@
   <!-- Returns the set of files to be included in the NuGet package
        with appropriate metadata.-->
   <Target Name="GetFilesToPackage"
-          Returns="@(FilesToPackage)">
+          Returns="@(FilesToPackage)"
+          Condition="'$(ExcludeFromPackage)' != 'true'">
     <PropertyGroup>
       <PackagePath Condition="'$(PackagePath)' == ''">$(TargetPath)</PackagePath>
       <PackageIncludeDocs Condition="'$(PackageIncludeDocs)' == '' AND '$(IsReferenceAssembly)' == 'true'">true</PackageIncludeDocs>

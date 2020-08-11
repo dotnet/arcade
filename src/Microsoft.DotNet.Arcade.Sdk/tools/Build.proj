@@ -11,13 +11,9 @@
 
     DotNetBuildFromSource           Building the entire stack from source with no external dependencies.
     DotNetOutputBlobFeedDir         Directory to publish Source Build assets to (packages, symbol packages, installers, etc.).
-    DotNetPublishUsingPipelines     Publish assets using Azure DevOps release pipelines.
-    DotNetArtifactsCategory         Type of assets being produced by the build.
-    DotNetPublishToBlobFeed         Publish assets to blob feed using DotNetPublishBlobFeedUrl and DotNetPublishBlobFeedKey.
-    DotNetPublishBlobFeedUrl        Target feed URL, or empty if not publishing to Azure blob feed.
-    DotNetPublishBlobFeedKey        Azure blob feed account key.
-    DotNetSymbolServerTokenMsdl     Personal access token for MSDL symbol server. Available from variable group DotNet-Symbol-Publish.
-    DotNetSymbolServerTokenSymWeb   Personal access token for SymWeb symbol server. Available from variable group DotNet-Symbol-Publish.
+    DotNetPublishUsingPipelines     Publish assets to Build Asset Registry.
+    DotNetSymbolServerTokenMsdl     Personal access token for MSDL symbol server. Available from variable group DotNet-Symbol-Publish.	
+    DotNetSymbolServerTokenSymWeb   Personal access token for SymWeb symbol server. Available from variable group DotNet-Symbol-Publish.	
     DotNetSymbolExpirationInDays    Symbol expiration time in days (defaults to 10 years).
     DotNetSignType                  Specifies the signing type: 'real' (default), 'test'.
     DotNetRuntimeSourceFeed         Storage account to lookup for the .Net runtime files
@@ -46,6 +42,7 @@
   <ItemDefinitionGroup>
     <ProjectToBuild>
       <RestoreInParallel>true</RestoreInParallel>
+      <BuildInParallel>true</BuildInParallel>
     </ProjectToBuild>
   </ItemDefinitionGroup>
 
@@ -84,11 +81,26 @@
     <Error Text="Property 'RepoRoot' must be specified" Condition="'$(_RepoRootOriginal)' == ''"/>
     <Error Text="File 'global.json' must exist in directory specified by RepoRoot: '$(_RepoRootOriginal)'" Condition="'$(_RepoRootOriginal)' != '' and !Exists('$(RepoRoot)global.json')"/>
 
+    <PropertyGroup>
+      <!-- 'IsRunningFromVisualStudio' may be true even when running msbuild.exe from command line. This generally means that MSBuild is from a Visual Studio installation and therefore we need to find NuGet.targets in a different location. -->
+      <_NuGetRestoreTargets Condition="Exists('$(MSBuildToolsPath)\NuGet.targets')" >$(MSBuildToolsPath)\NuGet.targets</_NuGetRestoreTargets>
+      <_NuGetRestoreTargets Condition="'$([MSBuild]::IsRunningFromVisualStudio())' == 'true' And Exists('$(MSBuildToolsPath32)\..\..\..\Common7\IDE\CommonExtensions\Microsoft\NuGet\NuGet.targets')">$(MSBuildToolsPath32)\..\..\..\Common7\IDE\CommonExtensions\Microsoft\NuGet\NuGet.targets</_NuGetRestoreTargets>
+
+      <!-- If `DotNetPublishUsingPipelines` is not set we default it to false. -->
+      <DotNetPublishUsingPipelines Condition="'$(DotNetPublishUsingPipelines)' == ''">false</DotNetPublishUsingPipelines>
+
+      <!-- 
+        If DotNetPublishUsingPipelines is set we don't publish symbols during the build stage,
+        only in the Maestro post-build stages. If DotNetPublishUsingPipelines is NOT set then
+        we publish symbols during the build stage.
+      -->
+      <PublishToSymbolServer>true</PublishToSymbolServer>
+      <PublishToSymbolServer Condition="'$(DotNetPublishUsingPipelines)' == 'true'">false</PublishToSymbolServer>
+    </PropertyGroup>
+
     <ItemGroup>
       <_SolutionBuildTargets Include="Rebuild" Condition="'$(Rebuild)' == 'true'" />
       <_SolutionBuildTargets Include="Build" Condition="'$(Build)' == 'true' and '$(Rebuild)' != 'true'" />
-      <!-- Extensibility point to run addition build targets after build. -->
-      <_SolutionBuildTargets Include="@(SolutionBuildTargets)" />
       <!-- Deploy target is set up to chain after Build so that F5 in VS works. -->
       <_SolutionBuildTargets Include="Test" Condition="'$(Test)' == 'true'" />
       <!-- Pack before running integration and performance tests so that these tests can test packages produced by the repo. -->
@@ -124,7 +136,16 @@
       <_RestoreToolsProps Include="@(_CommonProps)"/>
       <_RestoreToolsProps Include="BaseIntermediateOutputPath=$(ArtifactsToolsetDir)Common"/>
       <_RestoreToolsProps Include="ExcludeRestorePackageImports=true"/>
-      <_RestoreToolsProps Include="PublishingToBlobStorage=$(DotNetPublishToBlobFeed)"/>
+      <_RestoreToolsProps Include="_NuGetRestoreTargets=$(_NuGetRestoreTargets)"/>
+      
+      <!-- Used in the SDK (Tools.proj) to control whether Build.Tasks.Feed will be restored or not. -->
+      <_RestoreToolsProps Include="Publish=$(Publish)"/>
+
+      <!-- Used in the SDK (Tools.proj) to control whether SymbolUploader.Build.Task will be restored or not. -->
+      <_RestoreToolsProps Include="PublishToSymbolServer=$(PublishToSymbolServer)"/>
+
+      <!-- Forward this property because we can't assume it will be available globally. -->
+      <_RestoreToolsProps Include="DotNetPublishUsingPipelines=$(DotNetPublishUsingPipelines)"/>
     </ItemGroup>
 
     <!--
@@ -138,11 +159,16 @@
 
     <ItemGroup>
       <_PublishProps Include="@(_CommonProps)"/>
-      <_PublishProps Include="PublishToAzureDevOpsArtifacts=$(DotNetPublishUsingPipelines)" />
-      <_PublishProps Include="ArtifactsCategory=$(DotNetArtifactsCategory)" />
-      <_PublishProps Include="AzureFeedUrl=$(DotNetPublishBlobFeedUrl)" Condition="'$(DotNetPublishToBlobFeed)' == 'true'" />
-      <_PublishProps Include="AzureAccountKey=$(DotNetPublishBlobFeedKey)" Condition="'$(DotNetPublishToBlobFeed)' == 'true'" />
       <_PublishProps Include="DotNetOutputBlobFeedDir=$(_DotNetOutputBlobFeedDir)" Condition="'$(_DotNetOutputBlobFeedDir)' != ''" />
+
+      <!-- Used in a few places in the stack to decide if publishing was enabled or not. -->
+      <_PublishProps Include="Publish=$(Publish)"/>
+
+      <!-- Used in the SDK (Publish.proj) to control whether in-build symbol publishing should be performed. -->
+      <_PublishProps Include="PublishToSymbolServer=$(PublishToSymbolServer)"/>
+
+      <!-- Forward this property because we can't assume it will be available globally. -->
+      <_PublishProps Include="DotNetPublishUsingPipelines=$(DotNetPublishUsingPipelines)"/>
     </ItemGroup>
 
     <ItemGroup>
@@ -172,13 +198,17 @@
         We invalidate the cache by changing the value of __BuildPhase property.
     -->
 
+    <ItemGroup>
+      <_SolutionRestoreProps Include="@(_SolutionBuildProps)" />
+      <_SolutionRestoreProps Include="__BuildPhase=SolutionRestore" />
+      <_SolutionRestoreProps Include="_NETCORE_ENGINEERING_TELEMETRY=Restore" />
+      <_SolutionRestoreProps Include="MSBuildRestoreSessionId=$([System.Guid]::NewGuid())" />
+      <_SolutionRestoreProps Include="RestoreUseStaticGraphEvaluation=true" Condition="'$(RestoreUseStaticGraphEvaluation)' == 'true'" />
+    </ItemGroup>
+    
     <PropertyGroup>
       <!-- This can be set to false as an optimization for repos that don't use NuGet. -->
       <RestoreUsingNuGetTargets Condition="'$(RestoreUsingNuGetTargets)' == ''">true</RestoreUsingNuGetTargets>
-
-      <!-- 'IsRunningFromVisualStudio' may be true even when running msbuild.exe from command line. This generally means that MSBuild is from a Visual Studio installation and therefore we need to find NuGet.targets in a different location. -->
-      <_NuGetRestoreTargets Condition="Exists('$(MSBuildToolsPath)\NuGet.targets')" >$(MSBuildToolsPath)\NuGet.targets</_NuGetRestoreTargets>
-      <_NuGetRestoreTargets Condition="'$([MSBuild]::IsRunningFromVisualStudio())' == 'true' And Exists('$(MSBuildToolsPath32)\..\..\..\Common7\IDE\CommonExtensions\Microsoft\NuGet\NuGet.targets')">$(MSBuildToolsPath32)\..\..\..\Common7\IDE\CommonExtensions\Microsoft\NuGet\NuGet.targets</_NuGetRestoreTargets>
     </PropertyGroup>
 
     <!--
@@ -186,14 +216,16 @@
       As a perf optimization, the Properties list here should match exactly with
       the properties passed to the "Restore" target a few lines below.
       This helps MSBuild cache the result of _IsProjectRestoreSupported.
+      No need to call into the nuget internal target when restoring using
+      the new msbuild static graph APIs (RestoreUseStaticGraphEvaluation=true).
     -->
     <MSBuild Projects="@(ProjectToBuild)"
-             Properties="@(_SolutionBuildProps);__BuildPhase=SolutionRestore;_NETCORE_ENGINEERING_TELEMETRY=Restore"
+             Properties="@(_SolutionRestoreProps)"
              RemoveProperties="$(_RemoveProps)"
              Targets="_IsProjectRestoreSupported"
              SkipNonexistentTargets="true"
              BuildInParallel="true"
-             Condition="'$(RestoreUsingNuGetTargets)' != 'false' and '%(ProjectToBuild.Extension)' != '.sln' and '$(Restore)' == 'true'">
+             Condition="'$(RestoreUsingNuGetTargets)' != 'false' and '%(ProjectToBuild.Extension)' != '.sln' and '%(ProjectToBuild.Extension)' != '.slnf' and '$(RestoreUseStaticGraphEvaluation)' != 'true' and '$(Restore)' == 'true'">
 
       <Output TaskParameter="TargetOutputs" ItemName="_ProjectToRestoreWithNuGet" />
     </MSBuild>
@@ -214,8 +246,8 @@
     </ItemGroup>
 
     <MSBuild Projects="@(_ProjectToRestore)"
-             Properties="@(_SolutionBuildProps);__BuildPhase=SolutionRestore;_NETCORE_ENGINEERING_TELEMETRY=Restore"
-             RemoveProperties="$(_RemoveProps)"
+             Properties="@(_SolutionRestoreProps)"
+             RemoveProperties="$(_RemoveProps);TreatWarningsAsErrors"
              Targets="Restore"
              SkipNonexistentTargets="true"
              BuildInParallel="%(_ProjectToRestore.RestoreInParallel)"
@@ -228,13 +260,12 @@
              Properties="@(_SolutionBuildProps);__BuildPhase=SolutionBuild;_NETCORE_ENGINEERING_TELEMETRY=Build"
              RemoveProperties="$(_RemoveProps)"
              Targets="@(_SolutionBuildTargets)"
-             BuildInParallel="true"
+             BuildInParallel="%(ProjectToBuild.BuildInParallel)"
              Condition="'@(_SolutionBuildTargets)' != ''" />
 
     <MSBuild Projects="AfterSolutionBuild.proj"
              Properties="@(_CommonProps);_NETCORE_ENGINEERING_TELEMETRY=Build"
              Targets="@(_SolutionBuildTargets)"
-             SkipNonexistentTargets="true"
              Condition="'@(_SolutionBuildTargets)' != ''" />
 
     <!--
@@ -248,12 +279,11 @@
     <MSBuild Projects="AfterSigning.proj"
              Properties="@(_CommonProps);_NETCORE_ENGINEERING_TELEMETRY=Sign"
              Targets="@(_SolutionBuildTargets)"
-             SkipNonexistentTargets="true"
              Condition="'@(_SolutionBuildTargets)' != ''"/>
 
     <MSBuild Projects="Publish.proj"
              Properties="@(_PublishProps);_NETCORE_ENGINEERING_TELEMETRY=Publish"
              Targets="Publish"
-             Condition="'$(Publish)' == 'true'"/>
+             Condition="'$(Publish)' == 'true' and '$(DotNetBuildFromSource)' != 'true'"/>
   </Target>
 </Project>

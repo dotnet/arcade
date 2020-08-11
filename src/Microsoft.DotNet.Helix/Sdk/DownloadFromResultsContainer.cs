@@ -110,7 +110,7 @@ namespace Microsoft.DotNet.Helix.Sdk
 
         private void LogRequiredParameterError(string parameter)
         {
-            Log.LogError($"Required parameter {parameter} string was null or empty");
+            Log.LogError(FailureCategory.Build, $"Required parameter {parameter} string was null or empty");
         }
     }
 }

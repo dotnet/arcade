@@ -66,10 +66,10 @@ The following applies to CI build definition, not PR validation build definition
 ### Versioning changes
 - Arcade has a new versioning scheme for packages
   - SHA is included in the package version
-  - The version number is calculated differently, which means you need to rev the pre-release label (or major/minor/revision number) to avoid version conflicts and keep correct ordering. For example, if your PreReleaseVersionLabel was beta before update it to beta2. 
+  - The version number is calculated differently, which means you need to rev the pre-release label (or major/minor/revision number) to avoid version conflicts and keep correct ordering. For example, if your PreReleaseVersionLabel was beta before and you wish to use SemVer2, set PreReleaseVersionIteration to '2'. If you are using SemVer1, set PreReleaseVersionLabel to beta2.
   - By default Arcade uses SemVer2. It allows for opting for SemVer1
 -	eng\Versions.props
-  - Update PreReleaseVersionLabel property to avoid version number collisions
+  - Update the PreReleaseVersionLabel and/or PreReleaseVersionIteration properties to avoid version number collisions
   - Set SemanticVersioningV1 property to true if you want to continue using SemVer1.
 
 ### XUnit updated

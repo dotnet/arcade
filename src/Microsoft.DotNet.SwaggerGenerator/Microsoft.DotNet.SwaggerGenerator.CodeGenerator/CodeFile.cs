@@ -1,4 +1,4 @@
-﻿namespace Microsoft.DotNet.SwaggerGenerator
+namespace Microsoft.DotNet.SwaggerGenerator
 {
     public class CodeFile
     {
