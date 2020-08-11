@@ -16,6 +16,8 @@ namespace Microsoft.DotNet.Helix.Sdk
     public class CreateXHarnessiOSWorkItems : XHarnessTaskBase
     {
         private const string PayloadScriptName = "ios-helix-job-payload.sh";
+        private const int DefaultLaunchTimeoutInMinutes = 10;
+        private const string LaunchTimeoutPropName = "LaunchTimeout";
 
         /// <summary>
         /// An array of one or more paths to iOS app bundles (folders ending with ".app" usually)
@@ -71,12 +73,12 @@ namespace Microsoft.DotNet.Helix.Sdk
         /// </summary>
         /// <param name="appFolderPath">Path to application package</param>
         /// <returns>An ITaskItem instance representing the prepared HelixWorkItem.</returns>
-        private async Task<ITaskItem> PrepareWorkItem(ITaskItem appFolderItem)
+        private async Task<ITaskItem> PrepareWorkItem(ITaskItem appBundleItem)
         {
             // Forces this task to run asynchronously
             await Task.Yield();
 
-            string appFolderPath = appFolderItem.ItemSpec.TrimEnd(Path.DirectorySeparatorChar);
+            string appFolderPath = appBundleItem.ItemSpec.TrimEnd(Path.DirectorySeparatorChar);
             
             string workItemName = Path.GetFileName(appFolderPath);
             if (workItemName.EndsWith(".app"))
@@ -84,9 +86,29 @@ namespace Microsoft.DotNet.Helix.Sdk
                 workItemName = workItemName.Substring(0, workItemName.Length - 4);
             }
 
-            var timeouts = ParseTimeouts();
+            var (testTimeout, workItemTimeout) = ParseTimeouts(appBundleItem);
 
-            string command = ValidateMetadataAndGetXHarnessiOSCommand(appFolderItem, timeouts.TestTimeout);
+            // Validation of any metadata specific to iOS stuff goes here
+            if (!appBundleItem.TryGetMetadata("Targets", out string targets))
+            {
+                Log.LogError("'Targets' metadata must be specified - " +
+                    "expecting list of target device/simulator platforms to execute tests on (e.g. ios-simulator-64)");
+                return null;
+            }
+
+            // Optional timeout for the how long it takes for the app to be installed, booted and tests start executing
+            TimeSpan launchTimeout = TimeSpan.FromMinutes(DefaultLaunchTimeoutInMinutes);
+            if (!appBundleItem.TryGetMetadata(LaunchTimeoutPropName, out string launchTimeoutProp))
+            {
+                if (!TimeSpan.TryParse(launchTimeoutProp, out launchTimeout) || launchTimeout.Ticks < 0)
+                {
+                    Log.LogError($"Invalid value \"{launchTimeoutProp}\" provided in <{LaunchTimeoutPropName}>");
+                }
+            }
+
+            string appName = Path.GetFileName(appBundleItem.ItemSpec);
+
+            string command = GetXHarnessCommand(appName, targets, testTimeout, launchTimeout);
 
             Log.LogMessage($"Creating work item with properties Identity: {workItemName}, Payload: {appFolderPath}, Command: {command}");
 
@@ -95,7 +117,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                 { "Identity", workItemName },
                 { "PayloadArchive", await CreateZipArchiveOfFolder(appFolderPath) },
                 { "Command", command },
-                { "Timeout", timeouts.WorkItemTimeout.ToString() },
+                { "Timeout", workItemTimeout.ToString() },
             });
         }
 
@@ -132,23 +154,15 @@ namespace Microsoft.DotNet.Helix.Sdk
             return outputZipPath;
         }
 
-        private string ValidateMetadataAndGetXHarnessiOSCommand(ITaskItem appFolderPath, TimeSpan xHarnessTimeout)
+        private string GetXHarnessCommand(string appName, string targets, TimeSpan testTimeout, TimeSpan launchTimeout)
         {
-            // Validation of any metadata specific to iOS stuff goes here
-            if (!appFolderPath.GetRequiredMetadata(Log, "Targets", out string targets))
-            {
-                Log.LogError("'Targets' metadata must be specified - " +
-                    "expecting list of target device/simulator platforms to execute tests on (e.g. ios-simulator-64)");
-                return null;
-            }
-
             // We need to call 'sudo launchctl' to spawn the process in a user session with GUI rendering capabilities
             string xharnessRunCommand = $"sudo launchctl asuser `id -u` sh \"{PayloadScriptName}\" " +
-                                        $"--app \"$HELIX_WORKITEM_ROOT/{Path.GetFileName(appFolderPath.ItemSpec)}\" " +
+                                        $"--app \"$HELIX_WORKITEM_ROOT/{appName}\" " +
                                          "--output-directory \"$HELIX_WORKITEM_UPLOAD_ROOT\" " +
                                         $"--targets \"{targets}\" " +
-                                        $"--timeout \"{xHarnessTimeout.TotalSeconds}\" " +
-                                         "--launch-timeout 900 " +
+                                        $"--timeout {testTimeout.TotalSeconds} " +
+                                        $"--launch-timeout {launchTimeout.TotalSeconds} " +
                                          "--xharness-cli-path \"$XHARNESS_CLI_PATH\" " +
                                         $"--xcode-version {XcodeVersion}" +
                                         (!string.IsNullOrEmpty(AppArguments) ? $" --app-arguments \"{AppArguments}\"" : string.Empty);
