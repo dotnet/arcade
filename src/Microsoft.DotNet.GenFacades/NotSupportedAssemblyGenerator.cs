@@ -29,9 +29,13 @@ namespace Microsoft.DotNet.GenFacades
         public override bool Execute()
         {
             if (SourceFiles == null || SourceFiles.Length == 0)
+            {
                 Log.LogError("There are no ref source files.");
-
-            GenerateNotSupportedAssemblyFiles(SourceFiles?.Select(item => item.ItemSpec).ToList(), IntermediateOutputPath, Message, ApiExclusionListPath);
+            }
+            else
+            {
+                GenerateNotSupportedAssemblyFiles(SourceFiles.Select(item => item.ItemSpec).ToList(), IntermediateOutputPath, Message, ApiExclusionListPath);
+            }
             return !Log.HasLoggedErrors;
         }
 
@@ -46,6 +50,7 @@ namespace Microsoft.DotNet.GenFacades
                 if (!File.Exists(sourceFile))
                 {
                     Log.LogError($"File {sourceFile} was not found.");
+                    continue;
                 }
                 string text = GenerateNotSupportedAssemblyForSourceFile(sourceFile, message, apiExclusionListPath);
                 string path = Path.Combine(intermediatePath, Path.GetFileNameWithoutExtension(sourceFile) + ".notSupported.cs");
