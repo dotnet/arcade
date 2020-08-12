@@ -14,6 +14,9 @@ using System.Linq;
 
 namespace Microsoft.DotNet.GenFacades
 {
+    /// <summary>
+    /// The class generates an NotSupportedAssembly from the reference sources.
+    /// </summary>
     public class NotSupportedAssemblyGenerator : BuildTask
     {
         [Required]
