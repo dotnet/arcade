@@ -42,7 +42,6 @@
     
     <NotSupportedAssemblyGenerator
       SourceFiles="@(UpdateReferencePaths)"
-      IntermediateOutputPath="$(IntermediateOutputPath)"
       Message="$(GeneratePlatformNotSupportedAssembly)"
       ApiExclusionListPath="$(ApiExclusionListPath)" />
     

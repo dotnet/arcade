@@ -7,6 +7,7 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.DotNet.Build.Tasks;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -17,9 +18,6 @@ namespace Microsoft.DotNet.GenFacades
     {
         [Required]
         public ITaskItem[] SourceFiles { get; set; }
-
-        [Required]
-        public string IntermediateOutputPath { get; set; }
 
         [Required]
         public string Message { get; set; }
@@ -34,15 +32,16 @@ namespace Microsoft.DotNet.GenFacades
             }
             else
             {
-                GenerateNotSupportedAssemblyFiles(SourceFiles.Select(item => item.ItemSpec).ToList(), IntermediateOutputPath, Message, ApiExclusionListPath);
+                GenerateNotSupportedAssemblyFiles(SourceFiles);
             }
             return !Log.HasLoggedErrors;
         }
 
-        public void GenerateNotSupportedAssemblyFiles(IEnumerable<string> sourceFiles, string intermediatePath, string message, string apiExclusionListPath)
+        private void GenerateNotSupportedAssemblyFiles(IEnumerable<ITaskItem> sourceFiles)
         {
-            foreach (string sourceFile in sourceFiles)
+            foreach (ITaskItem item in sourceFiles)
             {
+                string sourceFile = item.ItemSpec;
                 if (string.IsNullOrEmpty(sourceFile))
                 {
                     continue;
@@ -52,23 +51,34 @@ namespace Microsoft.DotNet.GenFacades
                     Log.LogError($"File {sourceFile} was not found.");
                     continue;
                 }
-                string text = GenerateNotSupportedAssemblyForSourceFile(sourceFile, message, apiExclusionListPath);
-                string path = Path.Combine(intermediatePath, Path.GetFileNameWithoutExtension(sourceFile) + ".notSupported.cs");
-                File.WriteAllText(path, text);
+                string text = GenerateNotSupportedAssemblyForSourceFile(sourceFile);
+
+                if(text != null)
+                    File.WriteAllText(item.GetMetadata("NotSupportedPath"), text);
             }
         }
 
-        public static string GenerateNotSupportedAssemblyForSourceFile(string sourceFile, string Message, string apiExclusionListPath)
+        private string GenerateNotSupportedAssemblyForSourceFile(string sourceFile)
         {
             string[] apiExclusions;
-            SyntaxTree syntaxTree = CSharpSyntaxTree.ParseText(File.ReadAllText(sourceFile));
-            if (string.IsNullOrEmpty(apiExclusionListPath) || !File.Exists(apiExclusionListPath))
+            SyntaxTree syntaxTree;
+            try
+            {
+                syntaxTree = CSharpSyntaxTree.ParseText(File.ReadAllText(sourceFile));
+            }
+            catch(Exception ex)
+            {
+                Log.LogError(ex.Message);
+                return null;
+            }
+
+            if (string.IsNullOrEmpty(ApiExclusionListPath) || !File.Exists(ApiExclusionListPath))
             {
                 apiExclusions = null;
             }
             else
             {
-                apiExclusions = File.ReadAllLines(apiExclusionListPath);
+                apiExclusions = File.ReadAllLines(ApiExclusionListPath);
             }
             var rewriter = new NotSupportedAssemblyRewriter(Message, apiExclusions);
             SyntaxNode root = rewriter.Visit(syntaxTree.GetRoot());
@@ -79,12 +89,12 @@ namespace Microsoft.DotNet.GenFacades
     internal class NotSupportedAssemblyRewriter : CSharpSyntaxRewriter
     {
         private string _message;
-        private List<string> _exclusionApis;
+        private string[] _exclusionApis;
 
-        public NotSupportedAssemblyRewriter(string Message, string[] ExclusionApis)
+        public NotSupportedAssemblyRewriter(string message, string[] exclusionApis)
         {
-            _message = Message;
-            _exclusionApis = ExclusionApis?.ToList();
+            _message = message;
+            _exclusionApis = exclusionApis;
         }
 
         public override SyntaxNode VisitMethodDeclaration(MethodDeclarationSyntax node)
@@ -92,7 +102,7 @@ namespace Microsoft.DotNet.GenFacades
             if (node.Body == null)
                 return node;
 
-            if (_exclusionApis != null && _exclusionApis.Contains(GetMethodDefination(node)))
+            if (_exclusionApis != null && _exclusionApis.Contains(GetMethodDefinition(node)))
                 return null;
 
             string message = "{ throw new System.PlatformNotSupportedException(" + $"{ _message }); "+ " }\n";  
@@ -123,9 +133,9 @@ namespace Microsoft.DotNet.GenFacades
         private string GetFullyQualifiedName(TypeDeclarationSyntax node)
         {
             string parent;
-            if (node.Parent is NamespaceDeclarationSyntax)
+            if (node.Parent is NamespaceDeclarationSyntax parentNamespace)
             {
-                parent = GetFullyQualifiedName((NamespaceDeclarationSyntax)node.Parent);
+                parent = GetFullyQualifiedName(parentNamespace);
             }
             else
             {
@@ -137,6 +147,6 @@ namespace Microsoft.DotNet.GenFacades
 
         private string GetFullyQualifiedName(NamespaceDeclarationSyntax node) => node.Name.ToFullString().Trim();
 
-        private string GetMethodDefination(MethodDeclarationSyntax node) => GetFullyQualifiedName((TypeDeclarationSyntax)node.Parent) + "." + node.Identifier.ValueText;
+        private string GetMethodDefinition(MethodDeclarationSyntax node) => GetFullyQualifiedName((TypeDeclarationSyntax)node.Parent) + "." + node.Identifier.ValueText;
     }
 }
