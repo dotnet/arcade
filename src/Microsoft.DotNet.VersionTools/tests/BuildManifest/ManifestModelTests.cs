@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
@@ -7,6 +7,8 @@ using Microsoft.DotNet.VersionTools.BuildManifest.Model;
 using System.Xml.Linq;
 using Xunit;
 using Xunit.Abstractions;
+using System.Reflection.Metadata;
+using System.Reflection;
 
 namespace Microsoft.DotNet.VersionTools.Tests.BuildManifest
 {
@@ -98,6 +100,17 @@ namespace Microsoft.DotNet.VersionTools.Tests.BuildManifest
             Assert.True(XNode.DeepEquals(xml, modelXml));
         }
 
+        [Fact]
+        public void TestManifestWithSigningInformation()
+        {
+            var buildModel = CreateSigningInformationBuildManifestModel();
+
+            XElement modelXml = buildModel.ToXml();
+            XElement xml = XElement.Parse(ExampleBuildStringWithSigningInformation);
+
+            Assert.True(XNode.DeepEquals(xml, modelXml));
+        }
+
         private BuildModel CreatePackageOnlyBuildManifestModel()
         {
             return new BuildModel(new BuildIdentity { Name = "SimpleBuildManifest", BuildId = "123" })
@@ -113,6 +126,104 @@ namespace Microsoft.DotNet.VersionTools.Tests.BuildManifest
                         }
                     }
                 }
+            };
+        }
+
+        private BuildModel CreateSigningInformationBuildManifestModel()
+        {
+            return new BuildModel(new BuildIdentity { Name = "SigningInformationBuildManifest", BuildId = "123", Branch = "refs/heads/Test", 
+                Commit = "test_commit", IsStable = "False", PublishingVersion = (PublishingInfraVersion)3 })
+            {
+                Artifacts = new ArtifactSet
+                {
+                    Packages = new List<PackageArtifactModel>
+                    {
+                        new PackageArtifactModel
+                        {
+                            Id = "TestPackage",
+                            Version = "5.0.0",
+                        },
+                        new PackageArtifactModel
+                        {
+                            Id = "ArcadeSdkTest",
+                            Version = "5.0.0",
+                        },
+                    },
+                    Blobs = new List<BlobArtifactModel>
+                    {
+                        new BlobArtifactModel
+                        {
+                            Id = "assets/symbols/test.nupkg",
+                        },
+                    }
+                },
+                SigningInformation = new SigningInformationModel
+                {
+                    AzureDevOpsCollectionUri = "https://dev.azure.com/uri/",
+                    AzureDevOpsBuildId = 123456,
+                    AzureDevOpsProject = "project",
+                    FileExtensionSignInfo = new List<FileExtensionSignInfoModel>
+                    {
+                        new FileExtensionSignInfoModel
+                        {
+                            Include = ".dll",
+                            CertificateName = "Microsoft400",
+                        },
+                        new FileExtensionSignInfoModel
+                        {
+                            Include = ".jar",
+                            CertificateName = "MicrosoftJARSHA2",
+                        },
+                        new FileExtensionSignInfoModel
+                        {
+                            Include = ".nupkg",
+                            CertificateName = "NuGet",
+                        },
+                    },
+                    FileSignInfo = new List<FileSignInfoModel>
+                    {
+                        new FileSignInfoModel
+                        {
+                            Include = "Dll.dll",
+                            CertificateName = "3PartySHA2",
+                        },
+                        new FileSignInfoModel
+                        {
+                            Include = "Another.dll",
+                            CertificateName = "AnotherCert",
+                        },
+                    },
+                    ItemsToSign = new List<ItemToSignModel>
+                    {
+                        new ItemToSignModel
+                        {
+                            Include = "Package1.nupkg",
+                        },
+                        new ItemToSignModel
+                        {
+                            Include = "Package2.nupkg",
+                        },
+                        new ItemToSignModel
+                        {
+                            Include = "Package3.nupkg",
+                        },
+                    },
+                    StrongNameSignInfo = new List<StrongNameSignInfoModel>
+                    {
+                        new StrongNameSignInfoModel
+                        {
+                            Include = "StrongNameTime",
+                            PublicKeyToken = "0123456789abcdef",
+                            CertificateName = "Microsoft400",
+                        },
+                        new StrongNameSignInfoModel
+                        {
+                            Include = "StrongButKindName",
+                            PublicKeyToken = "fedcba9876543210",
+                            CertificateName = "Microsoft404",
+                        },
+                    },
+                },
             };
         }
 
@@ -172,6 +283,26 @@ namespace Microsoft.DotNet.VersionTools.Tests.BuildManifest
     Commit=""152dbe8a4b4e30eee26208ff6a850e9aa73c07f8"" />
 
 </OrchestratedBuild>
+";
+
+        private const string ExampleBuildStringWithSigningInformation = @"
+<Build PublishingVersion=""3"" Name=""SigningInformationBuildManifest"" BuildId=""123"" Branch=""refs/heads/Test"" Commit=""test_commit"" IsStable=""False"">
+  <Package Id=""ArcadeSdkTest"" Version=""5.0.0"" />
+  <Package Id=""TestPackage"" Version=""5.0.0"" />
+  <Blob Id=""assets/symbols/test.nupkg""/>
+  <SigningInformation AzureDevOpsCollectionUri=""https://dev.azure.com/uri/"" AzureDevOpsProject=""project"" AzureDevOpsBuildId=""123456"">
+    <FileExtensionSignInfo Include="".dll"" CertificateName=""Microsoft400"" />
+    <FileExtensionSignInfo Include="".jar"" CertificateName=""MicrosoftJARSHA2"" />
+    <FileExtensionSignInfo Include="".nupkg"" CertificateName=""NuGet"" />
+    <FileSignInfo Include=""Another.dll"" CertificateName=""AnotherCert"" />
+    <FileSignInfo Include=""Dll.dll"" CertificateName=""3PartySHA2"" />
+    <ItemsToSign Include=""Package1.nupkg"" />
+    <ItemsToSign Include=""Package2.nupkg"" />
+    <ItemsToSign Include=""Package3.nupkg"" />
+    <StrongNameSignInfo Include=""StrongButKindName"" PublicKeyToken=""fedcba9876543210"" CertificateName=""Microsoft404"" />
+    <StrongNameSignInfo Include=""StrongNameTime"" PublicKeyToken=""0123456789abcdef"" CertificateName=""Microsoft400"" />
+  </SigningInformation>
+</Build>
 ";
     }
 }
