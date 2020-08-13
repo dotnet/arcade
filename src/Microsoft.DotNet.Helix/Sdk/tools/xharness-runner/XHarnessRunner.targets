@@ -28,7 +28,7 @@
       <_XHarnessCliPath>$(_XHarnessLocalToolPath)\.store\microsoft.dotnet.xharness.cli\$(_XHarnessPackageVersion)\microsoft.dotnet.xharness.cli\$(_XHarnessPackageVersion)</_XHarnessCliPath>
     </PropertyGroup>
 
-    <!-- It can happen that the SDK is invoke in parallel and we have to make sure we don't install the tool twice -->
+    <!-- It can happen that the SDK is invoked in parallel and then it can fail when re-using the install location, so we ignore the exit code -->
     <Exec Command="dotnet tool install --tool-path $(_XHarnessLocalToolPath) --version $(_XHarnessPackageVersion) --add-source $(XHarnessPackageSource) $(_XHarnessPackageName)"
           WorkingDirectory="$(ArtifactsTmpDir)"
           IgnoreExitCode="true" />
