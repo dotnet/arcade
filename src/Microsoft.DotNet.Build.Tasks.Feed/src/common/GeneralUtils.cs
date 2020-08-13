@@ -21,7 +21,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         public const string SymbolPackageSuffix = ".symbols.nupkg";
         public const string PackageSuffix = ".nupkg";
         public const string PackagesCategory = "PACKAGE";
-        public const int MaxRetries = 1;
+        public const int DefaultMaxAttempts = 5;
 
         /// <summary>
         ///  Enum describing the states of a given package on a feed
@@ -135,7 +135,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
             ExponentialRetry RetryHandler = new ExponentialRetry
             {
-                MaxAttempts = MaxRetries
+                MaxAttempts = DefaultMaxAttempts
             };
 
             bool success = await RetryHandler.RunAsync(async attempt =>
@@ -212,7 +212,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
             ExponentialRetry RetryHandler = new ExponentialRetry
             {
-                MaxAttempts = MaxRetries
+                MaxAttempts = DefaultMaxAttempts
             };
 
             bool success = await RetryHandler.RunAsync(async attempt =>
