@@ -152,6 +152,17 @@ namespace Microsoft.DotNet.GenFacades
             return node.WithBody(block);
         }
 
+        public override SyntaxNode VisitConversionOperatorDeclaration(ConversionOperatorDeclarationSyntax node)
+        {
+            if (node.Body == null)
+                return node;
+
+            string message = "{ throw new System.PlatformNotSupportedException(" + $"{ _message }); " + " } ";
+            BlockSyntax block = (BlockSyntax)SyntaxFactory.ParseStatement(message);
+
+            return node.WithBody(block);
+        }
+
         private string GetFullyQualifiedName(TypeDeclarationSyntax node)
         {
             string parent;
