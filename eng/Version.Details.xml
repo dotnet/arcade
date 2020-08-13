@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Dependencies>
   <ProductDependencies>
-    <Dependency Name="Microsoft.SymbolUploader.Build.Task" Version="1.1.141302">
+    <Dependency Name="Microsoft.SymbolUploader.Build.Task" Version="1.1.141304">
       <Uri>https://dev.azure.com/dnceng/internal/_git/dotnet-symuploader</Uri>
-      <Sha>64af3771fee16a95272515a42eec0d7de47505a9</Sha>
+      <Sha>39ea47d9b2e472feb148674cf962f8e3580cd3f1</Sha>
     </Dependency>
   </ProductDependencies>
   <ToolsetDependencies>
