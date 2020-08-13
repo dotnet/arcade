@@ -42,7 +42,7 @@
     
     <NotSupportedAssemblyGenerator
       SourceFiles="@(UpdateReferencePaths)"
-      Message="$(GeneratePlatformNotSupportedAssembly)"
+      Message="$(GeneratePlatformNotSupportedAssemblyMessage)"
       ApiExclusionListPath="$(ApiExclusionListPath)" />
     
     <ItemGroup>

@@ -124,7 +124,7 @@ namespace Microsoft.DotNet.GenFacades
 
         public override SyntaxNode VisitAccessorDeclaration(AccessorDeclarationSyntax node)
         {
-            if (node.Keyword.Text == "set" || node.Body == null)
+            if (node.Body == null)
                 return node;
 
             string message = "{ throw new System.PlatformNotSupportedException(" + $"{ _message }); "+ " } ";       
