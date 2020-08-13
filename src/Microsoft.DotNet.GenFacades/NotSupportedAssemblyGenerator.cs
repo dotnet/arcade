@@ -122,6 +122,14 @@ namespace Microsoft.DotNet.GenFacades
             return node.WithBody(block);
         }
 
+        public override SyntaxNode VisitDestructorDeclaration(DestructorDeclarationSyntax node)
+        {
+            string message = "{ throw new System.PlatformNotSupportedException(" + $"{ _message }); " + " }\n";
+            BlockSyntax block = (BlockSyntax)SyntaxFactory.ParseStatement(message);
+
+            return node.WithBody(block);
+        }
+
         public override SyntaxNode VisitAccessorDeclaration(AccessorDeclarationSyntax node)
         {
             if (node.Body == null)
