@@ -1,10 +1,9 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
@@ -16,7 +15,7 @@ namespace Microsoft.DotNet.Arcade.Sdk.SourceBuild
     /// dependencies. For each dependency with a "SourceBuildRepoName" element,
     /// adds an item to the "Dependencies" output.
     /// </summary>
-    public class ReadSourceBuildIntNupkgDependencies : Task
+    public class ReadSourceBuildIntermediateNupkgDependencies : Task
     {
         [Required]
         public string VersionDetailsXmlFile { get; set; }
