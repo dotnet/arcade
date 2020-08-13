@@ -108,28 +108,48 @@ namespace Microsoft.DotNet.GenFacades
             if (_exclusionApis != null && _exclusionApis.Contains(GetMethodDefinition(node)))
                 return null;
 
-            string message = "{ throw new System.PlatformNotSupportedException(" + $"{ _message }); "+ " }\n";  
-            BlockSyntax block = (BlockSyntax)SyntaxFactory.ParseStatement(message);
-
+            BlockSyntax block = (BlockSyntax)SyntaxFactory.ParseStatement(GetDefaultMessage());
             return node.WithBody(block);
         }
 
         public override SyntaxNode VisitConstructorDeclaration(ConstructorDeclarationSyntax node)
         {
-            string message = "{ throw new System.PlatformNotSupportedException(" + $"{ _message }); "+ " }\n";        
-            BlockSyntax block = (BlockSyntax)SyntaxFactory.ParseStatement(message);
+            BlockSyntax block = (BlockSyntax)SyntaxFactory.ParseStatement(GetDefaultMessage());
+            return node.WithBody(block);
+        }
 
+        public override SyntaxNode VisitDestructorDeclaration(DestructorDeclarationSyntax node)
+        {
+            BlockSyntax block = (BlockSyntax)SyntaxFactory.ParseStatement(GetDefaultMessage());
             return node.WithBody(block);
         }
 
         public override SyntaxNode VisitAccessorDeclaration(AccessorDeclarationSyntax node)
         {
-            if (node.Keyword.Text == "set" || node.Body == null)
+            if (node.Body == null)
                 return node;
 
             string message = "{ throw new System.PlatformNotSupportedException(" + $"{ _message }); "+ " } ";       
             BlockSyntax block = (BlockSyntax)SyntaxFactory.ParseStatement(message);
 
+            return node.WithBody(block);
+        }
+
+        public override SyntaxNode VisitOperatorDeclaration(OperatorDeclarationSyntax node)
+        {
+            if (node.Body == null)
+                return node;
+
+            BlockSyntax block = (BlockSyntax)SyntaxFactory.ParseStatement(GetDefaultMessage());
+            return node.WithBody(block);
+        }
+
+        public override SyntaxNode VisitConversionOperatorDeclaration(ConversionOperatorDeclarationSyntax node)
+        {
+            if (node.Body == null)
+                return node;
+
+            BlockSyntax block = (BlockSyntax)SyntaxFactory.ParseStatement(GetDefaultMessage());
             return node.WithBody(block);
         }
 
@@ -151,5 +171,7 @@ namespace Microsoft.DotNet.GenFacades
         private string GetFullyQualifiedName(NamespaceDeclarationSyntax node) => node.Name.ToFullString().Trim();
 
         private string GetMethodDefinition(MethodDeclarationSyntax node) => GetFullyQualifiedName((TypeDeclarationSyntax)node.Parent) + "." + node.Identifier.ValueText;
+    
+        private string GetDefaultMessage() => "{ throw new System.PlatformNotSupportedException(" + $"{ _message }); " + " }\n";
     }
 }
