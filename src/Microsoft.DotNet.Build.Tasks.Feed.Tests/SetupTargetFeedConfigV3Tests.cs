@@ -3,6 +3,7 @@
 // See the LICENSE file in the project root for more information.
 
 using Microsoft.DotNet.Build.Tasks.Feed.Model;
+using Microsoft.DotNet.Build.Tasks.Feed.Tests.TestDoubles;
 using System.Collections.Generic;
 using System.Linq;
 using Xunit;

@@ -15,6 +15,8 @@ using System.Net.Http;
 using static Microsoft.DotNet.Build.Tasks.Feed.GeneralUtils;
 using System.Diagnostics;
 using Microsoft.DotNet.VersionTools.BuildManifest.Model;
+using Microsoft.DotNet.Build.Tasks.Feed.Tests.TestDoubles;
+using Microsoft.DotNet.VersionTools.Util;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
 {
@@ -27,8 +29,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         [Fact]
         public void ConstructV2PublishingTask()
         {
-            var testInputs = Path.Combine(Path.GetDirectoryName(typeof(PublishArtifactsInManifestTests).Assembly.Location), "TestInputs", "Manifests");
-            var manifestFullPath = Path.Combine(testInputs, "SampleV2.xml");
+            var manifestFullPath = TestInputs.GetFullPath(@"Manifests\SampleV2.xml");
 
             var buildEngine = new MockBuildEngine();
             var task = new PublishArtifactsInManifest()
@@ -45,8 +46,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         [Fact]
         public void ConstructV3PublishingTask()
         {
-            var testInputs = Path.Combine(Path.GetDirectoryName(typeof(PublishArtifactsInManifestTests).Assembly.Location), "TestInputs", "Manifests");
-            var manifestFullPath = Path.Combine(testInputs, "SampleV3.xml");
+            var manifestFullPath = TestInputs.GetFullPath(@"Manifests\SampleV3.xml");
 
             var buildEngine = new MockBuildEngine();
             var task = new PublishArtifactsInManifest()
