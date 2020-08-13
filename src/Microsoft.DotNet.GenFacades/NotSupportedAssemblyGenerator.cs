@@ -112,6 +112,14 @@ namespace Microsoft.DotNet.GenFacades
             return node.WithBody(block);
         }
 
+        public override SyntaxNode VisitClassDeclaration(ClassDeclarationSyntax node)
+        {
+            if (_exclusionApis != null && _exclusionApis.Contains(GetFullyQualifiedName(node)))
+                return null;
+
+            return base.VisitClassDeclaration(node);
+        }
+
         public override SyntaxNode VisitConstructorDeclaration(ConstructorDeclarationSyntax node)
         {
             BlockSyntax block = (BlockSyntax)SyntaxFactory.ParseStatement(GetDefaultMessage());
