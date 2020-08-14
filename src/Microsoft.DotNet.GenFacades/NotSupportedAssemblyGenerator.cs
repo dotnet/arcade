@@ -92,7 +92,7 @@ namespace Microsoft.DotNet.GenFacades
     internal class NotSupportedAssemblyRewriter : CSharpSyntaxRewriter
     {
         private string _message;
-        private string[] _exclusionApis;
+        private IEnumerable<string> _exclusionApis;
 
         public NotSupportedAssemblyRewriter(string message, string[] exclusionApis)
         {
@@ -104,7 +104,7 @@ namespace Microsoft.DotNet.GenFacades
             {
                 _message = message;
             }
-            _exclusionApis = exclusionApis;
+            _exclusionApis = exclusionApis.Select(t => t.Substring(t.IndexOf(':') + 1));
         }
 
         public override SyntaxNode VisitMethodDeclaration(MethodDeclarationSyntax node)
