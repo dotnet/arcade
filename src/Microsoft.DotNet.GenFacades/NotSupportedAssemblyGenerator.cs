@@ -96,7 +96,14 @@ namespace Microsoft.DotNet.GenFacades
 
         public NotSupportedAssemblyRewriter(string message, string[] exclusionApis)
         {
-            _message = message;
+            if (message != null && message.StartsWith("SR."))
+            {
+                _message = "System." + message;
+            }
+            else
+            {
+                _message = message;
+            }
             _exclusionApis = exclusionApis;
         }
 
