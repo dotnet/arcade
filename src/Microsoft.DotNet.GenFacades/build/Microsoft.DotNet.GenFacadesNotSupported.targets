@@ -11,6 +11,12 @@
     <NoWarn>$(NoWarn);CA1823;CA1821;CS0169</NoWarn>
   </PropertyGroup>
 
+  <ItemGroup Condition="'$(GeneratePlatformNotSupportedAssembly)' == 'true' or '$(GeneratePlatformNotSupportedAssemblyMessage)' != ''">
+    <AssemblyMetadata Include="NotSupported">
+      <Value>True</Value>
+    </AssemblyMetadata>
+  </ItemGroup>
+
   <ItemGroup Condition="'$(GeneratePlatformNotSupportedAssemblyMessage)' != ''">
     <ProjectReference Include="$(ContractProject)">
       <Targets>GetCompileItems</Targets>
