@@ -14,15 +14,15 @@
     </ReadSourceBuildIntermediateNupkgDependencies>
 
     <PropertyGroup>
-      <SourceBuildIntNupkgRid Condition="'$(SourceBuildIntNupkgRid)' == ''">linux-x64</SourceBuildIntNupkgRid>
+      <SourceBuildIntermediateNupkgRid Condition="'$(SourceBuildIntermediateNupkgRid)' == ''">linux-x64</SourceBuildIntermediateNupkgRid>
     </PropertyGroup>
 
     <ItemGroup Condition="'@(VersionDetailsSourceBuildElement)' != ''">
-      <SourceBuildIntNupkgReference
-        Include="%(VersionDetailsSourceBuildElement.Identity).$(SourceBuildIntNupkgRid)"
+      <SourceBuildIntermediateNupkgReference
+        Include="%(VersionDetailsSourceBuildElement.Identity).$(SourceBuildIntermediateNupkgRid)"
         ExactVersion="%(VersionDetailsSourceBuildElement.Version)" />
       <PackageReference
-        Include="@(SourceBuildIntNupkgReference)"
+        Include="@(SourceBuildIntermediateNupkgReference)"
         Version="[%(ExactVersion)]"/>
     </ItemGroup>
   </Target>
@@ -31,20 +31,20 @@
           Condition="
             '$(ArcadeBuildFromSource)' == 'true' and
             '$(ArcadeInnerBuildFromSource)' == 'true' and
-            '@(SourceBuildIntNupkgReference)' != ''"
+            '@(SourceBuildIntermediateNupkgReference)' != ''"
           AfterTargets="Restore">
     <PropertyGroup>
       <SourceBuiltNupkgCacheDir>$([MSBuild]::NormalizeDirectory('$(ArtifactsObjDir)', 'source-built-upstream-cache'))</SourceBuiltNupkgCacheDir>
     </PropertyGroup>
 
     <ItemGroup>
-      <IntNupkgSourceDir Include="$([MSBuild]::NormalizeDirectory(
+      <IntermediateNupkgSourceDir Include="$([MSBuild]::NormalizeDirectory(
         '$(NuGetPackageRoot)',
-        '$([System.String]::new(`%(SourceBuildIntNupkgReference.Identity)`).ToLowerInvariant())',
-        '$([System.String]::new(`%(SourceBuildIntNupkgReference.ExactVersion)`).ToLowerInvariant())',
+        '$([System.String]::new(`%(SourceBuildIntermediateNupkgReference.Identity)`).ToLowerInvariant())',
+        '$([System.String]::new(`%(SourceBuildIntermediateNupkgReference.ExactVersion)`).ToLowerInvariant())',
         'artifacts'))" />
 
-      <SourceBuiltNupkgFile Include="%(IntNupkgSourceDir.Identity)**\*.nupkg" />
+      <SourceBuiltNupkgFile Include="%(IntermediateNupkgSourceDir.Identity)**\*.nupkg" />
     </ItemGroup>
 
     <Copy
