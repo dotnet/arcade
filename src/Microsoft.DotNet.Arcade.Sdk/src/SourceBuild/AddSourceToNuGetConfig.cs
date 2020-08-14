@@ -2,8 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-// Copied from https://github.com/dotnet/source-build/blob/76ed853be34c0745c638066193a275a443522266/tools-local/tasks/Microsoft.DotNet.SourceBuild.Tasks.XPlat/AddSourceToNuGetConfig.cs
-
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using System.IO;
@@ -12,11 +10,12 @@ using System.Xml.Linq;
 
 namespace Microsoft.DotNet.Arcade.Sdk.SourceBuild
 {
-    /*
-     * This task adds a source to a well-formed NuGet.Config file. If a source with `SourceName` is already present, then
-     * the path of the source is changed. Otherwise, the source is added as the first source in the list, after any clear
-     * elements (if present).
-     */
+    /// <summary>
+    /// This task adds a source to a well-formed NuGet.Config file with highest
+    /// priority, or replaces a source with the same name if present. The task
+    /// also by default adds a 'clear' element if none exists, to avoid
+    /// unintended leaks from the build environment.
+    /// </summary>
     public class AddSourceToNuGetConfig : Task
     {
         [Required]
@@ -28,36 +27,57 @@ namespace Microsoft.DotNet.Arcade.Sdk.SourceBuild
         [Required]
         public string SourcePath { get; set; }
 
+        public bool SkipEnsureClear { get; set; }
+
         public override bool Execute()
         {
-            XDocument d = XDocument.Load(NuGetConfigFile);
-            XElement packageSourcesElement = d.Root.Descendants().First(e => e.Name == "packageSources");
-            XElement toAdd = new XElement("add", new XAttribute("key", SourceName), new XAttribute("value", SourcePath));
-            XElement clearTag = new XElement("clear");
+            XDocument document = XDocument.Load(NuGetConfigFile);
 
-            XElement exisitingSourceBuildElement = packageSourcesElement.Descendants().FirstOrDefault(e => e.Name == "add" && e.Attribute(XName.Get("key")).Value == SourceName);
-            XElement lastClearElement = packageSourcesElement.Descendants().LastOrDefault(e => e.Name == "clear");
-
-            if (exisitingSourceBuildElement != null)
+            XName CreateQualifiedName(string plainName)
             {
-                exisitingSourceBuildElement.ReplaceWith(toAdd);
+                return document.Root.GetDefaultNamespace().GetName(plainName);
+            }
+
+            XElement packageSourcesElement = document.Root
+                .Element(CreateQualifiedName("packageSources"));
+
+            var sourceElementToAdd = new XElement(
+                "add",
+                new XAttribute("key", SourceName),
+                new XAttribute("value", SourcePath));
+
+            XElement existingSourceElement = packageSourcesElement
+                .Elements(CreateQualifiedName("add"))
+                .FirstOrDefault(e => e.Attribute("key").Value == SourceName);
+
+            XElement lastClearElement = packageSourcesElement
+                .Elements(CreateQualifiedName("clear"))
+                .LastOrDefault();
+
+            if (existingSourceElement != null)
+            {
+                existingSourceElement.ReplaceWith(sourceElementToAdd);
             }
             else if (lastClearElement != null)
             {
-                lastClearElement.AddAfterSelf(toAdd);
+                lastClearElement.AddAfterSelf(sourceElementToAdd);
             }
             else
             {
-                packageSourcesElement.AddFirst(toAdd);
-                packageSourcesElement.AddFirst(clearTag);
+                packageSourcesElement.AddFirst(sourceElementToAdd);
             }
 
-            using (FileStream fs = new FileStream(NuGetConfigFile, FileMode.Create, FileAccess.ReadWrite))
+            if (lastClearElement == null && !SkipEnsureClear)
             {
-                d.Save(fs);
+                packageSourcesElement.AddFirst(new XElement("clear"));
             }
 
-            return true;
+            using (var fs = new FileStream(NuGetConfigFile, FileMode.Create, FileAccess.ReadWrite))
+            {
+                document.Save(fs);
+            }
+
+            return !Log.HasLoggedErrors;
         }
     }
 }
