@@ -104,7 +104,7 @@ namespace Microsoft.DotNet.GenFacades
             {
                 _message = message;
             }
-            _exclusionApis = exclusionApis.Select(t => t.Substring(t.IndexOf(':') + 1));
+            _exclusionApis = exclusionApis?.Select(t => t.Substring(t.IndexOf(':') + 1));
         }
 
         public override SyntaxNode VisitMethodDeclaration(MethodDeclarationSyntax node)
