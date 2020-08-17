@@ -7,9 +7,15 @@
   <PropertyGroup>
     <SourceBuildOutputDir Condition="'$(SourceBuildOutputDir)' == ''">$([MSBuild]::NormalizeDirectory('$(ArtifactsDir)', 'source-build'))</SourceBuildOutputDir>
     <SourceBuildSelfDir>$([MSBuild]::NormalizeDirectory('$(SourceBuildOutputDir)', 'self'))</SourceBuildSelfDir>
-    <CurrentRepoSourceBuildArtifactsDir>$([MSBuild]::NormalizeDirectory('$(SourceBuildSelfDir)', 'artifacts'))</CurrentRepoSourceBuildArtifactsDir>
     <CurrentRepoSourceBuildSourceDir>$([MSBuild]::NormalizeDirectory('$(SourceBuildSelfDir)', 'src'))</CurrentRepoSourceBuildSourceDir>
     <CurrentRepoSourceBuildPackageCache>$([MSBuild]::NormalizeDirectory('$(SourceBuildSelfDir)', 'package-cache'))</CurrentRepoSourceBuildPackageCache>
+
+    <!--
+      Keep artifacts/ inside source dir so that ancestor-based file lookups find the inner repo, not
+      the outer repo. The inner repo global.json and NuGet.config files may have been modified by
+      source-build, and we want projects inside the artifacts/ dir to respect that.
+    -->
+    <CurrentRepoSourceBuildArtifactsDir>$([MSBuild]::NormalizeDirectory('$(CurrentRepoSourceBuildSourceDir)', 'artifacts'))</CurrentRepoSourceBuildArtifactsDir>
 
     <CurrentRepoSourceBuildArtifactsPackagesDir>$([MSBuild]::NormalizeDirectory('$(CurrentRepoSourceBuildArtifactsDir)', 'packages', '$(Configuration)'))</CurrentRepoSourceBuildArtifactsPackagesDir>
     <CurrentRepoSourceBuildBinlogFile>$([MSBuild]::NormalizePath('$(CurrentRepoSourceBuildArtifactsDir)', 'sourcebuild.binlog'))</CurrentRepoSourceBuildBinlogFile>
