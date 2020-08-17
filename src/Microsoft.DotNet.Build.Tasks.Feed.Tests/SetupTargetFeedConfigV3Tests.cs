@@ -130,6 +130,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     isStableBuild: true,
                     repositoryName: "test-repo",
                     commitSha: "c0c0c0c0",
+                    AzureStorageTargetFeedPAT,
                     publishInstallersAndChecksums,
                     InstallersTargetStaticFeed,
                     InstallersTargetStaticFeedKey,
@@ -230,6 +231,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     isStableBuild: false,
                     repositoryName: "test-repo",
                     commitSha: "c0c0c0c0",
+                    AzureStorageTargetFeedPAT,
                     publishInstallersAndChecksums,
                     InstallersTargetStaticFeed,
                     InstallersTargetStaticFeedKey,
@@ -287,6 +289,18 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
 
             expectedFeeds.Add(
                 new TargetFeedConfig(
+                    TargetFeedContentType.Symbols,
+                    PublishingConstants.LegacyDotNetBlobFeedURL,
+                    FeedType.AzureStorageFeed,
+                    AzureStorageTargetFeedPAT,
+                    string.Empty,
+                    AssetSelection.All,
+                    isolated: false,
+                    @internal: false,
+                    allowOverwrite: false));
+
+            expectedFeeds.Add(
+                new TargetFeedConfig(
                     TargetFeedContentType.Package,
                     AzureDevOpsStaticShippingFeed,
                     FeedType.AzDoNugetFeed,
@@ -315,6 +329,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     isStableBuild: false,
                     repositoryName: "test-repo",
                     commitSha: "c0c0c0c0",
+                    AzureStorageTargetFeedPAT,
                     publishInstallersAndChecksums,
                     InstallersTargetStaticFeed,
                     InstallersTargetStaticFeedKey,

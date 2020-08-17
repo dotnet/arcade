@@ -2,14 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
-using System.Collections.Generic;
-using System.Composition;
-using System.Composition.Hosting;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Reflection;
 using McMaster.Extensions.CommandLineUtils;
 using Microsoft.Cci;
 using Microsoft.Cci.Comparers;
@@ -20,18 +12,44 @@ using Microsoft.Cci.Extensions.CSharp;
 using Microsoft.Cci.Filters;
 using Microsoft.Cci.Mappings;
 using Microsoft.Cci.Writers;
+using System;
+using System.Collections.Generic;
+using System.Composition;
+using System.Composition.Hosting;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Reflection;
 
 namespace Microsoft.DotNet.ApiCompat
 {
-    public class Program
+    public class ApiCompatRunner
     {
-        public static int Main(string[] args)
+        private readonly CommandLineApplication _app;
+        private readonly TextWriter _outStream;
+
+        public ApiCompatRunner() : this(null) { }
+
+        public ApiCompatRunner(TextWriter outputStream)
+        {
+            _outStream = outputStream;
+            _app = CreateApp();
+            
+            // Clear exit code from previous runs on the same domain given this is a static property.
+            DifferenceWriter.ExitCode = 0;
+        }
+
+        public int Run(string[] args) => _app.Execute(args);
+
+        private CommandLineApplication CreateApp()
         {
             var app = new CommandLineApplication
             {
                 Name = "ApiCompat",
                 FullName = "A command line tool to verify that two sets of APIs are compatible.",
-                ResponseFileHandling = ResponseFileHandling.ParseArgsAsSpaceSeparated
+                ResponseFileHandling = ResponseFileHandling.ParseArgsAsSpaceSeparated,
+                Out = _outStream ?? Console.Out,
+                Error = _outStream ?? Console.Error
             };
             app.HelpOption("-?|-h|--help");
             app.VersionOption("-v|--version", GetAssemblyVersion());
@@ -100,7 +118,7 @@ namespace Microsoft.DotNet.ApiCompat
                     return 0;
                 }
 
-                using (TextWriter output = GetOutput(outFilePath.Value()))
+                using (TextWriter output = _outStream ?? GetOutput(outFilePath.Value()))
                 {
                     if (DifferenceWriter.ExitCode != 0)
                         return 0;
@@ -153,7 +171,7 @@ namespace Microsoft.DotNet.ApiCompat
                             leftOperandValue,
                             rightOperandValue,
                             excludeAttributes.Value(),
-							allowDefaultInterfaceMethods.HasValue());
+                            allowDefaultInterfaceMethods.HasValue());
                         writer.Write(implDirs.Value(), implAssemblies, contracts.Value, contractAssemblies);
 
                         return 0;
@@ -167,7 +185,7 @@ namespace Microsoft.DotNet.ApiCompat
                 }
             });
 
-            return app.Execute(args);
+            return app;
         }
 
         private static ICciDifferenceWriter GetDifferenceWriter(TextWriter writer,

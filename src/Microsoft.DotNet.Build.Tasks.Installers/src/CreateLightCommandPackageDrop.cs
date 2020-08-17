@@ -11,13 +11,15 @@ using System.Xml;
 using System.Xml.Linq;
 using System.Xml.XPath;
 
-namespace Microsoft.DotNet.Build.Tasks.SharedFramework.Sdk.src
+namespace Microsoft.DotNet.Build.Tasks.Installers
 {
     public class CreateLightCommandPackageDrop : BuildTask
     {
         private const int _fieldsArtifactId = 0;
         private const int _fieldsArtifactPath1 = 6;
         private const int _fieldsArtifactPath2 = 1;
+        private const int _fieldsArtifactPath3 = 2;
+        private const int _fieldsArtifactPath6 = 5;
 
         [Required]
         public string LightCommandWorkingDir { get; set; }
@@ -29,6 +31,10 @@ namespace Microsoft.DotNet.Build.Tasks.SharedFramework.Sdk.src
         public string ContentsFile { get; set; }
         public string OutputsFile { get; set; }
         public string BuiltOutputsFile { get; set; }
+        /// <summary>
+        /// Additional set of base paths that are used for resolving paths.
+        /// </summary>
+        public ITaskItem[] AdditionalBasePaths { get; set; }
         public ITaskItem [] Loc { get; set; }
         public ITaskItem [] Sice { get; set; }
         [Required]
@@ -43,7 +49,7 @@ namespace Microsoft.DotNet.Build.Tasks.SharedFramework.Sdk.src
         // and to validate that the light command being created by this task is correct (assist with debugging).
         public string OriginalLightCommand { get; set; }
 
-        public override bool ExecuteCore()
+        public override bool Execute()
         {
             LightCommandPackageNameOutput = Path.GetFileNameWithoutExtension(Out);
             string packageDropOutputFolder = Path.Combine(LightCommandWorkingDir, LightCommandPackageNameOutput);
@@ -52,49 +58,32 @@ namespace Microsoft.DotNet.Build.Tasks.SharedFramework.Sdk.src
             {
                 Directory.CreateDirectory(packageDropOutputFolder);
             }
+
             XmlNamespaceManager nsmgr = new XmlNamespaceManager(new NameTable());
             nsmgr.AddNamespace("wix", "http://schemas.microsoft.com/wix/2006/objects");
 
-            foreach (var wixobj in WixSrcFiles)
+            foreach (var wixSrcFile in WixSrcFiles)
             {
                 // copy the file to outputPath
-                string newWixObjFile = Path.Combine(packageDropOutputFolder, Path.GetFileName(wixobj.ItemSpec));
-                Log.LogMessage(MessageImportance.Normal, $"Creating modified wixobj file '{newWixObjFile}'...");
-                File.Copy(wixobj.ItemSpec, newWixObjFile, true);
+                string newWixSrcFilePath = Path.Combine(packageDropOutputFolder, Path.GetFileName(wixSrcFile.ItemSpec));
+                File.Copy(wixSrcFile.ItemSpec, newWixSrcFilePath, true);
 
-                XDocument doc = XDocument.Load(newWixObjFile);
-                if (doc == null)
+                string wixSrcFileExtension = Path.GetExtension(wixSrcFile.ItemSpec);
+                // These files are typically .wixobj. Occasionally we have a wixlib as input, which
+                // is created using light and is a binary file. When doing post-build signing,
+                // it's replaced in the inputs to the light command after being reconstructed from
+                // its own light command drop.
+                if (wixSrcFileExtension == ".wixlib")
                 {
-                    Log.LogError($"Failed to open the wixobj file '{newWixObjFile}'");
+                    continue;
+                }
+                else if (wixSrcFileExtension != ".wixobj")
+                {
+                    Log.LogError($"Wix source file extension {wixSrcFileExtension} is not supported.");
                     continue;
                 }
 
-                // process fragment - WixFile elements
-                // path in field 7
-                string xpath = "//wix:wixObject/wix:section[@type='fragment']/wix:table[@name='WixFile']/wix:row";
-                ProcessXPath(doc, xpath, packageDropOutputFolder, nsmgr, _fieldsArtifactPath1);
-
-                // process product - WixFile elements
-                // path in field 7
-                xpath = "//wix:wixObject/wix:section[@type='product']/wix:table[@name='WixFile']/wix:row";
-                ProcessXPath(doc, xpath, packageDropOutputFolder, nsmgr, _fieldsArtifactPath1);
-
-                // process fragment - Binary elements
-                // path in field 2
-                xpath = "//wix:wixObject/wix:section[@type='fragment']/wix:table[@name='Binary']/wix:row";
-                ProcessXPath(doc, xpath, packageDropOutputFolder, nsmgr, _fieldsArtifactPath2);
-
-                // process product - Icon elements
-                // path in field 2
-                xpath = "//wix:wixObject/wix:section[@type='product']/wix:table[@name='Icon']/wix:row";
-                ProcessXPath(doc, xpath, packageDropOutputFolder, nsmgr, _fieldsArtifactPath2);
-
-                // process product - WixVariable elements
-                // path in field 2
-                xpath = "//wix:wixObject/wix:section[@type='product']/wix:table[@name='WixVariable']/wix:row";
-                ProcessXPath(doc, xpath, packageDropOutputFolder, nsmgr, _fieldsArtifactPath2);
-
-                doc.Save(newWixObjFile);
+                ProcessWixObj(newWixSrcFilePath, packageDropOutputFolder, nsmgr);
             }
             if (Loc != null)
             {
@@ -182,6 +171,68 @@ namespace Microsoft.DotNet.Build.Tasks.SharedFramework.Sdk.src
 
             return !Log.HasLoggedErrors;
         }
+
+        /// <summary>
+        ///     Process a .wixobj file that is an input to the light command.
+        /// </summary>
+        /// <param name="wixObjFilePath">Path to the wixobj file in its new drop location</param>
+        /// <param name="packageDropOutputFolder">Output light command drop folder</param>
+        /// <param name="nsmgr">xml namespace manager</param>
+        void ProcessWixObj(string wixObjFilePath, string packageDropOutputFolder, XmlNamespaceManager nsmgr)
+        {
+            Log.LogMessage(LogImportance.Normal, $"Creating modified wixobj file '{wixObjFilePath}'...");
+
+            XDocument doc = XDocument.Load(wixObjFilePath);
+            if (doc == null)
+            {
+                Log.LogError($"Failed to open the wixobj file '{wixObjFilePath}'");
+                return;
+            }
+
+            // process fragment - WixFile elements
+            // path in field 7
+            string xpath = "//wix:wixObject/wix:section[@type='fragment']/wix:table[@name='WixFile']/wix:row";
+            ProcessXPath(doc, xpath, packageDropOutputFolder, nsmgr, _fieldsArtifactPath1);
+
+            // process product - WixFile elements
+            // path in field 7
+            xpath = "//wix:wixObject/wix:section[@type='product']/wix:table[@name='WixFile']/wix:row";
+            ProcessXPath(doc, xpath, packageDropOutputFolder, nsmgr, _fieldsArtifactPath1);
+
+            // process fragment - Binary elements
+            // path in field 2
+            xpath = "//wix:wixObject/wix:section[@type='fragment']/wix:table[@name='Binary']/wix:row";
+            ProcessXPath(doc, xpath, packageDropOutputFolder, nsmgr, _fieldsArtifactPath2);
+
+            // process product - Icon elements
+            // path in field 2
+            xpath = "//wix:wixObject/wix:section[@type='product']/wix:table[@name='Icon']/wix:row";
+            ProcessXPath(doc, xpath, packageDropOutputFolder, nsmgr, _fieldsArtifactPath2);
+
+            // process product - WixVariable elements
+            // path in field 2
+            xpath = "//wix:wixObject/wix:section[@type='product']/wix:table[@name='WixVariable']/wix:row";
+            ProcessXPath(doc, xpath, packageDropOutputFolder, nsmgr, _fieldsArtifactPath2);
+
+            // Bundle specific items.
+
+            // path in fields 3 and 6
+            xpath = "//wix:wixObject/wix:section[@type='bundle']/wix:table[@name='Payload']/wix:row";
+            ProcessXPath(doc, xpath, packageDropOutputFolder, nsmgr, _fieldsArtifactPath3, _fieldsArtifactPath6);
+
+            // process WixVariable data
+            // path in field 2
+            xpath = "//wix:wixObject/wix:section[@type='bundle']/wix:table[@name='WixVariable']/wix:row";
+            ProcessXPath(doc, xpath, packageDropOutputFolder, nsmgr, _fieldsArtifactPath2);
+
+            // process Payload, in fragment section, data
+            // path in fields 3 and 6
+            xpath = "//wix:wixObject/wix:section[@type='fragment']/wix:table[@name='Payload']/wix:row";
+            ProcessXPath(doc, xpath, packageDropOutputFolder, nsmgr, _fieldsArtifactPath3, _fieldsArtifactPath6);
+
+            doc.Save(wixObjFilePath);
+        }
+
         void ProcessXPath(XDocument doc, string xpath, string outputPath, XmlNamespaceManager nsmgr, int pathField1, int pathField2 = 0)
         {
             IEnumerable<XElement> iels = doc.XPathSelectElements(xpath, nsmgr);
@@ -198,10 +249,11 @@ namespace Microsoft.DotNet.Build.Tasks.SharedFramework.Sdk.src
                     }
 
                     int count = 0;
-                    string id = "";
-                    string oldPath = "";
-                    string newRelativePath = "";
+                    string id = null;
+                    string oldPath = null;
+                    string newRelativePath = null;
                     bool foundArtifact = false;
+                    bool isVariableRef = false;
 
                     foreach (XElement field in fields)
                     {
@@ -212,12 +264,42 @@ namespace Microsoft.DotNet.Build.Tasks.SharedFramework.Sdk.src
                         else if (count == pathField1)
                         {
                             oldPath = field.Value;
-                            if (!File.Exists(oldPath))
+
+                            // Potentially make oldPath the absolute if it's not, using the additional base
+                            // paths. It's possible that the path is a variable. In this case,
+                            // we can ignore it.
+                            if (oldPath.StartsWith("!("))
+                            {
+                                isVariableRef = true;
+                                break;
+                            }
+                            else if (!Path.IsPathRooted(oldPath))
+                            {
+                                if (AdditionalBasePaths == null)
+                                {
+                                    // Break here, will log an error below.
+                                    break;
+                                }
+                                foreach (var additionalBasePath in AdditionalBasePaths)
+                                {
+                                    var possiblePath = Path.Combine(additionalBasePath.ItemSpec, oldPath);
+                                    if (File.Exists(possiblePath))
+                                    {
+                                        oldPath = possiblePath;
+                                        foundArtifact = true;
+                                        break;
+                                    }
+                                }
+                            }
+                            else if (File.Exists(oldPath))
+                            {
+                                foundArtifact = true;
+                            }
+                            else
                             {
                                 break;
                             }
 
-                            foundArtifact = true;
                             newRelativePath = Path.Combine(id, Path.GetFileName(oldPath));
                             field.Value = newRelativePath;
                         }
@@ -229,15 +311,26 @@ namespace Microsoft.DotNet.Build.Tasks.SharedFramework.Sdk.src
                         count++;
                     }
 
-                    if (foundArtifact)
+                    if (!isVariableRef)
                     {
-                        string newFolder = Path.Combine(outputPath, id);
-                        if (!Directory.Exists(newFolder))
+                        if (foundArtifact)
                         {
-                            Directory.CreateDirectory(newFolder);
-                        }
+                            string newFolder = Path.Combine(outputPath, id);
+                            if (!Directory.Exists(newFolder))
+                            {
+                                Directory.CreateDirectory(newFolder);
+                            }
 
-                        File.Copy(oldPath, Path.Combine(outputPath, newRelativePath), true);
+                            File.Copy(oldPath, Path.Combine(outputPath, newRelativePath), true);
+                        }
+                        else if (oldPath == null)
+                        {
+                            Log.LogError($"Could not locate a file within {row}");
+                        }
+                        else
+                        {
+                            Log.LogError($"Could not locate file {oldPath}. Please ensure the file exists and/or pass AdditionalBasePaths for non-rooted file paths.");
+                        }
                     }
                 }
             }

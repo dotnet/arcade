@@ -2,7 +2,7 @@
 
 parameters:
   - name: PublishingInfraVersion
-    displayName: Which version of the should be used?
+    displayName: Which version of publishing should be used to promote the build definition?
     type: number
     default: 2
     values:

@@ -48,15 +48,15 @@ try {
       $optionalParams.Add($SigningValidationAdditionalParameters) | Out-Null
     }
   }
-  
+
   & darc add-build-to-channel `
-	--id $buildId `
+  --id $buildId `
   --publishing-infra-version $PublishingInfraVersion `
-	--default-channels `
-	--source-branch master `
-	--azdev-pat $AzdoToken `
-	--bar-uri $MaestroApiEndPoint `
-	--password $MaestroToken `
+  --default-channels `
+  --source-branch master `
+  --azdev-pat $AzdoToken `
+  --bar-uri $MaestroApiEndPoint `
+  --password $MaestroToken `
 	@optionalParams
 
   if ($LastExitCode -ne 0) {

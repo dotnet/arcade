@@ -439,6 +439,59 @@ update, Darc searches the assets in the subtree to find the newest-built asset
 matching the dependency that declared the coherent parent. Darc then assigns
 that version to the dependency.
 
+### Strict Coherency
+
+This current default model of coherency (find the newest-built asset) has some severe
+drawbacks:
+- **Build information is required** - The current algorithm picks the newest build asset
+  in the subtree. This means that a build lookup is required for each every build in the tree.
+  This is not only time consuming, it is also fragile. Loss of BAR data would mean that
+  CPD constraints could not be satisfied.
+- **Newest may not be the desired choice** - More than one version of the asset may appear
+  within the subtree. While newest is chosen, this does not mean that newest is the correct
+  choice. Consider the following:
+  - dotnet/efcore ties dependency Foo to Bar, coming from dotnet/extensions. Foo is produced
+    out of dotnet/core-setup.
+  - dotnet/extensions has Foo pinned to version 1.0.0, but also has dependencies on
+    another, newer dotnet/core-setup build that also produced Foo at 1.0.1.
+  - CPD will choose Foo to be 1.0.1. This may be what the repo owner wished, but they may
+    also simply have wanted 1.0.0.
+- **Incremental servicing can cause version regressions** - This is perhaps the biggest drawback
+  of the current algorithm. Consider the following:
+  - dotnet/efcore ties dependency Foo to Bar, coming from dotnet/extensions. Foo is produced
+    out of dotnet/core-setup, but only when it has changes for an upcoming release.
+  - dotnet/extensions does not have a direct dependency on Foo.
+  - dotnet/extensions has a dependency on another incrementally-serviced package produced out of
+    dotnet/core-setup. This package has not been serviced recently, but when it was, Foo was also serviced,
+    producing 1.0.3.
+  - dotnet/core-setup just serviced Foo @ 1.0.10, but for the next release it is not producing that
+    package.
+  - When dotnet/core-setup build is ingested into dotnet/efcore and dotnet/extensions
+    for the next release, the CPD algorithm will no longer find Foo @ 1.0.10 in the build asset
+    graph. It has simply disappeared because there is no longer a reference to any build
+    that produced Foo @ 1.0.10. Instead, it will find 1.0.3, as this reference still exists.
+
+Strict coherency eliminates these problems by doing the following: If dependency Foo is tied to
+coherent parent Bar, and Bar comes from dotnet/extensions @ 12345, then dotnet/extensions @ 12345
+must have a **direct** dependency on Foo. The version of Foo is directly copied from the version
+at dotnet/extensions @ 12345. This ensures the following:
+- No build information is utilized and the CPD evaluation only involves a single version file
+  lookup.
+- There is no choice to make. There is only one possible version for Foo, since a dependency
+  can only appear once within a Version.Details.xml file.
+
+The downside of CPD strict is that dependencies that are not directly utilized within a
+repo are often required to appear in their Version.Details.xml files. Overall, this is
+a small tradeoff for better performance and predictable behavior. Rollout of CPD strict
+as the default behavior is pending addition of new dependencies in various repos in the 3.x
+branches.
+
+To try CPD strict on a repo, run the following command:
+
+```
+darc update-dependencies --strict-coherency --coherency-only
+```
+
 #### Specifying a coherent parent
 
 To specify a coherent parent, add "CoherentParentDependency" attributes in your

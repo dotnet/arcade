@@ -31,6 +31,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public string[] ManifestBuildData { get; set; }
 
+        public string AzureDevOpsCollectionUri { get; set; }
+
+        public string AzureDevOpsProject { get; set; }
+
+        public int AzureDevOpsBuildId { get; set; }
+
         public ITaskItem[] ItemsToSign { get; set; }
 
         public ITaskItem[] StrongNameSignInfo { get; set; }
@@ -159,7 +165,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         }
                     }
                     
-                    SigningInformationModel signingInformationModel = BuildManifestUtil.CreateSigningInformationModelFromItems(ItemsToSign, StrongNameSignInfo, FileSignInfo, FileExtensionSignInfo);
+                    SigningInformationModel signingInformationModel = BuildManifestUtil.CreateSigningInformationModelFromItems(AzureDevOpsCollectionUri, AzureDevOpsProject, AzureDevOpsBuildId,
+                        ItemsToSign, StrongNameSignInfo, FileSignInfo, FileExtensionSignInfo);
 
                     BuildManifestUtil.CreateBuildManifest(Log,
                         blobArtifacts,

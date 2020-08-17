@@ -31,6 +31,9 @@
   
   <Target Name="Execute">
     <GenerateBuildManifest Artifacts="@(ItemsToPush)"
+                           AzureDevOpsCollectionUri="$(SYSTEM_TEAMFOUNDATIONCOLLECTIONURI)"
+                           AzureDevOpsProject="$(SYSTEM_TEAMPROJECT)"
+                           AzureDevOpsBuildId="$(BUILD_BUILDID)"
                            ItemsToSign="@(ItemsToSign)"
                            StrongNameSignInfo="@(StrongNameSignInfo)"
                            FileSignInfo="@(FileSignInfo)"
@@ -41,6 +44,5 @@
                            RepoUri="$(BUILD_REPOSITORY_URI)"
                            RepoBranch="$(BUILD_SOURCEBRANCH)"
                            RepoCommit="$(BUILD_SOURCEVERSION)"
-                           AzureDevOpsCollectionUri="testUri"/>
   </Target>
 </Project>

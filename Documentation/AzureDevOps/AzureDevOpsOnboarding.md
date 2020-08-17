@@ -39,7 +39,7 @@ Instructions for setting up the GitHub to dev.azure.com/dnceng/internal mirror a
 
 Azure DevOps has detailed documentation on how to create builds that are linked from GitHub repositories which can be found [here](https://docs.microsoft.com/en-us/azure/devops/build-release/actions/ci-build-github?view=vsts); however, before going through those steps, keep in mind that our process differs from the steps in the official documentation in a few key places:
 
-* The YAML tutorial links to a .NET Core sample repository for an example of a simple `azure-pipelines.yml` file. Instead of using that repository, use [our sample repository](https://github.com/dotnet/arcade-minimalci-sample).
+* The YAML tutorial links to a .NET Core sample repository for an example of a simple `azure-pipelines.yml` file. Instead of using that repository, use [our sample repository](https://github.com/dotnet/arcade-validation).
 
 ## Azure DevOps service connection
 
@@ -153,7 +153,7 @@ https://dev.azure.com/dnceng/public/_build?definitionId=208&branchName=master
 
 ## Signed Builds
 
-dev.azure.com/dnceng now has support for signed builds.  Code should be mirrored to dev.azure.com/dnceng/internal as outlined in the [Azure DevOps Guidance](./Policy/AzureDevOpsGuidance.md#projects).  See [MovingFromDevDivToDncEng.md](./MovingFromDevDivToDncEng.md) for information about moving signed builds from DevDiv to DncEng.
+dev.azure.com/dnceng now has support for signed builds.  Code should be mirrored to dev.azure.com/dnceng/internal as outlined in the [Azure DevOps Guidance](./AzureDevOpsGuidance.md#projects).  See [MovingFromDevDivToDncEng.md](./MovingFromDevDivToDncEng.md) for information about moving signed builds from DevDiv to DncEng.
 
 ## Generate Graph Files
 

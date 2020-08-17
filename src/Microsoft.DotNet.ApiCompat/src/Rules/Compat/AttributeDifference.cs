@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using Microsoft.Cci.Mappings;
 using System.Composition;
 using Microsoft.Cci.Comparers;
+using Microsoft.Cci.Filters;
 
 namespace Microsoft.Cci.Differs.Rules
 {
@@ -34,7 +35,10 @@ namespace Microsoft.Cci.Differs.Rules
     [ExportDifferenceRule]
     internal class AttributeDifference : CompatDifferenceRule
     {
-        private MappingSettings _settings = new MappingSettings();
+        private MappingSettings _settings = new MappingSettings()
+        {
+            Filter = new AttributesFilter(includeAttributes: true)
+        };
 
         [Import]
         public IAttributeFilter AttributeFilter { get; set; }

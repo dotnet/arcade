@@ -10,6 +10,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
 {
     public class PublishingConstants
     {
+        public static readonly string LegacyDotNetBlobFeedURL = "https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json";
         public static readonly string ExpectedFeedUrlSuffix = "index.json";
 
         // Matches package feeds like
@@ -74,6 +75,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
         private const string FeedDotNet5Transport = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet5-transport/nuget/v3/index.json";
         private const string FeedDotNet5Symbols = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet5-symbols/nuget/v3/index.json";
 
+        private const string FeedDotNet6Shipping = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6/nuget/v3/index.json";
+        private const string FeedDotNet6Transport = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6-transport/nuget/v3/index.json";
+        private const string FeedDotNet6Symbols = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6-symbols/nuget/v3/index.json";
+
         private const string FeedDotNet5InternalShipping = "https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet5-internal/nuget/v3/index.json";
         private const string FeedDotNet5InternalTransport = "https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet5-internal-transport/nuget/v3/index.json";
         private const string FeedDotNet5InternalSymbols = "https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet5-internal-symbols/nuget/v3/index.json";
@@ -87,6 +92,17 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedDotNet5Shipping,
                 FeedDotNet5Transport,
                 FeedDotNet5Symbols,
+                FeedForChecksums,
+                FeedForInstallers),
+
+            // ".NET 6 Dev",
+            new TargetChannelConfig(
+                1296,
+                PublishingInfraVersion.All,
+                "net6/dev",
+                FeedDotNet6Shipping,
+                FeedDotNet6Transport,
+                FeedDotNet6Symbols,
                 FeedForChecksums,
                 FeedForInstallers),
 
@@ -156,16 +172,16 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedInternalForChecksums,
                 FeedInternalForInstallers),
 
-            // ".NET 5 RC 1 (internal)",
+            // ".NET 5 RC 1",
             new TargetChannelConfig(
                 1157,
                 PublishingInfraVersion.All,
                 akaMSChannelName: "net5/rc1",
-                FeedDotNet5InternalShipping,
-                FeedDotNet5InternalTransport,
-                FeedDotNet5InternalSymbols,
-                FeedInternalForChecksums,
-                FeedInternalForInstallers),
+                FeedDotNet5Shipping,
+                FeedDotNet5Transport,
+                FeedDotNet5Symbols,
+                FeedForChecksums,
+                FeedForInstallers),
 
             // ".NET Eng - Latest",
             new TargetChannelConfig(

@@ -112,12 +112,9 @@ function InitializeDotNetCli([bool]$install, [bool]$createSdkLocationFile) {
   # Disable first run since we do not need all ASP.NET packages restored.
   $env:DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1
 
-  # On CI:
-  # Disable telemetry
-  # Set the CLI home directory to the build machine's workspace.
+  # Disable telemetry on CI.
   if ($ci) {
     $env:DOTNET_CLI_TELEMETRY_OPTOUT=1
-    $env:DOTNET_CLI_HOME=$env:AGENT_BUILDDIRECTORY
   }
 
   # Source Build uses DotNetCoreSdkDir variable

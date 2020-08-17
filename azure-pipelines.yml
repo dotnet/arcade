@@ -135,7 +135,7 @@ stages:
               -restore
               -test
               -projects $(Build.SourcesDirectory)\tests\UnitTests.XHarness.Android.proj
-              /bl:$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)\Helix.XHarness.binlog
+              /bl:$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)\Helix.XHarness.Android.binlog
               /p:RestoreUsingNuGetTargets=false
             displayName: XHarness Android Helix Testing
             # Workaround until https://github.com/dotnet/xharness/issues/232 is fixed
@@ -177,7 +177,7 @@ stages:
               -restore
               -test
               -projects $(Build.SourcesDirectory)/tests/UnitTests.XHarness.iOS.proj
-              /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.XHarness.binlog
+              /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.XHarness.iOS.binlog
               /p:RestoreUsingNuGetTargets=false
             displayName: XHarness iOS Helix Testing
             continueOnError: true
@@ -191,7 +191,7 @@ stages:
               -restore
               -test
               -projects $(Build.SourcesDirectory)/tests/UnitTests.XHarness.iOS.IncludeCliOnly.proj
-              /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.XHarness.binlog
+              /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.XHarness.CLI.binlog
               /p:RestoreUsingNuGetTargets=false
             displayName: XHarness CLI pre-install Helix Testing
             continueOnError: true
@@ -219,7 +219,7 @@ stages:
       # enabled back once this issue is resolved: https://github.com/dotnet/arcade/issues/2912
       enableSourceLinkValidation: false
       publishDependsOn:
-      - Validate	
+      - Validate
       - ValidateSdk
       # This is to enable SDL runs part of Post-Build Validation Stage
       SDLValidationParameters:

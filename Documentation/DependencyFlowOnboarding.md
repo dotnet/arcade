@@ -20,9 +20,9 @@ These pre-requisites are not hard requirements, but enabling dependency flow wil
 
 ### Steps for publishing
 
-#### 1. Copy the eng/ folder
+#### 1. Copy files from eng/ folder
 
-Copy the `eng/` folder from the [minimalci-sample](https://github.com/dotnet/arcade-minimalci-sample) repo. 
+Copy `Versions.props`, `Versions.Details.xml` and the `common/` folder from the `eng/` folder of the [arcade-validation](https://github.com/dotnet/arcade-validation/tree/master/eng) repo. 
 
 This folder contains required version files as well as Pipeline templates used for publishing assets.
 
