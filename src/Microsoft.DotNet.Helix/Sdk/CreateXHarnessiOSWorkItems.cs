@@ -98,11 +98,12 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             // Optional timeout for the how long it takes for the app to be installed, booted and tests start executing
             TimeSpan launchTimeout = TimeSpan.FromMinutes(DefaultLaunchTimeoutInMinutes);
-            if (!appBundleItem.TryGetMetadata(LaunchTimeoutPropName, out string launchTimeoutProp))
+            if (appBundleItem.TryGetMetadata(LaunchTimeoutPropName, out string launchTimeoutProp))
             {
                 if (!TimeSpan.TryParse(launchTimeoutProp, out launchTimeout) || launchTimeout.Ticks < 0)
                 {
                     Log.LogError($"Invalid value \"{launchTimeoutProp}\" provided in <{LaunchTimeoutPropName}>");
+                    return null;
                 }
             }
 
