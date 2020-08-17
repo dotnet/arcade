@@ -142,7 +142,7 @@ stages:
         inputs:
           filePath: eng\common\sdk-task.ps1
           arguments: -task PublishArtifactsInManifest -restore -msbuildEngine dotnet
-            /p:publishingInfraVersion=2
+            /p:PublishingInfraVersion=2
             /p:ArtifactsCategory=$(ArtifactsCategory)
             /p:IsStableBuild=$(IsStableBuild)
             /p:IsInternalBuild=$(IsInternalBuild)
