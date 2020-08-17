@@ -1,0 +1,60 @@
+<Project>
+
+  <UsingTask TaskName="Microsoft.DotNet.Arcade.Sdk.SourceBuild.AddSourceToNuGetConfig" AssemblyFile="$(ArcadeSdkBuildTasksAssembly)" />
+  <UsingTask TaskName="Microsoft.DotNet.Arcade.Sdk.SourceBuild.ReadSourceBuildIntermediateNupkgDependencies" AssemblyFile="$(ArcadeSdkBuildTasksAssembly)" />
+
+  <Target Name="CollectSourceBuildIntermediateNupkgDependencies"
+          Condition="
+            '$(ArcadeBuildFromSource)' == 'true' and
+            '$(ArcadeInnerBuildFromSource)' == 'true'"
+          BeforeTargets="CollectPackageReferences">
+    <ReadSourceBuildIntermediateNupkgDependencies
+      VersionDetailsXmlFile="$([MSBuild]::NormalizePath('$(RepositoryEngineeringDir)', 'Version.Details.xml'))">
+      <Output TaskParameter="Dependencies" ItemName="VersionDetailsSourceBuildElement" />
+    </ReadSourceBuildIntermediateNupkgDependencies>
+
+    <PropertyGroup>
+      <SourceBuildIntermediateNupkgRid Condition="'$(SourceBuildIntermediateNupkgRid)' == ''">linux-x64</SourceBuildIntermediateNupkgRid>
+    </PropertyGroup>
+
+    <ItemGroup Condition="'@(VersionDetailsSourceBuildElement)' != ''">
+      <SourceBuildIntermediateNupkgReference
+        Include="%(VersionDetailsSourceBuildElement.Identity).$(SourceBuildIntermediateNupkgRid)"
+        ExactVersion="%(VersionDetailsSourceBuildElement.Version)" />
+      <PackageReference
+        Include="@(SourceBuildIntermediateNupkgReference)"
+        Version="[%(ExactVersion)]"/>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="SetUpSourceBuildIntermediateNupkgCache"
+          Condition="
+            '$(ArcadeBuildFromSource)' == 'true' and
+            '$(ArcadeInnerBuildFromSource)' == 'true' and
+            '@(SourceBuildIntermediateNupkgReference)' != ''"
+          AfterTargets="Restore">
+    <PropertyGroup>
+      <SourceBuiltNupkgCacheDir>$([MSBuild]::NormalizeDirectory('$(ArtifactsObjDir)', 'source-built-upstream-cache'))</SourceBuiltNupkgCacheDir>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <IntermediateNupkgSourceDir Include="$([MSBuild]::NormalizeDirectory(
+        '$(NuGetPackageRoot)',
+        '$([System.String]::new(`%(SourceBuildIntermediateNupkgReference.Identity)`).ToLowerInvariant())',
+        '$([System.String]::new(`%(SourceBuildIntermediateNupkgReference.ExactVersion)`).ToLowerInvariant())',
+        'artifacts'))" />
+
+      <SourceBuiltNupkgFile Include="%(IntermediateNupkgSourceDir.Identity)**\*.nupkg" />
+    </ItemGroup>
+
+    <Copy
+      SourceFiles="@(SourceBuiltNupkgFile)"
+      DestinationFiles="@(SourceBuiltNupkgFile -> '$(SourceBuiltNupkgCacheDir)%(Filename)%(Extension)')" />
+
+    <AddSourceToNuGetConfig
+      NuGetConfigFile="$(RestoreConfigFile)"
+      SourceName="source-build-int-nupkg-cache"
+      SourcePath="$(SourceBuiltNupkgCacheDir)" />
+  </Target>
+
+</Project>
