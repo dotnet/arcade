@@ -100,7 +100,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             TimeSpan launchTimeout = TimeSpan.FromMinutes(DefaultLaunchTimeoutInMinutes);
             if (appBundleItem.TryGetMetadata(LaunchTimeoutPropName, out string launchTimeoutProp))
             {
-                if (!TimeSpan.TryParse(launchTimeoutProp, out launchTimeout) || launchTimeout.Ticks < 0)
+                if (!string.IsNullOrEmpty(launchTimeoutProp) && !TimeSpan.TryParse(launchTimeoutProp, out launchTimeout) || launchTimeout.Ticks < 0)
                 {
                     Log.LogError($"Invalid value \"{launchTimeoutProp}\" provided in <{LaunchTimeoutPropName}>");
                     return null;
