@@ -91,6 +91,7 @@ namespace Microsoft.DotNet.GenFacades
 
     internal class NotSupportedAssemblyRewriter : CSharpSyntaxRewriter
     {
+        private const string emptyBody = "{ }\n";
         private string _message;
         private IEnumerable<string> _exclusionApis;
 
@@ -118,7 +119,7 @@ namespace Microsoft.DotNet.GenFacades
             BlockSyntax block;
             if (node.Identifier.ValueText == "Dispose" || node.Identifier.ValueText == "Finalize")
             {
-                block = (BlockSyntax)SyntaxFactory.ParseStatement("{ }\n");
+                block = (BlockSyntax)SyntaxFactory.ParseStatement(emptyBody);
             }
             else
             {
@@ -143,7 +144,7 @@ namespace Microsoft.DotNet.GenFacades
 
         public override SyntaxNode VisitDestructorDeclaration(DestructorDeclarationSyntax node)
         {
-            BlockSyntax block = (BlockSyntax)SyntaxFactory.ParseStatement("{ }\n");
+            BlockSyntax block = (BlockSyntax)SyntaxFactory.ParseStatement(emptyBody);
             return node.WithBody(block);
         }
 
