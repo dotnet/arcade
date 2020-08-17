@@ -14,4 +14,5 @@
 
   <Import Condition="'$(IsPartialFacadeAssembly)' == 'true' AND '$(IsReferenceAssembly)' != 'true'" Project="Microsoft.DotNet.GenPartialFacadeSource.targets" />
   <Import Condition="'$(IsPartialFacadeAssembly)' == 'true' AND '$(IsReferenceAssembly)' == 'true'" Project="Microsoft.DotNet.GenFacadesILRewriter.targets" />
+  <Import Project="Microsoft.DotNet.GenFacadesNotSupported.targets" />
 </Project>
