@@ -1,0 +1,53 @@
+<Project>
+
+  <!-- Shield this project from nonstandard Directory.Build.props/targets. -->
+  <PropertyGroup>
+    <ImportDirectoryBuildProps>false</ImportDirectoryBuildProps>
+    <ImportDirectoryBuildTargets>false</ImportDirectoryBuildTargets>
+  </PropertyGroup>
+
+  <Import Project="Sdk.props" Sdk="Microsoft.DotNet.Arcade.Sdk" />
+  <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
+
+  <!-- Repository extension point -->
+  <Import Project="$(RepositoryEngineeringDir)SourceBuild.props" Condition="Exists('$(RepositoryEngineeringDir)SourceBuild.props')" />
+
+  <PropertyGroup>
+    <SourceBuildPackageRid Condition="'$(SourceBuildPackageRid)' == ''">linux-x64</SourceBuildPackageRid>
+    <GitHubRepositoryName Condition="'$(GitHubRepositoryName)' == ''">no-repo-name-defined</GitHubRepositoryName>
+
+    <Copyright Condition="'$(Copyright)' == ''">$(CopyrightNetFoundation)</Copyright>
+    <PackageLicenseExpression Condition="'$(PackageLicenseExpression)' == ''">MIT</PackageLicenseExpression>
+
+    <IsPackable>true</IsPackable>
+    <IsShipping>false</IsShipping>
+    <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+
+    <!-- NuGet excludes nupkgs by default: disable this behavior. -->
+    <NoDefaultExcludes>true</NoDefaultExcludes>
+
+    <EnableDefaultSourceBuildIntermediateItems Condition="'$(EnableDefaultSourceBuildIntermediateItems)' == ''">true</EnableDefaultSourceBuildIntermediateItems>
+
+    <!-- Arbitrary TargetFramework to appease SDK. -->
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(EnableDefaultSourceBuildIntermediateItems)' == 'true'">
+    <Content Include="$(CurrentRepoSourceBuildArtifactsPackagesDir)**\*.nupkg" PackagePath="artifacts" />
+    <Content Include="$(CurrentRepoSourceBuildArtifactsPackagesDir)**\*.tar.gz" PackagePath="artifacts" />
+  </ItemGroup>
+
+  <Target Name="InitializeSourceBuildIntermediatePackageId"
+          BeforeTargets="GenerateNuspec;InitializeStandardNuspecProperties">
+    <PropertyGroup>
+      <PackageId>Microsoft.SourceBuild.Intermediate.$(GitHubRepositoryName).$(SourceBuildPackageRid)</PackageId>
+    </PropertyGroup>
+  </Target>
+
+  <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
+  <Import Project="Sdk.targets" Sdk="Microsoft.DotNet.Arcade.Sdk" />
+
+  <Target Name="Build" />
+
+</Project>

@@ -1,0 +1,8 @@
+<Project>
+
+  <Import Project="SourceBuildArcadeIntercept.targets" />
+
+  <!-- Repo extensibility point. -->
+  <Import Project="$(RepositoryEngineeringDir)SourceBuild.props" Condition="Exists('$(RepositoryEngineeringDir)SourceBuild.props')" />
+
+</Project>
