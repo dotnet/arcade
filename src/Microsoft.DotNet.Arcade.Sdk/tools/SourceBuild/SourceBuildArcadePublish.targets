@@ -1,7 +1,7 @@
 <Project>
 
   <!--
-    If an inner source-build attempts to publish its packages, theys could find their way onto a dev
+    If an inner source-build attempts to publish its packages, they could find their way onto a dev
     feed and be used unintentionally by downstream repos and devs, or the duplicate packages could
     break the build in a confusing way. This target should detect this and break the build in a
     clear way, instead.
