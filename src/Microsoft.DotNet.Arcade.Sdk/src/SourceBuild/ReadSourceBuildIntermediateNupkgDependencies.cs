@@ -21,7 +21,8 @@ namespace Microsoft.DotNet.Arcade.Sdk.SourceBuild
         public string VersionDetailsXmlFile { get; set; }
 
         /// <summary>
-        /// %(Identity): Name attribute of the dependency element.
+        /// %(Identity): Value of the SourceBuildRepoName element of the dependency element.
+        /// %(Name): Name attribute of the dependency element. Informational.
         /// %(Version): Version attribute of the dependency element.
         /// </summary>
         [Output]
@@ -39,32 +40,42 @@ namespace Microsoft.DotNet.Arcade.Sdk.SourceBuild
             Dependencies = root
                 .Elements()
                 .Elements(CreateQualifiedName("Dependency"))
-                .Where(d => d.Element(CreateQualifiedName("SourceBuildRepoName")) != null)
                 .Select(d =>
                 {
-                    string name = d.Attribute("Name")?.Value;
+                    string sourceBuildRepoName = d.Element(CreateQualifiedName("SourceBuildRepoName"))?.Value;
+
+                    if (string.IsNullOrEmpty(sourceBuildRepoName))
+                    {
+                        // Ignore element: doesn't represent a source-build dependency.
+                        return null;
+                    }
+
+                    string name = d.Attribute("Name")?.Value ?? string.Empty;
 
                     if (string.IsNullOrEmpty(name))
                     {
-                        Log.LogError($"Dependency Name null or empty in '{VersionDetailsXmlFile}' element {d}");
-                        return null;
+                        // Log name missing as FYI, but this is not an error case for source-build.
+                        Log.LogMessage($"Dependency Name null or empty in '{VersionDetailsXmlFile}' element {d}");
                     }
 
                     string version = d.Attribute("Version")?.Value;
 
                     if (string.IsNullOrEmpty(version))
                     {
+                        // We need a version to bring down an intermediate nupkg. Fail.
                         Log.LogError($"Dependency Version null or empty in '{VersionDetailsXmlFile}' element {d}");
                         return null;
                     }
 
                     return new TaskItem(
-                        name,
+                        sourceBuildRepoName,
                         new Dictionary<string, string>
                         {
+                            ["Name"] = name,
                             ["Version"] = version
                         });
                 })
+                .Where(d => d != null)
                 .ToArray();
 
             return !Log.HasLoggedErrors;

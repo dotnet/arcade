@@ -1,5 +1,7 @@
 <Project>
 
+  <Import Project="SourceBuildArcade.targets" />
+
   <UsingTask TaskName="Microsoft.DotNet.Arcade.Sdk.SourceBuild.AddSourceToNuGetConfig" AssemblyFile="$(ArcadeSdkBuildTasksAssembly)" />
   <UsingTask TaskName="Microsoft.DotNet.Arcade.Sdk.SourceBuild.ReadSourceBuildIntermediateNupkgDependencies" AssemblyFile="$(ArcadeSdkBuildTasksAssembly)" />
 
@@ -7,19 +9,16 @@
           Condition="
             '$(ArcadeBuildFromSource)' == 'true' and
             '$(ArcadeInnerBuildFromSource)' == 'true'"
+          DependsOnTargets="GetSourceBuildIntermediateNupkgNameConvention"
           BeforeTargets="CollectPackageReferences">
     <ReadSourceBuildIntermediateNupkgDependencies
       VersionDetailsXmlFile="$([MSBuild]::NormalizePath('$(RepositoryEngineeringDir)', 'Version.Details.xml'))">
       <Output TaskParameter="Dependencies" ItemName="VersionDetailsSourceBuildElement" />
     </ReadSourceBuildIntermediateNupkgDependencies>
 
-    <PropertyGroup>
-      <SourceBuildIntermediateNupkgRid Condition="'$(SourceBuildIntermediateNupkgRid)' == ''">linux-x64</SourceBuildIntermediateNupkgRid>
-    </PropertyGroup>
-
     <ItemGroup Condition="'@(VersionDetailsSourceBuildElement)' != ''">
       <SourceBuildIntermediateNupkgReference
-        Include="%(VersionDetailsSourceBuildElement.Identity).$(SourceBuildIntermediateNupkgRid)"
+        Include="$(SourceBuildIntermediateNupkgPrefix)%(VersionDetailsSourceBuildElement.Identity)$(SourceBuildIntermediateNupkgSuffix)"
         ExactVersion="%(VersionDetailsSourceBuildElement.Version)" />
       <PackageReference
         Include="@(SourceBuildIntermediateNupkgReference)"

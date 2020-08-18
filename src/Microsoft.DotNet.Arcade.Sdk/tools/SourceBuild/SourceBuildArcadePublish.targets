@@ -1,5 +1,7 @@
 <Project>
 
+  <Import Project="SourceBuildArcade.targets" />
+
   <!--
     If an inner source-build attempts to publish its packages, theys could find their way onto a dev
     feed and be used unintentionally by downstream repos and devs, or the duplicate packages could

@@ -1,8 +1,16 @@
 <Project>
 
-  <Import Project="SourceBuildArcadeIntercept.targets" />
-
   <!-- Repo extensibility point. -->
   <Import Project="$(RepositoryEngineeringDir)SourceBuild.props" Condition="Exists('$(RepositoryEngineeringDir)SourceBuild.props')" />
+
+  <Target Name="GetSourceBuildIntermediateNupkgNameConvention">
+    <PropertyGroup>
+      <SourceBuildIntermediateNupkgRid Condition="'$(SourceBuildIntermediateNupkgRid)' == ''">linux-x64</SourceBuildIntermediateNupkgRid>
+      <SourceBuildIntermediateNupkgPrefix Condition="'$(SourceBuildIntermediateNupkgPrefix)' == ''">Microsoft.SourceBuild.Intermediate.</SourceBuildIntermediateNupkgPrefix>
+      <SourceBuildIntermediateNupkgSuffix Condition="'$(SourceBuildIntermediateNupkgSuffix)' == ''">.$(SourceBuildIntermediateNupkgRid)</SourceBuildIntermediateNupkgSuffix>
+
+      <GitHubRepositoryName Condition="'$(GitHubRepositoryName)' == ''">no-repo-name-defined</GitHubRepositoryName>
+    </PropertyGroup>
+  </Target>
 
 </Project>
