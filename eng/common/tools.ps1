@@ -223,7 +223,7 @@ function GetDotNetInstallScript([string] $dotnetRoot) {
 }
 
 function InstallDotNetSdk([string] $dotnetRoot, [string] $version, [string] $architecture = '') {
-  InstallDotNet $dotnetRoot $version $architecture
+  InstallDotNet $dotnetRoot $version $architecture '' $false $runtimeSourceFeed $runtimeSourceFeedKey
 }
 
 function InstallDotNet([string] $dotnetRoot,
@@ -250,8 +250,7 @@ function InstallDotNet([string] $dotnetRoot,
   catch {
     Write-PipelineTelemetryError -Category 'InitializeToolset' -Message "Failed to install dotnet runtime '$runtime' from public location."
 
-    # Only the runtime can be installed from a custom [private] location.
-    if ($runtime -and ($runtimeSourceFeed -or $runtimeSourceFeedKey)) {
+    if ($runtimeSourceFeed -or $runtimeSourceFeedKey) {
       if ($runtimeSourceFeed) { $installParameters.AzureFeed = $runtimeSourceFeed }
 
       if ($runtimeSourceFeedKey) {
