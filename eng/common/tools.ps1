@@ -249,7 +249,7 @@ function InstallDotNet([string] $dotnetRoot,
   }
   catch {
     if ($runtimeSourceFeed -or $runtimeSourceFeedKey) {
-      Write-Host "Failed to install dotnet runtime '$runtime' from public location. Trying from '$runtimeSourceFeed'"
+      Write-Host "Failed to install dotnet from public location. Trying from '$runtimeSourceFeed'"
       if ($runtimeSourceFeed) { $installParameters.AzureFeed = $runtimeSourceFeed }
 
       if ($runtimeSourceFeedKey) {
@@ -262,11 +262,11 @@ function InstallDotNet([string] $dotnetRoot,
         & $installScript @installParameters
       }
       catch {
-        Write-PipelineTelemetryError -Category 'InitializeToolset' -Message "Failed to install dotnet runtime '$runtime' from custom location '$runtimeSourceFeed'."
+        Write-PipelineTelemetryError -Category 'InitializeToolset' -Message "Failed to install dotnet from custom location '$runtimeSourceFeed'."
         ExitWithExitCode 1
       }
     } else {
-      Write-PipelineTelemetryError -Category 'InitializeToolset' -Message "Failed to install dotnet runtime '$runtime' from public location."
+      Write-PipelineTelemetryError -Category 'InitializeToolset' -Message "Failed to install dotnet from public location."
       ExitWithExitCode 1
     }
   }
