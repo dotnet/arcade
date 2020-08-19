@@ -5,6 +5,8 @@
     These targets inject source-build into Arcade's build process.
   -->
 
+  <Import Project="SourceBuildArcade.targets" />
+
   <PropertyGroup>
     <SourceBuildOutputDir Condition="'$(SourceBuildOutputDir)' == ''">$([MSBuild]::NormalizeDirectory('$(ArtifactsDir)', 'source-build'))</SourceBuildOutputDir>
     <SourceBuildSelfDir>$([MSBuild]::NormalizeDirectory('$(SourceBuildOutputDir)', 'self'))</SourceBuildSelfDir>
@@ -151,7 +153,8 @@
   <!--
     Create a source-build intermediate NuGet package for dependency transport.
   -->
-  <Target Name="PackSourceBuildIntermediateNupkg">
+  <Target Name="PackSourceBuildIntermediateNupkg"
+          DependsOnTargets="GetSourceBuildIntermediateNupkgNameConvention">
     <PropertyGroup>
       <SourceBuildIntermediateProjFile>$(MSBuildThisFileDirectory)SourceBuildIntermediate.proj</SourceBuildIntermediateProjFile>
       <SourceBuildIntermediateProjTargetFile>$(ArtifactsObjDir)ArcadeGeneratedProjects\SourceBuildIntermediate\SourceBuildIntermediate.proj</SourceBuildIntermediateProjTargetFile>
@@ -169,7 +172,10 @@
     <MSBuild
       Projects="$(SourceBuildIntermediateProjTargetFile)"
       Targets="%(SourceBuildIntermediatePackTarget.Identity)"
-      Properties="CurrentRepoSourceBuildArtifactsPackagesDir=$(CurrentRepoSourceBuildArtifactsPackagesDir)" />
+      Properties="
+        CurrentRepoSourceBuildArtifactsPackagesDir=$(CurrentRepoSourceBuildArtifactsPackagesDir);
+        SourceBuildArcadeTargetsFile=$(MSBuildThisFileDirectory)SourceBuildArcade.targets;
+        " />
   </Target>
 
   <Target Name="PreventPrebuiltBuild"
