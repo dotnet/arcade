@@ -2,7 +2,7 @@ parameters:
  # Which publishing infra should be used. THIS SHOULD MATCH THE VERSION ON THE BUILD MANIFEST.
   # Publishing V2 accepts optionally outlining the publishing stages - default is inline.
   # Publishing V3 DOES NOT accept inlining the publishing stages.
-  publishingInfraVersion: 3
+  publishingInfraVersion: 2
   # When set to true the publishing templates from the repo will be used
   # otherwise Darc add-build-to-channel will be used to trigger the promotion pipeline
   inline: true
