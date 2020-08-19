@@ -5,6 +5,9 @@
   <!-- Properties requires by NuGet.targets to restore PackageReferences -->
   <PropertyGroup>
     <TargetFramework>net472</TargetFramework>
+    <!-- Workaround changes from newer MSBuild requiring additional properties --> 
+    <TargetFrameworkVersion Condition="'$(TargetFrameworkVersion)' == ''">5</TargetFrameworkVersion>
+    <TargetFrameworkIdentifier  Condition="'$(TargetFrameworkIdentifier)' == ''">.NETFramework</TargetFrameworkIdentifier>     
     <MSBuildProjectExtensionsPath>$(BaseIntermediateOutputPath)</MSBuildProjectExtensionsPath>
   </PropertyGroup>
 
