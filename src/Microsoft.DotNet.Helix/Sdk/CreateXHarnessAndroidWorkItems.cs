@@ -50,9 +50,9 @@ namespace Microsoft.DotNet.Helix.Sdk
             await Task.Yield();
             string workItemName = Path.GetFileNameWithoutExtension(appPackage.ItemSpec);
 
-            var timeouts = ParseTimeouts();
+            var (testTimeout, workItemTimeout) = ParseTimeouts(appPackage);
 
-            string command = ValidateMetadataAndGetXHarnessAndroidCommand(appPackage, timeouts.TestTimeout);
+            string command = ValidateMetadataAndGetXHarnessAndroidCommand(appPackage, testTimeout);
 
             if (!Path.GetExtension(appPackage.ItemSpec).Equals(".apk", StringComparison.OrdinalIgnoreCase))
             {
@@ -67,7 +67,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                 { "Identity", workItemName },
                 { "PayloadArchive", CreateZipArchiveOfPackage(appPackage.ItemSpec) },
                 { "Command", command },
-                { "Timeout", timeouts.WorkItemTimeout.ToString() },
+                { "Timeout", workItemTimeout.ToString() },
             });
         }
 

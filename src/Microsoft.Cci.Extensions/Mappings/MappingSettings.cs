@@ -11,10 +11,10 @@ namespace Microsoft.Cci.Mappings
 {
     public class MappingSettings
     {
-        public MappingSettings()
+        public MappingSettings(bool excludeAttributes = true)
         {
             this.ElementCount = 2;
-            this.Filter = new PublicOnlyCciFilter();
+            this.Filter = new PublicOnlyCciFilter(excludeAttributes);
             this.Comparers = CciComparers.Default;
             this.DiffFactory = new ElementDifferenceFactory();
         }

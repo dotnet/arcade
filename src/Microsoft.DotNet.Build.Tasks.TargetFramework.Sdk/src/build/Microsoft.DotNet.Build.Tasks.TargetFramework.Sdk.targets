@@ -52,7 +52,6 @@
           DependsOnTargets="ResolvePackageDependenciesForBuild">
     <MSBuild Projects="@(ProjectReference)"
              Targets="GetTargetFrameworks"
-             ContinueOnError="true"
              SkipNonexistentTargets="true">
       <Output TaskParameter="TargetOutputs" ItemName="_ProjectRefWithTfms"/>
     </MSBuild>
