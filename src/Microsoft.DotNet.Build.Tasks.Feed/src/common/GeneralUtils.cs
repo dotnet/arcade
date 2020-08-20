@@ -216,7 +216,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             };
 
             bool success = await RetryHandler.RunAsync(async attempt =>
-            {
+            { 
                 try
                 {
                     HttpResponseMessage response = await httpClient.GetAsync(feedUrl);
