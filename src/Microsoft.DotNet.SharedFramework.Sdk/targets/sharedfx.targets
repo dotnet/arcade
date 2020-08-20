@@ -6,6 +6,7 @@
     <PublishReadyToRunEmitSymbols>true</PublishReadyToRunEmitSymbols>
     <PublishReadyToRunShowWarnings>true</PublishReadyToRunShowWarnings>
     <AllowedOutputExtensionsInSymbolsPackageBuildOutputFolder>$(AllowedOutputExtensionsInSymbolsPackageBuildOutputFolder);.map;.dbg;.debug;.dwarf</AllowedOutputExtensionsInSymbolsPackageBuildOutputFolder>
+    <HostJsonTargetPath Condition="'$(HostJsonTargetPath)' == ''">runtimes/$(RuntimeIdentifier)/lib/$(TargetFramework)</HostJsonTargetPath>
   </PropertyGroup>
 
   <Target Name="GetSharedFrameworkFilesForReadyToRun" DependsOnTargets="$(GetSharedFrameworkFilesForReadyToRunDependsOn)" Returns="@(ReferenceCopyLocalPaths)" />
@@ -28,7 +29,7 @@
   </Target>
 
   <Target Name="_PrepareSharedFrameworkForReadyToRun"
-          DependsOnTargets="_ValidatePackageInformation;
+          DependsOnTargets="_CalculatePackageInformation;
                             GetSharedFrameworkFilesForReadyToRun"
           Condition="'$(PlatformPackageType)' == 'RuntimePack'">
     <ItemGroup>
@@ -58,7 +59,7 @@
   </Target>
 
   <Target Name="GetFilesToPackage"
-          DependsOnTargets="_ValidatePackageInformation;
+          DependsOnTargets="_CalculatePackageInformation;
                             ResolveFrameworkReferences;
                             ResolveLockFileCopyLocalFiles;
                             ResolveReferences;
@@ -149,7 +150,7 @@
     </GenerateSharedFrameworkDepsFile>
     <ItemGroup>
       <_SharedFrameworkDepsFile>
-        <TargetPath>runtimes/$(RuntimeIdentifier)/lib/$(TargetFramework)</TargetPath>
+        <TargetPath>$(HostJsonTargetPath)</TargetPath>
         <GeneratedBuildFile>true</GeneratedBuildFile>
       </_SharedFrameworkDepsFile>
       <FileWrites Include="@(_SharedFrameworkDepsFile)" />
@@ -171,7 +172,7 @@
           Condition="'$(PlatformPackageType)' == 'RuntimePack'">
     <ItemGroup>
       <FilesToPackage Include="$(ProjectRuntimeConfigFilePath)"
-                     TargetPath="runtimes/$(RuntimeIdentifier)/lib/$(TargetFramework)"
+                     TargetPath="$(HostJsonTargetPath)"
                      GeneratedBuildFile="true" />
     </ItemGroup>
   </Target>
@@ -270,7 +271,7 @@
   -->
   <UsingTask TaskName="GeneratePlatformManifestEntriesFromFileList" AssemblyFile="$(DotNetSharedFrameworkTaskFile)" />
   <Target Name="_GeneratePlatformManifestFromRuntimePack"
-          DependsOnTargets="_ValidatePackageInformation"
+          DependsOnTargets="_CalculatePackageInformation"
           Condition="'$(PlatformPackageType)' == 'TargetingPack' and '$(UseTemplatedPlatformManifest)' != 'true'">
 
     <PropertyGroup>
@@ -386,7 +387,8 @@
   </Target>
 
   <Target Name="_GetAllSharedFrameworkFiles"
-          DependsOnTargets="GetFilesToPackage;
+          DependsOnTargets="_CalculatePackageInformation;
+                            GetFilesToPackage;
                             _GenerateSharedFrameworkDepsFile;
                             _GenerateSharedFrameworkRuntimeConfigFile;
                             _ValidateAllFilesInTemplatedPlatformManifest;

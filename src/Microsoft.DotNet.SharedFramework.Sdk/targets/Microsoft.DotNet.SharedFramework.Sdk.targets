@@ -67,7 +67,7 @@
     </PropertyGroup>
   </Target>
 
-  <Target Name="_ValidatePackageInformation">
+  <Target Name="_CalculatePackageInformation">
     <Error Condition="'$(PlatformPackageType)' != 'TargetingPack' and
                       '$(PlatformPackageType)' != 'RuntimePack' and
                       '$(PlatformPackageType)' != 'AppHostPack' and
