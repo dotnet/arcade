@@ -178,7 +178,7 @@ function InstallDotNetSdk {
   if [[ $# -ge 3 ]]; then
     architecture=$3
   fi
-  InstallDotNet "$root" "$version" "$architecture" "sdk" 0 $runtime_source_feed $runtime_source_feed_key
+  InstallDotNet "$root" "$version" $architecture 'sdk' 'false' $runtime_source_feed $runtime_source_feed_key
 }
 
 function InstallDotNet {
@@ -197,7 +197,7 @@ function InstallDotNet {
     runtimeArg="--runtime $4"
   fi
   local skipNonVersionedFilesArg=""
-  if [[ "$#" -ge "5" ]] && [ $5 -ne 0 ]; then
+  if [[ "$#" -ge "5" ]] && [[ "$5" != 'false' ]]; then
     skipNonVersionedFilesArg="--skip-non-versioned-files"
   fi
   bash "$install_script" --version $version --install-dir "$root" $archArg $runtimeArg $skipNonVersionedFilesArg || {
