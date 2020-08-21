@@ -386,6 +386,55 @@
     </ItemGroup>
   </Target>
 
+  <UsingTask TaskName="VerifyClosure" AssemblyFile="$(DotNetSharedFrameworkTaskFile)" />
+  <Target Name="_VerifyClosure"
+          DependsOnTargets="GetFilesToPackage"
+          Condition="'$(SkipValidatePackage)' != 'true'">
+    <ItemGroup>
+      <_closureFiles Include="@(FilesToPackage)" Condition="'%(Extension)' == '.dll' or '%(Extension)' == '$(LibraryFileExtension)'" />
+      <_closureFileNames Include="@(_closureFiles->'%(FileName)')" Original="%(Identity)" />
+
+      <_closureFileNamesFiltered Include="@(_closureFileNames)" Exclude="@(ExcludeFromClosure)"/>
+      <_closureFileFiltered Include="@(_closureFileNamesFiltered->'%(Original)')"/>
+    </ItemGroup>
+
+    <Message Text="Verifying closure of $(PackageId) assemblies" />
+    <VerifyClosure
+      Sources="@(_closureFileFiltered)"
+      IgnoredReferences="@(IgnoredReference)"
+      DependencyGraphFilePath="$(IntermediateOutputPath)assembly-graph.dgml" />
+  </Target>
+
+  <UsingTask TaskName="VerifyTypes" AssemblyFile="$(DotNetSharedFrameworkTaskFile)" />
+  <Target Name="_VerifyNoDuplicateTypes"
+          DependsOnTargets="GetFilesToPackage"
+          Condition="'$(SkipValidatePackage)' != 'true'">
+
+    <ItemGroup>
+      <_dupTypeFiles Include="@(FilesToPackage)" Condition="'%(Extension)' == '.dll' or '%(Extension)' == '$(LibraryFileExtension)'" />
+      <_dupTypeFileName Include="@(_dupTypeFiles->'%(FileName)')" Original="%(Identity)" />
+
+      <_dupTypeFileNamesFiltered Include="@(_dupTypeFileName)" Exclude="@(ExcludeFromDuplicateTypes)"/>
+      <_dupTypeFileFiltered Include="@(_dupTypeFileNamesFiltered->'%(Original)')"/>
+    </ItemGroup>
+
+    <Message Text="Verifying no duplicate types in $(PackageId) assemblies" />
+    <VerifyTypes
+      Sources="@(_dupTypeFileFiltered)"
+      IgnoredTypes="@(IgnoredDuplicateType)" />
+  </Target>
+
+  <UsingTask TaskName="ValidateFileVersions" AssemblyFile="$(DotNetSharedFrameworkTaskFile)" />
+  <Target Name="_ValidateFileVersions"
+          DependsOnTargets="GetFilesToPackage"
+          Condition="'$(PermitDllAndExeFilesLackingFileVersion)' != 'true' and '$(PlatformPackageType)' == 'RuntimePack'">
+    <ItemGroup>
+      <_filesToVerify Include="@(FilesToPackage)" Condition="'%(Extension)' == '.dll' or '%(Extension)' == '.exe'" />
+    </ItemGroup>
+    <ValidateFileVersions Files="@(_filesToVerify)" />
+  </Target>
+
+
   <Target Name="_GetAllSharedFrameworkFiles"
           DependsOnTargets="_CalculatePackageInformation;
                             GetFilesToPackage;
@@ -395,7 +444,10 @@
                             _CreatePlatformManifest;
                             _GenerateFrameworkList;
                             _AddPackageOverridesToPackage;
-                            _CreateVersionsFile"
+                            _CreateVersionsFile;
+                            _VerifyClosure;
+                            _VerifyNoDuplicateTypes;
+                            _ValidateFileVersions"
           Returns="@(FilesToPackage)" />
 
   <Target Name="_AddFilesToNuGetPackage" BeforeTargets="_GetPackageFiles">

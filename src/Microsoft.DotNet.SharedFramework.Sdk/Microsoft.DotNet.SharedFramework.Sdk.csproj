@@ -24,6 +24,7 @@
     <PackageReference Include="NuGet.Packaging" Version="$(NuGetVersion)" />
     <PackageReference Include="NuGet.ProjectModel" Version="$(NuGetVersion)" />
     <PackageReference Include="NuGet.Versioning" Version="$(NuGetVersion)" />
+    <PackageReference Include="System.Reflection.Metadata" Version="$(SystemReflectionMetadataVersion)" />
   </ItemGroup>
 
   <ItemGroup>
@@ -37,6 +38,11 @@
 
   <ItemGroup>
     <Compile Include="..\Common\BuildTask.cs" Link="src\BuildTask.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Microsoft.DotNet.Build.Tasks.Packaging\src\VerifyClosure.cs" Link="src/Packaging/VerifyClosure.cs" />
+    <Compile Include="..\Microsoft.DotNet.Build.Tasks.Packaging\src\VerifyTypes.cs" Link="src/Packaging/VerifyTypes.cs" />
   </ItemGroup>
   
   <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
