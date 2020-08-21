@@ -27,7 +27,7 @@
     <MSBuild
       Projects="$(AcquireWixProjectFile)"
       Targets="AcquireWixCore"
-      Properties="IntermediateOutputRootPath=$(IntermediateOutputRootPath)" />
+      Properties="IntermediateOutputRootPath=$(IntermediateOutputRootPath);RepoRoot=$(RepoRoot)" />
   </Target>
 
   <Target Name="GetAcquireWixProperties"> 
