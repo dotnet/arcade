@@ -1,3 +1,4 @@
+<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
 <Project>
 
   <!-- Shield this project from nonstandard Directory.Build.props/targets. -->
@@ -9,13 +10,10 @@
   <Import Project="Sdk.props" Sdk="Microsoft.DotNet.Arcade.Sdk" />
   <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
 
-  <!-- Repository extension point -->
-  <Import Project="$(RepositoryEngineeringDir)SourceBuild.props" Condition="Exists('$(RepositoryEngineeringDir)SourceBuild.props')" />
+  <!-- Import common functionality, including repo extension point. -->
+  <Import Project="$(SourceBuildArcadeTargetsFile)" />
 
   <PropertyGroup>
-    <SourceBuildPackageRid Condition="'$(SourceBuildPackageRid)' == ''">linux-x64</SourceBuildPackageRid>
-    <GitHubRepositoryName Condition="'$(GitHubRepositoryName)' == ''">no-repo-name-defined</GitHubRepositoryName>
-
     <Copyright Condition="'$(Copyright)' == ''">$(CopyrightNetFoundation)</Copyright>
     <PackageLicenseExpression Condition="'$(PackageLicenseExpression)' == ''">MIT</PackageLicenseExpression>
 
@@ -39,9 +37,10 @@
   </ItemGroup>
 
   <Target Name="InitializeSourceBuildIntermediatePackageId"
+          DependsOnTargets="GetSourceBuildIntermediateNupkgNameConvention"
           BeforeTargets="GenerateNuspec;InitializeStandardNuspecProperties">
     <PropertyGroup>
-      <PackageId>Microsoft.SourceBuild.Intermediate.$(GitHubRepositoryName).$(SourceBuildPackageRid)</PackageId>
+      <PackageId>$(SourceBuildIntermediateNupkgPrefix)$(GitHubRepositoryName)$(SourceBuildIntermediateNupkgSuffix)</PackageId>
     </PropertyGroup>
   </Target>
 
