@@ -6,6 +6,10 @@
   <UsingTask TaskName="Microsoft.DotNet.Arcade.Sdk.SourceBuild.AddSourceToNuGetConfig" AssemblyFile="$(ArcadeSdkBuildTasksAssembly)" />
   <UsingTask TaskName="Microsoft.DotNet.Arcade.Sdk.SourceBuild.ReadSourceBuildIntermediateNupkgDependencies" AssemblyFile="$(ArcadeSdkBuildTasksAssembly)" />
 
+  <ItemGroup>
+    <PackageReference Include="Microsoft.DotNet.SourceBuild.Tasks" Version="$(MicrosoftDotNetSourceBuildTasksVersion)" IsImplicitlyDefined="true" />
+  </ItemGroup>
+
   <Target Name="CollectSourceBuildIntermediateNupkgDependencies"
           Condition="
             '$(ArcadeBuildFromSource)' == 'true' and
@@ -23,7 +27,7 @@
         ExactVersion="%(VersionDetailsSourceBuildElement.Version)" />
       <PackageReference
         Include="@(SourceBuildIntermediateNupkgReference)"
-        Version="[%(ExactVersion)]"/>
+        Version="[%(SourceBuildIntermediateNupkgReference.ExactVersion)]"/>
     </ItemGroup>
   </Target>
 
