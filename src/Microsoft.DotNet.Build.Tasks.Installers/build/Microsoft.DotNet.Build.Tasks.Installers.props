@@ -4,12 +4,12 @@
     <MicrosoftDotNetBuildTasksInstallersTaskAssembly Condition="'$(MSBuildRuntimeType)' != 'Core'">$(MSBuildThisFileDirectory)..\tools\net472\Microsoft.DotNet.Build.Tasks.Installers.dll</MicrosoftDotNetBuildTasksInstallersTaskAssembly>
   </PropertyGroup>
 
+  <UsingTask TaskName="BuildFPMToolPreReqs" AssemblyFile="$(MicrosoftDotNetBuildTasksInstallersTaskAssembly)"/>
   <UsingTask TaskName="CreateLightCommandPackageDrop" AssemblyFile="$(MicrosoftDotNetBuildTasksInstallersTaskAssembly)" />
   <UsingTask TaskName="ExecWithRetries" AssemblyFile="$(MicrosoftDotNetBuildTasksInstallersTaskAssembly)" />
-  <UsingTask TaskName="StabilizeWixFileId" AssemblyFile="$(MicrosoftDotNetBuildTasksInstallersTaskAssembly)" />
   <UsingTask TaskName="GenerateCurrentVersion" AssemblyFile="$(MicrosoftDotNetBuildTasksInstallersTaskAssembly)" />
-  <UsingTask TaskName="GenerateMsiVersion" AssemblyFile="$(MicrosoftDotNetBuildTasksInstallersTaskAssembly)" />
   <UsingTask TaskName="GenerateGuidFromName" AssemblyFile="$(MicrosoftDotNetBuildTasksInstallersTaskAssembly)" />
-  <UsingTask TaskName="BuildFPMToolPreReqs" AssemblyFile="$(MicrosoftDotNetBuildTasksInstallersTaskAssembly)"/>
   <UsingTask TaskName="GenerateJsonObjectString" AssemblyFile="$(MicrosoftDotNetBuildTasksInstallersTaskAssembly)"/>
+  <UsingTask TaskName="GenerateMsiVersion" AssemblyFile="$(MicrosoftDotNetBuildTasksInstallersTaskAssembly)" />
+  <UsingTask TaskName="StabilizeWixFileId" AssemblyFile="$(MicrosoftDotNetBuildTasksInstallersTaskAssembly)" />
 </Project>

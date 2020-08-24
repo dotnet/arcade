@@ -39,30 +39,36 @@
 
   <Target Name="GenerateInstallers" DependsOnTargets="GetInstallerGenerationFlags" Condition="'$(SkipInstallerBuild)' != 'true' and '$(GenerateInstallers)' == 'true'">
     <ItemGroup>
-      <_InstallerBuildProject Include="$(MSBuildProjectFile)"
-               Targets="GenerateDeb"
-               Properties="GenerateDeb=true"
-               Condition="'$(GenerateDeb)' == 'true'" />
-      <_InstallerBuildProject Include="$(MSBuildProjectFile)"
-               Targets="GenerateRpm"
-               Properties="GenerateRpm=true"
-               Condition="'$(GenerateRpm)' == 'true'" />
-      <_InstallerBuildProject Include="$(MSBuildProjectFile)"
-               Targets="GenerateMsi"
-               Properties="GenerateMSI=true"
-               Condition="'$(GenerateMSI)' == 'true'" />
-      <_InstallerBuildProject Include="$(MSBuildProjectFile)"
-               Targets="GenerateCrossArchMsi"
-               Properties="GenerateCrossArchMsi=true"
-               Condition="'$(GenerateCrossArchMsi)' == 'true'" />
-      <_InstallerBuildProject Include="$(MSBuildProjectFile)"
-               Targets="GeneratePkg"
-               Properties="GeneratePkg=true"
-               Condition="'$(GeneratePkg)' == 'true'" />
-      <_InstallerBuildProject Include="$(MSBuildProjectFile)"
-               Targets="GenerateVSInsertionNupkg"
-               Properties="GenerateMSI=$(GenerateMSI);GenerateCrossArchMsi=$(GenerateCrossArchMsi)"
-               Condition="'$(GenerateVSInsertionPackages)' == 'true'" />
+      <_InstallerBuildProject
+        Include="$(MSBuildProjectFile)"
+        Targets="GenerateDeb"
+        Properties="GenerateDeb=true"
+        Condition="'$(GenerateDeb)' == 'true'" />
+      <_InstallerBuildProject
+        Include="$(MSBuildProjectFile)"
+        Targets="GenerateRpm"
+        Properties="GenerateRpm=true"
+        Condition="'$(GenerateRpm)' == 'true'" />
+      <_InstallerBuildProject
+        Include="$(MSBuildProjectFile)"
+        Targets="GenerateMsi"
+        Properties="GenerateMSI=true"
+        Condition="'$(GenerateMSI)' == 'true'" />
+      <_InstallerBuildProject
+        Include="$(MSBuildProjectFile)"
+        Targets="GenerateCrossArchMsi"
+        Properties="GenerateCrossArchMsi=true"
+        Condition="'$(GenerateCrossArchMsi)' == 'true'" />
+      <_InstallerBuildProject
+        Include="$(MSBuildProjectFile)"
+        Targets="GeneratePkg"
+        Properties="GeneratePkg=true"
+        Condition="'$(GeneratePkg)' == 'true'" />
+      <_InstallerBuildProject
+        Include="$(MSBuildProjectFile)"
+        Targets="GenerateVSInsertionNupkg"
+        Properties="GenerateMSI=$(GenerateMSI);GenerateCrossArchMsi=$(GenerateCrossArchMsi)"
+        Condition="'$(GenerateVSInsertionPackages)' == 'true'" />
     </ItemGroup>
     <MSBuild Projects="@(_InstallerBuildProject)"
              Targets="%(_InstallerBuildProject.Targets)"

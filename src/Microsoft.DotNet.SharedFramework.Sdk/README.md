@@ -70,6 +70,7 @@ Cons of harvesting:
 Pros of templating:
 
 - All files can be declared to be in the manifest without needing every file on disk.
+  - As a result, this enables building a targeting pack for a runtime pack that has disjoint sets of files on different RIDs, such as Microsoft.NETCore.App, without needing to download any runtime pack builds.
 - Targeting pack can be built independently of the runtime pack.
 - Ensures that every file in a runtime pack is a known file in the manifest.
 
@@ -81,25 +82,17 @@ Cons of templating:
 
 ### Platform Manifest Harvesting
 
-For platforms where all target platforms have the same files
-or where one platform has a superset of the files available
-on all platforms, we can generate a platform manifest from
-the present files in the runtime pack.
+For platforms where all target platforms have the same files or where one platform has a superset of the files available on all platforms, we can generate a platform manifest from the present files in the runtime pack.
 
 This is enabled by default or when `UseTemplatedPlatformManifest` is not set to `true`.
 
 Set the `RuntimePackProjectPath` to the path to the runtime pack shared framework project.
 
-If you only want to use one RID to generate the platform manifest, you can set
-the `RuntimePackPlatformForManifest` property to the RID you'd like to use.
-If the chosen RID doesn't have a superset of files for all shipping platforms,
-then you may have unexpected behavior when using the produced targeting pack.
+If you only want to use one RID to generate the platform manifest, you can set the `RuntimePackPlatformForManifest` property to the RID you'd like to use. If the chosen RID doesn't have a superset of files for all shipping platforms, then you may have unexpected behavior when using the produced targeting pack.
 
 ### Templated Platform Manifest
 
-For shared frameworks with differing sets of files on various platforms
-and with no single platform that contains all of the files, this SDK provides support
-for creating a platform manifest from a templated list of items.
+For shared frameworks with differing sets of files on various platforms and with no single platform that contains all of the files, this SDK provides support for creating a platform manifest from a templated list of items.
 
 Assumptions:
 
@@ -107,7 +100,7 @@ Assumptions:
     or have an easily calculatable assembly version and file version.
 - All native files have an easily calculatable file version.
 
-To use, set `UseTemplatedPlatformManifes`t to true and define a set of `PlatformManifestFileEntry` items
+To use, set `UseTemplatedPlatformManifest` to true and define a set of `PlatformManifestFileEntry` items
 
 `PlatformManifestFileEntry` metadata:
 
@@ -121,9 +114,10 @@ To use, set `UseTemplatedPlatformManifes`t to true and define a set of `Platform
   - A file version for this file if it is not present in the ref-pack build.
 
 Properties for these targets:
-`UseTemplatedPlatformManifest`: Set to true to enable the templated platform manifest generation
-`PlatformManifestFallbackAssemblyVersion`: Fallback asssembly version when one is needed and there is no fallback on the entry.
-`PlatformManifestFallbackFileVersion`: Fallback file version when one is needed and there is no fallback on the entry.
+
+- `UseTemplatedPlatformManifest`: Set to true to enable the templated platform manifest generation
+- `PlatformManifestFallbackAssemblyVersion`: Fallback asssembly version when one is needed and there is no fallback on the entry.
+- `PlatformManifestFallbackFileVersion`: Fallback file version when one is needed and there is no fallback on the entry.
 
 ### RuntimeList/FrameworkList Generation
 
