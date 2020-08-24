@@ -59,7 +59,7 @@
     <WindowsAzureStorageVersion>8.5.0</WindowsAzureStorageVersion>
     <XUnitVersion>2.4.1</XUnitVersion>
     <XUnitAbstractionsVersion>2.0.3</XUnitAbstractionsVersion>
-    <XUnitVSRunnerVersion>2.4.1</XUnitVSRunnerVersion>
+    <XUnitVSRunnerVersion>2.4.3</XUnitVSRunnerVersion>
     <MicrosoftDotNetBuildTasksFeedVersion>5.0.0-beta.20419.21</MicrosoftDotNetBuildTasksFeedVersion>
     <MicrosoftDotNetSignToolVersion>5.0.0-beta.20419.21</MicrosoftDotNetSignToolVersion>
     <MicrosoftAzureDocumentDBVersion>1.22.0</MicrosoftAzureDocumentDBVersion>
