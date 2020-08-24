@@ -54,10 +54,10 @@ namespace Microsoft.DotNet.SharedFramework.Sdk
                 {
                     continue;
                 }
-                var filePath = file.ItemSpec;
-                var fileName = Path.GetFileName(filePath);
-                var fileVersion = FileUtilities.GetFileVersion(filePath)?.ToString() ?? string.Empty;
-                var assemblyVersion = FileUtilities.GetAssemblyName(filePath)?.Version;
+                string filePath = file.ItemSpec;
+                string fileName = Path.GetFileName(filePath);
+                string fileVersion = FileUtilities.GetFileVersion(filePath)?.ToString() ?? string.Empty;
+                Version assemblyVersion = FileUtilities.GetAssemblyName(filePath)?.Version;
                 string cultureMaybe = file.GetMetadata("Culture");
                 if (!string.IsNullOrEmpty(cultureMaybe))
                 {

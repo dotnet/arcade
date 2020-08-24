@@ -14,6 +14,11 @@ using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.Versioning;
 
+// This file implements a subset of the Extensions class in the
+// Microsoft.DotNet.Build.Tasks.Packaging project to support
+// the Shared Framework SDK's usage of the VerifyClosure and
+// VerifyTypes tasks used in shared framework validation.
+
 namespace Microsoft.DotNet.Build.Tasks.Packaging
 {
     public static class Extensions
