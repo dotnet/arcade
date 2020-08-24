@@ -117,7 +117,7 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
             {
                 foreach (var locItem in Loc)
                 {
-                    commandString += $" -loc:{Path.GetFileName(locItem.ItemSpec)}";
+                    commandString += $" -loc {Path.GetFileName(locItem.ItemSpec)}";
                 }
             }
             if(Fv)
