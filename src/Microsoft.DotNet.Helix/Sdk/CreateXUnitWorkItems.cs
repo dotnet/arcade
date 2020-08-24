@@ -81,7 +81,6 @@ namespace Microsoft.DotNet.Helix.Sdk
         /// <summary>
         /// Prepares HelixWorkItem given xUnit project information.
         /// </summary>
-        /// <param name="publishPath">The non-relative path to the publish directory.</param>
         /// <returns>An ITaskItem instance representing the prepared HelixWorkItem.</returns>
         private async Task<ITaskItem> PrepareWorkItem(ITaskItem xunitProject)
         {
@@ -143,13 +142,15 @@ namespace Microsoft.DotNet.Helix.Sdk
                 }
             }
 
-            return new Microsoft.Build.Utilities.TaskItem(assemblyName, new Dictionary<string, string>()
+            var result = new Microsoft.Build.Utilities.TaskItem(assemblyName, new Dictionary<string, string>()
             {
-                { "Identity", assemblyName },
-                { "PayloadDirectory", publishDirectory },
-                { "Command", command },
-                { "Timeout", timeout.ToString() },
+                {"Identity", assemblyName},
+                {"PayloadDirectory", publishDirectory},
+                {"Command", command},
+                {"Timeout", timeout.ToString()},
             });
+            xunitProject.CopyMetadataTo(result);
+            return result;
         }
     }
 }
