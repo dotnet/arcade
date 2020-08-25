@@ -122,11 +122,13 @@ namespace {{pascalCaseNs Namespace}}
 
             {{#each NonConstantParameters}}
             {{#if Required}}
+            {{#if (isNullableType Type)}}
             if ({{#nullCheck Type Required}}{{camelCase Name}}{{/nullCheck}})
             {
                 throw new ArgumentNullException(nameof({{camelCase Name}}));
             }
 
+            {{/if}}
             {{/if}}
             {{#if (isVerifyable Type)}}
             if (!{{camelCase Name}}.IsValid)

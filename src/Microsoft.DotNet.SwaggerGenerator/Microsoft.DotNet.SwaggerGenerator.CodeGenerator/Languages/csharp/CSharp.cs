@@ -20,6 +20,52 @@ namespace Microsoft.DotNet.SwaggerGenerator.Languages
                 return ns;
             }
 
+            [HelperMethod]
+            public static bool IsNullableType(TypeReference reference)
+            {
+                if (reference == TypeReference.Boolean)
+                {
+                    return false;
+                }
+
+                if (reference == TypeReference.Int32)
+                {
+                    return false;
+                }
+
+                if (reference == TypeReference.Int64)
+                {
+                    return false;
+                }
+
+                if (reference == TypeReference.Float)
+                {
+                    return false;
+                }
+
+                if (reference == TypeReference.Double)
+                {
+                    return false;
+                }
+
+                if (reference == TypeReference.Date)
+                {
+                    return false;
+                }
+
+                if (reference == TypeReference.DateTime)
+                {
+                    return false;
+                }
+
+                if (reference == TypeReference.Uuid)
+                {
+                    return false;
+                }
+
+                return true;
+            }
+
             public override string Extension => ".cs";
 
             protected override string ResolveReference(TypeReference reference, object[] args)
