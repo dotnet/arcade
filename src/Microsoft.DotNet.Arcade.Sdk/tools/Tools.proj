@@ -7,7 +7,8 @@
     <TargetFramework>net472</TargetFramework>
     <!-- Workaround changes from newer MSBuild requiring additional properties --> 
     <TargetFrameworkVersion Condition="'$(TargetFrameworkVersion)' == ''">5</TargetFrameworkVersion>
-    <TargetFrameworkIdentifier  Condition="'$(TargetFrameworkIdentifier)' == ''">.NETFramework</TargetFrameworkIdentifier>     
+    <TargetFrameworkIdentifier  Condition="'$(TargetFrameworkIdentifier)' == ''">.NETFramework</TargetFrameworkIdentifier>
+    <TargetFrameworkMoniker>.NETFramework,Version=v4.7.2</TargetFrameworkMoniker>   
     <MSBuildProjectExtensionsPath>$(BaseIntermediateOutputPath)</MSBuildProjectExtensionsPath>
   </PropertyGroup>
 
