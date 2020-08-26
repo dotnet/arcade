@@ -181,16 +181,6 @@
         Type="AzDoNugetFeed"
         Token="$(AzdoTargetFeedPAT)" />
 
-      <!-- Legacy blob feed. Legacy feed is non-internal so we skip it for this. -->
-      <TargetFeedConfig
-        Condition="'$(IsInternalBuild)' == 'false'"
-        AssetSelection="NonShippingOnly"
-        Include="Package;Symbols"
-        TargetURL="$(TargetStaticFeed)"
-        Isolated="false"
-        Type="AzureStorageFeed"
-        Token="$(AzureStorageTargetFeedPAT)" />
-
       <TargetFeedConfig
         AssetSelection="NonShippingOnly"
         Include="Package"
