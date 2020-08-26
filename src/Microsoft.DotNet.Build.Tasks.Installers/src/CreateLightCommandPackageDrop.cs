@@ -97,6 +97,7 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
             // Write Light command to file
             string commandFilename = Path.Combine(packageDropOutputFolder, "light.cmd");
             string commandString = string.Empty;
+            commandString += "set outputfolder=%1";
             if(OriginalLightCommand != null)
             {
                 commandString += "REM Original light command" + Environment.NewLine;
@@ -104,7 +105,7 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
             }
             commandString += "REM Modified light command" + Environment.NewLine;
             commandString += "light.exe";
-            commandString += $" -out {Path.GetFileName(Out)}";
+            commandString += $" -out %outputfolder%{Path.GetFileName(Out)}";
             if (NoLogo)
             {
                 commandString += " -nologo";
@@ -126,7 +127,7 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
             }
             if(PdbOut != null)
             {
-                commandString += $" -pdbout {PdbOut}";
+                commandString += $" -pdbout %outputfolder%{PdbOut}";
             }
             if(WixProjectFile != null)
             {
