@@ -97,7 +97,7 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
             // Write Light command to file
             string commandFilename = Path.Combine(packageDropOutputFolder, "light.cmd");
             string commandString = string.Empty;
-            commandString += "set outputfolder=%1";
+            commandString += "set outputfolder=%1" + Environment.NewLine;
             if(OriginalLightCommand != null)
             {
                 commandString += "REM Original light command" + Environment.NewLine;
