@@ -326,10 +326,6 @@ There are a few benefits, but the bottom line is: you can rely on Arcade SDK and
 
 This happens because the publishing job will only execute in stage(s) representing a channel(s) that is [configured as a Default Channel](https://github.com/dotnet/arcade/blob/ec191f3d706d740bc7a87fbb98d94d916f81f0cb/Documentation/Darc.md#add-default-channel) for the build in Maestro++. All other stages will only execute the `Setup Maestro Vars` job. 
 
-### Why so many stages?
-
-Each stage represents a different Maestro++ channel. Therefore, as the number of channels in Maestro increase the number of stages also increase. We are considering to [change this representation](https://github.com/dotnet/arcade/issues/4283) so that it doesn't clutter the build UI.
-
 ### What's this "Setup Maestro Vars" job?
 
 Currently Azure DevOps does not support communicating "YAML variables" across stages. The recommended workaround to do this is to use an AzDO artifact to persist the variables. The `Setup Maestro Vars` job is used to read one of such artifacts and set stage-scope variables based on the file content.
@@ -361,7 +357,7 @@ The `DotNetPublishUsingPipelines` is a flag that Arcade SDK uses to determine if
 
 ### Where can I see publishing logs?
 
-The publishing logs are stored inside an Azure DevOps artifacts container named `PostBuildLogs`. Each activated post-build channel/stage will have a subfolder under `PostBuildLogs`. Each job in a publishing channel/stage will have `.binlogs` in the container.
+The publishing logs are stored inside an Azure DevOps artifacts container named `PostBuildLogs`. Publishing stage will have a subfolder under `PostBuildLogs`. Each job in a publishing channel/stage will have `.binlogs` in the container.
 
 ### Which feeds does Arcade infra publish to?
 
@@ -385,3 +381,33 @@ The publishing logs are stored inside an Azure DevOps artifacts container named 
 |                     | https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet3/nuget/v3/index.json |
 | dotnet3-transport   | .NET Core 3 non-shipping packages                            |
 |                     | https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet3-transport/nuget/v3/index.json |
+
+
+### How to upgrade to Publishing V3?
+
+1) Add PublishingVersion in /eng/Publishing.props 
+
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+   <PropertyGroup>
+      <PublishingVersion>3</PublishingVersion>
+   </PropertyGroup>
+</Project>
+
+2) Update the publishingInfraVersion in /eng/common/template/post-build/post-build.yml
+
+  publishingInfraVersion: 3
+
+  
+### What is changing in V3?
+
+Previously the UI was immensely cluttered. Most confusing part was the stages were 'activated' but they don't publish anything. So now we have only one stage for publishing. Publishing stage will have all the information related to errors/warnings/logs.
+Publish Using Darc we publish to the default channel specified by the user. (add-default-channel) 
+
+(./images/build-with-post-build-stages.png)
+
+Instead of having one stage per channel we've changed the infra to have just one publishing stage for the build. 
+
+(./images/build-with-post-build-stages.png)
+
+
