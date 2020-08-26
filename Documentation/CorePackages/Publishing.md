@@ -404,10 +404,10 @@ The publishing logs are stored inside an Azure DevOps artifacts container named 
 Previously the UI was immensely cluttered. Most confusing part was the stages were 'activated' but they don't publish anything. So now we have only one stage for publishing. Publishing stage will have all the information related to errors/warnings/logs.
 Publish Using Darc we publish to the default channel specified by the user. (add-default-channel) 
 
-(./images/build-with-post-build-stages.png)
+(./images/Publishing.png)
 
 Instead of having one stage per channel we've changed the infra to have just one publishing stage for the build. 
 
-(./images/build-with-post-build-stages.png)
+(./images/BuildPromotion.png)
 
 

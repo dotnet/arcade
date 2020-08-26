@@ -879,7 +879,7 @@ task of the "Publish to Build Asset Registry" job in your build. See
 [Locating the BAR build ID for a build](#locating-the-bar-build-id-for-a-build).
 
 ```
-darc add-build-to-channel --id 46856 --channel ".NET Core SDK 3.1.3xx"
+darc add-build-to-channel --id 46856 --channel ".NET Core SDK 3.1.3xx" --publishing-infra-version 3
 ```
 
 There are a few interesting non-standard scenarios:
@@ -1297,16 +1297,18 @@ channel associations (See [add-default-channel](#add-default-channel)).
 Occasionally, automatic assignment is turned off for various reasons but we may
 still need to assign a specific build to a channel.
 
-This can be done with the `add-build-to-channel` command.  It takes two
+This can be done with the `add-build-to-channel` command.  It takes three
 parameters:
 - Name of the channel you want to assign a build to
 - BAR build id of the build to assign to the specified channel. This can be
   found by looking at the "Publish to Build Asset Registry" leg of an official build.
+- Publishing infra version - 3, for V3 publishing.
 
 **Parameters**
 
 - `--id` - **(Required)**. BAR id of build to assign to channel.
 - `--channel` - **(Required)**. Channel to assign build to.
+- `--publish-infra-version` - **(Required)**. Publishing infrastructure version.
 - `--source-branch` - Branch that should be used as base for the promotion build.
 - `--source-sha` - SHA that should be used as base for the promotion build.
 - `--validate-signing` - Perform signing validation.
