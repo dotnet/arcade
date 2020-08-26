@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.XPath;
@@ -96,78 +97,88 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
 
             // Write Light command to file
             string commandFilename = Path.Combine(packageDropOutputFolder, "light.cmd");
-            string commandString = string.Empty;
+            StringBuilder commandString = new StringBuilder();
+            commandString.AppendLine("@echo off");
+            commandString.AppendLine("setlocal");
+            commandString.AppendLine("set outputfolder=%1");
+            commandString.AppendLine("if \"%outputfolder%\" NEQ \"\" (");
+            commandString.AppendLine("  if \"%outputfolder:~-1%\" NEQ \"\\\" ( ");
+            commandString.AppendLine("    set outputfolder=%outputfolder%\\");
+            commandString.AppendLine("  )");
+            commandString.AppendLine(")");
             if(OriginalLightCommand != null)
             {
-                commandString += "REM Original light command" + Environment.NewLine;
-                commandString += "REM " + OriginalLightCommand + Environment.NewLine;
+                commandString.AppendLine("REM Original light command");
+                commandString.AppendLine($"REM {OriginalLightCommand }");
             }
-            commandString += "REM Modified light command" + Environment.NewLine;
-            commandString += "light.exe";
-            commandString += $" -out {Path.GetFileName(Out)}";
+            commandString.AppendLine("REM Modified light command");
+            commandString.Append("light.exe");
+            commandString.Append($" -out %outputfolder%{Path.GetFileName(Out)}");
             if (NoLogo)
             {
-                commandString += " -nologo";
+                commandString.Append(" -nologo");
             }
             if (Cultures != null)
             {
-                commandString += $" -cultures:{Cultures}";
+                commandString.Append($" -cultures:{Cultures}");
             }
             if (Loc != null)
             {
                 foreach (var locItem in Loc)
                 {
-                    commandString += $" -loc {Path.GetFileName(locItem.ItemSpec)}";
+                    commandString.Append($" -loc {Path.GetFileName(locItem.ItemSpec)}");
                 }
             }
             if(Fv)
             {
-                commandString += " -fv";
+                commandString.Append(" -fv");
             }
             if(PdbOut != null)
             {
-                commandString += $" -pdbout {PdbOut}";
+                commandString.Append($" -pdbout %outputfolder%{PdbOut}");
             }
             if(WixProjectFile != null)
             {
                 var destinationPath = Path.Combine(packageDropOutputFolder, Path.GetFileName(WixProjectFile));
                 File.Copy(WixProjectFile, destinationPath, true);
-                commandString += $" -wixprojectfile {Path.GetFileName(WixProjectFile)}";
+                commandString.Append($" -wixprojectfile {Path.GetFileName(WixProjectFile)}");
             }
             if(ContentsFile != null)
             {
-                commandString += $" -contentsfile {Path.GetFileName(ContentsFile)}";
+                commandString.Append($" -contentsfile {Path.GetFileName(ContentsFile)}");
             }
             if (OutputsFile != null)
             {
-                commandString += $" -outputsfile {Path.GetFileName(OutputsFile)}";
+                commandString.Append($" -outputsfile {Path.GetFileName(OutputsFile)}");
             }
             if (BuiltOutputsFile != null)
             {
-                commandString += $" -builtoutputsfile {Path.GetFileName(BuiltOutputsFile)}";
+                commandString.Append($" -builtoutputsfile {Path.GetFileName(BuiltOutputsFile)}");
             }
             if (Sice != null)
             {
                 foreach (var siceItem in Sice)
                 {
-                    commandString += $" -sice:{siceItem.ItemSpec}";
+                    commandString.Append($" -sice:{siceItem.ItemSpec}");
                 }
             }
             if(WixExtensions != null)
             {
                 foreach(var wixExtension in WixExtensions)
                 {
-                    commandString += $" -ext {wixExtension.ItemSpec}";
+                    commandString.Append($" -ext {wixExtension.ItemSpec}");
                 }
             }
             if(WixSrcFiles != null)
             {
                 foreach(var wixSrcFile in WixSrcFiles)
                 {
-                    commandString += $" {Path.GetFileName(wixSrcFile.ItemSpec)}";
+                    commandString.Append($" {Path.GetFileName(wixSrcFile.ItemSpec)}");
                 }
             }
-            File.WriteAllText(commandFilename, commandString);
+            commandString.AppendLine();
+            commandString.AppendLine("endlocal");
+            File.WriteAllText(commandFilename, commandString.ToString());
 
             return !Log.HasLoggedErrors;
         }
