@@ -235,7 +235,7 @@ namespace Microsoft.DotNet.Build.Tasks.Installers.src
                     string oldPath = null;
                     string newRelativePath = null;
                     bool foundArtifact = false;
-                    bool isVariableRef = false;
+                    bool isVariableOrUriRef = false;
 
                     foreach (XElement field in fields)
                     {
@@ -248,11 +248,11 @@ namespace Microsoft.DotNet.Build.Tasks.Installers.src
                             oldPath = field.Value;
 
                             // Potentially make oldPath the absolute if it's not, using the additional base
-                            // paths. It's possible that the path is a variable. In this case,
+                            // paths. It's possible that the path is a variable or URI. In this case,
                             // we can ignore it.
-                            if (oldPath.StartsWith("!("))
+                            if (oldPath.StartsWith("!(") || oldPath.StartsWith("https"))
                             {
-                                isVariableRef = true;
+                                isVariableOrUriRef = true;
                                 break;
                             }
                             else if (!Path.IsPathRooted(oldPath))
@@ -293,7 +293,7 @@ namespace Microsoft.DotNet.Build.Tasks.Installers.src
                         count++;
                     }
 
-                    if (!isVariableRef)
+                    if (!isVariableOrUriRef)
                     {
                         if (foundArtifact)
                         {
