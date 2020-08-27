@@ -391,11 +391,21 @@
           DependsOnTargets="GetFilesToPackage"
           Condition="'$(SkipValidatePackage)' != 'true'">
     <ItemGroup>
-      <_closureFiles Include="@(FilesToPackage)" Condition="'%(Extension)' == '.dll' or '%(Extension)' == '$(LibraryFileExtension)'" />
+      <_closureFiles
+        Include="@(FilesToPackage)"
+        Condition="('%(Extension)' == '.dll' or '%(Extension)' == '$(LibraryFileExtension)') and '%(FilesToPackage.Culture)' == ''" />
       <_closureFileNames Include="@(_closureFiles->'%(FileName)')" Original="%(Identity)" />
 
       <_closureFileNamesFiltered Include="@(_closureFileNames)" Exclude="@(ExcludeFromClosure)"/>
       <_closureFileFiltered Include="@(_closureFileNamesFiltered->'%(Original)')"/>
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(PlatformPackageType)' == 'RuntimePack'">
+      <IgnoredReference Include="@(RuntimePackAsset->'%(FileName)')" />
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(PlatformPackageType)' == 'TargetingPack'">
+      <IgnoredReference Include="@(Reference->'%(FileName)')" Condition="'%(Reference.FrameworkReferenceName)' != ''" />
     </ItemGroup>
 
     <Message Text="Verifying closure of $(PackageId) assemblies" />
@@ -411,7 +421,9 @@
           Condition="'$(SkipValidatePackage)' != 'true'">
 
     <ItemGroup>
-      <_dupTypeFiles Include="@(FilesToPackage)" Condition="'%(Extension)' == '.dll' or '%(Extension)' == '$(LibraryFileExtension)'" />
+      <_dupTypeFiles
+         Include="@(FilesToPackage)"
+        Condition="('%(Extension)' == '.dll' or '%(Extension)' == '$(LibraryFileExtension)') and '%(FilesToPackage.Culture)' == ''" />
       <_dupTypeFileName Include="@(_dupTypeFiles->'%(FileName)')" Original="%(Identity)" />
 
       <_dupTypeFileNamesFiltered Include="@(_dupTypeFileName)" Exclude="@(ExcludeFromDuplicateTypes)"/>
