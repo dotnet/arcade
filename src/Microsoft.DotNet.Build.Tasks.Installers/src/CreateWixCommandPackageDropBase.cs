@@ -95,6 +95,7 @@ namespace Microsoft.DotNet.Build.Tasks.Installers.src
                     commandString.Append($" {Path.GetFileName(wixSrcFile.ItemSpec)}");
                 }
             }
+            ProcessToolSpecificCommandLineParameters(packageDropOutputFolder, commandString);
             commandString.AppendLine();
             commandString.AppendLine("endlocal");
             File.WriteAllText(commandFilename, commandString.ToString());
