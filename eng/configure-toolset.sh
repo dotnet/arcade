@@ -11,8 +11,8 @@ function Test-FilesUseTelemetryOutput {
         'eng/common/cross/build-android-rootfs.sh'
         'eng/common/cross/build-rootfs.sh'
         'eng/common/darc-init.sh'
-        'eng/common/msbuild.sh',
-        'eng/common/performance/performance-setup.sh',
+        'eng/common/msbuild.sh'
+        'eng/common/performance/performance-setup.sh'
         'eng/common/dotnet-install-scripts/dotnet-install.sh'
     )
 
