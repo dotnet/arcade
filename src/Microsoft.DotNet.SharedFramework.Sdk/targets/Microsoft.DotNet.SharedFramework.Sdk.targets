@@ -105,10 +105,6 @@
     <MacOSComponentNamePackType Condition="'$(MacOSComponentNamePackType)' == ''">pack.$(PlatformPackageType.ToLower())</MacOSComponentNamePackType>
   </PropertyGroup>
 
-  <PropertyGroup>
-    <BuildDependsOn></BuildDependsOn>
-  </PropertyGroup>
-
   <Import Project="$(MSBuildThisFileDirectory)sharedfx.targets" />
   
   <Import Project="windows/wix.targets" />
