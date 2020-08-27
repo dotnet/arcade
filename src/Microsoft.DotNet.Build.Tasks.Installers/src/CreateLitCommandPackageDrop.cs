@@ -24,6 +24,9 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
     {
         [Required]
         public string LitCommandWorkingDir { get; set; }
+        /// <summary>
+        /// Bind files into the library file.
+        /// </summary>
         public bool Bf { get; set; }
 
         [Output]

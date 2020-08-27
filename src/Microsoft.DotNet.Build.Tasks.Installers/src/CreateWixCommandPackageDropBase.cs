@@ -26,6 +26,9 @@ namespace Microsoft.DotNet.Build.Tasks.Installers.src
         /// Additional set of base paths that are used for resolving paths.
         /// </summary>
         public ITaskItem[] AdditionalBasePaths { get; set; }
+        /// <summary>
+        /// Localization files
+        /// </summary>
         public ITaskItem[] Loc { get; set; }
         [Required]
         public string Out { get; set; }

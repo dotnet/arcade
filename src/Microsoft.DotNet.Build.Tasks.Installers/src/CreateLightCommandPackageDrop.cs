@@ -13,6 +13,9 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
     {
         [Required]
         public string LightCommandWorkingDir { get; set; }
+        /// <summary>
+        /// Add a FileVersion attribute to each assembly in the MsiAssemblyName table (rarely needed).
+        /// </summary>
         public bool Fv { get; set; }
         public string PdbOut { get; set; }
         public string Cultures { get; set; }
