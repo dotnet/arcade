@@ -9,6 +9,24 @@
     <HostJsonTargetPath Condition="'$(HostJsonTargetPath)' == ''">runtimes/$(RuntimeIdentifier)/lib/$(TargetFramework)</HostJsonTargetPath>
   </PropertyGroup>
 
+
+  <!--
+    Enable Self-Contained for FrameworkReference resolution to enable resolving runtime pack assets.
+    (used in package verification)
+  -->
+  <Target Name="_ConsiderSelfContainedForFrameworkReferenceResolution" BeforeTargets="ProcessFrameworkReferences">
+    <PropertyGroup>
+      <SelfContained>true</SelfContained>
+    </PropertyGroup>
+  </Target>
+
+  
+  <Target Name="_RemoveSelfContainedAfterFrameworkReferenceResolution" AfterTargets="ProcessFrameworkReferences">
+    <PropertyGroup>
+      <SelfContained>true</SelfContained>
+    </PropertyGroup>
+  </Target>
+
   <Target Name="GetSharedFrameworkFilesForReadyToRun" DependsOnTargets="$(GetSharedFrameworkFilesForReadyToRunDependsOn)" Returns="@(ReferenceCopyLocalPaths)" />
 
   <ItemDefinitionGroup>
