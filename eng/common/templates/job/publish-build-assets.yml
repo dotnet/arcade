@@ -67,6 +67,7 @@ jobs:
           /p:MaestroApiEndpoint=https://maestro-prod.westus2.cloudapp.azure.com
           /p:PublishUsingPipelines=${{ parameters.publishUsingPipelines }}
           /p:Configuration=$(_BuildConfig)
+          /p:OfficialBuildId=$(OfficialBuildId)
       condition: ${{ parameters.condition }}
       continueOnError: ${{ parameters.continueOnError }}
     
