@@ -183,6 +183,61 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedForChecksums,
                 FeedForInstallers),
 
+            // ".NET 5 RC 2",
+            new TargetChannelConfig(
+                1329,
+                PublishingInfraVersion.All,
+                akaMSChannelName: "net5/rc2",
+                FeedDotNet5Shipping,
+                FeedDotNet5Transport,
+                FeedDotNet5Symbols,
+                FeedForChecksums,
+                FeedForInstallers),
+
+            // ".NET 5" (public),
+            new TargetChannelConfig(
+                1299,
+                PublishingInfraVersion.Next,
+                akaMSChannelName: "net5/daily",
+                FeedDotNet5Shipping,
+                FeedDotNet5Transport,
+                FeedDotNet5Symbols,
+                FeedForChecksums,
+                FeedForInstallers),
+
+            // ".NET 5 Internal" (internal),
+            new TargetChannelConfig(
+                1300,
+                PublishingInfraVersion.Next,
+                akaMSChannelName: string.Empty,
+                FeedDotNet5InternalShipping,
+                FeedDotNet5InternalTransport,
+                FeedDotNet5InternalSymbols,
+                FeedInternalForChecksums,
+                FeedInternalForInstallers),
+
+            // ".NET 5 SDK 5.0.1xx" (public),
+            new TargetChannelConfig(
+                1297,
+                PublishingInfraVersion.Next,
+                akaMSChannelName: "net5/daily",
+                FeedDotNet5Shipping,
+                FeedDotNet5Transport,
+                FeedDotNet5Symbols,
+                FeedForChecksums,
+                FeedForInstallers),
+
+            // ".NET 5 SDK 5.0.1xx Internal" (internal),
+            new TargetChannelConfig(
+                1298,
+                PublishingInfraVersion.Next,
+                akaMSChannelName: string.Empty,
+                FeedDotNet5InternalShipping,
+                FeedDotNet5InternalTransport,
+                FeedDotNet5InternalSymbols,
+                FeedInternalForChecksums,
+                FeedInternalForInstallers),
+
             // ".NET Eng - Latest",
             new TargetChannelConfig(
                 2,
