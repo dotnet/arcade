@@ -87,6 +87,7 @@ jobs:
         PublishLocation: Container
         ArtifactName: ReleaseConfigs
     
-    - template: /eng/common/templates/steps/publish-logs.yml
-      parameters:
-        JobLabel: 'Publish_Artifacts_Logs'     
+    - ${{ if eq(parameters.enablePublishBuildArtifacts, 'true') }}:
+      - template: /eng/common/templates/steps/publish-logs.yml
+        parameters:
+          JobLabel: 'Publish_Artifacts_Logs'     
