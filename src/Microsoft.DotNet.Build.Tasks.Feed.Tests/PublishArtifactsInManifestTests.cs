@@ -277,7 +277,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                         { "Type", "AZURESTORAGEFEED" },
                         { "AssetSelection", "SHIPPINGONLY" },
                         { "Internal", "false" },
-                        // Feed is not isolated
                         { "Isolated", isIsolatedFeed.ToString() }})
                 },
                 BuildEngine = buildEngine
