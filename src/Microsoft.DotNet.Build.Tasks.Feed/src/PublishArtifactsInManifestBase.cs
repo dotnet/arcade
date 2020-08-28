@@ -8,6 +8,7 @@ using Microsoft.DotNet.Maestro.Client;
 using Microsoft.DotNet.Maestro.Client.Models;
 using Microsoft.DotNet.VersionTools.BuildManifest.Model;
 using NuGet.Packaging.Core;
+using NuGet.Versioning;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -247,6 +248,66 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 if (InternalBuild && !feedConfig.Internal)
                 {
                     Log.LogError($"Use of non-internal feed '{feedConfig.TargetURL}' is invalid for an internal build. This can be overridden with '{nameof(SkipSafetyChecks)}= true'");
+                }
+            }
+        }
+
+        /// <summary>
+        ///  Run a check to verify that stable assets are not published to
+        ///  locations they should not be published.
+        ///  
+        /// This is only done for packages since feeds are
+        /// immutable.
+        /// </summary>
+        public void CheckForStableAssetsInNonIsolatedFeeds()
+        {
+            if (SkipSafetyChecks)
+            {
+                return;
+            }
+
+            foreach (var packagesPerCategory in PackagesByCategory)
+            {
+                var category = packagesPerCategory.Key;
+                var packages = packagesPerCategory.Value;
+
+                if (FeedConfigs.TryGetValue(category, out HashSet<TargetFeedConfig> feedConfigsForCategory))
+                {
+                    foreach (var feedConfig in feedConfigsForCategory)
+                    {
+                        // Look at the version numbers. If any of the packages here are stable and about to be published to a
+                        // non-isolated feed, then issue an error. Isolated feeds may recieve all packages.
+                        if (feedConfig.Isolated)
+                        {
+                            continue;
+                        }
+
+                        HashSet<PackageArtifactModel> filteredPackages = FilterPackages(packages, feedConfig);
+
+                        // Matches special case versions such as 1.0.0.1234
+                        string fourPartVersionPattern = @"\d+\.\d+\.\d+\.\d+";
+
+                        foreach (var package in filteredPackages)
+                        {
+                            // Special case. Four part versions should publish to non-isolated feeds
+                            if (Regex.IsMatch(package.Version, fourPartVersionPattern))
+                            {
+                                continue;
+                            }
+                            if (!NuGetVersion.TryParse(package.Version, out NuGetVersion version))
+                            {
+                                Log.LogError($"Package '{package.Id}' has invalid version '{package.Version}'");
+                            }
+                            // We want to avoid pushing non-final bits with final version numbers to feeds that are in general
+                            // use by the public. This is for technical (can't overwrite the original packages) reasons as well as 
+                            // to avoid confusion. Because .NET core generally brands its "final" bits without prerelease version
+                            // suffixes (e.g. 3.0.0-preview1), test to see whether a prerelease suffix exists.
+                            else if (!version.IsPrerelease)
+                            {
+                                Log.LogError($"Package '{package.Id}' has stable version '{package.Version}' but is targeted at a non-isolated feed '{feedConfig.TargetURL}'");
+                            }
+                        }
+                    }
                 }
             }
         }

@@ -14,6 +14,7 @@ using Xunit;
 using System.Net.Http;
 using static Microsoft.DotNet.Build.Tasks.Feed.GeneralUtils;
 using System.Diagnostics;
+using Microsoft.DotNet.VersionTools.BuildManifest.Model;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
 {
@@ -242,6 +243,76 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
 
             await task.ParseTargetFeedConfigAsync();
             Assert.True(!task.Log.HasLoggedErrors);
+        }
+
+
+        /// <summary>
+        ///     Check that attempts to publish stable artifacts to non-stable feeds will throw errors.
+        /// </summary>
+        [Theory]
+        [InlineData("3.0.0", false, true)]
+        [InlineData("3.0.0-preview1", false, false)]
+        [InlineData("3.0.0.10", false, false)]
+        [InlineData("3.0.0-preview1-12345", false, false)]
+        [InlineData("5.3.0-rtm.6198", false, false)]
+        [InlineData("3.3.1-beta3-19430-03", false, false)]
+        [InlineData("3.0.0", true, false)]
+        [InlineData("3.0.0-preview1", true, false)]
+        [InlineData("3.0.0.10", true, false)]
+        [InlineData("3.0.0-preview1-12345", true, false)]
+        [InlineData("5.3.0-rtm.6198", true, false)]
+        [InlineData("3.3.1-beta3-19430-03", true, false)]
+        [InlineData("3.0.0", false, false, true)]
+        public async Task StableAssetCheckV2Async(string assetVersion, bool isIsolatedFeed, bool shouldError, bool skipChecks = false)
+        {
+            var buildEngine = new MockBuildEngine();
+            var task = new PublishArtifactsInManifestV2
+            {
+                SkipSafetyChecks = skipChecks,
+                TargetFeedConfig = new MsBuildUtils.TaskItem[]
+                {
+                    new MsBuildUtils.TaskItem("PACKAGE", new Dictionary<string, string> {
+                        { "TargetUrl", BlobFeedUrl },
+                        { "Token", RandomToken },
+                        { "Type", "AZURESTORAGEFEED" },
+                        { "AssetSelection", "SHIPPINGONLY" },
+                        { "Internal", "false" },
+                        // Feed is not isolated
+                        { "Isolated", isIsolatedFeed.ToString() }})
+                },
+                BuildEngine = buildEngine
+            };
+
+            const string packageId = "Foo.Package";
+
+            BuildModel buildModel = new BuildModel(new BuildIdentity())
+            {
+                Artifacts = new ArtifactSet
+                {
+                    Blobs = new List<BlobArtifactModel>(),
+                    Packages = new List<PackageArtifactModel>
+                    {
+                        new PackageArtifactModel()
+                        {
+                            Id = packageId,
+                            Version = assetVersion
+                        }
+                    }
+                }
+            };
+
+            await task.ParseTargetFeedConfigAsync();
+            Assert.False(task.Log.HasLoggedErrors);
+
+            task.SplitArtifactsInCategories(buildModel);
+            Assert.False(task.Log.HasLoggedErrors);
+
+            task.CheckForStableAssetsInNonIsolatedFeeds();
+            Assert.Equal(shouldError, task.Log.HasLoggedErrors);
+            if (shouldError)
+            {
+                Assert.Contains(buildEngine.BuildErrorEvents, e => e.Message.Equals($"Package '{packageId}' has stable version '{assetVersion}' but is targeted at a non-isolated feed '{BlobFeedUrl}'"));
+            }
         }
 
         [Theory]
