@@ -47,10 +47,10 @@ This table represents the status of the .NET 5 Servicing Readiness Test on a Per
 | Repo               | Owner    | RTM Build | RTM+1     | RTM+2        |
 | ------------------ | -------- | --------- | --------- | ------------ |
 | aspnetcore         | kevinpi  | ![][red]  | ![][red]  | ![][red]     |
-| efcore             | kevinpi  | ![][red]  | ![][red]  | ![][red]     |
+| efcore             | kevinpi  | ![][green]| ![][red]  | ![][red]     |
 | extensions         | ericstj  | ![][red]  | ![][red]  | ![][red]     |
 | installer          | marcpop  | ![][red]  | ![][red]  | ![][red]     |
-| sdk                | marcpop  | ![][red]  | ![][red]  | ![][red]     |
+| sdk                | marcpop  |![][yellow]| ![][red]  | ![][red]     |
 | runtime            | jaredpar | ![][green]| ![][red]  | ![][red]     |
 | winforms           | mmcgaw   | ![][green]| ![][red]  | ![][red]     |
 | wpf-int            | fabiant  | N/A       | ![][red]  | ![][red]     |
