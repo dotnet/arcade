@@ -147,6 +147,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     }
                 }
 
+                CheckForStableAssetsInNonIsolatedFeeds();
+
+                if (Log.HasLoggedErrors)
+                {
+                    return false;
+                }
+
                 await Task.WhenAll(new Task[] {
                         HandlePackagePublishingAsync(buildAssets),
                         HandleBlobPublishingAsync(buildAssets)
