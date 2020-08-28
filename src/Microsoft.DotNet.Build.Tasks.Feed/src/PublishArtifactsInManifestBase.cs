@@ -119,6 +119,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         private readonly ConcurrentDictionary<(int AssetId, string AssetLocation, AddAssetLocationToAssetAssetLocationType LocationType), ValueTuple> NewAssetLocations =
             new ConcurrentDictionary<(int AssetId, string AssetLocation, AddAssetLocationToAssetAssetLocationType LocationType), ValueTuple>();
 
+        // Matches versions such as 1.0.0.1234
+        private static readonly string FourPartVersionPattern = @"\d+\.\d+\.\d+\.\d+";
+
+        private static Regex FourPartVersionRegex = new Regex(FourPartVersionPattern);
+
         protected LatestLinksManager LinkManager { get; set; } = null;
 
         /// <summary>
@@ -284,13 +289,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                         HashSet<PackageArtifactModel> filteredPackages = FilterPackages(packages, feedConfig);
 
-                        // Matches special case versions such as 1.0.0.1234
-                        string fourPartVersionPattern = @"\d+\.\d+\.\d+\.\d+";
-
                         foreach (var package in filteredPackages)
                         {
                             // Special case. Four part versions should publish to non-isolated feeds
-                            if (Regex.IsMatch(package.Version, fourPartVersionPattern))
+                            if (FourPartVersionRegex.IsMatch(package.Version))
                             {
                                 continue;
                             }
