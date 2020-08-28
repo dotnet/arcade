@@ -2,13 +2,16 @@
 
 Repo owners are asked to do the following:
 
-- Prepare ‘RTM’ code changes and build of each repo that has stable branding (5.0.0) – For those core repos that have shipping packages, prepare code changes with StabilizePackageVersion set to ‘true’ and build. **Do not assign the build to a channel.** See https://github.com/dotnet/runtime/blob/master/eng/Versions.props#L15-L16 for the typical location where this lives. Verify that branding looks correct in all produced assets (do the correct packages have stable branding?) This applies to the following repos:
+- Prepare or flow ‘RTM’ code changes and build of each repo that has stable branding (5.0.0) – For those core repos that have shipping packages, prepare code changes with StabilizePackageVersion set to ‘true’ and build. **Do not assign the build to a channel.** See https://github.com/dotnet/runtime/blob/master/eng/Versions.props#L15-L16 for the typical location where this lives. Verify that branding looks correct in all produced assets (do the correct packages have stable branding?) This applies to the following repos:
   - Runtime
   - Aspnetcore
   - Windowsdesktop
   - Extensions
   - Efcore
   - installer
+  - winforms
+  - wpf
+  - templating
 - Prepare ‘RTM+1’ changes+build (5.0.1) - For those repos with incremental servicing (extensions, runtime, windowsdesktop, aspnetcore), prepare code changes and a build on top of the RTM change that ship some minimal set of packages that would be expected on month to month. **Do not assign the build to a channel.** The runtime, aspnetcore, and windowsdesktop repos should not produce a targeting pack. For those repos that incrementally service some packages outside the shared framework, increment a patch version for one package and ship it. This applies to the following repos:
   - runtime
   - extensions
@@ -47,13 +50,13 @@ This table represents the status of the .NET 5 Servicing Readiness Test on a Per
 | efcore             | kevinpi  | ![][red]  | ![][red]  | ![][red]     |
 | extensions         | ericstj  | ![][red]  | ![][red]  | ![][red]     |
 | installer          | marcpop  | ![][red]  | ![][red]  | ![][red]     |
-| sdk                | marcpop  | N/A       | ![][red]  | ![][red]     |
-| runtime            | jaredpar | ![][red]  | ![][red]  | ![][red]     |
-| winforms           | mmcgaw   | N/A       | ![][red]  | ![][red]     |
+| sdk                | marcpop  | ![][red]  | ![][red]  | ![][red]     |
+| runtime            | jaredpar | ![][green]| ![][red]  | ![][red]     |
+| winforms           | mmcgaw   | ![][green]| ![][red]  | ![][red]     |
 | wpf-int            | fabiant  | N/A       | ![][red]  | ![][red]     |
-| wpf                | fabiant  | N/A       | ![][red]  | ![][red]     |
+| wpf                | fabiant  | ![][green]| ![][red]  | ![][red]     |
 | windowsdesktop     | fabiant  | ![][red]  | ![][red]  | ![][red]     |
-| templating         | joaguila | N/A       | ![][red]  | ![][red]     |
+| templating         | joaguila | ![][green]| ![][red]  | ![][red]     |
 
 [red]: https://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Red.png
 [green]: https://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png
