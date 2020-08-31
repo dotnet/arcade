@@ -8,17 +8,17 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
 {
     public static class TestInputs
     {
-        public static string GetFullPath(string testInputName)
+        public static string GetFullPath(string relativeTestInputPath)
         {
             return Path.Combine(
                 Path.GetDirectoryName(typeof(TestInputs).Assembly.Location),
                 "TestInputs",
-                testInputName);
+                relativeTestInputPath);
         }
 
-        public static byte[] ReadAllBytes(string testInputName)
+        public static byte[] ReadAllBytes(string relativeTestInputPath)
         {
-            var path = GetFullPath(testInputName);
+            var path = GetFullPath(relativeTestInputPath);
             return File.ReadAllBytes(path);
         }
     }

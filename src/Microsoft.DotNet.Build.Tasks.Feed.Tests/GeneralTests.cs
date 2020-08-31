@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -90,7 +91,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             HttpStatusCode feedResponseStatusCode,
             PackageFeedStatus expectedResult)
         {
-            var localPackagePath = TestInputs.GetFullPath(@"Nupkgs\test-package-a.zip");
+            var localPackagePath = TestInputs.GetFullPath(Path.Combine("Nupkgs", "test-package-a.zip"));
             var packageContentUrl = $"https://fakefeed.azure.com/nuget/v3/{feedResponseContentName}.nupkg";
             var taskLoggingHelper = new Microsoft.Build.Utilities.TaskLoggingHelper(new StubTask());
             var retryHandler = new MockRetryHandler();
@@ -98,7 +99,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             var response = new HttpResponseMessage(feedResponseStatusCode);
             if (!string.IsNullOrEmpty(feedResponseContentName))
             {
-                var content = TestInputs.ReadAllBytes($@"Nupkgs\{feedResponseContentName}.zip");
+                var content = TestInputs.ReadAllBytes(Path.Combine("Nupkgs", $"{feedResponseContentName}.zip"));
                 response.Content = new ByteArrayContent(content);
             };
 
@@ -123,7 +124,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             HttpStatusCode initialResponseStatusCode,
             int expectedAttemptCount)
         {
-            var testPackageName = @"Nupkgs\test-package-a.zip";
+            var testPackageName = Path.Combine("Nupkgs", "test-package-a.zip");
             var localPackagePath = TestInputs.GetFullPath(testPackageName);
             var packageContentUrl = "https://fakefeed.azure.com/nuget/v3/test-package-a.zip";
             var taskLoggingHelper = new Microsoft.Build.Utilities.TaskLoggingHelper(new StubTask());

@@ -29,7 +29,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         [Fact]
         public void ConstructV2PublishingTask()
         {
-            var manifestFullPath = TestInputs.GetFullPath(@"Manifests\SampleV2.xml");
+            var manifestFullPath = TestInputs.GetFullPath(Path.Combine("Manifests", "SampleV2.xml"));
 
             var buildEngine = new MockBuildEngine();
             var task = new PublishArtifactsInManifest()
@@ -46,7 +46,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         [Fact]
         public void ConstructV3PublishingTask()
         {
-            var manifestFullPath = TestInputs.GetFullPath(@"Manifests\SampleV3.xml");
+            var manifestFullPath = TestInputs.GetFullPath(Path.Combine("Manifests", "SampleV3.xml"));
 
             var buildEngine = new MockBuildEngine();
             var task = new PublishArtifactsInManifest()
