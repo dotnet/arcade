@@ -38,7 +38,7 @@ For those repos that really only change a single patch number per-release (efcor
 
 ## Status of exercises per repo:
 - ![][red] - Not started
-- ![][yellow] - Results not verified
+- ![][yell] - Results not verified
 - ![][green] - Results verified. Good to go!
 - N/A - Not applicable for this repo (e.g. no changes to make for RTM+1 or 2)
 
