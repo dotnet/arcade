@@ -20,6 +20,7 @@ use darc to achieve them, as well as a general reference guide to darc commands.
   - [Gathering a build drop](#gathering-a-build-drop)
   - [Assigning an individual build to a channel](#assigning-an-individual-build-to-a-channel)
   - [Locating the BAR build ID for a build](#locating-the-bar-build-id-for-a-build)
+  - [Checking Merge Policies](#checking-merge-policies)
 
 - [Command Reference](#command-reference)
   - [Common Parameters](#common-parameters)
@@ -929,6 +930,13 @@ To locate the BAR build ID for a build
     Determined build will be added to the following channels: [131]
   ```
 4. The BAR build ID is `47814`
+
+### Checking Merge Policies
+
+You will find them on the `Checks` tab of each updates PRs created by maestro. Depending on the merge policies set for the repository, you will find multiple checks (in a failed or successful state). 
+
+![Checks Merge Policies](ChecksMergePolicies.png)
+
 
 ## Command Reference
 
