@@ -127,11 +127,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// <returns></returns>
         /// <remarks>
         ///     Open a stream to the local file and an http request to the package. There are a couple possibilities:
-        ///     - The returned headers includes a content MD5 header, in which case we can
+        ///     - The returned headers include a content MD5 header, in which case we can
         ///       hash the local file and just compare those.
         ///     - No content MD5 hash, and the streams must be compared in blocks. This is a bit trickier to do efficiently,
         ///       since we do not necessarily want to read all bytes if we can help it. Thus, we should compare in blocks.  However,
-        ///       the streams make no gaurantee that they will return a full block each time when read operations are performed, so we
+        ///       the streams make no guarantee that they will return a full block each time when read operations are performed, so we
         ///       must be sure to only compare the minimum number of bytes returned.
         /// </remarks>
         public static Task<PackageFeedStatus> CompareLocalPackageToFeedPackage(
@@ -159,11 +159,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// <returns></returns>
         /// <remarks>
         ///     Open a stream to the local file and an http request to the package. There are a couple possibilities:
-        ///     - The returned headers includes a content MD5 header, in which case we can
+        ///     - The returned headers include a content MD5 header, in which case we can
         ///       hash the local file and just compare those.
         ///     - No content MD5 hash, and the streams must be compared in blocks. This is a bit trickier to do efficiently,
         ///       since we do not necessarily want to read all bytes if we can help it. Thus, we should compare in blocks.  However,
-        ///       the streams make no gaurantee that they will return a full block each time when read operations are performed, so we
+        ///       the streams make no guarantee that they will return a full block each time when read operations are performed, so we
         ///       must be sure to only compare the minimum number of bytes returned.
         /// </remarks>
         public static async Task<PackageFeedStatus> CompareLocalPackageToFeedPackage(
