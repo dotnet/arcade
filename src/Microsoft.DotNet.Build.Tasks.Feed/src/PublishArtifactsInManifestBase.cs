@@ -7,6 +7,7 @@ using Microsoft.DotNet.Build.Tasks.Feed.Model;
 using Microsoft.DotNet.Maestro.Client;
 using Microsoft.DotNet.Maestro.Client.Models;
 using Microsoft.DotNet.VersionTools.BuildManifest.Model;
+using Microsoft.DotNet.VersionTools.Util;
 using NuGet.Packaging.Core;
 using NuGet.Versioning;
 using System;

@@ -6,9 +6,8 @@ using Microsoft.Build.Framework;
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Text;
 
-namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
+namespace Microsoft.DotNet.Build.Tasks.Feed.Tests.TestDoubles
 {
     public class MockBuildEngine : IBuildEngine
     {
