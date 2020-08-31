@@ -46,16 +46,16 @@ This table represents the status of the .NET 5 Servicing Readiness Test on a Per
 
 | Repo               | Owner    | RTM Build           | RTM+1               | RTM+2               |
 | ------------------ | -------- | ------------------- | ------------------- | ------------------- |
-| aspnetcore         | kevinpi  | ![][red]            | ![][red]            | ![][red]            |
+| aspnetcore         | kevinpi  | ![][green] (62659)  | ![][red]            | ![][red]            |
 | efcore             | kevinpi  | ![][green] (62354)  | ![][red]            | ![][red]            |
 | extensions         | ericstj  | ![][red]            | ![][red]            | ![][red]            |
 | installer          | marcpop  | ![][red]            | ![][red]            | ![][red]            |
-| sdk                | marcpop  | ![][yell]  (62349)  | ![][red]            | ![][red]            |
+| sdk                | marcpop  | ![][yell]           | ![][red]            | ![][red]            |
 | runtime            | jaredpar | ![][green] (61508)  | ![][green] (62236)  | ![][red]            |
 | winforms           | mmcgaw   | ![][green] (62157)  | ![][red]            | ![][red]            |
 | wpf-int            | fabiant  | N/A                 | N/A                 | N/A                 |
 | wpf                | fabiant  | ![][green] (62357)  | ![][red]            | ![][red]            |
-| windowsdesktop     | fabiant  | ![][red]            | ![][red]            | ![][red]            |
+| windowsdesktop     | fabiant  | ![][green] (xxxxx)  | ![][red]            | ![][red]            |
 | templating         | joaguila | ![][green]          | ![][red]            | ![][red]            |
 
 [red]: https://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Red.png
