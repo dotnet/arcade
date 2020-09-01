@@ -4,7 +4,7 @@
 <Project>
 
   <PropertyGroup>
-    <XliffTasksDirectory Condition="'$(MSBuildRuntimeType)' == 'Core'">$(MSBuildThisFileDirectory)..\tools\netcoreapp2.0\</XliffTasksDirectory>
+    <XliffTasksDirectory Condition="'$(MSBuildRuntimeType)' == 'Core'">$(MSBuildThisFileDirectory)..\tools\netcoreapp2.1\</XliffTasksDirectory>
     <XliffTasksDirectory Condition="'$(MSBuildRuntimeType)' != 'Core'">$(MSBuildThisFileDirectory)..\tools\net46\</XliffTasksDirectory>
     <XliffTasksAssembly>$(XliffTasksDirectory)XliffTasks.dll</XliffTasksAssembly>
   </PropertyGroup>
