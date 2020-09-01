@@ -52,6 +52,8 @@
           DependsOnTargets="ResolvePackageDependenciesForBuild">
     <MSBuild Projects="@(ProjectReference)"
              Targets="GetTargetFrameworks"
+             BuildInParallel="$(BuildInParallel)"
+             RemoveProperties="TargetFramework;RuntimeIdentifier"
              SkipNonexistentTargets="true">
       <Output TaskParameter="TargetOutputs" ItemName="_ProjectRefWithTfms"/>
     </MSBuild>
