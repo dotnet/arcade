@@ -1350,6 +1350,8 @@ To flow immediately, run the specified command
     darc trigger-subscriptions --id 15a2995c-1b8e-41af-54c5-08d6c734018a
   https://github.com/dotnet/winforms @ release/3.0 (update freq: None)
     darc trigger-subscriptions --id 22859ac6-b4a6-4fce-54c7-08d6c734018a
+If the above example build doesn't happen to be the latest in a channel but you want trigger-subscriptions to use it:
+    darc trigger-subscriptions --id 22859ac6-b4a6-4fce-54c7-08d6c734018a --build 13078
 ```
 
 ### **`authenticate`**
@@ -2776,6 +2778,7 @@ confirmation before sending the trigger request.
 **Parameters**
 
 - `--id` - Trigger subscription by id.  Not compatible with other filtering parameters.
+- `--build` - If specified, selects a specific BAR build id to use; otherwise will use the latest available from the supplied `--source-repo` id.
 - `--target-repo` - Filter by target repo (matches substring unless --exact or --regex is passed).
 - `--source-repo` - Filter by source repo (matches substring unless --exact or --regex is passed).
 - `--channel` - Filter by source channel (matches substring unless --exact or --regex is passed).
@@ -2789,6 +2792,13 @@ confirmation before sending the trigger request.
 ```
 PS D:\enlistments\arcade> darc trigger-subscriptions --source-repo arcade --target-repo arcade-services
 
+Will trigger the following 1 subscriptions...
+  https://github.com/dotnet/arcade (.NET Tools - Latest) ==> 'https://github.com/dotnet/arcade-services' ('master')
+Continue? (y/n) y
+Triggering 1 subscriptions...done
+
+PS D:\enlistments\arcade> darc trigger-subscriptions --source-repo arcade --target-repo arcade-services --build 123
+Subscription updates will use Build # 123 instead of latest available
 Will trigger the following 1 subscriptions...
   https://github.com/dotnet/arcade (.NET Tools - Latest) ==> 'https://github.com/dotnet/arcade-services' ('master')
 Continue? (y/n) y
