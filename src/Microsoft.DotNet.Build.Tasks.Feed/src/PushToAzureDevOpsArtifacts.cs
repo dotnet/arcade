@@ -21,7 +21,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public bool PublishFlatContainer { get; set; }
 
-        public string ManifestRepoUri { get; set; }
+        public string ManifestRepoName { get; set; }
 
         public string ManifestBuildId { get; set; } = "no build id provided";
 
@@ -172,7 +172,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         blobArtifacts,
                         packageArtifacts,
                         AssetManifestPath,
-                        ManifestRepoUri,
+                        ManifestRepoName,
                         ManifestBuildId,
                         ManifestBranch,
                         ManifestCommit,
