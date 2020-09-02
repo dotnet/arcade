@@ -167,7 +167,7 @@
 
   <Target Name="VerifyClosure"
           DependsOnTargets="GetClosureFiles"
-          Condition="'$(SkipValidatePackage)' != 'true'"
+          Condition="'$(SkipValidatePackage)' != 'true' or '$(ShouldVerifyClosure)' == 'true'"
           Inputs="%(ClosureFile.FileSet)"
           Outputs="batching-on-FileSet-metadata">
     <ItemGroup>
