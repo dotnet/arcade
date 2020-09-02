@@ -46,6 +46,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public string ManifestRepoName { get; set; }
 
+        public string ManifestRepoUri { get; set; }
+
         public string ManifestBuildId { get; set; } = "no build id provided";
 
         public string ManifestBranch { get; set; }
@@ -160,7 +162,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     blobArtifacts,
                     packageArtifacts,
                     AssetManifestPath,
-                    ManifestRepoName,
+                    ManifestRepoUri,
                     ManifestBuildId,
                     ManifestBranch,
                     ManifestCommit,

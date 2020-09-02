@@ -89,7 +89,7 @@
                     ManifestBranch="$(ManifestBranch)"
                     ManifestCommit="$(ManifestCommit)"
                     ManifestBuildData="$(ManifestBuildData)"
-                    ManifestRepoName="$(ManifestRepoName)"
+                    ManifestRepoUri="$(ManifestRepoUri)"
                     AssetManifestPath="$(AssetManifestFilePath)" />
   </Target>
 
@@ -120,7 +120,7 @@
                     ManifestBranch="$(ManifestBranch)"
                     ManifestCommit="$(ManifestCommit)"
                     ManifestBuildData="$(ManifestBuildData)"
-                    ManifestRepoName="$(ManifestRepoName)"
+                    ManifestRepoUri="$(ManifestRepoUri)"
                     AssetManifestPath="$(AssetManifestFilePath)" />
 
   </Target>
