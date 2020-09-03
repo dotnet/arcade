@@ -50,7 +50,7 @@ Write-Output "Looking up build definitions..."
 $internalBuildDefinitions = Invoke-RestMethod -Method "GET" -Uri "${internalApiEndpoint}build/definitions?api-version=6.0&repositoryId=${repositoryId}&repositoryType=TfsGit" -Headers $headers
 $publicBuildDefinitions = Invoke-RestMethod -Method "GET" -Uri "${publicApiEndpoint}build/definitions?api-version=6.0&repositoryId=${GitHubRepository}&repositoryType=GitHub"
 
-Write-Output "[INTERNAL] Build definitions based on the internal mirrored repository ($($internalBuildDefinitions.count)):"
+Write-Output "[INTERNAL] Pipelines based on the internal mirrored repository ($($internalBuildDefinitions.count)):"
 $internalBuildDefinitions.value | ForEach-Object {Write-Pipeline $_}
 
 Write-Output "[PUBLIC] Build definitions based on the GitHub repository ($($publicBuildDefinitions.count)):"
