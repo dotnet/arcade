@@ -36,7 +36,7 @@ parameters:
   - name: PublishInstallersAndChecksums
     displayName: Should installers and checksums be published?
     type: boolean 
-    default: false
+    default: true
       
   - name: SymbolPublishingAdditionalParameters
     displayName: Additional (MSBuild) properties for symbol publishing
