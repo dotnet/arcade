@@ -207,7 +207,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     CommitSha = CommitSha
                 };
 
-                if (packagesFeedTask.Execute())
+                if (!packagesFeedTask.Execute())
                 {
                     throw new Exception($"Problems creating an AzureDevOps feed for repository '{RepositoryName}' and commit '{CommitSha}'.");
                 }
