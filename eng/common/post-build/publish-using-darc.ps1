@@ -8,7 +8,7 @@ param(
   [Parameter(Mandatory=$false)][string] $EnableSourceLinkValidation,
   [Parameter(Mandatory=$false)][string] $EnableSigningValidation,
   [Parameter(Mandatory=$false)][string] $EnableNugetValidation,
-  [Parameter(Mandatory=$false)][string] $PublishInstallersAndChecksums,
+  [Parameter(Mandatory=$true)][string] $PublishInstallersAndChecksums,
   [Parameter(Mandatory=$false)][string] $ArtifactsPublishingAdditionalParameters,
   [Parameter(Mandatory=$false)][string] $SigningValidationAdditionalParameters
 )
@@ -29,7 +29,7 @@ try {
     $optionalParams.Add("--no-wait") | Out-Null
   }
 
-  if ("false" -ne $PublishInstallersAndChecksums) {
+  if ("true" -eq $PublishInstallersAndChecksums) {
     $optionalParams.Add("--publish-installers-and-checksums") | Out-Null
   }
 
@@ -54,11 +54,11 @@ try {
   --id $buildId `
   --publishing-infra-version $PublishingInfraVersion `
   --default-channels `
-  --source-branch buildModelUpdate `
+  --source-branch master `
+  --publish-installers-and-checksums `
   --azdev-pat $AzdoToken `
   --bar-uri $MaestroApiEndPoint `
   --password $MaestroToken `
-  --publish-installers-and-checksums `
 	@optionalParams
 
   if ($LastExitCode -ne 0) {
