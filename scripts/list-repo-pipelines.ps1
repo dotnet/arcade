@@ -53,5 +53,5 @@ $publicBuildDefinitions = Invoke-RestMethod -Method "GET" -Uri "${publicApiEndpo
 Write-Output "[INTERNAL] Pipelines based on the internal mirrored repository ($($internalBuildDefinitions.count)):"
 $internalBuildDefinitions.value | ForEach-Object {Write-Pipeline $_}
 
-Write-Output "[PUBLIC] Build definitions based on the GitHub repository ($($publicBuildDefinitions.count)):"
+Write-Output "[PUBLIC] Pipelines based on the GitHub repository ($($publicBuildDefinitions.count)):"
 $publicBuildDefinitions.value | ForEach-Object {Write-Pipeline $_}
