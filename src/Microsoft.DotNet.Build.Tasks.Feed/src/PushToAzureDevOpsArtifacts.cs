@@ -173,7 +173,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         blobArtifacts,
                         packageArtifacts,
                         AssetManifestPath,
-                        String.IsNullOrEmpty(ManifestRepoName) ? ManifestRepoName : ManifestRepoUri,
+                        !String.IsNullOrEmpty(ManifestRepoName) ? ManifestRepoName : ManifestRepoUri,
                         ManifestBuildId,
                         ManifestBranch,
                         ManifestCommit,
