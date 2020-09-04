@@ -112,22 +112,27 @@ function ParseDarcOutput {
         $idMatch = [regex]::match($line, "\s+\-\s+Id:\s+(.*)")
         if ($idMatch.Success) {
             $id = $idMatch.Groups[1].Value
+            continue
         }
         $updateFrequencyMatch = [regex]::match($line, "\s+\-\s+Update Frequency:\s+(.*)")
         if ($updateFrequencyMatch.Success) {
             $updateFrequency = $updateFrequencyMatch.Groups[1].Value
+            continue
         }
         $enabledMatch = [regex]::match($line, "\s+\-\s+Enabled:\s+(.*)")
         if ($enabledMatch.Success) {
             $enabled = $enabledMatch.Groups[1].Value
+            continue
         }
         $batchableMatch = [regex]::match($line, "\s+\-\s+Batchable:\s+(.*)")
         if ($batchableMatch.Success) {
             $batchable = $batchableMatch.Groups[1].Value
+            continue
         }
         $mergePoliciesMatch = [regex]::match($line, "\s+\-\s+Merge Policies:(.*)")
         if ($mergePoliciesMatch.Success) {
             $mergePolicies = $mergePoliciesMatch.Groups[1].Value
+            continue
         }
         $lastBuildMatch = [regex]::match($line, "\s+\-\s+Last Build:(.*)")
         if (-not ($mergePoliciesMatch.Success -or $batchableMatch.Success -or $enabledMatch.Success -or $updateFrequencyMatch.Success -or $idMatch.Success -or $headerMatch.Success -or $lastBuildMatch.Success)) {
