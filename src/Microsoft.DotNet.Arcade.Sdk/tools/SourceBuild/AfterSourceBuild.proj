@@ -48,8 +48,6 @@
           DependsOnTargets="WritePrebuiltUsageData">
     <PropertyGroup>
       <FailOnPrebuiltBaselineError Condition="'$(FailOnPrebuiltBaselineError)' == ''">false</FailOnPrebuiltBaselineError>
-
-      <PrebuiltBaselineDataFile Condition="'$(PrebuiltBaselineDataFile)' == ''">$(PrebuiltBaselineDataFileDefault)</PrebuiltBaselineDataFile>
     </PropertyGroup>
 
     <WriteUsageReports
@@ -65,6 +63,7 @@
     <ValidateUsageAgainstBaseline
       DataFile="$(PackageReportDataFile)"
       BaselineDataFile="$(PrebuiltBaselineDataFile)"
+      BaselineDataUpdateHintFile="$(PrebuiltBaselineDataFileDefault)"
       OutputBaselineFile="$(SourceBuildSelfPrebuiltReportDir)generated-new-baseline.xml"
       OutputReportFile="$(SourceBuildSelfPrebuiltReportDir)baseline-comparison.xml"
       AllowTestProjectUsage="$(AllowTestProjectUsage)"

@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using Microsoft.Build.Framework;
@@ -16,8 +16,19 @@ namespace Microsoft.DotNet.SourceBuild.Tasks.UsageReport
         [Required]
         public string DataFile { get; set; }
 
-        [Required]
+        /// <summary>
+        /// The prebuilt baseline: an XML file that lists allowed prebuilt usage.
+        /// </summary>
         public string BaselineDataFile { get; set; }
+
+        /// <summary>
+        /// A hint path used in error messages to tell the user where to update the prebuilt
+        /// baseline data if a baseline validation error occurs. If there is no baseline data file
+        /// at all yet, the error indicates that one should be created at this location if the
+        /// prebuilt usage should be permitted.
+        /// </summary>
+        [Required]
+        public string BaselineDataUpdateHintFile { get; set; }
 
         [Required]
         public string OutputBaselineFile { get; set; }
@@ -31,9 +42,9 @@ namespace Microsoft.DotNet.SourceBuild.Tasks.UsageReport
         {
             var used = UsageData.Parse(XElement.Parse(File.ReadAllText(DataFile)));
 
-            string baselineText = File.Exists(BaselineDataFile)
-                ? File.ReadAllText(BaselineDataFile)
-                : "<UsageData />";
+            string baselineText = string.IsNullOrEmpty(BaselineDataFile)
+                ? "<UsageData />"
+                : File.ReadAllText(BaselineDataFile);
 
             var baseline = UsageData.Parse(XElement.Parse(baselineText));
 
@@ -113,21 +124,21 @@ namespace Microsoft.DotNet.SourceBuild.Tasks.UsageReport
             if (tellUserToUpdateBaseline)
             {
                 string baselineNotFoundWarning = "";
-                if (File.Exists(BaselineDataFile))
+                if (string.IsNullOrEmpty(BaselineDataFile))
                 {
                     baselineNotFoundWarning =
-                        $"different from the baseline found at '{BaselineDataFile}'";
+                        $"not expected, because no baseline file exists at '{BaselineDataUpdateHintFile}'";
                 }
                 else
                 {
                     baselineNotFoundWarning =
-                        $"not expected, because no baseline exists at '{BaselineDataFile}'";
+                        $"different from the baseline found at '{BaselineDataFile}'";
                 }
 
                 Log.LogWarning(
                     $"Prebuilt usages are {baselineNotFoundWarning}. If it's acceptable to " +
-                    $"update the baseline, copy the contents of '{OutputBaselineFile}' into the " +
-                    "baseline file.");
+                    "update the baseline, copy the contents of the automatically generated " +
+                    $"baseline '{OutputBaselineFile}'.");
             }
 
             return !Log.HasLoggedErrors;

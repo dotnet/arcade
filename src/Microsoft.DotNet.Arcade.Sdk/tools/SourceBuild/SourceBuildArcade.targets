@@ -22,6 +22,7 @@
     <CurrentRepoSourceBuiltNupkgCacheDir>$([MSBuild]::NormalizeDirectory('$(CurrentRepoSourceBuildArtifactsDir)', 'obj', 'source-built-upstream-cache'))</CurrentRepoSourceBuiltNupkgCacheDir>
 
     <PrebuiltBaselineDataFileDefault>$(RepositoryEngineeringDir)SourceBuildPrebuiltBaseline.xml</PrebuiltBaselineDataFileDefault>
+    <PrebuiltBaselineDataFile Condition="Exists('$(PrebuiltBaselineDataFileDefault)')">$(PrebuiltBaselineDataFileDefault)</PrebuiltBaselineDataFile>
   </PropertyGroup>
 
   <Target Name="GetSourceBuildIntermediateNupkgNameConvention">
