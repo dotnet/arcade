@@ -113,8 +113,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestProjects", "TestProject
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "AttributeDifference.Contract", "src\Microsoft.DotNet.ApiCompat\tests\TestProjects\AttributeDifference\Contract\AttributeDifference.Contract.csproj", "{1CC55B23-6212-4120-BF52-8DED9CFF9FBC}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.SourceBuild.Tasks.Tests", "src\Microsoft.DotNet.SourceBuild\tests\Microsoft.DotNet.SourceBuild.Tasks.Tests.csproj", "{264DD356-7C4D-4E67-AB06-59290E7CA0CF}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.SourceBuild.Tasks", "src\Microsoft.DotNet.SourceBuild\tasks\Microsoft.DotNet.SourceBuild.Tasks.csproj", "{F9D72AF5-9320-43C8-A24F-CBE294FCED0A}"
 EndProject
 Global
@@ -699,18 +697,6 @@ Global
 		{1CC55B23-6212-4120-BF52-8DED9CFF9FBC}.Release|x64.Build.0 = Release|Any CPU
 		{1CC55B23-6212-4120-BF52-8DED9CFF9FBC}.Release|x86.ActiveCfg = Release|Any CPU
 		{1CC55B23-6212-4120-BF52-8DED9CFF9FBC}.Release|x86.Build.0 = Release|Any CPU
-		{264DD356-7C4D-4E67-AB06-59290E7CA0CF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{264DD356-7C4D-4E67-AB06-59290E7CA0CF}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{264DD356-7C4D-4E67-AB06-59290E7CA0CF}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{264DD356-7C4D-4E67-AB06-59290E7CA0CF}.Debug|x64.Build.0 = Debug|Any CPU
-		{264DD356-7C4D-4E67-AB06-59290E7CA0CF}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{264DD356-7C4D-4E67-AB06-59290E7CA0CF}.Debug|x86.Build.0 = Debug|Any CPU
-		{264DD356-7C4D-4E67-AB06-59290E7CA0CF}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{264DD356-7C4D-4E67-AB06-59290E7CA0CF}.Release|Any CPU.Build.0 = Release|Any CPU
-		{264DD356-7C4D-4E67-AB06-59290E7CA0CF}.Release|x64.ActiveCfg = Release|Any CPU
-		{264DD356-7C4D-4E67-AB06-59290E7CA0CF}.Release|x64.Build.0 = Release|Any CPU
-		{264DD356-7C4D-4E67-AB06-59290E7CA0CF}.Release|x86.ActiveCfg = Release|Any CPU
-		{264DD356-7C4D-4E67-AB06-59290E7CA0CF}.Release|x86.Build.0 = Release|Any CPU
 		{F9D72AF5-9320-43C8-A24F-CBE294FCED0A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{F9D72AF5-9320-43C8-A24F-CBE294FCED0A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F9D72AF5-9320-43C8-A24F-CBE294FCED0A}.Debug|x64.ActiveCfg = Debug|Any CPU
@@ -752,7 +738,6 @@ Global
 		{52E92416-5E5F-4A62-A837-9D8554DD2805} = {6F517597-E9E2-43B2-B7E2-757132EA525C}
 		{6F517597-E9E2-43B2-B7E2-757132EA525C} = {E41E23C4-5CB0-4C61-9E05-EEFFEC4B356D}
 		{1CC55B23-6212-4120-BF52-8DED9CFF9FBC} = {6F517597-E9E2-43B2-B7E2-757132EA525C}
-		{264DD356-7C4D-4E67-AB06-59290E7CA0CF} = {C53DD924-C212-49EA-9BC4-1827421361EF}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {32B9C883-432E-4FC8-A1BF-090EB033DD5B}
