@@ -1,20 +1,26 @@
 <#
 .SYNOPSIS
-Generates two powershell scripts with a sequence of DARC commands:
-    1. script which disables all Maestro subscriptions where internal and public repository is target
-    2. script which
-        * recreates all default channels for internal and public repositories with master branch
-        * recreates all subscriptions where target repository is internal or public and branch is master
-        Note: subscriptions where public or internal repository is source aren't recreated because branch is defined on channel, not on subscription
+This script doesn't update Maestro directly and runs only darc read commands. It generates two Powershell
+scripts with a sequence of darc commands which can be first reviewed and then executed.
+
+Generated scripts:
+    1. Script which disables all Maestro subscriptions where specified internal or GitHub repository is a target
+    2. Script which
+        * takes all default channels targeting master in specified internal or GitHub repository
+          and re-creates them for main
+        * takes all subscriptions targeting master in specified internal or GitHub repository
+          and re-creates them for main
+        Note: subscriptions sourcing specified internal or GitHub repository aren't recreated because branch is
+              defined on a channel, not on subscription (this is done in the first step).
 
 .PARAMETER Repository
-Mandatory short name of public repository (e.g. dotnet/runtime or dotnet/wpf)
+Mandatory short name of GitHub repository (e.g. dotnet/runtime or dotnet/wpf)
 
 .PARAMETER NewBranch
-Optional new name of branch. If not set default value is 'main'.
+Optional new name of branch, defaults to 'main'.
 
 .PARAMETER OldBranch
-Optional ols name of branch. If not set default value is 'master'.
+Optional old name of branch, defaults to 'master'.
 #>
 
 [CmdletBinding()]
