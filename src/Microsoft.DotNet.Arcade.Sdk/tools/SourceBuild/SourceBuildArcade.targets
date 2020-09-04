@@ -4,6 +4,27 @@
   <!-- Repo extensibility point. -->
   <Import Project="$(RepositoryEngineeringDir)SourceBuild.props" Condition="Exists('$(RepositoryEngineeringDir)SourceBuild.props')" />
 
+  <PropertyGroup>
+    <SourceBuildOutputDir Condition="'$(SourceBuildOutputDir)' == ''">$([MSBuild]::NormalizeDirectory('$(ArtifactsDir)', 'source-build'))</SourceBuildOutputDir>
+    <SourceBuildSelfDir>$([MSBuild]::NormalizeDirectory('$(SourceBuildOutputDir)', 'self'))</SourceBuildSelfDir>
+    <CurrentRepoSourceBuildSourceDir>$([MSBuild]::NormalizeDirectory('$(SourceBuildSelfDir)', 'src'))</CurrentRepoSourceBuildSourceDir>
+    <CurrentRepoSourceBuildPackageCache>$([MSBuild]::NormalizeDirectory('$(SourceBuildSelfDir)', 'package-cache'))</CurrentRepoSourceBuildPackageCache>
+    <SourceBuildSelfPrebuiltReportDir>$([MSBuild]::NormalizeDirectory('$(SourceBuildSelfDir)', 'prebuilt-report'))</SourceBuildSelfPrebuiltReportDir>
+
+    <!--
+      Keep artifacts/ inside source dir so that ancestor-based file lookups find the inner repo, not
+      the outer repo. The inner repo global.json and NuGet.config files may have been modified by
+      source-build, and we want projects inside the artifacts/ dir to respect that.
+    -->
+    <CurrentRepoSourceBuildArtifactsDir>$([MSBuild]::NormalizeDirectory('$(CurrentRepoSourceBuildSourceDir)', 'artifacts'))</CurrentRepoSourceBuildArtifactsDir>
+    <CurrentRepoSourceBuildArtifactsPackagesDir>$([MSBuild]::NormalizeDirectory('$(CurrentRepoSourceBuildArtifactsDir)', 'packages', '$(Configuration)'))</CurrentRepoSourceBuildArtifactsPackagesDir>
+
+    <CurrentRepoSourceBuiltNupkgCacheDir>$([MSBuild]::NormalizeDirectory('$(CurrentRepoSourceBuildArtifactsDir)', 'obj', 'source-built-upstream-cache'))</CurrentRepoSourceBuiltNupkgCacheDir>
+
+    <PrebuiltBaselineDataFileDefault>$(RepositoryEngineeringDir)SourceBuildPrebuiltBaseline.xml</PrebuiltBaselineDataFileDefault>
+    <PrebuiltBaselineDataFile Condition="Exists('$(PrebuiltBaselineDataFileDefault)')">$(PrebuiltBaselineDataFileDefault)</PrebuiltBaselineDataFile>
+  </PropertyGroup>
+
   <Target Name="GetSourceBuildIntermediateNupkgNameConvention">
     <PropertyGroup>
       <SourceBuildIntermediateNupkgRid Condition="'$(SourceBuildIntermediateNupkgRid)' == ''">linux-x64</SourceBuildIntermediateNupkgRid>

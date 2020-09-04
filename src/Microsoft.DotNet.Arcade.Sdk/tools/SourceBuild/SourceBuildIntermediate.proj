@@ -34,6 +34,7 @@
   <ItemGroup Condition="'$(EnableDefaultSourceBuildIntermediateItems)' == 'true'">
     <Content Include="$(CurrentRepoSourceBuildArtifactsPackagesDir)**\*.nupkg" PackagePath="artifacts" />
     <Content Include="$(CurrentRepoSourceBuildArtifactsPackagesDir)**\*.tar.gz" PackagePath="artifacts" />
+    <Content Include="$(SourceBuildSelfPrebuiltReportDir)**\*" PackagePath="prebuilt-report" />
   </ItemGroup>
 
   <Target Name="InitializeSourceBuildIntermediatePackageId"

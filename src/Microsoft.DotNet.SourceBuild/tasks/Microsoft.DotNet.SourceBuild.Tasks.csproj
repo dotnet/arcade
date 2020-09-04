@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net472;netcoreapp2.1</TargetFrameworks>
+    <PackageType>MSBuildSdk</PackageType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\Common\EnumerableExtensions.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Build.Tasks.Core" Version="$(MicrosoftBuildTasksCoreVersion)" Publish="false" />
+    <PackageReference Include="Microsoft.Build" Version="$(MicrosoftBuildVersion)" Publish="false" />
+    <!--
+      Microsoft.DotNet.Arcade.Sdk uses "NuGetVersioningVersion" for its NuGet library dependency.
+      Other libraries in dotnet/arcade that depend on NuGet libraries use "NuGetVersion".
+      See https://github.com/dotnet/arcade/issues/6014
+    -->
+    <PackageReference Include="NuGet.Frameworks" Version="$(NuGetVersion)" />
+    <PackageReference Include="NuGet.Packaging" Version="$(NuGetVersion)" />
+    <PackageReference Include="NuGet.ProjectModel" Version="$(NuGetVersion)" />
+    <PackageReference Include="NuGet.Versioning" Version="$(NuGetVersion)" />
+  </ItemGroup>
+
+  <Import Project="$(RepoRoot)eng\BuildTask.targets" />
+
+</Project>

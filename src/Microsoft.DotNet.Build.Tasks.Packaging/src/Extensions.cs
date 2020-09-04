@@ -106,16 +106,6 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
             return Enumerable.Empty<string>();
         }
 
-        public static IEnumerable<T> NullAsEmpty<T>(this IEnumerable<T> source)
-        {
-            if (source == null)
-            {
-                return Enumerable.Empty<T>();
-            }
-
-            return source;
-        }
-
         public static string TrimAndGetNullForEmpty(this string s)
         {
             if (s == null)
