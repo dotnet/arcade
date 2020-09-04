@@ -1,6 +1,5 @@
 ﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
@@ -31,7 +30,12 @@ namespace Microsoft.DotNet.SourceBuild.Tasks.UsageReport
         public override bool Execute()
         {
             var used = UsageData.Parse(XElement.Parse(File.ReadAllText(DataFile)));
-            var baseline = UsageData.Parse(XElement.Parse(File.ReadAllText(BaselineDataFile)));
+
+            string baselineText = File.Exists(BaselineDataFile)
+                ? File.ReadAllText(BaselineDataFile)
+                : "<UsageData />";
+
+            var baseline = UsageData.Parse(XElement.Parse(baselineText));
 
             Comparison<PackageIdentity> diff = Compare(
                 used.Usages.Select(u => u.GetIdentityWithoutRid()).Distinct(),
@@ -108,10 +112,22 @@ namespace Microsoft.DotNet.SourceBuild.Tasks.UsageReport
 
             if (tellUserToUpdateBaseline)
             {
+                string baselineNotFoundWarning = "";
+                if (File.Exists(BaselineDataFile))
+                {
+                    baselineNotFoundWarning =
+                        $"different from the baseline found at '{BaselineDataFile}'";
+                }
+                else
+                {
+                    baselineNotFoundWarning =
+                        $"not expected, because no baseline exists at '{BaselineDataFile}'";
+                }
+
                 Log.LogWarning(
-                    "Prebuilt usages are different from the baseline. If detected changes are " +
-                    "acceptable, update baseline with:\n" +
-                    $"cp '{OutputBaselineFile}' '{BaselineDataFile}'");
+                    $"Prebuilt usages are {baselineNotFoundWarning}. If it's acceptable to " +
+                    $"update the baseline, copy the contents of '{OutputBaselineFile}' into the " +
+                    "baseline file.");
             }
 
             return !Log.HasLoggedErrors;

@@ -1,6 +1,5 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using NuGet.Packaging.Core;
 using System.Linq;
@@ -40,16 +39,16 @@ namespace Microsoft.DotNet.SourceBuild.Tasks.UsageReport
         {
             CreatedByRid = xml.Element(nameof(CreatedByRid))
                 ?.Value,
-            ProjectDirectories = xml.Element(nameof(ProjectDirectories)) == null ? new string[] { } :
-                xml.Element(nameof(ProjectDirectories)).Elements()
+            ProjectDirectories =
+                (xml.Element(nameof(ProjectDirectories))?.Elements()).NullAsEmpty()
                 .Select(x => x.Value)
                 .ToArray(),
-            NeverRestoredTarballPrebuilts = xml.Element(nameof(NeverRestoredTarballPrebuilts)) == null ? new PackageIdentity[] { } :
-                xml.Element(nameof(NeverRestoredTarballPrebuilts)).Elements()
+            NeverRestoredTarballPrebuilts =
+                (xml.Element(nameof(NeverRestoredTarballPrebuilts))?.Elements()).NullAsEmpty()
                 .Select(XmlParsingHelpers.ParsePackageIdentity)
                 .ToArray(),
-            Usages = xml.Element(nameof(Usages)) == null ? new Usage[] { } :
-                xml.Element(nameof(Usages)).Elements()
+            Usages =
+                (xml.Element(nameof(Usages))?.Elements()).NullAsEmpty()
                 .Select(Usage.Parse)
                 .ToArray()
         };
