@@ -1,3 +1,32 @@
+<#
+.SYNOPSIS
+Generates two powershell scripts with a sequence of DARC commands:
+    1. script which disables all Maestro subscriptions where internal and public repository is target
+    2. script which
+        * recreates all default channels for internal and public repositories with master branch
+        * recreates all subscriptions where target repository is internal or public and branch is master
+        Note: subscriptions where public or internal repository is source aren't recreated because branch is defined on channel, not on subscription
+
+.PARAMETER Repository
+Mandatory short name of public repository (e.g. dotnet/runtime or dotnet/wpf)
+
+.PARAMETER NewBranch
+Optional new name of branch. If not set default value is 'main'.
+
+.PARAMETER OldBranch
+Optional ols name of branch. If not set default value is 'master'.
+#>
+
+[CmdletBinding()]
+param (
+    [Parameter(Mandatory = $true)]
+    [string]$Repository,
+    [string]$NewBranch = "main",
+    [string]$OldBranch = "master"
+)
+
+$SPLIT_LINE = "# " + "-" * 80
+
 function BuildDarcCreateSubscruptionsCommands {
     param (
         $items,
@@ -6,24 +35,33 @@ function BuildDarcCreateSubscruptionsCommands {
 
     $commands = @()
     ForEach ($item in $items) {
-        $cmd = "`$ret=darc add-subscription --channel `"$($item.fromChannel)`" --source-repo `"$($item.fromRepo)`" --target-repo `"$($item.toRepo)`" --update-frequency `"$($item.updateFrequency)`" --target-branch `"$branch`" --no-trigger -q"
+        $cmd = ""
+        if ($item.enabled -ne "True") {
+            $cmd = "`$ret="
+        }
+        $cmd += "darc add-subscription --channel `"$($item.fromChannel)`" --source-repo `"$($item.fromRepo)`" --target-repo `"$($item.toRepo)`" --update-frequency `"$($item.updateFrequency)`" --target-branch `"$branch`" --no-trigger -q"
         if ($item.mergePolicies -like "*Standard*") {
             $cmd += " --standard-automerge"
-        }    
+        }
         if ($item.mergePolicies -like "*NoRequestedChanges*") {
             $cmd += " --no-requested-changes"
-        }    
+        }
         if ($item.mergePolicies -like "*NoExtraCommits*") {
             $cmd += " --no-extra-commits"
-        }    
+        }
         if ($item.mergePolicies -like "*AllChecksSuccessful*") {
             $cmd += " --all-checks-passed"
             $ignoreChecksMatch = [regex]::match($item.mergePolicies, "ignoreChecks\s*=\s*\[\s*([^\]]+)\s*\]")
             if ($ignoreChecksMatch.Success) {
-                $cmd += " --ignore-checks `""            
+                $cmd += " --ignore-checks `""
                 $ignoreChecksValuesMatches = [regex]::matches($ignoreChecksMatch.Groups[1].Value, "`"([^`"]+)`"")
+                $first = $True
                 ForEach ($check in $ignoreChecksValuesMatches) {
-                    $cmd += $check.Groups[1].Value + ","
+                    if (-not $first) {
+                        $cmd += ","
+                    }
+                    $first = $false
+                    $cmd += $check.Groups[1].Value
                 }
                 $cmd += "`""
             }
@@ -33,14 +71,11 @@ function BuildDarcCreateSubscruptionsCommands {
         }
 
         $commands += $cmd
-        $cmd = "Write-Output `$ret"
-        $commands += $cmd
 
         if ($item.enabled -ne "True") {
-            $cmd = "`$id=[regex]::match(`$ret,`"Successfully created new subscription with id '([^']+)'.`").Groups[1].Value" 
-            $commands += $cmd
-            $cmd = "darc subscription-status --id `$id -d -q"
-            $commands += $cmd
+            $commands += "Write-Output `$ret"
+            $commands += "`$id=[regex]::match(`$ret,`"Successfully created new subscription with id '([^']+)'.`").Groups[1].Value"
+            $commands += "darc subscription-status --id `$id -d -q"
         }
     }
 
@@ -49,19 +84,19 @@ function BuildDarcCreateSubscruptionsCommands {
 
 function ParseDarcOutput {
     param (
-        $lines
+        $darcOutputLines
     )
-	
+
     $list = @()
-    For ($i = 0; $i -le $lines.Length; $i++) {
-        $line = $lines[$i]	
+    For ($i = 0; $i -le $darcOutputLines.Length; $i++) {
+        $line = $darcOutputLines[$i]
         $headerMatch = [regex]::match($line, "([^\s]+)\s+\(([^\)]+)\)\s+==>\s+'([^']+)'\s+\('([^\)]+)'\)")
 
-        if ($headerMatch.Success) {	
+        if ($headerMatch.Success) {
             if ($i -ne 0) {
-                $list += @{fromRepo = $fromRepo; toRepo = $toRepo; fromChannel = $fromChannel; toBranch = $toBranch; id = $id; updateFrequency = $updateFrequency; enabled = $enabled; batchable = $batchable; mergePolicies = $mergePolicies };
+                $list += @{fromRepo = $fromRepo; toRepo = $toRepo; fromChannel = $fromChannel; toBranch = $toBranch; id = $id; updateFrequency = $updateFrequency; enabled = $enabled; batchable = $batchable; mergePolicies = $mergePolicies }
             }
-	
+
             $id = ""
             $updateFrequency = ""
             $enabled = ""
@@ -71,7 +106,7 @@ function ParseDarcOutput {
             $fromRepo = $headerMatch.Groups[1].Value
             $fromChannel = $headerMatch.Groups[2].Value
             $toRepo = $headerMatch.Groups[3].Value
-            $toBranch = $headerMatch.Groups[4].Value		
+            $toBranch = $headerMatch.Groups[4].Value
         }
 
         $idMatch = [regex]::match($line, "\s+\-\s+Id:\s+(.*)")
@@ -96,7 +131,7 @@ function ParseDarcOutput {
         }
         $lastBuildMatch = [regex]::match($line, "\s+\-\s+Last Build:(.*)")
         if (-not ($mergePoliciesMatch.Success -or $batchableMatch.Success -or $enabledMatch.Success -or $updateFrequencyMatch.Success -or $idMatch.Success -or $headerMatch.Success -or $lastBuildMatch.Success)) {
-            $mergePolicies += $line 
+            $mergePolicies += $line
         }
     }
     if ($null -ne $fromRepo) {
@@ -111,34 +146,25 @@ function  GenerateMigrationDarcScript {
         [string]$newBranch,
         [string]$oldBranch
     )
-    
+
     $migrationCommands = @()
     $migrationCommands += "# Recreate default channels for $repo"
-    $migrationCommands += "#-----------------------------------"
+    $migrationCommands += $SPLIT_LINE
     $items = @(darc get-default-channels --source-repo "$repo" --branch "$oldBranch" | Select-String -Pattern "\((\d+)\)\s+$repo\s+@\s+$oldBranch\s+->\s+(.*)" | ForEach-Object { [ordered]@{id = $_.matches.Groups[1].Value; chanel = $_.matches.Groups[2].Value } })
-    ForEach ($item in $items) {	
-        $migrationCommands += "darc delete-default-channel --id `"$($item.id)`""
-        $migrationCommands += "darc add-default-channel --repo `"$repo`" --branch $newBranch --channel `"$($item.chanel)`""	
-    }
-    
 
-    $linesTarget = (darc get-subscriptions --target-repo $repo)
-    $itemsTarget = ParseDarcOutput $linesTarget
+    ForEach ($item in $items) {
+        $migrationCommands += "darc delete-default-channel --id `"$($item.id)`""
+        $migrationCommands += "darc add-default-channel --repo `"$repo`" --branch $newBranch --channel `"$($item.chanel)`""
+    }
+
+    $darcOutputLines = (darc get-subscriptions --exact --target-repo "$repo" --target-branch "$oldBranch")
+    $itemsTarget = ParseDarcOutput $darcOutputLines
     $commandsTarget = BuildDarcCreateSubscruptionsCommands $itemsTarget $newBranch
 
-    $linesSource = (darc get-subscriptions --source-repo $repo)
-    $itemsSource = ParseDarcOutput $linesSource
-    $commandsSource = BuildDarcCreateSubscruptionsCommands $itemsSource $newBranch
-
     $migrationCommands += "# Recreate target subscriptions for $repo"
-    $migrationCommands += "#-----------------------------------"
-    $migrationCommands += "darc delete-subscriptions --target-repo `"$repo`" -q"
+    $migrationCommands += $SPLIT_LINE
+    $migrationCommands += "darc delete-subscriptions --exact --target-repo `"$repo`" --target-branch `"$oldBranch`" -q"
     $migrationCommands += $commandsTarget
-
-    $migrationCommands += "# Recreate source subscriptions for $repo"
-    $migrationCommands += "#-----------------------------------"
-    $migrationCommands += "darc delete-subscriptions --source-repo `"$repo`" -q"
-    $migrationCommands += $commandsSource
 
     return $migrationCommands
 }
@@ -148,15 +174,15 @@ function  GenerateDisableDarcScript {
         [string] $repo,
         [string] $newBranch,
         [string] $oldBranch
-    ) 
+    )
 
     $disabledCommands = @()
     $disabledCommands += "# Disable target subscriptions for $repo"
-    $disabledCommands += "#-----------------------------------"
-    $lines = (darc get-subscriptions --target-repo "$repo")
+    $disabledCommands += $SPLIT_LINE
+    $lines = (darc get-subscriptions --exact --target-repo "$repo" --target-branch "$oldBranch")
     $ids = $lines | Select-String -Pattern "\s+-\s+Id:\s+([^\s]+)" | ForEach-Object { $_.matches.Groups[1].Value }
-    ForEach ($id in $ids) {	    
-        $disabledCommands += "darc subscription-status --id $id -d -q"
+    ForEach ($id in $ids) {
+        $disabledCommands += "darc subscription-status --id `"$id`" -d -q"
     }
 
     return $disabledCommands
@@ -171,28 +197,24 @@ function  GenerateDarcScripts {
     $migrationFile = "rename-branch-in-maestro.ps1"
     $disableFile = "disable-subscriptions-in-maestro.ps1"
 
-    $fullRepo = "https://dev.azure.com/dnceng/internal/_git/dotnet-" + $repo
-    Write-Output ("Generating darc scripts for repository {0} {1} ==> {2}..." -f $fullRepo, $oldBranch, $newBranch)
+    $internalRepo = "https://dev.azure.com/dnceng/internal/_git/{0}" -f ($repo -replace "/", "-")
+    Write-Output ("Generating darc scripts for repository {0} {1} ==> {2}..." -f $internalRepo, $oldBranch, $newBranch)
 
-    $migrationCommands = GenerateMigrationDarcScript $fullRepo $newBranch $oldBranch
+    $migrationCommands = GenerateMigrationDarcScript $internalRepo $newBranch $oldBranch
     $migrationCommands | Out-File -FilePath $migrationFile
-    $disableCommands = GenerateDisableDarcScript $fullRepo $newBranch $oldBranch
+    $disableCommands = GenerateDisableDarcScript $internalRepo $newBranch $oldBranch
     $disableCommands |  Out-File -FilePath $disableFile
 
-    $fullRepo = "https://github.com/dotnet/" + $repo
-    Write-Output ("Generating darc scripts for repository {0} {1} ==> {2}..." -f $fullRepo, $oldBranch, $newBranch)
+    $publicRepo = "https://github.com/{0}" -f $repo
+    Write-Output ("Generating darc scripts for repository {0} {1} ==> {2}..." -f $publicRepo, $oldBranch, $newBranch)
 
-    $migrationCommands = GenerateMigrationDarcScript $fullRepo $newBranch $oldBranch
+    $migrationCommands = GenerateMigrationDarcScript $publicRepo $newBranch $oldBranch
     $migrationCommands | Out-File -Append -FilePath $migrationFile
-    $disableCommands = GenerateDisableDarcScript $fullRepo $newBranch $oldBranch
+    $disableCommands = GenerateDisableDarcScript $publicRepo $newBranch $oldBranch
     $disableCommands |  Out-File -Append -FilePath $disableFile
 
     Write-Output ("Files {0} and {1} were generated." -f $migrationFile, $disableFile)
 }
 
-if ($args.Count -gt 1) {
-    GenerateDarcScripts $args[0] $args[1] $args[2]
-}
-else {
-    GenerateDarcScripts $args[0] "main" "master"
-}
+
+GenerateDarcScripts $Repository $NewBranch $OldBranch
