@@ -5,7 +5,7 @@ parameters:
   enableSourceLinkValidation: false
   enableSigningValidation: true
   enableNugetValidation: true
-  publishInstallersAndChecksums: false
+  publishInstallersAndChecksums: true
   useBuildManifest: false
   
   # These parameters let the user customize the call to sdk-task.ps1 for publishing
