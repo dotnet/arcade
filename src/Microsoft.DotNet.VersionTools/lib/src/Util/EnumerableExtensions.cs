@@ -2,17 +2,11 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Microsoft.DotNet.VersionTools.Util
 {
-    internal static class EnumerableExtensions
+    internal static class DictionaryExtensions
     {
-        public static IEnumerable<T> NullAsEmpty<T>(this IEnumerable<T> source)
-        {
-            return source ?? Enumerable.Empty<T>();
-        }
-
         public static TValue GetOrDefault<TKey, TValue>(
             this IDictionary<TKey, TValue> attributes,
             TKey key)
