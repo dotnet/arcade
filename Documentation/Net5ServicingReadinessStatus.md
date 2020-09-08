@@ -51,10 +51,10 @@ This table represents the status of the .NET 5 Servicing Readiness Test on a Per
 | extensions         | ericstj  | ![][red]            | ![][red]            | ![][red]            |
 | installer          | marcpop  | ![][red]            | ![][red]            | ![][red]            |
 | sdk                | marcpop  | ![][yell]           | ![][red]            | ![][red]            |
-| runtime            | jaredpar | ![][green] (61508)  | ![][green] (62236)  | ![][red]            |
-| winforms           | mmcgaw   | ![][green] (62157)  | ![][green] (62852)  | ![][red]            |
+| runtime            | jaredpar | ![][green] (61508)  | ![][green] (63213)  | ![][red] (63563)    |
+| winforms           | mmcgaw   | ![][green] (62157)  | ![][green] (63331)  | ![][red]            |
 | wpf-int            | fabiant  | N/A                 | N/A                 | N/A                 |
-| wpf                | fabiant  | ![][green] (62357)  | ![][red]            | ![][red]            |
+| wpf                | fabiant  | ![][red] (63539)    | ![][red] (63344)    | ![][red]            |
 | windowsdesktop     | fabiant  | ![][green] (xxxxx)  | ![][red]            | ![][red]            |
 | templating         | joaguila | ![][green]          | ![][red]            | ![][red]            |
 
