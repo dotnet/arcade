@@ -28,7 +28,7 @@ namespace Microsoft.DotNet.Build.Tasks.TargetFramework.Sdk
             for (int i = 0; i < ProjectReferencesWithTargetFrameworks.Length; i++)
             {
                 ITaskItem projectReference = ProjectReferencesWithTargetFrameworks[i];
-                string[] targetFrameworks = projectReference.GetMetadata("TargetFrameworks").Split(';');
+                string[] targetFrameworks = projectReference.GetMetadata("RawTargetFrameworks").Split(';');
                 
                 string bestTargetFramework = targetFrameworkResolver.GetBestSupportedTargetFramework(targetFrameworks, TargetFramework);
                 if (bestTargetFramework == null)
