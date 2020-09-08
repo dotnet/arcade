@@ -25,7 +25,6 @@
     As _InnerBuildProjects items are used in the GetTargetFrameworks path as well (>= .NET 5), we restore the item state.
   -->
   <Target Name="RestoreInnerBuildProjects"
-          BeforeTargets="GetTargetFrameworksWithPlatformFromInnerBuilds"
           AfterTargets="DispatchToInnerBuilds"
           Condition="'@(_OriginalInnerBuildProjects)' != ''">
     <ItemGroup>
