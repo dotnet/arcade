@@ -26,6 +26,7 @@
   -->
   <Target Name="RestoreInnerBuildProjects"
           BeforeTargets="GetTargetFrameworksWithPlatformFromInnerBuilds"
+          AfterTargets="DispatchToInnerBuilds"
           Condition="'@(_OriginalInnerBuildProjects)' != ''">
     <ItemGroup>
       <_InnerBuildProjects Remove="@(_InnerBuildProjects)" />
