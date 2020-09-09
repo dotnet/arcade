@@ -47,12 +47,12 @@ This table represents the status of the .NET 5 Servicing Readiness Test on a Per
 | Repo               | Owner    | RTM Build           | RTM+1               | RTM+2               |
 | ------------------ | -------- | ------------------- | ------------------- | ------------------- |
 | aspnetcore         | kevinpi  | ![][green] (62659)  | ![][red]            | ![][red]            |
-| efcore             | kevinpi  | ![][green] (62354)  | ![][red]            | ![][red]            |
-| extensions         | ericstj  | ![][red]            | ![][red]            | ![][red]            |
+| efcore             | kevinpi  | ![][green] (63748)  | ![][red]            | ![][red]            |
+| extensions         | ericstj  | ![][red] (63770)    | ![][red]            | ![][red]            |
 | installer          | marcpop  | ![][red]            | ![][red]            | ![][red]            |
 | sdk                | marcpop  | ![][yell]           | ![][red]            | ![][red]            |
-| runtime            | jaredpar | ![][green] (61508)  | ![][green] (63213)  | ![][red] (63563)    |
-| winforms           | mmcgaw   | ![][green] (62157)  | ![][green] (63331)  | ![][red]            |
+| runtime            | jaredpar | ![][green] (63680, based on RC1)  | ![][green] (63213, based on RC1)  | ![][red] (63563)    |
+| winforms           | mmcgaw   | ![][green] (https://dev.azure.com/dnceng/internal/_build/results?buildId=807549&view=results)  | ![][green] (63331)  | ![][red]            |
 | wpf-int            | fabiant  | N/A                 | N/A                 | N/A                 |
 | wpf                | fabiant  | ![][red] (63539)    | ![][red] (63344)    | ![][red]            |
 | windowsdesktop     | fabiant  | ![][green] (xxxxx)  | ![][red]            | ![][red]            |
