@@ -8,7 +8,8 @@
     <IsPackable>true</IsPackable>
     <Description>Build artifact signing tool</Description>
     <PackageTags>Arcade Build Tool Signing</PackageTags>
-    <DevelopmentDependency>true</DevelopmentDependency>
+    <DevelopmentDependency>false</DevelopmentDependency>
+    <NoWarn>$(NoWarn);NU5128</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="..\Common\AssemblyResolution.cs" Link="src\AssemblyResolution.cs" />
@@ -30,6 +31,15 @@
   <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
     <Reference Include="WindowsBase"/>
   </ItemGroup>
+
+
+  <Target Name="PackageAssembliesInLib" BeforeTargets="GenerateNuspec">
+    <ItemGroup>
+      <_PackageFiles Include="@(_PackageFiles)" Condition="$([System.String]::Copy(%(_PackageFiles.PackagePath)).Contains('tools/'))">
+        <PackagePath>$([System.String]::Copy('%(PackagePath)').Replace('tools', 'lib'))</PackagePath>
+      </_PackageFiles>
+    </ItemGroup>
+  </Target>
 
   <Import Project="$(RepoRoot)eng\BuildTask.targets" />
 </Project>
