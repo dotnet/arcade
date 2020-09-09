@@ -194,7 +194,7 @@
       <TargetFeedConfig
         Condition="'$(IsInternalBuild)' == 'false'"
         AssetSelection="NonShippingOnly"
-        Include="PACKAGE;SYMBOLS"
+        Include="SYMBOLS"
         TargetURL="$(TargetStaticFeed)"
         Isolated="false"
         Type="AzureStorageFeed"
@@ -308,7 +308,7 @@
     -->
     <ItemGroup Condition="'@(TargetFeedConfig)' == '' AND '$(IsStableBuild)' == 'false' AND '$(IsInternalBuild)' == 'false'">
       <TargetFeedConfig
-        Include="Package;Symbols;OSX;Deb;Rpm;Node;BinaryLayout;Installer;Checksum;Maven;VSIX;Badge;Other"
+        Include="Symbols;OSX;Deb;Rpm;Node;BinaryLayout;Installer;Checksum;Maven;VSIX;Badge;Other"
         TargetURL="$(TargetStaticFeed)"
         Isolated="false"
         Type="AzureStorageFeed"
