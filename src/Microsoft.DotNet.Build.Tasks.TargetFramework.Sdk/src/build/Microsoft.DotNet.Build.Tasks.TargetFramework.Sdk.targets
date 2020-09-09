@@ -16,7 +16,7 @@
     <ItemGroup>
       <_OriginalInnerBuildProjects Include="@(_InnerBuildProjects)" />
       <_InnerBuildProjects Remove="@(_InnerBuildProjects)" />
-      <_InnerBuildProjects Include="@(InnerBuildProjectsWithBestTargetFramework->Distinct())" />
+      <_InnerBuildProjects Include="@(InnerBuildProjectsWithBestTargetFramework)" />
     </ItemGroup>
   </Target>
 
