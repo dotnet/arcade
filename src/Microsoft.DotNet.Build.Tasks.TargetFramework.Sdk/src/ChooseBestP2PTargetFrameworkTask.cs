@@ -28,7 +28,12 @@ namespace Microsoft.DotNet.Build.Tasks.TargetFramework.Sdk
             for (int i = 0; i < ProjectReferencesWithTargetFrameworks.Length; i++)
             {
                 ITaskItem projectReference = ProjectReferencesWithTargetFrameworks[i];
-                string[] targetFrameworks = projectReference.GetMetadata("RawTargetFrameworks").Split(';');
+                string targetFrameworksValue = projectReference.GetMetadata("RawTargetFrameworks");
+                if (string.IsNullOrEmpty(targetFrameworksValue))
+                {
+                    targetFrameworksValue = projectReference.GetMetadata("TargetFrameworks");
+                }
+                string[] targetFrameworks = targetFrameworksValue.Split(';');
                 
                 string bestTargetFramework = targetFrameworkResolver.GetBestSupportedTargetFramework(targetFrameworks, TargetFramework);
                 if (bestTargetFramework == null)
