@@ -14,8 +14,22 @@
           BeforeTargets="DispatchToInnerBuilds"
           DependsOnTargets="GetProjectWithBestTargetFrameworks">
     <ItemGroup>
+      <_OriginalInnerBuildProjects Include="@(_InnerBuildProjects)" />
       <_InnerBuildProjects Remove="@(_InnerBuildProjects)" />
       <_InnerBuildProjects Include="@(InnerBuildProjectsWithBestTargetFramework)" />
+    </ItemGroup>
+  </Target>
+
+  <!--
+    We filter _InnerBuildProjects items during DispatchToInnerBuilds to only run for best target frameworks.
+    As _InnerBuildProjects items are used in the GetTargetFrameworks path as well (>= .NET 5), we restore the item state.
+  -->
+  <Target Name="RestoreInnerBuildProjects"
+          AfterTargets="DispatchToInnerBuilds"
+          Condition="'@(_OriginalInnerBuildProjects)' != ''">
+    <ItemGroup>
+      <_InnerBuildProjects Remove="@(_InnerBuildProjects)" />
+      <_InnerBuildProjects Include="@(_OriginalInnerBuildProjects)" />
     </ItemGroup>
   </Target>
   
