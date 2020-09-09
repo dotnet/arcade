@@ -48,11 +48,11 @@ This table represents the status of the .NET 5 Servicing Readiness Test on a Per
 | ------------------ | -------- | ------------------- | ------------------- | ------------------- |
 | aspnetcore         | kevinpi  | ![][green]          | ![][red]            | ![][red]            |
 | efcore             | kevinpi  | ![][green] (63748)  | ![][red]            | ![][red]            |
-| extensions         | ericstj  | ![][red] (63770)    | ![][red]            | ![][red]            |
+| extensions         | ericstj  | ![][yell] (63770)   | ![][red]            | ![][red]            |
 | installer          | marcpop  | ![][red]            | ![][red]            | ![][red]            |
 | sdk                | marcpop  | ![][yell]           | ![][red]            | ![][red]            |
-| runtime            | jaredpar | ![][green] (63680)  | ![][green] (63213)  | ![][green] (63563)    |
-| winforms           | mmcgaw   | ![][green]          | ![][green] (63331)  | ![][red]            |
+| runtime            | jaredpar | ![][green] (63680)  | ![][green] (63213)  | ![][green] (63563)  |
+| winforms           | mmcgaw   | ![][red]            | ![][green] (63331)  | ![][red]            |
 | wpf-int            | fabiant  | N/A                 | N/A                 | N/A                 |
 | wpf                | fabiant  | ![][red]            | ![][red] (63344)    | ![][red]            |
 | windowsdesktop     | fabiant  | ![][red]            | ![][red]            | ![][red]            |
