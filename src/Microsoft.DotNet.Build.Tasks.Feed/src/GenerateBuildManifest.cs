@@ -70,6 +70,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// </summary>
         public ITaskItem[] FileExtensionSignInfo { get; set; }
 
+        public ITaskItem[] CertificatesSignInfo { get; set; }
+
         /// <summary>
         /// The CI build ID.
         /// </summary>
@@ -129,6 +131,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     StrongNameSignInfo,
                     FileSignInfo,
                     FileExtensionSignInfo,
+                    CertificatesSignInfo,
                     BuildId,
                     BuildData,
                     RepoUri,

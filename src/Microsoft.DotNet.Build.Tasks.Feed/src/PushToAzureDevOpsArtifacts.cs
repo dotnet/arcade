@@ -46,6 +46,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public ITaskItem[] FileExtensionSignInfo { get; set; }
 
+        public ITaskItem[] CertificatesSignInfo { get; set; }
+
         public string AssetManifestPath { get; set; }
 
         public bool IsStableBuild { get; set; }
@@ -167,7 +169,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     }
                     
                     SigningInformationModel signingInformationModel = BuildManifestUtil.CreateSigningInformationModelFromItems(AzureDevOpsCollectionUri, AzureDevOpsProject, AzureDevOpsBuildId,
-                        ItemsToSign, StrongNameSignInfo, FileSignInfo, FileExtensionSignInfo);
+                        ItemsToSign, StrongNameSignInfo, FileSignInfo, FileExtensionSignInfo, CertificatesSignInfo);
 
                     BuildManifestUtil.CreateBuildManifest(Log,
                         blobArtifacts,
