@@ -50,7 +50,7 @@ This is the basic sample schema for the signing.props file:
 </Project>```
 
 Additional information about the publishing process in general can be found here:
-
+https://github.com/dotnet/arcade/blob/master/Documentation/CorePackages/Publishing.md
 
 # Sign Tool
 
