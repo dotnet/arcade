@@ -7,7 +7,7 @@
   
     Parameters:
   
-      - PDBArtifactsDirectory   : Full path to directory containing PDB files to be published.
+      - PDBArtifactsDirectory   : Full path to directory containing PDB files to be published and (optionally) DLLs matching these PDBs
       - BlobBasePath            : Full path containing *.symbols.nupkg packages to be published.
       - DotNetSymbolServerTokenMsdl   : PAT to access MSDL.
       - DotNetSymbolServerTokenSymWeb : PAT to access SymWeb.
@@ -33,6 +33,8 @@
   <Target Name="Execute">
     <ItemGroup>
       <FilesToPublishToSymbolServer Include="$(PDBArtifactsDirectory)\**\*.pdb"/>
+      <!-- Whenever PDBs are associated with DLLs that are not included as symbols.nupkgs, they need to be included via FilesToPublishToSymbolServer -->
+      <FilesToPublishToSymbolServer Include="$(PDBArtifactsDirectory)\**\*.dll"/>
       <PackagesToPublishToSymbolServer Include="$(BlobBasePath)\*.symbols.nupkg"/>
 
       <!--
