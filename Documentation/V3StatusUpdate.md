@@ -19,7 +19,7 @@ This table represents the status of the .NET 5 V3 publishing status on a Per-Rep
 | wpf-int            | ![][red]     |
 | wpf                | ![][red]     |
 | windowsdesktop     | ![][green]   |
-| templating         | N/A          |
+| arcade-validation  | ![][yellow]  |
 
 [red]: https://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Red.png
 [green]: https://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png
