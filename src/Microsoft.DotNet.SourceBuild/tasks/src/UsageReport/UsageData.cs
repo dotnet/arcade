@@ -12,6 +12,7 @@ namespace Microsoft.DotNet.SourceBuild.Tasks.UsageReport
         public string CreatedByRid { get; set; }
         public string[] ProjectDirectories { get; set; }
         public PackageIdentity[] NeverRestoredTarballPrebuilts { get; set; }
+        public UsagePattern[] IgnorePatterns { get; set; }
         public Usage[] Usages { get; set; }
 
         public XElement ToXml() => new XElement(
@@ -28,6 +29,10 @@ namespace Microsoft.DotNet.SourceBuild.Tasks.UsageReport
                 NeverRestoredTarballPrebuilts
                     .OrderBy(id => id)
                     .Select(id => id.ToXElement())),
+            IgnorePatterns?.Any() != true ? null : new XElement(
+                nameof(IgnorePatterns),
+                IgnorePatterns
+                    .Select(p => p.ToXml())),
             Usages?.Any() != true ? null : new XElement(
                 nameof(Usages),
                 Usages
@@ -46,6 +51,10 @@ namespace Microsoft.DotNet.SourceBuild.Tasks.UsageReport
             NeverRestoredTarballPrebuilts =
                 (xml.Element(nameof(NeverRestoredTarballPrebuilts))?.Elements()).NullAsEmpty()
                 .Select(XmlParsingHelpers.ParsePackageIdentity)
+                .ToArray(),
+            IgnorePatterns =
+                (xml.Element(nameof(IgnorePatterns))?.Elements()).NullAsEmpty()
+                .Select(UsagePattern.Parse)
                 .ToArray(),
             Usages =
                 (xml.Element(nameof(Usages))?.Elements()).NullAsEmpty()
