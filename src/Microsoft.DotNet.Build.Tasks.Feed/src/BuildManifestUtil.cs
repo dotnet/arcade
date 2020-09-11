@@ -64,6 +64,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             ITaskItem[] strongNameSignInfo,
             ITaskItem[] fileSignInfo,
             ITaskItem[] fileExtensionSignInfo,
+            ITaskItem[] certificatesSignInfo,
             string buildId,
             string[] BuildProperties,
             string repoUri,
@@ -118,7 +119,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 isStableBuild,
                 publishingVersion,
                 log,
-                signingInformationModel: CreateSigningInformationModelFromItems(azureDevOpsCollectionUri, azureDevOpsProject, azureDevOpsBuildId, itemsToSign, strongNameSignInfo, fileSignInfo, fileExtensionSignInfo));
+                signingInformationModel: CreateSigningInformationModelFromItems(azureDevOpsCollectionUri, azureDevOpsProject, azureDevOpsBuildId, itemsToSign, strongNameSignInfo, fileSignInfo, fileExtensionSignInfo, certificatesSignInfo));
             return buildModel;
         }
 
@@ -129,12 +130,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             ITaskItem[] itemsToSign,
             ITaskItem[] strongNameSignInfo,
             ITaskItem[] fileSignInfo,
-            ITaskItem[] fileExtensionSignInfo)
+            ITaskItem[] fileExtensionSignInfo,
+            ITaskItem[] certificatesSignInfo)
         {
             List<ItemToSignModel> parsedItemsToSign = new List<ItemToSignModel>();
             List<StrongNameSignInfoModel> parsedStrongNameSignInfo = new List<StrongNameSignInfoModel>();
             List<FileSignInfoModel> parsedFileSignInfo = new List<FileSignInfoModel>();
             List<FileExtensionSignInfoModel> parsedFileExtensionSignInfoModel = new List<FileExtensionSignInfoModel>();
+            List<CertificatesSignInfoModel> parsedCertificatesSignInfoModel = new List<CertificatesSignInfoModel>();
 
             if (itemsToSign != null)
             {
@@ -170,6 +173,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     parsedFileExtensionSignInfoModel.Add(new FileExtensionSignInfoModel { Include = signInfo.ItemSpec, CertificateName = attributes["CertificateName"] });
                 }
             }
+            if (certificatesSignInfo != null)
+            {
+                foreach (var signInfo in certificatesSignInfo)
+                {
+                    var attributes = signInfo.CloneCustomMetadata() as Dictionary<string, string>;
+                    parsedCertificatesSignInfoModel.Add(new CertificatesSignInfoModel { Include = signInfo.ItemSpec, DualSigningAllowed = attributes["DualSigningAllowed"] });
+                }
+            }
 
             return new SigningInformationModel
             {
@@ -179,7 +190,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 ItemsToSign = parsedItemsToSign,
                 StrongNameSignInfo = parsedStrongNameSignInfo,
                 FileSignInfo = parsedFileSignInfo,
-                FileExtensionSignInfo = parsedFileExtensionSignInfoModel
+                FileExtensionSignInfo = parsedFileExtensionSignInfoModel,
+                CertificatesSignInfo = parsedCertificatesSignInfoModel
             };
         }
 
