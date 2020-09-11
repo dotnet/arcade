@@ -26,6 +26,15 @@
     <NewtonsoftJsonVersion>9.0.1</NewtonsoftJsonVersion>
   </PropertyGroup>
 
+  <!--
+    When running a test project, if an exact match for the runtime version isn't available, allow
+    major version roll-forward. This allows 'netcoreapp2.1' tests to run on the much more recent
+    runtime bundled with the global.json SDK.
+  -->
+  <PropertyGroup Condition="'$(IsTestProject)' == 'true' and '$(DisableTestProjectRollForward)' != 'true'">
+    <RollForward>Major</RollForward>
+  </PropertyGroup>
+
   <PropertyGroup Condition="'$(DotNetBuildOffline)' == 'true'">
     <!--
       Arcade has a special version prop for CodeAnalysis.CSharp in GenFacades
