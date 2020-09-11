@@ -47,7 +47,8 @@ This is the basic sample schema for the signing.props file:
         <FileExtensionSignInfo Include=".pkg" CertificateName="8003" />
         <FileExtensionSignInfo Include=".deb;.rpm" CertificateName="LinuxSign" />
     </ItemGroup>
-</Project>```
+</Project>
+```
 
 Additional information about the publishing process in general can be found here:
 https://github.com/dotnet/arcade/blob/master/Documentation/CorePackages/Publishing.md
