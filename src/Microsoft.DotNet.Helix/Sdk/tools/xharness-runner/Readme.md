@@ -33,7 +33,7 @@ There are some required configuration properties that need to be set for XHarnes
   <!-- Required: Version of XHarness CLI to use -->
   <IncludeXHarnessCli>true</IncludeXHarnessCli>
 
-  <!-- Required: Version of XHarness CLI to use -->
+  <!-- Required: Version of XHarness CLI to use. Check the NuGet feed for current version: https://dev.azure.com/dnceng/public/_packaging?_a=package&feed=dotnet-eng&package=Microsoft.DotNet.XHarness.CLI&protocolType=NuGet -->
   <MicrosoftDotNetXHarnessCLIVersion>1.0.0-prerelease.20322.1</MicrosoftDotNetXHarnessCLIVersion>
 
   <!-- Optional: Properties that are also valid for the Arcade Helix SDK (some might be needed for CI runs only) -->
@@ -92,6 +92,9 @@ You can also specify some metadata that will help you configure the run better:
     <!-- Timeout for the actual test run (when TestRunner starts execution of tests) -->
     <!-- Should be smaller than WorkItemTimeout by several minutes -->
     <TestTimeout>00:12:00</TestTimeout>
+
+    <!-- Timeout for how long it takes to install and boot the app and start running the first test -->
+    <LaunchTimeout>00:10:00</LaunchTimeout>
   </XHarnessAppBundleToTest>
 </ItemGroup>
 ```
@@ -125,14 +128,14 @@ You can also specify some metadata that will help you configure the run better:
 
 ```xml
 <ItemGroup>
-  <XHarnessAppBundleToTest Include="$(TestArchiveTestsRoot)**\*.apk">
+  <XHarnessApkToTest Include="$(TestArchiveTestsRoot)**\*.apk">
     <!-- Timeout for the overall run of the whole Helix work item (including Simulator booting, app installation..) -->
     <WorkItemTimeout>00:20:00</WorkItemTimeout>
 
     <!-- Timeout for the actual test run (when TestRunner starts execution of tests) -->
     <!-- Should be smaller than WorkItemTimeout by several minutes -->
     <TestTimeout>00:12:00</TestTimeout>
-  </XHarnessAppBundleToTest>
+  </XHarnessApkToTest>
 </ItemGroup>
 ```
 

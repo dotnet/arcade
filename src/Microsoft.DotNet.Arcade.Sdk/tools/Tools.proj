@@ -1,10 +1,14 @@
-<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
+<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
 <Project>
   <Import Project="BuildStep.props" />
 
   <!-- Properties requires by NuGet.targets to restore PackageReferences -->
   <PropertyGroup>
     <TargetFramework>net472</TargetFramework>
+    <!-- Workaround changes from newer MSBuild requiring additional properties --> 
+    <TargetFrameworkVersion Condition="'$(TargetFrameworkVersion)' == ''">5</TargetFrameworkVersion>
+    <TargetFrameworkIdentifier  Condition="'$(TargetFrameworkIdentifier)' == ''">.NETFramework</TargetFrameworkIdentifier>
+    <TargetFrameworkMoniker Condition="'$(TargetFrameworkMoniker)' == ''">.NETFramework,Version=v4.7.2</TargetFrameworkMoniker>   
     <MSBuildProjectExtensionsPath>$(BaseIntermediateOutputPath)</MSBuildProjectExtensionsPath>
   </PropertyGroup>
 
@@ -42,6 +46,8 @@
 
     <Exec Command='"$(DotNetTool)" tool restore' WorkingDirectory="$(RepoRoot)" />
   </Target>
+
+  <Import Project="SourceBuild/SourceBuildArcadeTools.targets" Condition="'$(ArcadeBuildFromSource)' == 'true'" />
 
   <!-- Repository extensibility point -->
   <Import Project="$(RepositoryEngineeringDir)Tools.props" Condition="Exists('$(RepositoryEngineeringDir)Tools.props')" />

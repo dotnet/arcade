@@ -1,6 +1,5 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using Microsoft.Build.Framework;
 using Microsoft.DotNet.Build.Tasks.Feed.Model;
@@ -145,6 +144,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         }
                         FeedConfigs[categoryKey].Add(feedConfig);
                     }
+                }
+
+                CheckForStableAssetsInNonIsolatedFeeds();
+
+                if (Log.HasLoggedErrors)
+                {
+                    return false;
                 }
 
                 await Task.WhenAll(new Task[] {

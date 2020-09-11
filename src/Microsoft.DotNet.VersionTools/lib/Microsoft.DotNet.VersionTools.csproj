@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0</TargetFrameworks>
@@ -6,7 +6,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="..\..\Common\EnumerableExtensions.cs" />
     <Compile Include="..\..\Common\ExponentialRetry.cs" />
+    <Compile Include="..\..\Common\IRetryHandler.cs" />
   </ItemGroup>
 
   <ItemGroup>

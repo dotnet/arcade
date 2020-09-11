@@ -40,6 +40,7 @@ namespace Microsoft.DotNet.SwaggerGenerator.Modeler
         private readonly AsyncLocal<Stack<string>> _methodNameStack = new AsyncLocal<Stack<string>>();
 
         private readonly Dictionary<string, TypeModel> _types = new Dictionary<string, TypeModel>();
+        private OpenApiDocument _rootDocument = null;
 
         public ServiceClientModelFactory(GeneratorOptions options)
         {
@@ -115,6 +116,7 @@ namespace Microsoft.DotNet.SwaggerGenerator.Modeler
 
         public ServiceClientModel Create(OpenApiDocument document)
         {
+            _rootDocument = document;
             GeneratorOptions options = _generatorOptions;
             ImmutableList<MethodGroupModel> methodGroups = document.Paths
                 .SelectMany(p => p.Value.Operations.Select(o => (path: p.Key, type: o.Key, operation: o.Value)))
@@ -256,6 +258,11 @@ namespace Microsoft.DotNet.SwaggerGenerator.Modeler
             if (schema == null)
             {
                 return TypeReference.Void;
+            }
+
+            if (schema.UnresolvedReference)
+            {
+                schema = (OpenApiSchema) _rootDocument.ResolveReference(schema.Reference);
             }
 
             string type = schema.Type;

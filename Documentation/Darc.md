@@ -439,6 +439,59 @@ update, Darc searches the assets in the subtree to find the newest-built asset
 matching the dependency that declared the coherent parent. Darc then assigns
 that version to the dependency.
 
+### Strict Coherency
+
+This current default model of coherency (find the newest-built asset) has some severe
+drawbacks:
+- **Build information is required** - The current algorithm picks the newest build asset
+  in the subtree. This means that a build lookup is required for each every build in the tree.
+  This is not only time consuming, it is also fragile. Loss of BAR data would mean that
+  CPD constraints could not be satisfied.
+- **Newest may not be the desired choice** - More than one version of the asset may appear
+  within the subtree. While newest is chosen, this does not mean that newest is the correct
+  choice. Consider the following:
+  - dotnet/efcore ties dependency Foo to Bar, coming from dotnet/extensions. Foo is produced
+    out of dotnet/core-setup.
+  - dotnet/extensions has Foo pinned to version 1.0.0, but also has dependencies on
+    another, newer dotnet/core-setup build that also produced Foo at 1.0.1.
+  - CPD will choose Foo to be 1.0.1. This may be what the repo owner wished, but they may
+    also simply have wanted 1.0.0.
+- **Incremental servicing can cause version regressions** - This is perhaps the biggest drawback
+  of the current algorithm. Consider the following:
+  - dotnet/efcore ties dependency Foo to Bar, coming from dotnet/extensions. Foo is produced
+    out of dotnet/core-setup, but only when it has changes for an upcoming release.
+  - dotnet/extensions does not have a direct dependency on Foo.
+  - dotnet/extensions has a dependency on another incrementally-serviced package produced out of
+    dotnet/core-setup. This package has not been serviced recently, but when it was, Foo was also serviced,
+    producing 1.0.3.
+  - dotnet/core-setup just serviced Foo @ 1.0.10, but for the next release it is not producing that
+    package.
+  - When dotnet/core-setup build is ingested into dotnet/efcore and dotnet/extensions
+    for the next release, the CPD algorithm will no longer find Foo @ 1.0.10 in the build asset
+    graph. It has simply disappeared because there is no longer a reference to any build
+    that produced Foo @ 1.0.10. Instead, it will find 1.0.3, as this reference still exists.
+
+Strict coherency eliminates these problems by doing the following: If dependency Foo is tied to
+coherent parent Bar, and Bar comes from dotnet/extensions @ 12345, then dotnet/extensions @ 12345
+must have a **direct** dependency on Foo. The version of Foo is directly copied from the version
+at dotnet/extensions @ 12345. This ensures the following:
+- No build information is utilized and the CPD evaluation only involves a single version file
+  lookup.
+- There is no choice to make. There is only one possible version for Foo, since a dependency
+  can only appear once within a Version.Details.xml file.
+
+The downside of CPD strict is that dependencies that are not directly utilized within a
+repo are often required to appear in their Version.Details.xml files. Overall, this is
+a small tradeoff for better performance and predictable behavior. Rollout of CPD strict
+as the default behavior is pending addition of new dependencies in various repos in the 3.x
+branches.
+
+To try CPD strict on a repo, run the following command:
+
+```
+darc update-dependencies --strict-coherency --coherency-only
+```
+
 #### Specifying a coherent parent
 
 To specify a coherent parent, add "CoherentParentDependency" attributes in your
@@ -1297,6 +1350,8 @@ To flow immediately, run the specified command
     darc trigger-subscriptions --id 15a2995c-1b8e-41af-54c5-08d6c734018a
   https://github.com/dotnet/winforms @ release/3.0 (update freq: None)
     darc trigger-subscriptions --id 22859ac6-b4a6-4fce-54c7-08d6c734018a
+If the above example build doesn't happen to be the latest in a channel but you want trigger-subscriptions to use it:
+    darc trigger-subscriptions --id 22859ac6-b4a6-4fce-54c7-08d6c734018a --build 13078
 ```
 
 ### **`authenticate`**
@@ -2723,6 +2778,7 @@ confirmation before sending the trigger request.
 **Parameters**
 
 - `--id` - Trigger subscription by id.  Not compatible with other filtering parameters.
+- `--build` - If specified, selects a specific BAR build id to use; otherwise will use the latest available from the supplied `--source-repo` id.
 - `--target-repo` - Filter by target repo (matches substring unless --exact or --regex is passed).
 - `--source-repo` - Filter by source repo (matches substring unless --exact or --regex is passed).
 - `--channel` - Filter by source channel (matches substring unless --exact or --regex is passed).
@@ -2736,6 +2792,13 @@ confirmation before sending the trigger request.
 ```
 PS D:\enlistments\arcade> darc trigger-subscriptions --source-repo arcade --target-repo arcade-services
 
+Will trigger the following 1 subscriptions...
+  https://github.com/dotnet/arcade (.NET Tools - Latest) ==> 'https://github.com/dotnet/arcade-services' ('master')
+Continue? (y/n) y
+Triggering 1 subscriptions...done
+
+PS D:\enlistments\arcade> darc trigger-subscriptions --source-repo arcade --target-repo arcade-services --build 123
+Subscription updates will use Build # 123 instead of latest available
 Will trigger the following 1 subscriptions...
   https://github.com/dotnet/arcade (.NET Tools - Latest) ==> 'https://github.com/dotnet/arcade-services' ('master')
 Continue? (y/n) y
