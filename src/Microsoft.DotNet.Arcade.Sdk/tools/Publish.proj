@@ -145,6 +145,7 @@
       ItemsToPush="@(ItemsToPushToBlobFeed)"
       ItemsToSign="@(ItemsToSign)"
       StrongNameSignInfo="@(StrongNameSignInfo)"
+      CertificatesSignInfo="@(CertificatesSignInfo)"                                
       FileSignInfo="@(FileSignInfo)"
       FileExtensionSignInfo="@(FileExtensionSignInfo)"
       ManifestBuildData="@(ManifestBuildData)"
