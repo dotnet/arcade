@@ -348,18 +348,16 @@
       LightCommandWorkingDir="$(LightCommandObjDir)"
       NoLogo="true"
       Cultures="en-us"
-      Out="$(OutInstallerFile)"
+      InstallerFile="$(OutInstallerFile)"
       WixExtensions="@(WixExtensions)"
       WixSrcFiles="@(WixSrcFile -> '$(WixObjDir)%(Filename).wixobj');@(DirectoryToHarvest -> '%(WixObjFile)')">
-      <Output TaskParameter="LightCommandPackageNameOutput" PropertyName="_LightCommandPackageNameOutput" />
+      <Output TaskParameter="OutputFile" PropertyName="_LightCommandPackageNameOutput" />
     </CreateLightCommandPackageDrop>
 
-    <MakeDir Directories="$(LightCommandPackagesDir)" />
-
-    <ZipDirectory
-      DestinationFile="$(LightCommandPackagesDir)/LightCommandPackage-$(_LightCommandPackageNameOutput).zip"
-      Overwrite="true"
-      SourceDirectory="$(LightCommandObjDir)/$(_LightCommandPackageNameOutput)" />
+    <Move SourceFiles="$(_LightCommandPackageNameOutput)"
+          DestinationFolder="$(ArtifactsNonShippingPackagesDir)" 
+          OverwriteReadonlyFiles="true"
+          Condition="Exists('$(_LightCommandPackageNameOutput)')" />
   </Target>
 
   <!--
