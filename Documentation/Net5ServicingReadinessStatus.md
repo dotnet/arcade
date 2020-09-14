@@ -51,11 +51,11 @@ This table represents the status of the .NET 5 Servicing Readiness Test on a Per
 | extensions         | ericstj  | ![][yell] (63770)   | ![][red]            | ![][red]            |
 | installer          | marcpop  | ![][red]            | ![][red]            | ![][red]            |
 | sdk                | marcpop  | ![][yell]           | ![][red]            | ![][red]            |
-| runtime            | jaredpar | ![][green] (63680)  | ![][green] (63213)  | ![][green] (63563)  |
-| winforms           | mmcgaw   | ![][red]            | ![][red]            | ![][red]            |
+| runtime            | jaredpar | ![][green] (64198)  | ![][green] (64197)  | ![][red]            |
+| winforms           | mmcgaw   | ![][green] (64378)  | ![][green] (64375)  | ![][green] (64376)  |
 | wpf-int            | fabiant  | N/A                 | N/A                 | N/A                 |
-| wpf                | fabiant  | ![][red]            | ![][red] (63344)    | ![][red]            |
-| windowsdesktop     | fabiant  | ![][red]            | ![][red]            | ![][red]            |
+| wpf                | fabiant  | ![][green] (64391)  | ![][green] (64389)  | ![][red]            |
+| windowsdesktop     | fabiant  | ![][green] (64407)  | ![][yell] (64428)   | ![][red]            |
 | templating         | joaguila | ![][green]          | ![][red]            | ![][red]            |
 
 [red]: https://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Red.png
