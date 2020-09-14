@@ -34,9 +34,18 @@ namespace Microsoft.DotNet.Build.Tasks.Installers.src
         [Required]
         public string InstallerFile { get; set; }
         public ITaskItem[] WixExtensions { get; set; }
+
+        /// <summary>
+        /// folder to place wixpackage output file
+        /// </summary>
+        [Required]
+        public string OutputFolder { get; set; }
         [Required]
         public ITaskItem[] WixSrcFiles { get; set; }
 
+        /// <summary>
+        /// path of wixpackage file
+        /// </summary>
         [Output]
         public string OutputFile { get; set; }
 
@@ -55,7 +64,7 @@ namespace Microsoft.DotNet.Build.Tasks.Installers.src
 
             CreateCommandFile(toolExecutable, originalCommand, packageDropOutputFolder);
 
-            OutputFile = $"{InstallerFile}{_packageExtension}";
+            OutputFile = Path.Combine(OutputFolder, $"{Path.GetFileName(InstallerFile)}{_packageExtension}");
             if(File.Exists(OutputFile))
             {
                 File.Delete(OutputFile);

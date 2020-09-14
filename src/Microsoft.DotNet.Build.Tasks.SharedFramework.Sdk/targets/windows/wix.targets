@@ -346,6 +346,7 @@
     <CreateLightCommandPackageDrop
       OriginalLightCommand="$(_lightCommand)"
       LightCommandWorkingDir="$(LightCommandObjDir)"
+      OutputFolder="$(ArtifactsNonShippingPackagesDir)"
       NoLogo="true"
       Cultures="en-us"
       InstallerFile="$(OutInstallerFile)"
@@ -353,11 +354,6 @@
       WixSrcFiles="@(WixSrcFile -> '$(WixObjDir)%(Filename).wixobj');@(DirectoryToHarvest -> '%(WixObjFile)')">
       <Output TaskParameter="OutputFile" PropertyName="_LightCommandPackageNameOutput" />
     </CreateLightCommandPackageDrop>
-
-    <Move SourceFiles="$(_LightCommandPackageNameOutput)"
-          DestinationFolder="$(ArtifactsNonShippingPackagesDir)" 
-          OverwriteReadonlyFiles="true"
-          Condition="Exists('$(_LightCommandPackageNameOutput)')" />
   </Target>
 
   <!--
