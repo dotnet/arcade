@@ -7,19 +7,22 @@
 
 This table represents the status of the .NET 5 V3 publishing status on a Per-Repo basis
 
-| Repo                | Build        | Notes                               |
-| ------------------  | -------------|-------------------------------------|
-| aspnetcore          | ![][yellow]  |                                     |
-| efcore              | ![][red]     |                                     |
-| extensions          | ![][red]     |                                     |
-| installer           | ![][red]     |                                     |
-| sdk                 | ![][red]     |                                     |
-| runtime             | ![][green]   |                                     |
-| winforms            | ![][red]     |                                     |
-| wpf-int             | ![][red]     |                                     |
-| wpf                 | ![][red]     |                                     |
-| windowsdesktop      | ![][green]   |                                     |
-| arcade-validation   | ![][yellow]  | Changes validated,PR out soon       |
+| Repo                | Ownwe        | Build        | Notes                                |
+| ------------------  | -------------|--------------|--------------------------------------|
+| windowsdesktop      | epananth     | ![][green]   |                                      |
+| arcade-validation   | epananth     | ![][yellow]  | Changes validated,PR out soon        |
+| aspnetcore          | epananth     | ![][green]   |                                      |
+| runtime             | epananth     | ![][green]   |                                      |
+| installer           | epananth     | ![][red]     |                                      |
+| sdk                 | epananth     | ![][red]     |                                      |
+| efcore              |              | ![][red]     |                                      |
+| extensions          |              | ![][red]     |                                      |
+| winforms            |              | ![][red]     |                                      |
+| wpf-int             |              | ![][red]     |                                      |
+| wpf                 |              | ![][red]     |                                      |
+| templating          |              | ![][red]     |                                      |
+| diagnostics         |              | ![][red]     |                                      |
+| aspnetcore-tooling  |              | ![][red]     |                                      |
 
 [red]: https://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Red.png
 [green]: https://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png
