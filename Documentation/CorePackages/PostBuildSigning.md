@@ -1,6 +1,6 @@
 # Signing as Part of Publishing
 
-Any repositories using Publish.proj have signing enabled by default and no further work is needed. More information about the file types that are signed and the certificates used to sign them can be found here:
+Any repositories using V3 publishing, Publish.proj, and the Arcade Shared Framework SDK have signing enabled by default and no further work is needed. Ensure that any other signing steps are disabled and that any repo specific publishing steps have been added after signing is complete. More information about the file types that are signed and the certificates used to sign them can be found here:
 https://github.com/dotnet/arcade/blob/master/src/Microsoft.DotNet.Arcade.Sdk/tools/Sign.props
 
 A manifest file is created as part of the build process, it can be found in AssetManifests/Manifest.xml. This file lists everything that will be signed once the build is complete. If this file has been created and the contents match the expected set of signed files for the build then no further action is needed.
@@ -61,11 +61,12 @@ This is the slightly more complex sample schema for the signing.props file:
 </Project>
 ```
 
+Repositories that are not using the Arcade Shared Framework SDK will need to add the CreateLightCommandPackageDrop task to the wix.targets file that creates MSIs for signing. See the Arcade Shared Framework SDK repo for an example.
+https://github.com/dotnet/arcade/tree/master/src/Microsoft.DotNet.Build.Tasks.Installers
+https://github.com/dotnet/arcade/blob/master/src/Microsoft.DotNet.Build.Tasks.SharedFramework.Sdk/targets/windows/wix.targets
+
 Additional information about the publishing process in general can be found here:
 https://github.com/dotnet/arcade/blob/master/Documentation/CorePackages/Publishing.md
 
 Additional information about the legacy signing process can be found here:
 https://github.com/dotnet/arcade/blob/master/Documentation/CorePackages/Signing.md
-
-Additional information about Light Command packages can be found here: 
-https://github.com/chcosta/arcade/blob/light/Documentation/LightWorkflow.md
