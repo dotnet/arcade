@@ -12,25 +12,15 @@ namespace Microsoft.DotNet.Helix.Sdk
         private const int DefaultWorkItemTimeoutInMinutes = 20;
         private const int DefaultTestTimeoutInMinutes = 12;
 
+        private const string TestTimeoutPropName = "TestTimeout";
+        private const string WorkItemTimeoutPropName = "WorkItemTimeout";
+
         /// <summary>
         /// Boolean true if this is a posix shell, false if not.
         /// This does not need to be set by a user; it is automatically determined in Microsoft.DotNet.Helix.Sdk.MonoQueue.targets
         /// </summary>
         [Required]
         public bool IsPosixShell { get; set; }
-
-        /// <summary>
-        /// Optional timeout for the actual test execution in the TimeSpan format (e.g. 00:45:00 for 45 minutes).
-        /// Defaults to 00:12:00.
-        /// </summary>
-        public string TestTimeout { get; set; }
-
-        /// <summary>
-        /// Optional timeout for the whole Helix work item run (includes SDK and tool installation)
-        /// in the TimeSpan format (e.g. 00:45:00 for 45 minutes).
-        /// Defaults to 00:20:00.
-        /// </summary>
-        public string WorkItemTimeout { get; set; }
 
         /// <summary>
         /// Extra arguments that will be passed to the iOS/Android/... app that is being run
@@ -43,30 +33,37 @@ namespace Microsoft.DotNet.Helix.Sdk
         [Output]
         public ITaskItem[] WorkItems { get; set; }
 
-        protected (TimeSpan TestTimeout, TimeSpan WorkItemTimeout) ParseTimeouts()
+        /// <summary>
+        /// Parses task item pointing to the app (app bundle/apk) we want to turn into an XHarness job.
+        /// </summary>
+        /// <param name="xHarnessAppItem">MSBuild task item</param>
+        /// <returns>
+        /// Parsed timeouts:
+        ///   - TestTimeout - Optional timeout for the actual test execution
+        ///   - WorkItemTimeout - Optional timeout for the whole Helix work item run (includes SDK and tool installation)
+        /// </returns>
+        protected (TimeSpan TestTimeout, TimeSpan WorkItemTimeout) ParseTimeouts(ITaskItem xHarnessAppItem)
         {
+            // Optional timeout for the actual test execution in the TimeSpan format
             TimeSpan testTimeout = TimeSpan.FromMinutes(DefaultTestTimeoutInMinutes);
-            if (!string.IsNullOrEmpty(TestTimeout))
+            if (xHarnessAppItem.TryGetMetadata(TestTimeoutPropName, out string testTimeoutProp))
             {
-                if (!TimeSpan.TryParse(TestTimeout, out testTimeout) || testTimeout.Ticks < 0)
+                if (!TimeSpan.TryParse(testTimeoutProp, out testTimeout) || testTimeout.Ticks < 0)
                 {
-                    Log.LogWarning($"Invalid value \"{TestTimeout}\" provided in TestTimeout; " +
-                        $"falling back to default value of \"00:{DefaultTestTimeoutInMinutes}:00\" ({DefaultTestTimeoutInMinutes} minutes)");
-                    testTimeout = TimeSpan.FromMinutes(DefaultTestTimeoutInMinutes);
+                    Log.LogError($"Invalid value \"{testTimeoutProp}\" provided in <{TestTimeoutPropName}>");
                 }
             }
 
+            // Optional timeout for the whole Helix work item run (includes SDK and tool installation)
             TimeSpan workItemTimeout = TimeSpan.FromMinutes(DefaultWorkItemTimeoutInMinutes);
-            if (!string.IsNullOrEmpty(WorkItemTimeout))
+            if (xHarnessAppItem.TryGetMetadata(WorkItemTimeoutPropName, out string workItemTimeoutProp))
             {
-                if (!TimeSpan.TryParse(WorkItemTimeout, out workItemTimeout) || workItemTimeout.Ticks < 0)
+                if (!TimeSpan.TryParse(workItemTimeoutProp, out workItemTimeout) || workItemTimeout.Ticks < 0)
                 {
-                    Log.LogWarning($"Invalid value \"{WorkItemTimeout}\" provided in WorkItemTimeout; " +
-                        $"falling back to default value of \"00:{DefaultWorkItemTimeoutInMinutes}:00\" ({DefaultWorkItemTimeoutInMinutes} minutes)");
-                    workItemTimeout = TimeSpan.FromMinutes(DefaultWorkItemTimeoutInMinutes);
+                    Log.LogError($"Invalid value \"{workItemTimeoutProp}\" provided in <{WorkItemTimeoutPropName}>");
                 }
             }
-            else if (!string.IsNullOrEmpty(TestTimeout))
+            else if (!string.IsNullOrEmpty(testTimeoutProp))
             {
                 // When test timeout was set and work item timeout has not,
                 // we adjust the work item timeout to give enough space for things to work

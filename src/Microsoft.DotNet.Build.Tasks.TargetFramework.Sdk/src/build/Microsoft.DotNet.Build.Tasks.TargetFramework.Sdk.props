@@ -1,11 +1,18 @@
-<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
-<Project TreatAsLocalProperty="TargetFramework">  
+<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
+<Project TreatAsLocalProperty="TargetFramework">
+  <!-- Add unparsed TargetFrameworks property to GetTargetFrameworks return item metadata to read from it later. -->
+  <ItemDefinitionGroup>
+    <_ThisProjectBuildMetadata>
+      <RawTargetFrameworks>$(TargetFrameworks)</RawTargetFrameworks>
+    </_ThisProjectBuildMetadata>
+  </ItemDefinitionGroup>
+
   <PropertyGroup>
     <DotNetBuildTasksTargetFrameworkSdkAssembly Condition="'$(DotNetBuildTasksTargetFrameworkSdkAssembly)' == '' AND '$(MSBuildRuntimeType)' == 'core'">..\tools\netcoreapp2.1\Microsoft.DotNet.Build.Tasks.TargetFramework.Sdk.dll</DotNetBuildTasksTargetFrameworkSdkAssembly>
     <DotNetBuildTasksTargetFrameworkSdkAssembly Condition="'$(DotNetBuildTasksTargetFrameworkSdkAssembly)' == '' AND '$(MSBuildRuntimeType)' != 'core'">..\tools\net472\Microsoft.DotNet.Build.Tasks.TargetFramework.Sdk.dll</DotNetBuildTasksTargetFrameworkSdkAssembly>
     <_OriginalTargetFramework>$(TargetFramework)</_OriginalTargetFramework>
   </PropertyGroup>
-  
+
   <PropertyGroup Condition="$(TargetFramework.Contains('-'))">
     <TargetFrameworkSuffix>$(TargetFramework.SubString($([MSBuild]::Add($(TargetFramework.IndexOf('-')), 1))))</TargetFrameworkSuffix>
     <TargetFramework>$(TargetFramework.SubString(0, $(TargetFramework.IndexOf('-'))))</TargetFramework>

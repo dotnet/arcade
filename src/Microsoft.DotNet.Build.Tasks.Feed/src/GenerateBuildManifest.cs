@@ -1,6 +1,5 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using Microsoft.Build.Framework;
 using Microsoft.DotNet.Build.Tasks.Feed.Model;
@@ -71,6 +70,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// </summary>
         public ITaskItem[] FileExtensionSignInfo { get; set; }
 
+        public ITaskItem[] CertificatesSignInfo { get; set; }
+
         /// <summary>
         /// The CI build ID.
         /// </summary>
@@ -130,6 +131,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     StrongNameSignInfo,
                     FileSignInfo,
                     FileExtensionSignInfo,
+                    CertificatesSignInfo,
                     BuildId,
                     BuildData,
                     RepoUri,
