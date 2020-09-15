@@ -6,8 +6,10 @@ using Microsoft.Build.Framework;
 using Microsoft.DotNet.Build.Tasks;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Xml.Linq;
 
 namespace Microsoft.DotNet.SharedFramework.Sdk
@@ -142,9 +144,13 @@ namespace Microsoft.DotNet.SharedFramework.Sdk
 
                     if (publicKeyToken != null)
                     {
-                        publicKeyTokenHex = BitConverter.ToString(publicKeyToken)
-                            .ToLowerInvariant()
-                            .Replace("-", "");
+                        int len = publicKeyToken.Length;
+                        StringBuilder publicKeyTokenBuilder = new StringBuilder(len * 2);
+                        for (int i = 0; i < len; i++)
+                        {
+                            publicKeyTokenBuilder.Append(publicKeyToken[i].ToString("x", CultureInfo.InvariantCulture));
+                        }
+                        publicKeyTokenHex = publicKeyTokenBuilder.ToString();
                     }
                     else
                     {

@@ -7,6 +7,8 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
+using System.Reflection.Metadata;
+using System.Reflection.PortableExecutable;
 
 namespace Microsoft.DotNet.SharedFramework.Sdk
 {
@@ -37,13 +39,30 @@ namespace Microsoft.DotNet.SharedFramework.Sdk
 
             try
             {
-                return AssemblyName.GetAssemblyName(path);
+                using (var stream = File.OpenRead(path))
+                using (var peReader = new PEReader(stream))
+                {
+                    if (peReader.HasMetadata)
+                    {
+                        return peReader.GetMetadataReader().GetAssemblyDefinition().GetAssemblyName();
+                    }
+                }
             }
             catch (BadImageFormatException)
             {
                 // Not a valid assembly.
                 return null;
             }
+            return null;
         }
+    }
+
+    internal struct AssemblyInformation
+    {
+        public string SimpleName { get; set; }
+
+        public Version Version { get; set; }
+
+        public string PublicKeyToken { get; set; }
     }
 }
