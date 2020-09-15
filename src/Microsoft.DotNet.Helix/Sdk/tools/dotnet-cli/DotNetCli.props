@@ -38,6 +38,21 @@
         <DotNetCliRuntime>osx-x64</DotNetCliRuntime>
       </PropertyGroup>
     </When>
+    <When Condition="$(HelixTargetQueue.ToLowerInvariant().Contains('alpine')) AND $(HelixTargetQueue.ToLowerInvariant().Contains('arm64'))">
+      <PropertyGroup>
+        <DotNetCliRuntime>linux-musl-arm64</DotNetCliRuntime>
+      </PropertyGroup>
+    </When>
+    <When Condition="$(HelixTargetQueue.ToLowerInvariant().Contains('alpine')) AND $(HelixTargetQueue.ToLowerInvariant().Contains('arm32'))">
+      <PropertyGroup>
+        <DotNetCliRuntime>linux-musl-arm</DotNetCliRuntime>
+      </PropertyGroup>
+    </When>
+    <When Condition="$(HelixTargetQueue.ToLowerInvariant().Contains('alpine'))">
+      <PropertyGroup>
+        <DotNetCliRuntime>linux-musl-x64</DotNetCliRuntime>
+      </PropertyGroup>
+    </When>
     <When Condition="$(HelixTargetQueue.ToLowerInvariant().Contains('arm32'))">
       <PropertyGroup>
         <DotNetCliRuntime>linux-arm</DotNetCliRuntime>
