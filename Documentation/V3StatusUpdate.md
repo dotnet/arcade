@@ -23,6 +23,13 @@ This table represents the status of the .NET 5 V3 publishing status on a Per-Rep
 | templating          |              | ![][red]     |                                      |
 | diagnostics         |              | ![][red]     |                                      |
 | aspnetcore-tooling  |              | ![][red]     |                                      |
+| fsharp              |              | ![][red]     |                                      |
+| symuploader         |              | ![][red]     |                                      |
+| symstore            |              | ![][red]     |                                      |
+| sourcelink          |              | ![][red]     |                                      |
+| clrmd               |              | ![][red]     |                                      |
+| msbuild             |              | ![][red]     |                                      |
+| xliff-tasks         |              | ![][red]     |                                      |
 
 [red]: https://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Red.png
 [green]: https://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png
