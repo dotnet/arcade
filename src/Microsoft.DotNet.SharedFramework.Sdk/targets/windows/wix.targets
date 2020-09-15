@@ -2,11 +2,9 @@
   <Target Name="_GetFrameworkPackWixConfiguration"
           BeforeTargets="GetInstallerWixConfiguration"
           DependsOnTargets="PublishFilesForWixInstaller">
-    <PropertyGroup>
-      <UseCustomDirectoryHarvesting>true</UseCustomDirectoryHarvesting>
-    </PropertyGroup>
     <PropertyGroup Condition="'$(PlatformPackageType)' == 'RuntimePack'">
       <WixIncludeRegistryKeys>true</WixIncludeRegistryKeys>
+      <UseCustomDirectoryHarvesting>true</UseCustomDirectoryHarvesting>
     </PropertyGroup>
 
     <ItemGroup Condition="'$(PlatformPackageType)' == 'RuntimePack'">
