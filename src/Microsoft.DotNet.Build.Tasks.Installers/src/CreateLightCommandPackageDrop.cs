@@ -24,16 +24,13 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
         public string BuiltOutputsFile { get; set; }
         public ITaskItem [] Sice { get; set; }
 
-        [Output]
-        public string LightCommandPackageNameOutput { get; set; }
         // The light command that was originally used to generate the MSI.  This is purely used for informational purposes
         // and to validate that the light command being created by this task is correct (assist with debugging).
         public string OriginalLightCommand { get; set; }
 
         public override bool Execute()
         {
-            LightCommandPackageNameOutput = Path.GetFileNameWithoutExtension(Out);
-            string packageDropOutputFolder = Path.Combine(LightCommandWorkingDir, LightCommandPackageNameOutput);
+            string packageDropOutputFolder = Path.Combine(LightCommandWorkingDir, Path.GetFileName(InstallerFile));
             ProcessWixCommand(packageDropOutputFolder, "light.exe", OriginalLightCommand);
 
             return !Log.HasLoggedErrors;
