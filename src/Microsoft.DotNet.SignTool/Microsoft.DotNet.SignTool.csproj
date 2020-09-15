@@ -8,7 +8,10 @@
     <IsPackable>true</IsPackable>
     <Description>Build artifact signing tool</Description>
     <PackageTags>Arcade Build Tool Signing</PackageTags>
-    <DevelopmentDependency>true</DevelopmentDependency>
+    <DevelopmentDependency>false</DevelopmentDependency>
+    <!-- NU5128 is required because we are packaging identical assemblies in tools and lib folders
+         See https://docs.microsoft.com/en-us/nuget/reference/errors-and-warnings/nu5128 -->
+    <NoWarn>$(NoWarn);NU5128</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="..\Common\AssemblyResolution.cs" Link="src\AssemblyResolution.cs" />
@@ -30,6 +33,15 @@
   <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
     <Reference Include="WindowsBase"/>
   </ItemGroup>
+
+  <!-- Copy assemblies into lib folder so they can be used as a development dependency -->
+  <Target Name="PackageAssembliesInLib" BeforeTargets="GenerateNuspec">
+    <ItemGroup>
+      <_PackageFiles Include="@(_PackageFiles)" Condition="$([System.String]::Copy(%(_PackageFiles.PackagePath)).Contains('tools/'))">
+        <PackagePath>$([System.String]::Copy('%(PackagePath)').Replace('tools', 'lib'))</PackagePath>
+      </_PackageFiles>
+    </ItemGroup>
+  </Target>
 
   <Import Project="$(RepoRoot)eng\BuildTask.targets" />
 </Project>

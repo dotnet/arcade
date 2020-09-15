@@ -37,12 +37,15 @@ namespace Microsoft.DotNet.VersionTools.BuildManifest.Model
 
         public List<StrongNameSignInfoModel> StrongNameSignInfo { get; set; } = new List<StrongNameSignInfoModel>();
 
+        public List<CertificatesSignInfoModel> CertificatesSignInfo { get; set; } = new List<CertificatesSignInfoModel>();
+
         public void Add(SigningInformationModel source)
         {
             FileExtensionSignInfo.AddRange(source.FileExtensionSignInfo);
             FileSignInfo.AddRange(source.FileSignInfo);
             ItemsToSign.AddRange(source.ItemsToSign);
             StrongNameSignInfo.AddRange(source.StrongNameSignInfo);
+            CertificatesSignInfo.AddRange(source.CertificatesSignInfo);
         }
 
         private static readonly string[] RequiredAttributes =
@@ -61,13 +64,17 @@ namespace Microsoft.DotNet.VersionTools.BuildManifest.Model
                 .ThrowIfMissingAttributes(RequiredAttributes)
                 .CreateXmlAttributes(RequiredAttributes),
             Enumerable.Concat(
-            FileExtensionSignInfo
-                .OrderBy(fe => fe.Include, StringComparer.OrdinalIgnoreCase)
-                .ThenBy(fe => fe.CertificateName, StringComparer.OrdinalIgnoreCase)
-                .Select(fe => fe.ToXml()),
-            FileSignInfo
+                FileExtensionSignInfo
+                    .OrderBy(fe => fe.Include, StringComparer.OrdinalIgnoreCase)
+                    .ThenBy(fe => fe.CertificateName, StringComparer.OrdinalIgnoreCase)
+                    .Select(fe => fe.ToXml()),
+                FileSignInfo
+                    .OrderBy(f => f.Include, StringComparer.OrdinalIgnoreCase)
+                    .ThenBy(f => f.CertificateName, StringComparer.OrdinalIgnoreCase)
+                    .Select(f => f.ToXml()))
+            .Concat(CertificatesSignInfo
                 .OrderBy(f => f.Include, StringComparer.OrdinalIgnoreCase)
-                .ThenBy(f => f.CertificateName, StringComparer.OrdinalIgnoreCase)
+                .ThenBy(f => f.DualSigningAllowed, StringComparer.OrdinalIgnoreCase)
                 .Select(f => f.ToXml()))
             .Concat(ItemsToSign
                 .OrderBy(i => i.Include, StringComparer.OrdinalIgnoreCase)
@@ -89,6 +96,7 @@ namespace Microsoft.DotNet.VersionTools.BuildManifest.Model
             FileSignInfo = xml.Elements("FileSignInfo").Select(FileSignInfoModel.Parse).ToList(),
             ItemsToSign = xml.Elements("ItemsToSign").Select(ItemToSignModel.Parse).ToList(),
             StrongNameSignInfo = xml.Elements("StrongNameSignInfo").Select(StrongNameSignInfoModel.Parse).ToList(),
+            CertificatesSignInfo = xml.Elements("CertificatesSignInfo").Select(CertificatesSignInfoModel.Parse).ToList(),
         };
     }
 
@@ -163,6 +171,43 @@ namespace Microsoft.DotNet.VersionTools.BuildManifest.Model
                 .ThrowIfMissingAttributes(RequiredAttributes)
         };
     }
+
+    public class CertificatesSignInfoModel
+    {
+        private static readonly string[] RequiredAttributes =
+        {
+            nameof(Include),
+            nameof(DualSigningAllowed)
+        };
+        public IDictionary<string, string> Attributes { get; set; } = new Dictionary<string, string>();
+
+        public string Include
+        {
+            get { return Attributes.GetOrDefault(nameof(Include)); }
+            set { Attributes[nameof(Include)] = value; }
+        }
+
+        public string DualSigningAllowed
+        {
+            get { return Attributes.GetOrDefault(nameof(DualSigningAllowed)); }
+            set { Attributes[nameof(DualSigningAllowed)] = value; }
+        }
+        public override string ToString() => $"Certificate \"{Include}\" has DualSigningAllowed set to {DualSigningAllowed}";
+
+        public XElement ToXml() => new XElement(
+            "CertificatesSignInfo",
+            Attributes
+                .ThrowIfMissingAttributes(RequiredAttributes)
+                .CreateXmlAttributes(RequiredAttributes));
+
+        public static CertificatesSignInfoModel Parse(XElement xml) => new CertificatesSignInfoModel
+        {
+            Attributes = xml
+                .CreateAttributeDictionary()
+                .ThrowIfMissingAttributes(RequiredAttributes)
+        };
+    }
+
 
     public class ItemToSignModel
     {

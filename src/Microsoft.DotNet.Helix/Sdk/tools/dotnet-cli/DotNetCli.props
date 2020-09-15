@@ -7,6 +7,7 @@
     <DotNetCliVersion Condition=" '$(DotNetCliVersion)' == '' AND '$(DotNetCliPackageType)' == 'runtime' ">3.1.5</DotNetCliVersion>
     <DotNetCliVersion Condition=" '$(DotNetCliVersion)' == '' AND '$(DotNetCliPackageType)' == 'sdk' ">3.1.301</DotNetCliVersion>
     <DotNetCliChannel Condition=" '$(DotNetCliChannel)' == '' ">Current</DotNetCliChannel>
+    <DotNetCliDestination>dotnet-cli</DotNetCliDestination>
     <_HelixMonoQueueTargets>$(_HelixMonoQueueTargets);$(MSBuildThisFileDirectory)DotNetCli.targets</_HelixMonoQueueTargets>
   </PropertyGroup>
 
@@ -17,24 +18,39 @@
   <Choose>
     <When Condition=" '$(DotNetCliRuntime)' != '' ">
     </When>
-    <When Condition="$(HelixTargetQueue.ToLowerInvariant().StartsWith('windows')) AND $(HelixTargetQueue.ToLowerInvariant().Contains('arm64'))">
+    <When Condition="$(HelixTargetQueue.ToLowerInvariant().Contains('windows')) AND $(HelixTargetQueue.ToLowerInvariant().Contains('arm64'))">
       <PropertyGroup>
         <DotNetCliRuntime>win-arm64</DotNetCliRuntime>
       </PropertyGroup>
     </When>
-    <When Condition="$(HelixTargetQueue.ToLowerInvariant().StartsWith('windows')) AND $(HelixTargetQueue.ToLowerInvariant().Contains('arm32'))">
+    <When Condition="$(HelixTargetQueue.ToLowerInvariant().Contains('windows')) AND $(HelixTargetQueue.ToLowerInvariant().Contains('arm32'))">
       <PropertyGroup>
         <DotNetCliRuntime>win-arm</DotNetCliRuntime>
       </PropertyGroup>
     </When>
-    <When Condition="$(HelixTargetQueue.ToLowerInvariant().StartsWith('windows'))">
+    <When Condition="$(HelixTargetQueue.ToLowerInvariant().Contains('windows'))">
       <PropertyGroup>
         <DotNetCliRuntime>win-x64</DotNetCliRuntime>
       </PropertyGroup>
     </When>
-    <When Condition="$(HelixTargetQueue.ToLowerInvariant().StartsWith('osx'))">
+    <When Condition="$(HelixTargetQueue.ToLowerInvariant().Contains('osx'))">
       <PropertyGroup>
         <DotNetCliRuntime>osx-x64</DotNetCliRuntime>
+      </PropertyGroup>
+    </When>
+    <When Condition="$(HelixTargetQueue.ToLowerInvariant().Contains('alpine')) AND $(HelixTargetQueue.ToLowerInvariant().Contains('arm64'))">
+      <PropertyGroup>
+        <DotNetCliRuntime>linux-musl-arm64</DotNetCliRuntime>
+      </PropertyGroup>
+    </When>
+    <When Condition="$(HelixTargetQueue.ToLowerInvariant().Contains('alpine')) AND $(HelixTargetQueue.ToLowerInvariant().Contains('arm32'))">
+      <PropertyGroup>
+        <DotNetCliRuntime>linux-musl-arm</DotNetCliRuntime>
+      </PropertyGroup>
+    </When>
+    <When Condition="$(HelixTargetQueue.ToLowerInvariant().Contains('alpine'))">
+      <PropertyGroup>
+        <DotNetCliRuntime>linux-musl-x64</DotNetCliRuntime>
       </PropertyGroup>
     </When>
     <When Condition="$(HelixTargetQueue.ToLowerInvariant().Contains('arm32'))">
