@@ -54,12 +54,21 @@
       <ResolvedFileToPublish Include="@(RuntimePackAsset)" ReferenceOnly="true" PostprocessAssembly="true" RelativePath="%(FileName)%(Extension)" />
       <ResolvedFileToPublish Include="@(ReferenceCopyLocalPaths)" Exclude="@(RuntimePackAsset)" PostprocessAssembly="true" RelativePath="%(FileName)%(Extension)" />
     </ItemGroup>
+    <!-- 
+      The PrepareForReadyToRunCompilation task now requires the MainAssembly metadata to be set.
+      It's only used in composite mode, which we do not use, so create a ficticous $(PackageId).dll
+      to ensure we don't accidentally trigger any unexpected behavior.
+    -->
+    <ItemGroup Condition="'@(IntermediateAssembly)' == ''">
+      <IntermediateAssembly Include="$(IntermediateOutputPath)/$(PackageId).dll" />
+    </ItemGroup>
   </Target>
 
   <Target Name="_ReadyToRunSharedFramework"
           DependsOnTargets="_PrepareSharedFrameworkForReadyToRun;CreateReadyToRunImages"
           Condition="'$(PlatformPackageType)' == 'RuntimePack'">
     <ItemGroup>
+      <IntermediateAssembly Remove="@(IntermediateAssembly)" />
       <FilesToPackage Remove="@(FilesToPackage)" />
       <FilesToPackage Include="@(ResolvedFileToPublish)" Exclude="@(RuntimePackAsset)" />
       <FilesToPackage Condition="'%(FilesToPackage.AssetType)' == 'native'" IsNative="true" />
