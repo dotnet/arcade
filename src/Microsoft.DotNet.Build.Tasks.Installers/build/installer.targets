@@ -35,7 +35,7 @@
   <!--
     Shared targets to build installers and distro packages.
   -->
-  <Import Project="$(MSBuildThisFileDirectory)windows/wix.targets" />
+  <Import Project="$(MSBuildThisFileDirectory)wix/wix.targets" />
 
   <Target Name="GenerateInstallers" DependsOnTargets="GetInstallerGenerationFlags" Condition="'$(SkipInstallerBuild)' != 'true' and '$(GenerateInstallers)' == 'true'">
     <ItemGroup>

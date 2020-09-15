@@ -9,7 +9,7 @@
     <Description>Installer task package</Description>
     <PackageTags>Arcade Build Tool Installer</PackageTags>
     <DevelopmentDependency>true</DevelopmentDependency>
-    <NoWarn>$(NoWarn);NU5127;NU5129</NoWarn>
+    <NoWarn>$(NoWarn);NU5127</NoWarn>
     <EnableDefaultNoneItems>false</EnableDefaultNoneItems>
   </PropertyGroup>
 

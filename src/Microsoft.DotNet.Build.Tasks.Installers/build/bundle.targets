@@ -10,7 +10,7 @@
     </PropertyGroup>
   </Target>
 
-  <Import Project="$(MSBuildThisFileDirectory)windows/wix.targets" />
+  <Import Project="$(MSBuildThisFileDirectory)wix/wix.targets" />
 
   <Target Name="GenerateBundles" DependsOnTargets="GetBundleGenerationFlags" Condition="'$(SkipInstallerBuild)' != 'true'">
     <ItemGroup>
