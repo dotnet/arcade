@@ -77,14 +77,27 @@ namespace Microsoft.DotNet.SignTool
         /// Explicit list of containers / files to be signed.
         /// This needs to be the full path to the file to be signed.
         /// </summary>
-        [Required]
         public string[] ItemsToSign { get; set; }
+
+        /// <summary>
+        /// Explicit list of containers / files to be signed.
+        /// This needs to be the full path to the file to be signed and a
+        /// BARBuildID per item
+        /// </summary>
+        public ITaskItem[] ItemsToSignPostBuild { get; set; }
 
         /// <summary>
         /// List of file names that should be ignored when checking
         /// for correctness of strong name signature.
         /// </summary>
         public string[] ItemsToSkipStrongNameCheck { get; set; }
+
+        /// <summary>
+        /// List of file names that should be ignored when checking
+        /// for correctness of strong name signature. This also includes
+        /// a BARBuildID per item
+        /// </summary>
+        public ITaskItem[] ItemsToSkipStrongNameCheckPostBuild { get; set; }
 
         /// <summary>
         /// Mapping relating PublicKeyToken, CertificateName and Strong Name. 
@@ -131,6 +144,11 @@ namespace Microsoft.DotNet.SignTool
         [Required]
         public string LogDir { get; set; }
 
+        /// <summary>
+        /// Whether we are signing post build or not.
+        /// </summary>
+        public bool IsPostBuild { get; set; } = false;
+
         public override bool Execute()
         {
 #if NET472
@@ -138,6 +156,11 @@ namespace Microsoft.DotNet.SignTool
 #endif
             try
             {
+                if (IsPostBuild)
+                {
+                    PrepareSigning();
+                }
+
                 ExecuteImpl();
                 return !Log.HasLoggedErrors;
             }
@@ -226,6 +249,84 @@ namespace Microsoft.DotNet.SignTool
             if (Log.HasLoggedErrors) return;
 
             util.Go(DoStrongNameCheck);
+        }
+
+        private void PrepareSigning()
+        {
+            if (ItemsToSignPostBuild == null || ItemsToSignPostBuild.Count() == 0)
+            {
+                Log.LogError("When in a post-build run, 'ItemsToSignPostBuild' should be populated");
+                return;
+            }
+
+            // We store the order set of ItemsToSign in ItemsToSign since this will  be used
+            // going forward. Same for ItemsToSkipStrongName
+            var orderedItemsToSign = ItemsToSignPostBuild.OrderBy(i => i.GetMetadata("BARBuildID")).ToArray();
+            ItemsToSign = new string[orderedItemsToSign.Length];
+            Array.Copy(orderedItemsToSign.Select(i => i.ItemSpec).ToArray(), ItemsToSign, orderedItemsToSign.Length);
+
+            if (ItemsToSkipStrongNameCheckPostBuild != null && ItemsToSkipStrongNameCheckPostBuild.Count() > 0)
+            {
+                var orderedItemsToSkipStrongName = ItemsToSkipStrongNameCheckPostBuild.OrderBy(i => i.GetMetadata("BARBuildID")).ToArray();
+                ItemsToSkipStrongNameCheck = new string[orderedItemsToSkipStrongName.Length];
+                Array.Copy(orderedItemsToSkipStrongName, ItemsToSkipStrongNameCheck, orderedItemsToSkipStrongName.Length);
+            }
+
+            // Based on the ordered set of BARBuildIds we start adding TaskItems to a map keeping track of things
+            // that already exist. At the end, we end up with a unique set of TaskItems guaranteeing that the oldests
+            // are always included and newests are included only if an older one with the same "Include" value
+            // was not part of the map
+            HashSet<string> orderedUniqueBarIds = new HashSet<string>(orderedItemsToSign.Select(i => i.GetMetadata("BARBuildID")));
+            Dictionary<string, ITaskItem> tempStrongNameSignInfoMap = new Dictionary<string, ITaskItem>();
+            Dictionary<string, ITaskItem> tempFileSignInfoMap = new Dictionary<string, ITaskItem>();
+            Dictionary<string, ITaskItem> tempFileExtensionSignInfoMap = new Dictionary<string, ITaskItem>();
+            Dictionary<string, ITaskItem> tempCertificatesSignInfoMap = new Dictionary<string, ITaskItem>();
+
+            foreach (string barId in orderedUniqueBarIds)
+            {
+                UpdateTempMaps(StrongNameSignInfo, tempStrongNameSignInfoMap, barId);
+                UpdateTempMaps(FileSignInfo, tempFileSignInfoMap, barId);
+                UpdateTempMaps(FileExtensionSignInfo, tempFileExtensionSignInfoMap, barId);
+                UpdateTempMaps(CertificatesSignInfo, tempCertificatesSignInfoMap, barId);
+            }
+
+            if (StrongNameSignInfo != null)
+            {
+                StrongNameSignInfo = new ITaskItem[tempStrongNameSignInfoMap.Count];
+                Array.Copy(tempStrongNameSignInfoMap.Values.ToArray(), StrongNameSignInfo, tempStrongNameSignInfoMap.Count);
+            }
+
+            if (FileSignInfo != null)
+            {
+                FileSignInfo = new ITaskItem[tempFileSignInfoMap.Count];
+                Array.Copy(tempFileSignInfoMap.Values.ToArray(), FileSignInfo, tempFileSignInfoMap.Count);
+            }
+
+            if (FileExtensionSignInfo != null)
+            {
+                FileExtensionSignInfo = new ITaskItem[tempFileExtensionSignInfoMap.Count];
+                Array.Copy(tempFileExtensionSignInfoMap.Values.ToArray(), FileExtensionSignInfo, tempFileExtensionSignInfoMap.Count);
+            }
+
+            if (CertificatesSignInfo != null)
+            {
+                CertificatesSignInfo = new ITaskItem[tempCertificatesSignInfoMap.Count];
+                Array.Copy(tempCertificatesSignInfoMap.Values.ToArray(), CertificatesSignInfo, tempCertificatesSignInfoMap.Count);
+            }
+        }
+
+        private void UpdateTempMaps(ITaskItem[] baseTaskItemCollection, Dictionary<string, ITaskItem> tempMap, string barId)
+        {
+            if (baseTaskItemCollection != null)
+            {
+                foreach (ITaskItem taskItem in baseTaskItemCollection.Where(s => s.GetMetadata("BARBuildID") == barId))
+                {
+                    if (!tempMap.ContainsKey(taskItem.ItemSpec))
+                    {
+                        tempMap.Add(taskItem.ItemSpec, taskItem);
+                    }
+                }
+            }
         }
 
         private void PrintConfigInformation()
