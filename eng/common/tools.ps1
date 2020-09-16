@@ -312,7 +312,7 @@ function InitializeVisualStudioMSBuild([bool]$install, [object]$vsRequirements =
     return $global:_MSBuildExe
   }
 
-  $vsMinVersionReqdStr = '16.5'
+  $vsMinVersionReqdStr = '16.8.0-preview3'
   $vsMinVersionReqd = [Version]::new($vsMinVersionReqdStr)
 
   if (!$vsRequirements) { $vsRequirements = $GlobalJson.tools.vs }
