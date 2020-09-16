@@ -13,8 +13,8 @@ This table represents the status of the .NET 5 V3 publishing status on a Per-Rep
 | arcade-validation   | epananth     | ![][yellow]  | Changes validated,PR out soon        |
 | aspnetcore          | epananth     | ![][green]   |                                      |
 | runtime             | epananth     | ![][green]   |                                      |
-| installer           | epananth     | ![][red]     |                                      |
-| sdk                 | epananth     | ![][red]     |                                      |
+| installer           | epananth     | ![][green]   |                                      |
+| sdk                 | epananth     | ![][green]   |                                      |
 | efcore              |              | ![][red]     |                                      |
 | extensions          |              | ![][red]     |                                      |
 | winforms            |              | ![][red]     |                                      |
