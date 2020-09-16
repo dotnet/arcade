@@ -7,8 +7,6 @@ Disable the existing signing logic and no other steps are needed, post-build sig
 
 Steps to ensure that post-build signing is correctly set up for a repo: A manifest file is created as part of the build process, it can be found in AssetManifests/Manifest.xml. This file lists everything that will be signed once the build is complete. If this file has been created and the contents match the expected set of signed files for the build then no further action is needed.
 
-
-
 More information about the file types that are signed and the certificates used to sign them can be found here:
 https://github.com/dotnet/arcade/blob/master/src/Microsoft.DotNet.Arcade.Sdk/tools/Sign.props
 
