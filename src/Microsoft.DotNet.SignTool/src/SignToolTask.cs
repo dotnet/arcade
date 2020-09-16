@@ -269,7 +269,7 @@ namespace Microsoft.DotNet.SignTool
             {
                 var orderedItemsToSkipStrongName = ItemsToSkipStrongNameCheckPostBuild.OrderBy(i => i.GetMetadata("BARBuildID")).ToArray();
                 ItemsToSkipStrongNameCheck = new string[orderedItemsToSkipStrongName.Length];
-                Array.Copy(orderedItemsToSkipStrongName, ItemsToSkipStrongNameCheck, orderedItemsToSkipStrongName.Length);
+                Array.Copy(orderedItemsToSkipStrongName.Select(i => i.ItemSpec).ToArray(), ItemsToSkipStrongNameCheck, orderedItemsToSkipStrongName.Length);
             }
 
             // Based on the ordered set of BARBuildIds we start adding TaskItems to a map keeping track of things
