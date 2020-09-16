@@ -40,6 +40,8 @@
   <Target Name="InitializeSourceBuildIntermediatePackageId"
           DependsOnTargets="GetSourceBuildIntermediateNupkgNameConvention"
           BeforeTargets="GenerateNuspec;InitializeStandardNuspecProperties">
+    <Error Condition="'$(GitHubRepositoryName)' == ''" Text="GitHubRepositoryName property is not defined." />
+
     <PropertyGroup>
       <PackageId>$(SourceBuildIntermediateNupkgPrefix)$(GitHubRepositoryName)$(SourceBuildIntermediateNupkgSuffix)</PackageId>
     </PropertyGroup>
