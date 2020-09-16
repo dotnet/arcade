@@ -120,6 +120,10 @@ namespace Microsoft.DotNet.Build.Tasks.Installers.src
             ProcessToolSpecificCommandLineParameters(packageDropOutputFolder, commandString);
             commandString.AppendLine();
             commandString.AppendLine("endlocal");
+            if(!Directory.Exists(packageDropOutputFolder))
+            {
+                Directory.CreateDirectory(packageDropOutputFolder);
+            }
             File.WriteAllText(commandFilename, commandString.ToString());
         }
 
