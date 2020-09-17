@@ -128,7 +128,7 @@ PATs that may be used:
 - A GitHub PAT for downloading files from GitHub (e.g. eng/Version.Details.xml or
   arcade script files.  Required scopes: None
 - An Azure DevOps PAT for downloading files from Azure DevOps. (e.g.
-  eng/Version.Details.xml)  Required scopes: Code-Read, Build-Read & Execute.
+  eng/Version.Details.xml)  Required scopes: Code-Read, Build-Read & Execute, Packaging Read
 - A Build Asset Registry (BAR) password for interacting with Maestro++/BAR (e.g.
   obtaining build information needed for a drop).
 
