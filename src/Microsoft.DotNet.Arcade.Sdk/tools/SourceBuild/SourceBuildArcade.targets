@@ -26,9 +26,9 @@
   </PropertyGroup>
 
   <Target Name="GetSourceBuildIntermediateNupkgNameConvention">
-    <Error
-      Condition="'$(SourceBuildNonPortable)' == 'true' and '$(TargetRid)' == ''"
-      Text="TargetRid is not specified! Specify it to build non-portable. Automatic RID detection works for portable build only." />
+    <PropertyGroup Condition="'$(SourceBuildNonPortable)' == 'true' and '$(TargetRid)' == ''">
+      <TargetRid>$([System.Runtime.InteropServices.RuntimeInformation]::RuntimeIdentifier)</TargetRid>
+    </PropertyGroup>
 
     <PropertyGroup Condition="'$(TargetRid)' == ''">
       <HostArchitecture>$([System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture.ToString().ToLowerInvariant())</HostArchitecture>
