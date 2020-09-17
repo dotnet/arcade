@@ -7,7 +7,7 @@
 
 This table represents the status of the .NET 5 V3 publishing status on a Per-Repo basis
 
-| Repo                | Ownwe        | Build        | Notes                                |
+| Repo                | Ownwer       | Status       | Notes                                |
 | ------------------  | -------------|--------------|--------------------------------------|
 | windowsdesktop      | epananth     | ![][green]   |                                      |
 | arcade-validation   | epananth     | ![][yellow]  | Changes validated,PR out soon        |
