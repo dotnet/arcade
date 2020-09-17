@@ -368,7 +368,6 @@ function InitializeVisualStudioMSBuild([bool]$install, [object]$vsRequirements =
         $vsMajorVersion = $vsMinVersion.Major
         $vsMinorVersion = $vsMinVersion.Minor
         $xcopyMSBuildVersion = "$vsMajorVersion.$vsMinorVersion.0"
-        Write-Host "Using xcopy-msbuild version of $xcopyMSBuildVersion to match VS version $vsMinVersionStr provided in global.json."
       }
     }
 
