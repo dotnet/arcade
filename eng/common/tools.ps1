@@ -376,7 +376,7 @@ function InitializeVisualStudioMSBuild([bool]$install, [object]$vsRequirements =
     if ($xcopyMSBuildVersion.Trim() -ine "none") {
         $vsInstallDir = InitializeXCopyMSBuild $xcopyMSBuildVersion $install
         if ($vsInstallDir -eq $null) {
-            throw "Could not xcopy msbuild. Please check that package 'RoslynTools.MSBuild @ $xcopyMSBuildVersion' on exists feed 'dotnet-eng'."
+            throw "Could not xcopy msbuild. Please check that package 'RoslynTools.MSBuild @ $xcopyMSBuildVersion' exists on feed 'dotnet-eng'."
         }
     }
     if ($vsInstallDir -eq $null) {
