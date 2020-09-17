@@ -129,6 +129,11 @@ namespace Microsoft.DotNet.SignTool
                         _log.LogMessage($"Repacking container: '{file.FileName}'");
                         _batchData.ZipDataMap[file.ContentHash].Repack(_log);
                     }
+                    if (file.IsWixContainer())
+                    {
+                        _log.LogMessage($"Packing wix container: '{file.FileName}'");
+                        _batchData.ZipDataMap[file.ContentHash].Repack(_log, _signTool.TempDir, _signTool.WixToolsPath);
+                    }
                 }
             }
 
@@ -136,13 +141,12 @@ namespace Microsoft.DotNet.SignTool
             // signed?
             bool isReadyToSign(FileSignInfo file)
             {
-                if (!file.IsZipContainer())
+                if (file.IsContainer())
                 {
-                    return true;
+                    var zipData = _batchData.ZipDataMap[file.ContentHash];
+                    return zipData.NestedParts.All(x => !x.FileSignInfo.SignInfo.ShouldSign || signedSet.Contains(x.FileSignInfo.ContentHash));
                 }
-
-                var zipData = _batchData.ZipDataMap[file.ContentHash];
-                return zipData.NestedParts.All(x => !x.FileSignInfo.SignInfo.ShouldSign || signedSet.Contains(x.FileSignInfo.ContentHash));
+                return true;
             }
 
             // Extract the next set of files that should be signed. This is the set of files for which all of the
@@ -263,6 +267,18 @@ namespace Microsoft.DotNet.SignTool
                     if (fileName.SignInfo.StrongName != null)
                     {
                         log.LogError($"Zip {fileName} cannot be strong name signed.");
+                    }
+                }
+                else if (fileName.IsWix())
+                {
+                    if (fileName.SignInfo.Certificate == null)
+                    {
+                        log.LogError($"Wix file {fileName} should have a certificate name.");
+                    }
+
+                    if (fileName.SignInfo.StrongName != null)
+                    {
+                        log.LogError($"Wix file {fileName} cannot be strong name signed.");
                     }
                 }
             }
