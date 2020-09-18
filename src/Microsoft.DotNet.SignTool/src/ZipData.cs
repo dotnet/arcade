@@ -64,7 +64,8 @@ namespace Microsoft.DotNet.SignTool
                 {
                     RepackWixPack(log, tempDir, wixToolsPath);
                 }
-                else {
+                else 
+                {
                     RepackRawZip(log);
                 }
             }

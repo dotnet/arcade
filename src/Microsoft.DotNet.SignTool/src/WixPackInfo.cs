@@ -13,6 +13,8 @@ namespace Microsoft.DotNet.SignTool
 
         internal string FullPath { get; private set; }
 
+        private const string WixPackExtension = ".wixpack.zip";
+
         internal WixPackInfo(string fullPath)
         {
             Moniker = GetMoniker(fullPath);
@@ -26,7 +28,7 @@ namespace Microsoft.DotNet.SignTool
             if (IsWixPack(path))
             {
                 string filename = Path.GetFileName(path);
-                int trimLength = ".wixpack.zip".Length;
+                int trimLength = WixPackExtension.Length;
                 moniker = filename.Remove(filename.Length - trimLength, trimLength);
             }
             return moniker;
@@ -34,7 +36,7 @@ namespace Microsoft.DotNet.SignTool
 
         internal static bool IsWixPack(string path)
         {
-            return Path.GetFileName(path).EndsWith(".wixpack.zip", StringComparison.OrdinalIgnoreCase);
+            return Path.GetFileName(path).EndsWith(WixPackExtension, StringComparison.OrdinalIgnoreCase);
         }
     }
 }

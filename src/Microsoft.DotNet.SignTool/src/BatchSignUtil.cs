@@ -269,7 +269,7 @@ namespace Microsoft.DotNet.SignTool
                         log.LogError($"Zip {fileName} cannot be strong name signed.");
                     }
                 }
-                else if (fileName.IsWix())
+                if (fileName.IsWixContainer())
                 {
                     if (fileName.SignInfo.Certificate == null)
                     {

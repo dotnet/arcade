@@ -210,7 +210,7 @@ namespace Microsoft.DotNet.SignTool
 
             // If there's a wixpack in ItemsToSign which corresponds to this file, pass along the path of 
             // the wixpack so we can associate the wixpack with the item
-            var wixPack = _wixPacks.FirstOrDefault(w => w.Moniker.Equals(Path.GetFileName(fullPath)));
+            var wixPack = _wixPacks.SingleOrDefault(w => w.Moniker.Equals(Path.GetFileName(fullPath)));
             var fileSignInfo = ExtractSignInfo(fullPath, contentHash, forceRepack, wixPack.FullPath);
 
             var key = new SignedFileContentKey(contentHash, Path.GetFileName(fullPath));
