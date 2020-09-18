@@ -135,6 +135,9 @@
       <ManifestBuildData Include="AzureDevOpsBranch=$(BUILD_SOURCEBRANCH)" />
     </ItemGroup>
     
+    <Error Condition="'$(AllowEmptySignPostBuildList)' != 'true' AND '@(ItemsToSignPostBuild)' == ''" 
+           Text="List of files to sign post-build is empty. Make sure that ItemsToSignPostBuild is configured correctly." />
+
     <!--
       The user can set `PublishingVersion` via eng\Publishing.props
     -->
@@ -143,7 +146,7 @@
       AzureDevOpsProject="$(SYSTEM_TEAMPROJECT)"
       AzureDevOpsBuildId="$(BUILD_BUILDID)"
       ItemsToPush="@(ItemsToPushToBlobFeed)"
-      ItemsToSign="@(ItemsToSign)"
+      ItemsToSign="@(ItemsToSignPostBuild)"
       StrongNameSignInfo="@(StrongNameSignInfo)"
       CertificatesSignInfo="@(CertificatesSignInfo)"                                
       FileSignInfo="@(FileSignInfo)"
@@ -260,7 +263,7 @@
       AzureDevOpsCollectionUri="$(SYSTEM_TEAMFOUNDATIONCOLLECTIONURI)"
       AzureDevOpsProject="$(SYSTEM_TEAMPROJECT)"
       AzureDevOpsBuildId="$(BUILD_BUILDID)"
-      ItemsToSign="@(ItemsToSign)"
+      ItemsToSign="@(ItemsToSignPostBuild)"
       StrongNameSignInfo="@(StrongNameSignInfo)"
       FileSignInfo="@(FileSignInfo)"
       FileExtensionSignInfo="@(FileExtensionSignInfo)"
