@@ -28,16 +28,13 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
         /// </summary>
         public bool Bf { get; set; }
 
-        [Output]
-        public string LitCommandPackageNameOutput { get; set; }
         // The lot command that was originally used to generate the wixlib.  This is purely used for informational purposes
         // and to validate that the lit command being created by this task is correct (assist with debugging).
         public string OriginalLitCommand { get; set; }
 
         public override bool Execute()
         {
-            LitCommandPackageNameOutput = Path.GetFileNameWithoutExtension(Out);
-            string packageDropOutputFolder = Path.Combine(LitCommandWorkingDir, LitCommandPackageNameOutput);
+            string packageDropOutputFolder = Path.Combine(LitCommandWorkingDir, Path.GetFileName(InstallerFile));
             ProcessWixCommand(packageDropOutputFolder, "lit.exe", OriginalLitCommand);
 
             return !Log.HasLoggedErrors;

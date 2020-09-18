@@ -11,7 +11,7 @@
   </ItemGroup>
 
   <PropertyGroup>
-    <MicrosoftDotNetBuildTasksInstallersTaskAssembly Condition="'$(MSBuildRuntimeType)' == 'Core'">$(NuGetPackageRoot)microsoft.dotnet.build.tasks.installers\$(MicrosoftDotNetBuildTasksInstallersVersion)\tools\netcoreapp2.0\Microsoft.DotNet.Build.Tasks.Installers.dll</MicrosoftDotNetBuildTasksInstallersTaskAssembly>
+    <MicrosoftDotNetBuildTasksInstallersTaskAssembly Condition="'$(MSBuildRuntimeType)' == 'Core'">$(NuGetPackageRoot)microsoft.dotnet.build.tasks.installers\$(MicrosoftDotNetBuildTasksInstallersVersion)\tools\netcoreapp2.1\Microsoft.DotNet.Build.Tasks.Installers.dll</MicrosoftDotNetBuildTasksInstallersTaskAssembly>
     <MicrosoftDotNetBuildTasksInstallersTaskAssembly Condition="'$(MSBuildRuntimeType)' != 'Core'">$(NuGetPackageRoot)microsoft.dotnet.build.tasks.installers\$(MicrosoftDotNetBuildTasksInstallersVersion)\tools\net472\Microsoft.DotNet.Build.Tasks.Installers.dll</MicrosoftDotNetBuildTasksInstallersTaskAssembly>
   </PropertyGroup>
 
@@ -346,20 +346,14 @@
     <CreateLightCommandPackageDrop
       OriginalLightCommand="$(_lightCommand)"
       LightCommandWorkingDir="$(LightCommandObjDir)"
+      OutputFolder="$(ArtifactsNonShippingPackagesDir)"
       NoLogo="true"
       Cultures="en-us"
-      Out="$(OutInstallerFile)"
+      InstallerFile="$(OutInstallerFile)"
       WixExtensions="@(WixExtensions)"
       WixSrcFiles="@(WixSrcFile -> '$(WixObjDir)%(Filename).wixobj');@(DirectoryToHarvest -> '%(WixObjFile)')">
-      <Output TaskParameter="LightCommandPackageNameOutput" PropertyName="_LightCommandPackageNameOutput" />
+      <Output TaskParameter="OutputFile" PropertyName="_LightCommandPackageNameOutput" />
     </CreateLightCommandPackageDrop>
-
-    <MakeDir Directories="$(LightCommandPackagesDir)" />
-
-    <ZipDirectory
-      DestinationFile="$(LightCommandPackagesDir)/LightCommandPackage-$(_LightCommandPackageNameOutput).zip"
-      Overwrite="true"
-      SourceDirectory="$(LightCommandObjDir)/$(_LightCommandPackageNameOutput)" />
   </Target>
 
   <!--

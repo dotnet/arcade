@@ -4,6 +4,7 @@
 using Microsoft.Build.Framework;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using System.Xml;
@@ -20,6 +21,7 @@ namespace Microsoft.DotNet.Build.Tasks.Installers.src
         private const int _fieldsArtifactPath3 = 2;
         private const int _fieldsArtifactPath6 = 5;
 
+        private readonly string _packageExtension = ".wixpack.zip";
         public bool NoLogo { get; set; }
         /// <summary>
         /// Additional set of base paths that are used for resolving paths.
@@ -30,10 +32,22 @@ namespace Microsoft.DotNet.Build.Tasks.Installers.src
         /// </summary>
         public ITaskItem[] Loc { get; set; }
         [Required]
-        public string Out { get; set; }
+        public string InstallerFile { get; set; }
         public ITaskItem[] WixExtensions { get; set; }
+
+        /// <summary>
+        /// folder to place wixpackage output file
+        /// </summary>
+        [Required]
+        public string OutputFolder { get; set; }
         [Required]
         public ITaskItem[] WixSrcFiles { get; set; }
+
+        /// <summary>
+        /// path of wixpackage file
+        /// </summary>
+        [Output]
+        public string OutputFile { get; set; }
 
         protected abstract void ProcessToolSpecificCommandLineParameters(string packageDropOutputFolder, StringBuilder commandString);
 
@@ -49,12 +63,18 @@ namespace Microsoft.DotNet.Build.Tasks.Installers.src
             ProcessLocFiles(packageDropOutputFolder);
 
             CreateCommandFile(toolExecutable, originalCommand, packageDropOutputFolder);
+
+            OutputFile = Path.Combine(OutputFolder, $"{Path.GetFileName(InstallerFile)}{_packageExtension}");
+            if(File.Exists(OutputFile))
+            {
+                File.Delete(OutputFile);
+            }
+            ZipFile.CreateFromDirectory(packageDropOutputFolder, OutputFile);
         }
 
         private void CreateCommandFile(string toolExecutable, string originalCommand, string packageDropOutputFolder)
         {
-            string toolName = Path.GetFileNameWithoutExtension(toolExecutable);
-            string commandFilename = Path.Combine(packageDropOutputFolder, $"{toolName}.cmd");
+            string commandFilename = Path.Combine(packageDropOutputFolder, $"create.cmd");
             StringBuilder commandString = new StringBuilder();
             commandString.AppendLine("@echo off");
             commandString.AppendLine("setlocal");
@@ -66,12 +86,12 @@ namespace Microsoft.DotNet.Build.Tasks.Installers.src
             commandString.AppendLine(")");
             if (originalCommand != null)
             {
-                commandString.AppendLine($"REM Original {toolName} command");
+                commandString.AppendLine($"REM Original command");
                 commandString.AppendLine($"REM {originalCommand }");
             }
-            commandString.AppendLine("REM Modified {toolName} command");
+            commandString.AppendLine("REM Modified command");
             commandString.Append(toolExecutable);
-            commandString.Append($" -out %outputfolder%{Path.GetFileName(Out)}");
+            commandString.Append($" -out %outputfolder%{Path.GetFileName(InstallerFile)}");
             if (NoLogo)
             {
                 commandString.Append(" -nologo");
@@ -100,6 +120,10 @@ namespace Microsoft.DotNet.Build.Tasks.Installers.src
             ProcessToolSpecificCommandLineParameters(packageDropOutputFolder, commandString);
             commandString.AppendLine();
             commandString.AppendLine("endlocal");
+            if(!Directory.Exists(packageDropOutputFolder))
+            {
+                Directory.CreateDirectory(packageDropOutputFolder);
+            }
             File.WriteAllText(commandFilename, commandString.ToString());
         }
 
