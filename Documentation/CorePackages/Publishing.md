@@ -400,7 +400,7 @@ Example:
    </PropertyGroup>
 </Project>
 ```
-Link to arcade-validation Publishing.props file will be added after the PR is merged.
+arcade-validation example : https://github.com/dotnet/arcade-validation/blob/a3b8def7412266282cd23edf9e84176f6afe52a5/eng/Publishing.props#L4
 
 2) In azure-pipelines.yml file, the call to the post-build.yml requires additional parameter publishingInfraVersion 
 
@@ -414,4 +414,4 @@ Example:
       enableNugetValidation: false
       enableSourceLinkValidation: false
 ```
-Link to arcade-validation azure-pipeline.yml file will be added after the PR is merged.
+arcade-validation example : https://github.com/dotnet/arcade-validation/blob/a3b8def7412266282cd23edf9e84176f6afe52a5/azure-pipelines.yml#L206
