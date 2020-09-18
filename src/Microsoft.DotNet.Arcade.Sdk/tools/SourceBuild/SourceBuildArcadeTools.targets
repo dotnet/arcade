@@ -17,17 +17,14 @@
           DependsOnTargets="GetSourceBuildIntermediateNupkgNameConvention"
           BeforeTargets="CollectPackageReferences">
     <ReadSourceBuildIntermediateNupkgDependencies
-      VersionDetailsXmlFile="$([MSBuild]::NormalizePath('$(RepositoryEngineeringDir)', 'Version.Details.xml'))">
-      <Output TaskParameter="Dependencies" ItemName="VersionDetailsSourceBuildElement" />
+      VersionDetailsXmlFile="$([MSBuild]::NormalizePath('$(RepositoryEngineeringDir)', 'Version.Details.xml'))"
+      SourceBuildIntermediateNupkgPrefix="$(SourceBuildIntermediateNupkgPrefix)"
+      SourceBuildIntermediateNupkgRid="$(SourceBuildIntermediateNupkgRid)">
+      <Output TaskParameter="Dependencies" ItemName="SourceBuildIntermediateNupkgReference" />
     </ReadSourceBuildIntermediateNupkgDependencies>
 
-    <ItemGroup Condition="'@(VersionDetailsSourceBuildElement)' != ''">
-      <SourceBuildIntermediateNupkgReference
-        Include="$(SourceBuildIntermediateNupkgPrefix)%(VersionDetailsSourceBuildElement.Identity)$(SourceBuildIntermediateNupkgSuffix)"
-        ExactVersion="%(VersionDetailsSourceBuildElement.Version)" />
-      <PackageReference
-        Include="@(SourceBuildIntermediateNupkgReference)"
-        Version="[%(SourceBuildIntermediateNupkgReference.ExactVersion)]"/>
+    <ItemGroup>
+      <PackageReference Include="@(SourceBuildIntermediateNupkgReference)" />
     </ItemGroup>
   </Target>
 
