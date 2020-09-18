@@ -385,3 +385,33 @@ The publishing logs are stored inside an Azure DevOps artifacts container named 
 |                     | https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet3/nuget/v3/index.json |
 | dotnet3-transport   | .NET Core 3 non-shipping packages                            |
 |                     | https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet3-transport/nuget/v3/index.json |
+
+### How to upgrade from V2 to V3?
+
+Following changes has to be made
+1) Create a file Publishing.props under /eng/Publishing.props if already exists then add publishingVersion property in the file
+
+Example: 
+```
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+   <PropertyGroup>
+      <PublishingVersion>3</PublishingVersion>
+   </PropertyGroup>
+</Project>
+```
+Link to arcade-validation Publishing.props file will be added after the PR is merged.
+
+2) In azure-pipelines.yml file, the call to the post-build.yml requires additional parameter publishingInfraVersion 
+
+Example: 
+```
+  - template: eng\common\templates\post-build\post-build.yml
+    parameters:
+      publishingInfraVersion: 3
+      enableSymbolValidation: false
+      enableSigningValidation: false
+      enableNugetValidation: false
+      enableSourceLinkValidation: false
+```
+Link to arcade-validation azure-pipeline.yml file will be added after the PR is merged.
