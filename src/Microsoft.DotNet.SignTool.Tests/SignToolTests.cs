@@ -7,6 +7,7 @@ using System.Collections.Immutable;
 using System.IO;
 using System.IO.Packaging;
 using System.Linq;
+using System.Runtime.InteropServices;
 using Microsoft.Build.Framework;
 using TestUtilities;
 using Xunit;
@@ -134,6 +135,11 @@ namespace Microsoft.DotNet.SignTool.Tests
             _output = output;
         }
 
+        private string GetWixToolPath()
+        {
+            return Path.Combine(Path.GetDirectoryName(typeof(SignToolTests).Assembly.Location), "tools", "wix");
+        }
+
         private string GetResourcePath(string name, string relativePath = null)
         {
             var srcPath = Path.Combine(Path.GetDirectoryName(typeof(SignToolTests).Assembly.Location), "Resources", name);
@@ -182,7 +188,8 @@ namespace Microsoft.DotNet.SignTool.Tests
             Dictionary<ExplicitCertificateKey, string> fileSignInfo,
             Dictionary<string, SignInfo> extensionsSignInfo,
             string[] expectedXmlElementsPerSingingRound,
-            string[] dualCertificates = null)
+            string[] dualCertificates = null,
+            string wixToolsPath = null)
         {
             var buildEngine = new FakeBuildEngine();
 
@@ -191,7 +198,7 @@ namespace Microsoft.DotNet.SignTool.Tests
             // The path to MSBuild will always be null in these tests, this will force
             // the signing logic to call our FakeBuildEngine.BuildProjectFile with a path
             // to the XML that store the content of the would be Microbuild sign request.
-            var signToolArgs = new SignToolArgs(_tmpDir, microBuildCorePath: "MicroBuildCorePath", testSign: true, msBuildPath: null, _tmpDir, enclosingDir: "", "");
+            var signToolArgs = new SignToolArgs(_tmpDir, microBuildCorePath: "MicroBuildCorePath", testSign: true, msBuildPath: null, _tmpDir, enclosingDir: "", "", wixToolsPath: wixToolsPath);
 
             var signTool = new FakeSignTool(signToolArgs, task.Log);
             var signingInput = new Configuration(signToolArgs.TempDir, itemsToSign, strongNameSignInfo, fileSignInfo, extensionsSignInfo, dualCertificates, task.Log).GenerateListOfFiles();
@@ -230,7 +237,7 @@ namespace Microsoft.DotNet.SignTool.Tests
             AssertEx.Equal(expectedErrors ?? Array.Empty<string>(), engine.LogErrorEvents.Select(w => w.Message));
             AssertEx.Equal(expectedWarnings ?? Array.Empty<string>(), engine.LogWarningEvents.Select(w => $"{w.Code}: {w.Message}"));
         }
-
+        
         [Fact]
         public void EmptySigningList()
         {
@@ -718,6 +725,49 @@ $@"
 </FilesToSign>
 "
             });
+        }
+
+        [SkippableFact]
+        public void MsiWithWixpack()
+        {
+            Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
+            // List of files to be considered for signing
+            var itemsToSign = new[]
+            {
+                GetResourcePath("MsiSetup.msi"),
+                GetResourcePath("MsiSetup.msi.wixpack.zip"),
+            };
+
+            // Default signing information
+            var strongNameSignInfo = new Dictionary<string, SignInfo>()
+            {
+                { "581d91ccdfc4ea9c", new SignInfo("ArcadeCertTest", "ArcadeStrongTest") }
+            };
+
+            // Overriding information
+            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
+
+            // Add msi certificate
+            Dictionary<string, SignInfo> fileExtensionSignInfo = s_fileExtensionSignInfo;
+            fileExtensionSignInfo.Add(".msi", new SignInfo("Microsoft400"));
+
+            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, fileExtensionSignInfo, new[]
+            {
+                "File 'MsiApplication.exe' TargetFramework='.NETFramework,Version=v4.7.2' Certificate='Microsoft400'",
+                "File 'MsiSetup.msi' Certificate='Microsoft400'",
+                "File 'MsiSetup.msi.wixpack.zip' Certificate=''",
+            });
+
+            ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
+            {
+$@"<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "0", "ABCDEFG/MsiApplication.exe")}"">
+  <Authenticode>Microsoft400</Authenticode>
+</FilesToSign>",
+ $@"<FilesToSign Include=""{Path.Combine(_tmpDir, "MsiSetup.msi")}"">
+  <Authenticode>Microsoft400</Authenticode>
+</FilesToSign>"
+            },
+            wixToolsPath: GetWixToolPath());
         }
 
         [Fact]
