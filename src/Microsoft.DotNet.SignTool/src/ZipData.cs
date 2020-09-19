@@ -3,8 +3,10 @@
 
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
+using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.IO.Packaging;
@@ -48,7 +50,7 @@ namespace Microsoft.DotNet.SignTool
         /// <summary>
         /// Repack the zip container with the signed files.
         /// </summary>
-        public void Repack(TaskLoggingHelper log)
+        public void Repack(TaskLoggingHelper log, string tempDir = null, string wixToolsPath = null)
         {
 #if NET472
             if (FileSignInfo.IsVsix())
@@ -58,7 +60,14 @@ namespace Microsoft.DotNet.SignTool
             else
 #endif
             {
-                RepackRawZip(log);
+                if (FileSignInfo.IsWixContainer())
+                {
+                    RepackWixPack(log, tempDir, wixToolsPath);
+                }
+                else 
+                {
+                    RepackRawZip(log);
+                }
             }
         }
 
@@ -130,6 +139,62 @@ namespace Microsoft.DotNet.SignTool
                     }
                 }
             }
+        }
+        private void RepackWixPack(TaskLoggingHelper log, string tempDir, string wixToolsPath)
+        {
+            if(wixToolsPath == null)
+            {
+                log.LogError("WixToolsPath must be defined to repack wixpacks. Wixpacks are used to produce signed msi's during release pipeline builds.  If this is not a release pipeline build, you may avoid this error by removing '*.wixpack.zip' from your ItemsToSign.");
+                return;
+            }
+
+            string workingDir = Path.Combine(tempDir, "extract", Guid.NewGuid().ToString());
+            string outputDir = Path.Combine(tempDir, "output");
+            ZipFile.ExtractToDirectory(FileSignInfo.WixContentFilePath, workingDir);
+            var fileList = Directory.GetFiles(workingDir, "*", SearchOption.AllDirectories);
+            foreach(var file in fileList)
+            {
+                var relativeName = file.Substring($"{workingDir}\\".Length).Replace('\\', '/');
+                var signedPart = FindNestedPart(relativeName);
+                if (!signedPart.HasValue)
+                {
+                    log.LogMessage(MessageImportance.Low, $"Didn't find signed part for nested file: {FileSignInfo.FullPath} -> {relativeName}");
+                    continue;
+                }
+                log.LogMessage(MessageImportance.Low, $"Copying signed stream from {signedPart.Value.FileSignInfo.FullPath} to {file}.");
+                File.Copy(signedPart.Value.FileSignInfo.FullPath, file, true);
+            }
+            string createFileName = Path.Combine(workingDir, "create.cmd");
+            var processStartInfo = new ProcessStartInfo()
+            {
+                FileName = "cmd.exe",
+                UseShellExecute = false,
+                Arguments = $"/c {createFileName} {outputDir}",
+                WorkingDirectory = workingDir,
+            };
+            if (Directory.Exists(wixToolsPath))
+            {
+                string path = processStartInfo.EnvironmentVariables["PATH"];
+                path = $"{path};{wixToolsPath}";
+                processStartInfo.EnvironmentVariables.Remove("PATH");
+                processStartInfo.EnvironmentVariables.Add("PATH", path);
+            }
+            if(!Directory.Exists(outputDir))
+            {
+                Directory.CreateDirectory(outputDir);
+            }
+            var process = Process.Start(processStartInfo);
+            process.WaitForExit();
+            if (process.ExitCode != 0)
+            {
+                log.LogError($"packaging of wix file '{FileSignInfo.FullPath}' failed");
+                return;
+            }
+            string outputFileName = Path.Combine(outputDir, FileSignInfo.FileName);
+            Debug.Assert(File.Exists(outputFileName));
+            log.LogMessage($"created wix assembly {outputFileName}");
+            log.LogMessage($"replacing '{FileSignInfo.FullPath}' with '{outputFileName}'");
+            File.Copy(outputFileName, FileSignInfo.FullPath, true);
         }
     }
 }
