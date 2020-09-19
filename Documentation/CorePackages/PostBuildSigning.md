@@ -1,6 +1,6 @@
 # Post Build Signing
 
-In publishing v3 signing will be moved out of the build step and will be completed post-build. This reduces the time required for builds that do not require signing and allows repos to have more control over when the signing process occurs.
+In publishing v3, signing will be moved out of the build step and will be completed post-build in a release pipeline. This reduces the time required for builds that do not require signing and allows repos to have more control over when the signing process occurs.
 
 Any repositories that wish to move to post-build signing should ensure that they're using v3 publishing, including Publish.proj and Microsoft.DotNet.Build.Tasks.SharedFramework.Sdk (this is the Arcade "Golden Path" and best practice).
 Disable the existing signing logic and no other steps are needed, post-build signing is enabled and configured by default.
