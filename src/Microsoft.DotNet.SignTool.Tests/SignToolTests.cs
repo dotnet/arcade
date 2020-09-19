@@ -237,7 +237,7 @@ namespace Microsoft.DotNet.SignTool.Tests
             AssertEx.Equal(expectedErrors ?? Array.Empty<string>(), engine.LogErrorEvents.Select(w => w.Message));
             AssertEx.Equal(expectedWarnings ?? Array.Empty<string>(), engine.LogWarningEvents.Select(w => $"{w.Code}: {w.Message}"));
         }
-        
+
         [Fact]
         public void EmptySigningList()
         {
