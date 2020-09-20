@@ -12,6 +12,7 @@ using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
 using System.Runtime.Versioning;
+using System.Text.RegularExpressions;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
@@ -66,6 +67,12 @@ namespace Microsoft.DotNet.SignTool
         private readonly Dictionary<SignedFileContentKey, HashSet<string>> _whichPackagesTheFileIsIn;
 
         /// <summary>
+        /// For each uniquely identified file keeps track of all containers where the file appeared
+        /// by full path.
+        /// </summary>
+        private readonly Dictionary<SignedFileContentKey, HashSet<string>> _whichPackagesTheFileIsInFullPath;
+
+        /// <summary>
         /// Keeps track of all files that produced a given error code.
         /// </summary>
         private readonly Dictionary<SigningToolErrorCode, HashSet<SignedFileContentKey>> _errors;
@@ -80,17 +87,31 @@ namespace Microsoft.DotNet.SignTool
         /// Use the content hash in the path of the extracted file paths. 
         /// The default is to use a unique content id based on the number of items extracted.
         /// </summary>
-        private readonly bool _useHashInExtractionPath; 
-        
+        private readonly bool _useHashInExtractionPath;
+
         /// <summary>
         /// A list of files whose content needs to be overwritten by signed content from a different file.
         /// Copy the content of file with full path specified in Key to file with full path specified in Value.
         /// </summary>
         internal List<KeyValuePair<string, string>> _filesToCopy;
 
-        public Configuration(string tempDir, string[] itemsToSign, Dictionary<string, SignInfo> strongNameInfo,
-            Dictionary<ExplicitCertificateKey, string> fileSignInfo, Dictionary<string, SignInfo> extensionSignInfo,
-            string[] dualCertificates, TaskLoggingHelper log, bool useHashInExtractionPath = false)
+        private readonly ITaskItem[] _strongNameInfoPostBuild;
+        private readonly ITaskItem[] _fileSignInfoPostBuild;
+        private readonly ITaskItem[] _fileExtensionSignInfoPostBuild;
+        private readonly ITaskItem[] _itemsToSignPostBuild;
+        private readonly ITaskItem[] _certificatesSignInfoPostBuild;
+        internal Dictionary<string, string> _hashToBarBuildIdMapping;
+        internal bool _isPostBuild = false;
+
+        public Configuration(
+            string tempDir,
+            string[] itemsToSign,
+            Dictionary<string, SignInfo> strongNameInfo,
+            Dictionary<ExplicitCertificateKey, string> fileSignInfo,
+            Dictionary<string, SignInfo> extensionSignInfo,
+            string[] dualCertificates,
+            TaskLoggingHelper log,
+            bool useHashInExtractionPath = false)
         {
             Debug.Assert(tempDir != null);
             Debug.Assert(itemsToSign != null && !itemsToSign.Any(i => i == null));
@@ -110,7 +131,44 @@ namespace Microsoft.DotNet.SignTool
             _itemsToSign = itemsToSign;
             _dualCertificates = dualCertificates ?? new string[0];
             _whichPackagesTheFileIsIn = new Dictionary<SignedFileContentKey, HashSet<string>>();
+            _whichPackagesTheFileIsInFullPath = new Dictionary<SignedFileContentKey, HashSet<string>>();
             _errors = new Dictionary<SigningToolErrorCode, HashSet<SignedFileContentKey>>();
+        }
+
+        public Configuration(
+            string tempDir,
+            ITaskItem[] itemsToSign,
+            ITaskItem[] strongNameSignInfo,
+            ITaskItem[] fileSignInfo,
+            ITaskItem[] fileExtensionSignInfo,
+            ITaskItem[] certificatesSignInfo,
+            TaskLoggingHelper log,
+            bool useHashInExtractionPath = false)
+        {
+            Debug.Assert(tempDir != null);
+            Debug.Assert(itemsToSign != null && !itemsToSign.Any(i => i == null));
+            Debug.Assert(strongNameSignInfo != null);
+            Debug.Assert(fileSignInfo != null);
+
+            _pathToContainerUnpackingDirectory = Path.Combine(tempDir, "ContainerSigning");
+            _useHashInExtractionPath = useHashInExtractionPath;
+            _log = log;
+            _strongNameInfoPostBuild = strongNameSignInfo;
+            _fileSignInfoPostBuild = fileSignInfo;
+            _fileExtensionSignInfoPostBuild = fileExtensionSignInfo;
+            _itemsToSignPostBuild = itemsToSign;
+            _certificatesSignInfoPostBuild = certificatesSignInfo;
+            _itemsToSignPostBuild = itemsToSign;
+            _itemsToSign = itemsToSign.Select(i => i.ItemSpec).ToArray();
+            _isPostBuild = true;
+            _filesToSign = new List<FileSignInfo>();
+            _filesToCopy = new List<KeyValuePair<string, string>>();
+            _zipDataMap = new Dictionary<ImmutableArray<byte>, ZipData>(ByteSequenceComparer.Instance);
+            _filesByContentKey = new Dictionary<SignedFileContentKey, FileSignInfo>();
+            _whichPackagesTheFileIsIn = new Dictionary<SignedFileContentKey, HashSet<string>>();
+            _whichPackagesTheFileIsInFullPath = new Dictionary<SignedFileContentKey, HashSet<string>>();
+            _errors = new Dictionary<SigningToolErrorCode, HashSet<SignedFileContentKey>>();
+            _hashToBarBuildIdMapping = new Dictionary<string, string>();
         }
 
         internal void ReadExistingContainerSigningCache()
@@ -163,8 +221,16 @@ namespace Microsoft.DotNet.SignTool
                     packages = new HashSet<string>();
                 }
 
+                if (!_whichPackagesTheFileIsInFullPath.TryGetValue(fileUniqueKey, out var paths))
+                {
+                    paths = new HashSet<string>();
+                }
+
                 packages.Add(fullPath);
+                paths.Add(fullPath);
+
                 _whichPackagesTheFileIsIn[fileUniqueKey] = packages;
+                _whichPackagesTheFileIsInFullPath[fileUniqueKey] = paths;
 
                 TrackFile(fullPath, ContentUtil.GetContentHash(fullPath), isNested: false);
             }
@@ -243,7 +309,75 @@ namespace Microsoft.DotNet.SignTool
         private FileSignInfo ExtractSignInfo(string fullPath, ImmutableArray<byte> hash, bool forceRepack = false)
         {
             // Try to determine default certificate name by the extension of the file
-            var hasSignInfo = _fileExtensionSignInfo.TryGetValue(Path.GetExtension(fullPath), out var signInfo);
+            bool hasSignInfo = false;
+            string barBuildId = null;
+            SignInfo signInfo = SignInfo.Ignore;
+
+            if (_isPostBuild)
+            {
+                string fileHash = ContentUtil.HashToString(ContentUtil.GetContentHash(fullPath));
+                ITaskItem itemToSign = _itemsToSignPostBuild.Where(i => i.ItemSpec == fullPath).FirstOrDefault();
+
+                if (itemToSign != null)
+                {
+                    barBuildId = itemToSign.GetMetadata("BARBuildId");
+
+                    if (!_hashToBarBuildIdMapping.ContainsKey(fileHash))
+                    {
+                        _hashToBarBuildIdMapping.Add(fileHash, barBuildId);
+                    }
+                    else
+                    {
+                        // If there is a collision and the stored BARBuildId is lower than the current
+                        // we use the stored one since the original ItemsToSign collection is sorted
+                        // by ascendent BARBuildOd
+                        if (string.Compare(_hashToBarBuildIdMapping[fileHash], barBuildId) < 0)
+                        {
+                            barBuildId = _hashToBarBuildIdMapping[fileHash];
+                        }
+                    }
+                }
+                else
+                {
+                    // The file is not in the original ItemsToSign, most likely it is an asset from a
+                    // container so we need to know what package(s) contains it so we can the
+                    // correspondent BARBuildId. Since the same file could exist in different packages
+                    // which were already processed, we take the lower of the BARBuildIds
+                    string relativePath = fullPath.Substring(_pathToContainerUnpackingDirectory.Length + 1);
+                    string entryFileName = Regex.Replace(relativePath, @"[\d]*\\", string.Empty);
+                    if (_whichPackagesTheFileIsInFullPath.TryGetValue(new SignedFileContentKey(fileHash, entryFileName), out var paths))
+                    {
+                        foreach (string path in paths)
+                        {
+                            string parentContainerHash = ContentUtil.HashToString(ContentUtil.GetContentHash(path));
+                            string nestedBarBuildId = _hashToBarBuildIdMapping[parentContainerHash];
+
+                            if (barBuildId == null || string.Compare(barBuildId, nestedBarBuildId) >= 0)
+                            {
+                                barBuildId = nestedBarBuildId;
+                            }
+                        }
+
+                        // Nested assed could be the same of another package so we only add it to the map 
+                        // if doesn't exist
+                        if (!_hashToBarBuildIdMapping.ContainsKey(fileHash))
+                        {
+                            _hashToBarBuildIdMapping.Add(fileHash, barBuildId);
+                        }
+                    }
+                }
+
+                hasSignInfo = FileExtensionSignInfo.TryGetSignInfo(
+                    _fileExtensionSignInfoPostBuild,
+                    fullPath,
+                    barBuildId,
+                    out signInfo);
+            }
+            else
+            {
+                hasSignInfo = _fileExtensionSignInfo.TryGetValue(Path.GetExtension(fullPath), out signInfo);
+            }
+
             var fileName = Path.GetFileName(fullPath);
             var extension = Path.GetExtension(fullPath);
             string explicitCertificateName = null;
@@ -264,7 +398,23 @@ namespace Microsoft.DotNet.SignTool
                 peInfo = GetPEInfo(fullPath);
 
                 // Get the default sign info based on the PKT, if applicable:
-                if (peInfo.IsManaged && _strongNameInfo.TryGetValue(peInfo.PublicKeyToken, out var pktBasedSignInfo))
+                SignInfo pktBasedSignInfo = SignInfo.Ignore;
+                bool strongNameInfo = false;
+
+                if (_isPostBuild)
+                {
+                    strongNameInfo = StrongNameInfo.TryGetSignInfo(
+                        _strongNameInfoPostBuild,
+                        barBuildId,
+                        peInfo,
+                        out pktBasedSignInfo);
+                }
+                else
+                {
+                    strongNameInfo = _strongNameInfo.TryGetValue(peInfo.PublicKeyToken ?? string.Empty, out pktBasedSignInfo);
+                }
+
+                if (peInfo.IsManaged && strongNameInfo)
                 {
                     if (peInfo.IsCrossgened)
                     {
@@ -274,13 +424,41 @@ namespace Microsoft.DotNet.SignTool
                     {
                         signInfo = pktBasedSignInfo;
                     }
-                    hasSignInfo = true;
 
+                    hasSignInfo = true;
                 }
 
                 // Check if we have more specific sign info:
-                matchedNameTokenFramework = _fileSignInfo.TryGetValue(new ExplicitCertificateKey(fileName, peInfo.PublicKeyToken, peInfo.TargetFramework), out explicitCertificateName);
-                matchedNameToken = !matchedNameTokenFramework && _fileSignInfo.TryGetValue(new ExplicitCertificateKey(fileName, peInfo.PublicKeyToken), out explicitCertificateName);
+                if (_isPostBuild)
+                {
+                    matchedNameTokenFramework = FileSignInfoPostBuild.TryGetCertificateByTargetFramework(
+                        _fileSignInfoPostBuild,
+                        fullPath,
+                        barBuildId,
+                        peInfo,
+                        out explicitCertificateName);
+                }
+                else
+                {
+                    matchedNameTokenFramework = _fileSignInfo.TryGetValue(new ExplicitCertificateKey(fileName, peInfo.PublicKeyToken, peInfo.TargetFramework), out explicitCertificateName);
+                }
+
+                if (!matchedNameTokenFramework)
+                {
+                    if (_isPostBuild)
+                    {
+                        matchedNameToken = FileSignInfoPostBuild.TryGetCertificateByFileNameAndPublicKeyToken(
+                        _fileSignInfoPostBuild,
+                        fullPath,
+                        barBuildId,
+                        peInfo,
+                        out explicitCertificateName);
+                    }
+                    else
+                    {
+                        matchedNameToken = _fileSignInfo.TryGetValue(new ExplicitCertificateKey(fileName, peInfo.PublicKeyToken), out explicitCertificateName);
+                    }
+                }
 
                 fileSpec = matchedNameTokenFramework ? $" (PublicKeyToken = {peInfo.PublicKeyToken}, Framework = {peInfo.TargetFramework})" :
                         matchedNameToken ? $" (PublicKeyToken = {peInfo.PublicKeyToken})" : string.Empty;
@@ -289,14 +467,25 @@ namespace Microsoft.DotNet.SignTool
             // We didn't find any specific information for PE files using PKT + TargetFramework
             if (explicitCertificateName == null)
             {
-                matchedName = _fileSignInfo.TryGetValue(new ExplicitCertificateKey(fileName), out explicitCertificateName);
+                if (_isPostBuild)
+                {
+                    matchedName = FileSignInfoPostBuild.TryGetCertificateByFileName(
+                        _fileSignInfoPostBuild,
+                        fullPath,
+                        barBuildId,
+                        out explicitCertificateName);
+                }
+                else
+                {
+                    matchedName = _fileSignInfo.TryGetValue(new ExplicitCertificateKey(fileName), out explicitCertificateName);
+                }
             }
 
             // If has overriding info, is it for ignoring the file?
             if (SignToolConstants.IgnoreFileCertificateSentinel.Equals(explicitCertificateName, StringComparison.OrdinalIgnoreCase))
             {
                 _log.LogMessage($"File configured to not be signed: {fileName}{fileSpec}");
-                return new FileSignInfo(fullPath, hash, SignInfo.Ignore, forceRepack:forceRepack);
+                return new FileSignInfo(fullPath, hash, SignInfo.Ignore, forceRepack: forceRepack);
             }
 
             // Do we have an explicit certificate after all?
@@ -308,9 +497,25 @@ namespace Microsoft.DotNet.SignTool
 
             if (hasSignInfo)
             {
-                if (isAlreadySigned && !_dualCertificates.Contains(signInfo.Certificate))
+                bool dualCerts = false;
+
+                if (_isPostBuild)
                 {
-                    return new FileSignInfo(fullPath, hash, SignInfo.AlreadySigned, forceRepack:forceRepack);
+                    if (_certificatesSignInfoPostBuild != null)
+                    {
+                        dualCerts = _certificatesSignInfoPostBuild
+                            .Where(c => c.GetMetadata("DualSigningAllowed").Equals("true", StringComparison.OrdinalIgnoreCase) &&
+                            c.GetMetadata("BARBuildId") == barBuildId).Any();
+                    }
+                }
+                else
+                {
+                    dualCerts = _dualCertificates.Contains(signInfo.Certificate);
+                }
+
+                if (isAlreadySigned && !dualCerts)
+                {
+                    return new FileSignInfo(fullPath, hash, SignInfo.AlreadySigned, forceRepack: forceRepack);
                 }
 
                 // TODO: implement this check for native PE files as well:
@@ -332,7 +537,7 @@ namespace Microsoft.DotNet.SignTool
                     }
                 }
 
-                return new FileSignInfo(fullPath, hash, signInfo, (peInfo != null && peInfo.TargetFramework != "") ? peInfo.TargetFramework : null, forceRepack:forceRepack);
+                return new FileSignInfo(fullPath, hash, signInfo, (peInfo != null && peInfo.TargetFramework != "") ? peInfo.TargetFramework : null, forceRepack: forceRepack);
             }
 
             if (SignToolConstants.SignableExtensions.Contains(extension) || SignToolConstants.SignableOSXExtensions.Contains(extension))
@@ -510,13 +715,21 @@ namespace Microsoft.DotNet.SignTool
                             packages = new HashSet<string>();
                         }
 
+                        if (!_whichPackagesTheFileIsInFullPath.TryGetValue(fileUniqueKey, out var paths))
+                        {
+                            paths = new HashSet<string>();
+                        }
+
                         packages.Add(zipFileSignInfo.FileName);
+                        paths.Add(zipFileSignInfo.FullPath);
+
                         _whichPackagesTheFileIsIn[fileUniqueKey] = packages;
+                        _whichPackagesTheFileIsInFullPath[fileUniqueKey] = paths;
 
                         // if we already encountered file that hash the same content we can reuse its signed version when repackaging the container.
                         var fileName = Path.GetFileName(relativePath);
                         if (!_filesByContentKey.TryGetValue(new SignedFileContentKey(contentHash, fileName), out var fileSignInfo))
-                        { 
+                        {
                             string extractPathRoot = _useHashInExtractionPath ? ContentUtil.HashToString(contentHash) : _filesByContentKey.Count().ToString();
                             string tempPath = Path.Combine(_pathToContainerUnpackingDirectory, extractPathRoot, relativePath);
                             _log.LogMessage($"Extracting file '{fileName}' from '{zipFileSignInfo.FullPath}' to '{tempPath}'.");

@@ -5,6 +5,7 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Resources;
@@ -78,13 +79,13 @@ namespace Microsoft.DotNet.SignTool
         /// This needs to be the full path to the file to be signed.
         /// </summary>
         [Required]
-        public string[] ItemsToSign { get; set; }
+        public ITaskItem[] ItemsToSign { get; set; }
 
         /// <summary>
         /// List of file names that should be ignored when checking
         /// for correctness of strong name signature.
         /// </summary>
-        public string[] ItemsToSkipStrongNameCheck { get; set; }
+        public ITaskItem[] ItemsToSkipStrongNameCheck { get; set; }
 
         /// <summary>
         /// Mapping relating PublicKeyToken, CertificateName and Strong Name. 
@@ -130,6 +131,11 @@ namespace Microsoft.DotNet.SignTool
         /// </summary>
         [Required]
         public string LogDir { get; set; }
+
+        /// <summary>
+        /// Whether we are signing post build or not.
+        /// </summary>
+        public bool IsPostBuild { get; set; } = false;
 
         public override bool Execute()
         {
@@ -181,7 +187,7 @@ namespace Microsoft.DotNet.SignTool
                     return;
                 }
 
-                var strongNameLocally = StrongNameSignInfo != null 
+                var strongNameLocally = StrongNameSignInfo != null
                     && StrongNameSignInfo
                         .Where(ti => !string.IsNullOrEmpty(ti.ItemSpec) && ti.ItemSpec.EndsWith(".snk", StringComparison.OrdinalIgnoreCase))
                         .Any();
@@ -208,7 +214,33 @@ namespace Microsoft.DotNet.SignTool
 
             var signToolArgs = new SignToolArgs(TempDir, MicroBuildCorePath, TestSign, MSBuildPath, LogDir, enclosingDir, SNBinaryPath);
             var signTool = DryRun ? new ValidationOnlySignTool(signToolArgs, Log) : (SignTool)new RealSignTool(signToolArgs, Log);
-            var configuration = new Configuration(TempDir, ItemsToSign, strongNameInfo, fileSignInfo, extensionSignInfo, dualCertificates, Log, useHashInExtractionPath: UseHashInExtractionPath);
+            Configuration configuration = null;
+
+            if (IsPostBuild)
+            {
+                configuration = new Configuration(
+                    TempDir,
+                    ItemsToSign.OrderBy(i => i.GetMetadata("BARBuildId")).ToArray(),
+                    StrongNameSignInfo,
+                    FileSignInfo,
+                    FileExtensionSignInfo,
+                    CertificatesSignInfo,
+                    Log,
+                    useHashInExtractionPath: UseHashInExtractionPath
+                    );
+            }
+            else
+            {
+                configuration = new Configuration(
+                    TempDir,
+                    ItemsToSign.Select(i => i.ItemSpec).ToArray(),
+                    strongNameInfo,
+                    fileSignInfo,
+                    extensionSignInfo,
+                    dualCertificates,
+                    Log,
+                    useHashInExtractionPath: UseHashInExtractionPath);
+            }
 
             if (ReadExistingContainerSigningCache)
             {
@@ -219,7 +251,7 @@ namespace Microsoft.DotNet.SignTool
 
             if (Log.HasLoggedErrors) return;
 
-            var util = new BatchSignUtil(BuildEngine, Log, signTool, signingInput, ItemsToSkipStrongNameCheck);
+            var util = new BatchSignUtil(BuildEngine, Log, signTool, signingInput, ItemsToSkipStrongNameCheck?.Select(i => i.ItemSpec).ToArray());
 
             util.SkipZipContainerSignatureMarkerCheck = this.SkipZipContainerSignatureMarkerCheck;
 
@@ -256,15 +288,15 @@ namespace Microsoft.DotNet.SignTool
                 return string.Empty;
             }
 
-            foreach (var path in ItemsToSign)
+            foreach (var itemToSign in ItemsToSign)
             {
-                if (!Path.IsPathRooted(path))
+                if (!Path.IsPathRooted(itemToSign.ItemSpec))
                 {
-                    Log.LogError($"Paths specified in {nameof(ItemsToSign)} must be absolute: '{path}'.");
+                    Log.LogError($"Paths specified in {nameof(ItemsToSign)} must be absolute: '{itemToSign}'.");
                     continue;
                 }
 
-                var directoryParts = Path.GetFullPath(Path.GetDirectoryName(path)).Split(separators);
+                var directoryParts = Path.GetFullPath(Path.GetDirectoryName(itemToSign.ItemSpec)).Split(separators);
                 if (result == null)
                 {
                     result = directoryParts;
@@ -402,7 +434,7 @@ namespace Microsoft.DotNet.SignTool
                     var publicKeyToken = item.GetMetadata("PublicKeyToken");
                     var certificateName = item.GetMetadata("CertificateName");
 
-                    if (fileName.IndexOfAny(new[] {'/', '\\'}) >= 0)
+                    if (fileName.IndexOfAny(new[] { '/', '\\' }) >= 0)
                     {
                         Log.LogError($"{nameof(FileSignInfo)} should specify file name and extension, not a full path: '{fileName}'");
                         continue;
