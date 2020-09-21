@@ -45,8 +45,8 @@
          These flags are split (rather than just a single check based on PostBuildSign == true/false because
          some repos may do both in-build and post-build signing. -->
     <!-- Control whether an empty ItemsToSign item group is allowed when calling SignToolTask. -->
-    <AllowEmptySignList Condition="'$(PostBuildSign)' != 'true'">false</AllowEmptySignPostBuildList>
-    <AllowEmptySignList Condition="'$(PostBuildSign)' == 'true'">true</AllowEmptySignPostBuildList>
+    <AllowEmptySignList Condition="'$(PostBuildSign)' != 'true'">false</AllowEmptySignList>
+    <AllowEmptySignList Condition="'$(PostBuildSign)' == 'true'">true</AllowEmptySignList>
     <!-- Control whether an empty ItemsToSignPostBuild item group is allowed during publishing -->
     <AllowEmptySignPostBuildList Condition="'$(PostBuildSign)' != 'true'">true</AllowEmptySignPostBuildList>
     <AllowEmptySignPostBuildList Condition="'$(PostBuildSign)' == 'true'">false</AllowEmptySignPostBuildList>
