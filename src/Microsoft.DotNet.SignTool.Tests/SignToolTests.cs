@@ -32,6 +32,7 @@ namespace Microsoft.DotNet.SignTool.Tests
             {".dylib", new SignInfo("DylibCertificate") },
             {".dll", new SignInfo("Microsoft400") },
             {".exe", new SignInfo("Microsoft400") },
+            {".msi", new SignInfo("Microsoft400") },
             {".vsix", new SignInfo("VsixSHA2") },
             {".zip", SignInfo.Ignore },
             {".nupkg", new SignInfo("NuGet") },
@@ -747,11 +748,7 @@ $@"
             // Overriding information
             var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
 
-            // Add msi certificate
-            Dictionary<string, SignInfo> fileExtensionSignInfo = s_fileExtensionSignInfo;
-            fileExtensionSignInfo.Add(".msi", new SignInfo("Microsoft400"));
-
-            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, fileExtensionSignInfo, new[]
+            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
                 "File 'MsiSetup.msi' Certificate='Microsoft400'",
                 "File 'MsiBootstrapper.exe' Certificate='Microsoft400'",
@@ -793,11 +790,7 @@ wixToolsPath: GetWixToolPath());
             // Overriding information
             var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
 
-            // Add msi certificate
-            Dictionary<string, SignInfo> fileExtensionSignInfo = s_fileExtensionSignInfo;
-            fileExtensionSignInfo.Add(".msi", new SignInfo("Microsoft400"));
-
-            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, fileExtensionSignInfo, new[]
+            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
                 "File 'MsiApplication.exe' TargetFramework='.NETFramework,Version=v4.7.2' Certificate='Microsoft400'",
                 "File 'MsiSetup.msi' Certificate='Microsoft400'",
