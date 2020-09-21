@@ -386,9 +386,13 @@ The publishing logs are stored inside an Azure DevOps artifacts container named 
 | dotnet3-transport   | .NET Core 3 non-shipping packages                            |
 |                     | https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet3-transport/nuget/v3/index.json |
 
+### What is V1 publishing?
+
+Publishing job has multiple stage(s), these stages represent available channels. Only the stages corresponding to default channel will execute. This is for arcade3.x only.
+
 ### What is V2 publishing?
 
-Publishing job in V2 runs in stage(s) representing a channel(s) that is configured as a default channel for the build in Maestro++. All the other stages will execute the Setup Maestro Vars job but will not publish. 
+In V2 Publishing job has multiple stage(s), these stages represent available channels. Only the stages corresponding to default channel will execute. All the other stages will execute the Setup Maestro Vars job but will not publish. 
 
 Example from arcade-validation : 
 
@@ -397,11 +401,49 @@ Example from arcade-validation :
 
 ### What is V3 publishing? How is it different from V2?
 
-In V3 we have one stage for publishing job called 'Publish-using-darc'. Even if the repo branch is associated to more than one default channel(s) there will be only one stage. Note that [default channel(s)](https://github.com/dotnet/arcade/blob/ec191f3d706d740bc7a87fbb98d94d916f81f0cb/Documentation/Darc.md#add-default-channel) has to be configured for this stage to create a build in Maestro++.
+In V3 we have one stage called 'Publish-using-darc' handling publishing for all available channels. Even if the repo branch is associated to more than one default channel(s) there will be only one stage. Publishing Using Darc stage internally calls darc 
+add-build-to-channel which inturn creates a build in Maestro Promotion Pipeline. 
 
-In V2 publishing job runs in multiple stages, it would show stage(s) activated even though it would not publish to that channel. So in V3 we unified it to only one stage.
+If the [default channel(s)](https://github.com/dotnet/arcade/blob/ec191f3d706d740bc7a87fbb98d94d916f81f0cb/Documentation/Darc.md#add-default-channel) is configured, this will create a build in Maestro Promotion Pipeline.
+
+If default channel is not configured, [add-build-to-channel](https://github.com/dotnet/arcade/blob/ec191f3d706d740bc7a87fbb98d94d916f81f0cb/Documentation/Darc.md#add-build-to-channel) can be used to publish to the channel(s) by creating a build in Maestro Promotion Pipeline.
+
+In V2 publishing job runs in multiple stages, it would show stage(s) activated even though it would not publish to that channel. So in V3 we unified it to only one stage, this has reduced UI cluttering. Also some classes of changes can be made to publishing directly without an arcade update.
 
 Example from arcade-validation: 
 
 ![V3-publishing](./images/V3-publishing.PNG)
 
+### How to upgrade from V2 to V3?
+
+Following changes has to be made
+1) Create or update eng/Publishing.props, adding the following MSBuild property:
+
+```
+<PublishingVersion>3</PublishingVersion>
+```
+
+Example: 
+```
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+   <PropertyGroup>
+      <PublishingVersion>3</PublishingVersion>
+   </PropertyGroup>
+</Project>
+```
+arcade-validation example : https://github.com/dotnet/arcade-validation/blob/a3b8def7412266282cd23edf9e84176f6afe52a5/eng/Publishing.props#L4
+
+2) In azure-pipelines.yml file, the call to the post-build.yml requires additional parameter publishingInfraVersion 
+
+Example: 
+```
+  - template: eng\common\templates\post-build\post-build.yml
+    parameters:
+      publishingInfraVersion: 3
+      enableSymbolValidation: false
+      enableSigningValidation: false
+      enableNugetValidation: false
+      enableSourceLinkValidation: false
+```
+arcade-validation example : https://github.com/dotnet/arcade-validation/blob/a3b8def7412266282cd23edf9e84176f6afe52a5/azure-pipelines.yml#L206
