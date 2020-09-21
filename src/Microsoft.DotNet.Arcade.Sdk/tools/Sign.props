@@ -14,10 +14,13 @@
     <_DefaultItemsToSign Include="$(ArtifactsPackagesDir)**\*.nupkg" />
     <_DefaultItemsToSign Include="$(VisualStudioSetupOutputPath)**\*.vsix" />
     <_DefaultItemsToSign Include="$(VisualStudioBuildPackagesDir)**\*.nupkg" />
+    <!-- Sign wixpacks to correspond to msi/exe signing -->
+    <_ItemsToOnlySignPostBuild Include="$(ArtifactsPackagesDir)**\*.wixpack.zip" />
 
     <!-- If PostBuildSign == true, these are added to ItemsToSignPostBuild, otherwise these are added to ItemsToSign -->
     <ItemsToSign Include="@(_DefaultItemsToSign)" Condition="'$(PostBuildSign)' != 'true'" />
     <ItemsToSignPostBuild Include="@(_DefaultItemsToSign->'%(Filename)%(Extension)')" Condition="'$(PostBuildSign)' == 'true'" />
+    <ItemsToSignPostBuild Include="@(_ItemsToOnlySignPostBuild->'%(Filename)%(Extension)')" Condition="'$(PostBuildSign)' == 'true'" />
 
     <!-- Default certificate/strong-name to be used for all files with PKT=="31bf3856ad364e35". -->
     <StrongNameSignInfo Include="MsSharedLib72" PublicKeyToken="31bf3856ad364e35" CertificateName="Microsoft400" />
