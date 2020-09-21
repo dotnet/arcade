@@ -392,7 +392,7 @@ Publishing job in V2 runs in stage(s) representing a channel(s) that is configur
 
 Example from arcade-validation : 
 
-![V2-publishing](./images/V2-publishing.png)
+![V2-publishing](./images/V2-publishing.PNG)
 
 
 ### What is V3 publishing? How is it different from V2?
@@ -403,5 +403,5 @@ In V2 publishing job runs in multiple stages, it would show stage(s) activated e
 
 Example from arcade-validation: 
 
-![V3-publishing](./images/V3-publishing.png)
+![V3-publishing](./images/V3-publishing.PNG)
 
