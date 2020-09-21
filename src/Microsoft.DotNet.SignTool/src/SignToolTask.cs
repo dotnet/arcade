@@ -75,6 +75,11 @@ namespace Microsoft.DotNet.SignTool
         public string MicroBuildCorePath { get; set; }
 
         /// <summary>
+        /// Path to the wix toolset directory
+        /// </summary>
+        public string WixToolsPath { get; set; }
+
+        /// <summary>
         /// Explicit list of containers / files to be signed.
         /// This needs to be the full path to the file to be signed.
         /// </summary>
@@ -179,6 +184,10 @@ namespace Microsoft.DotNet.SignTool
 
             if (!DryRun)
             {
+                if(!Path.IsPathRooted(TempDir))
+                {
+                    Log.LogWarning($"TempDir ('{TempDir}' is not rooted, this can cause unexpected behavior in signtool.  Please provide a fully qualified 'TempDir' path.");
+                }
                 var isValidSNPath = !string.IsNullOrEmpty(SNBinaryPath) && File.Exists(SNBinaryPath) && SNBinaryPath.EndsWith("sn.exe");
 
                 if (DoStrongNameCheck && !isValidSNPath)
@@ -198,7 +207,10 @@ namespace Microsoft.DotNet.SignTool
                     return;
                 }
             }
-
+            if(WixToolsPath != null && !Directory.Exists(WixToolsPath))
+            {
+                Log.LogError($"WixToolsPath ('{WixToolsPath}') does not exist.");
+            }
             var enclosingDir = GetEnclosingDirectoryOfItemsToSign();
 
             PrintConfigInformation();
@@ -212,7 +224,7 @@ namespace Microsoft.DotNet.SignTool
 
             if (Log.HasLoggedErrors) return;
 
-            var signToolArgs = new SignToolArgs(TempDir, MicroBuildCorePath, TestSign, MSBuildPath, LogDir, enclosingDir, SNBinaryPath);
+            var signToolArgs = new SignToolArgs(TempDir, MicroBuildCorePath, TestSign, MSBuildPath, LogDir, enclosingDir, SNBinaryPath, WixToolsPath);
             var signTool = DryRun ? new ValidationOnlySignTool(signToolArgs, Log) : (SignTool)new RealSignTool(signToolArgs, Log);
             Configuration configuration = null;
 

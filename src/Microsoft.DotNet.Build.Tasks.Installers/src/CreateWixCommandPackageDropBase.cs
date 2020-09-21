@@ -69,6 +69,10 @@ namespace Microsoft.DotNet.Build.Tasks.Installers.src
             {
                 File.Delete(OutputFile);
             }
+            if(!Directory.Exists(OutputFolder))
+            {
+                Directory.CreateDirectory(OutputFolder);
+            }
             ZipFile.CreateFromDirectory(packageDropOutputFolder, OutputFile);
         }
 

@@ -19,6 +19,8 @@ namespace Microsoft.DotNet.SignTool
         internal string TempDir => _args.TempDir;
         internal string MicroBuildCorePath => _args.MicroBuildCorePath;
 
+        internal string WixToolsPath => _args.WixToolsPath;
+
         internal SignTool(SignToolArgs args, TaskLoggingHelper log)
         {
             _args = args;
