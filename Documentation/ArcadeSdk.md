@@ -270,7 +270,7 @@ Configurable item groups:
 - `ItemsToSign`
   List of files to sign in-place, during the build. May list individual files to sign (e.g. .dll, .exe, .ps1, etc.) as well as container files (.nupkg, .vsix, .zip, etc.). All files embedded in a container file are signed (recursively) unless specified otherwise.
 - `ItemsToSignPostBuild`
-  List of file names (without paths) to sign in post build. May only contain files that are published. All files embedded in a container file are signed (recursively) unless specified otherwise.
+  List of file names (without paths) to sign in post build release pipeline. May only contain files that are published. All files embedded in a container file are signed (recursively) unless specified otherwise.
 - `FileSignInfo`
   Specifies Authenticode certificate to use to sign files with given file name.
 - `FileExtensionSignInfo`
