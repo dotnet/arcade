@@ -136,7 +136,7 @@ namespace Microsoft.DotNet.SignTool
                 // extract engines
                 foreach (var file in enginesToSign)
                 {
-                    string engineFileName = $"{Path.Combine(workingDirectory, file.FileName)}-engine.exe";
+                    string engineFileName = $"{Path.Combine(workingDirectory, file.FileName)}{SignToolConstants.MsiEngineExtension}";
                     _log.LogMessage(MessageImportance.Normal, $"Extracting engine from {file.FullPath}");
                     int exitCode = RunWixTool("insignia.exe", $"-ib {file.FullPath} -o {engineFileName}", workingDirectory, _signTool.WixToolsPath);
                     if(exitCode != 0)
@@ -262,6 +262,8 @@ namespace Microsoft.DotNet.SignTool
                 UseShellExecute = false,
                 Arguments = $"/c {toolName} {arguments}",
                 WorkingDirectory = workingDirectory,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true
             };
             if (Directory.Exists(wixToolsPath))
             {
