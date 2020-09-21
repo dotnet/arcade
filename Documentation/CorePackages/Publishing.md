@@ -385,3 +385,21 @@ The publishing logs are stored inside an Azure DevOps artifacts container named 
 |                     | https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet3/nuget/v3/index.json |
 | dotnet3-transport   | .NET Core 3 non-shipping packages                            |
 |                     | https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet3-transport/nuget/v3/index.json |
+
+### What is V2 publishing?
+
+Publishing job in V2 runs in stage(s) representing a channel(s) that is configured as a default channel for the build in Maestro++. All the other stages will execute the Setup Maestro Vars job but will not publish. 
+
+Example from arcade-validation : 
+
+(./images/V2-publishing.png)
+
+
+### What is V3 publishing? How is it different from V2?
+
+In V2 publishing job runs in multiple stages,it would show stage(s) activated even though it would not publish to that channel. In V3 we have one stage for publishing job called 'Publish-using-darc'. Even if the repo branch is associated to more than one default channel(s) there will be only one stage. Note that [default channel(s)](https://github.com/dotnet/arcade/blob/ec191f3d706d740bc7a87fbb98d94d916f81f0cb/Documentation/Darc.md#add-default-channel) has to be configured for this stage to create a build in Maestro++.
+
+Example from arcade-validation: 
+
+(./images/V3-publishing.png)
+
