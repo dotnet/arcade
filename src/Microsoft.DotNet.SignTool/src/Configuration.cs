@@ -167,6 +167,7 @@ namespace Microsoft.DotNet.SignTool
             _itemsToSign = itemsToSign.Select(i => i.ItemSpec).ToArray();
             _isPostBuild = true;
             _filesToSign = new List<FileSignInfo>();
+            _wixPacks = new List<WixPackInfo>();
             _filesToCopy = new List<KeyValuePair<string, string>>();
             _zipDataMap = new Dictionary<ImmutableArray<byte>, ZipData>(ByteSequenceComparer.Instance);
             _filesByContentKey = new Dictionary<SignedFileContentKey, FileSignInfo>();
@@ -371,13 +372,13 @@ namespace Microsoft.DotNet.SignTool
                             string parentContainerHash = ContentUtil.HashToString(ContentUtil.GetContentHash(path));
                             string nestedBarBuildId = _hashToBarBuildIdMapping[parentContainerHash];
 
-                            if (barBuildId == null || string.Compare(barBuildId, nestedBarBuildId) >= 0)
+                            if (barBuildId == null || string.Compare(barBuildId, nestedBarBuildId) > 0)
                             {
                                 barBuildId = nestedBarBuildId;
                             }
                         }
 
-                        // Nested assed could be the same of another package so we only add it to the map 
+                        // Nested asset could be the same of another package so we only add it to the map 
                         // if doesn't exist
                         if (!_hashToBarBuildIdMapping.ContainsKey(fileHash))
                         {

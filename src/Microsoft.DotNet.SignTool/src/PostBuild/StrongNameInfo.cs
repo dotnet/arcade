@@ -17,7 +17,7 @@ namespace Microsoft.DotNet.SignTool
         {
             signInfo = SignInfo.Ignore;
 
-            ITaskItem strongNameTaskItem = strongNameInfoPostBuild.Where(
+            ITaskItem strongNameTaskItem = strongNameInfoPostBuild?.Where(
                            s => s.GetMetadata("PublicKeyToken") == peInfo.PublicKeyToken &&
                            s.GetMetadata("BARBuildId") == barBuildId).FirstOrDefault();
 

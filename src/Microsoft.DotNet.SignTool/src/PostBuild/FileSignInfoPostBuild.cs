@@ -19,7 +19,7 @@ namespace Microsoft.DotNet.SignTool
         {
             certName = null;
 
-            ITaskItem fileSignInfoTaskItem = fileSignInfoPostBuild.Where(
+            ITaskItem fileSignInfoTaskItem = fileSignInfoPostBuild?.Where(
                             f => Path.GetFileName(fullPath) == f.ItemSpec &&
                             f.GetMetadata("PublicKeyToken") == peInfo.PublicKeyToken &&
                             f.GetMetadata("TargetFramework") == peInfo.TargetFramework &&
@@ -44,7 +44,7 @@ namespace Microsoft.DotNet.SignTool
         {
             certName = null;
 
-            ITaskItem fileSignInfoTaskItem = fileSignInfoPostBuild.Where(
+            ITaskItem fileSignInfoTaskItem = fileSignInfoPostBuild?.Where(
                             f => Path.GetFileName(fullPath) == f.ItemSpec &&
                             f.GetMetadata("PublicKeyToken") == peInfo.PublicKeyToken &&
                             f.GetMetadata("TargetFramework") == string.Empty &&
@@ -68,7 +68,7 @@ namespace Microsoft.DotNet.SignTool
         {
             certName = null;
 
-            ITaskItem fileSignInfoTaskItem = fileSignInfoPostBuild.Where(
+            ITaskItem fileSignInfoTaskItem = fileSignInfoPostBuild?.Where(
                             f => Path.GetFileName(fullPath) == f.ItemSpec &&
                             f.GetMetadata("PublicKeyToken") == string.Empty &&
                             f.GetMetadata("TargetFramework") == string.Empty &&

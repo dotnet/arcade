@@ -41,85 +41,85 @@ namespace Microsoft.DotNet.SignTool.Tests
         // Default extension based signing information post build
         private static readonly ITaskItem[] s_fileExtensionSignInfoPostBuild = new ITaskItem[]
         {
-            new TaskItem(".js", new Dictionary<string, string> { 
+            new TaskItem(".js", new Dictionary<string, string> {
                 { "CertificateName", "JSCertificate" },
-                {"BARBuildID", "123" } 
+                { "BARBuildID", "123" }
             }),
             new TaskItem(".jar", new Dictionary<string, string> {
                 { "CertificateName", "JARCertificate" },
-                {"BARBuildID", "123" }
+                { "BARBuildID", "123" }
             }),
             new TaskItem(".ps1", new Dictionary<string, string> {
                 { "CertificateName", "PSCertificate" },
-                {"BARBuildID", "123" }
+                { "BARBuildID", "123" }
             }),
             new TaskItem(".psd1", new Dictionary<string, string> {
                 { "CertificateName", "PSDCertificate" },
-                {"BARBuildID", "123" }
+                { "BARBuildID", "123" }
             }),
             new TaskItem(".psm1", new Dictionary<string, string> {
                 { "CertificateName", "PSMCertificate" },
-                {"BARBuildID", "123" }
+                { "BARBuildID", "123" }
             }),
             new TaskItem(".psc1", new Dictionary<string, string> {
                 { "CertificateName", "PSCCertificate" },
-                {"BARBuildID", "123" }
+                { "BARBuildID", "123" }
             }),
             new TaskItem(".psd1", new Dictionary<string, string> {
                 { "CertificateName", "PSDCertificate" },
-                {"BARBuildID", "123" }
+                { "BARBuildID", "123" }
             }),
             new TaskItem(".dylib", new Dictionary<string, string> {
                 { "CertificateName", "DylibCertificate" },
-                {"BARBuildID", "123" }
+                { "BARBuildID", "123" }
             }),
             new TaskItem(".dll", new Dictionary<string, string> {
                 { "CertificateName", "Microsoft400" },
-                {"BARBuildID", "123" }
+                { "BARBuildID", "123" }
             }),
             new TaskItem(".exe", new Dictionary<string, string> {
                 { "CertificateName", "Microsoft400" },
-                {"BARBuildID", "123" }
+                { "BARBuildID", "123" }
             }),
             new TaskItem(".zip", new Dictionary<string, string> {
-                { "CertificateName", "" },
-                {"BARBuildID", "123" }
+                { "CertificateName", "None" },
+                { "BARBuildID", "123" }
             }),
             new TaskItem(".nupkg", new Dictionary<string, string> {
                 { "CertificateName", "NuGet" },
-                {"BARBuildID", "123" }
+                { "BARBuildID", "123" }
             }),
             new TaskItem(".vsix", new Dictionary<string, string> {
                 { "CertificateName", "VsixSHA2" },
-                {"BARBuildID", "123" }
+                { "BARBuildID", "123" }
             }),
             new TaskItem(".js", new Dictionary<string, string> {
                 { "CertificateName", "JSCertificate" },
-                {"BARBuildID", "234" }
+                { "BARBuildID", "234" }
             }),
             new TaskItem(".jar", new Dictionary<string, string> {
                 { "CertificateName", "JARCertificate" },
-                {"BARBuildID", "234" }
+                { "BARBuildID", "234" }
             }),
             new TaskItem(".ps1", new Dictionary<string, string> {
                 { "CertificateName", "PSCertificate" },
-                {"BARBuildID", "234" }
+                { "BARBuildID", "234" }
             }),
             new TaskItem(".psd1", new Dictionary<string, string> {
                 { "CertificateName", "PSDCertificate" },
-                {"BARBuildID", "234" }
+                { "BARBuildID", "234" }
             }),
             new TaskItem(".dll", new Dictionary<string, string> {
                 { "CertificateName", "Microsoft400" },
-                {"BARBuildID", "234" }
+                { "BARBuildID", "234" }
             }),
             new TaskItem(".nupkg", new Dictionary<string, string> {
                 { "CertificateName", "NuGet" },
-                {"BARBuildID", "234" }
+                { "BARBuildID", "234" }
             }),
             new TaskItem(".vsix", new Dictionary<string, string> {
                 { "CertificateName", "VsixSHA2" },
-                {"BARBuildID", "234" }
+                { "BARBuildID", "234" }
             })
         };
 
@@ -318,11 +318,11 @@ namespace Microsoft.DotNet.SignTool.Tests
             // to the XML that store the content of the would be Microbuild sign request.
             var signToolArgs = new SignToolArgs(
                 _tmpDir,
-                microBuildCorePath: "MicroBuildCorePath", 
-                testSign: true, 
-                msBuildPath: null, 
-                _tmpDir, 
-                enclosingDir: "", 
+                microBuildCorePath: "MicroBuildCorePath",
+                testSign: true,
+                msBuildPath: null,
+                _tmpDir,
+                enclosingDir: "",
                 "");
 
             var signTool = new FakeSignTool(signToolArgs, task.Log);
@@ -427,8 +427,8 @@ namespace Microsoft.DotNet.SignTool.Tests
 
             var task = new SignToolTask { BuildEngine = new FakeBuildEngine() };
             var signingInput = new Configuration(
-                _tmpDir, 
-                itemsToSign, 
+                _tmpDir,
+                itemsToSign,
                 strongNameSignInfo,
                 fileSignInfo,
                 s_fileExtensionSignInfoPostBuild,
@@ -443,7 +443,8 @@ namespace Microsoft.DotNet.SignTool.Tests
         [Fact]
         public void EmptySigningListForTask()
         {
-            var task = new SignToolTask {
+            var task = new SignToolTask
+            {
                 BuildEngine = new FakeBuildEngine(),
                 ItemsToSign = Array.Empty<ITaskItem>(),
                 StrongNameSignInfo = Array.Empty<ITaskItem>(),
@@ -513,7 +514,7 @@ namespace Microsoft.DotNet.SignTool.Tests
         {
             var itemsToSign = new ITaskItem[]
             {
-                new TaskItem(GetResourcePath("ContainerOne.1.0.0.nupkg"), new Dictionary<string, string> 
+                new TaskItem(GetResourcePath("ContainerOne.1.0.0.nupkg"), new Dictionary<string, string>
                 {
                     { "BARBuildID", "123" }
                 })
@@ -530,7 +531,7 @@ namespace Microsoft.DotNet.SignTool.Tests
             };
 
             ValidateFileSignInfos(
-                itemsToSign, 
+                itemsToSign,
                 strongNameSignInfo,
                 new ITaskItem[0],
                 s_fileExtensionSignInfoPostBuild,
@@ -798,7 +799,7 @@ $@"
 
             ValidateFileSignInfos(
                 itemsToSign,
-                strongNameSignInfo, 
+                strongNameSignInfo,
                 fileSignInfo,
                 s_fileExtensionSignInfoPostBuild,
                 new ITaskItem[0],
@@ -852,8 +853,8 @@ $@"
                 "File 'ProjectOne.dll' TargetFramework='.NETCoreApp,Version=v2.1' Certificate='3PartySHA2' StrongName='ArcadeStrongTest'",
                 "File 'ProjectOne.dll' TargetFramework='.NETStandard,Version=v2.0' Certificate='3PartySHA2' StrongName='ArcadeStrongTest'",
                 "File 'ContainerOne.1.0.0.nupkg' Certificate='NuGet'"
-            }, 
-            expectedWarnings: new[] 
+            },
+            expectedWarnings: new[]
             {
                 $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "4", "lib/netcoreapp2.0/ContainerOne.dll")}' with Microsoft certificate 'ArcadeCertTest'. The library is considered 3rd party library due to its copyright: ''."
             });
@@ -895,9 +896,9 @@ $@"
             };
 
             ValidateFileSignInfos(
-                itemsToSign, 
-                strongNameSignInfo, 
-                fileSignInfo, 
+                itemsToSign,
+                strongNameSignInfo,
+                fileSignInfo,
                 s_fileExtensionSignInfoPostBuild,
                 new ITaskItem[0],
                 new[]
@@ -974,10 +975,10 @@ $@"
             };
 
             ValidateFileSignInfos(
-                itemsToSign, 
-                strongNameSignInfo, 
-                fileSignInfo, 
-                s_fileExtensionSignInfoPostBuild, 
+                itemsToSign,
+                strongNameSignInfo,
+                fileSignInfo,
+                s_fileExtensionSignInfoPostBuild,
                 new ITaskItem[0],
                 new[]
             {
@@ -1066,8 +1067,8 @@ $@"<FilesToSign Include=""{Path.Combine(_tmpDir, "CoreLibCrossARM.dll")}"">
             };
 
             ValidateFileSignInfos(
-                itemsToSign, 
-                strongNameSignInfo, 
+                itemsToSign,
+                strongNameSignInfo,
                 fileSignInfo,
                 new ITaskItem[0],
                 new ITaskItem[0],
@@ -1078,8 +1079,8 @@ $@"<FilesToSign Include=""{Path.Combine(_tmpDir, "CoreLibCrossARM.dll")}"">
             });
 
             ValidateGeneratedProject(
-                itemsToSign, 
-                strongNameSignInfo, 
+                itemsToSign,
+                strongNameSignInfo,
                 fileSignInfo,
                 new ITaskItem[0],
                 new ITaskItem[0],
@@ -1139,10 +1140,10 @@ $@"<FilesToSign Include=""{Path.Combine(_tmpDir, "CoreLibCrossARM.dll")}"">
             var fileSignInfo = new ITaskItem[0];
 
             ValidateFileSignInfos(
-                itemsToSign, 
-                strongNameSignInfo, 
-                fileSignInfo, 
-                s_fileExtensionSignInfoPostBuild, 
+                itemsToSign,
+                strongNameSignInfo,
+                fileSignInfo,
+                s_fileExtensionSignInfoPostBuild,
                 new ITaskItem[0],
                 new[]
             {
@@ -1206,10 +1207,10 @@ $@"<FilesToSign Include=""{Path.Combine(_tmpDir, "CoreLibCrossARM.dll")}"">
             };
 
             ValidateFileSignInfos(
-                itemsToSign, 
-                strongNameSignInfo, 
-                fileSignInfo, 
-                s_fileExtensionSignInfoPostBuild, 
+                itemsToSign,
+                strongNameSignInfo,
+                fileSignInfo,
+                s_fileExtensionSignInfoPostBuild,
                 new ITaskItem[0],
                 new[]
             {
@@ -1226,14 +1227,14 @@ $@"<FilesToSign Include=""{Path.Combine(_tmpDir, "CoreLibCrossARM.dll")}"">
                 GetResourcePath("EmptyPKT.dll")
             };
 
-            var strongNameSignInfo = new Dictionary<string, SignInfo>() {};
+            var strongNameSignInfo = new Dictionary<string, SignInfo>() { };
             var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>() { };
 
             ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
                 "File 'EmptyPKT.dll' TargetFramework='.NETCoreApp,Version=v2.1' Certificate='Microsoft400'",
-            }, 
-            expectedWarnings: new[] 
+            },
+            expectedWarnings: new[]
             {
                 $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "EmptyPKT.dll")}' with Microsoft certificate 'Microsoft400'. The library is considered 3rd party library due to its copyright: ''."
             });
@@ -1254,9 +1255,9 @@ $@"<FilesToSign Include=""{Path.Combine(_tmpDir, "CoreLibCrossARM.dll")}"">
             var fileSignInfo = new ITaskItem[0];
 
             ValidateFileSignInfos(
-                itemsToSign, 
-                strongNameSignInfo, 
-                fileSignInfo, 
+                itemsToSign,
+                strongNameSignInfo,
+                fileSignInfo,
                 s_fileExtensionSignInfoPostBuild,
                 new ITaskItem[0],
                 new[]
@@ -1367,10 +1368,10 @@ $@"
             var fileSignInfo = new ITaskItem[0];
 
             ValidateFileSignInfos(
-                itemsToSign, 
-                strongNameSignInfo, 
-                fileSignInfo, 
-                s_fileExtensionSignInfoPostBuild, 
+                itemsToSign,
+                strongNameSignInfo,
+                fileSignInfo,
+                s_fileExtensionSignInfoPostBuild,
                 new ITaskItem[0],
                 new[]
             {
@@ -1386,10 +1387,10 @@ $@"
             });
 
             ValidateGeneratedProject(
-                itemsToSign, 
-                strongNameSignInfo, 
-                fileSignInfo, 
-                s_fileExtensionSignInfoPostBuild, 
+                itemsToSign,
+                strongNameSignInfo,
+                fileSignInfo,
+                s_fileExtensionSignInfoPostBuild,
                 new ITaskItem[0],
                 new[]
             {
@@ -1547,10 +1548,10 @@ $@"<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "0", "ABCDE
             var fileSignInfo = new ITaskItem[0];
 
             ValidateFileSignInfos(
-                itemsToSign, 
-                strongNameSignInfo, 
-                fileSignInfo, 
-                s_fileExtensionSignInfoPostBuild, 
+                itemsToSign,
+                strongNameSignInfo,
+                fileSignInfo,
+                s_fileExtensionSignInfoPostBuild,
                 new ITaskItem[0],
                 new[]
             {
@@ -1562,10 +1563,10 @@ $@"<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "0", "ABCDE
             });
 
             ValidateGeneratedProject(
-                itemsToSign, 
-                strongNameSignInfo, 
-                fileSignInfo, 
-                s_fileExtensionSignInfoPostBuild, 
+                itemsToSign,
+                strongNameSignInfo,
+                fileSignInfo,
+                s_fileExtensionSignInfoPostBuild,
                 new ITaskItem[0],
                 new[]
             {
@@ -1644,10 +1645,10 @@ $@"
             var fileSignInfo = new ITaskItem[0];
 
             ValidateFileSignInfos(
-                itemsToSign, 
-                strongNameSignInfo, 
-                fileSignInfo, 
-                s_fileExtensionSignInfoPostBuild, 
+                itemsToSign,
+                strongNameSignInfo,
+                fileSignInfo,
+                s_fileExtensionSignInfoPostBuild,
                 new ITaskItem[0],
                 new[]
             {
@@ -1656,10 +1657,10 @@ $@"
             });
 
             ValidateGeneratedProject(
-                itemsToSign, 
-                strongNameSignInfo, 
-                fileSignInfo, 
-                s_fileExtensionSignInfoPostBuild, 
+                itemsToSign,
+                strongNameSignInfo,
+                fileSignInfo,
+                s_fileExtensionSignInfoPostBuild,
                 new ITaskItem[0],
                 new[]
             {
@@ -1761,10 +1762,10 @@ $@"
             var fileSignInfo = new ITaskItem[0];
 
             ValidateFileSignInfos(
-                itemsToSign, 
-                strongNameSignInfo, 
-                fileSignInfo, 
-                s_fileExtensionSignInfoPostBuild, 
+                itemsToSign,
+                strongNameSignInfo,
+                fileSignInfo,
+                s_fileExtensionSignInfoPostBuild,
                 new ITaskItem[0],
                 new[]
             {
@@ -1780,9 +1781,9 @@ $@"
             });
 
             ValidateGeneratedProject(
-                itemsToSign, 
-                strongNameSignInfo, 
-                fileSignInfo, 
+                itemsToSign,
+                strongNameSignInfo,
+                fileSignInfo,
                 s_fileExtensionSignInfoPostBuild,
                 new ITaskItem[0],
                 new[]
@@ -1900,10 +1901,10 @@ $@"
             var fileSignInfo = new ITaskItem[0];
 
             ValidateFileSignInfos(
-                itemsToSign, 
-                strongNameSignInfo, 
-                fileSignInfo, 
-                s_fileExtensionSignInfoPostBuild, 
+                itemsToSign,
+                strongNameSignInfo,
+                fileSignInfo,
+                s_fileExtensionSignInfoPostBuild,
                 new ITaskItem[0],
                 new[]
             {
@@ -1915,10 +1916,10 @@ $@"
             });
 
             ValidateGeneratedProject(
-                itemsToSign, 
-                strongNameSignInfo, 
-                fileSignInfo, 
-                s_fileExtensionSignInfoPostBuild, 
+                itemsToSign,
+                strongNameSignInfo,
+                fileSignInfo,
+                s_fileExtensionSignInfoPostBuild,
                 new ITaskItem[0],
                 new[]
             {
@@ -2043,10 +2044,10 @@ $@"
             var fileSignInfo = new ITaskItem[0];
 
             ValidateFileSignInfos(
-                itemsToSign, 
-                strongNameSignInfo, 
-                fileSignInfo, 
-                s_fileExtensionSignInfoPostBuild, 
+                itemsToSign,
+                strongNameSignInfo,
+                fileSignInfo,
+                s_fileExtensionSignInfoPostBuild,
                 new ITaskItem[0],
                 new[]
             {
@@ -2062,10 +2063,10 @@ $@"
             });
 
             ValidateGeneratedProject(
-                itemsToSign, 
-                strongNameSignInfo, 
-                fileSignInfo, 
-                s_fileExtensionSignInfoPostBuild, 
+                itemsToSign,
+                strongNameSignInfo,
+                fileSignInfo,
+                s_fileExtensionSignInfoPostBuild,
                 new ITaskItem[0],
                 new[]
             {
@@ -2159,10 +2160,10 @@ $@"
             var fileSignInfo = new ITaskItem[0];
 
             ValidateFileSignInfos(
-                itemsToSign, 
-                strongNameSignInfo, 
-                fileSignInfo, 
-                s_fileExtensionSignInfoPostBuild, 
+                itemsToSign,
+                strongNameSignInfo,
+                fileSignInfo,
+                s_fileExtensionSignInfoPostBuild,
                 new ITaskItem[0],
                 new[]
             {
@@ -2171,10 +2172,10 @@ $@"
             });
 
             ValidateGeneratedProject(
-                itemsToSign, 
-                strongNameSignInfo, 
-                fileSignInfo, 
-                s_fileExtensionSignInfoPostBuild, 
+                itemsToSign,
+                strongNameSignInfo,
+                fileSignInfo,
+                s_fileExtensionSignInfoPostBuild,
                 new ITaskItem[0],
                 new[]
             {
@@ -2262,7 +2263,7 @@ $@"
             ValidateFileSignInfos(
                 itemsToSign,
                 new ITaskItem[0],
-                new ITaskItem[0], 
+                new ITaskItem[0],
                 s_fileExtensionSignInfoPostBuild,
                 new ITaskItem[0],
             new[]
@@ -2301,7 +2302,7 @@ $@"
             {
                 $"File 'SignedLibrary.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='{dualCertificates.First()}'",
             },
-            dualCertificates : dualCertificates);
+            dualCertificates: dualCertificates);
         }
 
         [Fact]
@@ -2337,8 +2338,8 @@ $@"
 
             ValidateFileSignInfos(
                 itemsToSign,
-                strongNameSignInfo, 
-                fileSignInfo, 
+                strongNameSignInfo,
+                fileSignInfo,
                 s_fileExtensionSignInfoPostBuild,
                 dualCertificates,
                 new[]
@@ -2398,10 +2399,10 @@ $@"
             var fileSignInfo = new ITaskItem[0];
 
             ValidateFileSignInfos(
-                itemsToSign, 
-                strongNameSignInfo, 
-                fileSignInfo, 
-                s_fileExtensionSignInfoPostBuild, 
+                itemsToSign,
+                strongNameSignInfo,
+                fileSignInfo,
+                s_fileExtensionSignInfoPostBuild,
                 new ITaskItem[0],
                 new[]
             {
@@ -2465,10 +2466,10 @@ $@"
             var fileSignInfo = new ITaskItem[0];
 
             ValidateFileSignInfos(
-                itemsToSign, 
-                strongNameSignInfo, 
-                fileSignInfo, 
-                s_fileExtensionSignInfoPostBuild, 
+                itemsToSign,
+                strongNameSignInfo,
+                fileSignInfo,
+                s_fileExtensionSignInfoPostBuild,
                 new ITaskItem[0],
                 new[]
             {
@@ -2541,7 +2542,7 @@ $@"
                 "File 'test.vsix' Certificate='VSIXCertificate'",
                 "File 'Simple.dll' TargetFramework='.NETCoreApp,Version=v2.1' Certificate='DLLCertificate2'",
                 "File 'Simple.nupkg' Certificate='NUPKGCertificate'",
-            }, 
+            },
             expectedWarnings: new[]
             {
                 $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "EmptyPKT.dll")}' with Microsoft certificate 'DLLCertificate'. The library is considered 3rd party library due to its copyright: ''.",
@@ -2695,10 +2696,10 @@ $@"
             };
 
             ValidateFileSignInfos(
-                itemsToSign, 
-                strongNameSignInfo, 
-                fileSignInfo, 
-                s_fileExtensionSignInfoPostBuild, 
+                itemsToSign,
+                strongNameSignInfo,
+                fileSignInfo,
+                s_fileExtensionSignInfoPostBuild,
                 new ITaskItem[0],
                 new[]
             {
@@ -2818,7 +2819,7 @@ $@"
                 new Dictionary<string, SignInfo>(),
                 new Dictionary<ExplicitCertificateKey, string>(),
                 new Dictionary<string, SignInfo>() { { extension, SignInfo.Ignore } },
-                new string[0], 
+                new string[0],
                 task.Log)
                 .GenerateListOfFiles();
 
@@ -2852,15 +2853,15 @@ $@"
             ValidateFileSignInfos(
                 itemsToSign,
                 new ITaskItem[0],
-                new ITaskItem[0], 
-                s_fileExtensionSignInfoPostBuild, 
+                new ITaskItem[0],
+                s_fileExtensionSignInfoPostBuild,
                 new ITaskItem[0],
                 new string[0]);
 
             ValidateGeneratedProject(
                 itemsToSign,
                 new ITaskItem[0],
-                new ITaskItem[0], 
+                new ITaskItem[0],
                 s_fileExtensionSignInfoPostBuild,
                 new ITaskItem[0],
                 new string[0]);
