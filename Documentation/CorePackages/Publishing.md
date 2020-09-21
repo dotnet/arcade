@@ -389,7 +389,11 @@ The publishing logs are stored inside an Azure DevOps artifacts container named 
 ### How to upgrade from V2 to V3?
 
 Following changes has to be made
-1) Create a file Publishing.props under /eng/Publishing.props if already exists then add publishingVersion property in the file
+1) Create or update eng/Publishing.props, adding the following MSBuild property:
+
+```
+<PublishingVersion>3</PublishingVersion>
+```
 
 Example: 
 ```
