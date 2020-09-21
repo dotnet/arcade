@@ -392,14 +392,16 @@ Publishing job in V2 runs in stage(s) representing a channel(s) that is configur
 
 Example from arcade-validation : 
 
-(./images/V2-publishing.png)
+![V2-publishing](./images/V2-publishing.png)
 
 
 ### What is V3 publishing? How is it different from V2?
 
-In V2 publishing job runs in multiple stages,it would show stage(s) activated even though it would not publish to that channel. In V3 we have one stage for publishing job called 'Publish-using-darc'. Even if the repo branch is associated to more than one default channel(s) there will be only one stage. Note that [default channel(s)](https://github.com/dotnet/arcade/blob/ec191f3d706d740bc7a87fbb98d94d916f81f0cb/Documentation/Darc.md#add-default-channel) has to be configured for this stage to create a build in Maestro++.
+In V3 we have one stage for publishing job called 'Publish-using-darc'. Even if the repo branch is associated to more than one default channel(s) there will be only one stage. Note that [default channel(s)](https://github.com/dotnet/arcade/blob/ec191f3d706d740bc7a87fbb98d94d916f81f0cb/Documentation/Darc.md#add-default-channel) has to be configured for this stage to create a build in Maestro++.
+
+In V2 publishing job runs in multiple stages, it would show stage(s) activated even though it would not publish to that channel. So in V3 we unified it to only one stage.
 
 Example from arcade-validation: 
 
-(./images/V3-publishing.png)
+![V3-publishing](./images/V3-publishing.png)
 
