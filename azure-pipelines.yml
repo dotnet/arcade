@@ -121,7 +121,6 @@ stages:
               -ci
               -restore
               -test
-              -v d
               -projects $(Build.SourcesDirectory)\tests\UnitTests.proj
               /bl:$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)\Helix.binlog
               /p:RestoreUsingNuGetTargets=false
@@ -135,7 +134,6 @@ stages:
               -ci
               -restore
               -test
-              -v d
               -projects $(Build.SourcesDirectory)\tests\UnitTests.XHarness.Android.proj
               /bl:$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)\Helix.XHarness.Android.binlog
               /p:RestoreUsingNuGetTargets=false
@@ -165,7 +163,6 @@ stages:
               --ci
               --restore
               --test
-              -v d
               --projects $(Build.SourcesDirectory)/tests/UnitTests.proj
               /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.binlog
               /p:RestoreUsingNuGetTargets=false
@@ -179,7 +176,6 @@ stages:
               -ci
               -restore
               -test
-              -v d
               -projects $(Build.SourcesDirectory)/tests/UnitTests.XHarness.iOS.proj
               /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.XHarness.iOS.binlog
               /p:RestoreUsingNuGetTargets=false
@@ -194,7 +190,6 @@ stages:
               -ci
               -restore
               -test
-              -v d
               -projects $(Build.SourcesDirectory)/tests/UnitTests.XHarness.iOS.IncludeCliOnly.proj
               /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.XHarness.CLI.binlog
               /p:RestoreUsingNuGetTargets=false
