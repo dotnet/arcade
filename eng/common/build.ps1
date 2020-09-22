@@ -3,7 +3,7 @@ Param(
   [string][Alias('c')]$configuration = "Debug",
   [string]$platform = $null,
   [string] $projects,
-  [string][Alias('v')]$verbosity = "detailed",
+  [string][Alias('v')]$verbosity = "minimal",
   [string] $msbuildEngine = $null,
   [bool] $warnAsError = $true,
   [bool] $nodeReuse = $true,

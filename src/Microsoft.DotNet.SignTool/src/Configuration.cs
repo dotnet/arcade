@@ -364,7 +364,8 @@ namespace Microsoft.DotNet.SignTool
                     // correspondent BARBuildId. Since the same file could exist in different packages
                     // which were already processed, we take the lower of the BARBuildIds
                     string relativePath = fullPath.Substring(_pathToContainerUnpackingDirectory.Length + 1);
-                    string entryFileName = Regex.Replace(relativePath, @"[\d]*\\", string.Empty);
+                    string separator = relativePath.Contains("\\") ? @"\\" : @"\/";
+                    string entryFileName = Regex.Replace(relativePath, @$"^[\d]*{separator}", string.Empty);
                     if (_whichPackagesTheFileIsInFullPath.TryGetValue(new SignedFileContentKey(fileHash, entryFileName), out var paths))
                     {
                         foreach (string path in paths)
