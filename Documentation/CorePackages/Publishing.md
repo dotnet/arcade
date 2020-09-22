@@ -149,7 +149,7 @@ In order to use the new publishing mechanism, the easiest way to start is by tur
 6. Create or update eng/Publishing.props, adding the following MSBuild property:
     ```XML
         <PublishingVersion>3</PublishingVersion>
-   ```
+    ```
 
   Example: 
     ```XML
@@ -159,8 +159,9 @@ In order to use the new publishing mechanism, the easiest way to start is by tur
              <PublishingVersion>3</PublishingVersion>
           </PropertyGroup>
        </Project>
-      ...
-  ```
+
+    ```
+
    Example of basic onbaording scenario can be found in the following repos :
 
    * [Arcade-Validation](https://github.com/dotnet/arcade-validation/blob/6009d37b7ecacbb0bc1e0c5a601b8d7e3b2e5fa5/eng/Publishing.props#L4)
