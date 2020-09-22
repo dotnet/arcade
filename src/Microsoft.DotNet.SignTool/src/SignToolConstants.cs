@@ -102,5 +102,10 @@ namespace Microsoft.DotNet.SignTool
         {
             ".pkg"
         };
+
+        /// <summary>
+        /// Attribute name containing the BAR build ID
+        /// </summary>
+        public const string BarBuildId = "BARBuildId";
     }
 }

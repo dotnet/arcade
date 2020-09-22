@@ -231,7 +231,7 @@ namespace Microsoft.DotNet.SignTool
             {
                 configuration = new Configuration(
                     TempDir,
-                    ItemsToSign.OrderBy(i => i.GetMetadata("BARBuildId")).ToArray(),
+                    ItemsToSign.OrderBy(i => i.GetMetadata(SignToolConstants.BarBuildId)).ToArray(),
                     StrongNameSignInfo,
                     FileSignInfo,
                     FileExtensionSignInfo,

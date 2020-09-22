@@ -19,7 +19,7 @@ namespace Microsoft.DotNet.SignTool
 
             ITaskItem strongNameTaskItem = strongNameInfoPostBuild?.Where(
                            s => s.GetMetadata("PublicKeyToken") == peInfo.PublicKeyToken &&
-                           s.GetMetadata("BARBuildId") == barBuildId).FirstOrDefault();
+                           s.GetMetadata(SignToolConstants.BarBuildId) == barBuildId).FirstOrDefault();
 
             if (strongNameTaskItem != null)
             {

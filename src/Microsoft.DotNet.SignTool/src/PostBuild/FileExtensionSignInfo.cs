@@ -20,7 +20,7 @@ namespace Microsoft.DotNet.SignTool
 
             ITaskItem signInfoTaskItem = fileExtensionSignInfoPostBuild?.Where(
                         f => f.ItemSpec == Path.GetExtension(fullPath) &&
-                        f.GetMetadata("BARBuildId") == barBuildId).FirstOrDefault();
+                        f.GetMetadata(SignToolConstants.BarBuildId) == barBuildId).FirstOrDefault();
 
             if (signInfoTaskItem != null)
             {

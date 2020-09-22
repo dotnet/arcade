@@ -341,7 +341,7 @@ namespace Microsoft.DotNet.SignTool
 
                 if (itemToSign != null)
                 {
-                    barBuildId = itemToSign.GetMetadata("BARBuildId");
+                    barBuildId = itemToSign.GetMetadata(SignToolConstants.BarBuildId);
 
                     if (!_hashToBarBuildIdMapping.ContainsKey(fileHash))
                     {
@@ -527,7 +527,7 @@ namespace Microsoft.DotNet.SignTool
                     {
                         dualCerts = _certificatesSignInfoPostBuild
                             .Where(c => c.GetMetadata("DualSigningAllowed").Equals("true", StringComparison.OrdinalIgnoreCase) &&
-                            c.GetMetadata("BARBuildId") == barBuildId).Any();
+                            c.GetMetadata(SignToolConstants.BarBuildId) == barBuildId).Any();
                     }
                 }
                 else

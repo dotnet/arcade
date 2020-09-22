@@ -23,7 +23,7 @@ namespace Microsoft.DotNet.SignTool
                             f => Path.GetFileName(fullPath) == f.ItemSpec &&
                             f.GetMetadata("PublicKeyToken") == peInfo.PublicKeyToken &&
                             f.GetMetadata("TargetFramework") == peInfo.TargetFramework &&
-                            f.GetMetadata("BARBuildId") == barBuildId).FirstOrDefault();
+                            f.GetMetadata(SignToolConstants.BarBuildId) == barBuildId).FirstOrDefault();
 
             if (fileSignInfoTaskItem != null)
             {
@@ -48,7 +48,7 @@ namespace Microsoft.DotNet.SignTool
                             f => Path.GetFileName(fullPath) == f.ItemSpec &&
                             f.GetMetadata("PublicKeyToken") == peInfo.PublicKeyToken &&
                             f.GetMetadata("TargetFramework") == string.Empty &&
-                            f.GetMetadata("BARBuildId") == barBuildId).FirstOrDefault();
+                            f.GetMetadata(SignToolConstants.BarBuildId) == barBuildId).FirstOrDefault();
 
             if (fileSignInfoTaskItem != null)
             {
@@ -72,7 +72,7 @@ namespace Microsoft.DotNet.SignTool
                             f => Path.GetFileName(fullPath) == f.ItemSpec &&
                             f.GetMetadata("PublicKeyToken") == string.Empty &&
                             f.GetMetadata("TargetFramework") == string.Empty &&
-                            f.GetMetadata("BARBuildId") == barBuildId).FirstOrDefault();
+                            f.GetMetadata(SignToolConstants.BarBuildId) == barBuildId).FirstOrDefault();
 
             if (fileSignInfoTaskItem != null)
             {
