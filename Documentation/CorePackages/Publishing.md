@@ -169,7 +169,7 @@ The pipeline for a build with stages enabled will look like the one shown below.
 
 **NOTE:** You need to have the AzDO <u>*Multi-stage pipelines*</u> preview feature enabled to see an UI like the one below. Take a [look here](https://docs.microsoft.com/en-us/azure/devops/project/navigation/preview-features?view=azure-devops) to see how to enable preview features in Azure DevOps.
 
-![V3-publishing](./images/V3-publishing.png)
+![V3-publishing](./images/V3-publishing.PNG)
 
 ### Validating the changes
 
