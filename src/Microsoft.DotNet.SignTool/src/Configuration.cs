@@ -147,6 +147,7 @@ namespace Microsoft.DotNet.SignTool
             ITaskItem[] fileSignInfo,
             ITaskItem[] fileExtensionSignInfo,
             ITaskItem[] certificatesSignInfo,
+            bool isPostBuild,
             TaskLoggingHelper log,
             bool useHashInExtractionPath = false)
         {
@@ -165,7 +166,7 @@ namespace Microsoft.DotNet.SignTool
             _certificatesSignInfoPostBuild = certificatesSignInfo;
             _itemsToSignPostBuild = itemsToSign;
             _itemsToSign = itemsToSign.Select(i => i.ItemSpec).ToArray();
-            _isPostBuild = true;
+            _isPostBuild = isPostBuild;
             _filesToSign = new List<FileSignInfo>();
             _wixPacks = new List<WixPackInfo>();
             _filesToCopy = new List<KeyValuePair<string, string>>();
@@ -350,7 +351,7 @@ namespace Microsoft.DotNet.SignTool
                     {
                         // If there is a collision and the stored BARBuildId is lower than the current
                         // we use the stored one since the original ItemsToSign collection is sorted
-                        // by ascendent BARBuildOd
+                        // by ascendent BARBuildId
                         if (string.Compare(_hashToBarBuildIdMapping[fileHash], barBuildId) < 0)
                         {
                             barBuildId = _hashToBarBuildIdMapping[fileHash];

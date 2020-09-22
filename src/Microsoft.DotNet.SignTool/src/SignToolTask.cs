@@ -236,6 +236,7 @@ namespace Microsoft.DotNet.SignTool
                     FileSignInfo,
                     FileExtensionSignInfo,
                     CertificatesSignInfo,
+                    IsPostBuild,
                     Log,
                     useHashInExtractionPath: UseHashInExtractionPath
                     );

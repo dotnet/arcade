@@ -333,6 +333,7 @@ namespace Microsoft.DotNet.SignTool.Tests
                 fileSignInfo,
                 extensionsSignInfo,
                 certificatesSignInfo,
+                true,
                 task.Log).GenerateListOfFiles();
 
             var util = new BatchSignUtil(task.BuildEngine, task.Log, signTool, signingInput, new string[] { });
@@ -391,6 +392,7 @@ namespace Microsoft.DotNet.SignTool.Tests
                 fileSignInfo,
                 extensionsSignInfo,
                 certificatesSignInfo,
+                true,
                 task.Log).GenerateListOfFiles();
 
             AssertEx.Equal(expected, signingInput.FilesToSign.Select(f => f.ToString()));
@@ -433,6 +435,7 @@ namespace Microsoft.DotNet.SignTool.Tests
                 fileSignInfo,
                 s_fileExtensionSignInfoPostBuild,
                 certificatesSignInfo,
+                true,
                 task.Log).GenerateListOfFiles();
 
             Assert.Empty(signingInput.FilesToSign);
@@ -2791,6 +2794,7 @@ $@"
                 new ITaskItem[0],
                 new ITaskItem[0],
                 new ITaskItem[0],
+                true,
                 task.Log).GenerateListOfFiles();
 
             Assert.True(task.Log.HasLoggedErrors);
