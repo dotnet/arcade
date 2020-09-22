@@ -401,14 +401,15 @@ Example from arcade-validation :
 
 ### What is V3 publishing? How is it different from V2?
 
-In V3 we have one stage called 'Publish-using-darc' handling publishing for all available channels. Even if the repo branch is associated to more than one default channel(s) there will be only one stage. Publishing Using Darc stage internally calls darc 
-add-build-to-channel which inturn creates a new build in Maestro Promotion Pipeline. 
-
-If the [default channel(s)](https://github.com/dotnet/arcade/blob/ec191f3d706d740bc7a87fbb98d94d916f81f0cb/Documentation/Darc.md#add-default-channel) is configured, this will create a build in Maestro Promotion Pipeline.
-
-If default channel is not configured, [add-build-to-channel](https://github.com/dotnet/arcade/blob/ec191f3d706d740bc7a87fbb98d94d916f81f0cb/Documentation/Darc.md#add-build-to-channel) can be used to publish to the channel(s).
+In V3 we have one stage called 'Publish-using-darc' handling publishing for all available channels. Even if the repo branch is associated to more than one default channel(s) there will be only one stage. Publishing Using Darc stage in V3, if add-default-channel is configured internally calls darc add-build-to-channel which inturn creates a new build in Maestro Promotion Pipeline. 
 
 In V2 publishing job runs in multiple stages, it would show stage(s) activated even though it would not publish to that channel. So in V3 we unified it to only one stage, this has reduced UI cluttering. Also some classes of changes can be made to publishing directly without an arcade update.
+
+In V2 and V3, 
+
+1) If the [default channel(s)](https://github.com/dotnet/arcade/blob/ec191f3d706d740bc7a87fbb98d94d916f81f0cb/Documentation/Darc.md#add-default-channel) is configured, this will create a build in Maestro Promotion Pipeline.
+
+2) If default channel is not configured, [add-build-to-channel](https://github.com/dotnet/arcade/blob/ec191f3d706d740bc7a87fbb98d94d916f81f0cb/Documentation/Darc.md#add-build-to-channel) can be used to publish to the channel(s).
 
 Example from arcade-validation: 
 
