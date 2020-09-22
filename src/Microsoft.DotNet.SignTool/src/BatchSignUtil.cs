@@ -132,7 +132,7 @@ namespace Microsoft.DotNet.SignTool
                 }
 
                 Dictionary<string, FileSignInfo> engines = new Dictionary<string, FileSignInfo>();
-                var workingDirectory = $"{Path.Combine(_signTool.TempDir, "engines")}";
+                var workingDirectory = Path.Combine(_signTool.TempDir, "engines");
                 // extract engines
                 foreach (var file in enginesToSign)
                 {
