@@ -1307,6 +1307,11 @@ parameters:
 
 - `--id` - **(Required)**. BAR id of build to assign to channel.
 - `--channel` - **(Required)**. Channel to assign build to.
+- `--publish-installers-and-checksums` **(Required)** Whether installers and checksums should be published. This should be true all the time. This will be defaulted to true in future (https://github.com/dotnet/core-eng/issues/10655)
+- `--publishing-infra-version` - Default version or if nothing is mentioned then it is 2. To get V3 benefits use 3. 
+- `--signing-validation-parameters` - Additional (MSBuild) properties to be passed to signing validation
+- `--symbol-publishing-parameters` -Additional (MSBuild) properties to be passed to symbol publishing
+- `--default-channels` - Default channel to the repository branch.
 - `--source-branch` - Branch that should be used as base for the promotion build.
 - `--source-sha` - SHA that should be used as base for the promotion build.
 - `--validate-signing` - Perform signing validation.
@@ -1322,7 +1327,9 @@ parameters:
 
 **Sample**
 ```
-PS D:\enlistments\arcade> darc add-build-to-channel --id 13078 --channel ".NET Core 3 Release"
+For V2 
+
+PS D:\enlistments\arcade> darc add-build-to-channel --id 13078 --channel ".NET Core 3 Release" --publish-installers-and-checksums
 Assigning the following build to channel '.NET Core 3 Release':
 
 Repository:    https://github.com/dotnet/core-setup
@@ -1354,6 +1361,56 @@ If the above example build doesn't happen to be the latest in a channel but you 
     darc trigger-subscriptions --id 22859ac6-b4a6-4fce-54c7-08d6c734018a --build 13078
 ```
 
+```
+For V3
+
+PS D:\enlistments\arcade> darc add-build-to-channel --id 65256 --channel "..NET 6 Dev" --publishing-infra-version 3 --publish-installers-and-checksums
+
+Waiting '60' seconds for promotion build to complete.
+Waiting '60' seconds for promotion build to complete.
+Waiting '60' seconds for promotion build to complete.
+Waiting '60' seconds for promotion build to complete.
+Waiting '60' seconds for promotion build to complete.
+Waiting '60' seconds for promotion build to complete.
+Waiting '60' seconds for promotion build to complete.
+Waiting '60' seconds for promotion build to complete.
+Build '65199' was successfully added to the target channel(s).
+Assigning build '65199' to the following channel(s):
+	.NET 6 Dev
+
+Repository:    https://github.com/dotnet/runtime
+Branch:        master
+Commit:        0e30f6fdc3ba5e1ef7ffb952fcb4762e5041c491
+Build Number:  20200921.2
+Date Produced: 9/21/2020 1:08 PM
+Build Link:    https://dev.azure.com/dnceng/internal/_build/results?buildId=823133
+BAR Build Id:  65199
+Released:      False
+Channels:
+The following repos/branches will apply this build immediately:
+  https://dev.azure.com/dnceng/internal/_git/dotnet-wpf-int @ master
+The following repos/branches will apply this change at a later time, or not by default.
+To flow immediately, run the specified command
+  https://github.com/dotnet/ef6 @ master (update freq: EveryDay)
+    darc trigger-subscriptions --id 9e51514d-a37b-46b2-d464-08d76e1d3434
+  https://github.com/dotnet/sdk @ master (update freq: EveryDay)
+    darc trigger-subscriptions --id ea219f43-0754-4d2f-576e-08d76e1d56cb
+  https://github.com/dotnet/winforms @ master (update freq: EveryDay)
+    darc trigger-subscriptions --id be4b0f38-c1d5-43ab-c5d9-08d76fa9c820
+  https://github.com/dotnet/extensions @ master (update freq: EveryDay)
+    darc trigger-subscriptions --id 8542892c-8237-4ac0-12f9-08d795579ebc
+  https://dev.azure.com/dnceng/internal/_git/dotnet-diagnostictests @ master (update freq: EveryDay)
+    darc trigger-subscriptions --id b0ba415d-f400-4d53-d5ef-08d7cb66345b
+  https://github.com/dotnet/api-catalog-infra @ master (update freq: None)
+    darc trigger-subscriptions --id a988bc25-b960-42cb-e187-08d7d67aa73d
+  https://github.com/dotnet/aspnetcore @ master (update freq: EveryDay)
+    darc trigger-subscriptions --id 68568747-40a2-4823-fae6-08d7f76e4602
+  https://github.com/dotnet/efcore @ main (update freq: EveryWeek)
+    darc trigger-subscriptions --id daf314a8-d8c8-4b54-8dcc-08d82e674dfc
+  https://github.com/mono/linker @ master (update freq: EveryWeek)
+    darc trigger-subscriptions --id d6001782-e01f-4a8a-8899-08d8446df6cf
+
+```
 ### **`authenticate`**
 
 Set up your darc client so that the PAT or password inputs do not need to be
