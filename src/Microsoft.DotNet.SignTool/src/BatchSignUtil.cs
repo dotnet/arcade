@@ -166,7 +166,6 @@ namespace Microsoft.DotNet.SignTool
                         _log.LogError($"Failed to attach engine to {engine.Value.FullPath}");
                         return false;
                     }
-
                 }
                 return true;
             }
