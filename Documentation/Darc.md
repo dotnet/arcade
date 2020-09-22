@@ -1307,11 +1307,11 @@ parameters:
 
 - `--id` - **(Required)**. BAR id of build to assign to channel.
 - `--channel` - **(Required)**. Channel to assign build to.
-- `--publish-installers-and-checksums` **(Required)** Whether installers and checksums should be published. This should be true all the time. This will be defaulted to true in future (https://github.com/dotnet/core-eng/issues/10655)
-- `--publishing-infra-version` - Default version or if nothing is mentioned then it is 2. To get V3 benefits use 3. 
+- `--publish-installers-and-checksums` **(Required)** Whether installers and checksums should be published. This should be true all the time.
+- `--publishing-infra-version` - Version of publishing, for latest publishing benefits use 3. Default is 2. 
 - `--signing-validation-parameters` - Additional (MSBuild) properties to be passed to signing validation
 - `--symbol-publishing-parameters` -Additional (MSBuild) properties to be passed to symbol publishing
-- `--default-channels` - Default channel to the repository branch.
+- `--default-channels` - Assign build to all default channels. Required if --channel is not specified.
 - `--source-branch` - Branch that should be used as base for the promotion build.
 - `--source-sha` - SHA that should be used as base for the promotion build.
 - `--validate-signing` - Perform signing validation.
@@ -1326,10 +1326,10 @@ parameters:
   The operation continues asynchronously in AzDO.
 
 **Sample**
+**V2 Publishing**
 ```
-For V2 
 
-PS D:\enlistments\arcade> darc add-build-to-channel --id 13078 --channel ".NET Core 3 Release" --publish-installers-and-checksums
+darc add-build-to-channel --id 13078 --channel ".NET Core 3 Release" --publish-installers-and-checksums
 Assigning the following build to channel '.NET Core 3 Release':
 
 Repository:    https://github.com/dotnet/core-setup
@@ -1361,19 +1361,13 @@ If the above example build doesn't happen to be the latest in a channel but you 
     darc trigger-subscriptions --id 22859ac6-b4a6-4fce-54c7-08d6c734018a --build 13078
 ```
 
+**V3 Publishing**
 ```
-For V3
 
-PS D:\enlistments\arcade> darc add-build-to-channel --id 65256 --channel "..NET 6 Dev" --publishing-infra-version 3 --publish-installers-and-checksums
+darc add-build-to-channel --id 65256 --channel "..NET 6 Dev" --publishing-infra-version 3 --publish-installers-and-checksums
 
 Waiting '60' seconds for promotion build to complete.
-Waiting '60' seconds for promotion build to complete.
-Waiting '60' seconds for promotion build to complete.
-Waiting '60' seconds for promotion build to complete.
-Waiting '60' seconds for promotion build to complete.
-Waiting '60' seconds for promotion build to complete.
-Waiting '60' seconds for promotion build to complete.
-Waiting '60' seconds for promotion build to complete.
+
 Build '65199' was successfully added to the target channel(s).
 Assigning build '65199' to the following channel(s):
 	.NET 6 Dev

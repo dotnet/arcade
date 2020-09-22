@@ -7,7 +7,7 @@
 
 This table represents the status of the .NET 5 V3 publishing status on a Per-Repo basis
 
-| Repo                | Ownwe        | Build        | Notes                                |
+| Repo                | Ownwer       | Status       | Notes                                |
 | ------------------  | -------------|--------------|--------------------------------------|
 | windowsdesktop      | epananth     | ![][green]   |                                      |
 | arcade-validation   | epananth     | ![][green]   |                                      |
@@ -17,9 +17,9 @@ This table represents the status of the .NET 5 V3 publishing status on a Per-Rep
 | sdk                 | epananth     | ![][green]   |                                      |
 | efcore              |              | ![][red]     |                                      |
 | extensions          |              | ![][red]     |                                      |
-| winforms            |              | ![][red]     |                                      |
+| winforms            | mmitche      | ![][green]   |                                      |
 | wpf-int             |              | ![][red]     |                                      |
-| wpf                 |              | ![][red]     |                                      |
+| wpf                 | mmitche      | ![][green]   |                                      |
 | templating          |              | ![][red]     |                                      |
 | diagnostics         |              | ![][red]     |                                      |
 | aspnetcore-tooling  |              | ![][red]     |                                      |
