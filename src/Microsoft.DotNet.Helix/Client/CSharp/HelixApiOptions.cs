@@ -6,8 +6,8 @@ namespace Microsoft.DotNet.Helix.Client
     partial class HelixApiOptions
     {
         // See https://github.com/Azure/azure-sdk-for-net/blob/master/sdk/core/Azure.Core/src/RetryOptions.cs for values this overrides
-        const int DefaultRetryDelaySeconds = 10;
-        const int DefaultMaxRetryCount = 5;
+        public const int DefaultRetryDelaySeconds = 10;
+        public const int DefaultMaxRetryCount = 5;
 
         partial void InitializeOptions()
         {
