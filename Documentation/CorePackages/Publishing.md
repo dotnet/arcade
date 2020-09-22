@@ -148,19 +148,20 @@ In order to use the new publishing mechanism, the easiest way to start is by tur
 
 6. Create or update eng/Publishing.props, adding the following MSBuild property:
 
-    ```
+    ```XML
 <PublishingVersion>3</PublishingVersion>
 
    ```
 
   Example: 
-  ```
+  ```XML
 <?xml version="1.0" encoding="utf-8"?>
   <Project>
      <PropertyGroup>
         <PublishingVersion>3</PublishingVersion>
      </PropertyGroup>
   </Project>
+
   ```
    Example of basic onbaording scenario can be found in the following repos :
 
