@@ -5,7 +5,7 @@ trigger: none
 jobs:
 - template: /eng/common/templates/jobs/jobs.yml
   parameters:
-    enableTelemetry: true
+    enableTelemetry: false
     helixRepo: dotnet/arcade
     jobs:
     - job: Merge_GitHub_to_Azure_DevOps

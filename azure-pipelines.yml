@@ -43,7 +43,7 @@ stages:
       enablePublishBuildArtifacts: true
       enablePublishBuildAssets: true
       enablePublishUsingPipelines: ${{ variables._PublishUsingPipelines }}
-      enableTelemetry: true
+      enableTelemetry: false
       graphFileGeneration:
         enabled: true
         includeToolset: true

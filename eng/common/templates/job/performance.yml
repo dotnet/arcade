@@ -11,13 +11,11 @@ parameters:
   continueOnError: 'false'        # optional -- determines whether to continue the build if the step errors
   dependsOn: ''                   # optional -- dependencies of the job
   timeoutInMinutes: 320           # optional -- timeout for the job
-  enableTelemetry: false          # optional -- enable for telemetry
 
 jobs:
 - template: ../jobs/jobs.yml
   parameters:
     dependsOn: ${{ parameters.dependsOn }}
-    enableTelemetry: ${{ parameters.enableTelemetry }}
     enablePublishBuildArtifacts: true
     continueOnError: ${{ parameters.continueOnError }}
     
