@@ -401,9 +401,9 @@ Example from arcade-validation :
 
 ### What is V3 publishing? How is it different from V2?
 
-In V3 we have one stage called 'Publish-using-darc' handling publishing for all available channels. Even if the repo branch is associated to more than one default channel(s) there will be only one stage. Publishing Using Darc stage in V3, if add-default-channel is configured internally calls darc add-build-to-channel which inturn creates a new build in Maestro Promotion Pipeline. 
+In V3, we have a single stage called 'Publish Using Darc', handling publishing for all available channels. Even if the repo branch is associated to more than one default channel(s) there will be only one stage. V3 uses `darc add-build-to-channel` to promote builds based on the current configured default channels for the branch just built. `add-build-to-channel` queues a new build of the Maestro Promotion Pipeline and waits for promotion to complete.
 
-In V2 publishing job runs in multiple stages, it would show stage(s) activated even though it would not publish to that channel. So in V3 we unified it to only one stage, this has reduced UI cluttering. Also some classes of changes can be made to publishing directly without an arcade update.
+In V2, publishing has a stage per channel, each stage activated even though it may not publish to that channel. V3 unifies this to a single stage, reducing UI clutter. In addition, some classes of changes (e.g. addition of new channels) can be made to publishing directly without an arcade update.
 
 In V2 and V3, 
 
