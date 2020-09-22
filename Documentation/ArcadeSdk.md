@@ -268,7 +268,9 @@ Customization of Authenticode signing process.
 
 Configurable item groups:
 - `ItemsToSign`
-  List of files to sign in-place. May list individual files to sign (e.g. .dll, .exe, .ps1, etc.) as well as container files (.nupkg, .vsix, .zip, etc.). All files embedded in a container file are signed (recursively) unless specified otherwise.
+  List of files to sign in-place, during the build. May list individual files to sign (e.g. .dll, .exe, .ps1, etc.) as well as container files (.nupkg, .vsix, .zip, etc.). All files embedded in a container file are signed (recursively) unless specified otherwise.
+- `ItemsToSignPostBuild`
+  List of file names (without paths) to sign in post build release pipeline. May only contain files that are published. All files embedded in a container file are signed (recursively) unless specified otherwise.
 - `FileSignInfo`
   Specifies Authenticode certificate to use to sign files with given file name.
 - `FileExtensionSignInfo`
@@ -280,7 +282,13 @@ Configurable item groups:
 
 Properties:
 - `AllowEmptySignList`
-  True to allow ItemsToSign to be empty (the repository doesn't have any file to sign).
+  True to allow ItemsToSign to be empty (the repository doesn't have any file to sign in-build).
+- `AllowEmptyPostBuildSignList`
+  True to allow ItemsToSignPostBuild to be empty (the repository doesn't have any file to sign post-build).
+- `PostBuildSign`
+  If true
+    - `ItemsToSignPostBuild` is tracked during the publishing process and these files will be signed during post-build.
+    - `ItemsToSignPostBuild` is populated with the default arcade `ItemsToSign`.
 
 See [Signing.md](https://github.com/dotnet/arcade/blob/master/Documentation/CorePackages/Signing.md#arguments-metadata) for details.
 
