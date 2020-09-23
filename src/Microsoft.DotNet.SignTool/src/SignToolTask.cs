@@ -136,11 +136,6 @@ namespace Microsoft.DotNet.SignTool
         [Required]
         public string LogDir { get; set; }
 
-        /// <summary>
-        /// Whether we are signing post build or not.
-        /// </summary>
-        public bool IsPostBuild { get; set; } = false;
-
         public override bool Execute()
         {
 #if NET472
@@ -227,32 +222,15 @@ namespace Microsoft.DotNet.SignTool
             var signTool = DryRun ? new ValidationOnlySignTool(signToolArgs, Log) : (SignTool)new RealSignTool(signToolArgs, Log);
             Configuration configuration = null;
 
-            if (IsPostBuild)
-            {
-                configuration = new Configuration(
-                    TempDir,
-                    ItemsToSign.OrderBy(i => i.GetMetadata(SignToolConstants.BarBuildId)).ToArray(),
-                    StrongNameSignInfo,
-                    FileSignInfo,
-                    FileExtensionSignInfo,
-                    CertificatesSignInfo,
-                    IsPostBuild,
-                    Log,
-                    useHashInExtractionPath: UseHashInExtractionPath
-                    );
-            }
-            else
-            {
-                configuration = new Configuration(
-                    TempDir,
-                    ItemsToSign.Select(i => i.ItemSpec).ToArray(),
-                    strongNameInfo,
-                    fileSignInfo,
-                    extensionSignInfo,
-                    dualCertificates,
-                    Log,
-                    useHashInExtractionPath: UseHashInExtractionPath);
-            }
+            configuration = new Configuration(
+                TempDir,
+                ItemsToSign.OrderBy(i => i.GetMetadata(SignToolConstants.CollisionPriorityId)).ToArray(),
+                strongNameInfo,
+                fileSignInfo,
+                extensionSignInfo,
+                dualCertificates,
+                Log,
+                useHashInExtractionPath: UseHashInExtractionPath);
 
             if (ReadExistingContainerSigningCache)
             {
@@ -281,13 +259,11 @@ namespace Microsoft.DotNet.SignTool
             Log.LogMessage(MessageImportance.High, $"MicroBuild signing configuration will be in (Round*.proj): {TempDir}");
         }
 
-        private string[] ParseCertificateInfo()
+        private ITaskItem[] ParseCertificateInfo()
         {
-            var dualCertificates = CertificatesSignInfo?
+            return CertificatesSignInfo?
                 .Where(item => item.GetMetadata("DualSigningAllowed").Equals("true", StringComparison.OrdinalIgnoreCase))
-                .Select(item => item.ItemSpec);
-
-            return dualCertificates?.ToArray();
+                .ToArray();
         }
 
         private string GetEnclosingDirectoryOfItemsToSign()
@@ -352,6 +328,7 @@ namespace Microsoft.DotNet.SignTool
                 {
                     var extension = item.ItemSpec;
                     var certificate = item.GetMetadata("CertificateName");
+                    var collisionPriorityId = item.GetMetadata(SignToolConstants.CollisionPriorityId);
 
                     if (!extension.Equals(Path.GetExtension(extension)))
                     {
@@ -372,7 +349,7 @@ namespace Microsoft.DotNet.SignTool
 
                     map[extension] = certificate.Equals(SignToolConstants.IgnoreFileCertificateSentinel, StringComparison.InvariantCultureIgnoreCase) ?
                         SignInfo.Ignore :
-                        new SignInfo(certificate);
+                        new SignInfo(certificate, collisionPriorityId: collisionPriorityId);
                 }
             }
 
@@ -390,6 +367,7 @@ namespace Microsoft.DotNet.SignTool
                     var strongName = item.ItemSpec;
                     var publicKeyToken = item.GetMetadata("PublicKeyToken");
                     var certificateName = item.GetMetadata("CertificateName");
+                    var collisionPriorityId = item.GetMetadata(SignToolConstants.CollisionPriorityId);
 
                     if (string.IsNullOrWhiteSpace(strongName))
                     {
@@ -418,7 +396,7 @@ namespace Microsoft.DotNet.SignTool
 
                     var signInfo = SignToolConstants.IgnoreFileCertificateSentinel.Equals(strongName, StringComparison.OrdinalIgnoreCase)
                         ? new SignInfo(certificateName)
-                        : new SignInfo(certificateName, strongName);
+                        : new SignInfo(certificateName, strongName, collisionPriorityId: collisionPriorityId);
 
                     if (map.ContainsKey(publicKeyToken))
                     {
@@ -445,6 +423,7 @@ namespace Microsoft.DotNet.SignTool
                     var targetFramework = item.GetMetadata("TargetFramework");
                     var publicKeyToken = item.GetMetadata("PublicKeyToken");
                     var certificateName = item.GetMetadata("CertificateName");
+                    var collisionPriorityId = item.GetMetadata(SignToolConstants.CollisionPriorityId);
 
                     if (fileName.IndexOfAny(new[] { '/', '\\' }) >= 0)
                     {
@@ -470,7 +449,7 @@ namespace Microsoft.DotNet.SignTool
                         continue;
                     }
 
-                    var key = new ExplicitCertificateKey(fileName, publicKeyToken, targetFramework);
+                    var key = new ExplicitCertificateKey(fileName, publicKeyToken, targetFramework, collisionPriorityId);
                     if (map.TryGetValue(key, out var existingCert))
                     {
                         Log.LogError($"Duplicate entries in {nameof(FileSignInfo)} with the same key ('{fileName}', '{publicKeyToken}', '{targetFramework}'): '{existingCert}', '{certificateName}'.");

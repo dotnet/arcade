@@ -34,29 +34,32 @@ namespace Microsoft.DotNet.SignTool
 
         internal bool IsAlreadySigned { get; }
 
+        internal string CollisionPriorityId { get; }
+
         public bool ShouldLocallyStrongNameSign => !string.IsNullOrEmpty(StrongName) && StrongName.EndsWith(".snk", StringComparison.OrdinalIgnoreCase);
 
         public bool ShouldSign => !IsAlreadySigned && !ShouldIgnore;
 
-        public SignInfo(string certificate, string strongName, bool shouldIgnore, bool isAlreadySigned)
+        public SignInfo(string certificate, string strongName, string collisionPriorityId, bool shouldIgnore, bool isAlreadySigned)
         {
             ShouldIgnore = shouldIgnore;
             IsAlreadySigned = isAlreadySigned;
             Certificate = certificate;
             StrongName = strongName;
+            CollisionPriorityId = collisionPriorityId;
         }
 
         private SignInfo(bool ignoreThisFile, bool alreadySigned) 
-            : this(certificate: null, strongName: null, ignoreThisFile, alreadySigned)
+            : this(certificate: null, strongName: null, collisionPriorityId: null, ignoreThisFile, alreadySigned)
         {
         }
 
-        internal SignInfo(string certificate, string strongName = null)
-            : this(certificate, strongName, shouldIgnore: false, isAlreadySigned: false)
+        internal SignInfo(string certificate, string strongName = null, string collisionPriorityId = null)
+            : this(certificate, strongName, collisionPriorityId, shouldIgnore: false, isAlreadySigned: false)
         {
         }
 
-        internal SignInfo WithCertificateName(string value)
-            => new SignInfo(value, StrongName, ShouldIgnore, IsAlreadySigned);
+        internal SignInfo WithCertificateName(string value, string collisionPriorityId)
+            => new SignInfo(value, StrongName, collisionPriorityId, ShouldIgnore, IsAlreadySigned);
     }
 }

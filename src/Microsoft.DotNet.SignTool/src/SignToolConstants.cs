@@ -104,8 +104,8 @@ namespace Microsoft.DotNet.SignTool
         };
 
         /// <summary>
-        /// Attribute name containing the BAR build ID
+        /// Attribute for the CollisionPriorityId
         /// </summary>
-        public const string BarBuildId = "BARBuildId";
+        public const string CollisionPriorityId = "CollisionPriorityId";
     }
 }
