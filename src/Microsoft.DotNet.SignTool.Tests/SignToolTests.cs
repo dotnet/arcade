@@ -47,7 +47,8 @@ namespace Microsoft.DotNet.SignTool.Tests
             { ".psc1", new SignInfo("PSCCertificate", collisionPriorityId: "123") },
             { ".dylib", new SignInfo("DylibCertificate", collisionPriorityId: "123") },
             { ".dll", new SignInfo("Microsoft400", collisionPriorityId: "123") },
-            { ".exe", new SignInfo("Microsoft400",collisionPriorityId:  "123") },
+            { ".exe", new SignInfo("Microsoft400", collisionPriorityId:  "123") },
+            { ".msi", new SignInfo("Microsoft400", collisionPriorityId:  "123") },
             { ".vsix", new SignInfo("VsixSHA2", collisionPriorityId: "123") },
             { ".zip", SignInfo.Ignore },
             { ".nupkg", new SignInfo("NuGet", collisionPriorityId: "123") },
@@ -920,18 +921,14 @@ wixToolsPath: GetWixToolPath());
             // Overriding information
             var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
 
-            // Add msi certificate
-            Dictionary<string, SignInfo> fileExtensionSignInfo = s_fileExtensionSignInfo;
-            fileExtensionSignInfo.Add(".msi", new SignInfo("Microsoft400", collisionPriorityId: "123"));
-
-            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, fileExtensionSignInfo, new[]
+            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfoWithCollisionId, new[]
             {
                 "File 'MsiApplication.exe' TargetFramework='.NETFramework,Version=v4.7.2' Certificate='Microsoft400'",
                 "File 'MsiSetup.msi' Certificate='Microsoft400'",
                 "File 'MsiSetup.msi.wixpack.zip' Certificate=''",
             });
 
-            ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
+            ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfoWithCollisionId, new[]
             {
 $@"<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "0", "ABCDEFG/MsiApplication.exe")}"">
   <Authenticode>Microsoft400</Authenticode>
