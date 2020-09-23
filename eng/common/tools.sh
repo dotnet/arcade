@@ -319,9 +319,9 @@ function GetNuGetPackageCachePath {
   if [[ -z ${NUGET_PACKAGES:-} ]]; then
     if [[ "$use_global_nuget_cache" == true ]]; then
       export NUGET_PACKAGES="$HOME/.nuget/packages"
-      export RESTORENOCACHE=true
     else
       export NUGET_PACKAGES="$repo_root/.packages"
+      export RESTORENOCACHE=true
     fi
   fi
 
