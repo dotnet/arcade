@@ -58,7 +58,6 @@ use_installed_dotnet_cli=${use_installed_dotnet_cli:-true}
 dotnetInstallScriptVersion=${dotnetInstallScriptVersion:-'v1'}
 
 # True to use global NuGet cache instead of restoring packages to repository-local directory.
-# also clear the http NuGet cache.
 if [[ "$ci" == true ]]; then
   use_global_nuget_cache=${use_global_nuget_cache:-false}
 else
