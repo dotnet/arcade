@@ -385,7 +385,7 @@ Example from arcade-validation:
 
 ### How to upgrade from V2 to V3?
 
-Following changes has to be made
+The following changes have to be made:
 1) Create or update eng/Publishing.props, adding the following MSBuild property:
 
 ```
