@@ -264,7 +264,7 @@ A conversion to `PushToAzureDevOpsArtifacts` for repos that are using the `PushT
       PublishFlatContainer="$(PublishFlatContainer)"
       AssetManifestPath="$(AssetManifestPath)"
       AssetsTemporaryDirectory="$(TempWorkingDirectory)"
-      PublishingVersion ="3" />
+      PublishingVersion="3" />
     
     <!-- Copy the generated manifest to the build's artifacts -->
     <Copy
