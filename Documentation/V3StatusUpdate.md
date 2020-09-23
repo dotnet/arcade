@@ -15,12 +15,12 @@ This table represents the status of the .NET 5 V3 publishing status on a Per-Rep
 | runtime             | epananth     | ![][green]   |                                      |
 | installer           | epananth     | ![][green]   |                                      |
 | sdk                 | epananth     | ![][green]   |                                      |
-| efcore              |              | ![][red]     |                                      |
-| extensions          |              | ![][red]     |                                      |
+| efcore              | epananth     | ![][green]   |                                      |
+| extensions          | epananth     | ![][green]   |                                      |
 | winforms            | mmitche      | ![][green]   |                                      |
 | wpf-int             |              | ![][red]     |                                      |
 | wpf                 | mmitche      | ![][green]   |                                      |
-| templating          |              | ![][red]     |                                      |
+| templating          | epananth     | ![][green]   |                                      |
 | diagnostics         |              | ![][red]     |                                      |
 | aspnetcore-tooling  |              | ![][red]     |                                      |
 | fsharp              |              | ![][red]     |                                      |
@@ -30,6 +30,8 @@ This table represents the status of the .NET 5 V3 publishing status on a Per-Rep
 | clrmd               |              | ![][red]     |                                      |
 | msbuild             |              | ![][red]     |                                      |
 | xliff-tasks         |              | ![][red]     |                                      |
+| roslyn-analyzer     | epananth     | ![][green]   |                                      |
+
 
 [red]: https://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Red.png
 [green]: https://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png
