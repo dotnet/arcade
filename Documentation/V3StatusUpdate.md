@@ -7,7 +7,7 @@
 
 This table represents the status of the .NET 5 V3 publishing status on a Per-Repo basis
 
-| Repo                | Ownwer       | Status       | Notes                                |
+| Repo                | Owner        | Status       | Notes                                |
 | ------------------  | -------------|--------------|--------------------------------------|
 | windowsdesktop      | epananth     | ![][green]   |                                      |
 | arcade-validation   | epananth     | ![][green]   |                                      |
@@ -18,18 +18,18 @@ This table represents the status of the .NET 5 V3 publishing status on a Per-Rep
 | efcore              | epananth     | ![][green]   |                                      |
 | extensions          | epananth     | ![][green]   |                                      |
 | winforms            | mmitche      | ![][green]   |                                      |
-| wpf-int             |              | ![][red]     |                                      |
+| wpf-int             | fabiant      | ![][red]     |                                      |
 | wpf                 | mmitche      | ![][green]   |                                      |
 | templating          | epananth     | ![][green]   |                                      |
 | diagnostics         |              | ![][red]     |                                      |
-| aspnetcore-tooling  |              | ![][red]     |                                      |
-| fsharp              |              | ![][red]     |                                      |
+| aspnetcore-tooling  | kevinpi      | ![][red]     |                                      |
+| fsharp              | brettfo      | ![][red]     |                                      |
 | symuploader         |              | ![][red]     |                                      |
 | symstore            |              | ![][red]     |                                      |
-| sourcelink          |              | ![][red]     |                                      |
+| sourcelink          | tmat         | ![][red]     |                                      |
 | clrmd               |              | ![][red]     |                                      |
 | msbuild             |              | ![][red]     |                                      |
-| xliff-tasks         |              | ![][red]     |                                      |
+| xliff-tasks         | epananth     | ![][red]     |                                      |
 | roslyn-analyzer     | epananth     | ![][green]   |                                      |
 
 

@@ -1316,10 +1316,10 @@ parameters:
 - `--id` - **(Required)**. BAR id of build to assign to channel.
 - `--channel` - **(Required)**. Channel to assign build to.
 - `--publish-installers-and-checksums` **(Required)** Whether installers and checksums should be published. This should be true all the time.
-- `--publishing-infra-version` - Version of publishing, for latest publishing benefits use 3. Default is 2. 
+- `--publishing-infra-version` - Version of publishing, for single stage [publishing infrastructure use 3]() else for multi stage publishing infra with each stage representing available channel use 2. Default is 2. 
 - `--signing-validation-parameters` - Additional (MSBuild) properties to be passed to signing validation
 - `--symbol-publishing-parameters` -Additional (MSBuild) properties to be passed to symbol publishing
-- `--default-channels` - Assign build to all default channels. Required if --channel is not specified.
+- `--default-channels` - Assign build to the default channel(s). Required if --channel is not specified.
 - `--source-branch` - Branch that should be used as base for the promotion build.
 - `--source-sha` - SHA that should be used as base for the promotion build.
 - `--validate-signing` - Perform signing validation.
@@ -1334,7 +1334,7 @@ parameters:
   The operation continues asynchronously in AzDO.
 
 **Sample**
-**V2 Publishing**
+**If using --publishing-infra-version 2**
 ```
 
 darc add-build-to-channel --id 13078 --channel ".NET Core 3 Release" --publish-installers-and-checksums
@@ -1369,10 +1369,10 @@ If the above example build doesn't happen to be the latest in a channel but you 
     darc trigger-subscriptions --id 22859ac6-b4a6-4fce-54c7-08d6c734018a --build 13078
 ```
 
-**V3 Publishing**
+**If using --publishing-infra-version 3**
 ```
 
-darc add-build-to-channel --id 65256 --channel "..NET 6 Dev" --publishing-infra-version 3 --publish-installers-and-checksums
+darc add-build-to-channel --id 65256 --channel ".NET 6 Dev" --publishing-infra-version 3 --publish-installers-and-checksums
 
 Waiting '60' seconds for promotion build to complete.
 

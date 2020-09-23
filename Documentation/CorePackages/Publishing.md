@@ -6,9 +6,9 @@ This document describes the infrastructure provided by the Arcade SDK for publis
 
 In order to use the new publishing mechanism, the easiest way to start is by turning your existing build pipeline into an AzDO YAML stage, and then making use of a YAML template ([eng/common/templates/post-build/post-build.yml](https://github.com/dotnet/arcade/blob/66175ebd3756697a3ca515e16cd5ffddc30582cd/eng/common/templates/post-build/post-build.yml)) provided by Arcade to use the default publishing stages. The process is explained below step by step.
 
-1. Update the Arcade SDK version used by the repository to `1.0.0-beta.19360.8` or newer.
+1. Update the Arcade SDK version used by the repository to `5.0.0-beta.20461.7` or newer.
 
-2. Disable asset publishing during the build. There are two common situations here. Some build definitions make use of the `jobs.yml` template and others make use of the `job.yml` (singular). The former is a wrapper around a few things, among them the `job.yml` and `publish-build-assets.yml` templates. If your build definition doesn't use `jobs.yml` you'll need to directly pass the `PublishUsingPipelines` parameter to the included templates. See examples below.
+1. Disable asset publishing during the build. There are two common situations here. Some build definitions make use of the `jobs.yml` template and others make use of the `job.yml` (singular). The former is a wrapper around a few things, among them the `job.yml` and `publish-build-assets.yml` templates. If your build definition doesn't use `jobs.yml` you'll need to directly pass the `PublishUsingPipelines` parameter to the included templates. See examples below.
 
     1. If the build job uses the `eng\common\templates\jobs\jobs.yml` template, set the parameter `enablePublishUsingPipelines` to `true`. See example below:
 
@@ -45,7 +45,7 @@ In order to use the new publishing mechanism, the easiest way to start is by tur
                   ...
             ```
 
-3. You'll also need to pass the below MSBuild property to the Arcade build scripts.
+1. You'll also need to pass the below MSBuild property to the Arcade build scripts.
 
   | Name                           | Value |
   | ------------------------------ | ----- |
@@ -86,7 +86,7 @@ In order to use the new publishing mechanism, the easiest way to start is by tur
          $(_InternalBuildArgs)
   ```
 
-4. Transform your existing build-definition to a single stage. Do that by nesting the current job definition(s) under the `stages` keyword. For instance, this example build definition with a single job definition:
+1. Transform your existing build-definition to a single stage. Do that by nesting the current job definition(s) under the `stages` keyword. For instance, this example build definition with a single job definition:
 
     ```YAML
     jobs:
@@ -111,7 +111,7 @@ In order to use the new publishing mechanism, the easiest way to start is by tur
 
     We suggest you to use the stage name *build* and have only one build stage. However, that's not a requirement. If you choose to use a different stage name or need to use multiple build stages you'll need to pass the name of the stage(s) to the `post-build.yml` template (see table on next section).
 
-5. Import the`eng\common\templates\post-build\post-build.yml` Arcade template at the end of the build definition. This will import all default test, validate and publishing stages provided by Arcade. The bottom part of your build definition will look like this:
+1. Import the`eng\common\templates\post-build\post-build.yml` Arcade template at the end of the build definition. This will import all default test, validate and publishing stages provided by Arcade. For a single stage publishing infrastructure, set `publishingInfraVersion` to 3. The bottom part of your build definition will look like this:
 
     ```YAML
     - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
@@ -126,7 +126,7 @@ In order to use the new publishing mechanism, the easiest way to start is by tur
 
     | Name                                    | Type     | Description                                                                                          |Default Value |
     | --------------------------------------- | -------- | -----------------------------------------------------------------------------------------------------|----- |
-    | publishingInfraVersion                  | int      | Publishing infrastructure version - Use 3 for latest publishing infra.                               | 2    |
+    | publishingInfraVersion                  | int      | Publishing infrastructure version - Use 3 for latest publishing infra. Accepted values are 2 / 3.                               | 2    |
     | enableSourceLinkValidation              | bool     | Run SourceLink validation during the post-build stage.                                               | false |
     | enableSigningValidation                 | bool     | Run signing validation during the post-build stage.                                                  | true |
     | enableNugetValidation                   | bool     | Run NuGet package validation tool during the post build stage.                                       | true |
@@ -146,7 +146,7 @@ In order to use the new publishing mechanism, the easiest way to start is by tur
     * [Arcade-Validation](https://github.com/dotnet/arcade-validation/blob/master/azure-pipelines.yml)
     * [Arcade-Services](https://github.com/dotnet/arcade-services/blob/master/azure-pipelines.yml)
 
-6. Create or update eng/Publishing.props, adding the following MSBuild property:
+1. Create or update eng/Publishing.props, adding the following MSBuild property:
     ```XML
         <PublishingVersion>3</PublishingVersion>
     ```
@@ -161,13 +161,11 @@ In order to use the new publishing mechanism, the easiest way to start is by tur
         </Project>
      ```
 
-   Example of basic onbaording scenario can be found in the following repos :
+   Example of the use of Publishing.props can be found in the following repos :
 
    * [Arcade-Validation](https://github.com/dotnet/arcade-validation/blob/6009d37b7ecacbb0bc1e0c5a601b8d7e3b2e5fa5/eng/Publishing.props#L4)
 
 The pipeline for a build with stages enabled will look like the one shown below.
-
-**NOTE:** You need to have the AzDO <u>*Multi-stage pipelines*</u> preview feature enabled to see an UI like the one below. Take a [look here](https://docs.microsoft.com/en-us/azure/devops/project/navigation/preview-features?view=azure-devops) to see how to enable preview features in Azure DevOps.
 
 ![V3-publishing](./images/V3-publishing.PNG)
 
@@ -183,7 +181,7 @@ Since the post-build stages will only trigger during builds that run in the inte
     ```
 
 3. Queue a build for your test branch
-4. Once the Build and Validate Build Assets stages complete, the *Publish Using Darc* stage should execute and publish the packages to the feed during the `Publish Using Darc` job. [Maestro Promotion Pipeline](https://dnceng.visualstudio.com/internal/_build?definitionId=750) is a pipeline used to publish the packages to the target    channel.`Publish Using Darc` job calls [`darc add-build-to-channel`](https://github.com/dotnet/arcade/blob/ec191f3d706d740bc7a87fbb98d94d916f81f0cb/Documentation/Darc.md#add-build-to-channel) which inturn queues a new build in Maestro Promotion Pipeline and waits for promotion to complete. 
+4. Once the Build and Validate Build Assets stages complete, the *Publish Using Darc* stage should execute and publish the packages to the feed during the `Publish Using Darc` job. [Maestro Promotion Pipeline](https://dnceng.visualstudio.com/internal/_build?definitionId=750) is a pipeline used to publish the packages to the target    channel. Make sure a new build gets queued in the `Maestro Promotion Pipeline`. `Publish Using Darc` job calls [`darc add-build-to-channel`](https://github.com/dotnet/arcade/blob/ec191f3d706d740bc7a87fbb98d94d916f81f0cb/Documentation/Darc.md#add-build-to-channel) which inturn queues a new build in Maestro Promotion Pipeline and waits for promotion to complete. 
 
 ### Checksum generation
 
@@ -199,7 +197,7 @@ Example:
     </ItemGroup>
     ```
 
-You will also need to pass `publishInstallersAndChecksums=true` to the `post-build.yml` template. Currently this value is be set to true by default. 
+You will also need to pass `publishInstallersAndChecksums=true` to the `post-build.yml` template. Make sure you do not change this value to false. 
 
 ## More complex onboarding scenarios
 
@@ -306,6 +304,77 @@ Furthermore, starting with Arcade SDK version **5.0.0-beta.20120.2** the default
 
 ## Frequently Asked Questions
 
+### What is V1 publishing?
+
+The publishing infrastructure has multiple stage(s), these stages represent available channels. Only the stages corresponding to the default channel will execute. This is for arcade3.x only. 
+
+Asset manifest Example : 
+
+`publishingVersion` is not present in V1.
+
+![V1-asset-manifest](./images/V1-asset-manifest.PNG)
+
+All the 3.1 services branches of repos uses arcade 3.x
+
+### What is V2 publishing?
+
+The publishing infrastructure has multiple stage(s), these stages represent available channels. Only the stages corresponding to default channel will execute. All the other stages will execute the Setup Maestro Vars job but will not publish.
+
+The distinction between V1 and V2 is that V1 serves for arcade3.x only and V2 serves for all the other repos. Also the asset manifest in V2 contains the `publishingVersion = 2`.
+
+Example asset manifest from arcade-validation:
+
+![V2-asset-manifest](./images/V2-asset-manifest.PNG)
+
+Example from arcade-validation : 
+
+![V2-publishing](./images/V2-publishing.PNG)
+
+
+### What is V3 publishing? How is it different from V2?
+
+In V3, we have a single stage called 'Publish Using Darc', handling publishing for all available channels. Even if the repo branch is associated to more than one default channel(s) there will be only one stage. V3 uses [`darc add-build-to-channel`](https://github.com/dotnet/arcade/blob/ec191f3d706d740bc7a87fbb98d94d916f81f0cb/Documentation/Darc.md#add-build-to-channel) to promote builds based on the current configured default channels for the branch just built. [Maestro promotion pipeline](https://dnceng.visualstudio.com/internal/_build?definitionId=750) is a pipeline used to publish the packages to the target channel.  `add-build-to-channel` queues a new build of the Maestro Promotion Pipeline and waits for promotion to complete. If the [default channel(s)](https://github.com/dotnet/arcade/blob/ec191f3d706d740bc7a87fbb98d94d916f81f0cb/Documentation/Darc.md#add-default-channel) is configured, this will create a build in Maestro Promotion Pipeline.
+
+V3 unifies this to a single stage, reducing UI clutter. In addition, some classes of changes (e.g. addition of new channels) can be added to the infrastructure without requiring an arcade update in a consumer repository.
+
+Example from arcade-validation: 
+
+![V3-publishing](./images/V3-publishing.PNG)
+
+### How to upgrade from V2 to V3?
+
+The following changes have to be made:
+1) Create or update eng/Publishing.props, adding the following MSBuild property:
+
+```
+<PublishingVersion>3</PublishingVersion>
+```
+
+Example: 
+```
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+   <PropertyGroup>
+      <PublishingVersion>3</PublishingVersion>
+   </PropertyGroup>
+</Project>
+```
+arcade-validation example : https://github.com/dotnet/arcade-validation/blob/a3b8def7412266282cd23edf9e84176f6afe52a5/eng/Publishing.props#L4
+
+2) In the azure-pipelines.yml file(or your pipeline file), add the `publishingInfraVersion` parameter to the post-build template.
+
+Example: 
+```
+  - template: eng\common\templates\post-build\post-build.yml
+    parameters:
+      publishingInfraVersion: 3
+      enableSymbolValidation: false
+      enableSigningValidation: false
+      enableNugetValidation: false
+      enableSourceLinkValidation: false
+```
+arcade-validation example : https://github.com/dotnet/arcade-validation/blob/a3b8def7412266282cd23edf9e84176f6afe52a5/azure-pipelines.yml#L206
+
 ### Guiding principles of the new infra?
 
 - **Controlled by Maestro++ Channels:** The locations where packages are published to are determined based on which Maestro++ channel the build is assigned to. Look [here](https://github.com/dotnet/arcade/blob/66175ebd3756697a3ca515e16cd5ffddc30582cd/Documentation/BranchesChannelsAndSubscriptions.md) for more info about channels.
@@ -343,79 +412,6 @@ Each stable builds (i.e., [Release Official Builds](https://github.com/dotnet/ar
 ### What benefits do I get from the new infrastructure?
 
 There are a few benefits, but the bottom line is: you can rely on Arcade SDK and Maestro++ to determine the correct place to publish the build assets. This is specially important for servicing and/or private builds where assets must not go to public locations before further validations. The new infrastructure also performs Signing validation, SDL validation and NuGet packages metadata validation.
-
-### What is V1 publishing?
-
-The publishing infrastructure has multiple stage(s), these stages represent available channels. Only the stages corresponding to the default channel will execute. This is for arcade3.x only. 
-
-Asset manifest Example : 
-
-![V1-asset-manifest](./images/V1-asset-manifest.PNG)
-
-Here are some of the repos currently using this infrastruture: 
- 1) [Roslyn](https://github.com/dotnet/roslyn)
- 2) [Sdk](https://github.com/dotnet/sdk)
-
-### What is V2 publishing?
-
-The publishing infrastructure has multiple stage(s), these stages represent available channels. Only the stages corresponding to default channel will execute. All the other stages will execute the Setup Maestro Vars job but will not publish.
-
-The distinction between V1 and V2 is that V1 serves for arcade3.x only and V2 serves for all the other repos. Also the asset manifest in V2 contains the `publishingVersion = 2`.
-
-Example asset manifest from arcade-validation:
-
-![V2-asset-manifest](./images/V2-asset-manifest.PNG)
-
-Example from arcade-validation : 
-
-![V2-publishing](./images/V2-publishing.PNG)
-
-
-### What is V3 publishing? How is it different from V2?
-
-In V3, we have a single stage called 'Publish Using Darc', handling publishing for all available channels. Even if the repo branch is associated to more than one default channel(s) there will be only one stage. V3 uses `darc add-build-to-channel` to promote builds based on the current configured default channels for the branch just built. [Maestro promotion pipeline](https://dnceng.visualstudio.com/internal/_build?definitionId=750) is a pipeline used to publish the packages to the target channel.  `add-build-to-channel` queues a new build of the Maestro Promotion Pipeline and waits for promotion to complete. If the [default channel(s)](https://github.com/dotnet/arcade/blob/ec191f3d706d740bc7a87fbb98d94d916f81f0cb/Documentation/Darc.md#add-default-channel) is configured, this will create a build in Maestro Promotion Pipeline.
-
-In V2, publishing has a stage per channel, each stage activated even though it may not publish to that channel. V3 unifies this to a single stage, reducing UI clutter. In addition, some classes of changes (e.g. addition of new channels) can be added to the infrastructure without requiring an arcade update in a consumer repository.
-
-If default channel is not configured, [add-build-to-channel](https://github.com/dotnet/arcade/blob/ec191f3d706d740bc7a87fbb98d94d916f81f0cb/Documentation/Darc.md#add-build-to-channel) can be used to publish to the channel(s), this is applicable to both V2 and V3.
-
-Example from arcade-validation: 
-
-![V3-publishing](./images/V3-publishing.PNG)
-
-### How to upgrade from V2 to V3?
-
-The following changes have to be made:
-1) Create or update eng/Publishing.props, adding the following MSBuild property:
-
-```
-<PublishingVersion>3</PublishingVersion>
-```
-
-Example: 
-```
-<?xml version="1.0" encoding="utf-8"?>
-<Project>
-   <PropertyGroup>
-      <PublishingVersion>3</PublishingVersion>
-   </PropertyGroup>
-</Project>
-```
-arcade-validation example : https://github.com/dotnet/arcade-validation/blob/a3b8def7412266282cd23edf9e84176f6afe52a5/eng/Publishing.props#L4
-
-2) In azure-pipelines.yml file, the call to the post-build.yml requires additional parameter publishingInfraVersion 
-
-Example: 
-```
-  - template: eng\common\templates\post-build\post-build.yml
-    parameters:
-      publishingInfraVersion: 3
-      enableSymbolValidation: false
-      enableSigningValidation: false
-      enableNugetValidation: false
-      enableSourceLinkValidation: false
-```
-arcade-validation example : https://github.com/dotnet/arcade-validation/blob/a3b8def7412266282cd23edf9e84176f6afe52a5/azure-pipelines.yml#L206
 
 ### Why most stages don't execute the publishing job in V2?
 
@@ -456,7 +452,7 @@ The `DotNetPublishUsingPipelines` is a flag that Arcade SDK uses to determine if
 
 ### Where can I see publishing logs?
 
-The publishing logs are stored inside an Azure DevOps artifacts container named `PostBuildLogs`. Each activated post-build channel/stage will have a subfolder under `PostBuildLogs`. Each job in a publishing channel/stage will have `.binlogs` in the container.
+Under `Publish Using Darc` job get the link to the newly queued build in [Maestro promotion pipeline](https://dnceng.visualstudio.com/internal/_build?definitionId=750). The publishing logs are stored inside an Azure DevOps artifacts container named `PostBuildLogs`. 
 
 ### Which feeds does Arcade infra publish to?
 
