@@ -857,10 +857,10 @@ $@"
         {
             Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
             // List of files to be considered for signing
-            var itemsToSign = new[]
+            var itemsToSign = new ITaskItem[]
             {
-                GetResourcePath("MsiBootstrapper.exe"),
-                GetResourcePath("MsiBootstrapper.exe.wixpack.zip"),
+                new TaskItem(GetResourcePath("MsiBootstrapper.exe")),
+                new TaskItem(GetResourcePath("MsiBootstrapper.exe.wixpack.zip"))
             };
 
             // Default signing information
