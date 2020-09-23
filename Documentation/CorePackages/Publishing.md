@@ -111,7 +111,7 @@ In order to use the new publishing mechanism, the easiest way to start is by tur
 
     We suggest you to use the stage name *build* and have only one build stage. However, that's not a requirement. If you choose to use a different stage name or need to use multiple build stages you'll need to pass the name of the stage(s) to the `post-build.yml` template (see table on next section).
 
-1. Import the`eng\common\templates\post-build\post-build.yml` Arcade template at the end of the build definition. This will import all default test, validate and publishing stages provided by Arcade. For a single stage publishing infrastructure, set `publishingInfraVersion` to 3. The bottom part of your build definition will look like this:
+1. Import the`eng\common\templates\post-build\post-build.yml` Arcade template at the end of the build definition. This will import all default test, validate and publishing stages provided by Arcade. For a single stage publishing infrastructure that reduces UI clutter and additionally, some classes of changes (e.g. addition of new channels) can be added to the infrastructure without requiring an arcade update in a consumer repository, set `publishingInfraVersion` to 3. The bottom part of your build definition will look like this:
 
     ```YAML
     - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
@@ -174,14 +174,14 @@ The pipeline for a build with stages enabled will look like the one shown below.
 Since the post-build stages will only trigger during builds that run in the internal project (i.e., they won't show up on public builds), there are some additional steps that need to be performed in order to test that the changes to the pipeline are correct, and that publishing works as expected. 
 
 1. Create a branch on the Azure DevOps internal mirror of the repo that includes the pipeline changes.
-2. Set up the "General Testing Channel" as a default channel for the internal repo + branch combination using Darc.
+1. Set up the "General Testing Channel" as a default channel for the internal repo + branch combination using Darc.
 
     ``` Powershell
     darc add-default-channel --channel "General Testing" --branch "<my_new_branch>" --repo "https://dev.azure.com/dnceng/internal/_git/<repo_name>"
     ```
 
-3. Queue a build for your test branch
-4. Once the Build and Validate Build Assets stages complete, the *Publish Using Darc* stage should execute and publish the packages to the feed during the `Publish Using Darc` job. [Maestro Promotion Pipeline](https://dnceng.visualstudio.com/internal/_build?definitionId=750) is a pipeline used to publish the packages to the target    channel. Make sure a new build gets queued in the `Maestro Promotion Pipeline`. `Publish Using Darc` job calls [`darc add-build-to-channel`](https://github.com/dotnet/arcade/blob/ec191f3d706d740bc7a87fbb98d94d916f81f0cb/Documentation/Darc.md#add-build-to-channel) which inturn queues a new build in Maestro Promotion Pipeline and waits for promotion to complete. 
+1. Queue a build for your test branch
+1. Once the Build and Validate Build Assets stages complete, the *Publish Using Darc* stage should execute and publish the packages to the feed during the `Publish Using Darc` job. [Maestro Promotion Pipeline](https://dnceng.visualstudio.com/internal/_build?definitionId=750) is a pipeline used to publish the packages to the target channel. The job informs that a new build has been triggered in the promotion pipeline, and once it succeeds the build will be in the channel.. `Publish Using Darc` job calls [`darc add-build-to-channel`](https://github.com/dotnet/arcade/blob/ec191f3d706d740bc7a87fbb98d94d916f81f0cb/Documentation/Darc.md#add-build-to-channel) which inturn queues a new build in Maestro Promotion Pipeline and waits for promotion to complete. 
 
 ### Checksum generation
 
@@ -197,7 +197,7 @@ Example:
     </ItemGroup>
     ```
 
-You will also need to pass `publishInstallersAndChecksums=true` to the `post-build.yml` template. Make sure you do not change this value to false. 
+Ensure that you pass `publishInstallersAndChecksums=true` to the `post-build.yml` template.
 
 ## More complex onboarding scenarios
 
@@ -312,11 +312,11 @@ Asset manifest Example :
 
 `publishingVersion` is not present in V1.
 
-```
+```XML
 <Build Name="https://dnceng@dev.azure.com/dnceng/internal/_git/dotnet-arcade-validation" BuildId="20200915.7" Branch="refs/heads/release/3.x" Commit="0f733414ac0a5e5d4b7233d47851a400204a7cac" AzureDevOpsAccount="dnceng" AzureDevOpsBranch="refs/heads/release/3.x" AzureDevOpsBuildDefinitionId="282" AzureDevOpsBuildId="816405" AzureDevOpsBuildNumber="20200915.7" AzureDevOpsProject="internal" AzureDevOpsRepository="https://dnceng@dev.azure.com/dnceng/internal/_git/dotnet-arcade-validation" InitialAssetsLocation="https://dev.azure.com/dnceng/internal/_apis/build/builds/816405/artifacts" IsStable="False" Location="https://dotnetfeed.blob.core.windows.net/arcade-validation/index.json">
 
 ```
-All the 3.1 services branches of repos uses arcade 3.x
+All the 3.1 services branches of repos use this version of the infrastructure.
 
 ### What is V2 publishing?
 
@@ -325,7 +325,7 @@ The publishing infrastructure has multiple stage(s), these stages represent avai
 The distinction between V1 and V2 is that V1 serves for arcade3.x only and V2 serves for all the other repos. Also the asset manifest in V2 contains the `publishingVersion = 2`.
 
 Example asset manifest from arcade-validation:
-```
+```XML
 <Build PublishingVersion="2" Name="dotnet-arcade-validation" BuildId="20200918.1" Branch="refs/heads/master" Commit="4aa1a2a24a2c7685fdbfea89f4496d8a31a05264" AzureDevOpsAccount="dnceng" AzureDevOpsBranch="refs/heads/master" AzureDevOpsBuildDefinitionId="282" AzureDevOpsBuildId="820763" AzureDevOpsBuildNumber="20200918.1" AzureDevOpsProject="internal" AzureDevOpsRepository="https://dnceng@dev.azure.com/dnceng/internal/_git/dotnet-arcade-validation" InitialAssetsLocation="https://dev.azure.com/dnceng/internal/_apis/build/builds/820763/artifacts" IsStable="False">
 <Package Id="Validation" Version="1.0.0-prerelease.20468.1" />
 
@@ -338,9 +338,9 @@ Example from arcade-validation :
 
 ### What is V3 publishing? How is it different from V2?
 
-In V3, we have a single stage called 'Publish Using Darc', handling publishing for all available channels. Even if the repo branch is associated to more than one default channel(s) there will be only one stage. V3 uses [`darc add-build-to-channel`](https://github.com/dotnet/arcade/blob/ec191f3d706d740bc7a87fbb98d94d916f81f0cb/Documentation/Darc.md#add-build-to-channel) to promote builds based on the current configured default channels for the branch just built. [Maestro promotion pipeline](https://dnceng.visualstudio.com/internal/_build?definitionId=750) is a pipeline used to publish the packages to the target channel.  `add-build-to-channel` queues a new build of the Maestro Promotion Pipeline and waits for promotion to complete. If the [default channel(s)](https://github.com/dotnet/arcade/blob/ec191f3d706d740bc7a87fbb98d94d916f81f0cb/Documentation/Darc.md#add-default-channel) is configured, this will create a build in Maestro Promotion Pipeline.
+In V3, we have a single stage called 'Publish Using Darc', handling publishing for all available channels. Even if the repo branch is associated to more than one default channel(s) there will be only one stage. V3 uses [`darc add-build-to-channel`](https://github.com/dotnet/arcade/blob/ec191f3d706d740bc7a87fbb98d94d916f81f0cb/Documentation/Darc.md#add-build-to-channel) to promote builds based on the current configured default channels for the branch just built. [Maestro promotion pipeline](https://dnceng.visualstudio.com/internal/_build?definitionId=750) is a pipeline used to publish the packages to the target channel. add-build-to-channel queues a new build of this pipeline and waits for it to publish assets for all the configured default channels.
 
-V3 unifies this to a single stage, reducing UI clutter. In addition, some classes of changes (e.g. addition of new channels) can be added to the infrastructure without requiring an arcade update in a consumer repository.
+V3 uses a single stage for publishing infrastructure, reducing UI clutter. In addition, some classes of changes (e.g. addition of new channels) can be added to the infrastructure without requiring an arcade update in a consumer repository.
 
 Example from arcade-validation: 
 
