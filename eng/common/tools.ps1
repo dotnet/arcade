@@ -546,9 +546,9 @@ function GetNuGetPackageCachePath() {
     # For directory normalization, see also: https://github.com/NuGet/Home/issues/7968
     if ($useGlobalNuGetCache) {
       $env:NUGET_PACKAGES = Join-Path $env:UserProfile '.nuget\packages\'
-      $env:RESTORENOCACHE = $true
     } else {
       $env:NUGET_PACKAGES = Join-Path $RepoRoot '.packages\'
+      $env:RESTORENOCACHE = $true
     }
   }
 
