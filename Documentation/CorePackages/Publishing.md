@@ -312,8 +312,10 @@ Asset manifest Example :
 
 `publishingVersion` is not present in V1.
 
-![V1-asset-manifest](./images/V1-asset-manifest.PNG)
+```
+<Build Name="https://dnceng@dev.azure.com/dnceng/internal/_git/dotnet-arcade-validation" BuildId="20200915.7" Branch="refs/heads/release/3.x" Commit="0f733414ac0a5e5d4b7233d47851a400204a7cac" AzureDevOpsAccount="dnceng" AzureDevOpsBranch="refs/heads/release/3.x" AzureDevOpsBuildDefinitionId="282" AzureDevOpsBuildId="816405" AzureDevOpsBuildNumber="20200915.7" AzureDevOpsProject="internal" AzureDevOpsRepository="https://dnceng@dev.azure.com/dnceng/internal/_git/dotnet-arcade-validation" InitialAssetsLocation="https://dev.azure.com/dnceng/internal/_apis/build/builds/816405/artifacts" IsStable="False" Location="https://dotnetfeed.blob.core.windows.net/arcade-validation/index.json">
 
+```
 All the 3.1 services branches of repos uses arcade 3.x
 
 ### What is V2 publishing?
@@ -323,8 +325,11 @@ The publishing infrastructure has multiple stage(s), these stages represent avai
 The distinction between V1 and V2 is that V1 serves for arcade3.x only and V2 serves for all the other repos. Also the asset manifest in V2 contains the `publishingVersion = 2`.
 
 Example asset manifest from arcade-validation:
+```
+<Build PublishingVersion="2" Name="dotnet-arcade-validation" BuildId="20200918.1" Branch="refs/heads/master" Commit="4aa1a2a24a2c7685fdbfea89f4496d8a31a05264" AzureDevOpsAccount="dnceng" AzureDevOpsBranch="refs/heads/master" AzureDevOpsBuildDefinitionId="282" AzureDevOpsBuildId="820763" AzureDevOpsBuildNumber="20200918.1" AzureDevOpsProject="internal" AzureDevOpsRepository="https://dnceng@dev.azure.com/dnceng/internal/_git/dotnet-arcade-validation" InitialAssetsLocation="https://dev.azure.com/dnceng/internal/_apis/build/builds/820763/artifacts" IsStable="False">
+<Package Id="Validation" Version="1.0.0-prerelease.20468.1" />
 
-![V2-asset-manifest](./images/V2-asset-manifest.PNG)
+```
 
 Example from arcade-validation : 
 
