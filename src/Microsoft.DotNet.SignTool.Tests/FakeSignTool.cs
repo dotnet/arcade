@@ -40,7 +40,10 @@ namespace Microsoft.DotNet.SignTool
 
         internal static void SignFile(string path)
         {
-            if (FileSignInfo.IsPEFile(path))
+            // Cannot fake sign the engine as that invalidates the exe and makes it non-executable
+            // which will cause insignia to be unable to reattach it to the installer exe.
+            if (FileSignInfo.IsPEFile(path) &&
+                !path.EndsWith(SignToolConstants.MsiEngineExtension))
             {
                 SignPEFile(path);
             }

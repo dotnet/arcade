@@ -164,27 +164,8 @@ namespace Microsoft.DotNet.SignTool
                 File.Copy(signedPart.Value.FileSignInfo.FullPath, file, true);
             }
             string createFileName = Path.Combine(workingDir, "create.cmd");
-            var processStartInfo = new ProcessStartInfo()
-            {
-                FileName = "cmd.exe",
-                UseShellExecute = false,
-                Arguments = $"/c {createFileName} {outputDir}",
-                WorkingDirectory = workingDir,
-            };
-            if (Directory.Exists(wixToolsPath))
-            {
-                string path = processStartInfo.EnvironmentVariables["PATH"];
-                path = $"{path};{wixToolsPath}";
-                processStartInfo.EnvironmentVariables.Remove("PATH");
-                processStartInfo.EnvironmentVariables.Add("PATH", path);
-            }
-            if(!Directory.Exists(outputDir))
-            {
-                Directory.CreateDirectory(outputDir);
-            }
-            var process = Process.Start(processStartInfo);
-            process.WaitForExit();
-            if (process.ExitCode != 0)
+            int exitCode = BatchSignUtil.RunWixTool(createFileName, outputDir, workingDir, wixToolsPath);
+            if (exitCode != 0)
             {
                 log.LogError($"packaging of wix file '{FileSignInfo.FullPath}' failed");
                 return;

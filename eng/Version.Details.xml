@@ -7,25 +7,25 @@
     </Dependency>
   </ProductDependencies>
   <ToolsetDependencies>
-    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="5.0.0-beta.20465.7">
+    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="5.0.0-beta.20471.1">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>fa0486ddb04a76341d822903c8977fb9fa088d1e</Sha>
+      <Sha>0365488709f58e37de6c2180e7fb243203ca0a9c</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Build.Tasks.Feed" Version="5.0.0-beta.20465.7">
+    <Dependency Name="Microsoft.DotNet.Build.Tasks.Feed" Version="5.0.0-beta.20471.1">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>fa0486ddb04a76341d822903c8977fb9fa088d1e</Sha>
+      <Sha>0365488709f58e37de6c2180e7fb243203ca0a9c</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.SignTool" Version="5.0.0-beta.20465.7">
+    <Dependency Name="Microsoft.DotNet.SignTool" Version="5.0.0-beta.20471.1">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>fa0486ddb04a76341d822903c8977fb9fa088d1e</Sha>
+      <Sha>0365488709f58e37de6c2180e7fb243203ca0a9c</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Helix.Sdk" Version="5.0.0-beta.20465.7">
+    <Dependency Name="Microsoft.DotNet.Helix.Sdk" Version="5.0.0-beta.20471.1">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>fa0486ddb04a76341d822903c8977fb9fa088d1e</Sha>
+      <Sha>0365488709f58e37de6c2180e7fb243203ca0a9c</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.SwaggerGenerator.MSBuild" Version="5.0.0-beta.20465.7">
+    <Dependency Name="Microsoft.DotNet.SwaggerGenerator.MSBuild" Version="5.0.0-beta.20471.1">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>fa0486ddb04a76341d822903c8977fb9fa088d1e</Sha>
+      <Sha>0365488709f58e37de6c2180e7fb243203ca0a9c</Sha>
     </Dependency>
     <Dependency Name="Microsoft.DotNet.Maestro.Client" Version="1.1.0-beta.20258.6">
       <Uri>https://github.com/dotnet/arcade-services</Uri>
@@ -35,9 +35,9 @@
       <Uri>https://github.com/dotnet/arcade-services</Uri>
       <Sha>592654f4a6855d7738a7c7c780355ac54457fdae</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.XHarness.CLI" Version="1.0.0-prerelease.20466.1">
+    <Dependency Name="Microsoft.DotNet.XHarness.CLI" Version="1.0.0-prerelease.20472.1">
       <Uri>https://github.com/dotnet/xharness</Uri>
-      <Sha>1e93e1e188116805165e232785ab7e718465baae</Sha>
+      <Sha>76d881fbee729e90ba417176355d5b54bd58b07b</Sha>
     </Dependency>
     <Dependency Name="Microsoft.Net.Compilers.Toolset" Version="3.8.0-3.20460.2">
       <Uri>https://github.com/dotnet/roslyn</Uri>

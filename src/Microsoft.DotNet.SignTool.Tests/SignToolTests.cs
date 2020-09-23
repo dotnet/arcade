@@ -31,6 +31,7 @@ namespace Microsoft.DotNet.SignTool.Tests
             {".dylib", new SignInfo("DylibCertificate") },
             {".dll", new SignInfo("Microsoft400") },
             {".exe", new SignInfo("Microsoft400") },
+            {".msi", new SignInfo("Microsoft400") },
             {".vsix", new SignInfo("VsixSHA2") },
             {".zip", SignInfo.Ignore },
             {".nupkg", new SignInfo("NuGet") },
@@ -851,6 +852,48 @@ $@"
             });
         }
 
+        [SkippableFact]
+        public void SignMsiEngine()
+        {
+            Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
+            // List of files to be considered for signing
+            var itemsToSign = new[]
+            {
+                GetResourcePath("MsiBootstrapper.exe"),
+                GetResourcePath("MsiBootstrapper.exe.wixpack.zip"),
+            };
+
+            // Default signing information
+            var strongNameSignInfo = new Dictionary<string, SignInfo>()
+            {
+                { "581d91ccdfc4ea9c", new SignInfo("ArcadeCertTest", "ArcadeStrongTest") }
+            };
+
+            // Overriding information
+            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
+
+            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
+            {
+                "File 'MsiSetup.msi' Certificate='Microsoft400'",
+                "File 'MsiBootstrapper.exe' Certificate='Microsoft400'",
+                "File 'MsiBootstrapper.exe.wixpack.zip' Certificate=''",
+            });
+
+            ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
+{
+$@"<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "0", "ABCDEFG/MsiSetup.msi")}"">
+  <Authenticode>Microsoft400</Authenticode>
+</FilesToSign>",
+ $@"<FilesToSign Include=""{Path.Combine(_tmpDir, "engines", "MsiBootstrapper.exe-engine.exe")}"">
+  <Authenticode>Microsoft400</Authenticode>
+</FilesToSign>",
+ $@"<FilesToSign Include=""{Path.Combine(_tmpDir, "MsiBootstrapper.exe")}"">
+  <Authenticode>Microsoft400</Authenticode>
+</FilesToSign>"
+            },
+wixToolsPath: GetWixToolPath());
+
+        }
         [SkippableFact]
         public void MsiWithWixpack()
         {

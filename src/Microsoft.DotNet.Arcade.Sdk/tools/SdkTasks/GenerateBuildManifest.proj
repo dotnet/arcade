@@ -28,13 +28,16 @@
   <UsingTask TaskName="GenerateBuildManifest" AssemblyFile="$(PkgMicrosoft_DotNet_Build_Tasks_Feed)\tools\netcoreapp2.1\Microsoft.DotNet.Build.Tasks.Feed.dll" />
 
   <Import Project="../Sign.props" />
+
+  <Error Condition="'$(AllowEmptySignPostBuildList)' != 'true' AND '@(ItemsToSignPostBuild)' == ''"
+      Text="List of files to sign post-build is empty. Make sure that ItemsToSignPostBuild is configured correctly." />
   
   <Target Name="Execute">
     <GenerateBuildManifest Artifacts="@(ItemsToPush)"
                            AzureDevOpsCollectionUri="$(SYSTEM_TEAMFOUNDATIONCOLLECTIONURI)"
                            AzureDevOpsProject="$(SYSTEM_TEAMPROJECT)"
                            AzureDevOpsBuildId="$(BUILD_BUILDID)"
-                           ItemsToSign="@(ItemsToSign)"
+                           ItemsToSign="@(ItemsToSignPostBuild)"
                            StrongNameSignInfo="@(StrongNameSignInfo)"
                            FileSignInfo="@(FileSignInfo)"
                            FileExtensionSignInfo="@(FileExtensionSignInfo)"
