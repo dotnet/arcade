@@ -540,11 +540,13 @@ function GetDefaultMSBuildEngine() {
 
 function GetNuGetPackageCachePath() {
   if ($env:NUGET_PACKAGES -eq $null) {
-    # Use local cache on CI to ensure deterministic build,
+    # Use local cache on CI to ensure deterministic build. 
+    # Avoid using the http cache as workaround for https://github.com/NuGet/Home/issues/3116
     # use global cache in dev builds to avoid cost of downloading packages.
     # For directory normalization, see also: https://github.com/NuGet/Home/issues/7968
     if ($useGlobalNuGetCache) {
       $env:NUGET_PACKAGES = Join-Path $env:UserProfile '.nuget\packages\'
+      $env:RESTORENOCACHE = $true
     } else {
       $env:NUGET_PACKAGES = Join-Path $RepoRoot '.packages\'
     }

@@ -58,7 +58,9 @@ use_installed_dotnet_cli=${use_installed_dotnet_cli:-true}
 dotnetInstallScriptVersion=${dotnetInstallScriptVersion:-'v1'}
 
 # True to use global NuGet cache instead of restoring packages to repository-local directory.
+# also clear the http NuGet cache.
 if [[ "$ci" == true ]]; then
+
   use_global_nuget_cache=${use_global_nuget_cache:-false}
 else
   use_global_nuget_cache=${use_global_nuget_cache:-true}
@@ -312,10 +314,12 @@ function InitializeBuildTool {
   _InitializeBuildToolFramework="netcoreapp2.1"
 }
 
+# Set RestoreNoCache as a workaround for https://github.com/NuGet/Home/issues/3116
 function GetNuGetPackageCachePath {
   if [[ -z ${NUGET_PACKAGES:-} ]]; then
     if [[ "$use_global_nuget_cache" == true ]]; then
       export NUGET_PACKAGES="$HOME/.nuget/packages"
+      export RESTORENOCACHE=true
     else
       export NUGET_PACKAGES="$repo_root/.packages"
     fi
