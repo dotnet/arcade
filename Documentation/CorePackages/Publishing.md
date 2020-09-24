@@ -306,7 +306,9 @@ Furthermore, starting with Arcade SDK version **5.0.0-beta.20120.2** the default
 
 ### What is V1 publishing?
 
-The publishing infrastructure has multiple stage(s), these stages represent available channels. Only the stages corresponding to the default channel will execute. This is for arcade3.x only. 
+The publishing infrastructure has multiple stage(s), these stages represent available channels. Only the stages corresponding to the default channel will execute. This is for arcade3.x only.
+
+V1 came into existance when we branched for release/3.x in arcade. Master and arcade/3.x initially had same publishing logic. Overtime publishing in arcade master evolved so that became V2 publishing.
 
 Asset manifest Example : 
 

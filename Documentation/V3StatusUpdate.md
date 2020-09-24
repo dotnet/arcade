@@ -31,7 +31,7 @@ This table represents the status of the .NET 5 V3 publishing status on a Per-Rep
 | msbuild             |              | ![][red]     |                                      |
 | xliff-tasks         | epananth     | ![][red]     |                                      |
 | roslyn-analyzer     | epananth     | ![][green]   |                                      |
-
+| Nuget.Client        | epananth     | ![][red]     |                                      |
 
 [red]: https://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Red.png
 [green]: https://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png
