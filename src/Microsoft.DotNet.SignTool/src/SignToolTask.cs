@@ -220,9 +220,8 @@ namespace Microsoft.DotNet.SignTool
 
             var signToolArgs = new SignToolArgs(TempDir, MicroBuildCorePath, TestSign, MSBuildPath, LogDir, enclosingDir, SNBinaryPath, WixToolsPath);
             var signTool = DryRun ? new ValidationOnlySignTool(signToolArgs, Log) : (SignTool)new RealSignTool(signToolArgs, Log);
-            Configuration configuration = null;
-
-            configuration = new Configuration(
+            
+            Configuration configuration = new Configuration(
                 TempDir,
                 ItemsToSign.OrderBy(i => i.GetMetadata(SignToolConstants.CollisionPriorityId)).ToArray(),
                 strongNameInfo,
@@ -318,9 +317,9 @@ namespace Microsoft.DotNet.SignTool
             }
         }
 
-        private Dictionary<string, SignInfo> ParseFileExtensionSignInfo()
+        private Dictionary<string, List<SignInfo>> ParseFileExtensionSignInfo()
         {
-            var map = new Dictionary<string, SignInfo>(StringComparer.OrdinalIgnoreCase);
+            var map = new Dictionary<string, List<SignInfo>>(StringComparer.OrdinalIgnoreCase);
 
             if (FileExtensionSignInfo != null)
             {
@@ -347,18 +346,27 @@ namespace Microsoft.DotNet.SignTool
                         Log.LogWarning($"Duplicated signing information for extension: {extension}. Overriding the previous entry.");
                     }
 
-                    map[extension] = certificate.Equals(SignToolConstants.IgnoreFileCertificateSentinel, StringComparison.InvariantCultureIgnoreCase) ?
+                    SignInfo signInfo = certificate.Equals(SignToolConstants.IgnoreFileCertificateSentinel, StringComparison.InvariantCultureIgnoreCase) ?
                         SignInfo.Ignore :
                         new SignInfo(certificate, collisionPriorityId: collisionPriorityId);
+
+                    if (map.ContainsKey(extension))
+                    {
+                        map[extension].Add(signInfo);
+                    }
+                    else
+                    {
+                        map.Add(extension, new List<SignInfo> { signInfo });
+                    }
                 }
             }
 
             return map;
         }
 
-        private Dictionary<string, SignInfo> ParseStrongNameSignInfo()
+        private Dictionary<string, List<SignInfo>> ParseStrongNameSignInfo()
         {
-            var map = new Dictionary<string, SignInfo>(StringComparer.OrdinalIgnoreCase);
+            var map = new Dictionary<string, List<SignInfo>>(StringComparer.OrdinalIgnoreCase);
 
             if (StrongNameSignInfo != null)
             {
@@ -404,7 +412,14 @@ namespace Microsoft.DotNet.SignTool
                         continue;
                     }
 
-                    map.Add(publicKeyToken, signInfo);
+                    if (map.ContainsKey(publicKeyToken))
+                    {
+                        map[publicKeyToken].Add(signInfo);
+                    }
+                    else
+                    {
+                        map.Add(publicKeyToken, new List<SignInfo> { signInfo });
+                    }
                 }
             }
 

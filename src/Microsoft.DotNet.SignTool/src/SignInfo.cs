@@ -34,6 +34,11 @@ namespace Microsoft.DotNet.SignTool
 
         internal bool IsAlreadySigned { get; }
 
+        /// <summary>
+        /// This is used to decide what SignInfos to use in the case of a collision. In case of a collision
+        /// we'll use the lower value since it would map a lower node in the graph and has precedence
+        /// over the rest
+        /// </summary>
         internal string CollisionPriorityId { get; }
 
         public bool ShouldLocallyStrongNameSign => !string.IsNullOrEmpty(StrongName) && StrongName.EndsWith(".snk", StringComparison.OrdinalIgnoreCase);

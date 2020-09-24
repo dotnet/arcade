@@ -20,38 +20,44 @@ namespace Microsoft.DotNet.SignTool.Tests
         private readonly ITestOutputHelper _output;
 
         // Default extension based signing information
-        private static readonly Dictionary<string, SignInfo> s_fileExtensionSignInfo = new Dictionary<string, SignInfo>()
+        private static readonly Dictionary<string, List<SignInfo>> s_fileExtensionSignInfo = new Dictionary<string, List<SignInfo>>()
         {
-            {".js", new SignInfo("JSCertificate") },
-            {".jar", new SignInfo("JARCertificate") },
-            {".ps1", new SignInfo("PSCertificate") },
-            {".psd1", new SignInfo("PSDCertificate") },
-            {".psm1", new SignInfo("PSMCertificate") },
-            {".psc1", new SignInfo("PSCCertificate") },
-            {".dylib", new SignInfo("DylibCertificate") },
-            {".dll", new SignInfo("Microsoft400") },
-            {".exe", new SignInfo("Microsoft400") },
-            {".msi", new SignInfo("Microsoft400") },
-            {".vsix", new SignInfo("VsixSHA2") },
-            {".zip", SignInfo.Ignore },
-            {".nupkg", new SignInfo("NuGet") },
+            {".js", new List<SignInfo>{ new SignInfo("JSCertificate") } },
+            {".jar",  new List<SignInfo>{ new SignInfo("JARCertificate") } },
+            {".ps1",  new List<SignInfo>{ new SignInfo("PSCertificate") } },
+            {".psd1",  new List<SignInfo>{ new SignInfo("PSDCertificate") } },
+            {".psm1",  new List<SignInfo>{ new SignInfo("PSMCertificate") } },
+            {".psc1",   new List<SignInfo>{ new SignInfo("PSCCertificate") } },
+            {".dylib", new List<SignInfo>{ new SignInfo("DylibCertificate") } },
+            {".dll",  new List<SignInfo>{ new SignInfo("Microsoft400") } },
+            {".exe",  new List<SignInfo>{ new SignInfo("Microsoft400") } },
+            {".msi",  new List<SignInfo>{ new SignInfo("Microsoft400") } },
+            {".vsix",  new List<SignInfo>{ new SignInfo("VsixSHA2") } },
+            {".zip",  new List<SignInfo>{ SignInfo.Ignore } },
+            {".nupkg",  new List<SignInfo>{ new SignInfo("NuGet") } },
         };
 
-        private static readonly Dictionary<string, SignInfo> s_fileExtensionSignInfoWithCollisionId = new Dictionary<string, SignInfo>()
+        private static readonly Dictionary<string, List<SignInfo>> s_fileExtensionSignInfoWithCollisionId = 
+            new Dictionary<string, List<SignInfo>>()
         {
-            {".js", new SignInfo("JSCertificate", collisionPriorityId: "123") },
-            {".jar", new SignInfo("JARCertificate", collisionPriorityId: "123") },
-            { ".ps1", new SignInfo("PSCertificate", collisionPriorityId: "123") },
-            { ".psd1", new SignInfo("PSDCertificate", collisionPriorityId: "123") },
-            { ".psm1", new SignInfo("PSMCertificate", collisionPriorityId: "123") },
-            { ".psc1", new SignInfo("PSCCertificate", collisionPriorityId: "123") },
-            { ".dylib", new SignInfo("DylibCertificate", collisionPriorityId: "123") },
-            { ".dll", new SignInfo("Microsoft400", collisionPriorityId: "123") },
-            { ".exe", new SignInfo("Microsoft400", collisionPriorityId:  "123") },
-            { ".msi", new SignInfo("Microsoft400", collisionPriorityId:  "123") },
-            { ".vsix", new SignInfo("VsixSHA2", collisionPriorityId: "123") },
-            { ".zip", SignInfo.Ignore },
-            { ".nupkg", new SignInfo("NuGet", collisionPriorityId: "123") },
+            {".js", new List<SignInfo>{ new SignInfo("JSCertificate", collisionPriorityId: "123") } },
+            {".jar", new List<SignInfo>{ new SignInfo("JARCertificate", collisionPriorityId: "123") } },
+            { ".ps1", new List<SignInfo>{ new SignInfo("PSCertificate", collisionPriorityId: "123") } },
+            { ".psd1", new List<SignInfo>{ new SignInfo("PSDCertificate", collisionPriorityId: "123") } },
+            { ".psm1", new List<SignInfo>{ new SignInfo("PSMCertificate", collisionPriorityId: "123") } },
+            { ".psc1", new List<SignInfo>{ new SignInfo("PSCCertificate", collisionPriorityId: "123") } },
+            { ".dylib", new List<SignInfo>{ new SignInfo("DylibCertificate", collisionPriorityId: "123") } },
+            { ".dll", new List<SignInfo>
+                { 
+                    new SignInfo("Microsoft400", collisionPriorityId: "123"),
+                    new SignInfo("FakeOne", collisionPriorityId: "456")
+                } 
+             },
+            { ".exe", new List<SignInfo>{ new SignInfo("Microsoft400", collisionPriorityId:  "123") } },
+            { ".msi", new List<SignInfo>{ new SignInfo("Microsoft400", collisionPriorityId:  "123") } },
+            { ".vsix", new List<SignInfo>{ new SignInfo("VsixSHA2", collisionPriorityId: "123") } },
+            { ".zip", new List<SignInfo>{ SignInfo.Ignore } },
+            { ".nupkg", new List<SignInfo>{ new SignInfo("NuGet", collisionPriorityId: "123") } },
         };
 
         // Default extension based signing information post build
@@ -286,9 +292,9 @@ namespace Microsoft.DotNet.SignTool.Tests
 
         private void ValidateGeneratedProject(
             ITaskItem[] itemsToSign,
-            Dictionary<string, SignInfo> strongNameSignInfo,
+            Dictionary<string, List<SignInfo>> strongNameSignInfo,
             Dictionary<ExplicitCertificateKey, string> fileSignInfo,
-            Dictionary<string, SignInfo> extensionsSignInfo,
+            Dictionary<string, List<SignInfo>> extensionsSignInfo,
             string[] expectedXmlElementsPerSingingRound,
             ITaskItem[] dualCertificates = null,
             string wixToolsPath = null)
@@ -320,9 +326,9 @@ namespace Microsoft.DotNet.SignTool.Tests
 
         private void ValidateFileSignInfos(
             ITaskItem[] itemsToSign,
-            Dictionary<string, SignInfo> strongNameSignInfo,
+            Dictionary<string, List<SignInfo>> strongNameSignInfo,
             Dictionary<ExplicitCertificateKey, string> fileSignInfo,
-            Dictionary<string, SignInfo> extensionsSignInfo,
+            Dictionary<string, List<SignInfo>> extensionsSignInfo,
             string[] expected,
             string[] expectedCopyFiles = null,
             ITaskItem[] dualCertificates = null,
@@ -345,7 +351,7 @@ namespace Microsoft.DotNet.SignTool.Tests
         {
             var itemsToSign = new ITaskItem[0];
 
-            var strongNameSignInfo = new Dictionary<string, SignInfo>();
+            var strongNameSignInfo = new Dictionary<string, List<SignInfo>>();
 
             var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
 
@@ -409,15 +415,15 @@ namespace Microsoft.DotNet.SignTool.Tests
             };
 
             // Default signing information
-            var strongNameSignInfo = new Dictionary<string, SignInfo>()
+            var strongNameSignInfo = new Dictionary<string, List<SignInfo>>()
             {
-                { "581d91ccdfc4ea9c", new SignInfo("3PartySHA2", "ArcadeStrongTest", "123") }
+                { "581d91ccdfc4ea9c", new List<SignInfo> {new SignInfo("3PartySHA2", "ArcadeStrongTest", "123") } }
             };
 
             // Overriding information
             var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
 
-            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
+            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfoWithCollisionId, new[]
             {
                 "File 'NativeLibrary.dll' Certificate='Microsoft400'",
                 "File 'ProjectOne.dll' TargetFramework='.NETFramework,Version=v4.6.1' Certificate='3PartySHA2' StrongName='ArcadeStrongTest'",
@@ -439,9 +445,9 @@ namespace Microsoft.DotNet.SignTool.Tests
             };
 
             // Default signing information
-            var strongNameSignInfo = new Dictionary<string, SignInfo>()
+            var strongNameSignInfo = new Dictionary<string, List<SignInfo>>()
             {
-                { "581d91ccdfc4ea9c", new SignInfo("3PartySHA2", "ArcadeStrongTest") }
+                { "581d91ccdfc4ea9c", new List<SignInfo> {new SignInfo("3PartySHA2", "ArcadeStrongTest") } }
             };
 
             // Overriding information
@@ -478,20 +484,20 @@ namespace Microsoft.DotNet.SignTool.Tests
             };
 
             // Default signing information
-            var strongNameSignInfo = new Dictionary<string, SignInfo>()
+            var strongNameSignInfo = new Dictionary<string, List<SignInfo>>()
             {
-                { pktToTest, new SignInfo(certificateToTest, collisionPriorityId: "123") }
+                { pktToTest, new List<SignInfo> { new SignInfo(certificateToTest, collisionPriorityId: "123") } }
             };
 
             // Overriding information
             var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
 
-            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, new Dictionary<string, SignInfo>(), new[]
+            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, new Dictionary<string, List<SignInfo>>(), new[]
             {
                 $"File '{fileToTest}' TargetFramework='.NETStandard,Version=v2.0' Certificate='{certificateToTest}'",
             });
 
-            ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, new Dictionary<string, SignInfo>(), new[]
+            ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, new Dictionary<string, List<SignInfo>>(), new[]
             {
 $@"
 <FilesToSign Include=""{Path.Combine(_tmpDir, fileToTest)}"">
@@ -511,9 +517,9 @@ $@"
             };
 
             // Default signing information
-            var strongNameSignInfo = new Dictionary<string, SignInfo>()
+            var strongNameSignInfo = new Dictionary<string, List<SignInfo>>()
             {
-                { "581d91ccdfc4ea9c", new SignInfo("3PartySHA2", "ArcadeStrongTest") }
+                { "581d91ccdfc4ea9c", new List<SignInfo> { new SignInfo("3PartySHA2", "ArcadeStrongTest") } }
             };
 
             // Overriding information
@@ -554,9 +560,9 @@ $@"
             };
 
             // Default signing information
-            var strongNameSignInfo = new Dictionary<string, SignInfo>()
+            var strongNameSignInfo = new Dictionary<string, List<SignInfo>>()
             {
-                { "581d91ccdfc4ea9c", new SignInfo("ArcadeCertTest", "ArcadeStrongTest", collisionPriorityId: "123") }
+                { "581d91ccdfc4ea9c", new List<SignInfo> { new SignInfo("ArcadeCertTest", "ArcadeStrongTest", collisionPriorityId: "123") } }
             };
 
             // Overriding information
@@ -592,9 +598,9 @@ $@"
             };
 
             // Default signing information
-            var strongNameSignInfo = new Dictionary<string, SignInfo>()
+            var strongNameSignInfo = new Dictionary<string, List<SignInfo>>()
             {
-                { "581d91ccdfc4ea9c", new SignInfo("ArcadeCertTest", "ArcadeStrongTest") }
+                { "581d91ccdfc4ea9c", new List<SignInfo>{ new SignInfo("ArcadeCertTest", "ArcadeStrongTest") } }
             };
 
             // Overriding information
@@ -626,10 +632,10 @@ $@"
             };
 
             // Default signing information
-            var strongNameSignInfo = new Dictionary<string, SignInfo>()
+            var strongNameSignInfo = new Dictionary<string, List<SignInfo>>()
             {
-                { "7cec85d7bea7798e", new SignInfo("ArcadeCertTest", "ArcadeStrongTest", "123") },
-                { "adb9793829ddae60", new SignInfo("Microsoft400", "AspNetCore", "123") }
+                { "7cec85d7bea7798e", new List<SignInfo>{ new SignInfo("ArcadeCertTest", "ArcadeStrongTest", "123") } },
+                { "adb9793829ddae60", new List<SignInfo>{ new SignInfo("Microsoft400", "AspNetCore", "123") } }
             };
 
             // Overriding information
@@ -638,13 +644,13 @@ $@"
                 { new ExplicitCertificateKey("EmptyPKT.dll", collisionPriorityId: "123"), "3PartySHA2" }
             };
 
-            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, new Dictionary<string, SignInfo>(), new[]
+            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, new Dictionary<string, List<SignInfo>>(), new[]
             {
                 "File 'CoreLibCrossARM.dll' Certificate='ArcadeCertTest'",
                 "File 'AspNetCoreCrossLib.dll' TargetFramework='.NETCoreApp,Version=v3.0' Certificate='Microsoft400'",
             });
 
-            ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, new Dictionary<string, SignInfo>(), new[]
+            ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, new Dictionary<string, List<SignInfo>>(), new[]
             {
 $@"<FilesToSign Include=""{Path.Combine(_tmpDir, "CoreLibCrossARM.dll")}"">
   <Authenticode>ArcadeCertTest</Authenticode>
@@ -667,9 +673,9 @@ $@"<FilesToSign Include=""{Path.Combine(_tmpDir, "CoreLibCrossARM.dll")}"">
                 })
             };
 
-            var strongNameSignInfo = new Dictionary<string, SignInfo>()
+            var strongNameSignInfo = new Dictionary<string, List<SignInfo>>()
             {
-                { "", new SignInfo("3PartySHA2", collisionPriorityId: "123") }
+                { "", new List<SignInfo>{ new SignInfo("3PartySHA2", collisionPriorityId: "123") } }
             };
 
             var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>() { };
@@ -692,9 +698,9 @@ $@"<FilesToSign Include=""{Path.Combine(_tmpDir, "CoreLibCrossARM.dll")}"">
                 })
             };
 
-            var strongNameSignInfo = new Dictionary<string, SignInfo>()
+            var strongNameSignInfo = new Dictionary<string, List<SignInfo>>()
             {
-                {  "", new SignInfo("DefaultCertificate", collisionPriorityId: "123") }
+                {  "", new List<SignInfo>{ new SignInfo("DefaultCertificate", collisionPriorityId: "123") } }
             };
 
             var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>()
@@ -717,7 +723,7 @@ $@"<FilesToSign Include=""{Path.Combine(_tmpDir, "CoreLibCrossARM.dll")}"">
                 new TaskItem(GetResourcePath("EmptyPKT.dll"))
             };
 
-            var strongNameSignInfo = new Dictionary<string, SignInfo>() { };
+            var strongNameSignInfo = new Dictionary<string, List<SignInfo>>() { };
             var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>() { };
 
             ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
@@ -743,15 +749,15 @@ $@"<FilesToSign Include=""{Path.Combine(_tmpDir, "CoreLibCrossARM.dll")}"">
             };
 
             // Default signing information
-            var strongNameSignInfo = new Dictionary<string, SignInfo>()
+            var strongNameSignInfo = new Dictionary<string, List<SignInfo>>()
             {
-                { "581d91ccdfc4ea9c", new SignInfo("3PartySHA2", "ArcadeStrongTest", "123") }
+                { "581d91ccdfc4ea9c", new List<SignInfo>{ new SignInfo("3PartySHA2", "ArcadeStrongTest", "123") } }
             };
 
             // Overriding information
             var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
 
-            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
+            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfoWithCollisionId, new[]
             {
                 "File 'NativeLibrary.dll' Certificate='Microsoft400'",
                 "File 'ProjectOne.dll' TargetFramework='.NETFramework,Version=v4.6.1' Certificate='3PartySHA2' StrongName='ArcadeStrongTest'",
@@ -764,7 +770,88 @@ $@"<FilesToSign Include=""{Path.Combine(_tmpDir, "CoreLibCrossARM.dll")}"">
                 "File 'NestedContainer.1.0.0.nupkg' Certificate='NuGet'"
             });
 
-            ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
+            ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfoWithCollisionId, new[]
+            {
+$@"
+<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "2", "lib/native/NativeLibrary.dll")}"">
+  <Authenticode>Microsoft400</Authenticode>
+</FilesToSign>
+<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "3", "lib/net461/ProjectOne.dll")}"">
+  <Authenticode>3PartySHA2</Authenticode>
+  <StrongName>ArcadeStrongTest</StrongName>
+</FilesToSign>
+<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "4", "lib/netcoreapp2.0/ContainerTwo.dll")}"">
+  <Authenticode>3PartySHA2</Authenticode>
+  <StrongName>ArcadeStrongTest</StrongName>
+</FilesToSign>
+<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "5", "lib/netcoreapp2.0/ProjectOne.dll")}"">
+  <Authenticode>3PartySHA2</Authenticode>
+  <StrongName>ArcadeStrongTest</StrongName>
+</FilesToSign>
+<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "6", "lib/netcoreapp2.1/ProjectOne.dll")}"">
+  <Authenticode>3PartySHA2</Authenticode>
+  <StrongName>ArcadeStrongTest</StrongName>
+</FilesToSign>
+<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "7", "lib/netstandard2.0/ProjectOne.dll")}"">
+  <Authenticode>3PartySHA2</Authenticode>
+  <StrongName>ArcadeStrongTest</StrongName>
+</FilesToSign>
+<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "9", "lib/netcoreapp2.0/ContainerOne.dll")}"">
+  <Authenticode>3PartySHA2</Authenticode>
+  <StrongName>ArcadeStrongTest</StrongName>
+</FilesToSign>",
+
+$@"
+<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "8", "ContainerOne.1.0.0.nupkg")}"">
+  <Authenticode>NuGet</Authenticode>
+</FilesToSign>",
+
+$@"
+<FilesToSign Include=""{GetResourcePath("NestedContainer.1.0.0.nupkg")}"">
+  <Authenticode>NuGet</Authenticode>
+</FilesToSign>"
+            });
+        }
+
+        [Fact]
+        public void NestedContainerWithCollisions()
+        {
+            // List of files to be considered for signing
+            var itemsToSign = new ITaskItem[]
+            {
+                new TaskItem(GetResourcePath("NestedContainer.1.0.0.nupkg"), new Dictionary<string, string>
+                {
+                    { SignToolConstants.CollisionPriorityId, "123" }
+                })
+            };
+
+            // Default signing information
+            var strongNameSignInfo = new Dictionary<string, List<SignInfo>>()
+            {
+                { "581d91ccdfc4ea9c", new List<SignInfo>{ new SignInfo("3PartySHA2", "ArcadeStrongTest", "123") } }
+            };
+
+            // Overriding information. Since ContainerOne.dll collides with ContainerTwo.dll already in the hash mapping
+            // table with collition id 123, we end up using ArcadeStrongTest instead of OverriddenCertificate1
+            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>()
+            {
+                { new ExplicitCertificateKey("ContainerOne.dll", collisionPriorityId: "456"), "OverriddenCertificate1" }
+            };
+
+            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfoWithCollisionId, new[]
+            {
+                "File 'NativeLibrary.dll' Certificate='Microsoft400'",
+                "File 'ProjectOne.dll' TargetFramework='.NETFramework,Version=v4.6.1' Certificate='3PartySHA2' StrongName='ArcadeStrongTest'",
+                "File 'ContainerTwo.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='3PartySHA2' StrongName='ArcadeStrongTest'",
+                "File 'ProjectOne.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='3PartySHA2' StrongName='ArcadeStrongTest'",
+                "File 'ProjectOne.dll' TargetFramework='.NETCoreApp,Version=v2.1' Certificate='3PartySHA2' StrongName='ArcadeStrongTest'",
+                "File 'ProjectOne.dll' TargetFramework='.NETStandard,Version=v2.0' Certificate='3PartySHA2' StrongName='ArcadeStrongTest'",
+                "File 'ContainerOne.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='3PartySHA2' StrongName='ArcadeStrongTest'",
+                "File 'ContainerOne.1.0.0.nupkg' Certificate='NuGet'",
+                "File 'NestedContainer.1.0.0.nupkg' Certificate='NuGet'"
+            });
+
+            ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfoWithCollisionId, new[]
             {
 $@"
 <FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "2", "lib/native/NativeLibrary.dll")}"">
@@ -817,9 +904,9 @@ $@"
             };
 
             // Default signing information
-            var strongNameSignInfo = new Dictionary<string, SignInfo>()
+            var strongNameSignInfo = new Dictionary<string, List<SignInfo>>()
             {
-                { "581d91ccdfc4ea9c", new SignInfo("ArcadeCertTest", "ArcadeStrongTest") }
+                { "581d91ccdfc4ea9c", new List<SignInfo>{ new SignInfo("ArcadeCertTest", "ArcadeStrongTest") } }
             };
 
             // Overriding information
@@ -865,9 +952,9 @@ $@"
             };
 
             // Default signing information
-            var strongNameSignInfo = new Dictionary<string, SignInfo>()
+            var strongNameSignInfo = new Dictionary<string, List<SignInfo>>()
             {
-                { "581d91ccdfc4ea9c", new SignInfo("ArcadeCertTest", "ArcadeStrongTest") }
+                { "581d91ccdfc4ea9c", new List<SignInfo>{ new SignInfo("ArcadeCertTest", "ArcadeStrongTest") } }
             };
 
             // Overriding information
@@ -913,9 +1000,9 @@ wixToolsPath: GetWixToolPath());
             };
 
             // Default signing information
-            var strongNameSignInfo = new Dictionary<string, SignInfo>()
+            var strongNameSignInfo = new Dictionary<string, List<SignInfo>>()
             {
-                { "581d91ccdfc4ea9c", new SignInfo("ArcadeCertTest", "ArcadeStrongTest", "123") }
+                { "581d91ccdfc4ea9c", new List<SignInfo>{ new SignInfo("ArcadeCertTest", "ArcadeStrongTest", "123") } }
             };
 
             // Overriding information
@@ -950,9 +1037,9 @@ $@"<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "0", "ABCDE
             };
 
             // Default signing information
-            var strongNameSignInfo = new Dictionary<string, SignInfo>()
+            var strongNameSignInfo = new Dictionary<string, List<SignInfo>>()
             {
-                { "581d91ccdfc4ea9c", new SignInfo("3PartySHA2") }
+                { "581d91ccdfc4ea9c", new List<SignInfo>{ new SignInfo("3PartySHA2") } }
             };
 
             // Overriding information
@@ -991,15 +1078,15 @@ $@"
             };
 
             // Default signing information
-            var strongNameSignInfo = new Dictionary<string, SignInfo>()
+            var strongNameSignInfo = new Dictionary<string, List<SignInfo>>()
             {
-                { "581d91ccdfc4ea9c", new SignInfo("3PartySHA2", "ArcadeStrongTest", "123") }
+                { "581d91ccdfc4ea9c", new List<SignInfo>{ new SignInfo("3PartySHA2", "ArcadeStrongTest", "123") } }
             };
 
             // Overriding information
             var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
 
-            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
+            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfoWithCollisionId, new[]
             {
                 "File 'ProjectOne.dll' TargetFramework='.NETFramework,Version=v4.6.1' Certificate='3PartySHA2' StrongName='ArcadeStrongTest'",
                 "File 'ProjectOne.dll' TargetFramework='.NETStandard,Version=v2.0' Certificate='3PartySHA2' StrongName='ArcadeStrongTest'",
@@ -1012,7 +1099,7 @@ $@"
                 $"{Path.Combine(_tmpDir, "ContainerSigning", "6", "PackageWithRelationships.vsix")} -> {Path.Combine(_tmpDir, "PackageWithRelationships.vsix")}"
             });
 
-            ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
+            ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfoWithCollisionId, new[]
             {
 $@"
 <FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "1", "lib/net461/ProjectOne.dll")}"">
@@ -1052,9 +1139,9 @@ $@"
             };
 
             // Default signing information
-            var strongNameSignInfo = new Dictionary<string, SignInfo>()
+            var strongNameSignInfo = new Dictionary<string, List<SignInfo>>()
             {
-                { "581d91ccdfc4ea9c", new SignInfo("3PartySHA2", "ArcadeStrongTest") }
+                { "581d91ccdfc4ea9c", new List<SignInfo>{ new SignInfo("3PartySHA2", "ArcadeStrongTest") } }
             };
 
             // Overriding information
@@ -1119,15 +1206,15 @@ $@"
             };
 
             // Default signing information
-            var strongNameSignInfo = new Dictionary<string, SignInfo>()
+            var strongNameSignInfo = new Dictionary<string, List<SignInfo>>()
             {
-                { "581d91ccdfc4ea9c", new SignInfo("3PartySHA2", "ArcadeStrongTest", "123") }
+                { "581d91ccdfc4ea9c", new List<SignInfo>{ new SignInfo("3PartySHA2", "ArcadeStrongTest", "123") } }
             };
 
             // Overriding information
             var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
 
-            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
+            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfoWithCollisionId, new[]
             {
                 "File 'ProjectOne.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='3PartySHA2' StrongName='ArcadeStrongTest'",
                 "File 'PackageWithRelationships.vsix' Certificate='VsixSHA2'",
@@ -1140,7 +1227,7 @@ $@"
                 $"{Path.Combine(_tmpDir, "A", "PackageWithRelationships.vsix")} -> {Path.Combine(_tmpDir, "B", "PackageWithRelationships.vsix")}"
             });
 
-            ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
+            ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfoWithCollisionId, new[]
             {
 $@"
 <FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "2", "Contents/Common7/IDE/PrivateAssemblies/ProjectOne.dll")}"">
@@ -1179,9 +1266,9 @@ $@"
             };
 
             // Default signing information
-            var strongNameSignInfo = new Dictionary<string, SignInfo>()
+            var strongNameSignInfo = new Dictionary<string, List<SignInfo>>()
             {
-                { "581d91ccdfc4ea9c", new SignInfo("3PartySHA2", "ArcadeStrongTest") }
+                { "581d91ccdfc4ea9c", new List<SignInfo>{ new SignInfo("3PartySHA2", "ArcadeStrongTest") } }
             };
 
             // Overriding information
@@ -1245,12 +1332,12 @@ $@"
             };
 
             // Default signing information
-            var strongNameSignInfo = new Dictionary<string, SignInfo>();
+            var strongNameSignInfo = new Dictionary<string, List<SignInfo>>();
 
             // Overriding information
             var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
 
-            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
+            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfoWithCollisionId, new[]
             {
                 "File 'dynalib.dylib' Certificate='DylibCertificate'",
                 "File 'javascript.js' Certificate='JSCertificate'",
@@ -1276,9 +1363,9 @@ $@"
                 new TaskItem("DualCertificateName"),
             };
 
-            var strongNameSignInfo = new Dictionary<string, SignInfo>()
+            var strongNameSignInfo = new Dictionary<string, List<SignInfo>>()
             {
-                { "31bf3856ad364e35", new SignInfo(dualCertificates.First().ItemSpec, null) }
+                { "31bf3856ad364e35", new List<SignInfo>{ new SignInfo(dualCertificates.First().ItemSpec, null) } }
             };
 
             var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
@@ -1303,15 +1390,15 @@ $@"
             };
 
             // Default signing information
-            var strongNameSignInfo = new Dictionary<string, SignInfo>()
+            var strongNameSignInfo = new Dictionary<string, List<SignInfo>>()
             {
-                { "581d91ccdfc4ea9c", new SignInfo("ArcadeCertTest", "ArcadeStrongTest", "123") }
+                { "581d91ccdfc4ea9c", new List<SignInfo>{ new SignInfo("ArcadeCertTest", "ArcadeStrongTest", "123") } }
             };
 
             // Overriding information
             var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
 
-            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
+            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfoWithCollisionId, new[]
             {
                 "File 'NativeLibrary.dll' Certificate='Microsoft400'",
                 "File 'SOS.NETCore.dll' TargetFramework='.NETCoreApp,Version=v1.0' Certificate='Microsoft400'",
@@ -1330,9 +1417,9 @@ $@"
             };
 
             // Default signing information
-            var strongNameSignInfo = new Dictionary<string, SignInfo>()
+            var strongNameSignInfo = new Dictionary<string, List<SignInfo>>()
             {
-                { "581d91ccdfc4ea9c", new SignInfo("ArcadeCertTest", "ArcadeStrongTest") }
+                { "581d91ccdfc4ea9c", new List<SignInfo>{ new SignInfo("ArcadeCertTest", "ArcadeStrongTest") } }
             };
 
             // Overriding information
@@ -1397,9 +1484,9 @@ $@"
                 }),
             };
 
-            var strongNameSignInfo = new Dictionary<string, SignInfo>()
+            var strongNameSignInfo = new Dictionary<string, List<SignInfo>>()
             {
-                { "581d91ccdfc4ea9c", new SignInfo("ArcadeCertTest", "StrongNameValue", "123") },
+                { "581d91ccdfc4ea9c", new List<SignInfo> {new SignInfo("ArcadeCertTest", "StrongNameValue", "123") } },
             };
 
             // Overriding information
@@ -1475,9 +1562,9 @@ $@"
 
             new Configuration(_tmpDir,
                 itemsToSign,
-                new Dictionary<string, SignInfo>(),
+                new Dictionary<string, List<SignInfo>>(),
                 new Dictionary<ExplicitCertificateKey, string>(),
-                new Dictionary<string, SignInfo>(),
+                new Dictionary<string, List<SignInfo>>(),
                 new ITaskItem[0], task.Log)
                 .GenerateListOfFiles();
 
@@ -1509,9 +1596,9 @@ $@"
 
             new Configuration(_tmpDir,
                 itemsToSign,
-                new Dictionary<string, SignInfo>(),
+                new Dictionary<string, List<SignInfo>>(),
                 new Dictionary<ExplicitCertificateKey, string>(),
-                new Dictionary<string, SignInfo>() { { extension, SignInfo.Ignore } },
+                new Dictionary<string, List<SignInfo>>() { { extension, new List<SignInfo> { SignInfo.Ignore } } },
                 new ITaskItem[0],
                 task.Log)
                 .GenerateListOfFiles();
@@ -1530,9 +1617,20 @@ $@"
                 })
             };
 
-            ValidateFileSignInfos(itemsToSign, new Dictionary<string, SignInfo>(), new Dictionary<ExplicitCertificateKey, string>(), s_fileExtensionSignInfo, new string[0]);
+            ValidateFileSignInfos(
+                itemsToSign, 
+                new Dictionary<string, List<SignInfo>>(), 
+                new Dictionary<ExplicitCertificateKey, 
+                string>(), 
+                s_fileExtensionSignInfoWithCollisionId, 
+                new string[0]);
 
-            ValidateGeneratedProject(itemsToSign, new Dictionary<string, SignInfo>(), new Dictionary<ExplicitCertificateKey, string>(), s_fileExtensionSignInfo, new string[0]);
+            ValidateGeneratedProject(
+                itemsToSign, 
+                new Dictionary<string, List<SignInfo>>(), 
+                new Dictionary<ExplicitCertificateKey, string>(), 
+                s_fileExtensionSignInfoWithCollisionId, 
+                new string[0]);
         }
     }
 }

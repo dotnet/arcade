@@ -43,7 +43,7 @@ namespace Microsoft.DotNet.SignTool
         /// <summary>
         /// Used to look for signing information when we have the PublicKeyToken of a file.
         /// </summary>
-        private readonly Dictionary<string, SignInfo> _strongNameInfo;
+        private readonly Dictionary<string, List<SignInfo>> _strongNameInfo;
 
         /// <summary>
         /// A list of all the binaries that MUST be signed. Also include containers that don't need 
@@ -55,9 +55,10 @@ namespace Microsoft.DotNet.SignTool
 
         /// <summary>
         /// Mapping of ".ext" to certificate. Files that have an extension on this map
-        /// will be signed using the specified certificate.
+        /// will be signed using the specified certificate. Input list might contain
+        /// duplicate entries
         /// </summary>
-        private readonly Dictionary<string, SignInfo> _fileExtensionSignInfo;
+        private readonly Dictionary<string, List<SignInfo>> _fileExtensionSignInfo;
 
         private readonly Dictionary<SignedFileContentKey, FileSignInfo> _filesByContentKey;
 
@@ -89,14 +90,18 @@ namespace Microsoft.DotNet.SignTool
         /// </summary>
         internal List<KeyValuePair<string, string>> _filesToCopy;
 
+        /// <summary>
+        /// Maps file hashes to collision ids. We use this to determine whether we processed an asset already
+        /// and what collision id to use. We always choose the lower collision id in case of collisions.
+        /// </summary>
         internal Dictionary<string, string> _hashToCollisionIdMap;
 
         public Configuration(
             string tempDir,
             ITaskItem[] itemsToSign,
-            Dictionary<string, SignInfo> strongNameInfo,
+            Dictionary<string, List<SignInfo>> strongNameInfo,
             Dictionary<ExplicitCertificateKey, string> fileSignInfo,
-            Dictionary<string, SignInfo> extensionSignInfo,
+            Dictionary<string, List<SignInfo>> extensionSignInfo,
             ITaskItem[] dualCertificates,
             TaskLoggingHelper log,
             bool useHashInExtractionPath = false)
@@ -284,8 +289,6 @@ namespace Microsoft.DotNet.SignTool
             string wixContentFilePath = null, 
             string containerPath = null)
         {
-            // Try to determine default certificate name by the extension of the file
-            bool hasSignInfo = _fileExtensionSignInfo.TryGetValue(Path.GetExtension(fullPath), out var signInfo);
             var fileName = Path.GetFileName(fullPath);
             var extension = Path.GetExtension(fullPath);
             string explicitCertificateName = null;
@@ -297,14 +300,11 @@ namespace Microsoft.DotNet.SignTool
             PEInfo peInfo = null;
             string stringHash = ContentUtil.HashToString(hash);
 
+            // Asset is nested asset part of a container. Try to get it from the visited assets first
             if (string.IsNullOrEmpty(collisionPriorityId) &&
                 !string.IsNullOrEmpty(containerPath))
             {
-                // Asset is nested asset part of a container. Try to get it from the visited assets first
-                if (_hashToCollisionIdMap.TryGetValue(stringHash, out collisionPriorityId))
-                {
-                }
-                else
+                if (!_hashToCollisionIdMap.TryGetValue(stringHash, out collisionPriorityId))
                 {
                     // Hash doesn't exist so we use the CollisionPriorityId from the parent container
                     string parentStringHash = ContentUtil.HashToString(ContentUtil.GetContentHash(containerPath));
@@ -312,6 +312,7 @@ namespace Microsoft.DotNet.SignTool
                 }
             }
 
+            // Update the hash map
             if (!_hashToCollisionIdMap.ContainsKey(stringHash))
             {
                 _hashToCollisionIdMap.Add(stringHash, collisionPriorityId);
@@ -320,9 +321,32 @@ namespace Microsoft.DotNet.SignTool
             {
                 string existingCollisionId = _hashToCollisionIdMap[stringHash];
 
+                // If we find that there is an asset which already was processed which has a lower
+                // collision id, we use that and update the map so we give it precedence
                 if (string.Compare(collisionPriorityId, existingCollisionId) < 0)
                 {
                     _hashToCollisionIdMap[stringHash] = collisionPriorityId;
+                }
+            }
+
+            // Try to determine default certificate name by the extension of the file. Since there might be dupes
+            // we get the one which maps a collision id or the first of the returned ones in case there is no
+            // collision id
+            bool hasSignInfos = _fileExtensionSignInfo.TryGetValue(Path.GetExtension(fullPath), out var signInfos);
+            SignInfo signInfo = SignInfo.Ignore;
+            bool hasSignInfo = false;
+
+            if (hasSignInfos)
+            {
+                if (!string.IsNullOrEmpty(collisionPriorityId))
+                {
+                    hasSignInfo = signInfos.Where(s => s.CollisionPriorityId == collisionPriorityId).Any();
+                    signInfo = signInfos.Where(s => s.CollisionPriorityId == collisionPriorityId).FirstOrDefault();
+                }
+                else
+                {
+                    hasSignInfo = true;
+                    signInfo = signInfos.FirstOrDefault();
                 }
             }
 
@@ -335,8 +359,26 @@ namespace Microsoft.DotNet.SignTool
 
                 peInfo = GetPEInfo(fullPath);
 
-                // Get the default sign info based on the PKT, if applicable:
-                bool strongNameInfo = _strongNameInfo.TryGetValue(peInfo.PublicKeyToken ?? string.Empty, out var pktBasedSignInfo);
+                // Get the default sign info based on the PKT, if applicable. Since there might be dupes
+                // we get the one which maps a collision id or the first of the returned ones in case there is no
+                // collision id
+                bool strongNameInfos = _strongNameInfo.TryGetValue(peInfo.PublicKeyToken ?? string.Empty, out var pktBasedSignInfos);
+                SignInfo pktBasedSignInfo = SignInfo.Ignore;
+                bool strongNameInfo = false;
+
+                if (strongNameInfos)
+                {
+                    if (!string.IsNullOrEmpty(collisionPriorityId))
+                    {
+                        strongNameInfo = pktBasedSignInfos.Where(s => s.CollisionPriorityId == collisionPriorityId).Any();
+                        pktBasedSignInfo = pktBasedSignInfos.Where(s => s.CollisionPriorityId == collisionPriorityId).FirstOrDefault();
+                    }
+                    else
+                    {
+                        strongNameInfo = true;
+                        pktBasedSignInfo = pktBasedSignInfos.FirstOrDefault();
+                    }
+                }
 
                 if (peInfo.IsManaged && strongNameInfo)
                 {
