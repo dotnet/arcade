@@ -341,11 +341,6 @@ namespace Microsoft.DotNet.SignTool
                         continue;
                     }
 
-                    if (map.ContainsKey(extension))
-                    {
-                        Log.LogWarning($"Duplicated signing information for extension: {extension}. Overriding the previous entry.");
-                    }
-
                     SignInfo signInfo = certificate.Equals(SignToolConstants.IgnoreFileCertificateSentinel, StringComparison.InvariantCultureIgnoreCase) ?
                         SignInfo.Ignore :
                         new SignInfo(certificate, collisionPriorityId: collisionPriorityId);
@@ -405,12 +400,6 @@ namespace Microsoft.DotNet.SignTool
                     var signInfo = SignToolConstants.IgnoreFileCertificateSentinel.Equals(strongName, StringComparison.OrdinalIgnoreCase)
                         ? new SignInfo(certificateName)
                         : new SignInfo(certificateName, strongName, collisionPriorityId: collisionPriorityId);
-
-                    if (map.ContainsKey(publicKeyToken))
-                    {
-                        Log.LogError($"Duplicate entries in {nameof(StrongNameSignInfo)} with the same key '{publicKeyToken}'.");
-                        continue;
-                    }
 
                     if (map.ContainsKey(publicKeyToken))
                     {
