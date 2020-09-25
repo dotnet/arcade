@@ -458,7 +458,7 @@ The `DotNetPublishUsingPipelines` is a flag that Arcade SDK uses to determine if
 
 ### Where can I see publishing logs?
 
-Under `Publish Using Darc` job get the link to the newly queued build in [Maestro promotion pipeline](https://dnceng.visualstudio.com/internal/_build?definitionId=750). The publishing logs are stored inside an Azure DevOps artifacts container named `PostBuildLogs`. 
+Under the `Publish Using Darc` job get the link to the newly queued build in the [Maestro promotion pipeline](https://dnceng.visualstudio.com/internal/_build?definitionId=750). The publishing logs are stored inside an Azure DevOps artifacts container named `PostBuildLogs`. 
 
 ### Which feeds does Arcade infra publish to?
 
