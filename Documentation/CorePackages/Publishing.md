@@ -41,7 +41,7 @@ In V3, we have a single stage called 'Publish Using Darc', handling publishing f
 The [maestro promotion pipeline](https://dnceng.visualstudio.com/internal/_build?definitionId=750) is a pipeline used to publish the packages to the target channel(s).
 `Add-build-to-channel` queues a new build of this pipeline and waits for it to publish assets to the appropriate locations.
 
-V3 uses a single stage for publishing infrastructure, reducing UI clutter. In addition, some classes of changes (e.g. addition of new channels) can be added to the infrastructure without requiring an arcade update in a consumer repository.
+Using a single stage for the publishing infrastructure reduces UI clutter. In addition, some classes of changes (e.g. addition of new channels) can be added without requiring an arcade update in a consumer repository.
 
 Example from arcade-validation: 
 
