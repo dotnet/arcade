@@ -274,7 +274,7 @@ Example:
     </ItemGroup>
     ```
 
-Ensure that you pass `publishInstallersAndChecksums=true` to the `post-build.yml` template.
+Ensure that you do not set `publishInstallersAndChecksums=false` in your call to the `post-build.yml` template.
 
 ## More complex onboarding scenarios
 
