@@ -103,5 +103,10 @@ namespace Microsoft.DotNet.SignTool
         {
             ".pkg"
         };
+
+        /// <summary>
+        /// Attribute for the CollisionPriorityId
+        /// </summary>
+        public const string CollisionPriorityId = "CollisionPriorityId";
     }
 }
