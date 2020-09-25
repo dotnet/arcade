@@ -1129,6 +1129,73 @@ $@"
         }
 
         [Fact]
+        public void VsixPackage_WithSpaces()
+        {
+            // List of files to be considered for signing
+            var itemsToSign = new ITaskItem[]
+            {
+                new TaskItem(GetResourcePath("TestSpaces.vsix"), new Dictionary<string, string>
+                {
+                    { SignToolConstants.CollisionPriorityId, "123" }
+                }),
+                new TaskItem(GetResourcePath("PackageWithRelationships.vsix"), new Dictionary<string, string>
+                {
+                    { SignToolConstants.CollisionPriorityId, "123" }
+                })
+            };
+
+            // Default signing information
+            var strongNameSignInfo = new Dictionary<string, List<SignInfo>>()
+            {
+                { "581d91ccdfc4ea9c", new List<SignInfo>{ new SignInfo("3PartySHA2", "ArcadeStrongTest", "123") } }
+            };
+
+            // Overriding information
+            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
+
+            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfoWithCollisionId, new[]
+            {
+                "File 'ProjectOne.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='3PartySHA2' StrongName='ArcadeStrongTest'",
+                "File 'PackageWithRelationships.vsix' Certificate='VsixSHA2'",
+                "File 'ProjectOne.dll' TargetFramework='.NETFramework,Version=v4.6.1' Certificate='3PartySHA2' StrongName='ArcadeStrongTest'",
+                "File 'ProjectOne.dll' TargetFramework='.NETStandard,Version=v2.0' Certificate='3PartySHA2' StrongName='ArcadeStrongTest'",                            
+                "File 'TestSpaces.vsix' Certificate='VsixSHA2'"
+            },
+            new[]
+            {
+                $"{Path.Combine(_tmpDir, "ContainerSigning", "4", "PackageWithRelationships.vsix")} -> {Path.Combine(_tmpDir, "PackageWithRelationships.vsix")}"
+            });
+
+            ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfoWithCollisionId, new[]
+            {
+$@"
+<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "6", "Contents/Common7/IDE/PrivateAssemblies/ProjectOne.dll")}"">
+  <Authenticode>3PartySHA2</Authenticode>
+  <StrongName>ArcadeStrongTest</StrongName>
+</FilesToSign>
+<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "10", "Team Tools/Dynamic Code Coverage/net461/ProjectOne.dll")}"">
+  <Authenticode>3PartySHA2</Authenticode>
+  <StrongName>ArcadeStrongTest</StrongName>
+</FilesToSign>
+<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "11", "Team Tools/Dynamic Code Coverage/netstandard2.0/ProjectOne.dll")}"">
+  <Authenticode>3PartySHA2</Authenticode>
+  <StrongName>ArcadeStrongTest</StrongName>
+</FilesToSign>",
+
+$@"
+<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "4", "PackageWithRelationships.vsix")}"">
+  <Authenticode>VsixSHA2</Authenticode>
+</FilesToSign>",
+
+$@"
+<FilesToSign Include=""{Path.Combine(_tmpDir, "TestSpaces.vsix")}"">
+  <Authenticode>VsixSHA2</Authenticode>
+</FilesToSign>
+"
+            });
+        }
+
+        [Fact]
         public void VsixPackage_DuplicateVsixBefore()
         {
             // List of files to be considered for signing
