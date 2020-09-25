@@ -1355,14 +1355,6 @@ The following repos/branches will apply this build immediately:
   https://github.com/dotnet/winforms-datavisualization @ release/3.0
 The following repos/branches will apply this change at a later time, or not by default.
 To flow immediately, run the specified command
-  https://github.com/dotnet/corefx @ release/3.0 (update freq: None)
-    darc trigger-subscriptions --id 79f1e123-800e-410f-94d7-08d690bc143a
-  https://github.com/dotnet/wpf @ release/3.0 (update freq: None)
-    darc trigger-subscriptions --id acbc5f33-ff41-488a-1647-08d6c4e9a7a0
-  https://github.com/dotnet/coreclr @ release/3.0 (update freq: None)
-    darc trigger-subscriptions --id 9a4bff4b-85c2-4174-9247-08d6c732a216
-  https://dev.azure.com/dnceng/internal/_git/dotnet-wpf-int @ release/3.0 (update freq: None)
-    darc trigger-subscriptions --id 15a2995c-1b8e-41af-54c5-08d6c734018a
   https://github.com/dotnet/winforms @ release/3.0 (update freq: None)
     darc trigger-subscriptions --id 22859ac6-b4a6-4fce-54c7-08d6c734018a
 If the above example build doesn't happen to be the latest in a channel but you want trigger-subscriptions to use it:
@@ -1395,22 +1387,6 @@ The following repos/branches will apply this change at a later time, or not by d
 To flow immediately, run the specified command
   https://github.com/dotnet/ef6 @ master (update freq: EveryDay)
     darc trigger-subscriptions --id 9e51514d-a37b-46b2-d464-08d76e1d3434
-  https://github.com/dotnet/sdk @ master (update freq: EveryDay)
-    darc trigger-subscriptions --id ea219f43-0754-4d2f-576e-08d76e1d56cb
-  https://github.com/dotnet/winforms @ master (update freq: EveryDay)
-    darc trigger-subscriptions --id be4b0f38-c1d5-43ab-c5d9-08d76fa9c820
-  https://github.com/dotnet/extensions @ master (update freq: EveryDay)
-    darc trigger-subscriptions --id 8542892c-8237-4ac0-12f9-08d795579ebc
-  https://dev.azure.com/dnceng/internal/_git/dotnet-diagnostictests @ master (update freq: EveryDay)
-    darc trigger-subscriptions --id b0ba415d-f400-4d53-d5ef-08d7cb66345b
-  https://github.com/dotnet/api-catalog-infra @ master (update freq: None)
-    darc trigger-subscriptions --id a988bc25-b960-42cb-e187-08d7d67aa73d
-  https://github.com/dotnet/aspnetcore @ master (update freq: EveryDay)
-    darc trigger-subscriptions --id 68568747-40a2-4823-fae6-08d7f76e4602
-  https://github.com/dotnet/efcore @ main (update freq: EveryWeek)
-    darc trigger-subscriptions --id daf314a8-d8c8-4b54-8dcc-08d82e674dfc
-  https://github.com/mono/linker @ master (update freq: EveryWeek)
-    darc trigger-subscriptions --id d6001782-e01f-4a8a-8899-08d8446df6cf
 
 ```
 ### **`authenticate`**

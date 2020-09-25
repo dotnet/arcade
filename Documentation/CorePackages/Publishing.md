@@ -13,7 +13,20 @@ Asset manifest Example :
 `publishingVersion` is not present in V1.
 
 ```XML
-<Build Name="https://dnceng@dev.azure.com/dnceng/internal/_git/dotnet-arcade-validation" BuildId="20200915.7" Branch="refs/heads/release/3.x" Commit="0f733414ac0a5e5d4b7233d47851a400204a7cac" AzureDevOpsAccount="dnceng" AzureDevOpsBranch="refs/heads/release/3.x" AzureDevOpsBuildDefinitionId="282" AzureDevOpsBuildId="816405" AzureDevOpsBuildNumber="20200915.7" AzureDevOpsProject="internal" AzureDevOpsRepository="https://dnceng@dev.azure.com/dnceng/internal/_git/dotnet-arcade-validation" InitialAssetsLocation="https://dev.azure.com/dnceng/internal/_apis/build/builds/816405/artifacts" IsStable="False" Location="https://dotnetfeed.blob.core.windows.net/arcade-validation/index.json">
+<Build Name="https://dnceng@dev.azure.com/dnceng/internal/_git/dotnet-arcade-validation"
+BuildId="20200915.7"
+Branch="refs/heads/release/3.x"
+Commit="0f733414ac0a5e5d4b7233d47851a400204a7cac"
+AzureDevOpsAccount="dnceng"
+AzureDevOpsBranch="refs/heads/release/3.x"
+AzureDevOpsBuildDefinitionId="282"
+AzureDevOpsBuildId="816405"
+AzureDevOpsBuildNumber="20200915.7"
+AzureDevOpsProject="internal"
+AzureDevOpsRepository="https://dnceng@dev.azure.com/dnceng/internal/_git/dotnet-arcade-validation"
+InitialAssetsLocation="https://dev.azure.com/dnceng/internal/_apis/build/builds/816405/artifacts"
+IsStable="False"
+Location="https://dotnetfeed.blob.core.windows.net/arcade-validation/index.json">
 
 ```
 All the 3.1 servicing branches of repos use this version of the infrastructure.
@@ -26,8 +39,20 @@ The distinction between V1 and V2 is that V1 serves for arcade3.x only and V2 se
 
 Example asset manifest from arcade-validation:
 ```XML
-<Build PublishingVersion="2" Name="dotnet-arcade-validation" BuildId="20200918.1" Branch="refs/heads/master" Commit="4aa1a2a24a2c7685fdbfea89f4496d8a31a05264" AzureDevOpsAccount="dnceng" AzureDevOpsBranch="refs/heads/master" AzureDevOpsBuildDefinitionId="282" AzureDevOpsBuildId="820763" AzureDevOpsBuildNumber="20200918.1" AzureDevOpsProject="internal" AzureDevOpsRepository="https://dnceng@dev.azure.com/dnceng/internal/_git/dotnet-arcade-validation" InitialAssetsLocation="https://dev.azure.com/dnceng/internal/_apis/build/builds/820763/artifacts" IsStable="False">
-<Package Id="Validation" Version="1.0.0-prerelease.20468.1" />
+<Build PublishingVersion="2"
+Name="dotnet-arcade-validation"
+BuildId="20200918.1"
+Branch="refs/heads/master"
+Commit="4aa1a2a24a2c7685fdbfea89f4496d8a31a05264"
+AzureDevOpsAccount="dnceng"
+AzureDevOpsBranch="refs/heads/master"
+AzureDevOpsBuildDefinitionId="282"
+AzureDevOpsBuildId="820763"
+AzureDevOpsBuildNumber="20200918.1"
+AzureDevOpsProject="internal"
+AzureDevOpsRepository="https://dnceng@dev.azure.com/dnceng/internal/_git/dotnet-arcade-validation"
+InitialAssetsLocation="https://dev.azure.com/dnceng/internal/_apis/build/builds/820763/artifacts"
+IsStable="False">
 
 ```
 
@@ -39,7 +64,7 @@ Example from arcade-validation :
 
 In V3, we have a single stage called 'Publish Using Darc', handling publishing for all available channels. Even if the repo branch is associated to more than one default channel(s) there will be only one stage. V3 uses [`darc add-build-to-channel`](https://github.com/dotnet/arcade/blob/ec191f3d706d740bc7a87fbb98d94d916f81f0cb/Documentation/Darc.md#add-build-to-channel) to promote builds based on the current configured default channels for the branch just built. [Maestro promotion pipeline](https://dnceng.visualstudio.com/internal/_build?definitionId=750) is a pipeline used to publish the packages to the target channel. add-build-to-channel queues a new build of this pipeline and waits for it to publish assets for all the configured default channels.
 
-V3 uses a single stage for publishing infrastructure, reducing UI clutter. In addition, some classes of changes (e.g. addition of new channels) can be added to the infrastructure without requiring an arcade update in a consumer repository.
+V3 uses a single stage for publishing infrastructure, reducing UI clutter. V3 reduces the number of machines used during publishing, which speeds up the whole process. In addition, some classes of changes (e.g. addition of new channels) can be added to the infrastructure without requiring an arcade update in a consumer repository.
 
 Example from arcade-validation: 
 
@@ -48,7 +73,7 @@ Example from arcade-validation:
 ### How to upgrade from V2 to V3?
 
 The following changes have to be made:
-1) Create or update eng/Publishing.props, adding the following MSBuild property:
+1. Create or update eng/Publishing.props, adding the following MSBuild property:
 
 ```
 <PublishingVersion>3</PublishingVersion>
@@ -65,7 +90,7 @@ Example:
 ```
 arcade-validation example : https://github.com/dotnet/arcade-validation/blob/a3b8def7412266282cd23edf9e84176f6afe52a5/eng/Publishing.props#L4
 
-2) In the azure-pipelines.yml file(or your pipeline file), add the `publishingInfraVersion` parameter to the post-build template.
+1. In the azure-pipelines.yml file(or your pipeline file), add the `publishingInfraVersion` parameter to the post-build template.
 
 Example: 
 ```
@@ -79,7 +104,7 @@ Example:
 ```
 arcade-validation example : https://github.com/dotnet/arcade-validation/blob/a3b8def7412266282cd23edf9e84176f6afe52a5/azure-pipelines.yml#L206
 
-## Basic onboarding scenario
+## Basic onboarding scenario for new repositories to the current publishing version V3
 
 In order to use the new publishing mechanism, the easiest way to start is by turning your existing build pipeline into an AzDO YAML stage, and then making use of a YAML template ([eng/common/templates/post-build/post-build.yml](https://github.com/dotnet/arcade/blob/66175ebd3756697a3ca515e16cd5ffddc30582cd/eng/common/templates/post-build/post-build.yml)) provided by Arcade to use the default publishing stages. The process is explained below step by step.
 
@@ -456,7 +481,11 @@ The `DotNetPublishUsingPipelines` is a flag that Arcade SDK uses to determine if
 
 **Note:** only packages and blobs described in at least one build manifest will be published.
 
-### Where can I see publishing logs?
+### Where can I see publishing logs in V1 and V2?
+
+The publishing logs are stored inside an Azure DevOps artifacts container named `PostBuildLogs`. Each activated post-build channel/stage will have a subfolder under `PostBuildLogs`. Each job in a publishing channel/stage will have `.binlogs` in the container.
+
+### Where can I see publishing logs in V3?
 
 Under the `Publish Using Darc` job get the link to the newly queued build in the [Maestro promotion pipeline](https://dnceng.visualstudio.com/internal/_build?definitionId=750). The publishing logs are stored inside an Azure DevOps artifacts container named `PostBuildLogs`. 
 
