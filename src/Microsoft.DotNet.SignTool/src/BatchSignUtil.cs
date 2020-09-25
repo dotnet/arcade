@@ -424,7 +424,7 @@ namespace Microsoft.DotNet.SignTool
 
                 if (!SkipZipContainerSignatureMarkerCheck)
                 {
-                    if ((file.IsNupkg() || file.IsVsix()) && !signedContainer)
+                    if (((file.IsNupkg() && !file.IsSymbolNupkg()) || file.IsVsix()) && !signedContainer)
                     {
                         _log.LogError($"Container {file.FullPath} does not have signature marker.");
                     }
