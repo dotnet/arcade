@@ -16,7 +16,7 @@ Asset manifest Example :
 <Build Name="https://dnceng@dev.azure.com/dnceng/internal/_git/dotnet-arcade-validation" BuildId="20200915.7" Branch="refs/heads/release/3.x" Commit="0f733414ac0a5e5d4b7233d47851a400204a7cac" AzureDevOpsAccount="dnceng" AzureDevOpsBranch="refs/heads/release/3.x" AzureDevOpsBuildDefinitionId="282" AzureDevOpsBuildId="816405" AzureDevOpsBuildNumber="20200915.7" AzureDevOpsProject="internal" AzureDevOpsRepository="https://dnceng@dev.azure.com/dnceng/internal/_git/dotnet-arcade-validation" InitialAssetsLocation="https://dev.azure.com/dnceng/internal/_apis/build/builds/816405/artifacts" IsStable="False" Location="https://dotnetfeed.blob.core.windows.net/arcade-validation/index.json">
 
 ```
-All the 3.1 services branches of repos use this version of the infrastructure.
+All the 3.1 servicing branches of repos use this version of the infrastructure.
 
 ### What is V2 publishing?
 
