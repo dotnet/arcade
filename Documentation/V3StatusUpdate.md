@@ -18,17 +18,17 @@ This table represents the status of the .NET 5 V3 publishing status on a Per-Rep
 | efcore              | epananth     | ![][green]   |                                      |
 | extensions          | epananth     | ![][green]   |                                      |
 | winforms            | mmitche      | ![][green]   |                                      |
-| wpf-int             | fabiant      | ![][red]     |                                      |
+| wpf-int             | mmitche      | ![][green]   |                                      |
 | wpf                 | mmitche      | ![][green]   |                                      |
 | templating          | epananth     | ![][green]   |                                      |
-| diagnostics         |              | ![][red]     |                                      |
+| diagnostics         | tommcdon     | ![][red]     |                                      |
 | aspnetcore-tooling  | kevinpi      | ![][red]     |                                      |
 | fsharp              | brettfo      | ![][red]     |                                      |
-| symuploader         |              | ![][red]     |                                      |
-| symstore            |              | ![][red]     |                                      |
+| symuploader         | tommcdon     | ![][red]     |                                      |
+| symstore            | tommcdon     | ![][red]     |                                      |
 | sourcelink          | tmat         | ![][red]     |                                      |
-| clrmd               |              | ![][red]     |                                      |
-| msbuild             |              | ![][red]     |                                      |
+| clrmd               | leculver     | ![][red]     |                                      |
+| msbuild             | marcpopMSFT  | ![][red]     |                                      |
 | xliff-tasks         | epananth     | ![][red]     |                                      |
 | roslyn-analyzer     | epananth     | ![][green]   |                                      |
 | Nuget.Client        | epananth     | ![][red]     |                                      |
