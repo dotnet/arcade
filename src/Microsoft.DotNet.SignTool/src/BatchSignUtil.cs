@@ -327,7 +327,7 @@ namespace Microsoft.DotNet.SignTool
                         log.LogError($"VSIX {fileName} cannot be strong name signed.");
                     }
                 }
-                else if (fileName.IsNupkg())
+                else if (fileName.IsNupkg() && !fileName.IsSymbolNupkg())
                 {
                     if (fileName.SignInfo.Certificate == null)
                     {
