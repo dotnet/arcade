@@ -18,7 +18,7 @@ This table represents the status of the .NET 5 V3 publishing status on a Per-Rep
 | efcore              | epananth     | ![][green]   |                                      |
 | extensions          | epananth     | ![][green]   |                                      |
 | winforms            | mmitche      | ![][green]   |                                      |
-| wpf-int             | fabiant      | ![][red]     |                                      |
+| wpf-int             | mmitche      | ![][red]     |                                      |
 | wpf                 | mmitche      | ![][green]   |                                      |
 | templating          | epananth     | ![][green]   |                                      |
 | diagnostics         | tommcdon     | ![][red]     |                                      |
