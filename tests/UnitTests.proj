@@ -18,7 +18,7 @@
 
   <ItemGroup>
     <HelixWorkItem Include="JUnitTest">
-      <Command>echo test > $HELIX_WORKITEM_UPLOAD_ROOT/test.txt & echo test > %HELIX_WORKITEM_UPLOAD_ROOT%\test.txt & exit /b 42</Command>
+      <Command>echo test > $HELIX_WORKITEM_UPLOAD_ROOT/test.txt &amp; echo test > %HELIX_WORKITEM_UPLOAD_ROOT%\test.txt &amp; exit /b 42</Command>
       <PayloadDirectory>$(MSBuildThisFileDirectory)Junit</PayloadDirectory>
     </HelixWorkItem>
   </ItemGroup>
