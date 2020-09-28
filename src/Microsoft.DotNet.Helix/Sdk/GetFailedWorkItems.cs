@@ -67,7 +67,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                             .ToImmutableList();
                     }
 
-                    metadata["UploadedFiles"] = JsonConvert.SerializeObject(files);
+                    metadata["UploadedFiles"] = JsonConvert.SerializeObject(files).Replace("%", "%25");
                 }
                 catch (Exception ex)
                 {
