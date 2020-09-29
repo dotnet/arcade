@@ -1,6 +1,5 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System;
 using System.Collections.Generic;
@@ -19,6 +18,8 @@ namespace Microsoft.DotNet.SignTool
         internal readonly TaskLoggingHelper _log;
         internal string TempDir => _args.TempDir;
         internal string MicroBuildCorePath => _args.MicroBuildCorePath;
+
+        internal string WixToolsPath => _args.WixToolsPath;
 
         internal SignTool(SignToolArgs args, TaskLoggingHelper log)
         {

@@ -20,6 +20,7 @@ use darc to achieve them, as well as a general reference guide to darc commands.
   - [Gathering a build drop](#gathering-a-build-drop)
   - [Assigning an individual build to a channel](#assigning-an-individual-build-to-a-channel)
   - [Locating the BAR build ID for a build](#locating-the-bar-build-id-for-a-build)
+  - [Checking Merge Policies on Github](#checking-merge-policies-on-github)
 
 - [Command Reference](#command-reference)
   - [Common Parameters](#common-parameters)
@@ -128,7 +129,7 @@ PATs that may be used:
 - A GitHub PAT for downloading files from GitHub (e.g. eng/Version.Details.xml or
   arcade script files.  Required scopes: None
 - An Azure DevOps PAT for downloading files from Azure DevOps. (e.g.
-  eng/Version.Details.xml)  Required scopes: Code-Read, Build-Read & Execute.
+  eng/Version.Details.xml)  Required scopes: Code-Read, Build-Read & Execute, Packaging Read
 - A Build Asset Registry (BAR) password for interacting with Maestro++/BAR (e.g.
   obtaining build information needed for a drop).
 
@@ -438,6 +439,59 @@ depends on, including transitive dependencies. To perform a coherent parent
 update, Darc searches the assets in the subtree to find the newest-built asset
 matching the dependency that declared the coherent parent. Darc then assigns
 that version to the dependency.
+
+### Strict Coherency
+
+This current default model of coherency (find the newest-built asset) has some severe
+drawbacks:
+- **Build information is required** - The current algorithm picks the newest build asset
+  in the subtree. This means that a build lookup is required for each every build in the tree.
+  This is not only time consuming, it is also fragile. Loss of BAR data would mean that
+  CPD constraints could not be satisfied.
+- **Newest may not be the desired choice** - More than one version of the asset may appear
+  within the subtree. While newest is chosen, this does not mean that newest is the correct
+  choice. Consider the following:
+  - dotnet/efcore ties dependency Foo to Bar, coming from dotnet/extensions. Foo is produced
+    out of dotnet/core-setup.
+  - dotnet/extensions has Foo pinned to version 1.0.0, but also has dependencies on
+    another, newer dotnet/core-setup build that also produced Foo at 1.0.1.
+  - CPD will choose Foo to be 1.0.1. This may be what the repo owner wished, but they may
+    also simply have wanted 1.0.0.
+- **Incremental servicing can cause version regressions** - This is perhaps the biggest drawback
+  of the current algorithm. Consider the following:
+  - dotnet/efcore ties dependency Foo to Bar, coming from dotnet/extensions. Foo is produced
+    out of dotnet/core-setup, but only when it has changes for an upcoming release.
+  - dotnet/extensions does not have a direct dependency on Foo.
+  - dotnet/extensions has a dependency on another incrementally-serviced package produced out of
+    dotnet/core-setup. This package has not been serviced recently, but when it was, Foo was also serviced,
+    producing 1.0.3.
+  - dotnet/core-setup just serviced Foo @ 1.0.10, but for the next release it is not producing that
+    package.
+  - When dotnet/core-setup build is ingested into dotnet/efcore and dotnet/extensions
+    for the next release, the CPD algorithm will no longer find Foo @ 1.0.10 in the build asset
+    graph. It has simply disappeared because there is no longer a reference to any build
+    that produced Foo @ 1.0.10. Instead, it will find 1.0.3, as this reference still exists.
+
+Strict coherency eliminates these problems by doing the following: If dependency Foo is tied to
+coherent parent Bar, and Bar comes from dotnet/extensions @ 12345, then dotnet/extensions @ 12345
+must have a **direct** dependency on Foo. The version of Foo is directly copied from the version
+at dotnet/extensions @ 12345. This ensures the following:
+- No build information is utilized and the CPD evaluation only involves a single version file
+  lookup.
+- There is no choice to make. There is only one possible version for Foo, since a dependency
+  can only appear once within a Version.Details.xml file.
+
+The downside of CPD strict is that dependencies that are not directly utilized within a
+repo are often required to appear in their Version.Details.xml files. Overall, this is
+a small tradeoff for better performance and predictable behavior. Rollout of CPD strict
+as the default behavior is pending addition of new dependencies in various repos in the 3.x
+branches.
+
+To try CPD strict on a repo, run the following command:
+
+```
+darc update-dependencies --strict-coherency --coherency-only
+```
 
 #### Specifying a coherent parent
 
@@ -877,6 +931,13 @@ To locate the BAR build ID for a build
   ```
 4. The BAR build ID is `47814`
 
+### Checking Merge Policies on Github
+
+You will find them on the `Checks` tab of each updates PRs created by maestro. Depending on the merge policies set for the repository, you will find one or multiple check(s) (in a failed or successful state). 
+
+![Checks Merge Policies](ChecksMergePolicies.png)
+
+
 ## Command Reference
 
 ### **`Common parameters`**
@@ -1254,6 +1315,11 @@ parameters:
 
 - `--id` - **(Required)**. BAR id of build to assign to channel.
 - `--channel` - **(Required)**. Channel to assign build to.
+- `--publish-installers-and-checksums` **(Required)** Whether installers and checksums should be published. All the installers and checksums usually go to the same storage account. By setting this to true we are agreeing to republish them everytime a new channel is added. This has to be set to true at all times.
+- `--publishing-infra-version` - Version of publishing, for single stage [publishing infrastructure use 3](https://github.com/dotnet/arcade/blob/master/Documentation/CorePackages/Publishing.md#what-is-v3-publishing-how-is-it-different-from-v2) else for multi stage publishing infra with each stage representing available channel(s) use 2. Default is 2. 
+- `--signing-validation-parameters` - Additional (MSBuild) properties to be passed to signing validation
+- `--symbol-publishing-parameters` -Additional (MSBuild) properties to be passed to symbol publishing
+- `--default-channels` - Assign build to the default channel(s). Required if --channel is not specified.
 - `--source-branch` - Branch that should be used as base for the promotion build.
 - `--source-sha` - SHA that should be used as base for the promotion build.
 - `--validate-signing` - Perform signing validation.
@@ -1268,8 +1334,10 @@ parameters:
   The operation continues asynchronously in AzDO.
 
 **Sample**
+**If using --publishing-infra-version 2**
 ```
-PS D:\enlistments\arcade> darc add-build-to-channel --id 13078 --channel ".NET Core 3 Release"
+
+darc add-build-to-channel --id 13078 --channel ".NET Core 3 Release" --publish-installers-and-checksums
 Assigning the following build to channel '.NET Core 3 Release':
 
 Repository:    https://github.com/dotnet/core-setup
@@ -1287,18 +1355,40 @@ The following repos/branches will apply this build immediately:
   https://github.com/dotnet/winforms-datavisualization @ release/3.0
 The following repos/branches will apply this change at a later time, or not by default.
 To flow immediately, run the specified command
-  https://github.com/dotnet/corefx @ release/3.0 (update freq: None)
-    darc trigger-subscriptions --id 79f1e123-800e-410f-94d7-08d690bc143a
-  https://github.com/dotnet/wpf @ release/3.0 (update freq: None)
-    darc trigger-subscriptions --id acbc5f33-ff41-488a-1647-08d6c4e9a7a0
-  https://github.com/dotnet/coreclr @ release/3.0 (update freq: None)
-    darc trigger-subscriptions --id 9a4bff4b-85c2-4174-9247-08d6c732a216
-  https://dev.azure.com/dnceng/internal/_git/dotnet-wpf-int @ release/3.0 (update freq: None)
-    darc trigger-subscriptions --id 15a2995c-1b8e-41af-54c5-08d6c734018a
   https://github.com/dotnet/winforms @ release/3.0 (update freq: None)
     darc trigger-subscriptions --id 22859ac6-b4a6-4fce-54c7-08d6c734018a
+If the above example build doesn't happen to be the latest in a channel but you want trigger-subscriptions to use it:
+    darc trigger-subscriptions --id 22859ac6-b4a6-4fce-54c7-08d6c734018a --build 13078
 ```
 
+**If using --publishing-infra-version 3**
+```
+
+darc add-build-to-channel --id 65256 --channel ".NET 6 Dev" --publishing-infra-version 3 --publish-installers-and-checksums
+
+Waiting '60' seconds for promotion build to complete.
+
+Build '65199' was successfully added to the target channel(s).
+Assigning build '65199' to the following channel(s):
+	.NET 6 Dev
+
+Repository:    https://github.com/dotnet/runtime
+Branch:        master
+Commit:        0e30f6fdc3ba5e1ef7ffb952fcb4762e5041c491
+Build Number:  20200921.2
+Date Produced: 9/21/2020 1:08 PM
+Build Link:    https://dev.azure.com/dnceng/internal/_build/results?buildId=823133
+BAR Build Id:  65199
+Released:      False
+Channels:
+The following repos/branches will apply this build immediately:
+  https://dev.azure.com/dnceng/internal/_git/dotnet-wpf-int @ master
+The following repos/branches will apply this change at a later time, or not by default.
+To flow immediately, run the specified command
+  https://github.com/dotnet/ef6 @ master (update freq: EveryDay)
+    darc trigger-subscriptions --id 9e51514d-a37b-46b2-d464-08d76e1d3434
+
+```
 ### **`authenticate`**
 
 Set up your darc client so that the PAT or password inputs do not need to be
@@ -2723,6 +2813,7 @@ confirmation before sending the trigger request.
 **Parameters**
 
 - `--id` - Trigger subscription by id.  Not compatible with other filtering parameters.
+- `--build` - If specified, selects a specific BAR build id to use; otherwise will use the latest available from the supplied `--source-repo` id.
 - `--target-repo` - Filter by target repo (matches substring unless --exact or --regex is passed).
 - `--source-repo` - Filter by source repo (matches substring unless --exact or --regex is passed).
 - `--channel` - Filter by source channel (matches substring unless --exact or --regex is passed).
@@ -2736,6 +2827,13 @@ confirmation before sending the trigger request.
 ```
 PS D:\enlistments\arcade> darc trigger-subscriptions --source-repo arcade --target-repo arcade-services
 
+Will trigger the following 1 subscriptions...
+  https://github.com/dotnet/arcade (.NET Tools - Latest) ==> 'https://github.com/dotnet/arcade-services' ('master')
+Continue? (y/n) y
+Triggering 1 subscriptions...done
+
+PS D:\enlistments\arcade> darc trigger-subscriptions --source-repo arcade --target-repo arcade-services --build 123
+Subscription updates will use Build # 123 instead of latest available
 Will trigger the following 1 subscriptions...
   https://github.com/dotnet/arcade (.NET Tools - Latest) ==> 'https://github.com/dotnet/arcade-services' ('master')
 Continue? (y/n) y

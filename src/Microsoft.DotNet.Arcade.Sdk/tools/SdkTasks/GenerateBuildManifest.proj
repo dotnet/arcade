@@ -1,4 +1,4 @@
-<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
+<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
 <Project Sdk="Microsoft.NET.Sdk" DefaultTargets="Execute">
   <!--
     Optional variables:
@@ -28,10 +28,16 @@
   <UsingTask TaskName="GenerateBuildManifest" AssemblyFile="$(PkgMicrosoft_DotNet_Build_Tasks_Feed)\tools\netcoreapp2.1\Microsoft.DotNet.Build.Tasks.Feed.dll" />
 
   <Import Project="../Sign.props" />
+
+  <Error Condition="'$(AllowEmptySignPostBuildList)' != 'true' AND '@(ItemsToSignPostBuild)' == ''"
+      Text="List of files to sign post-build is empty. Make sure that ItemsToSignPostBuild is configured correctly." />
   
   <Target Name="Execute">
     <GenerateBuildManifest Artifacts="@(ItemsToPush)"
-                           ItemsToSign="@(ItemsToSign)"
+                           AzureDevOpsCollectionUri="$(SYSTEM_TEAMFOUNDATIONCOLLECTIONURI)"
+                           AzureDevOpsProject="$(SYSTEM_TEAMPROJECT)"
+                           AzureDevOpsBuildId="$(BUILD_BUILDID)"
+                           ItemsToSign="@(ItemsToSignPostBuild)"
                            StrongNameSignInfo="@(StrongNameSignInfo)"
                            FileSignInfo="@(FileSignInfo)"
                            FileExtensionSignInfo="@(FileExtensionSignInfo)"
@@ -40,6 +46,6 @@
                            BuildData="$(ManifestBuildData)"
                            RepoUri="$(BUILD_REPOSITORY_URI)"
                            RepoBranch="$(BUILD_SOURCEBRANCH)"
-                           RepoCommit="$(BUILD_SOURCEVERSION)" />
+                           RepoCommit="$(BUILD_SOURCEVERSION)"/>
   </Target>
 </Project>

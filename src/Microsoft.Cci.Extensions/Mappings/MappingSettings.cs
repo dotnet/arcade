@@ -1,6 +1,5 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using System.Collections.Generic;
 using Microsoft.Cci.Comparers;
@@ -11,10 +10,10 @@ namespace Microsoft.Cci.Mappings
 {
     public class MappingSettings
     {
-        public MappingSettings()
+        public MappingSettings(bool excludeAttributes = true)
         {
             this.ElementCount = 2;
-            this.Filter = new PublicOnlyCciFilter();
+            this.Filter = new PublicOnlyCciFilter(excludeAttributes);
             this.Comparers = CciComparers.Default;
             this.DiffFactory = new ElementDifferenceFactory();
         }

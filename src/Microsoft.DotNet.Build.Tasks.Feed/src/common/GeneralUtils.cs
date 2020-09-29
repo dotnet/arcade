@@ -1,6 +1,5 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
@@ -16,12 +15,29 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed
 {
-    public class GeneralUtils
+    public static class GeneralUtils
     {
         public const string SymbolPackageSuffix = ".symbols.nupkg";
         public const string PackageSuffix = ".nupkg";
         public const string PackagesCategory = "PACKAGE";
-        public const int MaxRetries = 1;
+
+        public static ExponentialRetry CreateDefaultRetryHandler()
+            => new ExponentialRetry
+            {
+                DelayBase = 5,
+                MaxAttempts = 5
+            };
+
+        /// <summary>
+        ///  Enum describing the states of a given package on a feed
+        /// </summary>
+        public enum PackageFeedStatus
+        {
+            DoesNotExist,
+            ExistsAndIdenticalToLocal,
+            ExistsAndDifferent,
+            Unknown
+        }
 
         /// <summary>
         ///     Compare a local stream and a remote stream for quality
@@ -106,28 +122,61 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// <param name="localPackageFullPath"></param>
         /// <param name="packageContentUrl"></param>
         /// <param name="client"></param>
+        /// <param name="log"></param>
         /// <returns></returns>
         /// <remarks>
         ///     Open a stream to the local file and an http request to the package. There are a couple possibilities:
-        ///     - The returned headers includes a content MD5 header, in which case we can
+        ///     - The returned headers include a content MD5 header, in which case we can
         ///       hash the local file and just compare those.
         ///     - No content MD5 hash, and the streams must be compared in blocks. This is a bit trickier to do efficiently,
         ///       since we do not necessarily want to read all bytes if we can help it. Thus, we should compare in blocks.  However,
-        ///       the streams make no gaurantee that they will return a full block each time when read operations are performed, so we
+        ///       the streams make no guarantee that they will return a full block each time when read operations are performed, so we
         ///       must be sure to only compare the minimum number of bytes returned.
         /// </remarks>
-        public static async Task<bool?> IsLocalPackageIdenticalToFeedPackage(string localPackageFullPath, string packageContentUrl, HttpClient client, TaskLoggingHelper log)
+        public static Task<PackageFeedStatus> CompareLocalPackageToFeedPackage(
+            string localPackageFullPath,
+            string packageContentUrl,
+            HttpClient client,
+            TaskLoggingHelper log)
+        {
+            return CompareLocalPackageToFeedPackage(
+                localPackageFullPath,
+                packageContentUrl,
+                client,
+                log,
+                CreateDefaultRetryHandler());
+        }
+
+        /// <summary>
+        ///     Determine whether a local package is the same as a package on an AzDO feed.
+        /// </summary>
+        /// <param name="localPackageFullPath"></param>
+        /// <param name="packageContentUrl"></param>
+        /// <param name="client"></param>
+        /// <param name="log"></param>
+        /// <param name="retryHandler"></param>
+        /// <returns></returns>
+        /// <remarks>
+        ///     Open a stream to the local file and an http request to the package. There are a couple possibilities:
+        ///     - The returned headers include a content MD5 header, in which case we can
+        ///       hash the local file and just compare those.
+        ///     - No content MD5 hash, and the streams must be compared in blocks. This is a bit trickier to do efficiently,
+        ///       since we do not necessarily want to read all bytes if we can help it. Thus, we should compare in blocks.  However,
+        ///       the streams make no guarantee that they will return a full block each time when read operations are performed, so we
+        ///       must be sure to only compare the minimum number of bytes returned.
+        /// </remarks>
+        public static async Task<PackageFeedStatus> CompareLocalPackageToFeedPackage(
+            string localPackageFullPath,
+            string packageContentUrl,
+            HttpClient client,
+            TaskLoggingHelper log,
+            IRetryHandler retryHandler)
         {
             log.LogMessage($"Getting package content from {packageContentUrl} and comparing to {localPackageFullPath}");
 
-            bool? result = null;
+            PackageFeedStatus result = PackageFeedStatus.Unknown;
 
-            ExponentialRetry RetryHandler = new ExponentialRetry
-            {
-                MaxAttempts = MaxRetries
-            };
-
-            bool success = await RetryHandler.RunAsync(async attempt =>
+            bool success = await retryHandler.RunAsync(async attempt =>
             {
                 try
                 {
@@ -136,14 +185,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     {
                         response.EnsureSuccessStatusCode();
 
-                        // Check the headers for content length and md5
+                        // Check the headers for content length and md5 
                         bool md5HeaderAvailable = response.Headers.TryGetValues("Content-MD5", out var md5);
                         bool lengthHeaderAvailable = response.Headers.TryGetValues("Content-Length", out var contentLength);
 
                         if (lengthHeaderAvailable && long.Parse(contentLength.Single()) != localFileStream.Length)
                         {
                             log.LogMessage(MessageImportance.Low, $"Package '{localPackageFullPath}' has different length than remote package '{packageContentUrl}'.");
-                            result = false;
+                            result = PackageFeedStatus.ExistsAndDifferent;
                             return true;
                         }
 
@@ -155,7 +204,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                                 log.LogMessage(MessageImportance.Low, $"Package '{localPackageFullPath}' has different MD5 hash than remote package '{packageContentUrl}'.");
                             }
 
-                            result = true;
+                            result = PackageFeedStatus.ExistsAndDifferent;
                             return true;
                         }
 
@@ -163,7 +212,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                         // Otherwise, compare the streams
                         var remoteStream = await response.Content.ReadAsStreamAsync();
-                        result = await GeneralUtils.CompareStreamsAsync(localFileStream, remoteStream, BufferSize);
+                        var streamsMatch = await GeneralUtils.CompareStreamsAsync(localFileStream, remoteStream, BufferSize);
+                        result = streamsMatch ? PackageFeedStatus.ExistsAndIdenticalToLocal : PackageFeedStatus.ExistsAndDifferent;
                         return true;
                     }
                 }
@@ -173,7 +223,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 {
                     if (e.Message.Contains("404 (Not Found)"))
                     {
-                        result = null;
+                        result = PackageFeedStatus.DoesNotExist;
                         return true;
                     }
 
@@ -194,16 +244,32 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// Do an unauthenticated GET on the feed URL. If it succeeds, the feed is not public.
         /// If it fails with a 4* error, assume it is internal.
         /// </remarks>
-        public static async Task<bool?> IsFeedPublicAsync(string feedUrl, HttpClient httpClient, TaskLoggingHelper log)
+        public static Task<bool?> IsFeedPublicAsync(
+            string feedUrl,
+            HttpClient httpClient,
+            TaskLoggingHelper log)
+        {
+            return IsFeedPublicAsync(feedUrl, httpClient, log, CreateDefaultRetryHandler());
+        }
+
+        /// <summary>
+        ///     Determine whether the feed is public or private.
+        /// </summary>
+        /// <param name="feedUrl">Feed url to test</param>
+        /// <returns>True if the feed is public, false if it is private, and null if it was not possible to determine.</returns>
+        /// <remarks>
+        /// Do an unauthenticated GET on the feed URL. If it succeeds, the feed is not public.
+        /// If it fails with a 4* error, assume it is internal.
+        /// </remarks>
+        public static async Task<bool?> IsFeedPublicAsync(
+            string feedUrl,
+            HttpClient httpClient,
+            TaskLoggingHelper log,
+            IRetryHandler retryHandler)
         {
             bool? isPublic = null;
 
-            ExponentialRetry RetryHandler = new ExponentialRetry
-            {
-                MaxAttempts = MaxRetries
-            };
-
-            bool success = await RetryHandler.RunAsync(async attempt =>
+            bool success = await retryHandler.RunAsync(async attempt =>
             {
                 try
                 {

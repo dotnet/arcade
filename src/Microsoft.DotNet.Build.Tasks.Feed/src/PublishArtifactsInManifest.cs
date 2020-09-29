@@ -1,6 +1,5 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using Microsoft.Build.Framework;
 using Microsoft.DotNet.Maestro.Client;
@@ -107,6 +106,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         public bool InternalBuild { get; set; }
 
         public bool PublishInstallersAndChecksums { get; set; } = false;
+
+        public string AzureStorageTargetFeedKey { get; set; }
 
         public string ChecksumsFeedKey { get; set; }
 
@@ -285,6 +286,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 AzureDevOpsFeedsKey = this.AzureDevOpsFeedsKey,
                 InstallersFeedKey = this.InstallersFeedKey,
                 CheckSumsFeedKey = this.ChecksumsFeedKey,
+                AzureStorageTargetFeedKey = this.AzureStorageTargetFeedKey
             };
         }
     }

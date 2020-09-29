@@ -1,6 +1,5 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using Microsoft.Build.Framework;
 using Microsoft.DotNet.Build.Tasks.Feed.Model;
@@ -34,6 +33,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             bool isStableBuild,
             string repositoryName,
             string commitSha,
+            string azureStorageTargetFeedPAT,
             bool publishInstallersAndChecksums,
             string installersTargetStaticFeed,
             string installersAzureAccountKey,
@@ -47,7 +47,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             IBuildEngine buildEngine,
             string stablePackagesFeed = null,
             string stableSymbolsFeed = null) 
-            : base(isInternalBuild, isStableBuild, repositoryName, commitSha, publishInstallersAndChecksums, installersTargetStaticFeed, installersAzureAccountKey, checksumsTargetStaticFeed, checksumsAzureAccountKey, azureDevOpsStaticShippingFeed, azureDevOpsStaticTransportFeed, azureDevOpsStaticSymbolsFeed, latestLinkShortUrlPrefix, azureDevOpsFeedsKey)
+            : base(isInternalBuild, isStableBuild, repositoryName, commitSha, azureStorageTargetFeedPAT, publishInstallersAndChecksums, installersTargetStaticFeed, installersAzureAccountKey, checksumsTargetStaticFeed, checksumsAzureAccountKey, azureDevOpsStaticShippingFeed, azureDevOpsStaticTransportFeed, azureDevOpsStaticSymbolsFeed, latestLinkShortUrlPrefix, azureDevOpsFeedsKey)
         {
             BuildEngine = buildEngine;
             StableSymbolsFeed = stableSymbolsFeed;
@@ -108,6 +108,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             LatestLinkShortUrlPrefix));
                 }
             }
+
+            targetFeedConfigs.Add(
+                new TargetFeedConfig(
+                    TargetFeedContentType.Symbols,
+                    PublishingConstants.LegacyDotNetBlobFeedURL,
+                    FeedType.AzureStorageFeed,
+                    AzureStorageTargetFeedPAT));
 
             targetFeedConfigs.Add(
                 new TargetFeedConfig(
@@ -200,7 +207,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     CommitSha = CommitSha
                 };
 
-                if (packagesFeedTask.Execute())
+                if (!packagesFeedTask.Execute())
                 {
                     throw new Exception($"Problems creating an AzureDevOps feed for repository '{RepositoryName}' and commit '{CommitSha}'.");
                 }

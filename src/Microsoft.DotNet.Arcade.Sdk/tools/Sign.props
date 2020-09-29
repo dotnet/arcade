@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
+<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
 <Project>
   <ItemGroup>
     <!--
@@ -11,9 +11,16 @@
     <CertificatesSignInfo Include="3PartySHA2" DualSigningAllowed="true" />
 
     <!-- List of container files that will be opened and checked for files that need to be signed. -->
-    <ItemsToSign Include="$(ArtifactsPackagesDir)**\*.nupkg" />
-    <ItemsToSign Include="$(VisualStudioSetupOutputPath)**\*.vsix" />
-    <ItemsToSign Include="$(VisualStudioBuildPackagesDir)**\*.nupkg" />
+    <_DefaultItemsToSign Include="$(ArtifactsPackagesDir)**\*.nupkg" />
+    <_DefaultItemsToSign Include="$(VisualStudioSetupOutputPath)**\*.vsix" />
+    <_DefaultItemsToSign Include="$(VisualStudioBuildPackagesDir)**\*.nupkg" />
+    <!-- Sign wixpacks to correspond to msi/exe signing -->
+    <_ItemsToOnlySignPostBuild Include="$(ArtifactsPackagesDir)**\*.wixpack.zip" />
+
+    <!-- If PostBuildSign == true, these are added to ItemsToSignPostBuild, otherwise these are added to ItemsToSign -->
+    <ItemsToSign Include="@(_DefaultItemsToSign)" Condition="'$(PostBuildSign)' != 'true'" />
+    <ItemsToSignPostBuild Include="@(_DefaultItemsToSign->'%(Filename)%(Extension)')" Condition="'$(PostBuildSign)' == 'true'" />
+    <ItemsToSignPostBuild Include="@(_ItemsToOnlySignPostBuild->'%(Filename)%(Extension)')" Condition="'$(PostBuildSign)' == 'true'" />
 
     <!-- Default certificate/strong-name to be used for all files with PKT=="31bf3856ad364e35". -->
     <StrongNameSignInfo Include="MsSharedLib72" PublicKeyToken="31bf3856ad364e35" CertificateName="Microsoft400" />
@@ -37,8 +44,15 @@
   </ItemGroup>
 
   <PropertyGroup>
+    <!-- Flags for controlling whether empty signing lists are detected for in build and post-build signing.
+         These flags are split (rather than just a single check based on PostBuildSign == true/false because
+         some repos may do both in-build and post-build signing. -->
     <!-- Control whether an empty ItemsToSign item group is allowed when calling SignToolTask. -->
-    <AllowEmptySignList>false</AllowEmptySignList>
+    <AllowEmptySignList Condition="'$(PostBuildSign)' != 'true'">false</AllowEmptySignList>
+    <AllowEmptySignList Condition="'$(PostBuildSign)' == 'true'">true</AllowEmptySignList>
+    <!-- Control whether an empty ItemsToSignPostBuild item group is allowed during publishing -->
+    <AllowEmptySignPostBuildList Condition="'$(PostBuildSign)' != 'true'">true</AllowEmptySignPostBuildList>
+    <AllowEmptySignPostBuildList Condition="'$(PostBuildSign)' == 'true'">false</AllowEmptySignPostBuildList>
 
     <NETCORE_ENGINEERING_TELEMETRY>Signing</NETCORE_ENGINEERING_TELEMETRY>
   </PropertyGroup>

@@ -1,6 +1,5 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 namespace Microsoft.DotNet.SignTool
 {
@@ -13,8 +12,8 @@ namespace Microsoft.DotNet.SignTool
         internal string SNBinaryPath { get; }
         internal string LogDir { get; }
         internal string EnclosingDir { get; }
-
-        internal SignToolArgs(string tempPath, string microBuildCorePath, bool testSign, string msBuildPath, string logDir, string enclosingDir, string snBinaryPath)
+        internal string WixToolsPath { get; }
+        internal SignToolArgs(string tempPath, string microBuildCorePath, bool testSign, string msBuildPath, string logDir, string enclosingDir, string snBinaryPath, string wixToolsPath = null)
         {
             TempDir = tempPath;
             MicroBuildCorePath = microBuildCorePath;
@@ -23,6 +22,7 @@ namespace Microsoft.DotNet.SignTool
             LogDir = logDir;
             EnclosingDir = enclosingDir;
             SNBinaryPath = snBinaryPath;
+            WixToolsPath = wixToolsPath;
         }
     }
 }

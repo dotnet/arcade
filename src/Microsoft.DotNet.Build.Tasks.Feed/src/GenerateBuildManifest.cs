@@ -1,6 +1,5 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using Microsoft.Build.Framework;
 using Microsoft.DotNet.Build.Tasks.Feed.Model;
@@ -34,6 +33,24 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         public string OutputPath { get; set; }
 
         /// <summary>
+        /// The collection URI of the Azure DevOps instance
+        /// </summary>
+        [Required]
+        public string AzureDevOpsCollectionUri { get; set; }
+
+        /// <summary>
+        /// The Azure DevOps project of this build
+        /// </summary>
+        [Required]
+        public string AzureDevOpsProject { get; set; }
+
+        /// <summary>
+        /// The Azure DevOps build ID
+        /// </summary>
+        [Required]
+        public int AzureDevOpsBuildId { get; set; }
+
+        /// <summary>
         /// List of files that need to be signed
         /// </summary>
         public ITaskItem[] ItemsToSign { get; set; }
@@ -52,6 +69,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// List of which certificates to use when signing files with particular extensions
         /// </summary>
         public ITaskItem[] FileExtensionSignInfo { get; set; }
+
+        public ITaskItem[] CertificatesSignInfo { get; set; }
 
         /// <summary>
         /// The CI build ID.
@@ -105,10 +124,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                 var buildModel = BuildManifestUtil.CreateModelFromItems(
                     Artifacts,
+                    AzureDevOpsCollectionUri,
+                    AzureDevOpsProject,
+                    AzureDevOpsBuildId,
                     ItemsToSign,
                     StrongNameSignInfo,
                     FileSignInfo,
                     FileExtensionSignInfo,
+                    CertificatesSignInfo,
                     BuildId,
                     BuildData,
                     RepoUri,

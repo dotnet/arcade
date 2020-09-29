@@ -1,8 +1,8 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using Microsoft.DotNet.Build.Tasks.Feed.Model;
+using Microsoft.DotNet.Build.Tasks.Feed.Tests.TestDoubles;
 using System.Collections.Generic;
 using System.Linq;
 using Xunit;
@@ -130,6 +130,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     isStableBuild: true,
                     repositoryName: "test-repo",
                     commitSha: "c0c0c0c0",
+                    AzureStorageTargetFeedPAT,
                     publishInstallersAndChecksums,
                     InstallersTargetStaticFeed,
                     InstallersTargetStaticFeedKey,
@@ -230,6 +231,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     isStableBuild: false,
                     repositoryName: "test-repo",
                     commitSha: "c0c0c0c0",
+                    AzureStorageTargetFeedPAT,
                     publishInstallersAndChecksums,
                     InstallersTargetStaticFeed,
                     InstallersTargetStaticFeedKey,
@@ -287,6 +289,18 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
 
             expectedFeeds.Add(
                 new TargetFeedConfig(
+                    TargetFeedContentType.Symbols,
+                    PublishingConstants.LegacyDotNetBlobFeedURL,
+                    FeedType.AzureStorageFeed,
+                    AzureStorageTargetFeedPAT,
+                    string.Empty,
+                    AssetSelection.All,
+                    isolated: false,
+                    @internal: false,
+                    allowOverwrite: false));
+
+            expectedFeeds.Add(
+                new TargetFeedConfig(
                     TargetFeedContentType.Package,
                     AzureDevOpsStaticShippingFeed,
                     FeedType.AzDoNugetFeed,
@@ -315,6 +329,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     isStableBuild: false,
                     repositoryName: "test-repo",
                     commitSha: "c0c0c0c0",
+                    AzureStorageTargetFeedPAT,
                     publishInstallersAndChecksums,
                     InstallersTargetStaticFeed,
                     InstallersTargetStaticFeedKey,

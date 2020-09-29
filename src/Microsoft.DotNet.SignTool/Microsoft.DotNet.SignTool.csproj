@@ -1,14 +1,17 @@
-﻿<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
+﻿<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net472;netcoreapp2.0</TargetFrameworks>
-    <TargetFrameworks Condition="'$(DotNetBuildFromSource)' == 'true'">netcoreapp2.0</TargetFrameworks>
+    <TargetFrameworks>net472;netcoreapp2.1</TargetFrameworks>
+    <TargetFrameworks Condition="'$(DotNetBuildFromSource)' == 'true'">netcoreapp2.1</TargetFrameworks>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <LangVersion>Latest</LangVersion>
     <IsPackable>true</IsPackable>
     <Description>Build artifact signing tool</Description>
     <PackageTags>Arcade Build Tool Signing</PackageTags>
-    <DevelopmentDependency>true</DevelopmentDependency>
+    <DevelopmentDependency>false</DevelopmentDependency>
+    <!-- NU5128 is required because we are packaging identical assemblies in tools and lib folders
+         See https://docs.microsoft.com/en-us/nuget/reference/errors-and-warnings/nu5128 -->
+    <NoWarn>$(NoWarn);NU5128</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="..\Common\AssemblyResolution.cs" Link="src\AssemblyResolution.cs" />
@@ -28,8 +31,17 @@
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
-    <Reference Include="WindowsBase"/>
+    <Reference Include="WindowsBase" />
   </ItemGroup>
+
+  <!-- Copy assemblies into lib folder so they can be used as a development dependency -->
+  <Target Name="PackageAssembliesInLib" BeforeTargets="GenerateNuspec">
+    <ItemGroup>
+      <_PackageFiles Include="@(_PackageFiles)" Condition="$([System.String]::Copy(%(_PackageFiles.PackagePath)).Contains('tools/'))">
+        <PackagePath>$([System.String]::Copy('%(PackagePath)').Replace('tools', 'lib'))</PackagePath>
+      </_PackageFiles>
+    </ItemGroup>
+  </Target>
 
   <Import Project="$(RepoRoot)eng\BuildTask.targets" />
 </Project>

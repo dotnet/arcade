@@ -6,7 +6,16 @@
     this file and switch to wixproj. See https://github.com/wixtoolset/issues/issues/5627
   -->
 
-  <UsingTask TaskName="CreateLightCommandPackageDrop" AssemblyFile="$(DotNetBuildTasksSharedFrameworkTaskFile)" />
+  <ItemGroup>
+    <PackageReference Include="Microsoft.DotNet.Build.Tasks.Installers" Version="$(MicrosoftDotNetBuildTasksInstallersVersion)" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <MicrosoftDotNetBuildTasksInstallersTaskAssembly Condition="'$(MSBuildRuntimeType)' == 'Core'">$(NuGetPackageRoot)microsoft.dotnet.build.tasks.installers\$(MicrosoftDotNetBuildTasksInstallersVersion)\tools\netcoreapp2.1\Microsoft.DotNet.Build.Tasks.Installers.dll</MicrosoftDotNetBuildTasksInstallersTaskAssembly>
+    <MicrosoftDotNetBuildTasksInstallersTaskAssembly Condition="'$(MSBuildRuntimeType)' != 'Core'">$(NuGetPackageRoot)microsoft.dotnet.build.tasks.installers\$(MicrosoftDotNetBuildTasksInstallersVersion)\tools\net472\Microsoft.DotNet.Build.Tasks.Installers.dll</MicrosoftDotNetBuildTasksInstallersTaskAssembly>
+  </PropertyGroup>
+
+  <UsingTask TaskName="CreateLightCommandPackageDrop" AssemblyFile="$(MicrosoftDotNetBuildTasksInstallersTaskAssembly)" />
   <UsingTask TaskName="ExecWithRetries" AssemblyFile="$(DotNetBuildTasksSharedFrameworkTaskFile)" />
   <UsingTask TaskName="StabilizeWixFileId" AssemblyFile="$(DotNetBuildTasksSharedFrameworkTaskFile)" />
 
@@ -18,7 +27,7 @@
     <MSBuild
       Projects="$(AcquireWixProjectFile)"
       Targets="AcquireWixCore"
-      Properties="IntermediateOutputRootPath=$(IntermediateOutputRootPath)" />
+      Properties="IntermediateOutputRootPath=$(IntermediateOutputRootPath);RepoRoot=$(RepoRoot)" />
   </Target>
 
   <Target Name="GetAcquireWixProperties"> 
@@ -337,20 +346,14 @@
     <CreateLightCommandPackageDrop
       OriginalLightCommand="$(_lightCommand)"
       LightCommandWorkingDir="$(LightCommandObjDir)"
+      OutputFolder="$(ArtifactsNonShippingPackagesDir)"
       NoLogo="true"
       Cultures="en-us"
-      Out="$(OutInstallerFile)"
+      InstallerFile="$(OutInstallerFile)"
       WixExtensions="@(WixExtensions)"
       WixSrcFiles="@(WixSrcFile -> '$(WixObjDir)%(Filename).wixobj');@(DirectoryToHarvest -> '%(WixObjFile)')">
-      <Output TaskParameter="LightCommandPackageNameOutput" PropertyName="_LightCommandPackageNameOutput" />
+      <Output TaskParameter="OutputFile" PropertyName="_LightCommandPackageNameOutput" />
     </CreateLightCommandPackageDrop>
-
-    <MakeDir Directories="$(LightCommandPackagesDir)" />
-
-    <ZipDirectory
-      DestinationFile="$(LightCommandPackagesDir)/LightCommandPackage-$(_LightCommandPackageNameOutput).zip"
-      Overwrite="true"
-      SourceDirectory="$(LightCommandObjDir)/$(_LightCommandPackageNameOutput)" />
   </Target>
 
   <!--

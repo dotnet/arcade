@@ -1,4 +1,4 @@
-<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
+<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
 <Project>
   <!--
     This file main target, namely `SetupTargetFeeds`, is used to create an ItemGroup with
@@ -61,7 +61,7 @@
     <NETCORE_ENGINEERING_TELEMETRY>Publish</NETCORE_ENGINEERING_TELEMETRY>
   </PropertyGroup>
 
-  <Target Name="SetupTargetFeeds">
+  <Target Name="SetupTargetFeeds" Outputs="@(TargetFeedConfig)">
     <Error
       Condition="'$(IsStableBuild)' == ''"
       Text="Parameter 'IsStableBuild' is empty. A boolean value is required." />
@@ -89,19 +89,6 @@
     <Error
       Condition="('$(AzureDevOpsStaticSymbolsFeed)' == '' or '$(AzureDevOpsStaticSymbolsFeedKey)' == '')"
       Text="Parameters 'AzureDevOpsStaticSymbolsFeed/AzureDevOpsStaticSymbolsFeedKey' are empty." />
-
-    <!--
-      If the user wants to use a test configuration we'll create a TargetFeedConfig using
-      optional parameters passed as properties. This should prevent all the other
-      cases below from being activated.
-    -->
-    <ItemGroup Condition="'$(CreateTestConfig)' == 'true'">
-      <TargetFeedConfig
-        Include="$(TestFeedCategories)"
-        TargetURL="$(TestFeedURL)"
-        Type="$(TestFeedType)"
-        Token="$(TestFeedToken)" />
-    </ItemGroup>
 
     <!--
       - Adding this to let repos that want to override the TargetFeed be able to do so.
@@ -193,16 +180,6 @@
         Isolated="true"
         Type="AzDoNugetFeed"
         Token="$(AzdoTargetFeedPAT)" />
-
-      <!-- Legacy blob feed. Legacy feed is non-internal so we skip it for this. -->
-      <TargetFeedConfig
-        Condition="'$(IsInternalBuild)' == 'false'"
-        AssetSelection="NonShippingOnly"
-        Include="Package;Symbols"
-        TargetURL="$(TargetStaticFeed)"
-        Isolated="false"
-        Type="AzureStorageFeed"
-        Token="$(AzureStorageTargetFeedPAT)" />
 
       <TargetFeedConfig
         AssetSelection="NonShippingOnly"

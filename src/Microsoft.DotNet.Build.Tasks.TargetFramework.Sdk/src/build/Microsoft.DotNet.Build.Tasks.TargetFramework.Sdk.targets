@@ -1,32 +1,51 @@
-<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
+<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
 <Project>
   <UsingTask TaskName="ChooseBestP2PTargetFrameworkTask" AssemblyFile="$(DotNetBuildTasksTargetFrameworkSdkAssembly)" />
   <UsingTask TaskName="ChooseBestTargetFrameworksTask" AssemblyFile="$(DotNetBuildTasksTargetFrameworkSdkAssembly)" />
   <UsingTask TaskName="AddTargetFrameworksToProjectTask" AssemblyFile="$(DotNetBuildTasksTargetFrameworkSdkAssembly)" />
-  
-  <PropertyGroup>
-    <_OriginalTargetFrameworks>$(TargetFrameworks)</_OriginalTargetFrameworks>
-  </PropertyGroup>
 
   <!-- Strip away the TargetFrameworkSuffix during the graph build. -->
   <PropertyGroup Condition="'$(IsGraphBuild)' == 'true' and '$(MSBuildRestoreSessionId)' != ''">
     <TargetFrameworks Condition="'$(TargetFrameworks)' != ''">$([System.Text.RegularExpressions.Regex]::Replace('$(TargetFrameworks)', '(-[^;]+)', ''))</TargetFrameworks>
   </PropertyGroup>
-     
+
+  <!-- We filter _InnerBuildProjects items during DispatchToInnerBuilds and Clean to only run for best target frameworks. -->
   <Target Name="RunOnlyBestTargetFrameworks"
-          Condition="'$(BuildTargetFramework)' != '' or '$(MSBuildProjectExtension)' == '.pkgproj'" 
-          BeforeTargets="DispatchToInnerBuilds"
+          Condition="'$(IsCrossTargetingBuild)' == 'true' and ('$(BuildTargetFramework)' != '' or '$(MSBuildProjectExtension)' == '.pkgproj')" 
+          BeforeTargets="DispatchToInnerBuilds;Clean"
           DependsOnTargets="GetProjectWithBestTargetFrameworks">
     <ItemGroup>
+      <_OriginalInnerBuildProjects Include="@(_InnerBuildProjects)" />
       <_InnerBuildProjects Remove="@(_InnerBuildProjects)" />
       <_InnerBuildProjects Include="@(InnerBuildProjectsWithBestTargetFramework)" />
     </ItemGroup>
   </Target>
+
+  <!-- As _InnerBuildProjects items are used in the GetTargetFrameworks path as well (>= .NET 5), we restore the item state. -->
+  <Target Name="RestoreInnerBuildProjects"
+          BeforeTargets="GetTargetFrameworksWithPlatformFromInnerBuilds"
+          AfterTargets="DispatchToInnerBuilds;Clean"
+          Condition="'@(_OriginalInnerBuildProjects)' != ''">
+    <ItemGroup>
+      <_InnerBuildProjects Remove="@(_InnerBuildProjects)" />
+      <_InnerBuildProjects Include="@(_OriginalInnerBuildProjects)" />
+    </ItemGroup>
+  </Target>
   
   <Target Name="GetProjectWithBestTargetFrameworks">
-    <ChooseBestTargetFrameworksTask BuildTargetFrameworks="$(BuildTargetFramework)-$(TargetOS);$(AdditionalBuildTargetFrameworks)"
+    <ItemGroup Condition="'$(BuildTargetFramework)' != ''">
+      <_BuildTargetFrameworkWithTargetOS Include="$(BuildTargetFramework)-$(TargetOS)" />
+    </ItemGroup>
+    <ItemGroup Condition="'$(BuildTargetFramework)' == ''">
+      <_BuildTargetFrameworkWithoutOS Include="$([MSBuild]::Unescape($([System.Text.RegularExpressions.Regex]::Replace('$(TargetFrameworks)', '(-[^;]+)', ''))))" />
+      <!-- TODO: Find a better way to filter out non applicable TargetOS values for .NET Framework. -->
+      <_BuildTargetFrameworkWithTargetOS Include="@(_BuildTargetFrameworkWithoutOS->Distinct()->'%(Identity)-$(TargetOS)')"
+                                         Condition="'$(TargetOS)' == 'Windows_NT' or !$([System.String]::Copy('%(Identity)').StartsWith('net4'))" />
+    </ItemGroup>
+    
+    <ChooseBestTargetFrameworksTask BuildTargetFrameworks="@(_BuildTargetFrameworkWithTargetOS);$(AdditionalBuildTargetFrameworks)"
                                     SupportedTargetFrameworks="$(TargetFrameworks)"
-                                    RuntimeGraph="$(RuntimeGraph)" >
+                                    RuntimeGraph="$(RuntimeGraph)">
       <Output TaskParameter="BestTargetFrameworks" ItemName="_BestTargetFramework" />
     </ChooseBestTargetFrameworksTask>
 
@@ -34,14 +53,6 @@
                                       BestTargetFrameworks="@(_BestTargetFramework)" >
       <Output TaskParameter="InnerBuildProjects" ItemName="InnerBuildProjectsWithBestTargetFramework" />
     </AddTargetFrameworksToProjectTask>
-  </Target>
-
-  <!-- Attaching the TargetFrameworkSuffix after restore for build.-->
-  <Target Name="AttachTargetFrameworkSuffixToTargetFrameworks"
-          AfterTargets="Restore">
-    <PropertyGroup>
-      <TargetFrameworks>$(_OriginalTargetFrameworks)</TargetFrameworks>
-    </PropertyGroup>
   </Target>
 
   <!--
@@ -54,7 +65,8 @@
           DependsOnTargets="ResolvePackageDependenciesForBuild">
     <MSBuild Projects="@(ProjectReference)"
              Targets="GetTargetFrameworks"
-             ContinueOnError="true"
+             BuildInParallel="$(BuildInParallel)"
+             RemoveProperties="TargetFramework;RuntimeIdentifier"
              SkipNonexistentTargets="true">
       <Output TaskParameter="TargetOutputs" ItemName="_ProjectRefWithTfms"/>
     </MSBuild>

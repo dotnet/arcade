@@ -76,6 +76,7 @@
   
   <ItemGroup>
     <Compile Include="..\..\Common\BuildTask.cs" />
+    <Compile Include="..\..\Common\EnumerableExtensions.cs" />
   </ItemGroup>
 
   <ItemGroup>

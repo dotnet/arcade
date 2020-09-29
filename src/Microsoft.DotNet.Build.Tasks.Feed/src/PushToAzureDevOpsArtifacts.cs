@@ -1,6 +1,5 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
-// See the LICENSE file in the project root for more information.
 
 using Microsoft.Build.Framework;
 using Microsoft.DotNet.VersionTools.BuildManifest.Model;
@@ -21,6 +20,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public bool PublishFlatContainer { get; set; }
 
+        public string ManifestRepoName { get; set; }
+
         public string ManifestRepoUri { get; set; }
 
         public string ManifestBuildId { get; set; } = "no build id provided";
@@ -31,6 +32,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public string[] ManifestBuildData { get; set; }
 
+        public string AzureDevOpsCollectionUri { get; set; }
+
+        public string AzureDevOpsProject { get; set; }
+
+        public int AzureDevOpsBuildId { get; set; }
+
         public ITaskItem[] ItemsToSign { get; set; }
 
         public ITaskItem[] StrongNameSignInfo { get; set; }
@@ -38,6 +45,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         public ITaskItem[] FileSignInfo { get; set; }
 
         public ITaskItem[] FileExtensionSignInfo { get; set; }
+
+        public ITaskItem[] CertificatesSignInfo { get; set; }
 
         public string AssetManifestPath { get; set; }
 
@@ -159,13 +168,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         }
                     }
                     
-                    SigningInformationModel signingInformationModel = BuildManifestUtil.CreateSigningInformationModelFromItems(ItemsToSign, StrongNameSignInfo, FileSignInfo, FileExtensionSignInfo);
+                    SigningInformationModel signingInformationModel = BuildManifestUtil.CreateSigningInformationModelFromItems(AzureDevOpsCollectionUri, AzureDevOpsProject, AzureDevOpsBuildId,
+                        ItemsToSign, StrongNameSignInfo, FileSignInfo, FileExtensionSignInfo, CertificatesSignInfo);
 
                     BuildManifestUtil.CreateBuildManifest(Log,
                         blobArtifacts,
                         packageArtifacts,
                         AssetManifestPath,
-                        ManifestRepoUri,
+                        !String.IsNullOrEmpty(ManifestRepoName) ? ManifestRepoName : ManifestRepoUri,
                         ManifestBuildId,
                         ManifestBranch,
                         ManifestCommit,

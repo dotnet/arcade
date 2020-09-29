@@ -2,7 +2,8 @@
 function Test-FilesUseTelemetryOutput {
     $requireTelemetryExcludeFiles = @(
         "enable-cross-org-publishing.ps1",
-        "performance-setup.ps1" )
+        "performance-setup.ps1",
+        "dotnet-install.ps1")
 
     $filesMissingTelemetry = Get-ChildItem -File -Recurse -Path "$PSScriptRoot\common" -Include "*.ps1" -Exclude $requireTelemetryExcludeFiles |
         Where-Object { -Not( $_ | Select-String -Pattern "Write-PipelineTelemetryError" )}
