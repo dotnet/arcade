@@ -37,27 +37,23 @@ For those repos that really only change a single patch number per-release (efcor
 - [ ] RTM+2
 
 ## Status of exercises per repo:
-- ![][red] - Not started
-- ![][yell] - Results not verified
-- ![][green] - Results verified. Good to go!
+- ❌ - Not started
+- 🚧 - Results not verified
+- ✔️ - Results verified. Good to go!
 - N/A - Not applicable for this repo (e.g. no changes to make for RTM+1 or 2)
 
 This table represents the status of the .NET 5 Servicing Readiness Test on a Per-Repo basis
 
 | Repo               | Owner    | RTM Build           | RTM+1               | RTM+2               |
 | ------------------ | -------- | ------------------- | ------------------- | ------------------- |
-| aspnetcore         | kevinpi  | ![][green]          | ![][red]            | ![][red]            |
-| efcore             | kevinpi  | ![][green] (63748)  | ![][red]            | ![][red]            |
-| extensions         | ericstj  | ![][yell] (63770)   | ![][red]            | ![][red]            |
-| installer          | marcpop  | ![][red]            | ![][red]            | ![][red]            |
-| sdk                | marcpop  | ![][yell]           | ![][red]            | ![][red]            |
-| runtime            | jaredpar | ![][green] (64198)  | ![][green] (64197)  | ![][red]            |
-| winforms           | mmcgaw   | ![][green] (64378)  | ![][green] (64375)  | ![][green] (64376)  |
-| wpf-int            | fabiant  | N/A                 | N/A                 | N/A                 |
-| wpf                | fabiant  | ![][green] (64391)  | ![][green] (64389)  | ![][red]            |
-| windowsdesktop     | fabiant  | ![][green] (64407)  | ![][yell] (64428)   | ![][red]            |
-| templating         | joaguila | ![][green]          | ![][red]            | ![][red]            |
-
-[red]: https://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Red.png
-[green]: https://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png
-[yell]: https://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Yellow.png
+| aspnetcore         | kevinpi  | ✔️                  | ❌                 | ❌                  |
+| efcore             | kevinpi  | ✔️ (63748)          | ❌                 | ❌                  |
+| extensions         | ericstj  | 🚧 (63770)          | ❌                 | ❌                  |
+| installer          | marcpop  | ❌                  | ❌                 | ❌                  |
+| sdk                | marcpop  | 🚧                  | ❌                 | ❌                  |
+| runtime            | jaredpar | ✔️ (64198)          | ✔️ (64197)         | ❌                  |
+| winforms           | mmcgaw   | ✔️ (64378)          | ✔️ (64375)         | ✔️ (64376)          |
+| wpf-int            | fabiant  | N/A                  | N/A                 | N/A                 |
+| wpf                | fabiant  | ✔️ (64391)          | ✔️ (64389)         | ❌                  |
+| windowsdesktop     | fabiant  | ✔️ (64407)          | 🚧 (64428)         | ❌                  |
+| templating         | joaguila | ✔️                  | ❌                 | ❌                  |
