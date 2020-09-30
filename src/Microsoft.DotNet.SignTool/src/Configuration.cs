@@ -222,11 +222,11 @@ namespace Microsoft.DotNet.SignTool
         }
 
         private FileSignInfo TrackFile(
-            string fullPath, 
+            string fullPath,
             string collisionPriorityId,
-            ImmutableArray<byte> contentHash, 
-            bool isNested, 
-            bool forceRepack = false, 
+            ImmutableArray<byte> contentHash,
+            bool isNested,
+            bool forceRepack = false,
             string containerPath = null)
         {
             _log.LogMessage($"Tracking file '{fullPath}' isNested={isNested}");
@@ -283,11 +283,11 @@ namespace Microsoft.DotNet.SignTool
         }
 
         private FileSignInfo ExtractSignInfo(
-            string fullPath, 
+            string fullPath,
             string collisionPriorityId,
-            ImmutableArray<byte> hash, 
-            bool forceRepack = false, 
-            string wixContentFilePath = null, 
+            ImmutableArray<byte> hash,
+            bool forceRepack = false,
+            string wixContentFilePath = null,
             string containerPath = null)
         {
             var fileName = Path.GetFileName(fullPath);
@@ -360,29 +360,22 @@ namespace Microsoft.DotNet.SignTool
 
                 peInfo = GetPEInfo(fullPath);
 
-                // Get the default sign info based on the PKT, if applicable. Since there might be dupes
-                // we get the one which maps a collision id or the first of the returned ones in case there is no
-                // collision id
-                bool strongNameInfos = _strongNameInfo.TryGetValue(peInfo.PublicKeyToken ?? string.Empty, out var pktBasedSignInfos);
-                SignInfo pktBasedSignInfo = SignInfo.Ignore;
-                bool strongNameInfo = false;
-
-                if (strongNameInfos)
+                if (peInfo.IsManaged && _strongNameInfo.TryGetValue(peInfo.PublicKeyToken, out var pktBasedSignInfos))
                 {
+                    // Get the default sign info based on the PKT, if applicable. Since there might be dupes
+                    // we get the one which maps a collision id or the first of the returned ones in case there is no
+                    // collision id
+                    SignInfo pktBasedSignInfo = SignInfo.Ignore;
+
                     if (!string.IsNullOrEmpty(collisionPriorityId))
                     {
-                        strongNameInfo = pktBasedSignInfos.Where(s => s.CollisionPriorityId == collisionPriorityId).Any();
                         pktBasedSignInfo = pktBasedSignInfos.Where(s => s.CollisionPriorityId == collisionPriorityId).FirstOrDefault();
                     }
                     else
                     {
-                        strongNameInfo = true;
                         pktBasedSignInfo = pktBasedSignInfos.FirstOrDefault();
                     }
-                }
 
-                if (peInfo.IsManaged && strongNameInfo)
-                {
                     if (peInfo.IsCrossgened)
                     {
                         signInfo = new SignInfo(pktBasedSignInfo.Certificate, collisionPriorityId: _hashToCollisionIdMap[stringHash]);
@@ -431,7 +424,7 @@ namespace Microsoft.DotNet.SignTool
 
                 if (isAlreadySigned && !dualCerts)
                 {
-                    return new FileSignInfo(fullPath, hash, SignInfo.AlreadySigned, forceRepack:forceRepack, wixContentFilePath: wixContentFilePath);
+                    return new FileSignInfo(fullPath, hash, SignInfo.AlreadySigned, forceRepack: forceRepack, wixContentFilePath: wixContentFilePath);
                 }
 
                 // TODO: implement this check for native PE files as well:
@@ -453,7 +446,7 @@ namespace Microsoft.DotNet.SignTool
                     }
                 }
 
-                return new FileSignInfo(fullPath, hash, signInfo, (peInfo != null && peInfo.TargetFramework != "") ? peInfo.TargetFramework : null, forceRepack:forceRepack, wixContentFilePath: wixContentFilePath);
+                return new FileSignInfo(fullPath, hash, signInfo, (peInfo != null && peInfo.TargetFramework != "") ? peInfo.TargetFramework : null, forceRepack: forceRepack, wixContentFilePath: wixContentFilePath);
             }
 
             if (SignToolConstants.SignableExtensions.Contains(extension) || SignToolConstants.SignableOSXExtensions.Contains(extension))
@@ -683,6 +676,7 @@ namespace Microsoft.DotNet.SignTool
                 return false;
             }
         }
+
         /// <summary>
         /// Build up the <see cref="ZipData"/> instance for a given zip container. This will also report any consistency
         /// errors found when examining the zip archive.
