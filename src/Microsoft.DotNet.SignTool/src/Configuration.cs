@@ -300,6 +300,12 @@ namespace Microsoft.DotNet.SignTool
             PEInfo peInfo = null;
             string stringHash = ContentUtil.HashToString(hash);
 
+            if (extension.Equals(".nupkg", StringComparison.OrdinalIgnoreCase)
+                && Path.GetFileNameWithoutExtension(fullPath).EndsWith(".symbols", StringComparison.OrdinalIgnoreCase))
+            {
+                extension = ".symbols.nupkg";
+            }
+
             // Asset is nested asset part of a container. Try to get it from the visited assets first
             if (string.IsNullOrEmpty(collisionPriorityId) &&
                 !string.IsNullOrEmpty(containerPath))
@@ -332,7 +338,7 @@ namespace Microsoft.DotNet.SignTool
             // Try to determine default certificate name by the extension of the file. Since there might be dupes
             // we get the one which maps a collision id or the first of the returned ones in case there is no
             // collision id
-            bool hasSignInfos = _fileExtensionSignInfo.TryGetValue(Path.GetExtension(fullPath), out var signInfos);
+            bool hasSignInfos = _fileExtensionSignInfo.TryGetValue(extension, out var signInfos);
             SignInfo signInfo = SignInfo.Ignore;
             bool hasSignInfo = false;
 
