@@ -300,10 +300,13 @@ namespace Microsoft.DotNet.SignTool
             PEInfo peInfo = null;
             string stringHash = ContentUtil.HashToString(hash);
 
-            if (extension.Equals(".nupkg", StringComparison.OrdinalIgnoreCase)
-                && Path.GetFileNameWithoutExtension(fullPath).EndsWith(".symbols", StringComparison.OrdinalIgnoreCase))
+            // handle multi-part extensions like ".symbols.nupkg" specified in FileExtensionSignInfo
+            foreach (string multiPartExtension in _fileExtensionSignInfo.Where(e => e.Key.Count(c => c == '.') > 1).Select(t => t.Key))
             {
-                extension = ".symbols.nupkg";
+                if (fileName.EndsWith(multiPartExtension, StringComparison.OrdinalIgnoreCase))
+                {
+                    extension = multiPartExtension;
+                }
             }
 
             // Asset is nested asset part of a container. Try to get it from the visited assets first
