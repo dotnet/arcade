@@ -14,7 +14,6 @@
   -->
 
   <Import Project="BuildStep.props" />
-  <Import Project="Version.BeforeCommonTargets.targets"/>
   <!-- Allow for repo specific Publish properties such as add additional files to be published -->
   <Import Project="$(RepositoryEngineeringDir)Publishing.props" Condition="Exists('$(RepositoryEngineeringDir)Publishing.props')" />
 
@@ -27,7 +26,7 @@
     <IsStableBuild Condition="'$(DotNetFinalVersionKind)' == 'release'">true</IsStableBuild>
 
     <UsesReleaseOnlyPackageVersion>false</UsesReleaseOnlyPackageVersion>
-    <UsesReleaseOnlyPackageVersion Condition ="'$(PreReleaseVersionLabel)' == '' and '$(AutoGenerateAssemblyVersion)' == 'true'"></UsesReleaseOnlyPackageVersion>
+    <UsesReleaseOnlyPackageVersion Condition ="'$(PreReleaseVersionLabel)' == '' and '$(AutoGenerateAssemblyVersion)' == 'true'">true</UsesReleaseOnlyPackageVersion>
     
     <!-- If `AutoGenerateSymbolPackages` is not set we default it to true. -->
     <AutoGenerateSymbolPackages Condition="'$(AutoGenerateSymbolPackages)' == ''">true</AutoGenerateSymbolPackages>
