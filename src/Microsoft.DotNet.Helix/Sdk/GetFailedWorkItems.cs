@@ -14,7 +14,7 @@ namespace Microsoft.DotNet.Helix.Sdk
 {
     public class GetFailedWorkItems : HelixTask
     {
-        static int MaxHelixApiConcurrency = 10;
+        static int MaxHelixApiConcurrency = 3;
 
         /// <summary>
         /// An array of Helix Jobs to get status for
