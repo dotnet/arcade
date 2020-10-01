@@ -197,7 +197,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             new TargetChannelConfig(
                 1299,
                 PublishingInfraVersion.Next,
-                akaMSChannelName: "net5/daily",
+                akaMSChannelName: "net5",
                 FeedDotNet5Shipping,
                 FeedDotNet5Transport,
                 FeedDotNet5Symbols,
@@ -219,7 +219,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             new TargetChannelConfig(
                 1297,
                 PublishingInfraVersion.Next,
-                akaMSChannelName: "net5/daily",
+                akaMSChannelName: "net5/5.0.1xx/daily",
                 FeedDotNet5Shipping,
                 FeedDotNet5Transport,
                 FeedDotNet5Symbols,
