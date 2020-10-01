@@ -66,6 +66,9 @@
         <OriginalPackage>%(PackagesToPublish.Identity)</OriginalPackage>
         <IsShipping>%(PackagesToPublish.IsShipping)</IsShipping>
       </SymbolPackagesToGenerate>
+
+      <!-- If PostBuildSign is true, then we need to include newly generated packages in ItemsToSignPostBuild. -->
+      <ItemsToSignPostBuild Include="@(SymbolPackagesToGenerate->'%(Filename)%(Extension)')" Condition="'$(PostBuildSign)' == 'true'" />
     </ItemGroup>
 
     <!--
