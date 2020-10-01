@@ -14,6 +14,8 @@ namespace Microsoft.DotNet.Helix.Sdk
 {
     public class GetFailedWorkItems : HelixTask
     {
+        static int MaxHelixApiConcurrency = 10;
+
         /// <summary>
         /// An array of Helix Jobs to get status for
         /// </summary>
@@ -44,37 +46,48 @@ namespace Microsoft.DotNet.Helix.Sdk
                 return Array.Empty<ITaskItem>();
             }
 
+            // use a semaphore to avoid excessive numbers of concurrent API calls
+            using var clientThrottle = new SemaphoreSlim(MaxHelixApiConcurrency, MaxHelixApiConcurrency);
             return await Task.WhenAll(status.Failed.Select(async wi =>
             {
-                wi = Helpers.CleanWorkItemName(wi);
-
-                // copy all job metadata into the new item
-                var metadata = job.CloneCustomMetadata();
-                metadata["JobName"] = jobName;
-                metadata["WorkItemName"] = wi;
-                var consoleUri = HelixApi.Options.BaseUri.AbsoluteUri.TrimEnd('/') + $"/api/2019-06-17/jobs/{jobName}/workitems/{Uri.EscapeDataString(wi)}/console";
-                metadata["ConsoleOutputUri"] = consoleUri;
-
                 try
                 {
-                    var files = await HelixApi.WorkItem.ListFilesAsync(wi, jobName, cancellationToken).ConfigureAwait(false);
+                    wi = Helpers.CleanWorkItemName(wi);
 
-                    if (!string.IsNullOrEmpty(AccessToken))
+                    // copy all job metadata into the new item
+                    var metadata = job.CloneCustomMetadata();
+                    metadata["JobName"] = jobName;
+                    metadata["WorkItemName"] = wi;
+                    var consoleUri = HelixApi.Options.BaseUri.AbsoluteUri.TrimEnd('/') + $"/api/2019-06-17/jobs/{jobName}/workitems/{Uri.EscapeDataString(wi)}/console";
+                    metadata["ConsoleOutputUri"] = consoleUri;
+
+                    try
                     {
-                        // Add AccessToken to all file links because the api requires auth if we submitted the job with auth
-                        files = files
-                            .Select(file => new UploadedFile(file.Name, file.Link + "?access_token=" + AccessToken))
-                            .ToImmutableList();
+                        // wait to avoid starting too many helix API requests
+                        await clientThrottle.WaitAsync();
+                        var files = await HelixApi.WorkItem.ListFilesAsync(wi, jobName, cancellationToken).ConfigureAwait(false);
+
+                        if (!string.IsNullOrEmpty(AccessToken))
+                        {
+                            // Add AccessToken to all file links because the api requires auth if we submitted the job with auth
+                            files = files
+                                .Select(file => new UploadedFile(file.Name, file.Link + "?access_token=" + AccessToken))
+                                .ToImmutableList();
+                        }
+
+                        metadata["UploadedFiles"] = JsonConvert.SerializeObject(files).Replace("%", "%25");
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.LogWarningFromException(ex);
                     }
 
-                    metadata["UploadedFiles"] = JsonConvert.SerializeObject(files).Replace("%", "%25");
+                    return new TaskItem($"{jobName}/{wi}", metadata);
                 }
-                catch (Exception ex)
+                finally
                 {
-                    Log.LogWarningFromException(ex);
+                    clientThrottle.Release();
                 }
-
-                return new TaskItem($"{jobName}/{wi}", metadata);
             })).ConfigureAwait(false);
         }
     }
