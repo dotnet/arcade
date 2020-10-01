@@ -107,6 +107,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// </summary>
         public string PublishingVersion { get; set; }
 
+        /// <summary>
+
+        /// </summary>
+        public bool UsesReleaseOnlyPackageVersion { get; set; }
+
         public override bool Execute()
         {
             try
@@ -139,6 +144,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     RepoCommit,
                     IsStableBuild,
                     targetPublishingVersion,
+                    UsesReleaseOnlyPackageVersion,
                     Log);
 
                 buildModel.WriteAsXml(OutputPath, Log);

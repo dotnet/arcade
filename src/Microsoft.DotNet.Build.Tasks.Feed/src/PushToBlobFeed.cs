@@ -58,6 +58,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public bool IsStableBuild { get; set; }
 
+        public bool UsesReleaseOnlyPackageVersion { get; set; }
+
         public override bool Execute()
         {
             return ExecuteAsync().GetAwaiter().GetResult();
@@ -166,7 +168,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     ManifestCommit,
                     ManifestBuildData,
                     IsStableBuild,
-                    PublishingInfraVersion.Legacy);
+                    PublishingInfraVersion.Legacy,
+                    UsesReleaseOnlyPackageVersion);
             }
             catch (Exception e)
             {

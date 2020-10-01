@@ -28,6 +28,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             string[] manifestBuildData,
             bool isStableBuild,
             PublishingInfraVersion publishingVersion,
+            bool usesReleaseOnlyPackageVersion,
             SigningInformationModel signingInformationModel = null)
         {
             CreateModel(
@@ -40,6 +41,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 manifestCommit,
                 isStableBuild,
                 publishingVersion,
+                usesReleaseOnlyPackageVersion,
                 log,
                 signingInformationModel: signingInformationModel)
                 .WriteAsXml(assetManifestPath, log);
@@ -72,6 +74,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             string repoCommit,
             bool isStableBuild,
             PublishingInfraVersion publishingVersion,
+            bool usesReleaseOnlyPackageVersion,
             TaskLoggingHelper log)
         {
             if (artifacts == null)
@@ -118,6 +121,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 repoCommit,
                 isStableBuild,
                 publishingVersion,
+                usesReleaseOnlyPackageVersion,
                 log,
                 signingInformationModel: CreateSigningInformationModelFromItems(azureDevOpsCollectionUri, azureDevOpsProject, azureDevOpsBuildId, itemsToSign, strongNameSignInfo, fileSignInfo, fileExtensionSignInfo, certificatesSignInfo));
             return buildModel;
@@ -204,6 +208,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             string manifestCommit,
             bool isStableBuild,
             PublishingInfraVersion publishingVersion,
+            bool usesReleaseOnlyPackageVersion,
             TaskLoggingHelper log,
             SigningInformationModel signingInformationModel = null)
         {
