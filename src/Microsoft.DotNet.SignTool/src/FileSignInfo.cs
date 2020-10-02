@@ -11,6 +11,7 @@ namespace Microsoft.DotNet.SignTool
 {
     internal readonly struct FileSignInfo
     {
+        internal readonly SignedFileContentKey FileContentKey;
         internal readonly string FileName;
         internal readonly string FullPath;
         internal readonly SignInfo SignInfo;
@@ -89,6 +90,7 @@ namespace Microsoft.DotNet.SignTool
 
             FileName = Path.GetFileName(fullPath);
             ContentHash = contentHash;
+            FileContentKey = new SignedFileContentKey(contentHash, FileName);
             FullPath = fullPath;
             SignInfo = signInfo;
             TargetFramework = targetFramework;
