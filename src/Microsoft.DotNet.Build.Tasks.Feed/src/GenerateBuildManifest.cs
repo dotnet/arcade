@@ -108,7 +108,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         public string PublishingVersion { get; set; }
 
         /// <summary>
-
+        /// Is the manifest for Release only package version?
         /// </summary>
         public bool UsesReleaseOnlyPackageVersion { get; set; }
 
