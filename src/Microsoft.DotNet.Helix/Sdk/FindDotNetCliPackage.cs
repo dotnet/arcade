@@ -32,7 +32,7 @@ namespace Microsoft.DotNet.Helix.Sdk
         public string Runtime { get; set; }
 
         /// <summary>
-        ///   'sdk' or 'runtime'
+        ///   'sdk', 'runtime' or 'aspnetcore-runtime'
         /// </summary>
         [Required]
         public string PackageType { get; set; }
@@ -73,6 +73,10 @@ namespace Microsoft.DotNet.Helix.Sdk
             {
                 return $"{DotNetCliAzureFeed}/Sdk/{Version}/dotnet-sdk-{Version}-{Runtime}.{extension}";
             }
+            else if (PackageType == "aspnetcore-runtime")
+            {
+                return $"{DotNetCliAzureFeed}/aspnetcore/Runtime/{Version}/aspnetcore-runtime-{Version}-{Runtime}.{extension}";
+            }
             else // PackageType == "runtime"
             {
                 return $"{DotNetCliAzureFeed}/Runtime/{Version}/dotnet-runtime-{Version}-{Runtime}.{extension}";
@@ -103,6 +107,10 @@ namespace Microsoft.DotNet.Helix.Sdk
             {
                 PackageType = "sdk";
             }
+            else if (string.Equals(PackageType, "aspnetcore-runtime", StringComparison.OrdinalIgnoreCase))
+            {
+                PackageType = "aspnetcore-runtime";
+            }
             else if (string.Equals(PackageType, "runtime", StringComparison.OrdinalIgnoreCase))
             {
                 PackageType = "runtime";
@@ -122,6 +130,10 @@ namespace Microsoft.DotNet.Helix.Sdk
                 if (PackageType == "sdk")
                 {
                     latestVersionUrl = $"{DotNetCliAzureFeed}/Sdk/{Channel}/latest.version";
+                }
+                else if (PackageType == "aspnetcore-runtime")
+                {
+                    latestVersionUrl = $"{DotNetCliAzureFeed}/aspnetcore/Runtime/{Channel}/latest.version";
                 }
                 else // PackageType == "runtime"
                 {
