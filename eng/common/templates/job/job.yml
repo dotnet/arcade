@@ -117,12 +117,12 @@ jobs:
     - task: NuGetAuthenticate@0
 
   - ${{ if or(eq(parameters.artifacts.download, 'true'), ne(parameters.artifacts.download, '')) }}:
-    - task: DownloadPipelineArtifact@2
+    - task: DownloadBuildArtifacts@0
       inputs:
         buildType: current
         artifactName: ${{ coalesce(parameters.artifacts.download.name, 'Artifacts_$(Agent.OS)_$(_BuildConfig)') }}
-        targetPath: ${{ coalesce(parameters.artifacts.download.path, 'artifacts') }}
-        itemPattern: ${{ coalesce(parameters.artifacts.download.pattern, '**') }}
+        downloadPath: ${{ coalesce(parameters.artifacts.download.path, 'artifacts') }}
+        itemPattern: ${{ coalesce(parameters.artifacts.download.pattern, 'Artifacts_$(Agent.OS)_$(_BuildConfig)/**') }}
 
   - ${{ each step in parameters.steps }}:
     - ${{ step }}
