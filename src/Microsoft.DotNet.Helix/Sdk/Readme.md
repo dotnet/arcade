@@ -105,7 +105,7 @@ Given a local folder `$(TestFolder)` containing `runtests.cmd`, this will run `r
 
     <!-- 'true' to download dotnet cli and add it to the path for every workitem. Default 'false' -->
     <IncludeDotNetCli>true</IncludeDotNetCli>
-    <!-- 'sdk' or 'runtime' -->
+    <!-- 'sdk', 'runtime' or 'aspnetcore-runtime' -->
     <DotNetCliPackageType>sdk</DotNetCliPackageType>
     <!-- 'latest' or a specific version of dotnet cli -->
     <DotNetCliVersion>2.1.403</DotNetCliVersion>

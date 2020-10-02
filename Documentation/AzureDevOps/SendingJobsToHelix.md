@@ -85,7 +85,7 @@ Simply specify the xUnit project(s) you wish to run (semicolon delimited) with t
 * the `XUnitRuntimeTargetFramework` &ndash; this is the framework version of xUnit you want to use from the xUnit NuGet package, e.g. `netcoreapp2.0`. Notably, the xUnit console runner only supports up to netcoreapp2.0 as of 14 March 2018, so this is the target that should be specified for running against any higher version test projects.
 * the `XUnitRunnerVersion` (the version of the xUnit nuget package you want to use, e.g. `2.4.1`).
 
-Finally, set `IncludeDotNetCli` to true and specify which `DotNetCliPackageType` (`sdk` or `runtime`) and `DotNetCliVersion` you wish to use. (For a full list of .NET CLI versions/package types, see these links: [3.0](https://dotnet.microsoft.com/download/dotnet-core/3.0), [2.1](https://dotnet.microsoft.com/download/dotnet-core/2.1), [2.2](https://dotnet.microsoft.com/download/dotnet-core/2.2).)
+Finally, set `IncludeDotNetCli` to true and specify which `DotNetCliPackageType` (`sdk`, `runtime` or `aspnetcore-runtime`) and `DotNetCliVersion` you wish to use. (For a full list of .NET CLI versions/package types, see these links: [3.0](https://dotnet.microsoft.com/download/dotnet-core/3.0), [2.1](https://dotnet.microsoft.com/download/dotnet-core/2.1), [2.2](https://dotnet.microsoft.com/download/dotnet-core/2.2).)
 
 The list of available Helix queues can be found on the [Helix homepage](https://helix.dot.net/).
 
