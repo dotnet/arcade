@@ -301,12 +301,9 @@ namespace Microsoft.DotNet.SignTool
             string stringHash = ContentUtil.HashToString(hash);
 
             // handle multi-part extensions like ".symbols.nupkg" specified in FileExtensionSignInfo
-            foreach (string multiPartExtension in _fileExtensionSignInfo.Where(e => e.Key.Count(c => c == '.') > 1).Select(t => t.Key))
+            if (_fileExtensionSignInfo != null)
             {
-                if (fileName.EndsWith(multiPartExtension, StringComparison.OrdinalIgnoreCase))
-                {
-                    extension = multiPartExtension;
-                }
+                extension = _fileExtensionSignInfo.OrderByDescending(o => o.Key.Length).FirstOrDefault(f => fileName.EndsWith(f.Key, StringComparison.OrdinalIgnoreCase)).Key ?? extension;
             }
 
             // Asset is nested asset part of a container. Try to get it from the visited assets first

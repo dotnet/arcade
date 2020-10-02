@@ -327,7 +327,7 @@ namespace Microsoft.DotNet.SignTool
                         log.LogError($"VSIX {fileName} cannot be strong name signed.");
                     }
                 }
-                else if (fileName.IsNupkg() && !fileName.IsSymbolNupkg())
+                else if (fileName.IsNupkg())
                 {
                     if (fileName.SignInfo.Certificate == null)
                     {
@@ -424,7 +424,7 @@ namespace Microsoft.DotNet.SignTool
 
                 if (!SkipZipContainerSignatureMarkerCheck)
                 {
-                    if (((file.IsNupkg() && !file.IsSymbolNupkg()) || file.IsVsix()) && !signedContainer)
+                    if ((file.IsNupkg() || file.IsVsix()) && !signedContainer)
                     {
                         _log.LogError($"Container {file.FullPath} does not have signature marker.");
                     }
