@@ -46,7 +46,6 @@
                            BuildData="$(ManifestBuildData)"
                            RepoUri="$(BUILD_REPOSITORY_URI)"
                            RepoBranch="$(BUILD_SOURCEBRANCH)"
-                           RepoCommit="$(BUILD_SOURCEVERSION)"
-                           UsesReleaseOnlyPackageVersion="$(UsesReleaseOnlyPackageVersion)"/>
+                           RepoCommit="$(BUILD_SOURCEVERSION)"/>
   </Target>
 </Project>
