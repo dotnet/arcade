@@ -4,7 +4,7 @@
     <!-- We then invoke the CLI DLL directly using .NET runtime without the need for .NET SDK -->
     <IncludeDotNetCli>true</IncludeDotNetCli>
     <IncludeXHarnessCli>true</IncludeXHarnessCli>
-    <DotNetCliPackageType>runtime</DotNetCliPackageType>
+    <DotNetCliPackageType>aspnetcore-runtime</DotNetCliPackageType>
     <DotNetCliVersion>3.1.5</DotNetCliVersion>
   </PropertyGroup>
 
