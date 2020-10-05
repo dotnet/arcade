@@ -52,7 +52,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public bool IsStableBuild { get; set; }
 
-        public bool UsesReleaseOnlyPackageVersion { get; set; }
+        public bool IsReleaseOnlyPackageVersion { get; set; }
 
         /// <summary>
         /// Which version should the build manifest be tagged with.
@@ -184,7 +184,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         ManifestBuildData,
                         IsStableBuild,
                         targetPublishingVersion,
-                        UsesReleaseOnlyPackageVersion,
+                        IsReleaseOnlyPackageVersion,
                         signingInformationModel: signingInformationModel);
 
                     Log.LogMessage(MessageImportance.High,

@@ -28,7 +28,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             string[] manifestBuildData,
             bool isStableBuild,
             PublishingInfraVersion publishingVersion,
-            bool usesReleaseOnlyPackageVersion,
+            bool isReleaseOnlyPackageVersion,
             SigningInformationModel signingInformationModel = null)
         {
             CreateModel(
@@ -41,7 +41,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 manifestCommit,
                 isStableBuild,
                 publishingVersion,
-                usesReleaseOnlyPackageVersion,
+                isReleaseOnlyPackageVersion,
                 log,
                 signingInformationModel: signingInformationModel)
                 .WriteAsXml(assetManifestPath, log);
@@ -74,7 +74,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             string repoCommit,
             bool isStableBuild,
             PublishingInfraVersion publishingVersion,
-            bool usesReleaseOnlyPackageVersion,
+            bool isReleaseOnlyPackageVersion,
             TaskLoggingHelper log)
         {
             if (artifacts == null)
@@ -121,7 +121,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 repoCommit,
                 isStableBuild,
                 publishingVersion,
-                usesReleaseOnlyPackageVersion,
+                isReleaseOnlyPackageVersion,
                 log,
                 signingInformationModel: CreateSigningInformationModelFromItems(azureDevOpsCollectionUri, azureDevOpsProject, azureDevOpsBuildId, itemsToSign, strongNameSignInfo, fileSignInfo, fileExtensionSignInfo, certificatesSignInfo));
             return buildModel;
@@ -208,7 +208,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             string manifestCommit,
             bool isStableBuild,
             PublishingInfraVersion publishingVersion,
-            bool usesReleaseOnlyPackageVersion,
+            bool isReleaseOnlyPackageVersion,
             TaskLoggingHelper log,
             SigningInformationModel signingInformationModel = null)
         {
@@ -227,7 +227,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         Commit = manifestCommit,
                         IsStable = isStableBuild.ToString(),
                         PublishingVersion = publishingVersion,
-                        UsesReleaseOnlyPackageVersion = usesReleaseOnlyPackageVersion.ToString()
+                        IsReleaseOnlyPackageVersion = isReleaseOnlyPackageVersion.ToString()
                     });
 
             buildModel.Artifacts.Blobs.AddRange(blobArtifacts);

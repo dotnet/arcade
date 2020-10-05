@@ -58,7 +58,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public bool IsStableBuild { get; set; }
 
-        public bool UsesReleaseOnlyPackageVersion { get; set; }
+        public bool IsReleaseOnlyPackageVersion { get; set; }
 
         public override bool Execute()
         {
@@ -169,7 +169,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     ManifestBuildData,
                     IsStableBuild,
                     PublishingInfraVersion.Legacy,
-                    UsesReleaseOnlyPackageVersion);
+                    IsReleaseOnlyPackageVersion);
             }
             catch (Exception e)
             {
