@@ -1,0 +1,38 @@
+trigger:
+  batch: true
+  branches:
+    include:
+    - master
+    - release/3.x
+
+pr: none
+
+variables:
+- template: eng/common-variables.yml
+
+stages:
+- stage: build
+  displayName: Build
+  jobs:
+  - template: /eng/common/templates/jobs/jobs.yml
+    parameters:
+      enableRichCodeNavigation: true
+      _BuildConfig: Debug
+      workspace:
+        clean: all
+      jobs:
+      - job: Windows_NT
+        timeoutInMinutes: 90
+        pool:
+          name: NetCorePublic-Pool
+          queue: BuildPool.Server.Amd64.VS2017.Arcade.Open
+        preSteps:
+        - checkout: self
+          clean: true
+        steps:
+        - script: eng\common\cibuild.cmd
+            -configuration $(_BuildConfig)
+            -prepareMachine
+            $(_InternalBuildArgs)
+            /p:Test=false
+          displayName: Windows Build / Publish
