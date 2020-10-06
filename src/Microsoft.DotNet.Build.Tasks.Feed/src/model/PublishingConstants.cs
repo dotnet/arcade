@@ -589,6 +589,17 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedForChecksums,
                 FeedForInstallers),
 
+            // "VS 16.9",
+            new TargetChannelConfig(
+                1473,
+                PublishingInfraVersion.All,
+                string.Empty,
+                FeedDotNetToolsShipping,
+                FeedDotNetToolsTransport,
+                FeedDotNetToolsSymbols,
+                FeedForChecksums,
+                FeedForInstallers),
+
             // "VS Master",
             new TargetChannelConfig(
                 1012,
