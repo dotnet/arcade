@@ -76,6 +76,11 @@ namespace Microsoft.DotNet.SignTool
             && (IsWix(FileName) 
                 || Path.GetExtension(FileName).Equals(".exe", StringComparison.OrdinalIgnoreCase));
 
+        internal bool IsExecutableWixContainer() =>
+            IsWixContainer() &&
+            (Path.GetExtension(FileName).Equals(".exe", StringComparison.OrdinalIgnoreCase) ||
+             Path.GetExtension(FileName).Equals(".msi", StringComparison.OrdinalIgnoreCase));
+
         internal bool IsContainer() => IsZipContainer() || IsWixContainer();
 
         internal bool IsPackage() => IsPackage(FileName);

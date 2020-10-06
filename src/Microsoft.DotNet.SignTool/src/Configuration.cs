@@ -248,11 +248,6 @@ namespace Microsoft.DotNet.SignTool
 
             if (fileSignInfo.IsContainer())
             {
-                /*if (_zipDataMap.ContainsKey(contentHash))
-                {
-                    _log.LogError($"File '{fullPath}' has the same content hash as '{_zipDataMap[contentHash].FileSignInfo.FullPath}'. The incorrect file will be written.");
-                }*/
-
                 if (fileSignInfo.IsZipContainer())
                 {
                     if (TryBuildZipData(fileSignInfo, out var zipData))
@@ -262,7 +257,7 @@ namespace Microsoft.DotNet.SignTool
                 }
                 else if (fileSignInfo.IsWixContainer())
                 {
-                    Console.WriteLine($"Trying to gather data for {fullPath}");
+                    _log.LogMessage($"Trying to gather data for wix container {fullPath}");
                     if (TryBuildWixData(fileSignInfo, out var msiData))
                     {
                         _zipDataMap[fileSignInfo.FileContentKey] = msiData;
