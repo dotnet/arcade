@@ -342,7 +342,7 @@ namespace Microsoft.DotNet.SignTool
                     }
 
                     SignInfo signInfo = certificate.Equals(SignToolConstants.IgnoreFileCertificateSentinel, StringComparison.InvariantCultureIgnoreCase) ?
-                        SignInfo.Ignore :
+                        SignInfo.Ignore.WithCollisionPriorityId(collisionPriorityId) :
                         new SignInfo(certificate, collisionPriorityId: collisionPriorityId);
 
                     if (map.ContainsKey(extension))
