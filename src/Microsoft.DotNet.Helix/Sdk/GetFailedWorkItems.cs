@@ -1,21 +1,23 @@
+using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
+using Microsoft.DotNet.Helix.Client.Models;
+using Newtonsoft.Json;
 using System;
-using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
-using Microsoft.DotNet.Helix.Client;
-using Newtonsoft.Json;
 using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.DotNet.Helix.Sdk
 {
     public class GetFailedWorkItems : HelixTask
     {
+        public const int DelayBetweenHelixApiCallsInMs = 500;
+
         /// <summary>
-        /// An array of Helix Jobs to get status for
+        /// An array of Helix Jobs for which to get status
         /// </summary>
         [Required]
         public ITaskItem[] Jobs { get; set; }
@@ -46,8 +48,12 @@ namespace Microsoft.DotNet.Helix.Sdk
                 return Array.Empty<ITaskItem>();
             }
 
-            return await Task.WhenAll(status.Failed.Select(async wi =>
+            List<ITaskItem> failedWorkItemObjects = new List<ITaskItem>();
+
+            foreach (string workItemName in status.Failed)
             {
+                string wi = Helpers.CleanWorkItemName(workItemName);
+
                 // copy all job metadata into the new item
                 var metadata = job.CloneCustomMetadata();
                 metadata["JobName"] = jobName;
@@ -57,20 +63,28 @@ namespace Microsoft.DotNet.Helix.Sdk
 
                 try
                 {
-                    var files = await HelixApi.RetryAsync(
-                        () => HelixApi.WorkItem.ListFilesAsync(wi, jobName, cancellationToken),
-                        LogExceptionRetry,
-                        cancellationToken);
+                    // Do this serially with a delay because total failure can hit throttling
+                    var files = await HelixApi.WorkItem.ListFilesAsync(wi, jobName, cancellationToken).ConfigureAwait(false);
 
-                    metadata["UploadedFiles"] = JsonConvert.SerializeObject(files);
+                    if (!string.IsNullOrEmpty(AccessToken))
+                    {
+                        // Add AccessToken to all file links because the api requires auth if we submitted the job with auth
+                        files = files
+                                .Select(file => new UploadedFile(file.Name, file.Link + "?access_token=" + AccessToken))
+                                .ToImmutableList();
+                    }
+
+                    metadata["UploadedFiles"] = JsonConvert.SerializeObject(files).Replace("%", "%25");
                 }
                 catch (Exception ex)
                 {
                     Log.LogWarningFromException(ex);
                 }
 
-                return new TaskItem($"{jobName}/{wi}", metadata);
-            }));
+                failedWorkItemObjects.Add(new TaskItem($"{jobName}/{wi}", metadata));
+                await Task.Delay(DelayBetweenHelixApiCallsInMs);
+            }
+            return failedWorkItemObjects;
         }
     }
 }
