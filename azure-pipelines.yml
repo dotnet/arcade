@@ -33,6 +33,7 @@ stages:
           manifests: true
       enableMicrobuild: true
       enablePublishUsingPipelines: true
+      enableRichCodeNavigation: true
       useBuildManifest: ${{ variables['_UseBuildManifest'] }}
       workspace:
         clean: all
