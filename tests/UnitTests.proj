@@ -20,7 +20,7 @@
 
   <ItemGroup>
     <HelixWorkItem Include="JUnitTest">
-      <Command>echo 'done!'</Command>
+      <Command>echo test > $HELIX_WORKITEM_UPLOAD_ROOT/test.txt &amp; echo test > %HELIX_WORKITEM_UPLOAD_ROOT%\test.txt &amp; exit /b 42</Command>
       <PayloadDirectory>$(MSBuildThisFileDirectory)Junit</PayloadDirectory>
     </HelixWorkItem>
   </ItemGroup>
@@ -31,7 +31,7 @@
 
   <ItemGroup>
     <HelixWorkItem Include="TrxTest">
-      <Command>echo 'done!'</Command>
+      <Command>exit /b 42</Command>
       <PayloadDirectory>$(MSBuildThisFileDirectory)Trx</PayloadDirectory>
     </HelixWorkItem>
   </ItemGroup>
