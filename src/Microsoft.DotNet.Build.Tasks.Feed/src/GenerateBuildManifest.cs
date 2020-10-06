@@ -107,6 +107,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// </summary>
         public string PublishingVersion { get; set; }
 
+        /// <summary>
+        /// Is the manifest for Release only package version?
+        /// </summary>
+        public bool IsReleaseOnlyPackageVersion { get; set; }
+
         public override bool Execute()
         {
             try
@@ -139,6 +144,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     RepoCommit,
                     IsStableBuild,
                     targetPublishingVersion,
+                    IsReleaseOnlyPackageVersion,
                     Log);
 
                 buildModel.WriteAsXml(OutputPath, Log);
