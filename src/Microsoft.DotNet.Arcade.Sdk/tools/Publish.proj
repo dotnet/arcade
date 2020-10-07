@@ -30,6 +30,10 @@
     <IsStableBuild>false</IsStableBuild>
     <IsStableBuild Condition="'$(DotNetFinalVersionKind)' == 'release'">true</IsStableBuild>
 
+    <!-- If `IsReleaseOnlyPackageVersion` is set to true, package safety checks can be skipped-->
+    <IsReleaseOnlyPackageVersion>false</IsReleaseOnlyPackageVersion>
+    <IsReleaseOnlyPackageVersion Condition ="'$(PreReleaseVersionLabel)' == '' and '$(AutoGenerateAssemblyVersion)' == 'true'">true</IsReleaseOnlyPackageVersion>
+  
     <AssetManifestOS Condition="'$(AssetManifestOS)' == ''">$(OS)</AssetManifestOS>
 
     <AssetManifestFileName>$(AssetManifestOS)-$(PlatformName).xml</AssetManifestFileName>
@@ -172,7 +176,8 @@
       IsStableBuild="$(IsStableBuild)"
       PublishFlatContainer="false"
       AssetManifestPath="$(AssetManifestFilePath)"
-      AssetsTemporaryDirectory="$(TempWorkingDirectory)" />
+      AssetsTemporaryDirectory="$(TempWorkingDirectory)" 
+      IsReleaseOnlyPackageVersion="$(IsReleaseOnlyPackageVersion)"/>
 
     <Copy 
       SourceFiles="$(AssetManifestFilePath)" 

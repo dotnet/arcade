@@ -26,7 +26,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             string manifestBranch,
             string manifestCommit,
             string[] manifestBuildData,
-            bool isStableBuild)
+            bool isStableBuild,
+            bool isReleaseOnlyPackageVersion)
         {
             CreateModel(
                 blobArtifacts,
@@ -37,6 +38,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 manifestBranch,
                 manifestCommit,
                 isStableBuild,
+                isReleaseOnlyPackageVersion,
                 log)
                 .WriteAsXml(assetManifestPath, log);
         }
@@ -59,6 +61,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             string repoBranch,
             string repoCommit,
             bool isStableBuild,
+            bool isReleaseOnlyPackageVersion,
             TaskLoggingHelper log)
         {
             if (artifacts == null)
@@ -104,6 +107,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 repoBranch,
                 repoCommit,
                 isStableBuild,
+                isReleaseOnlyPackageVersion,
                 log);
             return buildModel;
         }
@@ -116,6 +120,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             string manifestBranch,
             string manifestCommit,
             bool isStableBuild,
+            bool isReleaseOnlyPackageVersion,
             TaskLoggingHelper log)
         {
             var attributes = MSBuildListSplitter.GetNamedProperties(manifestBuildData);
@@ -131,7 +136,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         BuildId = manifestBuildId,
                         Branch = manifestBranch,
                         Commit = manifestCommit,
-                        IsStable = isStableBuild.ToString()
+                        IsStable = isStableBuild.ToString(),
+                        IsReleaseOnlyPackageVersion = isReleaseOnlyPackageVersion.ToString()
                     });
 
             buildModel.Artifacts.Blobs.AddRange(blobArtifacts);
