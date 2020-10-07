@@ -26,12 +26,6 @@ namespace Microsoft.DotNet.SignTool
             FileName = fileName;
         }
 
-        public SignedFileContentKey(string stringHash, string fileName)
-        {
-            StringHash = stringHash;
-            FileName = fileName;
-        }
-
         public override bool Equals(object obj)
             => obj is SignedFileContentKey key && Equals(key);
 

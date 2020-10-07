@@ -320,8 +320,6 @@ namespace Microsoft.DotNet.SignTool.Tests
 
             util.Go(doStrongNameCheck: true);
 
-            Assert.Same(ByteSequenceComparer.Instance, signingInput.ZipDataMap.KeyComparer);
-
             // The list of files that would be signed was captured inside the FakeBuildEngine,
             // here we check if that matches what we expected
             var actualXmlElementsPerSingingRound = buildEngine.FilesToSign.Select(round => string.Join(Environment.NewLine, round));
@@ -1648,6 +1646,12 @@ $@"
                 {
                     { SignToolConstants.CollisionPriorityId, "123" }
                 }),
+                // This symbols nupkg has the same hash as Simple.nupkg.
+                // It should still get signed with a different signature.
+                new TaskItem(GetResourcePath("Simple.symbols.nupkg"), new Dictionary<string, string>
+                {
+                    { SignToolConstants.CollisionPriorityId, "123" }
+                }),
             };
 
             var strongNameSignInfo = new Dictionary<string, List<SignInfo>>()
@@ -1670,6 +1674,7 @@ $@"
                 { new ExplicitCertificateKey("PackageWithRelationships.vsix", collisionPriorityId: "123"), "VSIXCertificate2" },
                 { new ExplicitCertificateKey("Simple.dll", collisionPriorityId: "123"), "DLLCertificate2" },
                 { new ExplicitCertificateKey("Simple.nupkg", collisionPriorityId: "123"), "NUPKGCertificate" },
+                { new ExplicitCertificateKey("Simple.symbols.nupkg", collisionPriorityId: "123"), "NUPKGCertificate2" },
                 { new ExplicitCertificateKey("ProjectOne.dll", "581d91ccdfc4ea9c", ".NETFramework,Version=v4.6.1", "123"), "DLLCertificate3" },
                 { new ExplicitCertificateKey("ProjectOne.dll", "581d91ccdfc4ea9c", ".NETStandard,Version=v2.0", "123"), "DLLCertificate4" },
                 { new ExplicitCertificateKey("ProjectOne.dll", "581d91ccdfc4ea9c", ".NETCoreApp,Version=v2.0", "123"), "DLLCertificate5" },
@@ -1692,6 +1697,7 @@ $@"
                 "File 'test.vsix' Certificate='VSIXCertificate'",
                 "File 'Simple.dll' TargetFramework='.NETCoreApp,Version=v2.1' Certificate='DLLCertificate2'",
                 "File 'Simple.nupkg' Certificate='NUPKGCertificate'",
+                "File 'Simple.symbols.nupkg' Certificate='NUPKGCertificate2'",
             },
             expectedWarnings: new[]
             {

@@ -11,6 +11,7 @@ namespace Microsoft.DotNet.SignTool
 {
     internal readonly struct FileSignInfo
     {
+        internal readonly SignedFileContentKey FileContentKey;
         internal readonly string FileName;
         internal readonly string FullPath;
         internal readonly SignInfo SignInfo;
@@ -80,6 +81,11 @@ namespace Microsoft.DotNet.SignTool
             && (IsWix(FileName) 
                 || Path.GetExtension(FileName).Equals(".exe", StringComparison.OrdinalIgnoreCase));
 
+        internal bool IsExecutableWixContainer() =>
+            IsWixContainer() &&
+            (Path.GetExtension(FileName).Equals(".exe", StringComparison.OrdinalIgnoreCase) ||
+             Path.GetExtension(FileName).Equals(".msi", StringComparison.OrdinalIgnoreCase));
+
         internal bool IsContainer() => IsZipContainer() || IsWixContainer();
 
         internal bool IsPackage() => IsPackage(FileName);
@@ -94,6 +100,7 @@ namespace Microsoft.DotNet.SignTool
 
             FileName = Path.GetFileName(fullPath);
             ContentHash = contentHash;
+            FileContentKey = new SignedFileContentKey(contentHash, FileName);
             FullPath = fullPath;
             SignInfo = signInfo;
             TargetFramework = targetFramework;
