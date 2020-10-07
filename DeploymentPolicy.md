@@ -45,7 +45,7 @@ See the sections [GitHub Issue Tagging](#GitHub-Issue-Tagging), [Rollbacks](#Rol
 ## GitHub Issue Tagging
 Every issue that arises as a result of a rollout must be filed on GitHub in dotnet/core-eng. These issues should include labels that specify the type of event and the repo in which it occurred.
 
-* The event type labels are: **Rollout Issue** for issues that arise as a result of the rollout, **Rollout Manual Hotfix** for manual hotfixes, **Rollout Manual Rollback** for manual rollbacks, and **Rollout Downtime** for downtime that occurs as a result of the deployment
+* The event type labels are: **Rollout Issue** for issues that arise as a result of the rollout, **Rollout Manual Hotfix** for manual hotfixes, **Rollout Manual Rollback** for manual rollbacks, **Rollout Downtime** for downtime that occurs as a result of the deployment, and **Rollout Failure** for deployments that need to be manually marked as failures.
   * Hotfixes and rollbacks that result in a deployment do not need to be filed on GitHub (i.e. only manual hotfixes and rollbacks should be filed)
   * Downtime issues may be automatically filed by telemetry
 * Additionally, all issues must contain a label indicating the repo affected:
