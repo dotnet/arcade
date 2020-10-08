@@ -9,6 +9,9 @@ namespace Microsoft.DotNet.Build.Tasks.TargetFramework.Sdk
 {
     public class ChooseBestP2PTargetFrameworkTask : BuildTask
     {
+        [Required]	
+        public string TargetFramework { get; set; }
+
         [Required]
         public ITaskItem[] ProjectReferencesWithTargetFrameworks { get; set; }
 
@@ -36,7 +39,7 @@ namespace Microsoft.DotNet.Build.Tasks.TargetFramework.Sdk
                 string referringTargetFramework = projectReference.GetMetadata("ReferringTargetFramework");
                 if (string.IsNullOrWhiteSpace(referringTargetFramework))
                 {
-                    throw new Exception($"ConsumingTargetFramework metadata must be set for Project {Path.GetFileName(projectReference.ItemSpec)}.");
+                    referringTargetFramework = TargetFramework;
                 }
                 
                 string bestTargetFramework = targetFrameworkResolver.GetBestSupportedTargetFramework(targetFrameworks, referringTargetFramework);

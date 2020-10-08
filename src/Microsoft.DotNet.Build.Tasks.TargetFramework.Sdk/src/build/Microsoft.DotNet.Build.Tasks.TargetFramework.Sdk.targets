@@ -71,14 +71,8 @@
       <Output TaskParameter="TargetOutputs" ItemName="_ProjectReferenceWithSetTargetFramework" />
     </MSBuild>
 
-    <ItemGroup>
-      <_ProjectReferenceWithSetTargetFramework>
-        <ReferringTargetFramework Condition="'%(ProjectReference.Identity)' == '%(Identity)' and '%(ProjectReference.ReferringTargetFramework)' != ''">%(ProjectReference.ReferringTargetFramework)</ReferringTargetFramework>
-        <ReferringTargetFramework Condition="'%(_ProjectReferenceWithSetTargetFramework.ReferringTargetFramework)' == ''">$([MSBuild]::ValueOrDefault('$(_OriginalTargetFramework)', '$(TargetFramework)'))</ReferringTargetFramework>
-      </_ProjectReferenceWithSetTargetFramework>
-    </ItemGroup>
-
-    <ChooseBestP2PTargetFrameworkTask ProjectReferencesWithTargetFrameworks="@(_ProjectReferenceWithSetTargetFramework)"
+    <ChooseBestP2PTargetFrameworkTask TargetFramework="$([MSBuild]::ValueOrDefault('$(_OriginalTargetFramework)', '$(TargetFramework)'))"
+                                      ProjectReferencesWithTargetFrameworks="@(_ProjectReferenceWithSetTargetFramework)"
                                       RuntimeGraph="$(RuntimeGraph)" >
       <Output TaskParameter="AnnotatedProjectReferencesWithSetTargetFramework" ItemName="_ProjectReferenceWithBestTargetFramework" />
     </ChooseBestP2PTargetFrameworkTask>
