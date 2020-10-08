@@ -33,16 +33,16 @@ namespace Microsoft.DotNet.Build.Tasks.TargetFramework.Sdk
                 }
                 string[] targetFrameworks = targetFrameworksValue.Split(';');
 
-                string consumingTargetFramework = projectReference.GetMetadata("ConsumingTargetFramework");
-                if (string.IsNullOrWhiteSpace(consumingTargetFramework))
+                string referringTargetFramework = projectReference.GetMetadata("ReferringTargetFramework");
+                if (string.IsNullOrWhiteSpace(referringTargetFramework))
                 {
                     throw new Exception($"ConsumingTargetFramework metadata must be set for Project {Path.GetFileName(projectReference.ItemSpec)}.");
                 }
                 
-                string bestTargetFramework = targetFrameworkResolver.GetBestSupportedTargetFramework(targetFrameworks, consumingTargetFramework);
+                string bestTargetFramework = targetFrameworkResolver.GetBestSupportedTargetFramework(targetFrameworks, referringTargetFramework);
                 if (bestTargetFramework == null)
                 {
-                    Log.LogError($"Not able to find a compatible supported target framework for {consumingTargetFramework} in Project {Path.GetFileName(projectReference.ItemSpec)}. The Supported Configurations are {string.Join(", ", targetFrameworks)}");
+                    Log.LogError($"Not able to find a compatible supported target framework for {referringTargetFramework} in Project {Path.GetFileName(projectReference.ItemSpec)}. The Supported Configurations are {string.Join(", ", targetFrameworks)}");
                 }
 
                 projectReference.SetMetadata("SetTargetFramework", "TargetFramework=" + bestTargetFramework);                
