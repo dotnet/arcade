@@ -71,7 +71,11 @@
       <Output TaskParameter="TargetOutputs" ItemName="_ProjectReferenceWithSetTargetFramework" />
     </MSBuild>
 
-    <ChooseBestP2PTargetFrameworkTask TargetFramework="$([MSBuild]::ValueOrDefault('$(_OriginalTargetFramework)', '$(TargetFramework)'))"
+    <PropertyGroup>
+      <_OriginalTargetFramework Condition="'$(_OriginalTargetFramework)' == ''">$(TargetFramework)</_OriginalTargetFramework>
+    </PropertyGroup>
+
+    <ChooseBestP2PTargetFrameworkTask TargetFramework="$(_OriginalTargetFramework)"
                                       ProjectReferencesWithTargetFrameworks="@(_ProjectReferenceWithSetTargetFramework)"
                                       RuntimeGraph="$(RuntimeGraph)" >
       <Output TaskParameter="AnnotatedProjectReferencesWithSetTargetFramework" ItemName="_ProjectReferenceWithBestTargetFramework" />
