@@ -217,7 +217,7 @@ jobs:
       displayName: Publish TRX Test Results
       inputs:
         testResultsFormat: 'VSTest'
-        testResultsFiles: '*.trx' 
+        testResultsFiles: '*.xml' 
         searchFolder: '$(Build.SourcesDirectory)/artifacts/TestResults/$(_BuildConfig)'
         testRunTitle: ${{ coalesce(parameters.testRunTitle, parameters.name, '$(System.JobName)') }}-trx
         mergeTestResults: ${{ parameters.mergeTestResults }}
