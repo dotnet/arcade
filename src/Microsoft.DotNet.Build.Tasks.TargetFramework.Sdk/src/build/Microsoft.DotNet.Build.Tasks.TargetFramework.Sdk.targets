@@ -76,7 +76,6 @@
         <ConsumingTargetFramework Condition="'%(ProjectReference.Identity)' == '%(Identity)' and '%(ProjectReference.ConsumingTargetFramework)' != ''">%(ProjectReference.ConsumingTargetFramework)</ConsumingTargetFramework>
         <ConsumingTargetFramework Condition="'%(_ProjectReferenceWithSetTargetFramework.ConsumingTargetFramework)' == ''">$([MSBuild]::ValueOrDefault('$(_OriginalTargetFramework)', '$(TargetFramework)'))</ConsumingTargetFramework>
       </_ProjectReferenceWithSetTargetFramework>
-      <_asdf Include="@(_ProjectReferenceWithSetTargetFramework)" />
     </ItemGroup>
 
     <ChooseBestP2PTargetFrameworkTask ProjectReferencesWithTargetFrameworks="@(_ProjectReferenceWithSetTargetFramework)"
