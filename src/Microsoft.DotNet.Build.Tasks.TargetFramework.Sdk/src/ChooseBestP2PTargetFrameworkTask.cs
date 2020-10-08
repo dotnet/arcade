@@ -9,7 +9,7 @@ namespace Microsoft.DotNet.Build.Tasks.TargetFramework.Sdk
 {
     public class ChooseBestP2PTargetFrameworkTask : BuildTask
     {
-        [Required]	
+        [Required]
         public string TargetFramework { get; set; }
 
         [Required]
