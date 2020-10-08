@@ -74,7 +74,7 @@ which Arcade can be branched for major release 'N' of .NET Core.
 1. Branch `dotnet/arcade` off of `master` into `release/<N>`
 2. Branch `dotnet/arcade-validation` off of `master` into `release/<N>`
 3. Update package version numbers in master to match the next major version of
-   .NET (N+1).
+   .NET (N+1). ([example](https://github.com/dotnet/arcade/pull/6356/files))
 4. [Introduce channels](https://github.com/dotnet/arcade/blob/master/Documentation/Darc.md#add-channel)
    for the new branches classified (`-c`) as `tools`
     - `.NET <N or next version> Eng`
@@ -82,6 +82,6 @@ which Arcade can be branched for major release 'N' of .NET Core.
 5. [Add default channel associations](https://github.com/dotnet/arcade/blob/master/Documentation/Darc.md#add-default-channel)
    for Arcade `release/<N>` to point to `.NET <N> Eng - Validation`
 6. Modify the release and master branches of arcade-validation to promote builds
-   to the appropriate channels.
+   to the appropriate channels. ([example](https://github.com/dotnet/arcade-validation/pull/1857/files))
 7. Reset arcade Maestro++ subscriptions targeting .NET release branches to
    source from .NET <N> Eng.
