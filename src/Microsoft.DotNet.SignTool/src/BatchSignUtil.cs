@@ -105,7 +105,7 @@ namespace Microsoft.DotNet.SignTool
             {
 
                 var filesToSign = files.Where(fileInfo => fileInfo.SignInfo.ShouldSign).ToArray();
-                totalFilesSigned = filesToSign.Count();
+                totalFilesSigned = filesToSign.Length;
                 _log.LogMessage(MessageImportance.High, $"Signing Round {round}: {filesToSign.Length} files to sign.");
 
                 if (filesToSign.Length == 0) return true;
@@ -123,7 +123,7 @@ namespace Microsoft.DotNet.SignTool
                 var enginesToSign = files.Where(fileInfo => fileInfo.SignInfo.ShouldSign && 
                                                 fileInfo.IsWixContainer() &&
                                                 Path.GetExtension(fileInfo.FullPath) == ".exe").ToArray();
-                totalFilesSigned = enginesToSign.Count();
+                totalFilesSigned = enginesToSign.Length;
                 if (enginesToSign.Length == 0)
                 {
                     return true;
