@@ -15,8 +15,6 @@ namespace Microsoft.DotNet.SignTool
 {
     internal sealed class BatchSignUtil
     {
-        internal static readonly StringComparer FilePathComparer = StringComparer.OrdinalIgnoreCase;
-
         private readonly TaskLoggingHelper _log;
         private readonly IBuildEngine _buildEngine;
         private readonly BatchSignInput _batchData;
