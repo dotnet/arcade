@@ -73,8 +73,8 @@
 
     <ItemGroup>
       <_ProjectReferenceWithSetTargetFramework>
-        <ConsumingTargetFramework Condition="'%(ProjectReference.Identity)' == '%(Identity)' and '%(ProjectReference.ConsumingTargetFramework)' != ''">%(ProjectReference.ConsumingTargetFramework)</ConsumingTargetFramework>
-        <ConsumingTargetFramework Condition="'%(_ProjectReferenceWithSetTargetFramework.ConsumingTargetFramework)' == ''">$([MSBuild]::ValueOrDefault('$(_OriginalTargetFramework)', '$(TargetFramework)'))</ConsumingTargetFramework>
+        <ReferringTargetFramework Condition="'%(ProjectReference.Identity)' == '%(Identity)' and '%(ProjectReference.ReferringTargetFramework)' != ''">%(ProjectReference.ReferringTargetFramework)</ReferringTargetFramework>
+        <ReferringTargetFramework Condition="'%(_ProjectReferenceWithSetTargetFramework.ReferringTargetFramework)' == ''">$([MSBuild]::ValueOrDefault('$(_OriginalTargetFramework)', '$(TargetFramework)'))</ReferringTargetFramework>
       </_ProjectReferenceWithSetTargetFramework>
     </ItemGroup>
 
