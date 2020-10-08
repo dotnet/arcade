@@ -67,6 +67,7 @@
              Targets="GetTargetFrameworks"
              BuildInParallel="$(BuildInParallel)"
              RemoveProperties="TargetFramework;RuntimeIdentifier"
+             Condition="'%(ProjectReference.SkipGetTargetFrameworkProperties)' != 'true'"
              SkipNonexistentTargets="true">
       <Output TaskParameter="TargetOutputs" ItemName="_ProjectReferenceWithSetTargetFramework" />
     </MSBuild>
