@@ -2,15 +2,13 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using Microsoft.Build.Framework;
+using System;
 using System.IO;
 
 namespace Microsoft.DotNet.Build.Tasks.TargetFramework.Sdk
 {
     public class ChooseBestP2PTargetFrameworkTask : BuildTask
     {
-        [Required]
-        public string TargetFramework { get; set; }
-
         [Required]
         public ITaskItem[] ProjectReferencesWithTargetFrameworks { get; set; }
 
@@ -34,11 +32,17 @@ namespace Microsoft.DotNet.Build.Tasks.TargetFramework.Sdk
                     targetFrameworksValue = projectReference.GetMetadata("TargetFrameworks");
                 }
                 string[] targetFrameworks = targetFrameworksValue.Split(';');
+
+                string consumingTargetFramework = projectReference.GetMetadata("ConsumingTargetFramework");
+                if (string.IsNullOrWhiteSpace(consumingTargetFramework))
+                {
+                    throw new Exception($"ConsumingTargetFramework metadata must be set for Project {Path.GetFileName(projectReference.ItemSpec)}.");
+                }
                 
-                string bestTargetFramework = targetFrameworkResolver.GetBestSupportedTargetFramework(targetFrameworks, TargetFramework);
+                string bestTargetFramework = targetFrameworkResolver.GetBestSupportedTargetFramework(targetFrameworks, consumingTargetFramework);
                 if (bestTargetFramework == null)
                 {
-                    Log.LogError($"Not able to find a compatible supported target framework for {TargetFramework} in Project {Path.GetFileName(projectReference.ItemSpec)}. The Supported Configurations are {string.Join(", ", targetFrameworks)}");
+                    Log.LogError($"Not able to find a compatible supported target framework for {consumingTargetFramework} in Project {Path.GetFileName(projectReference.ItemSpec)}. The Supported Configurations are {string.Join(", ", targetFrameworks)}");
                 }
 
                 projectReference.SetMetadata("SetTargetFramework", "TargetFramework=" + bestTargetFramework);                
