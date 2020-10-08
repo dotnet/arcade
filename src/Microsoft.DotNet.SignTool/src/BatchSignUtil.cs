@@ -114,7 +114,7 @@ namespace Microsoft.DotNet.SignTool
                 {
                     _log.LogMessage(MessageImportance.Low, file.ToString());
                 }
-                
+
                 return _signTool.Sign(_buildEngine, round, filesToSign);
             }
 
