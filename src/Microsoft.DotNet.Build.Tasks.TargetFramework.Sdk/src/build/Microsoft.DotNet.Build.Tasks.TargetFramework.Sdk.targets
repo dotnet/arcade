@@ -69,7 +69,7 @@
              RemoveProperties="TargetFramework;RuntimeIdentifier"
              Condition="'%(ProjectReference.SkipGetTargetFrameworkProperties)' != 'true'"
              SkipNonexistentTargets="true">
-      <Output TaskParameter="TargetOutputs" ItemName="_ProjectReferenceWithSetTargetFramework" />
+      <Output TaskParameter="TargetOutputs" ItemName="_ProjectReferenceWithTargetFrameworks" />
     </MSBuild>
 
     <PropertyGroup>
@@ -77,7 +77,7 @@
     </PropertyGroup>
 
     <ChooseBestP2PTargetFrameworkTask TargetFramework="$(_OriginalTargetFramework)"
-                                      ProjectReferencesWithTargetFrameworks="@(_ProjectReferenceWithSetTargetFramework)"
+                                      ProjectReferencesWithTargetFrameworks="@(_ProjectReferenceWithTargetFrameworks)"
                                       RuntimeGraph="$(RuntimeGraph)" >
       <Output TaskParameter="AnnotatedProjectReferencesWithSetTargetFramework" ItemName="_ProjectReferenceWithBestTargetFramework" />
     </ChooseBestP2PTargetFrameworkTask>
@@ -85,7 +85,6 @@
     <ItemGroup>
       <ProjectReference Remove="@(ProjectReference)" />
       <ProjectReference Include="@(_ProjectReferenceWithBestTargetFramework)"
-                        RemoveMetadata="ConsumingTargetFramework;RawTargetFrameworks"
                         SkipGetTargetFrameworkProperties="true" />
     </ItemGroup>
   </Target>
