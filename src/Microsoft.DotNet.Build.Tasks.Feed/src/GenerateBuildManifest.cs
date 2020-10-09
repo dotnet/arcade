@@ -60,11 +60,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// Is this manifest for a stable build?
         /// </summary>
         public bool IsStableBuild { get; set; }
-        
-        /// <summary>
-        /// Is the manifest for Release only package version?
-        /// </summary>
-        public bool IsReleaseOnlyPackageVersion { get; set; }
 
         public override bool Execute()
         {
@@ -78,7 +73,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     RepoBranch,
                     RepoCommit,
                     IsStableBuild,
-                    IsReleaseOnlyPackageVersion,
                     Log);
 
                 buildModel.WriteAsXml(OutputPath, Log);

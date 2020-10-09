@@ -62,12 +62,6 @@ namespace Microsoft.DotNet.VersionTools.BuildManifest.Model
             set { Attributes[nameof(IsStable)] = value; }
         }
 
-        public string IsReleaseOnlyPackageVersion
-        {
-            get { return Attributes.GetOrDefault(nameof(IsReleaseOnlyPackageVersion)); }
-            set { Attributes[nameof(IsReleaseOnlyPackageVersion)] = value; }
-        }
-
         public string VersionStamp
         {
             get { return Attributes.GetOrDefault(nameof(VersionStamp)); }
