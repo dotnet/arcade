@@ -36,32 +36,27 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// <summary>
         /// Full path to the folder containing blob assets.
         /// </summary>
-        [Required]
         public string BlobAssetsBasePath { get; set; }
 
         /// <summary>
         /// Full path to the folder containing package assets.
         /// </summary>
-        [Required]
         public string PackageAssetsBasePath { get; set; }
 
         /// <summary>
         /// ID of the build (in BAR/Maestro) that produced the artifacts being published.
         /// This might change in the future as we'll probably fetch this ID from the manifest itself.
         /// </summary>
-        [Required]
         public int BARBuildId { get; set; }
 
         /// <summary>
         /// Access point to the Maestro API to be used for accessing BAR.
         /// </summary>
-        [Required]
         public string MaestroApiEndpoint { get; set; }
 
         /// <summary>
         /// Authentication token to be used when interacting with Maestro API.
         /// </summary>
-        [Required]
         public string BuildAssetRegistryToken { get; set; }
 
         /// <summary>
@@ -887,6 +882,38 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         Log.LogError($"The property {prop.Name} is required but doesn't have a value set.");
                     }
                 }
+            }
+
+            AnyMissingRequiredBaseProperties();
+
+            return Log.HasLoggedErrors;
+        }
+
+        protected bool AnyMissingRequiredBaseProperties()
+        {
+            if (string.IsNullOrEmpty(BlobAssetsBasePath))
+            {
+                Log.LogError($"The property {nameof(BlobAssetsBasePath)} is required but doesn't have a value set.");
+            }
+
+            if (string.IsNullOrEmpty(PackageAssetsBasePath))
+            {
+                Log.LogError($"The property {nameof(PackageAssetsBasePath)} is required but doesn't have a value set.");
+            }
+
+            if (BARBuildId == 0)
+            {
+                Log.LogError($"The property {nameof(BARBuildId)} is required but doesn't have a value set.");
+            }
+
+            if (string.IsNullOrEmpty(MaestroApiEndpoint))
+            {
+                Log.LogError($"The property {nameof(MaestroApiEndpoint)} is required but doesn't have a value set.");
+            }
+
+            if (string.IsNullOrEmpty(BuildAssetRegistryToken))
+            {
+                Log.LogError($"The property {nameof(BuildAssetRegistryToken)} is required but doesn't have a value set.");
             }
 
             return Log.HasLoggedErrors;
