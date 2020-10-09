@@ -86,4 +86,4 @@ which Arcade can be branched for major release 'N' of .NET Core.
 7. Update [PublishingConstants.cs](https://github.com/dotnet/arcade/blob/master/src/Microsoft.DotNet.Build.Tasks.Feed/src/model/PublishingConstants.cs)
    in Arcade's master for new channels ([example](https://github.com/dotnet/arcade/pull/6360/files))
 8. Reset arcade Maestro++ subscriptions targeting .NET release branches to
-   source from .NET <N> Eng.
+   source from `.NET <N> Eng`.
