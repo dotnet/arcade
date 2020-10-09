@@ -15,8 +15,6 @@ namespace Microsoft.DotNet.SignTool
 {
     internal sealed class BatchSignUtil
     {
-        internal static readonly StringComparer FilePathComparer = StringComparer.OrdinalIgnoreCase;
-
         private readonly TaskLoggingHelper _log;
         private readonly IBuildEngine _buildEngine;
         private readonly BatchSignInput _batchData;
@@ -101,12 +99,13 @@ namespace Microsoft.DotNet.SignTool
             // bugs if repeated runs use the same ordering.
             var toSignList = _batchData.FilesToSign.ToList();
             var round = 0;
-            var signedSet = new HashSet<ImmutableArray<byte>>(ByteSequenceComparer.Instance);
+            var signedSet = new HashSet<SignedFileContentKey>();
 
-            bool signFiles(IEnumerable<FileSignInfo> files)
+            bool signFiles(IEnumerable<FileSignInfo> files, out int totalFilesSigned)
             {
-                var filesToSign = files.Where(fileInfo => fileInfo.SignInfo.ShouldSign).ToArray();
 
+                var filesToSign = files.Where(fileInfo => fileInfo.SignInfo.ShouldSign).ToArray();
+                totalFilesSigned = filesToSign.Length;
                 _log.LogMessage(MessageImportance.High, $"Signing Round {round}: {filesToSign.Length} files to sign.");
 
                 if (filesToSign.Length == 0) return true;
@@ -119,12 +118,12 @@ namespace Microsoft.DotNet.SignTool
                 return _signTool.Sign(_buildEngine, round, filesToSign);
             }
 
-            bool signEngines(IEnumerable<FileSignInfo> files)
+            bool signEngines(IEnumerable<FileSignInfo> files, out int totalFilesSigned)
             {
                 var enginesToSign = files.Where(fileInfo => fileInfo.SignInfo.ShouldSign && 
                                                 fileInfo.IsWixContainer() &&
                                                 Path.GetExtension(fileInfo.FullPath) == ".exe").ToArray();
-
+                totalFilesSigned = enginesToSign.Length;
                 if (enginesToSign.Length == 0)
                 {
                     return true;
@@ -147,7 +146,6 @@ namespace Microsoft.DotNet.SignTool
                 }
 
                 // sign engines
-                round++;
                 bool signResult = _signTool.Sign(_buildEngine, round, engines.Select(engine => new FileSignInfo(engine.Key, engine.Value.ContentHash, engine.Value.SignInfo)));
                 if(!signResult)
                 {
@@ -176,12 +174,12 @@ namespace Microsoft.DotNet.SignTool
                     if (file.IsZipContainer())
                     {
                         _log.LogMessage($"Repacking container: '{file.FileName}'");
-                        _batchData.ZipDataMap[file.ContentHash].Repack(_log);
+                        _batchData.ZipDataMap[file.FileContentKey].Repack(_log);
                     }
                     if (file.IsWixContainer())
                     {
                         _log.LogMessage($"Packing wix container: '{file.FileName}'");
-                        _batchData.ZipDataMap[file.ContentHash].Repack(_log, _signTool.TempDir, _signTool.WixToolsPath);
+                        _batchData.ZipDataMap[file.FileContentKey].Repack(_log, _signTool.TempDir, _signTool.WixToolsPath);
                     }
                 }
             }
@@ -192,8 +190,9 @@ namespace Microsoft.DotNet.SignTool
             {
                 if (file.IsContainer())
                 {
-                    var zipData = _batchData.ZipDataMap[file.ContentHash];
-                    return zipData.NestedParts.All(x => !x.FileSignInfo.SignInfo.ShouldSign || signedSet.Contains(x.FileSignInfo.ContentHash));
+                    var zipData = _batchData.ZipDataMap[file.FileContentKey];
+                    return zipData.NestedParts.All(x => !x.FileSignInfo.SignInfo.ShouldSign || 
+                        signedSet.Contains(x.FileSignInfo.FileContentKey));
                 }
                 return true;
             }
@@ -230,19 +229,25 @@ namespace Microsoft.DotNet.SignTool
                 }
 
                 repackFiles(list);
-
-                if (!signEngines(list))
+                int totalFilesSigned;
+                if (!signEngines(list, out totalFilesSigned))
                 {
                     return false;
                 }
+                if(totalFilesSigned > 0)
+                {
+                    round++;
+                }
 
-                if (!signFiles(list))
+                if (!signFiles(list, out totalFilesSigned))
                 {
                     return false;
                 }
-
-                round++;
-                list.ForEach(x => signedSet.Add(x.ContentHash));
+                if (totalFilesSigned > 0)
+                {
+                    round++;
+                }
+                list.ForEach(x => signedSet.Add(x.FileContentKey));
             }
 
             return true;
@@ -351,7 +356,7 @@ namespace Microsoft.DotNet.SignTool
                         log.LogError($"Zip {fileName} cannot be strong name signed.");
                     }
                 }
-                if (fileName.IsWixContainer())
+                if (fileName.IsExecutableWixContainer())
                 {
                     if (fileName.SignInfo.Certificate == null)
                     {
@@ -391,7 +396,7 @@ namespace Microsoft.DotNet.SignTool
             }
             else if (file.IsZipContainer())
             {
-                var zipData = _batchData.ZipDataMap[file.ContentHash];
+                var zipData = _batchData.ZipDataMap[file.FileContentKey];
                 bool signedContainer = false;
 
                 using (var archive = new ZipArchive(File.OpenRead(file.FullPath), ZipArchiveMode.Read))

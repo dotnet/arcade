@@ -11,6 +11,7 @@ namespace Microsoft.DotNet.SignTool
 {
     internal readonly struct FileSignInfo
     {
+        internal readonly SignedFileContentKey FileContentKey;
         internal readonly string FileName;
         internal readonly string FullPath;
         internal readonly SignInfo SignInfo;
@@ -33,6 +34,9 @@ namespace Microsoft.DotNet.SignTool
 
         internal static bool IsNupkg(string path)
             => Path.GetExtension(path).Equals(".nupkg", StringComparison.OrdinalIgnoreCase);
+
+        internal static bool IsSymbolsNupkg(string path)
+            => path.EndsWith(".symbols.nupkg", StringComparison.OrdinalIgnoreCase);
 
         internal static bool IsZip(string path)
             => Path.GetExtension(path).Equals(".zip", StringComparison.OrdinalIgnoreCase);
@@ -60,7 +64,9 @@ namespace Microsoft.DotNet.SignTool
 
         internal bool IsVsix() => IsVsix(FileName);
 
-        internal bool IsNupkg() => IsNupkg(FileName);
+        internal bool IsNupkg() => IsNupkg(FileName) && !IsSymbolsNupkg();
+
+        internal bool IsSymbolsNupkg() => IsSymbolsNupkg(FileName);
 
         internal bool IsZip() => IsZip(FileName);
 
@@ -74,6 +80,11 @@ namespace Microsoft.DotNet.SignTool
             WixContentFilePath != null
             && (IsWix(FileName) 
                 || Path.GetExtension(FileName).Equals(".exe", StringComparison.OrdinalIgnoreCase));
+
+        internal bool IsExecutableWixContainer() =>
+            IsWixContainer() &&
+            (Path.GetExtension(FileName).Equals(".exe", StringComparison.OrdinalIgnoreCase) ||
+             Path.GetExtension(FileName).Equals(".msi", StringComparison.OrdinalIgnoreCase));
 
         internal bool IsContainer() => IsZipContainer() || IsWixContainer();
 
@@ -89,6 +100,7 @@ namespace Microsoft.DotNet.SignTool
 
             FileName = Path.GetFileName(fullPath);
             ContentHash = contentHash;
+            FileContentKey = new SignedFileContentKey(contentHash, FileName);
             FullPath = fullPath;
             SignInfo = signInfo;
             TargetFramework = targetFramework;

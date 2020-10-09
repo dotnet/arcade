@@ -14,7 +14,6 @@
   -->
 
   <Import Project="BuildStep.props" />
-
   <!-- Allow for repo specific Publish properties such as add additional files to be published -->
   <Import Project="$(RepositoryEngineeringDir)Publishing.props" Condition="Exists('$(RepositoryEngineeringDir)Publishing.props')" />
 
@@ -26,6 +25,10 @@
     <IsStableBuild>false</IsStableBuild>
     <IsStableBuild Condition="'$(DotNetFinalVersionKind)' == 'release'">true</IsStableBuild>
 
+    <!-- If `IsReleaseOnlyPackageVersion` is set to true, package safety checks can be skipped-->
+    <IsReleaseOnlyPackageVersion>false</IsReleaseOnlyPackageVersion>
+    <IsReleaseOnlyPackageVersion Condition ="'$(PreReleaseVersionLabel)' == '' and '$(AutoGenerateAssemblyVersion)' == 'true'">true</IsReleaseOnlyPackageVersion>
+    
     <!-- If `AutoGenerateSymbolPackages` is not set we default it to true. -->
     <AutoGenerateSymbolPackages Condition="'$(AutoGenerateSymbolPackages)' == ''">true</AutoGenerateSymbolPackages>
 
@@ -161,7 +164,8 @@
       ManifestCommit="$(BUILD_SOURCEVERSION)"
       IsStableBuild="$(IsStableBuild)"
       PublishingVersion="$(PublishingVersion)"
-      AssetManifestPath="$(AssetManifestFilePath)" />
+      AssetManifestPath="$(AssetManifestFilePath)" 
+      IsReleaseOnlyPackageVersion="$(IsReleaseOnlyPackageVersion)" />
 
     <!-- 
         Publish Windows PDBs produced by SymStore.targets (by default, only shipping PDBs are placed there).

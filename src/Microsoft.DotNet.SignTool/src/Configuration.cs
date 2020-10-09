@@ -27,7 +27,7 @@ namespace Microsoft.DotNet.SignTool
         /// This store content information for container files.
         /// Key is the content hash of the file.
         /// </summary>
-        private readonly Dictionary<ImmutableArray<byte>, ZipData> _zipDataMap;
+        private readonly Dictionary<SignedFileContentKey, ZipData> _zipDataMap;
 
         /// <summary>
         /// Path to where container files will be extracted.
@@ -95,7 +95,7 @@ namespace Microsoft.DotNet.SignTool
         /// Maps file hashes to collision ids. We use this to determine whether we processed an asset already
         /// and what collision id to use. We always choose the lower collision id in case of collisions.
         /// </summary>
-        internal Dictionary<string, string> _hashToCollisionIdMap;
+        internal Dictionary<SignedFileContentKey, string> _hashToCollisionIdMap;
 
         public Configuration(
             string tempDir,
@@ -121,14 +121,14 @@ namespace Microsoft.DotNet.SignTool
             _filesToSign = new List<FileSignInfo>();
             _wixPacks = new List<WixPackInfo>();
             _filesToCopy = new List<KeyValuePair<string, string>>();
-            _zipDataMap = new Dictionary<ImmutableArray<byte>, ZipData>(ByteSequenceComparer.Instance);
+            _zipDataMap = new Dictionary<SignedFileContentKey, ZipData>();
             _filesByContentKey = new Dictionary<SignedFileContentKey, FileSignInfo>();
             _itemsToSign = itemsToSign;
             _dualCertificates = dualCertificates == null ? new ITaskItem[0] : dualCertificates;
             _whichPackagesTheFileIsIn = new Dictionary<SignedFileContentKey, HashSet<string>>();
             _errors = new Dictionary<SigningToolErrorCode, HashSet<SignedFileContentKey>>();
             _wixPacks = _itemsToSign.Where(w => WixPackInfo.IsWixPack(w.ItemSpec))?.Select(s => new WixPackInfo(s.ItemSpec)).ToList();
-            _hashToCollisionIdMap = new Dictionary<string, string>();
+            _hashToCollisionIdMap = new Dictionary<SignedFileContentKey, string>();
         }
 
         internal void ReadExistingContainerSigningCache()
@@ -164,7 +164,7 @@ namespace Microsoft.DotNet.SignTool
                 // which indicates that it was signed so we need to ensure we repack the binary with the signed version
                 string actualFileHash = ContentUtil.HashToString(ContentUtil.GetContentHash(file));
                 bool forceRepack = stringHash != actualFileHash;
-                _hashToCollisionIdMap.TryGetValue(stringHash, out string collisionPriorityId);
+                _hashToCollisionIdMap.TryGetValue(new SignedFileContentKey(contentHash, Path.GetFileName(file)), out string collisionPriorityId);
 
                 TrackFile(file, collisionPriorityId, contentHash, false, forceRepack);
             }
@@ -177,7 +177,7 @@ namespace Microsoft.DotNet.SignTool
             {
                 string fullPath = itemToSign.ItemSpec;
                 string collisionPriorityId = itemToSign.GetMetadata(SignToolConstants.CollisionPriorityId);
-                var fileUniqueKey = new SignedFileContentKey(ContentUtil.GetContentHash(fullPath), fullPath);
+                var fileUniqueKey = new SignedFileContentKey(ContentUtil.GetContentHash(fullPath), Path.GetFileName(fullPath));
 
                 if (!_whichPackagesTheFileIsIn.TryGetValue(fileUniqueKey, out var packages))
                 {
@@ -218,7 +218,7 @@ namespace Microsoft.DotNet.SignTool
                 }
             }
 
-            return new BatchSignInput(_filesToSign.ToImmutableArray(), _zipDataMap.ToImmutableDictionary(ByteSequenceComparer.Instance), _filesToCopy.ToImmutableArray());
+            return new BatchSignInput(_filesToSign.ToImmutableArray(), _zipDataMap.ToImmutableDictionary(), _filesToCopy.ToImmutableArray());
         }
 
         private FileSignInfo TrackFile(
@@ -236,9 +236,7 @@ namespace Microsoft.DotNet.SignTool
             var wixPack = _wixPacks.SingleOrDefault(w => w.Moniker.Equals(Path.GetFileName(fullPath), StringComparison.OrdinalIgnoreCase));
             var fileSignInfo = ExtractSignInfo(fullPath, collisionPriorityId, contentHash, forceRepack, wixPack.FullPath, containerPath);
 
-            var key = new SignedFileContentKey(contentHash, Path.GetFileName(fullPath));
-
-            if (_filesByContentKey.TryGetValue(key, out var existingSignInfo))
+            if (_filesByContentKey.TryGetValue(fileSignInfo.FileContentKey, out var existingSignInfo))
             {
                 // If we saw this file already we wouldn't call TrackFile unless this is a top-level file.
                 Debug.Assert(!isNested);
@@ -250,29 +248,24 @@ namespace Microsoft.DotNet.SignTool
 
             if (fileSignInfo.IsContainer())
             {
-                if (_zipDataMap.ContainsKey(contentHash))
-                {
-                    _log.LogError($"File '{fullPath}' has the same content hash as '{_zipDataMap[contentHash].FileSignInfo.FullPath}'. The incorrect file will be written.");
-                }
-
                 if (fileSignInfo.IsZipContainer())
                 {
                     if (TryBuildZipData(fileSignInfo, out var zipData))
                     {
-                        _zipDataMap[contentHash] = zipData;
+                        _zipDataMap[fileSignInfo.FileContentKey] = zipData;
                     }
                 }
                 else if (fileSignInfo.IsWixContainer())
                 {
-                    Console.WriteLine($"Trying to gather data for {fullPath}");
+                    _log.LogMessage($"Trying to gather data for wix container {fullPath}");
                     if (TryBuildWixData(fileSignInfo, out var msiData))
                     {
-                        _zipDataMap[contentHash] = msiData;
+                        _zipDataMap[fileSignInfo.FileContentKey] = msiData;
                     }
                 }
             }
-            _log.LogMessage(MessageImportance.Low, $"Caching file {key.FileName} {key.StringHash}");
-            _filesByContentKey.Add(key, fileSignInfo);
+            _log.LogMessage(MessageImportance.Low, $"Caching file {fileSignInfo.FileContentKey.FileName} {fileSignInfo.FileContentKey.StringHash}");
+            _filesByContentKey.Add(fileSignInfo.FileContentKey, fileSignInfo);
 
             if (fileSignInfo.SignInfo.ShouldSign || fileSignInfo.ForceRepack || fileSignInfo.IsContainer())
             {
@@ -299,41 +292,47 @@ namespace Microsoft.DotNet.SignTool
             var matchedNameToken = false;
             var matchedName = false;
             PEInfo peInfo = null;
-            string stringHash = ContentUtil.HashToString(hash);
+            SignedFileContentKey signedFileContentKey = new SignedFileContentKey(hash, fileName);
+
+            // handle multi-part extensions like ".symbols.nupkg" specified in FileExtensionSignInfo
+            if (_fileExtensionSignInfo != null)
+            {
+                extension = _fileExtensionSignInfo.OrderByDescending(o => o.Key.Length).FirstOrDefault(f => fileName.EndsWith(f.Key, StringComparison.OrdinalIgnoreCase)).Key ?? extension;
+            }
 
             // Asset is nested asset part of a container. Try to get it from the visited assets first
             if (string.IsNullOrEmpty(collisionPriorityId) &&
                 !string.IsNullOrEmpty(containerPath))
             {
-                if (!_hashToCollisionIdMap.TryGetValue(stringHash, out collisionPriorityId))
+                if (!_hashToCollisionIdMap.TryGetValue(signedFileContentKey, out collisionPriorityId))
                 {
                     // Hash doesn't exist so we use the CollisionPriorityId from the parent container
-                    string parentStringHash = ContentUtil.HashToString(ContentUtil.GetContentHash(containerPath));
-                    collisionPriorityId = _hashToCollisionIdMap[parentStringHash];
+                    SignedFileContentKey parentSignedFileContentKey = new SignedFileContentKey(ContentUtil.GetContentHash(containerPath), Path.GetFileName(containerPath));
+                    collisionPriorityId = _hashToCollisionIdMap[parentSignedFileContentKey];
                 }
             }
 
             // Update the hash map
-            if (!_hashToCollisionIdMap.ContainsKey(stringHash))
+            if (!_hashToCollisionIdMap.ContainsKey(signedFileContentKey))
             {
-                _hashToCollisionIdMap.Add(stringHash, collisionPriorityId);
+                _hashToCollisionIdMap.Add(signedFileContentKey, collisionPriorityId);
             }
             else
             {
-                string existingCollisionId = _hashToCollisionIdMap[stringHash];
+                string existingCollisionId = _hashToCollisionIdMap[signedFileContentKey];
 
                 // If we find that there is an asset which already was processed which has a lower
                 // collision id, we use that and update the map so we give it precedence
                 if (string.Compare(collisionPriorityId, existingCollisionId) < 0)
                 {
-                    _hashToCollisionIdMap[stringHash] = collisionPriorityId;
+                    _hashToCollisionIdMap[signedFileContentKey] = collisionPriorityId;
                 }
             }
 
             // Try to determine default certificate name by the extension of the file. Since there might be dupes
             // we get the one which maps a collision id or the first of the returned ones in case there is no
             // collision id
-            bool hasSignInfos = _fileExtensionSignInfo.TryGetValue(Path.GetExtension(fullPath), out var signInfos);
+            bool hasSignInfos = _fileExtensionSignInfo.TryGetValue(extension, out var signInfos);
             SignInfo signInfo = SignInfo.Ignore;
             bool hasSignInfo = false;
 
@@ -378,7 +377,7 @@ namespace Microsoft.DotNet.SignTool
 
                     if (peInfo.IsCrossgened)
                     {
-                        signInfo = new SignInfo(pktBasedSignInfo.Certificate, collisionPriorityId: _hashToCollisionIdMap[stringHash]);
+                        signInfo = new SignInfo(pktBasedSignInfo.Certificate, collisionPriorityId: _hashToCollisionIdMap[signedFileContentKey]);
                     }
                     else
                     {
@@ -389,8 +388,8 @@ namespace Microsoft.DotNet.SignTool
                 }
 
                 // Check if we have more specific sign info:
-                matchedNameTokenFramework = _fileSignInfo.TryGetValue(new ExplicitCertificateKey(fileName, peInfo.PublicKeyToken, peInfo.TargetFramework, _hashToCollisionIdMap[stringHash]), out explicitCertificateName);
-                matchedNameToken = !matchedNameTokenFramework && _fileSignInfo.TryGetValue(new ExplicitCertificateKey(fileName, peInfo.PublicKeyToken, collisionPriorityId: _hashToCollisionIdMap[stringHash]), out explicitCertificateName);
+                matchedNameTokenFramework = _fileSignInfo.TryGetValue(new ExplicitCertificateKey(fileName, peInfo.PublicKeyToken, peInfo.TargetFramework, _hashToCollisionIdMap[signedFileContentKey]), out explicitCertificateName);
+                matchedNameToken = !matchedNameTokenFramework && _fileSignInfo.TryGetValue(new ExplicitCertificateKey(fileName, peInfo.PublicKeyToken, collisionPriorityId: _hashToCollisionIdMap[signedFileContentKey]), out explicitCertificateName);
 
                 fileSpec = matchedNameTokenFramework ? $" (PublicKeyToken = {peInfo.PublicKeyToken}, Framework = {peInfo.TargetFramework})" :
                         matchedNameToken ? $" (PublicKeyToken = {peInfo.PublicKeyToken})" : string.Empty;
@@ -399,7 +398,7 @@ namespace Microsoft.DotNet.SignTool
             // We didn't find any specific information for PE files using PKT + TargetFramework
             if (explicitCertificateName == null)
             {
-                matchedName = _fileSignInfo.TryGetValue(new ExplicitCertificateKey(fileName, collisionPriorityId: _hashToCollisionIdMap[stringHash]), out explicitCertificateName);
+                matchedName = _fileSignInfo.TryGetValue(new ExplicitCertificateKey(fileName, collisionPriorityId: _hashToCollisionIdMap[signedFileContentKey]), out explicitCertificateName);
             }
 
             // If has overriding info, is it for ignoring the file?
@@ -412,7 +411,7 @@ namespace Microsoft.DotNet.SignTool
             // Do we have an explicit certificate after all?
             if (explicitCertificateName != null)
             {
-                signInfo = signInfo.WithCertificateName(explicitCertificateName, _hashToCollisionIdMap[stringHash]);
+                signInfo = signInfo.WithCertificateName(explicitCertificateName, _hashToCollisionIdMap[signedFileContentKey]);
                 hasSignInfo = true;
             }
 
@@ -420,7 +419,7 @@ namespace Microsoft.DotNet.SignTool
             {
                 bool dualCerts = _dualCertificates
                         .Where(d => d.ItemSpec == signInfo.Certificate &&
-                        d.GetMetadata(SignToolConstants.CollisionPriorityId) == _hashToCollisionIdMap[stringHash]).Any();
+                        d.GetMetadata(SignToolConstants.CollisionPriorityId) == _hashToCollisionIdMap[signedFileContentKey]).Any();
 
                 if (isAlreadySigned && !dualCerts)
                 {
@@ -446,16 +445,14 @@ namespace Microsoft.DotNet.SignTool
                     }
                 }
 
-                return new FileSignInfo(fullPath, hash, signInfo, (peInfo != null && peInfo.TargetFramework != "") ? peInfo.TargetFramework : null, forceRepack: forceRepack, wixContentFilePath: wixContentFilePath);
+                return new FileSignInfo(fullPath, hash, signInfo,  (peInfo != null && peInfo.TargetFramework != "") ? peInfo.TargetFramework : null, forceRepack: forceRepack, wixContentFilePath: wixContentFilePath);
             }
 
             if (SignToolConstants.SignableExtensions.Contains(extension) || SignToolConstants.SignableOSXExtensions.Contains(extension))
             {
                 // Extract the relative path inside the package / otherwise just return the full path of the file
                 var contentHash = ContentUtil.GetContentHash(fullPath);
-                var tempDir = Path.Combine(_pathToContainerUnpackingDirectory, ContentUtil.HashToString(contentHash));
-                var relativePath = fullPath.Replace($@"{tempDir}\", "");
-                LogError(SigningToolErrorCode.SIGN002, new SignedFileContentKey(contentHash, relativePath));
+                LogError(SigningToolErrorCode.SIGN002, new SignedFileContentKey(contentHash, fileName));
             }
             else
             {
@@ -626,7 +623,7 @@ namespace Microsoft.DotNet.SignTool
                             contentHash = ContentUtil.GetContentHash(stream);
                         }
 
-                        var fileUniqueKey = new SignedFileContentKey(contentHash, relativePath);
+                        var fileUniqueKey = new SignedFileContentKey(contentHash, Path.GetFileName(relativePath));
 
                         if (!_whichPackagesTheFileIsIn.TryGetValue(fileUniqueKey, out var packages))
                         {
@@ -640,7 +637,7 @@ namespace Microsoft.DotNet.SignTool
                         // if we already encountered file that hash the same content we can reuse its signed version when repackaging the container.
                         var fileName = Path.GetFileName(relativePath);
                         string stringHash = ContentUtil.HashToString(contentHash);
-                        if (!_filesByContentKey.TryGetValue(new SignedFileContentKey(contentHash, fileName), out var fileSignInfo))
+                        if (!_filesByContentKey.TryGetValue(fileUniqueKey, out var fileSignInfo))
                         {
                             string extractPathRoot = _useHashInExtractionPath ? stringHash : _filesByContentKey.Count().ToString();
                             string tempPath = Path.Combine(_pathToContainerUnpackingDirectory, extractPathRoot, WebUtility.UrlDecode(relativePath));
@@ -654,7 +651,7 @@ namespace Microsoft.DotNet.SignTool
                                 stream.CopyTo(tempFileStream);
                             }
 
-                            _hashToCollisionIdMap.TryGetValue(stringHash, out string collisionPriorityId);
+                            _hashToCollisionIdMap.TryGetValue(fileUniqueKey, out string collisionPriorityId);
                             fileSignInfo = TrackFile(tempPath, collisionPriorityId, contentHash, isNested: true, containerPath: zipFileSignInfo.FullPath);
                         }
 
