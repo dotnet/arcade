@@ -248,11 +248,33 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedForChecksums,
                 FeedForInstallers),
 
+            // ".NET 5 Eng",
+            new TargetChannelConfig(
+                1495,
+                PublishingInfraVersion.Next,
+                "eng/net5",
+                FeedDotNetEngShipping,
+                FeedDotNetEngTransport,
+                FeedDotNetEngSymbols,
+                FeedForChecksums,
+                FeedForInstallers),
+
             // ".NET Eng - Validation",
             new TargetChannelConfig(
                 9,
                 PublishingInfraVersion.All,
                 "eng/validation",
+                FeedDotNetEngShipping,
+                FeedDotNetEngTransport,
+                FeedDotNetEngSymbols,
+                FeedForChecksums,
+                FeedForInstallers),
+
+            // ".NET 5 Eng - Validation",
+            new TargetChannelConfig(
+                1496,
+                PublishingInfraVersion.Next,
+                "eng/net5validation",
                 FeedDotNetEngShipping,
                 FeedDotNetEngTransport,
                 FeedDotNetEngSymbols,
@@ -581,6 +603,17 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             // "VS 16.8",
             new TargetChannelConfig(
                 1154,
+                PublishingInfraVersion.All,
+                string.Empty,
+                FeedDotNetToolsShipping,
+                FeedDotNetToolsTransport,
+                FeedDotNetToolsSymbols,
+                FeedForChecksums,
+                FeedForInstallers),
+
+            // "VS 16.9",
+            new TargetChannelConfig(
+                1473,
                 PublishingInfraVersion.All,
                 string.Empty,
                 FeedDotNetToolsShipping,
