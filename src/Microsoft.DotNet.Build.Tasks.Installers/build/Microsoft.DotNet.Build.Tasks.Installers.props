@@ -2,7 +2,8 @@
   <PropertyGroup>
     <MicrosoftDotNetBuildTasksInstallersTaskAssembly Condition="'$(MSBuildRuntimeType)' == 'Core'">$(MSBuildThisFileDirectory)..\tools\netcoreapp2.1\Microsoft.DotNet.Build.Tasks.Installers.dll</MicrosoftDotNetBuildTasksInstallersTaskAssembly>
     <MicrosoftDotNetBuildTasksInstallersTaskAssembly Condition="'$(MSBuildRuntimeType)' != 'Core'">$(MSBuildThisFileDirectory)..\tools\net472\Microsoft.DotNet.Build.Tasks.Installers.dll</MicrosoftDotNetBuildTasksInstallersTaskAssembly>
+    <MicrosoftDotNetBuildTasksInstallersMSBuildDir Condition="'$(MicrosoftDotNetBuildTasksInstallersMSBuildDir)' == ''">$(MSBuildThisFileDirectory)</MicrosoftDotNetBuildTasksInstallersMSBuildDir>
   </PropertyGroup>
 
-  <UsingTask TaskName="CreateLightCommandPackageDrop" AssemblyFile="$(MicrosoftDotNetBuildTasksInstallersTaskAssembly)" />
+  <Import Project="$(MicrosoftDotNetBuildTasksInstallersMSBuildDir)installer.props" />
 </Project>
