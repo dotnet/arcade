@@ -884,6 +884,38 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 }
             }
 
+            AnyMissingRequiredBaseProperties();
+
+            return Log.HasLoggedErrors;
+        }
+
+        protected bool AnyMissingRequiredBaseProperties()
+        {
+            if (string.IsNullOrEmpty(BlobAssetsBasePath))
+            {
+                Log.LogError($"The property {nameof(BlobAssetsBasePath)} is required but doesn't have a value set.");
+            }
+
+            if (string.IsNullOrEmpty(PackageAssetsBasePath))
+            {
+                Log.LogError($"The property {nameof(PackageAssetsBasePath)} is required but doesn't have a value set.");
+            }
+
+            if (BARBuildId == 0)
+            {
+                Log.LogError($"The property {nameof(BARBuildId)} is required but doesn't have a value set.");
+            }
+
+            if (string.IsNullOrEmpty(MaestroApiEndpoint))
+            {
+                Log.LogError($"The property {nameof(MaestroApiEndpoint)} is required but doesn't have a value set.");
+            }
+
+            if (string.IsNullOrEmpty(BuildAssetRegistryToken))
+            {
+                Log.LogError($"The property {nameof(BuildAssetRegistryToken)} is required but doesn't have a value set.");
+            }
+
             return Log.HasLoggedErrors;
         }
     }
