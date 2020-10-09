@@ -39,13 +39,11 @@
     <Delete Files="@(_OutputFiles)" />
 
     <Message Text="Running tests: $(_TestAssembly) [$(_TestEnvironment)]" Importance="high"/>
-    <!-- Remove EnvironmentVariables parameter when https://github.com/dotnet/sdk/pull/13619 is merged and consumed. -->
     <Exec Command='$(_TestRunnerCommand)'
           LogStandardErrorAsError="false"
           WorkingDirectory="$(_TargetDir)"
           IgnoreExitCode="true"
           Timeout="$(_TestTimeout)"
-          EnvironmentVariables="DOTNET_ROOT=$([MSBuild]::ValueOrDefault('$(DOTNET_ROOT)', '$(DotNetRoot)'))"
           ContinueOnError="WarnAndContinue">
       <Output TaskParameter="ExitCode" PropertyName="_TestErrorCode" />
     </Exec>
