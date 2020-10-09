@@ -54,7 +54,8 @@
       NonShippingFeedName="$(NonShippingAzdoPackageFeedURL)"
       ShippingAssetsFolder="$(ShippingFolder)"
       NonShippingAssetsFolder="$(NonShippingFolder)"
-    ></PublishSignedAssets>
+      NugetPath="$(NugetPath)">
+    </PublishSignedAssets>
   </Target>
 
   <ItemGroup>
