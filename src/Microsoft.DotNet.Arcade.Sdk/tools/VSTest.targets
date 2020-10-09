@@ -44,8 +44,6 @@
           WorkingDirectory="$(_TargetDir)"
           IgnoreExitCode="true"
           Timeout="$(_TestTimeout)"
-          <!-- Remove when https://github.com/dotnet/sdk/pull/13619 is merged and consumed. -->
-          EnvironmentVariables="DOTNET_ROOT=$([MSBuild]::ValueOrDefault('$(DOTNET_ROOT)', '$(DotNetRoot)'))"
           ContinueOnError="WarnAndContinue">
       <Output TaskParameter="ExitCode" PropertyName="_TestErrorCode" />
     </Exec>
