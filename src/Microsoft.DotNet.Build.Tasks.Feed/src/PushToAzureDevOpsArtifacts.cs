@@ -35,8 +35,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         public string AssetManifestPath { get; set; }
 
         public bool IsStableBuild { get; set; }
-        
-        public bool IsReleaseOnlyPackageVersion { get; set; }
 
         public override bool Execute()
         {
@@ -142,8 +140,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         ManifestBranch,
                         ManifestCommit,
                         ManifestBuildData,
-                        IsStableBuild,
-                        IsReleaseOnlyPackageVersion);
+                        IsStableBuild);
                 }
             }
             catch (Exception e)
