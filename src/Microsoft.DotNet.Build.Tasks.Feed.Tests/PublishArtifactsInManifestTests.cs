@@ -249,44 +249,27 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         ///     Check that attempts to publish stable artifacts to non-stable feeds will throw errors.
         /// </summary>
         [Theory]
-        [InlineData("3.0.0", false, true)]
-        [InlineData("3.0.0-preview1", false, false)]
-        [InlineData("3.0.0.10", false, false)]
-        [InlineData("3.0.0-preview1-12345", false, false)]
-        [InlineData("5.3.0-rtm.6198", false, false)]
-        [InlineData("3.3.1-beta3-19430-03", false, false)]
-        [InlineData("3.0.0", true, false)]
-        [InlineData("3.0.0-preview1", true, false)]
-        [InlineData("3.0.0.10", true, false)]
-        [InlineData("3.0.0-preview1-12345", true, false)]
-        [InlineData("5.3.0-rtm.6198", true, false)]
-        [InlineData("3.3.1-beta3-19430-03", true, false)]
-        [InlineData("3.0.0", false, false, true)]
-        public async Task StableAssetCheckV2Async(string assetVersion, bool isIsolatedFeed, bool shouldError, bool skipChecks = false)
+        [InlineData("3.0.0", false, true, "true")]
+        [InlineData("3.0.0-preview1", false, false , "false")]
+        [InlineData("3.0.0.10", false, false, "true")]
+        [InlineData("3.0.0-preview1-12345", false, false, "false")]
+        [InlineData("5.3.0-rtm.6198", false, false ,"false")]
+        [InlineData("3.3.1-beta3-19430-03", false, false , "false")]
+        [InlineData("3.0.0", true, false, "true")]
+        [InlineData("3.0.0-preview1", true, false, "false")]
+        [InlineData("3.0.0.10", true, false, "true")]
+        [InlineData("3.0.0-preview1-12345", true, false, "false")]
+        [InlineData("5.3.0-rtm.6198", true, false ,"true")]
+        [InlineData("3.3.1-beta3-19430-03", true, false, "false")]
+        [InlineData("3.0.0", false, false,"false", true)]
+        public async Task StableAssetCheckV2Async(string assetVersion, bool isIsolatedFeed, bool shouldError, string isReleaseOnlyPackageVersion, bool skipChecks = false)
         {
             var buildEngine = new MockBuildEngine();
-            var task = new PublishArtifactsInManifestV2
-            {
-                SkipSafetyChecks = skipChecks,
-                TargetFeedConfig = new MsBuildUtils.TaskItem[]
-                {
-                    new MsBuildUtils.TaskItem("PACKAGE", new Dictionary<string, string> {
-                        { "TargetUrl", BlobFeedUrl },
-                        { "Token", RandomToken },
-                        { "Type", "AZURESTORAGEFEED" },
-                        { "AssetSelection", "SHIPPINGONLY" },
-                        { "Internal", "false" },
-                        { "Isolated", isIsolatedFeed.ToString() }})
-                },
-                BuildEngine = buildEngine
-            };
 
             const string packageId = "Foo.Package";
-
             BuildIdentity buildIdentity = new BuildIdentity();
-            buildIdentity.IsReleaseOnlyPackageVersion = "False";
-            bool IsReleaseOnlyPackageVersion = bool.Parse(buildIdentity.IsReleaseOnlyPackageVersion);
-            BuildModel buildModel = new BuildModel(new BuildIdentity())
+            buildIdentity.IsReleaseOnlyPackageVersion = isReleaseOnlyPackageVersion;
+            BuildModel buildModel = new BuildModel(buildIdentity)
             {
                 Artifacts = new ArtifactSet
                 {
@@ -302,13 +285,30 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 }
             };
 
+            var task = new PublishArtifactsInManifestV2
+            {
+                SkipSafetyChecks = skipChecks,
+                TargetFeedConfig = new MsBuildUtils.TaskItem[]
+                {
+                    new MsBuildUtils.TaskItem("PACKAGE", new Dictionary<string, string> {
+                        { "TargetUrl", BlobFeedUrl },
+                        { "Token", RandomToken },
+                        { "Type", "AZURESTORAGEFEED" },
+                        { "AssetSelection", "SHIPPINGONLY" },
+                        { "Internal", "false" },
+                        { "Isolated", isIsolatedFeed.ToString() }})
+                },
+                BuildEngine = buildEngine,
+                BuildModel = buildModel
+            };
+
             await task.ParseTargetFeedConfigAsync();
             Assert.False(task.Log.HasLoggedErrors);
 
             task.SplitArtifactsInCategories(buildModel);
             Assert.False(task.Log.HasLoggedErrors);
 
-            task.CheckForStableAssetsInNonIsolatedFeeds(IsReleaseOnlyPackageVersion);
+            task.CheckForStableAssetsInNonIsolatedFeeds();
             Assert.Equal(shouldError, task.Log.HasLoggedErrors);
             if (shouldError)
             {

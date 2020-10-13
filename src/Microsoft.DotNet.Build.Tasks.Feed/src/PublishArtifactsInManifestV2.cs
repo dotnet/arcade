@@ -58,7 +58,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     return false;
                 }
 
-                CheckForStableAssetsInNonIsolatedFeeds(bool.Parse(BuildModel.Identity.IsReleaseOnlyPackageVersion));
+                CheckForStableAssetsInNonIsolatedFeeds();
 
                 if (Log.HasLoggedErrors)
                 {
