@@ -76,14 +76,15 @@ which Arcade can be branched for major release 'N' of .NET Core.
 3. Update package version numbers in master to match the next major version of
    .NET (N+1). ([example](https://github.com/dotnet/arcade/pull/6356/files))
 4. [Introduce channels](https://github.com/dotnet/arcade/blob/master/Documentation/Darc.md#add-channel)
-   for the new branches classified (`-c`) as `tools`
+   for the new branches, classified (`-c`) as `tools`
     - `.NET <N or next version> Eng`
     - `.NET <N or next version> Eng - Validation`
 5. [Add default channel associations](https://github.com/dotnet/arcade/blob/master/Documentation/Darc.md#add-default-channel)
    for Arcade `release/<N>` to point to `.NET <N> Eng - Validation`
-6. Modify the new release branch  `release/<N>` of arcade-validation to promote builds
+6. [Create a subscription](https://github.com/dotnet/arcade/blob/master/Documentation/Darc.md#add-subscription) from `arcade`  to `arcade-validation` (branch `release/<N>`) to take changes from the `.NET <N> Eng - Validation` channel.
+7. Modify the new release branch  `release/<N>` of arcade-validation to promote builds
    to `.NET <N> Eng`. ([example](https://github.com/dotnet/arcade-validation/pull/1857/files))
-7. Update [PublishingConstants.cs](https://github.com/dotnet/arcade/blob/master/src/Microsoft.DotNet.Build.Tasks.Feed/src/model/PublishingConstants.cs)
+8. Update [PublishingConstants.cs](https://github.com/dotnet/arcade/blob/master/src/Microsoft.DotNet.Build.Tasks.Feed/src/model/PublishingConstants.cs)
    in Arcade's master for new channels ([example](https://github.com/dotnet/arcade/pull/6360/files))
-8. Reset arcade Maestro++ subscriptions targeting .NET release branches to
+9. Reset arcade Maestro++ subscriptions targeting .NET release branches to
    source from `.NET <N> Eng`.
