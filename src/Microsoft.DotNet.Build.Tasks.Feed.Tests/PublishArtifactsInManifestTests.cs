@@ -283,6 +283,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
 
             const string packageId = "Foo.Package";
 
+            BuildIdentity buildIdentity = new BuildIdentity();
+            buildIdentity.IsReleaseOnlyPackageVersion = "False";
+            bool IsReleaseOnlyPackageVersion = bool.Parse(buildIdentity.IsReleaseOnlyPackageVersion);
             BuildModel buildModel = new BuildModel(new BuildIdentity())
             {
                 Artifacts = new ArtifactSet
@@ -305,7 +308,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             task.SplitArtifactsInCategories(buildModel);
             Assert.False(task.Log.HasLoggedErrors);
 
-            task.CheckForStableAssetsInNonIsolatedFeeds(true);
+            task.CheckForStableAssetsInNonIsolatedFeeds(IsReleaseOnlyPackageVersion);
             Assert.Equal(shouldError, task.Log.HasLoggedErrors);
             if (shouldError)
             {
