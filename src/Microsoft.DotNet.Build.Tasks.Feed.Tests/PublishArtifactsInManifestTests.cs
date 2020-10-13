@@ -305,7 +305,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             task.SplitArtifactsInCategories(buildModel);
             Assert.False(task.Log.HasLoggedErrors);
 
-            task.CheckForStableAssetsInNonIsolatedFeeds();
+            task.CheckForStableAssetsInNonIsolatedFeeds(true);
             Assert.Equal(shouldError, task.Log.HasLoggedErrors);
             if (shouldError)
             {

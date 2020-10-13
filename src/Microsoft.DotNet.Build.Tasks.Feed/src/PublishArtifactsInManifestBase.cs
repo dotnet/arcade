@@ -259,11 +259,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// This is only done for packages since feeds are
         /// immutable.
         /// </summary>
-        public void CheckForStableAssetsInNonIsolatedFeeds()
+        public void CheckForStableAssetsInNonIsolatedFeeds(bool isReleaseOnlyPackageVersion)
         {
-            if (SkipSafetyChecks)
+            if(!isReleaseOnlyPackageVersion)
             {
+                if (SkipSafetyChecks)
+                {
                 return;
+                }
             }
 
             foreach (var packagesPerCategory in PackagesByCategory)

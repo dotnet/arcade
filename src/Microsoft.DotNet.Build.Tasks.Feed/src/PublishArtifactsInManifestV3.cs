@@ -146,7 +146,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     }
                 }
 
-                CheckForStableAssetsInNonIsolatedFeeds();
+                CheckForStableAssetsInNonIsolatedFeeds(bool.Parse(BuildModel.Identity.IsReleaseOnlyPackageVersion));
 
                 if (Log.HasLoggedErrors)
                 {
