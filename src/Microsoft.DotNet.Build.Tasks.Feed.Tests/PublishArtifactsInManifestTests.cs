@@ -373,17 +373,21 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 }
             };
 
-            Func<string, string, Task<int>> testStartProcessAsync = async (string fakeExePath, string fakeExeArgs) =>
+            Func<string, string, ProcessExecutionResult> testRunAngLogProcess = (string fakeExePath, string fakeExeArgs) =>
             {
-                await (Task.Delay(10)); // To make this actually async
-                Debug.WriteLine($"Called mocked StartProcessAsync() :  ExePath = {fakeExePath}, ExeArgs = {fakeExeArgs}");
-                Assert.Equal(fakeExePath, fakeNugetExeName); 
+                Debug.WriteLine($"Called mocked RunProcessAndGetOutputs() :  ExePath = {fakeExePath}, ExeArgs = {fakeExeArgs}");
+                Assert.Equal(fakeExePath, fakeNugetExeName);
+                ProcessExecutionResult result = new ProcessExecutionResult() { StandardError = "fake stderr", StandardOut = "fake stdout" };
                 timesNugetExeCalled++;
                 if (timesNugetExeCalled >= pushAttemptsBeforeSuccess)
                 {
-                    return 0;
+                    result.ExitCode = 0;
                 }
-                return 1;
+                else
+                {
+                    result.ExitCode = 1;
+                }
+                return result;
             };
 
             await task.PushNugetPackageAsync(
@@ -396,7 +400,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 "feedvisibility", 
                 "feedname",
                 testCompareLocalPackage,
-                testStartProcessAsync);
+                testRunAngLogProcess);
             if (!expectedFailure && localPackageMatchesFeed)
             {
                 // Successful retry scenario; make sure we ran the # of retries we thought.
