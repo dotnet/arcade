@@ -5,7 +5,6 @@ using System;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.IO;
-using Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.SignTool
 {
@@ -113,5 +112,8 @@ namespace Microsoft.DotNet.SignTool
                (TargetFramework != null ? $" TargetFramework='{TargetFramework}'" : "") +
                $" Certificate='{SignInfo.Certificate}'" +
                (SignInfo.StrongName != null ? $" StrongName='{SignInfo.StrongName}'" : "");
+        internal FileSignInfo WithSignableParts(bool value)
+            => new FileSignInfo(FullPath, ContentHash, SignInfo.WithSignableParts(value), TargetFramework, ForceRepack, WixContentFilePath);
+
     }
 }

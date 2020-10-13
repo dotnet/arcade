@@ -124,12 +124,12 @@ namespace Microsoft.DotNet.SignTool
 
         public override bool VerifySignedNugetFileMarker(string filePath)
         {
-            return Path.GetFileName(filePath).Equals(".signature.p7s", StringComparison.OrdinalIgnoreCase);
+            return VerifySignatures.VerifySignedNupkgByFileMarker(filePath);
         }
 
         public override bool VerifySignedVSIXFileMarker(string filePath)
         {
-            return filePath.StartsWith("package/services/digital-signature/", StringComparison.OrdinalIgnoreCase);
+            return VerifySignatures.VerifySignedVSIXByFileMarker(filePath);
         }
     }
 }

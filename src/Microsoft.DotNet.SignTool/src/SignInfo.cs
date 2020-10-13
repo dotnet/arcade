@@ -34,6 +34,8 @@ namespace Microsoft.DotNet.SignTool
 
         internal bool IsAlreadySigned { get; }
 
+        internal bool HasSignableParts { get; }
+
         /// <summary>
         /// This is used to decide what SignInfos to use in the case of a collision. In case of a collision
         /// we'll use the lower value since it would map a lower node in the graph and has precedence
@@ -45,29 +47,33 @@ namespace Microsoft.DotNet.SignTool
 
         public bool ShouldSign => !IsAlreadySigned && !ShouldIgnore;
 
-        public SignInfo(string certificate, string strongName, string collisionPriorityId, bool shouldIgnore, bool isAlreadySigned)
+        public SignInfo(string certificate, string strongName, string collisionPriorityId, bool shouldIgnore, bool isAlreadySigned, bool hasSignableParts = false)
         {
             ShouldIgnore = shouldIgnore;
             IsAlreadySigned = isAlreadySigned;
             Certificate = certificate;
             StrongName = strongName;
             CollisionPriorityId = collisionPriorityId;
+            HasSignableParts = hasSignableParts;
         }
 
-        private SignInfo(bool ignoreThisFile, bool alreadySigned) 
-            : this(certificate: null, strongName: null, collisionPriorityId: null, ignoreThisFile, alreadySigned)
+        private SignInfo(bool ignoreThisFile, bool alreadySigned, bool hasSignableParts = false) 
+            : this(certificate: null, strongName: null, collisionPriorityId: null, ignoreThisFile, alreadySigned, hasSignableParts)
         {
         }
 
-        internal SignInfo(string certificate, string strongName = null, string collisionPriorityId = null)
-            : this(certificate, strongName, collisionPriorityId, shouldIgnore: false, isAlreadySigned: false)
+        internal SignInfo(string certificate, string strongName = null, string collisionPriorityId = null, bool hasSignableParts = false)
+            : this(certificate, strongName, collisionPriorityId, shouldIgnore: false, isAlreadySigned: false, hasSignableParts: hasSignableParts)
         {
         }
 
         internal SignInfo WithCertificateName(string value, string collisionPriorityId)
-            => new SignInfo(value, StrongName, collisionPriorityId, ShouldIgnore, IsAlreadySigned);
+            => new SignInfo(value, StrongName, collisionPriorityId, ShouldIgnore, IsAlreadySigned, HasSignableParts);
 
         internal SignInfo WithCollisionPriorityId(string collisionPriorityId)
-            => new SignInfo(Certificate, StrongName, collisionPriorityId, ShouldIgnore, IsAlreadySigned);
+            => new SignInfo(Certificate, StrongName, collisionPriorityId, ShouldIgnore, IsAlreadySigned, HasSignableParts);
+
+        internal SignInfo WithSignableParts(bool value)
+            => new SignInfo(Certificate, StrongName, CollisionPriorityId, ShouldIgnore, IsAlreadySigned, value);
     }
 }
