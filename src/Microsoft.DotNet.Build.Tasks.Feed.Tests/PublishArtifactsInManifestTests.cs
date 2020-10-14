@@ -248,21 +248,25 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         /// <summary>
         ///     Check that attempts to publish stable artifacts to non-stable feeds will throw errors.
         /// </summary>
-        [Theory]
+        [Theory] 
         [InlineData("3.0.0", false, true)]
         [InlineData("3.0.0-preview1", false, false)]
         [InlineData("3.0.0.10", false, false)]
         [InlineData("3.0.0-preview1-12345", false, false)]
         [InlineData("5.3.0-rtm.6198", false, false)]
-        [InlineData("3.3.1-beta3-19430-03", false, false)]
+        [InlineData("3.3.1-beta3-19430-03", false, false )]
         [InlineData("3.0.0", true, false)]
         [InlineData("3.0.0-preview1", true, false)]
         [InlineData("3.0.0.10", true, false)]
         [InlineData("3.0.0-preview1-12345", true, false)]
         [InlineData("5.3.0-rtm.6198", true, false)]
         [InlineData("3.3.1-beta3-19430-03", true, false)]
-        [InlineData("3.0.0", false, false, true)]
-        public async Task StableAssetCheckV2Async(string assetVersion, bool isIsolatedFeed, bool shouldError, bool skipChecks = false, string  isReleaseOnlyPackageVersion = "false")
+        [InlineData("3.0.0", false, false, "false",true)]
+        [InlineData("5.0.0", true, false, "true")]
+        [InlineData("5.0.1-preview-123", true, false, "false", true)]
+        [InlineData("5.0.0", false, true, "false")]
+        [InlineData("5.0.1-preview-123", false, false, "true")]
+        public async Task StableAssetCheckV2Async(string assetVersion, bool isIsolatedFeed, bool shouldError, string isReleaseOnlyPackageVersion = "false" ,bool skipChecks = false )
         {
             const string packageId = "Foo.Package";
 
