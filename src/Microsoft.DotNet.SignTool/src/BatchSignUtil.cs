@@ -318,7 +318,10 @@ namespace Microsoft.DotNet.SignTool
         {
             foreach (var fileName in _batchData.FilesToSign.OrderBy(x => x.FullPath))
             {
-                var isVsixCert = !string.IsNullOrEmpty(fileName.SignInfo.Certificate) && IsVsixCertificate(fileName.SignInfo.Certificate);
+                bool isVsixCert = (!string.IsNullOrEmpty(fileName.SignInfo.Certificate) && IsVsixCertificate(fileName.SignInfo.Certificate)) ||
+                                    fileName.SignInfo.IsAlreadySigned && fileName.SignInfo.HasSignableParts;
+
+                bool isInvalidEmptyCertificate = fileName.SignInfo.Certificate == null && (!fileName.SignInfo.HasSignableParts && !fileName.SignInfo.IsAlreadySigned);
 
                 if (fileName.IsPEFile())
                 {
@@ -331,10 +334,7 @@ namespace Microsoft.DotNet.SignTool
                 {
                     if (!isVsixCert)
                     {
-                        if (!fileName.SignInfo.HasSignableParts)
-                        {
-                            log.LogError($"VSIX {fileName} must be signed with a VSIX certificate");
-                        }
+                        log.LogError($"VSIX {fileName} must be signed with a VSIX certificate");
                     }
 
                     if (fileName.SignInfo.StrongName != null)
@@ -344,12 +344,9 @@ namespace Microsoft.DotNet.SignTool
                 }
                 else if (fileName.IsNupkg())
                 {
-                    if (fileName.SignInfo.Certificate == null)
+                    if(isInvalidEmptyCertificate)
                     {
-                        if (!fileName.SignInfo.HasSignableParts)
-                        {
-                            log.LogError($"Nupkg {fileName} should have a certificate name.");
-                        }
+                        log.LogError($"Nupkg {fileName} should have a certificate name.");
                     }
 
                     if (fileName.SignInfo.StrongName != null)
@@ -361,10 +358,7 @@ namespace Microsoft.DotNet.SignTool
                 {
                     if (fileName.SignInfo.Certificate != null)
                     {
-                        if (!fileName.SignInfo.HasSignableParts)
-                        {
-                            log.LogError($"Zip {fileName} should not be signed with this certificate: {fileName.SignInfo.Certificate}");
-                        }
+                        log.LogError($"Zip {fileName} should not be signed with this certificate: {fileName.SignInfo.Certificate}");
                     }
 
                     if (fileName.SignInfo.StrongName != null)
@@ -374,12 +368,9 @@ namespace Microsoft.DotNet.SignTool
                 }
                 if (fileName.IsExecutableWixContainer())
                 {
-                    if (fileName.SignInfo.Certificate == null)
+                    if (isInvalidEmptyCertificate)
                     {
-                        if (!fileName.SignInfo.HasSignableParts)
-                        {
-                            log.LogError($"Wix file {fileName} should have a certificate name.");
-                        }
+                        log.LogError($"Wix file {fileName} should have a certificate name.");
                     }
 
                     if (fileName.SignInfo.StrongName != null)
