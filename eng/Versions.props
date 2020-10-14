@@ -77,7 +77,7 @@
     <MicrosoftDotNetSwaggerGeneratorMSBuildVersion>6.0.0-beta.20509.12</MicrosoftDotNetSwaggerGeneratorMSBuildVersion>
     <XliffTasksVersion>1.0.0-beta.20502.2</XliffTasksVersion>
     <MicrosoftDotNetMaestroTasksVersion>1.1.0-beta.20461.2</MicrosoftDotNetMaestroTasksVersion>
-    <MicrosoftDotNetXHarnessCLIVersion>1.0.0-prerelease.20505.1</MicrosoftDotNetXHarnessCLIVersion>
+    <MicrosoftDotNetXHarnessCLIVersion>1.0.0-prerelease.20512.5</MicrosoftDotNetXHarnessCLIVersion>
     <MicrosoftSymbolUploaderBuildTaskVersion>1.1.150803</MicrosoftSymbolUploaderBuildTaskVersion>
   </PropertyGroup>
 </Project>
