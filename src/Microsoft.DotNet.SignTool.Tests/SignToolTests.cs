@@ -745,9 +745,10 @@ $@"<FilesToSign Include=""{Path.Combine(_tmpDir, "CoreLibCrossARM.dll")}"">
             });
         }
 
-        [Fact]
+        [SkippableFact]
         public void DoubleNestedContainer()
         {
+            Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
             // List of files to be considered for signing
             var itemsToSign = new ITaskItem[]
             {
