@@ -324,9 +324,12 @@ namespace Microsoft.DotNet.SignTool
             {
                 if (!_hashToCollisionIdMap.TryGetValue(signedFileContentKey, out collisionPriorityId))
                 {
-                    // Hash doesn't exist so we use the CollisionPriorityId from the parent container
-                    SignedFileContentKey parentSignedFileContentKey = new SignedFileContentKey(ContentUtil.GetContentHash(containerPath), Path.GetFileName(containerPath));
-                    collisionPriorityId = _hashToCollisionIdMap[parentSignedFileContentKey];
+                    if(containerPath != fullPath)
+                    { 
+                        // Hash doesn't exist so we use the CollisionPriorityId from the parent container
+                        SignedFileContentKey parentSignedFileContentKey = new SignedFileContentKey(ContentUtil.GetContentHash(containerPath), Path.GetFileName(containerPath));
+                        collisionPriorityId = _hashToCollisionIdMap[parentSignedFileContentKey];
+                    }
                 }
             }
 
@@ -459,8 +462,9 @@ namespace Microsoft.DotNet.SignTool
             if (hasSignInfo)
             {
                 bool dualCerts = _dualCertificates
-                        .Where(d => d.ItemSpec == signInfo.Certificate &&
-                        d.GetMetadata(SignToolConstants.CollisionPriorityId) == _hashToCollisionIdMap[signedFileContentKey]).Any();
+                        .Where(d => d.ItemSpec == signInfo.Certificate && 
+                        (d.GetMetadata(SignToolConstants.CollisionPriorityId) == "" ||
+                        d.GetMetadata(SignToolConstants.CollisionPriorityId) == _hashToCollisionIdMap[signedFileContentKey])).Any();
 
                 if (isAlreadySigned && !dualCerts && !forceRepack)
                 {
