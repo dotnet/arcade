@@ -347,10 +347,10 @@ namespace Microsoft.DotNet.SignTool
 
                     if (map.ContainsKey(extension))
                     {
-                        if(map[extension].Any(m => m.CollisionPriorityId == signInfo.CollisionPriorityId))
-                        {
-                            Log.LogError($"Multiple certificates for extension '{extension}' defined for CollisionPriorityId '{signInfo.CollisionPriorityId}.  There should be one certificate per extension per collision priority id.");
-                        }
+//                        if(map[extension].Any(m => m.CollisionPriorityId == signInfo.CollisionPriorityId))
+//                        {
+//                            Log.LogError($"Multiple certificates for extension '{extension}' defined for CollisionPriorityId '{signInfo.CollisionPriorityId}'.  There should be one certificate per extension per collision priority id.");
+//                        }
                         map[extension].Add(signInfo);
                     }
                     else
