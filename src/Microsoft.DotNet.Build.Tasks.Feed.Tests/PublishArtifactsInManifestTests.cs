@@ -373,7 +373,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 }
             };
 
-            Func<string, string, ProcessExecutionResult> testRunAngLogProcess = (string fakeExePath, string fakeExeArgs) =>
+            Func<string, string, ProcessExecutionResult> testRunAndLogProcess = (string fakeExePath, string fakeExeArgs) =>
             {
                 Debug.WriteLine($"Called mocked RunProcessAndGetOutputs() :  ExePath = {fakeExePath}, ExeArgs = {fakeExeArgs}");
                 Assert.Equal(fakeExePath, fakeNugetExeName);
@@ -400,7 +400,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 "feedvisibility", 
                 "feedname",
                 testCompareLocalPackage,
-                testRunAngLogProcess);
+                testRunAndLogProcess);
             if (!expectedFailure && localPackageMatchesFeed)
             {
                 // Successful retry scenario; make sure we ran the # of retries we thought.
