@@ -117,6 +117,12 @@ Note that the specific test cases listed are an initial guess based on reading c
     - Negative cases, expect a meaningful exception
       -	Given a SigningInformation missing various top level values that are assumed present (if allowed from caller)
       -	Given a SigningInformation with nested values missing
+  - Scenario Tests
+    - Positive cases, validate that the BAR database has been updated with the correct information and that the new build exists
+      - All values and input are valid throughout the pipeline
+    - Negative cases, a user friendly error message is returned
+      - RepoRoot is null or empty
+      - AssetVersion is null or empty
 
 **Non-Goals**
 Test coverage for any code outside of the Maestro.task project.
