@@ -1094,6 +1094,51 @@ $@"
             });
         }
 
+        [Fact]
+        public void CheckPowershellSigning()
+        {
+            // List of files to be considered for signing
+            var itemsToSign = new ITaskItem[]
+            {
+                new TaskItem(GetResourcePath("SignedScript.ps1")),
+                new TaskItem(GetResourcePath("UnsignedScript.ps1"))
+            };
+
+            // Default signing information
+            var strongNameSignInfo = new Dictionary<string, List<SignInfo>>();
+
+            // Overriding information
+            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
+
+            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
+            {
+                "File 'UnsignedScript.ps1' Certificate='PSCertificate'"
+            });
+        }
+
+        [Fact]
+        public void SignNupkgWithUnsignedContents()
+        {
+            // List of files to be considered for signing
+            var itemsToSign = new ITaskItem[]
+            {
+                new TaskItem(GetResourcePath("UnsignedContents.nupkg")),
+                new TaskItem(GetResourcePath("SignedContents.nupkg"))
+            };
+
+            // Default signing information
+            var strongNameSignInfo = new Dictionary<string, List<SignInfo>>();
+
+            // Overriding information
+            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
+
+            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
+            {
+                "File 'UnsignedScript.ps1' Certificate='PSCertificate'",
+                "File 'UnsignedContents.nupkg' Certificate='NuGet'"
+            });
+        }
+
         [SkippableFact]
         public void SignMsiEngine()
         {
