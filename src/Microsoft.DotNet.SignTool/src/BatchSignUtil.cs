@@ -97,10 +97,10 @@ namespace Microsoft.DotNet.SignTool
         {
             // Generate the list of signed files in a deterministic order. Makes it easier to track down
             // bugs if repeated runs use the same ordering.
-            var toSignList = _batchData.FilesToSign.ToList();
+            var toTrackList = _batchData.FilesToSign.ToList();
             var toRepackList = _batchData.FilesToSign.Where(x => (x.ForceRepack || x.SignInfo.HasSignableParts) && x.IsContainer())?.Select(x => x.FullPath)?.ToList();
             var round = 0;
-            var signedSet = new HashSet<SignedFileContentKey>();
+            var trackedSet = new HashSet<SignedFileContentKey>();
 
             bool signFiles(IEnumerable<FileSignInfo> files, out int totalFilesSigned)
             {
@@ -192,13 +192,13 @@ namespace Microsoft.DotNet.SignTool
 
             // Is this file ready to be signed? That is are all of the items that it depends on already
             // signed?
-            bool isReadyToSign(FileSignInfo file)
+            bool isReady(FileSignInfo file)
             {
                 if (file.IsContainer())
                 {
                     var zipData = _batchData.ZipDataMap[file.FileContentKey];
                     return zipData.NestedParts.All(x => (!x.FileSignInfo.SignInfo.ShouldSign ||
-                        signedSet.Contains(x.FileSignInfo.FileContentKey)) && !toRepackList.Contains(x.FileSignInfo.FullPath)
+                        trackedSet.Contains(x.FileSignInfo.FileContentKey)) && !toRepackList.Contains(x.FileSignInfo.FullPath)
                         );
                 }
                 return true;
@@ -210,13 +210,13 @@ namespace Microsoft.DotNet.SignTool
             {
                 var list = new List<FileSignInfo>();
                 var i = 0;
-                while (i < toSignList.Count)
+                while (i < toTrackList.Count)
                 {
-                    var current = toSignList[i];
-                    if (isReadyToSign(current))
+                    var current = toTrackList[i];
+                    if (isReady(current))
                     {
                         list.Add(current);
-                        toSignList.RemoveAt(i);
+                        toTrackList.RemoveAt(i);
                     }
                     else
                     {
@@ -227,17 +227,18 @@ namespace Microsoft.DotNet.SignTool
                 return list;
             }
 
-            while (toSignList.Count > 0)
+            while (toTrackList.Count > 0)
             {
-                var list = extractNextGroup();
-                if (list.Count == 0)
+                var trackList = extractNextGroup();
+                if (trackList.Count == 0)
                 {
                     throw new InvalidOperationException("No progress made on signing which indicates a bug");
                 }
 
-                repackFiles(list);
+                repackFiles(trackList);
                 int totalFilesSigned;
-                if (!signEngines(list, out totalFilesSigned))
+                var signList = trackList.Where(w => w.SignInfo.ShouldSign && w.SignInfo.Certificate != null).ToList();
+                if (!signEngines(signList, out totalFilesSigned))
                 {
                     return false;
                 }
@@ -246,7 +247,7 @@ namespace Microsoft.DotNet.SignTool
                     round++;
                 }
 
-                if (!signFiles(list, out totalFilesSigned))
+                if (!signFiles(signList, out totalFilesSigned))
                 {
                     return false;
                 }
@@ -254,7 +255,7 @@ namespace Microsoft.DotNet.SignTool
                 {
                     round++;
                 }
-                list.ForEach(x => signedSet.Add(x.FileContentKey));
+                trackList.ForEach(x => trackedSet.Add(x.FileContentKey));
             }
 
             return true;
