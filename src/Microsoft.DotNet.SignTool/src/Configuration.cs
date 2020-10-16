@@ -280,7 +280,7 @@ namespace Microsoft.DotNet.SignTool
                     _filesByContentKey[fileSignInfo.FileContentKey] = fileSignInfo;
                 }
             }
-            if (fileSignInfo.SignInfo.ShouldSign || fileSignInfo.ForceRepack || fileSignInfo.SignInfo.HasSignableParts)
+            if (fileSignInfo.SignInfo.ShouldSign || fileSignInfo.ForceRepack)
             {
                 // We never sign wixpacks
                 if (!WixPackInfo.IsWixPack(fileSignInfo.FileName))
@@ -439,6 +439,19 @@ namespace Microsoft.DotNet.SignTool
                     _log.LogMessage(MessageImportance.Low, $"File {fullPath} is digitally signed.");
                 }
             }
+            else if(FileSignInfo.IsPowerShellScript(fullPath))
+            {
+                isAlreadySigned = VerifySignatures.VerifySignedPowerShellFile(fullPath);
+                if (!isAlreadySigned)
+                {
+                    _log.LogMessage($"File {fullPath} does not have a signature block.");
+                }
+                else
+                {
+                    _log.LogMessage(MessageImportance.Low, $"File {fullPath} has a signature block.");
+                }
+            }
+
             // We didn't find any specific information for PE files using PKT + TargetFramework
             if (explicitCertificateName == null)
             {
@@ -455,7 +468,7 @@ namespace Microsoft.DotNet.SignTool
             // Do we have an explicit certificate after all?
             if (explicitCertificateName != null)
             {
-                signInfo = signInfo.WithCertificateName(explicitCertificateName, _hashToCollisionIdMap[signedFileContentKey]);
+                signInfo = signInfo.WithCertificateName(explicitCertificateName, _hashToCollisionIdMap[signedFileContentKey]).WithSignableParts(hasSignableParts);
                 hasSignInfo = true;
             }
 
@@ -468,7 +481,7 @@ namespace Microsoft.DotNet.SignTool
 
                 if (isAlreadySigned && !dualCerts && !forceRepack)
                 {
-                    return new FileSignInfo(fullPath, hash, SignInfo.AlreadySigned.WithSignableParts(hasSignableParts), forceRepack: forceRepack, wixContentFilePath: wixContentFilePath);
+                    return new FileSignInfo(fullPath, hash, signInfo.WithIsAlreadySigned(isAlreadySigned).WithSignableParts(hasSignableParts), forceRepack: forceRepack, wixContentFilePath: wixContentFilePath);
                 }
 
                 // TODO: implement this check for native PE files as well:
@@ -504,8 +517,7 @@ namespace Microsoft.DotNet.SignTool
                 _log.LogMessage($"Ignoring non-signable file: {fullPath}");
             }
 
-            signInfo = SignInfo.Ignore.WithSignableParts(hasSignableParts);
-            return new FileSignInfo(fullPath, hash, signInfo, forceRepack: forceRepack, wixContentFilePath: wixContentFilePath);
+            return new FileSignInfo(fullPath, hash, SignInfo.Ignore, forceRepack: forceRepack, wixContentFilePath: wixContentFilePath);
         }
 
         internal bool IsSignedContainer(string fullPath)

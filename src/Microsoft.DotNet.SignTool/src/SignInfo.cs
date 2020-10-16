@@ -74,6 +74,9 @@ namespace Microsoft.DotNet.SignTool
             => new SignInfo(Certificate, StrongName, collisionPriorityId, ShouldIgnore, IsAlreadySigned, HasSignableParts);
 
         internal SignInfo WithSignableParts(bool value)
-            => new SignInfo(Certificate, StrongName, CollisionPriorityId, ShouldIgnore, IsAlreadySigned, value);
+            => new SignInfo(Certificate, StrongName, CollisionPriorityId, ShouldIgnore && !value, IsAlreadySigned && !value, value);
+
+        internal SignInfo WithIsAlreadySigned(bool value = false)
+            => new SignInfo(Certificate, StrongName, CollisionPriorityId, value, value, HasSignableParts);
     }
 }

@@ -4,12 +4,17 @@
 using System;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 
 namespace Microsoft.DotNet.SignTool
 {
     internal class VerifySignatures
     {
+        internal static bool VerifySignedPowerShellFile(string filePath)
+        {
+            return File.ReadLines(filePath).Any(line => line.IndexOf("# SIG # Begin Signature Block", StringComparison.OrdinalIgnoreCase) >= 0);
+        }
         internal static bool VerifySignedNupkgByFileMarker(string filePath)
         {
             return Path.GetFileName(filePath).Equals(".signature.p7s", StringComparison.OrdinalIgnoreCase);

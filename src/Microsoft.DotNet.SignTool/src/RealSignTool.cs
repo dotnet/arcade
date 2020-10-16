@@ -119,7 +119,7 @@ namespace Microsoft.DotNet.SignTool
 
         public override bool VerifySignedPowerShellFile(string filePath)
         {
-            return File.ReadLines(filePath).Any(line => line.IndexOf("# SIG # Begin Signature Block", StringComparison.OrdinalIgnoreCase) >= 0);
+            return VerifySignatures.VerifySignedPowerShellFile(filePath);
         }
 
         public override bool VerifySignedNugetFileMarker(string filePath)
