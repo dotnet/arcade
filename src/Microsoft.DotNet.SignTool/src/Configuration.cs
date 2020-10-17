@@ -272,7 +272,7 @@ namespace Microsoft.DotNet.SignTool
             {
                 // Only sign containers if the file itself is unsigned, or 
                 // an item in the container is unsigned.
-                hasSignableParts = _zipDataMap[fileSignInfo.FileContentKey].NestedParts.Any(b => b.FileSignInfo.SignInfo.ShouldSign == true || b.FileSignInfo.SignInfo.HasSignableParts);
+                hasSignableParts = _zipDataMap[fileSignInfo.FileContentKey].NestedParts.Any(b => b.FileSignInfo.SignInfo.ShouldSign == true || b.FileSignInfo.HasSignableParts);
                 if(hasSignableParts)
                 {
                     // If the file has contents that need to be signed, then re-evaluate the signing info and specify forceRepack is true
@@ -280,7 +280,7 @@ namespace Microsoft.DotNet.SignTool
                     _filesByContentKey[fileSignInfo.FileContentKey] = fileSignInfo;
                 }
             }
-            if (fileSignInfo.SignInfo.ShouldSign || fileSignInfo.ForceRepack)
+            if (fileSignInfo.SignInfo.ShouldSign || fileSignInfo.ShouldRepack)
             {
                 // We never sign wixpacks
                 if (!WixPackInfo.IsWixPack(fileSignInfo.FileName))
@@ -298,8 +298,7 @@ namespace Microsoft.DotNet.SignTool
             ImmutableArray<byte> hash,
             bool forceRepack = false,
             string wixContentFilePath = null,
-            string containerPath = null,
-            bool hasSignableParts = false)
+            string containerPath = null)
         {
             var fileName = Path.GetFileName(fullPath);
             var extension = Path.GetExtension(fullPath);
@@ -354,7 +353,7 @@ namespace Microsoft.DotNet.SignTool
             // we get the one which maps a collision id or the first of the returned ones in case there is no
             // collision id
             bool hasSignInfos = _fileExtensionSignInfo.TryGetValue(extension, out var signInfos);
-            SignInfo signInfo = SignInfo.Ignore.WithSignableParts(hasSignableParts);
+            SignInfo signInfo = SignInfo.Ignore;
             bool hasSignInfo = false;
 
             if (hasSignInfos)
@@ -385,7 +384,7 @@ namespace Microsoft.DotNet.SignTool
                     // Get the default sign info based on the PKT, if applicable. Since there might be dupes
                     // we get the one which maps a collision id or the first of the returned ones in case there is no
                     // collision id
-                    SignInfo pktBasedSignInfo = SignInfo.Ignore.WithSignableParts(hasSignableParts);
+                    SignInfo pktBasedSignInfo = SignInfo.Ignore;
 
                     if (!string.IsNullOrEmpty(collisionPriorityId))
                     {
@@ -462,13 +461,13 @@ namespace Microsoft.DotNet.SignTool
             if (SignToolConstants.IgnoreFileCertificateSentinel.Equals(explicitCertificateName, StringComparison.OrdinalIgnoreCase))
             {
                 _log.LogMessage($"File configured to not be signed: {fileName}{fileSpec}");
-                return new FileSignInfo(fullPath, hash, SignInfo.Ignore.WithSignableParts(hasSignableParts), forceRepack: forceRepack);
+                return new FileSignInfo(fullPath, hash, SignInfo.Ignore, forceRepack: forceRepack);
             }
 
             // Do we have an explicit certificate after all?
             if (explicitCertificateName != null)
             {
-                signInfo = signInfo.WithCertificateName(explicitCertificateName, _hashToCollisionIdMap[signedFileContentKey]).WithSignableParts(hasSignableParts);
+                signInfo = signInfo.WithCertificateName(explicitCertificateName, _hashToCollisionIdMap[signedFileContentKey]);
                 hasSignInfo = true;
             }
 
@@ -481,7 +480,7 @@ namespace Microsoft.DotNet.SignTool
 
                 if (isAlreadySigned && !dualCerts && !forceRepack)
                 {
-                    return new FileSignInfo(fullPath, hash, signInfo.WithIsAlreadySigned(isAlreadySigned).WithSignableParts(hasSignableParts), forceRepack: forceRepack, wixContentFilePath: wixContentFilePath);
+                    return new FileSignInfo(fullPath, hash, signInfo.WithIsAlreadySigned(isAlreadySigned), forceRepack: forceRepack, wixContentFilePath: wixContentFilePath);
                 }
 
                 // TODO: implement this check for native PE files as well:
@@ -747,7 +746,7 @@ namespace Microsoft.DotNet.SignTool
                             fileSignInfo = TrackFile(tempPath, collisionPriorityId, contentHash, isNested: true, containerPath: containerPath ?? archivePath);
                         }
 
-                        if (fileSignInfo.SignInfo.ShouldSign || fileSignInfo.ForceRepack || fileSignInfo.SignInfo.HasSignableParts)
+                        if (fileSignInfo.SignInfo.ShouldSign || fileSignInfo.ShouldRepack)
                         {
                             nestedParts.Add(new ZipPart(relativePath, fileSignInfo));
                         }

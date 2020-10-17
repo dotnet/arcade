@@ -91,7 +91,11 @@ namespace Microsoft.DotNet.SignTool
 
         internal bool IsPowerShellScript() => IsPowerShellScript(FileName);
 
-        internal FileSignInfo(string fullPath, ImmutableArray<byte> contentHash, SignInfo signInfo, string targetFramework = null, bool forceRepack = false, string wixContentFilePath = null)
+        internal bool ShouldRepack => ForceRepack || HasSignableParts;
+
+        internal bool HasSignableParts { get; }
+
+        internal FileSignInfo(string fullPath, ImmutableArray<byte> contentHash, SignInfo signInfo, string targetFramework = null, bool forceRepack = false, string wixContentFilePath = null, bool hasSignableParts = false)
         {
             Debug.Assert(fullPath != null);
             Debug.Assert(!contentHash.IsDefault && contentHash.Length == 256 / 8);
@@ -105,6 +109,7 @@ namespace Microsoft.DotNet.SignTool
             TargetFramework = targetFramework;
             ForceRepack = forceRepack;
             WixContentFilePath = wixContentFilePath;
+            HasSignableParts = hasSignableParts;
         }
 
         public override string ToString()
@@ -112,8 +117,9 @@ namespace Microsoft.DotNet.SignTool
                (TargetFramework != null ? $" TargetFramework='{TargetFramework}'" : "") +
                $" Certificate='{SignInfo.Certificate}'" +
                (SignInfo.StrongName != null ? $" StrongName='{SignInfo.StrongName}'" : "");
+
         internal FileSignInfo WithSignableParts(bool value)
-            => new FileSignInfo(FullPath, ContentHash, SignInfo.WithSignableParts(value), TargetFramework, ForceRepack, WixContentFilePath);
+            => new FileSignInfo(FullPath, ContentHash, SignInfo, TargetFramework, ForceRepack, WixContentFilePath, value);
 
     }
 }

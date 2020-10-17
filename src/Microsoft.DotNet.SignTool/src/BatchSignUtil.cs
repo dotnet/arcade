@@ -98,7 +98,7 @@ namespace Microsoft.DotNet.SignTool
             // Generate the list of signed files in a deterministic order. Makes it easier to track down
             // bugs if repeated runs use the same ordering.
             var toTrackList = _batchData.FilesToSign.ToList();
-            var toRepackList = _batchData.FilesToSign.Where(x => (x.ForceRepack || x.SignInfo.HasSignableParts) && x.IsContainer())?.Select(x => x.FullPath)?.ToList();
+            var toRepackList = _batchData.FilesToSign.Where(x => x.ShouldRepack)?.Select(x => x.FullPath)?.ToList();
             var round = 0;
             var trackedSet = new HashSet<SignedFileContentKey>();
 
@@ -237,8 +237,7 @@ namespace Microsoft.DotNet.SignTool
 
                 repackFiles(trackList);
                 int totalFilesSigned;
-                var signList = trackList.Where(w => w.SignInfo.ShouldSign && w.SignInfo.Certificate != null).ToList();
-                if (!signEngines(signList, out totalFilesSigned))
+                if (!signEngines(trackList, out totalFilesSigned))
                 {
                     return false;
                 }
@@ -247,7 +246,7 @@ namespace Microsoft.DotNet.SignTool
                     round++;
                 }
 
-                if (!signFiles(signList, out totalFilesSigned))
+                if (!signFiles(trackList, out totalFilesSigned))
                 {
                     return false;
                 }
@@ -320,9 +319,9 @@ namespace Microsoft.DotNet.SignTool
             foreach (var fileName in _batchData.FilesToSign.OrderBy(x => x.FullPath))
             {
                 bool isVsixCert = (!string.IsNullOrEmpty(fileName.SignInfo.Certificate) && IsVsixCertificate(fileName.SignInfo.Certificate)) ||
-                                    fileName.SignInfo.IsAlreadySigned && fileName.SignInfo.HasSignableParts;
+                                    fileName.SignInfo.IsAlreadySigned && fileName.HasSignableParts;
 
-                bool isInvalidEmptyCertificate = fileName.SignInfo.Certificate == null && (!fileName.SignInfo.HasSignableParts && !fileName.SignInfo.IsAlreadySigned);
+                bool isInvalidEmptyCertificate = fileName.SignInfo.Certificate == null && (!fileName.HasSignableParts && !fileName.SignInfo.IsAlreadySigned);
 
                 if (fileName.IsPEFile())
                 {
