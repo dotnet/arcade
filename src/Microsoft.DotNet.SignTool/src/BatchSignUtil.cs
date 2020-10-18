@@ -234,8 +234,8 @@ namespace Microsoft.DotNet.SignTool
                 {
                     throw new InvalidOperationException("No progress made on signing which indicates a bug");
                 }
-
-                repackFiles(trackList);
+                var repackList = trackList.Where(w => toRepackList.Contains(w.FullPath));
+                repackFiles(repackList);
                 int totalFilesSigned;
                 if (!signEngines(trackList, out totalFilesSigned))
                 {
