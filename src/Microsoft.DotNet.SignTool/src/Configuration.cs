@@ -552,7 +552,6 @@ namespace Microsoft.DotNet.SignTool
             return true;
         }
 
-
         private void LogWarning(SigningToolErrorCode code, string message)
             => _log.LogWarning(subcategory: null, warningCode: code.ToString(), helpKeyword: null, file: null, lineNumber: 0, columnNumber: 0, endLineNumber: 0, endColumnNumber: 0, message: message);
 
