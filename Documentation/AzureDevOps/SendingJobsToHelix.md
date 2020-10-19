@@ -132,7 +132,7 @@ Tests results for "public" projects are accessible via the link which is provide
 Example build output:
 
 ```Text
-Sent Helix Job 7a6bb019-ed0e-4e46-a065-a38391d90019
+Sent Helix Job ; see work items at https://helix.dot.net/api/jobs/7a6bb019-ed0e-4e46-a065-a38391d90019/workitems?api-version=2019-06-17
 Waiting on job completion...
 Results will be available from https://mc.dot.net/#/user/dotnet-github-anon-kaonashi-bot/pr~2Fdotnet~2Fwinforms~2Frefs~2Fpull~2F9~2Fmerge/type~2Ftests/20181029.7
 ```
