@@ -50,7 +50,6 @@ namespace Microsoft.DotNet.SignTool
                 {
                     return false;
                 }
-
             }
             return true;
         }
