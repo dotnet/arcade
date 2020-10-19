@@ -97,7 +97,7 @@ namespace Microsoft.DotNet.SignTool
         {
             // Generate the list of signed files in a deterministic order. Makes it easier to track down
             // bugs if repeated runs use the same ordering.
-            var toTrackList = _batchData.FilesToSign.ToList();
+            var toProcessList = _batchData.FilesToSign.ToList();
             var toRepackList = _batchData.FilesToSign.Where(x => x.ShouldRepack)?.Select(x => x.FullPath)?.ToList();
             var round = 0;
             var trackedSet = new HashSet<SignedFileContentKey>();
@@ -210,13 +210,13 @@ namespace Microsoft.DotNet.SignTool
             {
                 var list = new List<FileSignInfo>();
                 var i = 0;
-                while (i < toTrackList.Count)
+                while (i < toProcessList.Count)
                 {
-                    var current = toTrackList[i];
+                    var current = toProcessList[i];
                     if (isReady(current))
                     {
                         list.Add(current);
-                        toTrackList.RemoveAt(i);
+                        toProcessList.RemoveAt(i);
                     }
                     else
                     {
@@ -227,7 +227,7 @@ namespace Microsoft.DotNet.SignTool
                 return list;
             }
 
-            while (toTrackList.Count > 0)
+            while (toProcessList.Count > 0)
             {
                 var trackList = extractNextGroup();
                 if (trackList.Count == 0)
