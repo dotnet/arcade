@@ -91,9 +91,11 @@ namespace Microsoft.DotNet.SignTool
 
         internal bool IsPowerShellScript() => IsPowerShellScript(FileName);
 
+        internal bool HasSignableParts { get; }
+
         internal bool ShouldRepack => ForceRepack || HasSignableParts;
 
-        internal bool HasSignableParts { get; }
+        internal bool ShouldTrack => SignInfo.ShouldSign || ShouldRepack;
 
         internal FileSignInfo(string fullPath, ImmutableArray<byte> contentHash, SignInfo signInfo, string targetFramework = null, bool forceRepack = false, string wixContentFilePath = null, bool hasSignableParts = false)
         {

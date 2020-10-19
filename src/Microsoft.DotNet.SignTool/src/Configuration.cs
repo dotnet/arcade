@@ -272,7 +272,7 @@ namespace Microsoft.DotNet.SignTool
             {
                 // Only sign containers if the file itself is unsigned, or 
                 // an item in the container is unsigned.
-                hasSignableParts = _zipDataMap[fileSignInfo.FileContentKey].NestedParts.Any(b => b.FileSignInfo.SignInfo.ShouldSign == true || b.FileSignInfo.HasSignableParts);
+                hasSignableParts = _zipDataMap[fileSignInfo.FileContentKey].NestedParts.Any(b => b.FileSignInfo.SignInfo.ShouldSign || b.FileSignInfo.HasSignableParts);
                 if(hasSignableParts)
                 {
                     // If the file has contents that need to be signed, then re-evaluate the signing info and specify forceRepack is true
@@ -280,7 +280,7 @@ namespace Microsoft.DotNet.SignTool
                     _filesByContentKey[fileSignInfo.FileContentKey] = fileSignInfo;
                 }
             }
-            if (fileSignInfo.SignInfo.ShouldSign || fileSignInfo.ShouldRepack)
+            if (fileSignInfo.ShouldTrack)
             {
                 // We never sign wixpacks
                 if (!WixPackInfo.IsWixPack(fileSignInfo.FileName))
@@ -745,7 +745,7 @@ namespace Microsoft.DotNet.SignTool
                             fileSignInfo = TrackFile(tempPath, collisionPriorityId, contentHash, isNested: true, containerPath: containerPath ?? archivePath);
                         }
 
-                        if (fileSignInfo.SignInfo.ShouldSign || fileSignInfo.ShouldRepack)
+                        if (fileSignInfo.ShouldTrack)
                         {
                             nestedParts.Add(new ZipPart(relativePath, fileSignInfo));
                         }

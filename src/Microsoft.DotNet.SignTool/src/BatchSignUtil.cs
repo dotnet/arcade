@@ -82,7 +82,7 @@ namespace Microsoft.DotNet.SignTool
         {
             foreach (var fileSignInfo in _batchData.FilesToSign.Where(x => x.IsPEFile()))
             {
-                if (fileSignInfo.SignInfo.StrongName != null)
+                if (fileSignInfo.SignInfo.StrongName != null && fileSignInfo.SignInfo.ShouldSign)
                 {
                     _log.LogMessage($"Removing public sign: '{fileSignInfo.FileName}'");
                     _signTool.RemovePublicSign(fileSignInfo.FullPath);
