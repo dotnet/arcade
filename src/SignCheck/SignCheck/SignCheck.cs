@@ -313,12 +313,12 @@ namespace SignCheck
                 {
                     TotalSignedFiles++;
                 }
-                else if (!(result.IsExcluded || result.IsSkipped))
+                else if (!(result.IsExcluded || result.IsSkipped) && (!result.IsSigned && !result.IsDoNotSign))
                 {
                     TotalUnsignedFiles++;
                 }
 
-                if (result.IsExcluded)
+                if (result.IsExcluded || (!result.IsSigned && result.IsDoNotSign))
                 {
                     TotalExcludedFiles++;
                 }
@@ -341,13 +341,13 @@ namespace SignCheck
                     ((result.IsSigned) && (result.IsDoNotSign)) ||
                     ((result.NestedResults.Count() > 0) && (Options.Recursive)) ||
                     ((FileStatus & FileStatus.AllFiles) == FileStatus.AllFiles) ||
-                    ((!result.IsSigned) && (!result.IsSkipped) && (!result.IsExcluded) && ((FileStatus & FileStatus.UnsignedFiles) != 0)))
+                    ((!result.IsSigned && !result.IsDoNotSign) && (!result.IsSkipped) && (!result.IsExcluded) && ((FileStatus & FileStatus.UnsignedFiles) != 0)))
                 {
                     LoggedResults = true;
                     Log.WriteMessage(LogVerbosity.Minimum, String.Empty.PadLeft(indent) + result.ToString(result.IsExcluded ? DetailKeys.ResultKeysExcluded : ResultDetails));
                 }
 
-                if (((!result.IsSigned) && (!(result.IsSkipped || result.IsExcluded))) || (result.IsSigned && result.IsDoNotSign))
+                if (((!result.IsSigned) && (!(result.IsSkipped || result.IsExcluded || result.IsDoNotSign))) || (result.IsSigned && result.IsDoNotSign))
                 {
                     NoSignIssues = false;
                 }
