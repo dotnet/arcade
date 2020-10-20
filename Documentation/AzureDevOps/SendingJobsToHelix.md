@@ -132,7 +132,6 @@ Tests results for "public" projects are accessible via the link which is provide
 Example build output:
 
 ```Text
-Sent Helix Job ; see work items at https://helix.dot.net/api/jobs/7a6bb019-ed0e-4e46-a065-a38391d90019/workitems?api-version=2019-06-17
 Sending Job to Debian.9.Amd64.Arcade.Open...
 Sent Helix Job; see work items at https://helix.dot.net/api/jobs/38f272c2-7999-44e4-953b-d5d003b614ce/workitems?api-version=2019-06-17
 Waiting for completion of job 38f272c2-7999-44e4-953b-d5d003b614ce on Debian.9.Amd64.Arcade.Open
@@ -156,5 +155,4 @@ As surfaced by the Helix API and backing Kusto (Azure Data Explorer) database, h
 - InfraRetry – Work item completed as expected, but on the 2nd-Nth attempt; this can be a requested-by-the-workitem retry, machine being rebooted or deleted during execution, or any number of random Azure components being flaky.  Typically ignoreable for test runs.
 - PassOnRetry – Special legacy retry functionality which is purposefully obsoleted as it does not play well with Azure DevOps test reporting (reporting the same facts twice causes issues)
 - Timeout – Work Item did not complete within its specified timeout and was forcibly killed.  Corresponds to exit code -3 (made up value since the process never exited)
-
 
