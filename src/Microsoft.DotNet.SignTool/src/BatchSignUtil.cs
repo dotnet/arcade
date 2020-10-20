@@ -321,7 +321,7 @@ namespace Microsoft.DotNet.SignTool
                 bool isVsixCert = (!string.IsNullOrEmpty(fileName.SignInfo.Certificate) && IsVsixCertificate(fileName.SignInfo.Certificate)) ||
                                     fileName.SignInfo.IsAlreadySigned && fileName.HasSignableParts;
 
-                bool isInvalidEmptyCertificate = fileName.SignInfo.Certificate == null && (!fileName.HasSignableParts && !fileName.SignInfo.IsAlreadySigned);
+                bool isInvalidEmptyCertificate = fileName.SignInfo.Certificate == null && !fileName.HasSignableParts && !fileName.SignInfo.IsAlreadySigned;
 
                 if (fileName.IsPEFile())
                 {

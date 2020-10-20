@@ -276,7 +276,7 @@ namespace Microsoft.DotNet.SignTool
                 if(hasSignableParts)
                 {
                     // If the file has contents that need to be signed, then re-evaluate the signing info and specify forceRepack is true
-                    fileSignInfo = fileSignInfo.WithSignableParts(true);
+                    fileSignInfo = fileSignInfo.WithSignableParts();
                     _filesByContentKey[fileSignInfo.FileContentKey] = fileSignInfo;
                 }
             }
@@ -419,7 +419,7 @@ namespace Microsoft.DotNet.SignTool
                 isAlreadySigned = VerifySignatures.IsSignedContainer(fullPath);
                 if(!isAlreadySigned)
                 {
-                    _log.LogMessage($"Container {fullPath} does not have a signature marker.");
+                    _log.LogMessage(MessageImportance.Low, $"Container {fullPath} does not have a signature marker.");
                 }
                 else
                 {
@@ -431,7 +431,7 @@ namespace Microsoft.DotNet.SignTool
                 isAlreadySigned = VerifySignatures.IsDigitallySigned(fullPath);
                 if (!isAlreadySigned)
                 {
-                    _log.LogMessage($"File {fullPath} is not digitally signed.");
+                    _log.LogMessage(MessageImportance.Low, $"File {fullPath} is not digitally signed.");
                 }
                 else
                 {
@@ -443,7 +443,7 @@ namespace Microsoft.DotNet.SignTool
                 isAlreadySigned = VerifySignatures.VerifySignedPowerShellFile(fullPath);
                 if (!isAlreadySigned)
                 {
-                    _log.LogMessage($"File {fullPath} does not have a signature block.");
+                    _log.LogMessage(MessageImportance.Low, $"File {fullPath} does not have a signature block.");
                 }
                 else
                 {
@@ -460,7 +460,7 @@ namespace Microsoft.DotNet.SignTool
             // If has overriding info, is it for ignoring the file?
             if (SignToolConstants.IgnoreFileCertificateSentinel.Equals(explicitCertificateName, StringComparison.OrdinalIgnoreCase))
             {
-                _log.LogMessage($"File configured to not be signed: {fileName}{fileSpec}");
+                _log.LogMessage(MessageImportance.Low, $"File configured to not be signed: {fileName}{fileSpec}");
                 return new FileSignInfo(fullPath, hash, SignInfo.Ignore, forceRepack: forceRepack);
             }
 
@@ -513,43 +513,10 @@ namespace Microsoft.DotNet.SignTool
             }
             else
             {
-                _log.LogMessage($"Ignoring non-signable file: {fullPath}");
+                _log.LogMessage(MessageImportance.Low, $"Ignoring non-signable file: {fullPath}");
             }
 
             return new FileSignInfo(fullPath, hash, SignInfo.Ignore, forceRepack: forceRepack, wixContentFilePath: wixContentFilePath);
-        }
-
-        internal bool IsSignedContainer(string fullPath)
-        {
-            if (FileSignInfo.IsZipContainer(fullPath))
-            {
-                bool signedContainer = false;
-
-                using (var archive = new ZipArchive(File.OpenRead(fullPath), ZipArchiveMode.Read))
-                {
-                    foreach (ZipArchiveEntry entry in archive.Entries)
-                    {
-                        if (FileSignInfo.IsNupkg(fullPath) && VerifySignatures.VerifySignedNupkgByFileMarker(fullPath))
-                        {
-                            signedContainer = true;
-                            break;
-                        }
-                        else if(FileSignInfo.IsVsix(fullPath) && VerifySignatures.VerifySignedVSIXByFileMarker(fullPath))
-                        {
-                            signedContainer = true;
-                            break;
-                        }
-                    }
-                }
-
-                if (!signedContainer)
-                {
-                    _log.LogMessage($"Container {fullPath} does not have signature marker.");
-                    return false;
-                }
-                _log.LogMessage(MessageImportance.Low, $"Container {fullPath} has a signature marker.");
-            }
-            return true;
         }
 
         private void LogWarning(SigningToolErrorCode code, string message)

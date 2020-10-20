@@ -120,8 +120,8 @@ namespace Microsoft.DotNet.SignTool
                $" Certificate='{SignInfo.Certificate}'" +
                (SignInfo.StrongName != null ? $" StrongName='{SignInfo.StrongName}'" : "");
 
-        internal FileSignInfo WithSignableParts(bool value)
-            => new FileSignInfo(FullPath, ContentHash, SignInfo, TargetFramework, ForceRepack, WixContentFilePath, value);
+        internal FileSignInfo WithSignableParts()
+            => new FileSignInfo(FullPath, ContentHash, SignInfo, TargetFramework, ForceRepack, WixContentFilePath, true);
 
     }
 }
