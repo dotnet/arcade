@@ -82,7 +82,7 @@ namespace Microsoft.DotNet.SignTool
         {
             foreach (var fileSignInfo in _batchData.FilesToSign.Where(x => x.IsPEFile()))
             {
-                if (fileSignInfo.SignInfo.StrongName != null)
+                if (fileSignInfo.SignInfo.StrongName != null && fileSignInfo.SignInfo.ShouldSign)
                 {
                     _log.LogMessage($"Removing public sign: '{fileSignInfo.FileName}'");
                     _signTool.RemovePublicSign(fileSignInfo.FullPath);
@@ -97,13 +97,13 @@ namespace Microsoft.DotNet.SignTool
         {
             // Generate the list of signed files in a deterministic order. Makes it easier to track down
             // bugs if repeated runs use the same ordering.
-            var toSignList = _batchData.FilesToSign.ToList();
+            var toProcessList = _batchData.FilesToSign.ToList();
+            var toRepackList = _batchData.FilesToSign.Where(x => x.ShouldRepack)?.Select(x => x.FullPath)?.ToList();
             var round = 0;
-            var signedSet = new HashSet<SignedFileContentKey>();
+            var trackedSet = new HashSet<SignedFileContentKey>();
 
             bool signFiles(IEnumerable<FileSignInfo> files, out int totalFilesSigned)
             {
-
                 var filesToSign = files.Where(fileInfo => fileInfo.SignInfo.ShouldSign).ToArray();
                 totalFilesSigned = filesToSign.Length;
                 _log.LogMessage(MessageImportance.High, $"Signing Round {round}: {filesToSign.Length} files to sign.");
@@ -158,6 +158,10 @@ namespace Microsoft.DotNet.SignTool
                 {
                     _log.LogMessage(MessageImportance.Normal, $"Attaching engine {engine.Key} to {engine.Value.FullPath}");
                     int exitCode = RunWixTool("insignia.exe", $"-ab {engine.Key} {engine.Value.FullPath} -o {engine.Value.FullPath}", workingDirectory, _signTool.WixToolsPath);
+
+                    // cleanup engines (they fail signing verification if they stay in the drop
+                    File.Delete(engine.Key);
+
                     if (exitCode != 0)
                     {
                         _log.LogError($"Failed to attach engine to {engine.Value.FullPath}");
@@ -175,24 +179,27 @@ namespace Microsoft.DotNet.SignTool
                     {
                         _log.LogMessage($"Repacking container: '{file.FileName}'");
                         _batchData.ZipDataMap[file.FileContentKey].Repack(_log);
+                        toRepackList.Remove(file.FullPath);
                     }
-                    if (file.IsWixContainer())
+                    else if (file.IsWixContainer())
                     {
                         _log.LogMessage($"Packing wix container: '{file.FileName}'");
                         _batchData.ZipDataMap[file.FileContentKey].Repack(_log, _signTool.TempDir, _signTool.WixToolsPath);
+                        toRepackList.Remove(file.FullPath);
                     }
                 }
             }
 
             // Is this file ready to be signed? That is are all of the items that it depends on already
             // signed?
-            bool isReadyToSign(FileSignInfo file)
+            bool isReady(FileSignInfo file)
             {
                 if (file.IsContainer())
                 {
                     var zipData = _batchData.ZipDataMap[file.FileContentKey];
-                    return zipData.NestedParts.All(x => !x.FileSignInfo.SignInfo.ShouldSign || 
-                        signedSet.Contains(x.FileSignInfo.FileContentKey));
+                    return zipData.NestedParts.All(x => (!x.FileSignInfo.SignInfo.ShouldSign ||
+                        trackedSet.Contains(x.FileSignInfo.FileContentKey)) && !toRepackList.Contains(x.FileSignInfo.FullPath)
+                        );
                 }
                 return true;
             }
@@ -203,13 +210,13 @@ namespace Microsoft.DotNet.SignTool
             {
                 var list = new List<FileSignInfo>();
                 var i = 0;
-                while (i < toSignList.Count)
+                while (i < toProcessList.Count)
                 {
-                    var current = toSignList[i];
-                    if (isReadyToSign(current))
+                    var current = toProcessList[i];
+                    if (isReady(current))
                     {
                         list.Add(current);
-                        toSignList.RemoveAt(i);
+                        toProcessList.RemoveAt(i);
                     }
                     else
                     {
@@ -220,17 +227,17 @@ namespace Microsoft.DotNet.SignTool
                 return list;
             }
 
-            while (toSignList.Count > 0)
+            while (toProcessList.Count > 0)
             {
-                var list = extractNextGroup();
-                if (list.Count == 0)
+                var trackList = extractNextGroup();
+                if (trackList.Count == 0)
                 {
                     throw new InvalidOperationException("No progress made on signing which indicates a bug");
                 }
-
-                repackFiles(list);
+                var repackList = trackList.Where(w => toRepackList.Contains(w.FullPath));
+                repackFiles(repackList);
                 int totalFilesSigned;
-                if (!signEngines(list, out totalFilesSigned))
+                if (!signEngines(trackList, out totalFilesSigned))
                 {
                     return false;
                 }
@@ -239,7 +246,7 @@ namespace Microsoft.DotNet.SignTool
                     round++;
                 }
 
-                if (!signFiles(list, out totalFilesSigned))
+                if (!signFiles(trackList, out totalFilesSigned))
                 {
                     return false;
                 }
@@ -247,7 +254,7 @@ namespace Microsoft.DotNet.SignTool
                 {
                     round++;
                 }
-                list.ForEach(x => signedSet.Add(x.FileContentKey));
+                trackList.ForEach(x => trackedSet.Add(x.FileContentKey));
             }
 
             return true;
@@ -311,7 +318,10 @@ namespace Microsoft.DotNet.SignTool
         {
             foreach (var fileName in _batchData.FilesToSign.OrderBy(x => x.FullPath))
             {
-                var isVsixCert = !string.IsNullOrEmpty(fileName.SignInfo.Certificate) && IsVsixCertificate(fileName.SignInfo.Certificate);
+                bool isVsixCert = (!string.IsNullOrEmpty(fileName.SignInfo.Certificate) && IsVsixCertificate(fileName.SignInfo.Certificate)) ||
+                                    fileName.SignInfo.IsAlreadySigned && fileName.HasSignableParts;
+
+                bool isInvalidEmptyCertificate = fileName.SignInfo.Certificate == null && !fileName.HasSignableParts && !fileName.SignInfo.IsAlreadySigned;
 
                 if (fileName.IsPEFile())
                 {
@@ -334,7 +344,7 @@ namespace Microsoft.DotNet.SignTool
                 }
                 else if (fileName.IsNupkg())
                 {
-                    if (fileName.SignInfo.Certificate == null)
+                    if(isInvalidEmptyCertificate)
                     {
                         log.LogError($"Nupkg {fileName} should have a certificate name.");
                     }
@@ -358,7 +368,7 @@ namespace Microsoft.DotNet.SignTool
                 }
                 if (fileName.IsExecutableWixContainer())
                 {
-                    if (fileName.SignInfo.Certificate == null)
+                    if (isInvalidEmptyCertificate)
                     {
                         log.LogError($"Wix file {fileName} should have a certificate name.");
                     }
