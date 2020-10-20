@@ -261,7 +261,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// </summary>
         public void CheckForStableAssetsInNonIsolatedFeeds()
         {
-            if(bool.Parse(BuildModel.Identity.IsReleaseOnlyPackageVersion) || SkipSafetyChecks)
+            if ((!string.IsNullOrEmpty(BuildModel.Identity.IsReleaseOnlyPackageVersion) && bool.Parse(BuildModel.Identity.IsReleaseOnlyPackageVersion))
+                || SkipSafetyChecks)
             {
                 return;
             }
