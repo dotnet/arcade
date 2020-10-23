@@ -25,9 +25,9 @@ namespace Microsoft.DotNet.SignTool
         /// <summary>
         /// The parts inside this container which need to be signed.
         /// </summary>
-        internal ImmutableArray<ZipPart> NestedParts { get; }
+        internal ImmutableDictionary<string, ZipPart> NestedParts { get; }
 
-        internal ZipData(FileSignInfo fileSignInfo, ImmutableArray<ZipPart> nestedBinaryParts)
+        internal ZipData(FileSignInfo fileSignInfo, ImmutableDictionary<string, ZipPart> nestedBinaryParts)
         {
             FileSignInfo = fileSignInfo;
             NestedParts = nestedBinaryParts;
@@ -35,12 +35,9 @@ namespace Microsoft.DotNet.SignTool
 
         internal ZipPart? FindNestedPart(string relativeName)
         {
-            foreach (var part in NestedParts)
+            if (NestedParts.TryGetValue(relativeName, out ZipPart part))
             {
-                if (relativeName == part.RelativeName)
-                {
-                    return part;
-                }
+                return part;
             }
 
             return null;

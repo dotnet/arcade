@@ -2,7 +2,6 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -10,6 +9,9 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using TaskLoggingHelper = Microsoft.Build.Utilities.TaskLoggingHelper;
 
 namespace Microsoft.DotNet.SignTool
 {
@@ -88,6 +90,27 @@ namespace Microsoft.DotNet.SignTool
                     _signTool.RemovePublicSign(fileSignInfo.FullPath);
                 }
             }
+        }
+
+        private SemaphoreSlim _repackThrottle = new SemaphoreSlim(16, 16);
+
+        private void RepackFiles(IEnumerable<FileSignInfo> files)
+        {
+            ParallelOptions parallelOptions = new ParallelOptions();
+            parallelOptions.MaxDegreeOfParallelism = 32;
+            Parallel.ForEach(files, parallelOptions, file =>
+            {
+                if (file.IsZipContainer())
+                {
+                    _log.LogMessage($"Repacking container: '{file.FileName}'");
+                    _batchData.ZipDataMap[file.FileContentKey].Repack(_log);
+                }
+                else if (file.IsWixContainer())
+                {
+                    _log.LogMessage($"Packing wix container: '{file.FileName}'");
+                    _batchData.ZipDataMap[file.FileContentKey].Repack(_log, _signTool.TempDir, _signTool.WixToolsPath);
+                }
+            });
         }
 
         /// <summary>
@@ -171,25 +194,6 @@ namespace Microsoft.DotNet.SignTool
                 return true;
             }
 
-            void repackFiles(IEnumerable<FileSignInfo> files)
-            {
-                foreach (var file in files)
-                {
-                    if (file.IsZipContainer())
-                    {
-                        _log.LogMessage($"Repacking container: '{file.FileName}'");
-                        _batchData.ZipDataMap[file.FileContentKey].Repack(_log);
-                        toRepackList.Remove(file.FullPath);
-                    }
-                    else if (file.IsWixContainer())
-                    {
-                        _log.LogMessage($"Packing wix container: '{file.FileName}'");
-                        _batchData.ZipDataMap[file.FileContentKey].Repack(_log, _signTool.TempDir, _signTool.WixToolsPath);
-                        toRepackList.Remove(file.FullPath);
-                    }
-                }
-            }
-
             // Is this file ready to be signed? That is are all of the items that it depends on already
             // signed?
             bool isReady(FileSignInfo file)
@@ -197,7 +201,7 @@ namespace Microsoft.DotNet.SignTool
                 if (file.IsContainer())
                 {
                     var zipData = _batchData.ZipDataMap[file.FileContentKey];
-                    return zipData.NestedParts.All(x => (!x.FileSignInfo.SignInfo.ShouldSign ||
+                    return zipData.NestedParts.Values.All(x => (!x.FileSignInfo.SignInfo.ShouldSign ||
                         trackedSet.Contains(x.FileSignInfo.FileContentKey)) && !toRepackList.Contains(x.FileSignInfo.FullPath)
                         );
                 }
@@ -235,7 +239,12 @@ namespace Microsoft.DotNet.SignTool
                     throw new InvalidOperationException("No progress made on signing which indicates a bug");
                 }
                 var repackList = trackList.Where(w => toRepackList.Contains(w.FullPath));
-                repackFiles(repackList);
+                RepackFiles(repackList);
+                foreach (var repackItem in repackList)
+                {
+                    toRepackList.Remove(repackItem.FullPath);
+                }
+
                 int totalFilesSigned;
                 if (!signEngines(trackList, out totalFilesSigned))
                 {
