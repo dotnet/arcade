@@ -318,10 +318,10 @@ namespace Microsoft.DotNet.SignTool.Tests
             var signingInput = new Configuration(signToolArgs.TempDir, itemsToSign, strongNameSignInfo, fileSignInfo, extensionsSignInfo, dualCertificates, task.Log).GenerateListOfFiles();
             var util = new BatchSignUtil(task.BuildEngine, task.Log, signTool, signingInput, new string[] { });
 
-            var beforeSigningEngineFilesList = Directory.GetFiles(signToolArgs.TempDir, "*-engine.exe", new EnumerationOptions() { RecurseSubdirectories = true });
+            var beforeSigningEngineFilesList = Directory.GetFiles(signToolArgs.TempDir, "*-engine.exe", SearchOption.AllDirectories);
             util.Go(doStrongNameCheck: true);
-            var afterSigningEngineFilesList = Directory.GetFiles(signToolArgs.TempDir, "*-engine.exe", new EnumerationOptions() { RecurseSubdirectories = true });
-            
+            var afterSigningEngineFilesList = Directory.GetFiles(signToolArgs.TempDir, "*-engine.exe", SearchOption.AllDirectories);
+
             // validate no intermediate msi engine files have populated the drop (they fail signing validation).
             Assert.Same(beforeSigningEngineFilesList, afterSigningEngineFilesList);
 
@@ -1117,13 +1117,30 @@ $@"
         }
 
         [Fact]
+        public void VerifyNupkgIntegrity()
+        {
+            var itemsToSign = new ITaskItem[]
+            {
+                new TaskItem(GetResourcePath("SignedPackage.1.0.0.nupkg")),
+                new TaskItem(GetResourcePath("IncorrectlySignedPackage.1.0.0.nupkg"))
+            };
+
+            ValidateFileSignInfos(itemsToSign,
+                                  new Dictionary<string, List<SignInfo>>(),
+                                  new Dictionary<ExplicitCertificateKey, string>(),
+                                  s_fileExtensionSignInfo,
+                                  new[] { "File 'IncorrectlySignedPackage.1.0.0.nupkg' Certificate='NuGet'" });
+
+        }
+
+        [Fact]
         public void SignNupkgWithUnsignedContents()
         {
             // List of files to be considered for signing
             var itemsToSign = new ITaskItem[]
             {
                 new TaskItem(GetResourcePath("UnsignedContents.nupkg")),
-                new TaskItem(GetResourcePath("SignedContents.nupkg"))
+                new TaskItem(GetResourcePath("FakeSignedContents.nupkg"))
             };
 
             // Default signing information

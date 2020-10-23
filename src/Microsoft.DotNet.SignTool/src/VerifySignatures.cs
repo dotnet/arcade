@@ -32,23 +32,24 @@ namespace Microsoft.DotNet.SignTool
 #if IS_SIGNING_SUPPORTED
                 if (isSigned)
                 {
-                    using (Stream stream = SignedPackageArchiveUtility.OpenPackageSignatureFileStream(binaryReader))
+                    try
                     {
-                        using (PackageArchiveReader par = new PackageArchiveReader(filePath))
+                        using (Stream stream = SignedPackageArchiveUtility.OpenPackageSignatureFileStream(binaryReader))
                         {
-                            var signature = par.GetPrimarySignatureAsync(CancellationToken.None).Result;
+                            using (PackageArchiveReader par = new PackageArchiveReader(filePath))
+                            {
+                                var signature = par.GetPrimarySignatureAsync(CancellationToken.None).Result;
 
-                            try
-                            {
-                                var task = par.ValidateIntegrityAsync(signature.SignatureContent, CancellationToken.None);
-                                task.Wait();
-                            }
-                            catch(Exception)
-                            {
-                                isSigned = false;
+                                    var task = par.ValidateIntegrityAsync(signature.SignatureContent, CancellationToken.None);
+                                    task.Wait();
                             }
                         }
                     }
+                    catch (Exception)
+                    {
+                        isSigned = false;
+                    }
+
                 }
 #endif
             }
@@ -70,7 +71,6 @@ namespace Microsoft.DotNet.SignTool
                     {
                         if (FileSignInfo.IsNupkg(fullPath) && VerifySignedNupkgByFileMarker(entry.FullName))
                         {
-                            
                             if (!VerifySignedNupkgIntegrity(fullPath))
                             {
                                 return false;
