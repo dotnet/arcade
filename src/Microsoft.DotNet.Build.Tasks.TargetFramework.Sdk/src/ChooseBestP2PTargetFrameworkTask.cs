@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using Microsoft.Build.Framework;
+using System;
 using System.IO;
 
 namespace Microsoft.DotNet.Build.Tasks.TargetFramework.Sdk
@@ -34,11 +35,17 @@ namespace Microsoft.DotNet.Build.Tasks.TargetFramework.Sdk
                     targetFrameworksValue = projectReference.GetMetadata("TargetFrameworks");
                 }
                 string[] targetFrameworks = targetFrameworksValue.Split(';');
+
+                string referringTargetFramework = projectReference.GetMetadata("ReferringTargetFramework");
+                if (string.IsNullOrWhiteSpace(referringTargetFramework))
+                {
+                    referringTargetFramework = TargetFramework;
+                }
                 
-                string bestTargetFramework = targetFrameworkResolver.GetBestSupportedTargetFramework(targetFrameworks, TargetFramework);
+                string bestTargetFramework = targetFrameworkResolver.GetBestSupportedTargetFramework(targetFrameworks, referringTargetFramework);
                 if (bestTargetFramework == null)
                 {
-                    Log.LogError($"Not able to find a compatible supported target framework for {TargetFramework} in Project {Path.GetFileName(projectReference.ItemSpec)}. The Supported Configurations are {string.Join(", ", targetFrameworks)}");
+                    Log.LogError($"Not able to find a compatible supported target framework for {referringTargetFramework} in Project {Path.GetFileName(projectReference.ItemSpec)}. The Supported Configurations are {string.Join(", ", targetFrameworks)}");
                 }
 
                 projectReference.SetMetadata("SetTargetFramework", "TargetFramework=" + bestTargetFramework);                

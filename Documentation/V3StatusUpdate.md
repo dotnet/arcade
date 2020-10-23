@@ -1,36 +1,41 @@
 ## V3 publishing update :
 
 ### Status of exercises per repo:
-- ![][red] - Not started
-- ![][yellow] - Results not verified
-- ![][green] - Results verified. Good to go!
+
+| Status         | Description |
+|--------------  | ----------- |
+|     ✔️| Results verified. Good to go! |
+|   ❌  | Not started |
 
 This table represents the status of the .NET 5 V3 publishing status on a Per-Repo basis
 
-| Repo                | Ownwe        | Build        | Notes                                |
-| ------------------  | -------------|--------------|--------------------------------------|
-| windowsdesktop      | epananth     | ![][green]   |                                      |
-| arcade-validation   | epananth     | ![][yellow]  | Changes validated,PR out soon        |
-| aspnetcore          | epananth     | ![][green]   |                                      |
-| runtime             | epananth     | ![][green]   |                                      |
-| installer           | epananth     | ![][green]   |                                      |
-| sdk                 | epananth     | ![][green]   |                                      |
-| efcore              |              | ![][red]     |                                      |
-| extensions          |              | ![][red]     |                                      |
-| winforms            |              | ![][red]     |                                      |
-| wpf-int             |              | ![][red]     |                                      |
-| wpf                 |              | ![][red]     |                                      |
-| templating          |              | ![][red]     |                                      |
-| diagnostics         |              | ![][red]     |                                      |
-| aspnetcore-tooling  |              | ![][red]     |                                      |
-| fsharp              |              | ![][red]     |                                      |
-| symuploader         |              | ![][red]     |                                      |
-| symstore            |              | ![][red]     |                                      |
-| sourcelink          |              | ![][red]     |                                      |
-| clrmd               |              | ![][red]     |                                      |
-| msbuild             |              | ![][red]     |                                      |
-| xliff-tasks         |              | ![][red]     |                                      |
-
-[red]: https://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Red.png
-[green]: https://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Green.png
-[yellow]: https://individual.icons-land.com/IconsPreview/Sport/PNG/16x16/Ball_Yellow.png
+| Repo                | Owner        | Status  | Notes                                |
+| ------------------  | -------------|-------- |--------------------------------------|
+| windowsdesktop      | epananth     | ✔️     |                                      |
+| arcade-validation   | epananth     | ✔️     |                                      |
+| aspnetcore          | epananth     | ✔️     |                                      |
+| runtime             | epananth     | ✔️     |                                      |
+| installer           | epananth     | ✔️     |                                      |
+| sdk                 | epananth     | ✔️     |                                      |
+| efcore              | epananth     | ✔️     |                                      |
+| extensions          | epananth     | ✔️     |                                      |
+| winforms            | mmitche      | ✔️     |                                      |
+| wpf-int             | mmitche      | ✔️     |                                      |
+| wpf                 | mmitche      | ✔️     |                                      |
+| templating          | epananth     | ✔️     |                                      |
+| diagnostics         | tommcdon     | ❌     |                                      |
+| aspnetcore-tooling  | dougbu       | ✔️     |                                      |
+| fsharp              | brettfo      | ❌     |                                      |
+| symuploader         | tommcdon     | ❌     |                                      |
+| symstore            | tommcdon     | ❌     |                                      |
+| sourcelink          | tmat         | ❌     |                                      |
+| clrmd               | leculver     | ❌     |                                      |
+| msbuild             | marcpopMSFT  | ❌     |                                      |
+| xliff-tasks         | epananth     | ❌     |                                      |
+| roslyn-analyzer     | epananth     | ✔️     |                                      |
+| Nuget.Client        | epananth     | ❌     |                                      |
+| mono/linker         | masafa       | ❌     |                                      |
+| llvm-project        | epananth     | ❌     |                                      |
+| icu                 | masafa       | ❌     |                                      |
+| wcf                 | epananth     | ❌     |                                      |
+| source-build-reference-packages| epananth     | ❌     |                                      |

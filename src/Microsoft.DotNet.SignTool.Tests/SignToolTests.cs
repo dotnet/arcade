@@ -35,6 +35,7 @@ namespace Microsoft.DotNet.SignTool.Tests
             {".vsix",  new List<SignInfo>{ new SignInfo("VsixSHA2") } },
             {".zip",  new List<SignInfo>{ SignInfo.Ignore } },
             {".nupkg",  new List<SignInfo>{ new SignInfo("NuGet") } },
+            {".symbols.nupkg",  new List<SignInfo>{ SignInfo.Ignore } },
         };
 
         private static readonly Dictionary<string, List<SignInfo>> s_fileExtensionSignInfoWithCollisionId = 
@@ -58,6 +59,7 @@ namespace Microsoft.DotNet.SignTool.Tests
             { ".vsix", new List<SignInfo>{ new SignInfo("VsixSHA2", collisionPriorityId: "123") } },
             { ".zip", new List<SignInfo>{ SignInfo.Ignore } },
             { ".nupkg", new List<SignInfo>{ new SignInfo("NuGet", collisionPriorityId: "123") } },
+            { ".symbols.nupkg",  new List<SignInfo>{ SignInfo.Ignore } },
         };
 
         // Default extension based signing information post build
@@ -104,6 +106,10 @@ namespace Microsoft.DotNet.SignTool.Tests
                 { SignToolConstants.CollisionPriorityId, "123" }
             }),
             new TaskItem(".zip", new Dictionary<string, string> {
+                { "CertificateName", "None" },
+                { SignToolConstants.CollisionPriorityId, "123" }
+            }),
+            new TaskItem(".symbols.nupkg", new Dictionary<string, string> {
                 { "CertificateName", "None" },
                 { SignToolConstants.CollisionPriorityId, "123" }
             }),
@@ -312,9 +318,12 @@ namespace Microsoft.DotNet.SignTool.Tests
             var signingInput = new Configuration(signToolArgs.TempDir, itemsToSign, strongNameSignInfo, fileSignInfo, extensionsSignInfo, dualCertificates, task.Log).GenerateListOfFiles();
             var util = new BatchSignUtil(task.BuildEngine, task.Log, signTool, signingInput, new string[] { });
 
+            var beforeSigningEngineFilesList = Directory.GetFiles(signToolArgs.TempDir, "*-engine.exe", new EnumerationOptions() { RecurseSubdirectories = true });
             util.Go(doStrongNameCheck: true);
-
-            Assert.Same(ByteSequenceComparer.Instance, signingInput.ZipDataMap.KeyComparer);
+            var afterSigningEngineFilesList = Directory.GetFiles(signToolArgs.TempDir, "*-engine.exe", new EnumerationOptions() { RecurseSubdirectories = true });
+            
+            // validate no intermediate msi engine files have populated the drop (they fail signing validation).
+            Assert.Same(beforeSigningEngineFilesList, afterSigningEngineFilesList);
 
             // The list of files that would be signed was captured inside the FakeBuildEngine,
             // here we check if that matches what we expected
@@ -736,6 +745,58 @@ $@"<FilesToSign Include=""{Path.Combine(_tmpDir, "CoreLibCrossARM.dll")}"">
             });
         }
 
+        [SkippableFact]
+        public void DoubleNestedContainer()
+        {
+            Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
+            // List of files to be considered for signing
+            var itemsToSign = new ITaskItem[]
+            {
+                new TaskItem(GetResourcePath("PackageWithWix.nupkg"), new Dictionary<string, string>
+                {
+                    { SignToolConstants.CollisionPriorityId, "123" }
+                }),
+                new TaskItem(GetResourcePath("MsiBootstrapper.exe.wixpack.zip"), new Dictionary<string, string>
+                {
+                    { SignToolConstants.CollisionPriorityId, "123" }
+                })
+            };
+
+            // Default signing information
+            var strongNameSignInfo = new Dictionary<string, List<SignInfo>>()
+            {
+                { "581d91ccdfc4ea9c", new List<SignInfo>{ new SignInfo("3PartySHA2", "ArcadeStrongTest", "123") } }
+            };
+
+            // Overriding information
+            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
+
+            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfoWithCollisionId, new[]
+            {
+                "File 'MsiSetup.msi' Certificate='Microsoft400'",
+                "File 'MsiBootstrapper.exe' Certificate='Microsoft400'",
+                "File 'PackageWithWix.nupkg' Certificate='NuGet'"
+            });
+
+            ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfoWithCollisionId, new[]
+            {
+$@"<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "4", "ABCDEFG/MsiSetup.msi")}"">
+  <Authenticode>Microsoft400</Authenticode>
+</FilesToSign>",
+$@"<FilesToSign Include=""{Path.Combine(_tmpDir, "engines\\MsiBootstrapper.exe-engine.exe")}"">
+  <Authenticode>Microsoft400</Authenticode>
+</FilesToSign>",
+$@"<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "4", "MsiBootstrapper.exe")}"">
+  <Authenticode>Microsoft400</Authenticode>
+</FilesToSign>",
+$@"<FilesToSign Include=""{Path.Combine(_tmpDir, "PackageWithWix.nupkg")}"">
+  <Authenticode>NuGet</Authenticode>
+</FilesToSign>"
+            },
+            wixToolsPath: GetWixToolPath());
+        }
+
+
         [Fact]
         public void NestedContainer()
         {
@@ -940,6 +1001,144 @@ $@"
             });
         }
 
+        [Fact]
+        public void SymbolsNupkg()
+        {
+            // List of files to be considered for signing
+            var itemsToSign = new ITaskItem[]
+            {
+                new TaskItem(GetResourcePath("test.symbols.nupkg"))
+            };
+
+            // Default signing information
+            var strongNameSignInfo = new Dictionary<string, List<SignInfo>>()
+            {
+                { "581d91ccdfc4ea9c", new List<SignInfo>{ new SignInfo("ArcadeCertTest", "ArcadeStrongTest") } }
+            };
+
+            // Overriding information
+            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
+
+            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
+            {
+                "File 'NativeLibrary.dll' Certificate='Microsoft400'",
+                "File 'SOS.NETCore.dll' TargetFramework='.NETCoreApp,Version=v1.0' Certificate='Microsoft400'",
+                "File 'Nested.NativeLibrary.dll' Certificate='Microsoft400'",
+                "File 'Nested.SOS.NETCore.dll' TargetFramework='.NETCoreApp,Version=v1.0' Certificate='Microsoft400'",
+                "File 'test.symbols.nupkg' Certificate=''",
+            });
+
+            ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
+            {
+$@"
+<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "0", "NativeLibrary.dll")}"">
+  <Authenticode>Microsoft400</Authenticode>
+</FilesToSign>
+<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "1", "SOS.NETCore.dll")}"">
+  <Authenticode>Microsoft400</Authenticode>
+</FilesToSign>
+<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "2", "this_is_a_big_folder_name_look/this_is_an_even_more_longer_folder_name/but_this_one_is_ever_longer_than_the_previous_other_two/Nested.NativeLibrary.dll")}"">
+  <Authenticode>Microsoft400</Authenticode>
+</FilesToSign>
+<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "3", "this_is_a_big_folder_name_look/this_is_an_even_more_longer_folder_name/but_this_one_is_ever_longer_than_the_previous_other_two/Nested.SOS.NETCore.dll")}"">
+  <Authenticode>Microsoft400</Authenticode>
+</FilesToSign>
+"
+            });
+        }
+
+        [Fact]
+        public void SignedSymbolsNupkg()
+        {
+            // List of files to be considered for signing
+            var itemsToSign = new ITaskItem[]
+            {
+                new TaskItem(GetResourcePath("test.symbols.nupkg"))
+            };
+
+            // Default signing information
+            var strongNameSignInfo = new Dictionary<string, List<SignInfo>>()
+            {
+                { "581d91ccdfc4ea9c", new List<SignInfo>{ new SignInfo("ArcadeCertTest", "ArcadeStrongTest") } }
+            };
+
+            // Overriding information
+            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
+            var tempFileExtensionSignInfo = s_fileExtensionSignInfo.Where(s => s.Key != ".symbols.nupkg").ToDictionary(e => e.Key, e => e.Value);
+            
+            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, tempFileExtensionSignInfo, new[]
+            {
+                "File 'NativeLibrary.dll' Certificate='Microsoft400'",
+                "File 'SOS.NETCore.dll' TargetFramework='.NETCoreApp,Version=v1.0' Certificate='Microsoft400'",
+                "File 'Nested.NativeLibrary.dll' Certificate='Microsoft400'",
+                "File 'Nested.SOS.NETCore.dll' TargetFramework='.NETCoreApp,Version=v1.0' Certificate='Microsoft400'",
+                "File 'test.symbols.nupkg' Certificate='NuGet'",
+            });
+
+            ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
+            {
+$@"
+<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "0", "NativeLibrary.dll")}"">
+  <Authenticode>Microsoft400</Authenticode>
+</FilesToSign>
+<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "1", "SOS.NETCore.dll")}"">
+  <Authenticode>Microsoft400</Authenticode>
+</FilesToSign>
+<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "2", "this_is_a_big_folder_name_look/this_is_an_even_more_longer_folder_name/but_this_one_is_ever_longer_than_the_previous_other_two/Nested.NativeLibrary.dll")}"">
+  <Authenticode>Microsoft400</Authenticode>
+</FilesToSign>
+<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "3", "this_is_a_big_folder_name_look/this_is_an_even_more_longer_folder_name/but_this_one_is_ever_longer_than_the_previous_other_two/Nested.SOS.NETCore.dll")}"">
+  <Authenticode>Microsoft400</Authenticode>
+</FilesToSign>
+"
+            });
+        }
+
+        [Fact]
+        public void CheckPowershellSigning()
+        {
+            // List of files to be considered for signing
+            var itemsToSign = new ITaskItem[]
+            {
+                new TaskItem(GetResourcePath("SignedScript.ps1")),
+                new TaskItem(GetResourcePath("UnsignedScript.ps1"))
+            };
+
+            // Default signing information
+            var strongNameSignInfo = new Dictionary<string, List<SignInfo>>();
+
+            // Overriding information
+            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
+
+            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
+            {
+                "File 'UnsignedScript.ps1' Certificate='PSCertificate'"
+            });
+        }
+
+        [Fact]
+        public void SignNupkgWithUnsignedContents()
+        {
+            // List of files to be considered for signing
+            var itemsToSign = new ITaskItem[]
+            {
+                new TaskItem(GetResourcePath("UnsignedContents.nupkg")),
+                new TaskItem(GetResourcePath("SignedContents.nupkg"))
+            };
+
+            // Default signing information
+            var strongNameSignInfo = new Dictionary<string, List<SignInfo>>();
+
+            // Overriding information
+            var fileSignInfo = new Dictionary<ExplicitCertificateKey, string>();
+
+            ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
+            {
+                "File 'UnsignedScript.ps1' Certificate='PSCertificate'",
+                "File 'UnsignedContents.nupkg' Certificate='NuGet'"
+            });
+        }
+
         [SkippableFact]
         public void SignMsiEngine()
         {
@@ -963,8 +1162,7 @@ $@"
             ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
                 "File 'MsiSetup.msi' Certificate='Microsoft400'",
-                "File 'MsiBootstrapper.exe' Certificate='Microsoft400'",
-                "File 'MsiBootstrapper.exe.wixpack.zip' Certificate=''",
+                "File 'MsiBootstrapper.exe' Certificate='Microsoft400'"
             });
 
             ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
@@ -979,7 +1177,7 @@ $@"<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "0", "ABCDE
   <Authenticode>Microsoft400</Authenticode>
 </FilesToSign>"
             },
-wixToolsPath: GetWixToolPath());
+            wixToolsPath: GetWixToolPath());
 
         }
         [SkippableFact]
@@ -1011,8 +1209,7 @@ wixToolsPath: GetWixToolPath());
             ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfoWithCollisionId, new[]
             {
                 "File 'MsiApplication.exe' TargetFramework='.NETFramework,Version=v4.7.2' Certificate='Microsoft400'",
-                "File 'MsiSetup.msi' Certificate='Microsoft400'",
-                "File 'MsiSetup.msi.wixpack.zip' Certificate=''",
+                "File 'MsiSetup.msi' Certificate='Microsoft400'"
             });
 
             ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfoWithCollisionId, new[]
@@ -1417,6 +1614,65 @@ $@"
         }
 
         [Fact]
+        public void ValidateParseFileExtensionEntriesForSameCollisionPriorityIdFails()
+        {
+            var fileExtensionSignInfo = new List<ITaskItem>();
+
+            // Validate that multiple entries will collide and fail
+            fileExtensionSignInfo.Add(new TaskItem(".js", new Dictionary<string, string>
+            {
+                { "CertificateName", "JSCertificate" },
+                { "CollisionPriorityId", "123" }
+            }));
+            fileExtensionSignInfo.Add(new TaskItem(".js", new Dictionary<string, string>{
+                { "CertificateName", "None" },
+                { "CollisionPriorityId", "123" }
+            }));
+
+            Assert.False(runTask(fileExtensionSignInfo: fileExtensionSignInfo.ToArray()));
+        }
+        [Fact]
+        public void ValidateParseFileExtensionEntriesForDifferentCollisionPriorityIdSucceeds()
+        {
+            var fileExtensionSignInfo = new List<ITaskItem>();
+
+            // Validate that multiple entries will collide and fail
+            fileExtensionSignInfo.Add(new TaskItem(".js", new Dictionary<string, string>
+            {
+                { "CertificateName", "JSCertificate" },
+                { "CollisionPriorityId", "123" }
+            }));
+            fileExtensionSignInfo.Add(new TaskItem(".js", new Dictionary<string, string>{
+                { "CertificateName", "None" }
+            }));
+            fileExtensionSignInfo.Add(new TaskItem(".js", new Dictionary<string, string>
+            {
+                { "CertificateName", "JSCertificate" },
+                { "CollisionPriorityId", "456" }
+            }));
+
+            Assert.True(runTask(fileExtensionSignInfo: fileExtensionSignInfo.ToArray()));
+        }
+
+        private bool runTask(ITaskItem[] itemsToSign = null, ITaskItem[] strongNameSignInfo = null, ITaskItem[] fileExtensionSignInfo = null)
+        {
+            var task = new SignToolTask
+            {
+                BuildEngine = new FakeBuildEngine(_output),
+                ItemsToSign = itemsToSign ?? Array.Empty<ITaskItem>(),
+                StrongNameSignInfo = strongNameSignInfo ?? Array.Empty<ITaskItem>(),
+                FileExtensionSignInfo = fileExtensionSignInfo ?? Array.Empty<ITaskItem>(),
+                LogDir = "LogDir",
+                TempDir = "TempDir",
+                DryRun = true,
+                MSBuildPath = CreateTestResource("msbuild.fake"),
+                DoStrongNameCheck = false,
+                SNBinaryPath = null,
+            };
+
+            return task.Execute();
+        }
+        [Fact]
         public void ValidateAppendingCertificate()
         {
             // List of files to be considered for signing
@@ -1549,6 +1805,12 @@ $@"
                 {
                     { SignToolConstants.CollisionPriorityId, "123" }
                 }),
+                // This symbols nupkg has the same hash as Simple.nupkg.
+                // It should still get signed with a different signature.
+                new TaskItem(GetResourcePath("Simple.symbols.nupkg"), new Dictionary<string, string>
+                {
+                    { SignToolConstants.CollisionPriorityId, "123" }
+                }),
             };
 
             var strongNameSignInfo = new Dictionary<string, List<SignInfo>>()
@@ -1571,6 +1833,7 @@ $@"
                 { new ExplicitCertificateKey("PackageWithRelationships.vsix", collisionPriorityId: "123"), "VSIXCertificate2" },
                 { new ExplicitCertificateKey("Simple.dll", collisionPriorityId: "123"), "DLLCertificate2" },
                 { new ExplicitCertificateKey("Simple.nupkg", collisionPriorityId: "123"), "NUPKGCertificate" },
+                { new ExplicitCertificateKey("Simple.symbols.nupkg", collisionPriorityId: "123"), "NUPKGCertificate2" },
                 { new ExplicitCertificateKey("ProjectOne.dll", "581d91ccdfc4ea9c", ".NETFramework,Version=v4.6.1", "123"), "DLLCertificate3" },
                 { new ExplicitCertificateKey("ProjectOne.dll", "581d91ccdfc4ea9c", ".NETStandard,Version=v2.0", "123"), "DLLCertificate4" },
                 { new ExplicitCertificateKey("ProjectOne.dll", "581d91ccdfc4ea9c", ".NETCoreApp,Version=v2.0", "123"), "DLLCertificate5" },
@@ -1593,6 +1856,7 @@ $@"
                 "File 'test.vsix' Certificate='VSIXCertificate'",
                 "File 'Simple.dll' TargetFramework='.NETCoreApp,Version=v2.1' Certificate='DLLCertificate2'",
                 "File 'Simple.nupkg' Certificate='NUPKGCertificate'",
+                "File 'Simple.symbols.nupkg' Certificate='NUPKGCertificate2'",
             },
             expectedWarnings: new[]
             {

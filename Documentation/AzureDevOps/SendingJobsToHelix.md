@@ -85,7 +85,7 @@ Simply specify the xUnit project(s) you wish to run (semicolon delimited) with t
 * the `XUnitRuntimeTargetFramework` &ndash; this is the framework version of xUnit you want to use from the xUnit NuGet package, e.g. `netcoreapp2.0`. Notably, the xUnit console runner only supports up to netcoreapp2.0 as of 14 March 2018, so this is the target that should be specified for running against any higher version test projects.
 * the `XUnitRunnerVersion` (the version of the xUnit nuget package you want to use, e.g. `2.4.1`).
 
-Finally, set `IncludeDotNetCli` to true and specify which `DotNetCliPackageType` (`sdk` or `runtime`) and `DotNetCliVersion` you wish to use. (For a full list of .NET CLI versions/package types, see these links: [3.0](https://dotnet.microsoft.com/download/dotnet-core/3.0), [2.1](https://dotnet.microsoft.com/download/dotnet-core/2.1), [2.2](https://dotnet.microsoft.com/download/dotnet-core/2.2).)
+Finally, set `IncludeDotNetCli` to true and specify which `DotNetCliPackageType` (`sdk`, `runtime` or `aspnetcore-runtime`) and `DotNetCliVersion` you wish to use. (For a full list of .NET CLI versions/package types, see these links: [3.0](https://dotnet.microsoft.com/download/dotnet-core/3.0), [2.1](https://dotnet.microsoft.com/download/dotnet-core/2.1), [2.2](https://dotnet.microsoft.com/download/dotnet-core/2.2).)
 
 The list of available Helix queues can be found on the [Helix homepage](https://helix.dot.net/).
 
@@ -132,9 +132,10 @@ Tests results for "public" projects are accessible via the link which is provide
 Example build output:
 
 ```Text
-Sent Helix Job 7a6bb019-ed0e-4e46-a065-a38391d90019
-Waiting on job completion...
-Results will be available from https://mc.dot.net/#/user/dotnet-github-anon-kaonashi-bot/pr~2Fdotnet~2Fwinforms~2Frefs~2Fpull~2F9~2Fmerge/type~2Ftests/20181029.7
+Sending Job to Debian.9.Amd64.Arcade.Open...
+Sent Helix Job; see work items at https://helix.dot.net/api/jobs/38f272c2-7999-44e4-953b-d5d003b614ce/workitems?api-version=2019-06-17
+Waiting for completion of job 38f272c2-7999-44e4-953b-d5d003b614ce on Debian.9.Amd64.Arcade.Open
+Job 38f272c2-7999-44e4-953b-d5d003b614ce on Debian.9.Amd64.Arcade.Open is completed with 14 finished work items.
 ```
 
 ### Internal test results
@@ -154,6 +155,4 @@ As surfaced by the Helix API and backing Kusto (Azure Data Explorer) database, h
 - InfraRetry – Work item completed as expected, but on the 2nd-Nth attempt; this can be a requested-by-the-workitem retry, machine being rebooted or deleted during execution, or any number of random Azure components being flaky.  Typically ignoreable for test runs.
 - PassOnRetry – Special legacy retry functionality which is purposefully obsoleted as it does not play well with Azure DevOps test reporting (reporting the same facts twice causes issues)
 - Timeout – Work Item did not complete within its specified timeout and was forcibly killed.  Corresponds to exit code -3 (made up value since the process never exited)
-
-
 

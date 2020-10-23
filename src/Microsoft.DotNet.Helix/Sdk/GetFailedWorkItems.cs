@@ -14,8 +14,10 @@ namespace Microsoft.DotNet.Helix.Sdk
 {
     public class GetFailedWorkItems : HelixTask
     {
+        public const int DelayBetweenHelixApiCallsInMs = 500;
+
         /// <summary>
-        /// An array of Helix Jobs to get status for
+        /// An array of Helix Jobs for which to get status
         /// </summary>
         [Required]
         public ITaskItem[] Jobs { get; set; }
@@ -44,9 +46,11 @@ namespace Microsoft.DotNet.Helix.Sdk
                 return Array.Empty<ITaskItem>();
             }
 
-            return await Task.WhenAll(status.Failed.Select(async wi =>
+            List<ITaskItem> failedWorkItemObjects = new List<ITaskItem>();
+
+            foreach (string workItemName in status.Failed)
             {
-                wi = Helpers.CleanWorkItemName(wi);
+                string wi = Helpers.CleanWorkItemName(workItemName);
 
                 // copy all job metadata into the new item
                 var metadata = job.CloneCustomMetadata();
@@ -57,25 +61,28 @@ namespace Microsoft.DotNet.Helix.Sdk
 
                 try
                 {
+                    // Do this serially with a delay because total failure can hit throttling
                     var files = await HelixApi.WorkItem.ListFilesAsync(wi, jobName, cancellationToken).ConfigureAwait(false);
 
                     if (!string.IsNullOrEmpty(AccessToken))
                     {
                         // Add AccessToken to all file links because the api requires auth if we submitted the job with auth
                         files = files
-                            .Select(file => new UploadedFile(file.Name, file.Link + "?access_token=" + AccessToken))
-                            .ToImmutableList();
+                                .Select(file => new UploadedFile(file.Name, file.Link + "?access_token=" + AccessToken))
+                                .ToImmutableList();
                     }
 
-                    metadata["UploadedFiles"] = JsonConvert.SerializeObject(files);
+                    metadata["UploadedFiles"] = JsonConvert.SerializeObject(files).Replace("%", "%25");
                 }
                 catch (Exception ex)
                 {
                     Log.LogWarningFromException(ex);
                 }
 
-                return new TaskItem($"{jobName}/{wi}", metadata);
-            })).ConfigureAwait(false);
+                failedWorkItemObjects.Add(new TaskItem($"{jobName}/{wi}", metadata));
+                await Task.Delay(DelayBetweenHelixApiCallsInMs);
+            }
+            return failedWorkItemObjects;
         }
     }
 }

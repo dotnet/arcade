@@ -52,6 +52,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public bool IsStableBuild { get; set; }
 
+        public bool IsReleaseOnlyPackageVersion { get; set; }
+
         /// <summary>
         /// Which version should the build manifest be tagged with.
         /// By default he latest version is used.
@@ -182,6 +184,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         ManifestBuildData,
                         IsStableBuild,
                         targetPublishingVersion,
+                        IsReleaseOnlyPackageVersion,
                         signingInformationModel: signingInformationModel);
 
                     Log.LogMessage(MessageImportance.High,

@@ -22,6 +22,7 @@
       <Targets>GetCompileItems</Targets>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
       <OutputItemType>ReferenceSources</OutputItemType>
+      <BuildReference Condition="'$(BuildingInsideVisualStudio)' == 'true'">false</BuildReference>
     </ProjectReference>
   </ItemGroup>
 
@@ -35,6 +36,15 @@
   </Target>
 
   <Target Name="GenerateNotSupportedAssemblySourceFromRef">
+    <!-- Populates the Reference Sources while building in VS-->
+    <MSBuild
+      Projects="@(ProjectReference)"
+      Targets="GetCompileItems"
+      Properties="%(ProjectReference.SetTargetFramework)"
+      Condition="'%(ProjectReference.Identity)' == '$(ContractProject)' and '$(BuildingInsideVisualStudio)' == 'true'">
+      <Output TaskParameter="TargetOutputs" ItemName="ReferenceSources" />
+    </MSBuild>
+    
     <ItemGroup>
       <UpdateReferencePaths Include="@(ReferenceSources)" NotSupportedPath="$(IntermediateOutputPath)\%(Filename).notsupported%(Extension)"/>
     </ItemGroup>
@@ -43,6 +53,7 @@
   <Target Name="UpdateRefToNonSupportedAssembly"
         DependsOnTargets="GenerateNotSupportedAssemblySourceFromRef"
         AfterTargets="ResolveProjectReferences"
+        Condition="'$(GeneratePlatformNotSupportedAssemblyMessage)' != ''"
         Inputs="@(UpdateReferencePaths)"
         Outputs="@(UpdateReferencePaths->'%(NotSupportedPath)')" >
 

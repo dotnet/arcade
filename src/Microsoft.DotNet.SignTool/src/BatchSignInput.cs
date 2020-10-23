@@ -22,7 +22,7 @@ namespace Microsoft.DotNet.SignTool
         /// Holds information about each of the containers that will be signed.
         /// The key is the content hash of the file.
         /// </summary>
-        internal ImmutableDictionary<ImmutableArray<byte>, ZipData> ZipDataMap;
+        internal ImmutableDictionary<SignedFileContentKey, ZipData> ZipDataMap;
 
         /// <summary>
         /// A list of files whose content needs to be overwritten by signed content from a different file.
@@ -30,11 +30,10 @@ namespace Microsoft.DotNet.SignTool
         /// </summary>
         internal ImmutableArray<KeyValuePair<string, string>> FilesToCopy;
 
-        internal BatchSignInput(ImmutableArray<FileSignInfo> filesToSign, ImmutableDictionary<ImmutableArray<byte>, ZipData> zipDataMap, ImmutableArray<KeyValuePair<string, string>> filesToCopy)
+        internal BatchSignInput(ImmutableArray<FileSignInfo> filesToSign, ImmutableDictionary<SignedFileContentKey, ZipData> zipDataMap, ImmutableArray<KeyValuePair<string, string>> filesToCopy)
         {
             Debug.Assert(!filesToSign.IsDefault);
             Debug.Assert(zipDataMap != null);
-            Debug.Assert(zipDataMap.KeyComparer == ByteSequenceComparer.Instance);
             Debug.Assert(!filesToCopy.IsDefault);
 
             FilesToSign = filesToSign;

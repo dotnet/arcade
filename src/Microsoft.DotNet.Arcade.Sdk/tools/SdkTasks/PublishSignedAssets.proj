@@ -1,0 +1,65 @@
+<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
+<Project Sdk="Microsoft.NET.Sdk" DefaultTargets="Execute">
+  <!--
+    Parameters:
+      - IsInternalBuild                         : true if at least an asset to be published is internal.
+      - ShippingFolder                          : Location of the shipping assets about to be published.
+      - NonShippingFolder                       : Location of the nonshipping assets about to be published.
+      - FeedName                                : Name of the feed that will be created. This will
+                                                  be appended by '-shipping' and '-nonshipping' depending the case
+      - NugetPath                               : Path to nuget.exe                                            
+      - AzdoTargetFeedPAT                       : Required token to publish assets to feeds
+  -->
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <NETCORE_ENGINEERING_TELEMETRY>Publish</NETCORE_ENGINEERING_TELEMETRY>
+  </PropertyGroup>
+
+  <Target Name="Execute">
+    <Error
+      Condition="'$(IsInternalBuild)' == ''"
+      Text="Parameter 'IsInternalBuild' is empty. A boolean value is required." />
+
+    <Error
+      Condition="'$(ShippingFolder)' == ''"
+      Text="Parameters 'ShippingFolder' is empty." />
+
+    <Error
+      Condition="'$(NonShippingFolder)' == ''"
+      Text="Parameters 'NonShippingFolder' is empty." />
+
+    <Error
+      Condition="'$(AzdoTargetFeedPAT)' == ''"
+      Text="Parameters 'AzdoTargetFeedPAT' is empty." />
+
+    <!--Create the shipping feed-->
+    <CreateAzureDevOpsFeed
+        IsInternal="$(IsInternalBuild)"
+        AzureDevOpsPersonalAccessToken="$(AzdoTargetFeedPAT)"
+        FeedName="$(FeedName)-shipping">
+      <Output TaskParameter="TargetFeedURL" PropertyName="ShippingAzdoPackageFeedURL"/>
+    </CreateAzureDevOpsFeed>
+
+    <!--Create the nonshipping feed-->
+    <CreateAzureDevOpsFeed
+        IsInternal="$(IsInternalBuild)"
+        AzureDevOpsPersonalAccessToken="$(AzdoTargetFeedPAT)"
+        FeedName="$(FeedName)-nonshipping">
+      <Output TaskParameter="TargetFeedURL" PropertyName="NonShippingAzdoPackageFeedURL"/>
+    </CreateAzureDevOpsFeed>
+
+    <PublishSignedAssets
+      AzureDevOpsPersonalAccessToken="$(AzdoTargetFeedPAT)"
+      ShippingFeedName="$(ShippingAzdoPackageFeedURL)"
+      NonShippingFeedName="$(NonShippingAzdoPackageFeedURL)"
+      ShippingAssetsFolder="$(ShippingFolder)"
+      NonShippingAssetsFolder="$(NonShippingFolder)"
+      NugetPath="$(NugetPath)">
+    </PublishSignedAssets>
+  </Target>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.DotNet.Build.Tasks.Feed" Version="$(MicrosoftDotNetBuildTasksFeedVersion)" />
+  </ItemGroup>
+</Project>

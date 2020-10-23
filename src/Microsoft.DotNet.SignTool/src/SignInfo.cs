@@ -34,6 +34,7 @@ namespace Microsoft.DotNet.SignTool
 
         internal bool IsAlreadySigned { get; }
 
+
         /// <summary>
         /// This is used to decide what SignInfos to use in the case of a collision. In case of a collision
         /// we'll use the lower value since it would map a lower node in the graph and has precedence
@@ -66,5 +67,11 @@ namespace Microsoft.DotNet.SignTool
 
         internal SignInfo WithCertificateName(string value, string collisionPriorityId)
             => new SignInfo(value, StrongName, collisionPriorityId, ShouldIgnore, IsAlreadySigned);
+
+        internal SignInfo WithCollisionPriorityId(string collisionPriorityId)
+            => new SignInfo(Certificate, StrongName, collisionPriorityId, ShouldIgnore, IsAlreadySigned);
+
+        internal SignInfo WithIsAlreadySigned(bool value = false)
+            => new SignInfo(Certificate, StrongName, CollisionPriorityId, value, value);
     }
 }

@@ -248,22 +248,46 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         /// <summary>
         ///     Check that attempts to publish stable artifacts to non-stable feeds will throw errors.
         /// </summary>
-        [Theory]
+        [Theory] 
         [InlineData("3.0.0", false, true)]
         [InlineData("3.0.0-preview1", false, false)]
         [InlineData("3.0.0.10", false, false)]
         [InlineData("3.0.0-preview1-12345", false, false)]
         [InlineData("5.3.0-rtm.6198", false, false)]
-        [InlineData("3.3.1-beta3-19430-03", false, false)]
+        [InlineData("3.3.1-beta3-19430-03", false, false )]
         [InlineData("3.0.0", true, false)]
         [InlineData("3.0.0-preview1", true, false)]
         [InlineData("3.0.0.10", true, false)]
         [InlineData("3.0.0-preview1-12345", true, false)]
         [InlineData("5.3.0-rtm.6198", true, false)]
         [InlineData("3.3.1-beta3-19430-03", true, false)]
-        [InlineData("3.0.0", false, false, true)]
-        public async Task StableAssetCheckV2Async(string assetVersion, bool isIsolatedFeed, bool shouldError, bool skipChecks = false)
+        [InlineData("3.0.0", false, false, false, true)]
+        [InlineData("5.0.0", true, false, true)]
+        [InlineData("5.0.1-preview-123", true, false, false, true)]
+        [InlineData("5.0.1-preview-123", false, false, true)]
+        public async Task StableAssetCheckV2Async(string assetVersion, bool isIsolatedFeed, bool shouldError, bool isReleaseOnlyPackageVersion = false ,bool skipChecks = false )
         {
+            const string packageId = "Foo.Package";
+
+            BuildIdentity buildIdentity = new BuildIdentity
+            {
+                IsReleaseOnlyPackageVersion = isReleaseOnlyPackageVersion.ToString()
+            };
+            BuildModel buildModel = new BuildModel(buildIdentity)
+            {
+                Artifacts = new ArtifactSet
+                {
+                    Blobs = new List<BlobArtifactModel>(),
+                    Packages = new List<PackageArtifactModel>
+                    {
+                        new PackageArtifactModel()
+                        {
+                            Id = packageId,
+                            Version = assetVersion
+                        }
+                    }
+                }
+            };
             var buildEngine = new MockBuildEngine();
             var task = new PublishArtifactsInManifestV2
             {
@@ -278,25 +302,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                         { "Internal", "false" },
                         { "Isolated", isIsolatedFeed.ToString() }})
                 },
-                BuildEngine = buildEngine
-            };
-
-            const string packageId = "Foo.Package";
-
-            BuildModel buildModel = new BuildModel(new BuildIdentity())
-            {
-                Artifacts = new ArtifactSet
-                {
-                    Blobs = new List<BlobArtifactModel>(),
-                    Packages = new List<PackageArtifactModel>
-                    {
-                        new PackageArtifactModel()
-                        {
-                            Id = packageId,
-                            Version = assetVersion
-                        }
-                    }
-                }
+                BuildEngine = buildEngine,
+                BuildModel = buildModel
             };
 
             await task.ParseTargetFeedConfigAsync();
@@ -373,17 +380,21 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 }
             };
 
-            Func<string, string, Task<int>> testStartProcessAsync = async (string fakeExePath, string fakeExeArgs) =>
+            Func<string, string, ProcessExecutionResult> testRunAndLogProcess = (string fakeExePath, string fakeExeArgs) =>
             {
-                await (Task.Delay(10)); // To make this actually async
-                Debug.WriteLine($"Called mocked StartProcessAsync() :  ExePath = {fakeExePath}, ExeArgs = {fakeExeArgs}");
-                Assert.Equal(fakeExePath, fakeNugetExeName); 
+                Debug.WriteLine($"Called mocked RunProcessAndGetOutputs() :  ExePath = {fakeExePath}, ExeArgs = {fakeExeArgs}");
+                Assert.Equal(fakeExePath, fakeNugetExeName);
+                ProcessExecutionResult result = new ProcessExecutionResult() { StandardError = "fake stderr", StandardOut = "fake stdout" };
                 timesNugetExeCalled++;
                 if (timesNugetExeCalled >= pushAttemptsBeforeSuccess)
                 {
-                    return 0;
+                    result.ExitCode = 0;
                 }
-                return 1;
+                else
+                {
+                    result.ExitCode = 1;
+                }
+                return result;
             };
 
             await task.PushNugetPackageAsync(
@@ -396,7 +407,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 "feedvisibility", 
                 "feedname",
                 testCompareLocalPackage,
-                testStartProcessAsync);
+                testRunAndLogProcess);
             if (!expectedFailure && localPackageMatchesFeed)
             {
                 // Successful retry scenario; make sure we ran the # of retries we thought.

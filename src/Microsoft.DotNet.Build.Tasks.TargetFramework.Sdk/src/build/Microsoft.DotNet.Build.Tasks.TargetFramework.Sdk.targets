@@ -67,23 +67,25 @@
              Targets="GetTargetFrameworks"
              BuildInParallel="$(BuildInParallel)"
              RemoveProperties="TargetFramework;RuntimeIdentifier"
+             Condition="'%(ProjectReference.SkipGetTargetFrameworkProperties)' != 'true'"
              SkipNonexistentTargets="true">
-      <Output TaskParameter="TargetOutputs" ItemName="_ProjectRefWithTfms"/>
+      <Output TaskParameter="TargetOutputs" ItemName="_ProjectReferenceWithTargetFrameworks" />
     </MSBuild>
-     
+
     <PropertyGroup>
       <_OriginalTargetFramework Condition="'$(_OriginalTargetFramework)' == ''">$(TargetFramework)</_OriginalTargetFramework>
     </PropertyGroup>
 
     <ChooseBestP2PTargetFrameworkTask TargetFramework="$(_OriginalTargetFramework)"
-                                      ProjectReferencesWithTargetFrameworks="@(_ProjectRefWithTfms)"
+                                      ProjectReferencesWithTargetFrameworks="@(_ProjectReferenceWithTargetFrameworks)"
                                       RuntimeGraph="$(RuntimeGraph)" >
-      <Output TaskParameter="AnnotatedProjectReferencesWithSetTargetFramework" ItemName="_ProjectReferencesWithBestTargetFrameworks" />
+      <Output TaskParameter="AnnotatedProjectReferencesWithSetTargetFramework" ItemName="_ProjectReferenceWithBestTargetFramework" />
     </ChooseBestP2PTargetFrameworkTask>
     
     <ItemGroup>
       <ProjectReference Remove="@(ProjectReference)" />
-      <ProjectReference Include="@(_ProjectReferencesWithBestTargetFrameworks)" SkipGetTargetFrameworkProperties="true"/>
+      <ProjectReference Include="@(_ProjectReferenceWithBestTargetFramework)"
+                        SkipGetTargetFrameworkProperties="true" />
     </ItemGroup>
   </Target>
 

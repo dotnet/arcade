@@ -50,9 +50,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
         private const string FeedDotNetEngTransport = FeedDotNetEngShipping;
         private const string FeedDotNetEngSymbols = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng-symbols/nuget/v3/index.json";
 
-        private const string FeedDotNetToolsShipping = "https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet-tools/nuget/v3/index.json";
+        private const string FeedDotNetToolsShipping = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json";
         private const string FeedDotNetToolsTransport = FeedDotNetToolsShipping;
-        private const string FeedDotNetToolsSymbols = "https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet-tools-symbols/nuget/v3/index.json";
+        private const string FeedDotNetToolsSymbols = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools-symbols/nuget/v3/index.json";
 
         private const string FeedDotNetToolsInternalShipping = "https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet-tools-internal/nuget/v3/index.json";
         private const string FeedDotNetToolsInternalTransport = FeedDotNetToolsInternalShipping;
@@ -197,7 +197,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             new TargetChannelConfig(
                 1299,
                 PublishingInfraVersion.Next,
-                akaMSChannelName: "net5/daily",
+                akaMSChannelName: "net5",
                 FeedDotNet5Shipping,
                 FeedDotNet5Transport,
                 FeedDotNet5Symbols,
@@ -219,7 +219,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             new TargetChannelConfig(
                 1297,
                 PublishingInfraVersion.Next,
-                akaMSChannelName: "net5/daily",
+                akaMSChannelName: "net5/5.0.1xx/daily",
                 FeedDotNet5Shipping,
                 FeedDotNet5Transport,
                 FeedDotNet5Symbols,
@@ -248,11 +248,33 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedForChecksums,
                 FeedForInstallers),
 
+            // ".NET 5 Eng",
+            new TargetChannelConfig(
+                1495,
+                PublishingInfraVersion.Next,
+                "eng/net5",
+                FeedDotNetEngShipping,
+                FeedDotNetEngTransport,
+                FeedDotNetEngSymbols,
+                FeedForChecksums,
+                FeedForInstallers),
+
             // ".NET Eng - Validation",
             new TargetChannelConfig(
                 9,
                 PublishingInfraVersion.All,
                 "eng/validation",
+                FeedDotNetEngShipping,
+                FeedDotNetEngTransport,
+                FeedDotNetEngSymbols,
+                FeedForChecksums,
+                FeedForInstallers),
+
+            // ".NET 5 Eng - Validation",
+            new TargetChannelConfig(
+                1496,
+                PublishingInfraVersion.Next,
+                "eng/net5validation",
                 FeedDotNetEngShipping,
                 FeedDotNetEngTransport,
                 FeedDotNetEngSymbols,
@@ -581,6 +603,17 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             // "VS 16.8",
             new TargetChannelConfig(
                 1154,
+                PublishingInfraVersion.All,
+                string.Empty,
+                FeedDotNetToolsShipping,
+                FeedDotNetToolsTransport,
+                FeedDotNetToolsSymbols,
+                FeedForChecksums,
+                FeedForInstallers),
+
+            // "VS 16.9",
+            new TargetChannelConfig(
+                1473,
                 PublishingInfraVersion.All,
                 string.Empty,
                 FeedDotNetToolsShipping,
