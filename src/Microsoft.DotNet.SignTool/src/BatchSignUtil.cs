@@ -106,9 +106,9 @@ namespace Microsoft.DotNet.SignTool
             {
                 var filesToSign = files.Where(fileInfo => fileInfo.SignInfo.ShouldSign).ToArray();
                 totalFilesSigned = filesToSign.Length;
-                _log.LogMessage(MessageImportance.High, $"Signing Round {round}: {filesToSign.Length} files to sign.");
-
                 if (filesToSign.Length == 0) return true;
+
+                _log.LogMessage(MessageImportance.High, $"Round {round}: Signing {filesToSign.Length} files.");
 
                 foreach (var file in filesToSign)
                 {
@@ -128,6 +128,8 @@ namespace Microsoft.DotNet.SignTool
                 {
                     return true;
                 }
+
+                _log.LogMessage(MessageImportance.High, $"Round {round}: Signing {enginesToSign.Length} engines.");
 
                 Dictionary<string, FileSignInfo> engines = new Dictionary<string, FileSignInfo>();
                 var workingDirectory = Path.Combine(_signTool.TempDir, "engines");
@@ -173,6 +175,13 @@ namespace Microsoft.DotNet.SignTool
 
             void repackFiles(IEnumerable<FileSignInfo> files)
             {
+                int repackCount = files.Count();
+                if(repackCount == 0)
+                {
+                    return;
+                }
+                _log.LogMessage(MessageImportance.High, $"Repacking {repackCount} containers.");
+
                 foreach (var file in files)
                 {
                     if (file.IsZipContainer())
@@ -186,6 +195,10 @@ namespace Microsoft.DotNet.SignTool
                         _log.LogMessage($"Packing wix container: '{file.FileName}'");
                         _batchData.ZipDataMap[file.FileContentKey].Repack(_log, _signTool.TempDir, _signTool.WixToolsPath);
                         toRepackList.Remove(file.FullPath);
+                    }
+                    else
+                    {
+                        _log.LogError($"Don't know how to repack file '{file.FullPath}'");
                     }
                 }
             }
