@@ -697,7 +697,7 @@ namespace Microsoft.DotNet.SignTool
                         if (!_filesByContentKey.TryGetValue(fileUniqueKey, out var fileSignInfo))
                         {
                             string extractPathRoot = _useHashInExtractionPath ? stringHash : _filesByContentKey.Count().ToString();
-                            string tempPath = Path.Combine(_pathToContainerUnpackingDirectory, extractPathRoot, WebUtility.UrlDecode(relativePath));
+                            string tempPath = Path.Combine(_pathToContainerUnpackingDirectory, extractPathRoot, Uri.UnescapeDataString(relativePath));
                             _log.LogMessage($"Extracting file '{fileName}' from '{archivePath}' to '{tempPath}'.");
 
                             Directory.CreateDirectory(Path.GetDirectoryName(tempPath));
