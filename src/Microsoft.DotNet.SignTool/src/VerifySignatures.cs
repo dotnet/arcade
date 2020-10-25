@@ -34,14 +34,18 @@ namespace Microsoft.DotNet.SignTool
                 {
                     try
                     {
+                        // A package will fail integrity checks if, for example, the package is signed and then:
+                        // - it is repacked
+                        // - it has its symbols stripped
+                        // - it is otherwise modified
                         using (Stream stream = SignedPackageArchiveUtility.OpenPackageSignatureFileStream(binaryReader))
                         {
                             using (PackageArchiveReader par = new PackageArchiveReader(filePath))
                             {
                                 var signature = par.GetPrimarySignatureAsync(CancellationToken.None).Result;
 
-                                    var task = par.ValidateIntegrityAsync(signature.SignatureContent, CancellationToken.None);
-                                    task.Wait();
+                                var task = par.ValidateIntegrityAsync(signature.SignatureContent, CancellationToken.None);
+                                task.Wait();
                             }
                         }
                     }
@@ -49,7 +53,6 @@ namespace Microsoft.DotNet.SignTool
                     {
                         isSigned = false;
                     }
-
                 }
 #endif
             }
