@@ -9,22 +9,9 @@
     <Description>Build artifact signing tool</Description>
     <PackageTags>Arcade Build Tool Signing</PackageTags>
     <DevelopmentDependency>false</DevelopmentDependency>
-    <!-- NU5128 is required because we are packaging identical assemblies in tools and lib folders
-         See https://docs.microsoft.com/en-us/nuget/reference/errors-and-warnings/nu5128 -->
     <NoWarn>$(NoWarn);NU5128</NoWarn>
   </PropertyGroup>
   
-  <!-- SigningNotSupported is a concept required by NuGet package integrity checks
-       https://github.com/NuGet/NuGet.Client/blob/e88a5a03a1b26099f8be225d3ee3a897b2edb1d0/build/common.targets#L19 -->
-  <PropertyGroup>
-    <SigningNotSupported Condition="$(TargetFramework.StartsWith('netstandard')) OR $(TargetFramework.StartsWith('netcoreapp'))">true</SigningNotSupported>
-    <SigningNotSupported Condition=" '$(SigningNotSupported)' != 'true'">false</SigningNotSupported>
-  </PropertyGroup>
-
-  <PropertyGroup Condition=" '$(SigningNotSupported)' != 'true' ">
-    <DefineConstants>$(DefineConstants);IS_SIGNING_SUPPORTED</DefineConstants>
-  </PropertyGroup>  
-
   <ItemGroup>
     <Compile Include="..\Common\AssemblyResolution.cs" Link="src\AssemblyResolution.cs" />
   </ItemGroup>

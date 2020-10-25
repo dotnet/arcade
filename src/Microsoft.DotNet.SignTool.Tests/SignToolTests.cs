@@ -323,7 +323,7 @@ namespace Microsoft.DotNet.SignTool.Tests
             var afterSigningEngineFilesList = Directory.GetFiles(signToolArgs.TempDir, "*-engine.exe", SearchOption.AllDirectories);
 
             // validate no intermediate msi engine files have populated the drop (they fail signing validation).
-            Assert.Same(beforeSigningEngineFilesList, afterSigningEngineFilesList);
+            Assert.True(beforeSigningEngineFilesList.SequenceEqual(afterSigningEngineFilesList));
 
             // The list of files that would be signed was captured inside the FakeBuildEngine,
             // here we check if that matches what we expected
@@ -1116,6 +1116,7 @@ $@"
             });
         }
 
+#if NETFRAMEWORK
         [Fact]
         public void VerifyNupkgIntegrity()
         {
@@ -1151,10 +1152,11 @@ $@"
             ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
                 "File 'UnsignedScript.ps1' Certificate='PSCertificate'",
-                "File 'UnsignedContents.nupkg' Certificate='NuGet'"
+                "File 'UnsignedContents.nupkg' Certificate='NuGet'",
+                "File 'FakeSignedContents.nupkg' Certificate='NuGet'"
             });
         }
-
+#endif
         [SkippableFact]
         public void SignMsiEngine()
         {

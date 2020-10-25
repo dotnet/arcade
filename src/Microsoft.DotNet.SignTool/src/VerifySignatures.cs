@@ -29,7 +29,7 @@ namespace Microsoft.DotNet.SignTool
             using (BinaryReader binaryReader = new BinaryReader(File.OpenRead(filePath)))
             {
                 isSigned = SignedPackageArchiveUtility.IsSigned(binaryReader);
-#if IS_SIGNING_SUPPORTED
+#if NETFRAMEWORK
                 if (isSigned)
                 {
                     try
