@@ -1130,7 +1130,6 @@ $@"
                                   new Dictionary<ExplicitCertificateKey, string>(),
                                   s_fileExtensionSignInfo,
                                   new[] { "File 'IncorrectlySignedPackage.1.0.0.nupkg' Certificate='NuGet'" });
-
         }
 
         [Fact]
