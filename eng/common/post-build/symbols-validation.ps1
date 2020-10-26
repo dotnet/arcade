@@ -10,7 +10,7 @@ param(
 $MaxParallelJobs = 6
 
 # Max number of retries
-$MaxRetry = 3
+$MaxRetry = 5
 
 # Wait time between check for system load
 $SecondsBetweenLoadChecks = 10
