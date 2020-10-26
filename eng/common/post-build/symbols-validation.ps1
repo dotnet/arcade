@@ -9,6 +9,9 @@ param(
 # Maximum number of jobs to run in parallel
 $MaxParallelJobs = 6
 
+# Max number of retries
+$MaxRetry = 3
+
 # Wait time between check for system load
 $SecondsBetweenLoadChecks = 10
 
@@ -21,10 +24,15 @@ $CountMissingSymbols = {
 
   Add-Type -AssemblyName System.IO.Compression.FileSystem
 
+  Write-Host "Validating $PackagePath "
+
   # Ensure input file exist
   if (!(Test-Path $PackagePath)) {
     Write-PipelineTaskError "Input file does not exist: $PackagePath"
-    return -2
+    return [pscustomobject]@{
+      result = -2
+      packagePath = $PackagePath
+    }
   }
   
   # Extensions for which we'll look for symbols
@@ -56,7 +64,10 @@ $CountMissingSymbols = {
       $FileName = $_.FullName
       if ($FileName -Match '\\ref\\') {
         Write-Host "`t Ignoring reference assembly file " $FileName
-        return
+        return [pscustomobject]@{
+          result = -3
+          packagePath = $PackagePath
+        }
       }
 
       $FirstMatchingSymbolDescriptionOrDefault = {
@@ -91,24 +102,35 @@ $CountMissingSymbols = {
       $dotnetSymbolExe = "$env:USERPROFILE\.dotnet\tools"
       $dotnetSymbolExe = Resolve-Path "$dotnetSymbolExe\dotnet-symbol.exe"
 
-      & $dotnetSymbolExe --symbols --modules --windows-pdbs $TargetServerParam $FullPath -o $SymbolsPath | Out-Null
+      $totalRetries = 0
 
-      if (Test-Path $PdbPath) {
-        return 'PDB'
-      }
-      elseif (Test-Path $NGenPdb) {
-        return 'NGen PDB'
-      }
-      elseif (Test-Path $SODbg) {
-        return 'DBG for SO'
-      }  
-      elseif (Test-Path $DylibDwarf) {
-        return 'Dwarf for Dylib'
-      }  
-      elseif (Test-Path $SymbolPath) {
-        return 'Module'
-      }
-      else {
+      while ($totalRetries -lt $using:MaxRetry) {
+        # Save the output and get diagnostic output
+        $output = & $dotnetSymbolExe --symbols --modules --windows-pdbs $TargetServerParam $FullPath -o $SymbolsPath --diagnostics | Out-String
+
+        if (Test-Path $PdbPath) {
+          return 'PDB'
+        }
+        elseif (Test-Path $NGenPdb) {
+          return 'NGen PDB'
+        }
+        elseif (Test-Path $SODbg) {
+          return 'DBG for SO'
+        }  
+        elseif (Test-Path $DylibDwarf) {
+          return 'Dwarf for Dylib'
+        }  
+        elseif (Test-Path $SymbolPath) {
+          return 'Module'
+        }
+        elseif ($output.Contains("503 Service Unavailable")) {
+          # If we got a 503 error, we should retry.
+          $totalRetries++
+        }
+        else {
+          return $null
+        }
+
         return $null
       }
     }
@@ -159,9 +181,19 @@ function CheckJobResult(
     Write-PipelineTelemetryError -Category 'CheckSymbols' -Message "$packagePath has duplicated symbol files"
     $DupedSymbols.Value++
   } 
-  elseif ($jobResult.result -ne '0') {
+  elseif ($result -eq '-2') {
+    Write-PipelineTelemetryError -Category 'CheckSymbols' -Message "$packagePath does not exist"
+    $TotalFailures.Value++
+  }
+  elseif($result -eq '-3') {
+    Write-Host "Ignored as reference assembly file $packagePath"
+  }
+  elseif ($result -gt '0') {
     Write-PipelineTelemetryError -Category 'CheckSymbols' -Message "Missing symbols for $result modules in the package $packagePath"
     $TotalFailures.Value++
+  }
+  else {
+    Write-Host "All symbols verified for package $packagePath"
   }
 }
 
@@ -191,8 +223,6 @@ function CheckSymbolsAvailable {
         Write-Host
         return
       }
-
-      Write-Host "Validating $FileName "
 
       Start-Job -ScriptBlock $CountMissingSymbols -ArgumentList $FullName | Out-Null
 
