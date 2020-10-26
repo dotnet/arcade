@@ -1116,6 +1116,10 @@ $@"
             });
         }
 
+/* These tests return different results on netcoreapp. ie, we can only truly validate nuget integrity when running on framework.
+ * NuGet behaves differently on core vs framework 
+ * - https://github.com/NuGet/NuGet.Client/blob/e88a5a03a1b26099f8be225d3ee3a897b2edb1d0/build/common.targets#L18-L25
+ */
 #if NETFRAMEWORK
         [Fact]
         public void VerifyNupkgIntegrity()
