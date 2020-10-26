@@ -68,7 +68,7 @@ $CountMissingSymbols = {
       $FileName = $_.FullName
       if ($FileName -Match '\\ref\\') {
         Write-Host "`t Ignoring reference assembly file " $FileName
-        continue
+        return
       }
 
       $FirstMatchingSymbolDescriptionOrDefault = {
