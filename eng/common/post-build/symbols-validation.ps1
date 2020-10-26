@@ -34,7 +34,7 @@ $CountMissingSymbols = {
   if (!(Test-Path $PackagePath)) {
     Write-PipelineTaskError "Input file does not exist: $PackagePath"
     return [pscustomobject]@{
-      result = $ERROR_FILEDOESNOTEXIST
+      result = $using:ERROR_FILEDOESNOTEXIST
       packagePath = $PackagePath
     }
   }
@@ -57,7 +57,7 @@ $CountMissingSymbols = {
     Write-Host "Something went wrong extracting $PackagePath"
     Write-Host $_
     return [pscustomobject]@{
-      result = $ERROR_BADEXTRACT
+      result = $using:ERROR_BADEXTRACT
       packagePath = $PackagePath
     }
   }
