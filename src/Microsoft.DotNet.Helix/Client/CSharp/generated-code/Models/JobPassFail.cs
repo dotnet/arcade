@@ -22,6 +22,9 @@ namespace Microsoft.DotNet.Helix.Client.Models
         [JsonProperty("Failed")]
         public IImmutableList<string> Failed { get; set; }
 
+        [JsonProperty("Passed")]
+        public IImmutableList<string> Passed { get; set; }
+
         [JsonIgnore]
         public bool IsValid
         {

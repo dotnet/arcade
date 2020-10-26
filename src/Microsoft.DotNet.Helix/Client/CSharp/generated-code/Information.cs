@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Text;
@@ -6,18 +7,21 @@ using System.Threading;
 using System.Threading.Tasks;
 using Azure;
 using Azure.Core;
-using Microsoft.DotNet.Helix.Client.Models;
+
+
 
 namespace Microsoft.DotNet.Helix.Client
 {
     public partial interface IInformation
     {
-        Task<QueueInfo> QueueInfoAsync(
+        Task<Models.QueueInfo> QueueInfoAsync(
             string queueId,
+            bool? includeQueueDepth = default,
             CancellationToken cancellationToken = default
         );
 
-        Task<IImmutableList<QueueInfo>> QueueInfoListAsync(
+        Task<IImmutableList<Models.QueueInfo>> QueueInfoListAsync(
+            bool? includeQueueDepth = default,
             CancellationToken cancellationToken = default
         );
 
@@ -36,24 +40,32 @@ namespace Microsoft.DotNet.Helix.Client
 
         partial void HandleFailedQueueInfoRequest(RestApiException ex);
 
-        public async Task<QueueInfo> QueueInfoAsync(
+        public async Task<Models.QueueInfo> QueueInfoAsync(
             string queueId,
+            bool? includeQueueDepth = default,
             CancellationToken cancellationToken = default
         )
         {
+
             if (string.IsNullOrEmpty(queueId))
             {
                 throw new ArgumentNullException(nameof(queueId));
             }
 
+            const string apiVersion = "2019-06-17";
 
             var _baseUri = Client.Options.BaseUri;
             var _url = new RequestUriBuilder();
             _url.Reset(_baseUri);
             _url.AppendPath(
-                "/api/2019-06-17/info/queues/{queueId}".Replace("{queueId}", Uri.EscapeDataString(Client.Serialize(queueId))),
+                "/api/info/queues/{queueId}".Replace("{queueId}", Uri.EscapeDataString(Client.Serialize(queueId))),
                 false);
 
+            if (includeQueueDepth != default(bool?))
+            {
+                _url.AppendQuery("includeQueueDepth", Client.Serialize(includeQueueDepth));
+            }
+            _url.AppendQuery("api-version", Client.Serialize(apiVersion));
 
 
             using (var _req = Client.Pipeline.CreateRequest())
@@ -76,7 +88,7 @@ namespace Microsoft.DotNet.Helix.Client
                     using (var _reader = new StreamReader(_res.ContentStream))
                     {
                         var _content = await _reader.ReadToEndAsync().ConfigureAwait(false);
-                        var _body = Client.Deserialize<QueueInfo>(_content);
+                        var _body = Client.Deserialize<Models.QueueInfo>(_content);
                         return _body;
                     }
                 }
@@ -94,10 +106,12 @@ namespace Microsoft.DotNet.Helix.Client
                 }
             }
 
-            var ex = new RestApiException(
+            var ex = new RestApiException<Models.ApiError>(
                 req,
                 res,
-                content);
+                content,
+                Client.Deserialize<Models.ApiError>(content)
+                );
             HandleFailedQueueInfoRequest(ex);
             HandleFailedRequest(ex);
             Client.OnFailedRequest(ex);
@@ -106,18 +120,26 @@ namespace Microsoft.DotNet.Helix.Client
 
         partial void HandleFailedQueueInfoListRequest(RestApiException ex);
 
-        public async Task<IImmutableList<QueueInfo>> QueueInfoListAsync(
+        public async Task<IImmutableList<Models.QueueInfo>> QueueInfoListAsync(
+            bool? includeQueueDepth = default,
             CancellationToken cancellationToken = default
         )
         {
+
+            const string apiVersion = "2019-06-17";
 
             var _baseUri = Client.Options.BaseUri;
             var _url = new RequestUriBuilder();
             _url.Reset(_baseUri);
             _url.AppendPath(
-                "/api/2019-06-17/info/queues",
+                "/api/info/queues",
                 false);
 
+            if (includeQueueDepth != default(bool?))
+            {
+                _url.AppendQuery("includeQueueDepth", Client.Serialize(includeQueueDepth));
+            }
+            _url.AppendQuery("api-version", Client.Serialize(apiVersion));
 
 
             using (var _req = Client.Pipeline.CreateRequest())
@@ -140,7 +162,7 @@ namespace Microsoft.DotNet.Helix.Client
                     using (var _reader = new StreamReader(_res.ContentStream))
                     {
                         var _content = await _reader.ReadToEndAsync().ConfigureAwait(false);
-                        var _body = Client.Deserialize<IImmutableList<QueueInfo>>(_content);
+                        var _body = Client.Deserialize<IImmutableList<Models.QueueInfo>>(_content);
                         return _body;
                     }
                 }
@@ -158,10 +180,12 @@ namespace Microsoft.DotNet.Helix.Client
                 }
             }
 
-            var ex = new RestApiException(
+            var ex = new RestApiException<Models.ApiError>(
                 req,
                 res,
-                content);
+                content,
+                Client.Deserialize<Models.ApiError>(content)
+                );
             HandleFailedQueueInfoListRequest(ex);
             HandleFailedRequest(ex);
             Client.OnFailedRequest(ex);

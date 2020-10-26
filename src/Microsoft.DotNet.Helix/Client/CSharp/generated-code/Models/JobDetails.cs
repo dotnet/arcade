@@ -6,7 +6,7 @@ namespace Microsoft.DotNet.Helix.Client.Models
 {
     public partial class JobDetails
     {
-        public JobDetails(string jobList, JobWorkItemCounts workItems, string name, string waitUrl, string source, string type, string build)
+        public JobDetails(string jobList, Models.JobWorkItemCounts workItems, string name, string waitUrl, string source, string type, string build)
         {
             JobList = jobList;
             WorkItems = workItems;
@@ -18,7 +18,7 @@ namespace Microsoft.DotNet.Helix.Client.Models
         }
 
         [JsonProperty("FailureReason")]
-        public FailureReason FailureReason { get; set; }
+        public Models.FailureReason FailureReason { get; set; }
 
         [JsonProperty("QueueId")]
         public string QueueId { get; set; }
@@ -27,7 +27,7 @@ namespace Microsoft.DotNet.Helix.Client.Models
         public string JobList { get; set; }
 
         [JsonProperty("WorkItems")]
-        public JobWorkItemCounts WorkItems { get; set; }
+        public Models.JobWorkItemCounts WorkItems { get; set; }
 
         [JsonProperty("Name")]
         public string Name { get; set; }
@@ -60,7 +60,7 @@ namespace Microsoft.DotNet.Helix.Client.Models
         public Newtonsoft.Json.Linq.JToken Properties { get; set; }
 
         [JsonProperty("Errors")]
-        public IImmutableList<WorkItemError> Errors { get; set; }
+        public IImmutableList<Models.WorkItemError> Errors { get; set; }
 
         [JsonIgnore]
         public bool IsValid
@@ -71,7 +71,7 @@ namespace Microsoft.DotNet.Helix.Client.Models
                 {
                     return false;
                 }
-                if (WorkItems == default(JobWorkItemCounts))
+                if (WorkItems == default(Models.JobWorkItemCounts))
                 {
                     return false;
                 }

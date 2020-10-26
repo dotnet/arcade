@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Text;
@@ -6,24 +7,25 @@ using System.Threading;
 using System.Threading.Tasks;
 using Azure;
 using Azure.Core;
-using Microsoft.DotNet.Helix.Client.Models;
+
+
 
 namespace Microsoft.DotNet.Helix.Client
 {
     public partial interface IStorage
     {
-        Task<IImmutableList<ContainerInformation>> ListAsync(
+        Task<IImmutableList<Models.ContainerInformation>> ListAsync(
             bool? getSasTokens = default,
             CancellationToken cancellationToken = default
         );
 
-        Task<ContainerInformation> NewAsync(
-            ContainerCreationRequest body,
+        Task<Models.ContainerInformation> NewAsync(
+            Models.ContainerCreationRequest body,
             CancellationToken cancellationToken = default
         );
 
-        Task<ContainerInformation> ExtendExpirationAsync(
-            ContainerExtensionRequest body,
+        Task<Models.ContainerInformation> ExtendExpirationAsync(
+            Models.ContainerExtensionRequest body,
             CancellationToken cancellationToken = default
         );
 
@@ -42,23 +44,26 @@ namespace Microsoft.DotNet.Helix.Client
 
         partial void HandleFailedListRequest(RestApiException ex);
 
-        public async Task<IImmutableList<ContainerInformation>> ListAsync(
+        public async Task<IImmutableList<Models.ContainerInformation>> ListAsync(
             bool? getSasTokens = default,
             CancellationToken cancellationToken = default
         )
         {
 
+            const string apiVersion = "2019-06-17";
+
             var _baseUri = Client.Options.BaseUri;
             var _url = new RequestUriBuilder();
             _url.Reset(_baseUri);
             _url.AppendPath(
-                "/api/2019-06-17/storage",
+                "/api/storage",
                 false);
 
             if (getSasTokens != default(bool?))
             {
                 _url.AppendQuery("getSasTokens", Client.Serialize(getSasTokens));
             }
+            _url.AppendQuery("api-version", Client.Serialize(apiVersion));
 
 
             using (var _req = Client.Pipeline.CreateRequest())
@@ -81,7 +86,7 @@ namespace Microsoft.DotNet.Helix.Client
                     using (var _reader = new StreamReader(_res.ContentStream))
                     {
                         var _content = await _reader.ReadToEndAsync().ConfigureAwait(false);
-                        var _body = Client.Deserialize<IImmutableList<ContainerInformation>>(_content);
+                        var _body = Client.Deserialize<IImmutableList<Models.ContainerInformation>>(_content);
                         return _body;
                     }
                 }
@@ -99,10 +104,12 @@ namespace Microsoft.DotNet.Helix.Client
                 }
             }
 
-            var ex = new RestApiException(
+            var ex = new RestApiException<Models.ApiError>(
                 req,
                 res,
-                content);
+                content,
+                Client.Deserialize<Models.ApiError>(content)
+                );
             HandleFailedListRequest(ex);
             HandleFailedRequest(ex);
             Client.OnFailedRequest(ex);
@@ -111,12 +118,13 @@ namespace Microsoft.DotNet.Helix.Client
 
         partial void HandleFailedNewRequest(RestApiException ex);
 
-        public async Task<ContainerInformation> NewAsync(
-            ContainerCreationRequest body,
+        public async Task<Models.ContainerInformation> NewAsync(
+            Models.ContainerCreationRequest body,
             CancellationToken cancellationToken = default
         )
         {
-            if (body == default(ContainerCreationRequest))
+
+            if (body == default(Models.ContainerCreationRequest))
             {
                 throw new ArgumentNullException(nameof(body));
             }
@@ -126,14 +134,16 @@ namespace Microsoft.DotNet.Helix.Client
                 throw new ArgumentException("The parameter is not valid", nameof(body));
             }
 
+            const string apiVersion = "2019-06-17";
 
             var _baseUri = Client.Options.BaseUri;
             var _url = new RequestUriBuilder();
             _url.Reset(_baseUri);
             _url.AppendPath(
-                "/api/2019-06-17/storage",
+                "/api/storage",
                 false);
 
+            _url.AppendQuery("api-version", Client.Serialize(apiVersion));
 
 
             using (var _req = Client.Pipeline.CreateRequest())
@@ -141,7 +151,7 @@ namespace Microsoft.DotNet.Helix.Client
                 _req.Uri = _url;
                 _req.Method = RequestMethod.Post;
 
-                if (body != default(ContainerCreationRequest))
+                if (body != default(Models.ContainerCreationRequest))
                 {
                     _req.Content = RequestContent.Create(Encoding.UTF8.GetBytes(Client.Serialize(body)));
                     _req.Headers.Add("Content-Type", "application/json; charset=utf-8");
@@ -162,7 +172,7 @@ namespace Microsoft.DotNet.Helix.Client
                     using (var _reader = new StreamReader(_res.ContentStream))
                     {
                         var _content = await _reader.ReadToEndAsync().ConfigureAwait(false);
-                        var _body = Client.Deserialize<ContainerInformation>(_content);
+                        var _body = Client.Deserialize<Models.ContainerInformation>(_content);
                         return _body;
                     }
                 }
@@ -180,10 +190,12 @@ namespace Microsoft.DotNet.Helix.Client
                 }
             }
 
-            var ex = new RestApiException(
+            var ex = new RestApiException<Models.ApiError>(
                 req,
                 res,
-                content);
+                content,
+                Client.Deserialize<Models.ApiError>(content)
+                );
             HandleFailedNewRequest(ex);
             HandleFailedRequest(ex);
             Client.OnFailedRequest(ex);
@@ -192,12 +204,13 @@ namespace Microsoft.DotNet.Helix.Client
 
         partial void HandleFailedExtendExpirationRequest(RestApiException ex);
 
-        public async Task<ContainerInformation> ExtendExpirationAsync(
-            ContainerExtensionRequest body,
+        public async Task<Models.ContainerInformation> ExtendExpirationAsync(
+            Models.ContainerExtensionRequest body,
             CancellationToken cancellationToken = default
         )
         {
-            if (body == default(ContainerExtensionRequest))
+
+            if (body == default(Models.ContainerExtensionRequest))
             {
                 throw new ArgumentNullException(nameof(body));
             }
@@ -207,14 +220,16 @@ namespace Microsoft.DotNet.Helix.Client
                 throw new ArgumentException("The parameter is not valid", nameof(body));
             }
 
+            const string apiVersion = "2019-06-17";
 
             var _baseUri = Client.Options.BaseUri;
             var _url = new RequestUriBuilder();
             _url.Reset(_baseUri);
             _url.AppendPath(
-                "/api/2019-06-17/storage/renew",
+                "/api/storage/renew",
                 false);
 
+            _url.AppendQuery("api-version", Client.Serialize(apiVersion));
 
 
             using (var _req = Client.Pipeline.CreateRequest())
@@ -222,7 +237,7 @@ namespace Microsoft.DotNet.Helix.Client
                 _req.Uri = _url;
                 _req.Method = RequestMethod.Post;
 
-                if (body != default(ContainerExtensionRequest))
+                if (body != default(Models.ContainerExtensionRequest))
                 {
                     _req.Content = RequestContent.Create(Encoding.UTF8.GetBytes(Client.Serialize(body)));
                     _req.Headers.Add("Content-Type", "application/json; charset=utf-8");
@@ -243,7 +258,7 @@ namespace Microsoft.DotNet.Helix.Client
                     using (var _reader = new StreamReader(_res.ContentStream))
                     {
                         var _content = await _reader.ReadToEndAsync().ConfigureAwait(false);
-                        var _body = Client.Deserialize<ContainerInformation>(_content);
+                        var _body = Client.Deserialize<Models.ContainerInformation>(_content);
                         return _body;
                     }
                 }
@@ -261,10 +276,12 @@ namespace Microsoft.DotNet.Helix.Client
                 }
             }
 
-            var ex = new RestApiException(
+            var ex = new RestApiException<Models.ApiError>(
                 req,
                 res,
-                content);
+                content,
+                Client.Deserialize<Models.ApiError>(content)
+                );
             HandleFailedExtendExpirationRequest(ex);
             HandleFailedRequest(ex);
             Client.OnFailedRequest(ex);
