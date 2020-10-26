@@ -122,7 +122,7 @@
   </Target>
 
   <Target Name="GetConfigScript" Returns="$(CMakeConfigScript)"
-    DependsOnTargets="ResolveVSGenerator;_ResolveVSCompilerToolchainForNonVSGenerators;_ResolveNonMSVCCompilerToolchain;$(CMakeConfigureDependsOn)">
+    DependsOnTargets="ResolveVSGenerator;GetRootCMakeListsDirectory;_ResolveVSCompilerToolchainForNonVSGenerators;_ResolveNonMSVCCompilerToolchain;$(CMakeConfigureDependsOn)">
     <Error Condition="'$(CMakeLists)' == ''" Text="A CMakeLists.txt must be specified via a CMakeLists item." />
     <Error Condition="'$(CMakeOutputDir)' == ''" Text="An output directory must be specified via the CMakeOutputDir property." />
     <Error Condition="!Exists('$(CMakeLists)')" Text="The provided CMakeLists.txt does not exist." />
