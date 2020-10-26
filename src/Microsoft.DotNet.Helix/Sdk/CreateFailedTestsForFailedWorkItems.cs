@@ -98,6 +98,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                                             ["outcome"] = failed ? "Failed" : "Passed",
                                             ["state"] = "Completed",
                                             ["errorMessage"] = failed ? "The Work Item Failed" : null,
+                                            ["durationInMs"] = 60 * 1000, // Use a non-zero duration so that the graphs look better.
                                             ["comment"] = new JObject
                                             {
                                                 ["HelixJobId"] = jobName,
