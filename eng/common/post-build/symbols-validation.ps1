@@ -15,6 +15,10 @@ $MaxRetry = 3
 # Wait time between check for system load
 $SecondsBetweenLoadChecks = 10
 
+# Set error codes
+Set-Variable -Name "ERROR_BADEXTRACT" -Option Constant -Value -1
+Set-Variable -Name "ERROR_FILEDOESNOTEXIST" -Option Constant -Value -2
+
 $CountMissingSymbols = {
   param( 
     [string] $PackagePath          # Path to a NuGet package
@@ -30,7 +34,7 @@ $CountMissingSymbols = {
   if (!(Test-Path $PackagePath)) {
     Write-PipelineTaskError "Input file does not exist: $PackagePath"
     return [pscustomobject]@{
-      result = -2
+      result = $ERROR_FILEDOESNOTEXIST
       packagePath = $PackagePath
     }
   }
@@ -53,7 +57,7 @@ $CountMissingSymbols = {
     Write-Host "Something went wrong extracting $PackagePath"
     Write-Host $_
     return [pscustomobject]@{
-      result = -1
+      result = $ERROR_BADEXTRACT
       packagePath = $PackagePath
     }
   }
@@ -64,10 +68,7 @@ $CountMissingSymbols = {
       $FileName = $_.FullName
       if ($FileName -Match '\\ref\\') {
         Write-Host "`t Ignoring reference assembly file " $FileName
-        return [pscustomobject]@{
-          result = -3
-          packagePath = $PackagePath
-        }
+        continue
       }
 
       $FirstMatchingSymbolDescriptionOrDefault = {
@@ -177,16 +178,13 @@ function CheckJobResult(
     $packagePath,
     [ref]$DupedSymbols,
     [ref]$TotalFailures) {
-  if ($result -eq '-1') {
+  if ($result -eq $ERROR_BADEXTRACT) {
     Write-PipelineTelemetryError -Category 'CheckSymbols' -Message "$packagePath has duplicated symbol files"
     $DupedSymbols.Value++
   } 
-  elseif ($result -eq '-2') {
+  elseif ($result -eq $ERROR_FILEDOESNOTEXIST) {
     Write-PipelineTelemetryError -Category 'CheckSymbols' -Message "$packagePath does not exist"
     $TotalFailures.Value++
-  }
-  elseif($result -eq '-3') {
-    Write-Host "Ignored as reference assembly file $packagePath"
   }
   elseif ($result -gt '0') {
     Write-PipelineTelemetryError -Category 'CheckSymbols' -Message "Missing symbols for $result modules in the package $packagePath"
