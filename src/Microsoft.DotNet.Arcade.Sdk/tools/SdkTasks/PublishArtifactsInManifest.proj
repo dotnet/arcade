@@ -72,7 +72,7 @@
     <Error Condition="'$(BlobBasePath)' == '' OR '$(PackageBasePath)' == ''" Text="A valid full path to BlobBasePath and PackageBasePath is required." />
 
     <ItemGroup>
-      <MergedManifest Condition="Exists('$(BlobBasePath)\MergedManifest.xml')" Include="$(BlobBasePath)\MergedManifest.xml" />
+      <MergedManifest Condition="Exists('$(BlobBasePath)MergedManifest.xml')" Include="$(BlobBasePath)MergedManifest.xml" />
       <ManifestFiles Include="@(MergedManifest)" />
       <ManifestFiles Condition="'@(ManifestFiles)' == ''" Include="$(ManifestsBasePath)\*.xml" />
     </ItemGroup>
