@@ -318,12 +318,12 @@ namespace Microsoft.DotNet.SignTool.Tests
             var signingInput = new Configuration(signToolArgs.TempDir, itemsToSign, strongNameSignInfo, fileSignInfo, extensionsSignInfo, dualCertificates, task.Log).GenerateListOfFiles();
             var util = new BatchSignUtil(task.BuildEngine, task.Log, signTool, signingInput, new string[] { });
 
-            var beforeSigningEngineFilesList = Directory.GetFiles(signToolArgs.TempDir, "*-engine.exe", new EnumerationOptions() { RecurseSubdirectories = true });
+            var beforeSigningEngineFilesList = Directory.GetFiles(signToolArgs.TempDir, "*-engine.exe", SearchOption.AllDirectories);
             util.Go(doStrongNameCheck: true);
-            var afterSigningEngineFilesList = Directory.GetFiles(signToolArgs.TempDir, "*-engine.exe", new EnumerationOptions() { RecurseSubdirectories = true });
-            
+            var afterSigningEngineFilesList = Directory.GetFiles(signToolArgs.TempDir, "*-engine.exe", SearchOption.AllDirectories);
+
             // validate no intermediate msi engine files have populated the drop (they fail signing validation).
-            Assert.Same(beforeSigningEngineFilesList, afterSigningEngineFilesList);
+            Assert.True(beforeSigningEngineFilesList.SequenceEqual(afterSigningEngineFilesList));
 
             // The list of files that would be signed was captured inside the FakeBuildEngine,
             // here we check if that matches what we expected
@@ -1116,6 +1116,27 @@ $@"
             });
         }
 
+/* These tests return different results on netcoreapp. ie, we can only truly validate nuget integrity when running on framework.
+ * NuGet behaves differently on core vs framework 
+ * - https://github.com/NuGet/NuGet.Client/blob/e88a5a03a1b26099f8be225d3ee3a897b2edb1d0/build/common.targets#L18-L25
+ */
+#if NETFRAMEWORK
+        [Fact]
+        public void VerifyNupkgIntegrity()
+        {
+            var itemsToSign = new ITaskItem[]
+            {
+                new TaskItem(GetResourcePath("SignedPackage.1.0.0.nupkg")),
+                new TaskItem(GetResourcePath("IncorrectlySignedPackage.1.0.0.nupkg"))
+            };
+
+            ValidateFileSignInfos(itemsToSign,
+                                  new Dictionary<string, List<SignInfo>>(),
+                                  new Dictionary<ExplicitCertificateKey, string>(),
+                                  s_fileExtensionSignInfo,
+                                  new[] { "File 'IncorrectlySignedPackage.1.0.0.nupkg' Certificate='NuGet'" });
+        }
+
         [Fact]
         public void SignNupkgWithUnsignedContents()
         {
@@ -1123,7 +1144,7 @@ $@"
             var itemsToSign = new ITaskItem[]
             {
                 new TaskItem(GetResourcePath("UnsignedContents.nupkg")),
-                new TaskItem(GetResourcePath("SignedContents.nupkg"))
+                new TaskItem(GetResourcePath("FakeSignedContents.nupkg"))
             };
 
             // Default signing information
@@ -1135,10 +1156,11 @@ $@"
             ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
                 "File 'UnsignedScript.ps1' Certificate='PSCertificate'",
-                "File 'UnsignedContents.nupkg' Certificate='NuGet'"
+                "File 'UnsignedContents.nupkg' Certificate='NuGet'",
+                "File 'FakeSignedContents.nupkg' Certificate='NuGet'"
             });
         }
-
+#endif
         [SkippableFact]
         public void SignMsiEngine()
         {

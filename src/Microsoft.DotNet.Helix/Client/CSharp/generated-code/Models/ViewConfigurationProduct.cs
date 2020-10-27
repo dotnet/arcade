@@ -11,7 +11,7 @@ namespace Microsoft.DotNet.Helix.Client.Models
         }
 
         [JsonProperty("flavors")]
-        public IImmutableList<ViewConfigurationFlavor> Flavors { get; set; }
+        public IImmutableList<Models.ViewConfigurationFlavor> Flavors { get; set; }
 
         [JsonProperty("name")]
         public string Name { get; set; }

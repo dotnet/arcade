@@ -9,10 +9,9 @@
     <Description>Build artifact signing tool</Description>
     <PackageTags>Arcade Build Tool Signing</PackageTags>
     <DevelopmentDependency>false</DevelopmentDependency>
-    <!-- NU5128 is required because we are packaging identical assemblies in tools and lib folders
-         See https://docs.microsoft.com/en-us/nuget/reference/errors-and-warnings/nu5128 -->
     <NoWarn>$(NoWarn);NU5128</NoWarn>
   </PropertyGroup>
+  
   <ItemGroup>
     <Compile Include="..\Common\AssemblyResolution.cs" Link="src\AssemblyResolution.cs" />
   </ItemGroup>
@@ -28,6 +27,7 @@
     <PackageReference Include="System.Reflection.Metadata" Version="$(SystemReflectionMetadataVersion)" />
     <PackageReference Include="Microsoft.Build.Utilities.Core" Version="$(MicrosoftBuildUtilitiesCoreVersion)" />
     <PackageReference Include="Microsoft.Build.Framework" Version="$(MicrosoftBuildFrameworkVersion)" />
+    <PackageReference Include="NuGet.Packaging.Core" Version="$(NuGetVersion)" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net472'">

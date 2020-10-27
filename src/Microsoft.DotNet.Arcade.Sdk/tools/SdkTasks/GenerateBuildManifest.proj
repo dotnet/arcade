@@ -1,5 +1,5 @@
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
-<Project Sdk="Microsoft.NET.Sdk" DefaultTargets="Execute">
+<Project Sdk="Microsoft.NET.Sdk" DefaultTargets="Execute" InitialTargets="_ValidateItemsToSignPostBuild">
   <!--
     Optional variables:
       AssetManifestFilePath      Output file path for manifest file
@@ -29,8 +29,10 @@
 
   <Import Project="../Sign.props" />
 
-  <Error Condition="'$(AllowEmptySignPostBuildList)' != 'true' AND '@(ItemsToSignPostBuild)' == ''"
-      Text="List of files to sign post-build is empty. Make sure that ItemsToSignPostBuild is configured correctly." />
+  <Target Name="_ValidateItemsToSignPostBuild"
+          Condition="'$(AllowEmptySignPostBuildList)' != 'true' AND '@(ItemsToSignPostBuild)' == ''">
+    <Error Text="List of files to sign post-build is empty. Make sure that ItemsToSignPostBuild is configured correctly." />
+  </Target>
   
   <Target Name="Execute">
     <GenerateBuildManifest Artifacts="@(ItemsToPush)"
