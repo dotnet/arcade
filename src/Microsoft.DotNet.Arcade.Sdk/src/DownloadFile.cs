@@ -91,7 +91,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
                 }
             }
 
-            Log.LogWarning($"Failed to download file using addresses in {nameof(Uri)} and/or {nameof(Uris)}.");
+            Log.LogError($"Failed to download file using addresses in {nameof(Uri)} and/or {nameof(Uris)}.");
 
             return false;
         }
@@ -161,11 +161,11 @@ namespace Microsoft.DotNet.Arcade.Sdk
 
                     if (attempt > Retries)
                     {
-                        Log.LogWarning($"Failed to download '{uri}' to '{DestinationPath}'");
+                        Log.LogError($"Failed to download '{uri}' to '{DestinationPath}': {e.Message}");
                         return false;
                     }
 
-                    Log.LogWarning($"Retrying download of '{uri}' to '{DestinationPath}' due to failure: '{e.Message}' ({attempt}/{Retries})");
+                    Log.LogMessage($"Retrying download of '{uri}' to '{DestinationPath}' due to failure: '{e.Message}' ({attempt}/{Retries})");
 
                     await Tasks.Task.Delay(RetryDelayMilliseconds).ConfigureAwait(false);
                     continue;
