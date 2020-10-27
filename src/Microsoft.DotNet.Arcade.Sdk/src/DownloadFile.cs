@@ -89,9 +89,11 @@ namespace Microsoft.DotNet.Arcade.Sdk
                         return true;
                     }
                 }
+
+                Log.LogError($"Download from all targets failed. List of attempted targets: {string.Join(", ", Uris.Select(m => m.ItemSpec))}");
             }
 
-            Log.LogWarning($"Failed to download file using addresses in {nameof(Uri)} and/or {nameof(Uris)}.");
+            Log.LogError($"Failed to download file using addresses in {nameof(Uri)} and/or {nameof(Uris)}.");
 
             return false;
         }
@@ -117,7 +119,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
                 {
                     if (e.InnerException is OperationCanceledException)
                     {
-                        Log.LogError($"Download of '{uri}' to '{DestinationPath}' has been cancelled.");
+                        Log.LogMessage($"Download of '{uri}' to '{DestinationPath}' has been cancelled.");
                         return false;
                     }
 
@@ -161,11 +163,11 @@ namespace Microsoft.DotNet.Arcade.Sdk
 
                     if (attempt > Retries)
                     {
-                        Log.LogWarning($"Failed to download '{uri}' to '{DestinationPath}'");
+                        Log.LogMessage($"Failed to download '{uri}' to '{DestinationPath}': {e.Message}");
                         return false;
                     }
 
-                    Log.LogWarning($"Retrying download of '{uri}' to '{DestinationPath}' due to failure: '{e.Message}' ({attempt}/{Retries})");
+                    Log.LogMessage($"Retrying download of '{uri}' to '{DestinationPath}' due to failure: '{e.Message}' ({attempt}/{Retries})");
 
                     await Tasks.Task.Delay(RetryDelayMilliseconds).ConfigureAwait(false);
                     continue;

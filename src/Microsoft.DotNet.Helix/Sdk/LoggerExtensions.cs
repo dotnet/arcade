@@ -61,14 +61,6 @@ namespace Microsoft.DotNet.Helix.Sdk
             }
         }
 
-        public static void LogWarning(this TaskLoggingHelper log, FailureCategory category, string message, params object[] messageArgs)
-        {
-            using (EnterFailureCategoryScope(log, category))
-            {
-                log.LogWarning(message, messageArgs);
-            }
-        }
-
         public struct FailureCategoryScope : IDisposable
         {
             private TaskLoggingHelper _log;
