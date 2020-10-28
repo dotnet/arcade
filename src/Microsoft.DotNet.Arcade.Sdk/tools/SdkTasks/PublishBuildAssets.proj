@@ -10,6 +10,9 @@
   <PropertyGroup>
     <OfficialBuild>false</OfficialBuild>
     <OfficialBuild Condition="'$(OfficialBuildId)' != ''">true</OfficialBuild>
+    <!-- Block stable versioning so that the merged asset manifest is pushed
+         to a unique location -->
+    <SuppressFinalPackageVersion>true</SuppressFinalPackageVersion>
   </PropertyGroup>
   
   <Import Project="$(RepoRoot)eng\Versions.props" />
