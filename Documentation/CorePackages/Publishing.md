@@ -6,7 +6,7 @@ This document describes the infrastructure provided by the Arcade SDK for publis
 
 The publishing infrastructure has multiple stage(s), these stages represent available channels. Only the stages corresponding to the default channel will execute. This is for arcade3.x only.
 
-V1 came into existance when we branched for release/3.x in arcade. Master and arcade/3.x initially had the same publishing logic. Overtime the publishing stage in arcade master evolved so that became V2 publishing.
+V1 came into existence when we branched for release/3.x in arcade. Master and arcade/3.x initially had the same publishing logic. Overtime the publishing stage in arcade master evolved so that became V2 publishing.
 
 Asset manifest Example : 
 
