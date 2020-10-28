@@ -103,7 +103,7 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links.src
 
                                     return true;
                                 }
-                                catch (HttpRequestException e)
+                                catch (Exception e) when (e is HttpRequestException || e is TaskCanceledException)
                                 {
                                     // Avoid failing in these cases.  We could have a timeout or other failure that
                                     // doesn't show up as a normal response status code. The case we typically see is
