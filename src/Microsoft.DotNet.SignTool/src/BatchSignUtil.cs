@@ -92,27 +92,6 @@ namespace Microsoft.DotNet.SignTool
             }
         }
 
-        private SemaphoreSlim _repackThrottle = new SemaphoreSlim(16, 16);
-
-        private void RepackFiles(IEnumerable<FileSignInfo> files)
-        {
-            ParallelOptions parallelOptions = new ParallelOptions();
-            parallelOptions.MaxDegreeOfParallelism = 32;
-            Parallel.ForEach(files, parallelOptions, file =>
-            {
-                if (file.IsZipContainer())
-                {
-                    _log.LogMessage($"Repacking container: '{file.FileName}'");
-                    _batchData.ZipDataMap[file.FileContentKey].Repack(_log);
-                }
-                else if (file.IsWixContainer())
-                {
-                    _log.LogMessage($"Packing wix container: '{file.FileName}'");
-                    _batchData.ZipDataMap[file.FileContentKey].Repack(_log, _signTool.TempDir, _signTool.WixToolsPath);
-                }
-            });
-        }
-
         /// <summary>
         /// Actually sign all of the described files.
         /// </summary>
@@ -121,11 +100,36 @@ namespace Microsoft.DotNet.SignTool
             // Generate the list of signed files in a deterministic order. Makes it easier to track down
             // bugs if repeated runs use the same ordering.
             var toProcessList = _batchData.FilesToSign.ToList();
-            var toRepackList = _batchData.FilesToSign.Where(x => x.ShouldRepack)?.Select(x => x.FullPath)?.ToList();
+            var toRepackSet = _batchData.FilesToSign.Where(x => x.ShouldRepack)?.Select(x => x.FullPath)?.ToHashSet();
             var round = 0;
             var trackedSet = new HashSet<SignedFileContentKey>();
 
-            bool signFiles(IEnumerable<FileSignInfo> files, out int totalFilesSigned)
+            // Given a group of file that are ready for processing,
+            // repack those files that are containers.
+            void repackGroup(IEnumerable<FileSignInfo> files)
+            {
+                var repackList = files.Where(w => toRepackSet.Contains(w.FullPath));
+
+                ParallelOptions parallelOptions = new ParallelOptions();
+                parallelOptions.MaxDegreeOfParallelism = 16;
+                Parallel.ForEach(repackList, parallelOptions, file =>
+                {
+                    if (file.IsZipContainer())
+                    {
+                        _log.LogMessage($"Repacking container: '{file.FileName}'");
+                        _batchData.ZipDataMap[file.FileContentKey].Repack(_log);
+                    }
+                    else if (file.IsWixContainer())
+                    {
+                        _log.LogMessage($"Packing wix container: '{file.FileName}'");
+                        _batchData.ZipDataMap[file.FileContentKey].Repack(_log, _signTool.TempDir, _signTool.WixToolsPath);
+                    }
+                    toRepackSet.Remove(file.FullPath);
+                });
+            }
+
+            // Given a list of files that need signing, sign them in a batch.
+            bool signGroup(IEnumerable<FileSignInfo> files, out int totalFilesSigned)
             {
                 var filesToSign = files.Where(fileInfo => fileInfo.SignInfo.ShouldSign).ToArray();
                 totalFilesSigned = filesToSign.Length;
@@ -141,6 +145,8 @@ namespace Microsoft.DotNet.SignTool
                 return _signTool.Sign(_buildEngine, round, filesToSign);
             }
 
+            // Given a list of files that need signing, sign the installer engines
+            // of those that are wix containers.
             bool signEngines(IEnumerable<FileSignInfo> files, out int totalFilesSigned)
             {
                 var enginesToSign = files.Where(fileInfo => fileInfo.SignInfo.ShouldSign && 
@@ -194,23 +200,24 @@ namespace Microsoft.DotNet.SignTool
                 return true;
             }
 
-            // Is this file ready to be signed? That is are all of the items that it depends on already
-            // signed?
+            // Is this file ready to be signed or repackaged? That is are all of the items that it depends on already
+            // signed, don't need signing, and are repacked.
             bool isReady(FileSignInfo file)
             {
                 if (file.IsContainer())
                 {
                     var zipData = _batchData.ZipDataMap[file.FileContentKey];
                     return zipData.NestedParts.Values.All(x => (!x.FileSignInfo.SignInfo.ShouldSign ||
-                        trackedSet.Contains(x.FileSignInfo.FileContentKey)) && !toRepackList.Contains(x.FileSignInfo.FullPath)
+                        trackedSet.Contains(x.FileSignInfo.FileContentKey)) && !toRepackSet.Contains(x.FileSignInfo.FullPath)
                         );
                 }
                 return true;
             }
 
-            // Extract the next set of files that should be signed. This is the set of files for which all of the
-            // dependencies have been signed.
-            List<FileSignInfo> extractNextGroup()
+            // Identify the next set of files that should be signed or repacked.
+            // This is the set of files for which all of the dependencies have been signed,
+            // are already signed, are repacked, etc.
+            List<FileSignInfo> identifyNextGroup()
             {
                 var list = new List<FileSignInfo>();
                 var i = 0;
@@ -231,19 +238,20 @@ namespace Microsoft.DotNet.SignTool
                 return list;
             }
 
+            // Core algorithm of batch signing.
+            // While there are files left to process,
+            //  Identify which files are ready for processing (ready to repack or sign)
+            //  Repack those of that set that are containers
+            //  Sign any of those files that need signing, along with their engines.
             while (toProcessList.Count > 0)
             {
-                var trackList = extractNextGroup();
+                var trackList = identifyNextGroup();
                 if (trackList.Count == 0)
                 {
                     throw new InvalidOperationException("No progress made on signing which indicates a bug");
                 }
-                var repackList = trackList.Where(w => toRepackList.Contains(w.FullPath));
-                RepackFiles(repackList);
-                foreach (var repackItem in repackList)
-                {
-                    toRepackList.Remove(repackItem.FullPath);
-                }
+
+                repackGroup(trackList);
 
                 int totalFilesSigned;
                 if (!signEngines(trackList, out totalFilesSigned))
@@ -255,7 +263,7 @@ namespace Microsoft.DotNet.SignTool
                     round++;
                 }
 
-                if (!signFiles(trackList, out totalFilesSigned))
+                if (!signGroup(trackList, out totalFilesSigned))
                 {
                     return false;
                 }
