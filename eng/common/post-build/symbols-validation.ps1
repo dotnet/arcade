@@ -131,9 +131,9 @@ $CountMissingSymbols = {
         else {
           return $null
         }
-
-        return $null
       }
+      
+      return $null
     }
 
       $SymbolsOnMSDL = & $FirstMatchingSymbolDescriptionOrDefault $FileName '--microsoft-symbol-server' $SymbolsPath
