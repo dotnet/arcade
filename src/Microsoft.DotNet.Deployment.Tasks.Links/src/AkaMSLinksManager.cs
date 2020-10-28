@@ -103,7 +103,7 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links.src
 
                                     return true;
                                 }
-                                catch (HttpRequestException e)
+                                catch (Exception e) when (e is HttpRequestException || e is TaskCanceledException)
                                 {
                                     // Avoid failing in these cases.  We could have a timeout or other failure that
                                     // doesn't show up as a normal response status code. The case we typically see is
@@ -149,7 +149,7 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links.src
             }
 
             await Task.WhenAll(linkBatches.Select(async batch =>
-                await CreateOrUpateLinkBatchAsync(batch, linkOwners, linkCreatedOrUpdatedBy, linkGroupOwner, overwrite, false)));
+                await CreateOrUpdateLinkBatchAsync(batch, linkOwners, linkCreatedOrUpdatedBy, linkGroupOwner, overwrite, false)));
         }
 
         /// <summary>
@@ -205,7 +205,7 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links.src
 
                                 return true;
                             }
-                            catch (HttpRequestException e)
+                            catch (Exception e) when (e is HttpRequestException || e is TaskCanceledException)
                             {
                                 // Avoid failing in these cases.  We could have a timeout or other failure that
                                 // doesn't show up as a normal response status code. The case we typically see is
@@ -235,7 +235,7 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links.src
         /// <param name="update">If true, existing links will be overwritten.</param>
         /// <param name="bucketed">Are these links already bucketed?</param>
         /// <returns>Async task</returns>
-        private async Task CreateOrUpateLinkBatchAsync(IEnumerable<AkaMSLink> links, string linkOwners,
+        private async Task CreateOrUpdateLinkBatchAsync(IEnumerable<AkaMSLink> links, string linkOwners,
             string linkCreatedOrUpdatedBy, string linkGroupOwner, bool update, bool bucketed)
         {
             _log.LogMessage(MessageImportance.High, $"{(update ? "Updating" : "Creating")} {links.Count()} aka.ms links.");
@@ -283,11 +283,11 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links.src
 
                                         if (linksToCreate.Any())
                                         {
-                                            await CreateOrUpateLinkBatchAsync(linksToCreate, linkOwners, linkCreatedOrUpdatedBy, linkGroupOwner, false, true);
+                                            await CreateOrUpdateLinkBatchAsync(linksToCreate, linkOwners, linkCreatedOrUpdatedBy, linkGroupOwner, false, true);
                                         }
                                         if (linksToUpdate.Any())
                                         {
-                                            await CreateOrUpateLinkBatchAsync(linksToUpdate, linkOwners, linkCreatedOrUpdatedBy, linkGroupOwner, true, true);
+                                            await CreateOrUpdateLinkBatchAsync(linksToUpdate, linkOwners, linkCreatedOrUpdatedBy, linkGroupOwner, true, true);
                                         }
                                         return true;
                                     }
@@ -310,7 +310,7 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links.src
                                 return true;
                             }
                         }
-                        catch (HttpRequestException e)
+                        catch (Exception e) when (e is HttpRequestException || e is TaskCanceledException)
                         {
                             // Avoid failing in these cases.  We could have a timeout or other failure that
                             // doesn't show up as a normal response status code. The case we typically see is
