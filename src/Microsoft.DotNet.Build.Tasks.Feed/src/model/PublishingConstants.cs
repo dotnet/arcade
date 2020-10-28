@@ -237,6 +237,28 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedInternalForChecksums,
                 FeedInternalForInstallers),
 
+            // ".NET 5 SDK 5.0.2xx" (public),
+            new TargetChannelConfig(
+                1518,
+                PublishingInfraVersion.Next,
+                akaMSChannelName: "net5/5.0.2xx/daily",
+                FeedDotNet5Shipping,
+                FeedDotNet5Transport,
+                FeedDotNet5Symbols,
+                FeedForChecksums,
+                FeedForInstallers),
+
+            // ".NET 5 SDK 5.0.2xx Internal" (internal),
+            new TargetChannelConfig(
+                1519,
+                PublishingInfraVersion.Next,
+                akaMSChannelName: string.Empty,
+                FeedDotNet5InternalShipping,
+                FeedDotNet5InternalTransport,
+                FeedDotNet5InternalSymbols,
+                FeedInternalForChecksums,
+                FeedInternalForInstallers),
+
             // ".NET Eng - Latest",
             new TargetChannelConfig(
                 2,
