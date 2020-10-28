@@ -10,7 +10,6 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using System.Net;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
 using System.Runtime.Versioning;
@@ -652,7 +651,7 @@ namespace Microsoft.DotNet.SignTool
 
                             _whichPackagesTheFileIsIn[fileUniqueKey] = packages;
 
-                            // if we already encountered file that hash the same content we can reuse its signed version when repackaging the container.
+                            // if we already encountered file that has the same content we can reuse its signed version when repackaging the container.
                             var fileName = Path.GetFileName(relativePath);
                             if (!_filesByContentKey.TryGetValue(fileUniqueKey, out var fileSignInfo))
                             {

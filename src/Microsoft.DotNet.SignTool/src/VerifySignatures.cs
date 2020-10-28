@@ -1,11 +1,15 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using NuGet.Common;
+using NuGet.Packaging;
+using NuGet.Packaging.Signing;
 using System;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
+using System.Threading;
 
 namespace Microsoft.DotNet.SignTool
 {
@@ -18,6 +22,41 @@ namespace Microsoft.DotNet.SignTool
         internal static bool VerifySignedNupkgByFileMarker(string filePath)
         {
             return Path.GetFileName(filePath).Equals(".signature.p7s", StringComparison.OrdinalIgnoreCase);
+        }
+        internal static bool VerifySignedNupkgIntegrity(string filePath)
+        {
+            bool isSigned = false;
+            using (BinaryReader binaryReader = new BinaryReader(File.OpenRead(filePath)))
+            {
+                isSigned = SignedPackageArchiveUtility.IsSigned(binaryReader);
+#if NETFRAMEWORK
+                if (isSigned)
+                {
+                    try
+                    {
+                        // A package will fail integrity checks if, for example, the package is signed and then:
+                        // - it is repacked
+                        // - it has its symbols stripped
+                        // - it is otherwise modified
+                        using (Stream stream = SignedPackageArchiveUtility.OpenPackageSignatureFileStream(binaryReader))
+                        {
+                            using (PackageArchiveReader par = new PackageArchiveReader(filePath))
+                            {
+                                var signature = par.GetPrimarySignatureAsync(CancellationToken.None).Result;
+
+                                var task = par.ValidateIntegrityAsync(signature.SignatureContent, CancellationToken.None);
+                                task.Wait();
+                            }
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        isSigned = false;
+                    }
+                }
+#endif
+            }
+            return isSigned;
         }
         internal static bool VerifySignedVSIXByFileMarker(string filePath)
         {
@@ -33,12 +72,16 @@ namespace Microsoft.DotNet.SignTool
                 {
                     foreach (ZipArchiveEntry entry in archive.Entries)
                     {
-                        if (FileSignInfo.IsNupkg(fullPath) && VerifySignatures.VerifySignedNupkgByFileMarker(entry.FullName))
+                        if (FileSignInfo.IsNupkg(fullPath) && VerifySignedNupkgByFileMarker(entry.FullName))
                         {
+                            if (!VerifySignedNupkgIntegrity(fullPath))
+                            {
+                                return false;
+                            }
                             signedContainer = true;
                             break;
                         }
-                        else if (FileSignInfo.IsVsix(fullPath) && VerifySignatures.VerifySignedVSIXByFileMarker(entry.FullName))
+                        else if (FileSignInfo.IsVsix(fullPath) && VerifySignedVSIXByFileMarker(entry.FullName))
                         {
                             signedContainer = true;
                             break;

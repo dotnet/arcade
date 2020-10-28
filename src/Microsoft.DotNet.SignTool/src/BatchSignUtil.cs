@@ -104,38 +104,14 @@ namespace Microsoft.DotNet.SignTool
             var round = 0;
             var trackedSet = new HashSet<SignedFileContentKey>();
 
-            // Given a group of file that are ready for processing,
-            // repack those files that are containers.
-            void repackGroup(IEnumerable<FileSignInfo> files)
-            {
-                var repackList = files.Where(w => toRepackSet.Contains(w.FullPath));
-
-                ParallelOptions parallelOptions = new ParallelOptions();
-                parallelOptions.MaxDegreeOfParallelism = 16;
-                Parallel.ForEach(repackList, parallelOptions, file =>
-                {
-                    if (file.IsZipContainer())
-                    {
-                        _log.LogMessage($"Repacking container: '{file.FileName}'");
-                        _batchData.ZipDataMap[file.FileContentKey].Repack(_log);
-                    }
-                    else if (file.IsWixContainer())
-                    {
-                        _log.LogMessage($"Packing wix container: '{file.FileName}'");
-                        _batchData.ZipDataMap[file.FileContentKey].Repack(_log, _signTool.TempDir, _signTool.WixToolsPath);
-                    }
-                    toRepackSet.Remove(file.FullPath);
-                });
-            }
-
             // Given a list of files that need signing, sign them in a batch.
             bool signGroup(IEnumerable<FileSignInfo> files, out int totalFilesSigned)
             {
                 var filesToSign = files.Where(fileInfo => fileInfo.SignInfo.ShouldSign).ToArray();
                 totalFilesSigned = filesToSign.Length;
-                _log.LogMessage(MessageImportance.High, $"Signing Round {round}: {filesToSign.Length} files to sign.");
-
                 if (filesToSign.Length == 0) return true;
+
+                _log.LogMessage(MessageImportance.High, $"Round {round}: Signing {filesToSign.Length} files.");
 
                 foreach (var file in filesToSign)
                 {
@@ -157,6 +133,8 @@ namespace Microsoft.DotNet.SignTool
                 {
                     return true;
                 }
+
+                _log.LogMessage(MessageImportance.High, $"Round {round}: Signing {enginesToSign.Length} engines.");
 
                 Dictionary<string, FileSignInfo> engines = new Dictionary<string, FileSignInfo>();
                 var workingDirectory = Path.Combine(_signTool.TempDir, "engines");
@@ -198,6 +176,41 @@ namespace Microsoft.DotNet.SignTool
                     }
                 }
                 return true;
+            }
+
+            // Given a group of file that are ready for processing,
+            // repack those files that are containers.
+            void repackGroup(IEnumerable<FileSignInfo> files)
+            {
+                var repackList = files.Where(w => toRepackSet.Contains(w.FullPath)).ToList();
+                
+                int repackCount = repackList.Count();
+                if(repackCount == 0)
+                {
+                    return;
+                }
+                _log.LogMessage(MessageImportance.High, $"Repacking {repackCount} containers.");
+
+                ParallelOptions parallelOptions = new ParallelOptions();
+                parallelOptions.MaxDegreeOfParallelism = 16;
+                Parallel.ForEach(repackList, parallelOptions, file =>
+                {
+                    if (file.IsZipContainer())
+                    {
+                        _log.LogMessage($"Repacking container: '{file.FileName}'");
+                        _batchData.ZipDataMap[file.FileContentKey].Repack(_log);
+                    }
+                    else if (file.IsWixContainer())
+                    {
+                        _log.LogMessage($"Packing wix container: '{file.FileName}'");
+                        _batchData.ZipDataMap[file.FileContentKey].Repack(_log, _signTool.TempDir, _signTool.WixToolsPath);
+                    }
+                    else
+                    {
+                        _log.LogError($"Don't know how to repack file '{file.FullPath}'");
+                    }
+                    toRepackSet.Remove(file.FullPath);
+                });
             }
 
             // Is this file ready to be signed or repackaged? That is are all of the items that it depends on already

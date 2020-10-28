@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
@@ -12,7 +13,7 @@ using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.DotNet.Helix.Sdk
 {
-    public class GetFailedWorkItems : HelixTask
+    public class GetHelixWorkItems : HelixTask
     {
         public const int DelayBetweenHelixApiCallsInMs = 500;
 
@@ -23,14 +24,14 @@ namespace Microsoft.DotNet.Helix.Sdk
         public ITaskItem[] Jobs { get; set; }
 
         [Output]
-        public ITaskItem[] FailedWorkItems { get; set; }
+        public ITaskItem[] WorkItems { get; set; }
 
         protected override async Task ExecuteCore(CancellationToken cancellationToken)
         {
-            FailedWorkItems = (await Task.WhenAll(Jobs.Select(j => GetFailedWorkItemsAsync(j, cancellationToken))).ConfigureAwait(false)).SelectMany(r => r).ToArray();
+            WorkItems = (await Task.WhenAll(Jobs.Select(j => GetWorkItemsAsync(j, cancellationToken))).ConfigureAwait(false)).SelectMany(r => r).ToArray();
         }
 
-        private async Task<IEnumerable<ITaskItem>> GetFailedWorkItemsAsync(ITaskItem job, CancellationToken cancellationToken)
+        private async Task<IEnumerable<ITaskItem>> GetWorkItemsAsync(ITaskItem job, CancellationToken cancellationToken)
         {
             var jobName = job.GetMetadata("Identity");
 
@@ -46,18 +47,35 @@ namespace Microsoft.DotNet.Helix.Sdk
                 return Array.Empty<ITaskItem>();
             }
 
-            List<ITaskItem> failedWorkItemObjects = new List<ITaskItem>();
+            var workItems = new List<ITaskItem>();
 
-            foreach (string workItemName in status.Failed)
+            IDictionary CreateWorkItemMetadata(string name)
             {
-                string wi = Helpers.CleanWorkItemName(workItemName);
-
-                // copy all job metadata into the new item
                 var metadata = job.CloneCustomMetadata();
                 metadata["JobName"] = jobName;
-                metadata["WorkItemName"] = wi;
-                var consoleUri = HelixApi.Options.BaseUri.AbsoluteUri.TrimEnd('/') + $"/api/2019-06-17/jobs/{jobName}/workitems/{Uri.EscapeDataString(wi)}/console";
+                metadata["WorkItemName"] = name;
+                var consoleUri = HelixApi.Options.BaseUri.AbsoluteUri.TrimEnd('/') + $"/api/2019-06-17/jobs/{jobName}/workitems/{Uri.EscapeDataString(name)}/console";
                 metadata["ConsoleOutputUri"] = consoleUri;
+
+                return metadata;
+            }
+
+            foreach (string name in status.Passed)
+            {
+                string wi = Helpers.CleanWorkItemName(name);
+
+                var metadata = CreateWorkItemMetadata(wi);
+                metadata["Failed"] = "false";
+
+                workItems.Add(new TaskItem($"{jobName}/{wi}", metadata));
+            }
+
+            foreach (string name in status.Failed)
+            {
+                string wi = Helpers.CleanWorkItemName(name);
+
+                var metadata = CreateWorkItemMetadata(wi);
+                metadata["Failed"] = "true";
 
                 try
                 {
@@ -79,10 +97,11 @@ namespace Microsoft.DotNet.Helix.Sdk
                     Log.LogWarningFromException(ex);
                 }
 
-                failedWorkItemObjects.Add(new TaskItem($"{jobName}/{wi}", metadata));
-                await Task.Delay(DelayBetweenHelixApiCallsInMs);
+                workItems.Add(new TaskItem($"{jobName}/{wi}", metadata));
+                await Task.Delay(DelayBetweenHelixApiCallsInMs, cancellationToken);
             }
-            return failedWorkItemObjects;
+
+            return workItems;
         }
     }
 }

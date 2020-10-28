@@ -318,12 +318,12 @@ namespace Microsoft.DotNet.SignTool.Tests
             var signingInput = new Configuration(signToolArgs.TempDir, itemsToSign, strongNameSignInfo, fileSignInfo, extensionsSignInfo, dualCertificates, task.Log).GenerateListOfFiles();
             var util = new BatchSignUtil(task.BuildEngine, task.Log, signTool, signingInput, new string[] { });
 
-            var beforeSigningEngineFilesList = Directory.GetFiles(signToolArgs.TempDir, "*-engine.exe", new EnumerationOptions() { RecurseSubdirectories = true });
+            var beforeSigningEngineFilesList = Directory.GetFiles(signToolArgs.TempDir, "*-engine.exe", SearchOption.AllDirectories);
             util.Go(doStrongNameCheck: true);
-            var afterSigningEngineFilesList = Directory.GetFiles(signToolArgs.TempDir, "*-engine.exe", new EnumerationOptions() { RecurseSubdirectories = true });
-            
+            var afterSigningEngineFilesList = Directory.GetFiles(signToolArgs.TempDir, "*-engine.exe", SearchOption.AllDirectories);
+
             // validate no intermediate msi engine files have populated the drop (they fail signing validation).
-            Assert.Same(beforeSigningEngineFilesList, afterSigningEngineFilesList);
+            Assert.True(beforeSigningEngineFilesList.SequenceEqual(afterSigningEngineFilesList));
 
             // The list of files that would be signed was captured inside the FakeBuildEngine,
             // here we check if that matches what we expected
@@ -509,7 +509,7 @@ namespace Microsoft.DotNet.SignTool.Tests
             ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, new Dictionary<string, List<SignInfo>>(), new[]
             {
 $@"
-<FilesToSign Include=""{Path.Combine(_tmpDir, fileToTest)}"">
+<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, fileToTest))}"">
   <Authenticode>{certificateToTest}</Authenticode>
 </FilesToSign>
 "
@@ -661,10 +661,10 @@ $@"
 
             ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, new Dictionary<string, List<SignInfo>>(), new[]
             {
-$@"<FilesToSign Include=""{Path.Combine(_tmpDir, "CoreLibCrossARM.dll")}"">
+$@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "CoreLibCrossARM.dll"))}"">
   <Authenticode>ArcadeCertTest</Authenticode>
 </FilesToSign>
-<FilesToSign Include=""{Path.Combine(_tmpDir, "AspNetCoreCrossLib.dll")}"">
+<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "AspNetCoreCrossLib.dll"))}"">
   <Authenticode>Microsoft400</Authenticode>
 </FilesToSign>",
             });
@@ -780,16 +780,16 @@ $@"<FilesToSign Include=""{Path.Combine(_tmpDir, "CoreLibCrossARM.dll")}"">
 
             ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfoWithCollisionId, new[]
             {
-$@"<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "4", "ABCDEFG/MsiSetup.msi")}"">
+$@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "4", "ABCDEFG/MsiSetup.msi"))}"">
   <Authenticode>Microsoft400</Authenticode>
 </FilesToSign>",
-$@"<FilesToSign Include=""{Path.Combine(_tmpDir, "engines\\MsiBootstrapper.exe-engine.exe")}"">
+$@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "engines\\MsiBootstrapper.exe-engine.exe"))}"">
   <Authenticode>Microsoft400</Authenticode>
 </FilesToSign>",
-$@"<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "4", "MsiBootstrapper.exe")}"">
+$@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "4", "MsiBootstrapper.exe"))}"">
   <Authenticode>Microsoft400</Authenticode>
 </FilesToSign>",
-$@"<FilesToSign Include=""{Path.Combine(_tmpDir, "PackageWithWix.nupkg")}"">
+$@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "PackageWithWix.nupkg"))}"">
   <Authenticode>NuGet</Authenticode>
 </FilesToSign>"
             },
@@ -834,41 +834,41 @@ $@"<FilesToSign Include=""{Path.Combine(_tmpDir, "PackageWithWix.nupkg")}"">
             ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfoWithCollisionId, new[]
             {
 $@"
-<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "2", "lib/native/NativeLibrary.dll")}"">
+<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "2", "lib/native/NativeLibrary.dll"))}"">
   <Authenticode>Microsoft400</Authenticode>
 </FilesToSign>
-<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "3", "lib/net461/ProjectOne.dll")}"">
+<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "3", "lib/net461/ProjectOne.dll"))}"">
   <Authenticode>3PartySHA2</Authenticode>
   <StrongName>ArcadeStrongTest</StrongName>
 </FilesToSign>
-<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "4", "lib/netcoreapp2.0/ContainerTwo.dll")}"">
+<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "4", "lib/netcoreapp2.0/ContainerTwo.dll"))}"">
   <Authenticode>3PartySHA2</Authenticode>
   <StrongName>ArcadeStrongTest</StrongName>
 </FilesToSign>
-<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "5", "lib/netcoreapp2.0/ProjectOne.dll")}"">
+<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "5", "lib/netcoreapp2.0/ProjectOne.dll"))}"">
   <Authenticode>3PartySHA2</Authenticode>
   <StrongName>ArcadeStrongTest</StrongName>
 </FilesToSign>
-<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "6", "lib/netcoreapp2.1/ProjectOne.dll")}"">
+<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "6", "lib/netcoreapp2.1/ProjectOne.dll"))}"">
   <Authenticode>3PartySHA2</Authenticode>
   <StrongName>ArcadeStrongTest</StrongName>
 </FilesToSign>
-<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "7", "lib/netstandard2.0/ProjectOne.dll")}"">
+<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "7", "lib/netstandard2.0/ProjectOne.dll"))}"">
   <Authenticode>3PartySHA2</Authenticode>
   <StrongName>ArcadeStrongTest</StrongName>
 </FilesToSign>
-<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "9", "lib/netcoreapp2.0/ContainerOne.dll")}"">
+<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "9", "lib/netcoreapp2.0/ContainerOne.dll"))}"">
   <Authenticode>3PartySHA2</Authenticode>
   <StrongName>ArcadeStrongTest</StrongName>
 </FilesToSign>",
 
 $@"
-<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "8", "ContainerOne.1.0.0.nupkg")}"">
+<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "8", "ContainerOne.1.0.0.nupkg"))}"">
   <Authenticode>NuGet</Authenticode>
 </FilesToSign>",
 
 $@"
-<FilesToSign Include=""{GetResourcePath("NestedContainer.1.0.0.nupkg")}"">
+<FilesToSign Include=""{Uri.EscapeDataString(GetResourcePath("NestedContainer.1.0.0.nupkg"))}"">
   <Authenticode>NuGet</Authenticode>
 </FilesToSign>"
             });
@@ -915,41 +915,41 @@ $@"
             ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfoWithCollisionId, new[]
             {
 $@"
-<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "2", "lib/native/NativeLibrary.dll")}"">
+<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "2", "lib/native/NativeLibrary.dll"))}"">
   <Authenticode>Microsoft400</Authenticode>
 </FilesToSign>
-<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "3", "lib/net461/ProjectOne.dll")}"">
+<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "3", "lib/net461/ProjectOne.dll"))}"">
   <Authenticode>3PartySHA2</Authenticode>
   <StrongName>ArcadeStrongTest</StrongName>
 </FilesToSign>
-<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "4", "lib/netcoreapp2.0/ContainerTwo.dll")}"">
+<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "4", "lib/netcoreapp2.0/ContainerTwo.dll"))}"">
   <Authenticode>3PartySHA2</Authenticode>
   <StrongName>ArcadeStrongTest</StrongName>
 </FilesToSign>
-<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "5", "lib/netcoreapp2.0/ProjectOne.dll")}"">
+<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "5", "lib/netcoreapp2.0/ProjectOne.dll"))}"">
   <Authenticode>3PartySHA2</Authenticode>
   <StrongName>ArcadeStrongTest</StrongName>
 </FilesToSign>
-<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "6", "lib/netcoreapp2.1/ProjectOne.dll")}"">
+<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "6", "lib/netcoreapp2.1/ProjectOne.dll"))}"">
   <Authenticode>3PartySHA2</Authenticode>
   <StrongName>ArcadeStrongTest</StrongName>
 </FilesToSign>
-<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "7", "lib/netstandard2.0/ProjectOne.dll")}"">
+<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "7", "lib/netstandard2.0/ProjectOne.dll"))}"">
   <Authenticode>3PartySHA2</Authenticode>
   <StrongName>ArcadeStrongTest</StrongName>
 </FilesToSign>
-<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "9", "lib/netcoreapp2.0/ContainerOne.dll")}"">
+<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "9", "lib/netcoreapp2.0/ContainerOne.dll"))}"">
   <Authenticode>3PartySHA2</Authenticode>
   <StrongName>ArcadeStrongTest</StrongName>
 </FilesToSign>",
 
 $@"
-<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "8", "ContainerOne.1.0.0.nupkg")}"">
+<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "8", "ContainerOne.1.0.0.nupkg"))}"">
   <Authenticode>NuGet</Authenticode>
 </FilesToSign>",
 
 $@"
-<FilesToSign Include=""{GetResourcePath("NestedContainer.1.0.0.nupkg")}"">
+<FilesToSign Include=""{Uri.EscapeDataString(GetResourcePath("NestedContainer.1.0.0.nupkg"))}"">
   <Authenticode>NuGet</Authenticode>
 </FilesToSign>"
             });
@@ -985,16 +985,16 @@ $@"
             ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
 $@"
-<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "0", "NativeLibrary.dll")}"">
+<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "0", "NativeLibrary.dll"))}"">
   <Authenticode>Microsoft400</Authenticode>
 </FilesToSign>
-<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "1", "SOS.NETCore.dll")}"">
+<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "1", "SOS.NETCore.dll"))}"">
   <Authenticode>Microsoft400</Authenticode>
 </FilesToSign>
-<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "2", "this_is_a_big_folder_name_look/this_is_an_even_more_longer_folder_name/but_this_one_is_ever_longer_than_the_previous_other_two/Nested.NativeLibrary.dll")}"">
+<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "2", "this_is_a_big_folder_name_look/this_is_an_even_more_longer_folder_name/but_this_one_is_ever_longer_than_the_previous_other_two/Nested.NativeLibrary.dll"))}"">
   <Authenticode>Microsoft400</Authenticode>
 </FilesToSign>
-<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "3", "this_is_a_big_folder_name_look/this_is_an_even_more_longer_folder_name/but_this_one_is_ever_longer_than_the_previous_other_two/Nested.SOS.NETCore.dll")}"">
+<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "3", "this_is_a_big_folder_name_look/this_is_an_even_more_longer_folder_name/but_this_one_is_ever_longer_than_the_previous_other_two/Nested.SOS.NETCore.dll"))}"">
   <Authenticode>Microsoft400</Authenticode>
 </FilesToSign>
 "
@@ -1031,16 +1031,16 @@ $@"
             ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
 $@"
-<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "0", "NativeLibrary.dll")}"">
+<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "0", "NativeLibrary.dll"))}"">
   <Authenticode>Microsoft400</Authenticode>
 </FilesToSign>
-<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "1", "SOS.NETCore.dll")}"">
+<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "1", "SOS.NETCore.dll"))}"">
   <Authenticode>Microsoft400</Authenticode>
 </FilesToSign>
-<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "2", "this_is_a_big_folder_name_look/this_is_an_even_more_longer_folder_name/but_this_one_is_ever_longer_than_the_previous_other_two/Nested.NativeLibrary.dll")}"">
+<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "2", "this_is_a_big_folder_name_look/this_is_an_even_more_longer_folder_name/but_this_one_is_ever_longer_than_the_previous_other_two/Nested.NativeLibrary.dll"))}"">
   <Authenticode>Microsoft400</Authenticode>
 </FilesToSign>
-<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "3", "this_is_a_big_folder_name_look/this_is_an_even_more_longer_folder_name/but_this_one_is_ever_longer_than_the_previous_other_two/Nested.SOS.NETCore.dll")}"">
+<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "3", "this_is_a_big_folder_name_look/this_is_an_even_more_longer_folder_name/but_this_one_is_ever_longer_than_the_previous_other_two/Nested.SOS.NETCore.dll"))}"">
   <Authenticode>Microsoft400</Authenticode>
 </FilesToSign>
 "
@@ -1078,16 +1078,16 @@ $@"
             ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
 $@"
-<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "0", "NativeLibrary.dll")}"">
+<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "0", "NativeLibrary.dll"))}"">
   <Authenticode>Microsoft400</Authenticode>
 </FilesToSign>
-<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "1", "SOS.NETCore.dll")}"">
+<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "1", "SOS.NETCore.dll"))}"">
   <Authenticode>Microsoft400</Authenticode>
 </FilesToSign>
-<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "2", "this_is_a_big_folder_name_look/this_is_an_even_more_longer_folder_name/but_this_one_is_ever_longer_than_the_previous_other_two/Nested.NativeLibrary.dll")}"">
+<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "2", "this_is_a_big_folder_name_look/this_is_an_even_more_longer_folder_name/but_this_one_is_ever_longer_than_the_previous_other_two/Nested.NativeLibrary.dll"))}"">
   <Authenticode>Microsoft400</Authenticode>
 </FilesToSign>
-<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "3", "this_is_a_big_folder_name_look/this_is_an_even_more_longer_folder_name/but_this_one_is_ever_longer_than_the_previous_other_two/Nested.SOS.NETCore.dll")}"">
+<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "3", "this_is_a_big_folder_name_look/this_is_an_even_more_longer_folder_name/but_this_one_is_ever_longer_than_the_previous_other_two/Nested.SOS.NETCore.dll"))}"">
   <Authenticode>Microsoft400</Authenticode>
 </FilesToSign>
 "
@@ -1116,6 +1116,27 @@ $@"
             });
         }
 
+/* These tests return different results on netcoreapp. ie, we can only truly validate nuget integrity when running on framework.
+ * NuGet behaves differently on core vs framework 
+ * - https://github.com/NuGet/NuGet.Client/blob/e88a5a03a1b26099f8be225d3ee3a897b2edb1d0/build/common.targets#L18-L25
+ */
+#if NETFRAMEWORK
+        [Fact]
+        public void VerifyNupkgIntegrity()
+        {
+            var itemsToSign = new ITaskItem[]
+            {
+                new TaskItem(GetResourcePath("SignedPackage.1.0.0.nupkg")),
+                new TaskItem(GetResourcePath("IncorrectlySignedPackage.1.0.0.nupkg"))
+            };
+
+            ValidateFileSignInfos(itemsToSign,
+                                  new Dictionary<string, List<SignInfo>>(),
+                                  new Dictionary<ExplicitCertificateKey, string>(),
+                                  s_fileExtensionSignInfo,
+                                  new[] { "File 'IncorrectlySignedPackage.1.0.0.nupkg' Certificate='NuGet'" });
+        }
+
         [Fact]
         public void SignNupkgWithUnsignedContents()
         {
@@ -1123,7 +1144,7 @@ $@"
             var itemsToSign = new ITaskItem[]
             {
                 new TaskItem(GetResourcePath("UnsignedContents.nupkg")),
-                new TaskItem(GetResourcePath("SignedContents.nupkg"))
+                new TaskItem(GetResourcePath("FakeSignedContents.nupkg"))
             };
 
             // Default signing information
@@ -1135,10 +1156,11 @@ $@"
             ValidateFileSignInfos(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
                 "File 'UnsignedScript.ps1' Certificate='PSCertificate'",
-                "File 'UnsignedContents.nupkg' Certificate='NuGet'"
+                "File 'UnsignedContents.nupkg' Certificate='NuGet'",
+                "File 'FakeSignedContents.nupkg' Certificate='NuGet'"
             });
         }
-
+#endif
         [SkippableFact]
         public void SignMsiEngine()
         {
@@ -1167,13 +1189,13 @@ $@"
 
             ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
 {
-$@"<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "0", "ABCDEFG/MsiSetup.msi")}"">
+$@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "0", "ABCDEFG/MsiSetup.msi"))}"">
   <Authenticode>Microsoft400</Authenticode>
 </FilesToSign>",
- $@"<FilesToSign Include=""{Path.Combine(_tmpDir, "engines", "MsiBootstrapper.exe-engine.exe")}"">
+ $@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "engines", "MsiBootstrapper.exe-engine.exe"))}"">
   <Authenticode>Microsoft400</Authenticode>
 </FilesToSign>",
- $@"<FilesToSign Include=""{Path.Combine(_tmpDir, "MsiBootstrapper.exe")}"">
+ $@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "MsiBootstrapper.exe"))}"">
   <Authenticode>Microsoft400</Authenticode>
 </FilesToSign>"
             },
@@ -1214,10 +1236,10 @@ $@"<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "0", "ABCDE
 
             ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfoWithCollisionId, new[]
             {
-$@"<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "0", "ABCDEFG/MsiApplication.exe")}"">
+$@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "0", "ABCDEFG/MsiApplication.exe"))}"">
   <Authenticode>Microsoft400</Authenticode>
 </FilesToSign>",
- $@"<FilesToSign Include=""{Path.Combine(_tmpDir, "MsiSetup.msi")}"">
+ $@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "MsiSetup.msi"))}"">
   <Authenticode>Microsoft400</Authenticode>
 </FilesToSign>"
             },
@@ -1251,7 +1273,7 @@ $@"<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "0", "ABCDE
             ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
 $@"
-<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "1", "VisualStudio.Mac.Banana.dll")}"">
+<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "1", "VisualStudio.Mac.Banana.dll"))}"">
   <Authenticode>3PartySHA2</Authenticode>
 </FilesToSign>
 "
@@ -1299,26 +1321,26 @@ $@"
             ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfoWithCollisionId, new[]
             {
 $@"
-<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "1", "lib/net461/ProjectOne.dll")}"">
+<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "1", "lib/net461/ProjectOne.dll"))}"">
   <Authenticode>3PartySHA2</Authenticode>
   <StrongName>ArcadeStrongTest</StrongName>
 </FilesToSign>
-<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "2", "lib/netstandard2.0/ProjectOne.dll")}"">
+<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "2", "lib/netstandard2.0/ProjectOne.dll"))}"">
   <Authenticode>3PartySHA2</Authenticode>
   <StrongName>ArcadeStrongTest</StrongName>
 </FilesToSign>
-<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "8", "Contents/Common7/IDE/PrivateAssemblies/ProjectOne.dll")}"">
+<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "8", "Contents/Common7/IDE/PrivateAssemblies/ProjectOne.dll"))}"">
   <Authenticode>3PartySHA2</Authenticode>
   <StrongName>ArcadeStrongTest</StrongName>
 </FilesToSign>",
 
 $@"
-<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "6", "PackageWithRelationships.vsix")}"">
+<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "6", "PackageWithRelationships.vsix"))}"">
   <Authenticode>VsixSHA2</Authenticode>
 </FilesToSign>",
 
 $@"
-<FilesToSign Include=""{Path.Combine(_tmpDir, "test.vsix")}"">
+<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "test.vsix"))}"">
   <Authenticode>VsixSHA2</Authenticode>
 </FilesToSign>
 "
@@ -1366,26 +1388,26 @@ $@"
             ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfoWithCollisionId, new[]
             {
 $@"
-<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "6", "Contents/Common7/IDE/PrivateAssemblies/ProjectOne.dll")}"">
+<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "6", "Contents/Common7/IDE/PrivateAssemblies/ProjectOne.dll"))}"">
   <Authenticode>3PartySHA2</Authenticode>
   <StrongName>ArcadeStrongTest</StrongName>
 </FilesToSign>
-<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "10", "Team Tools/Dynamic Code Coverage/net461/ProjectOne.dll")}"">
+<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "10", "Team%20Tools/Dynamic Code Coverage/net461/ProjectOne.dll"))}"">
   <Authenticode>3PartySHA2</Authenticode>
   <StrongName>ArcadeStrongTest</StrongName>
 </FilesToSign>
-<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "11", "Team Tools/Dynamic Code Coverage/netstandard2.0/ProjectOne.dll")}"">
+<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "11", "Team%20Tools/Dynamic Code Coverage/netstandard2.0/ProjectOne.dll"))}"">
   <Authenticode>3PartySHA2</Authenticode>
   <StrongName>ArcadeStrongTest</StrongName>
 </FilesToSign>",
 
 $@"
-<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "4", "PackageWithRelationships.vsix")}"">
+<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "4", "PackageWithRelationships.vsix"))}"">
   <Authenticode>VsixSHA2</Authenticode>
 </FilesToSign>",
 
 $@"
-<FilesToSign Include=""{Path.Combine(_tmpDir, "TestSpaces.vsix")}"">
+<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "TestSpaces.vsix"))}"">
   <Authenticode>VsixSHA2</Authenticode>
 </FilesToSign>
 "
@@ -1423,26 +1445,26 @@ $@"
             ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
 $@"
-<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "2", "Contents/Common7/IDE/PrivateAssemblies/ProjectOne.dll")}"">
+<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "2", "Contents/Common7/IDE/PrivateAssemblies/ProjectOne.dll"))}"">
   <Authenticode>3PartySHA2</Authenticode>
   <StrongName>ArcadeStrongTest</StrongName>
 </FilesToSign>
-<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "7", "lib/net461/ProjectOne.dll")}"">
+<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "7", "lib/net461/ProjectOne.dll"))}"">
   <Authenticode>3PartySHA2</Authenticode>
   <StrongName>ArcadeStrongTest</StrongName>
 </FilesToSign>
-<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "8", "lib/netstandard2.0/ProjectOne.dll")}"">
+<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "8", "lib/netstandard2.0/ProjectOne.dll"))}"">
   <Authenticode>3PartySHA2</Authenticode>
   <StrongName>ArcadeStrongTest</StrongName>
 </FilesToSign>",
 
 $@"
-<FilesToSign Include=""{Path.Combine(_tmpDir, "PackageWithRelationships.vsix")}"">
+<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "PackageWithRelationships.vsix"))}"">
   <Authenticode>VsixSHA2</Authenticode>
 </FilesToSign>",
 
 $@"
-<FilesToSign Include=""{Path.Combine(_tmpDir, "test.vsix")}"">
+<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "test.vsix"))}"">
   <Authenticode>VsixSHA2</Authenticode>
 </FilesToSign>
 "
@@ -1494,26 +1516,26 @@ $@"
             ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfoWithCollisionId, new[]
             {
 $@"
-<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "2", "Contents/Common7/IDE/PrivateAssemblies/ProjectOne.dll")}"">
+<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "2", "Contents/Common7/IDE/PrivateAssemblies/ProjectOne.dll"))}"">
   <Authenticode>3PartySHA2</Authenticode>
   <StrongName>ArcadeStrongTest</StrongName>
 </FilesToSign>
-<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "7", "lib/net461/ProjectOne.dll")}"">
+<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "7", "lib/net461/ProjectOne.dll"))}"">
   <Authenticode>3PartySHA2</Authenticode>
   <StrongName>ArcadeStrongTest</StrongName>
 </FilesToSign>
-<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "8", "lib/netstandard2.0/ProjectOne.dll")}"">
+<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "8", "lib/netstandard2.0/ProjectOne.dll"))}"">
   <Authenticode>3PartySHA2</Authenticode>
   <StrongName>ArcadeStrongTest</StrongName>
 </FilesToSign>",
 
 $@"
-<FilesToSign Include=""{Path.Combine(_tmpDir, "A", "PackageWithRelationships.vsix")}"">
+<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "A", "PackageWithRelationships.vsix"))}"">
   <Authenticode>VsixSHA2</Authenticode>
 </FilesToSign>",
 
 $@"
-<FilesToSign Include=""{Path.Combine(_tmpDir, "test.vsix")}"">
+<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "test.vsix"))}"">
   <Authenticode>VsixSHA2</Authenticode>
 </FilesToSign>
 "
@@ -1547,13 +1569,13 @@ $@"
             ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfo, new[]
             {
 $@"
-<FilesToSign Include=""{Path.Combine(_tmpDir, "ContainerSigning", "2", "Contents/Common7/IDE/PrivateAssemblies/ProjectOne.dll")}"">
+<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "2", "Contents/Common7/IDE/PrivateAssemblies/ProjectOne.dll"))}"">
   <Authenticode>3PartySHA2</Authenticode>
   <StrongName>ArcadeStrongTest</StrongName>
 </FilesToSign>",
 
 $@"
-<FilesToSign Include=""{Path.Combine(_tmpDir, "PackageWithRelationships.vsix")}"">
+<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "PackageWithRelationships.vsix"))}"">
   <Authenticode>VsixSHA2</Authenticode>
 </FilesToSign>"
             });

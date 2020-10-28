@@ -16,7 +16,7 @@ namespace Microsoft.DotNet.Helix.Client.Models
         }
 
         [JsonProperty("FailureReason")]
-        public FailureReason FailureReason { get; set; }
+        public Models.FailureReason FailureReason { get; set; }
 
         [JsonProperty("Id")]
         public string Id { get; set; }
@@ -31,19 +31,16 @@ namespace Microsoft.DotNet.Helix.Client.Models
         public string ConsoleOutputUri { get; set; }
 
         [JsonProperty("Errors")]
-        public IImmutableList<WorkItemError> Errors { get; set; }
+        public IImmutableList<Models.WorkItemError> Errors { get; set; }
 
         [JsonProperty("Warnings")]
-        public IImmutableList<WorkItemError> Warnings { get; set; }
+        public IImmutableList<Models.WorkItemError> Warnings { get; set; }
 
         [JsonProperty("Logs")]
-        public IImmutableList<WorkItemLog> Logs { get; set; }
+        public IImmutableList<Models.WorkItemLog> Logs { get; set; }
 
         [JsonProperty("Files")]
-        public IImmutableList<WorkItemFile> Files { get; set; }
-
-        [JsonProperty("Analysis")]
-        public AnalysisReport Analysis { get; set; }
+        public IImmutableList<Models.WorkItemFile> Files { get; set; }
 
         [JsonProperty("OtherEvents")]
         public IImmutableList<Newtonsoft.Json.Linq.JToken> OtherEvents { get; set; }

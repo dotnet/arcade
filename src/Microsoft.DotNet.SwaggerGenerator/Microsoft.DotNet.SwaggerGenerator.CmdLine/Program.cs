@@ -94,7 +94,7 @@ namespace Microsoft.DotNet.SwaggerGenerator.CmdLine
             ServiceClientModel model = generator.Create(document);
 
             var codeFactory = new ServiceClientCodeFactory();
-            List<CodeFile> code = codeFactory.GenerateCode(model, generatorOptions, logger);
+            List<CodeFile> code = codeFactory.GenerateCode(model, generatorOptions);
 
             var outputDirectory = new DirectoryInfo(output);
             outputDirectory.Create();

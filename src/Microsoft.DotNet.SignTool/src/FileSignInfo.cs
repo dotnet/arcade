@@ -121,7 +121,7 @@ namespace Microsoft.DotNet.SignTool
                (SignInfo.StrongName != null ? $" StrongName='{SignInfo.StrongName}'" : "");
 
         internal FileSignInfo WithSignableParts()
-            => new FileSignInfo(FullPath, ContentHash, SignInfo, TargetFramework, ForceRepack, WixContentFilePath, true);
+            => new FileSignInfo(FullPath, ContentHash, SignInfo.WithIsAlreadySigned(false), TargetFramework, ForceRepack, WixContentFilePath, true);
 
     }
 }
