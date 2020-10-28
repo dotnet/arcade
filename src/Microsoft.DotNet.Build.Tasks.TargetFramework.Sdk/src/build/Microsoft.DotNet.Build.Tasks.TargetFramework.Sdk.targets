@@ -4,7 +4,7 @@
   <UsingTask TaskName="ChooseBestTargetFrameworksTask" AssemblyFile="$(DotNetBuildTasksTargetFrameworkSdkAssembly)" />
   <UsingTask TaskName="AddTargetFrameworksToProjectTask" AssemblyFile="$(DotNetBuildTasksTargetFrameworkSdkAssembly)" />
 
-  <!-- Strip away the TargetFrameworkSuffix during the graph build. -->
+  <!-- Strip away the TargetPlatforms during the graph build restore for frameworks older than net5.0 -->
   <PropertyGroup Condition="'$(IsGraphBuild)' == 'true' and '$(MSBuildRestoreSessionId)' != ''">
     <TargetFrameworks Condition="'$(TargetFrameworks)' != ''">$([System.Text.RegularExpressions.Regex]::Replace('$(TargetFrameworks)', '$(TargetFrameworkPattern)', '${v1}'))</TargetFrameworks>
   </PropertyGroup>
