@@ -145,7 +145,7 @@ namespace Microsoft.DotNet.SignTool
             }
 
             string workingDir = Path.Combine(tempDir, "extract", Guid.NewGuid().ToString());
-            string outputDir = Path.Combine(tempDir, "output");
+            string outputDir = Path.Combine(tempDir, "output", Guid.NewGuid().ToString());
             ZipFile.ExtractToDirectory(FileSignInfo.WixContentFilePath, workingDir);
             var fileList = Directory.GetFiles(workingDir, "*", SearchOption.AllDirectories);
             foreach(var file in fileList)
