@@ -380,7 +380,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 }
             };
 
-            Func<string, string, ProcessExecutionResult> testRunAndLogProcess = (string fakeExePath, string fakeExeArgs) =>
+            Func<string, string, Task<ProcessExecutionResult>> testRunAndLogProcess = (string fakeExePath, string fakeExeArgs) =>
             {
                 Debug.WriteLine($"Called mocked RunProcessAndGetOutputs() :  ExePath = {fakeExePath}, ExeArgs = {fakeExeArgs}");
                 Assert.Equal(fakeExePath, fakeNugetExeName);
@@ -394,7 +394,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 {
                     result.ExitCode = 1;
                 }
-                return result;
+                return Task.FromResult(result);
             };
 
             await task.PushNugetPackageAsync(
