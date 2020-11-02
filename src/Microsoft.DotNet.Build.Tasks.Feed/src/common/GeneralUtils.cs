@@ -364,7 +364,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             {
                 log.LogMessage(MessageImportance.High, $"Defaulting to category 'OTHER' for asset {assetId}");
                 return "OTHER";
-            }
+            } 
+        }
+
+
+        private static System.Threading.Tasks.Task WaitForProcessExitAsync(Process process)
+        {
+            return System.Threading.Tasks.Task.Run(() => process.WaitForExit());
         }
 
         /// <summary>
@@ -373,7 +379,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// <param name="path">Path to process</param>
         /// <param name="arguments">Process arguments</param>
         /// <returns>Process return code</returns>
-        public static ProcessExecutionResult RunProcessAndGetOutputs(string path, string arguments)
+        public static async Task<ProcessExecutionResult> RunProcessAndGetOutputsAsync(string path, string arguments)
         {
             ProcessStartInfo info = new ProcessStartInfo(path, arguments)
             {
@@ -429,8 +435,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             process.Start();
             process.BeginErrorReadLine();
             process.BeginOutputReadLine();
-            process.WaitForExit();
+            
+            // Creates task to wait for process exit using timeout
+            await WaitForProcessExitAsync(process);
+
             // Wait for the last outputs to flush before returning
+
             System.Threading.Tasks.Task.WaitAll(new System.Threading.Tasks.Task[] { stderrCompletion.Task, stdoutCompletion.Task }, TimeSpan.FromSeconds(5));
             return new ProcessExecutionResult()
             {
