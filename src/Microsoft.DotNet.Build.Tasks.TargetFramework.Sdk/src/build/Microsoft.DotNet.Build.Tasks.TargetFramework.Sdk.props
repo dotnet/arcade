@@ -11,7 +11,7 @@
     <DotNetBuildTasksTargetFrameworkSdkAssembly Condition="'$(DotNetBuildTasksTargetFrameworkSdkAssembly)' == '' AND '$(MSBuildRuntimeType)' == 'core'">..\tools\netcoreapp2.1\Microsoft.DotNet.Build.Tasks.TargetFramework.Sdk.dll</DotNetBuildTasksTargetFrameworkSdkAssembly>
     <DotNetBuildTasksTargetFrameworkSdkAssembly Condition="'$(DotNetBuildTasksTargetFrameworkSdkAssembly)' == '' AND '$(MSBuildRuntimeType)' != 'core'">..\tools\net472\Microsoft.DotNet.Build.Tasks.TargetFramework.Sdk.dll</DotNetBuildTasksTargetFrameworkSdkAssembly>
     <_OriginalTargetFramework>$(TargetFramework)</_OriginalTargetFramework>
-    <TargetFrameworkPattern><![CDATA[(?<v1>netstandard2.0|netstandard2.1|net461|net462|net47|netcoreapp2.0|netcoreapp2.1|netcoreapp3.1|netcoreapp3.0)(-[^;]+)]]></TargetFrameworkPattern>
+    <TargetFrameworkPattern><![CDATA[(?<v1>((netstandard|netcoreapp)[1-9\.]+)|(net[1-4][1-9\.]+))(-[^;]+)]]></TargetFrameworkPattern>
   </PropertyGroup>
 
   <PropertyGroup Condition="$(TargetFramework.Contains('-'))">
