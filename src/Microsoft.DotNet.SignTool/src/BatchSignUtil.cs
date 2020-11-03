@@ -153,7 +153,8 @@ namespace Microsoft.DotNet.SignTool
                 }
 
                 // sign engines
-                bool signResult = _signTool.Sign(_buildEngine, round, engines.Select(engine => new FileSignInfo(engine.Key, engine.Value.ContentHash, engine.Value.SignInfo)));
+                bool signResult = _signTool.Sign(_buildEngine, round, engines.Select(engine =>
+                    new FileSignInfo(new PathWithHash(engine.Key, engine.Value.ContentHash), engine.Value.SignInfo)));
                 if(!signResult)
                 {
                     _log.LogError($"Failed to sign engines");
