@@ -2,11 +2,16 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
+#if NET472
+using AppDomainIsolatedTask = Microsoft.Build.Utilities.AppDomainIsolatedTask;
+#else
+using BuildTask = Microsoft.Build.Utilities.Task;
+#endif
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Resources;
 using System.Runtime.Versioning;
 
@@ -18,7 +23,7 @@ namespace Microsoft.DotNet.SignTool
     {
         static SignToolTask() => AssemblyResolution.Initialize();
 #else
-    public class SignToolTask : Task
+    public class SignToolTask : BuildTask
     {
 #endif
         /// <summary>
@@ -233,7 +238,8 @@ namespace Microsoft.DotNet.SignTool
 
             if (ReadExistingContainerSigningCache)
             {
-                configuration.ReadExistingContainerSigningCache();
+                Log.LogError($"Existing signing container cache no longer supported.");
+                return;
             }
 
             var signingInput = configuration.GenerateListOfFiles();
