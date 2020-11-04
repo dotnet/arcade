@@ -126,7 +126,12 @@ test_results=`ls "$output_directory"/xunit-*.xml`
 if [ ! -f "$test_results" ]; then
     echo "Failed to find xUnit tests results in the output directory. Existing files:"
     ls -la "$output_directory"
-    exit 1
+
+    if [ "$exit_code" == "0" ]; then
+        exit_code=1
+    fi
+
+    exit $exit_code
 fi
 
 echo "Found test results in $output_directory/$test_results. Renaming to testResults.xml to prepare for Helix upload"
