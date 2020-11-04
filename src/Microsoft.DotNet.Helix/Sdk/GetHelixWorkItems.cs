@@ -49,9 +49,9 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             var workItems = new List<ITaskItem>();
 
-            Dictionary<string, string> CreateWorkItemMetadata(string name)
+            IDictionary<string, string> CreateWorkItemMetadata(string name)
             {
-                var metadata = job.CloneCustomMetadata() as Dictionary<string, string>;
+                var metadata = job.CloneCustomMetadata() as IDictionary<string, string>;
                 metadata["JobName"] = jobName;
                 metadata["WorkItemName"] = name;
                 var consoleUri = HelixApi.Options.BaseUri.AbsoluteUri.TrimEnd('/') + $"/api/2019-06-17/jobs/{jobName}/workitems/{Uri.EscapeDataString(name)}/console";
@@ -60,7 +60,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                 return metadata;
             }
 
-            ITaskItem2 CreateTaskItem(string workItemName, Dictionary<string, string> metadata)
+            ITaskItem2 CreateTaskItem(string workItemName, IDictionary<string, string> metadata)
             {
                 ITaskItem2 workItem = new TaskItem(workItemName);
 
