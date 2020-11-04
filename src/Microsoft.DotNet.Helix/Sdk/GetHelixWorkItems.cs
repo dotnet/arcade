@@ -51,7 +51,7 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             Dictionary<string, string> CreateWorkItemMetadata(string name)
             {
-                Dictionary<string, string> metadata = job.CloneCustomMetadata() as Dictionary<string, string>;
+                var metadata = job.CloneCustomMetadata() as Dictionary<string, string>;
                 metadata["JobName"] = jobName;
                 metadata["WorkItemName"] = name;
                 var consoleUri = HelixApi.Options.BaseUri.AbsoluteUri.TrimEnd('/') + $"/api/2019-06-17/jobs/{jobName}/workitems/{Uri.EscapeDataString(name)}/console";
@@ -62,7 +62,7 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             ITaskItem2 CreateTaskItem(string workItemName, Dictionary<string, string> metadata)
             {
-                var workItem = (ITaskItem2) new TaskItem(workItemName);
+                ITaskItem2 workItem = new TaskItem(workItemName);
 
                 foreach(KeyValuePair<string, string> entry in metadata)
                 {
