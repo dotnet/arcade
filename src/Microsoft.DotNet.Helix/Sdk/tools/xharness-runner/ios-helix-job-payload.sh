@@ -127,7 +127,7 @@ if [ ! -f "$test_results" ]; then
     echo "Failed to find xUnit tests results in the output directory. Existing files:"
     ls -la "$output_directory"
 
-    if [ "$exit_code" == "0" ]; then
+    if [ $exit_code -eq 0 ]; then
         exit_code=1
     fi
 
