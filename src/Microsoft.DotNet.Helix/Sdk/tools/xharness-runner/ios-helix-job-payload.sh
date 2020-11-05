@@ -128,7 +128,7 @@ if [ ! -f "$test_results" ]; then
     ls -la "$output_directory"
 
     if [ $exit_code -eq 0 ]; then
-        exit_code=1
+        exit_code=5
     fi
 
     exit $exit_code
