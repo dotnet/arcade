@@ -267,7 +267,7 @@ stages:
               -WaitPublishingFinish ${{ parameters.waitPublishingFinish }}
               -PublishInstallersAndChecksums ${{ parameters.publishInstallersAndChecksums }}
               -ArtifactsPublishingAdditionalParameters '${{ parameters.artifactsPublishingAdditionalParameters }}'
-              -SigningValidationAdditionalParameters '${{ parameters.symbolPublishingAdditionalParameters }}'
+              -SymbolPublishingAdditionalParameters '${{ parameters.symbolPublishingAdditionalParameters }}'
 
 - ${{ if and(le(parameters.publishingInfraVersion, 2), eq(parameters.inline, 'true')) }}:
   - template: \eng\common\templates\post-build\channels\generic-public-channel.yml
