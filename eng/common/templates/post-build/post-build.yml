@@ -32,7 +32,6 @@ parameters:
   symbolPublishingAdditionalParameters: ''
   artifactsPublishingAdditionalParameters: ''
   signingValidationAdditionalParameters: ''
-  useBuildManifest: false
 
   # Which stages should finish execution before post-build stages start
   validateDependsOn:
@@ -139,16 +138,6 @@ stages:
       pool:
         vmImage: 'windows-2019'
       steps:
-        - ${{ if eq(parameters.useBuildManifest, true) }}:
-          - task: DownloadBuildArtifacts@0
-            displayName: Download build manifest
-            inputs:
-              buildType: specific
-              buildVersionToDownload: specific
-              project: $(AzDOProjectName)
-              pipeline: $(AzDOPipelineId)
-              buildId: $(AzDOBuildId)
-              artifactName: BuildManifests
         - task: DownloadBuildArtifacts@0
           displayName: Download Package Artifacts
           inputs:
