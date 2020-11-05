@@ -239,6 +239,7 @@ stages:
     - job:
       displayName: Publish Using Darc
       dependsOn: setupMaestroVars
+      timeoutInMinutes: 120
       variables:
         - name: BARBuildId
           value: $[ dependencies.setupMaestroVars.outputs['setReleaseVars.BARBuildId'] ]
