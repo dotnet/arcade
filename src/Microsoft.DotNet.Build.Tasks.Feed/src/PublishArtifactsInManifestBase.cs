@@ -10,6 +10,7 @@ using Microsoft.DotNet.VersionTools.Util;
 using NuGet.Packaging.Core;
 using NuGet.Versioning;
 using System;
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -18,10 +19,12 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Reflection;
+using System.Reflection.Metadata;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.DotNet.Build.Tasks.Feed.src;
 using static Microsoft.DotNet.Build.Tasks.Feed.GeneralUtils;
 using MsBuildUtils = Microsoft.Build.Utilities;
 
@@ -310,6 +313,105 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             }
         }
 
+        protected async Task HandleSymbolPublishingAsync(string pdbArtifactsBasePath,
+            string personalTokenMsdl, 
+            string personalTokenSymweb,
+            string symbolPublishingExclusionsFile,
+            Dictionary<string, HashSet<Asset>> buildAssets)
+        {
+            List<Task> publishTasks = new List<Task>();
+            Log.LogMessage(MessageImportance.High, "\nPublishing Symbols: ");
+            HashSet<BlobArtifactModel> packagesToPublish = new HashSet<BlobArtifactModel>();
+            ArrayList items = new ArrayList();
+            ArrayList itemsymweb = new ArrayList();
+            foreach (var blobsPerCategory in BlobsByCategory)
+            {
+                var category = blobsPerCategory.Key;
+                var blobs = blobsPerCategory.Value;
+
+                if (FeedConfigs.TryGetValue(category, out HashSet<TargetFeedConfig> feedConfigsForCategory))
+                {
+                    foreach (var feedConfig in feedConfigsForCategory)
+                    {
+                        //IEnumerable<string> inputPackages;
+                        foreach (var blob in blobs)
+                        {
+                            // Applies to symbol packages and core-sdk's VS feed packages
+                            if (blob.Id.EndsWith(GeneralUtils.SymbolPackageSuffix, StringComparison.OrdinalIgnoreCase))
+                            {
+                                if (feedConfig.PublishToMsdl)
+                                {
+                                    items.Add(blob);
+                                }
+                                else
+                                    itemsymweb.Add(blob);
+                            }
+                        }
+
+                    }
+                }
+
+                IEnumerable<string> filesToSymbolServer = null;
+                if (Directory.Exists(pdbArtifactsBasePath))
+                {
+                    filesToSymbolServer = 
+                        Directory.EnumerateFileSystemEntries(pdbArtifactsBasePath);
+                }
+
+                ITaskItem[] publishPackagesToMsdl = (ITaskItem[])items.ToArray(typeof(ITaskItem));
+                ITaskItem[] pubishPackagesToSymweb = (ITaskItem[]) itemsymweb.ToArray(typeof(ITaskItem));
+                HashSet<string> packagesToBeExcluded = new HashSet<string>();
+                if (publishPackagesToMsdl.Length > 0)
+                {
+                    PublishSymbolsHelper.Publish(
+                            log: Log,
+                            symbolServerPath: "https://microsoftpublicsymbols.artifacts.visualstudio.com/DefaultCollection",
+                            personalAccessToken: personalTokenMsdl,
+                            ConvertToStringLists(publishPackagesToMsdl),
+                            inputFiles: filesToSymbolServer,
+                            null,
+                            "SymbolUploader",
+                            expirationInDays: 3650,
+                            new DateTime(2040, 12, 31),
+                            false,
+                            false,
+                            null,
+                            true,
+                            false,
+                            true);
+                }
+
+                PublishSymbolsHelper.Publish(
+                        log: Log,
+                        symbolServerPath: "https://microsoft.artifacts.visualstudio.com/DefaultCollection",
+                        personalAccessToken: personalTokenSymweb,
+                        ConvertToStringLists(pubishPackagesToSymweb),
+                        inputFiles:filesToSymbolServer,
+                        null,
+                        "SymbolUploader",
+                        expirationInDays: 3650,
+                        new DateTime(2040, 12, 31),
+                        false,
+                        false,
+                        null,
+                        true,
+                        false,
+                        true);
+                
+            await Task.WhenAll(publishTasks);
+            }
+        }
+
+        private List<string> ConvertToStringLists(ITaskItem[] taskItems)
+        {
+            List<string> stringList = new List<string>();
+            foreach (var item in taskItems)
+            {
+                stringList.Add(item.ItemSpec);
+            }
+            return stringList;
+        }
+
         /// <summary>
         ///     Handle package publishing for all the feed configs.
         /// </summary>
@@ -427,6 +529,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
             await Task.WhenAll(publishTasks);
         }
+
 
         /// <summary>
         ///     Filter the blobs by the feed config information
