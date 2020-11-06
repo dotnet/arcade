@@ -47,7 +47,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
         /// </summary>
         public string LatestLinkShortUrlPrefix { get; }
 
-        public TargetFeedConfig(TargetFeedContentType contentType, string targetURL, FeedType type, string token, string latestLinkShortUrlPrefix = null, AssetSelection assetSelection = AssetSelection.All, bool isolated = false, bool @internal = false, bool allowOverwrite = false)
+        public bool PublishToMsdl { get; }
+
+        public TargetFeedConfig(TargetFeedContentType contentType, string targetURL, FeedType type, string token, string latestLinkShortUrlPrefix = null, AssetSelection assetSelection = AssetSelection.All, bool isolated = false, bool @internal = false, bool allowOverwrite = false, bool publishToMsdl = false)
         {
             ContentType = contentType;
             TargetURL = targetURL;
@@ -58,6 +60,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             Internal = @internal;
             AllowOverwrite = allowOverwrite;
             LatestLinkShortUrlPrefix = latestLinkShortUrlPrefix ?? string.Empty;
+            PublishToMsdl = publishToMsdl;
         }
 
         public override bool Equals(object obj)
@@ -72,7 +75,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 (AssetSelection == other.AssetSelection) &&
                 (Isolated == other.Isolated) &&
                 (Internal == other.Internal) &&
-                (AllowOverwrite == other.AllowOverwrite);
+                (AllowOverwrite == other.AllowOverwrite) ;
         }
 
         public override int GetHashCode()

@@ -115,6 +115,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public string AzureDevOpsFeedsKey { get; set; }
 
+        public string PDBArtifactsBasePath {get; set;}
+
+        public string DotNetSymbolServerTokenMsdl {get; set;}
+
+        public string DotNetSymbolServerTokenSymWeb {get; set;}
+
+        public string SymbolPublishingExclusionsFile {get; set;}
+
         /// <summary>
         /// If true, safety checks only print messages and do not error
         /// - Internal asset to public feed
@@ -286,7 +294,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 AzureDevOpsFeedsKey = this.AzureDevOpsFeedsKey,
                 InstallersFeedKey = this.InstallersFeedKey,
                 CheckSumsFeedKey = this.ChecksumsFeedKey,
-                AzureStorageTargetFeedKey = this.AzureStorageTargetFeedKey
+                AzureStorageTargetFeedKey = this.AzureStorageTargetFeedKey,
+                PDBArtifactsBasePath = this.PDBArtifactsBasePath,
+                DotNetSymbolServerTokenMsdl = this.DotNetSymbolServerTokenMsdl,
+                DotNetSymbolServerTokenSymWeb = this.DotNetSymbolServerTokenSymWeb,
+                SymbolPublishingExclusionsFile = this.SymbolPublishingExclusionsFile
             };
         }
     }

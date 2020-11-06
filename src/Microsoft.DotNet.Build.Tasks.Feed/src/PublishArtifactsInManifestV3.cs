@@ -36,6 +36,16 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public bool PublishInstallersAndChecksums { get; set; }
 
+        public bool PublishToMsdl { get; set; }
+
+        public string PDBArtifactsBasePath { get; set; }
+
+        public string DotNetSymbolServerTokenMsdl { get; set; }
+
+        public string DotNetSymbolServerTokenSymWeb { get; set; }
+
+        public string SymbolPublishingExclusionsFile {get; set;}
+
         public override bool Execute()
         {
             ExecuteAsync().GetAwaiter().GetResult();
@@ -122,7 +132,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         targetChannelConfig.SymbolsFeed,
                         $"dotnet/{targetChannelConfig.AkaMSChannelName}",
                         AzureDevOpsFeedsKey,
-                        BuildEngine = this.BuildEngine);
+                        BuildEngine = this.BuildEngine,
+                        targetChannelConfig.IsPublishToMsdl);
 
                     var targetFeedConfigs = targetFeedsSetup.Setup();
 
@@ -155,9 +166,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                 await Task.WhenAll(new Task[] {
                         HandlePackagePublishingAsync(buildAssets),
-                        HandleBlobPublishingAsync(buildAssets)
-                    });
-
+                        HandleBlobPublishingAsync(buildAssets),
+                        HandleSymbolPublishingAsync(PDBArtifactsBasePath, DotNetSymbolServerTokenMsdl, DotNetSymbolServerTokenSymWeb, SymbolPublishingExclusionsFile, buildAssets)
+            });
                 await PersistPendingAssetLocationAsync(client);
             }
             catch (Exception e)

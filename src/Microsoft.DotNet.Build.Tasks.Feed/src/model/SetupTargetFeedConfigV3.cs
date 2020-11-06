@@ -20,7 +20,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             TargetFeedContentType.Maven,
             TargetFeedContentType.VSIX,
             TargetFeedContentType.Badge,
-            TargetFeedContentType.Other
+            TargetFeedContentType.Other,
+            TargetFeedContentType.Symbols
         };
 
         private IBuildEngine BuildEngine { get; }
@@ -28,6 +29,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         private string StablePackagesFeed { get; set; }
         
         private string StableSymbolsFeed { get; set; }
+
+        private bool PublishToMsdl { get; set; }
 
         public SetupTargetFeedConfigV3(bool isInternalBuild,
             bool isStableBuild,
@@ -45,6 +48,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             string latestLinkShortUrlPrefix,
             string azureDevOpsFeedsKey,
             IBuildEngine buildEngine,
+            bool publishToMsdl,
             string stablePackagesFeed = null,
             string stableSymbolsFeed = null) 
             : base(isInternalBuild, isStableBuild, repositoryName, commitSha, azureStorageTargetFeedPAT, publishInstallersAndChecksums, installersTargetStaticFeed, installersAzureAccountKey, checksumsTargetStaticFeed, checksumsAzureAccountKey, azureDevOpsStaticShippingFeed, azureDevOpsStaticTransportFeed, azureDevOpsStaticSymbolsFeed, latestLinkShortUrlPrefix, azureDevOpsFeedsKey)
@@ -52,6 +56,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             BuildEngine = buildEngine;
             StableSymbolsFeed = stableSymbolsFeed;
             StablePackagesFeed = stablePackagesFeed;
+            PublishToMsdl = publishToMsdl;
         }
 
         public override List<TargetFeedConfig> Setup()
@@ -114,7 +119,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     TargetFeedContentType.Symbols,
                     PublishingConstants.LegacyDotNetBlobFeedURL,
                     FeedType.AzureStorageFeed,
-                    AzureStorageTargetFeedPAT));
+                    AzureStorageTargetFeedPAT,
+                    @publishToMsdl: PublishToMsdl));
 
             targetFeedConfigs.Add(
                 new TargetFeedConfig(
@@ -162,7 +168,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     AzureDevOpsStaticSymbolsFeed,
                     FeedType.AzDoNugetFeed,
                     AzureDevOpsFeedsKey,
-                    @internal: true)
+                    @internal: true,
+                    @publishToMsdl: PublishToMsdl)
             };
 
             if (PublishInstallersAndChecksums)
@@ -250,7 +257,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     StableSymbolsFeed,
                     FeedType.AzDoNugetFeed,
                     AzureDevOpsFeedsKey,
-                    isolated: true));
+                    isolated: true,
+                    @publishToMsdl: PublishToMsdl));
 
             targetFeedConfigs.Add(
                 new TargetFeedConfig(
