@@ -55,6 +55,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
         /// </summary>
         public string InstallersFeed { get; }
 
+        public bool IsPublishToMsdl { get; }
+
         public TargetChannelConfig(
             int id,
             PublishingInfraVersion publishingInfraVersion,
@@ -63,7 +65,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             string transportFeed,
             string symbolsFeed,
             string checksumsFeed,
-            string installersFeed)
+            string installersFeed,
+            bool isPublishToMsdl)
         {
             Id = id;
             PublishingInfraVersion = publishingInfraVersion;
@@ -73,6 +76,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             SymbolsFeed = symbolsFeed;
             ChecksumsFeed = checksumsFeed;
             InstallersFeed = installersFeed;
+            IsPublishToMsdl = isPublishToMsdl;
         }
 
         public override string ToString()
@@ -85,7 +89,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 $"\n Transport-feed: '{TransportFeed}' " +
                 $"\n Symbols-feed: '{SymbolsFeed}' " +
                 $"\n Installers-feed: '{InstallersFeed}' " +
-                $"\n Checksums-feed: '{ChecksumsFeed}' ";
+                $"\n Checksums-feed: '{ChecksumsFeed}' " +
+                $"\n IsPublishToMsdl: '{IsPublishToMsdl}' ";
         }
 
         public override bool Equals(object other)
@@ -98,7 +103,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                    TransportFeed.Equals(config.TransportFeed, StringComparison.OrdinalIgnoreCase) &&
                    SymbolsFeed.Equals(config.SymbolsFeed, StringComparison.OrdinalIgnoreCase) &&
                    ChecksumsFeed.Equals(config.ChecksumsFeed, StringComparison.OrdinalIgnoreCase) &&
-                   InstallersFeed.Equals(config.InstallersFeed, StringComparison.OrdinalIgnoreCase);
+                   InstallersFeed.Equals(config.InstallersFeed, StringComparison.OrdinalIgnoreCase) &&
+                   IsPublishToMsdl == config.IsPublishToMsdl;
         }
 
         public override int GetHashCode()
