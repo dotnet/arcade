@@ -55,7 +55,7 @@ stages:
         
     - template: /eng/publishing/v3/publish-symbols.yml
       parameters:
-        publishInstallersAndChecksums: ${{ parameters.publishInstallersAndChecksums }}
+        symbolPublishingAdditionalParameters: ${{ parameters.symbolPublishingAdditionalParameters }}
 
     - template: /eng/publishing/v3/publish-assets.yml
       parameters:
