@@ -84,18 +84,19 @@ if [ -z "$xharness_cli_path" ]; then
     die "XHarness path wasn't provided";
 fi
 
-if [ -z "$xcode_version" ]; then
-    die "Xcode version wasn't provided";
-fi
-
 if [ ! -z "$app_arguments" ]; then
     app_arguments="-- $app_arguments";
 fi
 
 set +e
 
+if [ -z "$xcode_version" ]; then
+    xcode_path=$(dirname $(dirname $(xcode-select -p)))
+else
+    xcode_path="/Applications/Xcode${xcode_version/./}.app"
+fi
+
 # Restart the simulator to make sure it is tied to the right user session
-xcode_path="/Applications/Xcode${xcode_version/./}.app"
 simulator_app="$xcode_path/Contents/Developer/Applications/Simulator.app"
 sudo pkill -9 -f "$simulator_app"
 open -a "$simulator_app"

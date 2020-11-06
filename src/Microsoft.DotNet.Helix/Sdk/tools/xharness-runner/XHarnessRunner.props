@@ -6,6 +6,5 @@
     <_HelixMonoQueueTargets>$(_HelixMonoQueueTargets);$(MSBuildThisFileDirectory)XHarnessRunner.targets</_HelixMonoQueueTargets>
 
     <XHarnessPackageSource Condition=" '$(XHarnessPackageSource)' == '' ">https://dnceng.pkgs.visualstudio.com/public/_packaging/dotnet-eng/nuget/v3/index.json</XHarnessPackageSource>
-    <XHarnessXcodeVersion Condition=" '$(XHarnessXcodeVersion)' == '' ">11.5</XHarnessXcodeVersion>
   </PropertyGroup>
 </Project>
