@@ -116,7 +116,12 @@
       AkaMSClientSecret="$(AkaMSClientSecret)"
       AkaMSTenant="$(AkaMSTenant)"
       AkaMSOwners="$(AkaMSOwners)"
-      AkaMSCreatedBy="$(AkaMSCreatedBy)" />
+      AkaMSCreatedBy="$(AkaMSCreatedBy)" 
+      DotNetSymbolServerTokenMsdl="$(DotNetSymbolServerTokenMsdl)"
+      DotNetSymbolServerTokenSymWeb="$(DotNetSymbolServerTokenSymWeb)"
+      SymbolPublishingExclusionsFile="$(SymbolPublishingExclusionsFile)"
+      PDBArtifactsBasePath="$(PDBArtifactsBasePath)"
+      />
   </Target>
 
   <ItemGroup>
