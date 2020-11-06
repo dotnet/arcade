@@ -11,7 +11,7 @@ xharness_cli_path=''
 xcode_version=''
 app_arguments=''
 
-while [[ $# > 0 ]]; do
+while [[ $# -gt 0 ]]; do
     opt="$(echo "$1" | awk '{print tolower($0)}')"
     case "$opt" in
       --app)
@@ -56,7 +56,7 @@ done
 
 function die ()
 {
-    echo $1 1>&2
+    echo "$1" 1>&2
     exit 1
 }
 
@@ -84,14 +84,14 @@ if [ -z "$xharness_cli_path" ]; then
     die "XHarness path wasn't provided";
 fi
 
-if [ ! -z "$app_arguments" ]; then
+if [ -n "$app_arguments" ]; then
     app_arguments="-- $app_arguments";
 fi
 
 set +e
 
 if [ -z "$xcode_version" ]; then
-    xcode_path=$(dirname $(dirname $(xcode-select -p)))
+    xcode_path="$(dirname "$(dirname "$(xcode-select -p)")")"
 else
     xcode_path="/Applications/Xcode${xcode_version/./}.app"
 fi
@@ -108,11 +108,11 @@ dotnet exec "$xharness_cli_path" ios test  \
     --app="$app"                           \
     --output-directory="$output_directory" \
     --targets="$targets"                   \
-    --timeout=$timeout                     \
-    --launch-timeout=$launch_timeout       \
+    --timeout="$timeout"                   \
+    --launch-timeout="$launch_timeout"     \
     --xcode="$xcode_path"                  \
     -v                                     \
-    $app_arguments
+    "$app_arguments"
 
 exit_code=$?
 
@@ -122,7 +122,7 @@ sudo pkill -9 -f "$simulator_app"
 # The simulator logs comming from the sudo-spawned Simulator.app are not readable by the helix uploader
 chmod 0644 "$output_directory"/*.log
 
-test_results=`ls "$output_directory"/xunit-*.xml`
+test_results=$(ls "$output_directory"/xunit-*.xml)
 
 if [ ! -f "$test_results" ]; then
     echo "Failed to find xUnit tests results in the output directory. Existing files:"
