@@ -39,7 +39,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             TargetFeedContentType.Maven,
             TargetFeedContentType.VSIX,
             TargetFeedContentType.Badge,
-            TargetFeedContentType.Other
+            TargetFeedContentType.Other,
+            TargetFeedContentType.Symbols
         };
 
         private readonly ITestOutputHelper Output;
@@ -51,9 +52,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
 
         [Theory]
         [InlineData(false, false)]
-        [InlineData(false, true)]
+ /*       [InlineData(false, true)]
         [InlineData(true, false)]
-        [InlineData(true, true)]
+        [InlineData(true, true)]*/
         public void StableFeeds(bool publishInstallersAndChecksums, bool isInternalBuild)
         {
             var expectedFeeds = new List<TargetFeedConfig>();
@@ -142,6 +143,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     LatestLinkShortUrlPrefix,
                     AzureDevOpsFeedsKey,
                     buildEngine,
+                    false,
                     StablePackageFeed,
                     StableSymbolsFeed
                 );
@@ -242,7 +244,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     AzureDevOpsStaticSymbolsFeed,
                     LatestLinkShortUrlPrefix,
                     AzureDevOpsFeedsKey,
-                    buildEngine: buildEngine
+                    buildEngine: buildEngine,
+                    false
                 );
 
             var actualFeeds = config.Setup();
@@ -340,7 +343,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     AzureDevOpsStaticSymbolsFeed,
                     LatestLinkShortUrlPrefix,
                     AzureDevOpsFeedsKey,
-                    buildEngine: buildEngine
+                    buildEngine: buildEngine,
+                    false
                 );
 
             var actualFeeds = config.Setup();
