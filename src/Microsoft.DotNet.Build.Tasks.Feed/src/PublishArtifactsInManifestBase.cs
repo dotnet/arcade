@@ -357,13 +357,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 HashSet<string> packagesToBeExcluded = new HashSet<string>();
                 IEnumerable<string> filesToSymbolServer = null;
                 if (Directory.Exists(pdbArtifactsBasePath))
-                    {
+                {
                         filesToSymbolServer =
                             Directory.EnumerateFileSystemEntries(pdbArtifactsBasePath);
-                    }
+                }
 
-                    if(publishPackagesToMsdl.Length >0)
-                    {
+                if(publishPackagesToMsdl.Length >0)
+                {
                         PublishSymbolsHelper.Publish(
                             log: Log,
                             symbolServerPath: "https://microsoftpublicsymbols.artifacts.visualstudio.com/DefaultCollection",
@@ -384,7 +384,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                     PublishSymbolsHelper.Publish(
                         log: Log,
-                        symbolServerPath: "",
+                        symbolServerPath: "https://microsoft.artifacts.visualstudio.com/DefaultCollection",
                         personalAccessToken: personalTokenSymweb,
                         ConvertToStringLists(pubishPackagesToSymweb),
                         filesToSymbolServer,
