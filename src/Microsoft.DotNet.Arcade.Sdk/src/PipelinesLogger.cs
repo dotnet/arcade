@@ -14,7 +14,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
     /// 
     /// https://github.com/Microsoft/azure-pipelines-tasks/blob/601dd2f0a3e671b19b55bcf139f554a09f3414da/docs/authoring/commands.md
     /// </summary>
-    public sealed class PipelinesLogger : ILogger
+    public class PipelinesLogger : ILogger
     {
         private readonly MessageBuilder _builder = new MessageBuilder();
         private readonly Dictionary<BuildEventContext, Guid> _buildEventContextMap = new Dictionary<BuildEventContext, Guid>(BuildEventContextComparer.Instance);
