@@ -313,6 +313,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             }
         }
 
+
         protected async Task HandleSymbolPublishingAsync(string pdbArtifactsBasePath,
             string personalTokenMsdl, 
             string personalTokenSymweb,
@@ -351,24 +352,24 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     }
                 }
 
-                IEnumerable<string> filesToSymbolServer = null;
-                if (Directory.Exists(pdbArtifactsBasePath))
-                {
-                    filesToSymbolServer = 
-                        Directory.EnumerateFileSystemEntries(pdbArtifactsBasePath);
-                }
-
                 ITaskItem[] publishPackagesToMsdl = (ITaskItem[])items.ToArray(typeof(ITaskItem));
                 ITaskItem[] pubishPackagesToSymweb = (ITaskItem[]) itemsymweb.ToArray(typeof(ITaskItem));
                 HashSet<string> packagesToBeExcluded = new HashSet<string>();
-                if (publishPackagesToMsdl.Length > 0)
-                {
-                    PublishSymbolsHelper.Publish(
+                IEnumerable<string> filesToSymbolServer = null;
+                if (Directory.Exists(pdbArtifactsBasePath))
+                    {
+                        filesToSymbolServer =
+                            Directory.EnumerateFileSystemEntries(pdbArtifactsBasePath);
+                    }
+
+                    if(publishPackagesToMsdl.Length >0)
+                    {
+                        PublishSymbolsHelper.Publish(
                             log: Log,
                             symbolServerPath: "https://microsoftpublicsymbols.artifacts.visualstudio.com/DefaultCollection",
                             personalAccessToken: personalTokenMsdl,
                             ConvertToStringLists(publishPackagesToMsdl),
-                            inputFiles: filesToSymbolServer,
+                            filesToSymbolServer,
                             null,
                             "SymbolUploader",
                             expirationInDays: 3650,
@@ -379,14 +380,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             true,
                             false,
                             true);
-                }
+                    }
 
-                PublishSymbolsHelper.Publish(
+                    PublishSymbolsHelper.Publish(
                         log: Log,
-                        symbolServerPath: "https://microsoft.artifacts.visualstudio.com/DefaultCollection",
+                        symbolServerPath: "",
                         personalAccessToken: personalTokenSymweb,
                         ConvertToStringLists(pubishPackagesToSymweb),
-                        inputFiles:filesToSymbolServer,
+                        filesToSymbolServer,
                         null,
                         "SymbolUploader",
                         expirationInDays: 3650,
@@ -397,8 +398,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         true,
                         false,
                         true);
-                
-            await Task.WhenAll(publishTasks);
+
+                    await Task.WhenAll(publishTasks);
             }
         }
 
