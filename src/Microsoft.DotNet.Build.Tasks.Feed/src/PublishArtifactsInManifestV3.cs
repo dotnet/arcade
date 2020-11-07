@@ -166,9 +166,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                 await Task.WhenAll(new Task[] {
                         HandlePackagePublishingAsync(buildAssets),
-                        HandleBlobPublishingAsync(buildAssets),
-                        HandleSymbolPublishingAsync(PDBArtifactsBasePath, DotNetSymbolServerTokenMsdl, DotNetSymbolServerTokenSymWeb, SymbolPublishingExclusionsFile, buildAssets)
-            });
+                        HandleBlobPublishingAsync(buildAssets)
+                });
+                HandleSymbolPublishingAsync(PDBArtifactsBasePath, DotNetSymbolServerTokenMsdl,
+                    DotNetSymbolServerTokenSymWeb, SymbolPublishingExclusionsFile, buildAssets);
                 await PersistPendingAssetLocationAsync(client);
             }
             catch (Exception e)

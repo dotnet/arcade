@@ -314,13 +314,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         }
 
 
-        protected async Task HandleSymbolPublishingAsync(string pdbArtifactsBasePath,
+        protected void HandleSymbolPublishingAsync(string pdbArtifactsBasePath,
             string personalTokenMsdl, 
             string personalTokenSymweb,
             string symbolPublishingExclusionsFile,
             Dictionary<string, HashSet<Asset>> buildAssets)
         {
-            List<Task> publishTasks = new List<Task>();
             Log.LogMessage(MessageImportance.High, "\nPublishing Symbols: ");
             HashSet<BlobArtifactModel> packagesToPublish = new HashSet<BlobArtifactModel>();
             ArrayList items = new ArrayList();
@@ -348,7 +347,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                                     itemsymweb.Add(blob);
                             }
                         }
-
                     }
                 }
 
@@ -380,7 +378,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             true,
                             false,
                             true);
-                    }
+                }
 
                     PublishSymbolsHelper.Publish(
                         log: Log,
@@ -399,7 +397,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         false,
                         true);
 
-                    await Task.WhenAll(publishTasks);
             }
         }
 
