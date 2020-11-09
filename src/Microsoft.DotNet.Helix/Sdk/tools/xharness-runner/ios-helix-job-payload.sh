@@ -96,7 +96,7 @@ else
     xcode_path="/Applications/Xcode${xcode_version/./}.app"
 fi
 
-# Start the simulator if it was not run already
+# Start the simulator if it is not running already
 simulator_app="$xcode_path/Contents/Developer/Applications/Simulator.app"
 open -a "$simulator_app"
 
