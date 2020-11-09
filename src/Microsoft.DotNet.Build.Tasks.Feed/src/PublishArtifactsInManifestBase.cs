@@ -375,7 +375,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             false,
                             false,
                             null,
-                            true,
+                            false,
                             false,
                             true);
                 }
@@ -393,7 +393,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         false,
                         false,
                         null,
-                        true,
+                        false,
                         false,
                         true);
 

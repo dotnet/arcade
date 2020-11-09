@@ -312,7 +312,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedGeneralTestingSymbols,
                 FeedForChecksums,
                 FeedForInstallers,
-                false),
+                true),
 
             // ".NET Core Tooling Dev",
             new TargetChannelConfig(
