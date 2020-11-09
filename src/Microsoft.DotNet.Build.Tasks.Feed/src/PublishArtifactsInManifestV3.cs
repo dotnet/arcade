@@ -164,10 +164,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     return false;
                 }
 
-                await Task.WhenAll(new Task[] {
-                        HandlePackagePublishingAsync(buildAssets),
-                        HandleBlobPublishingAsync(buildAssets)
-                });
+         /*       await Task.WhenAll(new Task[] {
+                        //HandlePackagePublishingAsync(buildAssets),
+                        //HandleBlobPublishingAsync(buildAssets),
+                        
+            });*/
                 HandleSymbolPublishingAsync(PDBArtifactsBasePath, DotNetSymbolServerTokenMsdl,
                     DotNetSymbolServerTokenSymWeb, SymbolPublishingExclusionsFile, buildAssets);
                 await PersistPendingAssetLocationAsync(client);

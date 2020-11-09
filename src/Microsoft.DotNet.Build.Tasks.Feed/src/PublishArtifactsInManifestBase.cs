@@ -320,6 +320,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             string symbolPublishingExclusionsFile,
             Dictionary<string, HashSet<Asset>> buildAssets)
         {
+            List<Task> publishTasks = new List<Task>();
             Log.LogMessage(MessageImportance.High, "\nPublishing Symbols: ");
             HashSet<BlobArtifactModel> packagesToPublish = new HashSet<BlobArtifactModel>();
             ArrayList items = new ArrayList();
@@ -333,12 +334,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 {
                     foreach (var feedConfig in feedConfigsForCategory)
                     {
+                        HashSet<BlobArtifactModel> filteredBlobs = FilterBlobs(blobs, feedConfig);
                         //IEnumerable<string> inputPackages;
-                        foreach (var blob in blobs)
+                        foreach (var blob in filteredBlobs)
                         {
                             // Applies to symbol packages and core-sdk's VS feed packages
                             if (blob.Id.EndsWith(GeneralUtils.SymbolPackageSuffix, StringComparison.OrdinalIgnoreCase))
                             {
+                                Log.LogMessage(MessageImportance.High, "\n Publishing Symbol" + blob.Id );
                                 if (feedConfig.PublishToMsdl)
                                 {
                                     items.Add(blob);
@@ -352,22 +355,23 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                 ITaskItem[] publishPackagesToMsdl = (ITaskItem[])items.ToArray(typeof(ITaskItem));
                 ITaskItem[] pubishPackagesToSymweb = (ITaskItem[]) itemsymweb.ToArray(typeof(ITaskItem));
-                HashSet<string> packagesToBeExcluded = new HashSet<string>();
                 IEnumerable<string> filesToSymbolServer = null;
                 if (Directory.Exists(pdbArtifactsBasePath))
                 {
                         filesToSymbolServer =
                             Directory.EnumerateFileSystemEntries(pdbArtifactsBasePath);
+                        Log.LogMessage(MessageImportance.High, "Files exists in the pdbArtifactsBasePath");
                 }
 
                 if(publishPackagesToMsdl.Length >0)
                 {
-                        PublishSymbolsHelper.Publish(
+                    Log.LogMessage(MessageImportance.High, "Going to publish to MSDL");
+                    PublishSymbolsHelper.Publish(
                             log: Log,
                             symbolServerPath: "https://microsoftpublicsymbols.artifacts.visualstudio.com/DefaultCollection",
                             personalAccessToken: personalTokenMsdl,
                             ConvertToStringLists(publishPackagesToMsdl),
-                            filesToSymbolServer,
+                            null,
                             null,
                             "SymbolUploader",
                             expirationInDays: 3650,
@@ -379,13 +383,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             false,
                             true);
                 }
-
-                    PublishSymbolsHelper.Publish(
+                PublishSymbolsHelper.Publish(
                         log: Log,
                         symbolServerPath: "https://microsoft.artifacts.visualstudio.com/DefaultCollection",
                         personalAccessToken: personalTokenSymweb,
                         ConvertToStringLists(pubishPackagesToSymweb),
-                        filesToSymbolServer,
+                        null,
                         null,
                         "SymbolUploader",
                         expirationInDays: 3650,
