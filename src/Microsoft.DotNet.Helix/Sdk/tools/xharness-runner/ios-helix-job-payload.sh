@@ -112,7 +112,7 @@ dotnet exec "$xharness_cli_path" ios test  \
     --launch-timeout="$launch_timeout"     \
     --xcode="$xcode_path"                  \
     -v                                     \
-    "$app_arguments"
+    $app_arguments
 
 exit_code=$?
 
