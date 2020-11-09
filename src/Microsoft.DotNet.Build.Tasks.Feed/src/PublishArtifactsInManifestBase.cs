@@ -334,9 +334,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 {
                     foreach (var feedConfig in feedConfigsForCategory)
                     {
-                        HashSet<BlobArtifactModel> filteredBlobs = FilterBlobs(blobs, feedConfig);
+                        //HashSet<BlobArtifactModel> filteredBlobs = FilterBlobs(blobs, feedConfig);
                         //IEnumerable<string> inputPackages;
-                        foreach (var blob in filteredBlobs)
+                        foreach (var blob in blobs)
                         {
                             // Applies to symbol packages and core-sdk's VS feed packages
                             if (blob.Id.EndsWith(GeneralUtils.SymbolPackageSuffix, StringComparison.OrdinalIgnoreCase))
@@ -371,7 +371,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             symbolServerPath: "https://microsoftpublicsymbols.artifacts.visualstudio.com/DefaultCollection",
                             personalAccessToken: personalTokenMsdl,
                             ConvertToStringLists(publishPackagesToMsdl),
-                            null,
+                            filesToSymbolServer,
                             null,
                             "SymbolUploader",
                             expirationInDays: 3650,
@@ -388,7 +388,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         symbolServerPath: "https://microsoft.artifacts.visualstudio.com/DefaultCollection",
                         personalAccessToken: personalTokenSymweb,
                         ConvertToStringLists(pubishPackagesToSymweb),
-                        null,
+                        filesToSymbolServer,
                         null,
                         "SymbolUploader",
                         expirationInDays: 3650,

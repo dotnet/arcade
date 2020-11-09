@@ -31,9 +31,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.src
                 bool timer,
                 bool verboseLogging)
             {
-                var tracer = new Tracer(log, verboseLogging);
+                var tracer = (SymbolStore.ITracer) new Tracer(log, verboseLogging);
 
-                PublishOperation publishOperation = new PublishOperation((SymbolStore.ITracer)tracer)
+                PublishOperation publishOperation = new PublishOperation(tracer)
                 {
                     SymbolServerPath = symbolServerPath,
                     PersonalAccessToken = personalAccessToken,
