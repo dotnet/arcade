@@ -34,7 +34,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.src
             {
                 var tracer = new Tracer(log, verboseLogging);
 
-                PublishOperation publishOperation = new PublishOperation((SymbolStore.ITracer)tracer)
+                PublishOperation publishOperation = new PublishOperation(tracer)
                 {
                     SymbolServerPath = symbolServerPath,
                     PersonalAccessToken = personalAccessToken,
@@ -101,7 +101,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.src
             }
         }
 
-    internal class Tracer
+    internal class Tracer : Microsoft.SymbolStore.ITracer
     {
         readonly TaskLoggingHelper m_log;
         readonly bool m_verbose;
