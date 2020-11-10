@@ -13,6 +13,8 @@
   <Import Project="$(MSBuildThisFileDirectory)wix/wix.targets" />
 
   <Target Name="GenerateBundles" DependsOnTargets="GetBundleGenerationFlags" Condition="'$(SkipInstallerBuild)' != 'true'">
+    <MakeDir Directories="$(PackageOutputPath)" />
+
     <ItemGroup>
       <_InstallerBuildProject Include="$(MSBuildProjectFile)"
                Targets="GenerateExeBundle"
