@@ -38,7 +38,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                         var workItemName = workItem.GetMetadata("WorkItemName");
                         var consoleUri = workItem.GetMetadata("ConsoleOutputUri");
 
-                        Log.LogError(FailureCategory.Test, $"Work item {workItemName} in job {jobName} has failed.\nFailure log: {consoleUri}{accessTokenSuffix}");
+                        Log.LogError(FailureCategory.Test, $"Work item '{workItemName}' in job {jobName} has failed.\nFailure log: '{consoleUri}{accessTokenSuffix}'");
                     }
                 }
             }
