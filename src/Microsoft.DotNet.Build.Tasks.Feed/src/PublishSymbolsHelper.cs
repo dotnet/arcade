@@ -5,6 +5,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Microsoft.SymbolUploader;
@@ -31,9 +32,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.src
                 bool timer,
                 bool verboseLogging)
             {
-                var tracer = (SymbolStore.ITracer) new Tracer(log, verboseLogging);
+                var tracer = new Tracer(log, verboseLogging);
 
-                PublishOperation publishOperation = new PublishOperation(tracer)
+                PublishOperation publishOperation = new PublishOperation((SymbolStore.ITracer)tracer)
                 {
                     SymbolServerPath = symbolServerPath,
                     PersonalAccessToken = personalAccessToken,

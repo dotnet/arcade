@@ -314,7 +314,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         }
 
 
-        protected void HandleSymbolPublishingAsync(string pdbArtifactsBasePath,
+        protected async Task HandleSymbolPublishingAsync(string pdbArtifactsBasePath,
             string personalTokenMsdl, 
             string personalTokenSymweb,
             string symbolPublishingExclusionsFile,
@@ -366,7 +366,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 if(publishPackagesToMsdl.Length >0)
                 {
                     Log.LogMessage(MessageImportance.High, "Going to publish to MSDL");
-                    PublishSymbolsHelper.Publish(
+                   await Task.Run(() => PublishSymbolsHelper.Publish(
                             log: Log,
                             symbolServerPath: "https://microsoftpublicsymbols.artifacts.visualstudio.com/DefaultCollection",
                             personalAccessToken: personalTokenMsdl,
@@ -381,9 +381,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             null,
                             false,
                             false,
-                            true);
+                            true));
                 }
-                PublishSymbolsHelper.Publish(
+                await Task.Run(() => PublishSymbolsHelper.Publish(
                         log: Log,
                         symbolServerPath: "https://microsoft.artifacts.visualstudio.com/DefaultCollection",
                         personalAccessToken: personalTokenSymweb,
@@ -398,7 +398,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         null,
                         false,
                         false,
-                        true);
+                        true));
 
             }
         }
