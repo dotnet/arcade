@@ -96,9 +96,8 @@ else
     xcode_path="/Applications/Xcode${xcode_version/./}.app"
 fi
 
-# Restart the simulator to make sure it is tied to the right user session
+# Start the simulator if it is not running already
 simulator_app="$xcode_path/Contents/Developer/Applications/Simulator.app"
-sudo pkill -9 -f "$simulator_app"
 open -a "$simulator_app"
 
 export XHARNESS_DISABLE_COLORED_OUTPUT=true
@@ -116,8 +115,12 @@ dotnet exec "$xharness_cli_path" ios test  \
 
 exit_code=$?
 
-# Kill the simulator after we're done
-sudo pkill -9 -f "$simulator_app"
+# Kill the simulator just in case when we fail to launch the app
+# 80 - app crash
+# 83 - app launch failure
+if [ $exit_code -eq 80 ] || [ $exit_code -eq 83 ]; then
+    sudo pkill -9 -f "$simulator_app"
+fi
 
 # The simulator logs comming from the sudo-spawned Simulator.app are not readable by the helix uploader
 chmod 0644 "$output_directory"/*.log
