@@ -114,6 +114,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         private readonly Dictionary<TargetFeedContentType, HashSet<BlobArtifactModel>> BlobsByCategory = 
             new Dictionary<TargetFeedContentType, HashSet<BlobArtifactModel>>();
 
+        private readonly HashSet<BlobArtifactModel> SymbolsNupkgs = new HashSet<BlobArtifactModel>();
+
         private readonly ConcurrentDictionary<(int AssetId, string AssetLocation, AddAssetLocationToAssetAssetLocationType LocationType), ValueTuple> NewAssetLocations =
             new ConcurrentDictionary<(int AssetId, string AssetLocation, AddAssetLocationToAssetAssetLocationType LocationType), ValueTuple>();
 
@@ -318,72 +320,71 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             string personalTokenMsdl, 
             string personalTokenSymweb,
             string symbolPublishingExclusionsFile,
-            Dictionary<string, HashSet<Asset>> buildAssets)
+            Dictionary<string, HashSet<Asset>> buildAssets,
+            string temporarySymbolsLocation)
         {
-            List<Task> publishTasks = new List<Task>();
+
             Log.LogMessage(MessageImportance.High, "\nPublishing Symbols: ");
+
             HashSet<BlobArtifactModel> packagesToPublish = new HashSet<BlobArtifactModel>();
             ArrayList items = new ArrayList();
             ArrayList itemsymweb = new ArrayList();
-            foreach (var blobsPerCategory in BlobsByCategory)
+
+            if (Directory.Exists(temporarySymbolsLocation))
             {
-                var category = blobsPerCategory.Key;
-                var blobs = blobsPerCategory.Value;
+                string[] fileEntries = Directory.GetFiles(temporarySymbolsLocation);
 
-                if (FeedConfigs.TryGetValue(category, out HashSet<TargetFeedConfig> feedConfigsForCategory))
-                {
-                    foreach (var feedConfig in feedConfigsForCategory)
+                    var category = TargetFeedContentType.Symbols;
+
+                    if (FeedConfigs.TryGetValue(category, out HashSet<TargetFeedConfig> feedConfigsForCategory))
                     {
-                        //HashSet<BlobArtifactModel> filteredBlobs = FilterBlobs(blobs, feedConfig);
-                        //IEnumerable<string> inputPackages;
-                        foreach (var blob in blobs)
+                        foreach (var feedConfig in feedConfigsForCategory)
                         {
-                            // Applies to symbol packages and core-sdk's VS feed packages
-                            if (blob.Id.EndsWith(GeneralUtils.SymbolPackageSuffix, StringComparison.OrdinalIgnoreCase))
+                            foreach (var file in fileEntries)
                             {
-                                Log.LogMessage(MessageImportance.High, "\n Publishing Symbol" + blob.Id );
-                                if (feedConfig.PublishToMsdl)
-                                {
-                                    items.Add(blob);
-                                }
-                                else
-                                    itemsymweb.Add(blob);
+                                Log.LogMessage(MessageImportance.High, "\n Publishing Symbol" + file);
+                                    if (feedConfig.PublishToMsdl)
+                                    {
+                                        items.Add(file);
+                                    }
+                                    else
+                                        itemsymweb.Add(file);
                             }
-                        }
-                    }
-                }
-
-                ITaskItem[] publishPackagesToMsdl = (ITaskItem[])items.ToArray(typeof(ITaskItem));
-                ITaskItem[] pubishPackagesToSymweb = (ITaskItem[]) itemsymweb.ToArray(typeof(ITaskItem));
-                IEnumerable<string> filesToSymbolServer = null;
-                if (Directory.Exists(pdbArtifactsBasePath))
-                {
+                        } 
+                        
+                    ITaskItem[] publishPackagesToMsdl = (ITaskItem[]) items.ToArray(typeof(ITaskItem));
+                    ITaskItem[] pubishPackagesToSymweb = (ITaskItem[]) itemsymweb.ToArray(typeof(ITaskItem));
+                    IEnumerable<string> filesToSymbolServer = null;
+                    if (Directory.Exists(pdbArtifactsBasePath))
+                    {
                         filesToSymbolServer =
                             Directory.EnumerateFileSystemEntries(pdbArtifactsBasePath);
                         Log.LogMessage(MessageImportance.High, "Files exists in the pdbArtifactsBasePath");
-                }
+                    }
 
-                if(publishPackagesToMsdl.Length >0)
-                {
-                    Log.LogMessage(MessageImportance.High, "Going to publish to MSDL");
-                   await Task.Run(() => PublishSymbolsHelper.Publish(
+                    if (publishPackagesToMsdl.Length > 0)
+                    {
+                        Log.LogMessage(MessageImportance.High, "Going to publish to MSDL");
+                        await Task.Run(() => PublishSymbolsHelper.Publish(
                             log: Log,
-                            symbolServerPath: "https://microsoftpublicsymbols.artifacts.visualstudio.com/DefaultCollection",
+                            symbolServerPath:
+                            "https://microsoftpublicsymbols.artifacts.visualstudio.com/DefaultCollection",
                             personalAccessToken: personalTokenMsdl,
                             ConvertToStringLists(publishPackagesToMsdl),
                             filesToSymbolServer,
                             null,
                             "SymbolUploader",
                             expirationInDays: 3650,
-                            new DateTime(2040, 12, 31),
                             false,
                             false,
                             null,
                             false,
                             false,
                             true));
-                }
-                await Task.Run(() => PublishSymbolsHelper.Publish(
+                    }
+
+                    Log.LogMessage(MessageImportance.High, "Going to publish to Symweb");
+                    await Task.Run(() => PublishSymbolsHelper.Publish(
                         log: Log,
                         symbolServerPath: "https://microsoft.artifacts.visualstudio.com/DefaultCollection",
                         personalAccessToken: personalTokenSymweb,
@@ -392,14 +393,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         null,
                         "SymbolUploader",
                         expirationInDays: 3650,
-                        new DateTime(2040, 12, 31),
                         false,
                         false,
                         null,
                         false,
                         false,
                         true));
-
+                    }
             }
         }
 

@@ -24,7 +24,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.src
                 HashSet<string> packageExcludeFiles,
                 string requestName,
                 int expirationInDays,
-                DateTime expirationDate,
                 bool convertPortablePdbsToWindowsPdbs,
                 bool publishSpecialClrFiles,
                 HashSet<int> pdbConversionTreatAsWarning,
@@ -49,11 +48,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.src
                     if (expirationInDays != 0)
                     {
                         publishOperation.ExpirationInDays = (uint) expirationInDays;
-                    }
-
-                    if (expirationDate != DateTime.MinValue)
-                    {
-                        publishOperation.ExpirationDate = expirationDate;
                     }
 
                     IEnumerable<PublishFileInfo> fileInfos = new PublishFileInfo[0];
