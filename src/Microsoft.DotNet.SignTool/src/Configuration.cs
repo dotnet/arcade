@@ -132,6 +132,7 @@ namespace Microsoft.DotNet.SignTool
 
         internal BatchSignInput GenerateListOfFiles()
         {
+            Stopwatch gatherInfoTime = Stopwatch.StartNew();
             foreach (var itemToSign in _itemsToSign)
             {
                 string fullPath = itemToSign.ItemSpec;
@@ -151,6 +152,8 @@ namespace Microsoft.DotNet.SignTool
                 PathWithHash pathWithHash = new PathWithHash(fullPath, contentHash);
                 TrackFile(pathWithHash, null, collisionPriorityId);
             }
+            gatherInfoTime.Stop();
+            Telemetry.AddMetric("Gather file info duration (s)", gatherInfoTime.ElapsedMilliseconds / 1000);
 
             if (_errors.Any())
             {

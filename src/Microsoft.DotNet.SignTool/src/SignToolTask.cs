@@ -242,17 +242,24 @@ namespace Microsoft.DotNet.SignTool
                 return;
             }
 
-            var signingInput = configuration.GenerateListOfFiles();
+            try
+            {
+                var signingInput = configuration.GenerateListOfFiles();
 
-            if (Log.HasLoggedErrors) return;
+                if (Log.HasLoggedErrors) return;
 
-            var util = new BatchSignUtil(BuildEngine, Log, signTool, signingInput, ItemsToSkipStrongNameCheck?.Select(i => i.ItemSpec).ToArray());
+                var util = new BatchSignUtil(BuildEngine, Log, signTool, signingInput, ItemsToSkipStrongNameCheck?.Select(i => i.ItemSpec).ToArray());
 
-            util.SkipZipContainerSignatureMarkerCheck = this.SkipZipContainerSignatureMarkerCheck;
+                util.SkipZipContainerSignatureMarkerCheck = this.SkipZipContainerSignatureMarkerCheck;
 
-            if (Log.HasLoggedErrors) return;
+                if (Log.HasLoggedErrors) return;
 
-            util.Go(DoStrongNameCheck);
+                util.Go(DoStrongNameCheck);
+            }
+            finally
+            {
+                Telemetry.SendEvents();
+            }
         }
 
         private void PrintConfigInformation()
