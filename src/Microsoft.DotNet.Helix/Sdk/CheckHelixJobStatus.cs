@@ -1,7 +1,5 @@
 using Microsoft.Build.Framework;
 using Newtonsoft.Json;
-using System;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -37,8 +35,9 @@ namespace Microsoft.DotNet.Helix.Sdk
                         var jobName = workItem.GetMetadata("JobName");
                         var workItemName = workItem.GetMetadata("WorkItemName");
                         var consoleUri = workItem.GetMetadata("ConsoleOutputUri");
+                        var logUrl = System.Uri.EscapeUriString(consoleUri + accessTokenSuffix);
 
-                        Log.LogError(FailureCategory.Test, $"Work item '{workItemName}' in job {jobName} has failed.\nFailure log: '{consoleUri}{accessTokenSuffix}'");
+                        Log.LogError(FailureCategory.Test, $"Work item '{workItemName}' in job {jobName} has failed.\nFailure log: {logUrl}");
                     }
                 }
             }
