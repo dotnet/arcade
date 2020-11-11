@@ -14,7 +14,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
     /// 
     /// https://github.com/Microsoft/azure-pipelines-tasks/blob/601dd2f0a3e671b19b55bcf139f554a09f3414da/docs/authoring/commands.md
     /// </summary>
-    public class PipelinesLogger : ILogger
+    public sealed class PipelinesLogger : ILogger
     {
         private readonly MessageBuilder _builder = new MessageBuilder();
         private readonly Dictionary<BuildEventContext, Guid> _buildEventContextMap = new Dictionary<BuildEventContext, Guid>(BuildEventContextComparer.Instance);
@@ -400,7 +400,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
             Skipped,
         }
 
-        internal sealed class MessageBuilder
+        public sealed class MessageBuilder
         {
             internal enum State
             {
@@ -412,7 +412,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
             private readonly StringBuilder _builder = new StringBuilder();
             private State _state;
 
-            internal void Start(string kind)
+            public void Start(string kind)
             {
                 Debug.Assert(_state == State.NotStarted || _state == State.Finished);
                 _builder.Length = 0;
@@ -420,18 +420,18 @@ namespace Microsoft.DotNet.Arcade.Sdk
                 _state = State.Properties;
             }
 
-            internal void AddProperty(string name, string value)
+            public void AddProperty(string name, string value)
             {
                 Debug.Assert(_state == State.Properties);
 
                 _builder.Append($"{name}={Escape(value)};");
             }
 
-            internal void AddProperty(string name, DateTimeOffset value) => AddProperty(name, value.ToString("O"));
-            internal void AddProperty(string name, int value) => AddProperty(name, value.ToString());
-            internal void AddProperty(string name, Guid value) => AddProperty(name, value.ToString("D"));
+            public void AddProperty(string name, DateTimeOffset value) => AddProperty(name, value.ToString("O"));
+            public void AddProperty(string name, int value) => AddProperty(name, value.ToString());
+            public void AddProperty(string name, Guid value) => AddProperty(name, value.ToString("D"));
 
-            internal void Finish(string message = null)
+            public void Finish(string message = null)
             {
                 Debug.Assert(_state == State.Properties);
                 _builder.Append("]");
@@ -443,7 +443,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
                 _state = State.Finished;
             }
 
-            internal string GetMessage()
+            public string GetMessage()
             {
                 Debug.Assert(_state == State.Finished);
                 return _builder.ToString();
