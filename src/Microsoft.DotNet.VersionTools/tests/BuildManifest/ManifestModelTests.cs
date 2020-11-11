@@ -158,9 +158,6 @@ namespace Microsoft.DotNet.VersionTools.Tests.BuildManifest
                 },
                 SigningInformation = new SigningInformationModel
                 {
-                    AzureDevOpsCollectionUri = "https://dev.azure.com/uri/",
-                    AzureDevOpsBuildId = 123456,
-                    AzureDevOpsProject = "project",
                     FileExtensionSignInfo = new List<FileExtensionSignInfoModel>
                     {
                         new FileExtensionSignInfoModel
