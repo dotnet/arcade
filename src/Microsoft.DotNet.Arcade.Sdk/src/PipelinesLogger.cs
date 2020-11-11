@@ -14,7 +14,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
     /// 
     /// https://github.com/Microsoft/azure-pipelines-tasks/blob/601dd2f0a3e671b19b55bcf139f554a09f3414da/docs/authoring/commands.md
     /// </summary>
-    public class PipelinesLogger : ILogger
+    public sealed class PipelinesLogger : ILogger
     {
         private readonly MessageBuilder _builder = new MessageBuilder();
         private readonly Dictionary<BuildEventContext, Guid> _buildEventContextMap = new Dictionary<BuildEventContext, Guid>(BuildEventContextComparer.Instance);
@@ -400,6 +400,14 @@ namespace Microsoft.DotNet.Arcade.Sdk
             Skipped,
         }
 
+        public sealed class MessageBuilder
+            public void Start(string kind)
+            public void AddProperty(string name, string value)
+            public void AddProperty(string name, DateTimeOffset value) => AddProperty(name, value.ToString("O"));
+            public void AddProperty(string name, int value) => AddProperty(name, value.ToString());
+            public void AddProperty(string name, Guid value) => AddProperty(name, value.ToString("D"));
+            public void Finish(string message = null)
+            public string GetMessage()
         /// <summary>
         /// Compares two event contexts on ProjectContextId and NodeId only.
         /// NOTE: Copied from MSBuild ParallelLoggerHelpers.cs.
