@@ -171,8 +171,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     return false;
                 }
                 await Task.WhenAll(new Task[] {
-                        HandlePackagePublishingAsync(buildAssets),
-                        HandleBlobPublishingAsync(buildAssets),
+                        //HandlePackagePublishingAsync(buildAssets),
+                        //HandleBlobPublishingAsync(buildAssets),
                         HandleSymbolPublishingAsync(PDBArtifactsBasePath, DotNetSymbolServerTokenMsdl,
                             DotNetSymbolServerTokenSymWeb, SymbolPublishingExclusionsFile, buildAssets, temporarySymbolsLocation)
 
@@ -200,7 +200,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 if (blobAsset.Id.EndsWith(".symbols.nupkg", StringComparison.OrdinalIgnoreCase))
                 {
                     var sourceFile = Path.Combine(BlobAssetsBasePath, blobAsset.Id);
-                    var destinationFile = Path.Combine(temporaryDir, blobAsset.Id);
+                    var destinationFile = Path.Combine(temporaryDir, Path.GetFileName(blobAsset.Id));
                     Log.LogMessage(MessageImportance.High ,$"Copying File from {sourceFile} to {destinationFile}");
                     File.Copy(sourceFile,destinationFile);
                     Log.LogMessage(MessageImportance.High, $"Copied {destinationFile} to {temporaryDir} successfully");
