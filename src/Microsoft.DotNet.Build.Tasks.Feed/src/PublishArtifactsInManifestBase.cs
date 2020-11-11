@@ -326,8 +326,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
             Log.LogMessage(MessageImportance.High, "\nPublishing Symbols: ");
 
-            ArrayList items = new ArrayList();
-            ArrayList itemsymweb = new ArrayList();
+            List<string> items = new List<string>();
+            List<string> itemsymweb = new List<string>();
 
             if (Directory.Exists(temporarySymbolsLocation))
             {
@@ -354,10 +354,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                                     }
                             }
                         } 
-                        
-                    ITaskItem[] publishPackagesToMsdl = (ITaskItem[]) items.ToArray(typeof(ITaskItem));
-                    ITaskItem[] pubishPackagesToSymweb = (ITaskItem[]) itemsymweb.ToArray(typeof(ITaskItem));
-                    IEnumerable<string> filesToSymbolServer = null;
+                        IEnumerable<string> filesToSymbolServer = null;
                     if (Directory.Exists(pdbArtifactsBasePath))
                     {
                         filesToSymbolServer =
@@ -365,7 +362,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         Log.LogMessage(MessageImportance.High, "Files exists in the pdbArtifactsBasePath");
                     }
 
-                    if (publishPackagesToMsdl.Length > 0)
+                    if (items.Count > 0)
                     {
                         Log.LogMessage(MessageImportance.High, "Going to publish to MSDL");
                         await Task.Run(() => PublishSymbolsHelper.Publish(
@@ -373,7 +370,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             symbolServerPath:
                             "https://microsoftpublicsymbols.artifacts.visualstudio.com/DefaultCollection",
                             personalAccessToken: personalTokenMsdl,
-                            ConvertToStringLists(publishPackagesToMsdl),
+                            items,
                             filesToSymbolServer,
                             null,
                             "SymbolUploader",
@@ -386,14 +383,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             true));
                     }
 
-                    if (pubishPackagesToSymweb.Length > 0)
+                    if (itemsymweb.Count > 0)
                     {
                         Log.LogMessage(MessageImportance.High, "Going to publish to Symweb");
                         await Task.Run(() => PublishSymbolsHelper.Publish(
                             log: Log,
                             symbolServerPath: "https://microsoft.artifacts.visualstudio.com/DefaultCollection",
                             personalAccessToken: personalTokenSymweb,
-                            ConvertToStringLists(pubishPackagesToSymweb),
+                            itemsymweb,
                             filesToSymbolServer,
                             null,
                             "SymbolUploader",
