@@ -326,7 +326,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
             Log.LogMessage(MessageImportance.High, "\nPublishing Symbols: ");
 
-            HashSet<BlobArtifactModel> packagesToPublish = new HashSet<BlobArtifactModel>();
             ArrayList items = new ArrayList();
             ArrayList itemsymweb = new ArrayList();
 
@@ -342,13 +341,17 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         {
                             foreach (var file in fileEntries)
                             {
-                                Log.LogMessage(MessageImportance.High, "\n Publishing Symbol" + file);
+                                
                                     if (feedConfig.PublishToMsdl)
                                     {
+                                        Log.LogMessage(MessageImportance.High, "\n Adding Symbol to Msdl" + file);
                                         items.Add(file);
                                     }
                                     else
+                                    {
+                                        Log.LogMessage(MessageImportance.High, "\n Publishing Symbol to Synweb" + file);
                                         itemsymweb.Add(file);
+                                    }
                             }
                         } 
                         
@@ -383,22 +386,25 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             true));
                     }
 
-                    Log.LogMessage(MessageImportance.High, "Going to publish to Symweb");
-                    await Task.Run(() => PublishSymbolsHelper.Publish(
-                        log: Log,
-                        symbolServerPath: "https://microsoft.artifacts.visualstudio.com/DefaultCollection",
-                        personalAccessToken: personalTokenSymweb,
-                        ConvertToStringLists(pubishPackagesToSymweb),
-                        filesToSymbolServer,
-                        null,
-                        "SymbolUploader",
-                        expirationInDays: 3650,
-                        false,
-                        false,
-                        null,
-                        false,
-                        false,
-                        true));
+                    if (pubishPackagesToSymweb.Length > 0)
+                    {
+                        Log.LogMessage(MessageImportance.High, "Going to publish to Symweb");
+                        await Task.Run(() => PublishSymbolsHelper.Publish(
+                            log: Log,
+                            symbolServerPath: "https://microsoft.artifacts.visualstudio.com/DefaultCollection",
+                            personalAccessToken: personalTokenSymweb,
+                            ConvertToStringLists(pubishPackagesToSymweb),
+                            filesToSymbolServer,
+                            null,
+                            "SymbolUploader",
+                            expirationInDays: 3650,
+                            false,
+                            false,
+                            null,
+                            false,
+                            false,
+                            true));
+                    }
                     }
             }
         }

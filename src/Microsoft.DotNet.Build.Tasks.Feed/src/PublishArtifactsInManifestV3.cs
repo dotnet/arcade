@@ -199,7 +199,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             {
                 if (blobAsset.Id.EndsWith(".symbols.nupkg", StringComparison.OrdinalIgnoreCase))
                 {
-                    var sourceFile = Path.Combine(BlobAssetsBasePath, blobAsset.Id);
+                    var sourceFile = Path.Combine(BlobAssetsBasePath, Path.GetFileName(blobAsset.Id));
                     var destinationFile = Path.Combine(temporaryDir, Path.GetFileName(blobAsset.Id));
                     Log.LogMessage(MessageImportance.High ,$"Copying File from {sourceFile} to {destinationFile}");
                     File.Copy(sourceFile,destinationFile);
