@@ -23,7 +23,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         private const string _testInitialLocation = "As they say....Location Location Location!";
         private static readonly string[] _defaultManifestBuildData = new string[]
         {
-                $"InitialAssetsLocation={_testInitialLocation}"
+            $"InitialAssetsLocation={_testInitialLocation}"
         };
 
         #endregion
@@ -643,7 +643,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         {
             var taskLoggingHelper = new Microsoft.Build.Utilities.TaskLoggingHelper(new StubTask());
             var localPackagePath = TestInputs.GetFullPath(Path.Combine("Nupkgs", "test-package-a.nupkg"));
-            var zipPath = @"this\is\a\zip.zip";
+            var zipPath = @"this/is/a/zip.zip";
 
             var artifacts = new ITaskItem[]
             {
@@ -756,7 +756,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             var stubTask = new StubTask(buildEngine);
             var taskLoggingHelper = new Microsoft.Build.Utilities.TaskLoggingHelper(stubTask);
             var localPackagePath = TestInputs.GetFullPath(Path.Combine("Nupkgs", "test-package-a.nupkg"));
-            const string zipPath = @"this\is\a\zip.zip";
+            const string zipPath = @"this/is/a/zip.zip";
             const string bogusNupkgToSign = "totallyboguspackage.nupkg";
 
             var artifacts = new ITaskItem[]
