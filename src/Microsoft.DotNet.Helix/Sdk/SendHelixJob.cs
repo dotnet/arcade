@@ -201,6 +201,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                     }
                 }
                 
+                def = AddBuildVariableProperty(def, "CollectionUri", "System.CollectionUri");
                 def = AddBuildVariableProperty(def, "Project", "System.TeamProject");
                 def = AddBuildVariableProperty(def, "BuildNumber", "Build.BuildNumber");
                 def = AddBuildVariableProperty(def, "BuildId", "Build.BuildId");
