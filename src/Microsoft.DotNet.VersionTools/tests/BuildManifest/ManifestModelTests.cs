@@ -286,7 +286,7 @@ namespace Microsoft.DotNet.VersionTools.Tests.BuildManifest
   <Package Id=""ArcadeSdkTest"" Version=""5.0.0"" />
   <Package Id=""TestPackage"" Version=""5.0.0"" />
   <Blob Id=""assets/symbols/test.nupkg""/>
-  <SigningInformation AzureDevOpsCollectionUri=""https://dev.azure.com/uri/"" AzureDevOpsProject=""project"" AzureDevOpsBuildId=""123456"">
+  <SigningInformation>
     <FileExtensionSignInfo Include="".dll"" CertificateName=""Microsoft400"" />
     <FileExtensionSignInfo Include="".jar"" CertificateName=""MicrosoftJARSHA2"" />
     <FileExtensionSignInfo Include="".nupkg"" CertificateName=""NuGet"" />
