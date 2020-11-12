@@ -417,7 +417,7 @@
     
     <MSBuild Projects="$(MSBuildProjectFullPath)"
              Targets="PublishToDisk"
-             Properties="OutputPath=$(_LayoutPackageRoot)"
+             Properties="OutputPath=$([MSBuild]::EnsureHasTrailingSlash('$(_LayoutPackageRoot)'))'"
              RemoveProperties="@(_GlobalPropertiesToRemoveForPublish)"  />
     
     <Copy
