@@ -26,7 +26,7 @@
     <MicrosoftCodeAnalysisAnalyzersVersion>2.6.3</MicrosoftCodeAnalysisAnalyzersVersion>
     <MicrosoftCodeAnalysisCSharpVersion>2.9.0</MicrosoftCodeAnalysisCSharpVersion>
     <MsbuildTaskMicrosoftCodeAnalysisCSharpVersion>3.4.0</MsbuildTaskMicrosoftCodeAnalysisCSharpVersion>
-    <MicrosoftIdentityModelClientsActiveDirectoryVersion>3.19.8</MicrosoftIdentityModelClientsActiveDirectoryVersion>
+    <MicrosoftIdentityModelClientsActiveDirectoryVersion>3.17.2</MicrosoftIdentityModelClientsActiveDirectoryVersion>
     <MicrosoftRestClientRuntimeVersion>2.3.13</MicrosoftRestClientRuntimeVersion>
     <MicrosoftExtensionsDependencyModelVersion>2.1.0</MicrosoftExtensionsDependencyModelVersion>
     <MicrosoftExtensionsFileSystemGlobbingVersion>2.0.0</MicrosoftExtensionsFileSystemGlobbingVersion>
@@ -60,7 +60,7 @@
     <XUnitVersion>2.4.1</XUnitVersion>
     <XUnitAbstractionsVersion>2.0.3</XUnitAbstractionsVersion>
     <XUnitVSRunnerVersion>2.4.1</XUnitVSRunnerVersion>
-    <MicrosoftDotNetBuildTasksFeedVersion>6.0.0-beta.20560.17</MicrosoftDotNetBuildTasksFeedVersion>
+    <MicrosoftDotNetBuildTasksFeedVersion>6.0.0-beta.20525.1</MicrosoftDotNetBuildTasksFeedVersion>
     <MicrosoftDotNetSignToolVersion>6.0.0-beta.20525.1</MicrosoftDotNetSignToolVersion>
     <MicrosoftAzureDocumentDBVersion>1.22.0</MicrosoftAzureDocumentDBVersion>
     <MicrosoftAzureCosmosDBTableVersion>1.1.2</MicrosoftAzureCosmosDBTableVersion>
