@@ -356,15 +356,15 @@
     Create macOS pkg installer.
   -->
   <Target Name="CreatePkg"
-          DependsOnTargets="
-            _GetInstallerProperties;
-            _CreateInstallerLayout"
+          DependsOnTargets="_GetInstallerProperties"
           Returns="@(_CreatedPkg)">
     
     <!-- Copy files to layout. -->
     <PropertyGroup>
       <_OutputPathRoot>$(IntermediateOutputPath)output/</_OutputPathRoot>
     </PropertyGroup>
+    
+    <MakeDir Directories="$(_OutputPathRoot)" />
 
     <MSBuild Projects="$(MSBuildProjectFullPath)"
              Targets="PublishToDisk"
@@ -417,7 +417,7 @@
     
     <MSBuild Projects="$(MSBuildProjectFullPath)"
              Targets="PublishToDisk"
-             Properties="OutputPath=$([MSBuild]::EnsureTrailingSlash('$(_LayoutPackageRoot)'))'"
+             Properties="OutputPath=$([MSBuild]::EnsureTrailingSlash('$(_LayoutPackageRoot)'))"
              RemoveProperties="@(_GlobalPropertiesToRemoveForPublish)"  />
     
     <Copy
