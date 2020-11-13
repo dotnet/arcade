@@ -2040,7 +2040,7 @@ $@"
 
             Assert.False(BatchSignUtil.RunWixTool("create.cmd", "foodir", "bardir", null, task.Log));
             Assert.True(task.Log.HasLoggedErrors);
-            Assert.Contains(fakeBuildEngine.LogErrorEvents, e => e.Message.Contains("WixToolsPath must be defined to run wix tooling"));
+            Assert.Contains(fakeBuildEngine.LogErrorEvents, e => e.Message.Contains("WixToolsPath must be defined to run WiX tooling"));
         }
 
         /// <summary>
