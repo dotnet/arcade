@@ -1,10 +1,10 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using Microsoft.Build.Framework;
-using Microsoft.DotNet.Build.Tasks.Feed.Model;
 using System;
 using System.Collections.Generic;
+using Microsoft.Build.Framework;
+using Microsoft.DotNet.Build.Tasks.Feed.Model;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed
 {
@@ -20,8 +20,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             TargetFeedContentType.Maven,
             TargetFeedContentType.VSIX,
             TargetFeedContentType.Badge,
-            TargetFeedContentType.Other,
-            TargetFeedContentType.Symbols
+            TargetFeedContentType.Other
         };
 
         private IBuildEngine BuildEngine { get; }
