@@ -6,6 +6,7 @@ using Microsoft.Build.Utilities;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Runtime.InteropServices;
 using TestUtilities;
@@ -956,7 +957,7 @@ $@"
         }
 
         [Fact]
-        public void ZipFile()
+        public void SignZipFile()
         {
             // List of files to be considered for signing
             var itemsToSign = new ITaskItem[]
@@ -1984,6 +1985,78 @@ $@"
                 new Dictionary<ExplicitCertificateKey, string>(), 
                 s_fileExtensionSignInfoWithCollisionId, 
                 new string[0]);
+        }
+
+        /// <summary>
+        /// Verify that running the wixpack returns passing result and that the expected output file
+        /// is created, or a negative result if the wix tool fails.
+        /// </summary>
+        [SkippableTheory]
+        [InlineData(true)]
+        [InlineData(false)]
+        public void RunWixToolRunsOrFailsProperly(bool deleteWixobjBeforeRunningTool)
+        {
+            var task = new SignToolTask { BuildEngine = new FakeBuildEngine() };
+
+            const string expectedExe = "MsiBootstrapper.exe";
+            const string wixPack = "MsiBootstrapper.exe.wixpack.zip";
+            var wixToolsPath = GetWixToolPath();
+            var wixpackPath = GetResourcePath(wixPack);
+            var tempDir = Path.GetTempPath();
+            string workingDir = Path.Combine(tempDir, "extract", Guid.NewGuid().ToString());
+            string outputDir = Path.Combine(tempDir, "output", Guid.NewGuid().ToString());
+            string createFileName = Path.Combine(workingDir, "create.cmd");
+            string outputFileName = Path.Combine(outputDir, expectedExe);
+            Directory.CreateDirectory(outputDir);
+
+            try
+            {
+                // Unzip the wixpack zip, run the tool, and check the exit code
+                ZipFile.ExtractToDirectory(wixpackPath, workingDir);
+
+                if (deleteWixobjBeforeRunningTool)
+                {
+                    File.Delete(Path.Combine(workingDir, "Bundle.wixobj"));
+                }
+
+                Assert.Equal(!deleteWixobjBeforeRunningTool, BatchSignUtil.RunWixTool(createFileName, outputDir, workingDir, wixToolsPath, task.Log));
+                Assert.Equal(!deleteWixobjBeforeRunningTool, File.Exists(outputFileName));
+            }
+            finally
+            {
+                Directory.Delete(workingDir, true);
+                Directory.Delete(outputDir, true);
+            }
+        }
+
+        /// <summary>
+        /// Run a wix tool, but with an empty wix path.
+        /// </summary>
+        [Fact]
+        public void RunWixToolThrowsErrorIfNoWixToolsProvided()
+        {
+            var fakeBuildEngine = new FakeBuildEngine();
+            var task = new SignToolTask { BuildEngine = fakeBuildEngine };
+
+            Assert.False(BatchSignUtil.RunWixTool("create.cmd", "foodir", "bardir", null, task.Log));
+            Assert.True(task.Log.HasLoggedErrors);
+            Assert.Contains(fakeBuildEngine.LogErrorEvents, e => e.Message.Contains("WixToolsPath must be defined to run wix tooling"));
+        }
+
+        /// <summary>
+        /// If attempting to repack a wix container, but a wix path was not
+        /// provided
+        /// </summary>
+        [Fact]
+        public void RunWixToolThrowsErrorIfWixToolsProvidedButDirDoesNotExist()
+        {
+            const string totalWixToolDir = "totally/wix/tools";
+            var fakeBuildEngine = new FakeBuildEngine();
+            var task = new SignToolTask { BuildEngine = fakeBuildEngine };
+
+            Assert.False(BatchSignUtil.RunWixTool("create.cmd", "foodir", "bardir", "totally/wix/tools", task.Log));
+            Assert.True(task.Log.HasLoggedErrors);
+            Assert.Contains(fakeBuildEngine.LogErrorEvents, e => e.Message.Contains($"WixToolsPath '{totalWixToolDir}' not found."));
         }
     }
 }
