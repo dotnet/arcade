@@ -320,14 +320,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             string personalTokenMsdl, 
             string personalTokenSymweb,
             string symbolPublishingExclusionsFile,
-            Dictionary<string, HashSet<Asset>> buildAssets,
             string temporarySymbolsLocation)
         {
 
             Log.LogMessage(MessageImportance.High, "\nPublishing Symbols: ");
 
-            List<string> items = new List<string>();
-            List<string> itemsymweb = new List<string>();
+            List<string> publishFilesToMsdl = new List<string>();
+            List<string> publishFilesToSymweb = new List<string>();
 
             if (Directory.Exists(temporarySymbolsLocation))
             {
@@ -335,26 +334,26 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                     var category = TargetFeedContentType.Symbols;
 
-                    if (FeedConfigs.TryGetValue(category, out HashSet<TargetFeedConfig> feedConfigsForCategory))
+                    HashSet<TargetFeedConfig> feedConfigsForSymbols = FeedConfigs[category];
+
+                    foreach (var feedConfig in feedConfigsForSymbols)
                     {
-                        foreach (var feedConfig in feedConfigsForCategory)
+                        foreach (var file in fileEntries)
                         {
-                            foreach (var file in fileEntries)
-                            {
-                                
-                                    if (feedConfig.PublishToMsdl)
-                                    {
-                                        Log.LogMessage(MessageImportance.High, "\n Adding Symbol to Msdl" + file);
-                                        items.Add(file);
-                                    }
-                                    else
-                                    {
-                                        Log.LogMessage(MessageImportance.High, "\n Publishing Symbol to Synweb" + file);
-                                        itemsymweb.Add(file);
-                                    }
-                            }
+                                if (feedConfig.PublishToMsdl)
+                                {
+                                    Log.LogMessage(MessageImportance.High, $"For Feed config : {feedConfig}");
+                                    Log.LogMessage(MessageImportance.High, "\n Adding Symbol to Msdl" + file);
+                                    publishFilesToMsdl.Add(file);
+                                }
+                                else
+                                {
+                                    Log.LogMessage(MessageImportance.High, $"For Feed config : {feedConfig}"); 
+                                    Log.LogMessage(MessageImportance.High, "\n Publishing Symbol to Symweb" + file);
+                                    publishFilesToSymweb.Add(file);
+                                }
                         } 
-                        IEnumerable<string> filesToSymbolServer = null;
+                    IEnumerable<string> filesToSymbolServer = null;
                     if (Directory.Exists(pdbArtifactsBasePath))
                     {
                         filesToSymbolServer =
@@ -362,7 +361,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         Log.LogMessage(MessageImportance.High, "Files exists in the pdbArtifactsBasePath");
                     }
 
-                    if (items.Count > 0)
+                    if (publishFilesToMsdl.Count > 0)
                     {
                         Log.LogMessage(MessageImportance.High, "Going to publish to MSDL");
                         await Task.Run(() => PublishSymbolsHelper.Publish(
@@ -370,10 +369,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             symbolServerPath:
                             "https://microsoftpublicsymbols.artifacts.visualstudio.com/DefaultCollection",
                             personalAccessToken: personalTokenMsdl,
-                            items,
+                            publishFilesToMsdl,
                             filesToSymbolServer,
                             null,
-                            "SymbolUploader",
                             expirationInDays: 3650,
                             false,
                             false,
@@ -383,17 +381,16 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             true));
                     }
 
-                    if (itemsymweb.Count > 0)
+                    if (publishFilesToSymweb.Count > 0)
                     {
                         Log.LogMessage(MessageImportance.High, "Going to publish to Symweb");
                         await Task.Run(() => PublishSymbolsHelper.Publish(
                             log: Log,
                             symbolServerPath: "https://microsoft.artifacts.visualstudio.com/DefaultCollection",
                             personalAccessToken: personalTokenSymweb,
-                            itemsymweb,
+                            publishFilesToSymweb,
                             filesToSymbolServer,
                             null,
-                            "SymbolUploader",
                             expirationInDays: 3650,
                             false,
                             false,
@@ -404,16 +401,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     }
                     }
             }
-        }
-
-        private List<string> ConvertToStringLists(ITaskItem[] taskItems)
-        {
-            List<string> stringList = new List<string>();
-            foreach (var item in taskItems)
-            {
-                stringList.Add(item.ItemSpec);
-            }
-            return stringList;
         }
 
         /// <summary>

@@ -22,7 +22,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.src
                 IEnumerable<string> inputPackages,
                 IEnumerable<string> inputFiles,
                 HashSet<string> packageExcludeFiles,
-                string requestName,
                 int expirationInDays,
                 bool convertPortablePdbsToWindowsPdbs,
                 bool publishSpecialClrFiles,
@@ -37,7 +36,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.src
                 {
                     SymbolServerPath = symbolServerPath,
                     PersonalAccessToken = personalAccessToken,
-                    RequestName = requestName,
                     PdbConversionTreatAsWarning = pdbConversionTreatAsWarning,
                     PublishSpecialClrFiles = publishSpecialClrFiles,
                     Timer = timer,

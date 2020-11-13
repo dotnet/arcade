@@ -171,13 +171,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     return false;
                 }
                 await Task.WhenAll(new Task[] {
-                        //HandlePackagePublishingAsync(buildAssets),
-                        //HandleBlobPublishingAsync(buildAssets),
+                        HandlePackagePublishingAsync(buildAssets),
+                        HandleBlobPublishingAsync(buildAssets),
                         HandleSymbolPublishingAsync(PDBArtifactsBasePath, DotNetSymbolServerTokenMsdl,
-                            DotNetSymbolServerTokenSymWeb, SymbolPublishingExclusionsFile, buildAssets, temporarySymbolsLocation)
+                            DotNetSymbolServerTokenSymWeb, SymbolPublishingExclusionsFile, temporarySymbolsLocation)
 
             });
-                
+                DeleteSymbolTemporaryFiles(temporarySymbolsLocation);
                 await PersistPendingAssetLocationAsync(client);
             }
             catch (Exception e)
@@ -206,6 +206,20 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     Log.LogMessage(MessageImportance.High, $"Copied {destinationFile} to {temporaryDir} successfully");
                 }
             }
+        }
+
+        private void DeleteSymbolTemporaryFiles(string temporarySymbolsLocation)
+        {
+            if (Directory.Exists(temporarySymbolsLocation))
+            {
+                string[] fileEntries = Directory.GetFiles(temporarySymbolsLocation); 
+                foreach(var file in fileEntries)
+                {
+                    File.Delete(file);
+                }
+            }
+            Directory.Delete(temporarySymbolsLocation);
+            Log.LogMessage(MessageImportance.High , "Successfully deleted the temporary symbols directory.");
         }
     }
 }
