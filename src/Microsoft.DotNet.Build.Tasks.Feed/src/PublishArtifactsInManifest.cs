@@ -115,13 +115,15 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public string AzureDevOpsFeedsKey { get; set; }
 
-        public string PDBArtifactsBasePath {get; set;}
+        public string PdbArtifactsBasePath {get; set;}
 
-        public string DotNetSymbolServerTokenMsdl {get; set;}
+        public string MsdlToken {get; set;}
 
-        public string DotNetSymbolServerTokenSymWeb {get; set;}
+        public string SymWebToken {get; set;}
 
         public string SymbolPublishingExclusionsFile {get; set;}
+
+        public bool PublishSpecialClrFiles { get; set; }
 
         /// <summary>
         /// If true, safety checks only print messages and do not error
@@ -295,10 +297,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 InstallersFeedKey = this.InstallersFeedKey,
                 CheckSumsFeedKey = this.ChecksumsFeedKey,
                 AzureStorageTargetFeedKey = this.AzureStorageTargetFeedKey,
-                PDBArtifactsBasePath = this.PDBArtifactsBasePath,
-                DotNetSymbolServerTokenMsdl = this.DotNetSymbolServerTokenMsdl,
-                DotNetSymbolServerTokenSymWeb = this.DotNetSymbolServerTokenSymWeb,
-                SymbolPublishingExclusionsFile = this.SymbolPublishingExclusionsFile
+                PdbArtifactsBasePath = this.PdbArtifactsBasePath,
+                SymWebToken = this.SymWebToken,
+                MsdlToken = this.MsdlToken,
+                SymbolPublishingExclusionsFile = this.SymbolPublishingExclusionsFile,
+                PublishSpecialClrFiles = this.PublishSpecialClrFiles
             };
         }
     }

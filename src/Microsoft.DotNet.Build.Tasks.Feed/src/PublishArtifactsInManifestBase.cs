@@ -1,16 +1,7 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using Microsoft.Build.Framework;
-using Microsoft.DotNet.Build.Tasks.Feed.Model;
-using Microsoft.DotNet.Maestro.Client;
-using Microsoft.DotNet.Maestro.Client.Models;
-using Microsoft.DotNet.VersionTools.BuildManifest.Model;
-using Microsoft.DotNet.VersionTools.Util;
-using NuGet.Packaging.Core;
-using NuGet.Versioning;
 using System;
-using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -19,12 +10,18 @@ using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Reflection;
-using System.Reflection.Metadata;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Build.Framework;
+using Microsoft.DotNet.Build.Tasks.Feed.Model;
 using Microsoft.DotNet.Build.Tasks.Feed.src;
+using Microsoft.DotNet.Maestro.Client;
+using Microsoft.DotNet.Maestro.Client.Models;
+using Microsoft.DotNet.VersionTools.BuildManifest.Model;
+using NuGet.Packaging.Core;
+using NuGet.Versioning;
 using static Microsoft.DotNet.Build.Tasks.Feed.GeneralUtils;
 using MsBuildUtils = Microsoft.Build.Utilities;
 
@@ -124,6 +121,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         private static Regex FourPartVersionRegex = new Regex(FourPartVersionPattern);
 
+        private const string SymwebServerPath = "https://microsoft.artifacts.visualstudio.com/DefaultCollection";
+
+        private const string MsdlServerPath = "https://microsoftpublicsymbols.artifacts.visualstudio.com/DefaultCollection";
         protected LatestLinksManager LinkManager { get; set; } = null;
 
         /// <summary>
@@ -315,15 +315,25 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             }
         }
 
-
-        protected async Task HandleSymbolPublishingAsync(string pdbArtifactsBasePath,
-            string personalTokenMsdl, 
-            string personalTokenSymweb,
+        /// <summary>
+        /// Publishes symbol, dll and pdb files to symbol server.
+        /// </summary>
+        /// <param name="pdbArtifactsBasePath">Path to dll and pdb files</param>
+        /// <param name="msdlToken">Token to authenticate msdl</param>
+        /// <param name="symwebToken">Token to authenticate symweb</param>
+        /// <param name="symbolPublishingExclusionsFile">Right now we do not add any files to this, so this is going to be null</param>
+        /// <param name="temporarySymbolsLocation">Path to Symbol.nupkgs</param>
+        /// <returns></returns>
+        protected async Task HandleSymbolPublishingAsync (
+            string pdbArtifactsBasePath,
+            string msdlToken, 
+            string symWebToken,
             string symbolPublishingExclusionsFile,
-            string temporarySymbolsLocation)
+            string temporarySymbolsLocation,
+            bool PublishSpecialClrFiles)
         {
 
-            Log.LogMessage(MessageImportance.High, "\nPublishing Symbols: ");
+            Log.LogMessage(MessageImportance.High, "\nPublishing Symbols to Symbol server: ");
 
             List<string> publishFilesToMsdl = new List<string>();
             List<string> publishFilesToSymweb = new List<string>();
@@ -342,14 +352,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         {
                                 if (feedConfig.PublishToMsdl)
                                 {
-                                    Log.LogMessage(MessageImportance.High, $"For Feed config : {feedConfig}");
-                                    Log.LogMessage(MessageImportance.High, "\n Adding Symbol to Msdl" + file);
+                                    Log.LogMessage(MessageImportance.High, $"\nSymbol file {file} should publish to Msdl.");
                                     publishFilesToMsdl.Add(file);
                                 }
                                 else
                                 {
-                                    Log.LogMessage(MessageImportance.High, $"For Feed config : {feedConfig}"); 
-                                    Log.LogMessage(MessageImportance.High, "\n Publishing Symbol to Symweb" + file);
+                                    Log.LogMessage(MessageImportance.High, $"\nSymbol file {file} should publish to Symweb.");
                                     publishFilesToSymweb.Add(file);
                                 }
                         } 
@@ -358,23 +366,21 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     {
                         filesToSymbolServer =
                             Directory.EnumerateFileSystemEntries(pdbArtifactsBasePath);
-                        Log.LogMessage(MessageImportance.High, "Files exists in the pdbArtifactsBasePath");
                     }
 
                     if (publishFilesToMsdl.Count > 0)
                     {
-                        Log.LogMessage(MessageImportance.High, "Going to publish to MSDL");
+                        Log.LogMessage(MessageImportance.High, "\nPublishing to MSDL :");
                         await Task.Run(() => PublishSymbolsHelper.Publish(
-                            log: Log,
-                            symbolServerPath:
-                            "https://microsoftpublicsymbols.artifacts.visualstudio.com/DefaultCollection",
-                            personalAccessToken: personalTokenMsdl,
+                            Log,
+                            MsdlServerPath,
+                            msdlToken,
                             publishFilesToMsdl,
                             filesToSymbolServer,
                             null,
-                            expirationInDays: 3650,
+                            3650,
                             false,
-                            false,
+                            PublishSpecialClrFiles,
                             null,
                             false,
                             false,
@@ -383,17 +389,17 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                     if (publishFilesToSymweb.Count > 0)
                     {
-                        Log.LogMessage(MessageImportance.High, "Going to publish to Symweb");
+                        Log.LogMessage(MessageImportance.High, "\nPublishing to Symweb :");
                         await Task.Run(() => PublishSymbolsHelper.Publish(
-                            log: Log,
-                            symbolServerPath: "https://microsoft.artifacts.visualstudio.com/DefaultCollection",
-                            personalAccessToken: personalTokenSymweb,
+                            Log,
+                            SymwebServerPath,
+                            symWebToken,
                             publishFilesToSymweb,
                             filesToSymbolServer,
                             null,
-                            expirationInDays: 3650,
+                            3650,
                             false,
-                            false,
+                            PublishSpecialClrFiles,
                             null,
                             false,
                             false,

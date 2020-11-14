@@ -84,7 +84,6 @@
 
       <InstallersFeedKey>$(InstallersAzureAccountKey)</InstallersFeedKey>
       <InstallersFeedKey Condition="'$(InternalBuild)' == 'true'">$(InternalInstallersTargetStaticFeedKey)</InstallersFeedKey>
-
       <ChecksumsFeedKey>$(ChecksumsAzureAccountKey)</ChecksumsFeedKey>
       <ChecksumsFeedKey Condition="'$(InternalBuild)' == 'true'">$(InternalChecksumsTargetStaticFeedKey)</ChecksumsFeedKey>
     </PropertyGroup>
@@ -117,11 +116,11 @@
       AkaMSTenant="$(AkaMSTenant)"
       AkaMSOwners="$(AkaMSOwners)"
       AkaMSCreatedBy="$(AkaMSCreatedBy)" 
-      DotNetSymbolServerTokenMsdl="$(DotNetSymbolServerTokenMsdl)"
-      DotNetSymbolServerTokenSymWeb="$(DotNetSymbolServerTokenSymWeb)"
+      MsdlToken="$(DotNetSymbolServerTokenMsdl)"
+      SymWebToken="$(DotNetSymbolServerTokenSymWeb)"
       SymbolPublishingExclusionsFile="$(SymbolPublishingExclusionsFile)"
-      PDBArtifactsBasePath="$(PDBArtifactsBasePath)"
-      />
+      PdbArtifactsBasePath="$(PDBArtifactsBasePath)"
+      PublishSpecialClrFiles="$(publishSpecialClrFiles)"/>
   </Target>
 
   <ItemGroup>

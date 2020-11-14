@@ -37,13 +37,15 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public bool PublishInstallersAndChecksums { get; set; }
 
-        public string PDBArtifactsBasePath { get; set; }
+        public string PdbArtifactsBasePath { get; set; }
 
-        public string DotNetSymbolServerTokenMsdl { get; set; }
+        public string MsdlToken { get; set; }
 
-        public string DotNetSymbolServerTokenSymWeb { get; set; }
+        public string SymWebToken { get; set; }
 
         public string SymbolPublishingExclusionsFile {get; set;}
+
+        public bool PublishSpecialClrFiles { get; set; }
 
         public override bool Execute()
         {
@@ -87,7 +89,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 }
                 SplitArtifactsInCategories(BuildModel);
 
-                CopySymbolsFilesToTemporaryLocation(BuildModel, temporarySymbolsLocation);
+                CopySymbolFilesToTemporaryLocation(BuildModel, temporarySymbolsLocation);
                 
                 if (Log.HasLoggedErrors)
                 {
@@ -173,8 +175,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 await Task.WhenAll(new Task[] {
                         HandlePackagePublishingAsync(buildAssets),
                         HandleBlobPublishingAsync(buildAssets),
-                        HandleSymbolPublishingAsync(PDBArtifactsBasePath, DotNetSymbolServerTokenMsdl,
-                            DotNetSymbolServerTokenSymWeb, SymbolPublishingExclusionsFile, temporarySymbolsLocation)
+                        HandleSymbolPublishingAsync(PdbArtifactsBasePath, MsdlToken,
+                            SymWebToken, SymbolPublishingExclusionsFile, temporarySymbolsLocation , PublishSpecialClrFiles)
 
             });
                 DeleteSymbolTemporaryFiles(temporarySymbolsLocation);
@@ -193,17 +195,15 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             return !Log.HasLoggedErrors;
         }
 
-        private void CopySymbolsFilesToTemporaryLocation(BuildModel buildModel, string temporaryDir)
+        private void CopySymbolFilesToTemporaryLocation(BuildModel buildModel, string symbolTemporaryLocation)
         {
             foreach (var blobAsset in buildModel.Artifacts.Blobs)
             {
                 if (blobAsset.Id.EndsWith(".symbols.nupkg", StringComparison.OrdinalIgnoreCase))
                 {
                     var sourceFile = Path.Combine(BlobAssetsBasePath, Path.GetFileName(blobAsset.Id));
-                    var destinationFile = Path.Combine(temporaryDir, Path.GetFileName(blobAsset.Id));
-                    Log.LogMessage(MessageImportance.High ,$"Copying File from {sourceFile} to {destinationFile}");
+                    var destinationFile = Path.Combine(symbolTemporaryLocation, Path.GetFileName(blobAsset.Id));
                     File.Copy(sourceFile,destinationFile);
-                    Log.LogMessage(MessageImportance.High, $"Copied {destinationFile} to {temporaryDir} successfully");
                 }
             }
         }

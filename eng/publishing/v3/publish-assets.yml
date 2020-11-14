@@ -79,11 +79,11 @@ jobs:
           /p:AkaMSClientId=$(akams-client-id)
           /p:AkaMSClientSecret=$(akams-client-secret)
           ${{ parameters.artifactsPublishingAdditionalParameters }}
-          ${{ parameters.symbolPublishingAdditionalParameters }}
           /p:PDBArtifactsBasePath='$(Build.ArtifactStagingDirectory)/PDBArtifacts/'
           /p:SymbolPublishingExclusionsFile='$(Build.SourcesDirectory)/eng/SymbolPublishingExclusionsFile.txt'
-          /p:DotNetSymbolServerTokenMsdl=$(microsoft-symbol-server-pat)
-          /p:DotNetSymbolServerTokenSymWeb=$(symweb-symbol-server-pat)
+          /p:PublishSpecialClrFiles=${{ parameters.symbolPublishingAdditionalParameters}}
+          /p:MsdlToken=$(microsoft-symbol-server-pat)
+          /p:SymWebToken=$(symweb-symbol-server-pat)
 
     - template: /eng/common/templates/steps/publish-logs.yml
       parameters:
