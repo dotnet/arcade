@@ -18,21 +18,29 @@ namespace XliffTasks.Model
             {
                 foreach (var attribute in element.Attributes())
                 {
-                    if (XmlName(attribute) != "DisplayName" && XmlName(attribute) != "Description")
+                    if (XmlName(attribute) == "DisplayName"
+                        || XmlName(attribute) == "Description")
                     {
-                        continue;
+                        yield return new TranslatableXmlAttribute(
+                            id: GenerateIdForDisplayNameOrDescription(attribute),
+                            source: attribute.Value,
+                            note: null,
+                            attribute: attribute);
                     }
-
-                    yield return new TranslatableXmlAttribute(
-                        id: GenerateId(attribute),
-                        source: attribute.Value,
-                        note: null,
-                        attribute: attribute);
+                    else if (XmlName(attribute) == "Value"
+                        && AttributedName(element) == "SearchTerms")
+                    {
+                        yield return new TranslatableXmlAttribute(
+                            id: GenerateIdForPropertyMetadata(element),
+                            source: attribute.Value,
+                            note: null,
+                            attribute: attribute);
+                    }
                 }
             }
         }
 
-        private static string GenerateId(XAttribute attribute)
+        private static string GenerateIdForDisplayNameOrDescription(XAttribute attribute)
         {
             XElement parent = attribute.Parent;
 
@@ -43,6 +51,13 @@ namespace XliffTasks.Model
             }
 
             return $"{XmlName(parent)}|{AttributedName(parent)}|{XmlName(attribute)}";
+        }
+
+        private static string GenerateIdForPropertyMetadata(XElement element)
+        {
+            XElement grandParent = element.Parent.Parent;
+
+            return $"{XmlName(grandParent)}|{AttributedName(grandParent)}|Metadata|{AttributedName(element)}";
         }
 
         private static string XmlName(XElement element) => element.Name.LocalName;

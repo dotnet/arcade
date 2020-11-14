@@ -24,6 +24,11 @@ namespace XliffTasks.Tests
     <EnumValue Name=""Third"" DisplayName=""Do the third thing"" />
   </EnumProperty>
   <BoolProperty Name=""MyBoolProperty"" Description=""My bool property description."" />
+  <StringProperty Name=""MyStringProperty"">
+    <StringProperty.Metadata>
+      <NameValuePair Name=""SearchTerms"" Value=""My;Search;Terms"" />
+    </StringProperty.Metadata>
+  </StringProperty>
 </Rule>";
 
             var translations = new Dictionary<string, string>
@@ -37,7 +42,7 @@ namespace XliffTasks.Tests
                 ["EnumValue|MyEnumProperty.Second|DisplayName"] = "GGG",
                 ["EnumValue|MyEnumProperty.Third|DisplayName"] = "HHH",
                 ["BoolProperty|MyBoolProperty|Description"] = "III",
-                
+                ["StringProperty|MyStringProperty|Metadata|SearchTerms"] = "JJJ"
             };
 
             string expectedTranslation =
@@ -51,6 +56,11 @@ namespace XliffTasks.Tests
     <EnumValue Name=""Third"" DisplayName=""HHH"" />
   </EnumProperty>
   <BoolProperty Name=""MyBoolProperty"" Description=""III"" />
+  <StringProperty Name=""MyStringProperty"">
+    <StringProperty.Metadata>
+      <NameValuePair Name=""SearchTerms"" Value=""JJJ"" />
+    </StringProperty.Metadata>
+  </StringProperty>
 </Rule>";
 
             var document = new XamlRuleDocument();
