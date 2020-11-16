@@ -81,7 +81,7 @@
       <AkaMSTenant Condition="'$(AkaMSTenant)' == ''">ncd</AkaMSTenant>
       <AkaMSOwners Condition="'$(AkaMSOwners)' == ''">dn-bot</AkaMSOwners>
       <AkaMSCreatedBy Condition="'$(AkaMSCreatedBy)' == ''">dn-bot</AkaMSCreatedBy>
-
+      <PublishSpecialClrFiles Condition="'$(PublishSpecialClrFiles)' == ''">false</PublishSpecialClrFiles>
       <InstallersFeedKey>$(InstallersAzureAccountKey)</InstallersFeedKey>
       <InstallersFeedKey Condition="'$(InternalBuild)' == 'true'">$(InternalInstallersTargetStaticFeedKey)</InstallersFeedKey>
       <ChecksumsFeedKey>$(ChecksumsAzureAccountKey)</ChecksumsFeedKey>
