@@ -724,25 +724,25 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             string feedVisibility,
             string feedName,
             Func<string, string, HttpClient, MsBuildUtils.TaskLoggingHelper, Task<PackageFeedStatus>> CompareLocalPackageToFeedPackageCallBack = null,
-            Func<string, string, ProcessExecutionResult> RunProcessAndGetOutputsCallBack = null
+            Func<string, string, Task<ProcessExecutionResult>> RunProcessAndGetOutputsCallBack = null
             )
         {
             // Using these callbacks we can mock up functionality when testing.
             CompareLocalPackageToFeedPackageCallBack ??= GeneralUtils.CompareLocalPackageToFeedPackage;
-            RunProcessAndGetOutputsCallBack ??= GeneralUtils.RunProcessAndGetOutputs;
+            RunProcessAndGetOutputsCallBack ??= GeneralUtils.RunProcessAndGetOutputsAsync;
             ProcessExecutionResult nugetResult = null;
+            var packageStatus = GeneralUtils.PackageFeedStatus.Unknown;
 
             try
             {
                 Log.LogMessage(MessageImportance.Normal, $"Pushing local package {localPackageLocation} to target feed {feedConfig.TargetURL}"); 
-                var packageStatus = GeneralUtils.PackageFeedStatus.Unknown;
                 int attemptIndex = 0;
 
                 do
                 {
                     attemptIndex++;
                     // The feed key when pushing to AzDo feeds is "AzureDevOps" (works with the credential helper).
-                    nugetResult = RunProcessAndGetOutputsCallBack(NugetPath, $"push \"{localPackageLocation}\" -Source \"{feedConfig.TargetURL}\" -NonInteractive -ApiKey AzureDevOps -Verbosity quiet");
+                    nugetResult = await RunProcessAndGetOutputsCallBack(NugetPath, $"push \"{localPackageLocation}\" -Source \"{feedConfig.TargetURL}\" -NonInteractive -ApiKey AzureDevOps -Verbosity quiet");
 
                     if (nugetResult.ExitCode == 0)
                     {
@@ -785,7 +785,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 {
                     Log.LogError($"Failed to publish package '{id}@{version}' to '{feedConfig.TargetURL}' after {MaxRetryCount} attempts. (Final status: {packageStatus})");
                 }
-                else if (!Log.HasLoggedErrors)
+                else
                 {
                     Log.LogMessage(MessageImportance.High, $"Succeeded publishing package '{localPackageLocation}' to feed {feedConfig.TargetURL}");
                 }
@@ -794,7 +794,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             {
                 Log.LogError($"Unexpected exception pushing package '{id}@{version}': {e.Message}");
             }
-            if (Log.HasLoggedErrors && nugetResult?.ExitCode != 0)
+
+            if (packageStatus != GeneralUtils.PackageFeedStatus.ExistsAndIdenticalToLocal && nugetResult?.ExitCode != 0)
             {
                 Log.LogError($"Output from nuget.exe: {Environment.NewLine}StdOut:{Environment.NewLine}{nugetResult.StandardOut}{Environment.NewLine}StdErr:{Environment.NewLine}{nugetResult.StandardError}");
             }

@@ -25,9 +25,9 @@ namespace Microsoft.DotNet.SignTool
         /// <summary>
         /// The parts inside this container which need to be signed.
         /// </summary>
-        internal ImmutableArray<ZipPart> NestedParts { get; }
+        internal ImmutableDictionary<string, ZipPart> NestedParts { get; }
 
-        internal ZipData(FileSignInfo fileSignInfo, ImmutableArray<ZipPart> nestedBinaryParts)
+        internal ZipData(FileSignInfo fileSignInfo, ImmutableDictionary<string, ZipPart> nestedBinaryParts)
         {
             FileSignInfo = fileSignInfo;
             NestedParts = nestedBinaryParts;
@@ -35,12 +35,9 @@ namespace Microsoft.DotNet.SignTool
 
         internal ZipPart? FindNestedPart(string relativeName)
         {
-            foreach (var part in NestedParts)
+            if (NestedParts.TryGetValue(relativeName, out ZipPart part))
             {
-                if (relativeName == part.RelativeName)
-                {
-                    return part;
-                }
+                return part;
             }
 
             return null;
@@ -148,8 +145,13 @@ namespace Microsoft.DotNet.SignTool
             }
 
             string workingDir = Path.Combine(tempDir, "extract", Guid.NewGuid().ToString());
-            string outputDir = Path.Combine(tempDir, "output");
+            string outputDir = Path.Combine(tempDir, "output", Guid.NewGuid().ToString());
+            string createFileName = Path.Combine(workingDir, "create.cmd");
+            string outputFileName = Path.Combine(outputDir, FileSignInfo.FileName);
+
+            Directory.CreateDirectory(outputDir);
             ZipFile.ExtractToDirectory(FileSignInfo.WixContentFilePath, workingDir);
+            
             var fileList = Directory.GetFiles(workingDir, "*", SearchOption.AllDirectories);
             foreach(var file in fileList)
             {
@@ -163,18 +165,21 @@ namespace Microsoft.DotNet.SignTool
                 log.LogMessage(MessageImportance.Low, $"Copying signed stream from {signedPart.Value.FileSignInfo.FullPath} to {file}.");
                 File.Copy(signedPart.Value.FileSignInfo.FullPath, file, true);
             }
-            string createFileName = Path.Combine(workingDir, "create.cmd");
+            
             int exitCode = BatchSignUtil.RunWixTool(createFileName, outputDir, workingDir, wixToolsPath);
             if (exitCode != 0)
             {
                 log.LogError($"packaging of wix file '{FileSignInfo.FullPath}' failed");
                 return;
             }
-            string outputFileName = Path.Combine(outputDir, FileSignInfo.FileName);
+
             Debug.Assert(File.Exists(outputFileName));
-            log.LogMessage($"created wix assembly {outputFileName}");
-            log.LogMessage($"replacing '{FileSignInfo.FullPath}' with '{outputFileName}'");
+            log.LogMessage($"Created wix file {outputFileName}, replacing '{FileSignInfo.FullPath}' with '{outputFileName}'");
             File.Copy(outputFileName, FileSignInfo.FullPath, true);
+
+            // Delete the intermediates
+            Directory.Delete(workingDir, true);
+            Directory.Delete(outputDir, true);
         }
     }
 }

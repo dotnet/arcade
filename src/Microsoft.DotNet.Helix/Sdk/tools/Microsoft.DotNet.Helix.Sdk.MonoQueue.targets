@@ -73,7 +73,8 @@
       <_AccessTokenSuffix />
       <_AccessTokenSuffix Condition=" '$(HelixAccessToken)' != '' ">&amp;access_token={Get this from helix.dot.net}</_AccessTokenSuffix>
     </PropertyGroup>
-    <Message Text="Sent Helix Job; see work items at https://helix.dot.net/api/jobs/$(HelixJobId)/workitems?api-version=2019-06-17$(_AccessTokenSuffix)" Importance="High" />
+    <Message Condition=" '$(HelixBaseUri)' == '' " Text="Sent Helix Job; see work items at https://helix.dot.net/api/jobs/$(HelixJobId)/workitems?api-version=2019-06-17$(_AccessTokenSuffix)" Importance="High" />
+    <Message Condition=" '$(HelixBaseUri)' != '' " Text="Sent Helix Job; see work items at $(HelixBaseUri)/api/jobs/$(HelixJobId)/workitems?api-version=2019-06-17$(_AccessTokenSuffix)" Importance="High" />
   </Target>
 
   <Target Name="Test"

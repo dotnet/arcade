@@ -157,53 +157,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 false),
 
             // ".NET 5 Preview 7",
-            new TargetChannelConfig(
-                1065,
-                PublishingInfraVersion.All,
-                "net5/preview7",
-                FeedDotNet5Shipping,
-                FeedDotNet5Transport,
-                FeedDotNet5Symbols,
-                FeedForChecksums,
-                FeedForInstallers,
-                false),
-
-            // ".NET 5 Preview 8 (internal)",
-            new TargetChannelConfig(
-                1155,
-                PublishingInfraVersion.All,
-                akaMSChannelName: "net5/preview8",
-                FeedDotNet5InternalShipping,
-                FeedDotNet5InternalTransport,
-                FeedDotNet5InternalSymbols,
-                FeedInternalForChecksums,
-                FeedInternalForInstallers,
-                true),
-
-            // ".NET 5 RC 1",
-            new TargetChannelConfig(
-                1157,
-                PublishingInfraVersion.All,
-                akaMSChannelName: "net5/rc1",
-                FeedDotNet5Shipping,
-                FeedDotNet5Transport,
-                FeedDotNet5Symbols,
-                FeedForChecksums,
-                FeedForInstallers,
-                false),
-
-            // ".NET 5 RC 2",
-            new TargetChannelConfig(
-                1329,
-                PublishingInfraVersion.All,
-                akaMSChannelName: "net5/rc2",
-                FeedDotNet5Shipping,
-                FeedDotNet5Transport,
-                FeedDotNet5Symbols,
-                FeedForChecksums,
-                FeedForInstallers,
-                false),
-
             // ".NET 5" (public),
             new TargetChannelConfig(
                 1299,
@@ -243,6 +196,30 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             // ".NET 5 SDK 5.0.1xx Internal" (internal),
             new TargetChannelConfig(
                 1298,
+                PublishingInfraVersion.Next,
+                akaMSChannelName: string.Empty,
+                FeedDotNet5InternalShipping,
+                FeedDotNet5InternalTransport,
+                FeedDotNet5InternalSymbols,
+                FeedInternalForChecksums,
+                FeedInternalForInstallers,
+                true),
+
+            // ".NET 5 SDK 5.0.2xx" (public),
+            new TargetChannelConfig(
+                1518,
+                PublishingInfraVersion.Next,
+                akaMSChannelName: "net5/5.0.2xx/daily",
+                FeedDotNet5Shipping,
+                FeedDotNet5Transport,
+                FeedDotNet5Symbols,
+                FeedForChecksums,
+                FeedForInstallers,
+                false),
+
+            // ".NET 5 SDK 5.0.2xx Internal" (internal),
+            new TargetChannelConfig(
+                1519,
                 PublishingInfraVersion.Next,
                 akaMSChannelName: string.Empty,
                 FeedDotNet5InternalShipping,

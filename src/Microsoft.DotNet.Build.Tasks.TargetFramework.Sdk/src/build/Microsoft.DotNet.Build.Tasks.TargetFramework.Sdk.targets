@@ -4,9 +4,9 @@
   <UsingTask TaskName="ChooseBestTargetFrameworksTask" AssemblyFile="$(DotNetBuildTasksTargetFrameworkSdkAssembly)" />
   <UsingTask TaskName="AddTargetFrameworksToProjectTask" AssemblyFile="$(DotNetBuildTasksTargetFrameworkSdkAssembly)" />
 
-  <!-- Strip away the TargetFrameworkSuffix during the graph build. -->
+  <!-- Strip away the TargetPlatforms during the graph build restore for frameworks older than net5.0 -->
   <PropertyGroup Condition="'$(IsGraphBuild)' == 'true' and '$(MSBuildRestoreSessionId)' != ''">
-    <TargetFrameworks Condition="'$(TargetFrameworks)' != ''">$([System.Text.RegularExpressions.Regex]::Replace('$(TargetFrameworks)', '(-[^;]+)', ''))</TargetFrameworks>
+    <TargetFrameworks Condition="'$(TargetFrameworks)' != ''">$([System.Text.RegularExpressions.Regex]::Replace('$(TargetFrameworks)', '$(TargetFrameworkPattern)', '${1}'))</TargetFrameworks>
   </PropertyGroup>
 
   <!-- We filter _InnerBuildProjects items during DispatchToInnerBuilds and Clean to only run for best target frameworks. -->
@@ -40,7 +40,7 @@
       <_BuildTargetFrameworkWithoutOS Include="$([MSBuild]::Unescape($([System.Text.RegularExpressions.Regex]::Replace('$(TargetFrameworks)', '(-[^;]+)', ''))))" />
       <!-- TODO: Find a better way to filter out non applicable TargetOS values for .NET Framework. -->
       <_BuildTargetFrameworkWithTargetOS Include="@(_BuildTargetFrameworkWithoutOS->Distinct()->'%(Identity)-$(TargetOS)')"
-                                         Condition="'$(TargetOS)' == 'Windows_NT' or !$([System.String]::Copy('%(Identity)').StartsWith('net4'))" />
+                                         Condition="'$(TargetOS)' == 'windows' or !$([System.String]::Copy('%(Identity)').StartsWith('net4'))" />
     </ItemGroup>
     
     <ChooseBestTargetFrameworksTask BuildTargetFrameworks="@(_BuildTargetFrameworkWithTargetOS);$(AdditionalBuildTargetFrameworks)"

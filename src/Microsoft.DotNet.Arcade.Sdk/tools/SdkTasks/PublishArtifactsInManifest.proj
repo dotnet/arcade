@@ -120,7 +120,7 @@
       SymWebToken="$(DotNetSymbolServerTokenSymWeb)"
       SymbolPublishingExclusionsFile="$(SymbolPublishingExclusionsFile)"
       PdbArtifactsBasePath="$(PDBArtifactsBasePath)"
-      PublishSpecialClrFiles="$(publishSpecialClrFiles)"/>
+      PublishSpecialClrFiles="$(PublishSpecialClrFiles)"/>
   </Target>
 
   <ItemGroup>
