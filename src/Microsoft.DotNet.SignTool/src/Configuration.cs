@@ -96,6 +96,8 @@ namespace Microsoft.DotNet.SignTool
         /// </summary>
         internal Dictionary<SignedFileContentKey, string> _hashToCollisionIdMap;
 
+        private Telemetry _telemetry;
+
         public Configuration(
             string tempDir,
             ITaskItem[] itemsToSign,
@@ -104,7 +106,8 @@ namespace Microsoft.DotNet.SignTool
             Dictionary<string, List<SignInfo>> extensionSignInfo,
             ITaskItem[] dualCertificates,
             TaskLoggingHelper log,
-            bool useHashInExtractionPath = false)
+            bool useHashInExtractionPath = false,
+            Telemetry telemetry = null)
         {
             Debug.Assert(tempDir != null);
             Debug.Assert(itemsToSign != null && !itemsToSign.Any(i => i == null));
@@ -128,6 +131,7 @@ namespace Microsoft.DotNet.SignTool
             _errors = new Dictionary<SigningToolErrorCode, HashSet<SignedFileContentKey>>();
             _wixPacks = _itemsToSign.Where(w => WixPackInfo.IsWixPack(w.ItemSpec))?.Select(s => new WixPackInfo(s.ItemSpec)).ToList();
             _hashToCollisionIdMap = new Dictionary<SignedFileContentKey, string>();
+            _telemetry = telemetry;
         }
 
         internal BatchSignInput GenerateListOfFiles()
@@ -153,7 +157,10 @@ namespace Microsoft.DotNet.SignTool
                 TrackFile(pathWithHash, null, collisionPriorityId);
             }
             gatherInfoTime.Stop();
-            Telemetry.AddMetric("Gather file info duration (s)", gatherInfoTime.ElapsedMilliseconds / 1000);
+            if (_telemetry != null)
+            {
+                _telemetry.AddMetric("Gather file info duration (s)", gatherInfoTime.ElapsedMilliseconds / 1000);
+            }
 
             if (_errors.Any())
             {

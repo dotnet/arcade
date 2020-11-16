@@ -21,17 +21,19 @@ namespace Microsoft.DotNet.SignTool
         private readonly BatchSignInput _batchData;
         private readonly SignTool _signTool;
         private readonly string[] _itemsToSkipStrongNameCheck;
+        private Telemetry _telemetry;
 
         internal bool SkipZipContainerSignatureMarkerCheck { get; set; }
 
         internal BatchSignUtil(IBuildEngine buildEngine, TaskLoggingHelper log, SignTool signTool,
-            BatchSignInput batchData, string[] itemsToSkipStrongNameCheck)
+            BatchSignInput batchData, string[] itemsToSkipStrongNameCheck, Telemetry telemetry = null)
         {
             _signTool = signTool;
             _batchData = batchData;
             _log = log;
             _buildEngine = buildEngine;
             _itemsToSkipStrongNameCheck = itemsToSkipStrongNameCheck ?? Array.Empty<string>();
+            _telemetry = telemetry;
         }
 
         internal void Go(bool doStrongNameCheck)
@@ -257,63 +259,68 @@ namespace Microsoft.DotNet.SignTool
             Stopwatch telemetrySignedTime = new Stopwatch();
             Stopwatch telemetryRepackedTime = new Stopwatch();
 
-            // Core algorithm of batch signing.
-            // While there are files left to process,
-            //  Identify which files are ready for processing (ready to repack or sign)
-            //  Repack those of that set that are containers
-            //  Sign any of those files that need signing, along with their engines.
-            bool doProcess = true;
-            while (toProcessList.Count > 0 && doProcess)
+            try
             {
-                var trackList = identifyNextGroup();
-                if (trackList.Count == 0)
+                // Core algorithm of batch signing.
+                // While there are files left to process,
+                //  Identify which files are ready for processing (ready to repack or sign)
+                //  Repack those of that set that are containers
+                //  Sign any of those files that need signing, along with their engines.
+                while (toProcessList.Count > 0)
                 {
-                    throw new InvalidOperationException("No progress made on signing which indicates a bug");
+                    var trackList = identifyNextGroup();
+                    if (trackList.Count == 0)
+                    {
+                        throw new InvalidOperationException("No progress made on signing which indicates a bug");
+                    }
+
+                    int fileModifiedCount;
+                    telemetryRepackedTime.Start();
+                    repackGroup(trackList, out fileModifiedCount);
+                    telemetryRepackedTime.Stop();
+                    telemetryTotalFilesRepacked += fileModifiedCount;
+
+                    try
+                    {
+                        telemetrySignedTime.Start();
+                        if (!signEngines(trackList, out fileModifiedCount))
+                        {
+                            return false;
+                        }
+                        if (fileModifiedCount > 0)
+                        {
+                            round++;
+                            telemetryTotalFilesSigned += fileModifiedCount;
+                        }
+
+                        if (!signGroup(trackList, out fileModifiedCount))
+                        {
+                            return false;
+                        }
+                        if (fileModifiedCount > 0)
+                        {
+                            round++;
+                            telemetryTotalFilesSigned += fileModifiedCount;
+                        }
+                    }
+                    finally
+                    {
+                        telemetrySignedTime.Stop();
+                    }
+
+                    trackList.ForEach(x => trackedSet.Add(x.FileContentKey));
                 }
-
-                int fileModifiedCount;
-                telemetryRepackedTime.Start();
-                repackGroup(trackList, out fileModifiedCount);
-                telemetryRepackedTime.Stop();
-                telemetryTotalFilesRepacked += fileModifiedCount;
-
-                try
-                {
-                    telemetrySignedTime.Start();
-                    if (!signEngines(trackList, out fileModifiedCount))
-                    {
-                        doProcess = false;
-                        continue;
-                    }
-                    if(fileModifiedCount > 0)
-                    {
-                        round++;
-                        telemetryTotalFilesSigned += fileModifiedCount;
-                    }
-
-                    if (!signGroup(trackList, out fileModifiedCount))
-                    {
-                        doProcess = false;
-                        continue;
-                    }
-                    if (fileModifiedCount > 0)
-                    {
-                        round++;
-                        telemetryTotalFilesSigned += fileModifiedCount;
-                    }
-                }
-                finally
-                {
-                    telemetrySignedTime.Stop();
-                }
-
-                trackList.ForEach(x => trackedSet.Add(x.FileContentKey));
             }
-
-            Telemetry.AddMetric("Signed file count", telemetryTotalFilesSigned);
-            Telemetry.AddMetric("Repacked file count", telemetryTotalFilesRepacked);
-            Telemetry.AddMetric("Signing duration (s)", telemetrySignedTime.ElapsedMilliseconds / 1000);
-            Telemetry.AddMetric("Repacking duration (s)", telemetryRepackedTime.ElapsedMilliseconds / 1000);
+            finally
+            {
+                if (_telemetry != null)
+                {
+                    _telemetry.AddMetric("Signed file count", telemetryTotalFilesSigned);
+                    _telemetry.AddMetric("Repacked file count", telemetryTotalFilesRepacked);
+                    _telemetry.AddMetric("Signing duration (s)", telemetrySignedTime.ElapsedMilliseconds / 1000);
+                    _telemetry.AddMetric("Repacking duration (s)", telemetryRepackedTime.ElapsedMilliseconds / 1000);
+                }
+            }
 
             return true;
         }
