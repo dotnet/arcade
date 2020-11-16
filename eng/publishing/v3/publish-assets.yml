@@ -81,7 +81,7 @@ jobs:
           ${{ parameters.artifactsPublishingAdditionalParameters }}
           /p:PDBArtifactsBasePath='$(Build.ArtifactStagingDirectory)/PDBArtifacts/'
           /p:SymbolPublishingExclusionsFile='$(Build.SourcesDirectory)/eng/SymbolPublishingExclusionsFile.txt'
-          /p:PublishSpecialClrFiles=${{ parameters.symbolPublishingAdditionalParameters}}
+          ${{ parameters.symbolPublishingAdditionalParameters}}
           /p:MsdlToken=$(microsoft-symbol-server-pat)
           /p:SymWebToken=$(symweb-symbol-server-pat)
 

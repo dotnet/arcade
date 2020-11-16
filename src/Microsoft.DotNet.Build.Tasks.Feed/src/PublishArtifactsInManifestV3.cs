@@ -204,6 +204,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     var sourceFile = Path.Combine(BlobAssetsBasePath, Path.GetFileName(blobAsset.Id));
                     var destinationFile = Path.Combine(symbolTemporaryLocation, Path.GetFileName(blobAsset.Id));
                     File.Copy(sourceFile,destinationFile);
+                    Log.LogMessage(MessageImportance.High, $"Successfully copied file {sourceFile} to {destinationFile}.");
                 }
             }
         }
