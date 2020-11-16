@@ -116,8 +116,8 @@
       AkaMSTenant="$(AkaMSTenant)"
       AkaMSOwners="$(AkaMSOwners)"
       AkaMSCreatedBy="$(AkaMSCreatedBy)" 
-      MsdlToken="$(DotNetSymbolServerTokenMsdl)"
-      SymWebToken="$(DotNetSymbolServerTokenSymWeb)"
+      MsdlToken="$(MsdlToken)"
+      SymWebToken="$(SymWebToken)"
       SymbolPublishingExclusionsFile="$(SymbolPublishingExclusionsFile)"
       PdbArtifactsBasePath="$(PDBArtifactsBasePath)"
       PublishSpecialClrFiles="$(PublishSpecialClrFiles)"/>
