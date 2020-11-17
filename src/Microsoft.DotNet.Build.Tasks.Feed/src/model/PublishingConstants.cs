@@ -82,7 +82,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
         private const string FeedDotNet5InternalTransport = "https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet5-internal-transport/nuget/v3/index.json";
         private const string FeedDotNet5InternalSymbols = "https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet5-internal-symbols/nuget/v3/index.json";
 
-
         public static readonly List<TargetChannelConfig> ChannelInfos = new List<TargetChannelConfig>() {
             // ".NET 5 Dev",
             new TargetChannelConfig(
@@ -108,55 +107,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedForInstallers,
                 false),
 
-            // ".NET 5 Preview 3",
-            new TargetChannelConfig(
-                739,
-                PublishingInfraVersion.All,
-                "net5/preview3",
-                FeedDotNet5Shipping,
-                FeedDotNet5Transport,
-                FeedDotNet5Symbols,
-                FeedForChecksums,
-                FeedForInstallers,
-                false),
-
-            // ".NET 5 Preview 4",
-            new TargetChannelConfig(
-                856,
-                PublishingInfraVersion.All,
-                "net5/preview4",
-                FeedDotNet5Shipping,
-                FeedDotNet5Transport,
-                FeedDotNet5Symbols,
-                FeedForChecksums,
-                FeedForInstallers,
-                false),
-
-            // ".NET 5 Preview 5",
-            new TargetChannelConfig(
-                857,
-                PublishingInfraVersion.All,
-                "net5/preview5",
-                FeedDotNet5Shipping,
-                FeedDotNet5Transport,
-                FeedDotNet5Symbols,
-                FeedForChecksums,
-                FeedForInstallers,
-                false),
-
-            // ".NET 5 Preview 6",
-            new TargetChannelConfig(
-                1013,
-                PublishingInfraVersion.All,
-                "net5/preview6",
-                FeedDotNet5Shipping,
-                FeedDotNet5Transport,
-                FeedDotNet5Symbols,
-                FeedForChecksums,
-                FeedForInstallers,
-                false),
-
-            // ".NET 5 Preview 7",
             // ".NET 5" (public),
             new TargetChannelConfig(
                 1299,

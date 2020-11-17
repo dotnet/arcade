@@ -111,8 +111,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         private readonly Dictionary<TargetFeedContentType, HashSet<BlobArtifactModel>> BlobsByCategory = 
             new Dictionary<TargetFeedContentType, HashSet<BlobArtifactModel>>();
 
-        private readonly HashSet<BlobArtifactModel> SymbolsNupkgs = new HashSet<BlobArtifactModel>();
-
         private readonly ConcurrentDictionary<(int AssetId, string AssetLocation, AddAssetLocationToAssetAssetLocationType LocationType), ValueTuple> NewAssetLocations =
             new ConcurrentDictionary<(int AssetId, string AssetLocation, AddAssetLocationToAssetAssetLocationType LocationType), ValueTuple>();
 
@@ -352,12 +350,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         {
                                 if (feedConfig.PublishToMsdl)
                                 {
-                                    Log.LogMessage(MessageImportance.High, $"Symbol file {file} should publish to Msdl.");
+                                    Log.LogMessage(MessageImportance.High, $"Symbol file {file} should publish to {MsdlServerPath}.");
                                     publishFilesToMsdl.Add(file);
                                 }
                                 else
                                 {
-                                    Log.LogMessage(MessageImportance.High, $"Symbol file {file} should publish to Symweb.");
+                                    Log.LogMessage(MessageImportance.High, $"Symbol file {file} should publish to {SymwebServerPath}.");
                                     publishFilesToSymweb.Add(file);
                                 }
                         } 

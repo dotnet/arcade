@@ -195,6 +195,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             return !Log.HasLoggedErrors;
         }
 
+
+        /// <summary>
+        /// Copying symbol files to temporary location is required because the symUploader API needs read/write access to the files, since we publish blobs and symbols in parallel this will cause IO exceptions.
+        /// </summary>
+        /// <param name="buildModel"></param>
+        /// <param name="symbolTemporaryLocation"></param>
         private void CopySymbolFilesToTemporaryLocation(BuildModel buildModel, string symbolTemporaryLocation)
         {
             foreach (var blobAsset in buildModel.Artifacts.Blobs)
@@ -204,23 +210,34 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     var sourceFile = Path.Combine(BlobAssetsBasePath, Path.GetFileName(blobAsset.Id));
                     var destinationFile = Path.Combine(symbolTemporaryLocation, Path.GetFileName(blobAsset.Id));
                     File.Copy(sourceFile,destinationFile);
-                    Log.LogMessage(MessageImportance.High, $"Successfully copied file {sourceFile} to {destinationFile}.");
+                    Log.LogMessage(MessageImportance.Low, $"Successfully copied file {sourceFile} to {destinationFile}.");
                 }
             }
         }
 
+        /// <summary>
+        /// Delete the symbols files and the folder after publishing to Symbol server, this is part of cleanup
+        /// </summary>
+        /// <param name="temporarySymbolsLocation"></param>
         private void DeleteSymbolTemporaryFiles(string temporarySymbolsLocation)
         {
-            if (Directory.Exists(temporarySymbolsLocation))
+            try
             {
-                string[] fileEntries = Directory.GetFiles(temporarySymbolsLocation); 
-                foreach(var file in fileEntries)
+                if (Directory.Exists(temporarySymbolsLocation))
                 {
-                    File.Delete(file);
+                    string[] fileEntries = Directory.GetFiles(temporarySymbolsLocation);
+                    foreach (var file in fileEntries)
+                    {
+                        File.Delete(file);
+                    }
                 }
+                Directory.Delete(temporarySymbolsLocation);
+                Log.LogMessage(MessageImportance.High, "Successfully deleted the temporary symbols directory.");
             }
-            Directory.Delete(temporarySymbolsLocation);
-            Log.LogMessage(MessageImportance.High , "Successfully deleted the temporary symbols directory.");
+            catch (Exception ex)
+            {
+                Log.LogErrorFromException(ex);
+            }
         }
     }
 }

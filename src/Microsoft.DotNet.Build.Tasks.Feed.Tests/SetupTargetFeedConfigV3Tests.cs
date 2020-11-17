@@ -39,8 +39,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             TargetFeedContentType.Maven,
             TargetFeedContentType.VSIX,
             TargetFeedContentType.Badge,
-            TargetFeedContentType.Other,
-            TargetFeedContentType.Symbols
+            TargetFeedContentType.Other
         };
 
         private readonly ITestOutputHelper Output;
@@ -52,9 +51,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
 
         [Theory]
         [InlineData(false, false)]
- /*       [InlineData(false, true)]
+        [InlineData(false, true)]
         [InlineData(true, false)]
-        [InlineData(true, true)]*/
+        [InlineData(true, true)]
         public void StableFeeds(bool publishInstallersAndChecksums, bool isInternalBuild)
         {
             var expectedFeeds = new List<TargetFeedConfig>();
