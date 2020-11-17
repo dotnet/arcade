@@ -352,12 +352,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         {
                                 if (feedConfig.PublishToMsdl)
                                 {
-                                    Log.LogMessage(MessageImportance.High, $"\nSymbol file {file} should publish to Msdl.");
+                                    Log.LogMessage(MessageImportance.High, $"Symbol file {file} should publish to Msdl.");
                                     publishFilesToMsdl.Add(file);
                                 }
                                 else
                                 {
-                                    Log.LogMessage(MessageImportance.High, $"\nSymbol file {file} should publish to Symweb.");
+                                    Log.LogMessage(MessageImportance.High, $"Symbol file {file} should publish to Symweb.");
                                     publishFilesToSymweb.Add(file);
                                 }
                         } 
