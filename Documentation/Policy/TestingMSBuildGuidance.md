@@ -4,7 +4,7 @@ In an effort to improve the ability to test and validate MSBuild functionality, 
 
 - When possible move as much logic out of MSBuild proj files and into the C# tasks (or related classes) so that it can be unit tested.
 - Use mocks and dependency injection where applicable when writing unit tests for your feature code. If the code does not have an entry point to impelement the ASP.NET Core Dependency Injection framework, use the Setter Injection pattern. 
-- Implement scenario tests for MSBuild projects in Arcade Validation. Validate your changes by running a private build of Arcade in Arcade Validation. Include a link of the Arcade Validation run on your Arcade PR. 
+- Implement scenario tests for MSBuild projects in Arcade Validation. Validate your changes by [running a private build](#how-to-validate-a-private-build) of Arcade in Arcade Validation. Include a link of the Arcade Validation run on your Arcade PR. 
 
 ## How to Validate a Private Build
 
