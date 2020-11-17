@@ -9,7 +9,7 @@ In an effort to improve the ability to test and validate MSBuild functionality, 
 ## How to Validate a Private Build
 
 1. Run a build of your Arcade branch on the [arcade-official-ci](https://dnceng.visualstudio.com/internal/_build?definitionId=6) Azure DevOps Pipeline
-2. Promote your build to the "General Testing" Maestro channel. 
+2. [Promote your build](../Darc.md#add-build-to-channel) to the "General Testing" Maestro channel. 
 3. Create a branch of [Arcade Validation](https://github.com/dotnet/arcade-validation)
 4. Using darc, run `update-dependencies` ([update-dependencies documentation](../Darc.md#updating-dependencies-in-your-local-repository)) on your Arcade Validation branch to use the build of Arcade you just created in the previous steps. 
 5. Run a build of your Arcade Validation branch on the [dotnet-arcade-validation-official](https://dnceng.visualstudio.com/internal/_build?definitionId=282) to verify your changes. 
