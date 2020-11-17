@@ -71,7 +71,7 @@
     <PropertyGroup>
       <_OutputPathRoot>$(IntermediateOutputPath)output/</_OutputPathRoot>
       <_ArchiveFileName>$(ArchiveName)-$(Version)</_ArchiveFileName>
-      <_ArchiveFileName Condition="'$(RuntimeIdentifier)' != ''">$(ArchiveName)-$(RuntimeIdentifier)-$(Version)</_ArchiveFileName>
+      <_ArchiveFileName Condition="'$(RuntimeIdentifier)' != ''">$(ArchiveName)-$(Version)-$(RuntimeIdentifier)</_ArchiveFileName>
     </PropertyGroup>
     <MSBuild Projects="$(MSBuildProjectFullPath)"
              Targets="PublishToDisk"
