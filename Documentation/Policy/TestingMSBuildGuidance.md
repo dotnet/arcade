@@ -1,10 +1,16 @@
 # Guidance for Testing MSBuild functionality
 
-In an effort to improve the ability to test and validate MSBuild functionality, please follow this guidance when working in those areas: 
+We are currently working on ways to improve our testability of Arcade, including the MSBuild projects and tasks. As we implement functionality to make that easier for folks contributing to Arcade, here is some guidance for validating changes made to MSBuild functionality in the interim: 
 
 - Since it is known how to create mocks and work with dependency injection in C# code, please move as much logic out of MSBuild proj files and into the C# tasks (or related classes) so that it can be unit tested.
 - Use mocks and dependency injection where applicable when writing unit tests for the MSBuild tasks in C#. If the code does not have an entry point to implement the ASP.NET Core Dependency Injection framework, use the Setter Injection pattern. 
-- Implement scenario tests for MSBuild projects in Arcade Validation. Validate your changes by [running a private build](#how-to-validate-a-private-build) of Arcade in Arcade Validation. Include a link of the Arcade Validation run on your Arcade PR. 
+- Implement scenario tests for MSBuild projects in [Arcade Validation](https://github.com/dotnet/arcade-validation/). Validate your changes by [running a private build](#how-to-validate-a-private-build) of Arcade in Arcade Validation. Include a link of the Arcade Validation run on your Arcade PR. 
+
+## Long-Term Solutions
+
+- We are currently [investigating](https://github.com/dotnet/core-eng/issues/11271) how to unit tests MSBuild projects. 
+- We plan to [implement a process](https://github.com/dotnet/core-eng/issues/11273) that will run Arcade Validation as a part of Arcade PRs in the future. The guidance in this document is in place until that work is completed. 
+- We want to provide the ability to bootstrap dependency injection into MSBuild tasks through [inheritence](https://github.com/dotnet/arcade/issues/6580).
 
 ## How to Validate a Private Build
 
@@ -21,8 +27,3 @@ If you want to also validate your private build of Arcade using a repository oth
 2. Create a branch in the repository you wish to validate your private build of Arcade with. 
 3. Using darc, run `update-dependencies` ([update-dependencies documentation](../Darc.md#updating-dependencies-in-your-local-repository)) on your branch to use the build of Arcade you just created in the previous steps. 
 4. Build your project and run the project's unit tests locally, and/or build your branch with your project's Azure DevOps pipeline. Ensure that the build pipeline excutes any tests (unit, integration, scenario, et cetera). 
-
-## Notes
-
-- We are currently [investigating](https://github.com/dotnet/core-eng/issues/11271) how to unit tests MSBuild projects. 
-- We plan to [implement a process](https://github.com/dotnet/core-eng/issues/11273) that will run Arcade Validation as a part of Arcade PRs in the future. The guidance in this document is in place until that work is completed. 
