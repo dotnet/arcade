@@ -149,7 +149,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
 
             var actualFeeds = config.Setup();
 
-            AreEquivalent(expectedFeeds, actualFeeds).Should().BeTrue();
+            actualFeeds.Should().BeEquivalentTo(expectedFeeds);
         }
 
         [Theory]
@@ -248,7 +248,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
 
             var actualFeeds = config.Setup();
 
-            AreEquivalent(expectedFeeds, actualFeeds).Should().BeTrue();
+            actualFeeds.Should().BeEquivalentTo(expectedFeeds);
         }
 
         [Theory]
@@ -346,9 +346,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
 
             var actualFeeds = config.Setup();
 
-            AreEquivalent(expectedFeeds, actualFeeds).Should().BeTrue();
+            actualFeeds.Should().BeEquivalentTo(expectedFeeds);
         }
-    
+
         private bool AreEquivalent(List<TargetFeedConfig> expectedItems, List<TargetFeedConfig> actualItems) 
         {
             if (expectedItems.Count() != actualItems.Count())
