@@ -321,6 +321,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// <param name="symwebToken">Token to authenticate symweb</param>
         /// <param name="symbolPublishingExclusionsFile">Right now we do not add any files to this, so this is going to be null</param>
         /// <param name="temporarySymbolsLocation">Path to Symbol.nupkgs</param>
+        /// <param name="publishSpecialClrFiles">If true, the special coreclr module indexed files like DBI, DAC and SOS are published</param>
         /// <returns></returns>
         protected async Task HandleSymbolPublishingAsync (
             string pdbArtifactsBasePath,
@@ -328,82 +329,56 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             string symWebToken,
             string symbolPublishingExclusionsFile,
             string temporarySymbolsLocation,
-            bool PublishSpecialClrFiles)
+            bool publishSpecialClrFiles)
         {
 
             Log.LogMessage(MessageImportance.High, "\nPublishing Symbols to Symbol server: ");
-
-            List<string> publishFilesToMsdl = new List<string>();
-            List<string> publishFilesToSymweb = new List<string>();
 
             if (Directory.Exists(temporarySymbolsLocation))
             {
                 string[] fileEntries = Directory.GetFiles(temporarySymbolsLocation);
 
-                    var category = TargetFeedContentType.Symbols;
+                var category = TargetFeedContentType.Symbols;
+                var token = string.Empty;
+                var symbolServerPath = string.Empty;
 
-                    HashSet<TargetFeedConfig> feedConfigsForSymbols = FeedConfigs[category];
+                HashSet<TargetFeedConfig> feedConfigsForSymbols = FeedConfigs[category];
 
-                    foreach (var feedConfig in feedConfigsForSymbols)
-                    {
-                        foreach (var file in fileEntries)
-                        {
-                                if (feedConfig.PublishToMsdl)
-                                {
-                                    Log.LogMessage(MessageImportance.High, $"Symbol file {file} should publish to {MsdlServerPath}.");
-                                    publishFilesToMsdl.Add(file);
-                                }
-                                else
-                                {
-                                    Log.LogMessage(MessageImportance.High, $"Symbol file {file} should publish to {SymwebServerPath}.");
-                                    publishFilesToSymweb.Add(file);
-                                }
-                        } 
-                    IEnumerable<string> filesToSymbolServer = null;
-                    if (Directory.Exists(pdbArtifactsBasePath))
-                    {
-                        filesToSymbolServer =
-                            Directory.EnumerateFileSystemEntries(pdbArtifactsBasePath);
-                    }
+                if (feedConfigsForSymbols.Any(x => x.PublishToMsdl))
+                {
+                    token = msdlToken;
+                    symbolServerPath = MsdlServerPath;
+                }
+                else
+                {
+                    token = symWebToken;
+                    symbolServerPath = SymwebServerPath;
+                }
 
-                    if (publishFilesToMsdl.Count > 0)
-                    {
-                        Log.LogMessage(MessageImportance.High, "\nPublishing to MSDL :");
-                        await Task.Run(() => PublishSymbolsHelper.Publish(
-                            Log,
-                            MsdlServerPath,
-                            msdlToken,
-                            publishFilesToMsdl,
-                            filesToSymbolServer,
-                            null,
-                            3650,
-                            false,
-                            PublishSpecialClrFiles,
-                            null,
-                            false,
-                            false,
-                            true));
-                    }
+                IEnumerable<string> filesToSymbolServer = null;
+                if (Directory.Exists(pdbArtifactsBasePath))
+                {
+                    filesToSymbolServer =
+                        Directory.EnumerateFileSystemEntries(pdbArtifactsBasePath);
+                }
 
-                    if (publishFilesToSymweb.Count > 0)
-                    {
-                        Log.LogMessage(MessageImportance.High, "\nPublishing to Symweb :");
-                        await Task.Run(() => PublishSymbolsHelper.Publish(
-                            Log,
-                            SymwebServerPath,
-                            symWebToken,
-                            publishFilesToSymweb,
-                            filesToSymbolServer,
-                            null,
-                            3650,
-                            false,
-                            PublishSpecialClrFiles,
-                            null,
-                            false,
-                            false,
-                            true));
-                    }
-                    }
+                Log.LogMessage(MessageImportance.High, $"\nPublishing symbol packages to {symbolServerPath}:");
+                Log.LogMessage(MessageImportance.High, $"\nPerforming symbol publishing...\nSymbolServerPath : ${symbolServerPath} \nExpirationInDays : 3650 " );
+                await Task.Run(() => PublishSymbolsHelper.Publish(
+                    Log,
+                    symbolServerPath,
+                    token,
+                    fileEntries,
+                    filesToSymbolServer,
+                    null,
+                    3650,
+                    false,
+                    publishSpecialClrFiles,
+                    null,
+                    false,
+                    false,
+                    true));
+                Log.LogMessage(MessageImportance.High, "\nSuccessfully published to Symbol Server.");
             }
         }
 
@@ -524,7 +499,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
             await Task.WhenAll(publishTasks);
         }
-
 
         /// <summary>
         ///     Filter the blobs by the feed config information

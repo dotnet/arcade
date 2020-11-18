@@ -81,7 +81,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     return false;
                 }
 
-                string temporarySymbolsLocation = Path.GetFullPath(Path.Combine(BlobAssetsBasePath, @"..\", "tempDir"));
+                string temporarySymbolsLocation = Path.GetFullPath(Path.Combine(BlobAssetsBasePath, @"..\", "tempSymbols"));
 
                 if (!Directory.Exists(temporarySymbolsLocation))
                 {
@@ -197,12 +197,20 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
 
         /// <summary>
-        /// Copying symbol files to temporary location is required because the symUploader API needs read/write access to the files, since we publish blobs and symbols in parallel this will cause IO exceptions.
+        /// Copying symbol files to temporary location.
         /// </summary>
         /// <param name="buildModel"></param>
         /// <param name="symbolTemporaryLocation"></param>
         private void CopySymbolFilesToTemporaryLocation(BuildModel buildModel, string symbolTemporaryLocation)
         {
+            string[] fileEntries = Directory.GetFiles(symbolTemporaryLocation);
+            if (fileEntries.Length != 0)
+            {
+                foreach (var file in fileEntries)
+                {
+                    File.Delete(file);
+                }
+            }
             foreach (var blobAsset in buildModel.Artifacts.Blobs)
             {
                 if (blobAsset.Id.EndsWith(".symbols.nupkg", StringComparison.OrdinalIgnoreCase))
@@ -236,7 +244,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             }
             catch (Exception ex)
             {
-                Log.LogErrorFromException(ex);
+                Log.LogWarning(ex.Message);
             }
         }
     }

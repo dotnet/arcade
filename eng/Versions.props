@@ -79,6 +79,6 @@
     <MicrosoftDotNetMaestroTasksVersion>1.1.0-beta.20509.1</MicrosoftDotNetMaestroTasksVersion>
     <MicrosoftDotNetXHarnessCLIVersion>1.0.0-prerelease.20563.1</MicrosoftDotNetXHarnessCLIVersion>
     <MicrosoftSymbolUploaderBuildTaskVersion>1.1.156402</MicrosoftSymbolUploaderBuildTaskVersion>
-    <MicrosoftDotNetSymbolUploaderVerison>1.1.152002</MicrosoftDotNetSymbolUploaderVerison>
+    <MicrosoftDotNetSymbolUploaderVersion>1.1.152002</MicrosoftDotNetSymbolUploaderVersion>
   </PropertyGroup>
 </Project>
