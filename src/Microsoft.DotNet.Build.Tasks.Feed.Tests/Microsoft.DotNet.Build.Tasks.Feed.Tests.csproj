@@ -13,6 +13,7 @@
     <PackageReference Include="Azure.Core" Version="1.0.2.0" />
     <PackageReference Include="DotNet.SleetLib" Version="$(DotNetSleetLibVersion)" />
     <PackageReference Include="Azure.Storage.Blobs" Version="$(AzureStorageBlobsVersion)" />
+    <PackageReference Include="FluentAssertions" Version="$(FluentAssertionsVersion)" />
   </ItemGroup>
 
   <ItemGroup>

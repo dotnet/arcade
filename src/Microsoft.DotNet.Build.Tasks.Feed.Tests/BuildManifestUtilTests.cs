@@ -9,6 +9,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Xunit;
+using FluentAssertions;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
 {
@@ -37,11 +38,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         {
             var taskLoggingHelper = new Microsoft.Build.Utilities.TaskLoggingHelper(new StubTask());
 
-            Assert.Throws<ArgumentNullException>(() =>
+            Action act = () =>
                 BuildManifestUtil.CreateModelFromItems(null, null,
                 null, null, null, null, _testAzdoBuildId, null, _testAzdoRepoUri, _testBuildBranch, _testBuildCommit, false,
                 VersionTools.BuildManifest.Model.PublishingInfraVersion.All,
-                true, taskLoggingHelper));
+                true, taskLoggingHelper);
+            act.Should().Throw<ArgumentNullException>();
         }
 
         /// <summary>
@@ -98,87 +100,43 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 VersionTools.BuildManifest.Model.PublishingInfraVersion.All,
                 true, taskLoggingHelper);
 
-            Assert.False(taskLoggingHelper.HasLoggedErrors);
+            taskLoggingHelper.HasLoggedErrors.Should().BeFalse();
             // When Maestro sees a symbol package, it is supposed to re-do the symbol package path to
             // be assets/symbols/<file-name>
-            Assert.Collection(model.Artifacts.Blobs,
+            model.Artifacts.Blobs.Should().SatisfyRespectively(
                 blob =>
                 {
-                    Assert.Equal(bobSymbolsExpectedId, blob.Id);
-                    Assert.True(blob.NonShipping);
-                    Assert.Collection(blob.Attributes,
-                        attr =>
-                        {
-                            Assert.Equal("NonShipping", attr.Key);
-                            Assert.Equal("true", attr.Value);
-                        },
-                        attr => {
-                            Assert.Equal("Category", attr.Key);
-                            Assert.Equal("SMORKELER", attr.Value);
-                        },
-                        attr => {
-                            Assert.Equal("Id", attr.Key);
-                            Assert.Equal(bobSymbolsExpectedId, attr.Value);
-                        });
+                    blob.Id.Should().Be(bobSymbolsExpectedId);
+                    blob.NonShipping.Should().BeTrue();
+                    blob.Attributes.Should().Contain("NonShipping", "true");
+                    blob.Attributes.Should().Contain("Category", "SMORKELER");
+                    blob.Attributes.Should().Contain("Id", bobSymbolsExpectedId);
                 },
                 blob =>
                 {
-                    Assert.Equal(bopSnupkgExpectedId, blob.Id);
-                    Assert.False(blob.NonShipping);
-                    Assert.Collection(blob.Attributes,
-                        attr =>
-                        {
-                            Assert.Equal("NonShipping", attr.Key);
-                            Assert.Equal("false", attr.Value);
-                        },
-                        attr => {
-                            Assert.Equal("Category", attr.Key);
-                            Assert.Equal("SNORPKEG", attr.Value);
-                        },
-                        attr => {
-                            Assert.Equal("Id", attr.Key);
-                            Assert.Equal(bopSnupkgExpectedId, attr.Value);
-                        });
+                    blob.Id.Should().Be(bopSnupkgExpectedId);
+                    blob.NonShipping.Should().BeFalse();
+                    blob.Attributes.Should().Contain("NonShipping", "false");
+                    blob.Attributes.Should().Contain("Category", "SNORPKEG");
+                    blob.Attributes.Should().Contain("Id", bopSnupkgExpectedId);
                 },
                 blob =>
                 {
-                    Assert.Equal(zipArtifact, blob.Id);
-                    Assert.False(blob.NonShipping);
-                    Assert.Collection(blob.Attributes,
-                        attr =>
-                        {
-                            Assert.Equal("ARandomBitOfMAD", attr.Key);
-                            Assert.Equal(string.Empty, attr.Value);
-                        },
-                        attr =>
-                        {
-                            Assert.Equal("Id", attr.Key);
-                            Assert.Equal(zipArtifact, attr.Value);
-                        });
+                    blob.Id.Should().Be(zipArtifact);
+                    blob.NonShipping.Should().BeFalse();
+                    blob.Attributes.Should().Contain("ARandomBitOfMAD", string.Empty);
+                    blob.Attributes.Should().Contain("Id", zipArtifact);
                 });
 
-            Assert.Collection(model.Artifacts.Packages,
+            model.Artifacts.Packages.Should().SatisfyRespectively(
                 package =>
                 {
-                    Assert.Equal("test-package-a", package.Id);
-                    Assert.Equal("1.0.0", package.Version);
-                    Assert.False(package.NonShipping);
-                    Assert.Collection(package.Attributes,
-                        attr =>
-                        {
-                            Assert.Equal("ShouldWePushDaNorpKeg", attr.Key);
-                            Assert.Equal("YES", attr.Value);
-                        },
-                        attr =>
-                        {
-                            Assert.Equal("Id", attr.Key);
-                            Assert.Equal("test-package-a", attr.Value);
-                        },
-                        attr =>
-                        {
-                            Assert.Equal("Version", attr.Key);
-                            Assert.Equal("1.0.0", attr.Value);
-                        });
+                    package.Id.Should().Be("test-package-a");
+                    package.Version.Should().Be("1.0.0");
+                    package.NonShipping.Should().BeFalse();
+                    package.Attributes.Should().Contain("ShouldWePushDaNorpKeg", "YES");
+                    package.Attributes.Should().Contain("Id", "test-package-a");
+                    package.Attributes.Should().Contain("Version", "1.0.0");
                 });
         }
 
@@ -204,38 +162,18 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 VersionTools.BuildManifest.Model.PublishingInfraVersion.All,
                 true, taskLoggingHelper);
 
-            Assert.Empty(model.Artifacts.Blobs);
-            Assert.Collection(model.Artifacts.Packages,
+            model.Artifacts.Blobs.Should().BeEmpty();
+            model.Artifacts.Packages.Should().SatisfyRespectively(
                 package =>
                 {
-                    Assert.Equal("test-package-a", package.Id);
-                    Assert.Equal("1.0.0", package.Version);
+                    package.Id.Should().Be("test-package-a");
+                    package.Version.Should().Be("1.0.0");
                     // We used "nonshipping=true" in our artifact metadata
-                    Assert.True(package.NonShipping);
-                    Assert.True(package.Attributes.ContainsKey("category"));
-                    Assert.Collection(package.Attributes,
-                        attr =>
-                        {
-                            // Should have preserved the case on this
-                            Assert.Equal("nonshipping", attr.Key);
-                            Assert.Equal("true", attr.Value);
-                        },
-                        attr =>
-                        {
-                            // Should have preserved the case on this
-                            Assert.Equal("Category", attr.Key);
-                            Assert.Equal("CASE", attr.Value);
-                        },
-                        attr =>
-                        {
-                            Assert.Equal("Id", attr.Key);
-                            Assert.Equal("test-package-a", attr.Value);
-                        },
-                        attr =>
-                        {
-                            Assert.Equal("Version", attr.Key);
-                            Assert.Equal("1.0.0", attr.Value);
-                        });
+                    package.NonShipping.Should().BeTrue();
+                    package.Attributes.Should().Contain("nonshipping", "true");
+                    package.Attributes.Should().Contain("Category", "CASE");
+                    package.Attributes.Should().Contain("Id", "test-package-a");
+                    package.Attributes.Should().Contain("Version", "1.0.0");
                 });
         }
 
@@ -266,8 +204,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 VersionTools.BuildManifest.Model.PublishingInfraVersion.All,
                 true, taskLoggingHelper);
 
-            Assert.True(taskLoggingHelper.HasLoggedErrors);
-            Assert.Contains(buildEngine.BuildErrorEvents, e => e.Message.Equals($"Missing 'RelativeBlobPath' property on blob {zipArtifact}"));
+            taskLoggingHelper.HasLoggedErrors.Should().BeTrue();
+            buildEngine.BuildErrorEvents.Should().Contain(e => e.Message.Equals($"Missing 'RelativeBlobPath' property on blob {zipArtifact}"));
         }
 
         /// <summary>
@@ -295,8 +233,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 true, taskLoggingHelper);
 
             // Should have logged an error that an initial location was not present.
-            Assert.True(taskLoggingHelper.HasLoggedErrors);
-            Assert.Contains(buildEngine.BuildErrorEvents, e => e.Message.Equals("Missing 'location' property from ManifestBuildData"));
+            taskLoggingHelper.HasLoggedErrors.Should().BeTrue();
+            buildEngine.BuildErrorEvents.Should().Contain(e => e.Message.Equals("Missing 'location' property from ManifestBuildData"));
         }
 
         /// <summary>
@@ -332,11 +270,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 true, taskLoggingHelper);
 
             // Should have logged an error that an initial location was not present.
-            Assert.False(taskLoggingHelper.HasLoggedErrors);
+            taskLoggingHelper.HasLoggedErrors.Should().BeFalse();
 
             // Check that the build model has the initial assets location
-            Assert.True(model.Identity.Attributes.ContainsKey(attributeName) &&
-                model.Identity.Attributes[attributeName] == _testInitialLocation);
+            model.Identity.Attributes.Should().Contain(attributeName, _testInitialLocation);
         }
 
         #endregion
@@ -462,132 +399,88 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 // There will be some reordering of the attributes here (they are written to the xml file in
                 // a defined order for some properties, then ordered by case).
                 // As a result, this comparison isn't exactly the same as some other tests.
-                Assert.False(taskLoggingHelper.HasLoggedErrors);
-                Assert.Equal(_testAzdoRepoUri, modelFromItems.Identity.Name);
-                Assert.Equal(_testAzdoBuildId, modelFromItems.Identity.BuildId);
-                Assert.Equal(_testBuildCommit, modelFromItems.Identity.Commit);
-                Assert.Equal(VersionTools.BuildManifest.Model.PublishingInfraVersion.Next, modelFromItems.Identity.PublishingVersion);
-                Assert.Equal("false", modelFromItems.Identity.IsReleaseOnlyPackageVersion, ignoreCase: true);
-                Assert.Equal("true", modelFromItems.Identity.IsStable, ignoreCase: true);
-                Assert.Collection(modelFromFile.Artifacts.Blobs,
+                taskLoggingHelper.HasLoggedErrors.Should().BeFalse();
+                modelFromItems.Identity.Name.Should().Be(_testAzdoRepoUri);
+                modelFromItems.Identity.BuildId.Should().Be(_testAzdoBuildId);
+                modelFromItems.Identity.Commit.Should().Be(_testBuildCommit);
+                modelFromItems.Identity.PublishingVersion.Should().Be(VersionTools.BuildManifest.Model.PublishingInfraVersion.Next);
+                modelFromItems.Identity.IsReleaseOnlyPackageVersion.Should().Be("False");
+                modelFromItems.Identity.IsStable.Should().Be("True");
+                modelFromFile.Artifacts.Blobs.Should().SatisfyRespectively(
                     blob =>
                     {
-                        Assert.Equal(bobSymbolsExpectedId, blob.Id);
-                        Assert.True(blob.NonShipping);
-                        Assert.Collection(blob.Attributes,
-                            attr => {
-                                Assert.Equal("Id", attr.Key);
-                                Assert.Equal(bobSymbolsExpectedId, attr.Value);
-                            },
-                            attr => {
-                                Assert.Equal("Category", attr.Key);
-                                Assert.Equal("SMORKELER", attr.Value);
-                            },
-                            attr =>
-                            {
-                                Assert.Equal("NonShipping", attr.Key);
-                                Assert.Equal("true", attr.Value);
-                            });
+                        blob.Id.Should().Be(bobSymbolsExpectedId);
+                        blob.NonShipping.Should().BeTrue();
+                        blob.Attributes.Should().Contain("Id", bobSymbolsExpectedId);
+                        blob.Attributes.Should().Contain("Category", "SMORKELER");
+                        blob.Attributes.Should().Contain("NonShipping", "true");
                     },
                     blob =>
                     {
-                        Assert.Equal(bopSnupkgExpectedId, blob.Id);
-                        Assert.False(blob.NonShipping);
-                        Assert.Collection(blob.Attributes,
-                            attr => {
-                                Assert.Equal("Id", attr.Key);
-                                Assert.Equal(bopSnupkgExpectedId, attr.Value);
-                            },
-                            attr => {
-                                Assert.Equal("Category", attr.Key);
-                                Assert.Equal("SNORPKEG", attr.Value);
-                            },
-                            attr =>
-                            {
-                                Assert.Equal("NonShipping", attr.Key);
-                                Assert.Equal("false", attr.Value);
-                            });
+                        blob.Id.Should().Be(bopSnupkgExpectedId);
+                        blob.NonShipping.Should().BeFalse();
+                        blob.Attributes.Should().Contain("Id", bopSnupkgExpectedId);
+                        blob.Attributes.Should().Contain("Category", "SNORPKEG");
+                        blob.Attributes.Should().Contain("NonShipping", "false");
                     },
                     blob =>
                     {
-                        Assert.Equal(zipArtifact, blob.Id);
-                        Assert.False(blob.NonShipping);
-                        Assert.Collection(blob.Attributes,
-                            attr =>
-                            {
-                                Assert.Equal("Id", attr.Key);
-                                Assert.Equal(zipArtifact, attr.Value);
-                            },
-                            attr =>
-                            {
-                                Assert.Equal("ARandomBitOfMAD", attr.Key);
-                                Assert.Equal(string.Empty, attr.Value);
-                            });
+                        blob.Id.Should().Be(zipArtifact);
+                        blob.NonShipping.Should().BeFalse();
+                        blob.Attributes.Should().Contain("Id", zipArtifact);
+                        blob.Attributes.Should().Contain("ARandomBitOfMAD", string.Empty);
                     });
 
-                Assert.Collection(modelFromFile.Artifacts.Packages,
+                modelFromFile.Artifacts.Packages.Should().SatisfyRespectively(
                     package =>
                     {
-                        Assert.Equal("test-package-a", package.Id);
-                        Assert.Equal("1.0.0", package.Version);
-                        Assert.False(package.NonShipping);
-                        Assert.Collection(package.Attributes,
-                            attr =>
-                            {
-                                Assert.Equal("Id", attr.Key);
-                                Assert.Equal("test-package-a", attr.Value);
-                            },
-                            attr =>
-                            {
-                                Assert.Equal("Version", attr.Key);
-                                Assert.Equal("1.0.0", attr.Value);
-                            },
-                            attr =>
-                            {
-                                Assert.Equal("ShouldWePushDaNorpKeg", attr.Key);
-                                Assert.Equal("YES", attr.Value);
-                            });
+                        package.Id.Should().Be("test-package-a");
+                        package.Version.Should().Be("1.0.0");
+                        package.NonShipping.Should().BeFalse();
+                        package.Attributes.Should().Contain("Id", "test-package-a");
+                        package.Attributes.Should().Contain("Version", "1.0.0");
+                        package.Attributes.Should().Contain("ShouldWePushDaNorpKeg", "YES");
                     });
 
-                Assert.NotNull(modelFromFile.SigningInformation);
-                Assert.Collection(modelFromFile.SigningInformation.ItemsToSign,
+                modelFromFile.SigningInformation.Should().NotBeNull();
+                modelFromFile.SigningInformation.ItemsToSign.Should().SatisfyRespectively(
                     item =>
                     {
-                        Assert.Equal("bing.zip", item.Include);
+                        item.Include.Should().Be("bing.zip");
                     },
                     item =>
                     {
-                        Assert.Equal("test-package-a.nupkg", item.Include);
+                        item.Include.Should().Be("test-package-a.nupkg");
                     });
-                Assert.Collection(modelFromFile.SigningInformation.StrongNameSignInfo,
+                modelFromFile.SigningInformation.StrongNameSignInfo.Should().SatisfyRespectively(
                     item =>
                     {
-                        Assert.Equal("test-package-a.nupkg", item.Include);
-                        Assert.Equal("IHasACert", item.CertificateName);
-                        Assert.Equal("BLORG", item.PublicKeyToken);
+                        item.Include.Should().Be("test-package-a.nupkg");
+                        item.CertificateName.Should().Be("IHasACert");
+                        item.PublicKeyToken.Should().Be("BLORG");
                     });
-                Assert.Collection(modelFromFile.SigningInformation.FileSignInfo,
+                modelFromFile.SigningInformation.FileSignInfo.Should().SatisfyRespectively(
                     item =>
                     {
-                        Assert.Equal("test-package-a.nupkg", item.Include);
-                        Assert.Equal("IHasACert2", item.CertificateName);
+                        item.Include.Should().Be("test-package-a.nupkg");
+                        item.CertificateName.Should().Be("IHasACert2");
                     });
-                Assert.Collection(modelFromFile.SigningInformation.CertificatesSignInfo,
+                modelFromFile.SigningInformation.CertificatesSignInfo.Should().SatisfyRespectively(
                     item =>
                     {
-                        Assert.Equal("MyCert", item.Include);
-                        Assert.Equal("false", item.DualSigningAllowed);
+                        item.Include.Should().Be("MyCert");
+                        item.DualSigningAllowed.Should().Be("false");
                     },
                     item =>
                     {
-                        Assert.Equal("MyOtherCert", item.Include);
-                        Assert.Equal("true", item.DualSigningAllowed);
+                        item.Include.Should().Be("MyOtherCert");
+                        item.DualSigningAllowed.Should().Be("true");
                     });
-                Assert.Collection(modelFromFile.SigningInformation.FileExtensionSignInfo,
+                modelFromFile.SigningInformation.FileExtensionSignInfo.Should().SatisfyRespectively(
                     item =>
                     {
-                        Assert.Equal(".dll", item.Include);
-                        Assert.Equal("MyCert", item.CertificateName);
+                        item.Include.Should().Be(".dll");
+                        item.CertificateName.Should().Be("MyCert");
                     });
             }
             finally
@@ -626,13 +519,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 VersionTools.BuildManifest.Model.PublishingInfraVersion.All,
                 true, taskLoggingHelper);
 
-            Assert.False(taskLoggingHelper.HasLoggedErrors);
-            Assert.NotNull(model.SigningInformation);
-            Assert.Empty(model.SigningInformation.ItemsToSign);
-            Assert.Empty(model.SigningInformation.CertificatesSignInfo);
-            Assert.Empty(model.SigningInformation.FileExtensionSignInfo);
-            Assert.Empty(model.SigningInformation.FileSignInfo);
-            Assert.Empty(model.SigningInformation.StrongNameSignInfo);
+            taskLoggingHelper.HasLoggedErrors.Should().BeFalse();
+            model.SigningInformation.Should().NotBeNull();
+            model.SigningInformation.ItemsToSign.Should().BeEmpty();
+            model.SigningInformation.CertificatesSignInfo.Should().BeEmpty();
+            model.SigningInformation.FileExtensionSignInfo.Should().BeEmpty();
+            model.SigningInformation.FileSignInfo.Should().BeEmpty();
+            model.SigningInformation.StrongNameSignInfo.Should().BeEmpty();
         }
 
         /// <summary>
@@ -703,46 +596,46 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 VersionTools.BuildManifest.Model.PublishingInfraVersion.All,
                 true, taskLoggingHelper);
 
-            Assert.False(taskLoggingHelper.HasLoggedErrors);
-            Assert.NotNull(model.SigningInformation);
-            Assert.Collection(model.SigningInformation.ItemsToSign,
+            taskLoggingHelper.HasLoggedErrors.Should().BeFalse();
+            model.SigningInformation.Should().NotBeNull();
+            model.SigningInformation.ItemsToSign.Should().SatisfyRespectively(
                 item =>
                 {
-                    Assert.Equal("test-package-a.nupkg", item.Include);
+                    item.Include.Should().Be("test-package-a.nupkg");
                 },
                 item =>
                 {
-                    Assert.Equal("zip.zip", item.Include);
+                    item.Include.Should().Be("zip.zip");
                 });
-            Assert.Collection(model.SigningInformation.StrongNameSignInfo,
+            model.SigningInformation.StrongNameSignInfo.Should().SatisfyRespectively(
                 item =>
                 {
-                    Assert.Equal("test-package-a.nupkg", item.Include);
-                    Assert.Equal("IHasACert", item.CertificateName);
-                    Assert.Equal("BLORG", item.PublicKeyToken);
+                    item.Include.Should().Be("test-package-a.nupkg");
+                    item.CertificateName.Should().Be("IHasACert");
+                    item.PublicKeyToken.Should().Be("BLORG");
                 });
-            Assert.Collection(model.SigningInformation.FileSignInfo,
+            model.SigningInformation.FileSignInfo.Should().SatisfyRespectively(
                 item =>
                 {
-                    Assert.Equal("test-package-a.nupkg", item.Include);
-                    Assert.Equal("IHasACert2", item.CertificateName);
+                    item.Include.Should().Be("test-package-a.nupkg");
+                    item.CertificateName.Should().Be("IHasACert2");
                 });
-            Assert.Collection(model.SigningInformation.CertificatesSignInfo,
+            model.SigningInformation.CertificatesSignInfo.Should().SatisfyRespectively(
                 item =>
                 {
-                    Assert.Equal("MyCert", item.Include);
-                    Assert.Equal("false", item.DualSigningAllowed);
+                    item.Include.Should().Be("MyCert");
+                    item.DualSigningAllowed.Should().Be("false");
                 },
                 item =>
                 {
-                    Assert.Equal("MyOtherCert", item.Include);
-                    Assert.Equal("true", item.DualSigningAllowed);
+                    item.Include.Should().Be("MyOtherCert");
+                    item.DualSigningAllowed.Should().Be("true");
                 });
-            Assert.Collection(model.SigningInformation.FileExtensionSignInfo,
+            model.SigningInformation.FileExtensionSignInfo.Should().SatisfyRespectively(
                 item =>
                 {
-                    Assert.Equal(".dll", item.Include);
-                    Assert.Equal("MyCert", item.CertificateName);
+                    item.Include.Should().Be(".dll");
+                    item.CertificateName.Should().Be("MyCert");
                 });
         }
 
@@ -779,8 +672,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 VersionTools.BuildManifest.Model.PublishingInfraVersion.All,
                 true, taskLoggingHelper);
 
-            Assert.True(taskLoggingHelper.HasLoggedErrors);
-            Assert.Contains(buildEngine.BuildErrorEvents, e => e.Message.Equals($"Item to sign '{bogusNupkgToSign}' was not found in the artifacts"));
+            taskLoggingHelper.HasLoggedErrors.Should().BeTrue();
+            buildEngine.BuildErrorEvents.Should().Contain(e => e.Message.Equals($"Item to sign '{bogusNupkgToSign}' was not found in the artifacts"));
         }
 
         #endregion
