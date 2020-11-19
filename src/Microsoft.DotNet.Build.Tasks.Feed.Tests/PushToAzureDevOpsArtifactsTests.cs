@@ -2,8 +2,10 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using FluentAssertions;
+using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Microsoft.DotNet.Build.Tasks.Feed.Tests.TestDoubles;
+using Microsoft.DotNet.VersionTools.Automation;
 using Microsoft.DotNet.VersionTools.BuildManifest.Model;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -14,6 +16,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Text;
 //using Xunit;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
@@ -21,6 +24,35 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
     [TestFixture]
     public class PushToAzureDevOpsArtifactsTests
     {
+        // We're using a fake file system so all of our paths can be fake, too
+        const string TargetManifestPath = @"C:\manifests\TestManifest.xml";
+        const string PackageA = @"C:\packages\test-package-a.nupkg";
+        const string PackageB = @"C:\packages\test-package-b.nupkg";
+        const string SampleManifest = @"C:\manifests\SampleManifest.xml";
+
+        static TaskItem[] TaskItems = new TaskItem[]
+        {
+            new TaskItem(PackageA, new Dictionary<string, string>
+            {
+                { "RelativeBlobPath", PackageA },
+                { "IsShipping", "false" },
+                { "ManifestArtifactData", "Nonshipping=true" },
+            }),
+            new TaskItem(PackageB, new Dictionary<string, string>
+            {
+                { "RelativeBlobPath", PackageB },
+                { "IsShipping", "true" },
+                { "ManifestArtifactData", "Nonshipping=false" },
+            }),
+            new TaskItem(SampleManifest, new Dictionary<string, string>
+            {
+                { "IsShipping", "false" },
+                { "RelativeBlobPath", SampleManifest },
+                { "ManifestArtifactData", "Nonshipping=false" },
+                { "PublishFlatContainer", "true" },
+            }),
+        };
+
         [Test]
         public void HasRecordedPublishingVersion()
         {
@@ -78,56 +110,84 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         }
 
         [Test]
-        public void Test()
+        public void ProducesBasicManifest()
         {
-            string targetManifestPath = Path.Combine(Path.GetTempPath(), $"TestManifest-{Guid.NewGuid()}.xml");
-            string packageA = Path.Combine(Directory.GetCurrentDirectory(), "TestInputs/Nupkgs/test-package-a.zip");
-            string packageB = Path.Combine(Directory.GetCurrentDirectory(), "TestInputs/Nupkgs/test-package-b.zip");
-            string manifest2 = "TestInputs/Manifests/SampleV2.xml";
-
-            TaskItem[] taskItems = new TaskItem[]
-            {
-                new TaskItem(packageA, new Dictionary<string, string>
-                {
-                    { "IsShipping", "false" },
-                    { "ManifestArtifactData", "Nonshipping=true" },
-                }),
-                new TaskItem(packageB, new Dictionary<string, string>
-                {
-                    { "IsShipping", "true" },
-                    { "ManifestArtifactData", "Nonshipping=false" },
-                }),
-                new TaskItem(manifest2, new Dictionary<string, string>
-                {
-                    { "IsShipping", "false" },
-                    { "RelativeBlobPath", manifest2 },
-                    { "ManifestArtifactData", "Nonshipping=false" },
-                    { "PublishFlatContainer", "true" },
-                }),
-            };
-
             var buildEngine = new MockBuildEngine();
-            var task = new PushToAzureDevOpsArtifacts
+            ServiceProvider mockNupkgInfoProvider = new ServiceCollection()
+                .AddLogging()
+                .AddSingleton<NupkgInfo>(f => { return new MockNupkgInfo(); })
+                .BuildServiceProvider();
+
+            string expectedManifest = $@"<Build PublishingVersion=""2"" Name=""https://dnceng@dev.azure.com/dnceng/internal/test-repo"" BuildId=""12345.6"" Branch=""/refs/heads/branch"" Commit=""1234567890abcdef"" InitialAssetsLocation=""cloud"" IsReleaseOnlyPackageVersion=""False"" IsStable=""True"">
+  <Package Id=""{Path.GetFileNameWithoutExtension(PackageA)}"" Version=""{MockNupkgInfo.MockNupkgVersion}"" Nonshipping=""true"" />
+  <Package Id=""{Path.GetFileNameWithoutExtension(PackageB)}"" Version=""{MockNupkgInfo.MockNupkgVersion}"" Nonshipping=""false"" />
+  <Blob Id=""{SampleManifest}"" Nonshipping=""false"" />
+</Build>";
+
+            PushToAzureDevOpsArtifacts task = ConstructPushToAzureDevOpsArtifactsTask(buildEngine, mockNupkgInfoProvider);
+
+            task.Execute().Should().BeTrue();
+
+            var manifest = task.FileSystem.FileReadAllText(TargetManifestPath);
+            manifest.Should().Be(expectedManifest);
+        }
+
+        [Test]
+        public void PublishFlatContainerManifest()
+        {
+            var buildEngine = new MockBuildEngine();
+            ServiceProvider mockNupkgInfoProvider = new ServiceCollection()
+                .AddLogging()
+                .AddSingleton<NupkgInfo>(f => { return new MockNupkgInfo(); })
+                .BuildServiceProvider();
+
+            PushToAzureDevOpsArtifacts task = ConstructPushToAzureDevOpsArtifactsTask(buildEngine, mockNupkgInfoProvider);
+            task.PublishFlatContainer = true;
+
+            string expectedManifest = $@"<Build PublishingVersion=""2"" Name=""https://dnceng@dev.azure.com/dnceng/internal/test-repo"" BuildId=""12345.6"" Branch=""/refs/heads/branch"" Commit=""1234567890abcdef"" InitialAssetsLocation=""cloud"" IsReleaseOnlyPackageVersion=""False"" IsStable=""True"">
+  <Blob Id=""{SampleManifest}"" Nonshipping=""false"" />
+  <Blob Id=""{PackageA}"" Nonshipping=""true"" />
+  <Blob Id=""{PackageB}"" Nonshipping=""false"" />
+</Build>";
+
+            task.Execute().Should().BeTrue();
+
+            var manifest = task.FileSystem.FileReadAllText(TargetManifestPath);
+            manifest.Should().Be(expectedManifest);
+        }
+
+        private static PushToAzureDevOpsArtifacts ConstructPushToAzureDevOpsArtifactsTask(IBuildEngine buildEngine, ServiceProvider nupkgInfoProvider)
+        {
+            return new PushToAzureDevOpsArtifacts
             {
-                FileSystem = MockFileSystem.CreateFromTaskItems(taskItems),
                 BuildEngine = buildEngine,
-                AssetManifestPath = targetManifestPath,
+                NupkgInfoProvider = nupkgInfoProvider,
+                FileSystem = MockFileSystem.CreateFromTaskItems(TaskItems),
+                AssetManifestPath = TargetManifestPath,
                 AzureDevOpsBuildId = 123456,
                 AzureDevOpsCollectionUri = "https://dev.azure.com/dnceng/",
                 AzureDevOpsProject = "internal",
                 IsStableBuild = true,
                 IsReleaseOnlyPackageVersion = false,
-                ItemsToPush = taskItems,
+                ItemsToPush = TaskItems,
                 ManifestBuildData = new string[] { $"InitialAssetsLocation=cloud" },
                 ManifestBranch = "/refs/heads/branch",
                 ManifestBuildId = "12345.6",
                 ManifestCommit = "1234567890abcdef",
                 ManifestRepoUri = "https://dnceng@dev.azure.com/dnceng/internal/test-repo",
             };
+        }
+    }
 
-            Assert.That(task.Execute());
+    internal class MockNupkgInfo : NupkgInfo
+    {
+        public static string MockNupkgVersion = "6.0.492";
 
-            var manifest = task.FileSystem.FileReadAllText(targetManifestPath);
+        public override void Initialize(string path)
+        {
+            Id = Path.GetFileNameWithoutExtension(path);
+            Version = MockNupkgVersion;
+            Prerelease = "10f2c";
         }
     }
 
@@ -145,23 +205,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             return mockFileSystem;
         }
 
-        //public struct FakeFile
-        //{
-        //    public FileInfo FileInfo;
-        //    public string FileContent;
-        //}
-
-        private Dictionary<string, string> _fakeFileSystem = new Dictionary<string, string>();
+        private Dictionary<string, byte[]> _fakeFileSystem = new Dictionary<string, byte[]>();
 
         public DirectoryInfo DirectoryCreateDirectory(string path)
         {
-            DirectoryInfo realDirectoryInfo = new DirectoryInfo(path);
-            Mock<DirectoryInfo> directoryInfo = new Mock<DirectoryInfo>(MockBehavior.Strict);
-
-            directoryInfo.SetupGet(d => d.FullName).Returns(path);
-            directoryInfo.SetupGet(d => d.Name).Returns(Path.GetDirectoryName(directoryInfo.Object.FullName));
-
-            return directoryInfo.Object;
+            return null;
         }
 
         public bool FileExists(string path)
@@ -169,27 +217,24 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             return _fakeFileSystem.ContainsKey(path);
         }
 
+        public Stream FileOpenRead(string path)
+        {
+            return new MemoryStream(_fakeFileSystem[path]);
+        }
+
         public string FileReadAllText(string path)
         {
-            if (!_fakeFileSystem.TryGetValue(path, out string content))
+            if (!_fakeFileSystem.TryGetValue(path, out byte[] content))
             {
                 throw new FileNotFoundException();
             }
 
-            return content;
+            return Encoding.UTF8.GetString(content);
         }
 
         public void FileWriteAllText(string path, string content)
         {
-            //Mock<FileInfo> fileInfo = new Mock<FileInfo>(MockBehavior.Loose);
-            //fileInfo.SetupGet(f => f.FullName).Returns(path);
-            //fileInfo.SetupGet(f => f.Length).Returns(content.Length);
-            //fileInfo.SetupGet(f => f.Name).Returns(Path.GetFileName(path));
-            //fileInfo.SetupGet(f => f.CreationTime).Returns(DateTime.Now);
-            //fileInfo.SetupGet(f => f.DirectoryName).Returns(Path.GetDirectoryName(path));
-            //fileInfo.SetupGet(f => f.Extension).Returns(Path.GetExtension(path));
-
-            _fakeFileSystem.Add(path, content);
+            _fakeFileSystem.Add(path, Encoding.UTF8.GetBytes(content));
         }
     }
 

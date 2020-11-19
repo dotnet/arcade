@@ -3,6 +3,7 @@
 
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
+using Microsoft.DotNet.VersionTools.Automation;
 using Microsoft.DotNet.VersionTools.BuildManifest.Model;
 using Microsoft.Extensions.DependencyInjection;
 using System;
@@ -57,6 +58,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         public bool IsReleaseOnlyPackageVersion { get; set; }
 
         public IFileSystem FileSystem { get; set; } = new RealFileSystem();
+
+        public ServiceProvider NupkgInfoProvider { get; set; } = NupkgInfo.GetDefaultProvider();
 
         /// <summary>
         /// Which version should the build manifest be tagged with.
@@ -160,7 +163,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                                 $"##vso[artifact.upload containerfolder=BlobArtifacts;artifactname=BlobArtifacts]{blobItem.ItemSpec}");
                         }
 
-                        packageArtifacts = packageItems.Select(BuildManifestUtil.CreatePackageArtifactModel);
+                        packageArtifacts = packageItems.Select(i => BuildManifestUtil.CreatePackageArtifactModel(i, NupkgInfoProvider));
                         blobArtifacts = blobItems.Select(BuildManifestUtil.CreateBlobArtifactModel).Where(blob => blob != null);
                     }
 
@@ -212,6 +215,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         // File
         public bool FileExists(string path);
+        public Stream FileOpenRead(string path);
         public string FileReadAllText(string path);
         public void FileWriteAllText(string path, string content);
     }
@@ -226,6 +230,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         public bool FileExists(string path)
         {
             return File.Exists(path);
+        }
+
+        public Stream FileOpenRead(string path)
+        {
+            return File.OpenRead(path);
         }
 
         public string FileReadAllText(string path)

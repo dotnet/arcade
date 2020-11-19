@@ -6,6 +6,7 @@ using Microsoft.Build.Utilities;
 using Microsoft.DotNet.Build.Tasks.Feed.Model;
 using Microsoft.DotNet.VersionTools.Automation;
 using Microsoft.DotNet.VersionTools.BuildManifest.Model;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -53,7 +54,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             log.LogMessage(MessageImportance.High, $"Creating build manifest file '{filePath}'...");
             string dirPath = Path.GetDirectoryName(filePath);
 
-            Directory.CreateDirectory(dirPath);
+            fileSystem.DirectoryCreateDirectory(dirPath);
 
             fileSystem.FileWriteAllText(filePath, buildModel.ToXml().ToString());
         }
@@ -76,6 +77,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             bool isStableBuild,
             PublishingInfraVersion publishingVersion,
             bool isReleaseOnlyPackageVersion,
+            ServiceProvider nupkgInfoProvider,
             TaskLoggingHelper log)
         {
             if (artifacts == null)
@@ -98,7 +100,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                 if (artifact.ItemSpec.EndsWith(".nupkg", StringComparison.OrdinalIgnoreCase) && !isSymbolsPackage)
                 {
-                    packageArtifacts.Add(BuildManifestUtil.CreatePackageArtifactModel(artifact));
+                    packageArtifacts.Add(BuildManifestUtil.CreatePackageArtifactModel(artifact, nupkgInfoProvider));
                 }
                 else
                 {
@@ -261,9 +263,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             }
         }
 
-        public static PackageArtifactModel CreatePackageArtifactModel(ITaskItem item)
+        public static PackageArtifactModel CreatePackageArtifactModel(ITaskItem item, ServiceProvider serviceProvider)
         {
-            NupkgInfo info = new NupkgInfo(item.ItemSpec);
+            NupkgInfo info = serviceProvider.GetService<NupkgInfo>();
+            info.Initialize(item.ItemSpec);
 
             return new PackageArtifactModel
             {

@@ -186,7 +186,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         {
             return artifacts.Concat(items
                 .Where(i => !string.Equals(i.GetMetadata("ExcludeFromManifest"), "true", StringComparison.OrdinalIgnoreCase))
-                .Select(BuildManifestUtil.CreatePackageArtifactModel));
+                .Select(i => BuildManifestUtil.CreatePackageArtifactModel(i, VersionTools.Automation.NupkgInfo.GetDefaultProvider())));
         }
 
         private static IEnumerable<BlobArtifactModel> ConcatBlobArtifacts(
