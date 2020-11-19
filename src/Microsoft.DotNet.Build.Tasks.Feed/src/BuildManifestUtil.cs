@@ -29,6 +29,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             bool isStableBuild,
             PublishingInfraVersion publishingVersion,
             bool isReleaseOnlyPackageVersion,
+            IFileSystem fileSystem,
             SigningInformationModel signingInformationModel = null)
         {
             CreateModel(
@@ -44,17 +45,17 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 isReleaseOnlyPackageVersion,
                 log,
                 signingInformationModel: signingInformationModel)
-                .WriteAsXml(assetManifestPath, log);
+                .WriteAsXml(assetManifestPath, log, fileSystem);
         }
 
-        public static void WriteAsXml(this BuildModel buildModel, string filePath, TaskLoggingHelper log)
+        public static void WriteAsXml(this BuildModel buildModel, string filePath, TaskLoggingHelper log, IFileSystem fileSystem)
         {
             log.LogMessage(MessageImportance.High, $"Creating build manifest file '{filePath}'...");
             string dirPath = Path.GetDirectoryName(filePath);
 
             Directory.CreateDirectory(dirPath);
 
-            File.WriteAllText(filePath, buildModel.ToXml().ToString());
+            fileSystem.FileWriteAllText(filePath, buildModel.ToXml().ToString());
         }
 
         public static BuildModel CreateModelFromItems(

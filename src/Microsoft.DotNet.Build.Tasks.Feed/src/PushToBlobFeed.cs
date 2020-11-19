@@ -169,7 +169,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     ManifestBuildData,
                     IsStableBuild,
                     PublishingInfraVersion.Legacy,
-                    IsReleaseOnlyPackageVersion);
+                    IsReleaseOnlyPackageVersion,
+                    new RealFileSystem());
             }
             catch (Exception e)
             {

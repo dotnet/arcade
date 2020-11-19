@@ -2,7 +2,9 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
 using Microsoft.DotNet.VersionTools.BuildManifest.Model;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -54,6 +56,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public bool IsReleaseOnlyPackageVersion { get; set; }
 
+        public IFileSystem FileSystem { get; set; } = new RealFileSystem();
+
         /// <summary>
         /// Which version should the build manifest be tagged with.
         /// By default he latest version is used.
@@ -91,7 +95,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             .Select(BuildManifestUtil.CreateBlobArtifactModel);
                         foreach (var blobItem in itemsToPushNoExcludes)
                         {
-                            if (!File.Exists(blobItem.ItemSpec))
+                            if (!FileSystem.FileExists(blobItem.ItemSpec))
                             {
                                 Log.LogError($"Could not find file {blobItem.ItemSpec}.");
                                 continue;
@@ -134,7 +138,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                         foreach (var packagePath in packageItems)
                         {
-                            if (!File.Exists(packagePath.ItemSpec))
+                            if (!FileSystem.FileExists(packagePath.ItemSpec))
                             {
                                 Log.LogError($"Could not find file {packagePath.ItemSpec}.");
                                 continue;
@@ -146,7 +150,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                         foreach (var blobItem in blobItems)
                         {
-                            if (!File.Exists(blobItem.ItemSpec))
+                            if (!FileSystem.FileExists(blobItem.ItemSpec))
                             {
                                 Log.LogError($"Could not find file {blobItem.ItemSpec}.");
                                 continue;
@@ -185,6 +189,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         IsStableBuild,
                         targetPublishingVersion,
                         IsReleaseOnlyPackageVersion,
+                        FileSystem,
                         signingInformationModel: signingInformationModel);
 
                     Log.LogMessage(MessageImportance.High,
@@ -197,6 +202,40 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             }
 
             return !Log.HasLoggedErrors;
+        }
+    }
+
+    public interface IFileSystem
+    {
+        // Directory
+        public DirectoryInfo DirectoryCreateDirectory(string path);
+
+        // File
+        public bool FileExists(string path);
+        public string FileReadAllText(string path);
+        public void FileWriteAllText(string path, string content);
+    }
+
+    public class RealFileSystem : IFileSystem
+    {
+        public DirectoryInfo DirectoryCreateDirectory(string path)
+        {
+            return Directory.CreateDirectory(path);
+        }
+
+        public bool FileExists(string path)
+        {
+            return File.Exists(path);
+        }
+
+        public string FileReadAllText(string path)
+        {
+            return File.ReadAllText(path);
+        }
+
+        public void FileWriteAllText(string path, string content)
+        {
+            File.WriteAllText(path, content);
         }
     }
 }
