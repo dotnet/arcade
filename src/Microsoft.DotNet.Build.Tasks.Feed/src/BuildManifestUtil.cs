@@ -160,7 +160,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             {
                 foreach (var signInfo in strongNameSignInfo)
                 {
-                    var attributes = signInfo.CloneCustomMetadata() as Dictionary<string, string>;
+                    var attributes = signInfo.CloneCustomMetadata() as IDictionary<string, string>;
                     parsedStrongNameSignInfo.Add(new StrongNameSignInfoModel { Include = Path.GetFileName(signInfo.ItemSpec), CertificateName = attributes["CertificateName"], PublicKeyToken = attributes["PublicKeyToken"] });
                 }
             }
@@ -168,7 +168,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             {
                 foreach (var signInfo in fileSignInfo)
                 {
-                    var attributes = signInfo.CloneCustomMetadata() as Dictionary<string, string>;
+                    var attributes = signInfo.CloneCustomMetadata() as IDictionary<string, string>;
                     parsedFileSignInfo.Add(new FileSignInfoModel { Include = signInfo.ItemSpec, CertificateName = attributes["CertificateName"] });
                 }
             }
@@ -176,7 +176,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             {
                 foreach (var signInfo in fileExtensionSignInfo)
                 {
-                    var attributes = signInfo.CloneCustomMetadata() as Dictionary<string, string>;
+                    var attributes = signInfo.CloneCustomMetadata() as IDictionary<string, string>;
                     parsedFileExtensionSignInfoModel.Add(new FileExtensionSignInfoModel { Include = signInfo.ItemSpec, CertificateName = attributes["CertificateName"] });
                 }
             }
@@ -184,7 +184,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             {
                 foreach (var signInfo in certificatesSignInfo)
                 {
-                    var attributes = signInfo.CloneCustomMetadata() as Dictionary<string, string>;
+                    var attributes = signInfo.CloneCustomMetadata() as IDictionary<string, string>;
                     parsedCertificatesSignInfoModel.Add(new CertificatesSignInfoModel { Include = signInfo.ItemSpec, DualSigningAllowed = attributes["DualSigningAllowed"] });
                 }
             }

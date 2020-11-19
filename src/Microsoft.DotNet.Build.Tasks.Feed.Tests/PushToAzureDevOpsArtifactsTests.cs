@@ -156,6 +156,145 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             manifest.Should().Be(expectedManifest);
         }
 
+        [Test]
+        public void IsNotStableBuildPath()
+        {
+            var buildEngine = new MockBuildEngine();
+            ServiceProvider mockNupkgInfoProvider = new ServiceCollection()
+                .AddLogging()
+                .AddSingleton<NupkgInfo>(f => { return new MockNupkgInfo(); })
+                .BuildServiceProvider();
+
+            PushToAzureDevOpsArtifacts task = ConstructPushToAzureDevOpsArtifactsTask(buildEngine, mockNupkgInfoProvider);
+            task.IsStableBuild = false;
+
+            string expectedManifest = $@"<Build PublishingVersion=""2"" Name=""https://dnceng@dev.azure.com/dnceng/internal/test-repo"" BuildId=""12345.6"" Branch=""/refs/heads/branch"" Commit=""1234567890abcdef"" InitialAssetsLocation=""cloud"" IsReleaseOnlyPackageVersion=""False"" IsStable=""False"">
+  <Package Id=""{Path.GetFileNameWithoutExtension(PackageA)}"" Version=""{MockNupkgInfo.MockNupkgVersion}"" Nonshipping=""true"" />
+  <Package Id=""{Path.GetFileNameWithoutExtension(PackageB)}"" Version=""{MockNupkgInfo.MockNupkgVersion}"" Nonshipping=""false"" />
+  <Blob Id=""{SampleManifest}"" Nonshipping=""false"" />
+</Build>";
+
+            task.Execute().Should().BeTrue();
+
+            var manifest = task.FileSystem.FileReadAllText(task.AssetManifestPath);
+            manifest.Should().Be(expectedManifest);
+        }
+
+        [Test]
+        public void IsReleaseOnlyPackageVersionPath()
+        {
+            var buildEngine = new MockBuildEngine();
+            ServiceProvider mockNupkgInfoProvider = new ServiceCollection()
+                .AddLogging()
+                .AddSingleton<NupkgInfo>(f => { return new MockNupkgInfo(); })
+                .BuildServiceProvider();
+
+            PushToAzureDevOpsArtifacts task = ConstructPushToAzureDevOpsArtifactsTask(buildEngine, mockNupkgInfoProvider);
+            task.IsReleaseOnlyPackageVersion = true;
+
+            string expectedManifest = $@"<Build PublishingVersion=""2"" Name=""https://dnceng@dev.azure.com/dnceng/internal/test-repo"" BuildId=""12345.6"" Branch=""/refs/heads/branch"" Commit=""1234567890abcdef"" InitialAssetsLocation=""cloud"" IsReleaseOnlyPackageVersion=""True"" IsStable=""True"">
+  <Package Id=""{Path.GetFileNameWithoutExtension(PackageA)}"" Version=""{MockNupkgInfo.MockNupkgVersion}"" Nonshipping=""true"" />
+  <Package Id=""{Path.GetFileNameWithoutExtension(PackageB)}"" Version=""{MockNupkgInfo.MockNupkgVersion}"" Nonshipping=""false"" />
+  <Blob Id=""{SampleManifest}"" Nonshipping=""false"" />
+</Build>";
+
+            task.Execute().Should().BeTrue();
+
+            var manifest = task.FileSystem.FileReadAllText(task.AssetManifestPath);
+            manifest.Should().Be(expectedManifest);
+        }
+
+        [Test]
+        public void SigningInfoInManifest()
+        {
+            var buildEngine = new MockBuildEngine();
+            ServiceProvider mockNupkgInfoProvider = new ServiceCollection()
+                .AddLogging()
+                .AddSingleton<NupkgInfo>(f => { return new MockNupkgInfo(); })
+                .BuildServiceProvider();
+
+            PushToAzureDevOpsArtifacts task = ConstructPushToAzureDevOpsArtifactsTask(buildEngine, mockNupkgInfoProvider);
+            task.FileExtensionSignInfo = new ITaskItem[]
+            {
+                new TaskItem(".dll", new Dictionary<string, string>
+                {
+                    { "CertificateName", "TestSigningCert" }
+                }),
+                new TaskItem(".nupkg", new Dictionary<string, string>
+                {
+                    { "CertificateName", "TestNupkg" }
+                }),
+                new TaskItem(".zip", new Dictionary<string, string>
+                {
+                    { "CertificateName", "None" }
+                }),
+            };
+            task.FileSignInfo = new ITaskItem[]
+            {
+                new TaskItem("Best.dll", new Dictionary<string, string>
+                {
+                    { "CertificateName", "BestCert" }
+                }),
+                new TaskItem("Worst.dll", new Dictionary<string, string>
+                {
+                    { "CertificateName", "WorstCert" }
+                }),
+            };
+            task.CertificatesSignInfo = new ITaskItem[]
+            {
+                new TaskItem("BestCert", new Dictionary<string, string>
+                {
+                    { "DualSigningAllowed", "true" }
+                }),
+                new TaskItem("WorstCert", new Dictionary<string, string>
+                {
+                    { "DualSigningAllowed", "false" }
+                }),
+            };
+            task.StrongNameSignInfo = new ITaskItem[]
+            {
+                new TaskItem("VeryCoolStrongName", new Dictionary<string, string>
+                {
+                    { "PublicKeyToken", "123456789ABCDEF00" },
+                    { "CertificateName", "BestCert" }
+                }),
+                new TaskItem("VeryTrashStrongName", new Dictionary<string, string>
+                {
+                    { "PublicKeyToken", "00FEDCBA987654321" },
+                    { "CertificateName", "WorstCert" }
+                }),
+            };
+            task.ItemsToSign = new ITaskItem[]
+            {
+                new TaskItem(PackageA),
+                new TaskItem(PackageB),
+            };
+
+            string expectedManifest = $@"<Build PublishingVersion=""2"" Name=""https://dnceng@dev.azure.com/dnceng/internal/test-repo"" BuildId=""12345.6"" Branch=""/refs/heads/branch"" Commit=""1234567890abcdef"" InitialAssetsLocation=""cloud"" IsReleaseOnlyPackageVersion=""False"" IsStable=""True"">
+  <Package Id=""{Path.GetFileNameWithoutExtension(PackageA)}"" Version=""{MockNupkgInfo.MockNupkgVersion}"" Nonshipping=""true"" />
+  <Package Id=""{Path.GetFileNameWithoutExtension(PackageB)}"" Version=""{MockNupkgInfo.MockNupkgVersion}"" Nonshipping=""false"" />
+  <Blob Id=""{SampleManifest}"" Nonshipping=""false"" />
+  <SigningInformation AzureDevOpsCollectionUri=""https://dev.azure.com/dnceng/"" AzureDevOpsProject=""internal"" AzureDevOpsBuildId=""123456"">
+    <FileExtensionSignInfo Include="".dll"" CertificateName=""TestSigningCert"" />
+    <FileExtensionSignInfo Include="".nupkg"" CertificateName=""TestNupkg"" />
+    <FileExtensionSignInfo Include="".zip"" CertificateName=""None"" />
+    <FileSignInfo Include=""Best.dll"" CertificateName=""BestCert"" />
+    <FileSignInfo Include=""Worst.dll"" CertificateName=""WorstCert"" />
+    <CertificatesSignInfo Include=""BestCert"" DualSigningAllowed=""true"" />
+    <CertificatesSignInfo Include=""WorstCert"" DualSigningAllowed=""false"" />
+    <ItemsToSign Include=""test-package-a.nupkg"" />
+    <ItemsToSign Include=""test-package-b.nupkg"" />
+    <StrongNameSignInfo Include=""VeryCoolStrongName"" PublicKeyToken=""123456789ABCDEF00"" CertificateName=""BestCert"" />
+    <StrongNameSignInfo Include=""VeryTrashStrongName"" PublicKeyToken=""00FEDCBA987654321"" CertificateName=""WorstCert"" />
+  </SigningInformation>
+</Build>";
+
+            task.Execute().Should().BeTrue();
+
+            var manifest = task.FileSystem.FileReadAllText(task.AssetManifestPath);
+            manifest.Should().Be(expectedManifest);
+        }
+
         private static PushToAzureDevOpsArtifacts ConstructPushToAzureDevOpsArtifactsTask(IBuildEngine buildEngine, ServiceProvider nupkgInfoProvider)
         {
             return new PushToAzureDevOpsArtifacts
@@ -234,6 +373,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
 
         public void FileWriteAllText(string path, string content)
         {
+            new FileInfo(path); // confirm path is a valid file path
             _fakeFileSystem.Add(path, Encoding.UTF8.GetBytes(content));
         }
     }
