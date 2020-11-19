@@ -7,7 +7,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests.TestDoubles
 {
     public class StubTask : ITask
     {
-        public IBuildEngine BuildEngine { get; set; } = new MockBuildEngine();
+        public StubTask(IBuildEngine buildEngine)
+        {
+            BuildEngine = buildEngine;
+        }
+
+        public StubTask() : this(new MockBuildEngine()) { }
+
+        public IBuildEngine BuildEngine { get; set; }
         public ITaskHost HostObject { get; set; }
 
         public bool Execute()

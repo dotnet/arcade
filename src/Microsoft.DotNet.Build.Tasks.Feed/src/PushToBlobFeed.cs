@@ -188,13 +188,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 .Select(BuildManifestUtil.CreatePackageArtifactModel));
         }
 
-        private static IEnumerable<BlobArtifactModel> ConcatBlobArtifacts(
+        private IEnumerable<BlobArtifactModel> ConcatBlobArtifacts(
             IEnumerable<BlobArtifactModel> artifacts,
             IEnumerable<ITaskItem> items)
         {
             return artifacts.Concat(items
                 .Where(i => !string.Equals(i.GetMetadata("ExcludeFromManifest"), "true", StringComparison.OrdinalIgnoreCase))
-                .Select(BuildManifestUtil.CreateBlobArtifactModel)
+                .Select(i => BuildManifestUtil.CreateBlobArtifactModel(i, Log))
                 .Where(blob => blob != null));
         }
     }
