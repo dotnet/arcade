@@ -355,16 +355,15 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     symbolServerPath = SymwebServerPath;
                 }
 
-                string[] filesToSymbolServer = new string[] {null};
+                IEnumerable<string> filesToSymbolServer = null;
                 if (Directory.Exists(pdbArtifactsBasePath))
                 {
-                    filesToSymbolServer = 
-                        Directory.GetFiles(pdbArtifactsBasePath);
+                    filesToSymbolServer =
+                        Directory.EnumerateFileSystemEntries(pdbArtifactsBasePath);
                 }
 
                 builder.Append($"\nPublishing symbol packages to {symbolServerPath}:");
-                builder.Append($"\nPerforming symbol publishing...\nSymbolServerPath : ${symbolServerPath} \nExpirationInDays : 3650 \nConvertPortablePdbsToWindowsPdb : false \ndryRun: false" +
-                               $" \nTotal number of symbol files : {fileEntries.Length} \nTotal number of dll and pdb files : {filesToSymbolServer.Length}");
+                builder.Append($"\nPerforming symbol publishing...\nSymbolServerPath : ${symbolServerPath} \nExpirationInDays : 3650 \nConvertPortablePdbsToWindowsPdb : false \ndryRun: false \nTotal number of symbol files : {fileEntries.Length} ");
                 await Task.Run(() => PublishSymbolsHelper.Publish(
                     Log,
                     symbolServerPath,
