@@ -331,8 +331,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             string temporarySymbolsLocation,
             bool publishSpecialClrFiles)
         {
-
-            Log.LogMessage(MessageImportance.High, "\nPublishing Symbols to Symbol server: ");
+            StringBuilder builder = new StringBuilder();
+            builder.Append("\nPublishing Symbols to Symbol server: ");
 
             if (Directory.Exists(temporarySymbolsLocation))
             {
@@ -362,8 +362,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         Directory.EnumerateFileSystemEntries(pdbArtifactsBasePath);
                 }
 
-                Log.LogMessage(MessageImportance.High, $"\nPublishing symbol packages to {symbolServerPath}:");
-                Log.LogMessage(MessageImportance.High, $"\nPerforming symbol publishing...\nSymbolServerPath : ${symbolServerPath} \nExpirationInDays : 3650 " );
+                builder.Append($"\nPublishing symbol packages to {symbolServerPath}:");
+                builder.Append($"\nPerforming symbol publishing...\nSymbolServerPath : ${symbolServerPath} \nExpirationInDays : 3650 \nConvertPortablePdbsToWindowsPdb : false \ndryRun: false \nTotal number of symbol files : {fileEntries.Length} ");
                 await Task.Run(() => PublishSymbolsHelper.Publish(
                     Log,
                     symbolServerPath,
@@ -378,7 +378,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     false,
                     false,
                     true));
-                Log.LogMessage(MessageImportance.High, "\nSuccessfully published to Symbol Server.");
+                builder.Append("\nSuccessfully published to Symbol Server.");
+                Log.LogMessage(MessageImportance.High, builder.ToString());
             }
         }
 
