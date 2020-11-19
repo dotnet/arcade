@@ -1,6 +1,7 @@
 <Project>
   <ItemGroup>
     <HelixCorrelationPayload Include="$(MSBuildThisFileDirectory)\reporter" IncludeDirectoryName="true"/>
+    <HelixProperties Include="AzurePipelinesTestRunId" Value="$(TestRunId)" />
   </ItemGroup>
 
   <PropertyGroup>

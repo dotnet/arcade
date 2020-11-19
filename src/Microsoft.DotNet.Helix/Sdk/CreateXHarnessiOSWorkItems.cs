@@ -4,7 +4,6 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.Build.Framework;
 
@@ -40,18 +39,6 @@ namespace Microsoft.DotNet.Helix.Sdk
             if (!IsPosixShell)
             {
                 Log.LogError("IsPosixShell was specified as false for an iOS work item; these can only run on MacOS devices currently.");
-                return false;
-            }
-
-            if (string.IsNullOrEmpty(XcodeVersion))
-            {
-                Log.LogError("No Xcode version was specified.");
-                return false;
-            }
-
-            if (!Regex.IsMatch(XcodeVersion, "[0-9]+\\.[0-9]+"))
-            {
-                Log.LogError($"Xcode version '{XcodeVersion}' was in an invalid format. Expected format is [major].[minor] format, e.g. 11.4.");
                 return false;
             }
 
@@ -164,8 +151,8 @@ namespace Microsoft.DotNet.Helix.Sdk
                                         $"--targets \"{targets}\" " +
                                         $"--timeout {testTimeout.TotalSeconds} " +
                                         $"--launch-timeout {launchTimeout.TotalSeconds} " +
-                                         "--xharness-cli-path \"$XHARNESS_CLI_PATH\" " +
-                                        $"--xcode-version {XcodeVersion}" +
+                                         "--xharness-cli-path \"$XHARNESS_CLI_PATH\"" +
+                                        (!string.IsNullOrEmpty(XcodeVersion) ? $" --xcode-version \"{XcodeVersion}\"" : string.Empty) +
                                         (!string.IsNullOrEmpty(AppArguments) ? $" --app-arguments \"{AppArguments}\"" : string.Empty);
 
             Log.LogMessage(MessageImportance.Low, $"Generated XHarness command: {xharnessRunCommand}");

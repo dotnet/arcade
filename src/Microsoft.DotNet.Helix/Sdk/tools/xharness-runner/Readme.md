@@ -103,7 +103,7 @@ You can configure the execution further via MSBuild properties:
 
 ```xml
 <PropertyGroup>
-  <!-- Optional: Specific version of Xcode to use -->
+  <!-- Optional: Specific version of Xcode to use. If omitted, xcode-select is used to determine the version -->
   <XHarnessXcodeVersion>11.4</XHarnessXcodeVersion>
 </PropertyGroup>
 ```
