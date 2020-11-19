@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Xunit;
 using Xunit.Abstractions;
+using FluentAssertions;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
 {
@@ -148,7 +149,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
 
             var actualFeeds = config.Setup();
 
-            Assert.True(AreEquivalent(expectedFeeds, actualFeeds));
+            actualFeeds.Should().BeEquivalentTo(expectedFeeds);
         }
 
         [Theory]
@@ -247,7 +248,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
 
             var actualFeeds = config.Setup();
 
-            Assert.True(AreEquivalent(expectedFeeds, actualFeeds));
+            actualFeeds.Should().BeEquivalentTo(expectedFeeds);
         }
 
         [Theory]
@@ -345,9 +346,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
 
             var actualFeeds = config.Setup();
 
-            Assert.True(AreEquivalent(expectedFeeds, actualFeeds));
+            actualFeeds.Should().BeEquivalentTo(expectedFeeds);
         }
-    
+
         private bool AreEquivalent(List<TargetFeedConfig> expectedItems, List<TargetFeedConfig> actualItems) 
         {
             if (expectedItems.Count() != actualItems.Count())
