@@ -466,12 +466,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     item =>
                     {
                         item.Include.Should().Be("MyCert");
-                        item.DualSigningAllowed.Should().Be("false");
+                        item.DualSigningAllowed.Should().Be(false);
                     },
                     item =>
                     {
                         item.Include.Should().Be("MyOtherCert");
-                        item.DualSigningAllowed.Should().Be("true");
+                        item.DualSigningAllowed.Should().Be(true);
                     });
                 modelFromFile.SigningInformation.FileExtensionSignInfo.Should().SatisfyRespectively(
                     item =>
@@ -619,12 +619,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 item =>
                 {
                     item.Include.Should().Be("MyCert");
-                    item.DualSigningAllowed.Should().Be("false");
+                    item.DualSigningAllowed.Should().Be(false);
                 },
                 item =>
                 {
                     item.Include.Should().Be("MyOtherCert");
-                    item.DualSigningAllowed.Should().Be("true");
+                    item.DualSigningAllowed.Should().Be(true);
                 });
             model.SigningInformation.FileExtensionSignInfo.Should().SatisfyRespectively(
                 item =>
