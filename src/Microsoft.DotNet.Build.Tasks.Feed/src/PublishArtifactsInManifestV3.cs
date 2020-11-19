@@ -88,7 +88,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     Directory.CreateDirectory(temporarySymbolsLocation);
                 }
                 SplitArtifactsInCategories(BuildModel);
-
+                //Copying symbol files to temporary location is required because the symUploader API needs read/write access to the files,
+                //since we publish blobs and symbols in parallel this will cause IO exceptions.
                 CopySymbolFilesToTemporaryLocation(BuildModel, temporarySymbolsLocation);
                 
                 if (Log.HasLoggedErrors)
