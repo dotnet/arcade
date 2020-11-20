@@ -143,8 +143,8 @@ namespace Microsoft.DotNet.SignTool
                 {
                     string engineFileName = $"{Path.Combine(workingDirectory, file.FileName)}{SignToolConstants.MsiEngineExtension}";
                     _log.LogMessage(MessageImportance.Normal, $"Extracting engine from {file.FullPath}");
-                    int exitCode = RunWixTool("insignia.exe", $"-ib {file.FullPath} -o {engineFileName}", workingDirectory, _signTool.WixToolsPath);
-                    if(exitCode != 0)
+                    if (!RunWixTool("insignia.exe", $"-ib {file.FullPath} -o {engineFileName}",
+                        workingDirectory, _signTool.WixToolsPath, _log))
                     {
                         _log.LogError($"Failed to extract engine from {file.FullPath}");
                         return false;
@@ -165,15 +165,21 @@ namespace Microsoft.DotNet.SignTool
                 foreach (var engine in engines)
                 {
                     _log.LogMessage(MessageImportance.Normal, $"Attaching engine {engine.Key} to {engine.Value.FullPath}");
-                    int exitCode = RunWixTool("insignia.exe", $"-ab {engine.Key} {engine.Value.FullPath} -o {engine.Value.FullPath}", workingDirectory, _signTool.WixToolsPath);
 
-                    // cleanup engines (they fail signing verification if they stay in the drop
-                    File.Delete(engine.Key);
-
-                    if (exitCode != 0)
+                    try
                     {
-                        _log.LogError($"Failed to attach engine to {engine.Value.FullPath}");
-                        return false;
+                        if (!RunWixTool("insignia.exe",
+                            $"-ab {engine.Key} {engine.Value.FullPath} -o {engine.Value.FullPath}", workingDirectory,
+                            _signTool.WixToolsPath, _log))
+                        {
+                            _log.LogError($"Failed to attach engine to {engine.Value.FullPath}");
+                            return false;
+                        }
+                    }
+                    finally
+                    {
+                        // cleanup engines (they fail signing verification if they stay in the drop
+                        File.Delete(engine.Key);
                     }
                 }
                 return true;
@@ -291,12 +297,25 @@ namespace Microsoft.DotNet.SignTool
             return true;
         }
 
-        internal static int RunWixTool(string toolName, string arguments, string workingDirectory, string wixToolsPath)
+        internal static bool RunWixTool(string toolName, string arguments, string workingDirectory, string wixToolsPath, TaskLoggingHelper log)
         {
+            if (wixToolsPath == null)
+            {
+                log.LogError("WixToolsPath must be defined to run WiX tooling. Wixpacks are used to produce signed msi's during post-build signing. If this repostiory is using in-build signing, remove '*.wixpack.zip' from ItemsToSign.");
+                return false;
+            }
+
+            if (!Directory.Exists(wixToolsPath))
+            {
+                log.LogError($"WixToolsPath '{wixToolsPath}' not found.");
+                return false;
+            }
+
             if (!Directory.Exists(workingDirectory))
             {
                 Directory.CreateDirectory(workingDirectory);
             }
+
             var processStartInfo = new ProcessStartInfo()
             {
                 FileName = "cmd.exe",
@@ -306,16 +325,15 @@ namespace Microsoft.DotNet.SignTool
                 RedirectStandardOutput = true,
                 RedirectStandardError = true
             };
-            if (Directory.Exists(wixToolsPath))
-            {
-                string path = processStartInfo.EnvironmentVariables["PATH"];
-                path = $"{path};{wixToolsPath}";
-                processStartInfo.EnvironmentVariables.Remove("PATH");
-                processStartInfo.EnvironmentVariables.Add("PATH", path);
-            }
+
+            string path = processStartInfo.EnvironmentVariables["PATH"];
+            path = $"{path};{wixToolsPath}";
+            processStartInfo.EnvironmentVariables.Remove("PATH");
+            processStartInfo.EnvironmentVariables.Add("PATH", path);
+
             var process = Process.Start(processStartInfo);
             process.WaitForExit();
-            return process.ExitCode;
+            return process.ExitCode == 0;
         }
 
         private bool CopyFiles()

@@ -8,14 +8,10 @@ using Microsoft.DotNet.Build.Tasks.Feed.Tests.TestDoubles;
 using Microsoft.DotNet.VersionTools.Automation;
 using Microsoft.DotNet.VersionTools.BuildManifest.Model;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
-using Moq;
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.IO.Compression;
-using System.Linq;
 using System.Text;
 //using Xunit;
 
@@ -56,7 +52,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         [Test]
         public void HasRecordedPublishingVersion()
         {
-            var targetManifiestPath = $"{Path.GetTempPath()}TestManifest-{Guid.NewGuid()}.xml";
+            var targetManifestPath = $"{Path.GetTempPath()}TestManifest-{Guid.NewGuid()}.xml";
             var buildId = "1.2.3";
             var initialAssetsLocation = "cloud";
             var isStable = false;
@@ -72,18 +68,23 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 ManifestBuildId = buildId,
                 IsReleaseOnlyPackageVersion = isReleaseOnlyPackageVersion,
                 ManifestBuildData = new string[] { $"InitialAssetsLocation={initialAssetsLocation}" },
-                AssetManifestPath = targetManifiestPath
+                AssetManifestPath = targetManifestPath
             };
 
             task.Execute();
 
+<<<<<<< HEAD
             Assert.AreEqual(expectedManifestContent, File.ReadAllText(targetManifiestPath));
+=======
+            var outputManifestContent = File.ReadAllText(targetManifestPath);
+            outputManifestContent.Should().Be(expectedManifestContent);
+>>>>>>> master
         }
 
         [Test]
         public void UsesCustomPublishingVersion()
         {
-            var targetManifiestPath = $"{Path.GetTempPath()}TestManifest-{Guid.NewGuid()}.xml";
+            var targetManifestPath = $"{Path.GetTempPath()}TestManifest-{Guid.NewGuid()}.xml";
             var buildId = "1.2.3";
             var initialAssetsLocation = "cloud";
             var isStable = false;
@@ -101,11 +102,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 ManifestBuildId = buildId,
                 ManifestBuildData = new string[] { $"InitialAssetsLocation={initialAssetsLocation}" },
                 PublishingVersion = publishingInfraVersion,
-                AssetManifestPath = targetManifiestPath
+                AssetManifestPath = targetManifestPath
             };
 
             task.Execute();
 
+<<<<<<< HEAD
             Assert.AreEqual(expectedManifestContent, File.ReadAllText(targetManifiestPath));
         }
 
@@ -327,6 +329,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             Id = Path.GetFileNameWithoutExtension(path);
             Version = MockNupkgVersion;
             Prerelease = "10f2c";
+=======
+            var outputManifestContent = File.ReadAllText(targetManifestPath);
+            outputManifestContent.Should().Be(expectedManifestContent);
+>>>>>>> master
         }
     }
 
