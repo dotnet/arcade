@@ -71,7 +71,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 AssetManifestPath = targetManifestPath
             };
 
-            task.Execute();
+            task.Execute().Should().BeTrue();
 
             File.ReadAllText(targetManifestPath).Should().Be(expectedManifestContent);
         }
@@ -100,7 +100,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 AssetManifestPath = targetManifestPath
             };
 
-            task.Execute();
+            task.Execute().Should().BeTrue();
 
             File.ReadAllText(targetManifestPath).Should().Be(expectedManifestContent);
         }
@@ -140,7 +140,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             PushToAzureDevOpsArtifacts task = ConstructPushToAzureDevOpsArtifactsTask(buildEngine, mockNupkgInfoProvider);
             task.PublishFlatContainer = true;
 
-            string expectedManifest = $@"<Build PublishingVersion=""2"" Name=""https://dnceng@dev.azure.com/dnceng/internal/test-repo"" BuildId=""12345.6"" Branch=""/refs/heads/branch"" Commit=""1234567890abcdef"" InitialAssetsLocation=""cloud"" IsReleaseOnlyPackageVersion=""False"" IsStable=""True"">
+            string expectedManifest = $@"<Build PublishingVersion=""{(int)PublishingInfraVersion.Latest}"" Name=""https://dnceng@dev.azure.com/dnceng/internal/test-repo"" BuildId=""12345.6"" Branch=""/refs/heads/branch"" Commit=""1234567890abcdef"" InitialAssetsLocation=""cloud"" IsReleaseOnlyPackageVersion=""False"" IsStable=""True"">
   <Blob Id=""{SampleManifest}"" Nonshipping=""false"" />
   <Blob Id=""{PackageA}"" Nonshipping=""true"" />
   <Blob Id=""{PackageB}"" Nonshipping=""false"" />
@@ -164,7 +164,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             PushToAzureDevOpsArtifacts task = ConstructPushToAzureDevOpsArtifactsTask(buildEngine, mockNupkgInfoProvider);
             task.IsStableBuild = false;
 
-            string expectedManifest = $@"<Build PublishingVersion=""2"" Name=""https://dnceng@dev.azure.com/dnceng/internal/test-repo"" BuildId=""12345.6"" Branch=""/refs/heads/branch"" Commit=""1234567890abcdef"" InitialAssetsLocation=""cloud"" IsReleaseOnlyPackageVersion=""False"" IsStable=""False"">
+            string expectedManifest = $@"<Build PublishingVersion=""{(int)PublishingInfraVersion.Latest}"" Name=""https://dnceng@dev.azure.com/dnceng/internal/test-repo"" BuildId=""12345.6"" Branch=""/refs/heads/branch"" Commit=""1234567890abcdef"" InitialAssetsLocation=""cloud"" IsReleaseOnlyPackageVersion=""False"" IsStable=""False"">
   <Package Id=""{Path.GetFileNameWithoutExtension(PackageA)}"" Version=""{MockNupkgInfo.MockNupkgVersion}"" Nonshipping=""true"" />
   <Package Id=""{Path.GetFileNameWithoutExtension(PackageB)}"" Version=""{MockNupkgInfo.MockNupkgVersion}"" Nonshipping=""false"" />
   <Blob Id=""{SampleManifest}"" Nonshipping=""false"" />
@@ -188,7 +188,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             PushToAzureDevOpsArtifacts task = ConstructPushToAzureDevOpsArtifactsTask(buildEngine, mockNupkgInfoProvider);
             task.IsReleaseOnlyPackageVersion = true;
 
-            string expectedManifest = $@"<Build PublishingVersion=""2"" Name=""https://dnceng@dev.azure.com/dnceng/internal/test-repo"" BuildId=""12345.6"" Branch=""/refs/heads/branch"" Commit=""1234567890abcdef"" InitialAssetsLocation=""cloud"" IsReleaseOnlyPackageVersion=""True"" IsStable=""True"">
+            string expectedManifest = $@"<Build PublishingVersion=""{(int)PublishingInfraVersion.Latest}"" Name=""https://dnceng@dev.azure.com/dnceng/internal/test-repo"" BuildId=""12345.6"" Branch=""/refs/heads/branch"" Commit=""1234567890abcdef"" InitialAssetsLocation=""cloud"" IsReleaseOnlyPackageVersion=""True"" IsStable=""True"">
   <Package Id=""{Path.GetFileNameWithoutExtension(PackageA)}"" Version=""{MockNupkgInfo.MockNupkgVersion}"" Nonshipping=""true"" />
   <Package Id=""{Path.GetFileNameWithoutExtension(PackageB)}"" Version=""{MockNupkgInfo.MockNupkgVersion}"" Nonshipping=""false"" />
   <Blob Id=""{SampleManifest}"" Nonshipping=""false"" />
@@ -266,7 +266,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 new TaskItem(PackageB),
             };
 
-            string expectedManifest = $@"<Build PublishingVersion=""2"" Name=""https://dnceng@dev.azure.com/dnceng/internal/test-repo"" BuildId=""12345.6"" Branch=""/refs/heads/branch"" Commit=""1234567890abcdef"" InitialAssetsLocation=""cloud"" IsReleaseOnlyPackageVersion=""False"" IsStable=""True"">
+            string expectedManifest = $@"<Build PublishingVersion=""{(int)PublishingInfraVersion.Latest}"" Name=""https://dnceng@dev.azure.com/dnceng/internal/test-repo"" BuildId=""12345.6"" Branch=""/refs/heads/branch"" Commit=""1234567890abcdef"" InitialAssetsLocation=""cloud"" IsReleaseOnlyPackageVersion=""False"" IsStable=""True"">
   <Package Id=""{Path.GetFileNameWithoutExtension(PackageA)}"" Version=""{MockNupkgInfo.MockNupkgVersion}"" Nonshipping=""true"" />
   <Package Id=""{Path.GetFileNameWithoutExtension(PackageB)}"" Version=""{MockNupkgInfo.MockNupkgVersion}"" Nonshipping=""false"" />
   <Blob Id=""{SampleManifest}"" Nonshipping=""false"" />

@@ -37,14 +37,10 @@ namespace Microsoft.DotNet.VersionTools.Automation
 
         public static ServiceProvider GetDefaultProvider()
         {
-            ServiceProvider defaultProvider = new ServiceCollection()
+            return new ServiceCollection()
                 .AddLogging()
                 .AddSingleton<NupkgInfo>()
                 .BuildServiceProvider();
-
-            var test = defaultProvider.GetService<NupkgInfo>();
-
-            return defaultProvider;
         }
     }
 }
