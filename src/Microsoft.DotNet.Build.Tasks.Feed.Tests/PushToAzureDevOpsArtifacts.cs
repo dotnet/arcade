@@ -13,7 +13,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
-//using Xunit;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
 {
