@@ -23,17 +23,17 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         [Required]
         public string TargetChannels { get; set; }
 
-        [Required]
+        [Required] 
         public string AzureDevOpsFeedsKey { get; set; }
 
-        [Required]
+        [Required] 
         public string AzureStorageTargetFeedKey { get; set; }
 
-        [Required]
+        [Required] 
         public string InstallersFeedKey { get; set; }
 
-        [Required]
-        public string CheckSumsFeedKey { get; set;  }
+        [Required] 
+        public string CheckSumsFeedKey { get; set; }
 
         public bool PublishInstallersAndChecksums { get; set; }
 
@@ -43,7 +43,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public string SymWebToken { get; set; }
 
-        public string SymbolPublishingExclusionsFile {get; set;}
+        public string SymbolPublishingExclusionsFile { get; set; }
 
         public bool PublishSpecialClrFiles { get; set; }
 
@@ -61,7 +61,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 return false;
             }
 
-            try 
+            try
             {
                 List<int> targetChannelsIds = new List<int>();
 
@@ -72,6 +72,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         Log.LogError($"Value '{channelIdStr}' isn't recognized as a valid Maestro++ channel ID.");
                         continue;
                     }
+
                     targetChannelsIds.Add(channelId);
                 }
 
@@ -81,17 +82,21 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     return false;
                 }
 
-                string temporarySymbolsLocation = Path.GetFullPath(Path.Combine(BlobAssetsBasePath, @"..\", "tempSymbols"));
+                string temporarySymbolsLocation =
+                    Path.GetFullPath(Path.Combine(BlobAssetsBasePath, @"..\", "tempSymbols"));
 
                 if (!Directory.Exists(temporarySymbolsLocation))
                 {
                     Directory.CreateDirectory(temporarySymbolsLocation);
                 }
+
                 SplitArtifactsInCategories(BuildModel);
+                DeleteSymbolTemporaryFiles(temporarySymbolsLocation);
+
                 //Copying symbol files to temporary location is required because the symUploader API needs read/write access to the files,
                 //since we publish blobs and symbols in parallel this will cause IO exceptions.
                 CopySymbolFilesToTemporaryLocation(BuildModel, temporarySymbolsLocation);
-                
+
                 if (Log.HasLoggedErrors)
                 {
                     return false;
@@ -106,9 +111,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 foreach (var targetChannelId in targetChannelsIds)
                 {
                     TargetChannelConfig targetChannelConfig = PublishingConstants.ChannelInfos
-                        .Where(ci => 
-                            ci.Id == targetChannelId && 
-                            (ci.PublishingInfraVersion == PublishingInfraVersion.All || ci.PublishingInfraVersion == PublishingInfraVersion.Next))
+                        .Where(ci =>
+                            ci.Id == targetChannelId &&
+                            (ci.PublishingInfraVersion == PublishingInfraVersion.All ||
+                             ci.PublishingInfraVersion == PublishingInfraVersion.Next))
                         .FirstOrDefault();
 
                     // Invalid channel ID was supplied
@@ -163,6 +169,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         {
                             FeedConfigs[categoryKey] = new HashSet<TargetFeedConfig>();
                         }
+
                         FeedConfigs[categoryKey].Add(feedConfig);
                     }
                 }
@@ -173,14 +180,17 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 {
                     return false;
                 }
-                await Task.WhenAll(new Task[] {
-                        HandlePackagePublishingAsync(buildAssets),
-                        HandleBlobPublishingAsync(buildAssets),
-                        HandleSymbolPublishingAsync(PdbArtifactsBasePath, MsdlToken,
-                            SymWebToken, SymbolPublishingExclusionsFile, temporarySymbolsLocation , PublishSpecialClrFiles)
 
-            });
+                await Task.WhenAll(new Task[] {
+                    HandlePackagePublishingAsync(buildAssets),
+                    HandleBlobPublishingAsync(buildAssets),
+                    HandleSymbolPublishingAsync(PdbArtifactsBasePath, MsdlToken,
+                        SymWebToken, SymbolPublishingExclusionsFile, temporarySymbolsLocation, PublishSpecialClrFiles)
+                });
+
                 DeleteSymbolTemporaryFiles(temporarySymbolsLocation);
+                DeleteSymbolTemporaryDirectory(temporarySymbolsLocation);
+                Log.LogMessage(MessageImportance.High, "Successfully deleted the temporary symbols directory.");
                 await PersistPendingAssetLocationAsync(client);
             }
             catch (Exception e)
@@ -204,28 +214,21 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// <param name="symbolTemporaryLocation"></param>
         private void CopySymbolFilesToTemporaryLocation(BuildModel buildModel, string symbolTemporaryLocation)
         {
-            string[] fileEntries = Directory.GetFiles(symbolTemporaryLocation);
-            if (fileEntries.Length != 0)
-            {
-                foreach (var file in fileEntries)
-                {
-                    File.Delete(file);
-                }
-            }
             foreach (var blobAsset in buildModel.Artifacts.Blobs)
             {
                 if (blobAsset.Id.EndsWith(".symbols.nupkg", StringComparison.OrdinalIgnoreCase))
                 {
                     var sourceFile = Path.Combine(BlobAssetsBasePath, Path.GetFileName(blobAsset.Id));
                     var destinationFile = Path.Combine(symbolTemporaryLocation, Path.GetFileName(blobAsset.Id));
-                    File.Copy(sourceFile,destinationFile);
-                    Log.LogMessage(MessageImportance.Low, $"Successfully copied file {sourceFile} to {destinationFile}.");
+                    File.Copy(sourceFile, destinationFile);
+                    Log.LogMessage(MessageImportance.Low,
+                        $"Successfully copied file {sourceFile} to {destinationFile}.");
                 }
             }
         }
 
         /// <summary>
-        /// Delete the symbols files and the folder after publishing to Symbol server, this is part of cleanup
+        /// Delete the symbols files after publishing to Symbol server(s), this is part of cleanup
         /// </summary>
         /// <param name="temporarySymbolsLocation"></param>
         private void DeleteSymbolTemporaryFiles(string temporarySymbolsLocation)
@@ -240,12 +243,22 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         File.Delete(file);
                     }
                 }
-                Directory.Delete(temporarySymbolsLocation);
-                Log.LogMessage(MessageImportance.High, "Successfully deleted the temporary symbols directory.");
             }
             catch (Exception ex)
             {
                 Log.LogWarning(ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Deletes the temporary symbol folder, this is part of clean up
+        /// </summary>
+        /// <param name="temporarySymbolLocation"></param>
+        private void DeleteSymbolTemporaryDirectory(string temporarySymbolLocation)
+        {
+            if (Directory.Exists(temporarySymbolLocation))
+            {
+                Directory.Delete(temporarySymbolLocation);
             }
         }
     }

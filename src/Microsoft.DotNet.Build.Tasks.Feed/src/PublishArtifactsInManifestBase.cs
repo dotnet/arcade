@@ -122,6 +122,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         private const string SymwebServerPath = "https://microsoft.artifacts.visualstudio.com/DefaultCollection";
 
         private const string MsdlServerPath = "https://microsoftpublicsymbols.artifacts.visualstudio.com/DefaultCollection";
+
         protected LatestLinksManager LinkManager { get; set; } = null;
 
         /// <summary>
@@ -318,7 +319,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// </summary>
         /// <param name="pdbArtifactsBasePath">Path to dll and pdb files</param>
         /// <param name="msdlToken">Token to authenticate msdl</param>
-        /// <param name="symwebToken">Token to authenticate symweb</param>
+        /// <param name="symWebToken">Token to authenticate symweb</param>
         /// <param name="symbolPublishingExclusionsFile">Right now we do not add any files to this, so this is going to be null</param>
         /// <param name="temporarySymbolsLocation">Path to Symbol.nupkgs</param>
         /// <param name="publishSpecialClrFiles">If true, the special coreclr module indexed files like DBI, DAC and SOS are published</param>
@@ -331,28 +332,27 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             string temporarySymbolsLocation,
             bool publishSpecialClrFiles)
         {
-            StringBuilder builder = new StringBuilder();
-            builder.Append("\nPublishing Symbols to Symbol server: ");
+            StringBuilder symbolLog = new StringBuilder();
+            symbolLog.AppendLine("Publishing Symbols to Symbol server: ");
 
             if (Directory.Exists(temporarySymbolsLocation))
             {
                 string[] fileEntries = Directory.GetFiles(temporarySymbolsLocation);
 
                 var category = TargetFeedContentType.Symbols;
-                var token = string.Empty;
-                var symbolServerPath = string.Empty;
 
                 HashSet<TargetFeedConfig> feedConfigsForSymbols = FeedConfigs[category];
 
+                Dictionary<string, string> serversToPublish = new Dictionary<string, string>();
+                
                 if (feedConfigsForSymbols.Any(x => x.PublishToMsdl))
                 {
-                    token = msdlToken;
-                    symbolServerPath = MsdlServerPath;
+                    serversToPublish.Add(MsdlServerPath, msdlToken);
                 }
                 else
                 {
-                    token = symWebToken;
-                    symbolServerPath = SymwebServerPath;
+                    serversToPublish.Add(MsdlServerPath, msdlToken);
+                    serversToPublish.Add(SymwebServerPath, symWebToken);
                 }
 
                 IEnumerable<string> filesToSymbolServer = null;
@@ -362,24 +362,34 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         Directory.EnumerateFileSystemEntries(pdbArtifactsBasePath);
                 }
 
-                builder.Append($"\nPublishing symbol packages to {symbolServerPath}:");
-                builder.Append($"\nPerforming symbol publishing...\nSymbolServerPath : ${symbolServerPath} \nExpirationInDays : 3650 \nConvertPortablePdbsToWindowsPdb : false \ndryRun: false \nTotal number of symbol files : {fileEntries.Length} ");
-                await Task.Run(() => PublishSymbolsHelper.Publish(
-                    Log,
-                    symbolServerPath,
-                    token,
-                    fileEntries,
-                    filesToSymbolServer,
-                    null,
-                    3650,
-                    false,
-                    publishSpecialClrFiles,
-                    null,
-                    false,
-                    false,
-                    true));
-                builder.Append("\nSuccessfully published to Symbol Server.");
-                Log.LogMessage(MessageImportance.High, builder.ToString());
+                foreach (var server in serversToPublish)
+                {
+                    var serverPath = server.Key;
+                    var token = server.Value;
+                    symbolLog.AppendLine($"Publishing symbol packages to {serverPath}:");
+                    symbolLog.AppendLine(
+                        $"Performing symbol publishing...\nSymbolServerPath : ${serverPath} \nExpirationInDays : 3650 \nConvertPortablePdbsToWindowsPdb : false \ndryRun: false \nTotal number of symbol files : {fileEntries.Length} ");
+                    await Task.Run(() => PublishSymbolsHelper.Publish(
+                        Log,
+                        serverPath,
+                        token,
+                        fileEntries,
+                        filesToSymbolServer,
+                        null,
+                        3650,
+                        false,
+                        publishSpecialClrFiles,
+                        null,
+                        false,
+                        false,
+                        true));
+                    symbolLog.AppendLine("Successfully published to Symbol Server.");
+                    Log.LogMessage(MessageImportance.High, symbolLog.ToString());
+                }
+            }
+            else
+            {
+                Log.LogError($"Temporary symbols directory {temporarySymbolsLocation} does not exists.");
             }
         }
 

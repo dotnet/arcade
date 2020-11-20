@@ -95,13 +95,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
     internal class Tracer : Microsoft.SymbolStore.ITracer
     {
-        readonly TaskLoggingHelper m_log;
-        readonly bool m_verbose;
+        readonly TaskLoggingHelper _log;
+        readonly bool _verbose;
 
         public Tracer(TaskLoggingHelper log, bool verbose)
         {
-            m_log = log;
-            m_verbose = verbose;
+            _log = log;
+            _verbose = verbose;
         }
 
         public void WriteLine(string message)
@@ -111,7 +111,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public void WriteLine(string format, params object[] arguments)
         {
-            m_log.LogMessage(MessageImportance.High, format, arguments);
+            _log.LogMessage(MessageImportance.High, format, arguments);
         }
 
         public void Information(string message)
@@ -121,7 +121,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public void Information(string format, params object[] arguments)
         {
-            m_log.LogMessage(MessageImportance.Normal, format, arguments);
+            _log.LogMessage(MessageImportance.Normal, format, arguments);
         }
 
         public void Warning(string message)
@@ -131,7 +131,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public void Warning(string format, params object[] arguments)
         {
-            m_log.LogWarning(format, arguments);
+            _log.LogWarning(format, arguments);
         }
 
         public void Error(string message)
@@ -141,7 +141,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public void Error(string format, params object[] arguments)
         {
-            m_log.LogError(format, arguments);
+            _log.LogError(format, arguments);
         }
 
         public void Verbose(string message)
@@ -151,7 +151,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public void Verbose(string format, params object[] arguments)
         {
-            m_log.LogMessage(m_verbose ? MessageImportance.Normal : MessageImportance.Low, format, arguments);
+            _log.LogMessage(_verbose ? MessageImportance.Normal : MessageImportance.Low, format, arguments);
         }
     }
 }
