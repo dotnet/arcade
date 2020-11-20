@@ -190,11 +190,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 foreach (var signInfo in fileSignInfo)
                 {
                     var attributes = signInfo.CloneCustomMetadata() as IDictionary<string, string>;
-<<<<<<< HEAD
-                    parsedFileSignInfo.Add(new FileSignInfoModel { Include = signInfo.ItemSpec, CertificateName = attributes["CertificateName"] });
-=======
                     parsedFileSignInfo.Add(new FileSignInfoModel { Include = Path.GetFileName(signInfo.ItemSpec), CertificateName = attributes["CertificateName"] });
->>>>>>> master
                 }
             }
             if (fileExtensionSignInfo != null)

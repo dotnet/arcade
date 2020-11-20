@@ -73,12 +73,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
 
             task.Execute();
 
-<<<<<<< HEAD
-            Assert.AreEqual(expectedManifestContent, File.ReadAllText(targetManifiestPath));
-=======
-            var outputManifestContent = File.ReadAllText(targetManifestPath);
-            outputManifestContent.Should().Be(expectedManifestContent);
->>>>>>> master
+            File.ReadAllText(targetManifestPath).Should().Be(expectedManifestContent);
         }
 
         [Test]
@@ -107,8 +102,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
 
             task.Execute();
 
-<<<<<<< HEAD
-            Assert.AreEqual(expectedManifestContent, File.ReadAllText(targetManifiestPath));
+            File.ReadAllText(targetManifestPath).Should().Be(expectedManifestContent);
         }
 
         [Test]
@@ -276,7 +270,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
   <Package Id=""{Path.GetFileNameWithoutExtension(PackageA)}"" Version=""{MockNupkgInfo.MockNupkgVersion}"" Nonshipping=""true"" />
   <Package Id=""{Path.GetFileNameWithoutExtension(PackageB)}"" Version=""{MockNupkgInfo.MockNupkgVersion}"" Nonshipping=""false"" />
   <Blob Id=""{SampleManifest}"" Nonshipping=""false"" />
-  <SigningInformation AzureDevOpsCollectionUri=""https://dev.azure.com/dnceng/"" AzureDevOpsProject=""internal"" AzureDevOpsBuildId=""123456"">
+  <SigningInformation>
     <FileExtensionSignInfo Include="".dll"" CertificateName=""TestSigningCert"" />
     <FileExtensionSignInfo Include="".nupkg"" CertificateName=""TestNupkg"" />
     <FileExtensionSignInfo Include="".zip"" CertificateName=""None"" />
@@ -329,10 +323,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             Id = Path.GetFileNameWithoutExtension(path);
             Version = MockNupkgVersion;
             Prerelease = "10f2c";
-=======
-            var outputManifestContent = File.ReadAllText(targetManifestPath);
-            outputManifestContent.Should().Be(expectedManifestContent);
->>>>>>> master
         }
     }
 

@@ -3,6 +3,7 @@
 
 using Microsoft.Build.Framework;
 using Microsoft.DotNet.Build.Tasks.Feed.Model;
+using Microsoft.DotNet.VersionTools.Automation;
 using Microsoft.DotNet.VersionTools.BuildManifest.Model;
 using System;
 using MSBuild = Microsoft.Build.Utilities;
@@ -142,9 +143,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     IsStableBuild,
                     targetPublishingVersion,
                     IsReleaseOnlyPackageVersion,
+                    NupkgInfo.GetDefaultProvider(),
                     Log);
 
-                buildModel.WriteAsXml(OutputPath, Log);
+                buildModel.WriteAsXml(OutputPath, Log, new RealFileSystem());
             }
             catch (Exception e)
             {

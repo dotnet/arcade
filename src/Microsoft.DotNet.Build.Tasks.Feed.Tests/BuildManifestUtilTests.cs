@@ -10,6 +10,7 @@ using System.IO;
 using System.Linq;
 using Xunit;
 using FluentAssertions;
+using Microsoft.DotNet.VersionTools.Automation;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
 {
@@ -51,7 +52,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 BuildManifestUtil.CreateModelFromItems(null, null,
                 null, null, null, null, _testAzdoBuildId, null, _testAzdoRepoUri, _testBuildBranch, _testBuildCommit, false,
                 VersionTools.BuildManifest.Model.PublishingInfraVersion.All,
-                true, _taskLoggingHelper);
+                true, NupkgInfo.GetDefaultProvider(), _taskLoggingHelper);
             act.Should().Throw<ArgumentNullException>();
         }
 
@@ -106,7 +107,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             var model = BuildManifestUtil.CreateModelFromItems(artifacts, null,
                 null, null, null, null, _testAzdoBuildId, _defaultManifestBuildData, _testAzdoRepoUri, _testBuildBranch, _testBuildCommit, false,
                 VersionTools.BuildManifest.Model.PublishingInfraVersion.All,
-                true, _taskLoggingHelper);
+                true, NupkgInfo.GetDefaultProvider(), _taskLoggingHelper);
 
             _taskLoggingHelper.HasLoggedErrors.Should().BeFalse();
             // When Maestro sees a symbol package, it is supposed to re-do the symbol package path to
@@ -167,7 +168,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             var model = BuildManifestUtil.CreateModelFromItems(artifacts, null,
                 null, null, null, null, _testAzdoBuildId, _defaultManifestBuildData, _testAzdoRepoUri, _testBuildBranch, _testBuildCommit, false,
                 VersionTools.BuildManifest.Model.PublishingInfraVersion.All,
-                true, _taskLoggingHelper);
+                true, NupkgInfo.GetDefaultProvider(), _taskLoggingHelper);
 
             model.Artifacts.Blobs.Should().BeEmpty();
             model.Artifacts.Packages.Should().SatisfyRespectively(
@@ -206,7 +207,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             BuildManifestUtil.CreateModelFromItems(artifacts, null,
                 null, null, null, null, _testAzdoBuildId, _defaultManifestBuildData, _testAzdoRepoUri, _testBuildBranch, _testBuildCommit, false,
                 VersionTools.BuildManifest.Model.PublishingInfraVersion.All,
-                true, _taskLoggingHelper);
+                true, NupkgInfo.GetDefaultProvider(), _taskLoggingHelper);
 
             _taskLoggingHelper.HasLoggedErrors.Should().BeTrue();
             _buildEngine.BuildErrorEvents.Should().Contain(e => e.Message.Equals($"Missing 'RelativeBlobPath' property on blob {zipArtifact}"));
@@ -231,7 +232,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             BuildManifestUtil.CreateModelFromItems(artifacts, null,
                 null, null, null, null, _testAzdoBuildId, null, _testAzdoRepoUri, _testBuildBranch, _testBuildCommit, false,
                 VersionTools.BuildManifest.Model.PublishingInfraVersion.Latest,
-                true, _taskLoggingHelper);
+                true, NupkgInfo.GetDefaultProvider(), _taskLoggingHelper);
 
             // Should have logged an error that an initial location was not present.
             _taskLoggingHelper.HasLoggedErrors.Should().BeTrue();
@@ -265,7 +266,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             var model = BuildManifestUtil.CreateModelFromItems(artifacts, null,
                 null, null, null, null, _testAzdoBuildId, manifestBuildData, _testAzdoRepoUri, _testBuildBranch, _testBuildCommit, false,
                 VersionTools.BuildManifest.Model.PublishingInfraVersion.All,
-                true, _taskLoggingHelper);
+                true, NupkgInfo.GetDefaultProvider(), _taskLoggingHelper);
 
             // Should have logged an error that an initial location was not present.
             _taskLoggingHelper.HasLoggedErrors.Should().BeFalse();
@@ -374,7 +375,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     strongNameSignInfo, fileSignInfo, fileExtensionSignInfo, certificatesSignInfo, _testAzdoBuildId,
                     _defaultManifestBuildData, _testAzdoRepoUri, _testBuildBranch, _testBuildCommit, true,
                     VersionTools.BuildManifest.Model.PublishingInfraVersion.Next,
-                    false, _taskLoggingHelper);
+                    false, NupkgInfo.GetDefaultProvider(), _taskLoggingHelper);
 
                 BuildManifestUtil.CreateBuildManifest(_taskLoggingHelper,
                         modelFromItems.Artifacts.Blobs,
@@ -388,6 +389,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                         bool.Parse(modelFromItems.Identity.IsStable),
                         modelFromItems.Identity.PublishingVersion,
                         bool.Parse(modelFromItems.Identity.IsReleaseOnlyPackageVersion),
+                        new RealFileSystem(),
                         modelFromItems.SigningInformation);
 
                 // Read the xml file back in and create a model from it.
@@ -513,7 +515,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             var model = BuildManifestUtil.CreateModelFromItems(artifacts, null,
                 null, null, null, null, _testAzdoBuildId, _defaultManifestBuildData, _testAzdoRepoUri, _testBuildBranch, _testBuildCommit, false,
                 VersionTools.BuildManifest.Model.PublishingInfraVersion.All,
-                true, _taskLoggingHelper);
+                true, NupkgInfo.GetDefaultProvider(), _taskLoggingHelper);
 
             _taskLoggingHelper.HasLoggedErrors.Should().BeFalse();
             model.SigningInformation.Should().NotBeNull();
@@ -589,7 +591,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 strongNameSignInfo, fileSignInfo, fileExtensionSignInfo, certificatesSignInfo,
                 _testAzdoBuildId, _defaultManifestBuildData, _testAzdoRepoUri, _testBuildBranch, _testBuildCommit, false,
                 VersionTools.BuildManifest.Model.PublishingInfraVersion.All,
-                true, _taskLoggingHelper);
+                true, NupkgInfo.GetDefaultProvider(), _taskLoggingHelper);
 
             _taskLoggingHelper.HasLoggedErrors.Should().BeFalse();
             model.SigningInformation.Should().NotBeNull();
@@ -662,7 +664,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 null, null, null, null,
                 _testAzdoBuildId, _defaultManifestBuildData, _testAzdoRepoUri, _testBuildBranch, _testBuildCommit, false,
                 VersionTools.BuildManifest.Model.PublishingInfraVersion.All,
-                true, _taskLoggingHelper);
+                true, NupkgInfo.GetDefaultProvider(), _taskLoggingHelper);
 
             _taskLoggingHelper.HasLoggedErrors.Should().BeTrue();
             _buildEngine.BuildErrorEvents.Should().Contain(e => e.Message.Equals($"Item to sign '{bogusNupkgToSign}' was not found in the artifacts"));
