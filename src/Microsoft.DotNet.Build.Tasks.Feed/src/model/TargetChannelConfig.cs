@@ -55,7 +55,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
         /// </summary>
         public string InstallersFeed { get; }
 
-        public bool ShouldPublishToMsdl { get; }
+        /// <summary>
+        /// Should publish to Msdl
+        /// </summary>
+        public SymbolTargetType SymbolTargetType { get; }
 
         public TargetChannelConfig(
             int id,
@@ -66,7 +69,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             string symbolsFeed,
             string checksumsFeed,
             string installersFeed,
-            bool shouldPublishToMsdl)
+            SymbolTargetType symbolTargetType)
         {
             Id = id;
             PublishingInfraVersion = publishingInfraVersion;
@@ -76,12 +79,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             SymbolsFeed = symbolsFeed;
             ChecksumsFeed = checksumsFeed;
             InstallersFeed = installersFeed;
-            ShouldPublishToMsdl = shouldPublishToMsdl;
+            SymbolTargetType = symbolTargetType;
         }
 
         public override string ToString()
         {
-            return 
+            return
                 $"\n Channel ID: '{Id}' " +
                 $"\n Infra-version: '{PublishingInfraVersion}' " +
                 $"\n AkaMSChannelName: '{AkaMSChannelName}' " +
@@ -90,7 +93,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 $"\n Symbols-feed: '{SymbolsFeed}' " +
                 $"\n Installers-feed: '{InstallersFeed}' " +
                 $"\n Checksums-feed: '{ChecksumsFeed}' " +
-                $"\n ShouldPublishToMsdl: '{ShouldPublishToMsdl}' ";
+                $"\n SymbolTargetType: '{SymbolTargetType}' ";
         }
 
         public override bool Equals(object other)
@@ -103,8 +106,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                    TransportFeed.Equals(config.TransportFeed, StringComparison.OrdinalIgnoreCase) &&
                    SymbolsFeed.Equals(config.SymbolsFeed, StringComparison.OrdinalIgnoreCase) &&
                    ChecksumsFeed.Equals(config.ChecksumsFeed, StringComparison.OrdinalIgnoreCase) &&
-                   InstallersFeed.Equals(config.InstallersFeed, StringComparison.OrdinalIgnoreCase) &&
-                   ShouldPublishToMsdl == config.ShouldPublishToMsdl;
+                   InstallersFeed.Equals(config.InstallersFeed, StringComparison.OrdinalIgnoreCase);
         }
 
         public override int GetHashCode()

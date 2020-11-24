@@ -149,7 +149,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         $"dotnet/{targetChannelConfig.AkaMSChannelName}",
                         AzureDevOpsFeedsKey,
                         BuildEngine = this.BuildEngine,
-                        targetChannelConfig.ShouldPublishToMsdl);
+                        targetChannelConfig.SymbolTargetType);
 
                     var targetFeedConfigs = targetFeedsSetup.Setup();
 
@@ -247,6 +247,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             catch (Exception ex)
             {
                 Log.LogWarning(ex.Message);
+            }
+            finally
+            {
+
             }
         }
 

@@ -123,6 +123,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         private const string MsdlServerPath = "https://microsoftpublicsymbols.artifacts.visualstudio.com/DefaultCollection";
 
+        private const int ExpirationInDays = 3650;
+
         protected LatestLinksManager LinkManager { get; set; } = null;
 
         /// <summary>
@@ -345,13 +347,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                 Dictionary<string, string> serversToPublish = new Dictionary<string, string>();
                 
-                if (feedConfigsForSymbols.Any(x => x.PublishToMsdl))
+                if (feedConfigsForSymbols.Any(x => (x.SymbolTargetType & SymbolTargetType.Msdl) != SymbolTargetType.None))
                 {
                     serversToPublish.Add(MsdlServerPath, msdlToken);
                 }
-                else
+                if (feedConfigsForSymbols.Any(x => (x.SymbolTargetType & SymbolTargetType.SymWeb) != SymbolTargetType.None))
                 {
-                    serversToPublish.Add(MsdlServerPath, msdlToken);
                     serversToPublish.Add(SymwebServerPath, symWebToken);
                 }
 
@@ -368,22 +369,23 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     var token = server.Value;
                     symbolLog.AppendLine($"Publishing symbol packages to {serverPath}:");
                     symbolLog.AppendLine(
-                        $"Performing symbol publishing...\nSymbolServerPath : ${serverPath} \nExpirationInDays : 3650 \nConvertPortablePdbsToWindowsPdb : false \ndryRun: false \nTotal number of symbol files : {fileEntries.Length} ");
-                    await Task.Run(() => PublishSymbolsHelper.Publish(
+                        $"Performing symbol publishing...\nSymbolServerPath : ${serverPath} \nExpirationInDays : {ExpirationInDays} \nConvertPortablePdbsToWindowsPdb : false \ndryRun: false \nTotal number of symbol files : {fileEntries.Length} ");
+                    await PublishSymbolsHelper.PublishAsync(
                         Log,
                         serverPath,
                         token,
                         fileEntries,
                         filesToSymbolServer,
                         null,
-                        3650,
+                        ExpirationInDays,
                         false,
                         publishSpecialClrFiles,
                         null,
                         false,
                         false,
-                        true));
+                        true);
                     symbolLog.AppendLine("Successfully published to Symbol Server.");
+                    symbolLog.AppendLine();
                     Log.LogMessage(MessageImportance.High, symbolLog.ToString());
                 }
             }

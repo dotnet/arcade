@@ -15,7 +15,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
     public class PublishSymbolsHelper
     {
-        internal static void Publish(
+        internal static async System.Threading.Tasks.Task PublishAsync(
                 TaskLoggingHelper log,
                 string symbolServerPath,
                 string personalAccessToken,
@@ -87,7 +87,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     }
                     else
                     {
-                        publishOperation.PublishFiles(fileInfos).GetAwaiter().GetResult();
+                        await publishOperation.PublishFiles(fileInfos);
                     }
                 }
             }

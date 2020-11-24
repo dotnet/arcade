@@ -115,14 +115,29 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public string AzureDevOpsFeedsKey { get; set; }
 
+        /// <summary>
+        /// Path to dll and pdb files
+        /// </summary>
         public string PdbArtifactsBasePath {get; set;}
 
+        /// <summary>
+        /// Token to publish to Msdl symbol server
+        /// </summary>
         public string MsdlToken {get; set;}
 
+        /// <summary>
+        /// Token to publish to SymWeb symbol server 
+        /// </summary>
         public string SymWebToken {get; set;}
 
+        /// <summary>
+        /// Files to exclude from symbol publishing
+        /// </summary>
         public string SymbolPublishingExclusionsFile {get; set;}
 
+        /// <summary>
+        /// 
+        /// </summary>
         public bool PublishSpecialClrFiles { get; set; }
 
         /// <summary>
