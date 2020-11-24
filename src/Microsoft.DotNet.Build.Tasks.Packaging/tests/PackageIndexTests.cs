@@ -55,7 +55,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
             packageIndex.Save(packageIndexFile);
             var newFileInfo = new FileInfo(packageIndexFile);
 
-            newFileInfo.Should().Be(previousLength);
+            newFileInfo.Length.Should().Be(previousLength);
 
             // ensure we have a different modified time
             File.SetLastWriteTimeUtc(packageIndexFile, new DateTime(originalModifiedTime.Ticks + 100));
@@ -63,7 +63,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
 
             packageIndex.Packages.Should().HaveCount(2);
             packageIndex.Packages.Should().ContainKey("MyPackage");
-            packageIndex.Packages.Should().ContainKey("MyPackage2");
+            packageIndex.Packages.Should().ContainKey("MyPackage3");
         }
     }
 }
