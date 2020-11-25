@@ -258,7 +258,7 @@
         Include="@(FindSiblingSymbolsForFile)"
         Exclude="@(WindowsNativeFile)" />
       <NonWindowsSymbolFile
-        Include="@(NonWindowsNativeFile -> '%(Identity)$(SymbolFileExtension)')" />
+        Include="@(NonWindowsNativeFile -> '%(Identity)$(SymbolsSuffix)')" />
 
       <ExistingNonWindowsSymbolFile Include="@(NonWindowsSymbolFile)" Condition="Exists('%(Identity)')" />
 

@@ -183,7 +183,7 @@
 
     <ItemGroup>
       <SharedFrameworkSymbols Include="$(CrossgennedPackageSymbolDir)**/*.pdb" />
-      <SharedFrameworkSymbols Include="$(CrossgennedPackageSymbolDir)**/*$(SymbolFileExtension)" />
+      <SharedFrameworkSymbols Include="$(CrossgennedPackageSymbolDir)**/*$(SymbolsSuffix)" />
 
       <SharedFrameworkSymbols
         Include="$(CrossgennedPackageSymbolDir)**/*$(CrossGenSymbolExtension)"

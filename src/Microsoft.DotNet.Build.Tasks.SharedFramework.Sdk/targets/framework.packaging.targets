@@ -143,7 +143,7 @@
           Exists('%(FullPath)') AND
           (
             '%(Extension)' == '.dll' OR
-            '%(Extension)' == '$(LibraryFileExtension)'
+            '%(Extension)' == '$(LibSuffix)'
           )"/>
 
       <ClosureFile
