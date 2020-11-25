@@ -248,10 +248,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             {
                 Log.LogWarning(ex.Message);
             }
-            finally
-            {
-
-            }
         }
 
         /// <summary>
