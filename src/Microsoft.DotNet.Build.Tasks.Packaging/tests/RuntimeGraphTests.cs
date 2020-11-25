@@ -6,6 +6,7 @@ using NuGet.RuntimeModel;
 using System.IO;
 using Xunit;
 using Xunit.Abstractions;
+using FluentAssertions;
 
 namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
 {
@@ -28,12 +29,12 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
             // method and replacing with JsonRuntimeFormat.WriteRuntimeGraph.
             NuGetUtility.WriteRuntimeGraph(file, runtimeGraph);
 
-            Assert.True(File.Exists(file));
+            File.Exists(file).Should().BeTrue();
 
             RuntimeGraph readRuntimeGraph = JsonRuntimeFormat.ReadRuntimeGraph(file);
 
-            Assert.NotNull(readRuntimeGraph);
-            Assert.Equal(runtimeGraph, readRuntimeGraph);
+            readRuntimeGraph.Should().NotBeNull();
+            readRuntimeGraph.Should().Be(runtimeGraph);
         }
     }
 }
