@@ -106,7 +106,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             string xharnessRunCommand = $"dotnet exec \"{(IsPosixShell ? "$XHARNESS_CLI_PATH" : "%XHARNESS_CLI_PATH%")}\" android test " +
                                         $"--app \"{Path.GetFileName(appPackage.ItemSpec)}\" " +
                                         $"--output-directory \"{outputDirectory}\" " +
-                                        $"--timeout {xHarnessTimeout.TotalSeconds} " +
+                                        $"--timeout \"{xHarnessTimeout}\" " +
                                         $"-p=\"{androidPackageName}\" " +
                                         "-v " +
                                         (expectedExitCode != 0 ? $" --expected-exit-code \"{expectedExitCode}\" " : string.Empty) +
