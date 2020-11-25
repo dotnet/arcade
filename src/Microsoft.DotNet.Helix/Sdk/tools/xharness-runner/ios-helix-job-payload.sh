@@ -10,6 +10,7 @@ launch_timeout=''
 xharness_cli_path=''
 xcode_version=''
 app_arguments=''
+expected_exit_code=0
 
 while [[ $# -gt 0 ]]; do
     opt="$(echo "$1" | awk '{print tolower($0)}')"
@@ -44,6 +45,10 @@ while [[ $# -gt 0 ]]; do
         ;;
       --app-arguments)
         app_arguments="$2"
+        shift
+        ;;
+      --expected-exit-code)
+        expected_exit_code="$2"
         shift
         ;;
       *)
@@ -103,14 +108,15 @@ open -a "$simulator_app"
 export XHARNESS_DISABLE_COLORED_OUTPUT=true
 export XHARNESS_LOG_WITH_TIMESTAMPS=true
 
-dotnet exec "$xharness_cli_path" ios test  \
-    --app="$app"                           \
-    --output-directory="$output_directory" \
-    --targets="$targets"                   \
-    --timeout="$timeout"                   \
-    --launch-timeout="$launch_timeout"     \
-    --xcode="$xcode_path"                  \
-    -v                                     \
+dotnet exec "$xharness_cli_path" ios test      \
+    --app="$app"                               \
+    --output-directory="$output_directory"     \
+    --targets="$targets"                       \
+    --timeout="$timeout"                       \
+    --launch-timeout="$launch_timeout"         \
+    --xcode="$xcode_path"                      \
+    --expected-exit-code="$expected_exit_code" \
+    -v                                         \
     $app_arguments
 
 exit_code=$?
