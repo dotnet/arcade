@@ -11,6 +11,7 @@ xharness_cli_path=''
 xcode_version=''
 app_arguments=''
 expected_exit_code=0
+command='test'
 
 while [[ $# -gt 0 ]]; do
     opt="$(echo "$1" | awk '{print tolower($0)}')"
@@ -51,6 +52,10 @@ while [[ $# -gt 0 ]]; do
         expected_exit_code="$2"
         shift
         ;;
+      --command)
+        command="$2"
+        shift
+        ;;
       *)
         echo "Invalid argument: $1"
         exit 1
@@ -64,18 +69,6 @@ function die ()
     echo "$1" 1>&2
     exit 1
 }
-
-if [ -z "$app" ]; then
-    die "App name wasn't provided";
-fi
-
-if [ -z "$output_directory" ]; then
-    die "Output directory wasn't provided";
-fi
-
-if [ -z "$targets" ]; then
-    die "List of targets wasn't provided";
-fi
 
 if [ -z "$timeout" ]; then
     die "Test timeout wasn't provided";
@@ -93,6 +86,10 @@ if [ -n "$app_arguments" ]; then
     app_arguments="-- $app_arguments";
 fi
 
+if [ "$command" == "run" ]; then
+    app_arguments="--expected-exit-code=$expected_exit_code $app_arguments"
+fi
+
 set +e
 
 if [ -z "$xcode_version" ]; then
@@ -108,15 +105,15 @@ open -a "$simulator_app"
 export XHARNESS_DISABLE_COLORED_OUTPUT=true
 export XHARNESS_LOG_WITH_TIMESTAMPS=true
 
-dotnet exec "$xharness_cli_path" ios test      \
-    --app="$app"                               \
-    --output-directory="$output_directory"     \
-    --targets="$targets"                       \
-    --timeout="$timeout"                       \
-    --launch-timeout="$launch_timeout"         \
-    --xcode="$xcode_path"                      \
-    --expected-exit-code="$expected_exit_code" \
-    -v                                         \
+# shellcheck disable=SC2086
+dotnet exec "$xharness_cli_path" ios $command \
+    --app="$app"                              \
+    --output-directory="$output_directory"    \
+    --targets="$targets"                      \
+    --timeout="$timeout"                      \
+    --launch-timeout="$launch_timeout"        \
+    --xcode="$xcode_path"                     \
+    -v                                        \
     $app_arguments
 
 exit_code=$?
