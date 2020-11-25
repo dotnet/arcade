@@ -99,6 +99,10 @@ You can also specify some metadata that will help you configure the run better:
     <!-- Optional (`ios run` command only): Expected exit code of the iOS/tvOS application. XHarness exits with 0 when the app exits with this code -->
     <!-- Please note that exit code detection may not be reliable across iOS/tvOS versions -->
     <ExpectedExitCode>3</ExpectedExitCode>
+    
+    <!-- Optional: For apps that don't contain unit tests, they can be run using the `ios run` command instead of `ios test` -->
+    <!-- Default is true -->
+    <IncludesTestRunner>false</IncludesTestRunner>
   </XHarnessAppBundleToTest>
 </ItemGroup>
 ```
