@@ -50,7 +50,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
 
         public SymbolTargetType SymbolTargetType { get; }
 
-        public TargetFeedConfig(TargetFeedContentType contentType, string targetURL, FeedType type, string token, string latestLinkShortUrlPrefix = null, AssetSelection assetSelection = AssetSelection.All, bool isolated = false, bool @internal = false, bool allowOverwrite = false, SymbolTargetType symbolTargetType)
+        public TargetFeedConfig(TargetFeedContentType contentType, string targetURL, FeedType type, string token, string latestLinkShortUrlPrefix = null, AssetSelection assetSelection = AssetSelection.All, bool isolated = false, bool @internal = false, bool allowOverwrite = false, SymbolTargetType symbolTargetType = SymbolTargetType.None)
         {
             ContentType = contentType;
             TargetURL = targetURL;
