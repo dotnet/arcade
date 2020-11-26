@@ -1,5 +1,9 @@
 #!/bin/bash
 
+###
+### This script is used as a payload of Helix jobs that execute iOS/tvOS workloads through XHarness.
+###
+
 set -ex
 
 app=''
