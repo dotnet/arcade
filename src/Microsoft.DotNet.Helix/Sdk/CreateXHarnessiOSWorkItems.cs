@@ -73,7 +73,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                 workItemName = workItemName.Substring(0, workItemName.Length - 4);
             }
 
-            var (testTimeout, workItemTimeout) = ParseTimeouts(appBundleItem);
+            var (testTimeout, workItemTimeout, expectedExitCode) = ParseMetadata(appBundleItem);
 
             // Validation of any metadata specific to iOS stuff goes here
             if (!appBundleItem.TryGetMetadata("Targets", out string targets))
@@ -96,7 +96,7 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             string appName = Path.GetFileName(appBundleItem.ItemSpec);
 
-            string command = GetXHarnessCommand(appName, targets, testTimeout, launchTimeout);
+            string command = GetXHarnessCommand(appName, targets, testTimeout, launchTimeout, expectedExitCode);
 
             Log.LogMessage($"Creating work item with properties Identity: {workItemName}, Payload: {appFolderPath}, Command: {command}");
 
@@ -142,16 +142,17 @@ namespace Microsoft.DotNet.Helix.Sdk
             return outputZipPath;
         }
 
-        private string GetXHarnessCommand(string appName, string targets, TimeSpan testTimeout, TimeSpan launchTimeout)
+        private string GetXHarnessCommand(string appName, string targets, TimeSpan testTimeout, TimeSpan launchTimeout, int expectedExitCode)
         {
             // We need to call 'sudo launchctl' to spawn the process in a user session with GUI rendering capabilities
             string xharnessRunCommand = $"sudo launchctl asuser `id -u` sh \"{PayloadScriptName}\" " +
                                         $"--app \"$HELIX_WORKITEM_ROOT/{appName}\" " +
                                          "--output-directory \"$HELIX_WORKITEM_UPLOAD_ROOT\" " +
                                         $"--targets \"{targets}\" " +
-                                        $"--timeout {testTimeout.TotalSeconds} " +
-                                        $"--launch-timeout {launchTimeout.TotalSeconds} " +
+                                        $"--timeout \"{testTimeout}\" " +
+                                        $"--launch-timeout \"{launchTimeout}\" " +
                                          "--xharness-cli-path \"$XHARNESS_CLI_PATH\"" +
+                                        (expectedExitCode != 0 ? $" --expected-exit-code \"{expectedExitCode}\"" : string.Empty) +
                                         (!string.IsNullOrEmpty(XcodeVersion) ? $" --xcode-version \"{XcodeVersion}\"" : string.Empty) +
                                         (!string.IsNullOrEmpty(AppArguments) ? $" --app-arguments \"{AppArguments}\"" : string.Empty);
 
