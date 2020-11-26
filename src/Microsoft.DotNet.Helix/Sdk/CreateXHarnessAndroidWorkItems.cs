@@ -109,7 +109,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                                         $"--timeout {xHarnessTimeout.TotalSeconds} " +
                                         $"-p=\"{androidPackageName}\" " +
                                         "-v " +
-                                        (expectedExitCode != 0 ? $" --expected-exit-code \"{expectedExitCode}\"" : string.Empty) +
+                                        (expectedExitCode != 0 ? $" --expected-exit-code \"{expectedExitCode}\" " : string.Empty) +
                                         outputPathArg +
                                         instrumentationArg +
                                         arguments +
