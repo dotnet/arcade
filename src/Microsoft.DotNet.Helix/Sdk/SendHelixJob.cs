@@ -164,8 +164,14 @@ namespace Microsoft.DotNet.Helix.Sdk
                     Log.LogMessage($"Setting creator to '{Creator}'");
                 }
 
-                if (CorrelationPayloads != null)
+                if (CorrelationPayloads == null)
                 {
+                    Log.LogMessage($"No Correlation Payloads for Job on {TargetQueue} set");
+                }
+                else
+                {
+                    Log.LogMessage($"Adding Correlation Payloads for Job on {TargetQueue}...");
+
                     foreach (ITaskItem correlationPayload in CorrelationPayloads)
                     {
                         def = AddCorrelationPayload(def, correlationPayload);
