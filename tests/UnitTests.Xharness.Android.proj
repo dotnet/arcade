@@ -31,15 +31,15 @@
     <HelixTargetQueue Include="ubuntu.1804.amd64.android"/>
   </ItemGroup>
 
+  <ItemGroup Condition=" '$(HelixAccessToken)' == '' ">
+    <HelixTargetQueue Include="ubuntu.1804.amd64.android.open"/>
+  </ItemGroup>
+
   <PropertyGroup Condition=" '$(HelixAccessToken)' == '' ">
     <IsExternal>true</IsExternal>
     <Creator>$(BUILD_SOURCEVERSIONAUTHOR)</Creator>
     <Creator Condition=" '$(Creator)' == ''">anon</Creator>
   </PropertyGroup>
-
-  <ItemGroup Condition=" '$(HelixAccessToken)' == '' ">
-    <HelixTargetQueue Include="ubuntu.1804.amd64.android.open"/>
-  </ItemGroup>
 
   <!-- Useless stuff to make Arcade SDK happy -->
   <PropertyGroup>
