@@ -13,7 +13,7 @@ timeout=''
 launch_timeout=''
 xharness_cli_path=''
 xcode_version=''
-app_arguments=''
+other_arguments=''
 expected_exit_code=0
 command='test'
 
@@ -49,7 +49,7 @@ while [[ $# -gt 0 ]]; do
         shift
         ;;
       --app-arguments)
-        app_arguments="$2"
+        other_arguments="$2"
         shift
         ;;
       --expected-exit-code)
@@ -78,20 +78,19 @@ if [ -z "$timeout" ]; then
     die "Test timeout wasn't provided";
 fi
 
-if [ -z "$launch_timeout" ]; then
-    die "Launch timeout wasn't provided";
-fi
-
 if [ -z "$xharness_cli_path" ]; then
     die "XHarness path wasn't provided";
 fi
 
-if [ -n "$app_arguments" ]; then
-    app_arguments="-- $app_arguments";
+if [ -n "$other_arguments" ]; then
+    other_arguments="-- $other_arguments";
 fi
 
 if [ "$command" == "run" ]; then
-    app_arguments="--expected-exit-code=$expected_exit_code $app_arguments"
+    other_arguments="--expected-exit-code=$expected_exit_code $other_arguments"
+elif [ -n "$launch_timeout" ]; then
+    # shellcheck disable=SC2089
+    other_arguments="--launch-timeout=\"$launch_timeout\" $other_arguments"
 fi
 
 set +e
@@ -109,16 +108,15 @@ open -a "$simulator_app"
 export XHARNESS_DISABLE_COLORED_OUTPUT=true
 export XHARNESS_LOG_WITH_TIMESTAMPS=true
 
-# shellcheck disable=SC2086
+# shellcheck disable=SC2086,SC2090
 dotnet exec "$xharness_cli_path" ios $command \
     --app="$app"                              \
     --output-directory="$output_directory"    \
     --targets="$targets"                      \
     --timeout="$timeout"                      \
-    --launch-timeout="$launch_timeout"        \
     --xcode="$xcode_path"                     \
     -v                                        \
-    $app_arguments
+    $other_arguments
 
 exit_code=$?
 
