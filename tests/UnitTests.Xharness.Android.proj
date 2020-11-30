@@ -2,6 +2,12 @@
   <!-- See UnitTests.proj in above folder for why this is included directly-from-repo -->
   <Import Project="$(MSBuildThisFileDirectory)\..\src\Microsoft.DotNet.Helix\Sdk\sdk\Sdk.props"/>
 
+  <!--
+    This is a project used in integration tests of Arcade.
+    It tests sending Android (XHarness) workloads using the Helix SDK.
+    It builds a mock project that does not build an APK directly but only downloads it from a storage account.
+   -->
+
   <PropertyGroup>
     <MicrosoftDotNetHelixSdkTasksAssembly Condition="'$(MSBuildRuntimeType)' == 'Core'">$(MSBuildThisFileDirectory)../artifacts/bin/Microsoft.DotNet.Helix.Sdk/$(Configuration)/netcoreapp2.1/publish/Microsoft.DotNet.Helix.Sdk.dll</MicrosoftDotNetHelixSdkTasksAssembly>
     <MicrosoftDotNetHelixSdkTasksAssembly Condition="'$(MSBuildRuntimeType)' != 'Core'">$(MSBuildThisFileDirectory)../artifacts/bin/Microsoft.DotNet.Helix.Sdk/$(Configuration)/net472/publish/Microsoft.DotNet.Helix.Sdk.dll</MicrosoftDotNetHelixSdkTasksAssembly>
@@ -25,15 +31,15 @@
     <HelixTargetQueue Include="ubuntu.1804.amd64.android"/>
   </ItemGroup>
 
+  <ItemGroup Condition=" '$(HelixAccessToken)' == '' ">
+    <HelixTargetQueue Include="ubuntu.1804.amd64.android.open"/>
+  </ItemGroup>
+
   <PropertyGroup Condition=" '$(HelixAccessToken)' == '' ">
     <IsExternal>true</IsExternal>
     <Creator>$(BUILD_SOURCEVERSIONAUTHOR)</Creator>
     <Creator Condition=" '$(Creator)' == ''">anon</Creator>
   </PropertyGroup>
-
-  <ItemGroup Condition=" '$(HelixAccessToken)' == '' ">
-    <HelixTargetQueue Include="ubuntu.1804.amd64.android.open"/>
-  </ItemGroup>
 
   <!-- Useless stuff to make Arcade SDK happy -->
   <PropertyGroup>

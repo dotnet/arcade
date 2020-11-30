@@ -164,10 +164,14 @@ namespace Microsoft.DotNet.Helix.Sdk
                     Log.LogMessage($"Setting creator to '{Creator}'");
                 }
 
-                Log.LogMessage(MessageImportance.High, $"Uploading payloads for Job on {TargetQueue}...");
-
-                if (CorrelationPayloads != null)
+                if (CorrelationPayloads == null)
                 {
+                    Log.LogMessage($"No Correlation Payloads for Job on {TargetQueue} set");
+                }
+                else
+                {
+                    Log.LogMessage($"Adding Correlation Payloads for Job on {TargetQueue}...");
+
                     foreach (ITaskItem correlationPayload in CorrelationPayloads)
                     {
                         def = AddCorrelationPayload(def, correlationPayload);
@@ -190,8 +194,6 @@ namespace Microsoft.DotNet.Helix.Sdk
                 {
                     def = def.WithCorrelationPayloadDirectory(directory);
                 }
-
-                Log.LogMessage(MessageImportance.High, $"Finished uploading payloads for Job on {TargetQueue}...");
 
                 if (HelixProperties != null)
                 {
