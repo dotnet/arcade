@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using Microsoft.DotNet.VersionTools.Automation;
@@ -13,6 +13,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
+using FluentAssertions;
 
 namespace Microsoft.DotNet.VersionTools.Tests.BuildManifest
 {
@@ -183,15 +184,16 @@ namespace Microsoft.DotNet.VersionTools.Tests.BuildManifest
                 .Setup(c => c.GetGitHubFileContentsAsync(It.IsAny<string>(), proj, fakeCommitHash))
                 .ReturnsAsync(() => fakeNewExistingBuild.ToXml().ToString());
 
-            await Assert.ThrowsAsync<ManifestChangeOutOfDateException>(
-                async () => await client.PushChangeAsync(
+            var pushClient = client.PushChangeAsync(
                     new BuildManifestChange(
                         new BuildManifestLocation(proj, @ref, basePath),
                         message,
                         fakeExistingBuild.Identity.BuildId,
                         new[] { addSemaphorePath },
                         _ => { }
-                        )));
+                        ));
+            Func<Task> act = async () => { await pushClient; };
+            await act.Should().ThrowAsync<ManifestChangeOutOfDateException>();
 
             mockGitHub.VerifyAll();
         }

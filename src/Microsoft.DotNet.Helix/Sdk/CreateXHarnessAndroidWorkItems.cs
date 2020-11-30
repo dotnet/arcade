@@ -50,9 +50,9 @@ namespace Microsoft.DotNet.Helix.Sdk
             await Task.Yield();
             string workItemName = Path.GetFileNameWithoutExtension(appPackage.ItemSpec);
 
-            var (testTimeout, workItemTimeout) = ParseTimeouts(appPackage);
+            var (testTimeout, workItemTimeout, expectedExitCode) = ParseMetadata(appPackage);
 
-            string command = ValidateMetadataAndGetXHarnessAndroidCommand(appPackage, testTimeout);
+            string command = ValidateMetadataAndGetXHarnessAndroidCommand(appPackage, testTimeout, expectedExitCode);
 
             if (!Path.GetExtension(appPackage.ItemSpec).Equals(".apk", StringComparison.OrdinalIgnoreCase))
             {
@@ -86,7 +86,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             return outputZipAbsolutePath;
         }
 
-        private string ValidateMetadataAndGetXHarnessAndroidCommand(ITaskItem appPackage, TimeSpan xHarnessTimeout)
+        private string ValidateMetadataAndGetXHarnessAndroidCommand(ITaskItem appPackage, TimeSpan xHarnessTimeout, int expectedExitCode)
         {
             // Validation of any metadata specific to Android stuff goes here
             if (!appPackage.GetRequiredMetadata(Log, "AndroidPackageName", out string androidPackageName))
@@ -106,9 +106,10 @@ namespace Microsoft.DotNet.Helix.Sdk
             string xharnessRunCommand = $"dotnet exec \"{(IsPosixShell ? "$XHARNESS_CLI_PATH" : "%XHARNESS_CLI_PATH%")}\" android test " +
                                         $"--app \"{Path.GetFileName(appPackage.ItemSpec)}\" " +
                                         $"--output-directory \"{outputDirectory}\" " +
-                                        $"--timeout {xHarnessTimeout.TotalSeconds} " +
+                                        $"--timeout \"{xHarnessTimeout}\" " +
                                         $"-p=\"{androidPackageName}\" " +
                                         "-v " +
+                                        (expectedExitCode != 0 ? $" --expected-exit-code \"{expectedExitCode}\" " : string.Empty) +
                                         outputPathArg +
                                         instrumentationArg +
                                         arguments +

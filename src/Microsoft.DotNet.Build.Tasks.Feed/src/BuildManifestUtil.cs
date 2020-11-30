@@ -167,7 +167,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 {
                     var fileName = Path.GetFileName(itemToSign.ItemSpec);
                     if (!blobArtifacts.Any(b => Path.GetFileName(b.Id).Equals(fileName, StringComparison.OrdinalIgnoreCase)) &&
-                        !packageArtifacts.Any(p => $"{p.Id}.nupkg".Equals(fileName, StringComparison.OrdinalIgnoreCase)))
+                        !packageArtifacts.Any(p => $"{p.Id}.{p.Version}.nupkg".Equals(fileName, StringComparison.OrdinalIgnoreCase)))
                     {
                         log.LogError($"Item to sign '{itemToSign}' was not found in the artifacts");
                     }
@@ -203,7 +203,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 foreach (var signInfo in certificatesSignInfo)
                 {
                     var attributes = signInfo.CloneCustomMetadata() as IDictionary<string, string>;
-                    parsedCertificatesSignInfoModel.Add(new CertificatesSignInfoModel { Include = signInfo.ItemSpec, DualSigningAllowed = attributes["DualSigningAllowed"] });
+                    parsedCertificatesSignInfoModel.Add(new CertificatesSignInfoModel { Include = signInfo.ItemSpec, DualSigningAllowed = bool.Parse(attributes["DualSigningAllowed"]) });
                 }
             }
 

@@ -5,6 +5,7 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Xunit;
 using Xunit.Abstractions;
+using FluentAssertions;
 
 namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
 {
@@ -39,11 +40,14 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
 
             _log.Reset();
             task.Execute();
-            Assert.Equal(0, _log.ErrorsLogged);
-            Assert.Equal(0, _log.WarningsLogged);
-            Assert.Equal(task.OriginalDependencies.Length, task.BaseLinedDependencies.Length);
-            Assert.Equal("System.Runtime", task.BaseLinedDependencies[0].ItemSpec);
-            Assert.Equal("4.0.21", task.BaseLinedDependencies[0].GetMetadata("Version"));
+            _log.ErrorsLogged.Should().Be(0);
+            _log.WarningsLogged.Should().Be(0);
+            task.BaseLinedDependencies.Should().SatisfyRespectively(
+                item =>
+                {
+                    item.ItemSpec.Should().Be("System.Runtime");
+                    item.GetMetadata("Version").Should().Be("4.0.21");
+                });
         }
 
         [Fact]
@@ -65,11 +69,14 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
 
             _log.Reset();
             task.Execute();
-            Assert.Equal(0, _log.ErrorsLogged);
-            Assert.Equal(0, _log.WarningsLogged);
-            Assert.Equal(task.OriginalDependencies.Length, task.BaseLinedDependencies.Length);
-            Assert.Equal("System.Runtime", task.BaseLinedDependencies[0].ItemSpec);
-            Assert.Equal("4.1.0", task.BaseLinedDependencies[0].GetMetadata("Version"));
+            _log.ErrorsLogged.Should().Be(0);
+            _log.WarningsLogged.Should().Be(0);
+            task.BaseLinedDependencies.Should().SatisfyRespectively(
+                item =>
+                {
+                    item.ItemSpec.Should().Be("System.Runtime");
+                    item.GetMetadata("Version").Should().Be("4.1.0");
+                });
         }
 
         [Fact]
@@ -90,11 +97,14 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
 
             _log.Reset();
             task.Execute();
-            Assert.Equal(0, _log.ErrorsLogged);
-            Assert.Equal(0, _log.WarningsLogged);
-            Assert.Equal(task.OriginalDependencies.Length, task.BaseLinedDependencies.Length);
-            Assert.Equal("System.Runtime", task.BaseLinedDependencies[0].ItemSpec);
-            Assert.Equal("4.0.21", task.BaseLinedDependencies[0].GetMetadata("Version"));
+            _log.ErrorsLogged.Should().Be(0);
+            _log.WarningsLogged.Should().Be(0);
+            task.BaseLinedDependencies.Should().SatisfyRespectively(
+                item =>
+                {
+                    item.ItemSpec.Should().Be("System.Runtime");
+                    item.GetMetadata("Version").Should().Be("4.0.21");
+                });
         }
 
         [Fact]
@@ -116,11 +126,14 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
 
             _log.Reset();
             task.Execute();
-            Assert.Equal(0, _log.ErrorsLogged);
-            Assert.Equal(0, _log.WarningsLogged);
-            Assert.Equal(task.OriginalDependencies.Length, task.BaseLinedDependencies.Length);
-            Assert.Equal("System.Banana", task.BaseLinedDependencies[0].ItemSpec);
-            Assert.Equal("4.0.0", task.BaseLinedDependencies[0].GetMetadata("Version"));
+            _log.ErrorsLogged.Should().Be(0);
+            _log.WarningsLogged.Should().Be(0);
+            task.BaseLinedDependencies.Should().SatisfyRespectively(
+                item =>
+                {
+                    item.ItemSpec.Should().Be("System.Banana");
+                    item.GetMetadata("Version").Should().Be("4.0.0");
+                });
         }
 
         private static ITaskItem CreateItem(string name, string version)

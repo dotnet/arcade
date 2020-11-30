@@ -1,11 +1,11 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using FluentAssertions;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -53,8 +53,8 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
 
             _log.Reset();
             task.Execute();
-            Assert.Equal(1, _log.ErrorsLogged);
-            Assert.Equal(0, _log.WarningsLogged);
+            _log.ErrorsLogged.Should().Be(1);
+            _log.WarningsLogged.Should().Be(0);
         }
 
         [Fact]
@@ -70,8 +70,8 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
 
             _log.Reset();
             task.Execute();
-            Assert.Equal(0, _log.ErrorsLogged);
-            Assert.Equal(0, _log.WarningsLogged);
+            _log.ErrorsLogged.Should().Be(0);
+            _log.WarningsLogged.Should().Be(0);
         }
 
         [Fact]
@@ -110,8 +110,8 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
 
             _log.Reset();
             task.Execute();
-            Assert.Equal(0, _log.ErrorsLogged);
-            Assert.Equal(0, _log.WarningsLogged);
+            _log.ErrorsLogged.Should().Be(0);
+            _log.WarningsLogged.Should().Be(0);
         }
 
         [Fact]
@@ -143,8 +143,8 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
 
             _log.Reset();
             task.Execute();
-            Assert.Equal(1, _log.ErrorsLogged);
-            Assert.Equal(0, _log.WarningsLogged);
+            _log.ErrorsLogged.Should().Be(1);
+            _log.WarningsLogged.Should().Be(0);
         }
 
         private class TestableValidateHarvestVersionTask : ValidateHarvestVersionIsLatestForRelease

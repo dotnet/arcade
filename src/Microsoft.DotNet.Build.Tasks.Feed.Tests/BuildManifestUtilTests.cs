@@ -68,7 +68,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         [Fact]
         public void ManifestArtifactParsingTest()
         {
-            var localPackagePath = TestInputs.GetFullPath(Path.Combine("Nupkgs", "test-package-a.nupkg"));
+            var localPackagePath = TestInputs.GetFullPath(Path.Combine("Nupkgs", "test-package-a.1.0.0.nupkg"));
 
             const string bopSymbolsNupkg = "foo/bar/baz/bop.symbols.nupkg";
             string bobSymbolsExpectedId = $"assets/symbols/{Path.GetFileName(bopSymbolsNupkg)}";
@@ -154,7 +154,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         [Fact]
         public void ArtifactMetadataIsCaseInsensitive()
         {
-            var localPackagePath = TestInputs.GetFullPath(Path.Combine("Nupkgs", "test-package-a.nupkg"));
+            var localPackagePath = TestInputs.GetFullPath(Path.Combine("Nupkgs", "test-package-a.1.0.0.nupkg"));
 
             var artifacts = new ITaskItem[]
             {
@@ -247,7 +247,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         [InlineData("InitialAssetsLocation")]
         public void InitialLocationInformationAttributesAreAccepted(string attributeName)
         {
-            var localPackagePath = TestInputs.GetFullPath(Path.Combine("Nupkgs", "test-package-a.nupkg"));
+            var localPackagePath = TestInputs.GetFullPath(Path.Combine("Nupkgs", "test-package-a.1.0.0.nupkg"));
 
             var artifacts = new ITaskItem[]
             {
@@ -289,7 +289,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         [Fact]
         public void RoundTripFromTaskItemsToFileToXml()
         {
-            var localPackagePath = TestInputs.GetFullPath(Path.Combine("Nupkgs", "test-package-a.nupkg"));
+            var localPackagePath = TestInputs.GetFullPath(Path.Combine("Nupkgs", "test-package-a.1.0.0.nupkg"));
 
             const string bopSymbolsNupkg = "foo/bar/baz/bop.symbols.nupkg";
             string bobSymbolsExpectedId = $"assets/symbols/{Path.GetFileName(bopSymbolsNupkg)}";
@@ -335,7 +335,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 new TaskItem(localPackagePath, new Dictionary<string, string>()
                 {
                     { "CertificateName", "IHasACert" },
-                    { "PublicKeyToken", "BLORG" }
+                    { "PublicKeyToken", "abcdabcdabcdabcd" }
                 })
             };
 
@@ -447,31 +447,31 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     },
                     item =>
                     {
-                        item.Include.Should().Be("test-package-a.nupkg");
+                        item.Include.Should().Be("test-package-a.1.0.0.nupkg");
                     });
                 modelFromFile.SigningInformation.StrongNameSignInfo.Should().SatisfyRespectively(
                     item =>
                     {
-                        item.Include.Should().Be("test-package-a.nupkg");
+                        item.Include.Should().Be("test-package-a.1.0.0.nupkg");
                         item.CertificateName.Should().Be("IHasACert");
-                        item.PublicKeyToken.Should().Be("BLORG");
+                        item.PublicKeyToken.Should().Be("abcdabcdabcdabcd");
                     });
                 modelFromFile.SigningInformation.FileSignInfo.Should().SatisfyRespectively(
                     item =>
                     {
-                        item.Include.Should().Be("test-package-a.nupkg");
+                        item.Include.Should().Be("test-package-a.1.0.0.nupkg");
                         item.CertificateName.Should().Be("IHasACert2");
                     });
                 modelFromFile.SigningInformation.CertificatesSignInfo.Should().SatisfyRespectively(
                     item =>
                     {
                         item.Include.Should().Be("MyCert");
-                        item.DualSigningAllowed.Should().Be("false");
+                        item.DualSigningAllowed.Should().Be(false);
                     },
                     item =>
                     {
                         item.Include.Should().Be("MyOtherCert");
-                        item.DualSigningAllowed.Should().Be("true");
+                        item.DualSigningAllowed.Should().Be(true);
                     });
                 modelFromFile.SigningInformation.FileExtensionSignInfo.Should().SatisfyRespectively(
                     item =>
@@ -500,7 +500,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         [Fact]
         public void NoSigningInformationDoesNotThrowAnError()
         {
-            var localPackagePath = TestInputs.GetFullPath(Path.Combine("Nupkgs", "test-package-a.nupkg"));
+            var localPackagePath = TestInputs.GetFullPath(Path.Combine("Nupkgs", "test-package-a.1.0.0.nupkg"));
 
             var artifacts = new ITaskItem[]
             {
@@ -530,7 +530,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         [Fact]
         public void SignInfoIsCorrectlyPopulatedFromItems()
         {
-            var localPackagePath = TestInputs.GetFullPath(Path.Combine("Nupkgs", "test-package-a.nupkg"));
+            var localPackagePath = TestInputs.GetFullPath(Path.Combine("Nupkgs", "test-package-a.1.0.0.nupkg"));
             var zipPath = @"this/is/a/zip.zip";
 
             var artifacts = new ITaskItem[]
@@ -553,7 +553,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 new TaskItem(localPackagePath, new Dictionary<string, string>()
                 {
                     { "CertificateName", "IHasACert" },
-                    { "PublicKeyToken", "BLORG" }
+                    { "PublicKeyToken", "abcdabcdabcdabcd" }
                 })
             };
 
@@ -596,7 +596,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             model.SigningInformation.ItemsToSign.Should().SatisfyRespectively(
                 item =>
                 {
-                    item.Include.Should().Be("test-package-a.nupkg");
+                    item.Include.Should().Be("test-package-a.1.0.0.nupkg");
                 },
                 item =>
                 {
@@ -605,26 +605,26 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             model.SigningInformation.StrongNameSignInfo.Should().SatisfyRespectively(
                 item =>
                 {
-                    item.Include.Should().Be("test-package-a.nupkg");
+                    item.Include.Should().Be("test-package-a.1.0.0.nupkg");
                     item.CertificateName.Should().Be("IHasACert");
-                    item.PublicKeyToken.Should().Be("BLORG");
+                    item.PublicKeyToken.Should().Be("abcdabcdabcdabcd");
                 });
             model.SigningInformation.FileSignInfo.Should().SatisfyRespectively(
                 item =>
                 {
-                    item.Include.Should().Be("test-package-a.nupkg");
+                    item.Include.Should().Be("test-package-a.1.0.0.nupkg");
                     item.CertificateName.Should().Be("IHasACert2");
                 });
             model.SigningInformation.CertificatesSignInfo.Should().SatisfyRespectively(
                 item =>
                 {
                     item.Include.Should().Be("MyCert");
-                    item.DualSigningAllowed.Should().Be("false");
+                    item.DualSigningAllowed.Should().Be(false);
                 },
                 item =>
                 {
                     item.Include.Should().Be("MyOtherCert");
-                    item.DualSigningAllowed.Should().Be("true");
+                    item.DualSigningAllowed.Should().Be(true);
                 });
             model.SigningInformation.FileExtensionSignInfo.Should().SatisfyRespectively(
                 item =>
@@ -640,7 +640,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         [Fact]
         public void ArtifactToSignMustExistInArtifacts()
         {
-            var localPackagePath = TestInputs.GetFullPath(Path.Combine("Nupkgs", "test-package-a.nupkg"));
+            var localPackagePath = TestInputs.GetFullPath(Path.Combine("Nupkgs", "test-package-a.1.0.0.nupkg"));
             const string zipPath = @"this/is/a/zip.zip";
             const string bogusNupkgToSign = "totallyboguspackage.nupkg";
 
@@ -656,6 +656,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             var itemsToSign = new ITaskItem[]
             {
                 new TaskItem(bogusNupkgToSign),
+                new TaskItem(Path.GetFileName(zipPath)),
+                new TaskItem(Path.GetFileName(localPackagePath)),
             };
 
             var model = BuildManifestUtil.CreateModelFromItems(artifacts, itemsToSign,
@@ -665,6 +667,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 true, _taskLoggingHelper);
 
             _taskLoggingHelper.HasLoggedErrors.Should().BeTrue();
+            _buildEngine.BuildErrorEvents.Should().HaveCount(1);
             _buildEngine.BuildErrorEvents.Should().Contain(e => e.Message.Equals($"Item to sign '{bogusNupkgToSign}' was not found in the artifacts"));
         }
 

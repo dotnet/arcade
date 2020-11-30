@@ -14,6 +14,7 @@ namespace Microsoft.DotNet.Helix.Sdk
 
         private const string TestTimeoutPropName = "TestTimeout";
         private const string WorkItemTimeoutPropName = "WorkItemTimeout";
+        private const string ExpectedExitCodePropName = "ExpectedExitCode";
 
         /// <summary>
         /// Boolean true if this is a posix shell, false if not.
@@ -34,15 +35,16 @@ namespace Microsoft.DotNet.Helix.Sdk
         public ITaskItem[] WorkItems { get; set; }
 
         /// <summary>
-        /// Parses task item pointing to the app (app bundle/apk) we want to turn into an XHarness job.
+        /// Parses metadata of the task item pointing to the app (app bundle/apk) we want to turn into an XHarness job.
         /// </summary>
         /// <param name="xHarnessAppItem">MSBuild task item</param>
         /// <returns>
-        /// Parsed timeouts:
+        /// Parsed data:
         ///   - TestTimeout - Optional timeout for the actual test execution
         ///   - WorkItemTimeout - Optional timeout for the whole Helix work item run (includes SDK and tool installation)
+        ///   - ExpectedExitCode - Optional expected exit code parameter that is forwarded to XHarness
         /// </returns>
-        protected (TimeSpan TestTimeout, TimeSpan WorkItemTimeout) ParseTimeouts(ITaskItem xHarnessAppItem)
+        protected (TimeSpan TestTimeout, TimeSpan WorkItemTimeout, int ExpectedExitCode) ParseMetadata(ITaskItem xHarnessAppItem)
         {
             // Optional timeout for the actual test execution in the TimeSpan format
             TimeSpan testTimeout = TimeSpan.FromMinutes(DefaultTestTimeoutInMinutes);
@@ -77,7 +79,16 @@ namespace Microsoft.DotNet.Helix.Sdk
                     $"to allow the XHarness tool to be initialized properly.");
             }
 
-            return (TestTimeout: testTimeout, WorkItemTimeout: workItemTimeout);
+            int expectedExitCode = 0;
+            if (xHarnessAppItem.TryGetMetadata(ExpectedExitCodePropName, out string expectedExitCodeProp))
+            {
+                int.TryParse(expectedExitCodeProp, out expectedExitCode);
+            }
+
+            return (
+                TestTimeout: testTimeout,
+                WorkItemTimeout: workItemTimeout,
+                ExpectedExitCode: expectedExitCode);
         }
     }
 }
