@@ -9,7 +9,6 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using TaskLoggingHelper = Microsoft.Build.Utilities.TaskLoggingHelper;
 
@@ -22,17 +21,19 @@ namespace Microsoft.DotNet.SignTool
         private readonly BatchSignInput _batchData;
         private readonly SignTool _signTool;
         private readonly string[] _itemsToSkipStrongNameCheck;
+        private Telemetry _telemetry;
 
         internal bool SkipZipContainerSignatureMarkerCheck { get; set; }
 
         internal BatchSignUtil(IBuildEngine buildEngine, TaskLoggingHelper log, SignTool signTool,
-            BatchSignInput batchData, string[] itemsToSkipStrongNameCheck)
+            BatchSignInput batchData, string[] itemsToSkipStrongNameCheck, Telemetry telemetry = null)
         {
             _signTool = signTool;
             _batchData = batchData;
             _log = log;
             _buildEngine = buildEngine;
             _itemsToSkipStrongNameCheck = itemsToSkipStrongNameCheck ?? Array.Empty<string>();
+            _telemetry = telemetry;
         }
 
         internal void Go(bool doStrongNameCheck)
@@ -105,10 +106,10 @@ namespace Microsoft.DotNet.SignTool
             var trackedSet = new HashSet<SignedFileContentKey>();
 
             // Given a list of files that need signing, sign them in a batch.
-            bool signGroup(IEnumerable<FileSignInfo> files, out int totalFilesSigned)
+            bool signGroup(IEnumerable<FileSignInfo> files, out int signedCount)
             {
                 var filesToSign = files.Where(fileInfo => fileInfo.SignInfo.ShouldSign).ToArray();
-                totalFilesSigned = filesToSign.Length;
+                signedCount = filesToSign.Length;
                 if (filesToSign.Length == 0) return true;
 
                 _log.LogMessage(MessageImportance.High, $"Round {round}: Signing {filesToSign.Length} files.");
@@ -123,12 +124,12 @@ namespace Microsoft.DotNet.SignTool
 
             // Given a list of files that need signing, sign the installer engines
             // of those that are wix containers.
-            bool signEngines(IEnumerable<FileSignInfo> files, out int totalFilesSigned)
+            bool signEngines(IEnumerable<FileSignInfo> files, out int signedCount)
             {
                 var enginesToSign = files.Where(fileInfo => fileInfo.SignInfo.ShouldSign && 
                                                 fileInfo.IsWixContainer() &&
                                                 Path.GetExtension(fileInfo.FullPath) == ".exe").ToArray();
-                totalFilesSigned = enginesToSign.Length;
+                signedCount = enginesToSign.Length;
                 if (enginesToSign.Length == 0)
                 {
                     return true;
@@ -187,11 +188,11 @@ namespace Microsoft.DotNet.SignTool
 
             // Given a group of file that are ready for processing,
             // repack those files that are containers.
-            void repackGroup(IEnumerable<FileSignInfo> files)
+            void repackGroup(IEnumerable<FileSignInfo> files, out int repackCount)
             {
                 var repackList = files.Where(w => toRepackSet.Contains(w.FullPath)).ToList();
-                
-                int repackCount = repackList.Count();
+
+                repackCount = repackList.Count();
                 if(repackCount == 0)
                 {
                     return;
@@ -258,40 +259,73 @@ namespace Microsoft.DotNet.SignTool
                 return list;
             }
 
-            // Core algorithm of batch signing.
-            // While there are files left to process,
-            //  Identify which files are ready for processing (ready to repack or sign)
-            //  Repack those of that set that are containers
-            //  Sign any of those files that need signing, along with their engines.
-            while (toProcessList.Count > 0)
+            // Telemetry data
+            double telemetryTotalFilesSigned = 0;
+            double telemetryTotalFilesRepacked = 0;
+            Stopwatch telemetrySignedTime = new Stopwatch();
+            Stopwatch telemetryRepackedTime = new Stopwatch();
+
+            try
             {
-                var trackList = identifyNextGroup();
-                if (trackList.Count == 0)
+                // Core algorithm of batch signing.
+                // While there are files left to process,
+                //  Identify which files are ready for processing (ready to repack or sign)
+                //  Repack those of that set that are containers
+                //  Sign any of those files that need signing, along with their engines.
+                while (toProcessList.Count > 0)
                 {
-                    throw new InvalidOperationException("No progress made on signing which indicates a bug");
-                }
+                    var trackList = identifyNextGroup();
+                    if (trackList.Count == 0)
+                    {
+                        throw new InvalidOperationException("No progress made on signing which indicates a bug");
+                    }
 
-                repackGroup(trackList);
+                    int fileModifiedCount;
+                    telemetryRepackedTime.Start();
+                    repackGroup(trackList, out fileModifiedCount);
+                    telemetryRepackedTime.Stop();
+                    telemetryTotalFilesRepacked += fileModifiedCount;
 
-                int totalFilesSigned;
-                if (!signEngines(trackList, out totalFilesSigned))
-                {
-                    return false;
-                }
-                if(totalFilesSigned > 0)
-                {
-                    round++;
-                }
+                    try
+                    {
+                        telemetrySignedTime.Start();
+                        if (!signEngines(trackList, out fileModifiedCount))
+                        {
+                            return false;
+                        }
+                        if (fileModifiedCount > 0)
+                        {
+                            round++;
+                            telemetryTotalFilesSigned += fileModifiedCount;
+                        }
 
-                if (!signGroup(trackList, out totalFilesSigned))
-                {
-                    return false;
+                        if (!signGroup(trackList, out fileModifiedCount))
+                        {
+                            return false;
+                        }
+                        if (fileModifiedCount > 0)
+                        {
+                            round++;
+                            telemetryTotalFilesSigned += fileModifiedCount;
+                        }
+                    }
+                    finally
+                    {
+                        telemetrySignedTime.Stop();
+                    }
+
+                    trackList.ForEach(x => trackedSet.Add(x.FileContentKey));
                 }
-                if (totalFilesSigned > 0)
+            }
+            finally
+            {
+                if (_telemetry != null)
                 {
-                    round++;
+                    _telemetry.AddMetric("Signed file count", telemetryTotalFilesSigned);
+                    _telemetry.AddMetric("Repacked file count", telemetryTotalFilesRepacked);
+                    _telemetry.AddMetric("Signing duration (s)", telemetrySignedTime.ElapsedMilliseconds / 1000);
+                    _telemetry.AddMetric("Repacking duration (s)", telemetryRepackedTime.ElapsedMilliseconds / 1000);
                 }
-                trackList.ForEach(x => trackedSet.Add(x.FileContentKey));
             }
 
             return true;

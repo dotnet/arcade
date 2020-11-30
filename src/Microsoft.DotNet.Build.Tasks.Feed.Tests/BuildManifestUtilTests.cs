@@ -335,7 +335,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 new TaskItem(localPackagePath, new Dictionary<string, string>()
                 {
                     { "CertificateName", "IHasACert" },
-                    { "PublicKeyToken", "BLORG" }
+                    { "PublicKeyToken", "abcdabcdabcdabcd" }
                 })
             };
 
@@ -454,7 +454,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     {
                         item.Include.Should().Be("test-package-a.1.0.0.nupkg");
                         item.CertificateName.Should().Be("IHasACert");
-                        item.PublicKeyToken.Should().Be("BLORG");
+                        item.PublicKeyToken.Should().Be("abcdabcdabcdabcd");
                     });
                 modelFromFile.SigningInformation.FileSignInfo.Should().SatisfyRespectively(
                     item =>
@@ -466,12 +466,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     item =>
                     {
                         item.Include.Should().Be("MyCert");
-                        item.DualSigningAllowed.Should().Be("false");
+                        item.DualSigningAllowed.Should().Be(false);
                     },
                     item =>
                     {
                         item.Include.Should().Be("MyOtherCert");
-                        item.DualSigningAllowed.Should().Be("true");
+                        item.DualSigningAllowed.Should().Be(true);
                     });
                 modelFromFile.SigningInformation.FileExtensionSignInfo.Should().SatisfyRespectively(
                     item =>
@@ -553,7 +553,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 new TaskItem(localPackagePath, new Dictionary<string, string>()
                 {
                     { "CertificateName", "IHasACert" },
-                    { "PublicKeyToken", "BLORG" }
+                    { "PublicKeyToken", "abcdabcdabcdabcd" }
                 })
             };
 
@@ -607,7 +607,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 {
                     item.Include.Should().Be("test-package-a.1.0.0.nupkg");
                     item.CertificateName.Should().Be("IHasACert");
-                    item.PublicKeyToken.Should().Be("BLORG");
+                    item.PublicKeyToken.Should().Be("abcdabcdabcdabcd");
                 });
             model.SigningInformation.FileSignInfo.Should().SatisfyRespectively(
                 item =>
@@ -619,12 +619,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 item =>
                 {
                     item.Include.Should().Be("MyCert");
-                    item.DualSigningAllowed.Should().Be("false");
+                    item.DualSigningAllowed.Should().Be(false);
                 },
                 item =>
                 {
                     item.Include.Should().Be("MyOtherCert");
-                    item.DualSigningAllowed.Should().Be("true");
+                    item.DualSigningAllowed.Should().Be(true);
                 });
             model.SigningInformation.FileExtensionSignInfo.Should().SatisfyRespectively(
                 item =>
