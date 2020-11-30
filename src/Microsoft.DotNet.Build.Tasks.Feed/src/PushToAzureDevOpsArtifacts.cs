@@ -88,7 +88,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     {
                         // Act as if %(PublishFlatContainer) were true for all items.
                         blobArtifacts = itemsToPushNoExcludes
-                            .Select(BuildManifestUtil.CreateBlobArtifactModel);
+                            .Select(i => BuildManifestUtil.CreateBlobArtifactModel(i, Log));
                         foreach (var blobItem in itemsToPushNoExcludes)
                         {
                             if (!File.Exists(blobItem.ItemSpec))
@@ -157,7 +157,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         }
 
                         packageArtifacts = packageItems.Select(BuildManifestUtil.CreatePackageArtifactModel);
-                        blobArtifacts = blobItems.Select(BuildManifestUtil.CreateBlobArtifactModel).Where(blob => blob != null);
+                        blobArtifacts = blobItems.Select(i => BuildManifestUtil.CreateBlobArtifactModel(i, Log)).Where(blob => blob != null);
                     }
 
                     PublishingInfraVersion targetPublishingVersion = PublishingInfraVersion.Latest;
@@ -170,8 +170,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         }
                     }
                     
-                    SigningInformationModel signingInformationModel = BuildManifestUtil.CreateSigningInformationModelFromItems(AzureDevOpsCollectionUri, AzureDevOpsProject, AzureDevOpsBuildId,
-                        ItemsToSign, StrongNameSignInfo, FileSignInfo, FileExtensionSignInfo, CertificatesSignInfo);
+                    SigningInformationModel signingInformationModel = BuildManifestUtil.CreateSigningInformationModelFromItems(
+                        ItemsToSign, StrongNameSignInfo, FileSignInfo, FileExtensionSignInfo, CertificatesSignInfo, blobArtifacts, packageArtifacts, Log);
 
                     BuildManifestUtil.CreateBuildManifest(Log,
                         blobArtifacts,

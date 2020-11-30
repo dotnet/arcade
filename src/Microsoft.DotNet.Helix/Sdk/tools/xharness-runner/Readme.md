@@ -86,15 +86,23 @@ You can also specify some metadata that will help you configure the run better:
 ```xml
 <ItemGroup>
   <XHarnessAppBundleToTest Include=".\appbundles\Contoso.Example.Tests.app">
-    <!-- Timeout for the overall run of the whole Helix work item (including Simulator booting, app installation..) -->
+    <!-- Optional: Timeout for the overall run of the whole Helix work item (including Simulator booting, app installation..) -->
     <WorkItemTimeout>00:20:00</WorkItemTimeout>
 
-    <!-- Timeout for the actual test run (when TestRunner starts execution of tests) -->
+    <!-- Optional: Timeout for the actual test run (when TestRunner starts execution of tests) -->
     <!-- Should be smaller than WorkItemTimeout by several minutes -->
     <TestTimeout>00:12:00</TestTimeout>
 
-    <!-- Timeout for how long it takes to install and boot the app and start running the first test -->
+    <!-- Optional: Timeout for how long it takes to install and boot the app and start running the first test -->
     <LaunchTimeout>00:10:00</LaunchTimeout>
+
+    <!-- Optional (`ios run` command only): Expected exit code of the iOS/tvOS application. XHarness exits with 0 when the app exits with this code -->
+    <!-- Please note that exit code detection may not be reliable across iOS/tvOS versions -->
+    <ExpectedExitCode>3</ExpectedExitCode>
+    
+    <!-- Optional: For apps that don't contain unit tests, they can be run using the `ios run` command instead of `ios test` -->
+    <!-- Default is true -->
+    <IncludesTestRunner>false</IncludesTestRunner>
   </XHarnessAppBundleToTest>
 </ItemGroup>
 ```
@@ -118,7 +126,7 @@ To execute .apks, declare one or more `XHarnessApkToTest` items:
     <!-- Package name: this comes from metadata inside the apk itself -->
     <AndroidPackageName>net.dot.System.Numerics.Vectors.Tests</AndroidPackageName>
 
-    <!-- If there are > 1 instrumentation class inside the package, we need to know the name of which to use -->
+    <!-- If there are > 1 instrumentation classes inside the package, we need to know the name of which to use -->
     <AndroidInstrumentationName>net.dot.MonoRunner</AndroidInstrumentationName>
   </XHarnessApkToTest>
 </ItemGroup>
@@ -129,12 +137,15 @@ You can also specify some metadata that will help you configure the run better:
 ```xml
 <ItemGroup>
   <XHarnessApkToTest Include="$(TestArchiveTestsRoot)**\*.apk">
-    <!-- Timeout for the overall run of the whole Helix work item (including Simulator booting, app installation..) -->
+    <!-- Optional: Timeout for the overall run of the whole Helix work item (including Simulator booting, app installation..) -->
     <WorkItemTimeout>00:20:00</WorkItemTimeout>
 
-    <!-- Timeout for the actual test run (when TestRunner starts execution of tests) -->
+    <!-- Optional: Timeout for the actual test run (when TestRunner starts execution of tests) -->
     <!-- Should be smaller than WorkItemTimeout by several minutes -->
     <TestTimeout>00:12:00</TestTimeout>
+  
+    <!-- Optional: Expected exit code of the instrumentation run. XHarness exits with 0 when the app exits with this code -->
+    <ExpectedExitCode>3</ExpectedExitCode>
   </XHarnessApkToTest>
 </ItemGroup>
 ```

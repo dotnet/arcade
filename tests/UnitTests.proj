@@ -50,9 +50,9 @@
   </ItemGroup>
 
   <ItemGroup Condition=" '$(HelixAccessToken)' != '' ">
-    <HelixTargetQueue Include="Debian.9.Amd64.Arcade"/>
-    <HelixTargetQueue Include="RedHat.7.Amd64.Arcade"/>
-    <HelixTargetQueue Include="Windows.10.Amd64.Arcade"/>
+    <HelixTargetQueue Include="Debian.9.Amd64"/>
+    <HelixTargetQueue Include="RedHat.7.Amd64"/>
+    <HelixTargetQueue Include="Windows.10.Amd64"/>
   </ItemGroup>
 
   <PropertyGroup Condition=" '$(HelixAccessToken)' == '' ">
@@ -62,9 +62,9 @@
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(HelixAccessToken)' == '' ">
-    <HelixTargetQueue Include="Debian.9.Amd64.Arcade.Open"/>
-    <HelixTargetQueue Include="RedHat.7.Amd64.Arcade.Open"/>
-    <HelixTargetQueue Include="Windows.10.Amd64.Arcade.Open"/>
+    <HelixTargetQueue Include="Debian.9.Amd64.Open"/>
+    <HelixTargetQueue Include="RedHat.7.Amd64.Open"/>
+    <HelixTargetQueue Include="Windows.10.Amd64.Open"/>
   </ItemGroup>
 
   <PropertyGroup Condition="!$(HelixTargetQueue.StartsWith('Windows'))">

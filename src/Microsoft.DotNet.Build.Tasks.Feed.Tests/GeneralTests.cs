@@ -9,6 +9,7 @@ using Microsoft.DotNet.Build.Tasks.Feed.Model;
 using Microsoft.DotNet.Build.Tasks.Feed.Tests.TestDoubles;
 using Xunit;
 using static Microsoft.DotNet.Build.Tasks.Feed.GeneralUtils;
+using FluentAssertions;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
 {
@@ -21,12 +22,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         {
             foreach (var channelConfig in PublishingConstants.ChannelInfos)
             {
-                Assert.True(channelConfig.Id > 0);
-                Assert.False(string.IsNullOrEmpty(channelConfig.ShippingFeed));
-                Assert.False(string.IsNullOrEmpty(channelConfig.TransportFeed));
-                Assert.False(string.IsNullOrEmpty(channelConfig.SymbolsFeed));
-                Assert.False(string.IsNullOrEmpty(channelConfig.ChecksumsFeed));
-                Assert.False(string.IsNullOrEmpty(channelConfig.InstallersFeed));
+                channelConfig.Id.Should().BeGreaterThan(0);
+                channelConfig.ShippingFeed.Should().NotBeNullOrEmpty();
+                channelConfig.ShippingFeed.Should().NotBeNullOrEmpty();
+                channelConfig.TransportFeed.Should().NotBeNullOrEmpty();
+                channelConfig.SymbolsFeed.Should().NotBeNullOrEmpty();
+                channelConfig.ChecksumsFeed.Should().NotBeNullOrEmpty();
+                channelConfig.InstallersFeed.Should().NotBeNullOrEmpty();
             }
         }
 
@@ -50,7 +52,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 new Microsoft.Build.Utilities.TaskLoggingHelper(new StubTask()),
                 retryHandler);
 
-            Assert.Equal(expectedResult, result);
+            result.Should().Be(expectedResult);
         }
 
         [Theory]
@@ -77,7 +79,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 new Microsoft.Build.Utilities.TaskLoggingHelper(new StubTask()),
                 retryHandler);
 
-            Assert.Equal(expectedAttemptCount, retryHandler.ActualAttempts);
+            retryHandler.ActualAttempts.Should().Be(expectedAttemptCount);
         }
 
         [Theory]
@@ -111,7 +113,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 taskLoggingHelper,
                 retryHandler);
 
-            Assert.Equal(expectedResult, result);
+            result.Should().Be(expectedResult);
         }
 
         [Theory]
@@ -152,7 +154,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 taskLoggingHelper,
                 retryHandler);
 
-            Assert.Equal(expectedAttemptCount, retryHandler.ActualAttempts);
+            retryHandler.ActualAttempts.Should().Be(expectedAttemptCount);
         }
     }
 }

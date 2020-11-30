@@ -121,7 +121,7 @@
     <ChooseBestTargetFrameworksTask BuildTargetFrameworks="@(BinPlaceTargetFrameworks)"
                                    SupportedTargetFrameworks="$(TargetFrameworks)"
                                    RuntimeGraph="$(RuntimeGraph)" >
-      <Output TaskParameter="BestTargetFrameworks" ItemName="_bestBinlaceTargetFrameworks" />
+      <Output TaskParameter="BestTargetFrameworks" ItemName="_bestBinPlaceTargetFrameworks" />
     </ChooseBestTargetFrameworksTask>
 
     <PropertyGroup>
@@ -129,7 +129,7 @@
     </PropertyGroup>
     
     <ItemGroup>
-      <_currentBinPlaceTargetFrameworks Include="@(_bestBinlaceTargetFrameworks)" Condition="'%(Identity)' == '$(_OriginalTargetFramework)'" />
+      <_currentBinPlaceTargetFrameworks Include="@(_bestBinPlaceTargetFrameworks)" Condition="'%(Identity)' == '$(_OriginalTargetFramework)'" />
 
       <BinPlaceDir Condition="'$(BinPlaceNative)' == 'true'" Include="@(_currentBinPlaceTargetFrameworks->'%(NativePath)')" />
       <BinPlaceDir Condition="'$(BinPlaceRef)' == 'true'" Include="@(_currentBinPlaceTargetFrameworks->'%(RefPath)')" />

@@ -1,9 +1,13 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using System;
 using System.IO;
 using Xunit;
 using Xunit.Abstractions;
+using FluentAssertions;
 
 namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
 {
@@ -33,21 +37,21 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
                 nuspec, 
                 dependencies: new[] { CreateDependency("someDependency", "0.0.0-test") });
 
-            Assert.True(Execute(generateNuSpec));
+            Execute(generateNuSpec).Should().BeTrue();
 
-            Assert.Equal(0, _log.ErrorsLogged);
-            Assert.Equal(0, _log.WarningsLogged);
+            _log.ErrorsLogged.Should().Be(0);
+            _log.WarningsLogged.Should().Be(0);
 
-            Assert.True(File.Exists(nuspec));
+            File.Exists(nuspec).Should().BeTrue();
 
             var nuspecs = new[] { new TaskItem(nuspec) };
 
             var nuGetPack = CreateNuGetPackTask(nuspecs, Directory.GetCurrentDirectory());
 
-            Assert.True(Execute(nuGetPack));
-            Assert.Equal(0, _log.ErrorsLogged);
-            Assert.Equal(0, _log.WarningsLogged);
-            Assert.True(File.Exists($"{generateNuSpec.Id}.{generateNuSpec.Version}.nupkg"));
+            Execute(nuGetPack).Should().BeTrue();
+            _log.ErrorsLogged.Should().Be(0);
+            _log.WarningsLogged.Should().Be(0);
+            File.Exists($"{generateNuSpec.Id}.{generateNuSpec.Version}.nupkg").Should().BeTrue();
         }
 
         private bool Execute(ITask task)

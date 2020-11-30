@@ -129,9 +129,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                 var buildModel = BuildManifestUtil.CreateModelFromItems(
                     Artifacts,
-                    AzureDevOpsCollectionUri,
-                    AzureDevOpsProject,
-                    AzureDevOpsBuildId,
                     ItemsToSign,
                     StrongNameSignInfo,
                     FileSignInfo,
