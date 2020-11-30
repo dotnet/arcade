@@ -466,7 +466,7 @@ namespace Microsoft.DotNet.VersionTools.Tests.BuildManifest
         private BuildModel CreateSigningInformationBuildManifestModel()
         {
             return new BuildModel(new BuildIdentity { Name = "SigningInformationBuildManifest", BuildId = "123", Branch = "refs/heads/Test", 
-                Commit = "test_commit", IsStable = "False", PublishingVersion = (PublishingInfraVersion)3 })
+                Commit = "test_commit", IsStable = false, PublishingVersion = (PublishingInfraVersion)3 })
             {
                 Artifacts = new ArtifactSet
                 {
