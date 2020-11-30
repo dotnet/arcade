@@ -2,6 +2,12 @@
   <!-- See UnitTests.proj in above folder for why this is included directly-from-repo -->
   <Import Project="$(MSBuildThisFileDirectory)\..\src\Microsoft.DotNet.Helix\Sdk\sdk\Sdk.props"/>
 
+  <!--
+    This is a project used in integration tests of Arcade.
+    It tests sending iOS (XHarness) workloads using the Helix SDK.
+    It builds two mock projects that do not build iOS apps but only downloads them from a storage account.
+   -->
+
   <PropertyGroup>
     <MicrosoftDotNetHelixSdkTasksAssembly Condition="'$(MSBuildRuntimeType)' == 'Core'">$(MSBuildThisFileDirectory)../artifacts/bin/Microsoft.DotNet.Helix.Sdk/$(Configuration)/netcoreapp2.1/publish/Microsoft.DotNet.Helix.Sdk.dll</MicrosoftDotNetHelixSdkTasksAssembly>
     <MicrosoftDotNetHelixSdkTasksAssembly Condition="'$(MSBuildRuntimeType)' != 'Core'">$(MSBuildThisFileDirectory)../artifacts/bin/Microsoft.DotNet.Helix.Sdk/$(Configuration)/net472/publish/Microsoft.DotNet.Helix.Sdk.dll</MicrosoftDotNetHelixSdkTasksAssembly>
@@ -19,6 +25,7 @@
   <!-- Test project which builds app bundle to run via XHarness -->
   <ItemGroup>
     <XHarnessiOSProject Include="$(MSBuildThisFileDirectory)XHarness\XHarness.TestAppBundle.proj" />
+    <XHarnessiOSProject Include="$(MSBuildThisFileDirectory)XHarness\XHarness.RunAppBundle.proj" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(HelixAccessToken)' != '' ">

@@ -5,6 +5,7 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Xunit;
 using Xunit.Abstractions;
+using FluentAssertions;
 
 namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
 {
@@ -38,11 +39,14 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
 
             _log.Reset();
             task.Execute();
-            Assert.Equal(0, _log.ErrorsLogged);
-            Assert.Equal(0, _log.WarningsLogged);
-            Assert.Equal(task.LatestPackages.Length, task.LastStablePackages.Length);
-            Assert.Equal("StableVersionTest", task.LastStablePackages[0].ItemSpec);
-            Assert.Equal("1.1.0", task.LastStablePackages[0].GetMetadata("Version"));
+            _log.ErrorsLogged.Should().Be(0);
+            _log.WarningsLogged.Should().Be(0);
+            task.LastStablePackages.Should().SatisfyRespectively(
+                item =>
+                {
+                    item.ItemSpec.Should().Be("StableVersionTest");
+                    item.GetMetadata("Version").Should().Be("1.1.0");
+                });
         }
 
 
@@ -63,11 +67,14 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
 
             _log.Reset();
             task.Execute();
-            Assert.Equal(0, _log.ErrorsLogged);
-            Assert.Equal(0, _log.WarningsLogged);
-            Assert.Equal(task.LatestPackages.Length, task.LastStablePackages.Length);
-            Assert.Equal("StableVersionTest", task.LastStablePackages[0].ItemSpec);
-            Assert.Equal("1.0.0", task.LastStablePackages[0].GetMetadata("Version"));
+            _log.ErrorsLogged.Should().Be(0);
+            _log.WarningsLogged.Should().Be(0);
+            task.LastStablePackages.Should().SatisfyRespectively(
+                item =>
+                {
+                    item.ItemSpec.Should().Be("StableVersionTest");
+                    item.GetMetadata("Version").Should().Be("1.0.0");
+                });
         }
 
         [Fact]
@@ -87,11 +94,14 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
 
             _log.Reset();
             task.Execute();
-            Assert.Equal(0, _log.ErrorsLogged);
-            Assert.Equal(0, _log.WarningsLogged);
-            Assert.Equal(task.LatestPackages.Length, task.LastStablePackages.Length);
-            Assert.Equal("StableVersionTest", task.LastStablePackages[0].ItemSpec);
-            Assert.Equal("1.0.0", task.LastStablePackages[0].GetMetadata("Version"));
+            _log.ErrorsLogged.Should().Be(0);
+            _log.WarningsLogged.Should().Be(0);
+            task.LastStablePackages.Should().SatisfyRespectively(
+                item =>
+                {
+                    item.ItemSpec.Should().Be("StableVersionTest");
+                    item.GetMetadata("Version").Should().Be("1.0.0");
+                });
         }
 
         [Fact]
@@ -111,9 +121,9 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
 
             _log.Reset();
             task.Execute();
-            Assert.Equal(0, _log.ErrorsLogged);
-            Assert.Equal(0, _log.WarningsLogged);
-            Assert.Equal(0, task.LastStablePackages.Length);
+            _log.ErrorsLogged.Should().Be(0);
+            _log.WarningsLogged.Should().Be(0);
+            task.LastStablePackages.Should().BeEmpty();
         }
 
         [Fact]
@@ -134,11 +144,14 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
 
             _log.Reset();
             task.Execute();
-            Assert.Equal(0, _log.ErrorsLogged);
-            Assert.Equal(0, _log.WarningsLogged);
-            Assert.Equal(task.LatestPackages.Length, task.LastStablePackages.Length);
-            Assert.Equal("StableVersionTest", task.LastStablePackages[0].ItemSpec);
-            Assert.Equal("1.0.0", task.LastStablePackages[0].GetMetadata("Version"));
+            _log.ErrorsLogged.Should().Be(0);
+            _log.WarningsLogged.Should().Be(0);
+            task.LastStablePackages.Should().SatisfyRespectively(
+                item =>
+                {
+                    item.ItemSpec.Should().Be("StableVersionTest");
+                    item.GetMetadata("Version").Should().Be("1.0.0");
+                });
         }
 
         [Fact]
@@ -159,11 +172,14 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
 
             _log.Reset();
             task.Execute();
-            Assert.Equal(0, _log.ErrorsLogged);
-            Assert.Equal(0, _log.WarningsLogged);
-            Assert.Equal(task.LatestPackages.Length, task.LastStablePackages.Length);
-            Assert.Equal("StableVersionTest", task.LastStablePackages[0].ItemSpec);
-            Assert.Equal("1.1.0", task.LastStablePackages[0].GetMetadata("Version"));
+            _log.ErrorsLogged.Should().Be(0);
+            _log.WarningsLogged.Should().Be(0);
+            task.LastStablePackages.Should().SatisfyRespectively(
+                item =>
+                {
+                    item.ItemSpec.Should().Be("StableVersionTest");
+                    item.GetMetadata("Version").Should().Be("1.1.0");
+                });
         }
 
         [Fact]
@@ -183,11 +199,14 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
 
             _log.Reset();
             task.Execute();
-            Assert.Equal(0, _log.ErrorsLogged);
-            Assert.Equal(0, _log.WarningsLogged);
-            Assert.Equal(task.LatestPackages.Length, task.LastStablePackages.Length);
-            Assert.Equal("StableVersionTest", task.LastStablePackages[0].ItemSpec);
-            Assert.Equal("1.1.0", task.LastStablePackages[0].GetMetadata("Version"));
+            _log.ErrorsLogged.Should().Be(0);
+            _log.WarningsLogged.Should().Be(0);
+            task.LastStablePackages.Should().SatisfyRespectively(
+                item =>
+                {
+                    item.ItemSpec.Should().Be("StableVersionTest");
+                    item.GetMetadata("Version").Should().Be("1.1.0");
+                });
         }
 
         private static ITaskItem CreateItem(string name, string version)

@@ -1,11 +1,11 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+
+using FluentAssertions;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -77,7 +77,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
                 }
             }
 
-            Assert.NotNull(result);
+            result.Should().NotBeNull();
             return result;
         }
 
@@ -100,13 +100,13 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
             _log.Reset();
             task.Execute();
 
-            Assert.Equal(0, _log.ErrorsLogged);
-            Assert.Equal(0, _log.WarningsLogged);
-            Assert.Equal(8, task.HarvestedFiles.Length);
-            var ns10asset = task.HarvestedFiles.FirstOrDefault(f => f.GetMetadata("TargetFramework") == "netstandard1.0" );
-            Assert.NotNull(ns10asset);
-            Assert.Equal("1.2.3.0", ns10asset.GetMetadata("AssemblyVersion"));
-            Assert.Equal(_frameworks.Length, task.SupportedFrameworks.Length);
+            _log.ErrorsLogged.Should().Be(0);
+            _log.WarningsLogged.Should().Be(0);
+            task.HarvestedFiles.Should().HaveCount(8);
+            var ns10asset = task.HarvestedFiles.FirstOrDefault(f => f.GetMetadata("TargetFramework") == "netstandard1.0");
+            ns10asset.Should().NotBeNull();
+            ns10asset.GetMetadata("AssemblyVersion").Should().Be("1.2.3.0");
+            task.SupportedFrameworks.Should().HaveCount(_frameworks.Length);
         }
 
         [Fact]
@@ -127,13 +127,13 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
             _log.Reset();
             task.Execute();
 
-            Assert.Equal(0, _log.ErrorsLogged);
-            Assert.Equal(0, _log.WarningsLogged);
-            Assert.Equal(17, task.HarvestedFiles.Length);
-            var net46asset = task.HarvestedFiles.FirstOrDefault(f => f.GetMetadata("TargetFramework") == "net46" );
-            Assert.NotNull(net46asset);
-            Assert.Equal("4.0.1.0", net46asset.GetMetadata("AssemblyVersion"));
-            Assert.Equal(6, task.SupportedFrameworks.Length);
+            _log.ErrorsLogged.Should().Be(0);
+            _log.WarningsLogged.Should().Be(0);
+            task.HarvestedFiles.Should().HaveCount(17);
+            var net46asset = task.HarvestedFiles.FirstOrDefault(f => f.GetMetadata("TargetFramework") == "net46");
+            net46asset.Should().NotBeNull();
+            net46asset.GetMetadata("AssemblyVersion").Should().Be("4.0.1.0");
+            task.SupportedFrameworks.Should().HaveCount(6);
         }
 
 
@@ -160,12 +160,12 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
             _log.Reset();
             task.Execute();
 
-            Assert.Equal(0, _log.ErrorsLogged);
-            Assert.Equal(0, _log.WarningsLogged);
-            Assert.Equal(79, task.HarvestedFiles.Length);
-            Assert.Contains(task.HarvestedFiles, f => f.GetMetadata("AssemblyVersion") == "4.1.0.0");
-            Assert.Equal(_frameworks.Length, task.SupportedFrameworks.Length);
-            Assert.All(task.SupportedFrameworks, f => Assert.NotEqual("unknown", f.GetMetadata("Version")));
+            _log.ErrorsLogged.Should().Be(0);
+            _log.WarningsLogged.Should().Be(0);
+            task.HarvestedFiles.Should().HaveCount(79);
+            task.HarvestedFiles.Should().Contain(f => f.GetMetadata("AssemblyVersion") == "4.1.0.0");
+            task.SupportedFrameworks.Should().HaveCount(_frameworks.Length);
+            task.SupportedFrameworks.Should().NotContain(f => f.GetMetadata("Version") == "unknown");
         }
 
         private ITaskItem CreateRuntimePackage(string packageId, string version)

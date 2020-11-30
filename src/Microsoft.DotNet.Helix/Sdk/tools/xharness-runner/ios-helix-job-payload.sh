@@ -1,5 +1,9 @@
 #!/bin/bash
 
+###
+### This script is used as a payload of Helix jobs that execute iOS/tvOS workloads through XHarness.
+###
+
 set -ex
 
 app=''
@@ -10,6 +14,8 @@ launch_timeout=''
 xharness_cli_path=''
 xcode_version=''
 app_arguments=''
+expected_exit_code=0
+command='test'
 
 while [[ $# -gt 0 ]]; do
     opt="$(echo "$1" | awk '{print tolower($0)}')"
@@ -46,6 +52,14 @@ while [[ $# -gt 0 ]]; do
         app_arguments="$2"
         shift
         ;;
+      --expected-exit-code)
+        expected_exit_code="$2"
+        shift
+        ;;
+      --command)
+        command="$2"
+        shift
+        ;;
       *)
         echo "Invalid argument: $1"
         exit 1
@@ -60,24 +74,8 @@ function die ()
     exit 1
 }
 
-if [ -z "$app" ]; then
-    die "App name wasn't provided";
-fi
-
-if [ -z "$output_directory" ]; then
-    die "Output directory wasn't provided";
-fi
-
-if [ -z "$targets" ]; then
-    die "List of targets wasn't provided";
-fi
-
 if [ -z "$timeout" ]; then
     die "Test timeout wasn't provided";
-fi
-
-if [ -z "$launch_timeout" ]; then
-    die "Launch timeout wasn't provided";
 fi
 
 if [ -z "$xharness_cli_path" ]; then
@@ -86,6 +84,13 @@ fi
 
 if [ -n "$app_arguments" ]; then
     app_arguments="-- $app_arguments";
+fi
+
+if [ "$command" == "run" ]; then
+    app_arguments="--expected-exit-code=$expected_exit_code $app_arguments"
+elif [ -n "$launch_timeout" ]; then
+    # shellcheck disable=SC2089
+    app_arguments="--launch-timeout=$launch_timeout $app_arguments"
 fi
 
 set +e
@@ -103,14 +108,16 @@ open -a "$simulator_app"
 export XHARNESS_DISABLE_COLORED_OUTPUT=true
 export XHARNESS_LOG_WITH_TIMESTAMPS=true
 
-dotnet exec "$xharness_cli_path" ios test  \
-    --app="$app"                           \
-    --output-directory="$output_directory" \
-    --targets="$targets"                   \
-    --timeout="$timeout"                   \
-    --launch-timeout="$launch_timeout"     \
-    --xcode="$xcode_path"                  \
-    -v                                     \
+# We include $app_arguments non-escaped and not arrayed because it might contain several extra arguments
+# which come from outside and are appeneded behind "--" and forwarded to the iOS application from XHarness.
+# shellcheck disable=SC2086,SC2090
+dotnet exec "$xharness_cli_path" ios $command \
+    --app="$app"                              \
+    --output-directory="$output_directory"    \
+    --targets="$targets"                      \
+    --timeout="$timeout"                      \
+    --xcode="$xcode_path"                     \
+    -v                                        \
     $app_arguments
 
 exit_code=$?
@@ -125,22 +132,24 @@ fi
 # The simulator logs comming from the sudo-spawned Simulator.app are not readable by the helix uploader
 chmod 0644 "$output_directory"/*.log
 
-test_results=$(ls "$output_directory"/xunit-*.xml)
+if [ "$command" == 'test' ]; then
+  test_results=$(ls "$output_directory"/xunit-*.xml)
 
-if [ ! -f "$test_results" ]; then
-    echo "Failed to find xUnit tests results in the output directory. Existing files:"
-    ls -la "$output_directory"
+  if [ ! -f "$test_results" ]; then
+      echo "Failed to find xUnit tests results in the output directory. Existing files:"
+      ls -la "$output_directory"
 
-    if [ $exit_code -eq 0 ]; then
-        exit_code=5
-    fi
+      if [ $exit_code -eq 0 ]; then
+          exit_code=5
+      fi
 
-    exit $exit_code
+      exit $exit_code
+  fi
+
+  echo "Found test results in $output_directory/$test_results. Renaming to testResults.xml to prepare for Helix upload"
+
+  # Prepare test results for Helix to pick up
+  mv "$test_results" "$output_directory/testResults.xml"
 fi
-
-echo "Found test results in $output_directory/$test_results. Renaming to testResults.xml to prepare for Helix upload"
-
-# Prepare test results for Helix to pick up
-mv "$test_results" "$output_directory/testResults.xml"
 
 exit $exit_code
