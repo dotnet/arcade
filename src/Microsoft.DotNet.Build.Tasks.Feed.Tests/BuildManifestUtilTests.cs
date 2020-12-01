@@ -385,9 +385,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                         modelFromItems.Identity.Branch,
                         modelFromItems.Identity.Commit,
                         modelFromItems.Identity.Attributes.Select(kv => $"{kv.Key}={kv.Value}").ToArray(),
-                        bool.Parse(modelFromItems.Identity.IsStable),
+                        modelFromItems.Identity.IsStable,
                         modelFromItems.Identity.PublishingVersion,
-                        bool.Parse(modelFromItems.Identity.IsReleaseOnlyPackageVersion),
+                        modelFromItems.Identity.IsReleaseOnlyPackageVersion,
                         modelFromItems.SigningInformation);
 
                 // Read the xml file back in and create a model from it.
@@ -401,8 +401,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 modelFromItems.Identity.BuildId.Should().Be(_testAzdoBuildId);
                 modelFromItems.Identity.Commit.Should().Be(_testBuildCommit);
                 modelFromItems.Identity.PublishingVersion.Should().Be(VersionTools.BuildManifest.Model.PublishingInfraVersion.Next);
-                modelFromItems.Identity.IsReleaseOnlyPackageVersion.Should().Be("False");
-                modelFromItems.Identity.IsStable.Should().Be("True");
+                modelFromItems.Identity.IsReleaseOnlyPackageVersion.Should().BeFalse();
+                modelFromItems.Identity.IsStable.Should().BeTrue();
                 modelFromFile.Artifacts.Blobs.Should().SatisfyRespectively(
                     blob =>
                     {
