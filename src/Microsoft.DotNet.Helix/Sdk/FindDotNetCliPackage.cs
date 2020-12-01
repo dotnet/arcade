@@ -1,4 +1,5 @@
 using System;
+using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.Build.Framework;
@@ -56,15 +57,20 @@ namespace Microsoft.DotNet.Helix.Sdk
             {
                 using var req = new HttpRequestMessage(HttpMethod.Head, downloadUrl);
                 using HttpResponseMessage res = await _client.SendAsync(req);
-                res.EnsureSuccessStatusCode();
+
+                if (res.StatusCode == HttpStatusCode.NotFound)
+                {
+                    // 404 means that we successfully hit the server, and it returned 404. This cannot be a network hiccup
+                    Log.LogError(FailureCategory.Build, $"Unable to find dotnet cli {PackageType} version {Version}, tried {downloadUrl}");
+                }
+                else
+                {
+                    res.EnsureSuccessStatusCode();
+                }
             }
-            catch (HttpRequestException ex) when (ex.Message.Contains("404 (Not Found)")) // 404 means that we successfully hit the server, and it returned 404. This cannot be a network hick-up
+            catch (Exception ex)
             {
-                Log.LogError(FailureCategory.Build, $"Unable to find dotnet cli {PackageType} version {Version}, tried {downloadUrl}");
-            }
-            catch (HttpRequestException otherEx)
-            {
-                Log.LogError(FailureCategory.Build, $"Unable to access dotnet cli {PackageType} version {Version} at {downloadUrl}, {otherEx.Message}");
+                Log.LogError(FailureCategory.Build, $"Unable to access dotnet cli {PackageType} version {Version} at {downloadUrl}, {ex.Message}");
             }
 
             if (!Log.HasLoggedErrors)
