@@ -617,7 +617,7 @@ namespace Microsoft.DotNet.VersionTools.Tests.BuildManifest
 ";
 
         private const string ExampleBuildStringWithSigningInformation = @"
-<Build PublishingVersion=""3"" Name=""SigningInformationBuildManifest"" BuildId=""123"" Branch=""refs/heads/Test"" Commit=""test_commit"" IsStable=""False"">
+<Build PublishingVersion=""3"" Name=""SigningInformationBuildManifest"" BuildId=""123"" Branch=""refs/heads/Test"" Commit=""test_commit"" IsStable=""false"">
   <Package Id=""ArcadeSdkTest"" Version=""5.0.0"" />
   <Package Id=""TestPackage"" Version=""5.0.0"" />
   <Blob Id=""assets/symbols/test.nupkg""/>
