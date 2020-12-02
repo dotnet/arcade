@@ -6,11 +6,11 @@
             This failure is expected and is not the reason why your PR failed. This test is always failing in order to test failure reporting infrastructure. If your PR is blocked there must be another test or build error that is blocking your PR.
          </failure>
       </testcase>
-      <!-- <testcase classname="HelixReporterTests" name="failure2" time="0.006">
+      <testcase classname="HelixReporterTests" name="failure2" time="0.006">
          <error message="Intentional Failure">
             This failure is expected and is not the reason why your PR failed. This test is always failing in order to test failure reporting infrastructure. If your PR is blocked there must be another test or build error that is blocking your PR.
          </error>
-      </testcase> -->
+      </testcase>
       <testcase classname="HelixReporterTests" name="skip1" time="0">
          <skipped />
       </testcase>
