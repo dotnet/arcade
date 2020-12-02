@@ -442,7 +442,7 @@ function MSBuild-Core {
     "$_InitializeBuildTool" "$@" || {
       local exit_code=$?
       # We should not Write-PipelineTaskError here because that message shows up in the build summary
-      # The build already logged an error, thats the reason it failed. Producing an error here only adds noise.
+      # The build already logged an error, that's the reason it failed. Producing an error here only adds noise.
       echo "Build failed with exit code $exit_code. Check errors above."
       if [[ "$ci" == "true" ]]; then
         Write-PipelineSetResult -result "Failed" -message "msbuild execution failed."
