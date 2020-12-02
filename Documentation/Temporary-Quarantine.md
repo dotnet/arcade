@@ -14,7 +14,7 @@ Step 3 is the focus of this proposal.
 
 ## When is something "broken" : \<70% pass rate
 We are going to consider something "broken" and in need of remediation **if it has failed 3 of the last 10 builds in the CI pipeline**.
-The CI pipeline should be passing 100% of the time, so 3 fails indicates that something needs to be done to unblock PR's.
+The CI pipeline should be passing 100% of the time, so 3 fails indicates that something needs to be done to unblock PRs.
 
 The quarantine option is meant to be used for issues that are believed to be short term disruptions.  Ideally nothing should remain
 quarantined for more than a few days or weeks. Permanent unreliability is a different problem not addressed by this procedure.
