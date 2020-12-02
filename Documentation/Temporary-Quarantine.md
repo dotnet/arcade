@@ -12,6 +12,46 @@ In general if a build or test fails, the steps should be as follows.
 
 Step 3 is the focus of this proposal.
 
-## When is something "broken"
-We are going to consider something "broken" an in need of remediation __**if it has failed 3 of the last 10 builds in the CI pipeline**__.
-The CI pipeline should be green 100% of the time, so 3 fails indicates that something needs to be done.
+## When is something "broken" : \<70% pass rate
+We are going to consider something "broken" an in need of remediation **if it has failed 3 of the last 10 builds in the CI pipeline**.
+The CI pipeline should be passing 100% of the time, so 3 fails indicates that something needs to be done to unblock PR's.
+
+The quarantine option is meant to be used for issues that are believed to be short term disruptions.  Ideally nothing should remain
+quarantined for more than a few days or weeks. Permanent unreliability is a different problem not addressed by this procedure.
+
+## What happens when something is quarantined
+PR builds will not include the quarantined component.
+The primary CI pipelines (e.g. the 'runtime' pipeline) will not include the quarantined component.
+A separate pipeline will be run on the same cadence as the CI pipeline in order to execute quarantined components in order to determine when
+it is appropriate to unquarantine the affected componented.
+
+An owner should be identified for every quarantined item, with a tracking issue in the most appropriate repository assigned to this owner or owners.
+The primary purpose of this ownership is to ensure that the quarantined item is being addressed and tracked for reintroduction into the mainline builds.
+
+## How to quarantine
+The smallest unit possible should be quarantined, to minimize the coverage gap in PR.
+
+1. A single test in a single configuration
+1. A single test in all configurations
+1. A test assembly
+1. A build "job"
+1. An entire pipeline
+
+### A single test in a single configuration
+TBD
+
+### A single test in all configurations
+TBD
+
+### A test assembly
+TBD
+
+### A build job
+TBD
+
+### An entire pipeline
+TBD
+
+## How to reintroduce : 100% pass for 10 quarantine builds
+Once that component has passed 10 sequential quarantined builds, it can be reintroduced into the mainline build by reverting the change
+made to quarantine it.
