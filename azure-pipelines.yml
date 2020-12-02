@@ -129,19 +129,6 @@ stages:
             env:
               SYSTEM_ACCESSTOKEN: $(System.AccessToken)
               HelixAccessToken: ''
-          - powershell: eng\common\build.ps1
-              -configuration $(_BuildConfig) 
-              -prepareMachine
-              -ci
-              -restore
-              -test
-              -projects $(Build.SourcesDirectory)\tests\UnitTests.XHarness.Android.proj
-              /bl:$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)\Helix.XHarness.Android.binlog
-              /p:RestoreUsingNuGetTargets=false
-            displayName: XHarness Android Helix Testing
-            env:
-              SYSTEM_ACCESSTOKEN: $(System.AccessToken)
-              HelixAccessToken: ''
         - job: Linux
           container: LinuxContainer
           pool:
@@ -166,32 +153,6 @@ stages:
               /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.binlog
               /p:RestoreUsingNuGetTargets=false
             displayName: Run Helix Tests
-            env:
-              SYSTEM_ACCESSTOKEN: $(System.AccessToken)
-              HelixAccessToken: ''
-          - script: eng/common/build.sh
-              -configuration $(_BuildConfig)
-              -prepareMachine
-              -ci
-              -restore
-              -test
-              -projects $(Build.SourcesDirectory)/tests/UnitTests.XHarness.iOS.proj
-              /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.XHarness.iOS.binlog
-              /p:RestoreUsingNuGetTargets=false
-            displayName: XHarness iOS Helix Testing
-            env:
-              SYSTEM_ACCESSTOKEN: $(System.AccessToken)
-              HelixAccessToken: ''
-          - script: eng/common/build.sh
-              -configuration $(_BuildConfig)
-              -prepareMachine
-              -ci
-              -restore
-              -test
-              -projects $(Build.SourcesDirectory)/tests/UnitTests.XHarness.iOS.IncludeCliOnly.proj
-              /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.XHarness.CLI.binlog
-              /p:RestoreUsingNuGetTargets=false
-            displayName: XHarness CLI pre-install Helix Testing
             env:
               SYSTEM_ACCESSTOKEN: $(System.AccessToken)
               HelixAccessToken: ''
