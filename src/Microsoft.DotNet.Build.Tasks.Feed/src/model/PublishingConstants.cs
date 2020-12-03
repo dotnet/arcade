@@ -575,7 +575,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             new TargetChannelConfig(
                 1648,
                 PublishingInfraVersion.All,
-                string.Empty,
+                akaMSChannelName: string.Empty,
                 FeedDotNetLibrariesShipping,
                 FeedDotNetLibrariesTransport,
                 FeedDotNetLibrariesSymbols,
