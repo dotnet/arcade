@@ -5,6 +5,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.DotNet.Helix.Sdk;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace Microsoft.DotNet.Helix.AzureDevOps
@@ -16,6 +17,9 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
         public ITaskItem[] ExpectedTestFailures { get; set; }
 
         public string EnableFlakyTestSupport { get; set; }
+
+        [Required]
+        public ITaskItem[] WorkItems { get; set; }
 
         protected override async Task ExecuteCoreAsync(HttpClient client)
         {
@@ -37,20 +41,16 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
 
         private async Task CheckTestResultsAsync(HttpClient client)
         {
-            foreach (var testRunId in TestRunIds)
+            foreach (int testRunId in TestRunIds)
             {
-                var data = await RetryAsync(
+                JObject data = await RetryAsync(
                     async () =>
                     {
-                        using (var req = new HttpRequestMessage(
+                        using var req = new HttpRequestMessage(
                             HttpMethod.Get,
-                            $"{CollectionUri}{TeamProject}/_apis/test/runs/{testRunId}?api-version=5.0"))
-                        {
-                            using (var res = await client.SendAsync(req))
-                            {
-                                return await ParseResponseAsync(req, res);
-                            }
-                        }
+                            $"{CollectionUri}{TeamProject}/_apis/test/runs/{testRunId}?api-version=6.0");
+                        using HttpResponseMessage res = await client.SendAsync(req);
+                        return await ParseResponseAsync(req, res);
                     });
 
                 if (data != null && data["runStatistics"] is JArray runStatistics)
@@ -59,12 +59,64 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
                         .FirstOrDefault(stat => stat["outcome"]?.ToString() == "Failed");
                     if (failed != null)
                     {
-                        Log.LogError(FailureCategory.Test, $"Test run {testRunId} has one or more failing tests.");
+                        await LogErrorsForFailedRun(client, testRunId);
                     }
                     else
                     {
                         Log.LogMessage(MessageImportance.Low, $"Test run {testRunId} has not failed.");
                     }
+                }
+            }
+        }
+
+        private async Task LogErrorsForFailedRun(HttpClient client, int testRunId)
+        {
+            JObject data = await RetryAsync(
+                async () =>
+                {
+                    using var req = new HttpRequestMessage(
+                        HttpMethod.Get,
+                        $"{CollectionUri}{TeamProject}/_apis/test/runs/{testRunId}/results?outcomes=Failed&$top=100&api-version=6.0");
+                    using HttpResponseMessage res = await client.SendAsync(req);
+                    return await ParseResponseAsync(req, res);
+                });
+            int count = data.Value<int>("count");
+            IEnumerable<JObject> entries = data.Value<JArray>("value").Cast<JObject>();
+            if (count == 0)
+            {
+                Log.LogError(FailureCategory.Test, $"Test run {testRunId} has one or more failing tests based on run statistics, but I couldn't find the failures.");
+                return;
+            }
+
+            foreach (JObject result in entries)
+            {
+                string name = result.Value<string>("automatedTestName");
+                string comment = result.Value<string>("comment");
+                JObject helixData;
+                try
+                {
+                    helixData = JObject.Parse(comment);
+                }
+                catch (JsonException)
+                {
+                    helixData = null;
+                }
+                string jobId = helixData?.Value<string>("HelixJobId");
+                string workItemName = helixData?.Value<string>("HelixWorkItemName");
+                ITaskItem workItem = null;
+                if (helixData != null && !string.IsNullOrEmpty(jobId) && !string.IsNullOrEmpty(workItemName))
+                {
+                    workItem = WorkItems.FirstOrDefault(t =>
+                        t.GetMetadata("JobName") == jobId && t.GetMetadata("WorkItemName") == workItemName);
+                }
+
+                if (workItem != null)
+                {
+                    Log.LogError(FailureCategory.Test, $"Test {name} has failed. Check the Test tab or this console log: {workItem.GetMetadata("ConsoleOutputUri")}");
+                }
+                else
+                {
+                    Log.LogError(FailureCategory.Test, $"Test {name} has failed. Check the Test tab for details.");
                 }
             }
         }
