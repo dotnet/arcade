@@ -22,10 +22,10 @@
       <PayloadDirectory>$(MSBuildThisFileDirectory)Junit</PayloadDirectory>
     </HelixWorkItem>
   </ItemGroup>
-  <ItemGroup>
+  <!-- <ItemGroup>
     <AzurePipelinesExpectedTestFailure Include="HelixReporterTests.failure1"/>
     <AzurePipelinesExpectedTestFailure Include="HelixReporterTests.failure2"/>
-  </ItemGroup>
+  </ItemGroup> -->
 
   <ItemGroup>
     <HelixWorkItem Include="TrxTest">
@@ -33,11 +33,11 @@
       <PayloadDirectory>$(MSBuildThisFileDirectory)Trx</PayloadDirectory>
     </HelixWorkItem>
   </ItemGroup>
-  <ItemGroup>
+  <!-- <ItemGroup>
     <AzurePipelinesExpectedTestFailure Include="HelixReporter.TRXTests.HelixReporter.TRXTests.Fail1"/>
     <AzurePipelinesExpectedTestFailure Include="HelixReporter.TRXTests.HelixReporter.TRX.Fail2"/>
     <AzurePipelinesExpectedTestFailure Include="tests.UnitTest2.ExpectedFailureTheoryTest"/>
-  </ItemGroup>
+  </ItemGroup> -->
 
   <ItemGroup>
     <XUnitProject Include="..\src\**\*.Tests.csproj"/>
