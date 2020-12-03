@@ -168,6 +168,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                                         $"--timeout \"{testTimeout}\" " +
                                         $"--launch-timeout \"{launchTimeout}\" " +
                                          "--xharness-cli-path \"$XHARNESS_CLI_PATH\" " +
+                                         "--helix-python-path \"$HELIX_PYTHONPATH\" " +
                                          "--command " + (includesTestRunner ? "test" : "run") +
                                         (expectedExitCode != 0 ? $" --expected-exit-code \"{expectedExitCode}\"" : string.Empty) +
                                         (!string.IsNullOrEmpty(XcodeVersion) ? $" --xcode-version \"{XcodeVersion}\"" : string.Empty) +
