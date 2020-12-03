@@ -14,7 +14,7 @@ launch_timeout=''
 xharness_cli_path=''
 xcode_version=''
 app_arguments=''
-python_path=''
+helix_python_path=''
 expected_exit_code=0
 command='test'
 
@@ -61,8 +61,8 @@ while [[ $# -gt 0 ]]; do
         command="$2"
         shift
         ;;
-      --python-path)
-        python_path="$2"
+      --helix-python-path)
+        helix_python_path="$2"
         shift
         ;;
       *)
@@ -85,6 +85,10 @@ fi
 
 if [ -z "$xharness_cli_path" ]; then
     die "XHarness path wasn't provided";
+fi
+
+if [ -z "$helix_python_path" ]; then
+    die "--helix-python-path path wasn't provided";
 fi
 
 if [ -n "$app_arguments" ]; then
@@ -137,8 +141,8 @@ fi
 # The only solution is to reboot the machine, so we request a work item retry + MacOS reboot when this happens
 # 83 - timeout in installation
 if [ $exit_code -eq 83 ]; then
-    "$python_path" -c "from helix.workitemutil import request_infra_retry; request_infra_retry('Retrying because iOS Simulator application install hung')"
-    "$python_path" -c "from helix.workitemutil import request_reboot; request_reboot('Rebooting because iOS Simulator application install hung ')"
+    "$helix_python_path" -c "from helix.workitemutil import request_infra_retry; request_infra_retry('Retrying because iOS Simulator application install hung')"
+    "$helix_python_path" -c "from helix.workitemutil import request_reboot; request_reboot('Rebooting because iOS Simulator application install hung ')"
     exit $exit_code
 fi
 
