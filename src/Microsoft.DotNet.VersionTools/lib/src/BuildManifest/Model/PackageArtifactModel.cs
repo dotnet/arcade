@@ -90,7 +90,7 @@ namespace Microsoft.DotNet.VersionTools.BuildManifest.Model
                 }
             }
 
-            return false;
+            return true;
         }
 
         public override int GetHashCode()
