@@ -110,6 +110,58 @@ namespace Microsoft.DotNet.VersionTools.Tests.BuildManifest
             Assert.True(XNode.DeepEquals(xml, modelXml));
         }
 
+        [Fact]
+        public void PackageArtifactModelEquals_ReturnsTrueWhenTwoObjectsHaveMatchingAttributes()
+        {
+            PackageArtifactModel packageArtifact = new PackageArtifactModel
+            {
+                Attributes = new Dictionary<string, string>
+                    {
+                        { "NonShipping", true.ToString().ToLower() },
+                    },
+                Id = "AssetName",
+                Version = "AssetVersion"
+            };
+
+            PackageArtifactModel otherPackageArtifact = new PackageArtifactModel
+            {
+                Attributes = new Dictionary<string, string>
+                    {
+                        { "NonShipping", true.ToString().ToLower() },
+                    },
+                Id = "AssetName",
+                Version = "AssetVersion"
+            };
+
+            Assert.True(packageArtifact.Equals(otherPackageArtifact));
+        }
+
+        [Fact]
+        public void PackageArtifactModelEquals_ReturnsFalseWhenTwoObjectsDoNotHaveMatchingAttributes()
+        {
+            PackageArtifactModel packageArtifact = new PackageArtifactModel
+            {
+                Attributes = new Dictionary<string, string>
+                    {
+                        { "Shipping", true.ToString().ToLower() },
+                    },
+                Id = "AssetName",
+                Version = "AssetVersion"
+            };
+
+            PackageArtifactModel otherPackageArtifact = new PackageArtifactModel
+            {
+                Attributes = new Dictionary<string, string>
+                    {
+                        { "NonShipping", true.ToString().ToLower() },
+                    },
+                Id = "AssetName",
+                Version = "AssetVersion"
+            };
+
+            Assert.False(packageArtifact.Equals(otherPackageArtifact));
+        }
+
         private BuildModel CreatePackageOnlyBuildManifestModel()
         {
             return new BuildModel(new BuildIdentity { Name = "SimpleBuildManifest", BuildId = "123" })
