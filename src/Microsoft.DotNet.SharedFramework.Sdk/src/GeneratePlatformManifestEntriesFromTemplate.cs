@@ -41,7 +41,7 @@ namespace Microsoft.DotNet.SharedFramework.Sdk
                     {
                         Name = entryTemplate.ItemSpec,
                         AssemblyVersion = FileUtilities.GetAssemblyName(existingFile.ItemSpec)?.Version.ToString() ?? string.Empty,
-                        FileVersion = FileUtilities.GetAssemblyName(existingFile.ItemSpec)?.Version.ToString() ?? string.Empty
+                        FileVersion = FileUtilities.GetFileVersion(existingFile.ItemSpec)?.ToString() ?? string.Empty
                     });
                 }
                 else
