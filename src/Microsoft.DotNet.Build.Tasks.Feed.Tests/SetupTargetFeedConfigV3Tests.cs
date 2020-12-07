@@ -43,7 +43,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             TargetFeedContentType.Other
         };
 
-        private const SymbolTargetType symbolTartgetType = SymbolTargetType.None;
+        private const SymbolTargetType symbolTargetType = SymbolTargetType.None;
 
         private readonly ITestOutputHelper Output;
 
@@ -74,7 +74,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                         isolated: true,
                         @internal: false,
                         allowOverwrite: true,
-                        symbolTartgetType));
+                        symbolTargetType));
 
                 foreach (var contentType in Installers)
                 {
@@ -89,7 +89,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                             isolated: true,
                             @internal: false,
                             allowOverwrite: true,
-                            symbolTartgetType));
+                            symbolTargetType));
                 }
             }
 
@@ -104,7 +104,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     isolated: true,
                     @internal: false,
                     allowOverwrite: false,
-                    symbolTartgetType));
+                    symbolTargetType));
 
             expectedFeeds.Add(
                 new TargetFeedConfig(
@@ -117,7 +117,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     isolated: true,
                     @internal: false,
                     allowOverwrite: false,
-                    symbolTartgetType));
+                    symbolTargetType));
 
             expectedFeeds.Add(
                 new TargetFeedConfig(
@@ -130,7 +130,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     isolated: false,
                     @internal: false,
                     allowOverwrite: false,
-                    symbolTartgetType));
+                    symbolTargetType));
 
             var buildEngine = new MockBuildEngine();
             var config = new SetupTargetFeedConfigV3(
@@ -150,7 +150,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     LatestLinkShortUrlPrefix,
                     AzureDevOpsFeedsKey,
                     buildEngine,
-                    symbolTartgetType,
+                    symbolTargetType,
                     StablePackageFeed,
                     StableSymbolsFeed
                 );
@@ -182,7 +182,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                             isolated: false,
                             @internal: true,
                             allowOverwrite: false,
-                            symbolTartgetType));
+                            symbolTargetType));
                 }
 
                 expectedFeeds.Add(
@@ -196,7 +196,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                         isolated: false,
                         @internal: true,
                         allowOverwrite: false,
-                        symbolTartgetType));
+                        symbolTargetType));
 
             }
 
@@ -211,7 +211,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     isolated: false,
                     @internal: true,
                     allowOverwrite: false,
-                    symbolTartgetType));
+                    symbolTargetType));
 
             expectedFeeds.Add(
                 new TargetFeedConfig(
@@ -224,7 +224,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     isolated: false,
                     @internal: true,
                     allowOverwrite: false,
-                    symbolTartgetType));
+                    symbolTargetType));
 
             expectedFeeds.Add(
                 new TargetFeedConfig(
@@ -237,7 +237,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     isolated: false,
                     @internal: true,
                     allowOverwrite: false,
-                    symbolTartgetType));
+                    symbolTargetType));
 
             var buildEngine = new MockBuildEngine();
             var config = new SetupTargetFeedConfigV3(
@@ -257,7 +257,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     LatestLinkShortUrlPrefix,
                     AzureDevOpsFeedsKey,
                     buildEngine: buildEngine,
-                    symbolTartgetType
+                    symbolTargetType
                 );
 
             var actualFeeds = config.Setup();
@@ -285,7 +285,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                         isolated: false,
                         @internal: false,
                         allowOverwrite: false,
-                        symbolTartgetType));
+                        symbolTargetType));
 
                 foreach (var contentType in Installers)
                 {
@@ -300,7 +300,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                             isolated: false,
                             @internal: false,
                             allowOverwrite: false,
-                            symbolTartgetType));
+                            symbolTargetType));
                 }
             }
 
@@ -315,7 +315,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     isolated: false,
                     @internal: false,
                     allowOverwrite: false,
-                    symbolTartgetType));
+                    symbolTargetType));
 
             expectedFeeds.Add(
                 new TargetFeedConfig(
@@ -328,7 +328,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     isolated: false,
                     @internal: false,
                     allowOverwrite: false,
-                    symbolTartgetType));
+                    symbolTargetType));
 
             expectedFeeds.Add(
                 new TargetFeedConfig(
@@ -341,7 +341,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     isolated: false,
                     @internal: false,
                     allowOverwrite: false,
-                    symbolTartgetType));
+                    symbolTargetType));
 
             var buildEngine = new MockBuildEngine();
             var config = new SetupTargetFeedConfigV3(
@@ -361,7 +361,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     LatestLinkShortUrlPrefix,
                     AzureDevOpsFeedsKey,
                     buildEngine: buildEngine,
-                    symbolTartgetType
+                    symbolTargetType
                 );
 
             var actualFeeds = config.Setup();

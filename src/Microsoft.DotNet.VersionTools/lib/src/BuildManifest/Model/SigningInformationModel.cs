@@ -179,7 +179,7 @@ namespace Microsoft.DotNet.VersionTools.BuildManifest.Model
         public bool DualSigningAllowed
         {
             get { return bool.Parse(Attributes.GetOrDefault(nameof(DualSigningAllowed))); }
-            set { Attributes[nameof(DualSigningAllowed)] = value.ToString(); }
+            set { Attributes[nameof(DualSigningAllowed)] = value.ToString().ToLower(); }
         }
         public override string ToString() => $"Certificate \"{Include}\" has DualSigningAllowed set to {DualSigningAllowed}";
 

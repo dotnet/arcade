@@ -21,12 +21,18 @@ namespace Microsoft.DotNet.SignTool
         private readonly BatchSignInput _batchData;
         private readonly SignTool _signTool;
         private readonly string[] _itemsToSkipStrongNameCheck;
+        private readonly Dictionary<SignedFileContentKey, string> _hashToCollisionIdMap;
         private Telemetry _telemetry;
 
         internal bool SkipZipContainerSignatureMarkerCheck { get; set; }
 
-        internal BatchSignUtil(IBuildEngine buildEngine, TaskLoggingHelper log, SignTool signTool,
-            BatchSignInput batchData, string[] itemsToSkipStrongNameCheck, Telemetry telemetry = null)
+        internal BatchSignUtil(IBuildEngine buildEngine,
+            TaskLoggingHelper log,
+            SignTool signTool,
+            BatchSignInput batchData,
+            string[] itemsToSkipStrongNameCheck,
+            Dictionary<SignedFileContentKey, string> hashToCollisionIdMap,
+            Telemetry telemetry = null)
         {
             _signTool = signTool;
             _batchData = batchData;
@@ -34,6 +40,7 @@ namespace Microsoft.DotNet.SignTool
             _buildEngine = buildEngine;
             _itemsToSkipStrongNameCheck = itemsToSkipStrongNameCheck ?? Array.Empty<string>();
             _telemetry = telemetry;
+            _hashToCollisionIdMap = hashToCollisionIdMap;
         }
 
         internal void Go(bool doStrongNameCheck)
@@ -116,7 +123,16 @@ namespace Microsoft.DotNet.SignTool
 
                 foreach (var file in filesToSign)
                 {
-                    _log.LogMessage(MessageImportance.Low, file.ToString());
+                    string collisionIdInfo = string.Empty;
+                    if(_hashToCollisionIdMap != null)
+                    {
+                        if(_hashToCollisionIdMap.TryGetValue(file.FileContentKey, out string collisionPriorityId))
+                        {
+                            collisionIdInfo = $"Collision Id='{collisionPriorityId}'";
+                        }
+                        
+                    }
+                    _log.LogMessage(MessageImportance.Low, $"{file} {collisionIdInfo}");
                 }
 
                 return _signTool.Sign(_buildEngine, round, filesToSign);

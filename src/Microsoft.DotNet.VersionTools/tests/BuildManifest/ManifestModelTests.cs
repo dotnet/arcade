@@ -445,6 +445,58 @@ namespace Microsoft.DotNet.VersionTools.Tests.BuildManifest
             XNode.DeepEquals(xml, modelXml).Should().BeTrue("Model failed to output the parsed XML.");
         }
 
+        [Fact]
+        public void PackageArtifactModelEquals_ReturnsTrueWhenTwoObjectsHaveMatchingAttributes()
+        {
+            PackageArtifactModel packageArtifact = new PackageArtifactModel
+            {
+                Attributes = new Dictionary<string, string>
+                    {
+                        { "NonShipping", true.ToString().ToLower() },
+                    },
+                Id = "AssetName",
+                Version = "AssetVersion"
+            };
+
+            PackageArtifactModel otherPackageArtifact = new PackageArtifactModel
+            {
+                Attributes = new Dictionary<string, string>
+                    {
+                        { "NonShipping", true.ToString().ToLower() },
+                    },
+                Id = "AssetName",
+                Version = "AssetVersion"
+            };
+
+            Assert.True(packageArtifact.Equals(otherPackageArtifact));
+        }
+
+        [Fact]
+        public void PackageArtifactModelEquals_ReturnsFalseWhenTwoObjectsDoNotHaveMatchingAttributes()
+        {
+            PackageArtifactModel packageArtifact = new PackageArtifactModel
+            {
+                Attributes = new Dictionary<string, string>
+                    {
+                        { "Shipping", true.ToString().ToLower() },
+                    },
+                Id = "AssetName",
+                Version = "AssetVersion"
+            };
+
+            PackageArtifactModel otherPackageArtifact = new PackageArtifactModel
+            {
+                Attributes = new Dictionary<string, string>
+                    {
+                        { "NonShipping", true.ToString().ToLower() },
+                    },
+                Id = "AssetName",
+                Version = "AssetVersion"
+            };
+
+            Assert.False(packageArtifact.Equals(otherPackageArtifact));
+        }
+
         private BuildModel CreatePackageOnlyBuildManifestModel()
         {
             return new BuildModel(new BuildIdentity { Name = "SimpleBuildManifest", BuildId = "123" })
@@ -466,7 +518,7 @@ namespace Microsoft.DotNet.VersionTools.Tests.BuildManifest
         private BuildModel CreateSigningInformationBuildManifestModel()
         {
             return new BuildModel(new BuildIdentity { Name = "SigningInformationBuildManifest", BuildId = "123", Branch = "refs/heads/Test", 
-                Commit = "test_commit", IsStable = "False", PublishingVersion = (PublishingInfraVersion)3 })
+                Commit = "test_commit", IsStable = false, PublishingVersion = (PublishingInfraVersion)3 })
             {
                 Artifacts = new ArtifactSet
                 {
@@ -617,7 +669,7 @@ namespace Microsoft.DotNet.VersionTools.Tests.BuildManifest
 ";
 
         private const string ExampleBuildStringWithSigningInformation = @"
-<Build PublishingVersion=""3"" Name=""SigningInformationBuildManifest"" BuildId=""123"" Branch=""refs/heads/Test"" Commit=""test_commit"" IsStable=""False"">
+<Build PublishingVersion=""3"" Name=""SigningInformationBuildManifest"" BuildId=""123"" Branch=""refs/heads/Test"" Commit=""test_commit"" IsStable=""false"">
   <Package Id=""ArcadeSdkTest"" Version=""5.0.0"" />
   <Package Id=""TestPackage"" Version=""5.0.0"" />
   <Blob Id=""assets/symbols/test.nupkg""/>

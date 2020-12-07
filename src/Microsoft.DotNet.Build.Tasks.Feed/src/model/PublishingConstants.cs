@@ -82,6 +82,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
         private const string FeedDotNet5InternalTransport = "https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet5-internal-transport/nuget/v3/index.json";
         private const string FeedDotNet5InternalSymbols = "https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet5-internal-symbols/nuget/v3/index.json";
 
+        private const string FeedDotNetLibrariesShipping = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-libraries/nuget/v3/index.json";
+        private const string FeedDotNetLibrariesTransport = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-libraries-transport/nuget/v3/index.json";
+        private const string FeedDotNetLibrariesSymbols = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-libraries-symbols/nuget/v3/index.json";
+
         private const SymbolTargetType InternalSymbolTargets = SymbolTargetType.Msdl;
         private const SymbolTargetType PublicAndInternalSymbolTargets = SymbolTargetType.Msdl | SymbolTargetType.SymWeb;
 
@@ -610,6 +614,18 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedDotNetToolsShipping,
                 FeedDotNetToolsTransport,
                 FeedDotNetToolsSymbols,
+                FeedForChecksums,
+                FeedForInstallers,
+                PublicAndInternalSymbolTargets),
+
+            // ".NET Libraries",
+            new TargetChannelConfig(
+                1648,
+                PublishingInfraVersion.All,
+                akaMSChannelName: string.Empty,
+                FeedDotNetLibrariesShipping,
+                FeedDotNetLibrariesTransport,
+                FeedDotNetLibrariesSymbols,
                 FeedForChecksums,
                 FeedForInstallers,
                 PublicAndInternalSymbolTargets),

@@ -134,7 +134,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                     var targetFeedsSetup = new SetupTargetFeedConfigV3(
                         InternalBuild,
-                        BuildModel.Identity.IsStable.Equals("true", System.StringComparison.OrdinalIgnoreCase),
+                        BuildModel.Identity.IsStable,
                         BuildModel.Identity.Name,
                         BuildModel.Identity.Commit,
                         AzureStorageTargetFeedKey,

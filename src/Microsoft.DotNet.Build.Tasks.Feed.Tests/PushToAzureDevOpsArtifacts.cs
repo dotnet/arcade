@@ -20,7 +20,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             var initialAssetsLocation = "cloud";
             var isStable = false;
             var isReleaseOnlyPackageVersion = false;
-            var expectedManifestContent = $"<Build PublishingVersion=\"{(int)PublishingInfraVersion.Latest}\" BuildId=\"{buildId}\" InitialAssetsLocation=\"{initialAssetsLocation}\" IsReleaseOnlyPackageVersion=\"{isReleaseOnlyPackageVersion}\" IsStable=\"{isStable}\" />";
+            var expectedManifestContent = $"<Build PublishingVersion=\"{(int)PublishingInfraVersion.Latest}\" BuildId=\"{buildId}\" InitialAssetsLocation=\"{initialAssetsLocation}\" IsReleaseOnlyPackageVersion=\"{isReleaseOnlyPackageVersion.ToString().ToLower()}\" IsStable=\"{isStable.ToString().ToLower()}\" />";
 
             var buildEngine = new MockBuildEngine();
             var task = new PushToAzureDevOpsArtifacts
@@ -49,7 +49,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             var isStable = false;
             var publishingInfraVersion = "456";
             var isReleaseOnlyPackageVersion = false;
-            var expectedManifestContent = $"<Build PublishingVersion=\"{publishingInfraVersion}\" BuildId=\"{buildId}\" InitialAssetsLocation=\"{initialAssetsLocation}\" IsReleaseOnlyPackageVersion=\"{isReleaseOnlyPackageVersion}\" IsStable=\"{isStable}\" />";
+            var expectedManifestContent = $"<Build PublishingVersion=\"{publishingInfraVersion}\" BuildId=\"{buildId}\" InitialAssetsLocation=\"{initialAssetsLocation}\" IsReleaseOnlyPackageVersion=\"{isReleaseOnlyPackageVersion.ToString().ToLower()}\" IsStable=\"{isStable.ToString().ToLower()}\" />";
 
             var buildEngine = new MockBuildEngine();
             var task = new PushToAzureDevOpsArtifacts
