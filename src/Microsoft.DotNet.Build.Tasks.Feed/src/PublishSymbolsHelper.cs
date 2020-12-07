@@ -87,7 +87,16 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     }
                     else
                     {
-                        await publishOperation.PublishFiles(fileInfos);
+                        try
+                        {
+                            await publishOperation.PublishFiles(fileInfos);
+                        }
+                        catch(Exception ex)
+                        {
+                            tracer.Error("Publishing symbols failed : ", ex.Message);
+                            tracer.Information(ex.ToString());
+                        }
+
                     }
                 }
             }
