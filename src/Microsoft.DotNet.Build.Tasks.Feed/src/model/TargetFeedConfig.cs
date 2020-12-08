@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
+using Microsoft.Extensions.Azure;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed.Model
 {
@@ -47,7 +48,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
         /// </summary>
         public string LatestLinkShortUrlPrefix { get; }
 
-        public TargetFeedConfig(TargetFeedContentType contentType, string targetURL, FeedType type, string token, string latestLinkShortUrlPrefix = null, AssetSelection assetSelection = AssetSelection.All, bool isolated = false, bool @internal = false, bool allowOverwrite = false)
+        public SymbolTargetType SymbolTargetType { get; }
+
+        public TargetFeedConfig(TargetFeedContentType contentType, string targetURL, FeedType type, string token, string latestLinkShortUrlPrefix = null, AssetSelection assetSelection = AssetSelection.All, bool isolated = false, bool @internal = false, bool allowOverwrite = false, SymbolTargetType symbolTargetType = SymbolTargetType.None)
         {
             ContentType = contentType;
             TargetURL = targetURL;
@@ -58,6 +61,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             Internal = @internal;
             AllowOverwrite = allowOverwrite;
             LatestLinkShortUrlPrefix = latestLinkShortUrlPrefix ?? string.Empty;
+            SymbolTargetType = symbolTargetType;
         }
 
         public override bool Equals(object obj)
@@ -72,7 +76,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 (AssetSelection == other.AssetSelection) &&
                 (Isolated == other.Isolated) &&
                 (Internal == other.Internal) &&
-                (AllowOverwrite == other.AllowOverwrite);
+                (AllowOverwrite == other.AllowOverwrite) ;
         }
 
         public override int GetHashCode()
@@ -111,6 +115,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
         VSIX            = 1024,
         Badge           = 2048,
         Other           = 4096
+    }
+
+    [Flags]
+    public enum SymbolTargetType
+    {
+        None = 0,
+        SymWeb = 1,
+        Msdl = 2
     }
 
     /// <summary>
