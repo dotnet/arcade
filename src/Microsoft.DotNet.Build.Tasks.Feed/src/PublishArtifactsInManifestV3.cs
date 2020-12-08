@@ -85,17 +85,27 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 string temporarySymbolsLocation =
                     Path.GetFullPath(Path.Combine(BlobAssetsBasePath, @"..\", "tempSymbols"));
 
+                string temporaryDllLocation =
+                    Path.GetFullPath(Path.Combine(BlobAssetsBasePath, @"..\", "tempDlls"));
+
                 if (!Directory.Exists(temporarySymbolsLocation))
                 {
                     Directory.CreateDirectory(temporarySymbolsLocation);
                 }
 
+                if (!Directory.Exists(temporaryDllLocation))
+                {
+                    Directory.CreateDirectory(temporaryDllLocation);
+                }
+
                 SplitArtifactsInCategories(BuildModel);
                 DeleteSymbolTemporaryFiles(temporarySymbolsLocation);
+                DeleteSymbolTemporaryFiles(temporaryDllLocation);
 
                 //Copying symbol files to temporary location is required because the symUploader API needs read/write access to the files,
                 //since we publish blobs and symbols in parallel this will cause IO exceptions.
                 CopySymbolFilesToTemporaryLocation(BuildModel, temporarySymbolsLocation);
+                CopyDllFilesToTemporaryLocation(PdbArtifactsBasePath, temporaryDllLocation);
 
                 if (Log.HasLoggedErrors)
                 {
@@ -184,12 +194,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 await Task.WhenAll(new Task[] {
                     HandlePackagePublishingAsync(buildAssets),
                     HandleBlobPublishingAsync(buildAssets),
-                    HandleSymbolPublishingAsync(PdbArtifactsBasePath, MsdlToken,
+                    HandleSymbolPublishingAsync(temporaryDllLocation, MsdlToken,
                         SymWebToken, SymbolPublishingExclusionsFile, temporarySymbolsLocation, PublishSpecialClrFiles)
                 });
 
                 DeleteSymbolTemporaryFiles(temporarySymbolsLocation);
+                DeleteSymbolTemporaryFiles(temporaryDllLocation);
                 DeleteSymbolTemporaryDirectory(temporarySymbolsLocation);
+                DeleteSymbolTemporaryDirectory(temporaryDllLocation);
                 Log.LogMessage(MessageImportance.High, "Successfully deleted the temporary symbols directory.");
                 await PersistPendingAssetLocationAsync(client);
             }
@@ -222,6 +234,32 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     var destinationFile = Path.Combine(symbolTemporaryLocation, Path.GetFileName(blobAsset.Id));
                     File.Copy(sourceFile, destinationFile);
                     Log.LogMessage(MessageImportance.Low,
+                        $"Successfully copied file {sourceFile} to {destinationFile}.");
+                }
+            }
+        }
+
+        private void CopyDllFilesToTemporaryLocation(string PdbArtifactsBasePath, string dllTemporaryLocation)
+        { 
+            if (Directory.Exists(PdbArtifactsBasePath))
+            {
+                string[] dlls = Directory.GetFiles(PdbArtifactsBasePath, "*.dll", SearchOption.AllDirectories);
+                string [] pdbs = Directory.GetFiles(PdbArtifactsBasePath, "*.pdb", SearchOption.AllDirectories);
+                foreach(var file in dlls)
+                {
+                    var sourceFile = Path.Combine(PdbArtifactsBasePath, Path.GetFileName(file));
+                    var destinationFile = Path.Combine(dllTemporaryLocation, Path.GetFileName(file));
+                    File.Copy(sourceFile, destinationFile);
+                    Log.LogMessage(MessageImportance.High,
+                        $"Successfully copied file {sourceFile} to {destinationFile}.");
+                }
+
+                foreach(var file in pdbs)
+                {
+                    var sourceFile = Path.Combine(PdbArtifactsBasePath, Path.GetFileName(file));
+                    var destinationFile = Path.Combine(dllTemporaryLocation, Path.GetFileName(file));
+                    File.Copy(sourceFile, destinationFile);
+                    Log.LogMessage(MessageImportance.High,
                         $"Successfully copied file {sourceFile} to {destinationFile}.");
                 }
             }
