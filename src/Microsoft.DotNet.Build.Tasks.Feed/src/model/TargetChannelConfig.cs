@@ -101,12 +101,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             return other is TargetChannelConfig config &&
                    PublishingInfraVersion == config.PublishingInfraVersion &&
                    Id == config.Id &&
-                   AkaMSChannelName.Equals(config.AkaMSChannelName, StringComparison.OrdinalIgnoreCase) &&
-                   ShippingFeed.Equals(config.ShippingFeed, StringComparison.OrdinalIgnoreCase) &&
-                   TransportFeed.Equals(config.TransportFeed, StringComparison.OrdinalIgnoreCase) &&
-                   SymbolsFeed.Equals(config.SymbolsFeed, StringComparison.OrdinalIgnoreCase) &&
-                   ChecksumsFeed.Equals(config.ChecksumsFeed, StringComparison.OrdinalIgnoreCase) &&
-                   InstallersFeed.Equals(config.InstallersFeed, StringComparison.OrdinalIgnoreCase);
+                   String.Equals(AkaMSChannelName, config.AkaMSChannelName, StringComparison.OrdinalIgnoreCase) &&
+                   String.Equals(ShippingFeed, config.ShippingFeed, StringComparison.OrdinalIgnoreCase) &&
+                   String.Equals(TransportFeed, config.TransportFeed, StringComparison.OrdinalIgnoreCase) &&
+                   String.Equals(SymbolsFeed, config.SymbolsFeed, StringComparison.OrdinalIgnoreCase) &&
+                   String.Equals(ChecksumsFeed, config.ChecksumsFeed, StringComparison.OrdinalIgnoreCase) &&
+                   String.Equals(InstallersFeed,config.InstallersFeed, StringComparison.OrdinalIgnoreCase)
         }
 
         public override int GetHashCode()
