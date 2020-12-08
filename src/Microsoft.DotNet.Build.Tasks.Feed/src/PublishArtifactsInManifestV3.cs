@@ -247,9 +247,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 string [] pdbs = Directory.GetFiles(PdbArtifactsBasePath, "*.pdb", SearchOption.AllDirectories);
                 foreach(var file in dlls.Concat(pdbs))
                 {
+                    var destinationFile = Path.Join(dllTemporaryLocation, Path.GetRelativePath(PdbArtifactsBasePath, file));
                     Log.LogMessage(MessageImportance.High,
                         $"Copying file {file} to {destinationFile}.");
-                    var destinationFile = Path.Join(dllTemporaryLocation, Path.GetRelativePath(PdbArtifactsBasePath, file));
                     File.Copy(file, destinationFile);
                     Log.LogMessage(MessageImportance.High,
                         $"Successfully copied file {file} to {destinationFile}.");
