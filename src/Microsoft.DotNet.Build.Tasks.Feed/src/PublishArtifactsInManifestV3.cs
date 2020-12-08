@@ -245,22 +245,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             {
                 string[] dlls = Directory.GetFiles(PdbArtifactsBasePath, "*.dll", SearchOption.AllDirectories);
                 string [] pdbs = Directory.GetFiles(PdbArtifactsBasePath, "*.pdb", SearchOption.AllDirectories);
-                foreach(var file in dlls)
+                foreach(var file in dlls.Concat(pdbs))
                 {
-                    var sourceFile = Path.Combine(PdbArtifactsBasePath, Path.GetFileName(file));
-                    var destinationFile = Path.Combine(dllTemporaryLocation, Path.GetFileName(file));
-                    File.Copy(sourceFile, destinationFile);
                     Log.LogMessage(MessageImportance.High,
-                        $"Successfully copied file {sourceFile} to {destinationFile}.");
-                }
-
-                foreach(var file in pdbs)
-                {
-                    var sourceFile = Path.Combine(PdbArtifactsBasePath, Path.GetFileName(file));
-                    var destinationFile = Path.Combine(dllTemporaryLocation, Path.GetFileName(file));
-                    File.Copy(sourceFile, destinationFile);
+                        $"Copying file {file} to {destinationFile}.");
+                    var destinationFile = Path.Join(dllTemporaryLocation, Path.GetRelativePath(PdbArtifactsBasePath, file));
+                    File.Copy(file, destinationFile);
                     Log.LogMessage(MessageImportance.High,
-                        $"Successfully copied file {sourceFile} to {destinationFile}.");
+                        $"Successfully copied file {file} to {destinationFile}.");
                 }
             }
         }
