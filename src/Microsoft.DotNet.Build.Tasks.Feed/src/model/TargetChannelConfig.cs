@@ -106,7 +106,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                    String.Equals(TransportFeed, config.TransportFeed, StringComparison.OrdinalIgnoreCase) &&
                    String.Equals(SymbolsFeed, config.SymbolsFeed, StringComparison.OrdinalIgnoreCase) &&
                    String.Equals(ChecksumsFeed, config.ChecksumsFeed, StringComparison.OrdinalIgnoreCase) &&
-                   String.Equals(InstallersFeed,config.InstallersFeed, StringComparison.OrdinalIgnoreCase)
+                   String.Equals(InstallersFeed, config.InstallersFeed, StringComparison.OrdinalIgnoreCase);
         }
 
         public override int GetHashCode()
