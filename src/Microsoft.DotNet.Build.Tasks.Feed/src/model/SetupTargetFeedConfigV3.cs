@@ -1,10 +1,10 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using System;
-using System.Collections.Generic;
 using Microsoft.Build.Framework;
 using Microsoft.DotNet.Build.Tasks.Feed.Model;
+using System;
+using System.Collections.Generic;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed
 {
@@ -29,8 +29,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         
         private string StableSymbolsFeed { get; set; }
 
-        private SymbolTargetType SymbolTargetType { get; set; }
-
         public SetupTargetFeedConfigV3(bool isInternalBuild,
             bool isStableBuild,
             string repositoryName,
@@ -47,15 +45,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             string latestLinkShortUrlPrefix,
             string azureDevOpsFeedsKey,
             IBuildEngine buildEngine,
-            SymbolTargetType symbolTargetType,
-        string stablePackagesFeed = null,
+            string stablePackagesFeed = null,
             string stableSymbolsFeed = null) 
             : base(isInternalBuild, isStableBuild, repositoryName, commitSha, azureStorageTargetFeedPAT, publishInstallersAndChecksums, installersTargetStaticFeed, installersAzureAccountKey, checksumsTargetStaticFeed, checksumsAzureAccountKey, azureDevOpsStaticShippingFeed, azureDevOpsStaticTransportFeed, azureDevOpsStaticSymbolsFeed, latestLinkShortUrlPrefix, azureDevOpsFeedsKey)
         {
             BuildEngine = buildEngine;
             StableSymbolsFeed = stableSymbolsFeed;
             StablePackagesFeed = stablePackagesFeed;
-            SymbolTargetType = symbolTargetType;
         }
 
         public override List<TargetFeedConfig> Setup()
@@ -99,8 +95,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         ChecksumsTargetStaticFeed,
                         FeedType.AzureStorageFeed,
                         ChecksumsAzureAccountKey,
-                        LatestLinkShortUrlPrefix,
-                        symbolTargetType: SymbolTargetType));
+                        LatestLinkShortUrlPrefix));
 
                 foreach (var contentType in Installers)
                 {
@@ -110,8 +105,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             InstallersTargetStaticFeed,
                             FeedType.AzureStorageFeed,
                             InstallersAzureAccountKey,
-                            LatestLinkShortUrlPrefix,
-                            symbolTargetType: SymbolTargetType));
+                            LatestLinkShortUrlPrefix));
                 }
             }
 
@@ -120,8 +114,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     TargetFeedContentType.Symbols,
                     PublishingConstants.LegacyDotNetBlobFeedURL,
                     FeedType.AzureStorageFeed,
-                    AzureStorageTargetFeedPAT,
-                    symbolTargetType: SymbolTargetType));
+                    AzureStorageTargetFeedPAT));
 
             targetFeedConfigs.Add(
                 new TargetFeedConfig(
@@ -129,8 +122,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     AzureDevOpsStaticShippingFeed,
                     FeedType.AzDoNugetFeed,
                     AzureDevOpsFeedsKey,
-                    assetSelection: AssetSelection.ShippingOnly,
-                    symbolTargetType: SymbolTargetType));
+                    assetSelection: AssetSelection.ShippingOnly));
 
             targetFeedConfigs.Add(
                 new TargetFeedConfig(
@@ -138,8 +130,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     AzureDevOpsStaticTransportFeed,
                     FeedType.AzDoNugetFeed,
                     AzureDevOpsFeedsKey,
-                    assetSelection: AssetSelection.NonShippingOnly,
-                    symbolTargetType: SymbolTargetType));
+                    assetSelection: AssetSelection.NonShippingOnly));
 
             return targetFeedConfigs;
         }
@@ -154,7 +145,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     FeedType.AzDoNugetFeed,
                     AzureDevOpsFeedsKey,
                     assetSelection: AssetSelection.ShippingOnly,
-                    symbolTargetType: SymbolTargetType,
                     @internal: true
                 ),
 
@@ -164,7 +154,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     FeedType.AzDoNugetFeed,
                     AzureDevOpsFeedsKey,
                     assetSelection: AssetSelection.NonShippingOnly,
-                    symbolTargetType: SymbolTargetType,
                     @internal: true
                 ),
 
@@ -173,7 +162,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     AzureDevOpsStaticSymbolsFeed,
                     FeedType.AzDoNugetFeed,
                     AzureDevOpsFeedsKey,
-                    symbolTargetType: SymbolTargetType,
                     @internal: true)
             };
 
@@ -187,7 +175,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             InstallersTargetStaticFeed,
                             FeedType.AzureStorageFeed,
                             InstallersAzureAccountKey,
-                            symbolTargetType: SymbolTargetType,
                             @internal: true
                         ));
                 }
@@ -198,7 +185,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         ChecksumsTargetStaticFeed,
                         FeedType.AzureStorageFeed,
                         ChecksumsAzureAccountKey,
-                        symbolTargetType: SymbolTargetType,
                         @internal: true
                     ));
             }
@@ -256,7 +242,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     FeedType.AzDoNugetFeed,
                     AzureDevOpsFeedsKey,
                     assetSelection: AssetSelection.ShippingOnly,
-                    symbolTargetType: SymbolTargetType,
                     isolated: true));
 
             targetFeedConfigs.Add(
@@ -265,7 +250,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     StableSymbolsFeed,
                     FeedType.AzDoNugetFeed,
                     AzureDevOpsFeedsKey,
-                    symbolTargetType: SymbolTargetType,
                     isolated: true));
 
             targetFeedConfigs.Add(
@@ -275,7 +259,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     FeedType.AzDoNugetFeed,
                     AzureDevOpsFeedsKey,
                     assetSelection: AssetSelection.NonShippingOnly,
-                    symbolTargetType: SymbolTargetType,
                     isolated: false));
 
             if (PublishInstallersAndChecksums)
@@ -289,7 +272,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             FeedType.AzureStorageFeed,
                             InstallersAzureAccountKey,
                             isolated: true,
-                            symbolTargetType: SymbolTargetType,
                             @internal: false,
                             allowOverwrite: true));
                 }
@@ -301,7 +283,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         FeedType.AzureStorageFeed,
                         ChecksumsAzureAccountKey,
                         isolated: true,
-                        symbolTargetType: SymbolTargetType,
                         @internal: false,
                         allowOverwrite: true));
             }

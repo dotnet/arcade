@@ -53,9 +53,12 @@ stages:
         BARBuildId: ${{ parameters.BARBuildId }}
         PromoteToChannelIds: ${{ parameters.PromoteToChannelIds }}
         
+    - template: /eng/publishing/v3/publish-symbols.yml
+      parameters:
+        symbolPublishingAdditionalParameters: ${{ parameters.symbolPublishingAdditionalParameters }}
+
     - template: /eng/publishing/v3/publish-assets.yml
       parameters:
         PromoteToChannelIds: ${{ parameters.PromoteToChannelIds }}
         publishInstallersAndChecksums: ${{ parameters.publishInstallersAndChecksums }}
         artifactsPublishingAdditionalParameters: ${{ parameters.artifactsPublishingAdditionalParameters }}
-        symbolPublishingAdditionalParameters: ${{parameters.symbolPublishingAdditionalParameters}}
