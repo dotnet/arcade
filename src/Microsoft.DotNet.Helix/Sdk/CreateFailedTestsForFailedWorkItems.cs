@@ -97,7 +97,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                                             ["testCaseTitle"] = $"{workItemFriendlyName} Work Item",
                                             ["outcome"] = failed ? "Failed" : "Passed",
                                             ["state"] = "Completed",
-                                            ["errorMessage"] = failed ? "The Work Item Failed" : null,
+                                            ["errorMessage"] = failed ? "The Work Item Failed, check the Helix Test Logs tab" : null,
                                             ["durationInMs"] = 60 * 1000, // Use a non-zero duration so that the graphs look better.
                                             ["comment"] = new JObject
                                             {
