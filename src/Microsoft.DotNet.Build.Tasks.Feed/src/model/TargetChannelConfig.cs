@@ -55,11 +55,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
         /// </summary>
         public string InstallersFeed { get; }
 
-        /// <summary>
-        /// Should publish to Msdl
-        /// </summary>
-        public SymbolTargetType SymbolTargetType { get; }
-
         public TargetChannelConfig(
             int id,
             PublishingInfraVersion publishingInfraVersion,
@@ -68,8 +63,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             string transportFeed,
             string symbolsFeed,
             string checksumsFeed,
-            string installersFeed,
-            SymbolTargetType symbolTargetType)
+            string installersFeed)
         {
             Id = id;
             PublishingInfraVersion = publishingInfraVersion;
@@ -79,12 +73,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             SymbolsFeed = symbolsFeed;
             ChecksumsFeed = checksumsFeed;
             InstallersFeed = installersFeed;
-            SymbolTargetType = symbolTargetType;
         }
 
         public override string ToString()
         {
-            return
+            return 
                 $"\n Channel ID: '{Id}' " +
                 $"\n Infra-version: '{PublishingInfraVersion}' " +
                 $"\n AkaMSChannelName: '{AkaMSChannelName}' " +
@@ -92,8 +85,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 $"\n Transport-feed: '{TransportFeed}' " +
                 $"\n Symbols-feed: '{SymbolsFeed}' " +
                 $"\n Installers-feed: '{InstallersFeed}' " +
-                $"\n Checksums-feed: '{ChecksumsFeed}' " +
-                $"\n SymbolTargetType: '{SymbolTargetType}' ";
+                $"\n Checksums-feed: '{ChecksumsFeed}' ";
         }
 
         public override bool Equals(object other)
@@ -106,8 +98,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                    TransportFeed.Equals(config.TransportFeed, StringComparison.OrdinalIgnoreCase) &&
                    SymbolsFeed.Equals(config.SymbolsFeed, StringComparison.OrdinalIgnoreCase) &&
                    ChecksumsFeed.Equals(config.ChecksumsFeed, StringComparison.OrdinalIgnoreCase) &&
-                   InstallersFeed.Equals(config.InstallersFeed, StringComparison.OrdinalIgnoreCase) &&
-                   SymbolTargetType == config.SymbolTargetType;
+                   InstallersFeed.Equals(config.InstallersFeed, StringComparison.OrdinalIgnoreCase);
         }
 
         public override int GetHashCode()
@@ -119,8 +110,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 TransportFeed, 
                 SymbolsFeed, 
                 ChecksumsFeed, 
-                InstallersFeed,
-                SymbolTargetType).GetHashCode();
+                InstallersFeed).GetHashCode();
         }
     }
 }

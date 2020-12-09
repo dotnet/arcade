@@ -43,8 +43,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             TargetFeedContentType.Other
         };
 
-        private const SymbolTargetType symbolTargetType = SymbolTargetType.None;
-
         private readonly ITestOutputHelper Output;
 
         public SetupTargetFeedConfigV3Tests(ITestOutputHelper output)
@@ -73,8 +71,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                         AssetSelection.All,
                         isolated: true,
                         @internal: false,
-                        allowOverwrite: true,
-                        symbolTargetType));
+                        allowOverwrite: true));
 
                 foreach (var contentType in Installers)
                 {
@@ -88,8 +85,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                             AssetSelection.All,
                             isolated: true,
                             @internal: false,
-                            allowOverwrite: true,
-                            symbolTargetType));
+                            allowOverwrite: true));
                 }
             }
 
@@ -103,8 +99,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     AssetSelection.ShippingOnly,
                     isolated: true,
                     @internal: false,
-                    allowOverwrite: false,
-                    symbolTargetType));
+                    allowOverwrite: false));
 
             expectedFeeds.Add(
                 new TargetFeedConfig(
@@ -116,8 +111,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     AssetSelection.All,
                     isolated: true,
                     @internal: false,
-                    allowOverwrite: false,
-                    symbolTargetType));
+                    allowOverwrite: false));
 
             expectedFeeds.Add(
                 new TargetFeedConfig(
@@ -129,8 +123,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     AssetSelection.NonShippingOnly,
                     isolated: false,
                     @internal: false,
-                    allowOverwrite: false,
-                    symbolTargetType));
+                    allowOverwrite: false));
 
             var buildEngine = new MockBuildEngine();
             var config = new SetupTargetFeedConfigV3(
@@ -150,7 +143,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     LatestLinkShortUrlPrefix,
                     AzureDevOpsFeedsKey,
                     buildEngine,
-                    symbolTargetType,
                     StablePackageFeed,
                     StableSymbolsFeed
                 );
@@ -181,8 +173,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                             AssetSelection.All,
                             isolated: false,
                             @internal: true,
-                            allowOverwrite: false,
-                            symbolTargetType));
+                            allowOverwrite: false));
                 }
 
                 expectedFeeds.Add(
@@ -195,8 +186,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                         AssetSelection.All,
                         isolated: false,
                         @internal: true,
-                        allowOverwrite: false,
-                        symbolTargetType));
+                        allowOverwrite: false));
 
             }
 
@@ -210,8 +200,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     AssetSelection.ShippingOnly,
                     isolated: false,
                     @internal: true,
-                    allowOverwrite: false,
-                    symbolTargetType));
+                    allowOverwrite: false));
 
             expectedFeeds.Add(
                 new TargetFeedConfig(
@@ -223,8 +212,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     AssetSelection.NonShippingOnly,
                     isolated: false,
                     @internal: true,
-                    allowOverwrite: false,
-                    symbolTargetType));
+                    allowOverwrite: false));
 
             expectedFeeds.Add(
                 new TargetFeedConfig(
@@ -236,8 +224,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     AssetSelection.All,
                     isolated: false,
                     @internal: true,
-                    allowOverwrite: false,
-                    symbolTargetType));
+                    allowOverwrite: false));
 
             var buildEngine = new MockBuildEngine();
             var config = new SetupTargetFeedConfigV3(
@@ -256,8 +243,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     AzureDevOpsStaticSymbolsFeed,
                     LatestLinkShortUrlPrefix,
                     AzureDevOpsFeedsKey,
-                    buildEngine: buildEngine,
-                    symbolTargetType
+                    buildEngine: buildEngine
                 );
 
             var actualFeeds = config.Setup();
@@ -284,8 +270,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                         AssetSelection.All,
                         isolated: false,
                         @internal: false,
-                        allowOverwrite: false,
-                        symbolTargetType));
+                        allowOverwrite: false));
 
                 foreach (var contentType in Installers)
                 {
@@ -299,8 +284,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                             AssetSelection.All,
                             isolated: false,
                             @internal: false,
-                            allowOverwrite: false,
-                            symbolTargetType));
+                            allowOverwrite: false));
                 }
             }
 
@@ -314,8 +298,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     AssetSelection.All,
                     isolated: false,
                     @internal: false,
-                    allowOverwrite: false,
-                    symbolTargetType));
+                    allowOverwrite: false));
 
             expectedFeeds.Add(
                 new TargetFeedConfig(
@@ -327,8 +310,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     AssetSelection.ShippingOnly,
                     isolated: false,
                     @internal: false,
-                    allowOverwrite: false,
-                    symbolTargetType));
+                    allowOverwrite: false));
 
             expectedFeeds.Add(
                 new TargetFeedConfig(
@@ -340,8 +322,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     AssetSelection.NonShippingOnly,
                     isolated: false,
                     @internal: false,
-                    allowOverwrite: false,
-                    symbolTargetType));
+                    allowOverwrite: false));
 
             var buildEngine = new MockBuildEngine();
             var config = new SetupTargetFeedConfigV3(
@@ -360,8 +341,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     AzureDevOpsStaticSymbolsFeed,
                     LatestLinkShortUrlPrefix,
                     AzureDevOpsFeedsKey,
-                    buildEngine: buildEngine,
-                    symbolTargetType
+                    buildEngine: buildEngine
                 );
 
             var actualFeeds = config.Setup();
