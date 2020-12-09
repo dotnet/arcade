@@ -239,6 +239,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             }
         }
 
+        /// <summary>
+        /// Copies the dlls and pdb to a temporary location
+        /// </summary>
+        /// <param name="PdbArtifactsBasePath"></param>
+        /// <param name="dllTemporaryLocation"></param>
         private void CopyDllFilesToTemporaryLocation(string PdbArtifactsBasePath, string dllTemporaryLocation)
         { 
             if (Directory.Exists(PdbArtifactsBasePath))
@@ -247,7 +252,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 string [] pdbs = Directory.GetFiles(PdbArtifactsBasePath, "*.pdb", SearchOption.AllDirectories);
                 foreach(var file in dlls.Concat(pdbs))
                 {
-                    var destinationFile = Path.Join(dllTemporaryLocation, Path.GetRelativePath(PdbArtifactsBasePath, file));
+                    var destinationFile = Path.Combine(dllTemporaryLocation, MakeRelativePath(PdbArtifactsBasePath, file));
                     Log.LogMessage(MessageImportance.High,
                         $"Copying file {file} to {destinationFile}.");
                     File.Copy(file, destinationFile);
@@ -255,6 +260,33 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         $"Successfully copied file {file} to {destinationFile}.");
                 }
             }
+        }
+
+        /// <summary>
+        /// Creates a relative path from one file or folder to another ( need to use this because this project uses .Net Framework
+        /// </summary>
+        /// <param name="fromPath">Contains the directory that defines the start of the relative path</param>
+        /// <param name="toPath">Contains the path that defines the endpoint of the relative path</param>
+        /// <returns></returns>
+        public static string MakeRelativePath(string fromPath, string toPath)
+        {
+            if (string.IsNullOrEmpty(fromPath)) throw new ArgumentNullException("fromPath");
+            if (string.IsNullOrEmpty(toPath)) throw new ArgumentNullException("toPath");
+
+            Uri fromUri = new Uri(fromPath);
+            Uri toUri = new Uri(toPath);
+
+            if (fromUri.Scheme != toUri.Scheme) { return toPath; } // path can't be made relative.
+
+            Uri relativeUri = fromUri.MakeRelativeUri(toUri);
+            string relativePath = Uri.UnescapeDataString(relativeUri.ToString());
+
+            if (toUri.Scheme.Equals("file", StringComparison.InvariantCultureIgnoreCase))
+            {
+                relativePath = relativePath.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
+            }
+
+            return relativePath;
         }
 
         /// <summary>
