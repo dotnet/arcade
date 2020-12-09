@@ -95,7 +95,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                 if (!Directory.Exists(temporaryDllLocation))
                 {
-                    Directory.CreateDirectory(temporaryDllLocation);
+                    Directory.CreateDirectory(Path.GetDirectoryName(temporaryDllLocation));
                 }
 
                 SplitArtifactsInCategories(BuildModel);
