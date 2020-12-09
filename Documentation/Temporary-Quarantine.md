@@ -16,8 +16,9 @@ Step 3 is the focus of this proposal.
 We are going to consider something "broken" and in need of remediation **if it has failed 3 of the last 10 builds in the CI pipeline**.
 The CI pipeline should be passing 100% of the time, so 3 fails indicates that something needs to be done to unblock PRs.
 
-The quarantine option is meant to be used for issues that are believed to be short term disruptions.  Ideally nothing should remain
-quarantined for more than a few days or weeks. Permanent unreliability is a different problem not addressed by this procedure.
+The quarantine option is meant to be used for issues that are believed to be short term disruptions.  If the fix cannot be determined immediately,
+within 5 minutes of the failure, quarantine needs to be enacted to unblock PR workflows.
+Permanent unreliability is a different problem not addressed by this procedure.
 
 ## What happens when something is quarantined
 PR builds will not include the quarantined component.
@@ -38,20 +39,20 @@ The smallest unit possible should be quarantined, to minimize the coverage gap i
 1. An entire pipeline
 
 ### A single test in a single configuration
-TBD
+TBD (https://github.com/dotnet/arcade/issues/6661)
 
 ### A single test in all configurations
-TBD
+TBD (https://github.com/dotnet/arcade/issues/6661)
 
 ### A test assembly
-TBD
+TBD (https://github.com/dotnet/arcade/issues/6662)
 
 ### A build job
-TBD
+TBD (https://github.com/dotnet/arcade/issues/6663)
 
 ### An entire pipeline
-TBD
+TBD (https://github.com/dotnet/arcade/issues/6663)
 
-## How to reintroduce : 100% pass for 10 quarantine builds
-Once that component has passed 10 sequential quarantined builds, it can be reintroduced into the mainline build by reverting the change
+## How to reintroduce : Run without failure for 30 days
+Once a fix has been introduced, and that component has passed passed for a month, it can be reintroduced into the mainline build by reverting the change
 made to quarantine it.
