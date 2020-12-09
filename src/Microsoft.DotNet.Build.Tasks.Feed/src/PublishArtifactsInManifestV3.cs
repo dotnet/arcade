@@ -263,7 +263,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         }
 
         /// <summary>
-        /// Creates a relative path from one file or folder to another ( need to use this because this project uses .Net Framework
+        /// Creates a relative path from one file or folder to another ( need to use this because this project uses .Net Framework)
         /// </summary>
         /// <param name="fromPath">Contains the directory that defines the start of the relative path</param>
         /// <param name="toPath">Contains the path that defines the endpoint of the relative path</param>
@@ -320,7 +320,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         {
             if (Directory.Exists(temporarySymbolLocation))
             {
-                Directory.Delete(temporarySymbolLocation);
+                Directory.Delete(temporarySymbolLocation, true);
             }
         }
     }
