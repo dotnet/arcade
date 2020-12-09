@@ -253,6 +253,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 foreach(var file in dlls.Concat(pdbs))
                 {
                     var destinationFile = Path.Combine(dllTemporaryLocation, MakeRelativePath(PdbArtifactsBasePath, file));
+                    Directory.CreateDirectory(Path.GetDirectoryName(destinationFile));
                     Log.LogMessage(MessageImportance.High,
                         $"Copying file {file} to {destinationFile}.");
                     File.Copy(file, destinationFile);
