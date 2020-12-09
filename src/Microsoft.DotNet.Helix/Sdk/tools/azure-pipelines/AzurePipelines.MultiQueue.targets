@@ -44,6 +44,7 @@
       ExpectedTestFailures="@(AzurePipelinesExpectedTestFailure)"
       EnableFlakyTestSupport="$(AzurePipelinesEnableFlakyTestSupport)"
       TestRunIds="@(HelixTargetQueue -> '%(TestRunId)')"
+      WorkItems="@(CompletedWorkItem)"
     />
   </Target>
 </Project>

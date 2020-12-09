@@ -264,7 +264,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
 
             BuildIdentity buildIdentity = new BuildIdentity
             {
-                IsReleaseOnlyPackageVersion = isReleaseOnlyPackageVersion.ToString()
+                IsReleaseOnlyPackageVersion = isReleaseOnlyPackageVersion
             };
             BuildModel buildModel = new BuildModel(buildIdentity)
             {

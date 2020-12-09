@@ -2,18 +2,16 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using Microsoft.Build.Framework;
-using Microsoft.DotNet.VersionTools.Automation;
 using Microsoft.DotNet.VersionTools.BuildManifest.Model;
 using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using MSBuild = Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed
 {
-    public class PushToAzureDevOpsArtifacts : MSBuild.Task
+    public class PushToAzureDevOpsArtifacts : MSBuildTaskBase
     {
         [Required]
         public ITaskItem[] ItemsToPush { get; set; }
@@ -56,15 +54,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public bool IsReleaseOnlyPackageVersion { get; set; }
 
-        public IFileSystem FileSystem { get; set; } = new RealFileSystem();
-
-        public ServiceProvider NupkgInfoProvider { get; set; } = NupkgInfo.GetDefaultProvider();
-
         /// <summary>
         /// Which version should the build manifest be tagged with.
         /// By default he latest version is used.
         /// </summary>
         public string PublishingVersion { get; set; }
+
+        public PushToAzureDevOpsArtifacts(ServiceProvider provider = null) : base(provider) { }
 
         public override bool Execute()
         {
@@ -94,10 +90,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     {
                         // Act as if %(PublishFlatContainer) were true for all items.
                         blobArtifacts = itemsToPushNoExcludes
-                            .Select(i => BuildManifestUtil.CreateBlobArtifactModel(i, Log));
+                            .Select(i => BlobArtifactModelFactory.CreateBlobArtifactModel(i, Log));
                         foreach (var blobItem in itemsToPushNoExcludes)
                         {
-                            if (!FileSystem.FileExists(blobItem.ItemSpec))
+                            if (!_fileSystem.FileExists(blobItem.ItemSpec))
                             {
                                 Log.LogError($"Could not find file {blobItem.ItemSpec}.");
                                 continue;
@@ -114,7 +110,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             .Select(i =>
                             {
                                 string fileName = Path.GetFileName(i.ItemSpec);
-                                i.SetMetadata("RelativeBlobPath", $"{BuildManifestUtil.AssetsVirtualDir}symbols/{fileName}");
+                                i.SetMetadata("RelativeBlobPath", $"{AssetsVirtualDir}symbols/{fileName}");
                                 return i;
                             })
                             .ToArray();
@@ -140,7 +136,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                         foreach (var packagePath in packageItems)
                         {
-                            if (!FileSystem.FileExists(packagePath.ItemSpec))
+                            if (!_fileSystem.FileExists(packagePath.ItemSpec))
                             {
                                 Log.LogError($"Could not find file {packagePath.ItemSpec}.");
                                 continue;
@@ -152,7 +148,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                         foreach (var blobItem in blobItems)
                         {
-                            if (!FileSystem.FileExists(blobItem.ItemSpec))
+                            if (!_fileSystem.FileExists(blobItem.ItemSpec))
                             {
                                 Log.LogError($"Could not find file {blobItem.ItemSpec}.");
                                 continue;
@@ -162,8 +158,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                                 $"##vso[artifact.upload containerfolder=BlobArtifacts;artifactname=BlobArtifacts]{blobItem.ItemSpec}");
                         }
 
-                        packageArtifacts = packageItems.Select(i => BuildManifestUtil.CreatePackageArtifactModel(i, NupkgInfoProvider));
-                        blobArtifacts = blobItems.Select(i => BuildManifestUtil.CreateBlobArtifactModel(i, Log)).Where(blob => blob != null);
+                        packageArtifacts = packageItems.Select(PackageArtifactModelFactory.CreatePackageArtifactModel);
+                        blobArtifacts = blobItems.Select(i => BlobArtifactModelFactory.CreateBlobArtifactModel(i, Log)).Where(blob => blob != null);
                     }
 
                     PublishingInfraVersion targetPublishingVersion = PublishingInfraVersion.Latest;
@@ -176,14 +172,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         }
                     }
                     
-                    SigningInformationModel signingInformationModel = BuildManifestUtil.CreateSigningInformationModelFromItems(
+                    SigningInformationModel signingInformationModel = SigningInformationModelFactory.CreateSigningInformationModelFromItems(
                         ItemsToSign, StrongNameSignInfo, FileSignInfo, FileExtensionSignInfo, CertificatesSignInfo, blobArtifacts, packageArtifacts, Log);
 
-                    BuildManifestUtil.CreateBuildManifest(Log,
+                    BuildModelFactory.CreateBuildManifest(Log,
                         blobArtifacts,
                         packageArtifacts,
                         AssetManifestPath,
-                        !String.IsNullOrEmpty(ManifestRepoName) ? ManifestRepoName : ManifestRepoUri,
+                        !string.IsNullOrEmpty(ManifestRepoName) ? ManifestRepoName : ManifestRepoUri,
                         ManifestBuildId,
                         ManifestBranch,
                         ManifestCommit,
@@ -191,7 +187,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         IsStableBuild,
                         targetPublishingVersion,
                         IsReleaseOnlyPackageVersion,
-                        FileSystem,
                         signingInformationModel: signingInformationModel);
 
                     Log.LogMessage(MessageImportance.High,
@@ -204,46 +199,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             }
 
             return !Log.HasLoggedErrors;
-        }
-    }
-
-    public interface IFileSystem
-    {
-        // Directory
-        public DirectoryInfo DirectoryCreateDirectory(string path);
-
-        // File
-        public bool FileExists(string path);
-        public Stream FileOpenRead(string path);
-        public string FileReadAllText(string path);
-        public void FileWriteAllText(string path, string content);
-    }
-
-    public class RealFileSystem : IFileSystem
-    {
-        public DirectoryInfo DirectoryCreateDirectory(string path)
-        {
-            return Directory.CreateDirectory(path);
-        }
-
-        public bool FileExists(string path)
-        {
-            return File.Exists(path);
-        }
-
-        public Stream FileOpenRead(string path)
-        {
-            return File.OpenRead(path);
-        }
-
-        public string FileReadAllText(string path)
-        {
-            return File.ReadAllText(path);
-        }
-
-        public void FileWriteAllText(string path, string content)
-        {
-            File.WriteAllText(path, content);
         }
     }
 }

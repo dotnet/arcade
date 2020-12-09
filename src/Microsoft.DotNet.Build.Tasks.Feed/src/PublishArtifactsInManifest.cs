@@ -15,7 +15,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
     ///     The intended use of this task is to push artifacts described in
     ///     a build manifest to package feeds.
     /// </summary>
-    public class PublishArtifactsInManifest : Microsoft.Build.Utilities.Task
+    public class PublishArtifactsInManifest : MSBuildTaskBase
     {
         /// <summary>
         /// Comma separated list of Maestro++ Channel IDs to which the build should
@@ -211,7 +211,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 return null;
             }
 
-            BuildModel buildModel = BuildManifestUtil.ManifestFileToModel(manifestFullPath, Log);
+            BuildModel buildModel = BuildModelFactory.ManifestFileToModel(manifestFullPath, Log);
             
             if (buildModel.Identity.PublishingVersion == PublishingInfraVersion.Legacy)
             {

@@ -6,6 +6,7 @@
 
   <ItemGroup>
     <PackageReference Include="Moq" Version="$(MoqVersion)" />
+    <PackageReference Include="FluentAssertions" Version="$(FluentAssertionsVersion)" />
   </ItemGroup>
 
   <ItemGroup>

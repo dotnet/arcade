@@ -2,18 +2,15 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using Microsoft.Build.Framework;
-using Microsoft.DotNet.Build.Tasks.Feed.Model;
-using Microsoft.DotNet.VersionTools.Automation;
 using Microsoft.DotNet.VersionTools.BuildManifest.Model;
 using System;
-using MSBuild = Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed
 {
     /// <summary>
     /// This task generates an XML build manifest for a list of packages and files.
     /// </summary>
-    public class GenerateBuildManifest : MSBuild.Task
+    public class GenerateBuildManifest : MSBuildTaskBase
     {
         /// <summary>
         /// An list of files produced by the build.
@@ -111,7 +108,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// <summary>
         /// Is the manifest for Release only package version?
         /// </summary>
-        public bool IsReleaseOnlyPackageVersion { get; set; }
+        public bool IsReleaseOnlyPackageVersion { get; set; }        
 
         public override bool Execute()
         {
@@ -128,7 +125,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     }
                 }
 
-                var buildModel = BuildManifestUtil.CreateModelFromItems(
+                var buildModel = BuildModelFactory.CreateModelFromItems(
                     Artifacts,
                     ItemsToSign,
                     StrongNameSignInfo,
@@ -143,10 +140,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     IsStableBuild,
                     targetPublishingVersion,
                     IsReleaseOnlyPackageVersion,
-                    NupkgInfo.GetDefaultProvider(),
                     Log);
 
-                buildModel.WriteAsXml(OutputPath, Log, new RealFileSystem());
+                Log.LogMessage(MessageImportance.High, $"Writing build manifest file '{OutputPath}'...");
+                _fileSystem.WriteXmlToFile(OutputPath, buildModel.ToXml());
             }
             catch (Exception e)
             {

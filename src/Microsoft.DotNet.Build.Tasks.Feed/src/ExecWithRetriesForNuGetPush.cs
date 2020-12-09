@@ -175,7 +175,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 return false;
             }
 
-            var packageInfo = new NupkgInfo(PackageFile);
+            var packageInfo = new NupkgInfo(new PackageArchiveReaderFactory(), PackageFile);
             string packageUrl =
                 $"{PassIfIdenticalV2Feed}/package/{packageInfo.Id}/{packageInfo.Version}";
 

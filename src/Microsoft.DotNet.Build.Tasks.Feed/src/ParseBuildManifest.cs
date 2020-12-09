@@ -5,7 +5,6 @@ using Microsoft.Build.Framework;
 using Microsoft.DotNet.VersionTools.BuildManifest.Model;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using MSBuild = Microsoft.Build.Utilities;
 
@@ -15,7 +14,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
     /// The intended use of this task is to push artifacts described in
     /// a build manifest to a static package feed.
     /// </summary>
-    public class ParseBuildManifest : MSBuild.Task
+    public class ParseBuildManifest : MSBuildTaskBase
     {
         private const string NuGetPackageInfoId = "PackageId";
         private const string NuGetPackageInfoVersion = "PackageVersion";
@@ -37,7 +36,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             Log.LogMessage(MessageImportance.High, "Parsing build manifest file: {0}", AssetManifestPath);
             try
             {
-                BuildModel buildModel = BuildManifestUtil.ManifestFileToModel(AssetManifestPath, Log);
+                BuildModel buildModel = BuildModelFactory.ManifestFileToModel(AssetManifestPath, Log);
                 if (!Log.HasLoggedErrors)
                 {
                     if (buildModel.Artifacts.Blobs.Any())

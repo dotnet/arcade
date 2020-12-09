@@ -18,7 +18,7 @@ namespace Microsoft.DotNet.VersionTools.Automation
             return packagePaths
                 // Ignore symbol packages.
                 .Where(path => !NupkgInfo.IsSymbolPackagePath(path))
-                .Select(path => new NupkgInfo(path));
+                .Select(path => new NupkgInfo(new PackageArchiveReaderFactory(), path));
         }
 
         protected static Dictionary<string, string> CreatePackageInfoDictionary(IEnumerable<NupkgInfo> infos)

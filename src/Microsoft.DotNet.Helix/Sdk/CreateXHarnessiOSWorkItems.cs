@@ -17,6 +17,8 @@ namespace Microsoft.DotNet.Helix.Sdk
         private const string PayloadScriptName = "ios-helix-job-payload.sh";
         private const int DefaultLaunchTimeoutInMinutes = 10;
         private const string LaunchTimeoutPropName = "LaunchTimeout";
+        private const string TargetsPropName = "Targets";
+        private const string IncludesTestRunnerPropName = "IncludesTestRunner";
 
         /// <summary>
         /// An array of one or more paths to iOS app bundles (folders ending with ".app" usually)
@@ -73,10 +75,10 @@ namespace Microsoft.DotNet.Helix.Sdk
                 workItemName = workItemName.Substring(0, workItemName.Length - 4);
             }
 
-            var (testTimeout, workItemTimeout) = ParseTimeouts(appBundleItem);
+            var (testTimeout, workItemTimeout, expectedExitCode) = ParseMetadata(appBundleItem);
 
             // Validation of any metadata specific to iOS stuff goes here
-            if (!appBundleItem.TryGetMetadata("Targets", out string targets))
+            if (!appBundleItem.TryGetMetadata(TargetsPropName, out string targets))
             {
                 Log.LogError("'Targets' metadata must be specified - " +
                     "expecting list of target device/simulator platforms to execute tests on (e.g. ios-simulator-64)");
@@ -94,9 +96,23 @@ namespace Microsoft.DotNet.Helix.Sdk
                 }
             }
 
+            bool includesTestRunner = true;
+            if (appBundleItem.TryGetMetadata(IncludesTestRunnerPropName, out string includesTestRunnerProp))
+            {
+                if (includesTestRunnerProp.ToLowerInvariant() == "false")
+                {
+                    includesTestRunner = false;
+                }
+            }
+
+            if (includesTestRunner && expectedExitCode != 0)
+            {
+                Log.LogWarning("The ExpectedExitCode property is ignored in the `ios test` scenario");
+            }
+
             string appName = Path.GetFileName(appBundleItem.ItemSpec);
 
-            string command = GetXHarnessCommand(appName, targets, testTimeout, launchTimeout);
+            string command = GetXHarnessCommand(appName, targets, testTimeout, launchTimeout, includesTestRunner, expectedExitCode);
 
             Log.LogMessage($"Creating work item with properties Identity: {workItemName}, Payload: {appFolderPath}, Command: {command}");
 
@@ -142,16 +158,19 @@ namespace Microsoft.DotNet.Helix.Sdk
             return outputZipPath;
         }
 
-        private string GetXHarnessCommand(string appName, string targets, TimeSpan testTimeout, TimeSpan launchTimeout)
+        private string GetXHarnessCommand(string appName, string targets, TimeSpan testTimeout, TimeSpan launchTimeout, bool includesTestRunner, int expectedExitCode)
         {
             // We need to call 'sudo launchctl' to spawn the process in a user session with GUI rendering capabilities
             string xharnessRunCommand = $"sudo launchctl asuser `id -u` sh \"{PayloadScriptName}\" " +
                                         $"--app \"$HELIX_WORKITEM_ROOT/{appName}\" " +
                                          "--output-directory \"$HELIX_WORKITEM_UPLOAD_ROOT\" " +
                                         $"--targets \"{targets}\" " +
-                                        $"--timeout {testTimeout.TotalSeconds} " +
-                                        $"--launch-timeout {launchTimeout.TotalSeconds} " +
-                                         "--xharness-cli-path \"$XHARNESS_CLI_PATH\"" +
+                                        $"--timeout \"{testTimeout}\" " +
+                                        $"--launch-timeout \"{launchTimeout}\" " +
+                                         "--xharness-cli-path \"$XHARNESS_CLI_PATH\" " +
+                                         "--helix-python-path \"$HELIX_PYTHONPATH\" " +
+                                         "--command " + (includesTestRunner ? "test" : "run") +
+                                        (expectedExitCode != 0 ? $" --expected-exit-code \"{expectedExitCode}\"" : string.Empty) +
                                         (!string.IsNullOrEmpty(XcodeVersion) ? $" --xcode-version \"{XcodeVersion}\"" : string.Empty) +
                                         (!string.IsNullOrEmpty(AppArguments) ? $" --app-arguments \"{AppArguments}\"" : string.Empty);
 

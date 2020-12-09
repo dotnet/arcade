@@ -10,11 +10,10 @@ using System.IO;
 using System.Linq;
 using Xunit;
 using FluentAssertions;
-using Microsoft.DotNet.VersionTools.Automation;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
 {
-    public class BuildManifestUtilTests
+    public class BuildModelFactoryTests
     {
         #region Standard test values
 
@@ -33,12 +32,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         readonly TaskLoggingHelper _taskLoggingHelper;
         readonly MockBuildEngine _buildEngine;
         readonly StubTask _stubTask;
+        readonly BuildModelFactory _buildModelFactory;
 
-        public BuildManifestUtilTests()
+        public BuildModelFactoryTests()
         {
             _buildEngine = new MockBuildEngine();
             _stubTask = new StubTask(_buildEngine);
             _taskLoggingHelper = new TaskLoggingHelper(_stubTask);
+            _buildModelFactory = new BuildModelFactory(new SigningInformationModelFactory(), new BlobArtifactModelFactory(), new PackageArtifactModelFactory());
         }
 
         #region Artifact related tests
@@ -49,10 +50,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         public void AttemptToCreateModelWithNoArtifactsFails()
         {
             Action act = () =>
-                BuildManifestUtil.CreateModelFromItems(null, null,
+                _buildModelFactory.CreateModelFromItems(null, null,
                 null, null, null, null, _testAzdoBuildId, null, _testAzdoRepoUri, _testBuildBranch, _testBuildCommit, false,
                 VersionTools.BuildManifest.Model.PublishingInfraVersion.All,
-                true, NupkgInfo.GetDefaultProvider(), _taskLoggingHelper);
+                true, _taskLoggingHelper);
             act.Should().Throw<ArgumentNullException>();
         }
 
@@ -69,7 +70,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         [Fact]
         public void ManifestArtifactParsingTest()
         {
-            var localPackagePath = TestInputs.GetFullPath(Path.Combine("Nupkgs", "test-package-a.nupkg"));
+            var localPackagePath = TestInputs.GetFullPath(Path.Combine("Nupkgs", "test-package-a.1.0.0.nupkg"));
 
             const string bopSymbolsNupkg = "foo/bar/baz/bop.symbols.nupkg";
             string bobSymbolsExpectedId = $"assets/symbols/{Path.GetFileName(bopSymbolsNupkg)}";
@@ -104,10 +105,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 })
             };
 
-            var model = BuildManifestUtil.CreateModelFromItems(artifacts, null,
+            var model = _buildModelFactory.CreateModelFromItems(artifacts, null,
                 null, null, null, null, _testAzdoBuildId, _defaultManifestBuildData, _testAzdoRepoUri, _testBuildBranch, _testBuildCommit, false,
                 VersionTools.BuildManifest.Model.PublishingInfraVersion.All,
-                true, NupkgInfo.GetDefaultProvider(), _taskLoggingHelper);
+                true, _taskLoggingHelper);
 
             _taskLoggingHelper.HasLoggedErrors.Should().BeFalse();
             // When Maestro sees a symbol package, it is supposed to re-do the symbol package path to
@@ -155,7 +156,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         [Fact]
         public void ArtifactMetadataIsCaseInsensitive()
         {
-            var localPackagePath = TestInputs.GetFullPath(Path.Combine("Nupkgs", "test-package-a.nupkg"));
+            var localPackagePath = TestInputs.GetFullPath(Path.Combine("Nupkgs", "test-package-a.1.0.0.nupkg"));
 
             var artifacts = new ITaskItem[]
             {
@@ -165,10 +166,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 })
             };
 
-            var model = BuildManifestUtil.CreateModelFromItems(artifacts, null,
+            var model = _buildModelFactory.CreateModelFromItems(artifacts, null,
                 null, null, null, null, _testAzdoBuildId, _defaultManifestBuildData, _testAzdoRepoUri, _testBuildBranch, _testBuildCommit, false,
                 VersionTools.BuildManifest.Model.PublishingInfraVersion.All,
-                true, NupkgInfo.GetDefaultProvider(), _taskLoggingHelper);
+                true, _taskLoggingHelper);
 
             model.Artifacts.Blobs.Should().BeEmpty();
             model.Artifacts.Packages.Should().SatisfyRespectively(
@@ -204,10 +205,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 }),
             };
 
-            BuildManifestUtil.CreateModelFromItems(artifacts, null,
+            _buildModelFactory.CreateModelFromItems(artifacts, null,
                 null, null, null, null, _testAzdoBuildId, _defaultManifestBuildData, _testAzdoRepoUri, _testBuildBranch, _testBuildCommit, false,
                 VersionTools.BuildManifest.Model.PublishingInfraVersion.All,
-                true, NupkgInfo.GetDefaultProvider(), _taskLoggingHelper);
+                true, _taskLoggingHelper);
 
             _taskLoggingHelper.HasLoggedErrors.Should().BeTrue();
             _buildEngine.BuildErrorEvents.Should().Contain(e => e.Message.Equals($"Missing 'RelativeBlobPath' property on blob {zipArtifact}"));
@@ -229,10 +230,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 })
             };
 
-            BuildManifestUtil.CreateModelFromItems(artifacts, null,
+            _buildModelFactory.CreateModelFromItems(artifacts, null,
                 null, null, null, null, _testAzdoBuildId, null, _testAzdoRepoUri, _testBuildBranch, _testBuildCommit, false,
                 VersionTools.BuildManifest.Model.PublishingInfraVersion.Latest,
-                true, NupkgInfo.GetDefaultProvider(), _taskLoggingHelper);
+                true, _taskLoggingHelper);
 
             // Should have logged an error that an initial location was not present.
             _taskLoggingHelper.HasLoggedErrors.Should().BeTrue();
@@ -248,7 +249,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         [InlineData("InitialAssetsLocation")]
         public void InitialLocationInformationAttributesAreAccepted(string attributeName)
         {
-            var localPackagePath = TestInputs.GetFullPath(Path.Combine("Nupkgs", "test-package-a.nupkg"));
+            var localPackagePath = TestInputs.GetFullPath(Path.Combine("Nupkgs", "test-package-a.1.0.0.nupkg"));
 
             var artifacts = new ITaskItem[]
             {
@@ -263,10 +264,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 $"{attributeName}={_testInitialLocation}"
             };
 
-            var model = BuildManifestUtil.CreateModelFromItems(artifacts, null,
+            var model = _buildModelFactory.CreateModelFromItems(artifacts, null,
                 null, null, null, null, _testAzdoBuildId, manifestBuildData, _testAzdoRepoUri, _testBuildBranch, _testBuildCommit, false,
                 VersionTools.BuildManifest.Model.PublishingInfraVersion.All,
-                true, NupkgInfo.GetDefaultProvider(), _taskLoggingHelper);
+                true, _taskLoggingHelper);
 
             // Should have logged an error that an initial location was not present.
             _taskLoggingHelper.HasLoggedErrors.Should().BeFalse();
@@ -290,7 +291,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         [Fact]
         public void RoundTripFromTaskItemsToFileToXml()
         {
-            var localPackagePath = TestInputs.GetFullPath(Path.Combine("Nupkgs", "test-package-a.nupkg"));
+            var localPackagePath = TestInputs.GetFullPath(Path.Combine("Nupkgs", "test-package-a.1.0.0.nupkg"));
 
             const string bopSymbolsNupkg = "foo/bar/baz/bop.symbols.nupkg";
             string bobSymbolsExpectedId = $"assets/symbols/{Path.GetFileName(bopSymbolsNupkg)}";
@@ -336,7 +337,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 new TaskItem(localPackagePath, new Dictionary<string, string>()
                 {
                     { "CertificateName", "IHasACert" },
-                    { "PublicKeyToken", "BLORG" }
+                    { "PublicKeyToken", "abcdabcdabcdabcd" }
                 })
             };
 
@@ -368,16 +369,16 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 })
             };
 
-            string tempXmlFile = System.IO.Path.GetTempFileName();
+            string tempXmlFile = Path.GetTempFileName();
             try
             {
-                var modelFromItems = BuildManifestUtil.CreateModelFromItems(artifacts, itemsToSign,
+                var modelFromItems = _buildModelFactory.CreateModelFromItems(artifacts, itemsToSign,
                     strongNameSignInfo, fileSignInfo, fileExtensionSignInfo, certificatesSignInfo, _testAzdoBuildId,
                     _defaultManifestBuildData, _testAzdoRepoUri, _testBuildBranch, _testBuildCommit, true,
                     VersionTools.BuildManifest.Model.PublishingInfraVersion.Next,
-                    false, NupkgInfo.GetDefaultProvider(), _taskLoggingHelper);
+                    false, _taskLoggingHelper);
 
-                BuildManifestUtil.CreateBuildManifest(_taskLoggingHelper,
+                _buildModelFactory.CreateBuildManifest(_taskLoggingHelper,
                         modelFromItems.Artifacts.Blobs,
                         modelFromItems.Artifacts.Packages,
                         tempXmlFile,
@@ -386,14 +387,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                         modelFromItems.Identity.Branch,
                         modelFromItems.Identity.Commit,
                         modelFromItems.Identity.Attributes.Select(kv => $"{kv.Key}={kv.Value}").ToArray(),
-                        bool.Parse(modelFromItems.Identity.IsStable),
+                        modelFromItems.Identity.IsStable,
                         modelFromItems.Identity.PublishingVersion,
-                        bool.Parse(modelFromItems.Identity.IsReleaseOnlyPackageVersion),
-                        new RealFileSystem(),
+                        modelFromItems.Identity.IsReleaseOnlyPackageVersion,
                         modelFromItems.SigningInformation);
 
                 // Read the xml file back in and create a model from it.
-                var modelFromFile = BuildManifestUtil.ManifestFileToModel(tempXmlFile, _taskLoggingHelper);
+                var modelFromFile = _buildModelFactory.ManifestFileToModel(tempXmlFile, _taskLoggingHelper);
 
                 // There will be some reordering of the attributes here (they are written to the xml file in
                 // a defined order for some properties, then ordered by case).
@@ -403,8 +403,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 modelFromItems.Identity.BuildId.Should().Be(_testAzdoBuildId);
                 modelFromItems.Identity.Commit.Should().Be(_testBuildCommit);
                 modelFromItems.Identity.PublishingVersion.Should().Be(VersionTools.BuildManifest.Model.PublishingInfraVersion.Next);
-                modelFromItems.Identity.IsReleaseOnlyPackageVersion.Should().Be("False");
-                modelFromItems.Identity.IsStable.Should().Be("True");
+                modelFromItems.Identity.IsReleaseOnlyPackageVersion.Should().BeFalse();
+                modelFromItems.Identity.IsStable.Should().BeTrue();
                 modelFromFile.Artifacts.Blobs.Should().SatisfyRespectively(
                     blob =>
                     {
@@ -449,31 +449,31 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     },
                     item =>
                     {
-                        item.Include.Should().Be("test-package-a.nupkg");
+                        item.Include.Should().Be("test-package-a.1.0.0.nupkg");
                     });
                 modelFromFile.SigningInformation.StrongNameSignInfo.Should().SatisfyRespectively(
                     item =>
                     {
-                        item.Include.Should().Be("test-package-a.nupkg");
+                        item.Include.Should().Be("test-package-a.1.0.0.nupkg");
                         item.CertificateName.Should().Be("IHasACert");
-                        item.PublicKeyToken.Should().Be("BLORG");
+                        item.PublicKeyToken.Should().Be("abcdabcdabcdabcd");
                     });
                 modelFromFile.SigningInformation.FileSignInfo.Should().SatisfyRespectively(
                     item =>
                     {
-                        item.Include.Should().Be("test-package-a.nupkg");
+                        item.Include.Should().Be("test-package-a.1.0.0.nupkg");
                         item.CertificateName.Should().Be("IHasACert2");
                     });
                 modelFromFile.SigningInformation.CertificatesSignInfo.Should().SatisfyRespectively(
                     item =>
                     {
                         item.Include.Should().Be("MyCert");
-                        item.DualSigningAllowed.Should().Be("false");
+                        item.DualSigningAllowed.Should().Be(false);
                     },
                     item =>
                     {
                         item.Include.Should().Be("MyOtherCert");
-                        item.DualSigningAllowed.Should().Be("true");
+                        item.DualSigningAllowed.Should().Be(true);
                     });
                 modelFromFile.SigningInformation.FileExtensionSignInfo.Should().SatisfyRespectively(
                     item =>
@@ -502,7 +502,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         [Fact]
         public void NoSigningInformationDoesNotThrowAnError()
         {
-            var localPackagePath = TestInputs.GetFullPath(Path.Combine("Nupkgs", "test-package-a.nupkg"));
+            var localPackagePath = TestInputs.GetFullPath(Path.Combine("Nupkgs", "test-package-a.1.0.0.nupkg"));
 
             var artifacts = new ITaskItem[]
             {
@@ -512,10 +512,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 })
             };
 
-            var model = BuildManifestUtil.CreateModelFromItems(artifacts, null,
+            var model = _buildModelFactory.CreateModelFromItems(artifacts, null,
                 null, null, null, null, _testAzdoBuildId, _defaultManifestBuildData, _testAzdoRepoUri, _testBuildBranch, _testBuildCommit, false,
                 VersionTools.BuildManifest.Model.PublishingInfraVersion.All,
-                true, NupkgInfo.GetDefaultProvider(), _taskLoggingHelper);
+                true, _taskLoggingHelper);
 
             _taskLoggingHelper.HasLoggedErrors.Should().BeFalse();
             model.SigningInformation.Should().NotBeNull();
@@ -532,7 +532,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         [Fact]
         public void SignInfoIsCorrectlyPopulatedFromItems()
         {
-            var localPackagePath = TestInputs.GetFullPath(Path.Combine("Nupkgs", "test-package-a.nupkg"));
+            var localPackagePath = TestInputs.GetFullPath(Path.Combine("Nupkgs", "test-package-a.1.0.0.nupkg"));
             var zipPath = @"this/is/a/zip.zip";
 
             var artifacts = new ITaskItem[]
@@ -555,7 +555,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 new TaskItem(localPackagePath, new Dictionary<string, string>()
                 {
                     { "CertificateName", "IHasACert" },
-                    { "PublicKeyToken", "BLORG" }
+                    { "PublicKeyToken", "abcdabcdabcdabcd" }
                 })
             };
 
@@ -587,18 +587,18 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 })
             };
 
-            var model = BuildManifestUtil.CreateModelFromItems(artifacts, itemsToSign,
+            var model = _buildModelFactory.CreateModelFromItems(artifacts, itemsToSign,
                 strongNameSignInfo, fileSignInfo, fileExtensionSignInfo, certificatesSignInfo,
                 _testAzdoBuildId, _defaultManifestBuildData, _testAzdoRepoUri, _testBuildBranch, _testBuildCommit, false,
                 VersionTools.BuildManifest.Model.PublishingInfraVersion.All,
-                true, NupkgInfo.GetDefaultProvider(), _taskLoggingHelper);
+                true, _taskLoggingHelper);
 
             _taskLoggingHelper.HasLoggedErrors.Should().BeFalse();
             model.SigningInformation.Should().NotBeNull();
             model.SigningInformation.ItemsToSign.Should().SatisfyRespectively(
                 item =>
                 {
-                    item.Include.Should().Be("test-package-a.nupkg");
+                    item.Include.Should().Be("test-package-a.1.0.0.nupkg");
                 },
                 item =>
                 {
@@ -607,26 +607,26 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             model.SigningInformation.StrongNameSignInfo.Should().SatisfyRespectively(
                 item =>
                 {
-                    item.Include.Should().Be("test-package-a.nupkg");
+                    item.Include.Should().Be("test-package-a.1.0.0.nupkg");
                     item.CertificateName.Should().Be("IHasACert");
-                    item.PublicKeyToken.Should().Be("BLORG");
+                    item.PublicKeyToken.Should().Be("abcdabcdabcdabcd");
                 });
             model.SigningInformation.FileSignInfo.Should().SatisfyRespectively(
                 item =>
                 {
-                    item.Include.Should().Be("test-package-a.nupkg");
+                    item.Include.Should().Be("test-package-a.1.0.0.nupkg");
                     item.CertificateName.Should().Be("IHasACert2");
                 });
             model.SigningInformation.CertificatesSignInfo.Should().SatisfyRespectively(
                 item =>
                 {
                     item.Include.Should().Be("MyCert");
-                    item.DualSigningAllowed.Should().Be("false");
+                    item.DualSigningAllowed.Should().Be(false);
                 },
                 item =>
                 {
                     item.Include.Should().Be("MyOtherCert");
-                    item.DualSigningAllowed.Should().Be("true");
+                    item.DualSigningAllowed.Should().Be(true);
                 });
             model.SigningInformation.FileExtensionSignInfo.Should().SatisfyRespectively(
                 item =>
@@ -642,7 +642,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         [Fact]
         public void ArtifactToSignMustExistInArtifacts()
         {
-            var localPackagePath = TestInputs.GetFullPath(Path.Combine("Nupkgs", "test-package-a.nupkg"));
+            var localPackagePath = TestInputs.GetFullPath(Path.Combine("Nupkgs", "test-package-a.1.0.0.nupkg"));
             const string zipPath = @"this/is/a/zip.zip";
             const string bogusNupkgToSign = "totallyboguspackage.nupkg";
 
@@ -658,15 +658,18 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             var itemsToSign = new ITaskItem[]
             {
                 new TaskItem(bogusNupkgToSign),
+                new TaskItem(Path.GetFileName(zipPath)),
+                new TaskItem(Path.GetFileName(localPackagePath)),
             };
 
-            var model = BuildManifestUtil.CreateModelFromItems(artifacts, itemsToSign,
+            var model = _buildModelFactory.CreateModelFromItems(artifacts, itemsToSign,
                 null, null, null, null,
                 _testAzdoBuildId, _defaultManifestBuildData, _testAzdoRepoUri, _testBuildBranch, _testBuildCommit, false,
                 VersionTools.BuildManifest.Model.PublishingInfraVersion.All,
-                true, NupkgInfo.GetDefaultProvider(), _taskLoggingHelper);
+                true, _taskLoggingHelper);
 
             _taskLoggingHelper.HasLoggedErrors.Should().BeTrue();
+            _buildEngine.BuildErrorEvents.Should().HaveCount(1);
             _buildEngine.BuildErrorEvents.Should().Contain(e => e.Message.Equals($"Item to sign '{bogusNupkgToSign}' was not found in the artifacts"));
         }
 

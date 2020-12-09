@@ -1,7 +1,6 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using Microsoft.Extensions.DependencyInjection;
 using NuGet.Packaging;
 using NuGet.Packaging.Core;
 
@@ -9,18 +8,13 @@ namespace Microsoft.DotNet.VersionTools.Automation
 {
     public class NupkgInfo
     {
-        public NupkgInfo()
-        {
-        }
+        private readonly PackageArchiveReaderFactory _packageArchiveReaderFactory;
 
-        public NupkgInfo(string path)
+        public NupkgInfo(PackageArchiveReaderFactory packageArchiveReaderFactory, string path)
         {
-            Initialize(path);
-        }
+            _packageArchiveReaderFactory = packageArchiveReaderFactory;
 
-        public virtual void Initialize(string path)
-        {
-            using (PackageArchiveReader archiveReader = new PackageArchiveReader(path))
+            using (PackageArchiveReader archiveReader = _packageArchiveReaderFactory.CreatePackageArchiveReader(path))
             {
                 PackageIdentity identity = archiveReader.GetIdentity();
                 Id = identity.Id;
@@ -29,18 +23,23 @@ namespace Microsoft.DotNet.VersionTools.Automation
             }
         }
 
-        public string Id { get; protected set; }
-        public string Version { get; protected set; }
-        public string Prerelease { get; protected set; }
+        public string Id { get; }
+        public string Version { get; }
+        public string Prerelease { get; }
 
         public static bool IsSymbolPackagePath(string path) => path.EndsWith(".symbols.nupkg");
+    }
 
-        public static ServiceProvider GetDefaultProvider()
+    public interface IPackageArchiveReaderFactory
+    {
+        PackageArchiveReader CreatePackageArchiveReader(string path);
+    }
+
+    public class PackageArchiveReaderFactory : IPackageArchiveReaderFactory
+    {
+        public PackageArchiveReader CreatePackageArchiveReader(string path)
         {
-            return new ServiceCollection()
-                .AddLogging()
-                .AddSingleton<NupkgInfo>()
-                .BuildServiceProvider();
+            return new PackageArchiveReader(path);
         }
     }
 }
