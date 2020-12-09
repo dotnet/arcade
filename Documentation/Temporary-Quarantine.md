@@ -26,7 +26,7 @@ The primary CI pipelines (e.g. the 'runtime' pipeline) will not include the quar
 A separate pipeline will be run on the same cadence as the CI pipeline in order to execute quarantined components in order to determine when
 it is appropriate to unquarantine the affected component.
 
-The current build owners should be aware every quarantined item, with a tracking issue in the most appropriate repository assigned to this owner or owners.
+Owners should be aware every quarantined item, with a tracking issue in the most appropriate repository assigned to them.
 The primary purpose of this ownership is to ensure that the quarantined item is being addressed and tracked for reintroduction into the mainline builds.
 
 ## How to quarantine
