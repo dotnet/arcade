@@ -66,7 +66,7 @@ while [[ $# -gt 0 ]]; do
         helix_python_bin="$2"
         shift
         ;;
-      --python_path)
+      --python-path)
         python_path="$2"
         shift
         ;;
