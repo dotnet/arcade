@@ -92,20 +92,20 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 {
                     Directory.CreateDirectory(temporarySymbolsLocation);
                 }
-
+/*
                 if (!Directory.Exists(temporaryDllLocation))
                 {
                     Directory.CreateDirectory(Path.GetDirectoryName(temporaryDllLocation));
-                }
+                }*/
 
                 SplitArtifactsInCategories(BuildModel);
                 DeleteSymbolTemporaryFiles(temporarySymbolsLocation);
-                DeleteSymbolTemporaryFiles(temporaryDllLocation);
+               // DeleteSymbolTemporaryFiles(temporaryDllLocation);
 
                 //Copying symbol files to temporary location is required because the symUploader API needs read/write access to the files,
                 //since we publish blobs and symbols in parallel this will cause IO exceptions.
                 CopySymbolFilesToTemporaryLocation(BuildModel, temporarySymbolsLocation);
-                CopyDllFilesToTemporaryLocation(PdbArtifactsBasePath, temporaryDllLocation);
+               // CopyDllFilesToTemporaryLocation(PdbArtifactsBasePath, temporaryDllLocation);
 
                 if (Log.HasLoggedErrors)
                 {
@@ -194,14 +194,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 await Task.WhenAll(new Task[] {
                     HandlePackagePublishingAsync(buildAssets),
                     HandleBlobPublishingAsync(buildAssets),
-                    HandleSymbolPublishingAsync(temporaryDllLocation, MsdlToken,
+                    HandleSymbolPublishingAsync(PdbArtifactsBasePath, MsdlToken,
                         SymWebToken, SymbolPublishingExclusionsFile, temporarySymbolsLocation, PublishSpecialClrFiles)
                 });
 
                 DeleteSymbolTemporaryFiles(temporarySymbolsLocation);
-                DeleteSymbolTemporaryFiles(temporaryDllLocation);
+               // DeleteSymbolTemporaryFiles(temporaryDllLocation);
                 DeleteSymbolTemporaryDirectory(temporarySymbolsLocation);
-                DeleteSymbolTemporaryDirectory(temporaryDllLocation);
+               // DeleteSymbolTemporaryDirectory(temporaryDllLocation);
                 Log.LogMessage(MessageImportance.High, "Successfully deleted the temporary symbols directory.");
                 await PersistPendingAssetLocationAsync(client);
             }
@@ -253,7 +253,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 foreach(var file in dlls.Concat(pdbs))
                 {
                     var destinationFile = Path.Combine(dllTemporaryLocation, MakeRelativePath(PdbArtifactsBasePath, file));
-                    Directory.CreateDirectory(Path.GetDirectoryName(destinationFile));
                     Log.LogMessage(MessageImportance.High,
                         $"Copying file {file} to {destinationFile}.");
                     File.Copy(file, destinationFile);
@@ -321,7 +320,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         {
             if (Directory.Exists(temporarySymbolLocation))
             {
-                Directory.Delete(temporarySymbolLocation, true);
+                Directory.Delete(temporarySymbolLocation);
             }
         }
     }
