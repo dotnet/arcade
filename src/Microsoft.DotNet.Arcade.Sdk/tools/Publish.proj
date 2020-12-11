@@ -98,6 +98,9 @@
       <PackagesToPublish Remove="@(PackagesToPublish)" />
       <PackagesToPublish Include="@(ItemsToPushToBlobFeed)" />
     </ItemGroup>
+    
+    <Error Condition="'$(AllowEmptySignPostBuildList)' != 'true' AND '@(ItemsToSignPostBuild)' == ''" 
+           Text="List of files to sign post-build is empty. Make sure that ItemsToSignPostBuild is configured correctly." />
   </Target>
 
   <Target Name="PublishToSourceBuildStorage">
@@ -140,9 +143,6 @@
       <ManifestBuildData Include="AzureDevOpsRepository=$(BUILD_REPOSITORY_URI)" />
       <ManifestBuildData Include="AzureDevOpsBranch=$(BUILD_SOURCEBRANCH)" />
     </ItemGroup>
-    
-    <Error Condition="'$(AllowEmptySignPostBuildList)' != 'true' AND '@(ItemsToSignPostBuild)' == ''" 
-           Text="List of files to sign post-build is empty. Make sure that ItemsToSignPostBuild is configured correctly." />
 
     <!--
       The user can set `PublishingVersion` via eng\Publishing.props
