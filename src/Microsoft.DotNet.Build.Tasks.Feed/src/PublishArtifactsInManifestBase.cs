@@ -358,8 +358,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 IEnumerable<string> filesToSymbolServer = null;
                 if (Directory.Exists(pdbArtifactsBasePath))
                 {
-                    filesToSymbolServer =
-                        Directory.EnumerateFileSystemEntries(pdbArtifactsBasePath);
+                    var pdbEntries = System.IO.Directory.EnumerateFiles(pdbArtifactsBasePath, "*.pdb", System.IO.SearchOption.AllDirectories);
+                    var dllEntries = System.IO.Directory.EnumerateFiles(pdbArtifactsBasePath, "*.dll", System.IO.SearchOption.AllDirectories);
+                    filesToSymbolServer = pdbEntries.Concat(dllEntries);
                 }
 
                 foreach (var server in serversToPublish)
