@@ -62,8 +62,7 @@ namespace Microsoft.DotNet.VersionTools.BuildManifest.Model
                             return false;
                         }
                     }
-
-                    if (localAttr.Value.Equals(
+                    else if (localAttr.Value.Equals(
                         other.Attributes.GetOrDefault(localAttr.Key),
                         StringComparison.OrdinalIgnoreCase) == false)
                     {
@@ -72,7 +71,7 @@ namespace Microsoft.DotNet.VersionTools.BuildManifest.Model
                 }
             }
 
-            return false;
+            return true;
         }
 
         public override int GetHashCode()
