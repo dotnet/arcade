@@ -77,7 +77,7 @@
     <DropAppVersion Condition="'$(DropAppVersion)' == ''">18.165.29912-buildid11693003</DropAppVersion>
     <MicroBuildPluginsSwixBuildVersion Condition="'$(MicroBuildPluginsSwixBuildVersion)' == ''">1.0.422</MicroBuildPluginsSwixBuildVersion>
     <MicroBuildCoreVersion Condition="'$(MicroBuildCoreVersion)' == ''">0.2.0</MicroBuildCoreVersion>
-    <MicrosoftDotNetIBCMergeVersion Condition="'$(MicrosoftDotNetIBCMergeVersion)' == ''">5.0.6-beta.19203.1</MicrosoftDotNetIBCMergeVersion>
+    <MicrosoftDotNetIBCMergeVersion Condition="'$(MicrosoftDotNetIBCMergeVersion)' == ''">5.0.7-beta.20159.1</MicrosoftDotNetIBCMergeVersion>
     <MicrosoftNETTestSdkVersion Condition="'$(MicrosoftNETTestSdkVersion)' == ''">16.6.1</MicrosoftNETTestSdkVersion>
     <MicrosoftNetFrameworkReferenceAssembliesVersion Condition="'$(MicrosoftNetFrameworkReferenceAssembliesVersion)' == ''">1.0.0-preview.2</MicrosoftNetFrameworkReferenceAssembliesVersion>
     <MicrosoftVSSDKBuildToolsVersion Condition="'$(MicrosoftVSSDKBuildToolsVersion)' == ''">15.1.192</MicrosoftVSSDKBuildToolsVersion>
@@ -99,7 +99,7 @@
     <SNVersion Condition="'$(SNVersion)' == ''">1.0.0</SNVersion>
     <MicrosoftDotNetBuildTasksVisualStudioVersion Condition="'$(MicrosoftDotNetBuildTasksVisualStudioVersion)' == ''">$(ArcadeSdkVersion)</MicrosoftDotNetBuildTasksVisualStudioVersion>
     <MicrosoftDotNetSourceBuildTasksVersion Condition="'$(MicrosoftDotNetSourceBuildTasksVersion)' == ''">$(ArcadeSdkVersion)</MicrosoftDotNetSourceBuildTasksVersion>
-    <RichCodeNavPackageVersion Condition="'$(RichCodeNavPackageVersion)' == ''">0.1.1407-alpha</RichCodeNavPackageVersion>
+    <RichCodeNavPackageVersion Condition="'$(RichCodeNavPackageVersion)' == ''">0.1.1832-alpha</RichCodeNavPackageVersion>
   </PropertyGroup>
 
   <!-- RestoreSources overrides - defines DotNetRestoreSources variable if available -->

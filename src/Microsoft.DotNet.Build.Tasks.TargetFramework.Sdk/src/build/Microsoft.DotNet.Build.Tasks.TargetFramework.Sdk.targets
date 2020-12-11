@@ -4,14 +4,15 @@
   <UsingTask TaskName="ChooseBestTargetFrameworksTask" AssemblyFile="$(DotNetBuildTasksTargetFrameworkSdkAssembly)" />
   <UsingTask TaskName="AddTargetFrameworksToProjectTask" AssemblyFile="$(DotNetBuildTasksTargetFrameworkSdkAssembly)" />
 
-  <!-- Strip away the TargetFrameworkSuffix during the graph build. -->
+  <!-- Strip away the TargetPlatforms during the graph build restore for frameworks older than net5.0 -->
   <PropertyGroup Condition="'$(IsGraphBuild)' == 'true' and '$(MSBuildRestoreSessionId)' != ''">
-    <TargetFrameworks Condition="'$(TargetFrameworks)' != ''">$([System.Text.RegularExpressions.Regex]::Replace('$(TargetFrameworks)', '(-[^;]+)', ''))</TargetFrameworks>
+    <TargetFrameworks Condition="'$(TargetFrameworks)' != ''">$([System.Text.RegularExpressions.Regex]::Replace('$(TargetFrameworks)', '$(TargetFrameworkPattern)', '${1}'))</TargetFrameworks>
   </PropertyGroup>
-     
+
+  <!-- We filter _InnerBuildProjects items during DispatchToInnerBuilds and Clean to only run for best target frameworks. -->
   <Target Name="RunOnlyBestTargetFrameworks"
-          Condition="'$(BuildTargetFramework)' != '' or '$(MSBuildProjectExtension)' == '.pkgproj'" 
-          BeforeTargets="DispatchToInnerBuilds"
+          Condition="'$(IsCrossTargetingBuild)' == 'true' and ('$(BuildTargetFramework)' != '' or '$(MSBuildProjectExtension)' == '.pkgproj')" 
+          BeforeTargets="DispatchToInnerBuilds;Clean"
           DependsOnTargets="GetProjectWithBestTargetFrameworks">
     <ItemGroup>
       <_OriginalInnerBuildProjects Include="@(_InnerBuildProjects)" />
@@ -20,12 +21,10 @@
     </ItemGroup>
   </Target>
 
-  <!--
-    We filter _InnerBuildProjects items during DispatchToInnerBuilds to only run for best target frameworks.
-    As _InnerBuildProjects items are used in the GetTargetFrameworks path as well (>= .NET 5), we restore the item state.
-  -->
+  <!-- As _InnerBuildProjects items are used in the GetTargetFrameworks path as well (>= .NET 5), we restore the item state. -->
   <Target Name="RestoreInnerBuildProjects"
-          AfterTargets="DispatchToInnerBuilds"
+          BeforeTargets="GetTargetFrameworksWithPlatformFromInnerBuilds"
+          AfterTargets="DispatchToInnerBuilds;Clean"
           Condition="'@(_OriginalInnerBuildProjects)' != ''">
     <ItemGroup>
       <_InnerBuildProjects Remove="@(_InnerBuildProjects)" />
@@ -41,7 +40,7 @@
       <_BuildTargetFrameworkWithoutOS Include="$([MSBuild]::Unescape($([System.Text.RegularExpressions.Regex]::Replace('$(TargetFrameworks)', '(-[^;]+)', ''))))" />
       <!-- TODO: Find a better way to filter out non applicable TargetOS values for .NET Framework. -->
       <_BuildTargetFrameworkWithTargetOS Include="@(_BuildTargetFrameworkWithoutOS->Distinct()->'%(Identity)-$(TargetOS)')"
-                                         Condition="'$(TargetOS)' == 'Windows_NT' or !$([System.String]::Copy('%(Identity)').StartsWith('net4'))" />
+                                         Condition="'$(TargetOS)' == 'windows' or !$([System.String]::Copy('%(Identity)').StartsWith('net4'))" />
     </ItemGroup>
     
     <ChooseBestTargetFrameworksTask BuildTargetFrameworks="@(_BuildTargetFrameworkWithTargetOS);$(AdditionalBuildTargetFrameworks)"
@@ -68,23 +67,25 @@
              Targets="GetTargetFrameworks"
              BuildInParallel="$(BuildInParallel)"
              RemoveProperties="TargetFramework;RuntimeIdentifier"
+             Condition="'%(ProjectReference.SkipGetTargetFrameworkProperties)' != 'true'"
              SkipNonexistentTargets="true">
-      <Output TaskParameter="TargetOutputs" ItemName="_ProjectRefWithTfms"/>
+      <Output TaskParameter="TargetOutputs" ItemName="_ProjectReferenceWithTargetFrameworks" />
     </MSBuild>
-     
+
     <PropertyGroup>
       <_OriginalTargetFramework Condition="'$(_OriginalTargetFramework)' == ''">$(TargetFramework)</_OriginalTargetFramework>
     </PropertyGroup>
 
     <ChooseBestP2PTargetFrameworkTask TargetFramework="$(_OriginalTargetFramework)"
-                                      ProjectReferencesWithTargetFrameworks="@(_ProjectRefWithTfms)"
+                                      ProjectReferencesWithTargetFrameworks="@(_ProjectReferenceWithTargetFrameworks)"
                                       RuntimeGraph="$(RuntimeGraph)" >
-      <Output TaskParameter="AnnotatedProjectReferencesWithSetTargetFramework" ItemName="_ProjectReferencesWithBestTargetFrameworks" />
+      <Output TaskParameter="AnnotatedProjectReferencesWithSetTargetFramework" ItemName="_ProjectReferenceWithBestTargetFramework" />
     </ChooseBestP2PTargetFrameworkTask>
     
     <ItemGroup>
       <ProjectReference Remove="@(ProjectReference)" />
-      <ProjectReference Include="@(_ProjectReferencesWithBestTargetFrameworks)" SkipGetTargetFrameworkProperties="true"/>
+      <ProjectReference Include="@(_ProjectReferenceWithBestTargetFramework)"
+                        SkipGetTargetFrameworkProperties="true" />
     </ItemGroup>
   </Target>
 

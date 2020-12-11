@@ -47,3 +47,17 @@
 ###############################################################################
 *.png				binary
 *.snk       		binary
+
+
+###############################################################################
+# Set file behavior to:
+#   treat as text, lf line endings
+###############################################################################
+changelog text eol=lf
+control text eol=lf
+copyright text eol=lf
+rules text eol=lf
+format text eol=lf
+compat text eol=lf
+*.bats text eol=lf
+*.1 text eol=lf

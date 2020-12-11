@@ -19,6 +19,8 @@ namespace Microsoft.DotNet.SignTool
         internal string TempDir => _args.TempDir;
         internal string MicroBuildCorePath => _args.MicroBuildCorePath;
 
+        internal string WixToolsPath => _args.WixToolsPath;
+
         internal SignTool(SignToolArgs args, TaskLoggingHelper log)
         {
             _args = args;
@@ -157,7 +159,7 @@ namespace Microsoft.DotNet.SignTool
 
             foreach (var fileToSign in filesToSign)
             {
-                AppendLine(builder, depth: 2, text: $@"<FilesToSign Include=""{fileToSign.FullPath}"">");
+                AppendLine(builder, depth: 2, text: $@"<FilesToSign Include=""{Uri.EscapeDataString(fileToSign.FullPath)}"">");
                 AppendLine(builder, depth: 3, text: $@"<Authenticode>{fileToSign.SignInfo.Certificate}</Authenticode>");
                 if (fileToSign.SignInfo.StrongName != null && !fileToSign.SignInfo.ShouldLocallyStrongNameSign)
                 {

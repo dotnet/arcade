@@ -12,6 +12,7 @@ namespace Microsoft.DotNet.SignTool
     {
         public const string IgnoreFileCertificateSentinel = "None";
 
+        public const string MsiEngineExtension = "-engine.exe";
         /// <summary>
         /// List of known signable extensions. Copied, removing duplicates, from here:
         /// https://microsoft.sharepoint.com/teams/codesigninfo/Wiki/Signable%20Files.aspx
@@ -102,5 +103,10 @@ namespace Microsoft.DotNet.SignTool
         {
             ".pkg"
         };
+
+        /// <summary>
+        /// Attribute for the CollisionPriorityId
+        /// </summary>
+        public const string CollisionPriorityId = "CollisionPriorityId";
     }
 }

@@ -1,13 +1,11 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using FluentAssertions;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using NuGet.Frameworks;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
 {
@@ -47,7 +45,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
         [Fact]
         public void ShouldReturnNullOnNullInput()
         {
-            Assert.Null(NuspecPropertyStringProvider.GetNuspecPropertyDictionary(null));
+            NuspecPropertyStringProvider.GetNuspecPropertyDictionary(null).Should().BeNull();
         }
 
         [Fact]
@@ -60,30 +58,34 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
         [Fact]
         public void ShouldFailWithNoEquals()
         {
-            Assert.Throws<InvalidDataException>(() => NuspecPropertyStringProvider.GetNuspecPropertyDictionary(new[] { "abc" }));
+            Action act = () => NuspecPropertyStringProvider.GetNuspecPropertyDictionary(new[] { "abc" });
+            act.Should().Throw<InvalidDataException>();
         }
 
         [Fact]
         public void ShouldFailWithNoValue()
         {
-            Assert.Throws<InvalidDataException>(() => NuspecPropertyStringProvider.GetNuspecPropertyDictionary(new[] { "a= " }));
+            Action act = () => NuspecPropertyStringProvider.GetNuspecPropertyDictionary(new[] { "a= " });
+            act.Should().Throw<InvalidDataException>();
         }
 
         [Fact]
         public void ShouldFailWithNoKey()
         {
-            Assert.Throws<InvalidDataException>(() => NuspecPropertyStringProvider.GetNuspecPropertyDictionary(new[] { " = b" }));
+            Action act = () => NuspecPropertyStringProvider.GetNuspecPropertyDictionary(new[] { " = b" });
+            act.Should().Throw<InvalidDataException>();
         }
 
         [Fact]
         public void ShouldFailWithNoKeyAndValue()
         {
-            Assert.Throws<InvalidDataException>(() => NuspecPropertyStringProvider.GetNuspecPropertyDictionary(new[] { " = " }));
+            Action act = () => NuspecPropertyStringProvider.GetNuspecPropertyDictionary(new[] { " = " });
+            act.Should().Throw<InvalidDataException>();
         }
 
         private static void AssertPropertyStringsParseToDictionary(string[] propertyStrings, Dictionary<string, string> expectedDictionary)
         {
-            Assert.Equal(expectedDictionary, NuspecPropertyStringProvider.GetNuspecPropertyDictionary(propertyStrings));
+            NuspecPropertyStringProvider.GetNuspecPropertyDictionary(propertyStrings).Should().BeEquivalentTo(expectedDictionary);
         }
     }
 }

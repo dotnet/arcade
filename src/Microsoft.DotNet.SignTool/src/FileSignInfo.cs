@@ -5,21 +5,21 @@ using System;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.IO;
-using Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.SignTool
 {
     internal readonly struct FileSignInfo
     {
-        internal readonly string FileName;
-        internal readonly string FullPath;
+        internal readonly SignedFileContentKey FileContentKey;
+        internal string FileName => File.FileName;
+        internal string FullPath => File.FullPath;
         internal readonly SignInfo SignInfo;
-        internal readonly ImmutableArray<byte> ContentHash;
+        internal ImmutableArray<byte> ContentHash => File.ContentHash;
+        internal readonly string WixContentFilePath;
+        internal readonly PathWithHash File;
 
         // optional file information that allows to disambiguate among multiple files with the same name:
         internal readonly string TargetFramework;
-
-        internal readonly bool ForceRepack;
 
         internal static bool IsPEFile(string path)
             => Path.GetExtension(path) == ".exe" || Path.GetExtension(path) == ".dll";
@@ -33,8 +33,15 @@ namespace Microsoft.DotNet.SignTool
         internal static bool IsNupkg(string path)
             => Path.GetExtension(path).Equals(".nupkg", StringComparison.OrdinalIgnoreCase);
 
+        internal static bool IsSymbolsNupkg(string path)
+            => path.EndsWith(".symbols.nupkg", StringComparison.OrdinalIgnoreCase);
+
         internal static bool IsZip(string path)
             => Path.GetExtension(path).Equals(".zip", StringComparison.OrdinalIgnoreCase);
+
+        internal static bool IsWix(string path)
+            => (Path.GetExtension(path).Equals(".msi", StringComparison.OrdinalIgnoreCase)
+                || Path.GetExtension(path).Equals(".wixlib", StringComparison.OrdinalIgnoreCase));
 
         internal static bool IsPowerShellScript(string path)
             => Path.GetExtension(path).Equals(".ps1", StringComparison.OrdinalIgnoreCase)
@@ -55,28 +62,52 @@ namespace Microsoft.DotNet.SignTool
 
         internal bool IsVsix() => IsVsix(FileName);
 
-        internal bool IsNupkg() => IsNupkg(FileName);
+        internal bool IsNupkg() => IsNupkg(FileName) && !IsSymbolsNupkg();
+
+        internal bool IsSymbolsNupkg() => IsSymbolsNupkg(FileName);
 
         internal bool IsZip() => IsZip(FileName);
 
         internal bool IsZipContainer() => IsZipContainer(FileName);
 
+        internal bool IsWix() => IsWix(FileName);
+
+        // A wix file is an Container if it has the proper extension AND the content
+        // (ie *.wixpack.zip) is available, otherwise it's treated like a normal file
+        internal bool IsWixContainer() =>
+            WixContentFilePath != null
+            && (IsWix(FileName) 
+                || Path.GetExtension(FileName).Equals(".exe", StringComparison.OrdinalIgnoreCase));
+
+        internal bool IsExecutableWixContainer() =>
+            IsWixContainer() &&
+            (Path.GetExtension(FileName).Equals(".exe", StringComparison.OrdinalIgnoreCase) ||
+             Path.GetExtension(FileName).Equals(".msi", StringComparison.OrdinalIgnoreCase));
+
+        internal bool IsContainer() => IsZipContainer() || IsWixContainer();
+
         internal bool IsPackage() => IsPackage(FileName);
 
         internal bool IsPowerShellScript() => IsPowerShellScript(FileName);
 
-        internal FileSignInfo(string fullPath, ImmutableArray<byte> contentHash, SignInfo signInfo, string targetFramework = null, bool forceRepack = false)
+        internal bool HasSignableParts { get; }
+
+        internal bool ShouldRepack => HasSignableParts;
+
+        internal bool ShouldTrack => SignInfo.ShouldSign || ShouldRepack;
+
+        internal FileSignInfo(PathWithHash pathWithHash, SignInfo signInfo, string targetFramework = null, string wixContentFilePath = null, bool hasSignableParts = false)
         {
-            Debug.Assert(fullPath != null);
-            Debug.Assert(!contentHash.IsDefault && contentHash.Length == 256 / 8);
+            Debug.Assert(pathWithHash.FullPath != null);
+            Debug.Assert(!pathWithHash.ContentHash.IsDefault && pathWithHash.ContentHash.Length == 256 / 8);
             Debug.Assert(targetFramework != "");
 
-            FileName = Path.GetFileName(fullPath);
-            ContentHash = contentHash;
-            FullPath = fullPath;
+            File = pathWithHash;
+            FileContentKey = new SignedFileContentKey(File.ContentHash, File.FileName);
             SignInfo = signInfo;
             TargetFramework = targetFramework;
-            ForceRepack = forceRepack;
+            WixContentFilePath = wixContentFilePath;
+            HasSignableParts = hasSignableParts;
         }
 
         public override string ToString()
@@ -84,5 +115,9 @@ namespace Microsoft.DotNet.SignTool
                (TargetFramework != null ? $" TargetFramework='{TargetFramework}'" : "") +
                $" Certificate='{SignInfo.Certificate}'" +
                (SignInfo.StrongName != null ? $" StrongName='{SignInfo.StrongName}'" : "");
+
+        internal FileSignInfo WithSignableParts()
+            => new FileSignInfo(File, SignInfo.WithIsAlreadySigned(false), TargetFramework, WixContentFilePath, true);
+
     }
 }

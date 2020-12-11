@@ -50,9 +50,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
         private const string FeedDotNetEngTransport = FeedDotNetEngShipping;
         private const string FeedDotNetEngSymbols = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng-symbols/nuget/v3/index.json";
 
-        private const string FeedDotNetToolsShipping = "https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet-tools/nuget/v3/index.json";
+        private const string FeedDotNetToolsShipping = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json";
         private const string FeedDotNetToolsTransport = FeedDotNetToolsShipping;
-        private const string FeedDotNetToolsSymbols = "https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet-tools-symbols/nuget/v3/index.json";
+        private const string FeedDotNetToolsSymbols = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools-symbols/nuget/v3/index.json";
 
         private const string FeedDotNetToolsInternalShipping = "https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet-tools-internal/nuget/v3/index.json";
         private const string FeedDotNetToolsInternalTransport = FeedDotNetToolsInternalShipping;
@@ -82,6 +82,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
         private const string FeedDotNet5InternalTransport = "https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet5-internal-transport/nuget/v3/index.json";
         private const string FeedDotNet5InternalSymbols = "https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet5-internal-symbols/nuget/v3/index.json";
 
+        private const string FeedDotNetLibrariesShipping = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-libraries/nuget/v3/index.json";
+        private const string FeedDotNetLibrariesTransport = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-libraries-transport/nuget/v3/index.json";
+        private const string FeedDotNetLibrariesSymbols = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-libraries-symbols/nuget/v3/index.json";
+
         public static readonly List<TargetChannelConfig> ChannelInfos = new List<TargetChannelConfig>() {
             // ".NET 5 Dev",
             new TargetChannelConfig(
@@ -105,99 +109,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedForChecksums,
                 FeedForInstallers),
 
-            // ".NET 5 Preview 3",
-            new TargetChannelConfig(
-                739,
-                PublishingInfraVersion.All,
-                "net5/preview3",
-                FeedDotNet5Shipping,
-                FeedDotNet5Transport,
-                FeedDotNet5Symbols,
-                FeedForChecksums,
-                FeedForInstallers),
-
-            // ".NET 5 Preview 4",
-            new TargetChannelConfig(
-                856,
-                PublishingInfraVersion.All,
-                "net5/preview4",
-                FeedDotNet5Shipping,
-                FeedDotNet5Transport,
-                FeedDotNet5Symbols,
-                FeedForChecksums,
-                FeedForInstallers),
-
-            // ".NET 5 Preview 5",
-            new TargetChannelConfig(
-                857,
-                PublishingInfraVersion.All,
-                "net5/preview5",
-                FeedDotNet5Shipping,
-                FeedDotNet5Transport,
-                FeedDotNet5Symbols,
-                FeedForChecksums,
-                FeedForInstallers),
-
-            // ".NET 5 Preview 6",
-            new TargetChannelConfig(
-                1013,
-                PublishingInfraVersion.All,
-                "net5/preview6",
-                FeedDotNet5Shipping,
-                FeedDotNet5Transport,
-                FeedDotNet5Symbols,
-                FeedForChecksums,
-                FeedForInstallers),
-
-            // ".NET 5 Preview 7",
-            new TargetChannelConfig(
-                1065,
-                PublishingInfraVersion.All,
-                "net5/preview7",
-                FeedDotNet5Shipping,
-                FeedDotNet5Transport,
-                FeedDotNet5Symbols,
-                FeedForChecksums,
-                FeedForInstallers),
-
-            // ".NET 5 Preview 8 (internal)",
-            new TargetChannelConfig(
-                1155,
-                PublishingInfraVersion.All,
-                akaMSChannelName: "net5/preview8",
-                FeedDotNet5InternalShipping,
-                FeedDotNet5InternalTransport,
-                FeedDotNet5InternalSymbols,
-                FeedInternalForChecksums,
-                FeedInternalForInstallers),
-
-            // ".NET 5 RC 1",
-            new TargetChannelConfig(
-                1157,
-                PublishingInfraVersion.All,
-                akaMSChannelName: "net5/rc1",
-                FeedDotNet5Shipping,
-                FeedDotNet5Transport,
-                FeedDotNet5Symbols,
-                FeedForChecksums,
-                FeedForInstallers),
-
-            // ".NET 5 RC 2",
-            new TargetChannelConfig(
-                1329,
-                PublishingInfraVersion.All,
-                akaMSChannelName: "net5/rc2",
-                FeedDotNet5Shipping,
-                FeedDotNet5Transport,
-                FeedDotNet5Symbols,
-                FeedForChecksums,
-                FeedForInstallers),
-
             // ".NET 5" (public),
             new TargetChannelConfig(
                 1299,
                 PublishingInfraVersion.Next,
-                akaMSChannelName: "net5/daily",
+                akaMSChannelName: "net5",
                 FeedDotNet5Shipping,
                 FeedDotNet5Transport,
                 FeedDotNet5Symbols,
@@ -219,7 +135,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             new TargetChannelConfig(
                 1297,
                 PublishingInfraVersion.Next,
-                akaMSChannelName: "net5/daily",
+                akaMSChannelName: "net5/5.0.1xx/daily",
                 FeedDotNet5Shipping,
                 FeedDotNet5Transport,
                 FeedDotNet5Symbols,
@@ -229,6 +145,28 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             // ".NET 5 SDK 5.0.1xx Internal" (internal),
             new TargetChannelConfig(
                 1298,
+                PublishingInfraVersion.Next,
+                akaMSChannelName: string.Empty,
+                FeedDotNet5InternalShipping,
+                FeedDotNet5InternalTransport,
+                FeedDotNet5InternalSymbols,
+                FeedInternalForChecksums,
+                FeedInternalForInstallers),
+
+            // ".NET 5 SDK 5.0.2xx" (public),
+            new TargetChannelConfig(
+                1518,
+                PublishingInfraVersion.Next,
+                akaMSChannelName: "net5/5.0.2xx/daily",
+                FeedDotNet5Shipping,
+                FeedDotNet5Transport,
+                FeedDotNet5Symbols,
+                FeedForChecksums,
+                FeedForInstallers),
+
+            // ".NET 5 SDK 5.0.2xx Internal" (internal),
+            new TargetChannelConfig(
+                1519,
                 PublishingInfraVersion.Next,
                 akaMSChannelName: string.Empty,
                 FeedDotNet5InternalShipping,
@@ -248,11 +186,33 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedForChecksums,
                 FeedForInstallers),
 
+            // ".NET 5 Eng",
+            new TargetChannelConfig(
+                1495,
+                PublishingInfraVersion.Next,
+                "eng/net5",
+                FeedDotNetEngShipping,
+                FeedDotNetEngTransport,
+                FeedDotNetEngSymbols,
+                FeedForChecksums,
+                FeedForInstallers),
+
             // ".NET Eng - Validation",
             new TargetChannelConfig(
                 9,
                 PublishingInfraVersion.All,
                 "eng/validation",
+                FeedDotNetEngShipping,
+                FeedDotNetEngTransport,
+                FeedDotNetEngSymbols,
+                FeedForChecksums,
+                FeedForInstallers),
+
+            // ".NET 5 Eng - Validation",
+            new TargetChannelConfig(
+                1496,
+                PublishingInfraVersion.Next,
+                "eng/net5validation",
                 FeedDotNetEngShipping,
                 FeedDotNetEngTransport,
                 FeedDotNetEngSymbols,
@@ -589,6 +549,17 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedForChecksums,
                 FeedForInstallers),
 
+            // "VS 16.9",
+            new TargetChannelConfig(
+                1473,
+                PublishingInfraVersion.All,
+                string.Empty,
+                FeedDotNetToolsShipping,
+                FeedDotNetToolsTransport,
+                FeedDotNetToolsSymbols,
+                FeedForChecksums,
+                FeedForInstallers),
+
             // "VS Master",
             new TargetChannelConfig(
                 1012,
@@ -597,6 +568,17 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedDotNetToolsShipping,
                 FeedDotNetToolsTransport,
                 FeedDotNetToolsSymbols,
+                FeedForChecksums,
+                FeedForInstallers),
+
+            // ".NET Libraries",
+            new TargetChannelConfig(
+                1648,
+                PublishingInfraVersion.All,
+                akaMSChannelName: string.Empty,
+                FeedDotNetLibrariesShipping,
+                FeedDotNetLibrariesTransport,
+                FeedDotNetLibrariesSymbols,
                 FeedForChecksums,
                 FeedForInstallers),
         };

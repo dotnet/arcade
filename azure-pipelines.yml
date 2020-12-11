@@ -4,12 +4,14 @@ trigger:
     include:
     - master
     - release/3.x
+    - release/5.0
 
 pr:
   branches:
     include:
     - master
     - release/3.x
+    - release/5.0
     - templates
 
 variables:
@@ -33,7 +35,6 @@ stages:
           manifests: true
       enableMicrobuild: true
       enablePublishUsingPipelines: true
-      useBuildManifest: ${{ variables['_UseBuildManifest'] }}
       workspace:
         clean: all
       jobs:
@@ -138,8 +139,6 @@ stages:
               /bl:$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)\Helix.XHarness.Android.binlog
               /p:RestoreUsingNuGetTargets=false
             displayName: XHarness Android Helix Testing
-            # Workaround until https://github.com/dotnet/xharness/issues/232 is fixed
-            continueOnError: true
             env:
               SYSTEM_ACCESSTOKEN: $(System.AccessToken)
               HelixAccessToken: ''
@@ -180,7 +179,6 @@ stages:
               /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.XHarness.iOS.binlog
               /p:RestoreUsingNuGetTargets=false
             displayName: XHarness iOS Helix Testing
-            continueOnError: true
             env:
               SYSTEM_ACCESSTOKEN: $(System.AccessToken)
               HelixAccessToken: ''
@@ -194,7 +192,6 @@ stages:
               /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.XHarness.CLI.binlog
               /p:RestoreUsingNuGetTargets=false
             displayName: XHarness CLI pre-install Helix Testing
-            continueOnError: true
             env:
               SYSTEM_ACCESSTOKEN: $(System.AccessToken)
               HelixAccessToken: ''
@@ -235,4 +232,3 @@ stages:
         -TsaRepositoryName "Arcade"
         -TsaCodebaseName "Arcade"
         -TsaPublish $True'
-      useBuildManifest: ${{ variables['_UseBuildManifest'] }}

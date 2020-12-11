@@ -11,7 +11,7 @@ namespace Microsoft.DotNet.Helix.Client.Models
         }
 
         [JsonProperty("sources")]
-        public IImmutableList<ViewConfigurationSource> Sources { get; set; }
+        public IImmutableList<Models.ViewConfigurationSource> Sources { get; set; }
 
         [JsonProperty("name")]
         public string Name { get; set; }

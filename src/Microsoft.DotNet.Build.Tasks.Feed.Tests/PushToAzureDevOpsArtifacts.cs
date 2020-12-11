@@ -6,6 +6,7 @@ using Microsoft.DotNet.VersionTools.BuildManifest.Model;
 using System;
 using System.IO;
 using Xunit;
+using FluentAssertions;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
 {
@@ -14,11 +15,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         [Fact]
         public void HasRecordedPublishingVersion()
         {
-            var targetManifiestPath = $"{Path.GetTempPath()}TestManifest-{Guid.NewGuid()}.xml";
+            var targetManifestPath = $"{Path.GetTempPath()}TestManifest-{Guid.NewGuid()}.xml";
             var buildId = "1.2.3";
             var initialAssetsLocation = "cloud";
             var isStable = false;
-            var expectedManifestContent = $"<Build PublishingVersion=\"{(int)PublishingInfraVersion.Latest}\" BuildId=\"{buildId}\" InitialAssetsLocation=\"{initialAssetsLocation}\" IsStable=\"{isStable}\" />";
+            var isReleaseOnlyPackageVersion = false;
+            var expectedManifestContent = $"<Build PublishingVersion=\"{(int)PublishingInfraVersion.Latest}\" BuildId=\"{buildId}\" InitialAssetsLocation=\"{initialAssetsLocation}\" IsReleaseOnlyPackageVersion=\"{isReleaseOnlyPackageVersion.ToString().ToLower()}\" IsStable=\"{isStable.ToString().ToLower()}\" />";
 
             var buildEngine = new MockBuildEngine();
             var task = new PushToAzureDevOpsArtifacts
@@ -27,24 +29,27 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 ItemsToPush = new Microsoft.Build.Utilities.TaskItem[0],
                 IsStableBuild = isStable,
                 ManifestBuildId = buildId,
+                IsReleaseOnlyPackageVersion = isReleaseOnlyPackageVersion,
                 ManifestBuildData = new string[] { $"InitialAssetsLocation={initialAssetsLocation}" },
-                AssetManifestPath = targetManifiestPath
+                AssetManifestPath = targetManifestPath
             };
 
             task.Execute();
 
-            Assert.Equal(expectedManifestContent, File.ReadAllText(targetManifiestPath));
+            var outputManifestContent = File.ReadAllText(targetManifestPath);
+            outputManifestContent.Should().Be(expectedManifestContent);
         }
 
         [Fact]
         public void UsesCustomPublishingVersion()
         {
-            var targetManifiestPath = $"{Path.GetTempPath()}TestManifest-{Guid.NewGuid()}.xml";
+            var targetManifestPath = $"{Path.GetTempPath()}TestManifest-{Guid.NewGuid()}.xml";
             var buildId = "1.2.3";
             var initialAssetsLocation = "cloud";
             var isStable = false;
             var publishingInfraVersion = "456";
-            var expectedManifestContent = $"<Build PublishingVersion=\"{publishingInfraVersion}\" BuildId=\"{buildId}\" InitialAssetsLocation=\"{initialAssetsLocation}\" IsStable=\"{isStable}\" />";
+            var isReleaseOnlyPackageVersion = false;
+            var expectedManifestContent = $"<Build PublishingVersion=\"{publishingInfraVersion}\" BuildId=\"{buildId}\" InitialAssetsLocation=\"{initialAssetsLocation}\" IsReleaseOnlyPackageVersion=\"{isReleaseOnlyPackageVersion.ToString().ToLower()}\" IsStable=\"{isStable.ToString().ToLower()}\" />";
 
             var buildEngine = new MockBuildEngine();
             var task = new PushToAzureDevOpsArtifacts
@@ -52,15 +57,17 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 BuildEngine = buildEngine,
                 ItemsToPush = new Microsoft.Build.Utilities.TaskItem[0],
                 IsStableBuild = isStable,
+                IsReleaseOnlyPackageVersion = isReleaseOnlyPackageVersion,
                 ManifestBuildId = buildId,
                 ManifestBuildData = new string[] { $"InitialAssetsLocation={initialAssetsLocation}" },
                 PublishingVersion = publishingInfraVersion,
-                AssetManifestPath = targetManifiestPath
+                AssetManifestPath = targetManifestPath
             };
 
             task.Execute();
 
-            Assert.Equal(expectedManifestContent, File.ReadAllText(targetManifiestPath));
+            var outputManifestContent = File.ReadAllText(targetManifestPath);
+            outputManifestContent.Should().Be(expectedManifestContent);
         }
     }
 }

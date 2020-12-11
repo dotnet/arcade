@@ -11,6 +11,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed
@@ -363,21 +364,30 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             {
                 log.LogMessage(MessageImportance.High, $"Defaulting to category 'OTHER' for asset {assetId}");
                 return "OTHER";
-            }
+            } 
+        }
+
+
+        private static System.Threading.Tasks.Task WaitForProcessExitAsync(Process process)
+        {
+            return System.Threading.Tasks.Task.Run(() => process.WaitForExit());
         }
 
         /// <summary>
-        ///     Start a process as an async Task.
+        ///   Run, and wait on a process synchronously, returning its full console output and exit code
         /// </summary>
         /// <param name="path">Path to process</param>
         /// <param name="arguments">Process arguments</param>
         /// <returns>Process return code</returns>
-        public static Task<int> StartProcessAsync(string path, string arguments)
+        public static async Task<ProcessExecutionResult> RunProcessAndGetOutputsAsync(string path, string arguments)
         {
             ProcessStartInfo info = new ProcessStartInfo(path, arguments)
             {
                 UseShellExecute = false,
                 RedirectStandardError = true,
+                RedirectStandardOutput = true,
+                StandardOutputEncoding = Encoding.UTF8,
+                StandardErrorEncoding = Encoding.UTF8
             };
 
             Process process = new Process
@@ -386,17 +396,65 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 EnableRaisingEvents = true
             };
 
-            var completionSource = new TaskCompletionSource<int>();
+            var stdOut = new StringBuilder();
+            var stdErr = new StringBuilder();
+            var stdoutCompletion = new TaskCompletionSource<bool>();
+            var stderrCompletion = new TaskCompletionSource<bool>();
 
-            process.Exited += (obj, args) =>
+            process.OutputDataReceived += (sender, e) =>
             {
-                completionSource.SetResult(((Process)obj).ExitCode);
-                process.Dispose();
+                if (e.Data != null)
+                {
+                    lock (stdOut)
+                    {
+                        stdOut.AppendLine(e.Data);
+                    }
+                }
+                else
+                {
+                    stdoutCompletion.TrySetResult(true);
+                }
+
+            };
+
+            process.ErrorDataReceived += (sender, e) =>
+            {
+                if (e.Data != null)
+                {
+                    lock (stdErr)
+                    {
+                        stdErr.AppendLine(e.Data);
+                    }
+                }
+                else
+                {
+                    stderrCompletion.TrySetResult(true);
+                }
             };
 
             process.Start();
+            process.BeginErrorReadLine();
+            process.BeginOutputReadLine();
+            
+            // Creates task to wait for process exit using timeout
+            await WaitForProcessExitAsync(process);
 
-            return completionSource.Task;
+            // Wait for the last outputs to flush before returning
+
+            System.Threading.Tasks.Task.WaitAll(new System.Threading.Tasks.Task[] { stderrCompletion.Task, stdoutCompletion.Task }, TimeSpan.FromSeconds(5));
+            return new ProcessExecutionResult()
+            {
+                ExitCode = process.ExitCode,
+                StandardOut = stdOut.ToString(),
+                StandardError = stdErr.ToString()
+            };
+        }
+
+        public class ProcessExecutionResult
+        {
+            public int ExitCode;
+            public string StandardOut;
+            public string StandardError;
         }
     }
 }

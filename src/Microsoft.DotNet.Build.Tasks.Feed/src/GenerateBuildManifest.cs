@@ -107,6 +107,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// </summary>
         public string PublishingVersion { get; set; }
 
+        /// <summary>
+        /// Is the manifest for Release only package version?
+        /// </summary>
+        public bool IsReleaseOnlyPackageVersion { get; set; }
+
         public override bool Execute()
         {
             try
@@ -124,9 +129,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                 var buildModel = BuildManifestUtil.CreateModelFromItems(
                     Artifacts,
-                    AzureDevOpsCollectionUri,
-                    AzureDevOpsProject,
-                    AzureDevOpsBuildId,
                     ItemsToSign,
                     StrongNameSignInfo,
                     FileSignInfo,
@@ -139,6 +141,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     RepoCommit,
                     IsStableBuild,
                     targetPublishingVersion,
+                    IsReleaseOnlyPackageVersion,
                     Log);
 
                 buildModel.WriteAsXml(OutputPath, Log);

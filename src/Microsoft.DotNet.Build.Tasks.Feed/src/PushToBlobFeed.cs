@@ -58,6 +58,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public bool IsStableBuild { get; set; }
 
+        public bool IsReleaseOnlyPackageVersion { get; set; }
+
         public override bool Execute()
         {
             return ExecuteAsync().GetAwaiter().GetResult();
@@ -166,7 +168,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     ManifestCommit,
                     ManifestBuildData,
                     IsStableBuild,
-                    PublishingInfraVersion.Legacy);
+                    PublishingInfraVersion.Legacy,
+                    IsReleaseOnlyPackageVersion);
             }
             catch (Exception e)
             {
@@ -185,13 +188,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 .Select(BuildManifestUtil.CreatePackageArtifactModel));
         }
 
-        private static IEnumerable<BlobArtifactModel> ConcatBlobArtifacts(
+        private IEnumerable<BlobArtifactModel> ConcatBlobArtifacts(
             IEnumerable<BlobArtifactModel> artifacts,
             IEnumerable<ITaskItem> items)
         {
             return artifacts.Concat(items
                 .Where(i => !string.Equals(i.GetMetadata("ExcludeFromManifest"), "true", StringComparison.OrdinalIgnoreCase))
-                .Select(BuildManifestUtil.CreateBlobArtifactModel)
+                .Select(i => BuildManifestUtil.CreateBlobArtifactModel(i, Log))
                 .Where(blob => blob != null));
         }
     }

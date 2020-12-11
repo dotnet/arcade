@@ -3,8 +3,9 @@
 
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using System.Collections.Generic;
+using System;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.IO.Packaging;
@@ -24,9 +25,9 @@ namespace Microsoft.DotNet.SignTool
         /// <summary>
         /// The parts inside this container which need to be signed.
         /// </summary>
-        internal ImmutableArray<ZipPart> NestedParts { get; }
+        internal ImmutableDictionary<string, ZipPart> NestedParts { get; }
 
-        internal ZipData(FileSignInfo fileSignInfo, ImmutableArray<ZipPart> nestedBinaryParts)
+        internal ZipData(FileSignInfo fileSignInfo, ImmutableDictionary<string, ZipPart> nestedBinaryParts)
         {
             FileSignInfo = fileSignInfo;
             NestedParts = nestedBinaryParts;
@@ -34,12 +35,9 @@ namespace Microsoft.DotNet.SignTool
 
         internal ZipPart? FindNestedPart(string relativeName)
         {
-            foreach (var part in NestedParts)
+            if (NestedParts.TryGetValue(relativeName, out ZipPart part))
             {
-                if (relativeName == part.RelativeName)
-                {
-                    return part;
-                }
+                return part;
             }
 
             return null;
@@ -48,7 +46,7 @@ namespace Microsoft.DotNet.SignTool
         /// <summary>
         /// Repack the zip container with the signed files.
         /// </summary>
-        public void Repack(TaskLoggingHelper log)
+        public void Repack(TaskLoggingHelper log, string tempDir = null, string wixToolsPath = null)
         {
 #if NET472
             if (FileSignInfo.IsVsix())
@@ -58,7 +56,14 @@ namespace Microsoft.DotNet.SignTool
             else
 #endif
             {
-                RepackRawZip(log);
+                if (FileSignInfo.IsWixContainer())
+                {
+                    RepackWixPack(log, tempDir, wixToolsPath);
+                }
+                else 
+                {
+                    RepackRawZip(log);
+                }
             }
         }
 
@@ -129,6 +134,54 @@ namespace Microsoft.DotNet.SignTool
                         entryStream.SetLength(signedStream.Length);
                     }
                 }
+            }
+        }
+        private void RepackWixPack(TaskLoggingHelper log, string tempDir, string wixToolsPath)
+        {
+            string workingDir = Path.Combine(tempDir, "extract", Guid.NewGuid().ToString());
+            string outputDir = Path.Combine(tempDir, "output", Guid.NewGuid().ToString());
+            string createFileName = Path.Combine(workingDir, "create.cmd");
+            string outputFileName = Path.Combine(outputDir, FileSignInfo.FileName);
+
+            try
+            {
+                Directory.CreateDirectory(outputDir);
+                ZipFile.ExtractToDirectory(FileSignInfo.WixContentFilePath, workingDir);
+
+                var fileList = Directory.GetFiles(workingDir, "*", SearchOption.AllDirectories);
+                foreach (var file in fileList)
+                {
+                    var relativeName = file.Substring($"{workingDir}\\".Length).Replace('\\', '/');
+                    var signedPart = FindNestedPart(relativeName);
+                    if (!signedPart.HasValue)
+                    {
+                        log.LogMessage(MessageImportance.Low, $"Didn't find signed part for nested file: {FileSignInfo.FullPath} -> {relativeName}");
+                        continue;
+                    }
+                    log.LogMessage(MessageImportance.Low, $"Copying signed stream from {signedPart.Value.FileSignInfo.FullPath} to {file}.");
+                    File.Copy(signedPart.Value.FileSignInfo.FullPath, file, true);
+                }
+
+                if (!BatchSignUtil.RunWixTool(createFileName, outputDir, workingDir, wixToolsPath, log))
+                {
+                    log.LogError($"Packaging of wix file '{FileSignInfo.FullPath}' failed");
+                    return;
+                }
+
+                if (!File.Exists(outputFileName))
+                {
+                    log.LogError($"Wix tool execution passed, but output file '{outputFileName}' was not found.");
+                    return;
+                }
+
+                log.LogMessage($"Created wix file {outputFileName}, replacing '{FileSignInfo.FullPath}' with '{outputFileName}'");
+                File.Copy(outputFileName, FileSignInfo.FullPath, true);
+            }
+            finally
+            {
+                // Delete the intermediates
+                Directory.Delete(workingDir, true);
+                Directory.Delete(outputDir, true);
             }
         }
     }

@@ -26,11 +26,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         [Required]
         public bool IsInternal { get; set; }
 
-        [Required]
         public string RepositoryName { get; set; }
 
-        [Required]
         public string CommitSha { get; set; }
+
+        /// <summary>
+        /// In case we want to use a defined feed name instead of calculate one dynamically
+        /// </summary>
+        public string FeedName { get; set; }
 
         /// <summary>
         /// Additional info to include in the feed name (for example "sym")
@@ -65,7 +68,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         {
             try
             {
-                if (CommitSha.Length < ShaUsableLength)
+                if (CommitSha?.Length < ShaUsableLength)
                 {
                     Log.LogError($"The CommitSHA should be at least {ShaUsableLength} characters long: CommitSha is '{CommitSha}'. Aborting feed creation.");
                     return false;
@@ -83,13 +86,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 // From the AzDO docs:
                 // The feed name can't contain spaces, start with a '.' or '_', end with a '.',
                 // or contain any of these: @ ~ ; { } ' + = , < > | / \ ? : & $ * " # [ ] %
-                string feedCompatibleRepositoryName = RepositoryName.Replace('/', '-');
+                string feedCompatibleRepositoryName = RepositoryName?.Replace('/', '-');
 
                 string accessType = IsInternal ? "internal" : "public";
                 string publicSegment = IsInternal ? string.Empty : "public/";
                 string accessId = IsInternal ? "int" : "pub";
                 string extraContentInfo = !string.IsNullOrEmpty(ContentIdentifier) ? $"-{ContentIdentifier}" : "";
-                string baseFeedName = $"darc-{accessId}{extraContentInfo}-{feedCompatibleRepositoryName}-{CommitSha.Substring(0, ShaUsableLength)}";
+                string baseFeedName = FeedName ?? $"darc-{accessId}{extraContentInfo}-{feedCompatibleRepositoryName}-{CommitSha.Substring(0, ShaUsableLength)}";
                 string versionedFeedName = baseFeedName;
                 bool needsUniqueName = false;
                 int subVersion = 0;

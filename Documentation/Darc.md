@@ -20,6 +20,7 @@ use darc to achieve them, as well as a general reference guide to darc commands.
   - [Gathering a build drop](#gathering-a-build-drop)
   - [Assigning an individual build to a channel](#assigning-an-individual-build-to-a-channel)
   - [Locating the BAR build ID for a build](#locating-the-bar-build-id-for-a-build)
+  - [Checking Merge Policies on Github](#checking-merge-policies-on-github)
 
 - [Command Reference](#command-reference)
   - [Common Parameters](#common-parameters)
@@ -128,7 +129,7 @@ PATs that may be used:
 - A GitHub PAT for downloading files from GitHub (e.g. eng/Version.Details.xml or
   arcade script files.  Required scopes: None
 - An Azure DevOps PAT for downloading files from Azure DevOps. (e.g.
-  eng/Version.Details.xml)  Required scopes: Code-Read, Build-Read & Execute.
+  eng/Version.Details.xml)  Required scopes: Code-Read, Build-Read & Execute, Packaging Read
 - A Build Asset Registry (BAR) password for interacting with Maestro++/BAR (e.g.
   obtaining build information needed for a drop).
 
@@ -930,6 +931,13 @@ To locate the BAR build ID for a build
   ```
 4. The BAR build ID is `47814`
 
+### Checking Merge Policies on Github
+
+You will find them on the `Checks` tab of each updates PRs created by maestro. Depending on the merge policies set for the repository, you will find one or multiple check(s) (in a failed or successful state). 
+
+![Checks Merge Policies](ChecksMergePolicies.png)
+
+
 ## Command Reference
 
 ### **`Common parameters`**
@@ -1307,6 +1315,11 @@ parameters:
 
 - `--id` - **(Required)**. BAR id of build to assign to channel.
 - `--channel` - **(Required)**. Channel to assign build to.
+- `--publish-installers-and-checksums` **(Required)** Whether installers and checksums should be published. All the installers and checksums usually go to the same storage account. By setting this to true we are agreeing to republish them everytime a new channel is added. This has to be set to true at all times.
+- `--publishing-infra-version` - Version of publishing, for single stage [publishing infrastructure use 3](https://github.com/dotnet/arcade/blob/master/Documentation/CorePackages/Publishing.md#what-is-v3-publishing-how-is-it-different-from-v2) else for multi stage publishing infra with each stage representing available channel(s) use 2. Default is 2. 
+- `--signing-validation-parameters` - Additional (MSBuild) properties to be passed to signing validation
+- `--symbol-publishing-parameters` -Additional (MSBuild) properties to be passed to symbol publishing
+- `--default-channels` - Assign build to the default channel(s). Required if --channel is not specified.
 - `--source-branch` - Branch that should be used as base for the promotion build.
 - `--source-sha` - SHA that should be used as base for the promotion build.
 - `--validate-signing` - Perform signing validation.
@@ -1321,8 +1334,10 @@ parameters:
   The operation continues asynchronously in AzDO.
 
 **Sample**
+**If using --publishing-infra-version 2**
 ```
-PS D:\enlistments\arcade> darc add-build-to-channel --id 13078 --channel ".NET Core 3 Release"
+
+darc add-build-to-channel --id 13078 --channel ".NET Core 3 Release" --publish-installers-and-checksums
 Assigning the following build to channel '.NET Core 3 Release':
 
 Repository:    https://github.com/dotnet/core-setup
@@ -1340,20 +1355,40 @@ The following repos/branches will apply this build immediately:
   https://github.com/dotnet/winforms-datavisualization @ release/3.0
 The following repos/branches will apply this change at a later time, or not by default.
 To flow immediately, run the specified command
-  https://github.com/dotnet/corefx @ release/3.0 (update freq: None)
-    darc trigger-subscriptions --id 79f1e123-800e-410f-94d7-08d690bc143a
-  https://github.com/dotnet/wpf @ release/3.0 (update freq: None)
-    darc trigger-subscriptions --id acbc5f33-ff41-488a-1647-08d6c4e9a7a0
-  https://github.com/dotnet/coreclr @ release/3.0 (update freq: None)
-    darc trigger-subscriptions --id 9a4bff4b-85c2-4174-9247-08d6c732a216
-  https://dev.azure.com/dnceng/internal/_git/dotnet-wpf-int @ release/3.0 (update freq: None)
-    darc trigger-subscriptions --id 15a2995c-1b8e-41af-54c5-08d6c734018a
   https://github.com/dotnet/winforms @ release/3.0 (update freq: None)
     darc trigger-subscriptions --id 22859ac6-b4a6-4fce-54c7-08d6c734018a
 If the above example build doesn't happen to be the latest in a channel but you want trigger-subscriptions to use it:
     darc trigger-subscriptions --id 22859ac6-b4a6-4fce-54c7-08d6c734018a --build 13078
 ```
 
+**If using --publishing-infra-version 3**
+```
+
+darc add-build-to-channel --id 65256 --channel ".NET 6 Dev" --publishing-infra-version 3 --publish-installers-and-checksums
+
+Waiting '60' seconds for promotion build to complete.
+
+Build '65199' was successfully added to the target channel(s).
+Assigning build '65199' to the following channel(s):
+	.NET 6 Dev
+
+Repository:    https://github.com/dotnet/runtime
+Branch:        master
+Commit:        0e30f6fdc3ba5e1ef7ffb952fcb4762e5041c491
+Build Number:  20200921.2
+Date Produced: 9/21/2020 1:08 PM
+Build Link:    https://dev.azure.com/dnceng/internal/_build/results?buildId=823133
+BAR Build Id:  65199
+Released:      False
+Channels:
+The following repos/branches will apply this build immediately:
+  https://dev.azure.com/dnceng/internal/_git/dotnet-wpf-int @ master
+The following repos/branches will apply this change at a later time, or not by default.
+To flow immediately, run the specified command
+  https://github.com/dotnet/ef6 @ master (update freq: EveryDay)
+    darc trigger-subscriptions --id 9e51514d-a37b-46b2-d464-08d76e1d3434
+
+```
 ### **`authenticate`**
 
 Set up your darc client so that the PAT or password inputs do not need to be
@@ -2761,10 +2796,7 @@ https://github.com/aspnet/AspNetCore (.NET 5 Dev) ==> 'https://github.com/aspnet
 
 ### **`trigger-subscriptions`**
 
-Triggers one or more subscriptions. For each subscription triggered, Maestro++
-will determine whether the latest build on the source channel of the source repository has been applied (or is currently in PR)
-to the target repo and branch. If not, a new PR will be created or updated
-(depending on existing PRs and/or subscription batchability).
+Triggers one or more subscriptions. For each subscription triggered, Maestro++ will create a new PR or update an existing one into the repo to update to the latest build (or specified build, if one is provided), regardless if the build had been applied previously or not.
 
 This update is not asynchronous and usually takes a few minutes, as Maestro++ needs
 to do a fair bit of work in the background.  New PRs created by

@@ -164,10 +164,14 @@ namespace Microsoft.DotNet.Helix.Sdk
                     Log.LogMessage($"Setting creator to '{Creator}'");
                 }
 
-                Log.LogMessage(MessageImportance.High, $"Uploading payloads for Job on {TargetQueue}...");
-
-                if (CorrelationPayloads != null)
+                if (CorrelationPayloads == null)
                 {
+                    Log.LogMessage($"No Correlation Payloads for Job on {TargetQueue} set");
+                }
+                else
+                {
+                    Log.LogMessage($"Adding Correlation Payloads for Job on {TargetQueue}...");
+
                     foreach (ITaskItem correlationPayload in CorrelationPayloads)
                     {
                         def = AddCorrelationPayload(def, correlationPayload);
@@ -191,8 +195,6 @@ namespace Microsoft.DotNet.Helix.Sdk
                     def = def.WithCorrelationPayloadDirectory(directory);
                 }
 
-                Log.LogMessage(MessageImportance.High, $"Finished uploading payloads for Job on {TargetQueue}...");
-
                 if (HelixProperties != null)
                 {
                     foreach (ITaskItem helixProperty in HelixProperties)
@@ -201,12 +203,27 @@ namespace Microsoft.DotNet.Helix.Sdk
                     }
                 }
                 
+                def = AddBuildVariableProperty(def, "CollectionUri", "System.CollectionUri");
                 def = AddBuildVariableProperty(def, "Project", "System.TeamProject");
                 def = AddBuildVariableProperty(def, "BuildNumber", "Build.BuildNumber");
                 def = AddBuildVariableProperty(def, "BuildId", "Build.BuildId");
                 def = AddBuildVariableProperty(def, "DefinitionName", "Build.DefinitionName");
                 def = AddBuildVariableProperty(def, "DefinitionId", "System.DefinitionId");
                 def = AddBuildVariableProperty(def, "Reason", "Build.Reason");
+                var variablesToCopy = new []
+                {
+                    "System.JobId",
+                    "System.JobName",
+                    "System.JobAttempt",
+                    "System.PhaseName",
+                    "System.PhaseAttempt",
+                    "System.StageName",
+                    "System.StageAttempt",
+                };
+                foreach (var name in variablesToCopy)
+                {
+                    def = AddBuildVariableProperty(def, name, name);
+                }
 
                 // don't send the job if we have errors
                 if (Log.HasLoggedErrors)

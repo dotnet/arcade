@@ -12,30 +12,34 @@ using Newtonsoft.Json.Linq;
 
 namespace Microsoft.DotNet.Helix.Sdk
 {
-    public class CreateFailedTestsForFailedWorkItems : AzureDevOpsTask
+    public class CreateTestsForWorkItems : AzureDevOpsTask
     {
         [Required]
-        public ITaskItem[] FailedWorkItems { get; set; }
+        public ITaskItem[] WorkItems { get; set; }
 
         protected override async Task ExecuteCoreAsync(HttpClient client)
         {
-            foreach (ITaskItem failedWorkItem in FailedWorkItems)
+            foreach (ITaskItem workItem in WorkItems)
             {
-                var jobName = failedWorkItem.GetMetadata("JobName");
-                var workItemName = failedWorkItem.GetMetadata("WorkItemName");
-                var testRunId = failedWorkItem.GetMetadata("TestRunId");
+                var jobName = workItem.GetMetadata("JobName");
+                var workItemName = workItem.GetMetadata("WorkItemName");
+                var testRunId = workItem.GetMetadata("TestRunId");
+                var failed = workItem.GetMetadata("Failed") == "true";
 
-                var testResultId = await CreateFakeTestResultAsync(client, testRunId, jobName, workItemName);
+                var testResultId = await CreateFakeTestResultAsync(client, testRunId, jobName, workItemName, failed);
 
-                try
+                if (failed)
                 {
-                    var uploadedFiles = JsonConvert.DeserializeObject<List<UploadedFile>>(failedWorkItem.GetMetadata("UploadedFiles"));
-                    var text = string.Join(Environment.NewLine, uploadedFiles.Select(f => $"{f.Name}:{Environment.NewLine}  {f.Link}{Environment.NewLine}"));
-                    await AttachResultFileToTestResultAsync(client, testRunId, testResultId, text);
-                }
-                catch (Exception ex)
-                {
-                    Log.LogWarningFromException(ex);
+                    try
+                    {
+                        var uploadedFiles = JsonConvert.DeserializeObject<List<UploadedFile>>(workItem.GetMetadata("UploadedFiles"));
+                        var text = string.Join(Environment.NewLine, uploadedFiles.Select(f => $"{f.Name}:{Environment.NewLine}  {f.Link}{Environment.NewLine}"));
+                        await AttachResultFileToTestResultAsync(client, testRunId, testResultId, text);
+                    }
+                    catch (Exception ex)
+                    {
+                        Log.LogWarningFromException(ex);
+                    }
                 }
             }
         }
@@ -72,7 +76,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                 });
         }
 
-        private async Task<int> CreateFakeTestResultAsync(HttpClient client, string testRunId, string jobName, string workItemFriendlyName)
+        private async Task<int> CreateFakeTestResultAsync(HttpClient client, string testRunId, string jobName, string workItemFriendlyName, bool failed)
         {
             var testResultData = await RetryAsync(
                 async () =>
@@ -91,9 +95,10 @@ namespace Microsoft.DotNet.Helix.Sdk
                                             ["automatedTestName"] = $"{workItemFriendlyName}.WorkItemExecution",
                                             ["automatedTestStorage"] = workItemFriendlyName,
                                             ["testCaseTitle"] = $"{workItemFriendlyName} Work Item",
-                                            ["outcome"] = "Failed",
+                                            ["outcome"] = failed ? "Failed" : "Passed",
                                             ["state"] = "Completed",
-                                            ["errorMessage"] = "The Work Item Failed",
+                                            ["errorMessage"] = failed ? "The Helix Work Item failed. Often this is due to a test crash or infrastructure failure. See the Helix Test Logs tab in the Results page of Azure DevOps." : null,
+                                            ["durationInMs"] = 60 * 1000, // Use a non-zero duration so that the graphs look better.
                                             ["comment"] = new JObject
                                             {
                                                 ["HelixJobId"] = jobName,

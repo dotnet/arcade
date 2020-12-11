@@ -11,10 +11,10 @@ namespace Microsoft.DotNet.Helix.Client.Models
         }
 
         [JsonProperty("columns")]
-        public IImmutableList<Displayable> Columns { get; set; }
+        public IImmutableList<Models.Displayable> Columns { get; set; }
 
         [JsonProperty("otherProperties")]
-        public IImmutableList<Displayable> OtherProperties { get; set; }
+        public IImmutableList<Models.Displayable> OtherProperties { get; set; }
 
         [JsonProperty("noWorkitems")]
         public bool? NoWorkitems { get; set; }

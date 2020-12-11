@@ -11,10 +11,14 @@
     <DotNetBuildTasksTargetFrameworkSdkAssembly Condition="'$(DotNetBuildTasksTargetFrameworkSdkAssembly)' == '' AND '$(MSBuildRuntimeType)' == 'core'">..\tools\netcoreapp2.1\Microsoft.DotNet.Build.Tasks.TargetFramework.Sdk.dll</DotNetBuildTasksTargetFrameworkSdkAssembly>
     <DotNetBuildTasksTargetFrameworkSdkAssembly Condition="'$(DotNetBuildTasksTargetFrameworkSdkAssembly)' == '' AND '$(MSBuildRuntimeType)' != 'core'">..\tools\net472\Microsoft.DotNet.Build.Tasks.TargetFramework.Sdk.dll</DotNetBuildTasksTargetFrameworkSdkAssembly>
     <_OriginalTargetFramework>$(TargetFramework)</_OriginalTargetFramework>
+    <TargetFrameworkPattern>(((netstandard|netcoreapp)[0-9\.]+)|(net[1-4][1-9\.]+))(-[^;]+)</TargetFrameworkPattern>
+    <TargetFrameworkWithoutSuffix>$(TargetFramework)</TargetFrameworkWithoutSuffix>
   </PropertyGroup>
 
   <PropertyGroup Condition="$(TargetFramework.Contains('-'))">
     <TargetFrameworkSuffix>$(TargetFramework.SubString($([MSBuild]::Add($(TargetFramework.IndexOf('-')), 1))))</TargetFrameworkSuffix>
-    <TargetFramework>$(TargetFramework.SubString(0, $(TargetFramework.IndexOf('-'))))</TargetFramework>
+    <TargetFrameworkWithoutSuffix>$(TargetFramework.SubString(0, $(TargetFramework.IndexOf('-'))))</TargetFrameworkWithoutSuffix>
+    <!-- Strip away the TargetPlatform during the build because the assets file and nuget generated files does not know about the TargetPlatform for frameworks older than net5.0.-->
+    <TargetFramework>$([System.Text.RegularExpressions.Regex]::Replace('$(TargetFramework)', '$(TargetFrameworkPattern)', '${1}'))</TargetFramework>
   </PropertyGroup>
 </Project>

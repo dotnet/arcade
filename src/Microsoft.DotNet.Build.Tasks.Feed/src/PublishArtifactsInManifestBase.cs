@@ -36,32 +36,27 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// <summary>
         /// Full path to the folder containing blob assets.
         /// </summary>
-        [Required]
         public string BlobAssetsBasePath { get; set; }
 
         /// <summary>
         /// Full path to the folder containing package assets.
         /// </summary>
-        [Required]
         public string PackageAssetsBasePath { get; set; }
 
         /// <summary>
         /// ID of the build (in BAR/Maestro) that produced the artifacts being published.
         /// This might change in the future as we'll probably fetch this ID from the manifest itself.
         /// </summary>
-        [Required]
         public int BARBuildId { get; set; }
 
         /// <summary>
         /// Access point to the Maestro API to be used for accessing BAR.
         /// </summary>
-        [Required]
         public string MaestroApiEndpoint { get; set; }
 
         /// <summary>
         /// Authentication token to be used when interacting with Maestro API.
         /// </summary>
-        [Required]
         public string BuildAssetRegistryToken { get; set; }
 
         /// <summary>
@@ -266,7 +261,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// </summary>
         public void CheckForStableAssetsInNonIsolatedFeeds()
         {
-            if (SkipSafetyChecks)
+            if (BuildModel.Identity.IsReleaseOnlyPackageVersion || SkipSafetyChecks)
             {
                 return;
             }
@@ -325,7 +320,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             List<Task> publishTasks = new List<Task>();
 
             // Just log a empty line for better visualization of the logs
-            Log.LogMessage(MessageImportance.High, "\nPublishing packages: ");
+            Log.LogMessage(MessageImportance.High, "\nBegin publishing of packages: ");
 
             foreach (var packagesPerCategory in PackagesByCategory)
             {
@@ -628,32 +623,34 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             string feedVisibility,
             string feedName,
             Func<string, string, HttpClient, MsBuildUtils.TaskLoggingHelper, Task<PackageFeedStatus>> CompareLocalPackageToFeedPackageCallBack = null,
-            Func<string, string, Task<int>> StartProcessAsyncCallBack = null
+            Func<string, string, Task<ProcessExecutionResult>> RunProcessAndGetOutputsCallBack = null
             )
         {
             // Using these callbacks we can mock up functionality when testing.
             CompareLocalPackageToFeedPackageCallBack ??= GeneralUtils.CompareLocalPackageToFeedPackage;
-            StartProcessAsyncCallBack ??= GeneralUtils.StartProcessAsync;
+            RunProcessAndGetOutputsCallBack ??= GeneralUtils.RunProcessAndGetOutputsAsync;
+            ProcessExecutionResult nugetResult = null;
+            var packageStatus = GeneralUtils.PackageFeedStatus.Unknown;
 
             try
             {
-                var packageStatus = GeneralUtils.PackageFeedStatus.Unknown;
+                Log.LogMessage(MessageImportance.Normal, $"Pushing local package {localPackageLocation} to target feed {feedConfig.TargetURL}"); 
                 int attemptIndex = 0;
 
                 do
                 {
                     attemptIndex++;
                     // The feed key when pushing to AzDo feeds is "AzureDevOps" (works with the credential helper).
-                    int nugetExitCode = await StartProcessAsyncCallBack(NugetPath, $"push \"{localPackageLocation}\" -Source \"{feedConfig.TargetURL}\" -NonInteractive -ApiKey AzureDevOps -Verbosity quiet");
+                    nugetResult = await RunProcessAndGetOutputsCallBack(NugetPath, $"push \"{localPackageLocation}\" -Source \"{feedConfig.TargetURL}\" -NonInteractive -ApiKey AzureDevOps -Verbosity quiet");
 
-                    if (nugetExitCode == 0)
+                    if (nugetResult.ExitCode == 0)
                     {
                         // We have just pushed this package so we know it exists and is identical to our local copy
                         packageStatus = GeneralUtils.PackageFeedStatus.ExistsAndIdenticalToLocal;
                         break;
                     }
 
-                    Log.LogMessage(MessageImportance.Low, $"Attempt # {attemptIndex} failed to push {localPackageLocation}, attempting to determine whether the package already existed on the feed with the same content. Nuget exit code = {nugetExitCode}");
+                    Log.LogMessage(MessageImportance.Low, $"Attempt # {attemptIndex} failed to push {localPackageLocation}, attempting to determine whether the package already existed on the feed with the same content. Nuget exit code = {nugetResult.ExitCode}");
 
                     string packageContentUrl = $"https://pkgs.dev.azure.com/{feedAccount}/{feedVisibility}_apis/packaging/feeds/{feedName}/nuget/packages/{id}/versions/{version}/content";
                     packageStatus = await CompareLocalPackageToFeedPackageCallBack(localPackageLocation, packageContentUrl, client, Log);
@@ -687,7 +684,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 {
                     Log.LogError($"Failed to publish package '{id}@{version}' to '{feedConfig.TargetURL}' after {MaxRetryCount} attempts. (Final status: {packageStatus})");
                 }
-                else if (!Log.HasLoggedErrors)
+                else
                 {
                     Log.LogMessage(MessageImportance.High, $"Succeeded publishing package '{localPackageLocation}' to feed {feedConfig.TargetURL}");
                 }
@@ -695,6 +692,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             catch (Exception e)
             {
                 Log.LogError($"Unexpected exception pushing package '{id}@{version}': {e.Message}");
+            }
+
+            if (packageStatus != GeneralUtils.PackageFeedStatus.ExistsAndIdenticalToLocal && nugetResult?.ExitCode != 0)
+            {
+                Log.LogError($"Output from nuget.exe: {Environment.NewLine}StdOut:{Environment.NewLine}{nugetResult.StandardOut}{Environment.NewLine}StdErr:{Environment.NewLine}{nugetResult.StandardError}");
             }
         }
 
@@ -887,6 +889,38 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         Log.LogError($"The property {prop.Name} is required but doesn't have a value set.");
                     }
                 }
+            }
+
+            AnyMissingRequiredBaseProperties();
+
+            return Log.HasLoggedErrors;
+        }
+
+        protected bool AnyMissingRequiredBaseProperties()
+        {
+            if (string.IsNullOrEmpty(BlobAssetsBasePath))
+            {
+                Log.LogError($"The property {nameof(BlobAssetsBasePath)} is required but doesn't have a value set.");
+            }
+
+            if (string.IsNullOrEmpty(PackageAssetsBasePath))
+            {
+                Log.LogError($"The property {nameof(PackageAssetsBasePath)} is required but doesn't have a value set.");
+            }
+
+            if (BARBuildId == 0)
+            {
+                Log.LogError($"The property {nameof(BARBuildId)} is required but doesn't have a value set.");
+            }
+
+            if (string.IsNullOrEmpty(MaestroApiEndpoint))
+            {
+                Log.LogError($"The property {nameof(MaestroApiEndpoint)} is required but doesn't have a value set.");
+            }
+
+            if (string.IsNullOrEmpty(BuildAssetRegistryToken))
+            {
+                Log.LogError($"The property {nameof(BuildAssetRegistryToken)} is required but doesn't have a value set.");
             }
 
             return Log.HasLoggedErrors;

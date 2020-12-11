@@ -1,21 +1,21 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using FluentAssertions;
 using Microsoft.DotNet.Build.Tasks.Feed.Model;
-using MsBuildUtils = Microsoft.Build.Utilities;
+using Microsoft.DotNet.Build.Tasks.Feed.Tests.TestDoubles;
+using Microsoft.DotNet.VersionTools.BuildManifest.Model;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
+using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Xunit;
-using System.Net.Http;
 using static Microsoft.DotNet.Build.Tasks.Feed.GeneralUtils;
-using System.Diagnostics;
-using Microsoft.DotNet.VersionTools.BuildManifest.Model;
-using Microsoft.DotNet.Build.Tasks.Feed.Tests.TestDoubles;
-using Microsoft.DotNet.VersionTools.Util;
+using MsBuildUtils = Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
 {
@@ -39,7 +39,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
 
             var which = task.WhichPublishingTask(manifestFullPath);
 
-            Assert.IsType<PublishArtifactsInManifestV2>(which);
+            which.Should().BeOfType<PublishArtifactsInManifestV2>();
         }
 
         [Fact]
@@ -56,7 +56,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
 
             var which = task.WhichPublishingTask(manifestFullPath);
 
-            Assert.IsType<PublishArtifactsInManifestV3>(which);
+            which.Should().BeOfType<PublishArtifactsInManifestV3>();
         }
 
         [Fact]
@@ -79,21 +79,17 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             };
 
             await task.ParseTargetFeedConfigAsync();
-            Assert.False(task.Log.HasLoggedErrors);
+            task.Log.HasLoggedErrors.Should().BeFalse();
 
             // This will have set the feed configs.
-            Assert.Collection(task.FeedConfigs,
-                configList =>
+            task.FeedConfigs.Should().ContainKey(TargetFeedContentType.BinaryLayout).WhichValue.Should().SatisfyRespectively(
+                config =>
                 {
-                    Assert.Equal(TargetFeedContentType.BinaryLayout, configList.Key);
-                    Assert.Collection(configList.Value, config =>
-                    {
-                        Assert.Equal(RandomToken, config.Token);
-                        Assert.Equal(BlobFeedUrl, config.TargetURL);
-                        Assert.False(config.Internal);
-                        Assert.Equal(FeedType.AzDoNugetFeed, config.Type);
-                        Assert.Equal(AssetSelection.All, config.AssetSelection);
-                    });
+                    config.Token.Should().Be(RandomToken);
+                    config.TargetURL.Should().Be(BlobFeedUrl);
+                    config.Internal.Should().BeFalse();
+                    config.Type.Should().Be(FeedType.AzDoNugetFeed);
+                    config.AssetSelection.Should().Be(AssetSelection.All);
                 });
         }
 
@@ -115,8 +111,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             };
 
             await task.ParseTargetFeedConfigAsync();
-            Assert.True(task.Log.HasLoggedErrors);
-            Assert.Contains(buildEngine.BuildErrorEvents, e => e.Message.Equals("Invalid feed config type 'MyUnknownFeedType'. Possible values are: AzDoNugetFeed, AzureStorageFeed"));
+            task.Log.HasLoggedErrors.Should().BeTrue();
+            buildEngine.BuildErrorEvents.Should().Contain(e =>
+                e.Message.Equals("Invalid feed config type 'MyUnknownFeedType'. Possible values are: AzDoNugetFeed, AzureStorageFeed"));
         }
 
         [Fact]
@@ -137,8 +134,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             };
 
             await task.ParseTargetFeedConfigAsync();
-            Assert.True(task.Log.HasLoggedErrors);
-            Assert.Contains(buildEngine.BuildErrorEvents, e => e.Message.Equals("Invalid FeedConfig entry. TargetURL='' Type='' Token=''"));
+            task.Log.HasLoggedErrors.Should().BeTrue();
+            buildEngine.BuildErrorEvents.Should().Contain(e => e.Message.Equals("Invalid FeedConfig entry. TargetURL='' Type='' Token=''"));
         }
 
         /// <summary>
@@ -167,17 +164,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             await task.ParseTargetFeedConfigAsync();
 
             // This will have set the feed configs.
-            Assert.Collection(task.FeedConfigs,
-                configList =>
+            task.FeedConfigs.Should().ContainKey(TargetFeedContentType.BinaryLayout).WhichValue.Should().SatisfyRespectively(
+                config =>
                 {
-                    Assert.Equal(TargetFeedContentType.BinaryLayout, configList.Key);
-                    Assert.Collection(configList.Value, config =>
-                    {
-                        Assert.Equal(RandomToken, config.Token);
-                        Assert.Equal(BlobFeedUrl, config.TargetURL);
-                        Assert.Equal(FeedType.AzureStorageFeed, config.Type);
-                        Assert.Equal(AssetSelection.ShippingOnly, config.AssetSelection);
-                    });
+                    config.Token.Should().Be(RandomToken);
+                    config.TargetURL.Should().Be(BlobFeedUrl);
+                    config.Type.Should().Be(FeedType.AzureStorageFeed);
+                    config.AssetSelection.Should().Be(AssetSelection.ShippingOnly);
                 });
         }
 
@@ -211,8 +204,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             await task.ParseTargetFeedConfigAsync();
             // Verify that the checker errors on attempts to publish internal
             // artifacts to non-internal feeds
-            Assert.True(task.Log.HasLoggedErrors);
-            Assert.Contains(buildEngine.BuildErrorEvents, e => e.Message.Equals($"Use of non-internal feed '{BlobFeedUrl}' is invalid for an internal build. This can be overridden with '{nameof(PublishArtifactsInManifest.SkipSafetyChecks)}= true'"));
+            task.Log.HasLoggedErrors.Should().BeTrue();
+            buildEngine.BuildErrorEvents.Should().Contain(e => e.Message.Equals($"Use of non-internal feed '{BlobFeedUrl}' is invalid for an internal build. This can be overridden with '{nameof(PublishArtifactsInManifest.SkipSafetyChecks)}= true'"));
         }
 
         [Fact]
@@ -241,49 +234,39 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             };
 
             await task.ParseTargetFeedConfigAsync();
-            Assert.True(!task.Log.HasLoggedErrors);
+            task.Log.HasLoggedErrors.Should().BeFalse();
         }
 
 
         /// <summary>
         ///     Check that attempts to publish stable artifacts to non-stable feeds will throw errors.
         /// </summary>
-        [Theory]
+        [Theory] 
         [InlineData("3.0.0", false, true)]
         [InlineData("3.0.0-preview1", false, false)]
         [InlineData("3.0.0.10", false, false)]
         [InlineData("3.0.0-preview1-12345", false, false)]
         [InlineData("5.3.0-rtm.6198", false, false)]
-        [InlineData("3.3.1-beta3-19430-03", false, false)]
+        [InlineData("3.3.1-beta3-19430-03", false, false )]
         [InlineData("3.0.0", true, false)]
         [InlineData("3.0.0-preview1", true, false)]
         [InlineData("3.0.0.10", true, false)]
         [InlineData("3.0.0-preview1-12345", true, false)]
         [InlineData("5.3.0-rtm.6198", true, false)]
         [InlineData("3.3.1-beta3-19430-03", true, false)]
-        [InlineData("3.0.0", false, false, true)]
-        public async Task StableAssetCheckV2Async(string assetVersion, bool isIsolatedFeed, bool shouldError, bool skipChecks = false)
+        [InlineData("3.0.0", false, false, false, true)]
+        [InlineData("5.0.0", true, false, true)]
+        [InlineData("5.0.1-preview-123", true, false, false, true)]
+        [InlineData("5.0.1-preview-123", false, false, true)]
+        public async Task StableAssetCheckV2Async(string assetVersion, bool isIsolatedFeed, bool shouldError, bool isReleaseOnlyPackageVersion = false ,bool skipChecks = false )
         {
-            var buildEngine = new MockBuildEngine();
-            var task = new PublishArtifactsInManifestV2
-            {
-                SkipSafetyChecks = skipChecks,
-                TargetFeedConfig = new MsBuildUtils.TaskItem[]
-                {
-                    new MsBuildUtils.TaskItem("PACKAGE", new Dictionary<string, string> {
-                        { "TargetUrl", BlobFeedUrl },
-                        { "Token", RandomToken },
-                        { "Type", "AZURESTORAGEFEED" },
-                        { "AssetSelection", "SHIPPINGONLY" },
-                        { "Internal", "false" },
-                        { "Isolated", isIsolatedFeed.ToString() }})
-                },
-                BuildEngine = buildEngine
-            };
-
             const string packageId = "Foo.Package";
 
-            BuildModel buildModel = new BuildModel(new BuildIdentity())
+            BuildIdentity buildIdentity = new BuildIdentity
+            {
+                IsReleaseOnlyPackageVersion = isReleaseOnlyPackageVersion
+            };
+            BuildModel buildModel = new BuildModel(buildIdentity)
             {
                 Artifacts = new ArtifactSet
                 {
@@ -298,18 +281,35 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     }
                 }
             };
+            var buildEngine = new MockBuildEngine();
+            var task = new PublishArtifactsInManifestV2
+            {
+                SkipSafetyChecks = skipChecks,
+                TargetFeedConfig = new MsBuildUtils.TaskItem[]
+                {
+                    new MsBuildUtils.TaskItem("PACKAGE", new Dictionary<string, string> {
+                        { "TargetUrl", BlobFeedUrl },
+                        { "Token", RandomToken },
+                        { "Type", "AZURESTORAGEFEED" },
+                        { "AssetSelection", "SHIPPINGONLY" },
+                        { "Internal", "false" },
+                        { "Isolated", isIsolatedFeed.ToString() }})
+                },
+                BuildEngine = buildEngine,
+                BuildModel = buildModel
+            };
 
             await task.ParseTargetFeedConfigAsync();
-            Assert.False(task.Log.HasLoggedErrors);
+            task.Log.HasLoggedErrors.Should().BeFalse();
 
             task.SplitArtifactsInCategories(buildModel);
-            Assert.False(task.Log.HasLoggedErrors);
+            task.Log.HasLoggedErrors.Should().BeFalse();
 
             task.CheckForStableAssetsInNonIsolatedFeeds();
-            Assert.Equal(shouldError, task.Log.HasLoggedErrors);
+            task.Log.HasLoggedErrors.Should().Be(shouldError);
             if (shouldError)
             {
-                Assert.Contains(buildEngine.BuildErrorEvents, e => e.Message.Equals($"Package '{packageId}' has stable version '{assetVersion}' but is targeted at a non-isolated feed '{BlobFeedUrl}'"));
+                buildEngine.BuildErrorEvents.Should().Contain(e => e.Message.Equals($"Package '{packageId}' has stable version '{assetVersion}' but is targeted at a non-isolated feed '{BlobFeedUrl}'"));
             }
         }
 
@@ -320,9 +320,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         public void NugetFeedParseTests(string uri, string account, string visibility, string feed)
         {
             var matches = Regex.Match(uri, PublishingConstants.AzDoNuGetFeedPattern);
-            Assert.Equal(account, matches.Groups["account"]?.Value);
-            Assert.Equal(visibility, matches.Groups["visibility"]?.Value);
-            Assert.Equal(feed, matches.Groups["feed"]?.Value);
+            matches.Groups["account"]?.Value.Should().Be(account);
+            matches.Groups["visibility"]?.Value.Should().Be(visibility);
+            matches.Groups["feed"]?.Value.Should().Be(feed);
         }
 
 
@@ -373,17 +373,21 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 }
             };
 
-            Func<string, string, Task<int>> testStartProcessAsync = async (string fakeExePath, string fakeExeArgs) =>
+            Func<string, string, Task<ProcessExecutionResult>> testRunAndLogProcess = (string fakeExePath, string fakeExeArgs) =>
             {
-                await (Task.Delay(10)); // To make this actually async
-                Debug.WriteLine($"Called mocked StartProcessAsync() :  ExePath = {fakeExePath}, ExeArgs = {fakeExeArgs}");
-                Assert.Equal(fakeExePath, fakeNugetExeName); 
+                Debug.WriteLine($"Called mocked RunProcessAndGetOutputs() :  ExePath = {fakeExePath}, ExeArgs = {fakeExeArgs}");
+                fakeNugetExeName.Should().Be(fakeExePath);
+                ProcessExecutionResult result = new ProcessExecutionResult() { StandardError = "fake stderr", StandardOut = "fake stdout" };
                 timesNugetExeCalled++;
                 if (timesNugetExeCalled >= pushAttemptsBeforeSuccess)
                 {
-                    return 0;
+                    result.ExitCode = 0;
                 }
-                return 1;
+                else
+                {
+                    result.ExitCode = 1;
+                }
+                return Task.FromResult(result);
             };
 
             await task.PushNugetPackageAsync(
@@ -396,13 +400,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 "feedvisibility", 
                 "feedname",
                 testCompareLocalPackage,
-                testStartProcessAsync);
+                testRunAndLogProcess);
             if (!expectedFailure && localPackageMatchesFeed)
             {
                 // Successful retry scenario; make sure we ran the # of retries we thought.
-                Assert.True(timesNugetExeCalled <= task.MaxRetryCount);
+                timesNugetExeCalled.Should().BeLessOrEqualTo(task.MaxRetryCount);
             }
-            Assert.Equal(task.Log.HasLoggedErrors, expectedFailure);
+            expectedFailure.Should().Be(task.Log.HasLoggedErrors);
         }
 
 
@@ -431,7 +435,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             FakeStream fakeStreamA = new FakeStream(streamABytes, maxStreamABytesReturnedEachCall);
             FakeStream fakeStreamB = new FakeStream(streamBBytes, maxStreamBBytesReturnedEachCall);
 
-            Assert.Equal(streamA == streamB, await GeneralUtils.CompareStreamsAsync(fakeStreamA, fakeStreamB, bufferSize));
+            bool streamsShouldBeSame = streamA == streamB;
+            bool streamsAreSame = await GeneralUtils.CompareStreamsAsync(fakeStreamA, fakeStreamB, bufferSize);
+            streamsAreSame.Should().Be(streamsShouldBeSame, "Stream comparison failed");
         }
 
         class FakeStream : Stream
@@ -449,7 +455,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
 
             public override System.Threading.Tasks.Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
             {
-                Assert.True(count > 0);
+                count.Should().BeGreaterThan(0);
 
                 // If we reach the end of the _maxStreamBytesReturned array, just use max int.
                 int maxStreamBytesThisCall = int.MaxValue;

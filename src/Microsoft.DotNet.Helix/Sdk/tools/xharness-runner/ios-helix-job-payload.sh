@@ -1,5 +1,9 @@
 #!/bin/bash
 
+###
+### This script is used as a payload of Helix jobs that execute iOS/tvOS workloads through XHarness.
+###
+
 set -ex
 
 app=''
@@ -10,8 +14,12 @@ launch_timeout=''
 xharness_cli_path=''
 xcode_version=''
 app_arguments=''
+helix_python_bin=''
+python_path=''
+expected_exit_code=0
+command='test'
 
-while [[ $# > 0 ]]; do
+while [[ $# -gt 0 ]]; do
     opt="$(echo "$1" | awk '{print tolower($0)}')"
     case "$opt" in
       --app)
@@ -46,6 +54,22 @@ while [[ $# > 0 ]]; do
         app_arguments="$2"
         shift
         ;;
+      --expected-exit-code)
+        expected_exit_code="$2"
+        shift
+        ;;
+      --command)
+        command="$2"
+        shift
+        ;;
+      --helix-python-bin)
+        helix_python_bin="$2"
+        shift
+        ;;
+      --python-path)
+        python_path="$2"
+        shift
+        ;;
       *)
         echo "Invalid argument: $1"
         exit 1
@@ -56,82 +80,104 @@ done
 
 function die ()
 {
-    echo $1 1>&2
+    echo "$1" 1>&2
     exit 1
 }
 
-if [ -z "$app" ]; then
-    die "App name wasn't provided";
-fi
-
-if [ -z "$output_directory" ]; then
-    die "Output directory wasn't provided";
-fi
-
-if [ -z "$targets" ]; then
-    die "List of targets wasn't provided";
-fi
-
 if [ -z "$timeout" ]; then
     die "Test timeout wasn't provided";
-fi
-
-if [ -z "$launch_timeout" ]; then
-    die "Launch timeout wasn't provided";
 fi
 
 if [ -z "$xharness_cli_path" ]; then
     die "XHarness path wasn't provided";
 fi
 
-if [ -z "$xcode_version" ]; then
-    die "Xcode version wasn't provided";
+if [ -z "$helix_python_bin" ]; then
+    die "--helix-python-bin wasn't provided";
 fi
 
-if [ ! -z "$app_arguments" ]; then
+if [ -z "$python_path" ]; then
+    die "--python-path wasn't provided";
+fi
+
+if [ -n "$app_arguments" ]; then
     app_arguments="-- $app_arguments";
+fi
+
+if [ "$command" == "run" ]; then
+    app_arguments="--expected-exit-code=$expected_exit_code $app_arguments"
+elif [ -n "$launch_timeout" ]; then
+    # shellcheck disable=SC2089
+    app_arguments="--launch-timeout=$launch_timeout $app_arguments"
 fi
 
 set +e
 
-# Restart the simulator to make sure it is tied to the right user session
-xcode_path="/Applications/Xcode${xcode_version/./}.app"
+if [ -z "$xcode_version" ]; then
+    xcode_path="$(dirname "$(dirname "$(xcode-select -p)")")"
+else
+    xcode_path="/Applications/Xcode${xcode_version/./}.app"
+fi
+
+# Start the simulator if it is not running already
 simulator_app="$xcode_path/Contents/Developer/Applications/Simulator.app"
-sudo pkill -9 -f "$simulator_app"
 open -a "$simulator_app"
 
 export XHARNESS_DISABLE_COLORED_OUTPUT=true
 export XHARNESS_LOG_WITH_TIMESTAMPS=true
 
-dotnet exec "$xharness_cli_path" ios test  \
-    --app="$app"                           \
-    --output-directory="$output_directory" \
-    --targets="$targets"                   \
-    --timeout=$timeout                     \
-    --launch-timeout=$launch_timeout       \
-    --xcode="$xcode_path"                  \
-    -v                                     \
+# We include $app_arguments non-escaped and not arrayed because it might contain several extra arguments
+# which come from outside and are appeneded behind "--" and forwarded to the iOS application from XHarness.
+# shellcheck disable=SC2086,SC2090
+dotnet exec "$xharness_cli_path" ios $command \
+    --app="$app"                              \
+    --output-directory="$output_directory"    \
+    --targets="$targets"                      \
+    --timeout="$timeout"                      \
+    --xcode="$xcode_path"                     \
+    -v                                        \
     $app_arguments
 
 exit_code=$?
 
-# Kill the simulator after we're done
-sudo pkill -9 -f "$simulator_app"
+# Kill the simulator just in case when we fail to launch the app
+# 80 - app crash
+if [ $exit_code -eq 80 ]; then
+    sudo pkill -9 -f "$simulator_app"
+fi
+
+# This handles an issue where Simulators get reeaally slow and they start failing to install apps
+# The only solution is to reboot the machine, so we request a work item retry + MacOS reboot when this happens
+# 83 - timeout in installation
+if [ $exit_code -eq 83 ]; then
+    # Since we run this script using launchctl to run in a GUI-capable user session, some of the env vars are not set here
+    export PYTHON_PATH=$PYTHON_PATH:$python_path
+    "$helix_python_bin" -c "from helix.workitemutil import request_infra_retry; request_infra_retry('Retrying because iOS Simulator application install hung')"
+    "$helix_python_bin" -c "from helix.workitemutil import request_reboot; request_reboot('Rebooting because iOS Simulator application install hung ')"
+    exit $exit_code
+fi
 
 # The simulator logs comming from the sudo-spawned Simulator.app are not readable by the helix uploader
 chmod 0644 "$output_directory"/*.log
 
-test_results=`ls "$output_directory"/xunit-*.xml`
+if [ "$command" == 'test' ]; then
+    test_results=$(ls "$output_directory"/xunit-*.xml)
 
-if [ ! -f "$test_results" ]; then
-    echo "Failed to find xUnit tests results in the output directory. Existing files:"
-    ls -la "$output_directory"
-    exit 1
+    if [ ! -f "$test_results" ]; then
+        echo "Failed to find xUnit tests results in the output directory. Existing files:"
+        ls -la "$output_directory"
+
+        if [ $exit_code -eq 0 ]; then
+            exit_code=5
+        fi
+
+        exit $exit_code
+    fi
+
+    echo "Found test results in $output_directory/$test_results. Renaming to testResults.xml to prepare for Helix upload"
+
+    # Prepare test results for Helix to pick up
+    mv "$test_results" "$output_directory/testResults.xml"
 fi
-
-echo "Found test results in $output_directory/$test_results. Renaming to testResults.xml to prepare for Helix upload"
-
-# Prepare test results for Helix to pick up
-mv "$test_results" "$output_directory/testResults.xml"
 
 exit $exit_code

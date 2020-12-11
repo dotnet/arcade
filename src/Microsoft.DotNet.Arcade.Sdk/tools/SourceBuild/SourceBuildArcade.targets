@@ -26,12 +26,31 @@
   </PropertyGroup>
 
   <Target Name="GetSourceBuildIntermediateNupkgNameConvention">
-    <PropertyGroup>
-      <SourceBuildIntermediateNupkgRid Condition="'$(SourceBuildIntermediateNupkgRid)' == ''">linux-x64</SourceBuildIntermediateNupkgRid>
-      <SourceBuildIntermediateNupkgPrefix Condition="'$(SourceBuildIntermediateNupkgPrefix)' == ''">Microsoft.SourceBuild.Intermediate.</SourceBuildIntermediateNupkgPrefix>
-      <SourceBuildIntermediateNupkgSuffix Condition="'$(SourceBuildIntermediateNupkgSuffix)' == ''">.$(SourceBuildIntermediateNupkgRid)</SourceBuildIntermediateNupkgSuffix>
+    <PropertyGroup Condition="'$(SourceBuildNonPortable)' == 'true' and '$(TargetRid)' == ''">
+      <TargetRid>$([System.Runtime.InteropServices.RuntimeInformation]::RuntimeIdentifier)</TargetRid>
+    </PropertyGroup>
 
-      <GitHubRepositoryName Condition="'$(GitHubRepositoryName)' == ''">no-repo-name-defined</GitHubRepositoryName>
+    <PropertyGroup Condition="'$(TargetRid)' == ''">
+      <HostArchitecture>$([System.Runtime.InteropServices.RuntimeInformation]::ProcessArchitecture.ToString().ToLowerInvariant())</HostArchitecture>
+      <SourceBuildTargetArchitecture Condition="'$(SourceBuildTargetArchitecture)' == ''">$(HostArchitecture)</SourceBuildTargetArchitecture>
+
+      <SourceBuildTargetPortableOSPlatform Condition="$([MSBuild]::IsOSPlatform('windows'))">win</SourceBuildTargetPortableOSPlatform>
+      <SourceBuildTargetPortableOSPlatform Condition="$([MSBuild]::IsOSPlatform('osx'))">osx</SourceBuildTargetPortableOSPlatform>
+      <SourceBuildTargetPortableOSPlatform Condition="$([MSBuild]::IsOSPlatform('linux'))">linux</SourceBuildTargetPortableOSPlatform>
+      <SourceBuildTargetPortableOSPlatform Condition="'$(SourceBuildTargetPortableOSPlatform)'==''">linux</SourceBuildTargetPortableOSPlatform>
+
+      <!-- By default, build for the portable OS platform with host machine architecture. -->
+      <TargetRid>$(SourceBuildTargetPortableOSPlatform)-$(SourceBuildTargetArchitecture)</TargetRid>
+    </PropertyGroup>
+
+    <!-- If this repo builds only managed outputs, no RID is used for the intermediate nupkg. -->
+    <PropertyGroup Condition="'$(SourceBuildManagedOnly)' != 'true'">
+      <SourceBuildIntermediateNupkgRid Condition="'$(SourceBuildIntermediateNupkgRid)' == ''">$(TargetRid)</SourceBuildIntermediateNupkgRid>
+    </PropertyGroup>
+
+    <PropertyGroup>
+      <SourceBuildIntermediateNupkgPrefix>Microsoft.SourceBuild.Intermediate.</SourceBuildIntermediateNupkgPrefix>
+      <SourceBuildIntermediateNupkgSuffix Condition="'$(SourceBuildIntermediateNupkgRid)' != ''">.$(SourceBuildIntermediateNupkgRid)</SourceBuildIntermediateNupkgSuffix>
     </PropertyGroup>
   </Target>
 

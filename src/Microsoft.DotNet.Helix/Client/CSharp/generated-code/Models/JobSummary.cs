@@ -17,7 +17,7 @@ namespace Microsoft.DotNet.Helix.Client.Models
         }
 
         [JsonProperty("FailureReason")]
-        public FailureReason FailureReason { get; set; }
+        public Models.FailureReason FailureReason { get; set; }
 
         [JsonProperty("QueueId")]
         public string QueueId { get; set; }
@@ -56,7 +56,7 @@ namespace Microsoft.DotNet.Helix.Client.Models
         public Newtonsoft.Json.Linq.JToken Properties { get; set; }
 
         [JsonProperty("Errors")]
-        public IImmutableList<WorkItemError> Errors { get; set; }
+        public IImmutableList<Models.WorkItemError> Errors { get; set; }
 
         [JsonIgnore]
         public bool IsValid

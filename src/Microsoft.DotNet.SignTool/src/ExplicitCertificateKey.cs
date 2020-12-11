@@ -11,14 +11,16 @@ namespace Microsoft.DotNet.SignTool
         public readonly string FileName;
         public readonly string PublicKeyToken;
         public readonly string TargetFramework;
+        public readonly string CollisionPriorityId;
 
-        public ExplicitCertificateKey(string fileName, string publicKeyToken = null, string targetFramework = null)
+        public ExplicitCertificateKey(string fileName, string publicKeyToken = null, string targetFramework = null, string collisionPriorityId = null)
         {
             Debug.Assert(fileName != null);
 
             FileName = fileName;
             PublicKeyToken = publicKeyToken ?? "";
             TargetFramework = targetFramework ?? "";
+            CollisionPriorityId = collisionPriorityId ?? "";
         }
 
         public override bool Equals(object obj)
@@ -29,6 +31,7 @@ namespace Microsoft.DotNet.SignTool
 
         bool IEquatable<ExplicitCertificateKey>.Equals(ExplicitCertificateKey other)
             => FileName == other.FileName && 
+            CollisionPriorityId == other.CollisionPriorityId &&
             string.Equals(PublicKeyToken, other.PublicKeyToken, StringComparison.OrdinalIgnoreCase) && 
             TargetFramework == other.TargetFramework;
 
