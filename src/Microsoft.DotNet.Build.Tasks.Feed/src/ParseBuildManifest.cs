@@ -14,7 +14,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
     /// The intended use of this task is to push artifacts described in
     /// a build manifest to a static package feed.
     /// </summary>
-    public class ParseBuildManifest : MSBuildTaskBase
+    public class ParseBuildManifest : MSBuild.Task
     {
         private const string NuGetPackageInfoId = "PackageId";
         private const string NuGetPackageInfoVersion = "PackageVersion";
@@ -30,6 +30,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         [Output]
         public ITaskItem[] PackageInfos { get; set; }
+
+        public static ISigningInformationModelFactory SigningInformationModelFactory { get; set; } = new SigningInformationModelFactory();
+
+        public static IBlobArtifactModelFactory BlobArtifactModelFactory { get; set; } = new BlobArtifactModelFactory();
+
+        public static IPackageArtifactModelFactory PackageArtifactModelFactory { get; set; } = new PackageArtifactModelFactory();
+
+        public static IBuildModelFactory BuildModelFactory { get; set; } = new BuildModelFactory(SigningInformationModelFactory, BlobArtifactModelFactory, PackageArtifactModelFactory);
 
         public override bool Execute()
         {

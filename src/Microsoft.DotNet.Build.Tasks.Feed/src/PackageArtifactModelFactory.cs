@@ -21,7 +21,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         {
             _provider = new ServiceCollection()
                 .AddSingleton<IPackageArchiveReaderFactory, PackageArchiveReaderFactory>()
-                .AddScoped<NupkgInfo>()
+                .AddTransient<NupkgInfo>()
                 .BuildServiceProvider();
         }
 

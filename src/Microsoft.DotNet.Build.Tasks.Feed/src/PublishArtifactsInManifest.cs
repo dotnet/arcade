@@ -8,6 +8,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using MSBuild = Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed
 {
@@ -15,7 +16,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
     ///     The intended use of this task is to push artifacts described in
     ///     a build manifest to package feeds.
     /// </summary>
-    public class PublishArtifactsInManifest : MSBuildTaskBase
+    public class PublishArtifactsInManifest : MSBuild.Task
     {
         /// <summary>
         /// Comma separated list of Maestro++ Channel IDs to which the build should
@@ -138,6 +139,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// Just an internal flag to keep track whether we published assets via a V3 manifest or not.
         /// </summary>
         private static bool PublishedV3Manifest { get; set; }
+
+        public static ISigningInformationModelFactory SigningInformationModelFactory { get; set; } = new SigningInformationModelFactory();
+
+        public static IBlobArtifactModelFactory BlobArtifactModelFactory { get; set; } = new BlobArtifactModelFactory();
+
+        public static IPackageArtifactModelFactory PackageArtifactModelFactory{ get; set; } = new PackageArtifactModelFactory();
+
+        public static IBuildModelFactory BuildModelFactory { get; set; } = new BuildModelFactory(SigningInformationModelFactory, BlobArtifactModelFactory, PackageArtifactModelFactory);
 
         public override bool Execute()
         {

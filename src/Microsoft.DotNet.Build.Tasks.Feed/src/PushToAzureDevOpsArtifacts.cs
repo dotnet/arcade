@@ -4,6 +4,7 @@
 using Microsoft.Build.Framework;
 using Microsoft.DotNet.VersionTools.BuildManifest.Model;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -60,9 +61,25 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// </summary>
         public string PublishingVersion { get; set; }
 
-        public PushToAzureDevOpsArtifacts(ServiceProvider provider = null) : base(provider) { }
+        public override void ConfigureServices(IServiceCollection collection)
+        {
+            foreach(var service in collection)
+            {
+                services.Add(service);
+            }
 
-        public override bool Execute()
+            services.TryAddSingleton<ISigningInformationModelFactory, SigningInformationModelFactory>();
+            services.TryAddSingleton<IBlobArtifactModelFactory, BlobArtifactModelFactory>();
+            services.TryAddSingleton<IPackageArtifactModelFactory, PackageArtifactModelFactory>();
+            services.TryAddSingleton<IBuildModelFactory, BuildModelFactory>();
+            services.TryAddSingleton<IFileSystem, FileSystem>();
+        }
+
+        public bool ExecuteTask(IFileSystem fileSystem,
+            ISigningInformationModelFactory signingInformationModelFactory,
+            IBlobArtifactModelFactory blobArtifactModelFactory,
+            IPackageArtifactModelFactory packageArtifactModelFactory,
+            IBuildModelFactory buildModelFactory)
         {
             try
             {
@@ -90,10 +107,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     {
                         // Act as if %(PublishFlatContainer) were true for all items.
                         blobArtifacts = itemsToPushNoExcludes
-                            .Select(i => BlobArtifactModelFactory.CreateBlobArtifactModel(i, Log));
+                            .Select(i => blobArtifactModelFactory.CreateBlobArtifactModel(i, Log));
                         foreach (var blobItem in itemsToPushNoExcludes)
                         {
-                            if (!_fileSystem.FileExists(blobItem.ItemSpec))
+                            if (!fileSystem.FileExists(blobItem.ItemSpec))
                             {
                                 Log.LogError($"Could not find file {blobItem.ItemSpec}.");
                                 continue;
@@ -136,7 +153,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                         foreach (var packagePath in packageItems)
                         {
-                            if (!_fileSystem.FileExists(packagePath.ItemSpec))
+                            if (!fileSystem.FileExists(packagePath.ItemSpec))
                             {
                                 Log.LogError($"Could not find file {packagePath.ItemSpec}.");
                                 continue;
@@ -148,7 +165,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                         foreach (var blobItem in blobItems)
                         {
-                            if (!_fileSystem.FileExists(blobItem.ItemSpec))
+                            if (!fileSystem.FileExists(blobItem.ItemSpec))
                             {
                                 Log.LogError($"Could not find file {blobItem.ItemSpec}.");
                                 continue;
@@ -158,8 +175,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                                 $"##vso[artifact.upload containerfolder=BlobArtifacts;artifactname=BlobArtifacts]{blobItem.ItemSpec}");
                         }
 
-                        packageArtifacts = packageItems.Select(PackageArtifactModelFactory.CreatePackageArtifactModel);
-                        blobArtifacts = blobItems.Select(i => BlobArtifactModelFactory.CreateBlobArtifactModel(i, Log)).Where(blob => blob != null);
+                        packageArtifacts = packageItems.Select(packageArtifactModelFactory.CreatePackageArtifactModel);
+                        blobArtifacts = blobItems.Select(i => blobArtifactModelFactory.CreateBlobArtifactModel(i, Log)).Where(blob => blob != null);
                     }
 
                     PublishingInfraVersion targetPublishingVersion = PublishingInfraVersion.Latest;
@@ -172,10 +189,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         }
                     }
                     
-                    SigningInformationModel signingInformationModel = SigningInformationModelFactory.CreateSigningInformationModelFromItems(
+                    SigningInformationModel signingInformationModel = signingInformationModelFactory.CreateSigningInformationModelFromItems(
                         ItemsToSign, StrongNameSignInfo, FileSignInfo, FileExtensionSignInfo, CertificatesSignInfo, blobArtifacts, packageArtifacts, Log);
 
-                    BuildModelFactory.CreateBuildManifest(Log,
+                    buildModelFactory.CreateBuildManifest(Log,
                         blobArtifacts,
                         packageArtifacts,
                         AssetManifestPath,

@@ -3,44 +3,42 @@
 
 using MSBuild = Microsoft.Build.Utilities;
 using Microsoft.Extensions.DependencyInjection;
+using System.Reflection;
+using System.Linq;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed
 {
     public abstract class MSBuildTaskBase : MSBuild.Task
     {
-        protected readonly IFileSystem _fileSystem;
+        private const string ExecuteMethodName = "ExecuteTask";
+        protected IServiceCollection services = new ServiceCollection();
 
-        public MSBuildTaskBase(ServiceProvider provider = null)
+        public override sealed bool Execute()
         {
-            if(provider == null)
-            {
-                provider = ConfigureServices();
-            }
-
-            _fileSystem = provider.GetRequiredService(typeof(IFileSystem)) as IFileSystem;
+            // create the DI collection and build the provider based on the parameters
+            ServiceCollection collection = new();
+            ConfigureServices(collection);
+            using var provider = services.BuildServiceProvider();
+            return (bool)GetExecuteMethod().Invoke(this, GetExecuteArguments(provider));
         }
 
-        private ServiceProvider ConfigureServices()
+        public ParameterInfo[] GetExecuteParameterTypes()
         {
-            ServiceProvider provider = new ServiceCollection()
-                .AddSingleton<ISigningInformationModelFactory, SigningInformationModelFactory>()
-                .AddSingleton<IBlobArtifactModelFactory, BlobArtifactModelFactory>()
-                .AddSingleton<IPackageArtifactModelFactory, PackageArtifactModelFactory>()
-                .AddSingleton<IBuildModelFactory, BuildModelFactory>()
-                .AddSingleton<IFileSystem, FileSystem>()
-                .BuildServiceProvider();
-
-            return provider;
+            return GetType().GetMethod(ExecuteMethodName).GetParameters();
         }
+
+        public object[] GetExecuteArguments(ServiceProvider serviceProvider)
+        {
+            return GetExecuteParameterTypes().Select(t => serviceProvider.GetRequiredService(t.ParameterType)).ToArray();
+        }
+
+        private MethodInfo GetExecuteMethod()
+        {
+            return GetType().GetMethod(ExecuteMethodName);
+        }
+
+        public abstract void ConfigureServices(IServiceCollection collection);
 
         public const string AssetsVirtualDir = "assets/";
-
-        public static ISigningInformationModelFactory SigningInformationModelFactory { get; set; } = new SigningInformationModelFactory();
-
-        public static IBlobArtifactModelFactory BlobArtifactModelFactory { get; set; } = new BlobArtifactModelFactory();
-
-        public static IPackageArtifactModelFactory PackageArtifactModelFactory { get; set; } = new PackageArtifactModelFactory();
-
-        public static IBuildModelFactory BuildModelFactory { get; set; } = new BuildModelFactory(SigningInformationModelFactory, BlobArtifactModelFactory, PackageArtifactModelFactory);
     }
 }

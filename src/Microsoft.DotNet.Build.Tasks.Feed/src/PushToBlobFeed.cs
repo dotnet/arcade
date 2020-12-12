@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed
 {
-    public class PushToBlobFeed : MSBuildTaskBase
+    public class PushToBlobFeed : Microsoft.Build.Utilities.Task
     {
         [Required]
         public string ExpectedFeedUrl { get; set; }
@@ -58,6 +58,16 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         public bool IsStableBuild { get; set; }
 
         public bool IsReleaseOnlyPackageVersion { get; set; }
+
+        public static ISigningInformationModelFactory SigningInformationModelFactory { get; set; } = new SigningInformationModelFactory();
+
+        public static IBlobArtifactModelFactory BlobArtifactModelFactory { get; set; } = new BlobArtifactModelFactory();
+
+        public static IPackageArtifactModelFactory PackageArtifactModelFactory { get; set; } = new PackageArtifactModelFactory();
+
+        public static IBuildModelFactory BuildModelFactory { get; set; } = new BuildModelFactory(SigningInformationModelFactory, BlobArtifactModelFactory, PackageArtifactModelFactory);
+
+        public const string AssetsVirtualDir = "assets/";
 
         public override bool Execute()
         {

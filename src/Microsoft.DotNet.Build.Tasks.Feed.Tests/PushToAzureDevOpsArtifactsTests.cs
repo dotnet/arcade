@@ -125,6 +125,21 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
 
             PushToAzureDevOpsArtifacts task = ConstructPushToAzureDevOpsArtifactsTask(buildEngine);
 
+            Mock<IFileSystem> fileSystemMock = new();
+            Mock<ISigningInformationModelFactory> signingInformationModelFactoryMock = new();
+            Mock<IBlobArtifactModelFactory> blobArtifactModelFactoryMock = new();
+            Mock<IPackageArtifactModelFactory> packageArtifactModelFactoryMock = new();
+            Mock<IBuildModelFactory> buildModelFactoryMock = new();
+
+            var collection = new ServiceCollection()
+                .AddSingleton(signingInformationModelFactoryMock.Object)
+                .AddSingleton(blobArtifactModelFactoryMock.Object)
+                .AddSingleton(packageArtifactModelFactoryMock.Object)
+                .AddSingleton(buildModelFactoryMock.Object)
+                .AddSingleton(fileSystemMock.Object);
+
+            task.ConfigureServices(collection);
+
             task.Execute().Should().BeTrue();
 
             var manifest = File.ReadAllText(TargetManifestPath);
@@ -297,20 +312,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
 
         private static PushToAzureDevOpsArtifacts ConstructPushToAzureDevOpsArtifactsTask(IBuildEngine buildEngine)
         {
-            Mock<IFileSystem> fileSystemMock = new Mock<IFileSystem>();
-
-            ServiceProvider provider = new ServiceCollection()
-                .AddSingleton<ISigningInformationModelFactory, SigningInformationModelFactory>()
-                .AddSingleton<IBlobArtifactModelFactory, BlobArtifactModelFactory>()
-                .AddSingleton<IPackageArtifactModelFactory, PackageArtifactModelFactory>()
-                .AddSingleton<IBuildModelFactory, BuildModelFactory>()
-                .AddSingleton(fileSystemMock.Object)
-                .BuildServiceProvider();
+            
 
 
             //fileSystemMock.Setup(m => m)
 
-            return new PushToAzureDevOpsArtifacts(provider)
+            return new PushToAzureDevOpsArtifacts
             {
                 BuildEngine = buildEngine,
                 //FileSystem = fileSystemMock.Object,//MockFileSystem.CreateFromTaskItems(TaskItems),

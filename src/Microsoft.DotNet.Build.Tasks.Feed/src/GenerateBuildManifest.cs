@@ -3,6 +3,7 @@
 
 using Microsoft.Build.Framework;
 using Microsoft.DotNet.VersionTools.BuildManifest.Model;
+using MSBuild = Microsoft.Build.Utilities;
 using System;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed
@@ -10,7 +11,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
     /// <summary>
     /// This task generates an XML build manifest for a list of packages and files.
     /// </summary>
-    public class GenerateBuildManifest : MSBuildTaskBase
+    public class GenerateBuildManifest : MSBuild.Task
     {
         /// <summary>
         /// An list of files produced by the build.
@@ -108,7 +109,17 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// <summary>
         /// Is the manifest for Release only package version?
         /// </summary>
-        public bool IsReleaseOnlyPackageVersion { get; set; }        
+        public bool IsReleaseOnlyPackageVersion { get; set; }
+
+        private IFileSystem _fileSystem { get; set; } = new FileSystem();
+
+        public static ISigningInformationModelFactory SigningInformationModelFactory { get; set; } = new SigningInformationModelFactory();
+
+        public static IBlobArtifactModelFactory BlobArtifactModelFactory { get; set; } = new BlobArtifactModelFactory();
+
+        public static IPackageArtifactModelFactory PackageArtifactModelFactory { get; set; } = new PackageArtifactModelFactory();
+
+        public static IBuildModelFactory BuildModelFactory { get; set; } = new BuildModelFactory(SigningInformationModelFactory, BlobArtifactModelFactory, PackageArtifactModelFactory);
 
         public override bool Execute()
         {
@@ -124,7 +135,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         return false;
                     }
                 }
-
+                
                 var buildModel = BuildModelFactory.CreateModelFromItems(
                     Artifacts,
                     ItemsToSign,
