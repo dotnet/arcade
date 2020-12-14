@@ -151,7 +151,7 @@ fi
 # 83 - timeout in installation
 if [ $exit_code -eq 83 ]; then
     # Since we run this script using launchctl to run in a GUI-capable user session, some of the env vars are not set here
-    export PYTHON_PATH=$PYTHON_PATH:$python_path
+    export PYTHONPATH=$PYTHONPATH:$python_path
     "$helix_python_bin" -c "from helix.workitemutil import request_infra_retry; request_infra_retry('Retrying because iOS Simulator application install hung')"
     "$helix_python_bin" -c "from helix.workitemutil import request_reboot; request_reboot('Rebooting because iOS Simulator application install hung ')"
     exit $exit_code
