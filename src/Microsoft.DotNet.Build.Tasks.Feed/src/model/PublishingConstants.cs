@@ -1,7 +1,7 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using Microsoft.DotNet.Build.Tasks.Feed.Model;
+using System;
 using Microsoft.DotNet.VersionTools.BuildManifest.Model;
 using System.Collections.Generic;
 
@@ -86,6 +86,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
         private const string FeedDotNetLibrariesTransport = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-libraries-transport/nuget/v3/index.json";
         private const string FeedDotNetLibrariesSymbols = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-libraries-symbols/nuget/v3/index.json";
 
+        private const SymbolTargetType InternalSymbolTargets = SymbolTargetType.Msdl;
+        private const SymbolTargetType PublicAndInternalSymbolTargets = SymbolTargetType.Msdl | SymbolTargetType.SymWeb;
+
         public static readonly List<TargetChannelConfig> ChannelInfos = new List<TargetChannelConfig>() {
             // ".NET 5 Dev",
             new TargetChannelConfig(
@@ -96,7 +99,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedDotNet5Transport,
                 FeedDotNet5Symbols,
                 FeedForChecksums,
-                FeedForInstallers),
+                FeedForInstallers,
+                PublicAndInternalSymbolTargets),
 
             // ".NET 6 Dev",
             new TargetChannelConfig(
@@ -107,7 +111,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedDotNet6Transport,
                 FeedDotNet6Symbols,
                 FeedForChecksums,
-                FeedForInstallers),
+                FeedForInstallers,
+                PublicAndInternalSymbolTargets),
 
             // ".NET 5" (public),
             new TargetChannelConfig(
@@ -118,7 +123,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedDotNet5Transport,
                 FeedDotNet5Symbols,
                 FeedForChecksums,
-                FeedForInstallers),
+                FeedForInstallers,
+                PublicAndInternalSymbolTargets),
 
             // ".NET 5 Internal" (internal),
             new TargetChannelConfig(
@@ -129,7 +135,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedDotNet5InternalTransport,
                 FeedDotNet5InternalSymbols,
                 FeedInternalForChecksums,
-                FeedInternalForInstallers),
+                FeedInternalForInstallers,
+                InternalSymbolTargets),
 
             // ".NET 5 SDK 5.0.1xx" (public),
             new TargetChannelConfig(
@@ -140,7 +147,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedDotNet5Transport,
                 FeedDotNet5Symbols,
                 FeedForChecksums,
-                FeedForInstallers),
+                FeedForInstallers,
+                PublicAndInternalSymbolTargets),
 
             // ".NET 5 SDK 5.0.1xx Internal" (internal),
             new TargetChannelConfig(
@@ -151,7 +159,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedDotNet5InternalTransport,
                 FeedDotNet5InternalSymbols,
                 FeedInternalForChecksums,
-                FeedInternalForInstallers),
+                FeedInternalForInstallers,
+                PublicAndInternalSymbolTargets),
 
             // ".NET 5 SDK 5.0.2xx" (public),
             new TargetChannelConfig(
@@ -162,7 +171,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedDotNet5Transport,
                 FeedDotNet5Symbols,
                 FeedForChecksums,
-                FeedForInstallers),
+                FeedForInstallers,
+                PublicAndInternalSymbolTargets),
 
             // ".NET 5 SDK 5.0.2xx Internal" (internal),
             new TargetChannelConfig(
@@ -173,7 +183,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedDotNet5InternalTransport,
                 FeedDotNet5InternalSymbols,
                 FeedInternalForChecksums,
-                FeedInternalForInstallers),
+                FeedInternalForInstallers,
+                InternalSymbolTargets),
 
             // ".NET Eng - Latest",
             new TargetChannelConfig(
@@ -184,7 +195,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedDotNetEngTransport,
                 FeedDotNetEngSymbols,
                 FeedForChecksums,
-                FeedForInstallers),
+                FeedForInstallers,
+                PublicAndInternalSymbolTargets),
 
             // ".NET 5 Eng",
             new TargetChannelConfig(
@@ -195,7 +207,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedDotNetEngTransport,
                 FeedDotNetEngSymbols,
                 FeedForChecksums,
-                FeedForInstallers),
+                FeedForInstallers,
+                PublicAndInternalSymbolTargets),
 
             // ".NET Eng - Validation",
             new TargetChannelConfig(
@@ -206,7 +219,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedDotNetEngTransport,
                 FeedDotNetEngSymbols,
                 FeedForChecksums,
-                FeedForInstallers),
+                FeedForInstallers,
+                PublicAndInternalSymbolTargets),
 
             // ".NET 5 Eng - Validation",
             new TargetChannelConfig(
@@ -217,7 +231,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedDotNetEngTransport,
                 FeedDotNetEngSymbols,
                 FeedForChecksums,
-                FeedForInstallers),
+                FeedForInstallers,
+                PublicAndInternalSymbolTargets),
 
             // "General Testing",
             new TargetChannelConfig(
@@ -228,7 +243,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedGeneralTesting,
                 FeedGeneralTestingSymbols,
                 FeedForChecksums,
-                FeedForInstallers),
+                FeedForInstallers,
+                PublicAndInternalSymbolTargets),
 
             // ".NET Core Tooling Dev",
             new TargetChannelConfig(
@@ -239,7 +255,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedDotNetToolsTransport,
                 FeedDotNetToolsSymbols,
                 FeedForChecksums,
-                FeedForInstallers),
+                FeedForInstallers,
+                PublicAndInternalSymbolTargets),
 
             // ".NET Core Tooling Release",
             new TargetChannelConfig(
@@ -250,7 +267,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedDotNetToolsTransport,
                 FeedDotNetToolsSymbols,
                 FeedForChecksums,
-                FeedForInstallers),
+                FeedForInstallers,
+                PublicAndInternalSymbolTargets),
 
             // ".NET Internal Tooling",
             new TargetChannelConfig(
@@ -261,7 +279,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedDotNetToolsInternalTransport,
                 FeedDotNetToolsInternalSymbols,
                 FeedInternalForChecksums,
-                FeedInternalForInstallers),
+                FeedInternalForInstallers,
+                PublicAndInternalSymbolTargets),
 
             // ".NET Core Experimental",
             new TargetChannelConfig(
@@ -272,7 +291,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedDotNetExperimental,
                 FeedDotNetExperimentalSymbols,
                 FeedForChecksums,
-                FeedForInstallers),
+                FeedForInstallers,
+                PublicAndInternalSymbolTargets),
 
             // ".NET Eng Services - Int",
             new TargetChannelConfig(
@@ -283,7 +303,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedDotNetEngTransport,
                 FeedDotNetEngSymbols,
                 FeedForChecksums,
-                FeedForInstallers),
+                FeedForInstallers,
+                PublicAndInternalSymbolTargets),
 
             // ".NET Eng Services - Prod",
             new TargetChannelConfig(
@@ -294,7 +315,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedDotNetEngTransport,
                 FeedDotNetEngSymbols,
                 FeedForChecksums,
-                FeedForInstallers),
+                FeedForInstallers,
+                PublicAndInternalSymbolTargets),
 
             // ".NET Core SDK 3.1.4xx",
             new TargetChannelConfig(
@@ -305,7 +327,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedDotNet31Transport,
                 FeedDotNet31Symbols,
                 FeedForChecksums,
-                FeedForInstallers),
+                FeedForInstallers,
+                PublicAndInternalSymbolTargets),
 
             // ".NET Core SDK 3.1.4xx Internal",
             new TargetChannelConfig(
@@ -316,7 +339,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedDotNet31InternalTransport,
                 FeedDotNet31InternalSymbols,
                 FeedInternalForChecksums,
-                FeedInternalForInstallers),
+                FeedInternalForInstallers,
+                PublicAndInternalSymbolTargets),
 
             // ".NET Core SDK 3.1.3xx",
             new TargetChannelConfig(
@@ -327,7 +351,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedDotNet31Transport,
                 FeedDotNet31Symbols,
                 FeedForChecksums,
-                FeedForInstallers),
+                FeedForInstallers,
+                PublicAndInternalSymbolTargets),
 
             // ".NET Core SDK 3.1.3xx Internal",
             new TargetChannelConfig(
@@ -338,7 +363,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedDotNet31InternalTransport,
                 FeedDotNet31InternalSymbols,
                 FeedForChecksums,
-                FeedForInstallers),
+                FeedForInstallers,
+                InternalSymbolTargets),
 
             // ".NET 3 Tools",
             new TargetChannelConfig(
@@ -349,7 +375,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedDotNetEngTransport,
                 FeedDotNetEngSymbols,
                 FeedForChecksums,
-                FeedForInstallers),
+                FeedForInstallers,
+                PublicAndInternalSymbolTargets),
 
             // ".NET 3 Tools - Validation",
             new TargetChannelConfig(
@@ -360,7 +387,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedDotNetEngTransport,
                 FeedDotNetEngSymbols,
                 FeedForChecksums,
-                FeedForInstallers),
+                FeedForInstallers,
+                PublicAndInternalSymbolTargets),
 
             // ".NET Core Tooling Dev",
             new TargetChannelConfig(
@@ -371,7 +399,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedDotNetToolsTransport,
                 FeedDotNetToolsSymbols,
                 FeedForChecksums,
-                FeedForInstallers),
+                FeedForInstallers,
+                PublicAndInternalSymbolTargets),
 
             // ".NET Core Tooling Release",
             new TargetChannelConfig(
@@ -382,7 +411,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedDotNetToolsTransport,
                 FeedDotNetToolsSymbols,
                 FeedForChecksums,
-                FeedForInstallers),
+                FeedForInstallers,
+                PublicAndInternalSymbolTargets),
 
             // ".NET Core 3.1 Dev",
             new TargetChannelConfig(
@@ -393,7 +423,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedDotNet31Transport,
                 FeedDotNet31Symbols,
                 FeedForChecksums,
-                FeedForInstallers),
+                FeedForInstallers,
+                PublicAndInternalSymbolTargets),
 
             // ".NET Core 3.1 Release",
             new TargetChannelConfig(
@@ -404,7 +435,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedDotNet31Transport,
                 FeedDotNet31Symbols,
                 FeedForChecksums,
-                FeedForInstallers),
+                FeedForInstallers,
+                PublicAndInternalSymbolTargets),
 
             // ".NET Core SDK 3.1.2xx",
             new TargetChannelConfig(
@@ -415,7 +447,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedDotNet31Transport,
                 FeedDotNet31Symbols,
                 FeedForChecksums,
-                FeedForInstallers),
+                FeedForInstallers,
+                PublicAndInternalSymbolTargets),
 
             // "NET Core SDK 3.1.1xx",
             new TargetChannelConfig(
@@ -426,7 +459,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedDotNet31Transport,
                 FeedDotNet31Symbols,
                 FeedForChecksums,
-                FeedForInstallers),
+                FeedForInstallers,
+                PublicAndInternalSymbolTargets),
 
             // ".NET Core SDK 3.1.3xx",
             new TargetChannelConfig(
@@ -437,7 +471,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedDotNet31Transport,
                 FeedDotNet31Symbols,
                 FeedForChecksums,
-                FeedForInstallers),
+                FeedForInstallers,
+                PublicAndInternalSymbolTargets),
 
             // ".NET Core SDK 3.1.4xx",
             new TargetChannelConfig(
@@ -448,7 +483,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedDotNet31Transport,
                 FeedDotNet31Symbols,
                 FeedForChecksums,
-                FeedForInstallers),
+                FeedForInstallers,
+                PublicAndInternalSymbolTargets),
 
             // ".NET Core SDK 3.1.3xx Internal",
             new TargetChannelConfig(
@@ -459,7 +495,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedDotNet31InternalTransport,
                 FeedDotNet31InternalSymbols,
                 FeedForChecksums,
-                FeedForInstallers),
+                FeedForInstallers,
+                InternalSymbolTargets),
 
             // ".NET Core 3.1 Internal Servicing",
             new TargetChannelConfig(
@@ -470,7 +507,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedDotNet31InternalTransport,
                 FeedDotNet31InternalSymbols,
                 FeedForChecksums,
-                FeedForInstallers),
+                FeedForInstallers,
+                InternalSymbolTargets),
 
             // ".NET Core SDK 3.1.2xx Internal",
             new TargetChannelConfig(
@@ -481,7 +519,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedDotNet31InternalTransport,
                 FeedDotNet31InternalSymbols,
                 FeedForChecksums,
-                FeedForInstallers),
+                FeedForInstallers,
+                InternalSymbolTargets),
 
             // ".NET Core SDK 3.1.1xx Internal",
             new TargetChannelConfig(
@@ -492,7 +531,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedDotNet31InternalTransport,
                 FeedDotNet31InternalSymbols,
                 FeedForChecksums,
-                FeedForInstallers),
+                FeedForInstallers,
+                InternalSymbolTargets),
 
             // ".NET Core SDK 3.1.4xx Internal",
             new TargetChannelConfig(
@@ -503,7 +543,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedDotNet31InternalTransport,
                 FeedDotNet31InternalSymbols,
                 FeedForChecksums,
-                FeedForInstallers),
+                FeedForInstallers,
+                InternalSymbolTargets),
 
             // ".NET Core 3.1 Blazor Features",
             new TargetChannelConfig(
@@ -514,7 +555,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedDotNet31BlazorTransport,
                 FeedDotNet31BlazorSymbols,
                 FeedForChecksums,
-                FeedForInstallers),
+                FeedForInstallers,
+                PublicAndInternalSymbolTargets),
 
             // "VS 16.6",
             new TargetChannelConfig(
@@ -525,7 +567,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedDotNetToolsTransport,
                 FeedDotNetToolsSymbols,
                 FeedForChecksums,
-                FeedForInstallers),
+                FeedForInstallers,
+                PublicAndInternalSymbolTargets),
 
             // "VS 16.7",
             new TargetChannelConfig(
@@ -536,7 +579,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedDotNetToolsTransport,
                 FeedDotNetToolsSymbols,
                 FeedForChecksums,
-                FeedForInstallers),
+                FeedForInstallers,
+                PublicAndInternalSymbolTargets),
 
             // "VS 16.8",
             new TargetChannelConfig(
@@ -547,7 +591,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedDotNetToolsTransport,
                 FeedDotNetToolsSymbols,
                 FeedForChecksums,
-                FeedForInstallers),
+                FeedForInstallers,
+                PublicAndInternalSymbolTargets),
 
             // "VS 16.9",
             new TargetChannelConfig(
@@ -558,7 +603,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedDotNetToolsTransport,
                 FeedDotNetToolsSymbols,
                 FeedForChecksums,
-                FeedForInstallers),
+                FeedForInstallers,
+                PublicAndInternalSymbolTargets),
 
             // "VS Master",
             new TargetChannelConfig(
@@ -569,7 +615,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedDotNetToolsTransport,
                 FeedDotNetToolsSymbols,
                 FeedForChecksums,
-                FeedForInstallers),
+                FeedForInstallers,
+                PublicAndInternalSymbolTargets),
 
             // ".NET Libraries",
             new TargetChannelConfig(
@@ -580,7 +627,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedDotNetLibrariesTransport,
                 FeedDotNetLibrariesSymbols,
                 FeedForChecksums,
-                FeedForInstallers),
+                FeedForInstallers,
+                PublicAndInternalSymbolTargets),
         };
         #endregion
     }

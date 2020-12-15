@@ -5,6 +5,10 @@
       <Uri>https://dev.azure.com/dnceng/internal/_git/dotnet-symuploader</Uri>
       <Sha>861806bc0dc685441cb3e8f6bd1ce5ed31e6b32b</Sha>
     </Dependency>
+    <Dependency Name="Microsoft.SymbolUploader" Version="1.1.152002">
+      <Uri>https://dev.azure.com/dnceng/internal/_git/dotnet-symuploader</Uri>
+      <Sha>165896e7efeecb70f01bd011257ead0f56d32c95</Sha>
+    </Dependency>
   </ProductDependencies>
   <ToolsetDependencies>
     <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="6.0.0-beta.20611.1">
