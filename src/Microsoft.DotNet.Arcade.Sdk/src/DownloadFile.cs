@@ -35,6 +35,8 @@ namespace Microsoft.DotNet.Arcade.Sdk
 
         public int Retries { get; set; } = 3;
 
+        public int TimeoutInSeconds { get; set; } = 100;
+
         private readonly CancellationTokenSource _cancellationSource = new CancellationTokenSource();
 
         public void Cancel() => _cancellationSource.Cancel();
@@ -111,6 +113,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
 
             using (var httpClient = new HttpClient(new HttpClientHandler { CheckCertificateRevocationList = true }))
             {
+                httpClient.Timeout = TimeSpan.FromSeconds(TimeoutInSeconds);
                 try
                 {
                     return await DownloadWithRetriesAsync(httpClient, uri);
