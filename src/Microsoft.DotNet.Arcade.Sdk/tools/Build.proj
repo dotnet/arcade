@@ -210,7 +210,7 @@
     <ItemGroup Condition="'$(RestoreUseStaticGraphEvaluation)' == 'true'">
       <_SolutionRestoreProps Include="RestoreUseStaticGraphEvaluation=true" />
       <!-- Enable binlog generation during static graph restore evaluation -->
-      <_SolutionRestoreProps Include="RESTORE_TASK_BINLOG_PARAMETERS=$(ArtifactsLogDir)Restore.binlog"  />
+      <_SolutionRestoreProps Include="RESTORE_TASK_BINLOG_PARAMETERS=$(ArtifactsLogDir)Restore.binlog" />
     </ItemGroup>
     
     <PropertyGroup>
