@@ -205,7 +205,12 @@
       <_SolutionRestoreProps Include="__BuildPhase=SolutionRestore" />
       <_SolutionRestoreProps Include="_NETCORE_ENGINEERING_TELEMETRY=Restore" />
       <_SolutionRestoreProps Include="MSBuildRestoreSessionId=$([System.Guid]::NewGuid())" />
-      <_SolutionRestoreProps Include="RestoreUseStaticGraphEvaluation=true" Condition="'$(RestoreUseStaticGraphEvaluation)' == 'true'" />
+    </ItemGroup>
+    
+    <ItemGroup Condition="'$(RestoreUseStaticGraphEvaluation)' == 'true'">
+      <_SolutionRestoreProps Include="RestoreUseStaticGraphEvaluation=true" />
+      <!-- Enable binlog generation during static graph restore evaluation -->
+      <_SolutionRestoreProps Include="RESTORE_TASK_BINLOG_PARAMETERS=$(ArtifactsLogDir)Restore.binlog" />
     </ItemGroup>
     
     <PropertyGroup>
