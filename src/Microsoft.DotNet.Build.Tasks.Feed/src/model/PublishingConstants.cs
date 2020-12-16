@@ -262,6 +262,19 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedForInstallers,
                 PublicAndInternalSymbolTargets),
 
+            // "General Testing Internal",
+            new TargetChannelConfig(
+                1647,
+                true,
+                PublishingInfraVersion.All,
+                "generaltestinginternal",
+                FeedGeneralTestingInternal,
+                FeedGeneralTestingInternal,
+                FeedGeneralTestingInternalSymbols,
+                FeedInternalForChecksums,
+                FeedInternalForInstallers,
+                InternalSymbolTargets),
+
             // ".NET Core Tooling Dev",
             new TargetChannelConfig(
                 548,
