@@ -72,7 +72,6 @@ To execute .app bundles, declare one or more `XHarnessAppBundleToTest` items:
 <ItemGroup>
   <!-- Find all directories named *.app -->
   <XHarnessAppBundleToTest Include="$([System.IO.Directory]::GetDirectories('$(TestArchiveTestsRoot)', '*.app', System.IO.SearchOption.AllDirectories))">
-    <Targets>ios-device</Targets>
     <Targets>ios-simulator-64_13.5</Targets>
   </XHarnessAppBundleToTest>
 </ItemGroup>
