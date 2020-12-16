@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.Build.Framework;
 
@@ -14,7 +13,8 @@ namespace Microsoft.DotNet.Helix.Sdk
     /// </summary>
     public class CreateXHarnessiOSWorkItems : XHarnessTaskBase
     {
-        private const string PayloadScriptName = "ios-helix-job-payload.sh";
+        private const string EntryPointScriptName = "xharness-helix-job.ios.sh";
+        private const string RunnerScriptName = "xharness-runner.ios.sh";
         private const int DefaultLaunchTimeoutInMinutes = 10;
         private const string LaunchTimeoutPropName = "LaunchTimeout";
         private const string TargetsPropName = "Targets";
@@ -111,8 +111,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             }
 
             string appName = Path.GetFileName(appBundleItem.ItemSpec);
-
-            string command = GetXHarnessCommand(appName, targets, testTimeout, launchTimeout, includesTestRunner, expectedExitCode);
+            string command = GetHelixCommand(appName, targets, testTimeout, launchTimeout, includesTestRunner, expectedExitCode);
 
             Log.LogMessage($"Creating work item with properties Identity: {workItemName}, Payload: {appFolderPath}, Command: {command}");
 
@@ -124,6 +123,19 @@ namespace Microsoft.DotNet.Helix.Sdk
                 { "Timeout", workItemTimeout.ToString() },
             });
         }
+
+        private string GetHelixCommand(string appName, string targets, TimeSpan testTimeout, TimeSpan launchTimeout, bool includesTestRunner, int expectedExitCode) =>
+            $"chmod +x {EntryPointScriptName} && ./{EntryPointScriptName} " +
+            $"--app \"$HELIX_WORKITEM_ROOT/{appName}\" " +
+             "--output-directory \"$HELIX_WORKITEM_UPLOAD_ROOT\" " +
+            $"--targets \"{targets}\" " +
+            $"--timeout \"{testTimeout}\" " +
+            $"--launch-timeout \"{launchTimeout}\" " +
+             "--xharness-cli-path \"$XHARNESS_CLI_PATH\" " +
+             "--command " + (includesTestRunner ? "test" : "run") +
+            (expectedExitCode != 0 ? $" --expected-exit-code \"{expectedExitCode}\"" : string.Empty) +
+            (!string.IsNullOrEmpty(XcodeVersion) ? $" --xcode-version \"{XcodeVersion}\"" : string.Empty) +
+            (!string.IsNullOrEmpty(AppArguments) ? $" --app-arguments \"{AppArguments}\"" : string.Empty);
 
         private async Task<string> CreateZipArchiveOfFolder(string folderToZip)
         {
@@ -145,46 +157,22 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             ZipFile.CreateFromDirectory(folderToZip, outputZipPath, CompressionLevel.Fastest, includeBaseDirectory: true);
 
-            // Add the payload script
-            Log.LogMessage($"Adding the Helix job payload script into the ziparchive");
-
-            using FileStream zipToOpen = new FileStream(outputZipPath, FileMode.Open);
-            using ZipArchive archive = new ZipArchive(zipToOpen, ZipArchiveMode.Update);
-            ZipArchiveEntry entry = archive.CreateEntry(PayloadScriptName);
-            using StreamWriter zipEntryWriter = new StreamWriter(entry.Open());
-            using FileStream payloadScriptStream = GetPayloadScriptStream();
-            await payloadScriptStream.CopyToAsync(zipEntryWriter.BaseStream);
+            Log.LogMessage($"Adding the Helix job payload scripts into the ziparchive");
+            await AddFileToPayload(outputZipPath, EntryPointScriptName);
+            await AddFileToPayload(outputZipPath, RunnerScriptName);
 
             return outputZipPath;
         }
 
-        private string GetXHarnessCommand(string appName, string targets, TimeSpan testTimeout, TimeSpan launchTimeout, bool includesTestRunner, int expectedExitCode)
+        private async Task AddFileToPayload(string payloadArchivePath, string fileName)
         {
-            // We need to call 'sudo launchctl' to spawn the process in a user session with GUI rendering capabilities
-            string xharnessRunCommand = $"sudo launchctl asuser `id -u` sh \"{PayloadScriptName}\" " +
-                                        $"--app \"$HELIX_WORKITEM_ROOT/{appName}\" " +
-                                         "--output-directory \"$HELIX_WORKITEM_UPLOAD_ROOT\" " +
-                                        $"--targets \"{targets}\" " +
-                                        $"--timeout \"{testTimeout}\" " +
-                                        $"--launch-timeout \"{launchTimeout}\" " +
-                                         "--xharness-cli-path \"$XHARNESS_CLI_PATH\" " +
-                                         "--helix-python-bin \"$HELIX_PYTHONPATH\" " +
-                                         "--python-path \"$PYTHONPATH\" " +
-                                         "--command " + (includesTestRunner ? "test" : "run") +
-                                        (expectedExitCode != 0 ? $" --expected-exit-code \"{expectedExitCode}\"" : string.Empty) +
-                                        (!string.IsNullOrEmpty(XcodeVersion) ? $" --xcode-version \"{XcodeVersion}\"" : string.Empty) +
-                                        (!string.IsNullOrEmpty(AppArguments) ? $" --app-arguments \"{AppArguments}\"" : string.Empty);
-
-            Log.LogMessage(MessageImportance.Low, $"Generated XHarness command: {xharnessRunCommand}");
-
-            return xharnessRunCommand;
-        }
-
-        private static FileStream GetPayloadScriptStream()
-        {
-            var assemblyDirectory = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
-            var scriptPath = Path.Combine(assemblyDirectory, "tools", "xharness-runner", PayloadScriptName);
-            return File.OpenRead(scriptPath);
+            var thisAssembly = typeof(CreateXHarnessiOSWorkItems).Assembly;
+            using Stream fileStream = thisAssembly.GetManifestResourceStream($"{thisAssembly.GetName().Name}.tools.xharness_runner.{fileName}");
+            using FileStream archiveStream = new FileStream(payloadArchivePath, FileMode.Open);
+            using ZipArchive archive = new ZipArchive(archiveStream, ZipArchiveMode.Update);
+            ZipArchiveEntry entry = archive.CreateEntry(fileName);
+            using StreamWriter zipEntryWriter = new StreamWriter(entry.Open());
+            await fileStream.CopyToAsync(zipEntryWriter.BaseStream);
         }
     }
 }

@@ -2,6 +2,8 @@
 
 ###
 ### This script is used as a payload of Helix jobs that execute iOS/tvOS workloads through XHarness.
+### It is executed via `launchctl asuser` in order to be able to spawn the simulator which needs to
+### run in a user session with GUI rendering capabilities.
 ###
 
 set -ex
@@ -14,8 +16,6 @@ launch_timeout=''
 xharness_cli_path=''
 xcode_version=''
 app_arguments=''
-helix_python_bin=''
-python_path=''
 expected_exit_code=0
 command='test'
 
@@ -62,14 +62,6 @@ while [[ $# -gt 0 ]]; do
         command="$2"
         shift
         ;;
-      --helix-python-bin)
-        helix_python_bin="$2"
-        shift
-        ;;
-      --python-path)
-        python_path="$2"
-        shift
-        ;;
       *)
         echo "Invalid argument: $1"
         exit 1
@@ -90,14 +82,6 @@ fi
 
 if [ -z "$xharness_cli_path" ]; then
     die "XHarness path wasn't provided";
-fi
-
-if [ -z "$helix_python_bin" ]; then
-    die "--helix-python-bin wasn't provided";
-fi
-
-if [ -z "$python_path" ]; then
-    die "--python-path wasn't provided";
 fi
 
 if [ -n "$app_arguments" ]; then
@@ -144,17 +128,6 @@ exit_code=$?
 # 80 - app crash
 if [ $exit_code -eq 80 ]; then
     sudo pkill -9 -f "$simulator_app"
-fi
-
-# This handles an issue where Simulators get reeaally slow and they start failing to install apps
-# The only solution is to reboot the machine, so we request a work item retry + MacOS reboot when this happens
-# 83 - timeout in installation
-if [ $exit_code -eq 83 ]; then
-    # Since we run this script using launchctl to run in a GUI-capable user session, some of the env vars are not set here
-    export PYTHONPATH=$PYTHONPATH:$python_path
-    "$helix_python_bin" -c "from helix.workitemutil import request_infra_retry; request_infra_retry('Retrying because iOS Simulator application install hung')"
-    "$helix_python_bin" -c "from helix.workitemutil import request_reboot; request_reboot('Rebooting because iOS Simulator application install hung ')"
-    exit $exit_code
 fi
 
 # The simulator logs comming from the sudo-spawned Simulator.app are not readable by the helix uploader
