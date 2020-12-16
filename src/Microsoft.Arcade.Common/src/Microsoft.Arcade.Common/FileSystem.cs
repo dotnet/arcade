@@ -4,7 +4,7 @@
 using System.IO;
 using System.Xml.Linq;
 
-namespace Microsoft.DotNet.Build.Tasks.Feed
+namespace Microsoft.Arcade.Common
 {
     public class FileSystem : IFileSystem
     {

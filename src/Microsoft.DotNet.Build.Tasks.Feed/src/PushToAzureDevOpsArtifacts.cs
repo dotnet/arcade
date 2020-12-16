@@ -1,6 +1,7 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using Microsoft.Arcade.Common;
 using Microsoft.Build.Framework;
 using Microsoft.DotNet.VersionTools.BuildManifest.Model;
 using Microsoft.Extensions.DependencyInjection;
@@ -63,16 +64,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public override void ConfigureServices(IServiceCollection collection)
         {
-            foreach(var service in collection)
-            {
-                services.Add(service);
-            }
-
-            services.TryAddSingleton<ISigningInformationModelFactory, SigningInformationModelFactory>();
-            services.TryAddSingleton<IBlobArtifactModelFactory, BlobArtifactModelFactory>();
-            services.TryAddSingleton<IPackageArtifactModelFactory, PackageArtifactModelFactory>();
-            services.TryAddSingleton<IBuildModelFactory, BuildModelFactory>();
-            services.TryAddSingleton<IFileSystem, FileSystem>();
+            collection.TryAddSingleton<ISigningInformationModelFactory, SigningInformationModelFactory>();
+            collection.TryAddSingleton<IBlobArtifactModelFactory, BlobArtifactModelFactory>();
+            collection.TryAddSingleton<IPackageArtifactModelFactory, PackageArtifactModelFactory>();
+            collection.TryAddSingleton<IBuildModelFactory, BuildModelFactory>();
+            collection.TryAddSingleton<IFileSystem, FileSystem>();
         }
 
         public bool ExecuteTask(IFileSystem fileSystem,

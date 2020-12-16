@@ -1,9 +1,12 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using Microsoft.Arcade.Common;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Microsoft.DotNet.Build.Tasks.Feed.Tests.TestDoubles;
+using Microsoft.DotNet.VersionTools.Automation;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -36,10 +39,20 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
 
         public BuildModelFactoryTests()
         {
+            ServiceProvider provider = new ServiceCollection()
+                .AddSingleton<ISigningInformationModelFactory, SigningInformationModelFactory>()
+                .AddSingleton<IBlobArtifactModelFactory, BlobArtifactModelFactory>()
+                .AddSingleton<IPackageArtifactModelFactory, PackageArtifactModelFactory>()
+                .AddSingleton<IPackageArchiveReaderFactory, PackageArchiveReaderFactory>()
+                .AddSingleton<INupkgInfoFactory, NupkgInfoFactory>()
+                .AddSingleton<IFileSystem, FileSystem>()
+                .AddSingleton(typeof(BuildModelFactory))
+                .BuildServiceProvider();
+
             _buildEngine = new MockBuildEngine();
             _stubTask = new StubTask(_buildEngine);
             _taskLoggingHelper = new TaskLoggingHelper(_stubTask);
-            _buildModelFactory = new BuildModelFactory(new SigningInformationModelFactory(), new BlobArtifactModelFactory(), new PackageArtifactModelFactory());
+            _buildModelFactory = ActivatorUtilities.CreateInstance<BuildModelFactory>(provider);
         }
 
         #region Artifact related tests

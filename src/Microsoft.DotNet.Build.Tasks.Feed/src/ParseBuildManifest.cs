@@ -1,8 +1,11 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using Microsoft.Arcade.Common;
 using Microsoft.Build.Framework;
 using Microsoft.DotNet.VersionTools.BuildManifest.Model;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,7 +17,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
     /// The intended use of this task is to push artifacts described in
     /// a build manifest to a static package feed.
     /// </summary>
-    public class ParseBuildManifest : MSBuild.Task
+    public class ParseBuildManifest : MSBuildTaskBase
     {
         private const string NuGetPackageInfoId = "PackageId";
         private const string NuGetPackageInfoVersion = "PackageVersion";
@@ -31,20 +34,20 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         [Output]
         public ITaskItem[] PackageInfos { get; set; }
 
-        public static ISigningInformationModelFactory SigningInformationModelFactory { get; set; } = new SigningInformationModelFactory();
+        public override void ConfigureServices(IServiceCollection collection)
+        {
+            collection.TryAddSingleton<ISigningInformationModelFactory, SigningInformationModelFactory>();
+            collection.TryAddSingleton<IBlobArtifactModelFactory, BlobArtifactModelFactory>();
+            collection.TryAddSingleton<IPackageArtifactModelFactory, PackageArtifactModelFactory>();
+            collection.TryAddSingleton<IBuildModelFactory, BuildModelFactory>();
+        }
 
-        public static IBlobArtifactModelFactory BlobArtifactModelFactory { get; set; } = new BlobArtifactModelFactory();
-
-        public static IPackageArtifactModelFactory PackageArtifactModelFactory { get; set; } = new PackageArtifactModelFactory();
-
-        public static IBuildModelFactory BuildModelFactory { get; set; } = new BuildModelFactory(SigningInformationModelFactory, BlobArtifactModelFactory, PackageArtifactModelFactory);
-
-        public override bool Execute()
+        public bool ExecuteTask(IBuildModelFactory buildModelFactory)
         {
             Log.LogMessage(MessageImportance.High, "Parsing build manifest file: {0}", AssetManifestPath);
             try
             {
-                BuildModel buildModel = BuildModelFactory.ManifestFileToModel(AssetManifestPath, Log);
+                BuildModel buildModel = buildModelFactory.ManifestFileToModel(AssetManifestPath, Log);
                 if (!Log.HasLoggedErrors)
                 {
                     if (buildModel.Artifacts.Blobs.Any())

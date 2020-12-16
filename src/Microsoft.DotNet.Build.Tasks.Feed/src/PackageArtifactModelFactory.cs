@@ -4,7 +4,6 @@
 using Microsoft.Build.Framework;
 using Microsoft.DotNet.VersionTools.Automation;
 using Microsoft.DotNet.VersionTools.BuildManifest.Model;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed
 {
@@ -15,19 +14,16 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
     public class PackageArtifactModelFactory : IPackageArtifactModelFactory
     {
-        private ServiceProvider _provider;
+        private readonly INupkgInfoFactory _nupkgInfoFactory;
 
-        public PackageArtifactModelFactory()
+        public PackageArtifactModelFactory(INupkgInfoFactory nupkgInfoFactory)
         {
-            _provider = new ServiceCollection()
-                .AddSingleton<IPackageArchiveReaderFactory, PackageArchiveReaderFactory>()
-                .AddTransient<NupkgInfo>()
-                .BuildServiceProvider();
+            _nupkgInfoFactory = nupkgInfoFactory;
         }
 
         public PackageArtifactModel CreatePackageArtifactModel(ITaskItem item)
         {
-            NupkgInfo info = ActivatorUtilities.CreateInstance(_provider, typeof(NupkgInfo), item.ItemSpec) as NupkgInfo;
+            NupkgInfo info = _nupkgInfoFactory.CreateNupkgInfo(item.ItemSpec);
 
             return new PackageArtifactModel
             {

@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using FluentAssertions;
+using Microsoft.Arcade.Common;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Microsoft.DotNet.Build.Tasks.Feed.Tests.TestDoubles;
@@ -139,8 +140,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 .AddSingleton(fileSystemMock.Object);
 
             task.ConfigureServices(collection);
-
-            task.Execute().Should().BeTrue();
+            using var provider = collection.BuildServiceProvider();
+            task.InvokeExecute(provider);
 
             var manifest = File.ReadAllText(TargetManifestPath);
             manifest.Should().Be(expectedManifest);

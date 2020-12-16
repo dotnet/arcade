@@ -121,6 +121,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.SourceBuil
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.SourceBuild.Tasks.Tests", "src\Microsoft.DotNet.SourceBuild\tests\Microsoft.DotNet.SourceBuild.Tasks.Tests.csproj", "{CE5278A3-2442-4309-A543-5BA5C1C76A2A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.Arcade.Common", "src\Microsoft.Arcade.Common\Microsoft.Arcade.Common.csproj", "{40799495-6741-43FD-B013-7CBE4A48A963}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -751,6 +753,18 @@ Global
 		{CE5278A3-2442-4309-A543-5BA5C1C76A2A}.Release|x64.Build.0 = Release|Any CPU
 		{CE5278A3-2442-4309-A543-5BA5C1C76A2A}.Release|x86.ActiveCfg = Release|Any CPU
 		{CE5278A3-2442-4309-A543-5BA5C1C76A2A}.Release|x86.Build.0 = Release|Any CPU
+		{40799495-6741-43FD-B013-7CBE4A48A963}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{40799495-6741-43FD-B013-7CBE4A48A963}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{40799495-6741-43FD-B013-7CBE4A48A963}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{40799495-6741-43FD-B013-7CBE4A48A963}.Debug|x64.Build.0 = Debug|Any CPU
+		{40799495-6741-43FD-B013-7CBE4A48A963}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{40799495-6741-43FD-B013-7CBE4A48A963}.Debug|x86.Build.0 = Debug|Any CPU
+		{40799495-6741-43FD-B013-7CBE4A48A963}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{40799495-6741-43FD-B013-7CBE4A48A963}.Release|Any CPU.Build.0 = Release|Any CPU
+		{40799495-6741-43FD-B013-7CBE4A48A963}.Release|x64.ActiveCfg = Release|Any CPU
+		{40799495-6741-43FD-B013-7CBE4A48A963}.Release|x64.Build.0 = Release|Any CPU
+		{40799495-6741-43FD-B013-7CBE4A48A963}.Release|x86.ActiveCfg = Release|Any CPU
+		{40799495-6741-43FD-B013-7CBE4A48A963}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

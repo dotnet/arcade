@@ -1,14 +1,16 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using Microsoft.Arcade.Common;
 using Microsoft.Build.Framework;
 using Microsoft.DotNet.Maestro.Client;
 using Microsoft.DotNet.VersionTools.BuildManifest.Model;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using System;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using MSBuild = Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed
 {
@@ -16,7 +18,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
     ///     The intended use of this task is to push artifacts described in
     ///     a build manifest to package feeds.
     /// </summary>
-    public class PublishArtifactsInManifest : MSBuild.Task
+    public class PublishArtifactsInManifest : MSBuildTaskBase
     {
         /// <summary>
         /// Comma separated list of Maestro++ Channel IDs to which the build should
@@ -140,16 +142,20 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// </summary>
         private static bool PublishedV3Manifest { get; set; }
 
-        public static ISigningInformationModelFactory SigningInformationModelFactory { get; set; } = new SigningInformationModelFactory();
+        private IBuildModelFactory _buildModelFactory;
 
-        public static IBlobArtifactModelFactory BlobArtifactModelFactory { get; set; } = new BlobArtifactModelFactory();
-
-        public static IPackageArtifactModelFactory PackageArtifactModelFactory{ get; set; } = new PackageArtifactModelFactory();
-
-        public static IBuildModelFactory BuildModelFactory { get; set; } = new BuildModelFactory(SigningInformationModelFactory, BlobArtifactModelFactory, PackageArtifactModelFactory);
-
-        public override bool Execute()
+        public override void ConfigureServices(IServiceCollection collection)
         {
+            collection.TryAddSingleton<ISigningInformationModelFactory, SigningInformationModelFactory>();
+            collection.TryAddSingleton<IBlobArtifactModelFactory, BlobArtifactModelFactory>();
+            collection.TryAddSingleton<IPackageArtifactModelFactory, PackageArtifactModelFactory>();
+            collection.TryAddSingleton<IBuildModelFactory, BuildModelFactory>();
+        }
+
+        public bool ExecuteTask(IBuildModelFactory buildModelFactory)
+        {
+            _buildModelFactory = buildModelFactory;
+
             return ExecuteAsync().GetAwaiter().GetResult();
         }
 
@@ -220,7 +226,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 return null;
             }
 
-            BuildModel buildModel = BuildModelFactory.ManifestFileToModel(manifestFullPath, Log);
+            BuildModel buildModel = _buildModelFactory.ManifestFileToModel(manifestFullPath, Log);
             
             if (buildModel.Identity.PublishingVersion == PublishingInfraVersion.Legacy)
             {

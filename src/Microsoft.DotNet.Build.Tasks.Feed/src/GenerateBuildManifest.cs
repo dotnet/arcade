@@ -1,17 +1,20 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using Microsoft.Arcade.Common;
 using Microsoft.Build.Framework;
 using Microsoft.DotNet.VersionTools.BuildManifest.Model;
 using MSBuild = Microsoft.Build.Utilities;
 using System;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed
 {
     /// <summary>
     /// This task generates an XML build manifest for a list of packages and files.
     /// </summary>
-    public class GenerateBuildManifest : MSBuild.Task
+    public class GenerateBuildManifest : MSBuildTaskBase
     {
         /// <summary>
         /// An list of files produced by the build.
@@ -111,17 +114,17 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// </summary>
         public bool IsReleaseOnlyPackageVersion { get; set; }
 
-        private IFileSystem _fileSystem { get; set; } = new FileSystem();
+        public override void ConfigureServices(IServiceCollection collection)
+        {
+            collection.TryAddSingleton<ISigningInformationModelFactory, SigningInformationModelFactory>();
+            collection.TryAddSingleton<IBlobArtifactModelFactory, BlobArtifactModelFactory>();
+            collection.TryAddSingleton<IPackageArtifactModelFactory, PackageArtifactModelFactory>();
+            collection.TryAddSingleton<IBuildModelFactory, BuildModelFactory>();
+            collection.TryAddSingleton<IFileSystem, FileSystem>();
+        }
 
-        public static ISigningInformationModelFactory SigningInformationModelFactory { get; set; } = new SigningInformationModelFactory();
-
-        public static IBlobArtifactModelFactory BlobArtifactModelFactory { get; set; } = new BlobArtifactModelFactory();
-
-        public static IPackageArtifactModelFactory PackageArtifactModelFactory { get; set; } = new PackageArtifactModelFactory();
-
-        public static IBuildModelFactory BuildModelFactory { get; set; } = new BuildModelFactory(SigningInformationModelFactory, BlobArtifactModelFactory, PackageArtifactModelFactory);
-
-        public override bool Execute()
+        public bool ExecuteTask(IFileSystem fileSystem,
+            IBuildModelFactory buildModelFactory)
         {
             try
             {
@@ -136,7 +139,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     }
                 }
                 
-                var buildModel = BuildModelFactory.CreateModelFromItems(
+                var buildModel = buildModelFactory.CreateModelFromItems(
                     Artifacts,
                     ItemsToSign,
                     StrongNameSignInfo,
@@ -154,7 +157,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     Log);
 
                 Log.LogMessage(MessageImportance.High, $"Writing build manifest file '{OutputPath}'...");
-                _fileSystem.WriteXmlToFile(OutputPath, buildModel.ToXml());
+                fileSystem.WriteXmlToFile(OutputPath, buildModel.ToXml());
             }
             catch (Exception e)
             {

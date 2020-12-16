@@ -1,6 +1,7 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using Microsoft.Arcade.Common;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Microsoft.DotNet.VersionTools.BuildManifest.Model;
@@ -49,22 +50,24 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
     public class BuildModelFactory : IBuildModelFactory
     {
-        private ISigningInformationModelFactory _signingInformationModelFactory { get; set; } = new SigningInformationModelFactory();
-        private IBlobArtifactModelFactory _blobArtifactModelFactory { get; set; } = new BlobArtifactModelFactory();
-        private IPackageArtifactModelFactory _packageArtifactModelFactory { get; set; } = new PackageArtifactModelFactory();
+        private readonly ISigningInformationModelFactory _signingInformationModelFactory;
+        private readonly IBlobArtifactModelFactory _blobArtifactModelFactory;
+        private readonly IPackageArtifactModelFactory _packageArtifactModelFactory;
+        private readonly IFileSystem _fileSystem;
 
         public BuildModelFactory(
             ISigningInformationModelFactory signingInformationModelFactory,
             IBlobArtifactModelFactory blobArtifactModelFactory,
-            IPackageArtifactModelFactory packageArtifactModelFactory)
+            IPackageArtifactModelFactory packageArtifactModelFactory,
+            IFileSystem fileSystem)
         {
             _signingInformationModelFactory = signingInformationModelFactory;
             _blobArtifactModelFactory = blobArtifactModelFactory;
             _packageArtifactModelFactory = packageArtifactModelFactory;
+            _fileSystem = fileSystem;
         }
 
-        public const string AssetsVirtualDir = "assets/";
-        public IFileSystem FileSystem { get; set; } = new FileSystem();
+        private const string AssetsVirtualDir = "assets/";
 
         /// <summary>
         /// Create a build manifest for packages, blobs, and associated signing information
@@ -111,7 +114,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 signingInformationModel: signingInformationModel);
 
             log.LogMessage(MessageImportance.High, $"Writing build manifest file '{assetManifestPath}'...");
-            FileSystem.WriteXmlToFile(assetManifestPath, model.ToXml());
+            _fileSystem.WriteXmlToFile(assetManifestPath, model.ToXml());
         }
 
         public BuildModel CreateModelFromItems(

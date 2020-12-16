@@ -3,7 +3,7 @@
 
 using System.Xml.Linq;
 
-namespace Microsoft.DotNet.Build.Tasks.Feed
+namespace Microsoft.Arcade.Common
 {
     public interface IFileSystem
     {
