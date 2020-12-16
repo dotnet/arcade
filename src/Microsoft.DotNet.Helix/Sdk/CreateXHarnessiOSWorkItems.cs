@@ -13,7 +13,7 @@ namespace Microsoft.DotNet.Helix.Sdk
     /// </summary>
     public class CreateXHarnessiOSWorkItems : XHarnessTaskBase
     {
-        private const string EntrypointScriptName = "xharness-helix-job.ios.sh";
+        private const string EntryPointScriptName = "xharness-helix-job.ios.sh";
         private const string RunnerScriptName = "xharness-runner.ios.sh";
         private const int DefaultLaunchTimeoutInMinutes = 10;
         private const string LaunchTimeoutPropName = "LaunchTimeout";
@@ -125,7 +125,7 @@ namespace Microsoft.DotNet.Helix.Sdk
         }
 
         private string GetHelixCommand(string appName, string targets, TimeSpan testTimeout, TimeSpan launchTimeout, bool includesTestRunner, int expectedExitCode) =>
-            $"chmod +x {EntrypointScriptName} && ./{EntrypointScriptName} " +
+            $"chmod +x {EntryPointScriptName} && ./{EntryPointScriptName} " +
             $"--app \"$HELIX_WORKITEM_ROOT/{appName}\" " +
              "--output-directory \"$HELIX_WORKITEM_UPLOAD_ROOT\" " +
             $"--targets \"{targets}\" " +
@@ -158,7 +158,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             ZipFile.CreateFromDirectory(folderToZip, outputZipPath, CompressionLevel.Fastest, includeBaseDirectory: true);
 
             Log.LogMessage($"Adding the Helix job payload scripts into the ziparchive");
-            await AddFileToPayload(outputZipPath, EntrypointScriptName);
+            await AddFileToPayload(outputZipPath, EntryPointScriptName);
             await AddFileToPayload(outputZipPath, RunnerScriptName);
 
             return outputZipPath;
