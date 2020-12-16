@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using Microsoft.DotNet.VersionTools.BuildManifest.Model;
+using NuGet.ContentModel;
 using System;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed.Model
@@ -60,8 +61,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
         /// </summary>
         public SymbolTargetType SymbolTargetType { get; }
 
+        public bool IsInternal { get; }
+
         public TargetChannelConfig(
             int id,
+            bool isInternal,
             PublishingInfraVersion publishingInfraVersion,
             string akaMSChannelName,
             string shippingFeed,
@@ -72,6 +76,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             SymbolTargetType symbolTargetType)
         {
             Id = id;
+            IsInternal = isInternal;
             PublishingInfraVersion = publishingInfraVersion;
             AkaMSChannelName = akaMSChannelName;
             ShippingFeed = shippingFeed;
@@ -93,7 +98,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 $"\n Symbols-feed: '{SymbolsFeed}' " +
                 $"\n Installers-feed: '{InstallersFeed}' " +
                 $"\n Checksums-feed: '{ChecksumsFeed}' " +
-                $"\n SymbolTargetType: '{SymbolTargetType}' ";
+                $"\n SymbolTargetType: '{SymbolTargetType}' " +
+                $"\n IsInternal: '{IsInternal}'";
         }
 
         public override bool Equals(object other)
@@ -101,19 +107,20 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             return other is TargetChannelConfig config &&
                    PublishingInfraVersion == config.PublishingInfraVersion &&
                    Id == config.Id &&
-                   AkaMSChannelName.Equals(config.AkaMSChannelName, StringComparison.OrdinalIgnoreCase) &&
-                   ShippingFeed.Equals(config.ShippingFeed, StringComparison.OrdinalIgnoreCase) &&
-                   TransportFeed.Equals(config.TransportFeed, StringComparison.OrdinalIgnoreCase) &&
-                   SymbolsFeed.Equals(config.SymbolsFeed, StringComparison.OrdinalIgnoreCase) &&
-                   ChecksumsFeed.Equals(config.ChecksumsFeed, StringComparison.OrdinalIgnoreCase) &&
-                   InstallersFeed.Equals(config.InstallersFeed, StringComparison.OrdinalIgnoreCase) &&
-                   SymbolTargetType == config.SymbolTargetType;
+                   String.Equals(AkaMSChannelName, config.AkaMSChannelName, StringComparison.OrdinalIgnoreCase) &&
+                   String.Equals(ShippingFeed, config.ShippingFeed, StringComparison.OrdinalIgnoreCase) &&
+                   String.Equals(TransportFeed, config.TransportFeed, StringComparison.OrdinalIgnoreCase) &&
+                   String.Equals(SymbolsFeed, config.SymbolsFeed, StringComparison.OrdinalIgnoreCase) &&
+                   String.Equals(ChecksumsFeed, config.ChecksumsFeed, StringComparison.OrdinalIgnoreCase) &&
+                   String.Equals(InstallersFeed, config.InstallersFeed, StringComparison.OrdinalIgnoreCase) &&
+                   IsInternal == config.IsInternal;
         }
 
         public override int GetHashCode()
         {
             return (PublishingInfraVersion, 
                 Id, 
+
                 AkaMSChannelName, 
                 ShippingFeed, 
                 TransportFeed, 

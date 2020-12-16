@@ -88,9 +88,9 @@
       <AkaMSCreatedBy Condition="'$(AkaMSCreatedBy)' == ''">dn-bot</AkaMSCreatedBy>
       <PublishSpecialClrFiles Condition="'$(PublishSpecialClrFiles)' == ''">false</PublishSpecialClrFiles>
       <InstallersFeedKey>$(InstallersAzureAccountKey)</InstallersFeedKey>
-      <InstallersFeedKey Condition="'$(InternalBuild)' == 'true'">$(InternalInstallersTargetStaticFeedKey)</InstallersFeedKey>
+      <InternalInstallersFeedKey>$(InternalInstallersTargetStaticFeedKey)</InternalInstallersFeedKey>
       <ChecksumsFeedKey>$(ChecksumsAzureAccountKey)</ChecksumsFeedKey>
-      <ChecksumsFeedKey Condition="'$(InternalBuild)' == 'true'">$(InternalChecksumsTargetStaticFeedKey)</ChecksumsFeedKey>
+      <InternalChecksumsFeedKey>$(InternalChecksumsTargetStaticFeedKey)</InternalChecksumsFeedKey>
     </PropertyGroup>
 
     <Error
@@ -110,6 +110,8 @@
       PublishInstallersAndChecksums="$(PublishInstallersAndChecksums)"
       ChecksumsFeedKey="$(ChecksumsFeedKey)"
       InstallersFeedKey="$(InstallersFeedKey)"
+      InternalChecksumsFeedKey="$(InternalChecksumsFeedKey)"
+      InternalInstallersFeedKey="$(InternalInstallersFeedKey)"
       AzureDevOpsFeedsKey="$(AzureDevOpsFeedsKey)"
       AzureStorageTargetFeedKey="$(AzureStorageTargetFeedPAT)"
       AssetManifestPaths="@(ManifestFiles)"

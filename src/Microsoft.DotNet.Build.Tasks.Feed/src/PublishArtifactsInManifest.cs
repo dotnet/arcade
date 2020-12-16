@@ -113,6 +113,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public string InstallersFeedKey { get; set; }
 
+        public string InternalInstallersFeedKey { get; set; }
+
+        public string InternalCheckSumsFeedKey { get; set; }
+
         public string AzureDevOpsFeedsKey { get; set; }
 
         /// <summary>
@@ -311,6 +315,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 AzureDevOpsFeedsKey = this.AzureDevOpsFeedsKey,
                 InstallersFeedKey = this.InstallersFeedKey,
                 CheckSumsFeedKey = this.ChecksumsFeedKey,
+                InternalCheckSumsFeedKey = this.InternalCheckSumsFeedKey,
+                InternalInstallersFeedKey = this.InternalInstallersFeedKey,
                 AzureStorageTargetFeedKey = this.AzureStorageTargetFeedKey,
                 PdbArtifactsBasePath = this.PdbArtifactsBasePath,
                 SymWebToken = this.SymWebToken,
