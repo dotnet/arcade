@@ -13,11 +13,11 @@ namespace Microsoft.Arcade.Common
             return File.Exists(path);
         }
 
-        public void WriteXmlToFile(string path, XElement content)
+        public void WriteToFile(string path, string content)
         {
             string dirPath = Path.GetDirectoryName(path);
             Directory.CreateDirectory(dirPath);
-            File.WriteAllText(path, content.ToString());
+            File.WriteAllText(path, content);
         }
     }
 }

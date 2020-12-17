@@ -7,9 +7,9 @@ namespace Microsoft.Arcade.Common
 {
     public interface IFileSystem
     {
-        public void WriteXmlToFile(string path, XElement content);
+        void WriteToFile(string path, string content);
 
         // File
-        public bool FileExists(string path);
+        bool FileExists(string path);
     }
 }

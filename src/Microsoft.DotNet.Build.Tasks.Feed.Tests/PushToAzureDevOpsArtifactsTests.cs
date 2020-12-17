@@ -9,12 +9,12 @@ using Microsoft.DotNet.Build.Tasks.Feed.Tests.TestDoubles;
 using Microsoft.DotNet.VersionTools.Automation;
 using Microsoft.DotNet.VersionTools.BuildManifest.Model;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Moq;
-using System;
+using NuGet.Packaging.Core;
+using NuGet.Versioning;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
-using System.Xml.Linq;
 using Xunit;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
@@ -22,65 +22,117 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
     public class PushToAzureDevOpsArtifactsTests
     {
         // We're using a fake file system so all of our paths can be fake, too
-        const string TargetManifestPath = @"C:\manifests\TestManifest.xml";
-        const string PackageA = @"C:\packages\test-package-a.nupkg";
-        const string PackageB = @"C:\packages\test-package-b.nupkg";
-        const string SampleManifest = @"C:\manifests\SampleManifest.xml";
+        private const string TARGET_MANIFEST_PATH = @"C:\manifests\TestManifest.xml";
+        private const string PACKAGE_A = @"C:\packages\test-package-a.6.0.492.nupkg";
+        private const string PACKAGE_B = @"C:\packages\test-package-b.6.0.492.nupkg";
+        private const string SAMPLE_MANIFEST = @"C:\manifests\SampleManifest.xml";
+        private const string NUPKG_VERSION = "6.0.492";
 
-        static TaskItem[] TaskItems = new TaskItem[]
+        private readonly TaskItem[] TaskItems = new TaskItem[]
         {
-            new TaskItem(PackageA, new Dictionary<string, string>
+            new TaskItem(PACKAGE_A, new Dictionary<string, string>
             {
-                { "RelativeBlobPath", PackageA },
+                { "RelativeBlobPath", PACKAGE_A },
                 { "IsShipping", "false" },
                 { "ManifestArtifactData", "Nonshipping=true" },
             }),
-            new TaskItem(PackageB, new Dictionary<string, string>
+            new TaskItem(PACKAGE_B, new Dictionary<string, string>
             {
-                { "RelativeBlobPath", PackageB },
+                { "RelativeBlobPath", PACKAGE_B },
                 { "IsShipping", "true" },
                 { "ManifestArtifactData", "Nonshipping=false" },
             }),
-            new TaskItem(SampleManifest, new Dictionary<string, string>
+            new TaskItem(SAMPLE_MANIFEST, new Dictionary<string, string>
             {
                 { "IsShipping", "false" },
-                { "RelativeBlobPath", SampleManifest },
+                { "RelativeBlobPath", SAMPLE_MANIFEST },
                 { "ManifestArtifactData", "Nonshipping=false" },
                 { "PublishFlatContainer", "true" },
             }),
         };
 
+        private PushToAzureDevOpsArtifacts ConstructPushToAzureDevOpsArtifactsTask()
+        {
+            return new PushToAzureDevOpsArtifacts
+            {
+                BuildEngine = new MockBuildEngine(),
+                AssetManifestPath = TARGET_MANIFEST_PATH,
+                AzureDevOpsBuildId = 123456,
+                AzureDevOpsCollectionUri = "https://dev.azure.com/dnceng/",
+                AzureDevOpsProject = "internal",
+                IsStableBuild = true,
+                IsReleaseOnlyPackageVersion = false,
+                ItemsToPush = TaskItems,
+                ManifestBuildData = new string[] { $"InitialAssetsLocation=cloud" },
+                ManifestBranch = "/refs/heads/branch",
+                ManifestBuildId = "12345.6",
+                ManifestCommit = "1234567890abcdef",
+                ManifestRepoUri = "https://dnceng@dev.azure.com/dnceng/internal/test-repo",
+            };
+        }
+
+        private void CreateMockServiceCollection(IServiceCollection collection)
+        {
+            Mock<IFileSystem> fileSystemMock = new();
+            Mock<ISigningInformationModelFactory> signingInformationModelFactoryMock = new();
+            Mock<IBlobArtifactModelFactory> blobArtifactModelFactoryMock = new();
+            Mock<IPackageArtifactModelFactory> packageArtifactModelFactoryMock = new();
+            Mock<IBuildModelFactory> buildModelFactoryMock = new();
+            Mock<IPackageArchiveReaderFactory> packageArchiveReaderFactoryMock = new();
+            Mock<INupkgInfoFactory> nupkgInfoFactoryMock = new();
+
+            collection.TryAddSingleton(signingInformationModelFactoryMock.Object);
+            collection.TryAddSingleton(blobArtifactModelFactoryMock.Object);
+            collection.TryAddSingleton(packageArtifactModelFactoryMock.Object);
+            collection.TryAddSingleton(buildModelFactoryMock.Object);
+            collection.TryAddSingleton(fileSystemMock.Object);
+            collection.TryAddSingleton(nupkgInfoFactoryMock.Object);
+            collection.TryAddSingleton(packageArchiveReaderFactoryMock.Object);
+        }
+
         [Fact]
         public void HasRecordedPublishingVersion()
         {
-            var targetManifestPath = $"{Path.GetTempPath()}TestManifest-{Guid.NewGuid()}.xml";
             var buildId = "1.2.3";
             var initialAssetsLocation = "cloud";
             var isStable = false;
             var isReleaseOnlyPackageVersion = false;
             var expectedManifestContent = $"<Build PublishingVersion=\"{(int)PublishingInfraVersion.Latest}\" BuildId=\"{buildId}\" InitialAssetsLocation=\"{initialAssetsLocation}\" IsReleaseOnlyPackageVersion=\"{isReleaseOnlyPackageVersion.ToString().ToLower()}\" IsStable=\"{isStable.ToString().ToLower()}\" />";
 
-            var buildEngine = new MockBuildEngine();
             var task = new PushToAzureDevOpsArtifacts
             {
-                BuildEngine = buildEngine,
+                BuildEngine = new MockBuildEngine(),
                 ItemsToPush = new TaskItem[0],
                 IsStableBuild = isStable,
                 ManifestBuildId = buildId,
                 IsReleaseOnlyPackageVersion = isReleaseOnlyPackageVersion,
                 ManifestBuildData = new string[] { $"InitialAssetsLocation={initialAssetsLocation}" },
-                AssetManifestPath = targetManifestPath
+                AssetManifestPath = TARGET_MANIFEST_PATH
             };
 
-            task.Execute().Should().BeTrue();
+            // Mocks
+            Mock<IFileSystem> fileSystemMock = new Mock<IFileSystem>();
+            IList<string> actualPath = new List<string>();
+            IList<string> actualBuildModel = new List<string>();
+            fileSystemMock.Setup(m => m.WriteToFile(Capture.In(actualPath), Capture.In(actualBuildModel))).Verifiable();
 
-            File.ReadAllText(targetManifestPath).Should().Be(expectedManifestContent);
+            // Dependency Injection setup
+            var collection = new ServiceCollection()
+                .AddSingleton(fileSystemMock.Object)
+                .AddSingleton<IBuildModelFactory, BuildModelFactory>();            
+            CreateMockServiceCollection(collection);
+            task.ConfigureServices(collection);
+            using var provider = collection.BuildServiceProvider();
+
+            // Act and Assert
+            task.InvokeExecute(provider).Should().BeTrue();
+            actualPath[0].Should().Be(TARGET_MANIFEST_PATH);
+            actualBuildModel[0].Should().Be(expectedManifestContent);
         }
 
         [Fact]
         public void UsesCustomPublishingVersion()
         {
-            var targetManifestPath = $"{Path.GetTempPath()}TestManifest-{Guid.NewGuid()}.xml";
             var buildId = "1.2.3";
             var initialAssetsLocation = "cloud";
             var isStable = false;
@@ -88,148 +140,234 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             var isReleaseOnlyPackageVersion = false;
             var expectedManifestContent = $"<Build PublishingVersion=\"{publishingInfraVersion}\" BuildId=\"{buildId}\" InitialAssetsLocation=\"{initialAssetsLocation}\" IsReleaseOnlyPackageVersion=\"{isReleaseOnlyPackageVersion.ToString().ToLower()}\" IsStable=\"{isStable.ToString().ToLower()}\" />";
 
-            var buildEngine = new MockBuildEngine();
             var task = new PushToAzureDevOpsArtifacts
             {
-                BuildEngine = buildEngine,
+                BuildEngine = new MockBuildEngine(),
                 ItemsToPush = new TaskItem[0],
                 IsStableBuild = isStable,
                 IsReleaseOnlyPackageVersion = isReleaseOnlyPackageVersion,
                 ManifestBuildId = buildId,
                 ManifestBuildData = new string[] { $"InitialAssetsLocation={initialAssetsLocation}" },
                 PublishingVersion = publishingInfraVersion,
-                AssetManifestPath = targetManifestPath
+                AssetManifestPath = TARGET_MANIFEST_PATH
             };
 
-            task.Execute().Should().BeTrue();
+            // Mocks
+            Mock<IFileSystem> fileSystemMock = new Mock<IFileSystem>();
+            IList<string> actualPath = new List<string>();
+            IList<string> actualBuildModel = new List<string>();
+            fileSystemMock.Setup(m => m.WriteToFile(Capture.In(actualPath), Capture.In(actualBuildModel))).Verifiable();
 
-            File.ReadAllText(targetManifestPath).Should().Be(expectedManifestContent);
+            // Dependency Injection setup
+            var collection = new ServiceCollection()
+                .AddSingleton(fileSystemMock.Object)
+                .AddSingleton<IBuildModelFactory, BuildModelFactory>();
+            CreateMockServiceCollection(collection);
+            task.ConfigureServices(collection);
+            using var provider = collection.BuildServiceProvider();
+
+            // Act and Assert
+            task.InvokeExecute(provider).Should().BeTrue();
+            actualPath[0].Should().Be(TARGET_MANIFEST_PATH);
+            actualBuildModel[0].Should().Be(expectedManifestContent);
         }
         
         [Fact]
         public void ProducesBasicManifest()
         {
-            var buildEngine = new MockBuildEngine();
-            /*ServiceProvider mockNupkgInfoProvider = new ServiceCollection()
-                .AddLogging()
-                .AddSingleton<NupkgInfo>(f => { return new MockNupkgInfo(); })
-                .BuildServiceProvider();*/
-
-             string MockNupkgVersion = "6.0.492";
-        Mock<NupkgInfo> nupkgInfoMock = new Mock<NupkgInfo>();
-
-            string expectedManifest = $@"<Build PublishingVersion=""2"" Name=""https://dnceng@dev.azure.com/dnceng/internal/test-repo"" BuildId=""12345.6"" Branch=""/refs/heads/branch"" Commit=""1234567890abcdef"" InitialAssetsLocation=""cloud"" IsReleaseOnlyPackageVersion=""False"" IsStable=""True"">
-  <Package Id=""{Path.GetFileNameWithoutExtension(PackageA)}"" Version=""{MockNupkgVersion}"" Nonshipping=""true"" />
-  <Package Id=""{Path.GetFileNameWithoutExtension(PackageB)}"" Version=""{MockNupkgVersion}"" Nonshipping=""false"" />
-  <Blob Id=""{SampleManifest}"" Nonshipping=""false"" />
+            string expectedManifestContent = $@"<Build PublishingVersion=""2"" Name=""https://dnceng@dev.azure.com/dnceng/internal/test-repo"" BuildId=""12345.6"" Branch=""/refs/heads/branch"" Commit=""1234567890abcdef"" InitialAssetsLocation=""cloud"" IsReleaseOnlyPackageVersion=""false"" IsStable=""true"">
+  <Package Id=""{Path.GetFileNameWithoutExtension(PACKAGE_A)}"" Version=""{NUPKG_VERSION}"" Nonshipping=""true"" />
+  <Package Id=""{Path.GetFileNameWithoutExtension(PACKAGE_B)}"" Version=""{NUPKG_VERSION}"" Nonshipping=""false"" />
+  <Blob Id=""{SAMPLE_MANIFEST}"" Nonshipping=""false"" />
 </Build>";
 
-            PushToAzureDevOpsArtifacts task = ConstructPushToAzureDevOpsArtifactsTask(buildEngine);
+            PushToAzureDevOpsArtifacts task = ConstructPushToAzureDevOpsArtifactsTask();
 
-            Mock<IFileSystem> fileSystemMock = new();
-            Mock<ISigningInformationModelFactory> signingInformationModelFactoryMock = new();
-            Mock<IBlobArtifactModelFactory> blobArtifactModelFactoryMock = new();
-            Mock<IPackageArtifactModelFactory> packageArtifactModelFactoryMock = new();
-            Mock<IBuildModelFactory> buildModelFactoryMock = new();
+            // Mocks
+            Mock<IFileSystem> fileSystemMock = new Mock<IFileSystem>();
+            IList<string> actualPath = new List<string>();
+            IList<string> actualBuildModel = new List<string>();
+            IList<string> files = new List<string>{ PACKAGE_A, PACKAGE_B, SAMPLE_MANIFEST };
+            fileSystemMock.Setup(m => m.WriteToFile(Capture.In(actualPath), Capture.In(actualBuildModel))).Verifiable();
+            fileSystemMock.Setup(m => m.FileExists(Capture.In(files))).Returns(true);
 
+            Mock<INupkgInfoFactory> nupkgInfoFactoryMock = new Mock<INupkgInfoFactory>();
+            IList<string> actualNupkgInfoPath = new List<string>();
+            nupkgInfoFactoryMock.Setup(m => m.CreateNupkgInfo(PACKAGE_A)).Returns(new NupkgInfo(new PackageIdentity(
+                id: Path.GetFileNameWithoutExtension(PACKAGE_A), 
+                version: new NuGetVersion(NUPKG_VERSION)
+            )));
+            nupkgInfoFactoryMock.Setup(m => m.CreateNupkgInfo(PACKAGE_B)).Returns(new NupkgInfo(new PackageIdentity(
+                id: Path.GetFileNameWithoutExtension(PACKAGE_B),
+                version: new NuGetVersion(NUPKG_VERSION)
+            )));
+
+            // Dependency Injection setup
             var collection = new ServiceCollection()
-                .AddSingleton(signingInformationModelFactoryMock.Object)
-                .AddSingleton(blobArtifactModelFactoryMock.Object)
-                .AddSingleton(packageArtifactModelFactoryMock.Object)
-                .AddSingleton(buildModelFactoryMock.Object)
-                .AddSingleton(fileSystemMock.Object);
-
+                .AddSingleton(fileSystemMock.Object)
+                .AddSingleton<IBuildModelFactory, BuildModelFactory>()
+                .AddSingleton<IPackageArtifactModelFactory, PackageArtifactModelFactory>()
+                .AddSingleton<IBlobArtifactModelFactory, BlobArtifactModelFactory>()
+                .AddSingleton(nupkgInfoFactoryMock.Object);
+            CreateMockServiceCollection(collection);
             task.ConfigureServices(collection);
             using var provider = collection.BuildServiceProvider();
-            task.InvokeExecute(provider);
 
-            var manifest = File.ReadAllText(TargetManifestPath);
-            manifest.Should().Be(expectedManifest);
+            // Act and Assert
+            task.InvokeExecute(provider).Should().BeTrue();
+            actualPath[0].Should().Be(TARGET_MANIFEST_PATH);
+            actualBuildModel[0].Should().Be(expectedManifestContent);
         }
-        /*
-        [Test]
+        
+        [Fact]
         public void PublishFlatContainerManifest()
         {
-            var buildEngine = new MockBuildEngine();
-            ServiceProvider mockNupkgInfoProvider = new ServiceCollection()
-                .AddLogging()
-                .AddSingleton<NupkgInfo>(f => { return new MockNupkgInfo(); })
-                .BuildServiceProvider();
-
-            PushToAzureDevOpsArtifacts task = ConstructPushToAzureDevOpsArtifactsTask(buildEngine, mockNupkgInfoProvider);
+            PushToAzureDevOpsArtifacts task = ConstructPushToAzureDevOpsArtifactsTask();
             task.PublishFlatContainer = true;
 
-            string expectedManifest = $@"<Build PublishingVersion=""{(int)PublishingInfraVersion.Latest}"" Name=""https://dnceng@dev.azure.com/dnceng/internal/test-repo"" BuildId=""12345.6"" Branch=""/refs/heads/branch"" Commit=""1234567890abcdef"" InitialAssetsLocation=""cloud"" IsReleaseOnlyPackageVersion=""False"" IsStable=""True"">
-  <Blob Id=""{SampleManifest}"" Nonshipping=""false"" />
-  <Blob Id=""{PackageA}"" Nonshipping=""true"" />
-  <Blob Id=""{PackageB}"" Nonshipping=""false"" />
+            string expectedManifestContent = $@"<Build PublishingVersion=""{(int)PublishingInfraVersion.Latest}"" Name=""https://dnceng@dev.azure.com/dnceng/internal/test-repo"" BuildId=""12345.6"" Branch=""/refs/heads/branch"" Commit=""1234567890abcdef"" InitialAssetsLocation=""cloud"" IsReleaseOnlyPackageVersion=""false"" IsStable=""true"">
+  <Blob Id=""{SAMPLE_MANIFEST}"" Nonshipping=""false"" />
+  <Blob Id=""{PACKAGE_A}"" Nonshipping=""true"" />
+  <Blob Id=""{PACKAGE_B}"" Nonshipping=""false"" />
 </Build>";
 
-            task.Execute().Should().BeTrue();
+            // Mocks
+            Mock<IFileSystem> fileSystemMock = new Mock<IFileSystem>();
+            IList<string> actualPath = new List<string>();
+            IList<string> actualBuildModel = new List<string>();
+            IList<string> files = new List<string> { PACKAGE_A, PACKAGE_B, SAMPLE_MANIFEST };
+            fileSystemMock.Setup(m => m.WriteToFile(Capture.In(actualPath), Capture.In(actualBuildModel))).Verifiable();
+            fileSystemMock.Setup(m => m.FileExists(Capture.In(files))).Returns(true);
 
-            var manifest = task.FileSystem.FileReadAllText(TargetManifestPath);
-            manifest.Should().Be(expectedManifest);
-        }*/
-        /*
-        [Test]
+            Mock<INupkgInfoFactory> nupkgInfoFactoryMock = new Mock<INupkgInfoFactory>();
+            IList<string> actualNupkgInfoPath = new List<string>();
+            nupkgInfoFactoryMock.Setup(m => m.CreateNupkgInfo(PACKAGE_A)).Returns(new NupkgInfo(new PackageIdentity(
+                id: Path.GetFileNameWithoutExtension(PACKAGE_A),
+                version: new NuGetVersion(NUPKG_VERSION)
+            )));
+            nupkgInfoFactoryMock.Setup(m => m.CreateNupkgInfo(PACKAGE_B)).Returns(new NupkgInfo(new PackageIdentity(
+                id: Path.GetFileNameWithoutExtension(PACKAGE_B),
+                version: new NuGetVersion(NUPKG_VERSION)
+            )));
+
+            // Dependency Injection setup
+            var collection = new ServiceCollection()
+                .AddSingleton(fileSystemMock.Object)
+                .AddSingleton<IBuildModelFactory, BuildModelFactory>()
+                .AddSingleton<IPackageArtifactModelFactory, PackageArtifactModelFactory>()
+                .AddSingleton<IBlobArtifactModelFactory, BlobArtifactModelFactory>()
+                .AddSingleton(nupkgInfoFactoryMock.Object);
+            CreateMockServiceCollection(collection);
+            task.ConfigureServices(collection);
+            using var provider = collection.BuildServiceProvider();
+
+            // Act and Assert
+            task.InvokeExecute(provider).Should().BeTrue();
+            actualPath[0].Should().Be(TARGET_MANIFEST_PATH);
+            actualBuildModel[0].Should().Be(expectedManifestContent);
+        }
+        
+        [Fact]
         public void IsNotStableBuildPath()
         {
-            var buildEngine = new MockBuildEngine();
-            ServiceProvider mockNupkgInfoProvider = new ServiceCollection()
-                .AddLogging()
-                .AddSingleton<NupkgInfo>(f => { return new MockNupkgInfo(); })
-                .BuildServiceProvider();
-
-            PushToAzureDevOpsArtifacts task = ConstructPushToAzureDevOpsArtifactsTask(buildEngine, mockNupkgInfoProvider);
+            PushToAzureDevOpsArtifacts task = ConstructPushToAzureDevOpsArtifactsTask();
             task.IsStableBuild = false;
 
-            string expectedManifest = $@"<Build PublishingVersion=""{(int)PublishingInfraVersion.Latest}"" Name=""https://dnceng@dev.azure.com/dnceng/internal/test-repo"" BuildId=""12345.6"" Branch=""/refs/heads/branch"" Commit=""1234567890abcdef"" InitialAssetsLocation=""cloud"" IsReleaseOnlyPackageVersion=""False"" IsStable=""False"">
-  <Package Id=""{Path.GetFileNameWithoutExtension(PackageA)}"" Version=""{MockNupkgInfo.MockNupkgVersion}"" Nonshipping=""true"" />
-  <Package Id=""{Path.GetFileNameWithoutExtension(PackageB)}"" Version=""{MockNupkgInfo.MockNupkgVersion}"" Nonshipping=""false"" />
-  <Blob Id=""{SampleManifest}"" Nonshipping=""false"" />
+            string expectedManifestContent = $@"<Build PublishingVersion=""{(int)PublishingInfraVersion.Latest}"" Name=""https://dnceng@dev.azure.com/dnceng/internal/test-repo"" BuildId=""12345.6"" Branch=""/refs/heads/branch"" Commit=""1234567890abcdef"" InitialAssetsLocation=""cloud"" IsReleaseOnlyPackageVersion=""false"" IsStable=""false"">
+  <Package Id=""{Path.GetFileNameWithoutExtension(PACKAGE_A)}"" Version=""{NUPKG_VERSION}"" Nonshipping=""true"" />
+  <Package Id=""{Path.GetFileNameWithoutExtension(PACKAGE_B)}"" Version=""{NUPKG_VERSION}"" Nonshipping=""false"" />
+  <Blob Id=""{SAMPLE_MANIFEST}"" Nonshipping=""false"" />
 </Build>";
 
-            task.Execute().Should().BeTrue();
+            // Mocks
+            Mock<IFileSystem> fileSystemMock = new Mock<IFileSystem>();
+            IList<string> actualPath = new List<string>();
+            IList<string> actualBuildModel = new List<string>();
+            IList<string> files = new List<string> { PACKAGE_A, PACKAGE_B, SAMPLE_MANIFEST };
+            fileSystemMock.Setup(m => m.WriteToFile(Capture.In(actualPath), Capture.In(actualBuildModel))).Verifiable();
+            fileSystemMock.Setup(m => m.FileExists(Capture.In(files))).Returns(true);
 
-            var manifest = task.FileSystem.FileReadAllText(task.AssetManifestPath);
-            manifest.Should().Be(expectedManifest);
-        }*/
-        /*
-        [Test]
+            Mock<INupkgInfoFactory> nupkgInfoFactoryMock = new Mock<INupkgInfoFactory>();
+            IList<string> actualNupkgInfoPath = new List<string>();
+            nupkgInfoFactoryMock.Setup(m => m.CreateNupkgInfo(PACKAGE_A)).Returns(new NupkgInfo(new PackageIdentity(
+                id: Path.GetFileNameWithoutExtension(PACKAGE_A),
+                version: new NuGetVersion(NUPKG_VERSION)
+            )));
+            nupkgInfoFactoryMock.Setup(m => m.CreateNupkgInfo(PACKAGE_B)).Returns(new NupkgInfo(new PackageIdentity(
+                id: Path.GetFileNameWithoutExtension(PACKAGE_B),
+                version: new NuGetVersion(NUPKG_VERSION)
+            )));
+
+            // Dependency Injection setup
+            var collection = new ServiceCollection()
+                .AddSingleton(fileSystemMock.Object)
+                .AddSingleton<IBuildModelFactory, BuildModelFactory>()
+                .AddSingleton<IPackageArtifactModelFactory, PackageArtifactModelFactory>()
+                .AddSingleton<IBlobArtifactModelFactory, BlobArtifactModelFactory>()
+                .AddSingleton(nupkgInfoFactoryMock.Object);
+            CreateMockServiceCollection(collection);
+            task.ConfigureServices(collection);
+            using var provider = collection.BuildServiceProvider();
+
+            // Act and Assert
+            task.InvokeExecute(provider).Should().BeTrue();
+            actualPath[0].Should().Be(TARGET_MANIFEST_PATH);
+            actualBuildModel[0].Should().Be(expectedManifestContent);
+        }
+        
+        [Fact]
         public void IsReleaseOnlyPackageVersionPath()
         {
-            var buildEngine = new MockBuildEngine();
-            ServiceProvider mockNupkgInfoProvider = new ServiceCollection()
-                .AddLogging()
-                .AddSingleton<NupkgInfo>(f => { return new MockNupkgInfo(); })
-                .BuildServiceProvider();
-
-            PushToAzureDevOpsArtifacts task = ConstructPushToAzureDevOpsArtifactsTask(buildEngine, mockNupkgInfoProvider);
+            PushToAzureDevOpsArtifacts task = ConstructPushToAzureDevOpsArtifactsTask();
             task.IsReleaseOnlyPackageVersion = true;
 
-            string expectedManifest = $@"<Build PublishingVersion=""{(int)PublishingInfraVersion.Latest}"" Name=""https://dnceng@dev.azure.com/dnceng/internal/test-repo"" BuildId=""12345.6"" Branch=""/refs/heads/branch"" Commit=""1234567890abcdef"" InitialAssetsLocation=""cloud"" IsReleaseOnlyPackageVersion=""True"" IsStable=""True"">
-  <Package Id=""{Path.GetFileNameWithoutExtension(PackageA)}"" Version=""{MockNupkgInfo.MockNupkgVersion}"" Nonshipping=""true"" />
-  <Package Id=""{Path.GetFileNameWithoutExtension(PackageB)}"" Version=""{MockNupkgInfo.MockNupkgVersion}"" Nonshipping=""false"" />
-  <Blob Id=""{SampleManifest}"" Nonshipping=""false"" />
+            string expectedManifestContent = $@"<Build PublishingVersion=""{(int)PublishingInfraVersion.Latest}"" Name=""https://dnceng@dev.azure.com/dnceng/internal/test-repo"" BuildId=""12345.6"" Branch=""/refs/heads/branch"" Commit=""1234567890abcdef"" InitialAssetsLocation=""cloud"" IsReleaseOnlyPackageVersion=""true"" IsStable=""true"">
+  <Package Id=""{Path.GetFileNameWithoutExtension(PACKAGE_A)}"" Version=""{NUPKG_VERSION}"" Nonshipping=""true"" />
+  <Package Id=""{Path.GetFileNameWithoutExtension(PACKAGE_B)}"" Version=""{NUPKG_VERSION}"" Nonshipping=""false"" />
+  <Blob Id=""{SAMPLE_MANIFEST}"" Nonshipping=""false"" />
 </Build>";
 
-            task.Execute().Should().BeTrue();
+            // Mocks
+            Mock<IFileSystem> fileSystemMock = new Mock<IFileSystem>();
+            IList<string> actualPath = new List<string>();
+            IList<string> actualBuildModel = new List<string>();
+            IList<string> files = new List<string> { PACKAGE_A, PACKAGE_B, SAMPLE_MANIFEST };
+            fileSystemMock.Setup(m => m.WriteToFile(Capture.In(actualPath), Capture.In(actualBuildModel))).Verifiable();
+            fileSystemMock.Setup(m => m.FileExists(Capture.In(files))).Returns(true);
 
-            var manifest = task.FileSystem.FileReadAllText(task.AssetManifestPath);
-            manifest.Should().Be(expectedManifest);
+            Mock<INupkgInfoFactory> nupkgInfoFactoryMock = new Mock<INupkgInfoFactory>();
+            IList<string> actualNupkgInfoPath = new List<string>();
+            nupkgInfoFactoryMock.Setup(m => m.CreateNupkgInfo(PACKAGE_A)).Returns(new NupkgInfo(new PackageIdentity(
+                id: Path.GetFileNameWithoutExtension(PACKAGE_A),
+                version: new NuGetVersion(NUPKG_VERSION)
+            )));
+            nupkgInfoFactoryMock.Setup(m => m.CreateNupkgInfo(PACKAGE_B)).Returns(new NupkgInfo(new PackageIdentity(
+                id: Path.GetFileNameWithoutExtension(PACKAGE_B),
+                version: new NuGetVersion(NUPKG_VERSION)
+            )));
+
+            // Dependency Injection setup
+            var collection = new ServiceCollection()
+                .AddSingleton(fileSystemMock.Object)
+                .AddSingleton<IBuildModelFactory, BuildModelFactory>()
+                .AddSingleton<IPackageArtifactModelFactory, PackageArtifactModelFactory>()
+                .AddSingleton<IBlobArtifactModelFactory, BlobArtifactModelFactory>()
+                .AddSingleton(nupkgInfoFactoryMock.Object);
+            CreateMockServiceCollection(collection);
+            task.ConfigureServices(collection);
+            using var provider = collection.BuildServiceProvider();
+
+            // Act and Assert
+            task.InvokeExecute(provider).Should().BeTrue();
+            actualPath[0].Should().Be(TARGET_MANIFEST_PATH);
+            actualBuildModel[0].Should().Be(expectedManifestContent);
         }
-        */
-        /*
-        [Test]
+        
+        
+        [Fact]
         public void SigningInfoInManifest()
         {
-            var buildEngine = new MockBuildEngine();
-            ServiceProvider mockNupkgInfoProvider = new ServiceCollection()
-                .AddLogging()
-                .AddSingleton<NupkgInfo>(f => { return new MockNupkgInfo(); })
-                .BuildServiceProvider();
-
-            PushToAzureDevOpsArtifacts task = ConstructPushToAzureDevOpsArtifactsTask(buildEngine, mockNupkgInfoProvider);
+            PushToAzureDevOpsArtifacts task = ConstructPushToAzureDevOpsArtifactsTask();
             task.FileExtensionSignInfo = new ITaskItem[]
             {
                 new TaskItem(".dll", new Dictionary<string, string>
@@ -271,25 +409,25 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             {
                 new TaskItem("VeryCoolStrongName", new Dictionary<string, string>
                 {
-                    { "PublicKeyToken", "123456789ABCDEF00" },
+                    { "PublicKeyToken", "123456789ABCDEF0" },
                     { "CertificateName", "BestCert" }
                 }),
                 new TaskItem("VeryTrashStrongName", new Dictionary<string, string>
                 {
-                    { "PublicKeyToken", "00FEDCBA987654321" },
+                    { "PublicKeyToken", "00FEDCBA98765432" },
                     { "CertificateName", "WorstCert" }
                 }),
             };
             task.ItemsToSign = new ITaskItem[]
             {
-                new TaskItem(PackageA),
-                new TaskItem(PackageB),
+                new TaskItem(PACKAGE_A),
+                new TaskItem(PACKAGE_B),
             };
 
-            string expectedManifest = $@"<Build PublishingVersion=""{(int)PublishingInfraVersion.Latest}"" Name=""https://dnceng@dev.azure.com/dnceng/internal/test-repo"" BuildId=""12345.6"" Branch=""/refs/heads/branch"" Commit=""1234567890abcdef"" InitialAssetsLocation=""cloud"" IsReleaseOnlyPackageVersion=""False"" IsStable=""True"">
-  <Package Id=""{Path.GetFileNameWithoutExtension(PackageA)}"" Version=""{MockNupkgInfo.MockNupkgVersion}"" Nonshipping=""true"" />
-  <Package Id=""{Path.GetFileNameWithoutExtension(PackageB)}"" Version=""{MockNupkgInfo.MockNupkgVersion}"" Nonshipping=""false"" />
-  <Blob Id=""{SampleManifest}"" Nonshipping=""false"" />
+            string expectedManifestContent = $@"<Build PublishingVersion=""{(int)PublishingInfraVersion.Latest}"" Name=""https://dnceng@dev.azure.com/dnceng/internal/test-repo"" BuildId=""12345.6"" Branch=""/refs/heads/branch"" Commit=""1234567890abcdef"" InitialAssetsLocation=""cloud"" IsReleaseOnlyPackageVersion=""false"" IsStable=""true"">
+  <Package Id=""test-package-a"" Version=""{NUPKG_VERSION}"" Nonshipping=""true"" />
+  <Package Id=""test-package-b"" Version=""{NUPKG_VERSION}"" Nonshipping=""false"" />
+  <Blob Id=""{SAMPLE_MANIFEST}"" Nonshipping=""false"" />
   <SigningInformation>
     <FileExtensionSignInfo Include="".dll"" CertificateName=""TestSigningCert"" />
     <FileExtensionSignInfo Include="".nupkg"" CertificateName=""TestNupkg"" />
@@ -298,109 +436,48 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
     <FileSignInfo Include=""Worst.dll"" CertificateName=""WorstCert"" />
     <CertificatesSignInfo Include=""BestCert"" DualSigningAllowed=""true"" />
     <CertificatesSignInfo Include=""WorstCert"" DualSigningAllowed=""false"" />
-    <ItemsToSign Include=""test-package-a.nupkg"" />
-    <ItemsToSign Include=""test-package-b.nupkg"" />
-    <StrongNameSignInfo Include=""VeryCoolStrongName"" PublicKeyToken=""123456789ABCDEF00"" CertificateName=""BestCert"" />
-    <StrongNameSignInfo Include=""VeryTrashStrongName"" PublicKeyToken=""00FEDCBA987654321"" CertificateName=""WorstCert"" />
+    <ItemsToSign Include=""test-package-a.6.0.492.nupkg"" />
+    <ItemsToSign Include=""test-package-b.6.0.492.nupkg"" />
+    <StrongNameSignInfo Include=""VeryCoolStrongName"" PublicKeyToken=""123456789ABCDEF0"" CertificateName=""BestCert"" />
+    <StrongNameSignInfo Include=""VeryTrashStrongName"" PublicKeyToken=""00FEDCBA98765432"" CertificateName=""WorstCert"" />
   </SigningInformation>
 </Build>";
 
-            task.Execute().Should().BeTrue();
+            // Mocks
+            Mock<IFileSystem> fileSystemMock = new Mock<IFileSystem>();
+            IList<string> actualPath = new List<string>();
+            IList<string> actualBuildModel = new List<string>();
+            IList<string> files = new List<string> { PACKAGE_A, PACKAGE_B, SAMPLE_MANIFEST };
+            fileSystemMock.Setup(m => m.WriteToFile(Capture.In(actualPath), Capture.In(actualBuildModel))).Verifiable();
+            fileSystemMock.Setup(m => m.FileExists(Capture.In(files))).Returns(true);
 
-            var manifest = task.FileSystem.FileReadAllText(task.AssetManifestPath);
-            manifest.Should().Be(expectedManifest);
-        }*/
+            Mock<INupkgInfoFactory> nupkgInfoFactoryMock = new Mock<INupkgInfoFactory>();
+            IList<string> actualNupkgInfoPath = new List<string>();
+            nupkgInfoFactoryMock.Setup(m => m.CreateNupkgInfo(PACKAGE_A)).Returns(new NupkgInfo(new PackageIdentity(
+                id: "test-package-a",
+                version: new NuGetVersion(NUPKG_VERSION)
+            )));
+            nupkgInfoFactoryMock.Setup(m => m.CreateNupkgInfo(PACKAGE_B)).Returns(new NupkgInfo(new PackageIdentity(
+                id: "test-package-b",
+                version: new NuGetVersion(NUPKG_VERSION)
+            )));
 
-        private static PushToAzureDevOpsArtifacts ConstructPushToAzureDevOpsArtifactsTask(IBuildEngine buildEngine)
-        {
-            
+            // Dependency Injection setup
+            var collection = new ServiceCollection()
+                .AddSingleton(fileSystemMock.Object)
+                .AddSingleton<IBuildModelFactory, BuildModelFactory>()
+                .AddSingleton<IPackageArtifactModelFactory, PackageArtifactModelFactory>()
+                .AddSingleton<IBlobArtifactModelFactory, BlobArtifactModelFactory>()
+                .AddSingleton<ISigningInformationModelFactory, SigningInformationModelFactory>()
+                .AddSingleton(nupkgInfoFactoryMock.Object);
+            CreateMockServiceCollection(collection);
+            task.ConfigureServices(collection);
+            using var provider = collection.BuildServiceProvider();
 
-
-            //fileSystemMock.Setup(m => m)
-
-            return new PushToAzureDevOpsArtifacts
-            {
-                BuildEngine = buildEngine,
-                //FileSystem = fileSystemMock.Object,//MockFileSystem.CreateFromTaskItems(TaskItems),
-                AssetManifestPath = TargetManifestPath,
-                AzureDevOpsBuildId = 123456,
-                AzureDevOpsCollectionUri = "https://dev.azure.com/dnceng/",
-                AzureDevOpsProject = "internal",
-                IsStableBuild = true,
-                IsReleaseOnlyPackageVersion = false,
-                ItemsToPush = TaskItems,
-                ManifestBuildData = new string[] { $"InitialAssetsLocation=cloud" },
-                ManifestBranch = "/refs/heads/branch",
-                ManifestBuildId = "12345.6",
-                ManifestCommit = "1234567890abcdef",
-                ManifestRepoUri = "https://dnceng@dev.azure.com/dnceng/internal/test-repo",
-            };
+            // Act and Assert
+            task.InvokeExecute(provider).Should().BeTrue();
+            actualPath[0].Should().Be(TARGET_MANIFEST_PATH);
+            actualBuildModel[0].Should().Be(expectedManifestContent);
         }
     }
-    /*
-    internal class MockNupkgInfo : NupkgInfo
-    {
-        public static string MockNupkgVersion = "6.0.492";
-
-        public override void Initialize(string path)
-        {
-            Id = Path.GetFileNameWithoutExtension(path);
-            Version = MockNupkgVersion;
-            Prerelease = "10f2c";
-        }
-    }*/
-
-    internal class MockFileSystem : IFileSystem
-    {
-        public static MockFileSystem CreateFromTaskItems(TaskItem[] taskItems)
-        {
-            var mockFileSystem = new MockFileSystem();
-            
-            foreach (TaskItem taskItem in taskItems)
-            {
-                mockFileSystem.FileWriteAllText(taskItem.ItemSpec, "none");
-            }
-
-            return mockFileSystem;
-        }
-
-        private Dictionary<string, byte[]> _fakeFileSystem = new Dictionary<string, byte[]>();
-
-        public DirectoryInfo DirectoryCreateDirectory(string path)
-        {
-            return null;
-        }
-
-        public bool FileExists(string path)
-        {
-            return _fakeFileSystem.ContainsKey(path);
-        }
-
-        public Stream FileOpenRead(string path)
-        {
-            return new MemoryStream(_fakeFileSystem[path]);
-        }
-
-        public string FileReadAllText(string path)
-        {
-            if (!_fakeFileSystem.TryGetValue(path, out byte[] content))
-            {
-                throw new FileNotFoundException();
-            }
-
-            return Encoding.UTF8.GetString(content);
-        }
-
-        public void FileWriteAllText(string path, string content)
-        {
-            new FileInfo(path); // confirm path is a valid file path
-            _fakeFileSystem.Add(path, Encoding.UTF8.GetBytes(content));
-        }
-
-        public void WriteXmlToFile(string path, XElement content)
-        {
-            throw new NotImplementedException();
-        }
-    }
-
 }

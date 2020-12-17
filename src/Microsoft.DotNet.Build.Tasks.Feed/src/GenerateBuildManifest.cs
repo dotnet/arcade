@@ -157,7 +157,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     Log);
 
                 Log.LogMessage(MessageImportance.High, $"Writing build manifest file '{OutputPath}'...");
-                fileSystem.WriteXmlToFile(OutputPath, buildModel.ToXml());
+                fileSystem.WriteToFile(OutputPath, buildModel.ToXml().ToString());
             }
             catch (Exception e)
             {

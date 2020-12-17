@@ -114,7 +114,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 signingInformationModel: signingInformationModel);
 
             log.LogMessage(MessageImportance.High, $"Writing build manifest file '{assetManifestPath}'...");
-            _fileSystem.WriteXmlToFile(assetManifestPath, model.ToXml());
+            _fileSystem.WriteToFile(assetManifestPath, model.ToXml().ToString());
         }
 
         public BuildModel CreateModelFromItems(
