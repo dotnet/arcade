@@ -120,7 +120,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
         {
             return (PublishingInfraVersion, 
                 Id, 
-
+                IsInternal,
                 AkaMSChannelName, 
                 ShippingFeed, 
                 TransportFeed, 
