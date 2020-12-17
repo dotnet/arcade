@@ -88,9 +88,9 @@
       <AkaMSCreatedBy Condition="'$(AkaMSCreatedBy)' == ''">dn-bot</AkaMSCreatedBy>
       <PublishSpecialClrFiles Condition="'$(PublishSpecialClrFiles)' == ''">false</PublishSpecialClrFiles>
       <InstallersFeedKey>$(InstallersAzureAccountKey)</InstallersFeedKey>
-      <InternalInstallersFeedKey>$(InternalInstallersTargetStaticFeedKey)</InternalInstallersFeedKey>
+      <InternalInstallersFeedKey>$(InternalInstallersAzureAccountKey)</InternalInstallersFeedKey>
       <ChecksumsFeedKey>$(ChecksumsAzureAccountKey)</ChecksumsFeedKey>
-      <InternalChecksumsFeedKey>$(InternalChecksumsTargetStaticFeedKey)</InternalChecksumsFeedKey>
+      <InternalChecksumsFeedKey>$(InternalChecksumsAzureAccountKey)</InternalChecksumsFeedKey>
     </PropertyGroup>
 
     <Error
