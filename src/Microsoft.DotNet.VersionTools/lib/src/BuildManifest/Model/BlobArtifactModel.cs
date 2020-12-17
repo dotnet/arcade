@@ -69,9 +69,11 @@ namespace Microsoft.DotNet.VersionTools.BuildManifest.Model
                         return false;
                     }
                 }
+
+                return true;
             }
 
-            return true;
+            return false;
         }
 
         public override int GetHashCode()
