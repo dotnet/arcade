@@ -104,7 +104,8 @@
           BeforeTargets="CoreTest">
     <CreateXHarnessiOSWorkItems AppBundles="@(XHarnessAppBundleToTest)"
                                 IsPosixShell="$(IsPosixShell)"
-                                XcodeVersion="$(XHarnessXcodeVersion)">
+                                XcodeVersion="$(XHarnessXcodeVersion)"
+                                AppleTeamIdentifier="$(XHarnessAppleTeamIdentifier)">
       <Output TaskParameter="WorkItems" ItemName="HelixWorkItem"/>
     </CreateXHarnessiOSWorkItems>
   </Target>

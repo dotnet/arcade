@@ -6,5 +6,8 @@
     <_HelixMonoQueueTargets>$(_HelixMonoQueueTargets);$(MSBuildThisFileDirectory)XHarnessRunner.targets</_HelixMonoQueueTargets>
 
     <XHarnessPackageSource Condition=" '$(XHarnessPackageSource)' == '' ">https://dnceng.pkgs.visualstudio.com/public/_packaging/dotnet-eng/nuget/v3/index.json</XHarnessPackageSource>
+
+    <!-- Needed for app signing and tied to certificates installed in Helix machines -->
+    <XHarnessAppleTeamIdentifier Condition=" '$(XHarnessAppleTeamIdentifier)' == '' ">U76R6NG7ZK</XHarnessAppleTeamIdentifier>
   </PropertyGroup>
 </Project>

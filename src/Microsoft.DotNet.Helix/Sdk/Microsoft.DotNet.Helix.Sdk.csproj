@@ -28,9 +28,13 @@
     <None Include="**\*.py;**\*.bat;**\*.sh" Pack="true">
       <PackagePath>%(RecursiveDir)%(Filename)%(Extension)</PackagePath>
     </None>
+    <None Include="tools\xharness-runner\Entitlements.template.plist" />
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="tools\xharness-runner\Entitlements.template.plist">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </EmbeddedResource>
     <EmbeddedResource Include="tools\xharness-runner\xharness-helix-job.ios.sh">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </EmbeddedResource>

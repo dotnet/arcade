@@ -99,6 +99,47 @@ else
     xcode_path="/Applications/Xcode${xcode_version/./}.app"
 fi
 
+# Signing
+if [ "$targets" == 'ios-device' ] || [ "$targets" == 'tvos-device' ]; then
+    echo "Real device target detected, application will need a signature"
+    
+    if [ ! -e "./Entitlements.plist" ]; then
+        echo "Missing Entitlements.plist file!"
+        exit 20
+    fi
+
+    keychain_name='signing-certs.keychain-db'
+    
+    set +x
+    keychain_password=$(cat ~/.config/keychain)
+    set -x
+
+    set +e
+
+    security list-keychains | grep "$keychain_name"
+    result=$?
+    if [ $result != 0 ]; then
+        echo "Keychain '$keychain_name' was not found"
+        exit 21
+    fi
+
+    security find-identity -vp codesigning "$keychain_name" | grep " 0 valid identities found"
+    result=$?
+    if [ $result == 0 ]; then
+        echo "No valid signing identities found in the keychain"
+        exit 22
+    fi
+
+    set -e
+
+    set +x
+    echo "security unlock-keychain -p *** $keychain_name"
+    security unlock-keychain -p "$keychain_password" "$keychain_name"
+    set -x
+
+    /usr/bin/codesign -v --force --sign "Apple Development" --keychain "$keychain_name" --entitlements "./Entitlements.plist" "$app"
+fi
+
 # Start the simulator if it is not running already
 simulator_app="$xcode_path/Contents/Developer/Applications/Simulator.app"
 open -a "$simulator_app"

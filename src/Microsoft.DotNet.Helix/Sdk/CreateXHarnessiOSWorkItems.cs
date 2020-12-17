@@ -32,6 +32,11 @@ namespace Microsoft.DotNet.Helix.Sdk
         public string XcodeVersion { get; set; }
 
         /// <summary>
+        /// ID of the team who's certificate is used for signing (in case of real device targets).
+        /// </summary>
+        public string AppleTeamIdentifier { get; set; }
+
+        /// <summary>
         /// The main method of this MSBuild task which calls the asynchronous execution method and
         /// collates logged errors in order to determine the success of HelixWorkItems
         /// </summary>
@@ -85,6 +90,13 @@ namespace Microsoft.DotNet.Helix.Sdk
                 return null;
             }
 
+            bool isDevice = targets.Contains("device");
+            if (isDevice && string.IsNullOrEmpty(AppleTeamIdentifier))
+            {
+                Log.LogError("AppleTeamIdentifier task parameter not set but required for real device targets!");
+                return null;
+            }
+
             // Optional timeout for the how long it takes for the app to be installed, booted and tests start executing
             TimeSpan launchTimeout = TimeSpan.FromMinutes(DefaultLaunchTimeoutInMinutes);
             if (appBundleItem.TryGetMetadata(LaunchTimeoutPropName, out string launchTimeoutProp))
@@ -112,13 +124,14 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             string appName = Path.GetFileName(appBundleItem.ItemSpec);
             string command = GetHelixCommand(appName, targets, testTimeout, launchTimeout, includesTestRunner, expectedExitCode);
+            string payloadArchivePath = await CreateZipArchiveOfFolder(appFolderPath, appName, isDevice);
 
             Log.LogMessage($"Creating work item with properties Identity: {workItemName}, Payload: {appFolderPath}, Command: {command}");
 
             return new Microsoft.Build.Utilities.TaskItem(workItemName, new Dictionary<string, string>()
             {
                 { "Identity", workItemName },
-                { "PayloadArchive", await CreateZipArchiveOfFolder(appFolderPath) },
+                { "PayloadArchive", payloadArchivePath },
                 { "Command", command },
                 { "Timeout", workItemTimeout.ToString() },
             });
@@ -137,7 +150,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             (!string.IsNullOrEmpty(XcodeVersion) ? $" --xcode-version \"{XcodeVersion}\"" : string.Empty) +
             (!string.IsNullOrEmpty(AppArguments) ? $" --app-arguments \"{AppArguments}\"" : string.Empty);
 
-        private async Task<string> CreateZipArchiveOfFolder(string folderToZip)
+        private async Task<string> CreateZipArchiveOfFolder(string folderToZip, string appName, bool includeEntitlements)
         {
             if (!Directory.Exists(folderToZip))
             {
@@ -158,21 +171,42 @@ namespace Microsoft.DotNet.Helix.Sdk
             ZipFile.CreateFromDirectory(folderToZip, outputZipPath, CompressionLevel.Fastest, includeBaseDirectory: true);
 
             Log.LogMessage($"Adding the Helix job payload scripts into the ziparchive");
-            await AddFileToPayload(outputZipPath, EntryPointScriptName);
-            await AddFileToPayload(outputZipPath, RunnerScriptName);
+            await AddResourceFileToPayload(outputZipPath, EntryPointScriptName);
+            await AddResourceFileToPayload(outputZipPath, RunnerScriptName);
+
+            if (includeEntitlements)
+            {
+                string entitlementsContent = (await GetResourceFileContent("Entitlements.template.plist"))
+                    .Replace("%TeamIdentifier%", AppleTeamIdentifier)
+                    .Replace("%BundleIdentifier%", appName);
+
+                await AddToPayloadArchive(outputZipPath, "Entitlements.plist", entitlementsContent);
+            }
 
             return outputZipPath;
         }
 
-        private async Task AddFileToPayload(string payloadArchivePath, string fileName)
+        private async Task AddResourceFileToPayload(string payloadArchivePath, string resourceFileName)
         {
-            var thisAssembly = typeof(CreateXHarnessiOSWorkItems).Assembly;
-            using Stream fileStream = thisAssembly.GetManifestResourceStream($"{thisAssembly.GetName().Name}.tools.xharness_runner.{fileName}");
+            string content = await GetResourceFileContent(resourceFileName);
+            await AddToPayloadArchive(payloadArchivePath, resourceFileName, content);
+        }
+
+        private async Task AddToPayloadArchive(string payloadArchivePath, string targetfileName, string content)
+        {
             using FileStream archiveStream = new FileStream(payloadArchivePath, FileMode.Open);
             using ZipArchive archive = new ZipArchive(archiveStream, ZipArchiveMode.Update);
-            ZipArchiveEntry entry = archive.CreateEntry(fileName);
+            ZipArchiveEntry entry = archive.CreateEntry(targetfileName);
             using StreamWriter zipEntryWriter = new StreamWriter(entry.Open());
-            await fileStream.CopyToAsync(zipEntryWriter.BaseStream);
+            await zipEntryWriter.WriteAsync(content);
+        }
+
+        private static async Task<string> GetResourceFileContent(string resourceFileName)
+        {
+            var thisAssembly = typeof(CreateXHarnessiOSWorkItems).Assembly;
+            using Stream fileStream = thisAssembly.GetManifestResourceStream($"{thisAssembly.GetName().Name}.tools.xharness_runner.{resourceFileName}");
+            using var reader = new StreamReader(fileStream);
+            return await reader.ReadToEndAsync();
         }
     }
 }
