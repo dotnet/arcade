@@ -63,8 +63,9 @@
 
   <Fragment>
     <PayloadGroup Id="DotnetCoreBAPayloads">
+      <!-- Default/Neutral localized content is US English -->
       <Payload Name="thm.xml" Compressed="yes" SourceFile="$(var.BundleThmDir)\bundle.thm" />
-      <Payload Name="thm.wxl" Compressed="yes" SourceFile="$(var.BundleThmDir)\bundle.wxl" />
+      <Payload Name="thm.wxl" Compressed="yes" SourceFile="$(var.BundleThmDir)\theme\1033\bundle.wxl" />
 
       <Payload Name="bg.png" Compressed="yes" SourceFile="$(var.DotNetBackgroundPngFile)" />
 

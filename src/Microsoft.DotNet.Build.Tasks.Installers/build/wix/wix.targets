@@ -64,7 +64,7 @@
       Minor="$(MinorVersion)"
       Patch="$(PatchVersion)"
       BuildNumberMajor="$(BuildNumberMajor)"
-      BuildNumberMinor="$(BuildNumberMajor)">
+      BuildNumberMinor="$(BuildNumberMinor)">
       <Output TaskParameter="MsiVersion" PropertyName="MsiVersionString" />
     </GenerateMsiVersion>
   </Target>
