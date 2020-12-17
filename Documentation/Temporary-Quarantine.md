@@ -22,12 +22,8 @@ Permanent unreliability is a different problem not addressed by this procedure.
 
 ## What happens when something is quarantined
 PR builds will not include the quarantined component.
-The primary CI pipelines (e.g. the 'runtime' pipeline) will not include the quarantined component.
-A separate pipeline will be run on the same cadence as the CI pipeline in order to execute quarantined components in order to determine when
-it is appropriate to unquarantine the affected component.
 
-Owners should be aware every quarantined item, with a tracking issue in the most appropriate repository assigned to them.
-The primary purpose of this ownership is to ensure that the quarantined item is being addressed and tracked for reintroduction into the mainline builds.
+For now, please follow the existing procedure for that's in place for your repo to disable tests.  The important piece of this document is the intent to keep 'main' passing instead of iterating in 'main' itself.
 
 ## How to quarantine
 The smallest unit possible should be quarantined, to minimize the coverage gap in PR.
@@ -37,6 +33,8 @@ The smallest unit possible should be quarantined, to minimize the coverage gap i
 1. A test assembly
 1. A build "job"
 1. An entire pipeline
+
+For now, there's no new guidance regarding the "how" - please continue to follow existing guidelines.  This will be expanded in the future as we work together and learn more.  (issues are opened for this work below)
 
 ### A single test in a single configuration
 TBD (https://github.com/dotnet/arcade/issues/6661)
@@ -56,3 +54,5 @@ TBD (https://github.com/dotnet/arcade/issues/6663)
 ## How to reintroduce : Run without failure for 30 days
 Once a fix has been introduced, and that component has passed passed for a month, it can be reintroduced into the mainline build by reverting the change
 made to quarantine it.
+
+For now this is only being used in the 'staging' pipeline which is used for new platform bring up.  
