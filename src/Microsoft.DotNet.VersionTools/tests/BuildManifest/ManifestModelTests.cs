@@ -524,6 +524,22 @@ namespace Microsoft.DotNet.VersionTools.Tests.BuildManifest
         }
 
         [Fact]
+        public void PackageArtifactModelEquals_ReturnsFalseWhenObjectsAreDifferentTypes()
+        {
+            PackageArtifactModel packageArtifact = new PackageArtifactModel
+            {
+                Attributes = new Dictionary<string, string>
+                    {
+                        { "NonShipping", true.ToString().ToLower() },
+                    },
+                Id = "AssetName",
+                Version = null
+            };
+
+            Assert.False(packageArtifact.Equals("thisIsNotAPackageArtifact!"));
+        }
+
+        [Fact]
         public void BlobArtifactModelEquals_ReturnsTrueWhenTwoObjectsHaveMatchingAttributes()
         {
             BlobArtifactModel blobArtifact = new BlobArtifactModel
@@ -593,6 +609,21 @@ namespace Microsoft.DotNet.VersionTools.Tests.BuildManifest
             };
 
             Assert.True(blobArtifact.Equals(otherBlobArtifact));
+        }
+
+        [Fact]
+        public void BlobArtifactModelEquals_ReturnsFalseWhenObjectsAreDifferentTypes()
+        {
+            BlobArtifactModel blobArtifact = new BlobArtifactModel
+            {
+                Attributes = new Dictionary<string, string>
+                    {
+                        { "NonShipping", true.ToString().ToLower() },
+                    },
+                Id = null
+            };
+
+            Assert.False(blobArtifact.Equals("thisIsNotABlobArtifact!"));
         }
 
         private BuildModel CreatePackageOnlyBuildManifestModel()
