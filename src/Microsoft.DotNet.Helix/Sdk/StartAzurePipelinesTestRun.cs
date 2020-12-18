@@ -30,7 +30,7 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
                     var req =
                         new HttpRequestMessage(
                             HttpMethod.Post,
-                            $"{CollectionUri}{TeamProject}/_apis/test/runs?api-version=5.0")
+                            $"{CollectionUri}{TeamProject}/_apis/test/runs?api-version=6.0")
                         {
                             Content = new StringContent(
                                 JsonConvert.SerializeObject(

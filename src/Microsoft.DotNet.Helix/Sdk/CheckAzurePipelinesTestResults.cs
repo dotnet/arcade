@@ -128,7 +128,7 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
                 {
                     using (var req = new HttpRequestMessage(
                         HttpMethod.Get,
-                        $"{CollectionUri}{TeamProject}/_apis/test/resultsummarybybuild?buildId={BuildId}&api-version=5.1-preview.2")
+                        $"{CollectionUri}{TeamProject}/_apis/test/resultsummarybybuild?buildId={BuildId}&api-version=6.0-preview")
                     )
                     {
                         using (HttpResponseMessage res = await client.SendAsync(req))
@@ -172,7 +172,7 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
                     {
                         using (var req = new HttpRequestMessage(
                             HttpMethod.Get,
-                            $"{CollectionUri}{TeamProject}/_apis/test/runs/{runId}/results?api-version=5.0&outcomes=Failed")
+                            $"{CollectionUri}{TeamProject}/_apis/test/runs/{runId}/results?api-version=6.0&outcomes=Failed")
                         )
                         {
                             using (HttpResponseMessage res = await client.SendAsync(req))
