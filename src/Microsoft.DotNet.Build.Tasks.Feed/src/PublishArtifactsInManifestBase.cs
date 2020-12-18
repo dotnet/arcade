@@ -16,7 +16,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.DotNet.Build.Tasks.Feed.Model;
-using Microsoft.DotNet.Build.Tasks.Feed.src;
 using Microsoft.DotNet.Maestro.Client;
 using Microsoft.DotNet.Maestro.Client.Models;
 using Microsoft.DotNet.VersionTools.BuildManifest.Model;

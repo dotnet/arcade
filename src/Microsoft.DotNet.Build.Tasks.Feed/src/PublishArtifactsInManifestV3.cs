@@ -35,6 +35,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         [Required] 
         public string CheckSumsFeedKey { get; set; }
 
+        public string InternalInstallersFeedKey { get; set; }
+
+        public string InternalCheckSumsFeedKey { get; set; }
+
         public bool PublishInstallersAndChecksums { get; set; }
 
         public string PdbArtifactsBasePath { get; set; }
@@ -133,16 +137,16 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     Log.LogMessage(MessageImportance.High, $"Publishing to this target channel: {targetChannelConfig}");
 
                     var targetFeedsSetup = new SetupTargetFeedConfigV3(
-                        InternalBuild,
+                        targetChannelConfig.IsInternal,
                         BuildModel.Identity.IsStable,
                         BuildModel.Identity.Name,
                         BuildModel.Identity.Commit,
                         AzureStorageTargetFeedKey,
                         PublishInstallersAndChecksums,
                         targetChannelConfig.InstallersFeed,
-                        InstallersFeedKey,
+                        targetChannelConfig.IsInternal? InternalInstallersFeedKey : InstallersFeedKey,
                         targetChannelConfig.ChecksumsFeed,
-                        CheckSumsFeedKey,
+                        targetChannelConfig.IsInternal? InternalCheckSumsFeedKey : CheckSumsFeedKey,
                         targetChannelConfig.ShippingFeed,
                         targetChannelConfig.TransportFeed,
                         targetChannelConfig.SymbolsFeed,
