@@ -457,7 +457,7 @@ function LocateVisualStudio([object]$vsRequirements = $null){
         Start-Sleep -Seconds $delayInSeconds
       }
       else {
-        throw "Unable to download file in $maxRetries attempts."
+        Write-PipelineTelemetryError -Category 'InitializeToolset' -Message "Unable to download file in $maxRetries attempts."
       }
     }
   }
