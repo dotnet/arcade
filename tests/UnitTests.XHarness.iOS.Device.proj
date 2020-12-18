@@ -17,8 +17,8 @@
     <HelixType>test/product/</HelixType>
     <TestRunNamePrefix>$(AGENT_JOBNAME)</TestRunNamePrefix>
     <IncludeXHarnessCli>true</IncludeXHarnessCli>
-    <EnableXUnitReporter>false</EnableXUnitReporter>
-    <EnableAzurePipelinesReporter>false</EnableAzurePipelinesReporter>
+    <EnableXUnitReporter>false</EnableXUnitReporter>    <!-- TODO: true -->
+    <EnableAzurePipelinesReporter>false</EnableAzurePipelinesReporter>    <!-- TODO: true -->
     <HelixBaseUri>https://helix.dot.net</HelixBaseUri>
   </PropertyGroup>
 
