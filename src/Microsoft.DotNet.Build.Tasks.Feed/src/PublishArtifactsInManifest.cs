@@ -120,6 +120,31 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         public string AzureDevOpsFeedsKey { get; set; }
 
         /// <summary>
+        /// Path to dll and pdb files
+        /// </summary>
+        public string PdbArtifactsBasePath {get; set;}
+
+        /// <summary>
+        /// Token to publish to Msdl symbol server
+        /// </summary>
+        public string MsdlToken {get; set;}
+
+        /// <summary>
+        /// Token to publish to SymWeb symbol server 
+        /// </summary>
+        public string SymWebToken {get; set;}
+
+        /// <summary>
+        /// Files to exclude from symbol publishing
+        /// </summary>
+        public string SymbolPublishingExclusionsFile {get; set;}
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public bool PublishSpecialClrFiles { get; set; }
+
+        /// <summary>
         /// If true, safety checks only print messages and do not error
         /// - Internal asset to public feed
         /// - Stable packages to non-isolated feeds
@@ -302,7 +327,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 AzureDevOpsFeedsKey = this.AzureDevOpsFeedsKey,
                 InstallersFeedKey = this.InstallersFeedKey,
                 CheckSumsFeedKey = this.ChecksumsFeedKey,
-                AzureStorageTargetFeedKey = this.AzureStorageTargetFeedKey
+                AzureStorageTargetFeedKey = this.AzureStorageTargetFeedKey,
+                PdbArtifactsBasePath = this.PdbArtifactsBasePath,
+                SymWebToken = this.SymWebToken,
+                MsdlToken = this.MsdlToken,
+                SymbolPublishingExclusionsFile = this.SymbolPublishingExclusionsFile,
+                PublishSpecialClrFiles = this.PublishSpecialClrFiles
             };
         }
     }

@@ -18,6 +18,11 @@
       - NugetPath                               : Full path to nuget.exe. Used for pushing to AzDO feeds.
       - PublishInstallersAndChecksums           : Whether installers & checksums should be published.
       - AzureDevOpsFeedsKey                     : Token used to publish to *any* AzDO feed in dnceng.
+      - PublishSpecialClrFiles                  : If true, the special coreclr module indexed files like DBI, DAC and SOS are published
+      - MsdlToken                               : Token used to publish symbol blobs, dll and pdb to Msdl
+      - SymWebToken                             : Token used to publish symbol blobs, dll and pdb to Symweb
+      - SymbolPublishingExclusionsFile          : Files that have to be excluded from symbol publishing 
+      - PdbArtifactsBasePath                    : Path to dlls and pdbs
 
       Optional aka.ms link generation parameters:
         - AkaMSClientId                         : Client ID for the aka.ms AD application
@@ -81,10 +86,9 @@
       <AkaMSTenant Condition="'$(AkaMSTenant)' == ''">ncd</AkaMSTenant>
       <AkaMSOwners Condition="'$(AkaMSOwners)' == ''">dn-bot</AkaMSOwners>
       <AkaMSCreatedBy Condition="'$(AkaMSCreatedBy)' == ''">dn-bot</AkaMSCreatedBy>
-
+      <PublishSpecialClrFiles Condition="'$(PublishSpecialClrFiles)' == ''">false</PublishSpecialClrFiles>
       <InstallersFeedKey>$(InstallersAzureAccountKey)</InstallersFeedKey>
       <InstallersFeedKey Condition="'$(InternalBuild)' == 'true'">$(InternalInstallersTargetStaticFeedKey)</InstallersFeedKey>
-
       <ChecksumsFeedKey>$(ChecksumsAzureAccountKey)</ChecksumsFeedKey>
       <ChecksumsFeedKey Condition="'$(InternalBuild)' == 'true'">$(InternalChecksumsTargetStaticFeedKey)</ChecksumsFeedKey>
     </PropertyGroup>
@@ -116,7 +120,12 @@
       AkaMSClientSecret="$(AkaMSClientSecret)"
       AkaMSTenant="$(AkaMSTenant)"
       AkaMSOwners="$(AkaMSOwners)"
-      AkaMSCreatedBy="$(AkaMSCreatedBy)" />
+      AkaMSCreatedBy="$(AkaMSCreatedBy)" 
+      MsdlToken="$(MsdlToken)"
+      SymWebToken="$(SymWebToken)"
+      SymbolPublishingExclusionsFile="$(SymbolPublishingExclusionsFile)"
+      PdbArtifactsBasePath="$(PDBArtifactsBasePath)"
+      PublishSpecialClrFiles="$(PublishSpecialClrFiles)"/>
   </Target>
 
   <ItemGroup>

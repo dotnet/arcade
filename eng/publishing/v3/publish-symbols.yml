@@ -54,7 +54,8 @@ jobs:
           /p:BlobBasePath='$(Build.ArtifactStagingDirectory)/BlobArtifacts/'
           /p:SymbolPublishingExclusionsFile='$(Build.SourcesDirectory)/eng/SymbolPublishingExclusionsFile.txt'
           /p:Configuration=Release
-          /p:PublishToMSDL=true
+          /p:PublishToMSDL=false
+          /p:PublishToSymWeb=true
           ${{ parameters.symbolPublishingAdditionalParameters }}
 
     - template: /eng/common/templates/steps/publish-logs.yml

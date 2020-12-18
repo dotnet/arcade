@@ -86,7 +86,31 @@ This SDK also supports automatically skipping builds on unsupported platforms or
 
 Additionally, if a `ProjectServicingConfiguration` item is provided with the identity of the project name and the `PatchVersion` metadata on the item is not equal to the current `PatchVersion`, the build will be skipped. This support enables a repository to disable building targeting packs in servicing releases if that is desired.
 
-## Tasks
+## Wix Command packages
+
+### Overview
+
+Wix command packages contain all of the artifacts and intermediates required to produce a wix package (msi, wixlib, exe, etc) and a script file which can be used to generate the wix file.
+
+The purpose of the wix command package is to provide a simple way to operate on the intermediate files before they are used to generate the wix artifact and generate the wix file (artifact).  In practice, this provides a way to post-build sign the wix intermediates and produce signed wix files.
+
+### Producing Wix Command packages
+
+If you're using the [Microsoft.DotNet.Build.Tasks.SharedFramework.Sdk](https://github.com/dotnet/arcade/tree/master/src/Microsoft.DotNet.Build.Tasks.SharedFramework.Sdk) package or the targets in this package to produce wix artifacts, then a wix command package will automatically be created for you.  If you're using the [wix toolset](https://wixtoolset.org/) to produce wix files, then you can produce "wix command packages" using the MSBuild tasks directly.
+
+Wix command packages are produced by using the `CreateLightCommandPackageDrop` or `CreateLitCommandPackageDrop` MSBuild tasks from the `Microsoft.DotNet.Build.Tasks.Installers` package.  Task usage is defined [here](https://github.com/dotnet/arcade/blob/master/src/Microsoft.DotNet.Build.Tasks.Installers/README.md#tasks)
+
+### File Format
+
+Wix command packages have the file extension `.wixpack.zip`, but they are standard zip files.
+
+Wix command packages contain a `create.cmd` script file in the root of the archive which is used to generate the wix file.
+
+Intermediate files needed to produce a wix file are placed in a folder which is the wix id value defined in the wixobj file for that artifact.
+
+WixObj files which are used to create the wix file are placed in the root of the archive and contain the info needed to produce a wix file.  File paths to intermediates are updated to refer to the paths in the archive.
+
+### Task Usage
 
 - **CreateLightCommandPackageDrop** - Create a layout that can be used to
   re-execute a light command. This can be used during post-build signing

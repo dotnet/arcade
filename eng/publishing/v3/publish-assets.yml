@@ -2,13 +2,15 @@ parameters:
   artifactsPublishingAdditionalParameters: ''
   publishInstallersAndChecksums: true
   PromoteToChannelIds: ''
+  symbolPublishingAdditionalParameters: ''
 
 jobs:
 - job: publish_assets
-  displayName: Publish Assets
+  displayName: Publish Assets and Symbols
   dependsOn: setupMaestroVars
   timeoutInMinutes: 120
   variables:
+    - group: DotNet-Symbol-Server-Pats
     - name: BARBuildId
       value: $[ dependencies.setupMaestroVars.outputs['setReleaseVars.BARBuildId'] ]
     - name: IsStableBuild
@@ -36,6 +38,7 @@ jobs:
           PackageArtifacts/**
           BlobArtifacts/**
           AssetManifests/**
+          PdbArtifacts/**
         downloadPath: '$(Build.ArtifactStagingDirectory)'
 
     - task: NuGetToolInstaller@1
@@ -52,7 +55,7 @@ jobs:
         arguments: -token $(dn-bot-dnceng-artifact-feeds-rw)
 
     - task: PowerShell@2
-      displayName: Publish packages & blobs
+      displayName: Publish packages, blobs and symbols
       inputs:
         filePath: $(Build.SourcesDirectory)/eng/common/sdk-task.ps1
         arguments: -task PublishArtifactsInManifest -restore -msbuildEngine dotnet
@@ -76,6 +79,11 @@ jobs:
           /p:AkaMSClientId=$(akams-client-id)
           /p:AkaMSClientSecret=$(akams-client-secret)
           ${{ parameters.artifactsPublishingAdditionalParameters }}
+          /p:PDBArtifactsBasePath='$(Build.ArtifactStagingDirectory)/PDBArtifacts/'
+          /p:SymbolPublishingExclusionsFile='$(Build.SourcesDirectory)/eng/SymbolPublishingExclusionsFile.txt'
+          ${{ parameters.symbolPublishingAdditionalParameters}}
+          /p:MsdlToken=$(microsoft-symbol-server-pat)
+          /p:SymWebToken=$(symweb-symbol-server-pat)
 
     - template: /eng/common/templates/steps/publish-logs.yml
       parameters:
