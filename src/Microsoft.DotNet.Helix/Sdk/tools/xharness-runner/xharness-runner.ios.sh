@@ -101,7 +101,7 @@ fi
 
 # Signing
 if [ "$targets" == 'ios-device' ] || [ "$targets" == 'tvos-device' ]; then
-    echo "Real device target detected, application will need a signature"
+    echo "Real device target detected, application will be signed"
     
     if [ ! -e "./Entitlements.plist" ]; then
         echo "Missing Entitlements.plist file!"
@@ -109,7 +109,7 @@ if [ "$targets" == 'ios-device' ] || [ "$targets" == 'tvos-device' ]; then
     fi
 
     keychain_name='signing-certs.keychain-db'
-    
+
     set +x
     keychain_password=$(cat ~/.config/keychain)
     set -x
@@ -138,11 +138,11 @@ if [ "$targets" == 'ios-device' ] || [ "$targets" == 'tvos-device' ]; then
     set -x
 
     /usr/bin/codesign -v --force --sign "Apple Development" --keychain "$keychain_name" --entitlements "./Entitlements.plist" "$app"
+else
+    # Start the simulator if it is not running already
+    simulator_app="$xcode_path/Contents/Developer/Applications/Simulator.app"
+    open -a "$simulator_app"
 fi
-
-# Start the simulator if it is not running already
-simulator_app="$xcode_path/Contents/Developer/Applications/Simulator.app"
-open -a "$simulator_app"
 
 export XHARNESS_DISABLE_COLORED_OUTPUT=true
 export XHARNESS_LOG_WITH_TIMESTAMPS=true
