@@ -178,7 +178,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             {
                 string entitlementsContent = (await GetResourceFileContent("Entitlements.template.plist"))
                     .Replace("%TeamIdentifier%", AppleTeamIdentifier)
-                    .Replace("%BundleIdentifier%", appName);
+                    .Replace("%BundleIdentifier%", appName.Substring(0, appName.Length - 4)); // Remove the .app suffix
 
                 await AddToPayloadArchive(outputZipPath, "Entitlements.plist", entitlementsContent);
             }
