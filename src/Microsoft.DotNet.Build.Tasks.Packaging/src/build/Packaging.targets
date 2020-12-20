@@ -856,6 +856,7 @@
   </Target>
 
   <Target Name="GetPackageDescription"
+          Condition="'$(Description)' == '' and '$(PackageDescription)' == ''"
           DependsOnTargets="GetSyncInfo">
     <PropertyGroup>
       <UseRuntimePackageDescription Condition="'$(UseRuntimePackageDescription)' == '' AND $(BaseId.StartsWith('runtime.native'))">true</UseRuntimePackageDescription>
