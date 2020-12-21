@@ -4,6 +4,7 @@
 
 using Microsoft.Arcade.Common;
 using Microsoft.Build.Framework;
+using Microsoft.DotNet.VersionTools.Automation;
 using Microsoft.DotNet.VersionTools.BuildManifest.Model;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -68,10 +69,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public override void ConfigureServices(IServiceCollection collection)
         {
+            collection.TryAddSingleton<IBuildModelFactory, BuildModelFactory>();
             collection.TryAddSingleton<ISigningInformationModelFactory, SigningInformationModelFactory>();
             collection.TryAddSingleton<IBlobArtifactModelFactory, BlobArtifactModelFactory>();
             collection.TryAddSingleton<IPackageArtifactModelFactory, PackageArtifactModelFactory>();
-            collection.TryAddSingleton<IBuildModelFactory, BuildModelFactory>();
+            collection.TryAddSingleton<INupkgInfoFactory, NupkgInfoFactory>();
+            collection.TryAddSingleton<IPackageArchiveReaderFactory, PackageArchiveReaderFactory>();
             collection.TryAddSingleton<IFileSystem, FileSystem>();
         }
 

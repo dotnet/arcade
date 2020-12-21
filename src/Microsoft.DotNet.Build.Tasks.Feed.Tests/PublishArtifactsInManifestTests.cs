@@ -2,9 +2,12 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using FluentAssertions;
+using Microsoft.Arcade.Common;
 using Microsoft.DotNet.Build.Tasks.Feed.Model;
 using Microsoft.DotNet.Build.Tasks.Feed.Tests.TestDoubles;
 using Microsoft.DotNet.VersionTools.BuildManifest.Model;
+using Microsoft.Extensions.DependencyInjection;
+using Moq;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -25,6 +28,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         private const string RandomToken = "abcd";
         private const string BlobFeedUrl = "https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json";
 
+        // This test should be refactored: https://github.com/dotnet/arcade/issues/6715
         [Fact]
         public void ConstructV2PublishingTask()
         {
@@ -37,11 +41,21 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 TargetChannels = GeneralTestingChannelId
             };
 
-            var which = task.WhichPublishingTask(manifestFullPath);
+            // Dependency Injection setup
+            var collection = new ServiceCollection()
+                .AddSingleton<IFileSystem, FileSystem>()
+                .AddSingleton<IBuildModelFactory, BuildModelFactory>();
+            task.ConfigureServices(collection);
+            using var provider = collection.BuildServiceProvider();
 
+            // Act and Assert
+            task.InvokeExecute(provider);
+
+            var which = task.WhichPublishingTask(manifestFullPath);
             which.Should().BeOfType<PublishArtifactsInManifestV2>();
         }
 
+        // This test should be refactored: https://github.com/dotnet/arcade/issues/6715
         [Fact]
         public void ConstructV3PublishingTask()
         {
@@ -54,8 +68,17 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 TargetChannels = GeneralTestingChannelId
             };
 
-            var which = task.WhichPublishingTask(manifestFullPath);
+            // Dependency Injection setup
+            var collection = new ServiceCollection()
+                .AddSingleton<IFileSystem, FileSystem>()
+                .AddSingleton<IBuildModelFactory, BuildModelFactory>();
+            task.ConfigureServices(collection);
+            using var provider = collection.BuildServiceProvider();
 
+            // Act and Assert
+            task.InvokeExecute(provider);
+
+            var which = task.WhichPublishingTask(manifestFullPath);
             which.Should().BeOfType<PublishArtifactsInManifestV3>();
         }
 
@@ -67,9 +90,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             {
                 // Create a single Microsoft.Build.Utilities.TaskItem for a simple feed config, then parse to FeedConfigs and
                 // check the expected values.
-                TargetFeedConfig = new Microsoft.Build.Utilities.TaskItem[]
+                TargetFeedConfig = new MsBuildUtils.TaskItem[]
                 {
-                    new Microsoft.Build.Utilities.TaskItem(TargetFeedContentType.BinaryLayout.ToString(), new Dictionary<string, string> {
+                    new MsBuildUtils.TaskItem(TargetFeedContentType.BinaryLayout.ToString(), new Dictionary<string, string> {
                         { "TargetUrl", BlobFeedUrl },
                         { "Token", RandomToken },
                         { "Type", "AzDoNugetFeed" },
@@ -99,9 +122,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             var buildEngine = new MockBuildEngine();
             var task = new PublishArtifactsInManifestV2
             {
-                TargetFeedConfig = new Microsoft.Build.Utilities.TaskItem[]
+                TargetFeedConfig = new MsBuildUtils.TaskItem[]
                 {
-                    new Microsoft.Build.Utilities.TaskItem("FOOPACKAGES", new Dictionary<string, string> {
+                    new MsBuildUtils.TaskItem("FOOPACKAGES", new Dictionary<string, string> {
                         { "TargetUrl", BlobFeedUrl },
                         { "Token", RandomToken },
                         { "Type", "MyUnknownFeedType" },
@@ -122,9 +145,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             var buildEngine = new MockBuildEngine();
             var task = new PublishArtifactsInManifestV2
             {
-                TargetFeedConfig = new Microsoft.Build.Utilities.TaskItem[]
+                TargetFeedConfig = new MsBuildUtils.TaskItem[]
                 {
-                    new Microsoft.Build.Utilities.TaskItem("FOOPACKAGES", new Dictionary<string, string> {
+                    new MsBuildUtils.TaskItem("FOOPACKAGES", new Dictionary<string, string> {
                         { "TargetUrl", string.Empty },
                         { "Token", string.Empty },
                         { "Type", string.Empty },
@@ -147,9 +170,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             var buildEngine = new MockBuildEngine();
             var task = new PublishArtifactsInManifestV2
             {
-                TargetFeedConfig = new Microsoft.Build.Utilities.TaskItem[]
+                TargetFeedConfig = new MsBuildUtils.TaskItem[]
                 {
-                    new Microsoft.Build.Utilities.TaskItem(TargetFeedContentType.BinaryLayout.ToString(), new Dictionary<string, string> {
+                    new MsBuildUtils.TaskItem(TargetFeedContentType.BinaryLayout.ToString(), new Dictionary<string, string> {
                         { "TargetUrl", BlobFeedUrl },
                         { "Token", RandomToken },
                         // Use different casing here to make sure that parsing
@@ -184,15 +207,15 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             var task = new PublishArtifactsInManifestV2
             {
                 InternalBuild = true,
-                TargetFeedConfig = new Microsoft.Build.Utilities.TaskItem[]
+                TargetFeedConfig = new MsBuildUtils.TaskItem[]
                 {
-                    new Microsoft.Build.Utilities.TaskItem("FOOPACKAGES", new Dictionary<string, string> {
+                    new MsBuildUtils.TaskItem("FOOPACKAGES", new Dictionary<string, string> {
                         { "TargetUrl", BlobFeedUrl },
                         { "Token", RandomToken },
                         { "Type", "AZURESTORAGEFEED" },
                         { "AssetSelection", "SHIPPINGONLY" },
                         { "Internal", "true" }}),
-                    new Microsoft.Build.Utilities.TaskItem("FOOPACKAGES", new Dictionary<string, string> {
+                    new MsBuildUtils.TaskItem("FOOPACKAGES", new Dictionary<string, string> {
                         { "TargetUrl", BlobFeedUrl },
                         { "Token", RandomToken },
                         { "Type", "AZURESTORAGEFEED" },
@@ -215,15 +238,15 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             var task = new PublishArtifactsInManifestV2
             {
                 InternalBuild = true,
-                TargetFeedConfig = new Microsoft.Build.Utilities.TaskItem[]
+                TargetFeedConfig = new MsBuildUtils.TaskItem[]
                 {
-                    new Microsoft.Build.Utilities.TaskItem(TargetFeedContentType.Checksum.ToString(), new Dictionary<string, string> {
+                    new MsBuildUtils.TaskItem(TargetFeedContentType.Checksum.ToString(), new Dictionary<string, string> {
                         { "TargetUrl", BlobFeedUrl },
                         { "Token", RandomToken },
                         { "Type", "AZURESTORAGEFEED" },
                         { "AssetSelection", "SHIPPINGONLY" },
                         { "Internal", "true" }}),
-                    new Microsoft.Build.Utilities.TaskItem(TargetFeedContentType.Maven.ToString(), new Dictionary<string, string> {
+                    new MsBuildUtils.TaskItem(TargetFeedContentType.Maven.ToString(), new Dictionary<string, string> {
                         { "TargetUrl", BlobFeedUrl },
                         { "Token", RandomToken },
                         { "Type", "AZURESTORAGEFEED" },
@@ -453,7 +476,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             int _callIndex = 0;
             int _position = 0;
 
-            public override System.Threading.Tasks.Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+            public override Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
             {
                 count.Should().BeGreaterThan(0);
 
@@ -472,7 +495,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 }
                 _position += bytesToWrite;
 
-                return System.Threading.Tasks.Task.FromResult(bytesToWrite);
+                return Task.FromResult(bytesToWrite);
             }
 
             #region Unused

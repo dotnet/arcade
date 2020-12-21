@@ -9,7 +9,6 @@ using Microsoft.DotNet.VersionTools.BuildManifest.Model;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using System;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -169,18 +168,24 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         private static bool PublishedV3Manifest { get; set; }
 
         private IBuildModelFactory _buildModelFactory;
+        private IFileSystem _fileSystem;
 
         public override void ConfigureServices(IServiceCollection collection)
         {
+            collection.TryAddSingleton<IBuildModelFactory, BuildModelFactory>();
             collection.TryAddSingleton<ISigningInformationModelFactory, SigningInformationModelFactory>();
             collection.TryAddSingleton<IBlobArtifactModelFactory, BlobArtifactModelFactory>();
             collection.TryAddSingleton<IPackageArtifactModelFactory, PackageArtifactModelFactory>();
-            collection.TryAddSingleton<IBuildModelFactory, BuildModelFactory>();
+            collection.TryAddSingleton<INupkgInfoFactory, NupkgInfoFactory>();
+            collection.TryAddSingleton<IPackageArchiveReaderFactory, PackageArchiveReaderFactory>();
+            collection.TryAddSingleton<IFileSystem, FileSystem>();
         }
 
-        public bool ExecuteTask(IBuildModelFactory buildModelFactory)
+        public bool ExecuteTask(IBuildModelFactory buildModelFactory,
+            IFileSystem fileSystem)
         {
             _buildModelFactory = buildModelFactory;
+            _fileSystem = fileSystem;
 
             return ExecuteAsync().GetAwaiter().GetResult();
         }
@@ -246,7 +251,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         {
             Log.LogMessage(MessageImportance.High, $"Creating a task to publish assets from {manifestFullPath}");
 
-            if (!File.Exists(manifestFullPath))
+            if (!_fileSystem.FileExists(manifestFullPath))
             {
                 Log.LogError($"Problem reading asset manifest path from '{manifestFullPath}'");
                 return null;

@@ -30,6 +30,7 @@ namespace Microsoft.DotNet.Build.Tasks.VersionTools
         public override void ConfigureServices(IServiceCollection collection)
         {
             collection.TryAddSingleton<INupkgInfoFactory, NupkgInfoFactory>();
+            collection.TryAddSingleton<IPackageArchiveReaderFactory, PackageArchiveReaderFactory>();
         }
 
         public bool ExecuteTask(INupkgInfoFactory nupkgInfoFactory)

@@ -14,6 +14,17 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
     public class BlobArtifactModelFactory : IBlobArtifactModelFactory
     {
+
+        /// <summary>
+        /// Creates a BlobArtifactModel based on the datat in the ITaskItem provided. Logs errors that may occur,
+        /// but does not prevent the creation of the BlobArtifactModel. Errors do not prevent the creation because 
+        /// we want to allow for the capture of all errors that may occur and report back all to the user so they can 
+        /// mitigate all the errors found instead of one at a time, which would require continual re-runs of this code
+        /// in order to find it. 
+        /// </summary>
+        /// <param name="item"></param>
+        /// <param name="log"></param>
+        /// <returns></returns>
         public BlobArtifactModel CreateBlobArtifactModel(ITaskItem item, TaskLoggingHelper log)
         {
             string path = item.GetMetadata("RelativeBlobPath");
