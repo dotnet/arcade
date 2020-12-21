@@ -102,7 +102,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// Whether this build is internal or not. If true, extra checks are done to avoid accidental
         /// publishing of assets to public feeds or storage accounts.
         /// </summary>
-        [Required]
         public bool InternalBuild { get; set; }
 
         public bool PublishInstallersAndChecksums { get; set; } = false;
@@ -113,7 +112,36 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public string InstallersFeedKey { get; set; }
 
+        public string InternalInstallersFeedKey { get; set; }
+
+        public string InternalCheckSumsFeedKey { get; set; }
+
         public string AzureDevOpsFeedsKey { get; set; }
+
+        /// <summary>
+        /// Path to dll and pdb files
+        /// </summary>
+        public string PdbArtifactsBasePath {get; set;}
+
+        /// <summary>
+        /// Token to publish to Msdl symbol server
+        /// </summary>
+        public string MsdlToken {get; set;}
+
+        /// <summary>
+        /// Token to publish to SymWeb symbol server 
+        /// </summary>
+        public string SymWebToken {get; set;}
+
+        /// <summary>
+        /// Files to exclude from symbol publishing
+        /// </summary>
+        public string SymbolPublishingExclusionsFile {get; set;}
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public bool PublishSpecialClrFiles { get; set; }
 
         /// <summary>
         /// If true, safety checks only print messages and do not error
@@ -286,7 +314,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 AzureDevOpsFeedsKey = this.AzureDevOpsFeedsKey,
                 InstallersFeedKey = this.InstallersFeedKey,
                 CheckSumsFeedKey = this.ChecksumsFeedKey,
-                AzureStorageTargetFeedKey = this.AzureStorageTargetFeedKey
+                InternalCheckSumsFeedKey = this.InternalCheckSumsFeedKey,
+                InternalInstallersFeedKey = this.InternalInstallersFeedKey,
+                AzureStorageTargetFeedKey = this.AzureStorageTargetFeedKey,
+                PdbArtifactsBasePath = this.PdbArtifactsBasePath,
+                SymWebToken = this.SymWebToken,
+                MsdlToken = this.MsdlToken,
+                SymbolPublishingExclusionsFile = this.SymbolPublishingExclusionsFile,
+                PublishSpecialClrFiles = this.PublishSpecialClrFiles
             };
         }
     }

@@ -1,14 +1,6 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using Microsoft.Build.Framework;
-using Microsoft.DotNet.Build.Tasks.Feed.Model;
-using Microsoft.DotNet.Maestro.Client;
-using Microsoft.DotNet.Maestro.Client.Models;
-using Microsoft.DotNet.VersionTools.BuildManifest.Model;
-using Microsoft.DotNet.VersionTools.Util;
-using NuGet.Packaging.Core;
-using NuGet.Versioning;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -22,6 +14,13 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Build.Framework;
+using Microsoft.DotNet.Build.Tasks.Feed.Model;
+using Microsoft.DotNet.Maestro.Client;
+using Microsoft.DotNet.Maestro.Client.Models;
+using Microsoft.DotNet.VersionTools.BuildManifest.Model;
+using NuGet.Packaging.Core;
+using NuGet.Versioning;
 using static Microsoft.DotNet.Build.Tasks.Feed.GeneralUtils;
 using MsBuildUtils = Microsoft.Build.Utilities;
 
@@ -118,6 +117,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         private static readonly string FourPartVersionPattern = @"\d+\.\d+\.\d+\.\d+";
 
         private static Regex FourPartVersionRegex = new Regex(FourPartVersionPattern);
+
+        private const string SymwebServerPath = "https://microsoft.artifacts.visualstudio.com/DefaultCollection";
+
+        private const string MsdlServerPath = "https://microsoftpublicsymbols.artifacts.visualstudio.com/DefaultCollection";
+
+        private const int ExpirationInDays = 3650;
 
         protected LatestLinksManager LinkManager { get; set; } = null;
 
@@ -306,6 +311,87 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         }
                     }
                 }
+            }
+        }
+
+        /// <summary>
+        /// Publishes symbol, dll and pdb files to symbol server.
+        /// </summary>
+        /// <param name="pdbArtifactsBasePath">Path to dll and pdb files</param>
+        /// <param name="msdlToken">Token to authenticate msdl</param>
+        /// <param name="symWebToken">Token to authenticate symweb</param>
+        /// <param name="symbolPublishingExclusionsFile">Right now we do not add any files to this, so this is going to be null</param>
+        /// <param name="temporarySymbolsLocation">Path to Symbol.nupkgs</param>
+        /// <param name="publishSpecialClrFiles">If true, the special coreclr module indexed files like DBI, DAC and SOS are published</param>
+        /// <returns></returns>
+        protected async Task HandleSymbolPublishingAsync (
+            string pdbArtifactsBasePath,
+            string msdlToken, 
+            string symWebToken,
+            string symbolPublishingExclusionsFile,
+            string temporarySymbolsLocation,
+            bool publishSpecialClrFiles)
+        {
+            StringBuilder symbolLog = new StringBuilder();
+            symbolLog.AppendLine("Publishing Symbols to Symbol server: ");
+
+            if (Directory.Exists(temporarySymbolsLocation))
+            {
+                string[] fileEntries = Directory.GetFiles(temporarySymbolsLocation);
+
+                var category = TargetFeedContentType.Symbols;
+
+                HashSet<TargetFeedConfig> feedConfigsForSymbols = FeedConfigs[category];
+
+                Dictionary<string, string> serversToPublish = new Dictionary<string, string>();
+                
+                if (feedConfigsForSymbols.Any(x => (x.SymbolTargetType & SymbolTargetType.Msdl) != SymbolTargetType.None))
+                {
+                    serversToPublish.Add(MsdlServerPath, msdlToken);
+                }
+                if (feedConfigsForSymbols.Any(x => (x.SymbolTargetType & SymbolTargetType.SymWeb) != SymbolTargetType.None))
+                {
+                    serversToPublish.Add(SymwebServerPath, symWebToken);
+                }
+
+                IEnumerable<string> filesToSymbolServer = null;
+                if (Directory.Exists(pdbArtifactsBasePath))
+                {
+                    var pdbEntries = System.IO.Directory.EnumerateFiles(pdbArtifactsBasePath, "*.pdb", System.IO.SearchOption.AllDirectories);
+                    var dllEntries = System.IO.Directory.EnumerateFiles(pdbArtifactsBasePath, "*.dll", System.IO.SearchOption.AllDirectories);
+                    filesToSymbolServer = pdbEntries.Concat(dllEntries);
+                }
+
+                foreach (var server in serversToPublish)
+                {
+                    var serverPath = server.Key;
+                    var token = server.Value;
+                    symbolLog.AppendLine($"Publishing symbol packages to {serverPath}:");
+                    symbolLog.AppendLine(
+                        $"Performing symbol publishing...\nSymbolServerPath : ${serverPath} \nExpirationInDays : {ExpirationInDays} \nConvertPortablePdbsToWindowsPdb : false \ndryRun: false \nTotal number of symbol files : {fileEntries.Length} ");
+                    await PublishSymbolsHelper.PublishAsync(
+                        Log,
+                        serverPath,
+                        token,
+                        fileEntries,
+                        filesToSymbolServer,
+                        null,
+                        ExpirationInDays,
+                        false,
+                        publishSpecialClrFiles,
+                        null,
+                        false,
+                        false,
+                        true);
+                    symbolLog.AppendLine("Successfully published to Symbol Server.");
+                    symbolLog.AppendLine();
+                    Log.LogMessage(MessageImportance.High, symbolLog.ToString());
+                    symbolLog.Clear();
+                }
+            }
+            else
+            {
+                Log.LogError($"Temporary symbols directory {temporarySymbolsLocation} does not exists.");
             }
         }
 

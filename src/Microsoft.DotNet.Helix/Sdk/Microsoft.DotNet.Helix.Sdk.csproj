@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>net472;netcoreapp2.1</TargetFrameworks>
@@ -22,7 +22,7 @@
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net472'"> 
     <Compile Include="..\..\Common\AssemblyResolver.cs" /> 
-  </ItemGroup> 
+  </ItemGroup>
 
   <ItemGroup>
     <None Include="**\*.py;**\*.bat;**\*.sh" Pack="true">
@@ -31,9 +31,12 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="tools\xharness-runner\ios-helix-job-payload.sh">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    <EmbeddedResource Include="tools\xharness-runner\xharness-helix-job.ios.sh">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="tools\xharness-runner\xharness-runner.ios.sh">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </EmbeddedResource>
   </ItemGroup>
 
   <Import Project="$(RepoRoot)eng\BuildTask.targets" />

@@ -18,6 +18,7 @@
     <PackageReference Include="Microsoft.Build.Tasks.Core" Version="$(MicrosoftBuildTasksCoreVersion)" />
     <PackageReference Include="Microsoft.DotNet.Maestro.Client" Version="$(MicrosoftDotNetMaestroClientVersion)" />
     <PackageReference Include="DotNet.SleetLib" Version="$(DotNetSleetLibVersion)" />
+    <PackageReference Include="Microsoft.SymbolUploader" Version="$(MicrosoftDotNetSymbolUploaderVersion)" />
   </ItemGroup>
 
   <ItemGroup>

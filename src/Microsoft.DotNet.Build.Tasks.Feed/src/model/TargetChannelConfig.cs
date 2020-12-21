@@ -55,17 +55,27 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
         /// </summary>
         public string InstallersFeed { get; }
 
+        /// <summary>
+        /// Should publish to Msdl
+        /// </summary>
+        public SymbolTargetType SymbolTargetType { get; }
+
+        public bool IsInternal { get; }
+
         public TargetChannelConfig(
             int id,
+            bool isInternal,
             PublishingInfraVersion publishingInfraVersion,
             string akaMSChannelName,
             string shippingFeed,
             string transportFeed,
             string symbolsFeed,
             string checksumsFeed,
-            string installersFeed)
+            string installersFeed,
+            SymbolTargetType symbolTargetType)
         {
             Id = id;
+            IsInternal = isInternal;
             PublishingInfraVersion = publishingInfraVersion;
             AkaMSChannelName = akaMSChannelName;
             ShippingFeed = shippingFeed;
@@ -73,11 +83,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             SymbolsFeed = symbolsFeed;
             ChecksumsFeed = checksumsFeed;
             InstallersFeed = installersFeed;
+            SymbolTargetType = symbolTargetType;
         }
 
         public override string ToString()
         {
-            return 
+            return
                 $"\n Channel ID: '{Id}' " +
                 $"\n Infra-version: '{PublishingInfraVersion}' " +
                 $"\n AkaMSChannelName: '{AkaMSChannelName}' " +
@@ -85,7 +96,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 $"\n Transport-feed: '{TransportFeed}' " +
                 $"\n Symbols-feed: '{SymbolsFeed}' " +
                 $"\n Installers-feed: '{InstallersFeed}' " +
-                $"\n Checksums-feed: '{ChecksumsFeed}' ";
+                $"\n Checksums-feed: '{ChecksumsFeed}' " +
+                $"\n SymbolTargetType: '{SymbolTargetType}' " +
+                $"\n IsInternal: '{IsInternal}'";
         }
 
         public override bool Equals(object other)
@@ -93,24 +106,27 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             return other is TargetChannelConfig config &&
                    PublishingInfraVersion == config.PublishingInfraVersion &&
                    Id == config.Id &&
-                   AkaMSChannelName.Equals(config.AkaMSChannelName, StringComparison.OrdinalIgnoreCase) &&
-                   ShippingFeed.Equals(config.ShippingFeed, StringComparison.OrdinalIgnoreCase) &&
-                   TransportFeed.Equals(config.TransportFeed, StringComparison.OrdinalIgnoreCase) &&
-                   SymbolsFeed.Equals(config.SymbolsFeed, StringComparison.OrdinalIgnoreCase) &&
-                   ChecksumsFeed.Equals(config.ChecksumsFeed, StringComparison.OrdinalIgnoreCase) &&
-                   InstallersFeed.Equals(config.InstallersFeed, StringComparison.OrdinalIgnoreCase);
+                   String.Equals(AkaMSChannelName, config.AkaMSChannelName, StringComparison.OrdinalIgnoreCase) &&
+                   String.Equals(ShippingFeed, config.ShippingFeed, StringComparison.OrdinalIgnoreCase) &&
+                   String.Equals(TransportFeed, config.TransportFeed, StringComparison.OrdinalIgnoreCase) &&
+                   String.Equals(SymbolsFeed, config.SymbolsFeed, StringComparison.OrdinalIgnoreCase) &&
+                   String.Equals(ChecksumsFeed, config.ChecksumsFeed, StringComparison.OrdinalIgnoreCase) &&
+                   String.Equals(InstallersFeed, config.InstallersFeed, StringComparison.OrdinalIgnoreCase) &&
+                   IsInternal == config.IsInternal;
         }
 
         public override int GetHashCode()
         {
             return (PublishingInfraVersion, 
                 Id, 
+                IsInternal,
                 AkaMSChannelName, 
                 ShippingFeed, 
                 TransportFeed, 
                 SymbolsFeed, 
                 ChecksumsFeed, 
-                InstallersFeed).GetHashCode();
+                InstallersFeed,
+                SymbolTargetType).GetHashCode();
         }
     }
 }

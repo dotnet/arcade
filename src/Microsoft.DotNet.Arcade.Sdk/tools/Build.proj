@@ -205,7 +205,7 @@
       <_SolutionRestoreProps Include="__BuildPhase=SolutionRestore" />
       <_SolutionRestoreProps Include="_NETCORE_ENGINEERING_TELEMETRY=Restore" />
       <_SolutionRestoreProps Include="MSBuildRestoreSessionId=$([System.Guid]::NewGuid())" />
-      <_SolutionRestoreProps Include="RestoreUseStaticGraphEvaluation=true" Condition="'$(RestoreUseStaticGraphEvaluation)' == 'true'" />
+      <_SolutionRestoreProps Include="RestoreUseStaticGraphEvaluation=$(RestoreUseStaticGraphEvaluation)" />
     </ItemGroup>
     
     <PropertyGroup>
@@ -245,6 +245,13 @@
 
       <!-- Invoke the 'Restore' target on solutions and projects which do not support NuGet. -->
       <_ProjectToRestore Include="@(ProjectToBuild)" Exclude="@(_ProjectToRestoreWithNuGet)" />
+    </ItemGroup>
+
+    <!-- Enable binlog generation during static graph restore evaluation -->
+    <ItemGroup Condition="'$(GenerateRestoreUseStaticGraphEvaluationBinlog)' == 'true'">
+      <_ProjectToRestore>
+        <AdditionalProperties>RESTORE_TASK_BINLOG_PARAMETERS=$(ArtifactsLogDir)Restore-%(Filename)%(Extension).binlog</AdditionalProperties>
+      </_ProjectToRestore>
     </ItemGroup>
 
     <MSBuild Projects="@(_ProjectToRestore)"
