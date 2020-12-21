@@ -257,7 +257,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 return null;
             }
 
-            BuildModel buildModel = _buildModelFactory.ManifestFileToModel(manifestFullPath, Log);
+            BuildModel buildModel = _buildModelFactory.ManifestFileToModel(manifestFullPath);
             
             if (buildModel.Identity.PublishingVersion == PublishingInfraVersion.Legacy)
             {

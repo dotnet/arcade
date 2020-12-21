@@ -66,7 +66,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 _buildModelFactory.CreateModelFromItems(null, null,
                 null, null, null, null, _testAzdoBuildId, null, _testAzdoRepoUri, _testBuildBranch, _testBuildCommit, false,
                 VersionTools.BuildManifest.Model.PublishingInfraVersion.All,
-                true, _taskLoggingHelper);
+                true);
             act.Should().Throw<ArgumentNullException>();
         }
 
@@ -121,7 +121,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             var model = _buildModelFactory.CreateModelFromItems(artifacts, null,
                 null, null, null, null, _testAzdoBuildId, _defaultManifestBuildData, _testAzdoRepoUri, _testBuildBranch, _testBuildCommit, false,
                 VersionTools.BuildManifest.Model.PublishingInfraVersion.All,
-                true, _taskLoggingHelper);
+                true);
 
             _taskLoggingHelper.HasLoggedErrors.Should().BeFalse();
             // When Maestro sees a symbol package, it is supposed to re-do the symbol package path to
@@ -182,7 +182,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             var model = _buildModelFactory.CreateModelFromItems(artifacts, null,
                 null, null, null, null, _testAzdoBuildId, _defaultManifestBuildData, _testAzdoRepoUri, _testBuildBranch, _testBuildCommit, false,
                 VersionTools.BuildManifest.Model.PublishingInfraVersion.All,
-                true, _taskLoggingHelper);
+                true);
 
             model.Artifacts.Blobs.Should().BeEmpty();
             model.Artifacts.Packages.Should().SatisfyRespectively(
@@ -221,7 +221,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             _buildModelFactory.CreateModelFromItems(artifacts, null,
                 null, null, null, null, _testAzdoBuildId, _defaultManifestBuildData, _testAzdoRepoUri, _testBuildBranch, _testBuildCommit, false,
                 VersionTools.BuildManifest.Model.PublishingInfraVersion.All,
-                true, _taskLoggingHelper);
+                true);
 
             _taskLoggingHelper.HasLoggedErrors.Should().BeTrue();
             _buildEngine.BuildErrorEvents.Should().Contain(e => e.Message.Equals($"Missing 'RelativeBlobPath' property on blob {zipArtifact}"));
@@ -246,7 +246,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             _buildModelFactory.CreateModelFromItems(artifacts, null,
                 null, null, null, null, _testAzdoBuildId, null, _testAzdoRepoUri, _testBuildBranch, _testBuildCommit, false,
                 VersionTools.BuildManifest.Model.PublishingInfraVersion.Latest,
-                true, _taskLoggingHelper);
+                true);
 
             // Should have logged an error that an initial location was not present.
             _taskLoggingHelper.HasLoggedErrors.Should().BeTrue();
@@ -280,7 +280,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             var model = _buildModelFactory.CreateModelFromItems(artifacts, null,
                 null, null, null, null, _testAzdoBuildId, manifestBuildData, _testAzdoRepoUri, _testBuildBranch, _testBuildCommit, false,
                 VersionTools.BuildManifest.Model.PublishingInfraVersion.All,
-                true, _taskLoggingHelper);
+                true);
 
             // Should have logged an error that an initial location was not present.
             _taskLoggingHelper.HasLoggedErrors.Should().BeFalse();
@@ -389,9 +389,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     strongNameSignInfo, fileSignInfo, fileExtensionSignInfo, certificatesSignInfo, _testAzdoBuildId,
                     _defaultManifestBuildData, _testAzdoRepoUri, _testBuildBranch, _testBuildCommit, true,
                     VersionTools.BuildManifest.Model.PublishingInfraVersion.Next,
-                    false, _taskLoggingHelper);
+                    false);
 
-                _buildModelFactory.CreateBuildManifest(_taskLoggingHelper,
+                _buildModelFactory.CreateBuildManifest(
                         modelFromItems.Artifacts.Blobs,
                         modelFromItems.Artifacts.Packages,
                         tempXmlFile,
@@ -406,7 +406,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                         modelFromItems.SigningInformation);
 
                 // Read the xml file back in and create a model from it.
-                var modelFromFile = _buildModelFactory.ManifestFileToModel(tempXmlFile, _taskLoggingHelper);
+                var modelFromFile = _buildModelFactory.ManifestFileToModel(tempXmlFile);
 
                 // There will be some reordering of the attributes here (they are written to the xml file in
                 // a defined order for some properties, then ordered by case).
@@ -528,7 +528,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             var model = _buildModelFactory.CreateModelFromItems(artifacts, null,
                 null, null, null, null, _testAzdoBuildId, _defaultManifestBuildData, _testAzdoRepoUri, _testBuildBranch, _testBuildCommit, false,
                 VersionTools.BuildManifest.Model.PublishingInfraVersion.All,
-                true, _taskLoggingHelper);
+                true);
 
             _taskLoggingHelper.HasLoggedErrors.Should().BeFalse();
             model.SigningInformation.Should().NotBeNull();
@@ -604,7 +604,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 strongNameSignInfo, fileSignInfo, fileExtensionSignInfo, certificatesSignInfo,
                 _testAzdoBuildId, _defaultManifestBuildData, _testAzdoRepoUri, _testBuildBranch, _testBuildCommit, false,
                 VersionTools.BuildManifest.Model.PublishingInfraVersion.All,
-                true, _taskLoggingHelper);
+                true);
 
             _taskLoggingHelper.HasLoggedErrors.Should().BeFalse();
             model.SigningInformation.Should().NotBeNull();
@@ -679,7 +679,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 null, null, null, null,
                 _testAzdoBuildId, _defaultManifestBuildData, _testAzdoRepoUri, _testBuildBranch, _testBuildCommit, false,
                 VersionTools.BuildManifest.Model.PublishingInfraVersion.All,
-                true, _taskLoggingHelper);
+                true);
 
             _taskLoggingHelper.HasLoggedErrors.Should().BeTrue();
             _buildEngine.BuildErrorEvents.Should().HaveCount(1);

@@ -155,8 +155,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     RepoCommit,
                     IsStableBuild,
                     targetPublishingVersion,
-                    IsReleaseOnlyPackageVersion,
-                    Log);
+                    IsReleaseOnlyPackageVersion);
 
                 Log.LogMessage(MessageImportance.High, $"Writing build manifest file '{OutputPath}'...");
                 fileSystem.WriteToFile(OutputPath, buildModel.ToXml().ToString());

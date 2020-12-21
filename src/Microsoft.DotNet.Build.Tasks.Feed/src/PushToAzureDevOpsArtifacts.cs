@@ -72,6 +72,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             collection.TryAddSingleton<IFileSystem, FileSystem>();
             collection.TryAddSingleton<IPackageArchiveReaderFactory, PackageArchiveReaderFactory>();
             collection.TryAddSingleton<INupkgInfoFactory, NupkgInfoFactory>();
+            collection.TryAddSingleton(Log);
         }
 
         public bool ExecuteTask(IFileSystem fileSystem,
@@ -106,7 +107,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     {
                         // Act as if %(PublishFlatContainer) were true for all items.
                         blobArtifacts = itemsToPushNoExcludes
-                            .Select(i => blobArtifactModelFactory.CreateBlobArtifactModel(i, Log));
+                            .Select(i => blobArtifactModelFactory.CreateBlobArtifactModel(i));
                         foreach (var blobItem in itemsToPushNoExcludes)
                         {
                             if (!fileSystem.FileExists(blobItem.ItemSpec))
@@ -175,7 +176,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         }
 
                         packageArtifacts = packageItems.Select(packageArtifactModelFactory.CreatePackageArtifactModel);
-                        blobArtifacts = blobItems.Select(i => blobArtifactModelFactory.CreateBlobArtifactModel(i, Log)).Where(blob => blob != null);
+                        blobArtifacts = blobItems.Select(i => blobArtifactModelFactory.CreateBlobArtifactModel(i)).Where(blob => blob != null);
                     }
 
                     PublishingInfraVersion targetPublishingVersion = PublishingInfraVersion.Latest;
@@ -189,9 +190,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     }
                     
                     SigningInformationModel signingInformationModel = signingInformationModelFactory.CreateSigningInformationModelFromItems(
-                        ItemsToSign, StrongNameSignInfo, FileSignInfo, FileExtensionSignInfo, CertificatesSignInfo, blobArtifacts, packageArtifacts, Log);
+                        ItemsToSign, StrongNameSignInfo, FileSignInfo, FileExtensionSignInfo, CertificatesSignInfo, blobArtifacts, packageArtifacts);
 
-                    buildModelFactory.CreateBuildManifest(Log,
+                    buildModelFactory.CreateBuildManifest(
                         blobArtifacts,
                         packageArtifacts,
                         AssetManifestPath,

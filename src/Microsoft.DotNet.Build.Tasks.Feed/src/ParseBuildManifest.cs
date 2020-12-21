@@ -51,7 +51,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             Log.LogMessage(MessageImportance.High, "Parsing build manifest file: {0}", AssetManifestPath);
             try
             {
-                BuildModel buildModel = buildModelFactory.ManifestFileToModel(AssetManifestPath, Log);
+                BuildModel buildModel = buildModelFactory.ManifestFileToModel(AssetManifestPath);
                 if (!Log.HasLoggedErrors)
                 {
                     if (buildModel.Artifacts.Blobs.Any())

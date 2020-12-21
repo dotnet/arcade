@@ -20,12 +20,18 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             ITaskItem[] fileExtensionSignInfo,
             ITaskItem[] certificatesSignInfo,
             IEnumerable<BlobArtifactModel> blobArtifacts,
-            IEnumerable<PackageArtifactModel> packageArtifacts,
-            TaskLoggingHelper log);
+            IEnumerable<PackageArtifactModel> packageArtifacts);
     }
 
     public class SigningInformationModelFactory : ISigningInformationModelFactory
     {
+        private readonly TaskLoggingHelper _log;
+
+        public SigningInformationModelFactory(TaskLoggingHelper logger)
+        {
+            _log = logger;
+        }
+
         public SigningInformationModel CreateSigningInformationModelFromItems(
             ITaskItem[] itemsToSign,
             ITaskItem[] strongNameSignInfo,
@@ -33,8 +39,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             ITaskItem[] fileExtensionSignInfo,
             ITaskItem[] certificatesSignInfo,
             IEnumerable<BlobArtifactModel> blobArtifacts,
-            IEnumerable<PackageArtifactModel> packageArtifacts,
-            TaskLoggingHelper log)
+            IEnumerable<PackageArtifactModel> packageArtifacts)
         {
             List<ItemToSignModel> parsedItemsToSign = new();
             List<StrongNameSignInfoModel> parsedStrongNameSignInfo = new();
@@ -50,7 +55,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     if (!blobArtifacts.Any(b => Path.GetFileName(b.Id).Equals(fileName, StringComparison.OrdinalIgnoreCase)) &&
                         !packageArtifacts.Any(p => $"{p.Id}.{p.Version}.nupkg".Equals(fileName, StringComparison.OrdinalIgnoreCase)))
                     {
-                        log.LogError($"Item to sign '{itemToSign}' was not found in the artifacts");
+                        _log.LogError($"Item to sign '{itemToSign}' was not found in the artifacts");
                     }
                     parsedItemsToSign.Add(new ItemToSignModel { Include = Path.GetFileName(fileName) });
                 }

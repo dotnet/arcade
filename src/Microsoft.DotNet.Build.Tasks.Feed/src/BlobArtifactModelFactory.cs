@@ -9,11 +9,17 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 {
     public interface IBlobArtifactModelFactory
     {
-        BlobArtifactModel CreateBlobArtifactModel(ITaskItem item, TaskLoggingHelper log);
+        BlobArtifactModel CreateBlobArtifactModel(ITaskItem item);
     }
 
     public class BlobArtifactModelFactory : IBlobArtifactModelFactory
     {
+        private readonly TaskLoggingHelper _log;
+
+        public BlobArtifactModelFactory(TaskLoggingHelper logger)
+        {
+            _log = logger;
+        }
 
         /// <summary>
         /// Creates a BlobArtifactModel based on the datat in the ITaskItem provided. Logs errors that may occur,
@@ -25,12 +31,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// <param name="item"></param>
         /// <param name="log"></param>
         /// <returns></returns>
-        public BlobArtifactModel CreateBlobArtifactModel(ITaskItem item, TaskLoggingHelper log)
+        public BlobArtifactModel CreateBlobArtifactModel(ITaskItem item)
         {
             string path = item.GetMetadata("RelativeBlobPath");
             if (string.IsNullOrEmpty(path))
             {
-                log.LogError($"Missing 'RelativeBlobPath' property on blob {item.ItemSpec}");
+                _log.LogError($"Missing 'RelativeBlobPath' property on blob {item.ItemSpec}");
             }
 
             return new BlobArtifactModel

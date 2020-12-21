@@ -183,7 +183,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     ManifestBuildData = ManifestBuildData == null ? locationAttribute : ManifestBuildData.Concat(locationAttribute).ToArray();
                 }
 
-                _buildModelFactory.CreateBuildManifest(Log,
+                _buildModelFactory.CreateBuildManifest(
                     blobArtifacts,
                     packageArtifacts,
                     AssetManifestPath,
@@ -219,7 +219,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         {
             return artifacts.Concat(items
                 .Where(i => !string.Equals(i.GetMetadata("ExcludeFromManifest"), "true", StringComparison.OrdinalIgnoreCase))
-                .Select(i => _blobArtifactModelFactory.CreateBlobArtifactModel(i, Log))
+                .Select(i => _blobArtifactModelFactory.CreateBlobArtifactModel(i))
                 .Where(blob => blob != null));
         }
     }

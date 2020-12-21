@@ -14,7 +14,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 {
     public interface IBuildModelFactory
     {
-        void CreateBuildManifest(TaskLoggingHelper log,
+        void CreateBuildManifest(
             IEnumerable<BlobArtifactModel> blobArtifacts,
             IEnumerable<PackageArtifactModel> packageArtifacts,
             string assetManifestPath,
@@ -42,10 +42,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             string repoCommit,
             bool isStableBuild,
             PublishingInfraVersion publishingVersion,
-            bool isReleaseOnlyPackageVersion,
-            TaskLoggingHelper log);
+            bool isReleaseOnlyPackageVersion);
 
-        BuildModel ManifestFileToModel(string assetManifestPath, TaskLoggingHelper log);
+        BuildModel ManifestFileToModel(string assetManifestPath);
     }
 
     public class BuildModelFactory : IBuildModelFactory
@@ -54,17 +53,20 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         private readonly IBlobArtifactModelFactory _blobArtifactModelFactory;
         private readonly IPackageArtifactModelFactory _packageArtifactModelFactory;
         private readonly IFileSystem _fileSystem;
+        private readonly TaskLoggingHelper _log;
 
         public BuildModelFactory(
             ISigningInformationModelFactory signingInformationModelFactory,
             IBlobArtifactModelFactory blobArtifactModelFactory,
             IPackageArtifactModelFactory packageArtifactModelFactory,
-            IFileSystem fileSystem)
+            IFileSystem fileSystem,
+            TaskLoggingHelper logger)
         {
             _signingInformationModelFactory = signingInformationModelFactory;
             _blobArtifactModelFactory = blobArtifactModelFactory;
             _packageArtifactModelFactory = packageArtifactModelFactory;
             _fileSystem = fileSystem;
+            _log = logger;
         }
 
         private const string AssetsVirtualDir = "assets/";
@@ -85,7 +87,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// <param name="publishingVersion">Publishing version in use.</param>
         /// <param name="isReleaseOnlyPackageVersion">True if this repo uses release-only package versions</param>
         /// <param name="signingInformationModel">Signing information.</param>
-        public void CreateBuildManifest(TaskLoggingHelper log,
+        public void CreateBuildManifest(
             IEnumerable<BlobArtifactModel> blobArtifacts,
             IEnumerable<PackageArtifactModel> packageArtifacts,
             string assetManifestPath,
@@ -110,10 +112,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 isStableBuild,
                 publishingVersion,
                 isReleaseOnlyPackageVersion,
-                log,
                 signingInformationModel: signingInformationModel);
 
-            log.LogMessage(MessageImportance.High, $"Writing build manifest file '{assetManifestPath}'...");
+            _log.LogMessage(MessageImportance.High, $"Writing build manifest file '{assetManifestPath}'...");
             _fileSystem.WriteToFile(assetManifestPath, model.ToXml().ToString());
         }
 
@@ -131,8 +132,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             string repoCommit,
             bool isStableBuild,
             PublishingInfraVersion publishingVersion,
-            bool isReleaseOnlyPackageVersion,
-            TaskLoggingHelper log)
+            bool isReleaseOnlyPackageVersion)
         {
             if (artifacts == null)
             {
@@ -164,13 +164,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         artifact.SetMetadata("RelativeBlobPath", $"{AssetsVirtualDir}symbols/{fileName}");
                     }
 
-                    blobArtifacts.Add(_blobArtifactModelFactory.CreateBlobArtifactModel(artifact, log));
+                    blobArtifacts.Add(_blobArtifactModelFactory.CreateBlobArtifactModel(artifact));
                 }
             }
 
             var signingInfoModel = _signingInformationModelFactory.CreateSigningInformationModelFromItems(
                 itemsToSign, strongNameSignInfo, fileSignInfo, fileExtensionSignInfo,
-                certificatesSignInfo, blobArtifacts, packageArtifacts, log);
+                certificatesSignInfo, blobArtifacts, packageArtifacts);
 
             var buildModel = CreateModel(
                 blobArtifacts,
@@ -183,12 +183,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 isStableBuild,
                 publishingVersion,
                 isReleaseOnlyPackageVersion,
-                log,
                 signingInformationModel: signingInfoModel);
             return buildModel;
         }
 
-        private BuildModel CreateModel(IEnumerable<BlobArtifactModel> blobArtifacts,
+        private BuildModel CreateModel(
+            IEnumerable<BlobArtifactModel> blobArtifacts,
             IEnumerable<PackageArtifactModel> packageArtifacts,
             string manifestBuildId,
             string[] manifestBuildData,
@@ -198,13 +198,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             bool isStableBuild,
             PublishingInfraVersion publishingVersion,
             bool isReleaseOnlyPackageVersion,
-            TaskLoggingHelper log,
             SigningInformationModel signingInformationModel = null)
         {
             var attributes = MSBuildListSplitter.GetNamedProperties(manifestBuildData);
             if (!ManifestBuildDataHasLocationInformation(attributes))
             {
-                log.LogError("Missing 'location' property from ManifestBuildData");
+                _log.LogError("Missing 'location' property from ManifestBuildData");
             }
             BuildModel buildModel = new BuildModel(
                     new BuildIdentity
@@ -225,7 +224,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             return buildModel;
         }
 
-        public BuildModel ManifestFileToModel(string assetManifestPath, TaskLoggingHelper log)
+        public BuildModel ManifestFileToModel(string assetManifestPath)
         {
             try
             {
@@ -233,8 +232,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             }
             catch (Exception e)
             {
-                log.LogError($"Could not parse asset manifest file: {assetManifestPath}");
-                log.LogErrorFromException(e);
+                _log.LogError($"Could not parse asset manifest file: {assetManifestPath}");
+                _log.LogErrorFromException(e);
                 return null;
             }
         }
