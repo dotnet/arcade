@@ -3,9 +3,13 @@
 
 using Microsoft.Arcade.Common;
 using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
 using Microsoft.DotNet.VersionTools.BuildManifest.Model;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed
 {
@@ -48,7 +52,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 {
                     if (buildModel.Artifacts.Blobs.Any())
                     {
-                        BlobInfos = buildModel.Artifacts.Blobs.Select(blob => new MSBuild.TaskItem(blob.Id)).ToArray();
+                        BlobInfos = buildModel.Artifacts.Blobs.Select(blob => new TaskItem(blob.Id)).ToArray();
                     }
                     if (buildModel.Artifacts.Packages.Any())
                     {
@@ -70,7 +74,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 [NuGetPackageInfoId] = identity.Id,
                 [NuGetPackageInfoVersion] = identity.Version.ToString()
             };
-            return new MSBuild.TaskItem(identity.ToString(), metadata);
+            return new TaskItem(identity.ToString(), metadata);
         }
     }
 }
