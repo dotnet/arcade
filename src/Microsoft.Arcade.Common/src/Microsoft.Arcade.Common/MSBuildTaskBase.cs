@@ -35,6 +35,7 @@ namespace Microsoft.Arcade.Common
         public virtual void ConfigureServices(IServiceCollection collection)
         {
             collection.TryAddSingleton<IFileSystem, FileSystem>();
+            collection.TryAddSingleton(Log);
         }
 
         private ParameterInfo[] GetExecuteParameterTypes()

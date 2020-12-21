@@ -179,6 +179,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             collection.TryAddSingleton<INupkgInfoFactory, NupkgInfoFactory>();
             collection.TryAddSingleton<IPackageArchiveReaderFactory, PackageArchiveReaderFactory>();
             collection.TryAddSingleton<IFileSystem, FileSystem>();
+            collection.TryAddSingleton(Log);
         }
 
         public bool ExecuteTask(IBuildModelFactory buildModelFactory,
