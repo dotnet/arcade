@@ -49,7 +49,6 @@
     <Title>$(Id)</Title>
     <Authors>Microsoft</Authors>
     <Owners>microsoft,dotnetframework</Owners>
-    <Description>TODO</Description>
     <IconUrl>http://go.microsoft.com/fwlink/?LinkID=288859</IconUrl>
     <Tags></Tags>
     <RequireLicenseAcceptance Condition="'$(RequireLicenseAcceptance)' == ''">false</RequireLicenseAcceptance>
@@ -856,6 +855,7 @@
   </Target>
 
   <Target Name="GetPackageDescription"
+          Condition="'$(Description)' == '' and '$(PackageDescription)' == ''"
           DependsOnTargets="GetSyncInfo">
     <PropertyGroup>
       <UseRuntimePackageDescription Condition="'$(UseRuntimePackageDescription)' == '' AND $(BaseId.StartsWith('runtime.native'))">true</UseRuntimePackageDescription>
