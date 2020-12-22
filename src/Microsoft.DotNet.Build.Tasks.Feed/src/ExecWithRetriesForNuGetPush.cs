@@ -14,7 +14,6 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
-using MSBuild = Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed
 {
@@ -87,6 +86,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         public override void ConfigureServices(IServiceCollection collection)
         {
             collection.TryAddSingleton<INupkgInfoFactory, NupkgInfoFactory>();
+            collection.TryAddSingleton<IPackageArchiveReaderFactory, PackageArchiveReaderFactory>();
         }
 
         public bool ExecuteTask(INupkgInfoFactory nupkgInfoFactory)

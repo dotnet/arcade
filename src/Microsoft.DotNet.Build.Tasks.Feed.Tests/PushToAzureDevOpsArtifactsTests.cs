@@ -6,6 +6,7 @@ using Microsoft.Arcade.Common;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Microsoft.DotNet.Build.Tasks.Feed.Tests.TestDoubles;
+using Microsoft.DotNet.Internal.DependencyInjection.Testing;
 using Microsoft.DotNet.VersionTools.Automation;
 using Microsoft.DotNet.VersionTools.BuildManifest.Model;
 using Microsoft.Extensions.DependencyInjection;
@@ -21,7 +22,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
 {
     public class PushToAzureDevOpsArtifactsTests
     {
-        // We're using a fake file system so all of our paths can be fake, too
         private const string TARGET_MANIFEST_PATH = @"C:\manifests\TestManifest.xml";
         private const string PACKAGE_A = @"C:\packages\test-package-a.6.0.492.nupkg";
         private const string PACKAGE_B = @"C:\packages\test-package-b.6.0.492.nupkg";
@@ -119,7 +119,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             // Dependency Injection setup
             var collection = new ServiceCollection()
                 .AddSingleton(fileSystemMock.Object)
-                .AddSingleton<IBuildModelFactory, BuildModelFactory>();            
+                .AddSingleton<IBuildModelFactory, BuildModelFactory>();
             CreateMockServiceCollection(collection);
             task.ConfigureServices(collection);
             using var provider = collection.BuildServiceProvider();
@@ -171,7 +171,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             actualPath[0].Should().Be(TARGET_MANIFEST_PATH);
             actualBuildModel[0].Should().Be(expectedManifestContent);
         }
-        
+
         [Fact]
         public void ProducesBasicManifest()
         {
@@ -187,14 +187,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             Mock<IFileSystem> fileSystemMock = new Mock<IFileSystem>();
             IList<string> actualPath = new List<string>();
             IList<string> actualBuildModel = new List<string>();
-            IList<string> files = new List<string>{ PACKAGE_A, PACKAGE_B, SAMPLE_MANIFEST };
+            IList<string> files = new List<string> { PACKAGE_A, PACKAGE_B, SAMPLE_MANIFEST };
             fileSystemMock.Setup(m => m.WriteToFile(Capture.In(actualPath), Capture.In(actualBuildModel))).Verifiable();
             fileSystemMock.Setup(m => m.FileExists(Capture.In(files))).Returns(true);
 
             Mock<INupkgInfoFactory> nupkgInfoFactoryMock = new Mock<INupkgInfoFactory>();
             IList<string> actualNupkgInfoPath = new List<string>();
             nupkgInfoFactoryMock.Setup(m => m.CreateNupkgInfo(PACKAGE_A)).Returns(new NupkgInfo(new PackageIdentity(
-                id: Path.GetFileNameWithoutExtension(PACKAGE_A), 
+                id: Path.GetFileNameWithoutExtension(PACKAGE_A),
                 version: new NuGetVersion(NUPKG_VERSION)
             )));
             nupkgInfoFactoryMock.Setup(m => m.CreateNupkgInfo(PACKAGE_B)).Returns(new NupkgInfo(new PackageIdentity(
@@ -218,7 +218,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             actualPath[0].Should().Be(TARGET_MANIFEST_PATH);
             actualBuildModel[0].Should().Be(expectedManifestContent);
         }
-        
+
         [Fact]
         public void PublishFlatContainerManifest()
         {
@@ -266,7 +266,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             actualPath[0].Should().Be(TARGET_MANIFEST_PATH);
             actualBuildModel[0].Should().Be(expectedManifestContent);
         }
-        
+
         [Fact]
         public void IsNotStableBuildPath()
         {
@@ -314,7 +314,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             actualPath[0].Should().Be(TARGET_MANIFEST_PATH);
             actualBuildModel[0].Should().Be(expectedManifestContent);
         }
-        
+
         [Fact]
         public void IsReleaseOnlyPackageVersionPath()
         {
@@ -362,8 +362,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             actualPath[0].Should().Be(TARGET_MANIFEST_PATH);
             actualBuildModel[0].Should().Be(expectedManifestContent);
         }
-        
-        
+
+
         [Fact]
         public void SigningInfoInManifest()
         {
@@ -478,6 +478,22 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             task.InvokeExecute(provider).Should().BeTrue();
             actualPath[0].Should().Be(TARGET_MANIFEST_PATH);
             actualBuildModel[0].Should().Be(expectedManifestContent);
+        }
+
+        [Fact]
+        public void AreDependenciesRegistered()
+        {
+            PushToAzureDevOpsArtifacts task = new PushToAzureDevOpsArtifacts();
+            
+            DependencyInjectionValidation.IsDependencyResolutionCoherent(
+                    s =>
+                    {
+                        task.ConfigureServices(s);
+                    },
+                    out string message
+                )
+                .Should()
+                .BeTrue(message);
         }
     }
 }
