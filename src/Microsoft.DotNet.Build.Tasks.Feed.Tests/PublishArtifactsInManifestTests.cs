@@ -542,6 +542,16 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         {
             ParseBuildManifest task = new ParseBuildManifest();
 
+            var collection = new ServiceCollection();
+            task.ConfigureServices(collection);
+            var provider = collection.BuildServiceProvider();
+
+            foreach (var dependency in task.GetExecuteParameterTypes())
+            {
+                var service = provider.GetRequiredService(dependency);
+                service.Should().NotBeNull();
+            }
+
             DependencyInjectionValidation.IsDependencyResolutionCoherent(
                     s =>
                     {

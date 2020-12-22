@@ -67,7 +67,7 @@ namespace Microsoft.Arcade.Common
         /// Uses some reflection magic to look up the types of depenencies that to be injected into the implemented task. 
         /// </summary>
         /// <returns></returns>
-        private Type[] GetExecuteParameterTypes()
+        public Type[] GetExecuteParameterTypes()
         {
             return GetType().GetMethod(ExecuteMethodName).GetParameters().Select(p => p.ParameterType).ToArray();
         }

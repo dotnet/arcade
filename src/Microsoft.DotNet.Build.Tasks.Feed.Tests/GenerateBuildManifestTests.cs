@@ -3,6 +3,7 @@
 
 using FluentAssertions;
 using Microsoft.DotNet.Internal.DependencyInjection.Testing;
+using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
@@ -13,6 +14,16 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         public void AreDependenciesRegistered()
         {
             GenerateBuildManifest task = new GenerateBuildManifest();
+
+            var collection = new ServiceCollection();
+            task.ConfigureServices(collection);
+            var provider = collection.BuildServiceProvider();
+
+            foreach (var dependency in task.GetExecuteParameterTypes())
+            {
+                var service = provider.GetRequiredService(dependency);
+                service.Should().NotBeNull();
+            }
 
             DependencyInjectionValidation.IsDependencyResolutionCoherent(
                     s =>

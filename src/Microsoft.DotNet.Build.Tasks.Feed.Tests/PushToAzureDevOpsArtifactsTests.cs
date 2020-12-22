@@ -484,7 +484,17 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         public void AreDependenciesRegistered()
         {
             PushToAzureDevOpsArtifacts task = new PushToAzureDevOpsArtifacts();
-            
+
+            var collection = new ServiceCollection();
+            task.ConfigureServices(collection);
+            var provider = collection.BuildServiceProvider();
+
+            foreach(var dependency in task.GetExecuteParameterTypes())
+            {
+                var service = provider.GetRequiredService(dependency);
+                service.Should().NotBeNull();
+            }
+
             DependencyInjectionValidation.IsDependencyResolutionCoherent(
                     s =>
                     {
