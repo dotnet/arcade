@@ -9,5 +9,6 @@ namespace Microsoft.DotNet.SharedFramework.Sdk
         public string Name { get; set; }
         public string AssemblyVersion { get; set; }
         public string FileVersion { get; set; }
+        public bool IsNative { get; set; }
     }
 }
