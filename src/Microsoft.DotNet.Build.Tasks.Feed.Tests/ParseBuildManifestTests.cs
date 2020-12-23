@@ -2,7 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using FluentAssertions;
-//using Microsoft.DotNet.Internal.DependencyInjection.Testing;
+using Microsoft.DotNet.Internal.DependencyInjection.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
@@ -10,7 +10,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
 {
     public class ParseBuildManifestTests
     {
-        /*[Fact]
+        [Fact]
         public void AreDependenciesRegistered()
         {
             ParseBuildManifest task = new ParseBuildManifest();
@@ -34,6 +34,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 )
                 .Should()
                 .BeTrue(message);
-        }*/
+        }
     }
 }

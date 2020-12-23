@@ -5,7 +5,7 @@ using FluentAssertions;
 using Microsoft.Arcade.Common;
 using Microsoft.DotNet.Build.Tasks.Feed.Model;
 using Microsoft.DotNet.Build.Tasks.Feed.Tests.TestDoubles;
-//using Microsoft.DotNet.Internal.DependencyInjection.Testing;
+using Microsoft.DotNet.Internal.DependencyInjection.Testing;
 using Microsoft.DotNet.VersionTools.BuildManifest.Model;
 using Microsoft.Extensions.DependencyInjection;
 using System;
@@ -537,7 +537,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             #endregion
         }
 
-       /* [Fact]
+        [Fact]
         public void AreDependenciesRegistered()
         {
             ParseBuildManifest task = new ParseBuildManifest();
@@ -561,6 +561,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 )
                 .Should()
                 .BeTrue(message);
-        }       */
+        }        
     }
 }
