@@ -44,8 +44,6 @@
     <SystemTextJsonVersion>4.7.0</SystemTextJsonVersion>
     <NuGetVersioningVersion>4.4.0</NuGetVersioningVersion>
     <NuGetVersion>5.6.0-preview.2.6489</NuGetVersion>
-    <NUnitVersion>3.12.0</NUnitVersion>
-    <NUnit3TestAdapterVersion>3.17.0</NUnit3TestAdapterVersion>
     <OctokitVersion>0.32.0</OctokitVersion>
     <DotNetSleetLibVersion>2.2.143</DotNetSleetLibVersion>
     <SwashbuckleAspNetCoreSwaggerVersion>3.0.0</SwashbuckleAspNetCoreSwaggerVersion>

@@ -7,6 +7,7 @@ using Microsoft.Build.Utilities;
 using Microsoft.DotNet.Build.Tasks.Feed.Tests.TestDoubles;
 using Microsoft.DotNet.VersionTools.Automation;
 using Microsoft.Extensions.DependencyInjection;
+using Moq;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -39,6 +40,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
 
         public BuildModelFactoryTests()
         {
+            _buildEngine = new MockBuildEngine();
+            _stubTask = new StubTask(_buildEngine);
+            _taskLoggingHelper = new TaskLoggingHelper(_stubTask);
+
             ServiceProvider provider = new ServiceCollection()
                 .AddSingleton<ISigningInformationModelFactory, SigningInformationModelFactory>()
                 .AddSingleton<IBlobArtifactModelFactory, BlobArtifactModelFactory>()
@@ -47,11 +52,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 .AddSingleton<INupkgInfoFactory, NupkgInfoFactory>()
                 .AddSingleton<IFileSystem, FileSystem>()
                 .AddSingleton(typeof(BuildModelFactory))
+                .AddSingleton(_taskLoggingHelper)
                 .BuildServiceProvider();
-
-            _buildEngine = new MockBuildEngine();
-            _stubTask = new StubTask(_buildEngine);
-            _taskLoggingHelper = new TaskLoggingHelper(_stubTask);
+            
             _buildModelFactory = ActivatorUtilities.CreateInstance<BuildModelFactory>(provider);
         }
 
