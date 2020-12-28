@@ -177,11 +177,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         [Fact]
         public void ProducesBasicManifest()
         {
-            string expectedManifestContent = $@"<Build PublishingVersion=""2"" Name=""https://dnceng@dev.azure.com/dnceng/internal/test-repo"" BuildId=""12345.6"" Branch=""/refs/heads/branch"" Commit=""1234567890abcdef"" InitialAssetsLocation=""cloud"" IsReleaseOnlyPackageVersion=""false"" IsStable=""true"">
-  <Package Id=""{Path.GetFileNameWithoutExtension(PACKAGE_A)}"" Version=""{NUPKG_VERSION}"" Nonshipping=""true"" />
-  <Package Id=""{Path.GetFileNameWithoutExtension(PACKAGE_B)}"" Version=""{NUPKG_VERSION}"" Nonshipping=""false"" />
-  <Blob Id=""{SAMPLE_MANIFEST}"" Nonshipping=""false"" />
-</Build>";
+            string expectedManifestContent = $@"<Build PublishingVersion=""2"" Name=""https://dnceng@dev.azure.com/dnceng/internal/test-repo"" BuildId=""12345.6"" Branch=""/refs/heads/branch"" Commit=""1234567890abcdef"" InitialAssetsLocation=""cloud"" IsReleaseOnlyPackageVersion=""false"" IsStable=""true""><Package Id=""{Path.GetFileNameWithoutExtension(PACKAGE_A)}"" Version=""{NUPKG_VERSION}"" Nonshipping=""true"" /><Package Id=""{Path.GetFileNameWithoutExtension(PACKAGE_B)}"" Version=""{NUPKG_VERSION}"" Nonshipping=""false"" /><Blob Id=""{SAMPLE_MANIFEST}"" Nonshipping=""false"" /></Build>";
 
             PushToAzureDevOpsArtifacts task = ConstructPushToAzureDevOpsArtifactsTask();
 
@@ -285,7 +281,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             // Act and Assert
             task.InvokeExecute(provider).Should().BeTrue();
             actualPath[0].Should().Be(TARGET_MANIFEST_PATH);
-            actualBuildModel[0].Should().BeEquivalentTo(expectedBuildModel.ToString());
+            actualBuildModel[0].Should().BeEquivalentTo(expectedBuildModel.ToString(SaveOptions.DisableFormatting));
         }
 
         [Fact]
@@ -295,11 +291,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             PushToAzureDevOpsArtifacts task = ConstructPushToAzureDevOpsArtifactsTask(buildEngine);
             task.IsStableBuild = false;
 
-            string expectedManifestContent = $@"<Build PublishingVersion=""{(int)PublishingInfraVersion.Latest}"" Name=""https://dnceng@dev.azure.com/dnceng/internal/test-repo"" BuildId=""12345.6"" Branch=""/refs/heads/branch"" Commit=""1234567890abcdef"" InitialAssetsLocation=""cloud"" IsReleaseOnlyPackageVersion=""false"" IsStable=""false"">
-  <Package Id=""{Path.GetFileNameWithoutExtension(PACKAGE_A)}"" Version=""{NUPKG_VERSION}"" Nonshipping=""true"" />
-  <Package Id=""{Path.GetFileNameWithoutExtension(PACKAGE_B)}"" Version=""{NUPKG_VERSION}"" Nonshipping=""false"" />
-  <Blob Id=""{SAMPLE_MANIFEST}"" Nonshipping=""false"" />
-</Build>";
+            string expectedManifestContent = $@"<Build PublishingVersion=""{(int)PublishingInfraVersion.Latest}"" Name=""https://dnceng@dev.azure.com/dnceng/internal/test-repo"" BuildId=""12345.6"" Branch=""/refs/heads/branch"" Commit=""1234567890abcdef"" InitialAssetsLocation=""cloud"" IsReleaseOnlyPackageVersion=""false"" IsStable=""false""><Package Id=""{Path.GetFileNameWithoutExtension(PACKAGE_A)}"" Version=""{NUPKG_VERSION}"" Nonshipping=""true"" /><Package Id=""{Path.GetFileNameWithoutExtension(PACKAGE_B)}"" Version=""{NUPKG_VERSION}"" Nonshipping=""false"" /><Blob Id=""{SAMPLE_MANIFEST}"" Nonshipping=""false"" /></Build>";
 
             // Mocks
             Mock<IFileSystem> fileSystemMock = new Mock<IFileSystem>();
@@ -334,8 +326,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             // Act and Assert
             //task.BuildEngine.
             var result = task.InvokeExecute(provider);
-            buildEngine.BuildErrorEvents.Count.Should().Be(0);
             buildEngine.BuildErrorEvents.ForEach(x => Console.WriteLine(x.Message));
+            buildEngine.BuildErrorEvents.Count.Should().Be(0);            
             result.Should().BeTrue();
             actualPath[0].Should().Be(TARGET_MANIFEST_PATH);
             actualBuildModel[0].Should().Be(expectedManifestContent);
@@ -347,11 +339,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             PushToAzureDevOpsArtifacts task = ConstructPushToAzureDevOpsArtifactsTask();
             task.IsReleaseOnlyPackageVersion = true;
 
-            string expectedManifestContent = $@"<Build PublishingVersion=""{(int)PublishingInfraVersion.Latest}"" Name=""https://dnceng@dev.azure.com/dnceng/internal/test-repo"" BuildId=""12345.6"" Branch=""/refs/heads/branch"" Commit=""1234567890abcdef"" InitialAssetsLocation=""cloud"" IsReleaseOnlyPackageVersion=""true"" IsStable=""true"">
-  <Package Id=""{Path.GetFileNameWithoutExtension(PACKAGE_A)}"" Version=""{NUPKG_VERSION}"" Nonshipping=""true"" />
-  <Package Id=""{Path.GetFileNameWithoutExtension(PACKAGE_B)}"" Version=""{NUPKG_VERSION}"" Nonshipping=""false"" />
-  <Blob Id=""{SAMPLE_MANIFEST}"" Nonshipping=""false"" />
-</Build>";
+            string expectedManifestContent = $@"<Build PublishingVersion=""{(int)PublishingInfraVersion.Latest}"" Name=""https://dnceng@dev.azure.com/dnceng/internal/test-repo"" BuildId=""12345.6"" Branch=""/refs/heads/branch"" Commit=""1234567890abcdef"" InitialAssetsLocation=""cloud"" IsReleaseOnlyPackageVersion=""true"" IsStable=""true""><Package Id=""{Path.GetFileNameWithoutExtension(PACKAGE_A)}"" Version=""{NUPKG_VERSION}"" Nonshipping=""true"" /><Package Id=""{Path.GetFileNameWithoutExtension(PACKAGE_B)}"" Version=""{NUPKG_VERSION}"" Nonshipping=""false"" /><Blob Id=""{SAMPLE_MANIFEST}"" Nonshipping=""false"" /></Build>";
 
             // Mocks
             Mock<IFileSystem> fileSystemMock = new Mock<IFileSystem>();
@@ -450,24 +438,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 new TaskItem(PACKAGE_B),
             };
 
-            string expectedManifestContent = $@"<Build PublishingVersion=""{(int)PublishingInfraVersion.Latest}"" Name=""https://dnceng@dev.azure.com/dnceng/internal/test-repo"" BuildId=""12345.6"" Branch=""/refs/heads/branch"" Commit=""1234567890abcdef"" InitialAssetsLocation=""cloud"" IsReleaseOnlyPackageVersion=""false"" IsStable=""true"">
-  <Package Id=""test-package-a"" Version=""{NUPKG_VERSION}"" Nonshipping=""true"" />
-  <Package Id=""test-package-b"" Version=""{NUPKG_VERSION}"" Nonshipping=""false"" />
-  <Blob Id=""{SAMPLE_MANIFEST}"" Nonshipping=""false"" />
-  <SigningInformation>
-    <FileExtensionSignInfo Include="".dll"" CertificateName=""TestSigningCert"" />
-    <FileExtensionSignInfo Include="".nupkg"" CertificateName=""TestNupkg"" />
-    <FileExtensionSignInfo Include="".zip"" CertificateName=""None"" />
-    <FileSignInfo Include=""Best.dll"" CertificateName=""BestCert"" />
-    <FileSignInfo Include=""Worst.dll"" CertificateName=""WorstCert"" />
-    <CertificatesSignInfo Include=""BestCert"" DualSigningAllowed=""true"" />
-    <CertificatesSignInfo Include=""WorstCert"" DualSigningAllowed=""false"" />
-    <ItemsToSign Include=""test-package-a.6.0.492.nupkg"" />
-    <ItemsToSign Include=""test-package-b.6.0.492.nupkg"" />
-    <StrongNameSignInfo Include=""VeryCoolStrongName"" PublicKeyToken=""123456789ABCDEF0"" CertificateName=""BestCert"" />
-    <StrongNameSignInfo Include=""VeryTrashStrongName"" PublicKeyToken=""00FEDCBA98765432"" CertificateName=""WorstCert"" />
-  </SigningInformation>
-</Build>";
+            string expectedManifestContent = $@"<Build PublishingVersion=""{(int)PublishingInfraVersion.Latest}"" Name=""https://dnceng@dev.azure.com/dnceng/internal/test-repo"" BuildId=""12345.6"" Branch=""/refs/heads/branch"" Commit=""1234567890abcdef"" InitialAssetsLocation=""cloud"" IsReleaseOnlyPackageVersion=""false"" IsStable=""true""><Package Id=""test-package-a"" Version=""{NUPKG_VERSION}"" Nonshipping=""true"" /><Package Id=""test-package-b"" Version=""{NUPKG_VERSION}"" Nonshipping=""false"" /><Blob Id=""{SAMPLE_MANIFEST}"" Nonshipping=""false"" /><SigningInformation><FileExtensionSignInfo Include="".dll"" CertificateName=""TestSigningCert"" /><FileExtensionSignInfo Include="".nupkg"" CertificateName=""TestNupkg"" /><FileExtensionSignInfo Include="".zip"" CertificateName=""None"" /><FileSignInfo Include=""Best.dll"" CertificateName=""BestCert"" /><FileSignInfo Include=""Worst.dll"" CertificateName=""WorstCert"" /><CertificatesSignInfo Include=""BestCert"" DualSigningAllowed=""true"" /><CertificatesSignInfo Include=""WorstCert"" DualSigningAllowed=""false"" /><ItemsToSign Include=""test-package-a.6.0.492.nupkg"" /><ItemsToSign Include=""test-package-b.6.0.492.nupkg"" /><StrongNameSignInfo Include=""VeryCoolStrongName"" PublicKeyToken=""123456789ABCDEF0"" CertificateName=""BestCert"" /><StrongNameSignInfo Include=""VeryTrashStrongName"" PublicKeyToken=""00FEDCBA98765432"" CertificateName=""WorstCert"" /></SigningInformation></Build>";
 
             // Mocks
             Mock<IFileSystem> fileSystemMock = new Mock<IFileSystem>();
