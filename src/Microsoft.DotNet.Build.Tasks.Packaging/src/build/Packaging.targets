@@ -117,6 +117,9 @@
              Text="$(MSBuildProjectName) -> Skipping for this platform."
              Importance="high" />
   </Target>
+  
+  <Target Name="Pack"
+          DependsOnTargets="Build" />
 
   <Target Name="Clean">
     <!-- package version is calculated so read the last version from the marker file. -->
