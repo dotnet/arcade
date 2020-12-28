@@ -128,13 +128,6 @@
 
   </Choose>
 
-  <!-- 
-    Implements proposal https://github.com/dotnet/designs/pull/33.
-  -->
-  <ItemGroup Condition="'$(UsingToolNetFrameworkReferenceAssemblies)' == 'true'">
-    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="$(MicrosoftNetFrameworkReferenceAssembliesVersion)" PrivateAssets="all" IsImplicitlyDefined="true" />
-  </ItemGroup>
-
   <ItemGroup Condition="'$(EnableRichCodeNavigation)' == 'true'">
     <PackageReference Include="RichCodeNav.EnvVarDump" Version="$(RichCodeNavPackageVersion)" IsImplicitlyDefined="true" PrivateAssets="all" />
   </ItemGroup>

@@ -40,7 +40,6 @@
     <UsingToolVSSDK Condition="'$(UsingToolVSSDK)' == ''">false</UsingToolVSSDK>
     <UsingToolIbcOptimization Condition="'$(UsingToolIbcOptimization)' == ''">false</UsingToolIbcOptimization>
     <UsingToolVisualStudioIbcTraining Condition="'$(UsingToolVisualStudioIbcTraining)' == ''">false</UsingToolVisualStudioIbcTraining>
-    <UsingToolNetFrameworkReferenceAssemblies Condition="'$(UsingToolNetFrameworkReferenceAssemblies)' == ''">false</UsingToolNetFrameworkReferenceAssemblies>
     <UsingToolNuGetRepack Condition="'$(UsingToolNuGetRepack)' == ''">false</UsingToolNuGetRepack>
     <UsingToolSymbolUploader Condition="'$(UsingToolSymbolUploader)' == ''">false</UsingToolSymbolUploader>
 
