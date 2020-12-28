@@ -16,6 +16,7 @@ using NuGet.Packaging.Core;
 using NuGet.Versioning;
 using System.Collections.Generic;
 using System.IO;
+using System.Xml.Linq;
 using Xunit;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
@@ -225,7 +226,33 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             PushToAzureDevOpsArtifacts task = ConstructPushToAzureDevOpsArtifactsTask();
             task.PublishFlatContainer = true;
 
-            string expectedManifestContent = $@"<Build PublishingVersion=""{(int)PublishingInfraVersion.Latest}"" Name=""https://dnceng@dev.azure.com/dnceng/internal/test-repo"" BuildId=""12345.6"" Branch=""/refs/heads/branch"" Commit=""1234567890abcdef"" InitialAssetsLocation=""cloud"" IsReleaseOnlyPackageVersion=""false"" IsStable=""true"">
+            XDocument expectedBuildModel = new XDocument(
+                new XElement("Build", 
+                    new XAttribute("PublishingVersion", (int)PublishingInfraVersion.Latest),
+                    new XAttribute("Name", "https://dnceng@dev.azure.com/dnceng/internal/test-repo"),
+                    new XAttribute("BuildId", "12345.6"), 
+                    new XAttribute("Branch", "/refs/heads/branch"),
+                    new XAttribute("Commit", "1234567890abcdef"),
+                    new XAttribute("InitialAssetsLocation", "cloud"),
+                    new XAttribute("IsReleaseOnlyPackageVersion", "false"),
+                    new XAttribute("IsStable", "true"),
+                        new XElement("Blob", 
+                            new XAttribute("Id", SAMPLE_MANIFEST),
+                            new XAttribute("Nonshipping", "false")
+                        ),
+                        new XElement("Blob",
+                            new XAttribute("Id", PACKAGE_A),
+                            new XAttribute("Nonshipping", "true")
+                        ),
+                        new XElement("Blob",
+                            new XAttribute("Id", PACKAGE_B),
+                            new XAttribute("Nonshipping", "false")
+                        )
+                )
+            );
+
+
+                            string expectedManifestContent = $@"<Build PublishingVersion=""{(int)PublishingInfraVersion.Latest}"" Name=""https://dnceng@dev.azure.com/dnceng/internal/test-repo"" BuildId=""12345.6"" Branch=""/refs/heads/branch"" Commit=""1234567890abcdef"" InitialAssetsLocation=""cloud"" IsReleaseOnlyPackageVersion=""false"" IsStable=""true"">
   <Blob Id=""{SAMPLE_MANIFEST}"" Nonshipping=""false"" />
   <Blob Id=""{PACKAGE_A}"" Nonshipping=""true"" />
   <Blob Id=""{PACKAGE_B}"" Nonshipping=""false"" />
@@ -264,7 +291,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             // Act and Assert
             task.InvokeExecute(provider).Should().BeTrue();
             actualPath[0].Should().Be(TARGET_MANIFEST_PATH);
-            actualBuildModel[0].Should().Be(expectedManifestContent);
+            actualBuildModel[0].Should().BeEquivalentTo(expectedBuildModel.ToString());
         }
 
         [Fact]
