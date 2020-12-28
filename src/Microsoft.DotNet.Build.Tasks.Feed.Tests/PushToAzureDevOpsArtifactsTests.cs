@@ -14,6 +14,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Moq;
 using NuGet.Packaging.Core;
 using NuGet.Versioning;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Xml.Linq;
@@ -52,11 +53,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             }),
         };
 
-        private PushToAzureDevOpsArtifacts ConstructPushToAzureDevOpsArtifactsTask()
+        private PushToAzureDevOpsArtifacts ConstructPushToAzureDevOpsArtifactsTask(IBuildEngine buildEngine = null)
         {
             return new PushToAzureDevOpsArtifacts
             {
-                BuildEngine = new MockBuildEngine(),
+                BuildEngine = buildEngine ?? new MockBuildEngine(),
                 AssetManifestPath = TARGET_MANIFEST_PATH,
                 AzureDevOpsBuildId = 123456,
                 AzureDevOpsCollectionUri = "https://dev.azure.com/dnceng/",
@@ -251,13 +252,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 )
             );
 
-
-                            string expectedManifestContent = $@"<Build PublishingVersion=""{(int)PublishingInfraVersion.Latest}"" Name=""https://dnceng@dev.azure.com/dnceng/internal/test-repo"" BuildId=""12345.6"" Branch=""/refs/heads/branch"" Commit=""1234567890abcdef"" InitialAssetsLocation=""cloud"" IsReleaseOnlyPackageVersion=""false"" IsStable=""true"">
-  <Blob Id=""{SAMPLE_MANIFEST}"" Nonshipping=""false"" />
-  <Blob Id=""{PACKAGE_A}"" Nonshipping=""true"" />
-  <Blob Id=""{PACKAGE_B}"" Nonshipping=""false"" />
-</Build>";
-
             // Mocks
             Mock<IFileSystem> fileSystemMock = new Mock<IFileSystem>();
             IList<string> actualPath = new List<string>();
@@ -297,7 +291,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         [Fact]
         public void IsNotStableBuildPath()
         {
-            PushToAzureDevOpsArtifacts task = ConstructPushToAzureDevOpsArtifactsTask();
+            var buildEngine = new MockBuildEngine();
+            PushToAzureDevOpsArtifacts task = ConstructPushToAzureDevOpsArtifactsTask(buildEngine);
             task.IsStableBuild = false;
 
             string expectedManifestContent = $@"<Build PublishingVersion=""{(int)PublishingInfraVersion.Latest}"" Name=""https://dnceng@dev.azure.com/dnceng/internal/test-repo"" BuildId=""12345.6"" Branch=""/refs/heads/branch"" Commit=""1234567890abcdef"" InitialAssetsLocation=""cloud"" IsReleaseOnlyPackageVersion=""false"" IsStable=""false"">
@@ -337,7 +332,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             using var provider = collection.BuildServiceProvider();
 
             // Act and Assert
-            task.InvokeExecute(provider).Should().BeTrue();
+            //task.BuildEngine.
+            var result = task.InvokeExecute(provider);
+            buildEngine.BuildErrorEvents.Count.Should().Be(0);
+            buildEngine.BuildErrorEvents.ForEach(x => Console.WriteLine(x.Message));
+            result.Should().BeTrue();
             actualPath[0].Should().Be(TARGET_MANIFEST_PATH);
             actualBuildModel[0].Should().Be(expectedManifestContent);
         }
