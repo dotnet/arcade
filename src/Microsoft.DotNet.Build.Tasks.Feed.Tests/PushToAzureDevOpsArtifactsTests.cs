@@ -24,13 +24,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
 {
     public class PushToAzureDevOpsArtifactsTests
     {
-        private const string TARGET_MANIFEST_PATH = @"C:\manifests\TestManifest.xml";
-        private const string PACKAGE_A = @"C:\packages\test-package-a.6.0.492.nupkg";
-        private const string PACKAGE_B = @"C:\packages\test-package-b.6.0.492.nupkg";
-        private const string SAMPLE_MANIFEST = @"C:\manifests\SampleManifest.xml";
+        private static string TARGET_MANIFEST_PATH = Path.Combine("C:", "manifests", "TestManifest.xml");// @"C:\manifests\TestManifest.xml";
+        private static string PACKAGE_A = Path.Combine("C:", "packages", "test-package-a.6.0.492.nupkg");// @"C:\packages\test-package-a.6.0.492.nupkg";
+        private static string PACKAGE_B = Path.Combine("C:", "packages", "test-package-b.6.0.492.nupkg"); //@"C:\packages\test-package-b.6.0.492.nupkg";
+        private static string SAMPLE_MANIFEST = Path.Combine("C:", "manifests", "SampleManifest.xml");//@"C:\manifests\SampleManifest.xml";
         private const string NUPKG_VERSION = "6.0.492";
 
-        private readonly TaskItem[] TaskItems = new TaskItem[]
+        private TaskItem[] TaskItems = new TaskItem[]
         {
             new TaskItem(PACKAGE_A, new Dictionary<string, string>
             {
@@ -325,12 +325,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             // Act and Assert
             var result = task.InvokeExecute(provider);
 
-            using(var writer = new StreamWriter(Path.Combine(Environment.GetEnvironmentVariable("HELIX_WORKITEM_UPLOAD_ROOT"), 
-                $"debuggingoutput-IsNotStableBuildPath.txt")))
-            {
-                buildEngine.BuildErrorEvents.ForEach(x => writer.WriteLine(x));
-                buildEngine.BuildMessageEvents.ForEach(x => writer.WriteLine(x));
-            }
+            //using(var writer = new StreamWriter(Path.Combine(Environment.GetEnvironmentVariable("HELIX_WORKITEM_UPLOAD_ROOT"), 
+            //    $"debuggingoutput-IsNotStableBuildPath.txt")))
+            //{
+            //    buildEngine.BuildErrorEvents.ForEach(x => writer.WriteLine(x));
+            //    buildEngine.BuildMessageEvents.ForEach(x => writer.WriteLine(x));
+            //}
 
 
 
