@@ -31,15 +31,16 @@ namespace Microsoft.DotNet.Build.Tasks.VersionTools
         {
             collection.TryAddSingleton<INupkgInfoFactory, NupkgInfoFactory>();
             collection.TryAddSingleton<IPackageArchiveReaderFactory, PackageArchiveReaderFactory>();
+            collection.TryAddSingleton<IVersionsRepoUpdaterFactory, VersionsRepoUpdaterFactory>();
         }
 
-        public bool ExecuteTask(INupkgInfoFactory nupkgInfoFactory)
+        public bool ExecuteTask(IVersionsRepoUpdaterFactory versionsRepoUpdaterFactory)
         {
             Trace.Listeners.MsBuildListenedInvoke(Log, () =>
             {
                 var gitHubAuth = new GitHubAuth(GitHubAuthToken, GitHubUser, GitHubEmail);
 
-                var updater = new GitHubVersionsRepoUpdater(nupkgInfoFactory, gitHubAuth, VersionsRepoOwner, VersionsRepo);
+                var updater = versionsRepoUpdaterFactory.CreateGitHubVersionsRepoUpdater(gitHubAuth, VersionsRepoOwner, VersionsRepo);
 
                 updater.UpdateBuildInfoAsync(
                     ShippedNuGetPackage.Select(item => item.ItemSpec),

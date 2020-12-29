@@ -39,13 +39,14 @@ namespace Microsoft.DotNet.Build.Tasks.VersionTools
         {
             collection.TryAddSingleton<INupkgInfoFactory, NupkgInfoFactory>();
             collection.TryAddSingleton<IPackageArchiveReaderFactory, PackageArchiveReaderFactory>();
+            collection.TryAddSingleton<IVersionsRepoUpdaterFactory, VersionsRepoUpdaterFactory>();
         }
 
-        public bool ExecuteTask(INupkgInfoFactory nupkgInfoFactory)
+        public bool ExecuteTask(IVersionsRepoUpdaterFactory versionsRepoUpdaterFactory)
         {
             Trace.Listeners.MsBuildListenedInvoke(Log, () =>
             {
-                var updater = new LocalVersionsRepoUpdater(nupkgInfoFactory);
+                var updater = versionsRepoUpdaterFactory.CreateLocalVersionsRepoUpdater();
 
                 if (!string.IsNullOrEmpty(GitHubAuthToken))
                 {
