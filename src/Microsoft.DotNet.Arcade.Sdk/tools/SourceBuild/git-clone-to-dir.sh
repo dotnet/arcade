@@ -31,7 +31,7 @@ usage() {
 set -euo pipefail
 
 while [[ $# > 0 ]]; do
-  opt="$(echo "$1" | awk '{print tolower($0)}')"
+  opt="$(echo "$1" | tr "[:upper:]" "[:lower:]")"
   case "$opt" in
     -h|--help)
       usage

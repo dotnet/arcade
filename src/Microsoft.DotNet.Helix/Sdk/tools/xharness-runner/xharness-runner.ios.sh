@@ -20,7 +20,7 @@ expected_exit_code=0
 command='test'
 
 while [[ $# -gt 0 ]]; do
-    opt="$(echo "$1" | awk '{print tolower($0)}')"
+    opt="$(echo "$1" | tr "[:upper:]" "[:lower:]")"
     case "$opt" in
       --app)
         app="$2"
