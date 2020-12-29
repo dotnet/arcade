@@ -302,7 +302,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             fileSystemMock.Setup(m => m.FileExists(Capture.In(files))).Returns(true);
 
             Mock<INupkgInfoFactory> nupkgInfoFactoryMock = new Mock<INupkgInfoFactory>();
-            IList<string> actualNupkgInfoPath = new List<string>();
             nupkgInfoFactoryMock.Setup(m => m.CreateNupkgInfo(PACKAGE_A)).Returns(new NupkgInfo(new PackageIdentity(
                 id: Path.GetFileNameWithoutExtension(PACKAGE_A),
                 version: new NuGetVersion(NUPKG_VERSION)
@@ -325,8 +324,16 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
 
             // Act and Assert
             var result = task.InvokeExecute(provider);
-            buildEngine.BuildErrorEvents[0].Message.Should().BeNull();//.ForEach(x => Console.WriteLine(x.Message));
-            buildEngine.BuildErrorEvents.Count.Should().Be(0);            
+
+            using(var writer = new StreamWriter(Path.Combine(Environment.GetEnvironmentVariable("HELIX_WORKITEM_UPLOAD_ROOT"), 
+                $"debuggingoutput-IsNotStableBuildPath.txt")))
+            {
+                buildEngine.BuildErrorEvents.ForEach(x => writer.WriteLine(x));
+                buildEngine.BuildMessageEvents.ForEach(x => writer.WriteLine(x));
+            }
+
+
+
             result.Should().BeTrue();
             actualPath[0].Should().Be(TARGET_MANIFEST_PATH);
             actualBuildModel[0].Should().Be(expectedManifestContent);
