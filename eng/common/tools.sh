@@ -85,19 +85,6 @@ function ResolvePath {
   _ResolvePath="$path"
 }
 
-# DetermineGlobalJsonHasEntry [json key]
-function DetermineGlobalJsonHasEntry {
-  local key=$1
-
-  if command -v jq &> /dev/null; then
-    if jq -er ".[] | select(has(\"$key\"))" "$global_json_file" &> /dev/null; then
-      global_json_has_runtimes=true
-    fi
-  elif [[ "$(cat "$global_json_file")" =~ \"$key\"[[:space:]\:]*\" ]]; then
-    global_json_has_runtimes=true
-  fi
-}
-
 # ReadVersionFromJson [json key]
 function ReadGlobalVersion {
   local key=$1
@@ -489,7 +476,13 @@ temp_dir="$artifacts_dir/tmp/$configuration"
 global_json_file="$repo_root/global.json"
 # determine if global.json contains a "runtimes" entry
 global_json_has_runtimes=false
-DetermineGlobalJsonHasEntry "runtime"
+if command -v jq &> /dev/null; then
+  if jq -er '. | select(has("runtimes"))' "$global_json_file" &> /dev/null; then
+    global_json_has_runtimes=true
+  fi
+elif [[ "$(cat "$global_json_file")" =~ \"runtimes\"[[:space:]\:]*\{ ]]; then
+  global_json_has_runtimes=true
+fi
 
 # HOME may not be defined in some scenarios, but it is required by NuGet
 if [[ -z $HOME ]]; then
