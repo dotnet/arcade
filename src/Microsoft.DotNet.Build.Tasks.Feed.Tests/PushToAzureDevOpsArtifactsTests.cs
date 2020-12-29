@@ -324,9 +324,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             using var provider = collection.BuildServiceProvider();
 
             // Act and Assert
-            //task.BuildEngine.
             var result = task.InvokeExecute(provider);
-            buildEngine.BuildErrorEvents.ForEach(x => Console.WriteLine(x.Message));
+            buildEngine.BuildErrorEvents[0].Message.Should().BeNull();//.ForEach(x => Console.WriteLine(x.Message));
             buildEngine.BuildErrorEvents.Count.Should().Be(0);            
             result.Should().BeTrue();
             actualPath[0].Should().Be(TARGET_MANIFEST_PATH);
