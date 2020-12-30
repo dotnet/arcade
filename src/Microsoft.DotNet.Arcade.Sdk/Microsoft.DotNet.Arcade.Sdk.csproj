@@ -52,6 +52,8 @@
     <None Include="tools/**/*.*" Pack="true">
       <PackagePath>tools/%(RecursiveDir)%(Filename)%(Extension)</PackagePath>
     </None>
+    <Compile Remove="obj\**" />
+    <EmbeddedResource Remove="obj\**" />
     <None Include="$(_GeneratedVersionFilePath)" Pack="true">
       <PackagePath>tools\DefaultVersions.Generated.props</PackagePath>
     </None>

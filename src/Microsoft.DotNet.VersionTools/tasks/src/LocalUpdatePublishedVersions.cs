@@ -1,15 +1,17 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using Microsoft.Arcade.Common;
 using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
 using Microsoft.DotNet.VersionTools.Automation;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using System.Diagnostics;
 using System.Linq;
 
 namespace Microsoft.DotNet.Build.Tasks.VersionTools
 {
-    public class LocalUpdatePublishedVersions : Task
+    public class LocalUpdatePublishedVersions : MSBuildTaskBase
     {
         [Required]
         public ITaskItem[] ShippedNuGetPackage { get; set; }
@@ -33,11 +35,18 @@ namespace Microsoft.DotNet.Build.Tasks.VersionTools
         public string VersionsRepoOwner { get; set; }
         public string VersionsRepoBranch { get; set; } = "master";
 
-        public override bool Execute()
+        public override void ConfigureServices(IServiceCollection collection)
+        {
+            collection.TryAddSingleton<INupkgInfoFactory, NupkgInfoFactory>();
+            collection.TryAddSingleton<IPackageArchiveReaderFactory, PackageArchiveReaderFactory>();
+            collection.TryAddSingleton<IVersionsRepoUpdaterFactory, VersionsRepoUpdaterFactory>();
+        }
+
+        public bool ExecuteTask(IVersionsRepoUpdaterFactory versionsRepoUpdaterFactory)
         {
             Trace.Listeners.MsBuildListenedInvoke(Log, () =>
             {
-                var updater = new LocalVersionsRepoUpdater();
+                var updater = versionsRepoUpdaterFactory.CreateLocalVersionsRepoUpdater();
 
                 if (!string.IsNullOrEmpty(GitHubAuthToken))
                 {

@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using Microsoft.DotNet.VersionTools.Automation.GitHubApi;
@@ -20,16 +20,18 @@ namespace Microsoft.DotNet.VersionTools.Automation
         private GitHubProject _project;
 
         public GitHubVersionsRepoUpdater(
+            INupkgInfoFactory nupkgInfoFactory,
             GitHubAuth gitHubAuth,
             string versionsRepoOwner = null,
             string versionsRepo = null)
             : this(
                 gitHubAuth,
-                new GitHubProject(versionsRepo ?? "versions", versionsRepoOwner))
+                new GitHubProject(versionsRepo ?? "versions", versionsRepoOwner),
+                nupkgInfoFactory)
         {
         }
 
-        public GitHubVersionsRepoUpdater(GitHubAuth gitHubAuth, GitHubProject project)
+        public GitHubVersionsRepoUpdater(GitHubAuth gitHubAuth, GitHubProject project, INupkgInfoFactory nupkgInfoFactory) : base(nupkgInfoFactory)
         {
             if (gitHubAuth == null)
             {

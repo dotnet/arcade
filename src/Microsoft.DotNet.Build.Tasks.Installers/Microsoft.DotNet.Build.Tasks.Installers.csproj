@@ -33,6 +33,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Remove="obj\**" />
+    <EmbeddedResource Remove="obj\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Compile Include="..\Common\BuildTask.cs" />
   </ItemGroup>
 

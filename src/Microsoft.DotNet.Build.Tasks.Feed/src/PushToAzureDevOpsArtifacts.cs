@@ -1,17 +1,20 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using Microsoft.Arcade.Common;
 using Microsoft.Build.Framework;
+using Microsoft.DotNet.VersionTools.Automation;
 using Microsoft.DotNet.VersionTools.BuildManifest.Model;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using MSBuild = Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed
 {
-    public class PushToAzureDevOpsArtifacts : MSBuild.Task
+    public class PushToAzureDevOpsArtifacts : MSBuildTaskBase
     {
         [Required]
         public ITaskItem[] ItemsToPush { get; set; }
@@ -60,7 +63,23 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// </summary>
         public string PublishingVersion { get; set; }
 
-        public override bool Execute()
+        public override void ConfigureServices(IServiceCollection collection)
+        {
+            collection.TryAddSingleton<ISigningInformationModelFactory, SigningInformationModelFactory>();
+            collection.TryAddSingleton<IBlobArtifactModelFactory, BlobArtifactModelFactory>();
+            collection.TryAddSingleton<IPackageArtifactModelFactory, PackageArtifactModelFactory>();
+            collection.TryAddSingleton<IBuildModelFactory, BuildModelFactory>();
+            collection.TryAddSingleton<IFileSystem, FileSystem>();
+            collection.TryAddSingleton<IPackageArchiveReaderFactory, PackageArchiveReaderFactory>();
+            collection.TryAddSingleton<INupkgInfoFactory, NupkgInfoFactory>();
+            collection.TryAddSingleton(Log);
+        }
+
+        public bool ExecuteTask(IFileSystem fileSystem,
+            ISigningInformationModelFactory signingInformationModelFactory,
+            IBlobArtifactModelFactory blobArtifactModelFactory,
+            IPackageArtifactModelFactory packageArtifactModelFactory,
+            IBuildModelFactory buildModelFactory)
         {
             try
             {
@@ -88,10 +107,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     {
                         // Act as if %(PublishFlatContainer) were true for all items.
                         blobArtifacts = itemsToPushNoExcludes
-                            .Select(i => BuildManifestUtil.CreateBlobArtifactModel(i, Log));
+                            .Select(i => blobArtifactModelFactory.CreateBlobArtifactModel(i));
                         foreach (var blobItem in itemsToPushNoExcludes)
                         {
-                            if (!File.Exists(blobItem.ItemSpec))
+                            if (!fileSystem.FileExists(blobItem.ItemSpec))
                             {
                                 Log.LogError($"Could not find file {blobItem.ItemSpec}.");
                                 continue;
@@ -108,7 +127,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             .Select(i =>
                             {
                                 string fileName = Path.GetFileName(i.ItemSpec);
-                                i.SetMetadata("RelativeBlobPath", $"{BuildManifestUtil.AssetsVirtualDir}symbols/{fileName}");
+                                i.SetMetadata("RelativeBlobPath", $"{AssetsVirtualDir}symbols/{fileName}");
                                 return i;
                             })
                             .ToArray();
@@ -134,7 +153,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                         foreach (var packagePath in packageItems)
                         {
-                            if (!File.Exists(packagePath.ItemSpec))
+                            if (!fileSystem.FileExists(packagePath.ItemSpec))
                             {
                                 Log.LogError($"Could not find file {packagePath.ItemSpec}.");
                                 continue;
@@ -146,7 +165,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                         foreach (var blobItem in blobItems)
                         {
-                            if (!File.Exists(blobItem.ItemSpec))
+                            if (!fileSystem.FileExists(blobItem.ItemSpec))
                             {
                                 Log.LogError($"Could not find file {blobItem.ItemSpec}.");
                                 continue;
@@ -156,8 +175,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                                 $"##vso[artifact.upload containerfolder=BlobArtifacts;artifactname=BlobArtifacts]{blobItem.ItemSpec}");
                         }
 
-                        packageArtifacts = packageItems.Select(BuildManifestUtil.CreatePackageArtifactModel);
-                        blobArtifacts = blobItems.Select(i => BuildManifestUtil.CreateBlobArtifactModel(i, Log)).Where(blob => blob != null);
+                        packageArtifacts = packageItems.Select(packageArtifactModelFactory.CreatePackageArtifactModel);
+                        blobArtifacts = blobItems.Select(i => blobArtifactModelFactory.CreateBlobArtifactModel(i)).Where(blob => blob != null);
                     }
 
                     PublishingInfraVersion targetPublishingVersion = PublishingInfraVersion.Latest;
@@ -170,14 +189,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         }
                     }
                     
-                    SigningInformationModel signingInformationModel = BuildManifestUtil.CreateSigningInformationModelFromItems(
-                        ItemsToSign, StrongNameSignInfo, FileSignInfo, FileExtensionSignInfo, CertificatesSignInfo, blobArtifacts, packageArtifacts, Log);
+                    SigningInformationModel signingInformationModel = signingInformationModelFactory.CreateSigningInformationModelFromItems(
+                        ItemsToSign, StrongNameSignInfo, FileSignInfo, FileExtensionSignInfo, CertificatesSignInfo, blobArtifacts, packageArtifacts);
 
-                    BuildManifestUtil.CreateBuildManifest(Log,
+                    buildModelFactory.CreateBuildManifest(
                         blobArtifacts,
                         packageArtifacts,
                         AssetManifestPath,
-                        !String.IsNullOrEmpty(ManifestRepoName) ? ManifestRepoName : ManifestRepoUri,
+                        !string.IsNullOrEmpty(ManifestRepoName) ? ManifestRepoName : ManifestRepoUri,
                         ManifestBuildId,
                         ManifestBranch,
                         ManifestCommit,
