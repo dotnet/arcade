@@ -61,6 +61,10 @@
     <Compile Include="..\Common\AssemblyResolution.cs" Link="src\AssemblyResolution.cs" />
     <Compile Remove="src\InstallDotNetCore.cs" Condition="'$(DotNetBuildFromSource)' == 'true'" />
   </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="obj\" />
+  </ItemGroup>
   
   <Target Name="_GenerateSdkVersionFile" Inputs="$(MSBuildAllProjects)" Outputs="$(_GeneratedVersionFilePath)" BeforeTargets="GenerateNuSpec">
 

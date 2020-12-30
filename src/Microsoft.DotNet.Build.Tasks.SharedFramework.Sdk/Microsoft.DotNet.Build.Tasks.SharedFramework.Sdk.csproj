@@ -40,5 +40,9 @@
     <Compile Include="..\Common\AssemblyResolution.cs" Link="src\AssemblyResolution.cs" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="obj\" />
+  </ItemGroup>
+
   <Import Project="$(RepoRoot)eng\BuildTask.targets" />
 </Project>

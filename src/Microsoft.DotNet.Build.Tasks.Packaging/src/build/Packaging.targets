@@ -103,6 +103,7 @@
 
   <!-- Redefine build to just create the NuSpec only, we'll create the package during ArcProjects phase -->
   <Target Name="Build"
+          Condition="'$(GeneratePackage)' == 'true'"
           DependsOnTargets="$(BuildDependsOn)">
 
     <Message Condition="'$(ShouldCreatePackage)' == 'true'"
