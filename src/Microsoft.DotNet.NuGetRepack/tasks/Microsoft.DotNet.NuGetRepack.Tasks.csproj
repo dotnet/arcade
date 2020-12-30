@@ -24,10 +24,6 @@
   <ItemGroup>
     <InternalsVisibleTo Include="Microsoft.DotNet.NuGetRepack.Tests" />
   </ItemGroup>
-  
-  <ItemGroup>
-    <Folder Include="obj\" />
-  </ItemGroup>
 
   <Import Project="$(RepoRoot)eng\BuildTask.targets" />
 

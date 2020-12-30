@@ -23,10 +23,6 @@
     <PackageReference Include="NuGet.Versioning" Version="$(NuGetVersion)" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="obj\" />
-  </ItemGroup>
-
   <Import Project="$(RepoRoot)eng\BuildTask.targets" />
 
 </Project>

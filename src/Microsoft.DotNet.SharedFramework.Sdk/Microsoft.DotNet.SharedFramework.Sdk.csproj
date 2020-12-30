@@ -50,9 +50,5 @@
     <Compile Include="..\Common\BuildTask.Desktop.cs" />
   </ItemGroup>
   
-  <ItemGroup>
-    <Folder Include="obj\Debug\" />
-  </ItemGroup>
-  
   <Import Project="$(RepoRoot)eng\BuildTask.targets" />
 </Project>
