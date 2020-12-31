@@ -6,7 +6,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 
-namespace Microsoft.DotNet.Build.Tasks.Feed.Tests.TestDoubles
+namespace Microsoft.Arcade.Test.Common
 {
     public class MockBuildEngine : IBuildEngine
     {
