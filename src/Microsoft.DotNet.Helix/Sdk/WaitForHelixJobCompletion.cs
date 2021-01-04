@@ -1,4 +1,5 @@
 using Microsoft.Build.Framework;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -14,36 +15,55 @@ namespace Microsoft.DotNet.Helix.Sdk
         [Required]
         public ITaskItem[] Jobs { get; set; }
 
+        public bool CancelHelixJobsOnTaskCancellation { get; set; } = true;
+
         protected override async Task ExecuteCore(CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
             // Wait 1 second to allow helix to register the job creation
             await Task.Delay(1000, cancellationToken);
 
-            List<(string jobName, string queueName)> jobNames = Jobs.Select(j => (j.GetMetadata("Identity"), j.GetMetadata("HelixTargetQueue"))).ToList();
+            List<(string jobName, string queueName, string jobCancellationToken)> jobNames = Jobs.Select(j => (j.GetMetadata("Identity"), j.GetMetadata("HelixTargetQueue"), j.GetMetadata("HelixJobCancellationToken"))).ToList();
 
             cancellationToken.ThrowIfCancellationRequested();
-            await Task.WhenAll(jobNames.Select(n => WaitForHelixJobAsync(n.jobName, n.queueName, cancellationToken)));
+            await Task.WhenAll(jobNames.Select(n => WaitForHelixJobAsync(n.jobName, n.queueName, n.jobCancellationToken, cancellationToken)));
         }
 
-        private async Task WaitForHelixJobAsync(string jobName, string queueName, CancellationToken cancellationToken)
+        private async Task WaitForHelixJobAsync(string jobName, string queueName, string helixJobCancellationToken, CancellationToken cancellationToken)
         {
             await Task.Yield();
             cancellationToken.ThrowIfCancellationRequested();
             Log.LogMessage(MessageImportance.High, $"Waiting for completion of job {jobName} on {queueName}");
 
-            for (;; await Task.Delay(20000, cancellationToken).ConfigureAwait(false)) // delay every time this loop repeats
+            try
             {
-                cancellationToken.ThrowIfCancellationRequested();
-                var pf = await HelixApi.Job.PassFailAsync(jobName, cancellationToken).ConfigureAwait(false);
-                if (pf.Working == 0 && pf.Total != 0)
+                for (; ; await Task.Delay(20000, cancellationToken).ConfigureAwait(false)) // delay every time this loop repeats
                 {
-                    Log.LogMessage(MessageImportance.High, $"Job {jobName} on {queueName} is completed with {pf.Total} finished work items.");
-                    return;
-                }
+                    cancellationToken.ThrowIfCancellationRequested();
+                    var pf = await HelixApi.Job.PassFailAsync(jobName, cancellationToken).ConfigureAwait(false);
+                    if (pf.Working == 0 && pf.Total != 0)
+                    {
+                        Log.LogMessage(MessageImportance.High, $"Job {jobName} on {queueName} is completed with {pf.Total} finished work items.");
+                        return;
+                    }
 
-                Log.LogMessage($"Job {jobName} on {queueName} is not yet completed with Pending: {pf.Working}, Finished: {pf.Total - pf.Working}");
-                cancellationToken.ThrowIfCancellationRequested();
+                    Log.LogMessage($"Job {jobName} on {queueName} is not yet completed with Pending: {pf.Working}, Finished: {pf.Total - pf.Working}");
+                    cancellationToken.ThrowIfCancellationRequested();
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                // Just in case the cancellation was an Http client timeout from the API, check our token was the one that caused the exception
+                if (CancelHelixJobsOnTaskCancellation && cancellationToken.IsCancellationRequested)
+                {
+                    if (string.IsNullOrEmpty(helixJobCancellationToken))
+                    {
+                        Log.LogWarning($"{nameof(CancelHelixJobsOnTaskCancellation)} is set to 'true', but no value provided for {nameof(helixJobCancellationToken)}");
+                    }
+                    Log.LogWarning($"Build task was cancelled while waiting on job '{jobName}'.  Attempting to cancel this job in Helix...");
+                    await HelixApi.Job.CancelAsync(jobName, helixJobCancellationToken);
+                    Log.LogWarning($"Successfully cancelled job '{jobName}'");
+                }
             }
         }
     }

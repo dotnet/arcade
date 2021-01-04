@@ -10,12 +10,14 @@ namespace Microsoft.DotNet.Helix.Client
         {
             JobApi = jobApi;
             CorrelationId = newJob.Name;
+            HelixCancellationToken = newJob.CancellationToken;
             ResultsContainerUri = resultsContainerUri;
             ResultsContainerReadSAS = resultsContainerReadSAS;
         }
 
         public IJob JobApi { get; }
         public string CorrelationId { get; }
+        public string HelixCancellationToken { get; }
         public string ResultsContainerUri { get; }
         public string ResultsContainerReadSAS { get; }
 
