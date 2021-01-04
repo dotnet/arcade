@@ -9,19 +9,8 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="$(MicrosoftExtensionsDependencyInjectionVersion)" />
   </ItemGroup>
 
-  <ItemGroup>
-    <None Include="build/**/*.*" Pack="true">
-      <PackagePath>build</PackagePath>
-    </None>
-  </ItemGroup>
-
   <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
     <Compile Include="..\Common\AssemblyResolver.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Remove="obj\**" />
-    <EmbeddedResource Remove="obj\**" />
   </ItemGroup>
   
   <ItemGroup Condition="'$(TargetFramework)' != 'net472'">
