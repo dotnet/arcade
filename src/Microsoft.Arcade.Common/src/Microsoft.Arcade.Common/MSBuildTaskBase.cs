@@ -10,7 +10,7 @@ using System.Linq;
 
 namespace Microsoft.Arcade.Common
 {
-    public abstract class MSBuildTaskBase : MSBuild.Task
+    public abstract partial class MSBuildTaskBase : MSBuild.Task
     {
         #region Common Variables
         protected const string AssetsVirtualDir = "assets/";
