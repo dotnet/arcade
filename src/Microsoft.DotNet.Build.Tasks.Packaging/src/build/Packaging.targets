@@ -49,7 +49,6 @@
     <Title>$(Id)</Title>
     <Authors>Microsoft</Authors>
     <Owners>microsoft,dotnetframework</Owners>
-    <Description>TODO</Description>
     <IconUrl>http://go.microsoft.com/fwlink/?LinkID=288859</IconUrl>
     <Tags></Tags>
     <RequireLicenseAcceptance Condition="'$(RequireLicenseAcceptance)' == ''">false</RequireLicenseAcceptance>
@@ -104,6 +103,7 @@
 
   <!-- Redefine build to just create the NuSpec only, we'll create the package during ArcProjects phase -->
   <Target Name="Build"
+          Condition="'$(GeneratePackage)' == 'true'"
           DependsOnTargets="$(BuildDependsOn)">
 
     <Message Condition="'$(ShouldCreatePackage)' == 'true'"
@@ -118,6 +118,9 @@
              Text="$(MSBuildProjectName) -> Skipping for this platform."
              Importance="high" />
   </Target>
+  
+  <Target Name="Pack"
+          DependsOnTargets="Build" />
 
   <Target Name="Clean">
     <!-- package version is calculated so read the last version from the marker file. -->
@@ -856,6 +859,7 @@
   </Target>
 
   <Target Name="GetPackageDescription"
+          Condition="'$(Description)' == '' and '$(PackageDescription)' == ''"
           DependsOnTargets="GetSyncInfo">
     <PropertyGroup>
       <UseRuntimePackageDescription Condition="'$(UseRuntimePackageDescription)' == '' AND $(BaseId.StartsWith('runtime.native'))">true</UseRuntimePackageDescription>

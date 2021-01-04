@@ -1,11 +1,14 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using Microsoft.Arcade.Common;
 using Microsoft.Build.Framework;
 using Microsoft.DotNet.Maestro.Client;
+using Microsoft.DotNet.VersionTools.Automation;
 using Microsoft.DotNet.VersionTools.BuildManifest.Model;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using System;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -15,7 +18,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
     ///     The intended use of this task is to push artifacts described in
     ///     a build manifest to package feeds.
     /// </summary>
-    public class PublishArtifactsInManifest : Microsoft.Build.Utilities.Task
+    public class PublishArtifactsInManifest : MSBuildTaskBase
     {
         /// <summary>
         /// Comma separated list of Maestro++ Channel IDs to which the build should
@@ -102,7 +105,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// Whether this build is internal or not. If true, extra checks are done to avoid accidental
         /// publishing of assets to public feeds or storage accounts.
         /// </summary>
-        [Required]
         public bool InternalBuild { get; set; }
 
         public bool PublishInstallersAndChecksums { get; set; } = false;
@@ -112,6 +114,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         public string ChecksumsFeedKey { get; set; }
 
         public string InstallersFeedKey { get; set; }
+
+        public string InternalInstallersFeedKey { get; set; }
+
+        public string InternalCheckSumsFeedKey { get; set; }
 
         public string AzureDevOpsFeedsKey { get; set; }
 
@@ -164,8 +170,27 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// </summary>
         private static bool PublishedV3Manifest { get; set; }
 
-        public override bool Execute()
+        private IBuildModelFactory _buildModelFactory;
+        private IFileSystem _fileSystem;
+
+        public override void ConfigureServices(IServiceCollection collection)
         {
+            collection.TryAddSingleton<IBuildModelFactory, BuildModelFactory>();
+            collection.TryAddSingleton<ISigningInformationModelFactory, SigningInformationModelFactory>();
+            collection.TryAddSingleton<IBlobArtifactModelFactory, BlobArtifactModelFactory>();
+            collection.TryAddSingleton<IPackageArtifactModelFactory, PackageArtifactModelFactory>();
+            collection.TryAddSingleton<INupkgInfoFactory, NupkgInfoFactory>();
+            collection.TryAddSingleton<IPackageArchiveReaderFactory, PackageArchiveReaderFactory>();
+            collection.TryAddSingleton<IFileSystem, FileSystem>();
+            collection.TryAddSingleton(Log);
+        }
+
+        public bool ExecuteTask(IBuildModelFactory buildModelFactory,
+            IFileSystem fileSystem)
+        {
+            _buildModelFactory = buildModelFactory;
+            _fileSystem = fileSystem;
+
             return ExecuteAsync().GetAwaiter().GetResult();
         }
 
@@ -230,13 +255,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         {
             Log.LogMessage(MessageImportance.High, $"Creating a task to publish assets from {manifestFullPath}");
 
-            if (!File.Exists(manifestFullPath))
+            if (!_fileSystem.FileExists(manifestFullPath))
             {
                 Log.LogError($"Problem reading asset manifest path from '{manifestFullPath}'");
                 return null;
             }
 
-            BuildModel buildModel = BuildManifestUtil.ManifestFileToModel(manifestFullPath, Log);
+            BuildModel buildModel = _buildModelFactory.ManifestFileToModel(manifestFullPath);
             
             if (buildModel.Identity.PublishingVersion == PublishingInfraVersion.Legacy)
             {
@@ -311,6 +336,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 AzureDevOpsFeedsKey = this.AzureDevOpsFeedsKey,
                 InstallersFeedKey = this.InstallersFeedKey,
                 CheckSumsFeedKey = this.ChecksumsFeedKey,
+                InternalCheckSumsFeedKey = this.InternalCheckSumsFeedKey,
+                InternalInstallersFeedKey = this.InternalInstallersFeedKey,
                 AzureStorageTargetFeedKey = this.AzureStorageTargetFeedKey,
                 PdbArtifactsBasePath = this.PdbArtifactsBasePath,
                 SymWebToken = this.SymWebToken,

@@ -11,6 +11,7 @@
       DotNetSymbolServerTokenMsdl       Personal access token for MSDL symbol server. Available from variable group DotNet-Symbol-Publish.
       DotNetSymbolServerTokenSymWeb     Personal access token for SymWeb symbol server. Available from variable group DotNet-Symbol-Publish.
       DotNetSymbolExpirationInDays      Symbol expiration time in days (defaults to 10 years).
+      SkipPackageChecks                 Skips package safety checks.
   -->
 
   <Import Project="BuildStep.props" />
@@ -27,7 +28,7 @@
 
     <!-- If `IsReleaseOnlyPackageVersion` is set to true, package safety checks can be skipped-->
     <IsReleaseOnlyPackageVersion>false</IsReleaseOnlyPackageVersion>
-    <IsReleaseOnlyPackageVersion Condition ="'$(PreReleaseVersionLabel)' == '' and '$(AutoGenerateAssemblyVersion)' == 'true'">true</IsReleaseOnlyPackageVersion>
+    <IsReleaseOnlyPackageVersion Condition ="('$(SkipPackagePublishingVersionChecks)' == 'true') or ('$(PreReleaseVersionLabel)' == '' and '$(AutoGenerateAssemblyVersion)' == 'true')">true</IsReleaseOnlyPackageVersion>
     
     <!-- If `AutoGenerateSymbolPackages` is not set we default it to true. -->
     <AutoGenerateSymbolPackages Condition="'$(AutoGenerateSymbolPackages)' == ''">true</AutoGenerateSymbolPackages>

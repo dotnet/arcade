@@ -1,9 +1,13 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using Microsoft.Arcade.Common;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Microsoft.DotNet.Build.Tasks.Feed.Tests.TestDoubles;
+using Microsoft.DotNet.VersionTools.Automation;
+using Microsoft.Extensions.DependencyInjection;
+using Moq;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -13,7 +17,7 @@ using FluentAssertions;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
 {
-    public class BuildManifestUtilTests
+    public class BuildModelFactoryTests
     {
         #region Standard test values
 
@@ -32,12 +36,26 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         readonly TaskLoggingHelper _taskLoggingHelper;
         readonly MockBuildEngine _buildEngine;
         readonly StubTask _stubTask;
+        readonly BuildModelFactory _buildModelFactory;
 
-        public BuildManifestUtilTests()
+        public BuildModelFactoryTests()
         {
             _buildEngine = new MockBuildEngine();
             _stubTask = new StubTask(_buildEngine);
             _taskLoggingHelper = new TaskLoggingHelper(_stubTask);
+
+            ServiceProvider provider = new ServiceCollection()
+                .AddSingleton<ISigningInformationModelFactory, SigningInformationModelFactory>()
+                .AddSingleton<IBlobArtifactModelFactory, BlobArtifactModelFactory>()
+                .AddSingleton<IPackageArtifactModelFactory, PackageArtifactModelFactory>()
+                .AddSingleton<IPackageArchiveReaderFactory, PackageArchiveReaderFactory>()
+                .AddSingleton<INupkgInfoFactory, NupkgInfoFactory>()
+                .AddSingleton<IFileSystem, FileSystem>()
+                .AddSingleton(typeof(BuildModelFactory))
+                .AddSingleton(_taskLoggingHelper)
+                .BuildServiceProvider();
+            
+            _buildModelFactory = ActivatorUtilities.CreateInstance<BuildModelFactory>(provider);
         }
 
         #region Artifact related tests
@@ -48,10 +66,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         public void AttemptToCreateModelWithNoArtifactsFails()
         {
             Action act = () =>
-                BuildManifestUtil.CreateModelFromItems(null, null,
+                _buildModelFactory.CreateModelFromItems(null, null,
                 null, null, null, null, _testAzdoBuildId, null, _testAzdoRepoUri, _testBuildBranch, _testBuildCommit, false,
                 VersionTools.BuildManifest.Model.PublishingInfraVersion.All,
-                true, _taskLoggingHelper);
+                true);
             act.Should().Throw<ArgumentNullException>();
         }
 
@@ -103,10 +121,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 })
             };
 
-            var model = BuildManifestUtil.CreateModelFromItems(artifacts, null,
+            var model = _buildModelFactory.CreateModelFromItems(artifacts, null,
                 null, null, null, null, _testAzdoBuildId, _defaultManifestBuildData, _testAzdoRepoUri, _testBuildBranch, _testBuildCommit, false,
                 VersionTools.BuildManifest.Model.PublishingInfraVersion.All,
-                true, _taskLoggingHelper);
+                true);
 
             _taskLoggingHelper.HasLoggedErrors.Should().BeFalse();
             // When Maestro sees a symbol package, it is supposed to re-do the symbol package path to
@@ -164,10 +182,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 })
             };
 
-            var model = BuildManifestUtil.CreateModelFromItems(artifacts, null,
+            var model = _buildModelFactory.CreateModelFromItems(artifacts, null,
                 null, null, null, null, _testAzdoBuildId, _defaultManifestBuildData, _testAzdoRepoUri, _testBuildBranch, _testBuildCommit, false,
                 VersionTools.BuildManifest.Model.PublishingInfraVersion.All,
-                true, _taskLoggingHelper);
+                true);
 
             model.Artifacts.Blobs.Should().BeEmpty();
             model.Artifacts.Packages.Should().SatisfyRespectively(
@@ -203,10 +221,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 }),
             };
 
-            BuildManifestUtil.CreateModelFromItems(artifacts, null,
+            _buildModelFactory.CreateModelFromItems(artifacts, null,
                 null, null, null, null, _testAzdoBuildId, _defaultManifestBuildData, _testAzdoRepoUri, _testBuildBranch, _testBuildCommit, false,
                 VersionTools.BuildManifest.Model.PublishingInfraVersion.All,
-                true, _taskLoggingHelper);
+                true);
 
             _taskLoggingHelper.HasLoggedErrors.Should().BeTrue();
             _buildEngine.BuildErrorEvents.Should().Contain(e => e.Message.Equals($"Missing 'RelativeBlobPath' property on blob {zipArtifact}"));
@@ -228,10 +246,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 })
             };
 
-            BuildManifestUtil.CreateModelFromItems(artifacts, null,
+            _buildModelFactory.CreateModelFromItems(artifacts, null,
                 null, null, null, null, _testAzdoBuildId, null, _testAzdoRepoUri, _testBuildBranch, _testBuildCommit, false,
                 VersionTools.BuildManifest.Model.PublishingInfraVersion.Latest,
-                true, _taskLoggingHelper);
+                true);
 
             // Should have logged an error that an initial location was not present.
             _taskLoggingHelper.HasLoggedErrors.Should().BeTrue();
@@ -262,10 +280,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 $"{attributeName}={_testInitialLocation}"
             };
 
-            var model = BuildManifestUtil.CreateModelFromItems(artifacts, null,
+            var model = _buildModelFactory.CreateModelFromItems(artifacts, null,
                 null, null, null, null, _testAzdoBuildId, manifestBuildData, _testAzdoRepoUri, _testBuildBranch, _testBuildCommit, false,
                 VersionTools.BuildManifest.Model.PublishingInfraVersion.All,
-                true, _taskLoggingHelper);
+                true);
 
             // Should have logged an error that an initial location was not present.
             _taskLoggingHelper.HasLoggedErrors.Should().BeFalse();
@@ -367,16 +385,16 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 })
             };
 
-            string tempXmlFile = System.IO.Path.GetTempFileName();
+            string tempXmlFile = Path.GetTempFileName();
             try
             {
-                var modelFromItems = BuildManifestUtil.CreateModelFromItems(artifacts, itemsToSign,
+                var modelFromItems = _buildModelFactory.CreateModelFromItems(artifacts, itemsToSign,
                     strongNameSignInfo, fileSignInfo, fileExtensionSignInfo, certificatesSignInfo, _testAzdoBuildId,
                     _defaultManifestBuildData, _testAzdoRepoUri, _testBuildBranch, _testBuildCommit, true,
                     VersionTools.BuildManifest.Model.PublishingInfraVersion.Next,
-                    false, _taskLoggingHelper);
+                    false);
 
-                BuildManifestUtil.CreateBuildManifest(_taskLoggingHelper,
+                _buildModelFactory.CreateBuildManifest(
                         modelFromItems.Artifacts.Blobs,
                         modelFromItems.Artifacts.Packages,
                         tempXmlFile,
@@ -391,7 +409,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                         modelFromItems.SigningInformation);
 
                 // Read the xml file back in and create a model from it.
-                var modelFromFile = BuildManifestUtil.ManifestFileToModel(tempXmlFile, _taskLoggingHelper);
+                var modelFromFile = _buildModelFactory.ManifestFileToModel(tempXmlFile);
 
                 // There will be some reordering of the attributes here (they are written to the xml file in
                 // a defined order for some properties, then ordered by case).
@@ -510,10 +528,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 })
             };
 
-            var model = BuildManifestUtil.CreateModelFromItems(artifacts, null,
+            var model = _buildModelFactory.CreateModelFromItems(artifacts, null,
                 null, null, null, null, _testAzdoBuildId, _defaultManifestBuildData, _testAzdoRepoUri, _testBuildBranch, _testBuildCommit, false,
                 VersionTools.BuildManifest.Model.PublishingInfraVersion.All,
-                true, _taskLoggingHelper);
+                true);
 
             _taskLoggingHelper.HasLoggedErrors.Should().BeFalse();
             model.SigningInformation.Should().NotBeNull();
@@ -585,11 +603,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 })
             };
 
-            var model = BuildManifestUtil.CreateModelFromItems(artifacts, itemsToSign,
+            var model = _buildModelFactory.CreateModelFromItems(artifacts, itemsToSign,
                 strongNameSignInfo, fileSignInfo, fileExtensionSignInfo, certificatesSignInfo,
                 _testAzdoBuildId, _defaultManifestBuildData, _testAzdoRepoUri, _testBuildBranch, _testBuildCommit, false,
                 VersionTools.BuildManifest.Model.PublishingInfraVersion.All,
-                true, _taskLoggingHelper);
+                true);
 
             _taskLoggingHelper.HasLoggedErrors.Should().BeFalse();
             model.SigningInformation.Should().NotBeNull();
@@ -660,11 +678,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 new TaskItem(Path.GetFileName(localPackagePath)),
             };
 
-            var model = BuildManifestUtil.CreateModelFromItems(artifacts, itemsToSign,
+            var model = _buildModelFactory.CreateModelFromItems(artifacts, itemsToSign,
                 null, null, null, null,
                 _testAzdoBuildId, _defaultManifestBuildData, _testAzdoRepoUri, _testBuildBranch, _testBuildCommit, false,
                 VersionTools.BuildManifest.Model.PublishingInfraVersion.All,
-                true, _taskLoggingHelper);
+                true);
 
             _taskLoggingHelper.HasLoggedErrors.Should().BeTrue();
             _buildEngine.BuildErrorEvents.Should().HaveCount(1);

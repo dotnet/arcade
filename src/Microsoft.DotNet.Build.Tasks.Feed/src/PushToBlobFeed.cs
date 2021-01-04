@@ -2,18 +2,21 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
+using Microsoft.Arcade.Common;
 using Microsoft.Build.Framework;
+using Microsoft.DotNet.VersionTools.Automation;
 using Microsoft.DotNet.VersionTools.BuildManifest.Model;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
-using MSBuild = Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed
 {
-    public class PushToBlobFeed : MSBuild.Task
+    public class PushToBlobFeed : MSBuildTaskBase
     {
         [Required]
         public string ExpectedFeedUrl { get; set; }
@@ -60,8 +63,30 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public bool IsReleaseOnlyPackageVersion { get; set; }
 
-        public override bool Execute()
+        private IBuildModelFactory _buildModelFactory;
+        private IPackageArtifactModelFactory _packageArtifactModelFactory;
+        private IBlobArtifactModelFactory _blobArtifactModelFactory;
+
+        public override void ConfigureServices(IServiceCollection collection)
         {
+            collection.TryAddSingleton<IBuildModelFactory, BuildModelFactory>();
+            collection.TryAddSingleton<ISigningInformationModelFactory, SigningInformationModelFactory>();
+            collection.TryAddSingleton<IBlobArtifactModelFactory, BlobArtifactModelFactory>();
+            collection.TryAddSingleton<IPackageArtifactModelFactory, PackageArtifactModelFactory>();
+            collection.TryAddSingleton<INupkgInfoFactory, NupkgInfoFactory>();
+            collection.TryAddSingleton<IPackageArchiveReaderFactory, PackageArchiveReaderFactory>();
+            collection.TryAddSingleton<IFileSystem, FileSystem>();
+            collection.TryAddSingleton(Log);
+        }
+
+        public bool ExecuteTask(IBuildModelFactory buildModelFactory,
+            IBlobArtifactModelFactory blobArtifactModelFactory,
+            IPackageArtifactModelFactory packageArtifactModelFactory)
+        {
+            _buildModelFactory = buildModelFactory;
+            _packageArtifactModelFactory = packageArtifactModelFactory;
+            _blobArtifactModelFactory = blobArtifactModelFactory;
+
             return ExecuteAsync().GetAwaiter().GetResult();
         }
 
@@ -126,7 +151,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         .Select(i =>
                         {
                             string fileName = Path.GetFileName(i.ItemSpec);
-                            i.SetMetadata("RelativeBlobPath", $"{BuildManifestUtil.AssetsVirtualDir}symbols/{fileName}");
+                            i.SetMetadata("RelativeBlobPath", $"{AssetsVirtualDir}symbols/{fileName}");
                             return i;
                         })
                         .ToArray();
@@ -152,13 +177,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     blobArtifacts = ConcatBlobArtifacts(blobArtifacts, symbolItems);
                 }
 
-                if(!BuildManifestUtil.ManifestBuildDataHasLocationInformation(ManifestBuildData))
+                if (!(MSBuildListSplitter.GetNamedProperties(ManifestBuildData).ContainsKey("Location") || 
+                    MSBuildListSplitter.GetNamedProperties(ManifestBuildData).ContainsKey("InitialAssetsLocation")))
                 {
                     string[] locationAttribute = new string[] { $"Location={ExpectedFeedUrl}" };
                     ManifestBuildData = ManifestBuildData == null ? locationAttribute : ManifestBuildData.Concat(locationAttribute).ToArray();
                 }
 
-                BuildManifestUtil.CreateBuildManifest(Log,
+                _buildModelFactory.CreateBuildManifest(
                     blobArtifacts,
                     packageArtifacts,
                     AssetManifestPath,
@@ -179,13 +205,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             return !Log.HasLoggedErrors;
         }
 
-        private static IEnumerable<PackageArtifactModel> ConcatPackageArtifacts(
+        private IEnumerable<PackageArtifactModel> ConcatPackageArtifacts(
             IEnumerable<PackageArtifactModel> artifacts,
             IEnumerable<ITaskItem> items)
         {
             return artifacts.Concat(items
                 .Where(i => !string.Equals(i.GetMetadata("ExcludeFromManifest"), "true", StringComparison.OrdinalIgnoreCase))
-                .Select(BuildManifestUtil.CreatePackageArtifactModel));
+                .Select(_packageArtifactModelFactory.CreatePackageArtifactModel));
         }
 
         private IEnumerable<BlobArtifactModel> ConcatBlobArtifacts(
@@ -194,7 +220,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         {
             return artifacts.Concat(items
                 .Where(i => !string.Equals(i.GetMetadata("ExcludeFromManifest"), "true", StringComparison.OrdinalIgnoreCase))
-                .Select(i => BuildManifestUtil.CreateBlobArtifactModel(i, Log))
+                .Select(i => _blobArtifactModelFactory.CreateBlobArtifactModel(i))
                 .Where(blob => blob != null));
         }
     }

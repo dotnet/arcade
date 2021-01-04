@@ -23,8 +23,8 @@
     <!-- Disable the message indicating we are using a preview SDK. That is understood and by design -->
     <SuppressNETCoreSdkPreviewMessage>true</SuppressNETCoreSdkPreviewMessage>
 
-    <!-- By default do not build NuGet package for a project. Project may override. -->
-    <IsPackable>false</IsPackable>
+    <!-- By default do not build NuGet package for a non pkgproj project. Project may override. -->
+    <IsPackable Condition="'$(MSBuildProjectExtension)' != '.pkgproj'">false</IsPackable>
 
     <!--
       Official build:
@@ -127,13 +127,6 @@
     </When>
 
   </Choose>
-
-  <!-- 
-    Implements proposal https://github.com/dotnet/designs/pull/33.
-  -->
-  <ItemGroup Condition="'$(UsingToolNetFrameworkReferenceAssemblies)' == 'true'">
-    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="$(MicrosoftNetFrameworkReferenceAssembliesVersion)" PrivateAssets="all" IsImplicitlyDefined="true" />
-  </ItemGroup>
 
   <ItemGroup Condition="'$(EnableRichCodeNavigation)' == 'true'">
     <PackageReference Include="RichCodeNav.EnvVarDump" Version="$(RichCodeNavPackageVersion)" IsImplicitlyDefined="true" PrivateAssets="all" />

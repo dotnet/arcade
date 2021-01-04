@@ -1,18 +1,20 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using Microsoft.Arcade.Common;
 using Microsoft.Build.Framework;
-using Microsoft.DotNet.Build.Tasks.Feed.Model;
+using Microsoft.DotNet.VersionTools.Automation;
 using Microsoft.DotNet.VersionTools.BuildManifest.Model;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using System;
-using MSBuild = Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed
 {
     /// <summary>
     /// This task generates an XML build manifest for a list of packages and files.
     /// </summary>
-    public class GenerateBuildManifest : MSBuild.Task
+    public class GenerateBuildManifest : MSBuildTaskBase
     {
         /// <summary>
         /// An list of files produced by the build.
@@ -112,7 +114,20 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// </summary>
         public bool IsReleaseOnlyPackageVersion { get; set; }
 
-        public override bool Execute()
+        public override void ConfigureServices(IServiceCollection collection)
+        {
+            collection.TryAddSingleton<IBuildModelFactory, BuildModelFactory>();
+            collection.TryAddSingleton<ISigningInformationModelFactory, SigningInformationModelFactory>();
+            collection.TryAddSingleton<IBlobArtifactModelFactory, BlobArtifactModelFactory>();
+            collection.TryAddSingleton<IPackageArtifactModelFactory, PackageArtifactModelFactory>();
+            collection.TryAddSingleton<INupkgInfoFactory, NupkgInfoFactory>();
+            collection.TryAddSingleton<IPackageArchiveReaderFactory, PackageArchiveReaderFactory>();
+            collection.TryAddSingleton<IFileSystem, FileSystem>();
+            collection.TryAddSingleton(Log);
+        }
+
+        public bool ExecuteTask(IFileSystem fileSystem,
+            IBuildModelFactory buildModelFactory)
         {
             try
             {
@@ -126,8 +141,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         return false;
                     }
                 }
-
-                var buildModel = BuildManifestUtil.CreateModelFromItems(
+                
+                var buildModel = buildModelFactory.CreateModelFromItems(
                     Artifacts,
                     ItemsToSign,
                     StrongNameSignInfo,
@@ -141,10 +156,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     RepoCommit,
                     IsStableBuild,
                     targetPublishingVersion,
-                    IsReleaseOnlyPackageVersion,
-                    Log);
+                    IsReleaseOnlyPackageVersion);
 
-                buildModel.WriteAsXml(OutputPath, Log);
+                Log.LogMessage(MessageImportance.High, $"Writing build manifest file '{OutputPath}'...");
+                fileSystem.WriteToFile(OutputPath, buildModel.ToXml().ToString());
             }
             catch (Exception e)
             {
