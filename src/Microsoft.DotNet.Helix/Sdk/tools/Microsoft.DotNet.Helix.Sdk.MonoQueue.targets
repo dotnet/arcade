@@ -57,6 +57,7 @@
                   WorkItems="@(HelixWorkItem)"
                   HelixProperties="@(HelixProperties)">
       <Output TaskParameter="JobCorrelationId" PropertyName="HelixJobId"/>
+      <Output TaskParameter="JobCancellationToken" PropertyName="HelixJobCancellationToken"/>
       <Output TaskParameter="ResultsContainerUri" PropertyName="HelixResultsContainer"/>
       <Output TaskParameter="ResultsContainerReadSAS" PropertyName="HelixResultsContainerReadSAS"/>
     </SendHelixJob>
@@ -66,6 +67,7 @@
         <HelixTargetQueue>$(HelixTargetQueue)</HelixTargetQueue>
         <ResultsContainerUri>$(HelixResultsContainer)</ResultsContainerUri>
         <ResultsContainerReadSAS>$(HelixResultsContainerReadSAS)</ResultsContainerReadSAS>
+        <HelixJobCancellationToken>$(HelixJobCancellationToken)</HelixJobCancellationToken>
       </SentJob>
     </ItemGroup>
 
