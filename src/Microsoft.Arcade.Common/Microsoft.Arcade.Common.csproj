@@ -14,7 +14,7 @@
   </ItemGroup>
   
   <ItemGroup Condition="'$(TargetFramework)' != 'net472'">
-    <Compile Remove="src\Microsoft.Arcade.Common\MSBuildTaskBase.Desktop.cs" />
+    <Compile Remove="MSBuildTaskBase.Desktop.cs" />
   </ItemGroup>
 
 </Project>

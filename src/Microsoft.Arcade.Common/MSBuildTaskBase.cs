@@ -34,8 +34,7 @@ namespace Microsoft.Arcade.Common
             using (var provider = collection.BuildServiceProvider())
             {
                 return InvokeExecute(provider);
-            }
-            
+            }            
         }
 
         /// <summary>
