@@ -31,8 +31,10 @@ namespace Microsoft.Arcade.Common
         {
             ServiceCollection collection = new();
             ConfigureServices(collection);
-            using var provider = collection.BuildServiceProvider();
-            return InvokeExecute(provider);
+            using (var provider = collection.BuildServiceProvider())
+            {
+                return InvokeExecute(provider);
+            }
         }
 
         /// <summary>
