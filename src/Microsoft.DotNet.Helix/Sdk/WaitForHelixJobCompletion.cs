@@ -58,7 +58,8 @@ namespace Microsoft.DotNet.Helix.Sdk
                 {
                     if (string.IsNullOrEmpty(helixJobCancellationToken))
                     {
-                        Log.LogWarning($"{nameof(CancelHelixJobsOnTaskCancellation)} is set to 'true', but no value provided for {nameof(helixJobCancellationToken)}");
+                        Log.LogWarning($"{nameof(CancelHelixJobsOnTaskCancellation)} is set to 'true', but no value was provided for {nameof(helixJobCancellationToken)}");
+                        return;
                     }
                     Log.LogWarning($"Build task was cancelled while waiting on job '{jobName}'.  Attempting to cancel this job in Helix...");
                     await HelixApi.Job.CancelAsync(jobName, helixJobCancellationToken);
