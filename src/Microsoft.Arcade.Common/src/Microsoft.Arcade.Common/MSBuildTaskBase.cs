@@ -29,12 +29,13 @@ namespace Microsoft.Arcade.Common
         /// <returns></returns>
         public override sealed bool Execute()
         {
-            ServiceCollection collection = new();
+            ServiceCollection collection = new ServiceCollection();
             ConfigureServices(collection);
             using (var provider = collection.BuildServiceProvider())
             {
                 return InvokeExecute(provider);
             }
+            
         }
 
         /// <summary>
