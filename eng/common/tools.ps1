@@ -645,7 +645,7 @@ function MSBuild() {
 
     $toolsetBuildProject = InitializeToolset
     $path = Split-Path -parent $toolsetBuildProject
-    $path = Join-Path $path (Join-Path $buildTool.Framework 'Microsoft.DotNet.Arcade.Sdk.dll')
+    $path = Join-Path $path (Join-Path $buildTool.Framework 'Microsoft.DotNet.ArcadeLogging.dll')
     $args += "/logger:$path"
   }
 
