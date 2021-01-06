@@ -1271,7 +1271,7 @@ $@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "Container
                 WixToolsPath = badPath
             };
 
-            task.Execute();
+            task.Execute().Should().BeFalse();
             task.Log.HasLoggedErrors.Should().BeTrue();
             fakeBuildEngine.LogErrorEvents.ForEach(a => a.Message.Should().EndWithEquivalent(" does not exist." ));
         }
