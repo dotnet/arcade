@@ -16,6 +16,11 @@ namespace Microsoft.DotNet.Helix.Client
         string CorrelationId { get; }
 
         /// <summary>
+        /// Token allowing cancellation of this specific job without other credentials
+        /// </summary>
+        string HelixCancellationToken { get; }
+
+        /// <summary>
         /// URI for blob storage container with the results.
         /// </summary>
         string ResultsContainerUri { get; }

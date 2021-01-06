@@ -22,6 +22,7 @@
 
   <PropertyGroup>
     <WaitForWorkItemCompletion Condition="'$(WaitForWorkItemCompletion)' != 'false'">true</WaitForWorkItemCompletion>
+    <CancelHelixJobsIfBuildCancelled Condition="'$(CancelHelixJobsIfBuildCancelled)' != 'false'">true</CancelHelixJobsIfBuildCancelled>
     <FailOnWorkItemFailure Condition="'$(FailOnWorkItemFailure)' != 'false'">true</FailOnWorkItemFailure>
     <FailOnMissionControlTestFailure Condition="'$(FailOnMissionControlTestFailure)' != 'true'">false</FailOnMissionControlTestFailure>
   </PropertyGroup>
@@ -55,6 +56,7 @@
       Condition="$(WaitForWorkItemCompletion)"
       AccessToken="$(HelixAccessToken)"
       BaseUri="$(HelixBaseUri)"
+      CancelHelixJobsOnTaskCancellation="$(CancelHelixJobsIfBuildCancelled)"
       Jobs="@(SentJob)" />
 
     <GetHelixWorkItems

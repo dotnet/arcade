@@ -89,16 +89,16 @@ function ResolvePath {
 function ReadGlobalVersion {
   local key=$1
 
-  local line=$(awk "/$key/ {print; exit}" "$global_json_file")
-  local pattern="\"$key\" *: *\"(.*)\""
+  if command -v jq &> /dev/null; then
+    _ReadGlobalVersion="$(jq -r ".[] | select(has(\"$key\")) | .\"$key\"" "$global_json_file")"
+  elif [[ "$(cat "$global_json_file")" =~ \"$key\"[[:space:]\:]*\"([^\"]+) ]]; then
+    _ReadGlobalVersion=${BASH_REMATCH[1]}
+  fi
 
-  if [[ ! $line =~ $pattern ]]; then
+  if [[ -z "$_ReadGlobalVersion" ]]; then
     Write-PipelineTelemetryError -category 'Build' "Error: Cannot find \"$key\" in $global_json_file"
     ExitWithExitCode 1
   fi
-
-  # return value
-  _ReadGlobalVersion=${BASH_REMATCH[1]}
 }
 
 function InitializeDotNetCli {
@@ -476,8 +476,11 @@ temp_dir="$artifacts_dir/tmp/$configuration"
 global_json_file="$repo_root/global.json"
 # determine if global.json contains a "runtimes" entry
 global_json_has_runtimes=false
-dotnetlocal_key=$(awk "/runtimes/ {print; exit}" "$global_json_file") || true
-if [[ -n "$dotnetlocal_key" ]]; then
+if command -v jq &> /dev/null; then
+  if jq -er '. | select(has("runtimes"))' "$global_json_file" &> /dev/null; then
+    global_json_has_runtimes=true
+  fi
+elif [[ "$(cat "$global_json_file")" =~ \"runtimes\"[[:space:]\:]*\{ ]]; then
   global_json_has_runtimes=true
 fi
 

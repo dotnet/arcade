@@ -2,12 +2,10 @@ using Microsoft.Build.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Diagnostics;
 using System.IO;
-using System.Text;
 using System.Collections;
 
-namespace Microsoft.DotNet.Arcade.Sdk
+namespace Microsoft.DotNet.ArcadeLogging
 {
     /// <summary>
     /// Logger for converting MSBuild error messages to the Azure Pipelines Tasks format

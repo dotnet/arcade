@@ -129,6 +129,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.VersionToo
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.Arcade.Test.Common", "src\Microsoft.Arcade.Test.Common\Microsoft.Arcade.Test.Common.csproj", "{EFF72D23-8533-4D00-8182-3B04C40AA1A8}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.ArcadeLogging", "src\Microsoft.DotNet.ArcadeLogging\Microsoft.DotNet.ArcadeLogging.csproj", "{73496668-336D-4D43-9093-C17862E78BCE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -807,6 +809,18 @@ Global
 		{EFF72D23-8533-4D00-8182-3B04C40AA1A8}.Release|x64.Build.0 = Release|Any CPU
 		{EFF72D23-8533-4D00-8182-3B04C40AA1A8}.Release|x86.ActiveCfg = Release|Any CPU
 		{EFF72D23-8533-4D00-8182-3B04C40AA1A8}.Release|x86.Build.0 = Release|Any CPU
+		{73496668-336D-4D43-9093-C17862E78BCE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{73496668-336D-4D43-9093-C17862E78BCE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{73496668-336D-4D43-9093-C17862E78BCE}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{73496668-336D-4D43-9093-C17862E78BCE}.Debug|x64.Build.0 = Debug|Any CPU
+		{73496668-336D-4D43-9093-C17862E78BCE}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{73496668-336D-4D43-9093-C17862E78BCE}.Debug|x86.Build.0 = Debug|Any CPU
+		{73496668-336D-4D43-9093-C17862E78BCE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{73496668-336D-4D43-9093-C17862E78BCE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{73496668-336D-4D43-9093-C17862E78BCE}.Release|x64.ActiveCfg = Release|Any CPU
+		{73496668-336D-4D43-9093-C17862E78BCE}.Release|x64.Build.0 = Release|Any CPU
+		{73496668-336D-4D43-9093-C17862E78BCE}.Release|x86.ActiveCfg = Release|Any CPU
+		{73496668-336D-4D43-9093-C17862E78BCE}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

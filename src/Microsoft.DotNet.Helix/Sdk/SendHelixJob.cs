@@ -47,6 +47,12 @@ namespace Microsoft.DotNet.Helix.Sdk
         public string JobCorrelationId { get; set; }
 
         /// <summary>
+        ///   A string value which allows cancellation of only the job used to generate it (to support anonymous scenarios)
+        /// </summary>
+        [Output]
+        public string JobCancellationToken { get; set; }
+
+        /// <summary>
         ///   When the task finishes, the results container uri should be available in case we want to download files.
         /// </summary>
         [Output]
@@ -236,6 +242,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                 cancellationToken.ThrowIfCancellationRequested();
                 ISentJob job = await def.SendAsync(msg => Log.LogMessage(msg), cancellationToken);
                 JobCorrelationId = job.CorrelationId;
+                JobCancellationToken = job.HelixCancellationToken;
                 ResultsContainerUri = job.ResultsContainerUri;
                 ResultsContainerReadSAS = job.ResultsContainerReadSAS;
                 cancellationToken.ThrowIfCancellationRequested();
