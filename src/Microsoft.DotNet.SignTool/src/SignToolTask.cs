@@ -141,6 +141,9 @@ namespace Microsoft.DotNet.SignTool
         [Required]
         public string LogDir { get; set; }
 
+        // This property can be removed if https://github.com/dotnet/arcade/issues/6747 is implemented
+        internal BatchSignInput ParsedSigningInput { get; private set; }
+
         public override bool Execute()
         {
 #if NET472
@@ -246,11 +249,11 @@ namespace Microsoft.DotNet.SignTool
                     return;
                 }
 
-                var signingInput = configuration.GenerateListOfFiles();
+                ParsedSigningInput = configuration.GenerateListOfFiles();
 
                 if (Log.HasLoggedErrors) return;
 
-                var util = new BatchSignUtil(BuildEngine, Log, signTool, signingInput, ItemsToSkipStrongNameCheck?.Select(i => i.ItemSpec).ToArray(), configuration._hashToCollisionIdMap, telemetry: telemetry);
+                var util = new BatchSignUtil(BuildEngine, Log, signTool, ParsedSigningInput, ItemsToSkipStrongNameCheck?.Select(i => i.ItemSpec).ToArray(), configuration._hashToCollisionIdMap, telemetry: telemetry);
 
                 util.SkipZipContainerSignatureMarkerCheck = this.SkipZipContainerSignatureMarkerCheck;
 
