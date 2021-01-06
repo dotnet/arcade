@@ -91,10 +91,6 @@ namespace Microsoft.DotNet.SignTool.Tests
                 { "CertificateName", "PSCCertificate" },
                 { SignToolConstants.CollisionPriorityId, "123" }
             }),
-            new TaskItem(".psd1", new Dictionary<string, string> {
-                { "CertificateName", "PSDCertificate" },
-                { SignToolConstants.CollisionPriorityId, "123" }
-            }),
             new TaskItem(".dylib", new Dictionary<string, string> {
                 { "CertificateName", "DylibCertificate" },
                 { SignToolConstants.CollisionPriorityId, "123" }
@@ -108,10 +104,6 @@ namespace Microsoft.DotNet.SignTool.Tests
                 { SignToolConstants.CollisionPriorityId, "123" }
             }),
             new TaskItem(".zip", new Dictionary<string, string> {
-                { "CertificateName", "None" },
-                { SignToolConstants.CollisionPriorityId, "123" }
-            }),
-            new TaskItem(".symbols.nupkg", new Dictionary<string, string> {
                 { "CertificateName", "None" },
                 { SignToolConstants.CollisionPriorityId, "123" }
             }),
@@ -1253,6 +1245,38 @@ $@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "Container
             wixToolsPath: GetWixToolPath());
         }
 
+        /// <summary>
+        /// Validate that an invalid wix toolset path causes an error
+        /// </summary>
+        [SkippableFact]
+        [Trait("Category", "SkipWhenLiveUnitTesting")]
+        public void BadWixToolsetPath()
+        {
+            Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
+
+            var badPath = Path.Combine(GetWixToolPath(), "badpath");
+
+            var fakeBuildEngine = new FakeBuildEngine(_output);
+            var task = new SignToolTask
+            {
+                BuildEngine = fakeBuildEngine,
+                ItemsToSign =  Array.Empty<ITaskItem>(),
+                StrongNameSignInfo = Array.Empty<ITaskItem>(),
+                FileExtensionSignInfo = Array.Empty<ITaskItem>(),
+                LogDir = "LogDir",
+                TempDir = "TempDir",
+                DryRun = true,
+                MSBuildPath = CreateTestResource("msbuild.fake"),
+                DoStrongNameCheck = false,
+                SNBinaryPath = null,
+                WixToolsPath = badPath
+            };
+
+            task.Execute();
+            task.Log.HasLoggedErrors.Should().BeTrue();
+            fakeBuildEngine.LogErrorEvents.ForEach(a => a.Message.Should().EndWithEquivalent(" does not exist." ));
+        }
+
         [Fact]
         public void MPackFile()
         {
@@ -1681,6 +1705,100 @@ $@"
             }));
 
             runTask(fileExtensionSignInfo: fileExtensionSignInfo.ToArray()).Should().BeTrue();
+        }
+
+        /// <summary>
+        /// This test is intended to validate that the argument parsing which occurs
+        /// in the SignToolTask class are properly parsed before they are passed
+        /// to sign tool.
+        /// </summary>
+        [Fact]
+        public void ValidateSignToolTaskParsing()
+        {
+            // List of files to be considered for signing
+            var itemsToSign = new ITaskItem[]
+            {
+                // Unsigned package
+                new TaskItem(GetResourcePath("ContainerOne.1.0.0.nupkg"), new Dictionary<string, string>
+                {
+                    { SignToolConstants.CollisionPriorityId, "123" }
+                }),
+                // Signed pe file
+                new TaskItem(GetResourcePath("SignedLibrary.dll"), new Dictionary<string, string>
+                {
+                    { SignToolConstants.CollisionPriorityId, "123" }
+                })
+            };
+
+            var strongNameSignInfo = new ITaskItem[]
+            {
+                new TaskItem("ArcadeStrongTest", new Dictionary<string, string>
+                {
+                    { "CertificateName", "3PartySHA2" },
+                    { "PublicKeyToken", "581d91ccdfc4ea9c" },
+                    { "CollisionPriorityId", "123" }
+                })
+            };
+
+            // Overriding file signing information
+            var fileSignInfo = new ITaskItem[]
+            {
+                new TaskItem("ProjectOne.dll", new Dictionary<string, string>
+                {
+                    { "TargetFramework", ".NETStandard,Version=v2.0" },
+                    { "CertificateName", "OverrideCertificateName" },
+                    { "PublicKeyToken", "581d91ccdfc4ea9c" },
+                    { "CollisionPriorityId", "123" }
+                }),
+                new TaskItem("SignedLibrary.dll", new Dictionary<string, string>
+                {
+                    { "TargetFramework", ".NETCoreApp,Version=v2.0" },
+                    { "CertificateName", "DualSignCertificate" },
+                    { "PublicKeyToken", "31bf3856ad364e35" },
+                    { "CollisionPriorityId", "123" }
+                })
+            };
+
+            // Enable dual signing for signed library
+            var certificatesSignInfo = new ITaskItem[]
+            {
+                new TaskItem("DualSignCertificate", new Dictionary<string, string>
+                {
+                    { "DualSigningAllowed", "true" }
+                })
+            };
+
+            var task = new SignToolTask
+            {
+                BuildEngine = new FakeBuildEngine(_output),
+                ItemsToSign = itemsToSign,
+                StrongNameSignInfo = strongNameSignInfo,
+                FileExtensionSignInfo = s_fileExtensionSignInfoPostBuild,
+                FileSignInfo = fileSignInfo,
+                CertificatesSignInfo = certificatesSignInfo,
+                LogDir = "LogDir",
+                TempDir = "TempDir",
+                DryRun = true,
+                MSBuildPath = CreateTestResource("msbuild.fake"),
+                MicroBuildCorePath = "MicroBuildCorePath",
+                DoStrongNameCheck = false,
+                SNBinaryPath = null,
+            };
+
+            task.Execute().Should().BeTrue();
+
+            var expected = new[]
+            {
+                "File 'NativeLibrary.dll' Certificate='Microsoft400'",
+                "File 'ProjectOne.dll' TargetFramework='.NETFramework,Version=v4.6.1' Certificate='3PartySHA2' StrongName='ArcadeStrongTest'",
+                "File 'ContainerOne.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='3PartySHA2' StrongName='ArcadeStrongTest'",
+                "File 'ProjectOne.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='3PartySHA2' StrongName='ArcadeStrongTest'",
+                "File 'ProjectOne.dll' TargetFramework='.NETCoreApp,Version=v2.1' Certificate='3PartySHA2' StrongName='ArcadeStrongTest'",
+                "File 'ProjectOne.dll' TargetFramework='.NETStandard,Version=v2.0' Certificate='OverrideCertificateName' StrongName='ArcadeStrongTest'",
+                "File 'ContainerOne.1.0.0.nupkg' Certificate='NuGet'",
+                "File 'SignedLibrary.dll' TargetFramework='.NETCoreApp,Version=v2.0' Certificate='DualSignCertificate'"
+            };
+            task.ParsedSigningInput.FilesToSign.Select(f => f.ToString()).Should().BeEquivalentTo(expected);
         }
 
         private bool runTask(ITaskItem[] itemsToSign = null, ITaskItem[] strongNameSignInfo = null, ITaskItem[] fileExtensionSignInfo = null)
