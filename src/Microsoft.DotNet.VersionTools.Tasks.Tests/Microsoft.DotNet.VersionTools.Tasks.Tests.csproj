@@ -16,6 +16,4 @@
     <ProjectReference Include="..\Microsoft.DotNet.VersionTools\tasks\Microsoft.DotNet.VersionTools.Tasks.csproj" />
   </ItemGroup>
 
-  <Import Project="$(RepoRoot)eng\BuildTask.targets" />
-
 </Project>

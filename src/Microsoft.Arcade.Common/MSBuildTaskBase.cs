@@ -10,7 +10,7 @@ using System.Linq;
 
 namespace Microsoft.Arcade.Common
 {
-    public abstract class MSBuildTaskBase : MSBuild.Task
+    public abstract partial class MSBuildTaskBase : MSBuild.Task
     {
         #region Common Variables
         protected const string AssetsVirtualDir = "assets/";
@@ -29,10 +29,12 @@ namespace Microsoft.Arcade.Common
         /// <returns></returns>
         public override sealed bool Execute()
         {
-            ServiceCollection collection = new();
+            ServiceCollection collection = new ServiceCollection();
             ConfigureServices(collection);
-            using var provider = collection.BuildServiceProvider();
-            return InvokeExecute(provider);
+            using (var provider = collection.BuildServiceProvider())
+            {
+                return InvokeExecute(provider);
+            }            
         }
 
         /// <summary>

@@ -3,8 +3,8 @@
 
 using FluentAssertions;
 using Microsoft.Arcade.Common;
+using Microsoft.Arcade.Test.Common;
 using Microsoft.DotNet.Build.Tasks.Feed.Model;
-using Microsoft.DotNet.Build.Tasks.Feed.Tests.TestDoubles;
 using Microsoft.DotNet.Internal.DependencyInjection.Testing;
 using Microsoft.DotNet.VersionTools.BuildManifest.Model;
 using Microsoft.Extensions.DependencyInjection;

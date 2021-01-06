@@ -25,6 +25,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Microsoft.Arcade.Common\Microsoft.Arcade.Common.csproj" />
+    <ProjectReference Include="..\Microsoft.Arcade.Test.Common\Microsoft.Arcade.Test.Common.csproj" />
     <ProjectReference Include="..\Microsoft.DotNet.Build.Tasks.Feed\Microsoft.DotNet.Build.Tasks.Feed.csproj" />
     <ProjectReference Include="..\Microsoft.DotNet.Internal.DependencyInjection.Testing\Microsoft.DotNet.Internal.DependencyInjection.Testing.csproj" />
     <ProjectReference Include="..\Microsoft.DotNet.VersionTools\lib\Microsoft.DotNet.VersionTools.csproj" />
