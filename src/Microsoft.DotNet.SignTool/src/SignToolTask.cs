@@ -141,6 +141,7 @@ namespace Microsoft.DotNet.SignTool
         [Required]
         public string LogDir { get; set; }
 
+        // This property can be removed if https://github.com/dotnet/arcade/issues/6747 is implemented
         internal BatchSignInput ParsedSigningInput { get; private set; }
 
         public override bool Execute()
