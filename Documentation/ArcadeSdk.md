@@ -670,7 +670,7 @@ The following task restores tools that are only available from internal feeds.
 
 The Build Pipeline needs to link the following variable group:
 
-- DotNet-Symbol-Publish 
+- DotNet-Symbol-Server-Pats
   - `microsoft-symbol-server-pat`
   - `symweb-symbol-server-pat`
 
