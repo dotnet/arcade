@@ -1249,7 +1249,6 @@ $@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "Container
         /// Validate that an invalid wix toolset path causes an error
         /// </summary>
         [SkippableFact]
-        [Trait("Category", "SkipWhenLiveUnitTesting")]
         public void BadWixToolsetPath()
         {
             Skip.IfNot(RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
