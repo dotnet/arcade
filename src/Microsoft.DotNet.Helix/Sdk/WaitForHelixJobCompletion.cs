@@ -47,7 +47,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                         var jd = await HelixApi.Job.DetailsAsync(jobName, cancellationToken).ConfigureAwait(false);
                         if (jd.Errors.Count() > 0)
                         {
-                            string errorMsgs = string.Join(",", jd.Errors.Select(d => d.Message).ToArray());
+                            string errorMsgs = string.Join(",", jd.Errors.Select(d => d.Message));
                             Log.LogError($"Helix encountered job-level error(s) for this job ({errorMsgs}).  Please contact dnceng with this information.");
                             return;
                         }
