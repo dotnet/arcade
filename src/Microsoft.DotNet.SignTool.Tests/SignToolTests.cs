@@ -1706,6 +1706,43 @@ $@"
             runTask(fileExtensionSignInfo: fileExtensionSignInfo.ToArray()).Should().BeTrue();
         }
 
+        // Given:
+        // - "SameFiles1.zip" contains "Simple1.exe" and "Simple2.exe"
+        // - "SameFiles2.zip" contains "Simple1.exe"
+        // - "Simple1.exe" and "Simple2.exe" have identical contents
+        // This test shows that:
+        // - even though Simple1 and Simple2 have identical contents, they are treated as unique files
+        // - Simple1 from SameFiles1.zip and Simple1 from SameFiles2.zip are treated as the same files because they have the
+        //   same content and the same name
+        [Fact]
+        public void FilesAreUniqueByName()
+        {
+            // List of files to be considered for signing
+            var itemsToSign = new ITaskItem[]
+            {
+                new TaskItem(GetResourcePath("SameFiles1.zip"), new Dictionary<string, string>
+                {
+                    { SignToolConstants.CollisionPriorityId, "123" }
+                }),
+                new TaskItem(GetResourcePath("SameFiles2.zip"), new Dictionary<string, string>
+                {
+                    { SignToolConstants.CollisionPriorityId, "123" }
+                })
+            };
+
+            ValidateFileSignInfos(itemsToSign, new Dictionary<string, List<SignInfo>>(), new Dictionary<ExplicitCertificateKey, string>(), s_fileExtensionSignInfoWithCollisionId, new[]
+            {
+                "File 'Simple1.exe' TargetFramework='.NETCoreApp,Version=v2.1' Certificate='Microsoft400'",
+                "File 'Simple2.exe' TargetFramework='.NETCoreApp,Version=v2.1' Certificate='Microsoft400'",
+                "File 'SameFiles1.zip' Certificate=''",
+                "File 'SameFiles2.zip' Certificate=''",
+            },
+            expectedWarnings: new[]
+            {
+                $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "0", "Simple1.exe")}' with Microsoft certificate 'Microsoft400'. The library is considered 3rd party library due to its copyright: ''.",
+                $@"SIGN001: Signing 3rd party library '{Path.Combine(_tmpDir, "ContainerSigning", "1", "Simple2.exe")}' with Microsoft certificate 'Microsoft400'. The library is considered 3rd party library due to its copyright: ''."
+            });
+        }
         /// <summary>
         /// This test is intended to validate that the argument parsing which occurs
         /// in the SignToolTask class are properly parsed before they are passed
