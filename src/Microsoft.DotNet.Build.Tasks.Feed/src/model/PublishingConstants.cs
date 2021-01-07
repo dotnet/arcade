@@ -680,7 +680,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
 
             // "VS 16.10",
             new TargetChannelConfig(
-                1670,
+                1692,
                 false,
                 PublishingInfraVersion.All,
                 string.Empty,
