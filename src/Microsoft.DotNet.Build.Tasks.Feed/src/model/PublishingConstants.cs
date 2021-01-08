@@ -119,6 +119,19 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedForInstallers,
                 PublicAndInternalSymbolTargets),
 
+            // ".NET Preview 1",
+            new TargetChannelConfig(
+                1670,
+                false,
+                PublishingInfraVersion.All,
+                "net6/preview1",
+                FeedDotNet6Shipping,
+                FeedDotNet6Transport,
+                FeedDotNet6Symbols,
+                FeedForChecksums,
+                FeedForInstallers,
+                PublicAndInternalSymbolTargets),
+
             // ".NET 5" (public),
             new TargetChannelConfig(
                 1299,
@@ -655,6 +668,19 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             // "VS 16.9",
             new TargetChannelConfig(
                 1473,
+                false,
+                PublishingInfraVersion.All,
+                string.Empty,
+                FeedDotNetToolsShipping,
+                FeedDotNetToolsTransport,
+                FeedDotNetToolsSymbols,
+                FeedForChecksums,
+                FeedForInstallers,
+                PublicAndInternalSymbolTargets),
+
+            // "VS 16.10",
+            new TargetChannelConfig(
+                1692,
                 false,
                 PublishingInfraVersion.All,
                 string.Empty,
