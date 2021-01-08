@@ -35,10 +35,24 @@ namespace Microsoft.DotNet.Helix.Sdk
             cancellationToken.ThrowIfCancellationRequested();
             Log.LogMessage(MessageImportance.High, $"Waiting for completion of job {jobName} on {queueName}");
 
+            int iterationCount = 0;
             try
             {
                 for (; ; await Task.Delay(20000, cancellationToken).ConfigureAwait(false)) // delay every time this loop repeats
                 {
+                    // On first try, and ~ every 12 checks (~4 minutes) after, check the job details for errors.
+                    // Jobs with any job-level errors will never finish and we want to investigate these.
+                    if (iterationCount++ % 12 == 0)
+                    {
+                        var jd = await HelixApi.Job.DetailsAsync(jobName, cancellationToken).ConfigureAwait(false);
+                        if (jd.Errors.Count() > 0)
+                        {
+                            string errorMsgs = string.Join(",", jd.Errors.Select(d => d.Message));
+                            Log.LogError($"Helix encountered job-level error(s) for this job ({errorMsgs}).  Please contact dnceng with this information.");
+                            return;
+                        }
+                    }
+
                     cancellationToken.ThrowIfCancellationRequested();
                     var pf = await HelixApi.Job.PassFailAsync(jobName, cancellationToken).ConfigureAwait(false);
                     if (pf.Working == 0 && pf.Total != 0)
