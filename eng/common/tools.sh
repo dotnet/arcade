@@ -415,7 +415,7 @@ function MSBuild {
 
     local toolset_dir="${_InitializeToolset%/*}"
     local logger_path="$toolset_dir/$_InitializeBuildToolFramework/Microsoft.DotNet.ArcadeLogging.dll"
-    if [[ ! -f logger_path ]]; then
+    if [[ ! -f $logger_path ]]; then
       logger_path="$toolset_dir/$_InitializeBuildToolFramework/Microsoft.DotNet.Arcade.Sdk.dll"
     fi
     args=( "${args[@]}" "-logger:$logger_path" )
