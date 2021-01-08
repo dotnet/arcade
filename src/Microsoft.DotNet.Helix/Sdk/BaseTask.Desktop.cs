@@ -1,4 +1,4 @@
-using Microsoft.DotNet.Build.Common.Desktop;
+using Microsoft.Arcade.Common.Desktop;
 
 namespace Microsoft.DotNet.Helix
 {

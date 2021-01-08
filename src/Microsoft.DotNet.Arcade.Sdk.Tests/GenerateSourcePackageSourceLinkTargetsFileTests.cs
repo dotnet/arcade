@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Xml.Linq;
 using Microsoft.Build.Utilities;
-using TestUtilities;
+using Microsoft.Arcade.Test.Common;
 using Xunit;
 
 namespace Microsoft.DotNet.Arcade.Sdk.Tests

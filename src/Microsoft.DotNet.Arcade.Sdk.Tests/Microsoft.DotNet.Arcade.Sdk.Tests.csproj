@@ -6,6 +6,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Common\Microsoft.Arcade.Test.Common\Microsoft.Arcade.Test.Common.csproj" />
     <ProjectReference Include="..\Microsoft.DotNet.Arcade.Sdk\Microsoft.DotNet.Arcade.Sdk.csproj" />
   </ItemGroup>
 
@@ -14,12 +15,6 @@
     <PackageReference Include="Microsoft.Build.Tasks.Core" Version="$(MicrosoftBuildTasksCoreVersion)" />
   </ItemGroup>
   
-  <ItemGroup>
-    <Compile Include="..\Common\TestUtilities\AssertEx.cs" Link="TestUtilities\AssertEx.cs" />
-    <Compile Include="..\Common\TestUtilities\DiffUtil.cs" Link="TestUtilities\DiffUtil.cs" />
-    <Compile Include="..\Common\TestUtilities\MockEngine.cs" Link="TestUtilities\MockEngine.cs" />
-  </ItemGroup>
-
   <ItemGroup>
     <Content Include="testassets\**\*" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="$(RepoRoot)eng\common\**\*" LinkBase="testassets\boilerplate\eng\common\" CopyToOutputDirectory="PreserveNewest" />

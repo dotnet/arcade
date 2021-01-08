@@ -17,11 +17,8 @@
     <PackageReference Include="System.Collections.Immutable" Version="$(SystemCollectionsImmutableVersion)" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Common\Microsoft.Arcade.Test.Common\Microsoft.Arcade.Test.Common.csproj" />
     <ProjectReference Include="..\..\src\Microsoft.DotNet.SignTool\Microsoft.DotNet.SignTool.csproj" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="..\Common\TestUtilities\AssertEx.cs" Link="TestUtilities\AssertEx.cs" />
-    <Compile Include="..\Common\TestUtilities\DiffUtil.cs" Link="TestUtilities\DiffUtil.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Resources\**">

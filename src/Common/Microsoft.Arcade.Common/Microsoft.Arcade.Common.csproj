@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net472;netcoreapp2.1</TargetFrameworks>
+    <TargetFrameworks>net472;netstandard2.0</TargetFrameworks>
     <IsPackable>true</IsPackable>
   </PropertyGroup>
 
@@ -11,9 +11,9 @@
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
-    <Compile Include="..\Common\AssemblyResolver.cs" />
+    <Compile Include="..\Internal\AssemblyResolver.cs" />
   </ItemGroup>
-  
+
   <ItemGroup Condition="'$(TargetFramework)' != 'net472'">
     <Compile Remove="MSBuildTaskBase.Desktop.cs" />
   </ItemGroup>
