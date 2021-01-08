@@ -5,7 +5,7 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.IO;
 using System.IO.Compression;
-using TestUtilities;
+using Microsoft.Arcade.Test.Common;
 using Xunit;
 
 namespace Microsoft.DotNet.Build.Tasks.VisualStudio.UnitTests
