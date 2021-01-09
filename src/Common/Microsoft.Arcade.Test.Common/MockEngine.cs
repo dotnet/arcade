@@ -6,9 +6,9 @@ using Microsoft.Build.Framework;
 using Xunit.Abstractions;
 using Xunit.Sdk;
 
-namespace Microsoft.DotNet.Arcade.Sdk.Tests.Utilities
+namespace Microsoft.Arcade.Test.Common
 {
-    internal class MockEngine : IBuildEngine5
+    public class MockEngine : IBuildEngine5
     {
         private readonly ITestOutputHelper _output;
 

@@ -24,7 +24,7 @@
   
   <Target Name="_RemoveSelfContainedAfterFrameworkReferenceResolution" AfterTargets="ProcessFrameworkReferences">
     <PropertyGroup>
-      <SelfContained>true</SelfContained>
+      <SelfContained>false</SelfContained>
     </PropertyGroup>
   </Target>
 

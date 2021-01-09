@@ -36,12 +36,12 @@
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
-    <Compile Include="..\Common\AssemblyResolver.cs" />
-    <Compile Include="..\Common\BuildTask.Desktop.cs" />
+    <Compile Include="..\Common\Internal\AssemblyResolver.cs" />
+    <Compile Include="..\Common\Internal\BuildTask.Desktop.cs" />
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="..\Common\BuildTask.cs" />
+    <Compile Include="..\Common\Internal\BuildTask.cs" />
   </ItemGroup>
 
   <!-- On Core, these native binaries wind up in the Runtimes folder of this package. For Desktop, we have to manually mark them to get them packed -->

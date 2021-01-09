@@ -273,8 +273,11 @@ function GetDotNetInstallScript {
     if command -v curl > /dev/null; then
       # first, try directly, if this fails we will retry with verbose logging
       curl "$install_script_url" -sSL --retry 10 --create-dirs -o "$install_script" || {
-        echo "Curl failed; dumping some information about dotnet.microsoft.com for later investigation"
-        echo | openssl s_client -showcerts -servername dotnet.microsoft.com  -connect dotnet.microsoft.com:443
+        if command -v openssl &> /dev/null
+        then
+          echo "Curl failed; dumping some information about dotnet.microsoft.com for later investigation"
+          echo | openssl s_client -showcerts -servername dotnet.microsoft.com  -connect dotnet.microsoft.com:443
+        fi
         echo "Will now retry the same URL with verbose logging."
         with_retries curl "$install_script_url" -sSL --verbose --retry 10 --create-dirs -o "$install_script" || {
           local exit_code=$?
@@ -411,7 +414,10 @@ function MSBuild {
     fi
 
     local toolset_dir="${_InitializeToolset%/*}"
-    local logger_path="$toolset_dir/$_InitializeBuildToolFramework/Microsoft.DotNet.Arcade.Sdk.dll"
+    local logger_path="$toolset_dir/$_InitializeBuildToolFramework/Microsoft.DotNet.ArcadeLogging.dll"
+    if [[ ! -f $logger_path ]]; then
+      logger_path="$toolset_dir/$_InitializeBuildToolFramework/Microsoft.DotNet.Arcade.Sdk.dll"
+    fi
     args=( "${args[@]}" "-logger:$logger_path" )
   fi
 

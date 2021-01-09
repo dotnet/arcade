@@ -5,7 +5,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Microsoft.DotNet.VersionTools.Util
+namespace Microsoft.Arcade.Common
 {
     public interface IRetryHandler
     {
