@@ -17,7 +17,7 @@ param(
 try {
   . $PSScriptRoot\post-build-utils.ps1
   # Hard coding darc version till the next arcade-services roll out, cos this version has required API changes for darc add-build-to-channel
-  $darc = Get-Darc "1.1.0-beta.20418.1"
+  $darc = Get-Darc "1.1.0-beta.21058.3"
 
   $optionalParams = [System.Collections.ArrayList]::new()
 
