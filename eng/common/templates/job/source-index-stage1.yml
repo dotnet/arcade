@@ -3,6 +3,7 @@ parameters:
   sourceIndexPackageVersion: 1.0.0-beta5
   sourceIndexPackageSource: https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-tools/nuget/v3/index.json
   sourceIndexBuildCommand: powershell -NoLogo -NoProfile -ExecutionPolicy Bypass -Command "eng/common/build.ps1 -restore -build -binarylog -ci"
+  preSteps: []
   binlogPath: artifacts/log/Debug/Build.binlog
   pool:
     vmImage: vs2017-win2016
@@ -21,6 +22,9 @@ jobs:
 
   pool: ${{ parameters.pool }}
   steps:
+  - ${{ each preStep in parameters.preSteps }}:
+    - ${{ preStep }}
+
   - task: UseDotNet@2
     displayName: Use .NET Core sdk 3.1
     inputs:
