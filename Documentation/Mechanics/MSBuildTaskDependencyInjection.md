@@ -2,7 +2,7 @@
 
 In an effort to make MSBuild Tasks more unit-testable, we are introducing this abstract base class to provide dependency injection support for the MSBuild Tasks classes. Enabling dependency injection will allow us to inject mock dependencies into the MSBuild Tasks classes for a better unit testing experience. 
 
-In an effort to provide dependency injection for the MSBuild Tasks in Arcade, we wanted to have a consistent way in implementing dependency injection for the `Microsoft.Build.Utilities.Task` type. In a web service or command line application, the entry point into the program serves as a place to configure the dependency injection service collections and provider. Since there isn't an entry point like that for MSBuild Tasks, we have created an abstract class to handle the common elements of configuration. 
+The `MSBuildTaskBase` abstract class provides a consistent way to implement dependency injection for the `Microsoft.Build.Utilities.Task` type. In a web service or command line application, the entry point into the program serves as a place to configure the dependency injection service collections and provider. Since there isn't an entry point like that for MSBuild Tasks, we have created an abstract class to handle the common elements of configuration. 
 
 MSBuildTaskBase class can be found [here](https://github.com/dotnet/arcade/blob/master/src/Microsoft.Arcade.Common/MSBuildTaskBase.cs).
 
@@ -16,37 +16,38 @@ For more reading about dependency injection:
 
 1. In your MSBuild Task class, inherit the `MSBuildTaskBase` class found the in `Microsoft.Arcade.Common` project. 
 
-```csharp
-public class TaskClassName : MSBuildTaskBase
-{
-    ...
-}
-```
+    ```csharp
+    public class TaskClassName : MSBuildTaskBase
+    {
+        ...
+    }
+    ```
 
-2. Implement the following two methods: `ExecuteTask` and `ConfigureServices`. 
+2. Implement the `ExecuteTask` method. Since the abstract base class uses reflection to find this method so that it can look up the dependencies being injected into the class, these are the requirements for its implementation: 
+    - Must be public
+    - Must be named exactly `ExecuteTask`
+    - Must return a boolean
+    - Can accept any (or no) parameters, which will be resolved from the service collection configured by ConfigureServices
 
-    - `ExecuteTask` replaces the `Execute` method from Microsoft.Build.Utilities.Task object. Any functionality you would include in the `Execute` method should go into `ExecuteTask` instead. 
-    - `ConfigureServices` should contain the configuration for the Service Collection that will resolve the dependencies.
+    `ExecuteTask` replaces the `Execute` method from the `Microsoft.Build.Utilities.Task` class. Any functionality you would include in the `Execute` method should go into `ExecuteTask` instead. This method also mimics the behavior of a constructor that would take in the dependencies for a class, and should include the interfaces of the dependencies being injected into the Task as parameters. 
 
-3. Similarly to how interfaces are included into a constructor for a class that will have its dependencies injected into it, include the interfaces of the dependencies for the Task into `ExecuteTask` parameters. 
+    ```csharp
+    public bool ExecuteTask(IThing thing, IPizza pizza, IHamburger hamburger)
+    { 
+        ...
+    }
+    ```
 
-```csharp
-public bool ExecuteTask(IThing thing, IFoo foo, IBar bar)
-{ 
-    ...
-}
-```
+3. Implement `ConfigureServices` to contain the configuration for the Service Collection that will resolve the dependencies. Ensure that you have configured all dependencies, including the downstream dependencies that are used by the top-level dependencies being injected into the Task. 
 
-4. Similarly to how a service collection would be configured to resolve dependencies, `ConfigureServices` should contain the same kind of configuration. Ensure that you have configured all dependencies, 
-
-```csharp
-public override void ConfigureServices(IServiceCollection collection)
-{
-    collection.TryAddSingleton<IThing, ThingClass>();
-    collection.TryAddSingleton<IFoo, FooClass>();
-    ...
-}
-```
+    ```csharp
+    public override void ConfigureServices(IServiceCollection collection)
+    {
+        collection.TryAddSingleton<IThing, ThingClass>();
+        collection.TryAddSingleton<IPizza, PizzaClass>();
+        ...
+    }
+    ```
 
 ## How to Use with Tests
 
@@ -88,25 +89,25 @@ This test uses a helper class that is provided in the `Microsoft.DotNet.Internal
 
 1. Create the mocks for the services to be injected into the task, and add them to a new service collection to be used in the test. 
 
-```csharp
-var collection = new ServiceCollection()
-    .AddSingleton(thingMock.Object)
-    .AddSingleton(fooMock.Object);
-```
+    ```csharp
+    var collection = new ServiceCollection()
+        .AddSingleton(thingMock.Object)
+        .AddSingleton(pizzaMock.Object);
+    ```
 
-2. Pass that collection into the Task's `ConfigureServices` method. If the `ConfigureServices` method registers dependencies using TryAdds, it shouldn't add conflicting dependency registrations into the collection. 
+1. Pass that collection into the Task's `ConfigureServices` method. If the `ConfigureServices` method registers dependencies using TryAdds, it shouldn't add conflicting dependency registrations into the collection. 
 
-```csharp
-MSBuildTaskClass task = new MSBuildTaskClass();
-task.ConfigureServices(collection);
-```
+    ```csharp
+    MSBuildTaskClass task = new MSBuildTaskClass();
+    task.ConfigureServices(collection);
+    ```
 
-3. Build the service provider and pass it into the method that will resolve the dependencies and invoke the `ExecuteTask` method.
+1. Build the service provider and pass it into the method that will resolve the dependencies and invoke the `ExecuteTask` method.
 
-```csharp
-using var provider = collection.BuildServiceProvider();
-bool result = task.InvokeExecute(provider);
-```
+    ```csharp
+    using var provider = collection.BuildServiceProvider();
+    bool result = task.InvokeExecute(provider);
+    ```
 
 ## What's Happening Behind the Scenes
 
