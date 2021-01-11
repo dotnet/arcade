@@ -1,8 +1,16 @@
 # Purpose of MSBuildTaskBase Class
 
+In an effort to make MSBuild Tasks more unit-testable, we are introducing this abstract base class to provide dependency injection support for the MSBuild Tasks classes. Enabling dependency injection will allow us to inject mock dependencies into the MSBuild Tasks classes for a better unit testing experience. 
+
 In an effort to provide dependency injection for the MSBuild Tasks in Arcade, we wanted to have a consistent way in implementing dependency injection for the `Microsoft.Build.Utilities.Task` type. In a web service or command line application, the entry point into the program serves as a place to configure the dependency injection service collections and provider. Since there isn't an entry point like that for MSBuild Tasks, we have created an abstract class to handle the common elements of configuration. 
 
 MSBuildTaskBase class can be found [here](https://github.com/dotnet/arcade/blob/master/src/Microsoft.Arcade.Common/MSBuildTaskBase.cs).
+
+For more reading about dependency injection: 
+- [Architectural Principles: Dependency Injection](https://docs.microsoft.com/en-us/dotnet/architecture/modern-web-apps-azure/architectural-principles#dependency-inversion)
+- [Dependency Injection in ASP.NET Core](https://docs.microsoft.com/en-us/aspnet/core/fundamentals/dependency-injection?view=aspnetcore-5.0)
+- [Dependency Injection: Constructor Injection Behavior](https://docs.microsoft.com/en-us/dotnet/core/extensions/dependency-injection#constructor-injection-behavior)
+- [PluralSight course: Dependency Injection in ASP.NET Core](https://www.pluralsight.com/courses/aspdotnet-core-dependency-injection)
 
 ## How to Implement in an MSBuild Task
 
