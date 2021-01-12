@@ -1,15 +1,15 @@
 This is a detailed guide on how to approach renaming of the `master` branch to `main`.
 It is primarily intended for repositories in the dotnet organization.
 The whole process should take approximately 1-2 hours, depending on the time your PR builds take.
-In case of any problems, please reach out to **@dotnet/m2m-renaming** or **@dotnet/dnceng**.
+In case of any problems, please reach out to **@dotnet/dnceng**.
+You can also use the [**First Responder** channel](https://teams.microsoft.com/l/channel/19%3aafba3d1545dd45d7b79f34c1821f6055%40thread.skype/First%2520Responders?groupId=4d73664c-9f2f-450d-82a5-c2f02756606d&tenantId=72f988bf-86f1-41af-91ab-2d7cd011db47).
 
 Please sit back and enjoy the moment of your career where you are actually asked to delete the master branch of your project.
 
 
 # Prerequisites
 
-These prerequisites are required for a successful migration. If you're not sure about any of these, please reach out to **@dotnet/m2m-renaming** or **@dotnet/dnceng**.
-You can also use the [**First Responder** channel](https://teams.microsoft.com/l/channel/19%3aafba3d1545dd45d7b79f34c1821f6055%40thread.skype/First%2520Responders?groupId=4d73664c-9f2f-450d-82a5-c2f02756606d&tenantId=72f988bf-86f1-41af-91ab-2d7cd011db47).
+These prerequisites are required for a successful migration. If you're not sure about any of these, please reach out to **@dotnet/dnceng**.
 
 Please verify that you:
 - Know whether your repo is part of the [Maestro/darc dependency flow](https://github.com/dotnet/arcade/blob/master/Documentation/DependencyFlowOnboarding.md)
@@ -148,7 +148,7 @@ pr:
 > * The `main` branch will be created as part of this step automatically. It shouldn't exist yet at this stage.
 > * When user opens GitHub repo it automatically shows steps how to update local repository.
 > * Automation updates target branch in all PRs.
-> * GitHub raw links are automatically redirected. For example link https://raw.githubusercontent.com/dotnet/m2m-renaming-test-1/master/README.md still works even after rename and is equivalent to link https://raw.githubusercontent.com/dotnet/m2m-renaming-test-1/main/README.md.
+> * GitHub raw links are automatically redirected. For example link https://raw.githubusercontent.com/dotnet/xharness/master/README.md still works even after rename and is equivalent to link https://raw.githubusercontent.com/dotnet/xharness/main/README.md.
 
 
 > **Warning:** The `master` branch will be deleted during this step!
