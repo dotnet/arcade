@@ -278,5 +278,7 @@ GitHub raw links are automatically redirected. For example link https://raw.gith
 ### How to revert Maestro migration?
 Two update scripts are generated. There are 3 scenarios:
 * In case the `disable-subscriptions-in-maestro.ps1` script was executed **only**, to roll back, edit this script and replace argument `-d` with `-e`.
-* Both scripts were executed. To roll-back you need to generate roll back scripts using another call of "./disable-subscriptions-prepare-migration-script.ps1 [repo name] master main". Then execute generated update script "./rename-branch-in-maestro.ps1" and all changes will be reverted.
+* When both scripts were executed, you need to generate rollback scripts using the second script:
+    `./disable-subscriptions-prepare-migration-script.ps1 [repo name] master main`.
+    Then execute generated update script `./rename-branch-in-maestro.ps1` and all changes will be reverted.
 * Reach out to us in case of any questions or issues with these scripts.
