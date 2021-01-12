@@ -252,3 +252,26 @@ pr:
 ```
 
 This should trigger the [code-mirror build](https://dev.azure.com/dnceng/internal/_build?definitionId=16&_a=summary) which should trigger the internal pipeline.
+
+# FAQ
+
+### What happens to open PRs?
+When branch is renamed in GitHub then open PRs against master are automatically re-targeted (forks as well).
+
+### What if PRs get merged/opened during the process?
+We suggest to try to not merge any PRs during the process described below. However, the instructions are ordered in a way that should prevent it and keep a consistent state even if it happens.
+
+### Can I revert if something goes sideways?
+All of the steps are easily revert-able, so it is not a problem to go back to master in case you find some problems maybe only specific to your repository that would prevent you from migrating.
+
+### How do I migrate Maestro subscriptions?
+Scripts for Maestro migration are part of this renaming guide.
+
+### How will repo users learn about this?
+GitHub users are automatically notified through UI that the branch was renamed and it gives them steps how to update their local repository.
+
+![GitHub UI notification](images/github-ui-notification.png)
+
+### What happens to links to files in my repo?
+GitHub links are automatically redirected. For example https://github.com/dotnet/xharness/blob/master/README.md will still work after the rename and will point to https://github.com/dotnet/xharness/blob/main/README.md.
+GitHub raw links are automatically redirected. For example link https://raw.githubusercontent.com/dotnet/xharness/master/README.md still works even after rename and is equivalent to link https://raw.githubusercontent.com/dotnet/xharness/main/README.md.
