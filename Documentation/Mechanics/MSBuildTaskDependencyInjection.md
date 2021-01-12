@@ -53,7 +53,9 @@ For more reading about dependency injection:
 
 ### Validating Dependency Injection Configuration
 
-To ensure that the service collection has been properly configured, you should include a test to validate the registration of the dependencies. The following is an example of that kind of test: 
+To ensure that the service collection has been properly configured, you should include a test to validate the registration of the dependencies. This test uses a helper class that is provided in the `Microsoft.DotNet.Internal.DependencyInjection.Testing` project. 
+
+The first parameter in `IsDependencyResolutionCoherent` attempts to configure the services in the Task to verify that the required services are configured correctly. The last parameter verifies that the top-level dependencies that are defined in `ExecuteTask`'s parameters are configured correctly. 
 
 ```csharp
 [Fact]
@@ -65,25 +67,18 @@ public void AreDependenciesRegistered()
     task.ConfigureServices(collection);
     var provider = collection.BuildServiceProvider();
 
-    foreach(var dependency in task.GetExecuteParameterTypes())
-    {
-        var service = provider.GetRequiredService(dependency);
-        service.Should().NotBeNull();
-    }
-
     DependencyInjectionValidation.IsDependencyResolutionCoherent(
             s =>
             {
                 task.ConfigureServices(s);
             },
-            out string message
+            out string message,
+            additionalScopedTypes: task.GetExecuteParameterTypes()
         )
         .Should()
         .BeTrue(message);
 }
 ```
-
-This test uses a helper class that is provided in the `Microsoft.DotNet.Internal.DependencyInjection.Testing` project. 
 
 ### Mocking Services for Task Unit Tests
 
@@ -95,7 +90,7 @@ This test uses a helper class that is provided in the `Microsoft.DotNet.Internal
         .AddSingleton(pizzaMock.Object);
     ```
 
-1. Pass that collection into the Task's `ConfigureServices` method. If the `ConfigureServices` method registers dependencies using TryAdds, it shouldn't add conflicting dependency registrations into the collection. 
+1. Pass that collection into the Task's `ConfigureServices` method. If the `ConfigureServices` method registers dependencies using `TryAdd`s, it shouldn't add conflicting dependency registrations into the collection. 
 
     ```csharp
     MSBuildTaskClass task = new MSBuildTaskClass();
@@ -129,15 +124,9 @@ public override sealed bool Execute()
 }
 ```
 
-`MSBuildTaskBase` contains a virtual implementation of `ConfigureServices` that configures common dependencies, such as `IFileSystem` (if you want to abstract the File and Directory classes so they can be mocked out for tests) and `TaskLoggingHelper` object called `Log`. It is expected that this method will be overridden. 
+The implementation of `ConfigureServices` on the concrete implementation of `MSBuildTaskBase` will configure the resolution of dependencies. 
 
-```csharp
-public virtual void ConfigureServices(IServiceCollection collection)
-{
-    collection.TryAddSingleton<IFileSystem, FileSystem>();
-    collection.TryAddSingleton(Log);
-}
-```
+`MSBuildTaskBase` contains a virtual implementation of `ConfigureServices` that configures common dependencies, such as `IFileSystem` (if you want to abstract the File and Directory classes so they can be mocked out for tests) and a `TaskLoggingHelper` object called `Log`. It is expected that this method will be overridden. 
 
 `InvokeExecute` is where the reflection magic happens. It looks up the `ExecuteTask` method on the concrete implementation, looks up the parameters (the dependencies) that are defined in the method, and resolves the dependencies with the provider that was configured and built. Then it passes along the required dependency implementations into the method when it ultimately invokes it. 
 
