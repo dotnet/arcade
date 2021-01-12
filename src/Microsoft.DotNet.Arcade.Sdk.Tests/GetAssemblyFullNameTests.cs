@@ -4,7 +4,7 @@
 using Microsoft.Build.Utilities;
 using System.Collections.Generic;
 using System.Linq;
-using TestUtilities;
+using Microsoft.Arcade.Test.Common;
 using Xunit;
 
 namespace Microsoft.DotNet.Arcade.Sdk.Tests

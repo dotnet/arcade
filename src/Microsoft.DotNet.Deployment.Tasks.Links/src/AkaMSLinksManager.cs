@@ -1,9 +1,9 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using Microsoft.Arcade.Common;
 using Microsoft.Build.Framework;
 using Microsoft.IdentityModel.Clients.ActiveDirectory;
-using Microsoft.DotNet.VersionTools.Util;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Concurrent;

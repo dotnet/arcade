@@ -60,7 +60,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="..\Common\AssemblyResolution.cs" Link="src\AssemblyResolution.cs" />
+    <Compile Include="..\Common\Internal\AssemblyResolution.cs" Link="src\AssemblyResolution.cs" />
     <Compile Remove="src\InstallDotNetCore.cs" Condition="'$(DotNetBuildFromSource)' == 'true'" />
   </ItemGroup>
 

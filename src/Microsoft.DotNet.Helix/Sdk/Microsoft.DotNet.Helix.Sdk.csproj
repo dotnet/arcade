@@ -21,7 +21,7 @@
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net472'"> 
-    <Compile Include="..\..\Common\AssemblyResolver.cs" /> 
+    <Compile Include="..\..\Common\Internal\AssemblyResolver.cs" /> 
   </ItemGroup>
 
   <ItemGroup>

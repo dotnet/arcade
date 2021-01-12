@@ -37,7 +37,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="..\Common\AssemblyResolution.cs" Link="src\AssemblyResolution.cs" />
+    <Compile Include="..\Common\Internal\AssemblyResolution.cs" Link="src\AssemblyResolution.cs" />
   </ItemGroup>
 
   <Import Project="$(RepoRoot)eng\BuildTask.targets" />

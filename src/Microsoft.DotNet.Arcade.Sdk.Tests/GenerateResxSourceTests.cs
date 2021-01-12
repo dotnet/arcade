@@ -3,7 +3,7 @@
 
 using System;
 using System.IO;
-using Microsoft.DotNet.Arcade.Sdk.Tests.Utilities;
+using Microsoft.Arcade.Test.Common;
 using Xunit;
 using Xunit.Abstractions;
 
