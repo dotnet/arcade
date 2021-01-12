@@ -279,13 +279,27 @@ GitHub raw links are automatically redirected. For example link https://raw.gith
 
 ### How to revert Maestro migration?
 Two update scripts are generated. There are 3 scenarios:
-1. In case the `disable-subscriptions-in-maestro.ps1` script was executed **only**, to roll back, edit this script and replace argument `-d` with `-e`. For example update:
+1. In case the `disable-subscriptions-in-maestro.ps1` script was executed **only**, to roll back, edit this script and replace argument `-d` with `-e`. For example update content of `disable-subscriptions-in-maestro.ps1` from:
 
-`darc subscription-status --id "032d107a-6f5d-4df8-c8c4-08d75d523d5f" -d -q`
+```
+$ErrorActionPreference = 'Stop'
+# Disable targeting subscriptions for https://dev.azure.com/dnceng/internal/_git/dotnet-runtime (master)
+# --------------------------------
+# Disable targeting subscriptions for https://github.com/dotnet/runtime (master)
+# ----------------------------------
+darc subscription-status --id "032d107a-6f5d-4df8-c8c4-08d75d523d5f" -d -q
+```
 
-to
-
-`darc subscription-status --id "032d107a-6f5d-4df8-c8c4-08d75d523d5f" -e -q`
+to:
+```
+$ErrorActionPreference = 'Stop'
+# Disable targeting subscriptions for https://dev.azure.com/dnceng/internal/_git/dotnet-runtime (master)
+# --------------------------------
+# Disable targeting subscriptions for https://github.com/dotnet/runtime (master)
+# ----------------------------------
+darc subscription-status --id "032d107a-6f5d-4df8-c8c4-08d75d523d5f" -e -q
+```
+and execute `disable-subscriptions-in-maestro.ps1`.
 
 2. When both scripts were executed, you need to generate rollback scripts using the same script which was used to generate migration scripts:
     `./disable-subscriptions-prepare-migration-script.ps1 [repo name] master main`.
