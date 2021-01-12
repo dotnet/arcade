@@ -20,18 +20,13 @@ namespace Microsoft.DotNet.VersionTools.Tasks.Tests
             task.ConfigureServices(collection);
             var provider = collection.BuildServiceProvider();
 
-            foreach (var dependency in task.GetExecuteParameterTypes())
-            {
-                var service = provider.GetRequiredService(dependency);
-                service.Should().NotBeNull();
-            }
-
             DependencyInjectionValidation.IsDependencyResolutionCoherent(
                     s =>
                     {
                         task.ConfigureServices(s);
                     },
-                    out string message
+                    out string message,
+                    additionalSingletonTypes: task.GetExecuteParameterTypes()
                 )
                 .Should()
                 .BeTrue(message);

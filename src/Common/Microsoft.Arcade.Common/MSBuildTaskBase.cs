@@ -59,11 +59,7 @@ namespace Microsoft.Arcade.Common
         /// that aren't configured for the tests. 
         /// </summary>
         /// <param name="collection"></param>
-        public virtual void ConfigureServices(IServiceCollection collection)
-        {
-            collection.TryAddSingleton<IFileSystem, FileSystem>();
-            collection.TryAddSingleton(Log);
-        }
+        public abstract void ConfigureServices(IServiceCollection collection);
 
         /// <summary>
         /// Uses some reflection magic to look up the types of depenencies that to be injected into the implemented task. 
