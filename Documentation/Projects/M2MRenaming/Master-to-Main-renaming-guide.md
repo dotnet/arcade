@@ -1,3 +1,5 @@
+# Master to main renaming guide
+
 This is a detailed guide on how to approach renaming of the `master` branch to `main`.
 It is primarily intended for repositories in the dotnet organization.
 The whole process should take approximately 1-2 hours, depending on the time your PR builds take.
@@ -277,8 +279,16 @@ GitHub raw links are automatically redirected. For example link https://raw.gith
 
 ### How to revert Maestro migration?
 Two update scripts are generated. There are 3 scenarios:
-* In case the `disable-subscriptions-in-maestro.ps1` script was executed **only**, to roll back, edit this script and replace argument `-d` with `-e`.
-* When both scripts were executed, you need to generate rollback scripts using the second script:
+1. In case the `disable-subscriptions-in-maestro.ps1` script was executed **only**, to roll back, edit this script and replace argument `-d` with `-e`. For example update:
+
+`darc subscription-status --id "032d107a-6f5d-4df8-c8c4-08d75d523d5f" -d -q`
+
+to
+
+`darc subscription-status --id "032d107a-6f5d-4df8-c8c4-08d75d523d5f" -e -q`
+
+2. When both scripts were executed, you need to generate rollback scripts using the same script which was used to generate migration scripts:
     `./disable-subscriptions-prepare-migration-script.ps1 [repo name] master main`.
     Then execute generated update script `./rename-branch-in-maestro.ps1` and all changes will be reverted.
-* Reach out to us in case of any questions or issues with these scripts.
+
+3. Reach out to us in case of any questions or issues with these scripts.
