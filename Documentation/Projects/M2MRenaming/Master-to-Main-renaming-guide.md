@@ -35,7 +35,7 @@ Some steps are only intended for some cases, they are labelled in the following 
 - ![Maestro enabled](images/maestro-enabled.png) Step is intended only for repositories that are part of our [dependency flow](https://github.com/dotnet/arcade/blob/master/Documentation/DependencyFlowOnboarding.md)**
 
 > \* You can tell that your repo is being mirrored by searching the git repositories in the [internal AzDO dnceng project](https://dev.azure.com/dnceng/internal/_git). In case your repository's name on GitHub is `dotnet/foo`, there should be a git repository named `dotnet-foo`. You should then also be able to find your repo in the [subscriptions.json](https://github.com/dotnet/versions/blob/master/Maestro/subscriptions.json#L627) file on which the mirroring is based.
-> 
+>
 > \*\* You can tell that your repo is part of our dependency flow when your repo contains the `/eng/Version.Details.xml` and `/eng/Versions.props` files. You are then also probably getting automatic updates (PRs) by the `dotnet-maestro` bot.
 
 # Step-by-step guide
@@ -274,3 +274,9 @@ GitHub users are automatically notified through UI that the branch was renamed a
 GitHub links are automatically redirected. For example https://github.com/dotnet/xharness/blob/master/README.md will still work after the rename and will point to https://github.com/dotnet/xharness/blob/main/README.md.
 
 GitHub raw links are automatically redirected. For example link https://raw.githubusercontent.com/dotnet/xharness/master/README.md still works even after rename and is equivalent to link https://raw.githubusercontent.com/dotnet/xharness/main/README.md.
+
+### How to revert Maestro migration?
+Two update scripts are generated. There are 3 scenarios:
+* Only the script "disable-subscriptions-in-maestro.ps1" was executed. To roll-back edit this script and replace argument -d with -e.
+* Both scripts were executed. To roll-back you need to generate roll back scripts using another call of "./disable-subscriptions-prepare-migration-script.ps1 [repo name] master main". Then execute generated update script "./rename-branch-in-maestro.ps1" and all changes will be reverted.
+* If there is any other error during execution of update scripts please contact us.
