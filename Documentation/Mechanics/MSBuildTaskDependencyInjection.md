@@ -4,7 +4,7 @@ In an effort to make MSBuild Tasks more unit-testable, we are introducing this a
 
 The `MSBuildTaskBase` abstract class provides a consistent way to implement dependency injection for the `Microsoft.Build.Utilities.Task` type. In a web service or command line application, the entry point into the program serves as a place to configure the dependency injection service collections and provider. Since there isn't an entry point like that for MSBuild Tasks, we have created an abstract class to handle the common elements of configuration. 
 
-MSBuildTaskBase class can be found [here](https://github.com/dotnet/arcade/blob/master/src/Microsoft.Arcade.Common/MSBuildTaskBase.cs).
+MSBuildTaskBase class can be found [here](https://github.com/dotnet/arcade/blob/master/src/Common/Microsoft.Arcade.Common/MSBuildTaskBase.cs).
 
 For more reading about dependency injection: 
 - [Architectural Principles: Dependency Injection](https://docs.microsoft.com/en-us/dotnet/architecture/modern-web-apps-azure/architectural-principles#dependency-inversion)
@@ -73,7 +73,7 @@ public void AreDependenciesRegistered()
                 task.ConfigureServices(s);
             },
             out string message,
-            additionalScopedTypes: task.GetExecuteParameterTypes()
+            additionalSingletonTypes: task.GetExecuteParameterTypes()
         )
         .Should()
         .BeTrue(message);
@@ -112,6 +112,8 @@ The Task's `Execute` is traditionally the method that is called when running the
 
 The `Execute` method serves as the Task's entry point, that handles the registration of dependencies that are defined in the concrete implementation of the `MSBuildTaskBase` class. In this method, a new `ServiceCollection` is created. It is passed into the `ConfigureServices` method to be populated with the configuration defined in the concrete implementation. Then, it builds the service provider that is passed into the `InvokeExecute` method. 
 
+[Link](https://github.com/dotnet/arcade/blob/5f255cb324530532b4676cf916745dae476b4c17/src/Common/Microsoft.Arcade.Common/MSBuildTaskBase.cs#L30-L38) to code
+
 ```csharp
 public override sealed bool Execute()
 {
@@ -129,6 +131,8 @@ The implementation of `ConfigureServices` on the concrete implementation of `MSB
 `MSBuildTaskBase` contains a virtual implementation of `ConfigureServices` that configures common dependencies, such as `IFileSystem` (if you want to abstract the File and Directory classes so they can be mocked out for tests) and a `TaskLoggingHelper` object called `Log`. It is expected that this method will be overridden. 
 
 `InvokeExecute` is where the reflection magic happens. It looks up the `ExecuteTask` method on the concrete implementation, looks up the parameters (the dependencies) that are defined in the method, and resolves the dependencies with the provider that was configured and built. Then it passes along the required dependency implementations into the method when it ultimately invokes it. 
+
+[Link](https://github.com/dotnet/arcade/blob/5f255cb324530532b4676cf916745dae476b4c17/src/Common/Microsoft.Arcade.Common/MSBuildTaskBase.cs#L49-L52) to code
 
 ```csharp
 public bool InvokeExecute(ServiceProvider provider)

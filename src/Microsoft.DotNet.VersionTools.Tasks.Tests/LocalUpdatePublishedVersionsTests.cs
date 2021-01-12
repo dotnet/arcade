@@ -26,7 +26,7 @@ namespace Microsoft.DotNet.VersionTools.Tasks.Tests
                         task.ConfigureServices(s);
                     },
                     out string message,
-                    additionalScopedTypes: task.GetExecuteParameterTypes()
+                    additionalSingletonTypes: task.GetExecuteParameterTypes()
                 )
                 .Should()
                 .BeTrue(message);

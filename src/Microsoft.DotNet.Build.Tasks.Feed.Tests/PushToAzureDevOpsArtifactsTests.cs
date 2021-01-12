@@ -569,7 +569,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                         task.ConfigureServices(s);
                     },
                     out string message,
-                    additionalScopedTypes: task.GetExecuteParameterTypes()
+                    additionalSingletonTypes: task.GetExecuteParameterTypes()
                 )
                 .Should()
                 .BeTrue(message);
