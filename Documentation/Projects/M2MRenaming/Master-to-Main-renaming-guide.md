@@ -21,8 +21,6 @@ Please verify that you:
     - Make sure you see the `Set as default branch` dropdown menu item in branch management
   - Make sure you have permissions to manage pipeline's settings in the AzDO portal
 - Have permissions to manage branches and branch policies in GitHub for your repo
-- Are admin of the repository on the the [Microsoft Open Source portal](https://repos.opensource.microsoft.com/)
-  - Verify that you see the default branch renaming form at `https://repos.opensource.microsoft.com/dotnet/repos/[REPO_NAME]/defaultBranch/`
 - Are aware of any custom hard-coded references to the `master` branch inside of your repository
   - Non-Arcade related, only specific to your repository
   - These can be some custom build scripts, documentation, makefiles...
@@ -274,4 +272,5 @@ GitHub users are automatically notified through UI that the branch was renamed a
 
 ### What happens to links to files in my repo?
 GitHub links are automatically redirected. For example https://github.com/dotnet/xharness/blob/master/README.md will still work after the rename and will point to https://github.com/dotnet/xharness/blob/main/README.md.
+
 GitHub raw links are automatically redirected. For example link https://raw.githubusercontent.com/dotnet/xharness/master/README.md still works even after rename and is equivalent to link https://raw.githubusercontent.com/dotnet/xharness/main/README.md.
