@@ -25,7 +25,8 @@
   <!-- Test project which builds app bundle to run via XHarness -->
   <ItemGroup>
     <XHarnessiOSProject Include="$(MSBuildThisFileDirectory)XHarness\XHarness.TestAppBundle.proj" />
-    <XHarnessiOSProject Include="$(MSBuildThisFileDirectory)XHarness\XHarness.RunAppBundle.proj" />
+    <!-- TODO: Disabled until dotnet/xharness#413 is resolved -->
+    <!-- <XHarnessiOSProject Include="$(MSBuildThisFileDirectory)XHarness\XHarness.RunAppBundle.proj" /> -->
   </ItemGroup>
 
   <ItemGroup Condition=" '$(HelixAccessToken)' != '' ">
