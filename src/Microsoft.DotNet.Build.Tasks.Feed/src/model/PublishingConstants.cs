@@ -89,7 +89,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
         private const string FeedGeneralTestingInternal = "https://pkgs.dev.azure.com/dnceng/internal/_packaging/general-testing-internal/nuget/v3/index.json";
         private const string FeedGeneralTestingInternalSymbols = "https://pkgs.dev.azure.com/dnceng/internal/_packaging/general-testing-internal/nuget/v3/index.json";
 
-        private const SymbolTargetType InternalSymbolTargets = SymbolTargetType.Msdl;
+        private const SymbolTargetType InternalSymbolTargets = SymbolTargetType.SymWeb;
         private const SymbolTargetType PublicAndInternalSymbolTargets = SymbolTargetType.Msdl | SymbolTargetType.SymWeb;
 
         public static readonly List<TargetChannelConfig> ChannelInfos = new List<TargetChannelConfig>() {
