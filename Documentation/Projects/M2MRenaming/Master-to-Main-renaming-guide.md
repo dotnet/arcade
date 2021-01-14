@@ -48,19 +48,22 @@ We suggest to try to not merge any PRs during the process described below. Howev
 All of the steps are easily revert-able, so it is not a problem to go back to `master` in case you find some problems maybe only specific to your repository that would prevent you from migrating.
 
 ## Overview of steps
-1. Disable Maestro subscriptions by running a following script
-2. Add `main` triggers to YAML pipelines
-3. Update the the build mirroring in `subscriptions.json`
-4. Create the `main` branch in the internal mirrored AzDO repository
-5. Change the default branch to `main` for your GitHub repository
-6. Search your repository for any references to the `main` branch specific to your repo
-7. Use a `darc` script to migrate channels and subscriptions
-8. Change the default branch for AzDO builds for pipelines
-9. Switch the default branch of the AzDO repository to `main`
-10. Delete the `master` branch of the AzDO repository
+1. [Disable Maestro subscriptions](#1-disable-maestro-subscriptions)
+2. [Add `main` triggers to YAML pipelines](#2-add-main-triggers-to-yaml-pipelines)
+3. [Update the the build mirroring in `subscriptions.json`](#3-update-the-the-build-mirroring-in-subscriptionsjson)
+4. [Create the `main` branch in the internal mirrored AzDO repository](#4-create-the-main-branch-in-the-internal-mirrored-azdo-repository)
+5. [Change the default branch to `main` for your GitHub repository](#5-change-the-default-branch-to-main-for-your-github-repository)
+6. [Search your repository for any references to the `main` branch specific to your repo](#6-search-your-repository-for-any-references-to-the-main-branch-specific-to-your-repo)
+7. [Use a `darc` script to migrate channels and subscriptions](#7-use-a-darc-script-to-migrate-channels-and-subscriptions)
+8. [Change the default branch for AzDO builds for pipelines](#8-change-the-default-branch-for-azdo-pipelines)
+9. [Switch the default branch of the AzDO repository to `main`](#9-switch-the-default-branch-of-the-azdo-repository-to-main)
+10. [Delete the `master` branch of the AzDO repository](#10-delete-the-master-branch-of-the-azdo-repository)
 11. Remove the `master` branch triggers from your YAML pipelines
 
-## 1. ![Maestro enabled](images/maestro-enabled.png) Generate Maestro migration scripts, review and execute a script which disables all subscriptions targeting internal and GitHub repositories.
+## 1. Disable Maestro subscriptions
+![Maestro enabled](images/maestro-enabled.png)
+
+Generate Maestro migration scripts, review and execute a script which disables all subscriptions targeting internal and GitHub repositories:
 
 1. Download the script [from](https://raw.githubusercontent.com/dotnet/arcade/master/scripts/disable-subscriptions-prepare-migration-script.ps1).
 2. Run the script `disable-subscriptions-prepare-migration-script.ps1` with short repository name (e.g. dotnet/wpf). Script generation is a safe operation which executes only darc read operations.
@@ -80,10 +83,11 @@ Files rename-branch-in-maestro.ps1 and disable-subscriptions-in-maestro.ps1 were
 > .\disable-subscriptions-in-maestro.ps1 # disables subscriptions in Maestro
 ```
 
-## 2. Add triggers for the `main` branch to all pipeline definitions. Merge this change to the `master` branch of the GitHub repo
+## 2. Add `main` triggers to YAML pipelines
 
-1. Find all YAML definitions of pipelines in your repository that are triggered by changes in the `master` branch and add (not replace) the `main` branch
-2. Then merge this change to your `master`
+1. Find all YAML definitions of pipelines in your repository that are triggered by changes in the `master` branch
+2. Add the `main` branch (do not remove `master` yet)
+3. Then merge this change to the `master` of your GitHub repo
 
 **Example:**
 
@@ -120,22 +124,27 @@ pr:
     - main
 ```
 
-## 3. ![AzDO mirrored](images/azdo-mirrored.png) Fork the [versions repo](https://github.com/dotnet/versions) and open a PR to change the build mirroring in [subscriptions.json](https://github.com/dotnet/versions/blob/master/Maestro/subscriptions.json#L627)
+## 3. Update the the build mirroring in `subscriptions.json`
+![AzDO mirrored](images/azdo-mirrored.png)
 
-1. Fork `https://github.com/dotnet/versions`
-2. Edit file `/Maestro/subscriptions.json`
-3. Find the row for you repo targeting the `master` branch (e.g. [this one](https://github.com/dotnet/versions/blob/ec8ac418546cdafbb8d3fbf5079e923aead33bd6/Maestro/subscriptions.json#L787))
-4. Change it to `main`, e.g.
+1. Fork [`https://github.com/dotnet/versions`](https://github.com/dotnet/versions)
+2. Edit file [`/Maestro/subscriptions.json`](https://github.com/dotnet/versions/blob/master/Maestro/subscriptions.json#L627)
+3. Find the row for your repo targeting the `master` branch (e.g. [this one](https://github.com/dotnet/versions/blob/ec8ac418546cdafbb8d3fbf5079e923aead33bd6/Maestro/subscriptions.json#L787))
+4. Change it to `main`
+  Example
     > `"https://github.com/dotnet/xharness/blob/master/**/*",`
 
-   to
+    changes to
 
     > `"https://github.com/dotnet/xharness/blob/main/**/*",`
+
 5. Wait for code-mirroring of the trigger change from last step
-6. Open a PR and get it merged (contact **@dnceng**). This will effectively disable code mirroring.
+6. Open a PR and get it merged (contact **@dnceng**).
 
+This will effectively disable code mirroring.
 
-## 4. ![AzDO mirrored](images/azdo-mirrored.png) Create the `main` branch in the internally mirrored AzDO repository
+## 4. Create the `main` branch in the internal mirrored AzDO repository
+![AzDO mirrored](images/azdo-mirrored.png)
 
 1. Go to the [internally mirrored repository](https://dev.azure.com/dnceng/internal/_git) - repository should have the same name, only replace `/` with `-`, e.g. `dotnet/xharness` becomes `dotnet-xharness`
 2. Wait for the code-mirror build to propagate the change from the previous step to the internal mirrored repository
@@ -168,36 +177,39 @@ pr:
 ![Changing the default branch in GitHub](images/github-branch-rename-tool.png)
 
 
-## 6. Search your repository for any references to the `master` branch specific to your repo, replace them to `main` and push them to `main`
+## 6. Search your repository for any references to the `main` branch specific to your repo
+
+Search your repository for any references to the `master` branch specific to your repo, replace them to `main` and push them to `main`.
 
 - Ignore the AzDO pipeline YAML for now (you have updated this before and the master trigger will be removed later on)
 - These can be some custom build scripts, documentation, makefiles...
 - We leave you here to your own device as this can vary between repos
 - Do not rename anything inside of the `/eng/common` directory, `.git` directory
 
+## 7. Use a `darc` script to migrate channels and subscriptions
+![Maestro enabled](images/maestro-enabled.png)
 
-## 7. ![Maestro enabled](images/maestro-enabled.png) Use [darc](https://github.com/dotnet/arcade/blob/master/Documentation/Darc.md) to migrate default channels and subscriptions
+> **Note:** This uses [darc](https://github.com/dotnet/arcade/blob/master/Documentation/Darc.md) and migrates default channels and subscriptions
 
 1. Review the script `rename-branch-in-maestro.ps1` generated in step 1.
 2. Execute the script `rename-branch-in-maestro.ps1`
 
-Example:
-```ps
-> cat rename-branch-in-maestro.ps1  # review the script which renames branches in Maestro both for internal and GitHub repositories
-...
-> .\rename-branch-in-maestro.ps1 # execute rename script
-...
-```
-
-
-## 8. ![AzDO mirrored](images/azdo-mirrored.png) Change the default branch for AzDO pipelines
+## 8. Change the default branch for AzDO pipelines
+![AzDO mirrored](images/azdo-mirrored.png) 
 
 - Do this for [public](https://dev.azure.com/dnceng/public) and [internal](https://dev.azure.com/dnceng/internal) projects
 - Do this for all pipelines that are based off a YAML in the repo that you are working with
 - You can use [this script](https://raw.githubusercontent.com/dotnet/arcade/763e8754c7e7a4b37ad76974a15dfe0ede876004/scripts/list-repo-pipelines.ps1) to list all pipelines associated with a given repo:
   > ```ps
-  > .\list-repo-pipelines.ps1 -GitHubRepository "[Your repo in the form dotnet/runtime]" -PAT "[personal access token]"
+  > .\list-repo-pipelines.ps1 -GitHubRepository "[REPOSITORY]" -PAT "[TOKEN]"
   > ```
+
+Example:
+  > ```ps
+  > .\list-repo-pipelines.ps1 -GitHubRepository "dotnet/runtime" -PAT "jdsvmd324jnsdvjafn2vsd"
+  > ```
+
+The **Pesonal Access Token** needs following scopes: {TODO}.
 
 1. Go to AzDO pipelines, find your pipeline
 2. Click `Edit`
@@ -208,19 +220,24 @@ Example:
    ![Piepline triggers](images/pipeline-default-branch.png)
 
 
-## 9. ![AzDO mirrored](images/azdo-mirrored.png) Go to the [internal AzDO dnceng](https://dev.azure.com/dnceng/internal/_git) mirror of your repository and switch the default branch to `main`
+## 9. Switch the default branch of the AzDO repository to `main`
 
+![AzDO mirrored](images/azdo-mirrored.png) 
+
+Go to the [internal AzDO dnceng](https://dev.azure.com/dnceng/internal/_git) mirror of your repository and switch the default branch to `main`:
 ![Changing the default branch](images/azdo-default-branch.png)
 
 
-## 10. ![AzDO mirrored](images/azdo-mirrored.png) Delete the `master` branch of the mirrored internal repository in AzDO
+## 10. Delete the `master` branch of the AzDO repository
+![AzDO mirrored](images/azdo-mirrored.png) 
 
 - For this you need to have the `Force push` permission in branch security settings
 
 
-## 11. Go to the GitHub repo and remove the `master` branch triggers from your pipelines. Merge this change to the `main` branch of the GitHub repo
+## 11. Remove the `master` branch triggers from your YAML pipelines
 
-Similarly to the [step 2.](#2-go-to-github-and-change-yaml-for-your-pipelines-add-triggers-to-main-branch-merge-this-change-to-the-master-branch-of-the-github-repo), where you added the triggers, now remove the `master` one.
+1. Go to the GitHub repo and remove the `master` branch triggers from your pipelines YAML (similar to [step 2.](#2-add-main-triggers-to-yaml-pipelines))
+2. Merge this change to the `main` branch of the GitHub repo
 
 **Example:**
 
@@ -255,7 +272,9 @@ pr:
     - main
 ```
 
-This should trigger the [code-mirror build](https://dev.azure.com/dnceng/internal/_build?definitionId=16&_a=summary) which should trigger the internal pipeline.
+3. Verify that the PR build runs correctly
+4. After merging, verify that the [code-mirror build](https://dev.azure.com/dnceng/internal/_build?definitionId=16&_a=summary) was triggered
+5. After merging, verify that the internal pipeline was triggered in AzDO
 
 # FAQ
 
