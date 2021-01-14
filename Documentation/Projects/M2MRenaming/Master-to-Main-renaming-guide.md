@@ -58,7 +58,8 @@ All of the steps are easily revert-able, so it is not a problem to go back to `m
 8. [Change the default branch for AzDO builds for pipelines](#8-change-the-default-branch-for-azdo-pipelines)
 9. [Switch the default branch of the AzDO repository to `main`](#9-switch-the-default-branch-of-the-azdo-repository-to-main)
 10. [Delete the `master` branch of the AzDO repository](#10-delete-the-master-branch-of-the-azdo-repository)
-11. Remove the `master` branch triggers from your YAML pipelines
+11. [Remove the `master` branch triggers from your YAML pipelines](#11-remove-the-master-branch-triggers-from-your-yaml-pipelines)
+12. [FAQ](#faq)
 
 ## 1. Disable Maestro subscriptions
 ![Maestro enabled](images/maestro-enabled.png)
@@ -218,6 +219,8 @@ The **Pesonal Access Token** needs following scopes: {TODO}.
    ![Piepline triggers](images/pipeline-triggers.png)
 4. Click `YAML`, `Get sources` and change the `Default branch for manual and scheduled builds`
    ![Piepline triggers](images/pipeline-default-branch.png)
+5. Save the changes
+   ![Pipeline triggers](images/save-pipeline.png)
 
 
 ## 9. Switch the default branch of the AzDO repository to `main`
