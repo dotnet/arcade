@@ -23,6 +23,9 @@
 
     <PrebuiltBaselineDataFileDefault>$(RepositoryEngineeringDir)SourceBuildPrebuiltBaseline.xml</PrebuiltBaselineDataFileDefault>
     <PrebuiltBaselineDataFile Condition="Exists('$(PrebuiltBaselineDataFileDefault)')">$(PrebuiltBaselineDataFileDefault)</PrebuiltBaselineDataFile>
+
+    <!-- By default, use the license file from the root of the repo for the intermediate nupkg. -->
+    <DetectSourceBuildIntermediateNupkgLicense Condition="'$(DetectSourceBuildIntermediateNupkgLicense)' == ''">true</DetectSourceBuildIntermediateNupkgLicense>
   </PropertyGroup>
 
   <Target Name="GetSourceBuildIntermediateNupkgNameConvention">

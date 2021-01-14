@@ -3,6 +3,8 @@
 
   <Import Project="..\BuildStep.props" />
 
+  <UsingTask TaskName="Microsoft.DotNet.Arcade.Sdk.GetLicenseFilePath" AssemblyFile="$(ArcadeSdkBuildTasksAssembly)" />
+
   <PropertyGroup>
     <MicrosoftDotNetSourceBuildTasksBuildDir>$(NuGetPackageRoot)microsoft.dotnet.sourcebuild.tasks\$(MicrosoftDotNetSourceBuildTasksVersion)\build\</MicrosoftDotNetSourceBuildTasksBuildDir>
   </PropertyGroup>
@@ -80,6 +82,13 @@
       <SourceBuildIntermediateProjTargetFile>$(ArtifactsObjDir)ArcadeGeneratedProjects\SourceBuildIntermediate\SourceBuildIntermediate.proj</SourceBuildIntermediateProjTargetFile>
     </PropertyGroup>
 
+    <!-- Find the repository's global LICENSE file to apply. -->
+    <Microsoft.DotNet.Arcade.Sdk.GetLicenseFilePath
+      Condition="'$(DetectSourceBuildIntermediateNupkgLicense)' == 'true'"
+      Directory="$(RepoRoot)">
+      <Output TaskParameter="Path" PropertyName="SourceBuildIntermediateNupkgLicenseFile"/>
+    </Microsoft.DotNet.Arcade.Sdk.GetLicenseFilePath>
+
     <!-- Copy the project to artifacts/ so that the repo's global.json is in an ancestor dir. -->
     <Copy
       SourceFiles="$(SourceBuildIntermediateProjFile)"
@@ -95,6 +104,7 @@
       Properties="
         CurrentRepoSourceBuildArtifactsPackagesDir=$(CurrentRepoSourceBuildArtifactsPackagesDir);
         SourceBuildArcadeTargetsFile=$(MSBuildThisFileDirectory)SourceBuildArcade.targets;
+        SourceBuildIntermediateNupkgLicenseFile=$(SourceBuildIntermediateNupkgLicenseFile);
         " />
   </Target>
 
