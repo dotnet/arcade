@@ -16,7 +16,8 @@ param(
 
 try {
   . $PSScriptRoot\post-build-utils.ps1
-  . $PSScriptRoot\..\darc-init.ps1
+
+  $darc = Get-Darc 
 
   $optionalParams = [System.Collections.ArrayList]::new()
 
@@ -55,7 +56,7 @@ try {
     }
   }
 
-  & darc add-build-to-channel `
+  & $darc add-build-to-channel `
   --id $buildId `
   --publishing-infra-version $PublishingInfraVersion `
   --default-channels `
