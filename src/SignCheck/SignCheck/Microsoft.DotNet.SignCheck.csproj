@@ -1,4 +1,4 @@
-﻿<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
+<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
 <Project Sdk="Microsoft.NET.Sdk">
   <Import Project="$(MSBuildThisFileDirectory)/../Microsoft.SignCheck/ResxWorkaround.props" />
   <PropertyGroup>
@@ -7,14 +7,15 @@
     <Platforms>x86</Platforms>
     <IsTool>True</IsTool>
     <Configurations>Release;Debug</Configurations>
-    <SignAssembly>false</SignAssembly>
+    <SignAssembly>true</SignAssembly>
     <IsPackable>true</IsPackable>
     <!-- Build Tasks should not include any dependencies -->
     <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
     <Description>Build artifact signing validation tool</Description>
     <PackageTags>Arcade Signing Validation Tool</PackageTags>
-    <RootNamespace>SignCheck</RootNamespace>
+    <RootNamespace>Microsoft.DotNet.SignCheck</RootNamespace>
     <ExcludeFromSourceBuild>true</ExcludeFromSourceBuild>
+    <NoWarn>8002</NoWarn>
   </PropertyGroup>
 
   <PropertyGroup Label="Nuget Package Settings">
@@ -23,11 +24,12 @@
 
   <ItemGroup>
     <PackageReference Include="CommandLineParser" Version="2.2.0" PrivateAssets="All" Publish="true" />
-    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="16.4.0" />
+    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="$(MicrosoftBuildUtilitiesCoreVersion)" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Microsoft.SignCheck\Microsoft.DotNet.SignCheckLibrary.csproj" PrivateAssets="All" Publish="true" />
+    <ProjectReference Include="..\..\Common\Microsoft.Arcade.Common\Microsoft.Arcade.Common.csproj" />
+    <ProjectReference Include="..\Microsoft.SignCheck\Microsoft.DotNet.SignCheckLibrary.csproj" PrivateAssets="all" Publish="true" />
   </ItemGroup>
 
   <ItemGroup>
@@ -46,6 +48,7 @@
     <EmbeddedResource Update="SignCheckResources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>SignCheckResources.Designer.cs</LastGenOutput>
+      <CustomToolNamespace>Microsoft.DotNet.SignCheck</CustomToolNamespace>
     </EmbeddedResource>
   </ItemGroup>
 

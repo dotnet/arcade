@@ -5,7 +5,7 @@ using CommandLine;
 using Microsoft.SignCheck.Logging;
 using System.Collections.Generic;
 
-namespace SignCheck
+namespace Microsoft.DotNet.SignCheck
 {
     public class Options
     {
