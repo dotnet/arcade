@@ -15,7 +15,6 @@
 
   <PropertyGroup>
     <Copyright Condition="'$(Copyright)' == ''">$(CopyrightNetFoundation)</Copyright>
-    <PackageLicenseExpression Condition="'$(PackageLicenseExpression)' == ''">MIT</PackageLicenseExpression>
 
     <IsPackable>true</IsPackable>
     <IsShipping>false</IsShipping>
@@ -30,6 +29,14 @@
     <!-- Arbitrary TargetFramework to appease SDK. -->
     <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
+
+  <PropertyGroup Condition="'$(SourceBuildIntermediateNupkgLicenseFile)' != ''">
+    <PackageLicenseFile>$([System.IO.Path]::GetFileName('$(SourceBuildIntermediateNupkgLicenseFile)'))</PackageLicenseFile>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(SourceBuildIntermediateNupkgLicenseFile)' != ''">
+    <None Include="$(SourceBuildIntermediateNupkgLicenseFile)" Pack="true" PackagePath="$(PackageLicenseFile)" />
+  </ItemGroup>
 
   <ItemGroup Condition="'$(EnableDefaultSourceBuildIntermediateItems)' == 'true'">
     <Content Include="$(CurrentRepoSourceBuildArtifactsPackagesDir)**\*.nupkg" PackagePath="artifacts" />
