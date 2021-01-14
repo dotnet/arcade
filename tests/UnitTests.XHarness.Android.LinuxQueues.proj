@@ -4,7 +4,7 @@
 
   <!--
     This is a project used in integration tests of Arcade.
-    It tests sending Android (XHarness) workloads using the Helix SDK.
+    It tests sending Android (XHarness) workloads using the Helix SDK to Linux-specific queues
     It builds a mock project that does not build an APK directly but only downloads it from a storage account.
    -->
 
@@ -24,7 +24,7 @@
 
   <!-- New Test Projects which build packages to run through XHarness/XHarness go here -->
   <ItemGroup>
-    <XHarnessAndroidProject Include="$(MSBuildThisFileDirectory)XHarness/XHarness.TestApk.proj" />
+    <XHarnessAndroidProject Include="$(MSBuildThisFileDirectory)XHarness/XHarness.TestApks.proj" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(HelixAccessToken)' != '' ">
