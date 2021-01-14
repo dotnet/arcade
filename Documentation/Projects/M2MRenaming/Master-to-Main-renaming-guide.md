@@ -17,7 +17,7 @@ Please verify that you:
 - Know whether your repo is part of the [Maestro/darc dependency flow](https://github.com/dotnet/arcade/blob/master/Documentation/DependencyFlowOnboarding.md)
   - If so, have the [`darc`](https://github.com/dotnet/arcade/blob/master/Documentation/Darc.md) command installed, updated and authenticated
   - Make sure tokens set using `darc authenticate` are still valid ([docs](https://github.com/dotnet/arcade/blob/master/Documentation/Darc.md#authenticate))
-  - Have PowerShell installed so that you can run scripts provided by us
+  - Have PowerShell installed so that you can run scripts provided by us (any version should be ok)
 - Know whether your repository is mirrored to the [internal AzDO dnceng project](https://dev.azure.com/dnceng/internal/_git)
   - Make sure you have sufficient permissions to manage branches/branch policies for the internal AzDO mirror of your repository
     - You need to have the `Force push` permission in branch security settings for the `master` branch to be able to delete it
@@ -59,7 +59,8 @@ All of the steps are easily revert-able, so it is not a problem to go back to `m
 9. [Switch the default branch of the AzDO repository to `main`](#9-switch-the-default-branch-of-the-azdo-repository-to-main)
 10. [Delete the `master` branch of the AzDO repository](#10-delete-the-master-branch-of-the-azdo-repository)
 11. [Remove the `master` branch triggers from your YAML pipelines](#11-remove-the-master-branch-triggers-from-your-yaml-pipelines)
-12. [FAQ](#faq)
+12. [Configure **Component Governance** to track the `main` branch](#12-configure-component-governance-to-track-the-main-branch)
+13. [FAQ](#faq)
 
 ## 1. Disable Maestro subscriptions
 ![Maestro enabled](images/maestro-enabled.png)
@@ -236,6 +237,8 @@ Go to the [internal AzDO dnceng](https://dev.azure.com/dnceng/internal/_git) mir
 
 - For this you need to have the `Force push` permission in branch security settings
 
+![Deleting AzDO master](images/delete-azdo-master.png)
+
 
 ## 11. Remove the `master` branch triggers from your YAML pipelines
 
@@ -279,31 +282,41 @@ pr:
 4. After merging, verify that the [code-mirror build](https://dev.azure.com/dnceng/internal/_build?definitionId=16&_a=summary) was triggered
 5. After merging, verify that the internal pipeline was triggered in AzDO
 
+## 12. Configure **Component Governance** to track the `main` branch
+
+Go to the internal AzDO mirror of your repository and configure **Component Governance** to track the right branch/pipeline.
+Copy the settings from the master branch.
+
+![Component Governance](images/component-governance-1.png)
+![Component Governance](images/component-governance-2.png)
+
+**You are done now with the migration!**
+
 # FAQ
 
-### What happens to open PRs?
+## What happens to open PRs?
 When branch is renamed in GitHub then open PRs against master are automatically re-targeted (forks as well).
 
-### What if PRs get merged/opened during the process?
+## What if PRs get merged/opened during the process?
 We suggest to try to not merge any PRs during the process described below. However, the instructions are ordered in a way that should prevent it and keep a consistent state even if it happens.
 
-### Can I revert if something goes sideways?
+## Can I revert if something goes sideways?
 All of the steps are easily revert-able, so it is not a problem to go back to master in case you find some problems maybe only specific to your repository that would prevent you from migrating.
 
-### How do I migrate Maestro subscriptions?
+## How do I migrate Maestro subscriptions?
 Scripts for Maestro migration are part of this renaming guide.
 
-### How will repo users learn about this?
+## How will repo users learn about this?
 GitHub users are automatically notified through UI that the branch was renamed and it gives them steps how to update their local repository.
 
 ![GitHub UI notification](images/github-ui-notification.png)
 
-### What happens to links to files in my repo?
+## What happens to links to files in my repo?
 GitHub links are automatically redirected. For example https://github.com/dotnet/xharness/blob/master/README.md will still work after the rename and will point to https://github.com/dotnet/xharness/blob/main/README.md.
 
 GitHub raw links are automatically redirected. For example link https://raw.githubusercontent.com/dotnet/xharness/master/README.md still works even after rename and is equivalent to link https://raw.githubusercontent.com/dotnet/xharness/main/README.md.
 
-### How to revert Maestro migration?
+## How to revert Maestro migration?
 Two update scripts are generated. There are 3 scenarios:
 1. In case the `disable-subscriptions-in-maestro.ps1` script was executed **only**, to roll back, edit this script and replace argument `-d` with `-e`. For example update content of `disable-subscriptions-in-maestro.ps1` from:
 
