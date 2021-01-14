@@ -15,16 +15,17 @@ These prerequisites are required for a successful migration. If you're not sure 
 
 Please verify that you:
 - Know whether your repo is part of the [Maestro/darc dependency flow](https://github.com/dotnet/arcade/blob/master/Documentation/DependencyFlowOnboarding.md)
-  - If so, have the [`darc`](https://github.com/dotnet/arcade/blob/master/Documentation/Darc.md) command installed and authenticated
+  - If so, have the [`darc`](https://github.com/dotnet/arcade/blob/master/Documentation/Darc.md) command installed, updated and authenticated
+  - Make sure tokens set using `darc authenticate` are still valid ([docs](https://github.com/dotnet/arcade/blob/master/Documentation/Darc.md#authenticate))
   - Have PowerShell installed so that you can run scripts provided by us
 - Know whether your repository is mirrored to the [internal AzDO dnceng project](https://dev.azure.com/dnceng/internal/_git)
   - Make sure you have sufficient permissions to manage branches/branch policies for the internal AzDO mirror of your repository
     - You need to have the `Force push` permission in branch security settings for the `master` branch to be able to delete it
-    - Make sure you see the `Set as default branch` dropdown menu item in branch management
-  - Make sure you have permissions to manage pipeline's settings in the AzDO portal
-- Have permissions to manage branches and branch policies in GitHub for your repo
+    - Make sure you see the `Set as default branch` dropdown menu item in branch management (verify with some random branch)
+  - Make sure you have permissions to manage pipeline's settings in the AzDO portal (if unsure, see screenshots in `8. Change the default branch for AzDO pipelines`)
+- Have permissions to manage branches and branch policies in GitHub for your repo (access to Settings > Branches)
 - Are aware of any custom hard-coded references to the `master` branch inside of your repository
-  - Non-Arcade related, only specific to your repository
+  - Non-Arcade related, only specific to your repository (disregard references in `/.git`, `/eng/common/` and `/azure-pipelines.yaml` for the moment)
   - These can be some custom build scripts, documentation, makefiles...
      > Please note that GitHub has a new feature that will try to redirect you to the default branch for certain 404s,
      > e.g. https://github.com/dotnet/efcore/blob/master/README.md will lead to the `README.md` on the default `release/5.0` branch
@@ -81,7 +82,7 @@ Files rename-branch-in-maestro.ps1 and disable-subscriptions-in-maestro.ps1 were
 
 ## 2. Add triggers for the `main` branch to all pipeline definitions. Merge this change to the `master` branch of the GitHub repo
 
-1. Find all YAML definitions of pipelines in your repository that are triggered by changes in the `master` branch and add the `main` branch
+1. Find all YAML definitions of pipelines in your repository that are triggered by changes in the `master` branch and add (not replace) the `main` branch
 2. Then merge this change to your `master`
 
 **Example:**
@@ -121,9 +122,8 @@ pr:
 
 ## 3. ![AzDO mirrored](images/azdo-mirrored.png) Fork the [versions repo](https://github.com/dotnet/versions) and open a PR to change the build mirroring in [subscriptions.json](https://github.com/dotnet/versions/blob/master/Maestro/subscriptions.json#L627)
 
-1. Wait for code-mirroring of the trigger change from last step
-2. Find the section labelled
-    >`// Mirror github changes to dotnet Azure DevOps`
+1. Fork `https://github.com/dotnet/versions`
+2. Edit file `/Maestro/subscriptions.json`
 3. Find the row for you repo targeting the `master` branch (e.g. [this one](https://github.com/dotnet/versions/blob/ec8ac418546cdafbb8d3fbf5079e923aead33bd6/Maestro/subscriptions.json#L787))
 4. Change it to `main`, e.g.
     > `"https://github.com/dotnet/xharness/blob/master/**/*",`
@@ -131,7 +131,8 @@ pr:
    to
 
     > `"https://github.com/dotnet/xharness/blob/main/**/*",`
-4. Open a PR and get it merged (contact **@dnceng**). This will effectively disable code mirroring.
+5. Wait for code-mirroring of the trigger change from last step
+6. Open a PR and get it merged (contact **@dnceng**). This will effectively disable code mirroring.
 
 
 ## 4. ![AzDO mirrored](images/azdo-mirrored.png) Create the `main` branch in the internally mirrored AzDO repository
@@ -142,6 +143,8 @@ pr:
 3. Go to `Branches`
 4. Create a new branch called `main` off of the `master` branch
 5. Set the branch policies same way as it is done for `master`
+
+> Note: Do **not** change the default branch for the AzDO repository yet.
 
 
 ## 5. Change the default branch to `main` for your GitHub repository
@@ -167,9 +170,10 @@ pr:
 
 ## 6. Search your repository for any references to the `master` branch specific to your repo, replace them to `main` and push them to `main`
 
+- Ignore the AzDO pipeline YAML for now (you have updated this before and the master trigger will be removed later on)
 - These can be some custom build scripts, documentation, makefiles...
 - We leave you here to your own device as this can vary between repos
-- Do not rename anything inside of the `/eng/common` directory
+- Do not rename anything inside of the `/eng/common` directory, `.git` directory
 
 
 ## 7. ![Maestro enabled](images/maestro-enabled.png) Use [darc](https://github.com/dotnet/arcade/blob/master/Documentation/Darc.md) to migrate default channels and subscriptions
