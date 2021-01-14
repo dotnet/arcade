@@ -16,11 +16,16 @@ These prerequisites are required for a successful migration. If you're not sure 
 Please verify that you:
 - Know whether your repo is part of the [Maestro/darc dependency flow](https://github.com/dotnet/arcade/blob/master/Documentation/DependencyFlowOnboarding.md)
   - If so, have the [`darc`](https://github.com/dotnet/arcade/blob/master/Documentation/Darc.md) command installed, updated and authenticated
-  - Make sure tokens set using `darc authenticate` are still valid ([docs](https://github.com/dotnet/arcade/blob/master/Documentation/Darc.md#authenticate))
+  - Make sure tokens set using `darc authenticate` are still valid ([details at Darc.md#authenticate](https://github.com/dotnet/arcade/blob/master/Documentation/Darc.md#authenticate))
   - Have PowerShell installed so that you can run scripts provided by us (any version should be ok)
 - Know whether your repository is mirrored to the [internal AzDO dnceng project](https://dev.azure.com/dnceng/internal/_git)
   - Make sure you have sufficient permissions to manage branches/branch policies for the internal AzDO mirror of your repository
-    - You need to have the `Force push` permission in branch security settings for the `master` branch to be able to delete it
+    - You need to have the `Force push` permission in branch security settings for the `master` branch to be able to delete it:
+        1. Navigate to the repo in AzDO
+        2. Go to `Branches`
+        3. Three dots by the `master` branch and `Branch security`
+        4. Search for yourself in the identities search box
+        5. Verify value in `Force push (rewrite history, delete branches and tags)` is `Allow` (can be through inheritance)
     - Make sure you see the `Set as default branch` dropdown menu item in branch management (verify with some random branch)
   - Make sure you have permissions to manage pipeline's settings in the AzDO portal (if unsure, see screenshots in `8. Change the default branch for AzDO pipelines`)
 - Have permissions to manage branches and branch policies in GitHub for your repo (access to Settings > Branches)
@@ -155,7 +160,7 @@ This will effectively disable code mirroring.
 4. Create a new branch called `main` off of the `master` branch
 5. Set the branch policies same way as it is done for `master`
 
-> Note: Do **not** change the default branch for the AzDO repository yet.
+> Note: Do **not** change the default branch for the AzDO repository yet, it will be done later in [step 9](#9-switch-the-default-branch-of-the-azdo-repository-to-main).
 
 
 ## 5. Change the default branch to `main` for your GitHub repository
@@ -187,6 +192,9 @@ Search your repository for any references to the `master` branch specific to you
 - These can be some custom build scripts, documentation, makefiles...
 - We leave you here to your own device as this can vary between repos
 - Do not rename anything inside of the `/eng/common` directory, `.git` directory
+    ```
+    grep -r master . | grep -v "^\./\(\.git\|eng/common\)"
+    ```
 
 ## 7. Use a `darc` script to migrate channels and subscriptions
 ![Maestro enabled](images/maestro-enabled.png)
@@ -211,7 +219,7 @@ Example:
   > .\list-repo-pipelines.ps1 -GitHubRepository "dotnet/runtime" -PAT "jdsvmd324jnsdvjafn2vsd"
   > ```
 
-The **Pesonal Access Token** needs following scopes: {TODO}.
+The **Pesonal Access Token** needs to read Code, Builds and Releases.
 
 1. Go to AzDO pipelines, find your pipeline
 2. Click `Edit`
@@ -226,9 +234,13 @@ The **Pesonal Access Token** needs following scopes: {TODO}.
 
 ## 9. Switch the default branch of the AzDO repository to `main`
 
-![AzDO mirrored](images/azdo-mirrored.png) 
+![AzDO mirrored](images/azdo-mirrored.png)
 
-Go to the [internal AzDO dnceng](https://dev.azure.com/dnceng/internal/_git) mirror of your repository and switch the default branch to `main`:
+1. Go to the [internal AzDO dnceng](https://dev.azure.com/dnceng/internal/_git) mirror of your repository
+2. Go to `Branches`
+3. Click the three dots by the `main` branch
+4. Click `Set as default branch`
+
 ![Changing the default branch](images/azdo-default-branch.png)
 
 
@@ -255,11 +267,13 @@ trigger:
   branches:
     include:
     - master
+    - main
 
 pr:
   branches:
     include:
     - master
+    - main
 ```
 
 changes to
