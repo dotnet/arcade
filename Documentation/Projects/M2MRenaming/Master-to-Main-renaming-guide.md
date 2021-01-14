@@ -299,12 +299,13 @@ pr:
 ## 12. Configure **Component Governance** to track the `main` branch
 
 Go to the internal AzDO mirror of your repository and configure **Component Governance** to track the right branch/pipeline.
-Copy the settings from the master branch.
+- Copy the settings from the `master` branch and set up tracking for `main`
+- Stop tracking the `master` branch
 
 ![Component Governance](images/component-governance-1.png)
 ![Component Governance](images/component-governance-2.png)
 
-**You are done now with the migration!**
+**You are now done with the migration!**
 
 # FAQ
 
