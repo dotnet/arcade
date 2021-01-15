@@ -69,7 +69,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             {
                 List<int> targetChannelsIds = new List<int>();
 
-                foreach (var channelIdStr in TargetChannels.Split(','))
+                foreach (var channelIdStr in TargetChannels.Split('-'))
                 {
                     if (!int.TryParse(channelIdStr, out var channelId))
                     {

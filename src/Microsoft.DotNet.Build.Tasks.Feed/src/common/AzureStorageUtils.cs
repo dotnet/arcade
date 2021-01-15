@@ -61,7 +61,7 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
             }
         }
 
-        public async Task UploadBlockBlobAsync(string filePath, string blobPath)
+        public async Task UploadBlockBlobAsync(string filePath, string blobPath, Stream stream)
         {
             BlobClient blob = GetBlob(blobPath.Replace("\\", "/"));
             BlobHttpHeaders headers = GetBlobHeadersByExtension(filePath);
@@ -83,7 +83,7 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
                 try
                 {
                     await blob.UploadAsync(
-                        filePath,
+                        stream,
                         headers)
                         .ConfigureAwait(false);
                     return true;
