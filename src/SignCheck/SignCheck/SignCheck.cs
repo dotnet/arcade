@@ -176,9 +176,10 @@ namespace SignCheck
             Exclusions.Add(new Exclusion("*wixuiwixca*;*.msi;WiX custom action"));
             Exclusions.Add(new Exclusion("*wixca*;*.msi;Wix custom action"));
             Exclusions.Add(new Exclusion("*wixstdba.dll*;*.exe;WiX standard bundle application"));
-            Exclusions.Add(new Exclusion("Microsoft.SourceBuild.Intermediate.*.nupkg;;Arcade-powered source-build intermediate nupkg"));
-            Exclusions.Add(new Exclusion("*;Microsoft.SourceBuild.Intermediate.*.nupkg;Arcade-powered source-build intermediate nupkg"));
-            Exclusions.Add(new Exclusion("*;*.nupkg;Arcade-powered source-build intermediate nupkg"));
+            // Add exclusions for arcade-powered source-build's intermediate nupkgs.
+            Exclusions.Add(new Exclusion("Microsoft.SourceBuild.Intermediate.*.nupkg;;Arcade-powered source-build intermediate nupkg, DO-NOT-SIGN, https://github.com/dotnet/arcade/issues/6810"));
+            Exclusions.Add(new Exclusion("*;Microsoft.SourceBuild.Intermediate.*.nupkg;Arcade-powered source-build intermediate nupkg, DO-NOT-SIGN, https://github.com/dotnet/arcade/issues/6810"));
+            Exclusions.Add(new Exclusion("*;*.nupkg;Arcade-powered source-build intermediate nupkg, DO-NOT-SIGN, https://github.com/dotnet/arcade/issues/6810"));
 
             if (!Directory.Exists(_appData))
             {
