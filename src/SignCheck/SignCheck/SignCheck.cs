@@ -176,6 +176,9 @@ namespace SignCheck
             Exclusions.Add(new Exclusion("*wixuiwixca*;*.msi;WiX custom action"));
             Exclusions.Add(new Exclusion("*wixca*;*.msi;Wix custom action"));
             Exclusions.Add(new Exclusion("*wixstdba.dll*;*.exe;WiX standard bundle application"));
+            Exclusions.Add(new Exclusion("Microsoft.SourceBuild.Intermediate.*.nupkg;;Arcade-powered source-build intermediate nupkg"));
+            Exclusions.Add(new Exclusion("*;Microsoft.SourceBuild.Intermediate.*.nupkg;Arcade-powered source-build intermediate nupkg"));
+            Exclusions.Add(new Exclusion("*;*.nupkg;Arcade-powered source-build intermediate nupkg"));
 
             if (!Directory.Exists(_appData))
             {
