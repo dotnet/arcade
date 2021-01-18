@@ -6,8 +6,6 @@
 ### run in a user session with GUI rendering capabilities.
 ###
 
-set -e
-
 app=''
 output_directory=''
 targets=''
@@ -64,7 +62,6 @@ while [[ $# -gt 0 ]]; do
         ;;
       *)
         echo "Invalid argument: $1"
-        set -x
         exit 1
         ;;
     esac
@@ -74,7 +71,6 @@ done
 function die ()
 {
     echo "$1" 1>&2
-    set -x
     exit 1
 }
 
@@ -96,8 +92,6 @@ elif [ -n "$launch_timeout" ]; then
     # shellcheck disable=SC2089
     app_arguments="--launch-timeout=$launch_timeout $app_arguments"
 fi
-
-set +e
 
 if [ -z "$xcode_version" ]; then
     xcode_path="$(dirname "$(dirname "$(xcode-select -p)")")"
@@ -143,11 +137,9 @@ if [ "$command" == 'test' ]; then
         ls -la "$output_directory"
 
         if [ $exit_code -eq 0 ]; then
-            set -x
             exit_code=5
         fi
 
-        set -x
         exit $exit_code
     fi
 
@@ -157,5 +149,4 @@ if [ "$command" == 'test' ]; then
     mv "$test_results" "$output_directory/testResults.xml"
 fi
 
-set -x
 exit $exit_code
