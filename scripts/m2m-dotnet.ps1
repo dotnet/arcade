@@ -1,15 +1,16 @@
 <#
 .SYNOPSIS
-Prepares data for migration, migrates and verifies your DARC subcriptions and default channels.
+Prepares data for migration, disables subscriptions, migrates and verifies
+DARC subcriptions and default channels.
 
 .DESCRIPTION
 This script runs in 3 modes:
-    1. Initialization - creates json file which describes DARC migration and disables targeting subscriptions
-        for your repository and branch.
-    2. Migration - using json file generated during Initializatin, this script removes default channels
+    1. GenerateDataFile - creates json file which describes DARC migration.
+    2. DisableSubscriptions - disables targeting subscriptions for your repository and old branch.
+    3. Migration - using json file generated during Initializatin, this script removes default channels
         and targeting subscriptions for your repository and branch. Then it recreates them under
         a new branch.
-    3. Verification - Compares default channels and targeting subscriptions from json file against current
+    4. Verification - Compares default channels and targeting subscriptions from json file against current
         state in DARC.
 
 .PARAMETER Repository
@@ -23,44 +24,70 @@ Optional new name of branch, defaults to 'main'.
 .PARAMETER OldBranch
 Optional old name of branch, defaults to 'master'.
 
+.PARAMETER GenerateDataFile
+Switch to run in generate data file mode. Repository parameter is required and NewBranch, OldBranch are optional.
+
+.PARAMETER DisableSubscriptions
+Switch to run in disable subscriptions on old branch mode. DataFile parameter is required.
+
 .PARAMETER Migrate
-Mandatory json file path used for DARC migration.
+Switch to run in migration mode. DataFile parameter is required.
 
 .PARAMETER Verify
-Mandatory json file path used for DARC validation.
+Switch to run in verification mode. DataFile parameter is required.
+
+.PARAMETER DataFile
+json file path used for DARC validation.
 
 .PARAMETER DryRun
 When specified then no DARC updates are executed, but only logged.
 
 .EXAMPLE
 1. For initilization execute:
-./m2m-dotnet.ps1 -Repository dotnet/m2m-renaming-test-1
+./m2m-dotnet.ps1 -GenerateDataFile -Repository dotnet/m2m-renaming-test-1
 or you can additionaly specify branch names:
-./m2m-dotnet.ps1 -Repository dotnet/m2m-renaming-test-1  -OldBranch "master" -NewBranch "main"
+./m2m-dotnet.ps1 -GenerateDataFile -Repository dotnet/m2m-renaming-test-1  -OldBranch master -NewBranch main
 
 This generates data file m2m-dotnet_[timestamp].json and disables all targeting subscriptions.
 
-2. For migration execute:
-.\m2m-dotnet.ps1  -Migrate m2m-dotnet_[timestamp].json
+2. To disable targeting subscriptions for your repository and old branch execute:
+.\m2m-dotnet.ps1  -DisableSubscriptions -DataFile m2m-dotnet_[timestamp].json
 
-3. For verification execute:
-.\m2m-dotnet.ps1  -Verify m2m-dotnet_[timestamp].json
+3. For migration execute:
+.\m2m-dotnet.ps1  -Migrate -DataFile m2m-dotnet_[timestamp].json
+
+4. For verification execute:
+.\m2m-dotnet.ps1  -Verify -DataFile m2m-dotnet_[timestamp].json
 
 #>
 
 [CmdletBinding()]
 param (
-    [Parameter(ParameterSetName = 'Initialize', Mandatory = $true)]
-    [string]$Repository,
-    [Parameter(ParameterSetName = 'Initialize')]
-    [string]$NewBranch = "main",
-    [Parameter(ParameterSetName = 'Initialize')]
-    [string]$OldBranch = "master",
+
+    [Parameter(ParameterSetName = 'GenerateDataFile', Mandatory = $true)]
+    [switch]$GenerateDataFile,
+
+    [Parameter(ParameterSetName = 'DisableSubscriptions', Mandatory = $true)]
+    [switch]$DisableSubscriptions,
+
     [Parameter(ParameterSetName = 'Migrate', Mandatory = $true)]
-    [string]$Migrate,
+    [switch]$Migrate,
+
     [Parameter(ParameterSetName = 'Verify', Mandatory = $true)]
-    [string]$Verify,
-    [Parameter(Mandatory = $false)]
+    [switch]$Verify,
+
+    [Parameter(ParameterSetName = 'GenerateDataFile', Mandatory = $true)]
+    [string]$Repository,
+    [Parameter(ParameterSetName = 'GenerateDataFile')]
+    [string]$NewBranch = "main",
+    [Parameter(ParameterSetName = 'GenerateDataFile')]
+    [string]$OldBranch = "master",
+
+    [Parameter(ParameterSetName = 'Verify', Mandatory = $true)]
+    [Parameter(ParameterSetName = 'Migrate', Mandatory = $true)]
+    [Parameter(ParameterSetName = 'DisableSubscriptions', Mandatory = $true)]
+    [string]$DataFile,
+
     [switch]$DryRun = $false
 )
 
@@ -68,8 +95,9 @@ param (
 Class DarcExecutor {
     [bool]$DryRun = $false
 
-    [object[]] ParseIgnoreChecks([string] $line) {
+    [string[]] ParseIgnoreChecks([string] $line) {
         $ignoreChecks = @()
+        # Matches fragment like : ignoreChecks = [ "WIP",  "license/cla" ]
         if ($line -match "ignoreChecks\s*=\s*\[\s*([^\]]+)\s*\]") {
             $ignoreChecksValuesMatches = [regex]::matches($matches[1], "`"([^`"]+)`"")
             ForEach ($check in $ignoreChecksValuesMatches) {
@@ -93,7 +121,7 @@ Class DarcExecutor {
         $batchable = $fromRepo = $fromChannel = $updateFrequency = $enabled = $mergePolicies = $null
         For ($i = 0; $i -le $darcOutputLines.Length; $i++) {
             $line = $darcOutputLines[$i]
-
+            # Matches header like: https://github.com/dotnet/arcade (.NET Eng - Latest) ==> 'https://github.com/dotnet/m2m-renaming-test-1' ('main')
             if ($line -match "([^\s]+)\s+\(([^\)]+)\)\s+==>\s+'([^']+)'\s+\('([^\)]+)'\)") {
                 if ($i -ne 0) {
                     $list += @{fromRepo = $fromRepo; fromChannel = $fromChannel; updateFrequency = $updateFrequency; enabled = $enabled; batchable = $batchable; ignoreChecks = @($this.ParseIgnoreChecks($mergePolicies)); mergePolicies = @($this.ParseMergePolicies($mergePolicies)) };
@@ -103,27 +131,35 @@ Class DarcExecutor {
 
                 $fromRepo = $matches[1]
                 $fromChannel = $matches[2]
+                continue
             }
-            elseif ($line -match "^\s+\-\s+([^:]+):\s*(.*)") {
+            # Matches field like: - Update Frequency: EveryWeek
+            if ($line -match "^\s+\-\s+([^:]+):\s*(.*)") {
                 $processingMergePolicies = $false
                 if ($matches[1] -eq "Update Frequency") {
                     $updateFrequency = $matches[2]
+                    continue
                 }
-                elseif ($matches[1] -eq "Enabled") {
+                if ($matches[1] -eq "Enabled") {
                     $enabled = $matches[2]
+                    continue
                 }
-                elseif ($matches[1] -eq "Batchable") {
+                if ($matches[1] -eq "Batchable") {
                     $batchable = $matches[2]
+                    continue
                 }
-                elseif ($matches[1] -eq "Merge Policies") {
+                if ($matches[1] -eq "Merge Policies") {
                     $mergePolicies = $matches[2]
                     $processingMergePolicies = $true
+                    continue
                 }
             }
-            elseif ($processingMergePolicies) {
+            if ($processingMergePolicies) {
                 $mergePolicies += $line
+                continue
             }
         }
+
         if ($null -ne $fromRepo) {
             $list += @{fromRepo = $fromRepo; fromChannel = $fromChannel; updateFrequency = $updateFrequency; enabled = $enabled; batchable = $batchable; ignoreChecks = @($this.ParseIgnoreChecks($mergePolicies)); mergePolicies = @($this.ParseMergePolicies($mergePolicies)) };
         }
@@ -171,7 +207,7 @@ Class DarcExecutor {
             }
         }
         else {
-            Write-Host("    WARNING: {0}" -f $output)
+            Write-Error("    WARNING: {0}" -f $output)
         }
     }
 
@@ -184,7 +220,7 @@ Class DarcExecutor {
             $output = $this.Execute($arguments, $true)
 
             if ($output -notmatch ".*done") {
-                Write-Host ("   WARNING: {0}" -f $output)
+                Write-Error("   WARNING: {0}" -f $output)
             }
         }
     }
@@ -201,7 +237,7 @@ Class DarcExecutor {
         $output = $this.Execute($arguments, $true)
 
         if ($output -notmatch ".*done") {
-            Write-Host ("   WARNING: {0}" -f $output)
+            Write-Error("   WARNING: {0}" -f $output)
         }
     }
 
@@ -280,13 +316,13 @@ Class DarcExecutor {
 
         $expectedDefaultChannels = ConvertTo-Json($actualConfig.defaultChannels | Sort-Object)
         $actualDefaultChannels = ConvertTo-Json($config.defaultChannels | Sort-Object)
-        if($expectedDefaultChannels -ne $actualDefaultChannels) {
+        if ($expectedDefaultChannels -ne $actualDefaultChannels) {
             throw("Expected default channels {0} don't match actual {1}." -f $actualDefaultChannels, $actualDefaultChannels)
         }
 
         $expectedSubscriptions = ConvertTo-Json($actualConfig.subscriptions | Sort-Object -Property "fromRepo")
         $actualSubscriptions = ConvertTo-Json($config.subscriptions | Sort-Object -Property "fromRepo")
-        if($expectedSubscriptions -ne $actualSubscriptions) {
+        if ($expectedSubscriptions -ne $actualSubscriptions) {
             throw("Expected subscriptions {0} don't match actual {1}." -f $expectedSubscriptions, $actualSubscriptions)
         }
 
@@ -301,18 +337,17 @@ Class DarcExecutor {
         else {
             $output = (&"darc"  $arguments | Out-String)
             if ($exitCodeCheck -and $LASTEXITCODE -ne 0) {
-                throw ("    Error with status code {0}: {1}" -f $LASTEXITCODE, $output)
+                throw ("    Error executing command ""darc {0}"" with status code {1}: {2}" -f ($arguments -join " "), $LASTEXITCODE, $output)
             }
             return $output
         }
     }
 }
-
-function  InitDarcConfigurationAndDisableSubscriptions {
+function  InitializeDarc {
     param (
         [DarcExecutor] $darc
     )
-    $configFile = "m2m-dotnet_{0:ddMMyyyy_HHmmss}.json" -f (get-date)
+    $configFile = "m2m-dotnet_{0:yyyyMMdd_HHmmss}.json" -f (get-date)
     $internalRepo = "https://dev.azure.com/dnceng/internal/_git/{0}" -f ($Repository -replace "/", "-")
     $publicRepo = "https://github.com/{0}" -f $Repository
 
@@ -325,16 +360,24 @@ function  InitDarcConfigurationAndDisableSubscriptions {
     $configs = @($configPublic, $configInternal)
     ConvertTo-Json $configs -Depth 4 | Out-File -FilePath $configFile
     Write-Host ("Configuration has been saved as {0}" -f $configFile)
+}
 
-    $darc.DisableTargetSubscriptions($publicRepo, $OldBranch)
-    $darc.DisableTargetSubscriptions($internalRepo, $OldBranch)
+function  DisableDarcSubscriptions {
+    param (
+        [DarcExecutor] $darc
+    )
+
+    $configs = Get-Content -Raw -Path $DataFile | ConvertFrom-Json
+    ForEach ($config in $configs) {
+        $darc.DisableTargetSubscriptions($config.repo, $config.oldBranch)
+    }
 }
 function MigrateDarc {
     param (
         [DarcExecutor]$darc
     )
 
-    $configs = Get-Content -Raw -Path $Migrate | ConvertFrom-Json
+    $configs = Get-Content -Raw -Path $DataFile | ConvertFrom-Json
     ForEach ($config in $configs) {
         $darc.MigrateRepo($config)
     }
@@ -344,7 +387,7 @@ function VerifyDarc {
         [DarcExecutor]$darc
     )
 
-    $configs = Get-Content -Raw -Path $Verify | ConvertFrom-Json
+    $configs = Get-Content -Raw -Path $DataFile | ConvertFrom-Json
     ForEach ($config in $configs) {
         $darc.VerifyRepo($config)
     }
@@ -354,12 +397,9 @@ $ErrorActionPreference = 'Stop'
 $darc = [DarcExecutor]::new()
 $darc.DryRun = $DryRun
 
-if ($PSCmdlet.ParameterSetName -eq "Initialize") {
-    InitDarcConfigurationAndDisableSubscriptions -darc $darc
-}
-elseif ($PSCmdlet.ParameterSetName -eq "Migrate") {
-    MigrateDarc -darc $darc
-}
-elseif ($PSCmdlet.ParameterSetName -eq "Verify") {
-    VerifyDarc -darc $darc
+switch ($PSCmdlet.ParameterSetName) {
+    "GenerateDataFile" { InitializeDarc -darc $darc }
+    "DisableSubscriptions" { DisableDarcSubscriptions -darc $darc }
+    "Migrate" { MigrateDarc -darc $darc }
+    "Verify" { VerifyDarc -darc $darc }
 }
