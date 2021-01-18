@@ -109,10 +109,7 @@ if [ "$targets" == 'ios-device' ] || [ "$targets" == 'tvos-device' ]; then
     fi
 
     keychain_name='signing-certs.keychain-db'
-
-    set +x
     keychain_password=$(cat ~/.config/keychain)
-    set -x
 
     set +e
 
@@ -132,10 +129,7 @@ if [ "$targets" == 'ios-device' ] || [ "$targets" == 'tvos-device' ]; then
 
     set -e
 
-    set +x
-    echo "security unlock-keychain -p *** $keychain_name"
     security unlock-keychain -p "$keychain_password" "$keychain_name"
-    set -x
 
     /usr/bin/codesign -v --force --sign "Apple Development" --keychain "$keychain_name" --entitlements "./Entitlements.plist" "$app"
 else
