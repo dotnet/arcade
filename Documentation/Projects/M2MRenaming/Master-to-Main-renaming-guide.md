@@ -78,7 +78,7 @@ Generate json data file describing Maestro migration, review it and disable all 
 ./m2m-dotnet.ps1 -GenerateDataFile -Repository [short repository name (e.g. dotnet/wpf)]
 ```
 3. Verify that the file `m2m-dotnet_[timestamp].json` was generated and check that subscriptions and default channels were properly filled.
-4. Disable DARC targeting subscriptions:
+4. Disable DARC subscriptions targeting your repository:
 ```
 ./m2m-dotnet.ps1 -DisableSubscriptions -DataFile m2m-dotnet_[timestamp].json
 ```
@@ -194,11 +194,11 @@ Search your repository for any references to the `master` branch specific to you
 
 > **Note:** This uses [darc](https://github.com/dotnet/arcade/blob/master/Documentation/Darc.md) and migrates default channels and subscriptions
 
-1. You can optionaly run DARC migration script in a dry run mode. This doesn't update anything, but displays DARC comands which will be executed.
+1. You can optionally run DARC migration script in a dry run mode. This doesn't update anything, but displays DARC commands which would be executed.
 ```
 ./m2m-dotnet.ps1 -Migrate -DataFile m2m-dotnet_[timestamp].json -DryRun
 ```
-2. Run DARC migration script (it's safe to be executed repeatedly):
+2. Run DARC migration script (it is safe to execute it repeatedly):
 ```
 ./m2m-dotnet.ps1 -Migrate -DataFile m2m-dotnet_[timestamp].json
 ```
