@@ -217,11 +217,7 @@ Class DarcExecutor {
         if (-not ($output -match "^No subscriptions found matching the specified criteria.")) {
             Write-Host ("Deleting subscriptions for {0} {1}" -f $repo, $branch)
             $arguments = @("delete-subscriptions", "--exact", "--target-repo", $repo, "--target-branch", $branch, "-q")
-            $output = $this.Execute($arguments, $true)
-
-            if ($output -notmatch ".*done") {
-                Write-Error("   WARNING: {0}" -f $output)
-            }
+            $this.Execute($arguments, $true)
         }
     }
 
@@ -234,11 +230,7 @@ Class DarcExecutor {
     [void]DisableSubscription ([string] $id) {
         Write-Host ("Disabling subscription {0}" -f $id)
         $arguments = @("subscription-status", "--id", $id, "-d", "-q")
-        $output = $this.Execute($arguments, $true)
-
-        if ($output -notmatch ".*done") {
-            Write-Error("   WARNING: {0}" -f $output)
-        }
+        $this.Execute($arguments, $true)
     }
 
     [string[]]GetTargetSubscriptionIds ([string] $repo, [string] $branch) {
@@ -332,7 +324,7 @@ Class DarcExecutor {
     [string]Execute ([string[]] $arguments, [bool]$exitCodeCheck) {
         if ($this.DryRun -and ($arguments[0] -ne "get-default-channels") -and ($arguments[0] -ne "get-subscriptions")) {
             Write-Host (">>> darc {0}" -f ($arguments -join " "))
-            return "done"
+            return "Successfully created new subscription with id 'TEST_ID'."
         }
         else {
             $output = (&"darc"  $arguments | Out-String)
