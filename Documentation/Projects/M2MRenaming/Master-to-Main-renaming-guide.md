@@ -70,24 +70,17 @@ All of the steps are easily revert-able, so it is not a problem to go back to `m
 ## 1. Disable Maestro subscriptions
 ![Maestro enabled](images/maestro-enabled.png)
 
-Generate Maestro migration scripts, review and execute a script which disables all subscriptions targeting internal and GitHub repositories:
+Generate json data file describing Maestro migration, review it and disable all subscriptions targeting internal and GitHub repositories:
 
-1. Download the script [from](https://raw.githubusercontent.com/dotnet/arcade/master/scripts/disable-subscriptions-prepare-migration-script.ps1).
-2. Run the script `disable-subscriptions-prepare-migration-script.ps1` with short repository name (e.g. dotnet/wpf). Script generation is a safe operation which executes only darc read operations.
-3. Verify that two scripts `rename-branch-in-maestro.ps1` and `disable-subscriptions-in-maestro.ps1` are generated.
-4. Review the script `disable-subscriptions-in-maestro.ps1`.
-5. Execute the script `disable-subscriptions-in-maestro.ps1`.
-
-Example:
-```ps
-> .\disable-subscriptions-prepare-migration-script.ps1 dotnet/aspnetcore # safe operation which only generates scripts
-Generating darc scripts for repository https://dev.azure.com/dnceng/internal/_git/dotnet-aspnetcore master ==> main...
-Generating darc scripts for repository https://github.com/dotnet/aspnetcore master ==> main...
-Files rename-branch-in-maestro.ps1 and disable-subscriptions-in-maestro.ps1 were generated.
-
-> cat disable-subscriptions-in-maestro.ps1 # review the script which disables all subscriptions targeting internal and GitHub repositories
-...
-> .\disable-subscriptions-in-maestro.ps1 # disables subscriptions in Maestro
+1. Download the script [m2m-dotnet.ps1](https://raw.githubusercontent.com/dotnet/arcade/master/scripts/m2m-dotnet.ps1).
+2. Generate json file which describes DARC migration (safe operation which executes only DARC read operations):
+```
+./m2m-dotnet.ps1 -GenerateDataFile -Repository [short repository name (e.g. dotnet/wpf)]
+```
+3. Verify that the file `m2m-dotnet_[timestamp].json` was generated and check that subscriptions and default channels were properly filled.
+4. Disable DARC targeting subscriptions:
+```
+./m2m-dotnet.ps1 -DisableSubscriptions -DataFile m2m-dotnet_[timestamp].json
 ```
 
 ## 2. Add `main` triggers to YAML pipelines
@@ -201,11 +194,21 @@ Search your repository for any references to the `master` branch specific to you
 
 > **Note:** This uses [darc](https://github.com/dotnet/arcade/blob/master/Documentation/Darc.md) and migrates default channels and subscriptions
 
-1. Review the script `rename-branch-in-maestro.ps1` generated in step 1.
-2. Execute the script `rename-branch-in-maestro.ps1`
+1. You can optionaly run DARC migration script in a dry run mode. This doesn't update anything, but displays DARC comands which will be executed.
+```
+./m2m-dotnet.ps1 -Migrate -DataFile m2m-dotnet_[timestamp].json -DryRun
+```
+2. Run DARC migration script (it's safe to be executed repeatedly):
+```
+./m2m-dotnet.ps1 -Migrate -DataFile m2m-dotnet_[timestamp].json
+```
+3. Validate migration (make sure that you don't see any errors):
+```
+./m2m-dotnet.ps1 -Verify -DataFile m2m-dotnet_[timestamp].json
+```
 
 ## 8. Change the default branch for AzDO pipelines
-![AzDO mirrored](images/azdo-mirrored.png) 
+![AzDO mirrored](images/azdo-mirrored.png)
 
 - Do this for [public](https://dev.azure.com/dnceng/public) and [internal](https://dev.azure.com/dnceng/internal) projects
 - Do this for all pipelines that are based off a YAML in the repo that you are working with
@@ -245,7 +248,7 @@ The **Pesonal Access Token** needs to read Code, Builds and Releases.
 
 
 ## 10. Delete the `master` branch of the AzDO repository
-![AzDO mirrored](images/azdo-mirrored.png) 
+![AzDO mirrored](images/azdo-mirrored.png)
 
 - For this you need to have the `Force push` permission in branch security settings
 
@@ -332,31 +335,18 @@ GitHub links are automatically redirected. For example https://github.com/dotnet
 GitHub raw links are automatically redirected. For example link https://raw.githubusercontent.com/dotnet/xharness/master/README.md still works even after rename and is equivalent to link https://raw.githubusercontent.com/dotnet/xharness/main/README.md.
 
 ## How to revert Maestro migration?
-Two update scripts are generated. There are 3 scenarios:
-1. In case the `disable-subscriptions-in-maestro.ps1` script was executed **only**, to roll back, edit this script and replace argument `-d` with `-e`. For example update content of `disable-subscriptions-in-maestro.ps1` from:
 
+1. Edit file `m2m-dotnet_[timestamp].json` and update following fields for public and internal repository:
 ```
-$ErrorActionPreference = 'Stop'
-# Disable targeting subscriptions for https://dev.azure.com/dnceng/internal/_git/dotnet-runtime (master)
-# --------------------------------
-# Disable targeting subscriptions for https://github.com/dotnet/runtime (master)
-# ----------------------------------
-darc subscription-status --id "032d107a-6f5d-4df8-c8c4-08d75d523d5f" -d -q
+"newBranch":  "master",
+"oldBranch":  "main",
 ```
-
-to:
+2. Run DARC migration script:
 ```
-$ErrorActionPreference = 'Stop'
-# Disable targeting subscriptions for https://dev.azure.com/dnceng/internal/_git/dotnet-runtime (master)
-# --------------------------------
-# Disable targeting subscriptions for https://github.com/dotnet/runtime (master)
-# ----------------------------------
-darc subscription-status --id "032d107a-6f5d-4df8-c8c4-08d75d523d5f" -e -q
+./m2m-dotnet.ps1 -Migrate -DataFile m2m-dotnet_[timestamp].json
 ```
-and execute `disable-subscriptions-in-maestro.ps1`.
-
-2. When both scripts were executed, you need to generate rollback scripts using the same script which was used to generate migration scripts:
-    `./disable-subscriptions-prepare-migration-script.ps1 [repo name] master main`.
-    Then execute generated update script `./rename-branch-in-maestro.ps1` and all changes will be reverted.
-
-3. Reach out to us in case of any questions or issues with these scripts.
+3. Validate migration (make sure that you don't see any errors):
+```
+./m2m-dotnet.ps1 -Verify -DataFile m2m-dotnet_[timestamp].json
+```
+4. Reach out to us in case of any questions or issues with these scripts.
