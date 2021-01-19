@@ -21,8 +21,9 @@
     <ItemGroup>
       <XHarnessAppBundleToTest Include="$(ArtifactsTmpDir)XHarness.RunDeviceAppBundle/$(XHarnessRunAppBundleName)">
         <Targets>ios-device</Targets>
-        <WorkItemTimeout>00:20:00</WorkItemTimeout>
-        <TestTimeout>00:15:00</TestTimeout>
+        <WorkItemTimeout>00:05:00</WorkItemTimeout>
+        <TestTimeout>00:03:00</TestTimeout>
+        <LaunchTimeout>00:01:00</LaunchTimeout>
         <IncludesTestRunner>false</IncludesTestRunner>
         <ExpectedExitCode>200</ExpectedExitCode>
       </XHarnessAppBundleToTest>

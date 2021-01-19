@@ -131,6 +131,8 @@ if [ "$targets" == 'ios-device' ] || [ "$targets" == 'tvos-device' ]; then
 
     security unlock-keychain -p "$keychain_password" "$keychain_name"
 
+    curl -o "$app/embedded.mobileprovision" "https://netcorenativeassets.blob.core.windows.net/resource-packages/external/ios/NET_Apple_Development_iOS.mobileprovision"
+
     /usr/bin/codesign -v --force --sign "Apple Development" --keychain "$keychain_name" --entitlements "./Entitlements.plist" "$app"
 else
     # Start the simulator if it is not running already
