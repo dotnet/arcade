@@ -6,8 +6,6 @@
 ### run in a user session with GUI rendering capabilities.
 ###
 
-set -ex
-
 app=''
 output_directory=''
 targets=''
@@ -94,8 +92,6 @@ elif [ -n "$launch_timeout" ]; then
     # shellcheck disable=SC2089
     app_arguments="--launch-timeout=$launch_timeout $app_arguments"
 fi
-
-set +e
 
 if [ -z "$xcode_version" ]; then
     xcode_path="$(dirname "$(dirname "$(xcode-select -p)")")"
