@@ -66,7 +66,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             Log.LogMessage($"Creating work item with properties Identity: {workItemName}, Payload: {appPackage.ItemSpec}, Command: {command}");
 
             string workItemZip = await CreateZipArchiveOfPackageAsync(appPackage.ItemSpec);
-            
+
             return new Build.Utilities.TaskItem(workItemName, new Dictionary<string, string>()
             {
                 { "Identity", workItemName },
@@ -82,28 +82,17 @@ namespace Microsoft.DotNet.Helix.Sdk
             string fileName = $"xharness-apk-payload-{Path.GetFileNameWithoutExtension(fileToZip).ToLowerInvariant()}.zip";
             string outputZipAbsolutePath = Path.Combine(directoryOfPackage, fileName);
             using (FileStream fs = File.OpenWrite(outputZipAbsolutePath))
+            using (var zip = new ZipArchive(fs, ZipArchiveMode.Create, false))
             {
-                using (var zip = new ZipArchive(fs, ZipArchiveMode.Create, false))
-                {
-                    zip.CreateEntryFromFile(fileToZip, Path.GetFileName(fileToZip));
-                    // WorkItem payloads of APKs can be reused if sent to multiple queues at once,
-                    // so we'll always include both scripts (very small)
-                    await AddEntryPointScriptsToWorkItemPayloadAsync(zip, PosixAndroidWrapperScript);
-                    await AddEntryPointScriptsToWorkItemPayloadAsync(zip, NonPosixAndroidWrapperScript);
-                }
+                zip.CreateEntryFromFile(fileToZip, Path.GetFileName(fileToZip));
             }
-            return outputZipAbsolutePath;
-        }
 
-        private async Task AddEntryPointScriptsToWorkItemPayloadAsync(ZipArchive zip, string scriptName)
-        {
-            var runnerScriptEntry = zip.CreateEntry(scriptName);
-            using (var helixPayloadStreamWriter = new StreamWriter(runnerScriptEntry.Open()))
-            {
-                var thisAssembly = GetType().Assembly;
-                using Stream embeddedScriptResourceStream = thisAssembly.GetManifestResourceStream($"{thisAssembly.GetName().Name}.tools.xharness_runner.{scriptName}");
-                await embeddedScriptResourceStream.CopyToAsync(helixPayloadStreamWriter.BaseStream);
-            }
+            // WorkItem payloads of APKs can be reused if sent to multiple queues at once,
+            // so we'll always include both scripts (very small)
+            await AddResourceFileToPayload(outputZipAbsolutePath, PosixAndroidWrapperScript);
+            await AddResourceFileToPayload(outputZipAbsolutePath, NonPosixAndroidWrapperScript);
+
+            return outputZipAbsolutePath;
         }
 
         private string ValidateMetadataAndGetXHarnessAndroidCommand(ITaskItem appPackage, TimeSpan xHarnessTimeout, int expectedExitCode)

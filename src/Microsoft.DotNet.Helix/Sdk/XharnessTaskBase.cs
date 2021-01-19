@@ -1,4 +1,8 @@
 using System;
+using System.IO;
+using System.IO.Compression;
+using System.Text;
+using System.Threading.Tasks;
 using Microsoft.Build.Framework;
 using Newtonsoft.Json;
 
@@ -89,6 +93,34 @@ namespace Microsoft.DotNet.Helix.Sdk
                 TestTimeout: testTimeout,
                 WorkItemTimeout: workItemTimeout,
                 ExpectedExitCode: expectedExitCode);
+        }
+
+        protected async Task AddResourceFileToPayload(string payloadArchivePath, string resourceFileName, string targetFileName = null)
+        {
+            string content = await GetResourceFileContent(resourceFileName);
+            await AddToPayloadArchive(payloadArchivePath, targetFileName ?? resourceFileName, content);
+        }
+
+        protected Task AddToPayloadArchive(string payloadArchivePath, string targetFilename, string content)
+        {
+            return AddToPayloadArchive(payloadArchivePath, targetFilename, new MemoryStream(Encoding.UTF8.GetBytes(content)));
+        }
+
+        protected async Task AddToPayloadArchive(string payloadArchivePath, string targetFilename, Stream content)
+        {
+            using FileStream archiveStream = new FileStream(payloadArchivePath, FileMode.Open);
+            using ZipArchive archive = new ZipArchive(archiveStream, ZipArchiveMode.Update);
+            ZipArchiveEntry entry = archive.CreateEntry(targetFilename);
+            using var targetStream = entry.Open();
+            await content.CopyToAsync(targetStream);
+        }
+
+        protected static async Task<string> GetResourceFileContent(string resourceFileName)
+        {
+            var thisAssembly = typeof(CreateXHarnessiOSWorkItems).Assembly;
+            using Stream fileStream = thisAssembly.GetManifestResourceStream($"{thisAssembly.GetName().Name}.tools.xharness_runner.{resourceFileName}");
+            using var reader = new StreamReader(fileStream);
+            return await reader.ReadToEndAsync();
         }
     }
 }

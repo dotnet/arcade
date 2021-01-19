@@ -131,7 +131,9 @@ if [ "$targets" == 'ios-device' ] || [ "$targets" == 'tvos-device' ]; then
 
     security unlock-keychain -p "$keychain_password" "$keychain_name"
 
-    curl -o "$app/embedded.mobileprovision" "https://netcorenativeassets.blob.core.windows.net/resource-packages/external/ios/NET_Apple_Development_iOS.mobileprovision"
+    if [ ! -f "$app/embedded.mobileprovision" ]; then
+        echo "Warning: no embedded provisioinig profile found, app signature might fail when deploying to the device"
+    fi
 
     /usr/bin/codesign -v --force --sign "Apple Development" --keychain "$keychain_name" --entitlements "./Entitlements.plist" "$app"
 else

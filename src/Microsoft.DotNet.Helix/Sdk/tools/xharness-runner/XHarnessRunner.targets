@@ -102,10 +102,19 @@
   <Target Name="CreateiOSWorkItems"
           Condition=" '@(XHarnessAppBundleToTest)' != '' "
           BeforeTargets="CoreTest">
+    <DownloadFile SourceUrl="$(XHarnessAppleProvisioningProfileUrl)"
+                  Condition=" '$(XHarnessAppleProvisioningProfileUrl)' != '' "
+                  DestinationFolder="$(ArtifactsTmpDir)"
+                  SkipUnchangedFiles="True"
+                  Retries="5">
+      <Output TaskParameter="DownloadedFile" ItemName="_XHarnessProvisioningProfile" />
+    </DownloadFile>
+
     <CreateXHarnessiOSWorkItems AppBundles="@(XHarnessAppBundleToTest)"
                                 IsPosixShell="$(IsPosixShell)"
                                 XcodeVersion="$(XHarnessXcodeVersion)"
-                                AppleTeamIdentifier="$(XHarnessAppleTeamIdentifier)">
+                                AppleTeamIdentifier="$(XHarnessAppleTeamIdentifier)"
+                                ProvisioningProfilePath="@(_XHarnessProvisioningProfile)">
       <Output TaskParameter="WorkItems" ItemName="HelixWorkItem"/>
     </CreateXHarnessiOSWorkItems>
   </Target>
