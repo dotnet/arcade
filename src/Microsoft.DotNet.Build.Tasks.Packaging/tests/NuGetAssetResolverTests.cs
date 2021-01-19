@@ -27,7 +27,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
                 "runtimes/aot/lib/netcore50/_._"
             };
 
-            NuGetAssetResolver resolver = new NuGetAssetResolver("RuntimeGraphRoundTrips.json", items);
+            NuGetAssetResolver resolver = new NuGetAssetResolver("runtime.json", items);
 
             var runtimeItems = resolver.GetRuntimeItems(NuGetFramework.Parse("netcore50"), "win10-x64-aot");
 

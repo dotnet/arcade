@@ -91,8 +91,8 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
                 HarvestAssets = true,
                 IncludeAllPaths = true,
                 PackageId = "System.Collections.Immutable",
-                PackageVersion = "1.7.1",
-                RuntimeFile = "RuntimeGraphRoundTrips.json"
+                PackageVersion = "1.5.0",
+                RuntimeFile = "runtime.json"
             };
 
             task.PackagesFolders = new[] { FindPackageFolder(task.PackageId, task.PackageVersion) };
@@ -102,10 +102,10 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
 
             _log.ErrorsLogged.Should().Be(0);
             _log.WarningsLogged.Should().Be(0);
-            task.HarvestedFiles.Should().HaveCount(10);
+            task.HarvestedFiles.Should().HaveCount(8);
             var ns10asset = task.HarvestedFiles.FirstOrDefault(f => f.GetMetadata("TargetFramework") == "netstandard1.0");
             ns10asset.Should().NotBeNull();
-            ns10asset.GetMetadata("AssemblyVersion").Should().Be("1.2.5.0");
+            ns10asset.GetMetadata("AssemblyVersion").Should().Be("1.2.3.0");
             task.SupportedFrameworks.Should().HaveCount(_frameworks.Length);
         }
 
@@ -120,7 +120,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
                 IncludeAllPaths = true,
                 PackageId = "Microsoft.Win32.Registry",
                 PackageVersion = "4.3.0",
-                RuntimeFile = "RuntimeGraphRoundTrips.json"
+                RuntimeFile = "runtime.json"
             };
             task.PackagesFolders = new[] { FindPackageFolder(task.PackageId, task.PackageVersion) };
 
@@ -133,7 +133,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
             var net46asset = task.HarvestedFiles.FirstOrDefault(f => f.GetMetadata("TargetFramework") == "net46");
             net46asset.Should().NotBeNull();
             net46asset.GetMetadata("AssemblyVersion").Should().Be("4.0.1.0");
-            task.SupportedFrameworks.Should().HaveCount(4);
+            task.SupportedFrameworks.Should().HaveCount(6);
         }
 
 
@@ -148,7 +148,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
                 IncludeAllPaths = true,
                 PackageId = "System.Runtime",
                 PackageVersion = "4.3.0",
-                RuntimeFile = "RuntimeGraphRoundTrips.json",
+                RuntimeFile = "runtime.json",
                 RuntimePackages = new []
                 {
                     CreateRuntimePackage("runtime.any.System.Runtime", "4.3.0"),
