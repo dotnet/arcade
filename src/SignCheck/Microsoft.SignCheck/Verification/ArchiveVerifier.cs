@@ -62,11 +62,12 @@ namespace Microsoft.SignCheck.Verification
                     // and we need to ensure they are extracted before we verify the MSIs.
                     foreach (string fullName in archiveMap.Keys)
                     {
-                        SignatureVerificationResult archiveEntryResult = VerifyFile(archiveMap[fullName], svr.Filename, fullName);
+                        SignatureVerificationResult result = VerifyFile(archiveMap[fullName], svr.Filename,
+                            Path.Combine(svr.VirtualPath, fullName), fullName);
 
                         // Tag the full path into the result detail
-                        archiveEntryResult.AddDetail(DetailKeys.File, SignCheckResources.DetailFullName, fullName);
-                        svr.NestedResults.Add(archiveEntryResult);
+                        result.AddDetail(DetailKeys.File, SignCheckResources.DetailFullName, fullName);
+                        svr.NestedResults.Add(result);
                     }
                     DeleteDirectory(tempPath);
                 }

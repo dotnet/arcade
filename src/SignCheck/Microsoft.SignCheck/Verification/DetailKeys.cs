@@ -9,6 +9,7 @@ namespace Microsoft.SignCheck.Verification
         public const string Error = "Error";
         public const string File = "File";
         public const string Misc = "Misc";
+
         // Classifier for signatures other than AuthentiCode/StrongName
         public const string Signature = "Signature";
         public const string StrongName = "StrongName";

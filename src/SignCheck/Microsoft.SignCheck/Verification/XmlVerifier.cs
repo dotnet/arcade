@@ -17,18 +17,18 @@ namespace Microsoft.SignCheck.Verification
 
         }
 
-        public override SignatureVerificationResult VerifySignature(string path, string parent)
+        public override SignatureVerificationResult VerifySignature(string path, string parent, string virtualPath)
         {
             if (VerifyXmlSignatures)
             {
                 X509Certificate2 xmlCertificate;
-                var svr = new SignatureVerificationResult(path, parent);
+                var svr = new SignatureVerificationResult(path, parent, virtualPath);
                 svr.IsSigned = IsSigned(svr.FullPath, out xmlCertificate);
                 svr.AddDetail(DetailKeys.File, SignCheckResources.DetailSigned, svr.IsSigned);
                 return svr;
             }
 
-            return SignatureVerificationResult.UnsupportedFileTypeResult(path, parent);
+            return SignatureVerificationResult.UnsupportedFileTypeResult(path, parent, virtualPath);
         }
 
         // See: https://msdn.microsoft.com/en-us/library/ms148731(v=vs.110).aspx
