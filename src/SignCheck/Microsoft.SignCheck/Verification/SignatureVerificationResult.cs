@@ -193,7 +193,7 @@ namespace Microsoft.SignCheck.Verification
 
             Filename = Path.GetFileName(path);
             FullPath = Path.GetFullPath(path);
-            VirtualPath = !string.IsNullOrEmpty(virtualPath) ? virtualPath.Replace('\\', '/') : virtualPath;
+            VirtualPath = virtualPath?.Replace('\\', '/');
 
             AddDetail(DetailKeys.File, Filename);
         }
@@ -269,7 +269,7 @@ namespace Microsoft.SignCheck.Verification
         {
             var signatureVerificationResult = new SignatureVerificationResult(path, parent, virtualPath)
             {
-                IsSkipped = true,
+                IsSkipped = true
             };
 
             signatureVerificationResult.AddDetail(DetailKeys.File, SignCheckResources.DetailSkippedUnsupportedFileType);
