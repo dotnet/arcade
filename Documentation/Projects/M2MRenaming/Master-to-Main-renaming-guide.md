@@ -41,6 +41,7 @@ Please verify that you:
 Some steps are only intended for some cases, they are labelled in the following way:
 - ![AzDO mirrored](images/azdo-mirrored.png) Step is intended only for repositories that are mirrored to the [internal AzDO dnceng project](https://dev.azure.com/dnceng/internal)*
 - ![Maestro enabled](images/maestro-enabled.png) Step is intended only for repositories that are part of our [dependency flow](https://github.com/dotnet/arcade/blob/master/Documentation/DependencyFlowOnboarding.md)**
+- The guide should also work for non-GitHub AzDO-only repositories. In this case, just follow steps that apply to AzDO.
 
 > \* You can tell that your repo is being mirrored by searching the git repositories in the [internal AzDO dnceng project](https://dev.azure.com/dnceng/internal/_git). In case your repository's name on GitHub is `dotnet/foo`, there should be a git repository named `dotnet-foo`. You should then also be able to find your repo in the [subscriptions.json](https://github.com/dotnet/versions/blob/master/Maestro/subscriptions.json#L627) file on which the mirroring is based.
 >
@@ -209,17 +210,18 @@ Search your repository for any references to the `master` branch specific to you
 
 - Do this for [public](https://dev.azure.com/dnceng/public) and [internal](https://dev.azure.com/dnceng/internal) projects
 - Do this for all pipelines that are based off a YAML in the repo that you are working with
-- You can use [this script](https://raw.githubusercontent.com/dotnet/arcade/763e8754c7e7a4b37ad76974a15dfe0ede876004/scripts/list-repo-pipelines.ps1) to list all pipelines associated with a given repo:
+- You can use [this script](https://github.com/dotnet/arcade/blob/master/scripts/list-repo-pipelines.ps1) to list all pipelines associated with a given repo:
   > ```ps
-  > .\list-repo-pipelines.ps1 -GitHubRepository "[REPOSITORY]" -PAT "[TOKEN]"
+  > .\list-repo-pipelines.ps1 -GitHubRepository "[GH REPO NAME]" -AzDORepository "[AZDO REPO NAME]" -PAT "[TOKEN]"
   > ```
 
 Example:
   > ```ps
-  > .\list-repo-pipelines.ps1 -GitHubRepository "dotnet/runtime" -PAT "jdsvmd324jnsdvjafn2vsd"
+  > .\list-repo-pipelines.ps1 -GitHubRepository "dotnet/xharness" -AzDORepository "dotnet-xharness" -PAT "jdsvmd324jnsdvjafn2vsd"
   > ```
 
-The **Pesonal Access Token** needs to read Code, Builds and Releases.
+The **Pesonal Access Token** needs to have following scopes: **Code (Read)**, **Build (Read)**.
+The parameters can be used separately, GitHub listing doesn't require the token to be set.
 
 1. Go to AzDO pipelines, find your pipeline
 2. Click `Edit`
