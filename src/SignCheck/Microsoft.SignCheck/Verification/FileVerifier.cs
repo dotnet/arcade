@@ -176,7 +176,7 @@ namespace Microsoft.SignCheck.Verification
 
             if ((!svr.IsDoNotSign) && (!svr.IsSigned))
             {
-                svr.IsExcluded = Exclusions.IsExcluded(path, parent, virtualPath, containerPath);
+                svr.IsExcluded = Exclusions.IsExcluded(path, parent, svr.VirtualPath, containerPath);
 
                 if ((svr.IsExcluded))
                 {
