@@ -109,7 +109,7 @@ Class DarcExecutor {
     }
 
     [object[]] ParseMergePolicies([string] $line) {
-        $line = $line -replace "ignoreChecks\s*=\s*\[\s*[^\]]+\s*\]", ""
+        $line = $line -replace "ignoreChecks\s*=\s*\[\s*[^\]]*\s*\]", ""
         $policies = $line -split "\s+" | Where-Object { $_ }
         return $policies
     }
@@ -177,25 +177,31 @@ Class DarcExecutor {
 
     [void]AddSubscription($repo, $branch, $item) {
         $arguments = @("add-subscription", "--channel", $item.fromChannel, "--source-repo", $item.fromRepo, "--target-repo", $repo, "--update-frequency", $item.updateFrequency, "--target-branch", $branch, "--no-trigger", "-q")
-
+        $policiesArguments = @("set-repository-policies", "--repo", $repo, "--branch", $branch, "-q")
+        $targetArgumentsRef = [ref]$arguments
+        if ($item.batchable -eq "True") {
+            $arguments += "--batchable"
+            $targetArgumentsRef = [ref]$policiesArguments
+        }
         if ($item.mergePolicies -contains "Standard") {
-            $arguments += "--standard-automerge"
+            $targetArgumentsRef.value += "--standard-automerge"
         }
         if ($item.mergePolicies -like "NoRequestedChanges") {
-            $arguments += "--no-requested-changes"
+            $targetArgumentsRef.value += "--no-requested-changes"
         }
         if ($item.mergePolicies -like "NoExtraCommits") {
-            $arguments += "--no-extra-commits"
+            $targetArgumentsRef.value += "--no-extra-commits"
         }
         if ($item.mergePolicies -like "AllChecksSuccessful") {
-            $arguments += "--all-checks-passed"
+            $targetArgumentsRef.value += "--all-checks-passed"
         }
         if ($item.ignoreChecks.length -gt 0) {
-            $arguments += "--ignore-checks"
-            $arguments += $item.ignoreChecks -join ","
+            $targetArgumentsRef.value += "--ignore-checks"
+            $targetArgumentsRef.value += $item.ignoreChecks -join ","
         }
+
         if ($item.batchable -eq "True") {
-            $arguments += " --batchable"
+            $this.Execute($policiesArguments, $true)
         }
 
         $output = $this.Execute($arguments, $true)
@@ -312,8 +318,9 @@ Class DarcExecutor {
             throw("Expected default channels {0} don't match actual {1}." -f $actualDefaultChannels, $actualDefaultChannels)
         }
 
-        $expectedSubscriptions = ConvertTo-Json($actualConfig.subscriptions | Sort-Object -Property "fromRepo")
-        $actualSubscriptions = ConvertTo-Json($config.subscriptions | Sort-Object -Property "fromRepo")
+        $actualSubscriptions = ConvertTo-Json($actualConfig.subscriptions | Sort-Object { $_.fromRepo })
+        $expectedSubscriptions = ConvertTo-Json($config.subscriptions | Sort-Object { $_.fromRepo })
+
         if ($expectedSubscriptions -ne $actualSubscriptions) {
             throw("Expected subscriptions {0} don't match actual {1}." -f $expectedSubscriptions, $actualSubscriptions)
         }
