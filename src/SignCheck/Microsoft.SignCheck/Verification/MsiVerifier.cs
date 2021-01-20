@@ -73,9 +73,10 @@ namespace Microsoft.SignCheck.Verification
 
                         foreach (Record record in view)
                         {
-                            string binaryFile = Path.Combine(svr.TempPath, (string)record["Name"]);
+                            string binaryFile = (string)record["Name"];
+                            string binaryFilePath = Path.Combine(svr.TempPath, binaryFile);
                             StructuredStorage.SaveStream(record, svr.TempPath);
-                            SignatureVerificationResult binaryStreamResult = VerifyFile(binaryFile, svr.Filename, Path.Combine(svr.VirtualPath, (string)record["Name"]), containerPath: null);
+                            SignatureVerificationResult binaryStreamResult = VerifyFile(binaryFilePath, svr.Filename, Path.Combine(svr.VirtualPath, binaryFile), containerPath: null);
                             binaryStreamResult.AddDetail(DetailKeys.Misc, SignCheckResources.FileExtractedFromBinaryTable);
                             svr.NestedResults.Add(binaryStreamResult);
                             record.Close();

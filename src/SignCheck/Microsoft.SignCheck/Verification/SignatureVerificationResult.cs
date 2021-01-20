@@ -128,7 +128,6 @@ namespace Microsoft.SignCheck.Verification
         public string VirtualPath
         {
             get;
-            set;
         }
 
         /// <summary>
@@ -271,7 +270,6 @@ namespace Microsoft.SignCheck.Verification
             var signatureVerificationResult = new SignatureVerificationResult(path, parent, virtualPath)
             {
                 IsSkipped = true,
-                VirtualPath = !string.IsNullOrEmpty(virtualPath) ? virtualPath.Replace('\\', '/') : virtualPath
             };
 
             signatureVerificationResult.AddDetail(DetailKeys.File, SignCheckResources.DetailSkippedUnsupportedFileType);
