@@ -47,13 +47,13 @@
     <OctokitVersion>0.32.0</OctokitVersion>
     <DotNetSleetLibVersion>2.2.143</DotNetSleetLibVersion>
     <SwashbuckleAspNetCoreSwaggerVersion>3.0.0</SwashbuckleAspNetCoreSwaggerVersion>
-    <SystemBuffersVersion>4.5.0</SystemBuffersVersion>
-    <SystemCollectionsImmutableVersion>1.5.0</SystemCollectionsImmutableVersion>
+    <SystemBuffersVersion>4.5.1</SystemBuffersVersion>
+    <SystemCollectionsImmutableVersion>1.7.1</SystemCollectionsImmutableVersion>
     <SystemDiagnosticsTraceSourceVersion>4.0.0</SystemDiagnosticsTraceSourceVersion>
     <SystemIOCompressionVersion>4.3.0</SystemIOCompressionVersion>
     <SystemIOPackagingVersion>4.5.0</SystemIOPackagingVersion>
     <SystemIOFileSystemPrimitivesVersion>4.3.0</SystemIOFileSystemPrimitivesVersion>
-    <SystemMemoryVersion>4.5.3</SystemMemoryVersion>
+    <SystemMemoryVersion>4.5.4</SystemMemoryVersion>
     <SystemNumericsVectorsVersion>4.5.0</SystemNumericsVectorsVersion>
     <SystemReflectionMetadataVersion>1.6.0</SystemReflectionMetadataVersion>
     <SystemRuntimeCompilerServicesUnsafeVersion>4.7.0</SystemRuntimeCompilerServicesUnsafeVersion>
@@ -83,7 +83,7 @@
     <XliffTasksVersion>1.0.0-beta.21064.1</XliffTasksVersion>
     <MicrosoftDotNetMaestroTasksVersion>1.1.0-beta.20570.1</MicrosoftDotNetMaestroTasksVersion>
     <MicrosoftDotNetXHarnessCLIVersion>1.0.0-prerelease.21068.3</MicrosoftDotNetXHarnessCLIVersion>
-    <MicrosoftSymbolUploaderBuildTaskVersion>1.1.156402</MicrosoftSymbolUploaderBuildTaskVersion>
-    <MicrosoftSymbolUploaderVersion>1.1.152002</MicrosoftSymbolUploaderVersion>
+    <MicrosoftSymbolUploaderBuildTaskVersion>1.1.206105</MicrosoftSymbolUploaderBuildTaskVersion>
+    <MicrosoftSymbolUploaderVersion>1.1.206105</MicrosoftSymbolUploaderVersion>
   </PropertyGroup>
 </Project>
