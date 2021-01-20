@@ -42,17 +42,22 @@
     </PropertyGroup>
   </Target>
 
+  <PropertyGroup>
+    <GenerateNativeVersionFileDependsOn>_InitializeAssemblyVersion</GenerateNativeVersionFileDependsOn>
+    <GenerateNativeVersionFileDependsOn Condition="'$(DisableSourceLink)' != 'true'">$(GenerateNativeVersionFileDependsOn);
+                                                                                     InitializeSourceControlInformationFromSourceControlManager</GenerateNativeVersionFileDependsOn>
+  </PropertyGroup>
+
   <!--
     GenerateNativeVersionFile target is a standalone target intended to be pulled into a build once as
     a pre-step before kicking off a native build. It will generate a _version.h or _version.c depending
     on the OS it is targeting.
   -->
   <Target Name="GenerateNativeVersionFile"
-          DependsOnTargets="_InitializeAssemblyVersion;InitializeSourceControlInformationFromSourceControlManager">
+          DependsOnTargets="$(GenerateNativeVersionFileDependsOn)">
 
-    <Error Condition="'$(SourceRevisionId)' == ''" Text="SourceRevisionId is not set, which means the SourceLink targets are not included in the build. Those are needed to produce a correct sha for our build outputs." />
-
-    <PropertyGroup>
+    <!-- To support builds without a source control provider available, allow this property to be unset. -->
+    <PropertyGroup Condition="'$(SourceRevisionId)' != ''">
       <_SourceBuildInfo> %40Commit: $(SourceRevisionId)</_SourceBuildInfo>
     </PropertyGroup>
 
