@@ -179,19 +179,10 @@ namespace Microsoft.DotNet.Helix.Sdk
             await AddResourceFileToPayload(outputZipPath, EntryPointScriptName);
             await AddResourceFileToPayload(outputZipPath, RunnerScriptName);
 
-            if (isDeviceTarget)
+            if (isDeviceTarget && !string.IsNullOrEmpty(ProvisioningProfilePath))
             {
-                string entitlementsContent = (await GetResourceFileContent("Entitlements.template.plist"))
-                    .Replace("%TeamIdentifier%", AppleTeamIdentifier)
-                    .Replace("%BundleIdentifier%", appName.Substring(0, appName.Length - 4)); // Remove the .app suffix
-
-                await AddToPayloadArchive(outputZipPath, "Entitlements.plist", entitlementsContent);
-
-                if (!string.IsNullOrEmpty(ProvisioningProfilePath))
-                {
-                    using var stream = new FileStream(ProvisioningProfilePath, FileMode.Open);
-                    await AddToPayloadArchive(outputZipPath, $"{appName}/embedded.mobileprovision", stream);
-                }
+                using var stream = new FileStream(ProvisioningProfilePath, FileMode.Open);
+                await AddToPayloadArchive(outputZipPath, $"{appName}/embedded.mobileprovision", stream);
             }
 
             return outputZipPath;

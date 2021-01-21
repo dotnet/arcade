@@ -102,40 +102,39 @@ fi
 # Signing
 if [ "$targets" == 'ios-device' ] || [ "$targets" == 'tvos-device' ]; then
     echo "Real device target detected, application will be signed"
-    
-    if [ ! -e "./Entitlements.plist" ]; then
-        echo "Missing Entitlements.plist file!"
-        exit 20
+
+    provisioning_profile="$app/embedded.mobileprovision"
+    if [ ! -f "$provisioning_profile" ]; then
+        echo "No embedded provisioning profile found at $provisioning_profile! Failed to sign the app!"
+        exit 21
     fi
 
+    # Unlock the keychain with certs
     keychain_name='signing-certs.keychain-db'
     keychain_password=$(cat ~/.config/keychain)
-
-    set +e
 
     security list-keychains | grep "$keychain_name"
     result=$?
     if [ $result != 0 ]; then
         echo "Keychain '$keychain_name' was not found"
-        exit 21
+        exit 22
     fi
 
     security find-identity -vp codesigning "$keychain_name" | grep " 0 valid identities found"
     result=$?
     if [ $result == 0 ]; then
         echo "No valid signing identities found in the keychain"
-        exit 22
+        exit 23
     fi
-
-    set -e
 
     security unlock-keychain -p "$keychain_password" "$keychain_name"
 
-    if [ ! -f "$app/embedded.mobileprovision" ]; then
-        echo "Warning: no embedded provisioinig profile found, app signature might fail when deploying to the device"
-    fi
+    # Generate entitlements file
+    security cms -D -i "$provisioning_profile" > provision.plist
+    /usr/libexec/PlistBuddy -x -c 'Print :Entitlements' provision.plist > entitlements.plist
 
-    /usr/bin/codesign -v --force --sign "Apple Development" --keychain "$keychain_name" --entitlements "./Entitlements.plist" "$app"
+    # Sign the app
+    /usr/bin/codesign -v --force --sign "Apple Development" --keychain "$keychain_name" --entitlements entitlements.plist "$app"
 else
     # Start the simulator if it is not running already
     simulator_app="$xcode_path/Contents/Developer/Applications/Simulator.app"
