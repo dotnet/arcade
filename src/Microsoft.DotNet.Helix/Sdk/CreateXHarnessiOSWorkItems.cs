@@ -32,6 +32,11 @@ namespace Microsoft.DotNet.Helix.Sdk
         public string XcodeVersion { get; set; }
 
         /// <summary>
+        /// Path to the provisioning profile that will be used to sign the app (in case of real device targets).
+        /// </summary>
+        public string ProvisioningProfilePath { get; set; }
+
+        /// <summary>
         /// The main method of this MSBuild task which calls the asynchronous execution method and
         /// collates logged errors in order to determine the success of HelixWorkItems
         /// </summary>
@@ -85,6 +90,14 @@ namespace Microsoft.DotNet.Helix.Sdk
                 return null;
             }
 
+            bool isDeviceTarget = targets.Contains("device");
+            string provisioningProfileDest = Path.Combine(appFolderPath, "embedded.mobileprovision");
+            if (isDeviceTarget && string.IsNullOrEmpty(ProvisioningProfilePath) && !File.Exists(provisioningProfileDest))
+            {
+                Log.LogError("ProvisioningProfilePath parameter not set but required for real device targets!");
+                return null;
+            }
+
             // Optional timeout for the how long it takes for the app to be installed, booted and tests start executing
             TimeSpan launchTimeout = TimeSpan.FromMinutes(DefaultLaunchTimeoutInMinutes);
             if (appBundleItem.TryGetMetadata(LaunchTimeoutPropName, out string launchTimeoutProp))
@@ -108,6 +121,19 @@ namespace Microsoft.DotNet.Helix.Sdk
             if (includesTestRunner && expectedExitCode != 0)
             {
                 Log.LogWarning("The ExpectedExitCode property is ignored in the `ios test` scenario");
+            }
+
+            if (isDeviceTarget)
+            {
+                if (!File.Exists(provisioningProfileDest))
+                {
+                    Log.LogMessage("Adding provisioning profile into the app bundle");
+                    File.Copy(ProvisioningProfilePath, provisioningProfileDest);
+                }
+                else
+                {
+                    Log.LogMessage("Bundle already contains a provisioning profile");
+                }
             }
 
             string appName = Path.GetFileName(appBundleItem.ItemSpec);

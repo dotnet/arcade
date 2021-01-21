@@ -104,14 +104,16 @@
           BeforeTargets="CoreTest">
     <DownloadFile SourceUrl="$(XHarnessAppleProvisioningProfileUrl)"
                   Condition=" '$(XHarnessAppleProvisioningProfileUrl)' != '' "
-                  DestinationFolder="@(XHarnessAppBundleToTest)"
-                  DestinationFileName="embedded.mobileprovision"
+                  DestinationFolder="$(ArtifactsTmpDir)"
                   SkipUnchangedFiles="True"
-                  Retries="5" />
+                  Retries="5">
+      <Output TaskParameter="DownloadedFile" ItemName="_XHarnessProvisioningProfile" />
+    </DownloadFile>
 
     <CreateXHarnessiOSWorkItems AppBundles="@(XHarnessAppBundleToTest)"
                                 IsPosixShell="$(IsPosixShell)"
-                                XcodeVersion="$(XHarnessXcodeVersion)">
+                                XcodeVersion="$(XHarnessXcodeVersion)"
+                                ProvisioningProfilePath="@(_XHarnessProvisioningProfile)">
       <Output TaskParameter="WorkItems" ItemName="HelixWorkItem"/>
     </CreateXHarnessiOSWorkItems>
   </Target>
