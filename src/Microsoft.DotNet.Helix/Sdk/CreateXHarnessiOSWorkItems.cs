@@ -129,7 +129,7 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             string appName = Path.GetFileName(appBundleItem.ItemSpec);
             string command = GetHelixCommand(appName, targets, testTimeout, launchTimeout, includesTestRunner, expectedExitCode);
-            string payloadArchivePath = await CreateZipArchiveOfFolder(appFolderPath, appName, isDeviceTarget);
+            string payloadArchivePath = await CreateZipArchiveOfFolder(appFolderPath);
 
             Log.LogMessage($"Creating work item with properties Identity: {workItemName}, Payload: {appFolderPath}, Command: {command}");
 
@@ -155,7 +155,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             (!string.IsNullOrEmpty(XcodeVersion) ? $" --xcode-version \"{XcodeVersion}\"" : string.Empty) +
             (!string.IsNullOrEmpty(AppArguments) ? $" --app-arguments \"{AppArguments}\"" : string.Empty);
 
-        private async Task<string> CreateZipArchiveOfFolder(string folderToZip, string appName, bool isDeviceTarget)
+        private async Task<string> CreateZipArchiveOfFolder(string folderToZip)
         {
             if (!Directory.Exists(folderToZip))
             {
@@ -178,12 +178,6 @@ namespace Microsoft.DotNet.Helix.Sdk
             Log.LogMessage($"Adding the Helix job payload scripts into the ziparchive");
             await AddResourceFileToPayload(outputZipPath, EntryPointScriptName);
             await AddResourceFileToPayload(outputZipPath, RunnerScriptName);
-
-            if (isDeviceTarget && !string.IsNullOrEmpty(ProvisioningProfilePath))
-            {
-                using var stream = new FileStream(ProvisioningProfilePath, FileMode.Open);
-                await AddToPayloadArchive(outputZipPath, $"{appName}/embedded.mobileprovision", stream);
-            }
 
             return outputZipPath;
         }
