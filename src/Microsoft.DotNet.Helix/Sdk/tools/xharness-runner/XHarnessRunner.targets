@@ -111,9 +111,7 @@
 
     <CreateXHarnessiOSWorkItems AppBundles="@(XHarnessAppBundleToTest)"
                                 IsPosixShell="$(IsPosixShell)"
-                                XcodeVersion="$(XHarnessXcodeVersion)"
-                                AppleTeamIdentifier="$(XHarnessAppleTeamIdentifier)"
-                                ProvisioningProfilePath="@(_XHarnessProvisioningProfile)">
+                                XcodeVersion="$(XHarnessXcodeVersion)">
       <Output TaskParameter="WorkItems" ItemName="HelixWorkItem"/>
     </CreateXHarnessiOSWorkItems>
   </Target>

@@ -32,16 +32,6 @@ namespace Microsoft.DotNet.Helix.Sdk
         public string XcodeVersion { get; set; }
 
         /// <summary>
-        /// ID of the team who's certificate is used for signing (in case of real device targets).
-        /// </summary>
-        public string AppleTeamIdentifier { get; set; }
-
-        /// <summary>
-        /// Path to the provisioning profile that will be used to sign the app (in case of real device targets).
-        /// </summary>
-        public string ProvisioningProfilePath { get; set; }
-
-        /// <summary>
         /// The main method of this MSBuild task which calls the asynchronous execution method and
         /// collates logged errors in order to determine the success of HelixWorkItems
         /// </summary>
@@ -92,13 +82,6 @@ namespace Microsoft.DotNet.Helix.Sdk
             {
                 Log.LogError("'Targets' metadata must be specified - " +
                     "expecting list of target device/simulator platforms to execute tests on (e.g. ios-simulator-64)");
-                return null;
-            }
-
-            bool isDeviceTarget = targets.Contains("device");
-            if (isDeviceTarget && string.IsNullOrEmpty(AppleTeamIdentifier))
-            {
-                Log.LogError("AppleTeamIdentifier task parameter not set but required for real device targets!");
                 return null;
             }
 
