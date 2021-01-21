@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 using System.IO.Compression;
-using System.Text;
+using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.Build.Framework;
 using Newtonsoft.Json;
@@ -97,13 +97,8 @@ namespace Microsoft.DotNet.Helix.Sdk
 
         protected async Task AddResourceFileToPayload(string payloadArchivePath, string resourceFileName, string targetFileName = null)
         {
-            string content = await GetResourceFileContent(resourceFileName);
-            await AddToPayloadArchive(payloadArchivePath, targetFileName ?? resourceFileName, content);
-        }
-
-        protected Task AddToPayloadArchive(string payloadArchivePath, string targetFilename, string content)
-        {
-            return AddToPayloadArchive(payloadArchivePath, targetFilename, new MemoryStream(Encoding.UTF8.GetBytes(content)));
+            using Stream fileStream = GetResourceFileContent(resourceFileName);
+            await AddToPayloadArchive(payloadArchivePath, targetFileName ?? resourceFileName, fileStream);
         }
 
         protected async Task AddToPayloadArchive(string payloadArchivePath, string targetFilename, Stream content)
@@ -111,16 +106,14 @@ namespace Microsoft.DotNet.Helix.Sdk
             using FileStream archiveStream = new FileStream(payloadArchivePath, FileMode.Open);
             using ZipArchive archive = new ZipArchive(archiveStream, ZipArchiveMode.Update);
             ZipArchiveEntry entry = archive.CreateEntry(targetFilename);
-            using var targetStream = entry.Open();
+            using Stream targetStream = entry.Open();
             await content.CopyToAsync(targetStream);
         }
 
-        protected static async Task<string> GetResourceFileContent(string resourceFileName)
+        protected static Stream GetResourceFileContent(string resourceFileName)
         {
-            var thisAssembly = typeof(CreateXHarnessiOSWorkItems).Assembly;
-            using Stream fileStream = thisAssembly.GetManifestResourceStream($"{thisAssembly.GetName().Name}.tools.xharness_runner.{resourceFileName}");
-            using var reader = new StreamReader(fileStream);
-            return await reader.ReadToEndAsync();
+            Assembly thisAssembly = typeof(CreateXHarnessiOSWorkItems).Assembly;
+            return thisAssembly.GetManifestResourceStream($"{thisAssembly.GetName().Name}.tools.xharness_runner.{resourceFileName}");
         }
     }
 }
