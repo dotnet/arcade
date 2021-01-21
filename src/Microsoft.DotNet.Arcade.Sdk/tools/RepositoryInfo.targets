@@ -9,6 +9,13 @@
     <PackageReference Include="Microsoft.SourceLink.AzureRepos.Git" Version="$(MicrosoftSourceLinkVersion)" PrivateAssets="all" IsImplicitlyDefined="true" />
   </ItemGroup>
 
+  <!-- Opt-in switch to disable source link (i.e. for local builds). -->
+  <PropertyGroup Condition="'$(DisableSourceLink)' == 'true'">
+    <EnableSourceLink>false</EnableSourceLink>
+    <EnableSourceControlManagerQueries>false</EnableSourceControlManagerQueries>
+    <DeterministicSourcePaths>false</DeterministicSourcePaths>
+  </PropertyGroup>
+
   <!--
     Set the SourceRoot to repo root to facilitate deterministic source paths when SCM queries are disabled.
     Set the RepositoryUrl to the Build.Repository.Uri Azure DevOps build variable if on CI, otherwise to local repo path.
