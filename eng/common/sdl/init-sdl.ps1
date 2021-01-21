@@ -25,6 +25,7 @@ $ProgressPreference = 'SilentlyContinue'
 $encodedPat = [Convert]::ToBase64String([System.Text.Encoding]::ASCII.GetBytes(":$AzureDevOpsAccessToken"))
 $escapedRepository = [Uri]::EscapeDataString("/$Repository/$BranchName/.gdn")
 $uri = "https://dev.azure.com/dnceng/internal/_apis/git/repositories/sdl-tool-cfg/Items?path=$escapedRepository&versionDescriptor[versionOptions]=0&`$format=zip&api-version=5.0"
+Write-Host $uri
 $zipFile = "$WorkingDirectory/gdn.zip"
 
 Add-Type -AssemblyName System.IO.Compression.FileSystem
