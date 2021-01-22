@@ -14,6 +14,10 @@ Please sit back and enjoy the moment of your career where you are actually asked
 These prerequisites are required for a successful migration. If you're not sure about any of these, please reach out to **@dotnet/dnceng**.
 
 Please verify that you:
+- **Have announced the change in your repo by pinning an issue**
+  - Ideally say when it is going to take
+  - You can link the [official announcement](https://github.com/dotnet/announcements/issues/172)
+  - After you're done, you can either edit this or can create a new pinned issue saying the renaming has happened. This is up to you. Additionally, GitHub will also display a banner on the homepage of the repo once the change happens
 - Know whether your repo is part of the [Maestro/darc dependency flow](https://github.com/dotnet/arcade/blob/master/Documentation/DependencyFlowOnboarding.md)
   - If so, have the [`darc`](https://github.com/dotnet/arcade/blob/master/Documentation/Darc.md) command installed, updated and authenticated
   - Make sure tokens set using `darc authenticate` are still valid ([details at Darc.md#authenticate](https://github.com/dotnet/arcade/blob/master/Documentation/Darc.md#authenticate))
