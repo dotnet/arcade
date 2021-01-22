@@ -50,6 +50,7 @@
     <Dependency Name="Microsoft.SourceLink.GitHub" Version="1.1.0-beta-21069-03">
       <Uri>https://github.com/dotnet/sourcelink</Uri>
       <Sha>0f3cb283e81fbdc930f0c7f7e52e5bc396d06a86</Sha>
+      <SourceBuild RepoName="sourcelink" ManagedOnly="true" />
     </Dependency>
     <Dependency Name="Microsoft.SourceLink.AzureRepos.Git" Version="1.1.0-beta-21069-03">
       <Uri>https://github.com/dotnet/sourcelink</Uri>
@@ -66,6 +67,11 @@
     <Dependency Name="XliffTasks" Version="1.0.0-beta.21071.1">
       <Uri>https://github.com/dotnet/xliff-tasks</Uri>
       <Sha>e1e91c0934e46e11b87574e619905c090213761b</Sha>
+    </Dependency>
+    <Dependency Name="Microsoft.SourceBuild.Intermediate.source-build-reference-packages" Version="5.0.0-alpha.1.20473.1">
+      <Uri>https://github.com/dotnet/source-build-reference-packages</Uri>
+      <Sha>def2e2c6dc5064319250e2868a041a3dc07f9579</Sha>
+      <SourceBuild RepoName="source-build-reference-packages" ManagedOnly="true" />
     </Dependency>
   </ToolsetDependencies>
 </Dependencies>
