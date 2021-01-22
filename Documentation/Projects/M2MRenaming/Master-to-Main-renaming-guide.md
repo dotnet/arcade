@@ -14,8 +14,9 @@ Please sit back and enjoy the moment of your career where you are actually asked
 These prerequisites are required for a successful migration. If you're not sure about any of these, please reach out to **@dotnet/dnceng**.
 
 Please verify that you:
+- Ideally have skimmed through this guide beforehand to get an idea of what needs to happen
 - **Have announced the change in your repo by pinning an issue**
-  - Ideally say when it is going to take
+  - Ideally say when it is going to happen
   - You can link the [official announcement](https://github.com/dotnet/announcements/issues/172)
   - After you're done, you can either edit this or can create a new pinned issue saying the renaming has happened. This is up to you. Additionally, GitHub will also display a banner on the homepage of the repo once the change happens
 - Know whether your repo is part of the [Maestro/darc dependency flow](https://github.com/dotnet/arcade/blob/master/Documentation/DependencyFlowOnboarding.md)
@@ -38,7 +39,6 @@ Please verify that you:
   - These can be some custom build scripts, documentation, makefiles...
      > Please note that GitHub has a new feature that will try to redirect you to the default branch for certain 404s,
      > e.g. https://github.com/dotnet/efcore/blob/master/README.md will lead to the `README.md` on the default `release/5.0` branch
-- Ideally skim through this guide beforehand to get an idea of what needs to happen
 
 # How long will this take?
 
@@ -48,9 +48,9 @@ The amount of custom work needed for your repository because of internal referen
 Our experience shows that **you should reserver 1 to 4 hours for this**.
 
 The steps that require changes are:
-- [step 2](#2-add-main-triggers-to-yaml-pipelines) and [step 6](#6-search-your-repository-for-any-references-to-the-main-branch-specific-to-your-repo) require changes to your repository,
-- [step 3](#3-update-the-the-build-mirroring-in-subscriptionsjson) requires a change to the [`dotnet/versions`](https://github.com/dotnet/versions) repo for which you will need an approval of someone from **@dotnet/dnceng**,
-- [step 11](#11-remove-the-master-branch-triggers-from-your-yaml-pipelines) is a clean-up step in your repo.
+- [Step 2](#2-add-main-triggers-to-yaml-pipelines) and [step 6](#6-search-your-repository-for-any-references-to-the-main-branch-specific-to-your-repo) inside of your GitHub repository,
+- [Step 3](#3-update-the-the-build-mirroring-in-subscriptionsjson) requires a change to the [`dotnet/versions`](https://github.com/dotnet/versions) repo for which you will need an approval of someone from **@dotnet/dnceng**,
+- [Step 11](#11-remove-the-master-branch-triggers-from-your-yaml-pipelines) is a clean-up step in your repo and can happen after.
 
 We recommend:
 - Prepare PRs for these steps beforehand
@@ -214,7 +214,7 @@ Search your repository for any references to the `master` branch specific to you
     ```
     grep -r master . | grep -v "^\./\(\.git\|eng/common\)"
     ```
-- There also might be references **to your repo from other repos**. You don't have to worry about these much as GitHub will redirect all links automatically (see [FAQ / What happens to links to files in my repo](#what-happens-to-links-to-files-in-my-repo)). Ideally take care of those at the end of this guide.
+- There also might be references **to your repo from other repos**. You don't have to worry about these much as GitHub will redirect all links automatically (see [FAQ / What happens to links to files in my repo](#what-happens-to-links-to-files-in-my-repo)). Ideally take care of those at the end of this guide
 
 ## 7. Use a `darc` script to migrate channels and subscriptions
 ![Maestro enabled](images/maestro-enabled.png)
