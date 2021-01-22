@@ -14,6 +14,11 @@ Please sit back and enjoy the moment of your career where you are actually asked
 These prerequisites are required for a successful migration. If you're not sure about any of these, please reach out to **@dotnet/dnceng**.
 
 Please verify that you:
+- Ideally have skimmed through this guide beforehand to get an idea of what needs to happen
+- **Have announced the change in your repo by pinning an issue**
+  - Ideally say when it is going to happen
+  - You can link the [official announcement](https://github.com/dotnet/announcements/issues/172)
+  - After you're done, you can either edit this or can create a new pinned issue saying the renaming has happened. This is up to you. Additionally, GitHub will also display a banner on the homepage of the repo once the change happens
 - Know whether your repo is part of the [Maestro/darc dependency flow](https://github.com/dotnet/arcade/blob/master/Documentation/DependencyFlowOnboarding.md)
   - If so, have the [`darc`](https://github.com/dotnet/arcade/blob/master/Documentation/Darc.md) command installed, updated and authenticated
   - Make sure tokens set using `darc authenticate` are still valid ([details at Darc.md#authenticate](https://github.com/dotnet/arcade/blob/master/Documentation/Darc.md#authenticate))
@@ -35,6 +40,24 @@ Please verify that you:
      > Please note that GitHub has a new feature that will try to redirect you to the default branch for certain 404s,
      > e.g. https://github.com/dotnet/efcore/blob/master/README.md will lead to the `README.md` on the default `release/5.0` branch
 
+# How long will this take?
+
+The actions in the steps themselves are mostly matters of a minute or so.
+However, some steps require changes to some repositories and the overall time spent on this depends on how long your PR builds and your CI take.
+The amount of custom work needed for your repository because of internal references and dependencies on master can vary for each repository.
+Our experience shows that **you should reserver 1 to 4 hours for this**.
+
+The steps that require changes are:
+- [Step 2](#2-add-main-triggers-to-yaml-pipelines) and [step 6](#6-search-your-repository-for-any-references-to-the-main-branch-specific-to-your-repo) inside of your GitHub repository,
+- [Step 3](#3-update-the-the-build-mirroring-in-subscriptionsjson) requires a change to the [`dotnet/versions`](https://github.com/dotnet/versions) repo for which you will need an approval of someone from **@dotnet/dnceng**,
+- [Step 11](#11-remove-the-master-branch-triggers-from-your-yaml-pipelines) is a clean-up step in your repo and can happen after.
+
+We recommend:
+- Prepare PRs for these steps beforehand
+- Ideally, get the `dotnet/versions` repo pre-approved as you won't be able to do it yourself (most likely)
+
+
+> Please not that [step 5](#5-change-the-default-branch-to-main-for-your-github-repository) will re-trigger all PR builds on all open PRs.
 
 ## Step labels
 
@@ -66,7 +89,8 @@ All of the steps are easily revert-able, so it is not a problem to go back to `m
 10. [Delete the `master` branch of the AzDO repository](#10-delete-the-master-branch-of-the-azdo-repository)
 11. [Remove the `master` branch triggers from your YAML pipelines](#11-remove-the-master-branch-triggers-from-your-yaml-pipelines)
 12. [Configure **Component Governance** to track the `main` branch](#12-configure-component-governance-to-track-the-main-branch)
-13. [FAQ](#faq)
+13. [Fix AzDO dashboards](#13-fix-any-azdo-dashboards-based-off-of-the-pipelines--repository)
+14. [FAQ](#faq)
 
 ## 1. Disable Maestro subscriptions
 ![Maestro enabled](images/maestro-enabled.png)
@@ -165,8 +189,9 @@ This will effectively disable code mirroring.
 > * Automation updates target branch in all PRs.
 > * GitHub raw links are automatically redirected. For example link https://raw.githubusercontent.com/dotnet/xharness/master/README.md still works even after rename and is equivalent to link https://raw.githubusercontent.com/dotnet/xharness/main/README.md.
 
-
 > **Warning:** The `master` branch will be deleted during this step!
+
+> **Warning:** This step will re-trigger all PR builds on all open PRs.
 
 1. Navigate to your repository: `https://github.com/dotnet/[REPO NAME]`
 2. In case you don't see settings tab, you don't have sufficient permissions and won't be able to proceed (please check the [prerequisites](#prerequisites))
@@ -189,6 +214,7 @@ Search your repository for any references to the `master` branch specific to you
     ```
     grep -r master . | grep -v "^\./\(\.git\|eng/common\)"
     ```
+- There also might be references **to your repo from other repos**. You don't have to worry about these much as GitHub will redirect all links automatically (see [FAQ / What happens to links to files in my repo](#what-happens-to-links-to-files-in-my-repo)). Ideally take care of those at the end of this guide
 
 ## 7. Use a `darc` script to migrate channels and subscriptions
 ![Maestro enabled](images/maestro-enabled.png)
@@ -213,7 +239,7 @@ Search your repository for any references to the `master` branch specific to you
 
 - Do this for [public](https://dev.azure.com/dnceng/public) and [internal](https://dev.azure.com/dnceng/internal) projects
 - Do this for all pipelines that are based off a YAML in the repo that you are working with
-- You can use [this script](https://github.com/dotnet/arcade/blob/master/scripts/list-repo-pipelines.ps1) to list all pipelines associated with a given repo:
+- You can use [this script](https://raw.githubusercontent.com/dotnet/arcade/master/scripts/list-repo-pipelines.ps1) to list all pipelines associated with a given repo:
   > ```ps
   > .\list-repo-pipelines.ps1 -GitHubRepository "[GH REPO NAME]" -AzDORepository "[AZDO REPO NAME]" -PAT "[TOKEN]"
   > ```
@@ -309,6 +335,11 @@ Go to the internal AzDO mirror of your repository and configure **Component Gove
 
 ![Component Governance](images/component-governance-1.png)
 ![Component Governance](images/component-governance-2.png)
+
+## 13. Fix any AzDO dashboards
+
+Fix any AzDO dashboards based off of the pipelines / repository.
+This can be done through the AzDO website in most cases.
 
 **You are now done with the migration!**
 
