@@ -60,6 +60,7 @@ namespace Microsoft.DotNet.SignCheck.Tests
             return dstPath;
         }
 
+#if NETFRAMEWORK
         [Fact]
         public void ValidateGetInputFilesFromOptionsEmptyList()
         {
@@ -181,5 +182,6 @@ namespace Microsoft.DotNet.SignCheck.Tests
             options.Verbosity.ToString().Should().Be(LoggerVerbosity.Diagnostic.ToString());
             options.VerifyStrongName.Should().BeTrue();
         }
+#endif
     }
 }

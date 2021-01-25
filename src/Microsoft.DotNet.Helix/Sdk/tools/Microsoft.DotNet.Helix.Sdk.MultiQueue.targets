@@ -47,7 +47,7 @@
   <Target Name="CoreTest">
     <MSBuild Projects="$(MSBuildProjectFile)"
              Targets="Test"
-             Properties="HelixTargetQueue=%(HelixTargetQueue.Identity);%(HelixTargetQueue.AdditionalProperties)"
+             Properties="HelixTargetQueue=%(HelixTargetQueue.Identity);XUnitRunnerArchitecture=%(HelixTargetQueue.XUnitRunnerArchitecture);%(HelixTargetQueue.AdditionalProperties)"
              BuildInParallel="$(BuildInParallel)">
       <Output TaskParameter="TargetOutputs" ItemName="SentJob" />
     </MSBuild>

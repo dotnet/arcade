@@ -2,11 +2,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>net472</TargetFrameworks>
-    <TargetFrameworkVersion>v4.7.2</TargetFrameworkVersion>
-    <TargetFrameworkIdentifier>.NETFramework</TargetFrameworkIdentifier>
     <LangVersion>Latest</LangVersion>
     <NoWarn>8002</NoWarn>
     <IsTestProject>true</IsTestProject>
+    <Platforms>x86</Platforms>
     <PlatformTarget Condition=" '$(PlatformTarget)' == '' ">x86</PlatformTarget>
   </PropertyGroup>
 

@@ -56,11 +56,19 @@
     </ItemGroup>
   </Target>
 
-  
   <Target Name="CreateXUnitWorkItems"
           Condition="'@(XUnitProject)' != ''"
-          BeforeTargets="CoreTest">    
-    <CreateXUnitWorkItems XUnitProjects="@(XUnitProject)" IsPosixShell="$(IsPosixShell)" XUnitArguments="$(XUnitArguments)" XUnitWorkItemTimeout="$(XUnitWorkItemTimeout)" DotNetCliVersion="$(DotNetCliVersion)">
+          BeforeTargets="CoreTest">
+    <PropertyGroup>
+      <_UseX86XUnitArchitecture>false</_UseX86XUnitArchitecture>
+      <_UseX86XUnitArchitecture Condition="'$(XUnitRunnerArchitecture)' == 'x86'">true</_UseX86XUnitArchitecture>
+    </PropertyGroup>
+    <ItemGroup>
+      <_XUnitProject Remove="@(_XUnitProject)" />
+      <_XUnitProject Include="@(XUnitProject)" Condition="'%(XUnitProject.HelixTargetQueue)' == '' and '%(XUnitProject.XUnitRunnerArchitecture)' == '$(XUnitRunnerArchitecture)'"/>
+      <_XUnitProject Include="@(XUnitProject)" Condition="'$(HelixTargetQueue)' == '%(XUnitProject.HelixTargetQueue)' and '%(XUnitProject.XUnitRunnerArchitecture)' == '$(XUnitRunnerArchitecture)'" />
+    </ItemGroup>
+    <CreateXUnitWorkItems XUnitProjects="@(_XUnitProject)" IsPosixShell="$(IsPosixShell)" XUnitArguments="$(XUnitArguments)" XUnitWorkItemTimeout="$(XUnitWorkItemTimeout)" DotNetCliVersion="$(DotNetCliVersion)" UseX86XUnitArchitecture="$(_UseX86XUnitArchitecture)">
       <Output TaskParameter="XUnitWorkItems" ItemName="HelixWorkItem"/>
     </CreateXUnitWorkItems>
   </Target>

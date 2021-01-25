@@ -47,6 +47,8 @@ namespace Microsoft.DotNet.Helix.Sdk
 
         public string DotNetCliVersion { get; set; }
 
+        public bool UseX86XUnitArchitecture { get; set; }
+
         /// <summary>
         /// An array of ITaskItems of type HelixWorkItem
         /// </summary>
@@ -103,8 +105,13 @@ namespace Microsoft.DotNet.Helix.Sdk
             xunitProject.TryGetMetadata("Arguments", out string arguments);
 
             string assemblyName = Path.GetFileName(targetPath);
+            string x86Identifier = "";
+            if (UseX86XUnitArchitecture)
+            {
+                x86Identifier= ".x86";
+            }
             string driver = runtimeTargetFramework.Contains("core") ? $"{PathToDotnet} exec " : "";
-            string runnerName = runtimeTargetFramework.Contains("core") ? "xunit.console.dll" : "xunit.console.exe";
+            string runnerName = runtimeTargetFramework.Contains("core") ? "xunit.console.dll" : $"xunit.console{ x86Identifier }.exe";
             string correlationPayload = IsPosixShell ? "$HELIX_CORRELATION_PAYLOAD" : "%HELIX_CORRELATION_PAYLOAD%";
             string xUnitRunner = $"{correlationPayload}/xunit-runner/tools/{runtimeTargetFramework}/{runnerName}";
 
