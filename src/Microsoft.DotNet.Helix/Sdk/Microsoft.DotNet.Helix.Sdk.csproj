@@ -37,6 +37,12 @@
     <EmbeddedResource Include="tools\xharness-runner\xharness-runner.ios.sh">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </EmbeddedResource>
+    <EmbeddedResource Include="tools\xharness-runner\xharness-helix-job.android.sh">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="tools\xharness-runner\xharness-helix-job.android.bat">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </EmbeddedResource>
   </ItemGroup>
 
   <Import Project="$(RepoRoot)eng\BuildTask.targets" />

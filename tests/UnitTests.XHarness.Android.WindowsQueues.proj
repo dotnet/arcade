@@ -4,8 +4,8 @@
 
   <!--
     This is a project used in integration tests of Arcade.
-    It tests sending iOS (XHarness) workloads using the Helix SDK.
-    It builds two mock projects that do not build iOS apps but only downloads them from a storage account.
+    It tests sending Android (XHarness) workloads using the Helix SDK to Windows-specific queues
+    It builds a mock project that does not build an APK directly but only downloads it from a storage account.
    -->
 
   <PropertyGroup>
@@ -22,18 +22,17 @@
     <HelixBaseUri>https://helix.dot.net</HelixBaseUri>
   </PropertyGroup>
 
-  <!-- Test project which builds app bundle to run via XHarness -->
+  <!-- New Test Projects which build packages to run through XHarness/XHarness go here -->
   <ItemGroup>
-    <XHarnessiOSProject Include="$(MSBuildThisFileDirectory)XHarness\XHarness.TestAppBundle.proj" />
-    <XHarnessiOSProject Include="$(MSBuildThisFileDirectory)XHarness\XHarness.RunAppBundle.proj" />
+    <XHarnessAndroidProject Include="$(MSBuildThisFileDirectory)XHarness/XHarness.TestApks.proj" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(HelixAccessToken)' != '' ">
-    <HelixTargetQueue Include="osx.1015.amd64"/>
+    <HelixTargetQueue Include="windows.10.amd64.android"/>
   </ItemGroup>
 
   <ItemGroup Condition=" '$(HelixAccessToken)' == '' ">
-    <HelixTargetQueue Include="osx.1015.amd64.open"/>
+    <HelixTargetQueue Include="windows.10.amd64.android.open" />
   </ItemGroup>
 
   <PropertyGroup Condition=" '$(HelixAccessToken)' == '' ">
@@ -46,7 +45,6 @@
   <PropertyGroup>
     <Language>msbuild</Language>
   </PropertyGroup>
-
   <Target Name="Pack"/>
 
   <!-- See UnitTests.proj in above folder for why this is included directly-from-repo -->

@@ -22,7 +22,8 @@
       <Targets>GetCompileItems</Targets>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
       <OutputItemType>ReferenceSources</OutputItemType>
-      <BuildReference Condition="'$(BuildingInsideVisualStudio)' == 'true'">false</BuildReference>
+      <!-- MSBuild ignores the Target name in these cases and invokes GetTargetPath, avoid that by disabling build -->
+      <BuildReference Condition="'$(BuildingInsideVisualStudio)' == 'true' or '$(BuildProjectReferences)' != 'true'">false</BuildReference>
     </ProjectReference>
   </ItemGroup>
 
@@ -41,7 +42,7 @@
       Projects="@(ProjectReference)"
       Targets="GetCompileItems"
       Properties="%(ProjectReference.SetTargetFramework)"
-      Condition="'%(ProjectReference.Identity)' == '$(ContractProject)' and '$(BuildingInsideVisualStudio)' == 'true'">
+      Condition="'%(ProjectReference.Targets)' == 'GetCompileItems' and ('$(BuildingInsideVisualStudio)' == 'true' or '$(BuildProjectReferences)' != 'true')">
       <Output TaskParameter="TargetOutputs" ItemName="ReferenceSources" />
     </MSBuild>
     

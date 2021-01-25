@@ -87,8 +87,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.NuGetRepac
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Build.Tasks.Feed.Tests", "src\Microsoft.DotNet.Build.Tasks.Feed.Tests\Microsoft.DotNet.Build.Tasks.Feed.Tests.csproj", "{6E19C6B6-4ADF-4DD6-86CC-6C1624BCDB71}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Build.Tasks.SharedFramework.Sdk", "src\Microsoft.DotNet.Build.Tasks.SharedFramework.Sdk\Microsoft.DotNet.Build.Tasks.SharedFramework.Sdk.csproj", "{62B929C4-3D15-4D43-AEFC-2D0BD3CFC20D}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Helix.JobSender.Tests", "src\Microsoft.DotNet.Helix\JobSender.Tests\Microsoft.DotNet.Helix.JobSender.Tests.csproj", "{3376C769-211F-4537-A156-5F841FF7840B}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.CMake.Sdk", "src\Microsoft.DotNet.CMake.Sdk\Microsoft.DotNet.CMake.Sdk.csproj", "{B1BFCB54-0FE7-4745-A471-2D7F21B5C7B9}"
