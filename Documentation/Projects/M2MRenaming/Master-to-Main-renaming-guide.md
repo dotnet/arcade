@@ -8,6 +8,35 @@ You can also use the [**First Responder** channel](https://teams.microsoft.com/l
 
 Please sit back and enjoy the moment of your career where you are actually asked to delete the master branch of your project.
 
+# Before you start
+
+Before you start the actual renaming, **please announce the change couple of days prior using a pinned issue in your repository**.
+
+Make sure to link the [official announcement](https://github.com/dotnet/announcements/issues/172).
+You can use this template:
+```md
+On <date> we're going to rename the default branch in this repository to main. For more details, see [our earlier announcement](https://github.com/dotnet/announcements/issues/172).”
+```
+
+Make also sure you go through the [prerequisites](#prerequisites) so that you have confidence you'll actually be able to migrate the repository once you get to it.
+
+# How long will this take?
+
+The actions in the steps themselves are mostly matters of a minute or so.
+However, some steps require changes to some repositories and the overall time spent on this depends on how long your PR builds and your CI take.
+The amount of custom work needed for your repository because of internal references and dependencies on master can vary for each repository.
+Our experience shows that **you should reserver 1 to 4 hours for this**.
+
+The steps that require changes are:
+- [Step 2](#2-add-main-triggers-to-yaml-pipelines) and [step 6](#6-search-your-repository-for-any-references-to-the-main-branch-specific-to-your-repo) inside of your GitHub repository,
+- [Step 3](#3-update-the-the-build-mirroring-in-subscriptionsjson) requires a change to the [`dotnet/versions`](https://github.com/dotnet/versions) repo for which you will need an approval of someone from **@dotnet/dnceng**,
+- [Step 11](#11-remove-the-master-branch-triggers-from-your-yaml-pipelines) is a clean-up step in your repo and can happen after.
+
+We recommend:
+- Prepare PRs for these steps beforehand
+- Ideally, get the `dotnet/versions` repo pre-approved as you won't be able to do it yourself (most likely)
+
+> Please note that [step 5](#5-change-the-default-branch-to-main-for-your-github-repository) will re-trigger all PR builds on all open PRs.
 
 # Prerequisites
 
@@ -40,24 +69,6 @@ Please verify that you:
   - These can be some custom build scripts, documentation, makefiles...
      > Please note that GitHub has a new feature that will try to redirect you to the default branch for certain 404s,
      > e.g. https://github.com/dotnet/efcore/blob/master/README.md will lead to the `README.md` on the default `release/5.0` branch
-
-# How long will this take?
-
-The actions in the steps themselves are mostly matters of a minute or so.
-However, some steps require changes to some repositories and the overall time spent on this depends on how long your PR builds and your CI take.
-The amount of custom work needed for your repository because of internal references and dependencies on master can vary for each repository.
-Our experience shows that **you should reserver 1 to 4 hours for this**.
-
-The steps that require changes are:
-- [Step 2](#2-add-main-triggers-to-yaml-pipelines) and [step 6](#6-search-your-repository-for-any-references-to-the-main-branch-specific-to-your-repo) inside of your GitHub repository,
-- [Step 3](#3-update-the-the-build-mirroring-in-subscriptionsjson) requires a change to the [`dotnet/versions`](https://github.com/dotnet/versions) repo for which you will need an approval of someone from **@dotnet/dnceng**,
-- [Step 11](#11-remove-the-master-branch-triggers-from-your-yaml-pipelines) is a clean-up step in your repo and can happen after.
-
-We recommend:
-- Prepare PRs for these steps beforehand
-- Ideally, get the `dotnet/versions` repo pre-approved as you won't be able to do it yourself (most likely)
-
-> Please note that [step 5](#5-change-the-default-branch-to-main-for-your-github-repository) will re-trigger all PR builds on all open PRs.
 
 ## Step labels
 
