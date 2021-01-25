@@ -18,6 +18,7 @@ Please verify that you:
 - **Have announced the change in your repo by pinning an issue**
   - Ideally say when it is going to happen
   - You can link the [official announcement](https://github.com/dotnet/announcements/issues/172)
+  - [Example issue](https://github.com/dotnet/aspnetcore/issues/29475)
   - After you're done, you can either edit this or can create a new pinned issue saying the renaming has happened. This is up to you. Additionally, GitHub will also display a banner on the homepage of the repo once the change happens
 - Know whether your repo is part of the [Maestro/darc dependency flow](https://github.com/dotnet/arcade/blob/master/Documentation/DependencyFlowOnboarding.md)
   - If so, have the [`darc`](https://github.com/dotnet/arcade/blob/master/Documentation/Darc.md) command installed, updated and authenticated
@@ -56,8 +57,7 @@ We recommend:
 - Prepare PRs for these steps beforehand
 - Ideally, get the `dotnet/versions` repo pre-approved as you won't be able to do it yourself (most likely)
 
-
-> Please not that [step 5](#5-change-the-default-branch-to-main-for-your-github-repository) will re-trigger all PR builds on all open PRs.
+> Please note that [step 5](#5-change-the-default-branch-to-main-for-your-github-repository) will re-trigger all PR builds on all open PRs.
 
 ## Step labels
 
@@ -191,7 +191,7 @@ This will effectively disable code mirroring.
 
 > **Warning:** The `master` branch will be deleted during this step!
 
-> **Warning:** This step will re-trigger all PR builds on all open PRs.
+> **Warning:** This step will re-trigger all PR builds on all PRs opened against master. If there is a large number of PRs (50+), please consider removing the branch trigger and then continuing here.
 
 1. Navigate to your repository: `https://github.com/dotnet/[REPO NAME]`
 2. In case you don't see settings tab, you don't have sufficient permissions and won't be able to proceed (please check the [prerequisites](#prerequisites))
@@ -214,6 +214,7 @@ Search your repository for any references to the `master` branch specific to you
     ```
     grep -r master . | grep -v "^\./\(\.git\|eng/common\)"
     ```
+- Consider also any code that is kept in sync using GitHub actions between repos, [such as this example](https://github.com/dotnet/aspnetcore/blob/main/.github/workflows/runtime-sync.yml).
 - There also might be references **to your repo from other repos**. You don't have to worry about these much as GitHub will redirect all links automatically (see [FAQ / What happens to links to files in my repo](#what-happens-to-links-to-files-in-my-repo)). Ideally take care of those at the end of this guide
 
 ## 7. Use a `darc` script to migrate channels and subscriptions
