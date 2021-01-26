@@ -16,12 +16,12 @@ exit_code=$?
 # This handles an issue where Simulators get reeaally slow and they start failing to install apps
 # The only solution is to reboot the machine, so we request a work item retry + MacOS reboot when this happens
 # 83 - timeout in installation
-# installation_timeout_exit_code=83
-# if [ $exit_code -eq $installation_timeout_exit_code ]; then
-#     # Since we run the payload script using launchctl, env vars are not set there and we have to do this part here
-#     "$HELIX_PYTHONPATH" -c "from helix.workitemutil import request_infra_retry; request_infra_retry('Retrying because iOS Simulator application install hung')"
-#     "$HELIX_PYTHONPATH" -c "from helix.workitemutil import request_reboot; request_reboot('Rebooting because iOS Simulator application install hung ')"
-#     exit $exit_code
-# fi
+installation_timeout_exit_code=83
+if [ $exit_code -eq $installation_timeout_exit_code ]; then
+    # Since we run the payload script using launchctl, env vars are not set there and we have to do this part here
+    "$HELIX_PYTHONPATH" -c "from helix.workitemutil import request_infra_retry; request_infra_retry('Retrying because iOS Simulator application install hung')"
+    "$HELIX_PYTHONPATH" -c "from helix.workitemutil import request_reboot; request_reboot('Rebooting because iOS Simulator application install hung ')"
+    exit $exit_code
+fi
 
 exit $exit_code

@@ -148,12 +148,12 @@ export XHARNESS_LOG_WITH_TIMESTAMPS=true
 # which come from outside and are appeneded behind "--" and forwarded to the iOS application from XHarness.
 # shellcheck disable=SC2086,SC2090
 dotnet exec "$xharness_cli_path" apple $command \
-    --app="$app"                              \
-    --output-directory="$output_directory"    \
-    --targets="$targets"                      \
-    --timeout="$timeout"                      \
-    --xcode="$xcode_path"                     \
-    -v                                        \
+    --app="$app"                                \
+    --output-directory="$output_directory"      \
+    --targets="$targets"                        \
+    --timeout="$timeout"                        \
+    --xcode="$xcode_path"                       \
+    -v                                          \
     $app_arguments
 
 exit_code=$?
