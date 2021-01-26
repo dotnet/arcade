@@ -22,7 +22,7 @@ This is automatically included as a Helix Correlation Payload for the job when X
 
 There are three main ways how to use XHarness through the Helix SDK:
 - Specify the apks/app bundles using the `XHarnessApkToTest` and `XHarnessAppBundleToTest` items as described below and everything will be taken care of from there. You no longer specify the `HelixCommand` to be executed. Each apk/app bundle will be processed as a separate Helix work item.
-- Specify the `XHarnessAndroidProject` or `XHarnessiOSProject` task items which will point to projects that produce apks/app bundles from their `Build` target.
+- Specify the `XHarnessAndroidProject` or `XHarnessAppleProject` task items which will point to projects that produce apks/app bundles from their `Build` target.
   - Examples - [iOS](https://github.com/dotnet/arcade/blob/master/tests/XHarness/XHarness.TestAppBundle.proj) and [Android](https://github.com/dotnet/arcade/blob/master/tests/XHarness/XHarness.TestApk.proj)
 - Only request the XHarness dotnet tool to be pre-installed for the Helix job for you and then call the XHarness tool yourself as shown below.
 
@@ -95,11 +95,11 @@ You can also specify some metadata that will help you configure the run better:
     <!-- Optional: Timeout for how long it takes to install and boot the app and start running the first test -->
     <LaunchTimeout>00:10:00</LaunchTimeout>
 
-    <!-- Optional (`ios run` command only): Expected exit code of the iOS/tvOS application. XHarness exits with 0 when the app exits with this code -->
+    <!-- Optional (`apple run` command only): Expected exit code of the iOS/tvOS application. XHarness exits with 0 when the app exits with this code -->
     <!-- Please note that exit code detection may not be reliable across iOS/tvOS versions -->
     <ExpectedExitCode>3</ExpectedExitCode>
     
-    <!-- Optional: For apps that don't contain unit tests, they can be run using the `ios run` command instead of `ios test` -->
+    <!-- Optional: For apps that don't contain unit tests, they can be run using the `apple run` command instead of `apple test` -->
     <!-- Default is true -->
     <IncludesTestRunner>false</IncludesTestRunner>
   </XHarnessAppBundleToTest>
