@@ -115,6 +115,16 @@ You can configure the execution further via MSBuild properties:
 </PropertyGroup>
 ```
 
+#### Targeting real iOS/tvOS devices
+
+To deploy an app bundle to a real device, the app bundle needs to be signed before the deployment.
+The Helix machines, that have devices attached to them, already contain the signing certificates and a provisioning profile will be downloaded as part of the job.
+
+When using the Helix SDK and targeting real devices:
+- You have to ideally supply a non-signed app bundle - the app will be signed for you on the Helix machine where your job gets executed
+- Only the basic set of app permissions are supported at the moment and we cannot re-sign an app that was already signed with a different set of permissions
+- Bundle id has to start with `net.dot.` since we only support those application IDs at the moment
+
 ### Android .apk payloads
 
 To execute .apks, declare one or more `XHarnessApkToTest` items:
