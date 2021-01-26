@@ -45,7 +45,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
                             retriesRemaining--;
                             if (retriesRemaining <= 0) {
                                 logger.Log(LogLevel.Error, "Encountered Connection Issue: " + e.ToString() + ", retries exhausted");
-                                throw e;
+                                throw;
                             }
                             logger.Log(LogLevel.Information, "Encountered Connection Issue: " + e.ToString() + ", retrying...");
                             // returns to start of while loop to retry after a delay

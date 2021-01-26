@@ -11,10 +11,10 @@ namespace Microsoft.DotNet.Helix.Sdk
     /// <summary>
     /// MSBuild custom task to create HelixWorkItems for provided iOS app bundle paths.
     /// </summary>
-    public class CreateXHarnessiOSWorkItems : XHarnessTaskBase
+    public class CreateXHarnessAppleWorkItems : XHarnessTaskBase
     {
-        private const string EntryPointScriptName = "xharness-helix-job.ios.sh";
-        private const string RunnerScriptName = "xharness-runner.ios.sh";
+        private const string EntryPointScriptName = "xharness-helix-job.apple.sh";
+        private const string RunnerScriptName = "xharness-runner.apple.sh";
         private const int DefaultLaunchTimeoutInMinutes = 10;
         private const string LaunchTimeoutPropName = "LaunchTimeout";
         private const string TargetsPropName = "Targets";

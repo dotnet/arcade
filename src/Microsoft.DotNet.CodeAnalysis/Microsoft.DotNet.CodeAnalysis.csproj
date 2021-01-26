@@ -12,6 +12,16 @@
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="$(MicrosoftCodeAnalysisCSharpVersion)" ExcludeAssets="analyzers" />
   </ItemGroup>
 
+  <!--
+    In the source-build tarball build, Microsoft.CodeAnalysis.CSharp has dependencies on old
+    versions of these packages due to repo build order. Override to lift them to the versions passed
+    in via DotNetPackageVersionPropsPath.
+  -->
+  <ItemGroup Condition="'$(DotNetBuildFromSource)' == 'true'">
+    <PackageReference Include="System.Collections.Immutable" Version="$(SystemCollectionsImmutableVersion)" />
+    <PackageReference Include="System.Reflection.Metadata" Version="$(SystemReflectionMetadataVersion)" />
+  </ItemGroup>
+
   <ItemGroup>
     <Content Include="build/*.*" PackagePath="build" />
     <Content Include="content/*.*" PackagePath="content" />

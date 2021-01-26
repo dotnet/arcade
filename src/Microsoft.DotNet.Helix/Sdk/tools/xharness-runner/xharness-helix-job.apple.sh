@@ -8,9 +8,9 @@
 
 set -x
 
-chmod +x xharness-runner.ios.sh
+chmod +x xharness-runner.apple.sh
 helix_runner_uid=$(id -u)
-sudo launchctl asuser "$helix_runner_uid" sh ./xharness-runner.ios.sh "$@"
+sudo launchctl asuser "$helix_runner_uid" sh ./xharness-runner.apple.sh "$@"
 exit_code=$?
 
 # This handles an issue where Simulators get reeaally slow and they start failing to install apps

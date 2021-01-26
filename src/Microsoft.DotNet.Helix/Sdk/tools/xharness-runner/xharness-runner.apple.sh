@@ -147,7 +147,7 @@ export XHARNESS_LOG_WITH_TIMESTAMPS=true
 # We include $app_arguments non-escaped and not arrayed because it might contain several extra arguments
 # which come from outside and are appeneded behind "--" and forwarded to the iOS application from XHarness.
 # shellcheck disable=SC2086,SC2090
-dotnet exec "$xharness_cli_path" ios $command \
+dotnet exec "$xharness_cli_path" apple $command \
     --app="$app"                              \
     --output-directory="$output_directory"    \
     --targets="$targets"                      \

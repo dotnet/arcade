@@ -63,6 +63,10 @@
           Condition="'@(ProjectReference)' != ''"
           BeforeTargets="AssignProjectConfiguration"
           DependsOnTargets="ResolvePackageDependenciesForBuild">
+    <PropertyGroup>
+      <_OriginalTargetFramework Condition="'$(_OriginalTargetFramework)' == ''">$(TargetFramework)</_OriginalTargetFramework>
+    </PropertyGroup>
+
     <MSBuild Projects="@(ProjectReference)"
              Targets="GetTargetFrameworks"
              BuildInParallel="$(BuildInParallel)"
@@ -72,9 +76,9 @@
       <Output TaskParameter="TargetOutputs" ItemName="_ProjectReferenceWithTargetFrameworks" />
     </MSBuild>
 
-    <PropertyGroup>
-      <_OriginalTargetFramework Condition="'$(_OriginalTargetFramework)' == ''">$(TargetFramework)</_OriginalTargetFramework>
-    </PropertyGroup>
+    <ItemGroup>
+      <_ProjectReferenceWithTargetFrameworks Include="@(ProjectReference->WithMetadataValue('SkipGetTargetFrameworkProperties', 'true'))" />
+    </ItemGroup>
 
     <ChooseBestP2PTargetFrameworkTask TargetFramework="$(_OriginalTargetFramework)"
                                       ProjectReferencesWithTargetFrameworks="@(_ProjectReferenceWithTargetFrameworks)"
@@ -84,8 +88,7 @@
     
     <ItemGroup>
       <ProjectReference Remove="@(ProjectReference)" />
-      <ProjectReference Include="@(_ProjectReferenceWithBestTargetFramework)"
-                        SkipGetTargetFrameworkProperties="true" />
+      <ProjectReference Include="@(_ProjectReferenceWithBestTargetFramework)" />
     </ItemGroup>
   </Target>
 
