@@ -25,7 +25,7 @@ Make also sure you go through the [prerequisites](#prerequisites) so that you ha
 The actions in the steps themselves are mostly matters of a minute or so.
 However, some steps require changes to some repositories and the overall time spent on this depends on how long your PR builds and your CI take.
 The amount of custom work needed for your repository because of internal references and dependencies on master can vary for each repository.
-Our experience shows that **you should reserver 1 to 4 hours for this**.
+Our experience shows that **you should reserve 1 to 4 hours for this**.
 
 The steps that require changes are:
 - [Step 2](#2-add-main-triggers-to-yaml-pipelines) and [step 6](#6-search-your-repository-for-any-references-to-the-main-branch-specific-to-your-repo) inside of your GitHub repository,
