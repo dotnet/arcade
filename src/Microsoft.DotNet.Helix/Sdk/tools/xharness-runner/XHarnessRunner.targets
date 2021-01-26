@@ -77,15 +77,15 @@
     </MSBuild>
   </Target>
 
-  <Target Name="BuildXHarnessiOSProjects"
-          Condition=" '@(XHarnessiOSProject)' != '' "
+  <Target Name="BuildXHarnessAppleProjects"
+          Condition=" '@(XHarnessAppleProject)' != '' "
           BeforeTargets="CoreBuild"
-          Outputs="%(XHarnessiOSProject.Identity)%(XHarnessiOSProject.AdditionalProperties)">
+          Outputs="%(XHarnessAppleProject.Identity)%(XHarnessAppleProject.AdditionalProperties)">
     <PropertyGroup>
-      <_CurrentXHarnessiOSProject>%(XHarnessiOSProject.Identity)</_CurrentXHarnessiOSProject>
-      <_CurrentAdditionalProperties>%(XHarnessiOSProject.AdditionalProperties)</_CurrentAdditionalProperties>
+      <_CurrentXHarnessAppleProject>%(XHarnessAppleProject.Identity)</_CurrentXHarnessAppleProject>
+      <_CurrentAdditionalProperties>%(XHarnessAppleProject.AdditionalProperties)</_CurrentAdditionalProperties>
     </PropertyGroup>
-    <MSBuild Projects="$(_CurrentXHarnessiOSProject)" Targets="Build" Properties="$(_CurrentAdditionalProperties)">
+    <MSBuild Projects="$(_CurrentXHarnessAppleProject)" Targets="Build" Properties="$(_CurrentAdditionalProperties)">
       <Output TaskParameter="TargetOutputs" ItemName="XHarnessAppBundleToTest" />
     </MSBuild>
   </Target>
@@ -99,14 +99,14 @@
     </CreateXHarnessAndroidWorkItems>
   </Target>
 
-  <Target Name="CreateiOSWorkItems"
+  <Target Name="CreateAppleWorkItems"
           Condition=" '@(XHarnessAppBundleToTest)' != '' "
           BeforeTargets="CoreTest">
-    <CreateXHarnessiOSWorkItems AppBundles="@(XHarnessAppBundleToTest)"
+    <CreateXHarnessAppleWorkItems AppBundles="@(XHarnessAppBundleToTest)"
                                 IsPosixShell="$(IsPosixShell)"
                                 XcodeVersion="$(XHarnessXcodeVersion)">
       <Output TaskParameter="WorkItems" ItemName="HelixWorkItem"/>
-    </CreateXHarnessiOSWorkItems>
+    </CreateXHarnessAppleWorkItems>
   </Target>
 
 </Project>
