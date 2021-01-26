@@ -121,9 +121,14 @@ Generate json data file describing Maestro migration, review it and disable all 
 
 ## 2. Add `main` triggers to YAML pipelines
 
+**Please read**
+Before you get on with this step, you should know, that once you change the default branch in your GitHub repository ([step 5](#5-change-the-default-branch-to-main-for-your-github-repository), all open PRs targeting `master` will be retargeted and all PR builds will be triggered again.
+This can cause a large strain on the engineering systems, so please consider the amount of opened pull requests in your repository.
+Please consider - based on the heaviness of your PR build and the number of PRs - whether you want to disable the PR builds for the time being or not.
+
 1. Find all YAML definitions of pipelines in your repository that are triggered by changes in the `master` branch
-2. Add the `main` branch (do not remove `master` yet)
-3. Then merge this change to the `master` of your GitHub repo
+2. Either add the `main` branch or not based on your assumption. Do not remove `master` yet!
+3. Merge this change to the `master` of your GitHub repo
 
 **Example:**
 
@@ -213,7 +218,6 @@ This will effectively disable code mirroring.
 
 ![Changing the default branch in GitHub](images/github-branch-rename-tool.png)
 
-
 ## 6. Search your repository for any references to the `main` branch specific to your repo
 
 Search your repository for any references to the `master` branch specific to your repo, replace them to `main` and push them to `main`.
@@ -273,7 +277,6 @@ The parameters can be used separately, GitHub listing doesn't require the token 
    ![Piepline triggers](images/pipeline-default-branch.png)
 5. Save the changes
    ![Pipeline triggers](images/save-pipeline.png)
-
 
 ## 9. Switch the default branch of the AzDO repository to `main`
 
