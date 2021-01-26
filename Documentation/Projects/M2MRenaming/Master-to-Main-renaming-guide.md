@@ -36,7 +36,7 @@ We recommend:
 - Prepare PRs for these steps beforehand
 - Ideally, get the `dotnet/versions` repo pre-approved as you won't be able to do it yourself (most likely)
 
-> Please note that [step 5](#5-change-the-default-branch-to-main-for-your-github-repository) will re-trigger all PR builds on all open PRs.
+> Please note that [step 5](#5-change-the-default-branch-to-main-for-your-github-repository) will retrigger all PR builds on all open PRs currently targeting the master branch.
 
 # Prerequisites
 
@@ -202,7 +202,7 @@ This will effectively disable code mirroring.
 
 > **Warning:** The `master` branch will be deleted during this step!
 
-> **Warning:** This step will re-trigger all PR builds on all PRs opened against master. If there is a large number of PRs (50+), please consider removing the branch trigger and then continuing here.
+> **Warning:** This step will retrigger all PR builds on all PRs opened against master. If there is a large number of PRs (50+), please consider removing the branch trigger and then continuing here.
 
 1. Navigate to your repository: `https://github.com/dotnet/[REPO NAME]`
 2. In case you don't see settings tab, you don't have sufficient permissions and won't be able to proceed (please check the [prerequisites](#prerequisites))
