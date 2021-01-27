@@ -8,6 +8,35 @@ You can also use the [**First Responder** channel](https://teams.microsoft.com/l
 
 Please sit back and enjoy the moment of your career where you are actually asked to delete the master branch of your project.
 
+# Before you start
+
+Before you start the actual renaming, **please announce the change couple of days prior using a pinned issue in your repository**.
+
+Make sure to link the [official announcement](https://github.com/dotnet/announcements/issues/172).
+You can use this template:
+```md
+On <date> we're going to rename the default branch in this repository to main. For more details, see [our earlier announcement](https://github.com/dotnet/announcements/issues/172).”
+```
+
+Make also sure you go through the [prerequisites](#prerequisites) so that you have confidence you'll actually be able to migrate the repository once you get to it.
+
+# How long will this take?
+
+The actions in the steps themselves are mostly matters of a minute or so.
+However, some steps require changes to some repositories and the overall time spent on this depends on how long your PR builds and your CI take.
+The amount of custom work needed for your repository because of internal references and dependencies on master can vary for each repository.
+Our experience shows that **you should reserve 1 to 4 hours for this**.
+
+The steps that require changes are:
+- [Step 2](#2-add-main-triggers-to-yaml-pipelines) and [step 6](#6-search-your-repository-for-any-references-to-the-main-branch-specific-to-your-repo) inside of your GitHub repository,
+- [Step 3](#3-update-the-the-build-mirroring-in-subscriptionsjson) requires a change to the [`dotnet/versions`](https://github.com/dotnet/versions) repo for which you will need an approval of someone from **@dotnet/dnceng**,
+- [Step 11](#11-remove-the-master-branch-triggers-from-your-yaml-pipelines) is a clean-up step in your repo and can happen after.
+
+We recommend:
+- Prepare PRs for these steps beforehand
+- Ideally, get the `dotnet/versions` repo pre-approved as you won't be able to do it yourself (most likely)
+
+> Please note that [step 5](#5-change-the-default-branch-to-main-for-your-github-repository) will retrigger all PR builds on all open PRs currently targeting the master branch.
 
 # Prerequisites
 
@@ -18,6 +47,7 @@ Please verify that you:
 - **Have announced the change in your repo by pinning an issue**
   - Ideally say when it is going to happen
   - You can link the [official announcement](https://github.com/dotnet/announcements/issues/172)
+  - [Example issue](https://github.com/dotnet/aspnetcore/issues/29475)
   - After you're done, you can either edit this or can create a new pinned issue saying the renaming has happened. This is up to you. Additionally, GitHub will also display a banner on the homepage of the repo once the change happens
 - Know whether your repo is part of the [Maestro/darc dependency flow](https://github.com/dotnet/arcade/blob/master/Documentation/DependencyFlowOnboarding.md)
   - If so, have the [`darc`](https://github.com/dotnet/arcade/blob/master/Documentation/Darc.md) command installed, updated and authenticated
@@ -39,25 +69,6 @@ Please verify that you:
   - These can be some custom build scripts, documentation, makefiles...
      > Please note that GitHub has a new feature that will try to redirect you to the default branch for certain 404s,
      > e.g. https://github.com/dotnet/efcore/blob/master/README.md will lead to the `README.md` on the default `release/5.0` branch
-
-# How long will this take?
-
-The actions in the steps themselves are mostly matters of a minute or so.
-However, some steps require changes to some repositories and the overall time spent on this depends on how long your PR builds and your CI take.
-The amount of custom work needed for your repository because of internal references and dependencies on master can vary for each repository.
-Our experience shows that **you should reserver 1 to 4 hours for this**.
-
-The steps that require changes are:
-- [Step 2](#2-add-main-triggers-to-yaml-pipelines) and [step 6](#6-search-your-repository-for-any-references-to-the-main-branch-specific-to-your-repo) inside of your GitHub repository,
-- [Step 3](#3-update-the-the-build-mirroring-in-subscriptionsjson) requires a change to the [`dotnet/versions`](https://github.com/dotnet/versions) repo for which you will need an approval of someone from **@dotnet/dnceng**,
-- [Step 11](#11-remove-the-master-branch-triggers-from-your-yaml-pipelines) is a clean-up step in your repo and can happen after.
-
-We recommend:
-- Prepare PRs for these steps beforehand
-- Ideally, get the `dotnet/versions` repo pre-approved as you won't be able to do it yourself (most likely)
-
-
-> Please not that [step 5](#5-change-the-default-branch-to-main-for-your-github-repository) will re-trigger all PR builds on all open PRs.
 
 ## Step labels
 
@@ -110,9 +121,14 @@ Generate json data file describing Maestro migration, review it and disable all 
 
 ## 2. Add `main` triggers to YAML pipelines
 
+**Please read**
+Before you get on with this step, you should know, that once you change the default branch in your GitHub repository ([step 5](#5-change-the-default-branch-to-main-for-your-github-repository), all open PRs targeting `master` will be retargeted and all PR builds will be triggered again.
+This can cause a large strain on the engineering systems, so please consider the amount of opened pull requests in your repository.
+Please consider - based on the heaviness of your PR build and the number of PRs - whether you want to disable the PR builds for the time being or not.
+
 1. Find all YAML definitions of pipelines in your repository that are triggered by changes in the `master` branch
-2. Add the `main` branch (do not remove `master` yet)
-3. Then merge this change to the `master` of your GitHub repo
+2. Either add the `main` branch or not based on your assumption. Do not remove `master` yet!
+3. Merge this change to the `master` of your GitHub repo
 
 **Example:**
 
@@ -191,7 +207,7 @@ This will effectively disable code mirroring.
 
 > **Warning:** The `master` branch will be deleted during this step!
 
-> **Warning:** This step will re-trigger all PR builds on all open PRs.
+> **Warning:** This step will retrigger all PR builds on all PRs opened against master. If there is a large number of PRs (50+), please consider removing the branch trigger and then continuing here.
 
 1. Navigate to your repository: `https://github.com/dotnet/[REPO NAME]`
 2. In case you don't see settings tab, you don't have sufficient permissions and won't be able to proceed (please check the [prerequisites](#prerequisites))
@@ -201,7 +217,6 @@ This will effectively disable code mirroring.
 6. Click `Rename branch` button to change the default branch to `main`
 
 ![Changing the default branch in GitHub](images/github-branch-rename-tool.png)
-
 
 ## 6. Search your repository for any references to the `main` branch specific to your repo
 
@@ -214,6 +229,7 @@ Search your repository for any references to the `master` branch specific to you
     ```
     grep -r master . | grep -v "^\./\(\.git\|eng/common\)"
     ```
+- Consider also any code that is kept in sync using GitHub actions between repos, [such as this example](https://github.com/dotnet/aspnetcore/blob/main/.github/workflows/runtime-sync.yml).
 - There also might be references **to your repo from other repos**. You don't have to worry about these much as GitHub will redirect all links automatically (see [FAQ / What happens to links to files in my repo](#what-happens-to-links-to-files-in-my-repo)). Ideally take care of those at the end of this guide
 
 ## 7. Use a `darc` script to migrate channels and subscriptions
@@ -261,7 +277,6 @@ The parameters can be used separately, GitHub listing doesn't require the token 
    ![Piepline triggers](images/pipeline-default-branch.png)
 5. Save the changes
    ![Pipeline triggers](images/save-pipeline.png)
-
 
 ## 9. Switch the default branch of the AzDO repository to `main`
 
