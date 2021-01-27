@@ -99,9 +99,47 @@ else
     xcode_path="/Applications/Xcode${xcode_version/./}.app"
 fi
 
-# Start the simulator if it is not running already
-simulator_app="$xcode_path/Contents/Developer/Applications/Simulator.app"
-open -a "$simulator_app"
+# Signing
+if [ "$targets" == 'ios-device' ] || [ "$targets" == 'tvos-device' ]; then
+    echo "Real device target detected, application will be signed"
+
+    provisioning_profile="$app/embedded.mobileprovision"
+    if [ ! -f "$provisioning_profile" ]; then
+        echo "No embedded provisioning profile found at $provisioning_profile! Failed to sign the app!"
+        exit 21
+    fi
+
+    # Unlock the keychain with certs
+    keychain_name='signing-certs.keychain-db'
+    keychain_password=$(cat ~/.config/keychain)
+
+    security list-keychains | grep "$keychain_name"
+    result=$?
+    if [ $result != 0 ]; then
+        echo "Keychain '$keychain_name' was not found"
+        exit 22
+    fi
+
+    security find-identity -vp codesigning "$keychain_name" | grep " 0 valid identities found"
+    result=$?
+    if [ $result == 0 ]; then
+        echo "No valid signing identities found in the keychain"
+        exit 23
+    fi
+
+    security unlock-keychain -p "$keychain_password" "$keychain_name"
+
+    # Generate entitlements file
+    security cms -D -i "$provisioning_profile" > provision.plist
+    /usr/libexec/PlistBuddy -x -c 'Print :Entitlements' provision.plist > entitlements.plist
+
+    # Sign the app
+    /usr/bin/codesign -v --force --sign "Apple Development" --keychain "$keychain_name" --entitlements entitlements.plist "$app"
+else
+    # Start the simulator if it is not running already
+    simulator_app="$xcode_path/Contents/Developer/Applications/Simulator.app"
+    open -a "$simulator_app"
+fi
 
 export XHARNESS_DISABLE_COLORED_OUTPUT=true
 export XHARNESS_LOG_WITH_TIMESTAMPS=true
@@ -110,12 +148,12 @@ export XHARNESS_LOG_WITH_TIMESTAMPS=true
 # which come from outside and are appeneded behind "--" and forwarded to the iOS application from XHarness.
 # shellcheck disable=SC2086,SC2090
 dotnet exec "$xharness_cli_path" apple $command \
-    --app="$app"                              \
-    --output-directory="$output_directory"    \
-    --targets="$targets"                      \
-    --timeout="$timeout"                      \
-    --xcode="$xcode_path"                     \
-    -v                                        \
+    --app="$app"                                \
+    --output-directory="$output_directory"      \
+    --targets="$targets"                        \
+    --timeout="$timeout"                        \
+    --xcode="$xcode_path"                       \
+    -v                                          \
     $app_arguments
 
 exit_code=$?
