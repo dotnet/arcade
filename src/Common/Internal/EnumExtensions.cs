@@ -21,8 +21,8 @@ internal static class EnumExtensions
             if (field != null)
             {
                 DescriptionAttribute attr = 
-                    Attribute.GetCustomAttribute(field, 
-                        typeof(DescriptionAttribute)) as DescriptionAttribute;
+                    Attribute.GetCustomAttribute(field, typeof(DescriptionAttribute)) as DescriptionAttribute;
+                    
                 if (attr != null)
                 {
                     return attr.Description;

@@ -314,7 +314,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 AkaMSGroupOwner = this.AkaMSGroupOwner,
                 AkaMsOwners = this.AkaMsOwners,
                 AkaMSTenant = this.AkaMSTenant,
-                BuildQuality = this.BuildQuality,
+                BuildQuality = this.BuildQuality
             };
         }
 
