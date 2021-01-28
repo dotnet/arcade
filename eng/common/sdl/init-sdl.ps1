@@ -21,19 +21,9 @@ $uri = "https://dev.azure.com/dnceng/internal/_apis/git/repositories/sdl-tool-cf
 $zipFile = "$WorkingDirectory/gdn.zip"
 
 Add-Type -AssemblyName System.IO.Compression.FileSystem
-$gdnFolder = (Join-Path $WorkingDirectory ".gdn")
-Try
-{
-  # We try to download the zip; if the request fails (e.g. the file doesn't exist), we catch it and init guardian instead
-  Write-Host "Downloading gdn folder from internal config repostiory..."
-  Invoke-WebRequest -Headers @{ "Accept"="application/zip"; "Authorization"="Basic $encodedPat" } -Uri $uri -OutFile $zipFile
-  if (Test-Path $gdnFolder) {
-    # Remove the gdn folder if it exists (it shouldn't unless there's too much caching; this is just in case)
-    Remove-Item -Force -Recurse $gdnFolder
-  }
-  [System.IO.Compression.ZipFile]::ExtractToDirectory($zipFile, $WorkingDirectory)
-  Write-Host $gdnFolder
-} Catch [System.Net.WebException] {
+$gdnFolder = (Join-Path $WorkingDirectory '.gdn')
+
+try {
   # if the folder does not exist, we'll do a guardian init and push it to the remote repository
   Write-Host "Initializing Guardian..."
   Write-Host "$GuardianCliLocation init --working-directory $WorkingDirectory --logger-level $GuardianLoggerLevel"
@@ -48,4 +38,10 @@ Try
     Write-Error "Guardian baseline failed with exit code $LASTEXITCODE."
   }
   & $(Join-Path $PSScriptRoot "push-gdn.ps1") -Repository $Repository -BranchName $BranchName -GdnFolder $gdnFolder -AzureDevOpsAccessToken $AzureDevOpsAccessToken -PushReason "Initialize gdn folder"
+  ExitWithExitCode 0
+}
+catch {
+  Write-Host $_.ScriptStackTrace
+  Write-PipelineTelemetryError -Force -Category 'Sdl' -Message $_
+  ExitWithExitCode 1
 }
