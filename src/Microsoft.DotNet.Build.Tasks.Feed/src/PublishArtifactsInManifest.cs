@@ -353,7 +353,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 SymWebToken = this.SymWebToken,
                 MsdlToken = this.MsdlToken,
                 SymbolPublishingExclusionsFile = this.SymbolPublishingExclusionsFile,
-                PublishSpecialClrFiles = this.PublishSpecialClrFiles
+                PublishSpecialClrFiles = this.PublishSpecialClrFiles,
+                BuildQuality = this.BuildQuality
             };
         }
     }
