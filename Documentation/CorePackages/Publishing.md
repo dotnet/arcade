@@ -505,8 +505,8 @@ TargetChannelConfig takes the following attributes
 | isInternal  | Publishing to an internal Channel or public channel | true or false  |
 | PublishingInfraVersion | Which version of the publishing infra can use this configuration. | Enum = All(0), Legacy(1), Latest(2), Next(3)  |
 | AkaMSChannelName | The name that should be used for creating Aka.ms links for this channel.  |   |
-| ShippingFeed | The URL (including the index.json suffix) of the *shipping* feed to be used for this channel. | https://github.com/dotnet/arcade/blob/master/Documentation/CorePackages/Publishing.md#which-feeds-does-arcade-infra-publish-to  | 
-| TransportFeed | The URL (including the index.json suffix) of the *transport* feed to be used for this channel. | https://github.com/dotnet/arcade/blob/master/Documentation/CorePackages/Publishing.md#which-feeds-does-arcade-infra-publish-to  | 
+| ShippingFeed | The URL (including the index.json suffix) of the *shipping* feed to be used for this channel. |   | 
+| TransportFeed | The URL (including the index.json suffix) of the *transport* feed to be used for this channel. |   | 
 | SymbolsFeed | The URL (including the index.json suffix) of the *symbols* feed to be used for this channel. |   | 
 | ChecksumsFeed | The URL (including the index.json suffix) where *checksums* should be published to. | FeedForChecksums for public channel, FeedInternalForChecksums for internal  | 
 | InstallersFeed | The URL (including the index.json suffix) where *installers* should be published to. | FeedForInstallers for public channel, FeedInternalForInstallers for internal channel   |
