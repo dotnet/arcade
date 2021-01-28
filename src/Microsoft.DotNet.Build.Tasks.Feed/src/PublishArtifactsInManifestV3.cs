@@ -135,6 +135,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     }
 
                     Log.LogMessage(MessageImportance.High, $"Publishing to this target channel: {targetChannelConfig}");
+                    Log.LogMessage(MessageImportance.High, $"Will be using short url: dotnet/{targetChannelConfig.AkaMSChannelName}/{BuildQuality}");
 
                     var targetFeedsSetup = new SetupTargetFeedConfigV3(
                         targetChannelConfig.IsInternal,

@@ -3,6 +3,7 @@ parameters:
   publishInstallersAndChecksums: true
   PromoteToChannelIds: ''
   symbolPublishingAdditionalParameters: ''
+  buildQuality: 'daily'
 
 jobs:
 - job: publish_assets
@@ -84,6 +85,7 @@ jobs:
           ${{ parameters.symbolPublishingAdditionalParameters}}
           /p:MsdlToken=$(microsoft-symbol-server-pat)
           /p:SymWebToken=$(symweb-symbol-server-pat)
+          /p:BuildQuality='${{ parameters.buildQuality }}'
 
     - template: /eng/common/templates/steps/publish-logs.yml
       parameters:
