@@ -59,6 +59,10 @@ stages:
         - checkout: self
           clean: true
         steps:
+        - task: OneLocBuild@2
+          inputs:
+            locProj: 'Localize/LocProject.json'
+            outDir: '$(Build.ArtifactStagingDirectory)/loc'
         - script: eng\common\cibuild.cmd
             -configuration $(_BuildConfig)
             -prepareMachine

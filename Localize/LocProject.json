@@ -1,0 +1,14 @@
+{
+    "Projects": [
+        {
+            "LanguageSet": "Azure_Languages",
+            "LocItems": [
+                {
+                    "SourceFile": "src\\Microsoft.DotNet.Arcade.Sdk.Tests\\testassets\\Resources\\TestStrings.resx",
+                    "CopyOption": "LangIDOnName",
+                    "OutputPath": "loc\\Microsoft.DotNet.Arcade.Sdk.Tests"
+                }
+            ]
+        }
+    ]
+}
