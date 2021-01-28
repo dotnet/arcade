@@ -6,7 +6,8 @@
     <PublishReadyToRunEmitSymbols>true</PublishReadyToRunEmitSymbols>
     <PublishReadyToRunShowWarnings>true</PublishReadyToRunShowWarnings>
     <AllowedOutputExtensionsInSymbolsPackageBuildOutputFolder>$(AllowedOutputExtensionsInSymbolsPackageBuildOutputFolder);.map;.dbg;.debug;.dwarf</AllowedOutputExtensionsInSymbolsPackageBuildOutputFolder>
-    <HostJsonTargetPath Condition="'$(HostJsonTargetPath)' == ''">runtimes/$(RuntimeIdentifier)/lib/$(TargetFramework)</HostJsonTargetPath>
+    <_DefaultHostJsonTargetPath>runtimes/$(RuntimeIdentifier)/lib/$(TargetFramework)</_DefaultHostJsonTargetPath>
+    <HostJsonTargetPath Condition="'$(HostJsonTargetPath)' == ''">$(_DefaultHostJsonTargetPath)</HostJsonTargetPath>
     <IncludeFallbacksInDepsFile Condition="'$(IncludeFallbacksInDepsFile)' == ''">false</IncludeFallbacksInDepsFile>
   </PropertyGroup>
 
@@ -159,12 +160,16 @@
   <Target Name="_GenerateSharedFrameworkDepsFile"
           DependsOnTargets="GetFilesToPackage"
           Condition="'$(PlatformPackageType)' == 'RuntimePack'">
+    <PropertyGroup>
+      <_TargetRootForFilesForDepsFile Condition="'$(HostJsonTargetPath)' == '$(_DefaultHostJsonTargetPath)'">runtimes/$(RuntimeIdentifier)</_TargetRootForFilesForDepsFile>
+      <_TargetRootForFilesForDepsFile Condition="'$(HostJsonTargetPath)' != '$(_DefaultHostJsonTargetPath)'">$(HostJsonTargetPath)</_TargetRootForFilesForDepsFile>
+    </PropertyGroup>
     <ItemGroup>
       <_FilesForDepsFile Include="@(FilesToPackage)"
                          Condition="'%(FilesToPackage.IsSymbolFile)' != 'true' and
                                     '%(FilesToPackage.PackOnly)' != 'true' and
                                     '%(FilesToPackage.ExcludeFromDataFiles)' != 'true' and
-                                    $([System.String]::new('%(FilesToPackage.TargetPath)').StartsWith('runtimes/$(RuntimeIdentifier)'))" />
+                                    $([System.String]::new('%(FilesToPackage.TargetPath)').StartsWith('$(_TargetRootForFilesForDepsFile)'))" />
     </ItemGroup>
     <GenerateSharedFrameworkDepsFile TargetFrameworkMoniker="$(TargetFrameworkMoniker)"
                                      RuntimeIdentifier="$(RuntimeIdentifier)"
