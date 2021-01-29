@@ -493,9 +493,9 @@ Under the `Publish Using Darc` job get the link to the newly queued build in the
 
 ### How to add a new channel to use V3 publishing?
 
-In the Microsoft.DotNet.Build.Task.Feed/src/Model/PublishingConstants.cs file, create a new TargetChannelConfig 
+Create the channel using [darc add-channel](https://github.com/dotnet/arcade/blob/master/Documentation/Darc.md#add-channel). Verify if the channel was created successfully using [darc get-channel](https://github.com/dotnet/arcade/blob/master/Documentation/Darc.md#get-channels) and get the channelId.
 
-Create the channel using [darc add-channel] (https://github.com/dotnet/arcade/blob/master/Documentation/Darc.md#add-channel)
+In the Microsoft.DotNet.Build.Task.Feed/src/Model/PublishingConstants.cs file, create a new TargetChannelConfig 
 
 TargetChannelConfig takes the following attributes
 
@@ -510,7 +510,7 @@ TargetChannelConfig takes the following attributes
 | SymbolsFeed | The URL (including the index.json suffix) of the *symbols* feed to be used for this channel. |   | 
 | ChecksumsFeed | The URL (including the index.json suffix) where *checksums* should be published to. | FeedForChecksums for public channel, FeedInternalForChecksums for internal  | 
 | InstallersFeed | The URL (including the index.json suffix) where *installers* should be published to. | FeedForInstallers for public channel, FeedInternalForInstallers for internal channel   |
-| SymbolTargetType | Publish to MSDL or SymWeb symbol server | PublicAndInternalSymbolTargets or InternalSymbolTargets |
+| SymbolTargetType | Publish to MSDL or SymWeb symbol server | PublicAndInternalSymbolTargets -publishes to both Msdl and SymWeb or InternalSymbolTargets - publishes only to SymWeb |
 
 ```
 Eg:
@@ -527,7 +527,7 @@ Publishing to General Testing channel : General Testing
                 FeedForChecksums,
                 FeedForInstallers,
                 PublicAndInternalSymbolTargets)
-```
+```C#
 
 
 ### Which feeds does Arcade infra publish to?
