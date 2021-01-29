@@ -491,6 +491,45 @@ The publishing logs are stored inside an Azure DevOps artifacts container named 
 
 Under the `Publish Using Darc` job get the link to the newly queued build in the [Maestro promotion pipeline](https://dnceng.visualstudio.com/internal/_build?definitionId=750). The publishing logs are stored inside an Azure DevOps artifacts container named `PostBuildLogs`. 
 
+### How to add a new channel to use V3 publishing?
+
+Create the channel using [darc add-channel](https://github.com/dotnet/arcade/blob/master/Documentation/Darc.md#add-channel). Verify if the channel was created successfully using [darc get-channel](https://github.com/dotnet/arcade/blob/master/Documentation/Darc.md#get-channels) and get the channelId.
+
+In the Microsoft.DotNet.Build.Task.Feed/src/Model/PublishingConstants.cs file, create a new TargetChannelConfig 
+
+TargetChannelConfig takes the following attributes
+
+| Params      |   Description             |  Value   |
+|-------------|---------------------------|----------|
+| ChannelId   | Id for channel to publish |          |
+| isInternal  | Publishing to an internal Channel or public channel | true or false  |
+| PublishingInfraVersion | Which version of the publishing infra can use this configuration. | Enum = All(0), Legacy(1), Latest(2), Next(3)  |
+| AkaMSChannelName | The name that should be used for creating Aka.ms links for this channel.  |   |
+| ShippingFeed | The URL (including the index.json suffix) of the *shipping* feed to be used for this channel. |   | 
+| TransportFeed | The URL (including the index.json suffix) of the *transport* feed to be used for this channel. |   | 
+| SymbolsFeed | The URL (including the index.json suffix) of the *symbols* feed to be used for this channel. |   | 
+| ChecksumsFeed | The URL (including the index.json suffix) where *checksums* should be published to. | FeedForChecksums for public channel, FeedInternalForChecksums for internal  | 
+| InstallersFeed | The URL (including the index.json suffix) where *installers* should be published to. | FeedForInstallers for public channel, FeedInternalForInstallers for internal channel   |
+| SymbolTargetType | Publish to MSDL or SymWeb symbol server | PublicAndInternalSymbolTargets -publishes to both Msdl and SymWeb or InternalSymbolTargets -publishes only to SymWeb |
+
+```C#
+Eg:
+Publishing to General Testing channel : General Testing
+
+            new TargetChannelConfig(
+                529,
+                false,
+                PublishingInfraVersion.All,
+                "generaltesting",
+                "https://pkgs.dev.azure.com/dnceng/public/_packaging/general-testing/nuget/v3/index.json",
+                "https://pkgs.dev.azure.com/dnceng/public/_packaging/general-testing/nuget/v3/index.json",
+                "https://pkgs.dev.azure.com/dnceng/public/_packaging/general-testing-symbols/nuget/v3/index.json",
+                FeedForChecksums,
+                FeedForInstallers,
+                PublicAndInternalSymbolTargets)
+```
+
+
 ### Which feeds does Arcade infra publish to?
 
 | Feed Name           | Intended Usage                                               |
