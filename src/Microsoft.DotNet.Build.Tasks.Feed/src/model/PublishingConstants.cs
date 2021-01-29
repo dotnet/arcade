@@ -41,11 +41,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             [Description("signed")]
             Signed,
 
-            [Description("latestRC")]
-            LatestRC,
+            [Description("validated")]
+            Validated,
 
-            [Description("latestReleased")]
-            LatestReleased
+            [Description("preview")]
+            Preview,
+
+            [Description("")]
+            GA
         }
 
         #region Target Channel Configs
