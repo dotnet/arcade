@@ -510,9 +510,9 @@ TargetChannelConfig takes the following attributes
 | SymbolsFeed | The URL (including the index.json suffix) of the *symbols* feed to be used for this channel. |   | 
 | ChecksumsFeed | The URL (including the index.json suffix) where *checksums* should be published to. | FeedForChecksums for public channel, FeedInternalForChecksums for internal  | 
 | InstallersFeed | The URL (including the index.json suffix) where *installers* should be published to. | FeedForInstallers for public channel, FeedInternalForInstallers for internal channel   |
-| SymbolTargetType | Publish to MSDL or SymWeb symbol server | PublicAndInternalSymbolTargets -publishes to both Msdl and SymWeb or InternalSymbolTargets - publishes only to SymWeb |
+| SymbolTargetType | Publish to MSDL or SymWeb symbol server | PublicAndInternalSymbolTargets -publishes to both Msdl and SymWeb or InternalSymbolTargets -publishes only to SymWeb |
 
-```
+```C#
 Eg:
 Publishing to General Testing channel : General Testing
 
@@ -521,13 +521,13 @@ Publishing to General Testing channel : General Testing
                 false,
                 PublishingInfraVersion.All,
                 "generaltesting",
-                "https://pkgs.dev.azure.com/dnceng/public/_packaging/general-testing/nuget/v3/index.json,
-                "https://pkgs.dev.azure.com/dnceng/public/_packaging/general-testing/nuget/v3/index.json,
+                "https://pkgs.dev.azure.com/dnceng/public/_packaging/general-testing/nuget/v3/index.json",
+                "https://pkgs.dev.azure.com/dnceng/public/_packaging/general-testing/nuget/v3/index.json",
                 "https://pkgs.dev.azure.com/dnceng/public/_packaging/general-testing-symbols/nuget/v3/index.json",
                 FeedForChecksums,
                 FeedForInstallers,
                 PublicAndInternalSymbolTargets)
-```C#
+```
 
 
 ### Which feeds does Arcade infra publish to?
