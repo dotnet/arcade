@@ -36,6 +36,7 @@ stages:
       enableMicrobuild: true
       enablePublishUsingPipelines: true
       enableSourceIndex: true
+      enableSourceBuild: true
       workspace:
         clean: all
       jobs:

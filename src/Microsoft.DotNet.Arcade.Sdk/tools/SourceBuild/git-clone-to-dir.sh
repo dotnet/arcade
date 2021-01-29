@@ -83,18 +83,46 @@ if [ ! -e "$destDir" ]; then
   mkdir -p "$destDir"
 
   if [ "${copyWip:-}" ]; then
-    echo "WIP copying is enabled"
     # Copy over changes that haven't been committed, for dev inner loop.
     # This gets changes (whether staged or not) but misses untracked files.
     stashCommit=$(cd "$sourceDir"; git stash create)
 
     if [ "$stashCommit" ]; then
-      echo "Created temporary stash $stashCommit to transfer WIP changes..."
+      echo "WIP changes detected: created temporary stash $stashCommit to transfer to inner repository..."
+    else
+      echo "No WIP changes detected..."
     fi
   fi
 
   echo "Creating empty clone at: $destDir"
-  git clone --no-checkout "$sourceDir" "$destDir"
+
+  shallowFile="$sourceDir/.git/shallow"
+
+  if [ -f "$shallowFile" ]; then
+    echo "Source repository is shallow..."
+    if [ "${stashCommit:-}" ]; then
+      echo "WIP stash is not supported in a shallow repository: aborting."
+      exit 1
+    fi
+
+    # If source repo is shallow, old versions of Git refuse to clone it to another directory. First,
+    # remove the 'shallow' file to trick Git into allowing the clone.
+    shallowContent=$(cat "$shallowFile")
+    rm "$shallowFile"
+
+    # Then, run the clone:
+    # * 'depth=1' avoids encountering the leaf commit in the shallow repo that points to a parent
+    #   that doesn't exist. (The commit marked "grafted".) Git would fail here, otherwise.
+    # * '--no-local' allows a shallow clone from a git dir on the same filesystem. This means the
+    #   clone will not use hard links and takes up more space. However, since we're doing a shallow
+    #   clone anyway, the difference is probably not significant. (This has not been measured.)
+    git clone --depth=1 --no-local --no-checkout "$sourceDir" "$destDir"
+
+    # Put the 'shallow' file back so operations on the outer Git repo continue to work normally.
+    printf "%s" "$shallowContent" > "$shallowFile"
+  else
+    git clone --no-checkout "$sourceDir" "$destDir"
+  fi
 
   (
     cd "$destDir"
