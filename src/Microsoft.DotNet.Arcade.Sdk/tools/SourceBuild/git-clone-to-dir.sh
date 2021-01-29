@@ -65,6 +65,8 @@ done
 
 [ ! "${destDir:-}" ] && echo "--dest not specified" && exit 1
 
+echo "Cloning repository at: $sourceDir -> $destDir ..."
+
 if [ -e "$destDir" ]; then
   echo "Destination already exists!"
   if [ -f "$destDir" ]; then
@@ -96,7 +98,8 @@ if [ ! -e "$destDir" ]; then
 
   echo "Creating empty clone at: $destDir"
 
-  shallowFile="$sourceDir/.git/shallow"
+  sourceGitDir=$(cd "$sourceDir" && git rev-parse --git-dir)
+  shallowFile="$sourceGitDir/shallow"
 
   if [ -f "$shallowFile" ]; then
     echo "Source repository is shallow..."
