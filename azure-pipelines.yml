@@ -264,4 +264,5 @@ stages:
         -TsaIterationPath $(_TsaIterationPath)
         -TsaRepositoryName "Arcade"
         -TsaCodebaseName "Arcade"
-        -TsaPublish $True'
+        -TsaPublish $True
+        -PoliCheckAdditionalRunConfigParams @("UserExclusionPath < $(Build.SourcesDirectory)/eng/PoliCheckExclusions.xml")'
