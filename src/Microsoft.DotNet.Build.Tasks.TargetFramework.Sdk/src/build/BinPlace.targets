@@ -109,6 +109,7 @@
     <ItemGroup>
       <BinPlaceItem Condition="Exists('$(TargetPath)')" Include="$(TargetPath)" />
       <BinPlaceItem Condition="Exists('$(TargetDir)$(TargetName).pdb')" Include="$(TargetDir)$(TargetName).pdb" />
+      <BinPlaceItem Condition="Exists('$(TargetDir)$(TargetName).xml')" Include="$(TargetDir)$(TargetName).xml" />
       <BinPlaceItem Condition="'$(BinPlaceReferenceCopyLocalPaths)' != 'false'" Include="@(ReferenceCopyLocalPaths)" />
       <BinPlaceItem Condition="'$(BinPlaceCopyToOutputDirectoryItems)' != 'false'" Include="@(AllItemsFullPathWithTargetPath)" />
       <BinPlaceItem Condition="'$(BinPlaceSatelliteAssemblies)' != 'false'" Include="@(IntermediateSatelliteAssembliesWithTargetPath)" />
