@@ -162,7 +162,7 @@ Given a local folder `$(TestFolder)` containing `runtests.cmd`, this will run `r
   </ItemGroup>
   <PropertyGroup>
     <!-- TargetFramework to publish the xunit test projects for -->
-    <XUnitPublishTargetFramework>netcoreapp2.1</XUnitPublishTargetFramework>
+    <XUnitPublishTargetFramework>netcoreapp3.1</XUnitPublishTargetFramework>
     <!-- TargetFramework of the xunit.runner.dll to use when running the tests -->
     <XUnitRuntimeTargetFramework>netcoreapp2.0</XUnitRuntimeTargetFramework>
     <!-- PackageVersion of xunit.runner.console to use -->

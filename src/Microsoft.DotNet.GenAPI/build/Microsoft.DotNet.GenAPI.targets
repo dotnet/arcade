@@ -7,7 +7,7 @@
     <DotNetTool Condition="'$(DotNetTool)' == ''">dotnet</DotNetTool>
 
     <GenAPITargetPath Condition="'$(GenAPITargetPath)' == ''">$(TargetDir)$(TargetName).cs</GenAPITargetPath>
-    <_GenAPIPath Condition="'$(MSBuildRuntimeType)' == 'core'">$(MSBuildThisFileDirectory)\..\tools\netcoreapp2.1\Microsoft.DotNet.GenAPI.dll</_GenAPIPath>
+    <_GenAPIPath Condition="'$(MSBuildRuntimeType)' == 'core'">$(MSBuildThisFileDirectory)\..\tools\netcoreapp3.1\Microsoft.DotNet.GenAPI.dll</_GenAPIPath>
     <_GenAPIPath Condition="'$(MSBuildRuntimeType)' != 'core'">$(MSBuildThisFileDirectory)\..\tools\net472\Microsoft.DotNet.GenAPI.exe</_GenAPIPath>
 
     <_GenAPICommand Condition="'$(MSBuildRuntimeType)' == 'core'">"$(DotNetTool)" "$(_GenAPIPath)"</_GenAPICommand>
