@@ -343,6 +343,9 @@ pr:
 
 ## 12. Configure **Component Governance** to track the `main` branch
 
+> **Note:** this step only applies to repositories that deploy to cloud and have a required Component Governance setup due to SDL.
+> Your repository might not be and that's ok.
+
 Go to the internal AzDO mirror of your repository and configure **Component Governance** to track the right branch/pipeline.
 - Copy the settings from the `master` branch and set up tracking for `main`
 - Stop tracking the `master` branch
