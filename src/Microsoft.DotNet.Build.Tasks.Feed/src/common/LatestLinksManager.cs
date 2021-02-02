@@ -90,7 +90,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// <remarks>
         public string GetLatestShortUrlForBlob(TargetFeedConfig feedConfig, BlobArtifactModel blob)
         {
-            string blobIdWithoutVersions = VersionIdentifier.RemoveVersions(blob.Id);
+            string blobIdWithoutVersions = Path.GetFileName(blob.Id);
 
             return Path.Combine(feedConfig.LatestLinkShortUrlPrefix, blobIdWithoutVersions).Replace("\\", "/");
         }
