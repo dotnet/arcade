@@ -87,7 +87,7 @@
       <AkaMSOwners Condition="'$(AkaMSOwners)' == ''">dn-bot</AkaMSOwners>
       <AkaMSCreatedBy Condition="'$(AkaMSCreatedBy)' == ''">dn-bot</AkaMSCreatedBy>
       <PublishSpecialClrFiles Condition="'$(PublishSpecialClrFiles)' == ''">false</PublishSpecialClrFiles>
-      <BuildQuality Condition="$(BuildQuality)' == ''">daily</BuildQuality>
+      <BuildQuality Condition="'$(BuildQuality)' == ''">daily</BuildQuality>
       <InstallersFeedKey>$(InstallersAzureAccountKey)</InstallersFeedKey>
       <InternalInstallersFeedKey>$(InternalInstallersAzureAccountKey)</InternalInstallersFeedKey>
       <ChecksumsFeedKey>$(ChecksumsAzureAccountKey)</ChecksumsFeedKey>
