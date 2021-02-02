@@ -412,7 +412,10 @@
     <ItemGroup>
       <_VersionsFile Include="$(IntermediateOutputPath)$(SharedFrameworkName).versions.txt" TargetPath="" GeneratedBuildFile="true" />
       <!-- The presence of the .version file is used by VS to detect a valid installation of the shared framework into a .NET Runtime/SDK install. -->
-      <_DotVersionFile Include="$(IntermediateOutputPath).version" PublishOnly="true" GeneratedBuildFile="true" />
+      <_DotVersionFile Include="$(IntermediateOutputPath).version"
+                       PublishOnly="true"
+                       GeneratedBuildFile="true"
+                       Condition="'$(PlatformPackageType)' == 'RuntimePack'" />
     </ItemGroup>
     <WriteLinesToFile
       Lines="$(SourceRevisionId);$(Version)"
