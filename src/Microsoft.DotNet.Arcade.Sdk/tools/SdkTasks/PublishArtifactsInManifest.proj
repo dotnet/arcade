@@ -87,6 +87,7 @@
       <AkaMSOwners Condition="'$(AkaMSOwners)' == ''">dn-bot</AkaMSOwners>
       <AkaMSCreatedBy Condition="'$(AkaMSCreatedBy)' == ''">dn-bot</AkaMSCreatedBy>
       <PublishSpecialClrFiles Condition="'$(PublishSpecialClrFiles)' == ''">false</PublishSpecialClrFiles>
+      <BuildQuality Condition="$(BuildQuality)' == ''">daily</BuildQuality>
       <InstallersFeedKey>$(InstallersAzureAccountKey)</InstallersFeedKey>
       <InternalInstallersFeedKey>$(InternalInstallersAzureAccountKey)</InternalInstallersFeedKey>
       <ChecksumsFeedKey>$(ChecksumsAzureAccountKey)</ChecksumsFeedKey>
@@ -127,7 +128,8 @@
       SymWebToken="$(SymWebToken)"
       SymbolPublishingExclusionsFile="$(SymbolPublishingExclusionsFile)"
       PdbArtifactsBasePath="$(PDBArtifactsBasePath)"
-      PublishSpecialClrFiles="$(PublishSpecialClrFiles)"/>
+      PublishSpecialClrFiles="$(PublishSpecialClrFiles)"
+      BuildQuality="$(BuildQuality)" />
   </Target>
 
   <ItemGroup>
