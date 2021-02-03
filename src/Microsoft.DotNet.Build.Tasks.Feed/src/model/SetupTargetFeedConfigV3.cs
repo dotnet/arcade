@@ -31,6 +31,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         private SymbolTargetType SymbolTargetType { get; set; }
 
+        private List<string> FilesToExclude { get; }
+
         public SetupTargetFeedConfigV3(bool isInternalBuild,
             bool isStableBuild,
             string repositoryName,
@@ -49,13 +51,15 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             IBuildEngine buildEngine,
             SymbolTargetType symbolTargetType,
         string stablePackagesFeed = null,
-            string stableSymbolsFeed = null) 
+            string stableSymbolsFeed = null,
+            List<string> filesToExclude = null) 
             : base(isInternalBuild, isStableBuild, repositoryName, commitSha, azureStorageTargetFeedPAT, publishInstallersAndChecksums, installersTargetStaticFeed, installersAzureAccountKey, checksumsTargetStaticFeed, checksumsAzureAccountKey, azureDevOpsStaticShippingFeed, azureDevOpsStaticTransportFeed, azureDevOpsStaticSymbolsFeed, latestLinkShortUrlPrefix, azureDevOpsFeedsKey)
         {
             BuildEngine = buildEngine;
             StableSymbolsFeed = stableSymbolsFeed;
             StablePackagesFeed = stablePackagesFeed;
             SymbolTargetType = symbolTargetType;
+            FilesToExclude = filesToExclude ?? new List<string>();
         }
 
         public override List<TargetFeedConfig> Setup()

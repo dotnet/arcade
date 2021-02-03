@@ -3,6 +3,8 @@
 
 using Microsoft.DotNet.VersionTools.BuildManifest.Model;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed.Model
 {
@@ -62,6 +64,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
 
         public bool IsInternal { get; }
 
+        public List<string> FilesToExclude { get; }
+
         public TargetChannelConfig(
             int id,
             bool isInternal,
@@ -72,7 +76,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             string symbolsFeed,
             string checksumsFeed,
             string installersFeed,
-            SymbolTargetType symbolTargetType)
+            SymbolTargetType symbolTargetType,
+            List<string> filesToExclude = null)
         {
             Id = id;
             IsInternal = isInternal;
@@ -84,6 +89,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             ChecksumsFeed = checksumsFeed;
             InstallersFeed = installersFeed;
             SymbolTargetType = symbolTargetType;
+            FilesToExclude = filesToExclude ?? new List<string>();
         }
 
         public override string ToString()
@@ -98,7 +104,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 $"\n Installers-feed: '{InstallersFeed}' " +
                 $"\n Checksums-feed: '{ChecksumsFeed}' " +
                 $"\n SymbolTargetType: '{SymbolTargetType}' " +
-                $"\n IsInternal: '{IsInternal}'";
+                $"\n IsInternal: '{IsInternal}'" +
+                $"\n FilesToExclude: \n\t{string.Join("\n\t", FilesToExclude)}'";
         }
 
         public override bool Equals(object other)
@@ -112,7 +119,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                    String.Equals(SymbolsFeed, config.SymbolsFeed, StringComparison.OrdinalIgnoreCase) &&
                    String.Equals(ChecksumsFeed, config.ChecksumsFeed, StringComparison.OrdinalIgnoreCase) &&
                    String.Equals(InstallersFeed, config.InstallersFeed, StringComparison.OrdinalIgnoreCase) &&
-                   IsInternal == config.IsInternal;
+                   IsInternal == config.IsInternal &&
+                   FilesToExclude.SequenceEqual(config.FilesToExclude);
         }
 
         public override int GetHashCode()
@@ -126,7 +134,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 SymbolsFeed, 
                 ChecksumsFeed, 
                 InstallersFeed,
-                SymbolTargetType).GetHashCode();
+                SymbolTargetType,
+                FilesToExclude).GetHashCode();
         }
     }
 }

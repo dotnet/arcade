@@ -153,7 +153,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         $"dotnet/{targetChannelConfig.AkaMSChannelName}/{BuildQuality}",
                         AzureDevOpsFeedsKey,
                         BuildEngine = this.BuildEngine,
-                        targetChannelConfig.SymbolTargetType);
+                        targetChannelConfig.SymbolTargetType,
+                        filesToExclude: targetChannelConfig.FilesToExclude);
 
                     var targetFeedConfigs = targetFeedsSetup.Setup();
 
