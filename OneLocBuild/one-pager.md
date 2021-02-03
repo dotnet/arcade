@@ -24,7 +24,7 @@ behalf of our customer repos) and the localization team. The other stakeholders 
 to maintain some new files for localization on their end if we aren't able to completely automate the work within `eng/common`.
 
 ## Risk
-The biggest risk facing this project is any information in the index file that needs to be manually tweaked. As an example,
+The most significant risk facing this project is any information in the index file that needs to be manually tweaked. As an example,
 [@RussKie](https://github.com/RussKie) created a [first pass attempt](https://github.com/dotnet/arcade/issues/6842#issuecomment-771963490)
 at this and found that he still had to manually remove some .resx files from the `LocProject.json` file after generation. We could
 create something like an exclusions list or other file that is *more* static than the `LocProject.json` would be to take much
@@ -34,13 +34,23 @@ To mitigate this risk, we will work with the localization team to see if we can 
 automatically scanning our repos and loop in the customer repos to make sure the localization pipelines are working properly for them.
 
 A second risk facing us is the need to backport this to servicing branches of Arcade. At this time it is unknown if there will be significant
-challenges to this separate from the ones we currently face in master. We will work in tandem with @mmitche to make sure that this is mitigated
-as much as possible.
+challenges to this separate from the ones we currently face in master. We will work in tandem with [@mmitche](http://github.com/mmitche)
+to make sure that this is mitigated as much as possible.
 
 Finally, the hard deadline of March 31, 2021, which is when the old localization system will be turned off is a risk. While we will likely
 be able to accomplish the majority of the work by this point, the unknowns of the servicing branches, in particular, are worrisome. We will work
 with the localization team to put in place a temporary manual process they recommended if this date slips for any of our branches.
 
 ## Serviceability
+Two PATs are required by the OneLocBuild task: a GitHub PAT and an AzDO PAT for the ceapex organization. The latter will have to be created and
+maintained.
 
-### Secrets
+There will be tests for the `LocProject.json` generation script and any other scripts that are created to ensure they are generating files
+correctly.
+
+### Rollout and Deployment
+This project will be tested thoroughly in customer repos before we check it into Arcade. Once we do check it into Arcade, it will simply be rolled out
+as a part of Arcade.
+
+## FR Handoff
+Most likely, we will only need to write a single document on the results of this project to facilitate FR handoff.
