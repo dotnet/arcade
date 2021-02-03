@@ -1,9 +1,9 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using System;
 using Microsoft.DotNet.VersionTools.BuildManifest.Model;
 using System.Collections.Generic;
+using System.ComponentModel;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed.Model
 {
@@ -32,6 +32,24 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
         // or https://pkgs.dev.azure.com/dnceng/_packaging/internal-feed-name/nuget/v3/index.json
         public static readonly string AzDoNuGetFeedPattern =
             @"https://pkgs.dev.azure.com/(?<account>[a-zA-Z0-9]+)/(?<visibility>[a-zA-Z0-9-]+/)?_packaging/(?<feed>.+)/nuget/v3/index.json";
+
+        public enum BuildQuality
+        {
+            [Description("daily")]
+            Daily,
+
+            [Description("signed")]
+            Signed,
+
+            [Description("validated")]
+            Validated,
+
+            [Description("preview")]
+            Preview,
+
+            [Description("")]
+            GA
+        }
 
         #region Target Channel Configs
         private const string FeedForChecksums = "https://dotnetclichecksums.blob.core.windows.net/dotnet/index.json";
@@ -163,7 +181,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 1297,
                 false,
                 PublishingInfraVersion.Next,
-                akaMSChannelName: "net5/5.0.1xx/daily",
+                akaMSChannelName: "net5/5.0.1xx",
                 FeedDotNet5Shipping,
                 FeedDotNet5Transport,
                 FeedDotNet5Symbols,
@@ -189,7 +207,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 1518,
                 false,
                 PublishingInfraVersion.Next,
-                akaMSChannelName: "net5/5.0.2xx/daily",
+                akaMSChannelName: "net5/5.0.2xx",
                 FeedDotNet5Shipping,
                 FeedDotNet5Transport,
                 FeedDotNet5Symbols,
@@ -215,7 +233,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 2,
                 false,
                 PublishingInfraVersion.All,
-                "eng/daily",
+                "eng",
                 FeedDotNetEngShipping,
                 FeedDotNetEngTransport,
                 FeedDotNetEngSymbols,
