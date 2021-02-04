@@ -42,8 +42,8 @@ be able to accomplish the majority of the work by this point, the unknowns of th
 with the localization team to put in place a temporary manual process they recommended if this date slips for any of our branches.
 
 ## Serviceability
-Two PATs are required by the OneLocBuild task: a GitHub PAT and an AzDO PAT for the ceapex organization. The latter will have to be created and
-maintained.
+Two PATs are required by the OneLocBuild task: a GitHub PAT and an AzDO PAT for the [ceapex organization](https://dev.azure.com/ceapex).
+The latter will have to be created and maintained.
 
 There will be tests for the `LocProject.json` generation script and any other scripts that are created to ensure they are generating files
 correctly.
