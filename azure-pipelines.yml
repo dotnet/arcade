@@ -63,6 +63,7 @@ stages:
           inputs:
             locProj: 'Localize/LocProject.json'
             outDir: '$(Build.ArtifactStagingDirectory)'
+          displayName: OneLocBuild
         - script: eng\common\cibuild.cmd
             -configuration $(_BuildConfig)
             -prepareMachine
