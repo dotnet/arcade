@@ -323,8 +323,15 @@ namespace Microsoft.DotNet.SignTool.Tests
             // The list of files that would be signed was captured inside the FakeBuildEngine,
             // here we check if that matches what we expected
             var actualXmlElementsPerSigningRound = buildEngine.FilesToSign.Select(round => string.Join(Environment.NewLine, round));
-            actualXmlElementsPerSigningRound.Should().Equal(expectedXmlElementsPerSigningRound, (e1, e2) =>
-                AssertEx.EqualIgnoringWhitespace(e1, e2));
+            actualXmlElementsPerSigningRound.Count().Should().Be(expectedXmlElementsPerSigningRound.Length);
+            int i = 0;
+            foreach (var actual in actualXmlElementsPerSigningRound)
+            {
+                var actualXml = AssertEx.NormalizeWhitespace(actual);
+                var expectedXml = AssertEx.NormalizeWhitespace(expectedXmlElementsPerSigningRound[i]);
+                actualXml.Should().Be(expectedXml);
+                i++;
+            }
 
             task.Log.HasLoggedErrors.Should().BeFalse();
         }
@@ -829,8 +836,7 @@ $@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "PackageWi
 
             ValidateGeneratedProject(itemsToSign, strongNameSignInfo, fileSignInfo, s_fileExtensionSignInfoWithCollisionId, new[]
             {
-$@"
-<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "2", "lib/native/NativeLibrary.dll"))}"">
+$@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "2", "lib/native/NativeLibrary.dll"))}"">
   <Authenticode>Microsoft400</Authenticode>
 </FilesToSign>
 <FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "3", "lib/net461/ProjectOne.dll"))}"">
@@ -845,7 +851,7 @@ $@"
   <Authenticode>3PartySHA2</Authenticode>
   <StrongName>ArcadeStrongTest</StrongName>
 </FilesToSign>
-<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "6", "lib/netcoreapp3.1/ProjectOne.dll"))}"">
+<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "6", "lib/netcoreapp2.1/ProjectOne.dll"))}"">
   <Authenticode>3PartySHA2</Authenticode>
   <StrongName>ArcadeStrongTest</StrongName>
 </FilesToSign>
@@ -926,7 +932,7 @@ $@"
   <Authenticode>3PartySHA2</Authenticode>
   <StrongName>ArcadeStrongTest</StrongName>
 </FilesToSign>
-<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "6", "lib/netcoreapp3.1/ProjectOne.dll"))}"">
+<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "6", "lib/netcoreapp2.1/ProjectOne.dll"))}"">
   <Authenticode>3PartySHA2</Authenticode>
   <StrongName>ArcadeStrongTest</StrongName>
 </FilesToSign>
