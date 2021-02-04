@@ -11,10 +11,10 @@ namespace Microsoft.DotNet.Helix.Sdk
     /// <summary>
     /// MSBuild custom task to create HelixWorkItems for provided iOS app bundle paths.
     /// </summary>
-    public class CreateXHarnessiOSWorkItems : XHarnessTaskBase
+    public class CreateXHarnessAppleWorkItems : XHarnessTaskBase
     {
-        private const string EntryPointScriptName = "xharness-helix-job.ios.sh";
-        private const string RunnerScriptName = "xharness-runner.ios.sh";
+        private const string EntryPointScriptName = "xharness-helix-job.apple.sh";
+        private const string RunnerScriptName = "xharness-runner.apple.sh";
         private const int DefaultLaunchTimeoutInMinutes = 10;
         private const string LaunchTimeoutPropName = "LaunchTimeout";
         private const string TargetsPropName = "Targets";
@@ -30,6 +30,11 @@ namespace Microsoft.DotNet.Helix.Sdk
         /// Xcode version to use in the [major].[minor] format, e.g. 11.4
         /// </summary>
         public string XcodeVersion { get; set; }
+
+        /// <summary>
+        /// Path to the provisioning profile that will be used to sign the app (in case of real device targets).
+        /// </summary>
+        public string ProvisioningProfilePath { get; set; }
 
         /// <summary>
         /// The main method of this MSBuild task which calls the asynchronous execution method and
@@ -85,6 +90,14 @@ namespace Microsoft.DotNet.Helix.Sdk
                 return null;
             }
 
+            bool isDeviceTarget = targets.Contains("device");
+            string provisioningProfileDest = Path.Combine(appFolderPath, "embedded.mobileprovision");
+            if (isDeviceTarget && string.IsNullOrEmpty(ProvisioningProfilePath) && !File.Exists(provisioningProfileDest))
+            {
+                Log.LogError("ProvisioningProfilePath parameter not set but required for real device targets!");
+                return null;
+            }
+
             // Optional timeout for the how long it takes for the app to be installed, booted and tests start executing
             TimeSpan launchTimeout = TimeSpan.FromMinutes(DefaultLaunchTimeoutInMinutes);
             if (appBundleItem.TryGetMetadata(LaunchTimeoutPropName, out string launchTimeoutProp))
@@ -110,15 +123,29 @@ namespace Microsoft.DotNet.Helix.Sdk
                 Log.LogWarning("The ExpectedExitCode property is ignored in the `ios test` scenario");
             }
 
+            if (isDeviceTarget)
+            {
+                if (!File.Exists(provisioningProfileDest))
+                {
+                    Log.LogMessage("Adding provisioning profile into the app bundle");
+                    File.Copy(ProvisioningProfilePath, provisioningProfileDest);
+                }
+                else
+                {
+                    Log.LogMessage("Bundle already contains a provisioning profile");
+                }
+            }
+
             string appName = Path.GetFileName(appBundleItem.ItemSpec);
             string command = GetHelixCommand(appName, targets, testTimeout, launchTimeout, includesTestRunner, expectedExitCode);
+            string payloadArchivePath = await CreateZipArchiveOfFolder(appFolderPath);
 
             Log.LogMessage($"Creating work item with properties Identity: {workItemName}, Payload: {appFolderPath}, Command: {command}");
 
-            return new Microsoft.Build.Utilities.TaskItem(workItemName, new Dictionary<string, string>()
+            return new Build.Utilities.TaskItem(workItemName, new Dictionary<string, string>()
             {
                 { "Identity", workItemName },
-                { "PayloadArchive", await CreateZipArchiveOfFolder(appFolderPath) },
+                { "PayloadArchive", payloadArchivePath },
                 { "Command", command },
                 { "Timeout", workItemTimeout.ToString() },
             });
@@ -158,21 +185,10 @@ namespace Microsoft.DotNet.Helix.Sdk
             ZipFile.CreateFromDirectory(folderToZip, outputZipPath, CompressionLevel.Fastest, includeBaseDirectory: true);
 
             Log.LogMessage($"Adding the Helix job payload scripts into the ziparchive");
-            await AddFileToPayload(outputZipPath, EntryPointScriptName);
-            await AddFileToPayload(outputZipPath, RunnerScriptName);
+            await AddResourceFileToPayload(outputZipPath, EntryPointScriptName);
+            await AddResourceFileToPayload(outputZipPath, RunnerScriptName);
 
             return outputZipPath;
-        }
-
-        private async Task AddFileToPayload(string payloadArchivePath, string fileName)
-        {
-            var thisAssembly = typeof(CreateXHarnessiOSWorkItems).Assembly;
-            using Stream fileStream = thisAssembly.GetManifestResourceStream($"{thisAssembly.GetName().Name}.tools.xharness_runner.{fileName}");
-            using FileStream archiveStream = new FileStream(payloadArchivePath, FileMode.Open);
-            using ZipArchive archive = new ZipArchive(archiveStream, ZipArchiveMode.Update);
-            ZipArchiveEntry entry = archive.CreateEntry(fileName);
-            using StreamWriter zipEntryWriter = new StreamWriter(entry.Open());
-            await fileStream.CopyToAsync(zipEntryWriter.BaseStream);
         }
     }
 }

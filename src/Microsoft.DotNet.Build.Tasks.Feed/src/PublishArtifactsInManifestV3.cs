@@ -73,7 +73,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 {
                     if (!int.TryParse(channelIdStr, out var channelId))
                     {
-                        Log.LogError($"Value '{channelIdStr}' isn't recognized as a valid Maestro++ channel ID.");
+                        Log.LogError($"Value '{channelIdStr}' isn't recognized as a valid Maestro++ channel ID. To add a channel refer to https://github.com/dotnet/arcade/blob/master/Documentation/CorePackages/Publishing.md#how-to-add-a-new-channel-to-use-v3-publishing.");
                         continue;
                     }
 

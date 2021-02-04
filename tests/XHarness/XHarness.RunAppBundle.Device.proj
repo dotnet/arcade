@@ -4,26 +4,26 @@
 
   <PropertyGroup>
     <XHarnessRunAppBundleName>HelloiOS.app</XHarnessRunAppBundleName>
-    <XHarnessRunAppBundleUrl>https://netcorenativeassets.blob.core.windows.net/resource-packages/external/macos/test-ios-app/$(XHarnessRunAppBundleName).zip</XHarnessRunAppBundleUrl>
+    <XHarnessRunAppBundleUrl>https://netcorenativeassets.blob.core.windows.net/resource-packages/external/macos/test-ios-app/$(XHarnessRunAppBundleName).iPhone.unsigned.zip</XHarnessRunAppBundleUrl>
   </PropertyGroup>
 
   <!-- We're not set up currently to build app bundles as part of normal builds, so this downloads existing ones for now -->
   <Target Name="Build" Returns="@(XHarnessAppBundleToTest)">
     <Error Condition=" '$(ArtifactsTmpDir)' == ''" Text="Not downloading AppBundle because ArtifactsTmpDir property is unset" />
-    <DownloadFile SourceUrl="$(XHarnessRunAppBundleUrl)" DestinationFolder="$(ArtifactsTmpDir)XHarness.RunAppBundle" SkipUnchangedFiles="True" Retries="5">
+    <DownloadFile SourceUrl="$(XHarnessRunAppBundleUrl)" DestinationFolder="$(ArtifactsTmpDir)XHarness.RunDeviceAppBundle" SkipUnchangedFiles="True" Retries="5">
       <Output TaskParameter="DownloadedFile" ItemName="ZippedAppBundle" />
     </DownloadFile>
 
     <Message Text="Downloaded @(ZippedAppBundle) for XHarness Test purposes" Importance="High" />
 
-    <Exec Command="tar -xzf @(ZippedAppBundle) -C $(ArtifactsTmpDir)XHarness.RunAppBundle" />
+    <Exec Command="tar -xzf @(ZippedAppBundle) -C $(ArtifactsTmpDir)XHarness.RunDeviceAppBundle" />
 
     <ItemGroup>
-      <XHarnessAppBundleToTest Include="$(ArtifactsTmpDir)XHarness.RunAppBundle/$(XHarnessRunAppBundleName)">
-        <Targets>ios-simulator-64</Targets>
-        <WorkItemTimeout>00:10:00</WorkItemTimeout>
-        <TestTimeout>00:08:00</TestTimeout>
-        <LaunchTimeout>00:05:00</LaunchTimeout>
+      <XHarnessAppBundleToTest Include="$(ArtifactsTmpDir)XHarness.RunDeviceAppBundle/$(XHarnessRunAppBundleName)">
+        <Targets>ios-device</Targets>
+        <WorkItemTimeout>00:05:00</WorkItemTimeout>
+        <TestTimeout>00:04:00</TestTimeout>
+        <LaunchTimeout>00:03:00</LaunchTimeout>
         <IncludesTestRunner>false</IncludesTestRunner>
         <ExpectedExitCode>200</ExpectedExitCode>
       </XHarnessAppBundleToTest>

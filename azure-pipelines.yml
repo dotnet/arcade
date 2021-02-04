@@ -36,6 +36,7 @@ stages:
       enableMicrobuild: true
       enablePublishUsingPipelines: true
       enableSourceIndex: true
+      enableSourceBuild: true
       workspace:
         clean: all
       jobs:
@@ -181,10 +182,24 @@ stages:
               -projects $(Build.SourcesDirectory)/tests/UnitTests.XHarness.iOS.proj
               /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.XHarness.iOS.binlog
               /p:RestoreUsingNuGetTargets=false
-            displayName: XHarness iOS Helix Testing
+            displayName: XHarness iOS Simulator Helix Testing
             env:
               SYSTEM_ACCESSTOKEN: $(System.AccessToken)
               HelixAccessToken: ''
+          # TODO (prvysoky): This will be enabled once we get a better app to test with (core-eng/11893)
+          # - script: eng/common/build.sh
+          #     -configuration $(_BuildConfig)
+          #     -prepareMachine
+          #     -ci
+          #     -restore
+          #     -test
+          #     -projects $(Build.SourcesDirectory)/tests/UnitTests.XHarness.iOS.Device.proj
+          #     /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.XHarness.iOS.Device.binlog
+          #     /p:RestoreUsingNuGetTargets=false
+          #   displayName: XHarness iOS Device Helix Testing
+          #   env:
+          #     SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+          #     HelixAccessToken: ''
           - script: eng/common/build.sh
               -configuration $(_BuildConfig)
               -prepareMachine
@@ -249,4 +264,5 @@ stages:
         -TsaIterationPath $(_TsaIterationPath)
         -TsaRepositoryName "Arcade"
         -TsaCodebaseName "Arcade"
-        -TsaPublish $True'
+        -TsaPublish $True
+        -PoliCheckAdditionalRunConfigParams @("UserExclusionPath < $(Build.SourcesDirectory)/eng/PoliCheckExclusions.xml")'

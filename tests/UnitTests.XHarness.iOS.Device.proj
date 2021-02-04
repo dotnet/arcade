@@ -24,16 +24,11 @@
 
   <!-- Test project which builds app bundle to run via XHarness -->
   <ItemGroup>
-    <XHarnessAppleProject Include="$(MSBuildThisFileDirectory)XHarness\XHarness.TestAppBundle.proj" />
-    <XHarnessAppleProject Include="$(MSBuildThisFileDirectory)XHarness\XHarness.RunAppBundle.proj" />
+    <XHarnessAppleProject Include="$(MSBuildThisFileDirectory)XHarness\XHarness.RunAppBundle.Device.proj" />
   </ItemGroup>
 
-  <ItemGroup Condition=" '$(HelixAccessToken)' != '' ">
-    <HelixTargetQueue Include="osx.1015.amd64"/>
-  </ItemGroup>
-
-  <ItemGroup Condition=" '$(HelixAccessToken)' == '' ">
-    <HelixTargetQueue Include="osx.1015.amd64.open"/>
+  <ItemGroup>
+    <HelixTargetQueue Include="osx.1015.amd64.iphone.open" />
   </ItemGroup>
 
   <PropertyGroup Condition=" '$(HelixAccessToken)' == '' ">

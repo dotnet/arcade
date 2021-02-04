@@ -23,7 +23,7 @@
   <!-- We test that the XHarness CLI is pre-installed and issue the state command -->
   <ItemGroup>
     <HelixWorkItem Include="xharness-ios-state">
-      <Command>dotnet exec "$XHARNESS_CLI_PATH" ios state</Command>
+      <Command>dotnet exec "$XHARNESS_CLI_PATH" apple state</Command>
       <Timeout>00:03:00</Timeout>
     </HelixWorkItem>
   </ItemGroup>

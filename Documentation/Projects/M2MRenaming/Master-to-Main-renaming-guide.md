@@ -8,12 +8,45 @@ You can also use the [**First Responder** channel](https://teams.microsoft.com/l
 
 Please sit back and enjoy the moment of your career where you are actually asked to delete the master branch of your project.
 
+# Before you start
+
+Before you start the actual renaming, **please announce the change couple of days prior using a pinned issue in your repository**.
+
+Make sure to link the [official announcement](https://github.com/dotnet/announcements/issues/172).
+You can use this template:
+```md
+On <date> we're going to rename the default branch in this repository to main. For more details, see [our earlier announcement](https://github.com/dotnet/announcements/issues/172).
+```
+
+Make also sure you go through the [prerequisites](#prerequisites) so that you have confidence you'll actually be able to migrate the repository once you get to it.
+
+# How long will this take?
+
+The actions in the steps themselves are mostly matters of a minute or so.
+However, some steps require changes to some repositories and the overall time spent on this depends on how long your PR builds and your CI take.
+The amount of custom work needed for your repository because of internal references and dependencies on master can vary for each repository.
+Our experience shows that **you should reserve 1 to 4 hours for this**.
+
+The steps that require changes are:
+- [Step 2](#2-add-main-triggers-to-yaml-pipelines) and [step 6](#6-search-your-repository-for-any-references-to-the-main-branch-specific-to-your-repo) inside of your GitHub repository,
+- [Step 3](#3-update-the-build-mirroring-in-subscriptionsjson) requires a change to the [`dotnet/versions`](https://github.com/dotnet/versions) repo for which you will need an approval of someone from **@dotnet/dnceng**,
+- [Step 11](#11-remove-the-master-branch-triggers-from-your-yaml-pipelines) is a clean-up step in your repo and can happen after.
+
+We recommend:
+- Prepare PRs for these steps beforehand
+- Ideally, get the `dotnet/versions` repo pre-approved as you won't be able to do it yourself (most likely)
 
 # Prerequisites
 
 These prerequisites are required for a successful migration. If you're not sure about any of these, please reach out to **@dotnet/dnceng**.
 
 Please verify that you:
+- Ideally have skimmed through this guide beforehand to get an idea of what needs to happen
+- **Have announced the change in your repo by pinning an issue**
+  - Ideally say when it is going to happen
+  - You can link the [official announcement](https://github.com/dotnet/announcements/issues/172)
+  - [Example issue](https://github.com/dotnet/aspnetcore/issues/29475)
+  - After you're done, you can either edit this or can create a new pinned issue saying the renaming has happened. This is up to you. Additionally, GitHub will also display a banner on the homepage of the repo once the change happens
 - Know whether your repo is part of the [Maestro/darc dependency flow](https://github.com/dotnet/arcade/blob/master/Documentation/DependencyFlowOnboarding.md)
   - If so, have the [`darc`](https://github.com/dotnet/arcade/blob/master/Documentation/Darc.md) command installed, updated and authenticated
   - Make sure tokens set using `darc authenticate` are still valid ([details at Darc.md#authenticate](https://github.com/dotnet/arcade/blob/master/Documentation/Darc.md#authenticate))
@@ -35,7 +68,6 @@ Please verify that you:
      > Please note that GitHub has a new feature that will try to redirect you to the default branch for certain 404s,
      > e.g. https://github.com/dotnet/efcore/blob/master/README.md will lead to the `README.md` on the default `release/5.0` branch
 
-
 ## Step labels
 
 Some steps are only intended for some cases, they are labelled in the following way:
@@ -49,14 +81,14 @@ Some steps are only intended for some cases, they are labelled in the following 
 
 # Step-by-step guide
 
-We suggest to try to not merge any PRs during the process described below. However, the instructions are ordered in a way that should prevent it and keep a consistent state even when it happens.
+We suggest trying to not merge any PRs during the process described below. However, the instructions are ordered in a way that should prevent it and keep a consistent state even when it happens.
 
 All of the steps are easily revert-able, so it is not a problem to go back to `master` in case you find some problems maybe only specific to your repository that would prevent you from migrating.
 
 ## Overview of steps
 1. [Disable Maestro subscriptions](#1-disable-maestro-subscriptions)
 2. [Add `main` triggers to YAML pipelines](#2-add-main-triggers-to-yaml-pipelines)
-3. [Update the the build mirroring in `subscriptions.json`](#3-update-the-the-build-mirroring-in-subscriptionsjson)
+3. [Update the build mirroring in `subscriptions.json`](#3-update-the-build-mirroring-in-subscriptionsjson)
 4. [Create the `main` branch in the internal mirrored AzDO repository](#4-create-the-main-branch-in-the-internal-mirrored-azdo-repository)
 5. [Change the default branch to `main` for your GitHub repository](#5-change-the-default-branch-to-main-for-your-github-repository)
 6. [Search your repository for any references to the `main` branch specific to your repo](#6-search-your-repository-for-any-references-to-the-main-branch-specific-to-your-repo)
@@ -66,7 +98,8 @@ All of the steps are easily revert-able, so it is not a problem to go back to `m
 10. [Delete the `master` branch of the AzDO repository](#10-delete-the-master-branch-of-the-azdo-repository)
 11. [Remove the `master` branch triggers from your YAML pipelines](#11-remove-the-master-branch-triggers-from-your-yaml-pipelines)
 12. [Configure **Component Governance** to track the `main` branch](#12-configure-component-governance-to-track-the-main-branch)
-13. [FAQ](#faq)
+13. [Fix AzDO dashboards](#13-fix-any-azdo-dashboards-based-off-of-the-pipelines--repository)
+14. [FAQ](#faq)
 
 ## 1. Disable Maestro subscriptions
 ![Maestro enabled](images/maestro-enabled.png)
@@ -86,9 +119,14 @@ Generate json data file describing Maestro migration, review it and disable all 
 
 ## 2. Add `main` triggers to YAML pipelines
 
+**Please read**
+Before you get on with this step, you should know, that once you change the default branch in your GitHub repository ([step 5](#5-change-the-default-branch-to-main-for-your-github-repository), all open PRs targeting `master` will be retargeted and all PR builds will be triggered again.
+This can cause a large strain on the engineering systems, so please consider the amount of opened pull requests in your repository.
+Please consider - based on the heaviness of your PR build and the number of PRs - whether you want to disable the PR builds for the time being or not.
+
 1. Find all YAML definitions of pipelines in your repository that are triggered by changes in the `master` branch
-2. Add the `main` branch (do not remove `master` yet)
-3. Then merge this change to the `master` of your GitHub repo
+2. Either add the `main` branch or not based on your assumption. Do not remove `master` yet!
+3. Merge this change to the `master` of your GitHub repo
 
 **Example:**
 
@@ -125,7 +163,7 @@ pr:
     - main
 ```
 
-## 3. Update the the build mirroring in `subscriptions.json`
+## 3. Update the build mirroring in `subscriptions.json`
 ![AzDO mirrored](images/azdo-mirrored.png)
 
 1. Fork [`https://github.com/dotnet/versions`](https://github.com/dotnet/versions)
@@ -162,11 +200,12 @@ This will effectively disable code mirroring.
 > Notes:
 > * The `main` branch will be created as part of this step automatically. It shouldn't exist yet at this stage.
 > * When user opens GitHub repo it automatically shows steps how to update local repository.
-> * Automation updates target branch in all PRs.
+> * Automation updates target branch in all PRs against master.
 > * GitHub raw links are automatically redirected. For example link https://raw.githubusercontent.com/dotnet/xharness/master/README.md still works even after rename and is equivalent to link https://raw.githubusercontent.com/dotnet/xharness/main/README.md.
 
-
 > **Warning:** The `master` branch will be deleted during this step!
+
+> **Warning:** This step will retrigger all PR builds on all PRs opened against master. If there is a large number of PRs (50+), please consider removing the branch trigger and then continuing here.
 
 1. Navigate to your repository: `https://github.com/dotnet/[REPO NAME]`
 2. In case you don't see settings tab, you don't have sufficient permissions and won't be able to proceed (please check the [prerequisites](#prerequisites))
@@ -174,9 +213,9 @@ This will effectively disable code mirroring.
 4. Ensure that UI looks the same as on the picture bellow. If it doesn't look the same than the GitHub rename tool isn't enabled for you. You should stop here and contact us.
 5. Under the first section `Default branch` you should see branch master
 6. Click `Rename branch` button to change the default branch to `main`
+7. If any, close all PRs opened by the **dotnet-maestro** bot since Maestro won't be able to update those anymore - they are for a different subscription. New PRs will automatically start flowing for the `main` branch once you update the darc subscriptions later in the guide.
 
 ![Changing the default branch in GitHub](images/github-branch-rename-tool.png)
-
 
 ## 6. Search your repository for any references to the `main` branch specific to your repo
 
@@ -189,6 +228,8 @@ Search your repository for any references to the `master` branch specific to you
     ```
     grep -r master . | grep -v "^\./\(\.git\|eng/common\)"
     ```
+- Consider also any code that is kept in sync using GitHub actions between repos, [such as this example](https://github.com/dotnet/aspnetcore/blob/main/.github/workflows/runtime-sync.yml).
+- There also might be references **to your repo from other repos**. You don't have to worry about these much as GitHub will redirect all links automatically (see [FAQ / What happens to links to files in my repo](#what-happens-to-links-to-files-in-my-repo)). Ideally take care of those at the end of this guide
 
 ## 7. Use a `darc` script to migrate channels and subscriptions
 ![Maestro enabled](images/maestro-enabled.png)
@@ -213,7 +254,7 @@ Search your repository for any references to the `master` branch specific to you
 
 - Do this for [public](https://dev.azure.com/dnceng/public) and [internal](https://dev.azure.com/dnceng/internal) projects
 - Do this for all pipelines that are based off a YAML in the repo that you are working with
-- You can use [this script](https://github.com/dotnet/arcade/blob/master/scripts/list-repo-pipelines.ps1) to list all pipelines associated with a given repo:
+- You can use [this script](https://raw.githubusercontent.com/dotnet/arcade/master/scripts/list-repo-pipelines.ps1) to list all pipelines associated with a given repo:
   > ```ps
   > .\list-repo-pipelines.ps1 -GitHubRepository "[GH REPO NAME]" -AzDORepository "[AZDO REPO NAME]" -PAT "[TOKEN]"
   > ```
@@ -223,7 +264,7 @@ Example:
   > .\list-repo-pipelines.ps1 -GitHubRepository "dotnet/xharness" -AzDORepository "dotnet-xharness" -PAT "jdsvmd324jnsdvjafn2vsd"
   > ```
 
-The **Pesonal Access Token** needs to have following scopes: **Code (Read)**, **Build (Read)**.
+The **Personal Access Token** needs to have following scopes: **Code (Read)**, **Build (Read)**.
 The parameters can be used separately, GitHub listing doesn't require the token to be set.
 
 1. Go to AzDO pipelines, find your pipeline
@@ -235,7 +276,6 @@ The parameters can be used separately, GitHub listing doesn't require the token 
    ![Piepline triggers](images/pipeline-default-branch.png)
 5. Save the changes
    ![Pipeline triggers](images/save-pipeline.png)
-
 
 ## 9. Switch the default branch of the AzDO repository to `main`
 
@@ -303,12 +343,20 @@ pr:
 
 ## 12. Configure **Component Governance** to track the `main` branch
 
+> **Note:** this step only applies to repositories that deploy to cloud and have a required Component Governance setup due to SDL.
+> Your repository might not be and that's ok.
+
 Go to the internal AzDO mirror of your repository and configure **Component Governance** to track the right branch/pipeline.
 - Copy the settings from the `master` branch and set up tracking for `main`
 - Stop tracking the `master` branch
 
 ![Component Governance](images/component-governance-1.png)
 ![Component Governance](images/component-governance-2.png)
+
+## 13. Fix any AzDO dashboards
+
+Fix any AzDO dashboards based off of the pipelines / repository.
+This can be done through the AzDO website in most cases.
 
 **You are now done with the migration!**
 
@@ -318,10 +366,10 @@ Go to the internal AzDO mirror of your repository and configure **Component Gove
 When branch is renamed in GitHub then open PRs against master are automatically re-targeted (forks as well).
 
 ## What if PRs get merged/opened during the process?
-We suggest to try to not merge any PRs during the process described below. However, the instructions are ordered in a way that should prevent it and keep a consistent state even if it happens.
+We suggest trying to not merge any PRs during the process described below. However, the instructions are ordered in a way that should prevent it and keep a consistent state even if it happens.
 
 ## Can I revert if something goes sideways?
-All of the steps are easily revert-able, so it is not a problem to go back to master in case you find some problems maybe only specific to your repository that would prevent you from migrating.
+All the steps are easily revert-able, so it is not a problem to go back to master in case you find some problems maybe only specific to your repository that would prevent you from migrating.
 
 ## How do I migrate Maestro subscriptions?
 Scripts for Maestro migration are part of this renaming guide.

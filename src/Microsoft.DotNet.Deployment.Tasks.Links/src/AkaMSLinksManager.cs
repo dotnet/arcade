@@ -351,7 +351,8 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links.src
                         targetUrl = link.TargetUrl,
                         lastModifiedBy = linkCreatedOrUpdatedBy,
                         description = link.Description,
-                        groupOwner = linkGroupOwner
+                        groupOwner = linkGroupOwner,
+                        isAllowParam = true
                     };
                 }));
             }
@@ -369,7 +370,8 @@ namespace Microsoft.DotNet.Deployment.Tasks.Links.src
                         groupOwner = linkGroupOwner,
                         // Create specific items
                         createdBy = linkCreatedOrUpdatedBy,
-                        isVanity = !string.IsNullOrEmpty(link.ShortUrl)
+                        isVanity = !string.IsNullOrEmpty(link.ShortUrl),
+                        isAllowParam = true
                     };
                 }));
             }

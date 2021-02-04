@@ -21,7 +21,7 @@
           of the assembly compilation process.
   -->
   <PropertyGroup>
-    <TargetsTriggeredByCompilation Condition="'$(DesignTimeBuild)' != 'true'">
+    <TargetsTriggeredByCompilation Condition="'$(DesignTimeBuild)' != 'true' and '$(DotNetBuildFromSource)' != 'true'">
       $(TargetsTriggeredByCompilation);FillPartialFacadeUsingTask
     </TargetsTriggeredByCompilation>
   </PropertyGroup>
