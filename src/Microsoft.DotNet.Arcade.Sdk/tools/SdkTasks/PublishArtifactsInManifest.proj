@@ -86,7 +86,7 @@
       <AkaMSTenant Condition="'$(AkaMSTenant)' == ''">ncd</AkaMSTenant>
       <AkaMSOwners Condition="'$(AkaMSOwners)' == ''">dn-bot</AkaMSOwners>
       <AkaMSCreatedBy Condition="'$(AkaMSCreatedBy)' == ''">dn-bot</AkaMSCreatedBy>
-      <AkaMSGroupOwner Condition="'$(AkaMSGroupOwner)' == ''">dotnetes</AkaMSCreatedBy>
+      <AkaMSGroupOwner Condition="'$(AkaMSGroupOwner)' == ''">dotnetes</AkaMSGroupOwner>
       <PublishSpecialClrFiles Condition="'$(PublishSpecialClrFiles)' == ''">false</PublishSpecialClrFiles>
       <InstallersFeedKey>$(InstallersAzureAccountKey)</InstallersFeedKey>
       <InternalInstallersFeedKey>$(InternalInstallersAzureAccountKey)</InternalInstallersFeedKey>
