@@ -426,7 +426,8 @@
       Lines="$(SourceRevisionId);$(Version)"
       File="@(_DotVersionFile)"
       Overwrite="true"
-      WriteOnlyWhenDifferent="true" />
+      WriteOnlyWhenDifferent="true"
+      Condition="'@(_DotVersionFile)' != ''" />
     <ItemGroup>
       <FileWrites Include="@(_VersionsFile);@(_DotVersionFile)" />
       <FilesToPackage Include="@(_VersionsFile);@(_DotVersionFile)" />

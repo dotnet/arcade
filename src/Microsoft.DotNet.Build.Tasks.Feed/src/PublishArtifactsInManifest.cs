@@ -3,6 +3,7 @@
 
 using Microsoft.Arcade.Common;
 using Microsoft.Build.Framework;
+using Microsoft.DotNet.Build.Tasks.Feed.Model;
 using Microsoft.DotNet.Maestro.Client;
 using Microsoft.DotNet.VersionTools.Automation;
 using Microsoft.DotNet.VersionTools.BuildManifest.Model;
@@ -165,6 +166,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public string AkaMSGroupOwner { get; set; }
 
+        public string BuildQuality
+        {
+            get { return _buildQuality.GetDescription(); }
+            set { Enum.TryParse<PublishingConstants.BuildQuality>(value, true, out _buildQuality); }
+        }
+
         /// <summary>
         /// Just an internal flag to keep track whether we published assets via a V3 manifest or not.
         /// </summary>
@@ -172,6 +179,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         private IBuildModelFactory _buildModelFactory;
         private IFileSystem _fileSystem;
+
+        private PublishingConstants.BuildQuality _buildQuality;
 
         public override void ConfigureServices(IServiceCollection collection)
         {
@@ -304,7 +313,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 AkaMSCreatedBy = this.AkaMSCreatedBy,
                 AkaMSGroupOwner = this.AkaMSGroupOwner,
                 AkaMsOwners = this.AkaMsOwners,
-                AkaMSTenant = this.AkaMSTenant
+                AkaMSTenant = this.AkaMSTenant,
+                BuildQuality = this.BuildQuality
             };
         }
 
@@ -343,7 +353,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 SymWebToken = this.SymWebToken,
                 MsdlToken = this.MsdlToken,
                 SymbolPublishingExclusionsFile = this.SymbolPublishingExclusionsFile,
-                PublishSpecialClrFiles = this.PublishSpecialClrFiles
+                PublishSpecialClrFiles = this.PublishSpecialClrFiles,
+                BuildQuality = this.BuildQuality
             };
         }
     }

@@ -147,7 +147,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         targetChannelConfig.ShippingFeed,
                         targetChannelConfig.TransportFeed,
                         targetChannelConfig.SymbolsFeed,
-                        $"dotnet/{targetChannelConfig.AkaMSChannelName}",
+                        $"dotnet/{targetChannelConfig.AkaMSChannelName}/{BuildQuality}",
                         AzureDevOpsFeedsKey,
                         BuildEngine = this.BuildEngine,
                         targetChannelConfig.SymbolTargetType);
