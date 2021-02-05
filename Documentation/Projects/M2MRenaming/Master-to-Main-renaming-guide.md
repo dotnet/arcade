@@ -272,7 +272,7 @@ Once you have the configuration file, execute the M2MTool with command `pipeline
 .\M2MTool.exe pipeline --config=configfile.csv
 ```
 
-### Pipelines based on GitHub repository have to be updated manually
+### 2. Pipelines based on GitHub repository have to be updated manually
 - Do this for all pipelines that are based off a YAML in the GitHub repo that you are working with
 - You can use [this script](https://raw.githubusercontent.com/dotnet/arcade/master/scripts/list-repo-pipelines.ps1) to list all pipelines associated with a given repo:
   > ```ps
