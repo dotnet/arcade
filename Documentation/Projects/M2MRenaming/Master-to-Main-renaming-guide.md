@@ -279,7 +279,7 @@ Once you have configuration file, execute the M2MTool with command `pipeline` an
   > .\list-repo-pipelines.ps1 -GitHubRepository "[GH REPO NAME]"
   > ```
 
-- Example for dotnet/xharness:
+- Example for `dotnet/xharness`:
   > ```ps
   > .\list-repo-pipelines.ps1 -GitHubRepository "dotnet/xharness"
   > ```
