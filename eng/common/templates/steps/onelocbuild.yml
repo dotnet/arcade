@@ -1,0 +1,11 @@
+parameters:
+  CeapexPat: $(dn-bot-ceapex-package-r)
+
+steps:
+- task: OneLocBuild@2
+  displayName: OneLocBuild
+  inputs:
+    locProj: Localize/LocProject.json
+    outDir: $(Build.ArtifactStagingDirectory)
+    packageSourceAuth: patAuth
+    patVariable: ${{ parameters.CeapexPat }}
