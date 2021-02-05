@@ -267,7 +267,7 @@ Example of M2MTool configuration file for dotnet-xharness:
 Org,Project,Repo
 dnceng,internal,dotnet-xharness
 ```
-Once you have configuration file, execute the M2MTool with command `pipeline` and your configuration file. Example for dotnet-xharness:
+Once you have the configuration file, execute the M2MTool with command `pipeline` and supply the configuration file:
 ```
 .\M2MTool.exe pipeline --config=configfile.csv
 ```
