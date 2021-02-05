@@ -364,17 +364,14 @@ pr:
 > **Note:** this step only applies to repositories that deploy to cloud and have a required Component Governance setup due to SDL.
 > Your repository might not be and that's ok.
 
-> Make sure that Component Governance task on main branch has finished before starting this step.
+> Make sure that Component Governance task on the main branch has finished before starting this step!
 
-Tracking of main branch is done automatically when a Component Governance task on this branch finishes. Once main branch is tracked you should disable tracking of master branch by [M2MTool](https://devdiv.visualstudio.com/DefaultCollection/Engineering/_git/M2MTool?path=%2FREADME.md&_a=preview) with command `component-governance-untrack-branch` and configuration prepared in [step 8](#8-change-the-default-branch-for-azdo-pipelines).
+Go to the internal AzDO mirror of your repository and configure **Component Governance** to track the right branch/pipeline.
+- Copy the settings from the `master` branch and set up tracking for `main`
+- Stop tracking the `master` branch
 
-Example for dotnet/xharness:
-```
-.\M2MTool.exe component-governance-untrack-branch --config=configfile.csv
-```
-
-> **Note:**  This command will fail if main branch isn't tracked.
-
+![Component Governance](images/component-governance-1.png)
+![Component Governance](images/component-governance-2.png)
 
 ## 13. Fix any AzDO dashboards
 
