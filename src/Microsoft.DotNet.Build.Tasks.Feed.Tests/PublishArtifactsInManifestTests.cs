@@ -540,7 +540,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         [Fact]
         public void AreDependenciesRegistered()
         {
-            ParseBuildManifest task = new ParseBuildManifest();
+            PublishArtifactsInManifest task = new PublishArtifactsInManifest();
 
             var collection = new ServiceCollection();
             task.ConfigureServices(collection);

@@ -5,7 +5,7 @@
     current .NET SDK framework version to avoid dependency challenges.
   -->
   <PropertyGroup>
-    <TargetFrameworkForNETSDK>netcoreapp2.1</TargetFrameworkForNETSDK>
+    <TargetFrameworkForNETSDK>netcoreapp3.1</TargetFrameworkForNETSDK>
     <TargetFrameworkForNETSDK Condition="'$(DotNetBuildFromSource)' == 'true'">net5.0</TargetFrameworkForNETSDK>
   </PropertyGroup>
 
