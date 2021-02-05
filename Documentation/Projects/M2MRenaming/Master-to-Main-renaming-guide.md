@@ -194,7 +194,7 @@ This will effectively disable code mirroring.
 4. Create a new branch called `main` off of the `master` branch
 5. Mirror policies from branch `master` to branch `main` using [M2MTool](https://devdiv.visualstudio.com/DefaultCollection/Engineering/_git/M2MTool?path=%2FREADME.md&_a=preview)
 
-Example for dotnet/xharness (just update parameter URL with URL of your repository):
+Example for `dotnet/xharness`:
 ```
 .\M2MTool.exe mirror-policies --frombranch=master --tobranch=main --url=https://dev.azure.com/dnceng/internal/_git/dotnet-xharness
 ```
