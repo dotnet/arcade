@@ -89,10 +89,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 string temporarySymbolsLocation =
                     Path.GetFullPath(Path.Combine(BlobAssetsBasePath, @"..\", "tempSymbols"));
 
-                if (!Directory.Exists(temporarySymbolsLocation))
-                {
-                    Directory.CreateDirectory(temporarySymbolsLocation);
-                }
+                CreateTemporarySymbolDirectory(temporarySymbolsLocation);
 
                 SplitArtifactsInCategories(BuildModel);
                 DeleteSymbolTemporaryFiles(temporarySymbolsLocation);
@@ -231,11 +228,18 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             }
         }
 
+        public void CreateTemporarySymbolDirectory(string temporarySymbolsLocation)
+        {
+            if (!Directory.Exists(temporarySymbolsLocation))
+            {
+                Directory.CreateDirectory(temporarySymbolsLocation);
+            }
+        }
         /// <summary>
         /// Delete the symbols files after publishing to Symbol server(s), this is part of cleanup
         /// </summary>
         /// <param name="temporarySymbolsLocation"></param>
-        private void DeleteSymbolTemporaryFiles(string temporarySymbolsLocation)
+        public void DeleteSymbolTemporaryFiles(string temporarySymbolsLocation)
         {
             try
             {
@@ -258,7 +262,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// Deletes the temporary symbol folder, this is part of clean up
         /// </summary>
         /// <param name="temporarySymbolLocation"></param>
-        private void DeleteSymbolTemporaryDirectory(string temporarySymbolLocation)
+        public void DeleteSymbolTemporaryDirectory(string temporarySymbolLocation)
         {
             if (Directory.Exists(temporarySymbolLocation))
             {
