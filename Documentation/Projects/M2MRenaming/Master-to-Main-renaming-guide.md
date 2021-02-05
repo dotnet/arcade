@@ -51,7 +51,7 @@ Please verify that you:
   - If so, have the [`darc`](https://github.com/dotnet/arcade/blob/master/Documentation/Darc.md) command installed, updated and authenticated
   - Make sure tokens set using `darc authenticate` are still valid ([details at Darc.md#authenticate](https://github.com/dotnet/arcade/blob/master/Documentation/Darc.md#authenticate))
   - Have PowerShell installed so that you can run scripts provided by us (any version should be ok)
-- Make sure that you have access to [M2MTool](https://devdiv.visualstudio.com/DefaultCollection/Engineering/_git/M2MTool?path=%2FREADME.md&_a=preview) and can download the latest version. M2MTool was created by VSEng and can be reused by us too.
+- Make sure that you have access to [M2MTool](https://devdiv.visualstudio.com/DefaultCollection/Engineering/_git/M2MTool?path=%2FREADME.md&_a=preview) and you can download the latest version. M2MTool was created by VSEng and shared with our division.
 - Know whether your repository is mirrored to the [internal AzDO dnceng project](https://dev.azure.com/dnceng/internal/_git)
   - Make sure you have sufficient permissions to manage branches/branch policies for the internal AzDO mirror of your repository
     - You need to have the `Force push` permission in branch security settings for the `master` branch to be able to delete it:
@@ -61,7 +61,7 @@ Please verify that you:
         4. Search for yourself in the identities search box
         5. Verify value in `Force push (rewrite history, delete branches and tags)` is `Allow` (can be through inheritance)
     - Make sure you see the `Set as default branch` dropdown menu item in branch management (verify with some random branch)
-    - If you don't have access to update policies, you need ask .NET Core Engineering <dnceng@microsoft.com>. Steps described in documentation for [M2MTool](https://devdiv.visualstudio.com/DefaultCollection/Engineering/_git/M2MTool?path=%2FREADME.md&_a=preview) are applicable for devdiv.
+    - If you don't have access to update policies, you need ask .NET Core Engineering <dnceng@microsoft.com>. Be aware that steps described in [M2MTool documentation](https://devdiv.visualstudio.com/DefaultCollection/Engineering/_git/M2MTool?path=%2FREADME.md&_a=preview) are applicable for devdiv.
   - Make sure you have permissions to manage pipeline's settings in the AzDO portal (if unsure, see screenshots in `8. Change the default branch for AzDO pipelines`)
 - Have permissions to manage branches and branch policies in GitHub for your repo (access to Settings > Branches)
 - Are aware of any custom hard-coded references to the `master` branch inside of your repository
