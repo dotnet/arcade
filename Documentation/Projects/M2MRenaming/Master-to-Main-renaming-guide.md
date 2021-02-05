@@ -284,7 +284,7 @@ Once you have configuration file, execute the M2MTool with command `pipeline` an
   > .\list-repo-pipelines.ps1 -GitHubRepository "dotnet/xharness"
   > ```
 
-To update pipeline:
+To update the pipeline:
 1. Go to AzDO pipelines, find your pipeline
 2. Click `Edit`
    ![Edit pipeline](images/edit-pipeline.png)
