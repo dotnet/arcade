@@ -84,9 +84,9 @@
 
     <PropertyGroup>
       <AkaMSTenant Condition="'$(AkaMSTenant)' == ''">ncd</AkaMSTenant>
-      <AkaMSOwners Condition="'$(AkaMSOwners)' == ''">dn-bot</AkaMSOwners>
+      <AkaMSOwners Condition="'$(AkaMSOwners)' == ''">jamshedd;leecow;rbhanda;v-susles;v-paddan</AkaMSOwners>
       <AkaMSCreatedBy Condition="'$(AkaMSCreatedBy)' == ''">dn-bot</AkaMSCreatedBy>
-      <AkaMSGroupOwner Condition="'$(AkaMSGroupOwner)' == ''">dotnetes</AkaMSGroupOwner>
+      <AkaMSGroupOwner Condition="'$(AkaMSGroupOwner)' == ''">dotnetes;ddfwlink</AkaMSGroupOwner>
       <PublishSpecialClrFiles Condition="'$(PublishSpecialClrFiles)' == ''">false</PublishSpecialClrFiles>
       <BuildQuality Condition="'$(BuildQuality)' == ''">daily</BuildQuality>
       <InstallersFeedKey>$(InstallersAzureAccountKey)</InstallersFeedKey>
