@@ -61,7 +61,7 @@ Please verify that you:
         4. Search for yourself in the identities search box
         5. Verify value in `Force push (rewrite history, delete branches and tags)` is `Allow` (can be through inheritance)
     - Make sure you see the `Set as default branch` dropdown menu item in branch management (verify with some random branch)
-    - If you don't have access to update policies, you need ask .NET Core Engineering <dnceng@microsoft.com>. Be aware that steps described in [M2MTool documentation](https://devdiv.visualstudio.com/DefaultCollection/Engineering/_git/M2MTool?path=%2FREADME.md&_a=preview) are applicable for devdiv.
+    - If you don't have access to update policies, you need to ask [.NET Core Engineering <dnceng@microsoft.com>](mailto://dnceng@microsoft.com). Beware, the steps described in [M2MTool documentation](https://devdiv.visualstudio.com/DefaultCollection/Engineering/_git/M2MTool?path=%2FREADME.md&_a=preview) are applicable for devdiv.
   - Make sure you have permissions to manage pipeline's settings in the AzDO portal (if unsure, see screenshots in `8. Change the default branch for AzDO pipelines`)
 - Have permissions to manage branches and branch policies in GitHub for your repo (access to Settings > Branches)
 - Are aware of any custom hard-coded references to the `master` branch inside of your repository
