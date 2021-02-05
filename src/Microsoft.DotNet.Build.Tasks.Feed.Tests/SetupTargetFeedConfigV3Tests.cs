@@ -15,6 +15,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
     {
         private const string AzureStorageTargetFeedPAT = "AzureStorageTargetFeedPAT";
         private const string LatestLinkShortUrlPrefix = "LatestLinkShortUrlPrefix";
+        private const string BuildQuality = "quality";
         private const string AzureDevOpsFeedsKey = "AzureDevOpsFeedsKey";
 
         private const string StablePackageFeed = "StablePackageFeed";
@@ -147,7 +148,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     AzureDevOpsStaticShippingFeed,
                     AzureDevOpsStaticTransportFeed,
                     AzureDevOpsStaticSymbolsFeed,
-                    LatestLinkShortUrlPrefix,
+                    $"{LatestLinkShortUrlPrefix}/{BuildQuality}",
                     AzureDevOpsFeedsKey,
                     buildEngine,
                     symbolTargetType,
@@ -254,7 +255,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     AzureDevOpsStaticShippingFeed,
                     AzureDevOpsStaticTransportFeed,
                     AzureDevOpsStaticSymbolsFeed,
-                    LatestLinkShortUrlPrefix,
+                    $"{LatestLinkShortUrlPrefix}/{BuildQuality}",
                     AzureDevOpsFeedsKey,
                     buildEngine: buildEngine,
                     symbolTargetType
@@ -280,7 +281,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                         ChecksumsTargetStaticFeed,
                         FeedType.AzureStorageFeed,
                         ChecksumsTargetStaticFeedKey,
-                        LatestLinkShortUrlPrefix,
+                        $"{LatestLinkShortUrlPrefix}/{BuildQuality}",
                         AssetSelection.All,
                         isolated: false,
                         @internal: false,
@@ -295,7 +296,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                             InstallersTargetStaticFeed,
                             FeedType.AzureStorageFeed,
                             InstallersTargetStaticFeedKey,
-                            LatestLinkShortUrlPrefix,
+                            $"{LatestLinkShortUrlPrefix}/{BuildQuality}",
                             AssetSelection.All,
                             isolated: false,
                             @internal: false,
@@ -358,7 +359,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     AzureDevOpsStaticShippingFeed,
                     AzureDevOpsStaticTransportFeed,
                     AzureDevOpsStaticSymbolsFeed,
-                    LatestLinkShortUrlPrefix,
+                    $"{LatestLinkShortUrlPrefix}/{BuildQuality}",
                     AzureDevOpsFeedsKey,
                     buildEngine: buildEngine,
                     symbolTargetType

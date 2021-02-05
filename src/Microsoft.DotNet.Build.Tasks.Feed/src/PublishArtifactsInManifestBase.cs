@@ -101,6 +101,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public string AkaMSGroupOwner { get; set; }
 
+        public string BuildQuality { get; set; }
+
         public readonly Dictionary<TargetFeedContentType, HashSet<TargetFeedConfig>> FeedConfigs = 
             new Dictionary<TargetFeedContentType, HashSet<TargetFeedConfig>>();
 

@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 namespace Microsoft.DotNet.Deployment.Tasks.Links
 {
     /// <summary>
-    /// Computes the checksum for a single file.
+    /// Creates or updates, in bulk, a set of aka.ms (redirection) links
     /// </summary>
     public class CreateAkaMSLinks : AkaMSLinksBase
     {

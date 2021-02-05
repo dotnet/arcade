@@ -36,6 +36,7 @@ stages:
       enableMicrobuild: true
       enablePublishUsingPipelines: true
       enableSourceIndex: true
+      enableSourceBuild: true
       workspace:
         clean: all
       jobs:
@@ -270,4 +271,5 @@ stages:
         -TsaIterationPath $(_TsaIterationPath)
         -TsaRepositoryName "Arcade"
         -TsaCodebaseName "Arcade"
-        -TsaPublish $True'
+        -TsaPublish $True
+        -PoliCheckAdditionalRunConfigParams @("UserExclusionPath < $(Build.SourcesDirectory)/eng/PoliCheckExclusions.xml")'
