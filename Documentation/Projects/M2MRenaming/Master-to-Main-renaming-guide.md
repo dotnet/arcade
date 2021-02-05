@@ -260,7 +260,7 @@ Search your repository for any references to the `master` branch specific to you
 ![AzDO mirrored](images/azdo-mirrored.png)
 
 ### 1. Pipelines based on AzDO repository can be updated by M2MTool
-First, you need to prepare a configuration file for [M2MTool](https://devdiv.visualstudio.com/DefaultCollection/Engineering/_git/M2MTool?path=%2FREADME.md&_a=preview). Example can be found in \M2MTool\ConfigFiles\configfile.csv.
+First, you need to prepare a configuration file for [M2MTool](https://devdiv.visualstudio.com/DefaultCollection/Engineering/_git/M2MTool?path=%2FREADME.md&_a=preview). Example can be found [here](https://devdiv.visualstudio.com/DefaultCollection/Engineering/_git/M2MTool?path=%2FConfigFiles%2Fconfigfile.csv).
 
 Example of M2MTool configuration file for `dotnet-xharness`:
 ```
