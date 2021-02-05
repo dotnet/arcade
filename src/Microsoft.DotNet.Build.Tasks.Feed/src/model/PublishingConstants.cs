@@ -304,7 +304,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedGeneralTestingSymbols,
                 FeedForChecksums,
                 FeedForInstallers,
-                PublicAndInternalSymbolTargets),
+                PublicAndInternalSymbolTargets,
+                filesToExclude: FilesToExclude),
 
             // "General Testing Internal",
             new TargetChannelConfig(
