@@ -34,6 +34,7 @@ stages:
           logs: true
           manifests: true
       enableMicrobuild: true
+      enableOneLocBuild: true
       enablePublishUsingPipelines: true
       enableSourceIndex: true
       enableSourceBuild: true
@@ -60,13 +61,6 @@ stages:
         - checkout: self
           clean: true
         steps:
-        - task: OneLocBuild@2
-          inputs:
-            locProj: Localize/LocProject.json
-            outDir: $(Build.ArtifactStagingDirectory)
-            packageSourceAuth: patAuth
-            patVariable: $(dn-bot-ceapex-package-r)
-          displayName: OneLocBuild
         - script: eng\common\cibuild.cmd
             -configuration $(_BuildConfig)
             -prepareMachine

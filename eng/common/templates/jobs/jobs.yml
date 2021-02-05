@@ -31,6 +31,8 @@ parameters:
   #           if 'true', the build won't run any of the internal only steps, even if it is running in non-public projects.
   runAsPublic: false
 
+  enableOneLocBuild: false
+
   enableSourceIndex: false
   sourceIndexParams: {}
 
@@ -97,3 +99,6 @@ jobs:
           - Asset_Registry_Publish
         pool:
           vmImage: vs2017-win2016
+
+  - ${{ if eq(parameters.enableOneLocBuild, 'true') }}:
+    - template: ../steps/one-loc-build.yml
