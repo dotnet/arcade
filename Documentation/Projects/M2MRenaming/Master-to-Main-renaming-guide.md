@@ -51,6 +51,7 @@ Please verify that you:
   - If so, have the [`darc`](https://github.com/dotnet/arcade/blob/master/Documentation/Darc.md) command installed, updated and authenticated
   - Make sure tokens set using `darc authenticate` are still valid ([details at Darc.md#authenticate](https://github.com/dotnet/arcade/blob/master/Documentation/Darc.md#authenticate))
   - Have PowerShell installed so that you can run scripts provided by us (any version should be ok)
+- Make sure that you have access to [M2MTool](https://devdiv.visualstudio.com/DefaultCollection/Engineering/_git/M2MTool?path=%2FREADME.md&_a=preview) and can download the latest version. M2MTool was created by VSEng and can be reused by us too.
 - Know whether your repository is mirrored to the [internal AzDO dnceng project](https://dev.azure.com/dnceng/internal/_git)
   - Make sure you have sufficient permissions to manage branches/branch policies for the internal AzDO mirror of your repository
     - You need to have the `Force push` permission in branch security settings for the `master` branch to be able to delete it:
@@ -60,7 +61,7 @@ Please verify that you:
         4. Search for yourself in the identities search box
         5. Verify value in `Force push (rewrite history, delete branches and tags)` is `Allow` (can be through inheritance)
     - Make sure you see the `Set as default branch` dropdown menu item in branch management (verify with some random branch)
-    - If you don't have access to update policies, you need follow steps for [M2MTool](https://devdiv.visualstudio.com/DefaultCollection/Engineering/_git/M2MTool?path=%2FREADME.md&_a=preview) and fill out ticket a VSEng Service Ticket
+    - If you don't have access to update policies, you need ask .NET Core Engineering <dnceng@microsoft.com>. Steps described in documentation for [M2MTool](https://devdiv.visualstudio.com/DefaultCollection/Engineering/_git/M2MTool?path=%2FREADME.md&_a=preview) are applicable for devdiv.
   - Make sure you have permissions to manage pipeline's settings in the AzDO portal (if unsure, see screenshots in `8. Change the default branch for AzDO pipelines`)
 - Have permissions to manage branches and branch policies in GitHub for your repo (access to Settings > Branches)
 - Are aware of any custom hard-coded references to the `master` branch inside of your repository
@@ -191,7 +192,7 @@ This will effectively disable code mirroring.
     > Note: Go to the [code-mirror build](https://dev.azure.com/dnceng/internal/_build?definitionId=16&_a=summary) and filter the pipeline runs by Tags (select your repo).
 3. Go to `Branches`
 4. Create a new branch called `main` off of the `master` branch
-5. Mirror policies from branch `master` to branch `main` using [M2MTool](https://devdiv.visualstudio.com/DefaultCollection/Engineering/_git/M2MTool)
+5. Mirror policies from branch `master` to branch `main` using [M2MTool](https://devdiv.visualstudio.com/DefaultCollection/Engineering/_git/M2MTool?path=%2FREADME.md&_a=preview)
 
 Example for dotnet/xharness (just update parameter URL with URL of your repository):
 ```
@@ -258,8 +259,8 @@ Search your repository for any references to the `master` branch specific to you
 ## 8. Change the default branch for AzDO pipelines
 ![AzDO mirrored](images/azdo-mirrored.png)
 
-### 8.1. For [internal](https://dev.azure.com/dnceng/internal) projects, you can update pipelines using [M2MTool](https://devdiv.visualstudio.com/DefaultCollection/Engineering/_git/M2MTool).
-First you need to prepare a configuration file for [M2MTool](https://devdiv.visualstudio.com/DefaultCollection/Engineering/_git/M2MTool). Example can be found in \M2MTool\ConfigFiles\configfile.csv.
+### 1. Pipelines based on AzDO repository can be updated by M2MTool
+First you need to prepare a configuration file for [M2MTool](https://devdiv.visualstudio.com/DefaultCollection/Engineering/_git/M2MTool?path=%2FREADME.md&_a=preview). Example can be found in \M2MTool\ConfigFiles\configfile.csv.
 
 Example of M2MTool configuration file for dotnet-xharness:
 ```
@@ -271,7 +272,7 @@ Once you have configuration file, execute the M2MTool with command `pipeline` an
 .\M2MTool.exe pipeline --config=configfile.csv
 ```
 
-### 8.2. M2MTool tool doesn't handle [public](https://dev.azure.com/dnceng/public) projects against GitHub repositories.
+### Pipelines based on GitHub repository have to be updated manually
 - Do this for all pipelines that are based off a YAML in the GitHub repo that you are working with
 - You can use [this script](https://raw.githubusercontent.com/dotnet/arcade/master/scripts/list-repo-pipelines.ps1) to list all pipelines associated with a given repo:
   > ```ps
@@ -363,9 +364,9 @@ pr:
 > **Note:** this step only applies to repositories that deploy to cloud and have a required Component Governance setup due to SDL.
 > Your repository might not be and that's ok.
 
-> Make sure that CG task on main branch has finished before starting this step.
+> Make sure that Component Governance task on main branch has finished before starting this step.
 
-Tracking of main breanch is done automatically when a CG task on this branch finishes. Once main branch is tracked you should disable tracking of master branch by [M2MTool](https://devdiv.visualstudio.com/DefaultCollection/Engineering/_git/M2MTool) with command `component-governance-untrack-branch` and configuration prepared in [step 8](#8-change-the-default-branch-for-azdo-pipelines).
+Tracking of main breanch is done automatically when a Component Governance task on this branch finishes. Once main branch is tracked you should disable tracking of master branch by [M2MTool](https://devdiv.visualstudio.com/DefaultCollection/Engineering/_git/M2MTool?path=%2FREADME.md&_a=preview) with command `component-governance-untrack-branch` and configuration prepared in [step 8](#8-change-the-default-branch-for-azdo-pipelines).
 
 Example for dotnet/xharness:
 ```
