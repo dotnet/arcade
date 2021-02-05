@@ -366,7 +366,7 @@ pr:
 
 > Make sure that Component Governance task on main branch has finished before starting this step.
 
-Tracking of main breanch is done automatically when a Component Governance task on this branch finishes. Once main branch is tracked you should disable tracking of master branch by [M2MTool](https://devdiv.visualstudio.com/DefaultCollection/Engineering/_git/M2MTool?path=%2FREADME.md&_a=preview) with command `component-governance-untrack-branch` and configuration prepared in [step 8](#8-change-the-default-branch-for-azdo-pipelines).
+Tracking of main branch is done automatically when a Component Governance task on this branch finishes. Once main branch is tracked you should disable tracking of master branch by [M2MTool](https://devdiv.visualstudio.com/DefaultCollection/Engineering/_git/M2MTool?path=%2FREADME.md&_a=preview) with command `component-governance-untrack-branch` and configuration prepared in [step 8](#8-change-the-default-branch-for-azdo-pipelines).
 
 Example for dotnet/xharness:
 ```
