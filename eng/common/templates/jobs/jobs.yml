@@ -99,6 +99,3 @@ jobs:
           - Asset_Registry_Publish
         pool:
           vmImage: vs2017-win2016
-
-  - ${{ if eq(parameters.enableOneLocBuild, 'true') }}:
-    - template: ../steps/one-loc-build.yml

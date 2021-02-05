@@ -20,6 +20,7 @@ parameters:
   # See schema documentation - https://github.com/dotnet/arcade/blob/master/Documentation/AzureDevOps/TemplateSchema.md
   artifacts: ''
   enableMicrobuild: false
+  enableOneLocBuild: false
   enablePublishBuildArtifacts: false
   enablePublishBuildAssets: false
   enablePublishTestResults: false
@@ -68,6 +69,8 @@ jobs:
   - ${{ if eq(parameters.enableRichCodeNavigation, 'true') }}:
     - name: EnableRichCodeNavigation
       value: 'true'
+  - ${{ if eq(parameters.enableOneLocBuild, 'true') }}:
+    - group: OneLocBuildVariables
   - ${{ each variable in parameters.variables }}:
     # handle name-value variable syntax
     # example:
@@ -123,6 +126,15 @@ jobs:
         artifactName: ${{ coalesce(parameters.artifacts.download.name, 'Artifacts_$(Agent.OS)_$(_BuildConfig)') }}
         targetPath: ${{ coalesce(parameters.artifacts.download.path, 'artifacts') }}
         itemPattern: ${{ coalesce(parameters.artifacts.download.pattern, '**') }}
+
+  - ${{ if eq(parameters.enableOneLocBuild, 'true') }}:
+    - task: OneLocBuild@2
+      displayName: OneLocBuild
+      inputs:
+        locProj: Localize/LocProject.json
+        outDir: $(Build.ArtifactStagingDirectory)
+        packageSourceAuth: patAuth
+        patVariable: $(dn-bot-ceapex-package-r)
 
   - ${{ each step in parameters.steps }}:
     - ${{ step }}

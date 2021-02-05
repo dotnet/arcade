@@ -27,7 +27,6 @@ variables:
     - group: Publish-Build-Assets
     - group: DotNet-HelixApi-Access
     - group: SDL_Settings
-    - group: OneLocBuildVariables
     - name: _InternalBuildArgs
       value: /p:DotNetSignType=$(_SignType) 
         /p:TeamName=$(_TeamName)
