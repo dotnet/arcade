@@ -135,7 +135,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 ChecksumsFeed, 
                 InstallersFeed,
                 SymbolTargetType,
-                FilesToExclude).GetHashCode();
+                string.Join(" ", FilesToExclude)).GetHashCode();
         }
     }
 }

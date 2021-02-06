@@ -97,7 +97,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
 
         public override int GetHashCode()
         {
-            return (ContentType, Type, AssetSelection, Isolated, Internal, AllowOverwrite, LatestLinkShortUrlPrefix, TargetURL,  Token, string.Join("",FilesToExclude)).GetHashCode();
+            return (ContentType, Type, AssetSelection, Isolated, Internal, AllowOverwrite, LatestLinkShortUrlPrefix, TargetURL,  Token, string.Join(" ",FilesToExclude)).GetHashCode();
         }
 
         public override string ToString()
