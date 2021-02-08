@@ -81,7 +81,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                         @internal: false,
                         allowOverwrite: true,
                         symbolTargetType,
-                        filesToExclude: FilesToExclude));
+                        filenamesToExclude: FilesToExclude));
 
                 foreach (var contentType in Installers)
                 {
@@ -97,7 +97,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                             @internal: false,
                             allowOverwrite: true,
                             symbolTargetType,
-                            filesToExclude: FilesToExclude));
+                            filenamesToExclude: FilesToExclude));
                 }
             }
 
@@ -113,7 +113,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     @internal: false,
                     allowOverwrite: false,
                     symbolTargetType,
-                    filesToExclude: FilesToExclude));
+                    filenamesToExclude: FilesToExclude));
 
             expectedFeeds.Add(
                 new TargetFeedConfig(
@@ -127,7 +127,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     @internal: false,
                     allowOverwrite: false,
                     symbolTargetType,
-                    filesToExclude: FilesToExclude));
+                    filenamesToExclude: FilesToExclude));
 
             expectedFeeds.Add(
                 new TargetFeedConfig(
@@ -141,7 +141,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     @internal: false,
                     allowOverwrite: false,
                     symbolTargetType,
-                    filesToExclude: FilesToExclude));
+                    filenamesToExclude: FilesToExclude));
 
             var buildEngine = new MockBuildEngine();
             var config = new SetupTargetFeedConfigV3(
@@ -195,7 +195,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                             @internal: true,
                             allowOverwrite: false,
                             symbolTargetType,
-                            filesToExclude: FilesToExclude));
+                            filenamesToExclude: FilesToExclude));
                 }
 
                 expectedFeeds.Add(
@@ -210,7 +210,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                         @internal: true,
                         allowOverwrite: false,
                         symbolTargetType,
-                        filesToExclude: FilesToExclude));
+                        filenamesToExclude: FilesToExclude));
 
             }
 
@@ -226,7 +226,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     @internal: true,
                     allowOverwrite: false,
                     symbolTargetType,
-                    filesToExclude: FilesToExclude));
+                    filenamesToExclude: FilesToExclude));
 
             expectedFeeds.Add(
                 new TargetFeedConfig(
@@ -240,7 +240,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     @internal: true,
                     allowOverwrite: false,
                     symbolTargetType,
-                    filesToExclude: FilesToExclude));
+                    filenamesToExclude: FilesToExclude));
 
             expectedFeeds.Add(
                 new TargetFeedConfig(
@@ -254,7 +254,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     @internal: true,
                     allowOverwrite: false,
                     symbolTargetType,
-                    filesToExclude: FilesToExclude));
+                    filenamesToExclude: FilesToExclude));
 
             var buildEngine = new MockBuildEngine();
             var config = new SetupTargetFeedConfigV3(
@@ -304,7 +304,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                         @internal: false,
                         allowOverwrite: false,
                         symbolTargetType,
-                        filesToExclude: FilesToExclude));
+                        filenamesToExclude: FilesToExclude));
 
                 foreach (var contentType in Installers)
                 {
@@ -320,7 +320,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                             @internal: false,
                             allowOverwrite: false,
                             symbolTargetType,
-                            filesToExclude: FilesToExclude));
+                            filenamesToExclude: FilesToExclude));
                 }
             }
 
@@ -336,7 +336,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     @internal: false,
                     allowOverwrite: false,
                     symbolTargetType,
-                    filesToExclude: FilesToExclude));
+                    filenamesToExclude: FilesToExclude));
 
             expectedFeeds.Add(
                 new TargetFeedConfig(
@@ -350,7 +350,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     @internal: false,
                     allowOverwrite: false,
                     symbolTargetType,
-                    filesToExclude: FilesToExclude));
+                    filenamesToExclude: FilesToExclude));
 
             expectedFeeds.Add(
                 new TargetFeedConfig(
@@ -364,7 +364,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     @internal: false,
                     allowOverwrite: false,
                     symbolTargetType,
-                    filesToExclude: FilesToExclude));
+                    filenamesToExclude: FilesToExclude));
 
             var buildEngine = new MockBuildEngine();
             var config = new SetupTargetFeedConfigV3(

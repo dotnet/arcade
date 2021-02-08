@@ -52,7 +52,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
 
         public SymbolTargetType SymbolTargetType { get; }
 
-        public List<string> FilesToExclude { get; }
+        public List<string> FilenamesToExclude { get; }
 
         public TargetFeedConfig(TargetFeedContentType contentType, 
             string targetURL, 
@@ -64,7 +64,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             bool @internal = false, 
             bool allowOverwrite = false, 
             SymbolTargetType symbolTargetType = SymbolTargetType.None, 
-            List<string> filesToExclude = null)
+            List<string> filenamesToExclude = null)
         {
             ContentType = contentType;
             TargetURL = targetURL;
@@ -76,7 +76,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             AllowOverwrite = allowOverwrite;
             LatestLinkShortUrlPrefix = latestLinkShortUrlPrefix ?? string.Empty;
             SymbolTargetType = symbolTargetType;
-            FilesToExclude = filesToExclude ?? new List<string>();
+            FilenamesToExclude = filenamesToExclude ?? new List<string>();
         }
 
         public override bool Equals(object obj)
@@ -92,12 +92,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 (Isolated == other.Isolated) &&
                 (Internal == other.Internal) &&
                 (AllowOverwrite == other.AllowOverwrite) &&
-                FilesToExclude.SequenceEqual(other.FilesToExclude);
+                FilenamesToExclude.SequenceEqual(other.FilenamesToExclude);
         }
 
         public override int GetHashCode()
         {
-            return (ContentType, Type, AssetSelection, Isolated, Internal, AllowOverwrite, LatestLinkShortUrlPrefix, TargetURL, Token, string.Join(" ", FilesToExclude)).GetHashCode();
+            return (ContentType, Type, AssetSelection, Isolated, Internal, AllowOverwrite, LatestLinkShortUrlPrefix, TargetURL, Token, string.Join(" ", FilenamesToExclude)).GetHashCode();
         }
 
         public override string ToString()
@@ -111,7 +111,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 $"\n AllowOverwrite? '{AllowOverwrite}' " +
                 $"\n ShortUrlPrefix: '{LatestLinkShortUrlPrefix}' " +
                 $"\n TargetURL: '{TargetURL}'" +
-                $"\n FilesToExclude: \n\t{string.Join("\n\t", FilesToExclude)}";
+                $"\n FilesToExclude: \n\t{string.Join("\n\t", FilenamesToExclude)}";
         }
     }
 

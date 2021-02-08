@@ -64,7 +64,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
 
         public bool IsInternal { get; }
 
-        public List<string> FilesToExclude { get; }
+        public List<string> FilenamesToExclude { get; }
 
         public TargetChannelConfig(
             int id,
@@ -77,7 +77,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             string checksumsFeed,
             string installersFeed,
             SymbolTargetType symbolTargetType,
-            List<string> filesToExclude = null)
+            List<string> filenamesToExclude = null)
         {
             Id = id;
             IsInternal = isInternal;
@@ -89,7 +89,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             ChecksumsFeed = checksumsFeed;
             InstallersFeed = installersFeed;
             SymbolTargetType = symbolTargetType;
-            FilesToExclude = filesToExclude ?? new List<string>();
+            FilenamesToExclude = filenamesToExclude ?? new List<string>();
         }
 
         public override string ToString()
@@ -105,7 +105,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 $"\n Checksums-feed: '{ChecksumsFeed}' " +
                 $"\n SymbolTargetType: '{SymbolTargetType}' " +
                 $"\n IsInternal: '{IsInternal}'" +
-                $"\n FilesToExclude: \n\t{string.Join("\n\t", FilesToExclude)}";
+                $"\n FilesToExclude: \n\t{string.Join("\n\t", FilenamesToExclude)}";
         }
 
         public override bool Equals(object other)
@@ -120,7 +120,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                    String.Equals(ChecksumsFeed, config.ChecksumsFeed, StringComparison.OrdinalIgnoreCase) &&
                    String.Equals(InstallersFeed, config.InstallersFeed, StringComparison.OrdinalIgnoreCase) &&
                    IsInternal == config.IsInternal &&
-                   FilesToExclude.SequenceEqual(config.FilesToExclude);
+                   FilenamesToExclude.SequenceEqual(config.FilenamesToExclude);
         }
 
         public override int GetHashCode()
@@ -135,7 +135,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 ChecksumsFeed, 
                 InstallersFeed,
                 SymbolTargetType,
-                string.Join(" ", FilesToExclude)).GetHashCode();
+                string.Join(" ", FilenamesToExclude)).GetHashCode();
         }
     }
 }

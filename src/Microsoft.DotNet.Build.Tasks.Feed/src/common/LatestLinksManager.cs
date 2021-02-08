@@ -55,7 +55,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
             Logger.LogMessage(MessageImportance.High, "\nThe following aka.ms links for blobs will be created:");
             IEnumerable<AkaMSLink> linksToCreate = blobsToPublish
-                .Where(blob => !feedConfig.FilesToExclude.Contains(Path.GetFileName(blob.Id)))
+                .Where(blob => !feedConfig.FilenamesToExclude.Contains(Path.GetFileName(blob.Id)))
                 .Select(blob =>
             {
 
