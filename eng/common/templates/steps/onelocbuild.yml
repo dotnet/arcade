@@ -2,6 +2,10 @@ parameters:
   CeapexPat: $(dn-bot-ceapex-package-r)
 
 steps:
+- task: Powershell@2
+  inputs:
+    filePath: $(Build.SourcesDirectory)/eng/common/generate-locproject.ps1
+
 - task: OneLocBuild@2
   displayName: OneLocBuild
   inputs:
