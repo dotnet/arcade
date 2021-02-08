@@ -43,9 +43,9 @@
       <Uri>https://github.com/dotnet/xharness</Uri>
       <Sha>bd947cb355b96a584128d12b58088f7efab57f96</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.Net.Compilers.Toolset" Version="3.9.0-4.21102.8">
+    <Dependency Name="Microsoft.Net.Compilers.Toolset" Version="3.9.0-4.21104.8">
       <Uri>https://github.com/dotnet/roslyn</Uri>
-      <Sha>ed0671d9d28cd6c748f5ce8805f650f986979d58</Sha>
+      <Sha>2fc92d84e746c3aab75f0930278ea6675cd5bb5c</Sha>
     </Dependency>
     <Dependency Name="Microsoft.SourceLink.GitHub" Version="1.1.0-beta-21101-02">
       <Uri>https://github.com/dotnet/sourcelink</Uri>
