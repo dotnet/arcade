@@ -13,10 +13,10 @@ namespace Microsoft.SignCheck.Verification
 
         }
 
-        public override SignatureVerificationResult VerifySignature(string path, string parent)
+        public override SignatureVerificationResult VerifySignature(string path, string parent, string virtualPath)
         {
             // LZMA is just an unsigned stream
-            var svr = SignatureVerificationResult.UnsupportedFileTypeResult(path, parent);
+            var svr = SignatureVerificationResult.UnsupportedFileTypeResult(path, parent, virtualPath);
             string fullPath = svr.FullPath;
             svr.AddDetail(DetailKeys.File, SignCheckResources.DetailSigned, SignCheckResources.NA);
 
@@ -32,7 +32,7 @@ namespace Microsoft.SignCheck.Verification
                 // LZMA files are just compressed streams. Decompress and then try to verify the decompressed file.
                 LZMAUtils.Decompress(fullPath, destinationFile);
 
-                svr.NestedResults.Add(VerifyFile(destinationFile, parent, containerPath: null));
+                svr.NestedResults.Add(VerifyFile(destinationFile, parent, Path.Combine(svr.VirtualPath, destinationFile), containerPath: null));
             }
 
             return svr;

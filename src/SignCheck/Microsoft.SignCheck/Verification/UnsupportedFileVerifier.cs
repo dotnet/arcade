@@ -10,9 +10,9 @@ namespace Microsoft.SignCheck.Verification
 
         }
 
-        public override SignatureVerificationResult VerifySignature(string path, string parent)
+        public override SignatureVerificationResult VerifySignature(string path, string parent, string virtualPath)
         {
-            return SignatureVerificationResult.UnsupportedFileTypeResult(path, parent);
+            return SignatureVerificationResult.UnsupportedFileTypeResult(path, parent, virtualPath);
         }
     }
 }

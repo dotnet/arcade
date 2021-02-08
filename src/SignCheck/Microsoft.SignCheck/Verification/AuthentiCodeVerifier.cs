@@ -2,10 +2,10 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
-using System.Linq;
-using Microsoft.SignCheck.Logging;
 using System.ComponentModel;
+using System.Linq;
 using System.Runtime.InteropServices;
+using Microsoft.SignCheck.Logging;
 
 namespace Microsoft.SignCheck.Verification
 {
@@ -25,9 +25,9 @@ namespace Microsoft.SignCheck.Verification
         {
         }
 
-        public override SignatureVerificationResult VerifySignature(string path, string parent)
+        public override SignatureVerificationResult VerifySignature(string path, string parent, string virtualPath)
         {
-            SignatureVerificationResult svr = VerifyAuthentiCode(path, parent);
+            SignatureVerificationResult svr = VerifyAuthentiCode(path, parent, virtualPath);
 
             if (FinalizeResult)
             {
@@ -39,9 +39,9 @@ namespace Microsoft.SignCheck.Verification
             return svr;
         }
 
-        protected SignatureVerificationResult VerifyAuthentiCode(string path, string parent)
+        protected SignatureVerificationResult VerifyAuthentiCode(string path, string parent, string virtualPath)
         {
-            var svr = new SignatureVerificationResult(path, parent);
+            var svr = new SignatureVerificationResult(path, parent, virtualPath);
             uint hresult = AuthentiCode.IsSigned(path);
             svr.IsAuthentiCodeSigned = hresult == 0;
             svr.IsSigned = svr.IsAuthentiCodeSigned;
