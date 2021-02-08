@@ -1,0 +1,5 @@
+{
+    "Exclusions": [
+        "TestStrings.resx"
+    ]
+}
