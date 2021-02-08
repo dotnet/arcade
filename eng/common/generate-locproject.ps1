@@ -25,5 +25,5 @@ $locJson = @{
 $json = ConvertTo-Json $locJson -Depth 5
 Write-Host "LocProject.json generated:`n`n$json`n`n"
 
-New-Item ".\Localize\LocProject.json"
-Set-Content ".\Localize\LocProject.json" $json
+New-Item "$env:BUILD_SOURCESDIRECTORY\Localize\LocProject.json" -Force
+Set-Content "$env:BUILD_SOURCESDIRECTORY\Localize\LocProject.json" $json
