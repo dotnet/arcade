@@ -105,7 +105,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 $"\n Checksums-feed: '{ChecksumsFeed}' " +
                 $"\n SymbolTargetType: '{SymbolTargetType}' " +
                 $"\n IsInternal: '{IsInternal}'" +
-                $"\n FilesToExclude: \n\t{string.Join("\n\t", FilenamesToExclude)}";
+                $"\n FilenamesToExclude: \n\t{string.Join("\n\t", FilenamesToExclude)}";
         }
 
         public override bool Equals(object other)

@@ -111,7 +111,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 $"\n AllowOverwrite? '{AllowOverwrite}' " +
                 $"\n ShortUrlPrefix: '{LatestLinkShortUrlPrefix}' " +
                 $"\n TargetURL: '{TargetURL}'" +
-                $"\n FilesToExclude: \n\t{string.Join("\n\t", FilenamesToExclude)}";
+                $"\n FilenamesToExclude: \n\t{string.Join("\n\t", FilenamesToExclude)}";
         }
     }
 
