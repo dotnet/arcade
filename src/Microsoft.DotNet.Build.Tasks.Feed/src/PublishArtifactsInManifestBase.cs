@@ -283,7 +283,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     foreach (var feedConfig in feedConfigsForCategory)
                     {
                         // Look at the version numbers. If any of the packages here are stable and about to be published to a
-                        // non-isolated feed, then issue an error. Isolated feeds may recieve all packages.
+                        // non-isolated feed, then issue an error. Isolated feeds may receive all packages.
                         if (feedConfig.Isolated)
                         {
                             continue;
