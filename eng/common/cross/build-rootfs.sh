@@ -266,14 +266,14 @@ if [[ "$__CodeName" == "alpine" ]]; then
       -U --allow-untrusted --root $__RootfsDir --arch $__AlpineArch --initdb \
       add $__AlpinePackages
 
-    if [[ -n "__AlpinePackagesEdgeMain" ]]; then
+    if [[ -n "$__AlpinePackagesEdgeMain" ]]; then
       $__ApkToolsDir/apk-tools-$__ApkToolsVersion/apk \
         -X http://dl-cdn.alpinelinux.org/alpine/edge/main \
         -U --allow-untrusted --root $__RootfsDir --arch $__AlpineArch --initdb \
         add $__AlpinePackagesEdgeMain
     fi
 
-    if [[ -n "__AlpinePackagesEdgeCommunity" ]]; then
+    if [[ -n "$__AlpinePackagesEdgeCommunity" ]]; then
       $__ApkToolsDir/apk-tools-$__ApkToolsVersion/apk \
         -X http://dl-cdn.alpinelinux.org/alpine/edge/community \
         -U --allow-untrusted --root $__RootfsDir --arch $__AlpineArch --initdb \
