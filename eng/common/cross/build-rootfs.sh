@@ -192,7 +192,7 @@ while :; do
             __CodeName=alpine
             __UbuntuRepo=
             __AlpineVersion=3.13
-            # Alpine 3.13 has all the packages we need in the main branch in 3.13
+            # Alpine 3.13 has all the packages we need in the 3.13 repository
             __AlpinePackages+=$__AlpinePackagesEdgeCommunity
             __AlpinePackagesEdgeCommunity=
             __AlpinePackages+=$__AlpinePackagesEdgeMain
@@ -266,14 +266,14 @@ if [[ "$__CodeName" == "alpine" ]]; then
       -U --allow-untrusted --root $__RootfsDir --arch $__AlpineArch --initdb \
       add $__AlpinePackages
 
-    if [[ ! -z "__AlpinePackagesEdgeMain" ]]; then
+    if [[ -n "__AlpinePackagesEdgeMain" ]]; then
       $__ApkToolsDir/apk-tools-$__ApkToolsVersion/apk \
         -X http://dl-cdn.alpinelinux.org/alpine/edge/main \
         -U --allow-untrusted --root $__RootfsDir --arch $__AlpineArch --initdb \
         add $__AlpinePackagesEdgeMain
     fi
 
-    if [[ ! -z "__AlpinePackagesEdgeCommunity" ]]; then
+    if [[ -n "__AlpinePackagesEdgeCommunity" ]]; then
       $__ApkToolsDir/apk-tools-$__ApkToolsVersion/apk \
         -X http://dl-cdn.alpinelinux.org/alpine/edge/community \
         -U --allow-untrusted --root $__RootfsDir --arch $__AlpineArch --initdb \
