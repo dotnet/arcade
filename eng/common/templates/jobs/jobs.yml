@@ -55,6 +55,9 @@ jobs:
 
       name: ${{ job.job }}
 
+- ${{ if eq(parameters.enableOneLocBuild, true) }}:
+  - template: ../job/onelocbuild.yml
+
 - ${{ if eq(parameters.enableSourceBuild, true) }}:
   - template: /eng/common/templates/jobs/source-build.yml
     parameters:
