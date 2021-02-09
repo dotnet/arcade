@@ -36,7 +36,7 @@ $locJson = @{
 }
 
 $json = ConvertTo-Json $locJson -Depth 5
-Write-Host "##vso[task.logissue type=info](NETCORE_ENGINEERING_TELEMETRY=Build) LocProject.json generated:`n`n$json`n`n"
+Write-Host "##vso[task.logdetail](NETCORE_ENGINEERING_TELEMETRY=Build) LocProject.json generated:`n`n$json`n`n"
 Pop-Location
 
 New-Item "$env:BUILD_SOURCESDIRECTORY\Localize\LocProject.json" -Force
