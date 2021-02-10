@@ -42,6 +42,5 @@ try {
 }
 catch {
   Write-Host $_.ScriptStackTrace
-  Write-PipelineTelemetryError -Force -Category 'Sdl' -Message $_
   ExitWithExitCode 1
 }
