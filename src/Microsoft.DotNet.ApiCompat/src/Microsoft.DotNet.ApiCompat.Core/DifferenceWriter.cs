@@ -19,16 +19,19 @@ namespace Microsoft.Cci.Writers
         private readonly List<Difference> _differences;
         private readonly TextWriter _writer;
         private int _totalDifferences = 0;
+        private readonly bool _isMSBuildTask;
+
         public static int ExitCode { get; set; }
 
         [Import]
         public IDifferenceOperands Operands { get; set; }
 
-        public DifferenceWriter(TextWriter writer, MappingSettings settings, IDifferenceFilter filter)
+        public DifferenceWriter(TextWriter writer, MappingSettings settings, IDifferenceFilter filter, bool isMSBuildTask = false)
             : base(settings, filter)
         {
             _writer = writer;
             _differences = new List<Difference>();
+            _isMSBuildTask = isMSBuildTask;
         }
 
         public void Write(string oldAssembliesName, IEnumerable<IAssembly> oldAssemblies, string newAssembliesName, IEnumerable<IAssembly> newAssemblies)
@@ -60,7 +63,11 @@ namespace Microsoft.Cci.Writers
                 }
             }
 
-            _writer.WriteLine("Total Issues: {0}", _totalDifferences);
+            if (!_isMSBuildTask)
+            {
+                _writer.WriteLine("Total Issues: {0}", _totalDifferences);
+            }
+
             _totalDifferences = 0;
         }
 

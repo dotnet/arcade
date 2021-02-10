@@ -1,46 +1,33 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
-<Project DefaultTargets="Build">
-
+<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. See the LICENSE file in the project root for more information. -->
+<Project>
   <PropertyGroup>
-    <!-- If DotNetTool is undefined, we default to assuming 'dotnet' is on the path -->
-    <DotNetTool Condition="'$(DotNetTool)' == ''">dotnet</DotNetTool>
+    <ApiCompatAssembly Condition="'$(MSBuildRuntimeType)' == 'core'">$(MSBuildThisFileDirectory)..\tools\netcoreapp3.1\Microsoft.DotNet.ApiCompat.dll</ApiCompatAssembly>
+    <ApiCompatAssembly Condition="'$(MSBuildRuntimeType)' != 'core'">$(MSBuildThisFileDirectory)..\tools\net472\Microsoft.DotNet.ApiCompat.exe</ApiCompatAssembly>
 
-    <_ApiCompatPath Condition="'$(MSBuildRuntimeType)' == 'core'">$(MSBuildThisFileDirectory)\..\tools\netcoreapp3.1\Microsoft.DotNet.ApiCompat.dll</_ApiCompatPath>
-    <_ApiCompatPath Condition="'$(MSBuildRuntimeType)' != 'core'">$(MSBuildThisFileDirectory)\..\tools\net472\Microsoft.DotNet.ApiCompat.exe</_ApiCompatPath>
-
-    <_ApiCompatCommand Condition="'$(MSBuildRuntimeType)' == 'core'">"$(DotNetTool)" "$(_ApiCompatPath)"</_ApiCompatCommand>
-    <_ApiCompatCommand Condition="'$(MSBuildRuntimeType)' != 'core' and '$(OS)' == 'Windows_NT'">"$(_ApiCompatPath)"</_ApiCompatCommand>
-    <_ApiCompatCommand Condition="'$(MSBuildRuntimeType)' != 'core' and '$(OS)' != 'Windows_NT'">mono --runtime=v4.0.30319 "$(_ApiCompatPath)"</_ApiCompatCommand>
+    <!-- By default, run API Compat if this package is referenced. -->
+    <RunApiCompat Condition="'$(RunApiCompat)' == '' and '$(DesignTimeBuild)' != 'true'">true</RunApiCompat>
+    <RunApiCompatForSrc Condition="'$(RunApiCompatForSrc)' == ''">$(RunApiCompat)</RunApiCompatForSrc>
+    <RunMatchingRefApiCompat Condition="'$(RunMatchingRefApiCompat)' == ''">false</RunMatchingRefApiCompat>
 
     <_ApiCompatSemaphoreFile>$(MSBuildThisFileName).semaphore</_ApiCompatSemaphoreFile>
   </PropertyGroup>
 
-  <PropertyGroup>
-    <!-- Default is to run API Compat if this package is referenced -->
-    <RunApiCompat Condition="'$(RunApiCompat)' == '' and '$(DesignTimeBuild)' != 'true'">true</RunApiCompat>
-
-    <RunApiCompatForSrc Condition="'$(RunApiCompatForSrc)' == ''">$(RunApiCompat)</RunApiCompatForSrc>
-    <RunMatchingRefApiCompat Condition="'$(RunMatchingRefApiCompat)' == ''">false</RunMatchingRefApiCompat>
-  </PropertyGroup>
-
   <PropertyGroup Condition="'$(RunApiCompat)' == 'true'">
-    <ApiCompatBaseline Condition="!Exists('$(ApiCompatBaseline)')">$(MSBuildProjectDirectory)\ApiCompatBaseline.$(TargetFramework).txt</ApiCompatBaseline>
-    <ApiCompatBaseline Condition="!Exists('$(ApiCompatBaseline)')">$(MSBuildProjectDirectory)\ApiCompatBaseline.txt</ApiCompatBaseline>
-
-    <MatchingRefApiCompatBaseline Condition="!Exists('$(MatchingRefApiCompatBaseline)')">$(MSBuildProjectDirectory)\MatchingRefApiCompatBaseline.$(TargetFramework).txt</MatchingRefApiCompatBaseline>
-    <MatchingRefApiCompatBaseline Condition="!Exists('$(MatchingRefApiCompatBaseline)')">$(MSBuildProjectDirectory)\MatchingRefApiCompatBaseline.txt</MatchingRefApiCompatBaseline>
-
     <TargetsTriggeredByCompilation Condition="'$(RunApiCompatForSrc)' == 'true'">$(TargetsTriggeredByCompilation);ValidateApiCompatForSrc</TargetsTriggeredByCompilation>
     <TargetsTriggeredByCompilation Condition="'$(RunMatchingRefApiCompat)' == 'true'">$(TargetsTriggeredByCompilation);RunMatchingRefApiCompat</TargetsTriggeredByCompilation>
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- Support the existing ApiCompatExcludeAttributeList property switch to not break existing consumers. -->
+    <ApiCompatExcludeAttributesFile Include="$(ApiCompatExcludeAttributeList.Split(','))" Condition="'$(ApiCompatExcludeAttributeList)' != ''" />
     <CustomAdditionalCompileInputs Condition="Exists('$(IntermediateOutputPath)$(_ApiCompatSemaphoreFile)')" Include="$(IntermediateOutputPath)$(_ApiCompatSemaphoreFile)" />
   </ItemGroup>
 
+  <UsingTask TaskName="Microsoft.DotNet.ApiCompat.ApiCompatTask" AssemblyFile="$(ApiCompatAssembly)" />
+
   <!-- ApiCompat for Implementation Assemblies  -->
   <Target Name="ValidateApiCompatForSrc"
+          DependsOnTargets="$(ApiCompatDependsOn)"
           Condition="'$(RunApiCompatForSrc)' == 'true' and '$(RunApiCompat)' == 'true'">
 
     <Error Condition="'@(ResolvedMatchingContract)' == ''"
@@ -57,36 +44,21 @@
       <_ContractDependencyDirectories Include="@(ResolvedMatchingContract -> '%(RootDir)%(Directory)')" />
       <_ContractDependencyDirectories Include="@(ResolvedMatchingContract -> '%(DependencyPaths)')" />
       <_ContractDependencyDirectories Include="$(ContractDependencyPaths)" />
+      <ApiCompatBaselineFile Condition="Exists('$(MSBuildProjectDirectory)\ApiCompatBaseline.$(TargetFramework).txt')" Include="$(MSBuildProjectDirectory)\ApiCompatBaseline.$(TargetFramework).txt" />
+      <ApiCompatBaselineFile Condition="Exists('$(MSBuildProjectDirectory)\ApiCompatBaseline.txt')" Include="$(MSBuildProjectDirectory)\ApiCompatBaseline.txt" />
     </ItemGroup>
 
-    <PropertyGroup>
-      <ApiCompatArgs>$(ApiCompatArgs) "@(ResolvedMatchingContract)"</ApiCompatArgs>
-      <ApiCompatArgs>$(ApiCompatArgs) --contract-depends "@(_ContractDependencyDirectories, ','),"</ApiCompatArgs>
-      <ApiCompatArgs Condition="'$(ApiCompatExcludeAttributeList)' != ''">$(ApiCompatArgs) --exclude-attributes "$(ApiCompatExcludeAttributeList)"</ApiCompatArgs>
-      <ApiCompatArgs Condition="'$(ApiCompatEnforceOptionalRules)' == 'true'">$(ApiCompatArgs) --enforce-optional-rules</ApiCompatArgs>
-      <ApiCompatArgs Condition="'$(BaselineAllAPICompatError)' != 'true' and Exists('$(ApiCompatBaseline)')">$(ApiCompatArgs) --baseline "$(ApiCompatBaseline)"</ApiCompatArgs>
-      <ApiCompatArgs>$(ApiCompatArgs) --impl-dirs "$(IntermediateOutputPath),@(_DependencyDirectories, ','),"</ApiCompatArgs>
-      <ApiCompatArgs Condition=" '$(AdditionalApiCompatOptions)' != '' ">$(ApiCompatArgs) $(AdditionalApiCompatOptions)</ApiCompatArgs>
-      <ApiCompatBaselineAll Condition="'$(BaselineAllAPICompatError)' == 'true'">&gt; "$(ApiCompatBaseline)"</ApiCompatBaselineAll>
-      <ApiCompatExitCode>0</ApiCompatExitCode>
-
-      <ApiCompatResponseFile>$(IntermediateOutputPath)apicompat.rsp</ApiCompatResponseFile>
-    </PropertyGroup>
-
     <MakeDir Directories="$(IntermediateOutputPath)" />
-    <WriteLinesToFile File="$(ApiCompatResponseFile)" Lines="$(ApiCompatArgs)" Overwrite="true" />
-
-    <Exec Command="$(_ApiCompatCommand) @&quot;$(ApiCompatResponseFile)&quot; $(ApiCompatBaselineAll)"
-          CustomErrorRegularExpression="^[a-zA-Z]+ :"
-          StandardOutputImportance="Low"
-          IgnoreExitCode="true">
+    <ApiCompatTask Contracts="@(ResolvedMatchingContract)"
+                   ImplDirs="$(IntermediateOutputPath);@(_DependencyDirectories)"
+                   ContractDepends="@(_ContractDependencyDirectories)"
+                   ExcludeAttributes="@(ApiCompatExcludeAttributesFile)"
+                   EnforceOptionalRules="$(ApiCompatEnforceOptionalRules)"
+                   BaselineFiles="@(ApiCompatBaselineFile)">
       <Output TaskParameter="ExitCode" PropertyName="ApiCompatExitCode" />
-    </Exec>
-
-    <!--
-      To force incremental builds to show failures again we are invalidating
-      one compile input.
-    -->
+    </ApiCompatTask>
+    
+    <!-- To force incremental builds to show failures again we are invalidating one compile input. -->
     <Touch Condition="'$(ApiCompatExitCode)' != '0'" Files="$(IntermediateOutputPath)$(_ApiCompatSemaphoreFile)" AlwaysCreate="true">
       <Output TaskParameter="TouchedFiles" ItemName="FileWrites" />
     </Touch>
@@ -95,16 +67,13 @@
 
   <!-- Reverse APICompat to verify that the reference assembly has all the APIs that are in the implementation -->
   <Target Name="RunMatchingRefApiCompat"
-          Condition="'$(RunMatchingRefApiCompat)' == 'true' and '$(RunApiCompat)' == 'true'" >
+          DependsOnTargets="$(ApiCompatDependsOn)"
+          Condition="'$(RunMatchingRefApiCompat)' == 'true' and '$(RunApiCompat)' == 'true'">
 
     <Error Condition="'@(ResolvedMatchingContract)' == ''"
            Text="ResolvedMatchingContract item must be specified to run API compat." />
     <Error Condition="!Exists('%(ResolvedMatchingContract.FullPath)')"
            Text="ResolvedMatchingContract '%(ResolvedMatchingContract.FullPath)' did not exist." />
-
-    <PropertyGroup>
-      <ImplementationAssemblyAsContract>@(IntermediateAssembly)</ImplementationAssemblyAsContract>
-    </PropertyGroup>
 
     <ItemGroup>
       <_ContractDependencyDirectoriesTemp Include="@(ReferencePath -> '%(RootDir)%(Directory)')" />
@@ -116,40 +85,23 @@
       <_ImplementationDependencyDirectories Include="@(ResolvedMatchingContract -> '%(RootDir)%(Directory)')" />
       <_ImplementationDependencyDirectories Include="@(ResolvedMatchingContract -> '%(DependencyPaths)')" />
       <_ImplementationDependencyDirectories Include="$(ContractDependencyPaths)" />
+      <MatchingRefApiCompatBaseline Condition="Exists('$(MSBuildProjectDirectory)\MatchingRefApiCompatBaseline.$(TargetFramework).txt')" Include="$(MSBuildProjectDirectory)\MatchingRefApiCompatBaseline.$(TargetFramework).txt" />
+      <MatchingRefApiCompatBaseline Condition="Exists('$(MSBuildProjectDirectory)\MatchingRefApiCompatBaseline.txt')" Include="$(MSBuildProjectDirectory)\MatchingRefApiCompatBaseline.txt" />
     </ItemGroup>
 
-    <PropertyGroup>
-      <MatchingRefApiCompatArgs>$(MatchingRefApiCompatArgs) "$(ImplementationAssemblyAsContract)"</MatchingRefApiCompatArgs>
-      <MatchingRefApiCompatArgs>$(MatchingRefApiCompatArgs) --contract-depends "@(_ContractDependencyDirectories, ','),"</MatchingRefApiCompatArgs>
-      <MatchingRefApiCompatArgs>$(MatchingRefApiCompatArgs) --left-operand implementation</MatchingRefApiCompatArgs>
-      <MatchingRefApiCompatArgs>$(MatchingRefApiCompatArgs) --right-operand reference</MatchingRefApiCompatArgs>
-      <MatchingRefApiCompatArgs Condition="'$(ApiCompatExcludeAttributeList)' != ''">$(MatchingRefApiCompatArgs) --exclude-attributes "$(ApiCompatExcludeAttributeList)"</MatchingRefApiCompatArgs>
-      <MatchingRefApiCompatArgs Condition="'$(ApiCompatEnforceOptionalRules)' == 'true'">$(MatchingRefApiCompatArgs) --enforce-optional-rules</MatchingRefApiCompatArgs>
-      <MatchingRefApiCompatArgs Condition="'$(BaselineAllMatchingRefApiCompatError)' != 'true' and Exists('$(MatchingRefApiCompatBaseline)')">$(MatchingRefApiCompatArgs) --baseline "$(MatchingRefApiCompatBaseline)"</MatchingRefApiCompatArgs>
-      <MatchingRefApiCompatArgs>$(MatchingRefApiCompatArgs) --impl-dirs "@(_ImplementationDependencyDirectories, ','),"</MatchingRefApiCompatArgs>
-      <MatchingRefApiCompatArgs
-          Condition=" '$(AdditionalApiCompatOptions)' != '' ">$(MatchingRefApiCompatArgs) $(AdditionalApiCompatOptions)</MatchingRefApiCompatArgs>
-      <MatchingRefApiCompatBaselineAll Condition="'$(BaselineAllMatchingRefApiCompatError)' == 'true'">&gt; "$(MatchingRefApiCompatBaseline)"</MatchingRefApiCompatBaselineAll>
-
-      <MatchingRefApiCompatExitCode>0</MatchingRefApiCompatExitCode>
-
-      <MatchingRefApiCompatResponseFile>$(IntermediateOutputPath)MatchingRefApiCompat_verifyexactref.rsp</MatchingRefApiCompatResponseFile>
-    </PropertyGroup>
-
     <MakeDir Directories="$(IntermediateOutputPath)" />
-    <WriteLinesToFile File="$(MatchingRefApiCompatResponseFile)" Lines="$(MatchingRefApiCompatArgs)" Overwrite="true" />
-
-    <Exec Command="$(_ApiCompatCommand) @&quot;$(MatchingRefApiCompatResponseFile)&quot; $(MatchingRefApiCompatBaselineAll)"
-          CustomErrorRegularExpression="^[a-zA-Z]+ :"
-          StandardOutputImportance="Low"
-          IgnoreExitCode="true">
+    <ApiCompatTask Contracts="@(IntermediateAssembly)"
+                   ContractDepends="@(_ContractDependencyDirectories)"
+                   EnforceOptionalRules="$(ApiCompatEnforceOptionalRules)"
+                   ExcludeAttributes="@(ApiCompatExcludeAttributesFile)"
+                   ImplDirs="@(_ImplementationDependencyDirectories)"
+                   LeftOperand="implementation"
+                   RightOperand="reference"
+                   BaselineFiles="@(MatchingRefApiCompatBaseline)">
       <Output TaskParameter="ExitCode" PropertyName="MatchingRefApiCompatExitCode" />
-    </Exec>
+    </ApiCompatTask>
 
-    <!--
-      To force incremental builds to show failures again we are invalidating
-       one compile input.
-    -->
+    <!-- To force incremental builds to show failures again we are invalidating one compile input. -->
     <Touch Condition="'$(MatchingRefApiCompatExitCode)' != '0'" Files="$(IntermediateOutputPath)$(_ApiCompatSemaphoreFile)" AlwaysCreate="true">
       <Output TaskParameter="TouchedFiles" ItemName="FileWrites" />
     </Touch>
