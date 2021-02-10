@@ -1,13 +1,13 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Microsoft.DotNet.VersionTools.Util
+namespace Microsoft.Arcade.Common
 {
-    internal static class ArgumentEscaper
+    public static class ArgumentEscaper
     {
         /// <summary>
         /// Undo the processing which took place to create string[] args in Main,
@@ -87,7 +87,7 @@ namespace Microsoft.DotNet.VersionTools.Util
             var quoted = ShouldSurroundWithQuotes(arg);
             if (quoted) sb.Append("\"");
 
-            for (int i = 0; i < arg.Length; ++i)
+            for (var i = 0; i < arg.Length; ++i)
             {
                 var backslashCount = 0;
 
@@ -109,7 +109,7 @@ namespace Microsoft.DotNet.VersionTools.Util
                 // Escape any preceding backslashes and the quote
                 else if (arg[i] == '"')
                 {
-                    sb.Append('\\', (2 * backslashCount) + 1);
+                    sb.Append('\\', 2 * backslashCount + 1);
                     sb.Append('"');
                 }
 

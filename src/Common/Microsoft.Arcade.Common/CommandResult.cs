@@ -1,13 +1,13 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
 using System.Text;
 using System.Diagnostics;
 
-namespace Microsoft.DotNet.VersionTools.Util
+namespace Microsoft.Arcade.Common
 {
-    internal struct CommandResult
+    public struct CommandResult
     {
         public static readonly CommandResult Empty = new CommandResult();
 
@@ -28,7 +28,7 @@ namespace Microsoft.DotNet.VersionTools.Util
         {
             if (ExitCode != 0)
             {
-                StringBuilder message = new StringBuilder($"Command failed with exit code {ExitCode}: {StartInfo.FileName} {StartInfo.Arguments}");
+                var message = new StringBuilder($"Command failed with exit code {ExitCode}: {StartInfo.FileName} {StartInfo.Arguments}");
 
                 if (!suppressOutput)
                 {

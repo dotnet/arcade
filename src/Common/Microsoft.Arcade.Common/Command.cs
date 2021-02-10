@@ -1,4 +1,4 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
@@ -9,9 +9,9 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-namespace Microsoft.DotNet.VersionTools.Util
+namespace Microsoft.Arcade.Common
 {
-    internal class Command
+    public class Command
     {
         public static readonly string[] RunnableSuffixes = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
             ? new string[] { ".exe", ".cmd", ".bat" }
@@ -73,7 +73,7 @@ namespace Microsoft.DotNet.VersionTools.Util
 
             if (useCmd)
             {
-                var comSpec = System.Environment.GetEnvironmentVariable("ComSpec");
+                var comSpec = Environment.GetEnvironmentVariable("ComSpec");
 
                 // cmd doesn't like "foo.exe ", so we need to ensure that if
                 // args is empty, we just run "foo.exe"
@@ -107,7 +107,7 @@ namespace Microsoft.DotNet.VersionTools.Util
                 else
                 {
                     // Search the path to see if we can find it 
-                    foreach (var path in System.Environment.GetEnvironmentVariable("PATH").Split(Path.PathSeparator))
+                    foreach (var path in Environment.GetEnvironmentVariable("PATH").Split(Path.PathSeparator))
                     {
                         var candidate = Path.Combine(path, executable + ".exe");
                         if (File.Exists(candidate))
@@ -293,7 +293,7 @@ namespace Microsoft.DotNet.VersionTools.Util
 
         private string FormatProcessInfo(ProcessStartInfo info, bool includeWorkingDirectory)
         {
-            string prefix = includeWorkingDirectory ?
+            var prefix = includeWorkingDirectory ?
                 $"{info.WorkingDirectory}> {info.FileName}" :
                 info.FileName;
 
@@ -317,7 +317,7 @@ namespace Microsoft.DotNet.VersionTools.Util
         {
             if (!_quietBuildReporter && _statusForward != null)
             {
-                bool success = exitCode == 0;
+                var success = exitCode == 0;
 
                 var message = $"{FormatProcessInfo(_process.StartInfo, includeWorkingDirectory: !success)} exited with {exitCode}";
 
