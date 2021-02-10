@@ -54,7 +54,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             }
 
             Logger.LogMessage(MessageImportance.High, "\nThe following aka.ms links for blobs will be created:");
-            IEnumerable<AkaMSLink> linksToCreate = blobsToPublish.Select(blob =>
+            IEnumerable<AkaMSLink> linksToCreate = blobsToPublish
+                .Where(blob => !feedConfig.FilenamesToExclude.Contains(Path.GetFileName(blob.Id)))
+                .Select(blob =>
             {
 
                 // Strip away the feed expected suffix (index.json) and append on the
@@ -72,6 +74,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     ShortUrl = GetLatestShortUrlForBlob(feedConfig, blob),
                     TargetUrl = actualTargetUrl
                 };
+                Logger.LogMessage(MessageImportance.High, $"  {Path.GetFileName(blob.Id)}");
 
                 Logger.LogMessage(MessageImportance.High, $"  aka.ms/{newLink.ShortUrl} -> {newLink.TargetUrl}");
 

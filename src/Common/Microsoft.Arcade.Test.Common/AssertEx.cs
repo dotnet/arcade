@@ -394,7 +394,7 @@ namespace Microsoft.Arcade.Test.Common
             throw new Exception("No exception was thrown.");
         }
 
-        internal static string NormalizeWhitespace(string input)
+        public static string NormalizeWhitespace(string input)
         {
             var output = new StringBuilder();
             var inputLines = input.Split('\n', '\r');

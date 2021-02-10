@@ -147,9 +147,9 @@ namespace Microsoft.SignCheck.Verification
         /// <param name="path">The path of the file to verify</param>
         /// <param name="parent">The parent file of the file to verify or null if this is a top-level file.</param>
         /// <returns>A SignatureVerificationResult containing detail about the verification result.</returns>
-        public virtual SignatureVerificationResult VerifySignature(string path, string parent)
+        public virtual SignatureVerificationResult VerifySignature(string path, string parent, string virtualPath)
         {
-            return SignatureVerificationResult.UnsupportedFileTypeResult(path, parent);
+            return SignatureVerificationResult.UnsupportedFileTypeResult(path, parent, virtualPath);
         }
 
         /// <summary>
@@ -160,14 +160,13 @@ namespace Microsoft.SignCheck.Verification
         /// <param name="containerPath">The path of the file in the container. This may differ from the path on disk as containers are flattened. It's
         /// primarily intended to help with exclusions and report more readable names.</param>
         /// <returns>The verification result.</returns>
-        public SignatureVerificationResult VerifyFile(string path, string parent, string containerPath)
+        public SignatureVerificationResult VerifyFile(string path, string parent, string virtualPath, string containerPath)
         {
             Log.WriteMessage(LogVerbosity.Detailed, String.Format(SignCheckResources.ProcessingFile, Path.GetFileName(path), String.IsNullOrEmpty(parent) ? SignCheckResources.NA : parent));
 
             FileVerifier fileVerifier = GetFileVerifier(path);
-            SignatureVerificationResult svr = fileVerifier.VerifySignature(path, parent);
-
-            svr.IsDoNotSign = Exclusions.IsDoNotSign(path, parent, containerPath);
+            SignatureVerificationResult svr = fileVerifier.VerifySignature(path, parent, virtualPath);
+            svr.IsDoNotSign = Exclusions.IsDoNotSign(path, parent, virtualPath, containerPath);
 
             if ((svr.IsDoNotSign) && (svr.IsSigned))
             {
@@ -177,7 +176,7 @@ namespace Microsoft.SignCheck.Verification
 
             if ((!svr.IsDoNotSign) && (!svr.IsSigned))
             {
-                svr.IsExcluded = Exclusions.IsExcluded(path, parent, containerPath);
+                svr.IsExcluded = Exclusions.IsExcluded(path, parent, svr.VirtualPath, containerPath);
 
                 if ((svr.IsExcluded))
                 {
@@ -195,6 +194,11 @@ namespace Microsoft.SignCheck.Verification
             if (String.IsNullOrEmpty(parent))
             {
                 svr.AddDetail(DetailKeys.File, SignCheckResources.DetailFullName, svr.FullPath);
+            }
+
+            if (!String.IsNullOrEmpty(virtualPath))
+            {
+                svr.AddDetail(DetailKeys.File, SignCheckResources.DetailVirtualPath, svr.VirtualPath);
             }
 
             return svr;

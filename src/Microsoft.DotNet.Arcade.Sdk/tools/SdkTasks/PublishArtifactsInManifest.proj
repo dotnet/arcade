@@ -59,7 +59,7 @@
   -->
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
     <NETCORE_ENGINEERING_TELEMETRY>Publish</NETCORE_ENGINEERING_TELEMETRY>
 
     <!-- Default publishing infra target is 2. -->
@@ -84,9 +84,9 @@
 
     <PropertyGroup>
       <AkaMSTenant Condition="'$(AkaMSTenant)' == ''">ncd</AkaMSTenant>
-      <AkaMSOwners Condition="'$(AkaMSOwners)' == ''">dn-bot</AkaMSOwners>
+      <AkaMSOwners Condition="'$(AkaMSOwners)' == ''">jamshedd;leecow;rbhanda;v-susles;v-paddan</AkaMSOwners>
       <AkaMSCreatedBy Condition="'$(AkaMSCreatedBy)' == ''">dn-bot</AkaMSCreatedBy>
-      <AkaMSGroupOwner Condition="'$(AkaMSGroupOwner)' == ''">dotnetes</AkaMSGroupOwner>
+      <AkaMSGroupOwner Condition="'$(AkaMSGroupOwner)' == ''">ddfwlink</AkaMSGroupOwner>
       <PublishSpecialClrFiles Condition="'$(PublishSpecialClrFiles)' == ''">false</PublishSpecialClrFiles>
       <BuildQuality Condition="'$(BuildQuality)' == ''">daily</BuildQuality>
       <InstallersFeedKey>$(InstallersAzureAccountKey)</InstallersFeedKey>
