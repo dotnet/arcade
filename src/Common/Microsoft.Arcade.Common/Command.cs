@@ -1,4 +1,4 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
@@ -73,7 +73,7 @@ namespace Microsoft.Arcade.Common
 
             if (useCmd)
             {
-                var comSpec = Environment.GetEnvironmentVariable("ComSpec");
+                var comSpec = System.Environment.GetEnvironmentVariable("ComSpec");
 
                 // cmd doesn't like "foo.exe ", so we need to ensure that if
                 // args is empty, we just run "foo.exe"
@@ -107,7 +107,7 @@ namespace Microsoft.Arcade.Common
                 else
                 {
                     // Search the path to see if we can find it 
-                    foreach (var path in Environment.GetEnvironmentVariable("PATH").Split(Path.PathSeparator))
+                    foreach (var path in System.Environment.GetEnvironmentVariable("PATH").Split(Path.PathSeparator))
                     {
                         var candidate = Path.Combine(path, executable + ".exe");
                         if (File.Exists(candidate))
@@ -293,7 +293,7 @@ namespace Microsoft.Arcade.Common
 
         private string FormatProcessInfo(ProcessStartInfo info, bool includeWorkingDirectory)
         {
-            var prefix = includeWorkingDirectory ?
+            string prefix = includeWorkingDirectory ?
                 $"{info.WorkingDirectory}> {info.FileName}" :
                 info.FileName;
 
@@ -317,7 +317,7 @@ namespace Microsoft.Arcade.Common
         {
             if (!_quietBuildReporter && _statusForward != null)
             {
-                var success = exitCode == 0;
+                bool success = exitCode == 0;
 
                 var message = $"{FormatProcessInfo(_process.StartInfo, includeWorkingDirectory: !success)} exited with {exitCode}";
 

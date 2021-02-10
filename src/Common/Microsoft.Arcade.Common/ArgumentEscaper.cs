@@ -1,4 +1,4 @@
-// Licensed to the .NET Foundation under one or more agreements.
+﻿// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
@@ -87,7 +87,7 @@ namespace Microsoft.Arcade.Common
             var quoted = ShouldSurroundWithQuotes(arg);
             if (quoted) sb.Append("\"");
 
-            for (var i = 0; i < arg.Length; ++i)
+            for (int i = 0; i < arg.Length; ++i)
             {
                 var backslashCount = 0;
 
@@ -109,7 +109,7 @@ namespace Microsoft.Arcade.Common
                 // Escape any preceding backslashes and the quote
                 else if (arg[i] == '"')
                 {
-                    sb.Append('\\', 2 * backslashCount + 1);
+                    sb.Append('\\', (2 * backslashCount) + 1);
                     sb.Append('"');
                 }
 
