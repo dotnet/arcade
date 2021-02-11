@@ -23,4 +23,4 @@ jobs:
     name: NetCorePublic-Pool
     queue: BuildPool.Ubuntu.1604.Amd64.Open
   steps:
-    script: ./curl-test.sh
+  - script: ./curl-test.sh
