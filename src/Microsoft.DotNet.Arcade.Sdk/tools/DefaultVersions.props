@@ -57,10 +57,10 @@
     <UsingToolMicrosoftNetCompilers Condition="'$(UsingToolMicrosoftNetCompilers)' == ''">false</UsingToolMicrosoftNetCompilers>
 
     <!--
-      Use linkers from the Microsoft.NET.ILLink.Tasks package.
-      Repo can set this property to true if it needs to use a different version of the linker than the one in the dotnet SDK.
+      Use IL linker from the Microsoft.NET.ILLink.Tasks package.
+      Repo can set this property to true if it needs to use a different version of the IL linker than the one in the dotnet SDK.
     -->
-    <UsingToolMicrosoftNetLinkers Condition="'$(UsingToolMicrosoftNetLinkers)' == ''">false</UsingToolMicrosoftNetLinkers>
+    <UsingToolMicrosoftNetILLinkTasks Condition="'$(UsingToolMicrosoftNetILLinkTasks)' == ''">false</UsingToolMicrosoftNetILLinkTasks>
   </PropertyGroup>
 
   <!--
