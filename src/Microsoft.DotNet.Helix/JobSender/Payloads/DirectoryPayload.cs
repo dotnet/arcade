@@ -2,10 +2,9 @@ using System;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Arcade.Common;
 
 namespace Microsoft.DotNet.Helix.Client
 {
@@ -30,9 +29,9 @@ namespace Microsoft.DotNet.Helix.Client
 
         public Task<string> UploadAsync(IBlobContainer payloadContainer, Action<string> log, CancellationToken cancellationToken)
             => Task.FromResult(
-                Helpers.MutexExec(
+                Helpers.DirectoryMutexExec(
                     () => DoUploadAsync(payloadContainer, log, cancellationToken),
-                    $"Global\\{Helpers.ComputeSha256Hash(NormalizedDirectoryPath)}"));
+                    NormalizedDirectoryPath));
 
         private async Task<string> DoUploadAsync(IBlobContainer payloadContainer, Action<string> log, CancellationToken cancellationToken)
         {

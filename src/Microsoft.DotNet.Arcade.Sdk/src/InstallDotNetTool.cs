@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
-using System.Threading;
 using Microsoft.Arcade.Common;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
@@ -15,11 +13,6 @@ namespace Microsoft.DotNet.Arcade.Sdk
     /// </summary>
     public class InstallDotNetTool : Task
     {
-        /// <summary>
-        /// After this period, we just give up on trying.
-        /// </summary>
-        private static readonly TimeSpan s_installationTimeout = TimeSpan.FromMinutes(5);
-
         /// <summary>
         /// The name of the tool to install (same as the NuGet package name, e.g. Microsoft.DotNet.XHarness.CLI).
         /// </summary>
@@ -55,8 +48,6 @@ namespace Microsoft.DotNet.Arcade.Sdk
         [Output]
         public string ToolPath { get; set; }
 
-        private string LockFilePath => Path.Combine(DestinationPath, Name + ".lock");
-
         public override bool Execute()
         {
             if (Version.Contains("*"))
@@ -78,116 +69,53 @@ namespace Microsoft.DotNet.Arcade.Sdk
             string storePath = Path.Combine(ToolPath, ".store", Name.ToLowerInvariant());
             string versionInstallPath = Path.Combine(storePath, version);
 
-            if (IsOrIsBeingInstalled(versionInstallPath))
+            return Helpers.DirectoryMutexExec(() =>
             {
-                return true;
-            }
-
-            FileStream lockFile;
-            try
-            {
-                lockFile = new FileStream(LockFilePath, FileMode.OpenOrCreate, FileAccess.Write, FileShare.None);
-            }
-            catch (IOException)
-            {
-                // Other process acquired the lock before we did
-                return IsOrIsBeingInstalled(versionInstallPath);
-            }
-
-            try
-            {
-                using (lockFile)
+                if (Directory.Exists(versionInstallPath))
                 {
-                    Log.LogMessage($"Installing {Name} v{Version}...");
-
-                    var args = new List<string>()
-                    {
-                        "tool",
-                        "install",
-                        "--version",
-                        Version,
-                        "--tool-path",
-                        ToolPath,
-                    };
-
-                    if (!string.IsNullOrEmpty(Source))
-                    {
-                        args.Add("--add-source");
-                        args.Add(Source);
-                    }
-
-                    args.Add(Name);
-
-                    Command command = Command.Create(string.IsNullOrEmpty(DotnetPath) ? "dotnet" : DotnetPath, args);
-                    CommandResult result = command.Execute();
-
-                    if (result.ExitCode != 0)
-                    {
-                        return Directory.Exists(versionInstallPath);
-                    }
-
-                    Log.LogMessage($"{Name} v{Version} installed");
-
+                    Log.LogMessage($"{Name} v{Version} is already installed");
                     return true;
                 }
-            }
-            finally
-            {
-                File.Delete(LockFilePath);
-            }
+
+                return InstallTool();
+            }, ToolPath);
         }
 
-        private bool IsOrIsBeingInstalled(string pathToVersion)
+        private bool InstallTool()
         {
-            var stopwatch = Stopwatch.StartNew();
-            bool reported = false;
+            Log.LogMessage($"Installing {Name} v{Version}...");
 
-            while (!Directory.Exists(pathToVersion) && IsInstallationInProgress())
+            var args = new List<string>()
             {
-                if (!reported)
-                {
-                    Log.LogMessage($"{Name} is being installed by other process. Waiting...");
-                    reported = true;
-                }
+                "tool",
+                "install",
+                "--version",
+                Version,
+                "--tool-path",
+                ToolPath,
+            };
 
-                if (stopwatch.Elapsed > s_installationTimeout)
-                {
-                    Log.LogError($"Concurrent installation of {Name} didn't finish in time.");
-                    return false;
-                }
-
-                Thread.Sleep(500);
+            if (!string.IsNullOrEmpty(Source))
+            {
+                args.Add("--add-source");
+                args.Add(Source);
             }
 
-            if (Directory.Exists(pathToVersion))
-            {
-                Log.LogMessage($"{Name} v{Version} was installed by other process successfully");
-                return true;
-            }
+            args.Add(Name);
 
-            return false;
-        }
+            Command command = Command.Create(string.IsNullOrEmpty(DotnetPath) ? "dotnet" : DotnetPath, args);
+            CommandResult result = command.Execute();
 
-        private bool IsInstallationInProgress()
-        {
-            if (!File.Exists(LockFilePath))
+            if (result.ExitCode != 0)
             {
+                Log.LogError(
+                    $"Failed to install the dotnet tool. Installation exited with {result.ExitCode}. " +
+                    Environment.NewLine + (string.IsNullOrEmpty(result.StdErr) ? result.StdOut : result.StdErr));
                 return false;
             }
 
-            try
-            {
-                using FileStream stream = File.Open(LockFilePath, FileMode.Open, FileAccess.Read, FileShare.None);
-                stream.Close();
-            }
-            catch (IOException)
-            {
-                // The file is used by other process or does not exist
-                return true;
-            }
-
-            // File exists and is not used by other process
-            return false;
+            Log.LogMessage($"{Name} v{Version} installed");
+            return true;
         }
     }
 }
