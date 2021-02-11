@@ -143,7 +143,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 PublicAndInternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude),
 
-            // ".NET Preview 1",
+            // ".NET 6 Preview 1",
             new TargetChannelConfig(
                 1670,
                 false,
@@ -252,7 +252,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedDotNetEngSymbols,
                 FeedForChecksums,
                 FeedForInstallers,
-                PublicAndInternalSymbolTargets),
+                PublicAndInternalSymbolTargets,
+                flatten: false),
 
             // ".NET 5 Eng",
             new TargetChannelConfig(
@@ -265,7 +266,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedDotNetEngSymbols,
                 FeedForChecksums,
                 FeedForInstallers,
-                PublicAndInternalSymbolTargets),
+                PublicAndInternalSymbolTargets,
+                flatten: false),
 
             // ".NET Eng - Validation",
             new TargetChannelConfig(
@@ -278,7 +280,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedDotNetEngSymbols,
                 FeedForChecksums,
                 FeedForInstallers,
-                PublicAndInternalSymbolTargets),
+                PublicAndInternalSymbolTargets,
+                flatten: false),
 
             // ".NET 5 Eng - Validation",
             new TargetChannelConfig(
@@ -291,7 +294,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedDotNetEngSymbols,
                 FeedForChecksums,
                 FeedForInstallers,
-                PublicAndInternalSymbolTargets),
+                PublicAndInternalSymbolTargets,
+                flatten: false),
 
             // "General Testing",
             new TargetChannelConfig(
@@ -331,7 +335,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedForChecksums,
                 FeedForInstallers,
                 PublicAndInternalSymbolTargets,
-                filenamesToExclude: FilenamesToExclude),
+                filenamesToExclude: FilenamesToExclude,
+                flatten: false),
 
             // ".NET Core Tooling Release",
             new TargetChannelConfig(
@@ -345,7 +350,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedForChecksums,
                 FeedForInstallers,
                 PublicAndInternalSymbolTargets,
-                filenamesToExclude: FilenamesToExclude),
+                filenamesToExclude: FilenamesToExclude,
+                flatten: false),
 
             // ".NET Internal Tooling",
             new TargetChannelConfig(
@@ -359,7 +365,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedInternalForChecksums,
                 FeedInternalForInstallers,
                 PublicAndInternalSymbolTargets,
-                filenamesToExclude: FilenamesToExclude),
+                filenamesToExclude: FilenamesToExclude,
+                flatten: false),
 
             // ".NET Core Experimental",
             new TargetChannelConfig(
@@ -373,7 +380,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedForChecksums,
                 FeedForInstallers,
                 PublicAndInternalSymbolTargets,
-                filenamesToExclude: FilenamesToExclude),
+                filenamesToExclude: FilenamesToExclude,
+                flatten: false),
 
             // ".NET Eng Services - Int",
             new TargetChannelConfig(
@@ -387,7 +395,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedForChecksums,
                 FeedForInstallers,
                 PublicAndInternalSymbolTargets,
-                filenamesToExclude: FilenamesToExclude),
+                filenamesToExclude: FilenamesToExclude,
+                flatten: false),
 
             // ".NET Eng Services - Prod",
             new TargetChannelConfig(
@@ -401,7 +410,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedForChecksums,
                 FeedForInstallers,
                 PublicAndInternalSymbolTargets,
-                filenamesToExclude: FilenamesToExclude),
+                filenamesToExclude: FilenamesToExclude,
+                flatten: false),
 
             // ".NET 3 Tools",
             new TargetChannelConfig(
@@ -415,7 +425,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedForChecksums,
                 FeedForInstallers,
                 PublicAndInternalSymbolTargets,
-                filenamesToExclude: FilenamesToExclude),
+                filenamesToExclude: FilenamesToExclude,
+                flatten: false),
 
             // ".NET 3 Tools - Validation",
             new TargetChannelConfig(
@@ -429,7 +440,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedForChecksums,
                 FeedForInstallers,
                 PublicAndInternalSymbolTargets,
-                filenamesToExclude: FilenamesToExclude),
+                filenamesToExclude: FilenamesToExclude,
+                flatten: false),
 
             // ".NET Core Tooling Dev",
             new TargetChannelConfig(
@@ -443,7 +455,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedForChecksums,
                 FeedForInstallers,
                 PublicAndInternalSymbolTargets,
-                filenamesToExclude: FilenamesToExclude),
+                filenamesToExclude: FilenamesToExclude,
+                flatten: false),
 
             // ".NET Core Tooling Release",
             new TargetChannelConfig(
@@ -457,7 +470,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedForChecksums,
                 FeedForInstallers,
                 PublicAndInternalSymbolTargets,
-                filenamesToExclude: FilenamesToExclude),
+                filenamesToExclude: FilenamesToExclude,
+                flatten: false),
 
             // ".NET Core 3.1 Dev",
             new TargetChannelConfig(
@@ -639,7 +653,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedForChecksums,
                 FeedForInstallers,
                 PublicAndInternalSymbolTargets,
-                filenamesToExclude: FilenamesToExclude),
+                filenamesToExclude: FilenamesToExclude,
+                flatten: false),
 
             // "VS 16.7",
             new TargetChannelConfig(
@@ -653,7 +668,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedForChecksums,
                 FeedForInstallers,
                 PublicAndInternalSymbolTargets,
-                filenamesToExclude: FilenamesToExclude),
+                filenamesToExclude: FilenamesToExclude,
+                flatten: false),
 
             // "VS 16.8",
             new TargetChannelConfig(
@@ -667,7 +683,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedForChecksums,
                 FeedForInstallers,
                 PublicAndInternalSymbolTargets,
-                filenamesToExclude: FilenamesToExclude),
+                filenamesToExclude: FilenamesToExclude,
+                flatten: false),
 
             // "VS 16.9",
             new TargetChannelConfig(
@@ -681,7 +698,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedForChecksums,
                 FeedForInstallers,
                 PublicAndInternalSymbolTargets,
-                filenamesToExclude: FilenamesToExclude),
+                filenamesToExclude: FilenamesToExclude,
+                flatten: false),
 
             // "VS 16.10",
             new TargetChannelConfig(
@@ -695,7 +713,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedForChecksums,
                 FeedForInstallers,
                 PublicAndInternalSymbolTargets,
-                filenamesToExclude: FilenamesToExclude),
+                filenamesToExclude: FilenamesToExclude,
+                flatten: false),
 
             // "VS Master",
             new TargetChannelConfig(
@@ -709,7 +728,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedForChecksums,
                 FeedForInstallers,
                 PublicAndInternalSymbolTargets,
-                filenamesToExclude: FilenamesToExclude),
+                filenamesToExclude: FilenamesToExclude,
+                flatten: false),
 
             // ".NET Libraries",
             new TargetChannelConfig(
@@ -723,7 +743,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedForChecksums,
                 FeedForInstallers,
                 PublicAndInternalSymbolTargets,
-                filenamesToExclude: FilenamesToExclude),
+                filenamesToExclude: FilenamesToExclude,
+                flatten: false),
         };
         #endregion
     }
