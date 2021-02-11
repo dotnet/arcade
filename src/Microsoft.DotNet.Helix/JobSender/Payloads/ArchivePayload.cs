@@ -8,6 +8,8 @@ namespace Microsoft.DotNet.Helix.Client
 {
     internal class ArchivePayload : IPayload
     {
+        private static readonly IHelpers s_helpers = new Helpers();
+
         private const int CacheExpiryHours = 1;
         public FileInfo Archive { get; }
 
@@ -22,7 +24,7 @@ namespace Microsoft.DotNet.Helix.Client
 
         public Task<string> UploadAsync(IBlobContainer payloadContainer, Action<string> log, CancellationToken cancellationToken)
             => Task.FromResult(
-                Helpers.DirectoryMutexExec(
+                s_helpers.DirectoryMutexExec(
                     () => DoUploadAsync(payloadContainer, log, cancellationToken),
                     Archive.FullName));
 

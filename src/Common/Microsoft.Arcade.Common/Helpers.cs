@@ -7,14 +7,14 @@ using System.Threading.Tasks;
 
 namespace Microsoft.Arcade.Common
 {
-    public static class Helpers
+    public class Helpers : IHelpers
     {
-        public static string RemoveTrailingSlash(string directoryPath)
+        public string RemoveTrailingSlash(string directoryPath)
         {
             return directoryPath.TrimEnd('/', '\\');
         }
 
-        public static string ComputeSha256Hash(string normalizedPath)
+        public string ComputeSha256Hash(string normalizedPath)
         {
             using (var hasher = SHA256.Create())
             {
@@ -26,45 +26,47 @@ namespace Microsoft.Arcade.Common
             }
         }
 
-        public static T MutexExec<T>(Func<T> function, string mutexName)
+        public T MutexExec<T>(Func<T> function, string mutexName)
         {
-            using (var mutex = new Mutex(false, mutexName))
+            using var mutex = new Mutex(false, mutexName);
+            bool hasMutex = false;
+
+            try
             {
-                bool hasMutex = false;
                 try
                 {
-                    try
-                    {
-                        mutex.WaitOne();
-                    }
-                    catch (AbandonedMutexException)
-                    {
-                    }
-
-                    hasMutex = true;
-                    return function();
+                    mutex.WaitOne();
                 }
-                finally
+                catch (AbandonedMutexException)
                 {
-                    if (hasMutex)
-                    {
-                        mutex.ReleaseMutex();
-                    }
+                }
+
+                hasMutex = true;
+                return function();
+            }
+            finally
+            {
+                if (hasMutex)
+                {
+                    mutex.ReleaseMutex();
                 }
             }
         }
 
-        public static T DirectoryMutexExec<T>(Func<T> function, string path) =>
+        public T DirectoryMutexExec<T>(Func<T> function, string path) =>
             MutexExec(
                 function,
                 $"Global\\{ComputeSha256Hash(path)}");
 
-        public static T MutexExec<T>(Func<Task<T>> function, string mutexName) =>
+        public T MutexExec<T>(Func<Task<T>> function, string mutexName) =>
             MutexExec(() => function().GetAwaiter().GetResult(), mutexName); // Can't await because of mutex
 
-        public static T DirectoryMutexExec<T>(Func<Task<T>> function, string path) =>
-            DirectoryMutexExec(() => function().GetAwaiter().GetResult(), path); // Can't await because of mutex
+        public T DirectoryMutexExec<T>(Func<Task<T>> function, string path) =>
+            DirectoryMutexExec(() => function().GetAwaiter().GetResult(), path); // Can't await because of mutex        
+    }
 
+    public static class KeyValuePairExtensions
+    {
         public static void Deconstruct<TKey, TValue>(this KeyValuePair<TKey, TValue> pair, out TKey key, out TValue value) { key = pair.Key; value = pair.Value; }
     }
 }

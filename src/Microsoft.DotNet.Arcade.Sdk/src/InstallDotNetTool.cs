@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using Microsoft.Arcade.Common;
 using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 namespace Microsoft.DotNet.Arcade.Sdk
 {
@@ -11,7 +12,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
     /// Task that installs a .NET tool in a given folder.
     /// Handles parallel builds that install the same tool.
     /// </summary>
-    public class InstallDotNetTool : Task
+    public class InstallDotNetTool : MSBuildTaskBase
     {
         /// <summary>
         /// The name of the tool to install (same as the NuGet package name, e.g. Microsoft.DotNet.XHarness.CLI).
@@ -48,7 +49,15 @@ namespace Microsoft.DotNet.Arcade.Sdk
         [Output]
         public string ToolPath { get; set; }
 
-        public override bool Execute()
+        public override void ConfigureServices(IServiceCollection collection)
+        {
+            collection.TryAddSingleton<ICommandFactory, CommandFactory>();
+            collection.TryAddSingleton<IFileSystem, FileSystem>();
+            collection.TryAddSingleton<IHelpers, Helpers>();
+            collection.TryAddSingleton(Log);
+        }
+
+        public bool ExecuteTask(ICommandFactory commandFactory, IFileSystem fileSystem, IHelpers helpers)
         {
             if (Version.Contains("*"))
             {
@@ -57,31 +66,30 @@ namespace Microsoft.DotNet.Arcade.Sdk
             }
 
             // We install the tool in [dest]/[name]/[version] because if we tried to install 2 versions in the same dir,
-            // dotnet tool install would fail.
+            // `dotnet tool install` would fail.
             var version = Version.ToLowerInvariant();
             ToolPath = Path.Combine(DestinationPath, Name, Version);
 
-            if (!Directory.Exists(ToolPath))
+            if (!fileSystem.DirectoryExists(ToolPath))
             {
-                Directory.CreateDirectory(DestinationPath);
+                fileSystem.CreateDirectory(DestinationPath);
             }
 
-            string storePath = Path.Combine(ToolPath, ".store", Name.ToLowerInvariant());
-            string versionInstallPath = Path.Combine(storePath, version);
+            string pathToSpecificVersion = Path.Combine(ToolPath, ".store", Name.ToLowerInvariant(), version);
 
-            return Helpers.DirectoryMutexExec(() =>
+            return helpers.DirectoryMutexExec(() =>
             {
-                if (Directory.Exists(versionInstallPath))
+                if (fileSystem.DirectoryExists(pathToSpecificVersion))
                 {
                     Log.LogMessage($"{Name} v{Version} is already installed");
                     return true;
                 }
 
-                return InstallTool();
+                return InstallTool(commandFactory);
             }, ToolPath);
         }
 
-        private bool InstallTool()
+        private bool InstallTool(ICommandFactory commandFactory)
         {
             Log.LogMessage($"Installing {Name} v{Version}...");
 
@@ -103,7 +111,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
 
             args.Add(Name);
 
-            Command command = Command.Create(string.IsNullOrEmpty(DotnetPath) ? "dotnet" : DotnetPath, args);
+            var command = commandFactory.Create(string.IsNullOrEmpty(DotnetPath) ? "dotnet" : DotnetPath, args);
             CommandResult result = command.Execute();
 
             if (result.ExitCode != 0)

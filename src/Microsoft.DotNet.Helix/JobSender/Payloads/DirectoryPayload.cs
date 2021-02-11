@@ -10,6 +10,8 @@ namespace Microsoft.DotNet.Helix.Client
 {
     internal class DirectoryPayload : IPayload
     {
+        private static readonly IHelpers s_helpers = new Helpers();
+
         public DirectoryPayload(string directory, string archiveEntryPrefix)
         {
             ArchiveEntryPrefix = archiveEntryPrefix;
@@ -23,13 +25,13 @@ namespace Microsoft.DotNet.Helix.Client
         private const int CacheExpiryHours = 5;
         public DirectoryInfo DirectoryInfo { get; }
 
-        public string NormalizedDirectoryPath => Helpers.RemoveTrailingSlash(DirectoryInfo.FullName);
+        public string NormalizedDirectoryPath => s_helpers.RemoveTrailingSlash(DirectoryInfo.FullName);
 
         public string ArchiveEntryPrefix { get; }
 
         public Task<string> UploadAsync(IBlobContainer payloadContainer, Action<string> log, CancellationToken cancellationToken)
             => Task.FromResult(
-                Helpers.DirectoryMutexExec(
+                s_helpers.DirectoryMutexExec(
                     () => DoUploadAsync(payloadContainer, log, cancellationToken),
                     NormalizedDirectoryPath));
 
