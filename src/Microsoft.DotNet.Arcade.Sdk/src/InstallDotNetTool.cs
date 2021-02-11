@@ -75,11 +75,11 @@ namespace Microsoft.DotNet.Arcade.Sdk
                 fileSystem.CreateDirectory(DestinationPath);
             }
 
-            string pathToSpecificVersion = Path.Combine(ToolPath, ".store", Name.ToLowerInvariant(), version);
+            string versionInstallPath = Path.Combine(ToolPath, ".store", Name.ToLowerInvariant(), version);
 
             return helpers.DirectoryMutexExec(() =>
             {
-                if (fileSystem.DirectoryExists(pathToSpecificVersion))
+                if (fileSystem.DirectoryExists(versionInstallPath))
                 {
                     Log.LogMessage($"{Name} v{Version} is already installed");
                     return true;
