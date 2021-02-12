@@ -190,6 +190,11 @@ namespace Microsoft.DotNet.Arcade.Sdk.Tests
             _task.ToolPath.Should().Be(s_installedPath);
         }
 
+        /// <summary>
+        /// This test spawns 2 real threads that use real Mutex.
+        /// First thread (installation task), calls the `dotnet tool install` command.
+        /// Second thread (skip task), waits for the first thread to finish and then verifies the existence of the tool.
+        /// </summary>
         [Fact]
         public async Task InstallsInParallelWithRealMutex()
         {
@@ -258,12 +263,12 @@ namespace Microsoft.DotNet.Arcade.Sdk.Tests
 
             var installationTask = Task.Run(() => task1.InvokeExecute(provider1).Should().BeTrue());
 
-            // At this point, `dotnet tool install` has been called and it's spinning
+            // Let's wait for the first `dotnet tool install` to be called (it will stay spinning)
             await hangingCommandCalled.Task;
 
             var skipTask = Task.Run(() => task2.InvokeExecute(provider2).Should().BeTrue());
 
-            // The first command must have been executed, let's verify arguments
+            // The first command must have been executed, let's verify the parameters
             hangingCommandFactoryMock
                 .Verify(
                     x => x.Create(
@@ -271,7 +276,7 @@ namespace Microsoft.DotNet.Arcade.Sdk.Tests
                         It.Is<IEnumerable<string>>(args => args.Count() == _expectedArgs.Count() && args.All(y => _expectedArgs.Contains(y)))),
                     Times.Once);
 
-            // The other command is waiting on the Mutex
+            // The other command is waiting on the Mutex now
             skipTask.IsCompleted.Should().BeFalse();
 
             _commandFactoryMock
@@ -281,11 +286,12 @@ namespace Microsoft.DotNet.Arcade.Sdk.Tests
                         It.Is<IEnumerable<string>>(args => args.Count() == _expectedArgs.Count() && args.All(y => _expectedArgs.Contains(y)))),
                     Times.Never);
 
-            // We now let `dotnet tool install` finish
+            // We now let `dotnet tool install` run to completion
             dotnetToolInstalled.SetResult(true);
 
-            installationTask.GetAwaiter().GetResult();
-            skipTask.GetAwaiter().GetResult();
+            // Let's give the installation task time to evaluate the command result
+            // Let's give the skip task get its own Mutex and verify existence of the installation
+            await Task.WhenAll(installationTask, skipTask);
 
             // Verify
             _commandFactoryMock
