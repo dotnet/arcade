@@ -51,9 +51,9 @@ namespace Microsoft.DotNet.Arcade.Sdk
 
         public override void ConfigureServices(IServiceCollection collection)
         {
-            collection.TryAddSingleton<ICommandFactory, CommandFactory>();
-            collection.TryAddSingleton<IFileSystem, FileSystem>();
-            collection.TryAddSingleton<IHelpers, Helpers>();
+            collection.TryAddTransient<ICommandFactory, CommandFactory>();
+            collection.TryAddTransient<IFileSystem, FileSystem>();
+            collection.TryAddTransient<IHelpers, Helpers>();
             collection.TryAddSingleton(Log);
         }
 

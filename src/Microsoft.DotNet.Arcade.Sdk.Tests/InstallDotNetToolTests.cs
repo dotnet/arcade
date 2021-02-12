@@ -6,12 +6,12 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using FluentAssertions;
 using Microsoft.Arcade.Common;
 using Microsoft.Arcade.Test.Common;
 using Microsoft.DotNet.Internal.DependencyInjection.Testing;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.DependencyInjection.Extensions;
 using Moq;
 using Xunit;
 
@@ -123,7 +123,6 @@ namespace Microsoft.DotNet.Arcade.Sdk.Tests
             // Verify
             _commandFactoryMock.VerifyAll();
             _commandMock.Verify(x => x.Execute(), Times.Once);
-            _fileSystemMock.Verify(x => x.CreateDirectory(InstallPath), Times.AtLeastOnce);
             _task.ToolPath.Should().Be(s_installedPath);
         }
 
@@ -149,7 +148,6 @@ namespace Microsoft.DotNet.Arcade.Sdk.Tests
             // Verify
             _commandFactoryMock.VerifyAll();
             _commandMock.Verify(x => x.Execute(), Times.Once);
-            _fileSystemMock.Verify(x => x.CreateDirectory(InstallPath), Times.AtLeastOnce);
         }
 
         [Fact]
@@ -189,8 +187,116 @@ namespace Microsoft.DotNet.Arcade.Sdk.Tests
             // Verify
             _commandFactoryMock.VerifyAll();
             _commandMock.Verify(x => x.Execute(), Times.Once);
-            _fileSystemMock.Verify(x => x.CreateDirectory(InstallPath), Times.AtLeastOnce);
             _task.ToolPath.Should().Be(s_installedPath);
+        }
+
+        [Fact]
+        public async Task InstallsInParallelWithRealMutex()
+        {
+            // Setup
+            var fileSystemMock1 = new Mock<IFileSystem>();
+            fileSystemMock1
+                .Setup(x => x.DirectoryExists(It.IsAny<string>()))
+                .Returns(false);
+
+            var fileSystemMock2 = new Mock<IFileSystem>();
+            fileSystemMock2
+                .Setup(x => x.DirectoryExists(It.IsAny<string>()))
+                .Returns(true);
+
+            var helpers = new Helpers();
+            var hangingCommandCalled = new TaskCompletionSource<bool>();
+            var dotnetToolInstalled = new TaskCompletionSource<bool>();
+
+            var hangingCommand = new Mock<ICommand>();
+            hangingCommand
+                .Setup(x => x.Execute())
+                .Callback(() =>
+                {
+                    hangingCommandCalled.SetResult(true);
+                    dotnetToolInstalled.Task.GetAwaiter().GetResult();
+                })
+                .Returns(new CommandResult(new ProcessStartInfo(), 0, "Tool installed", null));
+
+            var hangingCommandFactoryMock = new Mock<ICommandFactory>();
+            hangingCommandFactoryMock
+                .Setup(x => x.Create(
+                    It.Is<string>(s => s == _dotnetPath),
+                    It.Is<IEnumerable<string>>(args => args.All(y => _expectedArgs.Contains(y)))))
+                .Returns(hangingCommand.Object)
+                .Verifiable();
+
+            var collection1 = new ServiceCollection();
+            collection1.AddSingleton(hangingCommandFactoryMock.Object);
+            collection1.AddSingleton(fileSystemMock1.Object);
+            collection1.AddTransient<IHelpers, Helpers>();
+
+            var collection2 = new ServiceCollection();
+            collection2.AddSingleton(_commandFactoryMock.Object);
+            collection2.AddSingleton(fileSystemMock2.Object);
+            collection2.AddTransient<IHelpers, Helpers>();
+
+            var task1 = new InstallDotNetTool()
+            {
+                DestinationPath = InstallPath,
+                Name = ToolName,
+                Version = ToolVersion,
+                BuildEngine = new MockBuildEngine(),
+            };
+
+            var task2 = new InstallDotNetTool()
+            {
+                DestinationPath = InstallPath,
+                Name = ToolName,
+                Version = ToolVersion,
+                BuildEngine = new MockBuildEngine(),
+            };
+
+            // Act
+            using var provider1 = collection1.BuildServiceProvider();
+            using var provider2 = collection2.BuildServiceProvider();
+
+            var installationTask = Task.Run(() => task1.InvokeExecute(provider1).Should().BeTrue());
+
+            // At this point, `dotnet tool install` has been called and it's spinning
+            await hangingCommandCalled.Task;
+
+            var skipTask = Task.Run(() => task2.InvokeExecute(provider2).Should().BeTrue());
+
+            // The first command must have been executed, let's verify arguments
+            hangingCommandFactoryMock
+                .Verify(
+                    x => x.Create(
+                        It.Is<string>(dotnet => dotnet == _dotnetPath),
+                        It.Is<IEnumerable<string>>(args => args.Count() == _expectedArgs.Count() && args.All(y => _expectedArgs.Contains(y)))),
+                    Times.Once);
+
+            // The other command is waiting on the Mutex
+            skipTask.IsCompleted.Should().BeFalse();
+
+            _commandFactoryMock
+                .Verify(
+                    x => x.Create(
+                        It.Is<string>(dotnet => dotnet == _dotnetPath),
+                        It.Is<IEnumerable<string>>(args => args.Count() == _expectedArgs.Count() && args.All(y => _expectedArgs.Contains(y)))),
+                    Times.Never);
+
+            // We now let `dotnet tool install` finish
+            dotnetToolInstalled.SetResult(true);
+
+            installationTask.GetAwaiter().GetResult();
+            skipTask.GetAwaiter().GetResult();
+
+            // Verify
+            _commandFactoryMock
+                .Verify(
+                    x => x.Create(
+                        It.Is<string>(dotnet => dotnet == _dotnetPath),
+                        It.Is<IEnumerable<string>>(args => args.Count() == _expectedArgs.Count() && args.All(y => _expectedArgs.Contains(y)))),
+                    Times.Never);
+
+            task1.ToolPath.Should().Be(task2.ToolPath);
+            task1.ToolPath.Should().Be(s_installedPath);
         }
 
         [Fact]
@@ -217,9 +323,9 @@ namespace Microsoft.DotNet.Arcade.Sdk.Tests
         private IServiceCollection CreateMockServiceCollection()
         {
             var collection = new ServiceCollection();
-            collection.TryAddSingleton(_commandFactoryMock.Object);
-            collection.TryAddSingleton(_fileSystemMock.Object);
-            collection.TryAddSingleton(_helpersMock.Object);
+            collection.AddSingleton(_commandFactoryMock.Object);
+            collection.AddSingleton(_fileSystemMock.Object);
+            collection.AddSingleton(_helpersMock.Object);
             return collection;
         }
     }
