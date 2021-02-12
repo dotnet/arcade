@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
+using Castle.DynamicProxy.Generators.Emitters.SimpleAST;
 using Microsoft.Arcade.Test.Common;
 using Microsoft.DotNet.Build.Tasks.Feed.Model;
 using Xunit;
@@ -11,15 +12,19 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         private const string MsdlToken = "msdlToken";
         private const string SymWebToken = "SymWebToken";
         private const string TargetUrl = "TargetUrl";
+        private const string Msdl = "https://microsoftpublicsymbols.artifacts.visualstudio.com/DefaultCollection";
+        private const string SymWeb = "https://microsoft.artifacts.visualstudio.com/DefaultCollection";
 
-        [Fact]
-        public void PublishToMsdlServerTest()
+        [Theory]
+        [InlineData(SymbolTargetType.Msdl, Msdl)]
+        [InlineData(SymbolTargetType.SymWeb, SymWeb)]
+        public void PublishToSymbolServersTest(SymbolTargetType symbolTargetType , string symbolServer)
         {
             var publishTask = new PublishArtifactsInManifestV3();
             var feedConfigsForSymbols = new HashSet<TargetFeedConfig>();
             feedConfigsForSymbols.Add(new TargetFeedConfig(
                 TargetFeedContentType.Symbols,
-                TargetUrl,
+                "TargetUrl",
                 FeedType.AzureStorageFeed,
                 MsdlToken,
                 string.Empty,
@@ -27,38 +32,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 isolated: true,
                 @internal: false,
                 allowOverwrite: true,
-                SymbolTargetType.Msdl));
+                symbolTargetType));
             Dictionary<string, string> test =
-                publishTask.WhichServerToPublish(feedConfigsForSymbols, MsdlToken, SymWebToken);
+                publishTask.GetTargetSymbolServers(feedConfigsForSymbols, MsdlToken, SymWebToken);
             Assert.True(
-                test.ContainsKey("https://microsoftpublicsymbols.artifacts.visualstudio.com/DefaultCollection"));
-            Assert.False(test.ContainsKey("https://microsoft.artifacts.visualstudio.com/DefaultCollection"));
+                test.ContainsKey(symbolServer));
             Assert.True(test.Count == 1);
         }
 
-        [Fact]
-        public void PublishToSymWebServerTest()
-        {
-            var publishTask = new PublishArtifactsInManifestV3();
-            var feedConfigsForSymbols = new HashSet<TargetFeedConfig>();
-            feedConfigsForSymbols.Add(new TargetFeedConfig(
-                TargetFeedContentType.Symbols,
-                TargetUrl,
-                FeedType.AzureStorageFeed,
-                SymWebToken,
-                string.Empty,
-                AssetSelection.All,
-                isolated: true,
-                @internal: false,
-                allowOverwrite: true,
-                SymbolTargetType.SymWeb));
-            Dictionary<string, string> test =
-                publishTask.WhichServerToPublish(feedConfigsForSymbols, MsdlToken, SymWebToken);
-            Assert.False(
-                test.ContainsKey("https://microsoftpublicsymbols.artifacts.visualstudio.com/DefaultCollection"));
-            Assert.True(test.ContainsKey("https://microsoft.artifacts.visualstudio.com/DefaultCollection"));
-            Assert.True(test.Count == 1);
-        }
 
         [Fact]
         public void PublishToBothSymbolServerTest()
@@ -88,7 +69,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 allowOverwrite: true,
                 SymbolTargetType.Msdl));
             Dictionary<string, string> test =
-                publishTask.WhichServerToPublish(feedConfigsForSymbols, MsdlToken, SymWebToken);
+                publishTask.GetTargetSymbolServers(feedConfigsForSymbols, MsdlToken, SymWebToken);
             Assert.True(
                 test.ContainsKey("https://microsoftpublicsymbols.artifacts.visualstudio.com/DefaultCollection"));
             Assert.True(test.ContainsKey("https://microsoft.artifacts.visualstudio.com/DefaultCollection"));
@@ -96,7 +77,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         }
 
         [Fact]
-        public void DirectoryDoesNotExists()
+        public void TemporarySymbolDirectoryDoesNotExists()
         {
             var buildEngine = new MockBuildEngine();
             var task = new PublishArtifactsInManifestV3()
@@ -113,7 +94,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         {
             var publishTask = new PublishArtifactsInManifestV3();
             var path = TestInputs.GetFullPath("Test");
-            publishTask.CreateTemporarySymbolDirectory(path);
+            publishTask.EnsureTemporarySymbolDirectoryExists(path);
             Assert.True(Directory.Exists(path));
             publishTask.DeleteSymbolTemporaryDirectory(path);
             Assert.False(Directory.Exists(path));
@@ -138,7 +119,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 allowOverwrite: true,
                 SymbolTargetType.SymWeb));
             Dictionary<string, string> test =
-                publishTask.WhichServerToPublish(feedConfigsForSymbols, MsdlToken, SymWebToken);
+                publishTask.GetTargetSymbolServers(feedConfigsForSymbols, MsdlToken, SymWebToken);
             Assert.True(PublishSymbolsHelper.PublishAsync(null,
                 path,
                 SymWebToken,

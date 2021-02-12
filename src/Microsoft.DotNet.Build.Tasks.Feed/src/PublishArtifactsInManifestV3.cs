@@ -89,7 +89,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 string temporarySymbolsLocation =
                     Path.GetFullPath(Path.Combine(BlobAssetsBasePath, @"..\", "tempSymbols"));
 
-                CreateTemporarySymbolDirectory(temporarySymbolsLocation);
+                EnsureTemporarySymbolDirectoryExists(temporarySymbolsLocation);
 
                 SplitArtifactsInCategories(BuildModel);
                 DeleteSymbolTemporaryFiles(temporarySymbolsLocation);
@@ -229,7 +229,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             }
         }
 
-        public void CreateTemporarySymbolDirectory(string temporarySymbolsLocation)
+        /// <summary>
+        /// Create Temporary Symbols directory if it does not exists.
+        /// </summary>
+        /// <param name="temporarySymbolsLocation"></param>
+        public void EnsureTemporarySymbolDirectoryExists(string temporarySymbolsLocation)
         {
             if (!Directory.Exists(temporarySymbolsLocation))
             {

@@ -346,7 +346,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 HashSet<TargetFeedConfig> feedConfigsForSymbols = FeedConfigs[category];
 
                 Dictionary<string, string> serversToPublish =
-                    WhichServerToPublish(feedConfigsForSymbols, msdlToken, symWebToken);
+                    GetTargetSymbolServers(feedConfigsForSymbols, msdlToken, symWebToken);
 
                 IEnumerable<string> filesToSymbolServer = null;
                 if (Directory.Exists(pdbArtifactsBasePath))
@@ -389,7 +389,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             }
         }
 
-        public Dictionary<string ,string> WhichServerToPublish(HashSet<TargetFeedConfig> feedConfigsForSymbols, string msdlToken, string symWebToken)
+        /// <summary>
+        /// Get the Symbol Server to publish
+        /// </summary>
+        /// <param name="feedConfigsForSymbols"></param>
+        /// <param name="msdlToken"></param>
+        /// <param name="symWebToken"></param>
+        /// <returns></returns>
+        public Dictionary<string ,string> GetTargetSymbolServers(HashSet<TargetFeedConfig> feedConfigsForSymbols, string msdlToken, string symWebToken)
         {
             Dictionary<string, string> serversToPublish = new Dictionary<string, string>();
             if (feedConfigsForSymbols.Any(x => (x.SymbolTargetType & SymbolTargetType.Msdl) != SymbolTargetType.None))
