@@ -5,7 +5,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Microsoft.SymbolUploader;
@@ -15,7 +14,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
     public class PublishSymbolsHelper
     {
-        internal static async System.Threading.Tasks.Task PublishAsync(
+        public static async System.Threading.Tasks.Task PublishAsync(
                 TaskLoggingHelper log,
                 string symbolServerPath,
                 string personalAccessToken,

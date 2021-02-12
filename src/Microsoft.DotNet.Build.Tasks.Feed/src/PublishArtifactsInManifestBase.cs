@@ -326,7 +326,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// <param name="temporarySymbolsLocation">Path to Symbol.nupkgs</param>
         /// <param name="publishSpecialClrFiles">If true, the special coreclr module indexed files like DBI, DAC and SOS are published</param>
         /// <returns></returns>
-        protected async Task HandleSymbolPublishingAsync (
+        public async Task HandleSymbolPublishingAsync (
             string pdbArtifactsBasePath,
             string msdlToken, 
             string symWebToken,
@@ -345,16 +345,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                 HashSet<TargetFeedConfig> feedConfigsForSymbols = FeedConfigs[category];
 
-                Dictionary<string, string> serversToPublish = new Dictionary<string, string>();
-                
-                if (feedConfigsForSymbols.Any(x => (x.SymbolTargetType & SymbolTargetType.Msdl) != SymbolTargetType.None))
-                {
-                    serversToPublish.Add(MsdlServerPath, msdlToken);
-                }
-                if (feedConfigsForSymbols.Any(x => (x.SymbolTargetType & SymbolTargetType.SymWeb) != SymbolTargetType.None))
-                {
-                    serversToPublish.Add(SymwebServerPath, symWebToken);
-                }
+                Dictionary<string, string> serversToPublish =
+                    GetTargetSymbolServers(feedConfigsForSymbols, msdlToken, symWebToken);
 
                 IEnumerable<string> filesToSymbolServer = null;
                 if (Directory.Exists(pdbArtifactsBasePath))
@@ -395,6 +387,27 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             {
                 Log.LogError($"Temporary symbols directory {temporarySymbolsLocation} does not exists.");
             }
+        }
+
+        /// <summary>
+        /// Get the Symbol Server to publish
+        /// </summary>
+        /// <param name="feedConfigsForSymbols"></param>
+        /// <param name="msdlToken"></param>
+        /// <param name="symWebToken"></param>
+        /// <returns></returns>
+        public Dictionary<string ,string> GetTargetSymbolServers(HashSet<TargetFeedConfig> feedConfigsForSymbols, string msdlToken, string symWebToken)
+        {
+            Dictionary<string, string> serversToPublish = new Dictionary<string, string>();
+            if (feedConfigsForSymbols.Any(x => (x.SymbolTargetType & SymbolTargetType.Msdl) != SymbolTargetType.None))
+            {
+                serversToPublish.Add(MsdlServerPath, msdlToken);
+            }
+            if (feedConfigsForSymbols.Any(x => (x.SymbolTargetType & SymbolTargetType.SymWeb) != SymbolTargetType.None))
+            {
+                serversToPublish.Add(SymwebServerPath, symWebToken);
+            }
+            return serversToPublish;
         }
 
         /// <summary>
