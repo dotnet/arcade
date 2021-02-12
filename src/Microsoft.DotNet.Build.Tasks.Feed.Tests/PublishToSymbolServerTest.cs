@@ -71,8 +71,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             Dictionary<string, string> test =
                 publishTask.GetTargetSymbolServers(feedConfigsForSymbols, MsdlToken, SymWebToken);
             Assert.True(
-                test.ContainsKey("https://microsoftpublicsymbols.artifacts.visualstudio.com/DefaultCollection"));
-            Assert.True(test.ContainsKey("https://microsoft.artifacts.visualstudio.com/DefaultCollection"));
+                test.ContainsKey(Msdl));
+            Assert.True(test.ContainsKey(SymWeb));
             Assert.True(test.Count == 2);
         }
 
