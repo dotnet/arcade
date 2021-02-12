@@ -5,7 +5,7 @@
     <IncludeDotNetCli>true</IncludeDotNetCli>
     <IncludeXHarnessCli>true</IncludeXHarnessCli>
     <DotNetCliPackageType Condition="'$(DotNetCliPackageType)' != 'sdk'">aspnetcore-runtime</DotNetCliPackageType>
-    <DotNetCliVersion>3.1.5</DotNetCliVersion>
+    <DotNetCliVersion Condition="'$(DotNetCliVersion)' == ''">3.1.5</DotNetCliVersion>
   </PropertyGroup>
 
   <Target Name="AddXHarnessCli"
