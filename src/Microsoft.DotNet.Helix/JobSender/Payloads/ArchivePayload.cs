@@ -2,11 +2,14 @@ using System;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Arcade.Common;
 
 namespace Microsoft.DotNet.Helix.Client
 {
     internal class ArchivePayload : IPayload
     {
+        private static readonly IHelpers s_helpers = new Helpers();
+
         private const int CacheExpiryHours = 1;
         public FileInfo Archive { get; }
 
@@ -21,9 +24,9 @@ namespace Microsoft.DotNet.Helix.Client
 
         public Task<string> UploadAsync(IBlobContainer payloadContainer, Action<string> log, CancellationToken cancellationToken)
             => Task.FromResult(
-                Helpers.MutexExec(
+                s_helpers.DirectoryMutexExec(
                     () => DoUploadAsync(payloadContainer, log, cancellationToken),
-                    $"Global\\{Helpers.ComputeSha256Hash(Archive.FullName)}"));
+                    Archive.FullName));
 
         private async Task<string> DoUploadAsync(IBlobContainer payloadContainer, Action<string> log, CancellationToken cancellationToken)
         {
