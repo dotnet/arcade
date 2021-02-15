@@ -23,22 +23,23 @@
       <XHarnessPackageSource>$([System.IO.Path]::GetDirectoryName($(XHarnessNupkgPath))) --no-cache</XHarnessPackageSource>
     </PropertyGroup>
 
+    <InstallDotNetTool Name="$(_XHarnessPackageName)"
+                       DestinationPath="$(ArtifactsTmpDir)"
+                       Version="$(_XHarnessPackageVersion)"
+                       Source="$(XHarnessPackageSource)">
+      <Output TaskParameter="ToolPath" PropertyName="_XHarnessCliPath" />
+    </InstallDotNetTool>
+
     <!-- We install the tool locally on the build machine, then, installed as-is, we zip it up and send as a correlation payload -->
     <PropertyGroup>
-      <_XHarnessLocalToolPath>$(ArtifactsTmpDir)Microsoft.DotNet.XHarness.CLI</_XHarnessLocalToolPath>
-      <_XHarnessCliPath>$(_XHarnessLocalToolPath)\.store\microsoft.dotnet.xharness.cli\$(_XHarnessPackageVersion)\microsoft.dotnet.xharness.cli\$(_XHarnessPackageVersion)</_XHarnessCliPath>
+      <_XHarnessCliPath>$(_XHarnessCliPath)\.store\microsoft.dotnet.xharness.cli\$(_XHarnessPackageVersion)\microsoft.dotnet.xharness.cli\$(_XHarnessPackageVersion)</_XHarnessCliPath>
     </PropertyGroup>
-
-    <!-- It can happen that the SDK is invoked in parallel and then it can fail when re-using the install location, so we ignore the exit code -->
-    <Exec Command="dotnet tool install --tool-path $(_XHarnessLocalToolPath) --version $(_XHarnessPackageVersion) --add-source $(XHarnessPackageSource) $(_XHarnessPackageName)"
-          WorkingDirectory="$(ArtifactsTmpDir)"
-          IgnoreExitCode="true" />
 
     <!-- There are files we don't need extracted inside of the extracted tool dir (such as the original .nupkg) that blow up the size 3x, so we remove them -->
     <ItemGroup>
       <_XHarnessExtraToolFiles Include="$(_XHarnessCliPath)\*.*" />
     </ItemGroup>
-    <Delete Files="@(_XHarnessExtraToolFiles)" />
+    <Delete Files="@(_XHarnessExtraToolFiles)" TreatErrorsAsWarnings="true" ContinueOnError="WarnAndContinue" />
 
     <ItemGroup>
       <HelixCorrelationPayload Include="$(_XHarnessCliPath)">
