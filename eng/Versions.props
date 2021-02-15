@@ -83,7 +83,7 @@
     <XliffTasksVersion>1.0.0-beta.21106.1</XliffTasksVersion>
     <MicrosoftDotNetMaestroTasksVersion>1.1.0-beta.20570.1</MicrosoftDotNetMaestroTasksVersion>
     <MicrosoftDotNetXHarnessCLIVersion>1.0.0-prerelease.21103.1</MicrosoftDotNetXHarnessCLIVersion>
-    <MicrosoftSymbolUploaderBuildTaskVersion>1.1.210502</MicrosoftSymbolUploaderBuildTaskVersion>
-    <MicrosoftSymbolUploaderVersion>1.1.210502</MicrosoftSymbolUploaderVersion>
+    <MicrosoftSymbolUploaderBuildTaskVersion>1.1.211302</MicrosoftSymbolUploaderBuildTaskVersion>
+    <MicrosoftSymbolUploaderVersion>1.1.211302</MicrosoftSymbolUploaderVersion>
   </PropertyGroup>
 </Project>
