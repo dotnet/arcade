@@ -133,6 +133,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                     Log.LogMessage(MessageImportance.High, $"Publishing to this target channel: {targetChannelConfig}");
 
+                    string shortLinkUrl = string.IsNullOrEmpty(targetChannelConfig.AkaMSChannelName) ?
+                        $"dotnet/" : $"dotnet/{targetChannelConfig.AkaMSChannelName}/{BuildQuality}";
+
                     var targetFeedsSetup = new SetupTargetFeedConfigV3(
                         targetChannelConfig.IsInternal,
                         BuildModel.Identity.IsStable,
@@ -147,7 +150,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         targetChannelConfig.ShippingFeed,
                         targetChannelConfig.TransportFeed,
                         targetChannelConfig.SymbolsFeed,
-                        $"dotnet/{targetChannelConfig.AkaMSChannelName}/{BuildQuality}",
+                        shortLinkUrl,
                         AzureDevOpsFeedsKey,
                         BuildEngine = this.BuildEngine,
                         targetChannelConfig.SymbolTargetType,
