@@ -502,7 +502,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             string isolatedString = feedConfig.Isolated ? "Isolated" : "Non-Isolated";
                             string internalString = feedConfig.Internal ? $", Internal" : ", Public";
                             string shippingString = blob.NonShipping ? "NonShipping" : "Shipping";
-                            Log.LogMessage(MessageImportance.High, $"Blob {blob.Id} ({shippingString}) should go to {feedConfig.TargetURL} ({isolatedString}{internalString})");
+                            if (feedConfig.Type != FeedType.AzureStorageFeed && blob.Id.EndsWith(".symbols.nupkg"))
+                            {
+                                Log.LogMessage(MessageImportance.High, $"Blob {blob.Id} ({shippingString}) should go to {feedConfig.TargetURL} ({isolatedString}{internalString})");
+                            }
                         }
 
                         switch (feedConfig.Type)
@@ -511,7 +514,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                                 publishTasks.Add(PublishBlobsToAzDoNugetFeedAsync(filteredBlobs, buildAssets, feedConfig));
                                 break;
                             case FeedType.AzureStorageFeed:
+                                if (feedConfig.ContentType != TargetFeedContentType.Symbols)
+                                {
                                 publishTasks.Add(PublishBlobsToAzureStorageNugetFeedAsync(filteredBlobs, buildAssets, feedConfig));
+                                }
                                 break;
                             default:
                                 Log.LogError($"Unknown target feed type for category '{category}': '{feedConfig.Type}'.");
