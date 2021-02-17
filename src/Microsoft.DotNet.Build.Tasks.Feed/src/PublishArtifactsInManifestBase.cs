@@ -502,7 +502,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             string isolatedString = feedConfig.Isolated ? "Isolated" : "Non-Isolated";
                             string internalString = feedConfig.Internal ? $", Internal" : ", Public";
                             string shippingString = blob.NonShipping ? "NonShipping" : "Shipping";
-                            if (feedConfig.Type != FeedType.AzureStorageFeed && blob.Id.EndsWith(".symbols.nupkg"))
+                            if (feedConfig.ContentType != TargetFeedContentType.Symbols && feedConfig.Type != FeedType.AzureStorageFeed)
                             {
                                 Log.LogMessage(MessageImportance.High, $"Blob {blob.Id} ({shippingString}) should go to {feedConfig.TargetURL} ({isolatedString}{internalString})");
                             }
