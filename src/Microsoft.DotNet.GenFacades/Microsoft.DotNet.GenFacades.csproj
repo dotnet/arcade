@@ -13,8 +13,10 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Build" Version="$(MicrosoftBuildVersion)" Publish="false" />
     <PackageReference Include="Microsoft.Build.Tasks.Core" Version="$(MicrosoftBuildTasksCoreVersion)" Publish="false" />
-    <!-- Microsoft.CodeAnalysis is also loaded by the msbuild. So this version should match the msbuild version of the assembly. -->
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="$(MsbuildTaskMicrosoftCodeAnalysisCSharpVersion)" ExcludeAssets="analyzers" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(DotNetBuildOffline)' == 'true'">
     <PackageReference Include="System.Reflection.Metadata" Version="$(SystemReflectionMetadataVersion)" />
   </ItemGroup>
 
