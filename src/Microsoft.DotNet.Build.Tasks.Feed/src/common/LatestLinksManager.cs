@@ -71,7 +71,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                 AkaMSLink newLink = new AkaMSLink
                 {
-                    ShortUrl = GetLatestShortUrlForBlob(feedConfig, blob),
+                    ShortUrl = GetLatestShortUrlForBlob(feedConfig, blob, feedConfig.Flatten),
                     TargetUrl = actualTargetUrl
                 };
                 Logger.LogMessage(MessageImportance.High, $"  {Path.GetFileName(blob.Id)}");
@@ -91,9 +91,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// <param name="blob">Blob</param>
         /// <returns>Short url prefix for the blob.</returns>
         /// <remarks>
-        public string GetLatestShortUrlForBlob(TargetFeedConfig feedConfig, BlobArtifactModel blob)
+        public string GetLatestShortUrlForBlob(TargetFeedConfig feedConfig, BlobArtifactModel blob, bool flatten)
         {
             string blobIdWithoutVersions = VersionIdentifier.RemoveVersions(blob.Id);
+
+            if (flatten)
+            {
+                blobIdWithoutVersions = Path.GetFileName(blobIdWithoutVersions);
+            }
 
             return Path.Combine(feedConfig.LatestLinkShortUrlPrefix, blobIdWithoutVersions).Replace("\\", "/");
         }

@@ -54,6 +54,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
 
         public List<string> FilenamesToExclude { get; }
 
+        public bool Flatten { get; }
+
         public TargetFeedConfig(TargetFeedContentType contentType, 
             string targetURL, 
             FeedType type, 
@@ -64,7 +66,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             bool @internal = false, 
             bool allowOverwrite = false, 
             SymbolTargetType symbolTargetType = SymbolTargetType.None, 
-            List<string> filenamesToExclude = null)
+            List<string> filenamesToExclude = null,
+            bool flatten = true)
         {
             ContentType = contentType;
             TargetURL = targetURL;
@@ -77,6 +80,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             LatestLinkShortUrlPrefix = latestLinkShortUrlPrefix ?? string.Empty;
             SymbolTargetType = symbolTargetType;
             FilenamesToExclude = filenamesToExclude ?? new List<string>();
+            Flatten = flatten;
         }
 
         public override bool Equals(object obj)
@@ -92,12 +96,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 (Isolated == other.Isolated) &&
                 (Internal == other.Internal) &&
                 (AllowOverwrite == other.AllowOverwrite) &&
-                FilenamesToExclude.SequenceEqual(other.FilenamesToExclude);
+                FilenamesToExclude.SequenceEqual(other.FilenamesToExclude) &&
+                (Flatten == other.Flatten);
         }
 
         public override int GetHashCode()
         {
-            return (ContentType, Type, AssetSelection, Isolated, Internal, AllowOverwrite, LatestLinkShortUrlPrefix, TargetURL, Token, string.Join(" ", FilenamesToExclude)).GetHashCode();
+            return (ContentType, Type, AssetSelection, Isolated, Internal, AllowOverwrite, LatestLinkShortUrlPrefix, TargetURL, Token, Flatten, string.Join(" ", FilenamesToExclude)).GetHashCode();
         }
 
         public override string ToString()
@@ -111,7 +116,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 $"\n AllowOverwrite? '{AllowOverwrite}' " +
                 $"\n ShortUrlPrefix: '{LatestLinkShortUrlPrefix}' " +
                 $"\n TargetURL: '{TargetURL}'" +
-                $"\n FilenamesToExclude: \n\t{string.Join("\n\t", FilenamesToExclude)}";
+                $"\n FilenamesToExclude: \n\t{string.Join("\n\t", FilenamesToExclude)}" +
+                $"\n Flatten: '{Flatten}'";
         }
     }
 
