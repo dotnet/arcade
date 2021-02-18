@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
+using Microsoft.Arcade.Common;
 using Microsoft.Build.Framework;
 
 namespace Microsoft.DotNet.Helix.Sdk
@@ -15,10 +17,12 @@ namespace Microsoft.DotNet.Helix.Sdk
     {
         private const string EntryPointScriptName = "xharness-helix-job.apple.sh";
         private const string RunnerScriptName = "xharness-runner.apple.sh";
-        private const int DefaultLaunchTimeoutInMinutes = 10;
         private const string LaunchTimeoutPropName = "LaunchTimeout";
-        private const string TargetsPropName = "Targets";
+        private const string TargetPropName = "Targets";
         private const string IncludesTestRunnerPropName = "IncludesTestRunner";
+        private const int DefaultLaunchTimeoutInMinutes = 10;
+
+        private readonly IHelpers _helpers = new Arcade.Common.Helpers();
 
         /// <summary>
         /// An array of one or more paths to iOS app bundles (folders ending with ".app" usually)
@@ -32,9 +36,16 @@ namespace Microsoft.DotNet.Helix.Sdk
         public string XcodeVersion { get; set; }
 
         /// <summary>
-        /// Path to the provisioning profile that will be used to sign the app (in case of real device targets).
+        /// URL template to get the provisioning profile that will be used to sign the app from (in case of real device targets).
         /// </summary>
-        public string ProvisioningProfilePath { get; set; }
+        public string ProvisioningProfileUrl { get; set; }
+
+        /// <summary>
+        /// Path where we can store intermediate files.
+        /// </summary>
+        public string TmpDir { get; set; }
+
+        private string ProvisioningProfileFileName(string platform) => ProvisioningProfileUrl.Split('/').Last().Replace("{PLATFORM}", platform);
 
         /// <summary>
         /// The main method of this MSBuild task which calls the asynchronous execution method and
@@ -59,6 +70,7 @@ namespace Microsoft.DotNet.Helix.Sdk
         /// <returns></returns>
         private async Task ExecuteAsync()
         {
+            DownloadProvisioningProfiles();
             WorkItems = (await Task.WhenAll(AppBundles.Select(PrepareWorkItem))).Where(wi => wi != null).ToArray();
         }
 
@@ -83,18 +95,10 @@ namespace Microsoft.DotNet.Helix.Sdk
             var (testTimeout, workItemTimeout, expectedExitCode) = ParseMetadata(appBundleItem);
 
             // Validation of any metadata specific to iOS stuff goes here
-            if (!appBundleItem.TryGetMetadata(TargetsPropName, out string targets))
+            if (!appBundleItem.TryGetMetadata(TargetPropName, out string target))
             {
                 Log.LogError("'Targets' metadata must be specified - " +
                     "expecting list of target device/simulator platforms to execute tests on (e.g. ios-simulator-64)");
-                return null;
-            }
-
-            bool isDeviceTarget = targets.Contains("device");
-            string provisioningProfileDest = Path.Combine(appFolderPath, "embedded.mobileprovision");
-            if (isDeviceTarget && string.IsNullOrEmpty(ProvisioningProfilePath) && !File.Exists(provisioningProfileDest))
-            {
-                Log.LogError("ProvisioningProfilePath parameter not set but required for real device targets!");
                 return null;
             }
 
@@ -120,15 +124,40 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             if (includesTestRunner && expectedExitCode != 0)
             {
-                Log.LogWarning("The ExpectedExitCode property is ignored in the `ios test` scenario");
+                Log.LogWarning("The ExpectedExitCode property is ignored in the `apple test` scenario");
             }
 
+            bool isDeviceTarget = target.Contains("device");
+            string provisioningProfileDest = Path.Combine(appFolderPath, "embedded.mobileprovision");
+
+            // Handle files needed for signing
             if (isDeviceTarget)
             {
+                if (string.IsNullOrEmpty(TmpDir))
+                {
+                    Log.LogError(nameof(TmpDir) + " parameter not set but required for real device targets!");
+                    return null;
+                }
+
+                if (string.IsNullOrEmpty(ProvisioningProfileUrl) && !File.Exists(provisioningProfileDest))
+                {
+                    Log.LogError(nameof(ProvisioningProfileUrl) + " parameter not set but required for real device targets!");
+                    return null;
+                }
+
                 if (!File.Exists(provisioningProfileDest))
                 {
                     Log.LogMessage("Adding provisioning profile into the app bundle");
-                    File.Copy(ProvisioningProfilePath, provisioningProfileDest);
+
+                    // StartsWith because suffix can be the target OS version
+                    if (target.StartsWith("ios-device"))
+                    {
+                        File.Copy(Path.Combine(TmpDir, ProvisioningProfileFileName("iOS")), provisioningProfileDest);
+                    }
+                    else if (target.StartsWith("tvos-device"))
+                    {
+                        File.Copy(Path.Combine(TmpDir, ProvisioningProfileFileName("tvOS")), provisioningProfileDest);
+                    }
                 }
                 else
                 {
@@ -137,7 +166,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             }
 
             string appName = Path.GetFileName(appBundleItem.ItemSpec);
-            string command = GetHelixCommand(appName, targets, testTimeout, launchTimeout, includesTestRunner, expectedExitCode);
+            string command = GetHelixCommand(appName, target, testTimeout, launchTimeout, includesTestRunner, expectedExitCode);
             string payloadArchivePath = await CreateZipArchiveOfFolder(appFolderPath);
 
             Log.LogMessage($"Creating work item with properties Identity: {workItemName}, Payload: {appFolderPath}, Command: {command}");
@@ -189,6 +218,54 @@ namespace Microsoft.DotNet.Helix.Sdk
             await AddResourceFileToPayload(outputZipPath, RunnerScriptName);
 
             return outputZipPath;
+        }
+
+        private void DownloadProvisioningProfiles()
+        {
+            string[] targets = AppBundles
+                .Select(appBundle => appBundle.TryGetMetadata(TargetPropName, out string target) ? target : null)
+                .Where(t => t != null)
+                .ToArray();
+
+            bool hasiOSTargets = targets.Contains("ios-device");
+            bool hastvOSTargets = targets.Contains("tvos-device");
+
+            if (!hasiOSTargets && !hastvOSTargets)
+            {
+                return;
+            }
+
+            if (hasiOSTargets)
+            {
+                DownloadProvisioningProfile("iOS");
+            }
+
+            if (hastvOSTargets)
+            {
+                DownloadProvisioningProfile("tvOS");
+            }
+        }
+
+        private void DownloadProvisioningProfile(string platform)
+        {
+            // The URL is a template in the following format:
+            // https://storage.azure.com/signing/NET_Apple_Development_{PLATFORM}.mobileprovision
+            var url = ProvisioningProfileUrl.Replace("{PLATFORM}", platform);
+            var fileName = url.Split('/').Last();
+            var targetFile = Path.Combine(TmpDir, ProvisioningProfileFileName(platform));
+
+            using var client = new WebClient();
+            _helpers.DirectoryMutexExec(async () => {
+                if (File.Exists(targetFile))
+                {
+                    Log.LogMessage($"Provisioning profile is already downloaded");
+                    return;
+                }
+
+                Log.LogMessage($"Downloading {platform} provisioning profile to {targetFile}");
+
+                await client.DownloadFileTaskAsync(new Uri(url), targetFile);
+            }, TmpDir);
         }
     }
 }
