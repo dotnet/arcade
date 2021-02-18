@@ -241,6 +241,34 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 InternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude),
 
+            // ".NET 5 SDK 5.0.3xx" (public),
+            new TargetChannelConfig(
+                1754,
+                false,
+                PublishingInfraVersion.Next,
+                akaMSChannelName: "5.0.3xx",
+                FeedDotNet5Shipping,
+                FeedDotNet5Transport,
+                FeedDotNet5Symbols,
+                FeedForChecksums,
+                FeedForInstallers,
+                PublicAndInternalSymbolTargets,
+                filenamesToExclude: FilenamesToExclude),
+
+            // ".NET 5 SDK 5.0.3xx Internal" (internal),
+            new TargetChannelConfig(
+                1755,
+                true,
+                PublishingInfraVersion.Next,
+                akaMSChannelName: "internal/5.0.3xx",
+                FeedDotNet5InternalShipping,
+                FeedDotNet5InternalTransport,
+                FeedDotNet5InternalSymbols,
+                FeedInternalForChecksums,
+                FeedInternalForInstallers,
+                InternalSymbolTargets,
+                filenamesToExclude: FilenamesToExclude),
+
             // ".NET Eng - Latest",
             new TargetChannelConfig(
                 2,
