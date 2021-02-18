@@ -112,7 +112,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public string AzureStorageTargetFeedKey { get; set; }
 
+        public bool UseSpecifiedFeeds { get; set; }
+
+        public string ChecksumsFeed { get; set; }
+
         public string ChecksumsFeedKey { get; set; }
+
+        public string InstallersFeed { get; set; }
 
         public string InstallersFeedKey { get; set; }
 
@@ -121,6 +127,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         public string InternalCheckSumsFeedKey { get; set; }
 
         public string AzureDevOpsFeedsKey { get; set; }
+
+        public string TransportFeed { get; set; }
+        
+        public string ShippingFeed { get; set; }
+
+        public string SymbolsFeed { get; set; }
 
         /// <summary>
         /// Path to dll and pdb files
@@ -354,7 +366,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 MsdlToken = this.MsdlToken,
                 SymbolPublishingExclusionsFile = this.SymbolPublishingExclusionsFile,
                 PublishSpecialClrFiles = this.PublishSpecialClrFiles,
-                BuildQuality = this.BuildQuality
+                BuildQuality = this.BuildQuality,
+                UseSpecifiedFeeds = this.UseSpecifiedFeeds,
+                InstallersFeed = this.InstallersFeed,
+                ChecksumsFeed = this.ChecksumsFeed,
+                ShippingFeed = this.ShippingFeed,
+                TransportFeed = this.TransportFeed,
+                SymbolsFeed = this.SymbolsFeed
             };
         }
     }

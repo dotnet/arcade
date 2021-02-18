@@ -51,6 +51,18 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public bool PublishSpecialClrFiles { get; set; }
 
+        public bool UseSpecifiedFeeds { get; set; }
+
+        public string InstallersFeed { get; set; }
+
+        public string ChecksumsFeed { get; set; }
+
+        public string ShippingFeed { get; set; }
+
+        public string TransportFeed { get; set; }
+
+        public string SymbolsFeed { get; set; }
+
         public override bool Execute()
         {
             ExecuteAsync().GetAwaiter().GetResult();
@@ -143,13 +155,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         BuildModel.Identity.Commit,
                         AzureStorageTargetFeedKey,
                         PublishInstallersAndChecksums,
-                        targetChannelConfig.InstallersFeed,
+                        (UseSpecifiedFeeds && !string.IsNullOrEmpty(InstallersFeed)) ? InstallersFeed : targetChannelConfig.InstallersFeed,
                         targetChannelConfig.IsInternal? InternalInstallersFeedKey : InstallersFeedKey,
-                        targetChannelConfig.ChecksumsFeed,
+                        (UseSpecifiedFeeds && !string.IsNullOrEmpty(ChecksumsFeed)) ? ChecksumsFeed : targetChannelConfig.ChecksumsFeed,
                         targetChannelConfig.IsInternal? InternalCheckSumsFeedKey : CheckSumsFeedKey,
-                        targetChannelConfig.ShippingFeed,
-                        targetChannelConfig.TransportFeed,
-                        targetChannelConfig.SymbolsFeed,
+                        (UseSpecifiedFeeds && !string.IsNullOrEmpty(ShippingFeed)) ? ShippingFeed :targetChannelConfig.ShippingFeed,
+                        (UseSpecifiedFeeds && !string.IsNullOrEmpty(TransportFeed)) ? TransportFeed :targetChannelConfig.TransportFeed,
+                        (UseSpecifiedFeeds && !string.IsNullOrEmpty(SymbolsFeed)) ? SymbolsFeed :targetChannelConfig.SymbolsFeed,
                         shortLinkUrl,
                         AzureDevOpsFeedsKey,
                         BuildEngine = this.BuildEngine,

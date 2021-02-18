@@ -93,6 +93,12 @@
       <InternalInstallersFeedKey>$(InternalInstallersAzureAccountKey)</InternalInstallersFeedKey>
       <ChecksumsFeedKey>$(ChecksumsAzureAccountKey)</ChecksumsFeedKey>
       <InternalChecksumsFeedKey>$(InternalChecksumsAzureAccountKey)</InternalChecksumsFeedKey>
+      <UseSpecifiedFeeds Condition="'$(UseSpecifiedFeeds)' == ''">false</UseSpecifiedFeeds>
+      <InstallersFeed>$(InstallersFeed)</InstallersFeed>
+      <ChecksumsFeed>$(ChecksumsFeed)</ChecksumsFeed>
+      <TransportFeed>$(TransportFeed)</TransportFeed>
+      <ShippingFeed>$(ShippingFeed)</ShippingFeed>
+      <SymbolsFeed>$(SymbolsFeed)</SymbolsFeed>
     </PropertyGroup>
 
     <Error
@@ -131,7 +137,13 @@
       SymbolPublishingExclusionsFile="$(SymbolPublishingExclusionsFile)"
       PdbArtifactsBasePath="$(PDBArtifactsBasePath)"
       PublishSpecialClrFiles="$(PublishSpecialClrFiles)"
-      BuildQuality="$(BuildQuality)" />
+      BuildQuality="$(BuildQuality)"
+      UseSpecifiedFeeds="$(UseSpecifiedFeeds)"
+      InstallersFeed="$(InstallersFeed)"
+      ChecksumsFeed="$(ChecksumsFeed)"
+      TransportFeed="$(TransportFeed)"
+      ShippingFeed="$(ShippingFeed)"
+      SymbolsFeed="$(SymbolsFeed)" />
   </Target>
 
   <ItemGroup>
