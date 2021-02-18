@@ -2,8 +2,8 @@
 ## Stakeholders
 The main stakeholder of the project is Chris Bohm as the .NET Azure Champion
 ## Risk
-The biggest risk to the success of this project comes from the possibility of Azure DevOps not exposing enough information to allow us differentiate between servicing and vNext builds.
-More risk comes from the lack of experience the team working on pool provider and helix controller projects, there will be a ramp-up on how development and debugging works in these projects.
+We plan to add a call to AzDo from pool provider to get details about the build being requested, we must be careful of not exceeding the 30-second timeout the pool provider has.
+More risk comes from the lack of experience the team working on pool provider and Helix API projects, there will be a ramp-up on how development and debugging works in these projects.
 
 No proof of concept will be needed as we already redirect jobs based on the repository that sends them. We will expand this adding to build and now redirect jobs based on the target branch.
 
@@ -17,11 +17,11 @@ Completing this work will open the possibility to increase the load in our vNext
 Unit tests will be added to ensure servicing builds and tests jobs are identified by our services and then redirected appropriately.
 Daily validation will be added to our staging environment where the code paths added are executed and alerts will be triggered if unexpected behavior is identified.
 
-Most likely new secrets might be required to query AzDo to get details about builds, this is part of the unknowns.
+No new secrets will be added as part of this effort
 
 This project has no SDL implications.
 
-This epic will not modify the current steps for setting up repro/test/dev environments for Helix Controller and Pool provider. Any missing information in the current documentation will be added
+This epic will not modify the current steps for setting up repro/test/dev environments for Helix API and Pool provider. Any missing information in the current documentation will be added
 ## Rollout and Deployment
 The epic doesn't consider any breaking changes on how helix services and pool provider are deployed to production but feature flags will be added during the development to reduce the need of rollback in case of unexpected results in production.
 The epic isn't deprecating any service.
@@ -29,7 +29,7 @@ The epic isn't deprecating any service.
 The impacted services will follow the current deployment schedule which considers one deployment to production every Wednesday.
 
 New queues will need to be created when the servicing OS matrix changes after a release. 
-Changes for redirecting work will be added to Helix controller and maybe to pool provider during the development of the project but won't be required once the epic is completed.
+Changes for redirecting work will be added to Helix API and maybe to pool provider during the development of the project but won't be required once the epic is completed.
 
 The risk of running production deployments for these services is low as they are mature services and have been executing successful builds for a long time. In case of having bugs in the payload that prevents the work from being redirected, the customers most likely won't be impacted as all the work will executed in the queue originally used in the job.
 
