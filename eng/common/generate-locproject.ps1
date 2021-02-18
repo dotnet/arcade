@@ -1,18 +1,37 @@
-
-
 Set-StrictMode -Version 2.0
 $ErrorActionPreference = "Stop"
 
 Push-Location "$env:BUILD_SOURCESDIRECTORY" # push location for Resolve-Path -Relative to work
 $resxFiles = Get-ChildItem -Recurse -Path "$env:BUILD_SOURCESDIRECTORY\*\*.resx"
-$exclusions = Get-Content "$env:BUILD_SOURCESDIRECTORY\Localize\LocExclusions.json" | ConvertFrom-Json
+$xlfFiles = @()
+
+$allXlfFiles = Get-ChildItem -Recurse -Path "$env:BUILD_SOURCESDIRECTORY\*\*.xlf"
+if ($allXlfFiles.Length > 0) {
+    $allXlfFiles[0].FullName -Match "\.([\w-]+)\.xlf"
+    $firstLangCode = $Matches.1
+    $langXlfFiles = Get-ChildItem -Recurse -Path "$env:BUILD_SOURCESDIRECTORY\*\*.$firstLangCode.xlf"
+}
+$langXlfFiles | ForEach-Object {
+    $_.Name -Match "([^.]+)\.[\w-]+\.xlf"
+    $xlfFiles += Copy-Item "$($_.FullName)" -Destination "$($_.Directory.FullName)\$($Matches.1).xlf" -PassThru
+}
+
+$locFiles = @($resxFiles) + $xlfFiles
+
+$exclusionsFilePath = "$env:BUILD_SOURCESDIRECTORY\Localize\LocExclusions.json"
+$exclusions = @{ Exclusions = @() }
+if (Test-Path -Path $exclusionsFilePath)
+{
+    $exclusions = Get-Content "$env:BUILD_SOURCESDIRECTORY\Localize\LocExclusions.json" | ConvertFrom-Json
+}
+
 
 $locJson = @{
     Projects = @(
         @{
             LanguageSet = "Azure_Languages"
             LocItems = @(
-                $resxFiles | ForEach-Object {
+                $locFiles | ForEach-Object {
                     $outputPath = "Localize\$(($_.DirectoryName | Resolve-Path -Relative).Substring(2) + "\" + $_.Name)" 
                     $continue = $true
                     $exclusions.Exclusions | ForEach-Object {
