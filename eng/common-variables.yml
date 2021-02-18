@@ -18,8 +18,6 @@ variables:
       value: False
     - name: _RunAsInternal
       value: True
-    - name: _SignType
-      value: real
     # DotNet-Blob-Feed provides: dotnetfeed-storage-access-key-1
     # Publish-Build-Assets provides: MaestroAccessToken, BotAccount-dotnet-maestro-bot-PAT
     # DotNet-HelixApi-Access provides: HelixApiAccessToken
@@ -28,7 +26,6 @@ variables:
     - group: DotNet-HelixApi-Access
     - group: SDL_Settings
     - name: _InternalBuildArgs
-      value: /p:DotNetSignType=$(_SignType) 
-        /p:TeamName=$(_TeamName)
+      value: /p:TeamName=$(_TeamName)
         /p:DotNetPublishUsingPipelines=true
         /p:OfficialBuildId=$(BUILD.BUILDNUMBER)

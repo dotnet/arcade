@@ -246,7 +246,8 @@ stages:
   - template: eng\common\templates\post-build\post-build.yml
     parameters:
       publishingInfraVersion: 3
-
+      # signing validation will not run, even if the below value is 'true', if the 'PostBuildSign' variable is set to 'true'
+      enableSigningValidation: false      
       # Sourcelink validation isn't passing for Arcade due to some regressions. This should be
       # enabled back once this issue is resolved: https://github.com/dotnet/arcade/issues/2912
       enableSourceLinkValidation: false
