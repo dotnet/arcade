@@ -1,23 +1,21 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
-namespace Microsoft.DotNet.VersionTools.Util
+namespace Microsoft.Arcade.Common
 {
-    internal class Command
+    public class Command : ICommand
     {
         public static readonly string[] RunnableSuffixes = RuntimeInformation.IsOSPlatform(OSPlatform.Windows)
             ? new string[] { ".exe", ".cmd", ".bat" }
             : new string[] { string.Empty };
 
-        private Process _process;
+        private readonly Process _process;
 
         private Action<string> _statusForward;
 
@@ -33,7 +31,7 @@ namespace Microsoft.DotNet.VersionTools.Util
         private bool _running = false;
         private bool _quietBuildReporter = false;
 
-        private Command(string executable, string args)
+        internal Command(string executable, string args)
         {
             // Set the things we need
             var psi = new ProcessStartInfo()
@@ -48,85 +46,7 @@ namespace Microsoft.DotNet.VersionTools.Util
             };
         }
 
-        public static Command Create(string executable, params string[] args)
-        {
-            return Create(executable, ArgumentEscaper.EscapeAndConcatenateArgArrayForProcessStart(args));
-        }
-
-        public static Command Create(string executable, IEnumerable<string> args)
-        {
-            return Create(executable, ArgumentEscaper.EscapeAndConcatenateArgArrayForProcessStart(args));
-        }
-
-        public static Command Create(string executable, string args)
-        {
-            ResolveExecutablePath(ref executable, ref args);
-
-            return new Command(executable, args);
-        }
-
-        private static void ResolveExecutablePath(ref string executable, ref string args)
-        {
-            // On Windows, we want to avoid using "cmd" if possible (it mangles the colors, and a bunch of other things)
-            // So, do a quick path search to see if we can just directly invoke it
-            var useCmd = ShouldUseCmd(executable);
-
-            if (useCmd)
-            {
-                var comSpec = System.Environment.GetEnvironmentVariable("ComSpec");
-
-                // cmd doesn't like "foo.exe ", so we need to ensure that if
-                // args is empty, we just run "foo.exe"
-                if (!string.IsNullOrEmpty(args))
-                {
-                    executable = (executable + " " + args).Replace("\"", "\\\"");
-                }
-                args = $"/C \"{executable}\"";
-                executable = comSpec;
-            }
-        }
-
-        private static bool ShouldUseCmd(string executable)
-        {
-            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                var extension = Path.GetExtension(executable);
-                if (!string.IsNullOrEmpty(extension))
-                {
-                    return !string.Equals(extension, ".exe", StringComparison.Ordinal);
-                }
-                else if (executable.Contains(Path.DirectorySeparatorChar))
-                {
-                    // It's a relative path without an extension
-                    if (File.Exists(executable + ".exe"))
-                    {
-                        // It refers to an exe!
-                        return false;
-                    }
-                }
-                else
-                {
-                    // Search the path to see if we can find it 
-                    foreach (var path in System.Environment.GetEnvironmentVariable("PATH").Split(Path.PathSeparator))
-                    {
-                        var candidate = Path.Combine(path, executable + ".exe");
-                        if (File.Exists(candidate))
-                        {
-                            // We found an exe!
-                            return false;
-                        }
-                    }
-                }
-
-                // It's a non-exe :(
-                return true;
-            }
-
-            // Non-windows never uses cmd
-            return false;
-        }
-
-        public Command QuietBuildReporter()
+        public ICommand QuietBuildReporter()
         {
             _quietBuildReporter = true;
             return this;
@@ -190,13 +110,13 @@ namespace Microsoft.DotNet.VersionTools.Util
                 _stdErrCapture?.GetStringBuilder()?.ToString());
         }
 
-        public Command WorkingDirectory(string projectDirectory)
+        public ICommand WorkingDirectory(string projectDirectory)
         {
             _process.StartInfo.WorkingDirectory = projectDirectory;
             return this;
         }
 
-        public Command EnvironmentVariable(string name, string value)
+        public ICommand EnvironmentVariable(string name, string value)
         {
 #if NET45
             _process.StartInfo.EnvironmentVariables[name] = value;
@@ -207,7 +127,7 @@ namespace Microsoft.DotNet.VersionTools.Util
             return this;
         }
 
-        public Command ForwardStatus(TextWriter to = null)
+        public ICommand ForwardStatus(TextWriter to = null)
         {
             ThrowIfRunning();
             if (to == null)
@@ -221,7 +141,7 @@ namespace Microsoft.DotNet.VersionTools.Util
             return this;
         }
 
-        public Command CaptureStdOut()
+        public ICommand CaptureStdOut()
         {
             ThrowIfRunning();
             _process.StartInfo.RedirectStandardOutput = true;
@@ -229,7 +149,7 @@ namespace Microsoft.DotNet.VersionTools.Util
             return this;
         }
 
-        public Command CaptureStdErr()
+        public ICommand CaptureStdErr()
         {
             ThrowIfRunning();
             _process.StartInfo.RedirectStandardError = true;
@@ -237,7 +157,7 @@ namespace Microsoft.DotNet.VersionTools.Util
             return this;
         }
 
-        public Command ForwardStdOut(TextWriter to = null)
+        public ICommand ForwardStdOut(TextWriter to = null)
         {
             ThrowIfRunning();
             _process.StartInfo.RedirectStandardOutput = true;
@@ -252,7 +172,7 @@ namespace Microsoft.DotNet.VersionTools.Util
             return this;
         }
 
-        public Command ForwardStdErr(TextWriter to = null)
+        public ICommand ForwardStdErr(TextWriter to = null)
         {
             ThrowIfRunning();
             _process.StartInfo.RedirectStandardError = true;
@@ -267,7 +187,7 @@ namespace Microsoft.DotNet.VersionTools.Util
             return this;
         }
 
-        public Command OnOutputLine(Action<string> handler)
+        public ICommand OnOutputLine(Action<string> handler)
         {
             ThrowIfRunning();
             _process.StartInfo.RedirectStandardOutput = true;
@@ -279,7 +199,7 @@ namespace Microsoft.DotNet.VersionTools.Util
             return this;
         }
 
-        public Command OnErrorLine(Action<string> handler)
+        public ICommand OnErrorLine(Action<string> handler)
         {
             ThrowIfRunning();
             _process.StartInfo.RedirectStandardError = true;

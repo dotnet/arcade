@@ -2,6 +2,8 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using Microsoft.Extensions.Azure;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed.Model
@@ -50,7 +52,22 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
 
         public SymbolTargetType SymbolTargetType { get; }
 
-        public TargetFeedConfig(TargetFeedContentType contentType, string targetURL, FeedType type, string token, string latestLinkShortUrlPrefix = null, AssetSelection assetSelection = AssetSelection.All, bool isolated = false, bool @internal = false, bool allowOverwrite = false, SymbolTargetType symbolTargetType = SymbolTargetType.None)
+        public List<string> FilenamesToExclude { get; }
+
+        public bool Flatten { get; }
+
+        public TargetFeedConfig(TargetFeedContentType contentType, 
+            string targetURL, 
+            FeedType type, 
+            string token, 
+            string latestLinkShortUrlPrefix = null, 
+            AssetSelection assetSelection = AssetSelection.All, 
+            bool isolated = false, 
+            bool @internal = false, 
+            bool allowOverwrite = false, 
+            SymbolTargetType symbolTargetType = SymbolTargetType.None, 
+            List<string> filenamesToExclude = null,
+            bool flatten = true)
         {
             ContentType = contentType;
             TargetURL = targetURL;
@@ -62,6 +79,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             AllowOverwrite = allowOverwrite;
             LatestLinkShortUrlPrefix = latestLinkShortUrlPrefix ?? string.Empty;
             SymbolTargetType = symbolTargetType;
+            FilenamesToExclude = filenamesToExclude ?? new List<string>();
+            Flatten = flatten;
         }
 
         public override bool Equals(object obj)
@@ -76,12 +95,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 (AssetSelection == other.AssetSelection) &&
                 (Isolated == other.Isolated) &&
                 (Internal == other.Internal) &&
-                (AllowOverwrite == other.AllowOverwrite) ;
+                (AllowOverwrite == other.AllowOverwrite) &&
+                FilenamesToExclude.SequenceEqual(other.FilenamesToExclude) &&
+                (Flatten == other.Flatten);
         }
 
         public override int GetHashCode()
         {
-            return (ContentType, Type, AssetSelection, Isolated, Internal, AllowOverwrite, LatestLinkShortUrlPrefix, TargetURL,  Token).GetHashCode();
+            return (ContentType, Type, AssetSelection, Isolated, Internal, AllowOverwrite, LatestLinkShortUrlPrefix, TargetURL, Token, Flatten, string.Join(" ", FilenamesToExclude)).GetHashCode();
         }
 
         public override string ToString()
@@ -94,7 +115,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 $"\n Internal? '{Internal}' " +
                 $"\n AllowOverwrite? '{AllowOverwrite}' " +
                 $"\n ShortUrlPrefix: '{LatestLinkShortUrlPrefix}' " +
-                $"\n TargetURL: '{TargetURL}'";
+                $"\n TargetURL: '{TargetURL}'" +
+                $"\n FilenamesToExclude: \n\t{string.Join("\n\t", FilenamesToExclude)}" +
+                $"\n Flatten: '{Flatten}'";
         }
     }
 

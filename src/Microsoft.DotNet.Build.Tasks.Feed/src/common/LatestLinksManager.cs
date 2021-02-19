@@ -54,7 +54,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             }
 
             Logger.LogMessage(MessageImportance.High, "\nThe following aka.ms links for blobs will be created:");
-            IEnumerable<AkaMSLink> linksToCreate = blobsToPublish.Select(blob =>
+            IEnumerable<AkaMSLink> linksToCreate = blobsToPublish
+                .Where(blob => !feedConfig.FilenamesToExclude.Contains(Path.GetFileName(blob.Id)))
+                .Select(blob =>
             {
 
                 // Strip away the feed expected suffix (index.json) and append on the
@@ -69,9 +71,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                 AkaMSLink newLink = new AkaMSLink
                 {
-                    ShortUrl = GetLatestShortUrlForBlob(feedConfig, blob),
+                    ShortUrl = GetLatestShortUrlForBlob(feedConfig, blob, feedConfig.Flatten),
                     TargetUrl = actualTargetUrl
                 };
+                Logger.LogMessage(MessageImportance.High, $"  {Path.GetFileName(blob.Id)}");
 
                 Logger.LogMessage(MessageImportance.High, $"  aka.ms/{newLink.ShortUrl} -> {newLink.TargetUrl}");
 
@@ -88,9 +91,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// <param name="blob">Blob</param>
         /// <returns>Short url prefix for the blob.</returns>
         /// <remarks>
-        public string GetLatestShortUrlForBlob(TargetFeedConfig feedConfig, BlobArtifactModel blob)
+        public string GetLatestShortUrlForBlob(TargetFeedConfig feedConfig, BlobArtifactModel blob, bool flatten)
         {
             string blobIdWithoutVersions = VersionIdentifier.RemoveVersions(blob.Id);
+
+            if (flatten)
+            {
+                blobIdWithoutVersions = Path.GetFileName(blobIdWithoutVersions);
+            }
 
             return Path.Combine(feedConfig.LatestLinkShortUrlPrefix, blobIdWithoutVersions).Replace("\\", "/");
         }
