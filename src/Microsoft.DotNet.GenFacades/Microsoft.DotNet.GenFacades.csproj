@@ -13,8 +13,11 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Build" Version="$(MicrosoftBuildVersion)" Publish="false" />
     <PackageReference Include="Microsoft.Build.Tasks.Core" Version="$(MicrosoftBuildTasksCoreVersion)" Publish="false" />
-    <!-- Microsoft.CodeAnalysis is also loaded by the msbuild. So this version should match the msbuild version of the assembly. -->
     <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="$(MsbuildTaskMicrosoftCodeAnalysisCSharpVersion)" ExcludeAssets="analyzers" />
+  </ItemGroup>
+
+  <!-- When building offline we need to bump the version of System.Reflection.Metadata that CodeAnalysis package depends on to match what the source build tarball expects. -->
+  <ItemGroup Condition="'$(DotNetBuildOffline)' == 'true'">
     <PackageReference Include="System.Reflection.Metadata" Version="$(SystemReflectionMetadataVersion)" />
   </ItemGroup>
 
@@ -26,15 +29,6 @@
     <PackageReference Include="System.Diagnostics.TextWriterTraceListener" Version="4.0.0" />
     <PackageReference Include="System.Diagnostics.FileVersionInfo" Version="4.3.0" />
     <PackageReference Include="System.Reflection.TypeExtensions" Version="4.3.0" />
-  </ItemGroup>
-
-  <!--
-    In the source-build tarball build, Microsoft.CodeAnalysis.CSharp has dependencies on old
-    versions of these packages due to repo build order. Override to lift them to the versions passed
-    in via DotNetPackageVersionPropsPath.
-  -->
-  <ItemGroup Condition="'$(DotNetBuildFromSource)' == 'true'">
-    <PackageReference Include="System.Collections.Immutable" Version="$(SystemCollectionsImmutableVersion)" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(DotNetBuildFromSource)' != 'true'">
