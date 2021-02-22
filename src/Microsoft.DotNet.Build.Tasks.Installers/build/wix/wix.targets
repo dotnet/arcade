@@ -176,8 +176,6 @@
       <LocDirName Include="$([System.String]::new('%(LocFile.RecursiveDir)').TrimEnd('\'))" />
 
       <CandleVariables Include="DisplayVersion" Value="$(MajorVersion).$(MinorVersion).$(PatchVersion).$(BuildNumberMajor)" />
-      <CandleVariables Include="ProductBandVersion" Value="$(MajorVersion).$(MinorVersion)" />
-      <CandleVariables Include="FrameworkDisplayVersion" Value="$(ProductVersion)" />
       <CandleVariables Include="LcidList" Value="@(LocDirName)" />
       <CandleVariables Include="BundleThmDir" Value="$(BundleThemeDirectory)" />
 
