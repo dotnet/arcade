@@ -72,9 +72,7 @@
     <ExcludedPackageReferenceFromPublish Include="NuGet.Commands" Version="$(NuGetVersion)" />
     <ExcludedPackageReferenceFromPublish Include="NuGet.Packaging" Version="$(NuGetVersion)" />
     <ExcludedPackageReferenceFromPublish Include="NuGet.ProjectModel" Version="$(NuGetVersion)" />
-    <ExcludedPackageReferenceFromPublish Publish="false"
-                                         Condition="'$(TargetFramework)' != 'net472'" />
-    <PackageReference Include="@(ExcludedPackageReferenceFromPublish)" />
+    <PackageReference Include="@(ExcludedPackageReferenceFromPublish)" Publish="$(TargetFramework.StartsWith('net4'))" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
