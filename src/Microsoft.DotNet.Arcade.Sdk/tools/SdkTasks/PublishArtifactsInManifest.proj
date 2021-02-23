@@ -93,12 +93,7 @@
       <InternalInstallersFeedKey>$(InternalInstallersAzureAccountKey)</InternalInstallersFeedKey>
       <ChecksumsFeedKey>$(ChecksumsAzureAccountKey)</ChecksumsFeedKey>
       <InternalChecksumsFeedKey>$(InternalChecksumsAzureAccountKey)</InternalChecksumsFeedKey>
-      <UseSpecifiedFeeds Condition="'$(UseSpecifiedFeeds)' == ''">false</UseSpecifiedFeeds>
-      <InstallersFeed>$(InstallersFeed)</InstallersFeed>
-      <ChecksumsFeed>$(ChecksumsFeed)</ChecksumsFeed>
-      <TransportFeed>$(TransportFeed)</TransportFeed>
-      <ShippingFeed>$(ShippingFeed)</ShippingFeed>
-      <SymbolsFeed>$(SymbolsFeed)</SymbolsFeed>
+      <AllowFeedOverrides Condition="'$(AllowFeedOverrides)' == ''">false</AllowFeedOverrides>
     </PropertyGroup>
 
     <Error
@@ -138,12 +133,12 @@
       PdbArtifactsBasePath="$(PDBArtifactsBasePath)"
       PublishSpecialClrFiles="$(PublishSpecialClrFiles)"
       BuildQuality="$(BuildQuality)"
-      UseSpecifiedFeeds="$(UseSpecifiedFeeds)"
-      InstallersFeed="$(InstallersFeed)"
-      ChecksumsFeed="$(ChecksumsFeed)"
-      TransportFeed="$(TransportFeed)"
-      ShippingFeed="$(ShippingFeed)"
-      SymbolsFeed="$(SymbolsFeed)" />
+      AllowFeedOverrides="$(AllowFeedOverrides)"
+      InstallersFeedOverride="$(InstallersFeedOverride)"
+      ChecksumsFeedOverride="$(ChecksumsFeedOverride)"
+      TransportFeedOverride="$(TransportFeedOverride)"
+      ShippingFeedOverride="$(ShippingFeedOverride)"
+      SymbolsFeedOverride="$(SymbolsFeedOverride)" />
   </Target>
 
   <ItemGroup>

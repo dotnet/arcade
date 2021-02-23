@@ -51,17 +51,17 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public bool PublishSpecialClrFiles { get; set; }
 
-        public bool UseSpecifiedFeeds { get; set; }
+        public bool AllowFeedOverrides { get; set; }
 
-        public string InstallersFeed { get; set; }
+        public string InstallersFeedOverride { get; set; }
 
-        public string ChecksumsFeed { get; set; }
+        public string ChecksumsFeedOverride { get; set; }
 
-        public string ShippingFeed { get; set; }
+        public string ShippingFeedOverride { get; set; }
 
-        public string TransportFeed { get; set; }
+        public string TransportFeedOverride { get; set; }
 
-        public string SymbolsFeed { get; set; }
+        public string SymbolsFeedOverride { get; set; }
 
         public override bool Execute()
         {
@@ -155,13 +155,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         BuildModel.Identity.Commit,
                         AzureStorageTargetFeedKey,
                         PublishInstallersAndChecksums,
-                        (UseSpecifiedFeeds && !string.IsNullOrEmpty(InstallersFeed)) ? InstallersFeed : targetChannelConfig.InstallersFeed,
+                        (AllowFeedOverrides && !string.IsNullOrEmpty(InstallersFeedOverride)) ? InstallersFeedOverride : targetChannelConfig.InstallersFeed,
                         targetChannelConfig.IsInternal? InternalInstallersFeedKey : InstallersFeedKey,
-                        (UseSpecifiedFeeds && !string.IsNullOrEmpty(ChecksumsFeed)) ? ChecksumsFeed : targetChannelConfig.ChecksumsFeed,
+                        (AllowFeedOverrides && !string.IsNullOrEmpty(ChecksumsFeedOverride)) ? ChecksumsFeedOverride : targetChannelConfig.ChecksumsFeed,
                         targetChannelConfig.IsInternal? InternalCheckSumsFeedKey : CheckSumsFeedKey,
-                        (UseSpecifiedFeeds && !string.IsNullOrEmpty(ShippingFeed)) ? ShippingFeed :targetChannelConfig.ShippingFeed,
-                        (UseSpecifiedFeeds && !string.IsNullOrEmpty(TransportFeed)) ? TransportFeed :targetChannelConfig.TransportFeed,
-                        (UseSpecifiedFeeds && !string.IsNullOrEmpty(SymbolsFeed)) ? SymbolsFeed :targetChannelConfig.SymbolsFeed,
+                        (AllowFeedOverrides && !string.IsNullOrEmpty(ShippingFeedOverride)) ? ShippingFeedOverride :targetChannelConfig.ShippingFeed,
+                        (AllowFeedOverrides && !string.IsNullOrEmpty(TransportFeedOverride)) ? TransportFeedOverride :targetChannelConfig.TransportFeed,
+                        (AllowFeedOverrides && !string.IsNullOrEmpty(SymbolsFeedOverride)) ? SymbolsFeedOverride :targetChannelConfig.SymbolsFeed,
                         shortLinkUrl,
                         AzureDevOpsFeedsKey,
                         BuildEngine = this.BuildEngine,

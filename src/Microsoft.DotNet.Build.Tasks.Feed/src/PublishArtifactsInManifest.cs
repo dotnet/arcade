@@ -112,13 +112,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public string AzureStorageTargetFeedKey { get; set; }
 
-        public bool UseSpecifiedFeeds { get; set; }
+        public bool AllowFeedOverrides { get; set; }
 
-        public string ChecksumsFeed { get; set; }
+        public string ChecksumsFeedOverride { get; set; }
 
         public string ChecksumsFeedKey { get; set; }
 
-        public string InstallersFeed { get; set; }
+        public string InstallersFeedOverride { get; set; }
 
         public string InstallersFeedKey { get; set; }
 
@@ -128,11 +128,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public string AzureDevOpsFeedsKey { get; set; }
 
-        public string TransportFeed { get; set; }
+        public string TransportFeedOverride { get; set; }
         
-        public string ShippingFeed { get; set; }
+        public string ShippingFeedOverride { get; set; }
 
-        public string SymbolsFeed { get; set; }
+        public string SymbolsFeedOverride { get; set; }
 
         /// <summary>
         /// Path to dll and pdb files
@@ -367,12 +367,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 SymbolPublishingExclusionsFile = this.SymbolPublishingExclusionsFile,
                 PublishSpecialClrFiles = this.PublishSpecialClrFiles,
                 BuildQuality = this.BuildQuality,
-                UseSpecifiedFeeds = this.UseSpecifiedFeeds,
-                InstallersFeed = this.InstallersFeed,
-                ChecksumsFeed = this.ChecksumsFeed,
-                ShippingFeed = this.ShippingFeed,
-                TransportFeed = this.TransportFeed,
-                SymbolsFeed = this.SymbolsFeed
+                AllowFeedOverrides = this.AllowFeedOverrides,
+                InstallersFeedOverride = this.InstallersFeedOverride,
+                ChecksumsFeedOverride = this.ChecksumsFeedOverride,
+                ShippingFeedOverride = this.ShippingFeedOverride,
+                TransportFeedOverride = this.TransportFeedOverride,
+                SymbolsFeedOverride = this.SymbolsFeedOverride
             };
         }
     }
