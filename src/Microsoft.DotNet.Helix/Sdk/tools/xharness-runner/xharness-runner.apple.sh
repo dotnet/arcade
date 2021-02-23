@@ -164,6 +164,12 @@ if [ $exit_code -eq 80 ]; then
     sudo pkill -9 -f "$simulator_app"
 fi
 
+# If we have a launch failure AND we are on simulators, we need to signal that we want a reboot+retry
+# The script that is running this one will notice and request Helix to do it
+if [ $exit_code -eq 83 ] && [[ "$targets" =~ "simulator" ]]; then
+    exit_code=123
+fi
+
 # The simulator logs comming from the sudo-spawned Simulator.app are not readable by the helix uploader
 chmod 0644 "$output_directory"/*.log
 
