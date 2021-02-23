@@ -155,13 +155,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         BuildModel.Identity.Commit,
                         AzureStorageTargetFeedKey,
                         PublishInstallersAndChecksums,
-                        (AllowFeedOverrides && !string.IsNullOrEmpty(InstallersFeedOverride)) ? InstallersFeedOverride : targetChannelConfig.InstallersFeed,
+                        GetFeed(targetChannelConfig.InstallersFeed, InstallersFeedOverride),
                         targetChannelConfig.IsInternal? InternalInstallersFeedKey : InstallersFeedKey,
-                        (AllowFeedOverrides && !string.IsNullOrEmpty(ChecksumsFeedOverride)) ? ChecksumsFeedOverride : targetChannelConfig.ChecksumsFeed,
+                        GetFeed(targetChannelConfig.ChecksumsFeed, ChecksumsFeedOverride),
                         targetChannelConfig.IsInternal? InternalCheckSumsFeedKey : CheckSumsFeedKey,
-                        (AllowFeedOverrides && !string.IsNullOrEmpty(ShippingFeedOverride)) ? ShippingFeedOverride :targetChannelConfig.ShippingFeed,
-                        (AllowFeedOverrides && !string.IsNullOrEmpty(TransportFeedOverride)) ? TransportFeedOverride :targetChannelConfig.TransportFeed,
-                        (AllowFeedOverrides && !string.IsNullOrEmpty(SymbolsFeedOverride)) ? SymbolsFeedOverride :targetChannelConfig.SymbolsFeed,
+                        GetFeed(targetChannelConfig.ShippingFeed, ShippingFeedOverride),
+                        GetFeed(targetChannelConfig.TransportFeed, TransportFeedOverride),
+                        GetFeed(targetChannelConfig.SymbolsFeed, SymbolsFeedOverride),
                         shortLinkUrl,
                         AzureDevOpsFeedsKey,
                         BuildEngine = this.BuildEngine,
@@ -288,6 +288,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             {
                 Directory.Delete(temporarySymbolLocation);
             }
+        }
+
+        public string GetFeed(string feed, string feedOverride)
+        {
+            return (AllowFeedOverrides && !string.IsNullOrEmpty(feedOverride)) ? feedOverride : feed;
         }
     }
 }
