@@ -115,18 +115,28 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
 
         public override bool Equals(object other)
         {
-            return other is TargetChannelConfig config &&
-                   PublishingInfraVersion == config.PublishingInfraVersion &&
-                   Id == config.Id &&
-                   String.Equals(AkaMSChannelName, config.AkaMSChannelName, StringComparison.OrdinalIgnoreCase) &&
-                   String.Equals(ShippingFeed, config.ShippingFeed, StringComparison.OrdinalIgnoreCase) &&
-                   String.Equals(TransportFeed, config.TransportFeed, StringComparison.OrdinalIgnoreCase) &&
-                   String.Equals(SymbolsFeed, config.SymbolsFeed, StringComparison.OrdinalIgnoreCase) &&
-                   String.Equals(ChecksumsFeed, config.ChecksumsFeed, StringComparison.OrdinalIgnoreCase) &&
-                   String.Equals(InstallersFeed, config.InstallersFeed, StringComparison.OrdinalIgnoreCase) &&
-                   IsInternal == config.IsInternal &&
-                   FilenamesToExclude.SequenceEqual(config.FilenamesToExclude) &&
-                   Flatten == config.Flatten;
+            if (other is TargetChannelConfig config &&
+                PublishingInfraVersion == config.PublishingInfraVersion &&
+                Id == config.Id &&
+                String.Equals(AkaMSChannelName, config.AkaMSChannelName, StringComparison.OrdinalIgnoreCase) &&
+                String.Equals(ShippingFeed, config.ShippingFeed, StringComparison.OrdinalIgnoreCase) &&
+                String.Equals(TransportFeed, config.TransportFeed, StringComparison.OrdinalIgnoreCase) &&
+                String.Equals(SymbolsFeed, config.SymbolsFeed, StringComparison.OrdinalIgnoreCase) &&
+                String.Equals(ChecksumsFeed, config.ChecksumsFeed, StringComparison.OrdinalIgnoreCase) &&
+                String.Equals(InstallersFeed, config.InstallersFeed, StringComparison.OrdinalIgnoreCase) &&
+                IsInternal == config.IsInternal &&
+                Flatten == config.Flatten)
+            {
+                if (FilenamesToExclude is null)
+                    return config.FilenamesToExclude is null;
+                
+                if (config.FilenamesToExclude is null)
+                    return false;
+                
+                return FilenamesToExclude.SequenceEqual(config.FilenamesToExclude);
+            }
+            
+            return false;
         }
 
         public override int GetHashCode()
