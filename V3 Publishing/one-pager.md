@@ -19,10 +19,10 @@ What are the unknown?
 ## Rollout and Deployment
 V1/V2 to V3
 a) We are deprecating legacy publshing code. This functionality will be first tested in arcade master and then in arcade-validation. Upon successful test, since all the repos getting update from arcade master are currently using V3 publishing. This rollout is going to be seamless. This is just going to be an arcade update and repo owners do not have to do anything here.
-b) Then V3 publishing infrastrure has to be added in arcade/release-3.0 and this will be tested against arcade-validation, installer, runtime, sdk. Upon successful testing, an arcade update will be rolled out which customer repos have to consume.
+b) Then V3 publishing infrastructure has to be added in arcade/release-3.0 and this will be tested against some repos that takes update from arcade/release-3.0. Upon successful testing, an arcade update will be rolled out which customer repos have to consume.
 c) Make a list of all the repos that will require to update like we did for arcade/release-5.0 eg:(https://github.com/dotnet/arcade/blob/master/Documentation/V3StatusUpdate.md)
 d) Will send out an email to partners to upgrade from V1/V2 to V3 and help them upgrade to V3. Documentation on how to upgrade can be found here (https://github.com/dotnet/arcade/blob/master/Documentation/CorePackages/Publishing.md#how-to-upgrade-from-v2-to-v3)
-e) After all the repos are onboarded successfully, V1 and V2 publishing infrasturcture will be deprecated from arcade/release-3.0. This is going to be an arcade rollout which customers repos have to consume.
+e) After all the repos are onboarded successfully, V1 and V2 publishing infrastructure will be deprecated from arcade/release-3.0. This is going to be an arcade rollout which customers repos have to consume.
 
 Performance imporvements 
 a) All the performance related improvements are going to be an arcade update which customer repos have to consume. This will be tested against runtime, installer before roll out.
@@ -38,6 +38,10 @@ a) No new PATs are added as part of this epic.
 
 SDL 
 No change to the SDL threat model.
+
+Confidence in deployments/shipping
+a) Before on-boarding repos using arcade/release-3.0 on V3 publishing, a subset of repos will be tested with the latest update, only upon successful test the repos will be on-boarded. 
+b) Adding more tests to the publishing infrastructure will increase the confidence. 
 
 ## Monitoring
 Customers are responsible for keeping their build green once the changes are rolled out.
