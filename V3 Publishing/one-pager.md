@@ -2,19 +2,20 @@
 We need to retire V1 and V2 publishing.
 
 Why do we need to retire V1 and V2? 
-Both V1 and V2 use multi stage(s) publishing infrastructure. V3 on the other hand uses single stage publishing, there by reducing UI clutter. V3 reduces the number of machines used during publishing, which speeds up the whole process. In both V1 and V2, when new channels are added it requires an arcade update to the customer repository, but in V3 it will only require arcade getting an arcade update.
+Both V1 and V2 use multi stage(s) publishing infrastructure. V3 on the other hand uses single stage publishing, thereby reducing UI clutter. V3 reduces the number of machines used during publishing, which speeds up the whole process. In both V1 and V2, when new channels are added it requires an arcade update to the customer repository, but in V3 it will only require arcade getting an arcade update.
 
 Currently arcade release/5.0, master and all the repos getting updates from these branches are already using V3 publishing. In this epic we are planning to move arcade release/3.0 branch to use V3 publishing. We need all the repos currently which takes updates from arcade release/3.0 to use the latest V3 publishing. Also removing all the legacy publishing code that includes V1 and V2 publishing from arcade master and release/3.0 branches.
 
-Also will be working on ways to improve the performance of publishing artifacts and symbols, and add more tests during this process. This will include better way of downloading artifacts from to improve publishing performance.
+Also will be working on ways to improve the performance of publishing artifacts and symbols, and add more tests during this process. This will include better way of downloading artifacts to improve publishing performance.
 
 ## Stakeholders
 - .NET Core Engineering
 - .NET Core Engingeering Partners
 
 ## Risk
-What are the unknown?
-- How acrade-services would react to this publishing arcade update, because right now we have special stages in arcade-services compared to other repos which consumes update from arcade/release-3.0.
+What are the unknowns?
+- How arcade-services would react to this publishing arcade update, because right now we have special stages in arcade-services compared to other repos which consumes update from arcade/release-3.0.
+- While on-boarding repos to V3, there might be some risk because of some unknown dependency of the repo on V1/V2 publishing.
 
 ## Rollout and Deployment
 V1/V2 to V3
@@ -24,7 +25,7 @@ c) Make a list of all the repos that will require to update like we did for arca
 d) Will send out an email to partners to upgrade from V1/V2 to V3 and help them upgrade to V3. Documentation on how to upgrade can be found here (https://github.com/dotnet/arcade/blob/master/Documentation/CorePackages/Publishing.md#how-to-upgrade-from-v2-to-v3)
 e) After all the repos are onboarded successfully, V1 and V2 publishing infrastructure will be deprecated from arcade/release-3.0. This is going to be an arcade rollout which customers repos have to consume.
 
-Performance imporvements 
+Performance improvements 
 a) All the performance related improvements are going to be an arcade update which customer repos have to consume. This will be tested against runtime, installer before roll out.
 
 ## Serviceability
