@@ -239,6 +239,7 @@ Search your repository for any references to the `master` branch specific to you
     ```
 - Consider also any code that is kept in sync using GitHub actions between repos, [such as this example](https://github.com/dotnet/aspnetcore/blob/main/.github/workflows/runtime-sync.yml).
 - There also might be references **to your repo from other repos**. You don't have to worry about these much as GitHub will redirect all links automatically (see [FAQ / What happens to links to files in my repo](#what-happens-to-links-to-files-in-my-repo)). Ideally take care of those at the end of this guide
+- There might also be `aka.ms/` links leading to your repo that will need changing
 
 ## 7. Use a `darc` script to migrate channels and subscriptions
 ![Maestro enabled](images/maestro-enabled.png)
