@@ -123,17 +123,18 @@
             GetCategorizedIntermediateNupkgContents;
             GetSourceBuildIntermediateNupkgNameConvention">
     <ItemGroup>
-      <IntermediateNupkgProject Include="$(SourceBuildIntermediateProjFile)" />
+      <IntermediateNupkgProject Include="$(SourceBuildIntermediateProjTargetFile)" />
 
       <IntermediateNupkgProject
-        Include="$(SourceBuildIntermediateProjFile)"
+        Include="$(SourceBuildIntermediateProjTargetFile)"
+        Condition=" '%(SupplementalIntermediateNupkgCategory.Identity)' != '' "
         AdditionalProperties="
           SupplementalIntermediateNupkgCategory=%(SupplementalIntermediateNupkgCategory.Identity)" />
     </ItemGroup>
 
     <PropertyGroup>
       <IntermediateNupkgBuildMessage>Building intermediate nupkg</IntermediateNupkgBuildMessage>
-      <IntermediateNupkgBuildMessage>$(IntermediateNupkgBuildMessage), and supplemental nupkgs for @(SupplementalIntermediateNupkgCategory, ', ')</IntermediateNupkgBuildMessage>
+      <IntermediateNupkgBuildMessage Condition=" '@(SupplementalIntermediateNupkgCategory)' != '' ">$(IntermediateNupkgBuildMessage), and supplemental nupkgs for @(SupplementalIntermediateNupkgCategory, ', ')</IntermediateNupkgBuildMessage>
     </PropertyGroup>
 
     <Message Importance="High" Text="$(IntermediateNupkgBuildMessage)..." />
