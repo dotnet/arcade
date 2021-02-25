@@ -51,6 +51,18 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public bool PublishSpecialClrFiles { get; set; }
 
+        public bool AllowFeedOverrides { get; set; }
+
+        public string InstallersFeedOverride { get; set; }
+
+        public string ChecksumsFeedOverride { get; set; }
+
+        public string ShippingFeedOverride { get; set; }
+
+        public string TransportFeedOverride { get; set; }
+
+        public string SymbolsFeedOverride { get; set; }
+
         public override bool Execute()
         {
             ExecuteAsync().GetAwaiter().GetResult();
@@ -143,13 +155,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         BuildModel.Identity.Commit,
                         AzureStorageTargetFeedKey,
                         PublishInstallersAndChecksums,
-                        targetChannelConfig.InstallersFeed,
+                        GetFeed(targetChannelConfig.InstallersFeed, InstallersFeedOverride),
                         targetChannelConfig.IsInternal? InternalInstallersFeedKey : InstallersFeedKey,
-                        targetChannelConfig.ChecksumsFeed,
+                        GetFeed(targetChannelConfig.ChecksumsFeed, ChecksumsFeedOverride),
                         targetChannelConfig.IsInternal? InternalCheckSumsFeedKey : CheckSumsFeedKey,
-                        targetChannelConfig.ShippingFeed,
-                        targetChannelConfig.TransportFeed,
-                        targetChannelConfig.SymbolsFeed,
+                        GetFeed(targetChannelConfig.ShippingFeed, ShippingFeedOverride),
+                        GetFeed(targetChannelConfig.TransportFeed, TransportFeedOverride),
+                        GetFeed(targetChannelConfig.SymbolsFeed, SymbolsFeedOverride),
                         shortLinkUrl,
                         AzureDevOpsFeedsKey,
                         BuildEngine = this.BuildEngine,
@@ -276,6 +288,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             {
                 Directory.Delete(temporarySymbolLocation);
             }
+        }
+
+        public string GetFeed(string feed, string feedOverride)
+        {
+            return (AllowFeedOverrides && !string.IsNullOrEmpty(feedOverride)) ? feedOverride : feed;
         }
     }
 }
