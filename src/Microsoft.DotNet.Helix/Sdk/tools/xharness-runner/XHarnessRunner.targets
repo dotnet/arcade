@@ -5,7 +5,8 @@
     <IncludeDotNetCli>true</IncludeDotNetCli>
     <IncludeXHarnessCli>true</IncludeXHarnessCli>
     <DotNetCliPackageType Condition="'$(DotNetCliPackageType)' != 'sdk'">aspnetcore-runtime</DotNetCliPackageType>
-    <DotNetCliVersion Condition="'$(DotNetCliVersion)' == ''">3.1.5</DotNetCliVersion>
+    <DotNetCliVersion Condition=" '$(DotNetCliVersion)' == '' ">3.1.5</DotNetCliVersion>
+    <DotNetCliVersion Condition=" '$(DotNetCliVersion)' == '$(BundledNETCoreAppPackageVersion)' AND '$(DotNetCliPackageType)' == 'aspnetcore-runtime' ">6.0.0-preview.1.21103.6</DotNetCliVersion>
   </PropertyGroup>
 
   <Target Name="AddXHarnessCli"
