@@ -110,7 +110,7 @@ The list of available Helix queues can be found on the [Helix homepage](https://
       # WorkItemTimeout: '' -- a timeout (specified as a System.TimeSpan string) for the work item command; requires WorkItemDirectory; incompatible with XUnitProjects
       IncludeDotNetCli: true
       DotNetCliPackageType: sdk
-      DotNetCliVersion: 2.1.403 # full list of versions here: https://raw.githubusercontent.com/dotnet/core/master/release-notes/releases.json
+      DotNetCliVersion: 2.1.403 # full list of versions here: https://raw.githubusercontent.com/dotnet/core/main/release-notes/releases.json
       # WaitForWorkItemCompletion: true -- defaults to true
       Creator: arcade # specify an appropriate Creator here -- required for external builds
       # DisplayNamePrefix: 'Send job to Helix' -- the Helix task's display name in AzDO. Defaults to 'Send job to Helix'
