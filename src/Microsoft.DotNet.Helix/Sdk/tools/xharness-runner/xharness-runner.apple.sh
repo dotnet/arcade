@@ -135,7 +135,7 @@ if [ "$targets" == 'ios-device' ] || [ "$targets" == 'tvos-device' ]; then
 
     # Sign the app
     /usr/bin/codesign -v --force --sign "Apple Development" --keychain "$keychain_name" --entitlements entitlements.plist "$app"
-else
+elif [[ "$targets" =~ "simulator" ]]; then
     # Start the simulator if it is not running already
     simulator_app="$xcode_path/Contents/Developer/Applications/Simulator.app"
     open -a "$simulator_app"
