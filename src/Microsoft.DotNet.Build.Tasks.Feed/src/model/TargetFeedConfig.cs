@@ -99,12 +99,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 (Flatten == other.Flatten))
             {
                 if (FilenamesToExclude is null)
-                    return config.FilenamesToExclude is null;
+                    return other.FilenamesToExclude is null;
                 
-                if (config.FilenamesToExclude is null)
+                if (other.FilenamesToExclude is null)
                     return false;
                 
-                return FilenamesToExclude.SequenceEqual(config.FilenamesToExclude);
+                return FilenamesToExclude.SequenceEqual(other.FilenamesToExclude);
             }
 
             return false;
