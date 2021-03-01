@@ -85,7 +85,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
 
         public override bool Equals(object obj)
         {
-            return  
+            if (  
                 obj is TargetFeedConfig other &&
                 (ContentType == other.ContentType) &&
                 TargetURL.Equals(other.TargetURL, StringComparison.OrdinalIgnoreCase) &&
@@ -96,8 +96,18 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 (Isolated == other.Isolated) &&
                 (Internal == other.Internal) &&
                 (AllowOverwrite == other.AllowOverwrite) &&
-                FilenamesToExclude.SequenceEqual(other.FilenamesToExclude) &&
-                (Flatten == other.Flatten);
+                (Flatten == other.Flatten))
+            {
+                if (FilenamesToExclude is null)
+                    return config.FilenamesToExclude is null;
+                
+                if (config.FilenamesToExclude is null)
+                    return false;
+                
+                return FilenamesToExclude.SequenceEqual(config.FilenamesToExclude);
+            }
+
+            return false;
         }
 
         public override int GetHashCode()
