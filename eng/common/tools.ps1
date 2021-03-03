@@ -166,7 +166,7 @@ function InitializeDotNetCli([bool]$install, [bool]$createSdkLocationFile) {
       $sdkCacheFileTemp = Join-Path $ToolsetDir $([System.IO.Path]::GetRandomFileName())
     }
     until (!(Test-Path $sdkCacheFileTemp))
-    Set-Content -Path $sdkCacheFileTemp -Value $dotnetRoot
+    Set-Content -Path $sdkCacheFileTemp -Value $dotnetRoot -Encoding utf8
 
     try {
       Move-Item -Force $sdkCacheFileTemp (Join-Path $ToolsetDir 'sdk.txt')
