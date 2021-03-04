@@ -20,7 +20,7 @@ Post build signing deals with this by recording sidecar information about at bui
 - Manifest files which describe the signing data for a build (e.g. items to sign and file extension -> certificate mappings)
 
 The process works as follows:
-1. Gather a drop of a build that needs to be signed, including all un-released inputs builds.
+1. Gather the drop of a build that needs to be signed, including all un-released inputs builds.
 2. Locate all build manifests (containing signing information for each input build)
 3. Build a list of all files to sign (files to sign should be found in the drop), and the specific certificate info required for those files/extensions (and any files within containers). Each input item to sign is associated with the certificate info present in the same build.
 4. Pass this data to SignTool
