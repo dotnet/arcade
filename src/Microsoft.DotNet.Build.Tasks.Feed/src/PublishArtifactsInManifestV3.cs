@@ -166,7 +166,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         AzureDevOpsFeedsKey,
                         BuildEngine = this.BuildEngine,
                         targetChannelConfig.SymbolTargetType,
-                        filesToExclude: targetChannelConfig.FilenamesToExclude);
+                        filesToExclude: targetChannelConfig.FilenamesToExclude,
+                        flatten: targetChannelConfig.Flatten);
 
                     var targetFeedConfigs = targetFeedsSetup.Setup();
 
