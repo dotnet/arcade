@@ -15,7 +15,7 @@ Performing post build signing is more involved. The drop that is to be signed is
 - **Deconstructing (and reconstructing) archives** - With in-build signing, SignTool knew how to deconstruct zip and nupkg archives. These could simply be unzipped, their contents replaced in-line, then zipped back up. Post build signing requires dealing with msi installers too. These are not as amenable to changes to contents (e.g. the msi database encodes file lengths, which change with signing).
 - **Tracking the source of all the files** - Let's say dotnet/runtime notes that apphost.exe should not be signed, then the installer repackages that binary in a zip file. When post-build signing runs, it needs to be able to identify that apphost.exe, which appears to be located within an installer produced zip file, actually came from runtime and thus should not be signed.
 
-Post build signing deals with this by recording sidecar information about at build time, then gathering the closure of that info when post build signing runs. The additional information includes the following:
+Post build signing deals with this by recording sidecar information at build time, then gathering the closure of that info when post build signing runs. The additional information includes the following:
 - Archives that can be used to reconstruct installers produced by a build.
 - Manifest files which describe the signing data for a build (e.g. items to sign and file extension -> certificate mappings)
 
