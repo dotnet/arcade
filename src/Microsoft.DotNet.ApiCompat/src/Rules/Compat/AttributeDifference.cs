@@ -32,6 +32,122 @@ namespace Microsoft.Cci.Differs.Rules
     }
 
     [ExportDifferenceRule]
+    internal class ParamAttributeDifference : CompatDifferenceRule
+    {
+        private MappingSettings _settings = new MappingSettings()
+        {
+            Filter = new AttributesFilter(includeAttributes: true)
+        };
+
+        [Import]
+        public IAttributeFilter AttributeFilter { get; set; }
+
+        public override DifferenceType Diff(IDifferences differences, ITypeDefinition impl, ITypeDefinition contract)
+        {
+            if (impl == null || contract == null)
+                return DifferenceType.Unknown;
+
+            bool changed = false;
+            if (impl.IsGeneric)
+            {
+                IGenericParameter[] method1GenParams = impl.GenericParameters.ToArray();
+                IGenericParameter[] method2GenParam = contract.GenericParameters.ToArray();
+                for (int i = 0; i < impl.GenericParameterCount; i++)
+                    changed |= CheckAttributesChanged(differences, method1GenParams[i], method1GenParams[i].Attributes, method2GenParam[i].Attributes, contract);
+            }
+
+            return changed ? DifferenceType.Changed : DifferenceType.Unchanged; ;
+        }
+
+        public override DifferenceType Diff(IDifferences differences, ITypeDefinitionMember impl, ITypeDefinitionMember contract)
+        {
+            var implMethod = impl as IMethodDefinition;
+            var contractMethod = contract as IMethodDefinition;
+            if (implMethod == null || contractMethod == null)
+                return DifferenceType.Unknown;
+
+            bool changed = false;
+            IParameterDefinition[] method1Params = implMethod.Parameters.ToArray();
+            IParameterDefinition[] method2Params = contractMethod.Parameters.ToArray();
+            for (int i = 0; i < implMethod.ParameterCount; i++)
+                changed |= CheckAttributesChanged(differences, method1Params[i], method1Params[i].Attributes, method2Params[i].Attributes, implMethod);
+
+            if (implMethod.IsGeneric)
+            {
+                IGenericParameter[] method1GenParams = implMethod.GenericParameters.ToArray();
+                IGenericParameter[] method2GenParam = contractMethod.GenericParameters.ToArray();
+                for (int i = 0; i < implMethod.GenericParameterCount; i++)
+                    changed |= CheckAttributesChanged(differences, method1GenParams[i], method1GenParams[i].Attributes, method2GenParam[i].Attributes, implMethod);
+            }
+
+            return changed ? DifferenceType.Changed : DifferenceType.Unchanged;
+        }
+
+        private bool CheckAttributesChanged(IDifferences differences, IReference target, IEnumerable<ICustomAttribute> implAttributes, IEnumerable<ICustomAttribute> contractAttributes, IReference member)
+        {
+            AttributesMapping<IEnumerable<ICustomAttribute>> attributeMapping = new AttributesMapping<IEnumerable<ICustomAttribute>>(_settings);
+            AttributeComparer attributeComparer = new AttributeComparer();
+            attributeMapping.AddMapping(0, contractAttributes.OrderBy(a => a, attributeComparer));
+            attributeMapping.AddMapping(1, implAttributes.OrderBy(a => a, attributeComparer));
+
+            bool changed = false;
+            string genericStr = target is IGenericParameter ? "generic param" : "parameter";
+            string parameterErrorString = $"{genericStr} '{target.FullName()}'";
+            foreach (var group in attributeMapping.Attributes)
+            {
+                switch (group.Difference)
+                {
+                    case DifferenceType.Added:
+                        {
+                            changed = true;
+                            ITypeReference type = group.Representative.Attributes.First().Type;
+
+                            if (AttributeFilter.ShouldExclude(type.DocId()))
+                                break;
+
+                            // Allow for additions
+                            differences.Add(new Difference("AddedAttribute",
+                                $"Attribute '{type.FullName()}' exists on {parameterErrorString} on member '{member.FullName()}' in the {Implementation} but not the {Contract}."));
+
+                            break;
+                        }
+                    case DifferenceType.Changed:
+                        {
+                            changed = true;
+                            ITypeReference type = group.Representative.Attributes.First().Type;
+
+                            if (AttributeFilter.ShouldExclude(type.DocId()))
+                                break;
+
+                            string contractKey = attributeComparer.GetKey(group[0].Attributes.First());
+                            string implementationKey = attributeComparer.GetKey(group[1].Attributes.First());
+
+                            differences.AddIncompatibleDifference("CannotChangeAttribute",
+                                $"Attribute '{type.FullName()}' on {parameterErrorString} on member '{member.FullName()}' changed from '{contractKey}' in the {Contract} to '{implementationKey}' in the {Implementation}.");
+
+                            break;
+                        }
+
+                    case DifferenceType.Removed:
+                        {
+                            changed = true;
+                            ITypeReference type = group.Representative.Attributes.First().Type;
+
+                            if (AttributeFilter.ShouldExclude(type.DocId()))
+                                break;
+
+                            differences.AddIncompatibleDifference("CannotRemoveAttribute",
+                                $"Attribute '{type.FullName()}' exists on {parameterErrorString} on member '{member.FullName()}' in the {Contract} but not the {Implementation}.");
+
+                            break;
+                        }
+                }
+            }
+            return changed;
+        }
+    }
+
+    [ExportDifferenceRule]
     internal class AttributeDifference : CompatDifferenceRule
     {
         private MappingSettings _settings = new MappingSettings()
