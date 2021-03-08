@@ -5,7 +5,10 @@ We need to make sure changes done in the Arcade SDK as well as in the [core pack
 ## Arcade Validation Policy
 
 - Each bell-weather repo (defined as runtime, aspnetcore, installer) must be building green so build problems won’t be compounded by new Arcade versions or images.
-- Contributors who are changing existing code will be asked to validate their changes against the "bellwether repos". (Instructions to follow)
+- Contributors who are changing existing code should use their best judgement to decide if additional validation against the "bellwether repos" is necessary. The following is a list of situations in which the contributor may want to run their changes against the bellwether repos: 
+  - Changes made to Signing, Publishing, or other stages outside of the build stage that would not show up in a PR build. 
+  - Changes that affect a fundamental piece of Arcade (e.g. build scripts, install scripts)
+  - Changes that affect many files (e.g. refactoring MSBuild Tasks to use a new abstract class for dependency injection support)
 - If there are any known breaking changes or any breaking changes surface during the validation against the bellwether repos, those changes should be communicated per the [Breaking Change Policy](../Policy/ChangesPolicy.md).
 - Official Arcade builds from master/main will now be promoted automatically to `.NET Eng - Latest` channel once it has passed the official Arcade Validation pipeline. 
 
