@@ -3,7 +3,6 @@ trigger:
   branches:
     include:
     - main
-    - master
     - release/3.x
     - release/5.0
 
@@ -11,7 +10,6 @@ pr:
   branches:
     include:
     - main
-    - master
     - release/3.x
     - release/5.0
     - templates
