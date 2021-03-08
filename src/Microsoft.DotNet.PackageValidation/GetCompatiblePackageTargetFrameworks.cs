@@ -11,7 +11,7 @@ using System.Linq;
 
 namespace Microsoft.DotNet.PackageValidation
 {
-    public class GetCompatibilePackageTargetFrameworks : BuildTask
+    public class GetCompatiblePackageTargetFrameworks : BuildTask
     {
         private static List<NuGetFramework> allTargetFrameworks = allTargetFrameworks = new();
         private static Dictionary<NuGetFramework, HashSet<NuGetFramework>> packageTfmMapping = new();

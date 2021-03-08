@@ -11,7 +11,7 @@ namespace Microsoft.DotNet.PackageValidation.Tests
     {
         public GetCompatibilePackageTargetFrameworksTests()
         {
-            GetCompatibilePackageTargetFrameworks.Initialize();
+            GetCompatiblePackageTargetFrameworks.Initialize();
         }
 
         public static IEnumerable<object[]> PackageTFMData => new List<object[]>
@@ -38,7 +38,7 @@ namespace Microsoft.DotNet.PackageValidation.Tests
         [MemberData(nameof(PackageTFMData))]
         public void GetCompatibleFrameworks(List<NuGetFramework> packageFrameworks, List<NuGetFramework> expectedTestFrameworks)
         {
-            List<NuGetFramework> actualTestFrameworks = GetCompatibilePackageTargetFrameworks.GetTestFrameworks(packageFrameworks);
+            List<NuGetFramework> actualTestFrameworks = GetCompatiblePackageTargetFrameworks.GetTestFrameworks(packageFrameworks);
             CollectionsEqual(expectedTestFrameworks, actualTestFrameworks);
         }
 
