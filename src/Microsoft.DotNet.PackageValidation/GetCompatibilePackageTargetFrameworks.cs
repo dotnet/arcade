@@ -33,24 +33,10 @@ namespace Microsoft.DotNet.PackageValidation
                 Initialize();
                 foreach (var packagePath in PackagePaths)
                 {
-                    List<NuGetFramework> frameworksToTest = new List<NuGetFramework>();
                     Package package = NupkgParser.CreatePackageObject(packagePath);
-                    var packageTargetFrameworks = package.PackageAssets.Where(t => t.AssetType != AssetType.RuntimeAsset).Select(t => t.TargetFramework).Distinct();
+                    List<NuGetFramework> packageTargetFrameworks = package.PackageAssets.Where(t => t.AssetType != AssetType.RuntimeAsset).Select(t => t.TargetFramework).Distinct().ToList();
 
-                    // Testing the package installation on all tfms linked with package targetframeworks.
-                    foreach (var item in packageTargetFrameworks)
-                    {
-                        if(packageTfmMapping.ContainsKey(item))
-                            frameworksToTest.AddRange(packageTfmMapping[item].ToList());
-                    }
-
-                    // Pruning the test matrix by removing the frameworks we dont want to test.
-                    frameworksToTest = frameworksToTest.Where(tfm => allTargetFrameworks.Contains(tfm)).ToList();
-                    
-                    // Adding the frameworks in the packages to the test matrix;
-                    frameworksToTest.AddRange(packageTargetFrameworks);
-                    frameworksToTest = frameworksToTest.Distinct().ToList();
-             
+                    List<NuGetFramework> frameworksToTest = GetTestFrameworks(packageTargetFrameworks);
                     testProjects.AddRange(CreateItemFromTestFramework(package.Title, package.Version, frameworksToTest, GetRidsFromPackage(package)));
                 }
                 
@@ -63,6 +49,26 @@ namespace Microsoft.DotNet.PackageValidation
             }
             
             return result && !Log.HasLoggedErrors;
+        }
+
+        public static List<NuGetFramework> GetTestFrameworks(List<NuGetFramework> packageTargetFrameworks)
+        {
+            List<NuGetFramework> frameworksToTest = new List<NuGetFramework>();
+
+            // Testing the package installation on all tfms linked with package targetframeworks.
+            foreach (var item in packageTargetFrameworks)
+            {
+                if (packageTfmMapping.ContainsKey(item))
+                    frameworksToTest.AddRange(packageTfmMapping[item].ToList());
+            }
+
+            // Pruning the test matrix by removing the frameworks we dont want to test.
+            frameworksToTest = frameworksToTest.Where(tfm => allTargetFrameworks.Contains(tfm)).ToList();
+
+            // Adding the frameworks in the packages to the test matrix;
+            frameworksToTest.AddRange(packageTargetFrameworks);
+            frameworksToTest = frameworksToTest.Distinct().ToList();
+            return frameworksToTest;
         }
 
         public static void Initialize()

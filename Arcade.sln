@@ -131,6 +131,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Arcade.Test.Commo
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.PackageValidation", "src\Microsoft.DotNet.PackageValidation\Microsoft.DotNet.PackageValidation.csproj", "{B691A17B-B577-431C-AF4D-199BBAC8EC97}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.PackageValidation.Tests", "src\Microsoft.DotNet.PackageValidation.Tests\Microsoft.DotNet.PackageValidation.Tests.csproj", "{8BBF14AC-48F0-4282-910E-48E816021660}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -821,6 +823,18 @@ Global
 		{B691A17B-B577-431C-AF4D-199BBAC8EC97}.Release|x64.Build.0 = Release|Any CPU
 		{B691A17B-B577-431C-AF4D-199BBAC8EC97}.Release|x86.ActiveCfg = Release|Any CPU
 		{B691A17B-B577-431C-AF4D-199BBAC8EC97}.Release|x86.Build.0 = Release|Any CPU
+		{8BBF14AC-48F0-4282-910E-48E816021660}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8BBF14AC-48F0-4282-910E-48E816021660}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8BBF14AC-48F0-4282-910E-48E816021660}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{8BBF14AC-48F0-4282-910E-48E816021660}.Debug|x64.Build.0 = Debug|Any CPU
+		{8BBF14AC-48F0-4282-910E-48E816021660}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{8BBF14AC-48F0-4282-910E-48E816021660}.Debug|x86.Build.0 = Debug|Any CPU
+		{8BBF14AC-48F0-4282-910E-48E816021660}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8BBF14AC-48F0-4282-910E-48E816021660}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8BBF14AC-48F0-4282-910E-48E816021660}.Release|x64.ActiveCfg = Release|Any CPU
+		{8BBF14AC-48F0-4282-910E-48E816021660}.Release|x64.Build.0 = Release|Any CPU
+		{8BBF14AC-48F0-4282-910E-48E816021660}.Release|x86.ActiveCfg = Release|Any CPU
+		{8BBF14AC-48F0-4282-910E-48E816021660}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
