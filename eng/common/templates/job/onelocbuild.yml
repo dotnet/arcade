@@ -9,6 +9,8 @@ parameters:
   CeapexPat: $(dn-bot-ceapex-package-r)
   GithubPat: $(BotAccount-dotnet-bot-repo-PAT)
 
+  LanguageSet: VS_Main_Languages
+
 jobs:
 - job: OneLocBuild
   
@@ -25,6 +27,8 @@ jobs:
     - task: Powershell@2
       inputs:
         filePath: $(Build.SourcesDirectory)/eng/common/generate-locproject.ps1
+        arguments: >
+          -LanguageSet "${{ parameters.LanguageSet }}"
       displayName: Generate LocProject.json
 
     - task: OneLocBuild@2
