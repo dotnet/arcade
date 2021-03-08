@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
+    <XUnitPublishTargetFramework>net5.0</XUnitPublishTargetFramework>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
 
