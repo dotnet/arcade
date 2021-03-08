@@ -2,6 +2,7 @@ trigger:
   batch: true
   branches:
     include:
+    - main
     - master
     - release/3.x
     - release/5.0
