@@ -2,20 +2,19 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using Microsoft.Build.Framework;
-using Microsoft.DotNet.Build.Tasks;
 using Microsoft.Build.Utilities;
+using Microsoft.DotNet.Build.Tasks;
 using NuGet.Frameworks;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Diagnostics;
 
 namespace Microsoft.DotNet.PackageValidation
 {
     public class GetCompatibilePackageTargetFrameworks : BuildTask
     {
-        private static List<NuGetFramework> allTargetFrameworks = allTargetFrameworks = new List<NuGetFramework>();
-        private static Dictionary<NuGetFramework, HashSet<NuGetFramework>> packageTfmMapping = new Dictionary<NuGetFramework, HashSet<NuGetFramework>>();
+        private static List<NuGetFramework> allTargetFrameworks = allTargetFrameworks = new();
+        private static Dictionary<NuGetFramework, HashSet<NuGetFramework>> packageTfmMapping = new();
 
         [Required]
         public string[] PackagePaths { get; set; }

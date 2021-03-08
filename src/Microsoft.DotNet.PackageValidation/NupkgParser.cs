@@ -13,7 +13,7 @@ namespace Microsoft.DotNet.PackageValidation
     {
         public static Package CreatePackageObject(string packagePath)
         {
-            List<Asset> packageAssets = new List<Asset>();
+            List<PackageAsset> packageAssets = new List<PackageAsset>();
             Dictionary<NuGetFramework, List<PackageDependency>> packageDependencies = new Dictionary<NuGetFramework, List<PackageDependency>>();
              
             PackageArchiveReader nupkgReader = new PackageArchiveReader(packagePath);
@@ -37,24 +37,24 @@ namespace Microsoft.DotNet.PackageValidation
             return new Package(title, version, packageAssets, packageDependencies);
         }
 
-        public static Asset ExtractAssetFromFile(string filePath)
+        public static PackageAsset ExtractAssetFromFile(string filePath)
         {
-            Asset asset = null;
+            PackageAsset asset = null;
             if (filePath.StartsWith("ref"))
             {
                 var stringParts = filePath.Split(@"/");
-                asset = new Asset(NuGetFramework.Parse(stringParts[1]), null, filePath, AssetType.RefAsset);
+                asset = new PackageAsset(NuGetFramework.Parse(stringParts[1]), null, filePath, AssetType.RefAsset);
             }
             else if (filePath.StartsWith("lib"))
             {
                 var stringParts = filePath.Split(@"/");
-                asset = new Asset(NuGetFramework.Parse(stringParts[1]), null, filePath, AssetType.LibAsset);
+                asset = new PackageAsset(NuGetFramework.Parse(stringParts[1]), null, filePath, AssetType.LibAsset);
 
             }
             else if (filePath.StartsWith("runtimes"))
             {
                 var stringParts = filePath.Split(@"/");
-                asset = new Asset(NuGetFramework.Parse(stringParts[3]), stringParts[1], filePath, AssetType.RuntimeAsset);
+                asset = new PackageAsset(NuGetFramework.Parse(stringParts[3]), stringParts[1], filePath, AssetType.RuntimeAsset);
             }
 
             return asset;

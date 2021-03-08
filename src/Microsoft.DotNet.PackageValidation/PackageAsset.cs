@@ -5,18 +5,18 @@ using NuGet.Frameworks;
 
 namespace Microsoft.DotNet.PackageValidation
 {
-    public class Asset
+    public class PackageAsset
     {
         public NuGetFramework TargetFramework { get; set; }
         public string Rid { get; set; }
         public string PackagePath { get; set; }
         public AssetType AssetType { get; set; }
 
-        public Asset(NuGetFramework targetFramework, string runtimeIdentifier, string packagePath1, AssetType assetType)
+        public PackageAsset(NuGetFramework targetFramework, string runtimeIdentifier, string packagePath, AssetType assetType)
         {
             TargetFramework = targetFramework;
             Rid = runtimeIdentifier;
-            PackagePath = packagePath1;
+            PackagePath = packagePath;
             AssetType = assetType;
         }
     }
