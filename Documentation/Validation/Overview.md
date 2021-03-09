@@ -10,7 +10,7 @@ We need to make sure changes done in the Arcade SDK as well as in the [core pack
   - Changes that affect a fundamental piece of Arcade (e.g. build scripts, install scripts)
   - Changes that affect many files (e.g. refactoring MSBuild Tasks to use a new abstract class for dependency injection support)
 - If there are any known breaking changes or any breaking changes surface during the validation against the bellwether repos, those changes should be communicated per the [Breaking Change Policy](../Policy/ChangesPolicy.md).
-- Official Arcade builds from master/main will now be promoted automatically to `.NET Eng - Latest` channel once it has passed the official Arcade Validation pipeline. 
+- Official Arcade builds from main will now be promoted automatically to `.NET Eng - Latest` channel once it has passed the official Arcade Validation pipeline. 
 
 ## The process
 
