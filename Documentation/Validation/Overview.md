@@ -9,6 +9,7 @@ We need to make sure changes done in the Arcade SDK as well as in the [core pack
   - Changes made to Signing, Publishing, or other stages outside of the build stage that would not show up in a PR build. 
   - Changes that affect a fundamental piece of Arcade (e.g. build scripts, install scripts)
   - Changes that affect many files (e.g. refactoring MSBuild Tasks to use a new abstract class for dependency injection support)
+  - Changes to packages that are only exercised by a specific set of repos, such as the Shared Framework SDK. 
 - If there are any known breaking changes or any breaking changes surface during the validation against the bellwether repos, those changes should be communicated per the [Breaking Change Policy](../Policy/ChangesPolicy.md).
 - Official Arcade builds from master/main will now be promoted automatically to `.NET Eng - Latest` channel once it has passed the official Arcade Validation pipeline. 
 
@@ -33,9 +34,7 @@ To validate against the Arcade Validation for Promotion pipeline (that includes 
 
 ### '.NET Tools - Validation' channel
 
-Before, all Arcade's builds were "tagged" with the ".NET Tools - Latest" channel and since all the repos get Arcade dependencies from this channel, any introduced bug would break consuming repos.
-
-Now, Arcade's builds go to the ".NET Tools - Validation" channel.
+Arcade's official builds go to the ".NET Tools - Validation" channel.
 
 ### [Arcade-Validation Repository](https://github.com/dotnet/arcade-validation)
 
