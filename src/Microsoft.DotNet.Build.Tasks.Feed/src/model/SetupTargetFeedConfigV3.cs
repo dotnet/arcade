@@ -31,6 +31,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         private SymbolTargetType SymbolTargetType { get; set; }
 
+        private List<string> FilesToExclude { get; }
+
+        private bool Flatten { get; }
+
         public SetupTargetFeedConfigV3(bool isInternalBuild,
             bool isStableBuild,
             string repositoryName,
@@ -49,13 +53,17 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             IBuildEngine buildEngine,
             SymbolTargetType symbolTargetType,
         string stablePackagesFeed = null,
-            string stableSymbolsFeed = null) 
+            string stableSymbolsFeed = null,
+            List<string> filesToExclude = null,
+            bool flatten = true) 
             : base(isInternalBuild, isStableBuild, repositoryName, commitSha, azureStorageTargetFeedPAT, publishInstallersAndChecksums, installersTargetStaticFeed, installersAzureAccountKey, checksumsTargetStaticFeed, checksumsAzureAccountKey, azureDevOpsStaticShippingFeed, azureDevOpsStaticTransportFeed, azureDevOpsStaticSymbolsFeed, latestLinkShortUrlPrefix, azureDevOpsFeedsKey)
         {
             BuildEngine = buildEngine;
             StableSymbolsFeed = stableSymbolsFeed;
             StablePackagesFeed = stablePackagesFeed;
             SymbolTargetType = symbolTargetType;
+            FilesToExclude = filesToExclude ?? new List<string>();
+            Flatten = flatten;
         }
 
         public override List<TargetFeedConfig> Setup()
@@ -100,7 +108,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         FeedType.AzureStorageFeed,
                         ChecksumsAzureAccountKey,
                         LatestLinkShortUrlPrefix,
-                        symbolTargetType: SymbolTargetType));
+                        symbolTargetType: SymbolTargetType,
+                        filenamesToExclude: FilesToExclude,
+                        flatten: Flatten));
 
                 foreach (var contentType in Installers)
                 {
@@ -111,7 +121,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             FeedType.AzureStorageFeed,
                             InstallersAzureAccountKey,
                             LatestLinkShortUrlPrefix,
-                            symbolTargetType: SymbolTargetType));
+                            symbolTargetType: SymbolTargetType,
+                            filenamesToExclude: FilesToExclude,
+                            flatten: Flatten));
                 }
             }
 
@@ -121,7 +133,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     PublishingConstants.LegacyDotNetBlobFeedURL,
                     FeedType.AzureStorageFeed,
                     AzureStorageTargetFeedPAT,
-                    symbolTargetType: SymbolTargetType));
+                    symbolTargetType: SymbolTargetType,
+                    filenamesToExclude: FilesToExclude,
+                    flatten: Flatten));
 
             targetFeedConfigs.Add(
                 new TargetFeedConfig(
@@ -130,7 +144,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     FeedType.AzDoNugetFeed,
                     AzureDevOpsFeedsKey,
                     assetSelection: AssetSelection.ShippingOnly,
-                    symbolTargetType: SymbolTargetType));
+                    symbolTargetType: SymbolTargetType,
+                    filenamesToExclude: FilesToExclude,
+                    flatten: Flatten));
 
             targetFeedConfigs.Add(
                 new TargetFeedConfig(
@@ -139,7 +155,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     FeedType.AzDoNugetFeed,
                     AzureDevOpsFeedsKey,
                     assetSelection: AssetSelection.NonShippingOnly,
-                    symbolTargetType: SymbolTargetType));
+                    symbolTargetType: SymbolTargetType,
+                    filenamesToExclude: FilesToExclude,
+                    flatten: Flatten));
 
             return targetFeedConfigs;
         }
@@ -155,7 +173,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     AzureDevOpsFeedsKey,
                     assetSelection: AssetSelection.ShippingOnly,
                     symbolTargetType: SymbolTargetType,
-                    @internal: true
+                    @internal: true,
+                    filenamesToExclude: FilesToExclude,
+                    flatten: Flatten
                 ),
 
                 new TargetFeedConfig(
@@ -165,7 +185,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     AzureDevOpsFeedsKey,
                     assetSelection: AssetSelection.NonShippingOnly,
                     symbolTargetType: SymbolTargetType,
-                    @internal: true
+                    @internal: true,
+                    filenamesToExclude: FilesToExclude,
+                    flatten: Flatten
                 ),
 
                 new TargetFeedConfig(
@@ -174,7 +196,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     FeedType.AzDoNugetFeed,
                     AzureDevOpsFeedsKey,
                     symbolTargetType: SymbolTargetType,
-                    @internal: true)
+                    @internal: true,
+                    filenamesToExclude: FilesToExclude,
+                    flatten: Flatten)
             };
 
             if (PublishInstallersAndChecksums)
@@ -188,7 +212,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             FeedType.AzureStorageFeed,
                             InstallersAzureAccountKey,
                             symbolTargetType: SymbolTargetType,
-                            @internal: true
+                            @internal: true,
+                            filenamesToExclude: FilesToExclude,
+                            flatten: Flatten
                         ));
                 }
 
@@ -199,7 +225,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         FeedType.AzureStorageFeed,
                         ChecksumsAzureAccountKey,
                         symbolTargetType: SymbolTargetType,
-                        @internal: true
+                        @internal: true,
+                        filenamesToExclude: FilesToExclude,
+                        flatten: Flatten
                     ));
             }
 
@@ -257,7 +285,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     AzureDevOpsFeedsKey,
                     assetSelection: AssetSelection.ShippingOnly,
                     symbolTargetType: SymbolTargetType,
-                    isolated: true));
+                    isolated: true,
+                    filenamesToExclude: FilesToExclude,
+                    flatten: Flatten));
 
             targetFeedConfigs.Add(
                 new TargetFeedConfig(
@@ -266,7 +296,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     FeedType.AzDoNugetFeed,
                     AzureDevOpsFeedsKey,
                     symbolTargetType: SymbolTargetType,
-                    isolated: true));
+                    isolated: true,
+                    filenamesToExclude: FilesToExclude,
+                    flatten: Flatten));
 
             targetFeedConfigs.Add(
                 new TargetFeedConfig(
@@ -276,7 +308,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     AzureDevOpsFeedsKey,
                     assetSelection: AssetSelection.NonShippingOnly,
                     symbolTargetType: SymbolTargetType,
-                    isolated: false));
+                    isolated: false,
+                    filenamesToExclude: FilesToExclude,
+                    flatten: Flatten));
 
             if (PublishInstallersAndChecksums)
             {
@@ -291,7 +325,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             isolated: true,
                             symbolTargetType: SymbolTargetType,
                             @internal: false,
-                            allowOverwrite: true));
+                            allowOverwrite: true,
+                            filenamesToExclude: FilesToExclude,
+                            flatten: Flatten));
                 }
 
                 targetFeedConfigs.Add(
@@ -303,7 +339,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         isolated: true,
                         symbolTargetType: SymbolTargetType,
                         @internal: false,
-                        allowOverwrite: true));
+                        allowOverwrite: true,
+                        filenamesToExclude: FilesToExclude,
+                        flatten: Flatten));
             }
 
             return targetFeedConfigs;

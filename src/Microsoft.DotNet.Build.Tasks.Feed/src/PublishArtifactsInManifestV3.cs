@@ -51,6 +51,18 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public bool PublishSpecialClrFiles { get; set; }
 
+        public bool AllowFeedOverrides { get; set; }
+
+        public string InstallersFeedOverride { get; set; }
+
+        public string ChecksumsFeedOverride { get; set; }
+
+        public string ShippingFeedOverride { get; set; }
+
+        public string TransportFeedOverride { get; set; }
+
+        public string SymbolsFeedOverride { get; set; }
+
         public override bool Execute()
         {
             ExecuteAsync().GetAwaiter().GetResult();
@@ -89,10 +101,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 string temporarySymbolsLocation =
                     Path.GetFullPath(Path.Combine(BlobAssetsBasePath, @"..\", "tempSymbols"));
 
-                if (!Directory.Exists(temporarySymbolsLocation))
-                {
-                    Directory.CreateDirectory(temporarySymbolsLocation);
-                }
+                EnsureTemporarySymbolDirectoryExists(temporarySymbolsLocation);
 
                 SplitArtifactsInCategories(BuildModel);
                 DeleteSymbolTemporaryFiles(temporarySymbolsLocation);
@@ -136,6 +145,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                     Log.LogMessage(MessageImportance.High, $"Publishing to this target channel: {targetChannelConfig}");
 
+                    string shortLinkUrl = string.IsNullOrEmpty(targetChannelConfig.AkaMSChannelName) ?
+                        $"dotnet/" : $"dotnet/{targetChannelConfig.AkaMSChannelName}/{BuildQuality}";
+
                     var targetFeedsSetup = new SetupTargetFeedConfigV3(
                         targetChannelConfig.IsInternal,
                         BuildModel.Identity.IsStable,
@@ -143,17 +155,19 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         BuildModel.Identity.Commit,
                         AzureStorageTargetFeedKey,
                         PublishInstallersAndChecksums,
-                        targetChannelConfig.InstallersFeed,
+                        GetFeed(targetChannelConfig.InstallersFeed, InstallersFeedOverride),
                         targetChannelConfig.IsInternal? InternalInstallersFeedKey : InstallersFeedKey,
-                        targetChannelConfig.ChecksumsFeed,
+                        GetFeed(targetChannelConfig.ChecksumsFeed, ChecksumsFeedOverride),
                         targetChannelConfig.IsInternal? InternalCheckSumsFeedKey : CheckSumsFeedKey,
-                        targetChannelConfig.ShippingFeed,
-                        targetChannelConfig.TransportFeed,
-                        targetChannelConfig.SymbolsFeed,
-                        $"dotnet/{targetChannelConfig.AkaMSChannelName}/{BuildQuality}",
+                        GetFeed(targetChannelConfig.ShippingFeed, ShippingFeedOverride),
+                        GetFeed(targetChannelConfig.TransportFeed, TransportFeedOverride),
+                        GetFeed(targetChannelConfig.SymbolsFeed, SymbolsFeedOverride),
+                        shortLinkUrl,
                         AzureDevOpsFeedsKey,
                         BuildEngine = this.BuildEngine,
-                        targetChannelConfig.SymbolTargetType);
+                        targetChannelConfig.SymbolTargetType,
+                        filesToExclude: targetChannelConfig.FilenamesToExclude,
+                        flatten: targetChannelConfig.Flatten);
 
                     var targetFeedConfigs = targetFeedsSetup.Setup();
 
@@ -232,10 +246,21 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         }
 
         /// <summary>
+        /// Create Temporary Symbols directory if it does not exists.
+        /// </summary>
+        /// <param name="temporarySymbolsLocation"></param>
+        public void EnsureTemporarySymbolDirectoryExists(string temporarySymbolsLocation)
+        {
+            if (!Directory.Exists(temporarySymbolsLocation))
+            {
+                Directory.CreateDirectory(temporarySymbolsLocation);
+            }
+        }
+        /// <summary>
         /// Delete the symbols files after publishing to Symbol server(s), this is part of cleanup
         /// </summary>
         /// <param name="temporarySymbolsLocation"></param>
-        private void DeleteSymbolTemporaryFiles(string temporarySymbolsLocation)
+        public void DeleteSymbolTemporaryFiles(string temporarySymbolsLocation)
         {
             try
             {
@@ -258,12 +283,17 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// Deletes the temporary symbol folder, this is part of clean up
         /// </summary>
         /// <param name="temporarySymbolLocation"></param>
-        private void DeleteSymbolTemporaryDirectory(string temporarySymbolLocation)
+        public void DeleteSymbolTemporaryDirectory(string temporarySymbolLocation)
         {
             if (Directory.Exists(temporarySymbolLocation))
             {
                 Directory.Delete(temporarySymbolLocation);
             }
+        }
+
+        public string GetFeed(string feed, string feedOverride)
+        {
+            return (AllowFeedOverrides && !string.IsNullOrEmpty(feedOverride)) ? feedOverride : feed;
         }
     }
 }

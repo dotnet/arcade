@@ -19,9 +19,9 @@ namespace Microsoft.SignCheck.Verification
 
         }
 
-        public override SignatureVerificationResult VerifySignature(string path, string parent)
+        public override SignatureVerificationResult VerifySignature(string path, string parent, string virtualPath)
         {
-            SignatureVerificationResult svr = base.VerifySignature(path, parent);
+            SignatureVerificationResult svr = base.VerifySignature(path, parent, virtualPath);
 
             if (VerifyRecursive)
             {
@@ -33,7 +33,7 @@ namespace Microsoft.SignCheck.Verification
                 foreach (string cabFile in Directory.EnumerateFiles(svr.TempPath))
                 {
                     string cabFileFullName = Path.GetFullPath(cabFile);
-                    SignatureVerificationResult cabEntryResult = VerifyFile(cabFile, svr.Filename, cabFileFullName);
+                    SignatureVerificationResult cabEntryResult = VerifyFile(cabFile, svr.Filename, Path.Combine(svr.VirtualPath, cabFile), cabFileFullName);
 
                     // Tag the full path into the result detail
                     cabEntryResult.AddDetail(DetailKeys.File, SignCheckResources.DetailFullName, cabFileFullName);

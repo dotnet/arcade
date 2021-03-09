@@ -1,18 +1,22 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
     <DefaultItemExcludes>$(DefaultItemExcludes);testassets\**\*</DefaultItemExcludes>
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Common\Microsoft.Arcade.Common\Microsoft.Arcade.Common.csproj" />
     <ProjectReference Include="..\Common\Microsoft.Arcade.Test.Common\Microsoft.Arcade.Test.Common.csproj" />
     <ProjectReference Include="..\Microsoft.DotNet.Arcade.Sdk\Microsoft.DotNet.Arcade.Sdk.csproj" />
+    <ProjectReference Include="..\Microsoft.DotNet.Internal.DependencyInjection.Testing\Microsoft.DotNet.Internal.DependencyInjection.Testing.csproj" />
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="FluentAssertions" Version="5.10.3" />
     <PackageReference Include="Microsoft.Build" Version="$(MicrosoftBuildVersion)" />
     <PackageReference Include="Microsoft.Build.Tasks.Core" Version="$(MicrosoftBuildTasksCoreVersion)" />
+    <PackageReference Include="Moq" Version="4.8.3" />
   </ItemGroup>
   
   <ItemGroup>

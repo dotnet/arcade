@@ -59,7 +59,7 @@
   -->
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
     <NETCORE_ENGINEERING_TELEMETRY>Publish</NETCORE_ENGINEERING_TELEMETRY>
 
     <!-- Default publishing infra target is 2. -->
@@ -84,15 +84,16 @@
 
     <PropertyGroup>
       <AkaMSTenant Condition="'$(AkaMSTenant)' == ''">ncd</AkaMSTenant>
-      <AkaMSOwners Condition="'$(AkaMSOwners)' == ''">dn-bot</AkaMSOwners>
+      <AkaMSOwners Condition="'$(AkaMSOwners)' == ''">jamshedd;leecow;rbhanda;v-susles;v-paddan</AkaMSOwners>
       <AkaMSCreatedBy Condition="'$(AkaMSCreatedBy)' == ''">dn-bot</AkaMSCreatedBy>
-      <AkaMSGroupOwner Condition="'$(AkaMSGroupOwner)' == ''">dotnetes</AkaMSGroupOwner>
+      <AkaMSGroupOwner Condition="'$(AkaMSGroupOwner)' == ''">ddfwlink</AkaMSGroupOwner>
       <PublishSpecialClrFiles Condition="'$(PublishSpecialClrFiles)' == ''">false</PublishSpecialClrFiles>
       <BuildQuality Condition="'$(BuildQuality)' == ''">daily</BuildQuality>
       <InstallersFeedKey>$(InstallersAzureAccountKey)</InstallersFeedKey>
       <InternalInstallersFeedKey>$(InternalInstallersAzureAccountKey)</InternalInstallersFeedKey>
       <ChecksumsFeedKey>$(ChecksumsAzureAccountKey)</ChecksumsFeedKey>
       <InternalChecksumsFeedKey>$(InternalChecksumsAzureAccountKey)</InternalChecksumsFeedKey>
+      <AllowFeedOverrides Condition="'$(AllowFeedOverrides)' == ''">false</AllowFeedOverrides>
     </PropertyGroup>
 
     <Error
@@ -131,7 +132,13 @@
       SymbolPublishingExclusionsFile="$(SymbolPublishingExclusionsFile)"
       PdbArtifactsBasePath="$(PDBArtifactsBasePath)"
       PublishSpecialClrFiles="$(PublishSpecialClrFiles)"
-      BuildQuality="$(BuildQuality)" />
+      BuildQuality="$(BuildQuality)"
+      AllowFeedOverrides="$(AllowFeedOverrides)"
+      InstallersFeedOverride="$(InstallersFeedOverride)"
+      ChecksumsFeedOverride="$(ChecksumsFeedOverride)"
+      TransportFeedOverride="$(TransportFeedOverride)"
+      ShippingFeedOverride="$(ShippingFeedOverride)"
+      SymbolsFeedOverride="$(SymbolsFeedOverride)" />
   </Target>
 
   <ItemGroup>

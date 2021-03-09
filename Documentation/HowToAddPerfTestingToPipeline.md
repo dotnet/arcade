@@ -72,7 +72,7 @@ The performance repository is a special case of perf testing, where we do not ne
       frameworks:
         - netcoreapp3.0  
         - netcoreapp2.2
-        - netcoreapp2.1
+        - netcoreapp3.1
         - net461
 
 # Ubuntu 1604 x64 ml benchmarks		
@@ -154,7 +154,7 @@ In general, we expect most repositories to test against the default tests and co
 | Name                | Options                                  |
 | ------------------- | ---------------------------------------- |
 | Architecture        | x64, x86 (Windows only), arm64 (linux only) |
-| Framework           | netcoreapp3.0, netcoreapp2.2, netcoreapp2.1, net461 (windows only) |
+| Framework           | netcoreapp3.0, netcoreapp2.2, netcoreapp3.1, net461 (windows only) |
 | CompilationMode     | Tiered, NoTiering, FullyJittedNoTiering, MinOpt |
 | Csproj              | src\benchmarks\micro\MicroBenchmarks.csproj <br> src\benchmarks\real-world\Microsoft.ML.Benchmarks\Microsoft.ML.Benchmarks.csproj <br> src\benchmarks\real-world\Roslyn\CompilerBenchmarks.csproj |
 | RunCategories       | For micro benchmarks: coreclr, corefx <br> For ML benchmarks: mldotnet <br> For Roslyn benchmarks: roslyn|

@@ -3,11 +3,9 @@
     <IncludeDotNetCli Condition=" '$(IncludeDotNetCli)' != 'true' ">false</IncludeDotNetCli>
     <DotNetCliPackageType Condition=" '$(DotNetCliPackageType)' == '' ">runtime</DotNetCliPackageType>
     <DotNetCliVersion Condition=" '$(DotNetCliVersion)' == '' AND '$(DotNetCliPackageType)' == 'runtime' ">$(BundledNETCoreAppPackageVersion)</DotNetCliVersion>
-    <DotNetCliVersion Condition=" '$(DotNetCliVersion)' == '' AND '$(DotNetCliPackageType)' == 'aspnetcore-runtime' ">$(BundledNETCoreAppPackageVersion)</DotNetCliVersion>
+    <!-- TODO (https://github.com/dotnet/arcade/issues/7022): We are hardcoding this version to use the one tied to the SDK version from global.json -->
+    <DotNetCliVersion Condition=" '$(DotNetCliVersion)' == '' AND '$(DotNetCliPackageType)' == 'aspnetcore-runtime' ">6.0.0-preview.1.21103.6</DotNetCliVersion>
     <DotNetCliVersion Condition=" '$(DotNetCliVersion)' == '' AND '$(DotNetCliPackageType)' == 'sdk' ">$(NETCoreSdkVersion)</DotNetCliVersion>
-    <DotNetCliVersion Condition=" '$(DotNetCliVersion)' == '' AND '$(DotNetCliPackageType)' == 'runtime' ">3.1.5</DotNetCliVersion>
-    <DotNetCliVersion Condition=" '$(DotNetCliVersion)' == '' AND '$(DotNetCliPackageType)' == 'aspnetcore-runtime' ">3.1.5</DotNetCliVersion>
-    <DotNetCliVersion Condition=" '$(DotNetCliVersion)' == '' AND '$(DotNetCliPackageType)' == 'sdk' ">3.1.301</DotNetCliVersion>
     <DotNetCliChannel Condition=" '$(DotNetCliChannel)' == '' ">Current</DotNetCliChannel>
     <DotNetCliDestination>dotnet-cli</DotNetCliDestination>
     <_HelixMonoQueueTargets>$(_HelixMonoQueueTargets);$(MSBuildThisFileDirectory)DotNetCli.targets</_HelixMonoQueueTargets>

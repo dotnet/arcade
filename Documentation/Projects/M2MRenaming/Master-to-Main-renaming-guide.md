@@ -50,7 +50,10 @@ Please verify that you:
 - Know whether your repo is part of the [Maestro/darc dependency flow](https://github.com/dotnet/arcade/blob/master/Documentation/DependencyFlowOnboarding.md)
   - If so, have the [`darc`](https://github.com/dotnet/arcade/blob/master/Documentation/Darc.md) command installed, updated and authenticated
   - Make sure tokens set using `darc authenticate` are still valid ([details at Darc.md#authenticate](https://github.com/dotnet/arcade/blob/master/Documentation/Darc.md#authenticate))
+  - If your repository's organization requires single sign-on (SSO), you need to enable it on the GitHub token which is used by DARC. Otherwise, you will get error 403 Forbidden during Maestro migration.
+  ![AzDO mirrored](images/darc-pat-sso.png)
   - Have PowerShell installed so that you can run scripts provided by us (any version should be ok)
+- Make sure that you have access to [M2MTool](https://devdiv.visualstudio.com/DefaultCollection/Engineering/_git/M2MTool?path=%2FREADME.md&_a=preview) and you can download the latest version. M2MTool was created by VSEng and shared with our division.
 - Know whether your repository is mirrored to the [internal AzDO dnceng project](https://dev.azure.com/dnceng/internal/_git)
   - Make sure you have sufficient permissions to manage branches/branch policies for the internal AzDO mirror of your repository
     - You need to have the `Force push` permission in branch security settings for the `master` branch to be able to delete it:
@@ -60,6 +63,7 @@ Please verify that you:
         4. Search for yourself in the identities search box
         5. Verify value in `Force push (rewrite history, delete branches and tags)` is `Allow` (can be through inheritance)
     - Make sure you see the `Set as default branch` dropdown menu item in branch management (verify with some random branch)
+    - If you don't have access to update policies, you need to ask [.NET Core Engineering <dnceng@microsoft.com>](mailto://dnceng@microsoft.com). Beware, the steps described in [M2MTool documentation](https://devdiv.visualstudio.com/DefaultCollection/Engineering/_git/M2MTool?path=%2FREADME.md&_a=preview) are applicable for devdiv.
   - Make sure you have permissions to manage pipeline's settings in the AzDO portal (if unsure, see screenshots in `8. Change the default branch for AzDO pipelines`)
 - Have permissions to manage branches and branch policies in GitHub for your repo (access to Settings > Branches)
 - Are aware of any custom hard-coded references to the `master` branch inside of your repository
@@ -190,7 +194,12 @@ This will effectively disable code mirroring.
     > Note: Go to the [code-mirror build](https://dev.azure.com/dnceng/internal/_build?definitionId=16&_a=summary) and filter the pipeline runs by Tags (select your repo).
 3. Go to `Branches`
 4. Create a new branch called `main` off of the `master` branch
-5. Set the branch policies same way as it is done for `master`
+5. Mirror policies from branch `master` to branch `main` using [M2MTool](https://devdiv.visualstudio.com/DefaultCollection/Engineering/_git/M2MTool?path=%2FREADME.md&_a=preview)
+
+Example for `dotnet/xharness`:
+```
+.\M2MTool.exe mirror-policies --frombranch=master --tobranch=main --url=https://dev.azure.com/dnceng/internal/_git/dotnet-xharness
+```
 
 > Note: Do **not** change the default branch for the AzDO repository yet, it will be done later in [step 9](#9-switch-the-default-branch-of-the-azdo-repository-to-main).
 
@@ -230,6 +239,7 @@ Search your repository for any references to the `master` branch specific to you
     ```
 - Consider also any code that is kept in sync using GitHub actions between repos, [such as this example](https://github.com/dotnet/aspnetcore/blob/main/.github/workflows/runtime-sync.yml).
 - There also might be references **to your repo from other repos**. You don't have to worry about these much as GitHub will redirect all links automatically (see [FAQ / What happens to links to files in my repo](#what-happens-to-links-to-files-in-my-repo)). Ideally take care of those at the end of this guide
+- There might also be `aka.ms/` links leading to your repo that will need changing
 
 ## 7. Use a `darc` script to migrate channels and subscriptions
 ![Maestro enabled](images/maestro-enabled.png)
@@ -252,21 +262,32 @@ Search your repository for any references to the `master` branch specific to you
 ## 8. Change the default branch for AzDO pipelines
 ![AzDO mirrored](images/azdo-mirrored.png)
 
-- Do this for [public](https://dev.azure.com/dnceng/public) and [internal](https://dev.azure.com/dnceng/internal) projects
-- Do this for all pipelines that are based off a YAML in the repo that you are working with
+### 1. Pipelines based on AzDO repository can be updated by M2MTool
+First, you need to prepare a configuration file for [M2MTool](https://devdiv.visualstudio.com/DefaultCollection/Engineering/_git/M2MTool?path=%2FREADME.md&_a=preview). Example can be found [here](https://devdiv.visualstudio.com/DefaultCollection/Engineering/_git/M2MTool?path=%2FConfigFiles%2Fconfigfile.csv).
+
+Example of M2MTool configuration file for `dotnet-xharness`:
+```
+Org,Project,Repo
+dnceng,internal,dotnet-xharness
+```
+Once you have the configuration file, execute the M2MTool with command `pipeline` and supply the configuration file:
+```
+.\M2MTool.exe pipeline --config=configfile.csv
+```
+
+### 2. Pipelines based on GitHub repository have to be updated manually
+- Do this for all pipelines that are based off a YAML in the GitHub repo that you are working with (these are usually in the public AzDO project)
 - You can use [this script](https://raw.githubusercontent.com/dotnet/arcade/master/scripts/list-repo-pipelines.ps1) to list all pipelines associated with a given repo:
   > ```ps
-  > .\list-repo-pipelines.ps1 -GitHubRepository "[GH REPO NAME]" -AzDORepository "[AZDO REPO NAME]" -PAT "[TOKEN]"
+  > .\list-repo-pipelines.ps1 -GitHubRepository "[GH REPO NAME]"
   > ```
 
-Example:
+- Example for `dotnet/xharness`:
   > ```ps
-  > .\list-repo-pipelines.ps1 -GitHubRepository "dotnet/xharness" -AzDORepository "dotnet-xharness" -PAT "jdsvmd324jnsdvjafn2vsd"
+  > .\list-repo-pipelines.ps1 -GitHubRepository "dotnet/xharness"
   > ```
 
-The **Personal Access Token** needs to have following scopes: **Code (Read)**, **Build (Read)**.
-The parameters can be used separately, GitHub listing doesn't require the token to be set.
-
+To update the pipeline:
 1. Go to AzDO pipelines, find your pipeline
 2. Click `Edit`
    ![Edit pipeline](images/edit-pipeline.png)
@@ -345,6 +366,8 @@ pr:
 
 > **Note:** this step only applies to repositories that deploy to cloud and have a required Component Governance setup due to SDL.
 > Your repository might not be and that's ok.
+
+> Make sure that Component Governance task on the main branch has finished before starting this step!
 
 Go to the internal AzDO mirror of your repository and configure **Component Governance** to track the right branch/pipeline.
 - Copy the settings from the `master` branch and set up tracking for `main`

@@ -69,7 +69,7 @@ namespace Microsoft.SignCheck.Verification
             return _exclusions.Contains(exclusion);
         }
 
-        public bool IsExcluded(string path, string parent, string containerPath, IEnumerable<Exclusion> exclusions)
+        public bool IsExcluded(string path, string parent, string virtualPath, string containerPath, IEnumerable<Exclusion> exclusions)
         {
             foreach (Exclusion e in exclusions)
             {
@@ -77,7 +77,7 @@ namespace Microsoft.SignCheck.Verification
                 //    Example: bar.dll;*.zip --> Exclude any occurence of bar.dll that is in a zip file
                 //             bar.dll;foo.zip --> Exclude bar.dll only if it is contained inside foo.zip
                 //             foo.exe;; --> Exclude any occurance of foo.exe and ignore the parent
-                if (IsMatch(e.FilePatterns, Path.GetFileName(containerPath)) || IsMatch(e.FilePatterns, containerPath) || IsMatch(e.FilePatterns, path) || IsMatch(e.FilePatterns, Path.GetFileName(path)))
+                if (IsMatch(e.FilePatterns, Path.GetFileName(containerPath)) || IsMatch(e.FilePatterns, containerPath) || IsMatch(e.FilePatterns, path) || IsMatch(e.FilePatterns, Path.GetFileName(path)) || IsMatch(e.FilePatterns, virtualPath))
                 {
                     if ((e.ParentFiles.Length == 0) || (e.ParentFiles.All(pf => String.IsNullOrEmpty(pf))) || IsMatch(e.ParentFiles, parent))
                     {
@@ -103,11 +103,12 @@ namespace Microsoft.SignCheck.Verification
         /// </summary>
         /// <param name="path">The path of the file on disk.</param>
         /// <param name="parent">The parent (container) of the file.</param>
+        /// <param name="virtualPath">The full path of the parent (container).</param>
         /// <param name="containerPath">The path of the file in the container. May be null if the file is not embedded in a container.</param>
         /// <returns></returns>
-        public bool IsExcluded(string path, string parent, string containerPath)
+        public bool IsExcluded(string path, string parent, string virtualPath, string containerPath)
         {
-            return IsExcluded(path, parent, containerPath, _exclusions);
+            return IsExcluded(path, parent, virtualPath, containerPath, _exclusions);
         }
 
         /// <summary>
@@ -115,12 +116,12 @@ namespace Microsoft.SignCheck.Verification
         /// </summary>
         /// <param name="path"></param>
         /// <returns></returns>
-        public bool IsDoNotSign(string path, string parent, string containerPath)
+        public bool IsDoNotSign(string path, string parent, string virtualPath, string containerPath)
         {
             // Get all the exclusions with DO-NOT-SIGN markers and check only against those
             IEnumerable<Exclusion> doNotSignExclusions = _exclusions.Where(e => e.Comment.Contains("DO-NOT-SIGN")).ToArray();
 
-            return (doNotSignExclusions.Count() > 0) && (IsExcluded(path, parent, containerPath, doNotSignExclusions));
+            return (doNotSignExclusions.Count() > 0) && (IsExcluded(path, parent, virtualPath, containerPath, doNotSignExclusions));
         }
 
         /// <summary>

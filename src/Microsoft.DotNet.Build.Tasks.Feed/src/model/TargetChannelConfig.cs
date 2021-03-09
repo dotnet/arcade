@@ -3,6 +3,8 @@
 
 using Microsoft.DotNet.VersionTools.BuildManifest.Model;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed.Model
 {
@@ -62,6 +64,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
 
         public bool IsInternal { get; }
 
+        public List<string> FilenamesToExclude { get; }
+
+        public bool Flatten { get; }
+
         public TargetChannelConfig(
             int id,
             bool isInternal,
@@ -72,7 +78,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             string symbolsFeed,
             string checksumsFeed,
             string installersFeed,
-            SymbolTargetType symbolTargetType)
+            SymbolTargetType symbolTargetType,
+            List<string> filenamesToExclude = null,
+            bool flatten = true)
         {
             Id = id;
             IsInternal = isInternal;
@@ -84,6 +92,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             ChecksumsFeed = checksumsFeed;
             InstallersFeed = installersFeed;
             SymbolTargetType = symbolTargetType;
+            FilenamesToExclude = filenamesToExclude ?? new List<string>();
+            Flatten = flatten;
         }
 
         public override string ToString()
@@ -98,21 +108,35 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 $"\n Installers-feed: '{InstallersFeed}' " +
                 $"\n Checksums-feed: '{ChecksumsFeed}' " +
                 $"\n SymbolTargetType: '{SymbolTargetType}' " +
-                $"\n IsInternal: '{IsInternal}'";
+                $"\n IsInternal: '{IsInternal}'" +
+                $"\n FilenamesToExclude: \n\t{string.Join("\n\t", FilenamesToExclude)}" +
+                $"\n Flatten: '{Flatten}'";
         }
 
         public override bool Equals(object other)
         {
-            return other is TargetChannelConfig config &&
-                   PublishingInfraVersion == config.PublishingInfraVersion &&
-                   Id == config.Id &&
-                   String.Equals(AkaMSChannelName, config.AkaMSChannelName, StringComparison.OrdinalIgnoreCase) &&
-                   String.Equals(ShippingFeed, config.ShippingFeed, StringComparison.OrdinalIgnoreCase) &&
-                   String.Equals(TransportFeed, config.TransportFeed, StringComparison.OrdinalIgnoreCase) &&
-                   String.Equals(SymbolsFeed, config.SymbolsFeed, StringComparison.OrdinalIgnoreCase) &&
-                   String.Equals(ChecksumsFeed, config.ChecksumsFeed, StringComparison.OrdinalIgnoreCase) &&
-                   String.Equals(InstallersFeed, config.InstallersFeed, StringComparison.OrdinalIgnoreCase) &&
-                   IsInternal == config.IsInternal;
+            if (other is TargetChannelConfig config &&
+                PublishingInfraVersion == config.PublishingInfraVersion &&
+                Id == config.Id &&
+                String.Equals(AkaMSChannelName, config.AkaMSChannelName, StringComparison.OrdinalIgnoreCase) &&
+                String.Equals(ShippingFeed, config.ShippingFeed, StringComparison.OrdinalIgnoreCase) &&
+                String.Equals(TransportFeed, config.TransportFeed, StringComparison.OrdinalIgnoreCase) &&
+                String.Equals(SymbolsFeed, config.SymbolsFeed, StringComparison.OrdinalIgnoreCase) &&
+                String.Equals(ChecksumsFeed, config.ChecksumsFeed, StringComparison.OrdinalIgnoreCase) &&
+                String.Equals(InstallersFeed, config.InstallersFeed, StringComparison.OrdinalIgnoreCase) &&
+                IsInternal == config.IsInternal &&
+                Flatten == config.Flatten)
+            {
+                if (FilenamesToExclude is null)
+                    return config.FilenamesToExclude is null;
+                
+                if (config.FilenamesToExclude is null)
+                    return false;
+                
+                return FilenamesToExclude.SequenceEqual(config.FilenamesToExclude);
+            }
+            
+            return false;
         }
 
         public override int GetHashCode()
@@ -126,7 +150,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 SymbolsFeed, 
                 ChecksumsFeed, 
                 InstallersFeed,
-                SymbolTargetType).GetHashCode();
+                SymbolTargetType,
+                Flatten,
+                string.Join(" ", FilenamesToExclude)).GetHashCode();
         }
     }
 }

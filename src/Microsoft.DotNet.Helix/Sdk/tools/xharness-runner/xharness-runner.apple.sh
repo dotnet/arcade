@@ -135,7 +135,7 @@ if [ "$targets" == 'ios-device' ] || [ "$targets" == 'tvos-device' ]; then
 
     # Sign the app
     /usr/bin/codesign -v --force --sign "Apple Development" --keychain "$keychain_name" --entitlements entitlements.plist "$app"
-else
+elif [[ "$targets" =~ "simulator" ]]; then
     # Start the simulator if it is not running already
     simulator_app="$xcode_path/Contents/Developer/Applications/Simulator.app"
     open -a "$simulator_app"
@@ -162,6 +162,12 @@ exit_code=$?
 # 80 - app crash
 if [ $exit_code -eq 80 ]; then
     sudo pkill -9 -f "$simulator_app"
+fi
+
+# If we have a launch failure AND we are on simulators, we need to signal that we want a reboot+retry
+# The script that is running this one will notice and request Helix to do it
+if [ $exit_code -eq 83 ] && [[ "$targets" =~ "simulator" ]]; then
+    exit_code=123
 fi
 
 # The simulator logs comming from the sudo-spawned Simulator.app are not readable by the helix uploader

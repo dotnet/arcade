@@ -65,6 +65,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Common\Microsoft.Arcade.Common\Microsoft.Arcade.Common.csproj" />
     <ProjectReference Include="..\Microsoft.DotNet.ArcadeLogging\Microsoft.DotNet.ArcadeLogging.csproj" />
   </ItemGroup>
   
@@ -77,6 +78,7 @@
   <PropertyGroup>
     <ArcadeSdkVersion>$(PackageVersion)</ArcadeSdkVersion>
     <MicrosoftNetCompilersToolsetVersion>$(MicrosoftNetCompilersToolsetVersion)</MicrosoftNetCompilersToolsetVersion>
+    <MicrosoftNetILLinkTasksVersion>$(MicrosoftNetILLinkTasksVersion)</MicrosoftNetILLinkTasksVersion>
     <MicrosoftSourceLinkVersion>$(MicrosoftSourceLinkVersion)</MicrosoftSourceLinkVersion>
     <MicrosoftDiaSymReaderPdb2PdbVersion>$(MicrosoftDiaSymReaderPdb2PdbVersion)</MicrosoftDiaSymReaderPdb2PdbVersion>
     <XliffTasksVersion>$(XliffTasksVersion)</XliffTasksVersion>

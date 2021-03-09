@@ -5,9 +5,9 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Microsoft.DotNet.VersionTools.Util
+namespace Microsoft.Arcade.Common
 {
-    internal static class ArgumentEscaper
+    public static class ArgumentEscaper
     {
         /// <summary>
         /// Undo the processing which took place to create string[] args in Main,

@@ -81,7 +81,7 @@ steps:
 The simplest Helix use-case is zipping up a single folder containing your project's tests and a batch file which runs those tests. To accomplish this, reference Arcade's `send-to-helix` template in `eng/common/templates/steps/send-to-helix.yml` from your `azure-pipelines.yml` file.
 
 Simply specify the xUnit project(s) you wish to run (semicolon delimited) with the `XUnitProjects` parameter. Then, specify:
-* the `XUnitPublishTargetFramework` &ndash; this is the framework your **test projects are targeting**, e.g. `netcoreapp2.1`.
+* the `XUnitPublishTargetFramework` &ndash; this is the framework your **test projects are targeting**, e.g. `netcoreapp3.1`.
 * the `XUnitRuntimeTargetFramework` &ndash; this is the framework version of xUnit you want to use from the xUnit NuGet package, e.g. `netcoreapp2.0`. Notably, the xUnit console runner only supports up to netcoreapp2.0 as of 14 March 2018, so this is the target that should be specified for running against any higher version test projects.
 * the `XUnitRunnerVersion` (the version of the xUnit nuget package you want to use, e.g. `2.4.1`).
 
@@ -102,7 +102,7 @@ The list of available Helix queues can be found on the [Helix homepage](https://
       # HelixPostCommands: '' -- any commands that you would like to run after running your job
       XUnitProjects: $(Build.SourcesDirectory)/HelloTests/HelloTests.csproj # specify your xUnit projects (semicolon delimited) here!
       # XUnitWorkItemTimeout: '00:05:00' -- a timeout (specified as a System.TimeSpan string) for all work items created from XUnitProjects
-      XUnitPublishTargetFramework: netcoreapp2.1 # specify your publish target framework here
+      XUnitPublishTargetFramework: netcoreapp3.1 # specify your publish target framework here
       XUnitRuntimeTargetFramework: netcoreapp2.0 # specify the framework you want to use for the xUnit runner
       XUnitRunnerVersion: 2.4.1 # specify the version of xUnit runner you wish to use here
       # WorkItemDirectory: '' -- payload directory to zip up and send to Helix; requires WorkItemCommand; incompatible with XUnitProjects
@@ -110,7 +110,7 @@ The list of available Helix queues can be found on the [Helix homepage](https://
       # WorkItemTimeout: '' -- a timeout (specified as a System.TimeSpan string) for the work item command; requires WorkItemDirectory; incompatible with XUnitProjects
       IncludeDotNetCli: true
       DotNetCliPackageType: sdk
-      DotNetCliVersion: 2.1.403 # full list of versions here: https://raw.githubusercontent.com/dotnet/core/master/release-notes/releases.json
+      DotNetCliVersion: 2.1.403 # full list of versions here: https://raw.githubusercontent.com/dotnet/core/main/release-notes/releases.json
       # WaitForWorkItemCompletion: true -- defaults to true
       Creator: arcade # specify an appropriate Creator here -- required for external builds
       # DisplayNamePrefix: 'Send job to Helix' -- the Helix task's display name in AzDO. Defaults to 'Send job to Helix'

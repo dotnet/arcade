@@ -2,15 +2,16 @@ using System;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Arcade.Common;
 
 namespace Microsoft.DotNet.Helix.Client
 {
     internal class DirectoryPayload : IPayload
     {
+        private static readonly IHelpers s_helpers = new Helpers();
+
         public DirectoryPayload(string directory, string archiveEntryPrefix)
         {
             ArchiveEntryPrefix = archiveEntryPrefix;
@@ -24,15 +25,15 @@ namespace Microsoft.DotNet.Helix.Client
         private const int CacheExpiryHours = 5;
         public DirectoryInfo DirectoryInfo { get; }
 
-        public string NormalizedDirectoryPath => Helpers.RemoveTrailingSlash(DirectoryInfo.FullName);
+        public string NormalizedDirectoryPath => s_helpers.RemoveTrailingSlash(DirectoryInfo.FullName);
 
         public string ArchiveEntryPrefix { get; }
 
         public Task<string> UploadAsync(IBlobContainer payloadContainer, Action<string> log, CancellationToken cancellationToken)
             => Task.FromResult(
-                Helpers.MutexExec(
+                s_helpers.DirectoryMutexExec(
                     () => DoUploadAsync(payloadContainer, log, cancellationToken),
-                    $"Global\\{Helpers.ComputeSha256Hash(NormalizedDirectoryPath)}"));
+                    NormalizedDirectoryPath));
 
         private async Task<string> DoUploadAsync(IBlobContainer payloadContainer, Action<string> log, CancellationToken cancellationToken)
         {

@@ -5,9 +5,9 @@ using System;
 using System.Text;
 using System.Diagnostics;
 
-namespace Microsoft.DotNet.VersionTools.Util
+namespace Microsoft.Arcade.Common
 {
-    internal struct CommandResult
+    public struct CommandResult
     {
         public static readonly CommandResult Empty = new CommandResult();
 

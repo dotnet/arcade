@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netcoreapp2.1</TargetFrameworks>
+    <TargetFrameworks>netcoreapp3.1</TargetFrameworks>
   </PropertyGroup>
 
   <ItemGroup>
@@ -15,6 +15,7 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="$(MicrosoftExtensionsDependencyInjectionVersion)" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="$(MicrosoftExtensionsDependencyInjectionAbstractionsVersion)" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="$(MicrosoftExtensionsLoggingConsoleVersion)" />
+    <PackageReference Include="Microsoft.SymbolUploader" Version="$(MicrosoftSymbolUploaderVersion)" />
     <PackageReference Include="Moq" Version="$(MoqVersion)" />
     <!-- This is here so that we agree with the feed tasks project's transitive reference to NewtonSoft.Json and Azure.Core -->
     <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
