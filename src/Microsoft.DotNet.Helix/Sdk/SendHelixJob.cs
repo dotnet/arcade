@@ -223,6 +223,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                     "System.JobAttempt",
                     "System.PhaseName",
                     "System.PhaseAttempt",
+                    "System.PullRequest.TargetBranch",
                     "System.StageName",
                     "System.StageAttempt",
                 };
