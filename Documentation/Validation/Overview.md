@@ -4,14 +4,14 @@ We need to make sure changes done in the Arcade SDK as well as in the [core pack
 
 ## Arcade Validation Policy
 
-- Each bell-weather repo (defined as runtime, aspnetcore, installer) must be building green so build problems won’t be compounded by new Arcade versions or images.
+- Each bellwether repo (defined as runtime, aspnetcore, installer) must be building green so build problems won’t be compounded by new Arcade versions or images.
 - Contributors who are changing existing code should use their best judgement to decide if additional validation against the "bellwether repos" is necessary. The following is a list of situations in which the contributor may want to run their changes against the bellwether repos: 
   - Changes made to Signing, Publishing, or other stages outside of the build stage that would not show up in a PR build. 
   - Changes that affect a fundamental piece of Arcade (e.g. build scripts, install scripts)
   - Changes that affect many files (e.g. refactoring MSBuild Tasks to use a new abstract class for dependency injection support)
   - Changes to packages that are only exercised by a specific set of repos, such as the Shared Framework SDK. 
 - If there are any known breaking changes or any breaking changes surface during the validation against the bellwether repos, those changes should be communicated per the [Breaking Change Policy](../Policy/ChangesPolicy.md).
-- Official Arcade builds from master/main will now be promoted automatically to `.NET Eng - Latest` channel once it has passed the official Arcade Validation pipeline. 
+- Official Arcade builds from main will now be promoted automatically to `.NET Eng - Latest` channel once it has passed the official Arcade Validation pipeline. 
 
 ## The process
 
@@ -27,7 +27,7 @@ To validate against the Arcade Validation for Promotion pipeline (that includes 
 
 1. Run a build of your Arcade branch on the [arcade-official-ci](https://dnceng.visualstudio.com/internal/_build?definitionId=6) Azure DevOps Pipeline
 2. [Promote your build](../Darc.md#add-build-to-channel) to the "General Testing" Maestro channel. 
-3. Create a branch of [Arcade Validation](https://github.com/dotnet/arcade-validation)
+3. Create a branch of [arcade-validation](https://github.com/dotnet/arcade-validation)
 4. Using darc, run `update-dependencies` ([update-dependencies documentation](../Darc.md#updating-dependencies-in-your-local-repository)) on your Arcade Validation branch to use the build of Arcade you just created in the previous steps. 
 5. Push your branch up to Azure DevOps Arcade Validation repository and run a build of your branch on the [dotnet-arcade-validation-for-promotion](https://dev.azure.com/dnceng/internal/_build?definitionId=838&_a=summary) to verify your changes. 
 6. It's not necessary to merge your Arcade Validation branch into the repo's main branch, so feel free to delete it when you're done validating your changes.
