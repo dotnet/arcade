@@ -193,7 +193,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public string AzureDevOpsOrg { get; set; }
 
-        public bool UseApi {get; set;}
         /// <summary>
         /// Just an internal flag to keep track whether we published assets via a V3 manifest or not.
         /// </summary>
@@ -387,9 +386,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 AzdoApiToken = this.AzdoApiToken,
                 BuildId = this.BuildId,
                 AzureProject = this.AzureProject,
-                AzureDevOpsOrg = this.AzureDevOpsOrg,
-                UseApi = this.UseApi
-
+                AzureDevOpsOrg = this.AzureDevOpsOrg
             };
         }
     }

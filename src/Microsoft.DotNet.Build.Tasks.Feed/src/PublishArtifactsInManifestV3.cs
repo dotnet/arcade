@@ -63,8 +63,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public string SymbolsFeedOverride { get; set; }
 
-        public bool UseApi {get; set;}
-
         public override bool Execute()
         {
             ExecuteAsync().GetAwaiter().GetResult();
