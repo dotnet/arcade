@@ -183,7 +183,17 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             get { return _buildQuality.GetDescription(); }
             set { Enum.TryParse<PublishingConstants.BuildQuality>(value, true, out _buildQuality); }
         }
+        public string AzdoApiToken {get; set;}
 
+        public string StagingDir { get; set;}
+
+        public string BuildId { get; set; }
+
+        public string AzureProject { get; set; }
+
+        public string AzureDevOpsOrg { get; set; }
+
+        public bool UseApi {get; set;}
         /// <summary>
         /// Just an internal flag to keep track whether we published assets via a V3 manifest or not.
         /// </summary>
@@ -372,7 +382,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 ChecksumsFeedOverride = this.ChecksumsFeedOverride,
                 ShippingFeedOverride = this.ShippingFeedOverride,
                 TransportFeedOverride = this.TransportFeedOverride,
-                SymbolsFeedOverride = this.SymbolsFeedOverride
+                SymbolsFeedOverride = this.SymbolsFeedOverride,
+                StagingDir =  this.StagingDir,
+                AzdoApiToken = this.AzdoApiToken,
+                BuildId = this.BuildId,
+                AzureProject = this.AzureProject,
+                AzureDevOpsOrg = this.AzureDevOpsOrg,
+                UseApi = this.UseApi
+
             };
         }
     }

@@ -38,6 +38,7 @@ jobs:
             $AzureDevOpsProject = $buildInfo.azureDevOpsProject
             $AzureDevOpsBuildDefinitionId = $buildInfo.azureDevOpsBuildDefinitionId
             $AzureDevOpsBuildId = $buildInfo.azureDevOpsBuildId
+            $AzureDevOpsAccount = $buildInfo.azureDevOpsAccount
 
             Write-Host "##vso[task.setvariable variable=BARBuildId;isOutput=true]$BarId"
             Write-Host "##vso[task.setvariable variable=TargetChannels;isOutput=true]$Channels"
@@ -46,6 +47,7 @@ jobs:
             Write-Host "##vso[task.setvariable variable=AzDOProjectName;isOutput=true]$AzureDevOpsProject"
             Write-Host "##vso[task.setvariable variable=AzDOPipelineId;isOutput=true]$AzureDevOpsBuildDefinitionId"
             Write-Host "##vso[task.setvariable variable=AzDOBuildId;isOutput=true]$AzureDevOpsBuildId"
+            Write-Host "##vso[task.setvariable variable=AzDOBuildAccount;isOutput=true]$AzureDevOpsAccount"
           }
           catch {
             Write-Host $_

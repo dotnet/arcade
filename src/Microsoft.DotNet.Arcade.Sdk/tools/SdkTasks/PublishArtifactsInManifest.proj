@@ -138,7 +138,13 @@
       ChecksumsFeedOverride="$(ChecksumsFeedOverride)"
       TransportFeedOverride="$(TransportFeedOverride)"
       ShippingFeedOverride="$(ShippingFeedOverride)"
-      SymbolsFeedOverride="$(SymbolsFeedOverride)" />
+      SymbolsFeedOverride="$(SymbolsFeedOverride)" 
+      AzdoApiToken="$(AzdoApiToken)"
+      TemporaryStagingDir="$(TemporaryStagingDir)"
+      BuildId="$(BuildId)"
+      AzureDevOpsOrg="$(AzureDevOpsOrg)"
+      AzureProject="$(AzureProject)"/>
+
   </Target>
 
   <ItemGroup>

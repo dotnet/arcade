@@ -63,6 +63,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public string SymbolsFeedOverride { get; set; }
 
+        public bool UseApi {get; set;}
+
         public override bool Execute()
         {
             ExecuteAsync().GetAwaiter().GetResult();
@@ -98,17 +100,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     return false;
                 }
 
-                string temporarySymbolsLocation =
-                    Path.GetFullPath(Path.Combine(BlobAssetsBasePath, @"..\", "tempSymbols"));
-
-                EnsureTemporarySymbolDirectoryExists(temporarySymbolsLocation);
-
                 SplitArtifactsInCategories(BuildModel);
-                DeleteSymbolTemporaryFiles(temporarySymbolsLocation);
-
-                //Copying symbol files to temporary location is required because the symUploader API needs read/write access to the files,
-                //since we publish blobs and symbols in parallel this will cause IO exceptions.
-                CopySymbolFilesToTemporaryLocation(BuildModel, temporarySymbolsLocation);
 
                 if (Log.HasLoggedErrors)
                 {
@@ -199,16 +191,30 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     return false;
                 }
 
+                string temporarySymbolsLocation ="";
+                if(Directory.EnumerateFileSystemEntries(PackageAssetsBasePath).Any())
+                {
+
+                    temporarySymbolsLocation = Path.GetFullPath(Path.Combine(BlobAssetsBasePath, @"..\", "tempSymbols"));
+
+                    EnsureTemporaryDirectoryExists(temporarySymbolsLocation);
+                    DeleteTemporaryFiles(temporarySymbolsLocation);
+
+                    //Copying symbol files to temporary location is required because the symUploader API needs read/write access to the files,
+                    //since we publish blobs and symbols in parallel this will cause IO exceptions.
+                    CopySymbolFilesToTemporaryLocation(BuildModel, temporarySymbolsLocation);
+                
+
                 await Task.WhenAll(new Task[] {
                     HandlePackagePublishingAsync(buildAssets),
                     HandleBlobPublishingAsync(buildAssets),
                     HandleSymbolPublishingAsync(PdbArtifactsBasePath, MsdlToken,
-                        SymWebToken, SymbolPublishingExclusionsFile, temporarySymbolsLocation, PublishSpecialClrFiles)
+                        SymWebToken, SymbolPublishingExclusionsFile, PublishSpecialClrFiles,temporarySymbolsLocation)
                 });
 
-                DeleteSymbolTemporaryFiles(temporarySymbolsLocation);
-                DeleteSymbolTemporaryDirectory(temporarySymbolsLocation);
-                Log.LogMessage(MessageImportance.High, "Successfully deleted the temporary symbols directory.");
+                DeleteTemporaryFiles(temporarySymbolsLocation);
+                DeleteTemporaryDirectory(temporarySymbolsLocation);
+                }
                 await PersistPendingAssetLocationAsync(client);
             }
             catch (Exception e)
@@ -242,52 +248,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     Log.LogMessage(MessageImportance.Low,
                         $"Successfully copied file {sourceFile} to {destinationFile}.");
                 }
-            }
-        }
-
-        /// <summary>
-        /// Create Temporary Symbols directory if it does not exists.
-        /// </summary>
-        /// <param name="temporarySymbolsLocation"></param>
-        public void EnsureTemporarySymbolDirectoryExists(string temporarySymbolsLocation)
-        {
-            if (!Directory.Exists(temporarySymbolsLocation))
-            {
-                Directory.CreateDirectory(temporarySymbolsLocation);
-            }
-        }
-        /// <summary>
-        /// Delete the symbols files after publishing to Symbol server(s), this is part of cleanup
-        /// </summary>
-        /// <param name="temporarySymbolsLocation"></param>
-        public void DeleteSymbolTemporaryFiles(string temporarySymbolsLocation)
-        {
-            try
-            {
-                if (Directory.Exists(temporarySymbolsLocation))
-                {
-                    string[] fileEntries = Directory.GetFiles(temporarySymbolsLocation);
-                    foreach (var file in fileEntries)
-                    {
-                        File.Delete(file);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Log.LogWarning(ex.Message);
-            }
-        }
-
-        /// <summary>
-        /// Deletes the temporary symbol folder, this is part of clean up
-        /// </summary>
-        /// <param name="temporarySymbolLocation"></param>
-        public void DeleteSymbolTemporaryDirectory(string temporarySymbolLocation)
-        {
-            if (Directory.Exists(temporarySymbolLocation))
-            {
-                Directory.Delete(temporarySymbolLocation);
             }
         }
 
