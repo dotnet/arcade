@@ -198,6 +198,8 @@ namespace Microsoft.DotNet.Helix.Sdk
                     }
                 }
 
+                def = AddBuildVariableProperty(def, "System.PullRequest.TargetBranch", "System.PullRequest.TargetBranch");
+
                 // don't send the job if we have errors
                 if (Log.HasLoggedErrors)
                 {
@@ -215,6 +217,26 @@ namespace Microsoft.DotNet.Helix.Sdk
             }
 
             cancellationToken.ThrowIfCancellationRequested();
+        }
+
+        private IJobDefinition AddBuildVariableProperty(IJobDefinition def, string key, string azdoVariableName)
+        {
+            string envName = FromAzdoVariableNameToEnvironmentVariableName(azdoVariableName);
+
+            var value = Environment.GetEnvironmentVariable(envName);
+            if (string.IsNullOrEmpty(value))
+            {
+                return def;
+            }
+
+            def.WithProperty(key, value);
+            Log.LogMessage($"Added build variable property '{key}' (value: '{value}') to job definition.");
+            return def;
+        }
+
+        private static string FromAzdoVariableNameToEnvironmentVariableName(string name)
+        {
+            return name.Replace('.', '_').ToUpper();
         }
 
         private IJobDefinition AddProperty(IJobDefinition def, ITaskItem property)
