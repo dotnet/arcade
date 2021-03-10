@@ -68,8 +68,8 @@ if ($CreateFile -eq "true") {
     Set-Content "$env:BUILD_SOURCESDIRECTORY\Localize\LocProject.json" $json
 }
 else {
-    $currentLocProject = Get-Content "$env:BUILD_SOURCESDIRECTORY\Localize\LocProject.json" | ConvertTo-Json
-    if ($locJson -ne $currentLocProject) {
+    $currentLocProject = Get-Content "$env:BUILD_SOURCESDIRECTORY\Localize\LocProject.json" | ConvertTo-Json -Depth 5
+    if ($json -ne $currentLocProject) {
         Write-Error "Existing LocProject.json differs from generated LocProject.json; please download the LocProject.json from artifacts and diff them to compare."
         exit 1
     }
