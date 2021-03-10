@@ -32,6 +32,8 @@ parameters:
   runAsPublic: false
 
   enableOneLocBuild: false
+  LclSource: lclFilesInRepo
+  LclPackageId: ''
 
   enableSourceIndex: false
   sourceIndexParams: {}
@@ -57,6 +59,10 @@ jobs:
 
 - ${{ if eq(parameters.enableOneLocBuild, true) }}:
   - template: ../job/onelocbuild.yml
+    parameters:
+      CreatePr: false
+      lclSource: ${{ parameters.LclSource }}
+      lclPackageId: ${{ parameters.LclPackageId }}
 
 - ${{ if eq(parameters.enableSourceBuild, true) }}:
   - template: /eng/common/templates/jobs/source-build.yml

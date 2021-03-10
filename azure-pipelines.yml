@@ -34,7 +34,6 @@ stages:
           logs: true
           manifests: true
       enableMicrobuild: true
-      enableOneLocBuild: true
       enablePublishUsingPipelines: true
       enableSourceIndex: true
       enableSourceBuild: true

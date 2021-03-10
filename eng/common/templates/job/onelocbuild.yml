@@ -9,7 +9,11 @@ parameters:
   CeapexPat: $(dn-bot-ceapex-package-r)
   GithubPat: $(BotAccount-dotnet-bot-repo-PAT)
 
+  CreatePr: true
+  CreateFile: true
   LanguageSet: VS_Main_Languages
+  LclSource: lclFilesInRepo
+  LclPackageId: ''
 
 jobs:
 - job: OneLocBuild
@@ -29,6 +33,7 @@ jobs:
         filePath: $(Build.SourcesDirectory)/eng/common/generate-locproject.ps1
         arguments: >
           -LanguageSet "${{ parameters.LanguageSet }}"
+          -CreateFile "${{ parameters.CreateFile }}"
       displayName: Generate LocProject.json
 
     - task: OneLocBuild@2
@@ -36,7 +41,9 @@ jobs:
       inputs:
         locProj: Localize/LocProject.json
         outDir: $(Build.ArtifactStagingDirectory)
-        isCreatePrSelected: true
+        lclSource: ${{ parameters.LclSource }}
+        lclPackageId: ${{ parameters.LclPackageId }}
+        isCreatePrSelected: ${{ parameters.CreatePr }}
         repoType: gitHub
         gitHubPatVariable: "${{ parameters.GithubPat }}"
         packageSourceAuth: patAuth
@@ -48,6 +55,15 @@ jobs:
       displayName: Publish Localization Files
       inputs:
         PathtoPublish: '$(Build.ArtifactStagingDirectory)/loc'
+        PublishLocation: Container
+        ArtifactName: Loc
+      continueOnError: true
+      condition: always()
+
+    - task: PublishBuildArtifacts@1
+      displayName: Publish LocProject.json
+      inputs:
+        PathtoPublish: '$(Build.SourcesDirectory)/Localize/'
         PublishLocation: Container
         ArtifactName: Loc
       continueOnError: true

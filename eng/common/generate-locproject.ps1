@@ -1,5 +1,6 @@
 Param(
-    [string] $LanguageSet = 'VS_Main_Languages'
+    [string] $LanguageSet = 'VS_Main_Languages',
+    [string] $CreateFile = "true"
 )
 
 Set-StrictMode -Version 2.0
@@ -62,6 +63,14 @@ $json = ConvertTo-Json $locJson -Depth 5
 Write-Host "(NETCORE_ENGINEERING_TELEMETRY=Build) LocProject.json generated:`n`n$json`n`n"
 Pop-Location
 
-New-Item "$env:BUILD_SOURCESDIRECTORY\Localize\LocProject.json" -Force
-Set-Content "$env:BUILD_SOURCESDIRECTORY\Localize\LocProject.json" $json
-Copy-Item "$env:BUILD_SOURCESDIRECTORY\Localize\LocProject.json" "$env:BUILD_ARTIFACTSTAGINGDIRECTORY\loc"
+if ($CreateFile -eq "true") {
+    New-Item "$env:BUILD_SOURCESDIRECTORY\Localize\LocProject.json" -Force
+    Set-Content "$env:BUILD_SOURCESDIRECTORY\Localize\LocProject.json" $json
+}
+else {
+    $currentLocProject = Get-Content "$env:BUILD_SOURCESDIRECTORY\Localize\LocProject.json" | ConvertTo-Json
+    if ($locJson -ne $currentLocProject) {
+        Write-Error "Existing LocProject.json differs from generated LocProject.json; please download the LocProject.json from artifacts and diff them to compare."
+        exit 1
+    }
+}
