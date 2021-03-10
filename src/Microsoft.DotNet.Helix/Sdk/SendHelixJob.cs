@@ -207,6 +207,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                 def = AddBuildVariableProperty(def, "DefinitionName", "Build.DefinitionName");
                 def = AddBuildVariableProperty(def, "DefinitionId", "System.DefinitionId");
                 def = AddBuildVariableProperty(def, "Reason", "Build.Reason");
+                def = AddBuildVariableProperty(def, "System.PullRequest.TargetBranch", "System.PullRequest.TargetBranch");
 
                 // don't send the job if we have errors
                 if (Log.HasLoggedErrors)
