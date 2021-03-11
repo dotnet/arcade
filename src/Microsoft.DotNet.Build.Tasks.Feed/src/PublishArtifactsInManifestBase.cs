@@ -812,6 +812,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 {
                     Log.LogError($"No target feed configuration found for artifact category: '{category}'.");
                 }
+                DeleteTemporaryFiles(Path.Combine(StagingDir, @"..\", "tempBlob"));
+                DeleteTemporaryDirectory(Path.Combine(StagingDir, @"..\", "tempBlob"));
             }
 
             await Task.WhenAll(publishTasks);

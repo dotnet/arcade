@@ -140,7 +140,7 @@
       ShippingFeedOverride="$(ShippingFeedOverride)"
       SymbolsFeedOverride="$(SymbolsFeedOverride)" 
       AzdoApiToken="$(AzdoApiToken)"
-      TemporaryStagingDir="$(TemporaryStagingDir)"
+      StagingDir="$(StagingDir)"
       BuildId="$(BuildId)"
       AzureDevOpsOrg="$(AzureDevOpsOrg)"
       AzureProject="$(AzureProject)"/>
