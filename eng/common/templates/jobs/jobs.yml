@@ -37,6 +37,7 @@ parameters:
   LocLanguageSet: VS_Main_Languages
   LclSource: lclFilesInRepo
   LclPackageId: ''
+  OneLocBuildRepoType: gitHub
 
   enableSourceIndex: false
   sourceIndexParams: {}
@@ -66,8 +67,9 @@ jobs:
       CreatePr: ${{ parameters.CreateOneLocBuildPr }}
       CreateFile: ${{ parameters.GenerateLocProjectJson }}
       LanguageSet: ${{ parameters.LocLanguageSet }}
-      lclSource: ${{ parameters.LclSource }}
-      lclPackageId: ${{ parameters.LclPackageId }}
+      LclSource: ${{ parameters.LclSource }}
+      LclPackageId: ${{ parameters.LclPackageId }}
+      RepoType: ${{ parameters.OneLocBuildRepoType }}
 
 - ${{ if eq(parameters.enableSourceBuild, true) }}:
   - template: /eng/common/templates/jobs/source-build.yml
