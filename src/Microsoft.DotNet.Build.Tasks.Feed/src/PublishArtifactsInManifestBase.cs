@@ -123,6 +123,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         private readonly string AzureDevOpsBaseUrl = $"https://dev.azure.com";
 
+        public bool UseApiOverride { get; set; }
+
         public readonly Dictionary<TargetFeedContentType, HashSet<TargetFeedConfig>> FeedConfigs = 
             new Dictionary<TargetFeedContentType, HashSet<TargetFeedConfig>>();
 
@@ -145,8 +147,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         private const string MsdlServerPath = "https://microsoftpublicsymbols.artifacts.visualstudio.com/DefaultCollection";
 
         private const int ExpirationInDays = 3650;
-
-        public int TimeoutInSeconds { get; set; } = 300;
 
         protected LatestLinksManager LinkManager { get; set; } = null;
 
@@ -388,6 +388,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             HashSet<string> blobs = new HashSet<string>();
             using HttpClientHandler _handler = new HttpClientHandler()
             {
+                AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate,
                 CheckCertificateRevocationList = true
             };
             using (HttpClient client = CreateHttpClient(_handler, AzureDevOpsOrg, AzureProject))
@@ -488,7 +489,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             StringBuilder symbolLog = new StringBuilder();
             symbolLog.AppendLine("Publishing Symbols to Symbol server: ");
 
-            if (Directory.Exists(temporarySymbolsLocation) && Directory.EnumerateFileSystemEntries(PackageAssetsBasePath).Any())
+            if (!UseApiOverride)
             {
                 string[] fileEntries = Directory.GetFiles(temporarySymbolsLocation);
 
@@ -594,7 +595,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             Log.LogMessage(MessageImportance.High, $"Package {package.Id}@{package.Version} ({shippingString}) should go to {feedConfig.TargetURL} ({isolatedString}{internalString})");
                         }
 
-                        if (Directory.EnumerateFileSystemEntries(PackageAssetsBasePath).Any())
+                        if (!UseApiOverride)
                         {
                             switch (feedConfig.Type)
                             {
@@ -640,8 +641,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             }
 
             await Task.WhenAll(publishTasks);
-            DeleteTemporaryFiles(Path.Combine(StagingDir, @"..\", "tempPackage"));
-            DeleteTemporaryDirectory(Path.Combine(StagingDir, @"..\", "tempPackage"));
         }
 
         private HashSet<PackageArtifactModel> FilterPackages(HashSet<PackageArtifactModel> packages, TargetFeedConfig feedConfig)
@@ -678,7 +677,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             client.DefaultRequestHeaders.Add(
                 "Accept",
                 $"application/xml;api-version={versionOverride ?? AzureDevOpsFeedsApiVersion}");
-            client.Timeout = TimeSpan.FromSeconds(TimeoutInSeconds);
             return client;
         }
 
@@ -719,7 +717,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         {
             string uri =
                 $"{AzureDevOpsBaseUrl}/{AzureDevOpsOrg}/_apis/resources/Containers/{containerId}?itemPath=/{artifact}/{fileName}&isShallow=true&api-version={AzureApiVersionForFileDownload}";
-            Log.LogMessage(MessageImportance.High, $"download file uri = {uri}");
+            Log.LogMessage($"download file uri = {uri}");
             HttpRequestMessage getMessage = new HttpRequestMessage(HttpMethod.Get, uri);
             HttpResponseMessage response = await client.SendAsync(getMessage);
             response.EnsureSuccessStatusCode();
@@ -767,7 +765,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             Log.LogMessage(MessageImportance.High, $"Blob {blob.Id} ({shippingString}) should go to {feedConfig.TargetURL} ({isolatedString}{internalString})");
                         }
 
-                        if (Directory.EnumerateFileSystemEntries(PackageAssetsBasePath).Any())
+                        if (!UseApiOverride)
                         {
                             switch (feedConfig.Type)
                             {
@@ -812,8 +810,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 {
                     Log.LogError($"No target feed configuration found for artifact category: '{category}'.");
                 }
-                DeleteTemporaryFiles(Path.Combine(StagingDir, @"..\", "tempBlob"));
-                DeleteTemporaryDirectory(Path.Combine(StagingDir, @"..\", "tempBlob"));
             }
 
             await Task.WhenAll(publishTasks);
@@ -1194,7 +1190,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 };
                 using (HttpClient client = CreateHttpClient(handler, AzureDevOpsOrg, AzureProject))
                 {
-                    client.Timeout = TimeSpan.FromSeconds(TimeoutInSeconds);
                     foreach (var blob in blobsToPublish)
                     {
                         if (TryAddAssetLocation(blob.Id, assetVersion: null, buildAssets, feedConfig,
@@ -1295,7 +1290,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 string localPackagePath = "";
                 using (HttpClient client = CreateHttpClient(handler, AzureDevOpsOrg))
                 {
-                    client.Timeout = TimeSpan.FromSeconds(TimeoutInSeconds);
                     foreach (var package in packagesToPublish)
                     {
                         var packageFilename = $"{package.Id}.{package.Version}.nupkg";
@@ -1378,7 +1372,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 };
                 using (HttpClient client = CreateHttpClient(handler, AzureDevOpsOrg, AzureProject))
                 {
-                    client.Timeout = TimeSpan.FromSeconds(TimeoutInSeconds);
                     {
                         foreach (var blob in blobsToPublish)
 
@@ -1531,7 +1524,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 string localPackagePath = "";
                 using (HttpClient client = CreateHttpClient(handler, AzureDevOpsOrg))
                 {
-                    client.Timeout = TimeSpan.FromSeconds(TimeoutInSeconds);
                     foreach (var package in packagesToPublish)
                     {
                         var packageFilename = $"{package.Id}.{package.Version}.nupkg";

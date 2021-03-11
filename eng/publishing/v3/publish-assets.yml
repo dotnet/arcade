@@ -110,7 +110,7 @@ jobs:
           /p:BuildId='$(AzDOBuildId)'
           /p:AzureDevOpsOrg='dnceng'
           /p:AzureProject='$(AzDOProjectName)'
-
+          /p:UseApiOverride='true'
     - template: /eng/common/templates/steps/publish-logs.yml
       parameters:
         StageLabel: '${{ parameters.stageName }}'
