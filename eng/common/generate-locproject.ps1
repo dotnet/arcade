@@ -56,9 +56,9 @@ $locJson = @{
                             CopyOption = "LangIDOnName"
                             OutputPath = $outputPath
                         }
-                        if ($CreateNeutralXlfs -ne "true" -and $_.Extension -eq '.xlf') {
-                            Remove-Item -Path $sourceFile
-                        }
+                    }
+                    if ($CreateNeutralXlfs -ne "true" -and $_.Extension -eq '.xlf') {
+                        Remove-Item -Path $sourceFile
                     }
                 }
             )
