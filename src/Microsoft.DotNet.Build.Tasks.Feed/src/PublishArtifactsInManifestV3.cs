@@ -190,7 +190,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 }
 
                 string temporarySymbolsLocation ="";
-                if (Directory.EnumerateFileSystemEntries(PackageAssetsBasePath).Any())
+                if (!UseApiOverride)
                 {
 
                     temporarySymbolsLocation =
