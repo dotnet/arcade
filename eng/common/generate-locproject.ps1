@@ -1,6 +1,7 @@
 Param(
-    [string] $LanguageSet = 'VS_Main_Languages',
-    [string] $CreateFile = "true"
+    [string] $LanguageSet = 'VS_Main_Languages',        # Language set to be used in the LocProject.json
+    [string] $CreateFile = "true",                      # Creates a LocProject.json when "true," otherwise generates a LocProject.json and compares it to one that already exists in the repo 
+    [string] $CreateNeutralXlfs = "true"                # Creates neutral xlf files. Only set to false when running locally
 )
 
 Set-StrictMode -Version 2.0
@@ -26,7 +27,9 @@ if ($allXlfFiles.Length -gt 0) {
 }
 $langXlfFiles | ForEach-Object {
     $isMatch = $_.Name -Match "([^.]+)\.[\w-]+\.xlf" # matches '[filename].[langcode].xlf'
-    $xlfFiles += Copy-Item "$($_.FullName)" -Destination "$($_.Directory.FullName)\$($Matches.1).xlf" -PassThru
+    
+    $destinationFile = "$($_.Directory.FullName)\$($Matches.1).xlf"
+    $xlfFiles += Copy-Item "$($_.FullName)" -Destination $destinationFile -PassThru
 }
 
 $locFiles = $jsonFiles + $xlfFiles
@@ -47,10 +50,14 @@ $locJson = @{
                     }
                     if ($continue)
                     {
+                        $sourceFile = ($_.FullName | Resolve-Path -Relative).Substring(2)
                         @{
-                            SourceFile = $_.FullName
+                            SourceFile = $sourceFile
                             CopyOption = "LangIDOnName"
                             OutputPath = $outputPath
+                        }
+                        if ($CreateNeutralXlfs -ne "true" -and $_.Extension -eq '.xlf') {
+                            Remove-Item -Path $sourceFile
                         }
                     }
                 }
