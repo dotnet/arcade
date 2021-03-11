@@ -486,11 +486,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             bool publishSpecialClrFiles,
             string temporarySymbolsLocation = null)
         {
-            StringBuilder symbolLog = new StringBuilder();
-            symbolLog.AppendLine("Publishing Symbols to Symbol server: ");
-
             if (!UseApiOverride)
             {
+                StringBuilder symbolLog = new StringBuilder();
+                symbolLog.AppendLine("Publishing Symbols to Symbol server: ");
                 string[] fileEntries = Directory.GetFiles(temporarySymbolsLocation);
 
                 var category = TargetFeedContentType.Symbols;
