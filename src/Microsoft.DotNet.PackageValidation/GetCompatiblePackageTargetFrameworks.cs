@@ -141,17 +141,20 @@ namespace Microsoft.DotNet.PackageValidation
                 if (item.AssetType == AssetType.RuntimeAsset)
                 {
                     string testRid = item.Rid;
+                    string testArch = "-x64";
                     if (testRid == "unix")
                     {
-                        testRid = "ubuntu";
+                        if (!rids.Contains("linux" + testArch))
+                            rids.Add("linux" + testArch);
+                        
+                        if (!rids.Contains("osx" + testArch))
+                            rids.Add("osx" + testArch);
                     }
-                    else if (testRid == "freebsd")
+                    else
                     {
-                        testRid = "debian";
-                    }
-                    string testArch = "-x64";
-                    if (!rids.Contains(testRid + testArch))
-                        rids.Add(testRid + testArch);
+                        if (!rids.Contains(testRid + testArch))
+                            rids.Add(testRid + testArch);
+                    }             
                 }
             }
             return string.Join(";", rids);
