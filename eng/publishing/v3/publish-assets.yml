@@ -30,9 +30,9 @@ jobs:
     - task: DownloadBuildArtifacts@0
       displayName: Download Build Assets
       continueOnError: true
+      enabled: false
       inputs:
         buildType: specific
-        enabled: false
         buildVersionToDownload: specific
         project: $(AzDOProjectName)
         pipeline: $(AzDOPipelineId)
