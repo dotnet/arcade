@@ -198,6 +198,29 @@ namespace Microsoft.DotNet.Helix.Sdk
                     }
                 }
 
+                def = AddBuildVariableProperty(def, "CollectionUri", "System.CollectionUri");
+                def = AddBuildVariableProperty(def, "Project", "System.TeamProject");
+                def = AddBuildVariableProperty(def, "BuildNumber", "Build.BuildNumber");
+                def = AddBuildVariableProperty(def, "BuildId", "Build.BuildId");
+                def = AddBuildVariableProperty(def, "DefinitionName", "Build.DefinitionName");
+                def = AddBuildVariableProperty(def, "DefinitionId", "System.DefinitionId");
+                def = AddBuildVariableProperty(def, "Reason", "Build.Reason");
+                var variablesToCopy = new[]
+                {
+                    "System.JobId",
+                    "System.JobName",
+                    "System.JobAttempt",
+                    "System.PhaseName",
+                    "System.PhaseAttempt",
+                    "System.PullRequest.TargetBranch",
+                    "System.StageName",
+                    "System.StageAttempt",
+                };
+                foreach (var name in variablesToCopy)
+                {
+                    def = AddBuildVariableProperty(def, name, name);
+                }
+
                 // don't send the job if we have errors
                 if (Log.HasLoggedErrors)
                 {
@@ -215,6 +238,26 @@ namespace Microsoft.DotNet.Helix.Sdk
             }
 
             cancellationToken.ThrowIfCancellationRequested();
+        }
+
+        private IJobDefinition AddBuildVariableProperty(IJobDefinition def, string key, string azdoVariableName)
+        {
+            string envName = FromAzdoVariableNameToEnvironmentVariableName(azdoVariableName);
+
+            var value = Environment.GetEnvironmentVariable(envName);
+            if (string.IsNullOrEmpty(value))
+            {
+                return def;
+            }
+
+            def.WithProperty(key, value);
+            Log.LogMessage($"Added build variable property '{key}' (value: '{value}') to job definition.");
+            return def;
+        }
+
+        private static string FromAzdoVariableNameToEnvironmentVariableName(string name)
+        {
+            return name.Replace('.', '_').ToUpper();
         }
 
         private IJobDefinition AddProperty(IJobDefinition def, ITaskItem property)
