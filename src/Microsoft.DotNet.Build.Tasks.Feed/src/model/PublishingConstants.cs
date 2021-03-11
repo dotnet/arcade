@@ -426,7 +426,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             // ".NET Internal Tooling",
             new TargetChannelConfig(
                 551,
-                false,
+                true,
                 PublishingInfraVersion.All,
                 akaMSChannelName: string.Empty,
                 FeedDotNetToolsInternalShipping,
@@ -644,7 +644,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             // ".NET Core 3.1 Internal Servicing",
             new TargetChannelConfig(
                 550,
-                false,
+                true,
                 PublishingInfraVersion.All,
                 akaMSChannelName: "internal/3.1",
                 FeedDotNet31InternalShipping,

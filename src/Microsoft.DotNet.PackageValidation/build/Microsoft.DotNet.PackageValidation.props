@@ -1,0 +1,5 @@
+<Project>
+  <PropertyGroup>
+    <DotNetPackageValidationAssembly>$(MSBuildThisFileDirectory)\..\tools\net5.0\Microsoft.DotNet.PackageValidation.dll</DotNetPackageValidationAssembly>
+  </PropertyGroup>
+</Project>

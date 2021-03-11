@@ -44,6 +44,7 @@ jobs:
           AssetManifests/**
           PdbArtifacts/**
         downloadPath: '$(Build.ArtifactStagingDirectory)'
+        checkDownloadedFiles: true
 
     - task: DownloadBuildArtifacts@0
       displayName: Download Build Assets
