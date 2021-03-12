@@ -139,7 +139,7 @@ namespace Microsoft.DotNet.VersionTools.Tests.BuildManifest
         [InlineData(typeof(ArgumentException), "bar.bat", "foocert2", null, null, "bar.bat", "foocert", null, null)]
         [InlineData(null, "bar.bat", "foocert2", ".NETCoreApp,Version=v5.0", null, "bar.bat", "foocert", ".NETCoreApp,Version=v3.1", null)]
         [InlineData(null, "bar.bat", "foocert2", ".NETCoreApp,Version=v1.0", "aaaaaaaaaaaaaaaa", "bar.bat", "foocert", ".NETCoreApp,Version=v1.0", "aaaaaaaaaaaaaaab")]
-        [InlineData(typeof(ArgumentException), "bar.bat", "foocert2", ".NETCoreApp,Version=v1.0", "aaaaaaaaaaaaaaaa", "bar.bat", "foocert", ".NETCoreApp,Version=v1.0", "aaaaaaaaaaaaaaaa")]        
+        [InlineData(typeof(ArgumentException), "bar.bat", "foocert2", ".NETCoreApp,Version=v1.0", "aaaaaaaaaaaaaaaa", "bar.bat", "foocert", ".NETCoreApp,Version=v1.0", "aaaaaaaaaaaaaaaa")]
         public void ManifestModelToXmlValidatesFileSignInfos(Type exceptionType, params string[] infos)
         {
             if (infos.Length % 4 != 0)
