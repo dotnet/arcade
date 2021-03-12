@@ -671,7 +671,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 address += $"{projectName}/";
             }
 
-            using var client = new HttpClient(handler)
+            var client = new HttpClient(handler)
             {
                 BaseAddress = new Uri(address)
             };
