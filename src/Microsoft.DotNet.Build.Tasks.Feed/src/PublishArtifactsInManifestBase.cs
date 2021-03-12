@@ -1094,7 +1094,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 }
                 else
                 {
-                    Log.LogMessage(MessageImportance.High, $"Succeeded publishing package '{localPackageLocation}' to feed {feedConfig.TargetURL}");
+                    Log.LogMessage($"Succeeded publishing package '{localPackageLocation}' to feed {feedConfig.TargetURL}");
                 }
             }
             catch (Exception e)
