@@ -47,9 +47,9 @@
       <Uri>https://github.com/dotnet/roslyn</Uri>
       <Sha>c10f884b30737542ddd84ca889a4aad9281ce210</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.NET.ILLink.Tasks" Version="6.0.100-preview.2.21154.2">
+    <Dependency Name="Microsoft.NET.ILLink.Tasks" Version="6.0.100-preview.2.21160.1">
       <Uri>https://github.com/mono/linker</Uri>
-      <Sha>228dc42248bb56fc0897aa756236a6e79e2690a7</Sha>
+      <Sha>bb923d296a0aa9afa499ffe29dcf71e66ee54352</Sha>
     </Dependency>
     <Dependency Name="Microsoft.SourceLink.GitHub" Version="1.1.0-beta-21151-02">
       <Uri>https://github.com/dotnet/sourcelink</Uri>
