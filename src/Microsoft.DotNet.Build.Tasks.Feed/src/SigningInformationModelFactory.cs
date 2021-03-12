@@ -74,15 +74,15 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 {
                     var attributes = signInfo.CloneCustomMetadata() as IDictionary<string, string>;
                     var fileSignInfoModel = new FileSignInfoModel { Include = Path.GetFileName(signInfo.ItemSpec), CertificateName = attributes["CertificateName"] };
-                    
-                    if (attributes.ContainsKey("PublicKeyToken"))
+
+                    if (attributes.TryGetValue("PublicKeyToken", out string publicKeyTokenValue))
                     {
-                        fileSignInfoModel.PublicKeyToken = attributes["PublicKeyToken"];
+                        fileSignInfoModel.PublicKeyToken = publicKeyTokenValue;
                     }
                     
-                    if (attributes.ContainsKey("TargetFramework"))
+                    if (attributes.TryGetValue("TargetFramework", out string targetFrameworkValue))
                     {
-                        fileSignInfoModel.TargetFramework = attributes["TargetFramework"];
+                        fileSignInfoModel.TargetFramework = targetFrameworkValue;
                     }
 
                     parsedFileSignInfo.Add(fileSignInfoModel);
