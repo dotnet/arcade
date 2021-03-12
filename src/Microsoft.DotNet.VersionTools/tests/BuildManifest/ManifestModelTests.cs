@@ -169,6 +169,36 @@ namespace Microsoft.DotNet.VersionTools.Tests.BuildManifest
         }
 
         /// <summary>
+        /// Per issue: dotnet/arcade#7064
+        /// </summary>
+        [Fact]
+        public void ValidateSymreaderFileSignInfos()
+        {
+            List<FileSignInfoModel> models = new List<FileSignInfoModel>();            
+            models.Add(new FileSignInfoModel()
+            {
+                Include = "Microsoft.DiaSymReader.dll",
+                CertificateName = "MicrosoftWin8WinBlue",
+                TargetFramework = ".NETFramework,Version=v2.0",
+                PublicKeyToken = "31bf3856ad364e35",
+            });
+            models.Add(new FileSignInfoModel()
+            {
+                Include = "Microsoft.DiaSymReader.dll",
+                CertificateName = "Microsoft101240624",
+                TargetFramework = ".NETStandard,Version=v1.1",
+                PublicKeyToken = "31bf3856ad364e35",
+            });
+
+            SigningInformationModel signInfo = new SigningInformationModel()
+            {
+                FileSignInfo = models
+            };
+
+            signInfo.ToXml().Should().NotBeNull();
+        }
+
+        /// <summary>
         /// Given a set of explicit file sign infos that or are invalid,
         /// Parse should throw with an appropriate error message if they are invalid.
         /// 
