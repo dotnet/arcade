@@ -123,6 +123,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         private readonly string AzureDevOpsBaseUrl = $"https://dev.azure.com";
 
+        public int Retries = 5;
+
         public bool UseApiOverride { get; set; }
 
         public readonly Dictionary<TargetFeedContentType, HashSet<TargetFeedConfig>> FeedConfigs = 
@@ -393,8 +395,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             };
             using (HttpClient client = CreateHttpClient(_handler, AzureDevOpsOrg, AzureProject))
             {
-                string path = await DownloadFileAsync(client, "BlobArtifacts", containerId, "MergedManifest.xml",
-                    temporarySymbDirectory);
+                string path = Path.Combine(temporarySymbDirectory, "MergedManifest.xml");
+                await DownloadFileAsync(client, "BlobArtifacts", containerId, "MergedManifest.xml", path);
+                
+                Log.LogMessage($"Symbol file to downloaded file {path}");
                 blobs = ParseXmlFile(path);
                 DeleteTemporaryFile(path);
                 Log.LogMessage(MessageImportance.High, $"Total number of symbol files : {blobs.Count}");
@@ -428,8 +432,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                     foreach (var blob in blobs)
                     {
-                        localBlobPath = await DownloadFileAsync(client, "BlobArtifacts", containerId, blob,
-                            temporarySymbDirectory);
+                        string localSymbolPath = Path.Combine(temporarySymbDirectory, blob);
+                        await DownloadFileAsync(client, "BlobArtifacts", containerId, blob, localSymbolPath);
+                        
+                        Log.LogMessage($"Local Symbol path to downloaded file {localSymbolPath}");
                         IEnumerable<string> symbolFile = new List<string>();
                         symbolFile.ToList().Add(localBlobPath);
                         foreach (var server in serversToPublish)
@@ -712,32 +718,61 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             }
         }
 
-        public async Task<string> DownloadFileAsync(HttpClient client, string artifact, string containerId,
-            string fileName, string tempDirectory)
+        public async Task<bool> DownloadFileAsync(HttpClient client, string artifact, string containerId,
+            string fileName, string path)
         {
+            int attempt = 0;
             string uri =
                 $"{AzureDevOpsBaseUrl}/{AzureDevOpsOrg}/_apis/resources/Containers/{containerId}?itemPath=/{artifact}/{fileName}&isShallow=true&api-version={AzureApiVersionForFileDownload}";
             Log.LogMessage($"download file uri = {uri}");
-            HttpRequestMessage getMessage = new HttpRequestMessage(HttpMethod.Get, uri);
-            HttpResponseMessage response = await client.SendAsync(getMessage);
-            response.EnsureSuccessStatusCode();
-
-            string localPackagePath = Path.Combine(tempDirectory, fileName);
-            Log.LogMessage($"LocalPath to downloaded file {localPackagePath}");
-            using (var fs = new FileStream(localPackagePath, FileMode.Create,
-                FileAccess.Write, FileShare.ReadWrite))
+            while (true)
             {
-                using (var stream = await response.Content.ReadAsStreamAsync())
+                try
                 {
+                    
+                    using HttpRequestMessage getMessage = new HttpRequestMessage(HttpMethod.Get, uri);
+                    using HttpResponseMessage response = await client.SendAsync(getMessage);
+                    if (response.StatusCode == HttpStatusCode.NotFound ||
+                        response.ReasonPhrase.StartsWith("The requested URI does not represent any resource on the server.", StringComparison.OrdinalIgnoreCase))
                     {
-                        await stream.CopyToAsync(fs);
-                        fs.Flush();
-                        fs.Close();
+                        Log.LogMessage($"Problems downloading file from '{uri}'. Does the resource exist on the storage? {response.StatusCode} : {response.ReasonPhrase}");
+                        return false;
                     }
+
+                    response.EnsureSuccessStatusCode();
+
+                    using (var fs = new FileStream(path, FileMode.Create,
+                        FileAccess.Write, FileShare.ReadWrite))
+                    {
+                        using (var stream = await response.Content.ReadAsStreamAsync())
+                        {
+                            {
+                                await stream.CopyToAsync(fs);
+                                fs.Flush();
+                                fs.Close();
+                            }
+                        }
+                    }
+
+                    return true;
                 }
-            }
-            return localPackagePath;
+
+                catch (Exception e) when (e is HttpRequestException || e is IOException && !(e is DirectoryNotFoundException || e is PathTooLongException))
+
+                {
+                    attempt++;
+                    if(attempt > Retries)
+                    {
+                        Log.LogMessage($"Failed to download {uri} to {path} ");
+                        return false;
+                    }
+                    Log.LogMessage($"Retrying download of '{uri}' to '{path}' due to failure: '{e.Message}' ({attempt}/{Retries})");
+
+                    await Task.Delay(RetryDelayMilliseconds).ConfigureAwait(false);
+                    continue;
+                }
         }
+    }
 
         protected async Task HandleBlobPublishingAsync(Dictionary<string, HashSet<Asset>> buildAssets)
         {
@@ -1196,28 +1231,27 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             AddAssetLocationToAssetAssetLocationType.Container))
                         {
                             string fileName = Path.GetFileName(blob.Id);
-                            
-                            
-                                string localBlobPath = await DownloadFileAsync(client, "BlobArtifacts", containerId,
-                                    fileName,
-                                    temporaryBlobDirectory);
+                            string localBlobPath = Path.Combine(temporaryBlobDirectory, fileName);
+                            await DownloadFileAsync(client, "BlobArtifacts", containerId,
+                                fileName,
+                                localBlobPath);
 
-                                if (!File.Exists(localBlobPath))
-                                {
-                                    Log.LogError($"Could not locate '{blob.Id} at '{localBlobPath}'");
-                                }
+                            if (!File.Exists(localBlobPath))
+                            {
+                                Log.LogError($"Could not locate '{blob.Id} at '{localBlobPath}'");
+                            }
 
-                                string id;
-                                string version;
-                                using (var packageReader = new NuGet.Packaging.PackageArchiveReader(localBlobPath))
-                                {
-                                    PackageIdentity packageIdentity = packageReader.GetIdentity();
-                                    id = packageIdentity.Id;
-                                    version = packageIdentity.Version.ToString();
-                                }
+                            string id;
+                            string version;
+                            using (var packageReader = new NuGet.Packaging.PackageArchiveReader(localBlobPath))
+                            {
+                                PackageIdentity packageIdentity = packageReader.GetIdentity();
+                                id = packageIdentity.Id;
+                                version = packageIdentity.Version.ToString();
+                            }
 
-                                await PushBlobToNugetFeed(feedConfig, localBlobPath, id, version);
-                                DeleteTemporaryFile(localBlobPath);
+                            await PushBlobToNugetFeed(feedConfig, localBlobPath, id, version);
+                            DeleteTemporaryFile(localBlobPath);
                         }
 
                     }
@@ -1293,9 +1327,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     foreach (var package in packagesToPublish)
                     {
                         var packageFilename = $"{package.Id}.{package.Version}.nupkg";
-                        localPackagePath =
-                            await DownloadFileAsync(client, "PackageArtifacts", containerId, packageFilename,
-                                temporaryPackageDirectory);
+                        localPackagePath = Path.Combine(temporaryPackageDirectory, packageFilename);
+                        await DownloadFileAsync(client, "PackageArtifacts", containerId, packageFilename,
+                                localPackagePath);
 
                         if (!File.Exists(localPackagePath))
                         {
@@ -1377,9 +1411,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                         {
                             var fileName = Path.GetFileName(blob.Id);
-                            var localBlobPath =
-                                await DownloadFileAsync(client, "BlobArtifacts", containerId, fileName,
-                                    temporaryBlobDirectory);
+                            var localBlobPath = Path.Combine(temporaryBlobDirectory, fileName);
+                            await DownloadFileAsync(client, "BlobArtifacts", containerId, fileName,
+                                localBlobPath);
                             if (!File.Exists(localBlobPath))
                             {
                                 Log.LogError($"Could not locate '{blob.Id} at '{localBlobPath}'");
@@ -1528,9 +1562,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     {
                         var packageFilename = $"{package.Id}.{package.Version}.nupkg";
 
-                        localPackagePath = await DownloadFileAsync(client, "PackageArtifacts", containerId,
+                        localPackagePath = Path.Combine(temporaryPackageDirectory, packageFilename);
+                        await DownloadFileAsync(client, "PackageArtifacts", containerId,
                             packageFilename,
-                            temporaryPackageDirectory);
+                            localPackagePath);
 
                         if (!File.Exists(localPackagePath))
                         {
