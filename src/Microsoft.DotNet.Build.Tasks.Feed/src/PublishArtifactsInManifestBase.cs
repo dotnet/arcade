@@ -671,7 +671,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 address += $"{projectName}/";
             }
 
-            var client = new HttpClient(handler)
+            using var client = new HttpClient(handler)
             {
                 BaseAddress = new Uri(address)
             };
@@ -697,8 +697,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 {
                     string uri =
                         $"{AzureDevOpsBaseUrl}/{AzureDevOpsOrg}/{AzureProject}/_apis/build/builds/{BuildId}/artifacts?api-version={AzureDevOpsFeedsApiVersion}";
-                    HttpRequestMessage getMessage = new HttpRequestMessage(HttpMethod.Get, uri);
-                    HttpResponseMessage response = await client.SendAsync(getMessage);
+                    using HttpRequestMessage getMessage = new HttpRequestMessage(HttpMethod.Get, uri);
+                    using HttpResponseMessage response = await client.SendAsync(getMessage);
                     response.EnsureSuccessStatusCode();
                     string responseBody = await response.Content.ReadAsStringAsync();
                     BuildArtifacts buildArtifacts = JsonConvert.DeserializeObject<BuildArtifacts>(responseBody);
