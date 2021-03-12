@@ -6,11 +6,12 @@ parameters:
   pool:
     vmImage: vs2017-win2016
 
-  CeapexPat: $(dn-bot-ceapex-package-r)
+  CeapexPat: $(dn-bot-ceapex-package-r) # PAT for the loc AzDO instance https://dev.azure.com/ceapex
   GithubPat: $(BotAccount-dotnet-bot-repo-PAT)
 
+  SourcesDirectory: $(Build.SourcesDirectory)
   CreatePr: true
-  CreateFile: true
+  UseCheckedInLocProjectJson: false
   LanguageSet: VS_Main_Languages
   LclSource: lclFilesInRepo
   LclPackageId: ''
@@ -26,15 +27,21 @@ jobs:
   pool: ${{ parameters.pool }}
 
   variables:
-    - group: OneLocBuildVariables
+    - group: OneLocBuildVariables # Contains the CeapexPat and GithubPat
+    - name: _GenerateLocProjectArguments
+      value: -SourcesDirectory ${{ parameters.SourcesDirectory }}
+        -LanguageSet "${{ parameters.LanguageSet }}"
+        -CreateNeutralXlfs
+    - ${{ if eq(parameters.UseCheckedInLocProjectJson, 'true') }}:
+      - name: _GenerateLocProjectArguments
+        value: ${{ variables._GenerateLocProjectArguments }} -UseCheckedInLocProjectJson
+      
 
   steps:
     - task: Powershell@2
       inputs:
         filePath: $(Build.SourcesDirectory)/eng/common/generate-locproject.ps1
-        arguments: >
-          -LanguageSet "${{ parameters.LanguageSet }}"
-          -CreateFile "${{ parameters.CreateFile }}"
+        arguments: $(_GenerateLocProjectArguments)
       displayName: Generate LocProject.json
 
     - task: OneLocBuild@2
