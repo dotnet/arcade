@@ -1,0 +1,19 @@
+use vs
+
+package name=__VS_PACKAGE_NAME__
+        version=__VS_PACKAGE_VERSION__
+        vs.package.chip=__VS_PACKAGE_CHIP__
+        vs.package.type=msi        
+
+vs.installSize
+  SystemDrive=__VS_PACKAGE_INSTALL_SIZE_SYSTEM_DRIVE__
+  TargetDrive=0
+  SharedDrive=0
+
+vs.msiProperties
+  vs.msiProperty name="MSIFASTINSTALL" value="7"
+  vs.msiProperty name="VSEXTUI" value="1"
+
+vs.payloads
+  vs.payload source=__VS_PAYLOAD_SOURCE__
+             size=__VS_PAYLOAD_SIZE__
