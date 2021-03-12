@@ -139,7 +139,7 @@ namespace Microsoft.DotNet.VersionTools.Tests.BuildManifest
         [InlineData(typeof(ArgumentException), "bar.bat", "foocert2", null, null, "bar.bat", "foocert", null, null)]
         [InlineData(null, "bar.bat", "foocert2", ".NETCoreApp,Version=v5.0", null, "bar.bat", "foocert", ".NETCoreApp,Version=v3.1", null)]
         [InlineData(null, "bar.bat", "foocert2", ".NETCoreApp,Version=v1.0", "aaaaaaaaaaaaaaaa", "bar.bat", "foocert", ".NETCoreApp,Version=v1.0", "aaaaaaaaaaaaaaab")]
-        [InlineData(typeof(ArgumentException), "bar.bat", "foocert2", ".NETCoreApp,Version=v1.0", "aaaaaaaaaaaaaaaa", "bar.bat", "foocert", ".NETCoreApp,Version=v1.0", "aaaaaaaaaaaaaaaa")]
+        [InlineData(typeof(ArgumentException), "bar.bat", "foocert2", ".NETCoreApp,Version=v1.0", "aaaaaaaaaaaaaaaa", "bar.bat", "foocert", ".NETCoreApp,Version=v1.0", "aaaaaaaaaaaaaaaa")]        
         public void ManifestModelToXmlValidatesFileSignInfos(Type exceptionType, params string[] infos)
         {
             if (infos.Length % 4 != 0)
@@ -166,6 +166,36 @@ namespace Microsoft.DotNet.VersionTools.Tests.BuildManifest
             };
 
             VerifyToXml(exceptionType, signInfo);
+        }
+
+        /// <summary>
+        /// Per issue: dotnet/arcade#7064
+        /// </summary>
+        [Fact]
+        public void ValidateSymreaderFileSignInfos()
+        {
+            List<FileSignInfoModel> models = new List<FileSignInfoModel>();            
+            models.Add(new FileSignInfoModel()
+            {
+                Include = "Microsoft.DiaSymReader.dll",
+                CertificateName = "MicrosoftWin8WinBlue",
+                TargetFramework = ".NETFramework,Version=v2.0",
+                PublicKeyToken = "31bf3856ad364e35",
+            });
+            models.Add(new FileSignInfoModel()
+            {
+                Include = "Microsoft.DiaSymReader.dll",
+                CertificateName = "Microsoft101240624",
+                TargetFramework = ".NETStandard,Version=v1.1",
+                PublicKeyToken = "31bf3856ad364e35",
+            });
+
+            SigningInformationModel signInfo = new SigningInformationModel()
+            {
+                FileSignInfo = models
+            };
+
+            signInfo.ToXml().Should().NotBeNull();
         }
 
         /// <summary>

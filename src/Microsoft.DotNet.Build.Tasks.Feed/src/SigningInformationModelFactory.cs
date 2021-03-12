@@ -73,7 +73,19 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 foreach (var signInfo in fileSignInfo)
                 {
                     var attributes = signInfo.CloneCustomMetadata() as IDictionary<string, string>;
-                    parsedFileSignInfo.Add(new FileSignInfoModel { Include = Path.GetFileName(signInfo.ItemSpec), CertificateName = attributes["CertificateName"] });
+                    var fileSignInfoModel = new FileSignInfoModel { Include = Path.GetFileName(signInfo.ItemSpec), CertificateName = attributes["CertificateName"] };
+                    
+                    if (attributes.ContainsKey("PublicKeyToken"))
+                    {
+                        fileSignInfoModel.PublicKeyToken = attributes["PublicKeyToken"];
+                    }
+                    
+                    if (attributes.ContainsKey("TargetFramework"))
+                    {
+                        fileSignInfoModel.TargetFramework = attributes["TargetFramework"];
+                    }
+
+                    parsedFileSignInfo.Add(fileSignInfoModel);
                 }
             }
             if (fileExtensionSignInfo != null)
