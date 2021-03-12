@@ -470,7 +470,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 symbolLog.AppendLine();
                 Log.LogMessage(MessageImportance.High, symbolLog.ToString());
                 symbolLog.Clear();
-                DeleteTemporaryFiles(temporarySymbDirectory);
             }
         }
 
@@ -1256,8 +1255,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                     }
                 }
-                DeleteTemporaryFiles(temporaryBlobDirectory);
-                Log.LogMessage($"Deleted all the contents from blob directory");
             }
         }
 
@@ -1345,8 +1342,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         DeleteTemporaryFile(localPackagePath);
                     }
                 }
-                DeleteTemporaryFiles(temporaryPackageDirectory);
-                Log.LogMessage($"Deleted all the contents from package directory");
             }
         }
 
@@ -1451,8 +1446,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             // The latest links should be updated only after the publishing is complete, to avoid
             // dead links in the interim.
             await LinkManager.CreateOrUpdateLatestLinksAsync(blobsToPublish, feedConfig, PublishingConstants.ExpectedFeedUrlSuffix.Length);
-            DeleteTemporaryFiles(temporaryBlobDirectory);
-            Log.LogMessage($"Deleted all the contents from blob directory");
         }
 
         private async Task PublishBlobsToAzureStorageNugetFeedAsync(
@@ -1590,8 +1583,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             {
                 Log.LogError($"Temporary directory {temporaryPackageDirectory} does not exist");
             }
-            DeleteTemporaryFiles(temporaryPackageDirectory);
-            Log.LogMessage($"Deleted all the contents from package directory");
         }
 
 

@@ -194,7 +194,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 {
 
                     temporarySymbolsLocation =
-                        Path.GetFullPath(Path.Combine(BlobAssetsBasePath, @"..\", "tempSymbols"));
+                        Path.GetFullPath(Path.Combine(BlobAssetsBasePath, @"..\", "tempSymb"));
 
                     EnsureTemporaryDirectoryExists(temporarySymbolsLocation);
                     DeleteTemporaryFiles(temporarySymbolsLocation);
@@ -211,9 +211,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         SymWebToken, SymbolPublishingExclusionsFile, PublishSpecialClrFiles,temporarySymbolsLocation)
                 });
 
-                DeleteTemporaryFiles(temporarySymbolsLocation);
-                DeleteTemporaryDirectory(temporarySymbolsLocation);
-                
+                DeleteTemporaryFiles(Path.GetFullPath(Path.Combine(BlobAssetsBasePath, @"..\", "tempSymb")));
+                DeleteTemporaryFiles(Path.GetFullPath(Path.Combine(BlobAssetsBasePath, @"..\", "tempPackage")));
+                DeleteTemporaryFiles(Path.GetFullPath(Path.Combine(BlobAssetsBasePath, @"..\", "tempBlob")));
+
                 await PersistPendingAssetLocationAsync(client);
             }
             catch (Exception e)
