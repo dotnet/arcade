@@ -428,18 +428,17 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate,
                     CheckCertificateRevocationList = true
                 };
-                string localBlobPath = "";
                 using (HttpClient client = CreateHttpClient(handler, AzureDevOpsOrg))
                 {
-
+                    string localSymbolPath = "";
                     foreach (var blob in blobs)
                     {
-                        string localSymbolPath = Path.Combine(temporarySymbDirectory, blob);
+                        localSymbolPath = Path.Combine(temporarySymbDirectory, blob);
                         await DownloadFileAsync(client, "BlobArtifacts", containerId, blob, localSymbolPath);
                         
                         Log.LogMessage($"Local Symbol path to downloaded file {localSymbolPath}");
                         IEnumerable<string> symbolFile = new List<string>();
-                        symbolFile.ToList().Add(localBlobPath);
+                        symbolFile.ToList().Add(localSymbolPath);
                         foreach (var server in serversToPublish)
                         {
                             var serverPath = server.Key;
@@ -462,7 +461,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                                 true);
                         }
 
-                        DeleteTemporaryFile(localBlobPath);
+                        DeleteTemporaryFile(localSymbolPath);
                     }
                 }
                 symbolLog.AppendLine(
@@ -1585,7 +1584,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         TryAddAssetLocation(package.Id, package.Version, buildAssets, feedConfig,
                             AddAssetLocationToAssetAssetLocationType.NugetFeed);
                         await PushPackageToNugetFeed(feedConfig, localPackagePath, package.Id, package.Version);
-                        DeleteTemporaryFile(packageFilename);
+                        DeleteTemporaryFile(localPackagePath);
                     }
                 }
             }
