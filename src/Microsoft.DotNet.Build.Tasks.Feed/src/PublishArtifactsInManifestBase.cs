@@ -162,6 +162,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// </summary>
         public int RetryDelayMilliseconds { get; set; } = 5000;
 
+        public int TimeoutInMinutes { get; set; } = 5;
+
         public override bool Execute()
         {
             return ExecuteAsync().GetAwaiter().GetResult();
@@ -728,9 +730,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             {
                 try
                 {
-                    
+                    CancellationTokenSource timeoutTokenSource = new CancellationTokenSource(TimeSpan.FromMinutes(TimeoutInMinutes));
                     using HttpRequestMessage getMessage = new HttpRequestMessage(HttpMethod.Get, uri);
-                    using HttpResponseMessage response = await client.SendAsync(getMessage);
+                    using HttpResponseMessage response = await client.SendAsync(getMessage, timeoutTokenSource.Token);
                     if (response.StatusCode == HttpStatusCode.NotFound ||
                         response.ReasonPhrase.StartsWith("The requested URI does not represent any resource on the server.", StringComparison.OrdinalIgnoreCase))
                     {

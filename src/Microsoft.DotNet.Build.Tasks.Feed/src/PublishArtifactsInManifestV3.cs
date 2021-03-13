@@ -214,6 +214,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 DeleteTemporaryFiles(Path.GetFullPath(Path.Combine(BlobAssetsBasePath, @"..\", "tempSymb")));
                 DeleteTemporaryFiles(Path.GetFullPath(Path.Combine(BlobAssetsBasePath, @"..\", "tempPackage")));
                 DeleteTemporaryFiles(Path.GetFullPath(Path.Combine(BlobAssetsBasePath, @"..\", "tempBlob")));
+                DeleteTemporaryDirectory(Path.GetFullPath(Path.Combine(BlobAssetsBasePath, @"..\", "tempSymb")));
+                DeleteTemporaryDirectory(Path.GetFullPath(Path.Combine(BlobAssetsBasePath, @"..\", "tempPackage")));
+                DeleteTemporaryDirectory(Path.GetFullPath(Path.Combine(BlobAssetsBasePath, @"..\", "tempBlob")));
 
                 await PersistPendingAssetLocationAsync(client);
             }
