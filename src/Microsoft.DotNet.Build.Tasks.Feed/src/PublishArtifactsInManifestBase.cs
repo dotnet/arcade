@@ -472,6 +472,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 symbolLog.AppendLine();
                 Log.LogMessage(MessageImportance.High, symbolLog.ToString());
                 symbolLog.Clear();
+                DeleteTemporaryFiles(temporarySymbDirectory);
+                DeleteTemporaryDirectory(temporarySymbDirectory);
             }
         }
 
@@ -1258,6 +1260,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     }
                 }
             }
+            DeleteTemporaryFiles(temporaryBlobDirectory);
+            DeleteTemporaryDirectory(temporaryBlobDirectory);
         }
 
 
@@ -1345,6 +1349,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     }
                 }
             }
+            DeleteTemporaryFiles(temporaryPackageDirectory);
+            DeleteTemporaryDirectory(temporaryPackageDirectory);
         }
 
         private async Task PublishPackagesToAzureStorageNugetFeedAsync(
@@ -1448,6 +1454,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             // The latest links should be updated only after the publishing is complete, to avoid
             // dead links in the interim.
             await LinkManager.CreateOrUpdateLatestLinksAsync(blobsToPublish, feedConfig, PublishingConstants.ExpectedFeedUrlSuffix.Length);
+            DeleteTemporaryFiles(temporaryBlobDirectory);
+            DeleteTemporaryDirectory(temporaryBlobDirectory);
         }
 
         private async Task PublishBlobsToAzureStorageNugetFeedAsync(
@@ -1585,6 +1593,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             {
                 Log.LogError($"Temporary directory {temporaryPackageDirectory} does not exist");
             }
+            DeleteTemporaryFiles(temporaryPackageDirectory);
+            DeleteTemporaryDirectory(temporaryPackageDirectory);
         }
 
 
@@ -1678,7 +1688,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         {
             if (Directory.Exists(temporaryLocation))
             {
-                Directory.Delete(temporaryLocation);
+                Directory.Delete(temporaryLocation, true);
             }
         }
 
