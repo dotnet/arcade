@@ -748,9 +748,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     {
                         using (var stream = await response.Content.ReadAsStreamAsync())
                         {
+                            try
                             {
                                 await stream.CopyToAsync(fs);
-                                fs.Flush();
+                            }
+                            finally
+                            {
+                                stream.Close();
                                 fs.Close();
                             }
                         }
