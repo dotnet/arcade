@@ -210,8 +210,15 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     HandleSymbolPublishingAsync(PdbArtifactsBasePath, MsdlToken,
                         SymWebToken, SymbolPublishingExclusionsFile, PublishSpecialClrFiles,temporarySymbolsLocation)
                 });
-
                 await PersistPendingAssetLocationAsync(client);
+                string temporaryPackageDirectory =
+                    Path.GetFullPath(Path.Combine(StagingDir, @"..\", "tempPackage"));
+                string temporaryBlobDirectory =
+                    Path.GetFullPath(Path.Combine(StagingDir, @"..\", "tempBlob"));
+                DeleteTemporaryFiles(temporaryPackageDirectory);
+                DeleteTemporaryDirectory(temporaryPackageDirectory);
+                DeleteTemporaryFiles(temporaryBlobDirectory);
+                DeleteTemporaryDirectory(temporaryBlobDirectory);
             }
             catch (Exception e)
             {
