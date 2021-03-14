@@ -40,7 +40,7 @@ Screenshot is show in [image 2](#image-2) below.
 
 This page shows you the build definitions for a particular repo and their pass/fail rate over an extended time period.  This view allows you to see how the build definition is trending in terms of build pass / fail.
 
-**Next Step** The next thing to investigate is "what are the issues causing a build definition to fail".  You can investigate failure categories either by going back to the [repo passing rate](#repo-passing-rate) page and "drilling through" to "Failure Categories" or directly going to the [Failure Categories](failure-categories) page and filtering results as desired.
+**Next Step** The next thing to investigate is "what are the issues causing a build definition to fail".  You can investigate failure categories either by going back to the [repo passing rate](#repo-passing-rate) page and "drilling through" to "Failure Categories" or directly going to the [Failure Categories](#failure-categories) page and filtering results as desired.
 
 ### Failure Categories
 
