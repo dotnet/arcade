@@ -471,8 +471,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 symbolLog.AppendLine();
                 Log.LogMessage(MessageImportance.High, symbolLog.ToString());
                 symbolLog.Clear();
-                DeleteTemporaryFiles(temporarySymbDirectory);
-                DeleteTemporaryDirectory(temporarySymbDirectory);
             }
         }
 

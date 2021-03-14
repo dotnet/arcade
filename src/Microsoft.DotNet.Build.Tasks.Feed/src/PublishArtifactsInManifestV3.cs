@@ -215,10 +215,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     Path.GetFullPath(Path.Combine(StagingDir, @"..\", "tempPackage"));
                 string temporaryBlobDirectory =
                     Path.GetFullPath(Path.Combine(StagingDir, @"..\", "tempBlob"));
+                string temporarySymbolDirectory =
+                    Path.GetFullPath(Path.Combine(StagingDir, @"..\", "tempSymb"));
                 DeleteTemporaryFiles(temporaryPackageDirectory);
                 DeleteTemporaryDirectory(temporaryPackageDirectory);
                 DeleteTemporaryFiles(temporaryBlobDirectory);
                 DeleteTemporaryDirectory(temporaryBlobDirectory);
+                DeleteTemporaryFiles(temporarySymbolDirectory);
+                DeleteTemporaryDirectory(temporarySymbolDirectory);
             }
             catch (Exception e)
             {
