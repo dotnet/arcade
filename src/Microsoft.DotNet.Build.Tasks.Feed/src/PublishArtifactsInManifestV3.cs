@@ -218,10 +218,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 string temporarySymbolDirectory =
                     Path.GetFullPath(Path.Combine(StagingDir, @"..\", "tempSymb"));
                 DeleteTemporaryFiles(temporaryPackageDirectory);
+                Log.LogMessage($"Deleting directory {temporaryPackageDirectory}");
                 DeleteTemporaryDirectory(temporaryPackageDirectory);
                 DeleteTemporaryFiles(temporaryBlobDirectory);
+                Log.LogMessage($"Deleting directory {temporaryBlobDirectory}");
                 DeleteTemporaryDirectory(temporaryBlobDirectory);
                 DeleteTemporaryFiles(temporarySymbolDirectory);
+                Log.LogMessage($"Deleting directory {temporarySymbolDirectory}");
                 DeleteTemporaryDirectory(temporarySymbolDirectory);
             }
             catch (Exception e)

@@ -741,8 +741,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                     response.EnsureSuccessStatusCode();
 
-                    using (var fs = new FileStream(path, FileMode.Create,
-                        FileAccess.Write, FileShare.ReadWrite))
+                    using (var fs = new FileStream(path, FileMode.Open,
+                        FileAccess.ReadWrite, FileShare.Read))
                     {
                         using (var stream = await response.Content.ReadAsStreamAsync())
                         {
