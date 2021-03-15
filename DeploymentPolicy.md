@@ -7,7 +7,7 @@ The Deployment principles and policies defined in this document applies to all s
 -   Deployment quality shows a continual, positive trend over time
 -	Key metrics are measured for each rollout and displayed on a dashboard ([Rollout Score Card](../Rollout-Scorecards/README.md)), and a clear rollback threshold is defined.
 -	Deploying multiple small updates is much more preferable to single large updates.
--	No breaking changes ([exceptions granted via policy](https://github.com/dotnet/arcade/blob/master/Documentation/Policy/ChangesPolicy.md))
+-	No breaking changes ([exceptions granted via policy](https://github.com/dotnet/arcade/blob/main/Documentation/Policy/ChangesPolicy.md))
 -	Rollouts themselves are frictionless, automated, and meet deployment quality goals
 -   Rollbacks (when triggered by clear thresholds) are also frictionless, automated, and meet quality goals
 -	Scenario tests are automated, accurately represent our customers, run prior to every deployment, and block deployment on failure
