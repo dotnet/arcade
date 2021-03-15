@@ -412,14 +412,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 GetTargetSymbolServers(feedConfigsForSymbols, msdlToken, symWebToken);
 
             IEnumerable<string> filesToSymbolServer = null;
-            if (Directory.Exists(pdbArtifactsBasePath))
-            {
-                var pdbEntries = System.IO.Directory.EnumerateFiles(pdbArtifactsBasePath, "*.pdb",
-                    System.IO.SearchOption.AllDirectories);
-                var dllEntries = System.IO.Directory.EnumerateFiles(pdbArtifactsBasePath, "*.dll",
-                    System.IO.SearchOption.AllDirectories);
-                filesToSymbolServer = pdbEntries.Concat(dllEntries);
-            }
 
             if (Directory.Exists(temporarySymbDirectory) && !string.IsNullOrEmpty(containerId))
             {
@@ -471,6 +463,42 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 symbolLog.AppendLine();
                 Log.LogMessage(MessageImportance.High, symbolLog.ToString());
                 symbolLog.Clear();
+            }
+
+            if (Directory.Exists(pdbArtifactsBasePath))
+            {
+                var pdbEntries = System.IO.Directory.EnumerateFiles(pdbArtifactsBasePath, "*.pdb",
+                    System.IO.SearchOption.AllDirectories);
+                var dllEntries = System.IO.Directory.EnumerateFiles(pdbArtifactsBasePath, "*.dll",
+                    System.IO.SearchOption.AllDirectories);
+                filesToSymbolServer = pdbEntries.Concat(dllEntries);
+            }
+
+            if (filesToSymbolServer != null && filesToSymbolServer.Count() > 1)
+            {
+                IEnumerable<string> symbolFile = null;
+                foreach (var server in serversToPublish)
+                {
+                    var serverPath = server.Key;
+                    var token = server.Value;
+                    symbolLog.AppendLine($"Publishing pdbFiles to {serverPath}:");
+
+                    await PublishSymbolsHelper.PublishAsync(
+                        Log,
+                        serverPath,
+                        token,
+                        symbolFile,
+                        filesToSymbolServer,
+                        null,
+                        ExpirationInDays,
+                        false,
+                        publishSpecialClrFiles,
+                        null,
+                        false,
+                        false,
+                        true);
+                }
+                Log.LogMessage($"Successfully published pdb files");
             }
         }
 
