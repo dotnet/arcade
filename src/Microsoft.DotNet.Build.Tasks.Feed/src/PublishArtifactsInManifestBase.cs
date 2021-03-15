@@ -18,7 +18,6 @@ using System.Threading.Tasks;
 using System.Xml;
 using Microsoft.Build.Framework;
 using Microsoft.DotNet.Build.Tasks.Feed.Model;
-using Microsoft.DotNet.Build.Tasks.Feed.src;
 using Microsoft.DotNet.Maestro.Client;
 using Microsoft.DotNet.Maestro.Client.Models;
 using Microsoft.DotNet.VersionTools.BuildManifest.Model;
@@ -349,19 +348,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             XmlNodeList itemsToSign = xmlDoc.GetElementsByTagName("ItemsToSign");
             XmlNodeList package = xmlDoc.GetElementsByTagName("Package");
             XmlNodeList blob = xmlDoc.GetElementsByTagName("Blob");
-            //HashSet<string> packageFiles = new HashSet<string>();
             HashSet<string> blobFiles = new HashSet<string>();
-
-            /*for (int i = 0; i < package.Count; i++)
-            {
-                string fileName = "";
-                fileName = $"{package[i].Attributes["Id"].Value}.{package[i].Attributes["Version"].Value}.nupkg";
-                packageFiles.Add(fileName);
-            }*/
 
             for (int i = 0; i < blob.Count; i++)
             {
-                var blobLocation = blob[i].Attributes["Id"].Value.ToString();
+                var blobLocation = blob[i].Attributes["Id"].Value;
                 var segments = blobLocation.Split('/');
                 var fileName = segments[segments.Length - 1];
                 if (fileName.Contains(".symbols.nupkg"))
@@ -383,14 +374,29 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             StringBuilder symbolLog = new StringBuilder();
             symbolLog.AppendLine("Publishing Symbols to Symbol server: ");
 
-            var category = TargetFeedContentType.Symbols;
+            var symbolCategory = TargetFeedContentType.Symbols;
 
             string containerId = GetContainerId().Result;
             string temporarySymbDirectory =
                 Path.GetFullPath(Path.Combine(StagingDir, @"..\", "tempSymb"));
             EnsureTemporaryDirectoryExists(temporarySymbDirectory);
-            HashSet<string> blobs = new HashSet<string>();
-            using HttpClientHandler _handler = new HttpClientHandler()
+            HashSet<string> symbolsToPublish = new HashSet<string>();
+            //Get all the symbol file names
+            foreach (var blobsPerCategory in BlobsByCategory)
+            {
+                var blobs = blobsPerCategory.Value;
+                foreach (var blob in blobs)
+                {
+                    var segments = blob.ToString().Split('/');
+                    var fileName = segments[segments.Length - 1];
+                    if (fileName.Contains(".symbols.nupkg"))
+                    {
+                        symbolsToPublish.Add(fileName);
+                    }
+                }
+            }
+
+/*            using HttpClientHandler _handler = new HttpClientHandler()
             {
                 AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate,
                 CheckCertificateRevocationList = true
@@ -402,18 +408,19 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 
                 Log.LogMessage($"Symbol file to downloaded file {path}");
                 blobs = ParseXmlFile(path);
+                
                 DeleteTemporaryFile(path);
                 Log.LogMessage(MessageImportance.High, $"Total number of symbol files : {blobs.Count}");
-            }
+            }*/
 
-            HashSet<TargetFeedConfig> feedConfigsForSymbols = FeedConfigs[category];
+            HashSet<TargetFeedConfig> feedConfigsForSymbols = FeedConfigs[symbolCategory];
 
             Dictionary<string, string> serversToPublish =
                 GetTargetSymbolServers(feedConfigsForSymbols, msdlToken, symWebToken);
 
             IEnumerable<string> filesToSymbolServer = null;
 
-            if (Directory.Exists(temporarySymbDirectory) && !string.IsNullOrEmpty(containerId))
+            if (Directory.Exists(temporarySymbDirectory) && !string.IsNullOrEmpty(containerId) && symbolsToPublish.Any())
             {
                 using HttpClientHandler handler = new HttpClientHandler()
                 {
@@ -423,10 +430,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 using (HttpClient client = CreateHttpClient(handler, AzureDevOpsOrg))
                 {
                     string localSymbolPath = "";
-                    foreach (var blob in blobs)
+                    foreach (var symbol in symbolsToPublish)
                     {
-                        localSymbolPath = Path.Combine(temporarySymbDirectory, blob);
-                        await DownloadFileAsync(client, "BlobArtifacts", containerId, blob, localSymbolPath);
+                        localSymbolPath = Path.Combine(temporarySymbDirectory, symbol);
+                        await DownloadFileAsync(client, "BlobArtifacts", containerId, symbol, localSymbolPath);
                         
                         Log.LogMessage($"Local Symbol path to downloaded file {localSymbolPath}");
                         IEnumerable<string> symbolFile = new List<string>();
@@ -435,7 +442,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         {
                             var serverPath = server.Key;
                             var token = server.Value;
-                            symbolLog.AppendLine($"Publishing symbol file {blob} to {serverPath}:");
+                            symbolLog.AppendLine($"Publishing symbol file {symbol} to {serverPath}:");
 
                             await PublishSymbolsHelper.PublishAsync(
                                 Log,
@@ -458,13 +465,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 }
                 symbolLog.AppendLine(
                     $"Performing symbol publishing... \nExpirationInDays : {ExpirationInDays} \nConvertPortablePdbsToWindowsPdb : false \ndryRun: false ");
-                symbolLog.Append($"\nTotal number of symbol files : {blobs.Count}");
+                symbolLog.Append($"\nTotal number of symbol files : {symbolsToPublish.Count}");
                 symbolLog.AppendLine("\nSuccessfully published to Symbol Server.");
                 symbolLog.AppendLine();
                 Log.LogMessage(MessageImportance.High, symbolLog.ToString());
                 symbolLog.Clear();
             }
-
+            // publishing pdb artifacts 
             if (Directory.Exists(pdbArtifactsBasePath))
             {
                 var pdbEntries = System.IO.Directory.EnumerateFiles(pdbArtifactsBasePath, "*.pdb",
@@ -474,7 +481,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 filesToSymbolServer = pdbEntries.Concat(dllEntries);
             }
 
-            if (filesToSymbolServer != null && filesToSymbolServer.Count() > 1)
+            if (filesToSymbolServer != null && filesToSymbolServer.Any())
             {
                 IEnumerable<string> symbolFile = null;
                 foreach (var server in serversToPublish)
