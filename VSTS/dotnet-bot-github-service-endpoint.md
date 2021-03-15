@@ -2,7 +2,7 @@
 
 ## Public project
 
-See the [onboarding documentation](https://github.com/dotnet/arcade/blob/master/Documentation/AzureDevOps/AzureDevOpsOnboarding.md#github-connections)
+See the [onboarding documentation](https://github.com/dotnet/arcade/blob/main/Documentation/AzureDevOps/AzureDevOpsOnboarding.md#github-connections)
 
 ## Internal project
 

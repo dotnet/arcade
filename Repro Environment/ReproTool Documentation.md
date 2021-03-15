@@ -1,5 +1,5 @@
 #  Repro Tool Documentation
-The following document shows the user documentation of the repro environment solution according to the [requirements](https://github.com/dotnet/core-eng/blob/master/Documentation/Project-Docs/Repro%20Environment/Prod%20Requirements.md).
+The following document shows the user documentation of the repro environment solution according to the [requirements](https://github.com/dotnet/core-eng/blob/main/Documentation/Project-Docs/Repro%20Environment/Prod%20Requirements.md).
 
 # Current version: 1.0.2
 The complete list of resolved issues is [here](./V1.0.1.md)
@@ -113,7 +113,7 @@ In order to see the information in [Mission Control], the user must **Log in**, 
 Go to [Mission Control], **Log In** and go to the `Repros` tab. 
 ![](./Images/ReproTab.PNG?raw=true)
 
-By default the user can see all the [Snapshots](https://github.com/dotnet/core-eng/blob/master/Documentation/Project-Docs/Repro%20Environment/Implementation%20Details%20POC.md#2-save-running-environment) and [Virtual Machines](https://github.com/dotnet/core-eng/blob/master/Documentation/Project-Docs/Repro%20Environment/Implementation%20Details%20POC.md#4-create-vm-with-repro-environment) created by that user.
+By default the user can see all the [Snapshots](https://github.com/dotnet/core-eng/blob/main/Documentation/Project-Docs/Repro%20Environment/Implementation%20Details%20POC.md#2-save-running-environment) and [Virtual Machines](https://github.com/dotnet/core-eng/blob/main/Documentation/Project-Docs/Repro%20Environment/Implementation%20Details%20POC.md#4-create-vm-with-repro-environment) created by that user.
 
 ![](./Images/MissionControl.PNG?raw=true)
 
@@ -140,5 +140,5 @@ Repro tool source and additional documentation is available at https://mseng.vis
 ![](./Images/FeedbackMC.png?raw=true)
 
 [Mission Control]: https://mc.dot.net/#/
-[Helix]: https://github.com/dotnet/core-eng/blob/master/Documentation/Project-Docs/Repro%20Environment/ReproTool%20Documentation.md#how-to-use-it-in-helix
-[Jenkins]: https://github.com/dotnet/core-eng/blob/master/Documentation/Project-Docs/Repro%20Environment/ReproTool%20Documentation.md#how-to-use-it-in-jenkins
+[Helix]: https://github.com/dotnet/core-eng/blob/main/Documentation/Project-Docs/Repro%20Environment/ReproTool%20Documentation.md#how-to-use-it-in-helix
+[Jenkins]: https://github.com/dotnet/core-eng/blob/main/Documentation/Project-Docs/Repro%20Environment/ReproTool%20Documentation.md#how-to-use-it-in-jenkins

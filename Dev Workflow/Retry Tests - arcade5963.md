@@ -26,7 +26,7 @@ This feature is primarily for the product teams, however, the Engineering Servic
 
 ### Proof of Concepts
 
-- Through a proof of concept, verify that we are able to implement a retry mechanism in Arcade by enhancing the [Helix SDK scripts](https://github.com/dotnet/arcade/tree/master/src/Microsoft.DotNet.Helix/Sdk/tools/azure-pipelines/reporter) written in Python that will allow work items that fail and meet a certain criteria (defined in JSON) to be retried. 
+- Through a proof of concept, verify that we are able to implement a retry mechanism in Arcade by enhancing the [Helix SDK scripts](https://github.com/dotnet/arcade/tree/main/src/Microsoft.DotNet.Helix/Sdk/tools/azure-pipelines/reporter) written in Python that will allow work items that fail and meet a certain criteria (defined in JSON) to be retried. 
   
   Implementation details for this proof of concept are as follows: 
     - Customer configures their desired retry rules in a pre-defined json file that will be provided in the /eng/ folder within Arcade. 

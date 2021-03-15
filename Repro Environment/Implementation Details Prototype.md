@@ -29,7 +29,7 @@ The following document shows the implementation details for the prototype of the
 # Dev workflow
 
 ## Request a repro
-There are two flows that could trigger the request of a repro: have a Jenkins Job that when failed it automatically will [save the running environment](https://github.com/dotnet/core-eng/blob/master/Documentation/Project-Docs/Repro%20Environment/Implementation%20Details%20POC.md#2-save-running-environment) so later the dev can request a [VM with the repro environment](https://github.com/dotnet/core-eng/blob/master/Documentation/Project-Docs/Repro%20Environment/Implementation%20Details%20POC.md#4-create-vm-with-repro-environment) or rebuild a Job and signal it to automatically save the running environment and create a VM as part of the Job.
+There are two flows that could trigger the request of a repro: have a Jenkins Job that when failed it automatically will [save the running environment](https://github.com/dotnet/core-eng/blob/main/Documentation/Project-Docs/Repro%20Environment/Implementation%20Details%20POC.md#2-save-running-environment) so later the dev can request a [VM with the repro environment](https://github.com/dotnet/core-eng/blob/main/Documentation/Project-Docs/Repro%20Environment/Implementation%20Details%20POC.md#4-create-vm-with-repro-environment) or rebuild a Job and signal it to automatically save the running environment and create a VM as part of the Job.
 
 ### 1. Save running environment by default
 ![](./Images/Scenario1.png?raw=true)
@@ -98,4 +98,4 @@ For information about the progress, please go to the following Epic:
 - Dev Test Failure Repro [408](https://github.com/dotnet/core-eng/issues/408)
 
 ## Considerations:
-Please refer to the section [Developers involved in the POC](https://github.com/dotnet/core-eng/blob/master/Documentation/Project-Docs/Repro%20Environment/Implementation%20Details%20POC.md#developers-involved-in-the-poc) of Implementation details POC.
+Please refer to the section [Developers involved in the POC](https://github.com/dotnet/core-eng/blob/main/Documentation/Project-Docs/Repro%20Environment/Implementation%20Details%20POC.md#developers-involved-in-the-poc) of Implementation details POC.

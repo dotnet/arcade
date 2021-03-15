@@ -1,1 +1,1 @@
-Moved to https://github.com/dotnet/arcade/blob/master/README.md
+Moved to https://github.com/dotnet/arcade/blob/main/README.md
