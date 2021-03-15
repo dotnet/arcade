@@ -9,11 +9,11 @@ The following are the pipelines and jobs currently running validation, and an ex
 
 - **CI / Staging**: <br />
     [Build -> Validate](https://dnceng.visualstudio.com/internal/_build?definitionId=620&_a=summary) -> [Pre-Deploy -> Deploy -> Post-Deploy](https://dnceng.visualstudio.com/internal/_build?definitionId=696&_a=summary)
-    - *Pre-Deployment Validation*: Powershell scripts. Types of [pre-deployment validation](https://github.com/dotnet/core-eng/blob/master/Documentation/Validation/ValidationProcess.md#pre-deployment)
+    - *Pre-Deployment Validation*: Powershell scripts. Types of [pre-deployment validation](https://github.com/dotnet/core-eng/blob/main/Documentation/Validation/ValidationProcess.md#pre-deployment)
       - Validate HMS Deployment
       - Validate Service Fabric Applications
       - Validate Resource Groups and Storage Accounts
-    - *Post-Deployment Validation*: In **Helix.Test.Staging.PostDeployment** test project. Types of [post-deployment validation](https://github.com/dotnet/core-eng/blob/master/Documentation/Validation/ValidationProcess.md#post-deployment)
+    - *Post-Deployment Validation*: In **Helix.Test.Staging.PostDeployment** test project. Types of [post-deployment validation](https://github.com/dotnet/core-eng/blob/main/Documentation/Validation/ValidationProcess.md#post-deployment)
       - Helix API Tests
 
 - **Production**:<br />
@@ -22,8 +22,8 @@ The following are the pipelines and jobs currently running validation, and an ex
 
 - **[Nightly](https://dev.azure.com/dnceng/internal/_build?definitionId=622&_a=summary)**:
     - SDL/Bin Skim
-    - **Helix.Test.Staging.Nightly** project: Types of [nightly validation](https://github.com/dotnet/core-eng/blob/master/Documentation/Validation/ValidationProcess.md#nightly)
+    - **Helix.Test.Staging.Nightly** project: Types of [nightly validation](https://github.com/dotnet/core-eng/blob/main/Documentation/Validation/ValidationProcess.md#nightly)
       - Sends jobs that echo "hello world" to each queue in staging (currently, only open queues)
 
 ## Where do the Tests live?
-Per the [Validation Process](https://github.com/dotnet/core-eng/blob/master/Documentation/Validation/ValidationProcess.md#unit-testing) documentation, tests will live within the solution of the project being tested. 
+Per the [Validation Process](https://github.com/dotnet/core-eng/blob/main/Documentation/Validation/ValidationProcess.md#unit-testing) documentation, tests will live within the solution of the project being tested. 

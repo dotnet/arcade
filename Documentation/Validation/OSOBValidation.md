@@ -19,4 +19,4 @@
 - Runs clean up stage to clean up old queues on staging
 
 ## Where do the Tests live? 
-Per the [Validation Process](https://github.com/dotnet/core-eng/blob/master/Documentation/Validation/ValidationProcess.md#unit-testing) documentation, tests will live within the solution of the project being tested. 
+Per the [Validation Process](https://github.com/dotnet/core-eng/blob/main/Documentation/Validation/ValidationProcess.md#unit-testing) documentation, tests will live within the solution of the project being tested. 

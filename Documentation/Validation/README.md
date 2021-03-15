@@ -19,9 +19,9 @@ Business Requirement: The process for running tests and reporting results uses a
 
 Ideal developer workflow from dev environment to production: 
 1.  Developer is responsible for writing code for feature, unit/functional tests to cover code written for feature, and expanding on any scenario tests that changes or enhances the way the service works. 
-2.  When the feature is completed, the developer should open a pull request that will validate their code. Upon passing validation (and gaining approval on their PR from their peers), the developer should merge into the master branch. 
+2.  When the feature is completed, the developer should open a pull request that will validate their code. Upon passing validation (and gaining approval on their PR from their peers), the developer should merge into the main branch. 
 3.  [Pre-deployment](#pre-deployment) checks on staging should occur to see if the services in staging are healthy for us to deploy to. If not, we should investigate and resolve the problems before we can deploy. 
-4.  Code is built from master and deployed to staging.
+4.  Code is built from main and deployed to staging.
 5.  [Post-deployment](#post-deployment) checks on staging should occur to ensure that the code we deployed is working as intended. 
 6.  Similarly, we'll have pre-deployment checks on production prior to deploying our code to production. 
 7.  Code is deployed to production. 
@@ -37,7 +37,7 @@ The following links are to documents regarding specifics for validating these se
 
 - [Helix Services and API](HelixValidation.md)
 - [OS Onboarding](OSOBValidation.md)
-- [Arcade](https://github.com/dotnet/arcade/blob/master/Documentation/Validation/Overview.md)
+- [Arcade](https://github.com/dotnet/arcade/blob/main/Documentation/Validation/Overview.md)
 - Arcade Services
 
 ## Consistency in Testing Services
