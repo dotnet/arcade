@@ -125,6 +125,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public bool UseApiOverride { get; set; }
 
+        public int Retries = 5;
+
         public readonly Dictionary<TargetFeedContentType, HashSet<TargetFeedConfig>> FeedConfigs = 
             new Dictionary<TargetFeedContentType, HashSet<TargetFeedConfig>>();
 
@@ -147,6 +149,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         private const string MsdlServerPath = "https://microsoftpublicsymbols.artifacts.visualstudio.com/DefaultCollection";
 
         private const int ExpirationInDays = 3650;
+
+        public int TimeoutInMinutes { get; set; } = 5;
 
         protected LatestLinksManager LinkManager { get; set; } = null;
 
@@ -337,38 +341,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 }
             }
         }
-
-        public HashSet<string> ParseXmlFile(string pathToXml)
-        {
-            XmlDocument xmlDoc = new XmlDocument();
-            xmlDoc.Load(pathToXml);
-            XmlNodeList itemsToSign = xmlDoc.GetElementsByTagName("ItemsToSign");
-            XmlNodeList package = xmlDoc.GetElementsByTagName("Package");
-            XmlNodeList blob = xmlDoc.GetElementsByTagName("Blob");
-            //HashSet<string> packageFiles = new HashSet<string>();
-            HashSet<string> blobFiles = new HashSet<string>();
-
-            /*for (int i = 0; i < package.Count; i++)
-            {
-                string fileName = "";
-                fileName = $"{package[i].Attributes["Id"].Value}.{package[i].Attributes["Version"].Value}.nupkg";
-                packageFiles.Add(fileName);
-            }*/
-
-            for (int i = 0; i < blob.Count; i++)
-            {
-                var blobLocation = blob[i].Attributes["Id"].Value.ToString();
-                var segments = blobLocation.Split('/');
-                var fileName = segments[segments.Length - 1];
-                if (fileName.Contains(".symbols.nupkg"))
-                {
-                    blobFiles.Add(fileName);
-                }
-            }
-            return blobFiles;
-        }
-
-        public async Task HandleSymbolPublishingOneByOneAsync(
+       public async Task HandleSymbolPublishingOneByOneAsync(
             string pdbArtifactsBasePath,
             string msdlToken,
             string symWebToken,
@@ -379,33 +352,88 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             StringBuilder symbolLog = new StringBuilder();
             symbolLog.AppendLine("Publishing Symbols to Symbol server: ");
 
-            var category = TargetFeedContentType.Symbols;
+            var symbolCategory = TargetFeedContentType.Symbols;
 
             string containerId = GetContainerId().Result;
-            string temporarySymbDirectory =
-                Path.GetFullPath(Path.Combine(StagingDir, @"..\", "tempSymb"));
-            EnsureTemporaryDirectoryExists(temporarySymbDirectory);
-            HashSet<string> blobs = new HashSet<string>();
-            using HttpClientHandler _handler = new HttpClientHandler()
+
+            HashSet<string> symbolsToPublish = new HashSet<string>();
+            //Get all the symbol file names
+            foreach (var blobsPerCategory in BlobsByCategory)
             {
-                AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate,
-                CheckCertificateRevocationList = true
-            };
-            using (HttpClient client = CreateHttpClient(_handler, AzureDevOpsOrg, AzureProject))
-            {
-                string path = await DownloadFileAsync(client, "BlobArtifacts", containerId, "MergedManifest.xml",
-                    temporarySymbDirectory);
-                blobs = ParseXmlFile(path);
-                DeleteTemporaryFile(path);
-                Log.LogMessage(MessageImportance.High, $"Total number of symbol files : {blobs.Count}");
+                var blobs = blobsPerCategory.Value;
+                foreach (var blob in blobs)
+                {
+                    var segments = blob.ToString().Split('/');
+                    var fileName = segments[segments.Length - 1];
+                    if (fileName.Contains(".symbols.nupkg"))
+                    {
+                        symbolsToPublish.Add(fileName);
+                    }
+                }
             }
 
-            HashSet<TargetFeedConfig> feedConfigsForSymbols = FeedConfigs[category];
+            HashSet<TargetFeedConfig> feedConfigsForSymbols = FeedConfigs[symbolCategory];
 
             Dictionary<string, string> serversToPublish =
                 GetTargetSymbolServers(feedConfigsForSymbols, msdlToken, symWebToken);
 
             IEnumerable<string> filesToSymbolServer = null;
+            using HttpClientHandler handler = new HttpClientHandler()
+                {
+                    AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate,
+                    CheckCertificateRevocationList = true
+                };
+            using (HttpClient client = CreateHttpClient(handler, AzureDevOpsOrg))
+            {
+                string localSymbolPath = "";
+                foreach (var symbol in symbolsToPublish)
+                {
+                    string temporarySymbDirectory =
+                        Path.GetFullPath(Path.Combine(StagingDir, @"..\", Guid.NewGuid().ToString()));
+                    EnsureTemporaryDirectoryExists(temporarySymbDirectory);
+                    localSymbolPath = Path.Combine(temporarySymbDirectory, symbol);
+                    await DownloadFileAsync(client, "BlobArtifacts", containerId, symbol, localSymbolPath);
+
+                    Log.LogMessage($"Local Symbol path to downloaded file {localSymbolPath}");
+                    IEnumerable<string> symbolFile = new List<string>();
+                    symbolFile.ToList().Add(localSymbolPath);
+                    foreach (var server in serversToPublish)
+                    {
+                        var serverPath = server.Key;
+                        var token = server.Value;
+                        symbolLog.AppendLine($"Publishing symbol file {symbol} to {serverPath}:");
+
+                        await PublishSymbolsHelper.PublishAsync(
+                            Log,
+                            serverPath,
+                            token,
+                            symbolFile,
+                            filesToSymbolServer,
+                            null,
+                            ExpirationInDays,
+                            false,
+                            publishSpecialClrFiles,
+                            null,
+                            false,
+                            false,
+                            true);
+                    }
+
+                    DeleteTemporaryFile(localSymbolPath);
+                    DeleteTemporaryDirectory(temporarySymbDirectory);
+                }
+
+                symbolLog.AppendLine(
+                    $"Performing symbol publishing... \nExpirationInDays : {ExpirationInDays} \nConvertPortablePdbsToWindowsPdb : false \ndryRun: false ");
+                symbolLog.Append($"\nTotal number of symbol files : {symbolsToPublish.Count}");
+                symbolLog.AppendLine("\nSuccessfully published to Symbol Server.");
+                symbolLog.AppendLine();
+                Log.LogMessage(MessageImportance.High, symbolLog.ToString());
+                symbolLog.Clear();
+
+            }
+
+            // publishing pdb artifacts 
             if (Directory.Exists(pdbArtifactsBasePath))
             {
                 var pdbEntries = System.IO.Directory.EnumerateFiles(pdbArtifactsBasePath, "*.pdb",
@@ -415,56 +443,31 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 filesToSymbolServer = pdbEntries.Concat(dllEntries);
             }
 
-            if (Directory.Exists(temporarySymbDirectory) && !string.IsNullOrEmpty(containerId))
+            if (filesToSymbolServer != null && filesToSymbolServer.Any())
             {
-                using HttpClientHandler handler = new HttpClientHandler()
+                IEnumerable<string> symbolFile = null;
+                foreach (var server in serversToPublish)
                 {
-                    AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate,
-                    CheckCertificateRevocationList = true
-                };
-                string localBlobPath = "";
-                using (HttpClient client = CreateHttpClient(handler, AzureDevOpsOrg))
-                {
+                    var serverPath = server.Key;
+                    var token = server.Value;
+                    symbolLog.AppendLine($"Publishing pdbFiles to {serverPath}:");
 
-                    foreach (var blob in blobs)
-                    {
-                        localBlobPath = await DownloadFileAsync(client, "BlobArtifacts", containerId, blob,
-                            temporarySymbDirectory);
-                        IEnumerable<string> symbolFile = new List<string>();
-                        symbolFile.ToList().Add(localBlobPath);
-                        foreach (var server in serversToPublish)
-                        {
-                            var serverPath = server.Key;
-                            var token = server.Value;
-                            symbolLog.AppendLine($"Publishing symbol file {blob} to {serverPath}:");
-
-                            await PublishSymbolsHelper.PublishAsync(
-                                Log,
-                                serverPath,
-                                token,
-                                symbolFile,
-                                filesToSymbolServer,
-                                null,
-                                ExpirationInDays,
-                                false,
-                                publishSpecialClrFiles,
-                                null,
-                                false,
-                                false,
-                                true);
-                        }
-
-                        DeleteTemporaryFile(localBlobPath);
-                    }
+                    await PublishSymbolsHelper.PublishAsync(
+                        Log,
+                        serverPath,
+                        token,
+                        symbolFile,
+                        filesToSymbolServer,
+                        null,
+                        ExpirationInDays,
+                        false,
+                        publishSpecialClrFiles,
+                        null,
+                        false,
+                        false,
+                        true);
                 }
-                symbolLog.AppendLine(
-                    $"Performing symbol publishing... \nExpirationInDays : {ExpirationInDays} \nConvertPortablePdbsToWindowsPdb : false \ndryRun: false ");
-                symbolLog.Append($"\nTotal number of symbol files : {blobs.Count}");
-                symbolLog.AppendLine("\nSuccessfully published to Symbol Server.");
-                symbolLog.AppendLine();
-                Log.LogMessage(MessageImportance.High, symbolLog.ToString());
-                symbolLog.Clear();
-                DeleteTemporaryDirectory(Path.GetFullPath(Path.Combine(StagingDir, @"..\", "tempSymb")));
+                Log.LogMessage($"Successfully published pdb files");
             }
         }
 
@@ -691,8 +694,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 {
                     string uri =
                         $"{AzureDevOpsBaseUrl}/{AzureDevOpsOrg}/{AzureProject}/_apis/build/builds/{BuildId}/artifacts?api-version={AzureDevOpsFeedsApiVersion}";
-                    HttpRequestMessage getMessage = new HttpRequestMessage(HttpMethod.Get, uri);
-                    HttpResponseMessage response = await client.SendAsync(getMessage);
+                    using HttpRequestMessage getMessage = new HttpRequestMessage(HttpMethod.Get, uri);
+                    using HttpResponseMessage response = await client.SendAsync(getMessage);
                     response.EnsureSuccessStatusCode();
                     string responseBody = await response.Content.ReadAsStringAsync();
                     BuildArtifacts buildArtifacts = JsonConvert.DeserializeObject<BuildArtifacts>(responseBody);
@@ -711,32 +714,65 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             }
         }
 
-        public async Task<string> DownloadFileAsync(HttpClient client, string artifact, string containerId,
-            string fileName, string tempDirectory)
+        public async Task<bool> DownloadFileAsync(HttpClient client, string artifact, string containerId,
+            string fileName, string path)
         {
+            int attempt = 0;
             string uri =
                 $"{AzureDevOpsBaseUrl}/{AzureDevOpsOrg}/_apis/resources/Containers/{containerId}?itemPath=/{artifact}/{fileName}&isShallow=true&api-version={AzureApiVersionForFileDownload}";
             Log.LogMessage($"download file uri = {uri}");
-            HttpRequestMessage getMessage = new HttpRequestMessage(HttpMethod.Get, uri);
-            HttpResponseMessage response = await client.SendAsync(getMessage);
-            response.EnsureSuccessStatusCode();
-
-            string localPackagePath = Path.Combine(tempDirectory, fileName);
-            Log.LogMessage($"LocalPath to downloaded file {localPackagePath}");
-            using (var fs = new FileStream(localPackagePath, FileMode.Create,
-                FileAccess.Write, FileShare.ReadWrite))
+            while (true)
             {
-                using (var stream = await response.Content.ReadAsStreamAsync())
+                try
                 {
+                    CancellationTokenSource timeoutTokenSource = new CancellationTokenSource(TimeSpan.FromMinutes(TimeoutInMinutes));
+                    using HttpRequestMessage getMessage = new HttpRequestMessage(HttpMethod.Get, uri);
+                    using HttpResponseMessage response = await client.SendAsync(getMessage, timeoutTokenSource.Token);
+                    if (response.StatusCode == HttpStatusCode.NotFound ||
+                        response.ReasonPhrase.StartsWith("The requested URI does not represent any resource on the server.", StringComparison.OrdinalIgnoreCase))
                     {
-                        await stream.CopyToAsync(fs);
-                        fs.Flush();
-                        fs.Close();
+                        Log.LogMessage($"Problems downloading file from '{uri}'. Does the resource exist on the storage? {response.StatusCode} : {response.ReasonPhrase}");
+                        return false;
                     }
+
+                    response.EnsureSuccessStatusCode();
+
+                    using (var fs = new FileStream(path, FileMode.Create,
+                        FileAccess.ReadWrite, FileShare.ReadWrite))
+                    {
+                        using (var stream = await response.Content.ReadAsStreamAsync())
+                        {
+                            try
+                            {
+                                await stream.CopyToAsync(fs);
+                            }
+                            finally
+                            {
+                                stream.Close();
+                                fs.Close();
+                            }
+                        }
+                    }
+
+                    return true;
                 }
-            }
-            return localPackagePath;
+
+                catch (Exception e) when (e is HttpRequestException || e is IOException && !(e is DirectoryNotFoundException || e is PathTooLongException))
+
+                {
+                    attempt++;
+                    if(attempt > Retries)
+                    {
+                        Log.LogMessage($"Failed to download {uri} to {path} ");
+                        return false;
+                    }
+                    Log.LogMessage($"Retrying download of '{uri}' to '{path}' due to failure: '{e.Message}' ({attempt}/{Retries})");
+
+                    await Task.Delay(RetryDelayMilliseconds).ConfigureAwait(false);
+                    continue;
+                }
         }
+    }
 
         protected async Task HandleBlobPublishingAsync(Dictionary<string, HashSet<Asset>> buildAssets)
         {
@@ -901,27 +937,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         }
 
         private async Task PublishPackagesToAzDoNugetFeedAsync(
-            HashSet<PackageArtifactModel> packagesToPublish,
-            Dictionary<string, HashSet<Asset>> buildAssets,
-            TargetFeedConfig feedConfig)
-        {
-            await PushNugetPackagesAsync(packagesToPublish, feedConfig, maxClients: MaxClients,
-                async (feed, httpClient, package, feedAccount, feedVisibility, feedName) =>
-                {
-                    string localPackagePath = Path.Combine(PackageAssetsBasePath, $"{package.Id}.{package.Version}.nupkg");
-                    if (!File.Exists(localPackagePath))
-                    {
-                        Log.LogError($"Could not locate '{package.Id}.{package.Version}' at '{localPackagePath}'");
-                        return;
-                    }
-
-                    TryAddAssetLocation(package.Id, package.Version, buildAssets, feedConfig, AddAssetLocationToAssetAssetLocationType.NugetFeed);
-
-                    await PushNugetPackageAsync(feed, httpClient, localPackagePath, package.Id, package.Version, feedAccount, feedVisibility, feedName);
-                });
-        }
-
-        private async Task PublishPackagesToAzDoNugetFeedAsyncOneByOne(
             HashSet<PackageArtifactModel> packagesToPublish,
             Dictionary<string, HashSet<Asset>> buildAssets,
             TargetFeedConfig feedConfig)
@@ -1156,7 +1171,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     }
                 });
         }
-
         private async Task PublishBlobsToAzDoNugetFeedOneByOneAsync(
             HashSet<BlobArtifactModel> blobsToPublish,
             Dictionary<string, HashSet<Asset>> buildAssets,
@@ -1173,56 +1187,57 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 }
                 else
                 {
-                    Log.LogWarning($"AzDO feed publishing not available for blobs. Blob '{blob.Id}' was not published.");
+                    Log.LogWarning(
+                        $"AzDO feed publishing not available for blobs. Blob '{blob.Id}' was not published.");
                 }
             }
+
             string containerId = GetContainerId().Result;
-            string temporaryBlobDirectory =
-                Path.GetFullPath(Path.Combine(StagingDir, @"..\", "tempBlob"));
-            EnsureTemporaryDirectoryExists(temporaryBlobDirectory);
-            if (Directory.Exists(temporaryBlobDirectory))
+
+
+            using HttpClientHandler handler = new HttpClientHandler()
             {
-                using HttpClientHandler handler = new HttpClientHandler()
+                AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate,
+                CheckCertificateRevocationList = true
+            };
+            using (HttpClient client = CreateHttpClient(handler, AzureDevOpsOrg, AzureProject))
+            {
+                foreach (var blob in blobsToPublish)
                 {
-                    AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate,
-                    CheckCertificateRevocationList = true
-                };
-                using (HttpClient client = CreateHttpClient(handler, AzureDevOpsOrg, AzureProject))
-                {
-                    foreach (var blob in blobsToPublish)
+                    if (TryAddAssetLocation(blob.Id, assetVersion: null, buildAssets, feedConfig,
+                        AddAssetLocationToAssetAssetLocationType.Container))
                     {
-                        if (TryAddAssetLocation(blob.Id, assetVersion: null, buildAssets, feedConfig,
-                            AddAssetLocationToAssetAssetLocationType.Container))
+                        string temporaryBlobDirectory =
+                            Path.GetFullPath(Path.Combine(StagingDir, @"..\", Guid.NewGuid().ToString()));
+                        EnsureTemporaryDirectoryExists(temporaryBlobDirectory);
+                        string fileName = Path.GetFileName(blob.Id);
+                        string localBlobPath = Path.Combine(temporaryBlobDirectory, fileName);
+                        await DownloadFileAsync(client, "BlobArtifacts", containerId,
+                            fileName,
+                            localBlobPath);
+
+                        if (!File.Exists(localBlobPath))
                         {
-                            string fileName = Path.GetFileName(blob.Id);
-                            
-                            
-                                string localBlobPath = await DownloadFileAsync(client, "BlobArtifacts", containerId,
-                                    fileName,
-                                    temporaryBlobDirectory);
-
-                                if (!File.Exists(localBlobPath))
-                                {
-                                    Log.LogError($"Could not locate '{blob.Id} at '{localBlobPath}'");
-                                }
-
-                                string id;
-                                string version;
-                                using (var packageReader = new NuGet.Packaging.PackageArchiveReader(localBlobPath))
-                                {
-                                    PackageIdentity packageIdentity = packageReader.GetIdentity();
-                                    id = packageIdentity.Id;
-                                    version = packageIdentity.Version.ToString();
-                                }
-
-                                await PushBlobToNugetFeed(feedConfig, localBlobPath, id, version);
-                                DeleteTemporaryFile(localBlobPath);
+                            Log.LogError($"Could not locate '{blob.Id} at '{localBlobPath}'");
                         }
 
-                    }
-                }
+                        string id;
+                        string version;
+                        using (var packageReader = new NuGet.Packaging.PackageArchiveReader(localBlobPath))
+                        {
+                            PackageIdentity packageIdentity = packageReader.GetIdentity();
+                            id = packageIdentity.Id;
+                            version = packageIdentity.Version.ToString();
+                        }
 
+                        await PushBlobToNugetFeed(feedConfig, localBlobPath, id, version);
+                        DeleteTemporaryFile(localBlobPath);
+                        DeleteTemporaryDirectory(temporaryBlobDirectory);
+                    }
+
+                }
             }
+
         }
 
 
@@ -1276,38 +1291,40 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 AllowOverwrite = feedConfig.AllowOverwrite,
                 PassIfExistingItemIdentical = true
             };
-            string temporaryPackageDirectory =
-                Path.GetFullPath(Path.Combine(StagingDir, @"..\", "tempPackage"));
-            EnsureTemporaryDirectoryExists(temporaryPackageDirectory);
-            if (Directory.Exists(temporaryPackageDirectory))
-            {
-                using HttpClientHandler handler = new HttpClientHandler()
-                {
-                    AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate,
-                    CheckCertificateRevocationList = true
-                };
-                string localPackagePath = "";
-                using (HttpClient client = CreateHttpClient(handler, AzureDevOpsOrg))
-                {
-                    foreach (var package in packagesToPublish)
-                    {
-                        var packageFilename = $"{package.Id}.{package.Version}.nupkg";
-                        localPackagePath =
-                            await DownloadFileAsync(client, "PackageArtifacts", containerId, packageFilename,
-                                temporaryPackageDirectory);
 
-                        if (!File.Exists(localPackagePath))
-                        {
-                            Log.LogError(
-                                $"Could not locate '{package.Id}.{package.Version}' at '{localPackagePath}'");
-                            return;
-                        }
-                        TryAddAssetLocation(package.Id, package.Version, buildAssets, feedConfig, AddAssetLocationToAssetAssetLocationType.NugetFeed);
-                        IEnumerable<string> item = new List<string>();
-                        item.ToList().Add(localPackagePath);
-                        await blobFeedAction.PushToFeedAsync(item, pushOptions);
-                        DeleteTemporaryFile(localPackagePath);
+
+            using HttpClientHandler handler = new HttpClientHandler()
+            {
+                AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate,
+                CheckCertificateRevocationList = true
+            };
+            string localPackagePath = "";
+            using (HttpClient client = CreateHttpClient(handler, AzureDevOpsOrg))
+            {
+                foreach (var package in packagesToPublish)
+                {
+                    string temporaryPackageDirectory =
+                        Path.GetFullPath(Path.Combine(StagingDir, @"..\", Guid.NewGuid().ToString()));
+                    EnsureTemporaryDirectoryExists(temporaryPackageDirectory);
+                    var packageFilename = $"{package.Id}.{package.Version}.nupkg";
+                    localPackagePath = Path.Combine(temporaryPackageDirectory, packageFilename);
+                    await DownloadFileAsync(client, "PackageArtifacts", containerId, packageFilename,
+                        localPackagePath);
+
+                    if (!File.Exists(localPackagePath))
+                    {
+                        Log.LogError(
+                            $"Could not locate '{package.Id}.{package.Version}' at '{localPackagePath}'");
+                        return;
                     }
+
+                    TryAddAssetLocation(package.Id, package.Version, buildAssets, feedConfig,
+                        AddAssetLocationToAssetAssetLocationType.NugetFeed);
+                    IEnumerable<string> item = new List<string>();
+                    item.ToList().Add(localPackagePath);
+                    await blobFeedAction.PushToFeedAsync(item, pushOptions);
+                    DeleteTemporaryFile(localPackagePath);
+                    DeleteTemporaryDirectory(temporaryPackageDirectory);
                 }
             }
         }
@@ -1348,8 +1365,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         }
 
         private async Task PublishBlobsToAzureStorageNugetFeedOneByOneAsync(HashSet<BlobArtifactModel> blobsToPublish,
-             Dictionary<string, HashSet<Asset>> buildAssets,
-             TargetFeedConfig feedConfig)
+            Dictionary<string, HashSet<Asset>> buildAssets,
+            TargetFeedConfig feedConfig)
         {
             string containerId = GetContainerId().Result;
             var blobFeedAction = CreateBlobFeedAction(feedConfig);
@@ -1358,63 +1375,61 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 AllowOverwrite = feedConfig.AllowOverwrite,
                 PassIfExistingItemIdentical = true
             };
-            string temporaryBlobDirectory =
-                Path.GetFullPath(Path.Combine(StagingDir, @"..\", "tempBlob"));
-            EnsureTemporaryDirectoryExists(temporaryBlobDirectory);
 
-            if (Directory.Exists(temporaryBlobDirectory))
+            using HttpClientHandler handler = new HttpClientHandler()
             {
-                using HttpClientHandler handler = new HttpClientHandler()
+                AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate,
+                CheckCertificateRevocationList = true
+            };
+            using (HttpClient client = CreateHttpClient(handler, AzureDevOpsOrg, AzureProject))
+            {
                 {
-                    AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate,
-                    CheckCertificateRevocationList = true
-                };
-                using (HttpClient client = CreateHttpClient(handler, AzureDevOpsOrg, AzureProject))
-                {
+                    foreach (var blob in blobsToPublish)
+
                     {
-                        foreach (var blob in blobsToPublish)
-
+                        string temporaryBlobDirectory =
+                            Path.GetFullPath(Path.Combine(StagingDir, @"..\", Guid.NewGuid().ToString()));
+                        EnsureTemporaryDirectoryExists(temporaryBlobDirectory);
+                        var fileName = Path.GetFileName(blob.Id);
+                        var localBlobPath = Path.Combine(temporaryBlobDirectory, fileName);
+                        await DownloadFileAsync(client, "BlobArtifacts", containerId, fileName,
+                            localBlobPath);
+                        if (!File.Exists(localBlobPath))
                         {
-                            var fileName = Path.GetFileName(blob.Id);
-                            var localBlobPath =
-                                await DownloadFileAsync(client, "BlobArtifacts", containerId, fileName,
-                                    temporaryBlobDirectory);
-                            if (!File.Exists(localBlobPath))
-                            {
-                                Log.LogError($"Could not locate '{blob.Id} at '{localBlobPath}'");
-                            }
-
-                            var item = new Microsoft.Build.Utilities.TaskItem(localBlobPath,
-                                new Dictionary<string, string>
-                                {
-                                    {"RelativeBlobPath", blob.Id}
-                                });
-
-
-                            TryAddAssetLocation(blob.Id, assetVersion: null, buildAssets, feedConfig,
-                                AddAssetLocationToAssetAssetLocationType.Container);
-
-                            using (var clientThrottle = new SemaphoreSlim(MaxClients, MaxClients))
-                            {
-                                await blobFeedAction.UploadAssetAsync(item, clientThrottle, pushOptions);
-                            }
-
-                            DeleteTemporaryFile(localBlobPath);
+                            Log.LogError($"Could not locate '{blob.Id} at '{localBlobPath}'");
                         }
+
+                        var item = new Microsoft.Build.Utilities.TaskItem(localBlobPath,
+                            new Dictionary<string, string>
+                            {
+                                {"RelativeBlobPath", blob.Id}
+                            });
+
+
+                        TryAddAssetLocation(blob.Id, assetVersion: null, buildAssets, feedConfig,
+                            AddAssetLocationToAssetAssetLocationType.Container);
+
+                        using (var clientThrottle = new SemaphoreSlim(MaxClients, MaxClients))
+                        {
+                            await blobFeedAction.UploadAssetAsync(item, clientThrottle, pushOptions);
+                        }
+
+                        DeleteTemporaryFile(localBlobPath);
+                        DeleteTemporaryDirectory(temporaryBlobDirectory);
                     }
                 }
             }
-
             if (LinkManager == null)
             {
-                LinkManager = new LatestLinksManager(AkaMSClientId, AkaMSClientSecret, AkaMSTenant, AkaMSGroupOwner, AkaMSCreatedBy, AkaMsOwners, Log);
+                LinkManager = new LatestLinksManager(AkaMSClientId, AkaMSClientSecret, AkaMSTenant, AkaMSGroupOwner,
+                    AkaMSCreatedBy, AkaMsOwners, Log);
             }
 
             // The latest links should be updated only after the publishing is complete, to avoid
             // dead links in the interim.
-            await LinkManager.CreateOrUpdateLatestLinksAsync(blobsToPublish, feedConfig, PublishingConstants.ExpectedFeedUrlSuffix.Length);
+            await LinkManager.CreateOrUpdateLatestLinksAsync(blobsToPublish, feedConfig,
+                PublishingConstants.ExpectedFeedUrlSuffix.Length);
         }
-
         private async Task PublishBlobsToAzureStorageNugetFeedAsync(
             HashSet<BlobArtifactModel> blobsToPublish,
             Dictionary<string, HashSet<Asset>> buildAssets,
@@ -1507,50 +1522,43 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             Dictionary<string, HashSet<Asset>> buildAssets,
             TargetFeedConfig feedConfig)
         {
-            
 
-            string temporaryPackageDirectory =
-                Path.GetFullPath(Path.Combine(StagingDir, @"..\", "tempPackage"));
-            EnsureTemporaryDirectoryExists(temporaryPackageDirectory);
             string containerId = GetContainerId().Result;
-            if (Directory.Exists(temporaryPackageDirectory))
+
+            using HttpClientHandler handler = new HttpClientHandler()
             {
-                using HttpClientHandler handler = new HttpClientHandler()
+                AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate,
+                CheckCertificateRevocationList = true
+            };
+            string localPackagePath = "";
+            using (HttpClient client = CreateHttpClient(handler, AzureDevOpsOrg))
+            {
+                foreach (var package in packagesToPublish)
                 {
-                    AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate,
-                    CheckCertificateRevocationList = true
-                };
-                string localPackagePath = "";
-                using (HttpClient client = CreateHttpClient(handler, AzureDevOpsOrg))
-                {
-                    foreach (var package in packagesToPublish)
+                    var packageFilename = $"{package.Id}.{package.Version}.nupkg";
+                    string temporaryPackageDirectory =
+                        Path.GetFullPath(Path.Combine(StagingDir, @"..\", Guid.NewGuid().ToString()));
+                    EnsureTemporaryDirectoryExists(temporaryPackageDirectory);
+                    localPackagePath = Path.Combine(temporaryPackageDirectory, packageFilename);
+                    await DownloadFileAsync(client, "PackageArtifacts", containerId,
+                        packageFilename,
+                        localPackagePath);
+
+                    if (!File.Exists(localPackagePath))
                     {
-                        var packageFilename = $"{package.Id}.{package.Version}.nupkg";
-
-                        localPackagePath = await DownloadFileAsync(client, "PackageArtifacts", containerId,
-                            packageFilename,
-                            temporaryPackageDirectory);
-
-                        if (!File.Exists(localPackagePath))
-                        {
-                            Log.LogError(
-                                $"Could not locate '{package.Id}.{package.Version}' at '{localPackagePath}'");
-                            return;
-                        }
-
-                        TryAddAssetLocation(package.Id, package.Version, buildAssets, feedConfig,
-                            AddAssetLocationToAssetAssetLocationType.NugetFeed);
-                        await PushPackageToNugetFeed(feedConfig, localPackagePath, package.Id, package.Version);
-                        DeleteTemporaryFile(packageFilename);
+                        Log.LogError(
+                            $"Could not locate '{package.Id}.{package.Version}' at '{localPackagePath}'");
+                        return;
                     }
+
+                    TryAddAssetLocation(package.Id, package.Version, buildAssets, feedConfig,
+                        AddAssetLocationToAssetAssetLocationType.NugetFeed);
+                    await PushPackageToNugetFeed(feedConfig, localPackagePath, package.Id, package.Version);
+                    File.Delete(localPackagePath);
+                    Directory.Delete(temporaryPackageDirectory);
                 }
             }
-            else
-            {
-                Log.LogError($"Temporary directory {temporaryPackageDirectory} does not exist");
-            }
         }
-
 
         private async Task PushPackageToNugetFeed(TargetFeedConfig feedConfig, string localPackagePath, string id , string version)
         {
@@ -1579,6 +1587,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     feedAccount, feedVisibility, feedName);
             }
         }
+
         /// <summary>
         /// Create Temporary directory if it does not exists.
         /// </summary>
