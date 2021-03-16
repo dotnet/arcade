@@ -190,8 +190,8 @@ This will effectively disable code mirroring.
 ![AzDO mirrored](images/azdo-mirrored.png)
 
 1. Go to the [internally mirrored repository](https://dev.azure.com/dnceng/internal/_git) - repository should have the same name, only replace `/` with `-`, e.g. `dotnet/xharness` becomes `dotnet-xharness`
-2. Wait for the code-mirror build to propagate the change from the previous step to the internal mirrored repository
-    > Note: Go to the [code-mirror build](https://dev.azure.com/dnceng/internal/_build?definitionId=16&_a=summary) and filter the pipeline runs by Tags (select your repo).
+2. Wait for the code-mirror build to propagate changes made in **step 2** to the internal mirrored repository (meaning: internal repo has main triggers)
+    > Note: You can go to the [code-mirror build](https://dev.azure.com/dnceng/internal/_build?definitionId=16&_a=summary) and filter the pipeline runs by Tags (select your repo).
 3. Go to `Branches`
 4. Create a new branch called `main` off of the `master` branch
 5. Mirror policies from branch `master` to branch `main` using [M2MTool](https://devdiv.visualstudio.com/DefaultCollection/Engineering/_git/M2MTool?path=%2FREADME.md&_a=preview)

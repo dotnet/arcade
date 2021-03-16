@@ -140,8 +140,21 @@ namespace Microsoft.DotNet.PackageValidation
             {
                 if (item.AssetType == AssetType.RuntimeAsset)
                 {
-                    if (!rids.Contains(item.Rid + "-x64"))
-                        rids.Add(item.Rid + "-x64");
+                    string testRid = item.Rid;
+                    string testArch = "-x64";
+                    if (testRid == "unix")
+                    {
+                        if (!rids.Contains("linux" + testArch))
+                            rids.Add("linux" + testArch);
+                        
+                        if (!rids.Contains("osx" + testArch))
+                            rids.Add("osx" + testArch);
+                    }
+                    else
+                    {
+                        if (!rids.Contains(testRid + testArch))
+                            rids.Add(testRid + testArch);
+                    }             
                 }
             }
             return string.Join(";", rids);
