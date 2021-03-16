@@ -1,7 +1,7 @@
 Param(
     [Parameter(Mandatory=$true)][string] $SourcesDirectory,     # Directory where source files live; if using a Localize directory it should live in here
     [string] $LanguageSet = 'VS_Main_Languages',                # Language set to be used in the LocProject.json
-    [switch] $UseCheckedInLocProjectJson,                       # Creates a LocProject.json when "true," otherwise generates a LocProject.json and compares it to one that already exists in the repo 
+    [switch] $UseCheckedInLocProjectJson,                       # When set, generates a LocProject.json and compares it to one that already exists in the repo; otherwise just generates one
     [switch] $CreateNeutralXlfs                                 # Creates neutral xlf files. Only set to false when running locally
 )
 
@@ -22,7 +22,12 @@ if (Test-Path -Path $exclusionsFilePath)
 }
 
 Push-Location "$SourcesDirectory" # push location for Resolve-Path -Relative to work
-$jsonFiles = Get-ChildItem -Recurse -Path "$SourcesDirectory" | Where-Object { $_.FullName -Match "en\\strings.json" }
+
+# Template files
+$jsonFiles = @()
+$jsonFiles += Get-ChildItem -Recurse -Path "$SourcesDirectory" | Where-Object { $_.FullName -Match "\.template\.config\\localize\\en\..+\.json" } # .NET templating pattern
+$jsonFiles += Get-ChildItem -Recurse -Path "$SourcesDirectory" | Where-Object { $_.FullName -Match "en\\strings\.json" } # current winforms pattern
+
 $xlfFiles = @()
 
 $allXlfFiles = Get-ChildItem -Recurse -Path "$SourcesDirectory\*\*.xlf"
@@ -78,9 +83,11 @@ Write-Host "(NETCORE_ENGINEERING_TELEMETRY=Build) LocProject.json generated:`n`n
 Pop-Location
 
 if (!$UseCheckedInLocProjectJson) {
+    New-Item "$SourcesDirectory\Localize\LocProject.json" -Force
     Set-Content "$SourcesDirectory\Localize\LocProject.json" $json
 }
 else {
+    New-Item "$SourcesDirectory\Localize\LocProject-generated.json" -Force
     Set-Content "$SourcesDirectory\Localize\LocProject-generated.json" $json
 
     if ((Get-FileHash "$SourcesDirectory\Localize\LocProject-generated.json").Hash -ne (Get-FileHash "$SourcesDirectory\Localize\LocProject.json").Hash) {

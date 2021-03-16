@@ -56,7 +56,6 @@ jobs:
         gitHubPatVariable: "${{ parameters.GithubPat }}"
         packageSourceAuth: patAuth
         patVariable: ${{ parameters.CeapexPat }}
-      continueOnError: true
       condition: always()
 
     - task: PublishBuildArtifacts@1
@@ -65,7 +64,6 @@ jobs:
         PathtoPublish: '$(Build.ArtifactStagingDirectory)/loc'
         PublishLocation: Container
         ArtifactName: Loc
-      continueOnError: true
       condition: always()
 
     - task: PublishBuildArtifacts@1
@@ -74,5 +72,4 @@ jobs:
         PathtoPublish: '$(Build.SourcesDirectory)/Localize/'
         PublishLocation: Container
         ArtifactName: Loc
-      continueOnError: true
       condition: always()
