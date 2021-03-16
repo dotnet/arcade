@@ -66,8 +66,7 @@ stages:
             $(_InternalBuildArgs)
             /p:Test=false
           displayName: Windows Build / Publish
-        - ${{ if eq(variables._RunAsPublic, False) }}:
-          - task: ComponentGovernanceComponentDetection@0
+        - task: ComponentGovernanceComponentDetection@0
       - ${{ if eq(variables._RunAsPublic, True) }}:
         - job: Linux
           container: LinuxContainer
