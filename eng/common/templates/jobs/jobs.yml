@@ -52,7 +52,7 @@ jobs:
           ${{ property.key }}: ${{ property.value }}
 
       name: ${{ job.job }}
-      
+
 - ${{ if eq(parameters.enableSourceBuild, true) }}:
   - template: /eng/common/templates/jobs/source-build.yml
     parameters:
