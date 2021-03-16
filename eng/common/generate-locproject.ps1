@@ -83,11 +83,11 @@ Write-Host "(NETCORE_ENGINEERING_TELEMETRY=Build) LocProject.json generated:`n`n
 Pop-Location
 
 if (!$UseCheckedInLocProjectJson) {
-    New-Item "$SourcesDirectory\Localize\LocProject.json" -Force
+    New-Item "$SourcesDirectory\Localize\LocProject.json" -Force # Need this to make sure the Localize directory is created
     Set-Content "$SourcesDirectory\Localize\LocProject.json" $json
 }
 else {
-    New-Item "$SourcesDirectory\Localize\LocProject-generated.json" -Force
+    New-Item "$SourcesDirectory\Localize\LocProject-generated.json" -Force # Need this to make sure the Localize directory is created
     Set-Content "$SourcesDirectory\Localize\LocProject-generated.json" $json
 
     if ((Get-FileHash "$SourcesDirectory\Localize\LocProject-generated.json").Hash -ne (Get-FileHash "$SourcesDirectory\Localize\LocProject.json").Hash) {
