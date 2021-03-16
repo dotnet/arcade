@@ -398,9 +398,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
             Dictionary<string, string> serversToPublish =
                 GetTargetSymbolServers(feedConfigsForSymbols, msdlToken, symWebToken);
-            string temporarySymbDirectory =
-                Path.GetFullPath(Path.Combine(StagingDir, @"..\", "tempSymb"));
-            EnsureTemporaryDirectoryExists(temporarySymbDirectory);
+            
             IEnumerable<string> filesToSymbolServer = null;
             using HttpClientHandler handler = new HttpClientHandler()
                 {
@@ -412,7 +410,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 string localSymbolPath = "";
                 foreach (var symbol in symbolsToPublish)
                 {
-
+                    string temporarySymbDirectory =
+                        Path.GetFullPath(Path.Combine(StagingDir, @"..\", Guid.NewGuid().ToString()));
+                    EnsureTemporaryDirectoryExists(temporarySymbDirectory);
                     localSymbolPath = Path.Combine(temporarySymbDirectory, symbol);
                     await DownloadFileAsync(client, "BlobArtifacts", containerId, symbol, localSymbolPath);
 
@@ -442,7 +442,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     }
 
                     DeleteTemporaryFile(localSymbolPath);
-
+                    DeleteTemporaryDirectory(temporarySymbDirectory);
                 }
 
                 symbolLog.AppendLine(
@@ -452,7 +452,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 symbolLog.AppendLine();
                 Log.LogMessage(MessageImportance.High, symbolLog.ToString());
                 symbolLog.Clear();
-                DeleteTemporaryDirectory(temporarySymbDirectory);
+                
             }
 
             // publishing pdb artifacts 
