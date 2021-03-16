@@ -60,17 +60,17 @@ $locJson = @{
                             $continue = $false
                         }
                     }
+                    $sourceFile = ($_.FullName | Resolve-Path -Relative)
+                    if (!$CreateNeutralXlfs -and $_.Extension -eq '.xlf') {
+                        Remove-Item -Path $sourceFile
+                    }
                     if ($continue)
                     {
-                        $sourceFile = ($_.FullName | Resolve-Path -Relative)
                         return @{
                             SourceFile = $sourceFile
                             CopyOption = "LangIDOnName"
                             OutputPath = $outputPath
                         }
-                    }
-                    if (!$CreateNeutralXlfs -and $_.Extension -eq '.xlf') {
-                        Remove-Item -Path $sourceFile
                     }
                 }
             )
