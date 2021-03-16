@@ -1594,8 +1594,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     TryAddAssetLocation(package.Id, package.Version, buildAssets, feedConfig,
                         AddAssetLocationToAssetAssetLocationType.NugetFeed);
                     await PushPackageToNugetFeed(feedConfig, localPackagePath, package.Id, package.Version);
-                    DeleteTemporaryFile(localPackagePath);
-                    DeleteTemporaryDirectory(temporaryPackageDirectory);
+                    File.Delete(localPackagePath);
+                    Directory.Delete(temporaryPackageDirectory);
                 }
             }
         }
