@@ -211,7 +211,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         SymWebToken, SymbolPublishingExclusionsFile, PublishSpecialClrFiles,temporarySymbolsLocation)
                 });
                 await PersistPendingAssetLocationAsync(client);
-                string temporaryPackageDirectory =
+                /*string temporaryPackageDirectory =
                     Path.GetFullPath(Path.Combine(StagingDir, @"..\", "tempPackage"));
                 string temporaryBlobDirectory =
                     Path.GetFullPath(Path.Combine(StagingDir, @"..\", "tempBlob"));
@@ -225,7 +225,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 DeleteTemporaryDirectory(temporaryBlobDirectory);
                 DeleteTemporaryFiles(temporarySymbolDirectory);
                 Log.LogMessage($"Deleting directory {temporarySymbolDirectory}");
-                DeleteTemporaryDirectory(temporarySymbolDirectory);
+                DeleteTemporaryDirectory(temporarySymbolDirectory);*/
             }
             catch (Exception e)
             {
