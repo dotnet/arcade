@@ -1,11 +1,12 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFrameworks>netcoreapp3.1;net472</TargetFrameworks>
     <ExcludeFromSourceBuild>false</ExcludeFromSourceBuild>
     <PackageType>MSBuildSdk</PackageType>
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <IsPackable>true</IsPackable>
+    <DefaultItemExcludes Condition="'$(TargetFramework)' != 'net472'">**/*.Desktop.*</DefaultItemExcludes>
   </PropertyGroup>
 
   <ItemGroup>
@@ -15,6 +16,12 @@
     <PackageReference Include="NuGet.Frameworks" Version="$(NuGetVersion)" />
     <PackageReference Include="NuGet.Packaging" Version="$(NuGetVersion)" />
   </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
+    <Compile Include="..\..\Common\Internal\AssemblyResolver.cs" />
+    <Compile Include="..\..\Common\Internal\BuildTask.Desktop.cs" />
+  </ItemGroup>
+
   <ItemGroup>
     <Compile Include="..\Common\Internal\BuildTask.cs" />
   </ItemGroup>
