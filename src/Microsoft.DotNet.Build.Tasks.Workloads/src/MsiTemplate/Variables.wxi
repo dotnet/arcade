@@ -14,5 +14,5 @@
   <?error Unknown platform: $(var.Platform)?>
   <?endif?>
   
-  <?define DependencyProviderKeyName=$(var.PackageId),$(var.PackageVersion)?>
+  <?define DependencyProviderKeyName=$(var.PackageId),$(var.PackageVersion),$(var.Platform)?>
 </Include>

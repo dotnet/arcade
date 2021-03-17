@@ -43,7 +43,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
 
         public LinkToolTask(IBuildEngine engine, string wixToolsetPath) : base(engine, wixToolsetPath)
         {
-
+         
         }
 
         protected override string GenerateCommandLineCommands()

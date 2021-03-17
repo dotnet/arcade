@@ -11,16 +11,9 @@ using System.Text;
 namespace Microsoft.DotNet.Build.Tasks.Workloads
 {
 
-    public class GenerateVisualStudioMsiPackageProject : Task
+    public class GenerateVisualStudioMsiPackageProject : GenerateTaskBase
     {
         public string Chip
-        {
-            get;
-            set;
-        }
-
-        [Required]
-        public string IntermediateOutputPath
         {
             get;
             set;
@@ -74,15 +67,17 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                     Log.LogMessage($"Using MSI version for package version: {Version}");
                 }
 
-                string swr = EmbeddedTemplates.Extract("msi.swr", IntermediateOutputPath);
-                string swixproj = EmbeddedTemplates.Extract("msi.swixproj", IntermediateOutputPath, PackageName+".swixproj");
+                string swixSourceDirectory = Path.Combine(SourceDirectory, Utils.GetHash(MsiPath, "MD5"));
+                string msiSwr = EmbeddedTemplates.Extract("msi.swr", swixSourceDirectory);
+                string msiSwixProj = EmbeddedTemplates.Extract("msi.swixproj", swixSourceDirectory, PackageName+".swixproj");
 
                 FileInfo msiInfo = new (MsiPath);
                 PayloadSize = msiInfo.Length;
                 InstallSize = MsiUtils.GetInstallSize(MsiPath);
                 Log.LogMessage($"MSI payload size: {PayloadSize}, install size (estimated): {InstallSize} ");
 
-                Utils.StringReplace(swr, GetReplacementTokens(), Encoding.UTF8);
+                Utils.StringReplace(msiSwr, GetReplacementTokens(), Encoding.UTF8);
+                Utils.StringReplace(msiSwixProj, GetReplacementTokens(), Encoding.UTF8);
             }
             catch (Exception e)
             {

@@ -12,12 +12,12 @@ using Microsoft.NET.Sdk.WorkloadManifestReader;
 
 namespace Microsoft.DotNet.Build.Tasks.Workloads.src
 {
-    public class GenerateVisualStudioWorkload : Task
+    public class GenerateVisualStudioWorkload : GenerateTaskBase
     {
         /// <summary>
         /// The NuGet package containing the workload manifest and targets.
         /// </summary>
-        [Required]
+
         public string WorkloadManifestPackage
         {
             get;
@@ -25,10 +25,24 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.src
         }
 
         /// <summary>
-        /// The base intermediate output path. 
+        /// The manifest file describing the workload.
         /// </summary>
-        /// [Required]
-        public string IntermediateBaseOutputPath
+        public string WorkloadManifest
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// A set of workload manifest items.
+        /// </summary>
+        public ITaskItem[] WorkloadManifests
+        {
+            get;
+            set;
+        }
+
+        public string OutputPath
         {
             get;
             set;
@@ -36,17 +50,17 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.src
 
         public string VisualStudioComponentSourcePath;
 
-        public string PackageFeed
+        public string PackagesPath
         {
             get;
             set;
         }
 
-        public string PackageSourcePath
-        {
-            get;
-            set;
-        }
+        //public string WixToolsetPath
+        //{
+        //    get;
+        //    set;
+        //}
 
         public string SrcSetupPackagesPath => Path.Combine(IntermediateBaseOutputPath, "src", "setuppackages");
 
@@ -63,22 +77,56 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.src
         {
             try
             {
-                PackageSourcePath = Path.GetFullPath(PackageSourcePath);
-                ProcessWorkloadManifest();
+                PackagesPath = Path.GetFullPath(PackagesPath);
+                ProcessWorkloadManifests();
             }
             catch (Exception e)
             {
                 Log.LogMessage(MessageImportance.Low, e.StackTrace);
-                Log.LogErrorFromException(e);                
+                Log.LogErrorFromException(e);
             }
 
             return !Log.HasLoggedErrors;
         }
 
+        //public IEnumerable<> GetWorkloadPacks()
+        //{
+
+        //}
+
+        public void ProcessWorkloadManifests()
+        {
+            List<WorkloadPackMsiData> msiPacks = new();
+
+            foreach (ITaskItem workloadManifestItem in WorkloadManifests)
+            {
+                var VSW = new VisualStudioWorkload(workloadManifestItem.ItemSpec, OutputPath, PackagesPath, Log);
+
+                msiPacks.AddRange(VSW.MsiPacks);
+
+               
+            }
+
+            // Dedupe to account for potentially shared packs across all the workloads
+            //IEnumerable<GenerateWorkloadPackMsi> generateMsiTasks = msiPacks.
+            //    Distinct().
+            //    Select(p => new GenerateWorkloadPackMsi(BuildEngine, p, IntermediateBaseOutputPath, WixToolsetPath, OutputPath));
+
+            //foreach (GenerateWorkloadPackMsi task in generateMsiTasks)
+            //{
+            //    if (!task.Execute())
+            //    {
+            //        throw new Exception($"Failed to generate workload pack for {task.SourcePackage} ({task.Platform}).");
+            //    }
+            //}
+
+
+        }
+
         public void ProcessWorkloadManifest()
         {
             NugetPackage workloadPackage = new NugetPackage(WorkloadManifestPackage, Log);
-            WorkloadDefinitionPath = Path.Combine(IntermediateBaseOutputPath, workloadPackage.Id, workloadPackage.Version.ToString());            
+            WorkloadDefinitionPath = Path.Combine(IntermediateBaseOutputPath, workloadPackage.Id, workloadPackage.Version.ToString());
             workloadPackage.Extract(WorkloadDefinitionPath, Enumerable.Empty<string>());
 
             string manifestJsonPath = Directory.GetFiles(WorkloadDefinitionPath, "workloadManifest.json").FirstOrDefault();
@@ -116,18 +164,25 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.src
 
             if (!pack.IsAlias)
             {
-                string sourcePackage = Path.Combine(PackageSourcePath, $"{pack.Id}.{pack.Version}.nupkg");
+                string sourcePackage = Path.Combine(PackagesPath, $"{pack.Id}.{pack.Version}.nupkg");
 
                 if (!File.Exists(sourcePackage))
                 {
                     throw new FileNotFoundException($"Unable to find workload pack '{sourcePackage}'");
                 }
+
+                //GenerateInstaller giTask = new GenerateInstaller(BuildEngine)
+                //{
+                //    IntermediateBaseOutputPath = this.IntermediateBaseOutputPath,
+                //    SourcePackage = sourcePackage,
+                //    WixToolsetPath = this.WixToolsetPath,
+
+                //};
             }
             else
             {
                 Log.LogMessage(MessageImportance.High, $"Processing aliases");
-            }    
-
+            }
 
             //NuGet.Common.ILogger logger = NullLogger.Instance;
             //CancellationToken cancellationToken = CancellationToken.None;
@@ -136,7 +191,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.src
             //SourceRepository repository = Repository.Factory.GetCoreV3(PackageFeed);
             //FindPackageByIdResource resource = repository.GetResourceAsync<FindPackageByIdResource>().Result;
 
-            
+
             //NuGetVersion packageVersion = new NuGetVersion("12.0.1");
             //using MemoryStream packageStream = new MemoryStream();
 

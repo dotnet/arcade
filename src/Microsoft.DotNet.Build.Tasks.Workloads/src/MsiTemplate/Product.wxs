@@ -3,7 +3,7 @@
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
   <?include Variables.wxi?>
   <Product Id="$(var.ProductCode)" Name="$(var.ProductName)" Language="1033" Version="$(var.ProductVersion)"
-           Manufacturer="Microsoft Corporation" UpgradeCode="$(var.UpgradeCode)">
+           Manufacturer="$(var.Manufacturer)" UpgradeCode="$(var.UpgradeCode)">
 
     <Package InstallerVersion="$(var.InstallerVersion)" Compressed="yes" InstallScope="perMachine" />
 

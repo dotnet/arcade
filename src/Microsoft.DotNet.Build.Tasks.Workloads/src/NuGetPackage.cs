@@ -20,15 +20,12 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
     /// </summary>
     public class NugetPackage
     {
-        /// <summary>
-        /// The UUID namespace to use for generating a product code.
-        /// </summary>
-        public static readonly Guid ProductCodeNamespaceUuid = Guid.Parse("3B04DD8B-41C4-4DA3-9E49-4B69F11533A7");
+        
 
-        /// <summary>
-        /// The UUID namesapce to use for generating an upgrade code.
-        /// </summary>
-        public static readonly Guid UpgradeCodeNamespaceUuid = Guid.Parse("C743F81B-B3B5-4E77-9F6D-474EFF3A722C");
+        public string Authors
+        {
+            get;
+        }
 
         /// <summary>
         /// The NuGet package identifier.
@@ -44,6 +41,11 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         }
 
         public string PackagePath
+        {
+            get;
+        }
+
+        public string Title
         {
             get;
         }
@@ -66,6 +68,8 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             NuspecReader nuspecReader = new(packageReader.GetNuspec());
 
             Identity = nuspecReader.GetIdentity();
+            Title = nuspecReader.GetTitle();
+            Authors = nuspecReader.GetAuthors();
         }
 
         /// <summary>
@@ -104,17 +108,6 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             }
         }
 
-        /// <summary>
-        /// Generate a set of preprocessor variable definitions using the metadata.
-        /// </summary>
-        /// <returns>An enumerable containing package metadata converted to WiX preprocessor definitions.</returns>
-        public IEnumerable<string> GetPreprocessorDefinitions()
-        {
-            yield return $@"PackageId={Id}";
-            yield return $@"PackageVersion={Version}";
-            yield return $@"ProductVersion={Version.Major}.{Version.Minor}.{Version.Patch}";
-            yield return $@"ProductCode={Utils.CreateUuid(ProductCodeNamespaceUuid, Identity.ToString()):B}";
-            yield return $@"UpgradeCode={Utils.CreateUuid(UpgradeCodeNamespaceUuid, Identity.ToString()):B}";
-        }
+       
     }
 }

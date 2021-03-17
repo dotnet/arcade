@@ -10,10 +10,13 @@ vs.installSize
   TargetDrive=0
   SharedDrive=0
 
+vs.logFiles
+  vs.logFile pattern="dd_seutp*__VS_PACKAGE_NAME__*.log"
+
 vs.msiProperties
   vs.msiProperty name="MSIFASTINSTALL" value="7"
   vs.msiProperty name="VSEXTUI" value="1"
 
 vs.payloads
-  vs.payload source=__VS_PAYLOAD_SOURCE__
+  vs.payload source=$(PayloadSource)
              size=__VS_PAYLOAD_SIZE__
