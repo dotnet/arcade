@@ -95,7 +95,7 @@ All of the steps are easily revert-able, so it is not a problem to go back to `m
 3. [Update the build mirroring in `subscriptions.json`](#3-update-the-build-mirroring-in-subscriptionsjson)
 4. [Create the `main` branch in the internal mirrored AzDO repository](#4-create-the-main-branch-in-the-internal-mirrored-azdo-repository)
 5. [Change the default branch to `main` for your GitHub repository](#5-change-the-default-branch-to-main-for-your-github-repository)
-6. [Search your repository for any references to the `main` branch specific to your repo](#6-search-your-repository-for-any-references-to-the-main-branch-specific-to-your-repo)
+6. [Search your repository for any references to the `master` branch specific to your repo](#6-search-your-repository-for-any-references-to-the-master-branch-specific-to-your-repo)
 7. [Use a `darc` script to migrate channels and subscriptions](#7-use-a-darc-script-to-migrate-channels-and-subscriptions)
 8. [Change the default branch for AzDO builds for pipelines](#8-change-the-default-branch-for-azdo-pipelines)
 9. [Switch the default branch of the AzDO repository to `main`](#9-switch-the-default-branch-of-the-azdo-repository-to-main)
@@ -226,7 +226,7 @@ Example for `dotnet/xharness`:
 
 ![Changing the default branch in GitHub](images/github-branch-rename-tool.png)
 
-## 6. Search your repository for any references to the `main` branch specific to your repo
+## 6. Search your repository for any references to the `master` branch specific to your repo
 
 Search your repository for any references to the `master` branch specific to your repo, replace them to `main` and push them to `main`.
 
