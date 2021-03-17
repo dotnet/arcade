@@ -91,7 +91,7 @@ else {
     Set-Content "$SourcesDirectory\Localize\LocProject-generated.json" $json
 
     if ((Get-FileHash "$SourcesDirectory\Localize\LocProject-generated.json").Hash -ne (Get-FileHash "$SourcesDirectory\Localize\LocProject.json").Hash) {
-        Write-PipelineTaskError -Type "warning" -Message "Existing LocProject.json differs from generated LocProject.json. Download LocProject-generated.json and compare them."
+        Write-PipelineTelemetryError -Category "OneLocBuild" -Message "Existing LocProject.json differs from generated LocProject.json. Download LocProject-generated.json and compare them."
         
         exit 1
     }
