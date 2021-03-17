@@ -42,18 +42,18 @@ namespace Microsoft.DotNet.PackageValidation
             PackageAsset asset = null;
             if (filePath.StartsWith("ref"))
             {
-                var stringParts = filePath.Split(@"/");
+                var stringParts = filePath.Split('/');
                 asset = new PackageAsset(NuGetFramework.Parse(stringParts[1]), null, filePath, AssetType.RefAsset);
             }
             else if (filePath.StartsWith("lib"))
             {
-                var stringParts = filePath.Split(@"/");
+                var stringParts = filePath.Split('/');
                 asset = new PackageAsset(NuGetFramework.Parse(stringParts[1]), null, filePath, AssetType.LibAsset);
 
             }
             else if (filePath.StartsWith("runtimes"))
             {
-                var stringParts = filePath.Split(@"/");
+                var stringParts = filePath.Split('/');
                 asset = new PackageAsset(NuGetFramework.Parse(stringParts[3]), stringParts[1], filePath, AssetType.RuntimeAsset);
             }
 
