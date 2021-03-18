@@ -870,6 +870,21 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 filenamesToExclude: FilenamesToExclude,
                 flatten: false),
 
+            // "VS 17.0",
+            new TargetChannelConfig(
+                1853,
+                false,
+                PublishingInfraVersion.All,
+                string.Empty,
+                FeedDotNetToolsShipping,
+                FeedDotNetToolsTransport,
+                FeedDotNetToolsSymbols,
+                FeedForChecksums,
+                FeedForInstallers,
+                PublicAndInternalSymbolTargets,
+                filenamesToExclude: FilenamesToExclude,
+                flatten: false),
+
             // "VS Master",
             new TargetChannelConfig(
                 1012,
