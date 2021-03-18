@@ -208,7 +208,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     HandlePackagePublishingAsync(buildAssets),
                     HandleBlobPublishingAsync(buildAssets),
                     HandleSymbolPublishingAsync(PdbArtifactsBasePath, MsdlToken,
-                        SymWebToken, SymbolPublishingExclusionsFile, PublishSpecialClrFiles,temporarySymbolsLocation)
+                        SymWebToken, SymbolPublishingExclusionsFile, PublishSpecialClrFiles, buildAssets ,temporarySymbolsLocation)
                 });
 
                 DeleteTemporaryFiles(temporarySymbolsLocation);
