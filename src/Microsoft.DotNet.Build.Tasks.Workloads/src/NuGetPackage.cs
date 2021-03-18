@@ -20,8 +20,9 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
     /// </summary>
     public class NugetPackage
     {
-        
-
+        /// <summary>
+        /// The package authors.
+        /// </summary>
         public string Authors
         {
             get;
@@ -79,8 +80,8 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         public void Extract(string destinationDirectory, IEnumerable<string> exclusionPatterns)
         {
             if (Directory.Exists(destinationDirectory))
-            { 
-                Directory.Delete(destinationDirectory, recursive: true); 
+            {
+                Directory.Delete(destinationDirectory, recursive: true);
             }
             Directory.CreateDirectory(destinationDirectory);
             ZipFile.ExtractToDirectory(PackagePath, destinationDirectory);
@@ -107,7 +108,5 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                 }
             }
         }
-
-       
     }
 }

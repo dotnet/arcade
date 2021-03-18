@@ -13,20 +13,8 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
     /// <summary>
     /// Generates the SWIX authoring for a component or component group.
     /// </summary>
-    public class GenerateVisualStudioComponent : Task
+    public class GenerateVisualStudioComponent : GenerateTaskBase
     {
-        /// <summary>
-        /// The base path where the project source will be generated.
-        /// </summary>
-        [Required]
-        public string IntermediateOutputBase
-        {
-            get;
-            set;
-        }
-
-        internal string IntermediateOutputPath => Path.Combine(IntermediateOutputBase, ComponentName);
-
         /// <summary>
         /// When <see langword="true"/>, the component is visible in the individual components tab.
         /// </summary>
@@ -111,9 +99,10 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
 
             try
             {
-                string componentSwr = EmbeddedTemplates.Extract("component.swr", IntermediateOutputPath);
-                string componentResSwr = EmbeddedTemplates.Extract("component.res.swr", IntermediateOutputPath);
-                GeneratedSwixProject = EmbeddedTemplates.Extract("component.swixproj", IntermediateOutputPath, ComponentName + ".swixproj");
+                string swixSourceDirectory = Path.Combine(SourceDirectory, "components", ComponentName);
+                string componentSwr = EmbeddedTemplates.Extract("component.swr", swixSourceDirectory);
+                string componentResSwr = EmbeddedTemplates.Extract("component.res.swr", swixSourceDirectory);
+                GeneratedSwixProject = EmbeddedTemplates.Extract("component.swixproj", swixSourceDirectory, ComponentName + ".swixproj");
 
                 Utils.StringReplace(componentSwr, GetReplacementTokens(), Encoding.UTF8);
                 Utils.StringReplace(componentResSwr, GetReplacementTokens(), Encoding.UTF8);

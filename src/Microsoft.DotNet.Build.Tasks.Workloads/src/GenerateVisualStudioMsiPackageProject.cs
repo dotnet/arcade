@@ -13,12 +13,19 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
 
     public class GenerateVisualStudioMsiPackageProject : GenerateTaskBase
     {
+        /// <summary>
+        /// The OS architecture targeted by the MSI.
+        /// </summary>
+        [Required]
         public string Chip
         {
             get;
             set;
         }
 
+        /// <summary>
+        /// The path of the MSI file.
+        /// </summary>
         public string MsiPath
         {
             get;
@@ -26,7 +33,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         }
 
         /// <summary>
-        /// The name of the Visual Studio package, e.g. Microsoft.VisualStudio.Foo
+        /// The name of the Visual Studio package (ID), e.g. "Microsoft.VisualStudio.X.Y.Z".
         /// </summary>
         [Required]
         public string PackageName
@@ -35,18 +42,38 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             set;
         }
 
+        /// <summary>
+        /// The version of the MSI payload package in the Visual Studio manifest. 
+        /// </summary>
         public Version Version
         {
             get;
             set;
         }
 
+        /// <summary>
+        /// The path of the generated .swixproj file.
+        /// </summary>
+        [Output]
+        public string SwixProject
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// The size of the MSI in bytes.
+        /// </summary>
         internal long PayloadSize
         {
             get;
             set;
         }
 
+        /// <summary>
+        /// The size of the installation in bytes. The size is an estimate based on the data in the File table, multiplied
+        /// by a factor to account for registry entries in the component database, a.k.a, Darwin descriptors.
+        /// </summary>
         internal long InstallSize
         {
             get;
@@ -78,6 +105,8 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
 
                 Utils.StringReplace(msiSwr, GetReplacementTokens(), Encoding.UTF8);
                 Utils.StringReplace(msiSwixProj, GetReplacementTokens(), Encoding.UTF8);
+
+                SwixProject = msiSwixProj;
             }
             catch (Exception e)
             {

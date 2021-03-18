@@ -61,6 +61,9 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             set;
         } = "packs";
 
+        /// <summary>
+        /// Gets or sets whether a corresponding SWIX project for each MSI should be generated.
+        /// </summary>
         public bool GenerateSwixAuthoring
         {
             get;
@@ -265,18 +268,24 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
 
                 TaskItem msi = new TaskItem(light.OutputFile);
                 msi.SetMetadata("Platform", platform);
-                msis.Add(msi);
 
                 if (GenerateSwixAuthoring)
                 {
-                    GenerateSwixPackageAuthoring(light.OutputFile, $"{nupkg.Id}", platform);
+                    string swixProject = GenerateSwixPackageAuthoring(light.OutputFile, $"{nupkg.Id}", platform);
+
+                    if (!string.IsNullOrWhiteSpace(swixProject))
+                    {
+                        msi.SetMetadata("SwixProject", swixProject);
+                    }
                 }
+                
+                msis.Add(msi);
             }
 
             return msis;
         }
 
-        public void GenerateSwixPackageAuthoring(string msiPath, string packageId, string platform)
+        public string GenerateSwixPackageAuthoring(string msiPath, string packageId, string platform)
         {
             GenerateVisualStudioMsiPackageProject swixTask = new()
             {                
@@ -291,7 +300,9 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             if (!swixTask.Execute())
             {
                 Log.LogError($"Failed to generate SWIX authoring for '{msiPath}'");
-            }            
+            }
+
+            return swixTask.SwixProject;
         }
 
         private IEnumerable<string> GetExlusionPatterns()

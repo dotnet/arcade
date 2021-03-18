@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <PayloadSource Condition="'$(MsiPayloadSource)' == ''">"__VS_PAYLOAD_SOURCE__"</PayloadSource>
+    <PayloadSource Condition="'$(PayloadSource)' == ''">__VS_PAYLOAD_SOURCE__</PayloadSource>
   </PropertyGroup>
 
   <PropertyGroup>

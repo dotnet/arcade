@@ -22,7 +22,15 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             set;
         }
 
+        /// <summary>
+        /// Root directory for generated source files.
+        /// </summary>
         public string SourceDirectory => Path.Combine(IntermediateBaseOutputPath, "src");
+
+        /// <summary>
+        /// Root directory for extracting package content.
+        /// </summary>
+        public string PackageDirectory => Path.Combine(IntermediateBaseOutputPath, "pkg");
 
         /// <summary>
         /// The directory containing the WiX toolset binaries.

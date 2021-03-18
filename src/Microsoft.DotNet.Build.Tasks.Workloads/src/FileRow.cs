@@ -1,11 +1,13 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using System;
 using Microsoft.Deployment.WindowsInstaller;
 
 namespace Microsoft.DotNet.Build.Tasks.Workloads
 {
+    /// <summary>
+    /// Describes a single row of an MSI File table.
+    /// </summary>
     public class FileRow
     {
         public int Attributes

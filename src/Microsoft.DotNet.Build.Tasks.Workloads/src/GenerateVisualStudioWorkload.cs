@@ -14,27 +14,9 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.src
 {
     public class GenerateVisualStudioWorkload : GenerateTaskBase
     {
+        
         /// <summary>
-        /// The NuGet package containing the workload manifest and targets.
-        /// </summary>
-
-        public string WorkloadManifestPackage
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// The manifest file describing the workload.
-        /// </summary>
-        public string WorkloadManifest
-        {
-            get;
-            set;
-        }
-
-        /// <summary>
-        /// A set of workload manifest items.
+        /// A set of workload manifest files.
         /// </summary>
         public ITaskItem[] WorkloadManifests
         {
@@ -42,43 +24,37 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.src
             set;
         }
 
-        public string OutputPath
+        /// <summary>
+        /// Set of packages containing workload manifests.
+        /// </summary>
+        public ITaskItem[] WorkloadPackages
         {
             get;
             set;
         }
-
-        public string VisualStudioComponentSourcePath;
-
-        public string PackagesPath
-        {
-            get;
-            set;
-        }
-
-        //public string WixToolsetPath
-        //{
-        //    get;
-        //    set;
-        //}
-
-        public string SrcSetupPackagesPath => Path.Combine(IntermediateBaseOutputPath, "src", "setuppackages");
-
-        public string WorkloadPackPackages => Path.Combine(IntermediateBaseOutputPath, "packs");
-
-        public string WorkloadDefinitionPath;
 
         /// <summary>
-        /// The path where the workload manifest.json file resides.
+        /// 
         /// </summary>
-        public string WorkloadManifestPath => "";
+        [Output]
+        public ITaskItem[] SwixProjects
+        {
+            get;
+            set;
+        }
 
         public override bool Execute()
         {
             try
             {
-                PackagesPath = Path.GetFullPath(PackagesPath);
-                ProcessWorkloadManifests();
+                List<ITaskItem> swixProjects = new();
+
+                foreach (ITaskItem workloadPackage in WorkloadPackages)
+                {
+                    swixProjects.AddRange(ProcessWorkloadManifest(workloadPackage.GetMetadata("FullPath")));
+                }
+
+                SwixProjects = swixProjects.ToArray();
             }
             catch (Exception e)
             {
@@ -89,132 +65,30 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.src
             return !Log.HasLoggedErrors;
         }
 
-        //public IEnumerable<> GetWorkloadPacks()
-        //{
-
-        //}
-
-        public void ProcessWorkloadManifests()
+        public IEnumerable<ITaskItem> ProcessWorkloadManifest(string workloadManifestPackage)
         {
-            List<WorkloadPackMsiData> msiPacks = new();
+            NugetPackage workloadPackage = new NugetPackage(workloadManifestPackage, Log);
 
-            foreach (ITaskItem workloadManifestItem in WorkloadManifests)
+            string packageContentPath = Path.Combine(PackageDirectory, workloadPackage.Id, workloadPackage.Version.ToNormalizedString());
+            workloadPackage.Extract(packageContentPath, Enumerable.Empty<string>());
+            string workloadManifestJsonPath = Directory.GetFiles(packageContentPath, "WorkloadManifest.json").FirstOrDefault();
+
+            if (string.IsNullOrWhiteSpace(workloadManifestJsonPath))
             {
-                var VSW = new VisualStudioWorkload(workloadManifestItem.ItemSpec, OutputPath, PackagesPath, Log);
-
-                msiPacks.AddRange(VSW.MsiPacks);
-
-               
+                throw new FileNotFoundException($"Unable to locate WorkloadManifest.json under '{packageContentPath}'.");
             }
 
-            // Dedupe to account for potentially shared packs across all the workloads
-            //IEnumerable<GenerateWorkloadPackMsi> generateMsiTasks = msiPacks.
-            //    Distinct().
-            //    Select(p => new GenerateWorkloadPackMsi(BuildEngine, p, IntermediateBaseOutputPath, WixToolsetPath, OutputPath));
+            WorkloadManifest manifest = WorkloadManifestReader.ReadWorkloadManifest(File.OpenRead(workloadManifestJsonPath));
 
-            //foreach (GenerateWorkloadPackMsi task in generateMsiTasks)
-            //{
-            //    if (!task.Execute())
-            //    {
-            //        throw new Exception($"Failed to generate workload pack for {task.SourcePackage} ({task.Platform}).");
-            //    }
-            //}
+            List<TaskItem> swixProjects = new();
 
-
-        }
-
-        public void ProcessWorkloadManifest()
-        {
-            NugetPackage workloadPackage = new NugetPackage(WorkloadManifestPackage, Log);
-            WorkloadDefinitionPath = Path.Combine(IntermediateBaseOutputPath, workloadPackage.Id, workloadPackage.Version.ToString());
-            workloadPackage.Extract(WorkloadDefinitionPath, Enumerable.Empty<string>());
-
-            string manifestJsonPath = Directory.GetFiles(WorkloadDefinitionPath, "workloadManifest.json").FirstOrDefault();
-
-            if (manifestJsonPath is null)
+            foreach (WorkloadDefinition workloadDefinition in manifest.Workloads.Values)
             {
-                throw new FileNotFoundException($"Unable to locate a workload manifest file under '{WorkloadDefinitionPath}'.");
+                ComponentPackage package = ComponentPackage.Create(manifest, workloadDefinition);
+                swixProjects.Add(package.Generate(Path.Combine(SourceDirectory, $"{workloadDefinition.Id}.{manifest.Version}.0")));
             }
 
-            WorkloadManifest manifest = WorkloadManifestReader.ReadWorkloadManifest(File.OpenRead(manifestJsonPath));
-
-            foreach (WorkloadDefinitionId id in manifest.Workloads.Keys)
-            {
-                string safeComponentId = Utils.ToSafeId(id.ToString());
-                Log.LogMessage(MessageImportance.High, $"Processing workload definition: {id} ({safeComponentId})");
-
-                VisualStudioComponentSourcePath = Path.Combine(IntermediateBaseOutputPath, safeComponentId,
-                  workloadPackage.Version.ToString());
-
-                EmbeddedTemplates.Extract("component.swr", VisualStudioComponentSourcePath);
-                EmbeddedTemplates.Extract("component.res.swr", VisualStudioComponentSourcePath);
-                EmbeddedTemplates.Extract("component.swixproj", VisualStudioComponentSourcePath, safeComponentId + ".swixproj");
-
-                foreach (WorkloadPackId packId in manifest.Packs.Keys)
-                {
-                    GeneratePacks(manifest.Packs[packId]);
-                }
-            }
-            //object manifestJson = JsonSerializer.Deserialize(manifestJsonPath);
-        }
-
-        public void GeneratePacks(WorkloadPack pack)
-        {
-            Log.LogMessage(MessageImportance.High, $"Generating MSI from workload pack: {pack.Id}");
-
-            if (!pack.IsAlias)
-            {
-                string sourcePackage = Path.Combine(PackagesPath, $"{pack.Id}.{pack.Version}.nupkg");
-
-                if (!File.Exists(sourcePackage))
-                {
-                    throw new FileNotFoundException($"Unable to find workload pack '{sourcePackage}'");
-                }
-
-                //GenerateInstaller giTask = new GenerateInstaller(BuildEngine)
-                //{
-                //    IntermediateBaseOutputPath = this.IntermediateBaseOutputPath,
-                //    SourcePackage = sourcePackage,
-                //    WixToolsetPath = this.WixToolsetPath,
-
-                //};
-            }
-            else
-            {
-                Log.LogMessage(MessageImportance.High, $"Processing aliases");
-            }
-
-            //NuGet.Common.ILogger logger = NullLogger.Instance;
-            //CancellationToken cancellationToken = CancellationToken.None;
-
-            //SourceCacheContext cache = new SourceCacheContext();
-            //SourceRepository repository = Repository.Factory.GetCoreV3(PackageFeed);
-            //FindPackageByIdResource resource = repository.GetResourceAsync<FindPackageByIdResource>().Result;
-
-
-            //NuGetVersion packageVersion = new NuGetVersion("12.0.1");
-            //using MemoryStream packageStream = new MemoryStream();
-
-            //bool x = resource.CopyNupkgToStreamAsync(
-            //    pack.Id.ToString(),
-            //    new NuGetVersion(pack.Version),
-            //    packageStream,
-            //    cache,
-            //    logger,
-            //    cancellationToken).Result;            
-        }
-
-        private Dictionary<string, string> GetReplacementTokens()
-        {
-            return new Dictionary<string, string>()
-            {
-                //{"__VS_PACKAGE_NAME__", ComponentName },
-                //{"__VS_PACKAGE_VERSION__", Version },
-                //{"__VS_IS_UI_GROUP__", IsUiGroup ? "yes" : "no" },
-                //{"__VS_COMPONENT_TITLE__", ComponentTitle },
-                //{"__VS_COMPONENT_DESCRIPTION__", ComponentDescription },
-                //{"__VS_COMPONENT_CATEGORY__", ComponentCategory }
-            };
+            return swixProjects;
         }
     }
 }
