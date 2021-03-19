@@ -32,8 +32,8 @@ Some of the content for this template was taken from [this article](https://medi
 - How will we have confidence in the deployments/shipping of the components of this epic? 
 - Identifying secrets (e.g. PATs, certificates, et cetera) that will be used (new ones to be created; existing ones to be used).
     - Instructions for rotating secret (if the secret is new)
-- Does this change any existing SDL threat model?
-- Does this require a new SDL threat model?
+- Does this change any existing SDL threat or data privacy models? (models can be found in [core-eng/SDL](https://github.com/dotnet/core-eng/SDL) folder)
+- Does this require a new SDL threat or data privacy models?
 - Steps for setting up repro/test/dev environments?
 
 #### Rollout and Deployment
