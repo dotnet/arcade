@@ -148,7 +148,7 @@ namespace Microsoft.DotNet.SharedFramework.Sdk
                         StringBuilder publicKeyTokenBuilder = new StringBuilder(len * 2);
                         for (int i = 0; i < len; i++)
                         {
-                            publicKeyTokenBuilder.Append(publicKeyToken[i].ToString("x", CultureInfo.InvariantCulture));
+                            publicKeyTokenBuilder.Append(publicKeyToken[i].ToString("x2", CultureInfo.InvariantCulture));
                         }
                         publicKeyTokenHex = publicKeyTokenBuilder.ToString();
                     }
