@@ -47,9 +47,9 @@
       <Uri>https://github.com/dotnet/roslyn</Uri>
       <Sha>59eedc33d35754759994155ea2f4e1012a9951e3</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.NET.ILLink.Tasks" Version="6.0.100-preview.2.21168.1">
+    <Dependency Name="Microsoft.NET.ILLink.Tasks" Version="6.0.100-preview.2.21169.1">
       <Uri>https://github.com/mono/linker</Uri>
-      <Sha>9eff8c6ce48cb15cafb8eef4aaf853675b05f9d9</Sha>
+      <Sha>e5f26cfc07144cf724bb93a4db61682ccc2033d5</Sha>
     </Dependency>
     <Dependency Name="Microsoft.SourceLink.GitHub" Version="1.1.0-beta-21151-02">
       <Uri>https://github.com/dotnet/sourcelink</Uri>
@@ -68,9 +68,9 @@
       <Uri>https://github.com/dotnet/symreader-converter</Uri>
       <Sha>c5ba7c88f92e2dde156c324a8c8edc04d9fa4fe0</Sha>
     </Dependency>
-    <Dependency Name="XliffTasks" Version="1.0.0-beta.21153.1">
+    <Dependency Name="XliffTasks" Version="1.0.0-beta.21168.1">
       <Uri>https://github.com/dotnet/xliff-tasks</Uri>
-      <Sha>f330177980c754b02cf80067f3bdd07454d5fccd</Sha>
+      <Sha>fd383f703f849e610b5075278676f0f23992c88a</Sha>
     </Dependency>
     <Dependency Name="Microsoft.SourceBuild.Intermediate.source-build-reference-packages" Version="5.0.0-alpha.1.20473.1">
       <Uri>https://github.com/dotnet/source-build-reference-packages</Uri>
