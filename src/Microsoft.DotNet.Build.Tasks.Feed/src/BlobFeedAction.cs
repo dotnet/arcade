@@ -1,23 +1,21 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.DotNet.Build.CloudTestTasks;
 using Microsoft.WindowsAzure.Storage;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
-using NuGet.Packaging;
 using NuGet.Packaging.Core;
 using Sleet;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.IO;
-using System.Linq;
-using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
 using MSBuild = Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed
@@ -140,6 +138,66 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             }
         }
 
+        public async Task UploadAssetAsync(
+            ITaskItem item,
+            PushOptions options)
+        {
+            string relativeBlobPath = item.GetMetadata("RelativeBlobPath");
+
+            if (string.IsNullOrEmpty(relativeBlobPath))
+            {
+                string fileName = Path.GetFileName(item.ItemSpec);
+                string recursiveDir = item.GetMetadata("RecursiveDir");
+                relativeBlobPath = $"{recursiveDir}{fileName}";
+            }
+
+            relativeBlobPath = $"{RelativePath}{relativeBlobPath}".Replace("\\", "/");
+
+            if (relativeBlobPath.Contains("//"))
+            {
+                Log.LogError(
+                    $"Item '{item.ItemSpec}' RelativeBlobPath contains virtual directory " +
+                    $"without name (double forward slash): '{relativeBlobPath}'");
+                return;
+            }
+
+            Log.LogMessage($"Uploading {relativeBlobPath}");
+            try
+            {
+                AzureStorageUtils blobUtils = new AzureStorageUtils(AccountName, AccountKey, ContainerName);
+
+                if (!options.AllowOverwrite && await blobUtils.CheckIfBlobExistsAsync(relativeBlobPath))
+                {
+                    if (options.PassIfExistingItemIdentical)
+                    {
+                        if (!await blobUtils.IsFileIdenticalToBlobAsync(item.ItemSpec, relativeBlobPath))
+                        {
+                            Log.LogError(
+                                $"Item '{item}' already exists with different contents " +
+                                $"at '{relativeBlobPath}'");
+                        }
+                    }
+                    else
+                    {
+                        Log.LogError($"Item '{item}' already exists at '{relativeBlobPath}'");
+                    }
+                }
+                else
+                {
+                    using (FileStream stream =
+                        new FileStream(item.ItemSpec, FileMode.Open, FileAccess.Read, FileShare.Read))
+                    {
+                        Log.LogMessage($"Uploading {item} to {relativeBlobPath}.");
+                        await blobUtils.UploadBlockBlobAsync(item.ItemSpec, relativeBlobPath, stream);
+                    }
+                }
+            }
+            catch (Exception exc)
+            {
+                Log.LogError($"Unable to upload to {relativeBlobPath} in Azure Storage account {AccountName}/{ContainerName} due to {exc}.");
+                throw;
+            }
+        }
         public async Task UploadAssetAsync(
             ITaskItem item,
             SemaphoreSlim clientThrottle,
