@@ -22,6 +22,7 @@ jobs:
         pipeline: $(AzDOPipelineId)
         buildId: $(AzDOBuildId)
         artifactName: BlobArtifacts
+        checkDownloadedFiles: true
 
     - task: PowerShell@2
       displayName: Validate

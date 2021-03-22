@@ -41,6 +41,7 @@ jobs:
           AssetManifests/**
           PdbArtifacts/**
         downloadPath: '$(Build.ArtifactStagingDirectory)'
+        checkDownloadedFiles: true
 
     - task: NuGetToolInstaller@1
       displayName: 'Install NuGet.exe'

@@ -115,7 +115,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             string wrapperScriptName = IsPosixShell ? PosixAndroidWrapperScript : NonPosixAndroidWrapperScript;
 
             string xharnessHelixWrapperScript = IsPosixShell ? $"chmod +x ./{wrapperScriptName} && ./{wrapperScriptName}"
-                                                             : $"{wrapperScriptName}";
+                                                             : $"call {wrapperScriptName}";
 
             string xharnessRunCommand = $"{xharnessHelixWrapperScript} " +
                                         $"dotnet exec \"{(IsPosixShell ? "$XHARNESS_CLI_PATH" : "%XHARNESS_CLI_PATH%")}\" android test " +

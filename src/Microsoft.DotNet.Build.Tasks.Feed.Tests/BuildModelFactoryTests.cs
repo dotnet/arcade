@@ -363,6 +363,19 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 new TaskItem(localPackagePath, new Dictionary<string, string>()
                 {
                     { "CertificateName", "IHasACert2" }
+                }),
+                // Added per issue: dotnet/arcade#7064
+                new TaskItem("Microsoft.DiaSymReader.dll", new Dictionary<string, string>()
+                {
+                    { "CertificateName", "MicrosoftWin8WinBlue" },
+                    { "TargetFramework", ".NETFramework,Version=v2.0" },
+                    { "PublicKeyToken", "31bf3856ad364e35" }
+                }),
+                new TaskItem("Microsoft.DiaSymReader.dll", new Dictionary<string, string>()
+                {
+                    { "CertificateName", "Microsoft101240624" },
+                    { "TargetFramework", ".NETStandard,Version=v1.1" },
+                    { "PublicKeyToken", "31bf3856ad364e35" }
                 })
             };
 
@@ -476,6 +489,20 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                         item.PublicKeyToken.Should().Be("abcdabcdabcdabcd");
                     });
                 modelFromFile.SigningInformation.FileSignInfo.Should().SatisfyRespectively(
+                    item =>
+                    {
+                        item.Include.Should().Be("Microsoft.DiaSymReader.dll");
+                        item.CertificateName.Should().Be("Microsoft101240624");
+                        item.TargetFramework.Should().Be(".NETStandard,Version=v1.1");
+                        item.PublicKeyToken.Should().Be("31bf3856ad364e35");
+                    },
+                    item =>
+                    {
+                        item.Include.Should().Be("Microsoft.DiaSymReader.dll");
+                        item.CertificateName.Should().Be("MicrosoftWin8WinBlue");
+                        item.TargetFramework.Should().Be(".NETFramework,Version=v2.0");
+                        item.PublicKeyToken.Should().Be("31bf3856ad364e35");
+                    },
                     item =>
                     {
                         item.Include.Should().Be("test-package-a.1.0.0.nupkg");

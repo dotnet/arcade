@@ -47,13 +47,13 @@ namespace Microsoft.DotNet.XUnitExtensions
                 // Null condition member names are silently tolerated.
                 if (string.IsNullOrWhiteSpace(entry)) continue;
 
-                MethodInfo conditionMethodInfo = ConditionalTestDiscoverer.LookupConditionalMethod(calleeType, entry);
-                if (conditionMethodInfo == null)
+                Func<bool> conditionFunc = ConditionalTestDiscoverer.LookupConditionalMember(calleeType, entry);
+                if (conditionFunc == null)
                 {
-                    throw new InvalidOperationException($"Unable to get MethodInfo, please check input for {entry}.");
+                    throw new InvalidOperationException($"Unable to get member, please check input for {entry}.");
                 }
 
-                if (!(bool)conditionMethodInfo.Invoke(null, null)) return false;
+                if (!conditionFunc()) return false;
             }
 
             return true;

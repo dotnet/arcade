@@ -60,8 +60,8 @@ namespace Microsoft.DotNet.XUnitExtensions
                     }
                 }
 
-                MethodInfo conditionMethodInfo;
-                if ((conditionMethodInfo = LookupConditionalMethod(declaringType, conditionMemberName)) == null)
+                Func<bool> conditionFunc;
+                if ((conditionFunc = LookupConditionalMember(declaringType, conditionMemberName)) == null)
                 {
                     throw new ConditionalDiscovererException(GetFailedLookupString(conditionMemberName, declaringType));
                 }
@@ -70,7 +70,7 @@ namespace Microsoft.DotNet.XUnitExtensions
                 // of them to produce a summary skip reason.
                 try
                 {
-                    if (!(bool)conditionMethodInfo.Invoke(null, null))
+                    if (!conditionFunc())
                     {
                         falseConditions.Add(conditionMemberName);
                     }
@@ -116,11 +116,11 @@ namespace Microsoft.DotNet.XUnitExtensions
         {
             return
                 $"An appropriate member '{name}' could not be found. " +
-                $"The conditional method needs to be a static method or property on the type {type} or any ancestor, " +
+                $"The conditional method needs to be a static method, property, or field on the type {type} or any ancestor, " +
                 "of any visibility, accepting zero arguments, and having a return type of Boolean.";
         }
         
-        internal static MethodInfo LookupConditionalMethod(Type t, string name)
+        internal static Func<bool> LookupConditionalMember(Type t, string name)
         {
             if (t == null || name == null)
                 return null;
@@ -129,13 +129,17 @@ namespace Microsoft.DotNet.XUnitExtensions
 
             MethodInfo mi = ti.GetDeclaredMethod(name);
             if (mi != null && mi.IsStatic && mi.GetParameters().Length == 0 && mi.ReturnType == typeof(bool))
-                return mi;
+                return () => (bool)mi.Invoke(null, null);
 
             PropertyInfo pi = ti.GetDeclaredProperty(name);
             if (pi != null && pi.PropertyType == typeof(bool) && pi.GetMethod != null && pi.GetMethod.IsStatic && pi.GetMethod.GetParameters().Length == 0)
-                return pi.GetMethod;
+                return () => (bool)pi.GetValue(null);
 
-            return LookupConditionalMethod(ti.BaseType, name);
+            FieldInfo fi = ti.GetDeclaredField(name);
+            if (fi != null && fi.FieldType == typeof(bool) && fi.IsStatic)
+                return () => (bool)fi.GetValue(null);
+
+            return LookupConditionalMember(ti.BaseType, name);
         }
 
         internal static bool CheckInputToSkipExecution(object[] conditionArguments, ref Type calleeType, ref string[] conditionMemberNames, ITestMethod testMethod = null)

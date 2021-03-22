@@ -22,6 +22,7 @@ jobs:
         pipeline: $(AzDOPipelineId)
         buildId: $(AzDOBuildId)
         artifactName: PackageArtifacts
+        checkDownloadedFiles: true
         itemPattern: |
           **
           !**/Microsoft.SourceBuild.Intermediate.*.nupkg
