@@ -26,8 +26,7 @@
     <InstallDotNetTool Name="$(_XHarnessPackageName)"
                        DestinationPath="$(ArtifactsTmpDir)"
                        Version="$(_XHarnessPackageVersion)"
-                       Source="$(XHarnessPackageSource)"
-                       DotnetPath="$(DotNetTool)">
+                       Source="$(XHarnessPackageSource)">
       <Output TaskParameter="ToolPath" PropertyName="_XHarnessCliPath" />
     </InstallDotNetTool>
 
