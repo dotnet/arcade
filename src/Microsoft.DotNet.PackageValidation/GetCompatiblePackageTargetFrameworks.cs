@@ -33,10 +33,8 @@ namespace Microsoft.DotNet.PackageValidation
                 foreach (var packagePath in PackagePaths)
                 {
                     Package package = NupkgParser.CreatePackageObject(packagePath);
-                    List<NuGetFramework> packageTargetFrameworks = package.PackageAssets.Where(t => t.AssetType != AssetType.RuntimeAsset).Select(t => t.TargetFramework).Distinct().ToList();
-
-                    List<NuGetFramework> frameworksToTest = GetTestFrameworks(packageTargetFrameworks);
-                    testProjects.AddRange(CreateItemFromTestFramework(package.Title, package.Version, frameworksToTest, GetRidsFromPackage(package)));
+                    List<NuGetFramework> frameworksToTest = GetTestFrameworks(package.ListFrameworksInPackage());
+                    testProjects.AddRange(CreateItemFromTestFramework(package.PackageId, package.Version, frameworksToTest, package.GetRids()));
                 }
                 
                 // Removing empty items.
@@ -50,7 +48,7 @@ namespace Microsoft.DotNet.PackageValidation
             return result && !Log.HasLoggedErrors;
         }
 
-        public static List<NuGetFramework> GetTestFrameworks(List<NuGetFramework> packageTargetFrameworks)
+        public static List<NuGetFramework> GetTestFrameworks(IEnumerable<NuGetFramework> packageTargetFrameworks)
         {
             List<NuGetFramework> frameworksToTest = new List<NuGetFramework>();
 
@@ -113,9 +111,9 @@ namespace Microsoft.DotNet.PackageValidation
             }
         }
     
-        public List<ITaskItem> CreateItemFromTestFramework(string title, string version, List<NuGetFramework> testFrameworks, string rids)
+        public IList<ITaskItem> CreateItemFromTestFramework(string title, string version, IEnumerable<NuGetFramework> testFrameworks, IEnumerable<string> rids)
         {
-            List<ITaskItem> testprojects = new List<ITaskItem>();
+            IList<ITaskItem> testprojects = new List<ITaskItem>();
             foreach (var framework in testFrameworks)
             {
                 var supportedPackage = new TaskItem(title);
@@ -123,41 +121,14 @@ namespace Microsoft.DotNet.PackageValidation
                 supportedPackage.SetMetadata("TargetFramework", framework.ToString());
                 supportedPackage.SetMetadata("TargetFrameworkShort", framework.GetShortFolderName());
 
-                if (!String.IsNullOrEmpty(rids))
+                if (rids != null)
                 {
-                    supportedPackage.SetMetadata("RuntimeIdentifiers", rids);
+                    supportedPackage.SetMetadata("RuntimeIdentifiers", string.Join(";", rids.Select(t => t + "-x64")).Replace("unix", "linux-x64;osx"));
                 }
                 testprojects.Add(supportedPackage);
             }
 
             return testprojects;
-        }
-    
-        public string GetRidsFromPackage(Package package)
-        {
-            List<string> rids = new List<string>();
-            foreach (var item in package.PackageAssets)
-            {
-                if (item.AssetType == AssetType.RuntimeAsset)
-                {
-                    string testRid = item.Rid;
-                    string testArch = "-x64";
-                    if (testRid == "unix")
-                    {
-                        if (!rids.Contains("linux" + testArch))
-                            rids.Add("linux" + testArch);
-                        
-                        if (!rids.Contains("osx" + testArch))
-                            rids.Add("osx" + testArch);
-                    }
-                    else
-                    {
-                        if (!rids.Contains(testRid + testArch))
-                            rids.Add(testRid + testArch);
-                    }             
-                }
-            }
-            return string.Join(";", rids);
         }
     }    
 }
