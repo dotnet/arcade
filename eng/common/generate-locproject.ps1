@@ -52,7 +52,7 @@ $locJson = @{
             LanguageSet = $LanguageSet
             LocItems = @(
                 $locFiles | ForEach-Object {
-                    $outputPath = "Localize\$(($_.DirectoryName | Resolve-Path -Relative) + "\")" 
+                    $outputPath = "$(($_.DirectoryName | Resolve-Path -Relative) + "\")" 
                     $continue = $true
                     foreach ($exclusion in $exclusions.Exclusions) {
                         if ($outputPath.Contains($exclusion))
