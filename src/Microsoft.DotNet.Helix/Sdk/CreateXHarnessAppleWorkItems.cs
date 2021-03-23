@@ -234,6 +234,11 @@ namespace Microsoft.DotNet.Helix.Sdk
 
         private void DownloadProvisioningProfiles()
         {
+            if (string.IsNullOrEmpty(ProvisioningProfileUrl))
+            {
+                return;
+            }
+
             string[] targets = AppBundles
                 .Select(appBundle => appBundle.TryGetMetadata(TargetPropName, out string target) ? target : null)
                 .Where(t => t != null)
