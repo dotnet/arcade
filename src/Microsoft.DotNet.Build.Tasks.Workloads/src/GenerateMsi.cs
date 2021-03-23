@@ -3,11 +3,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text;
 using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
 using Microsoft.NET.Sdk.WorkloadManifestReader;
 
 namespace Microsoft.DotNet.Build.Tasks.Workloads
@@ -37,6 +34,9 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             set;
         }
 
+        /// <summary>
+        /// The path of the NuGet package to convert into an MSI.
+        /// </summary>
         [Required]
         public string SourcePackage
         {
@@ -51,9 +51,18 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                 if (!Enum.TryParse(Kind, true, out WorkloadPackKind kind))
                 {
                     Log.LogError($"Invalid package kind ({Kind}).");
+                    return false;
                 }
-                                
+
                 string[] platforms = Platforms.Select(p => p.ItemSpec).ToArray();
+                IEnumerable<string> unsupportedPlatforms = platforms.Except(SupportedPlatforms);
+
+                if (unsupportedPlatforms.Count() > 0)
+                {
+                    Log.LogError($"Unsupported platforms detected: {String.Join(",", unsupportedPlatforms)}");
+                    return false;
+                }
+
                 List<ITaskItem> msis = new();
                 msis.AddRange(Generate(SourcePackage, OutputPath, GetInstallDir(kind), platforms));
                 Msis = msis.ToArray();

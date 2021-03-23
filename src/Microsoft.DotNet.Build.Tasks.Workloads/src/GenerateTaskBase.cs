@@ -32,8 +32,14 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         /// </summary>
         public string PackageDirectory => Path.Combine(IntermediateBaseOutputPath, "pkg");
 
+        /// <summary>
+        /// Root directory for generated SWIX projects.
+        /// </summary>
         public string SwixDirectory => Path.Combine(SourceDirectory, "swix");
 
+        /// <summary>
+        /// Root directory for generated MSI sources.
+        /// </summary>
         public string MsiDirectory => Path.Combine(SourceDirectory, "msi");
 
         /// <summary>

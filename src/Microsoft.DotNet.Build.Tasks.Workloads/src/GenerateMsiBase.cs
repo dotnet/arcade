@@ -28,14 +28,14 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         internal const string PackageContentDirectoryReference = "VersionDir";
 
         /// <summary>
-        /// The default set of platforms to use for building MSIs.
-        /// </summary>
-        internal static readonly string[] MsiPlatforms = new string[] { "x86", "x64", "arm64" };
-
-        /// <summary>
         /// The UUID namespace to use for generating a product code.
         /// </summary>
         internal static readonly Guid ProductCodeNamespaceUuid = Guid.Parse("3B04DD8B-41C4-4DA3-9E49-4B69F11533A7");
+
+        /// <summary>
+        /// The set of supported target platforms for MSIs.
+        /// </summary>
+        internal static readonly string[] SupportedPlatforms = new string[] { "x86", "x64", "arm64" };
 
         /// <summary>
         /// The UUID namesapce to use for generating an upgrade code.
@@ -58,7 +58,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         {
             get;
             set;
-        }        
+        }
 
         /// <summary>
         /// The set of MSIs that were produced.
@@ -136,7 +136,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                 }
 
                 // Compile the MSI sources
-                string candleIntermediateOutputPath = Path.Combine(IntermediateBaseOutputPath, "wixobj", 
+                string candleIntermediateOutputPath = Path.Combine(IntermediateBaseOutputPath, "wixobj",
                     $"{nupkg.Id}", $"{nupkg.Version}", platform);
 
                 CompileToolTask candle = new(BuildEngine, WixToolsetPath)
@@ -257,7 +257,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             yield return $@"ProductVersion={package.ProductVersion}";
             yield return $@"ProductCode={Utils.CreateUuid(ProductCodeNamespaceUuid, package.Identity.ToString() + $"{platform}"):B}";
             yield return $@"UpgradeCode={Utils.CreateUuid(UpgradeCodeNamespaceUuid, package.Identity.ToString() + $"{platform}"):B}";
-        }       
+        }
 
         /// <summary>
         /// Get the installation directory based on the kind of workload pack.
