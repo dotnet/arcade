@@ -390,7 +390,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             }
         }
 
-        private async Task<bool> PushAsync(IEnumerable<string> items, PushOptions options)
+        public async Task<bool> PushAsync(IEnumerable<string> items, PushOptions options)
         {
             LocalSettings settings = GetSettings();
             SleetLogger log = new SleetLogger(Log, NuGet.Common.LogLevel.Verbose);

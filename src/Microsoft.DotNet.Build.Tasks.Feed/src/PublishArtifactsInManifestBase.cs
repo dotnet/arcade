@@ -1186,7 +1186,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         }
                         string id;
                         string version;
-                        using var packageReader = new NuGet.Packaging.PackageArchiveReader(localBlobPath);
+                        using var packageReader = new PackageArchiveReader(localBlobPath);
 
                         PackageIdentity packageIdentity = packageReader.GetIdentity();
                         id = packageIdentity.Id;
@@ -1300,9 +1300,18 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     }
                     TryAddAssetLocation(package.Id, package.Version, buildAssets, feedConfig,
                         AddAssetLocationToAssetAssetLocationType.NugetFeed);
-                    IEnumerable<string> item = new List<string>();
-                    item.ToList().Add(localPackagePath);
-                    await blobFeedAction.PushToFeedAsync(item, pushOptions);
+                    IEnumerable<string> items = new List<string>();
+                    items.ToList().Add(localPackagePath);
+                    Log.LogMessage(MessageImportance.Low, $"START pushing {packageFilename} to feed");
+                    try
+                    { 
+                        await blobFeedAction.PushAsync(items, pushOptions);
+                    }
+                    catch (Exception e)
+                    {
+                        Log.LogErrorFromException(e);
+                    }
+
                     DeleteTemporaryFile(localPackagePath);
                     DeleteTemporaryDirectory(temporaryPackageDirectory);
                 }
