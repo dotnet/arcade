@@ -643,7 +643,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public HttpClient CreateAzdoClient(string accountName,  bool download, string projectName = null, string versionOverride = null, string baseAddressSubpath = null)
         {
-            using HttpClientHandler handler = new HttpClientHandler { CheckCertificateRevocationList = true } ;
+            HttpClientHandler handler = new HttpClientHandler { CheckCertificateRevocationList = true } ;
             if (download)
             {
                 handler.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
