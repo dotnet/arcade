@@ -91,6 +91,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
             CreateRuntimeGroup("osx", "unix", "x64;arm64", "10.10;10.11;10.12;10.13;10.14;10.15;10.16;11.0"),
             CreateRuntimeGroup("win", "any", "x64;x86;arm;arm64", "7;8;81;10", additionalQualifiers:"aot", omitVersionDelimiter:true),
             CreateRuntimeGroup("debian", "linux", "x64;x86;arm;armel;arm64", "8;9;10", treatVersionsAsCompatible:false),
+            CreateRuntimeGroup("ubuntu", "debian", "x64;x86;arm", "14.04;14.10;15.04;15.10", treatVersionsAsCompatible:false),
             CreateRuntimeGroup("rhel", "linux", "x64", "6"),
             CreateRuntimeGroup("rhel", "linux", "x64", "7;7.0;7.1;7.2;7.3;7.4;7.5;7.6"),
             CreateRuntimeGroup("rhel", "linux", "x64;arm64", "8;8.0;8.1"),

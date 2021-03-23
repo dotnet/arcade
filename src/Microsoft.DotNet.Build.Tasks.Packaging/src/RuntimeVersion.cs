@@ -11,6 +11,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
     /// </summary>
     internal sealed class RuntimeVersion : IComparable, IComparable<RuntimeVersion>, IEquatable<RuntimeVersion>
     {
+        private string versionString;
         private Version version;
         private bool hasMinor;
 
@@ -18,18 +19,18 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
         {
             // intentionally don't support the type of version that omits the separators as it is abiguous.
             // for example Windows 8.1 was encoded as win81, where as Windows 10.0 was encoded as win10
-
-            if (versionString.IndexOf('.') == -1)
+            this.versionString = versionString;
+            string toParse = versionString;
+            if (toParse.IndexOf('.') == -1)
             {
-                versionString += ".0";
+                toParse += ".0";
                 hasMinor = false;
             }
             else
             {
                 hasMinor = true;
             }
-            version = Version.Parse(versionString);
-
+            version = Version.Parse(toParse);
         }
 
         public int CompareTo(object obj)
@@ -62,6 +63,8 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
                 {
                     return 1;
                 }
+
+                return string.CompareOrdinal(versionString, other.versionString);
             }
 
             return versionResult;
@@ -70,9 +73,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
         public bool Equals(RuntimeVersion other)
         {
             return object.ReferenceEquals(other, this) ||
-                (!(other is null) &&
-                (hasMinor == other.hasMinor) &&
-                version.Equals(other.version));
+                versionString.Equals(other.versionString, StringComparison.Ordinal);
         }
 
         public override bool Equals(object obj)
@@ -82,12 +83,12 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
 
         public override int GetHashCode()
         {
-            return version.GetHashCode() | (hasMinor ? 1 : 0);
+            return versionString.GetHashCode();
         }
 
         public override string ToString()
         {
-            return hasMinor ? version.ToString() : version.Major.ToString();
+            return versionString;
         }
 
         public static bool operator ==(RuntimeVersion v1, RuntimeVersion v2)
