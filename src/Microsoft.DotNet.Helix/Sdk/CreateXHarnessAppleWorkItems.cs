@@ -37,6 +37,8 @@ namespace Microsoft.DotNet.Helix.Sdk
 
         /// <summary>
         /// URL template to get the provisioning profile that will be used to sign the app from (in case of real device targets).
+        /// The URL is a template in the following format:
+        /// https://storage.azure.com/signing/NET_Apple_Development_{PLATFORM}.mobileprovision
         /// </summary>
         public string ProvisioningProfileUrl { get; set; }
 
@@ -45,7 +47,15 @@ namespace Microsoft.DotNet.Helix.Sdk
         /// </summary>
         public string TmpDir { get; set; }
 
-        private string ProvisioningProfileFileName(string platform) => ProvisioningProfileUrl.Split('/').Last().Replace("{PLATFORM}", platform);
+        private enum TargetPlatform
+        {
+            iOS,
+            tvOS,
+        }
+
+        private string GetProvisioningProfileFileName(TargetPlatform platform) => Path.GetFileName(GetProvisioningProfileUrl(platform));
+
+        private string GetProvisioningProfileUrl(TargetPlatform platform) => ProvisioningProfileUrl.Replace("{PLATFORM}", platform.ToString());
 
         /// <summary>
         /// The main method of this MSBuild task which calls the asynchronous execution method and
@@ -152,11 +162,13 @@ namespace Microsoft.DotNet.Helix.Sdk
                     // StartsWith because suffix can be the target OS version
                     if (target.StartsWith("ios-device"))
                     {
-                        File.Copy(Path.Combine(TmpDir, ProvisioningProfileFileName("iOS")), provisioningProfileDest);
+                        string profilePath = Path.Combine(TmpDir, GetProvisioningProfileFileName(TargetPlatform.iOS));
+                        File.Copy(profilePath, provisioningProfileDest);
                     }
                     else if (target.StartsWith("tvos-device"))
                     {
-                        File.Copy(Path.Combine(TmpDir, ProvisioningProfileFileName("tvOS")), provisioningProfileDest);
+                        string profilePath = Path.Combine(TmpDir, GetProvisioningProfileFileName(TargetPlatform.tvOS));
+                        File.Copy(profilePath, provisioningProfileDest);
                     }
                 }
                 else
@@ -230,29 +242,20 @@ namespace Microsoft.DotNet.Helix.Sdk
             bool hasiOSTargets = targets.Contains("ios-device");
             bool hastvOSTargets = targets.Contains("tvos-device");
 
-            if (!hasiOSTargets && !hastvOSTargets)
-            {
-                return;
-            }
-
             if (hasiOSTargets)
             {
-                DownloadProvisioningProfile("iOS");
+                DownloadProvisioningProfile(TargetPlatform.iOS);
             }
 
             if (hastvOSTargets)
             {
-                DownloadProvisioningProfile("tvOS");
+                DownloadProvisioningProfile(TargetPlatform.tvOS);
             }
         }
 
-        private void DownloadProvisioningProfile(string platform)
+        private void DownloadProvisioningProfile(TargetPlatform platform)
         {
-            // The URL is a template in the following format:
-            // https://storage.azure.com/signing/NET_Apple_Development_{PLATFORM}.mobileprovision
-            var url = ProvisioningProfileUrl.Replace("{PLATFORM}", platform);
-            var fileName = url.Split('/').Last();
-            var targetFile = Path.Combine(TmpDir, ProvisioningProfileFileName(platform));
+            var targetFile = Path.Combine(TmpDir, GetProvisioningProfileFileName(platform));
 
             using var client = new WebClient();
             _helpers.DirectoryMutexExec(async () => {
@@ -264,7 +267,7 @@ namespace Microsoft.DotNet.Helix.Sdk
 
                 Log.LogMessage($"Downloading {platform} provisioning profile to {targetFile}");
 
-                await client.DownloadFileTaskAsync(new Uri(url), targetFile);
+                await client.DownloadFileTaskAsync(new Uri(GetProvisioningProfileUrl(platform)), targetFile);
             }, TmpDir);
         }
     }
