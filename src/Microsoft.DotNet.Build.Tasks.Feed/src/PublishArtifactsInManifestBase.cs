@@ -343,6 +343,17 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 }
             }
         }
+
+        /// <summary>
+        /// Publishes files to symbol server(s) one by one using Azure api to download files
+        /// </summary>
+        /// <param name="pdbArtifactsBasePath"></param>
+        /// <param name="msdlToken"></param>
+        /// <param name="symWebToken"></param>
+        /// <param name="symbolPublishingExclusionsFile"></param>
+        /// <param name="publishSpecialClrFiles"></param>
+        /// <param name="buildAssets"></param>
+        /// <returns></returns>
        public async Task HandleSymbolPublishingOneByOneAsync(
             string pdbArtifactsBasePath,
             string msdlToken,
@@ -351,17 +362,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             bool publishSpecialClrFiles,
             Dictionary<string, HashSet<Asset>> buildAssets)
         {
-
             StringBuilder symbolLog = new StringBuilder();
             symbolLog.AppendLine("Publishing Symbols to Symbol server: ");
-
             var symbolCategory = TargetFeedContentType.Symbols;
-
             string containerId = await GetContainerIdAsync();
-
             HashSet<string> symbolsToPublish = new HashSet<string>();
             //Get all the symbol file names
-
             foreach (var asset in buildAssets)
             {
                 var name = asset.Key;
@@ -373,9 +379,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     
                 }
             }
-
             HashSet<TargetFeedConfig> feedConfigsForSymbols = FeedConfigs[symbolCategory];
-
             Dictionary<string, string> serversToPublish =
                 GetTargetSymbolServers(feedConfigsForSymbols, msdlToken, symWebToken);
 
@@ -415,11 +419,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             false,
                             true);
                     }
-
                     DeleteTemporaryFile(localSymbolPath);
                     DeleteTemporaryDirectory(temporarySymbDirectory);
                 }
-
                 symbolLog.AppendLine(
                     $"Performing symbol publishing... \nExpirationInDays : {ExpirationInDays} \nConvertPortablePdbsToWindowsPdb : false \ndryRun: false ");
                 symbolLog.Append($"\nTotal number of symbol files : {symbolsToPublish.Count}");
@@ -427,9 +429,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 symbolLog.AppendLine();
                 Log.LogMessage(MessageImportance.High, symbolLog.ToString());
                 symbolLog.Clear();
-
             }
-
             // publishing pdb artifacts 
             if (Directory.Exists(pdbArtifactsBasePath))
             {
@@ -495,48 +495,57 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             {
                 StringBuilder symbolLog = new StringBuilder();
                 symbolLog.AppendLine("Publishing Symbols to Symbol server: ");
-                string[] fileEntries = Directory.GetFiles(temporarySymbolsLocation);
-
-                var category = TargetFeedContentType.Symbols;
-
-                HashSet<TargetFeedConfig> feedConfigsForSymbols = FeedConfigs[category];
-
-                Dictionary<string, string> serversToPublish =
-                    GetTargetSymbolServers(feedConfigsForSymbols, msdlToken, symWebToken);
-
-                IEnumerable<string> filesToSymbolServer = null;
-                if (Directory.Exists(pdbArtifactsBasePath))
+                if (Directory.Exists(temporarySymbolsLocation))
                 {
-                    var pdbEntries = System.IO.Directory.EnumerateFiles(pdbArtifactsBasePath, "*.pdb", System.IO.SearchOption.AllDirectories);
-                    var dllEntries = System.IO.Directory.EnumerateFiles(pdbArtifactsBasePath, "*.dll", System.IO.SearchOption.AllDirectories);
-                    filesToSymbolServer = pdbEntries.Concat(dllEntries);
+                    string[] fileEntries = Directory.GetFiles(temporarySymbolsLocation);
+
+                    var category = TargetFeedContentType.Symbols;
+
+                    HashSet<TargetFeedConfig> feedConfigsForSymbols = FeedConfigs[category];
+
+                    Dictionary<string, string> serversToPublish =
+                        GetTargetSymbolServers(feedConfigsForSymbols, msdlToken, symWebToken);
+
+                    IEnumerable<string> filesToSymbolServer = null;
+                    if (Directory.Exists(pdbArtifactsBasePath))
+                    {
+                        var pdbEntries = System.IO.Directory.EnumerateFiles(pdbArtifactsBasePath, "*.pdb",
+                            System.IO.SearchOption.AllDirectories);
+                        var dllEntries = System.IO.Directory.EnumerateFiles(pdbArtifactsBasePath, "*.dll",
+                            System.IO.SearchOption.AllDirectories);
+                        filesToSymbolServer = pdbEntries.Concat(dllEntries);
+                    }
+
+                    foreach (var server in serversToPublish)
+                    {
+                        var serverPath = server.Key;
+                        var token = server.Value;
+                        symbolLog.AppendLine($"Publishing symbol packages to {serverPath}:");
+                        symbolLog.AppendLine(
+                            $"Performing symbol publishing...\nSymbolServerPath : ${serverPath} \nExpirationInDays : {ExpirationInDays} \nConvertPortablePdbsToWindowsPdb : false \ndryRun: false \nTotal number of symbol files : {fileEntries.Length} ");
+                        await PublishSymbolsHelper.PublishAsync(
+                            Log,
+                            serverPath,
+                            token,
+                            fileEntries,
+                            filesToSymbolServer,
+                            null,
+                            ExpirationInDays,
+                            false,
+                            publishSpecialClrFiles,
+                            null,
+                            false,
+                            false,
+                            true);
+                        symbolLog.AppendLine("Successfully published to Symbol Server.");
+                        symbolLog.AppendLine();
+                        Log.LogMessage(MessageImportance.High, symbolLog.ToString());
+                        symbolLog.Clear();
+                    }
                 }
-
-                foreach (var server in serversToPublish)
+                else
                 {
-                    var serverPath = server.Key;
-                    var token = server.Value;
-                    symbolLog.AppendLine($"Publishing symbol packages to {serverPath}:");
-                    symbolLog.AppendLine(
-                        $"Performing symbol publishing...\nSymbolServerPath : ${serverPath} \nExpirationInDays : {ExpirationInDays} \nConvertPortablePdbsToWindowsPdb : false \ndryRun: false \nTotal number of symbol files : {fileEntries.Length} ");
-                    await PublishSymbolsHelper.PublishAsync(
-                        Log,
-                        serverPath,
-                        token,
-                        fileEntries,
-                        filesToSymbolServer,
-                        null,
-                        ExpirationInDays,
-                        false,
-                        publishSpecialClrFiles,
-                        null,
-                        false,
-                        false,
-                        true);
-                    symbolLog.AppendLine("Successfully published to Symbol Server.");
-                    symbolLog.AppendLine();
-                    Log.LogMessage(MessageImportance.High, symbolLog.ToString());
-                    symbolLog.Clear();
+                    Log.LogError("Temporary symbols directory does not exists.");
                 }
             }
             else
@@ -599,7 +608,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             Log.LogMessage(MessageImportance.High,
                                 $"Package {package.Id}@{package.Version} ({shippingString}) should go to {feedConfig.TargetURL} ({isolatedString}{internalString})");
                         }
-
                         switch (feedConfig.Type)
                         {
                             case FeedType.AzDoNugetFeed:
@@ -615,7 +623,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                                     $"Unknown target feed type for category '{category}': '{feedConfig.Type}'.");
                                 break;
                         }
-
                     }
                 }
                 else
@@ -623,7 +630,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     Log.LogError($"No target feed configuration found for artifact category: '{category}'.");
                 }
             }
-
             await Task.WhenAll(publishTasks);
         }
 
@@ -699,12 +705,20 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 {
                     Log.LogErrorFromException(e);
                 }
-
                 return containerId;
             }
         }
 
-        public async Task DownloadFileAsync(HttpClient client, string artifact, string containerId,
+        /// <summary>
+        /// Download artifact file using Azure API
+        /// </summary>
+        /// <param name="client"></param>
+        /// <param name="artifact"></param>
+        /// <param name="containerId"></param>
+        /// <param name="fileName"></param>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        private async Task DownloadFileAsync(HttpClient client, string artifact, string containerId,
             string fileName, string path)
         {
             string uri =
@@ -801,7 +815,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     Log.LogError($"No target feed configuration found for artifact category: '{category}'.");
                 }
             }
-
             await Task.WhenAll(publishTasks);
         }
 
@@ -1311,12 +1324,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     {
                         Log.LogErrorFromException(e);
                     }
-
                     DeleteTemporaryFile(localPackagePath);
                     DeleteTemporaryDirectory(temporaryPackageDirectory);
                 }
             }
         }
+
         private async Task PublishBlobsToAzureStorageNugetFeedAsync(
             HashSet<BlobArtifactModel> blobsToPublish,
             Dictionary<string, HashSet<Asset>> buildAssets,
@@ -1472,7 +1485,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             await PushNugetPackageAsync(feedConfig, httpClient, localPackagePath, id,
                 version,
                 feedAccount, feedVisibility, feedName);
-
         }
 
         /// <summary>

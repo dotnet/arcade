@@ -3,6 +3,7 @@ using System.IO;
 using Castle.DynamicProxy.Generators.Emitters.SimpleAST;
 using Microsoft.Arcade.Test.Common;
 using Microsoft.DotNet.Build.Tasks.Feed.Model;
+using Microsoft.DotNet.Maestro.Client.Models;
 using Xunit;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
@@ -85,7 +86,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 BuildEngine = buildEngine,
             };
             var path = TestInputs.GetFullPath("Symbol");
-            //var publish = task.HandleSymbolPublishingAsync(path, MsdlToken, SymWebToken, "", false, path);
+            var buildAsset = new Dictionary<string, HashSet<Asset>>();
+            var publish = task.HandleSymbolPublishingAsync(path, MsdlToken, SymWebToken, "", false, buildAsset, path);
             Assert.True(task.Log.HasLoggedErrors);
         }
 
