@@ -12,32 +12,54 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
     internal class RuntimeGroup
     {
         private const string rootRID = "any";
-        private const char VersionDelimiter = '.';
-        private const char ArchitectureDelimiter = '-';
-        private const char QualifierDelimiter = '-';
 
         public RuntimeGroup(ITaskItem item)
         {
             BaseRID = item.ItemSpec;
             Parent = item.GetString(nameof(Parent));
-            Versions = item.GetStrings(nameof(Versions));
+            Versions = new HashSet<RuntimeVersion>(item.GetStrings(nameof(Versions)).Select(v => new RuntimeVersion(v)));
             TreatVersionsAsCompatible = item.GetBoolean(nameof(TreatVersionsAsCompatible), true);
             OmitVersionDelimiter = item.GetBoolean(nameof(OmitVersionDelimiter));
             ApplyVersionsToParent = item.GetBoolean(nameof(ApplyVersionsToParent));
-            Architectures = item.GetStrings(nameof(Architectures));
+            Architectures = new HashSet<string>(item.GetStrings(nameof(Architectures)));
             AdditionalQualifiers = item.GetStrings(nameof(AdditionalQualifiers));
             OmitRIDs = new HashSet<string>(item.GetStrings(nameof(OmitRIDs)));
             OmitRIDDefinitions = new HashSet<string>(item.GetStrings(nameof(OmitRIDDefinitions)));
             OmitRIDReferences = new HashSet<string>(item.GetStrings(nameof(OmitRIDReferences)));
         }
 
+        private RuntimeGroup(RuntimeGroup template)
+        {
+            BaseRID = template.BaseRID;
+            Parent = template.Parent;
+            Versions = new HashSet<RuntimeVersion>();
+            TreatVersionsAsCompatible = template.TreatVersionsAsCompatible;
+            OmitVersionDelimiter = template.OmitVersionDelimiter;
+            ApplyVersionsToParent = template.ApplyVersionsToParent;
+            Architectures = new HashSet<string>();
+            AdditionalQualifiers = template.AdditionalQualifiers;
+            OmitRIDs = new HashSet<string>();
+            OmitRIDDefinitions = new HashSet<string>();
+            OmitRIDReferences = new HashSet<string>();
+        }
+
+        /// <summary>
+        /// Creates a new RuntimeGroup that matches existing template for parent and format with no architectures, versions or qualifiers.
+        /// </summary>
+        /// <param name="runtimeGroup"></param>
+        /// <returns></returns>
+        public static RuntimeGroup CreateFromTemplate(RuntimeGroup template)
+        {
+            return new RuntimeGroup(template);
+        }
+
         public string BaseRID { get; }
         public string Parent { get; }
-        public IEnumerable<string> Versions { get; }
+        public ICollection<RuntimeVersion> Versions { get; }
         public bool TreatVersionsAsCompatible { get; }
         public bool OmitVersionDelimiter { get; }
         public bool ApplyVersionsToParent { get; }
-        public IEnumerable<string> Architectures { get; }
+        public ICollection<string> Architectures { get; }
         public IEnumerable<string> AdditionalQualifiers { get; }
         public ICollection<string> OmitRIDs { get; }
         public ICollection<string> OmitRIDDefinitions { get; }
@@ -62,16 +84,15 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
             public IEnumerable<RID> Imports { get; }
         }
 
-        private RID CreateRuntime(string baseRid, string version = null, string architecture = null, string qualifier = null)
+
+        private RID CreateRuntime(string baseRid, RuntimeVersion version = null, string architecture = null, string qualifier = null)
         {
             return new RID()
             {
                 BaseRID = baseRid,
-                VersionDelimiter = OmitVersionDelimiter ? String.Empty : VersionDelimiter.ToString(),
                 Version = version,
-                ArchitectureDelimiter = ArchitectureDelimiter.ToString(),
+                OmitVersionDelimiter = OmitVersionDelimiter,
                 Architecture = architecture,
-                QualifierDelimiter = QualifierDelimiter.ToString(),
                 Qualifier = qualifier
             };
         }
@@ -102,7 +123,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
                 yield return new RIDMapping(CreateRuntime(BaseRID, architecture: architecture), imports);
             }
 
-            string lastVersion = null;
+            RuntimeVersion lastVersion = null;
             foreach (var version in Versions)
             {
                 // base + version =>
@@ -261,5 +282,4 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
             return new RuntimeGraph(GetRuntimeDescriptions());
         }
     }
-
 }

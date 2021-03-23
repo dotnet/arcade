@@ -53,6 +53,15 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
         }
 
         /// <summary>
+        /// Additional runtime identifiers to add to the graph.
+        /// </summary>
+        public string[] InferRuntimeIdentifiers
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// Optional source Runtime.json to use as a starting point when merging additional RuntimeGroups
         /// </summary>
         public string SourceRuntimeJson
@@ -133,7 +142,11 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
                 runtimeGraph = new RuntimeGraph();
             }
 
-            foreach (var runtimeGroup in RuntimeGroups.NullAsEmpty().Select(i => new RuntimeGroup(i)))
+            List<RuntimeGroup> runtimeGroups = RuntimeGroups.NullAsEmpty().Select(i => new RuntimeGroup(i)).ToList();
+
+            AddInferredRuntimeIdentifiers(runtimeGroups, InferRuntimeIdentifiers.NullAsEmpty());
+
+            foreach (var runtimeGroup in runtimeGroups)
             {
                 runtimeGraph = SafeMerge(runtimeGraph, runtimeGroup);
             }
@@ -267,6 +280,79 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
                     {
                         Log.LogError($"Runtime {runtimeDescription.RuntimeIdentifier} imports {import} which is not defined.");
                     }
+                }
+            }
+        }
+        private void AddInferredRuntimeIdentifiers(ICollection<RuntimeGroup> runtimeGroups, IEnumerable<string> runtimeIdentifiers)
+        {
+            var runtimeGroupsByBaseRID = runtimeGroups.GroupBy(rg => rg.BaseRID).ToDictionary(g => g.Key, g => new List<RuntimeGroup>(g.AsEnumerable()));
+
+            foreach(var runtimeIdentifer in runtimeIdentifiers)
+            {
+                RID rid = RID.Parse(runtimeIdentifer);
+
+                if (!rid.HasArchitecture() && !rid.HasVersion())
+                {
+                    Log.LogError($"Cannot add Runtime {rid} to any existing group since it has no architcture nor version.");
+                    continue;
+                }
+
+                if (runtimeGroupsByBaseRID.TryGetValue(rid.BaseRID, out var candidateRuntimeGroups))
+                {
+                    RuntimeGroup closestGroup = null;
+                    RuntimeVersion closestVersion = null;
+
+                    foreach(var candidate in candidateRuntimeGroups)
+                    {
+                        if (rid.HasArchitecture() && !candidate.Architectures.Contains(rid.Architecture))
+                        {
+                            continue;
+                        }
+
+                        foreach(var version in candidate.Versions)
+                        {
+                            if (closestVersion == null || 
+                               ((version <= rid.Version) &&
+                                (version > closestVersion)))
+                            {
+                                closestVersion = version;
+                                closestGroup = candidate;
+                            }
+                        }
+                    }
+
+                    if (closestGroup == null)
+                    {
+                        // couldn't find a close group, create a new one for just this arch/version
+                        RuntimeGroup templateGroup = candidateRuntimeGroups.First();
+                        RuntimeGroup runtimeGroup = RuntimeGroup.CreateFromTemplate(templateGroup);
+
+                        if (rid.HasArchitecture())
+                        {
+                            runtimeGroup.Architectures.Add(rid.Architecture);
+                        }
+
+                        if (rid.HasVersion())
+                        {
+                            runtimeGroup.Versions.Add(rid.Version);
+                        }
+
+                        // add to overall list
+                        runtimeGroups.Add(runtimeGroup);
+
+                        // add to our base-RID specific list from the dictionary so that further iterations see it.
+                        candidateRuntimeGroups.Add(runtimeGroup);
+
+                    }
+                    else if (closestVersion != rid.Version)
+                    {
+                        closestGroup.Versions.Add(rid.Version);
+                    }
+
+                }
+                else
+                {
+                    Log.LogError($"Cannot find a group to add Runtime {rid} ({rid.BaseRID}) from {string.Join(",", runtimeGroupsByBaseRID.Keys)}");
                 }
             }
         }
