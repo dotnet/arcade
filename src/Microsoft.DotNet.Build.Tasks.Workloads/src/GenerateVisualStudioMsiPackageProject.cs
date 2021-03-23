@@ -10,7 +10,6 @@ using System.Text;
 
 namespace Microsoft.DotNet.Build.Tasks.Workloads
 {
-
     public class GenerateVisualStudioMsiPackageProject : GenerateTaskBase
     {
         /// <summary>
@@ -94,9 +93,9 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                     Log.LogMessage($"Using MSI version for package version: {Version}");
                 }
 
-                string swixSourceDirectory = Path.Combine(SourceDirectory, Utils.GetHash(MsiPath, "MD5"));
+                string swixSourceDirectory = Path.Combine(SwixDirectory, PackageName, Chip);
                 string msiSwr = EmbeddedTemplates.Extract("msi.swr", swixSourceDirectory);
-                string msiSwixProj = EmbeddedTemplates.Extract("msi.swixproj", swixSourceDirectory, PackageName+".swixproj");
+                string msiSwixProj = EmbeddedTemplates.Extract("msi.swixproj", swixSourceDirectory, $"{PackageName}.{Version.ToString(3)}.{Chip}.swixproj");
 
                 FileInfo msiInfo = new (MsiPath);
                 PayloadSize = msiInfo.Length;

@@ -41,6 +41,13 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             set;
         }
 
+        public WorkloadPackMsiData(string sourcePackage, string installDir, params string[] platforms)
+        {
+            SourcePackage = sourcePackage;
+            InstallDir = installDir;
+            Platforms = platforms;
+        }
+
         public override bool Equals(object obj)
         {
             if ((obj is null) || !GetType().Equals(obj.GetType()))

@@ -46,6 +46,8 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             get;
         }
 
+        public string ProductVersion => $"{Version.Major}.{Version.Minor}.{Version.Patch}";
+
         public string Title
         {
             get;

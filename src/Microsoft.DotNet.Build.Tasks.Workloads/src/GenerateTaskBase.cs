@@ -32,6 +32,10 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         /// </summary>
         public string PackageDirectory => Path.Combine(IntermediateBaseOutputPath, "pkg");
 
+        public string SwixDirectory => Path.Combine(SourceDirectory, "swix");
+
+        public string MsiDirectory => Path.Combine(SourceDirectory, "msi");
+
         /// <summary>
         /// The directory containing the WiX toolset binaries.
         /// </summary>

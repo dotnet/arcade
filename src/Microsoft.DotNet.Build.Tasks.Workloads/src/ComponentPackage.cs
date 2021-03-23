@@ -105,6 +105,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
 
                 swrWriter.WriteLine($"  vs.dependency id={dependency.Id}");
                 swrWriter.WriteLine($"                version=[{dependency.Version}]");
+                swrWriter.WriteLine($"                behaviors=IgnoreApplicabilityFailures");
             }
 
             return new TaskItem(componentSwixProj);

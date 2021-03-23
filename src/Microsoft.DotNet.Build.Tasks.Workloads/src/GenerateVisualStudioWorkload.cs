@@ -14,7 +14,6 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.src
 {
     public class GenerateVisualStudioWorkload : GenerateTaskBase
     {
-        
         /// <summary>
         /// A set of workload manifest files.
         /// </summary>
@@ -25,7 +24,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.src
         }
 
         /// <summary>
-        /// Set of packages containing workload manifests.
+        /// A set of packages containing workload manifests.
         /// </summary>
         public ITaskItem[] WorkloadPackages
         {
@@ -47,6 +46,8 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.src
         {
             try
             {
+
+
                 List<ITaskItem> swixProjects = new();
 
                 foreach (ITaskItem workloadPackage in WorkloadPackages)
@@ -69,7 +70,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.src
         {
             NugetPackage workloadPackage = new NugetPackage(workloadManifestPackage, Log);
 
-            string packageContentPath = Path.Combine(PackageDirectory, workloadPackage.Id, workloadPackage.Version.ToNormalizedString());
+            string packageContentPath = Path.Combine(PackageDirectory, $"{workloadPackage.Identity}");
             workloadPackage.Extract(packageContentPath, Enumerable.Empty<string>());
             string workloadManifestJsonPath = Directory.GetFiles(packageContentPath, "WorkloadManifest.json").FirstOrDefault();
 
@@ -81,7 +82,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.src
             WorkloadManifest manifest = WorkloadManifestReader.ReadWorkloadManifest(File.OpenRead(workloadManifestJsonPath));
 
             List<TaskItem> swixProjects = new();
-
+            
             foreach (WorkloadDefinition workloadDefinition in manifest.Workloads.Values)
             {
                 ComponentPackage package = ComponentPackage.Create(manifest, workloadDefinition);

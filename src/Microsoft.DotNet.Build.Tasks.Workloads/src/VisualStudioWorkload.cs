@@ -86,13 +86,8 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.src
                     foreach (string platform in MsiPlatforms)
                     {
                         Log?.LogMessage(MessageImportance.Low, $"GetPackData: source: {sourcePackage}, platform: {platform}");
-                        msiPacks.Add(new WorkloadPackMsiData
-                        {
-                            InstallDir = GetInstallDir(pack.Kind),
-                            OutputPath = this.OutputPath,
-                            Platform = platform,
-                            SourcePackage = sourcePackage,
-                        });
+                        msiPacks.Add(new WorkloadPackMsiData(sourcePackage, GetInstallDir(pack.Kind), platform));
+                        
                     }
                 }
                 else

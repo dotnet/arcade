@@ -11,7 +11,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
     public static class CommandBuilderExtensions
     {
         /// <summary>
-        /// 
+        /// Appends an array of command line switches. The switch name is repeated for each value.
         /// </summary>
         /// <param name="builder"></param>
         /// <param name="switchName"></param>
