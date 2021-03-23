@@ -341,11 +341,11 @@
           DependsOnTargets="_GetTargetOSArchInfo"
           Returns="@(_CrossArchMsi)">
     <MSBuild
-      Condition="'@(CrossArchMsiToBuild)' != ''"
+      Condition="'@(CrossArchMsiToBuild)' != '' and '$(InstallerTargetArchitecture)' != '$(TargetArchitecture)'"
       Projects="$(MSBuildProjectFullPath)"
       Targets="CreateWixInstaller"
       Properties="
-        InstallerTargetArchitecture=%(CrossArchMsiToBuild.Identity);
+        InstallerTargetArchitecture=$(InstallerTargetArchitecture);
         CrossArchContentsArch=$(TargetArchitecture);
         GenerateMSI=true">
       <Output TaskParameter="TargetOutputs" ItemName="_CrossArchMsi" />
