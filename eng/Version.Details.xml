@@ -11,25 +11,25 @@
     </Dependency>
   </ProductDependencies>
   <ToolsetDependencies>
-    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="6.0.0-beta.21160.7">
+    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="6.0.0-beta.21167.3">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>7f13798e5f567b72ffe63205bf49839245f0f8c1</Sha>
+      <Sha>0ca849f0b71866b007fedaaa938cee63f8d056a6</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Build.Tasks.Feed" Version="6.0.0-beta.21160.7">
+    <Dependency Name="Microsoft.DotNet.Build.Tasks.Feed" Version="6.0.0-beta.21167.3">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>7f13798e5f567b72ffe63205bf49839245f0f8c1</Sha>
+      <Sha>0ca849f0b71866b007fedaaa938cee63f8d056a6</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.SignTool" Version="6.0.0-beta.21160.7">
+    <Dependency Name="Microsoft.DotNet.SignTool" Version="6.0.0-beta.21167.3">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>7f13798e5f567b72ffe63205bf49839245f0f8c1</Sha>
+      <Sha>0ca849f0b71866b007fedaaa938cee63f8d056a6</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Helix.Sdk" Version="6.0.0-beta.21160.7">
+    <Dependency Name="Microsoft.DotNet.Helix.Sdk" Version="6.0.0-beta.21167.3">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>7f13798e5f567b72ffe63205bf49839245f0f8c1</Sha>
+      <Sha>0ca849f0b71866b007fedaaa938cee63f8d056a6</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.SwaggerGenerator.MSBuild" Version="6.0.0-beta.21160.7">
+    <Dependency Name="Microsoft.DotNet.SwaggerGenerator.MSBuild" Version="6.0.0-beta.21167.3">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>7f13798e5f567b72ffe63205bf49839245f0f8c1</Sha>
+      <Sha>0ca849f0b71866b007fedaaa938cee63f8d056a6</Sha>
     </Dependency>
     <Dependency Name="Microsoft.DotNet.Maestro.Client" Version="1.1.0-beta.20258.6">
       <Uri>https://github.com/dotnet/arcade-services</Uri>
@@ -39,17 +39,17 @@
       <Uri>https://github.com/dotnet/arcade-services</Uri>
       <Sha>cac955fe259cb611f6a29d09209bd717deb69037</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.XHarness.CLI" Version="1.0.0-prerelease.21154.2">
+    <Dependency Name="Microsoft.DotNet.XHarness.CLI" Version="1.0.0-prerelease.21169.2">
       <Uri>https://github.com/dotnet/xharness</Uri>
-      <Sha>645910141e0ef98efee3c5bf9128b8fefb1a3c01</Sha>
+      <Sha>dfce3c1b43968f7e172b9a2ead777999ea0a94b2</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.Net.Compilers.Toolset" Version="3.9.0-6.21152.10">
+    <Dependency Name="Microsoft.Net.Compilers.Toolset" Version="3.9.0-6.21160.10">
       <Uri>https://github.com/dotnet/roslyn</Uri>
-      <Sha>c10f884b30737542ddd84ca889a4aad9281ce210</Sha>
+      <Sha>59eedc33d35754759994155ea2f4e1012a9951e3</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.NET.ILLink.Tasks" Version="6.0.100-preview.2.21160.1">
+    <Dependency Name="Microsoft.NET.ILLink.Tasks" Version="6.0.100-preview.2.21169.4">
       <Uri>https://github.com/mono/linker</Uri>
-      <Sha>bb923d296a0aa9afa499ffe29dcf71e66ee54352</Sha>
+      <Sha>8bbc089bbf6db9343f94861e647137e71dfb719f</Sha>
     </Dependency>
     <Dependency Name="Microsoft.SourceLink.GitHub" Version="1.1.0-beta-21151-02">
       <Uri>https://github.com/dotnet/sourcelink</Uri>
@@ -68,9 +68,9 @@
       <Uri>https://github.com/dotnet/symreader-converter</Uri>
       <Sha>c5ba7c88f92e2dde156c324a8c8edc04d9fa4fe0</Sha>
     </Dependency>
-    <Dependency Name="XliffTasks" Version="1.0.0-beta.21153.1">
+    <Dependency Name="XliffTasks" Version="1.0.0-beta.21169.2">
       <Uri>https://github.com/dotnet/xliff-tasks</Uri>
-      <Sha>f330177980c754b02cf80067f3bdd07454d5fccd</Sha>
+      <Sha>0da469fe1c2714d0e25cad1143632562fb528425</Sha>
     </Dependency>
     <Dependency Name="Microsoft.SourceBuild.Intermediate.source-build-reference-packages" Version="5.0.0-alpha.1.20473.1">
       <Uri>https://github.com/dotnet/source-build-reference-packages</Uri>
