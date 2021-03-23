@@ -157,23 +157,27 @@ namespace Microsoft.DotNet.Helix.Sdk
 
                 if (!File.Exists(provisioningProfileDest))
                 {
-                    Log.LogMessage("Adding provisioning profile into the app bundle");
-
                     // StartsWith because suffix can be the target OS version
+                    TargetPlatform? platform = null;
                     if (target.StartsWith("ios-device"))
                     {
-                        string profilePath = Path.Combine(TmpDir, GetProvisioningProfileFileName(TargetPlatform.iOS));
-                        File.Copy(profilePath, provisioningProfileDest);
+                        platform = TargetPlatform.iOS;
                     }
                     else if (target.StartsWith("tvos-device"))
                     {
-                        string profilePath = Path.Combine(TmpDir, GetProvisioningProfileFileName(TargetPlatform.tvOS));
+                        platform = TargetPlatform.tvOS;
+                    }
+
+                    if (platform.HasValue)
+                    {
+                        string profilePath = Path.Combine(TmpDir, GetProvisioningProfileFileName(platform.Value));
+                        Log.LogMessage($"Adding provisioning profile `{profilePath}` into the app bundle at `{provisioningProfileDest}`");
                         File.Copy(profilePath, provisioningProfileDest);
                     }
                 }
                 else
                 {
-                    Log.LogMessage("Bundle already contains a provisioning profile");
+                    Log.LogMessage($"Bundle already contains a provisioning profile at `{provisioningProfileDest}`");
                 }
             }
 
