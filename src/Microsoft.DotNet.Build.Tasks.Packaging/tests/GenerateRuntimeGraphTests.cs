@@ -61,6 +61,26 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
         }
 
         [Fact]
+        public void CanInferNewArchitecture()
+        {
+            string runtimeFile = $"{nameof(GenerateRuntimeGraphTests)}.{nameof(CanInferNewArchitecture)}.runtime.json";
+
+            // will generate and compare to existing file.
+            GenerateRuntimeGraph task = new GenerateRuntimeGraph()
+            {
+                BuildEngine = _engine,
+                RuntimeGroups = runtimeGroups,
+                RuntimeJson = runtimeFile,
+                InferRuntimeIdentifiers = new[] { "win12-x128" }
+            };
+
+            _log.Reset();
+            task.Execute();
+            _log.ErrorsLogged.Should().Be(0);
+            _log.WarningsLogged.Should().Be(0);
+        }
+
+        [Fact]
         public void CanIgnoreExistingInferRids()
         {
             // intentionally use same file as CanCreateRuntimeGraph, we don't want changes
@@ -72,7 +92,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
                 BuildEngine = _engine,
                 RuntimeGroups = runtimeGroups,
                 RuntimeJson = runtimeFile,
-                InferRuntimeIdentifiers = new[] { "rhel.9-x64", "centos.9-arm64" }
+                InferRuntimeIdentifiers = new[] { "rhel.9-x64", "centos.9-arm64", "win-x64" }
             };
 
             _log.Reset();

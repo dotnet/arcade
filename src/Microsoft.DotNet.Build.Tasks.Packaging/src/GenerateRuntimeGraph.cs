@@ -309,6 +309,12 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
                             continue;
                         }
 
+                        if (!rid.HasVersion())
+                        {
+                            closestGroup = candidate;
+                            continue;
+                        }
+
                         foreach(var version in candidate.Versions)
                         {
                             if (closestVersion == null || 
@@ -344,7 +350,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
                         candidateRuntimeGroups.Add(runtimeGroup);
 
                     }
-                    else if (closestVersion != rid.Version)
+                    else if (rid.HasVersion() && closestVersion != rid.Version)
                     {
                         closestGroup.Versions.Add(rid.Version);
                     }

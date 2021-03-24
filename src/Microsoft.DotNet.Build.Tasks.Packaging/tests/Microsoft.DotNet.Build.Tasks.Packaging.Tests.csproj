@@ -39,12 +39,7 @@
   </ItemGroup>
   
   <ItemGroup>
-    <None Update="GenerateRuntimeGraphTests.CanInferRids.runtime.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="GenerateRuntimeGraphTests.CanCreateRuntimeGraph.runtime.json">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    <None Update="*.runtime.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <!-- Find the packages from one of many package folders -->

@@ -50,7 +50,12 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
 
         public int CompareTo(RuntimeVersion other)
         {
-            int versionResult = version.CompareTo(other.version);
+            if (other == null)
+            {
+                return 1;
+            }
+
+            int versionResult = version.CompareTo(other?.version);
 
             if (versionResult == 0)
             {
@@ -73,7 +78,8 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
         public bool Equals(RuntimeVersion other)
         {
             return object.ReferenceEquals(other, this) ||
-                versionString.Equals(other.versionString, StringComparison.Ordinal);
+                (other != null && 
+                versionString.Equals(other.versionString, StringComparison.Ordinal));
         }
 
         public override bool Equals(object obj)
