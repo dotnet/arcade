@@ -107,7 +107,7 @@ jobs:
           /p:SymWebToken=$(symweb-symbol-server-pat)
           /p:BuildQuality='${{ parameters.buildQuality }}'
           /p:AzdoApiToken='$(dn-bot-dotnet-build-rw-code-rw)'
-          /p:StagingDir='$(Build.ArtifactStagingDirectory)/'
+          /p:ArtifactsBasePath='$(Build.ArtifactStagingDirectory)/'
           /p:BuildId='$(AzDOBuildId)'
           /p:AzureDevOpsOrg='dnceng'
           /p:AzureProject='$(AzDOProjectName)'

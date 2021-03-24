@@ -185,7 +185,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         }
         public string AzdoApiToken {get; set;}
 
-        public string StagingDir { get; set;}
+        public string ArtifactsBasePath { get; set;}
 
         public string BuildId { get; set; }
 
@@ -193,7 +193,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public string AzureDevOpsOrg { get; set; }
 
-        public bool UseApiOverride {get; set;}
+        public bool UseApiOverride { get; set; } = false;
 
         /// <summary>
         /// Just an internal flag to keep track whether we published assets via a V3 manifest or not.
@@ -384,7 +384,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 ShippingFeedOverride = this.ShippingFeedOverride,
                 TransportFeedOverride = this.TransportFeedOverride,
                 SymbolsFeedOverride = this.SymbolsFeedOverride,
-                StagingDir =  this.StagingDir,
+                ArtifactsBasePath =  this.ArtifactsBasePath,
                 AzdoApiToken = this.AzdoApiToken,
                 BuildId = this.BuildId,
                 AzureProject = this.AzureProject,

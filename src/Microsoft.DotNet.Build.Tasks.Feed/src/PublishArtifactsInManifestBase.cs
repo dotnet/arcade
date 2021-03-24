@@ -109,7 +109,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public string AzdoApiToken { get; set; }
 
-        public string StagingDir { get; set; }
+        public string ArtifactsBasePath { get; set; }
 
         public string AzureDevOpsFeedsApiVersion { get; set; } = "6.0";
 
@@ -389,10 +389,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 string localSymbolPath = "";
                 foreach (var symbol in symbolsToPublish)
                 {
-                    string temporarySymbDirectory =
-                        Path.GetFullPath(Path.Combine(StagingDir, @"..\", Guid.NewGuid().ToString()));
-                    EnsureTemporaryDirectoryExists(temporarySymbDirectory);
-                    localSymbolPath = Path.Combine(temporarySymbDirectory, symbol);
+                    string temporarySymbolsDirectory = CreateTemporaryDirectory();
+                        //Path.GetFullPath(Path.Combine(ArtifactsBasePath, Guid.NewGuid().ToString()));
+                    //EnsureTemporaryDirectoryExists(temporarySymbolsDirectory);
+                    localSymbolPath = Path.Combine(temporarySymbolsDirectory, symbol);
                     await DownloadFileAsync(client, "BlobArtifacts", containerId, symbol, localSymbolPath);
 
                     Log.LogMessage(MessageImportance.Low, $"Local Symbol path to downloaded file {localSymbolPath}");
@@ -420,7 +420,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             true);
                     }
                     DeleteTemporaryFile(localSymbolPath);
-                    DeleteTemporaryDirectory(temporarySymbDirectory);
+                    DeleteTemporaryDirectory(temporarySymbolsDirectory);
                 }
                 symbolLog.AppendLine(
                     $"Performing symbol publishing... \nExpirationInDays : {ExpirationInDays} \nConvertPortablePdbsToWindowsPdb : false \ndryRun: false ");
@@ -705,6 +705,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 {
                     Log.LogErrorFromException(e);
                 }
+
+                if (string.IsNullOrEmpty(containerId))
+                {
+                    Log.LogError("Container Id does not exists");
+                }
                 return containerId;
             }
         }
@@ -938,7 +943,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 {
                     var packageFilename = $"{package.Id}.{package.Version}.nupkg";
                     string temporaryPackageDirectory =
-                        Path.GetFullPath(Path.Combine(StagingDir, @"..\", Guid.NewGuid().ToString()));
+                        Path.GetFullPath(Path.Combine(ArtifactsBasePath,Guid.NewGuid().ToString()));
                     EnsureTemporaryDirectoryExists(temporaryPackageDirectory);
                     localPackagePath = Path.Combine(temporaryPackageDirectory, packageFilename);
                     await DownloadFileAsync(client, "PackageArtifacts", containerId,
@@ -1185,9 +1190,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     if (TryAddAssetLocation(blob.Id, assetVersion: null, buildAssets, feedConfig,
                         AddAssetLocationToAssetAssetLocationType.Container))
                     {
-                        string temporaryBlobDirectory =
-                            Path.GetFullPath(Path.Combine(StagingDir, @"..\", Guid.NewGuid().ToString()));
-                        EnsureTemporaryDirectoryExists(temporaryBlobDirectory);
+                        string temporaryBlobDirectory = CreateTemporaryDirectory();
+                            //Path.GetFullPath(Path.Combine(ArtifactsBasePath, Guid.NewGuid().ToString()));
+                        //EnsureTemporaryDirectoryExists(temporaryBlobDirectory);
                         string fileName = Path.GetFileName(blob.Id);
                         string localBlobPath = Path.Combine(temporaryBlobDirectory, fileName);
                         await DownloadFileAsync(client, "BlobArtifacts", containerId,
@@ -1259,7 +1264,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     {
                         Log.LogError($"Could not locate '{p.Id}.{p.Version}' at '{localPackagePath}'");
                     }
-
                     return localPackagePath;
                 });
 
@@ -1298,9 +1302,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                 foreach (var package in packagesToPublish)
                 {
-                    string temporaryPackageDirectory =
-                        Path.GetFullPath(Path.Combine(StagingDir, @"..\", Guid.NewGuid().ToString()));
-                    EnsureTemporaryDirectoryExists(temporaryPackageDirectory);
+                    string temporaryPackageDirectory = CreateTemporaryDirectory();
+                        //Path.GetFullPath(Path.Combine(ArtifactsBasePath, Guid.NewGuid().ToString()));
+                    //EnsureTemporaryDirectoryExists(temporaryPackageDirectory);
                     var packageFilename = $"{package.Id}.{package.Version}.nupkg";
                     localPackagePath = Path.Combine(temporaryPackageDirectory, packageFilename);
                     await DownloadFileAsync(client, "PackageArtifacts", containerId, packageFilename,
@@ -1328,6 +1332,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     DeleteTemporaryDirectory(temporaryPackageDirectory);
                 }
             }
+        }
+
+        public string CreateTemporaryDirectory()
+        {
+            string temporaryDirectory =
+                Path.GetFullPath(Path.Combine(ArtifactsBasePath, Guid.NewGuid().ToString()));
+            EnsureTemporaryDirectoryExists(temporaryDirectory);
+            return temporaryDirectory;
         }
 
         private async Task PublishBlobsToAzureStorageNugetFeedAsync(
@@ -1386,9 +1398,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                 foreach (var blob in blobsToPublish)
                 {
-                    string temporaryBlobDirectory =
-                        Path.GetFullPath(Path.Combine(StagingDir, @"..\", Guid.NewGuid().ToString()));
-                    EnsureTemporaryDirectoryExists(temporaryBlobDirectory);
+                    string temporaryBlobDirectory = CreateTemporaryDirectory();
+                        //Path.GetFullPath(Path.Combine(ArtifactsBasePath, Guid.NewGuid().ToString()));
+                    //EnsureTemporaryDirectoryExists(temporaryBlobDirectory);
                     var fileName = Path.GetFileName(blob.Id);
                     var localBlobPath = Path.Combine(temporaryBlobDirectory, fileName);
                     await DownloadFileAsync(client, "BlobArtifacts", containerId, fileName,
@@ -1604,6 +1616,15 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 Log.LogError($"The property {nameof(BuildAssetRegistryToken)} is required but doesn't have a value set.");
             }
 
+            if (string.IsNullOrEmpty(AzdoApiToken))
+            {
+                Log.LogError($"The property {nameof(AzdoApiToken)} is required but doesn't have a value set.");
+            }
+
+            if (string.IsNullOrEmpty(ArtifactsBasePath))
+            {
+                Log.LogError($"The property {nameof(ArtifactsBasePath)} is required but doesn't have a value set.");
+            }
             return Log.HasLoggedErrors;
         }
     }
