@@ -504,7 +504,7 @@ TargetChannelConfig takes the following attributes
 | ChannelId   | Id for channel to publish |          |
 | isInternal  | Publishing to an internal Channel or public channel | true or false  |
 | PublishingInfraVersion | Which version of the publishing infra can use this configuration. | Enum = All(0), Legacy(1), Latest(2), Next(3)  |
-| AkaMSChannelName | The name that should be used for creating Aka.ms links for this channel. A specified build quality will be appended to this value if supplied. | See [What build qualities are supported?](#What-build-qualities-are-supported?) for valid build quality values |
+| AkaMSChannelName | The name that should be used for creating Aka.ms links for this channel. A specified build quality will be appended to this value if supplied. | See [What build qualities are supported?](#what-build-qualities-are-supported) for valid build quality values |
 | ShippingFeed | The URL (including the index.json suffix) of the *shipping* feed to be used for this channel. |   | 
 | TransportFeed | The URL (including the index.json suffix) of the *transport* feed to be used for this channel. |   | 
 | SymbolsFeed | The URL (including the index.json suffix) of the *symbols* feed to be used for this channel. |   | 
