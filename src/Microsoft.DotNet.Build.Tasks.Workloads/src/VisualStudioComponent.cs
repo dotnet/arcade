@@ -13,17 +13,20 @@ using NuGet.Versioning;
 namespace Microsoft.DotNet.Build.Tasks.Workloads
 {
     /// <summary>
-    /// Represents a component or component group SWIX project.
+    /// Represents a Visual Studio component or component group.
     /// </summary>
-    public class ComponentPackage
+    public class VisualStudioComponent
     {
+        /// <summary>
+        /// The component category.
+        /// </summary>
         public string Category
         {
             get;
         } = ".NET";
 
         /// <summary>
-        /// The description of the component.
+        /// The description of the component, displayed as a tooltip inside the UI.
         /// </summary>
         public string Description
         {
@@ -31,18 +34,24 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         }
 
         /// <summary>
-        /// 
+        /// The component name (ID).
         /// </summary>
         public string Name
         {
             get;
         }
 
+        /// <summary>
+        /// The title of the component to display in the installer UI, e.g. the individual component tab.
+        /// </summary>
         public string Title
         {
             get;
         }
 
+        /// <summary>
+        /// The version of the component.
+        /// </summary>
         public Version Version
         {
             get;
@@ -50,7 +59,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
 
         private ICollection<VisualStudioDependency> Dependencies = new List<VisualStudioDependency>();
 
-        public ComponentPackage(string name, string description, string title, Version version)
+        public VisualStudioComponent(string name, string description, string title, Version version)
         {
             Name = name;
             Description = description;
@@ -58,21 +67,38 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             Version = version;
         }
 
+        /// <summary>
+        /// Add a component dependency using the provided name and version.
+        /// </summary>
+        /// <param name="name">The name (ID) of the dependency.</param>
+        /// <param name="version">The version of the dependency.</param>
         public void AddDependency(string name, Version version)
         {
             AddDependency(new VisualStudioDependency(name, version));
         }
 
+        /// <summary>
+        /// Add a component dependency using the specified <see cref="VisualStudioDependency"/>.
+        /// </summary>
+        /// <param name="dependency">The dependency to add to this component.</param>
         public void AddDependency(VisualStudioDependency dependency)
         {
             Dependencies.Add(dependency);
         }
 
+        /// <summary>
+        /// Add a component dependency using the specified item.
+        /// </summary>
+        /// <param name="dependency">The dependency to add to this component.</param>
         public void AddDependency(ITaskItem dependency)
         {
             AddDependency(new VisualStudioDependency(dependency.ItemSpec, new Version(dependency.GetMetadata("Version"))));
         }
 
+        /// <summary>
+        /// Add a dependency using the specified workload pack.
+        /// </summary>
+        /// <param name="dependency">The dependency to add to this component.</param>
         public void AddDependency(WorkloadPack dependency)
         {
             AddDependency($"{dependency.Id}", new NuGetVersion(dependency.Version).Version);
@@ -81,8 +107,8 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         /// <summary>
         /// Generate a SWIX project for the component in the specified folder.
         /// </summary>
-        /// <param name="projectPath">The project folder.</param>
-        /// <returns>The path to the .swixproj file.</returns>
+        /// <param name="projectPath">The path of the SWIX project to generate.</param>
+        /// <returns>An item describing the generated SWIX project.</returns>
         public TaskItem Generate(string projectPath)
         {
             string componentSwr = EmbeddedTemplates.Extract("component.swr", projectPath);
@@ -124,14 +150,14 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         }
 
         /// <summary>
-        /// Creates a <see cref="ComponentPackage"/> using a workload definition.
+        /// Creates a <see cref="VisualStudioComponent"/> using a workload definition.
         /// </summary>
         /// <param name="Definition"></param>
         /// <param name="packs"></param>
         /// <returns></returns>
-        public static ComponentPackage Create(WorkloadManifest manifest, WorkloadDefinition definition)
+        public static VisualStudioComponent Create(WorkloadManifest manifest, WorkloadDefinition definition)
         {
-            ComponentPackage package = new(Utils.ToSafeId(definition.Id.ToString()), definition.Description,
+            VisualStudioComponent package = new(Utils.ToSafeId(definition.Id.ToString()), definition.Description,
                 definition.Description, new Version($"{manifest.Version}.0"));
 
             foreach (WorkloadPackId packId in definition.Packs)

@@ -59,12 +59,14 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
 
                 if (unsupportedPlatforms.Count() > 0)
                 {
-                    Log.LogError($"Unsupported platforms detected: {String.Join(",", unsupportedPlatforms)}");
+                    Log.LogError($"Unsupported platforms detected: {String.Join(",", unsupportedPlatforms)}.");
                     return false;
                 }
 
+                // For a single MSI we always generate all platforms and simply use the ID of the source package for
+                // the SWIX projects.
                 List<ITaskItem> msis = new();
-                msis.AddRange(Generate(SourcePackage, OutputPath, GetInstallDir(kind), platforms));
+                msis.AddRange(Generate(SourcePackage, null, OutputPath, GetInstallDir(kind), platforms));
                 Msis = msis.ToArray();
             }
             catch (Exception e)

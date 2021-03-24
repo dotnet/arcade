@@ -1,11 +1,8 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
@@ -21,12 +18,6 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             set;
         } = true;
 
-        public string OutputFile
-        {
-            get;
-            set;
-        }
-
         /// <summary>
         /// A collection of compiler extension assemblies to use.
         /// </summary>
@@ -35,7 +26,22 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             get;
         } = new List<string>();
 
+        public string OutputFile
+        {
+            get;
+            set;
+        }
+
         public IEnumerable<string> SourceFiles
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Semicolon sepearate list of ICEs to suppress.
+        /// </summary>
+        public string SuppressIces
         {
             get;
             set;
@@ -51,6 +57,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             CommandLineBuilder.AppendSwitchIfNotNull("-o ", OutputFile);
             CommandLineBuilder.AppendSwitchIfTrue("-fv", AddFileVersion);
             CommandLineBuilder.AppendArrayIfNotNull("-ext ", Extensions.ToArray());
+            CommandLineBuilder.AppendSwitchIfNotNull("-sice:", SuppressIces);
             CommandLineBuilder.AppendFileNamesIfNotNull(SourceFiles.ToArray(), " ");
 
             return CommandLineBuilder.ToString();

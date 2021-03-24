@@ -81,12 +81,21 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         }
 
         /// <summary>
+        /// Semicolon sepearate list of ICEs to suppress.
+        /// </summary>
+        public string SuppressIces
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// Generate a set of MSIs for the specified platforms using the specified NuGet package.
         /// </summary>
         /// <param name="sourcePackage">The NuGet package to convert into an MSI.</param>
         /// <param name="outputPath">The output path of the generated MSI.</param>
         /// <param name="platforms"></param>
-        protected IEnumerable<ITaskItem> Generate(string sourcePackage, string outputPath, string installDir, params string[] platforms)
+        protected IEnumerable<ITaskItem> Generate(string sourcePackage, string swixPackageId, string outputPath, string installDir, params string[] platforms)
         {
             NugetPackage nupkg = new(sourcePackage, Log);
             List<TaskItem> msis = new();
@@ -181,7 +190,8 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                 LinkToolTask light = new(BuildEngine, WixToolsetPath)
                 {
                     OutputFile = Path.Combine(OutputPath, outputFile),
-                    SourceFiles = Directory.EnumerateFiles(candleIntermediateOutputPath, "*.wixobj")
+                    SourceFiles = Directory.EnumerateFiles(candleIntermediateOutputPath, "*.wixobj"),
+                    SuppressIces = this.SuppressIces
                 };
 
                 // Add WiX extensions
@@ -199,7 +209,8 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
 
                 if (GenerateSwixAuthoring)
                 {
-                    string swixProject = GenerateSwixPackageAuthoring(light.OutputFile, $"{nupkg.Id}", platform);
+                    string swixProject = GenerateSwixPackageAuthoring(light.OutputFile, 
+                        !string.IsNullOrWhiteSpace(swixPackageId) ? swixPackageId : $"{nupkg.Id}", platform);
 
                     if (!string.IsNullOrWhiteSpace(swixProject))
                     {

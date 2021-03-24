@@ -12,10 +12,14 @@ using Microsoft.NET.Sdk.WorkloadManifestReader;
 
 namespace Microsoft.DotNet.Build.Tasks.Workloads.src
 {
+    /// <summary>
+    /// MSBuild task for generating Visual Studio component projects representing
+    /// the workload definitions.
+    /// </summary>
     public class GenerateVisualStudioWorkload : GenerateTaskBase
     {
         /// <summary>
-        /// A set of workload manifest files.
+        /// The workload manifest files to use for generating the Visual Studio components.
         /// </summary>
         public ITaskItem[] WorkloadManifests
         {
@@ -46,8 +50,6 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.src
         {
             try
             {
-
-
                 List<ITaskItem> swixProjects = new();
 
                 foreach (ITaskItem workloadPackage in WorkloadPackages)
@@ -66,7 +68,13 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.src
             return !Log.HasLoggedErrors;
         }
 
-        public IEnumerable<ITaskItem> ProcessWorkloadManifest(string workloadManifestPackage)
+        /// <summary>
+        /// Extracts the workload manifest from the manifest package and generate a SWIX project for a Visual Studio component
+        /// matching the manifests dependencies.  
+        /// </summary>
+        /// <param name="workloadManifestPackage">The path of the workload package containing the manifest.</param>
+        /// <returns>A set of items containing the generated SWIX projects.</returns>
+        internal IEnumerable<ITaskItem> ProcessWorkloadManifest(string workloadManifestPackage)
         {
             NugetPackage workloadPackage = new NugetPackage(workloadManifestPackage, Log);
 
@@ -85,8 +93,8 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.src
             
             foreach (WorkloadDefinition workloadDefinition in manifest.Workloads.Values)
             {
-                ComponentPackage package = ComponentPackage.Create(manifest, workloadDefinition);
-                swixProjects.Add(package.Generate(Path.Combine(SourceDirectory, $"{workloadDefinition.Id}.{manifest.Version}.0")));
+                VisualStudioComponent component = VisualStudioComponent.Create(manifest, workloadDefinition);
+                swixProjects.Add(component.Generate(Path.Combine(SourceDirectory, $"{workloadDefinition.Id}.{manifest.Version}.0")));
             }
 
             return swixProjects;

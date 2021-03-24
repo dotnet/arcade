@@ -10,6 +10,9 @@ using System.Text;
 
 namespace Microsoft.DotNet.Build.Tasks.Workloads
 {
+    /// <summary>
+    /// MSBuild task for generating a Visual Studio MSI package project (.swixproj).
+    /// </summary>
     public class GenerateVisualStudioMsiPackageProject : GenerateTaskBase
     {
         /// <summary>
@@ -32,7 +35,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         }
 
         /// <summary>
-        /// The name of the Visual Studio package (ID), e.g. "Microsoft.VisualStudio.X.Y.Z".
+        /// The name of the Visual Studio package (ID), e.g. "Microsoft.VisualStudio.X.Y.Z", that will wrap the MSI.
         /// </summary>
         [Required]
         public string PackageName
