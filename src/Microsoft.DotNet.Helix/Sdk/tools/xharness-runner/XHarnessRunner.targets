@@ -5,8 +5,8 @@
     <IncludeDotNetCli>true</IncludeDotNetCli>
     <IncludeXHarnessCli>true</IncludeXHarnessCli>
     <DotNetCliPackageType Condition="'$(DotNetCliPackageType)' != 'sdk'">aspnetcore-runtime</DotNetCliPackageType>
-    <DotNetCliVersion Condition=" '$(DotNetCliVersion)' == '' ">3.1.5</DotNetCliVersion>
-    <DotNetCliVersion Condition=" '$(DotNetCliVersion)' == '$(BundledNETCoreAppPackageVersion)' AND '$(DotNetCliPackageType)' == 'aspnetcore-runtime' ">6.0.0-preview.1.21103.6</DotNetCliVersion>
+    <DotNetCliVersion Condition=" '$(DotNetCliVersion)' == '' ">6.0.100-preview.2.21155.3</DotNetCliVersion>
+    <DotNetCliVersion Condition=" '$(DotNetCliVersion)' == '$(BundledNETCoreAppPackageVersion)' AND '$(DotNetCliPackageType)' == 'aspnetcore-runtime' ">6.0.0-preview.2.21154.6</DotNetCliVersion>
   </PropertyGroup>
 
   <Target Name="AddXHarnessCli"
@@ -54,14 +54,14 @@
       <HelixPreCommands>$(HelixPreCommands);export PATH=$HELIX_CORRELATION_PAYLOAD/xharness-cli:$PATH</HelixPreCommands>
       <HelixPreCommands>$(HelixPreCommands);export XHARNESS_DISABLE_COLORED_OUTPUT=true</HelixPreCommands>
       <HelixPreCommands>$(HelixPreCommands);export XHARNESS_LOG_WITH_TIMESTAMPS=true</HelixPreCommands>
-      <HelixPreCommands>$(HelixPreCommands);export XHARNESS_CLI_PATH=$HELIX_CORRELATION_PAYLOAD/microsoft.dotnet.xharness.cli/$(_XHarnessPackageVersion)/tools/netcoreapp3.1/any/Microsoft.DotNet.XHarness.CLI.dll</HelixPreCommands>
+      <HelixPreCommands>$(HelixPreCommands);export XHARNESS_CLI_PATH=$HELIX_CORRELATION_PAYLOAD/microsoft.dotnet.xharness.cli/$(_XHarnessPackageVersion)/tools/net6.0/any/Microsoft.DotNet.XHarness.CLI.dll</HelixPreCommands>
     </PropertyGroup>
 
     <PropertyGroup Condition="!$(IsPosixShell)">
       <HelixPreCommands>$(HelixPreCommands);set PATH=%HELIX_CORRELATION_PAYLOAD%\xharness-cli%3B%PATH%</HelixPreCommands>
       <HelixPreCommands>$(HelixPreCommands);set XHARNESS_DISABLE_COLORED_OUTPUT=true</HelixPreCommands>
       <HelixPreCommands>$(HelixPreCommands);set XHARNESS_LOG_WITH_TIMESTAMPS=true</HelixPreCommands>
-      <HelixPreCommands>$(HelixPreCommands);set XHARNESS_CLI_PATH=%HELIX_CORRELATION_PAYLOAD%\microsoft.dotnet.xharness.cli\$(_XHarnessPackageVersion)\tools\netcoreapp3.1\any\Microsoft.DotNet.XHarness.CLI.dll</HelixPreCommands>
+      <HelixPreCommands>$(HelixPreCommands);set XHARNESS_CLI_PATH=%HELIX_CORRELATION_PAYLOAD%\microsoft.dotnet.xharness.cli\$(_XHarnessPackageVersion)\tools\net6.0\any\Microsoft.DotNet.XHarness.CLI.dll</HelixPreCommands>
     </PropertyGroup>
   </Target>
 
