@@ -67,41 +67,14 @@ jobs:
 
 The parameters that can be passed to the template are as follows:
 
-### `RepoType`
-**Default Value**: `'gitHub'`
+| **Parameter** | **Default Value** | **Notes** |
+|:-:|:-:|-|
+| `RepoType` | `'gitHub'` | Should be set to `'gitHub'` for GitHub-based repositories and `'azureDevOps'` for Azure DevOps-based ones. |
+| `SourcesDirectory` | `$(Build.SourcesDirectory)` | This is the root directory for your repository source code. |
+| `CreatePr` | `true` | When set to `true`, instructs the OneLocBuild task to make a PR back to the source repository containing the localized files. |
+| `UseCheckedInLocProjectJson` | `false` | When set to `true`, instructs the LocProject.json generation script to use build-time validation rather than build-time generation, as described above. |
+| `LanguageSet` | `VS_Main_Languages` | This defines the `LanguageSet` of the LocProject.json as described in the [OneLocBuild task documentation](https://ceapex.visualstudio.com/CEINTL/_wiki/wikis/CEINTL.wiki/107/Localization-with-OneLocBuild-Task?anchor=languageset%2C-languages-(required)). |
+| `LclSource` | `LclFilesInRepo` | This passes the `LclSource` input to the OneLocBuild task as described in [its documentation](https://ceapex.visualstudio.com/CEINTL/_wiki/wikis/CEINTL.wiki/107/Localization-with-OneLocBuild-Task?anchor=languageset%2C-languages-(required)). For most repos, this should be set to `LclFilesfromPackage`. |
+| `LclPackageId` | `''` | When `LclSource` is set to `LclFilesfromPackage`, this passes in the package ID as described in the [OneLocBuild task documentation](https://ceapex.visualstudio.com/CEINTL/_wiki/wikis/CEINTL.wiki/107/Localization-with-OneLocBuild-Task?anchor=scenario-2%3A-lcl-files-from-a-package). |
 
-Should be set to `'gitHub'` for GitHub-based repositories and `'azureDevOps'` for Azure DevOps-based ones.
-
-### `SourcesDirectory`
-**Default Value**: `$(Build.SourcesDirectory)`
-
-This is the root directory for your repository source code.
-
-### `CreatePr`
-**Default Value**: `true`
-
-When set to `true`, instructs the OneLocBuild task to make a PR back to the source repository containing the localized
-files.
-
-### ``UseCheckedInLocProjectJson``
-**Default Value**: `false`
-
-When set to `true`, instructs the LocProject.json generation script to use build-time validation rather than build-time
-generation, as described above.
-
-### ``LanguageSet``
-**Default Value**: `VS_Main_Languages`
-
-This defines the `LanguageSet` of the LocProject.json as described in the [OneLocBuild task documentation](https://ceapex.visualstudio.com/CEINTL/_wiki/wikis/CEINTL.wiki/107/Localization-with-OneLocBuild-Task?anchor=languageset%2C-languages-(required)).
-
-### `LclSource`
-**Default Value**: `LclFilesInRepo`
-
-This passes the `LclSource` input to the OneLocBuild task as described in [its documentation](https://ceapex.visualstudio.com/CEINTL/_wiki/wikis/CEINTL.wiki/107/Localization-with-OneLocBuild-Task?anchor=languageset%2C-languages-(required)).
-For most repos, this should be set to `LclFilesfromPackage`.
-
-### `LclPackageId`
-**Default Value**: `''`
-
-When `LclSource` is set to `LclFilesfromPackage`, this passes in the package ID as described in the
-[OneLocBuild task documentation](https://ceapex.visualstudio.com/CEINTL/_wiki/wikis/CEINTL.wiki/107/Localization-with-OneLocBuild-Task?anchor=scenario-2%3A-lcl-files-from-a-package).
+It is recommended that you set `LclSource` and `LclPackageId` as shown in the example above.
