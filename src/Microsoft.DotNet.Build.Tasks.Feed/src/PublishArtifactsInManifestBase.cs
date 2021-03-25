@@ -390,8 +390,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 foreach (var symbol in symbolsToPublish)
                 {
                     string temporarySymbolsDirectory = CreateTemporaryDirectory();
-                        //Path.GetFullPath(Path.Combine(ArtifactsBasePath, Guid.NewGuid().ToString()));
-                    //EnsureTemporaryDirectoryExists(temporarySymbolsDirectory);
                     localSymbolPath = Path.Combine(temporarySymbolsDirectory, symbol);
                     await DownloadFileAsync(client, "BlobArtifacts", containerId, symbol, localSymbolPath);
 
@@ -1191,8 +1189,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         AddAssetLocationToAssetAssetLocationType.Container))
                     {
                         string temporaryBlobDirectory = CreateTemporaryDirectory();
-                            //Path.GetFullPath(Path.Combine(ArtifactsBasePath, Guid.NewGuid().ToString()));
-                        //EnsureTemporaryDirectoryExists(temporaryBlobDirectory);
                         string fileName = Path.GetFileName(blob.Id);
                         string localBlobPath = Path.Combine(temporaryBlobDirectory, fileName);
                         await DownloadFileAsync(client, "BlobArtifacts", containerId,
@@ -1303,8 +1299,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 foreach (var package in packagesToPublish)
                 {
                     string temporaryPackageDirectory = CreateTemporaryDirectory();
-                        //Path.GetFullPath(Path.Combine(ArtifactsBasePath, Guid.NewGuid().ToString()));
-                    //EnsureTemporaryDirectoryExists(temporaryPackageDirectory);
                     var packageFilename = $"{package.Id}.{package.Version}.nupkg";
                     localPackagePath = Path.Combine(temporaryPackageDirectory, packageFilename);
                     await DownloadFileAsync(client, "PackageArtifacts", containerId, packageFilename,
@@ -1334,6 +1328,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             }
         }
 
+        /// <summary>
+        /// Creates a temporary directory
+        /// </summary>
+        /// <returns></returns>
         public string CreateTemporaryDirectory()
         {
             string temporaryDirectory =

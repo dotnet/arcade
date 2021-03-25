@@ -193,6 +193,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public string AzureDevOpsOrg { get; set; }
 
+        /// <summary>
+        /// If true, uses Azdo Api to download artifacts and symbols files one file at a time during publishing process.
+        /// If it is set to false, then artifacts and symbols are downloaded in PackageArtifacts and BlobArtifacts directory before publishing. 
+        /// </summary>
         public bool UseApiOverride { get; set; } = false;
 
         /// <summary>

@@ -23,6 +23,10 @@
       - SymWebToken                             : Token used to publish symbol blobs, dll and pdb to Symweb
       - SymbolPublishingExclusionsFile          : Files that have to be excluded from symbol publishing 
       - PdbArtifactsBasePath                    : Path to dlls and pdbs
+      - AzdoApiToken                            : Token used to call the Azure Api to download artifacts and symbols
+      - ArtifactsBasePath                       : Staging directory 
+      - UseApiOverride                          : When set to true it will use Azure Api to download the artifacts and symbols one file at a time
+                                                  during publishing, else all the artifacts and symbols are downloaded before publishing.
 
       Optional aka.ms link generation parameters:
         - AkaMSClientId                         : Client ID for the aka.ms AD application
