@@ -23,7 +23,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
         {
             StringBuilder builder = new StringBuilder(BaseRID);
 
-            if (HasVersion())
+            if (HasVersion)
             {
                 if (!OmitVersionDelimiter)
                 {
@@ -32,13 +32,13 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
                 builder.Append(Version);
             }
 
-            if (HasArchitecture())
+            if (HasArchitecture)
             {
                 builder.Append(ArchitectureDelimiter);
                 builder.Append(Architecture);
             }
 
-            if (HasQualifier())
+            if (HasQualifier)
             {
                 builder.Append(QualifierDelimiter);
                 builder.Append(Qualifier);
@@ -161,20 +161,11 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
         }
 
 
-        public bool HasVersion()
-        {
-            return Version != null;
-        }
+        public bool HasVersion => Version != null;
 
-        public bool HasArchitecture()
-        {
-            return Architecture != null;
-        }
+        public bool HasArchitecture => Architecture != null;
 
-        public bool HasQualifier()
-        {
-            return Qualifier != null;
-        }
+        public bool HasQualifier => Qualifier != null;
 
         public override bool Equals(object obj)
         {

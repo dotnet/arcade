@@ -22,35 +22,35 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
             OmitVersionDelimiter = item.GetBoolean(nameof(OmitVersionDelimiter));
             ApplyVersionsToParent = item.GetBoolean(nameof(ApplyVersionsToParent));
             Architectures = new HashSet<string>(item.GetStrings(nameof(Architectures)));
-            AdditionalQualifiers = item.GetStrings(nameof(AdditionalQualifiers));
+            AdditionalQualifiers = new HashSet<string>(item.GetStrings(nameof(AdditionalQualifiers)));
             OmitRIDs = new HashSet<string>(item.GetStrings(nameof(OmitRIDs)));
             OmitRIDDefinitions = new HashSet<string>(item.GetStrings(nameof(OmitRIDDefinitions)));
             OmitRIDReferences = new HashSet<string>(item.GetStrings(nameof(OmitRIDReferences)));
         }
 
-        private RuntimeGroup(RuntimeGroup template)
+        public RuntimeGroup(string baseRID, string parent, bool treatVersionsAsCompatible = true, bool omitVersionDelimiter = false, bool applyVersionsToParent = false, IEnumerable<string> additionalQualifiers = null)
         {
-            BaseRID = template.BaseRID;
-            Parent = template.Parent;
+            BaseRID = baseRID;
+            Parent = parent;
             Versions = new HashSet<RuntimeVersion>();
-            TreatVersionsAsCompatible = template.TreatVersionsAsCompatible;
-            OmitVersionDelimiter = template.OmitVersionDelimiter;
-            ApplyVersionsToParent = template.ApplyVersionsToParent;
+            TreatVersionsAsCompatible = treatVersionsAsCompatible;
+            OmitVersionDelimiter = omitVersionDelimiter;
+            ApplyVersionsToParent = applyVersionsToParent;
             Architectures = new HashSet<string>();
-            AdditionalQualifiers = template.AdditionalQualifiers;
+            AdditionalQualifiers = new HashSet<string>(additionalQualifiers.NullAsEmpty());
             OmitRIDs = new HashSet<string>();
             OmitRIDDefinitions = new HashSet<string>();
             OmitRIDReferences = new HashSet<string>();
         }
 
         /// <summary>
-        /// Creates a new RuntimeGroup that matches existing template for parent and format with no architectures, versions or qualifiers.
+        /// Creates a new RuntimeGroup that matches existing template for parent and format with no architectures nor versions.
         /// </summary>
         /// <param name="runtimeGroup"></param>
         /// <returns></returns>
         public static RuntimeGroup CreateFromTemplate(RuntimeGroup template)
         {
-            return new RuntimeGroup(template);
+            return new RuntimeGroup(template.BaseRID, template.Parent, template.TreatVersionsAsCompatible, template.OmitVersionDelimiter, template.ApplyVersionsToParent, template.AdditionalQualifiers);
         }
 
         public string BaseRID { get; }
@@ -60,10 +60,33 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
         public bool OmitVersionDelimiter { get; }
         public bool ApplyVersionsToParent { get; }
         public ICollection<string> Architectures { get; }
-        public IEnumerable<string> AdditionalQualifiers { get; }
+        public ICollection<string> AdditionalQualifiers { get; }
         public ICollection<string> OmitRIDs { get; }
         public ICollection<string> OmitRIDDefinitions { get; }
         public ICollection<string> OmitRIDReferences { get; }
+
+        public void ApplyRid(RID rid)
+        {
+            if (!rid.BaseRID.Equals(BaseRID, StringComparison.Ordinal))
+            {
+                throw new ArgumentException(nameof(rid), $"Cannot apply {nameof(RID)} with {nameof(RID.BaseRID)} {rid.BaseRID} to {nameof(RuntimeGroup)} with {nameof(RuntimeGroup.BaseRID)} {BaseRID}.");
+            }
+
+            if (rid.HasArchitecture)
+            {
+                Architectures.Add(rid.Architecture);
+            }
+
+            if (rid.HasVersion)
+            {
+                Versions.Add(rid.Version);
+            }
+
+            if (rid.HasQualifier)
+            {
+                AdditionalQualifiers.Add(rid.Qualifier);
+            }
+        }
 
         private class RIDMapping
         {

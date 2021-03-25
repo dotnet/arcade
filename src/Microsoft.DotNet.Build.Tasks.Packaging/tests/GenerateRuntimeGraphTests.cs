@@ -7,6 +7,9 @@ using Xunit;
 using Xunit.Abstractions;
 using FluentAssertions;
 using System.IO;
+using System.Collections.Generic;
+using System.Linq;
+using System;
 
 namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
 {
@@ -41,43 +44,53 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
         }
 
         [Fact]
-        public void CanInferRids()
+        public void CanAddVersionsToExistingGroups()
         {
-            string runtimeFile = $"{nameof(GenerateRuntimeGraphTests)}.{nameof(CanInferRids)}.runtime.json";
+            List<RuntimeGroup> groups = runtimeGroups.Select(g => new RuntimeGroup(g)).ToList();
 
-            // will generate and compare to existing file.
-            GenerateRuntimeGraph task = new GenerateRuntimeGraph()
-            {
-                BuildEngine = _engine,
-                RuntimeGroups = runtimeGroups,
-                RuntimeJson = runtimeFile,
-                InferRuntimeIdentifiers = new[] { "rhel.9.2-x64", "centos.9.2-arm64" }
-            };
+            RuntimeGroup rhelGroup = groups.Where(g => g.BaseRID.Equals("rhel", StringComparison.Ordinal) &&
+                        g.Versions.Contains(new RuntimeVersion("9")) &&
+                        g.Architectures.Contains("x64")).Single();
+            RuntimeGroup centosGroup = groups.Where(g => g.BaseRID.Equals("centos", StringComparison.Ordinal) &&
+                        g.Versions.Contains(new RuntimeVersion("9")) &&
+                        g.Architectures.Contains("arm64")).Single();
 
-            _log.Reset();
-            task.Execute();
-            _log.ErrorsLogged.Should().Be(0);
-            _log.WarningsLogged.Should().Be(0);
+            GenerateRuntimeGraph.AddRuntimeIdentifiers(groups, new[] { "rhel.9.2-x64", "centos.9.2-arm64" }, null);
+
+            rhelGroup.Versions.Should().Contain(new RuntimeVersion("9.2"));
+            centosGroup.Versions.Should().Contain(new RuntimeVersion("9.2"));
         }
 
         [Fact]
-        public void CanInferNewArchitecture()
+        public void CanAddArchitectureToExistingGroups()
         {
-            string runtimeFile = $"{nameof(GenerateRuntimeGraphTests)}.{nameof(CanInferNewArchitecture)}.runtime.json";
+            List<RuntimeGroup> groups = runtimeGroups.Select(g => new RuntimeGroup(g)).ToList();
+            List<RuntimeGroup> originalGroups = new List<RuntimeGroup>(groups);
+            GenerateRuntimeGraph.AddRuntimeIdentifiers(groups, new[] { "win10-x128" }, null);
 
-            // will generate and compare to existing file.
-            GenerateRuntimeGraph task = new GenerateRuntimeGraph()
+            groups.Except(originalGroups).Should().SatisfyRespectively(g =>
             {
-                BuildEngine = _engine,
-                RuntimeGroups = runtimeGroups,
-                RuntimeJson = runtimeFile,
-                InferRuntimeIdentifiers = new[] { "win12-x128" }
-            };
+                Assert.Equal("win", g.BaseRID);
+                Assert.Equal("any", g.Parent);
+                g.Versions.Should().SatisfyRespectively(v => Assert.Equal(new RuntimeVersion("10"), v));
+                g.Architectures.Should().SatisfyRespectively(a => Assert.Equal("x128", a));
+            });
+        }
 
-            _log.Reset();
-            task.Execute();
-            _log.ErrorsLogged.Should().Be(0);
-            _log.WarningsLogged.Should().Be(0);
+        [Fact]
+        public void CanAdNewGroups()
+        {
+            List<RuntimeGroup> groups = runtimeGroups.Select(g => new RuntimeGroup(g)).ToList();
+            List<RuntimeGroup> originalGroups = new List<RuntimeGroup>(groups);
+            GenerateRuntimeGraph.AddRuntimeIdentifiers(groups, new[] { "yolinux.42.0-quantum" }, "linux");
+
+            groups.Except(originalGroups).Should().SatisfyRespectively(g =>
+            {
+                Assert.Equal("yolinux", g.BaseRID);
+                Assert.Equal("linux", g.Parent);
+                g.Versions.Should().SatisfyRespectively(v => Assert.Equal(new RuntimeVersion("42.0"), v));
+                g.Architectures.Should().SatisfyRespectively(a => Assert.Equal("quantum", a));
+            });
         }
 
         [Fact]
@@ -92,7 +105,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
                 BuildEngine = _engine,
                 RuntimeGroups = runtimeGroups,
                 RuntimeJson = runtimeFile,
-                InferRuntimeIdentifiers = new[] { "rhel.9-x64", "centos.9-arm64", "win-x64" }
+                AdditionalRuntimeIdentifiers = new[] { "rhel.9-x64", "centos.9-arm64", "win-x64" }
             };
 
             _log.Reset();
