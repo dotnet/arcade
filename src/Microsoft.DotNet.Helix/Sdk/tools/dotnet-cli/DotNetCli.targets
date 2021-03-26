@@ -5,9 +5,16 @@
     <FindDotNetCliPackage Version="$(DotNetCliVersion)" Runtime="$(DotNetCliRuntime)" PackageType="$(DotNetCliPackageType)" Channel="$(DotNetCliChannel)">
       <Output TaskParameter="PackageUri" PropertyName="DotNetCliPackageUri"/>
     </FindDotNetCliPackage>
+    <FindDotNetCliPackage Condition="$(IncludeDotNetRuntime) == 'true'" Version="$(DotNetRuntimeVersion)" Runtime="$(DotNetCliRuntime)" PackageType="runtime" Channel="$(DotNetCliChannel)">
+      <Output TaskParameter="PackageUri" PropertyName="DotNetRuntimePackageUri"/>
+    </FindDotNetCliPackage>
     <ItemGroup>
       <HelixCorrelationPayload Include="dotnet-cli">
         <Uri>$(DotNetCliPackageUri)</Uri>
+        <Destination>$(DotNetCliDestination)</Destination>
+      </HelixCorrelationPayload>
+      <HelixCorrelationPayload Include="dotnet-runtime" Condition="$(IncludeDotNetRuntime) == 'true'">
+        <Uri>$(DotNetRuntimePackageUri)</Uri>
         <Destination>$(DotNetCliDestination)</Destination>
       </HelixCorrelationPayload>
     </ItemGroup>
