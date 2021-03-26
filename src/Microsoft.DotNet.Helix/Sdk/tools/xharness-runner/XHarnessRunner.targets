@@ -30,7 +30,7 @@
     </PropertyGroup>
 
     <!-- It can happen that the SDK is invoked in parallel and then it can fail when re-using the install location, so we ignore the exit code -->
-    <Exec Command="dotnet tool install --tool-path $(_XHarnessLocalToolPath) --version $(_XHarnessPackageVersion) --add-source $(XHarnessPackageSource) $(_XHarnessPackageName)"
+    <Exec Command="&quot;$(DotNetTool)&quot; tool install --framework net6.0 --tool-path $(_XHarnessLocalToolPath) --version $(_XHarnessPackageVersion) --add-source $(XHarnessPackageSource) $(_XHarnessPackageName)"
           WorkingDirectory="$(ArtifactsTmpDir)"
           IgnoreExitCode="true" />
 
