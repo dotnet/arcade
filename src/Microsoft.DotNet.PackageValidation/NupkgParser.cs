@@ -11,14 +11,14 @@ namespace Microsoft.DotNet.PackageValidation
 {
     public class NupkgParser
     {
-        public static Package CreatePackageObject(string packagePath)
+        public static Package CreatePackageObject(string packagePath, string runtimeGraph)
         {
             Dictionary<NuGetFramework, List<PackageDependency>> packageDependencies = new Dictionary<NuGetFramework, List<PackageDependency>>();
-             
+
             PackageArchiveReader nupkgReader = new PackageArchiveReader(packagePath);
             NuspecReader nuspecReader = nupkgReader.NuspecReader;
 
-            string title = nuspecReader.GetTitle();
+            string packageId = nuspecReader.GetId();
             string version = nuspecReader.GetVersion().ToString();
             IEnumerable<PackageDependencyGroup> dependencyGroups = nuspecReader.GetDependencyGroups();
 
@@ -27,7 +27,7 @@ namespace Microsoft.DotNet.PackageValidation
                 packageDependencies.Add(item.TargetFramework, item.Packages.ToList());
             }
 
-            return new Package(title, version, nupkgReader.GetFiles().Where(t => t.EndsWith(title + ".dll" )), packageDependencies);
+            return new Package(packageId, version, nupkgReader.GetFiles().Where(t => t.EndsWith(packageId + ".dll" )), packageDependencies, runtimeGraph);
         }
     }
 }

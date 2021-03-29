@@ -1,0 +1,18 @@
+<Project>
+  
+  <UsingTask TaskName="ValidatePackage" AssemblyFile="$(DotNetPackageValidationAssembly)"/>
+  
+  <Target Name="ValidatePackage2" AfterTargets="Pack">
+
+    <PropertyGroup>
+      <ExtractFolder Condition="'$(ExtractFolder)' == ''">$(PackageOutputPath)extract</ExtractFolder>
+      <PackagePath Condition="'$(PackagePath)' == ''">$(PackageOutputPath)$(PackageID).$(Version).nupkg</PackagePath>
+    </PropertyGroup>
+
+    <ValidatePackage PackagePath="$(PackagePath)"
+                     ExtractFolder="$(ExtractFolder)"
+                     RuntimeGraph="$(RuntimeGraph)"
+                     TestFrameworks="$(TestFrameworks)"/>
+  </Target>
+
+</Project>
