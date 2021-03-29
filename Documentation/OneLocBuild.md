@@ -17,8 +17,8 @@ OneLocBuild Azure DevOps task are both wrapped in the onelocbuild.yml job templa
 
 The script searches your checked-in code for all localized XLF files and template JSON files. Files can be excluded
 using a checked in file (/Localize/LocExclusions.json). The LocExclusions file excludes files based on simple matching.
-For example, the LocExclusions.json file below will exclude everything in a directory called `tests` and any files
-whose names include `test.xlf`.
+For example, the LocExclusions.json file below will exclude everything in a directory called `tests` and any file
+which include `test.xlf` in its name.
 
 ```json
 {
@@ -34,15 +34,15 @@ for how to proceed.
 
 ### Build-Time Generation
 
-The default way to then pass the generated LocProject.json file directly to the OneLocBuild task. This is the simpler
-of the two methods and removes the overhead of needing to maintain a checked in LocProject.json file. The
-LocProject.json file is emitted in build logs and as a build artifact for examination.
+**The recommended path** is to have the script pass the generated LocProject.json directly to the OneLocBuild task.
+This is the simpler of the two methods and removes the overhead of needing to maintain a checked in
+LocProject.json file. The LocProject.json file is emitted in build logs and as a build artifact for examination.
 
 ### Build-Time Validation
 
-Alternatively, repos can opt to check in a static LocProject.json and have the script compare it against the
-generated one. If they differ, the script will break the build so that a dev can update either the LocProject.json
-or the LocExclusions.json file accordingly.
+While it is **not the recommended path**, repos can instead opt to check in a static LocProject.json and have the
+script compare it against the generated one. If they differ, the script will break the build so that a dev can
+update either the LocProject.json or the LocExclusions.json file accordingly.
 
 Because the script can be run locally, devs can also do this validation prior to pushing their changes.
 
