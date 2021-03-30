@@ -83,7 +83,7 @@ AddFlow https://github.com/mono/linker $RuntimeChannel https://github.com/dotnet
 Write-Host "Add sdk->sdk flow"
 AddFlow https://github.com/dotnet/sdk $SdkChannel https://github.com/dotnet/installer $SdkBranch EveryBuild
 AddFlow https://github.com/dotnet/roslyn-analyzers $SdkChannel https://github.com/dotnet/sdk $SdkBranch EveryBuild
-AddFlow https://github.com/dotnet/templating $RuntimeChannel https://github.com/dotnet/sdk $SdkBranch EveryBuild
+AddFlow https://github.com/dotnet/templating $SdkChannel https://github.com/dotnet/sdk $SdkBranch EveryBuild
 
 
 
