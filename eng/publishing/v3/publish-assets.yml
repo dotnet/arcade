@@ -106,12 +106,12 @@ jobs:
           /p:MsdlToken=$(microsoft-symbol-server-pat)
           /p:SymWebToken=$(symweb-symbol-server-pat)
           /p:BuildQuality='${{ parameters.buildQuality }}'
-          /p:AzdoApiToken='$(dn-bot-dotnet-build-rw-code-rw)'
+          /p:AzdoApiToken='$(dn-bot-all-orgs-build-rw-code-rw)'
           /p:ArtifactsBasePath='$(Build.ArtifactStagingDirectory)/'
           /p:BuildId='$(AzDOBuildId)'
-          /p:AzureDevOpsOrg='dnceng'
+          /p:AzureDevOpsOrg='$(AzDOAccount)'
           /p:AzureProject='$(AzDOProjectName)'
-          /p:UseApiOverride='true'
+          /p:UseStreamingPublishing='true'
     - template: /eng/common/templates/steps/publish-logs.yml
       parameters:
         StageLabel: '${{ parameters.stageName }}'

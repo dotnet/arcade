@@ -1,16 +1,16 @@
- // Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using Microsoft.Build.Framework;
-using Microsoft.DotNet.Build.Tasks.Feed.Model;
-using Microsoft.DotNet.Maestro.Client;
-using Microsoft.DotNet.Maestro.Client.Models;
-using Microsoft.DotNet.VersionTools.BuildManifest.Model;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Build.Framework;
+using Microsoft.DotNet.Build.Tasks.Feed.Model;
+using Microsoft.DotNet.Maestro.Client;
+using Microsoft.DotNet.Maestro.Client.Models;
+using Microsoft.DotNet.VersionTools.BuildManifest.Model;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed
 {
@@ -190,7 +190,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 }
 
                 string temporarySymbolsLocation ="";
-                if (!UseApiOverride)
+                if (!UseStreamingPublishing)
                 {
 
                     temporarySymbolsLocation =

@@ -197,7 +197,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// If true, uses Azdo Api to download artifacts and symbols files one file at a time during publishing process.
         /// If it is set to false, then artifacts and symbols are downloaded in PackageArtifacts and BlobArtifacts directory before publishing. 
         /// </summary>
-        public bool UseApiOverride { get; set; } = false;
+        public bool UseStreamingPublishing { get; set; } = false;
 
         /// <summary>
         /// Just an internal flag to keep track whether we published assets via a V3 manifest or not.
@@ -393,7 +393,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 BuildId = this.BuildId,
                 AzureProject = this.AzureProject,
                 AzureDevOpsOrg = this.AzureDevOpsOrg,
-                UseApiOverride = this.UseApiOverride
+                UseStreamingPublishing = this.UseStreamingPublishing
             };
         }
     }

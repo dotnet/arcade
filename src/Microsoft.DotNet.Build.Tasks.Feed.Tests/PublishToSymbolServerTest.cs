@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.IO;
-using Castle.DynamicProxy.Generators.Emitters.SimpleAST;
 using Microsoft.Arcade.Test.Common;
 using Microsoft.DotNet.Build.Tasks.Feed.Model;
 using Microsoft.DotNet.Maestro.Client.Models;
@@ -136,6 +135,5 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 false,
                 false).IsCompleted);
         }
-
     }
 }
