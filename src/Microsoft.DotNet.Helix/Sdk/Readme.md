@@ -158,14 +158,14 @@ Given a local folder `$(TestFolder)` containing `runtests.cmd`, this will run `r
     Channel defaults to Current
   -->
   <ItemGroup>
-    <!-- Includes the specified dotnet package version/packagetype/channel, using the DotNetCliRuntime -->
+    <!-- Includes the 6.0.0-preview.4.21178.6 dotnet runtime package version from the Current channel, using the DotNetCliRuntime -->
     <AdditionalDotNetPackage Include="6.0.0-preview.4.21178.6">
       <!-- 'sdk', 'runtime' or 'aspnetcore-runtime' -->
       <PackageType>runtime</PackageType>
       <!-- 'Current' or 'LTS', determines what channel 'latest' version pulls from -->
       <Channel>Current</Channel>
     </AdditionalDotNetPackage>
-    <!-- Includes the specified version, using the default runtime packageType, DotNetCliRuntime, and Current channel  -->
+    <!-- Includes the 6.0.0-preview.4.21175.1 version, using the default runtime packageType, DotNetCliRuntime, and Current channel  -->
     <AdditionalDotNetPackage Include="6.0.0-preview.4.21175.1" />
   </ItemGroup>
   
