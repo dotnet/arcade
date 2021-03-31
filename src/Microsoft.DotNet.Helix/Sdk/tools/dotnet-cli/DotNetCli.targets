@@ -5,16 +5,9 @@
     <FindDotNetCliPackage Version="$(DotNetCliVersion)" Runtime="$(DotNetCliRuntime)" PackageType="$(DotNetCliPackageType)" Channel="$(DotNetCliChannel)">
       <Output TaskParameter="PackageUri" PropertyName="DotNetCliPackageUri"/>
     </FindDotNetCliPackage>
-    <FindDotNetCliPackage Condition="$(IncludeDotNetRuntime) == 'true'" Version="$(DotNetRuntimeVersion)" Runtime="$(DotNetCliRuntime)" PackageType="runtime" Channel="$(DotNetCliChannel)">
-      <Output TaskParameter="PackageUri" PropertyName="DotNetRuntimePackageUri"/>
-    </FindDotNetCliPackage>
     <ItemGroup>
       <HelixCorrelationPayload Include="dotnet-cli">
         <Uri>$(DotNetCliPackageUri)</Uri>
-        <Destination>$(DotNetCliDestination)</Destination>
-      </HelixCorrelationPayload>
-      <HelixCorrelationPayload Include="dotnet-runtime" Condition="$(IncludeDotNetRuntime) == 'true'">
-        <Uri>$(DotNetRuntimePackageUri)</Uri>
         <Destination>$(DotNetCliDestination)</Destination>
       </HelixCorrelationPayload>
     </ItemGroup>
@@ -24,5 +17,22 @@
       <HelixPreCommands Condition="$(IsPosixShell)">$(HelixPreCommands);export DOTNET_ROOT=$HELIX_CORRELATION_PAYLOAD/$(DotNetCliDestination);export DOTNET_CLI_TELEMETRY_OPTOUT=1</HelixPreCommands>
       <HelixPreCommands Condition="!$(IsPosixShell)">$(HelixPreCommands);set DOTNET_ROOT=%HELIX_CORRELATION_PAYLOAD%\$(DotNetCliDestination);set DOTNET_CLI_TELEMETRY_OPTOUT=1</HelixPreCommands>
     </PropertyGroup>
+  </Target>
+  
+  <Target Name="AddAdditionalRuntimes" 
+          Condition="@(AdditionalDotNetPackage->Count()) != 0"
+          AfterTargets="Build" 
+          Outputs="%(AdditionalDotNetPackage.Identity)">
+
+    <Message Text = "FindDotNetCliPackage '%(AdditionalDotNetPackage.Identity)' '$(DotNetCliRuntime)' '%(AdditionalDotNetPackage.PackageType)' '%(AdditionalDotNetPackage.Channel)' "/>
+    <FindDotNetCliPackage Version="%(AdditionalDotNetPackage.Identity)" Runtime="$(DotNetCliRuntime)" PackageType="%(AdditionalDotNetPackage.PackageType)" Channel="$(DotNetCliChannel)">
+      <Output TaskParameter="PackageUri" PropertyName="DotNetCliPackageUri"/>
+    </FindDotNetCliPackage>
+    <ItemGroup>
+      <HelixCorrelationPayload Include="dotnet-additional">
+        <Uri>$(DotNetCliPackageUri)</Uri>
+        <Destination>$(DotNetCliDestination)</Destination>
+      </HelixCorrelationPayload>
+    </ItemGroup>
   </Target>
 </Project>
