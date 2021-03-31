@@ -150,64 +150,72 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 relativeBlobPath = $"{recursiveDir}{fileName}";
             }
 
-            relativeBlobPath = $"{RelativePath}{relativeBlobPath}".Replace("\\", "/");
-
-            if (relativeBlobPath.Contains("//"))
+            if (!string.IsNullOrEmpty(relativeBlobPath))
             {
-                Log.LogError(
-                    $"Item '{item.ItemSpec}' RelativeBlobPath contains virtual directory " +
-                    $"without name (double forward slash): '{relativeBlobPath}'");
-                return;
-            }
+                relativeBlobPath = $"{RelativePath}{relativeBlobPath}".Replace("\\", "/");
 
-            Log.LogMessage($"Uploading {relativeBlobPath}");
-
-            if (clientThrottle != null)
-            {
-                await clientThrottle.WaitAsync();
-            }
-
-            try
-            {
-                AzureStorageUtils blobUtils = new AzureStorageUtils(AccountName, AccountKey, ContainerName);
-
-                if (!options.AllowOverwrite && await blobUtils.CheckIfBlobExistsAsync(relativeBlobPath))
+                if (relativeBlobPath.StartsWith("//"))
                 {
-                    if (options.PassIfExistingItemIdentical)
+                    Log.LogError(
+                        $"Item '{item.ItemSpec}' RelativeBlobPath contains virtual directory " +
+                        $"without name (double forward slash): '{relativeBlobPath}'");
+                    return;
+                }
+
+                Log.LogMessage($"Uploading {relativeBlobPath}");
+
+                if (clientThrottle != null)
+                {
+                    await clientThrottle.WaitAsync();
+                }
+
+                try
+                {
+                    AzureStorageUtils blobUtils = new AzureStorageUtils(AccountName, AccountKey, ContainerName);
+
+                    if (!options.AllowOverwrite && await blobUtils.CheckIfBlobExistsAsync(relativeBlobPath))
                     {
-                        if (!await blobUtils.IsFileIdenticalToBlobAsync(item.ItemSpec, relativeBlobPath))
+                        if (options.PassIfExistingItemIdentical)
                         {
-                            Log.LogError(
-                                $"Item '{item}' already exists with different contents " +
-                                $"at '{relativeBlobPath}'");
+                            if (!await blobUtils.IsFileIdenticalToBlobAsync(item.ItemSpec, relativeBlobPath))
+                            {
+                                Log.LogError(
+                                    $"Item '{item}' already exists with different contents " +
+                                    $"at '{relativeBlobPath}'");
+                            }
+                        }
+                        else
+                        {
+                            Log.LogError($"Item '{item}' already exists at '{relativeBlobPath}'");
                         }
                     }
                     else
                     {
-                        Log.LogError($"Item '{item}' already exists at '{relativeBlobPath}'");
+                        using (FileStream stream =
+                            new FileStream(item.ItemSpec, FileMode.Open, FileAccess.Read, FileShare.Read))
+                        {
+                            Log.LogMessage($"Uploading {item} to {relativeBlobPath}.");
+                            await blobUtils.UploadBlockBlobAsync(item.ItemSpec, relativeBlobPath, stream);
+                        }
                     }
                 }
-                else
+                catch (Exception exc)
                 {
-                    using (FileStream stream =
-                        new FileStream(item.ItemSpec, FileMode.Open, FileAccess.Read, FileShare.Read))
+                    Log.LogError(
+                        $"Unable to upload to {relativeBlobPath} in Azure Storage account {AccountName}/{ContainerName} due to {exc}.");
+                    throw;
+                }
+                finally
+                {
+                    if (clientThrottle != null)
                     {
-                        Log.LogMessage($"Uploading {item} to {relativeBlobPath}.");
-                        await blobUtils.UploadBlockBlobAsync(item.ItemSpec, relativeBlobPath, stream);
+                        clientThrottle.Release();
                     }
                 }
             }
-            catch (Exception exc)
+            else
             {
-                Log.LogError($"Unable to upload to {relativeBlobPath} in Azure Storage account {AccountName}/{ContainerName} due to {exc}.");
-                throw;
-            }
-            finally
-            {
-                if (clientThrottle != null)
-                {
-                    clientThrottle.Release();
-                }
+                Log.LogError($"Relative blob path is empty.");
             }
         }
 
