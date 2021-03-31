@@ -730,6 +730,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         /// <summary>
         /// Gets the container Id, that is going to be used in another API call to download the assets
+        /// ContainerId is the same for PackageArtifacts and BlobArtifacts
         /// </summary>
         /// <returns></returns>
         private async Task<string> GetContainerIdAsync()
