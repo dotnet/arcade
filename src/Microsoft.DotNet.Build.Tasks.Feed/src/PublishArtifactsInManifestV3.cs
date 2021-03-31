@@ -189,7 +189,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     return false;
                 }
 
-                string temporarySymbolsLocation ="";
+                string temporarySymbolsLocation = "";
                 if (!UseStreamingPublishing)
                 {
 
@@ -199,8 +199,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     EnsureTemporaryDirectoryExists(temporarySymbolsLocation);
                     DeleteTemporaryFiles(temporarySymbolsLocation);
 
-                    //Copying symbol files to temporary location is required because the symUploader API needs read/write access to the files,
-                    //since we publish blobs and symbols in parallel this will cause IO exceptions.
+                    // Copying symbol files to temporary location is required because the symUploader API needs read/write access to the files,
+                    // since we publish blobs and symbols in parallel this will cause IO exceptions.
                     CopySymbolFilesToTemporaryLocation(BuildModel, temporarySymbolsLocation);
                 }
 
@@ -208,7 +208,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     HandlePackagePublishingAsync(buildAssets),
                     HandleBlobPublishingAsync(buildAssets),
                     HandleSymbolPublishingAsync(PdbArtifactsBasePath, MsdlToken,
-                        SymWebToken, SymbolPublishingExclusionsFile, PublishSpecialClrFiles, buildAssets ,temporarySymbolsLocation)
+                        SymWebToken, SymbolPublishingExclusionsFile, PublishSpecialClrFiles, buildAssets, temporarySymbolsLocation)
                 });
 
                 DeleteTemporaryFiles(temporarySymbolsLocation);

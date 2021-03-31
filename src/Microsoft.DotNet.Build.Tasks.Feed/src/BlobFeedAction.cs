@@ -122,17 +122,15 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             return !Log.HasLoggedErrors;
         }
 
-        public async Task PublishToFlatContainerAsync(IEnumerable<ITaskItem> taskItems, int maxClients, PushOptions pushOptions)
+        public async Task PublishToFlatContainerAsync(IEnumerable<ITaskItem> taskItems, int maxClients,
+            PushOptions pushOptions)
         {
             if (taskItems.Any())
             {
                 using (var clientThrottle = new SemaphoreSlim(maxClients, maxClients))
                 {
                     await System.Threading.Tasks.Task.WhenAll(taskItems.Select(
-                        item =>
-                        {
-                            return UploadAssetAsync(item, clientThrottle, pushOptions);
-                        }
+                        item => { return UploadAssetAsync(item, pushOptions, clientThrottle); }
                     ));
                 }
             }
@@ -140,68 +138,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public async Task UploadAssetAsync(
             ITaskItem item,
-            PushOptions options)
-        {
-            string relativeBlobPath = item.GetMetadata("RelativeBlobPath");
-
-            if (string.IsNullOrEmpty(relativeBlobPath))
-            {
-                string fileName = Path.GetFileName(item.ItemSpec);
-                string recursiveDir = item.GetMetadata("RecursiveDir");
-                relativeBlobPath = $"{recursiveDir}{fileName}";
-            }
-
-            relativeBlobPath = $"{RelativePath}{relativeBlobPath}".Replace("\\", "/");
-
-            if (relativeBlobPath.Contains("//"))
-            {
-                Log.LogError(
-                    $"Item '{item.ItemSpec}' RelativeBlobPath contains virtual directory " +
-                    $"without name (double forward slash): '{relativeBlobPath}'");
-                return;
-            }
-
-            Log.LogMessage($"Uploading {relativeBlobPath}");
-            try
-            {
-                AzureStorageUtils blobUtils = new AzureStorageUtils(AccountName, AccountKey, ContainerName);
-
-                if (!options.AllowOverwrite && await blobUtils.CheckIfBlobExistsAsync(relativeBlobPath))
-                {
-                    if (options.PassIfExistingItemIdentical)
-                    {
-                        if (!await blobUtils.IsFileIdenticalToBlobAsync(item.ItemSpec, relativeBlobPath))
-                        {
-                            Log.LogError(
-                                $"Item '{item}' already exists with different contents " +
-                                $"at '{relativeBlobPath}'");
-                        }
-                    }
-                    else
-                    {
-                        Log.LogError($"Item '{item}' already exists at '{relativeBlobPath}'");
-                    }
-                }
-                else
-                {
-                    using (FileStream stream =
-                        new FileStream(item.ItemSpec, FileMode.Open, FileAccess.Read, FileShare.Read))
-                    {
-                        Log.LogMessage($"Uploading {item} to {relativeBlobPath}.");
-                        await blobUtils.UploadBlockBlobAsync(item.ItemSpec, relativeBlobPath, stream);
-                    }
-                }
-            }
-            catch (Exception exc)
-            {
-                Log.LogError($"Unable to upload to {relativeBlobPath} in Azure Storage account {AccountName}/{ContainerName} due to {exc}.");
-                throw;
-            }
-        }
-        public async Task UploadAssetAsync(
-            ITaskItem item,
-            SemaphoreSlim clientThrottle,
-            PushOptions options)
+            PushOptions options,
+            SemaphoreSlim clientThrottle = null)
         {
             string relativeBlobPath = item.GetMetadata("RelativeBlobPath");
 
@@ -224,7 +162,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
             Log.LogMessage($"Uploading {relativeBlobPath}");
 
-            await clientThrottle.WaitAsync();
+            if (clientThrottle != null)
+            {
+                await clientThrottle.WaitAsync();
+            }
 
             try
             {
@@ -263,7 +204,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             }
             finally
             {
-                clientThrottle.Release();
+                if (clientThrottle != null)
+                {
+                    clientThrottle.Release();
+                }
             }
         }
 

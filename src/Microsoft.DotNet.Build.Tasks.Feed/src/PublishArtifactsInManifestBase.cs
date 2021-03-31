@@ -170,6 +170,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             DelayBase = 2.5 // 2.5 ^ 5 = ~1.5 minutes max wait between retries
         };
 
+        private const string BlobArtifacts = "BlobArtifacts";
+
+        private const string PackageArtifacts = "PackageArtifacts";
+
         public override bool Execute()
         {
             return ExecuteAsync().GetAwaiter().GetResult();
@@ -392,7 +396,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 {
                     string temporarySymbolsDirectory = CreateTemporaryDirectory();
                     localSymbolPath = Path.Combine(temporarySymbolsDirectory, symbol);
-                    await DownloadFileAsync(client, "BlobArtifacts", containerId, symbol, localSymbolPath);
+                    await DownloadFileAsync(client, BlobArtifacts, containerId, symbol, localSymbolPath);
 
                     Log.LogMessage(MessageImportance.Low, $"Local Symbol path to downloaded file {localSymbolPath}");
                     List<string> symbolFiles = new List<string>();
@@ -744,7 +748,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                     foreach (var artifact in buildArtifacts.value)
                     {
-                        if (string.Equals(artifact.name, "BlobArtifacts"))
+                        if (string.Equals(artifact.name, BlobArtifacts))
                         {
                             string[] segment = artifact.resource.data.Split('/');
                             containerId = segment[1];
@@ -999,7 +1003,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     Path.GetFullPath(Path.Combine(ArtifactsBasePath, Guid.NewGuid().ToString()));
                 EnsureTemporaryDirectoryExists(temporaryPackageDirectory);
                 localPackagePath = Path.Combine(temporaryPackageDirectory, packageFilename);
-                await DownloadFileAsync(client, "PackageArtifacts", containerId,
+                await DownloadFileAsync(client, PackageArtifacts, containerId,
                     packageFilename,
                     localPackagePath);
                 if (!File.Exists(localPackagePath))
@@ -1387,7 +1391,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 string temporaryPackageDirectory = CreateTemporaryDirectory();
                 var packageFilename = $"{package.Id}.{package.Version}.nupkg";
                 localPackagePath = Path.Combine(temporaryPackageDirectory, packageFilename);
-                await DownloadFileAsync(client, "PackageArtifacts", containerId, packageFilename,
+                await DownloadFileAsync(client, PackageArtifacts, containerId, packageFilename,
                     localPackagePath);
                 if (!File.Exists(localPackagePath))
                 {
@@ -1504,7 +1508,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     });
                 TryAddAssetLocation(blob.Id, assetVersion: null, buildAssets, feedConfig,
                     AddAssetLocationToAssetAssetLocationType.Container);
-                await blobFeedAction.UploadAssetAsync(item, pushOptions);
+                await blobFeedAction.UploadAssetAsync(item, pushOptions, null);
                 DeleteTemporaryFile(localBlobPath);
                 DeleteTemporaryDirectory(temporaryBlobDirectory);
             }
@@ -1657,7 +1661,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// <summary>
         /// Delete the files after publishing, this is part of cleanup
         /// </summary>
-        /// <param name="temporaryLocation"></param>
+        /// <param name="filePath"></param>
         public void DeleteTemporaryFile(string filePath)
         {
             try
@@ -1682,7 +1686,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         {
             if (Directory.Exists(temporaryLocation))
             {
-                Directory.Delete(temporaryLocation);
+                try
+                {
+                    Directory.Delete(temporaryLocation);
+                }
+                catch (Exception ex)
+                {
+                    Log.LogWarning(ex.Message);
+                }
             }
         }
 
