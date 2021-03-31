@@ -25,7 +25,7 @@
           Outputs="%(AdditionalDotNetPackage.Identity)">
 
     <Message Text = "FindDotNetCliPackage '%(AdditionalDotNetPackage.Identity)' '$(DotNetCliRuntime)' '%(AdditionalDotNetPackage.PackageType)' '%(AdditionalDotNetPackage.Channel)' "/>
-    <FindDotNetCliPackage Version="%(AdditionalDotNetPackage.Identity)" Runtime="$(DotNetCliRuntime)" PackageType="%(AdditionalDotNetPackage.PackageType)" Channel="$(DotNetCliChannel)">
+    <FindDotNetCliPackage Version="%(AdditionalDotNetPackage.Identity)" Runtime="$(DotNetCliRuntime)" PackageType="%(AdditionalDotNetPackage.PackageType)" Channel="%(AdditionalDotNetPackage.Channel)">
       <Output TaskParameter="PackageUri" PropertyName="DotNetCliPackageUri"/>
     </FindDotNetCliPackage>
     <ItemGroup>
