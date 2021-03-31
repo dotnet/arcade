@@ -154,8 +154,8 @@ Given a local folder `$(TestFolder)` containing `runtests.cmd`, this will run `r
 
   <!--
     Including additional dotnet correlation payloads
-    PackageType defaults to runtime
-    Channel defaults to Current
+    PackageType (defaults to runtime)
+    Channel (defaults to Current)
   -->
   <ItemGroup>
     <!-- Includes the 6.0.0-preview.4.21178.6 dotnet runtime package version from the Current channel, using the DotNetCliRuntime -->
