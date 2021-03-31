@@ -153,7 +153,7 @@ Given a local folder `$(TestFolder)` containing `runtests.cmd`, this will run `r
   </PropertyGroup>
 
   <!--
-    Including additional dotnet correlation payloads
+    Optional additional dotnet runtimes or SDKs for correlation payloads
     PackageType (defaults to runtime)
     Channel (defaults to Current)
   -->
