@@ -26,12 +26,12 @@
     <PropertyGroup>
       <_channel>%(AdditionalDotNetPackage.Channel)</_channel>
       <_channel Condition=" '$(_channel)' == '' ">Current</_channel>
-      <_package>%(AdditionalDotNetPackage.PackageType)</_package>
-      <_package Condition=" '$(_package)' == '' ">runtime</_package>
+      <_packageType>%(AdditionalDotNetPackage.PackageType)</_packageType>
+      <_packageType Condition=" '$(_packageType)' == '' ">runtime</_packageType>
     </PropertyGroup>
 
-    <Message Text = "FindDotNetCliPackage '%(AdditionalDotNetPackage.Identity)' '$(DotNetCliRuntime)' '$(_package)' '$(_channel)' "/>
-    <FindDotNetCliPackage Version="%(AdditionalDotNetPackage.Identity)" Runtime="$(DotNetCliRuntime)" PackageType="$(_package)" Channel="$(_channel)">
+    <Message Text = "Adding correlation payload for additional .NET Core package: Version: '%(AdditionalDotNetPackage.Identity)'  Runtime: '$(DotNetCliRuntime)' PackageType: '$(_packageType)' Channel: '$(_channel)' "/>
+    <FindDotNetCliPackage Version="%(AdditionalDotNetPackage.Identity)" Runtime="$(DotNetCliRuntime)" PackageType="$(_packageType)" Channel="$(_channel)">
       <Output TaskParameter="PackageUri" PropertyName="DotNetCliPackageUri"/>
     </FindDotNetCliPackage>
     <ItemGroup>
