@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>netcoreapp3.1;net472</TargetFrameworks>
@@ -8,6 +8,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Build.Utilities.Core" Version="$(MicrosoftBuildUtilitiesCoreVersion)" />
     <PackageReference Include="NuGet.Frameworks" Version="$(NuGetVersion)" />
+    <PackageReference Include="NuGet.Packaging" Version="$(NuGetVersion)" />
   </ItemGroup>
 
   <ItemGroup>

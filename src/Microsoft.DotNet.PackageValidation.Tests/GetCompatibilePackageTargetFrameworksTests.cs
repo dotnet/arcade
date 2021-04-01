@@ -11,7 +11,7 @@ namespace Microsoft.DotNet.PackageValidation.Tests
     {
         public GetCompatibilePackageTargetFrameworksTests()
         {
-            GetCompatiblePackageTargetFrameworks.Initialize();
+            PackageValidation.Helpers.Initialize(Helpers.allTargetFrameworks);
         }
 
         public static IEnumerable<object[]> PackageTFMData => new List<object[]>
