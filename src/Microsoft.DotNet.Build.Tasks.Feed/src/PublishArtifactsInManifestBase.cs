@@ -394,7 +394,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             Dictionary<string, string> serversToPublish =
                 GetTargetSymbolServers(feedConfigsForSymbols, msdlToken, symWebToken);
 
-            IEnumerable<string> filesToSymbolServer = null;
             using (HttpClient client = CreateAzdoClient(AzureDevOpsOrg, true))
             {
                 string localSymbolPath = "";
@@ -422,7 +421,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                                 serverPath,
                                 token,
                                 symbolFiles,
-                                filesToSymbolServer,
+                                null,
                                 null,
                                 ExpirationInDays,
                                 false,
@@ -452,6 +451,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             }
 
             // publishing pdb artifacts 
+            IEnumerable<string> filesToSymbolServer = null;
             if (Directory.Exists(pdbArtifactsBasePath))
             {
                 var pdbEntries = System.IO.Directory.EnumerateFiles(pdbArtifactsBasePath, "*.pdb",
@@ -468,6 +468,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     var serverPath = server.Key;
                     var token = server.Value;
                     symbolLog.AppendLine($"Publishing pdbFiles to {serverPath}:");
+                    
                     try
                     {
                         await PublishSymbolsHelper.PublishAsync(
@@ -485,7 +486,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             false,
                             true);
                     }
-
                     catch (Exception ex)
                     {
                         Log.LogError(ex.Message);
@@ -609,7 +609,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             false,
                             true);
                     }
-                    
                     catch (Exception ex)
                     {
                         Log.LogError(ex.Message);
