@@ -88,7 +88,6 @@
 
     <Error Condition="'$(ManifestsBasePath)' == ''" Text="ManifestsBasePath is empty. Please provide the full path to asset manifest(s) directory." />
     <Error Condition="'$(BlobBasePath)' == '' OR '$(PackageBasePath)' == ''" Text="A valid full path to BlobBasePath and PackageBasePath is required." />
-    <Error Condition="'$(ArtifactsBasePath)' == ''" Text="ArtifactBasePath is empty. Please provide the full path to ArtifactBasePath directory." />
 
     <ItemGroup>
       <MergedManifest Condition="Exists('$(BlobBasePath)\MergedManifest.xml')" Include="$(BlobBasePath)\MergedManifest.xml" />
@@ -109,6 +108,7 @@
       <InternalChecksumsFeedKey>$(InternalChecksumsAzureAccountKey)</InternalChecksumsFeedKey>
       <AllowFeedOverrides Condition="'$(AllowFeedOverrides)' == ''">false</AllowFeedOverrides>
       <UseStreamingPublishing Condition="'$(UseStreamingPublishing)' == ''">false</UseStreamingPublishing>
+      <ArtifactsBasePath Condition="'$(ArtifactsBasePath)' == ''">$(BlobBasePath)</ArtifactsBasePath>
     </PropertyGroup>
 
     <Error
