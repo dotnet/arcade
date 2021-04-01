@@ -28,3 +28,4 @@ AsmDiff is a command line tool which may be used to check the API changes betwee
 - `-w|--DiffWriter` - Type of difference writer to use, either CSharp code diffs or flat list of compat violations (default).
 - `-s|--SyntaxWriter` - Specific the syntax writer type. Only used if the writer is CSDecl
 - `-o|--OutFile` - Output file path. Default is the console.
+- `-l|--Language` - Provide a languagetag for localized content. Currently language specific content is only available in Markdown for en and de. If this parameter is not provided the environments default language will be used. If a specific language is not supported english is the default language.
