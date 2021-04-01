@@ -6,7 +6,6 @@ using Microsoft.DotNet.Build.Tasks;
 using NuGet.ContentModel;
 using NuGet.Frameworks;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 
 namespace Microsoft.DotNet.PackageValidation
@@ -24,44 +23,60 @@ namespace Microsoft.DotNet.PackageValidation
 
         public string RuntimeGraph { get; set; }
 
+        public string NoWarn { get; set; }
 
         public override bool Execute()
         {
-            if (!Debugger.IsAttached) { Debugger.Launch(); } else { Debugger.Break(); };
             Helpers.Initialize(TestFrameworks);
+
+            if (!File.Exists(PackagePath))
+            {
+                Log.LogError($"{PackagePath} does not exist. Please check your package path.");
+                return false;
+            }
+
             Helpers.ExtractPackage(PackagePath, ExtractFolder);
             Package package = NupkgParser.CreatePackageObject(PackagePath, RuntimeGraph);
             ValidateCompileAgainstTimeRuntimeTfms(package);
             ValidateCompileAndRuntimeAgainstRelatedTfms(package);
-            return true;
+            return !Log.HasLoggedErrors; ;
         }
 
         public void ValidateCompileAgainstTimeRuntimeTfms(Package package)
         {
-            foreach (var compileItem in package.CompileAssets)
+            foreach (ContentItem compileItem in package.CompileAssets)
             {
                 NuGetFramework testFramework = (NuGetFramework)compileItem.Properties["tfm"];
                 ContentItem runtimeItem = package.FindBestRuntimeAssetForFramework(testFramework);
-                string compileDll = Path.Combine(ExtractFolder, compileItem.Path);
-                string runtimeDll = Path.Combine(ExtractFolder, runtimeItem.Path);
-            
-                // Run Api Compat between compile dll and runtime dll
-                IEnumerable<string> rids = package.Rids;
-                RunApiCompat(compileItem.Path, runtimeItem.Path);
-                foreach (var rid in rids)
+
+                if (runtimeItem == null)
+                {
+                    Log.LogError($"There is no rid less runtime asset for {testFramework.Framework}.");
+                }
+                else
+                {
+                    RunApiCompat(compileItem.Path, runtimeItem.Path);
+                }
+ 
+                foreach (var rid in package.Rids)
                 {
                     runtimeItem = package.FindBestRuntimeAssetForFrameworkAndRuntime(testFramework, rid);
-                    // Run the api compat & version check here
-                    RunApiCompat(compileItem.Path, runtimeItem.Path);
+                    if (runtimeItem == null)
+                    {
+                        Log.LogError($"There is no runtime asset for {testFramework.Framework}-{rid}.");
+                    }
+                    else
+                    {
+                        RunApiCompat(compileItem.Path, runtimeItem.Path);
+                    }
                 }
             }
         }
 
         public void ValidateCompileAndRuntimeAgainstRelatedTfms(Package package)
         {
-            var relatedFrameworks = package.FrameworksInPackage;
-            HashSet<NuGetFramework> testFrameworks = new HashSet<NuGetFramework>();
-            foreach (var item in relatedFrameworks)
+            HashSet<NuGetFramework> testFrameworks = new();
+            foreach (NuGetFramework item in package.FrameworksInPackage)
             {
                 if (Helpers.packageTfmMapping.ContainsKey(item))
                     testFrameworks.UnionWith(Helpers.packageTfmMapping[item]);
@@ -70,17 +85,34 @@ namespace Microsoft.DotNet.PackageValidation
             foreach (var framework in testFrameworks)
             {
                 var compileTime = package.FindBestCompileAssetForFramework(framework);
-                var runTime = package.FindBestRuntimeAssetForFramework(framework);
-
-                // Run Api Compat between compile dll and runtime dll
-                RunApiCompat(compileTime.Path, runTime.Path);
-                
-                IEnumerable<string> rids = package.Rids;
-                foreach (var rid in rids)
+                if (compileTime == null)
                 {
-                    runTime = package.FindBestRuntimeAssetForFrameworkAndRuntime(framework, rid);
+                    Log.LogError($"There is no compile time asset for {framework}.");
+                }
+
+                var runtime = package.FindBestRuntimeAssetForFramework(framework);
+                if (runtime == null)
+                {
+                    Log.LogError($"There is no runtime asset for {framework}.");
+                }
+
+                if (runtime != null && compileTime != null)
+                {
+                    RunApiCompat(compileTime.Path, runtime.Path);
+                }
+
+                foreach (string rid in package.Rids)
+                {
+                    runtime = package.FindBestRuntimeAssetForFrameworkAndRuntime(framework, rid);
                     // Run the api compat & version check here
-                    RunApiCompat(compileTime.Path, runTime.Path);
+                    if (runtime == null)
+                    {
+                        Log.LogError($"There is no runtime asset for {framework}-{rid}.");
+                    }
+                    else
+                    {
+                        RunApiCompat(compileTime.Path, runtime.Path);
+                    }
                 }
             }
         }
@@ -88,7 +120,13 @@ namespace Microsoft.DotNet.PackageValidation
         private void RunApiCompat(string compileTimeDll, string runtTimeDll)
         {
             string compileTimeDllPath = Path.Combine(ExtractFolder, compileTimeDll);
-            string runTimeDllPath = Path.Combine(ExtractFolder, runtTimeDll);
+            string runtimeDllPath = Path.Combine(ExtractFolder, runtTimeDll);
+            ApiCompatRunner apiCompatRunner = new ApiCompatRunner(compileTimeDllPath, runtimeDllPath);
+
+            foreach (var difference in apiCompatRunner.RunApiCompat(NoWarn))
+            {
+                Log.LogError(difference.ToString());
+            }
         }
     }
 }

@@ -8,6 +8,7 @@ using NuGet.Frameworks;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.IO;
 
 namespace Microsoft.DotNet.PackageValidation
 {
@@ -24,7 +25,6 @@ namespace Microsoft.DotNet.PackageValidation
 
         public override bool Execute()
         {
-            bool result = true;
             List<ITaskItem> testPackages = new List<ITaskItem>();
 
             try
@@ -32,6 +32,12 @@ namespace Microsoft.DotNet.PackageValidation
                 Helpers.Initialize(TestFrameworks);
                 foreach (var packagePath in PackagePaths)
                 {
+                    if (!File.Exists(packagePath))
+                    {
+                        Log.LogError($"{packagePath} does not exist. Please check the package path.");
+                        continue;
+                    }
+
                     Package package = NupkgParser.CreatePackageObject(packagePath, null);
                     List<NuGetFramework> frameworksToTest = GetTestFrameworks(package.FrameworksInPackage);
                     testPackages.AddRange(CreateItemFromTestFramework(package.PackageId, package.Version, frameworksToTest, package.Rids));
@@ -45,15 +51,15 @@ namespace Microsoft.DotNet.PackageValidation
                 Log.LogErrorFromException(e, showStackTrace: false);
             }
             
-            return result && !Log.HasLoggedErrors;
+            return !Log.HasLoggedErrors;
         }
 
-        public static List<NuGetFramework> GetTestFrameworks(IEnumerable<NuGetFramework> packageTargetFrameworks)
+        internal static List<NuGetFramework> GetTestFrameworks(IEnumerable<NuGetFramework> packageTargetFrameworks)
         {
             List<NuGetFramework> frameworksToTest = new List<NuGetFramework>();
 
             // Testing the package installation on all tfms linked with package targetframeworks.
-            foreach (var item in packageTargetFrameworks)
+            foreach (NuGetFramework item in packageTargetFrameworks)
             {
                 if (Helpers.packageTfmMapping.ContainsKey(item))
                     frameworksToTest.AddRange(Helpers.packageTfmMapping[item].ToList());
@@ -64,25 +70,25 @@ namespace Microsoft.DotNet.PackageValidation
             frameworksToTest = frameworksToTest.Distinct().ToList();
             return frameworksToTest;
         }
-    
-        public IList<ITaskItem> CreateItemFromTestFramework(string title, string version, IEnumerable<NuGetFramework> testFrameworks, IEnumerable<string> rids)
+
+        private IList<ITaskItem> CreateItemFromTestFramework(string title, string version, IEnumerable<NuGetFramework> testFrameworks, IEnumerable<string> rids)
         {
-            IList<ITaskItem> testprojects = new List<ITaskItem>();
-            foreach (var framework in testFrameworks)
+            IList<ITaskItem> generatedProjects = new List<ITaskItem>();
+            foreach (NuGetFramework framework in testFrameworks)
             {
-                var supportedPackage = new TaskItem(title);
-                supportedPackage.SetMetadata("Version", version);
-                supportedPackage.SetMetadata("TargetFramework", framework.ToString());
-                supportedPackage.SetMetadata("TargetFrameworkShort", framework.GetShortFolderName());
+                var generatedProject = new TaskItem(title);
+                generatedProject.SetMetadata("Version", version);
+                generatedProject.SetMetadata("TargetFramework", framework.ToString());
+                generatedProject.SetMetadata("TargetFrameworkShort", framework.GetShortFolderName());
 
                 if (rids != null)
                 {
-                    supportedPackage.SetMetadata("RuntimeIdentifiers", string.Join(";", rids.Select(t => t + "-x64")).Replace("unix", "linux-x64;osx"));
+                    generatedProject.SetMetadata("RuntimeIdentifiers", string.Join(";", rids.Select(t => t + "-x64")).Replace("unix", "linux-x64;osx"));
                 }
-                testprojects.Add(supportedPackage);
+                generatedProjects.Add(generatedProject);
             }
 
-            return testprojects;
+            return generatedProjects;
         }
     }    
 }

@@ -9,7 +9,10 @@ using System.Linq;
 
 namespace Microsoft.DotNet.PackageValidation
 {
-    public class NupkgParser
+    /// <summary>
+    /// Creates a package object from the nupkg package.
+    /// </summary>
+    internal class NupkgParser
     {
         public static Package CreatePackageObject(string packagePath, string runtimeGraph)
         {

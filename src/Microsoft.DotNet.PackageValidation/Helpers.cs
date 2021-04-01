@@ -9,11 +9,11 @@ using System.Linq;
 
 namespace Microsoft.DotNet.PackageValidation
 {
-    public class Helpers
+    internal class Helpers
     {
         public static IList<NuGetFramework> allTargetFrameworks;
         public static Dictionary<NuGetFramework, HashSet<NuGetFramework>> packageTfmMapping = new();
-        
+
         public static void Initialize(IEnumerable<string> nugetFrameworks)
         {
             // Defining the set of known frameworks that we care to test

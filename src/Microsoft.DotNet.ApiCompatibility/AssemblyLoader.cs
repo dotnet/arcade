@@ -1,4 +1,4 @@
-﻿using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using System;
 using System.Collections.Generic;
@@ -87,47 +87,6 @@ namespace Microsoft.DotNet.ApiCompatibility
 
             LoadFromPaths(referencePaths);
             return _cSharpCompilation.Assembly;
-        }
-
-        public IEnumerable<IAssemblySymbol> LoadMatchingAssemblies(IEnumerable<IAssemblySymbol> fromAssemblies, IEnumerable<string> searchPaths, bool validateMatchingIdentity = true, bool warnOnMissingAssemblies = true)
-        {
-            List<IAssemblySymbol> matchingAssemblies = new List<IAssemblySymbol>();
-            foreach (IAssemblySymbol assembly in fromAssemblies)
-            {
-                bool found = false;
-                string name = $"{assembly.Name}.dll";
-                foreach (string directory in searchPaths)
-                {
-                    if (!Directory.Exists(directory))
-                    {
-                        throw new ArgumentException($"Matching assembly search directory '{directory}' does not exist", nameof(searchPaths));
-                    }
-
-                    string possiblePath = Path.Combine(directory, name);
-                    if (File.Exists(possiblePath))
-                    {
-                        MetadataReference reference = CreateMetadataReferenceIfNeeded(possiblePath);
-                        ISymbol symbol = _cSharpCompilation.GetAssemblyOrModuleSymbol(reference);
-                        if (symbol is IAssemblySymbol matchingAssembly)
-                        {
-                            if (validateMatchingIdentity && !matchingAssembly.Identity.Equals(assembly.Identity))
-                            {
-                                _cSharpCompilation = _cSharpCompilation.RemoveReferences(new[] { reference });
-                                _loadedAssemblies.Remove(name);
-                                continue;
-                            }
-
-                            matchingAssemblies.Add(matchingAssembly);
-                            found = true;
-                            break;
-                        }
-                    }
-                }
-
-                // TODO: check if found and log error
-            }
-
-            return matchingAssemblies;
         }
 
         private IEnumerable<MetadataReference> LoadFromPaths(IEnumerable<string> paths)

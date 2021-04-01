@@ -15,7 +15,7 @@ namespace Microsoft.DotNet.PackageValidation
     {
         private ManagedCodeConventions _conventions;
 
-        public Package(string packageId, string version, IEnumerable<string> packageAssets, Dictionary<NuGetFramework, List<PackageDependency>> packageDependencies, string runtimeFile)
+        public Package(string packageId, string version, IEnumerable<string> packageAssets, Dictionary<NuGetFramework, List<PackageDependency>> packageDependencies, string runtimeGraphPath)
         {
             PackageId = packageId;
             Version = version;
@@ -23,9 +23,9 @@ namespace Microsoft.DotNet.PackageValidation
             PackageAssets.Load(packageAssets);
 
             RuntimeGraph runtimeGraph = null;
-            if (!string.IsNullOrEmpty(runtimeFile))
+            if (!string.IsNullOrEmpty(runtimeGraphPath))
             {
-                runtimeGraph = JsonRuntimeFormat.ReadRuntimeGraph(runtimeFile);
+                runtimeGraph = JsonRuntimeFormat.ReadRuntimeGraph(runtimeGraphPath);
             }
             _conventions = new ManagedCodeConventions(runtimeGraph);
 
@@ -34,7 +34,7 @@ namespace Microsoft.DotNet.PackageValidation
             RuntimeSpecificAssets = PackageAssets.FindItems(_conventions.Patterns.RuntimeAssemblies).Where(t => t.Path.StartsWith("runtimes"));
             RuntimeAssets = PackageAssets.FindItems(_conventions.Patterns.RuntimeAssemblies);
             Rids = RuntimeSpecificAssets?.Select(t => (string)t.Properties["rid"]);
-            FrameworksInPackage = PackageAssets.FindItems(_conventions.Patterns.AnyTargettedFile).Select(t => (NuGetFramework)t.Properties["tfm"]);
+            FrameworksInPackage = PackageAssets.FindItems(_conventions.Patterns.AnyTargettedFile)?.Select(t => (NuGetFramework)t.Properties["tfm"]);
         }
 
         public ContentItemCollection PackageAssets { get; set; } = new ContentItemCollection();
