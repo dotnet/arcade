@@ -5,6 +5,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -170,9 +171,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         private enum ArtifactName
         {
+            [Description("PackageArtifacts")]
             PackageArtifacts,
+
+            [Description("BlobArtifacts")]
             BlobArtifacts
         }
+
         public override bool Execute()
         {
             return ExecuteAsync().GetAwaiter().GetResult();
@@ -575,6 +580,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     GetTargetSymbolServers(feedConfigsForSymbols, msdlToken, symWebToken);
 
                 IEnumerable<string> filesToSymbolServer = null;
+                
                 if (Directory.Exists(pdbArtifactsBasePath))
                 {
                     var pdbEntries = System.IO.Directory.EnumerateFiles(pdbArtifactsBasePath, "*.pdb",
@@ -747,6 +753,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             }
 
             string address = $"https://dev.azure.com/{accountName}/";
+            
             if (!string.IsNullOrEmpty(projectName))
             {
                 address += $"{projectName}/";
@@ -787,7 +794,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                     foreach (var artifact in buildArtifacts.value)
                     {
-                        if (string.Equals(artifact.name, artifactName))
+                        ArtifactName name;
+                        if (Enum.TryParse<ArtifactName>(artifact.name, out name) && name == artifactName)
                         {
                             string[] segment = artifact.resource.data.Split('/');
                             containerId = segment[1];
