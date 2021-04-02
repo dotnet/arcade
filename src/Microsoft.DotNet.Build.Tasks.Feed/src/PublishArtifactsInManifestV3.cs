@@ -192,7 +192,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 string temporarySymbolsLocation = "";
                 if (!UseStreamingPublishing)
                 {
-
                     temporarySymbolsLocation =
                         Path.GetFullPath(Path.Combine(BlobAssetsBasePath, @"..\", "tempSymbols"));
 
