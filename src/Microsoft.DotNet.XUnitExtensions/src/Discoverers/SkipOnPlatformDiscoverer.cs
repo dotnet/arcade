@@ -14,7 +14,7 @@ namespace Microsoft.DotNet.XUnitExtensions
     {
         public IEnumerable<KeyValuePair<string, string>> GetTraits(IAttributeInfo traitAttribute)
         {
-            TestPlatforms testPlatforms = TestPlatforms.Any;
+            TestPlatforms testPlatforms = (TestPlatforms)0;
 
             // Last argument is either the TestPlatform or the test platform to skip the test on.
             if (traitAttribute.GetConstructorArguments().LastOrDefault() is TestPlatforms tp)
