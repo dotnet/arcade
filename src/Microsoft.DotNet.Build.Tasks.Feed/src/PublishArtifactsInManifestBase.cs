@@ -362,7 +362,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// <param name="msdlToken">Token to authenticate msdl</param>
         /// <param name="symWebToken">Token to authenticate symweb</param>
         /// <param name="symbolPublishingExclusionsFile">Right now we do not add any files to this, so this is going to be null</param>
-        /// <param name="temporarySymbolsLocation">Path to Symbol.nupkgs</param>
         /// <param name="publishSpecialClrFiles">If true, the special coreclr module indexed files like DBI, DAC and SOS are published</param>
         /// <returns>Task</returns>
         public async Task PublishSymbolsUsingStreamingAsync(
