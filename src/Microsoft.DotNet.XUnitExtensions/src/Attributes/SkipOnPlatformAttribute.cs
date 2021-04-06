@@ -7,10 +7,10 @@ using Xunit.Sdk;
 namespace Xunit
 {
     [TraitDiscoverer("Microsoft.DotNet.XUnitExtensions.SkipOnPlatformDiscoverer", "Microsoft.DotNet.XUnitExtensions")]
-    [AttributeUsage(AttributeTargets.Assembly | AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
+    [AttributeUsage(AttributeTargets.Assembly | AttributeTargets.Class | AttributeTargets.Method, AllowMultiple = true, Inherited = true)]
     public class SkipOnPlatformAttribute : Attribute, ITraitAttribute
     {
         internal SkipOnPlatformAttribute() { }
-        public SkipOnPlatformAttribute(string reason, TestPlatforms testPlatforms) { }
+        public SkipOnPlatformAttribute(TestPlatforms testPlatforms, string reason) { }
     }
 }

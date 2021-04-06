@@ -16,8 +16,8 @@ namespace Microsoft.DotNet.XUnitExtensions
         {
             TestPlatforms testPlatforms = (TestPlatforms)0;
 
-            // Last argument is either the TestPlatform or the test platform to skip the test on.
-            if (traitAttribute.GetConstructorArguments().LastOrDefault() is TestPlatforms tp)
+            // First argument is either the TestPlatform or the test platform to skip the test on.
+            if (traitAttribute.GetConstructorArguments().FirstOrDefault() is TestPlatforms tp)
             {
                 testPlatforms = tp;
             }
