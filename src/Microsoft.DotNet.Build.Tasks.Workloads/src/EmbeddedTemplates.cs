@@ -15,7 +15,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
 
         private static readonly string s_namespace = "";
 
-        private static readonly Dictionary<string, string> TemplateResources = new();
+        private static readonly Dictionary<string, string> _templateResources = new();
 
         public static string Extract(string filename, string destinationFolder)
         {
@@ -24,7 +24,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
 
         public static string Extract(string filename, string destinationFolder, string destinationFilename)
         {
-            if (!TemplateResources.TryGetValue(filename, out string resourceName))
+            if (!_templateResources.TryGetValue(filename, out string resourceName))
             {
                 throw new KeyNotFoundException($"No template for '{filename}' exists.");
             }
@@ -60,7 +60,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         {
             s_namespace = MethodBase.GetCurrentMethod().DeclaringType.Namespace;
 
-            TemplateResources = new()
+            _templateResources = new()
             {
                 { "DependencyProvider.wxs", $"{s_namespace}.MsiTemplate.DependencyProvider.wxs" },
                 { "Directories.wxs", $"{s_namespace}.MsiTemplate.Directories.wxs" },

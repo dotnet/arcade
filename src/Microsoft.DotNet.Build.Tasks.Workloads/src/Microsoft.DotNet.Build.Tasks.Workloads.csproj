@@ -1,4 +1,4 @@
-﻿<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
+<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFrameworks>net472</TargetFrameworks>
@@ -39,11 +39,6 @@
     <None Include="build/**/*.*" Pack="true">
       <PackagePath>build</PackagePath>
     </None>
-  </ItemGroup>
-
-  <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
-    <Compile Include="..\..\Common\Internal\AssemblyResolver.cs" />
-    <Compile Include="..\..\Common\Internal\BuildTask.Desktop.cs" />
   </ItemGroup>
 
   <ItemGroup>
