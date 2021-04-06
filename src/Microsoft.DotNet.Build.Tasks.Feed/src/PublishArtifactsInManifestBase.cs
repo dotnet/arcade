@@ -1115,8 +1115,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                 await PushPackageToNugetFeed(httpClient, feedConfig, localPackagePath, package.Id, package.Version);
 
-                File.Delete(localPackagePath);
-                Directory.Delete(temporaryPackageDirectory);
+                DeleteTemporaryFile(localPackagePath);
+                DeleteTemporaryDirectory(temporaryPackageDirectory);
             }
         }
 
