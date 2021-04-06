@@ -10,6 +10,7 @@
     <ToolCommandName>dotnet-asmdiff</ToolCommandName>
     <ExcludeFromSourceBuild>true</ExcludeFromSourceBuild>
     <StrongNameKeyId>Open</StrongNameKeyId>
+    <UsingToolXliff>true</UsingToolXliff>
   </PropertyGroup>
   
   <ItemGroup>
@@ -19,20 +20,11 @@
   
   <ItemGroup>
     <PackageReference Include="McMaster.Extensions.CommandLineUtils" Version="$(McMasterExtensionsCommandLineUtils)" />
-  </ItemGroup>
-  
-  <ItemGroup>
-    <Compile Update="Resources.Designer.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>Resources.resx</DependentUpon>
-    </Compile>
+    <!-- Arcade only makes shipping assemblies localizable by default, we'd like to localize this tool without treating it as "shipping". -->
+    <PackageReference Include="XliffTasks" Version="$(XliffTasksVersion)" PrivateAssets="all" />
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Update="Resources.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
+    <EmbeddedResource Update="Resources.resx" GenerateSource="true" />
   </ItemGroup>
 </Project>
