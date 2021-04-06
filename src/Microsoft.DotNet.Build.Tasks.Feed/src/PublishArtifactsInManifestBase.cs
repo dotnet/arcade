@@ -773,6 +773,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// Gets the container Id, that is going to be used in another API call to download the assets
         /// ContainerId is the same for PackageArtifacts and BlobArtifacts
         /// </summary>
+        /// <param name="artifactName">If it is PackageArtifacts or BlobArtifacts</param>
         /// <returns>ContainerId</returns>
         private async Task<string> GetContainerIdAsync(ArtifactName artifactName)
         {
@@ -818,7 +819,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// Download artifact file using Azure API
         /// </summary>
         /// <param name="client">Azdo client</param>
-        /// <param name="ArtifactName">If it is PackageArtifacts or BlobArtifacts</param>
+        /// <param name="artifactName">If it is PackageArtifacts or BlobArtifacts</param>
         /// <param name="containerId">ContainerId where the packageArtifact and BlobArtifacts are stored</param>
         /// <param name="fileName">Name the file we are trying to download</param>
         /// <param name="path">Path where the file is being downloaded</param>
