@@ -106,6 +106,7 @@ __AndroidPackages+=" libandroid-glob"
 __AndroidPackages+=" liblzma"
 __AndroidPackages+=" krb5"
 __AndroidPackages+=" openssl"
+# do I need ldap on android? how can I find android package name?
 
 for path in $(wget -qO- http://termux.net/dists/stable/main/binary-$__AndroidArch/Packages |\
     grep -A15 "Package: \(${__AndroidPackages// /\\|}\)" | grep -v "static\|tool" | grep Filename); do
