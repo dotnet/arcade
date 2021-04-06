@@ -50,20 +50,19 @@ namespace Microsoft.DotNet.AsmDiff
         {
             if (_diffDocument.IsDiff)
             {
-                writer.WriteLine("# API Difference {0} vs {1}", _diffDocument.Left.Name, _diffDocument.Right.Name);
+                writer.WriteLine(Resources.MarkdownTitle, _diffDocument.Left.Name, _diffDocument.Right.Name);
             }
             else
             {
                 string singleSideName = _diffDocument.Left.IsEmpty ? _diffDocument.Right.Name : _diffDocument.Left.Name;
-                writer.WriteLine("# API List of {0}", singleSideName);
+                writer.WriteLine(Resources.MarkdownAPIListTitle, singleSideName);
             }
 
             writer.WriteLine();
 
             if (_diffDocument.IsDiff)
             {
-                writer.WriteLine("API listing follows standard diff formatting. Lines preceded by a '+' are");
-                writer.WriteLine("additions and a '-' indicates removal.");
+                writer.WriteLine(Resources.MarkdownDiffDescription);
                 writer.WriteLine();
             }
         }
