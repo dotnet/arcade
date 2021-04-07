@@ -1842,7 +1842,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 try
                 {
                     Log.LogMessage(MessageImportance.Low, $"Deleting directory : {temporaryLocation}");
-                    Directory.Delete(temporaryLocation);
+                    Directory.Delete(temporaryLocation, true);
                 }
                 catch (Exception ex)
                 {
