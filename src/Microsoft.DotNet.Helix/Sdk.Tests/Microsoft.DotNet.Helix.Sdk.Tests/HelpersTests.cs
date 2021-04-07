@@ -35,5 +35,11 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
 
             Assert.Equal(workItemNameExpected, actual);
         }
+
+        [Fact]
+        public void WillFail()
+        {
+            Assert.Equal("a\nb", "c\nd");
+        }
     }
 }
