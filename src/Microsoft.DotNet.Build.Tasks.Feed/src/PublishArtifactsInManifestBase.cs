@@ -816,11 +816,64 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 if (string.IsNullOrEmpty(containerId))
                 {
                     Log.LogError("Container Id does not exists");
-
                 }
 
                 return containerId;
             }
+        }
+
+        private async Task<string> GetContainerAsync(ArtifactName artifactName)
+        {
+            string uri =
+                $"{AzureDevOpsBaseUrl}/{AzureDevOpsOrg}/{AzureProject}/_apis/build/builds/{BuildId}/artifacts?api-version={AzureDevOpsFeedsApiVersion}";
+            Exception mostRecentlyCaughtException = null;
+            string containerId = "";
+            bool success = await RetryHandler.RunAsync(async attempt =>
+            {
+                try
+                {
+                    CancellationTokenSource timeoutTokenSource =
+                        new CancellationTokenSource(TimeSpan.FromMinutes(TimeoutInMinutes));
+
+                    using HttpClient client = CreateAzdoClient(AzureDevOpsOrg, false, AzureProject);
+                    using HttpRequestMessage getMessage = new HttpRequestMessage(HttpMethod.Get, uri);
+                    using HttpResponseMessage response = await client.GetAsync(uri, timeoutTokenSource.Token);
+
+                    response.EnsureSuccessStatusCode();
+                    string responseBody = await response.Content.ReadAsStringAsync();
+                    BuildArtifacts buildArtifacts = JsonConvert.DeserializeObject<BuildArtifacts>(responseBody);
+
+                    foreach (var artifact in buildArtifacts.value)
+                    {
+                        ArtifactName name;
+                        if (Enum.TryParse<ArtifactName>(artifact.name, out name) && name == artifactName)
+                        {
+                            string[] segment = artifact.resource.data.Split('/');
+                            containerId = segment[1];
+                            return true;
+                        }
+                    }
+                    return false;
+                }
+                catch (HttpRequestException toStore)
+                {
+                    mostRecentlyCaughtException = toStore;
+                    return false;
+                }
+            }).ConfigureAwait(false);
+
+            if (string.IsNullOrEmpty(containerId))
+            {
+                Log.LogError("Container Id does not exists");
+            }
+
+            if (!success)
+            {
+                throw new Exception(
+                    $"Failed to get container id after {RetryHandler.MaxAttempts} attempts.  See inner exception for details, {mostRecentlyCaughtException}");
+            }
+
+            return containerId;
         }
 
         /// <summary>
@@ -1072,7 +1125,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             Dictionary<string, HashSet<Asset>> buildAssets,
             TargetFeedConfig feedConfig)
         {
-            string containerId = await GetContainerIdAsync(ArtifactName.PackageArtifacts);
+            string containerId = await GetContainerAsync(ArtifactName.PackageArtifacts);
             
             if (Log.HasLoggedErrors)
             {
