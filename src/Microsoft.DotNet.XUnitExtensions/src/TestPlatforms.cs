@@ -19,7 +19,8 @@ namespace Xunit
         tvOS = 256,
         Android = 512,
         Browser = 1024,
-        AnyUnix = FreeBSD | Linux | NetBSD | OSX | illumos | Solaris | iOS | tvOS | Android | Browser,
+        MacCatalyst = 2048,
+        AnyUnix = FreeBSD | Linux | NetBSD | OSX | illumos | Solaris | iOS | tvOS | MacCatalyst | Android | Browser,
         Any = ~0
     }
 }

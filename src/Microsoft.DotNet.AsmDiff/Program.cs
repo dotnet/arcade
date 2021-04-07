@@ -5,6 +5,7 @@ using McMaster.Extensions.CommandLineUtils;
 using System;
 using System.IO;
 using System.Text;
+using System.Threading;
 
 namespace Microsoft.DotNet.AsmDiff
 {
@@ -68,6 +69,9 @@ namespace Microsoft.DotNet.AsmDiff
         [Option("-o|--OutFile", "Output file path. Default is the console.", CommandOptionType.SingleValue)]
         public string OutFile { get; set; }
 
+        [Option("-l|--Language", "Provide a languagetag for localized content. If this parameter is not provided the environments default language will be used. Currently language specific content is only available in Markdown Writer.", CommandOptionType.SingleValue)]
+        public string Language { get; set; }
+
         public void OnExecute()
         {         
             if (string.IsNullOrEmpty(NewSet))
@@ -82,6 +86,13 @@ namespace Microsoft.DotNet.AsmDiff
             {
                 // If the user didn't explicitly specify what to include we default to changes only.
                 Added = Removed = Changed = true;
+            }
+
+            if (!string.IsNullOrEmpty(Language))
+            {
+                var cultureInfo = System.Globalization.CultureInfo.GetCultureInfo(Language);
+                Thread.CurrentThread.CurrentCulture = cultureInfo;
+                Thread.CurrentThread.CurrentUICulture = cultureInfo;
             }
 
             DiffConfigurationOptions options = GetDiffOptions();

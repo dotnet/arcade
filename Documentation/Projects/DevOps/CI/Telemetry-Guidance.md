@@ -36,6 +36,8 @@ Arcade scripts will support a `Write-PipelineTelemetryError` function that can b
 
 Repos with custom scripts can add telemetry categorization by using Arcade's logging functions which are available in their repo via dependency flow of the `eng/common` scripts.
 
+Please note: for scripts that call the logging functions to properly report back to AzDO, you must set `$ci=$true`.
+
 ### Arcade MSBuild logger support
 
 Arcade's MSBuild logger looks for an `NETCORE_ENGINEERING_TELEMETRY` static or global property.  If present, then error output will be decorated in the expected [telemetry format](#telemetry-format).

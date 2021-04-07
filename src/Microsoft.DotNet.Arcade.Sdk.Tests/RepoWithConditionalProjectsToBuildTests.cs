@@ -21,7 +21,7 @@ namespace Microsoft.DotNet.Arcade.Sdk.Tests
             _fixture = fixture;
         }
 
-        [Theory]
+        [Theory(Skip = "https://github.com/dotnet/arcade/issues/7092")]
         [InlineData(false, 1, false)]
         [InlineData(false, 1, true)]
         [InlineData(true, 2, false)]
