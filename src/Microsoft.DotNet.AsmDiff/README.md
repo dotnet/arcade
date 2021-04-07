@@ -9,8 +9,8 @@ AsmDiff is a command line tool which may be used to check the API changes betwee
 
 ## Additional Options
 
-- `-nsn|--NewSetName` - Provide a name for the new set in output. If this parameter is not provided the file- or directoryname will be used.
-- `-osn|--OldSetName` - Provide a name for the old set in output. If this parameter is not provided the file- or directoryname will be used.
+- `-nsn|--NewSetName` - Provide a name for the new set in output. If this parameter is not provided the file or directory name will be used.
+- `-osn|--OldSetName` - Provide a name for the old set in output. If this parameter is not provided the file or directory name will be used.
 - `-u|--Unchanged` - Include members, types, and namespaces that are unchanged.
 - `-r|--Removed` - Include members, types, and namespaces that were removed. (default is removed and added)
 - `-a|--Added` - Include members, types, and namespaces that were removed. (default is removed and added)
