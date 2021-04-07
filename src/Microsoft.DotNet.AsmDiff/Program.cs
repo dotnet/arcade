@@ -16,6 +16,11 @@ namespace Microsoft.DotNet.AsmDiff
         [Option("-ns|--NewSet", "Provide path to an assembly or directory for an assembly set to gather the new set of types. If this parameter is not provided the API's for the oldset will be printed instead of the diff.", CommandOptionType.SingleValue)]
         public string NewSet { get; set; }
 
+        [Option("-nsn|--NewSetName", "Provide a name for the new set in output. If this parameter is not provided the file or directory name will be used.", CommandOptionType.SingleValue)]
+        public string NewSetName { get; set; }
+        [Option("-osn|--OldSetName", "Provide a name for the old set in output. If this parameter is not provided the file or directory name will be used.", CommandOptionType.SingleValue)]
+        public string OldSetName { get; set; }
+
         [Option("-u|--Unchanged", "Include members, types, and namespaces that are unchanged.", CommandOptionType.NoValue)]
         public bool Unchanged { get; set; }
         [Option("-r|--Removed", "Include members, types, and namespaces that were removed. (default is removed and added)", CommandOptionType.NoValue)]
@@ -92,10 +97,10 @@ namespace Microsoft.DotNet.AsmDiff
 
             DiffConfigurationOptions options = GetDiffOptions();
             DiffFormat diffFormat = GetDiffFormat();
-            
-            AssemblySet oldAssemblies = AssemblySet.FromPaths(OldSet);
-            AssemblySet newAssemblies = AssemblySet.FromPaths(NewSet);
-            
+
+            AssemblySet oldAssemblies = AssemblySet.FromPaths(OldSetName, OldSet);
+            AssemblySet newAssemblies = AssemblySet.FromPaths(NewSetName, NewSet);
+
             DiffConfiguration diffConfiguration = new DiffConfiguration(oldAssemblies, newAssemblies, options);
 
             if (diffFormat == DiffFormat.Md)
