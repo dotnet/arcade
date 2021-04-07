@@ -179,11 +179,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
             bool success = await retryHandler.RunAsync(async attempt =>
             {
+                using (Stream localFileStream = File.OpenRead(localPackageFullPath))
+                using (HttpResponseMessage response = await client.GetAsync(packageContentUrl))
                 try
                 {
-                    using (Stream localFileStream = File.OpenRead(localPackageFullPath))
-                    using (HttpResponseMessage response = await client.GetAsync(packageContentUrl))
-                    {
                         response.EnsureSuccessStatusCode();
 
                         // Check the headers for content length and md5 
@@ -216,21 +215,25 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         var streamsMatch = await GeneralUtils.CompareStreamsAsync(localFileStream, remoteStream, BufferSize);
                         result = streamsMatch ? PackageFeedStatus.ExistsAndIdenticalToLocal : PackageFeedStatus.ExistsAndDifferent;
                         return true;
-                    }
-                }
-                // String based comparison because the status code isn't exposed in HttpRequestException
-                // see here: https://github.com/dotnet/runtime/issues/23648
-                catch (HttpRequestException e)
-                {
-                    if (e.Message.Contains("404 (Not Found)"))
-                    {
-                        result = PackageFeedStatus.DoesNotExist;
-                        return true;
-                    }
 
-                    // Retry this. Could be an http client timeout, 500, etc.
-                    return false;
+                    }
+                    // String based comparison because the status code isn't exposed in HttpRequestException
+                    // see here: https://github.com/dotnet/runtime/issues/23648
+                catch (HttpRequestException e)
+                { 
+                        if (e.Message.Contains("404 (Not Found)"))
+                        {
+                            result = PackageFeedStatus.DoesNotExist;
+                            return true;
+                        }
+
+                        // Retry this. Could be an http client timeout, 500, etc.
+                        return false;
                 }
+                    finally
+                    {
+                        localFileStream.Close();
+                    }
             });
 
             return result;
