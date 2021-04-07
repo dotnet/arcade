@@ -76,7 +76,7 @@ __IllumosPackages="icu-64.2nb2"
 __IllumosPackages+=" mit-krb5-1.16.2nb4"
 __IllumosPackages+=" openssl-1.1.1e"
 __IllumosPackages+=" zlib-1.2.11"
-__IllumosPackages+=" ldap-0.5.11"
+__IllumosPackages+=" openldap-client-2.4.49"
 
 __UseMirror=0
 
