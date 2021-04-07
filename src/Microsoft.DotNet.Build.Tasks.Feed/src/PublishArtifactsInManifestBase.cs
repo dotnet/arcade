@@ -403,7 +403,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 {
                     string temporarySymbolsDirectory = CreateTemporaryDirectory();
                     string localSymbolPath = Path.Combine(temporarySymbolsDirectory, symbol);
-                    symbolLog.AppendLine($"Downloading symbol : {symbol}");
+                    symbolLog.AppendLine($"Downloading symbol : {symbol} to {localSymbolPath}");
  
                     await DownloadFileAsync(client, ArtifactName.BlobArtifacts, containerId, symbol, localSymbolPath);
 
@@ -411,7 +411,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     {
                         Log.LogError($"Could not locate '{symbol} at '{localSymbolPath}'");
                     }
-                    symbolLog.AppendLine($"Successfully downloaded symbol : {symbol}");
+                    symbolLog.AppendLine($"Successfully downloaded symbol : {symbol} to {localSymbolPath}");
 
                     symbolLog.AppendLine($"Local Symbol path to downloaded file {localSymbolPath}");
                     List<string> symbolFiles = new List<string>();
@@ -1141,7 +1141,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     Path.GetFullPath(Path.Combine(ArtifactsBasePath, Guid.NewGuid().ToString()));
                 EnsureTemporaryDirectoryExists(temporaryPackageDirectory);
                 string localPackagePath = Path.Combine(temporaryPackageDirectory, packageFilename);
-                Log.LogMessage(MessageImportance.Low, $"Downloading package : {packageFilename}");
+                Log.LogMessage(MessageImportance.Low, $"Downloading package : {packageFilename} to {localPackagePath}");
 
                 await DownloadFileAsync(
                     client,
@@ -1156,7 +1156,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         $"Could not locate '{package.Id}.{package.Version}' at '{localPackagePath}'");
                     return;
                 }
-                Log.LogMessage(MessageImportance.Low, $"Successfully downloaded package : {packageFilename}");
+                Log.LogMessage(MessageImportance.Low, $"Successfully downloaded package : {packageFilename} to {localPackagePath}");
 
                 TryAddAssetLocation(
                     package.Id,
@@ -1481,7 +1481,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     string fileName = Path.GetFileName(blob.Id);
                     string localBlobPath = Path.Combine(temporaryBlobDirectory, fileName);
                     
-                    Log.LogMessage(MessageImportance.Low, $"Downloading blob : {fileName}");
+                    Log.LogMessage(MessageImportance.Low, $"Downloading blob : {fileName} to {localBlobPath}");
 
                     await DownloadFileAsync(
                         client,
@@ -1494,7 +1494,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     {
                         Log.LogError($"Could not locate '{blob.Id} at '{localBlobPath}'");
                     }
-                    Log.LogMessage(MessageImportance.Low, $"Successfully downloaded blob : {fileName}");
+                    Log.LogMessage(MessageImportance.Low, $"Successfully downloaded blob : {fileName} to {localBlobPath}");
 
                     string id;
                     string version;
@@ -1626,7 +1626,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 var fileName = Path.GetFileName(blob.Id);
                 var localBlobPath = Path.Combine(temporaryBlobDirectory, fileName);
                 
-                Log.LogMessage(MessageImportance.Low , $"Downloading blob : {fileName}");
+                Log.LogMessage(MessageImportance.Low , $"Downloading blob : {fileName} to {localBlobPath}");
 
                 await DownloadFileAsync(
                     client,
@@ -1639,7 +1639,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 {
                     Log.LogError($"Could not locate '{blob.Id} at '{localBlobPath}'");
                 }
-                Log.LogMessage(MessageImportance.Low, $"Successfully downloaded blob : {fileName}");
+                Log.LogMessage(MessageImportance.Low, $"Successfully downloaded blob : {fileName} to {localBlobPath}");
 
                 var item = new Microsoft.Build.Utilities.TaskItem(localBlobPath,
                     new Dictionary<string, string>
