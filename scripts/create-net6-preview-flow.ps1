@@ -30,7 +30,7 @@ Write-Host "Making default channels for runtime repos"
 MakeDefaultChannel https://dev.azure.com/dnceng/internal/_git/dotnet-wpf-int $RuntimeBranch $RuntimeChannel
 MakeDefaultChannel https://github.com/dotnet/aspnetcore $RuntimeBranch $RuntimeChannel
 MakeDefaultChannel https://github.com/dotnet/efcore $RuntimeBranch $RuntimeChannel
-MakeDefaultChannel https://github.com/dotnet/extensions $RuntimeBranch $RuntimeChannel
+MakeDefaultChannel https://github.com/dotnet/emsdk $RuntimeBranch $RuntimeChannel
 MakeDefaultChannel https://github.com/dotnet/icu $RuntimeBranch $RuntimeChannel
 MakeDefaultChannel https://github.com/dotnet/runtime $RuntimeBranch $RuntimeChannel
 MakeDefaultChannel https://github.com/dotnet/windowsdesktop $RuntimeBranch $RuntimeChannel
@@ -50,7 +50,7 @@ Write-Host "Add arcade flow"
 AddArcadeFlow https://dev.azure.com/dnceng/internal/_git/dotnet-wpf-int $RuntimeBranch
 AddArcadeFlow https://github.com/dotnet/aspnetcore $RuntimeBranch
 AddArcadeFlow https://github.com/dotnet/efcore $RuntimeBranch
-AddArcadeFlow https://github.com/dotnet/extensions $RuntimeBranch
+AddArcadeFlow https://github.com/dotnet/emsdk $RuntimeBranch
 AddArcadeFlow https://github.com/dotnet/icu $RuntimeBranch
 AddArcadeFlow https://github.com/dotnet/runtime $RuntimeBranch
 AddArcadeFlow https://github.com/dotnet/windowsdesktop $RuntimeBranch
@@ -65,10 +65,10 @@ AddArcadeFlow https://github.com/dotnet/templating $SdkBranch
 Write-Host "Add runtime -> runtime flow"
 AddFlow https://dev.azure.com/dnceng/internal/_git/dotnet-wpf-int $RuntimeChannel https://github.com/dotnet/wpf $RuntimeBranch EveryBuild
 AddFlow https://github.com/dotnet/efcore $RuntimeChannel https://github.com/dotnet/aspnetcore $RuntimeBranch EveryBuild
+AddFlow https://github.com/dotnet/emsdk $RuntimeChannel https://github.com/dotnet/aspnetcore $RuntimeBranch EveryBuild
 AddFlow https://github.com/dotnet/icu $RuntimeChannel https://github.com/dotnet/runtime $RuntimeBranch EveryBuild
 AddFlow https://github.com/dotnet/runtime $RuntimeChannel https://github.com/dotnet/aspnetcore $RuntimeBranch EveryBuild
 AddFlow https://github.com/dotnet/runtime $RuntimeChannel https://github.com/dotnet/efcore $RuntimeBranch EveryBuild
-AddFlow https://github.com/dotnet/runtime $RuntimeChannel https://github.com/dotnet/extensions $RuntimeBranch EveryBuild
 AddFlow https://github.com/dotnet/runtime $RuntimeChannel https://github.com/dotnet/winforms $RuntimeBranch EveryBuild
 AddFlow https://github.com/dotnet/winforms $RuntimeChannel https://github.com/dotnet/wpf $RuntimeBranch EveryBuild
 AddFlow https://github.com/dotnet/wpf $RuntimeChannel https://github.com/dotnet/windowsdesktop $RuntimeBranch EveryBuild
