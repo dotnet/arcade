@@ -403,8 +403,16 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 {
                     string temporarySymbolsDirectory = CreateTemporaryDirectory();
                     string localSymbolPath = Path.Combine(temporarySymbolsDirectory, symbol);
-                    
+                    symbolLog.AppendLine($"Downloading symbol : {symbol}");
+ 
                     await DownloadFileAsync(client, ArtifactName.BlobArtifacts, containerId, symbol, localSymbolPath);
+
+                    if (!File.Exists(localSymbolPath))
+                    {
+                        Log.LogError($"Could not locate '{symbol} at '{localSymbolPath}'");
+                    }
+                    symbolLog.AppendLine($"Successfully downloaded symbol : {symbol}");
+
                     symbolLog.AppendLine($"Local Symbol path to downloaded file {localSymbolPath}");
                     List<string> symbolFiles = new List<string>();
                     symbolFiles.ToList().Add(localSymbolPath);
@@ -1080,6 +1088,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     Path.GetFullPath(Path.Combine(ArtifactsBasePath, Guid.NewGuid().ToString()));
                 EnsureTemporaryDirectoryExists(temporaryPackageDirectory);
                 string localPackagePath = Path.Combine(temporaryPackageDirectory, packageFilename);
+                Log.LogMessage(MessageImportance.Low, $"Downloading package : {packageFilename}");
 
                 await DownloadFileAsync(
                     client,
@@ -1094,6 +1103,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         $"Could not locate '{package.Id}.{package.Version}' at '{localPackagePath}'");
                     return;
                 }
+                Log.LogMessage(MessageImportance.Low, $"Successfully downloaded package : {packageFilename}");
 
                 TryAddAssetLocation(
                     package.Id,
@@ -1418,6 +1428,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     string fileName = Path.GetFileName(blob.Id);
                     string localBlobPath = Path.Combine(temporaryBlobDirectory, fileName);
                     
+                    Log.LogMessage(MessageImportance.Low, $"Downloading blob : {fileName}");
+
                     await DownloadFileAsync(
                         client,
                         ArtifactName.BlobArtifacts,
@@ -1429,6 +1441,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     {
                         Log.LogError($"Could not locate '{blob.Id} at '{localBlobPath}'");
                     }
+                    Log.LogMessage(MessageImportance.Low, $"Successfully downloaded blob : {fileName}");
+
                     string id;
                     string version;
                     using var packageReader = new PackageArchiveReader(localBlobPath);
@@ -1559,6 +1573,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 var fileName = Path.GetFileName(blob.Id);
                 var localBlobPath = Path.Combine(temporaryBlobDirectory, fileName);
                 
+                Log.LogMessage(MessageImportance.Low , $"Downloading blob : {fileName}");
+
                 await DownloadFileAsync(
                     client,
                     ArtifactName.BlobArtifacts,
@@ -1570,6 +1586,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 {
                     Log.LogError($"Could not locate '{blob.Id} at '{localBlobPath}'");
                 }
+                Log.LogMessage(MessageImportance.Low, $"Successfully downloaded blob : {fileName}");
 
                 var item = new Microsoft.Build.Utilities.TaskItem(localBlobPath,
                     new Dictionary<string, string>
@@ -1751,7 +1768,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             {
                 if (File.Exists(filePath))
                 {
-                    Log.LogMessage($"Going to delete the following file {filePath}");
+                    Log.LogMessage($"Deleting file : {filePath}");
                     File.Delete(filePath);
                 }
             }
@@ -1771,6 +1788,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             {
                 try
                 {
+                    Log.LogMessage(MessageImportance.Low, $"Deleting directory : {temporaryLocation}");
                     Directory.Delete(temporaryLocation);
                 }
                 catch (Exception ex)
