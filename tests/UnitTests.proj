@@ -72,6 +72,7 @@
   <PropertyGroup Condition="$(HelixTargetQueue.StartsWith('Windows'))">
     <HelixPreCommands>$(HelixPreCommands);dir /s %HELIX_CORRELATION_PAYLOAD%</HelixPreCommands>
     <HelixPreCommands>$(HelixPreCommands);dir /s</HelixPreCommands>
+    <HelixPostCommands>$(HelixPostCommands);copy /Y *.xml %HELIX_WORKITEM_UPLOAD_ROOT%\</HelixPostCommands>
   </PropertyGroup>
 
   <!-- Useless stuff to make Arcade SDK happy -->
