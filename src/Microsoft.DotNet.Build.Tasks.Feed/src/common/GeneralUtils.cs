@@ -134,13 +134,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         ///       the streams make no guarantee that they will return a full block each time when read operations are performed, so we
         ///       must be sure to only compare the minimum number of bytes returned.
         /// </remarks>
-        public static Task<PackageFeedStatus> CompareLocalPackageToFeedPackage(
+        public static async Task<PackageFeedStatus> CompareLocalPackageToFeedPackage(
             string localPackageFullPath,
             string packageContentUrl,
             HttpClient client,
             TaskLoggingHelper log)
         {
-            return CompareLocalPackageToFeedPackage(
+            return await CompareLocalPackageToFeedPackage(
                 localPackageFullPath,
                 packageContentUrl,
                 client,

@@ -178,6 +178,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             BlobArtifacts
         }
 
+        private int TimeoutInSeconds = 180;
+
         public override bool Execute()
         {
             return ExecuteAsync().GetAwaiter().GetResult();
@@ -403,9 +405,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 {
                     string temporarySymbolsDirectory = CreateTemporaryDirectory();
                     string localSymbolPath = Path.Combine(temporarySymbolsDirectory, symbol);
-                    
+                    symbolLog.AppendLine($"Downloading symbol : {symbol} to {localSymbolPath}");
+
                     await DownloadFileAsync(client, ArtifactName.BlobArtifacts, containerId, symbol, localSymbolPath);
-                    symbolLog.AppendLine($"Local Symbol path to downloaded file {localSymbolPath}");
+                    symbolLog.AppendLine($"Successfully downloaded symbol : {symbol} to {localSymbolPath}");
                     List<string> symbolFiles = new List<string>();
                     symbolFiles.ToList().Add(localSymbolPath);
                     
@@ -438,7 +441,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         }
                     }
 
-                    DeleteTemporaryFile(localSymbolPath);
                     DeleteTemporaryDirectory(temporarySymbolsDirectory);
                 }
                 symbolLog.AppendLine(
@@ -759,6 +761,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             {
                 BaseAddress = new Uri(address)
             };
+            client.Timeout = TimeSpan.FromSeconds(TimeoutInSeconds); 
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
                 "Basic",
                 Convert.ToBase64String(Encoding.ASCII.GetBytes(string.Format("{0}:{1}", "",
@@ -777,14 +780,21 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// <returns>ContainerId</returns>
         private async Task<string> GetContainerIdAsync(ArtifactName artifactName)
         {
+            string uri =
+                 $"{AzureDevOpsBaseUrl}/{AzureDevOpsOrg}/{AzureProject}/_apis/build/builds/{BuildId}/artifacts?api-version={AzureDevOpsFeedsApiVersion}";
+            Exception mostRecentlyCaughtException = null;
             string containerId = "";
-            using (HttpClient client = CreateAzdoClient(AzureDevOpsOrg, false, AzureProject))
+            bool success = await RetryHandler.RunAsync(async attempt =>
             {
-                string uri =
-                    $"{AzureDevOpsBaseUrl}/{AzureDevOpsOrg}/{AzureProject}/_apis/build/builds/{BuildId}/artifacts?api-version={AzureDevOpsFeedsApiVersion}";
                 try
                 {
-                    using HttpResponseMessage response = await client.GetAsync(uri);
+                    CancellationTokenSource timeoutTokenSource =
+                        new CancellationTokenSource(TimeSpan.FromMinutes(TimeoutInMinutes));
+
+                    using HttpClient client = CreateAzdoClient(AzureDevOpsOrg, false, AzureProject);
+                    using HttpRequestMessage getMessage = new HttpRequestMessage(HttpMethod.Get, uri);
+                    using HttpResponseMessage response = await client.GetAsync(uri, timeoutTokenSource.Token);
+
                     response.EnsureSuccessStatusCode();
                     string responseBody = await response.Content.ReadAsStringAsync();
                     BuildArtifacts buildArtifacts = JsonConvert.DeserializeObject<BuildArtifacts>(responseBody);
@@ -796,23 +806,30 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         {
                             string[] segment = artifact.resource.data.Split('/');
                             containerId = segment[1];
-                            break;
+                            return true;
                         }
                     }
+                    return false;
                 }
-                catch (Exception e)
+                catch (HttpRequestException toStore)
                 {
-                    Log.LogErrorFromException(e);
+                    mostRecentlyCaughtException = toStore;
+                    return false;
                 }
+            }).ConfigureAwait(false);
 
-                if (string.IsNullOrEmpty(containerId))
-                {
-                    Log.LogError("Container Id does not exists");
-
-                }
-
-                return containerId;
+            if (string.IsNullOrEmpty(containerId))
+            {
+                Log.LogError("Container Id does not exists");
             }
+
+            if (!success)
+            {
+                throw new Exception(
+                    $"Failed to get container id after {RetryHandler.MaxAttempts} attempts.  See inner exception for details, {mostRecentlyCaughtException}");
+            }
+
+            return containerId;
         }
 
         /// <summary>
@@ -1080,6 +1097,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     Path.GetFullPath(Path.Combine(ArtifactsBasePath, Guid.NewGuid().ToString()));
                 EnsureTemporaryDirectoryExists(temporaryPackageDirectory);
                 string localPackagePath = Path.Combine(temporaryPackageDirectory, packageFilename);
+                Log.LogMessage(MessageImportance.Low, $"Downloading package : {packageFilename} to {localPackagePath}");
 
                 await DownloadFileAsync(
                     client,
@@ -1094,6 +1112,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         $"Could not locate '{package.Id}.{package.Version}' at '{localPackagePath}'");
                     return;
                 }
+                Log.LogMessage(MessageImportance.Low, $"Successfully downloaded package : {packageFilename} to {localPackagePath}");
 
                 TryAddAssetLocation(
                     package.Id,
@@ -1107,7 +1126,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     CheckCertificateRevocationList = true
                 });
 
-                httpClient.Timeout = TimeSpan.FromSeconds(180);
+                httpClient.Timeout = TimeSpan.FromSeconds(TimeoutInSeconds);
                 httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
                     "Basic",
                     Convert.ToBase64String(
@@ -1115,8 +1134,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                 await PushPackageToNugetFeed(httpClient, feedConfig, localPackagePath, package.Id, package.Version);
 
-                File.Delete(localPackagePath);
-                Directory.Delete(temporaryPackageDirectory);
+                DeleteTemporaryDirectory(localPackagePath);
             }
         }
 
@@ -1373,12 +1391,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         string id;
                         string version;
                         // Determine package ID and version by asking the nuget libraries
-                        using var packageReader = new PackageArchiveReader(localBlobPath);
+                        using (var packageReader = new PackageArchiveReader(localBlobPath))
+                        {
+                            PackageIdentity packageIdentity = packageReader.GetIdentity();
+                            id = packageIdentity.Id;
+                            version = packageIdentity.Version.ToString();
+                        }
 
-                        PackageIdentity packageIdentity = packageReader.GetIdentity();
-                        id = packageIdentity.Id;
-                        version = packageIdentity.Version.ToString();
-                        
                         await PushNugetPackageAsync(
                             feed,
                             httpClient,
@@ -1417,7 +1436,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     string temporaryBlobDirectory = CreateTemporaryDirectory();
                     string fileName = Path.GetFileName(blob.Id);
                     string localBlobPath = Path.Combine(temporaryBlobDirectory, fileName);
-                    
+                    Log.LogMessage(MessageImportance.Low, $"Downloading blob : {fileName} to {localBlobPath}");
+
                     await DownloadFileAsync(
                         client,
                         ArtifactName.BlobArtifacts,
@@ -1429,21 +1449,23 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     {
                         Log.LogError($"Could not locate '{blob.Id} at '{localBlobPath}'");
                     }
+                    Log.LogMessage(MessageImportance.Low, $"Successfully downloaded blob : {fileName} to {localBlobPath}");
+
                     string id;
                     string version;
-                    using var packageReader = new PackageArchiveReader(localBlobPath);
+                    using (var packageReader = new PackageArchiveReader(localBlobPath))
+                    {
+                        PackageIdentity packageIdentity = packageReader.GetIdentity();
+                        id = packageIdentity.Id;
+                        version = packageIdentity.Version.ToString();
+                    }
 
-                    PackageIdentity packageIdentity = packageReader.GetIdentity();
-                    id = packageIdentity.Id;
-                    version = packageIdentity.Version.ToString();
-                    
                     await PushBlobToNugetFeed(
                         feedConfig,
                         localBlobPath,
                         id,
                         version);
                     
-                    DeleteTemporaryFile(localBlobPath);
                     DeleteTemporaryDirectory(temporaryBlobDirectory);
                 }
             }
@@ -1558,7 +1580,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 string temporaryBlobDirectory = CreateTemporaryDirectory();
                 var fileName = Path.GetFileName(blob.Id);
                 var localBlobPath = Path.Combine(temporaryBlobDirectory, fileName);
-                
+                Log.LogMessage(MessageImportance.Low, $"Downloading blob : {fileName} to {localBlobPath}");
+
                 await DownloadFileAsync(
                     client,
                     ArtifactName.BlobArtifacts,
@@ -1570,6 +1593,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 {
                     Log.LogError($"Could not locate '{blob.Id} at '{localBlobPath}'");
                 }
+                Log.LogMessage(MessageImportance.Low, $"Successfully downloaded blob : {fileName} to {localBlobPath}");
 
                 var item = new Microsoft.Build.Utilities.TaskItem(localBlobPath,
                     new Dictionary<string, string>
@@ -1585,7 +1609,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     AddAssetLocationToAssetAssetLocationType.Container);
                 
                 await blobFeedAction.UploadAssetAsync(item, pushOptions, null);
-                DeleteTemporaryFile(localBlobPath);
                 DeleteTemporaryDirectory(temporaryBlobDirectory);
             }
         }
@@ -1742,41 +1765,32 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         }
 
         /// <summary>
-        /// Delete the files after publishing, this is part of cleanup
-        /// </summary>
-        /// <param name="filePath"></param>
-        public void DeleteTemporaryFile(string filePath)
-        {
-            try
-            {
-                if (File.Exists(filePath))
-                {
-                    Log.LogMessage($"Going to delete the following file {filePath}");
-                    File.Delete(filePath);
-                }
-            }
-            catch (Exception ex)
-            {
-                Log.LogWarning(ex.Message);
-            }
-        }
-
-        /// <summary>
         /// Deletes the temporary folder, this is part of clean up
         /// </summary>
         /// <param name="temporaryLocation"></param>
         public void DeleteTemporaryDirectory(string temporaryLocation)
         {
+            var attempts = 0;
             if (Directory.Exists(temporaryLocation))
             {
-                try
+                do
                 {
-                    Directory.Delete(temporaryLocation);
+                    try
+                    {
+                        attempts++;
+                        Log.LogMessage(MessageImportance.Low, $"Deleting directory : {temporaryLocation}");
+                        Directory.Delete(temporaryLocation, true);
+                        break;
+                    }
+                    catch (Exception ex)
+                    {
+                        if (attempts == MaxRetryCount)
+                            Log.LogMessage(MessageImportance.Low, $"Unable to delete the directory because of {ex.Message} after {attempts} attempts.");
+                    }
+                    Log.LogMessage(MessageImportance.Low, $"Retrying to delete {temporaryLocation}, attempt number {attempts}");
+                    Task.Delay(RetryDelayMilliseconds).Wait();
                 }
-                catch (Exception ex)
-                {
-                    Log.LogWarning(ex.Message);
-                }
+                while (true);
             }
         }
 
