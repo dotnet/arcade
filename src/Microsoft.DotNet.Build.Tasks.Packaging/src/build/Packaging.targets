@@ -1216,7 +1216,7 @@
                     ReleaseNotes="$(ReleaseNotes)"
                     Summary="$(Summary)"
                     Language="$(Language)"
-                    ProjectUrl="$(ProjectUrl)"
+                    ProjectUrl="$(PackageProjectUrl)"
                     IconUrl="$(IconUrl)"
                     Icon="$(PackageIcon)"
                     LicenseUrl="$(LicenseUrl)"
