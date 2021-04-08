@@ -61,12 +61,19 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
 
         private JObject BuildPipelineReference()
         {
-            return new JObject
+            var obj = new JObject
             {
                 {"jobReference", BuildReference("job", JobName, JobAttempt)},
                 {"phaseReference", BuildReference("phase", PhaseName, PhaseAttempt)},
                 {"stageReference", BuildReference("stage", StageName, StageAttempt)},
             };
+
+            if (int.TryParse(BuildId, out var buildId))
+            {
+                obj["pipelineId"] = buildId;
+            }
+
+            return obj;
         }
 
         private JObject BuildReference(string part, string name, int attempt)
