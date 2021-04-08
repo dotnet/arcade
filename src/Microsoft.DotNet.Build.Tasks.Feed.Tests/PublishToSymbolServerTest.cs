@@ -93,7 +93,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         [Fact]
         public void TemporarySymbolsDirectoryTest()
         {
-            var publishTask = new PublishArtifactsInManifestV3();
+            var buildEngine = new MockBuildEngine();
+            var publishTask = new PublishArtifactsInManifestV3()
+            {
+                BuildEngine = buildEngine,
+            };
             var path = TestInputs.GetFullPath("Test");
             publishTask.EnsureTemporaryDirectoryExists(path);
             Assert.True(Directory.Exists(path));
