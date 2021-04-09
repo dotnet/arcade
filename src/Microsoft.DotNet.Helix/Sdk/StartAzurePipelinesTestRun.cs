@@ -12,6 +12,13 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
         [Required]
         public string TestRunName { get; set; }
 
+        public string JobName { get; set; }
+        public int JobAttempt { get; set; }
+        public string StageName { get; set; }
+        public int StageAttempt { get; set; }
+        public string PhaseName { get; set; }
+        public int PhaseAttempt { get; set; }
+
         [Output]
         public int TestRunId { get; set; }
         
@@ -33,6 +40,7 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
                                         ["build"] = new JObject {["id"] = BuildId,},
                                         ["name"] = TestRunName,
                                         ["state"] = "InProgress",
+                                        ["pipelineReference"] = BuildPipelineReference(),
                                     }),
                                 Encoding.UTF8,
                                 "application/json"),
@@ -49,6 +57,42 @@ namespace Microsoft.DotNet.Helix.AzureDevOps
                         }
                     }
                 });
+        }
+
+        private JObject BuildPipelineReference()
+        {
+            var obj = new JObject
+            {
+                {"jobReference", BuildReference("job", JobName, JobAttempt)},
+                {"phaseReference", BuildReference("phase", PhaseName, PhaseAttempt)},
+                {"stageReference", BuildReference("stage", StageName, StageAttempt)},
+            };
+
+            if (int.TryParse(BuildId, out var buildId))
+            {
+                obj["pipelineId"] = buildId;
+            }
+
+            return obj;
+        }
+
+        private JObject BuildReference(string part, string name, int attempt)
+        {
+            var reference = new JObject
+            {
+                [$"{part.ToLowerInvariant()}Name"] = name ?? GetEnvironmentVariable($"SYSTEM_{part.ToUpperInvariant()}NAME"),
+            };
+
+            if (attempt != 0)
+            {
+                reference["attempt"] = attempt;
+            }
+            else if (int.TryParse(GetEnvironmentVariable($"SYSTEM_{part.ToUpperInvariant()}ATTEMPT"), out int attemptFromEnv))
+            {
+                reference["attempt"] = attemptFromEnv;
+            }
+
+            return reference;
         }
     }
 }
