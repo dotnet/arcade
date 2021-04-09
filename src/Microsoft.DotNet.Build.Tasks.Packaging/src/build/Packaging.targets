@@ -50,6 +50,7 @@
     <Authors>Microsoft</Authors>
     <Owners>microsoft,dotnetframework</Owners>
     <IconUrl>http://go.microsoft.com/fwlink/?LinkID=288859</IconUrl>
+    <Tags></Tags>
     <RequireLicenseAcceptance Condition="'$(RequireLicenseAcceptance)' == ''">false</RequireLicenseAcceptance>
     <Serviceable Condition="'$(Serviceable)' == ''">true</Serviceable>
     <!-- we depend on NuGet v2.12 / v3.4 behavior NuGet doesn't support two different min client versions
@@ -1212,7 +1213,7 @@
                     Authors="$(Authors)"
                     Owners="$(Owners)"
                     Description="$(Description)"
-                    ReleaseNotes="$(PackageReleaseNotes)"
+                    ReleaseNotes="$(ReleaseNotes)"
                     Summary="$(Summary)"
                     Language="$(Language)"
                     ProjectUrl="$(PackageProjectUrl)"
@@ -1222,7 +1223,7 @@
                     PackageLicenseExpression="$(PackageLicenseExpression)"
                     Copyright="$(Copyright)"
                     RequireLicenseAcceptance="$(RequireLicenseAcceptance)"
-                    Tags="$(PackageTags)"
+                    Tags="$(Tags)"
                     DevelopmentDependency="$(DevelopmentDependency)"
                     Dependencies="@(Dependency)"
                     References="@(Reference)"
