@@ -183,6 +183,21 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             get { return _buildQuality.GetDescription(); }
             set { Enum.TryParse<PublishingConstants.BuildQuality>(value, true, out _buildQuality); }
         }
+        public string AzdoApiToken {get; set;}
+
+        public string ArtifactsBasePath { get; set;}
+
+        public string BuildId { get; set; }
+
+        public string AzureProject { get; set; }
+
+        public string AzureDevOpsOrg { get; set; }
+
+        /// <summary>
+        /// If true, uses Azdo Api to download artifacts and symbols files one file at a time during publishing process.
+        /// If it is set to false, then artifacts and symbols are downloaded in PackageArtifacts and BlobArtifacts directory before publishing. 
+        /// </summary>
+        public bool UseStreamingPublishing { get; set; } = false;
 
         /// <summary>
         /// Just an internal flag to keep track whether we published assets via a V3 manifest or not.
@@ -372,7 +387,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 ChecksumsFeedOverride = this.ChecksumsFeedOverride,
                 ShippingFeedOverride = this.ShippingFeedOverride,
                 TransportFeedOverride = this.TransportFeedOverride,
-                SymbolsFeedOverride = this.SymbolsFeedOverride
+                SymbolsFeedOverride = this.SymbolsFeedOverride,
+                ArtifactsBasePath =  this.ArtifactsBasePath,
+                AzdoApiToken = this.AzdoApiToken,
+                BuildId = this.BuildId,
+                AzureProject = this.AzureProject,
+                AzureDevOpsOrg = this.AzureDevOpsOrg,
+                UseStreamingPublishing = this.UseStreamingPublishing
             };
         }
     }

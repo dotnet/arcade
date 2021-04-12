@@ -22,12 +22,15 @@ jobs:
       value: $[ dependencies.setupMaestroVars.outputs['setReleaseVars.AzDOPipelineId'] ]
     - name: AzDOBuildId
       value: $[ dependencies.setupMaestroVars.outputs['setReleaseVars.AzDOBuildId'] ]
+    - name: AzDOAccount
+      value: $[ dependencies.setupMaestroVars.outputs['setReleaseVars.AzDOBuildAccount'] ]
   pool:
     vmImage: 'windows-2019'
   steps:
     - task: DownloadBuildArtifacts@0
       displayName: Download Build Assets
       continueOnError: true
+      enabled: true
       inputs:
         buildType: specific
         buildVersionToDownload: specific
@@ -36,12 +39,9 @@ jobs:
         buildId: $(AzDOBuildId)
         downloadType: 'specific'
         itemPattern: |
-          PackageArtifacts/**
-          BlobArtifacts/**
           AssetManifests/**
           PdbArtifacts/**
         downloadPath: '$(Build.ArtifactStagingDirectory)'
-        checkDownloadedFiles: true
 
     - task: NuGetToolInstaller@1
       displayName: 'Install NuGet.exe'
@@ -87,7 +87,12 @@ jobs:
           /p:MsdlToken=$(microsoft-symbol-server-pat)
           /p:SymWebToken=$(symweb-symbol-server-pat)
           /p:BuildQuality='${{ parameters.buildQuality }}'
-
+          /p:AzdoApiToken='$(dn-bot-all-orgs-build-rw-code-rw)'
+          /p:ArtifactsBasePath='$(Build.ArtifactStagingDirectory)/'
+          /p:BuildId='$(AzDOBuildId)'
+          /p:AzureDevOpsOrg='$(AzDOAccount)'
+          /p:AzureProject='$(AzDOProjectName)'
+          /p:UseStreamingPublishing='true'
     - template: /eng/common/templates/steps/publish-logs.yml
       parameters:
         StageLabel: '${{ parameters.stageName }}'

@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 using System.IO;
-using Castle.DynamicProxy.Generators.Emitters.SimpleAST;
 using Microsoft.Arcade.Test.Common;
 using Microsoft.DotNet.Build.Tasks.Feed.Model;
+using Microsoft.DotNet.Maestro.Client.Models;
 using Xunit;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
@@ -85,18 +85,23 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 BuildEngine = buildEngine,
             };
             var path = TestInputs.GetFullPath("Symbol");
-            var publish = task.HandleSymbolPublishingAsync(path, MsdlToken, SymWebToken, "", path, false);
+            var buildAsset = new Dictionary<string, HashSet<Asset>>();
+            var publish = task.HandleSymbolPublishingAsync(path, MsdlToken, SymWebToken, "", false, buildAsset, path);
             Assert.True(task.Log.HasLoggedErrors);
         }
 
         [Fact]
         public void TemporarySymbolsDirectoryTest()
         {
-            var publishTask = new PublishArtifactsInManifestV3();
+            var buildEngine = new MockBuildEngine();
+            var publishTask = new PublishArtifactsInManifestV3()
+            {
+                BuildEngine = buildEngine,
+            };
             var path = TestInputs.GetFullPath("Test");
-            publishTask.EnsureTemporarySymbolDirectoryExists(path);
+            publishTask.EnsureTemporaryDirectoryExists(path);
             Assert.True(Directory.Exists(path));
-            publishTask.DeleteSymbolTemporaryDirectory(path);
+            publishTask.DeleteTemporaryDirectory(path);
             Assert.False(Directory.Exists(path));
         }
 
@@ -134,6 +139,5 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 false,
                 false).IsCompleted);
         }
-
     }
 }
