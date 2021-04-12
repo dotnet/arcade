@@ -102,9 +102,9 @@
   <Import Project="$(MSBuildThisFileDirectory)\..\src\Microsoft.DotNet.Helix\Sdk\sdk\Sdk.targets"/>
 
   <ItemGroup>
-    <HelixWorkItem Condition="$(HelixTargetQueue.StartsWith('Windows'))" Include="ASPNetCoreTest">
+    <HelixWorkItem Condition="$(HelixTargetQueue.StartsWith('Windows'))" Include="AspNetCoreTest">
       <Command>powershell %HELIX_WORKITEM_PAYLOAD%\aspnet-versioncheck.ps1 -aspNetCoreVersion $(AspNetCoreRuntimeVersion)</Command>
-      <PayloadDirectory>$(MSBuildThisFileDirectory)\ASPNETVersionCheck</PayloadDirectory>
+      <PayloadDirectory>$(MSBuildThisFileDirectory)\AspNetVersionCheck</PayloadDirectory>
     </HelixWorkItem>
   </ItemGroup>
 </Project>

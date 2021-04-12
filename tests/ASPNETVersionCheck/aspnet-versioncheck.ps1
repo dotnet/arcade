@@ -8,7 +8,7 @@ $dotnetVersion = & dotnet --version
 $dotNetSdkMatch = $dotnetVersion -Match $versionRegex
 if ($dotNetSdkMatch -eq $false) {
   Write-Host ".NET SDK version '$dotnetVersion' did not match regex!"
-  exit 1
+  exit 2
 }
 $dotnetMajorVersion = $Matches.version
 $dotnetPreviewVersion = $Matches.preview
@@ -17,7 +17,7 @@ Write-Host ".NET SDK '$dotnetVersion' -- major version: '$dotnetMajorVersion'; p
 $aspNetCoreMatch = $aspNetCoreVersion -Match $versionRegex
 if ($aspNetCoreMatch -eq $false) {
   Write-Host "ASP.NET Core Runtime version '$aspNetCoreVersion' did not match regex!"
-  exit 1
+  exit 3
 }
 $aspNetCoreMajorVersion = $Matches.version
 $aspNetCorePreviewVersion = $Matches.preview
