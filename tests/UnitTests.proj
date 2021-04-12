@@ -100,9 +100,9 @@
   <!-- <Import Sdk="Microsoft.DotNet.Helix.Sdk" Project="Sdk.targets"/> -->
   <!-- Using locally built version of the helix sdk, normal projects replace the below Import with the SDK import above-->
   <Import Project="$(MSBuildThisFileDirectory)\..\src\Microsoft.DotNet.Helix\Sdk\sdk\Sdk.targets"/>
-  
+
   <ItemGroup>
-    <HelixWorkItem Include="ASPNetCoreTest">
+    <HelixWorkItem Condition="$(HelixTargetQueue.StartsWith('Windows'))" Include="ASPNetCoreTest">
       <Command>powershell %HELIX_WORKITEM_PAYLOAD%\aspnet-versioncheck.ps1 -aspNetCoreVersion $(AspNetCoreRuntimeVersion)</Command>
       <PayloadDirectory>$(MSBuildThisFileDirectory)\ASPNETVersionCheck</PayloadDirectory>
     </HelixWorkItem>
