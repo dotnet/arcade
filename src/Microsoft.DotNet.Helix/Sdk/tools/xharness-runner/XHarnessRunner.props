@@ -1,5 +1,4 @@
 <Project>
-  <Import Project="$(MSBuildThisFileDirectory)\..\dotnet-cli\AspNetCoreRuntimeVersion.props"/>
   <PropertyGroup>
     <_XHarnessPackageName>Microsoft.DotNet.XHarness.CLI</_XHarnessPackageName>
     <!-- MicrosoftDotNetXHarnessCLIVersion comes from eng\Versions.props -->
