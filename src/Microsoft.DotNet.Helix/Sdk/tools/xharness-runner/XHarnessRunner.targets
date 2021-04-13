@@ -1,6 +1,4 @@
 <Project>
-  <Import Project="$(MSBuildThisFileDirectory)\..\dotnet-cli\AspNetCoreRuntimeVersion.props"/>
-
   <PropertyGroup Condition=" '$(IncludeXHarnessCli)' == 'true' ">
     <!-- We then invoke the CLI DLL directly using .NET runtime without the need for .NET SDK -->
     <IncludeDotNetCli>true</IncludeDotNetCli>
