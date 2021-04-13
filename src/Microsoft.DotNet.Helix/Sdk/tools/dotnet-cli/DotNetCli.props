@@ -1,5 +1,4 @@
 <Project>
-  <Import Project="$(MSBuildThisFileDirectory)\AspNetCoreRuntimeVersion.props"/>
   <PropertyGroup>
     <IncludeDotNetCli Condition=" '$(IncludeDotNetCli)' != 'true' ">false</IncludeDotNetCli>
     <AspNetCoreRuntimeVersion>6.0.0-preview.2.21154.6</AspNetCoreRuntimeVersion>
