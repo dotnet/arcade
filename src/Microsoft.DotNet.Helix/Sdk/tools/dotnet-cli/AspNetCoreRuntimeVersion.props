@@ -1,0 +1,5 @@
+<Project>
+  <PropertyGroup>
+    <AspNetCoreRuntimeVersion>6.0.0-preview.2.21154.6</AspNetCoreRuntimeVersion>
+  </PropertyGroup>
+</Project>

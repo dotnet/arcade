@@ -1,4 +1,5 @@
 <Project>
+  <Import Project="$(MSBuildThisFileDirectory)\AspNetCoreRuntimeVersion.props"/>
 
   <PropertyGroup Condition=" '$(IncludeXHarnessCli)' == 'true' ">
     <!-- We then invoke the CLI DLL directly using .NET runtime without the need for .NET SDK -->
@@ -6,7 +7,7 @@
     <IncludeXHarnessCli>true</IncludeXHarnessCli>
     <DotNetCliPackageType Condition="'$(DotNetCliPackageType)' != 'sdk'">aspnetcore-runtime</DotNetCliPackageType>
     <DotNetCliVersion Condition=" '$(DotNetCliVersion)' == '' ">6.0.100-preview.2.21155.3</DotNetCliVersion>
-    <DotNetCliVersion Condition=" '$(DotNetCliVersion)' == '$(BundledNETCoreAppPackageVersion)' AND '$(DotNetCliPackageType)' == 'aspnetcore-runtime' ">6.0.0-preview.2.21154.6</DotNetCliVersion>
+    <DotNetCliVersion Condition=" '$(DotNetCliVersion)' == '$(BundledNETCoreAppPackageVersion)' AND '$(DotNetCliPackageType)' == 'aspnetcore-runtime' ">$(AspNetCoreRuntimeVersion)</DotNetCliVersion>
   </PropertyGroup>
 
   <Target Name="AddXHarnessCli"
