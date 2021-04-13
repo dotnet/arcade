@@ -55,7 +55,7 @@ namespace Microsoft.DotNet.SharedFramework.Sdk
                         component.GetMetadata("FileNameWithExtension")));
                         
                 var optionsElement = document.Root.Element("options");
-                bool templateHasOptions = options is not null;
+                bool templateHasOptions = optionsElement is not null;
                 if (!templateHasOptions)
                 {
                     optionsElement = new XElement("options");
