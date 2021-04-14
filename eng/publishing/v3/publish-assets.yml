@@ -40,6 +40,7 @@ jobs:
         downloadType: 'specific'
         itemPattern: |
           AssetManifests/**
+          BlobArtifacts/MergedManifest.xml
           PdbArtifacts/**
         downloadPath: '$(Build.ArtifactStagingDirectory)'
 
