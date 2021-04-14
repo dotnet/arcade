@@ -60,14 +60,14 @@ namespace Microsoft.DotNet.SharedFramework.Sdk
                 {
                     optionsElement = new XElement("options");
                 }
-                if (optionsElement.Attribute("hostArchitecture") is null)
+                if (optionsElement.Attribute("hostArchitectures") is null)
                 {
                     string hostArchitecture = TargetArchitecture;
                     if (hostArchitecture == "x64")
                     {
                         hostArchitecture = "x86_64";
                     }
-                    optionsElement.Add(new XAttribute("hostArchitecture", hostArchitecture));
+                    optionsElement.Add(new XAttribute("hostArchitectures", hostArchitecture));
                 }
                 
                 if (!templateHasOptions)
