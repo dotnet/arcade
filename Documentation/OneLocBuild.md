@@ -72,6 +72,7 @@ The parameters that can be passed to the template are as follows:
 | `RepoType` | `'gitHub'` | Should be set to `'gitHub'` for GitHub-based repositories and `'azureDevOps'` for Azure DevOps-based ones. |
 | `SourcesDirectory` | `$(Build.SourcesDirectory)` | This is the root directory for your repository source code. |
 | `CreatePr` | `true` | When set to `true`, instructs the OneLocBuild task to make a PR back to the source repository containing the localized files. |
+| `AutoCompletePr` | `false` | When set to `true`, instructs the OneLocBuild task to autocomplete the created PR. Requires permissions to bypass any checks on the main branch. |
 | `UseCheckedInLocProjectJson` | `false` | When set to `true`, instructs the LocProject.json generation script to use build-time validation rather than build-time generation, as described above. |
 | `LanguageSet` | `VS_Main_Languages` | This defines the `LanguageSet` of the LocProject.json as described in the [OneLocBuild task documentation](https://ceapex.visualstudio.com/CEINTL/_wiki/wikis/CEINTL.wiki/107/Localization-with-OneLocBuild-Task?anchor=languageset%2C-languages-(required)). |
 | `LclSource` | `LclFilesInRepo` | This passes the `LclSource` input to the OneLocBuild task as described in [its documentation](https://ceapex.visualstudio.com/CEINTL/_wiki/wikis/CEINTL.wiki/107/Localization-with-OneLocBuild-Task?anchor=languageset%2C-languages-(required)). For most repos, this should be set to `LclFilesfromPackage`. |
