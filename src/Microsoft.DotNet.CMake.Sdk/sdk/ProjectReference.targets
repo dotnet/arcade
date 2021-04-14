@@ -11,15 +11,10 @@
   </Target>
 
   <Target Name="CopyNativeProjectBinaries">
-    <MSBuild Projects="$(ReferencedCMakeProject)"
-      Targets="IsMultiConfigurationGenerator">
-      <Output TaskParameter="TargetOutputs" PropertyName="_IsMultiConfigurationGenerator" />
-    </MSBuild>
-
-    <ItemGroup Condition="'$(_IsMultiConfigurationGenerator)' == 'true'">
+    <ItemGroup Condition="'$(IsMultiConfigurationGenerator)' == 'true'">
       <NativeProjectBinaries Include="$(NativeProjectOutputFolder)\*.*" />
     </ItemGroup>
-    <ItemGroup Condition="'$(_IsMultiConfigurationGenerator)' != 'true'">
+    <ItemGroup Condition="'$(IsMultiConfigurationGenerator)' != 'true'">
 
     <!-- ############################################################### -->
     <!-- The following is required because the single configuration      -->
@@ -122,12 +117,14 @@
 
     <MSBuild Projects="%(NativeProjectReferenceNormalized.CMakeProject)"
       Targets="GetOutputPathForProjectReference"
-      Properties="ReferencedCMakeLists=%(NativeProjectReferenceNormalized.Identity)">
+      Properties="ReferencedCMakeLists=%(NativeProjectReferenceNormalized.Identity);%(NativeProjectReferenceNormalized.AdditionalProperties)">
       <Output TaskParameter="TargetOutputs" ItemName="NativeProjectOutputFoldersToCopy" />
     </MSBuild>
 
     <ItemGroup>
-      <_NativeProjectReferenceToBuild Include="%(NativeProjectReferenceNormalized.CMakeProject)" Condition="'%(NativeProjectReferenceNormalized.BuildNative)' == 'true'" />
+      <_NativeProjectReferenceToBuild Include="%(NativeProjectReferenceNormalized.CMakeProject)"
+                                      Condition="'%(NativeProjectReferenceNormalized.BuildNative)' == 'true'"
+                                      AdditionalProperties="%(NativeProjectReferenceNormalized.AdditionalProperties)" />
     </ItemGroup>
 
     <RemoveDuplicates Inputs="@(_NativeProjectReferenceToBuild)">
@@ -142,7 +139,8 @@
     <MSBuild Projects="$(MSBuildProjectFile)" 
              Targets="CopyNativeProjectBinaries"
              Properties="NativeProjectOutputFolder=%(NativeProjectOutputFoldersToCopy.Identity);
-                         ReferencedCMakeProject=%(NativeProjectOutputFoldersToCopy.MSBuildSourceProjectFile)"
+                         ReferencedCMakeProject=%(NativeProjectOutputFoldersToCopy.MSBuildSourceProjectFile);
+                         IsMultiConfigurationGenerator=%(NativeProjectOutputFoldersToCopy.IsMultiConfigurationGenerator)"
              Condition="'@(NativeProjectReference)' != ''" />
 
   </Target>
