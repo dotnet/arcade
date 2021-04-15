@@ -86,13 +86,11 @@
       <Output TaskParameter="TargetOutputs" ItemName="TargetFeedConfig"/>
     </CallTarget>
 
-    <Error Condition="'$(ManifestsBasePath)' == ''" Text="ManifestsBasePath is empty. Please provide the full path to asset manifest(s) directory." />
     <Error Condition="'$(BlobBasePath)' == '' OR '$(PackageBasePath)' == ''" Text="A valid full path to BlobBasePath and PackageBasePath is required." />
 
     <ItemGroup>
       <MergedManifest Condition="Exists('$(BlobBasePath)\MergedManifest.xml')" Include="$(BlobBasePath)\MergedManifest.xml" />
       <ManifestFiles Include="@(MergedManifest)" />
-      <ManifestFiles Condition="'@(ManifestFiles)' == ''" Include="$(ManifestsBasePath)\*.xml" />
     </ItemGroup>
 
     <PropertyGroup>
@@ -113,7 +111,7 @@
 
     <Error
       Condition="'@(ManifestFiles)' == ''"
-      Text="No manifest file was found in the provided path: $(ManifestsBasePath)" />
+      Text="Merged manifest file was not found in the provided path: $(BlobBasePath)." />
 
     <!-- 
       Publish artifacts from all manifests.
