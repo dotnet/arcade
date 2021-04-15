@@ -53,7 +53,29 @@ namespace Microsoft.DotNet.SharedFramework.Sdk
                     .Select(component => new XElement("pkg-ref",
                         new XAttribute("id", component.GetMetadata("FileNameWithExtension")),
                         component.GetMetadata("FileNameWithExtension")));
+                        
+                var optionsElement = document.Root.Element("options");
+                bool templateHasOptions = optionsElement is not null;
+                if (!templateHasOptions)
+                {
+                    optionsElement = new XElement("options");
+                }
+                if (optionsElement.Attribute("hostArchitectures") is null)
+                {
+                    string hostArchitecture = TargetArchitecture;
+                    if (hostArchitecture == "x64")
+                    {
+                        hostArchitecture = "x86_64";
+                    }
+                    optionsElement.Add(new XAttribute("hostArchitectures", hostArchitecture));
+                }
+                
+                if (!templateHasOptions)
+                {
+                    document.Root.Add(optionsElement);
+                }
 
+                document.Root.Add(titleElement);
                 document.Root.Add(new XElement("choices-outline", choiceLineElements));
                 document.Root.Add(choiceElements);
                 document.Root.Add(pkgRefElements);
