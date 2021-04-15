@@ -29,7 +29,7 @@ namespace Microsoft.SignCheck.Verification
             WinTrustData data = new WinTrustData()
             {
                 cbStruct = (uint)Marshal.SizeOf(typeof(WinTrustData)),
-                dwProvFlags = Convert.ToUInt32(Provider.WTD_SAFER_FLAG),
+                dwProvFlags = 0,
                 dwStateAction = Convert.ToUInt32(StateAction.WTD_STATEACTION_IGNORE),
                 dwUIChoice = Convert.ToUInt32(UIChoice.WTD_UI_NONE),
                 dwUIContext = 0,
