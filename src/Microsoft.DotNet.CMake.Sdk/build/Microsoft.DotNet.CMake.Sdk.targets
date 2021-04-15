@@ -67,7 +67,7 @@
     </PropertyGroup>
   </Target>
 
-  <Target Name="GetOutputPathForProjectReference" DependsOnTargets="GetRootCMakeListsDirectory;ResolveVSGenerator" Returns="$(_CMakeProjectReferenceFilesLocation)">
+  <Target Name="GetOutputPathForProjectReference" DependsOnTargets="GetRootCMakeListsDirectory;ResolveVSGenerator;IsMultiConfigurationGenerator" Returns="@(_CMakeProjectReferenceFilesLocationItem)">
     <PropertyGroup>
       <_NormalizedReferencedCMakeListsDirectory>$([System.IO.Path]::GetDirectoryName($(ReferencedCMakeLists)))</_NormalizedReferencedCMakeListsDirectory>
     </PropertyGroup>
@@ -83,6 +83,9 @@
       <_CMakeProjectReferenceFilesLocation
         Condition="'$(_CMakeMultiConfigurationGenerator)' == 'true'">$([MSBuild]::NormalizePath('$(_CMakeProjectReferenceFilesLocation)','$(Configuration)'))</_CMakeProjectReferenceFilesLocation>
     </PropertyGroup>
+    <ItemGroup>
+      <_CMakeProjectReferenceFilesLocationItem Include="$(_CMakeProjectReferenceFilesLocation)" IsMultiConfigurationGenerator="_CMakeMultiConfigurationGenerator" />
+    </ItemGroup>
   </Target>
 
   <Target Name="_ResolveVSCompilerToolchainForNonVSGenerators"
