@@ -72,6 +72,7 @@ namespace Microsoft.DotNet.RemoteExecutor
             !RuntimeInformation.IsOSPlatform(OSPlatform.Create("IOS")) &&
             !RuntimeInformation.IsOSPlatform(OSPlatform.Create("ANDROID")) &&
             !RuntimeInformation.IsOSPlatform(OSPlatform.Create("TVOS")) &&
+            !RuntimeInformation.IsOSPlatform(OSPlatform.Create("MACCATALYST")) &&
             !RuntimeInformation.IsOSPlatform(OSPlatform.Create("WATCHOS")) &&
             !RuntimeInformation.IsOSPlatform(OSPlatform.Create("BROWSER")) &&
             // The current RemoteExecutor design is not compatible with single file
