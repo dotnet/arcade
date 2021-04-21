@@ -433,7 +433,7 @@
     </HarvestPackage>
 
     <ItemGroup>
-      <SupportedFramework Include="@(_HarvestedSupportedFramework)" Exclude="@(NotSupportedOnTargetFramework)" />
+      <SupportedFramework Include="@(_HarvestedSupportedFramework)" Exclude="@(NotSupportedOnTargetFramework);@(ExcludeHarvestedSupportedFramework)" />
     </ItemGroup>
   </Target>
 
