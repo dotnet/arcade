@@ -410,7 +410,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     await DownloadFileAsync(client, ArtifactName.BlobArtifacts, containerId, symbol, localSymbolPath);
                     symbolLog.AppendLine($"Successfully downloaded symbol : {symbol} to {localSymbolPath}");
                     List<string> symbolFiles = new List<string>();
-                    symbolFiles.ToList().Add(localSymbolPath);
+                    symbolFiles.Add(localSymbolPath);
                     
                     foreach (var server in serversToPublish)
                     {
