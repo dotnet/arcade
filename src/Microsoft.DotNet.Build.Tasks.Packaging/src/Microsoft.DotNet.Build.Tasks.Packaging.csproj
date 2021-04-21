@@ -21,7 +21,6 @@
 - GenerateNetStandardSupportTable
 - GeneratePackageReport
 - GenerateRuntimeDependencies
-- GenerateRuntimeGraph
 - GetApplicableAssetsFromPackageReports
 - GetApplicableAssetsFromPackages
 - GetAssemblyReferences
