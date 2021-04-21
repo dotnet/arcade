@@ -409,8 +409,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         string localSymbolPath = Path.Combine(temporarySymbolsDirectory, symbol);
                         symbolLog.AppendLine($"Downloading symbol : {symbol} to {localSymbolPath}");
 
-                        await DownloadFileAsync(client, ArtifactName.BlobArtifacts, containerId, symbol,
-                            localSymbolPath);
+                        await DownloadFileAsync(client, ArtifactName.BlobArtifacts, containerId, symbol, localSymbolPath);
                         symbolLog.AppendLine($"Successfully downloaded symbol : {symbol} to {localSymbolPath}");
                         List<string> symbolFiles = new List<string>();
                         symbolFiles.Add(localSymbolPath);
