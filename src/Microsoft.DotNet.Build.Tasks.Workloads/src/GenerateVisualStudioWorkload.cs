@@ -5,12 +5,11 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Microsoft.NET.Sdk.WorkloadManifestReader;
 
-namespace Microsoft.DotNet.Build.Tasks.Workloads.src
+namespace Microsoft.DotNet.Build.Tasks.Workloads
 {
     /// <summary>
     /// MSBuild task for generating Visual Studio component projects representing
@@ -18,6 +17,70 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.src
     /// </summary>
     public class GenerateVisualStudioWorkload : GenerateTaskBase
     {
+        /// <summary>
+        /// An item group used to provide a customized title, description, and category for a specific workload ID in Visual Studio.
+        /// Workloads only define a description. Visual Studio defines a separate title (checkbox text) and description (checkbox tooltip).
+        /// </summary>
+        public ITaskItem[] ComponentResources
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// The version of the component in the Visual Studio manifest. If no version is specified,
+        /// the manifest version is used.
+        /// </summary>
+        public string ComponentVersion
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Gets or sets whether MSIs for workload packs will be generated. When set to <see langword="false" />, only
+        /// Visual Studio component authoring files are generated.
+        /// </summary>
+        public bool GenerateMsis
+        {
+            get;
+            set;
+        } = true;
+
+        /// <summary>
+        /// Set of missing workload pack packages.
+        /// </summary>
+        [Output]
+        public ITaskItem[] MissingPacks
+        {
+            get;
+            set;
+        } = Array.Empty<ITaskItem>();
+
+        public string OutputPath
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// The path where the workload-pack packages referenced by the workload manifests are located.
+        /// </summary>
+        public string PackagesPath
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// An item group containing information to shorten the names of packages.
+        /// </summary>
+        public ITaskItem[] ShortNames
+        {
+            get;
+            set;
+        }
+
         /// <summary>
         /// The workload manifest files to use for generating the Visual Studio components.
         /// </summary>
@@ -37,7 +100,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.src
         }
 
         /// <summary>
-        /// 
+        /// The paths of the generated .swixproj files.
         /// </summary>
         [Output]
         public ITaskItem[] SwixProjects
@@ -50,14 +113,19 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.src
         {
             try
             {
-                List<ITaskItem> swixProjects = new();
-
-                foreach (ITaskItem workloadPackage in WorkloadPackages)
+                if (WorkloadManifests != null)
                 {
-                    swixProjects.AddRange(ProcessWorkloadManifest(workloadPackage.GetMetadata("FullPath")));
+                    SwixProjects = GenerateSwixProjects(WorkloadManifests);
                 }
-
-                SwixProjects = swixProjects.ToArray();
+                else if (WorkloadPackages != null)
+                {
+                    SwixProjects = GenerateSwixProjects(GetManifestsFromManifestPackages(WorkloadPackages));
+                }
+                else
+                {
+                    Log.LogError($"Either {nameof(WorkloadPackages)} or {nameof(WorkloadManifests)} item must be non-empty");
+                    return false;
+                }
             }
             catch (Exception e)
             {
@@ -68,13 +136,94 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.src
             return !Log.HasLoggedErrors;
         }
 
+        ITaskItem[] GenerateSwixProjects(ITaskItem[] workloadManifests)
+        {
+            List<ITaskItem> swixProjects = new();
+
+            // Generate the MSIs first to see if we have missing packs so we can remove
+            // those dependencies from the components.
+            if (GenerateMsis)
+            {
+                Log?.LogMessage(MessageImportance.Low, "Generating MSIs...");
+                // Generate MSIs for workload packs and add their .swixproj files 
+                swixProjects.AddRange(GenerateMsisFromManifests(workloadManifests));
+            }
+
+            foreach (ITaskItem workloadManifest in workloadManifests)
+            {
+                swixProjects.AddRange(ProcessWorkloadManifestFile(workloadManifest.GetMetadata("FullPath")));
+            }
+
+            return swixProjects.ToArray();
+        }
+
+        internal IEnumerable<ITaskItem> GenerateMsisFromManifests(ITaskItem[] workloadManifests)
+        {
+            GenerateWorkloadMsis msiTask = new()
+            {
+                BuildEngine = this.BuildEngine,
+                GenerateSwixAuthoring = true,
+                IntermediateBaseOutputPath = this.IntermediateBaseOutputPath,
+                OutputPath = this.OutputPath,
+                PackagesPath = this.PackagesPath,
+                ShortNames = this.ShortNames,
+                WixToolsetPath = this.WixToolsetPath,
+                WorkloadManifests = workloadManifests
+            };
+
+            if (!msiTask.Execute())
+            {
+                Log?.LogError($"Failed to generate MSIs for workload packs.");
+                return Enumerable.Empty<ITaskItem>();
+            }
+            else
+            {
+                if (msiTask.MissingPacks != null)
+                {
+                    MissingPacks = msiTask.MissingPacks;
+
+                    foreach (ITaskItem item in MissingPacks)
+                    {
+                        Log?.LogWarning($"Unable to locate '{item.GetMetadata(Metadata.SourcePackage)}'. Short name: {item.GetMetadata(Metadata.ShortName)}, Platform: {item.GetMetadata(Metadata.Platform)}, Workload Pack: ({item.ItemSpec}).");
+                    }
+                }
+
+                return msiTask.Msis.Select(m => new TaskItem(m.GetMetadata(Metadata.SwixProject)));
+            }
+        }
+
+        internal IEnumerable<ITaskItem> ProcessWorkloadManifestFile(string workloadManifestJsonPath)
+        {
+            WorkloadManifest manifest = WorkloadManifestReader.ReadWorkloadManifest(File.OpenRead(workloadManifestJsonPath));
+
+            List<TaskItem> swixProjects = new();
+
+            foreach (WorkloadDefinition workloadDefinition in manifest.Workloads.Values)
+            {
+                // Each workload maps to a Visual Studio component.
+                VisualStudioComponent component = VisualStudioComponent.Create(Log, manifest, workloadDefinition,
+                    ComponentVersion, ShortNames, ComponentResources, MissingPacks);
+
+                // If there are no dependencies, regardless of whether we are generating MSIs, we'll report an
+                // error as we'd produce invalid SWIX.
+                if (!component.HasDependencies)
+                {
+                    Log?.LogError($"Visual Studio components '{component.Name}' must have at least one dependency.");
+                }
+
+                swixProjects.Add(component.Generate(Path.Combine(SourceDirectory, $"{workloadDefinition.Id}.{manifest.Version}.0")));
+            }
+
+            return swixProjects;
+        }
+
         /// <summary>
         /// Extracts the workload manifest from the manifest package and generate a SWIX project for a Visual Studio component
         /// matching the manifests dependencies.  
         /// </summary>
         /// <param name="workloadManifestPackage">The path of the workload package containing the manifest.</param>
         /// <returns>A set of items containing the generated SWIX projects.</returns>
-        internal IEnumerable<ITaskItem> ProcessWorkloadManifest(string workloadManifestPackage)
+        internal IEnumerable<ITaskItem> ProcessWorkloadManifestPackage(string workloadManifestPackage)
         {
             NugetPackage workloadPackage = new(workloadManifestPackage, Log);
 
@@ -87,17 +236,31 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.src
                 throw new FileNotFoundException($"Unable to locate WorkloadManifest.json under '{packageContentPath}'.");
             }
 
-            WorkloadManifest manifest = WorkloadManifestReader.ReadWorkloadManifest(File.OpenRead(workloadManifestJsonPath));
+            return ProcessWorkloadManifestFile(workloadManifestJsonPath);
+        }
 
-            List<TaskItem> swixProjects = new();
-            
-            foreach (WorkloadDefinition workloadDefinition in manifest.Workloads.Values)
+        internal ITaskItem[] GetManifestsFromManifestPackages(ITaskItem[] workloadPackages)
+        {
+            List<TaskItem> manifests = new();
+
+            foreach (ITaskItem item in workloadPackages)
             {
-                VisualStudioComponent component = VisualStudioComponent.Create(manifest, workloadDefinition);
-                swixProjects.Add(component.Generate(Path.Combine(SourceDirectory, $"{workloadDefinition.Id}.{manifest.Version}.0")));
+                NugetPackage workloadPackage = new(item.GetMetadata("FullPath"), Log);
+                string packageContentPath = Path.Combine(PackageDirectory, $"{workloadPackage.Identity}");
+                workloadPackage.Extract(packageContentPath, Enumerable.Empty<string>());
+                string workloadManifestJsonPath = Directory.GetFiles(packageContentPath, "WorkloadManifest.json").FirstOrDefault();
+
+                if (string.IsNullOrWhiteSpace(workloadManifestJsonPath))
+                {
+                    throw new FileNotFoundException($"Unable to locate WorkloadManifest.json under '{packageContentPath}'.");
+                }
+
+                Log?.LogMessage(MessageImportance.Low, $"Adding manifest: {workloadManifestJsonPath}");
+
+                manifests.Add(new TaskItem(workloadManifestJsonPath));
             }
 
-            return swixProjects;
+            return manifests.ToArray();
         }
     }
 }

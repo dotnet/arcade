@@ -28,9 +28,19 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         }
 
         /// <summary>
-        /// The path where the packages referenced by the manifest files are located.
+        /// The path where the workload-pack packages referenced by the manifest files are located.
         /// </summary>
         public string PackagesPath
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
+        /// Gets the set of missing workload packs.
+        /// </summary>
+        [Output]
+        public ITaskItem[] MissingPacks
         {
             get;
             set;
@@ -41,6 +51,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             try
             {
                 List<ITaskItem> msis = new();
+                List<ITaskItem> missingPacks = new();
 
                 if (string.IsNullOrWhiteSpace(PackagesPath))
                 {
@@ -48,18 +59,37 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                     return false;
                 }
 
-                foreach (WorkloadPack pack in GetWorkloadPacks())
+                // Each pack maps to multiple packs and different MSI packages. We considering a pack
+                // to be missing when none of its dependent MSIs were found/generated.
+                IEnumerable<WorkloadPack> workloadPacks = GetWorkloadPacks();
+                List<string> missingPackIds = new(workloadPacks.Select(p => $"{p.Id}"));
+
+                foreach (WorkloadPack pack in workloadPacks)
                 {
                     Log.LogMessage($"Processing workload pack: {pack.Id}, Version: {pack.Version}");
 
                     foreach ((string sourcePackage, string[] platforms) in GetSourcePackages(pack))
                     {
-                        // Always select the pack ID for the VS MSI package.
-                        msis.AddRange(Generate(sourcePackage, $"{pack.Id}", OutputPath, GetInstallDir(pack.Kind), platforms));
+                        if (!File.Exists(sourcePackage))
+                        {
+                            Log?.LogWarning($"Workload pack package does not exist: {sourcePackage}");
+                            continue;
+                        }
+
+                        missingPackIds.Remove(pack.Id.ToString());
+
+                        // Swix package is always versioned to support upgrading SxS installs. The pack alias will be
+                        // used for individual MSIs
+                        string swixPackageId = $"{pack.Id.ToString().Replace(ShortNames)}.{pack.Version}";
+
+                        // Always select the pack ID for the VS MSI package, even when aliased.
+                        msis.AddRange(Generate(sourcePackage, swixPackageId,
+                            OutputPath, GetInstallDir(pack.Kind), platforms));
                     }
                 }
 
                 Msis = msis.ToArray();
+                MissingPacks = missingPackIds.Select(p => new TaskItem(p)).ToArray();
             }
             catch (Exception e)
             {
@@ -80,7 +110,12 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                 Select(g => g.First());
         }
 
-        private IEnumerable<(string, string[])> GetSourcePackages(WorkloadPack pack)
+        /// <summary>
+        /// Gets the packages associated with a specific workload pack.
+        /// </summary>
+        /// <param name="pack"></param>
+        /// <returns>An enumerable of tuples. Each tuple contains the full path of the NuGet package and the target platforms.</returns>
+        internal IEnumerable<(string, string[])> GetSourcePackages(WorkloadPack pack)
         {
             if (pack.IsAlias)
             {
