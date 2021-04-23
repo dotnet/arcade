@@ -4,7 +4,7 @@
 
   <PropertyGroup>
     <XHarnessAppBundleName>System.Numerics.Vectors.Tests.app</XHarnessAppBundleName>
-    <XHarnessAppBundleUrl>https://netcorenativeassets.blob.core.windows.net/resource-packages/external/macos/test-ios-app/$(XHarnessAppBundleName).zip</XHarnessAppBundleUrl>
+    <XHarnessAppBundleUrl>https://netcorenativeassets.blob.core.windows.net/resource-packages/external/ios/test-app/ios-simulator-64/$(XHarnessAppBundleName).zip</XHarnessAppBundleUrl>
   </PropertyGroup>
 
   <!-- We're not set up currently to build app bundles as part of normal builds, so this downloads existing ones for now -->
