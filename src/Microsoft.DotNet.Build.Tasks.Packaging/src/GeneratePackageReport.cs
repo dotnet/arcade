@@ -387,20 +387,5 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
                 _unusedTargetPaths.Remove(targetPath);
             }
         }
-
-        private class SupportFramework
-        {
-            private static readonly string[] s_nullRidList = new string[] { null };
-            public SupportFramework(NuGetFramework framework)
-            {
-                Framework = framework;
-                RuntimeIds = s_nullRidList;
-            }
-
-            public NuGetFramework Framework { get; }
-            public string[] RuntimeIds { get; set; }
-
-            public string ShortName { get { return Framework.GetShortFolderName(); } }            
-        }
     }
 }

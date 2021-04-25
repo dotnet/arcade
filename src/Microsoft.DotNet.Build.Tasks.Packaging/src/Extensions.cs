@@ -17,8 +17,6 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
 {
     public static class Extensions
     {
-        private static readonly NuGetFramework NullFramework = new NuGetFramework("Null,Version=v1.0");
-
         public static string GetString(this ITaskItem taskItem, string metadataName)
         {
             var metadataValue = taskItem.GetMetadata(metadataName)?.Trim();
@@ -184,25 +182,6 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
             list.AddRange(value);
 
             //property.SetValue(target, list, null);
-        }
-    }
-}
-
-namespace NuGet
-{
-    internal static class NuGetFrameworkExtensions
-    { 
-        // NuGet.Frameworks doesn't have the equivalent of the old VersionUtility.GetFrameworkString
-        // which is relevant for building packages
-        public static string GetFrameworkString(this NuGetFramework self)
-        {
-            var frameworkName = new FrameworkName(self.DotNetFrameworkName);
-            string name = frameworkName.Identifier + frameworkName.Version;
-            if (string.IsNullOrEmpty(frameworkName.Profile))
-            {
-                return name;
-            }
-            return name + "-" + frameworkName.Profile;
         }
     }
 }
