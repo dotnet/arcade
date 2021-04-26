@@ -23,9 +23,32 @@ namespace Microsoft.DotNet.Arcade.Sdk.Tests
         private readonly Mock<IFileSystem> _fileSystemMock;
         private readonly Mock<IHelpers> _helpersMock;
 
-        private readonly string _locFilesDir = @"C:\a\loc";
+        private readonly string _locFilesDir = @"D:\a\1\a\loc\";
+        private readonly string _sourcesDir = @"D:\a\1\s\";
         private readonly string _gitHubOrg = "dotnet";
         private readonly string _gitHubRepo = "arcade";
+        private readonly string _gitHubBranch = "main";
+
+        private readonly string _prDiffFileContent = @"D:\a\1\s\src\Microsoft.CodeAnalysis.Analyzers\Core\xlf\CodeAnalysisDiagnosticsResources.fr.xlf
+D:\a\1\s\src\Microsoft.CodeAnalysis.Analyzers\Core\xlf\CodeAnalysisDiagnosticsResources.ja.xlf
+D:\a\1\s\src\Microsoft.CodeAnalysis.Analyzers\Core\xlf\CodeAnalysisDiagnosticsResources.ko.xlf
+D:\a\1\s\src\Microsoft.CodeAnalysis.Analyzers\Core\xlf\CodeAnalysisDiagnosticsResources.ru.xlf
+D:\a\1\s\src\Microsoft.CodeAnalysis.Analyzers\Core\xlf\CodeAnalysisDiagnosticsResources.zh-Hans.xlf
+D:\a\1\s\src\Microsoft.CodeAnalysis.Analyzers\Core\xlf\CodeAnalysisDiagnosticsResources.zh-Hant.xlf
+D:\a\1\s\src\Microsoft.CodeAnalysis.BannedApiAnalyzers\Core\xlf\BannedApiAnalyzerResources.zh-Hans.xlf
+D:\a\1\s\src\Microsoft.CodeAnalysis.BannedApiAnalyzers\Core\xlf\BannedApiAnalyzerResources.zh-Hant.xlf
+D:\a\1\s\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\xlf\MicrosoftCodeQualityAnalyzersResources.cs.xlf
+D:\a\1\s\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\xlf\MicrosoftCodeQualityAnalyzersResources.de.xlf
+D:\a\1\s\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\xlf\MicrosoftCodeQualityAnalyzersResources.es.xlf
+D:\a\1\s\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\xlf\MicrosoftCodeQualityAnalyzersResources.fr.xlf
+D:\a\1\s\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\xlf\MicrosoftCodeQualityAnalyzersResources.it.xlf
+D:\a\1\s\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\xlf\MicrosoftCodeQualityAnalyzersResources.ja.xlf
+D:\a\1\s\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\xlf\MicrosoftCodeQualityAnalyzersResources.ko.xlf
+D:\a\1\s\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\xlf\MicrosoftCodeQualityAnalyzersResources.pl.xlf
+D:\a\1\s\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\xlf\MicrosoftCodeQualityAnalyzersResources.pt-BR.xlf
+D:\a\1\s\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\xlf\MicrosoftCodeQualityAnalyzersResources.ru.xlf
+D:\a\1\s\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\xlf\MicrosoftCodeQualityAnalyzersResources.tr.xlf
+D:\a\1\s\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\xlf\MicrosoftCodeQualityAnalyzersResources.zh-Hans.xlf";
 
         private readonly PostOneLocBuildToGitHub _task;
 
@@ -48,11 +71,43 @@ namespace Microsoft.DotNet.Arcade.Sdk.Tests
             _task = new PostOneLocBuildToGitHub
             {
                 LocFilesDirectory = _locFilesDir,
+                SourcesDirectory = _sourcesDir,
                 GitHubPat = "fake",
                 GitHubOrg = _gitHubOrg,
                 GitHubRepo = _gitHubRepo,
+                GitHubBranch = _gitHubBranch,
             };
         }
+
+        [Fact]
+        public async Task MakesPr()
+        {
+            IReadOnlyList<PullRequest> prs = new List<PullRequest>
+            {
+                new TestPullRequest { TestTitle = $"A nonsense PR", TestState = ItemState.Open, TestBase = new TestGitReference { TestLabel = $"{_gitHubOrg}:{_gitHubBranch}" } },
+                new TestPullRequest { TestTitle = $"{PostOneLocBuildToGitHub.PrPrefix}04/21/2021", TestState = ItemState.Open, TestBase = new TestGitReference { TestLabel = $"{_gitHubOrg}:{_gitHubBranch}" } },
+                new TestPullRequest { TestTitle = $"A different nonsense PR", TestState = ItemState.Open, TestBase = new TestGitReference { TestLabel = $"{_gitHubOrg}:{_gitHubBranch}" } },
+                new TestPullRequest { TestTitle = $"[DO NOT MERGE] Just testing", TestState = ItemState.Open, TestBase = new TestGitReference { TestLabel = $"{_gitHubOrg}:{_gitHubBranch}" } },
+            };
+
+            _fileSystemMock.Setup(f => f.FileExists(It.IsAny<string>()))
+                .Returns(true);
+            _fileSystemMock.Setup(f => f.ReadFromFile(It.IsAny<string>()))
+                .Returns(_prDiffFileContent);
+            
+            _gitHubClientMock
+                .Setup(g => g.PullRequest.GetAllForRepository(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<PullRequestRequest>()))
+                .Returns(Task.FromResult(prs));
+
+            await Task.Delay(10);
+        }
+
+        //[Fact]
+        //public async Task TemporaryTestDeleteBeforeCommitting()
+        //{
+        //    PostOneLocBuildToGitHub task = new PostOneLocBuildToGitHub();
+            
+        //}
 
         [Fact]
         public async Task ReturnsExistingOneLocPr()
@@ -60,10 +115,10 @@ namespace Microsoft.DotNet.Arcade.Sdk.Tests
             // Setup
             IReadOnlyList<PullRequest> prs = new List<PullRequest>
             {
-                new TestPullRequest { TestTitle = $"A nonsense PR", TestState = ItemState.Open },
-                new TestPullRequest { TestTitle = $"{PostOneLocBuildToGitHub.PrPrefix}04/21/2021", TestState = ItemState.Open },
-                new TestPullRequest { TestTitle = $"A different nonsense PR", TestState = ItemState.Open },
-                new TestPullRequest { TestTitle = $"[DO NOT MERGE] Just testing", TestState = ItemState.Open },
+                new TestPullRequest { TestTitle = $"A nonsense PR", TestState = ItemState.Open, TestBase = new TestGitReference { TestLabel = $"{_gitHubOrg}:{_gitHubBranch}" } },
+                new TestPullRequest { TestTitle = $"{PostOneLocBuildToGitHub.PrPrefix}04/21/2021", TestState = ItemState.Open, TestBase = new TestGitReference { TestLabel = $"{_gitHubOrg}:{_gitHubBranch}" } },
+                new TestPullRequest { TestTitle = $"A different nonsense PR", TestState = ItemState.Open, TestBase = new TestGitReference { TestLabel = $"{_gitHubOrg}:{_gitHubBranch}" } },
+                new TestPullRequest { TestTitle = $"[DO NOT MERGE] Just testing", TestState = ItemState.Open, TestBase = new TestGitReference { TestLabel = $"{_gitHubOrg}:{_gitHubBranch}" } },
             };
 
             _gitHubClientMock
@@ -75,6 +130,29 @@ namespace Microsoft.DotNet.Arcade.Sdk.Tests
 
             // Verify
             foundPr.Title.Should().Be($"{PostOneLocBuildToGitHub.PrPrefix}04/21/2021");
+            foundPr.Base.Label.Should().Be($"{_gitHubOrg}:{_gitHubBranch}");
+        }
+
+        [Fact]
+        public async Task ReturnsNoLocPr()
+        {
+            // Setup
+            IReadOnlyList<PullRequest> prs = new List<PullRequest>
+            {
+                new TestPullRequest { TestTitle = $"A nonsense PR", TestState = ItemState.Open, TestBase = new TestGitReference { TestLabel = $"{_gitHubOrg}:{_gitHubBranch}" } },
+                new TestPullRequest { TestTitle = $"A different nonsense PR", TestState = ItemState.Open, TestBase = new TestGitReference { TestLabel = $"{_gitHubOrg}:{_gitHubBranch}" } },
+                new TestPullRequest { TestTitle = $"[DO NOT MERGE] Just testing", TestState = ItemState.Open, TestBase = new TestGitReference { TestLabel = $"{_gitHubOrg}:{_gitHubBranch}" } },
+            };
+
+            _gitHubClientMock
+                .Setup(g => g.PullRequest.GetAllForRepository(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<PullRequestRequest>()))
+                .Returns(Task.FromResult(prs));
+
+            // Act
+            PullRequest foundPr = await _task.FindExistingOneLocPr(_gitHubClientMock.Object);
+
+            // Verify
+            foundPr.Should().BeNull();
         }
 
         private IServiceCollection CreateMockServiceCollection()
@@ -90,6 +168,11 @@ namespace Microsoft.DotNet.Arcade.Sdk.Tests
         {
             public string TestTitle { get { return Title; } set { Title = value; } }
             public StringEnum<ItemState> TestState { get { return State; } set { State = value; } }
+            public GitReference TestBase { get { return Base; } set { Base = value; } }
+        }
+        private class TestGitReference : GitReference
+        {
+            public string TestLabel { get { return Label; } set { Label = value; } }
         }
     }
 }

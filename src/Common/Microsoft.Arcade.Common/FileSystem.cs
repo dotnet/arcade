@@ -22,11 +22,21 @@ namespace Microsoft.Arcade.Common
             return File.Exists(path);
         }
 
+        public string[] GetFiles(string path, string searchPattern, SearchOption searchOption)
+        {
+            return Directory.GetFiles(path, searchPattern, searchOption);
+        }
+
         public void WriteToFile(string path, string content)
         {
             string dirPath = Path.GetDirectoryName(path);
             Directory.CreateDirectory(dirPath);
             File.WriteAllText(path, content);
+        }
+
+        public string ReadFromFile(string path)
+        {
+            return File.ReadAllText(path);
         }
     }
 }
