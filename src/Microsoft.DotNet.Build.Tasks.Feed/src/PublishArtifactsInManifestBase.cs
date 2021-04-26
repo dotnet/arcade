@@ -820,7 +820,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     }
                     return false;
                 }
-                catch (HttpRequestException toStore)
+                catch (Exception toStore) when (toStore is HttpRequestException || toStore is TaskCanceledException)
                 {
                     mostRecentlyCaughtException = toStore;
                     return false;
@@ -891,7 +891,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                     return true;
                 }
-                catch (HttpRequestException toStore)
+                catch (Exception toStore) when (toStore is HttpRequestException || toStore is TaskCanceledException)
                 {
                     mostRecentlyCaughtException = toStore;
                     return false;

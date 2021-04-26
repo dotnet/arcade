@@ -220,7 +220,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 }
                 // String based comparison because the status code isn't exposed in HttpRequestException
                 // see here: https://github.com/dotnet/runtime/issues/23648
-                catch (HttpRequestException e)
+                catch (Exception e) when (e is HttpRequestException || e is TaskCanceledException)
                 {
                     if (e.Message.Contains("404 (Not Found)"))
                     {
