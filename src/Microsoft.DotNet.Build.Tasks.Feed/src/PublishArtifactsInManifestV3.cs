@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.DotNet.Build.Tasks.Feed.Model;
@@ -202,19 +203,29 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     // since we publish blobs and symbols in parallel this will cause IO exceptions.
                     CopySymbolFilesToTemporaryLocation(BuildModel, temporarySymbolsLocation);
                 }
+                using var clientThrottle = new SemaphoreSlim(16, 16);
 
-                await Task.WhenAll(new Task[] {
-                    HandlePackagePublishingAsync(buildAssets),
-                    HandleBlobPublishingAsync(buildAssets),
-                    HandleSymbolPublishingAsync(
-                        PdbArtifactsBasePath,
-                        MsdlToken,
-                        SymWebToken,
-                        SymbolPublishingExclusionsFile,
-                        PublishSpecialClrFiles,
-                        buildAssets,
-                        temporarySymbolsLocation)
-                });
+                try
+                {
+                    await Task.WhenAll(new Task[]
+                    {
+                        HandlePackagePublishingAsync(buildAssets, clientThrottle),
+                        HandleBlobPublishingAsync(buildAssets, clientThrottle),
+                        HandleSymbolPublishingAsync(
+                            PdbArtifactsBasePath,
+                            MsdlToken,
+                            SymWebToken,
+                            SymbolPublishingExclusionsFile,
+                            PublishSpecialClrFiles,
+                            buildAssets,
+                            clientThrottle,
+                            temporarySymbolsLocation)
+                    });
+                }
+                finally
+                {
+                    clientThrottle.Release();
+                }
 
                 DeleteTemporaryFiles(temporarySymbolsLocation);
                 DeleteTemporaryDirectory(temporarySymbolsLocation);
