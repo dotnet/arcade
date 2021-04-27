@@ -398,54 +398,63 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             HashSet<TargetFeedConfig> feedConfigsForSymbols = FeedConfigs[symbolCategory];
             Dictionary<string, string> serversToPublish =
                 GetTargetSymbolServers(feedConfigsForSymbols, msdlToken, symWebToken);
-
+            using var clientThrottle = new SemaphoreSlim(MaxClients, MaxClients);
             if (symbolsToPublish != null && symbolsToPublish.Any())
             {
                 using (HttpClient client = CreateAzdoClient(AzureDevOpsOrg, true))
                 {
-                    foreach (var symbol in symbolsToPublish)
+                    await Task.WhenAll(symbolsToPublish.Select(async symbol =>
                     {
-                        string temporarySymbolsDirectory = CreateTemporaryDirectory();
-                        string localSymbolPath = Path.Combine(temporarySymbolsDirectory, symbol);
-                        symbolLog.AppendLine($"Downloading symbol : {symbol} to {localSymbolPath}");
-
-                        await DownloadFileAsync(client, ArtifactName.BlobArtifacts, containerId, symbol, localSymbolPath);
-                        symbolLog.AppendLine($"Successfully downloaded symbol : {symbol} to {localSymbolPath}");
-                        List<string> symbolFiles = new List<string>();
-                        symbolFiles.Add(localSymbolPath);
-                        symbolLog.AppendLine($"Uploading symbol file '{string.Join(",", symbolFiles)}'");
-
-                        foreach (var server in serversToPublish)
+                        try
                         {
-                            var serverPath = server.Key;
-                            var token = server.Value;
-                            symbolLog.AppendLine($"Publishing symbol file {symbol} to {serverPath}:");
+                            await clientThrottle.WaitAsync();
+                            string temporarySymbolsDirectory = CreateTemporaryDirectory();
+                            string localSymbolPath = Path.Combine(temporarySymbolsDirectory, symbol);
+                            symbolLog.AppendLine($"Downloading symbol : {symbol} to {localSymbolPath}");
 
-                            try
+                            await DownloadFileAsync(client, ArtifactName.BlobArtifacts, containerId, symbol,
+                                localSymbolPath);
+                            symbolLog.AppendLine($"Successfully downloaded symbol : {symbol} to {localSymbolPath}");
+                            List<string> symbolFiles = new List<string>();
+                            symbolFiles.Add(localSymbolPath);
+                            symbolLog.AppendLine($"Uploading symbol file '{string.Join(",", symbolFiles)}'");
+
+                            foreach (var server in serversToPublish)
                             {
-                                await PublishSymbolsHelper.PublishAsync(
-                                    Log,
-                                    serverPath,
-                                    token,
-                                    symbolFiles,
-                                    null,
-                                    null,
-                                    ExpirationInDays,
-                                    false,
-                                    publishSpecialClrFiles,
-                                    null,
-                                    false,
-                                    false,
-                                    true);
+                                var serverPath = server.Key;
+                                var token = server.Value;
+                                symbolLog.AppendLine($"Publishing symbol file {symbol} to {serverPath}:");
+
+                                try
+                                {
+                                    await PublishSymbolsHelper.PublishAsync(
+                                        Log,
+                                        serverPath,
+                                        token,
+                                        symbolFiles,
+                                        null,
+                                        null,
+                                        ExpirationInDays,
+                                        false,
+                                        publishSpecialClrFiles,
+                                        null,
+                                        false,
+                                        false,
+                                        true);
+                                }
+                                catch (Exception ex)
+                                {
+                                    Log.LogError(ex.Message);
+                                }
                             }
-                            catch (Exception ex)
-                            {
-                                Log.LogError(ex.Message);
-                            }
+
+                            DeleteTemporaryDirectory(temporarySymbolsDirectory);
                         }
-
-                        DeleteTemporaryDirectory(temporarySymbolsDirectory);
-                    }
+                        finally
+                        {
+                            clientThrottle.Release();
+                        }
+                    }));
 
                     symbolLog.AppendLine(
                         $"Performing symbol publishing... \nExpirationInDays : {ExpirationInDays} \nConvertPortablePdbsToWindowsPdb : false \ndryRun: false ");
