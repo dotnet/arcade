@@ -388,11 +388,21 @@ namespace Microsoft.DotNet.Helix.Sdk
 
         private IEnumerable<string> GetCommands(ITaskItem workItem, string workItemCommand)
         {
+            string MakeCommand(string command)
+            {
+                if (IsPosixShell)
+                {
+                    return $"{{ {command} }} || exit $?";
+                }
+
+                return $"{command} || exit /b";
+            }
+
             if (PreCommands != null)
             {
                 foreach (string command in PreCommands)
                 {
-                    yield return command;
+                    yield return MakeCommand(command);
                 }
             }
 
@@ -400,7 +410,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             {
                 foreach (string command in SplitCommands(workItemPreCommandsString))
                 {
-                    yield return command;
+                    yield return MakeCommand(command);
                 }
             }
 
@@ -416,7 +426,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             {
                 foreach (string command in SplitCommands(workItemPostCommandsString))
                 {
-                    yield return command;
+                    yield return MakeCommand(command);
                 }
             }
 
@@ -424,7 +434,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             {
                 foreach (string command in PostCommands)
                 {
-                    yield return command;
+                    yield return MakeCommand(command);
                 }
             }
 
