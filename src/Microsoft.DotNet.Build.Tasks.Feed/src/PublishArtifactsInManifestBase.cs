@@ -398,7 +398,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             HashSet<TargetFeedConfig> feedConfigsForSymbols = FeedConfigs[symbolCategory];
             Dictionary<string, string> serversToPublish =
                 GetTargetSymbolServers(feedConfigsForSymbols, msdlToken, symWebToken);
-            using var clientThrottle = new SemaphoreSlim(MaxClients, MaxClients);
+            using var clientThrottle = new SemaphoreSlim(8, 8);
             if (symbolsToPublish != null && symbolsToPublish.Any())
             {
                 using (HttpClient client = CreateAzdoClient(AzureDevOpsOrg, true))
@@ -1106,7 +1106,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 return;
             }
 
-            using var clientThrottle = new SemaphoreSlim(MaxClients, MaxClients);
+            using var clientThrottle = new SemaphoreSlim(8, 8);
             using HttpClient client = CreateAzdoClient(AzureDevOpsOrg, true);
 
             await Task.WhenAll(packagesToPublish.Select(async package =>
@@ -1452,8 +1452,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             {
                 return;
             }
-            using var clientThrottle = new SemaphoreSlim(MaxClients, MaxClients);
             using HttpClient client = CreateAzdoClient(AzureDevOpsOrg, true, AzureProject);
+            using var clientThrottle = new SemaphoreSlim(8, 8);
 
             await Task.WhenAll(blobsToPublish.Select(async blob =>
             {
@@ -1615,12 +1615,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 PassIfExistingItemIdentical = true
             };
             using HttpClient client = CreateAzdoClient(AzureDevOpsOrg, true, AzureProject);
-            using var clientThrottle = new SemaphoreSlim(MaxClients, MaxClients);
+            using var clientThrottle = new SemaphoreSlim(8, 8);
 
             await Task.WhenAll(blobsToPublish.Select(async blob =>
             {
                 try
                 {
+                    await clientThrottle.WaitAsync();
                     string temporaryBlobDirectory = CreateTemporaryDirectory();
                     var fileName = Path.GetFileName(blob.Id);
                     var localBlobPath = Path.Combine(temporaryBlobDirectory, fileName);
@@ -1659,7 +1660,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 }
                 finally
                 {
-                    clientThrottle.Release();
+                    await clientThrottle.WaitAsync();
                 }
             }));
         }
