@@ -542,7 +542,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             string symbolPublishingExclusionsFile,
             bool publishSpecialClrFiles,
             Dictionary<string, HashSet<Asset>> buildAssets,
-            SemaphoreSlim clientThrottle,
+            SemaphoreSlim clientThrottle = null,
             string temporarySymbolsLocation = null)
         {
             if (UseStreamingPublishing)
