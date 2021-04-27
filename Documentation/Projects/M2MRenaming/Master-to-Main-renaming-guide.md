@@ -124,7 +124,7 @@ Generate json data file describing Maestro migration, review it and disable all 
 ## 2. Add `main` triggers to YAML pipelines
 
 **Please read**
-Before you get on with this step, you should know, that once you change the default branch in your GitHub repository ([step 5](#5-change-the-default-branch-to-main-for-your-github-repository), all open PRs targeting `master` will be retargeted and all PR builds will be triggered again.
+Before you get on with this step, you should know, that once you change the default branch in your GitHub repository ([step 5](#5-change-the-default-branch-to-main-for-your-github-repository)), all open PRs targeting `master` will be retargeted and all PR builds will be triggered again.
 This can cause a large strain on the engineering systems, so please consider the amount of opened pull requests in your repository.
 Please consider - based on the heaviness of your PR build and the number of PRs - whether you want to disable the PR builds for the time being or not.
 
