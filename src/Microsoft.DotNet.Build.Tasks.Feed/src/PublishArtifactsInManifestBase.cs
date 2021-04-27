@@ -451,9 +451,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                             DeleteTemporaryDirectory(temporarySymbolsDirectory);
                         }
-                        catch (Exception ex)
+                        finally
                         {
-                            Log.LogError(ex.Message);
+                            clientThrottle.Release();
                         }
                     }));
 
@@ -1167,9 +1167,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                     DeleteTemporaryDirectory(localPackagePath);
                 }
-                catch(Exception ex)
+                finally
                 {
-                    Log.LogError(ex.Message);
+                    clientThrottle.Release();
                 }
             }));
         }
@@ -1513,9 +1513,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         DeleteTemporaryDirectory(temporaryBlobDirectory);
                     }
                 }
-                catch(Exception ex)
+                finally
                 {
-                    Log.LogError(ex.Message);
+                    clientThrottle.Release();
                 }
             }));
         }
@@ -1667,9 +1667,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     await blobFeedAction.UploadAssetAsync(item, pushOptions, null);
                     DeleteTemporaryDirectory(temporaryBlobDirectory);
                 }
-                catch(Exception ex)
+                finally
                 {
-                    Log.LogError(ex.Message);
+                    clientThrottle.Release();
                 }
             }));
         }
