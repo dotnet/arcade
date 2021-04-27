@@ -25,7 +25,8 @@ namespace Microsoft.DotNet.Arcade.Sdk.Tests
 
         private readonly string _locFilesDir = @"D:\a\1\a\loc\";
         private readonly string _sourcesDir = @"D:\a\1\s\";
-        private readonly string _gitHubOrg = "dotnet";
+        private readonly string _gitHubSourceOrg = "maestro";
+        private readonly string _gitHubTargetOrg = "dotnet";
         private readonly string _gitHubRepo = "arcade";
         private readonly string _gitHubBranch = "main";
 
@@ -73,40 +74,33 @@ D:\a\1\s\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\xlf\MicrosoftCode
                 LocFilesDirectory = _locFilesDir,
                 SourcesDirectory = _sourcesDir,
                 GitHubPat = "fake",
-                GitHubOrg = _gitHubOrg,
+                GitHubSourceOrg = _gitHubSourceOrg,
+                GitHubTargetOrg = _gitHubTargetOrg,
                 GitHubRepo = _gitHubRepo,
                 GitHubBranch = _gitHubBranch,
             };
         }
 
-        [Fact]
-        public async Task MakesPr()
-        {
-            IReadOnlyList<PullRequest> prs = new List<PullRequest>
-            {
-                new TestPullRequest { TestTitle = $"A nonsense PR", TestState = ItemState.Open, TestBase = new TestGitReference { TestLabel = $"{_gitHubOrg}:{_gitHubBranch}" } },
-                new TestPullRequest { TestTitle = $"{PostOneLocBuildToGitHub.PrPrefix}04/21/2021", TestState = ItemState.Open, TestBase = new TestGitReference { TestLabel = $"{_gitHubOrg}:{_gitHubBranch}" } },
-                new TestPullRequest { TestTitle = $"A different nonsense PR", TestState = ItemState.Open, TestBase = new TestGitReference { TestLabel = $"{_gitHubOrg}:{_gitHubBranch}" } },
-                new TestPullRequest { TestTitle = $"[DO NOT MERGE] Just testing", TestState = ItemState.Open, TestBase = new TestGitReference { TestLabel = $"{_gitHubOrg}:{_gitHubBranch}" } },
-            };
-
-            _fileSystemMock.Setup(f => f.FileExists(It.IsAny<string>()))
-                .Returns(true);
-            _fileSystemMock.Setup(f => f.ReadFromFile(It.IsAny<string>()))
-                .Returns(_prDiffFileContent);
-            
-            _gitHubClientMock
-                .Setup(g => g.PullRequest.GetAllForRepository(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<PullRequestRequest>()))
-                .Returns(Task.FromResult(prs));
-
-            await Task.Delay(10);
-        }
-
         //[Fact]
-        //public async Task TemporaryTestDeleteBeforeCommitting()
+        //public async Task MakesPr()
         //{
-        //    PostOneLocBuildToGitHub task = new PostOneLocBuildToGitHub();
+        //    IReadOnlyList<PullRequest> prs = new List<PullRequest>
+        //    {
+        //        new TestPullRequest { TestTitle = $"A nonsense PR", TestState = ItemState.Open, TestBase = new TestGitReference { TestLabel = $"{_gitHubTargetOrg}:{_gitHubBranch}" } },
+        //        new TestPullRequest { TestTitle = $"{PostOneLocBuildToGitHub.PrPrefix}04/21/2021", TestState = ItemState.Open, TestBase = new TestGitReference { TestLabel = $"{_gitHubTargetOrg}:{_gitHubBranch}" } },
+        //        new TestPullRequest { TestTitle = $"A different nonsense PR", TestState = ItemState.Open, TestBase = new TestGitReference { TestLabel = $"{_gitHubTargetOrg}:{_gitHubBranch}" } },
+        //        new TestPullRequest { TestTitle = $"[DO NOT MERGE] Just testing", TestState = ItemState.Open, TestBase = new TestGitReference { TestLabel = $"{_gitHubTargetOrg}:{_gitHubBranch}" } },
+        //    };
+
+        //    _fileSystemMock.Setup(f => f.FileExists(It.IsAny<string>()))
+        //        .Returns(true);
+        //    _fileSystemMock.Setup(f => f.ReadFromFile(It.IsAny<string>()))
+        //        .Returns(_prDiffFileContent);
             
+        //    _gitHubClientMock
+        //        .Setup(g => g.PullRequest.GetAllForRepository(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<PullRequestRequest>()))
+        //        .Returns(Task.FromResult(prs));
+
         //}
 
         [Fact]
@@ -115,10 +109,10 @@ D:\a\1\s\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\xlf\MicrosoftCode
             // Setup
             IReadOnlyList<PullRequest> prs = new List<PullRequest>
             {
-                new TestPullRequest { TestTitle = $"A nonsense PR", TestState = ItemState.Open, TestBase = new TestGitReference { TestLabel = $"{_gitHubOrg}:{_gitHubBranch}" } },
-                new TestPullRequest { TestTitle = $"{PostOneLocBuildToGitHub.PrPrefix}04/21/2021", TestState = ItemState.Open, TestBase = new TestGitReference { TestLabel = $"{_gitHubOrg}:{_gitHubBranch}" } },
-                new TestPullRequest { TestTitle = $"A different nonsense PR", TestState = ItemState.Open, TestBase = new TestGitReference { TestLabel = $"{_gitHubOrg}:{_gitHubBranch}" } },
-                new TestPullRequest { TestTitle = $"[DO NOT MERGE] Just testing", TestState = ItemState.Open, TestBase = new TestGitReference { TestLabel = $"{_gitHubOrg}:{_gitHubBranch}" } },
+                new TestPullRequest { TestTitle = $"A nonsense PR", TestState = ItemState.Open, TestBase = new TestGitReference { TestLabel = $"{_gitHubTargetOrg}:{_gitHubBranch}" } },
+                new TestPullRequest { TestTitle = $"{PostOneLocBuildToGitHub.PrPrefix}04/21/2021", TestState = ItemState.Open, TestBase = new TestGitReference { TestLabel = $"{_gitHubTargetOrg}:{_gitHubBranch}" } },
+                new TestPullRequest { TestTitle = $"A different nonsense PR", TestState = ItemState.Open, TestBase = new TestGitReference { TestLabel = $"{_gitHubTargetOrg}:{_gitHubBranch}" } },
+                new TestPullRequest { TestTitle = $"[DO NOT MERGE] Just testing", TestState = ItemState.Open, TestBase = new TestGitReference { TestLabel = $"{_gitHubTargetOrg}:{_gitHubBranch}" } },
             };
 
             _gitHubClientMock
@@ -130,7 +124,7 @@ D:\a\1\s\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\xlf\MicrosoftCode
 
             // Verify
             foundPr.Title.Should().Be($"{PostOneLocBuildToGitHub.PrPrefix}04/21/2021");
-            foundPr.Base.Label.Should().Be($"{_gitHubOrg}:{_gitHubBranch}");
+            foundPr.Base.Label.Should().Be($"{_gitHubTargetOrg}:{_gitHubBranch}");
         }
 
         [Fact]
@@ -139,9 +133,9 @@ D:\a\1\s\src\NetAnalyzers\Core\Microsoft.CodeQuality.Analyzers\xlf\MicrosoftCode
             // Setup
             IReadOnlyList<PullRequest> prs = new List<PullRequest>
             {
-                new TestPullRequest { TestTitle = $"A nonsense PR", TestState = ItemState.Open, TestBase = new TestGitReference { TestLabel = $"{_gitHubOrg}:{_gitHubBranch}" } },
-                new TestPullRequest { TestTitle = $"A different nonsense PR", TestState = ItemState.Open, TestBase = new TestGitReference { TestLabel = $"{_gitHubOrg}:{_gitHubBranch}" } },
-                new TestPullRequest { TestTitle = $"[DO NOT MERGE] Just testing", TestState = ItemState.Open, TestBase = new TestGitReference { TestLabel = $"{_gitHubOrg}:{_gitHubBranch}" } },
+                new TestPullRequest { TestTitle = $"A nonsense PR", TestState = ItemState.Open, TestBase = new TestGitReference { TestLabel = $"{_gitHubTargetOrg}:{_gitHubBranch}" } },
+                new TestPullRequest { TestTitle = $"A different nonsense PR", TestState = ItemState.Open, TestBase = new TestGitReference { TestLabel = $"{_gitHubTargetOrg}:{_gitHubBranch}" } },
+                new TestPullRequest { TestTitle = $"[DO NOT MERGE] Just testing", TestState = ItemState.Open, TestBase = new TestGitReference { TestLabel = $"{_gitHubTargetOrg}:{_gitHubBranch}" } },
             };
 
             _gitHubClientMock

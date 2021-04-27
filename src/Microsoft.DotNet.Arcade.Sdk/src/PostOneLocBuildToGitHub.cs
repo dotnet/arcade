@@ -28,7 +28,10 @@ namespace Microsoft.DotNet.Arcade.Sdk
         public string GitHubPat { get; set; }
 
         [Required]
-        public string GitHubOrg { get; set; }
+        public string GitHubSourceOrg { get; set; }
+
+        [Required]
+        public string GitHubTargetOrg { get; set; }
 
         [Required]
         public string GitHubRepo { get; set; }
@@ -37,7 +40,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
         public string GitHubBranch { get; set; }
 
         public static string PrDiffFileName = "BinPlaceFileList.txt";
-        public static string PrPrefix = "Localized files from OneLocBuild for ";
+        public static string PrPrefix = "Add localization from OneLocBuild ";
 
         private const string _gitFileBlobMode = "100644";
 
@@ -65,9 +68,14 @@ namespace Microsoft.DotNet.Arcade.Sdk
                 return false;
             }
 
-            string[] filesToPr = fileSystem.ReadFromFile(pathToPrDiffFile).Split('\n');
+            string[] filesToPr = fileSystem.ReadFromFile(pathToPrDiffFile).Split(new string[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
+            if (filesToPr.Length == 0)
+            {
+                Log.LogMessage($"No loc changes. Exiting.");
+                return true;
+            }
 
-            Reference targetBranch = await gitHubClient.Git.Reference.Get(GitHubOrg, GitHubRepo, $"heads/{GitHubBranch}");
+            Reference targetBranch = await gitHubClient.Git.Reference.Get(GitHubTargetOrg, GitHubRepo, $"heads/{GitHubBranch}");
             Reference newBranch;
             string branchName;
             string branchRef;
@@ -78,17 +86,17 @@ namespace Microsoft.DotNet.Arcade.Sdk
             {
                 branchName = existingPr.Head.Ref;
                 branchRef = $"heads/{branchName}";
-                newBranch = await gitHubClient.Git.Reference.Get(GitHubOrg, GitHubRepo, branchRef);
+                newBranch = await gitHubClient.Git.Reference.Get(GitHubSourceOrg, GitHubRepo, branchRef);
             }
             // If not, we create a new branch
             else
             {
-                branchName = $"OneLocBuild-{new Guid()}";
+                branchName = $"OneLocBuild-{Guid.NewGuid()}";
                 branchRef = $"heads/{branchName}";
-                newBranch = await gitHubClient.Git.Reference.CreateBranch(GitHubOrg, GitHubRepo, branchName, targetBranch);
+                newBranch = await gitHubClient.Git.Reference.CreateBranch(GitHubSourceOrg, GitHubRepo, branchName, targetBranch);
             }
 
-            TreeResponse currentTree = await gitHubClient.Git.Tree.Get(GitHubOrg, GitHubRepo, branchRef);
+            TreeResponse currentTree = await gitHubClient.Git.Tree.Get(GitHubSourceOrg, GitHubRepo, branchRef);
             NewTree newTree = new NewTree
             {
                 BaseTree = currentTree.Sha
@@ -97,7 +105,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
             // Add each file to the tree
             foreach (string file in filesToPr)
             {
-                string filePath = file.Substring(SourcesDirectory.Length); // equivalent to Path.GetRelativePath()
+                string filePath = file.Substring(SourcesDirectory.Length).Replace('\\', '/'); // equivalent to Path.GetRelativePath() but converts to git path format
                 string locdFilePath = fileSystem.GetFiles(LocFilesDirectory, Path.GetFileName(file), SearchOption.AllDirectories).First();
                 string locdFileContent = fileSystem.ReadFromFile(locdFilePath);
 
@@ -111,22 +119,22 @@ namespace Microsoft.DotNet.Arcade.Sdk
                 newTree.Tree.Add(locdFile);
             }
 
-            TreeResponse treeResponse = await gitHubClient.Git.Tree.Create(GitHubOrg, GitHubRepo, newTree);
+            TreeResponse treeResponse = await gitHubClient.Git.Tree.Create(GitHubSourceOrg, GitHubRepo, newTree);
 
             // Create a commit
-            NewCommit newCommit = new NewCommit($"Add localization from OneLocBuild ({DateTimeOffset.Now:yyyy-mm-dd}",
+            NewCommit newCommit = new NewCommit($"{PrPrefix}({DateTimeOffset.Now:yyyy-MM-dd})",
                 treeResponse.Sha,
                 newBranch.Object.Sha);
-            Commit commit = await gitHubClient.Git.Commit.Create(GitHubOrg, GitHubRepo, newCommit);
+            Commit commit = await gitHubClient.Git.Commit.Create(GitHubSourceOrg, GitHubRepo, newCommit);
 
             ReferenceUpdate update = new ReferenceUpdate(commit.Sha);
-            await gitHubClient.Git.Reference.Update(GitHubOrg, GitHubRepo, branchRef, update);
+            await gitHubClient.Git.Reference.Update(GitHubSourceOrg, GitHubRepo, branchRef, update);
 
             // Create a new pull request if one does not exist
             if (existingPr is null)
             {
-                NewPullRequest newPr = new NewPullRequest(newCommit.Message, branchName, GitHubBranch);
-                await gitHubClient.PullRequest.Create(GitHubOrg, GitHubRepo, newPr);
+                NewPullRequest newPr = new NewPullRequest(newCommit.Message, $"{GitHubSourceOrg}:{branchName}", GitHubBranch);
+                await gitHubClient.PullRequest.Create(GitHubTargetOrg, GitHubRepo, newPr);
             }
 
             return true;
@@ -135,9 +143,9 @@ namespace Microsoft.DotNet.Arcade.Sdk
         public async Task<PullRequest> FindExistingOneLocPr(IGitHubClient gitHubClient)
         {
             PullRequestRequest filter = new PullRequestRequest { State = ItemStateFilter.Open };
-            var prs = (await gitHubClient.PullRequest.GetAllForRepository(GitHubOrg, GitHubRepo, filter))
+            var prs = (await gitHubClient.PullRequest.GetAllForRepository(GitHubTargetOrg, GitHubRepo, filter))
                 .Where(pr => pr.Title.StartsWith(PrPrefix))
-                .Where(pr => pr.Base.Label.Equals($"{GitHubOrg}:{GitHubBranch}", StringComparison.OrdinalIgnoreCase));
+                .Where(pr => pr.Base.Label.Equals($"{GitHubTargetOrg}:{GitHubBranch}", StringComparison.OrdinalIgnoreCase));
 
             if (prs.Count() > 0)
             {
