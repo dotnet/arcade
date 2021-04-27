@@ -682,7 +682,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// <param name="client">Maestro API client</param>
         /// <param name="buildAssets">Assets information about build being published.</param>
         /// <returns>Task</returns>
-        protected async Task HandlePackagePublishingAsync(Dictionary<string, HashSet<Asset>> buildAssets, SemaphoreSlim clientThrottle)
+        protected async Task HandlePackagePublishingAsync(Dictionary<string, HashSet<Asset>> buildAssets, SemaphoreSlim clientThrottle =null)
         {
             List<Task> publishTasks = new List<Task>();
 
@@ -918,7 +918,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             }
         }
 
-        protected async Task HandleBlobPublishingAsync(Dictionary<string, HashSet<Asset>> buildAssets, SemaphoreSlim clientThrottle)
+        protected async Task HandleBlobPublishingAsync(Dictionary<string, HashSet<Asset>> buildAssets, SemaphoreSlim clientThrottle= null)
         {
             List<Task> publishTasks = new List<Task>();
 
