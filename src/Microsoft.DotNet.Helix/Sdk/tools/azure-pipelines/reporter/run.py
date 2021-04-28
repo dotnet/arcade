@@ -36,6 +36,7 @@ class UploadWorker(Thread):
         self.__print('uploaded {} results'.format(self.total_uploaded))
 
     def run(self):
+        global workerFailed, workerFailedLock
         self.__print("starting...")
         while True:
             try:
@@ -70,6 +71,7 @@ def process_args() -> Tuple[str, str, str, Optional[str]]:
 
 
 def main():
+    global workerFailed, workerFailedLock
     logging.basicConfig(
         format='%(asctime)s: %(levelname)s: %(thread)d: %(module)s(%(lineno)d): %(funcName)s: %(message)s',
         level=logging.INFO,
