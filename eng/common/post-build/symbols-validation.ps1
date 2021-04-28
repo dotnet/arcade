@@ -212,41 +212,41 @@ function CheckSymbolsAvailable {
   $DupedSymbols = 0
 
   Get-ChildItem "$InputPath\*.nupkg" |
-  ForEach-Object {
-    $FileName = $_.Name
-    $FullName = $_.FullName
+    ForEach-Object {
+      $FileName = $_.Name
+      $FullName = $_.FullName
 
-    # These packages from Arcade-Services include some native libraries that
-    # our current symbol uploader can't handle. Below is a workaround until
-    # we get issue: https://github.com/dotnet/arcade/issues/2457 sorted.
-    if ($FileName -Match 'Microsoft\.DotNet\.Darc\.') {
-      Write-Host "Ignoring Arcade-services file: $FileName"
-      Write-Host
-      return
-    }
-    elseif ($FileName -Match 'Microsoft\.DotNet\.Maestro\.Tasks\.') {
-      Write-Host "Ignoring Arcade-services file: $FileName"
-      Write-Host
-      return
-    }
+      # These packages from Arcade-Services include some native libraries that
+      # our current symbol uploader can't handle. Below is a workaround until
+      # we get issue: https://github.com/dotnet/arcade/issues/2457 sorted.
+      if ($FileName -Match 'Microsoft\.DotNet\.Darc\.') {
+        Write-Host "Ignoring Arcade-services file: $FileName"
+        Write-Host
+        return
+      }
+      elseif ($FileName -Match 'Microsoft\.DotNet\.Maestro\.Tasks\.') {
+        Write-Host "Ignoring Arcade-services file: $FileName"
+        Write-Host
+        return
+      }
 
-    Start-Job -ScriptBlock $CountMissingSymbols -ArgumentList @($FullName,$WindowsPdbVerificationParam) | Out-Null
+      Start-Job -ScriptBlock $CountMissingSymbols -ArgumentList @($FullName,$WindowsPdbVerificationParam) | Out-Null
 
-    $NumJobs = @(Get-Job -State 'Running').Count
-
-    while ($NumJobs -ge $MaxParallelJobs) {
-      Write-Host "There are $NumJobs validation jobs running right now. Waiting $SecondsBetweenLoadChecks seconds to check again."
-      sleep $SecondsBetweenLoadChecks
       $NumJobs = @(Get-Job -State 'Running').Count
-    }
 
-    foreach ($Job in @(Get-Job -State 'Completed')) {
-      $jobResult = Wait-Job -Id $Job.Id | Receive-Job
-      CheckJobResult $jobResult.result $jobResult.packagePath ([ref]$DupedSymbols) ([ref]$TotalFailures)
-      Remove-Job -Id $Job.Id
+      while ($NumJobs -ge $MaxParallelJobs) {
+        Write-Host "There are $NumJobs validation jobs running right now. Waiting $SecondsBetweenLoadChecks seconds to check again."
+        sleep $SecondsBetweenLoadChecks
+        $NumJobs = @(Get-Job -State 'Running').Count
+      }
+
+      foreach ($Job in @(Get-Job -State 'Completed')) {
+        $jobResult = Wait-Job -Id $Job.Id | Receive-Job
+        CheckJobResult $jobResult.result $jobResult.packagePath ([ref]$DupedSymbols) ([ref]$TotalFailures)
+        Remove-Job -Id $Job.Id
+      }
+      Write-Host
     }
-    Write-Host
-  }
 
   foreach ($Job in @(Get-Job)) {
     $jobResult = Wait-Job -Id $Job.Id | Receive-Job
