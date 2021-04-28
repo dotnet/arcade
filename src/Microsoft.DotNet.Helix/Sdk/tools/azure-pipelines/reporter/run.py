@@ -3,12 +3,15 @@ import sys
 import traceback
 import logging
 from queue import Queue
-from threading import Thread
+from threading import Thread, Lock
 from typing import Tuple, Optional
 
 from test_results_reader import read_results
 from helpers import batch, get_env
 from azure_devops_result_publisher import AzureDevOpsTestResultPublisher
+
+workerFailedLock = Lock()
+workerFailed = False
 
 class UploadWorker(Thread):
     def __init__(self, queue, idx, collection_uri, team_project, test_run_id, access_token):
@@ -40,6 +43,8 @@ class UploadWorker(Thread):
                 self.__process(item)
             except:
                 self.__print("got error: {}".format(traceback.format_exc()))
+                with workerFailedLock:
+                    workerFailed = True
             finally:
                 self.queue.task_done()
 
@@ -105,6 +110,10 @@ def main():
     q.join()
 
     log.info("Main thread exiting")
+    
+    with workerFailedLock:
+        if workerFailed:
+            sys.exit(1337)
 
 if __name__ == '__main__':
     main()

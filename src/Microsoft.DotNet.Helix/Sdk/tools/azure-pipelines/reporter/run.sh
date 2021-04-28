@@ -35,6 +35,8 @@ fi
 
 date -u +"%FT%TZ"
 $ENV_PATH/bin/python -B $script_path/run.py "$@"
+export _uploaderExitCode=$?
 date -u +"%FT%TZ"
 
 export PYTHONPATH=$_OLD_PYTHONPATH
+exit $_uploaderExitCode
