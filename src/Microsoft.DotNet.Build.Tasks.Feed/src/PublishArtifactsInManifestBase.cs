@@ -681,6 +681,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// </summary>
         /// <param name="client">Maestro API client</param>
         /// <param name="buildAssets">Assets information about build being published.</param>
+        /// <param name="clientThrottle">Semaphore.</param>
         /// <returns>Task</returns>
         protected async Task HandlePackagePublishingAsync(Dictionary<string, HashSet<Asset>> buildAssets, SemaphoreSlim clientThrottle =null)
         {

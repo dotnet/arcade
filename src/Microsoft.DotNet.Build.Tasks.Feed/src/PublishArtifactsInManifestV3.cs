@@ -207,8 +207,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     CopySymbolFilesToTemporaryLocation(BuildModel, temporarySymbolsLocation);
                 }
 
-                using var clientThrottle = new SemaphoreSlim(16, 16);
-
+                using var clientThrottle = new SemaphoreSlim(12, 12);
 
                 await Task.WhenAll(new Task[]
                 {
@@ -225,10 +224,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         temporarySymbolsLocation)
                 });
 
-
                 DeleteTemporaryFiles(temporarySymbolsLocation);
                 DeleteTemporaryDirectory(temporarySymbolsLocation);
-
             }
             catch (Exception e)
             {
