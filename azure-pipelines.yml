@@ -151,10 +151,10 @@ stages:
           pool:
             ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
               name:  NetCorePublic-Pool
-              queue: BuildPool.Ubuntu.1604.Amd64.Open
+              queue: BuildPool.Ubuntu.1804.Amd64.Open
             ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
               name:  NetCoreInternal-Pool
-              queue: BuildPool.Ubuntu.1604.Amd64
+              queue: BuildPool.Ubuntu.1804.Amd64
           variables:
           - HelixApiAccessToken: ''
           - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
