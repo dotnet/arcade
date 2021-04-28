@@ -124,6 +124,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         private readonly string AzureDevOpsBaseUrl = $"https://dev.azure.com";
 
+        /// <summary>
+        /// Instead of relying on pre-downloaded artifacts, 'stream' artifacts in from the input build.
+        /// Artifacts are downloaded one by one from the input build, and then immediately published and deleted.
+        /// This allows for faster publishing by utilizing both upload and download pipes at the same time,
+        /// and reduces maximum disk usage.
+        /// This is not appplicable if the input build does not contain the artifacts for publishing
+        /// (e.g. when publishing post-build signed assets)
+        /// </summary>
         public bool UseStreamingPublishing { get; set; }
 
         public readonly Dictionary<TargetFeedContentType, HashSet<TargetFeedConfig>> FeedConfigs = 
@@ -1853,14 +1861,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 Log.LogError($"The property {nameof(BuildAssetRegistryToken)} is required but doesn't have a value set.");
             }
 
-            if (string.IsNullOrEmpty(AzdoApiToken))
+            if (UseStreamingPublishing && string.IsNullOrEmpty(AzdoApiToken))
             {
-                Log.LogError($"The property {nameof(AzdoApiToken)} is required but doesn't have a value set.");
+                Log.LogError($"The property {nameof(AzdoApiToken)} is required when using streaming publishing, but doesn't have a value set.");
             }
 
-            if (string.IsNullOrEmpty(ArtifactsBasePath))
+            if (UseStreamingPublishing && string.IsNullOrEmpty(ArtifactsBasePath))
             {
-                Log.LogError($"The property {nameof(ArtifactsBasePath)} is required but doesn't have a value set.");
+                Log.LogError($"The property {nameof(ArtifactsBasePath)} is required when using streaming publishing, but doesn't have a value set.");
             }
             return Log.HasLoggedErrors;
         }
