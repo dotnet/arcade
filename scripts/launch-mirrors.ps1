@@ -57,9 +57,9 @@ function LaunchMirrorBuild {
             parameters = $(ConvertTo-Json @{BranchToMirror=$branch; GithubRepo=$repo})
         }
         $bodyStr = ConvertTo-Json $body
-        $uri = "${AzDOInstance}/_apis/build/builds?api-version=5.1"
+        $uri = "${AzDOInstance}/_apis/build/builds?api-version=6.0"
         Write-Host "Launching $mirrorType build for $repo @ $branch"
-        $queueResponse = Invoke-WebRequest -Method Post -ContentType "application/json" -Headers $AzDOAuthHeader -Uri "${AzDOInstance}/_apis/build/builds?api-version=5.1" -Body $bodyStr | ConvertFrom-Json
+        $queueResponse = Invoke-WebRequest -Method Post -ContentType "application/json" -Headers $AzDOAuthHeader -Uri "${AzDOInstance}/_apis/build/builds?api-version=6.0" -Body $bodyStr | ConvertFrom-Json
         $buildId = $queueResponse.id
         Write-Host "Launched $AzDOInstance/_build/results?buildId=$buildId"
     }

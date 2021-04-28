@@ -53,7 +53,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                     var req =
                         new HttpRequestMessage(
                             HttpMethod.Post,
-                            $"{CollectionUri}{TeamProject}/_apis/test/Runs/{testRunId}/Results/{testResultId}/attachments?api-version=5.1-preview.1")
+                            $"{CollectionUri}{TeamProject}/_apis/test/Runs/{testRunId}/Results/{testResultId}/attachments?api-version=6.0-preview")
                         {
                             Content = new StringContent(
                                 JsonConvert.SerializeObject(
@@ -84,7 +84,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                     var req =
                         new HttpRequestMessage(
                             HttpMethod.Post,
-                            $"{CollectionUri}{TeamProject}/_apis/test/Runs/{testRunId}/results?api-version=5.1-preview.6")
+                            $"{CollectionUri}{TeamProject}/_apis/test/Runs/{testRunId}/results?api-version=6.0-preview")
                         {
                             Content = new StringContent(
                                 JsonConvert.SerializeObject(

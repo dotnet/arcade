@@ -46,7 +46,7 @@ function Get-Package-List($vstsAuthHeader, $account, $visibility, $feed) {
     # Get the list of packages from the source and target
     $listOfPackages = @()
     try {
-        $packageListUri = "https://feeds.dev.azure.com/$account/${visibility}_apis/packaging/Feeds/$feed/packages?api-version=5.1-preview.1"
+        $packageListUri = "https://feeds.dev.azure.com/$account/${visibility}_apis/packaging/Feeds/$feed/packages?api-version=6.0-preview"
         Write-Host "Looking up packages on feed at: $packageListUri"
         $result = Invoke-WebRequest -Headers $vstsAuthHeader $packageListUri
         $resultJson = $result | ConvertFrom-Json
