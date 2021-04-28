@@ -115,6 +115,8 @@ class AzureDevOpsTestResultPublisher:
                     outcome="Passed"
                     )
             if r.result == "Fail":
+                print( "Failure message: {}".format(r.failure_message))
+                print( "Failure message as text: {}".format(text(r.failure_message)))
                 return TestSubResult(
                     comment=comment,
                     display_name=text(r.name),
