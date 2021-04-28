@@ -3,7 +3,8 @@
 As of April 1, 2021, all .NET repositories will be using OneLocBuild for localization. Documentation on this system can
 be found [here](https://ceapex.visualstudio.com/CEINTL/_wiki/wikis/CEINTL.wiki/107/Localization-with-OneLocBuild-Task).
 This system is **not a replacement for Xliff-Tasks**; rather, it is replacing the localization team's old system called
-Simple Loc. Xliff-Tasks will continue to be used in addition to OneLocBuild.
+Simple Loc. OneLocBuild coordinates getting translations for new and updated strings and merging them back into the
+repo. Xliff-Tasks will continue to be used in addition to OneLocBuild.
 
 To make OneLocBuild easier to use, we have integrated the task into Arcade. This integration is a job template
 ([here](/eng/common/templates/job/onelocbuild.yml)) that is described in this document.
