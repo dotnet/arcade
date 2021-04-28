@@ -207,7 +207,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     CopySymbolFilesToTemporaryLocation(BuildModel, temporarySymbolsLocation);
                 }
 
-                using var clientThrottle = new SemaphoreSlim(12, 12);
+                using var clientThrottle = new SemaphoreSlim(20, 20);
 
                 await Task.WhenAll(new Task[]
                 {
