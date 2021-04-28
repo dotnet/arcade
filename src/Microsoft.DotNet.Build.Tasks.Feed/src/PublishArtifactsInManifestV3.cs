@@ -222,10 +222,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             temporarySymbolsLocation)
                     });
                 }
-                finally
-                {
-                    clientThrottle.Release();
-                }
 
                 DeleteTemporaryFiles(temporarySymbolsLocation);
                 DeleteTemporaryDirectory(temporarySymbolsLocation);
