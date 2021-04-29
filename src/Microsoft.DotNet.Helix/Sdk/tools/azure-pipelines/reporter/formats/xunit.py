@@ -20,7 +20,7 @@ def _unescape_xunit_message(value):
     # best to turn back into something resembling the original message
     # It only uses \x**, \x**** (indistinguishably), and then the items from __unescape_char_map
     def bs(match):
-        grp = match[0]
+        grp = match.group(0)
         sym = grp[1]
         if sym == 'x':
             return chr(int(grp[2:], 16))
