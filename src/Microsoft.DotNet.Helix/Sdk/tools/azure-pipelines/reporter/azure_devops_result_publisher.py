@@ -2,8 +2,8 @@ import base64
 import os
 import logging
 import sys
-from typing import Iterable, Mapping, List, Dict, Optional, Tuple
 from builtins import str as text
+from typing import Iterable, Mapping, List, Dict, Optional, Tuple
 from azure.devops.connection import Connection
 from msrest.authentication import BasicTokenAuthentication, BasicAuthentication
 from azure.devops.v5_1.test import TestClient
@@ -116,9 +116,6 @@ class AzureDevOpsTestResultPublisher:
                     outcome="Passed"
                     )
             if r.result == "Fail":
-                sys.stdout.write( "Failure message: {}".format(r.failure_message))
-                sys.stdout.write( "Failure message as text: {}".format(text(r.failure_message)))
-                sys.stdout.flush()
                 return TestSubResult(
                     comment=comment,
                     display_name=text(r.name),
@@ -151,9 +148,6 @@ class AzureDevOpsTestResultPublisher:
                     comment=comment,
                 )
             if r.result == "Fail":
-                sys.stdout.write( "Failure message: {}".format(r.failure_message))
-                sys.stdout.write( "Failure message as text: {}".format(text(r.failure_message)))
-                sys.stdout.flush()
                 return TestCaseResult(
                     test_case_title=text(r.name),
                     automated_test_name=text(r.name),
@@ -163,7 +157,7 @@ class AzureDevOpsTestResultPublisher:
                     duration_in_ms=r.duration_seconds*1000,
                     outcome="Failed",
                     state="Completed",
-                    error_message=text(r.failure_message),
+                    error_message=text(r.failure_message).decode(,
                     stack_trace=text(r.stack_trace) if r.stack_trace is not None else None,
                     comment=comment,
                 )
