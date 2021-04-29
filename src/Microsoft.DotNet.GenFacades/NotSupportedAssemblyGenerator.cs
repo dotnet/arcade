@@ -127,6 +127,22 @@ namespace Microsoft.DotNet.GenFacades
             return node.WithBody(block);
         }
 
+        public override SyntaxNode VisitPropertyDeclaration(PropertyDeclarationSyntax node)
+        {
+            if (_exclusionApis != null && _exclusionApis.Contains(GetPropertyDefinition(node)))
+                return null;
+
+            return base.VisitPropertyDeclaration(node);
+        }
+
+        public override SyntaxNode VisitEventDeclaration(EventDeclarationSyntax node)
+        {
+            if (_exclusionApis != null && _exclusionApis.Contains(GetEventDefinition(node)))
+                return null;
+
+            return base.VisitEventDeclaration(node);
+        }
+
         public override SyntaxNode VisitClassDeclaration(ClassDeclarationSyntax node)
         {
             if (_exclusionApis != null && _exclusionApis.Contains(GetFullyQualifiedName(node)))
@@ -194,7 +210,11 @@ namespace Microsoft.DotNet.GenFacades
         private string GetFullyQualifiedName(NamespaceDeclarationSyntax node) => node.Name.ToFullString().Trim();
 
         private string GetMethodDefinition(MethodDeclarationSyntax node) => GetFullyQualifiedName((TypeDeclarationSyntax)node.Parent) + "." + node.Identifier.ValueText;
-    
+
+        private string GetPropertyDefinition(PropertyDeclarationSyntax node) => GetFullyQualifiedName((TypeDeclarationSyntax)node.Parent) + "." + node.Identifier.ValueText;
+
+        private string GetEventDefinition(EventDeclarationSyntax node) => GetFullyQualifiedName((TypeDeclarationSyntax)node.Parent) + "." + node.Identifier.ValueText;
+
         private string GetDefaultMessage() => "{ throw new System.PlatformNotSupportedException(" + $"{ _message }); " + " }\n";
     }
 }
