@@ -39,7 +39,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         [Fact]
         public void WillFail()
         {
-            Assert.Equal("a\nb", "c\nd");
+            Assert.Equal("a\n\u045Db", "c\nd");
         }
     }
 }
