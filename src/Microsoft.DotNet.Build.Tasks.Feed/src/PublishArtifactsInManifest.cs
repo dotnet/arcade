@@ -92,11 +92,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         public string BuildAssetRegistryToken { get; set; }
 
         /// <summary>
-        /// Maximum number of parallel uploads for the upload tasks
-        /// </summary>
-        public int MaxClients { get; set; }
-
-        /// <summary>
         /// Directory where "nuget.exe" is installed. This will be used to publish packages.
         /// </summary>
         [Required]
