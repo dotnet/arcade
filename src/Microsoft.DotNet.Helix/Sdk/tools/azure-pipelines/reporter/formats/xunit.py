@@ -19,16 +19,13 @@ def _unescape_xunit_message(value):
     # xunit does some relatively bad escaping on the error message we we need to do our
     # best to turn back into something resembling the original message
     # It only uses \x**, \x**** (indistinguishably), and then the items from __unescape_char_map
-    def __bs(match):
+    def bs(match):
         grp = match[0]
         sym = grp[1]
         if sym == 'x':
             return chr(int(grp[2:], 16))
-        a = _unescape_char_map.get(match[0][1])
-        if a is None:
-            return sym
-        return a
-    return re.sub(r'\\x[0-9a-fA-F][0-9a-fA-F][0-9a-fA-F]?[0-9a-fA-F]?|\\[^x]', __bs, s)
+        return _unescape_char_map.get(match[0][1]) or sym
+    return re.sub(r'\\x[0-9a-fA-F][0-9a-fA-F][0-9a-fA-F]?[0-9a-fA-F]?|\\[^x]', bs, value)
 
 class XUnitFormat(ResultFormat):
 
