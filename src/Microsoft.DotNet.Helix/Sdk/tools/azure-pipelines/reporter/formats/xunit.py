@@ -39,7 +39,7 @@ class XUnitFormat(ResultFormat):
                     exception_type = failure_element.get("exception-type")
                     message_element = failure_element.find("message")
                     if message_element is not None:
-                        failure_message = message_element.text.encode('utf-8').decode('unicode_escape')
+                        failure_message = message_element.text.encode('utf-8', 'replace').decode('unicode_escape', 'replace')
                     stack_trace_element = failure_element.find("stack-trace")
                     if stack_trace_element is not None:
                         stack_trace = stack_trace_element.text

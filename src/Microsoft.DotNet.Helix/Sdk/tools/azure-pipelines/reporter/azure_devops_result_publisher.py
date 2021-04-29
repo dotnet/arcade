@@ -1,9 +1,8 @@
 import base64
 import os
 import logging
-import sys
-from builtins import str as text
 from typing import Iterable, Mapping, List, Dict, Optional, Tuple
+from builtins import str as text
 from azure.devops.connection import Connection
 from msrest.authentication import BasicTokenAuthentication, BasicAuthentication
 from azure.devops.v5_1.test import TestClient
@@ -157,7 +156,7 @@ class AzureDevOpsTestResultPublisher:
                     duration_in_ms=r.duration_seconds*1000,
                     outcome="Failed",
                     state="Completed",
-                    error_message=text(r.failure_message).decode(,
+                    error_message=text(r.failure_message),
                     stack_trace=text(r.stack_trace) if r.stack_trace is not None else None,
                     comment=comment,
                 )
