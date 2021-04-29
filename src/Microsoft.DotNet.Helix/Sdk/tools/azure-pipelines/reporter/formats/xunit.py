@@ -1,3 +1,4 @@
+import re
 import xml.etree.ElementTree
 
 from .result_format import ResultFormat
