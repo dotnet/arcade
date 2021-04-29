@@ -39,7 +39,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         [Fact]
         public void WillFail()
         {
-            Assert.Equal("a\n\u045Db", "c\nd");
+            Assert.Equal("a\n\u045Dbasic \\ backslash", "c\ndC:\\now\\with\\paths");
         }
     }
 }
