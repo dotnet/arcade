@@ -33,6 +33,8 @@ GOTO :retryloop
 
 echo  %date%-%time%
 %ENV_PATH%\Scripts\python.exe -B %~dp0run.py %*
+set _uploaderExitCode=%ERRORLEVEL%
 echo  %date%-%time%
 
 set PYTHONPATH=%_OLD_PYTHONPATH%
+exit /b %_uploaderExitCode%
