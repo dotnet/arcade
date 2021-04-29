@@ -365,6 +365,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// <param name="symWebToken">Token to authenticate symweb</param>
         /// <param name="symbolPublishingExclusionsFile">Right now we do not add any files to this, so this is going to be null</param>
         /// <param name="publishSpecialClrFiles">If true, the special coreclr module indexed files like DBI, DAC and SOS are published</param>
+        /// <param name="clientThrottle">To avoid starting too many processes</param>
         /// <returns>Task</returns>
         public async Task PublishSymbolsUsingStreamingAsync(
             string pdbArtifactsBasePath,
@@ -534,6 +535,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// <param name="symWebToken">Token to authenticate symweb</param>
         /// <param name="symbolPublishingExclusionsFile">Right now we do not add any files to this, so this is going to be null</param>
         /// <param name="temporarySymbolsLocation">Path to Symbol.nupkgs</param>
+        /// <param name="clientThrottle">To avoid starting too many processes</param>
         /// <param name="publishSpecialClrFiles">If true, the special coreclr module indexed files like DBI, DAC and SOS are published</param>
         public async Task HandleSymbolPublishingAsync (
             string pdbArtifactsBasePath,
@@ -681,7 +683,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// </summary>
         /// <param name="client">Maestro API client</param>
         /// <param name="buildAssets">Assets information about build being published.</param>
-        /// <param name="clientThrottle">Semaphore.</param>
+        /// <param name="clientThrottle">To avoid starting too many processes</param>
         /// <returns>Task</returns>
         protected async Task HandlePackagePublishingAsync(Dictionary<string, HashSet<Asset>> buildAssets, SemaphoreSlim clientThrottle =null)
         {

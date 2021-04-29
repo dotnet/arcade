@@ -64,6 +64,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public string SymbolsFeedOverride { get; set; }
 
+        /// <summary>
+        /// Maximum number of parallel uploads for the upload tasks
+        /// </summary>
+        public int MaximumClients { get; set; } = 20;
+
         public override bool Execute()
         {
             ExecuteAsync().GetAwaiter().GetResult();
@@ -207,7 +212,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     CopySymbolFilesToTemporaryLocation(BuildModel, temporarySymbolsLocation);
                 }
 
-                using var clientThrottle = new SemaphoreSlim(20, 20);
+                using var clientThrottle = new SemaphoreSlim(MaximumClients, MaximumClients);
 
                 await Task.WhenAll(new Task[]
                 {
