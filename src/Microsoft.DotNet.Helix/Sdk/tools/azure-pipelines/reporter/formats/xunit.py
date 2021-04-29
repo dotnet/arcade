@@ -69,6 +69,7 @@ class XUnitFormat(ResultFormat):
 
                     output_element = element.find("output")
                     if output_element is not None:
+                        print ("XUNIT Found attachment for test {}".format(name))
                         attachments.append(TestResultAttachment(
                             name=u"Console_Output.log",
                             text=output_element.text,

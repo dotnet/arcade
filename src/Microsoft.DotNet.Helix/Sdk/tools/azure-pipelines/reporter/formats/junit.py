@@ -47,6 +47,7 @@ class JUnitFormat(ResultFormat):
 
                     stdout_element = element.find("system-out")
                     if stdout_element is not None:
+                        print ("JUnit Found attachment for test {}".format(name))
                         attachments.append(TestResultAttachment(
                             name=u"Console_Output.log",
                             text=stdout_element.text,
@@ -54,6 +55,7 @@ class JUnitFormat(ResultFormat):
 
                     stderr_element = element.find("system-err")
                     if stderr_element is not None:
+                        print ("JUnit ERR Found attachment for test {}".format(name))
                         attachments.append(TestResultAttachment(
                             name=u"Error_Output.log",
                             text=stderr_element.text,
