@@ -231,6 +231,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                 DeleteTemporaryFiles(temporarySymbolsLocation);
                 DeleteTemporaryDirectory(temporarySymbolsLocation);
+
+                await PersistPendingAssetLocationAsync(client);
             }
             catch (Exception e)
             {
