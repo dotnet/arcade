@@ -1,5 +1,5 @@
 import os
-from defs import TestResult, TestResultAttachment
+from helix.public import TestResult, TestResultAttachment
 from typing import Iterable, List
 from formats import all_formats
 from helpers import get_env

@@ -2,7 +2,7 @@ import re
 import xml.etree.ElementTree
 
 from .result_format import ResultFormat
-from defs import TestResult, TestResultAttachment
+from helix.public import TestResult, TestResultAttachment
 
 _unescape_char_map = {
     'r': '\r',
