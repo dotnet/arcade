@@ -48,7 +48,7 @@
 # True to use global NuGet cache instead of restoring packages to repository-local directory.
 [bool]$useGlobalNuGetCache = if (Test-Path variable:useGlobalNuGetCache) { $useGlobalNuGetCache } else { !$ci }
 
-# True to exclude prelease versions Visual Studio during build
+# True to exclude prerelease versions Visual Studio during build
 [bool]$excludePrereleaseVS = if (Test-Path variable:excludePrereleaseVS) { $excludePrereleaseVS } else { $false }
 
 # An array of names of processes to stop on script exit if prepareMachine is true.
