@@ -252,7 +252,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         {
             foreach (var blobAsset in buildModel.Artifacts.Blobs)
             {
-                if (blobAsset.Id.EndsWith(".symbols.nupkg", StringComparison.OrdinalIgnoreCase))
+                if (GeneralUtils.IsSymbolPackage(blobAsset.Id))
                 {
                     var sourceFile = Path.Combine(BlobAssetsBasePath, Path.GetFileName(blobAsset.Id));
                     var destinationFile = Path.Combine(symbolTemporaryLocation, Path.GetFileName(blobAsset.Id));
