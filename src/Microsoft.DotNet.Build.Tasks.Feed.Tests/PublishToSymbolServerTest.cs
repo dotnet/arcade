@@ -9,7 +9,6 @@ using Microsoft.Arcade.Test.Common;
 using Microsoft.DotNet.Build.Tasks.Feed.Model;
 using Microsoft.DotNet.Build.Tasks.Feed.Tests.TestDoubles;
 using Microsoft.DotNet.Maestro.Client.Models;
-using Microsoft.DotNet.VersionTools.BuildManifest.Model;
 using Xunit;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
