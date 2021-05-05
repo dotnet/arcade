@@ -406,7 +406,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             foreach (var asset in buildAssets)
             {
                 var name = asset.Key;
-                if (name.Contains(".symbols.nupkg"))
+                if (GeneralUtils.IsSymbolPackage(name))
                 {
                     symbolsToPublish.Add(Path.GetFileName(name));
                 }
