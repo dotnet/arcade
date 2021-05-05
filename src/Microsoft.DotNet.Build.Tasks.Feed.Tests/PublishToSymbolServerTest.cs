@@ -1,8 +1,15 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net;
+using System.Net.Http;
+using System.Threading.Tasks;
+using Microsoft.Arcade.Common;
 using Microsoft.Arcade.Test.Common;
 using Microsoft.DotNet.Build.Tasks.Feed.Model;
+using Microsoft.DotNet.Build.Tasks.Feed.Tests.TestDoubles;
 using Microsoft.DotNet.Maestro.Client.Models;
+using Microsoft.DotNet.VersionTools.BuildManifest.Model;
 using Xunit;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
@@ -39,7 +46,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 test.ContainsKey(symbolServer));
             Assert.True(test.Count == 1);
         }
-
 
         [Fact]
         public void PublishToBothSymbolServerTest()
@@ -139,5 +145,161 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 false,
                 false).IsCompleted);
         }
+
+        [Fact]
+        public void  SuccessfulDownloadFileTestAsync()
+        {
+            var buildEngine = new MockBuildEngine();
+            var publishTask = new PublishArtifactsInManifestV3
+            {
+                BuildEngine = buildEngine,
+            };
+
+            var testFile = Path.Combine("Symbols", "test.txt");
+            var responseContent = TestInputs.ReadAllBytes(testFile);
+            var responses = new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new ByteArrayContent(responseContent)
+            };
+
+            using HttpClient client = FakeHttpClient.WithResponse(responses);
+            var path = TestInputs.GetFullPath(Guid.NewGuid().ToString());
+
+
+            var test = publishTask.DownloadFileAsync(
+                client,
+                PublishArtifactsInManifestBase.ArtifactName.BlobArtifacts,
+                "1234",
+                "test.txt",
+                path);
+
+            Assert.True(File.Exists(path));
+            publishTask.DeleteTemporaryFiles(path);
+            publishTask.DeleteTemporaryDirectory(path);
+        }
+
+        [Theory]
+        [InlineData(HttpStatusCode.BadRequest, 3)]
+        [InlineData(HttpStatusCode.NotFound, 2)]
+        [InlineData(HttpStatusCode.GatewayTimeout, 1)]
+        public async Task FailedDownloadTestAsync(HttpStatusCode httpStatus, int maxRetry)
+        {
+            var buildEngine = new MockBuildEngine();
+            var publishTask = new PublishArtifactsInManifestV3
+            {
+                BuildEngine = buildEngine,
+            };
+            var testFile = Path.Combine("Symbols", "test.txt");
+            var responseContent = TestInputs.ReadAllBytes(testFile);
+            publishTask.RetryHandler = new ExponentialRetry()
+            {
+                DelayBase = 1,
+                MaxAttempts = maxRetry
+            };
+            var responses = new[]
+            {
+                new HttpResponseMessage(httpStatus)
+                {
+                    Content = new ByteArrayContent(responseContent)
+                },
+                new HttpResponseMessage(httpStatus)
+                {
+                    Content = new ByteArrayContent(responseContent)
+                },
+                new HttpResponseMessage(HttpStatusCode.NotFound)
+                {
+                Content = new ByteArrayContent(responseContent)
+                }
+            };
+            using HttpClient client = FakeHttpClient.WithResponses(responses);
+            var path = TestInputs.GetFullPath(Guid.NewGuid().ToString());
+
+            try
+            {
+                await publishTask.DownloadFileAsync(
+                    client,
+                    PublishArtifactsInManifestBase.ArtifactName.BlobArtifacts,
+                    "1234",
+                    "test.txt",
+                    path);
+            }
+            catch (Exception ex) 
+            {
+                Assert.Contains($"Failed to download local file '{path}' after {publishTask.RetryHandler.MaxAttempts} attempts.  See inner exception for details,", ex.Message);
+            }
+        }
+
+        [Theory]
+        [InlineData(PublishArtifactsInManifestBase.ArtifactName.BlobArtifacts, "1")]
+        [InlineData(PublishArtifactsInManifestBase.ArtifactName.PackageArtifacts, "1234")]
+        public async Task GetContainerIdTestAsync(PublishArtifactsInManifestBase.ArtifactName artifactName, string containerId)
+        {
+            var buildEngine = new MockBuildEngine();
+            var publishTask = new PublishArtifactsInManifestV3
+            {
+                BuildEngine = buildEngine,
+            };
+            publishTask.BuildId = "1243456";
+            var testPackageName = Path.Combine("Symbols", "test.txt");
+            var responseContent = TestInputs.ReadAllBytes(testPackageName);
+            var responses = new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new ByteArrayContent(responseContent)
+            };
+
+            using HttpClient client = FakeHttpClient.WithResponse(responses);
+            var test = await publishTask.GetContainerIdAsync(
+                client,
+                artifactName);
+            Assert.Equal(containerId, test);
+        }
+
+        [Theory]
+        [InlineData(HttpStatusCode.BadRequest, 2)]
+        [InlineData(HttpStatusCode.NotFound, 3)]
+        public async Task ContainerIdErrorAsync(HttpStatusCode httpStatus, int maxAttempt)
+        {
+            var buildEngine = new MockBuildEngine();
+            var publishTask = new PublishArtifactsInManifestV3
+            {
+                BuildEngine = buildEngine,
+            };
+            publishTask.BuildId = "1243456";
+            publishTask.RetryHandler = new ExponentialRetry()
+            {
+                DelayBase = 1,
+                MaxAttempts = maxAttempt
+            };
+            var testPackageName = Path.Combine("Symbols", "test.txt");
+            var responseContent = TestInputs.ReadAllBytes(testPackageName);
+            var responses = new[]
+            {
+                new HttpResponseMessage(httpStatus)
+                {
+                    Content = new ByteArrayContent(responseContent)
+                },
+                new HttpResponseMessage(httpStatus)
+                {
+                    Content = new ByteArrayContent(responseContent)
+                },
+                new HttpResponseMessage(HttpStatusCode.NotFound)
+                {
+                    Content = new ByteArrayContent(responseContent)
+                }
+            };
+
+            using HttpClient client = FakeHttpClient.WithResponses(responses);
+            try
+            {
+                await publishTask.GetContainerIdAsync(
+                    client,
+                    PublishArtifactsInManifestBase.ArtifactName.BlobArtifacts);
+            }
+            catch (Exception ex)
+            {
+                Assert.Contains($"Failed to get container id after {publishTask.RetryHandler.MaxAttempts} attempts.  See inner exception for details,", ex.Message);
+            }
+        }
+
     }
 }

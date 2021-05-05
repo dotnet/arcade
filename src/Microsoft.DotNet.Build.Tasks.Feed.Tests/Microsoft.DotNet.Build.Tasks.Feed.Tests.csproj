@@ -38,4 +38,8 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="TestInputs\Symbols\test.txt" />
+  </ItemGroup>
 </Project>
