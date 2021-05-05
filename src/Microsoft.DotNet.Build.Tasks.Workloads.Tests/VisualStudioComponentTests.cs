@@ -82,7 +82,8 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
 
         private static WorkloadManifest Create(string filename)
         {
-            return WorkloadManifestReader.ReadWorkloadManifest(File.OpenRead(Path.Combine(AppContext.BaseDirectory, "testassets", filename)));
+            return WorkloadManifestReader.ReadWorkloadManifest(Path.GetFileNameWithoutExtension(filename),
+                File.OpenRead(Path.Combine(AppContext.BaseDirectory, "testassets", filename)));
         }
     }
 }

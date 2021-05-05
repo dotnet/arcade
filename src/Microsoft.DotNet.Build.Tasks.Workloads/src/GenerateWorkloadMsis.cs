@@ -104,7 +104,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         {
             // We need to track duplicate packs so we only generate MSIs once. We'll key off the pack ID and version.
             IEnumerable<WorkloadManifest> manifests = WorkloadManifests.Select(
-                w => WorkloadManifestReader.ReadWorkloadManifest(File.OpenRead(w.ItemSpec)));
+                w => WorkloadManifestReader.ReadWorkloadManifest(Path.GetFileNameWithoutExtension(w.ItemSpec), File.OpenRead(w.ItemSpec)));
 
             return manifests.SelectMany(m => m.Packs.Values).GroupBy(x => new { x.Id, x.Version }).
                 Select(g => g.First());

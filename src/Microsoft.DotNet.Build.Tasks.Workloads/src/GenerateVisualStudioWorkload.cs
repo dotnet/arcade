@@ -194,7 +194,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
 
         internal IEnumerable<ITaskItem> ProcessWorkloadManifestFile(string workloadManifestJsonPath)
         {
-            WorkloadManifest manifest = WorkloadManifestReader.ReadWorkloadManifest(File.OpenRead(workloadManifestJsonPath));
+            WorkloadManifest manifest = WorkloadManifestReader.ReadWorkloadManifest(Path.GetFileNameWithoutExtension(workloadManifestJsonPath), File.OpenRead(workloadManifestJsonPath));
 
             List<TaskItem> swixProjects = new();
 

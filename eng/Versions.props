@@ -86,6 +86,6 @@
     <MicrosoftDotNetXHarnessCLIVersion>1.0.0-prerelease.21209.2</MicrosoftDotNetXHarnessCLIVersion>
     <MicrosoftSymbolUploaderBuildTaskVersion>1.1.156402</MicrosoftSymbolUploaderBuildTaskVersion>
     <MicrosoftSymbolUploaderVersion>1.1.152002</MicrosoftSymbolUploaderVersion>
-    <MicrosoftNetSdkWorkloadManifestReaderVersion>6.0.100-preview.3.21175.4</MicrosoftNetSdkWorkloadManifestReaderVersion>
+    <MicrosoftNetSdkWorkloadManifestReaderVersion>6.0.100-preview.5.21254.11</MicrosoftNetSdkWorkloadManifestReaderVersion>
   </PropertyGroup>
 </Project>
