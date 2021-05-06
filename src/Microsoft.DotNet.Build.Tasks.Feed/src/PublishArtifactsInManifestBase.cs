@@ -1258,7 +1258,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             using (HttpClient httpClient = new HttpClient(new HttpClientHandler
                 {CheckCertificateRevocationList = true}))
             {
-                httpClient.Timeout = TimeSpan.FromSeconds(180);
+                httpClient.Timeout = TimeSpan.FromSeconds(TimeoutInSeconds);
                 httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue(
                     "Basic",
                     Convert.ToBase64String(Encoding.ASCII.GetBytes(string.Format("{0}:{1}", "", feedConfig.Token))));
