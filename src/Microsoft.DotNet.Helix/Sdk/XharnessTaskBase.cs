@@ -18,13 +18,6 @@ namespace Microsoft.DotNet.Helix.Sdk
         private const string ExpectedExitCodePropName = "ExpectedExitCode";
 
         /// <summary>
-        /// Boolean true if this is a posix shell, false if not.
-        /// This does not need to be set by a user; it is automatically determined in Microsoft.DotNet.Helix.Sdk.MonoQueue.targets
-        /// </summary>
-        [Required]
-        public bool IsPosixShell { get; set; }
-
-        /// <summary>
         /// Extra arguments that will be passed to the iOS/Android/... app that is being run
         /// </summary>
         public string AppArguments { get; set; }

@@ -65,12 +65,6 @@ namespace Microsoft.DotNet.Helix.Sdk
         /// <returns>A boolean value indicating the success of HelixWorkItem creation</returns>
         public bool ExecuteTask(IProvisioningProfileProvider provisioningProfileProvider, IZipArchiveManager zipArchiveManager)
         {
-            if (!IsPosixShell)
-            {
-                Log.LogError("IsPosixShell was specified as false for an iOS work item; these can only run on MacOS devices currently.");
-                return false;
-            }
-
             provisioningProfileProvider.AddProfilesToBundles(AppBundles);
             var tasks = AppBundles.Select(bundle => PrepareWorkItem(zipArchiveManager, bundle));
 

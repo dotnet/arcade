@@ -103,7 +103,6 @@
           Condition=" '@(XHarnessAppBundleToTest)' != '' "
           BeforeTargets="CoreTest">
     <CreateXHarnessAppleWorkItems AppBundles="@(XHarnessAppBundleToTest)"
-                                  IsPosixShell="$(IsPosixShell)"
                                   XcodeVersion="$(XHarnessXcodeVersion)"
                                   ProvisioningProfileUrl="$(XHarnessAppleProvisioningProfileUrl)"
                                   TmpDir="$(ArtifactsTmpDir)">

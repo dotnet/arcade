@@ -23,6 +23,13 @@ namespace Microsoft.DotNet.Helix.Sdk
         private const string NonPosixAndroidWrapperScript = "tools.xharness_runner.xharness-helix-job.android.bat";
 
         /// <summary>
+        /// Boolean true if this is a posix shell, false if not.
+        /// This does not need to be set by a user; it is automatically determined in Microsoft.DotNet.Helix.Sdk.MonoQueue.targets
+        /// </summary>
+        [Required]
+        public bool IsPosixShell { get; set; }
+
+        /// <summary>
         /// An array of one or more paths to application packages (.apk for Android)
         /// that will be used to create Helix work items.
         /// </summary>
