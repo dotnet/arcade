@@ -15,9 +15,10 @@ namespace Microsoft.DotNet.Helix.Sdk
     /// </summary>
     public class CreateXHarnessAndroidWorkItems : XHarnessTaskBase
     {
-        private const string ArgumentsPropertyName = "Arguments";
-        private const string AndroidInstrumentationNamePropertyName = "AndroidInstrumentationName";
-        private const string DeviceOutputPathPropertyName = "DeviceOutputPath";
+        private const string ArgumentsPropName = "Arguments";
+        private const string AndroidInstrumentationNamePropName = "AndroidInstrumentationName";
+        private const string DeviceOutputPathPropName = "DeviceOutputPath";
+
         private const string PosixAndroidWrapperScript = "tools.xharness_runner.xharness-helix-job.android.sh";
         private const string NonPosixAndroidWrapperScript = "tools.xharness_runner.xharness-helix-job.android.bat";
 
@@ -111,9 +112,9 @@ namespace Microsoft.DotNet.Helix.Sdk
                 return null;
             }
 
-            appPackage.TryGetMetadata(ArgumentsPropertyName, out string arguments);
-            appPackage.TryGetMetadata(AndroidInstrumentationNamePropertyName, out string androidInstrumentationName);
-            appPackage.TryGetMetadata(DeviceOutputPathPropertyName, out string deviceOutputPath);
+            appPackage.TryGetMetadata(ArgumentsPropName, out string arguments);
+            appPackage.TryGetMetadata(AndroidInstrumentationNamePropName, out string androidInstrumentationName);
+            appPackage.TryGetMetadata(DeviceOutputPathPropName, out string deviceOutputPath);
 
             string outputPathArg = string.IsNullOrEmpty(deviceOutputPath) ? string.Empty : $"--dev-out={deviceOutputPath} ";
             string instrumentationArg = string.IsNullOrEmpty(androidInstrumentationName) ? string.Empty : $"-i={androidInstrumentationName} ";

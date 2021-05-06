@@ -77,7 +77,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                     }
 
                     // This makes sure we download the profile the first time we see an app that needs it
-                    if (!profileLocations.TryGetValue(platform, out string profilePath))
+                    if (!profileLocations.TryGetValue(platform, out string? profilePath))
                     {
                         if (string.IsNullOrEmpty(_tmpDir))
                         {
@@ -104,7 +104,7 @@ namespace Microsoft.DotNet.Helix.Sdk
 
         private string DownloadProvisioningProfile(ApplePlatform platform)
         {
-            var targetFile = Path.Combine(_tmpDir, GetProvisioningProfileFileName(platform));
+            var targetFile = Path.Combine(_tmpDir!, GetProvisioningProfileFileName(platform));
 
             _helpers.DirectoryMutexExec(async () =>
             {

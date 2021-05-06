@@ -19,10 +19,11 @@ namespace Microsoft.DotNet.Helix.Sdk
         public const string iOSTargetName = "ios-device";
         public const string tvOSTargetName = "tvos-device";
 
-        private const string EntryPointScriptName = "tools.xharness_runner.xharness-helix-job.apple.sh";
-        private const string RunnerScriptName = "tools.xharness_runner.xharness-runner.apple.sh";
         private const string LaunchTimeoutPropName = "LaunchTimeout";
         private const string IncludesTestRunnerPropName = "IncludesTestRunner";
+
+        private const string EntryPointScript = "tools.xharness_runner.xharness-helix-job.apple.sh";
+        private const string RunnerScript = "tools.xharness_runner.xharness-runner.apple.sh";
 
         private static readonly TimeSpan s_defaultLaunchTimeout = TimeSpan.FromMinutes(10);
 
@@ -149,7 +150,7 @@ namespace Microsoft.DotNet.Helix.Sdk
         }
 
         private string GetHelixCommand(string appName, string targets, TimeSpan testTimeout, TimeSpan launchTimeout, bool includesTestRunner, int expectedExitCode) =>
-            $"chmod +x {EntryPointScriptName} && ./{EntryPointScriptName} " +
+            $"chmod +x {EntryPointScript} && ./{EntryPointScript} " +
             $"--app \"$HELIX_WORKITEM_ROOT/{appName}\" " +
              "--output-directory \"$HELIX_WORKITEM_UPLOAD_ROOT\" " +
             $"--targets \"{targets}\" " +
@@ -182,8 +183,8 @@ namespace Microsoft.DotNet.Helix.Sdk
             zipArchiveManager.ArchiveDirectory(folderToZip, outputZipPath, true);
 
             Log.LogMessage($"Adding the XHarness job scripts into the payload archive");
-            await zipArchiveManager.AddResourceFileToArchive<CreateXHarnessAppleWorkItems>(outputZipPath, EntryPointScriptName);
-            await zipArchiveManager.AddResourceFileToArchive<CreateXHarnessAppleWorkItems>(outputZipPath, RunnerScriptName);
+            await zipArchiveManager.AddResourceFileToArchive<CreateXHarnessAppleWorkItems>(outputZipPath, EntryPointScript);
+            await zipArchiveManager.AddResourceFileToArchive<CreateXHarnessAppleWorkItems>(outputZipPath, RunnerScript);
 
             return outputZipPath;
         }
