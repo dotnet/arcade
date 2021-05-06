@@ -4,10 +4,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Microsoft.Deployment.WindowsInstaller.Package;
 using Microsoft.Deployment.WindowsInstaller;
+using Microsoft.Deployment.WindowsInstaller.Package;
 
 namespace Microsoft.DotNet.Build.Tasks.Workloads
 {
@@ -17,10 +15,10 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
 
         public static IEnumerable<FileRow> GetAllFiles(string packagePath)
         {
-            using InstallPackage ip = new InstallPackage(packagePath, DatabaseOpenMode.ReadOnly);
-            using Database db = new Database(packagePath, DatabaseOpenMode.ReadOnly);
+            using InstallPackage ip = new(packagePath, DatabaseOpenMode.ReadOnly);
+            using Database db = new(packagePath, DatabaseOpenMode.ReadOnly);
             using View fileView = db.OpenView(_getFilesQuery);
-            List<FileRow> files = new List<FileRow>();
+            List<FileRow> files = new();
             fileView.Execute();
 
             foreach (Record file in fileView)
@@ -33,7 +31,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
 
         public static string GetProperty(string packagePath, string property)
         {
-            using InstallPackage ip = new InstallPackage(packagePath, DatabaseOpenMode.ReadOnly);
+            using InstallPackage ip = new(packagePath, DatabaseOpenMode.ReadOnly);
             return ip.Property[property];
             
         }

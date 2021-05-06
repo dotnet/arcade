@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Microsoft.NET.Sdk.WorkloadManifestReader;
@@ -31,6 +30,26 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         /// The UUID namespace to use for generating a product code.
         /// </summary>
         internal static readonly Guid ProductCodeNamespaceUuid = Guid.Parse("3B04DD8B-41C4-4DA3-9E49-4B69F11533A7");
+
+        /// <summary>
+        /// Static RTF text for inserting a EULA into the MSI. The license URL of the NuGet package will be embedded 
+        /// as plain text since the text control used to render the MSI UI does not render hyperlinks even though RTF supports it.
+        /// </summary>
+        internal static readonly string Eula = @"{\rtf1\ansi\ansicpg1252\deff0\nouicompat\deflang1033{\fonttbl{\f0\fnil\fcharset0 Calibri;}}
+{\colortbl ;\red0\green0\blue255;}
+{\*\generator Riched20 10.0.19041}\viewkind4\uc1 
+\pard\sa200\sl276\slmult1\f0\fs22\lang9 This software is licensed separately as set out in its accompanying license. By continuing, you also agree to that license (__LICENSE_URL__).\par
+\par
+}";
+
+        /// <summary>
+        /// An item group containing information to shorten the names of packages.
+        /// </summary>
+        public ITaskItem[] ShortNames
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// The set of supported target platforms for MSIs.
@@ -124,6 +143,9 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                 sourceFiles.Add(EmbeddedTemplates.Extract("Directories.wxs", msiSourcePath));
                 sourceFiles.Add(EmbeddedTemplates.Extract("Product.wxs", msiSourcePath));
                 sourceFiles.Add(EmbeddedTemplates.Extract("Registry.wxs", msiSourcePath));
+
+                string EulaRtfPath = Path.Combine(msiSourcePath, "eula.rtf");
+                File.WriteAllText(EulaRtfPath, Eula.Replace("__LICENSE_URL__", nupkg.LicenseUrl));
                 EmbeddedTemplates.Extract("Variables.wxi", msiSourcePath);
 
                 // Harvest the package contents and add it to the source files we need to compile.
@@ -171,6 +193,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                 candle.PreprocessorDefinitions.Add($@"Platform={platform}");
                 candle.PreprocessorDefinitions.Add($@"SourceDir={packageContentsDirectory}");
                 candle.PreprocessorDefinitions.Add($@"Manufacturer={manufacturer}");
+                candle.PreprocessorDefinitions.Add($@"EulaRtf={EulaRtfPath}");
 
                 // Compiler extension to process dependency provider authoring for package reference counting.
                 candle.Extensions.Add("WixDependencyExtension");
@@ -183,9 +206,12 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                 // Link the MSI. The generated filename contains a the semantic version (excluding build metadata) and platform. 
                 // If the source package already contains a platform, e.g. an aliased package that has a RID, then we don't add
                 // the platform again.
+
+                string shortPackageName = Path.GetFileNameWithoutExtension(sourcePackage).Replace(ShortNames);
+
                 string outputFile = sourcePackage.Contains(platform) ?
-                    Path.Combine(OutputPath, Path.GetFileNameWithoutExtension(sourcePackage) + ".msi") :
-                    Path.Combine(OutputPath, Path.GetFileNameWithoutExtension(sourcePackage) + $"-{platform}.msi");
+                    Path.Combine(OutputPath, shortPackageName + ".msi") :
+                    Path.Combine(OutputPath, shortPackageName + $"-{platform}.msi");
 
                 LinkToolTask light = new(BuildEngine, WixToolsetPath)
                 {
@@ -204,17 +230,18 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                 }
 
                 TaskItem msi = new(light.OutputFile);
-                msi.SetMetadata("Platform", platform);
-                msi.SetMetadata("Version", nupkg.ProductVersion);
+                msi.SetMetadata(Metadata.Platform, platform);
+                msi.SetMetadata(Metadata.Version, nupkg.ProductVersion);
 
                 if (GenerateSwixAuthoring)
                 {
-                    string swixProject = GenerateSwixPackageAuthoring(light.OutputFile, 
-                        !string.IsNullOrWhiteSpace(swixPackageId) ? swixPackageId : $"{nupkg.Id}", platform);
+                    string swixProject = GenerateSwixPackageAuthoring(light.OutputFile,
+                        !string.IsNullOrWhiteSpace(swixPackageId) ? swixPackageId :
+                        $"{nupkg.Id.Replace(ShortNames)}.{nupkg.Version}", platform);
 
                     if (!string.IsNullOrWhiteSpace(swixProject))
                     {
-                        msi.SetMetadata("SwixProject", swixProject);
+                        msi.SetMetadata(Metadata.SwixProject, swixProject);
                     }
                 }
 
@@ -232,9 +259,8 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                 IntermediateBaseOutputPath = this.IntermediateBaseOutputPath,
                 PackageName = packageId,
                 MsiPath = msiPath,
+                BuildEngine = this.BuildEngine,
             };
-
-            swixTask.BuildEngine = BuildEngine;
 
             if (!swixTask.Execute())
             {
