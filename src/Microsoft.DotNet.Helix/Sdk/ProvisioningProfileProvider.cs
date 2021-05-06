@@ -100,7 +100,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                         }
 
                         profilePath = DownloadProvisioningProfile(platform);
-                        profileLocations.Add(platform, DownloadProvisioningProfile(platform));
+                        profileLocations.Add(platform, profilePath);
                     }
 
                     // Copy the profile into the folder
