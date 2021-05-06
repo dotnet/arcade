@@ -48,7 +48,7 @@ namespace Microsoft.Arcade.Test.Common
 
         public string? GetExtension(string? path) => Path.GetExtension(path);
 
-        public string PathCombine(string path1, string path2) => Path.Combine(path1, path2);
+        public string PathCombine(string path1, string path2) => path1 + "/" + path2;
 
         public void WriteToFile(string path, string content)
         {
@@ -67,6 +67,7 @@ namespace Microsoft.Arcade.Test.Common
         {
             private readonly MockFileSystem _fileSystem;
             private readonly string _path;
+            private bool disposed = false;
 
             public MockFileStream(MockFileSystem fileSystem, string path)
                 : base(fileSystem.FileExists(path) ? System.Text.Encoding.UTF8.GetBytes(fileSystem.FileContents[path]) : new byte[1024])
@@ -75,11 +76,15 @@ namespace Microsoft.Arcade.Test.Common
                 _path = path;
             }
 
-            public new void Dispose()
+            protected override void Dispose(bool disposing)
             {
                 // flush file to our system
-                using var sr = new StreamReader(this);
-                _fileSystem.WriteToFile(_path, sr.ReadToEnd());
+                if (!disposed)
+                {
+                    disposed = true;
+                    using var sr = new StreamReader(this);
+                    _fileSystem.WriteToFile(_path, sr.ReadToEnd());
+                }
             }
         }
     }

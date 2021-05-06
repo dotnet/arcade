@@ -32,12 +32,17 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
 
             _fileSystem = new MockFileSystem();
 
-            var profileResponse = new HttpResponseMessage(HttpStatusCode.OK)
+            var response1 = new HttpResponseMessage(HttpStatusCode.OK)
             {
-                Content = new StringContent("profile content"),
+                Content = new StringContent("iOS content"),
             };
 
-            var httpClient = FakeHttpClient.WithResponses(profileResponse, profileResponse, profileResponse);
+            var response2 = new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent("tvOS content"),
+            };
+
+            var httpClient = FakeHttpClient.WithResponses(response1, response2);
 
             _profileProvider = new ProvisioningProfileProvider(
                 new TaskLoggingHelper(new MockBuildEngine(), nameof(ProvisioningProfileProviderTests)),
@@ -53,12 +58,30 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         {
             _profileProvider.AddProfilesToBundles(new[]
             {
-                CreateAppBundle("apps/System.Foo.app", "ios-simulator-64_13.5"),
-                CreateAppBundle("apps/System.Bar.app", "tvos-simulator-64"),
+                CreateAppBundle("/apps/System.Foo.app", "ios-simulator-64_13.5"),
+                CreateAppBundle("/apps/System.Bar.app", "tvos-simulator-64"),
             });
 
             _downloadCount.Should().Be(0);
             _fileSystem.Files.Should().BeEmpty();
+        }
+
+        [Fact]
+        public void MultipleiOSDeviceTargetsGetTheSameProfile()
+        {
+            _profileProvider.AddProfilesToBundles(new[]
+            {
+                CreateAppBundle("/apps/System.Device1.app", "ios-device"),
+                CreateAppBundle("/apps/System.Simulator.app", "tvos-simulator-64"),
+                CreateAppBundle("/apps/System.Device2.app", "ios-device"),
+                CreateAppBundle("/apps/System.Foo.app", "ios-simulator-64_13.5"),
+            });
+
+            _downloadCount.Should().Be(1);
+            _fileSystem.Files.Should().BeEquivalentTo(
+                "/tmp/iOS.mobileprovision",
+                "/apps/System.Device1.app/embedded.mobileprovision",
+                "/apps/System.Device2.app/embedded.mobileprovision");
         }
 
         private ITaskItem CreateAppBundle(string path, string targets)
