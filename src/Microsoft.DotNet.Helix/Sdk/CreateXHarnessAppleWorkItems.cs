@@ -95,7 +95,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             string workItemName = fileSystem.GetFileName(appFolderPath);
             if (workItemName.EndsWith(".app"))
             {
-                workItemName = workItemName[0..^4];
+                workItemName = workItemName.Substring(0, workItemName.Length - 4);
             }
 
             var (testTimeout, workItemTimeout, expectedExitCode) = ParseMetadata(appBundleItem);
