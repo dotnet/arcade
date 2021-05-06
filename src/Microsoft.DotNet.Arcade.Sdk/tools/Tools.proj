@@ -29,7 +29,8 @@
     <PackageReference Include="MicroBuild.Core" Version="$(MicroBuildCoreVersion)"  IsImplicitlyDefined="true" />
     <PackageReference Include="MicroBuild.Core.Sentinel" Version="1.0.0" IsImplicitlyDefined="true" />
     <PackageReference Include="vswhere" Version="$(VSWhereVersion)" IsImplicitlyDefined="true" />
-    <PackageReference Include="Microsoft.DotNet.Build.Tasks.Feed" Version="$(MicrosoftDotNetBuildTasksFeedVersion)" Condition="'$(Publish)' == 'true'" IsImplicitlyDefined="true" />
+    <!-- Some users want to restore outside of build or publish, providing a custom property allows preventing turning on publish machinery for the restore -->
+    <PackageReference Include="Microsoft.DotNet.Build.Tasks.Feed" Version="$(MicrosoftDotNetBuildTasksFeedVersion)" Condition="'$(Publish)' == 'true' or '$(AlwaysRestoreArcadeFeedTasks)' == 'true' " IsImplicitlyDefined="true" />
     <PackageReference Include="Microsoft.DotNet.NuGetRepack.Tasks" Version="$(MicrosoftDotnetNuGetRepackTasksVersion)" Condition="'$(UsingToolNuGetRepack)' == 'true'" IsImplicitlyDefined="true" />
     <PackageReference Include="Microsoft.DotNet.SignTool" Version="$(MicrosoftDotNetSignToolVersion)" IsImplicitlyDefined="true" />
     <PackageReference Include="Microsoft.SymbolUploader.Build.Task" Version="$(MicrosoftSymbolUploaderBuildTaskVersion)" Condition="'$(PublishToSymbolServer)' == 'true'" IsImplicitlyDefined="true" />
