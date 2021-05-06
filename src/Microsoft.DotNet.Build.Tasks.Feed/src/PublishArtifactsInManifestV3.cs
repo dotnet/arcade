@@ -162,7 +162,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         AzureDevOpsFeedsKey,
                         BuildEngine = this.BuildEngine,
                         targetChannelConfig.SymbolTargetType,
-                        azureDevOpsPublicStaticSymbolsFeed: PublicSymbolsFeedOverride,
+                        azureDevOpsPublicStaticSymbolsFeed: GetFeed(null, PublicSymbolsFeedOverride),
                         filesToExclude: targetChannelConfig.FilenamesToExclude,
                         flatten: targetChannelConfig.Flatten);
 
