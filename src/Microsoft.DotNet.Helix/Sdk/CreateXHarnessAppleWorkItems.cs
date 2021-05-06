@@ -20,9 +20,8 @@ namespace Microsoft.DotNet.Helix.Sdk
         private const string LaunchTimeoutPropName = "LaunchTimeout";
         private const string TargetPropName = "Targets";
         private const string IncludesTestRunnerPropName = "IncludesTestRunner";
-        private const int DefaultLaunchTimeoutInMinutes = 10;
 
-        private readonly IHelpers _helpers = new Arcade.Common.Helpers();
+        private static readonly TimeSpan s_defaultLaunchTimeout = TimeSpan.FromMinutes(10);
 
         /// <summary>
         /// An array of one or more paths to iOS app bundles (folders ending with ".app" usually)
@@ -62,7 +61,7 @@ namespace Microsoft.DotNet.Helix.Sdk
         /// collates logged errors in order to determine the success of HelixWorkItems
         /// </summary>
         /// <returns>A boolean value indicating the success of HelixWorkItem creation</returns>
-        public override bool Execute()
+        public bool ExecuteTask(IHelpers helpers)
         {
             if (!IsPosixShell)
             {
@@ -70,7 +69,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                 return false;
             }
 
-            ExecuteAsync().GetAwaiter().GetResult();
+            ExecuteAsync(helpers).GetAwaiter().GetResult();
             return !Log.HasLoggedErrors;
         }
 
@@ -78,7 +77,7 @@ namespace Microsoft.DotNet.Helix.Sdk
         /// Create work items for XHarness test execution
         /// </summary>
         /// <returns></returns>
-        private async Task ExecuteAsync()
+        private async Task ExecuteAsync(IHelpers helpers)
         {
             DownloadProvisioningProfiles();
             WorkItems = (await Task.WhenAll(AppBundles.Select(PrepareWorkItem))).Where(wi => wi != null).ToArray();
@@ -115,7 +114,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             target = target.ToLowerInvariant();
 
             // Optional timeout for the how long it takes for the app to be installed, booted and tests start executing
-            TimeSpan launchTimeout = TimeSpan.FromMinutes(DefaultLaunchTimeoutInMinutes);
+            TimeSpan launchTimeout = s_defaultLaunchTimeout;
             if (appBundleItem.TryGetMetadata(LaunchTimeoutPropName, out string launchTimeoutProp))
             {
                 if (!TimeSpan.TryParse(launchTimeoutProp, out launchTimeout) || launchTimeout.Ticks < 0)

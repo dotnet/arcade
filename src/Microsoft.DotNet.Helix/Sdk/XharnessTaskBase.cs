@@ -3,6 +3,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Reflection;
 using System.Threading.Tasks;
+using Microsoft.Arcade.Common;
 using Microsoft.Build.Framework;
 using Newtonsoft.Json;
 
@@ -11,10 +12,10 @@ namespace Microsoft.DotNet.Helix.Sdk
     /// <summary>
     /// MSBuild custom task to create HelixWorkItems for provided Android application packages.
     /// </summary>
-    public abstract class XHarnessTaskBase : BaseTask
+    public abstract class XHarnessTaskBase : MSBuildTaskBase
     {
-        private const int DefaultWorkItemTimeoutInMinutes = 20;
-        private const int DefaultTestTimeoutInMinutes = 12;
+        private static readonly TimeSpan s_defaultWorkItemTimeout = TimeSpan.FromMinutes(20);
+        private static readonly TimeSpan s_defaultTestTimeout = TimeSpan.FromMinutes(12);
 
         private const string TestTimeoutPropName = "TestTimeout";
         private const string WorkItemTimeoutPropName = "WorkItemTimeout";
@@ -51,7 +52,7 @@ namespace Microsoft.DotNet.Helix.Sdk
         protected (TimeSpan TestTimeout, TimeSpan WorkItemTimeout, int ExpectedExitCode) ParseMetadata(ITaskItem xHarnessAppItem)
         {
             // Optional timeout for the actual test execution in the TimeSpan format
-            TimeSpan testTimeout = TimeSpan.FromMinutes(DefaultTestTimeoutInMinutes);
+            TimeSpan testTimeout = s_defaultTestTimeout;
             if (xHarnessAppItem.TryGetMetadata(TestTimeoutPropName, out string testTimeoutProp))
             {
                 if (!TimeSpan.TryParse(testTimeoutProp, out testTimeout) || testTimeout.Ticks < 0)
@@ -61,7 +62,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             }
 
             // Optional timeout for the whole Helix work item run (includes SDK and tool installation)
-            TimeSpan workItemTimeout = TimeSpan.FromMinutes(DefaultWorkItemTimeoutInMinutes);
+            TimeSpan workItemTimeout = s_defaultWorkItemTimeout;
             if (xHarnessAppItem.TryGetMetadata(WorkItemTimeoutPropName, out string workItemTimeoutProp))
             {
                 if (!TimeSpan.TryParse(workItemTimeoutProp, out workItemTimeout) || workItemTimeout.Ticks < 0)
@@ -73,7 +74,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             {
                 // When test timeout was set and work item timeout has not,
                 // we adjust the work item timeout to give enough space for things to work
-                workItemTimeout = TimeSpan.FromMinutes(testTimeout.TotalMinutes + DefaultWorkItemTimeoutInMinutes - DefaultTestTimeoutInMinutes);
+                workItemTimeout = testTimeout + s_defaultWorkItemTimeout - s_defaultTestTimeout;
             }
 
             if (workItemTimeout <= testTimeout)
