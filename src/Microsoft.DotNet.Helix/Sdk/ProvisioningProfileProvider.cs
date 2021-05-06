@@ -5,6 +5,8 @@ using System.Net.Http;
 using Microsoft.Arcade.Common;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 #nullable enable
 namespace Microsoft.DotNet.Helix.Sdk
@@ -128,6 +130,23 @@ namespace Microsoft.DotNet.Helix.Sdk
         private string GetProvisioningProfileFileName(ApplePlatform platform) => Path.GetFileName(GetProvisioningProfileUrl(platform));
 
         private string GetProvisioningProfileUrl(ApplePlatform platform) => _profileUrlTemplate!.Replace("{PLATFORM}", platform.ToString());
+    }
 
+    public static class ProvisioningProfileProviderRegistration
+    {
+        public static void TryAddProvisioningProfileProvider(this IServiceCollection collection, string provisioningProfileUrlTemplate, string tmpDir)
+        {
+            collection.TryAddTransient<IHelpers, Arcade.Common.Helpers>();
+            collection.TryAddSingleton(_ => new HttpClient(new HttpClientHandler { CheckCertificateRevocationList = true }));
+            collection.AddSingleton<IProvisioningProfileProvider>(serviceProvider =>
+            {
+                return new ProvisioningProfileProvider(
+                    serviceProvider.GetRequiredService<TaskLoggingHelper>(),
+                    serviceProvider.GetRequiredService<IHelpers>(),
+                    serviceProvider.GetRequiredService<HttpClient>(),
+                    provisioningProfileUrlTemplate,
+                    tmpDir);
+            });
+        }
     }
 }
