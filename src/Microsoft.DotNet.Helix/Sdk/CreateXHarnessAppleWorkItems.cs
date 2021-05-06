@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.IO.Compression;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Arcade.Common;
@@ -20,8 +19,8 @@ namespace Microsoft.DotNet.Helix.Sdk
         public const string iOSTargetName = "ios-device";
         public const string tvOSTargetName = "tvos-device";
 
-        private const string EntryPointScriptName = "xharness-helix-job.apple.sh";
-        private const string RunnerScriptName = "xharness-runner.apple.sh";
+        private const string EntryPointScriptName = "tools.xharness_runner.xharness-helix-job.apple.sh";
+        private const string RunnerScriptName = "tools.xharness_runner.xharness-runner.apple.sh";
         private const string LaunchTimeoutPropName = "LaunchTimeout";
         private const string IncludesTestRunnerPropName = "IncludesTestRunner";
 
@@ -53,7 +52,8 @@ namespace Microsoft.DotNet.Helix.Sdk
 
         public override void ConfigureServices(IServiceCollection collection)
         {
-            collection.TryAddTransient<IHelpers, Arcade.Common.Helpers>();
+            collection.TryAddProvisioningProfileProvider(ProvisioningProfileUrl, TmpDir);
+            collection.TryAddTransient<IZipArchiveManager, ZipArchiveManager>();
             collection.TryAddSingleton(Log);
         }
 
@@ -62,7 +62,7 @@ namespace Microsoft.DotNet.Helix.Sdk
         /// collates logged errors in order to determine the success of HelixWorkItems
         /// </summary>
         /// <returns>A boolean value indicating the success of HelixWorkItem creation</returns>
-        public bool ExecuteTask(IHelpers helpers, IProvisioningProfileProvider provisioningProfileProvider)
+        public bool ExecuteTask(IProvisioningProfileProvider provisioningProfileProvider, IZipArchiveManager zipArchiveManager)
         {
             if (!IsPosixShell)
             {
@@ -70,18 +70,12 @@ namespace Microsoft.DotNet.Helix.Sdk
                 return false;
             }
 
-            ExecuteAsync(helpers, provisioningProfileProvider).GetAwaiter().GetResult();
-            return !Log.HasLoggedErrors;
-        }
-
-        /// <summary>
-        /// Create work items for XHarness test execution
-        /// </summary>
-        /// <returns></returns>
-        private async Task ExecuteAsync(IHelpers helpers, IProvisioningProfileProvider provisioningProfileProvider)
-        {
             provisioningProfileProvider.AddProfilesToBundles(AppBundles);
-            WorkItems = (await Task.WhenAll(AppBundles.Select(PrepareWorkItem))).Where(wi => wi != null).ToArray();
+            var tasks = AppBundles.Select(bundle => PrepareWorkItem(zipArchiveManager, bundle));
+
+            WorkItems = Task.WhenAll(tasks).GetAwaiter().GetResult().Where(wi => wi != null).ToArray();
+            
+            return !Log.HasLoggedErrors;
         }
 
         /// <summary>
@@ -89,7 +83,7 @@ namespace Microsoft.DotNet.Helix.Sdk
         /// </summary>
         /// <param name="appFolderPath">Path to application package</param>
         /// <returns>An ITaskItem instance representing the prepared HelixWorkItem.</returns>
-        private async Task<ITaskItem> PrepareWorkItem(ITaskItem appBundleItem)
+        private async Task<ITaskItem> PrepareWorkItem(IZipArchiveManager zipArchiveManager, ITaskItem appBundleItem)
         {
             // Forces this task to run asynchronously
             await Task.Yield();
@@ -141,7 +135,7 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             string appName = Path.GetFileName(appBundleItem.ItemSpec);
             string command = GetHelixCommand(appName, target, testTimeout, launchTimeout, includesTestRunner, expectedExitCode);
-            string payloadArchivePath = await CreateZipArchiveOfFolder(appFolderPath);
+            string payloadArchivePath = await CreateZipArchiveOfFolder(zipArchiveManager, appFolderPath);
 
             Log.LogMessage($"Creating work item with properties Identity: {workItemName}, Payload: {appFolderPath}, Command: {command}");
 
@@ -167,7 +161,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             (!string.IsNullOrEmpty(XcodeVersion) ? $" --xcode-version \"{XcodeVersion}\"" : string.Empty) +
             (!string.IsNullOrEmpty(AppArguments) ? $" --app-arguments \"{AppArguments}\"" : string.Empty);
 
-        private async Task<string> CreateZipArchiveOfFolder(string folderToZip)
+        private async Task<string> CreateZipArchiveOfFolder(IZipArchiveManager zipArchiveManager, string folderToZip)
         {
             if (!Directory.Exists(folderToZip))
             {
@@ -176,7 +170,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             }
 
             string appFolderDirectory = Path.GetDirectoryName(folderToZip);
-            string fileName = $"xharness-ios-app-payload-{Path.GetFileName(folderToZip).ToLowerInvariant()}.zip";
+            string fileName = $"xharness-app-payload-{Path.GetFileName(folderToZip).ToLowerInvariant()}.zip";
             string outputZipPath = Path.Combine(appFolderDirectory, fileName);
 
             if (File.Exists(outputZipPath))
@@ -185,11 +179,11 @@ namespace Microsoft.DotNet.Helix.Sdk
                 File.Delete(outputZipPath);
             }
 
-            ZipFile.CreateFromDirectory(folderToZip, outputZipPath, CompressionLevel.Fastest, includeBaseDirectory: true);
+            zipArchiveManager.ArchiveDirectory(folderToZip, outputZipPath, true);
 
-            Log.LogMessage($"Adding the Helix job payload scripts into the ziparchive");
-            await AddResourceFileToPayload(outputZipPath, EntryPointScriptName);
-            await AddResourceFileToPayload(outputZipPath, RunnerScriptName);
+            Log.LogMessage($"Adding the XHarness job scripts into the payload archive");
+            await zipArchiveManager.AddResourceFileToArchive<CreateXHarnessAppleWorkItems>(outputZipPath, EntryPointScriptName);
+            await zipArchiveManager.AddResourceFileToArchive<CreateXHarnessAppleWorkItems>(outputZipPath, RunnerScriptName);
 
             return outputZipPath;
         }

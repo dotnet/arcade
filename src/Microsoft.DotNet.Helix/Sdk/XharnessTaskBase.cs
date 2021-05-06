@@ -1,8 +1,4 @@
 using System;
-using System.IO;
-using System.IO.Compression;
-using System.Reflection;
-using System.Threading.Tasks;
 using Microsoft.Arcade.Common;
 using Microsoft.Build.Framework;
 using Newtonsoft.Json;
@@ -94,27 +90,6 @@ namespace Microsoft.DotNet.Helix.Sdk
                 TestTimeout: testTimeout,
                 WorkItemTimeout: workItemTimeout,
                 ExpectedExitCode: expectedExitCode);
-        }
-
-        protected static async Task AddResourceFileToPayload(string payloadArchivePath, string resourceFileName, string targetFileName = null)
-        {
-            using Stream fileStream = GetResourceFileContent(resourceFileName);
-            await AddToPayloadArchive(payloadArchivePath, targetFileName ?? resourceFileName, fileStream);
-        }
-
-        protected static async Task AddToPayloadArchive(string payloadArchivePath, string targetFilename, Stream content)
-        {
-            using FileStream archiveStream = new FileStream(payloadArchivePath, FileMode.Open);
-            using ZipArchive archive = new ZipArchive(archiveStream, ZipArchiveMode.Update);
-            ZipArchiveEntry entry = archive.CreateEntry(targetFilename);
-            using Stream targetStream = entry.Open();
-            await content.CopyToAsync(targetStream);
-        }
-
-        protected static Stream GetResourceFileContent(string resourceFileName)
-        {
-            Assembly thisAssembly = typeof(XHarnessTaskBase).Assembly;
-            return thisAssembly.GetManifestResourceStream($"{thisAssembly.GetName().Name}.tools.xharness_runner.{resourceFileName}");
         }
     }
 }
