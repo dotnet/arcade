@@ -129,6 +129,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public string SymbolsFeedOverride { get; set; }
 
+        public string PublicSymbolsFeedOverride { get; set; }
+
         /// <summary>
         /// Path to dll and pdb files
         /// </summary>
@@ -381,6 +383,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 ShippingFeedOverride = this.ShippingFeedOverride,
                 TransportFeedOverride = this.TransportFeedOverride,
                 SymbolsFeedOverride = this.SymbolsFeedOverride,
+                PublicSymbolsFeedOverride = this.PublicSymbolsFeedOverride,
                 ArtifactsBasePath =  this.ArtifactsBasePath,
                 AzdoApiToken = this.AzdoApiToken,
                 BuildId = this.BuildId,
