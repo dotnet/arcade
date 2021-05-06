@@ -55,6 +55,7 @@ namespace Microsoft.DotNet.Helix.Sdk
         {
             collection.TryAddProvisioningProfileProvider(ProvisioningProfileUrl, TmpDir);
             collection.TryAddTransient<IZipArchiveManager, ZipArchiveManager>();
+            collection.TryAddTransient<IFileSystem, FileSystem>();
             collection.TryAddSingleton(Log);
         }
 
@@ -63,10 +64,13 @@ namespace Microsoft.DotNet.Helix.Sdk
         /// collates logged errors in order to determine the success of HelixWorkItems
         /// </summary>
         /// <returns>A boolean value indicating the success of HelixWorkItem creation</returns>
-        public bool ExecuteTask(IProvisioningProfileProvider provisioningProfileProvider, IZipArchiveManager zipArchiveManager)
+        public bool ExecuteTask(
+            IProvisioningProfileProvider provisioningProfileProvider,
+            IZipArchiveManager zipArchiveManager,
+            IFileSystem fileSystem)
         {
             provisioningProfileProvider.AddProfilesToBundles(AppBundles);
-            var tasks = AppBundles.Select(bundle => PrepareWorkItem(zipArchiveManager, bundle));
+            var tasks = AppBundles.Select(bundle => PrepareWorkItem(zipArchiveManager, fileSystem, bundle));
 
             WorkItems = Task.WhenAll(tasks).GetAwaiter().GetResult().Where(wi => wi != null).ToArray();
             
@@ -78,17 +82,20 @@ namespace Microsoft.DotNet.Helix.Sdk
         /// </summary>
         /// <param name="appFolderPath">Path to application package</param>
         /// <returns>An ITaskItem instance representing the prepared HelixWorkItem.</returns>
-        private async Task<ITaskItem> PrepareWorkItem(IZipArchiveManager zipArchiveManager, ITaskItem appBundleItem)
+        private async Task<ITaskItem> PrepareWorkItem(
+            IZipArchiveManager zipArchiveManager,
+            IFileSystem fileSystem,
+            ITaskItem appBundleItem)
         {
             // Forces this task to run asynchronously
             await Task.Yield();
 
             string appFolderPath = appBundleItem.ItemSpec.TrimEnd(Path.DirectorySeparatorChar);
             
-            string workItemName = Path.GetFileName(appFolderPath);
+            string workItemName = fileSystem.GetFileName(appFolderPath);
             if (workItemName.EndsWith(".app"))
             {
-                workItemName = workItemName.Substring(0, workItemName.Length - 4);
+                workItemName = workItemName[0..^4];
             }
 
             var (testTimeout, workItemTimeout, expectedExitCode) = ParseMetadata(appBundleItem);
@@ -128,9 +135,9 @@ namespace Microsoft.DotNet.Helix.Sdk
                 Log.LogWarning("The ExpectedExitCode property is ignored in the `apple test` scenario");
             }
 
-            string appName = Path.GetFileName(appBundleItem.ItemSpec);
+            string appName = fileSystem.GetFileName(appBundleItem.ItemSpec);
             string command = GetHelixCommand(appName, target, testTimeout, launchTimeout, includesTestRunner, expectedExitCode);
-            string payloadArchivePath = await CreateZipArchiveOfFolder(zipArchiveManager, appFolderPath);
+            string payloadArchivePath = await CreateZipArchiveOfFolder(zipArchiveManager, fileSystem, appFolderPath);
 
             Log.LogMessage($"Creating work item with properties Identity: {workItemName}, Payload: {appFolderPath}, Command: {command}");
 
@@ -156,22 +163,22 @@ namespace Microsoft.DotNet.Helix.Sdk
             (!string.IsNullOrEmpty(XcodeVersion) ? $" --xcode-version \"{XcodeVersion}\"" : string.Empty) +
             (!string.IsNullOrEmpty(AppArguments) ? $" --app-arguments \"{AppArguments}\"" : string.Empty);
 
-        private async Task<string> CreateZipArchiveOfFolder(IZipArchiveManager zipArchiveManager, string folderToZip)
+        private async Task<string> CreateZipArchiveOfFolder(IZipArchiveManager zipArchiveManager, IFileSystem fileSystem, string folderToZip)
         {
-            if (!Directory.Exists(folderToZip))
+            if (!fileSystem.DirectoryExists(folderToZip))
             {
                 Log.LogError($"Cannot find path containing app: '{folderToZip}'");
                 return string.Empty;
             }
 
-            string appFolderDirectory = Path.GetDirectoryName(folderToZip);
-            string fileName = $"xharness-app-payload-{Path.GetFileName(folderToZip).ToLowerInvariant()}.zip";
-            string outputZipPath = Path.Combine(appFolderDirectory, fileName);
+            string appFolderDirectory = fileSystem.GetDirectoryName(folderToZip);
+            string fileName = $"xharness-app-payload-{fileSystem.GetFileName(folderToZip).ToLowerInvariant()}.zip";
+            string outputZipPath = fileSystem.PathCombine(appFolderDirectory, fileName);
 
-            if (File.Exists(outputZipPath))
+            if (fileSystem.FileExists(outputZipPath))
             {
                 Log.LogMessage($"Zip archive '{outputZipPath}' already exists, overwriting..");
-                File.Delete(outputZipPath);
+                fileSystem.DeleteFile(outputZipPath);
             }
 
             zipArchiveManager.ArchiveDirectory(folderToZip, outputZipPath, true);

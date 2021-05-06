@@ -38,6 +38,7 @@ namespace Microsoft.DotNet.Helix.Sdk
         public override void ConfigureServices(IServiceCollection collection)
         {
             collection.TryAddTransient<IZipArchiveManager, ZipArchiveManager>();
+            collection.TryAddTransient<IFileSystem, FileSystem>();
             collection.TryAddSingleton(Log);
         }
 
@@ -46,9 +47,9 @@ namespace Microsoft.DotNet.Helix.Sdk
         /// collates logged errors in order to determine the success of HelixWorkItems
         /// </summary>
         /// <returns>A boolean value indicating the success of HelixWorkItem creation</returns>
-        public bool Execute(IZipArchiveManager zipArchiveManager)
+        public bool Execute(IZipArchiveManager zipArchiveManager, IFileSystem fileSystem)
         {
-            var tasks = Apks.Select(apk => PrepareWorkItem(zipArchiveManager, apk));
+            var tasks = Apks.Select(apk => PrepareWorkItem(zipArchiveManager, fileSystem, apk));
 
             WorkItems = Task.WhenAll(tasks).GetAwaiter().GetResult().Where(wi => wi != null).ToArray();
 
@@ -60,25 +61,25 @@ namespace Microsoft.DotNet.Helix.Sdk
         /// </summary>
         /// <param name="appPackage">Path to application package</param>
         /// <returns>An ITaskItem instance representing the prepared HelixWorkItem.</returns>
-        private async Task<ITaskItem> PrepareWorkItem(IZipArchiveManager zipArchiveManager, ITaskItem appPackage)
+        private async Task<ITaskItem> PrepareWorkItem(IZipArchiveManager zipArchiveManager, IFileSystem fileSystem, ITaskItem appPackage)
         {
             // Forces this task to run asynchronously
             await Task.Yield();
-            string workItemName = Path.GetFileNameWithoutExtension(appPackage.ItemSpec);
+            string workItemName = fileSystem.GetFileNameWithoutExtension(appPackage.ItemSpec);
 
             var (testTimeout, workItemTimeout, expectedExitCode) = ParseMetadata(appPackage);
 
             string command = ValidateMetadataAndGetXHarnessAndroidCommand(appPackage, testTimeout, expectedExitCode);
 
-            if (!Path.GetExtension(appPackage.ItemSpec).Equals(".apk", StringComparison.OrdinalIgnoreCase))
+            if (!fileSystem.GetExtension(appPackage.ItemSpec).Equals(".apk", StringComparison.OrdinalIgnoreCase))
             {
-                Log.LogError($"Unsupported app package type: {Path.GetFileName(appPackage.ItemSpec)}");
+                Log.LogError($"Unsupported app package type: {fileSystem.GetFileName(appPackage.ItemSpec)}");
                 return null;
             }
 
             Log.LogMessage($"Creating work item with properties Identity: {workItemName}, Payload: {appPackage.ItemSpec}, Command: {command}");
 
-            string workItemZip = await CreateZipArchiveOfPackageAsync(zipArchiveManager, appPackage.ItemSpec);
+            string workItemZip = await CreateZipArchiveOfPackageAsync(zipArchiveManager, fileSystem, appPackage.ItemSpec);
 
             return new Build.Utilities.TaskItem(workItemName, new Dictionary<string, string>()
             {
@@ -89,15 +90,15 @@ namespace Microsoft.DotNet.Helix.Sdk
             });
         }
 
-        private async Task<string> CreateZipArchiveOfPackageAsync(IZipArchiveManager zipArchiveManager, string fileToZip)
+        private async Task<string> CreateZipArchiveOfPackageAsync(IZipArchiveManager zipArchiveManager, IFileSystem fileSystem, string fileToZip)
         {
-            string fileName = $"xharness-apk-payload-{Path.GetFileNameWithoutExtension(fileToZip).ToLowerInvariant()}.zip";
-            string outputZipPath = Path.Combine(Path.GetDirectoryName(fileToZip), fileName);
+            string fileName = $"xharness-apk-payload-{fileSystem.GetFileNameWithoutExtension(fileToZip).ToLowerInvariant()}.zip";
+            string outputZipPath = fileSystem.PathCombine(fileSystem.GetDirectoryName(fileToZip), fileName);
 
-            if (File.Exists(outputZipPath))
+            if (fileSystem.FileExists(outputZipPath))
             {
                 Log.LogMessage($"Zip archive '{outputZipPath}' already exists, overwriting..");
-                File.Delete(outputZipPath);
+                fileSystem.DeleteFile(outputZipPath);
             }
 
             zipArchiveManager.ArchiveFile(fileToZip, outputZipPath);

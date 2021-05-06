@@ -32,14 +32,22 @@ namespace Microsoft.DotNet.Helix.Sdk
 
         private readonly TaskLoggingHelper _log;
         private readonly IHelpers _helpers;
+        private readonly IFileSystem _fileSystem;
         private readonly HttpClient _httpClient;
         private readonly string? _profileUrlTemplate;
         private readonly string? _tmpDir;
 
-        public ProvisioningProfileProvider(TaskLoggingHelper log, IHelpers helpers, HttpClient httpClient, string? profileUrlTemplate, string? tmpDir)
+        public ProvisioningProfileProvider(
+            TaskLoggingHelper log,
+            IHelpers helpers,
+            IFileSystem fileSystem,
+            HttpClient httpClient,
+            string? profileUrlTemplate,
+            string? tmpDir)
         {
             _log = log ?? throw new ArgumentNullException(nameof(log));
             _helpers = helpers ?? throw new ArgumentNullException(nameof(helpers));
+            _fileSystem = fileSystem ?? throw new ArgumentNullException(nameof(fileSystem));
             _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
             _profileUrlTemplate = profileUrlTemplate;
             _tmpDir = tmpDir;
@@ -69,8 +77,8 @@ namespace Microsoft.DotNet.Helix.Sdk
                     }
 
                     // App comes with a profile already
-                    var provisioningProfileDestPath = Path.Combine(appBundle.ItemSpec, "embedded.mobileprovision");
-                    if (File.Exists(provisioningProfileDestPath))
+                    var provisioningProfileDestPath = _fileSystem.PathCombine(appBundle.ItemSpec, "embedded.mobileprovision");
+                    if (_fileSystem.FileExists(provisioningProfileDestPath))
                     {
                         _log.LogMessage($"Bundle already contains a provisioning profile at `{provisioningProfileDestPath}`");
                         continue;
@@ -97,18 +105,18 @@ namespace Microsoft.DotNet.Helix.Sdk
 
                     // Copy the profile into the folder
                     _log.LogMessage($"Adding provisioning profile `{profilePath}` into the app bundle at `{provisioningProfileDestPath}`");
-                    File.Copy(profilePath, provisioningProfileDestPath);
+                    _fileSystem.FileCopy(profilePath, provisioningProfileDestPath);
                 }
             }
         }
 
         private string DownloadProvisioningProfile(ApplePlatform platform)
         {
-            var targetFile = Path.Combine(_tmpDir!, GetProvisioningProfileFileName(platform));
+            var targetFile = _fileSystem.PathCombine(_tmpDir!, GetProvisioningProfileFileName(platform));
 
             _helpers.DirectoryMutexExec(async () =>
             {
-                if (File.Exists(targetFile))
+                if (_fileSystem.FileExists(targetFile))
                 {
                     _log.LogMessage($"Provisioning profile is already downloaded");
                     return;
@@ -120,16 +128,19 @@ namespace Microsoft.DotNet.Helix.Sdk
                 using var response = await _httpClient.GetAsync(uri);
                 response.EnsureSuccessStatusCode();
 
-                using var fileStream = new FileStream(targetFile, FileMode.Create, FileAccess.Write);
+                using var fileStream = _fileSystem.GetFileStream(targetFile, FileMode.Create, FileAccess.Write);
                 await response.Content.CopyToAsync(fileStream);
             }, _tmpDir);
 
             return targetFile;
         }
 
-        private string GetProvisioningProfileFileName(ApplePlatform platform) => Path.GetFileName(GetProvisioningProfileUrl(platform));
+        private string GetProvisioningProfileFileName(ApplePlatform platform)
+            => _fileSystem.GetFileName(GetProvisioningProfileUrl(platform))
+                ?? throw new InvalidOperationException("Failed to get provision profile file name");
 
-        private string GetProvisioningProfileUrl(ApplePlatform platform) => _profileUrlTemplate!.Replace("{PLATFORM}", platform.ToString());
+        private string GetProvisioningProfileUrl(ApplePlatform platform)
+            => _profileUrlTemplate!.Replace("{PLATFORM}", platform.ToString());
     }
 
     public static class ProvisioningProfileProviderRegistration
@@ -137,12 +148,14 @@ namespace Microsoft.DotNet.Helix.Sdk
         public static void TryAddProvisioningProfileProvider(this IServiceCollection collection, string provisioningProfileUrlTemplate, string tmpDir)
         {
             collection.TryAddTransient<IHelpers, Arcade.Common.Helpers>();
+            collection.TryAddTransient<IFileSystem, FileSystem>();
             collection.TryAddSingleton(_ => new HttpClient(new HttpClientHandler { CheckCertificateRevocationList = true }));
             collection.AddSingleton<IProvisioningProfileProvider>(serviceProvider =>
             {
                 return new ProvisioningProfileProvider(
                     serviceProvider.GetRequiredService<TaskLoggingHelper>(),
                     serviceProvider.GetRequiredService<IHelpers>(),
+                    serviceProvider.GetRequiredService<IFileSystem>(),
                     serviceProvider.GetRequiredService<HttpClient>(),
                     provisioningProfileUrlTemplate,
                     tmpDir);
