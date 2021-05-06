@@ -6,6 +6,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -428,7 +429,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             string localSymbolPath = Path.Combine(temporarySymbolsDirectory, symbol);
                             symbolLog.AppendLine($"Downloading symbol : {symbol} to {localSymbolPath}");
 
-                            var downloadStartTime = DateTime.Now;
+                            Stopwatch gatherDownloadTime = Stopwatch.StartNew();
                             await DownloadFileAsync(
                                 client,
                                 ArtifactName.BlobArtifacts,
@@ -436,8 +437,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                                 symbol,
                                 localSymbolPath);
                             
-                            var downloadEndTime = DateTime.Now;
-                            symbolLog.AppendLine($"Time taken to download file to '{localSymbolPath}' is {downloadEndTime - downloadStartTime}");
+                            gatherDownloadTime.Stop();
+                            symbolLog.AppendLine($"Time taken to download file to '{localSymbolPath}' is {gatherDownloadTime.ElapsedMilliseconds / 1000} (seconds)");
                             symbolLog.AppendLine($"Successfully downloaded symbol : {symbol} to {localSymbolPath}");
 
                             List<string> symbolFiles = new List<string>();
@@ -449,7 +450,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                                 var serverPath = server.Key;
                                 var token = server.Value;
                                 symbolLog.AppendLine($"Publishing symbol file {symbol} to {serverPath}:");
-                                var symbolPublishingStartTime = DateTime.Now;
+                                Stopwatch gatherSymbolPublishingTime = Stopwatch.StartNew();
 
                                 try
                                 {
@@ -473,8 +474,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                                     Log.LogError(ex.Message);
                                 }
 
+                                gatherSymbolPublishingTime.Stop();
                                 symbolLog.AppendLine(
-                                    $"Symbol publishing for {symbol} took {DateTime.Now - symbolPublishingStartTime}");
+                                    $"Symbol publishing for {symbol} took {gatherSymbolPublishingTime.ElapsedMilliseconds / 1000} (seconds)");
                             }
 
                             DeleteTemporaryDirectory(temporarySymbolsDirectory);
@@ -1158,7 +1160,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     Log.LogMessage(MessageImportance.Low,
                         $"Downloading package : {packageFilename} to {localPackagePath}");
 
-                    var downloadStartTime = DateTime.Now;
+                    Stopwatch gatherPackageDownloadTime = Stopwatch.StartNew();
                     await DownloadFileAsync(
                         client,
                         ArtifactName.PackageArtifacts,
@@ -1173,7 +1175,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         return;
                     }
 
-                    Log.LogMessage(MessageImportance.Low, $"Time taken to download file to '{localPackagePath}' is {DateTime.Now - downloadStartTime}");
+                    gatherPackageDownloadTime.Stop();
+                    Log.LogMessage(MessageImportance.Low, $"Time taken to download file to '{localPackagePath}' is {gatherPackageDownloadTime.ElapsedMilliseconds / 1000} (seconds)");
                     Log.LogMessage(MessageImportance.Low,
                         $"Successfully downloaded package : {packageFilename} to {localPackagePath}");
 
@@ -1195,9 +1198,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         Convert.ToBase64String(
                             Encoding.ASCII.GetBytes(string.Format("{0}:{1}", "", feedConfig.Token))));
 
-                    var packagePublishingStartTime = DateTime.Now;
+                    Stopwatch gatherPackagePublishingTime = Stopwatch.StartNew();
                     await PushPackageToNugetFeed(httpClient, feedConfig, localPackagePath, package.Id, package.Version);
-                    Log.LogMessage(MessageImportance.Low,$"Publishing package {localPackagePath} took {DateTime.Now - packagePublishingStartTime}");
+                    gatherPackagePublishingTime.Stop();
+                    Log.LogMessage(MessageImportance.Low,$"Publishing package {localPackagePath} took {gatherPackagePublishingTime.ElapsedMilliseconds / 1000} (seconds)");
 
                     DeleteTemporaryDirectory(localPackagePath);
                 }
@@ -1514,7 +1518,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         string localBlobPath = Path.Combine(temporaryBlobDirectory, fileName);
                         Log.LogMessage(MessageImportance.Low, $"Downloading blob : {fileName} to {localBlobPath}");
 
-                        var downloadStartTime = DateTime.Now;
+                        Stopwatch gatherBlobDownloadTime = Stopwatch.StartNew();
                         await DownloadFileAsync(
                             client,
                             ArtifactName.BlobArtifacts,
@@ -1526,8 +1530,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         {
                             Log.LogError($"Could not locate '{blob.Id} at '{localBlobPath}'");
                         }
-                        var downloadEndTime = DateTime.Now;
-                        Log.LogMessage(MessageImportance.Low, $"Time taken to download file to '{localBlobPath}' is {downloadEndTime - downloadStartTime}");
+                        gatherBlobDownloadTime.Stop();
+                        Log.LogMessage(MessageImportance.Low, $"Time taken to download file to '{localBlobPath}' is {gatherBlobDownloadTime.ElapsedMilliseconds / 1000} (seconds)");
 
                         Log.LogMessage(MessageImportance.Low,
                             $"Successfully downloaded blob : {fileName} to {localBlobPath}");
@@ -1541,13 +1545,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             version = packageIdentity.Version.ToString();
                         }
 
-                        var blobPublishingStartTime = DateTime.Now;
+                        Stopwatch gatherBlobPublishingTime = Stopwatch.StartNew();
                         await PushBlobToNugetFeed(
                             feedConfig,
                             localBlobPath,
                             id,
                             version);
-                        Log.LogMessage(MessageImportance.Low, $"Time taken to publish blob {localBlobPath} is {DateTime.Now - blobPublishingStartTime}");
+                        gatherBlobPublishingTime.Stop();
+                        Log.LogMessage(MessageImportance.Low, $"Time taken to publish blob {localBlobPath} is {gatherBlobPublishingTime.ElapsedMilliseconds / 1000} (seconds)");
 
                         DeleteTemporaryDirectory(temporaryBlobDirectory);
                     }
@@ -1675,7 +1680,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     var localBlobPath = Path.Combine(temporaryBlobDirectory, fileName);
                     Log.LogMessage(MessageImportance.Low, $"Downloading blob : {fileName} to {localBlobPath}");
 
-                    var downloadStartTime = DateTime.Now;
+                    Stopwatch gatherBlobDownloadTime = Stopwatch.StartNew();
                     await DownloadFileAsync(
                         client,
                         ArtifactName.BlobArtifacts,
@@ -1687,7 +1692,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     {
                         Log.LogError($"Could not locate '{blob.Id} at '{localBlobPath}'");
                     }
-                    Log.LogMessage(MessageImportance.Low, $"Time taken to download file to '{localBlobPath}' is {DateTime.Now - downloadStartTime}");
+                    gatherBlobDownloadTime.Stop();
+                    Log.LogMessage(MessageImportance.Low, $"Time taken to download file to '{localBlobPath}' is {gatherBlobDownloadTime.ElapsedMilliseconds / 1000} (seconds)");
 
                     Log.LogMessage(MessageImportance.Low,
                         $"Successfully downloaded blob : {fileName} to {localBlobPath}");
@@ -1705,9 +1711,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         feedConfig,
                         AddAssetLocationToAssetAssetLocationType.Container);
 
-                    var blobPublishStartTime = DateTime.Now;
+                    Stopwatch gatherBlobPublishingTime = Stopwatch.StartNew();
                     await blobFeedAction.UploadAssetAsync(item, pushOptions, null);
-                    Log.LogMessage(MessageImportance.Low,$"Publishing {item.ItemSpec} completed in {DateTime.Now - blobPublishStartTime}");
+                    gatherBlobPublishingTime.Stop();
+                    Log.LogMessage(MessageImportance.Low,$"Publishing {item.ItemSpec} completed in {gatherBlobPublishingTime.ElapsedMilliseconds / 1000} (seconds)");
 
                     DeleteTemporaryDirectory(temporaryBlobDirectory);
                 }
