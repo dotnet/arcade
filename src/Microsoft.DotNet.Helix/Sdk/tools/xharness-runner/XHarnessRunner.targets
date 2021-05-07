@@ -54,6 +54,7 @@
       <HelixPreCommands>$(HelixPreCommands);export XHARNESS_DISABLE_COLORED_OUTPUT=true</HelixPreCommands>
       <HelixPreCommands>$(HelixPreCommands);export XHARNESS_LOG_WITH_TIMESTAMPS=true</HelixPreCommands>
       <HelixPreCommands>$(HelixPreCommands);export XHARNESS_CLI_PATH=$HELIX_CORRELATION_PAYLOAD/microsoft.dotnet.xharness.cli/$(_XHarnessPackageVersion)/tools/net6.0/any/Microsoft.DotNet.XHarness.CLI.dll</HelixPreCommands>
+      <HelixPreCommands>$(HelixPreCommands);alias xharness='dotnet exec "$XHARNESS_CLI_PATH"'</HelixPreCommands>
     </PropertyGroup>
 
     <PropertyGroup Condition="!$(IsPosixShell)">
@@ -61,6 +62,7 @@
       <HelixPreCommands>$(HelixPreCommands);set XHARNESS_DISABLE_COLORED_OUTPUT=true</HelixPreCommands>
       <HelixPreCommands>$(HelixPreCommands);set XHARNESS_LOG_WITH_TIMESTAMPS=true</HelixPreCommands>
       <HelixPreCommands>$(HelixPreCommands);set XHARNESS_CLI_PATH=%HELIX_CORRELATION_PAYLOAD%\microsoft.dotnet.xharness.cli\$(_XHarnessPackageVersion)\tools\net6.0\any\Microsoft.DotNet.XHarness.CLI.dll</HelixPreCommands>
+      <!-- TODO: Add the same alias as above -->
     </PropertyGroup>
   </Target>
 
@@ -91,18 +93,20 @@
   </Target>
 
   <Target Name="CreateAndroidWorkItems"
-          Condition=" '@(XHarnessApkToTest)' != '' "
+          Condition=" '@(XHarnessApkToTest)' != '' || '@(AndroidHelixWorkItem)' != '' "
           BeforeTargets="CoreTest">
     <CreateXHarnessAndroidWorkItems Apks="@(XHarnessApkToTest)"
+                                    AndroidWorkItems="@(AndroidHelixWorkItem)"
                                     IsPosixShell="$(IsPosixShell)">
       <Output TaskParameter="WorkItems" ItemName="HelixWorkItem"/>
     </CreateXHarnessAndroidWorkItems>
   </Target>
 
   <Target Name="CreateAppleWorkItems"
-          Condition=" '@(XHarnessAppBundleToTest)' != '' "
+          Condition=" '@(XHarnessAppBundleToTest)' != '' || '@(AppleHelixWorkItem)' != '' "
           BeforeTargets="CoreTest">
     <CreateXHarnessAppleWorkItems AppBundles="@(XHarnessAppBundleToTest)"
+                                  AppleWorkItems="@(AppleHelixWorkItem)"
                                   XcodeVersion="$(XHarnessXcodeVersion)"
                                   ProvisioningProfileUrl="$(XHarnessAppleProvisioningProfileUrl)"
                                   TmpDir="$(ArtifactsTmpDir)">

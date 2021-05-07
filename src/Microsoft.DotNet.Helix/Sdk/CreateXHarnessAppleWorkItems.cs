@@ -35,6 +35,12 @@ namespace Microsoft.DotNet.Helix.Sdk
         public ITaskItem[] AppBundles { get; set; }
 
         /// <summary>
+        /// An array of hand-crafted HelixWorkItems where users can specify their own XHarness commands.
+        /// </summary>
+        [Required]
+        public ITaskItem[] AppleWorkItems { get; set; }
+
+        /// <summary>
         /// Xcode version to use, e.g. 11.4 or 12.5_beta3.
         /// </summary>
         public string XcodeVersion { get; set; }
