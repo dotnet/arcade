@@ -18,6 +18,7 @@ namespace Microsoft.DotNet.Helix.Sdk
         private const string ArgumentsPropName = "Arguments";
         private const string AndroidInstrumentationNamePropName = "AndroidInstrumentationName";
         private const string DeviceOutputPathPropName = "DeviceOutputPath";
+        private const string AndroidPackageNamePropName = "AndroidPackageName";
 
         private const string PosixAndroidWrapperScript = "tools.xharness_runner.xharness-helix-job.android.sh";
         private const string NonPosixAndroidWrapperScript = "tools.xharness_runner.xharness-helix-job.android.bat";
@@ -47,7 +48,7 @@ namespace Microsoft.DotNet.Helix.Sdk
         /// collates logged errors in order to determine the success of HelixWorkItems
         /// </summary>
         /// <returns>A boolean value indicating the success of HelixWorkItem creation</returns>
-        public bool Execute(IZipArchiveManager zipArchiveManager, IFileSystem fileSystem)
+        public bool ExecuteTask(IZipArchiveManager zipArchiveManager, IFileSystem fileSystem)
         {
             var tasks = Apks.Select(apk => PrepareWorkItem(zipArchiveManager, fileSystem, apk));
 
@@ -114,9 +115,9 @@ namespace Microsoft.DotNet.Helix.Sdk
         private string ValidateMetadataAndGetXHarnessAndroidCommand(ITaskItem appPackage, TimeSpan xHarnessTimeout, int expectedExitCode)
         {
             // Validation of any metadata specific to Android stuff goes here
-            if (!appPackage.GetRequiredMetadata(Log, "AndroidPackageName", out string androidPackageName))
+            if (!appPackage.GetRequiredMetadata(Log, AndroidPackageNamePropName, out string androidPackageName))
             {
-                Log.LogError("AndroidPackageName metadata must be specified; this may match, but can vary from file name");
+                Log.LogError($"{AndroidPackageNamePropName} metadata must be specified; this may match, but can vary from file name");
                 return null;
             }
 

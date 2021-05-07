@@ -12,40 +12,38 @@ using Xunit;
 #nullable enable
 namespace Microsoft.DotNet.Helix.Sdk.Tests
 {
-    public class CreateXHarnessAppleWorkItemsTests
+    public class CreateXHarnessAndroidWorkItemsTests
     {
         private readonly MockFileSystem _fileSystem;
-        private readonly Mock<IProvisioningProfileProvider> _profileProvider;
         private readonly Mock<IZipArchiveManager> _zipArchiveManager;
-        private readonly CreateXHarnessAppleWorkItems _task;
+        private readonly CreateXHarnessAndroidWorkItems _task;
 
-        public CreateXHarnessAppleWorkItemsTests()
+        public CreateXHarnessAndroidWorkItemsTests()
         {
             _fileSystem = new MockFileSystem();
-            _profileProvider = new();
             _zipArchiveManager = new();
             _zipArchiveManager.SetReturnsDefault(Task.CompletedTask);
             _zipArchiveManager
-                .Setup(x => x.ArchiveDirectory(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<bool>()))
-                .Callback<string, string, bool>((folder, zipPath, _) =>
+                .Setup(x => x.ArchiveFile(It.IsAny<string>(), It.IsAny<string>()))
+                .Callback<string, string>((folder, zipPath) =>
                 {
                     _fileSystem.Files.Add(zipPath, "zip of " + folder);
                 });
 
-            _task = new CreateXHarnessAppleWorkItems()
+            _task = new CreateXHarnessAndroidWorkItems()
             {                
                 BuildEngine = new MockBuildEngine(),
             };
         }
 
         [Fact]
-        public void MissingTargetsPropertyIsCaught()
+        public void MissingApkNamePropertyIsCaught()
         {
             var collection = CreateMockServiceCollection();
             _task.ConfigureServices(collection);
-            _task.AppBundles = new[]
+            _task.Apks = new[]
             {
-                CreateAppBundle("/apps/System.Foo.app", null!)
+                CreateApk("/apks/System.Foo.app", null!)
             };
 
             // Act
@@ -57,15 +55,14 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         }
 
         [Fact]
-        public void AppleXHarnessWorkItemIsCreated()
+        public void AndroidXHarnessWorkItemIsCreated()
         {
             var collection = CreateMockServiceCollection();
             _task.ConfigureServices(collection);
-            _task.AppBundles = new[]
+            _task.Apks = new[]
             {
-                CreateAppBundle("/apps/System.Foo.app", "ios-device_13.5", "00:15:42", "00:08:55", "00:02:33")
+                CreateApk("/apks/System.Foo.apk", "System.Foo", "00:15:42", "00:08:55")
             };
-            _task.TmpDir = "/tmp";
 
             // Act
             using var provider = collection.BuildServiceProvider();
@@ -83,16 +80,12 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             _fileSystem.FileExists(payloadArchive).Should().BeTrue();
 
             var command = workItem.GetMetadata("Command");
-            command.Should().Contain("--command test");
             command.Should().Contain("--timeout \"00:08:55\"");
-            command.Should().Contain("--launch-timeout \"00:02:33\"");
 
-            _profileProvider
-                .Verify(x => x.AddProfilesToBundles(It.Is<ITaskItem[]>(bundles => bundles.Any(b => b.ItemSpec == "/apps/System.Foo.app"))), Times.AtLeastOnce);
             _zipArchiveManager
-                .Verify(x => x.AddResourceFileToArchive<CreateXHarnessAppleWorkItems>(payloadArchive, It.Is<string>(s => s.Contains("xharness-helix-job.apple.sh")), It.IsAny<string>()), Times.AtLeastOnce);
+                .Verify(x => x.AddResourceFileToArchive<CreateXHarnessAndroidWorkItems>(payloadArchive, It.Is<string>(s => s.Contains("xharness-helix-job.android.sh")), It.IsAny<string>()), Times.AtLeastOnce);
             _zipArchiveManager
-                .Verify(x => x.AddResourceFileToArchive<CreateXHarnessAppleWorkItems>(payloadArchive, It.Is<string>(s => s.Contains("xharness-runner.apple.sh")), It.IsAny<string>()), Times.AtLeastOnce);
+                .Verify(x => x.AddResourceFileToArchive<CreateXHarnessAndroidWorkItems>(payloadArchive, It.Is<string>(s => s.Contains("xharness-helix-job.android.bat")), It.IsAny<string>()), Times.AtLeastOnce);
         }
 
         [Fact]
@@ -100,13 +93,13 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         {
             var collection = CreateMockServiceCollection();
             _task.ConfigureServices(collection);
-            _task.AppBundles = new[]
+            _task.Apks = new[]
             {
-                CreateAppBundle("apps/System.Foo.app", "ios-simulator-64_13.5"),
-                CreateAppBundle("apps/System.Bar.app", "ios-simulator-64_13.5"),
+                CreateApk("apks/System.Foo.apk", "System.Foo"),
+                CreateApk("apks/System.Bar.apk", "System.Bar"),
             };
 
-            _fileSystem.Files.Add("apps/xharness-app-payload-system.foo.app.zip", "archive");
+            _fileSystem.Files.Add("apks/xharness-apk-payload-system.foo.zip", "archive");
 
             // Act
             using var provider = collection.BuildServiceProvider();
@@ -130,7 +123,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         [Fact]
         public void AreDependenciesRegistered()
         {
-            var task = new CreateXHarnessAppleWorkItems();
+            var task = new CreateXHarnessAndroidWorkItems();
 
             var collection = new ServiceCollection();
             task.ConfigureServices(collection);
@@ -145,19 +138,16 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             .BeTrue(message);
         }
 
-        private ITaskItem CreateAppBundle(
+        private ITaskItem CreateApk(
             string path,
-            string targets,
+            string apkName,
             string? workItemTimeout = null,
             string? testTimeout = null,
-            string? launchTimeout = null,
-            int expectedExitCode = 0,
-            bool includesTestRunner = true)
+            int expectedExitCode = 0)
         {
             var mockBundle = new Mock<ITaskItem>();
             mockBundle.SetupGet(x => x.ItemSpec).Returns(path);
-            mockBundle.Setup(x => x.GetMetadata(CreateXHarnessAppleWorkItems.TargetPropName)).Returns(targets);
-            mockBundle.Setup(x => x.GetMetadata("IncludesTestRunner")).Returns(includesTestRunner.ToString());
+            mockBundle.Setup(x => x.GetMetadata("AndroidPackageName")).Returns(apkName);
 
             if (workItemTimeout != null)
             {
@@ -169,17 +159,12 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 mockBundle.Setup(x => x.GetMetadata("TestTimeout")).Returns(testTimeout);
             }
 
-            if (launchTimeout != null)
-            {
-                mockBundle.Setup(x => x.GetMetadata("LaunchTimeout")).Returns(launchTimeout);
-            }
-
             if (expectedExitCode != 0)
             {
                 mockBundle.Setup(x => x.GetMetadata("ExpectedExitCode")).Returns(expectedExitCode.ToString());
             }
 
-            _fileSystem.CreateDirectory(path);
+            _fileSystem.WriteToFile(path, "apk");
 
             return mockBundle.Object;
         }
@@ -188,7 +173,6 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         {
             var collection = new ServiceCollection();
             collection.AddSingleton<IFileSystem>(_fileSystem);
-            collection.AddSingleton(_profileProvider.Object);
             collection.AddSingleton(_zipArchiveManager.Object);
             return collection;
         }
