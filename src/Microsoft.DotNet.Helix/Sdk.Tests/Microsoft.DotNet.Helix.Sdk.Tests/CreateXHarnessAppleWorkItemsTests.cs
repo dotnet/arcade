@@ -46,14 +46,33 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         }
 
         [Fact]
-        public void AppBundleMetadataParsedCorrectly()
+        public void MissingTargetsPropertyIsCaught()
         {
             var collection = CreateMockServiceCollection();
             _task.ConfigureServices(collection);
             _task.AppBundles = new[]
             {
-                CreateAppBundle("/apps/System.Foo.app", "ios-simulator-64_13.5", "00:15:42")
+                CreateAppBundle("/apps/System.Foo.app", null!)
             };
+
+            // Act
+            using var provider = collection.BuildServiceProvider();
+            _task.InvokeExecute(provider).Should().BeFalse();
+
+            // Verify
+            _task.WorkItems.Length.Should().Be(0);
+        }
+
+        [Fact]
+        public void AppleXHarnessWorkItemIsCreated()
+        {
+            var collection = CreateMockServiceCollection();
+            _task.ConfigureServices(collection);
+            _task.AppBundles = new[]
+            {
+                CreateAppBundle("/apps/System.Foo.app", "ios-device_13.5", "00:15:42", "00:08:55", "00:02:33")
+            };
+            _task.TmpDir = "/tmp";
 
             // Act
             using var provider = collection.BuildServiceProvider();
@@ -69,6 +88,50 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             var payloadArchive = workItem.GetMetadata("PayloadArchive");
             payloadArchive.Should().NotBeNullOrEmpty();
             _fileSystem.FileExists(payloadArchive).Should().BeTrue();
+
+            var command = workItem.GetMetadata("Command");
+            command.Should().Contain("--command test");
+            command.Should().Contain("--timeout \"00:08:55\"");
+            command.Should().Contain("--launch-timeout \"00:02:33\"");
+
+            _profileProvider
+                .Verify(x => x.AddProfilesToBundles(It.Is<ITaskItem[]>(bundles => bundles.Any(b => b.ItemSpec == "/apps/System.Foo.app"))), Times.AtLeastOnce);
+            _zipArchiveManager
+                .Verify(x => x.AddResourceFileToArchive<CreateXHarnessAppleWorkItems>(payloadArchive, It.Is<string>(s => s.Contains("xharness-helix-job.apple.sh")), It.IsAny<string>()), Times.AtLeastOnce);
+            _zipArchiveManager
+                .Verify(x => x.AddResourceFileToArchive<CreateXHarnessAppleWorkItems>(payloadArchive, It.Is<string>(s => s.Contains("xharness-runner.apple.sh")), It.IsAny<string>()), Times.AtLeastOnce);
+        }
+
+        [Fact]
+        public void ArchivePayloadIsOverwritten()
+        {
+            var collection = CreateMockServiceCollection();
+            _task.ConfigureServices(collection);
+            _task.AppBundles = new[]
+            {
+                CreateAppBundle("apps/System.Foo.app", "ios-simulator-64_13.5"),
+                CreateAppBundle("apps/System.Bar.app", "ios-simulator-64_13.5"),
+            };
+
+            _fileSystem.Files.Add("apps/xharness-app-payload-system.foo.app.zip", "archive");
+
+            // Act
+            using var provider = collection.BuildServiceProvider();
+            _task.InvokeExecute(provider).Should().BeTrue();
+
+            // Verify
+            _task.WorkItems.Length.Should().Be(2);
+
+            var workItem = _task.WorkItems.Last();
+            workItem.GetMetadata("Identity").Should().Be("System.Bar");
+            
+            workItem = _task.WorkItems.First();
+            workItem.GetMetadata("Identity").Should().Be("System.Foo");
+
+            var payloadArchive = workItem.GetMetadata("PayloadArchive");
+            payloadArchive.Should().NotBeNullOrEmpty();
+            _fileSystem.FileExists(payloadArchive).Should().BeTrue();
+            _fileSystem.RemovedFiles.Should().Contain(payloadArchive);
         }
 
         [Fact]
@@ -98,11 +161,13 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             string? workItemTimeout = null,
             string? testTimeout = null,
             string? launchTimeout = null,
-            int expectedExitCode = 0)
+            int expectedExitCode = 0,
+            bool includesTestRunner = true)
         {
             var mockBundle = new Mock<ITaskItem>();
             mockBundle.SetupGet(x => x.ItemSpec).Returns(path);
             mockBundle.Setup(x => x.GetMetadata(CreateXHarnessAppleWorkItems.TargetPropName)).Returns(targets);
+            mockBundle.Setup(x => x.GetMetadata("IncludesTestRunner")).Returns(includesTestRunner.ToString());
 
             if (workItemTimeout != null)
             {

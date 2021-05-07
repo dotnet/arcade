@@ -150,7 +150,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             collection.TryAddTransient<IHelpers, Arcade.Common.Helpers>();
             collection.TryAddTransient<IFileSystem, FileSystem>();
             collection.TryAddSingleton(_ => new HttpClient(new HttpClientHandler { CheckCertificateRevocationList = true }));
-            collection.AddSingleton<IProvisioningProfileProvider>(serviceProvider =>
+            collection.TryAddSingleton<IProvisioningProfileProvider>(serviceProvider =>
             {
                 return new ProvisioningProfileProvider(
                     serviceProvider.GetRequiredService<TaskLoggingHelper>(),
