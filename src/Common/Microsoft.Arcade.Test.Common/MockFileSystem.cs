@@ -10,24 +10,20 @@ namespace Microsoft.Arcade.Test.Common
 {
     public class MockFileSystem : IFileSystem
     {
-        public HashSet<string> Files { get; }
-
         public HashSet<string> Directories { get; }    
         
-        public Dictionary<string, string> FileContents { get; }
+        public Dictionary<string, string> Files { get; }
 
         public List<string> RemovedDirectories { get; } = new();
 
         public List<string> RemovedFiles { get; } = new();
 
         public MockFileSystem(
-            IEnumerable<string>? files = null,
-            IEnumerable<string>? directories = null,
-            Dictionary<string, string>? fileContents = null)
+            Dictionary<string, string>? files = null,
+            IEnumerable<string>? directories = null)
         {
-            Files = new(files ?? new string[0]);
             Directories = new(directories ?? new string[0]);
-            FileContents = fileContents ?? new();
+            Files = files ?? new();
         }
 
         #region IFileSystem implementation
@@ -36,7 +32,7 @@ namespace Microsoft.Arcade.Test.Common
 
         public bool DirectoryExists(string path) => Directories.Contains(path);
 
-        public bool FileExists(string path) => Files.Contains(path);
+        public bool FileExists(string path) => Files.ContainsKey(path);
 
         public void DeleteFile(string path) => Files.Remove(path);
 
@@ -50,27 +46,26 @@ namespace Microsoft.Arcade.Test.Common
 
         public string PathCombine(string path1, string path2) => path1 + "/" + path2;
 
-        public void WriteToFile(string path, string content)
-        {
-            FileContents[path] = content;
-            Files.Add(path);
-        }
+        public void WriteToFile(string path, string content) => Files[path] = content;
 
-        public void FileCopy(string sourceFileName, string destFileName) => Files.Add(destFileName);
+        public void FileCopy(string sourceFileName, string destFileName) => Files[destFileName] = Files[sourceFileName];
 
         public Stream GetFileStream(string path, FileMode mode, FileAccess access)
             => FileExists(path) ? new MemoryStream() : new MockFileStream(this, path);
 
         #endregion
 
+        /// <summary>
+        /// Allows to write to a stream that will end up in the MockFileSystem.
+        /// </summary>
         private class MockFileStream : MemoryStream
         {
             private readonly MockFileSystem _fileSystem;
             private readonly string _path;
-            private bool disposed = false;
+            private bool _disposed = false;
 
             public MockFileStream(MockFileSystem fileSystem, string path)
-                : base(fileSystem.FileExists(path) ? System.Text.Encoding.UTF8.GetBytes(fileSystem.FileContents[path]) : new byte[1024])
+                : base(fileSystem.FileExists(path) ? System.Text.Encoding.UTF8.GetBytes(fileSystem.Files[path]) : new byte[2048])
             {
                 _fileSystem = fileSystem;
                 _path = path;
@@ -79,11 +74,12 @@ namespace Microsoft.Arcade.Test.Common
             protected override void Dispose(bool disposing)
             {
                 // flush file to our system
-                if (!disposed)
+                if (!_disposed)
                 {
-                    disposed = true;
+                    _disposed = true;
                     using var sr = new StreamReader(this);
-                    _fileSystem.WriteToFile(_path, sr.ReadToEnd());
+                    Seek(0, SeekOrigin.Begin);
+                    _fileSystem.WriteToFile(_path, sr.ReadToEnd().Replace("\0", ""));
                 }
             }
         }

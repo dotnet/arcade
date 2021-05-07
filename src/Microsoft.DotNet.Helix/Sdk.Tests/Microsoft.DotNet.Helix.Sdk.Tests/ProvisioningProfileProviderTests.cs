@@ -78,10 +78,52 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             });
 
             _downloadCount.Should().Be(1);
-            _fileSystem.Files.Should().BeEquivalentTo(
+
+            _fileSystem.Files.Keys.Should().BeEquivalentTo(
                 "/tmp/iOS.mobileprovision",
                 "/apps/System.Device1.app/embedded.mobileprovision",
                 "/apps/System.Device2.app/embedded.mobileprovision");
+
+            _fileSystem.Files["/apps/System.Device1.app/embedded.mobileprovision"].Should().Be("iOS content");
+            _fileSystem.Files["/apps/System.Device2.app/embedded.mobileprovision"].Should().Be("iOS content");
+        }
+
+        [Fact]
+        public void MultiplePlatformsGetTheirProfile()
+        {
+            _profileProvider.AddProfilesToBundles(new[]
+            {
+                CreateAppBundle("/apps/System.Device1.iOS.app", "ios-device"),
+                CreateAppBundle("/apps/System.Simulator.app", "tvos-simulator-64"),
+                CreateAppBundle("/apps/System.Device2.iOS.app", "ios-device"),
+                CreateAppBundle("/apps/System.Device3.tvOS.app", "tvos-device"),
+            });
+
+            _downloadCount.Should().Be(2);
+
+            _fileSystem.Files.Keys.Should().BeEquivalentTo(
+                "/tmp/iOS.mobileprovision",
+                "/tmp/tvOS.mobileprovision",
+                "/apps/System.Device1.iOS.app/embedded.mobileprovision",
+                "/apps/System.Device2.iOS.app/embedded.mobileprovision",
+                "/apps/System.Device3.tvOS.app/embedded.mobileprovision");
+
+            _fileSystem.Files["/apps/System.Device1.iOS.app/embedded.mobileprovision"].Should().Be("iOS content");
+            _fileSystem.Files["/apps/System.Device2.iOS.app/embedded.mobileprovision"].Should().Be("iOS content");
+            _fileSystem.Files["/apps/System.Device3.tvOS.app/embedded.mobileprovision"].Should().Be("tvOS content");
+        }
+
+        [Fact]
+        public void BundlesContainingProfileAreIgnored()
+        {
+            _fileSystem.WriteToFile("/apps/System.Device1.app/embedded.mobileprovision", "iOS content");
+            _profileProvider.AddProfilesToBundles(new[]
+            {
+                CreateAppBundle("/apps/System.Device1.app", "ios-device"),
+                CreateAppBundle("/apps/System.Simulator.app", "tvos-simulator-64"),
+            });
+
+            _downloadCount.Should().Be(0);
         }
 
         private ITaskItem CreateAppBundle(string path, string targets)
