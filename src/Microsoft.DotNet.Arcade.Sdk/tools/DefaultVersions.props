@@ -69,7 +69,7 @@
     Default versions
   -->
   <PropertyGroup>
-    <DropAppVersion Condition="'$(DropAppVersion)' == ''">18.165.29912-buildid11693003</DropAppVersion>
+    <DropAppVersion Condition="'$(DropAppVersion)' == ''">18.169.30122-buildid12194732</DropAppVersion>
     <MicroBuildPluginsSwixBuildVersion Condition="'$(MicroBuildPluginsSwixBuildVersion)' == ''">1.0.422</MicroBuildPluginsSwixBuildVersion>
     <MicroBuildCoreVersion Condition="'$(MicroBuildCoreVersion)' == ''">0.2.0</MicroBuildCoreVersion>
     <MicrosoftDotNetIBCMergeVersion Condition="'$(MicrosoftDotNetIBCMergeVersion)' == ''">5.0.6-beta.19203.1</MicrosoftDotNetIBCMergeVersion>
