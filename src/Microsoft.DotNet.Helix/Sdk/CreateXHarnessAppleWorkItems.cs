@@ -103,7 +103,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             // Validation of any metadata specific to iOS stuff goes here
             if (!appBundleItem.TryGetMetadata(TargetPropName, out string target))
             {
-                Log.LogError("'Targets' metadata must be specified - " +
+                Log.LogError($"'{TargetPropName}' metadata must be specified - " +
                     "expecting list of target device/simulator platforms to execute tests on (e.g. ios-simulator-64)");
                 return null;
             }

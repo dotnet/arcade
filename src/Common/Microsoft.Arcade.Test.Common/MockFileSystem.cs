@@ -10,13 +10,15 @@ namespace Microsoft.Arcade.Test.Common
 {
     public class MockFileSystem : IFileSystem
     {
+        #region File system state
+
         public HashSet<string> Directories { get; }    
         
         public Dictionary<string, string> Files { get; }
 
-        public List<string> RemovedDirectories { get; } = new();
-
         public List<string> RemovedFiles { get; } = new();
+
+        #endregion
 
         public MockFileSystem(
             Dictionary<string, string>? files = null,
@@ -34,7 +36,11 @@ namespace Microsoft.Arcade.Test.Common
 
         public bool FileExists(string path) => Files.ContainsKey(path);
 
-        public void DeleteFile(string path) => Files.Remove(path);
+        public void DeleteFile(string path)
+        {
+            Files.Remove(path);
+            RemovedFiles.Add(path);
+        }
 
         public string? GetDirectoryName(string? path) => Path.GetDirectoryName(path);
 

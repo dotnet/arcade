@@ -1,4 +1,3 @@
-#nullable enable
 using System;
 using System.Net;
 using System.Net.Http;
@@ -11,6 +10,7 @@ using Microsoft.DotNet.Arcade.Test.Common;
 using Moq;
 using Xunit;
 
+#nullable enable
 namespace Microsoft.DotNet.Helix.Sdk.Tests
 {
     public class ProvisioningProfileProviderTests
@@ -126,7 +126,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             _downloadCount.Should().Be(0);
         }
 
-        private ITaskItem CreateAppBundle(string path, string targets)
+        private static ITaskItem CreateAppBundle(string path, string targets)
         {
             var mockBundle = new Mock<ITaskItem>();
             mockBundle.SetupGet(x => x.ItemSpec).Returns(path);
