@@ -154,6 +154,7 @@
       TransportFeedOverride="$(TransportFeedOverride)"
       ShippingFeedOverride="$(ShippingFeedOverride)"
       SymbolsFeedOverride="$(SymbolsFeedOverride)" 
+      PublicSymbolsFeedOverride="$(PublicSymbolsFeedOverride)"
       AzdoApiToken="$(AzdoApiToken)"
       ArtifactsBasePath="$(ArtifactsBasePath)"
       BuildId="$(BuildId)"
