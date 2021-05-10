@@ -226,17 +226,10 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         internal IEnumerable<ITaskItem> ProcessWorkloadManifestPackage(string workloadManifestPackage)
         {
             NugetPackage workloadPackage = new(workloadManifestPackage, Log);
-
             string packageContentPath = Path.Combine(PackageDirectory, $"{workloadPackage.Identity}");
             workloadPackage.Extract(packageContentPath, Enumerable.Empty<string>());
-            string workloadManifestJsonPath = Directory.GetFiles(packageContentPath, "WorkloadManifest.json").FirstOrDefault();
 
-            if (string.IsNullOrWhiteSpace(workloadManifestJsonPath))
-            {
-                throw new FileNotFoundException($"Unable to locate WorkloadManifest.json under '{packageContentPath}'.");
-            }
-
-            return ProcessWorkloadManifestFile(workloadManifestJsonPath);
+            return ProcessWorkloadManifestFile(GetWorkloadManifestJsonPath(packageContentPath));
         }
 
         internal ITaskItem[] GetManifestsFromManifestPackages(ITaskItem[] workloadPackages)
@@ -248,19 +241,30 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                 NugetPackage workloadPackage = new(item.GetMetadata("FullPath"), Log);
                 string packageContentPath = Path.Combine(PackageDirectory, $"{workloadPackage.Identity}");
                 workloadPackage.Extract(packageContentPath, Enumerable.Empty<string>());
-                string workloadManifestJsonPath = Directory.GetFiles(packageContentPath, "WorkloadManifest.json").FirstOrDefault();
-
-                if (string.IsNullOrWhiteSpace(workloadManifestJsonPath))
-                {
-                    throw new FileNotFoundException($"Unable to locate WorkloadManifest.json under '{packageContentPath}'.");
-                }
-
+                string workloadManifestJsonPath = GetWorkloadManifestJsonPath(packageContentPath);
                 Log?.LogMessage(MessageImportance.Low, $"Adding manifest: {workloadManifestJsonPath}");
 
                 manifests.Add(new TaskItem(workloadManifestJsonPath));
             }
 
             return manifests.ToArray();
+        }
+
+        internal string GetWorkloadManifestJsonPath(string packageContentPath)
+        {
+            string dataDirectory = Path.Combine(packageContentPath, "data");
+
+            // Check the data directory first, otherwise fall back to the older format where manifests were in the root of the package.
+            string workloadManifestJsonPath = Directory.Exists(dataDirectory) ?
+                Directory.GetFiles(dataDirectory, "WorkloadManifest.json").FirstOrDefault() :
+                Directory.GetFiles(packageContentPath, "WorkloadManifest.json").FirstOrDefault();
+
+            if (string.IsNullOrWhiteSpace(workloadManifestJsonPath))
+            {
+                throw new FileNotFoundException($"Unable to locate WorkloadManifest.json under '{packageContentPath}'.");
+            }
+
+            return workloadManifestJsonPath;
         }
     }
 }
