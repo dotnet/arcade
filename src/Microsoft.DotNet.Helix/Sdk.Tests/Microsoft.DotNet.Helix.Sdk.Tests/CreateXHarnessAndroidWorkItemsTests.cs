@@ -86,9 +86,9 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             command.Should().Contain("--timeout \"00:08:55\"");
 
             _zipArchiveManager
-                .Verify(x => x.AddResourceFileToArchive<CreateXHarnessAndroidWorkItems>(payloadArchive, It.Is<string>(s => s.Contains("xharness-helix-job.android.sh")), It.IsAny<string>()), Times.AtLeastOnce);
+                .Verify(x => x.AddResourceFileToArchive<CreateXHarnessAndroidWorkItems>(payloadArchive, It.Is<string>(s => s.Contains("xharness-helix-job.android.sh")), "xharness-helix-job.android.sh"), Times.AtLeastOnce);
             _zipArchiveManager
-                .Verify(x => x.AddResourceFileToArchive<CreateXHarnessAndroidWorkItems>(payloadArchive, It.Is<string>(s => s.Contains("xharness-helix-job.android.bat")), It.IsAny<string>()), Times.AtLeastOnce);
+                .Verify(x => x.AddResourceFileToArchive<CreateXHarnessAndroidWorkItems>(payloadArchive, It.Is<string>(s => s.Contains("xharness-helix-job.android.bat")), "xharness-helix-job.android.bat"), Times.AtLeastOnce);
         }
 
         [Fact]

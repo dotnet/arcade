@@ -22,8 +22,8 @@ namespace Microsoft.DotNet.Helix.Sdk
         private const string LaunchTimeoutPropName = "LaunchTimeout";
         private const string IncludesTestRunnerPropName = "IncludesTestRunner";
 
-        private const string EntryPointScript = "tools.xharness_runner.xharness-helix-job.apple.sh";
-        private const string RunnerScript = "tools.xharness_runner.xharness-runner.apple.sh";
+        private const string EntryPointScript = "xharness-helix-job.apple.sh";
+        private const string RunnerScript = "xharness-runner.apple.sh";
 
         private static readonly TimeSpan s_defaultLaunchTimeout = TimeSpan.FromMinutes(10);
 
@@ -184,8 +184,8 @@ namespace Microsoft.DotNet.Helix.Sdk
             zipArchiveManager.ArchiveDirectory(folderToZip, outputZipPath, true);
 
             Log.LogMessage($"Adding the XHarness job scripts into the payload archive");
-            await zipArchiveManager.AddResourceFileToArchive<CreateXHarnessAppleWorkItems>(outputZipPath, EntryPointScript);
-            await zipArchiveManager.AddResourceFileToArchive<CreateXHarnessAppleWorkItems>(outputZipPath, RunnerScript);
+            await zipArchiveManager.AddResourceFileToArchive<CreateXHarnessAppleWorkItems>(outputZipPath, ScriptNamespace + EntryPointScript, EntryPointScript);
+            await zipArchiveManager.AddResourceFileToArchive<CreateXHarnessAppleWorkItems>(outputZipPath, ScriptNamespace + RunnerScript, RunnerScript);
 
             return outputZipPath;
         }

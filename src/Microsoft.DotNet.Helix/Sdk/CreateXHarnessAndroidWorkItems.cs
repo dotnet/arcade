@@ -20,8 +20,8 @@ namespace Microsoft.DotNet.Helix.Sdk
         private const string DeviceOutputPathPropName = "DeviceOutputPath";
         private const string AndroidPackageNamePropName = "AndroidPackageName";
 
-        private const string PosixAndroidWrapperScript = "tools.xharness_runner.xharness-helix-job.android.sh";
-        private const string NonPosixAndroidWrapperScript = "tools.xharness_runner.xharness-helix-job.android.bat";
+        private const string PosixAndroidWrapperScript = "xharness-helix-job.android.sh";
+        private const string NonPosixAndroidWrapperScript = "xharness-helix-job.android.bat";
 
         /// <summary>
         /// Boolean true if this is a posix shell, false if not.
@@ -106,8 +106,8 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             // WorkItem payloads of APKs can be reused if sent to multiple queues at once,
             // so we'll always include both scripts (very small)
-            await zipArchiveManager.AddResourceFileToArchive<CreateXHarnessAndroidWorkItems>(outputZipPath, PosixAndroidWrapperScript);
-            await zipArchiveManager.AddResourceFileToArchive<CreateXHarnessAndroidWorkItems>(outputZipPath, NonPosixAndroidWrapperScript);
+            await zipArchiveManager.AddResourceFileToArchive<CreateXHarnessAndroidWorkItems>(outputZipPath, ScriptNamespace + PosixAndroidWrapperScript, PosixAndroidWrapperScript);
+            await zipArchiveManager.AddResourceFileToArchive<CreateXHarnessAndroidWorkItems>(outputZipPath, ScriptNamespace + NonPosixAndroidWrapperScript, NonPosixAndroidWrapperScript);
 
             return outputZipPath;
         }

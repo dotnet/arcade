@@ -1,7 +1,6 @@
 using System;
 using Microsoft.Arcade.Common;
 using Microsoft.Build.Framework;
-using Newtonsoft.Json;
 
 namespace Microsoft.DotNet.Helix.Sdk
 {
@@ -16,6 +15,8 @@ namespace Microsoft.DotNet.Helix.Sdk
         private const string TestTimeoutPropName = "TestTimeout";
         private const string WorkItemTimeoutPropName = "WorkItemTimeout";
         private const string ExpectedExitCodePropName = "ExpectedExitCode";
+
+        protected const string ScriptNamespace = "tools.xharness_runner.";
 
         /// <summary>
         /// Extra arguments that will be passed to the iOS/Android/... app that is being run

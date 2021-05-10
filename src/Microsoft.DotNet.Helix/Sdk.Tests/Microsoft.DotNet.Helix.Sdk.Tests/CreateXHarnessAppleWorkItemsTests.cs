@@ -93,9 +93,9 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             _profileProvider
                 .Verify(x => x.AddProfilesToBundles(It.Is<ITaskItem[]>(bundles => bundles.Any(b => b.ItemSpec == "/apps/System.Foo.app"))), Times.AtLeastOnce);
             _zipArchiveManager
-                .Verify(x => x.AddResourceFileToArchive<CreateXHarnessAppleWorkItems>(payloadArchive, It.Is<string>(s => s.Contains("xharness-helix-job.apple.sh")), It.IsAny<string>()), Times.AtLeastOnce);
+                .Verify(x => x.AddResourceFileToArchive<CreateXHarnessAppleWorkItems>(payloadArchive, It.Is<string>(s => s.Contains("xharness-helix-job.apple.sh")), "xharness-helix-job.apple.sh"), Times.AtLeastOnce);
             _zipArchiveManager
-                .Verify(x => x.AddResourceFileToArchive<CreateXHarnessAppleWorkItems>(payloadArchive, It.Is<string>(s => s.Contains("xharness-runner.apple.sh")), It.IsAny<string>()), Times.AtLeastOnce);
+                .Verify(x => x.AddResourceFileToArchive<CreateXHarnessAppleWorkItems>(payloadArchive, It.Is<string>(s => s.Contains("xharness-runner.apple.sh")), "xharness-runner.apple.sh"), Times.AtLeastOnce);
         }
 
         [Fact]
