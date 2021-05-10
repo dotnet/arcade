@@ -21,7 +21,7 @@ namespace Microsoft.Arcade.Common
         /// </summary>
         /// <param name="directoryPath">The directory to archive</param>
         /// <param name="archivePath">Path where to create the archive</param>
-        /// <param name="includeBaseDirectory">Should the top level entry of the arvhive be the directory?</param>
+        /// <param name="includeBaseDirectory">When true, includes top-level directory in the archive</param>
         void ArchiveDirectory(string directoryPath, string archivePath, bool includeBaseDirectory);
 
         /// <summary>
