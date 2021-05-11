@@ -12,7 +12,7 @@ namespace Microsoft.DotNet.Helix.Sdk
         private static readonly TimeSpan s_defaultWorkItemTimeout = TimeSpan.FromMinutes(20);
         private static readonly TimeSpan s_defaultTestTimeout = TimeSpan.FromMinutes(12);
 
-        private class MetadataNames
+        public class MetadataName
         {
             public const string TestTimeout = "TestTimeout";
             public const string WorkItemTimeout = "WorkItemTimeout";
@@ -45,7 +45,7 @@ namespace Microsoft.DotNet.Helix.Sdk
         /// </returns>
         protected (TimeSpan TestTimeout, TimeSpan WorkItemTimeout, int ExpectedExitCode, string CustomCommands) ParseMetadata(ITaskItem xHarnessAppItem)
         {
-            xHarnessAppItem.TryGetMetadata(MetadataNames.CustomCommands, out string customCommands);
+            xHarnessAppItem.TryGetMetadata(MetadataName.CustomCommands, out string customCommands);
             if (string.IsNullOrEmpty(customCommands))
             {
                 customCommands = null;
@@ -53,21 +53,21 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             // Optional timeout for the actual test execution in the TimeSpan format
             TimeSpan testTimeout = s_defaultTestTimeout;
-            if (xHarnessAppItem.TryGetMetadata(MetadataNames.TestTimeout, out string testTimeoutProp))
+            if (xHarnessAppItem.TryGetMetadata(MetadataName.TestTimeout, out string testTimeoutProp))
             {
                 if (!TimeSpan.TryParse(testTimeoutProp, out testTimeout) || testTimeout.Ticks < 0)
                 {
-                    Log.LogError($"Invalid value \"{testTimeoutProp}\" provided in <{MetadataNames.TestTimeout}>");
+                    Log.LogError($"Invalid value \"{testTimeoutProp}\" provided in <{MetadataName.TestTimeout}>");
                 }
             }
 
             // Optional timeout for the whole Helix work item run (includes SDK and tool installation)
             TimeSpan workItemTimeout = s_defaultWorkItemTimeout;
-            if (xHarnessAppItem.TryGetMetadata(MetadataNames.WorkItemTimeout, out string workItemTimeoutProp))
+            if (xHarnessAppItem.TryGetMetadata(MetadataName.WorkItemTimeout, out string workItemTimeoutProp))
             {
                 if (!TimeSpan.TryParse(workItemTimeoutProp, out workItemTimeout) || workItemTimeout.Ticks < 0)
                 {
-                    Log.LogError($"Invalid value \"{workItemTimeoutProp}\" provided in <{MetadataNames.WorkItemTimeout}>");
+                    Log.LogError($"Invalid value \"{workItemTimeoutProp}\" provided in <{MetadataName.WorkItemTimeout}>");
                 }
             }
             else if (!string.IsNullOrEmpty(testTimeoutProp))
@@ -85,7 +85,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             }
 
             int expectedExitCode = 0;
-            if (xHarnessAppItem.TryGetMetadata(MetadataNames.ExpectedExitCode, out string expectedExitCodeProp))
+            if (xHarnessAppItem.TryGetMetadata(MetadataName.ExpectedExitCode, out string expectedExitCodeProp))
             {
                 int.TryParse(expectedExitCodeProp, out expectedExitCode);
             }

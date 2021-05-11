@@ -91,11 +91,11 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             command.Should().Contain("--launch-timeout \"00:02:33\"");
 
             _profileProvider
-                .Verify(x => x.AddProfilesToBundles(It.Is<ITaskItem[]>(bundles => bundles.Any(b => b.ItemSpec == "/apps/System.Foo.app"))), Times.AtLeastOnce);
+                .Verify(x => x.AddProfilesToBundles(It.Is<ITaskItem[]>(bundles => bundles.Any(b => b.ItemSpec == "/apps/System.Foo.app"))), Times.Once);
             _zipArchiveManager
-                .Verify(x => x.AddResourceFileToArchive<CreateXHarnessAppleWorkItems>(payloadArchive, It.Is<string>(s => s.Contains("xharness-helix-job.apple.sh")), "xharness-helix-job.apple.sh"), Times.AtLeastOnce);
+                .Verify(x => x.AddResourceFileToArchive<CreateXHarnessAppleWorkItems>(payloadArchive, It.Is<string>(s => s.Contains("xharness-helix-job.apple.sh")), "xharness-helix-job.apple.sh"), Times.Once);
             _zipArchiveManager
-                .Verify(x => x.AddResourceFileToArchive<CreateXHarnessAppleWorkItems>(payloadArchive, It.Is<string>(s => s.Contains("xharness-runner.apple.sh")), "xharness-runner.apple.sh"), Times.AtLeastOnce);
+                .Verify(x => x.AddResourceFileToArchive<CreateXHarnessAppleWorkItems>(payloadArchive, It.Is<string>(s => s.Contains("xharness-runner.apple.sh")), "xharness-runner.apple.sh"), Times.Once);
         }
 
         [Fact]
@@ -131,6 +131,35 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         }
 
         [Fact]
+        public void CustomCommandsAreExecuted()
+        {
+            var collection = CreateMockServiceCollection();
+            _task.ConfigureServices(collection);
+            _task.AppBundles = new[]
+            {
+                CreateAppBundle("apps/System.Foo.app", "ios-simulator-64_13.5", customCommands: "echo foo"),
+            };
+
+            // Act
+            using var provider = collection.BuildServiceProvider();
+            _task.InvokeExecute(provider).Should().BeTrue();
+
+            // Verify
+            _task.WorkItems.Length.Should().Be(1);
+
+            var workItem = _task.WorkItems.First();
+            workItem.GetMetadata("Identity").Should().Be("System.Foo");
+            workItem.GetMetadata("Command").Should().Contain("--command \"custom-commands.sh\"");
+
+            var payloadArchive = workItem.GetMetadata("PayloadArchive");
+            payloadArchive.Should().NotBeNullOrEmpty();
+            _fileSystem.FileExists(payloadArchive).Should().BeTrue();
+
+            _zipArchiveManager
+                .Verify(x => x.AddContentToArchive(payloadArchive, "custom-commands.sh", "echo foo"), Times.Once);
+        }
+
+        [Fact]
         public void AreDependenciesRegistered()
         {
             var task = new CreateXHarnessAppleWorkItems();
@@ -155,31 +184,37 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             string? testTimeout = null,
             string? launchTimeout = null,
             int expectedExitCode = 0,
-            bool includesTestRunner = true)
+            bool includesTestRunner = true,
+            string? customCommands = null)
         {
             var mockBundle = new Mock<ITaskItem>();
             mockBundle.SetupGet(x => x.ItemSpec).Returns(path);
             mockBundle.Setup(x => x.GetMetadata(CreateXHarnessAppleWorkItems.MetadataNames.Targets)).Returns(targets);
-            mockBundle.Setup(x => x.GetMetadata("IncludesTestRunner")).Returns(includesTestRunner.ToString());
+            mockBundle.Setup(x => x.GetMetadata(CreateXHarnessAppleWorkItems.MetadataNames.IncludesTestRunner)).Returns(includesTestRunner.ToString());
 
             if (workItemTimeout != null)
             {
-                mockBundle.Setup(x => x.GetMetadata("WorkItemTimeout")).Returns(workItemTimeout);
+                mockBundle.Setup(x => x.GetMetadata(XHarnessTaskBase.MetadataName.WorkItemTimeout)).Returns(workItemTimeout);
             }
 
             if (testTimeout != null)
             {
-                mockBundle.Setup(x => x.GetMetadata("TestTimeout")).Returns(testTimeout);
+                mockBundle.Setup(x => x.GetMetadata(XHarnessTaskBase.MetadataName.TestTimeout)).Returns(testTimeout);
             }
 
             if (launchTimeout != null)
             {
-                mockBundle.Setup(x => x.GetMetadata("LaunchTimeout")).Returns(launchTimeout);
+                mockBundle.Setup(x => x.GetMetadata(CreateXHarnessAppleWorkItems.MetadataNames.LaunchTimeout)).Returns(launchTimeout);
             }
 
             if (expectedExitCode != 0)
             {
-                mockBundle.Setup(x => x.GetMetadata("ExpectedExitCode")).Returns(expectedExitCode.ToString());
+                mockBundle.Setup(x => x.GetMetadata(XHarnessTaskBase.MetadataName.ExpectedExitCode)).Returns(expectedExitCode.ToString());
+            }
+
+            if (customCommands != null)
+            {
+                mockBundle.Setup(x => x.GetMetadata(XHarnessTaskBase.MetadataName.CustomCommands)).Returns(customCommands);
             }
 
             _fileSystem.CreateDirectory(path);
