@@ -31,7 +31,7 @@ namespace Microsoft.Arcade.Common
         /// <param name="archivePath">Path to the archive</param>
         /// <param name="targetFilename">New path of the file in the archive</param>
         /// <param name="content">Content of the file</param>
-        Task AddContentToArchive(string archivePath, string targetFilename, string content)
+        Task AddContentToArchive(string archivePath, string targetFilename, string content);
 
         /// <summary>
         /// Compresses a directory into an archive on a given path.

@@ -159,7 +159,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         {
             var mockBundle = new Mock<ITaskItem>();
             mockBundle.SetupGet(x => x.ItemSpec).Returns(path);
-            mockBundle.Setup(x => x.GetMetadata(CreateXHarnessAppleWorkItems.TargetPropName)).Returns(targets);
+            mockBundle.Setup(x => x.GetMetadata(CreateXHarnessAppleWorkItems.MetadataNames.Targets)).Returns(targets);
             mockBundle.Setup(x => x.GetMetadata("IncludesTestRunner")).Returns(includesTestRunner.ToString());
 
             if (workItemTimeout != null)
