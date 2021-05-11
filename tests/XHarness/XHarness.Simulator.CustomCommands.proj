@@ -1,0 +1,41 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" />
+
+  <PropertyGroup>
+    <XHarnessTestAppBundleName>System.Numerics.Vectors.Tests</XHarnessTestAppBundleName>
+    <XHarnessTestAppBundleUrl>https://netcorenativeassets.blob.core.windows.net/resource-packages/external/ios/test-app/ios-simulator-64/$(XHarnessTestAppBundleName).app.zip</XHarnessTestAppBundleUrl>
+  </PropertyGroup>
+
+  <!-- We're not set up currently to build app bundles as part of normal builds, so this downloads existing ones for now -->
+  <Target Name="Build" Returns="@(XHarnessAppBundleToTest)">
+    <Error Condition=" '$(ArtifactsTmpDir)' == ''" Text="Not downloading AppBundle because ArtifactsTmpDir property is unset" />
+    <DownloadFile SourceUrl="$(XHarnessTestAppBundleUrl)" DestinationFolder="$(ArtifactsTmpDir)XHarness.TestAppBundle" SkipUnchangedFiles="True" Retries="5">
+      <Output TaskParameter="DownloadedFile" ItemName="ZippedAppBundle" />
+    </DownloadFile>
+
+    <Message Text="Downloaded @(ZippedAppBundle) for XHarness Test purposes" Importance="High" />
+
+    <Exec Command="tar -xzf @(ZippedAppBundle) -C $(ArtifactsTmpDir)XHarness.TestAppBundle" />
+
+    <ItemGroup>
+      <XHarnessAppBundleToTest Include="$(ArtifactsTmpDir)XHarness.TestAppBundle/$(XHarnessTestAppBundleName).app">
+        <Targets>ios-simulator-64</Targets>
+        <WorkItemTimeout>00:12:00</WorkItemTimeout>
+        <CustomCommands>
+          set -ex
+          deviceId=`xharness apple device ios-simulator-64`
+          xharness apple install -t=ios-simulator-64 --device="$deviceId" -o="$HELIX_WORKITEM_UPLOAD_ROOT" --app="$HELIX_WORKITEM_PAYLOAD/$(XHarnessTestAppBundleName).app" -v
+          set +e
+          result=0
+          xharness apple just-test -t=ios-simulator-64 --device="$deviceId" -o="$HELIX_WORKITEM_UPLOAD_ROOT" --app="net.dot.$(XHarnessTestAppBundleName)" --launch-timeout=00:05:00 --timeout=00:08:00 -v
+          ((result|=$?))
+          xharness apple uninstall -t=ios-simulator-64 --device="$deviceId" -o="$HELIX_WORKITEM_UPLOAD_ROOT" --app="net.dot.$(XHarnessTestAppBundleName)" -v
+          ((result|=$?))
+          exit $result
+        </CustomCommands>
+      </XHarnessAppBundleToTest>
+    </ItemGroup>
+  </Target>
+
+</Project>

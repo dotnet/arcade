@@ -202,19 +202,6 @@ stages:
           #     SYSTEM_ACCESSTOKEN: $(System.AccessToken)
           #     HelixAccessToken: ''
           - script: eng/common/build.sh
-              -configuration $(_BuildConfig)
-              -prepareMachine
-              -ci
-              -restore
-              -test
-              -projects $(Build.SourcesDirectory)/tests/UnitTests.XHarness.iOS.IncludeCliOnly.proj
-              /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.XHarness.CLI.binlog
-              /p:RestoreUsingNuGetTargets=false
-            displayName: XHarness CLI pre-install Helix Testing
-            env:
-              SYSTEM_ACCESSTOKEN: $(System.AccessToken)
-              HelixAccessToken: ''
-          - script: eng/common/build.sh
               -configuration $(_BuildConfig) 
               -prepareMachine
               -ci

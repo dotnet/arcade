@@ -24,7 +24,7 @@
 
   <!-- Test project which builds app bundle to run via XHarness -->
   <ItemGroup>
-    <XHarnessAppleProject Include="$(MSBuildThisFileDirectory)XHarness\XHarness.RunAppBundle.Device.proj" />
+    <XHarnessAppleProject Include="$(MSBuildThisFileDirectory)XHarness\XHarness.Device.AppleRun.proj" />
   </ItemGroup>
 
   <ItemGroup>
