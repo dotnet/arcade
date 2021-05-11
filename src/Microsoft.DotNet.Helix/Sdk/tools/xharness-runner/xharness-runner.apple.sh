@@ -143,7 +143,7 @@ fi
 
 export XHARNESS_DISABLE_COLORED_OUTPUT=true
 export XHARNESS_LOG_WITH_TIMESTAMPS=true
-
+set -x
 if [ "$command" == "test" ] || [ "$command" == "run" ]; then
     # We include $app_arguments non-escaped and not arrayed because it might contain several extra arguments
     # which come from outside and are appeneded behind "--" and forwarded to the iOS application from XHarness.

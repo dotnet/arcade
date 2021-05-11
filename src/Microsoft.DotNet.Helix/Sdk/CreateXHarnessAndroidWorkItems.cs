@@ -68,7 +68,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             await Task.Yield();
             string workItemName = fileSystem.GetFileNameWithoutExtension(appPackage.ItemSpec);
 
-            var (testTimeout, workItemTimeout, expectedExitCode) = ParseMetadata(appPackage);
+            var (testTimeout, workItemTimeout, expectedExitCode, customCommands) = ParseMetadata(appPackage);
 
             string command = ValidateMetadataAndGetXHarnessAndroidCommand(appPackage, testTimeout, expectedExitCode);
 

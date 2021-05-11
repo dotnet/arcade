@@ -21,7 +21,6 @@ namespace Microsoft.DotNet.Helix.Sdk
         public static class MetadataNames
         {
             public const string Targets = "Targets";
-            public const string CustomCommands = "CustomCommands";
             public const string LaunchTimeout = "LaunchTimeout";
             public const string IncludesTestRunner = "IncludesTestRunner";
         }
@@ -103,7 +102,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                 workItemName = workItemName.Substring(0, workItemName.Length - 4);
             }
 
-            var (testTimeout, workItemTimeout, expectedExitCode) = ParseMetadata(appBundleItem);
+            var (testTimeout, workItemTimeout, expectedExitCode, customCommands) = ParseMetadata(appBundleItem);
 
             // Validation of any metadata specific to iOS stuff goes here
             if (!appBundleItem.TryGetMetadata(MetadataNames.Targets, out string target))
@@ -139,8 +138,6 @@ namespace Microsoft.DotNet.Helix.Sdk
             {
                 Log.LogWarning("The ExpectedExitCode property is ignored in the `apple test` scenario");
             }
-
-            appBundleItem.TryGetMetadata(MetadataNames.CustomCommands, out string customCommands);
 
             string appName = fileSystem.GetFileName(appBundleItem.ItemSpec);
             string command = GetHelixCommand(appName, target, testTimeout, launchTimeout, includesTestRunner, expectedExitCode, customCommands != null);
@@ -185,7 +182,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                 return string.Empty;
             }
 
-            string appFolderDirectory = TmpDir ?? fileSystem.GetDirectoryName(folderToZip);
+            string appFolderDirectory = fileSystem.GetDirectoryName(folderToZip);
             string fileName = $"xharness-app-payload-{fileSystem.GetFileName(folderToZip).ToLowerInvariant()}.zip";
             string outputZipPath = fileSystem.PathCombine(appFolderDirectory, fileName);
 
