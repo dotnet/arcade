@@ -264,7 +264,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                 }
 
                 // Generate a .csproj to build a NuGet payload package to carry the MSI and JSON manifest
-                msi.SetMetadata(Metadata.PackageProject, GeneratePackageProject(msi.ItemSpec, msiJsonPath, nupkg));
+                msi.SetMetadata(Metadata.PackageProject, GeneratePackageProject(msi.ItemSpec, msiJsonPath, platform, nupkg));
 
                 msis.Add(msi);
             }
@@ -272,9 +272,9 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             return msis;
         }
 
-        private string GeneratePackageProject(string msiPath, string msiJsonPath, NugetPackage nupkg)
+        private string GeneratePackageProject(string msiPath, string msiJsonPath, string platform, NugetPackage nupkg)
         {
-            string msiPackageProject = Path.Combine(MsiPackageDirectory, nupkg.Id, "msi.csproj");
+            string msiPackageProject = Path.Combine(MsiPackageDirectory, platform, nupkg.Id, "msi.csproj");
             Log?.LogMessage($"Generating package project: '{msiPackageProject}'");
 
             Directory.CreateDirectory(Path.GetDirectoryName(msiPackageProject));
@@ -297,7 +297,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             writer.WriteElementString("PackageType", "NetWorkloadPack");
             writer.WriteElementString("SuppressDependenciesWhenPacking", "true");
             writer.WriteElementString("NoWarn", "$(NoWarn);NU5128");
-            writer.WriteElementString("PackageId", $"{nupkg.Id}.Msi");
+            writer.WriteElementString("PackageId", $"{nupkg.Id}.Msi.{platform}");
             writer.WriteElementString("Version", $"{nupkg.Version}");
             writer.WriteElementString("Description", nupkg.Description);
             if (!string.IsNullOrWhiteSpace(nupkg.Authors))
