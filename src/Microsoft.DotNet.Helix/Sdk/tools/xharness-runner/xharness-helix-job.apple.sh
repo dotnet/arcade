@@ -6,11 +6,46 @@
 ### GUI rendering capabilities.
 ###
 
+app=''
+xcode_version=''
+targets=''
+
+while [[ $# -gt 0 ]]; do
+    opt="$(echo "$1" | tr "[:upper:]" "[:lower:]")"
+    case "$opt" in
+      --app)
+        app="$2"
+        shift
+        ;;
+      --targets)
+        targets="$2"
+        shift
+        ;;
+      --xcode-version)
+        xcode_version="$2"
+        shift
+        ;;
+      *)
+        echo "Invalid argument: $1"
+        exit 1
+        ;;
+    esac
+    shift
+done
+
 set -x
 
+# It is important we call the script via `launchctl asuser` in order to be able to spawn
+# the simulator which needs to run in a user session with GUI rendering capabilities.
 chmod +x xharness-runner.apple.sh
 helix_runner_uid=$(id -u)
-sudo launchctl asuser "$helix_runner_uid" sh ./xharness-runner.apple.sh "$@"
+sudo launchctl asuser "$helix_runner_uid" sh ./xharness-runner.apple.sh \
+    --app "$HELIX_WORKITEM_ROOT/$app"                                   \
+    --targets "$targets"                                                \
+    --xharness-cli-path "$XHARNESS_CLI_PATH"                            \
+    --output-directory "$HELIX_WORKITEM_UPLOAD_ROOT"                    \
+    --xcode-version "$xcode_version"
+
 exit_code=$?
 
 # This handles an issue where Simulators get reeaally slow and they start failing to install apps

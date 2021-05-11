@@ -7,6 +7,58 @@
 ### Currently no special functionality is needed beyond causing infrastructure retry and reboot if the emulators
 ### or devices have trouble, but to add more Helix-specific Android XHarness behaviors, this is one extensibility point.
 
+app=''
+output_directory=''
+targets=''
+timeout=''
+xharness_cli_path=''
+app_arguments=''
+expected_exit_code=0
+command='test'
+
+while [[ $# -gt 0 ]]; do
+    opt="$(echo "$1" | tr "[:upper:]" "[:lower:]")"
+    case "$opt" in
+      --app)
+        app="$2"
+        shift
+        ;;
+      --output-directory)
+        output_directory="$2"
+        shift
+        ;;
+      --targets)
+        targets="$2"
+        shift
+        ;;
+      --timeout)
+        timeout="$2"
+        shift
+        ;;
+      --xharness-cli-path)
+        xharness_cli_path="$2"
+        shift
+        ;;
+      --app-arguments)
+        app_arguments="$2"
+        shift
+        ;;
+      --expected-exit-code)
+        expected_exit_code="$2"
+        shift
+        ;;
+      --command)
+        command="$2"
+        shift
+        ;;
+      *)
+        echo "Invalid argument: $1"
+        exit 1
+        ;;
+    esac
+    shift
+done
+
 set -x
 echo "XHarness Helix Job Wrapper calling '$@'"
 "$@"

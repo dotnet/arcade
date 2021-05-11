@@ -8,14 +8,9 @@
 
 app=''
 output_directory=''
-targets=''
-timeout=''
-launch_timeout=''
 xharness_cli_path=''
 xcode_version=''
-app_arguments=''
-expected_exit_code=0
-command='test'
+targets=''
 
 while [[ $# -gt 0 ]]; do
     opt="$(echo "$1" | tr "[:upper:]" "[:lower:]")"
@@ -24,20 +19,12 @@ while [[ $# -gt 0 ]]; do
         app="$2"
         shift
         ;;
-      --output-directory)
-        output_directory="$2"
-        shift
-        ;;
       --targets)
         targets="$2"
         shift
         ;;
-      --timeout)
-        timeout="$2"
-        shift
-        ;;
-      --launch-timeout)
-        launch_timeout="$2"
+      --output-directory)
+        output_directory="$2"
         shift
         ;;
       --xharness-cli-path)
@@ -46,18 +33,6 @@ while [[ $# -gt 0 ]]; do
         ;;
       --xcode-version)
         xcode_version="$2"
-        shift
-        ;;
-      --app-arguments)
-        app_arguments="$2"
-        shift
-        ;;
-      --expected-exit-code)
-        expected_exit_code="$2"
-        shift
-        ;;
-      --command)
-        command="$2"
         shift
         ;;
       *)
@@ -74,23 +49,16 @@ function die ()
     exit 1
 }
 
-if [ -z "$timeout" ]; then
-    die "Test timeout wasn't provided";
+if [ -z "$app" ]; then
+    die "App bundle path wasn't provided";
+fi
+
+if [ -z "$targets" ]; then
+    die "No targets were provided";
 fi
 
 if [ -z "$xharness_cli_path" ]; then
     die "XHarness path wasn't provided";
-fi
-
-if [ -n "$app_arguments" ]; then
-    app_arguments="-- $app_arguments";
-fi
-
-if [ "$command" == "run" ]; then
-    app_arguments="--expected-exit-code=$expected_exit_code $app_arguments"
-elif [ -n "$launch_timeout" ]; then
-    # shellcheck disable=SC2089
-    app_arguments="--launch-timeout=$launch_timeout $app_arguments"
 fi
 
 if [ -z "$xcode_version" ]; then
@@ -145,26 +113,9 @@ export XHARNESS_DISABLE_COLORED_OUTPUT=true
 export XHARNESS_LOG_WITH_TIMESTAMPS=true
 alias xharness="dotnet exec $xharness_cli_path"
 
-if [ "$command" == "test" ] || [ "$command" == "run" ]; then
-    # We include $app_arguments non-escaped and not arrayed because it might contain several extra arguments
-    # which come from outside and are appeneded behind "--" and forwarded to the iOS application from XHarness.
-    # shellcheck disable=SC2086,SC2090
-    xharness apple $command                    \
-        --app="$app"                           \
-        --output-directory="$output_directory" \
-        --targets="$targets"                   \
-        --timeout="$timeout"                   \
-        --xcode="$xcode_path"                  \
-        -v                                     \
-        $app_arguments
-
-    exit_code=$?
-else
-    # Custom commands need to be invoked. They are in a .sh file which name is in $command
-    source "$command"
-    exit_code=$?
-fi
-
+# Act out the actual commands
+source command.sh
+exit_code=$?
 
 # Kill the simulator just in case when we fail to launch the app
 # 80 - app crash
