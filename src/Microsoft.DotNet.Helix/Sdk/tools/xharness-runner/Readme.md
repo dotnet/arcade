@@ -15,7 +15,7 @@ For these workloads, we currently expect the payload to contain xUnit tests and 
 Logs will be collected automatically and sent back with the other Helix results.
 The test results themselves can be published to Azure DevOps using the same python-based publishing scripts as regular Helix jobs.
 
-XHarness is a [.NET Core tool](https://docs.microsoft.com/en-us/dotnet/core/tools/global-tools) and requires **.NET Core 3.1 runtime** to execute on the Helix agent.
+XHarness is a [.NET Core tool](https://docs.microsoft.com/en-us/dotnet/core/tools/global-tools) and requires **.NET 6 runtime** to execute on the Helix agent.
 This is automatically included as a Helix Correlation Payload for the job when XHarness workload is detected.
 
 ## How to use
@@ -30,7 +30,7 @@ There are some required configuration properties that need to be set for XHarnes
 
 ```xml
 <PropertyGroup>
-  <!-- Required: Version of XHarness CLI to use -->
+  <!-- Required: Makes sure XHarness is pre-installed on the Helix agent before the job starts -->
   <IncludeXHarnessCli>true</IncludeXHarnessCli>
 
   <!-- Required: Version of XHarness CLI to use. Check the NuGet feed for current version: https://dev.azure.com/dnceng/public/_packaging?_a=package&feed=dotnet-eng&package=Microsoft.DotNet.XHarness.CLI&protocolType=NuGet -->
@@ -45,7 +45,7 @@ There are some required configuration properties that need to be set for XHarnes
 </PropertyGroup>
 
 <!-- Required: Configuration that is already needed for the Helix SDK -->
-<ItemGroup Condition=" '$(HelixAccessToken)' == '' ">
+<ItemGroup>
   <HelixTargetQueue Include="osx.1015.amd64.open"/>
 </ItemGroup>
 ```
@@ -123,7 +123,7 @@ The Helix machines, that have devices attached to them, already contain the sign
 When using the Helix SDK and targeting real devices:
 - You have to ideally supply a non-signed app bundle - the app will be signed for you on the Helix machine where your job gets executed
 - Only the basic set of app permissions are supported at the moment and we cannot re-sign an app that was already signed with a different set of permissions
-- Bundle id has to start with `net.dot.` since we only support those application IDs at the moment
+- App bundle identifier has to start with `net.dot.` since we only support those application IDs at the moment
 
 ### Android .apk payloads
 

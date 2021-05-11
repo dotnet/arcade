@@ -1,31 +1,22 @@
 using System;
-using System.IO;
-using System.IO.Compression;
-using System.Reflection;
-using System.Threading.Tasks;
+using Microsoft.Arcade.Common;
 using Microsoft.Build.Framework;
-using Newtonsoft.Json;
 
 namespace Microsoft.DotNet.Helix.Sdk
 {
     /// <summary>
     /// MSBuild custom task to create HelixWorkItems for provided Android application packages.
     /// </summary>
-    public abstract class XHarnessTaskBase : BaseTask
+    public abstract class XHarnessTaskBase : MSBuildTaskBase
     {
-        private const int DefaultWorkItemTimeoutInMinutes = 20;
-        private const int DefaultTestTimeoutInMinutes = 12;
+        private static readonly TimeSpan s_defaultWorkItemTimeout = TimeSpan.FromMinutes(20);
+        private static readonly TimeSpan s_defaultTestTimeout = TimeSpan.FromMinutes(12);
 
         private const string TestTimeoutPropName = "TestTimeout";
         private const string WorkItemTimeoutPropName = "WorkItemTimeout";
         private const string ExpectedExitCodePropName = "ExpectedExitCode";
 
-        /// <summary>
-        /// Boolean true if this is a posix shell, false if not.
-        /// This does not need to be set by a user; it is automatically determined in Microsoft.DotNet.Helix.Sdk.MonoQueue.targets
-        /// </summary>
-        [Required]
-        public bool IsPosixShell { get; set; }
+        protected const string ScriptNamespace = "tools.xharness_runner.";
 
         /// <summary>
         /// Extra arguments that will be passed to the iOS/Android/... app that is being run
@@ -51,7 +42,7 @@ namespace Microsoft.DotNet.Helix.Sdk
         protected (TimeSpan TestTimeout, TimeSpan WorkItemTimeout, int ExpectedExitCode) ParseMetadata(ITaskItem xHarnessAppItem)
         {
             // Optional timeout for the actual test execution in the TimeSpan format
-            TimeSpan testTimeout = TimeSpan.FromMinutes(DefaultTestTimeoutInMinutes);
+            TimeSpan testTimeout = s_defaultTestTimeout;
             if (xHarnessAppItem.TryGetMetadata(TestTimeoutPropName, out string testTimeoutProp))
             {
                 if (!TimeSpan.TryParse(testTimeoutProp, out testTimeout) || testTimeout.Ticks < 0)
@@ -61,7 +52,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             }
 
             // Optional timeout for the whole Helix work item run (includes SDK and tool installation)
-            TimeSpan workItemTimeout = TimeSpan.FromMinutes(DefaultWorkItemTimeoutInMinutes);
+            TimeSpan workItemTimeout = s_defaultWorkItemTimeout;
             if (xHarnessAppItem.TryGetMetadata(WorkItemTimeoutPropName, out string workItemTimeoutProp))
             {
                 if (!TimeSpan.TryParse(workItemTimeoutProp, out workItemTimeout) || workItemTimeout.Ticks < 0)
@@ -73,7 +64,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             {
                 // When test timeout was set and work item timeout has not,
                 // we adjust the work item timeout to give enough space for things to work
-                workItemTimeout = TimeSpan.FromMinutes(testTimeout.TotalMinutes + DefaultWorkItemTimeoutInMinutes - DefaultTestTimeoutInMinutes);
+                workItemTimeout = testTimeout + s_defaultWorkItemTimeout - s_defaultTestTimeout;
             }
 
             if (workItemTimeout <= testTimeout)
@@ -93,27 +84,6 @@ namespace Microsoft.DotNet.Helix.Sdk
                 TestTimeout: testTimeout,
                 WorkItemTimeout: workItemTimeout,
                 ExpectedExitCode: expectedExitCode);
-        }
-
-        protected static async Task AddResourceFileToPayload(string payloadArchivePath, string resourceFileName, string targetFileName = null)
-        {
-            using Stream fileStream = GetResourceFileContent(resourceFileName);
-            await AddToPayloadArchive(payloadArchivePath, targetFileName ?? resourceFileName, fileStream);
-        }
-
-        protected static async Task AddToPayloadArchive(string payloadArchivePath, string targetFilename, Stream content)
-        {
-            using FileStream archiveStream = new FileStream(payloadArchivePath, FileMode.Open);
-            using ZipArchive archive = new ZipArchive(archiveStream, ZipArchiveMode.Update);
-            ZipArchiveEntry entry = archive.CreateEntry(targetFilename);
-            using Stream targetStream = entry.Open();
-            await content.CopyToAsync(targetStream);
-        }
-
-        protected static Stream GetResourceFileContent(string resourceFileName)
-        {
-            Assembly thisAssembly = typeof(XHarnessTaskBase).Assembly;
-            return thisAssembly.GetManifestResourceStream($"{thisAssembly.GetName().Name}.tools.xharness_runner.{resourceFileName}");
         }
     }
 }

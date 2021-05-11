@@ -10,6 +10,7 @@ using Microsoft.DotNet.Build.Tasks.Feed.Tests.TestDoubles;
 using Xunit;
 using static Microsoft.DotNet.Build.Tasks.Feed.GeneralUtils;
 using FluentAssertions;
+using Microsoft.DotNet.Arcade.Test.Common;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
 {
@@ -55,7 +56,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             HttpStatusCode feedResponseStatusCode,
             bool? expectedResult)
         {
-            using var httpClient = FakeHttpClient.WithResponse(
+            using var httpClient = FakeHttpClient.WithResponses(
                 new HttpResponseMessage(feedResponseStatusCode));
             var retryHandler = new MockRetryHandler();
 
@@ -117,7 +118,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 response.Content = new ByteArrayContent(content);
             };
 
-            var httpClient = FakeHttpClient.WithResponse(response);
+            var httpClient = FakeHttpClient.WithResponses(response);
 
             var result = await GeneralUtils.CompareLocalPackageToFeedPackage(
                 localPackagePath,
