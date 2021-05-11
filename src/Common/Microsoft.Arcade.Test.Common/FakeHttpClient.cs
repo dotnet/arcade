@@ -7,14 +7,11 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Microsoft.DotNet.Build.Tasks.Feed.Tests.TestDoubles
+namespace Microsoft.DotNet.Arcade.Test.Common
 {
     public static class FakeHttpClient
     {
-        public static HttpClient WithResponse(HttpResponseMessage response)
-            => WithResponses(new[] { response });
-
-        public static HttpClient WithResponses(IEnumerable<HttpResponseMessage> responses)
+        public static HttpClient WithResponses(params HttpResponseMessage[] responses)
             => new HttpClient(
                 new FakeHttpMessageHandler(responses));
 
@@ -44,5 +41,4 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests.TestDoubles
             }
         }
     }
-
 }
