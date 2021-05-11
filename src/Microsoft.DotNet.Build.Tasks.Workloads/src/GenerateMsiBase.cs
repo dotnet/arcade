@@ -294,7 +294,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             writer.WriteElementString("TargetFramework", "net5.0");
             writer.WriteElementString("GeneratePackageOnBuild", "true");
             writer.WriteElementString("IncludeBuildOutput", "false");
-            writer.WriteElementString("PackageType", "NetWorkloadPack");
+            writer.WriteElementString("PackageType", "DotnetPlatform");
             writer.WriteElementString("SuppressDependenciesWhenPacking", "true");
             writer.WriteElementString("NoWarn", "$(NoWarn);NU5128");
             writer.WriteElementString("PackageId", $"{nupkg.Id}.Msi.{platform}");
