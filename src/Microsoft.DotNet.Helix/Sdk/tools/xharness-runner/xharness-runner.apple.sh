@@ -144,19 +144,26 @@ fi
 export XHARNESS_DISABLE_COLORED_OUTPUT=true
 export XHARNESS_LOG_WITH_TIMESTAMPS=true
 
-# We include $app_arguments non-escaped and not arrayed because it might contain several extra arguments
-# which come from outside and are appeneded behind "--" and forwarded to the iOS application from XHarness.
-# shellcheck disable=SC2086,SC2090
-dotnet exec "$xharness_cli_path" apple $command \
-    --app="$app"                                \
-    --output-directory="$output_directory"      \
-    --targets="$targets"                        \
-    --timeout="$timeout"                        \
-    --xcode="$xcode_path"                       \
-    -v                                          \
-    $app_arguments
+if [ "$command" == "test" ] || [ "$command" == "run" ]; then
+    # We include $app_arguments non-escaped and not arrayed because it might contain several extra arguments
+    # which come from outside and are appeneded behind "--" and forwarded to the iOS application from XHarness.
+    # shellcheck disable=SC2086,SC2090
+    xharness apple $command                    \
+        --app="$app"                           \
+        --output-directory="$output_directory" \
+        --targets="$targets"                   \
+        --timeout="$timeout"                   \
+        --xcode="$xcode_path"                  \
+        -v                                     \
+        $app_arguments
 
-exit_code=$?
+    exit_code=$?
+else
+    # Custom commands need to be invoked. They are in a .sh file which name is in $command
+    source "$command"
+    exit_code=$?
+fi
+
 
 # Kill the simulator just in case when we fail to launch the app
 # 80 - app crash
