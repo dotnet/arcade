@@ -9,7 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Microsoft.DotNet.PackageValidation
+namespace Microsoft.DotNet.PackageTesting
 {
     public class GetCompatiblePackageTargetFrameworks : BuildTask
     {

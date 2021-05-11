@@ -11,7 +11,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Microsoft.DotNet.PackageValidation\Microsoft.DotNet.PackageValidation.csproj" />
+    <ProjectReference Include="..\Microsoft.DotNet.PackageTesting\Microsoft.DotNet.PackageTesting.csproj" />
   </ItemGroup>
 
 </Project>

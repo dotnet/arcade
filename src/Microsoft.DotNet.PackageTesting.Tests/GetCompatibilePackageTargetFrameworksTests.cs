@@ -5,7 +5,7 @@ using NuGet.Frameworks;
 using System.Collections.Generic;
 using Xunit;
 
-namespace Microsoft.DotNet.PackageValidation.Tests
+namespace Microsoft.DotNet.PackageTesting.Tests
 {
     public class GetCompatibilePackageTargetFrameworksTests
     {
