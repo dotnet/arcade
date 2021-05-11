@@ -36,12 +36,6 @@ namespace Microsoft.DotNet.Helix.Sdk
         /// </summary>
         public ITaskItem[] Apks { get; set; }
 
-        /// <summary>
-        /// An array of hand-crafted HelixWorkItems where users can specify their own XHarness commands.
-        /// </summary>
-        [Required]
-        public ITaskItem[] AndroidWorkItems { get; set; }
-
         public override void ConfigureServices(IServiceCollection collection)
         {
             collection.TryAddTransient<IZipArchiveManager, ZipArchiveManager>();

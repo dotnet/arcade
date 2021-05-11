@@ -4,6 +4,7 @@
 using System.IO;
 using System.IO.Compression;
 using System.Reflection;
+using System.Text;
 using System.Threading.Tasks;
 
 namespace Microsoft.Arcade.Common
@@ -17,9 +18,7 @@ namespace Microsoft.Arcade.Common
         }
 
         public void ArchiveDirectory(string directoryPath, string archivePath, bool includeBaseDirectory)
-        {
-            ZipFile.CreateFromDirectory(directoryPath, archivePath, CompressionLevel.Fastest, includeBaseDirectory);
-        }
+            => ZipFile.CreateFromDirectory(directoryPath, archivePath, CompressionLevel.Fastest, includeBaseDirectory);
 
         public void ArchiveFile(string filePath, string archivePath)
         {
@@ -30,7 +29,10 @@ namespace Microsoft.Arcade.Common
             }
         }
 
-        private async Task AddContentToArchive(string archivePath, string targetFilename, Stream content)
+        public Task AddContentToArchive(string archivePath, string targetFilename, string content)
+            => AddContentToArchive(archivePath, targetFilename, new MemoryStream(Encoding.UTF8.GetBytes(content)));
+
+        public async Task AddContentToArchive(string archivePath, string targetFilename, Stream content)
         {
             using FileStream archiveStream = new FileStream(archivePath, FileMode.Open);
             using ZipArchive archive = new ZipArchive(archiveStream, ZipArchiveMode.Update);
