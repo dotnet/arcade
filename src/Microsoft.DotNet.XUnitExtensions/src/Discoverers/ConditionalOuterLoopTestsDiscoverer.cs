@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using Xunit.Abstractions;
 using Xunit.Sdk;
 using System.Linq;
+using System.Diagnostics;
 
 namespace Microsoft.DotNet.XUnitExtensions
 {
@@ -22,10 +23,6 @@ namespace Microsoft.DotNet.XUnitExtensions
         public IEnumerable<KeyValuePair<string, string>> GetTraits(IAttributeInfo traitAttribute)
         {
             IEnumerable<object> ctorArgs = traitAttribute.GetConstructorArguments();
-            if (ctorArgs.Count() <= 2)
-            {
-                return new[] { new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.OuterLoop) };
-            }
             return DiscovererHelpers.EvaluateArguments(ctorArgs, XunitConstants.OuterLoop);
         }
     }
