@@ -9,6 +9,54 @@ repo. Xliff-Tasks will continue to be used in addition to OneLocBuild.
 To make OneLocBuild easier to use, we have integrated the task into Arcade. This integration is a job template
 ([here](/eng/common/templates/job/onelocbuild.yml)) that is described in this document.
 
+## Onboarding to OneLocBuild Using Arcade
+
+Onboarding to OneLocBuild is a simple process:
+
+1. Ensure that your repository is on the latest version of Arcade.
+2. Create a test branch (e.g. `LocalizationTests`) in your repository and add the following job template to your YAML:
+```yaml
+- template: /eng/common/templates/job/onelocbuild.yml
+  parameters:
+    CreatePr: false
+```
+3. Run the pipeline you want to use OneLocBuild on your test branch.
+4. Send the test run of that pipeline to Cristiano Suzuki and ask for an LCL package.
+5. Cristiano will generate an LCL package for you and send you its name. It will be something like
+   `LCL-JUNO-PROD-YOURREPO`.
+6. Change your YAML (subbing `'LCL-JUNO-PROD-YOURREPO'` with the package ID  Cristiano gave you) to:
+```yaml
+- template: /eng/common/templates/job/onelocbuild.yml
+  parameters:
+    LclSource: lclFilesfromPackage
+    LclPackageId: 'LCL-JUNO-PROD-YOURREPO'
+```
+7. Merge the changes to your main branch and then let Cristiano know to re-target the package to your main branch.
+
+*Note: as of 12 May 2021, if your repository is mirrored to internal with Maestro, you will also need to keep*
+*`CreatePr: false` in your YAML. Currently, OneLocBuild does not support our scenario, so PRs are being made*
+*manually before release. Please notify Jon Fortescue (jofortes) if you're following this step so that you can*
+*be updated when PR creation is supported.*
+
+## Releasing with OneLocBuild Using Arcade
+
+**NB: The SLA for translations is one week. Please allow at least two weeks from the release for this process.**
+
+### If You're Releasing from `main`
+If you're releasing from the main branch of your repository, all that you need to do is ensure that you're merging
+PRs from OneLocBuild as they are made and that you allow the translator SLA for any new strings prior to the release.
+
+### If You're Releasing from a Branch Other Than `main` (Including Servicing Branches)
+If you're releasing from any other branch (including servicing branches), you must do the following:
+
+1. Add the OneLocBuild task to the pipeline YAML of the release branch
+2. Contact Cristiano Suzuki at least two weeks before the release and tell him to re-target your repository to the
+   release branch.
+3. Merge the OneLocBuild PRs to your release branch.
+4. After the release, tell Cristiano to re-target your repository to the `main` branch again.
+
+# Technical Documentation
+
 ## LocProject.json Index File
 
 The core component of OneLocBuild is the LocProject.json file. This file is an index file containing references to
@@ -30,8 +78,8 @@ which include `test.xlf` in its name.
 }
 ```
 
-The selected files are then added to a generated LocProject.json file. At this point, template currently provides two options
-for how to proceed.
+The selected files are then added to a generated LocProject.json file. At this point, template currently provides two
+options for how to proceed.
 
 ### Build-Time Generation
 
