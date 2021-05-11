@@ -13,6 +13,7 @@ namespace Microsoft.DotNet.XUnitExtensions.Tests
         // This test class is test order dependent so do not rename the tests.
         // If new tests need to be added, follow the same naming pattern ConditionalAttribute{LetterToOrderTest} and then add a Validate{TestName}.
 
+        private static bool s_conditionalOuterLoop;
         private static bool s_conditionalFactExecuted;
         private static int s_conditionalTheoryCount;
 
@@ -22,6 +23,13 @@ namespace Microsoft.DotNet.XUnitExtensions.Tests
         public void ConditionalAttributeA()
         {
             s_conditionalFactExecuted = true;
+        }
+
+        [Fact]
+        [ConditionalOuterLoop("never outer loop", TestPlatforms.Any & ~TestPlatforms.Any)]
+        public void ConditionalOuterLoopAttribute()
+        {
+            s_conditionalOuterLoop = true;
         }
 
         [ConditionalTheory(nameof(AlwaysTrue))]
@@ -39,6 +47,12 @@ namespace Microsoft.DotNet.XUnitExtensions.Tests
         public void ValidateConditionalFact()
         {
             Assert.True(s_conditionalFactExecuted);
+        }
+
+        [Fact]
+        public void ValidateConditionalOuterLoop()
+        {
+            Assert.True(s_conditionalOuterLoop);
         }
 
         [Fact]

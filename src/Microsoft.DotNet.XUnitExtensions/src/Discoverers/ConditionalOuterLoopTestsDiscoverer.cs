@@ -4,14 +4,15 @@
 using System.Collections.Generic;
 using Xunit.Abstractions;
 using Xunit.Sdk;
+using System.Linq;
 
 namespace Microsoft.DotNet.XUnitExtensions
 {
     /// <summary>
-    /// This class discovers all of the tests, test classes and test assemblies that have
-    /// applied the ActiveIssue attribute
+    /// This class discovers all of the tests and test classes that have
+    /// applied the OuterLoop attribute
     /// </summary>
-    public class ActiveIssueDiscoverer : ITraitDiscoverer
+    public class ConditionalOuterLoopTestsDiscoverer : ITraitDiscoverer
     {
         /// <summary>
         /// Gets the trait values from the Category attribute.
@@ -21,7 +22,11 @@ namespace Microsoft.DotNet.XUnitExtensions
         public IEnumerable<KeyValuePair<string, string>> GetTraits(IAttributeInfo traitAttribute)
         {
             IEnumerable<object> ctorArgs = traitAttribute.GetConstructorArguments();
-            return DiscovererHelpers.EvaluateArguments(ctorArgs, XunitConstants.Failing);
+            if (ctorArgs.Count() <= 2)
+            {
+                return new[] { new KeyValuePair<string, string>(XunitConstants.Category, XunitConstants.OuterLoop) };
+            }
+            return DiscovererHelpers.EvaluateArguments(ctorArgs, XunitConstants.OuterLoop);
         }
     }
 }
