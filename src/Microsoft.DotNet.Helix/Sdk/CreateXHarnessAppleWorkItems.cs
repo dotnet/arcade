@@ -87,9 +87,6 @@ namespace Microsoft.DotNet.Helix.Sdk
             IFileSystem fileSystem,
             ITaskItem appBundleItem)
         {
-            // Forces this task to run asynchronously
-            await Task.Yield();
-
             string appFolderPath = appBundleItem.ItemSpec.TrimEnd(Path.DirectorySeparatorChar);
             
             string workItemName = fileSystem.GetFileName(appFolderPath);

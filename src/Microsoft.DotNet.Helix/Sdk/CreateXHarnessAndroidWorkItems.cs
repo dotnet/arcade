@@ -64,8 +64,6 @@ namespace Microsoft.DotNet.Helix.Sdk
         /// <returns>An ITaskItem instance representing the prepared HelixWorkItem.</returns>
         private async Task<ITaskItem> PrepareWorkItem(IZipArchiveManager zipArchiveManager, IFileSystem fileSystem, ITaskItem appPackage)
         {
-            // Forces this task to run asynchronously
-            await Task.Yield();
             string workItemName = fileSystem.GetFileNameWithoutExtension(appPackage.ItemSpec);
 
             var (testTimeout, workItemTimeout, expectedExitCode) = ParseMetadata(appPackage);
