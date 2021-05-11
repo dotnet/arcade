@@ -46,6 +46,10 @@ namespace Microsoft.DotNet.Helix.Sdk
         protected (TimeSpan TestTimeout, TimeSpan WorkItemTimeout, int ExpectedExitCode, string CustomCommands) ParseMetadata(ITaskItem xHarnessAppItem)
         {
             xHarnessAppItem.TryGetMetadata(MetadataNames.CustomCommands, out string customCommands);
+            if (string.IsNullOrEmpty(customCommands))
+            {
+                customCommands = null;
+            }
 
             // Optional timeout for the actual test execution in the TimeSpan format
             TimeSpan testTimeout = s_defaultTestTimeout;

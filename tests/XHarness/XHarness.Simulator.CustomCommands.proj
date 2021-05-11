@@ -25,12 +25,12 @@
         <CustomCommands>
           set -ex
           deviceId=`xharness apple device ios-simulator-64`
-          xharness apple install -t=ios-simulator-64 --device="$deviceId" -o="$HELIX_WORKITEM_UPLOAD_ROOT" --app="$HELIX_WORKITEM_PAYLOAD/$(XHarnessAppBundleName).app" -v
+          xharness apple install -t=ios-simulator-64 --device="$deviceId" -o="$output_directory" --app="$app" -v
           set +e
           result=0
-          xharness apple just-test -t=ios-simulator-64 --device="$deviceId" -o="$HELIX_WORKITEM_UPLOAD_ROOT" --app="net.dot.$(XHarnessAppBundleName)" --launch-timeout=00:05:00 --timeout=00:08:00 -v
+          xharness apple just-test -t=ios-simulator-64 --device="$deviceId" -o="$output_directory" --app="net.dot.$(XHarnessAppBundleName)" --launch-timeout=00:05:00 --timeout=00:08:00 -v
           ((result|=$?))
-          xharness apple uninstall -t=ios-simulator-64 --device="$deviceId" -o="$HELIX_WORKITEM_UPLOAD_ROOT" --app="net.dot.$(XHarnessAppBundleName)" -v
+          xharness apple uninstall -t=ios-simulator-64 --device="$deviceId" -o="$output_directory" --app="net.dot.$(XHarnessAppBundleName)" -v
           ((result|=$?))
           exit $result
         </CustomCommands>
