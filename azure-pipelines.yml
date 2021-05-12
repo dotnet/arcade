@@ -66,6 +66,7 @@ stages:
             $(_InternalBuildArgs)
             /p:Test=false
           displayName: Windows Build / Publish
+        - inline: rd /s /q artifacts/bin
         - task: ComponentGovernanceComponentDetection@0
       - ${{ if eq(variables._RunAsPublic, True) }}:
         - job: Linux
@@ -97,8 +98,6 @@ stages:
       parameters:
         artifacts:
           publish:
-            artifacts:
-              name: Artifacts_Test_$(Agent.OS)_$(_BuildConfig)
             logs: 
               name: Logs_Test_$(Agent.OS)_$(_BuildConfig)
           download: true
