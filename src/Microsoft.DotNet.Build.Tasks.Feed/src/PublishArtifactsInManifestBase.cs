@@ -390,8 +390,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             Dictionary<string, HashSet<Asset>> buildAssets,
             SemaphoreSlim clientThrottle)
         {
-            StringBuilder symbolLog = new StringBuilder();
-            symbolLog.AppendLine("Publishing Symbols to Symbol server: ");
+            Log.LogMessage(MessageImportance.High, 
+                $"Performing symbol publishing... \nExpirationInDays : {ExpirationInDays} \nConvertPortablePdbsToWindowsPdb : false \ndryRun: false ");
             var symbolCategory = TargetFeedContentType.Symbols;
             string containerId = await GetContainerIdAsync(ArtifactName.BlobArtifacts);
             
@@ -411,6 +411,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 }
             }
 
+            Log.LogMessage(MessageImportance.High, $"Total number of symbol files : {symbolsToPublish.Count}");
+
             HashSet<TargetFeedConfig> feedConfigsForSymbols = FeedConfigs[symbolCategory];
             Dictionary<string, string> serversToPublish =
                 GetTargetSymbolServers(feedConfigsForSymbols, msdlToken, symWebToken);
@@ -427,7 +429,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             await clientThrottle.WaitAsync();
                             string temporarySymbolsDirectory = CreateTemporaryDirectory();
                             string localSymbolPath = Path.Combine(temporarySymbolsDirectory, symbol);
-                            symbolLog.AppendLine($"Downloading symbol : {symbol} to {localSymbolPath}");
+                            Log.LogMessage(MessageImportance.High, $"Downloading symbol : {symbol} to {localSymbolPath}");
 
                             Stopwatch gatherDownloadTime = Stopwatch.StartNew();
                             await DownloadFileAsync(
@@ -438,18 +440,17 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                                 localSymbolPath);
                             
                             gatherDownloadTime.Stop();
-                            symbolLog.AppendLine($"Time taken to download file to '{localSymbolPath}' is {gatherDownloadTime.ElapsedMilliseconds / 1000.0} (seconds)");
-                            symbolLog.AppendLine($"Successfully downloaded symbol : {symbol} to {localSymbolPath}");
+                            Log.LogMessage(MessageImportance.High, $"Time taken to download file to '{localSymbolPath}' is {gatherDownloadTime.ElapsedMilliseconds / 1000.0} (seconds)");
+                            Log.LogMessage(MessageImportance.High, $"Successfully downloaded symbol : {symbol} to {localSymbolPath}");
 
                             List<string> symbolFiles = new List<string>();
                             symbolFiles.Add(localSymbolPath);
-                            symbolLog.AppendLine($"Uploading symbol file '{string.Join(",", symbolFiles)}'");
 
                             foreach (var server in serversToPublish)
                             {
                                 var serverPath = server.Key;
                                 var token = server.Value;
-                                symbolLog.AppendLine($"Publishing symbol file {symbol} to {serverPath}:");
+                                Log.LogMessage(MessageImportance.High, $"Publishing symbol file {symbol} to {serverPath}:");
                                 Stopwatch gatherSymbolPublishingTime = Stopwatch.StartNew();
 
                                 try
@@ -475,7 +476,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                                 }
 
                                 gatherSymbolPublishingTime.Stop();
-                                symbolLog.AppendLine(
+                                Log.LogMessage(MessageImportance.High,
                                     $"Symbol publishing for {symbol} took {gatherSymbolPublishingTime.ElapsedMilliseconds / 1000.0} (seconds)");
                             }
 
@@ -487,13 +488,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         }
                     }));
 
-                    symbolLog.AppendLine(
-                        $"Performing symbol publishing... \nExpirationInDays : {ExpirationInDays} \nConvertPortablePdbsToWindowsPdb : false \ndryRun: false ");
-                    symbolLog.AppendLine($"Total number of symbol files : {symbolsToPublish.Count}");
-                    symbolLog.AppendLine("Successfully published to Symbol Server.");
-                    symbolLog.AppendLine();
-                    Log.LogMessage(MessageImportance.High, symbolLog.ToString());
-                    symbolLog.Clear();
+                    Log.LogMessage(MessageImportance.High, "Successfully published to symbol servers.");
                 }
             }
             else
@@ -522,7 +517,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 {
                     var serverPath = server.Key;
                     var token = server.Value;
-                    symbolLog.AppendLine($"Publishing pdbFiles to {serverPath}:");
+                    Log.LogMessage(MessageImportance.High, $"Publishing pdbFiles to {serverPath}:");
                     
                     try
                     {
@@ -618,8 +613,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         {
             if (Directory.Exists(temporarySymbolsLocation))
             {
-                StringBuilder symbolLog = new StringBuilder();
-                symbolLog.AppendLine("Publishing Symbols to Symbol server: ");
+                Log.LogMessage(MessageImportance.High, "Publishing Symbols to Symbol server: ");
                 string[] fileEntries = Directory.GetFiles(temporarySymbolsLocation);
 
                 var category = TargetFeedContentType.Symbols;
@@ -647,9 +641,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 foreach (var server in serversToPublish)
                 {
                     var serverPath = server.Key;
-                    var token = server.Value;
-                    symbolLog.AppendLine($"Publishing symbol packages to {serverPath}:");
-                    symbolLog.AppendLine(
+                    var token = server.Value;;
+                    Log.LogMessage(MessageImportance.High,
                         $"Performing symbol publishing...\nSymbolServerPath : ${serverPath} \nExpirationInDays : {ExpirationInDays} \nConvertPortablePdbsToWindowsPdb : false \ndryRun: false \nTotal number of symbol files : {fileEntries.Length} ");
                     
                     try
@@ -674,10 +667,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         Log.LogError(ex.Message);
                     }
 
-                    symbolLog.AppendLine("Successfully published to Symbol Server.");
-                    symbolLog.AppendLine();
-                    Log.LogMessage(MessageImportance.High, symbolLog.ToString());
-                    symbolLog.Clear();
+                    Log.LogMessage(MessageImportance.High, $"Successfully published to ${serverPath}.");
                 }
             }
             else
