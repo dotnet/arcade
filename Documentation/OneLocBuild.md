@@ -26,7 +26,7 @@ Onboarding to OneLocBuild is a simple process:
    test build you've done.
 5. The loc team will generate an LCL package for you and send you its ID. It will be something like
    `LCL-JUNO-PROD-YOURREPO`.
-6. Change your YAML (subbing `'LCL-JUNO-PROD-YOURREPO'` with the package ID given to you) to:
+6. Change your YAML (subbing `'LCL-JUNO-PROD-YOURREPO'` for the package ID given to you) to:
 ```yaml
 - template: /eng/common/templates/job/onelocbuild.yml
   parameters:
@@ -37,14 +37,14 @@ Onboarding to OneLocBuild is a simple process:
    [repo modification ticket](https://ceapex.visualstudio.com/CEINTL/_workitems/create/Loc%20Request) with the loc team 
    to let them know to retarget the branch.
 
-*Note: as of 12 May 2021, if your repository is mirrored to internal with Maestro, you will also need to keep*
-*`CreatePr: false` in your YAML. Currently, OneLocBuild does not support our scenario, so PRs are being made*
-*manually before release. Please notify Jon Fortescue (jofortes) if you're following this step so that you can*
-*be updated when PR creation is supported.*
+As of 12 May 2021, if your repository is mirrored to internal with Maestro, you will also need to keep
+`CreatePr: false` in your YAML. Currently, OneLocBuild does not support our scenario, so we are PRs are being made
+manually before release as a workaround. Please [get a hold of Engineering Services](https://github.com/dotnet/core-eng/wiki/How-to-get-a-hold-of-Engineering-Servicing)
+if you're following this step so that you can be updated when PR creation is supported.
 
 ## Releasing with OneLocBuild Using Arcade
 
-**NB: The SLA for translations is one week. Please allow at least two weeks from the release for this process.**
+**Note: The SLA for translations is one week. Please allow at least two weeks from the release for this process.**
 
 ### If You're Releasing from `main`
 If you're releasing from the main branch of your repository, all that you need to do is ensure that you're merging
@@ -53,11 +53,11 @@ PRs from OneLocBuild as they are made and that you allow the translator SLA for 
 ### If You're Releasing from a Branch Other Than `main` (Including Servicing Branches)
 If you're releasing from any other branch (including servicing branches), you must do the following:
 
-1. Add the OneLocBuild task to the pipeline YAML of the release branch
+1. Add the OneLocBuild job template to the pipeline YAML of the release branch
 2. Open a [repo modification ticket](https://ceapex.visualstudio.com/CEINTL/_workitems/create/Loc%20Request) with the 
    loc team at least two weeks before the release and request that they re-target your repository to the release branch.
 4. Merge the OneLocBuild PRs to your release branch.
-5. After the release, tell Cristiano to re-target your repository to the `main` branch again.
+5. After the release, open another repo modification ticket to re-target your repository to the `main` branch again.
 
 ## Filing Issues for Translation Issues
 
