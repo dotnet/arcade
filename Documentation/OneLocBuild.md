@@ -21,17 +21,21 @@ Onboarding to OneLocBuild is a simple process:
     CreatePr: false
 ```
 3. Run the pipeline you want to use OneLocBuild on your test branch.
-4. Send the test run of that pipeline to Cristiano Suzuki and ask for an LCL package.
-5. Cristiano will generate an LCL package for you and send you its name. It will be something like
+4. Open a ticket with the localization team using
+   [this template](https://ceapex.visualstudio.com/CEINTL/_workitems/create/Loc%20Request). Include the link to the 
+   test build you've done.
+5. The loc team will generate an LCL package for you and send you its name. It will be something like
    `LCL-JUNO-PROD-YOURREPO`.
-6. Change your YAML (subbing `'LCL-JUNO-PROD-YOURREPO'` with the package ID  Cristiano gave you) to:
+6. Change your YAML (subbing `'LCL-JUNO-PROD-YOURREPO'` with the package ID given to you) to:
 ```yaml
 - template: /eng/common/templates/job/onelocbuild.yml
   parameters:
     LclSource: lclFilesfromPackage
     LclPackageId: 'LCL-JUNO-PROD-YOURREPO'
 ```
-7. Merge the changes to your main branch and then let Cristiano know to re-target the package to your main branch.
+7. Merge the changes to your main branch and then let open a
+   [repo modification ticket](https://ceapex.visualstudio.com/CEINTL/_workitems/create/Loc%20Request) with the loc team 
+   to let them know to retarget the branch.
 
 *Note: as of 12 May 2021, if your repository is mirrored to internal with Maestro, you will also need to keep*
 *`CreatePr: false` in your YAML. Currently, OneLocBuild does not support our scenario, so PRs are being made*
@@ -50,10 +54,14 @@ PRs from OneLocBuild as they are made and that you allow the translator SLA for 
 If you're releasing from any other branch (including servicing branches), you must do the following:
 
 1. Add the OneLocBuild task to the pipeline YAML of the release branch
-2. Contact Cristiano Suzuki at least two weeks before the release and tell him to re-target your repository to the
-   release branch.
-3. Merge the OneLocBuild PRs to your release branch.
-4. After the release, tell Cristiano to re-target your repository to the `main` branch again.
+2. Open a [repo modification ticket](https://ceapex.visualstudio.com/CEINTL/_workitems/create/Loc%20Request) with the 
+   loc team at least two weeks before the release and tell them to re-target your repository to the release branch.
+4. Merge the OneLocBuild PRs to your release branch.
+5. After the release, tell Cristiano to re-target your repository to the `main` branch again.
+
+## Filing Issues for Translation Issues
+
+File a translation issue ticket with the localization team (see documentation [here](https://dev.azure.com/ceapex/CEINTL/_wiki/wikis/CEINTL.wiki/1361/Provide-Enough-Information-in-DevRel-Feedback-Ticket)).
 
 # Technical Documentation
 
