@@ -111,7 +111,9 @@ $ValidatePackage = {
                             $Status = (Invoke-WebRequest -Uri $Link -UseBasicParsing -Method HEAD -TimeoutSec 5).StatusCode
                           }
                           else {
+                            # If it's not a github link, we want to break out of the loop and not retry.
                             $Status = 0
+                            $totalRetries = $using:MaxRetry
                           }
                         }
                         catch {
