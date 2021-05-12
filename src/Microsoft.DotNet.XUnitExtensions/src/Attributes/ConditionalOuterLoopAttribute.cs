@@ -20,7 +20,7 @@ namespace Xunit
         public ConditionalOuterLoopAttribute(string reason, TargetFrameworkMonikers framework) { }
         public ConditionalOuterLoopAttribute(string reason, TestRuntimes runtimes) { }
         public ConditionalOuterLoopAttribute(string reason, TestPlatforms platforms = TestPlatforms.Any, TargetFrameworkMonikers framework = TargetFrameworkMonikers.Any, TestRuntimes runtimes = TestRuntimes.Any) { }
-        public ConditionalOuterLoopAttribute(string isreasonsue, Type calleeType, params string[] conditionMemberNames)
+        public ConditionalOuterLoopAttribute(string reason, Type calleeType, params string[] conditionMemberNames)
         {
             CalleeType = calleeType;
             ConditionMemberNames = conditionMemberNames;
