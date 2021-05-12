@@ -140,18 +140,18 @@ namespace Microsoft.DotNet.Helix.Sdk
                 injectedCommand = $"xharness apple {(includesTestRunner ? "test" : "run")} " +
                     "--app \"$app\" " +
                     "--output-directory \"$output_directory\" " +
-                    $"--targets \"{targets}\" " +
-                    $"--timeout \"{testTimeout}\" " +
+                    "--targets \"$targets\" " +
+                    "--timeout \"$timeout\" " +
                     (includesTestRunner
-                        ? $"--launch-timeout \"{launchTimeout}\" "
-                        : $"--expected-exit-code {expectedExitCode} ") +
+                        ? $"--launch-timeout \"$launch_timeout\" "
+                        : $"--expected-exit-code $expected_exit_code ") +
                     "--xcode \"$xcode_path\" " +
                     "-v " +
                     (!string.IsNullOrEmpty(AppArguments) ? "-- " + AppArguments : string.Empty);
             }
 
             string appName = fileSystem.GetFileName(appBundleItem.ItemSpec);
-            string helixCommand = GetHelixCommand(appName, targets);
+            string helixCommand = GetHelixCommand(appName, targets, testTimeout, launchTimeout, includesTestRunner, expectedExitCode);
             string payloadArchivePath = await CreateZipArchiveOfFolder(zipArchiveManager, fileSystem, appFolderPath, injectedCommand);
 
             Log.LogMessage($"Creating work item with properties Identity: {workItemName}, Payload: {appFolderPath}, Command: {helixCommand}");
@@ -165,10 +165,14 @@ namespace Microsoft.DotNet.Helix.Sdk
             });
         }
 
-        private string GetHelixCommand(string appName, string targets) =>
+        private string GetHelixCommand(string appName, string targets, TimeSpan testTimeout, TimeSpan launchTimeout, bool includesTestRunner, int expectedExitCode) =>
             $"chmod +x {EntryPointScript} && ./{EntryPointScript} " +
             $"--app \"{appName}\" " +
             $"--targets \"{targets}\" " +
+            $"--timeout \"{testTimeout}\" " +
+            $"--launch-timeout \"{launchTimeout}\" " +
+            (includesTestRunner ? "--includes-test-runner " : string.Empty) +
+            $"--expected-exit-code \"{expectedExitCode}\" " +
             (!string.IsNullOrEmpty(XcodeVersion) ? $" --xcode-version \"{XcodeVersion}\"" : string.Empty) +
             (!string.IsNullOrEmpty(AppArguments) ? $" --app-arguments \"{AppArguments}\"" : string.Empty);
 

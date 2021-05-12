@@ -177,8 +177,13 @@ Example:
 </ItemGroup>
 ```
 
-When using `CustomCommands`, several variables will be defined for you for easier run:
+When using `CustomCommands`, several variables will be defined for you for easier run.
+
+#### Variables defined for Apple scenarios
 - `$app` - path to the application
 - `$output_directory` - path under which all files will be uploaded to Helix at the end of the job
-  - If a file named `testResults.xml` is found, it will be uploaded back to Azure DevOps
-- `$targets`, `$xcode_version` `$launch_timeout`, `$timeout`, `$expected_exit_code` - properties set on the original MSBuild item
+  - If a file named `testResults.xml` is found containing xUnit results, it will be uploaded back to Azure DevOps
+- `$targets`, `$timeout`, `$launch_timeout`, `$expected_exit_code`, `$includes_test_runner` - parsed metadata defined on the original `XHarnessAppBundleToTest` MSBuild item
+
+#### Variables defined for Android scenarios
+Android is currently not supported - coming soon!

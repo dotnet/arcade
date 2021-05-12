@@ -7,8 +7,7 @@
 ###
 
 app=''
-xcode_version=''
-targets=''
+forwarded_args=''
 
 while [[ $# -gt 0 ]]; do
     opt="$(echo "$1" | tr "[:upper:]" "[:lower:]")"
@@ -17,17 +16,8 @@ while [[ $# -gt 0 ]]; do
         app="$2"
         shift
         ;;
-      --targets)
-        targets="$2"
-        shift
-        ;;
-      --xcode-version)
-        xcode_version="$2"
-        shift
-        ;;
       *)
-        echo "Invalid argument: $1"
-        exit 1
+        forwarded_args="$forwarded_args $1"
         ;;
     esac
     shift
@@ -40,11 +30,10 @@ set -x
 chmod +x xharness-runner.apple.sh
 helix_runner_uid=$(id -u)
 sudo launchctl asuser "$helix_runner_uid" sh ./xharness-runner.apple.sh \
+    $forwarded_args                                                     \
     --app "$HELIX_WORKITEM_ROOT/$app"                                   \
-    --targets "$targets"                                                \
     --xharness-cli-path "$XHARNESS_CLI_PATH"                            \
     --output-directory "$HELIX_WORKITEM_UPLOAD_ROOT"                    \
-    --xcode-version "$xcode_version"
 
 exit_code=$?
 

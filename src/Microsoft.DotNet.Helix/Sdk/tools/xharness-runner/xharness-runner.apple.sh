@@ -8,9 +8,13 @@
 
 app=''
 output_directory=''
+targets=''
+timeout=''
+launch_timeout=''
 xharness_cli_path=''
 xcode_version=''
-targets=''
+app_arguments=''
+expected_exit_code=0
 
 while [[ $# -gt 0 ]]; do
     opt="$(echo "$1" | tr "[:upper:]" "[:lower:]")"
@@ -21,6 +25,14 @@ while [[ $# -gt 0 ]]; do
         ;;
       --targets)
         targets="$2"
+        shift
+        ;;
+      --timeout)
+        timeout="$2"
+        shift
+        ;;
+      --launch-timeout)
+        launch_timeout="$2"
         shift
         ;;
       --output-directory)
@@ -35,9 +47,13 @@ while [[ $# -gt 0 ]]; do
         xcode_version="$2"
         shift
         ;;
-      *)
-        echo "Invalid argument: $1"
-        exit 1
+      --app-arguments)
+        app_arguments="$2"
+        shift
+        ;;
+      --expected-exit-code)
+        expected_exit_code="$2"
+        shift
         ;;
     esac
     shift
