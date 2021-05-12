@@ -86,7 +86,8 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             _fileSystem.FileExists(payloadArchive).Should().BeTrue();
 
             var command = workItem.GetMetadata("Command");
-            command.Should().Contain("--command test");
+            command.Should().Contain("System.Foo.app");
+            command.Should().Contain("--targets \"ios-device_13.5\"");
             command.Should().Contain("--timeout \"00:08:55\"");
             command.Should().Contain("--launch-timeout \"00:02:33\"");
 
@@ -96,6 +97,8 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 .Verify(x => x.AddResourceFileToArchive<CreateXHarnessAppleWorkItems>(payloadArchive, It.Is<string>(s => s.Contains("xharness-helix-job.apple.sh")), "xharness-helix-job.apple.sh"), Times.Once);
             _zipArchiveManager
                 .Verify(x => x.AddResourceFileToArchive<CreateXHarnessAppleWorkItems>(payloadArchive, It.Is<string>(s => s.Contains("xharness-runner.apple.sh")), "xharness-runner.apple.sh"), Times.Once);
+            _zipArchiveManager
+                .Verify(x => x.AddContentToArchive(payloadArchive, "command.sh", It.Is<string>(s => s.Contains("xharness apple test"))), Times.Once);
         }
 
         [Fact]
@@ -149,14 +152,13 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
 
             var workItem = _task.WorkItems.First();
             workItem.GetMetadata("Identity").Should().Be("System.Foo");
-            workItem.GetMetadata("Command").Should().Contain("--command \"custom-commands.sh\"");
 
             var payloadArchive = workItem.GetMetadata("PayloadArchive");
             payloadArchive.Should().NotBeNullOrEmpty();
             _fileSystem.FileExists(payloadArchive).Should().BeTrue();
 
             _zipArchiveManager
-                .Verify(x => x.AddContentToArchive(payloadArchive, "custom-commands.sh", "echo foo"), Times.Once);
+                .Verify(x => x.AddContentToArchive(payloadArchive, "command.sh", "echo foo"), Times.Once);
         }
 
         [Fact]

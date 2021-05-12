@@ -130,7 +130,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                 }
             }
 
-            if (includesTestRunner && expectedExitCode != 0)
+            if (includesTestRunner && expectedExitCode != 0 && injectedCommand != null)
             {
                 Log.LogWarning("The ExpectedExitCode property is ignored in the `apple test` scenario");
             }
@@ -143,7 +143,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                     "--targets \"$targets\" " +
                     "--timeout \"$timeout\" " +
                     (includesTestRunner
-                        ? $"--launch-timeout \"$launch_timeout\" "
+                        ? $"--includes-test-runner --launch-timeout \"$launch_timeout\" "
                         : $"--expected-exit-code $expected_exit_code ") +
                     "--xcode \"$xcode_path\" " +
                     "-v " +

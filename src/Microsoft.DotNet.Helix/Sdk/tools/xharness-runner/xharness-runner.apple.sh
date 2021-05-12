@@ -15,12 +15,17 @@ xharness_cli_path=''
 xcode_version=''
 app_arguments=''
 expected_exit_code=0
+includes_test_runner=false
 
 while [[ $# -gt 0 ]]; do
     opt="$(echo "$1" | tr "[:upper:]" "[:lower:]")"
     case "$opt" in
       --app)
         app="$2"
+        shift
+        ;;
+      --output-directory)
+        output_directory="$2"
         shift
         ;;
       --targets)
@@ -33,10 +38,6 @@ while [[ $# -gt 0 ]]; do
         ;;
       --launch-timeout)
         launch_timeout="$2"
-        shift
-        ;;
-      --output-directory)
-        output_directory="$2"
         shift
         ;;
       --xharness-cli-path)
@@ -54,6 +55,9 @@ while [[ $# -gt 0 ]]; do
       --expected-exit-code)
         expected_exit_code="$2"
         shift
+        ;;
+      --includes-test-runner)
+        includes_test_runner=true
         ;;
     esac
     shift
