@@ -38,9 +38,9 @@ Onboarding to OneLocBuild is a simple process:
    to let them know to retarget the branch.
 
 As of 12 May 2021, if your repository is mirrored to internal with Maestro, you will also need to keep
-`CreatePr: false` in your YAML. Currently, OneLocBuild does not support our scenario, so we are PRs are being made
-manually before release as a workaround. Please [get a hold of Engineering Services](https://github.com/dotnet/core-eng/wiki/How-to-get-a-hold-of-Engineering-Servicing)
-if you're following this step so that you can be updated when PR creation is supported.
+`CreatePr: false` in your YAML. Currently, OneLocBuild does not support our scenario, so the step to create PRs fails,
+breaking the build. As a workaround, we are creating PRs manually prior to releases. Please [get a hold of Engineering Services](https://github.com/dotnet/core-eng/wiki/How-to-get-a-hold-of-Engineering-Servicing)
+so that you can be updated when automated PR creation is supported.
 
 ## Releasing with OneLocBuild Using Arcade
 
