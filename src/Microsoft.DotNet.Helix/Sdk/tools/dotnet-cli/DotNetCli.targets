@@ -18,4 +18,27 @@
       <HelixPreCommands Condition="!$(IsPosixShell)">$(HelixPreCommands);set DOTNET_ROOT=%HELIX_CORRELATION_PAYLOAD%\$(DotNetCliDestination);set DOTNET_CLI_TELEMETRY_OPTOUT=1</HelixPreCommands>
     </PropertyGroup>
   </Target>
+  
+  <Target Name="AddAdditionalRuntimes" 
+          Condition="@(AdditionalDotNetPackage->Count()) != 0"
+          AfterTargets="Build" 
+          Outputs="%(AdditionalDotNetPackage.Identity)">
+    <PropertyGroup>
+      <_channel>%(AdditionalDotNetPackage.Channel)</_channel>
+      <_channel Condition=" '$(_channel)' == '' ">Current</_channel>
+      <_packageType>%(AdditionalDotNetPackage.PackageType)</_packageType>
+      <_packageType Condition=" '$(_packageType)' == '' ">runtime</_packageType>
+    </PropertyGroup>
+
+    <Message Text = "Adding correlation payload for additional .NET Core package: Version: '%(AdditionalDotNetPackage.Identity)'  Runtime: '$(DotNetCliRuntime)' PackageType: '$(_packageType)' Channel: '$(_channel)' "/>
+    <FindDotNetCliPackage Version="%(AdditionalDotNetPackage.Identity)" Runtime="$(DotNetCliRuntime)" PackageType="$(_packageType)" Channel="$(_channel)">
+      <Output TaskParameter="PackageUri" PropertyName="DotNetCliPackageUri"/>
+    </FindDotNetCliPackage>
+    <ItemGroup>
+      <HelixCorrelationPayload Include="dotnet-additional">
+        <Uri>$(DotNetCliPackageUri)</Uri>
+        <Destination>$(DotNetCliDestination)</Destination>
+      </HelixCorrelationPayload>
+    </ItemGroup>
+  </Target>
 </Project>
