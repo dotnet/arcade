@@ -2,6 +2,9 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using Xunit;
+using System.Linq;
+using Xunit.Sdk;
+using System.Reflection;
 
 namespace Microsoft.DotNet.XUnitExtensions.Tests
 {
@@ -13,7 +16,6 @@ namespace Microsoft.DotNet.XUnitExtensions.Tests
         // This test class is test order dependent so do not rename the tests.
         // If new tests need to be added, follow the same naming pattern ConditionalAttribute{LetterToOrderTest} and then add a Validate{TestName}.
 
-        private static bool s_conditionalOuterLoop;
         private static bool s_conditionalFactExecuted;
         private static int s_conditionalTheoryCount;
 
@@ -27,9 +29,40 @@ namespace Microsoft.DotNet.XUnitExtensions.Tests
 
         [Fact]
         [OuterLoop("never outer loop", TestPlatforms.Any & ~TestPlatforms.Any)]
-        public void ConditionalOuterLoopAttribute()
+        public void NeverConditionalOuterLoopAttribute()
         {
-            s_conditionalOuterLoop = true;
+            var method = System.Reflection.MethodBase.GetCurrentMethod();
+            var attribute = CustomAttributeData.GetCustomAttributes(method).Where(attr => attr.AttributeType == typeof(OuterLoopAttribute)).Single();
+            var disco = new OuterLoopTestsDiscoverer();
+            var res = disco.GetTraits(new ReflectionAttributeInfo(attribute)).ToList();
+
+            Assert.Empty(res);
+        }
+
+        [Fact]
+        [OuterLoop("always outer loop", TestPlatforms.Any)]
+        public void AlwaysConditionalOuterLoopAttribute()
+        {
+            var method = System.Reflection.MethodBase.GetCurrentMethod();
+            var attribute = CustomAttributeData.GetCustomAttributes(method).Where(attr => attr.AttributeType == typeof(OuterLoopAttribute)).Single();
+            var disco = new OuterLoopTestsDiscoverer();
+            var res = disco.GetTraits(new ReflectionAttributeInfo(attribute)).ToList();
+
+            Assert.Single(res);
+            Assert.Equal("outerloop", res[0].Value);
+        }
+
+        [Fact]
+        [OuterLoop("always outer loop")]
+        public void AlwaysOuterLoopAttribute()
+        {
+            var method = System.Reflection.MethodBase.GetCurrentMethod();
+            var attribute = CustomAttributeData.GetCustomAttributes(method).Where(attr => attr.AttributeType == typeof(OuterLoopAttribute)).Single();
+            var disco = new OuterLoopTestsDiscoverer();
+            var res = disco.GetTraits(new ReflectionAttributeInfo(attribute)).ToList();
+
+            Assert.Single(res);
+            Assert.Equal("outerloop", res[0].Value);
         }
 
         [ConditionalTheory(nameof(AlwaysTrue))]
@@ -47,12 +80,6 @@ namespace Microsoft.DotNet.XUnitExtensions.Tests
         public void ValidateConditionalFact()
         {
             Assert.True(s_conditionalFactExecuted);
-        }
-
-        [Fact]
-        public void ValidateConditionalOuterLoop()
-        {
-            Assert.True(s_conditionalOuterLoop);
         }
 
         [Fact]
