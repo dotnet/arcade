@@ -3,7 +3,7 @@
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" />
 
   <PropertyGroup>
-    <XHarnessTestAppBundleName>System.Text.Json.Tests.app</XHarnessTestAppBundleName>
+    <XHarnessTestAppBundleName>Microsoft.Extensions.Configuration.CommandLine.Tests.app</XHarnessTestAppBundleName>
     <XHarnessTestAppBundleUrl>https://netcorenativeassets.blob.core.windows.net/resource-packages/external/ios/test-app/ios-simulator-64/$(XHarnessTestAppBundleName).zip</XHarnessTestAppBundleUrl>
   </PropertyGroup>
 
