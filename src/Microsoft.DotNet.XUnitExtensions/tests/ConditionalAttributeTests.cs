@@ -26,7 +26,7 @@ namespace Microsoft.DotNet.XUnitExtensions.Tests
         }
 
         [Fact]
-        [ConditionalOuterLoop("never outer loop", TestPlatforms.Any & ~TestPlatforms.Any)]
+        [OuterLoop("never outer loop", TestPlatforms.Any & ~TestPlatforms.Any)]
         public void ConditionalOuterLoopAttribute()
         {
             s_conditionalOuterLoop = true;
