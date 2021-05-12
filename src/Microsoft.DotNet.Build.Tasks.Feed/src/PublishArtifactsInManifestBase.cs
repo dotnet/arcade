@@ -476,7 +476,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                                 }
 
                                 gatherSymbolPublishingTime.Stop();
-                                symbolLog.AppendLine(
+                                Log.LogMessage(MessageImportance.High,
                                     $"Symbol publishing for {symbol} took {gatherSymbolPublishingTime.ElapsedMilliseconds / 1000.0} (seconds)");
                             }
 
