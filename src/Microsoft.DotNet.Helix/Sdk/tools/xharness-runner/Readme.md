@@ -163,7 +163,7 @@ Example:
     <WorkItemTimeout>00:12:00</WorkItemTimeout>
     <CustomCommands>
       set -e
-      deviceId=`xharness apple device ios-simulator-64`
+      deviceId=`xharness apple device $targets`
       xharness apple install -t $targets --device "$deviceId" -o "$output_directory" --app=$app
       set +e
       result=0
