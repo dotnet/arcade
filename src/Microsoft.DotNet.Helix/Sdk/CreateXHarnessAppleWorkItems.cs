@@ -98,7 +98,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                 workItemName = workItemName.Substring(0, workItemName.Length - 4);
             }
 
-            var (testTimeout, workItemTimeout, expectedExitCode, injectedCommand) = ParseMetadata(appBundleItem);
+            var (testTimeout, workItemTimeout, expectedExitCode, customCommands) = ParseMetadata(appBundleItem);
 
             // Validation of any metadata specific to iOS stuff goes here
             if (!appBundleItem.TryGetMetadata(MetadataNames.Targets, out string targets))
@@ -130,20 +130,21 @@ namespace Microsoft.DotNet.Helix.Sdk
                 }
             }
 
-            if (includesTestRunner && expectedExitCode != 0 && injectedCommand != null)
+            if (includesTestRunner && expectedExitCode != 0 && customCommands != null)
             {
                 Log.LogWarning("The ExpectedExitCode property is ignored in the `apple test` scenario");
             }
 
-            if (injectedCommand == null)
+            if (customCommands == null)
             {
-                injectedCommand = $"xharness apple {(includesTestRunner ? "test" : "run")} " +
+                // In case user didn't specify custom commands, we use our default one
+                customCommands = $"xharness apple {(includesTestRunner ? "test" : "run")} " +
                     "--app \"$app\" " +
                     "--output-directory \"$output_directory\" " +
                     "--targets \"$targets\" " +
                     "--timeout \"$timeout\" " +
                     (includesTestRunner
-                        ? $"--includes-test-runner --launch-timeout \"$launch_timeout\" "
+                        ? $"--launch-timeout \"$launch_timeout\" "
                         : $"--expected-exit-code $expected_exit_code ") +
                     "--xcode \"$xcode_path\" " +
                     "-v " +
@@ -152,7 +153,7 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             string appName = fileSystem.GetFileName(appBundleItem.ItemSpec);
             string helixCommand = GetHelixCommand(appName, targets, testTimeout, launchTimeout, includesTestRunner, expectedExitCode);
-            string payloadArchivePath = await CreateZipArchiveOfFolder(zipArchiveManager, fileSystem, appFolderPath, injectedCommand);
+            string payloadArchivePath = await CreateZipArchiveOfFolder(zipArchiveManager, fileSystem, appFolderPath, customCommands);
 
             Log.LogMessage($"Creating work item with properties Identity: {workItemName}, Payload: {appFolderPath}, Command: {helixCommand}");
 
