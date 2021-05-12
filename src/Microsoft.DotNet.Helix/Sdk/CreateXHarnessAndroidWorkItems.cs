@@ -68,7 +68,7 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             var (testTimeout, workItemTimeout, expectedExitCode, customCommands) = ParseMetadata(appPackage);
 
-            string command = ValidateMetadataAndGetXHarnessAndroidCommand(appPackage, testTimeout, expectedExitCode, customCommands != null);
+            string command = ValidateMetadataAndGetXHarnessAndroidCommand(appPackage, testTimeout, expectedExitCode);
 
             if (!fileSystem.GetExtension(appPackage.ItemSpec).Equals(".apk", StringComparison.OrdinalIgnoreCase))
             {
@@ -78,7 +78,7 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             Log.LogMessage($"Creating work item with properties Identity: {workItemName}, Payload: {appPackage.ItemSpec}, Command: {command}");
 
-            string workItemZip = await CreateZipArchiveOfPackageAsync(zipArchiveManager, fileSystem, appPackage.ItemSpec, customCommands);
+            string workItemZip = await CreateZipArchiveOfPackageAsync(zipArchiveManager, fileSystem, appPackage.ItemSpec);
 
             return new Build.Utilities.TaskItem(workItemName, new Dictionary<string, string>()
             {
@@ -89,11 +89,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             });
         }
 
-        private async Task<string> CreateZipArchiveOfPackageAsync(
-            IZipArchiveManager zipArchiveManager,
-            IFileSystem fileSystem,
-            string fileToZip,
-            string customCommands)
+        private async Task<string> CreateZipArchiveOfPackageAsync(IZipArchiveManager zipArchiveManager, IFileSystem fileSystem, string fileToZip)
         {
             string fileName = $"xharness-apk-payload-{fileSystem.GetFileNameWithoutExtension(fileToZip).ToLowerInvariant()}.zip";
             string outputZipPath = fileSystem.PathCombine(fileSystem.GetDirectoryName(fileToZip), fileName);
@@ -111,19 +107,10 @@ namespace Microsoft.DotNet.Helix.Sdk
             await zipArchiveManager.AddResourceFileToArchive<CreateXHarnessAndroidWorkItems>(outputZipPath, ScriptNamespace + PosixAndroidWrapperScript, PosixAndroidWrapperScript);
             await zipArchiveManager.AddResourceFileToArchive<CreateXHarnessAndroidWorkItems>(outputZipPath, ScriptNamespace + NonPosixAndroidWrapperScript, NonPosixAndroidWrapperScript);
 
-            if (customCommands != null)
-            {
-                await zipArchiveManager.AddContentToArchive(outputZipPath, CustomCommandsScript + (IsPosixShell ? "sh" : "bat"), customCommands);
-            }
-
             return outputZipPath;
         }
 
-        private string ValidateMetadataAndGetXHarnessAndroidCommand(
-            ITaskItem appPackage,
-            TimeSpan xHarnessTimeout,
-            int expectedExitCode,
-            bool customCommands)
+        private string ValidateMetadataAndGetXHarnessAndroidCommand(ITaskItem appPackage, TimeSpan xHarnessTimeout, int expectedExitCode)
         {
             // Validation of any metadata specific to Android stuff goes here
             if (!appPackage.GetRequiredMetadata(Log, AndroidPackageNamePropName, out string androidPackageName))
@@ -142,30 +129,21 @@ namespace Microsoft.DotNet.Helix.Sdk
             string outputDirectory = IsPosixShell ? "$HELIX_WORKITEM_UPLOAD_ROOT" : "%HELIX_WORKITEM_UPLOAD_ROOT%";
             string wrapperScriptName = IsPosixShell ? PosixAndroidWrapperScript : NonPosixAndroidWrapperScript;
 
-            string xharnessRunCommand;
-
             string xharnessHelixWrapperScript = IsPosixShell ? $"chmod +x ./{wrapperScriptName} && ./{wrapperScriptName}"
                                                              : $"call {wrapperScriptName}";
 
-            if (customCommands)
-            {
-                xharnessRunCommand = "call " + CustomCommandsScript + (IsPosixShell ? ".sh" : ".bat");
-            }
-            else
-            {
-                xharnessRunCommand = $"{xharnessHelixWrapperScript} " +
-                    $"xharness android test " +
-                    $"--app \"{Path.GetFileName(appPackage.ItemSpec)}\" " +
-                    $"--output-directory \"{outputDirectory}\" " +
-                    $"--timeout \"{xHarnessTimeout}\" " +
-                    $"-p=\"{androidPackageName}\" " +
-                    "-v " +
-                    (expectedExitCode != 0 ? $" --expected-exit-code \"{expectedExitCode}\" " : string.Empty) +
-                    outputPathArg +
-                    instrumentationArg +
-                    arguments +
-                    (!string.IsNullOrEmpty(AppArguments) ? $" -- {AppArguments}" : string.Empty);
-            }
+            string xharnessRunCommand = $"{xharnessHelixWrapperScript} " +
+                                        $"dotnet exec \"{(IsPosixShell ? "$XHARNESS_CLI_PATH" : "%XHARNESS_CLI_PATH%")}\" android test " +
+                                        $"--app \"{Path.GetFileName(appPackage.ItemSpec)}\" " +
+                                        $"--output-directory \"{outputDirectory}\" " +
+                                        $"--timeout \"{xHarnessTimeout}\" " +
+                                        $"-p=\"{androidPackageName}\" " +
+                                        "-v " +
+                                        (expectedExitCode != 0 ? $" --expected-exit-code \"{expectedExitCode}\" " : string.Empty) +
+                                        outputPathArg +
+                                        instrumentationArg +
+                                        arguments +
+                                        (!string.IsNullOrEmpty(AppArguments) ? $" -- {AppArguments}" : string.Empty);
 
             Log.LogMessage(MessageImportance.Low, $"Generated XHarness command: {xharnessRunCommand}");
 
