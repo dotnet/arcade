@@ -24,7 +24,7 @@ Onboarding to OneLocBuild is a simple process:
 4. Open a ticket with the localization team using
    [this template](https://ceapex.visualstudio.com/CEINTL/_workitems/create/Loc%20Request). Include the link to the 
    test build you've done.
-5. The loc team will generate an LCL package for you and send you its name. It will be something like
+5. The loc team will generate an LCL package for you and send you its ID. It will be something like
    `LCL-JUNO-PROD-YOURREPO`.
 6. Change your YAML (subbing `'LCL-JUNO-PROD-YOURREPO'` with the package ID given to you) to:
 ```yaml
@@ -33,7 +33,7 @@ Onboarding to OneLocBuild is a simple process:
     LclSource: lclFilesfromPackage
     LclPackageId: 'LCL-JUNO-PROD-YOURREPO'
 ```
-7. Merge the changes to your main branch and then let open a
+7. Merge the changes to your main branch and then open a
    [repo modification ticket](https://ceapex.visualstudio.com/CEINTL/_workitems/create/Loc%20Request) with the loc team 
    to let them know to retarget the branch.
 
@@ -55,7 +55,7 @@ If you're releasing from any other branch (including servicing branches), you mu
 
 1. Add the OneLocBuild task to the pipeline YAML of the release branch
 2. Open a [repo modification ticket](https://ceapex.visualstudio.com/CEINTL/_workitems/create/Loc%20Request) with the 
-   loc team at least two weeks before the release and tell them to re-target your repository to the release branch.
+   loc team at least two weeks before the release and request that they re-target your repository to the release branch.
 4. Merge the OneLocBuild PRs to your release branch.
 5. After the release, tell Cristiano to re-target your repository to the `main` branch again.
 
