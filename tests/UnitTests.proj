@@ -45,7 +45,13 @@
 
     <!-- Exclude tests that do not target .NET Core -->
     <XUnitProject Remove="..\src\Microsoft.DotNet.Build.Tasks.VisualStudio.Tests\Microsoft.DotNet.Build.Tasks.VisualStudio.Tests.csproj"/>
-  </ItemGroup>
+  </ItemGroup> 
+  
+  <PropertyGroup>
+    <IsExternal>true</IsExternal>
+    <Creator>$(BUILD_SOURCEVERSIONAUTHOR)</Creator>
+    <Creator Condition=" '$(Creator)' == ''">anon</Creator>
+  </PropertyGroup>
 
   <ItemGroup>
     <HelixTargetQueue Include="pr-windows.10.amd64.open-test-aggregator"/>
