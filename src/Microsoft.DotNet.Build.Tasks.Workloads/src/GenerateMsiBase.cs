@@ -127,7 +127,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
 
             if (string.IsNullOrWhiteSpace(nupkg.Title))
             {
-                Log?.LogWarning($"'{sourcePackage}' should have a non-empty title. The MSI ProductName will be set to the package ID instead.");
+                Log?.LogMessage(MessageImportance.High, $"'{sourcePackage}' should have a non-empty title. The MSI ProductName will be set to the package ID instead.");
                 productName = nupkg.Id;
             }
 

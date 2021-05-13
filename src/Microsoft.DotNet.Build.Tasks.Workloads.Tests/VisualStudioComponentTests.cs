@@ -23,7 +23,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
         {
             WorkloadManifest manifest = Create("WorkloadManifest.json");
             WorkloadDefinition definition = manifest.Workloads.FirstOrDefault().Value;
-            VisualStudioComponent component = VisualStudioComponent.Create(null, manifest, definition, "1.2.3.4", NoItems, NoItems, NoItems);
+            VisualStudioComponent component = VisualStudioComponent.Create(null, manifest, definition, NoItems, NoItems, NoItems, NoItems);
 
             string swixProjDirectory = RandomPath;
             Directory.CreateDirectory(swixProjDirectory);
@@ -51,7 +51,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
                 })
             };
 
-            VisualStudioComponent component = VisualStudioComponent.Create(null, manifest, definition, "1.2.3.4", NoItems, resources, NoItems);
+            VisualStudioComponent component = VisualStudioComponent.Create(null, manifest, definition, NoItems, NoItems, resources, NoItems);
 
             string swixProjDirectory = RandomPath;
             Directory.CreateDirectory(swixProjDirectory);
@@ -69,7 +69,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
         {
             WorkloadManifest manifest = Create("WorkloadManifest.json");
             WorkloadDefinition definition = manifest.Workloads.FirstOrDefault().Value;
-            VisualStudioComponent component = VisualStudioComponent.Create(null, manifest, definition, "1.2.3.4", NoItems, NoItems, NoItems);
+            VisualStudioComponent component = VisualStudioComponent.Create(null, manifest, definition, NoItems, NoItems, NoItems, NoItems);
 
             string swixProjDirectory = RandomPath;
             Directory.CreateDirectory(swixProjDirectory);

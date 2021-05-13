@@ -188,20 +188,26 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         /// </summary>
         /// <param name="manifest"></param>
         /// <param name="workload"></param>
-        /// <param name="componentVersion"></param>
+        /// <param name="componentVersions"></param>
         /// <param name="shortNames"></param>
         /// <param name="shortNameMetadata"></param>
         /// <param name="componentResources"></param>
         /// <returns></returns>
-        public static VisualStudioComponent Create(TaskLoggingHelper log, WorkloadManifest manifest, WorkloadDefinition workload, string componentVersion,
+        public static VisualStudioComponent Create(TaskLoggingHelper log, WorkloadManifest manifest, WorkloadDefinition workload, ITaskItem[] componentVersions,
             ITaskItem[] shortNames, ITaskItem[] componentResources, ITaskItem[] missingPacks)
         {
             log?.LogMessage("Creating Visual Studio component");
-            Version version = string.IsNullOrWhiteSpace(componentVersion) ? new Version($"{manifest.Version}.0") :
-                new Version(componentVersion);
+            string workloadId = $"{workload.Id}";
+
+            // If there's an explicit version mapping we use that, otherwise we fall back to the manifest version
+            // and normalize it since it can have semantic information and Visual Studio components do not support that.
+            ITaskItem versionItem = componentVersions?.Where(v => string.Equals(v.ItemSpec, workloadId, StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
+            Version version = (versionItem != null) && !string.IsNullOrWhiteSpace(versionItem.GetMetadata(Metadata.Version))
+                ? new Version(versionItem.GetMetadata(Metadata.Version))
+                : (new NuGetVersion(manifest.Version)).Version;
 
             ITaskItem resourceItem = componentResources?.Where(
-                r => string.Equals(r.ItemSpec, workload.Id.ToString(), StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
+                r => string.Equals(r.ItemSpec, workloadId, StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
 
             // Workload definitions do not have separate title/description fields so the only option
             // is to default to the workload description for both.
@@ -209,7 +215,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             string description = resourceItem?.GetMetadata(Metadata.Description) ?? workload.Description;
             string category = resourceItem?.GetMetadata(Metadata.Category) ?? ".NET";
 
-            VisualStudioComponent component = new(Utils.ToSafeId(workload.Id.ToString()), description,
+            VisualStudioComponent component = new(Utils.ToSafeId(workloadId), description,
                 title, version, shortNames, category);
 
             IEnumerable<string> missingPackIds = missingPacks.Select(p => p.ItemSpec);

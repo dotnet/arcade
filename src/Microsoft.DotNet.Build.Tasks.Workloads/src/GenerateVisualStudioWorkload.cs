@@ -31,7 +31,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         /// The version of the component in the Visual Studio manifest. If no version is specified,
         /// the manifest version is used.
         /// </summary>
-        public string ComponentVersion
+        public ITaskItem[] ComponentVersions
         {
             get;
             set;
@@ -100,10 +100,26 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         }
 
         /// <summary>
+        /// Semicolon sepearate list of ICEs to suppress.
+        /// </summary>
+        public string SuppressIces
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// The paths of the generated .swixproj files.
         /// </summary>
         [Output]
         public ITaskItem[] SwixProjects
+        {
+            get;
+            set;
+        }
+
+        [Output]
+        public ITaskItem[] Msis
         {
             get;
             set;
@@ -167,6 +183,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                 OutputPath = this.OutputPath,
                 PackagesPath = this.PackagesPath,
                 ShortNames = this.ShortNames,
+                SuppressIces = this.SuppressIces,
                 WixToolsetPath = this.WixToolsetPath,
                 WorkloadManifests = workloadManifests
             };
@@ -184,10 +201,14 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
 
                     foreach (ITaskItem item in MissingPacks)
                     {
-                        Log?.LogWarning($"Unable to locate '{item.GetMetadata(Metadata.SourcePackage)}'. Short name: {item.GetMetadata(Metadata.ShortName)}, Platform: {item.GetMetadata(Metadata.Platform)}, Workload Pack: ({item.ItemSpec}).");
+                        Log?.LogMessage(MessageImportance.High, $"Unable to locate '{item.GetMetadata(Metadata.SourcePackage)}'. Short name: {item.GetMetadata(Metadata.ShortName)}, Platform: {item.GetMetadata(Metadata.Platform)}, Workload Pack: ({item.ItemSpec}).");
                     }
                 }
 
+                Msis = msiTask.Msis;
+
+                // The Msis output parameter also contains the .swixproj files, but for VS, we want all the project files for
+                // packages and components.
                 return msiTask.Msis.Select(m => new TaskItem(m.GetMetadata(Metadata.SwixProject)));
             }
         }
@@ -200,9 +221,23 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
 
             foreach (WorkloadDefinition workloadDefinition in manifest.Workloads.Values)
             {
+                // Abstract workloads can only be extended, so we can't generate items for this yet. Might need to do a second pass
+                // if there are other manifests that extend the workload.
+                if (workloadDefinition.IsAbstract)
+                {
+                    Log?.LogMessage(MessageImportance.High, $"{workloadDefinition.Id} is abstract and will be skipped.");
+                    continue;
+                }
+
+                if ((workloadDefinition.Platforms?.Count > 0) && (!workloadDefinition.Platforms.Any(p => p.StartsWith("win"))))
+                {
+                    Log?.LogMessage(MessageImportance.High, $"{workloadDefinition.Id} platforms does not support Windows and will be skipped ({string.Join(", ", workloadDefinition.Platforms)}).");
+                    continue;
+                }
+
                 // Each workload maps to a Visual Studio component.
                 VisualStudioComponent component = VisualStudioComponent.Create(Log, manifest, workloadDefinition,
-                    ComponentVersion, ShortNames, ComponentResources, MissingPacks);
+                    ComponentVersions, ShortNames, ComponentResources, MissingPacks);
 
                 // If there are no dependencies, regardless of whether we are generating MSIs, we'll report an
                 // error as we'd produce invalid SWIX.

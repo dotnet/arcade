@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Microsoft.NET.Sdk.WorkloadManifestReader;
@@ -59,7 +58,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                     return false;
                 }
 
-                // Each pack maps to multiple packs and different MSI packages. We considering a pack
+                // Each pack maps to multiple packs and different MSI packages. We consider a pack
                 // to be missing when none of its dependent MSIs were found/generated.
                 IEnumerable<WorkloadPack> workloadPacks = GetWorkloadPacks();
                 List<string> missingPackIds = new(workloadPacks.Select(p => $"{p.Id}"));
@@ -72,11 +71,17 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                     {
                         if (!File.Exists(sourcePackage))
                         {
-                            Log?.LogWarning($"Workload pack package does not exist: {sourcePackage}");
+                            Log?.LogMessage(MessageImportance.High, $"Workload pack package does not exist: {sourcePackage}");
+
+                            missingPacks.Add(new TaskItem($"{pack.Id}", new Dictionary<string, string>
+                            {
+                                { Metadata.SourcePackage, sourcePackage },
+                                { Metadata.Platform, string.Join(",", platforms) },
+                                { Metadata.ShortName, $"{pack.Id.ToString().Replace(ShortNames)}" }
+                            }));
+
                             continue;
                         }
-
-                        missingPackIds.Remove(pack.Id.ToString());
 
                         // Swix package is always versioned to support upgrading SxS installs. The pack alias will be
                         // used for individual MSIs
@@ -89,7 +94,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                 }
 
                 Msis = msis.ToArray();
-                MissingPacks = missingPackIds.Select(p => new TaskItem(p)).ToArray();
+                MissingPacks = missingPacks.ToArray();
             }
             catch (Exception e)
             {
@@ -106,8 +111,19 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             IEnumerable<WorkloadManifest> manifests = WorkloadManifests.Select(
                 w => WorkloadManifestReader.ReadWorkloadManifest(Path.GetFileNameWithoutExtension(w.ItemSpec), File.OpenRead(w.ItemSpec)));
 
-            return manifests.SelectMany(m => m.Packs.Values).GroupBy(x => new { x.Id, x.Version }).
-                Select(g => g.First());
+            // We want all workloads in all manifests iff
+            //   1. The workload isn't abstract
+            //   2. The workload has no platform or at least one platform includes Windows
+            var workloads = manifests.SelectMany(m => m.Workloads).
+                Select(w => w.Value).
+                Where(wd => !wd.IsAbstract).
+                Where(wd => (wd.Platforms == null) || wd.Platforms.Any(p => p.StartsWith("win")));
+
+            var packIds = workloads.SelectMany(w => w.Packs).Distinct();
+
+            return manifests.SelectMany(m => m.Packs.Values).
+                Where(p => packIds.Contains(p.Id)).
+                Distinct();
         }
 
         /// <summary>
@@ -142,7 +158,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                             break;
                         default:
                             Log?.LogMessage($"Skipping alias ({rid}).");
-                            break;
+                            continue;
                     }
                 }
             }
