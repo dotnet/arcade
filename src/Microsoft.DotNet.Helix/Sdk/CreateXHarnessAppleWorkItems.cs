@@ -15,12 +15,15 @@ namespace Microsoft.DotNet.Helix.Sdk
     /// </summary>
     public class CreateXHarnessAppleWorkItems : XHarnessTaskBase
     {
-        public const string TargetPropName = "Targets";
         public const string iOSTargetName = "ios-device";
         public const string tvOSTargetName = "tvos-device";
 
-        private const string LaunchTimeoutPropName = "LaunchTimeout";
-        private const string IncludesTestRunnerPropName = "IncludesTestRunner";
+        public static class MetadataNames
+        {
+            public const string Targets = "Targets";
+            public const string LaunchTimeout = "LaunchTimeout";
+            public const string IncludesTestRunner = "IncludesTestRunner";
+        }
 
         private const string EntryPointScript = "xharness-helix-job.apple.sh";
         private const string RunnerScript = "xharness-runner.apple.sh";
@@ -73,7 +76,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             var tasks = AppBundles.Select(bundle => PrepareWorkItem(zipArchiveManager, fileSystem, bundle));
 
             WorkItems = Task.WhenAll(tasks).GetAwaiter().GetResult().Where(wi => wi != null).ToArray();
-            
+
             return !Log.HasLoggedErrors;
         }
 
@@ -88,38 +91,38 @@ namespace Microsoft.DotNet.Helix.Sdk
             ITaskItem appBundleItem)
         {
             string appFolderPath = appBundleItem.ItemSpec.TrimEnd(Path.DirectorySeparatorChar);
-            
+
             string workItemName = fileSystem.GetFileName(appFolderPath);
             if (workItemName.EndsWith(".app"))
             {
                 workItemName = workItemName.Substring(0, workItemName.Length - 4);
             }
 
-            var (testTimeout, workItemTimeout, expectedExitCode) = ParseMetadata(appBundleItem);
+            var (testTimeout, workItemTimeout, expectedExitCode, customCommands) = ParseMetadata(appBundleItem);
 
             // Validation of any metadata specific to iOS stuff goes here
-            if (!appBundleItem.TryGetMetadata(TargetPropName, out string target))
+            if (!appBundleItem.TryGetMetadata(MetadataNames.Targets, out string targets))
             {
-                Log.LogError($"'{TargetPropName}' metadata must be specified - " +
+                Log.LogError($"'{MetadataNames.Targets}' metadata must be specified - " +
                     "expecting list of target device/simulator platforms to execute tests on (e.g. ios-simulator-64)");
                 return null;
             }
 
-            target = target.ToLowerInvariant();
+            targets = targets.ToLowerInvariant();
 
             // Optional timeout for the how long it takes for the app to be installed, booted and tests start executing
             TimeSpan launchTimeout = s_defaultLaunchTimeout;
-            if (appBundleItem.TryGetMetadata(LaunchTimeoutPropName, out string launchTimeoutProp))
+            if (appBundleItem.TryGetMetadata(MetadataNames.LaunchTimeout, out string launchTimeoutProp))
             {
                 if (!TimeSpan.TryParse(launchTimeoutProp, out launchTimeout) || launchTimeout.Ticks < 0)
                 {
-                    Log.LogError($"Invalid value \"{launchTimeoutProp}\" provided in <{LaunchTimeoutPropName}>");
+                    Log.LogError($"Invalid value \"{launchTimeoutProp}\" provided in <{MetadataNames.LaunchTimeout}>");
                     return null;
                 }
             }
 
             bool includesTestRunner = true;
-            if (appBundleItem.TryGetMetadata(IncludesTestRunnerPropName, out string includesTestRunnerProp))
+            if (appBundleItem.TryGetMetadata(MetadataNames.IncludesTestRunner, out string includesTestRunnerProp))
             {
                 if (includesTestRunnerProp.ToLowerInvariant() == "false")
                 {
@@ -127,40 +130,58 @@ namespace Microsoft.DotNet.Helix.Sdk
                 }
             }
 
-            if (includesTestRunner && expectedExitCode != 0)
+            if (includesTestRunner && expectedExitCode != 0 && customCommands != null)
             {
                 Log.LogWarning("The ExpectedExitCode property is ignored in the `apple test` scenario");
             }
 
-            string appName = fileSystem.GetFileName(appBundleItem.ItemSpec);
-            string command = GetHelixCommand(appName, target, testTimeout, launchTimeout, includesTestRunner, expectedExitCode);
-            string payloadArchivePath = await CreateZipArchiveOfFolder(zipArchiveManager, fileSystem, appFolderPath);
+            if (customCommands == null)
+            {
+                // In case user didn't specify custom commands, we use our default one
+                customCommands = $"xharness apple {(includesTestRunner ? "test" : "run")} " +
+                    "--app \"$app\" " +
+                    "--output-directory \"$output_directory\" " +
+                    "--targets \"$targets\" " +
+                    "--timeout \"$timeout\" " +
+                    (includesTestRunner
+                        ? $"--launch-timeout \"$launch_timeout\" "
+                        : $"--expected-exit-code $expected_exit_code ") +
+                    "--xcode \"$xcode_path\" " +
+                    "-v " +
+                    (!string.IsNullOrEmpty(AppArguments) ? "-- " + AppArguments : string.Empty);
+            }
 
-            Log.LogMessage($"Creating work item with properties Identity: {workItemName}, Payload: {appFolderPath}, Command: {command}");
+            string appName = fileSystem.GetFileName(appBundleItem.ItemSpec);
+            string helixCommand = GetHelixCommand(appName, targets, testTimeout, launchTimeout, includesTestRunner, expectedExitCode);
+            string payloadArchivePath = await CreateZipArchiveOfFolder(zipArchiveManager, fileSystem, appFolderPath, customCommands);
+
+            Log.LogMessage($"Creating work item with properties Identity: {workItemName}, Payload: {appFolderPath}, Command: {helixCommand}");
 
             return new Build.Utilities.TaskItem(workItemName, new Dictionary<string, string>()
             {
                 { "Identity", workItemName },
                 { "PayloadArchive", payloadArchivePath },
-                { "Command", command },
+                { "Command", helixCommand },
                 { "Timeout", workItemTimeout.ToString() },
             });
         }
 
         private string GetHelixCommand(string appName, string targets, TimeSpan testTimeout, TimeSpan launchTimeout, bool includesTestRunner, int expectedExitCode) =>
             $"chmod +x {EntryPointScript} && ./{EntryPointScript} " +
-            $"--app \"$HELIX_WORKITEM_ROOT/{appName}\" " +
-             "--output-directory \"$HELIX_WORKITEM_UPLOAD_ROOT\" " +
+            $"--app \"{appName}\" " +
             $"--targets \"{targets}\" " +
             $"--timeout \"{testTimeout}\" " +
             $"--launch-timeout \"{launchTimeout}\" " +
-             "--xharness-cli-path \"$XHARNESS_CLI_PATH\" " +
-             "--command " + (includesTestRunner ? "test" : "run") +
-            (expectedExitCode != 0 ? $" --expected-exit-code \"{expectedExitCode}\"" : string.Empty) +
+            (includesTestRunner ? "--includes-test-runner " : string.Empty) +
+            $"--expected-exit-code \"{expectedExitCode}\" " +
             (!string.IsNullOrEmpty(XcodeVersion) ? $" --xcode-version \"{XcodeVersion}\"" : string.Empty) +
             (!string.IsNullOrEmpty(AppArguments) ? $" --app-arguments \"{AppArguments}\"" : string.Empty);
 
-        private async Task<string> CreateZipArchiveOfFolder(IZipArchiveManager zipArchiveManager, IFileSystem fileSystem, string folderToZip)
+        private async Task<string> CreateZipArchiveOfFolder(
+            IZipArchiveManager zipArchiveManager,
+            IFileSystem fileSystem,
+            string folderToZip,
+            string injectedCommands)
         {
             if (!fileSystem.DirectoryExists(folderToZip))
             {
@@ -183,6 +204,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             Log.LogMessage($"Adding the XHarness job scripts into the payload archive");
             await zipArchiveManager.AddResourceFileToArchive<CreateXHarnessAppleWorkItems>(outputZipPath, ScriptNamespace + EntryPointScript, EntryPointScript);
             await zipArchiveManager.AddResourceFileToArchive<CreateXHarnessAppleWorkItems>(outputZipPath, ScriptNamespace + RunnerScript, RunnerScript);
+            await zipArchiveManager.AddContentToArchive(outputZipPath, CustomCommandsScript + ".sh", injectedCommands);
 
             return outputZipPath;
         }

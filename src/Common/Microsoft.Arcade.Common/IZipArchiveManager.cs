@@ -1,6 +1,7 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using System.IO;
 using System.Threading.Tasks;
 
 namespace Microsoft.Arcade.Common
@@ -15,6 +16,22 @@ namespace Microsoft.Arcade.Common
         /// <param name="resourceName">Name of the embedded resource</param>
         /// <param name="targetFileName">New name of the file in the archive</param>
         Task AddResourceFileToArchive<TAssembly>(string archivePath, string resourceName, string targetFileName = null);
+
+        /// <summary>
+        /// Creates a file with given content in a given archive.
+        /// </summary>
+        /// <param name="archivePath">Path to the archive</param>
+        /// <param name="targetFilename">New path of the file in the archive</param>
+        /// <param name="content">Content of the file</param>
+        Task AddContentToArchive(string archivePath, string targetFilename, Stream content);
+
+        /// <summary>
+        /// Creates a file with given content in a given archive.
+        /// </summary>
+        /// <param name="archivePath">Path to the archive</param>
+        /// <param name="targetFilename">New path of the file in the archive</param>
+        /// <param name="content">Content of the file</param>
+        Task AddContentToArchive(string archivePath, string targetFilename, string content);
 
         /// <summary>
         /// Compresses a directory into an archive on a given path.

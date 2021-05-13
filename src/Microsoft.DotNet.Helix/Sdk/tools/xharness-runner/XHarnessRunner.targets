@@ -61,6 +61,7 @@
       <HelixPreCommands>$(HelixPreCommands);set XHARNESS_DISABLE_COLORED_OUTPUT=true</HelixPreCommands>
       <HelixPreCommands>$(HelixPreCommands);set XHARNESS_LOG_WITH_TIMESTAMPS=true</HelixPreCommands>
       <HelixPreCommands>$(HelixPreCommands);set XHARNESS_CLI_PATH=%HELIX_CORRELATION_PAYLOAD%\microsoft.dotnet.xharness.cli\$(_XHarnessPackageVersion)\tools\net6.0\any\Microsoft.DotNet.XHarness.CLI.dll</HelixPreCommands>
+      <HelixPreCommands>$(HelixPreCommands);doskey xharness="dotnet exec %XHARNESS_CLI_PATH%"</HelixPreCommands>
     </PropertyGroup>
   </Target>
 
@@ -93,8 +94,7 @@
   <Target Name="CreateAndroidWorkItems"
           Condition=" '@(XHarnessApkToTest)' != '' "
           BeforeTargets="CoreTest">
-    <CreateXHarnessAndroidWorkItems Apks="@(XHarnessApkToTest)"
-                                    IsPosixShell="$(IsPosixShell)">
+    <CreateXHarnessAndroidWorkItems Apks="@(XHarnessApkToTest)" IsPosixShell="$(IsPosixShell)">
       <Output TaskParameter="WorkItems" ItemName="HelixWorkItem"/>
     </CreateXHarnessAndroidWorkItems>
   </Target>
