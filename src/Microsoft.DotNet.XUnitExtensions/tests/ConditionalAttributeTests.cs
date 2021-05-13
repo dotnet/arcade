@@ -2,9 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using Xunit;
-using System.Linq;
 using Xunit.Sdk;
-using System.Reflection;
 
 namespace Microsoft.DotNet.XUnitExtensions.Tests
 {
@@ -32,9 +30,7 @@ namespace Microsoft.DotNet.XUnitExtensions.Tests
         public void NeverConditionalOuterLoopAttribute()
         {
             var method = System.Reflection.MethodBase.GetCurrentMethod();
-            var attribute = CustomAttributeData.GetCustomAttributes(method).Where(attr => attr.AttributeType == typeof(OuterLoopAttribute)).Single();
-            var disco = new OuterLoopTestsDiscoverer();
-            var res = disco.GetTraits(new ReflectionAttributeInfo(attribute)).ToList();
+            var res = TraitHelper.GetTraits(method);
 
             Assert.Empty(res);
         }
@@ -44,9 +40,7 @@ namespace Microsoft.DotNet.XUnitExtensions.Tests
         public void AlwaysConditionalOuterLoopAttribute()
         {
             var method = System.Reflection.MethodBase.GetCurrentMethod();
-            var attribute = CustomAttributeData.GetCustomAttributes(method).Where(attr => attr.AttributeType == typeof(OuterLoopAttribute)).Single();
-            var disco = new OuterLoopTestsDiscoverer();
-            var res = disco.GetTraits(new ReflectionAttributeInfo(attribute)).ToList();
+            var res = TraitHelper.GetTraits(method);
 
             Assert.Single(res);
             Assert.Equal("outerloop", res[0].Value);
@@ -57,9 +51,7 @@ namespace Microsoft.DotNet.XUnitExtensions.Tests
         public void AlwaysOuterLoopAttribute()
         {
             var method = System.Reflection.MethodBase.GetCurrentMethod();
-            var attribute = CustomAttributeData.GetCustomAttributes(method).Where(attr => attr.AttributeType == typeof(OuterLoopAttribute)).Single();
-            var disco = new OuterLoopTestsDiscoverer();
-            var res = disco.GetTraits(new ReflectionAttributeInfo(attribute)).ToList();
+            var res = TraitHelper.GetTraits(method);
 
             Assert.Single(res);
             Assert.Equal("outerloop", res[0].Value);
