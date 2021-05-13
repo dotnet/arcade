@@ -65,7 +65,7 @@ stages:
             $(_InternalBuildArgs)
             /p:Test=false
           displayName: Windows Build / Publish
-        - script: rd /s /q artifacts\bin
+        - script: rd /s /q artifacts\bin && mkdir artifacts\bin
         - task: ComponentGovernanceComponentDetection@0
       - ${{ if eq(variables._RunAsPublic, True) }}:
         - job: Linux
