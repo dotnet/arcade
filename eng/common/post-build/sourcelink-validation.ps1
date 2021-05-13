@@ -16,7 +16,7 @@ $global:RepoFiles = @{}
 # Maximum number of jobs to run in parallel
 $MaxParallelJobs = 16
 
-$MaxRetry = 5
+$MaxRetries = 5
 
 # Wait time between check for system load
 $SecondsBetweenLoadChecks = 10
@@ -101,7 +101,7 @@ $ValidatePackage = {
 
                     $totalRetries = 0
 
-                    while ($totalRetries -lt $using:MaxRetry) {
+                    while ($totalRetries -lt $using:MaxRetries) {
                       if ( !($Cache.ContainsKey($FilePath)) ) {
                         try {
                           $Uri = $Link -as [System.URI]
@@ -113,21 +113,19 @@ $ValidatePackage = {
                           else {
                             # If it's not a github link, we want to break out of the loop and not retry.
                             $Status = 0
-                            $totalRetries = $using:MaxRetry
+                            $totalRetries = $using:MaxRetries
                           }
                         }
                         catch {
-                          write-host $_
+                          Write-Host $_
                           $Status = 0
                         }
                       }
 
                       if ($Status -ne 200) {
-                        if ($totalRetries -lt $using:MaxRetry)
-                        {
-                          $totalRetries++
-                        }
-                        else {
+                        $totalRetries++
+                        
+                        if ($totalRetries -ge $using:MaxRetries) {
                           if ($NumFailedLinks -eq 0) {
                             if ($FailedFiles.Value -eq 0) {
                               Write-Host
@@ -159,7 +157,7 @@ $ValidatePackage = {
         }
   }
   catch {
-  
+    Write-Host $_
   }
   finally {
     $zip.Dispose() 
