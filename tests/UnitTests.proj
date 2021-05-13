@@ -48,7 +48,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <HelixTargetQueue Include="pr-windows.7.amd64-test-aggregator"/>
+    <HelixTargetQueue Include="pr-windows.10.amd64.open-test-aggregator"/>
   </ItemGroup>
 
   <PropertyGroup Condition="!$(HelixTargetQueue.StartsWith('Windows'))">
