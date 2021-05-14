@@ -16,6 +16,7 @@ xcode_version=''
 app_arguments=''
 expected_exit_code=0
 includes_test_runner=false
+reset_simulator=false
 
 while [[ $# -gt 0 ]]; do
     opt="$(echo "$1" | tr "[:upper:]" "[:lower:]")"
@@ -58,6 +59,9 @@ while [[ $# -gt 0 ]]; do
         ;;
       --includes-test-runner)
         includes_test_runner=true
+        ;;
+      --reset-simulator)
+        reset_simulator=true
         ;;
     esac
     shift

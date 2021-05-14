@@ -67,7 +67,7 @@ To execute .app bundles, declare one or more `XHarnessAppBundleToTest` items:
 The `<Targets>` metadata is a required configuration that tells XHarness which kind of device/Simulator to target.
 Use the XHarness CLI help command to find more (see the `--targets` option).
 
-You can also specify some metadata that will help you configure the run better:
+You can also specify some additional metadata that will help you configure the run better:
 
 ```xml
 <ItemGroup>
@@ -89,6 +89,10 @@ You can also specify some metadata that will help you configure the run better:
     <!-- Optional: For apps that don't contain unit tests, they can be run using the `apple run` command instead of `apple test` -->
     <!-- Default is true -->
     <IncludesTestRunner>false</IncludesTestRunner>
+
+    <!-- Optional: Before and after the run, erases all simulator data and resets it for a clean state -->
+    <!-- Default is false -->
+    <ResetSimulator>true</ResetSimulator>
   </XHarnessAppBundleToTest>
 </ItemGroup>
 ```
@@ -128,7 +132,7 @@ To execute .apks, declare one or more `XHarnessApkToTest` items:
 </ItemGroup>
 ```
 
-You can also specify some metadata that will help you configure the run better:
+You can also specify some additional metadata that will help you configure the run better:
 
 ```xml
 <ItemGroup>
