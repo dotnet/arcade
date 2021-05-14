@@ -87,7 +87,7 @@ AddFlow https://github.com/dotnet/templating $SdkChannel https://github.com/dotn
 
 Write-Host "Add tooling->sdk flow"
 AddFlow https://github.com/nuget/nuget.client $VSChannel https://github.com/dotnet/sdk $SdkBranch EveryBuild
-AddFlow https://github.com/dotnet/roslyn "VS Master" https://github.com/dotnet/sdk $SdkBranch EveryBuild
+AddFlow https://github.com/dotnet/roslyn $VSChannel https://github.com/dotnet/sdk $SdkBranch EveryBuild
 AddFlow https://github.com/dotnet/fsharp $VSChannel https://github.com/dotnet/sdk $SdkBranch EveryBuild
 AddFlow https://github.com/dotnet/msbuild $VSChannel https://github.com/dotnet/sdk $SdkBranch EveryBuild
 
