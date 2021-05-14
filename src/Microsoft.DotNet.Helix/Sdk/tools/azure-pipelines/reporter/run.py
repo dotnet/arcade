@@ -9,7 +9,7 @@ from typing import Tuple, Optional
 from helpers import get_env
 from test_results_reader import read_results
 
-from helix.public import PackingTestReporter, DefaultTestReporter
+from helix.public import DefaultTestReporter, AzureDevOpsReportingParameters
 
 def process_args() -> Tuple[str, str, str, Optional[str]]:
     if len(sys.argv) < 4 or len(sys.argv) > 5:
