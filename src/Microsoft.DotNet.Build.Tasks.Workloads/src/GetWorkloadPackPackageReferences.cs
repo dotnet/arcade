@@ -80,14 +80,14 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                             {
                                 if (!excludedPackIds.Contains($"{pack.AliasTo[alias]}"))
                                 {
-                                    WriteItem(writer, "DownloadPackage", ("Include", $"{pack.AliasTo[alias]}"), ("Version", $"[{pack.Version}]"));
+                                    WriteItem(writer, "PackageDownload", ("Include", $"{pack.AliasTo[alias]}"), ("Version", $"[{pack.Version}]"));
                                     packs.Add($"$(NuGetPackageRoot){pack.AliasTo[alias]}\\{pack.Version}\\*.nupkg");
                                 }
                             }
                         }
                         else if (!excludedPackIds.Contains($"{pack.Id}"))
                         {
-                            WriteItem(writer, "DownloadPackage", ("Include", $"{pack.Id}"), ("Version", $"[{pack.Version}]"));
+                            WriteItem(writer, "PackageDownload", ("Include", $"{pack.Id}"), ("Version", $"[{pack.Version}]"));
                             packs.Add($"$(NuGetPackageRoot){pack.Id}\\{pack.Version}\\*.nupkg");
                         }
                     }

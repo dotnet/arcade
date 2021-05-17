@@ -209,7 +209,8 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
 
                 // The Msis output parameter also contains the .swixproj files, but for VS, we want all the project files for
                 // packages and components.
-                return msiTask.Msis.Select(m => new TaskItem(m.GetMetadata(Metadata.SwixProject)));
+                return msiTask.Msis.Where(m => !string.IsNullOrWhiteSpace(m.GetMetadata(Metadata.SwixProject))).
+                    Select(m => new TaskItem(m.GetMetadata(Metadata.SwixProject)));
             }
         }
 

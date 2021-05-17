@@ -251,7 +251,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                 msi.SetMetadata(Metadata.Version, nupkg.ProductVersion);
                 msi.SetMetadata(Metadata.JsonProperties, msiJsonPath);
 
-                if (GenerateSwixAuthoring)
+                if (GenerateSwixAuthoring && IsSupportedByVisualStudio(platform))
                 {
                     string swixProject = GenerateSwixPackageAuthoring(light.OutputFile,
                         !string.IsNullOrWhiteSpace(swixPackageId) ? swixPackageId :
@@ -275,14 +275,26 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         private string GeneratePackageProject(string msiPath, string msiJsonPath, string platform, NugetPackage nupkg)
         {
             string msiPackageProject = Path.Combine(MsiPackageDirectory, platform, nupkg.Id, "msi.csproj");
+            string msiPackageProjectDir = Path.GetDirectoryName(msiPackageProject);
+
             Log?.LogMessage($"Generating package project: '{msiPackageProject}'");
 
-            Directory.CreateDirectory(Path.GetDirectoryName(msiPackageProject));
+            if (Directory.Exists(msiPackageProjectDir))
+            {
+                Directory.Delete(msiPackageProjectDir, recursive: true);
+            }
+
+            Directory.CreateDirectory(msiPackageProjectDir);
+
+            EmbeddedTemplates.Extract("Icon.png", msiPackageProjectDir);
+            EmbeddedTemplates.Extract("LICENSE.TXT", msiPackageProjectDir);
+
+            string licenseTextPath = Path.Combine(msiPackageProjectDir, "LICENSE.TXT");
 
             XmlWriterSettings settings = new XmlWriterSettings
             {
                 Indent = true,
-                IndentChars = "  "
+                IndentChars = "  ",
             };
 
             XmlWriter writer = XmlWriter.Create(msiPackageProject, settings);
@@ -294,12 +306,16 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             writer.WriteElementString("TargetFramework", "net5.0");
             writer.WriteElementString("GeneratePackageOnBuild", "true");
             writer.WriteElementString("IncludeBuildOutput", "false");
+            writer.WriteElementString("IsPackable", "true");
             writer.WriteElementString("PackageType", "DotnetPlatform");
             writer.WriteElementString("SuppressDependenciesWhenPacking", "true");
             writer.WriteElementString("NoWarn", "$(NoWarn);NU5128");
             writer.WriteElementString("PackageId", $"{nupkg.Id}.Msi.{platform}");
-            writer.WriteElementString("Version", $"{nupkg.Version}");
+            writer.WriteElementString("PackageVersion", $"{nupkg.Version}");
             writer.WriteElementString("Description", nupkg.Description);
+            writer.WriteElementString("PackageIcon", "Icon.png");
+            //writer.WriteElementString("PackageLicenseFile", "LICENSE.TXT");
+
             if (!string.IsNullOrWhiteSpace(nupkg.Authors))
             {
                 writer.WriteElementString("Authors", nupkg.Authors);
@@ -310,23 +326,13 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                 writer.WriteElementString("Copyright", nupkg.Copyright);
             }
 
-            if (nupkg.LicenseData != null)
-            {
-                if (nupkg.LicenseData.LicenseExpression != null)
-                {
-                    writer.WriteElementString("PackageLicenseExpression", nupkg.LicenseData.LicenseExpression.ToString());
-                }
-            } 
-            else if (!string.IsNullOrWhiteSpace(nupkg.LicenseUrl))
-            {
-                writer.WriteElementString("PackageLicenseUrl", nupkg.LicenseUrl);
-            }
-
+            writer.WriteElementString("PackageLicenseExpression", "MIT");
             writer.WriteEndElement();
 
             writer.WriteStartElement("ItemGroup");
-            WriteItem(writer, "None", msiPath);
-            WriteItem(writer, "None", msiJsonPath);
+            WriteItem(writer, "None", msiPath, @"\data");
+            WriteItem(writer, "None", msiJsonPath, @"\data");
+            WriteItem(writer, "None", licenseTextPath, @"\");
             writer.WriteEndElement();
 
             writer.WriteEndElement();
@@ -336,12 +342,12 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             return msiPackageProject;
         }
 
-        private void WriteItem(XmlWriter writer, string itemName, string include)
+        private void WriteItem(XmlWriter writer, string itemName, string include, string packagePath)
         {
             writer.WriteStartElement(itemName);
             writer.WriteAttributeString("Include", include);
             writer.WriteAttributeString("Pack", "true");
-            writer.WriteAttributeString("PackagePath", @"\data");
+            writer.WriteAttributeString("PackagePath", packagePath);
             writer.WriteEndElement();
         }
 
