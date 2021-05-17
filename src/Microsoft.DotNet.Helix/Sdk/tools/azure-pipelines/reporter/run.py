@@ -93,7 +93,7 @@ def main():
         worker.daemon = True 
         worker.start()
 
-    log.info("Beginning reading of test results.")
+    log.info("Beginning to read test results...")
 
     # In case the user puts the results in HELIX_WORKITEM_UPLOAD_ROOT for upload, check there too.
     all_results = read_results([os.getcwd(),
