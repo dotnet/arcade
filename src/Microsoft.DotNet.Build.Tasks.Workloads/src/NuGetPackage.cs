@@ -27,6 +27,16 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             get;
         }
 
+        public string Copyright
+        {
+            get;
+        }
+
+        public string Description
+        {
+            get;
+        }
+
         /// <summary>
         /// The NuGet package identifier.
         /// </summary>
@@ -36,6 +46,11 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         /// The identity of the NuGet package.
         /// </summary>
         public PackageIdentity Identity
+        {
+            get;
+        }
+
+        public LicenseMetadata LicenseData
         {
             get;
         }
@@ -78,6 +93,9 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             Title = nuspecReader.GetTitle();
             Authors = nuspecReader.GetAuthors();
             LicenseUrl = nuspecReader.GetLicenseUrl();
+            Description = nuspecReader.GetDescription();
+            Copyright = nuspecReader.GetCopyright();
+            LicenseData = nuspecReader.GetLicenseMetadata();
         }
 
         /// <summary>

@@ -5,6 +5,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
+using System.Xml;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Microsoft.NET.Sdk.WorkloadManifestReader;
@@ -124,7 +126,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
 
             if (string.IsNullOrWhiteSpace(nupkg.Title))
             {
-                Log?.LogWarning($"'{sourcePackage}' should have a non-empty title. The MSI ProductName will be set to the package ID instead.");
+                Log?.LogMessage(MessageImportance.High, $"'{sourcePackage}' should have a non-empty title. The MSI ProductName will be set to the package ID instead.");
                 productName = nupkg.Id;
             }
 
@@ -229,11 +231,26 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                     throw new Exception($"Failed to link MSI.");
                 }
 
+                // Generate metadata used for CLI based installations.
+                string msiPath = light.OutputFile;
+                MsiProperties msiProps = new MsiProperties
+                {
+                    InstallSize = MsiUtils.GetInstallSize(msiPath),
+                    ProductCode = MsiUtils.GetProperty(msiPath, "ProductCode"),
+                    ProductVersion = MsiUtils.GetProperty(msiPath, "ProductVersion"),
+                    ProviderKeyName = $"{nupkg.Id},{nupkg.Version},{platform}",
+                    UpgradeCode = MsiUtils.GetProperty(msiPath, "UpgradeCode")
+                };
+
+                string msiJsonPath = Path.Combine(Path.GetDirectoryName(msiPath), Path.GetFileNameWithoutExtension(msiPath) + ".json");
+                File.WriteAllText(msiJsonPath, JsonSerializer.Serialize<MsiProperties>(msiProps));
+
                 TaskItem msi = new(light.OutputFile);
                 msi.SetMetadata(Metadata.Platform, platform);
                 msi.SetMetadata(Metadata.Version, nupkg.ProductVersion);
+                msi.SetMetadata(Metadata.JsonProperties, msiJsonPath);
 
-                if (GenerateSwixAuthoring)
+                if (GenerateSwixAuthoring && IsSupportedByVisualStudio(platform))
                 {
                     string swixProject = GenerateSwixPackageAuthoring(light.OutputFile,
                         !string.IsNullOrWhiteSpace(swixPackageId) ? swixPackageId :
@@ -245,10 +262,91 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                     }
                 }
 
+                // Generate a .csproj to build a NuGet payload package to carry the MSI and JSON manifest
+                msi.SetMetadata(Metadata.PackageProject, GeneratePackageProject(msi.ItemSpec, msiJsonPath, platform, nupkg));
+
                 msis.Add(msi);
             }
 
             return msis;
+        }
+
+        private string GeneratePackageProject(string msiPath, string msiJsonPath, string platform, NugetPackage nupkg)
+        {
+            string msiPackageProject = Path.Combine(MsiPackageDirectory, platform, nupkg.Id, "msi.csproj");
+            string msiPackageProjectDir = Path.GetDirectoryName(msiPackageProject);
+
+            Log?.LogMessage($"Generating package project: '{msiPackageProject}'");
+
+            if (Directory.Exists(msiPackageProjectDir))
+            {
+                Directory.Delete(msiPackageProjectDir, recursive: true);
+            }
+
+            Directory.CreateDirectory(msiPackageProjectDir);
+
+            EmbeddedTemplates.Extract("Icon.png", msiPackageProjectDir);
+            EmbeddedTemplates.Extract("LICENSE.TXT", msiPackageProjectDir);
+
+            string licenseTextPath = Path.Combine(msiPackageProjectDir, "LICENSE.TXT");
+
+            XmlWriterSettings settings = new XmlWriterSettings
+            {
+                Indent = true,
+                IndentChars = "  ",
+            };
+
+            XmlWriter writer = XmlWriter.Create(msiPackageProject, settings);
+
+            writer.WriteStartElement("Project");
+            writer.WriteAttributeString("Sdk", "Microsoft.NET.Sdk");
+
+            writer.WriteStartElement("PropertyGroup");
+            writer.WriteElementString("TargetFramework", "net5.0");
+            writer.WriteElementString("GeneratePackageOnBuild", "true");
+            writer.WriteElementString("IncludeBuildOutput", "false");
+            writer.WriteElementString("IsPackable", "true");
+            writer.WriteElementString("PackageType", "DotnetPlatform");
+            writer.WriteElementString("SuppressDependenciesWhenPacking", "true");
+            writer.WriteElementString("NoWarn", "$(NoWarn);NU5128");
+            writer.WriteElementString("PackageId", $"{nupkg.Id}.Msi.{platform}");
+            writer.WriteElementString("PackageVersion", $"{nupkg.Version}");
+            writer.WriteElementString("Description", nupkg.Description);
+            writer.WriteElementString("PackageIcon", "Icon.png");
+
+            if (!string.IsNullOrWhiteSpace(nupkg.Authors))
+            {
+                writer.WriteElementString("Authors", nupkg.Authors);
+            }
+
+            if (!string.IsNullOrWhiteSpace(nupkg.Copyright))
+            {
+                writer.WriteElementString("Copyright", nupkg.Copyright);
+            }
+
+            writer.WriteElementString("PackageLicenseExpression", "MIT");
+            writer.WriteEndElement();
+
+            writer.WriteStartElement("ItemGroup");
+            WriteItem(writer, "None", msiPath, @"\data");
+            WriteItem(writer, "None", msiJsonPath, @"\data");
+            WriteItem(writer, "None", licenseTextPath, @"\");
+            writer.WriteEndElement();
+
+            writer.WriteEndElement();
+            writer.Flush();
+            writer.Close();
+
+            return msiPackageProject;
+        }
+
+        private void WriteItem(XmlWriter writer, string itemName, string include, string packagePath)
+        {
+            writer.WriteStartElement(itemName);
+            writer.WriteAttributeString("Include", include);
+            writer.WriteAttributeString("Pack", "true");
+            writer.WriteAttributeString("PackagePath", packagePath);
+            writer.WriteEndElement();
         }
 
         private string GenerateSwixPackageAuthoring(string msiPath, string packageId, string platform)
