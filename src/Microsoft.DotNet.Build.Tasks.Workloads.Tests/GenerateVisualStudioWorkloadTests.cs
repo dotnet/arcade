@@ -136,7 +136,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
             string componentSwr = File.ReadAllText(Path.Combine(outputPath, "component.swr"));
             Assert.Single(buildTask.SwixProjects);
             Assert.Contains(@"package name=microsoft.net.sdk.blazorwebassembly.aot
-        version=1.0", componentSwr);
+        version=6.0.0.0", componentSwr);
         }
 
         [Fact]
