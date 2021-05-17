@@ -5,12 +5,11 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
+using System.Xml;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Microsoft.NET.Sdk.WorkloadManifestReader;
-using System.Text.Json;
-using System.Xml;
-using NuGet.Packaging.Licenses;
 
 namespace Microsoft.DotNet.Build.Tasks.Workloads
 {
@@ -314,7 +313,6 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             writer.WriteElementString("PackageVersion", $"{nupkg.Version}");
             writer.WriteElementString("Description", nupkg.Description);
             writer.WriteElementString("PackageIcon", "Icon.png");
-            //writer.WriteElementString("PackageLicenseFile", "LICENSE.TXT");
 
             if (!string.IsNullOrWhiteSpace(nupkg.Authors))
             {
