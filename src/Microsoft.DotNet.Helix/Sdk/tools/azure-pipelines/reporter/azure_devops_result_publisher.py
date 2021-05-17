@@ -81,6 +81,7 @@ class AzureDevOpsTestResultPublisher:
                     add_test_results_to_test_run(list(test_case_results),
                                                  self.team_project,
                                                  self.test_run_id)  # type: List[TestCaseResult]
+                succeeded = True
 
             except AzureDevOpsClientRequestError as ex:
                 # Odd syntax here is to deal with checking substrings of the list of args in this exception
