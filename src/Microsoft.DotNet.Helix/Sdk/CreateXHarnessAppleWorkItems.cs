@@ -23,6 +23,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             public const string Targets = "Targets";
             public const string LaunchTimeout = "LaunchTimeout";
             public const string IncludesTestRunner = "IncludesTestRunner";
+            public const string ResetSimulator = "ResetSimulator";
         }
 
         private const string EntryPointScript = "xharness-helix-job.apple.sh";
@@ -135,6 +136,15 @@ namespace Microsoft.DotNet.Helix.Sdk
                 Log.LogWarning("The ExpectedExitCode property is ignored in the `apple test` scenario");
             }
 
+            bool resetSimulator = false;
+            if (appBundleItem.TryGetMetadata(MetadataNames.ResetSimulator, out string resetSimulatorRunnerProp))
+            {
+                if (resetSimulatorRunnerProp.ToLowerInvariant() == "true")
+                {
+                    resetSimulator = true;
+                }
+            }
+
             if (customCommands == null)
             {
                 // In case user didn't specify custom commands, we use our default one
@@ -146,13 +156,14 @@ namespace Microsoft.DotNet.Helix.Sdk
                     (includesTestRunner
                         ? $"--launch-timeout \"$launch_timeout\" "
                         : $"--expected-exit-code $expected_exit_code ") +
+                    (resetSimulator ? $"--reset-simulator " : string.Empty) +
                     "--xcode \"$xcode_path\" " +
                     "-v " +
                     (!string.IsNullOrEmpty(AppArguments) ? "-- " + AppArguments : string.Empty);
             }
 
             string appName = fileSystem.GetFileName(appBundleItem.ItemSpec);
-            string helixCommand = GetHelixCommand(appName, targets, testTimeout, launchTimeout, includesTestRunner, expectedExitCode);
+            string helixCommand = GetHelixCommand(appName, targets, testTimeout, launchTimeout, includesTestRunner, expectedExitCode, resetSimulator);
             string payloadArchivePath = await CreateZipArchiveOfFolder(zipArchiveManager, fileSystem, appFolderPath, customCommands);
 
             Log.LogMessage($"Creating work item with properties Identity: {workItemName}, Payload: {appFolderPath}, Command: {helixCommand}");
@@ -166,13 +177,22 @@ namespace Microsoft.DotNet.Helix.Sdk
             });
         }
 
-        private string GetHelixCommand(string appName, string targets, TimeSpan testTimeout, TimeSpan launchTimeout, bool includesTestRunner, int expectedExitCode) =>
+        private string GetHelixCommand(
+            string appName,
+            string targets,
+            TimeSpan testTimeout,
+            TimeSpan launchTimeout,
+            bool includesTestRunner,
+            int expectedExitCode,
+            bool resetSimulator)
+            =>
             $"chmod +x {EntryPointScript} && ./{EntryPointScript} " +
             $"--app \"{appName}\" " +
             $"--targets \"{targets}\" " +
             $"--timeout \"{testTimeout}\" " +
             $"--launch-timeout \"{launchTimeout}\" " +
             (includesTestRunner ? "--includes-test-runner " : string.Empty) +
+            (resetSimulator ? "--reset-simulator" : string.Empty) +
             $"--expected-exit-code \"{expectedExitCode}\" " +
             (!string.IsNullOrEmpty(XcodeVersion) ? $" --xcode-version \"{XcodeVersion}\"" : string.Empty) +
             (!string.IsNullOrEmpty(AppArguments) ? $" --app-arguments \"{AppArguments}\"" : string.Empty);
