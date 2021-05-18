@@ -48,7 +48,7 @@
 
     <!-- Copy the original assembly for debugging purposes -->
     <Copy SourceFiles="$(_ClearAssemblyReferenceVersionsAssembly)"
-          DestinationFolder="$(IntermediateOutputPath)ClearRef/"
+          DestinationFolder="$(IntermediateOutputPath)ClearRef"
           Condition="'$(GenFacadesForceZeroVersionSeedsDebugMode)' == 'true'">
       <Output TaskParameter="CopiedFiles" ItemName="FileWrites" />
     </Copy>
