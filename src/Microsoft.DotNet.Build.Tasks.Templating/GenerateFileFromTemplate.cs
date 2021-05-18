@@ -30,9 +30,8 @@ namespace Microsoft.DotNet.Build.Tasks.Templating
     public class GenerateFileFromTemplate : Task
     {
         /// <summary>
-        /// The template file.
-        /// Variable syntax: ${VarName}
-        /// If your template file needs to output this format, you can escape the dollar sign with a backtick, e.g. `${NotReplaced}
+        /// The template file using the variable syntax <c>${VarName}</c>.
+        /// If your template file needs to output this format, you can escape the dollar sign with a backtick e.g. <c>`${NotReplaced}</c>.
         /// </summary>
         [Required]
         public string TemplateFile { get; set; }
@@ -45,7 +44,7 @@ namespace Microsoft.DotNet.Build.Tasks.Templating
         public string OutputPath { get; set; }
 
         /// <summary>
-        /// Key=value pairs of values
+        /// Key=Value pairs of values, separated by semicolons e.g. <c>Properties="Sum=4;OtherValue=123;"</c>.
         /// </summary>
         [Required]
         public string[] Properties { get; set; }
@@ -67,7 +66,7 @@ namespace Microsoft.DotNet.Build.Tasks.Templating
             Directory.CreateDirectory(Path.GetDirectoryName(outputPath));
             File.WriteAllText(outputPath, result);
 
-            return true;
+            return !Log.HasLoggedErrors;
         }
 
         public string Replace(string template, IDictionary<string, string> values)
