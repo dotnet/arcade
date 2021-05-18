@@ -7,7 +7,7 @@ using NuGet.Packaging.Core;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Microsoft.DotNet.PackageValidation
+namespace Microsoft.DotNet.PackageTesting
 {
     public class NupkgParser
     {
@@ -19,7 +19,7 @@ namespace Microsoft.DotNet.PackageValidation
             PackageArchiveReader nupkgReader = new PackageArchiveReader(packagePath);
             NuspecReader nuspecReader = nupkgReader.NuspecReader;
 
-            string title = nuspecReader.GetTitle();
+            string packageId = nuspecReader.GetId();
             string version = nuspecReader.GetVersion().ToString();
             IEnumerable<PackageDependencyGroup> dependencyGroups = nuspecReader.GetDependencyGroups();
 
@@ -28,13 +28,13 @@ namespace Microsoft.DotNet.PackageValidation
                 packageDependencies.Add(item.TargetFramework, item.Packages.ToList());
             }
 
-            var files = nupkgReader.GetFiles().ToList().Where(t => t.EndsWith(".dll")).Where(t => t.Contains(title + ".dll"));
+            var files = nupkgReader.GetFiles().ToList().Where(t => t.EndsWith(".dll")).Where(t => t.Contains(packageId + ".dll"));
             foreach (var file in files)
             {
                 packageAssets.Add(ExtractAssetFromFile(file));
             }
 
-            return new Package(title, version, packageAssets, packageDependencies);
+            return new Package(packageId, version, packageAssets, packageDependencies);
         }
 
         public static PackageAsset ExtractAssetFromFile(string filePath)

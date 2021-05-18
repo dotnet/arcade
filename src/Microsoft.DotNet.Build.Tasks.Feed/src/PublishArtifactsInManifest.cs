@@ -92,11 +92,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         public string BuildAssetRegistryToken { get; set; }
 
         /// <summary>
-        /// Maximum number of parallel uploads for the upload tasks
-        /// </summary>
-        public int MaxClients { get; set; } = 16;
-
-        /// <summary>
         /// Directory where "nuget.exe" is installed. This will be used to publish packages.
         /// </summary>
         [Required]
@@ -133,6 +128,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         public string ShippingFeedOverride { get; set; }
 
         public string SymbolsFeedOverride { get; set; }
+
+        public string PublicSymbolsFeedOverride { get; set; }
 
         /// <summary>
         /// Path to dll and pdb files
@@ -331,7 +328,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 BARBuildId = this.BARBuildId,
                 MaestroApiEndpoint = this.MaestroApiEndpoint,
                 BuildAssetRegistryToken = this.BuildAssetRegistryToken,
-                MaxClients = this.MaxClients,
                 NugetPath = this.NugetPath,
                 InternalBuild = this.InternalBuild,
                 SkipSafetyChecks = this.SkipSafetyChecks,
@@ -359,7 +355,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 BARBuildId = this.BARBuildId,
                 MaestroApiEndpoint = this.MaestroApiEndpoint,
                 BuildAssetRegistryToken = this.BuildAssetRegistryToken,
-                MaxClients = this.MaxClients,
                 NugetPath = this.NugetPath,
                 InternalBuild = this.InternalBuild,
                 SkipSafetyChecks = this.SkipSafetyChecks,
@@ -388,6 +383,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 ShippingFeedOverride = this.ShippingFeedOverride,
                 TransportFeedOverride = this.TransportFeedOverride,
                 SymbolsFeedOverride = this.SymbolsFeedOverride,
+                PublicSymbolsFeedOverride = this.PublicSymbolsFeedOverride,
                 ArtifactsBasePath =  this.ArtifactsBasePath,
                 AzdoApiToken = this.AzdoApiToken,
                 BuildId = this.BuildId,

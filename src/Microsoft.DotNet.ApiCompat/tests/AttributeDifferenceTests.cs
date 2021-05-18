@@ -22,9 +22,10 @@ namespace Microsoft.DotNet.ApiCompat.Tests
             Assert.Contains("CannotRemoveAttribute : Attribute 'AttributeDifference.FooAttribute' exists on 'AttributeDifference.AttributeDifferenceClass1' in the implementation but not the contract.", runOutput);
             Assert.Contains("CannotRemoveAttribute : Attribute 'System.ComponentModel.DefaultValueAttribute' exists on generic param 'T' on member 'AttributeDifference.AttributeDifferenceClass1.GenericMethodWithAttribute<T>()' in the implementation but not the contract.", runOutput);
             Assert.Contains("CannotRemoveAttribute : Attribute 'System.ComponentModel.DefaultValueAttribute' exists on generic param 'T' on member 'AttributeDifference.AttributeDifferenceClass1.GenericMethodWithAttribute<T>()' in the implementation but not the contract.", runOutput);
+            Assert.Contains("CannotRemoveAttribute : Attribute 'AttributeDifference.FooAttribute' exists on 'AttributeDifference.AttributeDifferenceClass1.MethodWithAttribute()' in the implementation but not the contract.", runOutput);
             Assert.Contains("CannotRemoveAttribute : Attribute 'AttributeDifference.FooAttribute' exists on parameter 'myParameter' on member 'AttributeDifference.AttributeDifferenceClass1.MethodWithAttribute(System.String, System.Object)' in the implementation but not the contract.", runOutput);
             Assert.Contains("CannotRemoveAttribute : Attribute 'System.ComponentModel.DefaultValueAttribute' exists on generic param 'TOne' on member 'AttributeDifference.AttributeDifferenceGenericCLass<TOne, TTwo>' in the implementation but not the contract.", runOutput);
-            Assert.Contains("Total Issues: 5", runOutput);
+            Assert.Contains("Total Issues: 6", runOutput);
         }
 
         [Fact]

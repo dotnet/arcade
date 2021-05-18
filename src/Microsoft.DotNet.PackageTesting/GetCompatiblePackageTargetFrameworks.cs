@@ -9,7 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Microsoft.DotNet.PackageValidation
+namespace Microsoft.DotNet.PackageTesting
 {
     public class GetCompatiblePackageTargetFrameworks : BuildTask
     {
@@ -26,7 +26,6 @@ namespace Microsoft.DotNet.PackageValidation
         {
             bool result = true;
             List<ITaskItem> testProjects = new List<ITaskItem>();
-
             try
             {
                 Initialize();
@@ -36,7 +35,7 @@ namespace Microsoft.DotNet.PackageValidation
                     List<NuGetFramework> packageTargetFrameworks = package.PackageAssets.Where(t => t.AssetType != AssetType.RuntimeAsset).Select(t => t.TargetFramework).Distinct().ToList();
 
                     List<NuGetFramework> frameworksToTest = GetTestFrameworks(packageTargetFrameworks);
-                    testProjects.AddRange(CreateItemFromTestFramework(package.Title, package.Version, frameworksToTest, GetRidsFromPackage(package)));
+                    testProjects.AddRange(CreateItemFromTestFramework(package.PackageId, package.Version, frameworksToTest, GetRidsFromPackage(package)));
                 }
                 
                 // Removing empty items.
@@ -113,12 +112,12 @@ namespace Microsoft.DotNet.PackageValidation
             }
         }
     
-        public List<ITaskItem> CreateItemFromTestFramework(string title, string version, List<NuGetFramework> testFrameworks, string rids)
+        public List<ITaskItem> CreateItemFromTestFramework(string packageId, string version, List<NuGetFramework> testFrameworks, string rids)
         {
             List<ITaskItem> testprojects = new List<ITaskItem>();
             foreach (var framework in testFrameworks)
             {
-                var supportedPackage = new TaskItem(title);
+                var supportedPackage = new TaskItem(packageId);
                 supportedPackage.SetMetadata("Version", version);
                 supportedPackage.SetMetadata("TargetFramework", framework.ToString());
                 supportedPackage.SetMetadata("TargetFrameworkShort", framework.GetShortFolderName());

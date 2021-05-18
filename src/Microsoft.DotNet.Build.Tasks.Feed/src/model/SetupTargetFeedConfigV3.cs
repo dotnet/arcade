@@ -29,6 +29,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         
         private string StableSymbolsFeed { get; set; }
 
+        private string AzureDevOpsPublicStaticSymbolsFeed { get; set; }
+
         private SymbolTargetType SymbolTargetType { get; set; }
 
         private List<string> FilesToExclude { get; }
@@ -54,6 +56,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             SymbolTargetType symbolTargetType,
             string stablePackagesFeed = null,
             string stableSymbolsFeed = null,
+            string azureDevOpsPublicStaticSymbolsFeed = null,
             List<string> filesToExclude = null,
             bool flatten = true) 
             : base(isInternalBuild, isStableBuild, repositoryName, commitSha, azureStorageTargetFeedPAT, publishInstallersAndChecksums, installersTargetStaticFeed, installersAzureAccountKey, checksumsTargetStaticFeed, checksumsAzureAccountKey, azureDevOpsStaticShippingFeed, azureDevOpsStaticTransportFeed, azureDevOpsStaticSymbolsFeed, latestLinkShortUrlPrefix, azureDevOpsFeedsKey)
@@ -62,6 +65,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             StableSymbolsFeed = stableSymbolsFeed;
             StablePackagesFeed = stablePackagesFeed;
             SymbolTargetType = symbolTargetType;
+            AzureDevOpsPublicStaticSymbolsFeed = azureDevOpsPublicStaticSymbolsFeed;
             FilesToExclude = filesToExclude ?? new List<string>();
             Flatten = flatten;
         }
@@ -156,6 +160,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             if (IsInternalBuild)
             {
                 symbolsFeed = AzureDevOpsStaticSymbolsFeed;
+                symbolsFeedType = FeedType.AzDoNugetFeed;
+                symbolsFeedSecret = AzureDevOpsFeedsKey;
+            }
+            else if (!string.IsNullOrEmpty(AzureDevOpsPublicStaticSymbolsFeed))
+            {
+                symbolsFeed = AzureDevOpsPublicStaticSymbolsFeed;
                 symbolsFeedType = FeedType.AzDoNugetFeed;
                 symbolsFeedSecret = AzureDevOpsFeedsKey;
             }

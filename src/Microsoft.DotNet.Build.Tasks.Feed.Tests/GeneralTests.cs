@@ -10,6 +10,7 @@ using Microsoft.DotNet.Build.Tasks.Feed.Tests.TestDoubles;
 using Xunit;
 using static Microsoft.DotNet.Build.Tasks.Feed.GeneralUtils;
 using FluentAssertions;
+using Microsoft.DotNet.Arcade.Test.Common;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
 {
@@ -33,6 +34,19 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         }
 
         [Theory]
+        [InlineData("foo/bar/baz/bop.symbols.nupkg", true)]
+        [InlineData("foo/bar/baz/bop.symbols.nupkg.sha512", false)]
+        [InlineData("foo/bar/baz/bip.snupkg.sha512", false)]
+        [InlineData("foo/bar/baz/bip.snupkg", true)]
+        [InlineData("foo/bar/baz/bip.SNUpkg", true)]
+        [InlineData("foo/bar/baz/bop.SYMBOLS.nupkg", true)]
+        [InlineData("foo/bar/symbols.nupkg/bop.nupkg", false)]
+        public void IsSymbolPackage(string package, bool isSymbolPackage)
+        {
+            GeneralUtils.IsSymbolPackage(package).Should().Be(isSymbolPackage);
+        }
+
+        [Theory]
         [InlineData(HttpStatusCode.OK, true)]
         [InlineData(HttpStatusCode.Accepted, true)]
         [InlineData(HttpStatusCode.BadRequest, false)]
@@ -42,7 +56,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             HttpStatusCode feedResponseStatusCode,
             bool? expectedResult)
         {
-            using var httpClient = FakeHttpClient.WithResponse(
+            using var httpClient = FakeHttpClient.WithResponses(
                 new HttpResponseMessage(feedResponseStatusCode));
             var retryHandler = new MockRetryHandler();
 
@@ -104,7 +118,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 response.Content = new ByteArrayContent(content);
             };
 
-            var httpClient = FakeHttpClient.WithResponse(response);
+            var httpClient = FakeHttpClient.WithResponses(response);
 
             var result = await GeneralUtils.CompareLocalPackageToFeedPackage(
                 localPackagePath,

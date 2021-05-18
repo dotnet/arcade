@@ -149,8 +149,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     continue;
                 }
 
-                var isSymbolsPackage = artifact.ItemSpec.EndsWith(".symbols.nupkg", StringComparison.OrdinalIgnoreCase)
-                    || artifact.ItemSpec.EndsWith(".snupkg", StringComparison.OrdinalIgnoreCase);
+                var isSymbolsPackage = GeneralUtils.IsSymbolPackage(artifact.ItemSpec);
 
                 if (artifact.ItemSpec.EndsWith(".nupkg", StringComparison.OrdinalIgnoreCase) && !isSymbolsPackage)
                 {

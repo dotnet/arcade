@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.DotNet.Build.Tasks.Feed.Model;
@@ -63,6 +64,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public string SymbolsFeedOverride { get; set; }
 
+        public string PublicSymbolsFeedOverride { get; set; }
+
         public override bool Execute()
         {
             ExecuteAsync().GetAwaiter().GetResult();
@@ -85,7 +88,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 {
                     if (!int.TryParse(channelIdStr, out var channelId))
                     {
-                        Log.LogError($"Value '{channelIdStr}' isn't recognized as a valid Maestro++ channel ID. To add a channel refer to https://github.com/dotnet/arcade/blob/master/Documentation/CorePackages/Publishing.md#how-to-add-a-new-channel-to-use-v3-publishing.");
+                        Log.LogError(
+                            $"Value '{channelIdStr}' isn't recognized as a valid Maestro++ channel ID. To add a channel refer to https://github.com/dotnet/arcade/blob/master/Documentation/CorePackages/Publishing.md#how-to-add-a-new-channel-to-use-v3-publishing.");
                         continue;
                     }
 
@@ -94,7 +98,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                 if (Log.HasLoggedErrors)
                 {
-                    Log.LogError($"Could not parse the target channels list '{TargetChannels}'. It should be a comma separated list of integers.");
+                    Log.LogError(
+                        $"Could not parse the target channels list '{TargetChannels}'. It should be a comma separated list of integers.");
                     return false;
                 }
 
@@ -135,8 +140,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                     Log.LogMessage(MessageImportance.High, $"Publishing to this target channel: {targetChannelConfig}");
 
-                    string shortLinkUrl = string.IsNullOrEmpty(targetChannelConfig.AkaMSChannelName) ?
-                        $"dotnet/" : $"dotnet/{targetChannelConfig.AkaMSChannelName}/{BuildQuality}";
+                    string shortLinkUrl = string.IsNullOrEmpty(targetChannelConfig.AkaMSChannelName)
+                        ? $"dotnet/"
+                        : $"dotnet/{targetChannelConfig.AkaMSChannelName}/{BuildQuality}";
 
                     var targetFeedsSetup = new SetupTargetFeedConfigV3(
                         targetChannelConfig.IsInternal,
@@ -146,9 +152,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         AzureStorageTargetFeedKey,
                         PublishInstallersAndChecksums,
                         GetFeed(targetChannelConfig.InstallersFeed, InstallersFeedOverride),
-                        targetChannelConfig.IsInternal? InternalInstallersFeedKey : InstallersFeedKey,
+                        targetChannelConfig.IsInternal ? InternalInstallersFeedKey : InstallersFeedKey,
                         GetFeed(targetChannelConfig.ChecksumsFeed, ChecksumsFeedOverride),
-                        targetChannelConfig.IsInternal? InternalCheckSumsFeedKey : CheckSumsFeedKey,
+                        targetChannelConfig.IsInternal ? InternalCheckSumsFeedKey : CheckSumsFeedKey,
                         GetFeed(targetChannelConfig.ShippingFeed, ShippingFeedOverride),
                         GetFeed(targetChannelConfig.TransportFeed, TransportFeedOverride),
                         GetFeed(targetChannelConfig.SymbolsFeed, SymbolsFeedOverride),
@@ -156,6 +162,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         AzureDevOpsFeedsKey,
                         BuildEngine = this.BuildEngine,
                         targetChannelConfig.SymbolTargetType,
+                        azureDevOpsPublicStaticSymbolsFeed: GetFeed(null, PublicSymbolsFeedOverride),
                         filesToExclude: targetChannelConfig.FilenamesToExclude,
                         flatten: targetChannelConfig.Flatten);
 
@@ -203,9 +210,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     CopySymbolFilesToTemporaryLocation(BuildModel, temporarySymbolsLocation);
                 }
 
-                await Task.WhenAll(new Task[] {
-                    HandlePackagePublishingAsync(buildAssets),
-                    HandleBlobPublishingAsync(buildAssets),
+                using var clientThrottle = new SemaphoreSlim(MaxClients, MaxClients);
+
+                await Task.WhenAll(new Task[]
+                {
+                    HandlePackagePublishingAsync(buildAssets, clientThrottle),
+                    HandleBlobPublishingAsync(buildAssets, clientThrottle),
                     HandleSymbolPublishingAsync(
                         PdbArtifactsBasePath,
                         MsdlToken,
@@ -213,12 +223,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         SymbolPublishingExclusionsFile,
                         PublishSpecialClrFiles,
                         buildAssets,
+                        clientThrottle,
                         temporarySymbolsLocation)
                 });
 
                 DeleteTemporaryFiles(temporarySymbolsLocation);
                 DeleteTemporaryDirectory(temporarySymbolsLocation);
-                
+
                 await PersistPendingAssetLocationAsync(client);
             }
             catch (Exception e)
@@ -244,7 +255,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         {
             foreach (var blobAsset in buildModel.Artifacts.Blobs)
             {
-                if (blobAsset.Id.EndsWith(".symbols.nupkg", StringComparison.OrdinalIgnoreCase))
+                if (GeneralUtils.IsSymbolPackage(blobAsset.Id))
                 {
                     var sourceFile = Path.Combine(BlobAssetsBasePath, Path.GetFileName(blobAsset.Id));
                     var destinationFile = Path.Combine(symbolTemporaryLocation, Path.GetFileName(blobAsset.Id));

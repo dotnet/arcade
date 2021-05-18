@@ -4,6 +4,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
@@ -34,11 +35,25 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         }
 
         /// <summary>
+        /// Gets whether this component has any dependencies.
+        /// </summary>
+        public bool HasDependencies => Dependencies.Count > 0;
+
+        /// <summary>
         /// The component name (ID).
         /// </summary>
         public string Name
         {
             get;
+        }
+
+        /// <summary>
+        /// An item group containing information to shorten the names of packages.
+        /// </summary>
+        public ITaskItem[] ShortNames
+        {
+            get;
+            set;
         }
 
         /// <summary>
@@ -59,12 +74,15 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
 
         private ICollection<VisualStudioDependency> Dependencies = new List<VisualStudioDependency>();
 
-        public VisualStudioComponent(string name, string description, string title, Version version)
+        public VisualStudioComponent(string name, string description, string title, Version version, ITaskItem[] shortNames,
+            string category)
         {
             Name = name;
             Description = description;
             Title = title;
             Version = version;
+            ShortNames = shortNames;
+            Category = category;
         }
 
         /// <summary>
@@ -92,16 +110,32 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         /// <param name="dependency">The dependency to add to this component.</param>
         public void AddDependency(ITaskItem dependency)
         {
-            AddDependency(new VisualStudioDependency(dependency.ItemSpec, new Version(dependency.GetMetadata("Version"))));
+            AddDependency(new VisualStudioDependency(dependency.ItemSpec.Replace(ShortNames), new Version(dependency.GetMetadata(Metadata.Version))));
         }
 
         /// <summary>
         /// Add a dependency using the specified workload pack.
         /// </summary>
-        /// <param name="dependency">The dependency to add to this component.</param>
-        public void AddDependency(WorkloadPack dependency)
+        /// <param name="pack">The dependency to add to this component.</param>
+        public void AddDependency(WorkloadPack pack)
         {
-            AddDependency($"{dependency.Id}", new NuGetVersion(dependency.Version).Version);
+            AddDependency($"{pack.Id.ToString().Replace(ShortNames)}.{pack.Version}", new NuGetVersion(pack.Version).Version);
+        }
+
+        public IEnumerable<VisualStudioDependency> GetAliasedDependencies(WorkloadPack pack)
+        {
+            foreach (var rid in pack.AliasTo.Keys)
+            {
+                switch (rid)
+                {
+                    case "win-x86":
+                    case "win-x64":
+                        yield return new VisualStudioDependency($"{pack.AliasTo[rid].ToString().Replace(ShortNames)}.{pack.Version}", new NuGetVersion(pack.Version).Version);
+                        break;
+                    default:
+                        break;
+                }
+            }
         }
 
         /// <summary>
@@ -145,27 +179,59 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                 {"__VS_PACKAGE_VERSION__", Version.ToString() },
                 {"__VS_COMPONENT_TITLE__", Title },
                 {"__VS_COMPONENT_DESCRIPTION__", Description },
-                {"__VS_COMPONENT_CATEGORY__", Category }
+                {"__VS_COMPONENT_CATEGORY__", Category ?? ".NET" }
             };
         }
 
         /// <summary>
         /// Creates a <see cref="VisualStudioComponent"/> using a workload definition.
         /// </summary>
-        /// <param name="Definition"></param>
-        /// <param name="packs"></param>
+        /// <param name="manifest"></param>
+        /// <param name="workload"></param>
+        /// <param name="componentVersions"></param>
+        /// <param name="shortNames"></param>
+        /// <param name="shortNameMetadata"></param>
+        /// <param name="componentResources"></param>
         /// <returns></returns>
-        public static VisualStudioComponent Create(WorkloadManifest manifest, WorkloadDefinition definition)
+        public static VisualStudioComponent Create(TaskLoggingHelper log, WorkloadManifest manifest, WorkloadDefinition workload, ITaskItem[] componentVersions,
+            ITaskItem[] shortNames, ITaskItem[] componentResources, ITaskItem[] missingPacks)
         {
-            VisualStudioComponent package = new(Utils.ToSafeId(definition.Id.ToString()), definition.Description,
-                definition.Description, new Version($"{manifest.Version}.0"));
+            log?.LogMessage("Creating Visual Studio component");
+            string workloadId = $"{workload.Id}";
 
-            foreach (WorkloadPackId packId in definition.Packs)
+            // If there's an explicit version mapping we use that, otherwise we fall back to the manifest version
+            // and normalize it since it can have semantic information and Visual Studio components do not support that.
+            ITaskItem versionItem = componentVersions?.Where(v => string.Equals(v.ItemSpec, workloadId, StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
+            Version version = (versionItem != null) && !string.IsNullOrWhiteSpace(versionItem.GetMetadata(Metadata.Version))
+                ? new Version(versionItem.GetMetadata(Metadata.Version))
+                : (new NuGetVersion(manifest.Version)).Version;
+
+            ITaskItem resourceItem = componentResources?.Where(
+                r => string.Equals(r.ItemSpec, workloadId, StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
+
+            // Workload definitions do not have separate title/description fields so the only option
+            // is to default to the workload description for both.
+            string title = resourceItem?.GetMetadata(Metadata.Title) ?? workload.Description;
+            string description = resourceItem?.GetMetadata(Metadata.Description) ?? workload.Description;
+            string category = resourceItem?.GetMetadata(Metadata.Category) ?? ".NET";
+
+            VisualStudioComponent component = new(Utils.ToSafeId(workloadId), description,
+                title, version, shortNames, category);
+
+            IEnumerable<string> missingPackIds = missingPacks.Select(p => p.ItemSpec);
+            log?.LogMessage(MessageImportance.Low, $"Missing packs: {string.Join(", ", missingPackIds)}");
+
+            // Visual Studio is case-insensitive. 
+            IEnumerable<WorkloadPackId> packIds = workload.Packs.Where(p => !missingPackIds.Contains($"{p}", StringComparer.OrdinalIgnoreCase));
+            log?.LogMessage(MessageImportance.Low, $"Packs: {string.Join(", ", packIds.Select(p=>$"{p}"))}");
+
+            foreach (WorkloadPackId packId in packIds)
             {
-                package.AddDependency(manifest.Packs[packId]);
+                log?.LogMessage(MessageImportance.Low, $"Adding component dependency for {packId} ");
+                component.AddDependency(manifest.Packs[packId]);
             }
 
-            return package;
+            return component;
         }
     }
 }

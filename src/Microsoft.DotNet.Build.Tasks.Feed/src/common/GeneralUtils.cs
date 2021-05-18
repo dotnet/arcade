@@ -19,6 +19,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
     public static class GeneralUtils
     {
         public const string SymbolPackageSuffix = ".symbols.nupkg";
+        public const string SnupkgPackageSuffix = ".snupkg";
         public const string PackageSuffix = ".nupkg";
         public const string PackagesCategory = "PACKAGE";
 
@@ -367,6 +368,16 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             } 
         }
 
+        /// <summary>
+        ///     Determine whether a file name or path is a symbol package.
+        /// </summary>
+        /// <param name="name">File anme or path</param>
+        /// <returns>True if the item is a symbol package, false otherwise</returns>
+        public static bool IsSymbolPackage(string name)
+        {
+            return name.EndsWith(SymbolPackageSuffix, StringComparison.OrdinalIgnoreCase) ||
+                name.EndsWith(SnupkgPackageSuffix, StringComparison.OrdinalIgnoreCase);
+        }
 
         private static System.Threading.Tasks.Task WaitForProcessExitAsync(Process process)
         {

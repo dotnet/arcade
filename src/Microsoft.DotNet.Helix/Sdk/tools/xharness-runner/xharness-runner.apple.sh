@@ -15,7 +15,8 @@ xharness_cli_path=''
 xcode_version=''
 app_arguments=''
 expected_exit_code=0
-command='test'
+includes_test_runner=false
+reset_simulator=false
 
 while [[ $# -gt 0 ]]; do
     opt="$(echo "$1" | tr "[:upper:]" "[:lower:]")"
@@ -56,13 +57,11 @@ while [[ $# -gt 0 ]]; do
         expected_exit_code="$2"
         shift
         ;;
-      --command)
-        command="$2"
-        shift
+      --includes-test-runner)
+        includes_test_runner=true
         ;;
-      *)
-        echo "Invalid argument: $1"
-        exit 1
+      --reset-simulator)
+        reset_simulator=true
         ;;
     esac
     shift
@@ -74,23 +73,16 @@ function die ()
     exit 1
 }
 
-if [ -z "$timeout" ]; then
-    die "Test timeout wasn't provided";
+if [ -z "$app" ]; then
+    die "App bundle path wasn't provided";
+fi
+
+if [ -z "$targets" ]; then
+    die "No targets were provided";
 fi
 
 if [ -z "$xharness_cli_path" ]; then
     die "XHarness path wasn't provided";
-fi
-
-if [ -n "$app_arguments" ]; then
-    app_arguments="-- $app_arguments";
-fi
-
-if [ "$command" == "run" ]; then
-    app_arguments="--expected-exit-code=$expected_exit_code $app_arguments"
-elif [ -n "$launch_timeout" ]; then
-    # shellcheck disable=SC2089
-    app_arguments="--launch-timeout=$launch_timeout $app_arguments"
 fi
 
 if [ -z "$xcode_version" ]; then
@@ -143,19 +135,10 @@ fi
 
 export XHARNESS_DISABLE_COLORED_OUTPUT=true
 export XHARNESS_LOG_WITH_TIMESTAMPS=true
+alias xharness="dotnet exec $xharness_cli_path"
 
-# We include $app_arguments non-escaped and not arrayed because it might contain several extra arguments
-# which come from outside and are appeneded behind "--" and forwarded to the iOS application from XHarness.
-# shellcheck disable=SC2086,SC2090
-dotnet exec "$xharness_cli_path" apple $command \
-    --app="$app"                                \
-    --output-directory="$output_directory"      \
-    --targets="$targets"                        \
-    --timeout="$timeout"                        \
-    --xcode="$xcode_path"                       \
-    -v                                          \
-    $app_arguments
-
+# Act out the actual commands
+source command.sh
 exit_code=$?
 
 # Kill the simulator just in case when we fail to launch the app

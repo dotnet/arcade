@@ -10,6 +10,7 @@ namespace AttributeDifference
     {
         public string MethodWithAttribute(string myParameter, [DefaultValue("myObject")] object myObject) => throw null;
         public T GenericMethodWithAttribute<T>() => throw null;
+        public void MethodWithAttribute() { }
     }
     public class AttributeDifferenceGenericCLass<TOne, [DefaultValue("TTwo")] TTwo>
     {

@@ -223,6 +223,30 @@ Click [here](../../src/Microsoft.DotNet.Arcade.Sdk/tools/Sign.proj) to see how t
 ...
 ```
 
+#### 8. How can I use the .NET specific certificate for executable files?
+
+By default, `Microsoft400` is the cert used by default for most executable files (e.g .dll, .js, .exe). To use the .NET specific cert (`MicrosoftDotNet500`),
+use one of the following approaches:
+
+1. Update the existing `FileExtensionSignInfo` and `StrongNameSignInfo` metadata in [Sign.props](../../src/Microsoft.DotNet.Arcade.Sdk/tools/Sign.props)
+to use `MicrosoftDotNet500`. This approach must be used if some files still need to be signed with `Microsoft400`.
+   ```
+   <ItemGroup>
+     <FileExtensionSignInfo Update=".js;.ps1;.psd1;.psm1;.psc1;.py;.dll;.exe" CertificateName="MicrosoftDotNet500" />
+     <StrongNameSignInfo Update="MsSharedLib72" PublicKeyToken="31bf3856ad364e35" CertificateName="MicrosoftDotNet500" />
+     <StrongNameSignInfo Update="SilverlightCert121" PublicKeyToken="7cec85d7bea7798e" CertificateName="MicrosoftDotNet500" />
+     <StrongNameSignInfo Update="StrongName" PublicKeyToken="b77a5c561934e089" CertificateName="MicrosoftDotNet500" />
+     <StrongNameSignInfo Update="StrongName" PublicKeyToken="b03f5f7f11d50a3a" CertificateName="MicrosoftDotNet500" />
+     <StrongNameSignInfo Update="$(MSBuildThisFileDirectory)snk\Open.snk" PublicKeyToken="cc7b13ffcd2ddd51" CertificateName="MicrosoftDotNet500" />
+   </ItemGroup>
+   ```
+2. Specify the property `UseDotNetCertificate` with value `true` in your `eng/Signing.props` file. This **replaces** all existing use of `Microsoft400` with `MicrosoftDotNet500`.
+   ```
+   <PropertyGroup>
+     <UseDotNetCertificate>f</UseDotNetCertificate>
+   </PropertyGroup>
+   ```
+
 ## Logs & MicroBuild configuration files
 
 The log messages from the SignToolTask itself will be included in the log (+.binlog) of the original build process. The binary log of executing the MicroBuild signing plugin will be stored in files named `SigningX.binlog` in the `LogDir` folder. The project files used to call the MicroBuild plugin will be stored in files named `RoundX.proj` in the `TempDir` folder. In both cases the `X` in the name refers to a signing round.

@@ -5,17 +5,17 @@ using NuGet.Frameworks;
 using NuGet.Packaging.Core;
 using System.Collections.Generic;
 
-namespace Microsoft.DotNet.PackageValidation
+namespace Microsoft.DotNet.PackageTesting
 {
     public class Package
     {
         public List<PackageAsset> PackageAssets { get; set; }
-        public string Title { get; set; }
+        public string PackageId { get; set; }
         public string Version { get; set; }
         public Dictionary<NuGetFramework, List<PackageDependency>> PackageDependencies { get; set; }
-        public Package(string title, string version, List<PackageAsset> packageAssets, Dictionary<NuGetFramework, List<PackageDependency>> packageDependencies)
+        public Package(string packageId, string version, List<PackageAsset> packageAssets, Dictionary<NuGetFramework, List<PackageDependency>> packageDependencies)
         {
-            Title = title;
+            PackageId = packageId;
             Version = version;
             PackageAssets = packageAssets;
             PackageDependencies = packageDependencies;
