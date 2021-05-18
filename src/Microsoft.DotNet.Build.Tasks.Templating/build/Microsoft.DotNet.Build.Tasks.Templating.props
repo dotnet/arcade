@@ -1,0 +1,10 @@
+
+<Project>
+
+  <PropertyGroup>
+    <_BuildTasksAssembly>$(MSBuildThisFileDirectory)..\tools\netstandard2.0\Microsoft.DotNet.Build.Tasks.Templating.dll</_BuildTasksAssembly>
+  </PropertyGroup>
+
+  <UsingTask TaskName="Microsoft.DotNet.Build.Tasks.Templating.GenerateFileFromTemplate" AssemblyFile="$(_BuildTasksAssembly)" />
+
+</Project>
