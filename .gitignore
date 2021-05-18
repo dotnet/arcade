@@ -131,3 +131,6 @@ node_modules/
 # Python Compile Outputs
 
 *.pyc
+
+# IntelliJ
+.idea/

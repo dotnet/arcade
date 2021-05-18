@@ -3,7 +3,11 @@
   <PropertyGroup>
     <EnableXUnitReporter Condition=" '$(EnableXUnitReporter)' != 'true' ">false</EnableXUnitReporter>
   </PropertyGroup>
-
+  
+  <PropertyGroup Condition=" '$(HelixTestConfigurationFilePath)' == '' ">
+    <HelixTestConfigurationFilePath Condition=" '$(RepositoryEngineeringDir)' != '' ">$(RepositoryEngineeringDir)/test-configuration.json</HelixTestConfigurationFilePath>
+  </PropertyGroup>
+  
   <Choose>
     <When Condition="$(HelixTargetQueue.ToLowerInvariant().Contains('windows'))">
       <PropertyGroup>
@@ -35,6 +39,10 @@
     <HelixProperties Condition="'$(HelixConfiguration)' != ''" Include="configuration" Value="$(HelixConfiguration)" />
     <HelixProperties Condition="'$(HelixArchitecture)' != ''" Include="architecture" Value="$(HelixArchitecture)" />
     <HelixProperties Include="operatingSystem" Value="$(HelixTargetQueue)" />
+  </ItemGroup>
+  
+  <ItemGroup Condition="Exists('$(HelixTestConfigurationFilePath)')">
+    <HelixCorrelationPayload Include="$(HelixTestConfigurationFilePath)" />
   </ItemGroup>
 
   <Target Name="CoreBuild">
