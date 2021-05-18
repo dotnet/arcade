@@ -144,3 +144,4 @@ namespace Microsoft.DotNet.Build.Tasks.Templating
         }
     }
 }
+
