@@ -22,8 +22,8 @@ Onboarding to OneLocBuild is a simple process:
 ```
 3. Run the pipeline you want to use OneLocBuild on your test branch.
 4. Open a ticket with the localization team using
-   [this template](https://ceapex.visualstudio.com/CEINTL/_workitems/create/Loc%20Request). Include the link to the 
-   test build you've done.
+   [this template](https://ceapex.visualstudio.com/CEINTL/_workitems/create/Loc%20Request?templateId=60b0dcf9-9892-4910-934e-d5becddd1bc1&ownerId=c2e38d3d-0e9e-429f-955d-6e39fc6f0457).
+   Include the link to the test build you've done.
 5. The loc team will generate an LCL package for you and send you its ID. It will be something like
    `LCL-JUNO-PROD-YOURREPO`.
 6. Change your YAML (subbing `'LCL-JUNO-PROD-YOURREPO'` for the package ID given to you) to:
@@ -34,8 +34,8 @@ Onboarding to OneLocBuild is a simple process:
     LclPackageId: 'LCL-JUNO-PROD-YOURREPO'
 ```
 7. Merge the changes to your main branch and then open a
-   [repo modification ticket](https://ceapex.visualstudio.com/CEINTL/_workitems/create/Loc%20Request) with the loc team 
-   to let them know to retarget the branch.
+   [repo modification ticket](https://ceapex.visualstudio.com/CEINTL/_workitems/create/Loc%20Request?templateId=415a0569-35ed-45c3-9321-8b1affff1f52&ownerId=c2e38d3d-0e9e-429f-955d-6e39fc6f0457)
+   with the loc team to let them know to retarget the branch.
 
 As of 12 May 2021, if your repository is mirrored to internal with Maestro, you will also need to keep
 `CreatePr: false` in your YAML. Currently, OneLocBuild does not support our scenario. The step to create a PR back to
