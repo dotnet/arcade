@@ -11,10 +11,13 @@
     <BuildOutputTargetFolder>tools\</BuildOutputTargetFolder>
     <DevelopmentDependency>true</DevelopmentDependency>
     <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+    <EnableDefaultNoneItems>false</EnableDefaultNoneItems>
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Include="build\**\*" PackagePath="build/" />
+    <None Include="build/**/*.*" Pack="true">
+      <PackagePath>build</PackagePath>
+    </None>
   </ItemGroup>
 
   <ItemGroup>
@@ -22,4 +25,5 @@
     <PackageReference Include="Microsoft.Build.Utilities.Core" Version="$(MicrosoftBuildUtilitiesCoreVersion)" />
   </ItemGroup>
 
+  <Import Project="$(RepoRoot)eng\BuildTask.targets" />
 </Project>
