@@ -31,60 +31,55 @@ namespace Microsoft.DotNet.GenFacades
             if (SourceFiles == null || SourceFiles.Length == 0)
             {
                 Log.LogError("There are no ref source files.");
+                return false;
             }
-            else
-            {
-                GenerateNotSupportedAssemblyFiles(SourceFiles);
-            }
+
+            GenerateNotSupportedAssemblyFiles(SourceFiles);
+
             return !Log.HasLoggedErrors;
         }
 
         private void GenerateNotSupportedAssemblyFiles(IEnumerable<ITaskItem> sourceFiles)
         {
+            string[] apiExclusions = null;
+            if (!string.IsNullOrEmpty(ApiExclusionListPath) && File.Exists(ApiExclusionListPath))
+            {
+                apiExclusions = File.ReadAllLines(ApiExclusionListPath);
+            }
+
             foreach (ITaskItem item in sourceFiles)
             {
                 string sourceFile = item.ItemSpec;
-                if (string.IsNullOrEmpty(sourceFile))
-                {
-                    continue;
-                }
+                string outputPath = item.GetMetadata("OutputPath");
+
                 if (!File.Exists(sourceFile))
                 {
                     Log.LogError($"File {sourceFile} was not found.");
                     continue;
                 }
-                string text = GenerateNotSupportedAssemblyForSourceFile(sourceFile);
 
-                if(text != null)
-                    File.WriteAllText(item.GetMetadata("NotSupportedPath"), text);
+                GenerateNotSupportedAssemblyForSourceFile(sourceFile, outputPath, apiExclusions);
             }
         }
 
-        private string GenerateNotSupportedAssemblyForSourceFile(string sourceFile)
+        private void GenerateNotSupportedAssemblyForSourceFile(string sourceFile, string outputPath, string[] apiExclusions)
         {
-            string[] apiExclusions;
             SyntaxTree syntaxTree;
+
             try
             {
                 syntaxTree = CSharpSyntaxTree.ParseText(File.ReadAllText(sourceFile));
             }
             catch(Exception ex)
             {
-                Log.LogError(ex.Message);
-                return null;
+                Log.LogErrorFromException(ex, false);
+                return;
             }
 
-            if (string.IsNullOrEmpty(ApiExclusionListPath) || !File.Exists(ApiExclusionListPath))
-            {
-                apiExclusions = null;
-            }
-            else
-            {
-                apiExclusions = File.ReadAllLines(ApiExclusionListPath);
-            }
             var rewriter = new NotSupportedAssemblyRewriter(Message, apiExclusions);
             SyntaxNode root = rewriter.Visit(syntaxTree.GetRoot());
-            return root.GetText().ToString();
+            string text = root.GetText().ToString();
+            File.WriteAllText(outputPath, text);
         }
     }
 
