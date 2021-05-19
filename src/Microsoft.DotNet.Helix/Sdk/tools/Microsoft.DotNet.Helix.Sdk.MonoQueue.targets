@@ -42,7 +42,7 @@
   </ItemGroup>
   
   <ItemGroup Condition="Exists('$(HelixTestConfigurationFilePath)')">
-    <HelixCorrelationPayload Include="$(HelixTestConfigurationFilePath)" />
+    <HelixCorrelationPayload Include="$(HelixTestConfigurationFilePath)" AsArchive="false" />
   </ItemGroup>
 
   <Target Name="CoreBuild">
