@@ -17,9 +17,9 @@
 
   <ItemGroup Condition="'$(GeneratePlatformNotSupportedAssemblyMessage)' != ''">
     <ProjectReference Include="$(ContractProject)">
-      <Targets>GetCompile</Targets>
+      <Targets>SourceFilesProjectOutputGroup</Targets>
       <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-      <OutputItemType>ContractCompile</OutputItemType>
+      <OutputItemType>_contractSourceFilesGroup</OutputItemType>
       <!-- MSBuild ignores the Target name in these cases and invokes GetTargetPath, avoid that by disabling build -->
       <BuildReference Condition="'$(BuildingInsideVisualStudio)' == 'true' or '$(BuildProjectReferences)' != 'true'">false</BuildReference>
     </ProjectReference>
@@ -29,17 +29,17 @@
     <!-- Populates the Reference Sources while building in VS-->
     <MSBuild
       Projects="@(ProjectReference)"
-      Targets="GetCompile"
+      Targets="SourceFilesProjectOutputGroup"
       Properties="%(ProjectReference.SetTargetFramework)"
       Condition="'%(ProjectReference.Targets)' == 'GetCompile' and ('$(BuildingInsideVisualStudio)' == 'true' or '$(BuildProjectReferences)' != 'true')">
-      <Output TaskParameter="TargetOutputs" ItemName="ContractCompile" />
+      <Output TaskParameter="TargetOutputs" ItemName="_contractSourceFilesGroup" />
     </MSBuild>
 
     <ItemGroup>
+      <_contractSourceFilesGroup IsRooted="$([System.IO.Path]::IsPathRooted('%(_contractSourceFilesGroup.OriginalItemSpec)'))" />
       <!-- Filtering out the files from the ref folder. -->
-      <GenFacadeNotSupportedCompileInput Include="@(ContractCompile -> '$([System.IO.Path]::GetFullPath('%(ContractCompile.Identity)'))')"
-                                         IntermediateOutputPath="$(IntermediateOutputPath)%(Filename).notsupported%(Extension)"
-                                         Condition="'$([System.IO.Path]::IsPathRooted('%(ContractCompile.Identity)'))' == 'false'" />
+      <GenFacadeNotSupportedCompileInput Include="@(_contractSourceFilesGroup->WithMetadataValue('Extension', '.cs')->WithMetadataValue('IsRooted', 'false'))"
+                                         OutputPath="$(IntermediateOutputPath)%(Filename).notsupported%(Extension)" />
     </ItemGroup>
   </Target>
 
@@ -48,7 +48,7 @@
           AfterTargets="ResolveProjectReferences"
           Condition="'$(GeneratePlatformNotSupportedAssemblyMessage)' != ''"
           Inputs="@(GenFacadeNotSupportedCompileInput)"
-          Outputs="@(GenFacadeNotSupportedCompileInput->'%(IntermediateOutputPath)')" >
+          Outputs="@(GenFacadeNotSupportedCompileInput->'%(OutputPath)')" >
 
     <NotSupportedAssemblyGenerator
       SourceFiles="@(GenFacadeNotSupportedCompileInput)"
@@ -56,8 +56,8 @@
       ApiExclusionListPath="$(ApiExclusionListPath)" />
 
     <ItemGroup>
-      <Compile Include="@(GenFacadeNotSupportedCompileInput->'%(IntermediateOutputPath)')" />
-      <FileWrites Include="@(GenFacadeNotSupportedCompileInput->'%(IntermediateOutputPath)')" />
+      <Compile Include="@(GenFacadeNotSupportedCompileInput->'%(OutputPath)')" />
+      <FileWrites Include="@(GenFacadeNotSupportedCompileInput->'%(OutputPath)')" />
     </ItemGroup>
   </Target>
 
