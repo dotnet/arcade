@@ -101,7 +101,8 @@ LocProject.json file. The LocProject.json file is emitted in build logs and as a
 
 While it is **not the recommended path**, repos can instead opt to check in a static LocProject.json and have the
 script compare it against the generated one. If they differ, the script will break the build so that a dev can
-update either the LocProject.json or the LocExclusions.json file accordingly.
+update either the LocProject.json or the LocExclusions.json file accordingly. The LocProject.json should be checked
+placed in the `eng/Localize` directory.
 
 Because the script can be run locally, devs can also do this validation prior to pushing their changes.
 
