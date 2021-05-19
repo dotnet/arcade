@@ -70,13 +70,17 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         [Required]
         public string NugetPath { get; set; }
 
-        private const int StreamingPublishingMaxClients = 20;
-        private const int NonStreamingPublishingMaxClients = 16;
+        private const int StreamingPublishingMaxClients = 16;
+        private const int NonStreamingPublishingMaxClients = 12;
 
         /// <summary>
         /// Maximum number of parallel uploads for the upload tasks.
         /// For streaming publishing, 20 is used as the most optimal.
         /// For non-streaming publishing, 16 is used (there are multiple sets of 16-parallel uploads)
+        ///
+        /// NOTE: Due to the desire to run on hosted agents and drastic memory changes in these VMs 
+        /// (see https://github.com/dotnet/core-eng/issues/13098 for details) these numbers are 
+        /// currently reduced below optimal to prevent OOM.
         /// </summary>
         public int MaxClients { get { return UseStreamingPublishing ? StreamingPublishingMaxClients : NonStreamingPublishingMaxClients; } }
 
