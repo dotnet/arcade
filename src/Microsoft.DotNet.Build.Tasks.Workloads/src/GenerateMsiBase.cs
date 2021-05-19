@@ -249,6 +249,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                 msi.SetMetadata(Metadata.Platform, platform);
                 msi.SetMetadata(Metadata.Version, nupkg.ProductVersion);
                 msi.SetMetadata(Metadata.JsonProperties, msiJsonPath);
+                msi.SetMetadata(Metadata.WixObj, candleIntermediateOutputPath);
 
                 if (GenerateSwixAuthoring && IsSupportedByVisualStudio(platform))
                 {
