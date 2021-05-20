@@ -98,10 +98,10 @@ def check_passed_to_workaround_ado_api_failure(dirs_to_check: List[str]) -> bool
 
     if found_a_result:
         if failure_count_found == 0:
-            print("Reporter script has failed, but we were able to find XUnit test results with no failures.")
+            print("Reporter script has failed, but XUnit test results show no failures.")
             return True
         else:
-            print("Reporter script has failed, but we were able to find XUnit test results with failures ({})"
+            print("Reporter script has failed, and we were able to find XUnit test results with failures ({})"
                   .format(str(failure_count_found)))
     else:
         print("Tried to mitigate but no results files found.")
@@ -116,7 +116,7 @@ def get_failure_count(test_results_path: str):
             if '<assembly ' in line:
                 match = total_regex.search(line)
                 if match is not None:
-                    fail_count = int(match.groups()[0])
+                    fail_count += int(match.groups()[0])
                 break
     return fail_count
 
