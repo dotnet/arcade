@@ -23,13 +23,13 @@ namespace Microsoft.DotNet.Helix.Client.Models
         public bool? SortByBuild { get; set; }
 
         [JsonProperty("releaseLinks")]
-        public IImmutableList<ViewConfigurationExternalTelemetry> ReleaseLinks { get; set; }
+        public IImmutableList<Models.ViewConfigurationExternalTelemetry> ReleaseLinks { get; set; }
 
         [JsonProperty("types")]
-        public IImmutableList<ViewConfigurationType> Types { get; set; }
+        public IImmutableList<Models.ViewConfigurationType> Types { get; set; }
 
         [JsonProperty("externalLinks")]
-        public IImmutableList<ViewConfigurationExternalTelemetry> ExternalLinks { get; set; }
+        public IImmutableList<Models.ViewConfigurationExternalTelemetry> ExternalLinks { get; set; }
 
         [JsonProperty("buildProperties")]
         public IImmutableDictionary<string, string> BuildProperties { get; set; }

@@ -31,7 +31,7 @@ usage() {
 set -euo pipefail
 
 while [[ $# > 0 ]]; do
-  opt="$(echo "$1" | awk '{print tolower($0)}')"
+  opt="$(echo "$1" | tr "[:upper:]" "[:lower:]")"
   case "$opt" in
     -h|--help)
       usage
@@ -65,6 +65,8 @@ done
 
 [ ! "${destDir:-}" ] && echo "--dest not specified" && exit 1
 
+echo "Cloning repository at: $sourceDir -> $destDir ..."
+
 if [ -e "$destDir" ]; then
   echo "Destination already exists!"
   if [ -f "$destDir" ]; then
@@ -79,29 +81,64 @@ if [ -e "$destDir" ]; then
   fi
 fi
 
-if [ ! -e "$destDir" ]; then
-  mkdir -p "$destDir"
+(
+  # This script uses "--git-dir" later on to detect a shallow submodule. "--git-dir" may give us a
+  # relative path. The version of Git we use doesn't have "--absolute-git-dir". To keep things
+  # simple, change to the repo's directory and work from there.
+  cd "$sourceDir"
 
-  if [ "${copyWip:-}" ]; then
-    echo "WIP copying is enabled"
-    # Copy over changes that haven't been committed, for dev inner loop.
-    # This gets changes (whether staged or not) but misses untracked files.
-    stashCommit=$(cd "$sourceDir"; git stash create)
+  if [ ! -e "$destDir" ]; then
+    mkdir -p "$destDir"
 
-    if [ "$stashCommit" ]; then
-      echo "Created temporary stash $stashCommit to transfer WIP changes..."
+    if [ "${copyWip:-}" ]; then
+      # Copy over changes that haven't been committed, for dev inner loop.
+      # This gets changes (whether staged or not) but misses untracked files.
+      stashCommit=$(cd "$sourceDir"; git stash create)
+
+      if [ "$stashCommit" ]; then
+        echo "WIP changes detected: created temporary stash $stashCommit to transfer to inner repository..."
+      else
+        echo "No WIP changes detected..."
+      fi
     fi
+
+    echo "Creating empty clone at: $destDir"
+
+    shallowFile="$(git rev-parse --git-dir)/shallow"
+
+    if [ -f "$shallowFile" ]; then
+      echo "Source repository is shallow..."
+      if [ "${stashCommit:-}" ]; then
+        echo "WIP stash is not supported in a shallow repository: aborting."
+        exit 1
+      fi
+
+      # If source repo is shallow, old versions of Git refuse to clone it to another directory. First,
+      # remove the 'shallow' file to trick Git into allowing the clone.
+      shallowContent=$(cat "$shallowFile")
+      rm "$shallowFile"
+
+      # Then, run the clone:
+      # * 'depth=1' avoids encountering the leaf commit in the shallow repo that points to a parent
+      #   that doesn't exist. (The commit marked "grafted".) Git would fail here, otherwise.
+      # * '--no-local' allows a shallow clone from a git dir on the same filesystem. This means the
+      #   clone will not use hard links and takes up more space. However, since we're doing a shallow
+      #   clone anyway, the difference is probably not significant. (This has not been measured.)
+      git clone --depth=1 --no-local --no-checkout "$sourceDir" "$destDir"
+
+      # Put the 'shallow' file back so operations on the outer Git repo continue to work normally.
+      printf "%s" "$shallowContent" > "$shallowFile"
+    else
+      git clone --no-checkout "$sourceDir" "$destDir"
+    fi
+
+    (
+      cd "$destDir"
+      echo "Checking out sources..."
+      # If no changes were stashed, stashCommit is empty string, and this is a simple checkout.
+      git checkout ${stashCommit:-}
+    )
+
+    echo "Clone complete: $sourceDir -> $destDir"
   fi
-
-  echo "Creating empty clone at: $destDir"
-  git clone --no-checkout "$sourceDir" "$destDir"
-
-  (
-    cd "$destDir"
-    echo "Checking out sources..."
-    # If no changes were stashed, stashCommit is empty string, and this is a simple checkout.
-    git checkout ${stashCommit:-}
-  )
-
-  echo "Clone complete: $sourceDir -> $destDir"
-fi
+)

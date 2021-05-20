@@ -51,7 +51,7 @@ namespace Microsoft.DotNet.SignTool
 
         private static void SignPEFile(string path)
         {
-            using (var stream = File.OpenWrite(path))
+            using (var stream = File.OpenWrite(Uri.UnescapeDataString(path)))
             {
                 stream.Write(_stamp, 0, _stamp.Length);
             }

@@ -1,0 +1,42 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" />
+
+  <PropertyGroup>
+    <XHarnessX86TestApkUrl>https://netcorenativeassets.blob.core.windows.net/resource-packages/external/android/test-apk/x86/System.Buffers.Tests-x86.apk</XHarnessX86TestApkUrl>
+    <XHarnessX64TestApkUrl>https://netcorenativeassets.blob.core.windows.net/resource-packages/external/android/test-apk/x86_64/System.Buffers.Tests-x64.apk</XHarnessX64TestApkUrl>
+    <XHarnessARM64V8TestApkUrl>https://netcorenativeassets.blob.core.windows.net/resource-packages/external/android/test-apk/arm64_v8a/System.Buffers.Tests-arm64-v8a.apk</XHarnessARM64V8TestApkUrl>
+  </PropertyGroup>
+
+  <Target Name="Build" Returns="@(XHarnessApkToTest)" >
+    <Error Condition=" '$(ArtifactsTmpDir)' == ''" Text="Not downloading APK because ArtifactsTmpDir property is unset" />
+
+    <DownloadFile Condition="'$(XharnessTestX86)' == 'true'" SourceUrl="$(XHarnessX86TestApkUrl)" DestinationFolder="$(ArtifactsTmpDir)XHarness.TestApk\x86" SkipUnchangedFiles="True" Retries="5">
+      <Output TaskParameter="DownloadedFile" ItemName="DownloadedApkFile" />
+    </DownloadFile>
+
+    <DownloadFile Condition="'$(XharnessTestX86_64)' == 'true'" SourceUrl="$(XHarnessX64TestApkUrl)" DestinationFolder="$(ArtifactsTmpDir)XHarness.TestApk\x86_64" SkipUnchangedFiles="True" Retries="5">
+      <Output TaskParameter="DownloadedFile" ItemName="DownloadedApkFile" />
+    </DownloadFile>
+
+    <DownloadFile Condition="'$(XharnessTestARM64_V8A)' == 'true'" SourceUrl="$(XHarnessARM64V8TestApkUrl)" DestinationFolder="$(ArtifactsTmpDir)XHarness.TestApk\arm64_v8a" SkipUnchangedFiles="True" Retries="5">
+      <Output TaskParameter="DownloadedFile" ItemName="DownloadedApkFile" />
+    </DownloadFile>
+
+    <Message Text="Downloaded @(DownloadedApkFile) for XHarness Test purposes" Importance="High" />
+
+    <ItemGroup>
+      <!-- We're not set up currently to build APK files as part of normal builds, so this downloads existing ones for now -->
+      <XHarnessApkToTest Include="@(DownloadedApkFile)">
+
+        <!-- Package name: this comes from metadata inside the apk itself -->
+        <AndroidPackageName>net.dot.System.Buffers.Tests</AndroidPackageName>
+
+        <!-- If there are > 1 instrumentation class inside the package, we need to know the name of which to use -->
+        <AndroidInstrumentationName>net.dot.MonoRunner</AndroidInstrumentationName>
+
+      </XHarnessApkToTest>
+    </ItemGroup>
+  </Target>
+
+</Project>

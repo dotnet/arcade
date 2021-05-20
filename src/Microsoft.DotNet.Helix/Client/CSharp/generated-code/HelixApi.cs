@@ -23,13 +23,10 @@ namespace Microsoft.DotNet.Helix.Client
     {
         HelixApiOptions Options { get; set; }
 
-        IAggregate Aggregate { get; }
-        IAnalysis Analysis { get; }
         IInformation Information { get; }
         IJob Job { get; }
         IMachine Machine { get; }
         IRepository Repository { get; }
-        IScaleSets ScaleSets { get; }
         IStorage Storage { get; }
         ITelemetry Telemetry { get; }
         IWorkItem WorkItem { get; }
@@ -43,7 +40,7 @@ namespace Microsoft.DotNet.Helix.Client
     public partial class HelixApiOptions : ClientOptions
     {
         public HelixApiOptions()
-            : this(new Uri("https://helix.dot.net"))
+            : this(new Uri("https://helix.dot.net/"))
         {
         }
 
@@ -53,7 +50,7 @@ namespace Microsoft.DotNet.Helix.Client
         }
 
         public HelixApiOptions(TokenCredential credentials)
-            : this(new Uri("https://helix.dot.net"), credentials)
+            : this(new Uri("https://helix.dot.net/"), credentials)
         {
         }
 
@@ -108,10 +105,6 @@ namespace Microsoft.DotNet.Helix.Client
 
         public JsonSerializerSettings SerializerSettings { get; }
 
-        public IAggregate Aggregate { get; }
-
-        public IAnalysis Analysis { get; }
-
         public IInformation Information { get; }
 
         public IJob Job { get; }
@@ -119,8 +112,6 @@ namespace Microsoft.DotNet.Helix.Client
         public IMachine Machine { get; }
 
         public IRepository Repository { get; }
-
-        public IScaleSets ScaleSets { get; }
 
         public IStorage Storage { get; }
 
@@ -137,13 +128,10 @@ namespace Microsoft.DotNet.Helix.Client
         public HelixApi(HelixApiOptions options)
         {
             Options = options;
-            Aggregate = new Aggregate(this);
-            Analysis = new Analysis(this);
             Information = new Information(this);
             Job = new Job(this);
             Machine = new Machine(this);
             Repository = new Repository(this);
-            ScaleSets = new ScaleSets(this);
             Storage = new Storage(this);
             Telemetry = new Telemetry(this);
             WorkItem = new WorkItem(this);
@@ -231,6 +219,11 @@ namespace Microsoft.DotNet.Helix.Client
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public T Deserialize<T>(string value)
         {
+            if (typeof(T) == typeof(string))
+            {
+                return (T)(object)value;
+            }
+
             return JsonConvert.DeserializeObject<T>(value, SerializerSettings);
         }
 

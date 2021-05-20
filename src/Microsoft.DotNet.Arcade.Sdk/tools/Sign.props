@@ -43,6 +43,14 @@
     <FileExtensionSignInfo Include=".zip" CertificateName="None" />
   </ItemGroup>
 
+  <!-- The name of the .NET specific certificate, which is a general replacement for Microsoft400
+       If UseDotNetCert is specific in a repo's eng/Signing.props, all usage of Microsoft400 is replaced
+       with MicrosoftDotNet500 -->
+  <PropertyGroup>
+    <DotNetCertificateName>MicrosoftDotNet500</DotNetCertificateName>
+    <UseDotNetCertificate>false</UseDotNetCertificate>
+  </PropertyGroup>
+
   <PropertyGroup>
     <!-- Flags for controlling whether empty signing lists are detected for in build and post-build signing.
          These flags are split (rather than just a single check based on PostBuildSign == true/false because

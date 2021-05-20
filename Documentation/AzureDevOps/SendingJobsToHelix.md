@@ -81,7 +81,7 @@ steps:
 The simplest Helix use-case is zipping up a single folder containing your project's tests and a batch file which runs those tests. To accomplish this, reference Arcade's `send-to-helix` template in `eng/common/templates/steps/send-to-helix.yml` from your `azure-pipelines.yml` file.
 
 Simply specify the xUnit project(s) you wish to run (semicolon delimited) with the `XUnitProjects` parameter. Then, specify:
-* the `XUnitPublishTargetFramework` &ndash; this is the framework your **test projects are targeting**, e.g. `netcoreapp2.1`.
+* the `XUnitPublishTargetFramework` &ndash; this is the framework your **test projects are targeting**, e.g. `netcoreapp3.1`.
 * the `XUnitRuntimeTargetFramework` &ndash; this is the framework version of xUnit you want to use from the xUnit NuGet package, e.g. `netcoreapp2.0`. Notably, the xUnit console runner only supports up to netcoreapp2.0 as of 14 March 2018, so this is the target that should be specified for running against any higher version test projects.
 * the `XUnitRunnerVersion` (the version of the xUnit nuget package you want to use, e.g. `2.4.1`).
 
@@ -102,7 +102,7 @@ The list of available Helix queues can be found on the [Helix homepage](https://
       # HelixPostCommands: '' -- any commands that you would like to run after running your job
       XUnitProjects: $(Build.SourcesDirectory)/HelloTests/HelloTests.csproj # specify your xUnit projects (semicolon delimited) here!
       # XUnitWorkItemTimeout: '00:05:00' -- a timeout (specified as a System.TimeSpan string) for all work items created from XUnitProjects
-      XUnitPublishTargetFramework: netcoreapp2.1 # specify your publish target framework here
+      XUnitPublishTargetFramework: netcoreapp3.1 # specify your publish target framework here
       XUnitRuntimeTargetFramework: netcoreapp2.0 # specify the framework you want to use for the xUnit runner
       XUnitRunnerVersion: 2.4.1 # specify the version of xUnit runner you wish to use here
       # WorkItemDirectory: '' -- payload directory to zip up and send to Helix; requires WorkItemCommand; incompatible with XUnitProjects
@@ -110,7 +110,7 @@ The list of available Helix queues can be found on the [Helix homepage](https://
       # WorkItemTimeout: '' -- a timeout (specified as a System.TimeSpan string) for the work item command; requires WorkItemDirectory; incompatible with XUnitProjects
       IncludeDotNetCli: true
       DotNetCliPackageType: sdk
-      DotNetCliVersion: 2.1.403 # full list of versions here: https://raw.githubusercontent.com/dotnet/core/master/release-notes/releases.json
+      DotNetCliVersion: 2.1.403 # full list of versions here: https://raw.githubusercontent.com/dotnet/core/main/release-notes/releases.json
       # WaitForWorkItemCompletion: true -- defaults to true
       Creator: arcade # specify an appropriate Creator here -- required for external builds
       # DisplayNamePrefix: 'Send job to Helix' -- the Helix task's display name in AzDO. Defaults to 'Send job to Helix'
@@ -132,9 +132,10 @@ Tests results for "public" projects are accessible via the link which is provide
 Example build output:
 
 ```Text
-Sent Helix Job 7a6bb019-ed0e-4e46-a065-a38391d90019
-Waiting on job completion...
-Results will be available from https://mc.dot.net/#/user/dotnet-github-anon-kaonashi-bot/pr~2Fdotnet~2Fwinforms~2Frefs~2Fpull~2F9~2Fmerge/type~2Ftests/20181029.7
+Sending Job to Debian.9.Amd64.Arcade.Open...
+Sent Helix Job; see work items at https://helix.dot.net/api/jobs/38f272c2-7999-44e4-953b-d5d003b614ce/workitems?api-version=2019-06-17
+Waiting for completion of job 38f272c2-7999-44e4-953b-d5d003b614ce on Debian.9.Amd64.Arcade.Open
+Job 38f272c2-7999-44e4-953b-d5d003b614ce on Debian.9.Amd64.Arcade.Open is completed with 14 finished work items.
 ```
 
 ### Internal test results
@@ -154,6 +155,4 @@ As surfaced by the Helix API and backing Kusto (Azure Data Explorer) database, h
 - InfraRetry – Work item completed as expected, but on the 2nd-Nth attempt; this can be a requested-by-the-workitem retry, machine being rebooted or deleted during execution, or any number of random Azure components being flaky.  Typically ignoreable for test runs.
 - PassOnRetry – Special legacy retry functionality which is purposefully obsoleted as it does not play well with Azure DevOps test reporting (reporting the same facts twice causes issues)
 - Timeout – Work Item did not complete within its specified timeout and was forcibly killed.  Corresponds to exit code -3 (made up value since the process never exited)
-
-
 

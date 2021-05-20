@@ -34,21 +34,28 @@ namespace Microsoft.DotNet.Build.Tasks.TargetFramework.Sdk
                 {
                     targetFrameworksValue = projectReference.GetMetadata("TargetFrameworks");
                 }
-                string[] targetFrameworks = targetFrameworksValue.Split(';');
 
-                string referringTargetFramework = projectReference.GetMetadata("ReferringTargetFramework");
-                if (string.IsNullOrWhiteSpace(referringTargetFramework))
+                // Allow referencing projects with TargetFrameworks explicitely cleared out, i.e. Microsoft.Build.Traversal.
+                if (!string.IsNullOrWhiteSpace(targetFrameworksValue))
                 {
-                    referringTargetFramework = TargetFramework;
-                }
-                
-                string bestTargetFramework = targetFrameworkResolver.GetBestSupportedTargetFramework(targetFrameworks, referringTargetFramework);
-                if (bestTargetFramework == null)
-                {
-                    Log.LogError($"Not able to find a compatible supported target framework for {referringTargetFramework} in Project {Path.GetFileName(projectReference.ItemSpec)}. The Supported Configurations are {string.Join(", ", targetFrameworks)}");
+                    string[] targetFrameworks = targetFrameworksValue.Split(';');
+
+                    string referringTargetFramework = projectReference.GetMetadata("ReferringTargetFramework");
+                    if (string.IsNullOrWhiteSpace(referringTargetFramework))
+                    {
+                        referringTargetFramework = TargetFramework;
+                    }
+
+                    string bestTargetFramework = targetFrameworkResolver.GetBestSupportedTargetFramework(targetFrameworks, referringTargetFramework);
+                    if (bestTargetFramework == null)
+                    {
+                        Log.LogError($"Not able to find a compatible supported target framework for {referringTargetFramework} in Project {Path.GetFileName(projectReference.ItemSpec)}. The Supported Configurations are {string.Join(", ", targetFrameworks)}");
+                    }
+
+                    projectReference.SetMetadata("SetTargetFramework", "TargetFramework=" + bestTargetFramework);
+                    projectReference.SetMetadata("SkipGetTargetFrameworkProperties", "true");
                 }
 
-                projectReference.SetMetadata("SetTargetFramework", "TargetFramework=" + bestTargetFramework);                
                 AnnotatedProjectReferencesWithSetTargetFramework[i] = projectReference;
             }
 

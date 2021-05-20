@@ -92,6 +92,11 @@
         <license type="file">$(PackageLicenseFile)</license>
       </_LicenseElement>
 
+      <_LicenseFileElement/>
+      <_LicenseFileElement Condition="'$(PackageLicenseFile)' != ''">
+        <file src="$(PackageLicenseFullPath)" target="$(PackageLicenseFile)" />
+      </_LicenseFileElement>
+
       <_TagsElement/>
       <_TagsElement Condition="'$(PackageTags)' != ''">
         <tags>$(PackageTags.Replace(';', ' '))</tags>
@@ -137,6 +142,7 @@
 
       <_CommonFileElements>
         $(_IconFileElement)
+        $(_LicenseFileElement)
       </_CommonFileElements>
     </PropertyGroup>
 

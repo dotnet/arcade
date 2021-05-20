@@ -22,6 +22,7 @@
 
   <PropertyGroup>
     <WaitForWorkItemCompletion Condition="'$(WaitForWorkItemCompletion)' != 'false'">true</WaitForWorkItemCompletion>
+    <CancelHelixJobsIfBuildCancelled Condition="'$(CancelHelixJobsIfBuildCancelled)' != 'false'">true</CancelHelixJobsIfBuildCancelled>
     <FailOnWorkItemFailure Condition="'$(FailOnWorkItemFailure)' != 'false'">true</FailOnWorkItemFailure>
     <FailOnMissionControlTestFailure Condition="'$(FailOnMissionControlTestFailure)' != 'true'">false</FailOnMissionControlTestFailure>
   </PropertyGroup>
@@ -55,15 +56,16 @@
       Condition="$(WaitForWorkItemCompletion)"
       AccessToken="$(HelixAccessToken)"
       BaseUri="$(HelixBaseUri)"
+      CancelHelixJobsOnTaskCancellation="$(CancelHelixJobsIfBuildCancelled)"
       Jobs="@(SentJob)" />
 
-    <GetFailedWorkItems
+    <GetHelixWorkItems
       Condition="$(WaitForWorkItemCompletion)"
       AccessToken="$(HelixAccessToken)"
       BaseUri="$(HelixBaseUri)"
       Jobs="@(SentJob)">
-      <Output TaskParameter="FailedWorkItems" ItemName="FailedWorkItem" />
-    </GetFailedWorkItems>
+      <Output TaskParameter="WorkItems" ItemName="CompletedWorkItem" />
+    </GetHelixWorkItems>
   </Target>
 
   <Target Name="Test"
@@ -78,7 +80,7 @@
       AccessToken="$(HelixAccessToken)"
       BaseUri="$(HelixBaseUri)"
       Jobs="@(SentJob)"
-      FailedWorkItems="@(FailedWorkItem)"
+      WorkItems="@(CompletedWorkItem)"
       FailOnWorkItemFailure="$(FailOnWorkItemFailure)"
       FailOnMissionControlTestFailure="$(FailOnMissionControlTestFailure)" 
       />

@@ -104,15 +104,50 @@
   -->
   <Target Name="PrepareInnerSourceBuildRepoRoot">
     <PropertyGroup>
+      <!--
+        By default, copy WIP. WIP copy helps with local machine dev work. Don't copy WIP if this is
+        a CI build: CI often uses shallow clones, which WIP copying doesn't support.
+      -->
+      <CopyWipIntoInnerSourceBuildRepo Condition="'$(CopyWipIntoInnerSourceBuildRepo)' == '' and '$(ContinuousIntegrationBuild)' == 'true'">false</CopyWipIntoInnerSourceBuildRepo>
+      <CopyWipIntoInnerSourceBuildRepo Condition="'$(CopyWipIntoInnerSourceBuildRepo)' == ''">true</CopyWipIntoInnerSourceBuildRepo>
+
       <_GitCloneToDirArgs />
       <_GitCloneToDirArgs>$(_GitCloneToDirArgs) --source &quot;$(RepoRoot)&quot;</_GitCloneToDirArgs>
       <_GitCloneToDirArgs>$(_GitCloneToDirArgs) --dest &quot;$(InnerSourceBuildRepoRoot)&quot;</_GitCloneToDirArgs>
-      <_GitCloneToDirArgs>$(_GitCloneToDirArgs) --copy-wip</_GitCloneToDirArgs>
-
+      <_GitCloneToDirArgs Condition="'$(CopyWipIntoInnerSourceBuildRepo)' == 'true'">$(_GitCloneToDirArgs) --copy-wip</_GitCloneToDirArgs>
       <_GitCloneToDirArgs Condition="'$(CleanInnerSourceBuildRepoRoot)' == 'true'">$(_GitCloneToDirArgs) --clean</_GitCloneToDirArgs>
+
+      <_GitCloneToDirScriptFile>$(MSBuildThisFileDirectory)git-clone-to-dir.sh</_GitCloneToDirScriptFile>
     </PropertyGroup>
 
-    <Exec Command="$(MSBuildThisFileDirectory)git-clone-to-dir.sh $(_GitCloneToDirArgs)" />
+    <Exec Command="$(_GitCloneToDirScriptFile) $(_GitCloneToDirArgs)" />
+
+    <!--
+      If the repo has submodules, use 'git clone' on each submodule to put it in the inner repo. We
+      could simply call 'git submodule update ...' one time in the inner repo. However, that hits
+      the network, which is slow and may be unreliable. Also:
+
+      * 'git clone' copies the minimal amount of files from one place on disk to another.
+      * 'git clone' uses hard links instead of doing a full copy of all the Git data files. (In some
+        cases it can't use hard links, but Git figures that out itself.)
+
+      The result of cloning each submodule into the right location in the inner repo isn't identical
+      to fully setting up a submodule, but it behaves the same in the context of source-build.
+    -->
+    <PropertyGroup>
+      <CloneSubmodulesToInnerSourceBuildRepo Condition="'$(CloneSubmodulesToInnerSourceBuildRepo)' == ''">true</CloneSubmodulesToInnerSourceBuildRepo>
+
+      <_GitSubmoduleCloneArgs />
+      <_GitSubmoduleCloneArgs>$(_GitSubmoduleCloneArgs) --source .</_GitSubmoduleCloneArgs>
+      <_GitSubmoduleCloneArgs>$(_GitSubmoduleCloneArgs) --dest &quot;$(InnerSourceBuildRepoRoot)$sm_path&quot;</_GitSubmoduleCloneArgs>
+      <_GitSubmoduleCloneArgs Condition="'$(CopyWipIntoInnerSourceBuildRepo)' == 'true'">$(_GitSubmoduleCloneArgs) --copy-wip</_GitSubmoduleCloneArgs>
+      <_GitSubmoduleCloneArgs Condition="'$(CleanInnerSourceBuildRepoRoot)' == 'true'">$(_GitSubmoduleCloneArgs) --clean</_GitSubmoduleCloneArgs>
+    </PropertyGroup>
+
+    <Exec
+      Condition="'$(CloneSubmodulesToInnerSourceBuildRepo)' == 'true'"
+      Command="git submodule foreach --recursive '$(_gitCloneToDirScriptFile) $(_GitSubmoduleCloneArgs)'"
+      WorkingDirectory="$(RepoRoot)" />
   </Target>
 
   <Target Name="RunInnerSourceBuildCommand"

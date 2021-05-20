@@ -119,17 +119,17 @@ namespace Microsoft.DotNet.SignTool
 
         public override bool VerifySignedPowerShellFile(string filePath)
         {
-            return File.ReadLines(filePath).Any(line => line.IndexOf("# SIG # Begin Signature Block", StringComparison.OrdinalIgnoreCase) >= 0);
+            return VerifySignatures.VerifySignedPowerShellFile(filePath);
         }
 
         public override bool VerifySignedNugetFileMarker(string filePath)
         {
-            return Path.GetFileName(filePath).Equals(".signature.p7s", StringComparison.OrdinalIgnoreCase);
+            return VerifySignatures.VerifySignedNupkgByFileMarker(filePath);
         }
 
         public override bool VerifySignedVSIXFileMarker(string filePath)
         {
-            return filePath.StartsWith("package/services/digital-signature/", StringComparison.OrdinalIgnoreCase);
+            return VerifySignatures.VerifySignedVSIXByFileMarker(filePath);
         }
     }
 }

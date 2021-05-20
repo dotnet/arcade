@@ -125,6 +125,11 @@ namespace Microsoft.SignCheck.Verification
             set;
         }
 
+        public string VirtualPath
+        {
+            get;
+        }
+
         /// <summary>
         /// A set of results for nested files. For example, if recursive verification is enabled and a file contains embedded files, e.g. an MSI, then
         /// this property will contain the verification results of the embedded files.
@@ -179,7 +184,7 @@ namespace Microsoft.SignCheck.Verification
             }
         }
 
-        public SignatureVerificationResult(string path, string parent)
+        public SignatureVerificationResult(string path, string parent, string virtualPath)
         {
             if (String.IsNullOrEmpty(path))
             {
@@ -188,6 +193,7 @@ namespace Microsoft.SignCheck.Verification
 
             Filename = Path.GetFileName(path);
             FullPath = Path.GetFullPath(path);
+            VirtualPath = virtualPath?.Replace('\\', '/');
 
             AddDetail(DetailKeys.File, Filename);
         }
@@ -259,9 +265,9 @@ namespace Microsoft.SignCheck.Verification
         /// </summary>
         /// <param name="path">The path to the file that is unsupported</param>
         /// <returns>A SignatureVerificationResult indicating the file is unsupported..</returns>
-        public static SignatureVerificationResult UnsupportedFileTypeResult(string path, string parent)
+        public static SignatureVerificationResult UnsupportedFileTypeResult(string path, string parent, string virtualPath)
         {
-            var signatureVerificationResult = new SignatureVerificationResult(path, parent)
+            var signatureVerificationResult = new SignatureVerificationResult(path, parent, virtualPath)
             {
                 IsSkipped = true
             };
@@ -279,7 +285,7 @@ namespace Microsoft.SignCheck.Verification
         /// <returns></returns>
         public static SignatureVerificationResult ExcludedFileResult(string path, string parent)
         {
-            var signatureVerificationResult = new SignatureVerificationResult(path, parent)
+            var signatureVerificationResult = new SignatureVerificationResult(path, parent, null)
             {
                 IsExcluded = true
             };

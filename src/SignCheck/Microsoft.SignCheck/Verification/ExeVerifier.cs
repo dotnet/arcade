@@ -17,10 +17,10 @@ namespace Microsoft.SignCheck.Verification
 
         }
 
-        public override SignatureVerificationResult VerifySignature(string path, string parent)
+        public override SignatureVerificationResult VerifySignature(string path, string parent, string virtualPath)
         {
             // Let the base class take care of verifying the AuthentiCode/StrongName
-            SignatureVerificationResult svr = base.VerifySignature(path, parent);
+            SignatureVerificationResult svr = base.VerifySignature(path, parent, virtualPath);
 
             if (VerifyRecursive)
             {
@@ -41,8 +41,8 @@ namespace Microsoft.SignCheck.Verification
                         {
                             foreach (string file in Directory.EnumerateFiles(svr.TempPath, "*.*", SearchOption.AllDirectories))
                             {
-                                SignatureVerificationResult bundleEntryResult = VerifyFile(Path.GetFullPath(file), svr.Filename, Path.GetFileName(file));
-                                //CheckAndUpdateExclusion(bundleEntryResult, "*"+Path.GetFileName(file), file, svr.Filename);
+                                var payloadPath = Path.Combine(svr.VirtualPath, Path.GetFileName(file));
+                                SignatureVerificationResult bundleEntryResult = VerifyFile(Path.GetFullPath(file), svr.Filename, payloadPath, Path.GetFileName(file));
                                 svr.NestedResults.Add(bundleEntryResult);
                             }
                         }

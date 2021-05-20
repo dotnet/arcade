@@ -1,12 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net472;netcoreapp2.1</TargetFrameworks>
+    <TargetFrameworks>net472;$(TargetFrameworkForNETSDK)</TargetFrameworks>
+    <TargetFrameworks Condition="'$(DotNetBuildFromSource)' == 'true'">$(TargetFrameworkForNETSDK)</TargetFrameworks>
     <PackageType>MSBuildSdk</PackageType>
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="..\..\Common\EnumerableExtensions.cs" />
+    <Compile Include="..\..\Common\Internal\EnumerableExtensions.cs" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,9 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netcoreapp2.1;net472</TargetFrameworks>
-    <TargetFrameworks Condition="'$(DotNetBuildFromSource)' == 'true'">netcoreapp2.1</TargetFrameworks>
-    <CopyLocalLockFileAssemblies Condition="'$(TargetFramework)' == 'netcoreapp2.1'">true</CopyLocalLockFileAssemblies>
+    <TargetFrameworks>net472;$(TargetFrameworkForNETSDK)</TargetFrameworks>
+    <TargetFrameworks Condition="'$(DotNetBuildFromSource)' == 'true'">$(TargetFrameworkForNETSDK)</TargetFrameworks>
+    <CopyLocalLockFileAssemblies Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'netcoreapp3.1'))">true</CopyLocalLockFileAssemblies>
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <IsPackable>true</IsPackable>
     <Title>Configuration system for cross-targeting projects.</Title>
@@ -12,12 +12,12 @@
   </PropertyGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
-    <Compile Include="..\..\Common\AssemblyResolver.cs" />
-    <Compile Include="..\..\Common\BuildTask.Desktop.cs" />
+    <Compile Include="..\..\Common\Internal\AssemblyResolver.cs" />
+    <Compile Include="..\..\Common\Internal\BuildTask.Desktop.cs" />
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="..\..\Common\BuildTask.cs" />
+    <Compile Include="..\..\Common\Internal\BuildTask.cs" />
   </ItemGroup>
 
   <ItemGroup>

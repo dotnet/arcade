@@ -13,12 +13,19 @@ namespace Microsoft.DotNet.VersionTools.Automation
 {
     public abstract class VersionsRepoUpdater
     {
-        protected static IEnumerable<NupkgInfo> CreatePackageInfos(IEnumerable<string> packagePaths)
+        private readonly INupkgInfoFactory _nupkgInfoFactory;
+
+        public VersionsRepoUpdater(INupkgInfoFactory nupkgInfoFactory)
+        {
+            _nupkgInfoFactory = nupkgInfoFactory;
+        }
+
+        protected IEnumerable<NupkgInfo> CreatePackageInfos(IEnumerable<string> packagePaths)
         {
             return packagePaths
                 // Ignore symbol packages.
                 .Where(path => !NupkgInfo.IsSymbolPackagePath(path))
-                .Select(path => new NupkgInfo(path));
+                .Select(path => _nupkgInfoFactory.CreateNupkgInfo(path));
         }
 
         protected static Dictionary<string, string> CreatePackageInfoDictionary(IEnumerable<NupkgInfo> infos)

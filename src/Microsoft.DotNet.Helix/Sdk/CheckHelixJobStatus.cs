@@ -16,7 +16,7 @@ namespace Microsoft.DotNet.Helix.Sdk
         public ITaskItem[] Jobs { get; set; }
 
         [Required]
-        public ITaskItem[] FailedWorkItems { get; set; }
+        public ITaskItem[] WorkItems { get; set; }
 
         public bool FailOnWorkItemFailure { get; set; } = true;
 
@@ -25,18 +25,21 @@ namespace Microsoft.DotNet.Helix.Sdk
         protected override Task ExecuteCore(CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            var jobNames = Jobs.Select(j => j.GetMetadata("Identity")).ToList();
 
             if (FailOnWorkItemFailure)
             {
-                string accessTokenSuffix = string.IsNullOrEmpty(this.AccessToken) ? String.Empty : "?access_token={Get this from helix.dot.net}";
-                foreach (ITaskItem failedWorkItem in FailedWorkItems)
+                string accessTokenSuffix = string.IsNullOrEmpty(AccessToken) ? "" : "?access_token={Get this from helix.dot.net}";
+                foreach (ITaskItem workItem in WorkItems)
                 {
-                    var jobName = failedWorkItem.GetMetadata("JobName");
-                    var workItemName = failedWorkItem.GetMetadata("WorkItemName");
-                    var consoleUri = failedWorkItem.GetMetadata("ConsoleOutputUri");
+                    var failed = workItem.GetMetadata("Failed");
+                    if (failed == "true")
+                    {
+                        var jobName = workItem.GetMetadata("JobName");
+                        var workItemName = workItem.GetMetadata("WorkItemName");
+                        var consoleUri = workItem.GetMetadata("ConsoleOutputUri");
 
-                    Log.LogError(FailureCategory.Test, $"Work item {failedWorkItem} in job {jobName} has failed.\nFailure log: {consoleUri}{accessTokenSuffix}");
+                        Log.LogError(FailureCategory.Test, $"Work item {workItemName} in job {jobName} has failed.\nFailure log: {consoleUri}{accessTokenSuffix}");
+                    }
                 }
             }
 

@@ -35,8 +35,12 @@
     <PackageLicenseFile>License.txt</PackageLicenseFile>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(PackageLicenseExpressionInternal)' != '' and '$(IsPackable)' == 'true' and '$(PackageLicenseFullPath)' == ''">
+    <PackageLicenseFullPath>$(MSBuildThisFileDirectory)Licenses\$(PackageLicenseExpressionInternal).txt</PackageLicenseFullPath>
+  </PropertyGroup>
+
   <ItemGroup Condition="'$(PackageLicenseExpressionInternal)' != '' and '$(IsPackable)' == 'true'">
-    <None Include="$(MSBuildThisFileDirectory)Licenses\$(PackageLicenseExpressionInternal).txt" Pack="true" PackagePath="$(PackageLicenseFile)" Visible="false" />
+    <None Include="$(PackageLicenseFullPath)" Pack="true" PackagePath="$(PackageLicenseFile)" Visible="false" />
   </ItemGroup>
 
   <!--

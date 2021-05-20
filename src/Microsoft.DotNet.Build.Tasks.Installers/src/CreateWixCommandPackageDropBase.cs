@@ -81,7 +81,6 @@ namespace Microsoft.DotNet.Build.Tasks.Installers.src
             string commandFilename = Path.Combine(packageDropOutputFolder, $"create.cmd");
             StringBuilder commandString = new StringBuilder();
             commandString.AppendLine("@echo off");
-            commandString.AppendLine("setlocal");
             commandString.AppendLine("set outputfolder=%1");
             commandString.AppendLine("if \"%outputfolder%\" NEQ \"\" (");
             commandString.AppendLine("  if \"%outputfolder:~-1%\" NEQ \"\\\" ( ");
@@ -123,7 +122,6 @@ namespace Microsoft.DotNet.Build.Tasks.Installers.src
             }
             ProcessToolSpecificCommandLineParameters(packageDropOutputFolder, commandString);
             commandString.AppendLine();
-            commandString.AppendLine("endlocal");
             if(!Directory.Exists(packageDropOutputFolder))
             {
                 Directory.CreateDirectory(packageDropOutputFolder);

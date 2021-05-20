@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Xml.Linq;
 using Microsoft.Build.Utilities;
-using TestUtilities;
+using Microsoft.Arcade.Test.Common;
 using Xunit;
 
 namespace Microsoft.DotNet.Arcade.Sdk.Tests
@@ -15,16 +15,19 @@ namespace Microsoft.DotNet.Arcade.Sdk.Tests
         [Fact]
         public void GetOutputFileContent()
         {
+            string NormalizePath(string path) =>
+                path.Replace('\\', Path.DirectorySeparatorChar);
+
             var task = new GenerateSourcePackageSourceLinkTargetsFile
             {
-                ProjectDirectory = @"C:\temp\A\B\C\D\E\F",
+                ProjectDirectory = NormalizePath(@"C:\temp\A\B\C\D\E\F"),
                 PackageId = "My.Package",
                 SourceRoots = new TaskItem[] 
                 {
-                    new TaskItem(@"C:\temp\A\", new Dictionary<string, string> { { "SourceLinkUrl", "http://A-git/commitsha/*" } }),
-                    new TaskItem(@"C:\temp\A\B\"),
-                    new TaskItem(@"C:\temp\A\B\C\", new Dictionary<string, string> { { "SourceLinkUrl", "http://C-git/commitsha/*?var=value" } }),
-                    new TaskItem(@"C:\temp\A\B\C\D\"),
+                    new TaskItem(NormalizePath(@"C:\temp\A\"), new Dictionary<string, string> { { "SourceLinkUrl", "http://A-git/commitsha/*" } }),
+                    new TaskItem(NormalizePath(@"C:\temp\A\B\")),
+                    new TaskItem(NormalizePath(@"C:\temp\A\B\C\"), new Dictionary<string, string> { { "SourceLinkUrl", "http://C-git/commitsha/*?var=value" } }),
+                    new TaskItem(NormalizePath(@"C:\temp\A\B\C\D\")),
                 },
                 OutputPath = "xxx",
             };

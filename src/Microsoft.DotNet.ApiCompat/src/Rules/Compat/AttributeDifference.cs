@@ -34,7 +34,7 @@ namespace Microsoft.Cci.Differs.Rules
     [ExportDifferenceRule]
     internal class AttributeDifference : CompatDifferenceRule
     {
-        private MappingSettings _settings = new MappingSettings()
+        private readonly MappingSettings _settings = new MappingSettings()
         {
             Filter = new AttributesFilter(includeAttributes: true)
         };
@@ -64,25 +64,58 @@ namespace Microsoft.Cci.Differs.Rules
             if (impl == null || contract == null)
                 return DifferenceType.Unknown;
 
-            return CheckAttributeDifferences(differences, impl, impl.Attributes, contract.Attributes);
+            bool changed = CheckAttributeDifferences(differences, impl, impl.Attributes, contract.Attributes);
+            if (impl.IsGeneric)
+            {
+                IGenericParameter[] method1GenParams = impl.GenericParameters.ToArray();
+                IGenericParameter[] method2GenParam = contract.GenericParameters.ToArray();
+                for (int i = 0; i < impl.GenericParameterCount; i++)
+                    changed |= CheckAttributeDifferences(differences, method1GenParams[i], method1GenParams[i].Attributes, method2GenParam[i].Attributes, member: contract);
+            }
+
+            return changed ? DifferenceType.Changed : DifferenceType.Unchanged; ;
         }
 
         public override DifferenceType Diff(IDifferences differences, ITypeDefinitionMember impl, ITypeDefinitionMember contract)
         {
-            if (impl == null || contract == null)
+            var implMethod = impl as IMethodDefinition;
+            var contractMethod = contract as IMethodDefinition;
+            if (implMethod == null || contractMethod == null)
                 return DifferenceType.Unknown;
 
-            return CheckAttributeDifferences(differences, impl, impl.Attributes, contract.Attributes);
+            bool changed = CheckAttributeDifferences(differences, implMethod, implMethod.Attributes, contractMethod.Attributes);
+
+            IParameterDefinition[] method1Params = implMethod.Parameters.ToArray();
+            IParameterDefinition[] method2Params = contractMethod.Parameters.ToArray();
+            for (int i = 0; i < implMethod.ParameterCount; i++)
+                changed |= CheckAttributeDifferences(differences, method1Params[i], method1Params[i].Attributes, method2Params[i].Attributes, member: implMethod);
+
+            if (implMethod.IsGeneric)
+            {
+                IGenericParameter[] method1GenParams = implMethod.GenericParameters.ToArray();
+                IGenericParameter[] method2GenParam = contractMethod.GenericParameters.ToArray();
+                for (int i = 0; i < implMethod.GenericParameterCount; i++)
+                    changed |= CheckAttributeDifferences(differences, method1GenParams[i], method1GenParams[i].Attributes, method2GenParam[i].Attributes, member: implMethod);
+            }
+
+            return changed ? DifferenceType.Changed : DifferenceType.Unchanged;
         }
 
-        private DifferenceType CheckAttributeDifferences(IDifferences differences, IReference target, IEnumerable<ICustomAttribute> implAttributes, IEnumerable<ICustomAttribute> contractAttributes)
+        private bool CheckAttributeDifferences(IDifferences differences, IReference target, IEnumerable<ICustomAttribute> implAttributes, IEnumerable<ICustomAttribute> contractAttributes, IReference member = null)
         {
-            DifferenceType difference = DifferenceType.Unchanged;
             AttributesMapping<IEnumerable<ICustomAttribute>> attributeMapping = new AttributesMapping<IEnumerable<ICustomAttribute>>(_settings);
             AttributeComparer attributeComparer = new AttributeComparer();
             attributeMapping.AddMapping(0, contractAttributes.OrderBy(a => a, attributeComparer));
             attributeMapping.AddMapping(1, implAttributes.OrderBy(a => a, attributeComparer));
 
+            string errString = $"'{target.FullName()}'";
+            if (target is IParameterDefinition || target is IGenericParameter)
+            {
+                errString = target is IGenericParameter ? "generic param" : "parameter";
+                errString += $" '{target.FullName()}' on member '{member?.FullName()}'";
+            }
+
+            bool changed = false;
             foreach (var group in attributeMapping.Attributes)
             {
                 switch (group.Difference)
@@ -96,8 +129,9 @@ namespace Microsoft.Cci.Differs.Rules
 
                             // Allow for additions
                             differences.Add(new Difference("AddedAttribute",
-                                $"Attribute '{type.FullName()}' exists on '{target.FullName()}' in the {Implementation} but not the {Contract}."));
+                                $"Attribute '{type.FullName()}' exists on {errString} in the {Implementation} but not the {Contract}."));
 
+                            changed = true;
                             break;
                         }
                     case DifferenceType.Changed:
@@ -111,9 +145,9 @@ namespace Microsoft.Cci.Differs.Rules
                             string implementationKey = attributeComparer.GetKey(group[1].Attributes.First());
 
                             differences.AddIncompatibleDifference("CannotChangeAttribute",
-                                $"Attribute '{type.FullName()}' on '{target.FullName()}' changed from '{contractKey}' in the {Contract} to '{implementationKey}' in the {Implementation}.");
+                                $"Attribute '{type.FullName()}' on {errString} changed from '{contractKey}' in the {Contract} to '{implementationKey}' in the {Implementation}.");
 
-                            difference = DifferenceType.Changed;
+                            changed = true;
                             break;
                         }
 
@@ -125,16 +159,16 @@ namespace Microsoft.Cci.Differs.Rules
                                 break;
 
                             differences.AddIncompatibleDifference("CannotRemoveAttribute",
-                                $"Attribute '{type.FullName()}' exists on '{target.FullName()}' in the {Contract} but not the {Implementation}.");
+                                $"Attribute '{type.FullName()}' exists on {errString} in the {Contract} but not the {Implementation}.");
 
 
                             // removals of an attribute are considered a "change" of the type
-                            difference = DifferenceType.Changed;
+                            changed = true;
                             break;
                         }
                 }
             }
-            return difference;
+            return changed;
         }
     }
 

@@ -41,7 +41,7 @@ namespace Microsoft.DotNet.SharedFramework.Sdk
                     {
                         Name = entryTemplate.ItemSpec,
                         AssemblyVersion = FileUtilities.GetAssemblyName(existingFile.ItemSpec)?.Version.ToString() ?? string.Empty,
-                        FileVersion = FileUtilities.GetAssemblyName(existingFile.ItemSpec)?.Version.ToString() ?? string.Empty
+                        FileVersion = FileUtilities.GetFileVersion(existingFile.ItemSpec)?.ToString() ?? string.Empty
                     });
                 }
                 else
@@ -55,7 +55,7 @@ namespace Microsoft.DotNet.SharedFramework.Sdk
                     string fileVersion = string.Empty;
                     if (isNativeEntry)
                     {
-                        assemblyVersion = "0.0.0.0";
+                        assemblyVersion = "";
                     }
                     else
                     {
@@ -75,7 +75,8 @@ namespace Microsoft.DotNet.SharedFramework.Sdk
                     {
                         Name = entryTemplate.ItemSpec,
                         AssemblyVersion = assemblyVersion,
-                        FileVersion = fileVersion
+                        FileVersion = fileVersion,
+                        IsNative = isNativeEntry
                     });
                 }
             }
@@ -83,7 +84,7 @@ namespace Microsoft.DotNet.SharedFramework.Sdk
             PlatformManifestEntries = entries.Select(entry =>
                 {
                     var item = new TaskItem(entry.Name);
-                    if (string.IsNullOrEmpty(entry.AssemblyVersion))
+                    if (string.IsNullOrEmpty(entry.AssemblyVersion) && !entry.IsNative)
                     {
                         Log.LogError($"The platform manifest entry for '{entry.Name}' does not have a fallback assembly version specified and is not built on this platform.");
                     }

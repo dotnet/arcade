@@ -3,12 +3,15 @@ import sys
 import traceback
 import logging
 from queue import Queue
-from threading import Thread
+from threading import Thread, Lock
 from typing import Tuple, Optional
 
 from test_results_reader import read_results
 from helpers import batch, get_env
 from azure_devops_result_publisher import AzureDevOpsTestResultPublisher
+
+workerFailedLock = Lock()
+workerFailed = False
 
 class UploadWorker(Thread):
     def __init__(self, queue, idx, collection_uri, team_project, test_run_id, access_token):
@@ -33,6 +36,7 @@ class UploadWorker(Thread):
         self.__print('uploaded {} results'.format(self.total_uploaded))
 
     def run(self):
+        global workerFailed, workerFailedLock
         self.__print("starting...")
         while True:
             try:
@@ -40,6 +44,8 @@ class UploadWorker(Thread):
                 self.__process(item)
             except:
                 self.__print("got error: {}".format(traceback.format_exc()))
+                with workerFailedLock:
+                    workerFailed = True
             finally:
                 self.queue.task_done()
 
@@ -65,6 +71,7 @@ def process_args() -> Tuple[str, str, str, Optional[str]]:
 
 
 def main():
+    global workerFailed, workerFailedLock
     logging.basicConfig(
         format='%(asctime)s: %(levelname)s: %(thread)d: %(module)s(%(lineno)d): %(funcName)s: %(message)s',
         level=logging.INFO,
@@ -86,7 +93,7 @@ def main():
         worker.daemon = True 
         worker.start()
 
-    log.info("Beginning reading of test results.")
+    log.info("Beginning to read test results...")
 
     # In case the user puts the results in HELIX_WORKITEM_UPLOAD_ROOT for upload, check there too.
     all_results = read_results([os.getcwd(),
@@ -105,6 +112,10 @@ def main():
     q.join()
 
     log.info("Main thread exiting")
+    
+    with workerFailedLock:
+        if workerFailed:
+            sys.exit(1337)
 
 if __name__ == '__main__':
     main()

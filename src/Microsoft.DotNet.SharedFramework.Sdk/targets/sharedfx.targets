@@ -6,7 +6,9 @@
     <PublishReadyToRunEmitSymbols>true</PublishReadyToRunEmitSymbols>
     <PublishReadyToRunShowWarnings>true</PublishReadyToRunShowWarnings>
     <AllowedOutputExtensionsInSymbolsPackageBuildOutputFolder>$(AllowedOutputExtensionsInSymbolsPackageBuildOutputFolder);.map;.dbg;.debug;.dwarf</AllowedOutputExtensionsInSymbolsPackageBuildOutputFolder>
-    <HostJsonTargetPath Condition="'$(HostJsonTargetPath)' == ''">runtimes/$(RuntimeIdentifier)/lib/$(TargetFramework)</HostJsonTargetPath>
+    <_DefaultHostJsonTargetPath>runtimes/$(RuntimeIdentifier)/lib/$(TargetFramework)</_DefaultHostJsonTargetPath>
+    <HostJsonTargetPath Condition="'$(HostJsonTargetPath)' == ''">$(_DefaultHostJsonTargetPath)</HostJsonTargetPath>
+    <IncludeFallbacksInDepsFile Condition="'$(IncludeFallbacksInDepsFile)' == ''">false</IncludeFallbacksInDepsFile>
   </PropertyGroup>
 
 
@@ -23,7 +25,7 @@
   
   <Target Name="_RemoveSelfContainedAfterFrameworkReferenceResolution" AfterTargets="ProcessFrameworkReferences">
     <PropertyGroup>
-      <SelfContained>true</SelfContained>
+      <SelfContained>false</SelfContained>
     </PropertyGroup>
   </Target>
 
@@ -158,12 +160,16 @@
   <Target Name="_GenerateSharedFrameworkDepsFile"
           DependsOnTargets="GetFilesToPackage"
           Condition="'$(PlatformPackageType)' == 'RuntimePack'">
+    <PropertyGroup>
+      <_TargetRootForFilesForDepsFile Condition="'$(HostJsonTargetPath)' == '$(_DefaultHostJsonTargetPath)'">runtimes/$(RuntimeIdentifier)</_TargetRootForFilesForDepsFile>
+      <_TargetRootForFilesForDepsFile Condition="'$(HostJsonTargetPath)' != '$(_DefaultHostJsonTargetPath)'">$(HostJsonTargetPath)</_TargetRootForFilesForDepsFile>
+    </PropertyGroup>
     <ItemGroup>
       <_FilesForDepsFile Include="@(FilesToPackage)"
                          Condition="'%(FilesToPackage.IsSymbolFile)' != 'true' and
                                     '%(FilesToPackage.PackOnly)' != 'true' and
                                     '%(FilesToPackage.ExcludeFromDataFiles)' != 'true' and
-                                    $([System.String]::new('%(FilesToPackage.TargetPath)').StartsWith('runtimes/$(RuntimeIdentifier)'))" />
+                                    $([System.String]::new('%(FilesToPackage.TargetPath)').StartsWith('$(_TargetRootForFilesForDepsFile)'))" />
     </ItemGroup>
     <GenerateSharedFrameworkDepsFile TargetFrameworkMoniker="$(TargetFrameworkMoniker)"
                                      RuntimeIdentifier="$(RuntimeIdentifier)"
@@ -172,7 +178,9 @@
                                      Version="$(Version)"
                                      Files="@(_FilesForDepsFile)"
                                      IntermediateOutputPath="$(IntermediateOutputPath)"
-                                     SharedFrameworkDepsNameOverride="$(SharedFrameworkHostFileNameOverride)">
+                                     SharedFrameworkDepsNameOverride="$(SharedFrameworkHostFileNameOverride)"
+                                     RuntimeIdentifierGraph="$(BundledRuntimeIdentifierGraphFile)"
+                                     IncludeFallbacksInDepsFile="$(IncludeFallbacksInDepsFile)">
       <Output TaskParameter="GeneratedDepsFile" ItemName="_SharedFrameworkDepsFile" />
     </GenerateSharedFrameworkDepsFile>
     <ItemGroup>
@@ -398,18 +406,31 @@
     </ItemGroup>
   </Target>
 
-  <Target Name="_CreateVersionsFile" DependsOnTargets="InitializeSourceControlInformationFromSourceControlManager">
+  <Target Name="_CreateVersionsFile"
+          DependsOnTargets="InitializeSourceControlInformationFromSourceControlManager"
+          Condition="'$(DisableSourceLink)' != 'true'">
     <ItemGroup>
       <_VersionsFile Include="$(IntermediateOutputPath)$(SharedFrameworkName).versions.txt" TargetPath="" GeneratedBuildFile="true" />
+      <!-- The presence of the .version file is used by VS to detect a valid installation of the shared framework into a .NET Runtime/SDK install. -->
+      <_DotVersionFile Include="$(IntermediateOutputPath).version"
+                       PublishOnly="true"
+                       GeneratedBuildFile="true"
+                       Condition="'$(PlatformPackageType)' == 'RuntimePack'" />
     </ItemGroup>
     <WriteLinesToFile
       Lines="$(SourceRevisionId);$(Version)"
       File="@(_VersionsFile)"
       Overwrite="true"
       WriteOnlyWhenDifferent="true" />
+    <WriteLinesToFile
+      Lines="$(SourceRevisionId);$(Version)"
+      File="@(_DotVersionFile)"
+      Overwrite="true"
+      WriteOnlyWhenDifferent="true"
+      Condition="'@(_DotVersionFile)' != ''" />
     <ItemGroup>
-      <FileWrites Include="@(_VersionsFile)" />
-      <FilesToPackage Include="@(_VersionsFile)" />
+      <FileWrites Include="@(_VersionsFile);@(_DotVersionFile)" />
+      <FilesToPackage Include="@(_VersionsFile);@(_DotVersionFile)" />
     </ItemGroup>
   </Target>
 
@@ -502,14 +523,14 @@
       <IncludeBuildOutput>true</IncludeBuildOutput>
     </PropertyGroup>
     <ItemGroup>
-      <_PackageFiles Include="@(_FilesToPackage)" PackagePath="%(_FilesToPackage.TargetPath)" Condition="'%(_FilesToPackage.IsSymbolFile)' != 'true'" />
+      <_PackageFiles Include="@(_FilesToPackage)" PackagePath="%(_FilesToPackage.TargetPath)" Condition="'%(_FilesToPackage.IsSymbolFile)' != 'true' and '%(_FilesToPackage.PublishOnly)' != 'true'" />
       <!-- 
            We need to handle symbol files specially so they get correctly filtered out of the implementation package.
            The base of the TargetPath attribute is $(BuildOutputTargetFolder)/%(TargetFramework), so we have to
            modify the TargetPath metadata with that base path in mind.
       -->
       <_TargetPathsToSymbols Include="@(_FilesToPackage)"
-                             Condition="'%(_FilesToPackage.IsSymbolFile)' == 'true'"
+                             Condition="'%(_FilesToPackage.IsSymbolFile)' == 'true' and '%(_FilesToPackage.PublishOnly)' != 'true'"
                              TargetFramework="$(TargetFramework)"
                              TargetPath="$([MSBuild]::MakeRelative($([MSBuild]::NormalizePath('$(BuildOutputTargetFolder)/$(TargetFramework)')), $([MSBuild]::NormalizePath('%(_FilesToPackage.TargetPath)', '%(Filename)%(Extension)'))))"/>
     </ItemGroup>

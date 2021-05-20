@@ -6,7 +6,6 @@ parameters:
   enableSigningValidation: true
   enableNugetValidation: true
   publishInstallersAndChecksums: true
-  useBuildManifest: false
   
   # These parameters let the user customize the call to sdk-task.ps1 for publishing
   # symbols & general artifacts as well as for signing validation
@@ -54,12 +53,9 @@ stages:
         BARBuildId: ${{ parameters.BARBuildId }}
         PromoteToChannelIds: ${{ parameters.PromoteToChannelIds }}
         
-    - template: /eng/publishing/v3/publish-symbols.yml
-      parameters:
-        publishInstallersAndChecksums: ${{ parameters.publishInstallersAndChecksums }}
-
     - template: /eng/publishing/v3/publish-assets.yml
       parameters:
         PromoteToChannelIds: ${{ parameters.PromoteToChannelIds }}
         publishInstallersAndChecksums: ${{ parameters.publishInstallersAndChecksums }}
         artifactsPublishingAdditionalParameters: ${{ parameters.artifactsPublishingAdditionalParameters }}
+        symbolPublishingAdditionalParameters: ${{parameters.symbolPublishingAdditionalParameters}}

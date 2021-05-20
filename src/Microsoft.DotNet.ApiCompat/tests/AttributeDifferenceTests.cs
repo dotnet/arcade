@@ -3,9 +3,7 @@
 
 using System;
 using System.IO;
-using System.Reflection;
 using Xunit;
-using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.ApiCompat.Tests
 {
@@ -22,7 +20,12 @@ namespace Microsoft.DotNet.ApiCompat.Tests
 
             Assert.Contains("CannotRemoveAttribute : Attribute 'System.ComponentModel.DesignerAttribute' exists on 'AttributeDifference.AttributeDifferenceClass1' in the implementation but not the contract.", runOutput);
             Assert.Contains("CannotRemoveAttribute : Attribute 'AttributeDifference.FooAttribute' exists on 'AttributeDifference.AttributeDifferenceClass1' in the implementation but not the contract.", runOutput);
-            Assert.Contains("Total Issues: 2", runOutput);
+            Assert.Contains("CannotRemoveAttribute : Attribute 'System.ComponentModel.DefaultValueAttribute' exists on generic param 'T' on member 'AttributeDifference.AttributeDifferenceClass1.GenericMethodWithAttribute<T>()' in the implementation but not the contract.", runOutput);
+            Assert.Contains("CannotRemoveAttribute : Attribute 'System.ComponentModel.DefaultValueAttribute' exists on generic param 'T' on member 'AttributeDifference.AttributeDifferenceClass1.GenericMethodWithAttribute<T>()' in the implementation but not the contract.", runOutput);
+            Assert.Contains("CannotRemoveAttribute : Attribute 'AttributeDifference.FooAttribute' exists on 'AttributeDifference.AttributeDifferenceClass1.MethodWithAttribute()' in the implementation but not the contract.", runOutput);
+            Assert.Contains("CannotRemoveAttribute : Attribute 'AttributeDifference.FooAttribute' exists on parameter 'myParameter' on member 'AttributeDifference.AttributeDifferenceClass1.MethodWithAttribute(System.String, System.Object)' in the implementation but not the contract.", runOutput);
+            Assert.Contains("CannotRemoveAttribute : Attribute 'System.ComponentModel.DefaultValueAttribute' exists on generic param 'TOne' on member 'AttributeDifference.AttributeDifferenceGenericCLass<TOne, TTwo>' in the implementation but not the contract.", runOutput);
+            Assert.Contains("Total Issues: 6", runOutput);
         }
 
         [Fact]
@@ -34,7 +37,7 @@ namespace Microsoft.DotNet.ApiCompat.Tests
 
             string runOutput = Helpers.RunApiCompat(_implementationPath, new string[] { _contractPath }, new string[] { excludeAttributesFile.Path }, "implementation", "contract");
             Assert.Contains("CannotRemoveAttribute : Attribute 'System.ComponentModel.DesignerAttribute' exists on 'AttributeDifference.AttributeDifferenceClass1' in the implementation but not the contract.", runOutput);
-            Assert.Contains("Total Issues: 1", runOutput);
+            Assert.Contains("Total Issues: 3", runOutput);
         }
 
         [Fact]
@@ -42,7 +45,7 @@ namespace Microsoft.DotNet.ApiCompat.Tests
         {
             using TempFile excludeAttributesFile = TempFile.Create();
 
-            File.WriteAllLines(excludeAttributesFile.Path, new string[] { "T:System.ComponentModel.DesignerAttribute", "T:AttributeDifference.FooAttribute" });
+            File.WriteAllLines(excludeAttributesFile.Path, new string[] { "T:System.ComponentModel.DesignerAttribute", "T:AttributeDifference.FooAttribute", "T:System.ComponentModel.DefaultValueAttribute" });
 
             string runOutput = Helpers.RunApiCompat(_implementationPath, new string[] { _contractPath }, new string[] { excludeAttributesFile.Path }, null, null);
 

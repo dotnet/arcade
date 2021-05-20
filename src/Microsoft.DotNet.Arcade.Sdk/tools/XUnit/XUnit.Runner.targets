@@ -1,25 +1,6 @@
 <Project>
-  <PropertyGroup>
-    <XUnitDesktopSettingsFile Condition="'$(XUnitDesktopSettingsFile)' == ''">$(MSBuildThisFileDirectory)xunit.runner.json</XUnitDesktopSettingsFile>
-  </PropertyGroup>
-  
   <ItemGroup>
     <PackageReference Include="xunit.runner.console" Version="$(XUnitRunnerConsoleVersion)" IsImplicitlyDefined="true" PrivateAssets="all" Publish="true"/>
-  </ItemGroup>
-
-  <!--
-    Include settings file (xunit.runner.json) if specified.
-  -->
-  <ItemGroup>
-    <None Include="$(XUnitDesktopSettingsFile)"
-          CopyToOutputDirectory="PreserveNewest"
-          Visible="false"
-          Condition="'$(XUnitDesktopSettingsFile)' != '' and '$(TargetFrameworkIdentifier)' == '.NETFramework'" />
-
-    <None Include="$(XUnitCoreSettingsFile)"
-          CopyToOutputDirectory="PreserveNewest"
-          Visible="false"
-          Condition="'$(XUnitCoreSettingsFile)' != '' and '$(TargetFrameworkIdentifier)' == '.NETCoreApp'" />
   </ItemGroup>
 
   <Target Name="RunTests"
@@ -44,10 +25,10 @@
       <_TargetDir>$([System.IO.Path]::GetDirectoryName('$(_TestAssembly)'))\</_TargetDir>
       <_CoreRuntimeConfigPath>$(_TargetDir)$(_TargetFileNameNoExt).runtimeconfig.json</_CoreRuntimeConfigPath>
       <_CoreDepsPath>$(_TargetDir)$(_TargetFileNameNoExt).deps.json</_CoreDepsPath>
-      
+
       <_TestRunner Condition="'%(TestToRun.Architecture)'=='x86' And Exists('$(DotNetRoot)x86\dotnet.exe')">$(DotNetRoot)x86\dotnet.exe</_TestRunner>
       <_TestRunner Condition="'$(_TestRunner)'==''">$(DotNetTool)</_TestRunner>
-      
+
       <_TestRunnerArgs>exec --depsfile "$(_CoreDepsPath)" --runtimeconfig "$(_CoreRuntimeConfigPath)" $(TestRuntimeAdditionalArguments) "$(NuGetPackageRoot)xunit.runner.console/$(XUnitVersion)/tools/$(_TestRunnerTargetFramework)/xunit.console.dll" "$(_TestAssembly)" -noautoreporters -xml "%(TestToRun.ResultsXmlPath)" -html "%(TestToRun.ResultsHtmlPath)" $(_TestRunnerAdditionalArguments)</_TestRunnerArgs>
     </PropertyGroup>
 
@@ -66,9 +47,9 @@
     <PropertyGroup>
       <_TestRunnerCommand>"$(_TestRunner)" $(_TestRunnerArgs)</_TestRunnerCommand>
 
-      <!-- 
+      <!--
         Redirect std output of the runner.
-        Note that xUnit outputs failure info to both STDOUT (stack trace, message) and STDERR (failed test name) 
+        Note that xUnit outputs failure info to both STDOUT (stack trace, message) and STDERR (failed test name)
       -->
       <_TestRunnerCommand Condition="'$(TestCaptureOutput)' != 'false'">$(_TestRunnerCommand) > "%(TestToRun.ResultsStdOutPath)" 2>&amp;1</_TestRunnerCommand>
     </PropertyGroup>
@@ -95,8 +76,8 @@
     <!--
       Add command line to the log.
     -->
-    <WriteLinesToFile File="%(TestToRun.ResultsStdOutPath)" 
-                      Overwrite="false" 
+    <WriteLinesToFile File="%(TestToRun.ResultsStdOutPath)"
+                      Overwrite="false"
                       Lines=";=== COMMAND LINE ===;$(_TestRunnerCommand)"
                       Condition="'$(TestCaptureOutput)' != 'false'" />
 
@@ -110,11 +91,11 @@
       <_ResultsFileToDisplay Condition="!Exists('$(_ResultsFileToDisplay)')">%(TestToRun.ResultsStdOutPath)</_ResultsFileToDisplay>
     </PropertyGroup>
 
-    <!-- 
+    <!--
       Ideally we would set ContinueOnError="ErrorAndContinue" so that when a test fails in multi-targeted test project
       we'll still run tests for all target frameworks. ErrorAndContinue doesn't work well on Linux though: https://github.com/Microsoft/msbuild/issues/3961.
     -->
-    <Error Text="Tests failed: $(_ResultsFileToDisplay) [$(_TestEnvironment)]" Condition="'$(_TestErrorCode)' != '0'" File="XUnit" />
+    <Error Text="Tests failed: $(_ResultsFileToDisplay) [$(_TestEnvironment)]" Condition="'$(_TestErrorCode)' != '0' and '$(_ErrorOnTestFailure)' != 'false'" File="XUnit" />
 
     <ItemGroup>
       <FileWrites Include="@(_OutputFiles)"/>

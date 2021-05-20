@@ -1,9 +1,9 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using FluentAssertions;
 using System;
 using System.Collections.Generic;
-using System.Text;
 using Xunit;
 
 namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
@@ -32,11 +32,11 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
             bool isCompatible = VersionUtility.IsCompatibleApiVersion(referenceVersion, candidateVersion);
             if (shouldBeCompatible)
             {
-                Assert.True(isCompatible, $"Version {candidateVersion.ToString()} should be compatible with version {referenceVersion.ToString()}");
+                isCompatible.Should().BeTrue($"Version {candidateVersion.ToString()} should be compatible with version {referenceVersion.ToString()}");
             }
             else
             {
-                Assert.False(isCompatible, $"Version {candidateVersion.ToString()} should not be compatible with version {referenceVersion.ToString()}");
+                isCompatible.Should().BeFalse($"Version {candidateVersion.ToString()} should not be compatible with version {referenceVersion.ToString()}");
             }
         }
     }

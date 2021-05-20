@@ -16,11 +16,11 @@ namespace Microsoft.SignCheck.Verification
 
         }
 
-        public override SignatureVerificationResult VerifySignature(string path, string parent)
+        public override SignatureVerificationResult VerifySignature(string path, string parent, string virtualPath)
         {
             if (VerifyJarSignatures)
             {
-                var svr = new SignatureVerificationResult(path, parent);
+                var svr = new SignatureVerificationResult(path, parent, virtualPath);
 
                 try
                 {
@@ -60,7 +60,7 @@ namespace Microsoft.SignCheck.Verification
                 return svr;
             }
 
-            return SignatureVerificationResult.UnsupportedFileTypeResult(path, parent);
+            return SignatureVerificationResult.UnsupportedFileTypeResult(path, parent, virtualPath);
         }
     }
 }

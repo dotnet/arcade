@@ -23,6 +23,11 @@
 
     <PrebuiltBaselineDataFileDefault>$(RepositoryEngineeringDir)SourceBuildPrebuiltBaseline.xml</PrebuiltBaselineDataFileDefault>
     <PrebuiltBaselineDataFile Condition="Exists('$(PrebuiltBaselineDataFileDefault)')">$(PrebuiltBaselineDataFileDefault)</PrebuiltBaselineDataFile>
+
+    <!-- By default, use the license file from the root of the repo for the intermediate nupkg. -->
+    <DetectSourceBuildIntermediateNupkgLicense Condition="'$(DetectSourceBuildIntermediateNupkgLicense)' == ''">true</DetectSourceBuildIntermediateNupkgLicense>
+
+    <EnableDefaultSourceBuildIntermediateItems Condition="'$(EnableDefaultSourceBuildIntermediateItems)' == ''">true</EnableDefaultSourceBuildIntermediateItems>
   </PropertyGroup>
 
   <Target Name="GetSourceBuildIntermediateNupkgNameConvention">
@@ -52,6 +57,43 @@
       <SourceBuildIntermediateNupkgPrefix>Microsoft.SourceBuild.Intermediate.</SourceBuildIntermediateNupkgPrefix>
       <SourceBuildIntermediateNupkgSuffix Condition="'$(SourceBuildIntermediateNupkgRid)' != ''">.$(SourceBuildIntermediateNupkgRid)</SourceBuildIntermediateNupkgSuffix>
     </PropertyGroup>
+  </Target>
+
+  <!--
+    Get the list of nupkg contents, categorized into supplemental categories if necessary. By
+    default, all non-symbol-package nupkg files and tar.gz files in
+    'artifacts/packages/{configuration}' are packed in the intermediate nupkg.
+
+    To configure this, add a target to eng/SourceBuild.props with
+    'BeforeTargets="GetCategorizedIntermediateNupkgContents"' that sets up
+    'IntermediateNupkgArtifactFile' items with optional 'Category' metadata.
+
+    When 'Category' is set, this tooling produces one supplemental intermediate nupkg per named
+    category. All files not in a category are put into the "main" intermediate nupkg.
+  -->
+  <Target Name="GetCategorizedIntermediateNupkgContents">
+    <ItemGroup Condition="'$(EnableDefaultSourceBuildIntermediateItems)' == 'true'">
+      <!-- Catch-all: anything not in a category gets packed in the 'main' intermediate nupkg. -->
+      <IntermediateNupkgArtifactFile Include="$(CurrentRepoSourceBuildArtifactsPackagesDir)**\*.nupkg" />
+      <IntermediateNupkgArtifactFile Include="$(CurrentRepoSourceBuildArtifactsPackagesDir)**\*.tar.gz" />
+      <!-- Don't pack any symbol packages: not needed for downstream source-build CI. -->
+      <IntermediateNupkgArtifactFile Remove="$(CurrentRepoSourceBuildArtifactsPackagesDir)**\*.symbols.nupkg" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <IntermediateNupkgFile Include="@(IntermediateNupkgArtifactFile)" PackagePath="artifacts" />
+
+      <!-- Report goes into the 'main' intermediate nupkg. -->
+      <IntermediateNupkgFile Include="$(SourceBuildSelfPrebuiltReportDir)**\*" PackagePath="prebuilt-report" />
+    </ItemGroup>
+
+    <RemoveDuplicates Inputs="@(IntermediateNupkgFile)">
+      <Output TaskParameter="Filtered" ItemName="IntermediatePackageFile" />
+    </RemoveDuplicates>
+
+    <ItemGroup>
+      <SupplementalIntermediateNupkgCategory Include="%(IntermediatePackageFile.Category)" />
+    </ItemGroup>
   </Target>
 
 </Project>

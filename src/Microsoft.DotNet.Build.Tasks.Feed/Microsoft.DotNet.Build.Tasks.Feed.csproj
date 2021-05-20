@@ -2,14 +2,14 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netcoreapp2.1;net472</TargetFrameworks>
+    <TargetFrameworks>netcoreapp3.1;net472</TargetFrameworks>
     <SignAssembly>true</SignAssembly>
 
     <Description>This package provides support for publishing assets to a NuGet protocol based feed.</Description>
     <DevelopmentDependency>true</DevelopmentDependency>
     <PackageType>MSBuildSdk</PackageType>
     <ExcludeFromSourceBuild>true</ExcludeFromSourceBuild>
-    <_ExcludeNuGetAssembliesTargetFramework>netcoreapp2.1</_ExcludeNuGetAssembliesTargetFramework>
+    <_ExcludeNuGetAssembliesTargetFramework>netcoreapp3.1</_ExcludeNuGetAssembliesTargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
@@ -17,12 +17,20 @@
     <PackageReference Include="Microsoft.Build" Version="$(MicrosoftBuildVersion)" />
     <PackageReference Include="Microsoft.Build.Tasks.Core" Version="$(MicrosoftBuildTasksCoreVersion)" />
     <PackageReference Include="Microsoft.DotNet.Maestro.Client" Version="$(MicrosoftDotNetMaestroClientVersion)" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="$(MicrosoftExtensionsDependencyInjectionVersion)" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="$(MicrosoftExtensionsDependencyInjectionAbstractionsVersion)" />
     <PackageReference Include="DotNet.SleetLib" Version="$(DotNetSleetLibVersion)" />
+    <PackageReference Include="Microsoft.SymbolUploader" Version="$(MicrosoftSymbolUploaderVersion)" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Common\Microsoft.Arcade.Common\Microsoft.Arcade.Common.csproj" />
     <ProjectReference Include="..\Microsoft.DotNet.Deployment.Tasks.Links\Microsoft.DotNet.Deployment.Tasks.Links.csproj" />
     <ProjectReference Include="..\Microsoft.DotNet.VersionTools\lib\Microsoft.DotNet.VersionTools.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Common\Internal\EnumExtensions.cs" />
   </ItemGroup>
 
   <!-- Exclude NuGet package assemblies per https://github.com/dotnet/arcade/issues/1965

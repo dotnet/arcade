@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Xunit;
 using Xunit.Abstractions;
+using FluentAssertions;
 
 namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
 {
@@ -95,11 +96,11 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
 
             _log.Reset();
             task.Execute();
-            Assert.Equal(0, _log.ErrorsLogged);
-            Assert.Equal(0, _log.WarningsLogged);
+            _log.ErrorsLogged.Should().Be(0);
+            _log.WarningsLogged.Should().Be(0);
 
             // Assert that we're not adding any new trimmed inbox dependencies, we have placeholders for all inbox frameworks.
-            Assert.Equal(0, task.TrimmedDependencies.Length);
+            task.TrimmedDependencies.Should().BeEmpty();
         }
 
         [Fact]
@@ -134,24 +135,26 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
 
             _log.Reset();
             task.Execute();
-            Assert.Equal(0, _log.ErrorsLogged);
-            Assert.Equal(0, _log.WarningsLogged);
+            _log.ErrorsLogged.Should().Be(0);
+            _log.WarningsLogged.Should().Be(0);
 
             // Assert that we're adding dependency groups that cover all inbox TFMs
-            Assert.Equal(11, task.TrimmedDependencies.Length);
-            Assert.Equal(1, task.TrimmedDependencies.Where(f => f.GetMetadata("TargetFramework").Equals("win8")).Count());
-            Assert.Equal(1, task.TrimmedDependencies.Where(f => f.GetMetadata("TargetFramework").Equals("monoandroid10")).Count());
-            Assert.Equal(1, task.TrimmedDependencies.Where(f => f.GetMetadata("TargetFramework").Equals("monotouch10")).Count());
-            Assert.Equal(1, task.TrimmedDependencies.Where(f => f.GetMetadata("TargetFramework").Equals("net45")).Count());
-            Assert.Equal(1, task.TrimmedDependencies.Where(f => f.GetMetadata("TargetFramework").Equals("wp8")).Count());
-            Assert.Equal(1, task.TrimmedDependencies.Where(f => f.GetMetadata("TargetFramework").Equals("wpa81")).Count());
-            Assert.Equal(1, task.TrimmedDependencies.Where(f => f.GetMetadata("TargetFramework").Equals("xamarinios10")).Count());
-            Assert.Equal(1, task.TrimmedDependencies.Where(f => f.GetMetadata("TargetFramework").Equals("xamarintvos10")).Count());
-            Assert.Equal(1, task.TrimmedDependencies.Where(f => f.GetMetadata("TargetFramework").Equals("xamarinwatchos10")).Count());
-            Assert.Equal(1, task.TrimmedDependencies.Where(f => f.GetMetadata("TargetFramework").Equals("xamarinmac20")).Count());
-            Assert.Equal(1, task.TrimmedDependencies.Where(f => f.GetMetadata("TargetFramework").Equals("portable45-net45+win8+wp8+wpa81")).Count());
+            task.TrimmedDependencies.Should().SatisfyRespectively(
+                item => task.TrimmedDependencies.Where(f => f.GetMetadata("TargetFramework").Equals("win8")).Should().HaveCount(1),
+                item => task.TrimmedDependencies.Where(f => f.GetMetadata("TargetFramework").Equals("monoandroid10")).Should().HaveCount(1),
+                item => task.TrimmedDependencies.Where(f => f.GetMetadata("TargetFramework").Equals("monotouch10")).Should().HaveCount(1),
+                item => task.TrimmedDependencies.Where(f => f.GetMetadata("TargetFramework").Equals("net45")).Should().HaveCount(1),
+                item => task.TrimmedDependencies.Where(f => f.GetMetadata("TargetFramework").Equals("wp8")).Should().HaveCount(1),
+                item => task.TrimmedDependencies.Where(f => f.GetMetadata("TargetFramework").Equals("wpa81")).Should().HaveCount(1),
+                item => task.TrimmedDependencies.Where(f => f.GetMetadata("TargetFramework").Equals("xamarinios10")).Should().HaveCount(1),
+                item => task.TrimmedDependencies.Where(f => f.GetMetadata("TargetFramework").Equals("xamarintvos10")).Should().HaveCount(1),
+                item => task.TrimmedDependencies.Where(f => f.GetMetadata("TargetFramework").Equals("xamarinwatchos10")).Should().HaveCount(1),
+                item => task.TrimmedDependencies.Where(f => f.GetMetadata("TargetFramework").Equals("xamarinmac20")).Should().HaveCount(1),
+                item => task.TrimmedDependencies.Where(f => f.GetMetadata("TargetFramework").Equals("portable45-net45+win8+wp8+wpa81")).Should().HaveCount(1)
+                );
+
             // Assert these are empty dependencygroups.
-            Assert.All(task.TrimmedDependencies, f => f.ToString().Equals("_._"));
+            task.TrimmedDependencies.Should().OnlyContain(f => f.ToString().Equals("_._"));
         }
 
         [Fact]
@@ -215,16 +218,37 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
 
             _log.Reset();
             task.Execute();
-            Assert.Equal(0, _log.ErrorsLogged);
-            Assert.Equal(0, _log.WarningsLogged);
+            _log.ErrorsLogged.Should().Be(0);
+            _log.WarningsLogged.Should().Be(0);
 
             // System.Collections.Immutable is not inbox and we've specified different versions for netstandard1.0 and netstandard1.3, so
             // we're expecting those dependencies to both be present for the net45 and net451 target frameworks.
-            Assert.Equal(4, task.TrimmedDependencies.Length);
-            Assert.Equal(1, task.TrimmedDependencies.Where(f => f.GetMetadata("TargetFramework").Equals("net45") && f.ItemSpec.Equals("System.Collections.Immutable", StringComparison.OrdinalIgnoreCase)).Count());
-            Assert.Equal(1, task.TrimmedDependencies.Where(f => f.GetMetadata("TargetFramework").Equals("net451") && f.ItemSpec.Equals("System.Collections.Immutable", StringComparison.OrdinalIgnoreCase)).Count());
-            Assert.Equal(1, task.TrimmedDependencies.Where(f => f.GetMetadata("TargetFramework").Equals("portable45-net45+win8+wp8+wpa81") && f.ItemSpec.Equals("System.Collections.Immutable", StringComparison.OrdinalIgnoreCase)).Count());
-            Assert.Equal(1, task.TrimmedDependencies.Where(f => f.GetMetadata("TargetFramework").Equals("portable46-net451+win81+wpa81") && f.ItemSpec.Equals("System.Collections.Immutable", StringComparison.OrdinalIgnoreCase)).Count());
+
+            task.TrimmedDependencies.Should().SatisfyRespectively(
+                item =>
+                {
+                    task.TrimmedDependencies.Where(f => f.GetMetadata("TargetFramework").Equals("net45") &&
+                        f.ItemSpec.Equals("System.Collections.Immutable", StringComparison.OrdinalIgnoreCase))
+                        .Should().HaveCount(1);
+                },
+                item =>
+                {
+                    task.TrimmedDependencies.Where(f => f.GetMetadata("TargetFramework").Equals("net451") &&
+                        f.ItemSpec.Equals("System.Collections.Immutable", StringComparison.OrdinalIgnoreCase))
+                        .Should().HaveCount(1);
+                },
+                item =>
+                {
+                    task.TrimmedDependencies.Where(f => f.GetMetadata("TargetFramework").Equals("portable45-net45+win8+wp8+wpa81") &&
+                        f.ItemSpec.Equals("System.Collections.Immutable", StringComparison.OrdinalIgnoreCase))
+                        .Should().HaveCount(1);
+                },
+                item =>
+                {
+                    task.TrimmedDependencies.Where(f => f.GetMetadata("TargetFramework").Equals("portable46-net451+win81+wpa81") &&
+                        f.ItemSpec.Equals("System.Collections.Immutable", StringComparison.OrdinalIgnoreCase))
+                        .Should().HaveCount(1);
+                });
         }
 
         [Fact]
@@ -267,11 +291,11 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
 
             _log.Reset();
             task.Execute();
-            Assert.Equal(0, _log.ErrorsLogged);
-            Assert.Equal(0, _log.WarningsLogged);
+            _log.ErrorsLogged.Should().Be(0);
+            _log.WarningsLogged.Should().Be(0);
 
             // Assert that we're not adding any new trimmed inbox dependencies, for unsupported inbox frameworks.
-            Assert.Equal(0, task.TrimmedDependencies.Length);
+            task.TrimmedDependencies.Should().BeEmpty();
         }
 
         [Fact]
@@ -313,9 +337,9 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
 
             _log.Reset();
             task.Execute();
-            Assert.Equal(0, _log.ErrorsLogged);
-            Assert.Equal(0, _log.WarningsLogged);
-            
+            _log.ErrorsLogged.Should().Be(0);
+            _log.WarningsLogged.Should().Be(0);
+
             var expectedTFMs = new HashSet<string>()
             {
                 "net45",
@@ -332,10 +356,10 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
             var actualTFMs = task.TrimmedDependencies.Select(d => d.GetMetadata("TargetFramework"));
 
             // Assert that we're creating new dependency groups
-            Assert.All(actualTFMs, actualTFM => Assert.True(expectedTFMs.Contains(actualTFM), $"Unexpected TFM {actualTFM} not in {string.Join(",", expectedTFMs)}"));          
+            actualTFMs.Should().BeSubsetOf(expectedTFMs, $"A TFM was not found in {string.Join(",", expectedTFMs)}");
 
             // System.Collections.Immutable will be added to all concrete frameworks
-            Assert.All(task.TrimmedDependencies, d => Assert.Equal("System.Collections.Immutable", d.ItemSpec));
+            task.TrimmedDependencies.Should().OnlyContain(d => d.ItemSpec == "System.Collections.Immutable");
         }
         
         [Fact]
@@ -363,19 +387,20 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
 
             _log.Reset();
             task.Execute();
-            Assert.Equal(0, _log.ErrorsLogged);
-            Assert.Equal(0, _log.WarningsLogged);
-            Assert.Equal(10, task.TrimmedDependencies.Length);
-            Assert.Equal(1, task.TrimmedDependencies.Where(f => f.GetMetadata("TargetFramework").Equals("win8")).Count());
-            Assert.Equal(1, task.TrimmedDependencies.Where(f => f.GetMetadata("TargetFramework").Equals("monoandroid10")).Count());
-            Assert.Equal(1, task.TrimmedDependencies.Where(f => f.GetMetadata("TargetFramework").Equals("monotouch10")).Count());
-            Assert.Equal(1, task.TrimmedDependencies.Where(f => f.GetMetadata("TargetFramework").Equals("net45")).Count());
-            Assert.Equal(1, task.TrimmedDependencies.Where(f => f.GetMetadata("TargetFramework").Equals("wpa81")).Count());
-            Assert.Equal(1, task.TrimmedDependencies.Where(f => f.GetMetadata("TargetFramework").Equals("xamarinios10")).Count());
-            Assert.Equal(1, task.TrimmedDependencies.Where(f => f.GetMetadata("TargetFramework").Equals("xamarintvos10")).Count());
-            Assert.Equal(1, task.TrimmedDependencies.Where(f => f.GetMetadata("TargetFramework").Equals("xamarinwatchos10")).Count());
-            Assert.Equal(1, task.TrimmedDependencies.Where(f => f.GetMetadata("TargetFramework").Equals("xamarinmac20")).Count());
-            Assert.Equal(1, task.TrimmedDependencies.Where(f => f.GetMetadata("TargetFramework").Equals("portable45-net45+win8+wpa81")).Count());
+            _log.ErrorsLogged.Should().Be(0);
+            _log.WarningsLogged.Should().Be(0);
+            task.TrimmedDependencies.Should().SatisfyRespectively(
+                item => task.TrimmedDependencies.Where(f => f.GetMetadata("TargetFramework").Equals("win8")).Should().HaveCount(1),
+                item => task.TrimmedDependencies.Where(f => f.GetMetadata("TargetFramework").Equals("monoandroid10")).Should().HaveCount(1),
+                item => task.TrimmedDependencies.Where(f => f.GetMetadata("TargetFramework").Equals("monotouch10")).Should().HaveCount(1),
+                item => task.TrimmedDependencies.Where(f => f.GetMetadata("TargetFramework").Equals("net45")).Should().HaveCount(1),
+                item => task.TrimmedDependencies.Where(f => f.GetMetadata("TargetFramework").Equals("wpa81")).Should().HaveCount(1),
+                item => task.TrimmedDependencies.Where(f => f.GetMetadata("TargetFramework").Equals("xamarinios10")).Should().HaveCount(1),
+                item => task.TrimmedDependencies.Where(f => f.GetMetadata("TargetFramework").Equals("xamarintvos10")).Should().HaveCount(1),
+                item => task.TrimmedDependencies.Where(f => f.GetMetadata("TargetFramework").Equals("xamarinwatchos10")).Should().HaveCount(1),
+                item => task.TrimmedDependencies.Where(f => f.GetMetadata("TargetFramework").Equals("xamarinmac20")).Should().HaveCount(1),
+                item => task.TrimmedDependencies.Where(f => f.GetMetadata("TargetFramework").Equals("portable45-net45+win8+wpa81")).Should().HaveCount(1)
+                );
         }
         public static ITaskItem CreateFileItem(string sourcePath, string targetPath, string targetFramework)
         {

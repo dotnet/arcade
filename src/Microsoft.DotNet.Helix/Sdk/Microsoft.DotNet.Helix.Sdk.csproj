@@ -1,7 +1,7 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net472;netcoreapp2.1</TargetFrameworks>
+    <TargetFrameworks>net472;netcoreapp3.1</TargetFrameworks>
     <PackageType>MSBuildSdk</PackageType>
     <LangVersion>latest</LangVersion>
     <DefaultItemExcludes Condition="'$(TargetFramework)' != 'net472'">**/*.Desktop.*</DefaultItemExcludes>
@@ -20,9 +20,9 @@
     <ProjectReference Include="..\JobSender\Microsoft.DotNet.Helix.JobSender.csproj" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(TargetFramework)' == 'net472'"> 
-    <Compile Include="..\..\Common\AssemblyResolver.cs" /> 
-  </ItemGroup> 
+  <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
+    <Compile Include="..\..\Common\Internal\AssemblyResolver.cs" />
+  </ItemGroup>
 
   <ItemGroup>
     <None Include="**\*.py;**\*.bat;**\*.sh" Pack="true">
@@ -31,9 +31,18 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="tools\xharness-runner\ios-helix-job-payload.sh">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    <EmbeddedResource Include="tools\xharness-runner\xharness-helix-job.apple.sh">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="tools\xharness-runner\xharness-runner.apple.sh">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="tools\xharness-runner\xharness-helix-job.android.sh">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="tools\xharness-runner\xharness-helix-job.android.bat">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </EmbeddedResource>
   </ItemGroup>
 
   <Import Project="$(RepoRoot)eng\BuildTask.targets" />

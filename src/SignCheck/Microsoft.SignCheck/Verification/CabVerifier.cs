@@ -12,10 +12,10 @@ namespace Microsoft.SignCheck.Verification
 
         }
 
-        public override SignatureVerificationResult VerifySignature(string path, string parent)
+        public override SignatureVerificationResult VerifySignature(string path, string parent, string virtualPath)
         {
             // Defer to the base class to verify the AuthentiCode signature
-            return base.VerifySignature(path, parent);
+            return base.VerifySignature(path, parent, virtualPath);
         }
     }
 }

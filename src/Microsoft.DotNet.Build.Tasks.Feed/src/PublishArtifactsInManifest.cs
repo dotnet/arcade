@@ -1,11 +1,15 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using Microsoft.Arcade.Common;
 using Microsoft.Build.Framework;
+using Microsoft.DotNet.Build.Tasks.Feed.Model;
 using Microsoft.DotNet.Maestro.Client;
+using Microsoft.DotNet.VersionTools.Automation;
 using Microsoft.DotNet.VersionTools.BuildManifest.Model;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using System;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -15,7 +19,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
     ///     The intended use of this task is to push artifacts described in
     ///     a build manifest to package feeds.
     /// </summary>
-    public class PublishArtifactsInManifest : Microsoft.Build.Utilities.Task
+    public class PublishArtifactsInManifest : MSBuildTaskBase
     {
         /// <summary>
         /// Comma separated list of Maestro++ Channel IDs to which the build should
@@ -88,11 +92,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         public string BuildAssetRegistryToken { get; set; }
 
         /// <summary>
-        /// Maximum number of parallel uploads for the upload tasks
-        /// </summary>
-        public int MaxClients { get; set; } = 16;
-
-        /// <summary>
         /// Directory where "nuget.exe" is installed. This will be used to publish packages.
         /// </summary>
         [Required]
@@ -102,18 +101,60 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// Whether this build is internal or not. If true, extra checks are done to avoid accidental
         /// publishing of assets to public feeds or storage accounts.
         /// </summary>
-        [Required]
         public bool InternalBuild { get; set; }
 
         public bool PublishInstallersAndChecksums { get; set; } = false;
 
         public string AzureStorageTargetFeedKey { get; set; }
 
+        public bool AllowFeedOverrides { get; set; }
+
+        public string ChecksumsFeedOverride { get; set; }
+
         public string ChecksumsFeedKey { get; set; }
+
+        public string InstallersFeedOverride { get; set; }
 
         public string InstallersFeedKey { get; set; }
 
+        public string InternalInstallersFeedKey { get; set; }
+
+        public string InternalCheckSumsFeedKey { get; set; }
+
         public string AzureDevOpsFeedsKey { get; set; }
+
+        public string TransportFeedOverride { get; set; }
+        
+        public string ShippingFeedOverride { get; set; }
+
+        public string SymbolsFeedOverride { get; set; }
+
+        public string PublicSymbolsFeedOverride { get; set; }
+
+        /// <summary>
+        /// Path to dll and pdb files
+        /// </summary>
+        public string PdbArtifactsBasePath {get; set;}
+
+        /// <summary>
+        /// Token to publish to Msdl symbol server
+        /// </summary>
+        public string MsdlToken {get; set;}
+
+        /// <summary>
+        /// Token to publish to SymWeb symbol server 
+        /// </summary>
+        public string SymWebToken {get; set;}
+
+        /// <summary>
+        /// Files to exclude from symbol publishing
+        /// </summary>
+        public string SymbolPublishingExclusionsFile {get; set;}
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public bool PublishSpecialClrFiles { get; set; }
 
         /// <summary>
         /// If true, safety checks only print messages and do not error
@@ -134,13 +175,55 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public string AkaMSGroupOwner { get; set; }
 
+        public string BuildQuality
+        {
+            get { return _buildQuality.GetDescription(); }
+            set { Enum.TryParse<PublishingConstants.BuildQuality>(value, true, out _buildQuality); }
+        }
+        public string AzdoApiToken {get; set;}
+
+        public string ArtifactsBasePath { get; set;}
+
+        public string BuildId { get; set; }
+
+        public string AzureProject { get; set; }
+
+        public string AzureDevOpsOrg { get; set; }
+
+        /// <summary>
+        /// If true, uses Azdo Api to download artifacts and symbols files one file at a time during publishing process.
+        /// If it is set to false, then artifacts and symbols are downloaded in PackageArtifacts and BlobArtifacts directory before publishing. 
+        /// </summary>
+        public bool UseStreamingPublishing { get; set; } = false;
+
         /// <summary>
         /// Just an internal flag to keep track whether we published assets via a V3 manifest or not.
         /// </summary>
         private static bool PublishedV3Manifest { get; set; }
 
-        public override bool Execute()
+        private IBuildModelFactory _buildModelFactory;
+        private IFileSystem _fileSystem;
+
+        private PublishingConstants.BuildQuality _buildQuality;
+
+        public override void ConfigureServices(IServiceCollection collection)
         {
+            collection.TryAddSingleton<IBuildModelFactory, BuildModelFactory>();
+            collection.TryAddSingleton<ISigningInformationModelFactory, SigningInformationModelFactory>();
+            collection.TryAddSingleton<IBlobArtifactModelFactory, BlobArtifactModelFactory>();
+            collection.TryAddSingleton<IPackageArtifactModelFactory, PackageArtifactModelFactory>();
+            collection.TryAddSingleton<INupkgInfoFactory, NupkgInfoFactory>();
+            collection.TryAddSingleton<IPackageArchiveReaderFactory, PackageArchiveReaderFactory>();
+            collection.TryAddSingleton<IFileSystem, FileSystem>();
+            collection.TryAddSingleton(Log);
+        }
+
+        public bool ExecuteTask(IBuildModelFactory buildModelFactory,
+            IFileSystem fileSystem)
+        {
+            _buildModelFactory = buildModelFactory;
+            _fileSystem = fileSystem;
+
             return ExecuteAsync().GetAwaiter().GetResult();
         }
 
@@ -181,7 +264,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         IMaestroApi client = ApiFactory.GetAuthenticated(MaestroApiEndpoint, BuildAssetRegistryToken);
                         Maestro.Client.Models.Build buildInformation = await client.Builds.GetBuildAsync(BARBuildId);
 
-                        var targetChannelsIds = TargetChannels.Split(',').Select(ci => int.Parse(ci));
+                        var targetChannelsIds = TargetChannels.Split('-').Select(ci => int.Parse(ci));
 
                         foreach (var targetChannelId in targetChannelsIds)
                         {
@@ -205,13 +288,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         {
             Log.LogMessage(MessageImportance.High, $"Creating a task to publish assets from {manifestFullPath}");
 
-            if (!File.Exists(manifestFullPath))
+            if (!_fileSystem.FileExists(manifestFullPath))
             {
                 Log.LogError($"Problem reading asset manifest path from '{manifestFullPath}'");
                 return null;
             }
 
-            BuildModel buildModel = BuildManifestUtil.ManifestFileToModel(manifestFullPath, Log);
+            BuildModel buildModel = _buildModelFactory.ManifestFileToModel(manifestFullPath);
             
             if (buildModel.Identity.PublishingVersion == PublishingInfraVersion.Legacy)
             {
@@ -245,7 +328,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 BARBuildId = this.BARBuildId,
                 MaestroApiEndpoint = this.MaestroApiEndpoint,
                 BuildAssetRegistryToken = this.BuildAssetRegistryToken,
-                MaxClients = this.MaxClients,
                 NugetPath = this.NugetPath,
                 InternalBuild = this.InternalBuild,
                 SkipSafetyChecks = this.SkipSafetyChecks,
@@ -254,7 +336,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 AkaMSCreatedBy = this.AkaMSCreatedBy,
                 AkaMSGroupOwner = this.AkaMSGroupOwner,
                 AkaMsOwners = this.AkaMsOwners,
-                AkaMSTenant = this.AkaMSTenant
+                AkaMSTenant = this.AkaMSTenant,
+                BuildQuality = this.BuildQuality
             };
         }
 
@@ -272,7 +355,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 BARBuildId = this.BARBuildId,
                 MaestroApiEndpoint = this.MaestroApiEndpoint,
                 BuildAssetRegistryToken = this.BuildAssetRegistryToken,
-                MaxClients = this.MaxClients,
                 NugetPath = this.NugetPath,
                 InternalBuild = this.InternalBuild,
                 SkipSafetyChecks = this.SkipSafetyChecks,
@@ -286,7 +368,28 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 AzureDevOpsFeedsKey = this.AzureDevOpsFeedsKey,
                 InstallersFeedKey = this.InstallersFeedKey,
                 CheckSumsFeedKey = this.ChecksumsFeedKey,
-                AzureStorageTargetFeedKey = this.AzureStorageTargetFeedKey
+                InternalCheckSumsFeedKey = this.InternalCheckSumsFeedKey,
+                InternalInstallersFeedKey = this.InternalInstallersFeedKey,
+                AzureStorageTargetFeedKey = this.AzureStorageTargetFeedKey,
+                PdbArtifactsBasePath = this.PdbArtifactsBasePath,
+                SymWebToken = this.SymWebToken,
+                MsdlToken = this.MsdlToken,
+                SymbolPublishingExclusionsFile = this.SymbolPublishingExclusionsFile,
+                PublishSpecialClrFiles = this.PublishSpecialClrFiles,
+                BuildQuality = this.BuildQuality,
+                AllowFeedOverrides = this.AllowFeedOverrides,
+                InstallersFeedOverride = this.InstallersFeedOverride,
+                ChecksumsFeedOverride = this.ChecksumsFeedOverride,
+                ShippingFeedOverride = this.ShippingFeedOverride,
+                TransportFeedOverride = this.TransportFeedOverride,
+                SymbolsFeedOverride = this.SymbolsFeedOverride,
+                PublicSymbolsFeedOverride = this.PublicSymbolsFeedOverride,
+                ArtifactsBasePath =  this.ArtifactsBasePath,
+                AzdoApiToken = this.AzdoApiToken,
+                BuildId = this.BuildId,
+                AzureProject = this.AzureProject,
+                AzureDevOpsOrg = this.AzureDevOpsOrg,
+                UseStreamingPublishing = this.UseStreamingPublishing
             };
         }
     }

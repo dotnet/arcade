@@ -1,6 +1,7 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using Microsoft.Arcade.Common;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using NuGet.Frameworks;
@@ -385,21 +386,6 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
             {
                 _unusedTargetPaths.Remove(targetPath);
             }
-        }
-
-        private class SupportFramework
-        {
-            private static readonly string[] s_nullRidList = new string[] { null };
-            public SupportFramework(NuGetFramework framework)
-            {
-                Framework = framework;
-                RuntimeIds = s_nullRidList;
-            }
-
-            public NuGetFramework Framework { get; }
-            public string[] RuntimeIds { get; set; }
-
-            public string ShortName { get { return Framework.GetShortFolderName(); } }            
         }
     }
 }

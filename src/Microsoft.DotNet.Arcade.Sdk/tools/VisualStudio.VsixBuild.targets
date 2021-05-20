@@ -247,15 +247,30 @@
   <Import Project="VisualStudio.ImportSdk.targets" Condition="'$(VSToolsPath)' != '' and ('$(IsVsixProject)' == 'true' or '$(GeneratePkgDefFile)' == 'true')" />
 
   <!--
-    Support for templates.
+    Support for templates. Generates VSIXSubPath items from information specified by the project in VSTemplate items.
   -->
-  <Target Name="_GetVsixTemplateItems" DependsOnTargets="ZipProjects;ZipItems" Condition="'@(VSTemplate)' != ''">
+  <Target Name="_GetVsixTemplateItems" Condition="'@(VSTemplate)' != ''">
+    <!--
+      Reads information from the files listed in VSTemplate and populates given itemg groups.
+      Note: TargetPath is nore relevant since we are not actually creating zip file.
+    -->
+    <GetVSTemplateItems TemplateFiles="@(VSTemplate)" TargetPath="_">
+      <Output TaskParameter="ZipItems" ItemName="_ItemTemplates" />
+      <Output TaskParameter="ZipProjects" ItemName="_ProjectTemplates" />
+    </GetVSTemplateItems>
+
     <ItemGroup>
-      <VSIXSourceItem Include="@(IntermediateZipItem)">
-        <VSIXSubPath>%(IntermediateZipItem.Filename)\%(IntermediateZipItem.Language)\%(IntermediateZipItem.OutputSubPath)\%(IntermediateZipItem.Culture)</VSIXSubPath>
-      </VSIXSourceItem>
-      <VSIXSourceItem Include="@(IntermediateZipProject)">
-        <VSIXSubPath>%(IntermediateZipProject.Filename)\%(IntermediateZipProject.Language)\%(IntermediateZipProject.OutputSubPath)\%(IntermediateZipProject.Culture)</VSIXSubPath>
+      <_TemplateFile Include="@(_ItemTemplates);@(_ProjectTemplates)">
+        <_TemplateName>$([System.IO.Path]::GetFileNameWithoutExtension('%(ZipFile)'))</_TemplateName>
+        
+        <!-- Item file path within the template directory (trim RootPath prefix, if any) -->
+        <_RelativeFilePath>\%(Identity)</_RelativeFilePath>
+        <_RelativeFilePath Condition="'%(RootPath)' != '\'">$([MSBuild]::ValueOrDefault('%(Identity)', '').Substring($([MSBuild]::ValueOrDefault('%(RootPath)', '').Length)))</_RelativeFilePath>
+
+        <_RelativeDir>$([System.IO.Path]::GetDirectoryName('%(_TemplateFile._RelativeFilePath)'))</_RelativeDir>
+      </_TemplateFile>
+      <VSIXSourceItem Include="@(_TemplateFile)" KeepMetadata="VSIXSubPath">
+        <VSIXSubPath>%(_TemplateName)\%(Language)\%(OutputSubPath)\%(Culture)\%(_TemplateName)%(_RelativeDir)</VSIXSubPath>
       </VSIXSourceItem>
     </ItemGroup>
   </Target>

@@ -351,7 +351,7 @@ You may need to fix this problem by merging branches with this PR. Contact .NET 
         }
 
         $prBody = @"
-I detected changes in the $HeadBranch branch which have not been merged yet to $BaseBranch. I'm a robot and am configured to help you automatically keep $BaseBranch up to date, so I've opened this PR.
+I detected changes in the $HeadBranch branch which have not been merged yet to $BaseBranch. I'm a robot and am [configured](https://github.com/dotnet/versions/blob/main/Maestro/subscriptions.json) to help you automatically keep $BaseBranch up to date, so I've opened this PR.
 
 $committersList
 

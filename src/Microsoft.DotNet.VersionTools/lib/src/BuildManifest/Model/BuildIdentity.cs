@@ -69,16 +69,48 @@ namespace Microsoft.DotNet.VersionTools.BuildManifest.Model
             set { Attributes[nameof(Commit)] = value; }
         }
 
-        public string IsStable
+        public bool IsStable
         {
-            get { return Attributes.GetOrDefault(nameof(IsStable)); }
-            set { Attributes[nameof(IsStable)] = value; }
+            get
+            {
+                string value = Attributes.GetOrDefault(nameof(IsStable));
+
+                if (string.IsNullOrEmpty(value))
+                {
+                    return false;
+                }
+                else
+                {
+                    return bool.Parse(value);
+                }
+            }
+
+            set
+            {
+                Attributes[nameof(IsStable)] = value.ToString().ToLower();
+            }
         }
 
-        public string IsReleaseOnlyPackageVersion
+        public bool IsReleaseOnlyPackageVersion
         {
-            get { return Attributes.GetOrDefault(nameof(IsReleaseOnlyPackageVersion)); }
-            set { Attributes[nameof(IsReleaseOnlyPackageVersion)] = value; }
+            get
+            {
+                string value = Attributes.GetOrDefault(nameof(IsReleaseOnlyPackageVersion));
+
+                if (string.IsNullOrEmpty(value))
+                {
+                    return false;
+                }
+                else
+                {
+                    return bool.Parse(value);
+                }
+            }
+
+            set
+            {
+                Attributes[nameof(IsReleaseOnlyPackageVersion)] = value.ToString().ToLower();
+            }
         }
 
         public string VersionStamp

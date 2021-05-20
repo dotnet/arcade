@@ -21,9 +21,9 @@ namespace Microsoft.SignCheck.Verification
 
         }
 
-        public override SignatureVerificationResult VerifySignature(string path, string parent)
+        public override SignatureVerificationResult VerifySignature(string path, string parent, string virtualPath)
         {
-            var svr = new SignatureVerificationResult(path, parent);
+            var svr = new SignatureVerificationResult(path, parent, virtualPath);
             string fullPath = svr.FullPath;
             svr.IsSigned = IsSigned(fullPath, svr);
             svr.AddDetail(DetailKeys.File, SignCheckResources.DetailSigned, svr.IsSigned);

@@ -2,13 +2,16 @@ parameters:
   artifactsPublishingAdditionalParameters: ''
   publishInstallersAndChecksums: true
   PromoteToChannelIds: ''
+  symbolPublishingAdditionalParameters: ''
+  buildQuality: 'daily'
 
 jobs:
 - job: publish_assets
-  displayName: Publish Assets
+  displayName: Publish Assets and Symbols
   dependsOn: setupMaestroVars
   timeoutInMinutes: 120
   variables:
+    - group: DotNet-Symbol-Server-Pats
     - name: BARBuildId
       value: $[ dependencies.setupMaestroVars.outputs['setReleaseVars.BARBuildId'] ]
     - name: IsStableBuild
@@ -19,12 +22,15 @@ jobs:
       value: $[ dependencies.setupMaestroVars.outputs['setReleaseVars.AzDOPipelineId'] ]
     - name: AzDOBuildId
       value: $[ dependencies.setupMaestroVars.outputs['setReleaseVars.AzDOBuildId'] ]
+    - name: AzDOAccount
+      value: $[ dependencies.setupMaestroVars.outputs['setReleaseVars.AzDOBuildAccount'] ]
   pool:
     vmImage: 'windows-2019'
   steps:
     - task: DownloadBuildArtifacts@0
       displayName: Download Build Assets
       continueOnError: true
+      enabled: true
       inputs:
         buildType: specific
         buildVersionToDownload: specific
@@ -33,9 +39,9 @@ jobs:
         buildId: $(AzDOBuildId)
         downloadType: 'specific'
         itemPattern: |
-          PackageArtifacts/**
-          BlobArtifacts/**
           AssetManifests/**
+          BlobArtifacts/MergedManifest.xml
+          PdbArtifacts/**
         downloadPath: '$(Build.ArtifactStagingDirectory)'
 
     - task: NuGetToolInstaller@1
@@ -52,7 +58,7 @@ jobs:
         arguments: -token $(dn-bot-dnceng-artifact-feeds-rw)
 
     - task: PowerShell@2
-      displayName: Publish packages & blobs
+      displayName: Publish packages, blobs and symbols
       inputs:
         filePath: $(Build.SourcesDirectory)/eng/common/sdk-task.ps1
         arguments: -task PublishArtifactsInManifest -restore -msbuildEngine dotnet
@@ -76,7 +82,18 @@ jobs:
           /p:AkaMSClientId=$(akams-client-id)
           /p:AkaMSClientSecret=$(akams-client-secret)
           ${{ parameters.artifactsPublishingAdditionalParameters }}
-
+          /p:PDBArtifactsBasePath='$(Build.ArtifactStagingDirectory)/PDBArtifacts/'
+          /p:SymbolPublishingExclusionsFile='$(Build.SourcesDirectory)/eng/SymbolPublishingExclusionsFile.txt'
+          ${{ parameters.symbolPublishingAdditionalParameters}}
+          /p:MsdlToken=$(microsoft-symbol-server-pat)
+          /p:SymWebToken=$(symweb-symbol-server-pat)
+          /p:BuildQuality='${{ parameters.buildQuality }}'
+          /p:AzdoApiToken='$(dn-bot-all-orgs-build-rw-code-rw)'
+          /p:ArtifactsBasePath='$(Build.ArtifactStagingDirectory)/'
+          /p:BuildId='$(AzDOBuildId)'
+          /p:AzureDevOpsOrg='$(AzDOAccount)'
+          /p:AzureProject='$(AzDOProjectName)'
+          /p:UseStreamingPublishing='true'
     - template: /eng/common/templates/steps/publish-logs.yml
       parameters:
         StageLabel: '${{ parameters.stageName }}'

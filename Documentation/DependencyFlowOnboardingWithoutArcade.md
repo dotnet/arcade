@@ -2,118 +2,67 @@
 
 ## Overview
 
-Dependency flow is the method by which .NET Core repos consume other product repo's assets.  In order to participate in dependency flow, a repo must produce a [manifest](#generate-a-manifest) of what assets / packages that repo produces and then publish that manifest to the Build Asset Registry (B.A.R.).  This document is intended to provide guidance for repos which are not using the Arcade Sdk but still need to participate in dependency flow. The end goal is that the repo is able to produce a manifest and publish that to B.A.R.
+Dependency flow is the method by which .NET repos consume other product repo's assets.  In order to participate in dependency flow, a repo must produce a [manifest](#generate-a-manifest) of what assets / packages that repo produces and then publish that manifest to the Build Asset Registry (B.A.R.).  This document is intended to provide guidance for repos which are not using the Arcade Sdk but still need to participate in dependency flow. The end goal is that the repo is able to produce a manifest and publish that to B.A.R.
 
-## Feed package
+To do so, a repo follows almost the same process as [normal arcade publishing](DependencyFlowOnboarding.md). The repo directly uses the [`PushToAzureDevOpsArtifacts`](https://github.com/dotnet/arcade/blob/master/src/Microsoft.DotNet.Build.Tasks.Feed/src/PushToAzureDevOpsArtifacts.cs) task in the [Microsoft.DotNet.Build.Tasks.Feed](https://github.com/dotnet/arcade/tree/master/src/Microsoft.DotNet.Build.Tasks.Feed) package (available from the dotnet-eng feed - `https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json`). This task uploads the artifacts to build storage and generates a manifest describing the build. The manifest is the used to publish the new build to the build asset registry (BAR).
 
-The [Microsoft.DotNet.Build.Tasks.Feed](https://github.com/dotnet/arcade/tree/master/src/Microsoft.DotNet.Build.Tasks.Feed) package (available from the dotnet-core feed - `https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json`) contains an MSBuild task which will [generate a manifest](https://github.com/dotnet/arcade/blob/master/src/Microsoft.DotNet.Build.Tasks.Feed/src/GenerateBuildManifest.cs) for you.
+## Creating a manifest
 
-The preferred path, is that teams use the Feed package to publish packages to blob storage, this model will additionally just create a manifest for you (assuming you specify the additional [manifest values](https://github.com/dotnet/arcade/blob/master/src/Microsoft.DotNet.Build.Tasks.Feed/build/Microsoft.DotNet.Build.Tasks.Feed.targets#L32)).  If you do not want to use the Feed package for package publishing, then you can still use the Feed package to generate a manifest by following the instructions in the remainder of this document.
+To create a manifest, use the PushToAzureDevOpsArtifacts, providing the feed that packages pushed to. The below target performs this task.
 
-## Generate a manifest
-
-Assuming tht you're not using the Feed package for publishing, your repo, there are a number of ways that you can generate a manifest.  This sample is not the exclusive way to generate a manifest and your repos layout or pre-reqs may mandate a different method.
-
-### Manifest Generation Example
-
-Here is one example (using MSBuild 15.0 and the .NET Core SDK 2.2.104) of generating a manifest by using the Arcade SDK (it is not necessary that your repo itself build using the Arcade SDK).
-
-File layout
-
-```TEXT
-\publish
-  -global.json
-  -NuGet.config
-  -eng\GenerateBuildManifest.props
-  -eng\Version.Details.xml
-  -eng\common\sdk-task.ps1
-  -eng\common\tools.ps1
 ```
+<UsingTask TaskName="Microsoft.DotNet.Build.Tasks.Feed.PushToAzureDevOpsArtifacts" AssemblyFile="$(MicrosoftDotNetBuildTasksFeedFilePath)" />
 
-`eng\common\sdk-task.ps1` and `eng\common\tools.ps1` are available from the [Arcade repo](https://github.com/dotnet/arcade/tree/master/eng/common), there are corresponding `sh` files if you need to run on Unix.
+<Target Name="PublishToBuildAssetRegistry">
+  <PropertyGroup>
+    <AssetManifestFileName>Assets.xml</AssetManifestFileName>
+    <AssetManifestPath>$(ArtifactsLogDir)AssetManifest\$(AssetManifestFileName)</AssetManifestPath>
+  </PropertyGroup>
 
-global.json
+  <Error Condition="!Exists($(NuGetClientNupkgsDirectoryPath))" Text="The package directory path '$(NuGetClientNupkgsDirectoryPath)' does not exist." />
+  <Error Condition="Exists($(AssetManifestPath))" Text="The manifest file '$(AssetManifestPath)' already exists." />
 
-```JSON
-{
-  "tools": {
-    "dotnet": "2.2.104"
-  },
-  "msbuild-sdks": {
-    "Microsoft.DotNet.Build.Tasks.Feed": "2.2.0-beta.19151.1",
-    "Microsoft.DotNet.Arcade.Sdk": "1.0.0-beta.19320.1"
-  }
-}
-```
+  <CreateItem Include="$([System.IO.Path]::Combine($(NuGetClientNupkgsDirectoryPath), '*.nupkg'))">
+    <Output TaskParameter="Include" ItemName="ItemsToPush" />
+  </CreateItem>
 
-NuGet.config
+  <Error Condition="'@(ItemsToPush)' == ''" Text="No packages to push." />
 
-```XML
-<?xml version="1.0" encoding="utf-8"?>
-<configuration>
-  <solution>
-    <add key="disableSourceControlIntegration" value="true" />
-  </solution>
-  <packageSources>
-    <clear />
-    <add key="dotnet-core" value="https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json" />
-    <add key="nuget.org" value="https://api.nuget.org/v3/index.json" />
-  </packageSources>
-  <disabledPackageSources>
-    <clear />
-  </disabledPackageSources>
-</configuration>
-```
+  <Error Condition="'$(BUILD_BUILDNUMBER)' == ''" Text="The BUILD_BUILDNUMBER property is required." />
+  <Error Condition="'$(ArtifactsLogDir)' == ''" Text="The ArtifactsLogDir property is required." />
+  <Error Condition="'$(BUILD_SOURCEBRANCH)' == ''" Text="The BUILD_SOURCEBRANCH property is required." />
+  <Error Condition="'$(BUILD_SOURCEVERSION)' == ''" Text="The BUILD_SOURCEVERSION property is required." />
+  <Error Condition="'$(BUILD_REPOSITORY_URI)' == ''" Text="The BUILD_REPOSITORY_URI property is required." />
+  <Error Condition="'$(MaestroAccessToken)' == ''" Text="The MaestroAccessToken property is required." />
+  <Error Condition="'$(MaestroApiEndpoint)' == ''" Text="The MaestroApiEndpoint property is required." />
+  <Error Condition="'$(SYSTEM_TEAMFOUNDATIONCOLLECTIONURI)' == ''" Text="The SYSTEM_TEAMFOUNDATIONCOLLECTIONURI property is required." />
+  <Error Condition="'$(SYSTEM_TEAMPROJECT)' == ''" Text="The SYSTEM_TEAMPROJECT property is required." />
+  <Error Condition="'$(BUILD_BUILDID)' == ''" Text="The BUILD_BUILDID property is required." />
+  <Error Condition="'$(SYSTEM_DEFINITIONID)' == ''" Text="The SYSTEM_DEFINITIONID property is required." />
 
-GenerateBuildManifest.props
-
-```XML
-<?xml version="1.0" encoding="utf-8"?>
-<Project>
-  <ItemGroup>
-    <SymbolPackages Include="$(ArtifactsShippingPackagesDir)*.symbols.nupkg" IsShipping="true" />
-    <SymbolPackages Include="$(ArtifactsNonShippingPackagesDir)*.symbols.nupkg" IsShipping="false" />
-
-    <PackagesToPublish Include="$(ArtifactsShippingPackagesDir)*.nupkg" IsShipping="true" />
-    <PackagesToPublish Include="$(ArtifactsNonShippingPackagesDir)*.nupkg" IsShipping="false" />
-    <PackagesToPublish Remove="@(ExistingSymbolPackages)" />
-  </ItemGroup>
+  <Message Text="Publishing %(ItemsToPush.Identity)" Importance="normal" />
 
   <ItemGroup>
-    <ItemsToPush Include="@(PackagesToPublish);@(ExistingSymbolPackages);@(SymbolPackagesToGenerate)">
-      <ManifestArtifactData Condition="'%(IsShipping)' != 'true'">NonShipping=true</ManifestArtifactData>
-    </ItemsToPush>
+    <ManifestBuildData Include="InitialAssetsLocation=https://dev.azure.com/url/to/my/feed/index.json" />
+    <ManifestBuildData Include="AzureDevOpsBuildId=$(BUILD_BUILDID)" />
+    <ManifestBuildData Include="AzureDevOpsBuildDefinitionId=$(SYSTEM_DEFINITIONID)" />
+    <ManifestBuildData Include="AzureDevOpsProject=$(SYSTEM_TEAMPROJECT)" />
+    <ManifestBuildData Include="AzureDevOpsBuildNumber=$(BUILD_BUILDNUMBER)" />
+    <ManifestBuildData Include="AzureDevOpsRepository=$(BUILD_REPOSITORY_URI)" />
+    <ManifestBuildData Include="AzureDevOpsBranch=$(BUILD_SOURCEBRANCH)" />
   </ItemGroup>
-</Project>
+
+  <PushToAzureDevOpsArtifacts
+    ItemsToPush="@(ItemsToPush)"
+    ManifestBuildData="@(ManifestBuildData)"
+    ManifestRepoUri="$(BUILD_REPOSITORY_NAME)"
+    ManifestBranch="$(BUILD_SOURCEBRANCH)"
+    ManifestBuildId="$(BUILD_BUILDNUMBER)"
+    ManifestCommit="$(BUILD_SOURCEVERSION)"
+    AssetManifestPath="$(AssetManifestPath)"
+    PublishingVersion="3" />
+</Target>
 ```
-
-Version.Details.xml
-
-```XML
-<?xml version="1.0" encoding="utf-8"?>
-<Dependencies>
-  <ProductDependencies>
-  </ProductDependencies>
-  <ToolsetDependencies>
-    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="1.0.0-beta.19320.1">
-      <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>9d8abf998866f10bc19d97e1916ff1c0ada3fd42</Sha>
-    </Dependency>
-  </ToolsetDependencies>
-</Dependencies>
-```
-
-Generate a manifest
-
-If all of your packages are "shipping" packages, you can just specify the `PackagesToPublishPattern` on the command-line and you do not need to include the "GenerateBuildManifest.props" file mentioned above...
-
-> `powershell -ExecutionPolicy Bypass -Command "eng\common\sdk-task.ps1 -restore -task GenerateBuildManifest /p:PackagesToPublishPattern=e:\gh\chcosta\arcade\artifacts\packages\Debug\NonShipping\*.nupkg /p:AssetManifestFilePath=e:\gh\chcosta\feed2\manifest.xml" /p:ManifestBuildData="Location=https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json"`
-
-`ManifestBuildData` is used to provide the "location" metadata which identifies where the assets have been / will be published to (ie, the feed url).
-
-For more control over your assets, you can exclude the `PackagesToPublishPattern` option from the command-line but include "GenerateBuildManifest.props" in your repo.  This will allow you to specify packages that are shipping vs non-shipping (shipping is the default).  More details about shipping are included [here](https://github.com/dotnet/arcade/blob/b0c930c2b44acd03671552f52b925183db0fc8ea/Documentation/Darc.md#gathering-a-build-drop).
-
-> `powershell -ExecutionPolicy Bypass -Command "eng\common\sdk-task.ps1 -restore -task GenerateBuildManifest /p:AssetManifestFilePath=e:\gh\chcosta\feed2\manifest.xml"`
 
 ## Publish the manifest to BAR
 

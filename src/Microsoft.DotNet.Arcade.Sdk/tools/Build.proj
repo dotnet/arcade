@@ -12,8 +12,8 @@
     DotNetBuildFromSource           Building the entire stack from source with no external dependencies.
     DotNetOutputBlobFeedDir         Directory to publish Source Build assets to (packages, symbol packages, installers, etc.).
     DotNetPublishUsingPipelines     Publish assets to Build Asset Registry.
-    DotNetSymbolServerTokenMsdl     Personal access token for MSDL symbol server. Available from variable group DotNet-Symbol-Publish.	
-    DotNetSymbolServerTokenSymWeb   Personal access token for SymWeb symbol server. Available from variable group DotNet-Symbol-Publish.	
+    DotNetSymbolServerTokenMsdl     Personal access token for MSDL symbol server. Available from variable group DotNet-Symbol-Server-Pats.	
+    DotNetSymbolServerTokenSymWeb   Personal access token for SymWeb symbol server. Available from variable group DotNet-Symbol-Server-Pats.	
     DotNetSymbolExpirationInDays    Symbol expiration time in days (defaults to 10 years).
     DotNetSignType                  Specifies the signing type: 'real' (default), 'test'.
     DotNetRuntimeSourceFeed         Storage account to lookup for the .Net runtime files
@@ -205,7 +205,7 @@
       <_SolutionRestoreProps Include="__BuildPhase=SolutionRestore" />
       <_SolutionRestoreProps Include="_NETCORE_ENGINEERING_TELEMETRY=Restore" />
       <_SolutionRestoreProps Include="MSBuildRestoreSessionId=$([System.Guid]::NewGuid())" />
-      <_SolutionRestoreProps Include="RestoreUseStaticGraphEvaluation=true" Condition="'$(RestoreUseStaticGraphEvaluation)' == 'true'" />
+      <_SolutionRestoreProps Include="RestoreUseStaticGraphEvaluation=$(RestoreUseStaticGraphEvaluation)" />
     </ItemGroup>
     
     <PropertyGroup>
@@ -245,6 +245,13 @@
 
       <!-- Invoke the 'Restore' target on solutions and projects which do not support NuGet. -->
       <_ProjectToRestore Include="@(ProjectToBuild)" Exclude="@(_ProjectToRestoreWithNuGet)" />
+    </ItemGroup>
+
+    <!-- Enable binlog generation during static graph restore evaluation -->
+    <ItemGroup Condition="'$(GenerateRestoreUseStaticGraphEvaluationBinlog)' == 'true'">
+      <_ProjectToRestore>
+        <AdditionalProperties>RESTORE_TASK_BINLOG_PARAMETERS=$(ArtifactsLogDir)Restore-%(Filename)%(Extension).binlog</AdditionalProperties>
+      </_ProjectToRestore>
     </ItemGroup>
 
     <MSBuild Projects="@(_ProjectToRestore)"

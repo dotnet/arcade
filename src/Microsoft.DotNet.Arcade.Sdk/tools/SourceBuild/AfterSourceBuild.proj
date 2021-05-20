@@ -3,6 +3,8 @@
 
   <Import Project="..\BuildStep.props" />
 
+  <UsingTask TaskName="Microsoft.DotNet.Arcade.Sdk.GetLicenseFilePath" AssemblyFile="$(ArcadeSdkBuildTasksAssembly)" />
+
   <PropertyGroup>
     <MicrosoftDotNetSourceBuildTasksBuildDir>$(NuGetPackageRoot)microsoft.dotnet.sourcebuild.tasks\$(MicrosoftDotNetSourceBuildTasksVersion)\build\</MicrosoftDotNetSourceBuildTasksBuildDir>
   </PropertyGroup>
@@ -13,7 +15,7 @@
           Condition="'$(ArcadeInnerBuildFromSource)' != 'true'"
           DependsOnTargets="
             ReportPrebuiltUsage;
-            PackSourceBuildIntermediateNupkg" />
+            PackSourceBuildIntermediateNupkgs" />
 
   <Target Name="WritePrebuiltUsageData">
     <ItemGroup>
@@ -71,31 +73,81 @@
   </Target>
 
   <!--
-    Create a source-build intermediate NuGet package for dependency transport.
+    Copies the intermediate nupkg project to 'artifacts/' so the repo's global.json is in an
+    ancestor dir. This helps ensure the same version of Arcade is used throughout the build.
   -->
-  <Target Name="PackSourceBuildIntermediateNupkg"
-          DependsOnTargets="GetSourceBuildIntermediateNupkgNameConvention">
+  <Target Name="CopyIntermediateNupkgProjToProjectDirectory">
     <PropertyGroup>
       <SourceBuildIntermediateProjFile>$(MSBuildThisFileDirectory)SourceBuildIntermediate.proj</SourceBuildIntermediateProjFile>
       <SourceBuildIntermediateProjTargetFile>$(ArtifactsObjDir)ArcadeGeneratedProjects\SourceBuildIntermediate\SourceBuildIntermediate.proj</SourceBuildIntermediateProjTargetFile>
     </PropertyGroup>
 
-    <!-- Copy the project to artifacts/ so that the repo's global.json is in an ancestor dir. -->
     <Copy
       SourceFiles="$(SourceBuildIntermediateProjFile)"
       DestinationFiles="$(SourceBuildIntermediateProjTargetFile)" />
 
-    <ItemGroup>
-      <SourceBuildIntermediatePackTarget Include="Restore;Pack" />
-    </ItemGroup>
-
+    <!-- Run a restore so the SDK doesn't complain. Nothing should actually get restored. -->
     <MSBuild
       Projects="$(SourceBuildIntermediateProjTargetFile)"
-      Targets="%(SourceBuildIntermediatePackTarget.Identity)"
+      Targets="Restore"
+      Properties="
+        SourceBuildArcadeTargetsFile=$(MSBuildThisFileDirectory)SourceBuildArcade.targets;
+        " />
+  </Target>
+
+  <Target Name="GetLicenseFileForIntermediateNupkgPack"
+          Condition="'$(DetectSourceBuildIntermediateNupkgLicense)' == 'true'">
+    <!-- Find the repository's global LICENSE file to apply. -->
+    <Microsoft.DotNet.Arcade.Sdk.GetLicenseFilePath Directory="$(RepoRoot)">
+      <Output TaskParameter="Path" PropertyName="DetectedLicenseFile"/>
+    </Microsoft.DotNet.Arcade.Sdk.GetLicenseFilePath>
+
+    <!-- Copy it to a file with '.txt' extension to avoid running into this NuGet problem: https://github.com/NuGet/Home/issues/7601 -->
+    <PropertyGroup>
+      <SourceBuildIntermediateNupkgLicenseFile>$(ArtifactsObjDir)ArcadeGeneratedProjects\SourceBuildIntermediate\LICENSE.txt</SourceBuildIntermediateNupkgLicenseFile>
+    </PropertyGroup>
+
+    <Copy
+      SourceFiles="$(DetectedLicenseFile)"
+      DestinationFiles="$(SourceBuildIntermediateNupkgLicenseFile)" />
+  </Target>
+
+  <!--
+    Create source-build intermediate NuGet package and supplemental intermediate NuGet packages (if
+    necessary) for dependency transport to downstream repos.
+  -->
+  <Target Name="PackSourceBuildIntermediateNupkgs"
+          DependsOnTargets="
+            CopyIntermediateNupkgProjToProjectDirectory;
+            GetLicenseFileForIntermediateNupkgPack;
+            GetCategorizedIntermediateNupkgContents;
+            GetSourceBuildIntermediateNupkgNameConvention">
+    <ItemGroup>
+      <IntermediateNupkgProject Include="$(SourceBuildIntermediateProjTargetFile)" />
+
+      <IntermediateNupkgProject
+        Include="$(SourceBuildIntermediateProjTargetFile)"
+        Condition=" '%(SupplementalIntermediateNupkgCategory.Identity)' != '' "
+        AdditionalProperties="
+          SupplementalIntermediateNupkgCategory=%(SupplementalIntermediateNupkgCategory.Identity)" />
+    </ItemGroup>
+
+    <PropertyGroup>
+      <IntermediateNupkgBuildMessage>Building intermediate nupkg</IntermediateNupkgBuildMessage>
+      <IntermediateNupkgBuildMessage Condition=" '@(SupplementalIntermediateNupkgCategory)' != '' ">$(IntermediateNupkgBuildMessage), and supplemental nupkgs for @(SupplementalIntermediateNupkgCategory, ', ')</IntermediateNupkgBuildMessage>
+    </PropertyGroup>
+
+    <Message Importance="High" Text="$(IntermediateNupkgBuildMessage)..." />
+
+    <MSBuild
+      Projects="@(IntermediateNupkgProject)"
+      Targets="Pack"
       Properties="
         CurrentRepoSourceBuildArtifactsPackagesDir=$(CurrentRepoSourceBuildArtifactsPackagesDir);
         SourceBuildArcadeTargetsFile=$(MSBuildThisFileDirectory)SourceBuildArcade.targets;
-        " />
+        SourceBuildIntermediateNupkgLicenseFile=$(SourceBuildIntermediateNupkgLicenseFile);
+        "
+      BuildInParallel="true"/>
   </Target>
 
   <Import Project="SourceBuildArcade.targets" />

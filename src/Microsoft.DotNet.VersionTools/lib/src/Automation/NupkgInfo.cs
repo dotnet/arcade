@@ -1,22 +1,17 @@
-﻿// Licensed to the .NET Foundation under one or more agreements.
+// Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using NuGet.Packaging;
 using NuGet.Packaging.Core;
 
 namespace Microsoft.DotNet.VersionTools.Automation
 {
     public class NupkgInfo
     {
-        public NupkgInfo(string path)
+        public NupkgInfo(PackageIdentity identity)
         {
-            using (PackageArchiveReader archiveReader = new PackageArchiveReader(path))
-            {
-                PackageIdentity identity = archiveReader.GetIdentity();
-                Id = identity.Id;
-                Version = identity.Version.ToString();
-                Prerelease = identity.Version.Release;
-            }
+            Id = identity.Id;
+            Version = identity.Version.ToString();
+            Prerelease = identity.Version.Release;
         }
 
         public string Id { get; }

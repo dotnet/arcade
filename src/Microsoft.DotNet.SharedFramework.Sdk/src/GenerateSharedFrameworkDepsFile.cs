@@ -6,6 +6,7 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Microsoft.DotNet.Build.Tasks;
 using Microsoft.Extensions.DependencyModel;
+using NuGet.RuntimeModel;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -37,6 +38,10 @@ namespace Microsoft.DotNet.SharedFramework.Sdk
         public string IntermediateOutputPath { get; set; }
 
         public string SharedFrameworkDepsNameOverride { get; set; }
+
+        public string RuntimeIdentifierGraph { get; set; }
+
+        public bool IncludeFallbacksInDepsFile { get; set; }
 
         [Output]
         public ITaskItem GeneratedDepsFile { get; set; }
@@ -89,11 +94,22 @@ namespace Microsoft.DotNet.SharedFramework.Sdk
                path: $"{SharedFrameworkPackName.ToLowerInvariant()}/{Version}",
                serviceable: true);
 
+            IEnumerable<RuntimeFallbacks> runtimeFallbackGraph = Array.Empty<RuntimeFallbacks>();
+
+            if (IncludeFallbacksInDepsFile)
+            {
+                RuntimeGraph runtimeGraph = JsonRuntimeFormat.ReadRuntimeGraph(RuntimeIdentifierGraph);
+                runtimeFallbackGraph = runtimeGraph.Runtimes
+                        .Select(runtimeDict => runtimeGraph.ExpandRuntime(runtimeDict.Key))
+                        .Where(expansion => expansion.Contains(RuntimeIdentifier))
+                        .Select(expansion => new RuntimeFallbacks(expansion.First(), expansion.Skip(1))); // ExpandRuntime return runtime itself as first item.
+            }
+
             var context = new DependencyContext(target,
                 CompilationOptions.Default,
                 Enumerable.Empty<CompilationLibrary>(),
                 new[] { runtimeLibrary },
-                Enumerable.Empty<RuntimeFallbacks>());
+                runtimeFallbackGraph);
 
             var depsFileName = string.IsNullOrEmpty(SharedFrameworkDepsNameOverride) ? $"{SharedFrameworkName}.deps.json" : $"{SharedFrameworkDepsNameOverride}.deps.json";
 

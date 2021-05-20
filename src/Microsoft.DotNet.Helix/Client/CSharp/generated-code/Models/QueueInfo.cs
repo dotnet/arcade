@@ -11,13 +11,13 @@ namespace Microsoft.DotNet.Helix.Client.Models
         }
 
         [JsonProperty("Artifacts")]
-        public IImmutableList<Artifact> Artifacts { get; set; }
+        public IImmutableList<Models.Artifact> Artifacts { get; set; }
 
         [JsonProperty("Description")]
         public string Description { get; set; }
 
         [JsonProperty("GalleryImage")]
-        public ImageInfo GalleryImage { get; set; }
+        public Models.ImageInfo GalleryImage { get; set; }
 
         [JsonProperty("Purpose")]
         public string Purpose { get; set; }
@@ -38,10 +38,10 @@ namespace Microsoft.DotNet.Helix.Client.Models
         public string OperatingSystemGroup { get; set; }
 
         [JsonProperty("PreInstalledImage")]
-        public CustomImagePreInstalled PreInstalledImage { get; set; }
+        public Models.CustomImagePreInstalled PreInstalledImage { get; set; }
 
         [JsonProperty("PreparedImage")]
-        public CustomImagePrepared PreparedImage { get; set; }
+        public Models.CustomImagePrepared PreparedImage { get; set; }
 
         [JsonProperty("QueueId")]
         public string QueueId { get; set; }

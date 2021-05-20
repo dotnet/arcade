@@ -2,6 +2,9 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using Microsoft.Extensions.Azure;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed.Model
 {
@@ -47,7 +50,24 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
         /// </summary>
         public string LatestLinkShortUrlPrefix { get; }
 
-        public TargetFeedConfig(TargetFeedContentType contentType, string targetURL, FeedType type, string token, string latestLinkShortUrlPrefix = null, AssetSelection assetSelection = AssetSelection.All, bool isolated = false, bool @internal = false, bool allowOverwrite = false)
+        public SymbolTargetType SymbolTargetType { get; }
+
+        public List<string> FilenamesToExclude { get; }
+
+        public bool Flatten { get; }
+
+        public TargetFeedConfig(TargetFeedContentType contentType, 
+            string targetURL, 
+            FeedType type, 
+            string token, 
+            string latestLinkShortUrlPrefix = null, 
+            AssetSelection assetSelection = AssetSelection.All, 
+            bool isolated = false, 
+            bool @internal = false, 
+            bool allowOverwrite = false, 
+            SymbolTargetType symbolTargetType = SymbolTargetType.None, 
+            List<string> filenamesToExclude = null,
+            bool flatten = true)
         {
             ContentType = contentType;
             TargetURL = targetURL;
@@ -58,11 +78,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             Internal = @internal;
             AllowOverwrite = allowOverwrite;
             LatestLinkShortUrlPrefix = latestLinkShortUrlPrefix ?? string.Empty;
+            SymbolTargetType = symbolTargetType;
+            FilenamesToExclude = filenamesToExclude ?? new List<string>();
+            Flatten = flatten;
         }
 
         public override bool Equals(object obj)
         {
-            return  
+            if (  
                 obj is TargetFeedConfig other &&
                 (ContentType == other.ContentType) &&
                 TargetURL.Equals(other.TargetURL, StringComparison.OrdinalIgnoreCase) &&
@@ -72,12 +95,24 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 (AssetSelection == other.AssetSelection) &&
                 (Isolated == other.Isolated) &&
                 (Internal == other.Internal) &&
-                (AllowOverwrite == other.AllowOverwrite);
+                (AllowOverwrite == other.AllowOverwrite) &&
+                (Flatten == other.Flatten))
+            {
+                if (FilenamesToExclude is null)
+                    return other.FilenamesToExclude is null;
+                
+                if (other.FilenamesToExclude is null)
+                    return false;
+                
+                return FilenamesToExclude.SequenceEqual(other.FilenamesToExclude);
+            }
+
+            return false;
         }
 
         public override int GetHashCode()
         {
-            return (ContentType, Type, AssetSelection, Isolated, Internal, AllowOverwrite, LatestLinkShortUrlPrefix, TargetURL,  Token).GetHashCode();
+            return (ContentType, Type, AssetSelection, Isolated, Internal, AllowOverwrite, LatestLinkShortUrlPrefix, TargetURL, Token, Flatten, string.Join(" ", FilenamesToExclude)).GetHashCode();
         }
 
         public override string ToString()
@@ -90,7 +125,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 $"\n Internal? '{Internal}' " +
                 $"\n AllowOverwrite? '{AllowOverwrite}' " +
                 $"\n ShortUrlPrefix: '{LatestLinkShortUrlPrefix}' " +
-                $"\n TargetURL: '{TargetURL}'";
+                $"\n TargetURL: '{TargetURL}'" +
+                $"\n FilenamesToExclude: \n\t{string.Join("\n\t", FilenamesToExclude)}" +
+                $"\n Flatten: '{Flatten}'";
         }
     }
 
@@ -111,6 +148,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
         VSIX            = 1024,
         Badge           = 2048,
         Other           = 4096
+    }
+
+    [Flags]
+    public enum SymbolTargetType
+    {
+        None = 0,
+        SymWeb = 1,
+        Msdl = 2
     }
 
     /// <summary>

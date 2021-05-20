@@ -25,9 +25,9 @@ namespace Microsoft.DotNet.SignTool
         /// <summary>
         /// The parts inside this container which need to be signed.
         /// </summary>
-        internal ImmutableArray<ZipPart> NestedParts { get; }
+        internal ImmutableDictionary<string, ZipPart> NestedParts { get; }
 
-        internal ZipData(FileSignInfo fileSignInfo, ImmutableArray<ZipPart> nestedBinaryParts)
+        internal ZipData(FileSignInfo fileSignInfo, ImmutableDictionary<string, ZipPart> nestedBinaryParts)
         {
             FileSignInfo = fileSignInfo;
             NestedParts = nestedBinaryParts;
@@ -35,12 +35,9 @@ namespace Microsoft.DotNet.SignTool
 
         internal ZipPart? FindNestedPart(string relativeName)
         {
-            foreach (var part in NestedParts)
+            if (NestedParts.TryGetValue(relativeName, out ZipPart part))
             {
-                if (relativeName == part.RelativeName)
-                {
-                    return part;
-                }
+                return part;
             }
 
             return null;
@@ -141,40 +138,51 @@ namespace Microsoft.DotNet.SignTool
         }
         private void RepackWixPack(TaskLoggingHelper log, string tempDir, string wixToolsPath)
         {
-            if(wixToolsPath == null)
-            {
-                log.LogError("WixToolsPath must be defined to repack wixpacks. Wixpacks are used to produce signed msi's during release pipeline builds.  If this is not a release pipeline build, you may avoid this error by removing '*.wixpack.zip' from your ItemsToSign.");
-                return;
-            }
-
             string workingDir = Path.Combine(tempDir, "extract", Guid.NewGuid().ToString());
-            string outputDir = Path.Combine(tempDir, "output");
-            ZipFile.ExtractToDirectory(FileSignInfo.WixContentFilePath, workingDir);
-            var fileList = Directory.GetFiles(workingDir, "*", SearchOption.AllDirectories);
-            foreach(var file in fileList)
-            {
-                var relativeName = file.Substring($"{workingDir}\\".Length).Replace('\\', '/');
-                var signedPart = FindNestedPart(relativeName);
-                if (!signedPart.HasValue)
-                {
-                    log.LogMessage(MessageImportance.Low, $"Didn't find signed part for nested file: {FileSignInfo.FullPath} -> {relativeName}");
-                    continue;
-                }
-                log.LogMessage(MessageImportance.Low, $"Copying signed stream from {signedPart.Value.FileSignInfo.FullPath} to {file}.");
-                File.Copy(signedPart.Value.FileSignInfo.FullPath, file, true);
-            }
+            string outputDir = Path.Combine(tempDir, "output", Guid.NewGuid().ToString());
             string createFileName = Path.Combine(workingDir, "create.cmd");
-            int exitCode = BatchSignUtil.RunWixTool(createFileName, outputDir, workingDir, wixToolsPath);
-            if (exitCode != 0)
-            {
-                log.LogError($"packaging of wix file '{FileSignInfo.FullPath}' failed");
-                return;
-            }
             string outputFileName = Path.Combine(outputDir, FileSignInfo.FileName);
-            Debug.Assert(File.Exists(outputFileName));
-            log.LogMessage($"created wix assembly {outputFileName}");
-            log.LogMessage($"replacing '{FileSignInfo.FullPath}' with '{outputFileName}'");
-            File.Copy(outputFileName, FileSignInfo.FullPath, true);
+
+            try
+            {
+                Directory.CreateDirectory(outputDir);
+                ZipFile.ExtractToDirectory(FileSignInfo.WixContentFilePath, workingDir);
+
+                var fileList = Directory.GetFiles(workingDir, "*", SearchOption.AllDirectories);
+                foreach (var file in fileList)
+                {
+                    var relativeName = file.Substring($"{workingDir}\\".Length).Replace('\\', '/');
+                    var signedPart = FindNestedPart(relativeName);
+                    if (!signedPart.HasValue)
+                    {
+                        log.LogMessage(MessageImportance.Low, $"Didn't find signed part for nested file: {FileSignInfo.FullPath} -> {relativeName}");
+                        continue;
+                    }
+                    log.LogMessage(MessageImportance.Low, $"Copying signed stream from {signedPart.Value.FileSignInfo.FullPath} to {file}.");
+                    File.Copy(signedPart.Value.FileSignInfo.FullPath, file, true);
+                }
+
+                if (!BatchSignUtil.RunWixTool(createFileName, outputDir, workingDir, wixToolsPath, log))
+                {
+                    log.LogError($"Packaging of wix file '{FileSignInfo.FullPath}' failed");
+                    return;
+                }
+
+                if (!File.Exists(outputFileName))
+                {
+                    log.LogError($"Wix tool execution passed, but output file '{outputFileName}' was not found.");
+                    return;
+                }
+
+                log.LogMessage($"Created wix file {outputFileName}, replacing '{FileSignInfo.FullPath}' with '{outputFileName}'");
+                File.Copy(outputFileName, FileSignInfo.FullPath, true);
+            }
+            finally
+            {
+                // Delete the intermediates
+                Directory.Delete(workingDir, true);
+                Directory.Delete(outputDir, true);
+            }
         }
     }
 }

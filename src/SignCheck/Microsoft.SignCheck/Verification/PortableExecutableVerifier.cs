@@ -30,10 +30,10 @@ namespace Microsoft.SignCheck.Verification
         /// <param name="path"></param>
         /// <param name="parent"></param>
         /// <returns></returns>
-        public override SignatureVerificationResult VerifySignature(string path, string parent)
+        public override SignatureVerificationResult VerifySignature(string path, string parent, string virtualPath)
         {
             // Defer to the base implementation to check the AuthentiCode signature.
-            SignatureVerificationResult svr = base.VerifySignature(path, parent);
+            SignatureVerificationResult svr = base.VerifySignature(path, parent, virtualPath);
             PEHeader = new PortableExecutableHeader(svr.FullPath);
 
             if (VerifyStrongNameSignature)

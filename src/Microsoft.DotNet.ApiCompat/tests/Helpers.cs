@@ -16,7 +16,7 @@ namespace Microsoft.DotNet.ApiCompat.Tests
         {
             using var writer = new StringWriter();
 
-            var args = Helpers.GetApiCompatArgs(left, rightDirs, excludeAttributesFile, leftName, rightName);
+            var args = GetApiCompatArgs(left, rightDirs, excludeAttributesFile, leftName, rightName);
             new ApiCompatRunner(writer).Run(args);
 
             return writer.ToString();

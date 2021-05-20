@@ -30,6 +30,7 @@ jobs:
           PdbArtifacts/**
           BlobArtifacts/**
         downloadPath: '$(Build.ArtifactStagingDirectory)'
+        checkDownloadedFiles: true
         
     # This is necessary whenever we want to publish/restore to an AzDO private feed
     # Since sdk-task.ps1 tries to restore packages we need to do this authentication here
@@ -54,7 +55,8 @@ jobs:
           /p:BlobBasePath='$(Build.ArtifactStagingDirectory)/BlobArtifacts/'
           /p:SymbolPublishingExclusionsFile='$(Build.SourcesDirectory)/eng/SymbolPublishingExclusionsFile.txt'
           /p:Configuration=Release
-          /p:PublishToMSDL=true
+          /p:PublishToMSDL=false
+          /p:PublishToSymWeb=true
           ${{ parameters.symbolPublishingAdditionalParameters }}
 
     - template: /eng/common/templates/steps/publish-logs.yml

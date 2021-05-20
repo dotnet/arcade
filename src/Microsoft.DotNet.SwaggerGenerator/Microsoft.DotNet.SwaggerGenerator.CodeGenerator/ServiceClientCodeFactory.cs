@@ -6,7 +6,6 @@ using System.Text;
 using HandlebarsDotNet;
 using Microsoft.DotNet.SwaggerGenerator.Languages;
 using Microsoft.DotNet.SwaggerGenerator.Modeler;
-using Microsoft.Extensions.Logging;
 
 namespace Microsoft.DotNet.SwaggerGenerator
 {
@@ -19,17 +18,14 @@ namespace Microsoft.DotNet.SwaggerGenerator
             ServiceClientModel clientModel,
             GeneratorOptions options,
             Templates templates,
-            Language language,
-            ILogger logger)
+            Language language)
         {
             _language = language;
             ClientModel = clientModel;
             Options = options;
             Templates = templates;
-            Logger = logger;
         }
 
-        public ILogger Logger { get; }
         public ServiceClientModel ClientModel { get; }
         public GeneratorOptions Options { get; }
         public Templates Templates { get; }
@@ -62,7 +58,7 @@ namespace Microsoft.DotNet.SwaggerGenerator
 
     public class ServiceClientCodeFactory
     {
-        public List<CodeFile> GenerateCode(ServiceClientModel model, GeneratorOptions options, ILogger logger)
+        public List<CodeFile> GenerateCode(ServiceClientModel model, GeneratorOptions options)
         {
             Language language = Language.Get(options.LanguageName);
 
@@ -74,7 +70,7 @@ namespace Microsoft.DotNet.SwaggerGenerator
 
             RegisterTemplates(hb, templates);
 
-            var context = new GenerateCodeContext(model, options, templates, language, logger);
+            var context = new GenerateCodeContext(model, options, templates, language);
             language.GenerateCode(context);
 
             return context.Files.Values.ToList();

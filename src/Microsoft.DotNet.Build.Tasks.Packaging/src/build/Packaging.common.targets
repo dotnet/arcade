@@ -5,7 +5,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <PackagingTaskDir Condition="'$(PackagingTaskDir)' == '' AND '$(MSBuildRuntimeType)' == 'core'">$(MSBuildThisFileDirectory)../tools/netcoreapp2.1/</PackagingTaskDir>
+    <PackagingTaskDir Condition="'$(PackagingTaskDir)' == '' AND '$(MSBuildRuntimeType)' == 'core'">$(MSBuildThisFileDirectory)../tools/netcoreapp3.1/</PackagingTaskDir>
     <PackagingTaskDir Condition="'$(PackagingTaskDir)' == '' AND '$(MSBuildRuntimeType)' != 'core'">$(MSBuildThisFileDirectory)../tools/net472/</PackagingTaskDir>
     <RuntimeIdGraphDefinitionFile Condition="'$(RuntimeIdGraphDefinitionFile)' == ''">$(MSBuildThisFileDirectory)runtime.json</RuntimeIdGraphDefinitionFile>
 
@@ -25,7 +25,6 @@
   <UsingTask TaskName="FilterUnknownPackages" AssemblyFile="$(PackagingTaskDir)Microsoft.DotNet.Build.Tasks.Packaging.dll"/>
   <UsingTask TaskName="GenerateNuSpec" AssemblyFile="$(PackagingTaskDir)Microsoft.DotNet.Build.Tasks.Packaging.dll"/>
   <UsingTask TaskName="GeneratePackageReport" AssemblyFile="$(PackagingTaskDir)Microsoft.DotNet.Build.Tasks.Packaging.dll"/>
-  <UsingTask TaskName="GenerateRuntimeGraph" AssemblyFile="$(PackagingTaskDir)Microsoft.DotNet.Build.Tasks.Packaging.dll"/>
   <UsingTask TaskName="GenerateRuntimeDependencies" AssemblyFile="$(PackagingTaskDir)Microsoft.DotNet.Build.Tasks.Packaging.dll"/>
   <UsingTask TaskName="GenerateSourceWithPublicTypesAsInternal" AssemblyFile="$(PackagingTaskDir)Microsoft.DotNet.Build.Tasks.Packaging.dll" />
   <UsingTask TaskName="GetApplicableAssetsFromPackages" AssemblyFile="$(PackagingTaskDir)Microsoft.DotNet.Build.Tasks.Packaging.dll"/>

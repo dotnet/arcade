@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Arcade.Common;
 using Microsoft.DotNet.Helix.Client.Models;
 using Newtonsoft.Json;
 
@@ -196,8 +197,9 @@ namespace Microsoft.DotNet.Helix.Client
                 ResultContainerPrefix  = multipleDashes.Replace(illegalCharacters.Replace(ResultContainerPrefix, ""), "-");
             }
 
-            var creationRequest = new JobCreationRequest(Type, _properties.ToImmutableDictionary(), jobListUri.ToString(), queueId)
+            var creationRequest = new JobCreationRequest(Type, jobListUri.ToString(), queueId)
             {
+                Properties = _properties.ToImmutableDictionary(),
                 Creator = Creator,
                 ResultContainerPrefix = ResultContainerPrefix,
                 DockerTag = dockerTag,

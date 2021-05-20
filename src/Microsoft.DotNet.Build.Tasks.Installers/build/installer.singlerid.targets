@@ -37,7 +37,9 @@
   -->
   <Import Project="$(MSBuildThisFileDirectory)wix/wix.targets" />
 
-  <Target Name="GenerateInstallers" DependsOnTargets="GetInstallerGenerationFlags" Condition="'$(SkipInstallerBuild)' != 'true' and '$(GenerateInstallers)' == 'true'">
+  <Target Name="GenerateInstallers" DependsOnTargets="GetInstallerGenerationFlags" Condition="'$(SkipInstallerBuild)' != 'true' and '$(GenerateInstallers)' == 'true'">    
+    <MakeDir Directories="$(PackageOutputPath)" />
+
     <ItemGroup>
       <_InstallerBuildProject
         Include="$(MSBuildProjectFile)"
@@ -129,8 +131,8 @@
       <InstallerBuildPart>$(Version)-$(TargetRuntimeOS)-$(InstallerTargetArchitecture)</InstallerBuildPart>
     </PropertyGroup>
     <PropertyGroup Condition="'$(GenerateDeb)' == 'true' or '$(GenerateRpm)' == 'true'">
-      <InstallerBuildPart>$(ProductVersion)-$(InstallerTargetArchitecture)</InstallerBuildPart>
-      <InstallerBuildPart Condition="'$(PackageTargetOS)' != ''">$(ProductVersion)-$(PackageTargetOS)-$(InstallerTargetArchitecture)</InstallerBuildPart>
+      <InstallerBuildPart>$(Version)-$(InstallerTargetArchitecture)</InstallerBuildPart>
+      <InstallerBuildPart Condition="'$(PackageTargetOS)' != ''">$(Version)-$(PackageTargetOS)-$(InstallerTargetArchitecture)</InstallerBuildPart>
     </PropertyGroup>
     <PropertyGroup>
       <!-- Location to place the installer, in artifacts. -->
@@ -339,11 +341,11 @@
           DependsOnTargets="_GetTargetOSArchInfo"
           Returns="@(_CrossArchMsi)">
     <MSBuild
-      Condition="'@(CrossArchMsiToBuild)' != ''"
+      Condition="'@(CrossArchMsiToBuild)' != '' and '$(InstallerTargetArchitecture)' != '$(TargetArchitecture)'"
       Projects="$(MSBuildProjectFullPath)"
       Targets="CreateWixInstaller"
       Properties="
-        InstallerTargetArchitecture=%(CrossArchMsiToBuild.Identity);
+        InstallerTargetArchitecture=$(InstallerTargetArchitecture);
         CrossArchContentsArch=$(TargetArchitecture);
         GenerateMSI=true">
       <Output TaskParameter="TargetOutputs" ItemName="_CrossArchMsi" />
@@ -354,15 +356,15 @@
     Create macOS pkg installer.
   -->
   <Target Name="CreatePkg"
-          DependsOnTargets="
-            _GetInstallerProperties;
-            _CreateInstallerLayout"
+          DependsOnTargets="_GetInstallerProperties"
           Returns="@(_CreatedPkg)">
     
     <!-- Copy files to layout. -->
     <PropertyGroup>
       <_OutputPathRoot>$(IntermediateOutputPath)output/</_OutputPathRoot>
     </PropertyGroup>
+    
+    <MakeDir Directories="$(_OutputPathRoot)" />
 
     <MSBuild Projects="$(MSBuildProjectFullPath)"
              Targets="PublishToDisk"
@@ -415,7 +417,7 @@
     
     <MSBuild Projects="$(MSBuildProjectFullPath)"
              Targets="PublishToDisk"
-             Properties="OutputPath=$(_LayoutPackageRoot)"
+             Properties="OutputPath=$([MSBuild]::EnsureTrailingSlash('$(_LayoutPackageRoot)'))"
              RemoveProperties="@(_GlobalPropertiesToRemoveForPublish)"  />
     
     <Copy

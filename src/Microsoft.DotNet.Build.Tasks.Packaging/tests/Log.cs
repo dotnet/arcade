@@ -1,7 +1,7 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using Xunit;
+using FluentAssertions;
 using Xunit.Abstractions;
 
 namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
@@ -49,8 +49,8 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
 
         public void AssertNoErrorsOrWarnings()
         {
-            Assert.Equal(0, ErrorsLogged);
-            Assert.Equal(0, WarningsLogged);
+            ErrorsLogged.Should().Be(0);
+            WarningsLogged.Should().Be(0);
         }
     }
 }

@@ -59,6 +59,7 @@
         <EnvironmentDisplay>$(TargetFramework)|$(_TestArchitecture)</EnvironmentDisplay>
         <ResultsFilePathWithoutExtension>$(_ResultFileNameNoExt)</ResultsFilePathWithoutExtension>
         <ResultsXmlPath>$(ArtifactsTestResultsDir)$(_ResultFileNameNoExt).xml</ResultsXmlPath>
+        <ResultsTrxPath>$(ArtifactsTestResultsDir)$(_ResultFileNameNoExt).trx</ResultsTrxPath>
         <ResultsHtmlPath>$(ArtifactsTestResultsDir)$(_ResultFileNameNoExt).html</ResultsHtmlPath>
         <ResultsStdOutPath>$(ArtifactsLogDir)$(_ResultFileNameNoExt).log</ResultsStdOutPath>
         <TestRunnerAdditionalArguments>$(TestRunnerAdditionalArguments)</TestRunnerAdditionalArguments>
@@ -80,4 +81,7 @@
 
   <!-- Import specialized targets files of supported test runners -->
   <Import Project="$(MSBuildThisFileDirectory)$(TestRunnerName)\$(TestRunnerName).targets" Condition="'$(IsTestProject)' == 'true' and '$(TestRunnerName)' != '' and Exists('$(MSBuildThisFileDirectory)$(TestRunnerName)\$(TestRunnerName).targets')"/>
+  
+  <!-- Allow for repo specific Test targets such as rerunning tests -->
+  <Import Project="$(RepositoryEngineeringDir)Tests.targets" Condition="Exists('$(RepositoryEngineeringDir)Tests.targets')" />
 </Project>

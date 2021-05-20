@@ -1,11 +1,11 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using FluentAssertions;
+using Microsoft.DotNet.VersionTools.BuildManifest;
 using System.Collections.Generic;
 using System.IO;
 using Xunit;
-using Microsoft.DotNet.VersionTools.BuildManifest;
-using NuGet.ContentModel;
 
 namespace Microsoft.DotNet.VersionTools.Tests.BuildManifest
 {
@@ -39,7 +39,7 @@ namespace Microsoft.DotNet.VersionTools.Tests.BuildManifest
         [InlineData("What-Is-A.FooPackage-2.2.nupkg", null)]
         public void ValidateSimpleVersions(string assetName, string version)
         {
-            Assert.Equal(version, VersionIdentifier.GetVersion(assetName));
+            VersionIdentifier.GetVersion(assetName).Should().Be(version);
         }
 
         [Fact]
@@ -52,11 +52,11 @@ namespace Microsoft.DotNet.VersionTools.Tests.BuildManifest
                 // First check whether the original version number can be identified
                 string expectedVersion = testAsset.ExpectedVersion;
                 string actualVersion = VersionIdentifier.GetVersion(testAsset.Name);
-                Assert.True(expectedVersion == actualVersion, $"Line {testAsset.Line} has incorrect computed version {actualVersion}");
+                actualVersion.Should().Be(expectedVersion, $"Line {testAsset.Line} has incorrect computed version {actualVersion}");
                 // Then check that all versions can be removed from the path of any blob asset
                 string expectedNameWithoutVersions = testAsset.NameWithoutVersions;
                 string actualNameWithoutVersions = VersionIdentifier.RemoveVersions(testAsset.Name);
-                Assert.True(expectedNameWithoutVersions == actualNameWithoutVersions, $"Line {testAsset.Line} has incorrect asset name without versions {actualNameWithoutVersions}");
+                actualNameWithoutVersions.Should().Be(expectedNameWithoutVersions, $"Line {testAsset.Line} has incorrect asset name without versions {actualNameWithoutVersions}");
             }
         }
 
@@ -71,8 +71,8 @@ namespace Microsoft.DotNet.VersionTools.Tests.BuildManifest
                 if (!string.IsNullOrEmpty(line))
                 {
                     string[] elements = line.Split(',');
-                    
-                    Assert.True(elements.Length == 3, $"Line {i+1} is missing version or path-without-versions info");
+
+                    elements.Should().HaveCount(3, $"Line {i + 1} is missing version or path-without-versions info");
 
                     string name = elements[0];
                     string expectedVersion = string.IsNullOrEmpty(elements[1]) ? null : elements[1];

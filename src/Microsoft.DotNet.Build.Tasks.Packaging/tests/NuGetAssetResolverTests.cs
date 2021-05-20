@@ -4,6 +4,7 @@
 using NuGet.Frameworks;
 using Xunit;
 using Xunit.Abstractions;
+using FluentAssertions;
 
 namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
 {
@@ -30,8 +31,8 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging.Tests
 
             var runtimeItems = resolver.GetRuntimeItems(NuGetFramework.Parse("netcore50"), "win10-x64-aot");
 
-            Assert.NotNull(runtimeItems);
-            Assert.Equal(1, runtimeItems.Items.Count);
+            runtimeItems.Should().NotBeNull();
+            runtimeItems.Items.Should().HaveCount(1);
 
             // Fails due to https://github.com/NuGet/Home/issues/1676
             // Assert.Equal(items[1], runtimeItems.Items.FirstOrDefault().Path);

@@ -70,7 +70,7 @@ namespace Microsoft.DotNet.SwaggerGenerator.MSBuild
 
             Log.LogMessage(MessageImportance.Low, $"Generating code files for language '{options.LanguageName}'");
             var codeFactory = new ServiceClientCodeFactory();
-            List<CodeFile> code = codeFactory.GenerateCode(model, options, new MSBuildLogger(Log));
+            List<CodeFile> code = codeFactory.GenerateCode(model, options);
 
             Log.LogMessage(MessageImportance.High, $"Generating {SwaggerDocumentUri} -> {OutputDirectory}");
             var outputDirectory = new DirectoryInfo(OutputDirectory);

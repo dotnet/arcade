@@ -2796,10 +2796,7 @@ https://github.com/aspnet/AspNetCore (.NET 5 Dev) ==> 'https://github.com/aspnet
 
 ### **`trigger-subscriptions`**
 
-Triggers one or more subscriptions. For each subscription triggered, Maestro++
-will determine whether the latest build on the source channel of the source repository has been applied (or is currently in PR)
-to the target repo and branch. If not, a new PR will be created or updated
-(depending on existing PRs and/or subscription batchability).
+Triggers one or more subscriptions. For each subscription triggered, Maestro++ will create a new PR or update an existing one into the repo to update to the latest build (or specified build, if one is provided), regardless if the build had been applied previously or not.
 
 This update is not asynchronous and usually takes a few minutes, as Maestro++ needs
 to do a fair bit of work in the background.  New PRs created by

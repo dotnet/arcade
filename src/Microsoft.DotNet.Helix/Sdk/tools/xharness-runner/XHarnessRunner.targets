@@ -1,11 +1,11 @@
 <Project>
-
   <PropertyGroup Condition=" '$(IncludeXHarnessCli)' == 'true' ">
     <!-- We then invoke the CLI DLL directly using .NET runtime without the need for .NET SDK -->
     <IncludeDotNetCli>true</IncludeDotNetCli>
     <IncludeXHarnessCli>true</IncludeXHarnessCli>
-    <DotNetCliPackageType>aspnetcore-runtime</DotNetCliPackageType>
-    <DotNetCliVersion>3.1.5</DotNetCliVersion>
+    <DotNetCliPackageType Condition="'$(DotNetCliPackageType)' != 'sdk'">aspnetcore-runtime</DotNetCliPackageType>
+    <DotNetCliVersion Condition=" '$(DotNetCliVersion)' == '' ">6.0.100-preview.2.21155.3</DotNetCliVersion>
+    <DotNetCliVersion Condition=" '$(DotNetCliVersion)' == '$(BundledNETCoreAppPackageVersion)' AND '$(DotNetCliPackageType)' == 'aspnetcore-runtime' ">$(AspNetCoreRuntimeVersion)</DotNetCliVersion>
   </PropertyGroup>
 
   <Target Name="AddXHarnessCli"
@@ -29,7 +29,7 @@
     </PropertyGroup>
 
     <!-- It can happen that the SDK is invoked in parallel and then it can fail when re-using the install location, so we ignore the exit code -->
-    <Exec Command="dotnet tool install --tool-path $(_XHarnessLocalToolPath) --version $(_XHarnessPackageVersion) --add-source $(XHarnessPackageSource) $(_XHarnessPackageName)"
+    <Exec Command="&quot;$(DotNetTool)&quot; tool install --framework net6.0 --tool-path $(_XHarnessLocalToolPath) --version $(_XHarnessPackageVersion) --add-source $(XHarnessPackageSource) $(_XHarnessPackageName)"
           WorkingDirectory="$(ArtifactsTmpDir)"
           IgnoreExitCode="true" />
 
@@ -37,7 +37,7 @@
     <ItemGroup>
       <_XHarnessExtraToolFiles Include="$(_XHarnessCliPath)\*.*" />
     </ItemGroup>
-    <Delete Files="@(_XHarnessExtraToolFiles)" />
+    <Delete Files="@(_XHarnessExtraToolFiles)" TreatErrorsAsWarnings="true" ContinueOnError="WarnAndContinue" />
 
     <ItemGroup>
       <HelixCorrelationPayload Include="$(_XHarnessCliPath)">
@@ -53,14 +53,15 @@
       <HelixPreCommands>$(HelixPreCommands);export PATH=$HELIX_CORRELATION_PAYLOAD/xharness-cli:$PATH</HelixPreCommands>
       <HelixPreCommands>$(HelixPreCommands);export XHARNESS_DISABLE_COLORED_OUTPUT=true</HelixPreCommands>
       <HelixPreCommands>$(HelixPreCommands);export XHARNESS_LOG_WITH_TIMESTAMPS=true</HelixPreCommands>
-      <HelixPreCommands>$(HelixPreCommands);export XHARNESS_CLI_PATH=$HELIX_CORRELATION_PAYLOAD/microsoft.dotnet.xharness.cli/$(_XHarnessPackageVersion)/tools/netcoreapp3.1/any/Microsoft.DotNet.XHarness.CLI.dll</HelixPreCommands>
+      <HelixPreCommands>$(HelixPreCommands);export XHARNESS_CLI_PATH=$HELIX_CORRELATION_PAYLOAD/microsoft.dotnet.xharness.cli/$(_XHarnessPackageVersion)/tools/net6.0/any/Microsoft.DotNet.XHarness.CLI.dll</HelixPreCommands>
     </PropertyGroup>
 
     <PropertyGroup Condition="!$(IsPosixShell)">
       <HelixPreCommands>$(HelixPreCommands);set PATH=%HELIX_CORRELATION_PAYLOAD%\xharness-cli%3B%PATH%</HelixPreCommands>
       <HelixPreCommands>$(HelixPreCommands);set XHARNESS_DISABLE_COLORED_OUTPUT=true</HelixPreCommands>
       <HelixPreCommands>$(HelixPreCommands);set XHARNESS_LOG_WITH_TIMESTAMPS=true</HelixPreCommands>
-      <HelixPreCommands>$(HelixPreCommands);set XHARNESS_CLI_PATH=%HELIX_CORRELATION_PAYLOAD%\microsoft.dotnet.xharness.cli\$(_XHarnessPackageVersion)\tools\netcoreapp3.1\any\Microsoft.DotNet.XHarness.CLI.dll</HelixPreCommands>
+      <HelixPreCommands>$(HelixPreCommands);set XHARNESS_CLI_PATH=%HELIX_CORRELATION_PAYLOAD%\microsoft.dotnet.xharness.cli\$(_XHarnessPackageVersion)\tools\net6.0\any\Microsoft.DotNet.XHarness.CLI.dll</HelixPreCommands>
+      <HelixPreCommands>$(HelixPreCommands);doskey xharness="dotnet exec %XHARNESS_CLI_PATH%"</HelixPreCommands>
     </PropertyGroup>
   </Target>
 
@@ -77,15 +78,15 @@
     </MSBuild>
   </Target>
 
-  <Target Name="BuildXHarnessiOSProjects"
-          Condition=" '@(XHarnessiOSProject)' != '' "
+  <Target Name="BuildXHarnessAppleProjects"
+          Condition=" '@(XHarnessAppleProject)' != '' "
           BeforeTargets="CoreBuild"
-          Outputs="%(XHarnessiOSProject.Identity)%(XHarnessiOSProject.AdditionalProperties)">
+          Outputs="%(XHarnessAppleProject.Identity)%(XHarnessAppleProject.AdditionalProperties)">
     <PropertyGroup>
-      <_CurrentXHarnessiOSProject>%(XHarnessiOSProject.Identity)</_CurrentXHarnessiOSProject>
-      <_CurrentAdditionalProperties>%(XHarnessiOSProject.AdditionalProperties)</_CurrentAdditionalProperties>
+      <_CurrentXHarnessAppleProject>%(XHarnessAppleProject.Identity)</_CurrentXHarnessAppleProject>
+      <_CurrentAdditionalProperties>%(XHarnessAppleProject.AdditionalProperties)</_CurrentAdditionalProperties>
     </PropertyGroup>
-    <MSBuild Projects="$(_CurrentXHarnessiOSProject)" Targets="Build" Properties="$(_CurrentAdditionalProperties)">
+    <MSBuild Projects="$(_CurrentXHarnessAppleProject)" Targets="Build" Properties="$(_CurrentAdditionalProperties)">
       <Output TaskParameter="TargetOutputs" ItemName="XHarnessAppBundleToTest" />
     </MSBuild>
   </Target>
@@ -93,20 +94,20 @@
   <Target Name="CreateAndroidWorkItems"
           Condition=" '@(XHarnessApkToTest)' != '' "
           BeforeTargets="CoreTest">
-    <CreateXHarnessAndroidWorkItems Apks="@(XHarnessApkToTest)"
-                                    IsPosixShell="$(IsPosixShell)">
+    <CreateXHarnessAndroidWorkItems Apks="@(XHarnessApkToTest)" IsPosixShell="$(IsPosixShell)">
       <Output TaskParameter="WorkItems" ItemName="HelixWorkItem"/>
     </CreateXHarnessAndroidWorkItems>
   </Target>
 
-  <Target Name="CreateiOSWorkItems"
+  <Target Name="CreateAppleWorkItems"
           Condition=" '@(XHarnessAppBundleToTest)' != '' "
           BeforeTargets="CoreTest">
-    <CreateXHarnessiOSWorkItems AppBundles="@(XHarnessAppBundleToTest)"
-                                IsPosixShell="$(IsPosixShell)"
-                                XcodeVersion="$(XHarnessXcodeVersion)">
+    <CreateXHarnessAppleWorkItems AppBundles="@(XHarnessAppBundleToTest)"
+                                  XcodeVersion="$(XHarnessXcodeVersion)"
+                                  ProvisioningProfileUrl="$(XHarnessAppleProvisioningProfileUrl)"
+                                  TmpDir="$(ArtifactsTmpDir)">
       <Output TaskParameter="WorkItems" ItemName="HelixWorkItem"/>
-    </CreateXHarnessiOSWorkItems>
+    </CreateXHarnessAppleWorkItems>
   </Target>
 
 </Project>

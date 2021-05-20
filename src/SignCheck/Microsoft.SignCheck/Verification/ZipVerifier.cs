@@ -12,9 +12,9 @@ namespace Microsoft.SignCheck.Verification
 
         }
 
-        public override SignatureVerificationResult VerifySignature(string path, string parent)
+        public override SignatureVerificationResult VerifySignature(string path, string parent, string virtualPath)
         {
-            var svr = SignatureVerificationResult.UnsupportedFileTypeResult(path, parent);
+            var svr = SignatureVerificationResult.UnsupportedFileTypeResult(path, parent, virtualPath);
             string fullPath = svr.FullPath;
             svr.AddDetail(DetailKeys.File, SignCheckResources.DetailSigned, SignCheckResources.NA);
 

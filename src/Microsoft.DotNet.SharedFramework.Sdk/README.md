@@ -46,7 +46,7 @@ If you need to resolve additional managed assemblies, you can add them to the `R
 
 ### Deps file generation
 
-By default, the SDK will generate a .deps.json file for runtime packs named `$(SharedFrameworkName).deps.json`. You can set the `$(SharedFrameworkHostFileNameOverride)` property to instead generate the deps file with the name `$(SharedFrameworkHostFileNameOverride).deps.json`.
+By default, the SDK will generate a .deps.json file for runtime packs named `$(SharedFrameworkName).deps.json`. You can set the `$(SharedFrameworkHostFileNameOverride)` property to instead generate the deps file with the name `$(SharedFrameworkHostFileNameOverride).deps.json`. The RID fallback graph can be included by setting `$(IncludeFallbacksInDepsFile)` to `true`.
 
 ### Runtimeconfig file generation
 

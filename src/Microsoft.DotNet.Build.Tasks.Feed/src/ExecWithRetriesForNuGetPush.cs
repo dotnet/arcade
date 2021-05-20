@@ -1,9 +1,12 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using Microsoft.Arcade.Common;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Tasks;
 using Microsoft.DotNet.VersionTools.Automation;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -11,14 +14,13 @@ using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
-using MSBuild = Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed
 {
     /// <summary>
     /// Run a command and retry if the exit code is not 0.
     /// </summary>
-    public class ExecWithRetriesForNuGetPush : MSBuild.Task
+    public class ExecWithRetriesForNuGetPush : MSBuildTaskBase
     {
         [Required]
         public string Command { get; set; }
@@ -73,14 +75,24 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         private Exec _runningExec;
 
+        private INupkgInfoFactory _nupkgInfoFactory;
+
         public void Cancel()
         {
             _runningExec?.Cancel();
             _cancelTokenSource.Cancel();
         }
 
-        public override bool Execute()
+        public override void ConfigureServices(IServiceCollection collection)
         {
+            collection.TryAddSingleton<INupkgInfoFactory, NupkgInfoFactory>();
+            collection.TryAddSingleton<IPackageArchiveReaderFactory, PackageArchiveReaderFactory>();
+        }
+
+        public bool ExecuteTask(INupkgInfoFactory nupkgInfoFactory)
+        {
+            _nupkgInfoFactory = nupkgInfoFactory;
+
             HashSet<string> activeIgnorableErrorMessages = new HashSet<string>();
             // Add any "Ignore" messages that don't have conditionals to our active list.
             if (IgnoredErrorMessagesWithConditional != null)
@@ -175,7 +187,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 return false;
             }
 
-            var packageInfo = new NupkgInfo(PackageFile);
+            var packageInfo = _nupkgInfoFactory.CreateNupkgInfo(PackageFile);
             string packageUrl =
                 $"{PassIfIdenticalV2Feed}/package/{packageInfo.Id}/{packageInfo.Version}";
 

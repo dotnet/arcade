@@ -6,7 +6,7 @@ This document describes the infrastructure provided by the Arcade SDK for publis
 
 The publishing infrastructure has multiple stage(s), these stages represent available channels. Only the stages corresponding to the default channel will execute. This is for arcade3.x only.
 
-V1 came into existance when we branched for release/3.x in arcade. Master and arcade/3.x initially had the same publishing logic. Overtime the publishing stage in arcade master evolved so that became V2 publishing.
+V1 came into existence when we branched for release/3.x in arcade. Master and arcade/3.x initially had the same publishing logic. Overtime the publishing stage in arcade master evolved so that became V2 publishing.
 
 Asset manifest Example : 
 
@@ -491,6 +491,47 @@ The publishing logs are stored inside an Azure DevOps artifacts container named 
 
 Under the `Publish Using Darc` job get the link to the newly queued build in the [Maestro promotion pipeline](https://dnceng.visualstudio.com/internal/_build?definitionId=750). The publishing logs are stored inside an Azure DevOps artifacts container named `PostBuildLogs`. 
 
+### How to add a new channel to use V3 publishing?
+
+Create the channel using [darc add-channel](https://github.com/dotnet/arcade/blob/master/Documentation/Darc.md#add-channel). Verify if the channel was created successfully using [darc get-channel](https://github.com/dotnet/arcade/blob/master/Documentation/Darc.md#get-channels) and get the channelId.
+
+In the Microsoft.DotNet.Build.Task.Feed/src/Model/PublishingConstants.cs file, create a new TargetChannelConfig 
+
+TargetChannelConfig takes the following attributes
+
+| Params      |   Description             |  Value   |
+|-------------|---------------------------|----------|
+| ChannelId   | Id for channel to publish |          |
+| isInternal  | Publishing to an internal Channel or public channel | true or false  |
+| PublishingInfraVersion | Which version of the publishing infra can use this configuration. | Enum = All(0), Legacy(1), Latest(2), Next(3)  |
+| AkaMSChannelName | The name that should be used for creating Aka.ms links for this channel. A specified build quality will be appended to this value if supplied. | See [What build qualities are supported?](#what-build-qualities-are-supported) for valid build quality values |
+| ShippingFeed | The URL (including the index.json suffix) of the *shipping* feed to be used for this channel. |   | 
+| TransportFeed | The URL (including the index.json suffix) of the *transport* feed to be used for this channel. |   | 
+| SymbolsFeed | The URL (including the index.json suffix) of the *symbols* feed to be used for this channel. |   | 
+| ChecksumsFeed | The URL (including the index.json suffix) where *checksums* should be published to. | FeedForChecksums for public channel, FeedInternalForChecksums for internal  | 
+| InstallersFeed | The URL (including the index.json suffix) where *installers* should be published to. | FeedForInstallers for public channel, FeedInternalForInstallers for internal channel   |
+| SymbolTargetType | Publish to MSDL or SymWeb symbol server | PublicAndInternalSymbolTargets -publishes to both Msdl and SymWeb or InternalSymbolTargets -publishes only to SymWeb |
+| FilenamesToExclude | List of files to exclude from creating aka.ms links. Should be exact file names | For most channels, we exclude MergedManifest.xml |  
+| Flatten | Whether or not to flatten the path when creating the aka.ms links | Defaults to true, which means the path in the aka.ms link will be flattened. False will use the full path without the version information of the files being published |
+
+```C#
+Eg:
+Publishing to General Testing channel : General Testing
+
+            new TargetChannelConfig(
+                529,
+                false,
+                PublishingInfraVersion.All,
+                "generaltesting",
+                "https://pkgs.dev.azure.com/dnceng/public/_packaging/general-testing/nuget/v3/index.json",
+                "https://pkgs.dev.azure.com/dnceng/public/_packaging/general-testing/nuget/v3/index.json",
+                "https://pkgs.dev.azure.com/dnceng/public/_packaging/general-testing-symbols/nuget/v3/index.json",
+                FeedForChecksums,
+                FeedForInstallers,
+                PublicAndInternalSymbolTargets)
+```
+
+
 ### Which feeds does Arcade infra publish to?
 
 | Feed Name           | Intended Usage                                               |
@@ -513,3 +554,24 @@ Under the `Publish Using Darc` job get the link to the newly queued build in the
 |                     | https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet3/nuget/v3/index.json |
 | dotnet3-transport   | .NET Core 3 non-shipping packages                            |
 |                     | https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet3-transport/nuget/v3/index.json |
+
+### Can the feeds be overriden?
+
+Yes. The feeds can be overriden by adding the following options when calling PublishArtifactsInManifest.proj:
+
+```
+/p:AllowFeedOverrides=True
+/p:InstallersFeedOverride=$(InstallersFeedOverride)
+/p:ChecksumsFeedOverride=$(ChecksumsFeedOverride)
+/p:ShippingFeedOverride=$(ShippingFeedOverride)
+/p:TransportFeedOverride=$(TransportFeedOverride)
+/p:SymbolsFeedOverride=$(SymbolsFeedOverride)
+```
+
+### How are the aka.ms links formatted?
+
+The aka.ms links are generated using the `BuildQuality` parameter that is passed to PublishArtifactsInManifest.proj, and the `akaMsChannelName` parameter passed to the `TargetChannelConfig` constructor. When akaMsChannelName is specified, we will create aka.ms links for the assets being published to that channel. Additionally, these links are "flatten," meaning that only the filename is used in addition to the build quality and the channel name when constructing the links. Finally, all version information is stripped from the filename. For example, if the `buildQuality` is `daily`, `akaMsChannelName` is `6.0`, `flatten` is `true`, and the filename is `dotnet-sdk-6.0.100-12345.12-win-x64.zip`, the aka.ms link generated will be `aka.ms/dotnet/6.0/daily/dotnet-sdk-win-x64.zip`.
+
+### What build qualities are supported?
+
+The build qualities that are supported are daily, signed, validated, preview, and ga. All official daily builds that publish using V3 should use the `daily` build quality. Signed and validated builds are generated by the staging process of the release process. Preview and GA links are generated at release time, on release day. All builds that have preview in the release version will be of the `preview` quality. All other builds will be marked as `GA`. GA builds do not append a build quality to the links.

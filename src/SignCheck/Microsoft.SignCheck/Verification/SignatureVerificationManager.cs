@@ -116,7 +116,7 @@ namespace Microsoft.SignCheck.Verification
             {
                 FileVerifier fileVerifier = GetFileVerifier(file);
                 SignatureVerificationResult result;
-                result = fileVerifier.VerifySignature(file, parent: null);
+                result = fileVerifier.VerifySignature(file, parent: null, virtualPath: Path.GetFileName(file));
 
                 if ((Options & SignatureVerificationOptions.GenerateExclusion) == SignatureVerificationOptions.GenerateExclusion)
                 {
@@ -124,7 +124,7 @@ namespace Microsoft.SignCheck.Verification
                     Log.WriteMessage(LogVerbosity.Diagnostic, SignCheckResources.DiagGenerateExclusion, result.Filename, result.ExclusionEntry);
                 }
 
-                result.IsDoNotSign = Exclusions.IsDoNotSign(file, parent: null, containerPath: null);
+                result.IsDoNotSign = Exclusions.IsDoNotSign(file, parent: null, virtualPath: null, containerPath: null);
 
                 if ((result.IsDoNotSign) && (result.IsSigned))
                 {
@@ -134,7 +134,7 @@ namespace Microsoft.SignCheck.Verification
 
                 if ((!result.IsDoNotSign) && (!result.IsSigned))
                 {
-                    result.IsExcluded = Exclusions.IsExcluded(file, parent: null, containerPath: null);
+                    result.IsExcluded = Exclusions.IsExcluded(file, parent: null, virtualPath: null, containerPath: null);
 
                     if ((result.IsExcluded))
                     {

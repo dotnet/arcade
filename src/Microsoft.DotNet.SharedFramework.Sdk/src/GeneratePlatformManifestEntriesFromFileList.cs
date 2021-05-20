@@ -30,7 +30,7 @@ namespace Microsoft.DotNet.SharedFramework.Sdk
                 {
                     Name = file.ItemSpec,
                     AssemblyVersion = FileUtilities.GetAssemblyName(file.GetMetadata("OriginalFilePath"))?.Version.ToString() ?? string.Empty,
-                    FileVersion = FileUtilities.GetAssemblyName(file.GetMetadata("OriginalFilePath"))?.Version.ToString() ?? string.Empty
+                    FileVersion = FileUtilities.GetFileVersion(file.GetMetadata("OriginalFilePath"))?.ToString() ?? string.Empty
                 });
             }
 

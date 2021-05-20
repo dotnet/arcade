@@ -18,7 +18,7 @@ namespace Microsoft.DotNet.Arcade.Sdk.Tests
             _fixture = fixture;
         }
 
-        [Fact]
+        [Fact(Skip = "https://github.com/dotnet/arcade/issues/7092")]
         public void MinimalRepoBuildsWithoutErrors()
         {
             var app = _fixture.CreateTestApp("MinimalRepo");
@@ -29,7 +29,7 @@ namespace Microsoft.DotNet.Arcade.Sdk.Tests
             Assert.Equal(0, exitCode);
         }
 
-        [Fact]
+        [Fact(Skip = "https://github.com/dotnet/arcade/issues/7092")]
         public void MinimalRepoWithFinalVersions()
         {
             var app = _fixture.CreateTestApp("MinimalRepo");

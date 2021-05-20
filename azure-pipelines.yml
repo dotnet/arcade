@@ -2,14 +2,14 @@ trigger:
   batch: true
   branches:
     include:
-    - master
+    - main
     - release/3.x
     - release/5.0
 
 pr:
   branches:
     include:
-    - master
+    - main
     - release/3.x
     - release/5.0
     - templates
@@ -35,7 +35,8 @@ stages:
           manifests: true
       enableMicrobuild: true
       enablePublishUsingPipelines: true
-      useBuildManifest: ${{ variables['_UseBuildManifest'] }}
+      enableSourceIndex: true
+      enableSourceBuild: true
       workspace:
         clean: all
       jobs:
@@ -43,8 +44,7 @@ stages:
         timeoutInMinutes: 90
         pool:
           ${{ if eq(variables._RunAsPublic, True) }}:
-            name: NetCorePublic-Pool
-            queue: BuildPool.Server.Amd64.VS2017.Arcade.Open
+            vmImage: windows-latest
           ${{ if eq(variables._RunAsInternal, True) }}:
             name: NetCoreInternal-Pool
             queue: BuildPool.Server.Amd64.VS2017.Arcade
@@ -65,12 +65,12 @@ stages:
             $(_InternalBuildArgs)
             /p:Test=false
           displayName: Windows Build / Publish
+        - task: ComponentGovernanceComponentDetection@0
       - ${{ if eq(variables._RunAsPublic, True) }}:
         - job: Linux
           container: LinuxContainer
           pool:
-            name:  NetCorePublic-Pool
-            queue: BuildPool.Ubuntu.1604.Amd64.Arcade.Open
+            vmImage: ubuntu-latest
           strategy:
             matrix:
               Build_Debug:
@@ -136,16 +136,16 @@ stages:
               -ci
               -restore
               -test
-              -projects $(Build.SourcesDirectory)\tests\UnitTests.XHarness.Android.proj
-              /bl:$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)\Helix.XHarness.Android.binlog
+              -projects $(Build.SourcesDirectory)\tests\UnitTests.XHarness.Android.WindowsQueues.proj
+              /bl:$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)\Helix.XHarness.Android.WindowsQueues.binlog
               /p:RestoreUsingNuGetTargets=false
-            displayName: XHarness Android Helix Testing
-            # Workaround until https://github.com/dotnet/xharness/issues/232 is fixed
-            continueOnError: true
+              /p:XharnessTestARM64_V8A=true
+            displayName: XHarness Android Helix Testing (Windows)
             env:
               SYSTEM_ACCESSTOKEN: $(System.AccessToken)
               HelixAccessToken: ''
         - job: Linux
+          timeoutInMinutes: 90
           container: LinuxContainer
           pool:
             vmimage: ubuntu-latest
@@ -178,24 +178,39 @@ stages:
               -ci
               -restore
               -test
-              -projects $(Build.SourcesDirectory)/tests/UnitTests.XHarness.iOS.proj
-              /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.XHarness.iOS.binlog
+              -projects $(Build.SourcesDirectory)/tests/UnitTests.XHarness.iOS.Simulator.proj
+              /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/UnitTests.XHarness.iOS.Simulator.binlog
               /p:RestoreUsingNuGetTargets=false
-            displayName: XHarness iOS Helix Testing
+            displayName: XHarness iOS Simulator Helix Testing
             env:
               SYSTEM_ACCESSTOKEN: $(System.AccessToken)
               HelixAccessToken: ''
+          # TODO (prvysoky): This will be enabled once we get a better app to test with (core-eng/11893)
+          # - script: eng/common/build.sh
+          #     -configuration $(_BuildConfig)
+          #     -prepareMachine
+          #     -ci
+          #     -restore
+          #     -test
+          #     -projects $(Build.SourcesDirectory)/tests/UnitTests.XHarness.iOS.Device.proj
+          #     /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.XHarness.iOS.Device.binlog
+          #     /p:RestoreUsingNuGetTargets=false
+          #   displayName: XHarness iOS Device Helix Testing
+          #   env:
+          #     SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+          #     HelixAccessToken: ''
           - script: eng/common/build.sh
-              -configuration $(_BuildConfig)
+              -configuration $(_BuildConfig) 
               -prepareMachine
               -ci
               -restore
               -test
-              -projects $(Build.SourcesDirectory)/tests/UnitTests.XHarness.iOS.IncludeCliOnly.proj
-              /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.XHarness.CLI.binlog
+              -projects $(Build.SourcesDirectory)/tests/UnitTests.XHarness.Android.LinuxQueues.proj
+              /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.XHarness.Android.LinuxQueues.binlog
               /p:RestoreUsingNuGetTargets=false
-            displayName: XHarness CLI pre-install Helix Testing
-            continueOnError: true
+              /p:XharnessTestX86=true 
+              /p:XharnessTestX86_64=true 
+            displayName: XHarness Android Helix Testing (Linux)
             env:
               SYSTEM_ACCESSTOKEN: $(System.AccessToken)
               HelixAccessToken: ''
@@ -215,7 +230,8 @@ stages:
   - template: eng\common\templates\post-build\post-build.yml
     parameters:
       publishingInfraVersion: 3
-
+      # signing validation will not run, even if the below value is 'true', if the 'PostBuildSign' variable is set to 'true'
+      enableSigningValidation: false      
       # Sourcelink validation isn't passing for Arcade due to some regressions. This should be
       # enabled back once this issue is resolved: https://github.com/dotnet/arcade/issues/2912
       enableSourceLinkValidation: false
@@ -235,5 +251,5 @@ stages:
         -TsaIterationPath $(_TsaIterationPath)
         -TsaRepositoryName "Arcade"
         -TsaCodebaseName "Arcade"
-        -TsaPublish $True'
-      useBuildManifest: ${{ variables['_UseBuildManifest'] }}
+        -TsaPublish $True
+        -PoliCheckAdditionalRunConfigParams @("UserExclusionPath < $(Build.SourcesDirectory)/eng/PoliCheckExclusions.xml")'

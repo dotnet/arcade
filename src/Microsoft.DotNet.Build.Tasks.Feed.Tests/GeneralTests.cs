@@ -9,6 +9,8 @@ using Microsoft.DotNet.Build.Tasks.Feed.Model;
 using Microsoft.DotNet.Build.Tasks.Feed.Tests.TestDoubles;
 using Xunit;
 using static Microsoft.DotNet.Build.Tasks.Feed.GeneralUtils;
+using FluentAssertions;
+using Microsoft.DotNet.Arcade.Test.Common;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
 {
@@ -21,13 +23,27 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         {
             foreach (var channelConfig in PublishingConstants.ChannelInfos)
             {
-                Assert.True(channelConfig.Id > 0);
-                Assert.False(string.IsNullOrEmpty(channelConfig.ShippingFeed));
-                Assert.False(string.IsNullOrEmpty(channelConfig.TransportFeed));
-                Assert.False(string.IsNullOrEmpty(channelConfig.SymbolsFeed));
-                Assert.False(string.IsNullOrEmpty(channelConfig.ChecksumsFeed));
-                Assert.False(string.IsNullOrEmpty(channelConfig.InstallersFeed));
+                channelConfig.Id.Should().BeGreaterThan(0);
+                channelConfig.ShippingFeed.Should().NotBeNullOrEmpty();
+                channelConfig.ShippingFeed.Should().NotBeNullOrEmpty();
+                channelConfig.TransportFeed.Should().NotBeNullOrEmpty();
+                channelConfig.SymbolsFeed.Should().NotBeNullOrEmpty();
+                channelConfig.ChecksumsFeed.Should().NotBeNullOrEmpty();
+                channelConfig.InstallersFeed.Should().NotBeNullOrEmpty();
             }
+        }
+
+        [Theory]
+        [InlineData("foo/bar/baz/bop.symbols.nupkg", true)]
+        [InlineData("foo/bar/baz/bop.symbols.nupkg.sha512", false)]
+        [InlineData("foo/bar/baz/bip.snupkg.sha512", false)]
+        [InlineData("foo/bar/baz/bip.snupkg", true)]
+        [InlineData("foo/bar/baz/bip.SNUpkg", true)]
+        [InlineData("foo/bar/baz/bop.SYMBOLS.nupkg", true)]
+        [InlineData("foo/bar/symbols.nupkg/bop.nupkg", false)]
+        public void IsSymbolPackage(string package, bool isSymbolPackage)
+        {
+            GeneralUtils.IsSymbolPackage(package).Should().Be(isSymbolPackage);
         }
 
         [Theory]
@@ -40,7 +56,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             HttpStatusCode feedResponseStatusCode,
             bool? expectedResult)
         {
-            using var httpClient = FakeHttpClient.WithResponse(
+            using var httpClient = FakeHttpClient.WithResponses(
                 new HttpResponseMessage(feedResponseStatusCode));
             var retryHandler = new MockRetryHandler();
 
@@ -50,7 +66,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 new Microsoft.Build.Utilities.TaskLoggingHelper(new StubTask()),
                 retryHandler);
 
-            Assert.Equal(expectedResult, result);
+            result.Should().Be(expectedResult);
         }
 
         [Theory]
@@ -77,7 +93,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 new Microsoft.Build.Utilities.TaskLoggingHelper(new StubTask()),
                 retryHandler);
 
-            Assert.Equal(expectedAttemptCount, retryHandler.ActualAttempts);
+            retryHandler.ActualAttempts.Should().Be(expectedAttemptCount);
         }
 
         [Theory]
@@ -102,7 +118,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 response.Content = new ByteArrayContent(content);
             };
 
-            var httpClient = FakeHttpClient.WithResponse(response);
+            var httpClient = FakeHttpClient.WithResponses(response);
 
             var result = await GeneralUtils.CompareLocalPackageToFeedPackage(
                 localPackagePath,
@@ -111,7 +127,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 taskLoggingHelper,
                 retryHandler);
 
-            Assert.Equal(expectedResult, result);
+            result.Should().Be(expectedResult);
         }
 
         [Theory]
@@ -152,7 +168,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 taskLoggingHelper,
                 retryHandler);
 
-            Assert.Equal(expectedAttemptCount, retryHandler.ActualAttempts);
+            retryHandler.ActualAttempts.Should().Be(expectedAttemptCount);
         }
     }
 }

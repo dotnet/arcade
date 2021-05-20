@@ -44,14 +44,12 @@
     <PackageId>$(Id)</PackageId>
     <PackedPackageNamePrefix Condition="'$(PackedPackageNamePrefix)' == ''">transport</PackedPackageNamePrefix>
     <PackedPackageId>$(PackedPackageNamePrefix).$(Id)</PackedPackageId>
-    <PackageProjectUrl>$(ProjectUrl)</PackageProjectUrl>
+    <PackageProjectUrl Condition="'$(PackageProjectUrl)' == ''">$(ProjectUrl)</PackageProjectUrl>
     <!-- It is by design that the Title matches the Id. We want users to get an assembly view. -->
     <Title>$(Id)</Title>
     <Authors>Microsoft</Authors>
     <Owners>microsoft,dotnetframework</Owners>
-    <Description>TODO</Description>
     <IconUrl>http://go.microsoft.com/fwlink/?LinkID=288859</IconUrl>
-    <Tags></Tags>
     <RequireLicenseAcceptance Condition="'$(RequireLicenseAcceptance)' == ''">false</RequireLicenseAcceptance>
     <Serviceable Condition="'$(Serviceable)' == ''">true</Serviceable>
     <!-- we depend on NuGet v2.12 / v3.4 behavior NuGet doesn't support two different min client versions
@@ -104,6 +102,7 @@
 
   <!-- Redefine build to just create the NuSpec only, we'll create the package during ArcProjects phase -->
   <Target Name="Build"
+          Condition="'$(GeneratePackage)' == 'true'"
           DependsOnTargets="$(BuildDependsOn)">
 
     <Message Condition="'$(ShouldCreatePackage)' == 'true'"
@@ -118,6 +117,9 @@
              Text="$(MSBuildProjectName) -> Skipping for this platform."
              Importance="high" />
   </Target>
+  
+  <Target Name="Pack"
+          DependsOnTargets="Build" />
 
   <Target Name="Clean">
     <!-- package version is calculated so read the last version from the marker file. -->
@@ -431,7 +433,7 @@
     </HarvestPackage>
 
     <ItemGroup>
-      <SupportedFramework Include="@(_HarvestedSupportedFramework)" Exclude="@(NotSupportedOnTargetFramework)" />
+      <SupportedFramework Include="@(_HarvestedSupportedFramework)" Exclude="@(NotSupportedOnTargetFramework);@(ExcludeHarvestedSupportedFramework)" />
     </ItemGroup>
   </Target>
 
@@ -856,6 +858,7 @@
   </Target>
 
   <Target Name="GetPackageDescription"
+          Condition="'$(Description)' == '' and '$(PackageDescription)' == ''"
           DependsOnTargets="GetSyncInfo">
     <PropertyGroup>
       <UseRuntimePackageDescription Condition="'$(UseRuntimePackageDescription)' == '' AND $(BaseId.StartsWith('runtime.native'))">true</UseRuntimePackageDescription>
@@ -1209,17 +1212,17 @@
                     Authors="$(Authors)"
                     Owners="$(Owners)"
                     Description="$(Description)"
-                    ReleaseNotes="$(ReleaseNotes)"
+                    ReleaseNotes="$(PackageReleaseNotes)"
                     Summary="$(Summary)"
                     Language="$(Language)"
-                    ProjectUrl="$(ProjectUrl)"
+                    ProjectUrl="$(PackageProjectUrl)"
                     IconUrl="$(IconUrl)"
                     Icon="$(PackageIcon)"
                     LicenseUrl="$(LicenseUrl)"
                     PackageLicenseExpression="$(PackageLicenseExpression)"
                     Copyright="$(Copyright)"
                     RequireLicenseAcceptance="$(RequireLicenseAcceptance)"
-                    Tags="$(Tags)"
+                    Tags="$(PackageTags)"
                     DevelopmentDependency="$(DevelopmentDependency)"
                     Dependencies="@(Dependency)"
                     References="@(Reference)"

@@ -6,6 +6,8 @@
     <_HelixMonoQueueTargets>$(_HelixMonoQueueTargets);$(MSBuildThisFileDirectory)XHarnessRunner.targets</_HelixMonoQueueTargets>
 
     <XHarnessPackageSource Condition=" '$(XHarnessPackageSource)' == '' ">https://dnceng.pkgs.visualstudio.com/public/_packaging/dotnet-eng/nuget/v3/index.json</XHarnessPackageSource>
-    <XHarnessXcodeVersion Condition=" '$(XHarnessXcodeVersion)' == '' ">11.5</XHarnessXcodeVersion>
+
+    <!-- Needed for app signing and tied to certificates installed in Helix machines -->
+    <XHarnessAppleProvisioningProfileUrl>https://netcorenativeassets.blob.core.windows.net/resource-packages/external/macos/signing/NET_Apple_Development_{PLATFORM}.mobileprovision</XHarnessAppleProvisioningProfileUrl>
   </PropertyGroup>
 </Project>

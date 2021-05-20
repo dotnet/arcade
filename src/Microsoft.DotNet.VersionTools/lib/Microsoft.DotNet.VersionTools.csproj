@@ -6,9 +6,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Include="..\..\Common\EnumerableExtensions.cs" />
-    <Compile Include="..\..\Common\ExponentialRetry.cs" />
-    <Compile Include="..\..\Common\IRetryHandler.cs" />
+    <Compile Include="..\..\Common\Internal\EnumerableExtensions.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Common\Microsoft.Arcade.Common\Microsoft.Arcade.Common.csproj" />
   </ItemGroup>
 
   <ItemGroup>

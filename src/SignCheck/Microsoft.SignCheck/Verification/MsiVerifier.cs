@@ -18,9 +18,9 @@ namespace Microsoft.SignCheck.Verification
 
         }
 
-        public override SignatureVerificationResult VerifySignature(string path, string parent)
+        public override SignatureVerificationResult VerifySignature(string path, string parent, string virtualPath)
         {
-            SignatureVerificationResult svr = base.VerifySignature(path, parent);
+            SignatureVerificationResult svr = base.VerifySignature(path, parent, virtualPath);
 
             if (VerifyRecursive)
             {
@@ -52,9 +52,8 @@ namespace Microsoft.SignCheck.Verification
 
                         foreach (string key in installPackage.Files.Keys)
                         {
-                            SignatureVerificationResult packageFileResult = VerifyFile(installPackage.Files[key].TargetPath, svr.Filename, containerPath: null);
+                            SignatureVerificationResult packageFileResult = VerifyFile(installPackage.Files[key].TargetPath, svr.Filename, Path.Combine(svr.VirtualPath, originalFiles[key]), containerPath: null);
                             packageFileResult.AddDetail(DetailKeys.File, SignCheckResources.DetailFullName, originalFiles[key]);
-                            //CheckAndUpdateExclusion(packageFileResult, packageFileResult.Filename, originalFiles[key], svr.Filename);
                             svr.NestedResults.Add(packageFileResult);
                         }
                     }
@@ -74,9 +73,10 @@ namespace Microsoft.SignCheck.Verification
 
                         foreach (Record record in view)
                         {
-                            string binaryFile = Path.Combine(svr.TempPath, (string)record["Name"]);
+                            string binaryFile = (string)record["Name"];
+                            string binaryFilePath = Path.Combine(svr.TempPath, binaryFile);
                             StructuredStorage.SaveStream(record, svr.TempPath);
-                            SignatureVerificationResult binaryStreamResult = VerifyFile(binaryFile, svr.Filename, containerPath: null);
+                            SignatureVerificationResult binaryStreamResult = VerifyFile(binaryFilePath, svr.Filename, Path.Combine(svr.VirtualPath, binaryFile), containerPath: null);
                             binaryStreamResult.AddDetail(DetailKeys.Misc, SignCheckResources.FileExtractedFromBinaryTable);
                             svr.NestedResults.Add(binaryStreamResult);
                             record.Close();

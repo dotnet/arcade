@@ -61,3 +61,4 @@ format text eol=lf
 compat text eol=lf
 *.bats text eol=lf
 *.1 text eol=lf
+*.plist text eol=lf

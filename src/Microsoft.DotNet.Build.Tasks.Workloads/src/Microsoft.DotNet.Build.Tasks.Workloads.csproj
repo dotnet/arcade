@@ -1,0 +1,68 @@
+<!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>net472;netcoreapp3.1</TargetFrameworks>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <LangVersion>Latest</LangVersion>
+    <IsPackable>true</IsPackable>
+    <Description>Workload pack installer generation task package</Description>
+    <PackageTags>Arcade Build Tool Installer Workloads</PackageTags>
+    <DevelopmentDependency>true</DevelopmentDependency>
+    <NoWarn>$(NoWarn);NU5127</NoWarn>
+    <EnableDefaultNoneItems>false</EnableDefaultNoneItems>
+    <RootNamespace>Microsoft.DotNet.Build.Tasks.Workloads</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Reflection.Metadata" Version="$(SystemReflectionMetadataVersion)" />
+    <PackageReference Include="Microsoft.Build.Utilities.Core" Version="$(MicrosoftBuildUtilitiesCoreVersion)" />
+    <PackageReference Include="Microsoft.Build.Tasks.Core" Version="$(MicrosoftBuildTasksCoreVersion)" />
+    <PackageReference Include="Microsoft.Build.Framework" Version="$(MicrosoftBuildFrameworkVersion)" />
+    <PackageReference Include="NuGet.Packaging" Version="$(NuGetVersion)" />
+    <PackageReference Include="Wix" Version="3.11.2" />
+    <PackageReference Include="Microsoft.NET.Sdk.WorkloadManifestReader" Version="$(MicrosoftNetSdkWorkloadManifestReaderVersion)" />
+    <PackageReference Include="System.Text.Json" Version="$(SystemTextJsonVersion)" Condition="'$(TargetFramework)' == 'net472'"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="$(WixInstallPath)\Microsoft.Deployment.Resources.dll" />
+    <Reference Include="$(WixInstallPath)\Microsoft.Deployment.Compression.dll" />
+    <Reference Include="$(WixInstallPath)\Microsoft.Deployment.Compression.Cab.dll" />
+    <Reference Include="$(WixInstallPath)\Microsoft.Deployment.WindowsInstaller.dll" />
+    <Reference Include="$(WixInstallPath)\Microsoft.Deployment.WindowsInstaller.Package.dll" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Microsoft.DotNet.Build.Tasks.Workloads" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="build/**/*.*" Pack="true">
+      <PackagePath>build</PackagePath>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="obj\**" />
+    <EmbeddedResource Remove="obj\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Misc\*.*" />
+    <EmbeddedResource Include="MsiTemplate\*.wxs" />
+    <EmbeddedResource Include="MsiTemplate\*.wxi" />
+    <EmbeddedResource Include="SwixTemplate\*.swr" />
+    <EmbeddedResource Include="SwixTemplate\*.swixproj" />
+    <EmbeddedResource Include="SwixTemplate\*.vsmanproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\Common\Internal\BuildTask.cs" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
+    <Reference Include="WindowsBase" />
+  </ItemGroup>
+
+  <Import Project="$(RepoRoot)eng\BuildTask.targets" />
+</Project>

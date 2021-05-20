@@ -1,0 +1,55 @@
+<Project DefaultTargets="Test">
+  <!-- See UnitTests.proj in above folder for why this is included directly-from-repo -->
+  <Import Project="$(MSBuildThisFileDirectory)\..\src\Microsoft.DotNet.Helix\Sdk\sdk\Sdk.props"/>
+
+  <!--
+    This is a project used in integration tests of Arcade.
+    It tests sending iOS (XHarness) workloads using the Helix SDK.
+    It builds two mock projects that do not build iOS apps but only downloads them from a storage account.
+   -->
+
+  <PropertyGroup>
+    <MicrosoftDotNetHelixSdkTasksAssembly Condition="'$(MSBuildRuntimeType)' == 'Core'">$(MSBuildThisFileDirectory)../artifacts/bin/Microsoft.DotNet.Helix.Sdk/$(Configuration)/netcoreapp3.1/publish/Microsoft.DotNet.Helix.Sdk.dll</MicrosoftDotNetHelixSdkTasksAssembly>
+    <MicrosoftDotNetHelixSdkTasksAssembly Condition="'$(MSBuildRuntimeType)' != 'Core'">$(MSBuildThisFileDirectory)../artifacts/bin/Microsoft.DotNet.Helix.Sdk/$(Configuration)/net472/publish/Microsoft.DotNet.Helix.Sdk.dll</MicrosoftDotNetHelixSdkTasksAssembly>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <HelixType>test/product/</HelixType>
+    <TestRunNamePrefix>$(AGENT_JOBNAME)</TestRunNamePrefix>
+    <IncludeXHarnessCli>true</IncludeXHarnessCli>
+    <EnableXUnitReporter>true</EnableXUnitReporter>
+    <EnableAzurePipelinesReporter>true</EnableAzurePipelinesReporter>
+    <HelixBaseUri>https://helix.dot.net</HelixBaseUri>
+  </PropertyGroup>
+
+  <!-- Test project which builds app bundle to run via XHarness -->
+  <ItemGroup>
+    <XHarnessAppleProject Include="$(MSBuildThisFileDirectory)XHarness\XHarness.Simulator.AppleTest.proj" />
+    <XHarnessAppleProject Include="$(MSBuildThisFileDirectory)XHarness\XHarness.Simulator.AppleRun.proj" />
+    <XHarnessAppleProject Include="$(MSBuildThisFileDirectory)XHarness\XHarness.Simulator.CustomCommands.proj" />
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(HelixAccessToken)' != '' ">
+    <HelixTargetQueue Include="osx.1015.amd64"/>
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(HelixAccessToken)' == '' ">
+    <HelixTargetQueue Include="osx.1015.amd64.open"/>
+  </ItemGroup>
+
+  <PropertyGroup Condition=" '$(HelixAccessToken)' == '' ">
+    <IsExternal>true</IsExternal>
+    <Creator>$(BUILD_SOURCEVERSIONAUTHOR)</Creator>
+    <Creator Condition=" '$(Creator)' == ''">anon</Creator>
+  </PropertyGroup>
+
+  <!-- Useless stuff to make Arcade SDK happy -->
+  <PropertyGroup>
+    <Language>msbuild</Language>
+  </PropertyGroup>
+
+  <Target Name="Pack"/>
+
+  <!-- See UnitTests.proj in above folder for why this is included directly-from-repo -->
+  <Import Project="$(MSBuildThisFileDirectory)\..\src\Microsoft.DotNet.Helix\Sdk\sdk\Sdk.targets"/>
+</Project>
