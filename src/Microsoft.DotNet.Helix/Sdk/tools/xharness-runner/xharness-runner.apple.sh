@@ -145,16 +145,27 @@ alias xharness="dotnet exec $xharness_cli_path"
 source command.sh
 exit_code=$?
 
+# Exit code values - https://github.com/dotnet/xharness/blob/main/src/Microsoft.DotNet.XHarness.Common/CLI/ExitCode.cs
+
 # Kill the simulator just in case when we fail to launch the app
 # 80 - app crash
 if [ $exit_code -eq 80 ]; then
     sudo pkill -9 -f "$simulator_app"
 fi
 
+# If we fail to find a simulator and we are not targeting a specific version, it is probably an issue since Xcode should always have one
+# 81 - simulator/device not found
+if [ $exit_code -eq 81 ] && [[ "$targets" =~ "simulator" ]] && [[ ! "$targets" =~ "_" ]]; then
+    touch './.retry'
+    touch './.reboot'
+fi
+
 # If we have a launch failure AND we are on simulators, we need to signal that we want a reboot+retry
 # The script that is running this one will notice and request Helix to do it
+# 83 - app launch failure
 if [ $exit_code -eq 83 ] && [[ "$targets" =~ "simulator" ]]; then
-    exit_code=123
+    touch './.retry'
+    touch './.reboot'
 fi
 
 # The simulator logs comming from the sudo-spawned Simulator.app are not readable by the helix uploader
