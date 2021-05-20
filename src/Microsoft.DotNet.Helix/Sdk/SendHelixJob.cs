@@ -528,6 +528,16 @@ namespace Microsoft.DotNet.Helix.Sdk
                     includeDirectoryName = false;
                 }
 
+                Log.LogMessage(
+                    MessageImportance.Low,
+                    $"Adding Correlation Payload Directory '{path}', destination '{destination}'"
+                );
+                return def.WithCorrelationPayloadDirectory(path, includeDirectoryName, destination);
+
+            }
+
+            if (File.Exists(path))
+            {
                 string asArchiveStr = correlationPayload.GetMetadata(MetadataNames.AsArchive);
                 if (!bool.TryParse(asArchiveStr, out bool asArchive))
                 {
@@ -538,9 +548,9 @@ namespace Microsoft.DotNet.Helix.Sdk
                 {
                     Log.LogMessage(
                         MessageImportance.Low,
-                        $"Adding Correlation Payload Directory '{path}', destination '{destination}'"
+                        $"Adding Correlation Payload Archive '{path}', destination '{destination}'"
                     );
-                    return def.WithCorrelationPayloadDirectory(path, includeDirectoryName, destination);
+                    return def.WithCorrelationPayloadArchive(path, destination);
                 }
 
                 Log.LogMessage(
@@ -548,12 +558,6 @@ namespace Microsoft.DotNet.Helix.Sdk
                     $"Adding Correlation Payload File '{path}', destination '{destination}'"
                 );
                 return def.WithCorrelationPayloadFiles(path);
-            }
-
-            if (File.Exists(path))
-            {
-                Log.LogMessage(MessageImportance.Low, $"Adding Correlation Payload Archive '{path}', destination '{destination}'");
-                return def.WithCorrelationPayloadArchive(path, destination);
             }
 
             Log.LogError(FailureCategory.Build, $"Correlation Payload '{path}' not found.");
