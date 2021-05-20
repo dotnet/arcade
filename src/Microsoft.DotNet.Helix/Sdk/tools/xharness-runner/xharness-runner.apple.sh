@@ -153,7 +153,7 @@ if [ $exit_code -eq 80 ]; then
     sudo pkill -9 -f "$simulator_app"
 fi
 
-# If we fail to find a simulator and we are not targeting a specific version, it is probably an issue since Xcode should always have one
+# If we fail to find a simulator and we are not targeting a specific version (e.g. `ios-simulator_13.5`), it is probably an issue because Xcode should always have at least one runtime version inside
 # 81 - simulator/device not found
 if [ $exit_code -eq 81 ] && [[ "$targets" =~ "simulator" ]] && [[ ! "$targets" =~ "_" ]]; then
     touch './.retry'
