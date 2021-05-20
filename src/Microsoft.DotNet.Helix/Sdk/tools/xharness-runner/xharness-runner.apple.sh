@@ -81,6 +81,10 @@ if [ -z "$targets" ]; then
     die "No targets were provided";
 fi
 
+if [ -z "$output_directory" ]; then
+    die "No output directory provided";
+fi
+
 if [ -z "$xharness_cli_path" ]; then
     die "XHarness path wasn't provided";
 fi
@@ -155,6 +159,9 @@ fi
 
 # The simulator logs comming from the sudo-spawned Simulator.app are not readable by the helix uploader
 chmod 0644 "$output_directory"/*.log
+
+# Remove empty files
+find "$output_directory" -name "*.log" -maxdepth 1 -size 0 -print -delete
 
 if [ "$command" == 'test' ]; then
     test_results=$(ls "$output_directory"/xunit-*.xml)
