@@ -42,6 +42,8 @@ class UploadWorker(Thread):
         self.__print("starting...")
         while True:
             try:
+                with workerFailedLock:
+                    workerFailed = True
                 item = self.queue.get()
                 self.__process(item)
             except:
