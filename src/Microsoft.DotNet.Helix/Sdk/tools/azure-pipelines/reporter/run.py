@@ -1,10 +1,11 @@
 import os
+import re
 import sys
 import traceback
 import logging
 from queue import Queue
 from threading import Thread, Lock
-from typing import Tuple, Optional
+from typing import Tuple, Optional, List
 
 from test_results_reader import read_results
 from helpers import batch, get_env
@@ -12,6 +13,7 @@ from azure_devops_result_publisher import AzureDevOpsTestResultPublisher
 
 workerFailedLock = Lock()
 workerFailed = False
+
 
 class UploadWorker(Thread):
     def __init__(self, queue, idx, collection_uri, team_project, test_run_id, access_token):
@@ -50,7 +52,6 @@ class UploadWorker(Thread):
                 self.queue.task_done()
 
 
-
 def process_args() -> Tuple[str, str, str, Optional[str]]:
     if len(sys.argv) < 4 or len(sys.argv) > 5:
         print("Usage:")
@@ -70,52 +71,115 @@ def process_args() -> Tuple[str, str, str, Optional[str]]:
     return collection_uri, team_project, test_run_id, access_token
 
 
+# This reporter will be phased out soon, but until then we need to deal with ADO outages and failures from client lib
+# Currently only understands XUnit TestResults.xml (should not be around long enough to need more)
+# See https://github.com/dotnet/arcade/issues/7371 for details
+def check_passed_to_workaround_ado_api_failure(dirs_to_check: List[str]) -> bool:
+    print("Reporting has failed.  Running mitigation for https://github.com/dotnet/arcade/issues/7371")
+    found_a_result = False
+    acceptable_xunit_file_names = [
+        "testResults.xml",
+        "test-results.xml",
+        "test_results.xml",
+        "TestResults.xUnit.xml"
+    ]
+
+    failure_count_found = 0
+
+    for dir_name in dirs_to_check:
+        print("Searching '{}' for test results files".format(dir_name))
+        for root, dirs, files in os.walk(dir_name):
+            for file_name in files:
+                if file_name in acceptable_xunit_file_names:
+                    file_path = os.path.join(root, file_name)
+                    print('Found results file {} '.format(file_path))
+                    found_a_result = True
+                    failure_count_found += get_failure_count(file_path)
+
+    if found_a_result:
+        if failure_count_found == 0:
+            print("Reporter script has failed, but we were able to find XUnit test results with no failures.")
+            return True
+        else:
+            print("Reporter script has failed, but we were able to find XUnit test results with failures ({})"
+                  .format(str(failure_count_found)))
+    else:
+        print("Tried to mitigate but no results files found.")
+    return False
+
+
+def get_failure_count(test_results_path: str):
+    fail_count = 0
+    with open(test_results_path, encoding="utf-8") as result_file:
+        total_regex = re.compile(r'failed="(\d+)"')
+        for line in result_file:
+            if '<assembly ' in line:
+                match = total_regex.search(line)
+                if match is not None:
+                    fail_count = int(match.groups()[0])
+                break
+    return fail_count
+
+
 def main():
     global workerFailed, workerFailedLock
-    logging.basicConfig(
-        format='%(asctime)s: %(levelname)s: %(thread)d: %(module)s(%(lineno)d): %(funcName)s: %(message)s',
-        level=logging.INFO,
-        handlers=[
-            logging.StreamHandler()
-        ]
-    )
-    log = logging.getLogger(__name__)
 
-    collection_uri, team_project, test_run_id, access_token = process_args()
+    try:
+        logging.basicConfig(
+            format='%(asctime)s: %(levelname)s: %(thread)d: %(module)s(%(lineno)d): %(funcName)s: %(message)s',
+            level=logging.INFO,
+            handlers=[
+                logging.StreamHandler()
+            ]
+        )
+        log = logging.getLogger(__name__)
 
-    worker_count = 10
-    q = Queue()
+        collection_uri, team_project, test_run_id, access_token = process_args()
 
-    log.info("Main thread starting {0} workers".format(worker_count))
+        worker_count = 10
+        q = Queue()
 
-    for i in range(worker_count):
-        worker = UploadWorker(q, i, collection_uri, team_project, test_run_id, access_token)
-        worker.daemon = True 
-        worker.start()
+        log.info("Main thread starting {0} workers".format(worker_count))
 
-    log.info("Beginning to read test results...")
+        for i in range(worker_count):
+            worker = UploadWorker(q, i, collection_uri, team_project, test_run_id, access_token)
+            worker.daemon = True
+            worker.start()
 
-    # In case the user puts the results in HELIX_WORKITEM_UPLOAD_ROOT for upload, check there too.
-    all_results = read_results([os.getcwd(),
-                                get_env("HELIX_WORKITEM_UPLOAD_ROOT")])
+        log.info("Beginning to read test results...")
 
-    batch_size = 1000
-    batches = batch(all_results, batch_size)
+        # In case the user puts the results in HELIX_WORKITEM_UPLOAD_ROOT for upload, check there too.
+        all_results = read_results([os.getcwd(),
+                                    get_env("HELIX_WORKITEM_UPLOAD_ROOT")])
 
-    log.info("Uploading results in batches of size {}".format(batch_size))
+        batch_size = 1000
+        batches = batch(all_results, batch_size)
 
-    for b in batches:
-        q.put(b)
+        log.info("Uploading results in batches of size {}".format(batch_size))
 
-    log.info("Main thread finished queueing batches")
+        for b in batches:
+            q.put(b)
 
-    q.join()
+        log.info("Main thread finished queueing batches")
 
-    log.info("Main thread exiting")
-    
-    with workerFailedLock:
-        if workerFailed:
-            sys.exit(1337)
+        q.join()
+
+        log.info("Main thread exiting")
+
+        with workerFailedLock:
+            if workerFailed:
+                if check_passed_to_workaround_ado_api_failure([os.getcwd(), get_env("HELIX_WORKITEM_UPLOAD_ROOT")]):
+                    sys.exit(0)
+                else:
+                    sys.exit(1337)
+    except Exception as anything:
+        log.warning("Unhandled exception trying to report to ADO: {}".format(str(anything)))
+        log.warning("We'll attempt to count the XUnit results and if XML is present and no failures, return 0")
+        if check_passed_to_workaround_ado_api_failure([os.getcwd(), get_env("HELIX_WORKITEM_UPLOAD_ROOT")]):
+            sys.exit(0)
+        else:
+            sys.exit(1138)
+
 
 if __name__ == '__main__':
     main()
