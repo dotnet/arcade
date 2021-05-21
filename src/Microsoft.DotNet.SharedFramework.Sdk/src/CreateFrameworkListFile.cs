@@ -87,13 +87,15 @@ namespace Microsoft.DotNet.SharedFramework.Sdk
                     AssemblyName = FileUtilities.GetAssemblyName(item.ItemSpec),
                     FileVersion = FileUtilities.GetFileVersion(item.ItemSpec),
                     IsNative = item.GetMetadata("IsNative") == "true",
+                    IsProfile = item.GetMetadata("IsNative") == "true",
                     IsSymbolFile = item.GetMetadata("IsSymbolFile") == "true",
+                    IsPgoData = item.GetMetadata("IsPgoData") == "true",
                     IsResourceFile = item.ItemSpec
                         .EndsWith(".resources.dll", StringComparison.OrdinalIgnoreCase)
                 })
                 .Where(f =>
                     !f.IsSymbolFile &&
-                    (f.Filename.EndsWith(".dll", StringComparison.OrdinalIgnoreCase) || f.IsNative))
+                    (f.Filename.EndsWith(".dll", StringComparison.OrdinalIgnoreCase) || f.IsNative || f.IsPgoData))
                 // Remove duplicate files this task is given.
                 .GroupBy(f => f.Item.ItemSpec)
                 .Select(g => g.First())
@@ -110,6 +112,10 @@ namespace Microsoft.DotNet.SharedFramework.Sdk
                 else if (f.IsResourceFile)
                 {
                     type = "Resources";
+                }
+                else if (f.IsPgoData)
+                {
+                    type = "PgoData";
                 }
 
                 string path = Path.Combine(f.TargetPath, f.Filename).Replace('\\', '/');
@@ -137,7 +143,12 @@ namespace Microsoft.DotNet.SharedFramework.Sdk
                         new XAttribute("Culture", Path.GetFileName(Path.GetDirectoryName(path))));
                 }
 
-                if (f.AssemblyName != null)
+                if (f.IsPgoData)
+                {
+                    // Pgo data is never carried with single file images
+                    element.Add(new XAttribute("DropFromSingleFile", "true"));
+                }
+                else if (f.AssemblyName != null)
                 {
                     byte[] publicKeyToken = f.AssemblyName.GetPublicKeyToken();
                     string publicKeyTokenHex;
