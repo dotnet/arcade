@@ -87,7 +87,6 @@ namespace Microsoft.DotNet.SharedFramework.Sdk
                     AssemblyName = FileUtilities.GetAssemblyName(item.ItemSpec),
                     FileVersion = FileUtilities.GetFileVersion(item.ItemSpec),
                     IsNative = item.GetMetadata("IsNative") == "true",
-                    IsProfile = item.GetMetadata("IsNative") == "true",
                     IsSymbolFile = item.GetMetadata("IsSymbolFile") == "true",
                     IsPgoData = item.GetMetadata("IsPgoData") == "true",
                     IsResourceFile = item.ItemSpec
