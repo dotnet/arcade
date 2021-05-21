@@ -58,20 +58,21 @@ namespace Microsoft.DotNet.RemoteExecutor
             {
                 HostRunner = processFileName;
 
+                string hostName = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "dotnet.exe" : "dotnet";
                 // Running with an apphost, eg. Visual Studio testhost. We should attempt to find and use dotnet.exe.
                 // This is a Windows-only workaround.
-                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) 
-                    && !IOPath.GetFileName(HostRunner).Equals("dotnet.exe", StringComparison.OrdinalIgnoreCase))
+                if (!IOPath.GetFileName(HostRunner).Equals(hostName, StringComparison.OrdinalIgnoreCase))
                 {
                     string runtimePath = IOPath.GetDirectoryName(typeof(object).Assembly.Location);
 
                     // In case we are running the app via a runtime, dotnet.exe is located 3 folders above the runtime. Example:
                     // runtime    ->  C:\Program Files\dotnet\shared\Microsoft.NETCore.App\5.0.6\
                     // dotnet.exe ->  C:\Program Files\dotnet\shared\dotnet.exe
+                    // This should also work on Unix and locally built runtime/testhost.
                     string directory = GetDirectoryName(GetDirectoryName(GetDirectoryName(runtimePath)));
                     if (directory != string.Empty)
                     {
-                        string dotnetExe = IOPath.Combine(GetDirectoryName(GetDirectoryName(GetDirectoryName(runtimePath))), "dotnet.exe");
+                        string dotnetExe = IOPath.Combine(GetDirectoryName(GetDirectoryName(GetDirectoryName(runtimePath))), hostName);
                         if (File.Exists(dotnetExe))
                         {
                             HostRunner = dotnetExe;
