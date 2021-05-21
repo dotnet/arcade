@@ -68,10 +68,14 @@ namespace Microsoft.DotNet.RemoteExecutor
                     // In case we are running the app via a runtime, dotnet.exe is located 3 folders above the runtime. Example:
                     // runtime    ->  C:\Program Files\dotnet\shared\Microsoft.NETCore.App\5.0.6\
                     // dotnet.exe ->  C:\Program Files\dotnet\shared\dotnet.exe
-                    string dotnetExe = IOPath.Combine(IOPath.GetDirectoryName(IOPath.GetDirectoryName(IOPath.GetDirectoryName(runtimePath))), "dotnet.exe");
-                    if (File.Exists(dotnetExe))
+                    string directory = GetDirectoryName(GetDirectoryName(GetDirectoryName(runtimePath)));
+                    if (directory != string.Empty)
                     {
-                        HostRunner = dotnetExe;
+                        string dotnetExe = IOPath.Combine(GetDirectoryName(GetDirectoryName(GetDirectoryName(runtimePath))), "dotnet.exe");
+                        if (File.Exists(dotnetExe))
+                        {
+                            HostRunner = dotnetExe;
+                        }
                     }
                 }
             }
@@ -80,7 +84,9 @@ namespace Microsoft.DotNet.RemoteExecutor
                 HostRunner = Path;
             }
 
-            HostRunnerName = System.IO.Path.GetFileName(HostRunner);
+            HostRunnerName = IOPath.GetFileName(HostRunner);
+
+            static string GetDirectoryName(string path) => string.IsNullOrEmpty(path) ? string.Empty : IOPath.GetDirectoryName(path);
         }
 
         private static bool IsNetCore() =>
