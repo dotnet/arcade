@@ -3,6 +3,7 @@
 
 using Microsoft.DotNet.Git.IssueManager.Clients;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Git.IssueManager.Helpers
@@ -42,7 +43,10 @@ namespace Microsoft.DotNet.Git.IssueManager.Helpers
             string repositoryUrl,
             string issueTitle,
             string issueDescription,
-            string gitHubPersonalAccessToken)
+            string gitHubPersonalAccessToken,
+            int? milestone = null,
+            IEnumerable<string> labels = null,
+            IEnumerable<string> assignees = null)
         {
             if (Uri.TryCreate(repositoryUrl, UriKind.Absolute, out Uri parsedUri))
             {
@@ -53,7 +57,8 @@ namespace Microsoft.DotNet.Git.IssueManager.Helpers
                         throw new ArgumentException("A GitHub personal access token is needed for this operation.");
                     }
 
-                    return await GitHubClient.CreateNewIssueAsync(repositoryUrl, issueTitle, issueDescription, gitHubPersonalAccessToken);
+                    return await GitHubClient.CreateNewIssueAsync(
+                        repositoryUrl, issueTitle, issueDescription, gitHubPersonalAccessToken, milestone, labels, assignees);
                 }
 
                 throw new NotImplementedException("Creating issues is not currently supported for an Azure DevOps repo.");
