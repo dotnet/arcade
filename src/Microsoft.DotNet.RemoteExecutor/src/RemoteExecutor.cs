@@ -72,7 +72,7 @@ namespace Microsoft.DotNet.RemoteExecutor
                     string directory = GetDirectoryName(GetDirectoryName(GetDirectoryName(runtimePath)));
                     if (directory != string.Empty)
                     {
-                        string dotnetExe = IOPath.Combine(GetDirectoryName(GetDirectoryName(GetDirectoryName(runtimePath))), hostName);
+                        string dotnetExe = IOPath.Combine(directory, hostName);
                         if (File.Exists(dotnetExe))
                         {
                             HostRunner = dotnetExe;
