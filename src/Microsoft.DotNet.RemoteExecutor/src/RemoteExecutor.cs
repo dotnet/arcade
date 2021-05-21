@@ -51,17 +51,30 @@ namespace Microsoft.DotNet.RemoteExecutor
                 return;
             }
 
-            HostRunnerName = System.IO.Path.GetFileName(processFileName);
             Path = typeof(RemoteExecutor).Assembly.Location;
 
             if (IsNetCore())
             {
                 HostRunner = processFileName;
+
+                // Running with an apphost, eg. Visual Studio testhost. We should attempt to find and use dotnet.exe.
+                // This is a Windows-only workaround.
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && !HostRunner.EndsWith("dotnet.exe", StringComparison.OrdinalIgnoreCase))
+                {
+                    string runtimePath = System.IO.Path.GetDirectoryName(typeof(object).Assembly.Location);
+                    string dotnetExe = System.IO.Path.Combine(runtimePath, "..", "..", "..", "dotnet.exe");
+                    if (File.Exists(dotnetExe))
+                    {
+                        HostRunner = dotnetExe;
+                    }
+                }
             }
             else if (RuntimeInformation.FrameworkDescription.StartsWith(".NET Framework", StringComparison.OrdinalIgnoreCase))
             {
                 HostRunner = Path;
             }
+
+            HostRunnerName = System.IO.Path.GetFileName(HostRunner);
         }
 
         private static bool IsNetCore() =>
