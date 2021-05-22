@@ -423,9 +423,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             HashSet<string> excludeFiles = new HashSet<string>();
             
             if(File.Exists(symbolPublishingExclusionsFile)){
+                Log.LogMessage(MessageImportance.High, $"SymbolPublishingExclusionFile exists");
                 string[] files = File.ReadAllLines(symbolPublishingExclusionsFile);
 
                 foreach(var file in files){
+                    Log.LogMessage(MessageImportance.High, $"Exclude the file {file} from publishing to symbol server");
                     excludeFiles.Add(file);
                 }
 
