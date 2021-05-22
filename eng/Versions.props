@@ -35,7 +35,7 @@
     <MicrosoftExtensionsLoggingConsoleVersion>2.1.1</MicrosoftExtensionsLoggingConsoleVersion>
     <MicrosoftNETCorePlatformsVersion>2.1.0</MicrosoftNETCorePlatformsVersion>
     <MicrosoftNetCompilersToolsetVersion>3.10.0-4.21262.12</MicrosoftNetCompilersToolsetVersion>
-    <MicrosoftNETILLinkTasksVersion>6.0.100-preview.5.21268.2</MicrosoftNETILLinkTasksVersion>
+    <MicrosoftNETILLinkTasksVersion>6.0.100-preview.5.21270.1</MicrosoftNETILLinkTasksVersion>
     <MicrosoftNetTestSdkVersion>16.7.1</MicrosoftNetTestSdkVersion>
     <MoqVersion>4.8.3</MoqVersion>
     <MonoOptionsVersion>5.3.0.1</MonoOptionsVersion>
@@ -65,7 +65,7 @@
     <XUnitVersion>2.4.1</XUnitVersion>
     <XUnitAbstractionsVersion>2.0.3</XUnitAbstractionsVersion>
     <XUnitVSRunnerVersion>2.4.1</XUnitVSRunnerVersion>
-    <MicrosoftDotNetBuildTasksFeedVersion>6.0.0-beta.21271.4</MicrosoftDotNetBuildTasksFeedVersion>
+    <MicrosoftDotNetBuildTasksFeedVersion>6.0.0-beta.21264.2</MicrosoftDotNetBuildTasksFeedVersion>
     <MicrosoftDotNetSignToolVersion>6.0.0-beta.21264.2</MicrosoftDotNetSignToolVersion>
     <MicrosoftAzureDocumentDBVersion>1.22.0</MicrosoftAzureDocumentDBVersion>
     <MicrosoftAzureCosmosDBTableVersion>1.1.2</MicrosoftAzureCosmosDBTableVersion>
