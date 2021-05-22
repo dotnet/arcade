@@ -574,7 +574,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedDotNetToolsInternalSymbols,
                 FeedInternalForChecksums,
                 FeedInternalForInstallers,
-                PublicAndInternalSymbolTargets,
+                InternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude,
                 flatten: false),
 
