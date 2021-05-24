@@ -61,7 +61,8 @@ namespace Microsoft.DotNet.RemoteExecutor
                 string hostName = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "dotnet.exe" : "dotnet";
 
                 // Partially addressing https://github.com/dotnet/arcade/issues/6371
-                // Running with an apphost, eg. Visual Studio testhost. We should attempt to find and use dotnet.exe.
+                // We expect to run tests with dotnet. However in certain scenarios we may have a different apphost (e.g. Visual Studio testhost).
+                // Attempt to find and use dotnet.
                 if (!IOPath.GetFileName(HostRunner).Equals(hostName, StringComparison.OrdinalIgnoreCase))
                 {
                     string runtimePath = IOPath.GetDirectoryName(typeof(object).Assembly.Location);
