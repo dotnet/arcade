@@ -45,6 +45,11 @@
     <!-- Exclude tests that do not target .NET Core -->
     <XUnitProject Remove="..\src\Microsoft.DotNet.Build.Tasks.VisualStudio.Tests\Microsoft.DotNet.Build.Tasks.VisualStudio.Tests.csproj"/>
   </ItemGroup>
+  
+  <!-- Exercise Helix failure reporting path for Xunit --> 
+  <ItemGroup>
+    <AzurePipelinesExpectedTestFailure Include="Microsoft.DotNet.Helix.Sdk.Tests.XunitReportingTests.ExerciseXunitCharacterFilteringFailurePath"/>
+  </ItemGroup>
 
   <ItemGroup Condition=" '$(HelixAccessToken)' != '' ">
     <HelixTargetQueue Include="Debian.9.Amd64"/>
