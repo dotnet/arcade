@@ -58,7 +58,13 @@ namespace Microsoft.DotNet.Git.IssueManager.Helpers
                     }
 
                     return await GitHubClient.CreateNewIssueAsync(
-                        repositoryUrl, issueTitle, issueDescription, gitHubPersonalAccessToken, milestone, labels, assignees);
+                        repositoryUrl,
+                        issueTitle,
+                        issueDescription,
+                        gitHubPersonalAccessToken,
+                        milestone,
+                        labels,
+                        assignees);
                 }
 
                 throw new NotImplementedException("Creating issues is not currently supported for an Azure DevOps repo.");
