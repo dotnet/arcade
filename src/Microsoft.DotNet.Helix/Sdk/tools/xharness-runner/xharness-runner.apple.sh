@@ -174,20 +174,9 @@ chmod 0644 "$output_directory"/*.log
 # Remove empty files
 find "$output_directory" -name "*.log" -maxdepth 1 -size 0 -print -delete
 
-if [ "$command" == 'test' ]; then
-    test_results=$(ls "$output_directory"/xunit-*.xml)
-
-    if [ ! -f "$test_results" ]; then
-        echo "Failed to find xUnit tests results in the output directory. Existing files:"
-        ls -la "$output_directory"
-
-        if [ $exit_code -eq 0 ]; then
-            exit_code=5
-        fi
-
-        exit $exit_code
-    fi
-
+# Rename test result XML so that AzDO reporter recognizes it
+test_results=$(ls "$output_directory"/xunit-*.xml)
+if [ -f "$test_results" ]; then
     echo "Found test results in $output_directory/$test_results. Renaming to testResults.xml to prepare for Helix upload"
 
     # Prepare test results for Helix to pick up
