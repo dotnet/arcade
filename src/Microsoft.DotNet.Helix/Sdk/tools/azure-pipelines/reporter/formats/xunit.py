@@ -24,7 +24,7 @@ def _unescape_xunit_message(value):
         sym = grp[1]
         if sym == 'x':
             return chr(int(grp[2:], 16))
-        return _unescape_char_map.get(match[0][1]) or sym
+        return _unescape_char_map.get(match.group(0)[1]) or sym
     return re.sub(r'\\x[0-9a-fA-F][0-9a-fA-F][0-9a-fA-F]?[0-9a-fA-F]?|\\[^x]', bs, value)
 
 class XUnitFormat(ResultFormat):

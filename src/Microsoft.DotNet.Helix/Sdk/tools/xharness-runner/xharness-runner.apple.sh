@@ -81,6 +81,10 @@ if [ -z "$targets" ]; then
     die "No targets were provided";
 fi
 
+if [ -z "$output_directory" ]; then
+    die "No output directory provided";
+fi
+
 if [ -z "$xharness_cli_path" ]; then
     die "XHarness path wasn't provided";
 fi
@@ -141,35 +145,38 @@ alias xharness="dotnet exec $xharness_cli_path"
 source command.sh
 exit_code=$?
 
+# Exit code values - https://github.com/dotnet/xharness/blob/main/src/Microsoft.DotNet.XHarness.Common/CLI/ExitCode.cs
+
 # Kill the simulator just in case when we fail to launch the app
 # 80 - app crash
 if [ $exit_code -eq 80 ]; then
     sudo pkill -9 -f "$simulator_app"
 fi
 
+# If we fail to find a simulator and we are not targeting a specific version (e.g. `ios-simulator_13.5`), it is probably an issue because Xcode should always have at least one runtime version inside
+# 81 - simulator/device not found
+if [ $exit_code -eq 81 ] && [[ "$targets" =~ "simulator" ]] && [[ ! "$targets" =~ "_" ]]; then
+    touch './.retry'
+    touch './.reboot'
+fi
+
 # If we have a launch failure AND we are on simulators, we need to signal that we want a reboot+retry
 # The script that is running this one will notice and request Helix to do it
+# 83 - app launch failure
 if [ $exit_code -eq 83 ] && [[ "$targets" =~ "simulator" ]]; then
-    exit_code=123
+    touch './.retry'
+    touch './.reboot'
 fi
 
 # The simulator logs comming from the sudo-spawned Simulator.app are not readable by the helix uploader
 chmod 0644 "$output_directory"/*.log
 
-if [ "$command" == 'test' ]; then
-    test_results=$(ls "$output_directory"/xunit-*.xml)
+# Remove empty files
+find "$output_directory" -name "*.log" -maxdepth 1 -size 0 -print -delete
 
-    if [ ! -f "$test_results" ]; then
-        echo "Failed to find xUnit tests results in the output directory. Existing files:"
-        ls -la "$output_directory"
-
-        if [ $exit_code -eq 0 ]; then
-            exit_code=5
-        fi
-
-        exit $exit_code
-    fi
-
+# Rename test result XML so that AzDO reporter recognizes it
+test_results=$(ls "$output_directory"/xunit-*.xml)
+if [ -f "$test_results" ]; then
     echo "Found test results in $output_directory/$test_results. Renaming to testResults.xml to prepare for Helix upload"
 
     # Prepare test results for Helix to pick up
