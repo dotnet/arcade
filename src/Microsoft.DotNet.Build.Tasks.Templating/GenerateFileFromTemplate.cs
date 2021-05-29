@@ -51,7 +51,7 @@ namespace Microsoft.DotNet.Build.Tasks.Templating
 
         public override bool Execute()
         {
-            var outputPath = Path.GetFullPath(OutputPath.Replace('\\', '/'));
+            string outputPath = Path.GetFullPath(OutputPath.Replace('\\', '/'));
 
             if (!File.Exists(TemplateFile))
             {
@@ -59,10 +59,10 @@ namespace Microsoft.DotNet.Build.Tasks.Templating
                 return false;
             }
 
-            var values = MSBuildListSplitter.GetNamedProperties(Properties);
-            var template = File.ReadAllText(TemplateFile);
+            IDictionary<string, string> values = MSBuildListSplitter.GetNamedProperties(Properties, Log);
+            string template = File.ReadAllText(TemplateFile);
 
-            var result = Replace(template, values);
+            string result = Replace(template, values);
             Directory.CreateDirectory(Path.GetDirectoryName(outputPath));
             File.WriteAllText(outputPath, result);
 
@@ -71,34 +71,34 @@ namespace Microsoft.DotNet.Build.Tasks.Templating
 
         public string Replace(string template, IDictionary<string, string> values)
         {
-            var sb = new StringBuilder();
-            var varNameSb = new StringBuilder();
-            var line = 1;
-            for (var i = 0; i < template.Length; i++)
+            StringBuilder sb = new();
+            StringBuilder varNameSb = new();
+            int line = 1;
+            for (int i = 0; i < template.Length; i++)
             {
-                var ch = template[i];
-                var nextCh = i + 1 >= template.Length
+                char templateChar = template[i];
+                char nextTemplateChar = i + 1 >= template.Length
                         ? '\0'
                         : template[i + 1];
 
                 // count lines in the template file
-                if (ch == '\n')
+                if (templateChar == '\n')
                 {
                     line++;
                 }
 
-                if (ch == '`' && (nextCh == '$' || nextCh == '`'))
+                if (templateChar == '`' && (nextTemplateChar == '$' || nextTemplateChar == '`'))
                 {
                     // skip the backtick for known escape characters
                     i++;
-                    sb.Append(nextCh);
+                    sb.Append(nextTemplateChar);
                     continue;
                 }
 
-                if (ch != '$' || nextCh != '{')
+                if (templateChar != '$' || nextTemplateChar != '{')
                 {
                     // variables begin with ${. Moving on.
-                    sb.Append(ch);
+                    sb.Append(templateChar);
                     continue;
                 }
 
@@ -106,16 +106,16 @@ namespace Microsoft.DotNet.Build.Tasks.Templating
                 i += 2;
                 for (; i < template.Length; i++)
                 {
-                    ch = template[i];
-                    if (ch != '}')
+                    templateChar = template[i];
+                    if (templateChar != '}')
                     {
-                        varNameSb.Append(ch);
+                        varNameSb.Append(templateChar);
                     }
                     else
                     {
                         // Found the end of the variable substitution
-                        var varName = varNameSb.ToString();
-                        if (values.TryGetValue(varName, out var value))
+                        string varName = varNameSb.ToString();
+                        if (values.TryGetValue(varName, out string value))
                         {
                             sb.Append(value);
                         }

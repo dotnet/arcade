@@ -3,44 +3,36 @@
 
 using System;
 using System.Collections.Generic;
+using Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.Build.Tasks.Templating
 {
     internal static class MSBuildListSplitter
     {
-        public static IDictionary<string, string> GetNamedProperties(string input)
+        public static IDictionary<string, string> GetNamedProperties(string[] input, TaskLoggingHelper log)
         {
-            if (string.IsNullOrEmpty(input))
-            {
-                return new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-            }
-
-            return GetNamedProperties(input.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries));
-        }
-
-        public static IDictionary<string, string> GetNamedProperties(string[] input)
-        {
-            var values = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            Dictionary<string, string> values = new(StringComparer.OrdinalIgnoreCase);
             if (input == null)
             {
                 return values;
             }
 
-            foreach (var item in input)
+            foreach (string item in input)
             {
-                var splitIdx = item.IndexOf('=');
+                int splitIdx = item.IndexOf('=');
                 if (splitIdx < 0)
                 {
                     continue;
                 }
 
-                var key = item.Substring(0, splitIdx).Trim();
+                string key = item.Substring(0, splitIdx).Trim();
                 if (string.IsNullOrEmpty(key))
                 {
+                    log.LogWarning($"Property: {item} does not have a valid property name");
                     continue;
                 }
 
-                var value = item.Substring(splitIdx + 1);
+                string value = item.Substring(splitIdx + 1);
                 values[key] = value;
             }
 
