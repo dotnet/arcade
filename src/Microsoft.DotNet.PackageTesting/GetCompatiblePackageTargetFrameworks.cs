@@ -140,7 +140,7 @@ namespace Microsoft.DotNet.PackageTesting
                 if (item.AssetType == AssetType.RuntimeAsset)
                 {
                     string testRid = item.Rid;
-                    string testArch = "-x64";
+                    string testArch = testRid == "browser" ? "-wasm" : "-x64";
                     if (testRid == "unix")
                     {
                         if (!rids.Contains("linux" + testArch))
