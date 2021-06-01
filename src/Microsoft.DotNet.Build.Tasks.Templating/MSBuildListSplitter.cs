@@ -22,6 +22,7 @@ namespace Microsoft.DotNet.Build.Tasks.Templating
                 int splitIdx = item.IndexOf('=');
                 if (splitIdx < 0)
                 {
+                    log.LogWarning($"Property: {item} does not have a valid '=' separator");
                     continue;
                 }
 
