@@ -20,7 +20,7 @@ namespace Microsoft.DotNet.Helix.Sdk
 
         public static class MetadataNames
         {
-            public const string Targets = "Targets";
+            public const string Target = "Target";
             public const string LaunchTimeout = "LaunchTimeout";
             public const string IncludesTestRunner = "IncludesTestRunner";
             public const string ResetSimulator = "ResetSimulator";
@@ -102,14 +102,14 @@ namespace Microsoft.DotNet.Helix.Sdk
             var (testTimeout, workItemTimeout, expectedExitCode, customCommands) = ParseMetadata(appBundleItem);
 
             // Validation of any metadata specific to iOS stuff goes here
-            if (!appBundleItem.TryGetMetadata(MetadataNames.Targets, out string targets))
+            if (!appBundleItem.TryGetMetadata(MetadataNames.Target, out string target))
             {
-                Log.LogError($"'{MetadataNames.Targets}' metadata must be specified - " +
+                Log.LogError($"'{MetadataNames.Target}' metadata must be specified - " +
                     "expecting list of target device/simulator platforms to execute tests on (e.g. ios-simulator-64)");
                 return null;
             }
 
-            targets = targets.ToLowerInvariant();
+            target = target.ToLowerInvariant();
 
             // Optional timeout for the how long it takes for the app to be installed, booted and tests start executing
             TimeSpan launchTimeout = s_defaultLaunchTimeout;
@@ -151,7 +151,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                 customCommands = $"xharness apple {(includesTestRunner ? "test" : "run")} " +
                     "--app \"$app\" " +
                     "--output-directory \"$output_directory\" " +
-                    "--targets \"$targets\" " +
+                    "--target \"$target\" " +
                     "--timeout \"$timeout\" " +
                     (includesTestRunner
                         ? $"--launch-timeout \"$launch_timeout\" "
@@ -163,7 +163,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             }
 
             string appName = fileSystem.GetFileName(appBundleItem.ItemSpec);
-            string helixCommand = GetHelixCommand(appName, targets, testTimeout, launchTimeout, includesTestRunner, expectedExitCode, resetSimulator);
+            string helixCommand = GetHelixCommand(appName, target, testTimeout, launchTimeout, includesTestRunner, expectedExitCode, resetSimulator);
             string payloadArchivePath = await CreateZipArchiveOfFolder(zipArchiveManager, fileSystem, appFolderPath, customCommands);
 
             Log.LogMessage($"Creating work item with properties Identity: {workItemName}, Payload: {appFolderPath}, Command: {helixCommand}");
@@ -179,7 +179,7 @@ namespace Microsoft.DotNet.Helix.Sdk
 
         private string GetHelixCommand(
             string appName,
-            string targets,
+            string target,
             TimeSpan testTimeout,
             TimeSpan launchTimeout,
             bool includesTestRunner,
@@ -188,7 +188,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             =>
             $"chmod +x {EntryPointScript} && ./{EntryPointScript} " +
             $"--app \"{appName}\" " +
-            $"--targets \"{targets}\" " +
+            $"--target \"{target}\" " +
             $"--timeout \"{testTimeout}\" " +
             $"--launch-timeout \"{launchTimeout}\" " +
             (includesTestRunner ? "--includes-test-runner " : string.Empty) +
