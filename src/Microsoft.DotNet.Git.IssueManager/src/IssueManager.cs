@@ -3,6 +3,7 @@
 
 using Microsoft.DotNet.Git.IssueManager.Helpers;
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Git.IssueManager
@@ -53,13 +54,19 @@ namespace Microsoft.DotNet.Git.IssueManager
         public async Task<int> CreateNewIssueAsync(
             string repositoryUrl,
             string issueTitle,
-            string issueDescription)
+            string issueDescription,
+            int? milestone = null,
+            IEnumerable<string> labels = null,
+            IEnumerable<string> assignees = null)
         {
             return await RepositoryHelper.CreateNewIssueAsync(
                 repositoryUrl,
                 issueTitle,
                 issueDescription,
-                GitHubPersonalAccessToken);
+                GitHubPersonalAccessToken,
+                milestone,
+                labels,
+                assignees);
         }
     }
 }

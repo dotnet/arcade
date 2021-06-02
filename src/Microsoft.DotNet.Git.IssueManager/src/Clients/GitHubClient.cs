@@ -3,9 +3,11 @@
 
 using Octokit;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Microsoft.DotNet.Git.IssueManager.Helpers;
 
 namespace Microsoft.DotNet.Git.IssueManager.Clients
 {
@@ -38,7 +40,10 @@ namespace Microsoft.DotNet.Git.IssueManager.Clients
             string repositoryUrl,
             string issueTitle,
             string issueDescription,
-            string personalAccessToken)
+            string personalAccessToken,
+            int? milestone = null,
+            IEnumerable<string> labels = null,
+            IEnumerable<string> assignees = null)
         {
             (string owner, string repoName) = ParseRepoUri(repositoryUrl);
 
@@ -48,8 +53,19 @@ namespace Microsoft.DotNet.Git.IssueManager.Clients
 
             NewIssue issueToBeCreated = new NewIssue(issueTitle)
             {
-                Body = issueDescription
+                Body = issueDescription,
+                Milestone = milestone
             };
+
+            if (labels is not null)
+            {
+                issueToBeCreated.Labels.AddRange(labels);
+            }
+
+            if (assignees is not null)
+            {
+                issueToBeCreated.Assignees.AddRange(assignees);
+            }
 
             Issue createdIssue = await client.Issue.Create(owner, repoName, issueToBeCreated);
 

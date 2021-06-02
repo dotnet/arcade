@@ -46,6 +46,17 @@
     <XUnitProject Remove="..\src\Microsoft.DotNet.Build.Tasks.VisualStudio.Tests\Microsoft.DotNet.Build.Tasks.VisualStudio.Tests.csproj"/>
   </ItemGroup>
 
+  <ItemGroup>
+    <HelixWorkItem Include="FailingXUnitTestsTest">
+      <Command>echo 'done!'</Command>
+      <PayloadDirectory>$(MSBuildThisFileDirectory)XUnit</PayloadDirectory>
+    </HelixWorkItem>
+  </ItemGroup>
+  <!-- Exercise Helix failure reporting path for Xunit --> 
+  <ItemGroup>
+    <AzurePipelinesExpectedTestFailure Include="XunitReportingTests.ExerciseXunitCharacterFilteringFailurePath"/>
+  </ItemGroup>
+
   <ItemGroup Condition=" '$(HelixAccessToken)' != '' ">
     <HelixTargetQueue Include="Debian.9.Amd64"/>
     <HelixTargetQueue Include="RedHat.7.Amd64"/>

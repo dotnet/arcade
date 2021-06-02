@@ -24,8 +24,16 @@ jobs:
       value: $[ dependencies.setupMaestroVars.outputs['setReleaseVars.AzDOBuildId'] ]
     - name: AzDOAccount
       value: $[ dependencies.setupMaestroVars.outputs['setReleaseVars.AzDOBuildAccount'] ]
-  pool:
-    vmImage: 'windows-2019'
+
+  # Using non-hosted build agents to (hopefully temporarily) work around OOMs
+  # See https://github.com/dotnet/core-eng/issues/13098 for context
+  ${{ if eq(variables['System.TeamFoundationCollectionUri'], 'https://dev.azure.com/dnceng/') }}:
+    pool:
+      name: NetCoreInternal-Pool
+      queue: BuildPool.Server.Amd64.VS2019
+  ${{ if ne(variables['System.TeamFoundationCollectionUri'], 'https://dev.azure.com/dnceng/') }}:
+    pool:
+      vmImage: 'windows-2019'
   steps:
     - task: DownloadBuildArtifacts@0
       displayName: Download Build Assets

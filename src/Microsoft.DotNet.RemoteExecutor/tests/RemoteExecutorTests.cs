@@ -10,7 +10,7 @@ namespace Microsoft.DotNet.RemoteExecutor.Tests
 {
     public class RemoteExecutorTests
     {
-        [Fact(Skip = "Remote executor is broken in VS test explorer")]
+        [Fact]
         public void AsyncAction_ThrowException()
         {
             Assert.Throws<RemoteExecutionException>(() =>
@@ -22,7 +22,7 @@ namespace Microsoft.DotNet.RemoteExecutor.Tests
             );
         }
 
-        [Fact(Skip = "Remote executor is broken in VS test explorer")]
+        [Fact]
         public void AsyncAction()
         {
             RemoteExecutor.Invoke(async () =>
@@ -31,7 +31,7 @@ namespace Microsoft.DotNet.RemoteExecutor.Tests
             }, new RemoteInvokeOptions { RollForward = "Major" }).Dispose();
         }
 
-        [Fact(Skip = "Remote executor is broken in VS test explorer")]
+        [Fact]
         public void AsyncFunc_ThrowException()
         {
             Assert.Throws<RemoteExecutionException>(() =>
@@ -44,7 +44,7 @@ namespace Microsoft.DotNet.RemoteExecutor.Tests
             );
         }
 
-        [Fact(Skip = "Remote executor is broken in VS test explorer")]
+        [Fact]
         public void AsyncFunc_InvalidReturnCode()
         {
             Assert.Throws<TrueException>(() =>
@@ -56,7 +56,7 @@ namespace Microsoft.DotNet.RemoteExecutor.Tests
             );
         }
 
-        [Fact(Skip = "Remote executor is broken in VS test explorer")]
+        [Fact]
         public void AsyncFunc_NoThrow_ValidReturnCode()
         {
             RemoteExecutor.Invoke(async () =>
