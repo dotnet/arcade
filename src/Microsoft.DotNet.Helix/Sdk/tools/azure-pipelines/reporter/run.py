@@ -1,6 +1,7 @@
 import os
 import re
 import sys
+import time
 import traceback
 import logging
 from queue import Queue
@@ -35,11 +36,9 @@ class UploadWorker(Thread):
     def __process(self, batch):
         self.publisher.upload_batch(batch)
         self.total_uploaded = self.total_uploaded + len(batch)
-        self.__print('uploaded {} results'.format(self.total_uploaded))
 
     def run(self):
         global workerFailed, workerFailedLock
-        self.__print("starting...")
         while True:
             try:
                 item = self.queue.get()
@@ -146,25 +145,19 @@ def main():
             worker.daemon = True
             worker.start()
 
-        log.info("Beginning to read test results...")
+        # https://github.com/dotnet/arcade/issues/7371 - trying to avoid contention for stdout
+        time.sleep(5)
 
         # In case the user puts the results in HELIX_WORKITEM_UPLOAD_ROOT for upload, check there too.
-        all_results = read_results([os.getcwd(),
-                                    get_env("HELIX_WORKITEM_UPLOAD_ROOT")])
+        all_results = read_results([os.getcwd(), get_env("HELIX_WORKITEM_UPLOAD_ROOT")])
 
         batch_size = 1000
         batches = batch(all_results, batch_size)
 
-        log.info("Uploading results in batches of size {}".format(batch_size))
-
         for b in batches:
             q.put(b)
 
-        log.info("Main thread finished queueing batches")
-
         q.join()
-
-        log.info("Main thread exiting")
 
         with workerFailedLock:
             if workerFailed:
