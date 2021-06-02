@@ -62,7 +62,7 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             foreach (var appBundle in appBundles)
             {
-                if (!appBundle.TryGetMetadata(CreateXHarnessAppleWorkItems.MetadataNames.Targets, out string bundleTargets))
+                if (!appBundle.TryGetMetadata(CreateXHarnessAppleWorkItems.MetadataNames.Target, out string bundleTargets))
                 {
                     _log.LogError("'Targets' metadata must be specified - " +
                         "expecting list of target device/simulator platforms to execute tests on (e.g. ios-simulator-64)");
