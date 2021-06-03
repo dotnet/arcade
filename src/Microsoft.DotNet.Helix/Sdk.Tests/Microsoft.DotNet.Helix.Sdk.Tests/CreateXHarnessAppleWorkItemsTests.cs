@@ -87,7 +87,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
 
             var command = workItem.GetMetadata("Command");
             command.Should().Contain("System.Foo.app");
-            command.Should().Contain("--targets \"ios-device_13.5\"");
+            command.Should().Contain("--target \"ios-device_13.5\"");
             command.Should().Contain("--timeout \"00:08:55\"");
             command.Should().Contain("--launch-timeout \"00:02:33\"");
 
@@ -181,7 +181,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
 
         private ITaskItem CreateAppBundle(
             string path,
-            string targets,
+            string target,
             string? workItemTimeout = null,
             string? testTimeout = null,
             string? launchTimeout = null,
@@ -191,7 +191,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         {
             var mockBundle = new Mock<ITaskItem>();
             mockBundle.SetupGet(x => x.ItemSpec).Returns(path);
-            mockBundle.Setup(x => x.GetMetadata(CreateXHarnessAppleWorkItems.MetadataNames.Target)).Returns(targets);
+            mockBundle.Setup(x => x.GetMetadata(CreateXHarnessAppleWorkItems.MetadataNames.Target)).Returns(target);
             mockBundle.Setup(x => x.GetMetadata(CreateXHarnessAppleWorkItems.MetadataNames.IncludesTestRunner)).Returns(includesTestRunner.ToString());
 
             if (workItemTimeout != null)
