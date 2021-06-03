@@ -8,7 +8,7 @@
 
 app=''
 output_directory=''
-targets=''
+target=''
 timeout=''
 launch_timeout=''
 xharness_cli_path=''
@@ -29,8 +29,8 @@ while [[ $# -gt 0 ]]; do
         output_directory="$2"
         shift
         ;;
-      --targets)
-        targets="$2"
+      --target)
+        target="$2"
         shift
         ;;
       --timeout)
@@ -77,8 +77,8 @@ if [ -z "$app" ]; then
     die "App bundle path wasn't provided";
 fi
 
-if [ -z "$targets" ]; then
-    die "No targets were provided";
+if [ -z "$target" ]; then
+    die "No target were provided";
 fi
 
 if [ -z "$output_directory" ]; then
@@ -96,7 +96,7 @@ else
 fi
 
 # Signing
-if [ "$targets" == 'ios-device' ] || [ "$targets" == 'tvos-device' ]; then
+if [ "$target" == 'ios-device' ] || [ "$target" == 'tvos-device' ]; then
     echo "Real device target detected, application will be signed"
 
     provisioning_profile="$app/embedded.mobileprovision"
