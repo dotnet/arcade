@@ -59,12 +59,12 @@ To execute .app bundles, declare one or more `XHarnessAppBundleToTest` items:
 <ItemGroup>
   <!-- Find all directories named *.app -->
   <XHarnessAppBundleToTest Include="$([System.IO.Directory]::GetDirectories('$(TestArchiveTestsRoot)', '*.app', System.IO.SearchOption.AllDirectories))">
-    <Target>ios-simulator-64_13.5</Targets>
+    <TestTarget>ios-simulator-64_13.5</TestTarget>
   </XHarnessAppBundleToTest>
 </ItemGroup>
 ```
 
-The `<Target>` metadata is a required configuration that tells XHarness which kind of device/Simulator to target.
+The `<TestTarget>` metadata is a required configuration that tells XHarness which kind of device/Simulator to target.
 Use the XHarness CLI help command to find more (see the `--target` option).
 
 You can also specify some additional metadata that will help you configure the run better:
@@ -163,7 +163,7 @@ Example:
 ```xml
 <ItemGroup>
   <XHarnessAppBundleToTest Include="path\to\Some.iOS.app">
-    <Target>ios-simulator-64</Target>
+    <TestTarget>ios-simulator-64</TestTarget>
     <WorkItemTimeout>00:12:00</WorkItemTimeout>
     <CustomCommands>
       set -e

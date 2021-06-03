@@ -20,7 +20,7 @@ namespace Microsoft.DotNet.Helix.Sdk
 
         public static class MetadataNames
         {
-            public const string Target = "Target";
+            public const string Target = "TestTarget";
             public const string LaunchTimeout = "LaunchTimeout";
             public const string IncludesTestRunner = "IncludesTestRunner";
             public const string ResetSimulator = "ResetSimulator";
