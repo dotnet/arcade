@@ -30,9 +30,14 @@ namespace Microsoft.DotNet.Arcade.Sdk.SourceBuild
 
         /// <summary>
         /// %(Identity): NuGet package ID.
+        /// %(Name): The Name of the dependency from Version.Details.xml.
         /// %(ExactVersion): NuGet package version. This can be used to look up the restored package
         ///   contents in a package cache.
         /// %(Version): NuGet package version, wrapped in "[version]" syntax for exact match.
+        /// %(Uri): The URI for the dependency repo.
+        /// %(Sha): The commit Sha for the dependency.
+        /// %(SourceBuildRepoName): The repo name for the dependency to use in source-build.
+        /// %(SourceBuildManagedOnly): Specifies whether the dependency is managed only code.
         /// </summary>
         [Output]
         public ITaskItem[] Dependencies { get; set; }
@@ -77,6 +82,11 @@ namespace Microsoft.DotNet.Arcade.Sdk.SourceBuild
 
                     string dependencyVersion = d.Attribute("Version")?.Value;
 
+                    string dependencyUri = d.Element(CreateQualifiedName("Uri"))?.Value;
+                    string dependencySha = d.Element(CreateQualifiedName("Sha"))?.Value;
+                    string sourceBuildRepoName = sourceBuildElement.Attribute("RepoName")?.Value;
+                    string sourceBuildManagedOnly = sourceBuildElement.Attribute("ManagedOnly")?.Value;
+
                     if (string.IsNullOrEmpty(dependencyVersion))
                     {
                         // We need a version to bring down an intermediate nupkg. Fail.
@@ -110,8 +120,13 @@ namespace Microsoft.DotNet.Arcade.Sdk.SourceBuild
                         identity,
                         new Dictionary<string, string>
                         {
+                            ["Name"] = dependencyName,
                             ["Version"] = $"[{dependencyVersion}]",
-                            ["ExactVersion"] = dependencyVersion
+                            ["ExactVersion"] = dependencyVersion,
+                            ["Uri"] = dependencyUri,
+                            ["Sha"] = dependencySha,
+                            ["SourceBuildRepoName"] = sourceBuildRepoName,
+                            ["SourceBuildManagedOnly"] = sourceBuildManagedOnly
                         });
                 })
                 .Where(d => d != null)
