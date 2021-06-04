@@ -168,6 +168,14 @@ if [ $exit_code -eq 83 ] && [[ "$targets" =~ "simulator" ]]; then
     touch './.reboot'
 fi
 
+# If fail to find a real device, it is unexpected as device queues should have one
+# It can often be fixed with a reboot
+# 81 - device not found
+if [ $exit_code -eq 81 ] && [[ "$targets" =~ "device" ]]; then
+    touch './.retry'
+    touch './.reboot'
+fi
+
 # The simulator logs comming from the sudo-spawned Simulator.app are not readable by the helix uploader
 chmod 0644 "$output_directory"/*.log
 
