@@ -17,7 +17,7 @@ The primary driving business requirement is the ability to build .NET Core 3.
 | dotnet/cli                  | master        |  @marcpopMSFT   |
 | dotnet/clicommandlineparser | master        |  @marcpopMSFT   |
 | dotnet/cli-migrate          | master        |  @marcpopMSFT   |
-| dotnet/coreclr              | master        |  @jeffschwMSFT  |
+| dotnet/runtime              | main          |  @jeffschwMSFT  |
 | dotnet/corefx               | master        |  @danmosemsft   |
 | dotnet/core-sdk             | master        |  @marcpopMSFT   |
 | dotnet/core-setup           | master        |  TBD            |
