@@ -212,6 +212,7 @@ function Retry($downloadBlock, $maxRetries = 5) {
     }
     else {
       Write-PipelineTelemetryError -Category 'InitializeToolset' -Message "Unable to download file in $maxRetries attempts."
+      break
     }
 
   }
