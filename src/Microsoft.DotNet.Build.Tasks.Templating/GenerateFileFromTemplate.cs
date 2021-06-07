@@ -40,7 +40,6 @@ namespace Microsoft.DotNet.Build.Tasks.Templating
         /// The destination for the generated file.
         /// </summary>
         [Required]
-        [Output]
         public string OutputPath { get; set; }
 
         /// <summary>
@@ -49,9 +48,15 @@ namespace Microsoft.DotNet.Build.Tasks.Templating
         [Required]
         public string[] Properties { get; set; }
 
+        /// <summary>
+        /// The destination for the generated file resolved by this task.
+        /// </summary>
+        [Output]
+        public string ResolvedOutputPath { get; set; }
+
         public override bool Execute()
         {
-            string outputPath = Path.GetFullPath(OutputPath.Replace('\\', '/'));
+            ResolvedOutputPath = Path.GetFullPath(OutputPath.Replace('\\', '/'));
 
             if (!File.Exists(TemplateFile))
             {
@@ -63,8 +68,8 @@ namespace Microsoft.DotNet.Build.Tasks.Templating
             string template = File.ReadAllText(TemplateFile);
 
             string result = Replace(template, values);
-            Directory.CreateDirectory(Path.GetDirectoryName(outputPath));
-            File.WriteAllText(outputPath, result);
+            Directory.CreateDirectory(Path.GetDirectoryName(ResolvedOutputPath));
+            File.WriteAllText(ResolvedOutputPath, result);
 
             return !Log.HasLoggedErrors;
         }

@@ -139,6 +139,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Build.Task
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Build.Tasks.Workloads.Tests", "src\Microsoft.DotNet.Build.Tasks.Workloads.Tests\Microsoft.DotNet.Build.Tasks.Workloads.Tests.csproj", "{0B5D3C20-EB58-4A82-A3AA-2E626A17B35D}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Build.Tasks.Templating", "src\Microsoft.DotNet.Build.Tasks.Templating\Microsoft.DotNet.Build.Tasks.Templating.csproj", "{E86BD2FD-231A-4B1B-AD69-5C04B0541A98}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -877,6 +879,18 @@ Global
 		{0B5D3C20-EB58-4A82-A3AA-2E626A17B35D}.Release|x64.Build.0 = Release|Any CPU
 		{0B5D3C20-EB58-4A82-A3AA-2E626A17B35D}.Release|x86.ActiveCfg = Release|Any CPU
 		{0B5D3C20-EB58-4A82-A3AA-2E626A17B35D}.Release|x86.Build.0 = Release|Any CPU
+		{E86BD2FD-231A-4B1B-AD69-5C04B0541A98}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E86BD2FD-231A-4B1B-AD69-5C04B0541A98}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E86BD2FD-231A-4B1B-AD69-5C04B0541A98}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{E86BD2FD-231A-4B1B-AD69-5C04B0541A98}.Debug|x64.Build.0 = Debug|Any CPU
+		{E86BD2FD-231A-4B1B-AD69-5C04B0541A98}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{E86BD2FD-231A-4B1B-AD69-5C04B0541A98}.Debug|x86.Build.0 = Debug|Any CPU
+		{E86BD2FD-231A-4B1B-AD69-5C04B0541A98}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E86BD2FD-231A-4B1B-AD69-5C04B0541A98}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E86BD2FD-231A-4B1B-AD69-5C04B0541A98}.Release|x64.ActiveCfg = Release|Any CPU
+		{E86BD2FD-231A-4B1B-AD69-5C04B0541A98}.Release|x64.Build.0 = Release|Any CPU
+		{E86BD2FD-231A-4B1B-AD69-5C04B0541A98}.Release|x86.ActiveCfg = Release|Any CPU
+		{E86BD2FD-231A-4B1B-AD69-5C04B0541A98}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
