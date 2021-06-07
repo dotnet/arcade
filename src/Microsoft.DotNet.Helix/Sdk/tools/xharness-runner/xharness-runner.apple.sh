@@ -168,7 +168,7 @@ if [ $exit_code -eq 83 ] && [[ "$targets" =~ "simulator" ]]; then
     touch './.reboot'
 fi
 
-# If fail to find a real device, it is unexpected as device queues should have one
+# If we fail to find a real device, it is unexpected as device queues should have one
 # It can often be fixed with a reboot
 # 81 - device not found
 if [ $exit_code -eq 81 ] && [[ "$targets" =~ "device" ]]; then
