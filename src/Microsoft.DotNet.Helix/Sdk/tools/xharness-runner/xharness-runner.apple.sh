@@ -131,7 +131,7 @@ if [ "$target" == 'ios-device' ] || [ "$target" == 'tvos-device' ]; then
 
     # Sign the app
     /usr/bin/codesign -v --force --sign "Apple Development" --keychain "$keychain_name" --entitlements entitlements.plist "$app"
-elif [[ "$targets" =~ "simulator" ]]; then
+elif [[ "$target" =~ "simulator" ]]; then
     # Start the simulator if it is not running already
     simulator_app="$xcode_path/Contents/Developer/Applications/Simulator.app"
     open -a "$simulator_app"
@@ -155,7 +155,7 @@ fi
 
 # If we fail to find a simulator and we are not targeting a specific version (e.g. `ios-simulator_13.5`), it is probably an issue because Xcode should always have at least one runtime version inside
 # 81 - simulator/device not found
-if [ $exit_code -eq 81 ] && [[ "$targets" =~ "simulator" ]] && [[ ! "$targets" =~ "_" ]]; then
+if [ $exit_code -eq 81 ] && [[ "$target" =~ "simulator" ]] && [[ ! "$target" =~ "_" ]]; then
     touch './.retry'
     touch './.reboot'
 fi
@@ -163,7 +163,7 @@ fi
 # If we have a launch failure AND we are on simulators, we need to signal that we want a reboot+retry
 # The script that is running this one will notice and request Helix to do it
 # 83 - app launch failure
-if [ $exit_code -eq 83 ] && [[ "$targets" =~ "simulator" ]]; then
+if [ $exit_code -eq 83 ] && [[ "$target" =~ "simulator" ]]; then
     touch './.retry'
     touch './.reboot'
 fi
@@ -171,7 +171,7 @@ fi
 # If we fail to find a real device, it is unexpected as device queues should have one
 # It can often be fixed with a reboot
 # 81 - device not found
-if [ $exit_code -eq 81 ] && [[ "$targets" =~ "device" ]]; then
+if [ $exit_code -eq 81 ] && [[ "$target" =~ "device" ]]; then
     touch './.retry'
     touch './.reboot'
 fi
