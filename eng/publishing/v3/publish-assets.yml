@@ -29,8 +29,7 @@ jobs:
   # See https://github.com/dotnet/core-eng/issues/13098 for context
   ${{ if eq(variables['System.TeamFoundationCollectionUri'], 'https://dev.azure.com/dnceng/') }}:
     pool:
-      name: NetCoreInternal-Pool
-      queue: BuildPool.Server.Amd64.VS2019
+      vmImage: 'windows-2019'
   ${{ if ne(variables['System.TeamFoundationCollectionUri'], 'https://dev.azure.com/dnceng/') }}:
     pool:
       vmImage: 'windows-2019'
