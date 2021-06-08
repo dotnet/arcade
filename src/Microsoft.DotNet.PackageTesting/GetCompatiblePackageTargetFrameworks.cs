@@ -72,29 +72,13 @@ namespace Microsoft.DotNet.PackageTesting
         public static void Initialize()
         {
             // Defining the set of known frameworks that we care to test
-            allTargetFrameworks.Add(FrameworkConstants.CommonFrameworks.NetCoreApp20);
-            allTargetFrameworks.Add(FrameworkConstants.CommonFrameworks.NetCoreApp21);
-            allTargetFrameworks.Add(FrameworkConstants.CommonFrameworks.NetCoreApp30);
             allTargetFrameworks.Add(FrameworkConstants.CommonFrameworks.NetCoreApp31);
             allTargetFrameworks.Add(FrameworkConstants.CommonFrameworks.Net50);
-            allTargetFrameworks.Add(FrameworkConstants.CommonFrameworks.Net45);
-            allTargetFrameworks.Add(FrameworkConstants.CommonFrameworks.Net451);
-            allTargetFrameworks.Add(FrameworkConstants.CommonFrameworks.Net452);
-            allTargetFrameworks.Add(FrameworkConstants.CommonFrameworks.Net46);
+            allTargetFrameworks.Add(FrameworkConstants.CommonFrameworks.Net60);
             allTargetFrameworks.Add(FrameworkConstants.CommonFrameworks.Net461);
             allTargetFrameworks.Add(FrameworkConstants.CommonFrameworks.Net462);
-            allTargetFrameworks.Add(FrameworkConstants.CommonFrameworks.Net463);
-            allTargetFrameworks.Add(FrameworkConstants.CommonFrameworks.NetStandard10);
-            allTargetFrameworks.Add(FrameworkConstants.CommonFrameworks.NetStandard11);
-            allTargetFrameworks.Add(FrameworkConstants.CommonFrameworks.NetStandard12);
-            allTargetFrameworks.Add(FrameworkConstants.CommonFrameworks.NetStandard13);
-            allTargetFrameworks.Add(FrameworkConstants.CommonFrameworks.NetStandard14);
-            allTargetFrameworks.Add(FrameworkConstants.CommonFrameworks.NetStandard15);
-            allTargetFrameworks.Add(FrameworkConstants.CommonFrameworks.NetStandard16);
-            allTargetFrameworks.Add(FrameworkConstants.CommonFrameworks.NetStandard17);
             allTargetFrameworks.Add(FrameworkConstants.CommonFrameworks.NetStandard20);
             allTargetFrameworks.Add(FrameworkConstants.CommonFrameworks.NetStandard21);
-            allTargetFrameworks.Add(FrameworkConstants.CommonFrameworks.UAP10);
 
             // creating a map framework in package => frameworks to test based on default compatibilty mapping.
             foreach (var item in DefaultFrameworkMappings.Instance.CompatibilityMappings)
