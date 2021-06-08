@@ -69,7 +69,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// </summary>
         [Required]
         public string NugetPath { get; set; }
-
+        
+        /// We are setting StreamingPublishingMaxClients=16 and NonStreamingPublishingMaxClients=12 through publish-asset.yml as we were hitting OOM issue 
+        /// https://github.com/dotnet/core-eng/issues/13098 for more details.
         public int StreamingPublishingMaxClients {get; set;}
         public int NonStreamingPublishingMaxClients {get; set;}
 
