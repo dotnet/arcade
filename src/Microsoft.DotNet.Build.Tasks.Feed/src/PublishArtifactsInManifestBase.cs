@@ -70,8 +70,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         [Required]
         public string NugetPath { get; set; }
 
-        private const int StreamingPublishingMaxClients = 16;
-        private const int NonStreamingPublishingMaxClients = 12;
+        public int StreamingPublishingMaxClients {get; set;}
+        public int NonStreamingPublishingMaxClients {get; set;}
 
         /// <summary>
         /// Maximum number of parallel uploads for the upload tasks.
