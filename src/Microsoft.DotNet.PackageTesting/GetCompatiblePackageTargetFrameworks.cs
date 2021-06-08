@@ -74,7 +74,6 @@ namespace Microsoft.DotNet.PackageTesting
             // Defining the set of known frameworks that we care to test
             allTargetFrameworks.Add(FrameworkConstants.CommonFrameworks.NetCoreApp31);
             allTargetFrameworks.Add(FrameworkConstants.CommonFrameworks.Net50);
-            allTargetFrameworks.Add(FrameworkConstants.CommonFrameworks.Net60);
             allTargetFrameworks.Add(FrameworkConstants.CommonFrameworks.Net461);
             allTargetFrameworks.Add(FrameworkConstants.CommonFrameworks.Net462);
             allTargetFrameworks.Add(FrameworkConstants.CommonFrameworks.NetStandard20);
