@@ -32,7 +32,7 @@ namespace Microsoft.DotNet.PackageTesting
                 foreach (var packagePath in PackagePaths)
                 {
                     Package package = NupkgParser.CreatePackageObject(packagePath);
-                    List<NuGetFramework> packageTargetFrameworks = package.PackageAssets.Where(t => t.AssetType != AssetType.RuntimeAsset).Select(t => t.TargetFramework).Distinct().ToList();
+                    List<NuGetFramework> packageTargetFrameworks = package.PackageAssets.Select(asset => asset.TargetFramework).Where(tfm => tfm != null).Distinct().ToList();
 
                     List<NuGetFramework> frameworksToTest = GetTestFrameworks(packageTargetFrameworks);
                     testProjects.AddRange(CreateItemFromTestFramework(package.PackageId, package.Version, frameworksToTest, GetRidsFromPackage(package)));

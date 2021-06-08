@@ -54,7 +54,8 @@ namespace Microsoft.DotNet.PackageTesting
             else if (filePath.StartsWith("runtimes"))
             {
                 var stringParts = filePath.Split('/');
-                asset = new PackageAsset(NuGetFramework.Parse(stringParts[3]), stringParts[1], filePath, AssetType.RuntimeAsset);
+                NuGetFramework framework = stringParts.Length > 3 ? NuGetFramework.Parse(stringParts[3]) : null;
+                asset = new PackageAsset(framework, stringParts[1], filePath, AssetType.RuntimeAsset);
             }
 
             return asset;
