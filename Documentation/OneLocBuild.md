@@ -28,10 +28,11 @@ Onboarding to OneLocBuild is a simple process:
    `LCL-JUNO-PROD-YOURREPO`.
 6. Change your YAML (subbing `'LCL-JUNO-PROD-YOURREPO'` for the package ID given to you) to:
 ```yaml
-- template: /eng/common/templates/job/onelocbuild.yml
-  parameters:
-    LclSource: lclFilesfromPackage
-    LclPackageId: 'LCL-JUNO-PROD-YOURREPO'
+- {{ if eq(variables['Build.SourceBranch'], 'refs/heads/main') }}:
+  - template: /eng/common/templates/job/onelocbuild.yml
+    parameters:
+      LclSource: lclFilesfromPackage
+      LclPackageId: 'LCL-JUNO-PROD-YOURREPO'
 ```
 7. If using a mirrored repository (your code is mirrored to a trusted repository which your official build uses),
    add the following parameter to your YAML (subbing e.g. `sdk` for the value):
@@ -134,9 +135,9 @@ The parameters that can be passed to the template are as follows:
 | `CreatePr` | `true` | When set to `true`, instructs the OneLocBuild task to make a PR back to the source repository containing the localized files. |
 | `AutoCompletePr` | `false` | When set to `true`, instructs the OneLocBuild task to autocomplete the created PR. Requires permissions to bypass any checks on the main branch. |
 | `UseLfLineEndings` | `true` | When set to `true`, instructs the OneLocBuild task to use LF line endings during check-in rather than CRLF. |
-| `GitHubOrg` | `'dotnet'` | The GitHub org to be used when making a PR from a mirrored repository. |
-| `MirrorRepo` | `''` | The name of the GitHub repository to make a PR to (when using a mirrored repository). |
-| `MirrorBranch` | `'main'` | The branch on GitHub to make a PR to (when using a mirrored repository). |
+| `GitHubOrg` | `'dotnet'` | The GitHub organization to be used when making a PR (only used when using a mirrored repository). |
+| `MirrorRepo` | `''` | The name of the GitHub repository to make a PR to (only used when using a mirrored repository). |
+| `MirrorBranch` | `'main'` | The branch on GitHub to make a PR to (only used when using a mirrored repository). |
 | `UseCheckedInLocProjectJson` | `false` | When set to `true`, instructs the LocProject.json generation script to use build-time validation rather than build-time generation, as described above. |
 | `LanguageSet` | `VS_Main_Languages` | This defines the `LanguageSet` of the LocProject.json as described in the [OneLocBuild task documentation](https://ceapex.visualstudio.com/CEINTL/_wiki/wikis/CEINTL.wiki/107/Localization-with-OneLocBuild-Task?anchor=languageset%2C-languages-(required)). |
 | `LclSource` | `LclFilesInRepo` | This passes the `LclSource` input to the OneLocBuild task as described in [its documentation](https://ceapex.visualstudio.com/CEINTL/_wiki/wikis/CEINTL.wiki/107/Localization-with-OneLocBuild-Task?anchor=languageset%2C-languages-(required)). For most repos, this should be set to `LclFilesfromPackage`. |
