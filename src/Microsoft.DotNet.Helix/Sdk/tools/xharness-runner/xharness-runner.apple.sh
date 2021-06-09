@@ -149,7 +149,7 @@ exit_code=$?
 
 # Kill the simulator just in case when we fail to launch the app
 # 80 - app crash
-if [ $exit_code -eq 80 ]; then
+if [ $exit_code -eq 80 ] && [[ "$target" =~ "simulator" ]]; then
     sudo pkill -9 -f "$simulator_app"
 fi
 
