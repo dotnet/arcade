@@ -94,6 +94,22 @@ jobs:
         PathtoPublish: '$(Build.StagingDirectory)/ReleaseConfigs.txt'
         PublishLocation: Container
         ArtifactName: ReleaseConfigs
+
+    - task: powershell@2
+      displayName: Check if SymbolExclusionFile.txt exists
+      inputs:
+        targetType: inline
+        script: |
+          $symbolExclusionfile = Test-Path -Path "$(Build.StagingDirectory)/eng/SymbolPublishingExclusionsFile.txt"
+          Write-Output "##vso[task.setvariable variable=SymbolExclusionFile]$symbolExclusionfile"
+
+    - eq(variables['SymbolExclusionFile'], True):
+      - task: PublishBuildArtifacts@1
+        displayName: Publish SymbplExclusionFile Artifact
+        inputs:
+          PathtoPublish: '$(Build.StagingDirectory)/eng/SymbolPublishingExclusionsFile.txt'
+          PublishLocation: Container
+          ArtifactName: SymbolsExclusion
     
     - ${{ if eq(parameters.enablePublishBuildArtifacts, 'true') }}:
       - template: /eng/common/templates/steps/publish-logs.yml
