@@ -103,7 +103,7 @@ jobs:
           $symbolExclusionfile = Test-Path -Path "$(Build.StagingDirectory)/eng/SymbolPublishingExclusionsFile.txt"
           Write-Output "##vso[task.setvariable variable=SymbolExclusionFile]$symbolExclusionfile"
 
-    - if eq(variables['SymbolExclusionFile'], True):
+    - ${{ if eq(variables['SymbolExclusionFile'], 'true') }}:
       - task: PublishBuildArtifacts@1
         displayName: Publish SymbplExclusionFile Artifact
         inputs:
