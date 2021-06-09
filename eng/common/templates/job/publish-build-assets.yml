@@ -100,12 +100,19 @@ jobs:
       inputs:
         targetType: inline
         script: |
-          $symbolExclusionfile = Test-Path -Path "$(Build.StagingDirectory)/eng/SymbolPublishingExclusionsFile.txt"
-          Write-Output "##vso[task.setvariable variable=SymbolExclusionFile]$symbolExclusionfile"
+          $symbolExclusionfile = "$(Build.StagingDirectory)/eng/SymbolPublishingExclusionsFile.txt"
+          if(Test-Path -Path $symbolExclusionfile)
+          {
+            Write-Host "SymbolExclusionFile exists"
+            Write-Host "##vso[task.setvariable variable=SymbolExclusionFile]$symbolExclusionfile"
+          }
+          else{
+           Write-Host "Symbols Exclusion file does not exists"
+          }
 
     - ${{ if eq(variables['SymbolExclusionFile'], 'true') }}:
       - task: PublishBuildArtifacts@1
-        displayName: Publish SymbplExclusionFile Artifact
+        displayName: Publish SymbolExclusionFile Artifact
         inputs:
           PathtoPublish: '$(Build.StagingDirectory)/eng/SymbolPublishingExclusionsFile.txt'
           PublishLocation: Container
