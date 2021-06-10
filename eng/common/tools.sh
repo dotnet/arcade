@@ -484,7 +484,8 @@ _script_dir=`dirname "$_ResolvePath"`
 . "$_script_dir/pipeline-logging-functions.sh"
 
 eng_root=`cd -P "$_script_dir/.." && pwd`
-repo_root=`cd -P "$_script_dir/../../" && pwd`
+repo_root=`cd -P "$_script_dir/../.." && pwd`
+repo_root="{repo_root}/"
 artifacts_dir="${repo_root}artifacts"
 toolset_dir="$artifacts_dir/toolset"
 tools_dir="${repo_root}.tools"
