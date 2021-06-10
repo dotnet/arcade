@@ -703,7 +703,7 @@ function MSBuild-Core() {
 
   foreach ($arg in $args) {
     if ($arg -ne $null -and $arg.Trim() -ne "") {
-      $cmdArgs += " `"$arg`""
+      $cmdArgs += " `"`"$arg`"`""
     }
   }
 
