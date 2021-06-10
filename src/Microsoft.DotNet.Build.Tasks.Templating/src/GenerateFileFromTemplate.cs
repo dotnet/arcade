@@ -76,8 +76,8 @@ namespace Microsoft.DotNet.Build.Tasks.Templating
 
         public string Replace(string template, IDictionary<string, string> values)
         {
-            StringBuilder sb = new();
-            StringBuilder varNameSb = new();
+            StringBuilder sb = new StringBuilder();
+            StringBuilder varNameSb = new StringBuilder();
             int line = 1;
             for (int i = 0; i < template.Length; i++)
             {

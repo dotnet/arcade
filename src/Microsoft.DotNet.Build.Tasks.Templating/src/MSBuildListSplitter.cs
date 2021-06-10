@@ -11,7 +11,7 @@ namespace Microsoft.DotNet.Build.Tasks.Templating
     {
         public static IDictionary<string, string> GetNamedProperties(string[] input, TaskLoggingHelper log)
         {
-            Dictionary<string, string> values = new(StringComparer.OrdinalIgnoreCase);
+            Dictionary<string, string> values = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
             if (input == null)
             {
                 return values;
