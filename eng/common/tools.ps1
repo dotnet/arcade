@@ -774,7 +774,7 @@ function Get-Darc($version) {
 
 . $PSScriptRoot\pipeline-logging-functions.ps1
 
-$RepoRoot = Resolve-Path (Join-Path $PSScriptRoot '..\..')
+$RepoRoot = Resolve-Path (Join-Path $PSScriptRoot '..\..\')
 $EngRoot = Resolve-Path (Join-Path $PSScriptRoot '..')
 $ArtifactsDir = Join-Path $RepoRoot 'artifacts'
 $ToolsetDir = Join-Path $ArtifactsDir 'toolset'
