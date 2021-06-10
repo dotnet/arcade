@@ -18,7 +18,7 @@ namespace Microsoft.DotNet.Build.Tasks.Templating.Tests
 
             try
             {
-                GenerateFileFromTemplate task = new();
+                GenerateFileFromTemplate task = new GenerateFileFromTemplate();
                 task.TemplateFile = GetFullPath("Directory.Build.props.in");
                 task.OutputPath = filePath;
                 task.Properties = new[] { "DefaultNetCoreTargetFramework=net6.0" };
@@ -45,7 +45,7 @@ namespace Microsoft.DotNet.Build.Tasks.Templating.Tests
 
             try
             {
-                GenerateFileFromTemplate task = new();
+                GenerateFileFromTemplate task = new GenerateFileFromTemplate();
                 task.BuildEngine = new MockEngine();
                 task.TemplateFile = GetFullPath("Directory.Build.props.in");
                 task.OutputPath = filePath;
@@ -70,7 +70,7 @@ namespace Microsoft.DotNet.Build.Tasks.Templating.Tests
 
             try
             {
-                GenerateFileFromTemplate task = new();
+                GenerateFileFromTemplate task = new GenerateFileFromTemplate();
                 task.BuildEngine = new MockEngine();
                 task.TemplateFile = GetFullPath(filename);
                 task.OutputPath = filePath;
