@@ -1,8 +1,8 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using NuGet.Frameworks;
 using System.Collections.Generic;
+using NuGet.Frameworks;
 using Xunit;
 
 namespace Microsoft.DotNet.PackageTesting.Tests
@@ -14,31 +14,128 @@ namespace Microsoft.DotNet.PackageTesting.Tests
             GetCompatiblePackageTargetFrameworks.Initialize();
         }
 
-        public static IEnumerable<object[]> PackageTFMData => new List<object[]>
+        public static IEnumerable<object[]> PackageTfmData => new List<object[]>
         {
             // single target framework in package
-            new object[] {  new List<NuGetFramework> { FrameworkConstants.CommonFrameworks.NetStandard20}, new List<NuGetFramework> { FrameworkConstants.CommonFrameworks.NetStandard20, FrameworkConstants.CommonFrameworks.NetCoreApp20, FrameworkConstants.CommonFrameworks.Net463, FrameworkConstants.CommonFrameworks.Net461, FrameworkConstants.CommonFrameworks.Net462} },
-            new object[] {  new List<NuGetFramework> { FrameworkConstants.CommonFrameworks.NetCoreApp20}, new List<NuGetFramework> { FrameworkConstants.CommonFrameworks.NetCoreApp20} },
-            new object[] {  new List<NuGetFramework> { FrameworkConstants.CommonFrameworks.NetCoreApp21}, new List<NuGetFramework> { FrameworkConstants.CommonFrameworks.NetCoreApp21} },
-            new object[] {  new List<NuGetFramework> { FrameworkConstants.CommonFrameworks.Net461}, new List<NuGetFramework> { FrameworkConstants.CommonFrameworks.Net461} },
-            new object[] {  new List<NuGetFramework> { FrameworkConstants.CommonFrameworks.Net45}, new List<NuGetFramework> { FrameworkConstants.CommonFrameworks.Net45} },
-            new object[] {  new List<NuGetFramework> { FrameworkConstants.CommonFrameworks.NetCoreApp30}, new List<NuGetFramework> { FrameworkConstants.CommonFrameworks.NetCoreApp30} },
-            new object[] {  new List<NuGetFramework> { FrameworkConstants.CommonFrameworks.NetCoreApp31}, new List<NuGetFramework> { FrameworkConstants.CommonFrameworks.NetCoreApp31} },
-            new object[] {  new List<NuGetFramework> { FrameworkConstants.CommonFrameworks.NetStandard21}, new List<NuGetFramework> { FrameworkConstants.CommonFrameworks.NetStandard21, FrameworkConstants.CommonFrameworks.NetCoreApp30 } },
-            new object[] {  new List<NuGetFramework> { FrameworkConstants.CommonFrameworks.NetStandard12}, new List<NuGetFramework> { FrameworkConstants.CommonFrameworks.NetStandard12, FrameworkConstants.CommonFrameworks.Net451 } },
-
-            // two target frameworks in package
-            new object[] {  new List<NuGetFramework> { FrameworkConstants.CommonFrameworks.NetStandard20, FrameworkConstants.CommonFrameworks.Net461}, new List<NuGetFramework> { FrameworkConstants.CommonFrameworks.NetStandard20, FrameworkConstants.CommonFrameworks.NetCoreApp20, FrameworkConstants.CommonFrameworks.Net463, FrameworkConstants.CommonFrameworks.Net461, FrameworkConstants.CommonFrameworks.Net462} },
-            new object[] {  new List<NuGetFramework> { FrameworkConstants.CommonFrameworks.NetStandard20, FrameworkConstants.CommonFrameworks.NetCoreApp30}, new List<NuGetFramework> { FrameworkConstants.CommonFrameworks.NetStandard20, FrameworkConstants.CommonFrameworks.NetCoreApp30, FrameworkConstants.CommonFrameworks.NetCoreApp20, FrameworkConstants.CommonFrameworks.Net463, FrameworkConstants.CommonFrameworks.Net461, FrameworkConstants.CommonFrameworks.Net462} },
-            new object[] {  new List<NuGetFramework> { FrameworkConstants.CommonFrameworks.NetCoreApp30, FrameworkConstants.CommonFrameworks.Net461}, new List<NuGetFramework> { FrameworkConstants.CommonFrameworks.NetCoreApp30, FrameworkConstants.CommonFrameworks.Net461} },
-            new object[] {  new List<NuGetFramework> { FrameworkConstants.CommonFrameworks.NetCoreApp30, FrameworkConstants.CommonFrameworks.Net50}, new List<NuGetFramework> { FrameworkConstants.CommonFrameworks.NetCoreApp30, FrameworkConstants.CommonFrameworks.Net50} },
+            new object[]
+            {  
+                new List<string> 
+                { 
+                    @"lib/netstandard2.0/TestPackage.dll",
+                },
+                new List<NuGetFramework> 
+                { 
+                    FrameworkConstants.CommonFrameworks.NetStandard20, 
+                    FrameworkConstants.CommonFrameworks.Net461, 
+                    FrameworkConstants.CommonFrameworks.Net462,
+                    FrameworkConstants.CommonFrameworks.NetCoreApp31
+                } 
+            },
+            new object[]
+            {
+                new List<string>
+                {
+                    @"runtimes/win/lib/netstandard2.0/TestPackage.dll",
+                },
+                new List<NuGetFramework>
+                {
+                    FrameworkConstants.CommonFrameworks.NetStandard20,
+                    FrameworkConstants.CommonFrameworks.Net461,
+                    FrameworkConstants.CommonFrameworks.Net462,
+                    FrameworkConstants.CommonFrameworks.NetCoreApp31
+                }
+            },
+            new object[]
+            {
+                new List<string>
+                {
+                    @"lib/net5.0/TestPackage.dll",
+                    @"runtimes/win/lib/netstandard2.0/TestPackage.dll"
+                },
+                new List<NuGetFramework>
+                {
+                    FrameworkConstants.CommonFrameworks.NetStandard20,
+                    FrameworkConstants.CommonFrameworks.Net461,
+                    FrameworkConstants.CommonFrameworks.Net462,
+                    FrameworkConstants.CommonFrameworks.NetCoreApp31,
+                    FrameworkConstants.CommonFrameworks.Net50
+                }
+            },
+            new object[]
+            {
+                new List<string>
+                {
+                    @"lib/netcoreapp3.1/TestPackage.dll"
+                },
+                new List<NuGetFramework>
+                {
+                    FrameworkConstants.CommonFrameworks.NetCoreApp31
+                }
+            },
+            new object[]
+            {
+                new List<string>
+                {
+                    @"lib/netcoreapp3.1/TestPackage.dll",
+                    @"lib/net461/TestPackage.dll"
+                },
+                new List<NuGetFramework>
+                {
+                    FrameworkConstants.CommonFrameworks.NetCoreApp31,
+                    FrameworkConstants.CommonFrameworks.Net461
+                }
+            },
+            new object[]
+            {
+                new List<string>
+                {
+                    @"runtimes/unix/lib/netcoreapp3.1/TestPackage.dll",
+                    @"runtimes/win/lib/netstandard2.0/TestPackage.dll"
+                },
+                new List<NuGetFramework>
+                {
+                    FrameworkConstants.CommonFrameworks.NetCoreApp31,
+                    FrameworkConstants.CommonFrameworks.NetStandard20,
+                    FrameworkConstants.CommonFrameworks.Net461,
+                    FrameworkConstants.CommonFrameworks.Net462
+                }
+            },
+            new object[]
+            {
+                new List<string>
+                {
+                    @"lib/net5.0/TestPackage.dll",
+                    @"lib/net472/TestPackage.dll",
+                    @"runtimes/win/lib/netstandard2.0/TestPackage.dll"
+                },
+                new List<NuGetFramework>
+                {
+                    FrameworkConstants.CommonFrameworks.NetStandard20,
+                    FrameworkConstants.CommonFrameworks.Net461,
+                    FrameworkConstants.CommonFrameworks.Net462,
+                    FrameworkConstants.CommonFrameworks.NetCoreApp31,
+                    FrameworkConstants.CommonFrameworks.Net50
+                }
+            },
+            new object[]
+            {
+                new List<string>
+                {
+                    @"lib/net461/TestPackage.dll"
+                },
+                new List<NuGetFramework>
+                {
+                    FrameworkConstants.CommonFrameworks.Net461,
+                }
+            },
         };
 
         [Theory]
-        [MemberData(nameof(PackageTFMData))]
-        public void GetCompatibleFrameworks(List<NuGetFramework> packageFrameworks, List<NuGetFramework> expectedTestFrameworks)
+        [MemberData(nameof(PackageTfmData))]
+        public void GetCompatibleFrameworks(List<string> filePaths, List<NuGetFramework> expectedTestFrameworks)
         {
-            List<NuGetFramework> actualTestFrameworks = GetCompatiblePackageTargetFrameworks.GetTestFrameworks(packageFrameworks);
+            Package package = new("TestPackage", "1.0.0", filePaths);
+            List<NuGetFramework> actualTestFrameworks = GetCompatiblePackageTargetFrameworks.GetTestFrameworks(package, "netcoreapp3.1");
             CollectionsEqual(expectedTestFrameworks, actualTestFrameworks);
         }
 

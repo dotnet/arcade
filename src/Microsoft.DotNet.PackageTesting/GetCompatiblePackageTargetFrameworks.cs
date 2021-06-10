@@ -19,6 +19,8 @@ namespace Microsoft.DotNet.PackageTesting
         [Required]
         public string[] PackagePaths { get; set; }
 
+        public string MinDotnetTargetFramework { get; set; }
+
         [Output]
         public ITaskItem[] TestProjects { get; set; }
 
@@ -32,12 +34,11 @@ namespace Microsoft.DotNet.PackageTesting
                 foreach (var packagePath in PackagePaths)
                 {
                     Package package = NupkgParser.CreatePackageObject(packagePath);
-                    List<NuGetFramework> packageTargetFrameworks = package.PackageAssets.Select(asset => asset.TargetFramework).Where(tfm => tfm != null).Distinct().ToList();
 
-                    List<NuGetFramework> frameworksToTest = GetTestFrameworks(packageTargetFrameworks);
-                    testProjects.AddRange(CreateItemFromTestFramework(package.PackageId, package.Version, frameworksToTest, GetRidsFromPackage(package)));
+                    List<NuGetFramework> testFrameworks = GetTestFrameworks(package, MinDotnetTargetFramework);
+                    testProjects.AddRange(CreateItemFromTestFramework(package.PackageId, package.Version, testFrameworks));
                 }
-                
+
                 // Removing empty items.
                 TestProjects = testProjects.Where(tfm => tfm.ItemSpec != "").ToArray();
             }
@@ -45,56 +46,42 @@ namespace Microsoft.DotNet.PackageTesting
             {
                 Log.LogErrorFromException(e, showStackTrace: false);
             }
-            
+
             return result && !Log.HasLoggedErrors;
         }
 
-        public static List<NuGetFramework> GetTestFrameworks(List<NuGetFramework> packageTargetFrameworks)
+        public static List<NuGetFramework> GetTestFrameworks(Package package, string minDotnetTargetFramework)
         {
-            List<NuGetFramework> frameworksToTest = new List<NuGetFramework>();
+            List<NuGetFramework> frameworksToTest= new List<NuGetFramework>();
+            IEnumerable<NuGetFramework> packageTargetFrameworks = package.FrameworksInPackage;
 
             // Testing the package installation on all tfms linked with package targetframeworks.
             foreach (var item in packageTargetFrameworks)
             {
                 if (packageTfmMapping.ContainsKey(item))
-                    frameworksToTest.AddRange(packageTfmMapping[item].ToList());
+                {
+                    frameworksToTest.AddRange(packageTfmMapping[item]);
+                }
+                // Adding the frameworks in the packages to the test matrix.
+                frameworksToTest.Add(item);
             }
 
-            // Pruning the test matrix by removing the frameworks we dont want to test.
-            frameworksToTest = frameworksToTest.Where(tfm => allTargetFrameworks.Contains(tfm)).ToList();
+            if (!string.IsNullOrEmpty(minDotnetTargetFramework) && frameworksToTest.Contains(FrameworkConstants.CommonFrameworks.NetStandard20))
+                frameworksToTest.Add(NuGetFramework.Parse(minDotnetTargetFramework));
 
-            // Adding the frameworks in the packages to the test matrix;
-            frameworksToTest.AddRange(packageTargetFrameworks);
-            frameworksToTest = frameworksToTest.Distinct().ToList();
+            frameworksToTest = frameworksToTest.Where(tfm => allTargetFrameworks.Contains(tfm)).Distinct().ToList();
             return frameworksToTest;
         }
 
         public static void Initialize()
         {
             // Defining the set of known frameworks that we care to test
-            allTargetFrameworks.Add(FrameworkConstants.CommonFrameworks.NetCoreApp20);
-            allTargetFrameworks.Add(FrameworkConstants.CommonFrameworks.NetCoreApp21);
-            allTargetFrameworks.Add(FrameworkConstants.CommonFrameworks.NetCoreApp30);
             allTargetFrameworks.Add(FrameworkConstants.CommonFrameworks.NetCoreApp31);
             allTargetFrameworks.Add(FrameworkConstants.CommonFrameworks.Net50);
-            allTargetFrameworks.Add(FrameworkConstants.CommonFrameworks.Net45);
-            allTargetFrameworks.Add(FrameworkConstants.CommonFrameworks.Net451);
-            allTargetFrameworks.Add(FrameworkConstants.CommonFrameworks.Net452);
-            allTargetFrameworks.Add(FrameworkConstants.CommonFrameworks.Net46);
             allTargetFrameworks.Add(FrameworkConstants.CommonFrameworks.Net461);
             allTargetFrameworks.Add(FrameworkConstants.CommonFrameworks.Net462);
-            allTargetFrameworks.Add(FrameworkConstants.CommonFrameworks.Net463);
-            allTargetFrameworks.Add(FrameworkConstants.CommonFrameworks.NetStandard10);
-            allTargetFrameworks.Add(FrameworkConstants.CommonFrameworks.NetStandard11);
-            allTargetFrameworks.Add(FrameworkConstants.CommonFrameworks.NetStandard12);
-            allTargetFrameworks.Add(FrameworkConstants.CommonFrameworks.NetStandard13);
-            allTargetFrameworks.Add(FrameworkConstants.CommonFrameworks.NetStandard14);
-            allTargetFrameworks.Add(FrameworkConstants.CommonFrameworks.NetStandard15);
-            allTargetFrameworks.Add(FrameworkConstants.CommonFrameworks.NetStandard16);
-            allTargetFrameworks.Add(FrameworkConstants.CommonFrameworks.NetStandard17);
             allTargetFrameworks.Add(FrameworkConstants.CommonFrameworks.NetStandard20);
             allTargetFrameworks.Add(FrameworkConstants.CommonFrameworks.NetStandard21);
-            allTargetFrameworks.Add(FrameworkConstants.CommonFrameworks.UAP10);
 
             // creating a map framework in package => frameworks to test based on default compatibilty mapping.
             foreach (var item in DefaultFrameworkMappings.Instance.CompatibilityMappings)
@@ -111,52 +98,20 @@ namespace Microsoft.DotNet.PackageTesting
                 }
             }
         }
-    
-        public List<ITaskItem> CreateItemFromTestFramework(string packageId, string version, List<NuGetFramework> testFrameworks, string rids)
+
+        public List<ITaskItem> CreateItemFromTestFramework(string packageId, string version, List<NuGetFramework> targetFrameworks)
         {
             List<ITaskItem> testprojects = new List<ITaskItem>();
-            foreach (var framework in testFrameworks)
+            foreach (var framework in targetFrameworks)
             {
                 var supportedPackage = new TaskItem(packageId);
                 supportedPackage.SetMetadata("Version", version);
                 supportedPackage.SetMetadata("TargetFramework", framework.ToString());
                 supportedPackage.SetMetadata("TargetFrameworkShort", framework.GetShortFolderName());
-
-                if (!String.IsNullOrEmpty(rids))
-                {
-                    supportedPackage.SetMetadata("RuntimeIdentifiers", rids);
-                }
                 testprojects.Add(supportedPackage);
             }
 
             return testprojects;
         }
-    
-        public string GetRidsFromPackage(Package package)
-        {
-            List<string> rids = new List<string>();
-            foreach (var item in package.PackageAssets)
-            {
-                if (item.AssetType == AssetType.RuntimeAsset)
-                {
-                    string testRid = item.Rid;
-                    string testArch = testRid == "browser" ? "-wasm" : "-x64";
-                    if (testRid == "unix")
-                    {
-                        if (!rids.Contains("linux" + testArch))
-                            rids.Add("linux" + testArch);
-                        
-                        if (!rids.Contains("osx" + testArch))
-                            rids.Add("osx" + testArch);
-                    }
-                    else
-                    {
-                        if (!rids.Contains(testRid + testArch))
-                            rids.Add(testRid + testArch);
-                    }             
-                }
-            }
-            return string.Join(";", rids);
-        }
-    }    
+    }
 }
