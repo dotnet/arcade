@@ -196,6 +196,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// </summary>
         public bool UseStreamingPublishing { get; set; } = false;
 
+        public int StreamingPublishingMaxClients {get; set;}
+
+        public int NonStreamingPublishingMaxClients {get; set;}
+
         /// <summary>
         /// Just an internal flag to keep track whether we published assets via a V3 manifest or not.
         /// </summary>
@@ -389,7 +393,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 BuildId = this.BuildId,
                 AzureProject = this.AzureProject,
                 AzureDevOpsOrg = this.AzureDevOpsOrg,
-                UseStreamingPublishing = this.UseStreamingPublishing
+                UseStreamingPublishing = this.UseStreamingPublishing,
+                StreamingPublishingMaxClients = this.StreamingPublishingMaxClients,
+                NonStreamingPublishingMaxClients = this.NonStreamingPublishingMaxClients
             };
         }
     }

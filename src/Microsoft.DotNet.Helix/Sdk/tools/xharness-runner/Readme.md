@@ -59,13 +59,13 @@ To execute .app bundles, declare one or more `XHarnessAppBundleToTest` items:
 <ItemGroup>
   <!-- Find all directories named *.app -->
   <XHarnessAppBundleToTest Include="$([System.IO.Directory]::GetDirectories('$(TestArchiveTestsRoot)', '*.app', System.IO.SearchOption.AllDirectories))">
-    <Targets>ios-simulator-64_13.5</Targets>
+    <TestTarget>ios-simulator-64_13.5</TestTarget>
   </XHarnessAppBundleToTest>
 </ItemGroup>
 ```
 
-The `<Targets>` metadata is a required configuration that tells XHarness which kind of device/Simulator to target.
-Use the XHarness CLI help command to find more (see the `--targets` option).
+The `<TestTarget>` metadata is a required configuration that tells XHarness which kind of device/Simulator to target.
+Use the XHarness CLI help command to find more (see the `--target` option).
 
 You can also specify some additional metadata that will help you configure the run better:
 
@@ -163,17 +163,17 @@ Example:
 ```xml
 <ItemGroup>
   <XHarnessAppBundleToTest Include="path\to\Some.iOS.app">
-    <Targets>ios-simulator-64</Targets>
+    <TestTarget>ios-simulator-64</TestTarget>
     <WorkItemTimeout>00:12:00</WorkItemTimeout>
     <CustomCommands>
       set -e
-      deviceId=`xharness apple device $targets`
-      xharness apple install -t $targets --device "$deviceId" -o "$output_directory" --app=$app
+      deviceId=`xharness apple device $target`
+      xharness apple install -t $target --device "$deviceId" -o "$output_directory" --app=$app
       set +e
       result=0
-      xharness apple just-test -t $targets --device "$deviceId" -o "$output_directory" --app net.dot.Some.iOS --timeout 00:08:00
+      xharness apple just-test -t $target --device "$deviceId" -o "$output_directory" --app net.dot.Some.iOS --timeout 00:08:00
       ((result|=$?))
-      xharness apple uninstall -t $targets --device "$deviceId" -o "$output_directory" --app net.dot.Some.iOS
+      xharness apple uninstall -t $target --device "$deviceId" -o "$output_directory" --app net.dot.Some.iOS
       ((result|=$?))
       exit $result
     </CustomCommands>
@@ -187,7 +187,7 @@ When using `CustomCommands`, several variables will be defined for you for easie
 - `$app` - path to the application
 - `$output_directory` - path under which all files will be uploaded to Helix at the end of the job
   - If a file named `testResults.xml` is found containing xUnit results, it will be uploaded back to Azure DevOps
-- `$targets`, `$timeout`, `$launch_timeout`, `$expected_exit_code`, `$includes_test_runner` - parsed metadata defined on the original `XHarnessAppBundleToTest` MSBuild item
+- `$target`, `$timeout`, `$launch_timeout`, `$expected_exit_code`, `$includes_test_runner` - parsed metadata defined on the original `XHarnessAppBundleToTest` MSBuild item
 
 #### Variables defined for Android scenarios
 Android is currently not supported - coming soon!

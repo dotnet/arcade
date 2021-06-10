@@ -133,7 +133,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         {
             var mockBundle = new Mock<ITaskItem>();
             mockBundle.SetupGet(x => x.ItemSpec).Returns(path);
-            mockBundle.Setup(x => x.GetMetadata(CreateXHarnessAppleWorkItems.MetadataNames.Targets)).Returns(targets);
+            mockBundle.Setup(x => x.GetMetadata(CreateXHarnessAppleWorkItems.MetadataNames.Target)).Returns(targets);
             return mockBundle.Object;
         }
     }

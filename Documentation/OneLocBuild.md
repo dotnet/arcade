@@ -33,16 +33,16 @@ Onboarding to OneLocBuild is a simple process:
     LclSource: lclFilesfromPackage
     LclPackageId: 'LCL-JUNO-PROD-YOURREPO'
 ```
-7. Merge the changes to your main branch and then open a
+7. If using a mirrored repository (your code is mirrored to a trusted repository which your official build uses),
+   add the following parameter to your YAML (subbing e.g. `sdk` for the value):
+```yaml
+    MirrorRepo: {{name of your GitHub repository}}
+```
+8. Merge the changes to your main branch and then open a
    [repo modification ticket](https://ceapex.visualstudio.com/CEINTL/_workitems/create/Loc%20Request?templateId=415a0569-35ed-45c3-9321-8b1affff1f52&ownerId=c2e38d3d-0e9e-429f-955d-6e39fc6f0457)
    with the loc team to let them know to retarget the branch.
 
-As of 12 May 2021, if your repository is mirrored to internal with Maestro, you will also need to keep
-`CreatePr: false` in your YAML. Currently, OneLocBuild does not support our scenario. The step to create a PR back to
-GitHub expects a GitHub repository with the same name as the internal repo, so the step to create PRs fails,
-breaking the build. Thus, we turn off automated PR creation to skip this step and we are creating PRs manually prior to
-releases as a workaround. Please [get a hold of Engineering Services](https://github.com/dotnet/core-eng/wiki/How-to-get-a-hold-of-Engineering-Servicing)
-so that you can be updated when automated PR creation is supported.
+
 
 ## Releasing with OneLocBuild Using Arcade
 
@@ -134,6 +134,9 @@ The parameters that can be passed to the template are as follows:
 | `CreatePr` | `true` | When set to `true`, instructs the OneLocBuild task to make a PR back to the source repository containing the localized files. |
 | `AutoCompletePr` | `false` | When set to `true`, instructs the OneLocBuild task to autocomplete the created PR. Requires permissions to bypass any checks on the main branch. |
 | `UseLfLineEndings` | `true` | When set to `true`, instructs the OneLocBuild task to use LF line endings during check-in rather than CRLF. |
+| `GitHubOrg` | `'dotnet'` | The GitHub org to be used when making a PR from a mirrored repository. |
+| `MirrorRepo` | `''` | The name of the GitHub repository to make a PR to (when using a mirrored repository). |
+| `MirrorBranch` | `'main'` | The branch on GitHub to make a PR to (when using a mirrored repository). |
 | `UseCheckedInLocProjectJson` | `false` | When set to `true`, instructs the LocProject.json generation script to use build-time validation rather than build-time generation, as described above. |
 | `LanguageSet` | `VS_Main_Languages` | This defines the `LanguageSet` of the LocProject.json as described in the [OneLocBuild task documentation](https://ceapex.visualstudio.com/CEINTL/_wiki/wikis/CEINTL.wiki/107/Localization-with-OneLocBuild-Task?anchor=languageset%2C-languages-(required)). |
 | `LclSource` | `LclFilesInRepo` | This passes the `LclSource` input to the OneLocBuild task as described in [its documentation](https://ceapex.visualstudio.com/CEINTL/_wiki/wikis/CEINTL.wiki/107/Localization-with-OneLocBuild-Task?anchor=languageset%2C-languages-(required)). For most repos, this should be set to `LclFilesfromPackage`. |
