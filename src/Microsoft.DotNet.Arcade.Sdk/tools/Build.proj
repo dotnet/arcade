@@ -1,5 +1,5 @@
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
-<Project DefaultTargets="Execute">
+<Project DefaultTargets="Execute" TreatAsLocalProperty="RepoRoot">
   <!--
 
   Required parameters:
@@ -33,6 +33,9 @@
   -->
 
   <PropertyGroup>
+    <_RepoRootOriginal>$(RepoRoot)</_RepoRootOriginal>
+    <RepoRoot>$([System.IO.Path]::GetFullPath('$(RepoRoot)/'))</RepoRoot>
+
     <_OriginalProjectsValue>$(Projects)</_OriginalProjectsValue>
   </PropertyGroup>
 
@@ -77,8 +80,8 @@
 
   <Target Name="Execute">
     <Error Text="No projects were found to build. Either the 'Projects' property or 'ProjectToBuild' item group must be specified." Condition="'@(ProjectToBuild)' == ''"/>
-    <Error Text="Property 'RepoRoot' must be specified" Condition="'$(RepoRoot)' == ''"/>
-    <Error Text="File 'global.json' must exist in directory specified by RepoRoot: '$(RepoRoot)'" Condition="'$(RepoRoot)' != '' and !Exists('$(RepoRoot)global.json')"/>
+    <Error Text="Property 'RepoRoot' must be specified" Condition="'$(_RepoRootOriginal)' == ''"/>
+    <Error Text="File 'global.json' must exist in directory specified by RepoRoot: '$(_RepoRootOriginal)'" Condition="'$(_RepoRootOriginal)' != '' and !Exists('$(RepoRoot)global.json')"/>
 
     <PropertyGroup>
       <!-- 'IsRunningFromVisualStudio' may be true even when running msbuild.exe from command line. This generally means that MSBuild is from a Visual Studio installation and therefore we need to find NuGet.targets in a different location. -->

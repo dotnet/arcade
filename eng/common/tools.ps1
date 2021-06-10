@@ -702,10 +702,7 @@ function MSBuild-Core() {
   }
 
   foreach ($arg in $args) {
-    if ($null -ne $arg -and $arg.Trim() -ne "") {
-      if ($arg.EndsWith('\')) {
-        $arg = $arg + "\"
-      }
+    if ($arg -ne $null -and $arg.Trim() -ne "") {
       $cmdArgs += " `"$arg`""
     }
   }
@@ -777,7 +774,7 @@ function Get-Darc($version) {
 
 . $PSScriptRoot\pipeline-logging-functions.ps1
 
-$RepoRoot = Resolve-Path (Join-Path $PSScriptRoot '..\..\')
+$RepoRoot = Resolve-Path (Join-Path $PSScriptRoot '..\..')
 $EngRoot = Resolve-Path (Join-Path $PSScriptRoot '..')
 $ArtifactsDir = Join-Path $RepoRoot 'artifacts'
 $ToolsetDir = Join-Path $ArtifactsDir 'toolset'
