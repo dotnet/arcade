@@ -3,7 +3,7 @@
 
 using System;
 using System.IO;
-using Microsoft.Arcade.Test.Common;
+using Microsoft.DotNet.Arcade.Sdk.Tests.Utilities;
 using Xunit;
 
 namespace Microsoft.DotNet.Build.Tasks.Templating.Tests
@@ -46,7 +46,7 @@ namespace Microsoft.DotNet.Build.Tasks.Templating.Tests
             try
             {
                 GenerateFileFromTemplate task = new();
-                task.BuildEngine = new MockBuildEngine();
+                task.BuildEngine = new MockEngine();
                 task.TemplateFile = GetFullPath("Directory.Build.props.in");
                 task.OutputPath = filePath;
                 task.Properties = new[] { invalidProperty };
@@ -71,7 +71,7 @@ namespace Microsoft.DotNet.Build.Tasks.Templating.Tests
             try
             {
                 GenerateFileFromTemplate task = new();
-                task.BuildEngine = new MockBuildEngine();
+                task.BuildEngine = new MockEngine();
                 task.TemplateFile = GetFullPath(filename);
                 task.OutputPath = filePath;
                 task.Properties = new[] { "DefaultNetCoreTargetFramework=net6.0" };
