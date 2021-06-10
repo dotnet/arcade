@@ -21,7 +21,7 @@ namespace Microsoft.DotNet.PackageTesting.Tests
             {  
                 new List<string> 
                 { 
-                    @"lib/netstandard2.0/TestPackage.dll",
+                    @"lib/netstandard2.0/TestPackage.dll"
                 },
                 new List<NuGetFramework> 
                 { 
@@ -135,7 +135,7 @@ namespace Microsoft.DotNet.PackageTesting.Tests
         public void GetCompatibleFrameworks(List<string> filePaths, List<NuGetFramework> expectedTestFrameworks)
         {
             Package package = new("TestPackage", "1.0.0", filePaths);
-            List<NuGetFramework> actualTestFrameworks = GetCompatiblePackageTargetFrameworks.GetTestFrameworks(package, "netcoreapp3.1");
+            IEnumerable<NuGetFramework> actualTestFrameworks = GetCompatiblePackageTargetFrameworks.GetTestFrameworks(package, "netcoreapp3.1");
             CollectionsEqual(expectedTestFrameworks, actualTestFrameworks);
         }
 

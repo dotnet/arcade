@@ -23,10 +23,10 @@ namespace Microsoft.DotNet.PackageTesting
             IEnumerable<ContentItem> RefAssets = packageAssets.FindItems(conventions.Patterns.CompileRefAssemblies);
             IEnumerable<ContentItem> LibAssets = packageAssets.FindItems(conventions.Patterns.CompileLibAssemblies);
             IEnumerable<ContentItem> CompileAssets = RefAssets.Any() ? RefAssets : LibAssets;
-            List<NuGetFramework> FrameworksInPackageList = CompileAssets?.Select(t => (NuGetFramework)t.Properties["tfm"]).ToList();
+            List<NuGetFramework> FrameworksInPackageList = CompileAssets.Select(t => (NuGetFramework)t.Properties["tfm"]).ToList();
 
             IEnumerable<ContentItem> RuntimeAssets = packageAssets.FindItems(conventions.Patterns.RuntimeAssemblies);
-            FrameworksInPackageList.AddRange(RuntimeAssets?.Select(t => (NuGetFramework)t.Properties["tfm"]).Distinct());
+            FrameworksInPackageList.AddRange(RuntimeAssets.Select(t => (NuGetFramework)t.Properties["tfm"]).Distinct());
             FrameworksInPackage = FrameworksInPackageList.Distinct();
         }
 

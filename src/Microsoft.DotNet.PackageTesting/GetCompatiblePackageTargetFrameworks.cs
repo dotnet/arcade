@@ -35,7 +35,7 @@ namespace Microsoft.DotNet.PackageTesting
                 {
                     Package package = NupkgParser.CreatePackageObject(packagePath);
 
-                    List<NuGetFramework> testFrameworks = GetTestFrameworks(package, MinDotnetTargetFramework);
+                    IEnumerable<NuGetFramework> testFrameworks = GetTestFrameworks(package, MinDotnetTargetFramework);
                     testProjects.AddRange(CreateItemFromTestFramework(package.PackageId, package.Version, testFrameworks));
                 }
 
@@ -50,7 +50,7 @@ namespace Microsoft.DotNet.PackageTesting
             return result && !Log.HasLoggedErrors;
         }
 
-        public static List<NuGetFramework> GetTestFrameworks(Package package, string minDotnetTargetFramework)
+        public static IEnumerable<NuGetFramework> GetTestFrameworks(Package package, string minDotnetTargetFramework)
         {
             List<NuGetFramework> frameworksToTest= new List<NuGetFramework>();
             IEnumerable<NuGetFramework> packageTargetFrameworks = package.FrameworksInPackage;
@@ -59,9 +59,7 @@ namespace Microsoft.DotNet.PackageTesting
             foreach (var item in packageTargetFrameworks)
             {
                 if (packageTfmMapping.ContainsKey(item))
-                {
                     frameworksToTest.AddRange(packageTfmMapping[item]);
-                }
                 // Adding the frameworks in the packages to the test matrix.
                 frameworksToTest.Add(item);
             }
@@ -69,8 +67,7 @@ namespace Microsoft.DotNet.PackageTesting
             if (!string.IsNullOrEmpty(minDotnetTargetFramework) && frameworksToTest.Contains(FrameworkConstants.CommonFrameworks.NetStandard20))
                 frameworksToTest.Add(NuGetFramework.Parse(minDotnetTargetFramework));
 
-            frameworksToTest = frameworksToTest.Where(tfm => allTargetFrameworks.Contains(tfm)).Distinct().ToList();
-            return frameworksToTest;
+            return frameworksToTest.Where(tfm => allTargetFrameworks.Contains(tfm)).Distinct();
         }
 
         public static void Initialize()
@@ -99,10 +96,10 @@ namespace Microsoft.DotNet.PackageTesting
             }
         }
 
-        public List<ITaskItem> CreateItemFromTestFramework(string packageId, string version, List<NuGetFramework> targetFrameworks)
+        public List<ITaskItem> CreateItemFromTestFramework(string packageId, string version, IEnumerable<NuGetFramework> testFrameworks)
         {
             List<ITaskItem> testprojects = new List<ITaskItem>();
-            foreach (var framework in targetFrameworks)
+            foreach (var framework in testFrameworks)
             {
                 var supportedPackage = new TaskItem(packageId);
                 supportedPackage.SetMetadata("Version", version);
