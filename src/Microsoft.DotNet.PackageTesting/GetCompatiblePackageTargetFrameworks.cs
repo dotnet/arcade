@@ -19,7 +19,8 @@ namespace Microsoft.DotNet.PackageTesting
         [Required]
         public string[] PackagePaths { get; set; }
 
-        public string MinDotnetTargetFramework { get; set; }
+        [Required]
+        public string SupportedFrameworks { get; set; }
 
         [Output]
         public ITaskItem[] TestProjects { get; set; }
@@ -30,12 +31,14 @@ namespace Microsoft.DotNet.PackageTesting
             List<ITaskItem> testProjects = new List<ITaskItem>();
             try
             {
-                Initialize();
+                Initialize(SupportedFrameworks);
+                string minDotnetTargetFramework = allTargetFrameworks.Where(t => t.Framework == ".NETCoreApp").OrderBy(t => t.Version).FirstOrDefault()?.GetShortFolderName();
+
                 foreach (var packagePath in PackagePaths)
                 {
                     Package package = NupkgParser.CreatePackageObject(packagePath);
 
-                    IEnumerable<NuGetFramework> testFrameworks = GetTestFrameworks(package, MinDotnetTargetFramework);
+                    IEnumerable<NuGetFramework> testFrameworks = GetTestFrameworks(package, minDotnetTargetFramework);
                     testProjects.AddRange(CreateItemFromTestFramework(package.PackageId, package.Version, testFrameworks));
                 }
 
@@ -64,21 +67,19 @@ namespace Microsoft.DotNet.PackageTesting
                 frameworksToTest.Add(item);
             }
 
-            if (!string.IsNullOrEmpty(minDotnetTargetFramework) && frameworksToTest.Contains(FrameworkConstants.CommonFrameworks.NetStandard20))
+            if (!string.IsNullOrEmpty(minDotnetTargetFramework) && frameworksToTest.Any(t => t.Framework == ".NETStandard"))
                 frameworksToTest.Add(NuGetFramework.Parse(minDotnetTargetFramework));
 
             return frameworksToTest.Where(tfm => allTargetFrameworks.Contains(tfm)).Distinct();
         }
 
-        public static void Initialize()
+        public static void Initialize(string targetFrameworks)
         {
             // Defining the set of known frameworks that we care to test
-            allTargetFrameworks.Add(FrameworkConstants.CommonFrameworks.NetCoreApp31);
-            allTargetFrameworks.Add(FrameworkConstants.CommonFrameworks.Net50);
-            allTargetFrameworks.Add(FrameworkConstants.CommonFrameworks.Net461);
-            allTargetFrameworks.Add(FrameworkConstants.CommonFrameworks.Net462);
-            allTargetFrameworks.Add(FrameworkConstants.CommonFrameworks.NetStandard20);
-            allTargetFrameworks.Add(FrameworkConstants.CommonFrameworks.NetStandard21);
+            foreach (var tfm in targetFrameworks.Split(';'))
+            {
+                allTargetFrameworks.Add(NuGetFramework.Parse(tfm));
+            }
 
             // creating a map framework in package => frameworks to test based on default compatibilty mapping.
             foreach (var item in DefaultFrameworkMappings.Instance.CompatibilityMappings)

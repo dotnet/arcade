@@ -11,7 +11,7 @@ namespace Microsoft.DotNet.PackageTesting.Tests
     {
         public GetCompatibilePackageTargetFrameworksTests()
         {
-            GetCompatiblePackageTargetFrameworks.Initialize();
+            GetCompatiblePackageTargetFrameworks.Initialize("netcoreapp3.1;net5.0;net6.0;net461;net462;net471;net472;netstandard2.0;netstandard2.1");
         }
 
         public static IEnumerable<object[]> PackageTfmData => new List<object[]>
@@ -113,6 +113,7 @@ namespace Microsoft.DotNet.PackageTesting.Tests
                     FrameworkConstants.CommonFrameworks.NetStandard20,
                     FrameworkConstants.CommonFrameworks.Net461,
                     FrameworkConstants.CommonFrameworks.Net462,
+                    NuGetFramework.Parse("net472"),
                     FrameworkConstants.CommonFrameworks.NetCoreApp31,
                     FrameworkConstants.CommonFrameworks.Net50
                 }
