@@ -66,6 +66,15 @@
         <PublicSign>false</PublicSign> <!-- The Open strong name key is a full key -->
       </PropertyGroup>
     </When>
+    <When Condition="'$(StrongNameKeyId)' == 'Test'">
+      <PropertyGroup>
+        <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)snk/Test.snk</AssemblyOriginatorKeyFile>
+        <PublicKey>$(TestPublicKey)</PublicKey>
+        <PublicKeyToken>9d77cc7ad39b68eb</PublicKeyToken>
+        <DelaySign>false</DelaySign>
+        <PublicSign>false</PublicSign> <!-- The Test strong name key is a full key -->
+      </PropertyGroup>
+    </When>
     <When Condition="'$(StrongNameKeyId)' == 'SilverlightPlatform'">
       <PropertyGroup>
         <AssemblyOriginatorKeyFile>$(MSBuildThisFileDirectory)snk/SilverlightPlatformPublicKey.snk</AssemblyOriginatorKeyFile>
