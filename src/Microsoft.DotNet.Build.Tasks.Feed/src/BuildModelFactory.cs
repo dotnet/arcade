@@ -256,7 +256,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         {
             foreach(var attribute in attributes.ToList())
             {
-                attributes[attribute.Key] = NormalizeUrl(attribute.Value);
+                attributes[attribute.Key] = NormalizeAzureDevOpsUrl(attribute.Value);
             }
         }
 
@@ -269,7 +269,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// </summary>
         /// <param name="repoUri">The original url</param>
         /// <returns>Transformed url</returns>
-        private string NormalizeUrl(string repoUri)
+        private string NormalizeAzureDevOpsUrl(string repoUri)
         {
             if (Uri.TryCreate(repoUri, UriKind.Absolute, out Uri parsedUri))
             {
