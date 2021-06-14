@@ -41,7 +41,7 @@ Onboarding to OneLocBuild is a simple process:
 ```
 This naming might be confusing for repositories using code mirroring through Maestro, as typically the
 "mirror repository" refers to the trusted Azure DevOps repository our GitHub repositories mirror to.
-In this case, however, it refers to the GitHub repository which is a _mirror of_ the Azure DevOps repository
+In this case, however, it refers to the repository that _mirrors to_ the Azure DevOps repository
 that the official build is based on.
 
 As a further note, the template by default assumes that your mirror repository is located in the dotnet GitHub
