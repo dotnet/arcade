@@ -20,6 +20,12 @@ Onboarding to OneLocBuild is a simple process:
   parameters:
     CreatePr: false
 ```
+Note: If you are running your PR builds and official builds off of the same definition and are on dnceng,
+you will want to conditionalize this step with the following:
+```yaml
+- ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
+```
+To prevent OneLocBuild from running in the public project where it will fail.
 3. Run the pipeline you want to use OneLocBuild on your test branch.
 4. Open a ticket with the localization team using
    [this template](https://ceapex.visualstudio.com/CEINTL/_workitems/create/Loc%20Request?templateId=60b0dcf9-9892-4910-934e-d5becddd1bc1&ownerId=c2e38d3d-0e9e-429f-955d-6e39fc6f0457).
@@ -28,13 +34,18 @@ Onboarding to OneLocBuild is a simple process:
    `LCL-JUNO-PROD-YOURREPO`.
 6. Change your YAML (subbing `'LCL-JUNO-PROD-YOURREPO'` for the package ID given to you) to:
 ```yaml
-- {{ if eq(variables['Build.SourceBranch'], 'refs/heads/main') }}:
+- ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/main') }}:
   - template: /eng/common/templates/job/onelocbuild.yml
     parameters:
       LclSource: lclFilesfromPackage
       LclPackageId: 'LCL-JUNO-PROD-YOURREPO'
 ```
-Make sure to remove the `CreatePr: false` line from step 2.
+Make sure to remove the `CreatePr: false` line from step 2. Additionally, if you added the YAML condition from step
+2, make sure that your new YAML condition now looks like:
+```yaml
+- ${{ if and(and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')), eq(variables['Build.SourceBranch'], 'refs/heads/main')) }}:
+```
+
 7. If using a mirrored repository (your code is mirrored to a trusted repository which your official build uses),
    add the following parameter to your YAML (subbing e.g. `sdk` for the value):
 ```yaml
