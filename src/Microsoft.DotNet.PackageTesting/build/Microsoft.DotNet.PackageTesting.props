@@ -5,6 +5,21 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <SupportedTestFramework Include="netcoreapp3.1;net5.0;net6.0;net461;net462;net471;net472;net48;netstandard2.0;netstandard2.1" />
+    <SupportedTestFramework Include="netcoreapp3.1" />
+    <SupportedTestFramework Include="net5.0" />
+    <SupportedTestFramework Include="net6.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <SupportedTestFramework Include="netstandard2.0" />
+    <SupportedTestFramework Include="netstandard2.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <SupportedTestFramework Include="net461" />
+    <SupportedTestFramework Include="net462" />
+    <SupportedTestFramework Include="net471" />
+    <SupportedTestFramework Include="net472" />
+    <SupportedTestFramework Include="net48" />
   </ItemGroup>
 </Project>
