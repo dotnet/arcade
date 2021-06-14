@@ -20,7 +20,7 @@ namespace Microsoft.DotNet.PackageTesting
         public string[] PackagePaths { get; set; }
 
         [Required]
-        public string SupportedFrameworks { get; set; }
+        public string SupportedTestFrameworks { get; set; }
 
         [Output]
         public ITaskItem[] TestProjects { get; set; }
@@ -31,7 +31,7 @@ namespace Microsoft.DotNet.PackageTesting
             List<ITaskItem> testProjects = new List<ITaskItem>();
             try
             {
-                Initialize(SupportedFrameworks);
+                Initialize(SupportedTestFrameworks);
                 string minDotnetTargetFramework = allTargetFrameworks.Where(t => t.Framework == ".NETCoreApp").OrderBy(t => t.Version).FirstOrDefault()?.GetShortFolderName();
 
                 foreach (var packagePath in PackagePaths)

@@ -3,4 +3,8 @@
     <DotNetPackageTestingAssembly Condition="'$(MSBuildRuntimeType)' != 'Core'">$(MSBuildThisFileDirectory)..\tools\net472\Microsoft.DotNet.PackageTesting.dll</DotNetPackageTestingAssembly>
     <DotNetPackageTestingAssembly Condition="'$(MSBuildRuntimeType)' == 'Core'">$(MSBuildThisFileDirectory)..\tools\netcoreapp3.1\Microsoft.DotNet.PackageTesting.dll</DotNetPackageTestingAssembly>
   </PropertyGroup>
+
+  <ItemGroup>
+    <SupportedTestFramework Include="netcoreapp3.1;net5.0;net6.0;net461;net462;net471;net472;net48;netstandard2.0;netstandard2.1" />
+  </ItemGroup>
 </Project>
