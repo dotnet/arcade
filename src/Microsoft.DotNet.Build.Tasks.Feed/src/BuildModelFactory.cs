@@ -8,6 +8,7 @@ using Microsoft.DotNet.VersionTools.BuildManifest.Model;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 
@@ -253,14 +254,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         private void NormalizeUrisInBuildData(IDictionary<string, string> attributes)
         {
-            if (attributes.ContainsKey("AzureDevOpsRepository"))
+            foreach(var attribute in attributes.ToList())
             {
-                attributes["AzureDevOpsRepository"] = NormalizeUrl(attributes["AzureDevOpsRepository"]);
-            }
-
-            if (attributes.ContainsKey("InitialAssetsLocation"))
-            {
-                attributes["InitialAssetsLocation"] = NormalizeUrl(attributes["InitialAssetsLocation"]);
+                attributes[attribute.Key] = NormalizeUrl(attribute.Value);
             }
         }
 
