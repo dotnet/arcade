@@ -39,10 +39,13 @@ Onboarding to OneLocBuild is a simple process:
 ```yaml
     MirrorRepo: {{name of your GitHub repository, e.g. 'sdk'}}
 ```
-This naming might be confusing for repositories using code mirroring through Maestro, as typically the "mirror repository"
-refers to the trusted Azure DevOps repository our GitHub repositories mirror to. In this case, however, it refers to the GitHub repository which is a _mirror of_ the Azure DevOps repository that the official build is based on.
+This naming might be confusing for repositories using code mirroring through Maestro, as typically the
+"mirror repository" refers to the trusted Azure DevOps repository our GitHub repositories mirror to.
+In this case, however, it refers to the GitHub repository which is a _mirror of_ the Azure DevOps repository
+that the official build is based on.
 
-As a further note, the template by default assumes that your mirror repository is located in the dotnet GitHub organization. If that is not the case, you will need to specify `GitHubOrg` as well.
+As a further note, the template by default assumes that your mirror repository is located in the dotnet GitHub
+organization. If that is not the case, you will need to specify `GitHubOrg` as well.
 
 8. Merge the changes to your main branch and then open a
    [repo modification ticket](https://ceapex.visualstudio.com/CEINTL/_workitems/create/Loc%20Request?templateId=415a0569-35ed-45c3-9321-8b1affff1f52&ownerId=c2e38d3d-0e9e-429f-955d-6e39fc6f0457)
