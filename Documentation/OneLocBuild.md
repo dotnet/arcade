@@ -34,10 +34,11 @@ Onboarding to OneLocBuild is a simple process:
       LclSource: lclFilesfromPackage
       LclPackageId: 'LCL-JUNO-PROD-YOURREPO'
 ```
+Make sure to remove the `CreatePr: false` line from step 2.
 7. If using a mirrored repository (your code is mirrored to a trusted repository which your official build uses),
    add the following parameter to your YAML (subbing e.g. `sdk` for the value):
 ```yaml
-    MirrorRepo: {{name of your GitHub repository, e.g. 'sdk'}}
+    MirrorRepo: name of your GitHub repository, e.g. 'sdk'
 ```
 This naming might be confusing for repositories using code mirroring through Maestro, as typically the
 "mirror repository" refers to the trusted Azure DevOps repository our GitHub repositories mirror to.
