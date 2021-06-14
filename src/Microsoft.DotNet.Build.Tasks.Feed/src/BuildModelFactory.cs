@@ -271,7 +271,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         // https://dnceng.visualstudio.com/internal/_git/repo we replace it to "dev.azure.com/dnceng"
         // for consistency
         /// </summary>
-        /// <param name="url">The original url</param>
+        /// <param name="repoUri">The original url</param>
         /// <returns>Transformed url</returns>
         private string NormalizeUrl(string repoUri)
         {
