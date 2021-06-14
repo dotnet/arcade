@@ -538,7 +538,7 @@ targets file will be available within the `.nuspec` file via variable `$SourceLi
 
 ## Building VSIX packages (optional)
 
-Building Visual Studio components is an opt-in feature of the Arcade SDK. Property `UsingToolVSSDK` needs to be set to `true` in the `Versions.props` file.
+Building Visual Studio components is an opt-in feature of the Arcade SDK. Property `UsingToolVSSDK` needs to be set to `true` in the `Versions.props` file.  You need to build using framework MSBuild when building VSIX packages.  To build using framework MSBuild, [specify the MSBuild engine](https://github.com/dotnet/arcade/blob/0916e2d4f072d0a87db15803ce5572ff687354d4/eng/common/build.ps1#L68) as VS when building.
 
 Set `VSSDKTargetPlatformRegRootSuffix` property to specify the root suffix of the VS hive to deploy to.
 
