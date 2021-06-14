@@ -75,7 +75,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         private static readonly string AzureDevOpsHostPattern = @"dev\.azure\.com\";
 
         private readonly Regex LegacyRepositoryUriPattern = new Regex(
-            @"^https://(?<account>[a-zA-Z0-9]+)\.visualstudio\.com/.*");
+            @"^https://(?<account>[a-zA-Z0-9]+)\.visualstudio\.com/");
 
         /// <summary>
         /// Create a build manifest for packages, blobs, and associated signing information
