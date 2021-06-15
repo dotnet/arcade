@@ -19,7 +19,7 @@ function MakeDefaultChannel($repo, $branch, $channel)
 function DisableFlow($channel)
 {
     Write-Host "Disabling flow on $channel"
-    & darc subscription-status --disable --channel "$channel" --quiet
+    & darc subscription-status --disable --channel "$channel" --quiet --exact
 }
 
 function AddFlow($sourceRepo, $sourceChannel, $targetRepo, $targetBranch, $frequency)
@@ -62,8 +62,10 @@ MakeDefaultChannel https://github.com/mono/linker $RuntimeBranch $RuntimeChannel
 
 if ($AddInternalFlow) {
     # Because of where internal fixes tend to be, we eliminate some leaves in the graph
-    # and flow them through the normal public channels: wpf-int, emsdk, icu, linker.
+    # and flow them through the normal public channels: emsdk, icu, linker.
+    # wpf-int gets assigned to the internal channel in addition (since there is no public->internal merge)
     Write-Host "Making default channels for internal branches of runtime repos"
+    MakeDefaultChannel https://dev.azure.com/dnceng/internal/_git/dotnet-wpf-int $RuntimeBranch $InternalRuntimeChannel
     MakeDefaultChannel https://dev.azure.com/dnceng/internal/_git/dotnet-aspnetcore $InternalRuntimeBranch $InternalRuntimeChannel
     MakeDefaultChannel https://dev.azure.com/dnceng/internal/_git/dotnet-efcore $InternalRuntimeBranch $InternalRuntimeChannel
     MakeDefaultChannel https://dev.azure.com/dnceng/internal/_git/dotnet-runtime $InternalRuntimeBranch $InternalRuntimeChannel
@@ -126,6 +128,7 @@ if ($AddInternalFlow) {
     Write-Host "Adding internal runtime -> internal runtime flow"
     AddBatchedFlow https://dev.azure.com/dnceng/internal/_git/dotnet-efcore $InternalRuntimeChannel https://dev.azure.com/dnceng/internal/_git/dotnet-aspnetcore $InternalRuntimeBranch EveryBuild
     AddBatchedFlow https://dev.azure.com/dnceng/internal/_git/dotnet-runtime $InternalRuntimeChannel https://dev.azure.com/dnceng/internal/_git/dotnet-aspnetcore $InternalRuntimeBranch EveryBuild
+    AddFlow https://dev.azure.com/dnceng/internal/_git/dotnet-wpf-int $InternalRuntimeChannel https://dev.azure.com/dnceng/internal/_git/dotnet-wpf $InternalRuntimeBranch EveryBuild
     AddFlow https://dev.azure.com/dnceng/internal/_git/dotnet-runtime $InternalRuntimeChannel https://dev.azure.com/dnceng/internal/_git/dotnet-efcore $InternalRuntimeBranch EveryBuild
     AddFlow https://dev.azure.com/dnceng/internal/_git/dotnet-runtime $InternalRuntimeChannel https://dev.azure.com/dnceng/internal/_git/dotnet-winforms $InternalRuntimeBranch EveryBuild
     AddFlow https://dev.azure.com/dnceng/internal/_git/dotnet-winforms $InternalRuntimeChannel https://dev.azure.com/dnceng/internal/_git/dotnet-wpf $InternalRuntimeBranch EveryBuild
