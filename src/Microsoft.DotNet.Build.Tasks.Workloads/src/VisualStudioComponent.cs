@@ -40,6 +40,15 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         public bool HasDependencies => Dependencies.Count > 0;
 
         /// <summary>
+        /// When "no", the component is visible in both the workloads and individual components tab.
+        /// When "yes", the component is only visible in the workloads tab.
+        /// </summary>
+        public string IsUiGroup
+        {
+            get;
+        } = "no";
+
+        /// <summary>
         /// The component name (ID).
         /// </summary>
         public string Name
@@ -74,7 +83,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
 
         private ICollection<VisualStudioDependency> Dependencies = new List<VisualStudioDependency>();
 
-        public VisualStudioComponent(string name, string description, string title, Version version, ITaskItem[] shortNames,
+        public VisualStudioComponent(string name, string description, string title, Version version, string isUiGroup, ITaskItem[] shortNames,
             string category)
         {
             Name = name;
@@ -83,6 +92,17 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             Version = version;
             ShortNames = shortNames;
             Category = category;
+            IsUiGroup = isUiGroup;
+        }
+
+        /// <summary>
+        /// Add a component dependency using the provided name and version.
+        /// </summary>
+        /// <param name="name">The name (ID) of the dependency.</param>
+        /// <param name="exactVersion">The version of the dependency.</param>
+        public void AddDependency(string name, Version exactVersion)
+        {
+            AddDependency(new VisualStudioDependency(name, exactVersion, exactVersion));
         }
 
         /// <summary>
@@ -90,9 +110,9 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         /// </summary>
         /// <param name="name">The name (ID) of the dependency.</param>
         /// <param name="version">The version of the dependency.</param>
-        public void AddDependency(string name, Version version)
+        public void AddDependency(string name, Version minVersion, Version maxVersion)
         {
-            AddDependency(new VisualStudioDependency(name, version));
+            AddDependency(new VisualStudioDependency(name, minVersion, maxVersion));
         }
 
         /// <summary>
@@ -119,7 +139,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         /// <param name="pack">The dependency to add to this component.</param>
         public void AddDependency(WorkloadPack pack)
         {
-            AddDependency($"{pack.Id.ToString().Replace(ShortNames)}.{pack.Version}", new NuGetVersion(pack.Version).Version);
+            AddDependency($"{pack.Id.ToString().Replace(ShortNames)}.{pack.Version}", new NuGetVersion(pack.Version).Version, maxVersion: null);
         }
 
         public IEnumerable<VisualStudioDependency> GetAliasedDependencies(WorkloadPack pack)
@@ -164,7 +184,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                 //                 version=[1.2.3.4]
 
                 swrWriter.WriteLine($"  vs.dependency id={dependency.Id}");
-                swrWriter.WriteLine($"                version=[{dependency.Version}]");
+                swrWriter.WriteLine($"                version={dependency.GetVersion()}");
                 swrWriter.WriteLine($"                behaviors=IgnoreApplicabilityFailures");
             }
 
@@ -179,7 +199,8 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                 {"__VS_PACKAGE_VERSION__", Version.ToString() },
                 {"__VS_COMPONENT_TITLE__", Title },
                 {"__VS_COMPONENT_DESCRIPTION__", Description },
-                {"__VS_COMPONENT_CATEGORY__", Category ?? ".NET" }
+                {"__VS_COMPONENT_CATEGORY__", Category ?? ".NET" },
+                {"__VS_IS_UI_GROUP__", IsUiGroup ?? "no" }
             };
         }
 
@@ -214,12 +235,24 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             string title = resourceItem?.GetMetadata(Metadata.Title) ?? workload.Description;
             string description = resourceItem?.GetMetadata(Metadata.Description) ?? workload.Description;
             string category = resourceItem?.GetMetadata(Metadata.Category) ?? ".NET";
+            string isUiGroup = workload.IsAbstract ? "yes" : "no";
 
             VisualStudioComponent component = new(Utils.ToSafeId(workloadId), description,
-                title, version, shortNames, category);
+                title, version, isUiGroup, shortNames, category);
 
             IEnumerable<string> missingPackIds = missingPacks.Select(p => p.ItemSpec);
             log?.LogMessage(MessageImportance.Low, $"Missing packs: {string.Join(", ", missingPackIds)}");
+
+            // If the work extends other workloads, we add those as component dependencies before
+            // processing direct pack dependencies
+            if (workload.Extends?.Count() > 0)
+            {
+                foreach (WorkloadDefinitionId dependency in workload.Extends)
+                {
+                    // Component dependencies, aka. workload extensions only have minimum version dependencies.
+                    component.AddDependency($"{Utils.ToSafeId(dependency.ToString())}", new Version("1.0.0.0"), maxVersion: null);
+                }
+            }
 
             // Visual Studio is case-insensitive. 
             IEnumerable<WorkloadPackId> packIds = workload.Packs.Where(p => !missingPackIds.Contains($"{p}", StringComparer.OrdinalIgnoreCase));
