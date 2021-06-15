@@ -117,7 +117,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
         }
 
         [Fact]
-        public void ItSkipsAbstractManifests()
+        public void ItIncludesAbstractManifests()
         {
             var buildTask = new GenerateVisualStudioWorkload()
             {
@@ -132,11 +132,14 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
             };
 
             Assert.True(buildTask.Execute());
-            string outputPath = Path.GetDirectoryName(buildTask.SwixProjects[0].GetMetadata("FullPath"));
-            string componentSwr = File.ReadAllText(Path.Combine(outputPath, "component.swr"));
-            Assert.Single(buildTask.SwixProjects);
+            string blazorOutputPath = Path.GetDirectoryName(buildTask.SwixProjects[0].GetMetadata("FullPath"));
+            string blazorComponentSwr = File.ReadAllText(Path.Combine(blazorOutputPath, "component.swr"));
             Assert.Contains(@"package name=microsoft.net.sdk.blazorwebassembly.aot
-        version=6.0.0.0", componentSwr);
+        version=6.0.0.0", blazorComponentSwr);
+            string androidOutputPath = Path.GetDirectoryName(buildTask.SwixProjects[1].GetMetadata("FullPath"));
+            string androidComponentSwr = File.ReadAllText(Path.Combine(androidOutputPath, "component.swr"));
+            Assert.Contains(@"package name=microsoft.net.runtime.android
+        version=6.0.0.0", androidComponentSwr);
         }
 
         [Fact]

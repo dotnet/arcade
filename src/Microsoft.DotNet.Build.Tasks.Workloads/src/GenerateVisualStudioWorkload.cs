@@ -222,14 +222,6 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
 
             foreach (WorkloadDefinition workloadDefinition in manifest.Workloads.Values)
             {
-                // Abstract workloads can only be extended, so we can't generate items for this yet. Might need to do a second pass
-                // if there are other manifests that extend the workload.
-                if (workloadDefinition.IsAbstract)
-                {
-                    Log?.LogMessage(MessageImportance.High, $"{workloadDefinition.Id} is abstract and will be skipped.");
-                    continue;
-                }
-
                 if ((workloadDefinition.Platforms?.Count > 0) && (!workloadDefinition.Platforms.Any(p => p.StartsWith("win"))))
                 {
                     Log?.LogMessage(MessageImportance.High, $"{workloadDefinition.Id} platforms does not support Windows and will be skipped ({string.Join(", ", workloadDefinition.Platforms)}).");

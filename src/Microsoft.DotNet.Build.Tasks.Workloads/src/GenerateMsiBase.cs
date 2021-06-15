@@ -236,6 +236,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                 MsiProperties msiProps = new MsiProperties
                 {
                     InstallSize = MsiUtils.GetInstallSize(msiPath),
+                    Payload = Path.GetFileName(msiPath),
                     ProductCode = MsiUtils.GetProperty(msiPath, "ProductCode"),
                     ProductVersion = MsiUtils.GetProperty(msiPath, "ProductVersion"),
                     ProviderKeyName = $"{nupkg.Id},{nupkg.Version},{platform}",
@@ -330,7 +331,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
 
             writer.WriteStartElement("ItemGroup");
             WriteItem(writer, "None", msiPath, @"\data");
-            WriteItem(writer, "None", msiJsonPath, @"\data");
+            WriteItem(writer, "None", msiJsonPath, @"\data\msi.json");
             WriteItem(writer, "None", licenseTextPath, @"\");
             writer.WriteEndElement();
 
