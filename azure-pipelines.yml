@@ -130,20 +130,20 @@ stages:
             env:
               SYSTEM_ACCESSTOKEN: $(System.AccessToken)
               HelixAccessToken: ''
-        - powershell: eng\common\build.ps1
-            -configuration $(_BuildConfig) 
-            -prepareMachine
-            -ci
-            -restore
-            -test
-            -projects $(Build.SourcesDirectory)\tests\UnitTests.XHarness.Android.WindowsQueues.proj
-            /bl:$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)\Helix.XHarness.Android.WindowsQueues.binlog
-            /p:RestoreUsingNuGetTargets=false
-            /p:XharnessTestARM64_V8A=true
-          displayName: XHarness Android Helix Testing (Windows)
-          env:
-            SYSTEM_ACCESSTOKEN: $(System.AccessToken)
-            HelixAccessToken: ''
+          - powershell: eng\common\build.ps1
+              -configuration $(_BuildConfig) 
+              -prepareMachine
+              -ci
+              -restore
+              -test
+              -projects $(Build.SourcesDirectory)\tests\UnitTests.XHarness.Android.WindowsQueues.proj
+              /bl:$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)\Helix.XHarness.Android.WindowsQueues.binlog
+              /p:RestoreUsingNuGetTargets=false
+              /p:XharnessTestARM64_V8A=true
+            displayName: XHarness Android Helix Testing (Windows)
+            env:
+              SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+              HelixAccessToken: ''
         - job: Linux
           timeoutInMinutes: 90
           container: LinuxContainer
