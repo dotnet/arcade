@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netcoreapp2.1;net472</TargetFrameworks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\Common\TestUtilities\MockEngine.cs" Link="TestUtilities\MockEngine.cs" />
+
+    <ProjectReference Include="..\src\Microsoft.DotNet.Build.Tasks.Templating.csproj" />
+
+    <PackageReference Include="Microsoft.Build" Version="$(MicrosoftBuildVersion)" />
+    <PackageReference Include="Microsoft.Build.Tasks.Core" Version="$(MicrosoftBuildTasksCoreVersion)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="testassets\**">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="testassets\Directory.Build.props.malformedbraces.in" />
+    <None Remove="testassets\Directory.Build.props.nobraces.in" />
+  </ItemGroup>
+</Project>
