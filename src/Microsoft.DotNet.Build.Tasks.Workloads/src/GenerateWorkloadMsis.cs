@@ -89,7 +89,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
 
                         // Always select the pack ID for the VS MSI package, even when aliased.
                         msis.AddRange(Generate(sourcePackage, swixPackageId,
-                            OutputPath, GetInstallDir(pack.Kind), platforms));
+                            OutputPath, pack.Kind, platforms));
                     }
                 }
 
@@ -111,12 +111,10 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             IEnumerable<WorkloadManifest> manifests = WorkloadManifests.Select(
                 w => WorkloadManifestReader.ReadWorkloadManifest(Path.GetFileNameWithoutExtension(w.ItemSpec), File.OpenRead(w.ItemSpec)));
 
-            // We want all workloads in all manifests iff
-            //   1. The workload isn't abstract
-            //   2. The workload has no platform or at least one platform includes Windows
+            // We want all workloads in all manifests iff the workload has no platform or at least one
+            // platform includes Windows
             var workloads = manifests.SelectMany(m => m.Workloads).
                 Select(w => w.Value).
-                Where(wd => !wd.IsAbstract).
                 Where(wd => (wd.Platforms == null) || wd.Platforms.Any(p => p.StartsWith("win")));
 
             var packIds = workloads.SelectMany(w => w.Packs).Distinct();
