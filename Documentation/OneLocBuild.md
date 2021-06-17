@@ -43,7 +43,7 @@ To prevent OneLocBuild from running in the public project where it will fail.
 Make sure to remove the `CreatePr: false` line from step 2. Additionally, if you added the YAML condition from step
 2, make sure that your new YAML condition now looks like:
 ```yaml
-- ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.SourceBranch'], 'refs/heads/main') }}:
+- ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.SourceBranch'], 'refs/heads/main')) }}:
 ```
 
 7. If using a mirrored repository (your code is mirrored to a trusted repository which your official build uses),
