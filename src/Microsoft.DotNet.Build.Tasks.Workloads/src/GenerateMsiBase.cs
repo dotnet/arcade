@@ -116,7 +116,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         /// <param name="sourcePackage">The NuGet package to convert into an MSI.</param>
         /// <param name="outputPath">The output path of the generated MSI.</param>
         /// <param name="platforms"></param>
-        protected IEnumerable<ITaskItem> Generate(string sourcePackage, string swixPackageId, string outputPath, string installDir, params string[] platforms)
+        protected IEnumerable<ITaskItem> Generate(string sourcePackage, string swixPackageId, string outputPath, WorkloadPackKind kind, params string[] platforms)
         {
             NugetPackage nupkg = new(sourcePackage, Log);
             List<TaskItem> msis = new();
@@ -133,8 +133,28 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             // Extract once, but harvest multiple times because some generated attributes are platform dependent. 
             string packageContentsDirectory = Path.Combine(PackageDirectory, $"{nupkg.Identity}");
             IEnumerable<string> exclusions = GetExlusionPatterns();
-            Log.LogMessage(MessageImportance.Low, $"Extracting '{sourcePackage}' to '{packageContentsDirectory}'");
-            nupkg.Extract(packageContentsDirectory, exclusions);
+            string installDir = GetInstallDir(kind);
+
+            if ((kind != WorkloadPackKind.Library) && (kind != WorkloadPackKind.Template))
+            {
+                Log.LogMessage(MessageImportance.Low, $"Extracting '{sourcePackage}' to '{packageContentsDirectory}'");
+                nupkg.Extract(packageContentsDirectory, exclusions);
+            }
+            else
+            {
+                // Library and template packs are not extracted. We want to harvest the nupkg itself,
+                // instead of the contents. The package is still copied to a separate folder for harvesting
+                // to avoid accidentally pulling in additional files and directories.
+                Log.LogMessage(MessageImportance.Low, $"Copying '{sourcePackage}' to '{packageContentsDirectory}'");
+
+                if (Directory.Exists(packageContentsDirectory))
+                {
+                    Directory.Delete(packageContentsDirectory, recursive: true);
+                }
+                Directory.CreateDirectory(packageContentsDirectory);
+
+                File.Copy(sourcePackage, Path.Combine(packageContentsDirectory, Path.GetFileName(sourcePackage)));
+            }
 
             foreach (string platform in platforms)
             {
@@ -236,6 +256,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                 MsiProperties msiProps = new MsiProperties
                 {
                     InstallSize = MsiUtils.GetInstallSize(msiPath),
+                    Payload = Path.GetFileName(msiPath),
                     ProductCode = MsiUtils.GetProperty(msiPath, "ProductCode"),
                     ProductVersion = MsiUtils.GetProperty(msiPath, "ProductVersion"),
                     ProviderKeyName = $"{nupkg.Id},{nupkg.Version},{platform}",
@@ -330,7 +351,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
 
             writer.WriteStartElement("ItemGroup");
             WriteItem(writer, "None", msiPath, @"\data");
-            WriteItem(writer, "None", msiJsonPath, @"\data");
+            WriteItem(writer, "None", msiJsonPath, @"\data\msi.json");
             WriteItem(writer, "None", licenseTextPath, @"\");
             writer.WriteEndElement();
 
@@ -406,7 +427,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             {
                 WorkloadPackKind.Framework or WorkloadPackKind.Sdk => "packs",
                 WorkloadPackKind.Library => "library-packs",
-                WorkloadPackKind.Template => "templates",
+                WorkloadPackKind.Template => "template-packs",
                 WorkloadPackKind.Tool => "tool-packs",
                 _ => throw new ArgumentException($"Unknown package kind: {kind}"),
             };

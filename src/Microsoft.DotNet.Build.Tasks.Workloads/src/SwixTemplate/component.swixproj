@@ -5,13 +5,10 @@
     <OutputLocalized>false</OutputLocalized>
     <OutputType>manifest</OutputType>
     <OutputPath>$(ManifestOutputPath)</OutputPath>
-    
-    <!-- Default to no, making this a component group. -->
-    <IsUIGroup Condition="'$(IsUIGroup)'==''">no</IsUIGroup>
   </PropertyGroup>
 
   <PropertyGroup>
-    <PackagePreprocessorDefinitions>$(PackagePreprocessorDefinitions);IsUIGroup=$(IsUIGroup)</PackagePreprocessorDefinitions>
+    <PackagePreprocessorDefinitions>$(PackagePreprocessorDefinitions)</PackagePreprocessorDefinitions>
   </PropertyGroup>
 
   <ItemGroup>

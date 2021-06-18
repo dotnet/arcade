@@ -17,6 +17,12 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             set;
         }
 
+        public string Payload
+        {
+            get;
+            set;
+        }
+
         public string ProductCode
         {
             get;
