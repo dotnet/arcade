@@ -14,7 +14,6 @@
     <DotNetCliPackageType>sdk</DotNetCliPackageType>
 
     <TestRunNamePrefix>$(AGENT_JOBNAME)</TestRunNamePrefix>
-  <HelixBaseUri>https://helix.int-dot.net</HelixBaseUri>
   </PropertyGroup>
 
   <ItemGroup>
@@ -45,8 +44,8 @@
 
     <!-- Exclude tests that do not target .NET Core -->
     <XUnitProject Remove="..\src\Microsoft.DotNet.Build.Tasks.VisualStudio.Tests\Microsoft.DotNet.Build.Tasks.VisualStudio.Tests.csproj"/>
-  </ItemGroup> 
-  
+  </ItemGroup>
+
   <ItemGroup>
     <HelixWorkItem Include="FailingXUnitTestsTest">
       <Command>echo 'done!'</Command>
@@ -58,14 +57,22 @@
     <AzurePipelinesExpectedTestFailure Include="XunitReportingTests.ExerciseXunitCharacterFilteringFailurePath"/>
   </ItemGroup>
 
-  <PropertyGroup>
+  <ItemGroup Condition=" '$(HelixAccessToken)' != '' ">
+    <HelixTargetQueue Include="Debian.9.Amd64"/>
+    <HelixTargetQueue Include="RedHat.7.Amd64"/>
+    <HelixTargetQueue Include="Windows.10.Amd64"/>
+  </ItemGroup>
+
+  <PropertyGroup Condition=" '$(HelixAccessToken)' == '' ">
     <IsExternal>true</IsExternal>
     <Creator>$(BUILD_SOURCEVERSIONAUTHOR)</Creator>
     <Creator Condition=" '$(Creator)' == ''">anon</Creator>
   </PropertyGroup>
 
-  <ItemGroup>
-    <HelixTargetQueue Include="pr-windows.10.amd64.open-test-aggregator"/>
+  <ItemGroup Condition=" '$(HelixAccessToken)' == '' ">
+    <HelixTargetQueue Include="Debian.9.Amd64.Open"/>
+    <HelixTargetQueue Include="RedHat.7.Amd64.Open"/>
+    <HelixTargetQueue Include="Windows.10.Amd64.Open"/>
   </ItemGroup>
 
   <PropertyGroup Condition="!$(HelixTargetQueue.StartsWith('Windows'))">
