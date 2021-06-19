@@ -4,9 +4,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
 using System.Text;
+using Microsoft.Build.Framework;
 
 namespace Microsoft.DotNet.Build.Tasks.Workloads
 {
@@ -82,6 +81,15 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             set;
         }
 
+        /// <summary>
+        /// The product architecture to which the package applies, the default is neutral.
+        /// </summary>
+        internal string ProductArch
+        {
+            get;
+            set;
+        } = "neutral";
+
         public override bool Execute()
         {
             try
@@ -98,9 +106,10 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
 
                 string swixSourceDirectory = Path.Combine(SwixDirectory, PackageName, Chip);
                 string msiSwr = EmbeddedTemplates.Extract("msi.swr", swixSourceDirectory);
-                string msiSwixProj = EmbeddedTemplates.Extract("msi.swixproj", swixSourceDirectory, $"{PackageName}.{Version.ToString(3)}.{Chip}.swixproj");
+                string fullProjectName = $"{PackageName}.{Version.ToString(3)}.{Chip}";
+                string msiSwixProj = EmbeddedTemplates.Extract("msi.swixproj", swixSourceDirectory, $"{Utils.GetHash(fullProjectName, "MD5")}.swixproj");
 
-                FileInfo msiInfo = new (MsiPath);
+                FileInfo msiInfo = new(MsiPath);
                 PayloadSize = msiInfo.Length;
                 InstallSize = MsiUtils.GetInstallSize(MsiPath);
                 Log.LogMessage($"MSI payload size: {PayloadSize}, install size (estimated): {InstallSize} ");
@@ -127,6 +136,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                 {"__VS_PACKAGE_VERSION__", Version.ToString() },
                 {"__VS_PACKAGE_CHIP__", Chip },
                 {"__VS_PACKAGE_INSTALL_SIZE_SYSTEM_DRIVE__", $"{InstallSize}"},
+                {"__VS_PACKAGE_PRODUCT_ARCH__", $"{ProductArch}" },
                 {"__VS_PAYLOAD_SOURCE__", MsiPath },
                 {"__VS_PAYLOAD_SIZE__", $"{PayloadSize}" },
             };

@@ -3,6 +3,8 @@
     <PackageLicenseFile Condition="'$(PackageLicenseExpression)' == ''">$([System.IO.Path]::GetFileName('$(LicenseFile)'))</PackageLicenseFile>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     <PublishReadyToRun Condition="'$(PublishReadyToRun)' == '' and '$(PlatformPackageType)' == 'RuntimePack' and '$(Configuration)' == 'Release'">true</PublishReadyToRun>
+    <!-- For .NET 6 and higher, default to using Crossgen2 in non-composite mode if PublishReadyToRun == true -->
+    <PublishReadyToRunUseCrossgen2 Condition="'$(PublishReadyToRunUseCrossgen2)' == '' and '$(PublishReadyToRun)' == 'true' and '$(_TargetFrameworkVersionWithoutV)' >= '6.0'">true</PublishReadyToRunUseCrossgen2>
     <PublishReadyToRunEmitSymbols>true</PublishReadyToRunEmitSymbols>
     <PublishReadyToRunShowWarnings>true</PublishReadyToRunShowWarnings>
     <AllowedOutputExtensionsInSymbolsPackageBuildOutputFolder>$(AllowedOutputExtensionsInSymbolsPackageBuildOutputFolder);.map;.dbg;.debug;.dwarf</AllowedOutputExtensionsInSymbolsPackageBuildOutputFolder>
@@ -129,6 +131,10 @@
     <ItemGroup>
       <FilesToPackage Condition="'%(Extension)' == '.pdb' or '%(Extension)' == '.dbg' or '%(Extension)' == '.dwarf'">
         <IsSymbolFile>true</IsSymbolFile>
+      </FilesToPackage>
+      <FilesToPackage Condition="'%(Extension)' == '.mibc'">
+        <IsPgoData>true</IsPgoData>
+        <TargetPath>PgoData</TargetPath>
       </FilesToPackage>
       <FilesToPackage Condition="$([System.String]::new('%(Filename)').Contains('.ni.{')) and 
                                  $([System.String]::new('%(Filename)').EndsWith('}')) and
@@ -380,6 +386,7 @@
       <_FrameworkListRootAttribute Include="FrameworkName" Value="$(SharedFrameworkName)" />
       <_FrameworkListRootAttribute Include="Name" Value="$(SharedFrameworkFriendlyName)" />
       <_FrameworkListTargetFilePrefix Include="ref/;runtimes/" />
+      <_FrameworkListTargetFilePrefix Condition="'$(PlatformPackageType)' == 'RuntimePack'" Include="PgoData" />
     </ItemGroup>
 
     <CreateFrameworkListFile

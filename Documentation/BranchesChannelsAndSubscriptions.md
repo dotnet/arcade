@@ -51,6 +51,7 @@ Subscriptions have the following characteristics:
 
 - They have a desired quality metric for when the mapping should be applied (e.g. should tests have passed?)
 - They have a trigger for when the mapping should be applied.
+- They may optionally include a list of GitHub logins (users who must be a public member of the Microsoft organization) or team aliases (for notification to work, this team must exist in the target repository's organization).  When included in a non-batched subscription, failed policies for the pull requests produced will tag these users. As such, these users should be teams or users who represent subject-matter experts for the source repository of the subscription.
 
 A subscription can be visualized with the following pseudocode
 
@@ -83,6 +84,9 @@ A subscription can be visualized with the following pseudocode
         // Check quality of new repo content (do a build, etc.)
         if (subscription.isDesiredQuality(repo)) {
             mergeChanges()
+        }
+        else if (subscription.hasFailureNotificationTags and subscription.isNotBatched) {
+            tagTheseUsersOnDependencyFlowPullRequest()
         }
     }
 ```

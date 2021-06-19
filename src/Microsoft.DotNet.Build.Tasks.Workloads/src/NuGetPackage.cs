@@ -1,17 +1,16 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
-using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.IO;
-using System.Text.RegularExpressions;
 using System.IO.Compression;
+using System.Linq;
+using System.Text.RegularExpressions;
+using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
 using NuGet.Packaging;
 using NuGet.Packaging.Core;
 using NuGet.Versioning;
-using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.Build.Tasks.Workloads
 {
@@ -28,6 +27,16 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             get;
         }
 
+        public string Copyright
+        {
+            get;
+        }
+
+        public string Description
+        {
+            get;
+        }
+
         /// <summary>
         /// The NuGet package identifier.
         /// </summary>
@@ -37,6 +46,16 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         /// The identity of the NuGet package.
         /// </summary>
         public PackageIdentity Identity
+        {
+            get;
+        }
+
+        public LicenseMetadata LicenseData
+        {
+            get;
+        }
+
+        public string LicenseUrl
         {
             get;
         }
@@ -73,6 +92,10 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             Identity = nuspecReader.GetIdentity();
             Title = nuspecReader.GetTitle();
             Authors = nuspecReader.GetAuthors();
+            LicenseUrl = nuspecReader.GetLicenseUrl();
+            Description = nuspecReader.GetDescription();
+            Copyright = nuspecReader.GetCopyright();
+            LicenseData = nuspecReader.GetLicenseMetadata();
         }
 
         /// <summary>

@@ -64,6 +64,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public string SymbolsFeedOverride { get; set; }
 
+        public string PublicSymbolsFeedOverride { get; set; }
+
         public override bool Execute()
         {
             ExecuteAsync().GetAwaiter().GetResult();
@@ -160,6 +162,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         AzureDevOpsFeedsKey,
                         BuildEngine = this.BuildEngine,
                         targetChannelConfig.SymbolTargetType,
+                        azureDevOpsPublicStaticSymbolsFeed: GetFeed(null, PublicSymbolsFeedOverride),
                         filesToExclude: targetChannelConfig.FilenamesToExclude,
                         flatten: targetChannelConfig.Flatten);
 

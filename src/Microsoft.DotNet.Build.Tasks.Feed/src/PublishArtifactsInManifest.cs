@@ -129,6 +129,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public string SymbolsFeedOverride { get; set; }
 
+        public string PublicSymbolsFeedOverride { get; set; }
+
         /// <summary>
         /// Path to dll and pdb files
         /// </summary>
@@ -193,6 +195,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// If it is set to false, then artifacts and symbols are downloaded in PackageArtifacts and BlobArtifacts directory before publishing. 
         /// </summary>
         public bool UseStreamingPublishing { get; set; } = false;
+
+        public int StreamingPublishingMaxClients {get; set;}
+
+        public int NonStreamingPublishingMaxClients {get; set;}
 
         /// <summary>
         /// Just an internal flag to keep track whether we published assets via a V3 manifest or not.
@@ -381,12 +387,15 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 ShippingFeedOverride = this.ShippingFeedOverride,
                 TransportFeedOverride = this.TransportFeedOverride,
                 SymbolsFeedOverride = this.SymbolsFeedOverride,
+                PublicSymbolsFeedOverride = this.PublicSymbolsFeedOverride,
                 ArtifactsBasePath =  this.ArtifactsBasePath,
                 AzdoApiToken = this.AzdoApiToken,
                 BuildId = this.BuildId,
                 AzureProject = this.AzureProject,
                 AzureDevOpsOrg = this.AzureDevOpsOrg,
-                UseStreamingPublishing = this.UseStreamingPublishing
+                UseStreamingPublishing = this.UseStreamingPublishing,
+                StreamingPublishingMaxClients = this.StreamingPublishingMaxClients,
+                NonStreamingPublishingMaxClients = this.NonStreamingPublishingMaxClients
             };
         }
     }

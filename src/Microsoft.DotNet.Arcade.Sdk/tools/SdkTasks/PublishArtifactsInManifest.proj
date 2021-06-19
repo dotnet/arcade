@@ -109,6 +109,8 @@
       <AllowFeedOverrides Condition="'$(AllowFeedOverrides)' == ''">false</AllowFeedOverrides>
       <UseStreamingPublishing Condition="'$(UseStreamingPublishing)' == ''">false</UseStreamingPublishing>
       <ArtifactsBasePath Condition="'$(ArtifactsBasePath)' == ''">$(BlobBasePath)</ArtifactsBasePath>
+      <NonStreamingPublishingMaxClients Condition="'$(NonStreamingPublishingMaxClients)' == ''">12</NonStreamingPublishingMaxClients>
+      <StreamingPublishingMaxClients Condition="'$(UseStreamingPublishing)' == 'true' and '$(StreamingPublishingMaxClients)' == ''">16</StreamingPublishingMaxClients>
     </PropertyGroup>
 
     <Error
@@ -154,13 +156,15 @@
       TransportFeedOverride="$(TransportFeedOverride)"
       ShippingFeedOverride="$(ShippingFeedOverride)"
       SymbolsFeedOverride="$(SymbolsFeedOverride)" 
+      PublicSymbolsFeedOverride="$(PublicSymbolsFeedOverride)"
       AzdoApiToken="$(AzdoApiToken)"
       ArtifactsBasePath="$(ArtifactsBasePath)"
       BuildId="$(BuildId)"
       AzureDevOpsOrg="$(AzureDevOpsOrg)"
       AzureProject="$(AzureProject)"
-      UseStreamingPublishing="$(UseStreamingPublishing)"/>
-
+      UseStreamingPublishing="$(UseStreamingPublishing)"
+      StreamingPublishingMaxClients="$(StreamingPublishingMaxClients)"
+      NonStreamingPublishingMaxClients="$(NonStreamingPublishingMaxClients)"/>
   </Target>
 
   <ItemGroup>

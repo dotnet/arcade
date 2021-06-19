@@ -12,6 +12,8 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
 {
     public abstract class GenerateTaskBase : Task
     {
+        public static readonly string[] SupportedVisualStudioPlatforms = { "x86", "x64" };
+
         /// <summary>
         /// The root intermediate output directory. 
         /// </summary>
@@ -43,6 +45,11 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         public string MsiDirectory => Path.Combine(SourceDirectory, "msi");
 
         /// <summary>
+        /// Root directory for .csproj sources to build NuGet packages.
+        /// </summary>
+        public string MsiPackageDirectory => Path.Combine(SourceDirectory, "msiPackage");
+
+        /// <summary>
         /// The directory containing the WiX toolset binaries.
         /// </summary>
         [Required]
@@ -50,6 +57,16 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         {
             get;
             set;
+        }
+
+        /// <summary>
+        /// Determines if the specified platfor is support by Visual Studio.
+        /// </summary>
+        /// <param name="platform">The platform to check</param>
+        /// <returns><see langword="true" /> if the platform is supported by Visual Studio.</returns>
+        protected bool IsSupportedByVisualStudio(string platform)
+        {
+            return SupportedVisualStudioPlatforms.Contains(platform);
         }
     }
 }

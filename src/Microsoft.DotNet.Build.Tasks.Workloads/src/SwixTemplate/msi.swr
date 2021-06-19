@@ -3,7 +3,8 @@ use vs
 package name=__VS_PACKAGE_NAME__
         version=__VS_PACKAGE_VERSION__
         vs.package.chip=__VS_PACKAGE_CHIP__
-        vs.package.type=msi        
+        vs.package.productArch=__VS_PACKAGE_PRODUCT_ARCH__
+        vs.package.type=msi
 
 vs.installSize
   SystemDrive=__VS_PACKAGE_INSTALL_SIZE_SYSTEM_DRIVE__

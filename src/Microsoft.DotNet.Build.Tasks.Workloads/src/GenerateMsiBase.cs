@@ -5,7 +5,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
+using System.Text.Json;
+using System.Xml;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Microsoft.NET.Sdk.WorkloadManifestReader;
@@ -31,6 +32,26 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         /// The UUID namespace to use for generating a product code.
         /// </summary>
         internal static readonly Guid ProductCodeNamespaceUuid = Guid.Parse("3B04DD8B-41C4-4DA3-9E49-4B69F11533A7");
+
+        /// <summary>
+        /// Static RTF text for inserting a EULA into the MSI. The license URL of the NuGet package will be embedded 
+        /// as plain text since the text control used to render the MSI UI does not render hyperlinks even though RTF supports it.
+        /// </summary>
+        internal static readonly string Eula = @"{\rtf1\ansi\ansicpg1252\deff0\nouicompat\deflang1033{\fonttbl{\f0\fnil\fcharset0 Calibri;}}
+{\colortbl ;\red0\green0\blue255;}
+{\*\generator Riched20 10.0.19041}\viewkind4\uc1 
+\pard\sa200\sl276\slmult1\f0\fs22\lang9 This software is licensed separately as set out in its accompanying license. By continuing, you also agree to that license (__LICENSE_URL__).\par
+\par
+}";
+
+        /// <summary>
+        /// An item group containing information to shorten the names of packages.
+        /// </summary>
+        public ITaskItem[] ShortNames
+        {
+            get;
+            set;
+        }
 
         /// <summary>
         /// The set of supported target platforms for MSIs.
@@ -95,7 +116,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         /// <param name="sourcePackage">The NuGet package to convert into an MSI.</param>
         /// <param name="outputPath">The output path of the generated MSI.</param>
         /// <param name="platforms"></param>
-        protected IEnumerable<ITaskItem> Generate(string sourcePackage, string swixPackageId, string outputPath, string installDir, params string[] platforms)
+        protected IEnumerable<ITaskItem> Generate(string sourcePackage, string swixPackageId, string outputPath, WorkloadPackKind kind, params string[] platforms)
         {
             NugetPackage nupkg = new(sourcePackage, Log);
             List<TaskItem> msis = new();
@@ -105,15 +126,35 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
 
             if (string.IsNullOrWhiteSpace(nupkg.Title))
             {
-                Log?.LogWarning($"'{sourcePackage}' should have a non-empty title. The MSI ProductName will be set to the package ID instead.");
+                Log?.LogMessage(MessageImportance.High, $"'{sourcePackage}' should have a non-empty title. The MSI ProductName will be set to the package ID instead.");
                 productName = nupkg.Id;
             }
 
             // Extract once, but harvest multiple times because some generated attributes are platform dependent. 
             string packageContentsDirectory = Path.Combine(PackageDirectory, $"{nupkg.Identity}");
             IEnumerable<string> exclusions = GetExlusionPatterns();
-            Log.LogMessage(MessageImportance.Low, $"Extracting '{sourcePackage}' to '{packageContentsDirectory}'");
-            nupkg.Extract(packageContentsDirectory, exclusions);
+            string installDir = GetInstallDir(kind);
+
+            if ((kind != WorkloadPackKind.Library) && (kind != WorkloadPackKind.Template))
+            {
+                Log.LogMessage(MessageImportance.Low, $"Extracting '{sourcePackage}' to '{packageContentsDirectory}'");
+                nupkg.Extract(packageContentsDirectory, exclusions);
+            }
+            else
+            {
+                // Library and template packs are not extracted. We want to harvest the nupkg itself,
+                // instead of the contents. The package is still copied to a separate folder for harvesting
+                // to avoid accidentally pulling in additional files and directories.
+                Log.LogMessage(MessageImportance.Low, $"Copying '{sourcePackage}' to '{packageContentsDirectory}'");
+
+                if (Directory.Exists(packageContentsDirectory))
+                {
+                    Directory.Delete(packageContentsDirectory, recursive: true);
+                }
+                Directory.CreateDirectory(packageContentsDirectory);
+
+                File.Copy(sourcePackage, Path.Combine(packageContentsDirectory, Path.GetFileName(sourcePackage)));
+            }
 
             foreach (string platform in platforms)
             {
@@ -124,6 +165,9 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                 sourceFiles.Add(EmbeddedTemplates.Extract("Directories.wxs", msiSourcePath));
                 sourceFiles.Add(EmbeddedTemplates.Extract("Product.wxs", msiSourcePath));
                 sourceFiles.Add(EmbeddedTemplates.Extract("Registry.wxs", msiSourcePath));
+
+                string EulaRtfPath = Path.Combine(msiSourcePath, "eula.rtf");
+                File.WriteAllText(EulaRtfPath, Eula.Replace("__LICENSE_URL__", nupkg.LicenseUrl));
                 EmbeddedTemplates.Extract("Variables.wxi", msiSourcePath);
 
                 // Harvest the package contents and add it to the source files we need to compile.
@@ -171,6 +215,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                 candle.PreprocessorDefinitions.Add($@"Platform={platform}");
                 candle.PreprocessorDefinitions.Add($@"SourceDir={packageContentsDirectory}");
                 candle.PreprocessorDefinitions.Add($@"Manufacturer={manufacturer}");
+                candle.PreprocessorDefinitions.Add($@"EulaRtf={EulaRtfPath}");
 
                 // Compiler extension to process dependency provider authoring for package reference counting.
                 candle.Extensions.Add("WixDependencyExtension");
@@ -183,9 +228,12 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                 // Link the MSI. The generated filename contains a the semantic version (excluding build metadata) and platform. 
                 // If the source package already contains a platform, e.g. an aliased package that has a RID, then we don't add
                 // the platform again.
+
+                string shortPackageName = Path.GetFileNameWithoutExtension(sourcePackage).Replace(ShortNames);
+
                 string outputFile = sourcePackage.Contains(platform) ?
-                    Path.Combine(OutputPath, Path.GetFileNameWithoutExtension(sourcePackage) + ".msi") :
-                    Path.Combine(OutputPath, Path.GetFileNameWithoutExtension(sourcePackage) + $"-{platform}.msi");
+                    Path.Combine(OutputPath, shortPackageName + ".msi") :
+                    Path.Combine(OutputPath, shortPackageName + $"-{platform}.msi");
 
                 LinkToolTask light = new(BuildEngine, WixToolsetPath)
                 {
@@ -203,25 +251,124 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                     throw new Exception($"Failed to link MSI.");
                 }
 
-                TaskItem msi = new(light.OutputFile);
-                msi.SetMetadata("Platform", platform);
-                msi.SetMetadata("Version", nupkg.ProductVersion);
-
-                if (GenerateSwixAuthoring)
+                // Generate metadata used for CLI based installations.
+                string msiPath = light.OutputFile;
+                MsiProperties msiProps = new MsiProperties
                 {
-                    string swixProject = GenerateSwixPackageAuthoring(light.OutputFile, 
-                        !string.IsNullOrWhiteSpace(swixPackageId) ? swixPackageId : $"{nupkg.Id}", platform);
+                    InstallSize = MsiUtils.GetInstallSize(msiPath),
+                    Payload = Path.GetFileName(msiPath),
+                    ProductCode = MsiUtils.GetProperty(msiPath, "ProductCode"),
+                    ProductVersion = MsiUtils.GetProperty(msiPath, "ProductVersion"),
+                    ProviderKeyName = $"{nupkg.Id},{nupkg.Version},{platform}",
+                    UpgradeCode = MsiUtils.GetProperty(msiPath, "UpgradeCode")
+                };
+
+                string msiJsonPath = Path.Combine(Path.GetDirectoryName(msiPath), Path.GetFileNameWithoutExtension(msiPath) + ".json");
+                File.WriteAllText(msiJsonPath, JsonSerializer.Serialize<MsiProperties>(msiProps));
+
+                TaskItem msi = new(light.OutputFile);
+                msi.SetMetadata(Metadata.Platform, platform);
+                msi.SetMetadata(Metadata.Version, nupkg.ProductVersion);
+                msi.SetMetadata(Metadata.JsonProperties, msiJsonPath);
+                msi.SetMetadata(Metadata.WixObj, candleIntermediateOutputPath);
+
+                if (GenerateSwixAuthoring && IsSupportedByVisualStudio(platform))
+                {
+                    string swixProject = GenerateSwixPackageAuthoring(light.OutputFile,
+                        !string.IsNullOrWhiteSpace(swixPackageId) ? swixPackageId :
+                        $"{nupkg.Id.Replace(ShortNames)}.{nupkg.Version}", platform);
 
                     if (!string.IsNullOrWhiteSpace(swixProject))
                     {
-                        msi.SetMetadata("SwixProject", swixProject);
+                        msi.SetMetadata(Metadata.SwixProject, swixProject);
                     }
                 }
+
+                // Generate a .csproj to build a NuGet payload package to carry the MSI and JSON manifest
+                msi.SetMetadata(Metadata.PackageProject, GeneratePackageProject(msi.ItemSpec, msiJsonPath, platform, nupkg));
 
                 msis.Add(msi);
             }
 
             return msis;
+        }
+
+        private string GeneratePackageProject(string msiPath, string msiJsonPath, string platform, NugetPackage nupkg)
+        {
+            string msiPackageProject = Path.Combine(MsiPackageDirectory, platform, nupkg.Id, "msi.csproj");
+            string msiPackageProjectDir = Path.GetDirectoryName(msiPackageProject);
+
+            Log?.LogMessage($"Generating package project: '{msiPackageProject}'");
+
+            if (Directory.Exists(msiPackageProjectDir))
+            {
+                Directory.Delete(msiPackageProjectDir, recursive: true);
+            }
+
+            Directory.CreateDirectory(msiPackageProjectDir);
+
+            EmbeddedTemplates.Extract("Icon.png", msiPackageProjectDir);
+            EmbeddedTemplates.Extract("LICENSE.TXT", msiPackageProjectDir);
+
+            string licenseTextPath = Path.Combine(msiPackageProjectDir, "LICENSE.TXT");
+
+            XmlWriterSettings settings = new XmlWriterSettings
+            {
+                Indent = true,
+                IndentChars = "  ",
+            };
+
+            XmlWriter writer = XmlWriter.Create(msiPackageProject, settings);
+
+            writer.WriteStartElement("Project");
+            writer.WriteAttributeString("Sdk", "Microsoft.NET.Sdk");
+
+            writer.WriteStartElement("PropertyGroup");
+            writer.WriteElementString("TargetFramework", "net5.0");
+            writer.WriteElementString("GeneratePackageOnBuild", "true");
+            writer.WriteElementString("IncludeBuildOutput", "false");
+            writer.WriteElementString("IsPackable", "true");
+            writer.WriteElementString("PackageType", "DotnetPlatform");
+            writer.WriteElementString("SuppressDependenciesWhenPacking", "true");
+            writer.WriteElementString("NoWarn", "$(NoWarn);NU5128");
+            writer.WriteElementString("PackageId", $"{nupkg.Id}.Msi.{platform}");
+            writer.WriteElementString("PackageVersion", $"{nupkg.Version}");
+            writer.WriteElementString("Description", nupkg.Description);
+            writer.WriteElementString("PackageIcon", "Icon.png");
+
+            if (!string.IsNullOrWhiteSpace(nupkg.Authors))
+            {
+                writer.WriteElementString("Authors", nupkg.Authors);
+            }
+
+            if (!string.IsNullOrWhiteSpace(nupkg.Copyright))
+            {
+                writer.WriteElementString("Copyright", nupkg.Copyright);
+            }
+
+            writer.WriteElementString("PackageLicenseExpression", "MIT");
+            writer.WriteEndElement();
+
+            writer.WriteStartElement("ItemGroup");
+            WriteItem(writer, "None", msiPath, @"\data");
+            WriteItem(writer, "None", msiJsonPath, @"\data\msi.json");
+            WriteItem(writer, "None", licenseTextPath, @"\");
+            writer.WriteEndElement();
+
+            writer.WriteEndElement();
+            writer.Flush();
+            writer.Close();
+
+            return msiPackageProject;
+        }
+
+        private void WriteItem(XmlWriter writer, string itemName, string include, string packagePath)
+        {
+            writer.WriteStartElement(itemName);
+            writer.WriteAttributeString("Include", include);
+            writer.WriteAttributeString("Pack", "true");
+            writer.WriteAttributeString("PackagePath", packagePath);
+            writer.WriteEndElement();
         }
 
         private string GenerateSwixPackageAuthoring(string msiPath, string packageId, string platform)
@@ -232,9 +379,8 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                 IntermediateBaseOutputPath = this.IntermediateBaseOutputPath,
                 PackageName = packageId,
                 MsiPath = msiPath,
+                BuildEngine = this.BuildEngine,
             };
-
-            swixTask.BuildEngine = BuildEngine;
 
             if (!swixTask.Execute())
             {
@@ -281,7 +427,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             {
                 WorkloadPackKind.Framework or WorkloadPackKind.Sdk => "packs",
                 WorkloadPackKind.Library => "library-packs",
-                WorkloadPackKind.Template => "templates",
+                WorkloadPackKind.Template => "template-packs",
                 WorkloadPackKind.Tool => "tool-packs",
                 _ => throw new ArgumentException($"Unknown package kind: {kind}"),
             };

@@ -96,6 +96,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
         private const string FeedDotNet6Transport = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6-transport/nuget/v3/index.json";
         private const string FeedDotNet6Symbols = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6-symbols/nuget/v3/index.json";
 
+        private const string FeedDotNet6InternalShipping = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6-internal/nuget/v3/index.json";
+        private const string FeedDotNet6InternalTransport = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6-internal-transport/nuget/v3/index.json";
+        private const string FeedDotNet6InternalSymbols = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6-internal-symbols/nuget/v3/index.json";
+
         private const string FeedDotNet5InternalShipping = "https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet5-internal/nuget/v3/index.json";
         private const string FeedDotNet5InternalTransport = "https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet5-internal-transport/nuget/v3/index.json";
         private const string FeedDotNet5InternalSymbols = "https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet5-internal-symbols/nuget/v3/index.json";
@@ -143,6 +147,20 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 PublicAndInternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude),
 
+            // ".NET 6 Internal",
+            new TargetChannelConfig(
+                2097,
+                true,
+                PublishingInfraVersion.All,
+                "internal/6.0",
+                FeedDotNet6InternalShipping,
+                FeedDotNet6InternalTransport,
+                FeedDotNet6InternalSymbols,
+                FeedInternalForChecksums,
+                FeedInternalForInstallers,
+                InternalSymbolTargets,
+                filenamesToExclude: FilenamesToExclude),
+
             // ".NET 6 SDK 6.0.1xx",
             new TargetChannelConfig(
                 1792,
@@ -155,6 +173,20 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedForChecksums,
                 FeedForInstallers,
                 PublicAndInternalSymbolTargets,
+                filenamesToExclude: FilenamesToExclude),
+
+            // ".NET 6 SDK 6.0.1xx Internal",
+            new TargetChannelConfig(
+                2098,
+                true,
+                PublishingInfraVersion.All,
+                "internal/6.0.1xx",
+                FeedDotNet6InternalShipping,
+                FeedDotNet6InternalTransport,
+                FeedDotNet6InternalSymbols,
+                FeedInternalForChecksums,
+                FeedInternalForInstallers,
+                InternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude),
 
             // ".NET 6 Preview 1",
@@ -297,6 +329,20 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 PublicAndInternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude),
 
+            // ".NET 6 Preview 6 Internal" ,
+            new TargetChannelConfig(
+                2092,
+                true,
+                PublishingInfraVersion.All,
+                "internal/6.0-preview6",
+                FeedDotNet6InternalShipping,
+                FeedDotNet6InternalTransport,
+                FeedDotNet6InternalSymbols,
+                FeedInternalForChecksums,
+                FeedInternalForInstallers,
+                InternalSymbolTargets,
+                filenamesToExclude: FilenamesToExclude),
+
             // ".NET 6.0.1xx SDK Preview 6",
             new TargetChannelConfig(
                 1965,
@@ -309,6 +355,20 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedForChecksums,
                 FeedForInstallers,
                 PublicAndInternalSymbolTargets,
+                filenamesToExclude: FilenamesToExclude),
+
+            // ".NET 6.0.1xx SDK Preview 6 Internal",
+            new TargetChannelConfig(
+                2086,
+                true,
+                PublishingInfraVersion.All,
+                "internal/6.0.1xx-preview6",
+                FeedDotNet6InternalShipping,
+                FeedDotNet6InternalTransport,
+                FeedDotNet6InternalSymbols,
+                FeedInternalForChecksums,
+                FeedInternalForInstallers,
+                InternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude),
 
             // ".NET 6 Preview 7" ,
@@ -325,6 +385,20 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 PublicAndInternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude),
 
+            // ".NET 6 Preview 7 Internal",
+            new TargetChannelConfig(
+                2091,
+                true,
+                PublishingInfraVersion.All,
+                "internal/6.0-preview7",
+                FeedDotNet6InternalShipping,
+                FeedDotNet6InternalTransport,
+                FeedDotNet6InternalSymbols,
+                FeedInternalForChecksums,
+                FeedInternalForInstallers,
+                InternalSymbolTargets,
+                filenamesToExclude: FilenamesToExclude),
+
             // ".NET 6.0.1xx SDK Preview 7",
             new TargetChannelConfig(
                 1966,
@@ -337,6 +411,132 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedForChecksums,
                 FeedForInstallers,
                 PublicAndInternalSymbolTargets,
+                filenamesToExclude: FilenamesToExclude),
+
+            // ".NET 6.0.1xx SDK Preview 7 Internal",
+            new TargetChannelConfig(
+                2085,
+                true,
+                PublishingInfraVersion.All,
+                "internal/6.0.1xx-preview7",
+                FeedDotNet6InternalShipping,
+                FeedDotNet6InternalTransport,
+                FeedDotNet6InternalSymbols,
+                FeedInternalForChecksums,
+                FeedInternalForInstallers,
+                InternalSymbolTargets,
+                filenamesToExclude: FilenamesToExclude),
+
+            // ".NET 6 RC 1" ,
+            new TargetChannelConfig(
+                2095,
+                false,
+                PublishingInfraVersion.All,
+                "6.0-rc1",
+                FeedDotNet6Shipping,
+                FeedDotNet6Transport,
+                FeedDotNet6Symbols,
+                FeedForChecksums,
+                FeedForInstallers,
+                PublicAndInternalSymbolTargets,
+                filenamesToExclude: FilenamesToExclude),
+
+            // ".NET 6 RC 1 Internal",
+            new TargetChannelConfig(
+                2093,
+                true,
+                PublishingInfraVersion.All,
+                "internal/6.0-rc1",
+                FeedDotNet6InternalShipping,
+                FeedDotNet6InternalTransport,
+                FeedDotNet6InternalSymbols,
+                FeedInternalForChecksums,
+                FeedInternalForInstallers,
+                InternalSymbolTargets,
+                filenamesToExclude: FilenamesToExclude),
+
+            // ".NET 6.0.1xx SDK RC 1",
+            new TargetChannelConfig(
+                2087,
+                false,
+                PublishingInfraVersion.All,
+                "6.0.1xx-rc1",
+                FeedDotNet6Shipping,
+                FeedDotNet6Transport,
+                FeedDotNet6Symbols,
+                FeedForChecksums,
+                FeedForInstallers,
+                PublicAndInternalSymbolTargets,
+                filenamesToExclude: FilenamesToExclude),
+
+            // ".NET 6.0.1xx SDK RC 1 Internal",
+            new TargetChannelConfig(
+                2088,
+                true,
+                PublishingInfraVersion.All,
+                "internal/6.0.1xx-rc1",
+                FeedDotNet6InternalShipping,
+                FeedDotNet6InternalTransport,
+                FeedDotNet6InternalSymbols,
+                FeedInternalForChecksums,
+                FeedInternalForInstallers,
+                InternalSymbolTargets,
+                filenamesToExclude: FilenamesToExclude),
+
+            // ".NET 6 RC 2" ,
+            new TargetChannelConfig(
+                2096,
+                false,
+                PublishingInfraVersion.All,
+                "6.0-rc2",
+                FeedDotNet6Shipping,
+                FeedDotNet6Transport,
+                FeedDotNet6Symbols,
+                FeedForChecksums,
+                FeedForInstallers,
+                PublicAndInternalSymbolTargets,
+                filenamesToExclude: FilenamesToExclude),
+
+            // ".NET 6 RC 2 Internal",
+            new TargetChannelConfig(
+                2094,
+                true,
+                PublishingInfraVersion.All,
+                "internal/6.0-rc2",
+                FeedDotNet6InternalShipping,
+                FeedDotNet6InternalTransport,
+                FeedDotNet6InternalSymbols,
+                FeedInternalForChecksums,
+                FeedInternalForInstallers,
+                InternalSymbolTargets,
+                filenamesToExclude: FilenamesToExclude),
+
+            // ".NET 6.0.1xx SDK RC 2",
+            new TargetChannelConfig(
+                2090,
+                false,
+                PublishingInfraVersion.All,
+                "6.0.1xx-rc2",
+                FeedDotNet6Shipping,
+                FeedDotNet6Transport,
+                FeedDotNet6Symbols,
+                FeedForChecksums,
+                FeedForInstallers,
+                PublicAndInternalSymbolTargets,
+                filenamesToExclude: FilenamesToExclude),
+
+            // ".NET 6.0.1xx SDK RC 2 Internal",
+            new TargetChannelConfig(
+                2089,
+                true,
+                PublishingInfraVersion.All,
+                "internal/6.0.1xx-rc2",
+                FeedDotNet6InternalShipping,
+                FeedDotNet6InternalTransport,
+                FeedDotNet6InternalSymbols,
+                FeedInternalForChecksums,
+                FeedInternalForInstallers,
+                InternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude),
 
             // ".NET 5" (public),
@@ -392,7 +592,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedDotNet5InternalSymbols,
                 FeedInternalForChecksums,
                 FeedInternalForInstallers,
-                PublicAndInternalSymbolTargets,
+                InternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude),
 
             // ".NET 5 SDK 5.0.2xx" (public),
@@ -443,6 +643,34 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 true,
                 PublishingInfraVersion.Next,
                 akaMSChannelName: "internal/5.0.3xx",
+                FeedDotNet5InternalShipping,
+                FeedDotNet5InternalTransport,
+                FeedDotNet5InternalSymbols,
+                FeedInternalForChecksums,
+                FeedInternalForInstallers,
+                InternalSymbolTargets,
+                filenamesToExclude: FilenamesToExclude),
+
+            // ".NET 5 SDK 5.0.4xx" (public),
+            new TargetChannelConfig(
+                1985,
+                false,
+                PublishingInfraVersion.Next,
+                akaMSChannelName: "5.0.4xx",
+                FeedDotNet5Shipping,
+                FeedDotNet5Transport,
+                FeedDotNet5Symbols,
+                FeedForChecksums,
+                FeedForInstallers,
+                PublicAndInternalSymbolTargets,
+                filenamesToExclude: FilenamesToExclude),
+
+            // ".NET 5 SDK 5.0.4xx Internal" (internal),
+            new TargetChannelConfig(
+                1986,
+                true,
+                PublishingInfraVersion.Next,
+                akaMSChannelName: "internal/5.0.4xx",
                 FeedDotNet5InternalShipping,
                 FeedDotNet5InternalTransport,
                 FeedDotNet5InternalSymbols,
@@ -574,7 +802,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedDotNetToolsInternalSymbols,
                 FeedInternalForChecksums,
                 FeedInternalForInstallers,
-                PublicAndInternalSymbolTargets,
+                InternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude,
                 flatten: false),
 

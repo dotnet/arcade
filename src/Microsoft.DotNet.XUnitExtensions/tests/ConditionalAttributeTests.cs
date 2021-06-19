@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using Xunit;
+using Xunit.Sdk;
 
 namespace Microsoft.DotNet.XUnitExtensions.Tests
 {
@@ -22,6 +23,38 @@ namespace Microsoft.DotNet.XUnitExtensions.Tests
         public void ConditionalAttributeA()
         {
             s_conditionalFactExecuted = true;
+        }
+
+        [Fact]
+        [OuterLoop("never outer loop", TestPlatforms.Any & ~TestPlatforms.Any)]
+        public void NeverConditionalOuterLoopAttribute()
+        {
+            var method = System.Reflection.MethodBase.GetCurrentMethod();
+            var res = TraitHelper.GetTraits(method);
+
+            Assert.Empty(res);
+        }
+
+        [Fact]
+        [OuterLoop("always outer loop", TestPlatforms.Any)]
+        public void AlwaysConditionalOuterLoopAttribute()
+        {
+            var method = System.Reflection.MethodBase.GetCurrentMethod();
+            var res = TraitHelper.GetTraits(method);
+
+            Assert.Single(res);
+            Assert.Equal("outerloop", res[0].Value);
+        }
+
+        [Fact]
+        [OuterLoop("always outer loop")]
+        public void AlwaysOuterLoopAttribute()
+        {
+            var method = System.Reflection.MethodBase.GetCurrentMethod();
+            var res = TraitHelper.GetTraits(method);
+
+            Assert.Single(res);
+            Assert.Equal("outerloop", res[0].Value);
         }
 
         [ConditionalTheory(nameof(AlwaysTrue))]
