@@ -6,6 +6,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.Arcade.Common;
 using Microsoft.Arcade.Test.Common;
+using Microsoft.DotNet.Arcade.Test.Common;
 using Microsoft.DotNet.Build.Tasks.Feed.Model;
 using Microsoft.DotNet.Build.Tasks.Feed.Tests.TestDoubles;
 using Microsoft.DotNet.Maestro.Client.Models;
@@ -161,7 +162,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 Content = new ByteArrayContent(responseContent)
             };
 
-            using HttpClient client = FakeHttpClient.WithResponse(response);
+            using HttpClient client = FakeHttpClient.WithResponses(response);
             var path = TestInputs.GetFullPath(Guid.NewGuid().ToString());
 
             var test = publishTask.DownloadFileAsync(
@@ -279,7 +280,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 Content = new ByteArrayContent(responseContent)
             };
 
-            using HttpClient client = FakeHttpClient.WithResponse(responses);
+            using HttpClient client = FakeHttpClient.WithResponses(responses);
             var test = await publishTask.GetContainerIdAsync(
                 client,
                 artifactName);
