@@ -185,7 +185,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// </summary>
         public int RetryDelayMilliseconds { get; set; } = 5000;
 
-        public ExponentialRetry RetryHandler = new ExponentialRetry
+        private readonly ExponentialRetry RetryHandler = new ExponentialRetry
         {
             MaxAttempts = 5,
             DelayBase = 2.5 // 2.5 ^ 5 = ~1.5 minutes max wait between retries
