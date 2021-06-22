@@ -77,7 +77,7 @@ PRs from OneLocBuild as they are made and that you allow the translator SLA for 
 If you're releasing from any other branch (including servicing branches), you must do the following:
 
 1. Add the OneLocBuild job template to the pipeline YAML of the release branch. When you do this, you have to change the YAML of both the main branch and the target branch to include a conditional specifying 
-   the target brnach rather than main (as above). Additionally, your YAML should include the following line (subbing your target branch for `target-branch`):
+   the target branch rather than main (as above). Additionally, your YAML should include the following line (substituting your target branch for `target-branch`):
 ```yaml
   MirrorBranch: target-branch
 ```
