@@ -17,5 +17,8 @@
   <?error Unknown platform: $(var.Platform)?>
   <?endif?>
   
+  <!-- Default dependency provider key for packs. -->
+  <?ifndef DependencyProviderKeyName?>
   <?define DependencyProviderKeyName=$(var.PackageId),$(var.PackageVersion),$(var.Platform)?>
+  <?endif?>
 </Include>

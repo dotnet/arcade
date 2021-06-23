@@ -84,5 +84,6 @@
     <MicrosoftSymbolUploaderBuildTaskVersion>1.1.156602</MicrosoftSymbolUploaderBuildTaskVersion>
     <MicrosoftSymbolUploaderVersion>1.1.156602</MicrosoftSymbolUploaderVersion>
     <MicrosoftNetSdkWorkloadManifestReaderVersion>6.0.100-preview.5.21254.11</MicrosoftNetSdkWorkloadManifestReaderVersion>
+    <MicrosoftDeploymentDotNetReleasesVersion>1.0.0-preview1.1.21116.1</MicrosoftDeploymentDotNetReleasesVersion>
   </PropertyGroup>
 </Project>
