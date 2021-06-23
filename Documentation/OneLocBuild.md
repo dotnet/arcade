@@ -76,11 +76,15 @@ PRs from OneLocBuild as they are made and that you allow the translator SLA for 
 ### If You're Releasing from a Branch Other Than `main` (Including Servicing Branches)
 If you're releasing from any other branch (including servicing branches), you must do the following:
 
-1. Add the OneLocBuild job template to the pipeline YAML of the release branch
+1. Add the OneLocBuild job template to the pipeline YAML of the release branch. When you do this, you have to change the YAML of both the main branch and the target branch to include a conditional specifying 
+   the target branch rather than main (as above). Additionally, your YAML should include the following line (substituting your target branch for `target-branch`):
+```yaml
+  MirrorBranch: target-branch
+```
 2. Open a [repo modification ticket](https://ceapex.visualstudio.com/CEINTL/_workitems/create/Loc%20Request?templateId=415a0569-35ed-45c3-9321-8b1affff1f52&ownerId=c2e38d3d-0e9e-429f-955d-6e39fc6f0457) with the 
    loc team at least two weeks before the release and request that they re-target your repository to the release branch.
-4. Merge the OneLocBuild PRs to your release branch.
-5. After the release, open another repo modification ticket to re-target your repository to the `main` branch again.
+3. Merge the OneLocBuild PRs to your release branch.
+4. After the release, open another repo modification ticket to re-target your repository to the `main` branch again.
 
 ## Filing Issues for Translation Issues
 
