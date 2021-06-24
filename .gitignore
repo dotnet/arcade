@@ -134,3 +134,6 @@ node_modules/
 
 # IntelliJ
 .idea/
+
+# vscode python env files
+.env
