@@ -18,18 +18,53 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             get;            
         }
 
-        /// <summary>
-        /// The version of the dependent.
-        /// </summary>
-        public Version Version
+        public Version MinVersion
         {
             get;
         }
 
-        public VisualStudioDependency(string id, Version version)
+        public Version MaxVersion
+        {
+            get;
+        }
+
+        /// <summary>
+        /// Creates a dependency with an exact version.
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="version"></param>
+        public VisualStudioDependency(string id, Version version) : this(id, version, version)
+        {
+
+        }
+        
+        /// <summary>
+        /// Creates a dependency with a minimum and maximum versions.
+        /// </summary>
+        /// <param name="id">The Visual Studio package ID. The ID applies to packages, components, component groups, etc.</param>
+        /// <param name="minVersion">The minimum required version, inclusive.</param>
+        /// <param name="maxVersion">The maximum version, exclusive. May be <see langword="null"/> if there is only a minimum requirement. If
+        /// equal to <paramref name="minVersion"/>, an exact version requirement is created, e.g. [1.2.0].</param>
+        public VisualStudioDependency(string id, Version minVersion, Version maxVersion)
         {
             Id = id;
-            Version = version;
+            MinVersion = minVersion;
+            MaxVersion = maxVersion;
+        }
+
+        public string GetVersion()
+        {
+            if ((MaxVersion != null) && (MinVersion == MaxVersion))
+            {
+                return $"[{MinVersion}]";
+            }
+
+            if (MaxVersion == null)
+            {
+                return $"[{MinVersion},)";
+            }
+
+            return $"[{MinVersion},{MaxVersion})";
         }
     }
 }

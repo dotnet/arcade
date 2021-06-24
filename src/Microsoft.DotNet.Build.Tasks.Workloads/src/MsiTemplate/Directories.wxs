@@ -6,11 +6,9 @@
     <Directory Id="TARGETDIR" Name="SourceDir">
       <Directory Id="$(var.ProgramFilesFolder)">
         <Directory Id="DOTNETHOME" Name="dotnet">
-          <Directory Id="InstallDir" Name="$(var.InstallDir)">
-            <Directory Id="PackageDir" Name="$(var.PackageId)">
-              <Directory Id="VersionDir" Name="$(var.PackageVersion)" />
-            </Directory>
-          </Directory>                     
+          <Directory Id="ManifestDir" Name="sdk-manifests">
+            <Directory Id="VersionDir" Name="$(var.SdkFeatureBandVersion)" />
+          </Directory>
         </Directory>
       </Directory>
     </Directory>

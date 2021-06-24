@@ -23,13 +23,16 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         #region Standard test values
 
         private const string _testAzdoRepoUri = "https://dnceng@dev.azure.com/dnceng/internal/_git/dotnet-buildtest";
+        private const string _normalizedTestAzdoRepoUri = "https://dev.azure.com/dnceng/internal/_git/dotnet-buildtest";
         private const string _testBuildBranch = "foobranch";
         private const string _testBuildCommit = "664996a16fa9228cfd7a55d767deb31f62a65f51";
         private const string _testAzdoBuildId = "89999999";
-        private const string _testInitialLocation = "As they say....Location Location Location!";
+        private const string _testInitialLocation = "https://dnceng.visualstudio.com/project/_apis/build/builds/id/artifacts";
+        private const string _normalizedTestInitialLocation = "https://dev.azure.com/dnceng/project/_apis/build/builds/id/artifacts";
         private static readonly string[] _defaultManifestBuildData = new string[]
         {
-            $"InitialAssetsLocation={_testInitialLocation}"
+            $"InitialAssetsLocation={_testInitialLocation}",
+            $"AzureDevOpsRepository={_testAzdoRepoUri}"
         };
 
         #endregion
@@ -165,6 +168,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     package.Attributes.Should().Contain("Id", "test-package-a");
                     package.Attributes.Should().Contain("Version", "1.0.0");
                 });
+
+            model.Identity.Attributes.Should().Contain("AzureDevOpsRepository", _normalizedTestAzdoRepoUri);
         }
 
         /// <summary>
@@ -290,7 +295,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             _taskLoggingHelper.HasLoggedErrors.Should().BeFalse();
 
             // Check that the build model has the initial assets location
-            model.Identity.Attributes.Should().Contain(attributeName, _testInitialLocation);
+            model.Identity.Attributes.Should().Contain(attributeName, _normalizedTestInitialLocation);
         }
 
         #endregion

@@ -157,6 +157,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                         ? $"--launch-timeout \"$launch_timeout\" "
                         : $"--expected-exit-code $expected_exit_code ") +
                     (resetSimulator ? $"--reset-simulator " : string.Empty) +
+                    (target.Contains("device") ? $"--signal-app-end " : string.Empty) + // iOS/tvOS 14+ workaround
                     "--xcode \"$xcode_path\" " +
                     "-v " +
                     (!string.IsNullOrEmpty(AppArguments) ? "-- " + AppArguments : string.Empty);

@@ -102,6 +102,8 @@ jobs:
           /p:AzureDevOpsOrg='$(AzDOAccount)'
           /p:AzureProject='$(AzDOProjectName)'
           /p:UseStreamingPublishing='true'
+          /p:StreamingPublishingMaxClients=16
+          /p:NonStreamingPublishingMaxClients=12
     - template: /eng/common/templates/steps/publish-logs.yml
       parameters:
         StageLabel: '${{ parameters.stageName }}'

@@ -5,6 +5,6 @@ package name=__VS_PACKAGE_NAME__
         vs.package.type=component
 
 vs.properties
-  isUiGroup=$(IsUIGroup)
+  isUiGroup=__VS_IS_UI_GROUP__
 
 vs.dependencies

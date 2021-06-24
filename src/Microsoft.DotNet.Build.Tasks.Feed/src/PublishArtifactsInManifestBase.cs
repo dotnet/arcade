@@ -69,9 +69,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// </summary>
         [Required]
         public string NugetPath { get; set; }
-
-        private const int StreamingPublishingMaxClients = 16;
-        private const int NonStreamingPublishingMaxClients = 12;
+        
+        /// <summary>
+        /// We are setting StreamingPublishingMaxClients=16 and NonStreamingPublishingMaxClients=12 through publish-asset.yml as we were hitting OOM issue 
+        /// https://github.com/dotnet/core-eng/issues/13098 for more details.
+        /// </summary>
+        public int StreamingPublishingMaxClients {get; set;}
+        public int NonStreamingPublishingMaxClients {get; set;}
 
         /// <summary>
         /// Maximum number of parallel uploads for the upload tasks.

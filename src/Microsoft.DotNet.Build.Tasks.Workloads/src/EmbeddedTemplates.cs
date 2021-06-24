@@ -64,6 +64,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             {
                 { "DependencyProvider.wxs", $"{s_namespace}.MsiTemplate.DependencyProvider.wxs" },
                 { "Directories.wxs", $"{s_namespace}.MsiTemplate.Directories.wxs" },
+                { "ManifestProduct.wxs", $"{s_namespace}.MsiTemplate.ManifestProduct.wxs" },
                 { "Product.wxs", $"{s_namespace}.MsiTemplate.Product.wxs" },
                 { "Registry.wxs", $"{s_namespace}.MsiTemplate.Registry.wxs" },
                 { "Variables.wxi", $"{s_namespace}.MsiTemplate.Variables.wxi" },
