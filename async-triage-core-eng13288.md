@@ -4,63 +4,59 @@ We want to implement a mechanism that will allow newly-created issues on GitHub 
 
 See Epic for more context: https://github.com/dotnet/core-eng/issues/13288
 
-### Stakeholders
+## Stakeholders
+  - .NET Engineering Services team
 
-- Who are the stakeholders (e.g. folks who will be using this feature; folks who are requesting this work; folks who need to "sign-off" on the epic)
-  - .NET Engineering Services triage team
+## Risk
 
-### Risk
+### Unknowns and Open Questions
+- How can we distinguish if an issue needs triage, or if it was just created and will immediately have an Epic assigned to it? ([link to issue](https://github.com/dotnet/core-eng/issues/13457))
+  - Suggested - a background job that occasionally scans for unassigned issues and adds a conversation on Teams if necessary. This also addresses an interesting case in which an issue was assigned to one Epic, then unassigned.
+- How can we push stagnating issues to the top of discussion on Teams so they can be resolved? What do we define as a stale issue?
+  - Suggested - have a bot periodically comment on the conversations that still need resolution.
+  - Suggested - weekly generated conversation listing all of the issues that still need to be triaged.
+- How much conversation that happens only on Teams will be reflected on GitHub?
+- We don't know how many people will actually choose to participate on the Teams conversation, or will continue to use the GitHub issue thread.
+- Some issues may not need to be assigned to an Epic (ex. customers that open issues for themselves).
 
-- What are the unknowns? (Mine are more like open questions, not potential risks)
-  - How can we distinguish if an issue needs triage, or if it was just created and will immediately have an Epic assigned to it? ([link to issue](https://github.com/dotnet/core-eng/issues/13457))
-  - How to close/archive a conversation once an issue has been assigned to an Epic? What if the conversation needs to be re-opened?
-  - How can we "push" stagnating issues to the top of discussion on Teams so they can be resolved?
-  - How much back-and-forth will be reflected on GitHub? Can an Epic be assigned from Teams?
-  - We don't know how many people will actually choose to participate on the Teams conversation, or will continue to use the GitHub issue thread.
-- Are there any POCs (proof of concepts) required to be built for this epic?
-  - Through a proof of concept, verify that we are able to open a new conversation in a channel on Teams when a new issue is opened on GitHub. Try to utilize some similar functionality to the FR Mention Bot.
-  - Through a proof of concept, verify that additional comments added to an issue update their dedicated Teams conversation.
-- What dependencies will this epic have? Are the dependencies currently in a state that the functionality in the epic can consume them now, or will they need to be updated?
-  - GitHub API, ZenHub API, Teams
-- Will the new implementation of any existing functionality cause breaking changes for existing consumers?
-  - No, this should be a new addition. Note that most of the GitHub webhook functionality is already implemented/deployed in Arcade Services.
-- Is there a goal to have this work completed by, and what is the risk of not hitting that date? (e.g. missed OKRs, increased pain-points for consumers, functionality is required for the next product release, et cetera)
-  - All work should be completed within 12 weeks (September 10th at the latest).
+### Proof of Concepts
+- Verify that we are able to open a new conversation in a channel on Teams when a new issue is opened on GitHub. Try to utilize some similar functionality to the FR Mention Bot.
+- Verify that additional comments added to an issue update their dedicated Teams conversation.
+- Verify that existing Teams conversations can be updated when triaged, such as denoting [Triaged] in the conversation title.
+- Verify that we can grab all the existing unassigned issues from GitHub (this will require the use of the ZenHub API to check if it is in an Epic).
 
-### Serviceability
+### Dependencies
+- GitHub API
+- ZenHub API
+- Teams
 
-- How will the components that make up this epic be tested?
-  - Functional testing of the bot - sending fake HTTP requests to Teams and inspecting the response?
-- How will we have confidence in the deployments/shipping of the components of this epic?
-- Identifying secrets (e.g. PATs, certificates, et cetera) that will be used (new ones to be created; existing ones to be used).
-    - Instructions for rotating secret (if the secret is new)
-    - Not sure if this counts as a secret: Teams channel connector URI, GitHub authentication
-- Does this change any existing SDL threat or data privacy models? (models can be found in [sharepoint](https://microsoft.sharepoint.com/teams/netfx/engineering/Shared%20Documents/Forms/AllItems.aspx?FolderCTID=0x01200053A84D1D9752264EB84A423D43EE2F05&viewid=6e9ff2b3%2D49b8%2D468b%2Db0d3%2Db1652e0bbdd3&id=%2Fteams%2Fnetfx%2Fengineering%2FShared%20Documents%2FSecurity%20Docs) folder)
-- Does this require a new SDL threat or data privacy models?
-- Steps for setting up repro/test/dev environments?
+Additionally, the solution should be a new addition. Note that most of the GitHub webhook functionality is already implemented in Arcade Services. The goal to have the work completed by is September 10th at the latest.
 
-#### Rollout and Deployment
-- How will we roll this out safely into production?
-  - Are we deprecating something else? No
-- How often and with what means we will deploy this?
-  - One-time deployment?
-- What needs to be deployed and where?
-  - Deployment in Arcade Services repo, check the Async Triage channel on Teams for updates.
-- What are the risks when doing it?
-- What are the dependencies when rolling out?
+## Serviceability
 
-### Usage Telemetry
-- How are we tracking the “usefulness” to our customers of the goals?
-  - Perhaps we can measure the average amount of time it takes for an issue to be triaged, how many people are involved, the average length of conversations, etc.
-- How are we tracking the usage of the changes of the goals?
+### Testing
+To avoid sending actual requests to Teams and cluttering up the channel, we can test some functionality of the code by creating mock HTTP calls and checking if they send requests in the right cases. We can also try creating a hidden channel on Teams for integration testing.
 
-### Monitoring
+### Security
+Identifying secrets that will be used include the Teams channel connector URI and authentication for the GitHub app. Note that all PII is owned by GitHub and Teams.
+- Steps for setting up repro/test/dev environments? (not too sure about this question)
+
+### Rollout and Deployment
+- The solution will be most likely be deployed on Arcade Services, and thus on the Arcade Services cadence. Once deployed, check the Async Triage channel on Teams for updates.
+- While nothing is being deprecated, we will probably remove the "Needs Triage" and "I Think This is Triaged" bot tags once the solution is deployed.
+- What are the risks during deployment?
+  - If the solution stops working, new untriaged issues may go unnoticed without a conversation being created on Teams. It may require some monitoring to make sure that untriaged issues are consistently being add on Teams.
+
+## Usage Telemetry
+Suggestions for tracking "usefulness" of the solution include measuring the average amount of time it takes for an issue to be triaged, how many people are involved, and the average length of conversations. However, more discussion is needed to figure out how the necessary information will be collected.
+
+## Monitoring
 - Is there existing monitoring that will be used by this epic?
+  - On the Teams end, we can monitor if there are an abnormal amount of non-successful requests made to Teams.
+  - Suggested - using Azure Application Insights to monitor the functionality of the GitHub controller.
 - If new monitoring is needed, it should be defined and alerting thresholds should be set up.
 
-### FR Hand off
-- What documentation/information needs to be provided to FR so the team as a whole is successful in maintaining these changes?
-  - Create some documentation on what functionalities the bot currently possesses and link to the code for more information.
-  - Code should also be clearly documented.
+## FR Hand off
+- We should create some documentation on what functionalities the solution currently possesses and link to the code for more information. The code should also be clearly documented.
 - If you have created new monitoring rules - what tools/processes should FR use to troubleshoot alerts
 - If existing monitoring is used, do the parameters need to be updated to accommodate these new updates
