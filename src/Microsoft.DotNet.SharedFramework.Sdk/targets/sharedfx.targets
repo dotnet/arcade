@@ -385,7 +385,7 @@
       <_FrameworkListRootAttribute Include="TargetFrameworkVersion" Value="$(TargetFrameworkVersion.TrimStart('vV'))" />
       <_FrameworkListRootAttribute Include="FrameworkName" Value="$(SharedFrameworkName)" />
       <_FrameworkListRootAttribute Include="Name" Value="$(SharedFrameworkFriendlyName)" />
-      <_FrameworkListTargetFilePrefix Include="ref/;runtimes/" />
+      <_FrameworkListTargetFilePrefix Include="ref/;runtimes/;analyzers/" />
       <_FrameworkListTargetFilePrefix Condition="'$(PlatformPackageType)' == 'RuntimePack'" Include="PgoData" />
     </ItemGroup>
 
@@ -448,7 +448,7 @@
     <ItemGroup>
       <_closureFiles
         Include="@(FilesToPackage)"
-        Condition="('%(Extension)' == '.dll' or '%(Extension)' == '$(LibraryFileExtension)') and '%(FilesToPackage.Culture)' == ''" />
+        Condition="('%(Extension)' == '.dll' or '%(Extension)' == '$(LibraryFileExtension)') and '%(FilesToPackage.Culture)' == '' and '%(FilesToPackage.ExcludeFromValidation)' != 'true'" />
       <_closureFileNames Include="@(_closureFiles->'%(FileName)')" Original="%(Identity)" />
 
       <_closureFileNamesFiltered Include="@(_closureFileNames)" Exclude="@(ExcludeFromClosure)"/>
@@ -478,7 +478,7 @@
     <ItemGroup>
       <_dupTypeFiles
          Include="@(FilesToPackage)"
-        Condition="('%(Extension)' == '.dll' or '%(Extension)' == '$(LibraryFileExtension)') and '%(FilesToPackage.Culture)' == ''" />
+         Condition="('%(Extension)' == '.dll' or '%(Extension)' == '$(LibraryFileExtension)') and '%(FilesToPackage.Culture)' == '' and '%(FilesToPackage.ExcludeFromValidation)' != 'true'" />
       <_dupTypeFileName Include="@(_dupTypeFiles->'%(FileName)')" Original="%(Identity)" />
 
       <_dupTypeFileNamesFiltered Include="@(_dupTypeFileName)" Exclude="@(ExcludeFromDuplicateTypes)"/>
