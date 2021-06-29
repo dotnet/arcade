@@ -26,9 +26,12 @@ stages:
 - stage: build
   displayName: Build
   jobs:
-  - template: /eng/common/templates/job/onelocbuild.yml
-    parameters:
-      CreatePr: false
+  - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest'), if eq(variables['Build.SourceBranch'], 'refs/heads/main')) }}:
+    - template: /eng/common/templates/job/onelocbuild.yml
+      parameters:
+        MirrorRepo: arcade
+        LclSource: lclFilesFromPackage
+        LclPackageId: 'LCL-JUNO-PROD-ARCADE'
   - template: /eng/common/templates/jobs/jobs.yml
     parameters:
       artifacts:
