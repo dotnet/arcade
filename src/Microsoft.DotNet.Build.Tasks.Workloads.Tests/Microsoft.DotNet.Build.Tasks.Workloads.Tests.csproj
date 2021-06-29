@@ -19,4 +19,8 @@
   <ItemGroup>
       <Content Include="testassets\**\*" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="testassets\mauiWorkloadManifest.json" />
+  </ItemGroup>
 </Project>
