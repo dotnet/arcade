@@ -131,10 +131,40 @@ namespace Microsoft.DotNet.SharedFramework.Sdk
                     }
                 }
 
+                string analyzerLanguage = null;
+
+                if (path.StartsWith("analyzers/"))
+                {
+                    type = "Analyzer";
+
+                    if (path.EndsWith(".resources.dll"))
+                    {
+                        // omit analyzer resources
+                        continue;
+                    }
+
+                    var pathParts = path.Split('/');
+
+                    if (pathParts.Length < 3 || !pathParts[1].Equals("dotnet", StringComparison.Ordinal) || pathParts.Length > 4)
+                    {
+                        Log.LogError($"Unexpected analyzer path format {path}.  Expected  'analyzers/dotnet(/language)/analyzer.dll");
+                    }
+
+                    if (pathParts.Length > 3)
+                    {
+                        analyzerLanguage = pathParts[2];
+                    }
+                }
+
                 var element = new XElement(
                     "File",
                     new XAttribute("Type", type),
                     new XAttribute("Path", path));
+
+                if (analyzerLanguage != null)
+                {
+                    element.Add(new XAttribute("Language", analyzerLanguage));
+                }
 
                 if (f.IsResourceFile)
                 {
