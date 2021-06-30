@@ -4,6 +4,7 @@ using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
+using Microsoft.Arcade.Common;
 using Microsoft.Arcade.Test.Common;
 using Microsoft.DotNet.Arcade.Test.Common;
 using Microsoft.DotNet.Build.Tasks.Feed.Model;
@@ -188,6 +189,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             };
             var testFile = Path.Combine("Symbols", "test.txt");
             var responseContent = TestInputs.ReadAllBytes(testFile);
+            publishTask.RetryHandler = new ExponentialRetry() { MaxAttempts = 3, DelayBase = 1 };
 
             var responses = new[]
             {
@@ -199,15 +201,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 {
                     Content = new ByteArrayContent(responseContent)
                 },
-                new HttpResponseMessage(HttpStatusCode.NotFound)
-                {
-                    Content = new ByteArrayContent(responseContent)
-                },
-                new HttpResponseMessage(HttpStatusCode.NotFound)
-                {
-                    Content = new ByteArrayContent(responseContent)
-                },
-                new HttpResponseMessage(HttpStatusCode.NotFound)
+                new HttpResponseMessage(httpStatus)
                 {
                     Content = new ByteArrayContent(responseContent)
                 }
@@ -222,7 +216,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     "1234",
                     "test.txt",
                     path));
-            Assert.Contains($"Failed to download local file '{path}' after 5 attempts.  See inner exception for details,", actualError.Message);
+            Assert.Contains($"Failed to download local file '{path}' after {publishTask.RetryHandler.MaxAttempts} attempts.  See inner exception for details,", actualError.Message);
         }
 
 
@@ -239,16 +233,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             };
             var testFile = Path.Combine("Symbols", "test.txt");
             var responseContent = TestInputs.ReadAllBytes(testFile);
+            publishTask.RetryHandler = new ExponentialRetry() { MaxAttempts = 3, DelayBase = 1 };
+
             var responses = new[]
             {
-                new HttpResponseMessage(httpStatus)
-                {
-                    Content = new ByteArrayContent(responseContent)
-                },
-                new HttpResponseMessage(httpStatus)
-                {
-                    Content = new ByteArrayContent(responseContent)
-                },
                 new HttpResponseMessage(httpStatus)
                 {
                     Content = new ByteArrayContent(responseContent)
@@ -272,7 +260,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     "1234",
                     "test.txt",
                     path));
-            Assert.Contains($"Failed to download local file '{path}' after 5 attempts.  See inner exception for details,", actualError.Message);
+            Assert.Contains($"Failed to download local file '{path}' after {publishTask.RetryHandler.MaxAttempts} attempts.  See inner exception for details,", actualError.Message);
         }
 
         [Theory]
@@ -311,19 +299,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 BuildEngine = buildEngine,
             };
             publishTask.BuildId = "1243456";
+            publishTask.RetryHandler = new ExponentialRetry() {MaxAttempts = 3, DelayBase = 1};
 
             var testPackageName = Path.Combine("Symbols", "test.txt");
             var responseContent = TestInputs.ReadAllBytes(testPackageName);
             var responses = new[]
             {
-                new HttpResponseMessage(httpStatus)
-                {
-                    Content = new ByteArrayContent(responseContent)
-                },
-                new HttpResponseMessage(httpStatus)
-                {
-                    Content = new ByteArrayContent(responseContent)
-                },
                 new HttpResponseMessage(httpStatus)
                 {
                     Content = new ByteArrayContent(responseContent)
@@ -344,7 +325,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 publishTask.GetContainerIdAsync(
                     client,
                     PublishArtifactsInManifestBase.ArtifactName.BlobArtifacts));
-            Assert.Contains($"Failed to get container id after 5 attempts.  See inner exception for details,", actualError.Message);
+            Assert.Contains($"Failed to get container id after {publishTask.RetryHandler.MaxAttempts} attempts.  See inner exception for details,", actualError.Message);
         }
 
     }
