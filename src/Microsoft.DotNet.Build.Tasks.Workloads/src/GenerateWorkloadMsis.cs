@@ -117,7 +117,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                 Select(w => w.Value).
                 Where(wd => (wd.Platforms == null) || wd.Platforms.Any(p => p.StartsWith("win")));
 
-            var packIds = workloads.SelectMany(w => w.Packs).Distinct();
+            var packIds = workloads.Where(w => w.Packs != null).SelectMany(w => w.Packs).Distinct();
 
             return manifests.SelectMany(m => m.Packs.Values).
                 Where(p => packIds.Contains(p.Id)).

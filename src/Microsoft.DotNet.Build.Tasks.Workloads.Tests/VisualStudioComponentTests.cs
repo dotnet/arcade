@@ -80,6 +80,23 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
             Assert.Contains(@"microsoft.net.sdk.blazorwebassembly.aot", componentSwr);
         }
 
+        [Fact]
+        public void ItCreatesComponentsWhenWorkloadsDoNotIncludePacks()
+        {
+            WorkloadManifest manifest = Create("mauiWorkloadManifest.json");
+            WorkloadDefinition definition = manifest.Workloads.FirstOrDefault().Value;
+            VisualStudioComponent component = VisualStudioComponent.Create(null, manifest, definition, NoItems, NoItems, NoItems, NoItems);
+
+            string swixProjDirectory = RandomPath;
+            Directory.CreateDirectory(swixProjDirectory);
+            component.Generate(swixProjDirectory);
+
+            string componentSwr = File.ReadAllText(Path.Combine(swixProjDirectory, "component.swr"));
+
+            Assert.Contains(@"vs.dependency id=maui.mobile", componentSwr);
+            Assert.Contains(@"vs.dependency id=maui.desktop", componentSwr);
+        }
+
         private static WorkloadManifest Create(string filename)
         {
             return WorkloadManifestReader.ReadWorkloadManifest(Path.GetFileNameWithoutExtension(filename),

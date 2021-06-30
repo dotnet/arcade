@@ -254,14 +254,17 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                 }
             }
 
-            // Visual Studio is case-insensitive. 
-            IEnumerable<WorkloadPackId> packIds = workload.Packs.Where(p => !missingPackIds.Contains($"{p}", StringComparer.OrdinalIgnoreCase));
-            log?.LogMessage(MessageImportance.Low, $"Packs: {string.Join(", ", packIds.Select(p=>$"{p}"))}");
-
-            foreach (WorkloadPackId packId in packIds)
+            if (workload.Packs != null)
             {
-                log?.LogMessage(MessageImportance.Low, $"Adding component dependency for {packId} ");
-                component.AddDependency(manifest.Packs[packId]);
+                // Visual Studio is case-insensitive. 
+                IEnumerable<WorkloadPackId> packIds = workload.Packs.Where(p => !missingPackIds.Contains($"{p}", StringComparer.OrdinalIgnoreCase));
+                log?.LogMessage(MessageImportance.Low, $"Packs: {string.Join(", ", packIds.Select(p => $"{p}"))}");
+
+                foreach (WorkloadPackId packId in packIds)
+                {
+                    log?.LogMessage(MessageImportance.Low, $"Adding component dependency for {packId} ");
+                    component.AddDependency(manifest.Packs[packId]);
+                }
             }
 
             return component;
