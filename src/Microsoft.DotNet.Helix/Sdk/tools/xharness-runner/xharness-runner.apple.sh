@@ -78,7 +78,7 @@ if [ -z "$app" ]; then
 fi
 
 if [ -z "$target" ]; then
-    die "No target were provided";
+    die "No target was provided";
 fi
 
 if [ -z "$output_directory" ]; then

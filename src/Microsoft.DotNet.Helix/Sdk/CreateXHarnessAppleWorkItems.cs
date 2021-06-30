@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -153,13 +152,13 @@ namespace Microsoft.DotNet.Helix.Sdk
                     "--output-directory \"$output_directory\" " +
                     "--target \"$target\" " +
                     "--timeout \"$timeout\" " +
+                    "--xcode \"$xcode_path\" " +
+                    "-v " +
                     (includesTestRunner
                         ? $"--launch-timeout \"$launch_timeout\" "
                         : $"--expected-exit-code $expected_exit_code ") +
                     (resetSimulator ? $"--reset-simulator " : string.Empty) +
                     (target.Contains("device") ? $"--signal-app-end " : string.Empty) + // iOS/tvOS 14+ workaround
-                    "--xcode \"$xcode_path\" " +
-                    "-v " +
                     (!string.IsNullOrEmpty(AppArguments) ? "-- " + AppArguments : string.Empty);
             }
 
@@ -169,13 +168,7 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             Log.LogMessage($"Creating work item with properties Identity: {workItemName}, Payload: {appFolderPath}, Command: {helixCommand}");
 
-            return new Build.Utilities.TaskItem(workItemName, new Dictionary<string, string>()
-            {
-                { "Identity", workItemName },
-                { "PayloadArchive", payloadArchivePath },
-                { "Command", helixCommand },
-                { "Timeout", workItemTimeout.ToString() },
-            });
+            return CreateTaskItem(workItemName, payloadArchivePath, helixCommand, workItemTimeout);
         }
 
         private string GetHelixCommand(
