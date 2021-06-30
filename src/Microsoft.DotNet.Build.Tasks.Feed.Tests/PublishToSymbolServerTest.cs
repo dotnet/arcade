@@ -219,7 +219,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             Assert.Contains($"Failed to download local file '{path}' after {publishTask.RetryHandler.MaxAttempts} attempts.  See inner exception for details,", actualError.Message);
         }
 
-
         [Theory]
         [InlineData(HttpStatusCode.BadRequest)]
         [InlineData(HttpStatusCode.NotFound)]
@@ -261,6 +260,46 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     "test.txt",
                     path));
             Assert.Contains($"Failed to download local file '{path}' after {publishTask.RetryHandler.MaxAttempts} attempts.  See inner exception for details,", actualError.Message);
+        }
+
+        [Theory]
+        [InlineData(HttpStatusCode.BadRequest)]
+        [InlineData(HttpStatusCode.NotFound)]
+        [InlineData(HttpStatusCode.GatewayTimeout)]
+        public async Task DownloadFileSuccessfulAfterRetryTest(HttpStatusCode httpStatus)
+        {
+            var buildEngine = new MockBuildEngine();
+            var publishTask = new PublishArtifactsInManifestV3
+            {
+                BuildEngine = buildEngine,
+            };
+            var testFile = Path.Combine("Symbols", "test.txt");
+            var responseContent = TestInputs.ReadAllBytes(testFile);
+            publishTask.RetryHandler = new ExponentialRetry() { MaxAttempts = 2, DelayBase = 1 };
+
+            var responses = new[]
+            {
+                new HttpResponseMessage(httpStatus)
+                {
+                    Content = new ByteArrayContent(responseContent)
+                },
+                new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new ByteArrayContent(responseContent)
+                }
+            };
+            using HttpClient client = FakeHttpClient.WithResponses(responses);
+            var path = TestInputs.GetFullPath(Guid.NewGuid().ToString());
+
+            await publishTask.DownloadFileAsync(
+                client,
+                PublishArtifactsInManifestBase.ArtifactName.BlobArtifacts,
+                "1234",
+                "test.txt",
+                path);
+            Assert.True(File.Exists(path));
+            publishTask.DeleteTemporaryFiles(path);
+            publishTask.DeleteTemporaryDirectory(path);
         }
 
         [Theory]
@@ -327,6 +366,5 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     PublishArtifactsInManifestBase.ArtifactName.BlobArtifacts));
             Assert.Contains($"Failed to get container id after {publishTask.RetryHandler.MaxAttempts} attempts.  See inner exception for details,", actualError.Message);
         }
-
     }
 }
