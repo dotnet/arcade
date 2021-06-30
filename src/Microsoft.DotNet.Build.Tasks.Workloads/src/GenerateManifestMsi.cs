@@ -281,10 +281,10 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
 
             Directory.CreateDirectory(msiPackageProjectDir);
 
-            EmbeddedTemplates.Extract("Icon.png", msiPackageProjectDir);
-            EmbeddedTemplates.Extract("LICENSE.TXT", msiPackageProjectDir);
-
-            string licenseTextPath = Path.Combine(msiPackageProjectDir, "LICENSE.TXT");
+            string iconFileName = "Icon.png";
+            string licenseFileName = "LICENSE.TXT";
+            EmbeddedTemplates.Extract(iconFileName, msiPackageProjectDir);
+            EmbeddedTemplates.Extract(licenseFileName, msiPackageProjectDir);
 
             XmlWriterSettings settings = new XmlWriterSettings
             {
@@ -326,7 +326,8 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             writer.WriteStartElement("ItemGroup");
             WriteItem(writer, "None", msiPath, @"\data");
             WriteItem(writer, "None", msiJsonPath, @"\data\msi.json");
-            WriteItem(writer, "None", licenseTextPath, @"\");
+            WriteItem(writer, "None", iconFileName, string.Empty);
+            WriteItem(writer, "None", licenseFileName, @"\");
             writer.WriteEndElement();
 
             writer.WriteEndElement();
