@@ -1,4 +1,4 @@
-# Asynchronous Triage
+# Asynchronous Triage Bot
 
 We want to implement a mechanism that will allow newly-created issues on GitHub that still need to be triaged to automatically have their own dedicated conversation started on Teams. It would also be useful to denote Teams conversations as [Triaged] or [Needs Triage] in Teams for clarity.
 
@@ -12,12 +12,8 @@ See Epic for more context: https://github.com/dotnet/core-eng/issues/13288
 ### Unknowns and Open Questions
 - How can we distinguish if an issue needs triage, or if it was just created and will immediately have an Epic assigned to it? ([link to issue](https://github.com/dotnet/core-eng/issues/13457))
   - Suggested - a background job that occasionally scans for unassigned issues and adds a conversation on Teams if necessary, rather than generating a conversation every time an issue is created. This also addresses an interesting case in which an issue was assigned to one Epic, then unassigned.
-- How can we push stagnating issues to the top of discussion on Teams so they can be resolved? What do we define as a stale issue?
-  - Suggested - have a bot periodically comment on the conversations that still need resolution.
-  - Suggested - weekly generated conversation listing all of the issues that still need to be triaged (ex. issues over a week old)
-  - Addressing this may be out of scope of the initial solution.
 - Some issues may not need to be assigned to an Epic (ex. customers that open issues for themselves).
-  - Suggested - marking these issues with a label for the bot to ignore, or triage assigns to "work tracking for other teams" epic.
+  - Suggested - marking these issues with a label for the bot to ignore, or triage assigns them to the "work tracking for other teams" epic.
 
 ### Proof of Concepts
 - Verify that we are able to open a new conversation in a channel on Teams when a new issue is opened on GitHub. Try to utilize some similar functionality to the FR Mention Bot.
@@ -39,6 +35,7 @@ To avoid sending actual requests to Teams and cluttering up the channel, we can 
 
 ### Security
 Identifying secrets that will be used include the Teams channel connector URI and authentication for the GitHub app. Note that all PII is owned by GitHub and Teams.
+- The "bot" account that will be posting to Teams will also require authentication and must have permission to access channel messages, add replies to a discussion, etc.
 - Setting up repro/test/dev environments: this will vary based on implementation details; the environment may simply be able to be set up and opened as a VS project, or might require a more complicated process.
 
 ### Rollout and Deployment
