@@ -83,12 +83,12 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             _fileSystem.FileExists(payloadArchive).Should().BeTrue();
 
             var command = workItem.GetMetadata("Command");
-            command.Should().Contain("--timeout \"00:08:55\"");
+            command.Should().Contain("-timeout \"00:08:55\"");
 
             _zipArchiveManager
                 .Verify(x => x.AddResourceFileToArchive<CreateXHarnessAndroidWorkItems>(payloadArchive, It.Is<string>(s => s.Contains("xharness-helix-job.android.sh")), "xharness-helix-job.android.sh"), Times.AtLeastOnce);
             _zipArchiveManager
-                .Verify(x => x.AddResourceFileToArchive<CreateXHarnessAndroidWorkItems>(payloadArchive, It.Is<string>(s => s.Contains("xharness-helix-job.android.bat")), "xharness-helix-job.android.bat"), Times.AtLeastOnce);
+                .Verify(x => x.AddResourceFileToArchive<CreateXHarnessAndroidWorkItems>(payloadArchive, It.Is<string>(s => s.Contains("xharness-helix-job.android.ps1")), "xharness-helix-job.android.ps1"), Times.AtLeastOnce);
         }
 
         [Fact]
@@ -102,7 +102,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 CreateApk("apks/System.Bar.apk", "System.Bar"),
             };
 
-            _fileSystem.Files.Add("apks/xharness-apk-payload-system.foo.zip", "archive");
+            _fileSystem.Files.Add("apks/xharness-apk-payload-System.Foo.zip", "archive");
 
             // Act
             using var provider = collection.BuildServiceProvider();
