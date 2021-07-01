@@ -198,3 +198,28 @@ When using `CustomCommands`, several variables will be defined for you for easie
 - `$output_directory` - path under which all files will be uploaded to Helix at the end of the job
   - If a file named `testResults.xml` is found containing xUnit results, it will be uploaded back to Azure DevOps
 - `$timeout`, `$expected_exit_code`, `$device_output_path`, `$instrumentation` - parsed metadata defined on the original `XHarnessApkToTest` MSBuild item
+
+
+### Reusing app bundles / apks
+
+In some scenarios, you might need to re-use one apk for multiple work items and for example supply each with a different custom command.
+You can then name the item however you like and supply the path to the app as metadata:
+
+```xml
+<XHarnessApkToTest Include="System.Text.Json">
+  <ApkPath>path/to/System.Text.Json.Tests.apk</ApkPath>
+  <AndroidPackageName>net.dot.System.Buffers.Tests</AndroidPackageName>
+  <AndroidInstrumentationName>net.dot.MonoRunner</AndroidInstrumentationName>
+</XHarnessApkToTest>
+
+<XHarnessApkToTest Include="System.Text.Json-with-custom-commands">
+  <ApkPath>path/to/System.Text.Json.Tests.apk</ApkPath>
+  <AndroidPackageName>net.dot.System.Buffers.Tests</AndroidPackageName>
+  <AndroidInstrumentationName>net.dot.MonoRunner</AndroidInstrumentationName>
+  <CustomCommands>
+    xharness android test --app "$app" --package-name "net.dot.System.Buffers.Tests" --output-directory "$output_directory" --instrumentation=net.dot.MonoRunner
+  </CustomCommands>
+</XHarnessApkToTest>
+```
+
+For Apple it is the same, just the metadata property name is `<AppBundlePath>`.

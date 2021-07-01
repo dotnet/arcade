@@ -20,6 +20,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             public const string AndroidInstrumentationName = "AndroidInstrumentationName";
             public const string DeviceOutputPath = "DeviceOutputPath";
             public const string AndroidPackageName = "AndroidPackageName";
+            public const string ApkPath = "ApkPath";
         }
 
         private const string PosixAndroidWrapperScript = "xharness-helix-job.android.sh";
@@ -66,13 +67,29 @@ namespace Microsoft.DotNet.Helix.Sdk
         /// <returns>An ITaskItem instance representing the prepared HelixWorkItem.</returns>
         private async Task<ITaskItem> PrepareWorkItem(IZipArchiveManager zipArchiveManager, IFileSystem fileSystem, ITaskItem appPackage)
         {
-            string workItemName = fileSystem.GetFileNameWithoutExtension(appPackage.ItemSpec);
-
-            var (testTimeout, workItemTimeout, expectedExitCode, customCommands) = ParseMetadata(appPackage);
-
-            if (!fileSystem.GetExtension(appPackage.ItemSpec).Equals(".apk", StringComparison.OrdinalIgnoreCase))
+            // The user can re-use the same .apk for 2 work items so the name of the work item will come from ItemSpec and path from metadata
+            string workItemName;
+            string apkPath;
+            if (appPackage.TryGetMetadata(MetadataNames.ApkPath, out string apkPathMetadata) && !string.IsNullOrEmpty(apkPathMetadata))
             {
-                Log.LogError($"Unsupported app package type: {fileSystem.GetFileName(appPackage.ItemSpec)}");
+                workItemName = appPackage.ItemSpec;
+                apkPath = apkPathMetadata;
+            }
+            else
+            {
+                workItemName = fileSystem.GetFileNameWithoutExtension(appPackage.ItemSpec);
+                apkPath = appPackage.ItemSpec;
+            }
+
+            if (!fileSystem.FileExists(apkPath))
+            {
+                Log.LogError($"App package not found in {apkPath}");
+                return null;
+            }
+
+            if (!fileSystem.GetExtension(apkPath).Equals(".apk", StringComparison.OrdinalIgnoreCase))
+            {
+                Log.LogError($"Unsupported app package type: {fileSystem.GetFileName(apkPath)}");
                 return null;
             }
 
@@ -83,7 +100,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                 return null;
             }
 
-            string command = GetHelixCommand(appPackage, androidPackageName, testTimeout, expectedExitCode);
+            var (testTimeout, workItemTimeout, expectedExitCode, customCommands) = ParseMetadata(appPackage);
 
             if (customCommands == null)
             {
@@ -114,14 +131,16 @@ namespace Microsoft.DotNet.Helix.Sdk
                     + passthroughArgs;
             }
 
-            Log.LogMessage($"Creating work item with properties Identity: {workItemName}, Payload: {appPackage.ItemSpec}, Command: {command}");
+            string command = GetHelixCommand(appPackage, apkPath, androidPackageName, testTimeout, expectedExitCode);
 
-            string workItemZip = await CreateZipArchiveOfPackageAsync(zipArchiveManager, fileSystem, appPackage.ItemSpec, customCommands);
+            Log.LogMessage($"Creating work item with properties Identity: {workItemName}, Payload: {apkPath}, Command: {command}");
+
+            string workItemZip = await CreateZipArchiveOfPackageAsync(zipArchiveManager, fileSystem, workItemName, apkPath, customCommands);
 
             return CreateTaskItem(workItemName, workItemZip, command, workItemTimeout);
         }
 
-        private string GetHelixCommand(ITaskItem appPackage, string androidPackageName, TimeSpan xHarnessTimeout, int expectedExitCode)
+        private string GetHelixCommand(ITaskItem appPackage, string apkPath, string androidPackageName, TimeSpan xHarnessTimeout, int expectedExitCode)
         {
             appPackage.TryGetMetadata(MetadataNames.AndroidInstrumentationName, out string androidInstrumentationName);
             appPackage.TryGetMetadata(MetadataNames.DeviceOutputPath, out string deviceOutputPath);
@@ -133,7 +152,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             // We either call .ps1 or .sh so we need to format the arguments well (PS has -argument, bash has --argument)
             string dash = IsPosixShell ? "--" : "-";
             string xharnessRunCommand = $"{xharnessHelixWrapperScript} " +
-                $"{dash}app \"{Path.GetFileName(appPackage.ItemSpec)}\" " +
+                $"{dash}app \"{Path.GetFileName(apkPath)}\" " +
                 $"{dash}timeout \"{xHarnessTimeout}\" " +
                 $"{dash}package_name \"{androidPackageName}\" " +
                 (expectedExitCode != 0 ? $" {dash}expected_exit_code \"{expectedExitCode}\" " : string.Empty) +
@@ -148,10 +167,11 @@ namespace Microsoft.DotNet.Helix.Sdk
         private async Task<string> CreateZipArchiveOfPackageAsync(
             IZipArchiveManager zipArchiveManager,
             IFileSystem fileSystem,
+            string workItemName,
             string fileToZip,
             string injectedCommands)
         {
-            string fileName = $"xharness-apk-payload-{fileSystem.GetFileNameWithoutExtension(fileToZip).ToLowerInvariant()}.zip";
+            string fileName = $"xharness-apk-payload-{workItemName}.zip";
             string outputZipPath = fileSystem.PathCombine(fileSystem.GetDirectoryName(fileToZip), fileName);
 
             if (fileSystem.FileExists(outputZipPath))

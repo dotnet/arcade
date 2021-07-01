@@ -23,6 +23,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             public const string LaunchTimeout = "LaunchTimeout";
             public const string IncludesTestRunner = "IncludesTestRunner";
             public const string ResetSimulator = "ResetSimulator";
+            public const string AppBundlePath = "AppBundlePath";
         }
 
         private const string EntryPointScript = "xharness-helix-job.apple.sh";
@@ -90,9 +91,28 @@ namespace Microsoft.DotNet.Helix.Sdk
             IFileSystem fileSystem,
             ITaskItem appBundleItem)
         {
-            string appFolderPath = appBundleItem.ItemSpec.TrimEnd(Path.DirectorySeparatorChar);
+            // The user can re-use the same .apk for 2 work items so the name of the work item will come from ItemSpec and path from metadata
+            string workItemName;
+            string appFolderPath;
+            if (appBundleItem.TryGetMetadata(MetadataNames.AppBundlePath, out string appPathMetadata) && !string.IsNullOrEmpty(appPathMetadata))
+            {
+                workItemName = appBundleItem.ItemSpec;
+                appFolderPath = appPathMetadata;
+            }
+            else
+            {
+                workItemName = fileSystem.GetFileName(appBundleItem.ItemSpec);
+                appFolderPath = appBundleItem.ItemSpec;
+            }
 
-            string workItemName = fileSystem.GetFileName(appFolderPath);
+            appFolderPath = appFolderPath.TrimEnd(Path.DirectorySeparatorChar);
+
+            if (!fileSystem.DirectoryExists(appFolderPath))
+            {
+                Log.LogError($"App bundle not found in {appFolderPath}");
+                return null;
+            }
+
             if (workItemName.EndsWith(".app"))
             {
                 workItemName = workItemName.Substring(0, workItemName.Length - 4);
@@ -162,9 +182,9 @@ namespace Microsoft.DotNet.Helix.Sdk
                     (!string.IsNullOrEmpty(AppArguments) ? "-- " + AppArguments : string.Empty);
             }
 
-            string appName = fileSystem.GetFileName(appBundleItem.ItemSpec);
+            string appName = fileSystem.GetFileName(appFolderPath);
             string helixCommand = GetHelixCommand(appName, target, testTimeout, launchTimeout, includesTestRunner, expectedExitCode, resetSimulator);
-            string payloadArchivePath = await CreateZipArchiveOfFolder(zipArchiveManager, fileSystem, appFolderPath, customCommands);
+            string payloadArchivePath = await CreateZipArchiveOfFolder(zipArchiveManager, fileSystem, workItemName, appFolderPath, customCommands);
 
             Log.LogMessage($"Creating work item with properties Identity: {workItemName}, Payload: {appFolderPath}, Command: {helixCommand}");
 
@@ -194,6 +214,7 @@ namespace Microsoft.DotNet.Helix.Sdk
         private async Task<string> CreateZipArchiveOfFolder(
             IZipArchiveManager zipArchiveManager,
             IFileSystem fileSystem,
+            string workItemName,
             string folderToZip,
             string injectedCommands)
         {
@@ -204,7 +225,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             }
 
             string appFolderDirectory = fileSystem.GetDirectoryName(folderToZip);
-            string fileName = $"xharness-app-payload-{fileSystem.GetFileName(folderToZip).ToLowerInvariant()}.zip";
+            string fileName = $"xharness-app-payload-{workItemName}.zip";
             string outputZipPath = fileSystem.PathCombine(appFolderDirectory, fileName);
 
             if (fileSystem.FileExists(outputZipPath))
