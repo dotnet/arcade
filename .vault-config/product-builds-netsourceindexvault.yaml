@@ -1,0 +1,13 @@
+storageLocation:
+  type: azure-key-vault
+  parameters:
+    subscription: a4fc5514-21a9-4296-bfaf-5c7ee7fa35d1
+    name: netsourceindexvault
+
+
+secrets:
+  #source-dot-net stage1 variables
+  source-dot-net-stage1-blob-container-url:
+    type: text
+    parameters:
+      description: set to never expire
