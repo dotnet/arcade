@@ -181,6 +181,9 @@ Example:
 </ItemGroup>
 ```
 
+Please note that Android can run on both Windows and Linux based on the target queue.
+For that reason, make sure the `<CustomCommands>` script you supply is either **bash** for Linux queues or **PowerShell** for Windows.
+
 When using `CustomCommands`, several variables will be defined for you for easier run.
 
 #### Variables defined for Apple scenarios
@@ -190,4 +193,8 @@ When using `CustomCommands`, several variables will be defined for you for easie
 - `$target`, `$timeout`, `$launch_timeout`, `$expected_exit_code`, `$includes_test_runner` - parsed metadata defined on the original `XHarnessAppBundleToTest` MSBuild item
 
 #### Variables defined for Android scenarios
-Android is currently not supported - coming soon!
+- `$app` - path to the application
+- `$package_name` - name of the Android package
+- `$output_directory` - path under which all files will be uploaded to Helix at the end of the job
+  - If a file named `testResults.xml` is found containing xUnit results, it will be uploaded back to Azure DevOps
+- `$timeout`, `$expected_exit_code`, `$device_output_path`, `$instrumentation` - parsed metadata defined on the original `XHarnessApkToTest` MSBuild item
