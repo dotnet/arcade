@@ -4,7 +4,7 @@
 
   <!--
     This is a project used in integration tests of Arcade.
-    It tests sending Android (XHarness) workloads using the Helix SDK to Linux-specific queues
+    It tests sending Android (XHarness) workloads using the Helix SDK to Windows-specific queues
     It builds a mock project that does not build an APK directly but only downloads it from a storage account.
    -->
 
@@ -25,15 +25,14 @@
   <!-- New Test Projects which build packages to run through XHarness/XHarness go here -->
   <ItemGroup>
     <XHarnessAndroidProject Include="$(MSBuildThisFileDirectory)XHarness/XHarness.TestApks.proj" />
+    <HelixTargetQueue Include="windows.10.amd64.android.open" />
   </ItemGroup>
 
-  <ItemGroup Condition=" '$(HelixAccessToken)' != '' ">
-    <HelixTargetQueue Include="ubuntu.1804.amd64.android"/>
-  </ItemGroup>
-
-  <ItemGroup Condition=" '$(HelixAccessToken)' == '' ">
-    <HelixTargetQueue Include="ubuntu.1804.amd64.android.open"/>
-  </ItemGroup>
+  <!-- For non-ci local runs -->
+  <PropertyGroup Condition=" '$(AGENT_JOBNAME)' == '' ">
+    <EnableXUnitReporter>false</EnableXUnitReporter>
+    <EnableAzurePipelinesReporter>false</EnableAzurePipelinesReporter>
+  </PropertyGroup>
 
   <PropertyGroup Condition=" '$(HelixAccessToken)' == '' ">
     <IsExternal>true</IsExternal>

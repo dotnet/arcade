@@ -11,15 +11,15 @@
   <Target Name="Build" Returns="@(XHarnessApkToTest)" >
     <Error Condition=" '$(ArtifactsTmpDir)' == ''" Text="Not downloading APK because ArtifactsTmpDir property is unset" />
 
-    <DownloadFile Condition="'$(XharnessTestX86)' == 'true'" SourceUrl="$(XHarnessX86TestApkUrl)" DestinationFolder="$(ArtifactsTmpDir)XHarness.TestApk\x86" SkipUnchangedFiles="True" Retries="5">
+    <DownloadFile Condition="'$(XHarnessTestX86)' == 'true'" SourceUrl="$(XHarnessX86TestApkUrl)" DestinationFolder="$(ArtifactsTmpDir)XHarness.TestApk\x86" SkipUnchangedFiles="True" Retries="5">
       <Output TaskParameter="DownloadedFile" ItemName="DownloadedApkFile" />
     </DownloadFile>
 
-    <DownloadFile Condition="'$(XharnessTestX86_64)' == 'true'" SourceUrl="$(XHarnessX64TestApkUrl)" DestinationFolder="$(ArtifactsTmpDir)XHarness.TestApk\x86_64" SkipUnchangedFiles="True" Retries="5">
+    <DownloadFile Condition="'$(XHarnessTestX86_64)' == 'true'" SourceUrl="$(XHarnessX64TestApkUrl)" DestinationFolder="$(ArtifactsTmpDir)XHarness.TestApk\x86_64" SkipUnchangedFiles="True" Retries="5">
       <Output TaskParameter="DownloadedFile" ItemName="DownloadedApkFile" />
     </DownloadFile>
 
-    <DownloadFile Condition="'$(XharnessTestARM64_V8A)' == 'true'" SourceUrl="$(XHarnessARM64V8TestApkUrl)" DestinationFolder="$(ArtifactsTmpDir)XHarness.TestApk\arm64_v8a" SkipUnchangedFiles="True" Retries="5">
+    <DownloadFile Condition="'$(XHarnessTestARM64_V8A)' == 'true'" SourceUrl="$(XHarnessARM64V8TestApkUrl)" DestinationFolder="$(ArtifactsTmpDir)XHarness.TestApk\arm64_v8a" SkipUnchangedFiles="True" Retries="5">
       <Output TaskParameter="DownloadedFile" ItemName="DownloadedApkFile" />
     </DownloadFile>
 
