@@ -139,7 +139,11 @@ fi
 
 export XHARNESS_DISABLE_COLORED_OUTPUT=true
 export XHARNESS_LOG_WITH_TIMESTAMPS=true
-alias xharness="dotnet exec $xharness_cli_path"
+
+# The xharness alias
+function xharness() {
+    "dotnet exec $xharness_cli_path" "$@"
+}
 
 # Act out the actual commands
 source command.sh

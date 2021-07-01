@@ -83,26 +83,31 @@ namespace Microsoft.DotNet.Helix.Sdk
                 return null;
             }
 
-            appPackage.TryGetMetadata(MetadataNames.AndroidInstrumentationName, out string androidInstrumentationName);
-
             string command = GetHelixCommand(appPackage, androidPackageName, testTimeout, expectedExitCode);
-
-            appPackage.TryGetMetadata(MetadataNames.Arguments, out string extraArguments);
 
             if (customCommands == null)
             {
+                appPackage.TryGetMetadata(MetadataNames.Arguments, out string extraArguments);
+
                 var exitCodeArg = expectedExitCode != 0 ? $" --expected-exit-code $expected_exit_code " : string.Empty;
                 var passthroughArgs = !string.IsNullOrEmpty(AppArguments) ? $" -- {AppArguments}" : string.Empty;
-                var instrumentationArg = !string.IsNullOrEmpty(androidInstrumentationName) ? $" --instrumentation \"$instrumentation\" " : string.Empty;
+
+                var instrumentationArg = appPackage.TryGetMetadata(MetadataNames.AndroidInstrumentationName, out string androidInstrumentationName)
+                    ? $"--instrumentation=\"{androidInstrumentationName}\" "
+                    : string.Empty;
+
+                var devOutArg = appPackage.TryGetMetadata(MetadataNames.DeviceOutputPath, out string deviceOutputPath)
+                    ? $"--dev-out \"{deviceOutputPath}\" "
+                    : string.Empty;
 
                 // In case user didn't specify custom commands, we use our default one
                 customCommands = "xharness android test " +
                     "--app \"$app\" " +
-                    "--output - directory \"$output_directory\" " +
+                    "--output-directory \"$output_directory\" " +
                     "--timeout \"$timeout\" " +
                     "--package-name \"$package_name\" " +
-                    " -v " +
-                    " --dev-out \"$device_output_path\" "
+                    " -v "
+                    + devOutArg
                     + instrumentationArg
                     + exitCodeArg
                     + extraArguments

@@ -40,7 +40,7 @@
     <EmbeddedResource Include="tools\xharness-runner\xharness-helix-job.android.sh">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </EmbeddedResource>
-    <EmbeddedResource Include="tools\xharness-runner\xharness-helix-job.android.bat">
+    <EmbeddedResource Include="tools\xharness-runner\xharness-helix-job.android.ps1">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </EmbeddedResource>
   </ItemGroup>

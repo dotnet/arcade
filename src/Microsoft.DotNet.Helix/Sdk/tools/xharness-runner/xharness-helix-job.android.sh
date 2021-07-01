@@ -39,10 +39,12 @@ while [[ $# -gt 0 ]]; do
         shift
         ;;
       --device_output_path)
-        device_output_path=true
+        device_output_path="$2"
+        shift
         ;;
       --instrumentation)
-        instrumentation=true
+        instrumentation="$2"
+        shift
         ;;
     esac
     shift
@@ -63,6 +65,11 @@ fi
 if [ -z "$output_directory" ]; then
     die "No output directory provided";
 fi
+
+# The xharness alias
+function xharness() {
+    dotnet exec $XHARNESS_CLI_PATH "$@"
+}
 
 # Act out the actual commands
 source command.sh
