@@ -142,7 +142,7 @@ export XHARNESS_LOG_WITH_TIMESTAMPS=true
 
 # The xharness alias
 function xharness() {
-    "dotnet exec $xharness_cli_path" "$@"
+    dotnet exec $xharness_cli_path "$@"
 }
 
 # Act out the actual commands
