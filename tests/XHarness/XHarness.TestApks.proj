@@ -8,6 +8,7 @@
     <XHarnessARM64V8TestApkUrl>https://netcorenativeassets.blob.core.windows.net/resource-packages/external/android/test-apk/arm64_v8a/System.Buffers.Tests-arm64-v8a.apk</XHarnessARM64V8TestApkUrl>
   </PropertyGroup>
 
+  <!-- We're not set up currently to build APK files as part of normal builds, so this downloads existing ones for now -->
   <Target Name="Build" Returns="@(XHarnessApkToTest)" >
     <Error Condition=" '$(ArtifactsTmpDir)' == ''" Text="Not downloading APK because ArtifactsTmpDir property is unset" />
 
@@ -25,9 +26,20 @@
 
     <Message Text="Downloaded @(DownloadedApkFile) for XHarness Test purposes" Importance="High" />
 
+    <!-- We create two work items for each app - one normal and one using the custom commands to test that flow too -->
     <ItemGroup>
-      <!-- We're not set up currently to build APK files as part of normal builds, so this downloads existing ones for now -->
-      <XHarnessApkToTest Include="@(DownloadedApkFile)">
+      <XHarnessApkToTest Include="@(DownloadedApkFile -> '%(Filename)')">
+        <ApkPath>%(FullPath)</ApkPath>
+
+        <!-- Package name: this comes from metadata inside the apk itself -->
+        <AndroidPackageName>net.dot.System.Buffers.Tests</AndroidPackageName>
+
+        <!-- If there are > 1 instrumentation class inside the package, we need to know the name of which to use -->
+        <AndroidInstrumentationName>net.dot.MonoRunner</AndroidInstrumentationName>
+      </XHarnessApkToTest>
+
+      <XHarnessApkToTest Include="@(DownloadedApkFile -> '%(Filename)-custom-command')">
+        <ApkPath>%(FullPath)</ApkPath>
 
         <!-- Package name: this comes from metadata inside the apk itself -->
         <AndroidPackageName>net.dot.System.Buffers.Tests</AndroidPackageName>
@@ -35,6 +47,10 @@
         <!-- If there are > 1 instrumentation class inside the package, we need to know the name of which to use -->
         <AndroidInstrumentationName>net.dot.MonoRunner</AndroidInstrumentationName>
 
+        <!-- This command is the same for PowerShell and bash so no need to detect the platform -->
+        <CustomCommands>
+          xharness android test --app "$app" --package-name "net.dot.System.Buffers.Tests" --output-directory "$output_directory" --instrumentation=net.dot.MonoRunner --timeout "$timeout" -v
+        </CustomCommands>
       </XHarnessApkToTest>
     </ItemGroup>
   </Target>
