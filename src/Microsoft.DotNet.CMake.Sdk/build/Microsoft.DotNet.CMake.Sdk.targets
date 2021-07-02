@@ -31,7 +31,7 @@
       <_CMakeMultiConfigurationGenerator>true</_CMakeMultiConfigurationGenerator>
       <_CMakePassArchitectureToGenerator>true</_CMakePassArchitectureToGenerator>
       <!-- We limit the VS version range for the generator since CMake only knows about specific VS versions -->
-      <VSGeneratorVersionRange Condition="'$(VSGeneratorVersionRange)' == ''">[15,17.0)</VSGeneratorVersionRange>
+      <VSGeneratorVersionRange Condition="'$(VSGeneratorVersionRange)' == ''">[15,18.0)</VSGeneratorVersionRange>
       <!-- Visual Studio uses the Win32 name for the x86 target architecture. -->
       <Platform Condition="'$(Platform)' == 'x86'">Win32</Platform>
     </PropertyGroup>
@@ -50,6 +50,7 @@
 
     <PropertyGroup>
       <VSGenerator Condition="$(_HighestCompatibleVSVersion.StartsWith(16.))">Visual Studio 16 2019</VSGenerator>
+      <VSGenerator Condition="$(_HighestCompatibleVSVersion.StartsWith(17.))">Visual Studio 17 2022</VSGenerator>
     </PropertyGroup>
 
     <Error Condition="'$(VSGenerator)' == ''"
