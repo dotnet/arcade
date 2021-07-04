@@ -68,6 +68,7 @@ __FreeBSDPackages+=" icu"
 __FreeBSDPackages+=" libinotify"
 __FreeBSDPackages+=" lttng-ust"
 __FreeBSDPackages+=" krb5"
+__FreeBSDPackages+=" terminfo-db"
 
 __IllumosPackages="icu-64.2nb2"
 __IllumosPackages+=" mit-krb5-1.16.2nb4"
