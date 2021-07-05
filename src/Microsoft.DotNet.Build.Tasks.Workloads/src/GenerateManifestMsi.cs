@@ -184,7 +184,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                     candle.PreprocessorDefinitions.Add($@"ProductCode={productCode}");
                     candle.PreprocessorDefinitions.Add($@"UpgradeCode={upgradeCode}");
                     // Override the default provider key
-                    candle.PreprocessorDefinitions.Add($@"DependencyProviderKey={nupkg.Id},{platform}");
+                    candle.PreprocessorDefinitions.Add($@"DependencyProviderKeyName={ManifestId},{SdkFeatureBandVersion},{platform}");
                     candle.PreprocessorDefinitions.Add($@"ProductName={productName}");
                     candle.PreprocessorDefinitions.Add($@"Platform={platform}");
                     candle.PreprocessorDefinitions.Add($@"SourceDir={packageContentsDataDirectory}");
