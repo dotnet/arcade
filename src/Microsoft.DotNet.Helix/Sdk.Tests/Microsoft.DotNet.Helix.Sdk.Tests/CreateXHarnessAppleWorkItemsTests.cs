@@ -112,7 +112,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 CreateAppBundle("apps/System.Bar.app", "ios-simulator-64_13.5"),
             };
 
-            _fileSystem.Files.Add("apps/xharness-app-payload-System.Foo.zip", "archive");
+            _fileSystem.Files.Add("apps/xharness-app-payload-system.foo.zip", "archive");
 
             // Act
             using var provider = collection.BuildServiceProvider();

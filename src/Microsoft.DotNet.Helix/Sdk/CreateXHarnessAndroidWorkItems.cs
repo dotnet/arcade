@@ -171,7 +171,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             string fileToZip,
             string injectedCommands)
         {
-            string fileName = $"xharness-apk-payload-{workItemName}.zip";
+            string fileName = $"xharness-apk-payload-{workItemName.ToLowerInvariant()}.zip";
             string outputZipPath = fileSystem.PathCombine(fileSystem.GetDirectoryName(fileToZip), fileName);
 
             if (fileSystem.FileExists(outputZipPath))

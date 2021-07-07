@@ -225,7 +225,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             }
 
             string appFolderDirectory = fileSystem.GetDirectoryName(folderToZip);
-            string fileName = $"xharness-app-payload-{workItemName}.zip";
+            string fileName = $"xharness-app-payload-{workItemName.ToLowerInvariant()}.zip";
             string outputZipPath = fileSystem.PathCombine(appFolderDirectory, fileName);
 
             if (fileSystem.FileExists(outputZipPath))

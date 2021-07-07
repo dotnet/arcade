@@ -102,7 +102,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 CreateApk("apks/System.Bar.apk", "System.Bar"),
             };
 
-            _fileSystem.Files.Add("apks/xharness-apk-payload-System.Foo.zip", "archive");
+            _fileSystem.Files.Add("apks/xharness-apk-payload-system.foo.zip", "archive");
 
             // Act
             using var provider = collection.BuildServiceProvider();
