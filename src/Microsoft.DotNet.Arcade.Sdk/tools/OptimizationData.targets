@@ -118,7 +118,7 @@
     <PropertyGroup>
       <_PartialNgenArg/>
       <_PartialNgenArg Condition="'$(ApplyNgenOptimization)' == 'partial'">-partialNGEN</_PartialNgenArg>
-      <__IgnoreMvidMismatchArg/>
+      <_IgnoreMvidMismatchArg/>
       <_IgnoreMvidMismatchArg Condition="'$(IgnoreIbcMergeErrors)' == 'true'">-ignoremvidmismatch</_IgnoreMvidMismatchArg>
     </PropertyGroup>
 
