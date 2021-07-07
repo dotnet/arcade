@@ -14,11 +14,11 @@ param (
     [string]$timeout,
     [Parameter(Mandatory)]
     [string]$package_name,
-    [Parameter]
+    [Parameter()]
     [int]$expected_exit_code = 0,
-    [Parameter]
+    [Parameter()]
     [string]$device_output_path = $null,
-    [Parameter]
+    [Parameter()]
     [string]$instrumentation = $null
 )
 
