@@ -8,17 +8,17 @@ or devices have trouble, but to add more Helix-specific Android XHarness behavio
 #>
 
 param (
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$app,
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$timeout,
-    [Parameter(Mandatory=$true)]
+    [Parameter(Mandatory)]
     [string]$package_name,
-    [Parameter(Mandatory=$false)]
+    [Parameter]
     [int]$expected_exit_code = 0,
-    [Parameter(Mandatory=$false)]
+    [Parameter]
     [string]$device_output_path = $null,
-    [Parameter(Mandatory=$false)]
+    [Parameter]
     [string]$instrumentation = $null
 )
 
@@ -28,11 +28,11 @@ $output_directory=$Env:HELIX_WORKITEM_UPLOAD_ROOT
 
 # The xharness alias
 function xharness() {
-    dotnet exec $Env:XHARNESS_CLI_PATH $args
+    dotnet exec $Env:XHARNESS_CLI_PATH @args
 }
 
 # Act out the actual commands
-. .\command.ps1
+. "$PSScriptRoot\command.ps1"
 
 $exit_code=$LASTEXITCODE
 
