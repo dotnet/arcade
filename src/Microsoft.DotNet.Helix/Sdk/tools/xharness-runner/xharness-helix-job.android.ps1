@@ -24,6 +24,7 @@ param (
 
 $ErrorActionPreference="Stop"
 
+[Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSUseDeclaredVarsMoreThanAssignments", "")] # Variable used in sourced script
 $output_directory=$Env:HELIX_WORKITEM_UPLOAD_ROOT
 
 # The xharness alias
