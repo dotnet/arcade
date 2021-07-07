@@ -1,5 +1,5 @@
 from abc import ABCMeta, abstractmethod, abstractproperty
-from defs import TestResult
+from helix.public import TestResult
 from typing import Iterable
 
 
@@ -10,15 +10,13 @@ class ResultFormat:
         pass
 
     @abstractproperty
-    def name(self):
+    def name(self) -> str:
         pass
 
     @abstractproperty
-    def acceptable_file_suffixes(self):
-        # type: () -> Iterable[str]
+    def acceptable_file_suffixes(self) -> Iterable[str]:
         pass
 
     @abstractmethod
-    def read_results(self, path):
-        # type: (str) -> Iterable[TestResult]
+    def read_results(self, path) -> Iterable[TestResult]:
         pass

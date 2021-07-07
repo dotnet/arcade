@@ -4,19 +4,19 @@
     <body>
       <trans-unit id="MarkdownAPIListTitle">
         <source># API List of {0}</source>
-        <target state="new"># API List of {0}</target>
+        <target state="translated"># Lista de API de {0}</target>
         <note />
       </trans-unit>
       <trans-unit id="MarkdownDiffDescription">
         <source>API listing follows standard diff formatting.
 Lines preceded by a '+' are additions and a '-' indicates removal.</source>
-        <target state="new">API listing follows standard diff formatting.
-Lines preceded by a '+' are additions and a '-' indicates removal.</target>
+        <target state="translated">La lista de API sigue el formato de diff estándar.
+Las líneas precedidas por un signo "+" son adiciones y un "-" indica una eliminación.</target>
         <note />
       </trans-unit>
       <trans-unit id="MarkdownTitle">
         <source># API Difference {0} vs {1}</source>
-        <target state="new"># API Difference {0} vs {1}</target>
+        <target state="translated"># Diferencias de API {0} frente a {1}</target>
         <note />
       </trans-unit>
     </body>
