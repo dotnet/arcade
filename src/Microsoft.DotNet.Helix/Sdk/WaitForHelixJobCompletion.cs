@@ -1,7 +1,9 @@
 using Microsoft.Build.Framework;
+using Microsoft.DotNet.Helix.Client;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -76,8 +78,16 @@ namespace Microsoft.DotNet.Helix.Sdk
                         return;
                     }
                     Log.LogWarning($"Build task was cancelled while waiting on job '{jobName}'.  Attempting to cancel this job in Helix...");
-                    await HelixApi.Job.CancelAsync(jobName, helixJobCancellationToken);
-                    Log.LogWarning($"Successfully cancelled job '{jobName}'");
+                    try
+                    {
+                        await HelixApi.Job.CancelAsync(jobName, helixJobCancellationToken);
+                        Log.LogWarning($"Successfully cancelled job '{jobName}'");
+                    }
+                    catch (RestApiException checkIfAlreadyCancelled) when (checkIfAlreadyCancelled.Response.Status == 304)
+                    {
+                        // Already cancelled
+                        Log.LogWarning($"Job '{jobName}' was already cancelled.");
+                    }
                 }
             }
         }

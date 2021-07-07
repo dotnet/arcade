@@ -19,6 +19,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
     public static class GeneralUtils
     {
         public const string SymbolPackageSuffix = ".symbols.nupkg";
+        public const string SnupkgPackageSuffix = ".snupkg";
         public const string PackageSuffix = ".nupkg";
         public const string PackagesCategory = "PACKAGE";
 
@@ -134,13 +135,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         ///       the streams make no guarantee that they will return a full block each time when read operations are performed, so we
         ///       must be sure to only compare the minimum number of bytes returned.
         /// </remarks>
-        public static Task<PackageFeedStatus> CompareLocalPackageToFeedPackage(
+        public static async Task<PackageFeedStatus> CompareLocalPackageToFeedPackage(
             string localPackageFullPath,
             string packageContentUrl,
             HttpClient client,
             TaskLoggingHelper log)
         {
-            return CompareLocalPackageToFeedPackage(
+            return await CompareLocalPackageToFeedPackage(
                 localPackageFullPath,
                 packageContentUrl,
                 client,
@@ -220,7 +221,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 }
                 // String based comparison because the status code isn't exposed in HttpRequestException
                 // see here: https://github.com/dotnet/runtime/issues/23648
-                catch (HttpRequestException e)
+                catch (Exception e) when (e is HttpRequestException || e is TaskCanceledException)
                 {
                     if (e.Message.Contains("404 (Not Found)"))
                     {
@@ -367,6 +368,16 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             } 
         }
 
+        /// <summary>
+        ///     Determine whether a file name or path is a symbol package.
+        /// </summary>
+        /// <param name="name">File anme or path</param>
+        /// <returns>True if the item is a symbol package, false otherwise</returns>
+        public static bool IsSymbolPackage(string name)
+        {
+            return name.EndsWith(SymbolPackageSuffix, StringComparison.OrdinalIgnoreCase) ||
+                name.EndsWith(SnupkgPackageSuffix, StringComparison.OrdinalIgnoreCase);
+        }
 
         private static System.Threading.Tasks.Task WaitForProcessExitAsync(Process process)
         {

@@ -84,9 +84,9 @@ namespace Microsoft.DotNet.AsmDiff
             return new AssemblySet(metadataHost, assemblies, name);
         }
 
-        public static AssemblySet FromPaths(params string[] paths)
+        public static AssemblySet FromPaths(string name, params string[] paths)
         {
-            return FromPaths(paths.AsEnumerable(), null);
+            return FromPaths(paths.AsEnumerable(), name);
         }
 
         public static AssemblySet FromPaths(IEnumerable<string> paths, string name)

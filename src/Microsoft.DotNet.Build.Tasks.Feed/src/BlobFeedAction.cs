@@ -1,23 +1,21 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.DotNet.Build.CloudTestTasks;
 using Microsoft.WindowsAzure.Storage;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
-using NuGet.Packaging;
 using NuGet.Packaging.Core;
 using Sleet;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.IO;
-using System.Linq;
-using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
 using MSBuild = Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed
@@ -124,17 +122,15 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             return !Log.HasLoggedErrors;
         }
 
-        public async Task PublishToFlatContainerAsync(IEnumerable<ITaskItem> taskItems, int maxClients, PushOptions pushOptions)
+        public async Task PublishToFlatContainerAsync(IEnumerable<ITaskItem> taskItems, int maxClients,
+            PushOptions pushOptions)
         {
             if (taskItems.Any())
             {
                 using (var clientThrottle = new SemaphoreSlim(maxClients, maxClients))
                 {
                     await System.Threading.Tasks.Task.WhenAll(taskItems.Select(
-                        item =>
-                        {
-                            return UploadAssetAsync(item, clientThrottle, pushOptions);
-                        }
+                        item => { return UploadAssetAsync(item, pushOptions, clientThrottle); }
                     ));
                 }
             }
@@ -142,8 +138,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public async Task UploadAssetAsync(
             ITaskItem item,
-            SemaphoreSlim clientThrottle,
-            PushOptions options)
+            PushOptions options,
+            SemaphoreSlim clientThrottle = null)
         {
             string relativeBlobPath = item.GetMetadata("RelativeBlobPath");
 
@@ -154,58 +150,72 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 relativeBlobPath = $"{recursiveDir}{fileName}";
             }
 
-            relativeBlobPath = $"{RelativePath}{relativeBlobPath}".Replace("\\", "/");
-
-            if (relativeBlobPath.Contains("//"))
+            if (!string.IsNullOrEmpty(relativeBlobPath))
             {
-                Log.LogError(
-                    $"Item '{item.ItemSpec}' RelativeBlobPath contains virtual directory " +
-                    $"without name (double forward slash): '{relativeBlobPath}'");
-                return;
-            }
+                relativeBlobPath = $"{RelativePath}{relativeBlobPath}".Replace("\\", "/");
 
-            Log.LogMessage($"Uploading {relativeBlobPath}");
-
-            await clientThrottle.WaitAsync();
-
-            try
-            {
-                AzureStorageUtils blobUtils = new AzureStorageUtils(AccountName, AccountKey, ContainerName);
-
-                if (!options.AllowOverwrite && await blobUtils.CheckIfBlobExistsAsync(relativeBlobPath))
+                if (relativeBlobPath.StartsWith("//"))
                 {
-                    if (options.PassIfExistingItemIdentical)
+                    Log.LogError(
+                        $"Item '{item.ItemSpec}' RelativeBlobPath contains virtual directory " +
+                        $"without name (double forward slash): '{relativeBlobPath}'");
+                    return;
+                }
+
+                Log.LogMessage($"Uploading {relativeBlobPath}");
+
+                if (clientThrottle != null)
+                {
+                    await clientThrottle.WaitAsync();
+                }
+
+                try
+                {
+                    AzureStorageUtils blobUtils = new AzureStorageUtils(AccountName, AccountKey, ContainerName);
+
+                    if (!options.AllowOverwrite && await blobUtils.CheckIfBlobExistsAsync(relativeBlobPath))
                     {
-                        if (!await blobUtils.IsFileIdenticalToBlobAsync(item.ItemSpec, relativeBlobPath))
+                        if (options.PassIfExistingItemIdentical)
                         {
-                            Log.LogError(
-                                $"Item '{item}' already exists with different contents " +
-                                $"at '{relativeBlobPath}'");
+                            if (!await blobUtils.IsFileIdenticalToBlobAsync(item.ItemSpec, relativeBlobPath))
+                            {
+                                Log.LogError(
+                                    $"Item '{item}' already exists with different contents " +
+                                    $"at '{relativeBlobPath}'");
+                            }
+                        }
+                        else
+                        {
+                            Log.LogError($"Item '{item}' already exists at '{relativeBlobPath}'");
                         }
                     }
                     else
                     {
-                        Log.LogError($"Item '{item}' already exists at '{relativeBlobPath}'");
+                        using (FileStream stream =
+                            new FileStream(item.ItemSpec, FileMode.Open, FileAccess.Read, FileShare.Read))
+                        {
+                            Log.LogMessage($"Uploading {item} to {relativeBlobPath}.");
+                            await blobUtils.UploadBlockBlobAsync(item.ItemSpec, relativeBlobPath, stream);
+                        }
                     }
                 }
-                else
+                catch (Exception exc)
                 {
-                    using (FileStream stream =
-                        new FileStream(item.ItemSpec, FileMode.Open, FileAccess.Read, FileShare.Read))
+                    Log.LogError(
+                        $"Unable to upload to {relativeBlobPath} in Azure Storage account {AccountName}/{ContainerName} due to {exc}.");
+                    throw;
+                }
+                finally
+                {
+                    if (clientThrottle != null)
                     {
-                        Log.LogMessage($"Uploading {item} to {relativeBlobPath}.");
-                        await blobUtils.UploadBlockBlobAsync(item.ItemSpec, relativeBlobPath, stream);
+                        clientThrottle.Release();
                     }
                 }
             }
-            catch (Exception exc)
+            else
             {
-                Log.LogError($"Unable to upload to {relativeBlobPath} in Azure Storage account {AccountName}/{ContainerName} due to {exc}.");
-                throw;
-            }
-            finally
-            {
-                clientThrottle.Release();
+                Log.LogError($"Relative blob path is empty.");
             }
         }
 
@@ -332,7 +342,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             }
         }
 
-        private async Task<bool> PushAsync(IEnumerable<string> items, PushOptions options)
+        public async Task<bool> PushAsync(IEnumerable<string> items, PushOptions options)
         {
             LocalSettings settings = GetSettings();
             SleetLogger log = new SleetLogger(Log, NuGet.Common.LogLevel.Verbose);

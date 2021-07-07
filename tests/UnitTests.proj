@@ -42,11 +42,19 @@
   <ItemGroup>
     <XUnitProject Include="..\src\**\*.Tests.csproj"/>
 
-    <!-- Remove the arcade sdk tests project because it depends heavily on machine/repo state and doesn't work properly in helix yet -->
-    <XUnitProject Remove="..\src\Microsoft.DotNet.Arcade.Sdk.Tests\Microsoft.DotNet.Arcade.Sdk.Tests.csproj"/>
-
     <!-- Exclude tests that do not target .NET Core -->
     <XUnitProject Remove="..\src\Microsoft.DotNet.Build.Tasks.VisualStudio.Tests\Microsoft.DotNet.Build.Tasks.VisualStudio.Tests.csproj"/>
+  </ItemGroup>
+
+  <ItemGroup>
+    <HelixWorkItem Include="FailingXUnitTestsTest">
+      <Command>echo 'done!'</Command>
+      <PayloadDirectory>$(MSBuildThisFileDirectory)XUnit</PayloadDirectory>
+    </HelixWorkItem>
+  </ItemGroup>
+  <!-- Exercise Helix failure reporting path for Xunit --> 
+  <ItemGroup>
+    <AzurePipelinesExpectedTestFailure Include="XunitReportingTests.ExerciseXunitCharacterFilteringFailurePath"/>
   </ItemGroup>
 
   <ItemGroup Condition=" '$(HelixAccessToken)' != '' ">
@@ -103,4 +111,11 @@
   <!-- <Import Sdk="Microsoft.DotNet.Helix.Sdk" Project="Sdk.targets"/> -->
   <!-- Using locally built version of the helix sdk, normal projects replace the below Import with the SDK import above-->
   <Import Project="$(MSBuildThisFileDirectory)\..\src\Microsoft.DotNet.Helix\Sdk\sdk\Sdk.targets"/>
+
+  <ItemGroup>
+    <HelixWorkItem Condition="$(HelixTargetQueue.StartsWith('Windows'))" Include="AspNetCoreTest">
+      <Command>powershell %HELIX_WORKITEM_PAYLOAD%\aspnet-versioncheck.ps1 -aspNetCoreVersion $(AspNetCoreRuntimeVersion)</Command>
+      <PayloadDirectory>$(MSBuildThisFileDirectory)\AspNetVersionCheck</PayloadDirectory>
+    </HelixWorkItem>
+  </ItemGroup>
 </Project>

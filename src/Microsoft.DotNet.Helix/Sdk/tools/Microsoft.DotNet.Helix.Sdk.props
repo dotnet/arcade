@@ -25,4 +25,5 @@
   <UsingTask TaskName="StopAzurePipelinesTestRun" AssemblyFile="$(MicrosoftDotNetHelixSdkTasksAssembly)"/>
   <UsingTask TaskName="CheckAzurePipelinesTestResults" AssemblyFile="$(MicrosoftDotNetHelixSdkTasksAssembly)"/>
   <UsingTask TaskName="DownloadFromResultsContainer" AssemblyFile="$(MicrosoftDotNetHelixSdkTasksAssembly)"/>
+  <UsingTask TaskName="CancelHelixJobs" AssemblyFile="$(MicrosoftDotNetHelixSdkTasksAssembly)"/>
 </Project>

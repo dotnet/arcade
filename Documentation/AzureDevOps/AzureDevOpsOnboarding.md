@@ -117,7 +117,7 @@ A couple of notes:
 
   - Whenever possible, you're always encouraged to use the hosted agent pools for your builds.  These don't come from the same budget as other build agents, and have far more MacOS machines than the Engineering Services team has.  
 
-- BuildPool Helix machines will be defined in the [dnceng internal repo 'dotnet-helix-machines'](https://dnceng.visualstudio.com/internal/_git/dotnet-helix-machines?path=%2Fdefinitions%2Fshared&version=GBmaster).  While this format is a bit dense, it is what is used by the deployment system so represents precisely what was on the machines for a given date of deployment.  As such, the descriptions below are not necessarily up-to-date but do represent what these queues had as of this edit.
+- BuildPool Helix machines will be defined in the [dnceng internal repo 'dotnet-helix-machines'](https://dnceng.visualstudio.com/internal/_git/dotnet-helix-machines?path=%2Fdefinitions%2Fshared&version=GBmain).  While this format is a bit dense, it is what is used by the deployment system so represents precisely what was on the machines for a given date of deployment.  As such, the descriptions below are not necessarily up-to-date but do represent what these queues had as of this edit.
 
 - BuildPool.Windows queues:
 

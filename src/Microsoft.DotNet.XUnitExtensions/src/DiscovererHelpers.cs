@@ -5,7 +5,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.InteropServices;
 using Xunit;
 
@@ -28,6 +27,7 @@ namespace Microsoft.DotNet.XUnitExtensions
                 (platforms.HasFlag(TestPlatforms.Solaris) && RuntimeInformation.IsOSPlatform(OSPlatform.Create("SOLARIS"))) ||
                 (platforms.HasFlag(TestPlatforms.iOS) && RuntimeInformation.IsOSPlatform(OSPlatform.Create("IOS"))) ||
                 (platforms.HasFlag(TestPlatforms.tvOS) && RuntimeInformation.IsOSPlatform(OSPlatform.Create("TVOS"))) ||
+                (platforms.HasFlag(TestPlatforms.MacCatalyst) && RuntimeInformation.IsOSPlatform(OSPlatform.Create("MACCATALYST"))) ||
                 (platforms.HasFlag(TestPlatforms.Android) && RuntimeInformation.IsOSPlatform(OSPlatform.Create("ANDROID"))) ||
                 (platforms.HasFlag(TestPlatforms.Browser) && RuntimeInformation.IsOSPlatform(OSPlatform.Create("BROWSER"))) ||
                 (platforms.HasFlag(TestPlatforms.Windows) && RuntimeInformation.IsOSPlatform(OSPlatform.Windows));
@@ -58,5 +58,54 @@ namespace Microsoft.DotNet.XUnitExtensions
 
             return true;
         }
+
+        internal static IEnumerable<KeyValuePair<string, string>> EvaluateArguments(IEnumerable<object> ctorArgs,string category, int skipFirst=1)
+        {
+            Debug.Assert(ctorArgs.Count() >= 2);
+
+            TestPlatforms platforms = TestPlatforms.Any;
+            TargetFrameworkMonikers frameworks = TargetFrameworkMonikers.Any;
+            TestRuntimes runtimes = TestRuntimes.Any;
+            Type calleeType = null;
+            string[] conditionMemberNames = null;
+            
+            foreach (object arg in ctorArgs.Skip(skipFirst)) // First argument is the issue number or reason.
+            {
+                if (arg is TestPlatforms)
+                {
+                    platforms = (TestPlatforms)arg;
+                }
+                else if (arg is TargetFrameworkMonikers)
+                {
+                    frameworks = (TargetFrameworkMonikers)arg;
+                }
+                else if (arg is TestRuntimes)
+                {
+                    runtimes = (TestRuntimes)arg;
+                }
+                else if (arg is Type)
+                {
+                    calleeType = (Type)arg;
+                }
+                else if (arg is string[])
+                {
+                    conditionMemberNames = (string[])arg;
+                }
+            }
+
+            if (calleeType != null && conditionMemberNames != null)
+            {
+                if (DiscovererHelpers.Evaluate(calleeType, conditionMemberNames))
+                {
+                    yield return new KeyValuePair<string, string>(XunitConstants.Category, category);
+                }
+            }
+            else if (DiscovererHelpers.TestPlatformApplies(platforms) &&
+                DiscovererHelpers.TestRuntimeApplies(runtimes) &&
+                DiscovererHelpers.TestFrameworkApplies(frameworks))
+            {
+                yield return new KeyValuePair<string, string>(XunitConstants.Category, category);
+            }
+        }        
     }
 }

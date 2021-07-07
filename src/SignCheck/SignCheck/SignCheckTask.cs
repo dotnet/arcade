@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
 using Microsoft.SignCheck.Logging;
 using System;
 using System.Collections.Generic;
@@ -10,8 +11,12 @@ using System.Linq;
 
 namespace SignCheck
 {
-    public class SignCheckTask : Microsoft.Build.Utilities.Task
+    [Microsoft.Build.Framework.LoadInSeparateAppDomain]
+    [RunInSTA]
+    public class SignCheckTask : AppDomainIsolatedTask
     {
+        static SignCheckTask() => Microsoft.DotNet.AssemblyResolution.Initialize();
+
         public bool EnableJarSignatureVerification
         {
             get;
@@ -85,6 +90,7 @@ namespace SignCheck
 
         public override bool Execute()
         {
+            Microsoft.DotNet.AssemblyResolution.Log = Log;
             Options options = new Options();
             options.EnableJarSignatureVerification = EnableJarSignatureVerification;
             options.EnableXmlSignatureVerification = EnableXmlSignatureVerification;
@@ -143,6 +149,7 @@ namespace SignCheck
             
             var sc = new SignCheck(options);
             int result = sc.Run();
+            Microsoft.DotNet.AssemblyResolution.Log = null;
             return (result == 0 && !Log.HasLoggedErrors);
         }
     }

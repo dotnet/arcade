@@ -30,7 +30,7 @@ namespace Microsoft.DotNet.SharedFramework.Sdk
         public override bool Execute()
         {
             List<PlatformManifestEntry> entries = new List<PlatformManifestEntry>();
-            var files = Files.ToDictionary(file => Path.GetFileName(file.ItemSpec));
+            var files = Files.ToLookup(file => Path.GetFileName(file.ItemSpec)).ToDictionary(l => l.Key, l=> l.First());
             foreach (var entryTemplate in PlatformManifestEntryTemplates)
             {
                 if (files.TryGetValue(entryTemplate.ItemSpec, out ITaskItem existingFile))

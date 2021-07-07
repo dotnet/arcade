@@ -1,7 +1,31 @@
+import re
 import xml.etree.ElementTree
-from .result_format import ResultFormat
-from defs import TestResult, TestResultAttachment
 
+from .result_format import ResultFormat
+from helix.public import TestResult, TestResultAttachment
+
+_unescape_char_map = {
+    'r': '\r',
+    'n': '\n',
+    't': '\t',
+    '0': '\0',
+    'a': '\a',
+    'b': '\b',
+    'v': '\v',
+    'f': '\f',
+}
+
+def _unescape_xunit_message(value):
+    # xunit does some escaping on the error message we need to do our
+    # best to turn back into something resembling the original message
+    # It only uses \x**, \x**** (indistinguishably), and then the items from __unescape_char_map
+    def bs(match):
+        grp = match.group(0)
+        sym = grp[1]
+        if sym == 'x':
+            return chr(int(grp[2:], 16))
+        return _unescape_char_map.get(match.group(0)[1]) or sym
+    return re.sub(r'\\x[0-9a-fA-F][0-9a-fA-F][0-9a-fA-F]?[0-9a-fA-F]?|\\[^x]', bs, value)
 
 class XUnitFormat(ResultFormat):
 
@@ -38,7 +62,7 @@ class XUnitFormat(ResultFormat):
                     exception_type = failure_element.get("exception-type")
                     message_element = failure_element.find("message")
                     if message_element is not None:
-                        failure_message = message_element.text
+                        failure_message = _unescape_xunit_message(message_element.text)
                     stack_trace_element = failure_element.find("stack-trace")
                     if stack_trace_element is not None:
                         stack_trace = stack_trace_element.text

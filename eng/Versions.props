@@ -9,7 +9,6 @@
     <!-- Libs -->
     <CommandLineParserVersion>2.2.1</CommandLineParserVersion>
     <CredentialManagementVersion>1.0.2</CredentialManagementVersion>
-    <MicrosoftCciVersion>4.0.0-rc3-24214-00</MicrosoftCciVersion>
     <HandlebarsNetVersion>1.10.1</HandlebarsNetVersion>
     <LibGit2SharpVersion>0.25.2</LibGit2SharpVersion>
     <log4netVersion>2.0.10</log4netVersion>
@@ -35,8 +34,8 @@
     <MicrosoftExtensionsFileSystemGlobbingVersion>2.0.0</MicrosoftExtensionsFileSystemGlobbingVersion>
     <MicrosoftExtensionsLoggingConsoleVersion>2.1.1</MicrosoftExtensionsLoggingConsoleVersion>
     <MicrosoftNETCorePlatformsVersion>2.1.0</MicrosoftNETCorePlatformsVersion>
-    <MicrosoftNetCompilersToolsetVersion>3.9.0-6.21160.10</MicrosoftNetCompilersToolsetVersion>
-    <MicrosoftNETILLinkTasksVersion>6.0.100-preview.2.21169.4</MicrosoftNETILLinkTasksVersion>
+    <MicrosoftNetCompilersToolsetVersion>3.10.0-4.21329.37</MicrosoftNetCompilersToolsetVersion>
+    <MicrosoftNETILLinkTasksVersion>6.0.100-preview.6.21355.2</MicrosoftNETILLinkTasksVersion>
     <MicrosoftNetTestSdkVersion>16.7.1</MicrosoftNetTestSdkVersion>
     <MoqVersion>4.8.3</MoqVersion>
     <MonoOptionsVersion>5.3.0.1</MonoOptionsVersion>
@@ -59,32 +58,32 @@
     <SystemReflectionMetadataVersion>1.6.0</SystemReflectionMetadataVersion>
     <SystemRuntimeCompilerServicesUnsafeVersion>4.7.0</SystemRuntimeCompilerServicesUnsafeVersion>
     <SystemRuntimeInteropServicesRuntimeInformation>4.3.0</SystemRuntimeInteropServicesRuntimeInformation>
-    <SystemTextEncodingsWebVersion>4.5.0</SystemTextEncodingsWebVersion>
+    <SystemTextEncodingsWebVersion>4.7.2</SystemTextEncodingsWebVersion>
     <SystemThreadingTasksExtensionVersion>4.5.2</SystemThreadingTasksExtensionVersion>
     <SystemValueTupleVersion>4.4.0</SystemValueTupleVersion>
     <WindowsAzureStorageVersion>8.5.0</WindowsAzureStorageVersion>
     <XUnitVersion>2.4.1</XUnitVersion>
     <XUnitAbstractionsVersion>2.0.3</XUnitAbstractionsVersion>
     <XUnitVSRunnerVersion>2.4.1</XUnitVSRunnerVersion>
-    <MicrosoftDotNetBuildTasksFeedVersion>6.0.0-beta.21167.3</MicrosoftDotNetBuildTasksFeedVersion>
-    <MicrosoftDotNetSignToolVersion>6.0.0-beta.21167.3</MicrosoftDotNetSignToolVersion>
+    <MicrosoftDotNetBuildTasksFeedVersion>6.0.0-beta.21355.2</MicrosoftDotNetBuildTasksFeedVersion>
+    <MicrosoftDotNetSignToolVersion>6.0.0-beta.21355.2</MicrosoftDotNetSignToolVersion>
     <MicrosoftAzureDocumentDBVersion>1.22.0</MicrosoftAzureDocumentDBVersion>
     <MicrosoftAzureCosmosDBTableVersion>1.1.2</MicrosoftAzureCosmosDBTableVersion>
     <MicrosoftAspNetCoreAllVersion>2.0.0</MicrosoftAspNetCoreAllVersion>
     <MicrosoftDotNetGitHubIssueLabelerAssetsVersion>1.6.0</MicrosoftDotNetGitHubIssueLabelerAssetsVersion>
     <MicrosoftMLVersion>1.0.0</MicrosoftMLVersion>
     <MicrosoftVisualStudioWebCodeGenerationDesignVersion>2.0.4</MicrosoftVisualStudioWebCodeGenerationDesignVersion>
-    <MicrosoftDiaSymReaderConverterVersion>1.1.0-beta2-19575-01</MicrosoftDiaSymReaderConverterVersion>
     <MicrosoftDiaSymReaderPdb2PdbVersion>1.1.0-beta2-19575-01</MicrosoftDiaSymReaderPdb2PdbVersion>
-    <MicrosoftDiaSymReaderNativeVersion>1.7.0</MicrosoftDiaSymReaderNativeVersion>
     <MicrosoftDotNetMaestroClientVersion>1.1.0-beta.20258.6</MicrosoftDotNetMaestroClientVersion>
-    <MicrosoftSourceLinkGitHubVersion>1.1.0-beta-21151-02</MicrosoftSourceLinkGitHubVersion>
-    <MicrosoftSourceLinkAzureReposGitVersion>1.1.0-beta-21151-02</MicrosoftSourceLinkAzureReposGitVersion>
-    <MicrosoftDotNetSwaggerGeneratorMSBuildVersion>6.0.0-beta.21167.3</MicrosoftDotNetSwaggerGeneratorMSBuildVersion>
-    <XliffTasksVersion>1.0.0-beta.21169.2</XliffTasksVersion>
-    <MicrosoftDotNetMaestroTasksVersion>1.1.0-beta.20570.1</MicrosoftDotNetMaestroTasksVersion>
-    <MicrosoftDotNetXHarnessCLIVersion>1.0.0-prerelease.21169.2</MicrosoftDotNetXHarnessCLIVersion>
-    <MicrosoftSymbolUploaderBuildTaskVersion>1.1.156402</MicrosoftSymbolUploaderBuildTaskVersion>
-    <MicrosoftSymbolUploaderVersion>1.1.152002</MicrosoftSymbolUploaderVersion>
+    <MicrosoftSourceLinkGitHubVersion>1.1.0-beta-21309-01</MicrosoftSourceLinkGitHubVersion>
+    <MicrosoftSourceLinkAzureReposGitVersion>1.1.0-beta-21309-01</MicrosoftSourceLinkAzureReposGitVersion>
+    <MicrosoftDotNetSwaggerGeneratorMSBuildVersion>6.0.0-beta.21355.2</MicrosoftDotNetSwaggerGeneratorMSBuildVersion>
+    <XliffTasksVersion>1.0.0-beta.21356.1</XliffTasksVersion>
+    <MicrosoftDotNetMaestroTasksVersion>1.1.0-beta.21228.1</MicrosoftDotNetMaestroTasksVersion>
+    <MicrosoftDotNetXHarnessCLIVersion>1.0.0-prerelease.21351.2</MicrosoftDotNetXHarnessCLIVersion>
+    <MicrosoftSymbolUploaderBuildTaskVersion>1.1.156602</MicrosoftSymbolUploaderBuildTaskVersion>
+    <MicrosoftSymbolUploaderVersion>1.1.156602</MicrosoftSymbolUploaderVersion>
+    <MicrosoftNetSdkWorkloadManifestReaderVersion>6.0.100-preview.5.21254.11</MicrosoftNetSdkWorkloadManifestReaderVersion>
+    <MicrosoftDeploymentDotNetReleasesVersion>1.0.0-preview1.1.21116.1</MicrosoftDeploymentDotNetReleasesVersion>
   </PropertyGroup>
 </Project>

@@ -83,7 +83,7 @@ namespace Microsoft.Cci.Differs.Rules
             if (implMethod == null || contractMethod == null)
                 return DifferenceType.Unknown;
 
-            bool changed = CheckAttributeDifferences(differences, implMethod, implMethod.Attributes, implMethod.Attributes);
+            bool changed = CheckAttributeDifferences(differences, implMethod, implMethod.Attributes, contractMethod.Attributes);
 
             IParameterDefinition[] method1Params = implMethod.Parameters.ToArray();
             IParameterDefinition[] method2Params = contractMethod.Parameters.ToArray();

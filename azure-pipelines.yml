@@ -26,6 +26,12 @@ stages:
 - stage: build
   displayName: Build
   jobs:
+  - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.SourceBranch'], 'refs/heads/main')) }}:
+    - template: /eng/common/templates/job/onelocbuild.yml
+      parameters:
+        MirrorRepo: arcade
+        LclSource: lclFilesFromPackage
+        LclPackageId: 'LCL-JUNO-PROD-ARCADE'
   - template: /eng/common/templates/jobs/jobs.yml
     parameters:
       artifacts:
@@ -44,8 +50,7 @@ stages:
         timeoutInMinutes: 90
         pool:
           ${{ if eq(variables._RunAsPublic, True) }}:
-            name: NetCorePublic-Pool
-            queue: BuildPool.Server.Amd64.VS2017.Arcade.Open
+            vmImage: windows-latest
           ${{ if eq(variables._RunAsInternal, True) }}:
             name: NetCoreInternal-Pool
             queue: BuildPool.Server.Amd64.VS2017.Arcade
@@ -71,8 +76,7 @@ stages:
         - job: Linux
           container: LinuxContainer
           pool:
-            name:  NetCorePublic-Pool
-            queue: BuildPool.Ubuntu.1604.Amd64.Arcade.Open
+            vmImage: ubuntu-latest
           strategy:
             matrix:
               Build_Debug:
@@ -132,23 +136,22 @@ stages:
             env:
               SYSTEM_ACCESSTOKEN: $(System.AccessToken)
               HelixAccessToken: ''
-        # We don't have enough hardware to run these tests on Arcade PR given the Arcade XHarness SDK changes infrequently. (https://github.com/dotnet/core-eng/issues/12238)
-        # Until the above issue is resolved, if you are editing the Xharness SDK's Windows side, please exercise this manually.  Contact dnceng for assistance.
-        # - powershell: eng\common\build.ps1
-        #     -configuration $(_BuildConfig) 
-        #     -prepareMachine
-        #     -ci
-        #     -restore
-        #     -test
-        #     -projects $(Build.SourcesDirectory)\tests\UnitTests.XHarness.Android.WindowsQueues.proj
-        #     /bl:$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)\Helix.XHarness.Android.WindowsQueues.binlog
-        #     /p:RestoreUsingNuGetTargets=false
-        #     /p:XharnessTestARM64_V8A=true
-        #   displayName: XHarness Android Helix Testing (Windows)
-        #   env:
-        #     SYSTEM_ACCESSTOKEN: $(System.AccessToken)
-        #     HelixAccessToken: ''
+          - powershell: eng\common\build.ps1
+              -configuration $(_BuildConfig) 
+              -prepareMachine
+              -ci
+              -restore
+              -test
+              -projects $(Build.SourcesDirectory)\tests\UnitTests.XHarness.Android.WindowsQueues.proj
+              /bl:$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)\Helix.XHarness.Android.WindowsQueues.binlog
+              /p:RestoreUsingNuGetTargets=false
+              /p:XharnessTestARM64_V8A=true
+            displayName: XHarness Android Helix Testing (Windows)
+            env:
+              SYSTEM_ACCESSTOKEN: $(System.AccessToken)
+              HelixAccessToken: ''
         - job: Linux
+          timeoutInMinutes: 90
           container: LinuxContainer
           pool:
             vmimage: ubuntu-latest
@@ -181,37 +184,23 @@ stages:
               -ci
               -restore
               -test
-              -projects $(Build.SourcesDirectory)/tests/UnitTests.XHarness.iOS.proj
-              /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.XHarness.iOS.binlog
+              -projects $(Build.SourcesDirectory)/tests/UnitTests.XHarness.iOS.Simulator.proj
+              /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/UnitTests.XHarness.iOS.Simulator.binlog
               /p:RestoreUsingNuGetTargets=false
             displayName: XHarness iOS Simulator Helix Testing
             env:
               SYSTEM_ACCESSTOKEN: $(System.AccessToken)
               HelixAccessToken: ''
-          # TODO (prvysoky): This will be enabled once we get a better app to test with (core-eng/11893)
-          # - script: eng/common/build.sh
-          #     -configuration $(_BuildConfig)
-          #     -prepareMachine
-          #     -ci
-          #     -restore
-          #     -test
-          #     -projects $(Build.SourcesDirectory)/tests/UnitTests.XHarness.iOS.Device.proj
-          #     /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.XHarness.iOS.Device.binlog
-          #     /p:RestoreUsingNuGetTargets=false
-          #   displayName: XHarness iOS Device Helix Testing
-          #   env:
-          #     SYSTEM_ACCESSTOKEN: $(System.AccessToken)
-          #     HelixAccessToken: ''
           - script: eng/common/build.sh
               -configuration $(_BuildConfig)
               -prepareMachine
               -ci
               -restore
               -test
-              -projects $(Build.SourcesDirectory)/tests/UnitTests.XHarness.iOS.IncludeCliOnly.proj
-              /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.XHarness.CLI.binlog
+              -projects $(Build.SourcesDirectory)/tests/UnitTests.XHarness.iOS.Device.proj
+              /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.XHarness.iOS.Device.binlog
               /p:RestoreUsingNuGetTargets=false
-            displayName: XHarness CLI pre-install Helix Testing
+            displayName: XHarness iOS Device Helix Testing
             env:
               SYSTEM_ACCESSTOKEN: $(System.AccessToken)
               HelixAccessToken: ''

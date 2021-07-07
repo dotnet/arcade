@@ -129,8 +129,8 @@ namespace Microsoft.Cci.Differs.Rules
 
         private class ModifierComparer : IEqualityComparer<ICustomModifier>
         {
-            private readonly static IEqualityComparer<ITypeDefinition> TypeComparer =
-                CciComparers.Default.GetEqualityComparer<ITypeDefinition>();
+            private readonly static IEqualityComparer<ITypeReference> TypeComparer =
+                CciComparers.Default.GetEqualityComparer<ITypeReference>();
 
             private ModifierComparer() { }
 
@@ -144,7 +144,7 @@ namespace Microsoft.Cci.Differs.Rules
                 }
 
                 return x.IsOptional == y.IsOptional &&
-                    TypeComparer.Equals(x.Modifier.ResolvedType, y.Modifier.ResolvedType);
+                    TypeComparer.Equals(x.Modifier, y.Modifier);
             }
 
             public int GetHashCode(ICustomModifier obj)
@@ -154,7 +154,7 @@ namespace Microsoft.Cci.Differs.Rules
                     return 0;
                 }
 
-                return (obj.IsOptional ? 1 : 0) | TypeComparer.GetHashCode(obj.Modifier.ResolvedType) << 1;
+                return (obj.IsOptional ? 1 : 0) | TypeComparer.GetHashCode(obj.Modifier) << 1;
             }
         }
     }

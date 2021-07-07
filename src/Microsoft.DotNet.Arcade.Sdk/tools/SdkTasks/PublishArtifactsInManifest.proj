@@ -23,6 +23,10 @@
       - SymWebToken                             : Token used to publish symbol blobs, dll and pdb to Symweb
       - SymbolPublishingExclusionsFile          : Files that have to be excluded from symbol publishing 
       - PdbArtifactsBasePath                    : Path to dlls and pdbs
+      - AzdoApiToken                            : Token used to call the Azure Api to download artifacts and symbols
+      - ArtifactsBasePath                       : Staging directory 
+      - UseStreamingPublishing                  : When set to true it will use Azure Api to download the artifacts and symbols using streaming,
+                                                  else all the artifacts and symbols are downloaded before publishing.
 
       Optional aka.ms link generation parameters:
         - AkaMSClientId                         : Client ID for the aka.ms AD application
@@ -30,6 +34,15 @@
         - AkaMSTenant                           : Tenant ID for aka.ms link generation. Defaults to ncd
         - AkaMSOwners                           : Semi-colon delimited list of aliases of the owners of generated links. Defaults to dn-bot
         - AkaMSCreatedBy                        : Semi-colon delimited list of aliases of the creator/updator links. Defaults to dn-bot
+        - BuildQuality                          : Build quality. Can be daily, signed, validated, preview or ga. Defaults to daily.
+
+      Optional feed override parameters:
+        - AllowFeedOverrides                    : Option to allow feed overrides if they are supplied. Defaults to false.
+        - InstallersFeedOverride                : Override for the installers feed
+        - ChecksumsFeedOverride                 : Override for the checksums feed
+        - TransportFeedOverride                 : Override for the transport feed
+        - ShippingFeedOverride                  : Override for the shipping feed
+        - SymbolsFeedOverride                   : Override for the symbols feed
 
     Parameters required by SetupTargetFeeds.proj:
       - IsInternalBuild
@@ -94,6 +107,10 @@
       <ChecksumsFeedKey>$(ChecksumsAzureAccountKey)</ChecksumsFeedKey>
       <InternalChecksumsFeedKey>$(InternalChecksumsAzureAccountKey)</InternalChecksumsFeedKey>
       <AllowFeedOverrides Condition="'$(AllowFeedOverrides)' == ''">false</AllowFeedOverrides>
+      <UseStreamingPublishing Condition="'$(UseStreamingPublishing)' == ''">false</UseStreamingPublishing>
+      <ArtifactsBasePath Condition="'$(ArtifactsBasePath)' == ''">$(BlobBasePath)</ArtifactsBasePath>
+      <NonStreamingPublishingMaxClients Condition="'$(NonStreamingPublishingMaxClients)' == ''">12</NonStreamingPublishingMaxClients>
+      <StreamingPublishingMaxClients Condition="'$(UseStreamingPublishing)' == 'true' and '$(StreamingPublishingMaxClients)' == ''">16</StreamingPublishingMaxClients>
     </PropertyGroup>
 
     <Error
@@ -138,7 +155,16 @@
       ChecksumsFeedOverride="$(ChecksumsFeedOverride)"
       TransportFeedOverride="$(TransportFeedOverride)"
       ShippingFeedOverride="$(ShippingFeedOverride)"
-      SymbolsFeedOverride="$(SymbolsFeedOverride)" />
+      SymbolsFeedOverride="$(SymbolsFeedOverride)" 
+      PublicSymbolsFeedOverride="$(PublicSymbolsFeedOverride)"
+      AzdoApiToken="$(AzdoApiToken)"
+      ArtifactsBasePath="$(ArtifactsBasePath)"
+      BuildId="$(BuildId)"
+      AzureDevOpsOrg="$(AzureDevOpsOrg)"
+      AzureProject="$(AzureProject)"
+      UseStreamingPublishing="$(UseStreamingPublishing)"
+      StreamingPublishingMaxClients="$(StreamingPublishingMaxClients)"
+      NonStreamingPublishingMaxClients="$(NonStreamingPublishingMaxClients)"/>
   </Target>
 
   <ItemGroup>

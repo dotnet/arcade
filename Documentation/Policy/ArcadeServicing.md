@@ -10,7 +10,7 @@ Mechanically, this is done in two ways:
 - Branch our tools (Arcade) with the product.
 - Rev the APIs of our services as needed.
 
-**For those inserting into Visual Studio, careful consideration should be given to which Arcade to take a dependency on.  If latest features are needed, then 'n' (or master) might make sense, otherwise 'n-1' (servicing) will be more stable and have much less churn.**
+**For those inserting into Visual Studio, careful consideration should be given to which Arcade to take a dependency on.  If latest features are needed, then 'n' (or main) might make sense, otherwise 'n-1' (servicing) will be more stable and have much less churn.**
 
 **It's important to note that we *must* continue to validate any supported versions
 of Arcade or services.**
@@ -18,14 +18,14 @@ of Arcade or services.**
 ## Details
 
 ### Where do we do work on Arcade SDK?
-- `master` for future releases
+- `main` for future releases
 - `release/<NET Core Major Version Number>` for servicing
 
-### How do I get my servicing fix into master?
-- Fixes that apply to both master as well as servicing releases must be first checked into
-  master and then cherry picked into the appropriate servicing branches.
-- Code flow happens from servicing branches back into master for the purposes of completeness,
-  but developers must **not** rely on this to get fixes into master.
+### How do I get my servicing fix into main?
+- Fixes that apply to both main as well as servicing releases must be first checked into
+  main and then cherry picked into the appropriate servicing branches.
+- Code flow happens from servicing branches back into main for the purposes of completeness,
+  but developers must **not** rely on this to get fixes into main.
 
 ### When do we branch?
 - Major releases of .NET Core, not minor

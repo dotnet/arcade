@@ -22,12 +22,23 @@ jobs:
       value: $[ dependencies.setupMaestroVars.outputs['setReleaseVars.AzDOPipelineId'] ]
     - name: AzDOBuildId
       value: $[ dependencies.setupMaestroVars.outputs['setReleaseVars.AzDOBuildId'] ]
-  pool:
-    vmImage: 'windows-2019'
+    - name: AzDOAccount
+      value: $[ dependencies.setupMaestroVars.outputs['setReleaseVars.AzDOBuildAccount'] ]
+
+  # Using non-hosted build agents to (hopefully temporarily) work around OOMs
+  # See https://github.com/dotnet/core-eng/issues/13098 for context
+  ${{ if eq(variables['System.TeamFoundationCollectionUri'], 'https://dev.azure.com/dnceng/') }}:
+    pool:
+      name: NetCoreInternal-Pool
+      queue: BuildPool.Server.Amd64.VS2019
+  ${{ if ne(variables['System.TeamFoundationCollectionUri'], 'https://dev.azure.com/dnceng/') }}:
+    pool:
+      vmImage: 'windows-2019'
   steps:
     - task: DownloadBuildArtifacts@0
       displayName: Download Build Assets
       continueOnError: true
+      enabled: true
       inputs:
         buildType: specific
         buildVersionToDownload: specific
@@ -36,12 +47,10 @@ jobs:
         buildId: $(AzDOBuildId)
         downloadType: 'specific'
         itemPattern: |
-          PackageArtifacts/**
-          BlobArtifacts/**
           AssetManifests/**
+          BlobArtifacts/MergedManifest.xml
           PdbArtifacts/**
         downloadPath: '$(Build.ArtifactStagingDirectory)'
-        checkDownloadedFiles: true
 
     - task: NuGetToolInstaller@1
       displayName: 'Install NuGet.exe'
@@ -87,7 +96,14 @@ jobs:
           /p:MsdlToken=$(microsoft-symbol-server-pat)
           /p:SymWebToken=$(symweb-symbol-server-pat)
           /p:BuildQuality='${{ parameters.buildQuality }}'
-
+          /p:AzdoApiToken='$(dn-bot-all-orgs-build-rw-code-rw)'
+          /p:ArtifactsBasePath='$(Build.ArtifactStagingDirectory)/'
+          /p:BuildId='$(AzDOBuildId)'
+          /p:AzureDevOpsOrg='$(AzDOAccount)'
+          /p:AzureProject='$(AzDOProjectName)'
+          /p:UseStreamingPublishing='true'
+          /p:StreamingPublishingMaxClients=16
+          /p:NonStreamingPublishingMaxClients=12
     - template: /eng/common/templates/steps/publish-logs.yml
       parameters:
         StageLabel: '${{ parameters.stageName }}'

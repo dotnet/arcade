@@ -10,6 +10,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using Xunit;
+using IOPath = System.IO.Path;
 
 namespace Microsoft.DotNet.RemoteExecutor
 {
@@ -51,17 +52,44 @@ namespace Microsoft.DotNet.RemoteExecutor
                 return;
             }
 
-            HostRunnerName = System.IO.Path.GetFileName(processFileName);
             Path = typeof(RemoteExecutor).Assembly.Location;
 
             if (IsNetCore())
             {
                 HostRunner = processFileName;
+
+                string hostName = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "dotnet.exe" : "dotnet";
+
+                // Partially addressing https://github.com/dotnet/arcade/issues/6371
+                // We expect to run tests with dotnet. However in certain scenarios we may have a different apphost (e.g. Visual Studio testhost).
+                // Attempt to find and use dotnet.
+                if (!IOPath.GetFileName(HostRunner).Equals(hostName, StringComparison.OrdinalIgnoreCase))
+                {
+                    string runtimePath = IOPath.GetDirectoryName(typeof(object).Assembly.Location);
+
+                    // In case we are running the app via a runtime, dotnet.exe is located 3 folders above the runtime. Example:
+                    // runtime    ->  C:\Program Files\dotnet\shared\Microsoft.NETCore.App\5.0.6\
+                    // dotnet.exe ->  C:\Program Files\dotnet\shared\dotnet.exe
+                    // This should also work on Unix and locally built runtime/testhost.
+                    string directory = GetDirectoryName(GetDirectoryName(GetDirectoryName(runtimePath)));
+                    if (directory != string.Empty)
+                    {
+                        string dotnetExe = IOPath.Combine(directory, hostName);
+                        if (File.Exists(dotnetExe))
+                        {
+                            HostRunner = dotnetExe;
+                        }
+                    }
+                }
             }
             else if (RuntimeInformation.FrameworkDescription.StartsWith(".NET Framework", StringComparison.OrdinalIgnoreCase))
             {
                 HostRunner = Path;
             }
+
+            HostRunnerName = IOPath.GetFileName(HostRunner);
+
+            static string GetDirectoryName(string path) => string.IsNullOrEmpty(path) ? string.Empty : IOPath.GetDirectoryName(path);
         }
 
         private static bool IsNetCore() =>
@@ -72,6 +100,7 @@ namespace Microsoft.DotNet.RemoteExecutor
             !RuntimeInformation.IsOSPlatform(OSPlatform.Create("IOS")) &&
             !RuntimeInformation.IsOSPlatform(OSPlatform.Create("ANDROID")) &&
             !RuntimeInformation.IsOSPlatform(OSPlatform.Create("TVOS")) &&
+            !RuntimeInformation.IsOSPlatform(OSPlatform.Create("MACCATALYST")) &&
             !RuntimeInformation.IsOSPlatform(OSPlatform.Create("WATCHOS")) &&
             !RuntimeInformation.IsOSPlatform(OSPlatform.Create("BROWSER")) &&
             // The current RemoteExecutor design is not compatible with single file

@@ -12,6 +12,12 @@ Supports copying to additional paths based on which `TargetFramework` among `Tar
     - Metadata:
         - TargetPath: when specified can indicate the relative path, including filename, to place the item.
 
+- BinPlaceDir
+    - Typically specified by the repository to control the output directories of projects.  Unlike `BinPlaceTargetFramework` no conditions are applied.
+    - Identity: diretory to copy `BinPlaceItem`s to.
+    - Metadata:
+        - ItemName: An item name to use instead of `BinPlaceItem` for the source of items for this `BinPlaceDir`.
+
 - BinPlaceTargetFramework
     - Typically specified by the repository to control the output directories of projects.
     - Identity: `TargetFramework` to binplace for. A `BinPlaceTargetFramework` is *active* if it is the best `TargetFramework` for the currently building project `TargetFramework`. When active it's behavior is defined by the metaadata below.

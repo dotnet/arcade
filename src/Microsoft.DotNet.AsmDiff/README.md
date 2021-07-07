@@ -9,6 +9,8 @@ AsmDiff is a command line tool which may be used to check the API changes betwee
 
 ## Additional Options
 
+- `-nsn|--NewSetName` - Provide a name for the new set in output. If this parameter is not provided the file or directory name will be used.
+- `-osn|--OldSetName` - Provide a name for the old set in output. If this parameter is not provided the file or directory name will be used.
 - `-u|--Unchanged` - Include members, types, and namespaces that are unchanged.
 - `-r|--Removed` - Include members, types, and namespaces that were removed. (default is removed and added)
 - `-a|--Added` - Include members, types, and namespaces that were removed. (default is removed and added)
@@ -28,3 +30,4 @@ AsmDiff is a command line tool which may be used to check the API changes betwee
 - `-w|--DiffWriter` - Type of difference writer to use, either CSharp code diffs or flat list of compat violations (default).
 - `-s|--SyntaxWriter` - Specific the syntax writer type. Only used if the writer is CSDecl
 - `-o|--OutFile` - Output file path. Default is the console.
+- `-l|--Language` - Provide a languagetag for localized content. Currently language specific content is only available in Markdown for en and de. If this parameter is not provided the environments default language will be used. If a specific language is not supported english is the default language.

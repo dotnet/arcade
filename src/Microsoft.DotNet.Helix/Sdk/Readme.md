@@ -153,6 +153,23 @@ Given a local folder `$(TestFolder)` containing `runtests.cmd`, this will run `r
   </PropertyGroup>
 
   <!--
+    Optional additional dotnet runtimes or SDKs for correlation payloads
+    PackageType (defaults to runtime)
+    Channel (defaults to Current)
+  -->
+  <ItemGroup>
+    <!-- Includes the 6.0.0-preview.4.21178.6 dotnet runtime package version from the Current channel, using the DotNetCliRuntime -->
+    <AdditionalDotNetPackage Include="6.0.0-preview.4.21178.6">
+      <!-- 'sdk', 'runtime' or 'aspnetcore-runtime' -->
+      <PackageType>runtime</PackageType>
+      <!-- 'Current' or 'LTS', determines what channel 'latest' version pulls from -->
+      <Channel>Current</Channel>
+    </AdditionalDotNetPackage>
+    <!-- Includes the 6.0.0-preview.4.21175.1 version, using the default runtime packageType, DotNetCliRuntime, and Current channel  -->
+    <AdditionalDotNetPackage Include="6.0.0-preview.4.21175.1" />
+  </ItemGroup>
+  
+  <!--
     XUnit Runner
       Enabling this will create one work item for each xunit test project specified.
       This is enabled by specifying one or more XUnitProject items

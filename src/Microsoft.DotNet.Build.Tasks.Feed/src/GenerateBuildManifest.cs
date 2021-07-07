@@ -35,24 +35,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         public string OutputPath { get; set; }
 
         /// <summary>
-        /// The collection URI of the Azure DevOps instance
-        /// </summary>
-        [Required]
-        public string AzureDevOpsCollectionUri { get; set; }
-
-        /// <summary>
-        /// The Azure DevOps project of this build
-        /// </summary>
-        [Required]
-        public string AzureDevOpsProject { get; set; }
-
-        /// <summary>
-        /// The Azure DevOps build ID
-        /// </summary>
-        [Required]
-        public int AzureDevOpsBuildId { get; set; }
-
-        /// <summary>
         /// List of files that need to be signed
         /// </summary>
         public ITaskItem[] ItemsToSign { get; set; }
@@ -135,7 +117,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                 if (!string.IsNullOrEmpty(PublishingVersion)) 
                 {
-                    if (Enum.TryParse(PublishingVersion, ignoreCase: true, out targetPublishingVersion))
+                    if (!Enum.TryParse(PublishingVersion, ignoreCase: true, out targetPublishingVersion))
                     {
                         Log.LogError($"Could not parse '{PublishingVersion}' as a valid publishing infrastructure version.");
                         return false;

@@ -29,6 +29,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         
         private string StableSymbolsFeed { get; set; }
 
+        private string AzureDevOpsPublicStaticSymbolsFeed { get; set; }
+
         private SymbolTargetType SymbolTargetType { get; set; }
 
         private List<string> FilesToExclude { get; }
@@ -52,8 +54,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             string azureDevOpsFeedsKey,
             IBuildEngine buildEngine,
             SymbolTargetType symbolTargetType,
-        string stablePackagesFeed = null,
+            string stablePackagesFeed = null,
             string stableSymbolsFeed = null,
+            string azureDevOpsPublicStaticSymbolsFeed = null,
             List<string> filesToExclude = null,
             bool flatten = true) 
             : base(isInternalBuild, isStableBuild, repositoryName, commitSha, azureStorageTargetFeedPAT, publishInstallersAndChecksums, installersTargetStaticFeed, installersAzureAccountKey, checksumsTargetStaticFeed, checksumsAzureAccountKey, azureDevOpsStaticShippingFeed, azureDevOpsStaticTransportFeed, azureDevOpsStaticSymbolsFeed, latestLinkShortUrlPrefix, azureDevOpsFeedsKey)
@@ -62,6 +65,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             StableSymbolsFeed = stableSymbolsFeed;
             StablePackagesFeed = stablePackagesFeed;
             SymbolTargetType = symbolTargetType;
+            AzureDevOpsPublicStaticSymbolsFeed = azureDevOpsPublicStaticSymbolsFeed;
             FilesToExclude = filesToExclude ?? new List<string>();
             Flatten = flatten;
         }
@@ -84,34 +88,16 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             }
             else
             {
-                if (IsInternalBuild)
-                {
-                    return NonStableInternalFeeds();
-                }
-                else
-                {
-                    return NonStablePublicFeeds();
-                }
+                return NonStableFeeds();
             }
         }
 
-        private List<TargetFeedConfig> NonStablePublicFeeds()
+        private List<TargetFeedConfig> NonStableFeeds()
         {
             List<TargetFeedConfig> targetFeedConfigs = new List<TargetFeedConfig>();
 
             if (PublishInstallersAndChecksums)
             {
-                targetFeedConfigs.Add(
-                    new TargetFeedConfig(
-                        TargetFeedContentType.Checksum,
-                        ChecksumsTargetStaticFeed,
-                        FeedType.AzureStorageFeed,
-                        ChecksumsAzureAccountKey,
-                        LatestLinkShortUrlPrefix,
-                        symbolTargetType: SymbolTargetType,
-                        filenamesToExclude: FilesToExclude,
-                        flatten: Flatten));
-
                 foreach (var contentType in Installers)
                 {
                     targetFeedConfigs.Add(
@@ -120,103 +106,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             InstallersTargetStaticFeed,
                             FeedType.AzureStorageFeed,
                             InstallersAzureAccountKey,
-                            LatestLinkShortUrlPrefix,
+                            latestLinkShortUrlPrefix: LatestLinkShortUrlPrefix,
+                            @internal: IsInternalBuild,
                             symbolTargetType: SymbolTargetType,
                             filenamesToExclude: FilesToExclude,
                             flatten: Flatten));
                 }
-            }
-
-            targetFeedConfigs.Add(
-                new TargetFeedConfig(
-                    TargetFeedContentType.Symbols,
-                    PublishingConstants.LegacyDotNetBlobFeedURL,
-                    FeedType.AzureStorageFeed,
-                    AzureStorageTargetFeedPAT,
-                    symbolTargetType: SymbolTargetType,
-                    filenamesToExclude: FilesToExclude,
-                    flatten: Flatten));
-
-            targetFeedConfigs.Add(
-                new TargetFeedConfig(
-                    TargetFeedContentType.Package,
-                    AzureDevOpsStaticShippingFeed,
-                    FeedType.AzDoNugetFeed,
-                    AzureDevOpsFeedsKey,
-                    assetSelection: AssetSelection.ShippingOnly,
-                    symbolTargetType: SymbolTargetType,
-                    filenamesToExclude: FilesToExclude,
-                    flatten: Flatten));
-
-            targetFeedConfigs.Add(
-                new TargetFeedConfig(
-                    TargetFeedContentType.Package,
-                    AzureDevOpsStaticTransportFeed,
-                    FeedType.AzDoNugetFeed,
-                    AzureDevOpsFeedsKey,
-                    assetSelection: AssetSelection.NonShippingOnly,
-                    symbolTargetType: SymbolTargetType,
-                    filenamesToExclude: FilesToExclude,
-                    flatten: Flatten));
-
-            return targetFeedConfigs;
-        }
-
-        private List<TargetFeedConfig>  NonStableInternalFeeds()
-        {
-            List<TargetFeedConfig> targetFeedConfigs = new List<TargetFeedConfig>
-            {
-                new TargetFeedConfig(
-                    TargetFeedContentType.Package,
-                    AzureDevOpsStaticShippingFeed,
-                    FeedType.AzDoNugetFeed,
-                    AzureDevOpsFeedsKey,
-                    assetSelection: AssetSelection.ShippingOnly,
-                    symbolTargetType: SymbolTargetType,
-                    @internal: true,
-                    filenamesToExclude: FilesToExclude,
-                    flatten: Flatten
-                ),
-
-                new TargetFeedConfig(
-                    TargetFeedContentType.Package,
-                    AzureDevOpsStaticTransportFeed,
-                    FeedType.AzDoNugetFeed,
-                    AzureDevOpsFeedsKey,
-                    assetSelection: AssetSelection.NonShippingOnly,
-                    symbolTargetType: SymbolTargetType,
-                    @internal: true,
-                    filenamesToExclude: FilesToExclude,
-                    flatten: Flatten
-                ),
-
-                new TargetFeedConfig(
-                    TargetFeedContentType.Symbols,
-                    AzureDevOpsStaticSymbolsFeed,
-                    FeedType.AzDoNugetFeed,
-                    AzureDevOpsFeedsKey,
-                    symbolTargetType: SymbolTargetType,
-                    @internal: true,
-                    filenamesToExclude: FilesToExclude,
-                    flatten: Flatten)
-            };
-
-            if (PublishInstallersAndChecksums)
-            {
-                foreach (var contentType in Installers)
-                {
-                    targetFeedConfigs.Add(
-                        new TargetFeedConfig(
-                            contentType,
-                            InstallersTargetStaticFeed,
-                            FeedType.AzureStorageFeed,
-                            InstallersAzureAccountKey,
-                            symbolTargetType: SymbolTargetType,
-                            @internal: true,
-                            filenamesToExclude: FilesToExclude,
-                            flatten: Flatten
-                        ));
-                }
 
                 targetFeedConfigs.Add(
                     new TargetFeedConfig(
@@ -224,12 +119,73 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         ChecksumsTargetStaticFeed,
                         FeedType.AzureStorageFeed,
                         ChecksumsAzureAccountKey,
+                        latestLinkShortUrlPrefix: LatestLinkShortUrlPrefix,
+                        @internal: IsInternalBuild,
                         symbolTargetType: SymbolTargetType,
-                        @internal: true,
                         filenamesToExclude: FilesToExclude,
-                        flatten: Flatten
-                    ));
+                        flatten: Flatten));
             }
+
+            targetFeedConfigs.Add(
+                new TargetFeedConfig(
+                    TargetFeedContentType.Package,
+                    AzureDevOpsStaticShippingFeed,
+                    FeedType.AzDoNugetFeed,
+                    AzureDevOpsFeedsKey,
+                    assetSelection: AssetSelection.ShippingOnly,
+                    @internal: IsInternalBuild,
+                    symbolTargetType: SymbolTargetType,
+                    filenamesToExclude: FilesToExclude,
+                    flatten: Flatten));
+
+            targetFeedConfigs.Add(
+                new TargetFeedConfig(
+                    TargetFeedContentType.Package,
+                    AzureDevOpsStaticTransportFeed,
+                    FeedType.AzDoNugetFeed,
+                    AzureDevOpsFeedsKey,
+                    assetSelection: AssetSelection.NonShippingOnly,
+                    @internal: IsInternalBuild,
+                    symbolTargetType: SymbolTargetType,
+                    filenamesToExclude: FilesToExclude,
+                    flatten: Flatten));
+
+            // For symbols, we don't have a blob location where internal symbols can go today,
+            // so a feed is used in this case. This would be a potential performance improvement for internal builds.
+            // This is pretty uncommon though, as non-stable internal builds are quite rare.
+            string symbolsFeed;
+            FeedType symbolsFeedType;
+            string symbolsFeedSecret;
+
+            if (IsInternalBuild)
+            {
+                symbolsFeed = AzureDevOpsStaticSymbolsFeed;
+                symbolsFeedType = FeedType.AzDoNugetFeed;
+                symbolsFeedSecret = AzureDevOpsFeedsKey;
+            }
+            else if (!string.IsNullOrEmpty(AzureDevOpsPublicStaticSymbolsFeed))
+            {
+                symbolsFeed = AzureDevOpsPublicStaticSymbolsFeed;
+                symbolsFeedType = FeedType.AzDoNugetFeed;
+                symbolsFeedSecret = AzureDevOpsFeedsKey;
+            }
+            else
+            {
+                symbolsFeed = PublishingConstants.LegacyDotNetBlobFeedURL;
+                symbolsFeedType = FeedType.AzureStorageFeed;
+                symbolsFeedSecret = AzureStorageTargetFeedPAT;
+            }
+
+            targetFeedConfigs.Add(
+                new TargetFeedConfig(
+                    TargetFeedContentType.Symbols,
+                    symbolsFeed,
+                    symbolsFeedType,
+                    symbolsFeedSecret,
+                    symbolTargetType: SymbolTargetType,
+                    @internal: IsInternalBuild,
+                    filenamesToExclude: FilesToExclude,
+                    flatten: Flatten));
 
             return targetFeedConfigs;
         }
@@ -324,6 +280,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             InstallersAzureAccountKey,
                             isolated: true,
                             symbolTargetType: SymbolTargetType,
+                            latestLinkShortUrlPrefix: LatestLinkShortUrlPrefix,
                             @internal: false,
                             allowOverwrite: true,
                             filenamesToExclude: FilesToExclude,
@@ -338,6 +295,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         ChecksumsAzureAccountKey,
                         isolated: true,
                         symbolTargetType: SymbolTargetType,
+                        latestLinkShortUrlPrefix: LatestLinkShortUrlPrefix,
                         @internal: false,
                         allowOverwrite: true,
                         filenamesToExclude: FilesToExclude,
