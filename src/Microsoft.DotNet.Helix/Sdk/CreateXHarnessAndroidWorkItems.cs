@@ -110,7 +110,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                 var passthroughArgs = !string.IsNullOrEmpty(AppArguments) ? $" -- {AppArguments}" : string.Empty;
 
                 var instrumentationArg = appPackage.TryGetMetadata(MetadataNames.AndroidInstrumentationName, out string androidInstrumentationName)
-                    ? $"--instrumentation=\"{androidInstrumentationName}\" "
+                    ? $"--instrumentation \"{androidInstrumentationName}\" "
                     : string.Empty;
 
                 var devOutArg = appPackage.TryGetMetadata(MetadataNames.DeviceOutputPath, out string deviceOutputPath)
