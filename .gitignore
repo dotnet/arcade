@@ -131,9 +131,3 @@ node_modules/
 # Python Compile Outputs
 
 *.pyc
-
-# IntelliJ
-.idea/
-
-# vscode python env files
-.env

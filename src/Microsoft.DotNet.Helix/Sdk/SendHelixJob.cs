@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
-using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -34,7 +33,6 @@ namespace Microsoft.DotNet.Helix.Sdk
             public const string Uri = "Uri";
             public const string Destination = "Destination";
             public const string IncludeDirectoryName = "IncludeDirectoryName";
-            public const string AsArchive = "AsArchive";
         }
 
         /// <summary>
@@ -523,41 +521,16 @@ namespace Microsoft.DotNet.Helix.Sdk
             if (Directory.Exists(path))
             {
                 string includeDirectoryNameStr = correlationPayload.GetMetadata(MetadataNames.IncludeDirectoryName);
-                if (!bool.TryParse(includeDirectoryNameStr, out bool includeDirectoryName))
-                {
-                    includeDirectoryName = false;
-                }
+                bool.TryParse(includeDirectoryNameStr, out bool includeDirectoryName);
 
-                Log.LogMessage(
-                    MessageImportance.Low,
-                    $"Adding Correlation Payload Directory '{path}', destination '{destination}'"
-                );
+                Log.LogMessage(MessageImportance.Low, $"Adding Correlation Payload Directory '{path}', destination '{destination}'");
                 return def.WithCorrelationPayloadDirectory(path, includeDirectoryName, destination);
-
             }
 
             if (File.Exists(path))
             {
-                string asArchiveStr = correlationPayload.GetMetadata(MetadataNames.AsArchive);
-                if (!bool.TryParse(asArchiveStr, out bool asArchive))
-                {
-                    asArchive = false;
-                }
-
-                if (asArchive)
-                {
-                    Log.LogMessage(
-                        MessageImportance.Low,
-                        $"Adding Correlation Payload Archive '{path}', destination '{destination}'"
-                    );
-                    return def.WithCorrelationPayloadArchive(path, destination);
-                }
-
-                Log.LogMessage(
-                    MessageImportance.Low,
-                    $"Adding Correlation Payload File '{path}', destination '{destination}'"
-                );
-                return def.WithCorrelationPayloadFiles(path);
+                Log.LogMessage(MessageImportance.Low, $"Adding Correlation Payload Archive '{path}', destination '{destination}'");
+                return def.WithCorrelationPayloadArchive(path, destination);
             }
 
             Log.LogError(FailureCategory.Build, $"Correlation Payload '{path}' not found.");
