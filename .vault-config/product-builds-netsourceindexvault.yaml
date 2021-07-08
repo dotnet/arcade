@@ -17,4 +17,4 @@ secrets:
     parameters:
       connectionString: source-dot-net-stage1-connection-string
       permissions: racwdl
-      container: stage1F
+      container: stage1
