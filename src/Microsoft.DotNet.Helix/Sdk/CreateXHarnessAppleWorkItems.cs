@@ -166,20 +166,8 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             if (customCommands == null)
             {
-                // In case user didn't specify custom commands, we use our default one
-                customCommands = $"xharness apple {(includesTestRunner ? "test" : "run")} " +
-                    "--app \"$app\" " +
-                    "--output-directory \"$output_directory\" " +
-                    "--target \"$target\" " +
-                    "--timeout \"$timeout\" " +
-                    "--xcode \"$xcode_path\" " +
-                    "-v " +
-                    (includesTestRunner
-                        ? $"--launch-timeout \"$launch_timeout\" "
-                        : $"--expected-exit-code $expected_exit_code ") +
-                    (resetSimulator ? $"--reset-simulator " : string.Empty) +
-                    (target.Contains("device") ? $"--signal-app-end " : string.Empty) + // iOS/tvOS 14+ workaround
-                    (!string.IsNullOrEmpty(AppArguments) ? "-- " + AppArguments : string.Empty);
+                // When no user commands are specified, we add the default `apple test ...` command
+                customCommands = GetDefaultCommand(target, includesTestRunner, resetSimulator);
             }
 
             string appName = fileSystem.GetFileName(appFolderPath);
@@ -190,6 +178,21 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             return CreateTaskItem(workItemName, payloadArchivePath, helixCommand, workItemTimeout);
         }
+
+        private string GetDefaultCommand(string target, bool includesTestRunner, bool resetSimulator) =>
+            $"xharness apple {(includesTestRunner ? "test" : "run")} " +
+            "--app \"$app\" " +
+            "--output-directory \"$output_directory\" " +
+            "--target \"$target\" " +
+            "--timeout \"$timeout\" " +
+            "--xcode \"$xcode_path\" " +
+            "-v " +
+            (includesTestRunner
+                ? $"--launch-timeout \"$launch_timeout\" "
+                : $"--expected-exit-code $expected_exit_code ") +
+            (resetSimulator ? $"--reset-simulator " : string.Empty) +
+            (target.Contains("device") ? $"--signal-app-end " : string.Empty) + // iOS/tvOS 14+ workaround
+            (!string.IsNullOrEmpty(AppArguments) ? "-- " + AppArguments : string.Empty);
 
         private string GetHelixCommand(
             string appName,

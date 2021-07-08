@@ -202,7 +202,8 @@ When using `CustomCommands`, several variables will be defined for you for easie
 
 ### Reusing app bundles / apks
 
-In some scenarios, you might need to re-use one apk for multiple work items and for example supply each with a different custom command.
+In some scenarios, you might need to re-use one application for multiple work items, i.e. to supply each with a different custom command to run the application with different parameters or to run the application on different test targets (e.g. different versions of iOS).
+
 You can then name the item however you like and supply the path to the app as metadata:
 
 ```xml

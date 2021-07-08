@@ -4,8 +4,8 @@
 ### This is used as the entrypoint of the work item so that XHarness failures can be detected and (when appropriate)
 ### cause the work item to retry and reboot the Helix agent the work is running on.
 ###
-### Currently no special functionality is needed beyond causing infrastructure retry and reboot if the emulators
-### or devices have trouble, but to add more Helix-specific Android XHarness behaviors, this is one extensibility point.
+### This scripts sets up the environment and then sources the actual XHarness commands that come either from the Helix
+### SDK or from user via the <CustomCommands> property.
 
 echo "XHarness Helix Job Wrapper calling '$@'"
 

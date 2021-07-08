@@ -10,7 +10,7 @@
   <!-- New Test Projects which build packages to run through XHarness/XHarness go here -->
   <ItemGroup>
     <XHarnessAndroidProject Include="$(MSBuildThisFileDirectory)XHarness/XHarness.TestApks.proj" />
-    <HelixTargetQueue Include="ubuntu.1804.amd64.android.open"/>
+    <HelixTargetQueue Include="ubuntu.1804.amd64.android.29.open"/>
   </ItemGroup>
 
   <Target Name="Pack"/>

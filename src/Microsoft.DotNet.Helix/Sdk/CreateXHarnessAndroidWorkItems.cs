@@ -68,6 +68,7 @@ namespace Microsoft.DotNet.Helix.Sdk
         private async Task<ITaskItem> PrepareWorkItem(IZipArchiveManager zipArchiveManager, IFileSystem fileSystem, ITaskItem appPackage)
         {
             // The user can re-use the same .apk for 2 work items so the name of the work item will come from ItemSpec and path from metadata
+            // This can be useful when we want to run the same app with different parameters or run the same app on different test targets, e.g. iOS 13 and 13.5
             string workItemName;
             string apkPath;
             if (appPackage.TryGetMetadata(MetadataNames.ApkPath, out string apkPathMetadata) && !string.IsNullOrEmpty(apkPathMetadata))
@@ -104,31 +105,8 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             if (customCommands == null)
             {
-                appPackage.TryGetMetadata(MetadataNames.Arguments, out string extraArguments);
-
-                var exitCodeArg = expectedExitCode != 0 ? $" --expected-exit-code $expected_exit_code " : string.Empty;
-                var passthroughArgs = !string.IsNullOrEmpty(AppArguments) ? $" -- {AppArguments}" : string.Empty;
-
-                var instrumentationArg = appPackage.TryGetMetadata(MetadataNames.AndroidInstrumentationName, out string androidInstrumentationName)
-                    ? $"--instrumentation \"{androidInstrumentationName}\" "
-                    : string.Empty;
-
-                var devOutArg = appPackage.TryGetMetadata(MetadataNames.DeviceOutputPath, out string deviceOutputPath)
-                    ? $"--dev-out \"{deviceOutputPath}\" "
-                    : string.Empty;
-
-                // In case user didn't specify custom commands, we use our default one
-                customCommands = "xharness android test " +
-                    "--app \"$app\" " +
-                    "--output-directory \"$output_directory\" " +
-                    "--timeout \"$timeout\" " +
-                    "--package-name \"$package_name\" " +
-                    " -v "
-                    + devOutArg
-                    + instrumentationArg
-                    + exitCodeArg
-                    + extraArguments
-                    + passthroughArgs;
+                // When no user commands are specified, we add the default `android test ...` command
+                customCommands = GetDefaultCommand(appPackage, expectedExitCode);
             }
 
             string command = GetHelixCommand(appPackage, apkPath, androidPackageName, testTimeout, expectedExitCode);
@@ -138,6 +116,35 @@ namespace Microsoft.DotNet.Helix.Sdk
             string workItemZip = await CreateZipArchiveOfPackageAsync(zipArchiveManager, fileSystem, workItemName, apkPath, customCommands);
 
             return CreateTaskItem(workItemName, workItemZip, command, workItemTimeout);
+        }
+
+        private string GetDefaultCommand(ITaskItem appPackage, int expectedExitCode)
+        {
+            appPackage.TryGetMetadata(MetadataNames.Arguments, out string extraArguments);
+
+            var exitCodeArg = expectedExitCode != 0 ? $" --expected-exit-code $expected_exit_code " : string.Empty;
+            var passthroughArgs = !string.IsNullOrEmpty(AppArguments) ? $" -- {AppArguments}" : string.Empty;
+
+            var instrumentationArg = appPackage.TryGetMetadata(MetadataNames.AndroidInstrumentationName, out string androidInstrumentationName)
+                ? $"--instrumentation \"{androidInstrumentationName}\" "
+                : string.Empty;
+
+            var devOutArg = appPackage.TryGetMetadata(MetadataNames.DeviceOutputPath, out string deviceOutputPath)
+                ? $"--dev-out \"{deviceOutputPath}\" "
+                : string.Empty;
+
+            // In case user didn't specify custom commands, we use our default one
+            return "xharness android test " +
+                "--app \"$app\" " +
+                "--output-directory \"$output_directory\" " +
+                "--timeout \"$timeout\" " +
+                "--package-name \"$package_name\" " +
+                " -v "
+                + devOutArg
+                + instrumentationArg
+                + exitCodeArg
+                + extraArguments
+                + passthroughArgs;
         }
 
         private string GetHelixCommand(ITaskItem appPackage, string apkPath, string androidPackageName, TimeSpan xHarnessTimeout, int expectedExitCode)
