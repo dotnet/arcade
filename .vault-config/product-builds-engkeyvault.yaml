@@ -24,7 +24,6 @@ secrets:
       subscription: a4fc5514-21a9-4296-bfaf-5c7ee7fa35d1
       account: dotnetfeed
 
-
   #Publish-Build-Assets
   MaestroAccessToken:
   	type: maestro-access-token
@@ -83,7 +82,6 @@ secrets:
       name: dn-bot-all-orgs-build
       organization: dnceng
 
-
   #DotNet-AllOrgs-Darc-Pats
   dn-bot-devdiv-dnceng-rw-code-pat:
     type: azure-devops-access-token
@@ -94,7 +92,6 @@ secrets:
           name: dn-bot-account-redmond
       name: dn-bot-devdiv-dnceng
       organization: dnceng
-
 
   #AzureDevOps-Artifact-Feeds-Pats
   dn-bot-dnceng-artifact-feeds-rw:
@@ -126,7 +123,6 @@ secrets:
           name: dn-bot-account-redmond
       name: dn-bot-all-orgs-artifact-feeds
       organization: dnceng
-
 
   #DotNet-Symbol-Server-Pats
   microsoft-symbol-server-pat:
