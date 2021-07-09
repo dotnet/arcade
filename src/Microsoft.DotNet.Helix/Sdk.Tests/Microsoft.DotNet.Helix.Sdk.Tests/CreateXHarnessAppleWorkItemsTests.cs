@@ -162,6 +162,46 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         }
 
         [Fact]
+        public void AppBundleIsReused()
+        {
+            var collection = CreateMockServiceCollection();
+            _task.ConfigureServices(collection);
+            _task.AppBundles = new[]
+            {
+                CreateAppBundle("item-1", "ios-simulator-64_13.5", appBundlePath: "apps/System.Foo.app"),
+                CreateAppBundle("item-2", "ios-simulator-64_13.6", appBundlePath: "apps/System.Foo.app"),
+            };
+
+            // Act
+            using var provider = collection.BuildServiceProvider();
+            _task.InvokeExecute(provider).Should().BeTrue();
+
+            // Verify
+            _task.WorkItems.Length.Should().Be(2);
+            _fileSystem.RemovedFiles.Should().BeEmpty();
+
+            var workItem1 = _task.WorkItems.Last();
+            workItem1.GetMetadata("Identity").Should().Be("item-2");
+
+            var payloadArchive = workItem1.GetMetadata("PayloadArchive");
+            payloadArchive.Should().NotBeNullOrEmpty();
+            _fileSystem.FileExists(payloadArchive).Should().BeTrue();
+
+            var command = workItem1.GetMetadata("Command");
+            command.Should().Contain("--target \"ios-simulator-64_13.6\"");
+
+            var workItem2 = _task.WorkItems.First();
+            workItem2.GetMetadata("Identity").Should().Be("item-1");
+
+            payloadArchive = workItem2.GetMetadata("PayloadArchive");
+            payloadArchive.Should().NotBeNullOrEmpty();
+            _fileSystem.FileExists(payloadArchive).Should().BeTrue();
+
+            command = workItem2.GetMetadata("Command");
+            command.Should().Contain("--target \"ios-simulator-64_13.5\"");
+        }
+
+        [Fact]
         public void AreDependenciesRegistered()
         {
             var task = new CreateXHarnessAppleWorkItems();
@@ -180,17 +220,18 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         }
 
         private ITaskItem CreateAppBundle(
-            string path,
+            string itemSpec,
             string target,
             string? workItemTimeout = null,
             string? testTimeout = null,
             string? launchTimeout = null,
             int expectedExitCode = 0,
             bool includesTestRunner = true,
-            string? customCommands = null)
+            string? customCommands = null,
+            string? appBundlePath = null)
         {
             var mockBundle = new Mock<ITaskItem>();
-            mockBundle.SetupGet(x => x.ItemSpec).Returns(path);
+            mockBundle.SetupGet(x => x.ItemSpec).Returns(itemSpec);
             mockBundle.Setup(x => x.GetMetadata(CreateXHarnessAppleWorkItems.MetadataNames.Target)).Returns(target);
             mockBundle.Setup(x => x.GetMetadata(CreateXHarnessAppleWorkItems.MetadataNames.IncludesTestRunner)).Returns(includesTestRunner.ToString());
 
@@ -219,7 +260,12 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 mockBundle.Setup(x => x.GetMetadata(XHarnessTaskBase.MetadataName.CustomCommands)).Returns(customCommands);
             }
 
-            _fileSystem.CreateDirectory(path);
+            if (appBundlePath != null)
+            {
+                mockBundle.Setup(x => x.GetMetadata(CreateXHarnessAppleWorkItems.MetadataNames.AppBundlePath)).Returns(appBundlePath);
+            }
+
+            _fileSystem.CreateDirectory(appBundlePath ?? itemSpec);
 
             return mockBundle.Object;
         }

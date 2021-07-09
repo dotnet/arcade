@@ -124,6 +124,40 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         }
 
         [Fact]
+        public void ApkIsReused()
+        {
+            var collection = CreateMockServiceCollection();
+            _task.ConfigureServices(collection);
+            _task.Apks = new[]
+            {
+                CreateApk("item-1", "System.Foo", apkPath: "apks/System.Foo.apk"),
+                CreateApk("item-2", "System.Foo", apkPath: "apks/System.Foo.apk"),
+            };
+
+            // Act
+            using var provider = collection.BuildServiceProvider();
+            _task.InvokeExecute(provider).Should().BeTrue();
+
+            // Verify
+            _task.WorkItems.Length.Should().Be(2);
+            _fileSystem.RemovedFiles.Should().BeEmpty();
+
+            var workItem1 = _task.WorkItems.Last();
+            workItem1.GetMetadata("Identity").Should().Be("item-2");
+
+            var payloadArchive = workItem1.GetMetadata("PayloadArchive");
+            payloadArchive.Should().NotBeNullOrEmpty();
+            _fileSystem.FileExists(payloadArchive).Should().BeTrue();
+
+            var workItem2 = _task.WorkItems.First();
+            workItem2.GetMetadata("Identity").Should().Be("item-1");
+
+            payloadArchive = workItem2.GetMetadata("PayloadArchive");
+            payloadArchive.Should().NotBeNullOrEmpty();
+            _fileSystem.FileExists(payloadArchive).Should().BeTrue();
+        }
+
+        [Fact]
         public void AreDependenciesRegistered()
         {
             var task = new CreateXHarnessAndroidWorkItems();
@@ -142,32 +176,38 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         }
 
         private ITaskItem CreateApk(
-            string path,
+            string itemSpec,
             string apkName,
             string? workItemTimeout = null,
             string? testTimeout = null,
-            int expectedExitCode = 0)
+            int expectedExitCode = 0,
+            string? apkPath = null)
         {
             var mockBundle = new Mock<ITaskItem>();
-            mockBundle.SetupGet(x => x.ItemSpec).Returns(path);
-            mockBundle.Setup(x => x.GetMetadata("AndroidPackageName")).Returns(apkName);
+            mockBundle.SetupGet(x => x.ItemSpec).Returns(itemSpec);
+            mockBundle.Setup(x => x.GetMetadata(CreateXHarnessAndroidWorkItems.MetadataNames.AndroidPackageName)).Returns(apkName);
 
             if (workItemTimeout != null)
             {
-                mockBundle.Setup(x => x.GetMetadata("WorkItemTimeout")).Returns(workItemTimeout);
+                mockBundle.Setup(x => x.GetMetadata(XHarnessTaskBase.MetadataName.WorkItemTimeout)).Returns(workItemTimeout);
             }
 
             if (testTimeout != null)
             {
-                mockBundle.Setup(x => x.GetMetadata("TestTimeout")).Returns(testTimeout);
+                mockBundle.Setup(x => x.GetMetadata(XHarnessTaskBase.MetadataName.TestTimeout)).Returns(testTimeout);
             }
 
             if (expectedExitCode != 0)
             {
-                mockBundle.Setup(x => x.GetMetadata("ExpectedExitCode")).Returns(expectedExitCode.ToString());
+                mockBundle.Setup(x => x.GetMetadata(XHarnessTaskBase.MetadataName.ExpectedExitCode)).Returns(expectedExitCode.ToString());
             }
 
-            _fileSystem.WriteToFile(path, "apk");
+            if (apkPath != null)
+            {
+                mockBundle.Setup(x => x.GetMetadata(CreateXHarnessAndroidWorkItems.MetadataNames.ApkPath)).Returns(apkPath);
+            }
+
+            _fileSystem.WriteToFile(apkPath ?? itemSpec, "apk");
 
             return mockBundle.Object;
         }
