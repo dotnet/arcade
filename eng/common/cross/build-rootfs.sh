@@ -33,7 +33,6 @@ __AlpinePackages="alpine-base"
 __AlpinePackages+=" build-base"
 __AlpinePackages+=" linux-headers"
 __AlpinePackagesEdgeCommunity=" lldb-dev"
-__AlpinePackagesEdgeMain=" llvm10-libs"
 __AlpinePackagesEdgeMain+=" python3"
 __AlpinePackagesEdgeMain+=" libedit"
 
@@ -191,6 +190,8 @@ while :; do
             __CodeName=alpine
             __UbuntuRepo=
             __AlpineVersion=3.9
+            __AlpinePackagesEdgeMain+=" llvm11-libs"
+            __AlpinePackagesEdgeMain+=" clang-libs"
             ;;
         alpine3.13)
             __CodeName=alpine
@@ -201,6 +202,7 @@ while :; do
             __AlpinePackagesEdgeCommunity=
             __AlpinePackages+=$__AlpinePackagesEdgeMain
             __AlpinePackagesEdgeMain=
+            __AlpinePackages+=" llvm10-libs"
             ;;
         freebsd11)
             __FreeBSDBase="11.3-RELEASE"
