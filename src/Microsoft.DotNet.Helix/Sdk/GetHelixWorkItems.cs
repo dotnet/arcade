@@ -34,6 +34,7 @@ namespace Microsoft.DotNet.Helix.Sdk
         private async Task<IEnumerable<ITaskItem>> GetWorkItemsAsync(ITaskItem job, CancellationToken cancellationToken)
         {
             var jobName = job.GetMetadata("Identity");
+            var helixTargetQueue = job.GetMetadata("HelixTargetQueue");
 
             Log.LogMessage($"Getting status of job {jobName}");
 
@@ -53,6 +54,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             {
                 var metadata = job.CloneCustomMetadata() as IDictionary<string, string>;
                 metadata["JobName"] = jobName;
+                metadata["HelixTargetQueue"] = helixTargetQueue;
                 metadata["WorkItemName"] = name;
                 var consoleUri = HelixApi.Options.BaseUri.AbsoluteUri.TrimEnd('/') + $"/api/2019-06-17/jobs/{jobName}/workitems/{Uri.EscapeDataString(name)}/console";
                 metadata["ConsoleOutputUri"] = consoleUri;

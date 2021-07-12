@@ -22,15 +22,16 @@ namespace Microsoft.DotNet.Helix.Sdk
             foreach (ITaskItem workItem in WorkItems)
             {
                 var jobName = workItem.GetMetadata("JobName");
+                var helixTargetQueue = workItem.GetMetadata("HelixTargetQueue");
                 var workItemName = workItem.GetMetadata("WorkItemName");
                 var testRunId = workItem.GetMetadata("TestRunId");
                 var failed = workItem.GetMetadata("Failed") == "true";
 
-                await CreateFakeTestResultAsync(client, testRunId, jobName, workItemName, failed);
+                await CreateFakeTestResultAsync(client, testRunId, jobName, helixTargetQueue, workItemName, failed);
             }
         }
 
-        private async Task<int> CreateFakeTestResultAsync(HttpClient client, string testRunId, string jobName, string workItemFriendlyName, bool failed)
+        private async Task<int> CreateFakeTestResultAsync(HttpClient client, string testRunId, string jobName, string helixTargetQueue, string workItemFriendlyName, bool failed)
         {
             var testResultData = await RetryAsync(
                 async () =>
@@ -56,6 +57,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                                             ["comment"] = new JObject
                                             {
                                                 ["HelixJobId"] = jobName,
+                                                ["HelixTargetQueue"] = helixTargetQueue,
                                                 ["HelixWorkItemName"] = workItemFriendlyName,
                                             }.ToString(),
                                         }
