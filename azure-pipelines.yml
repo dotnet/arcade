@@ -142,10 +142,10 @@ stages:
               -ci
               -restore
               -test
-              -projects $(Build.SourcesDirectory)\tests\UnitTests.XHarness.Android.WindowsQueues.proj
-              /bl:$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)\Helix.XHarness.Android.WindowsQueues.binlog
+              -projects $(Build.SourcesDirectory)\tests\UnitTests.XHarness.Android.Device.proj
+              /bl:$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)\Helix.XHarness.Android.Device.binlog
               /p:RestoreUsingNuGetTargets=false
-              /p:XharnessTestARM64_V8A=true
+              /p:XHarnessTestARM64_V8A=true
             displayName: XHarness Android Helix Testing (Windows)
             env:
               SYSTEM_ACCESSTOKEN: $(System.AccessToken)
@@ -210,11 +210,11 @@ stages:
               -ci
               -restore
               -test
-              -projects $(Build.SourcesDirectory)/tests/UnitTests.XHarness.Android.LinuxQueues.proj
-              /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.XHarness.Android.LinuxQueues.binlog
+              -projects $(Build.SourcesDirectory)/tests/UnitTests.XHarness.Android.Simulator.proj
+              /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.XHarness.Android.Simulator.binlog
               /p:RestoreUsingNuGetTargets=false
-              /p:XharnessTestX86=true 
-              /p:XharnessTestX86_64=true 
+              /p:XHarnessTestX86=true 
+              /p:XHarnessTestX86_64=true 
             displayName: XHarness Android Helix Testing (Linux)
             env:
               SYSTEM_ACCESSTOKEN: $(System.AccessToken)

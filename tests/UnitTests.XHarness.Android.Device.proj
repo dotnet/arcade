@@ -1,0 +1,14 @@
+<Project DefaultTargets="Test">
+  <Import Project="./UnitTests.XHarness.Common.props"/>
+
+  <!-- New Test Projects which build packages to run through XHarness/XHarness go here -->
+  <ItemGroup>
+    <XHarnessAndroidProject Include="$(MSBuildThisFileDirectory)XHarness/XHarness.TestApks.proj" />
+    <HelixTargetQueue Include="windows.10.amd64.android.open" />
+  </ItemGroup>
+
+  <Target Name="Pack"/>
+
+  <!-- See UnitTests.proj in above folder for why this is included directly-from-repo -->
+  <Import Project="$(MSBuildThisFileDirectory)\..\src\Microsoft.DotNet.Helix\Sdk\sdk\Sdk.targets"/>
+</Project>

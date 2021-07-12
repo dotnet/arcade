@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Microsoft.Arcade.Common;
 using Microsoft.Build.Framework;
 
@@ -93,5 +94,14 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             return (testTimeout, workItemTimeout, expectedExitCode, customCommands);
         }
+
+        protected Build.Utilities.TaskItem CreateTaskItem(string workItemName, string payloadArchivePath, string command, TimeSpan timeout) =>
+            new (workItemName, new Dictionary<string, string>()
+            {
+                { "Identity", workItemName },
+                { "PayloadArchive", payloadArchivePath },
+                { "Command", command },
+                { "Timeout", timeout.ToString() },
+            });
     }
 }
