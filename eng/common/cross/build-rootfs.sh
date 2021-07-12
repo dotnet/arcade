@@ -114,6 +114,8 @@ while :; do
             __UbuntuArch=s390x
             __UbuntuRepo="http://ports.ubuntu.com/ubuntu-ports/"
             __UbuntuPackages=$(echo ${__UbuntuPackages} | sed 's/ libunwind8-dev//')
+            __UbuntuPackages=$(echo ${__UbuntuPackages} | sed 's/ libomp-dev//')
+            __UbuntuPackages=$(echo ${__UbuntuPackages} | sed 's/ libomp5//')
             unset __LLDB_Package
             ;;
         x86)
