@@ -29,6 +29,7 @@
 
       <_DesktopMSBuildRequired>false</_DesktopMSBuildRequired>
       <_DesktopMSBuildRequired Condition="'$(_DryRun)' != 'true' and '$(MSBuildRuntimeType)' == 'Core'">true</_DesktopMSBuildRequired>
+      <_TurnOffTelemetry Condition="'$(TurnOffTelemetry)' == ''">false</_TestSign>
     </PropertyGroup>
 
     <Error Condition="'$(AllowEmptySignList)' != 'true' AND '@(ItemsToSign)' == ''" 

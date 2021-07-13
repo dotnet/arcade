@@ -37,6 +37,11 @@ namespace Microsoft.DotNet.SignTool
         public bool TestSign { get; set; }
 
         /// <summary>
+        /// Turn off Telmetry is added to turn off telemetry for linux signing in release pipeline, but by default its always false
+        /// </summary>
+        public bool TurnOffTelemetry {get; set;}
+        
+        /// <summary>
         /// True to perform strong name check on signed files.
         /// If enabled it will require SNBinaryPath to be informed.
         /// </summary>
@@ -263,7 +268,10 @@ namespace Microsoft.DotNet.SignTool
             }
             finally
             {
-                telemetry.SendEvents();
+                if (TurnOffTelemetry)
+                {
+                    telemetry.SendEvents();
+                }
             }
         }
 
