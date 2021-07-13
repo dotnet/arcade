@@ -7,4 +7,5 @@ storageLocation:
 secrets:
   HelixApiAccessToken:
     type: helix-access-token
-    environment: helix.dot.net
+    parameters:
+      environment: helix.dot.net
