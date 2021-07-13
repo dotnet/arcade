@@ -26,15 +26,15 @@ secrets:
 
   #Publish-Build-Assets
   MaestroAccessToken:
-  	type: maestro-access-token
+    type: maestro-access-token
     parameters:
       environment: maestro-prod.westus2.cloudapp.azure.com
 
   BotAccount-dotnet-maestro-bot-PAT:
     type: github-access-token
     parameters:
-      GitHubBotAccountSecret: BotAccount-dotnet-maestro-bot
-      GitHubBotAccountName: dotnet-maestro-bot
+      gitHubBotAccountSecret: BotAccount-dotnet-maestro-bot
+      gitHubBotAccountName: dotnet-maestro-bot
 
   dn-bot-dnceng-build-rw-code-rw:
     type: azure-devops-access-token
