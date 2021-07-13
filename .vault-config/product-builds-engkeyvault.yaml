@@ -1,0 +1,144 @@
+storageLocation:
+  type: azure-key-vault
+  parameters:
+    subscription: a4fc5514-21a9-4296-bfaf-5c7ee7fa35d1
+    name: EngKeyVault
+
+references:
+  helixkv:
+    type: azure-key-vault
+    parameters:
+      subscription: a4fc5514-21a9-4296-bfaf-5c7ee7fa35d1
+      name: helixkv
+
+secrets:
+  BotAccount-dotnet-maestro-bot:
+    type: github-account
+    parameters:
+      Name: dotnet-maestro-bot
+
+  #DotNet-Blob-Feed
+  dotnetfeed-storage-access-key-1:
+    type: azure-storage-key
+    parameters:
+      subscription: a4fc5514-21a9-4296-bfaf-5c7ee7fa35d1
+      account: dotnetfeed
+
+  #Publish-Build-Assets
+  MaestroAccessToken:
+    type: maestro-access-token
+    parameters:
+      environment: maestro-prod.westus2.cloudapp.azure.com
+
+  BotAccount-dotnet-maestro-bot-PAT:
+    type: github-access-token
+    parameters:
+      gitHubBotAccountSecret: BotAccount-dotnet-maestro-bot
+      gitHubBotAccountName: dotnet-maestro-bot
+
+  dn-bot-dnceng-build-rw-code-rw:
+    type: azure-devops-access-token
+    parameters:
+      domainAccountName: dn-bot
+      domainAccountSecret:
+          location: helixkv
+          name: dn-bot-account-redmond
+      name: dn-bot-dnceng-build
+      organization: dnceng
+
+  akams:
+    type: github-oauth-secret
+    parameters:
+      appName: akams
+      description: set to never expire
+
+  publishing-dnceng-devdiv-code-r-build-re:
+    type: azure-devops-access-token
+    parameters:
+      domainAccountName: dn-bot
+      domainAccountSecret:
+          location: helixkv
+          name: dn-bot-account-redmond
+      name: publishing-dnceng-devdiv-code
+      organization: dnceng
+
+  dn-bot-dotnet-build-rw-code-rw:
+    type: azure-devops-access-token
+    parameters:
+      domainAccountName: dn-bot
+      domainAccountSecret:
+          location: helixkv
+          name: dn-bot-account-redmond
+      name: dn-bot-dotnet-build
+      organization: dnceng
+
+  dn-bot-all-orgs-build-rw-code-rw:
+    type: azure-devops-access-token
+    parameters:
+      domainAccountName: dn-bot
+      domainAccountSecret:
+          location: helixkv
+          name: dn-bot-account-redmond
+      name: dn-bot-all-orgs-build
+      organization: dnceng
+
+  #DotNet-AllOrgs-Darc-Pats
+  dn-bot-devdiv-dnceng-rw-code-pat:
+    type: azure-devops-access-token
+    parameters:
+      domainAccountName: dn-bot
+      domainAccountSecret:
+          location: helixkv
+          name: dn-bot-account-redmond
+      name: dn-bot-devdiv-dnceng
+      organization: dnceng
+
+  #AzureDevOps-Artifact-Feeds-Pats
+  dn-bot-dnceng-artifact-feeds-rw:
+    type: azure-devops-access-token
+    parameters:
+      domainAccountName: dn-bot
+      domainAccountSecret:
+          location: helixkv
+          name: dn-bot-account-redmond
+      name: dn-bot-dnceng-artifact-feeds
+      organization: dnceng
+
+  dn-bot-dnceng-universal-packages-rw:
+    type: azure-devops-access-token
+    parameters:
+      domainAccountName: dn-bot
+      domainAccountSecret:
+          location: helixkv
+          name: dn-bot-account-redmond
+      name: dn-bot-dnceng-universal-packages
+      organization: dnceng
+
+  dn-bot-all-orgs-artifact-feeds-rw:
+    type: azure-devops-access-token
+    parameters:
+      domainAccountName: dn-bot
+      domainAccountSecret:
+          location: helixkv
+          name: dn-bot-account-redmond
+      name: dn-bot-all-orgs-artifact-feeds
+      organization: dnceng
+
+  #DotNet-Symbol-Server-Pats
+  microsoft-symbol-server-pat:
+    type: azure-devops-access-token
+    parameters:
+      domainAccountSecret:
+          location: helixkv
+          name: dn-bot-account-redmond
+      name: microsoft-symbol-server-pat
+      organization: dnceng
+
+  symweb-symbol-server-pat:
+    type: azure-devops-access-token
+    parameters:
+      domainAccountSecret:
+          location: helixkv
+          name: dn-bot-account-redmond
+      name: dn-symweb-symbol-server-pat
+      organization: dnceng
