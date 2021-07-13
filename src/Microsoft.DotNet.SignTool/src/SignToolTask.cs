@@ -268,7 +268,7 @@ namespace Microsoft.DotNet.SignTool
             }
             finally
             {
-                if (TurnOffTelemetry)
+                if (!TurnOffTelemetry)
                 {
                     telemetry.SendEvents();
                 }
