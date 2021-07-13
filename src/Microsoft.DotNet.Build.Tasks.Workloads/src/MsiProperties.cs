@@ -17,6 +17,12 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             set;
         }
 
+        public int Language
+        {
+            get;
+            set;
+        }
+
         public string Payload
         {
             get;
@@ -45,6 +51,6 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         {
             get;
             set;
-        }        
+        }
     }
 }

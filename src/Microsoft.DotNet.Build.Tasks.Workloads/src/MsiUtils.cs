@@ -29,12 +29,18 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             return files;
         }
 
+        /// <summary>
+        /// Extracts the specified property from the MSI's Property table.
+        /// </summary>
+        /// <param name="packagePath">The path to the MSI package.</param>
+        /// <param name="property">The name of the property to extract.</param>
+        /// <returns>The value of the property.</returns>
         public static string GetProperty(string packagePath, string property)
         {
             using InstallPackage ip = new(packagePath, DatabaseOpenMode.ReadOnly);
             return ip.Property[property];
-            
         }
+
         /// <summary>
         /// Calculate the number of bytes a Windows Installer Package would consume on disk. The function assumes that all files will be installed.
         /// </summary>

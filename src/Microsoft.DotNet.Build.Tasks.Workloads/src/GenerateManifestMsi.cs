@@ -234,6 +234,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                     MsiProperties msiProps = new MsiProperties
                     {
                         InstallSize = MsiUtils.GetInstallSize(msiPath),
+                        Language = Convert.ToInt32(MsiUtils.GetProperty(msiPath, "ProductLanguage")),
                         Payload = Path.GetFileName(msiPath),
                         ProductCode = MsiUtils.GetProperty(msiPath, "ProductCode"),
                         ProductVersion = MsiUtils.GetProperty(msiPath, "ProductVersion"),
@@ -326,7 +327,6 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             writer.WriteStartElement("ItemGroup");
             WriteItem(writer, "None", msiPath, @"\data");
             WriteItem(writer, "None", msiJsonPath, @"\data\msi.json");
-            WriteItem(writer, "None", iconFileName, string.Empty);
             WriteItem(writer, "None", licenseFileName, @"\");
             writer.WriteEndElement();
 
