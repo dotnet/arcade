@@ -62,6 +62,7 @@
         LogDir="$(ArtifactsLogDir)"
         MSBuildPath="$(_DesktopMSBuildPath)"
         SNBinaryPath="$(NuGetPackageRoot)sn\$(SNVersion)\sn.exe"
-        MicroBuildCorePath="$(NuGetPackageRoot)microbuild.core\$(MicroBuildCoreVersion)"/>
+        MicroBuildCorePath="$(NuGetPackageRoot)microbuild.core\$(MicroBuildCoreVersion)"
+        TurnOffTelemetry="$(TurnOffTelemetry)/>
   </Target>
 </Project>
