@@ -332,7 +332,8 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
 
             writer.WriteRaw(@"
 <Target Name=""AddPackageIcon""
-        BeforeTargets=""GenerateNuspec"">
+        BeforeTargets=""GenerateNuspec""
+        Condition=""'$(PackageIcon)' == ''"">
   <PropertyGroup>
     <PackageIcon>Icon.png</PackageIcon>
   </PropertyGroup>
