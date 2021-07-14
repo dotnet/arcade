@@ -4,6 +4,7 @@ import sys
 import time
 import traceback
 import logging
+import shutil
 from queue import Queue
 from threading import Thread, Lock
 from typing import Tuple, Optional
@@ -11,7 +12,7 @@ from typing import Tuple, Optional
 from helpers import get_env
 from test_results_reader import read_results
 
-from helix.public import DefaultTestReporter, AzureDevOpsReportingParameters
+from helix.public import DefaultTestReporter, AzureDevOpsReportingParameters, PackingTestReporter
 
 def process_args() -> Tuple[str, str, str, Optional[str]]:
     if len(sys.argv) < 4 or len(sys.argv) > 5:
@@ -62,6 +63,11 @@ def main():
     )
 
     reporter.report_results(all_results)
+
+    packed_file = PackingTestReporter._file_name
+
+    if os.path.isfile(packed_file):
+        shutil.copy(packed_file, os.path.join(get_env("HELIX_WORKITEM_UPLOAD_ROOT"), "test_report.json"))
 
 if __name__ == '__main__':
     main()
