@@ -5,11 +5,11 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text.Json;
 using System.Xml;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Microsoft.Deployment.DotNet.Releases;
+using Newtonsoft.Json;
 
 namespace Microsoft.DotNet.Build.Tasks.Workloads
 {
@@ -244,7 +244,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                     };
 
                     string msiJsonPath = Path.Combine(Path.GetDirectoryName(msiPath), Path.GetFileNameWithoutExtension(msiPath) + ".json");
-                    File.WriteAllText(msiJsonPath, JsonSerializer.Serialize<MsiProperties>(msiProps));
+                    File.WriteAllText(msiJsonPath, JsonConvert.SerializeObject(msiProps));
 
                     TaskItem msi = new(light.OutputFile);
                     msi.SetMetadata(Metadata.Platform, platform);
@@ -329,7 +329,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             WriteItem(writer, "None", msiPath, @"\data");
             WriteItem(writer, "None", msiJsonPath, @"\data\msi.json");
             WriteItem(writer, "None", licenseFileName, @"\");
-            
+
             WriteItem(writer, "None", iconFileName, string.Empty);
 
             writer.WriteEndElement();

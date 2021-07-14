@@ -2,11 +2,9 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.Deployment.WindowsInstaller;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace Microsoft.DotNet.Build.Tasks.Workloads
 {
@@ -19,12 +17,14 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             set;
         }
 
+        [JsonConverter(typeof(VersionConverter))]
         public Version VersionMin
         {
             get;
             set;
         }
 
+        [JsonConverter(typeof(VersionConverter))]
         public Version VersionMax
         {
             get;
