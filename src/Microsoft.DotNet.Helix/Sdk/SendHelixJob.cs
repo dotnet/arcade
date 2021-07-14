@@ -541,7 +541,9 @@ namespace Microsoft.DotNet.Helix.Sdk
                 string asArchiveStr = correlationPayload.GetMetadata(MetadataNames.AsArchive);
                 if (!bool.TryParse(asArchiveStr, out bool asArchive))
                 {
-                    asArchive = false;
+                    // With no other information, default to true, since that was the previous behavior
+                    // before we added the option
+                    asArchive = true;
                 }
 
                 if (asArchive)
