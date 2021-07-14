@@ -30,8 +30,8 @@
       <_DesktopMSBuildRequired>false</_DesktopMSBuildRequired>
       <_DesktopMSBuildRequired Condition="'$(_DryRun)' != 'true' and '$(MSBuildRuntimeType)' == 'Core'">true</_DesktopMSBuildRequired>
       <!-- We have telemetry turned off only for linux signing in release pipeline. Issue tracking this https://github.com/dotnet/arcade/issues/7621 -->
-      <_TurnOffTelemetry>true</_TurnOffTelemetry>
-      <_TurnOffTelemetry Condition="'$(TurnOffTelemetry)' == ''">false</_TurnOffTelemetry>
+      <_DisableTelemetry>false</_DisableTelemetry>
+      <_DisableTelemetry Condition="'$(DisableTelemetry)' != ''">$(DisableTelemetry)</_DisableTelemetry>
     </PropertyGroup>
 
     <Error Condition="'$(AllowEmptySignList)' != 'true' AND '@(ItemsToSign)' == ''" 
@@ -65,6 +65,6 @@
         MSBuildPath="$(_DesktopMSBuildPath)"
         SNBinaryPath="$(NuGetPackageRoot)sn\$(SNVersion)\sn.exe"
         MicroBuildCorePath="$(NuGetPackageRoot)microbuild.core\$(MicroBuildCoreVersion)"
-        TurnOffTelemetry="$(_TurnOffTelemetry)/>
+        DisableTelemetry="$(_DisableTelemetry)/>
   </Target>
 </Project>

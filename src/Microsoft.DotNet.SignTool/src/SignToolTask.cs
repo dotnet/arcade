@@ -40,7 +40,7 @@ namespace Microsoft.DotNet.SignTool
         /// Turn off Telmetry is added to turn off telemetry for linux signing in release pipeline, but by default its always false
         /// Issue tracking this https://github.com/dotnet/arcade/issues/7621
         /// </summary>
-        public bool TurnOffTelemetry {get; set;}
+        public bool DisableTelemetry {get; set;}
         
         /// <summary>
         /// True to perform strong name check on signed files.
@@ -269,7 +269,7 @@ namespace Microsoft.DotNet.SignTool
             }
             finally
             {
-                if (!TurnOffTelemetry)
+                if (!DisableTelemetry)
                 {
                     telemetry.SendEvents();
                 }
