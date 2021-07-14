@@ -332,11 +332,10 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             writer.WriteElementString("IsPackable", "true");
             writer.WriteElementString("PackageType", "DotnetPlatform");
             writer.WriteElementString("SuppressDependenciesWhenPacking", "true");
-            writer.WriteElementString("NoWarn", "$(NoWarn);NU5128;NU5118");
+            writer.WriteElementString("NoWarn", "$(NoWarn);NU5128");
             writer.WriteElementString("PackageId", $"{nupkg.Id}.Msi.{platform}");
             writer.WriteElementString("PackageVersion", $"{nupkg.Version}");
             writer.WriteElementString("Description", nupkg.Description);
-            writer.WriteElementString("PackageIcon", "Icon.png");
 
             if (!string.IsNullOrWhiteSpace(nupkg.Authors))
             {
@@ -355,9 +354,21 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             WriteItem(writer, "None", msiPath, @"\data");
             WriteItem(writer, "None", msiJsonPath, @"\data\msi.json");
             WriteItem(writer, "None", licenseFileName, @"\");
-            writer.WriteEndElement();
+            writer.WriteEndElement(); // ItemGroup
 
-            writer.WriteEndElement();
+            writer.WriteRaw(@"
+<Target Name=""AddPackageIcon""
+        BeforeTargets=""GenerateNuspec"">
+  <PropertyGroup>
+    <PackageIcon>Icon.png</PackageIcon>
+  </PropertyGroup>
+  <ItemGroup Condition=""'$(IsPackable)' == 'true'"">
+    <None Include=""$(PackageIcon)"" Pack=""true"" PackagePath=""$(PackageIcon)"" Visible=""false"" />
+  </ItemGroup>
+</Target>
+");
+
+            writer.WriteEndElement(); // Project
             writer.Flush();
             writer.Close();
 
