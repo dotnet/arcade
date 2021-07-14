@@ -239,7 +239,8 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                         ProductCode = MsiUtils.GetProperty(msiPath, "ProductCode"),
                         ProductVersion = MsiUtils.GetProperty(msiPath, "ProductVersion"),
                         ProviderKeyName = $"{nupkg.Id},{nupkg.Version},{platform}",
-                        UpgradeCode = MsiUtils.GetProperty(msiPath, "UpgradeCode")
+                        UpgradeCode = MsiUtils.GetProperty(msiPath, "UpgradeCode"),
+                        RelatedProducts = MsiUtils.GetRelatedProducts(msiPath)
                     };
 
                     string msiJsonPath = Path.Combine(Path.GetDirectoryName(msiPath), Path.GetFileNameWithoutExtension(msiPath) + ".json");
@@ -305,7 +306,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             writer.WriteElementString("IsPackable", "true");
             writer.WriteElementString("PackageType", "DotnetPlatform");
             writer.WriteElementString("SuppressDependenciesWhenPacking", "true");
-            writer.WriteElementString("NoWarn", "$(NoWarn);NU5128");
+            writer.WriteElementString("NoWarn", "$(NoWarn);NU5128;NU5118");
             writer.WriteElementString("PackageId", $"{nupkg.Id}.Msi.{platform}");
             writer.WriteElementString("PackageVersion", $"{nupkg.Version}");
             writer.WriteElementString("Description", nupkg.Description);
@@ -328,6 +329,9 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             WriteItem(writer, "None", msiPath, @"\data");
             WriteItem(writer, "None", msiJsonPath, @"\data\msi.json");
             WriteItem(writer, "None", licenseFileName, @"\");
+            
+            WriteItem(writer, "None", iconFileName, string.Empty);
+
             writer.WriteEndElement();
 
             writer.WriteEndElement();

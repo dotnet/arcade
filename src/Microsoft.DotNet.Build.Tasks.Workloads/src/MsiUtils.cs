@@ -13,6 +13,8 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
     {
         private const string _getFilesQuery = "SELECT `File`, `Component_`, `FileName`, `FileSize`, `Version`, `Language`, `Attributes`, `Sequence` FROM `File`";
 
+        private const string _getUpgradeQuery = "SELECT `UpgradeCode`, `VersionMin`, `VersionMax`, `Language`, `Attributes` FROM `Upgrade`";
+
         public static IEnumerable<FileRow> GetAllFiles(string packagePath)
         {
             using InstallPackage ip = new(packagePath, DatabaseOpenMode.ReadOnly);
@@ -27,6 +29,28 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             }
 
             return files;
+        }
+
+        public static IEnumerable<RelatedProduct> GetRelatedProducts(string packagePath)
+        {
+            using InstallPackage ip = new(packagePath, DatabaseOpenMode.ReadOnly);
+            using Database db = new(packagePath, DatabaseOpenMode.ReadOnly);
+
+            if (db.Tables.Contains("Upgrade"))
+            {
+                using View upgradeView = db.OpenView(_getUpgradeQuery);
+                List<RelatedProduct> relatedProducts = new();
+                upgradeView.Execute();
+
+                foreach (Record relatedProduct in upgradeView)
+                {
+                    relatedProducts.Add(RelatedProduct.Create(relatedProduct));
+                }
+
+                return relatedProducts;
+            }
+
+            return Enumerable.Empty<RelatedProduct>();
         }
 
         /// <summary>

@@ -52,5 +52,11 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             get;
             set;
         }
+
+        public IEnumerable<RelatedProduct> RelatedProducts
+        {
+            get;
+            set;
+        }
     }
 }
