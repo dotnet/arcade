@@ -3,8 +3,6 @@
 
 using System;
 using Microsoft.Deployment.WindowsInstaller;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
 
 namespace Microsoft.DotNet.Build.Tasks.Workloads
 {
@@ -16,16 +14,14 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             get;
             set;
         }
-
-        [JsonConverter(typeof(VersionConverter))]
-        public Version VersionMin
+       
+        public string VersionMin
         {
             get;
             set;
         }
 
-        [JsonConverter(typeof(VersionConverter))]
-        public Version VersionMax
+        public string VersionMax
         {
             get;
             set;
@@ -51,8 +47,8 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             return new RelatedProduct
             {
                 UpgradeCode = (string)record["UpgradeCode"],
-                VersionMin = string.IsNullOrWhiteSpace(versionMin) ? null : Version.Parse(versionMin),
-                VersionMax = string.IsNullOrWhiteSpace(versionMax) ? null : Version.Parse(versionMax),
+                VersionMin = string.IsNullOrWhiteSpace(versionMin) ? null : versionMin,
+                VersionMax = string.IsNullOrWhiteSpace(versionMax) ? null : versionMax,
                 Language = (string)record["Language"],
                 Attributes = (int)record["Attributes"]
             };
