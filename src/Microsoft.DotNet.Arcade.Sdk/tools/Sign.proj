@@ -29,7 +29,6 @@
 
       <_DesktopMSBuildRequired>false</_DesktopMSBuildRequired>
       <_DesktopMSBuildRequired Condition="'$(_DryRun)' != 'true' and '$(MSBuildRuntimeType)' == 'Core'">true</_DesktopMSBuildRequired>
-      <!-- We have telemetry turned off only for linux signing in release pipeline. Issue tracking this https://github.com/dotnet/arcade/issues/7621 -->
       <_DisableTelemetry>false</_DisableTelemetry>
       <_DisableTelemetry Condition="'$(DisableTelemetry)' != ''">$(DisableTelemetry)</_DisableTelemetry>
     </PropertyGroup>
