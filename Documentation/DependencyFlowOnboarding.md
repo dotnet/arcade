@@ -10,9 +10,9 @@ There's a set of steps that need to be completed so the versions of assets your 
 
 ## Prerequisites
 
-These pre-requisites are not hard requirements, but enabling dependency flow will be much simpler if you are using these processes:
-
 - If your repository is not part of the Dotnet GitHub organization, contact an administrator for the organization to install the dotnet-maestro app in your repository: https://github.com/apps/dotnet-maestro
+
+The following pre-requisites are not hard requirements, but enabling dependency flow will be much simpler if you are using these processes:
 
 - Internal builds produced out of https://dev.azure.com/dnceng/internal
 
