@@ -42,7 +42,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         [Fact]
         public void FailOnceThenPass()
         {
-            var target = Path.Combine(Path.GetTempPath(), "my-test-file-123456.snt");
+            string target = Path.Combine(Environment.GetEnvironmentVariable("HELIX_WORKITEM_ROOT") ?? Environment.GetEnvironmentVariable("TEMP"), "my-test-file-123456.snt");
             bool exists = File.Exists(target);
             if (!exists)
             {
