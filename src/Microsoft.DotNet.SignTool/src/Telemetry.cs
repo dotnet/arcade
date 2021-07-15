@@ -22,25 +22,31 @@ namespace Microsoft.DotNet.SignTool
 
         private static string disableTelemetry = Environment.GetEnvironmentVariable("DISABLE_TELEMETRY");
 
-        private bool enableTelemetry = false;
-        
         public Telemetry()
         {
             _metrics = new Dictionary<string, double>();
         }
 
+        internal bool DisableTelemetry(string disableTelemetry)
+        {
+            if (!bool.TryParse(Environment.GetEnvironmentVariable("DISABLE_TELEMETRY"), out var telemetrySwitch))
+            {
+                telemetrySwitch = false; // the default if the variable isn't set
+            }
+            return telemetrySwitch;
+        }
+
         internal void AddMetric(string name, double value)
         {
-            if (!bool.TryParse(disableTelemetry, out enableTelemetry))
+            if (DisableTelemetry(disableTelemetry))
             {
                 _metrics.Add(name, value);
             }
-            
         }
 
         internal void SendEvents()
         {
-            if (!bool.TryParse(disableTelemetry, out enableTelemetry))
+            if (DisableTelemetry(disableTelemetry))
             {
                 // set APPINSIGHTS_INSTRUMENTATIONKEY environment variable to begin tracking telemetry
                 TelemetryConfiguration configuration = TelemetryConfiguration.CreateDefault();
