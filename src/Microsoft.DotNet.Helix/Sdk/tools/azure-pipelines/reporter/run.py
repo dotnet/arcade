@@ -64,7 +64,7 @@ def main():
 
     reporter.report_results(all_results)
 
-    packed_file = PackingTestReporter._file_name
+    packed_file = PackingTestReporter._file_name()
 
     if os.path.isfile(packed_file):
         shutil.copy(packed_file, os.path.join(get_env("HELIX_WORKITEM_UPLOAD_ROOT"), "test_report.json"))
