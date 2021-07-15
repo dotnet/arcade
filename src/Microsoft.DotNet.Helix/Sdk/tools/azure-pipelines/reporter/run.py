@@ -140,10 +140,12 @@ def main():
 
         log.info("Main thread starting {0} workers".format(worker_count))
 
+        workers = []
         for i in range(worker_count):
             worker = UploadWorker(q, i, collection_uri, team_project, test_run_id, access_token)
             worker.daemon = True
             worker.start()
+            workers += [worker]
 
         # https://github.com/dotnet/arcade/issues/7371 - trying to avoid contention for stdout
         time.sleep(5)
@@ -158,6 +160,9 @@ def main():
             q.put(b)
 
         q.join()
+
+        for w in workers:
+            w.join()
 
         with workerFailedLock:
             if workerFailed:

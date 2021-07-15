@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Xunit;
 using System.Net;
 
@@ -34,6 +35,19 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             var actual = Helpers.CleanWorkItemName(workItemNameWithFowardSlash);
 
             Assert.Equal(workItemNameExpected, actual);
+        }
+        
+        [MemberData(nameof(TwoThousand))]
+        [Theory]
+        public void LotsOfTest(int x)
+        {
+            Assert.Equal(x, x);        
+        }
+
+        public static IEnumerable<object[]> TwoThousand()
+        {
+            for (int i = 0; i < 2000; i++)
+                yield return new object[] {i};
         }
     }
 }

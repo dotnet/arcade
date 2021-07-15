@@ -2,13 +2,14 @@ import base64
 import os
 import logging
 import time
+import json
 from typing import Iterable, Mapping, List, Dict, Optional, Tuple
 from builtins import str as text
 from azure.devops.connection import Connection
 from msrest.authentication import BasicTokenAuthentication, BasicAuthentication
 from azure.devops.v5_1.test import TestClient
 from azure.devops.v5_1.test.models import TestCaseResult, TestAttachmentRequestModel, TestSubResult
-from azure.devops.exceptions import AzureDevOpsClientRequestError
+from azure.devops.exceptions import AzureDevOpsClientRequestError, AzureDevOpsServiceError
 
 from helpers import get_env
 from defs import TestResult
@@ -83,6 +84,9 @@ class AzureDevOpsTestResultPublisher:
                                                  self.test_run_id)  # type: List[TestCaseResult]
                 succeeded = True
 
+            except AzureDevOpsServiceError as ex:
+                print(json.dumps(ex))
+                raise ex
             except AzureDevOpsClientRequestError as ex:
                 # Odd syntax here is to deal with checking substrings of the list of args in this exception
                 hit_503 = len([element for element in ex.args if ('invalid status code of 503' in element)]) != 0
