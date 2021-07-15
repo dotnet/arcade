@@ -37,11 +37,6 @@ namespace Microsoft.DotNet.SignTool
         public bool TestSign { get; set; }
 
         /// <summary>
-        /// Enable or disable telemetry
-        /// </summary>
-        public bool DisableTelemetry {get; set;}
-        
-        /// <summary>
         /// True to perform strong name check on signed files.
         /// If enabled it will require SNBinaryPath to be informed.
         /// </summary>
@@ -268,10 +263,7 @@ namespace Microsoft.DotNet.SignTool
             }
             finally
             {
-                if (!DisableTelemetry)
-                {
-                    telemetry.SendEvents();
-                }
+                telemetry.SendEvents();
             }
         }
 

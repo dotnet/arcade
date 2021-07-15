@@ -29,8 +29,6 @@
 
       <_DesktopMSBuildRequired>false</_DesktopMSBuildRequired>
       <_DesktopMSBuildRequired Condition="'$(_DryRun)' != 'true' and '$(MSBuildRuntimeType)' == 'Core'">true</_DesktopMSBuildRequired>
-      <_DisableTelemetry>false</_DisableTelemetry>
-      <_DisableTelemetry Condition="'$(DisableTelemetry)' != ''">$(DisableTelemetry)</_DisableTelemetry>
     </PropertyGroup>
 
     <Error Condition="'$(AllowEmptySignList)' != 'true' AND '@(ItemsToSign)' == ''" 
@@ -63,7 +61,6 @@
         LogDir="$(ArtifactsLogDir)"
         MSBuildPath="$(_DesktopMSBuildPath)"
         SNBinaryPath="$(NuGetPackageRoot)sn\$(SNVersion)\sn.exe"
-        MicroBuildCorePath="$(NuGetPackageRoot)microbuild.core\$(MicroBuildCoreVersion)"
-        DisableTelemetry="$(_DisableTelemetry)/>
+        MicroBuildCorePath="$(NuGetPackageRoot)microbuild.core\$(MicroBuildCoreVersion)"/>
   </Target>
 </Project>
