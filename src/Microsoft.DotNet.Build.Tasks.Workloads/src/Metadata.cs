@@ -16,6 +16,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         public const string SourcePackage = "SourcePackage";
         public const string SwixProject = "SwixProject";
         public const string Title = "Title";
+        public const string TransportPackageProject = "TransportPackageProject";
         public const string Version = "Version";
         public const string WixObj = "WixObj";
     }

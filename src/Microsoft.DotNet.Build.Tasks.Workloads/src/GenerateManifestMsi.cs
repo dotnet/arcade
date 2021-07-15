@@ -98,6 +98,15 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             set;
         }
 
+        /// <summary>
+        /// Gets or sets whether a corresponding VS redist pack project should be generated for the MSI.
+        /// </summary>
+        public bool GenerateTransportAuthoring
+        {
+            get;
+            set;
+        } = false;
+
         public override bool Execute()
         {
             try
@@ -255,6 +264,11 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                     // Generate a .csproj to build a NuGet payload package to carry the MSI and JSON manifest
                     msi.SetMetadata(Metadata.PackageProject, GeneratePackageProject(msi.ItemSpec, msiJsonPath, platform, nupkg));
 
+                    if (GenerateTransportAuthoring)
+                    {
+                        msi.SetMetadata(Metadata.TransportPackageProject, GenerateTransportPackageProject(msi.ItemSpec, msiJsonPath, platform, nupkg));
+                    }
+
                     msis.Add(msi);
                 }
 
@@ -348,6 +362,63 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             writer.Close();
 
             return msiPackageProject;
+        }
+
+        private string GenerateTransportPackageProject(string msiPath, string msiJsonPath, string platform, NugetPackage nupkg)
+        {
+            string msiTransportPackageProject = Path.Combine(MsiTransportPackageDirectory, platform, nupkg.Id, "msi-transport.csproj");
+            string msiTransportPackageProjectDir = Path.GetDirectoryName(msiTransportPackageProject);
+
+            Log?.LogMessage($"Generating package project: '{msiTransportPackageProject}'");
+
+            if (Directory.Exists(msiTransportPackageProjectDir))
+            {
+                Directory.Delete(msiTransportPackageProjectDir, recursive: true);
+            }
+
+            Directory.CreateDirectory(msiTransportPackageProjectDir);
+
+            XmlWriterSettings settings = new XmlWriterSettings
+            {
+                Indent = true,
+                IndentChars = "  ",
+            };
+
+            XmlWriter writer = XmlWriter.Create(msiTransportPackageProject, settings);
+
+            writer.WriteStartElement("Project");
+            writer.WriteAttributeString("Sdk", "Microsoft.NET.Sdk");
+
+            writer.WriteStartElement("PropertyGroup");
+            writer.WriteElementString("TargetFramework", "net5.0");
+            writer.WriteElementString("GeneratePackageOnBuild", "true");
+            writer.WriteElementString("IncludeBuildOutput", "false");
+            writer.WriteElementString("IsPackable", "true");
+            writer.WriteElementString("SuppressDependenciesWhenPacking", "true");
+            writer.WriteElementString("NoWarn", "$(NoWarn);NU5128");
+            writer.WriteElementString("PackageId", $"VS.Redist.{nupkg.Id}.Msi.{platform}");
+            writer.WriteElementString("PackageVersion", $"{nupkg.Version}");
+            writer.WriteElementString("Description", nupkg.Description);
+
+            if (!string.IsNullOrWhiteSpace(nupkg.Authors))
+            {
+                writer.WriteElementString("Authors", nupkg.Authors);
+            }
+
+            if (!string.IsNullOrWhiteSpace(nupkg.Copyright))
+            {
+                writer.WriteElementString("Copyright", nupkg.Copyright);
+            }
+
+            writer.WriteEndElement(); // PropertyGroup
+            writer.WriteStartElement("ItemGroup");
+            WriteItem(writer, "None", msiPath, @"\");
+            writer.WriteEndElement(); // ItemGroup
+            writer.WriteEndElement(); // Project
+            writer.Flush();
+            writer.Close();
+
+            return msiTransportPackageProject;
         }
 
         private void WriteItem(XmlWriter writer, string itemName, string include, string packagePath)

@@ -50,6 +50,11 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         public string MsiPackageDirectory => Path.Combine(SourceDirectory, "msiPackage");
 
         /// <summary>
+        /// Root directory for .csproj sources to build transport NuGet packages.
+        /// </summary>
+        public string MsiTransportPackageDirectory => Path.Combine(SourceDirectory, "redis");
+
+        /// <summary>
         /// The directory containing the WiX toolset binaries.
         /// </summary>
         [Required]
