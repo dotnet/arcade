@@ -1,6 +1,6 @@
 import xml.etree.ElementTree
 from .result_format import ResultFormat
-from helix.public import TestResult, TestResultAttachment
+from defs import TestResult, TestResultAttachment
 
 
 class JUnitFormat(ResultFormat):

@@ -256,11 +256,13 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                 MsiProperties msiProps = new MsiProperties
                 {
                     InstallSize = MsiUtils.GetInstallSize(msiPath),
+                    Language = Convert.ToInt32(MsiUtils.GetProperty(msiPath, "ProductLanguage")),
                     Payload = Path.GetFileName(msiPath),
                     ProductCode = MsiUtils.GetProperty(msiPath, "ProductCode"),
                     ProductVersion = MsiUtils.GetProperty(msiPath, "ProductVersion"),
                     ProviderKeyName = $"{nupkg.Id},{nupkg.Version},{platform}",
-                    UpgradeCode = MsiUtils.GetProperty(msiPath, "UpgradeCode")
+                    UpgradeCode = MsiUtils.GetProperty(msiPath, "UpgradeCode"),
+                    RelatedProducts = MsiUtils.GetRelatedProducts(msiPath)
                 };
 
                 string msiJsonPath = Path.Combine(Path.GetDirectoryName(msiPath), Path.GetFileNameWithoutExtension(msiPath) + ".json");
@@ -334,7 +336,6 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             writer.WriteElementString("PackageId", $"{nupkg.Id}.Msi.{platform}");
             writer.WriteElementString("PackageVersion", $"{nupkg.Version}");
             writer.WriteElementString("Description", nupkg.Description);
-            writer.WriteElementString("PackageIcon", "Icon.png");
 
             if (!string.IsNullOrWhiteSpace(nupkg.Authors))
             {
@@ -352,11 +353,23 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             writer.WriteStartElement("ItemGroup");
             WriteItem(writer, "None", msiPath, @"\data");
             WriteItem(writer, "None", msiJsonPath, @"\data\msi.json");
-            WriteItem(writer, "None", iconFileName, string.Empty);
             WriteItem(writer, "None", licenseFileName, @"\");
-            writer.WriteEndElement();
+            writer.WriteEndElement(); // ItemGroup
 
-            writer.WriteEndElement();
+            writer.WriteRaw(@"
+<Target Name=""AddPackageIcon""
+        BeforeTargets=""$(GenerateNuspecDependsOn)""
+        Condition=""'$(PackageIcon)' == ''"">
+  <PropertyGroup>
+    <PackageIcon>Icon.png</PackageIcon>
+  </PropertyGroup>
+  <ItemGroup Condition=""'$(IsPackable)' == 'true'"">
+    <None Include=""$(PackageIcon)"" Pack=""true"" PackagePath=""$(PackageIcon)"" Visible=""false"" />
+  </ItemGroup>
+</Target>
+");
+
+            writer.WriteEndElement(); // Project
             writer.Flush();
             writer.Close();
 
