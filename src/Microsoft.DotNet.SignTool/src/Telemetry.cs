@@ -20,25 +20,24 @@ namespace Microsoft.DotNet.SignTool
             { "BUILD_SOURCEVERSION", Environment.GetEnvironmentVariable("BUILD_SOURCEVERSION") }
         };
 
-        private static string disableTelemetry = Environment.GetEnvironmentVariable("DISABLE_TELEMETRY");
-
         public Telemetry()
         {
             _metrics = new Dictionary<string, double>();
         }
 
-        internal bool DisableTelemetry(string disableTelemetry)
+        // enable or disable telemetry
+        internal bool DisableTelemetry()
         {
             if (!bool.TryParse(Environment.GetEnvironmentVariable("DISABLE_TELEMETRY"), out bool telemetrySwitch))
             {
-                telemetrySwitch = false; // the default if the variable isn't set
+                telemetrySwitch = false;
             }
             return telemetrySwitch;
         }
 
         internal void AddMetric(string name, double value)
         {
-            if (!DisableTelemetry(disableTelemetry))
+            if (!DisableTelemetry())
             {
                 _metrics.Add(name, value);
             }
@@ -46,7 +45,7 @@ namespace Microsoft.DotNet.SignTool
 
         internal void SendEvents()
         {
-            if (!DisableTelemetry(disableTelemetry))
+            if (!DisableTelemetry())
             {
                 // set APPINSIGHTS_INSTRUMENTATIONKEY environment variable to begin tracking telemetry
                 TelemetryConfiguration configuration = TelemetryConfiguration.CreateDefault();
