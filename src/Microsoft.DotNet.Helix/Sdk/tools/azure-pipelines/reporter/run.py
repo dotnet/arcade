@@ -128,7 +128,7 @@ def main():
             format='%(asctime)s: %(levelname)s: %(thread)d: %(module)s(%(lineno)d): %(funcName)s: %(message)s',
             level=logging.INFO,
             handlers=[
-                logging.StreamHandler().
+                logging.StreamHandler()
             ]
         )
         log = logging.getLogger(__name__)
