@@ -29,7 +29,7 @@ namespace Microsoft.DotNet.SignTool
 
         internal bool DisableTelemetry(string disableTelemetry)
         {
-            if (!bool.TryParse(Environment.GetEnvironmentVariable("DISABLE_TELEMETRY"), out var telemetrySwitch))
+            if (!bool.TryParse(Environment.GetEnvironmentVariable("DISABLE_TELEMETRY"), out bool telemetrySwitch))
             {
                 telemetrySwitch = false; // the default if the variable isn't set
             }
@@ -38,7 +38,7 @@ namespace Microsoft.DotNet.SignTool
 
         internal void AddMetric(string name, double value)
         {
-            if (DisableTelemetry(disableTelemetry))
+            if (!DisableTelemetry(disableTelemetry))
             {
                 _metrics.Add(name, value);
             }
@@ -46,7 +46,7 @@ namespace Microsoft.DotNet.SignTool
 
         internal void SendEvents()
         {
-            if (DisableTelemetry(disableTelemetry))
+            if (!DisableTelemetry(disableTelemetry))
             {
                 // set APPINSIGHTS_INSTRUMENTATIONKEY environment variable to begin tracking telemetry
                 TelemetryConfiguration configuration = TelemetryConfiguration.CreateDefault();
