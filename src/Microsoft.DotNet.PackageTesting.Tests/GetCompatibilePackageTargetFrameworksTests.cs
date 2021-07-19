@@ -141,6 +141,32 @@ namespace Microsoft.DotNet.PackageTesting.Tests
             CollectionsEqual(expectedTestFrameworks, actualTestFrameworks);
         }
 
+        [Fact]
+        public void GetCompatibleFrameworksFromDependencies()
+        {
+            var dependencyFrameworks = new[]
+            {
+                FrameworkConstants.CommonFrameworks.NetCoreApp21,
+                FrameworkConstants.CommonFrameworks.NetCoreApp31,
+                FrameworkConstants.CommonFrameworks.NetStandard20,
+                FrameworkConstants.CommonFrameworks.NetStandard21,
+                NuGetFramework.Parse("net6.0"),
+            };
+            Package package = new("TestPackage", "1.0.0", Enumerable.Empty<string>(), dependencyFrameworks);
+            IEnumerable<NuGetFramework> actualTestFrameworks = GetCompatiblePackageTargetFrameworks.GetTestFrameworks(package, "netcoreapp3.1");
+
+            var expectedTestFrameworks = new[]
+            {
+                NuGetFramework.Parse("net6.0"),
+                FrameworkConstants.CommonFrameworks.NetCoreApp31,
+                FrameworkConstants.CommonFrameworks.Net461,
+                FrameworkConstants.CommonFrameworks.Net462,
+                FrameworkConstants.CommonFrameworks.NetStandard20,
+                FrameworkConstants.CommonFrameworks.NetStandard21
+            };
+            CollectionsEqual(expectedTestFrameworks, actualTestFrameworks);
+        }
+
         private static void CollectionsEqual<T>(IEnumerable<T> T1, IEnumerable<T> T2)
         {
             foreach (var item in T1)
