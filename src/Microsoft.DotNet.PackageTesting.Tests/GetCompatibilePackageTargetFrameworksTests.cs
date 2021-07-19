@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System.Collections.Generic;
+using System.Linq;
 using NuGet.Frameworks;
 using Xunit;
 
@@ -135,7 +136,7 @@ namespace Microsoft.DotNet.PackageTesting.Tests
         [MemberData(nameof(PackageTfmData))]
         public void GetCompatibleFrameworks(List<string> filePaths, List<NuGetFramework> expectedTestFrameworks)
         {
-            Package package = new("TestPackage", "1.0.0", filePaths);
+            Package package = new("TestPackage", "1.0.0", filePaths, Enumerable.Empty<NuGetFramework>());
             IEnumerable<NuGetFramework> actualTestFrameworks = GetCompatiblePackageTargetFrameworks.GetTestFrameworks(package, "netcoreapp3.1");
             CollectionsEqual(expectedTestFrameworks, actualTestFrameworks);
         }
