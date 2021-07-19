@@ -31,7 +31,7 @@ namespace Microsoft.DotNet.SignTool
         // enable or disable telemetry
         internal bool DisableTelemetry()
         {
-            if (!bool.TryParse(Environment.GetEnvironmentVariable("DISABLE_TELEMETRY"), out bool telemetrySwitch))
+            if (!bool.TryParse(Environment.GetEnvironmentVariable("SIGNTOOL_DISABLE_TELEMETRY"), out bool telemetrySwitch))
             {
                 telemetrySwitch = false;
             }
