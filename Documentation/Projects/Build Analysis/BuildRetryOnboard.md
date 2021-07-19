@@ -26,23 +26,23 @@ Ex. \eng\BuildConfiguration\build-configuration.json
 ## Build configuration file structure
 ```json 
 {
-  "RetryCountLimit":1,
-  "RetryByAnyError":false,
-  "RetryByErrors":[
-    {
-      "ErrorRegex":"Regex"
-    }
-  ],
-  "RetryByPipeline":{
-    "RetryJobs":[
+   "RetryCountLimit":1,
+   "RetryByAnyError":false,
+   "RetryByErrors":[
       {
-        "JobName":"JobName"
+         "ErrorRegex":"Regex"
       }
-    ],
-    "RetryStages":[
-      {
-        "StageName":"StageName"
-      }
+   ],
+   "RetryByPipeline":{
+      "RetryJobs":[
+         {
+            "JobName":"JobName"
+         }
+      ],
+      "RetryStages":[
+         {
+            "StageName":"StageName"
+         }
     ],
     "RetryJobsInStage":[
       {
@@ -70,8 +70,8 @@ Ex. \eng\BuildConfiguration\build-configuration.json
         "JobsNames":["JobName"],
         "ErrorRegex":"Regex"
       }
-    ]
-  }
+      ]
+   }
 }
 ```
 
@@ -189,8 +189,8 @@ For example, imagine that you have an error: "Vstest failed with error."  that m
           "StageName":"StageName",
           "JobsNames":["JobNameA", "JobNameB"],
           "ErrorRegex":"Regex"
+             }
+          ]
         }
-      ]
     }
-  }
-   ```
+	```

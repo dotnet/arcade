@@ -9,7 +9,7 @@
   <Target Name="BinPlace"
           DependsOnTargets="GetBinPlaceTargetFramework;BinPlaceFiles;BinPlaceProps"
           AfterTargets="CopyFilesToOutputDirectory"
-          Condition="'$(EnableBinPlacing)' == 'true'" />
+          Condition="'$(EnableBinPlacing)' == 'true' OR '@(BinPlaceDir)' != ''" />
 
   <Target Name="BinPlaceFiles"
           Condition="'@(BinPlaceDir)' != ''"
@@ -171,6 +171,7 @@
     <AdditionalCleanDirectories Include="@(BinPlaceTargetFrameworks->'%(PackageFileRefPath)')" />
     <AdditionalCleanDirectories Include="@(BinPlaceTargetFrameworks->'%(PackageFileRuntimePath)')" />
     <AdditionalCleanDirectories Include="@(BinPlaceTargetFrameworks->'%(TestPath)')" />
+    <AdditionalCleanDirectories Include="@(BinPlaceDir)" />
   </ItemGroup>
 
   <Target Name="_CleanGetCurrentAdditionalFileWrites" BeforeTargets="_CleanGetCurrentAndPriorFileWrites" Condition="'@(AdditionalCleanDirectories)' != ''">

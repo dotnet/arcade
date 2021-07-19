@@ -185,13 +185,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// </summary>
         public int RetryDelayMilliseconds { get; set; } = 5000;
 
-        public readonly ExponentialRetry RetryHandler = new ExponentialRetry
+        public ExponentialRetry RetryHandler = new ExponentialRetry
         {
             MaxAttempts = 5,
             DelayBase = 2.5 // 2.5 ^ 5 = ~1.5 minutes max wait between retries
         };
 
-        private enum ArtifactName
+        public enum ArtifactName
         {
             [Description("PackageArtifacts")]
             PackageArtifacts,
@@ -401,7 +401,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             Log.LogMessage(MessageImportance.High, 
                 $"Performing symbol publishing... \nExpirationInDays : {ExpirationInDays} \nConvertPortablePdbsToWindowsPdb : false \ndryRun: false ");
             var symbolCategory = TargetFeedContentType.Symbols;
-            string containerId = await GetContainerIdAsync(ArtifactName.BlobArtifacts);
+
+            using HttpClient httpClient = CreateAzdoClient(AzureDevOpsOrg, false, AzureProject);
+            string containerId = await GetContainerIdAsync(httpClient, ArtifactName.BlobArtifacts);
             
             if (Log.HasLoggedErrors)
             {
@@ -830,7 +832,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// </summary>
         /// <param name="artifactName">If it is PackageArtifacts or BlobArtifacts</param>
         /// <returns>ContainerId</returns>
-        private async Task<string> GetContainerIdAsync(ArtifactName artifactName)
+        public async Task<string> GetContainerIdAsync(HttpClient client, ArtifactName artifactName)
         {
             string uri =
                  $"{AzureDevOpsBaseUrl}/{AzureDevOpsOrg}/{AzureProject}/_apis/build/builds/{BuildId}/artifacts?api-version={AzureDevOpsFeedsApiVersion}";
@@ -843,7 +845,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     CancellationTokenSource timeoutTokenSource =
                         new CancellationTokenSource(TimeSpan.FromMinutes(TimeoutInMinutes));
 
-                    using HttpClient client = CreateAzdoClient(AzureDevOpsOrg, false, AzureProject);
                     using HttpRequestMessage getMessage = new HttpRequestMessage(HttpMethod.Get, uri);
                     using HttpResponseMessage response = await client.GetAsync(uri, timeoutTokenSource.Token);
 
@@ -892,7 +893,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// <param name="containerId">ContainerId where the packageArtifact and BlobArtifacts are stored</param>
         /// <param name="fileName">Name the file we are trying to download</param>
         /// <param name="path">Path where the file is being downloaded</param>
-        private async Task DownloadFileAsync(
+        public async Task DownloadFileAsync(
             HttpClient client,
             ArtifactName artifactName,
             string containerId,
@@ -1136,7 +1137,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             TargetFeedConfig feedConfig,
             SemaphoreSlim clientThrottle)
         {
-            string containerId = await GetContainerIdAsync(ArtifactName.PackageArtifacts);
+            using HttpClient httpClient = CreateAzdoClient(AzureDevOpsOrg, false, AzureProject);
+            string containerId = await GetContainerIdAsync(httpClient, ArtifactName.PackageArtifacts);
             
             if (Log.HasLoggedErrors)
             {
@@ -1491,7 +1493,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             TargetFeedConfig feedConfig,
             SemaphoreSlim clientThrottle)
         {
-            string containerId = await GetContainerIdAsync(ArtifactName.BlobArtifacts);
+            using HttpClient httpClient = CreateAzdoClient(AzureDevOpsOrg, false, AzureProject);
+            string containerId = await GetContainerIdAsync(httpClient, ArtifactName.BlobArtifacts);
 
             if (Log.HasLoggedErrors)
             {
@@ -1654,7 +1657,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             TargetFeedConfig feedConfig,
             SemaphoreSlim clientThrottle)
         {
-            string containerId = await GetContainerIdAsync(ArtifactName.BlobArtifacts);
+            using HttpClient httpClient = CreateAzdoClient(AzureDevOpsOrg, false, AzureProject);
+            string containerId = await GetContainerIdAsync(httpClient, ArtifactName.BlobArtifacts);
 
             if (Log.HasLoggedErrors)
             {

@@ -20,12 +20,18 @@ variables:
 resources:
   containers:
   - container: LinuxContainer
-    image: microsoft/dotnet-buildtools-prereqs:ubuntu-14.04-cross-0cd4667-20170319080304
+    image: mcr.microsoft.com/dotnet-buildtools/prereqs:ubuntu-14.04-cross-0cd4667-20170319080304
 
 stages:
 - stage: build
   displayName: Build
   jobs:
+  - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.SourceBranch'], 'refs/heads/main')) }}:
+    - template: /eng/common/templates/job/onelocbuild.yml
+      parameters:
+        MirrorRepo: arcade
+        LclSource: lclFilesFromPackage
+        LclPackageId: 'LCL-JUNO-PROD-ARCADE'
   - template: /eng/common/templates/jobs/jobs.yml
     parameters:
       artifacts:

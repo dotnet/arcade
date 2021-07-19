@@ -13,6 +13,8 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
     {
         private const string _getFilesQuery = "SELECT `File`, `Component_`, `FileName`, `FileSize`, `Version`, `Language`, `Attributes`, `Sequence` FROM `File`";
 
+        private const string _getUpgradeQuery = "SELECT `UpgradeCode`, `VersionMin`, `VersionMax`, `Language`, `Attributes` FROM `Upgrade`";
+
         public static IEnumerable<FileRow> GetAllFiles(string packagePath)
         {
             using InstallPackage ip = new(packagePath, DatabaseOpenMode.ReadOnly);
@@ -29,12 +31,40 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             return files;
         }
 
+        public static IEnumerable<RelatedProduct> GetRelatedProducts(string packagePath)
+        {
+            using InstallPackage ip = new(packagePath, DatabaseOpenMode.ReadOnly);
+            using Database db = new(packagePath, DatabaseOpenMode.ReadOnly);
+
+            if (db.Tables.Contains("Upgrade"))
+            {
+                using View upgradeView = db.OpenView(_getUpgradeQuery);
+                List<RelatedProduct> relatedProducts = new();
+                upgradeView.Execute();
+
+                foreach (Record relatedProduct in upgradeView)
+                {
+                    relatedProducts.Add(RelatedProduct.Create(relatedProduct));
+                }
+
+                return relatedProducts;
+            }
+
+            return Enumerable.Empty<RelatedProduct>();
+        }
+
+        /// <summary>
+        /// Extracts the specified property from the MSI's Property table.
+        /// </summary>
+        /// <param name="packagePath">The path to the MSI package.</param>
+        /// <param name="property">The name of the property to extract.</param>
+        /// <returns>The value of the property.</returns>
         public static string GetProperty(string packagePath, string property)
         {
             using InstallPackage ip = new(packagePath, DatabaseOpenMode.ReadOnly);
             return ip.Property[property];
-            
         }
+
         /// <summary>
         /// Calculate the number of bytes a Windows Installer Package would consume on disk. The function assumes that all files will be installed.
         /// </summary>
