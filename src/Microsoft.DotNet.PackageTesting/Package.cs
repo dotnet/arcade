@@ -11,7 +11,7 @@ namespace Microsoft.DotNet.PackageTesting
 {
     public class Package
     {
-        public Package(string packageId, string version, IEnumerable<string> packageAssetPaths)
+        public Package(string packageId, string version, IEnumerable<string> packageAssetPaths, IEnumerable<NuGetFramework> dependencyFrameworks)
         {
             PackageId = packageId;
             Version = version;
@@ -27,6 +27,7 @@ namespace Microsoft.DotNet.PackageTesting
 
             IEnumerable<ContentItem> RuntimeAssets = packageAssets.FindItems(conventions.Patterns.RuntimeAssemblies);
             FrameworksInPackageList.AddRange(RuntimeAssets.Select(t => (NuGetFramework)t.Properties["tfm"]).Distinct());
+            FrameworksInPackageList.AddRange(dependencyFrameworks);
             FrameworksInPackage = FrameworksInPackageList.Distinct();
         }
 
