@@ -36,16 +36,24 @@ git add .
 if ($LASTEXITCODE -ne 0) {
   Write-Error "Git add failed with exit code $LASTEXITCODE."
 }
-Write-Host "git -c user.email=`"dn-bot@microsoft.com`" -c user.name=`"Dotnet Bot`" commit -m `"$PushReason for $Repository/$BranchName`""
-git -c user.email="dn-bot@microsoft.com" -c user.name="Dotnet Bot" commit -m "$PushReason for $Repository/$BranchName"
+# check if there are any staged changes (0 = no changes, 1 = changes)
+Write-Host "git diff --cached --exit-code"
+git diff --cached --exit-code
+Write-Host "git diff exit code: $LASTEXITCODE"
 if ($LASTEXITCODE -ne 0) {
-  Write-Error "Git commit failed with exit code $LASTEXITCODE."
+  Write-Host "git -c user.email=`"dn-bot@microsoft.com`" -c user.name=`"Dotnet Bot`" commit -m `"$PushReason for $Repository/$BranchName`""
+  git -c user.email="dn-bot@microsoft.com" -c user.name="Dotnet Bot" commit -m "$PushReason for $Repository/$BranchName"
+  if ($LASTEXITCODE -ne 0) {
+    Write-Error "Git commit failed with exit code $LASTEXITCODE."
+  }
+  Write-Host "git push"
+  git push
+  if ($LASTEXITCODE -ne 0) {
+    Write-Error "Git push failed with exit code $LASTEXITCODE."
+  }
 }
-Write-Host "git push"
-git push
-if ($LASTEXITCODE -ne 0) {
-  Write-Error "Git push failed with exit code $LASTEXITCODE."
+else {
+  Write-Host "Skipping commit and push because there is nothing to commit"
 }
-
 # Return to the original directory
 Pop-Location
