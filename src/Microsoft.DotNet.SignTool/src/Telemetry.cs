@@ -25,8 +25,8 @@ namespace Microsoft.DotNet.SignTool
         public Telemetry()
         {
             _metrics = new Dictionary<string, double>();
-            _disableTelemetry = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SIGNTOOL_DISABLE_TELEMETRY")) 
-                                && string.Equals(Environment.GetEnvironmentVariable("SIGNTOOL_DISABLE_TELEMETRY"),"true");
+            _disableTelemetry = (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SIGNTOOL_DISABLE_TELEMETRY")) 
+                                && string.Equals(Environment.GetEnvironmentVariable("SIGNTOOL_DISABLE_TELEMETRY"),"true"));
         }
 
         internal void AddMetric(string name, double value)
