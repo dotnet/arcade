@@ -12,7 +12,7 @@ Param(
 
 $ErrorActionPreference = "Stop"
 Set-StrictMode -Version 2.0
-$LASTEXITCODE = 0
+$global:LASTEXITCODE = 0
 
 # We store config files in the r directory of .gdn
 Write-Host $ToolsList
