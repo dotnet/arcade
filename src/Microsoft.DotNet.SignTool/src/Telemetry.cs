@@ -20,22 +20,13 @@ namespace Microsoft.DotNet.SignTool
             { "BUILD_SOURCEVERSION", Environment.GetEnvironmentVariable("BUILD_SOURCEVERSION") }
         };
 
-        private static bool _disableTelemetry;
+        private readonly bool _disableTelemetry ;
 
         public Telemetry()
         {
             _metrics = new Dictionary<string, double>();
-            _disableTelemetry = DisableTelemetry();
-        }
-
-        // enable or disable telemetry
-        internal bool DisableTelemetry()
-        {
-            if (!bool.TryParse(Environment.GetEnvironmentVariable("SIGNTOOL_DISABLE_TELEMETRY"), out bool telemetrySwitch))
-            {
-                telemetrySwitch = false;
-            }
-            return telemetrySwitch;
+            _disableTelemetry = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SIGNTOOL_DISABLE_TELEMETRY")) 
+                                && string.Equals(Environment.GetEnvironmentVariable("SIGNTOOL_DISABLE_TELEMETRY"),"true");
         }
 
         internal void AddMetric(string name, double value)
