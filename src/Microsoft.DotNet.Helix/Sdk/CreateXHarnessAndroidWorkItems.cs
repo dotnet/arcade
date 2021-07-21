@@ -122,15 +122,15 @@ namespace Microsoft.DotNet.Helix.Sdk
         {
             appPackage.TryGetMetadata(MetadataNames.Arguments, out string extraArguments);
 
-            var exitCodeArg = expectedExitCode != 0 ? $" --expected-exit-code $expected_exit_code " : string.Empty;
+            var exitCodeArg = expectedExitCode != 0 ? $"--expected-exit-code $expected_exit_code" : string.Empty;
             var passthroughArgs = !string.IsNullOrEmpty(AppArguments) ? $" -- {AppArguments}" : string.Empty;
 
             var instrumentationArg = appPackage.TryGetMetadata(MetadataNames.AndroidInstrumentationName, out string androidInstrumentationName)
-                ? $"--instrumentation \"{androidInstrumentationName}\" "
+                ? $"--instrumentation \"{androidInstrumentationName}\""
                 : string.Empty;
 
             var devOutArg = appPackage.TryGetMetadata(MetadataNames.DeviceOutputPath, out string deviceOutputPath)
-                ? $"--dev-out \"{deviceOutputPath}\" "
+                ? $"--dev-out \"{deviceOutputPath}\""
                 : string.Empty;
 
             // In case user didn't specify custom commands, we use our default one
@@ -139,12 +139,8 @@ namespace Microsoft.DotNet.Helix.Sdk
                 "--output-directory \"$output_directory\" " +
                 "--timeout \"$timeout\" " +
                 "--package-name \"$package_name\" " +
-                " -v "
-                + devOutArg
-                + instrumentationArg
-                + exitCodeArg
-                + extraArguments
-                + passthroughArgs;
+                " -v " +
+                $"{ devOutArg } { instrumentationArg } { exitCodeArg } { extraArguments } { passthroughArgs }";
         }
 
         private string GetHelixCommand(ITaskItem appPackage, string apkPath, string androidPackageName, TimeSpan xHarnessTimeout, int expectedExitCode)
