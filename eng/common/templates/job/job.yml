@@ -196,7 +196,7 @@ jobs:
     - task: PublishBuildArtifacts@1
       displayName: Publish Logs
       inputs:
-        PathtoPublish: '$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)'
+        PathtoPublish: '$(Build.SourcesDirectory)/artifacts/log'
         PublishLocation: Container
         ArtifactName: ${{ coalesce(parameters.enablePublishBuildArtifacts.artifactName, '$(Agent.Os)_$(Agent.JobName)' ) }}
       continueOnError: true
