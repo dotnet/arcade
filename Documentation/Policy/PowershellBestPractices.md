@@ -101,7 +101,7 @@ if ($LASTEXITCODE -ne 0) {
 }
 ```
 
-*There is a known issue when using `$LASTEXITCODE` in release builds where PowerShell will report that the variable has not been set. As a workaround, simply set `$LASTEXITCODE = 0` at the top of your script.*
+*There is a known issue when using `$LASTEXITCODE` in release builds where PowerShell will report that the variable has not been set. As a workaround, simply set `$global:LASTEXITCODE = 0` at the top of your script.*
 
 ## Set StrictMode and ErrorActionPreference at the top of every file
 
