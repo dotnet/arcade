@@ -37,6 +37,8 @@ if ($LASTEXITCODE -ne 0) {
   Write-Error "Git add failed with exit code $LASTEXITCODE."
 }
 # check if there are any staged changes (0 = no changes, 1 = changes)
+# if we don't do this and there's nothing to commit `git commit` will return
+# exit code 1 and we will fail
 Write-Host "git diff --cached --exit-code"
 git diff --cached --exit-code
 Write-Host "git diff exit code: $LASTEXITCODE"
