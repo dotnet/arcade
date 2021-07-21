@@ -39,6 +39,7 @@ $exit_code=$LASTEXITCODE
 
 # ADB_DEVICE_ENUMERATION_FAILURE
 if ($exit_code -eq 85) {
+    $ErrorActionPreference="Continue"
     Write-Error "Encountered ADB_DEVICE_ENUMERATION_FAILURE.  This is typically not a failure of the work item.  We will run it again and reboot this computer to help its devices"
     Write-Error "If this occurs repeatedly, please check for architectural mismatch, e.g. sending x86 or x86_64 APKs to an arm64_v8a-only queue."
     & "$Env:HELIX_PYTHONPATH" -c "from helix.workitemutil import request_infra_retry; request_infra_retry('Retrying because we could not enumerate all Android devices')"
