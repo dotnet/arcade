@@ -147,9 +147,9 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                     productName = nupkg.Id;
                 }
 
-                
 
-                
+
+
 
                 // Extract once, but harvest multiple times because some generated attributes are platform dependent. 
                 string packageContentsDirectory = Path.Combine(PackageDirectory, $"{nupkg.Identity}");
