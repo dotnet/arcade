@@ -39,7 +39,6 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         /// <summary>
         /// The ID of the workload manifest.
         /// </summary>
-        [Required]
         public string ManifestId
         {
             get;
@@ -74,7 +73,6 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         /// <summary>
         /// The SDK version, e.g. 6.0.107.
         /// </summary>
-        [Required]
         public string SdkVersion
         {
             get;
@@ -111,10 +109,34 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         {
             try
             {
-                Log.LogMessage($"Generating workload manifest installer for {SdkFeatureBandVersion}");
-
                 NugetPackage nupkg = new(WorkloadManifestPackage, Log);
                 List<TaskItem> msis = new();
+
+                var manifestSeparator = ".Manifest-";
+                if (string.IsNullOrWhiteSpace(ManifestId))
+                {
+                    if ($"{nupkg.Id}".IndexOf(manifestSeparator, StringComparison.OrdinalIgnoreCase) == -1)
+                    {
+                        Log.LogError($"Unable to parse a manifest ID from package ID: '{nupkg.Id}'. Please provide the 'ManifestId' parameter.");
+                    }
+                    else
+                    {
+                        ManifestId = $"{nupkg.Id}".Substring(0, $"{nupkg.Id}".IndexOf(manifestSeparator));
+                    }
+                }
+                if (string.IsNullOrWhiteSpace(SdkVersion))
+                {
+                    if ($"{nupkg.Id}".IndexOf(manifestSeparator, StringComparison.OrdinalIgnoreCase) == -1)
+                    {
+                        Log.LogError($"Unable to parse the SDK version from package ID: '{nupkg.Id}'. Please provide the 'SdkVersion' parameter.");
+                    }
+                    else
+                    {
+                        SdkVersion = $"{nupkg.Id}".Substring($"{nupkg.Id}".IndexOf(manifestSeparator) + manifestSeparator.Length);
+                    }
+                }
+
+                Log.LogMessage(MessageImportance.High, $"Generating workload manifest installer for {SdkFeatureBandVersion}");
 
                 // MSI ProductName defaults to the package title and fallback to the package ID with a warning.
                 string productName = nupkg.Title;
@@ -124,6 +146,10 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                     Log?.LogMessage(MessageImportance.High, $"'{WorkloadManifestPackage}' should have a non-empty title. The MSI ProductName will be set to the package ID instead.");
                     productName = nupkg.Id;
                 }
+
+                
+
+                
 
                 // Extract once, but harvest multiple times because some generated attributes are platform dependent. 
                 string packageContentsDirectory = Path.Combine(PackageDirectory, $"{nupkg.Identity}");
@@ -289,7 +315,6 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
 
             return !Log.HasLoggedErrors;
         }
-
 
         private string GeneratePackageProject(string msiPath, string msiJsonPath, string platform, NugetPackage nupkg)
         {
