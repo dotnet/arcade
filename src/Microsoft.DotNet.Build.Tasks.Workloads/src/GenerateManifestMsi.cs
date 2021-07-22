@@ -18,6 +18,15 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         private Version _sdkFeaureBandVersion;
 
         /// <summary>
+        /// Gets or sets whether a corresponding SWIX project should be generated for the MSI.
+        /// </summary>
+        public bool GenerateSwixAuthoring
+        {
+            get;
+            set;
+        } = true;
+
+        /// <summary>
         /// The path where the generated MSIs will be placed.
         /// </summary>
         [Required]
@@ -252,6 +261,19 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                     msi.SetMetadata(Metadata.JsonProperties, msiJsonPath);
                     msi.SetMetadata(Metadata.WixObj, candleIntermediateOutputPath);
 
+                    if (GenerateSwixAuthoring && IsSupportedByVisualStudio(platform))
+                    {
+                        string swixPackageId = $"{nupkg.Id}";
+
+                        string swixProject = GenerateSwixPackageAuthoring(light.OutputFile,
+                            swixPackageId, platform);
+
+                        if (!string.IsNullOrWhiteSpace(swixProject))
+                        {
+                            msi.SetMetadata(Metadata.SwixProject, swixProject);
+                        }
+                    }
+
                     // Generate a .csproj to build a NuGet payload package to carry the MSI and JSON manifest
                     msi.SetMetadata(Metadata.PackageProject, GeneratePackageProject(msi.ItemSpec, msiJsonPath, platform, nupkg));
 
@@ -357,6 +379,25 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             writer.WriteAttributeString("Pack", "true");
             writer.WriteAttributeString("PackagePath", packagePath);
             writer.WriteEndElement();
+        }
+
+        private string GenerateSwixPackageAuthoring(string msiPath, string packageId, string platform)
+        {
+            GenerateVisualStudioMsiPackageProject swixTask = new()
+            {
+                Chip = platform,
+                IntermediateBaseOutputPath = this.IntermediateBaseOutputPath,
+                PackageName = packageId,
+                MsiPath = msiPath,
+                BuildEngine = this.BuildEngine,
+            };
+
+            if (!swixTask.Execute())
+            {
+                Log.LogError($"Failed to generate SWIX authoring for '{msiPath}'");
+            }
+
+            return swixTask.SwixProject;
         }
     }
 }
