@@ -51,7 +51,7 @@ Validate-DotNet runs each day at 4pm pacific time. Each run is tagged with the r
 
 ### Automatic Notifications
 
-Notifcations use build monitor to automatically monitor builds of Validate-DotNet for a particular repository and open issues when failures occur. If an issue is already open for Validate-DotNet failures in your repo, it will append a new comment.
+Notifcations use [Build Monitor](https://github.com/dotnet/core-eng/blob/main/Documentation/BuildFailureManagement.md) to automatically monitor builds of Validate-DotNet for a particular repository and open issues when failures occur. If an issue is already open for Validate-DotNet failures in your repo, it will append a new comment.
 
 To onboard, you will need to update both the `Builds` array and the `Issues` array in the [settings.json](https://github.com/dotnet/arcade-services/blob/main/src/DotNet.Status.Web/.config/settings.json#L23).
 
@@ -102,3 +102,9 @@ For example, for runtime, we would do:
     "UpdateExisting": true
 }
 ```
+
+## What do I do if an issue is opened in my repo
+
+Validation failures come in many forms. Most will be actual problems found with the assets in a drop for your repo. These are the responsibility of the product teams to fix. Any failures in the `Required Validation` stage should be fixed as soon as possible, as they are possible release blockers.
+
+Some failures may be issues with infrastructure. If you believe this is a case, please reach out to First Responders, and someone will help diagnose and fix the issue found.
