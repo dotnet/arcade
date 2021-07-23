@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -24,6 +23,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             public const string LaunchTimeout = "LaunchTimeout";
             public const string IncludesTestRunner = "IncludesTestRunner";
             public const string ResetSimulator = "ResetSimulator";
+            public const string AppBundlePath = "AppBundlePath";
         }
 
         private const string EntryPointScript = "xharness-helix-job.apple.sh";
@@ -91,9 +91,28 @@ namespace Microsoft.DotNet.Helix.Sdk
             IFileSystem fileSystem,
             ITaskItem appBundleItem)
         {
-            string appFolderPath = appBundleItem.ItemSpec.TrimEnd(Path.DirectorySeparatorChar);
+            // The user can re-use the same .apk for 2 work items so the name of the work item will come from ItemSpec and path from metadata
+            string workItemName;
+            string appFolderPath;
+            if (appBundleItem.TryGetMetadata(MetadataNames.AppBundlePath, out string appPathMetadata) && !string.IsNullOrEmpty(appPathMetadata))
+            {
+                workItemName = appBundleItem.ItemSpec;
+                appFolderPath = appPathMetadata;
+            }
+            else
+            {
+                workItemName = fileSystem.GetFileName(appBundleItem.ItemSpec);
+                appFolderPath = appBundleItem.ItemSpec;
+            }
 
-            string workItemName = fileSystem.GetFileName(appFolderPath);
+            appFolderPath = appFolderPath.TrimEnd(Path.DirectorySeparatorChar);
+
+            if (!fileSystem.DirectoryExists(appFolderPath))
+            {
+                Log.LogError($"App bundle not found in {appFolderPath}");
+                return null;
+            }
+
             if (workItemName.EndsWith(".app"))
             {
                 workItemName = workItemName.Substring(0, workItemName.Length - 4);
@@ -147,36 +166,33 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             if (customCommands == null)
             {
-                // In case user didn't specify custom commands, we use our default one
-                customCommands = $"xharness apple {(includesTestRunner ? "test" : "run")} " +
-                    "--app \"$app\" " +
-                    "--output-directory \"$output_directory\" " +
-                    "--target \"$target\" " +
-                    "--timeout \"$timeout\" " +
-                    (includesTestRunner
-                        ? $"--launch-timeout \"$launch_timeout\" "
-                        : $"--expected-exit-code $expected_exit_code ") +
-                    (resetSimulator ? $"--reset-simulator " : string.Empty) +
-                    (target.Contains("device") ? $"--signal-app-end " : string.Empty) + // iOS/tvOS 14+ workaround
-                    "--xcode \"$xcode_path\" " +
-                    "-v " +
-                    (!string.IsNullOrEmpty(AppArguments) ? "-- " + AppArguments : string.Empty);
+                // When no user commands are specified, we add the default `apple test ...` command
+                customCommands = GetDefaultCommand(target, includesTestRunner, resetSimulator);
             }
 
-            string appName = fileSystem.GetFileName(appBundleItem.ItemSpec);
+            string appName = fileSystem.GetFileName(appFolderPath);
             string helixCommand = GetHelixCommand(appName, target, testTimeout, launchTimeout, includesTestRunner, expectedExitCode, resetSimulator);
-            string payloadArchivePath = await CreateZipArchiveOfFolder(zipArchiveManager, fileSystem, appFolderPath, customCommands);
+            string payloadArchivePath = await CreateZipArchiveOfFolder(zipArchiveManager, fileSystem, workItemName, appFolderPath, customCommands);
 
             Log.LogMessage($"Creating work item with properties Identity: {workItemName}, Payload: {appFolderPath}, Command: {helixCommand}");
 
-            return new Build.Utilities.TaskItem(workItemName, new Dictionary<string, string>()
-            {
-                { "Identity", workItemName },
-                { "PayloadArchive", payloadArchivePath },
-                { "Command", helixCommand },
-                { "Timeout", workItemTimeout.ToString() },
-            });
+            return CreateTaskItem(workItemName, payloadArchivePath, helixCommand, workItemTimeout);
         }
+
+        private string GetDefaultCommand(string target, bool includesTestRunner, bool resetSimulator) =>
+            $"xharness apple {(includesTestRunner ? "test" : "run")} " +
+            "--app \"$app\" " +
+            "--output-directory \"$output_directory\" " +
+            "--target \"$target\" " +
+            "--timeout \"$timeout\" " +
+            "--xcode \"$xcode_path\" " +
+            "-v " +
+            (includesTestRunner
+                ? $"--launch-timeout \"$launch_timeout\" "
+                : $"--expected-exit-code $expected_exit_code ") +
+            (resetSimulator ? $"--reset-simulator " : string.Empty) +
+            (target.Contains("device") ? $"--signal-app-end " : string.Empty) + // iOS/tvOS 14+ workaround
+            (!string.IsNullOrEmpty(AppArguments) ? "-- " + AppArguments : string.Empty);
 
         private string GetHelixCommand(
             string appName,
@@ -201,6 +217,7 @@ namespace Microsoft.DotNet.Helix.Sdk
         private async Task<string> CreateZipArchiveOfFolder(
             IZipArchiveManager zipArchiveManager,
             IFileSystem fileSystem,
+            string workItemName,
             string folderToZip,
             string injectedCommands)
         {
@@ -211,7 +228,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             }
 
             string appFolderDirectory = fileSystem.GetDirectoryName(folderToZip);
-            string fileName = $"xharness-app-payload-{fileSystem.GetFileName(folderToZip).ToLowerInvariant()}.zip";
+            string fileName = $"xharness-app-payload-{workItemName.ToLowerInvariant()}.zip";
             string outputZipPath = fileSystem.PathCombine(appFolderDirectory, fileName);
 
             if (fileSystem.FileExists(outputZipPath))

@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System.Linq;
+using NuGet.Frameworks;
 using NuGet.Packaging;
 
 namespace Microsoft.DotNet.PackageTesting
@@ -16,7 +17,9 @@ namespace Microsoft.DotNet.PackageTesting
             string packageId = nuspecReader.GetId();
             string version = nuspecReader.GetVersion().ToString();
 
-            return new Package(packageId, version, nupkgReader.GetFiles()?.Where(t => t.EndsWith(packageId + ".dll")));
+            NuGetFramework[] dependencyFrameworks = nuspecReader.GetDependencyGroups().Select(dg => dg.TargetFramework).Where(tfm => tfm != null).ToArray();
+
+            return new Package(packageId, version, nupkgReader.GetFiles()?.Where(t => t.EndsWith(packageId + ".dll")), dependencyFrameworks);
         }
     }
 }
