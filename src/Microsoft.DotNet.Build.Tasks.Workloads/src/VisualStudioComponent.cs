@@ -243,7 +243,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             IEnumerable<string> missingPackIds = missingPacks.Select(p => p.ItemSpec);
             log?.LogMessage(MessageImportance.Low, $"Missing packs: {string.Join(", ", missingPackIds)}");
 
-            // If the work extends other workloads, we add those as component dependencies before
+            // If the workload extends other workloads, we add those as component dependencies before
             // processing direct pack dependencies
             if (workload.Extends?.Count() > 0)
             {
@@ -263,7 +263,15 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                 foreach (WorkloadPackId packId in packIds)
                 {
                     log?.LogMessage(MessageImportance.Low, $"Adding component dependency for {packId} ");
-                    component.AddDependency(manifest.Packs[packId]);
+
+                    if (manifest.Packs.ContainsKey(packId))
+                    {
+                        component.AddDependency(manifest.Packs[packId]);
+                    }
+                    else
+                    {
+                        log?.LogMessage(MessageImportance.High, $"Missing Visual Studio component dependency, packId: {packId}.");
+                    }
                 }
             }
 
