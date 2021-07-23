@@ -912,7 +912,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         new CancellationTokenSource(TimeSpan.FromMinutes(TimeoutInMinutes));
 
                     using HttpRequestMessage getMessage = new HttpRequestMessage(HttpMethod.Get, uri);
-                    using HttpResponseMessage response = await client.GetAsync(uri, timeoutTokenSource.Token);
+                    using HttpResponseMessage response = await client.GetAsync(uri, HttpCompletionOption.ResponseHeadersRead, timeoutTokenSource.Token);
 
                     response.EnsureSuccessStatusCode();
 
