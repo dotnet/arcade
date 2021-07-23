@@ -14,7 +14,6 @@
     <DotNetCliPackageType>sdk</DotNetCliPackageType>
 
     <TestRunNamePrefix>$(AGENT_JOBNAME)</TestRunNamePrefix>
-	<HelixBaseUri>https://helix.int-dot.net</HelixBaseUri>
   </PropertyGroup>
 
   <ItemGroup>
@@ -59,6 +58,9 @@
   </ItemGroup>
 
   <ItemGroup Condition=" '$(HelixAccessToken)' != '' ">
+    <HelixTargetQueue Include="Debian.9.Amd64"/>
+    <HelixTargetQueue Include="RedHat.7.Amd64"/>
+    <HelixTargetQueue Include="Windows.10.Amd64"/>
   </ItemGroup>
 
   <PropertyGroup Condition=" '$(HelixAccessToken)' == '' ">
@@ -68,7 +70,9 @@
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(HelixAccessToken)' == '' ">
-    <HelixTargetQueue Include="pr-sles.12.amd64-fix-reporting-cases"/>
+    <HelixTargetQueue Include="Debian.9.Amd64.Open"/>
+    <HelixTargetQueue Include="RedHat.7.Amd64.Open"/>
+    <HelixTargetQueue Include="Windows.10.Amd64.Open"/>
   </ItemGroup>
 
   <PropertyGroup Condition="!$(HelixTargetQueue.StartsWith('Windows'))">
