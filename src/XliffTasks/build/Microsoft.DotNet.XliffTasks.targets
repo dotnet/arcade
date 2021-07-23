@@ -6,7 +6,7 @@
   <PropertyGroup>
     <XliffTasksDirectory Condition="'$(MSBuildRuntimeType)' == 'Core'">$(MSBuildThisFileDirectory)..\tools\netcoreapp2.1\</XliffTasksDirectory>
     <XliffTasksDirectory Condition="'$(MSBuildRuntimeType)' != 'Core'">$(MSBuildThisFileDirectory)..\tools\net46\</XliffTasksDirectory>
-    <XliffTasksAssembly>$(XliffTasksDirectory)Microsoft.XliffTasks.dll</XliffTasksAssembly>
+    <XliffTasksAssembly>$(XliffTasksDirectory)Microsoft.DotNet.XliffTasks.dll</XliffTasksAssembly>
   </PropertyGroup>
 
   <UsingTask TaskName="GatherXlf" AssemblyFile="$(XliffTasksAssembly)" />

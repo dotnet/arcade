@@ -7,6 +7,6 @@
     <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
   </PropertyGroup>
 
-  <Import Project="$(MSBuildThisFileDirectory)..\build\Microsoft.XliffTasks.props" />
+  <Import Project="$(MSBuildThisFileDirectory)..\build\Microsoft.DotNet.XliffTasks.props" />
 
 </Project>
