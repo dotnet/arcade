@@ -9,13 +9,13 @@ Validating builds is an important part of producing a releasable product. There 
 
 While many of these validation steps can be performed in official builds, the supported model is to onboard to the nightly Validation pipeline.
 
-## How do we Validate DotNet (and the product repos)?
+## How do we validate dotnet?
 
 Pre-.NET 5, validation for the the core dotnet repositories were done during the official builds. For .NET 5, all post-build validation and source code validation was moved out of the official build and into a separate nightly pipeline, [Validate-DotNet](https://dev.azure.com/dnceng/internal/_build?definitionId=827). This pipeline runs all the same validation that is performed on the full product when we go to release, and is a smoke test for product teams, so that product teams can address any issues well before release day.
 
-Validate-DotNet is controlled by a separate scheduling pipeline, which looks for the newest build for each repository that has been on-boarded on every channel that those repositories publish to. If no build is found from the previous 24 hours, no validation run will be started for that channel/repo combination. For any respository that has published a new build to the BAR database for a given channel, a new Validate-DotNet run will be created.
+Validate-DotNet is controlled by a separate scheduling pipeline, which, once a day, looks for the newest build for each repository that has been onboarded on every channel that those repositories publish to. If no build is found from the previous 24 hours, no validation run will be started for that channel/repo combination. For any respository that has published a new build to the BAR database for a given channel, a new Validate-DotNet run will be created.
 
-Validate-DotNet uses the information in the BAR database, and in particular, the `gather-drop` command to pull down all of the assets that were created in a particular build (but no downstream assets). The pipeline will then sign the build before running the various validation checks on that build. Validation includes:
+Validate-DotNet uses the information in the BAR database, and in particular, the `gather-drop` command to pull down all of the assets that were created in a particular build (but no downstream assets). The pipeline will then sign the build before running the various validation checks on that build, including:
 
 * Signing Validation
 * SDL Validation (which will open TSA issues for any failures found)
@@ -28,11 +28,11 @@ Validate-DotNet uses the information in the BAR database, and in particular, the
 
 Please note, we are always adding new validation to the pipeline, so this is not an exhaustive list.
 
-## Why move validation out of official builds
+## Why move validation out of official builds?
 
 As a part of .NET 5, we had a goal of 2 hour build turn-around. In order to close in on that goal, we removed many things out of official builds including post-build validation.
 
-## Onboarding to Validate-DotNet
+## How do I onboard to Validate-DotNet?
 
 [Validate-DotNet](https://dev.azure.com/dnceng/internal/_build?definitionId=827) is a pipeline that automatically runs nightly validation for all repositories that have been onboarding. Onboarding to Validate-DotNet is quite simple:
 
@@ -45,7 +45,7 @@ Once the first step is complete, your repository will start validating on a nigh
 
 There are two main ways of checking your validation results: manual, and using automatic notifactions.
 
-### Manual looking at the pipeline
+### Manually looking at the pipeline
 
 Validate-DotNet runs each day at 4pm pacific time. Each run is tagged with the repo name and the channel of the given run (to distinguish between the various versions). To look at the runs for only your repository, you can use the following url, with your repository name in place of `<repo>` `https://dev.azure.com/dnceng/internal/_build?definitionId=827&tagFilter=<repo>`. For example, if you wanted to look at results for runtime, you would navigate to `https://dev.azure.com/dnceng/internal/_build?definitionId=827&tagFilter=runtime`.
 
@@ -103,8 +103,19 @@ For example, for runtime, we would do:
 }
 ```
 
-## What do I do if an issue is opened in my repo
+### What do I do if an issue is opened in my repo?
 
 Validation failures come in many forms. Most will be actual problems found with the assets in a drop for your repo. These are the responsibility of the product teams to fix. Any failures in the `Required Validation` stage should be fixed as soon as possible, as they are possible release blockers.
 
 Some failures may be issues with infrastructure. If you believe this is a case, please reach out to First Responders, and someone will help diagnose and fix the issue found.
+
+Errors we commonly see in validation jobs include:
+
+* Signing Validation
+  * Files that are not intended to be signed are not listed in the `eng/SignCheckExclusionsFile.txt` for that repo, so validation complains that the files are not signed. Mitigation: add that file type to the `eng/SignCheckExclusionsFile.txt` in your repo.
+* SDL Validation (which will open TSA issues for any failures found)
+  * Any pipeline failures in these legs should be reported to dnceng@microsoft.com, as it suggests an infrastructure failure. SDL failures should automatically create TSA issues, which you should address as appropriate.
+* Localization Validation
+  * Localizaion is done closer to release time. Localization failures suggest that either the localization hasn't finished translations, or the translation PR hasn't been checked in to your repository and should be. The closer to release we get, the more important fixing these failures becomes.
+* Nuget Metadata Validation
+  * Metadata is missing. These need to be fixed in repo, and are shipping blockers.
