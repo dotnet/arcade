@@ -34,6 +34,14 @@ Right now, there are two pools (Prod and staging) for our internal project and t
 | Public | Prod | NetCorePublic-Pool | NetCore1ES-Xaml-Public-Pool | DEP-UXP-WinUI-Helix |
 | Public | Prod | NetCorePublic-Pool | NetCore1ES-Svc-Public-Pool | dncenghelix-02 |
 
+## 1ES Managed images
+
+1ES Managed images are stored in the resource group [1ESManagedImages](https://ms.portal.azure.com/#@microsoft.onmicrosoft.com/resource/subscriptions/84a65c9a-787d-45da-b10a-3a1cefce8060/resourcegroups/1ESManagedImages/overview) in **dnceng-internaltooling** subscription
+
+Each Managed image points to an Azure image in the Shared Gallery ([HelixImages](https://ms.portal.azure.com/#@microsoft.onmicrosoft.com/resource/subscriptions/84a65c9a-787d-45da-b10a-3a1cefce8060/resourceGroups/HelixImages/providers/Microsoft.Compute/galleries/HelixImages/overview)) where we store the images we build in **CreateCustomImage.exe** this includes Prod and Staging images.
+
+1ES Managed images used in prod are tagged the same way Azure images are, the tag is **IsProductionImage** and its value is **true**. The tagging happens during the deployment of the pools in **DeployHostedPools.exe**. We will keep the lasted 3 prod images the same way we do for Azure images, the clean up will happen in CleanPRs.exe
+
 ## Customer impact
 
 All customers must change their yaml files to start using 1ES Host pools. Proper documentation will be shared through our Partners DL.
