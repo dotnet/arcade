@@ -147,10 +147,6 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                     productName = nupkg.Id;
                 }
 
-
-
-
-
                 // Extract once, but harvest multiple times because some generated attributes are platform dependent. 
                 string packageContentsDirectory = Path.Combine(PackageDirectory, $"{nupkg.Identity}");
                 nupkg.Extract(packageContentsDirectory, Enumerable.Empty<string>());
@@ -192,6 +188,8 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                     var productCode = Guid.NewGuid();
                     Log.LogMessage($"UC: {upgradeCode}, PC: {productCode}, {SdkFeatureBandVersion}, {SdkVersion}, {platform}");
 
+                    string providerKeyName = $"{ManifestId},{SdkFeatureBandVersion},{platform}";
+
                     // Compile the MSI sources
                     string candleIntermediateOutputPath = Path.Combine(IntermediateBaseOutputPath, "wixobj",
                         $"{nupkg.Id}", $"{nupkg.Version}", platform);
@@ -219,7 +217,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                     candle.PreprocessorDefinitions.Add($@"ProductCode={productCode}");
                     candle.PreprocessorDefinitions.Add($@"UpgradeCode={upgradeCode}");
                     // Override the default provider key
-                    candle.PreprocessorDefinitions.Add($@"DependencyProviderKeyName={ManifestId},{SdkFeatureBandVersion},{platform}");
+                    candle.PreprocessorDefinitions.Add($@"DependencyProviderKeyName={providerKeyName}");
                     candle.PreprocessorDefinitions.Add($@"ProductName={productName}");
                     candle.PreprocessorDefinitions.Add($@"Platform={platform}");
                     candle.PreprocessorDefinitions.Add($@"SourceDir={packageContentsDataDirectory}");
@@ -273,7 +271,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                         Payload = Path.GetFileName(msiPath),
                         ProductCode = MsiUtils.GetProperty(msiPath, "ProductCode"),
                         ProductVersion = MsiUtils.GetProperty(msiPath, "ProductVersion"),
-                        ProviderKeyName = $"{nupkg.Id},{nupkg.Version},{platform}",
+                        ProviderKeyName = $"{providerKeyName}",
                         UpgradeCode = MsiUtils.GetProperty(msiPath, "UpgradeCode"),
                         RelatedProducts = MsiUtils.GetRelatedProducts(msiPath)
                     };
