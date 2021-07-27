@@ -2,16 +2,21 @@
 
 Validating builds is an important part of producing a releasable product. There are several levels of validation that are performed on product builds at various phases of the process:
 
-* Repo level functionality testing: this is controlled by the product teams and defined in the repositories, and is performed during PR and CI builds.
-* Source code validtion: this includes SDL testing, as well as localization testing, and occurs either in the official build or in the post-build nightly Validation pipeline.
-* Signing validation: validates that binaries have been signed and is performed post-build, post-signing, in the Validation pipeline.
-* Package validation: includes sourcelink validation, symbols validation, nupkg metadata validation, and can be performed either in the official build or as part of the nightly Validation pipeline
+* CI/PR build time
+  * Repository-level functional testing. Owned by the product teams and defined in the repositories, and used to identify bugs
+* Official build time (optionally)
+  * Source code validation: this includes SDL testing, as well as localization testing. Used to confirm that source code meets Microsoft's standards.
+  * Package validation: includes sourcelink validation, symbols validation, nupkg metadata validation. Used to confirm that customers will be able to install and debug packages from .NET.
+* Nightly validation pipeline (optionally)
+  * Source code validation: this includes SDL testing, as well as localization testing. Used to confirm that source code meets Microsoft's standards.
+  * Package validation: includes sourcelink validation, symbols validation, nupkg metadata validation. Used to confirm that customers will be able to install and debug packages from .NET.
+  * Signing validation: Used to validate that all bits that we ship have been signed properly.
 
-While many of these validation steps can be performed in official builds, the supported model is to onboard to the nightly Validation pipeline.
+While many of these validation steps can be performed in official builds, the supported model is to onboard to the nightly validation pipeline. All of these steps will be performed as part of shipping the product, and all product teams have the option of running these exact validation steps at a nightly cadence.
 
-## How do we validate dotnet?
+## How do we validate .NET?
 
-Pre-.NET 5, validation for the the core dotnet repositories were done during the official builds. For .NET 5, all post-build validation and source code validation was moved out of the official build and into a separate nightly pipeline, [Validate-DotNet](https://dev.azure.com/dnceng/internal/_build?definitionId=827). This pipeline runs all the same validation that is performed on the full product when we go to release, and is a smoke test for product teams, so that product teams can address any issues well before release day.
+Pre-.NET 5, validation for the core .NET repositories were done during the official builds. For .NET 5, all post-build validation and source code validation was moved out of the official build and into a separate nightly pipeline, [Validate-DotNet](https://dev.azure.com/dnceng/internal/_build?definitionId=827). This pipeline runs all the same validation that is performed on the full product when we go to release, and is a smoke test for product teams, so that they can address any issues well before release day.
 
 Validate-DotNet is controlled by a separate scheduling pipeline, which, once a day, looks for the newest build for each repository that has been onboarded on every channel that those repositories publish to. If no build is found from the previous 24 hours, no validation run will be started for that channel/repo combination. For any respository that has published a new build to the BAR database for a given channel, a new Validate-DotNet run will be created.
 
