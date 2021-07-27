@@ -35,7 +35,7 @@
     <MicrosoftExtensionsLoggingConsoleVersion>2.1.1</MicrosoftExtensionsLoggingConsoleVersion>
     <MicrosoftNETCorePlatformsVersion>2.1.0</MicrosoftNETCorePlatformsVersion>
     <MicrosoftNetCompilersToolsetVersion>3.10.0-4.21329.37</MicrosoftNetCompilersToolsetVersion>
-    <MicrosoftNETILLinkTasksVersion>6.0.100-preview.6.21370.1</MicrosoftNETILLinkTasksVersion>
+    <MicrosoftNETILLinkTasksVersion>6.0.100-preview.6.21376.2</MicrosoftNETILLinkTasksVersion>
     <MicrosoftNetTestSdkVersion>16.7.1</MicrosoftNetTestSdkVersion>
     <MoqVersion>4.8.3</MoqVersion>
     <MonoOptionsVersion>5.3.0.1</MonoOptionsVersion>
