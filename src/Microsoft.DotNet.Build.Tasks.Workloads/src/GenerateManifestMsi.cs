@@ -188,7 +188,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
 
                     // To support upgrades, the UpgradeCode must be stable withing a feature band.
                     // For example, 6.0.101 and 6.0.108 will generate the same GUID for the same platform.
-                    var upgradeCode = Utils.CreateUuid(GenerateMsiBase.UpgradeCodeNamespaceUuid, $"{SdkFeatureBandVersion};{platform}");
+                    var upgradeCode = Utils.CreateUuid(GenerateMsiBase.UpgradeCodeNamespaceUuid, $"{ManifestId};{SdkFeatureBandVersion};{platform}");
                     var productCode = Guid.NewGuid();
                     Log.LogMessage($"UC: {upgradeCode}, PC: {productCode}, {SdkFeatureBandVersion}, {SdkVersion}, {platform}");
 
