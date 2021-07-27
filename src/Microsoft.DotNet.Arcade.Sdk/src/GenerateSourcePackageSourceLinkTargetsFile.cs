@@ -89,7 +89,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
             }
 
             var relativePathToSourceRoot = projectDir.Substring(innerMostRootItemSpec.Length);
-            var contentFilesSourceLinkUrl = innerMostRootSourceLinkUrl.Replace("*", Uri.EscapeUriString(relativePathToSourceRoot.Replace('\\', '/')) + "*");
+            var contentFilesSourceLinkUrl = innerMostRootSourceLinkUrl.Replace("*", Uri.EscapeDataString(relativePathToSourceRoot.Replace('\\', '/')) + "*");
             return GetTargetsFileContent(PackageId, contentFilesSourceLinkUrl);
         }
 
