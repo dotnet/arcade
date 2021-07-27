@@ -31,7 +31,7 @@
       Projects="@(ProjectReference)"
       Targets="SourceFilesProjectOutputGroup"
       Properties="%(ProjectReference.SetTargetFramework)"
-      Condition="'%(ProjectReference.Targets)' == 'GetCompile' and ('$(BuildingInsideVisualStudio)' == 'true' or '$(BuildProjectReferences)' != 'true')">
+      Condition="'%(ProjectReference.Targets)' == 'SourceFilesProjectOutputGroup' and ('$(BuildingInsideVisualStudio)' == 'true' or '$(BuildProjectReferences)' != 'true')">
       <Output TaskParameter="TargetOutputs" ItemName="_contractSourceFilesGroup" />
     </MSBuild>
 
