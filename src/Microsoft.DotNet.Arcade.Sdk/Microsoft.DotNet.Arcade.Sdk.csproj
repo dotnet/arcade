@@ -81,7 +81,7 @@
     <MicrosoftNetILLinkTasksVersion>$(MicrosoftNetILLinkTasksVersion)</MicrosoftNetILLinkTasksVersion>
     <MicrosoftSourceLinkVersion>$(MicrosoftSourceLinkVersion)</MicrosoftSourceLinkVersion>
     <MicrosoftDiaSymReaderPdb2PdbVersion>$(MicrosoftDiaSymReaderPdb2PdbVersion)</MicrosoftDiaSymReaderPdb2PdbVersion>
-    <XliffTasksVersion>$(XliffTasksVersion)</XliffTasksVersion>
+    <MicrosoftDotNetXliffTasksVersion>$(MicrosoftDotNetXliffTasksVersion)</MicrosoftDotNetXliffTasksVersion>
     <MicrosoftDotNetMaestroTasksVersion>$(MicrosoftDotNetMaestroTasksVersion)</MicrosoftDotNetMaestroTasksVersion>
     <MicrosoftSymbolUploaderBuildTaskVersion>$(MicrosoftSymbolUploaderBuildTaskVersion)</MicrosoftSymbolUploaderBuildTaskVersion>
   </PropertyGroup>
