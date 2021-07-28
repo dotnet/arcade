@@ -59,6 +59,7 @@
   </ItemGroup>
 
   <ItemGroup Condition=" '$(HelixAccessToken)' != '' ">
+    <HelixTargetQueue Include="pr-windows.10.amd64.open-tweak-batching"/>
   </ItemGroup>
 
   <PropertyGroup Condition=" '$(HelixAccessToken)' == '' ">
