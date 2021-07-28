@@ -33,7 +33,7 @@ namespace Sample
 
 ### Hello World
 This will print out `'Hai Wurld!'` in the work item's console log.
-Please note the command supplied is executing as a Windows command line command and as a shell command in Linux/OSX.
+Please note the command supplied is executing as a Windows command line command on Windows queues and as a shell command on Linux and OSX queues.
 
 ```csharp
 var job = await api.Job.Define()
