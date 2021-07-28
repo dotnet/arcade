@@ -32,7 +32,7 @@ namespace Sample
 ```
 
 ### Hello World
-This will print out `'Hai Wurld!'` in the work item's console log.
+This will print out `'Hai Wurld!'` in the work item's console log. Please notice that the command for Windows is placed inside a bat script file.
 
 ```csharp
 var job = await api.Job.Define()
