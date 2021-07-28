@@ -8,7 +8,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
 {
     public class GenerateManifestMsiTests
     {
-        [Fact]
+        [WindowsOnlyFact]
         public void ItThrowsIfPayloadRelativePathIsTooLong()
         {
             var task = new GenerateManifestMsi();

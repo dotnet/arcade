@@ -270,21 +270,24 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                     {
                         if (pack.IsAlias && !pack.AliasTo.Keys.Any(rid => s_SupportedRids.Contains(rid)))
                         {
-                            log?.LogWarning($"Workload {workload.Id} supports Windows, but none of its aliased packs do. Only the following pack aliases were found: {String.Join("", "", pack.AliasTo.Keys)}.");
+                            log?.LogMessage($"Workload {workload.Id} supports Windows, but none of its aliased packs do. Only the following pack aliases were found: {String.Join("", "", pack.AliasTo.Keys)}.");
                             continue;
+                        }
+                        else
+                        {
+                            log?.LogMessage(MessageImportance.Low, $"Adding component dependency for {packId} ");
+                            component.AddDependency(manifest.Packs[packId]);
                         }
                     }
 
-                    log?.LogMessage(MessageImportance.Low, $"Adding component dependency for {packId} ");
-
-                    if (manifest.Packs.ContainsKey(packId))
-                    {
-                        component.AddDependency(manifest.Packs[packId]);
-                    }
-                    else
-                    {
-                        log?.LogMessage(MessageImportance.High, $"Missing Visual Studio component dependency, packId: {packId}.");
-                    }
+                    //if (manifest.Packs.ContainsKey(packId))
+                    //{
+                    //    component.AddDependency(manifest.Packs[packId]);
+                    //}
+                    //else
+                    //{
+                    //    log?.LogMessage(MessageImportance.High, $"Missing Visual Studio component dependency, packId: {packId}.");
+                    //}
                 }
             }
 

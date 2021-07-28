@@ -226,7 +226,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                 {
                     Log?.LogMessage(MessageImportance.High, $"{workloadDefinition.Id} platforms does not support Windows and will be skipped ({string.Join(", ", workloadDefinition.Platforms)}).");
                     continue;
-                }               
+                }
 
                 // Each workload maps to a Visual Studio component.
                 VisualStudioComponent component = VisualStudioComponent.Create(Log, manifest, workloadDefinition,
