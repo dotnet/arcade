@@ -80,6 +80,15 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         }
 
         /// <summary>
+        /// An item group containing information to shorten the names of packages.
+        /// </summary>
+        public ITaskItem[] ShortNames
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// Semicolon sepearate list of ICEs to suppress.
         /// </summary>
         public string SuppressIces
@@ -287,7 +296,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
 
                     if (GenerateSwixAuthoring && IsSupportedByVisualStudio(platform))
                     {
-                        string swixPackageId = $"{nupkg.Id}";
+                        string swixPackageId = $"{nupkg.Id.ToString().Replace(ShortNames)}";
 
                         string swixProject = GenerateSwixPackageAuthoring(light.OutputFile,
                             swixPackageId, platform);
@@ -404,7 +413,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             writer.WriteEndElement();
         }
 
-        private string GenerateSwixPackageAuthoring(string msiPath, string packageId, string platform)
+        internal string GenerateSwixPackageAuthoring(string msiPath, string packageId, string platform)
         {
             GenerateVisualStudioMsiPackageProject swixTask = new()
             {
@@ -412,8 +421,12 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                 IntermediateBaseOutputPath = this.IntermediateBaseOutputPath,
                 PackageName = packageId,
                 MsiPath = msiPath,
+                Version = !string.IsNullOrEmpty(MsiVersion) ? new Version(MsiVersion) : null,
                 BuildEngine = this.BuildEngine,
             };
+
+            string vsPayloadRelativePath = $"{swixTask.PackageName},version={swixTask.Version.ToString(3)},chip={swixTask.Chip},productarch={swixTask.ProductArch}\\{Path.GetFileName(msiPath)}";
+            CheckRelativePayloadPath(vsPayloadRelativePath);
 
             if (!swixTask.Execute())
             {

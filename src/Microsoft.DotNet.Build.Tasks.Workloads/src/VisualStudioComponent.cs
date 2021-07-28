@@ -18,6 +18,8 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
     /// </summary>
     public class VisualStudioComponent
     {
+        private static readonly string[] s_SupportedRids = new string[] { "win7", "win10", "any", "win", "win-x64", "win-x86", "win-arm64" };
+
         /// <summary>
         /// The component category.
         /// </summary>
@@ -262,6 +264,17 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
 
                 foreach (WorkloadPackId packId in packIds)
                 {
+                    // Check whether the pack dependency is aliased to non-Windows RIDs. If so, we can't add a dependency for the pack
+                    // because we won't be able to create installers.
+                    if (manifest.Packs.TryGetValue(packId, out WorkloadPack pack))
+                    {
+                        if (pack.IsAlias && !pack.AliasTo.Keys.Any(rid => s_SupportedRids.Contains(rid)))
+                        {
+                            log?.LogWarning($"Workload {workload.Id} supports Windows, but none of its aliased packs do. Only the following pack aliases were found: {String.Join("", "", pack.AliasTo.Keys)}.");
+                            continue;
+                        }
+                    }
+
                     log?.LogMessage(MessageImportance.Low, $"Adding component dependency for {packId} ");
 
                     if (manifest.Packs.ContainsKey(packId))

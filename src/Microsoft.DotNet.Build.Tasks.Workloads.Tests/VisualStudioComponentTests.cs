@@ -37,6 +37,23 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
         }
 
         [Fact]
+        public void ItIgnoresNotApplicableAliasedPacks()
+        {
+            WorkloadManifest manifest = Create("BadAliasedManifest.json");
+            WorkloadDefinition definition = manifest.Workloads.FirstOrDefault().Value;
+
+            VisualStudioComponent component = VisualStudioComponent.Create(null, manifest, definition, NoItems, NoItems, null, NoItems);
+
+            string swixProjDirectory = RandomPath;
+            Directory.CreateDirectory(swixProjDirectory);
+            component.Generate(swixProjDirectory);
+
+            string componentSwr = File.ReadAllText(Path.Combine(swixProjDirectory, "component.swr"));
+
+            Assert.DoesNotContain(@"Microsoft.NETCore.App.Runtime.AOT.Cross.ios-arm64", componentSwr);
+        }
+
+        [Fact]
         public void ItCanOverrideDefaultValues()
         {
             WorkloadManifest manifest = Create("WorkloadManifest.json");
