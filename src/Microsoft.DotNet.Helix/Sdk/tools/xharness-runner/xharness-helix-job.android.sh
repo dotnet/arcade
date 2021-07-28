@@ -85,7 +85,6 @@ ADB_DEVICE_ENUMERATION_FAILURE=85
 if [ $exit_code -eq $ADB_DEVICE_ENUMERATION_FAILURE ]; then
     echo 'Encountered ADB_DEVICE_ENUMERATION_FAILURE. This is typically not a failure of the work item. We will run it again and reboot this computer to help its devices'
     echo 'If this occurs repeatedly, please check for architectural mismatch, e.g. sending arm64_v8a APKs to an x86_64 / x86 only queue.'
-    # Since we run the payload script using launchctl, env vars are not set there and we have to do this part here
     "$HELIX_PYTHONPATH" -c "from helix.workitemutil import request_infra_retry; request_infra_retry('Retrying because we could not enumerate all Android devices')"
     "$HELIX_PYTHONPATH" -c "from helix.workitemutil import request_reboot; request_reboot('Rebooting to allow Android emulator or device to restart.')"
 fi
@@ -97,7 +96,6 @@ PACKAGE_INSTALLATION_FAILURE=78
 if [ $exit_code -eq PACKAGE_INSTALLATION_FAILURE ]; then
     echo 'Encountered PACKAGE_INSTALLATION_FAILURE. This is typically not a failure of the work item. We will try it again on another device'
     echo 'If this occurs repeatedly, please check for architectural mismatch, e.g. requesting installation on arm64_v8a-only queue for x86 or x86_64 APKs.'
-    # Since we run the payload script using launchctl, env vars are not set there and we have to do this part here
     "$HELIX_PYTHONPATH" -c "from helix.workitemutil import request_infra_retry; request_infra_retry('Retrying because we could not enumerate all Android devices')"
 fi
 
