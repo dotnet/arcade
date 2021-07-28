@@ -1,6 +1,9 @@
+using System;
 using System.Collections.Generic;
+using System.IO;
 using Xunit;
 using System.Net;
+using Newtonsoft.Json;
 
 namespace Microsoft.DotNet.Helix.Sdk.Tests
 {
@@ -35,6 +38,19 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             var actual = Helpers.CleanWorkItemName(workItemNameWithFowardSlash);
 
             Assert.Equal(workItemNameExpected, actual);
+        }
+
+        [Fact]
+        public void FailOnceThenPass()
+        {
+            string target = Path.Combine(Environment.GetEnvironmentVariable("HELIX_WORKITEM_ROOT") ?? Environment.GetEnvironmentVariable("TEMP"), "my-test-file-123456.snt");
+            bool exists = File.Exists(target);
+            if (!exists)
+            {
+                File.WriteAllText(target, "Test failed once");
+            }
+            
+            Assert.True(exists, $"File should exist: {target}");
         }
         
         [MemberData(nameof(TwoThousand))]
