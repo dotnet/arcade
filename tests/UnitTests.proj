@@ -14,6 +14,7 @@
     <DotNetCliPackageType>sdk</DotNetCliPackageType>
 
     <TestRunNamePrefix>$(AGENT_JOBNAME)</TestRunNamePrefix>
+	<HelixBaseUri>https://helix.int-dot.net</HelixBaseUri>
   </PropertyGroup>
 
   <ItemGroup>
@@ -58,7 +59,7 @@
   </ItemGroup>
 
   <ItemGroup Condition=" '$(HelixAccessToken)' != '' ">
-    <HelixTargetQueue Include="pr-ubuntu.1804.amd64-tweak-batching"/>
+    <HelixTargetQueue Include="pr-windows.10.amd64-tweak-batching"/>
   </ItemGroup>
 
   <PropertyGroup Condition=" '$(HelixAccessToken)' == '' ">
@@ -68,6 +69,7 @@
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(HelixAccessToken)' == '' ">
+    <HelixTargetQueue Include="pr-windows.10.amd64.open-tweak-batching"/>
   </ItemGroup>
 
   <PropertyGroup Condition="!$(HelixTargetQueue.StartsWith('Windows'))">
