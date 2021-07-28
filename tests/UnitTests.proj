@@ -72,16 +72,6 @@
     <HelixTargetQueue Include="pr-windows.10.amd64.open-tweak-batching"/>
   </ItemGroup>
 
-  <PropertyGroup Condition="!$(HelixTargetQueue.ToLowerInvariant().Contains('windows'))">
-    <HelixPreCommands>$(HelixPreCommands);find $HELIX_CORRELATION_PAYLOAD -type f</HelixPreCommands>
-    <HelixPreCommands>$(HelixPreCommands);find . -type f</HelixPreCommands>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="$(HelixTargetQueue.ToLowerInvariant().Contains('windows'))">
-    <HelixPreCommands>$(HelixPreCommands);dir /s %HELIX_CORRELATION_PAYLOAD%</HelixPreCommands>
-    <HelixPreCommands>$(HelixPreCommands);dir /s</HelixPreCommands>
-  </PropertyGroup>
-
   <!-- Useless stuff to make Arcade SDK happy -->
   <PropertyGroup>
     <Language>msbuild</Language>
