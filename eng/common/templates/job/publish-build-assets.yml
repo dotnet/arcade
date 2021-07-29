@@ -100,7 +100,7 @@ jobs:
       inputs:
         targetType: inline
         script: |
-          $symbolExclusionfile = "/eng/SymbolPublishingExclusionsFile.txt"
+          $symbolExclusionfile = "$(Build.SourcesDirectory)/eng/SymbolPublishingExclusionsFile.txt"
           if(Test-Path -Path $symbolExclusionfile)
           {
             Write-Host "SymbolExclusionFile exists"
@@ -114,7 +114,7 @@ jobs:
       - task: PublishBuildArtifacts@1
         displayName: Publish SymbolExclusionFile Artifact
         inputs:
-          PathtoPublish: '/eng/SymbolPublishingExclusionsFile.txt'
+          PathtoPublish: '$(Build.SourcesDirectory)/eng/SymbolPublishingExclusionsFile.txt'
           PublishLocation: Container
           ArtifactName: SymbolsExclusion
     
