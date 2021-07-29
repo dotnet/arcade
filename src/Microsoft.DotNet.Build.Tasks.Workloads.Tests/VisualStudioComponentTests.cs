@@ -34,7 +34,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
             Assert.Contains(@"title=""Blazor WebAssembly AOT workload""", componentResSwr);
             Assert.Contains(@"description=""Blazor WebAssembly AOT workload""", componentResSwr);
             Assert.Contains(@"category="".NET""", componentResSwr);
-        }        
+        }
 
         [Fact]
         public void ItCanOverrideDefaultValues()
