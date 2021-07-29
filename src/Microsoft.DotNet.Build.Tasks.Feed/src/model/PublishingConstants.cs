@@ -96,9 +96,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
         private const string FeedDotNet6Transport = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6-transport/nuget/v3/index.json";
         private const string FeedDotNet6Symbols = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6-symbols/nuget/v3/index.json";
 
-        private const string FeedDotNet6InternalShipping = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6-internal/nuget/v3/index.json";
-        private const string FeedDotNet6InternalTransport = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6-internal-transport/nuget/v3/index.json";
-        private const string FeedDotNet6InternalSymbols = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6-internal-symbols/nuget/v3/index.json";
+        private const string FeedDotNet6InternalShipping = "https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet6-internal/nuget/v3/index.json";
+        private const string FeedDotNet6InternalTransport = "https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet6-internal-transport/nuget/v3/index.json";
+        private const string FeedDotNet6InternalSymbols = "https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet6-internal-symbols/nuget/v3/index.json";
 
         private const string FeedDotNet5InternalShipping = "https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet5-internal/nuget/v3/index.json";
         private const string FeedDotNet5InternalTransport = "https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet5-internal-transport/nuget/v3/index.json";

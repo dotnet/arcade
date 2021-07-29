@@ -20,12 +20,18 @@ variables:
 resources:
   containers:
   - container: LinuxContainer
-    image: microsoft/dotnet-buildtools-prereqs:ubuntu-14.04-cross-0cd4667-20170319080304
+    image: mcr.microsoft.com/dotnet-buildtools/prereqs:ubuntu-14.04-cross-0cd4667-20170319080304
 
 stages:
 - stage: build
   displayName: Build
   jobs:
+  - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.SourceBranch'], 'refs/heads/main')) }}:
+    - template: /eng/common/templates/job/onelocbuild.yml
+      parameters:
+        MirrorRepo: arcade
+        LclSource: lclFilesFromPackage
+        LclPackageId: 'LCL-JUNO-PROD-ARCADE'
   - template: /eng/common/templates/jobs/jobs.yml
     parameters:
       artifacts:
@@ -136,10 +142,10 @@ stages:
               -ci
               -restore
               -test
-              -projects $(Build.SourcesDirectory)\tests\UnitTests.XHarness.Android.WindowsQueues.proj
-              /bl:$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)\Helix.XHarness.Android.WindowsQueues.binlog
+              -projects $(Build.SourcesDirectory)\tests\UnitTests.XHarness.Android.Device.proj
+              /bl:$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)\Helix.XHarness.Android.Device.binlog
               /p:RestoreUsingNuGetTargets=false
-              /p:XharnessTestARM64_V8A=true
+              /p:XHarnessTestARM64_V8A=true
             displayName: XHarness Android Helix Testing (Windows)
             env:
               SYSTEM_ACCESSTOKEN: $(System.AccessToken)
@@ -204,11 +210,11 @@ stages:
               -ci
               -restore
               -test
-              -projects $(Build.SourcesDirectory)/tests/UnitTests.XHarness.Android.LinuxQueues.proj
-              /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.XHarness.Android.LinuxQueues.binlog
+              -projects $(Build.SourcesDirectory)/tests/UnitTests.XHarness.Android.Simulator.proj
+              /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.XHarness.Android.Simulator.binlog
               /p:RestoreUsingNuGetTargets=false
-              /p:XharnessTestX86=true 
-              /p:XharnessTestX86_64=true 
+              /p:XHarnessTestX86=true 
+              /p:XHarnessTestX86_64=true 
             displayName: XHarness Android Helix Testing (Linux)
             env:
               SYSTEM_ACCESSTOKEN: $(System.AccessToken)

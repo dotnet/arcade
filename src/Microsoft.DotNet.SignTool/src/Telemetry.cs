@@ -20,26 +20,35 @@ namespace Microsoft.DotNet.SignTool
             { "BUILD_SOURCEVERSION", Environment.GetEnvironmentVariable("BUILD_SOURCEVERSION") }
         };
 
+        private readonly bool _disableTelemetry ;
+
         public Telemetry()
         {
             _metrics = new Dictionary<string, double>();
+            _disableTelemetry =
+                (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SIGNTOOL_DISABLE_TELEMETRY")));
         }
 
         internal void AddMetric(string name, double value)
         {
-            _metrics.Add(name, value);
+            if (!_disableTelemetry)
+            {
+                _metrics.Add(name, value);
+            }
         }
 
         internal void SendEvents()
         {
-            // set APPINSIGHTS_INSTRUMENTATIONKEY environment variable to begin tracking telemetry
-            TelemetryConfiguration configuration = TelemetryConfiguration.CreateDefault();
+            if (!_disableTelemetry)
+            {
+                // set APPINSIGHTS_INSTRUMENTATIONKEY environment variable to begin tracking telemetry
+                TelemetryConfiguration configuration = TelemetryConfiguration.CreateDefault();
+                TelemetryClient telemetryClient = new TelemetryClient(configuration);
 
-            TelemetryClient telemetryClient = new TelemetryClient(configuration);
-
-            telemetryClient.TrackEvent(s_sendEventName, properties: s_properties, metrics: _metrics);
-            telemetryClient.Flush();
-            _metrics = null;
+                telemetryClient.TrackEvent(s_sendEventName, properties: s_properties, metrics: _metrics);
+                telemetryClient.Flush();
+                _metrics = null;
+            }
         }
     }
 }
