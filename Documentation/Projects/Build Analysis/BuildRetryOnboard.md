@@ -43,6 +43,33 @@ Ex. \eng\BuildConfiguration\build-configuration.json
          {
             "StageName":"StageName"
          }
+    ],
+    "RetryJobsInStage":[
+      {
+        "StageName":"StageName",
+        "JobsNames":["JobName"]
+      }
+    ]
+  },
+  "RetryByErrorsInPipeline":{
+    "ErrorInPipelineByStage":[
+      {
+        "StageName":"StageName",
+        "ErrorRegex":"Regex"
+      }
+    ],
+    "ErrorInPipelineByJobs":[
+      {
+        "JobsNames":["JobName"],
+        "ErrorRegex":"Regex"
+      }
+    ],
+    "ErrorInPipelineByJobsInStage":[
+      {
+        "StageName":"StageName",
+        "JobsNames":["JobName"],
+        "ErrorRegex":"Regex"
+      }
       ]
    }
 }
@@ -98,7 +125,70 @@ Default value: False.
        "RetryByPipeline":{
           "RetryStages":[
              {
-                "StageName":"Build"
+                "StageName":"StageName"
+             }
+          ]
+        }
+    }
+	```
+     If you want to retry jobs under a specific stage, you can do that by defining the stage name and then the jobs that you want to retry that are under that stage. You will need to define each stage separately. 
+   ```json
+   {
+      "RetryCountLimit":1,
+      "RetryByPipeline":{
+         "RetryJobsInStage":[
+            {
+               "StageName":"StageName",
+               "JobsNames":[ "JobNameA", "JobNameB" ]
+            }
+         ]
+      }
+   }
+   ```
+- **RetryByErrorsInPipeline:** This is a combination of retry by error and retry by pipeline, in which you will be able to retry a build base on errors found in specific places on the pipeline. <br>  
+This gives you a more granular control on which error do you want that get retried.<br>  
+For example, imagine that you have an error: "Vstest failed with error."  that most of the time happens in StageA, when it happens on StageA and you retry the build it usually finishes successfully. Unfortunately, the same error could happen on StageB and when that happens it is unusual. So, if you want the build only gets retried when the error happens in StageA you can define that: 
+
+   ```json
+   {
+      "RetryCountLimit":1,
+      "RetryByErrorsInPipeline":{
+         "ErrorInPipelineByStage":[
+            {
+            "StageName":"StageA",
+            "ErrorRegex":"Vstest failed with error.*"
+            }
+         ]
+      }
+   }
+   ```
+
+   This same principle can be applied to errors under specific job names: 
+
+   ```json
+  {
+    "RetryCountLimit":1,
+    "RetryByErrorsInPipeline":{
+      "ErrorInPipelineByJobs":[
+        {
+          "JobsNames":["JobNameA","JobNameB"],
+          "ErrorRegex":"Regex"
+        }
+      ]
+    }
+  }
+   ```
+
+   and errors for Jobs under a specific Stage:
+   ```json
+  {
+    "RetryCountLimit":1,
+    "RetryByErrorsInPipeline":{
+      "ErrorInPipelineByJobsInStage":[
+        {
+          "StageName":"StageName",
+          "JobsNames":["JobNameA", "JobNameB"],
+          "ErrorRegex":"Regex"
              }
           ]
         }

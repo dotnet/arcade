@@ -2,7 +2,7 @@
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
   <?include Variables.wxi?>
-  <Product Id="$(var.ProductCode)" Name="$(var.ProductName)" Language="1033" Version="$(var.ProductVersion)"
+  <Product Id="$(var.ProductCode)" Name="$(var.ProductName)" Language="$(var.ProductLanguage)" Version="$(var.ProductVersion)"
            Manufacturer="$(var.Manufacturer)" UpgradeCode="$(var.UpgradeCode)">
 
     <Package InstallerVersion="$(var.InstallerVersion)" Compressed="yes" InstallScope="perMachine" />

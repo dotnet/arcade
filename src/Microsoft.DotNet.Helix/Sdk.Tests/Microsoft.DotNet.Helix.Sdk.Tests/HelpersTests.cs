@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.IO;
 using Xunit;
 using System.Net;
@@ -51,19 +50,6 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             }
             
             Assert.True(exists, $"File should exist: {target}");
-        }
-        
-        [MemberData(nameof(TwoThousand))]
-        [Theory]
-        public void LotsOfTest(int x)
-        {
-            Assert.Equal(x, x);        
-        }
-
-        public static IEnumerable<object[]> TwoThousand()
-        {
-            for (int i = 0; i < 2000; i++)
-                yield return new object[] {i};
         }
     }
 }

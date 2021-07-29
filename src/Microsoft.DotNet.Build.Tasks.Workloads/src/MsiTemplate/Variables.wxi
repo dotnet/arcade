@@ -17,6 +17,10 @@
   <?error Unknown platform: $(var.Platform)?>
   <?endif?>
   
+  <?ifndef ProductLanguage?>
+  <?define ProductLanguage=1033?>
+  <?endif?>
+  
   <!-- Default dependency provider key for packs. -->
   <?ifndef DependencyProviderKeyName?>
   <?define DependencyProviderKeyName=$(var.PackageId),$(var.PackageVersion),$(var.Platform)?>
