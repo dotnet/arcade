@@ -16,7 +16,7 @@ namespace Microsoft.DotNet.Helix.Sdk
         /// </summary>
         public string BaseUri
         {
-            get => "https://helix.dot.net/";
+            get => "https://helix.int-dot.net/";
             set { }
         }
 
