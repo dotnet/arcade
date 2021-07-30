@@ -106,7 +106,6 @@ jobs:
           if(Test-Path -Path $symbolExclusionfile)
           {
             Write-Host "SymbolExclusionFile exists"
-            parameters.SymbolExclusionFile = 'true'
             Write-Host "##vso[task.setvariable variable=SymbolExclusionFile]true"
           }
           else{
