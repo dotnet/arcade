@@ -43,7 +43,7 @@ jobs:
           AssetManifests/**
           BlobArtifacts/MergedManifest.xml
           PdbArtifacts/**
-          SymbolExclusion/**
+          SymbolsExclusion/**
         downloadPath: '$(Build.ArtifactStagingDirectory)'
 
     - task: NuGetToolInstaller@1

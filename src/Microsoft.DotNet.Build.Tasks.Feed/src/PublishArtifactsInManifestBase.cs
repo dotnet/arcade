@@ -438,6 +438,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 }
 
             }
+            else {
+                Log.LogMessage(MessageImportance.High, $"SymbolPublishingExclusionFile does not exits, check path ${symbolPublishingExclusionsFile} ");
+            }
 
             if (symbolsToPublish != null && symbolsToPublish.Any())
             {
