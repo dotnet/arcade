@@ -2,6 +2,7 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using Microsoft.Build.Framework;
+using Microsoft.DotNet.Build.Tasks;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -12,7 +13,7 @@ using System.Reflection.PortableExecutable;
 using System.Text;
 using System.Xml.Linq;
 
-namespace Microsoft.DotNet.Build.Tasks.Packaging
+namespace Microsoft.DotNet.PackageTesting
 {
     /// <summary>
     /// Verifies the closure of a set of DLLs, making sure all files are present and no cycles exist
@@ -125,7 +126,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
 
         private void LoadIgnoredReferences()
         {
-            foreach (var ignoredReference in IgnoredReferences.NullAsEmpty())
+            foreach (var ignoredReference in IgnoredReferences.DefaultIfEmpty())
             {
                 var name = ignoredReference.ItemSpec;
                 var versionString = ignoredReference.GetMetadata("Version");
@@ -175,7 +176,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
             // check module references
             if (assm.State == CheckState.Unchecked && CheckModuleReferences)
             {
-                foreach(var moduleReference in assm.ModuleReferences.NullAsEmpty())
+                foreach(var moduleReference in assm.ModuleReferences.DefaultIfEmpty())
                 {
                     if (ShouldIgnore(moduleReference))
                     {

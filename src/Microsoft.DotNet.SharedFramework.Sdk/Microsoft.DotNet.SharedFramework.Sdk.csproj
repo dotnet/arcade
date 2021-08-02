@@ -41,8 +41,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="..\Microsoft.DotNet.Build.Tasks.Packaging\src\VerifyClosure.cs" Link="src/Packaging/VerifyClosure.cs" />
-    <Compile Include="..\Microsoft.DotNet.Build.Tasks.Packaging\src\VerifyTypes.cs" Link="src/Packaging/VerifyTypes.cs" />
+    <Compile Include="..\Microsoft.DotNet.PackageTesting\VerifyClosure.cs" Link="src/Packaging/VerifyClosure.cs" />
+    <Compile Include="..\Microsoft.DotNet.PackageTesting\VerifyTypes.cs" Link="src/Packaging/VerifyTypes.cs" />
   </ItemGroup>
   
   <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
