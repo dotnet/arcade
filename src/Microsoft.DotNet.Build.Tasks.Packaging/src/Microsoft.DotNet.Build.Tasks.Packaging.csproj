@@ -38,9 +38,7 @@
 - SplitDependenciesBySupport
 - SplitReferences
 - UpdatePackageIndex
-- ValidationTask
-- VerifyClosure
-- VerifyTypes</PackageDescription>
+- ValidationTask</PackageDescription>
 
     <DefaultItemExcludes Condition="'$(TargetFramework)' != 'net472'">**/*.Desktop.*</DefaultItemExcludes>
     <BeforePack>$(BeforePack);AddRuntimeJson</BeforePack>
