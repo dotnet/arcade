@@ -204,6 +204,7 @@ stages:
             env:
               SYSTEM_ACCESSTOKEN: $(System.AccessToken)
               HelixAccessToken: ''
+            continueOnError: true
           - script: eng/common/build.sh
               -configuration $(_BuildConfig) 
               -prepareMachine
