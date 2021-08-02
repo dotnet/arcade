@@ -11,6 +11,10 @@ namespace Microsoft.DotNet.PackageTesting
 {
     public class Package
     {
+        public IEnumerable<NuGetFramework> FrameworksInPackage { get; }
+        public string PackageId { get; }
+        public string Version { get; }
+
         public Package(string packageId, string version, IEnumerable<string> packageAssetPaths, IEnumerable<NuGetFramework> dependencyFrameworks)
         {
             PackageId = packageId;
@@ -18,7 +22,7 @@ namespace Microsoft.DotNet.PackageTesting
 
             ContentItemCollection packageAssets = new();
             packageAssets.Load(packageAssetPaths);
-            ManagedCodeConventions conventions = new ManagedCodeConventions(null);
+            ManagedCodeConventions conventions = new(null);
 
             IEnumerable<ContentItem> RefAssets = packageAssets.FindItems(conventions.Patterns.CompileRefAssemblies);
             IEnumerable<ContentItem> LibAssets = packageAssets.FindItems(conventions.Patterns.CompileLibAssemblies);
@@ -30,9 +34,5 @@ namespace Microsoft.DotNet.PackageTesting
             FrameworksInPackageList.AddRange(dependencyFrameworks);
             FrameworksInPackage = FrameworksInPackageList.Distinct();
         }
-
-        public string PackageId { get; set; }
-        public string Version { get; set; }
-        public IEnumerable<NuGetFramework> FrameworksInPackage { get; private set; }
     }
 }

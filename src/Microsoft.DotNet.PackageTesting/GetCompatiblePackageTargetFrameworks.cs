@@ -13,7 +13,7 @@ namespace Microsoft.DotNet.PackageTesting
 {
     public class GetCompatiblePackageTargetFrameworks : BuildTask
     {
-        private static List<NuGetFramework> allTargetFrameworks = allTargetFrameworks = new();
+        private static List<NuGetFramework> allTargetFrameworks = new();
         private static Dictionary<NuGetFramework, HashSet<NuGetFramework>> packageTfmMapping = new();
 
         [Required]
@@ -27,12 +27,15 @@ namespace Microsoft.DotNet.PackageTesting
 
         public override bool Execute()
         {
-            bool result = true;
-            List<ITaskItem> testProjects = new List<ITaskItem>();
+            List<ITaskItem> testProjects = new();
+
             try
             {
                 Initialize(SupportedTestFrameworks);
-                string minDotnetTargetFramework = allTargetFrameworks.Where(t => t.Framework == ".NETCoreApp").OrderBy(t => t.Version).FirstOrDefault()?.GetShortFolderName();
+                string minDotnetTargetFramework = allTargetFrameworks.Where(t => t.Framework == ".NETCoreApp")
+                    .OrderBy(t => t.Version)
+                    .FirstOrDefault()?
+                    .GetShortFolderName();
 
                 foreach (var packagePath in PackagePaths)
                 {
@@ -50,25 +53,30 @@ namespace Microsoft.DotNet.PackageTesting
                 Log.LogErrorFromException(e, showStackTrace: false);
             }
 
-            return result && !Log.HasLoggedErrors;
+            return !Log.HasLoggedErrors;
         }
 
         public static IEnumerable<NuGetFramework> GetTestFrameworks(Package package, string minDotnetTargetFramework)
         {
-            List<NuGetFramework> frameworksToTest= new List<NuGetFramework>();
+            List<NuGetFramework> frameworksToTest= new();
             IEnumerable<NuGetFramework> packageTargetFrameworks = package.FrameworksInPackage;
 
             // Testing the package installation on all tfms linked with package targetframeworks.
             foreach (var item in packageTargetFrameworks)
             {
                 if (packageTfmMapping.ContainsKey(item))
+                {
                     frameworksToTest.AddRange(packageTfmMapping[item]);
+                }
+
                 // Adding the frameworks in the packages to the test matrix.
                 frameworksToTest.Add(item);
             }
 
             if (!string.IsNullOrEmpty(minDotnetTargetFramework) && frameworksToTest.Any(t => t.Framework == ".NETStandard"))
+            {
                 frameworksToTest.Add(NuGetFramework.Parse(minDotnetTargetFramework));
+            }
 
             return frameworksToTest.Where(tfm => allTargetFrameworks.Contains(tfm)).Distinct();
         }
@@ -97,12 +105,12 @@ namespace Microsoft.DotNet.PackageTesting
             }
         }
 
-        public List<ITaskItem> CreateItemFromTestFramework(string packageId, string version, IEnumerable<NuGetFramework> testFrameworks)
+        private static List<ITaskItem> CreateItemFromTestFramework(string packageId, string version, IEnumerable<NuGetFramework> testFrameworks)
         {
-            List<ITaskItem> testprojects = new List<ITaskItem>();
+            List<ITaskItem> testprojects = new();
             foreach (var framework in testFrameworks)
             {
-                var supportedPackage = new TaskItem(packageId);
+                TaskItem supportedPackage = new(packageId);
                 supportedPackage.SetMetadata("Version", version);
                 supportedPackage.SetMetadata("TargetFramework", framework.ToString());
                 supportedPackage.SetMetadata("TargetFrameworkShort", framework.GetShortFolderName());

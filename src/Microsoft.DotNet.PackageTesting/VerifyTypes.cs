@@ -2,21 +2,22 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using Microsoft.Build.Framework;
+using Microsoft.DotNet.Build.Tasks;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
 
-namespace Microsoft.DotNet.Build.Tasks.Packaging
+namespace Microsoft.DotNet.PackageTesting
 {
     /// <summary>
     /// Verifies no type overlap in a set of DLLs
     /// </summary>
     public class VerifyTypes : BuildTask
     {
-
         /// <summary>
         /// Sources to scan.  Items can be directories or files.
         /// </summary>
@@ -124,7 +125,7 @@ namespace Microsoft.DotNet.Build.Tasks.Packaging
 
         private void LoadIgnoredTypes()
         {
-            foreach(var ignoredType in IgnoredTypes.NullAsEmpty())
+            foreach(var ignoredType in IgnoredTypes.DefaultIfEmpty())
             {
                 ignoredTypes.Add(ignoredType.ItemSpec);
             }

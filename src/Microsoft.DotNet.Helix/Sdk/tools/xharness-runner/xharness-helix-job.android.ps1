@@ -37,13 +37,39 @@ function xharness() {
 
 $exit_code=$LASTEXITCODE
 
+$retry=$false
+$reboot=$false
+
+switch ($exit_code)
+{
+    85 {
+        $ErrorActionPreference="Continue"
+        Write-Error "Encountered ADB_DEVICE_ENUMERATION_FAILURE. This is typically not a failure of the work item. We will run it again and reboot this computer to help its devices"
+        Write-Error "If this occurs repeatedly, please check for architectural mismatch, e.g. sending x86 or x86_64 APKs to an arm64_v8a-only queue."
+        $retry=$true
+        $reboot=$true
+        Break
+    }
+
+    78 {
+        $ErrorActionPreference="Continue"
+        Write-Error "Encountered PACKAGE_INSTALLATION_FAILURE. This is typically not a failure of the work item. We will try it again on another Helix agent"
+        Write-Error "If this occurs repeatedly, please check for architectural mismatch, e.g. requesting installation on arm64_v8a-only queue for x86 or x86_64 APKs."
+        $retry=$true
+        Break
+    }
+}
+
 # ADB_DEVICE_ENUMERATION_FAILURE
-if ($exit_code -eq 85) {
-    $ErrorActionPreference="Continue"
-    Write-Error "Encountered ADB_DEVICE_ENUMERATION_FAILURE.  This is typically not a failure of the work item.  We will run it again and reboot this computer to help its devices"
-    Write-Error "If this occurs repeatedly, please check for architectural mismatch, e.g. sending x86 or x86_64 APKs to an arm64_v8a-only queue."
+if ($retry) {
+
     & "$Env:HELIX_PYTHONPATH" -c "from helix.workitemutil import request_infra_retry; request_infra_retry('Retrying because we could not enumerate all Android devices')"
-    & "$Env:HELIX_PYTHONPATH" -c "from helix.workitemutil import request_reboot; request_reboot('Rebooting to allow Android emulator or device to restart')"
+}
+
+# PACKAGE_INSTALLATION_FAILURE
+if ($reboot) {
+
+     & "$Env:HELIX_PYTHONPATH" -c "from helix.workitemutil import request_reboot; request_reboot('Rebooting to allow Android emulator or device to restart')"
 }
 
 exit $exit_code
