@@ -66,9 +66,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         private async Task<bool> ExecuteAsync()
         {
-            _azureDevOpsFeedsBaseUrl = $"https://feeds.dev.azure.com/{AzureDevOpsOrg}/";
             try
             {
+                _azureDevOpsFeedsBaseUrl = $"https://feeds.dev.azure.com/{AzureDevOpsOrg}/";
                 if (CommitSha?.Length < ShaUsableLength)
                 {
                     Log.LogError($"The CommitSHA should be at least {ShaUsableLength} characters long: CommitSha is '{CommitSha}'. Aborting feed creation.");
