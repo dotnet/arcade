@@ -45,9 +45,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public string AzureDevOpsFeedsApiVersion { get; set; } = "5.0-preview.1";
 
-        public static string AzureDevOpsOrg { get; set; } = "dnceng";
+        public string AzureDevOpsOrg { get; set; } = "dnceng";
 
-        private readonly string AzureDevOpsFeedsBaseUrl = $"https://feeds.dev.azure.com/{AzureDevOpsOrg}/";
+        private string _azureDevOpsFeedsBaseUrl;
 
         /// <summary>
         /// Number of characters from the commit SHA prefix that should be included in the feed name.
@@ -66,6 +66,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         private async Task<bool> ExecuteAsync()
         {
+            _azureDevOpsFeedsBaseUrl = $"https://feeds.dev.azure.com/{AzureDevOpsOrg}/";
             try
             {
                 if (CommitSha?.Length < ShaUsableLength)
@@ -109,7 +110,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 {
                     using (HttpClient client = new HttpClient(new HttpClientHandler { CheckCertificateRevocationList = true })
                     {
-                        BaseAddress = new Uri(AzureDevOpsFeedsBaseUrl)
+                        BaseAddress = new Uri(_azureDevOpsFeedsBaseUrl)
                     })
                     {
                         client.DefaultRequestHeaders.Add(
