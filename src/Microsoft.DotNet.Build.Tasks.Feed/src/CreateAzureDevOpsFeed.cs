@@ -47,8 +47,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public string AzureDevOpsOrg { get; set; } = "dnceng";
 
-        private string _azureDevOpsFeedsBaseUrl;
-
         /// <summary>
         /// Number of characters from the commit SHA prefix that should be included in the feed name.
         /// </summary>
@@ -68,7 +66,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         {
             try
             {
-                _azureDevOpsFeedsBaseUrl = $"https://feeds.dev.azure.com/{AzureDevOpsOrg}/";
+                string azureDevOpsFeedsBaseUrl = $"https://feeds.dev.azure.com/{AzureDevOpsOrg}/";
                 if (CommitSha?.Length < ShaUsableLength)
                 {
                     Log.LogError($"The CommitSHA should be at least {ShaUsableLength} characters long: CommitSha is '{CommitSha}'. Aborting feed creation.");
@@ -110,7 +108,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 {
                     using (HttpClient client = new HttpClient(new HttpClientHandler { CheckCertificateRevocationList = true })
                     {
-                        BaseAddress = new Uri(_azureDevOpsFeedsBaseUrl)
+                        BaseAddress = new Uri(azureDevOpsFeedsBaseUrl)
                     })
                     {
                         client.DefaultRequestHeaders.Add(
