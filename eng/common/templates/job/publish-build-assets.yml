@@ -110,7 +110,7 @@ jobs:
            Write-Host "Symbols Exclusion file does not exists"
           }
 
-    - ${{ if eq($(SymbolExclusionFile), 'true') }}:
+    - ${{ if eq(SymbolExclusionFile, 'true') }}:
       - task: PublishBuildArtifacts@1
         displayName: Publish SymbolPublishingExclusionsFile Artifact
         inputs:
