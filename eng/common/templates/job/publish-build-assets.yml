@@ -117,7 +117,7 @@ jobs:
         PathtoPublish: '$(Build.SourcesDirectory)/eng/SymbolPublishingExclusionsFile.txt'
         PublishLocation: Container
         ArtifactName: ReleaseConfigs
-        condition: (variables['SymbolExclusionFile'], 'true') 
+        condition: eq(variables['SymbolExclusionFile'], 'true') 
     
     - ${{ if eq(parameters.enablePublishBuildArtifacts, 'true') }}:
       - template: /eng/common/templates/steps/publish-logs.yml
