@@ -12,7 +12,6 @@
       - DotNetSymbolServerTokenMsdl   : PAT to access MSDL.
       - DotNetSymbolServerTokenSymWeb : PAT to access SymWeb.
       - DotNetSymbolExpirationInDays  : Expiration days for published packages. Default is 3650.
-      - DryRun  : Switch parameter to handle dry run. Default is false.
       - SymbolPublishingExclusionsFile : Path to file containing exclusion list to be used by Symbol Uploader.
       - PublishSpecialClrFiles : If true, publish the DAC, DBI and SOS using the coreclr index. If false, don't do any special indexing.
   -->
@@ -40,7 +39,6 @@
 
     <PropertyGroup>
       <DotNetSymbolExpirationInDays Condition="'$(DotNetSymbolExpirationInDays)' == ''">3650</DotNetSymbolExpirationInDays>
-      <DryRun Condition="'$(DryRun)' == ''">false</DryRun>
       <PublishToSymbolServer>true</PublishToSymbolServer>
       <PublishToSymWeb Condition="'$(PublishToSymWeb)' == ''">true</PublishToSymWeb>
       <PublishToMSDL Condition="'$(PublishToMSDL)' == ''">true</PublishToMSDL>
