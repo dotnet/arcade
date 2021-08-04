@@ -430,21 +430,21 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             
             if(File.Exists(symbolPublishingExclusionsFile))
             {
-                Log.LogMessage(MessageImportance.High, $"SymbolPublishingExclusionFile exists");
+                Log.LogMessage(MessageImportance.Normal, $"SymbolPublishingExclusionFile exists");
                 string[] files = File.ReadAllLines(symbolPublishingExclusionsFile);
 
                 foreach(var file in files)
                 {
                     if(!string.IsNullOrEmpty(file))
                     {
-                        Log.LogMessage(MessageImportance.High, $"Exclude the file {file} from publishing to symbol server");
+                        Log.LogMessage(MessageImportance.Normal, $"Exclude the file {file} from publishing to symbol server");
                         excludeFiles.Add(file);
                     }
                 }
             }
             else
             {
-                Log.LogMessage(MessageImportance.High, $"SymbolPublishingExclusionFile does not exits, check path ${symbolPublishingExclusionsFile} ");
+                Log.LogMessage(MessageImportance.Normal, $"SymbolPublishingExclusionFile was not found at ${symbolPublishingExclusionsFile} ");
             }
 
             if (symbolsToPublish != null && symbolsToPublish.Any())
