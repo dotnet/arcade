@@ -63,9 +63,12 @@ MakeDefaultChannel https://github.com/mono/linker $RuntimeBranch $RuntimeChannel
 if ($AddInternalFlow) {
     # Because of where internal fixes tend to be, we eliminate some leaves in the graph
     # and flow them through the normal public channels: emsdk, icu, linker.
-    # wpf-int gets assigned to the internal channel in addition (since there is no public->internal merge)
+    # wpf-int is flowed from the public channel (there is no internal branch or merge) due to
+    # an issue in the staging pipeline where it will give the test feed for the public preview build
+    # internal permissions in some cases because it sees the internal repo publishing locations before
+    # the public locations. The logic is such that if any asset has non-public permissions, the test feed will have
+    # internal permissions.
     Write-Host "Making default channels for internal branches of runtime repos"
-    MakeDefaultChannel https://dev.azure.com/dnceng/internal/_git/dotnet-wpf-int $RuntimeBranch $InternalRuntimeChannel
     MakeDefaultChannel https://dev.azure.com/dnceng/internal/_git/dotnet-aspnetcore $InternalRuntimeBranch $InternalRuntimeChannel
     MakeDefaultChannel https://dev.azure.com/dnceng/internal/_git/dotnet-efcore $InternalRuntimeBranch $InternalRuntimeChannel
     MakeDefaultChannel https://dev.azure.com/dnceng/internal/_git/dotnet-runtime $InternalRuntimeBranch $InternalRuntimeChannel
@@ -86,6 +89,7 @@ if ($AddInternalFlow) {
     Write-Host "Making default channels for SDK repos"
     MakeDefaultChannel https://dev.azure.com/dnceng/internal/_git/dotnet-installer $InternalSdkBranch $InternalSdkChannel
     MakeDefaultChannel https://dev.azure.com/dnceng/internal/_git/dotnet-sdk $InternalSdkBranch $InternalSdkChannel
+    MakeDefaultChannel https://dev.azure.com/dnceng/internal/_git/dotnet-templating $InternalSdkBranch $InternalSdkChannel
 }
 
 Write-Host "Setting up batched merge policies"
@@ -128,7 +132,6 @@ if ($AddInternalFlow) {
     Write-Host "Adding internal runtime -> internal runtime flow"
     AddBatchedFlow https://dev.azure.com/dnceng/internal/_git/dotnet-efcore $InternalRuntimeChannel https://dev.azure.com/dnceng/internal/_git/dotnet-aspnetcore $InternalRuntimeBranch EveryBuild
     AddBatchedFlow https://dev.azure.com/dnceng/internal/_git/dotnet-runtime $InternalRuntimeChannel https://dev.azure.com/dnceng/internal/_git/dotnet-aspnetcore $InternalRuntimeBranch EveryBuild
-    AddFlow https://dev.azure.com/dnceng/internal/_git/dotnet-wpf-int $InternalRuntimeChannel https://dev.azure.com/dnceng/internal/_git/dotnet-wpf $InternalRuntimeBranch EveryBuild
     AddFlow https://dev.azure.com/dnceng/internal/_git/dotnet-runtime $InternalRuntimeChannel https://dev.azure.com/dnceng/internal/_git/dotnet-efcore $InternalRuntimeBranch EveryBuild
     AddFlow https://dev.azure.com/dnceng/internal/_git/dotnet-runtime $InternalRuntimeChannel https://dev.azure.com/dnceng/internal/_git/dotnet-winforms $InternalRuntimeBranch EveryBuild
     AddFlow https://dev.azure.com/dnceng/internal/_git/dotnet-winforms $InternalRuntimeChannel https://dev.azure.com/dnceng/internal/_git/dotnet-wpf $InternalRuntimeBranch EveryBuild
@@ -142,6 +145,7 @@ Write-Host "Add runtime->sdk flow"
 AddFlow https://github.com/dotnet/aspnetcore $RuntimeChannel https://github.com/dotnet/sdk $SdkBranch EveryBuild
 AddFlow https://github.com/dotnet/windowsdesktop $RuntimeChannel https://github.com/dotnet/sdk $SdkBranch EveryBuild
 AddFlow https://github.com/dotnet/runtime $RuntimeChannel https://github.com/dotnet/sdk $SdkBranch EveryBuild
+AddFlow https://github.com/dotnet/runtime $RuntimeChannel https://github.com/dotnet/templating $SdkBranch EveryBuild
 AddFlow https://github.com/mono/linker $RuntimeChannel https://github.com/dotnet/sdk $SdkBranch EveryBuild
 
 if ($AddInternalFlow) {
@@ -149,6 +153,7 @@ if ($AddInternalFlow) {
     AddFlow https://dev.azure.com/dnceng/internal/_git/dotnet-aspnetcore $InternalRuntimeChannel https://dev.azure.com/dnceng/internal/_git/dotnet-sdk $InternalSdkBranch EveryBuild
     AddFlow https://dev.azure.com/dnceng/internal/_git/dotnet-windowsdesktop $InternalRuntimeChannel https://dev.azure.com/dnceng/internal/_git/dotnet-sdk $InternalSdkBranch EveryBuild
     AddFlow https://dev.azure.com/dnceng/internal/_git/dotnet-runtime $InternalRuntimeChannel https://dev.azure.com/dnceng/internal/_git/dotnet-sdk $InternalSdkBranch EveryBuild
+    AddFlow https://dev.azure.com/dnceng/internal/_git/dotnet-runtime $InternalRuntimeChannel https://dev.azure.com/dnceng/internal/_git/dotnet-templating $InternalSdkBranch EveryBuild
     
     Write-Host "Disabling internal runtime->internal sdk flow"
     DisableFlow $InternalRuntimeChannel
@@ -163,6 +168,7 @@ if ($AddInternalFlow) {
     Write-Host "Adding internal sdk->internal sdk flow"
     # Nothing but SDK->installer flows internally
     AddFlow https://dev.azure.com/dnceng/internal/_git/dotnet-sdk $InternalSdkChannel https://dev.azure.com/dnceng/internal/_git/dotnet-installer $InternalSdkBranch EveryBuild
+    AddFlow https://dev.azure.com/dnceng/internal/_git/dotnet-templating $InternalSdkChannel https://dev.azure.com/dnceng/internal/_git/dotnet-sdk $InternalSdkBranch EveryBuild
     
     Write-Host "Disabling internal sdk->internal sdk flow"
     DisableFlow $InternalSdkChannel
