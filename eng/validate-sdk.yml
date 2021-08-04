@@ -40,3 +40,5 @@ jobs:
         $(_BuildArgs)
         /p:DotNetPublishBlobFeedUrl=$(_ValidateBlobFeedUrl)
       displayName: Build / Validate
+    - script: eng\common\sdk-task.ps1 -task PublishToSymbolServers /p:DryRun="true" -restore
+      displayName: sdk-task verification
