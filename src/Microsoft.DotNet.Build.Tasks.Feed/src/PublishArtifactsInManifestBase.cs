@@ -428,17 +428,22 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 GetTargetSymbolServers(feedConfigsForSymbols, msdlToken, symWebToken);
             HashSet<string> excludeFiles = new HashSet<string>();
             
-            if(File.Exists(symbolPublishingExclusionsFile)){
+            if(File.Exists(symbolPublishingExclusionsFile))
+            {
                 Log.LogMessage(MessageImportance.High, $"SymbolPublishingExclusionFile exists");
                 string[] files = File.ReadAllLines(symbolPublishingExclusionsFile);
 
-                foreach(var file in files){
-                    Log.LogMessage(MessageImportance.High, $"Exclude the file {file} from publishing to symbol server");
-                    excludeFiles.Add(file);
+                foreach(var file in files)
+                {
+                    if(!string.IsNullOrEmpty(file))
+                    {
+                        Log.LogMessage(MessageImportance.High, $"Exclude the file {file} from publishing to symbol server");
+                        excludeFiles.Add(file);
+                    }
                 }
-
             }
-            else {
+            else
+            {
                 Log.LogMessage(MessageImportance.High, $"SymbolPublishingExclusionFile does not exits, check path ${symbolPublishingExclusionsFile} ");
             }
 

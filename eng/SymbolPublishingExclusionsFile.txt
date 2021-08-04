@@ -1,2 +1,0 @@
-Microsoft.Arcade.Common
-Microsoft.DotNet.XUnitExtensions
