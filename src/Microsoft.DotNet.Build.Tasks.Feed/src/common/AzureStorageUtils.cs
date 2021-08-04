@@ -14,6 +14,8 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
+using Azure.Core.Pipeline;
+using System.Net.Http;
 
 namespace Microsoft.DotNet.Build.CloudTestTasks
 {
@@ -39,7 +41,12 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
         {
             _credential = new StorageSharedKeyCredential(AccountName, AccountKey);
             Uri endpoint = new Uri($"https://{AccountName}.blob.core.windows.net");
-            BlobServiceClient service = new BlobServiceClient(endpoint, _credential);
+            var httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(300) };
+            var clientOptions = new BlobClientOptions()
+            {
+                Transport = new HttpClientTransport(httpClient)
+            };
+            BlobServiceClient service = new BlobServiceClient(endpoint, _credential, clientOptions);
             Container = service.GetBlobContainerClient(ContainerName);
         }
 
@@ -65,7 +72,7 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
         {
             BlobClient blob = GetBlob(blobPath.Replace("\\", "/"));
             BlobHttpHeaders headers = GetBlobHeadersByExtension(filePath);
-
+            
             // This function can sporadically throw 
             // "System.Net.Http.HttpRequestException: Error while copying content to a stream."
             // Ideally it should retry for itself internally, but the existing retry seems 
