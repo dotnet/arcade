@@ -108,6 +108,7 @@ jobs:
           }
           else{
            Write-Host "Symbols Exclusion file does not exists"
+           Write-Host "##vso[task.setvariable variable=SymbolExclusionFile]false"
           }
 
     - task: PublishBuildArtifacts@1
