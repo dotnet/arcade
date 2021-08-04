@@ -66,7 +66,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         {
             try
             {
-                string azureDevOpsFeedsBaseUrl = $"https://feeds.dev.azure.com/{AzureDevOpsOrg}/";
                 if (CommitSha?.Length < ShaUsableLength)
                 {
                     Log.LogError($"The CommitSHA should be at least {ShaUsableLength} characters long: CommitSha is '{CommitSha}'. Aborting feed creation.");
@@ -104,6 +103,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     return false;
                 }
 
+                string azureDevOpsFeedsBaseUrl = $"https://feeds.dev.azure.com/{AzureDevOpsOrg}/";
                 do
                 {
                     using (HttpClient client = new HttpClient(new HttpClientHandler { CheckCertificateRevocationList = true })
