@@ -18,6 +18,15 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         private Version _sdkFeaureBandVersion;
 
         /// <summary>
+        /// Gets or sets whether a corresponding SWIX project should be generated for the MSI.
+        /// </summary>
+        public bool GenerateSwixAuthoring
+        {
+            get;
+            set;
+        } = true;
+
+        /// <summary>
         /// The path where the generated MSIs will be placed.
         /// </summary>
         [Required]
@@ -30,7 +39,6 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         /// <summary>
         /// The ID of the workload manifest.
         /// </summary>
-        [Required]
         public string ManifestId
         {
             get;
@@ -65,7 +73,6 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         /// <summary>
         /// The SDK version, e.g. 6.0.107.
         /// </summary>
-        [Required]
         public string SdkVersion
         {
             get;
@@ -102,10 +109,34 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         {
             try
             {
-                Log.LogMessage($"Generating workload manifest installer for {SdkFeatureBandVersion}");
-
                 NugetPackage nupkg = new(WorkloadManifestPackage, Log);
                 List<TaskItem> msis = new();
+
+                var manifestSeparator = ".Manifest-";
+                if (string.IsNullOrWhiteSpace(ManifestId))
+                {
+                    if ($"{nupkg.Id}".IndexOf(manifestSeparator, StringComparison.OrdinalIgnoreCase) == -1)
+                    {
+                        Log.LogError($"Unable to parse a manifest ID from package ID: '{nupkg.Id}'. Please provide the 'ManifestId' parameter.");
+                    }
+                    else
+                    {
+                        ManifestId = $"{nupkg.Id}".Substring(0, $"{nupkg.Id}".IndexOf(manifestSeparator));
+                    }
+                }
+                if (string.IsNullOrWhiteSpace(SdkVersion))
+                {
+                    if ($"{nupkg.Id}".IndexOf(manifestSeparator, StringComparison.OrdinalIgnoreCase) == -1)
+                    {
+                        Log.LogError($"Unable to parse the SDK version from package ID: '{nupkg.Id}'. Please provide the 'SdkVersion' parameter.");
+                    }
+                    else
+                    {
+                        SdkVersion = $"{nupkg.Id}".Substring($"{nupkg.Id}".IndexOf(manifestSeparator) + manifestSeparator.Length);
+                    }
+                }
+
+                Log.LogMessage(MessageImportance.High, $"Generating workload manifest installer for {SdkFeatureBandVersion}");
 
                 // MSI ProductName defaults to the package title and fallback to the package ID with a warning.
                 string productName = nupkg.Title;
@@ -115,6 +146,10 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                     Log?.LogMessage(MessageImportance.High, $"'{WorkloadManifestPackage}' should have a non-empty title. The MSI ProductName will be set to the package ID instead.");
                     productName = nupkg.Id;
                 }
+
+
+
+
 
                 // Extract once, but harvest multiple times because some generated attributes are platform dependent. 
                 string packageContentsDirectory = Path.Combine(PackageDirectory, $"{nupkg.Identity}");
@@ -153,7 +188,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
 
                     // To support upgrades, the UpgradeCode must be stable withing a feature band.
                     // For example, 6.0.101 and 6.0.108 will generate the same GUID for the same platform.
-                    var upgradeCode = Utils.CreateUuid(GenerateMsiBase.UpgradeCodeNamespaceUuid, $"{SdkFeatureBandVersion};{platform}");
+                    var upgradeCode = Utils.CreateUuid(GenerateMsiBase.UpgradeCodeNamespaceUuid, $"{ManifestId};{SdkFeatureBandVersion};{platform}");
                     var productCode = Guid.NewGuid();
                     Log.LogMessage($"UC: {upgradeCode}, PC: {productCode}, {SdkFeatureBandVersion}, {SdkVersion}, {platform}");
 
@@ -252,6 +287,19 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                     msi.SetMetadata(Metadata.JsonProperties, msiJsonPath);
                     msi.SetMetadata(Metadata.WixObj, candleIntermediateOutputPath);
 
+                    if (GenerateSwixAuthoring && IsSupportedByVisualStudio(platform))
+                    {
+                        string swixPackageId = $"{nupkg.Id}";
+
+                        string swixProject = GenerateSwixPackageAuthoring(light.OutputFile,
+                            swixPackageId, platform);
+
+                        if (!string.IsNullOrWhiteSpace(swixProject))
+                        {
+                            msi.SetMetadata(Metadata.SwixProject, swixProject);
+                        }
+                    }
+
                     // Generate a .csproj to build a NuGet payload package to carry the MSI and JSON manifest
                     msi.SetMetadata(Metadata.PackageProject, GeneratePackageProject(msi.ItemSpec, msiJsonPath, platform, nupkg));
 
@@ -267,7 +315,6 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
 
             return !Log.HasLoggedErrors;
         }
-
 
         private string GeneratePackageProject(string msiPath, string msiJsonPath, string platform, NugetPackage nupkg)
         {
@@ -357,6 +404,25 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             writer.WriteAttributeString("Pack", "true");
             writer.WriteAttributeString("PackagePath", packagePath);
             writer.WriteEndElement();
+        }
+
+        private string GenerateSwixPackageAuthoring(string msiPath, string packageId, string platform)
+        {
+            GenerateVisualStudioMsiPackageProject swixTask = new()
+            {
+                Chip = platform,
+                IntermediateBaseOutputPath = this.IntermediateBaseOutputPath,
+                PackageName = packageId,
+                MsiPath = msiPath,
+                BuildEngine = this.BuildEngine,
+            };
+
+            if (!swixTask.Execute())
+            {
+                Log.LogError($"Failed to generate SWIX authoring for '{msiPath}'");
+            }
+
+            return swixTask.SwixProject;
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <PackageId>Microsoft.DotNet.XUnitConsoleRunner</PackageId>
@@ -24,6 +24,7 @@
     <PackageReference Include="xunit.runner.reporters" Version="$(XUnitVersion)" />
     <PackageReference Include="xunit.runner.utility" Version="$(XUnitVersion)" />
     <PackageReference Include="xunit.abstractions" Version="$(XUnitAbstractionsVersion)" />
+    <PackageReference Include="System.Net.Http" Version="$(SystemNetHttpVersion)" />
   </ItemGroup>
 
   <Import Project="$(RepoRoot)eng\BuildTask.targets" />

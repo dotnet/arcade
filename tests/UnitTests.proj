@@ -69,7 +69,8 @@
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(HelixAccessToken)' == '' ">
-    <HelixTargetQueue Include="pr-windows.10.amd64.open-tweak-batching"/>
+    <HelixTargetQueue Include="pr-windows.10.amd64.open-redirect-azdo-cache"/>
+    <HelixTargetQueue Include="pr-ubuntu.1804.amd64.open-redirect-azdo-cache"/>
   </ItemGroup>
 
   <!-- Useless stuff to make Arcade SDK happy -->

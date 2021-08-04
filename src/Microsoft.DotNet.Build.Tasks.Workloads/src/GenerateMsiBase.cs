@@ -134,6 +134,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             string packageContentsDirectory = Path.Combine(PackageDirectory, $"{nupkg.Identity}");
             IEnumerable<string> exclusions = GetExlusionPatterns();
             string installDir = GetInstallDir(kind);
+            string packKind = kind.ToString().ToLowerInvariant();
 
             if ((kind != WorkloadPackKind.Library) && (kind != WorkloadPackKind.Template))
             {
@@ -174,10 +175,14 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                 string packageContentWxs = Path.Combine(msiSourcePath, "PackageContent.wxs");
                 sourceFiles.Add(packageContentWxs);
 
+                string directoryReference = (kind == WorkloadPackKind.Library) || (kind == WorkloadPackKind.Template)
+                    ? "InstallDir"
+                    : PackageContentDirectoryReference;
+
                 HarvestToolTask heat = new(BuildEngine, WixToolsetPath)
                 {
                     ComponentGroupName = PackageContentComponentGroupName,
-                    DirectoryReference = PackageContentDirectoryReference,
+                    DirectoryReference = directoryReference,
                     OutputFile = packageContentWxs,
                     Platform = platform,
                     SourceDirectory = packageContentsDirectory
@@ -216,6 +221,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                 candle.PreprocessorDefinitions.Add($@"SourceDir={packageContentsDirectory}");
                 candle.PreprocessorDefinitions.Add($@"Manufacturer={manufacturer}");
                 candle.PreprocessorDefinitions.Add($@"EulaRtf={EulaRtfPath}");
+                candle.PreprocessorDefinitions.Add($@"PackKind={packKind}");
 
                 // Compiler extension to process dependency provider authoring for package reference counting.
                 candle.Extensions.Add("WixDependencyExtension");

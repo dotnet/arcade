@@ -457,9 +457,6 @@
 
     <ItemGroup Condition="'$(PlatformPackageType)' == 'RuntimePack'">
       <IgnoredReference Include="@(RuntimePackAsset->'%(FileName)')" />
-      <!-- Ignore inboxed analyzers -->
-      <IgnoredReference Include="@(Reference->'%(FileName)')" 
-          Condition="$([System.String]::Copy('%(FullPath)').IndexOf('analyzers')) > 0"/>
     </ItemGroup>
 
     <ItemGroup Condition="'$(PlatformPackageType)' == 'TargetingPack'">

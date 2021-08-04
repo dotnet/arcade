@@ -104,8 +104,9 @@ Target Branch: <target branch for arcade updates, e.g. master>
 Update Frequency: everyDay
 Batchable: False
 Merge Policies:
-- Name: standard
+- Name: Standard
   Properties: {}
+Pull Request Failure Notification Tags: ''
 ```
 
 3. Save and close

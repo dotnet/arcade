@@ -7,9 +7,11 @@
       <Directory Id="$(var.ProgramFilesFolder)">
         <Directory Id="DOTNETHOME" Name="dotnet">
           <Directory Id="InstallDir" Name="$(var.InstallDir)">
+            <?if $(var.PackKind) != "library" and $(var.PackKind) != "template"?>
             <Directory Id="PackageDir" Name="$(var.PackageId)">
               <Directory Id="VersionDir" Name="$(var.PackageVersion)" />
             </Directory>
+            <?endif?>
           </Directory>
         </Directory>
       </Directory>
