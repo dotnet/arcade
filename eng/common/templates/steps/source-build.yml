@@ -44,7 +44,7 @@ steps:
     # in the default public locations.
     internalRuntimeDownloadArgs=
     if [ '$(dotnetclimsrc-read-sas-token-base64)' != '$''(dotnetclimsrc-read-sas-token-base64)' ]; then
-      internalRuntimeDownloadArgs='/p:DotNetRuntimeSourceFeed=https://dotnetclimsrc.blob.core.windows.net/dotnet /p:DotNetRuntimeSourceFeedKey=$(dotnetclimsrc-read-sas-token-base64)'
+      internalRuntimeDownloadArgs='/p:DotNetRuntimeSourceFeed=https://dotnetclimsrc.blob.core.windows.net/dotnet /p:DotNetRuntimeSourceFeedKey=$(dotnetclimsrc-read-sas-token-base64) --runtimesourcefeed https://dotnetclimsrc.blob.core.windows.net/dotnet --runtimesourcefeedkey $(dotnetclimsrc-read-sas-token-base64)'
     fi
 
     buildConfig=Release
