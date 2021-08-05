@@ -126,7 +126,7 @@ namespace Microsoft.DotNet.PackageTesting
 
         private void LoadIgnoredReferences()
         {
-            if (IgnoredReferences == null or IgnoredReferences.Length == 0) return;
+            if (IgnoredReferences == null || IgnoredReferences.Length == 0) return;
         
             foreach (var ignoredReference in IgnoredReferences)
             {
