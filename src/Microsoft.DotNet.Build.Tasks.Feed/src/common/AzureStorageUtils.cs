@@ -72,7 +72,7 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
         {
             BlobClient blob = GetBlob(blobPath.Replace("\\", "/"));
             BlobHttpHeaders headers = GetBlobHeadersByExtension(filePath);
-            
+
             // This function can sporadically throw 
             // "System.Net.Http.HttpRequestException: Error while copying content to a stream."
             // Ideally it should retry for itself internally, but the existing retry seems 
