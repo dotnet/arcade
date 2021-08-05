@@ -37,17 +37,17 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
 
         public BlobContainerClient Container { get; set; }
 
-        private static readonly HttpClient HttpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(300) };
-        private static readonly BlobClientOptions ClientOptions = new BlobClientOptions()
+        private static readonly HttpClient s_httpClient = new HttpClient { Timeout = TimeSpan.FromSeconds(300) };
+        private static readonly BlobClientOptions s_clientOptions = new BlobClientOptions()
         {
-            Transport = new HttpClientTransport(HttpClient)
+            Transport = new HttpClientTransport(s_httpClient)
         };
 
         public AzureStorageUtils(string AccountName, string AccountKey, string ContainerName)
         {
             _credential = new StorageSharedKeyCredential(AccountName, AccountKey);
             Uri endpoint = new Uri($"https://{AccountName}.blob.core.windows.net");
-            BlobServiceClient service = new BlobServiceClient(endpoint, _credential, ClientOptions);
+            BlobServiceClient service = new BlobServiceClient(endpoint, _credential, s_clientOptions);
             Container = service.GetBlobContainerClient(ContainerName);
         }
 
