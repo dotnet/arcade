@@ -126,7 +126,9 @@ namespace Microsoft.DotNet.PackageTesting
 
         private void LoadIgnoredReferences()
         {
-            foreach (var ignoredReference in IgnoredReferences.DefaultIfEmpty())
+            if (IgnoredReferences == null or IgnoredReferences.Length == 0) return;
+        
+            foreach (var ignoredReference in IgnoredReferences)
             {
                 var name = ignoredReference.ItemSpec;
                 var versionString = ignoredReference.GetMetadata("Version");
