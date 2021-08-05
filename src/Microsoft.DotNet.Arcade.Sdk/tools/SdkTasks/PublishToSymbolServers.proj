@@ -44,6 +44,7 @@
       <PublishToMSDL Condition="'$(PublishToMSDL)' == ''">true</PublishToMSDL>
       <PublishToSymbolServer Condition="'@(FilesToPublishToSymbolServer)' == '' and '@(PackagesToPublishToSymbolServer)' == ''">false</PublishToSymbolServer>
       <PublishSpecialClrFiles Condition="'$(PublishSpecialClrFiles)' == ''">true</PublishSpecialClrFiles>
+      <DryRun Condition="'$(DryRun)' == ''">false</DryRun>
     </PropertyGroup>
 
     <Message
@@ -96,7 +97,7 @@
                     SymbolServerPath="%(SymbolServerTargets.Identity)"
                     ExpirationInDays="$(DotNetSymbolExpirationInDays)"
                     VerboseLogging="true"
-                    DryRun="false"
+                    DryRun="$(DryRun)"
                     ConvertPortablePdbsToWindowsPdbs="false"
                     PdbConversionTreatAsWarning=""
                     PublishSpecialClrFiles="$(PublishSpecialClrFiles)"
