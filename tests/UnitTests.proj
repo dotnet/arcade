@@ -14,7 +14,6 @@
     <DotNetCliPackageType>sdk</DotNetCliPackageType>
 
     <TestRunNamePrefix>$(AGENT_JOBNAME)</TestRunNamePrefix>
-	<HelixBaseUri>https://helix.int-dot.net</HelixBaseUri>
   </PropertyGroup>
 
   <ItemGroup>
@@ -59,7 +58,9 @@
   </ItemGroup>
 
   <ItemGroup Condition=" '$(HelixAccessToken)' != '' ">
-    <HelixTargetQueue Include="pr-windows.10.amd64-tweak-batching"/>
+    <HelixTargetQueue Include="Debian.9.Amd64"/>
+    <HelixTargetQueue Include="RedHat.7.Amd64"/>
+    <HelixTargetQueue Include="Windows.10.Amd64"/>
   </ItemGroup>
 
   <PropertyGroup Condition=" '$(HelixAccessToken)' == '' ">
@@ -69,9 +70,20 @@
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(HelixAccessToken)' == '' ">
-    <HelixTargetQueue Include="pr-windows.10.amd64.open-redirect-azdo-cache"/>
-    <HelixTargetQueue Include="pr-ubuntu.1804.amd64.open-redirect-azdo-cache"/>
+    <HelixTargetQueue Include="Debian.9.Amd64.Open"/>
+    <HelixTargetQueue Include="RedHat.7.Amd64.Open"/>
+    <HelixTargetQueue Include="Windows.10.Amd64.Open"/>
   </ItemGroup>
+
+  <PropertyGroup Condition="!$(HelixTargetQueue.StartsWith('Windows'))">
+    <HelixPreCommands>$(HelixPreCommands);find $HELIX_CORRELATION_PAYLOAD -type f</HelixPreCommands>
+    <HelixPreCommands>$(HelixPreCommands);find . -type f</HelixPreCommands>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="$(HelixTargetQueue.StartsWith('Windows'))">
+    <HelixPreCommands>$(HelixPreCommands);dir /s %HELIX_CORRELATION_PAYLOAD%</HelixPreCommands>
+    <HelixPreCommands>$(HelixPreCommands);dir /s</HelixPreCommands>
+  </PropertyGroup>
 
   <!-- Useless stuff to make Arcade SDK happy -->
   <PropertyGroup>
