@@ -123,6 +123,8 @@ stages:
           - checkout: self
             clean: true
           steps:
+          - script: eng\common\sdk-task.ps1 -task PublishToSymbolServers /p:DryRun="true" -restore
+            displayName: sdk-task verification
           - powershell: eng\common\build.ps1
               -configuration $(_BuildConfig) 
               -prepareMachine
