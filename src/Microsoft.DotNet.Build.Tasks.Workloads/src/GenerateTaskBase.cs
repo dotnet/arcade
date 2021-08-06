@@ -12,6 +12,8 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
 {
     public abstract class GenerateTaskBase : Task
     {
+        public const int MaxPayloadRelativePath = 182;
+
         public static readonly string[] SupportedVisualStudioPlatforms = { "x86", "x64" };
 
         /// <summary>
@@ -67,6 +69,15 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         protected bool IsSupportedByVisualStudio(string platform)
         {
             return SupportedVisualStudioPlatforms.Contains(platform);
+        }
+
+        protected void CheckRelativePayloadPath(string relativePath)
+        {
+            if (relativePath.Length > MaxPayloadRelativePath)
+            {
+                // We'll let the task's execute method take care of logging this and terminating.
+                throw new Exception($"Payload relative path exceeds max length ({MaxPayloadRelativePath}): {relativePath}");
+            }
         }
     }
 }

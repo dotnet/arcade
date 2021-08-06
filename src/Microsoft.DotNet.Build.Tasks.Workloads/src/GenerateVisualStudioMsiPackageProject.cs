@@ -104,6 +104,10 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                     Log.LogMessage($"Using MSI version for package version: {Version}");
                 }
 
+                // Try to catch VS manifest validation errors before we get to VS.
+                string vsPayloadRelativePath = $"{PackageName},version={Version.ToString(3)},chip={Chip},productarch={ProductArch}\\{Path.GetFileName(MsiPath)}";
+                CheckRelativePayloadPath(vsPayloadRelativePath);
+
                 string swixSourceDirectory = Path.Combine(SwixDirectory, PackageName, Chip);
                 string msiSwr = EmbeddedTemplates.Extract("msi.swr", swixSourceDirectory);
                 string fullProjectName = $"{PackageName}.{Version.ToString(3)}.{Chip}";
