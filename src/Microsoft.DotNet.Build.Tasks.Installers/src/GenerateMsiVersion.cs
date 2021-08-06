@@ -85,7 +85,7 @@ namespace Microsoft.DotNet.Build.Tasks.Installers
             var minor = int.Parse(Minor) << 22;
             var patch = int.Parse(Patch) << 18;
 
-            var buildNumberMajor = int.Parse(BuildNumberMajor) & 0x3FFF << 4;
+            var buildNumberMajor = (int.Parse(BuildNumberMajor) & 0x3FFF) << 4;
             var buildNumberMinor = int.Parse(BuildNumberMinor) & 0xF;
 
             var msiVersionNumber = major | minor | patch | buildNumberMajor | buildNumberMinor;
