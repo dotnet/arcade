@@ -246,6 +246,7 @@
                                 DepsFilePath="$(SharedFrameworkDepsDestinationFile)"
                                 PackagesToRemove="@(TrimPkgsFromDeps)"
                                 Runtime="$(RuntimeGraphGeneratorRuntime)"
+                                RuntimeIdentifierGraph="$(BundledRuntimeIdentifierGraphFile)"
                                 BuildTasksAssemblyPath="$(PackagingTaskDir)Microsoft.DotNet.Build.Tasks.Packaging.dll" />
   </Target>
 

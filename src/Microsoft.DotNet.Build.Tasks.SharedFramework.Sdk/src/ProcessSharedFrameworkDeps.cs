@@ -6,6 +6,7 @@ using Microsoft.Build.Utilities;
 using Microsoft.Extensions.DependencyModel;
 using NuGet.Common;
 using NuGet.ProjectModel;
+using NuGet.RuntimeModel;
 using System;
 using System.IO;
 using System.Linq;
@@ -28,6 +29,8 @@ namespace Microsoft.DotNet.Build.Tasks.SharedFramework.Sdk
 
         [Required]
         public string BuildTasksAssemblyPath { get; set; }
+
+        public string RuntimeIdentifierGraph { get; set; }
 
         public override bool Execute()
         {
@@ -53,7 +56,7 @@ namespace Microsoft.DotNet.Build.Tasks.SharedFramework.Sdk
             }
 
             var manager = new RuntimeGraphManager();
-            var graph = manager.Collect(lockFile);
+            RuntimeGraph graph = string.IsNullOrEmpty(RuntimeIdentifierGraph) ? manager.Collect(lockFile) : JsonRuntimeFormat.ReadRuntimeGraph(RuntimeIdentifierGraph);
             var expandedGraph = manager.Expand(graph, Runtime);
 
             var trimmedRuntimeLibraries = context.RuntimeLibraries;
