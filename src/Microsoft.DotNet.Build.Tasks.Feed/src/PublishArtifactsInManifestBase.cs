@@ -426,26 +426,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             HashSet<TargetFeedConfig> feedConfigsForSymbols = FeedConfigs[symbolCategory];
             Dictionary<string, string> serversToPublish =
                 GetTargetSymbolServers(feedConfigsForSymbols, msdlToken, symWebToken);
-            HashSet<string> excludeFiles = new HashSet<string>();
-            
-            if(File.Exists(symbolPublishingExclusionsFile))
-            {
-                Log.LogMessage(MessageImportance.Normal, $"SymbolPublishingExclusionFile exists");
-                string[] files = File.ReadAllLines(symbolPublishingExclusionsFile);
-
-                foreach(var file in files)
-                {
-                    if(!string.IsNullOrEmpty(file))
-                    {
-                        Log.LogMessage(MessageImportance.Normal, $"Exclude the file {file} from publishing to symbol server");
-                        excludeFiles.Add(file);
-                    }
-                }
-            }
-            else
-            {
-                Log.LogMessage(MessageImportance.Normal, $"SymbolPublishingExclusionFile was not found at ${symbolPublishingExclusionsFile} ");
-            }
 
             if (symbolsToPublish != null && symbolsToPublish.Any())
             {
@@ -491,7 +471,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                                         token,
                                         symbolFiles,
                                         null,
-                                        excludeFiles,
+                                        null,
                                         ExpirationInDays,
                                         false,
                                         publishSpecialClrFiles,
@@ -557,7 +537,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             token,
                             null,
                             filesToSymbolServer,
-                            excludeFiles,
+                            null,
                             ExpirationInDays,
                             false,
                             publishSpecialClrFiles,
