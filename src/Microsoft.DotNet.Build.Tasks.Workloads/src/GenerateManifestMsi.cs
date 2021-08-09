@@ -80,6 +80,15 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         }
 
         /// <summary>
+        /// An item group containing information to shorten the names of packages.
+        /// </summary>
+        public ITaskItem[] ShortNames
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// Semicolon sepearate list of ICEs to suppress.
         /// </summary>
         public string SuppressIces
@@ -147,10 +156,6 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                     productName = nupkg.Id;
                 }
 
-
-
-
-
                 // Extract once, but harvest multiple times because some generated attributes are platform dependent. 
                 string packageContentsDirectory = Path.Combine(PackageDirectory, $"{nupkg.Identity}");
                 nupkg.Extract(packageContentsDirectory, Enumerable.Empty<string>());
@@ -192,6 +197,8 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                     var productCode = Guid.NewGuid();
                     Log.LogMessage($"UC: {upgradeCode}, PC: {productCode}, {SdkFeatureBandVersion}, {SdkVersion}, {platform}");
 
+                    string providerKeyName = $"{ManifestId},{SdkFeatureBandVersion},{platform}";
+
                     // Compile the MSI sources
                     string candleIntermediateOutputPath = Path.Combine(IntermediateBaseOutputPath, "wixobj",
                         $"{nupkg.Id}", $"{nupkg.Version}", platform);
@@ -219,7 +226,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                     candle.PreprocessorDefinitions.Add($@"ProductCode={productCode}");
                     candle.PreprocessorDefinitions.Add($@"UpgradeCode={upgradeCode}");
                     // Override the default provider key
-                    candle.PreprocessorDefinitions.Add($@"DependencyProviderKeyName={ManifestId},{SdkFeatureBandVersion},{platform}");
+                    candle.PreprocessorDefinitions.Add($@"DependencyProviderKeyName={providerKeyName}");
                     candle.PreprocessorDefinitions.Add($@"ProductName={productName}");
                     candle.PreprocessorDefinitions.Add($@"Platform={platform}");
                     candle.PreprocessorDefinitions.Add($@"SourceDir={packageContentsDataDirectory}");
@@ -273,7 +280,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                         Payload = Path.GetFileName(msiPath),
                         ProductCode = MsiUtils.GetProperty(msiPath, "ProductCode"),
                         ProductVersion = MsiUtils.GetProperty(msiPath, "ProductVersion"),
-                        ProviderKeyName = $"{nupkg.Id},{nupkg.Version},{platform}",
+                        ProviderKeyName = $"{providerKeyName}",
                         UpgradeCode = MsiUtils.GetProperty(msiPath, "UpgradeCode"),
                         RelatedProducts = MsiUtils.GetRelatedProducts(msiPath)
                     };
@@ -289,7 +296,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
 
                     if (GenerateSwixAuthoring && IsSupportedByVisualStudio(platform))
                     {
-                        string swixPackageId = $"{nupkg.Id}";
+                        string swixPackageId = $"{nupkg.Id.ToString().Replace(ShortNames)}";
 
                         string swixProject = GenerateSwixPackageAuthoring(light.OutputFile,
                             swixPackageId, platform);
@@ -406,7 +413,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             writer.WriteEndElement();
         }
 
-        private string GenerateSwixPackageAuthoring(string msiPath, string packageId, string platform)
+        internal string GenerateSwixPackageAuthoring(string msiPath, string packageId, string platform)
         {
             GenerateVisualStudioMsiPackageProject swixTask = new()
             {
@@ -414,8 +421,12 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                 IntermediateBaseOutputPath = this.IntermediateBaseOutputPath,
                 PackageName = packageId,
                 MsiPath = msiPath,
+                Version = !string.IsNullOrEmpty(MsiVersion) ? new Version(MsiVersion) : null,
                 BuildEngine = this.BuildEngine,
             };
+
+            string vsPayloadRelativePath = $"{swixTask.PackageName},version={swixTask.Version.ToString(3)},chip={swixTask.Chip},productarch={swixTask.ProductArch}\\{Path.GetFileName(msiPath)}";
+            CheckRelativePayloadPath(vsPayloadRelativePath);
 
             if (!swixTask.Execute())
             {
