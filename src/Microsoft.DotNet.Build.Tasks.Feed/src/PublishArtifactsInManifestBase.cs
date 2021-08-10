@@ -12,6 +12,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Net.Sockets;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -956,7 +957,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                     return true;
                 }
-                catch (Exception toStore) when (toStore is HttpRequestException || toStore is TaskCanceledException)
+                catch (Exception toStore) when (toStore is HttpRequestException || toStore is TaskCanceledException || toStore is SocketException)
                 {
                     mostRecentlyCaughtException = toStore;
                     return false;
