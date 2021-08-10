@@ -43,6 +43,7 @@ jobs:
           AssetManifests/**
           BlobArtifacts/MergedManifest.xml
           PdbArtifacts/**
+          ReleaseConfigs/SymbolPublishingExclusionsFile.txt
         downloadPath: '$(Build.ArtifactStagingDirectory)'
 
     - task: NuGetToolInstaller@1
@@ -84,7 +85,7 @@ jobs:
           /p:AkaMSClientSecret=$(akams-client-secret)
           ${{ parameters.artifactsPublishingAdditionalParameters }}
           /p:PDBArtifactsBasePath='$(Build.ArtifactStagingDirectory)/PDBArtifacts/'
-          /p:SymbolPublishingExclusionsFile='$(Build.SourcesDirectory)/eng/SymbolPublishingExclusionsFile.txt'
+          /p:SymbolPublishingExclusionsFile='$(Build.ArtifactStagingDirectory)/ReleaseConfigs/SymbolPublishingExclusionsFile.txt'
           ${{ parameters.symbolPublishingAdditionalParameters}}
           /p:MsdlToken=$(microsoft-symbol-server-pat)
           /p:SymWebToken=$(symweb-symbol-server-pat)
