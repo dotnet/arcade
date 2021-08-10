@@ -45,9 +45,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public string AzureDevOpsFeedsApiVersion { get; set; } = "5.0-preview.1";
 
-        public static string AzureDevOpsOrg { get; set; } = "dnceng";
-
-        private readonly string AzureDevOpsFeedsBaseUrl = $"https://feeds.dev.azure.com/{AzureDevOpsOrg}/";
+        public string AzureDevOpsOrg { get; set; } = "dnceng";
 
         /// <summary>
         /// Number of characters from the commit SHA prefix that should be included in the feed name.
@@ -105,11 +103,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     return false;
                 }
 
+                string azureDevOpsFeedsBaseUrl = $"https://feeds.dev.azure.com/{AzureDevOpsOrg}/";
                 do
                 {
                     using (HttpClient client = new HttpClient(new HttpClientHandler { CheckCertificateRevocationList = true })
                     {
-                        BaseAddress = new Uri(AzureDevOpsFeedsBaseUrl)
+                        BaseAddress = new Uri(azureDevOpsFeedsBaseUrl)
                     })
                     {
                         client.DefaultRequestHeaders.Add(
@@ -119,13 +118,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             "Basic",
                             Convert.ToBase64String(Encoding.ASCII.GetBytes(string.Format("{0}:{1}", "", AzureDevOpsPersonalAccessToken))));
 
-                        AzureDevOpsArtifactFeed newFeed = new AzureDevOpsArtifactFeed(versionedFeedName);
+                        AzureDevOpsArtifactFeed newFeed = new AzureDevOpsArtifactFeed(versionedFeedName, AzureDevOpsOrg);
 
                         string body = JsonConvert.SerializeObject(newFeed, _serializerSettings);
 
                         HttpRequestMessage postMessage = new HttpRequestMessage(HttpMethod.Post, $"{publicSegment}_apis/packaging/feeds");
                         postMessage.Content = new StringContent(body, Encoding.UTF8, "application/json");
-
                         HttpResponseMessage response = await client.SendAsync(postMessage);
 
                         if (response.StatusCode == HttpStatusCode.Created)
@@ -180,20 +178,24 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
     public class AzureDevOpsArtifactFeed
     {
-        public AzureDevOpsArtifactFeed(string name)
+        public AzureDevOpsArtifactFeed(string name, string organization)
         {
             Name = name;
+            if (organization == "dnceng")
+            {
+                Permissions = new List<Permission>
+                {
+                    // Mimic the permissions added to a feed when created in the browser
+                    new Permission("Microsoft.TeamFoundation.ServiceIdentity;116cce53-b859-4624-9a95-934af41eccef:Build:b55de4ed-4b5a-4215-a8e4-0a0a5f71e7d8", 3),                      // Project Collection Build Service
+                    new Permission("Microsoft.TeamFoundation.ServiceIdentity;116cce53-b859-4624-9a95-934af41eccef:Build:7ea9116e-9fac-403d-b258-b31fcf1bb293", 3),                      // internal Build Service
+                    new Permission("Microsoft.TeamFoundation.Identity;S-1-9-1551374245-1349140002-2196814402-2899064621-3782482097-0-0-0-0-1", 4),                                      // Feed administrators
+                    new Permission("Microsoft.TeamFoundation.Identity;S-1-9-1551374245-1846651262-2896117056-2992157471-3474698899-1-2052915359-1158038602-2757432096-2854636005", 4)   // Feed administrators and contributors
+                };
+            }
         }
 
         public string Name { get; set; }
 
-        public readonly List<Permission> Permissions = new List<Permission>
-        {
-            // Mimic the permissions added to a feed when created in the browser
-            new Permission("Microsoft.TeamFoundation.ServiceIdentity;116cce53-b859-4624-9a95-934af41eccef:Build:b55de4ed-4b5a-4215-a8e4-0a0a5f71e7d8", 3),                      // Project Collection Build Service
-            new Permission("Microsoft.TeamFoundation.ServiceIdentity;116cce53-b859-4624-9a95-934af41eccef:Build:7ea9116e-9fac-403d-b258-b31fcf1bb293", 3),                      // internal Build Service
-            new Permission("Microsoft.TeamFoundation.Identity;S-1-9-1551374245-1349140002-2196814402-2899064621-3782482097-0-0-0-0-1", 4),                                      // Feed administrators
-            new Permission("Microsoft.TeamFoundation.Identity;S-1-9-1551374245-1846651262-2896117056-2992157471-3474698899-1-2052915359-1158038602-2757432096-2854636005", 4)   // Feed administrators and contributors
-        };
+        public List<Permission> Permissions { get; private set; }
     }
 }

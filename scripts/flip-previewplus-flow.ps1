@@ -1,9 +1,9 @@
 param
 (
-    [Parameter(Mandatory=$true)][string]"$RuntimeChannel",
-    [Parameter(Mandatory=$true)][string]"$SdkChannel",
-    [Parameter(Mandatory=$true)][string]"$InternalRuntimeChannel",
-    [Parameter(Mandatory=$true)][string]"$InternalSdkChannel",
+    [Parameter(Mandatory=$true)][string]$RuntimeChannel,
+    [Parameter(Mandatory=$true)][string]$SdkChannel,
+    [Parameter(Mandatory=$true)][string]$InternalRuntimeChannel,
+    [Parameter(Mandatory=$true)][string]$InternalSdkChannel,
     [Parameter(Mandatory=$true)][ValidateSet('Preview','Preview+')][string]$FlowType,
     [switch]$TriggerSubscriptions
 )

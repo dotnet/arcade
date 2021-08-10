@@ -239,6 +239,9 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                     Log?.LogError($"Visual Studio components '{component.Name}' must have at least one dependency.");
                 }
 
+                string vsPayloadRelativePath = $"{component.Name},version={component.Version}\\_package.json";
+                CheckRelativePayloadPath(vsPayloadRelativePath);
+
                 swixProjects.Add(component.Generate(Path.Combine(SourceDirectory, $"{workloadDefinition.Id}.{manifest.Version}.0")));
             }
 

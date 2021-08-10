@@ -3,11 +3,11 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.IO;
+using System.Linq;
 using Microsoft.Arcade.Test.Common;
-using Microsoft.Build.Utilities;
 using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
 using Xunit;
 
 namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
@@ -19,6 +19,42 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
         public string TestAssetsPath = Path.Combine(AppContext.BaseDirectory, "testassets");
 
         public string TestIntermediateBaseOutputPath => Path.Combine(IntermediateBaseOutputPath, Path.GetFileNameWithoutExtension(Path.GetTempFileName()));
+
+        [Fact]
+        public void ItIgnoresNotApplicableAliasedPacks()
+        {
+            string workloadManifest = Path.Combine(AppContext.BaseDirectory, "testassets", "AbstractWorkloadsNonWindowsPacks.json");
+
+            var buildTask = new GenerateVisualStudioWorkload()
+            {
+                WorkloadManifests = new TaskItem[]
+                {
+                    new TaskItem(workloadManifest)
+                },
+                ComponentVersions = new TaskItem[]
+                {
+                    new TaskItem("microsoft-net-runtime-ios", new Dictionary<string, string> { { "Version", "6.5.38766" } }),
+                    new TaskItem("runtimes-ios", new Dictionary<string, string> { { "Version", "6.5.38766" } }),
+                    new TaskItem("microsoft-net-runtime-mono-tooling", new Dictionary<string, string> { { "Version", "6.5.38766" } }),
+                },
+                GenerateMsis = false,
+                IntermediateBaseOutputPath = TestIntermediateBaseOutputPath,
+                WixToolsetPath = "",
+                BuildEngine = new MockBuildEngine()
+            };
+
+            Assert.True(buildTask.Execute());
+            string outputPath = Path.GetDirectoryName(buildTask.SwixProjects[0].GetMetadata("FullPath"));
+            string componentSwr = File.ReadAllText(Path.Combine(outputPath, "component.swr"));
+
+            Assert.Contains(@"package name=microsoft.net.runtime.ios", componentSwr);
+            Assert.DoesNotContain(@"vs.dependency id=Microsoft.NETCore.App.Runtime.AOT.Cross.ios-arm", componentSwr);
+            Assert.DoesNotContain(@"vs dependency id=Microsoft.NETCore.App.Runtime.AOT.Cross.ios-arm64", componentSwr);
+            Assert.DoesNotContain(@"vs dependency id=Microsoft.NETCore.App.Runtime.AOT.Cross.iossimulator-arm64", componentSwr);
+            Assert.DoesNotContain(@"vs dependency id=Microsoft.NETCore.App.Runtime.AOT.Cross.iossimulator-x64", componentSwr);
+            Assert.DoesNotContain(@"vs dependency id=Microsoft.NETCore.App.Runtime.AOT.Cross.iossimulator-x86", componentSwr);
+            Assert.Contains(@"vs.dependency id=runtimes.ios", componentSwr);
+        }
 
         [Fact]
         public void ItGeneratesASwixProjectFromAWorkloadManifest()
