@@ -6,7 +6,6 @@ using Microsoft.DotNet.Build.Tasks;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
@@ -125,7 +124,9 @@ namespace Microsoft.DotNet.PackageTesting
 
         private void LoadIgnoredTypes()
         {
-            foreach(var ignoredType in IgnoredTypes.DefaultIfEmpty())
+            if (IgnoredTypes == null || IgnoredTypes.Length == 0) return;
+
+            foreach(var ignoredType in IgnoredTypes)
             {
                 ignoredTypes.Add(ignoredType.ItemSpec);
             }
