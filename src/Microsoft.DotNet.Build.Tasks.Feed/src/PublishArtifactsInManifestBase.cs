@@ -426,12 +426,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             HashSet<TargetFeedConfig> feedConfigsForSymbols = FeedConfigs[symbolCategory];
             Dictionary<string, string> serversToPublish =
                 GetTargetSymbolServers(feedConfigsForSymbols, msdlToken, symWebToken);
-            HashSet<string> excludeFiles = new HashSet<string>();
+            HashSet<string> excludeFiles = null;
             
             if(File.Exists(symbolPublishingExclusionsFile))
             {
                 Log.LogMessage(MessageImportance.Normal, $"SymbolPublishingExclusionFile exists");
                 string[] files = File.ReadAllLines(symbolPublishingExclusionsFile);
+                excludeFiles = new HashSet<string>();
 
                 foreach(var file in files)
                 {
