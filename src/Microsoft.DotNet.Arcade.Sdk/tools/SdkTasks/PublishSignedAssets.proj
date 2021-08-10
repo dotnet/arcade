@@ -14,6 +14,7 @@
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <NETCORE_ENGINEERING_TELEMETRY>Publish</NETCORE_ENGINEERING_TELEMETRY>
+    <AzureDevOpsOrg Condition="'$(AzureDevOpsOrg)' == ''">dnceng</AzureDevOpsOrg>
   </PropertyGroup>
 
   <Target Name="Execute">
@@ -37,7 +38,8 @@
     <CreateAzureDevOpsFeed
         IsInternal="$(IsInternalBuild)"
         AzureDevOpsPersonalAccessToken="$(AzdoTargetFeedPAT)"
-        FeedName="$(FeedName)-shipping">
+        FeedName="$(FeedName)-shipping"
+        AzureDevOpsOrg="$(AzureDevOpsOrg)">
       <Output TaskParameter="TargetFeedURL" PropertyName="ShippingAzdoPackageFeedURL"/>
     </CreateAzureDevOpsFeed>
 
@@ -45,7 +47,8 @@
     <CreateAzureDevOpsFeed
         IsInternal="$(IsInternalBuild)"
         AzureDevOpsPersonalAccessToken="$(AzdoTargetFeedPAT)"
-        FeedName="$(FeedName)-nonshipping">
+        FeedName="$(FeedName)-nonshipping"
+        AzureDevOpsOrg="$(AzureDevOpsOrg)">
       <Output TaskParameter="TargetFeedURL" PropertyName="NonShippingAzdoPackageFeedURL"/>
     </CreateAzureDevOpsFeed>
 

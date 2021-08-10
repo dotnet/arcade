@@ -1,5 +1,6 @@
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
 <Project>
+
   <UsingTask TaskName="ChooseBestP2PTargetFrameworkTask" AssemblyFile="$(DotNetBuildTasksTargetFrameworkSdkAssembly)" />
   <UsingTask TaskName="ChooseBestTargetFrameworksTask" AssemblyFile="$(DotNetBuildTasksTargetFrameworkSdkAssembly)" />
   <UsingTask TaskName="AddTargetFrameworksToProjectTask" AssemblyFile="$(DotNetBuildTasksTargetFrameworkSdkAssembly)" />
@@ -90,42 +91,6 @@
       <ProjectReference Remove="@(ProjectReference)" />
       <ProjectReference Include="@(_ProjectReferenceWithBestTargetFramework)" />
     </ItemGroup>
-  </Target>
-
-  <Target Name="ExpandAllPackageTargetFrameworks"
-          BeforeTargets="ExpandProjectReferences"
-          Condition="'$(MSBuildProjectExtension)' == '.pkgproj'">
-    <MSBuild Targets="GetPackageTargetFrameworksList"
-             Projects="@(_NonPkgProjProjectReference)">
-      <Output TaskParameter="TargetOutputs"
-              ItemName="_NonPkgProjProjectReferenceTargetFramework" />
-    </MSBuild>
-    
-    <ItemGroup>
-      <!-- assign TargetFramework as a separate step to prevent batching during the transform which can reorder the list.
-           order or projects matters here since this applies to traversal projects which build projects serially. -->
-      <_NonPkgProjProjectReferenceTargetFrameworkWithAdditionalProperties Include="@(_NonPkgProjProjectReferenceTargetFramework->'%(OriginalItemSpec)')">
-        <AdditionalProperties>TargetFramework=%(_NonPkgProjProjectReferenceTargetFramework.Identity);%(_NonPkgProjProjectReferenceTargetFramework.AdditionalProperties)</AdditionalProperties>
-      </_NonPkgProjProjectReferenceTargetFrameworkWithAdditionalProperties>
-
-    </ItemGroup>
-
-    <ItemGroup>
-      <_NonPkgProjProjectReference Remove="@(_NonPkgProjProjectReference)" />
-      <_NonPkgProjProjectReference Include="@(_NonPkgProjProjectReferenceTargetFrameworkWithAdditionalProperties)" />
-    </ItemGroup>
-  </Target>
-
-  <Target Name="GetPackageTargetFrameworksList"
-          Returns="$(PackageTargetFrameworks)">
-    <ItemGroup>
-      <PackageTargetFrameworksList Include="$(TargetFrameworks)" />
-      <PackageTargetFrameworksList Remove="@(PackageTargetFrameworksList)" Condition="$([System.String]::Copy('%(Identity)').StartsWith('_'))" />
-    </ItemGroup>
-
-    <PropertyGroup>
-      <PackageTargetFrameworks>@(PackageTargetFrameworksList)</PackageTargetFrameworks>
-    </PropertyGroup>
   </Target>
 
 </Project>

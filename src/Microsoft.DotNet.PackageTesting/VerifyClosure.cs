@@ -126,7 +126,9 @@ namespace Microsoft.DotNet.PackageTesting
 
         private void LoadIgnoredReferences()
         {
-            foreach (var ignoredReference in IgnoredReferences.DefaultIfEmpty())
+            if (IgnoredReferences == null || IgnoredReferences.Length == 0) return;
+        
+            foreach (var ignoredReference in IgnoredReferences)
             {
                 var name = ignoredReference.ItemSpec;
                 var versionString = ignoredReference.GetMetadata("Version");
@@ -174,9 +176,9 @@ namespace Microsoft.DotNet.PackageTesting
             AssemblyInfo assm = depStack.Peek();
 
             // check module references
-            if (assm.State == CheckState.Unchecked && CheckModuleReferences)
+            if (assm.State == CheckState.Unchecked && CheckModuleReferences && assm.ModuleReferences != null)
             {
-                foreach(var moduleReference in assm.ModuleReferences.DefaultIfEmpty())
+                foreach(var moduleReference in assm.ModuleReferences)
                 {
                     if (ShouldIgnore(moduleReference))
                     {

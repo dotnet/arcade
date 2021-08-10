@@ -95,13 +95,17 @@ namespace Microsoft.DotNet.Helix.Sdk
                         string destinationFile = Path.Combine(destinationDir.FullName, file);
                         Log.LogMessage(MessageImportance.Normal, $"Downloading {file} => {destinationFile}...");
 
-                        var uri = new Uri($"{ResultsContainer}{workItemName}/{file}");
+                        // Currently the blob storage includes the retry iteration, however there is no good way
+                        // to get the "best" iteration number to download the files from. For now, use always iteration
+                        // 1 until helix provides an API to get result files from the "good" iteration run.
+                        // https://github.com/dotnet/core-eng/issues/13983
+                        var uri = new Uri($"{ResultsContainer}{workItemName}/1/{file}");
                         CloudBlob blob = string.IsNullOrEmpty(ResultsContainerReadSAS) ? new CloudBlob(uri) : new CloudBlob(uri, new StorageCredentials(ResultsContainerReadSAS));
                         await blob.DownloadToFileAsync(destinationFile, FileMode.Create);
                     }
                     catch (StorageException e)
                     {
-                        Log.LogWarning($"Failed to download {workItemName}/{file} blob from results container: {e.Message}");
+                        Log.LogWarning($"Failed to download {workItemName}/1/{file} blob from results container: {e.Message}");
                     }
                 }
             };
