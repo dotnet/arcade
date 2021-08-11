@@ -107,7 +107,12 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             appFolderPath = appFolderPath.TrimEnd(Path.DirectorySeparatorChar);
 
-            (workItemName, bool isAlreadyArchived) = GetWorkItemName(workItemName);
+            bool isAlreadyArchived = workItemName.EndsWith(".zip");
+
+            if (isAlreadyArchived || workItemName.EndsWith(".app"))
+            {
+                workItemName = workItemName.Substring(0, workItemName.Length - 4);
+            }
 
             if (!ValidateAppBundlePath(fileSystem, appFolderPath, isAlreadyArchived))
             {
@@ -182,19 +187,6 @@ namespace Microsoft.DotNet.Helix.Sdk
             bool isAlreadyArchived)
         {
             return isAlreadyArchived ? fileSystem.FileExists(appBundlePath) : fileSystem.DirectoryExists(appBundlePath);
-        }
-
-        private (string workItemName, bool isAlreadyArchived) GetWorkItemName(
-            string workItemName)
-        {
-            bool isAlreadyArchived = workItemName.EndsWith(".zip");
-
-            if (isAlreadyArchived || workItemName.EndsWith(".app"))
-            {
-                workItemName = workItemName.Substring(0, workItemName.Length - 4);
-            }
-
-            return (workItemName, isAlreadyArchived);
         }
 
         private string GetDefaultCommand(string target, bool includesTestRunner, bool resetSimulator) =>
