@@ -178,7 +178,7 @@ stages:
             clean: true
           steps:
           - script: eng/common/build.sh
-              --configuration $(_BuildConfig) 
+              --configuration $(_BuildConfig)
               --prepareMachine
               --ci
               --restore
