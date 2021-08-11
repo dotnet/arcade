@@ -127,7 +127,14 @@ stages:
             displayName: sdk-task verification
             inputs:
               filePath: eng\common\sdk-task.ps1
-              arguments: -task PublishToSymbolServers /p:DryRun="true" -restore
+              arguments: -task PublishToSymbolServers /p:DryRun="true" -restore -msbuildEngine dotnet
+                /p:DotNetSymbolServerTokenMsdl=DryRunPTA
+                /p:DotNetSymbolServerTokenSymWeb=DryRunPTA
+                /p:PDBArtifactsDirectory='$(Build.ArtifactStagingDirectory)/PDBArtifacts/'
+                /p:BlobBasePath='$(Build.ArtifactStagingDirectory)/BlobArtifacts/'
+                /p:SymbolPublishingExclusionsFile='$(Build.SourcesDirectory)/eng/SymbolPublishingExclusionsFile.txt'
+                /p:Configuration=Release
+                /p:PublishToMSDL=false
           - powershell: eng\common\build.ps1
               -configuration $(_BuildConfig)
               -prepareMachine
