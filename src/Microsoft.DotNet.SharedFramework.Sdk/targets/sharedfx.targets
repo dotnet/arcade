@@ -7,7 +7,7 @@
     <PublishReadyToRunUseCrossgen2 Condition="'$(PublishReadyToRunUseCrossgen2)' == '' and '$(PublishReadyToRun)' == 'true' and '$(_TargetFrameworkVersionWithoutV)' >= '6.0'">true</PublishReadyToRunUseCrossgen2>
     <PublishReadyToRunEmitSymbols>true</PublishReadyToRunEmitSymbols>
     <PublishReadyToRunShowWarnings>true</PublishReadyToRunShowWarnings>
-    <AllowedOutputExtensionsInSymbolsPackageBuildOutputFolder>$(AllowedOutputExtensionsInSymbolsPackageBuildOutputFolder);.map;.dbg;.debug;.dwarf</AllowedOutputExtensionsInSymbolsPackageBuildOutputFolder>
+    <AllowedOutputExtensionsInSymbolsPackageBuildOutputFolder>$(AllowedOutputExtensionsInSymbolsPackageBuildOutputFolder);.map;.r2rmap;.dbg;.debug;.dwarf</AllowedOutputExtensionsInSymbolsPackageBuildOutputFolder>
     <_DefaultHostJsonTargetPath>runtimes/$(RuntimeIdentifier)/lib/$(TargetFramework)</_DefaultHostJsonTargetPath>
     <HostJsonTargetPath Condition="'$(HostJsonTargetPath)' == ''">$(_DefaultHostJsonTargetPath)</HostJsonTargetPath>
     <IncludeFallbacksInDepsFile Condition="'$(IncludeFallbacksInDepsFile)' == ''">false</IncludeFallbacksInDepsFile>
@@ -77,6 +77,7 @@
       <FilesToPackage Include="@(ResolvedFileToPublish)" Exclude="@(RuntimePackAsset)" />
       <FilesToPackage Condition="'%(FilesToPackage.AssetType)' == 'native'" IsNative="true" />
       <_r2rSymbolFiles Include="@(ResolvedFileToPublish->'%(RootDir)%(Directory)%(FileName).ni.pdb')" />
+      <_r2rV1MapFiles Include="@(ResolvedFileToPublish->'%(RootDir)%(Directory)%(FileName).ni.r2rmap')" />
     </ItemGroup>
     <!-- MSBuild does not resolve globs from item transformations,
          so round-trip through a property to activate glob resolution. -->
@@ -86,6 +87,7 @@
     <ItemGroup>
       <FilesToPackage Include="@(_r2rSymbolFiles)" Condition="Exists('%(Identity)')" IsSymbolFile="true" />
       <FilesToPackage Include="$(_r2rSymbolFilePattern)" IsSymbolFile="true" />
+      <FilesToPackage Include="@(_r2rV1MapFiles)" Condition="Exists('%(Identity)')" IsSymbolFile="true" />
     </ItemGroup>
   </Target>
 
@@ -136,9 +138,14 @@
         <IsPgoData>true</IsPgoData>
         <TargetPath>PgoData</TargetPath>
       </FilesToPackage>
+      <!-- Legacy crossgen perf map files. -->
       <FilesToPackage Condition="$([System.String]::new('%(Filename)').Contains('.ni.{')) and 
                                  $([System.String]::new('%(Filename)').EndsWith('}')) and
                                  '%(Extension)' == '.map'">
+        <IsSymbolFile>true</IsSymbolFile>
+      </FilesToPackage>
+      <!-- crossgen2 v1 perf map files. -->
+      <FilesToPackage Condition="'%(Extension)' == '.r2rmap'">
         <IsSymbolFile>true</IsSymbolFile>
       </FilesToPackage>
     </ItemGroup>
