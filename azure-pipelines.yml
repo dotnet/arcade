@@ -103,7 +103,7 @@ stages:
           publish:
             artifacts:
               name: Artifacts_Test_$(Agent.OS)_$(_BuildConfig)
-            logs:
+            logs: 
               name: Logs_Test_$(Agent.OS)_$(_BuildConfig)
           download: true
         workspace:
@@ -136,7 +136,7 @@ stages:
                 /p:Configuration=Release
                 /p:PublishToMSDL=false
           - powershell: eng\common\build.ps1
-              -configuration $(_BuildConfig)
+              -configuration $(_BuildConfig) 
               -prepareMachine
               -ci
               -restore
@@ -149,7 +149,7 @@ stages:
               SYSTEM_ACCESSTOKEN: $(System.AccessToken)
               HelixAccessToken: ''
           - powershell: eng\common\build.ps1
-              -configuration $(_BuildConfig)
+              -configuration $(_BuildConfig) 
               -prepareMachine
               -ci
               -restore
@@ -178,7 +178,7 @@ stages:
             clean: true
           steps:
           - script: eng/common/build.sh
-              --configuration $(_BuildConfig)
+              --configuration $(_BuildConfig) 
               --prepareMachine
               --ci
               --restore
@@ -217,7 +217,7 @@ stages:
               SYSTEM_ACCESSTOKEN: $(System.AccessToken)
               HelixAccessToken: ''
           - script: eng/common/build.sh
-              -configuration $(_BuildConfig)
+              -configuration $(_BuildConfig) 
               -prepareMachine
               -ci
               -restore
@@ -225,8 +225,8 @@ stages:
               -projects $(Build.SourcesDirectory)/tests/UnitTests.XHarness.Android.Simulator.proj
               /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.XHarness.Android.Simulator.binlog
               /p:RestoreUsingNuGetTargets=false
-              /p:XHarnessTestX86=true
-              /p:XHarnessTestX86_64=true
+              /p:XHarnessTestX86=true 
+              /p:XHarnessTestX86_64=true 
             displayName: XHarness Android Helix Testing (Linux)
             env:
               SYSTEM_ACCESSTOKEN: $(System.AccessToken)
@@ -239,7 +239,7 @@ stages:
     jobs:
     - template: /eng/validate-sdk.yml
       parameters:
-        buildArgs: -configuration $(_BuildConfig)
+        buildArgs: -configuration $(_BuildConfig) 
           -prepareMachine
           $(_InternalBuildArgs)
           /p:Test=false
@@ -248,7 +248,7 @@ stages:
     parameters:
       publishingInfraVersion: 3
       # signing validation will not run, even if the below value is 'true', if the 'PostBuildSign' variable is set to 'true'
-      enableSigningValidation: false
+      enableSigningValidation: false      
       # Sourcelink validation isn't passing for Arcade due to some regressions. This should be
       # enabled back once this issue is resolved: https://github.com/dotnet/arcade/issues/2912
       enableSourceLinkValidation: false

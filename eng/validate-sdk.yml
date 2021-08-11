@@ -31,7 +31,7 @@ jobs:
     - checkout: self
       clean: true
     steps:
-    - script: eng\update-packagesource.cmd
+    - script: eng\update-packagesource.cmd 
         -gitHubPat $(BotAccount-dotnet-maestro-bot-PAT)
         -barToken $(MaestroAccessToken)
         -packagesSource $(Build.SourcesDirectory)/build_stage_artifacts
