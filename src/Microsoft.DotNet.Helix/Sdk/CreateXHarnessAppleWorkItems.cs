@@ -107,17 +107,14 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             appFolderPath = appFolderPath.TrimEnd(Path.DirectorySeparatorChar);
 
-            if (!fileSystem.DirectoryExists(appFolderPath))
+            (workItemName, bool isAlreadyArchived) = GetWorkItemName(workItemName);
+
+            if (!ValidateAppBundlePath(fileSystem, appFolderPath, isAlreadyArchived))
             {
                 Log.LogError($"App bundle not found in {appFolderPath}");
                 return null;
             }
-
-            if (workItemName.EndsWith(".app"))
-            {
-                workItemName = workItemName.Substring(0, workItemName.Length - 4);
-            }
-
+            
             var (testTimeout, workItemTimeout, expectedExitCode, customCommands) = ParseMetadata(appBundleItem);
 
             // Validation of any metadata specific to iOS stuff goes here
@@ -170,13 +167,34 @@ namespace Microsoft.DotNet.Helix.Sdk
                 customCommands = GetDefaultCommand(target, includesTestRunner, resetSimulator);
             }
 
-            string appName = fileSystem.GetFileName(appFolderPath);
+            string appName = isAlreadyArchived ? $"{fileSystem.GetFileNameWithoutExtension(appFolderPath)}.app" : fileSystem.GetFileName(appFolderPath);
             string helixCommand = GetHelixCommand(appName, target, testTimeout, launchTimeout, includesTestRunner, expectedExitCode, resetSimulator);
-            string payloadArchivePath = await CreateZipArchiveOfFolder(zipArchiveManager, fileSystem, workItemName, appFolderPath, customCommands);
+            string payloadArchivePath = await CreateZipArchiveOfFolder(zipArchiveManager, fileSystem, workItemName, isAlreadyArchived, appFolderPath, customCommands);
 
             Log.LogMessage($"Creating work item with properties Identity: {workItemName}, Payload: {appFolderPath}, Command: {helixCommand}");
 
             return CreateTaskItem(workItemName, payloadArchivePath, helixCommand, workItemTimeout);
+        }
+
+        private bool ValidateAppBundlePath(
+            IFileSystem fileSystem, 
+            string appBundlePath, 
+            bool isAlreadyArchived)
+        {
+            return isAlreadyArchived ? fileSystem.FileExists(appBundlePath) : fileSystem.DirectoryExists(appBundlePath);
+        }
+
+        private (string workItemName, bool isAlreadyArchived) GetWorkItemName(
+            string workItemName)
+        {
+            bool isAlreadyArchived = workItemName.EndsWith(".zip");
+
+            if (isAlreadyArchived || workItemName.EndsWith(".app"))
+            {
+                workItemName = workItemName.Substring(0, workItemName.Length - 4);
+            }
+
+            return (workItemName, isAlreadyArchived);
         }
 
         private string GetDefaultCommand(string target, bool includesTestRunner, bool resetSimulator) =>
@@ -218,15 +236,10 @@ namespace Microsoft.DotNet.Helix.Sdk
             IZipArchiveManager zipArchiveManager,
             IFileSystem fileSystem,
             string workItemName,
+            bool isAlreadyArchived,
             string folderToZip,
             string injectedCommands)
         {
-            if (!fileSystem.DirectoryExists(folderToZip))
-            {
-                Log.LogError($"Cannot find path containing app: '{folderToZip}'");
-                return string.Empty;
-            }
-
             string appFolderDirectory = fileSystem.GetDirectoryName(folderToZip);
             string fileName = $"xharness-app-payload-{workItemName.ToLowerInvariant()}.zip";
             string outputZipPath = fileSystem.PathCombine(appFolderDirectory, fileName);
@@ -237,7 +250,15 @@ namespace Microsoft.DotNet.Helix.Sdk
                 fileSystem.DeleteFile(outputZipPath);
             }
 
-            zipArchiveManager.ArchiveDirectory(folderToZip, outputZipPath, true);
+            if (!isAlreadyArchived)
+            {
+                zipArchiveManager.ArchiveDirectory(folderToZip, outputZipPath, true);
+            }
+            else
+            {
+                Log.LogMessage($"App payload '{workItemName}` has already been zipped. Copying to '{outputZipPath}` instead");
+                fileSystem.FileCopy(folderToZip, outputZipPath);
+            }
 
             Log.LogMessage($"Adding the XHarness job scripts into the payload archive");
             await zipArchiveManager.AddResourceFileToArchive<CreateXHarnessAppleWorkItems>(outputZipPath, ScriptNamespace + EntryPointScript, EntryPointScript);
