@@ -960,7 +960,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 catch (Exception toStore)
                 {
                     mostRecentlyCaughtException = toStore;
-                    Log.LogMessage(MessageImportance.Normal, $"Download failed due to {toStore.GetType().FullName}: {toStore.Message}");
                     return false;
                 }
             }).ConfigureAwait(false);
@@ -968,7 +967,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             if (!success)
             {
                 throw new Exception(
-                    $"Failed to download local file '{path}' after {RetryHandler.MaxAttempts} attempts.  See inner exception for details, {mostRecentlyCaughtException}");
+                    $"Failed to download local file '{path}' after {RetryHandler.MaxAttempts} attempts.  See inner exception for details.", mostRecentlyCaughtException);
             }
         }
 
