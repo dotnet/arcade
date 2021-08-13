@@ -24,7 +24,7 @@
     <SuppressNETCoreSdkPreviewMessage>true</SuppressNETCoreSdkPreviewMessage>
     
     <!-- Workaround breaking change in .NET SDK. See https://github.com/dotnet/sdk/issues/19521 -->
-    <DisableImplicitNamespaceImports>true<DisableImplicitNamespaceImports/>
+    <DisableImplicitNamespaceImports>true</DisableImplicitNamespaceImports>
 
     <!-- By default do not build NuGet package for a non pkgproj project. Project may override. -->
     <IsPackable Condition="'$(MSBuildProjectExtension)' != '.pkgproj'">false</IsPackable>
