@@ -96,6 +96,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
         private const string FeedDotNet6Transport = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6-transport/nuget/v3/index.json";
         private const string FeedDotNet6Symbols = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6-symbols/nuget/v3/index.json";
 
+        private const string FeedDotNet7Shipping = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet7/nuget/v3/index.json";
+        private const string FeedDotNet7Transport = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet7-transport/nuget/v3/index.json";
+        private const string FeedDotNet7Symbols = "https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet7-symbols/nuget/v3/index.json";
+
         private const string FeedDotNet6InternalShipping = "https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet6-internal/nuget/v3/index.json";
         private const string FeedDotNet6InternalTransport = "https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet6-internal-transport/nuget/v3/index.json";
         private const string FeedDotNet6InternalSymbols = "https://pkgs.dev.azure.com/dnceng/internal/_packaging/dotnet6-internal-symbols/nuget/v3/index.json";
@@ -128,6 +132,34 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 FeedDotNet5Shipping,
                 FeedDotNet5Transport,
                 FeedDotNet5Symbols,
+                FeedForChecksums,
+                FeedForInstallers,
+                PublicAndInternalSymbolTargets,
+                filenamesToExclude: FilenamesToExclude),
+
+            // ".NET 7",
+            new TargetChannelConfig(
+                2236,
+                false,
+                PublishingInfraVersion.All,
+                "7.0",
+                FeedDotNet7Shipping,
+                FeedDotNet7Transport,
+                FeedDotNet7Symbols,
+                FeedForChecksums,
+                FeedForInstallers,
+                PublicAndInternalSymbolTargets,
+                filenamesToExclude: FilenamesToExclude),
+
+            // ".NET 7 SDK 7.0.1xx",
+            new TargetChannelConfig(
+                2237,
+                false,
+                PublishingInfraVersion.All,
+                "7.0.1xx",
+                FeedDotNet7Shipping,
+                FeedDotNet7Transport,
+                FeedDotNet7Symbols,
                 FeedForChecksums,
                 FeedForInstallers,
                 PublicAndInternalSymbolTargets,
