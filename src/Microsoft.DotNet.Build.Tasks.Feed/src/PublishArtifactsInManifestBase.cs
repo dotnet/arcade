@@ -957,9 +957,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                     return true;
                 }
-                catch (Exception toStore) when (toStore is HttpRequestException || toStore is TaskCanceledException || toStore is SocketException)
+                catch (Exception toStore)
                 {
                     mostRecentlyCaughtException = toStore;
+                    Log.LogMessage(MessageImportance.Normal, $"Download failed due to {toStore.GetType().FullName}: {toStore.Message}");
                     return false;
                 }
             }).ConfigureAwait(false);
