@@ -957,7 +957,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                     return true;
                 }
-                catch (Exception toStore) when (toStore is HttpRequestException || toStore is TaskCanceledException || toStore is SocketException)
+                catch (Exception toStore)
                 {
                     mostRecentlyCaughtException = toStore;
                     return false;
@@ -967,7 +967,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             if (!success)
             {
                 throw new Exception(
-                    $"Failed to download local file '{path}' after {RetryHandler.MaxAttempts} attempts.  See inner exception for details, {mostRecentlyCaughtException}");
+                    $"Failed to download local file '{path}' after {RetryHandler.MaxAttempts} attempts.  See inner exception for details.", mostRecentlyCaughtException);
             }
         }
 
