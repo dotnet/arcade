@@ -335,7 +335,7 @@ This is the fastest rerun option, because the payloads don't need to be redownlo
 In the example, with a value of "2", that means that the test will need to fail 3 times before being marks as failed (1 intial failure, and 2 rerun failures).
 
 ## rules
-The three "rules" entries are lists of rules that will be used to match test to determin desired behavior. In the case of multiple rule matches:
+The three "rules" entries are lists of rules that will be used to match test to determine desired behavior. In the case of multiple rule matches:
 - if a quarantine rule matches, the test is quarantined
 - if the default behavior is "rerun" and a "fail" rule matches, the test is failed
 - if the default bheavior is "fail" and a "rerun" rule matches, the test is rerun
