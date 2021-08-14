@@ -362,4 +362,4 @@ True if the property contains (case-insensitive) the value string
 #### {"wildcard": "value with * wildcard"}
 The same as a raw string, but "*" can match any number of characters, and "?" can match one character
 #### {"regex": "value with .* regex"}
-true if the propety matches the regular expression
+true if the property matches the regular expression
