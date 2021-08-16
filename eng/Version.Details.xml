@@ -11,25 +11,25 @@
     </Dependency>
   </ProductDependencies>
   <ToolsetDependencies>
-    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="6.0.0-beta.21410.8">
+    <Dependency Name="Microsoft.DotNet.Arcade.Sdk" Version="6.0.0-beta.21412.1">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>e10772e3594e46a031574c20a4145441737ac56d</Sha>
+      <Sha>58ac7035021bd7277ef7582338afd25403fc9aea</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Build.Tasks.Feed" Version="6.0.0-beta.21410.8">
+    <Dependency Name="Microsoft.DotNet.Build.Tasks.Feed" Version="6.0.0-beta.21412.1">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>e10772e3594e46a031574c20a4145441737ac56d</Sha>
+      <Sha>58ac7035021bd7277ef7582338afd25403fc9aea</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.SignTool" Version="6.0.0-beta.21410.8">
+    <Dependency Name="Microsoft.DotNet.SignTool" Version="6.0.0-beta.21412.1">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>e10772e3594e46a031574c20a4145441737ac56d</Sha>
+      <Sha>58ac7035021bd7277ef7582338afd25403fc9aea</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Helix.Sdk" Version="6.0.0-beta.21410.8">
+    <Dependency Name="Microsoft.DotNet.Helix.Sdk" Version="6.0.0-beta.21412.1">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>e10772e3594e46a031574c20a4145441737ac56d</Sha>
+      <Sha>58ac7035021bd7277ef7582338afd25403fc9aea</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.SwaggerGenerator.MSBuild" Version="6.0.0-beta.21410.8">
+    <Dependency Name="Microsoft.DotNet.SwaggerGenerator.MSBuild" Version="6.0.0-beta.21412.1">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>e10772e3594e46a031574c20a4145441737ac56d</Sha>
+      <Sha>58ac7035021bd7277ef7582338afd25403fc9aea</Sha>
     </Dependency>
     <Dependency Name="Microsoft.DotNet.Maestro.Client" Version="1.1.0-beta.20258.6">
       <Uri>https://github.com/dotnet/arcade-services</Uri>
@@ -47,9 +47,9 @@
       <Uri>https://github.com/dotnet/roslyn</Uri>
       <Sha>246ce641f04b67ef017655275d850bf902a8e40f</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.NET.ILLink.Tasks" Version="6.0.100-preview.6.21412.1">
+    <Dependency Name="Microsoft.NET.ILLink.Tasks" Version="6.0.100-preview.6.21413.1">
       <Uri>https://github.com/mono/linker</Uri>
-      <Sha>4dd506a685d7d81a0e7782ca56d6c0db0064d7d4</Sha>
+      <Sha>c321df28835445093009af394ddf3c31e9b1fc91</Sha>
     </Dependency>
     <Dependency Name="Microsoft.SourceLink.GitHub" Version="1.1.0-beta-21309-01">
       <Uri>https://github.com/dotnet/sourcelink</Uri>
@@ -68,9 +68,9 @@
       <Uri>https://github.com/dotnet/symreader-converter</Uri>
       <Sha>c5ba7c88f92e2dde156c324a8c8edc04d9fa4fe0</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.XliffTasks" Version="1.0.0-beta.21412.1">
+    <Dependency Name="Microsoft.DotNet.XliffTasks" Version="1.0.0-beta.21414.1">
       <Uri>https://github.com/dotnet/xliff-tasks</Uri>
-      <Sha>e75ee06448aa07fa02853aac97a6cc4bff387ecb</Sha>
+      <Sha>5cc5c3fb5e3296788f60aeaeb1a370151b03ade7</Sha>
     </Dependency>
   </ToolsetDependencies>
 </Dependencies>
