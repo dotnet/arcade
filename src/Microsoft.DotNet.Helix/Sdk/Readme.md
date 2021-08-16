@@ -338,7 +338,7 @@ In the example, with a value of "2", that means that the test will need to fail 
 The three "rules" entries are lists of rules that will be used to match test to determine desired behavior. In the case of multiple rule matches:
 - if a quarantine rule matches, the test is quarantined
 - if the default behavior is "rerun" and a "fail" rule matches, the test is failed
-- if the default bheavior is "fail" and a "rerun" rule matches, the test is rerun
+- if the default behavior is "fail" and a "rerun" rule matches, the test is rerun
 - default behavior is used
 
 A "rule" consists of a property, and then a rule object
