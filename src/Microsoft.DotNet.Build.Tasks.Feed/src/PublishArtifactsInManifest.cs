@@ -341,7 +341,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 AkaMSGroupOwner = this.AkaMSGroupOwner,
                 AkaMsOwners = this.AkaMsOwners,
                 AkaMSTenant = this.AkaMSTenant,
-                BuildQuality = this.BuildQuality
+                BuildQuality = this.BuildQuality,
+                UseStreamingPublishing = this.UseStreamingPublishing,
+                StreamingPublishingMaxClients = this.StreamingPublishingMaxClients,
+                NonStreamingPublishingMaxClients = this.NonStreamingPublishingMaxClients
             };
         }
 
