@@ -187,6 +187,7 @@ function InitializeCustomToolset {
 }
 
 function Build {
+  TryToLogClientIp
   InitializeToolset
   InitializeCustomToolset
 
