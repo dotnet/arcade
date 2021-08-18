@@ -157,7 +157,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                 File.Copy(sourcePackage, Path.Combine(packageContentsDirectory, Path.GetFileName(sourcePackage)));
             }
 
-            foreach (string platform in platforms)
+            System.Threading.Tasks.Parallel.ForEach(platforms, platform =>
             {
                 // Extract the MSI template and add it to the list of source files.
                 List<string> sourceFiles = new();
@@ -296,7 +296,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                 msi.SetMetadata(Metadata.PackageProject, GeneratePackageProject(msi.ItemSpec, msiJsonPath, platform, nupkg));
 
                 msis.Add(msi);
-            }
+            });
 
             return msis;
         }

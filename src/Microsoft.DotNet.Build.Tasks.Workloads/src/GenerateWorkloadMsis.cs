@@ -63,6 +63,8 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                 IEnumerable<WorkloadPack> workloadPacks = GetWorkloadPacks();
                 List<string> missingPackIds = new(workloadPacks.Select(p => $"{p.Id}"));
 
+                List<(string sourcePackage, string swixPackageId, string outputPath, WorkloadPackKind kind, string[] platforms)> packsToGenerate = new();
+
                 foreach (WorkloadPack pack in workloadPacks)
                 {
                     Log.LogMessage($"Processing workload pack: {pack.Id}, Version: {pack.Version}");
@@ -88,10 +90,14 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                         string swixPackageId = $"{pack.Id.ToString().Replace(ShortNames)}.{pack.Version}";
 
                         // Always select the pack ID for the VS MSI package, even when aliased.
-                        msis.AddRange(Generate(sourcePackage, swixPackageId,
-                            OutputPath, pack.Kind, platforms));
+                        packsToGenerate.Add(new(sourcePackage, swixPackageId, OutputPath, pack.Kind, platforms));
                     }
                 }
+
+                System.Threading.Tasks.Parallel.ForEach(packsToGenerate, p =>
+                {
+                    msis.AddRange(Generate(p.sourcePackage, p.swixPackageId, p.outputPath, p.kind, p.platforms));
+                });
 
                 Msis = msis.ToArray();
                 MissingPacks = missingPacks.ToArray();
