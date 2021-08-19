@@ -4960,4 +4960,4 @@ Microsoft.DotNet.Web.ProjectTemplates.2.2.2.2.7.nupkg,2.2.7,Microsoft.DotNet.Web
 Microsoft.DotNet.Web.Spa.ProjectTemplates.2.2.2.2.7.nupkg,2.2.7,Microsoft.DotNet.Web.Spa.ProjectTemplates.2.2.nupkg
 runtime.win-x64.Microsoft.AspNetCore.All.2.2.7.nupkg,2.2.7,runtime.win-x64.Microsoft.AspNetCore.All.nupkg
 runtime.win-x64.Microsoft.AspNetCore.App.2.2.7.nupkg,2.2.7,runtime.win-x64.Microsoft.AspNetCore.App.nupkg
-assets/symbols/Microsoft.NET.Workload.Mono.ToolChain.Manifest-6.0.100.Msi.x64.6.0.0-preview.7.21377.20.symbols.nupkg
+assets/symbols/Microsoft.NET.Workload.Mono.ToolChain.Manifest-6.0.100.Msi.x64.6.0.0-preview.7.21377.20.symbols.nupkg,6.0.0-preview.7.21377.20,assets/symbols/Microsoft.NET.Workload.Mono.ToolChain.Manifest-6.0.100.Msi.x64.symbols.nupkg
