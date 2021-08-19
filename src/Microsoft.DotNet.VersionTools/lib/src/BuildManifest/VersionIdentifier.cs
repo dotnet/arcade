@@ -93,8 +93,7 @@ namespace Microsoft.DotNet.VersionTools.BuildManifest
 
             int currentIndex = 0;
             // Stack of major.minor.patch.
-            Stack<int> majorMinorPatchStack = new Stack<int>(3);
-            Stack<int> majorMinorPatchIndexStack = new Stack<int>(3);
+            Stack<(int,int)> majorMinorPatchStack = new Stack<(int,int)>(3);
             string majorMinorPatch = null;
             int majorMinorPatchIndex = 0;
             StringBuilder versionSuffix = new StringBuilder();
@@ -130,28 +129,24 @@ namespace Microsoft.DotNet.VersionTools.BuildManifest
                     if ((majorMinorPatchStack.Count == 0 && isNumber) ||
                         (majorMinorPatchStack.Count > 0 && prevDelimiterCharacter == '.' && isNumber))
                     {
-                        majorMinorPatchStack.Push(potentialVersionSegment);
-                        majorMinorPatchIndexStack.Push(currentIndex);
+                        majorMinorPatchStack.Push((potentialVersionSegment, currentIndex));
                     }
                     // Check for partial major.minor.patch cases, like: 2.2.bar or 2.2-100.bleh
                     else if (majorMinorPatchStack.Count > 0 && majorMinorPatchStack.Count < 3 &&
                              (prevDelimiterCharacter != '.' || !isNumber))
                     {
                         majorMinorPatchStack.Clear();
-                        majorMinorPatchIndexStack.Clear();
                     }
                     
                     // Determine whether we are done with major.minor.patch after this update.
                     if (majorMinorPatchStack.Count >= 3 && (prevDelimiterCharacter != '.' || !isNumber || nextDelimiterIndex == -1))
                     {
                         // Done with major.minor.patch, found. Pop the top 3 elements off the stack.
-                        int patch = majorMinorPatchStack.Pop();
-                        int minor = majorMinorPatchStack.Pop();
-                        int major = majorMinorPatchStack.Pop();
-                        majorMinorPatchIndexStack.Pop();
-                        majorMinorPatchIndexStack.Pop();
+                        (int patch, int patchIndex) = majorMinorPatchStack.Pop();
+                        (int minor, int minorIndex) = majorMinorPatchStack.Pop();
+                        (int major, int majorIndex) = majorMinorPatchStack.Pop();
                         majorMinorPatch = $"{major}.{minor}.{patch}";
-                        majorMinorPatchIndex = majorMinorPatchIndexStack.Pop();
+                        majorMinorPatchIndex = majorIndex;
                     }
                 }
                 
