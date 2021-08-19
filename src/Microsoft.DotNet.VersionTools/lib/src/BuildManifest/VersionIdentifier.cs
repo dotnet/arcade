@@ -93,7 +93,7 @@ namespace Microsoft.DotNet.VersionTools.BuildManifest
 
             int currentIndex = 0;
             // Stack of major.minor.patch.
-            Stack<(int,int)> majorMinorPatchStack = new Stack<(int,int)>(3);
+            Stack<(int versionNumber, int index)> majorMinorPatchStack = new Stack<(int,int)>(3);
             string majorMinorPatch = null;
             int majorMinorPatchIndex = 0;
             StringBuilder versionSuffix = new StringBuilder();
