@@ -87,14 +87,19 @@ namespace Microsoft.DotNet.VersionTools.BuildManifest
             // then look for a minor.patch, completing the major.minor.patch.  Continue to do so until we get
             // to something that is NOT major.minor.patch (this is necessary because we sometimes see things like:
             // VS.Redist.Common.NetCore.Templates.x86.2.2.3.0.101-servicing-014320.nupkg
+            // Continue iterating until we find ALL potential versions. Return the one that is the latest in the segment
+            // This is to deal with files with multiple major.minor.patchs in the file name, for example:
+            // Microsoft.NET.Workload.Mono.ToolChain.Manifest-6.0.100.Msi.x64.6.0.0-rc.1.21380.2.symbols.nupkg
 
             int currentIndex = 0;
             // Stack of major.minor.patch.
-            Stack<int> majorMinorPatchStack = new Stack<int>(3);
+            Stack<(int versionNumber, int index)> majorMinorPatchStack = new Stack<(int,int)>(3);
             string majorMinorPatch = null;
+            int majorMinorPatchIndex = 0;
             StringBuilder versionSuffix = new StringBuilder();
             char prevDelimiterCharacter = char.MinValue;
             char nextDelimiterCharacter = char.MinValue;
+            Dictionary<int,string> majorMinorPatchDictionary = new Dictionary<int, string>();
             while (true)
             {
                 string nextSegment;
@@ -124,7 +129,7 @@ namespace Microsoft.DotNet.VersionTools.BuildManifest
                     if ((majorMinorPatchStack.Count == 0 && isNumber) ||
                         (majorMinorPatchStack.Count > 0 && prevDelimiterCharacter == '.' && isNumber))
                     {
-                        majorMinorPatchStack.Push(potentialVersionSegment);
+                        majorMinorPatchStack.Push((potentialVersionSegment, currentIndex));
                     }
                     // Check for partial major.minor.patch cases, like: 2.2.bar or 2.2-100.bleh
                     else if (majorMinorPatchStack.Count > 0 && majorMinorPatchStack.Count < 3 &&
@@ -137,10 +142,11 @@ namespace Microsoft.DotNet.VersionTools.BuildManifest
                     if (majorMinorPatchStack.Count >= 3 && (prevDelimiterCharacter != '.' || !isNumber || nextDelimiterIndex == -1))
                     {
                         // Done with major.minor.patch, found. Pop the top 3 elements off the stack.
-                        int patch = majorMinorPatchStack.Pop();
-                        int minor = majorMinorPatchStack.Pop();
-                        int major = majorMinorPatchStack.Pop();
+                        (int patch, int patchIndex) = majorMinorPatchStack.Pop();
+                        (int minor, int minorIndex) = majorMinorPatchStack.Pop();
+                        (int major, int majorIndex) = majorMinorPatchStack.Pop();
                         majorMinorPatch = $"{major}.{minor}.{patch}";
+                        majorMinorPatchIndex = majorIndex;
                     }
                 }
                 
@@ -160,11 +166,15 @@ namespace Microsoft.DotNet.VersionTools.BuildManifest
                     if (versionSuffix.Length == 0 &&
                         (prevDelimiterCharacter != '-' || !_knownTags.Any(tag => nextSegment.StartsWith(tag, StringComparison.OrdinalIgnoreCase))))
                     {
-                        return majorMinorPatch;
+                        majorMinorPatchDictionary.Add(majorMinorPatchIndex, majorMinorPatch);
+                        majorMinorPatch = null;
+                        versionSuffix = new StringBuilder();
                     }
                     else if (versionSuffix.Length != 0 && !int.TryParse(nextSegment, out int potentialVersionSegment) && nextSegment != _finalSuffix)
                     {
-                        return $"{majorMinorPatch}{versionSuffix.ToString()}";
+                        majorMinorPatchDictionary.Add(majorMinorPatchIndex, $"{majorMinorPatch}{versionSuffix.ToString()}");
+                        majorMinorPatch = null;
+                        versionSuffix = new StringBuilder();
                     }
                     else
                     {
@@ -184,12 +194,18 @@ namespace Microsoft.DotNet.VersionTools.BuildManifest
                 }
             }
 
-            if (string.IsNullOrEmpty(majorMinorPatch))
+            if(majorMinorPatch != null)
+            {
+                majorMinorPatchDictionary.Add(majorMinorPatchIndex, $"{majorMinorPatch}{versionSuffix.ToString()}");
+            }
+
+            if (!majorMinorPatchDictionary.Any())
             {
                 return null;
             }
 
-            return $"{majorMinorPatch}{versionSuffix.ToString()}";
+            int maxKey = majorMinorPatchDictionary.Keys.Max();
+            return majorMinorPatchDictionary[maxKey];
         }
 
         /// <summary>
