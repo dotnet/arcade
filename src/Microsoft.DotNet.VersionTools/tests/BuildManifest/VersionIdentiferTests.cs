@@ -34,6 +34,7 @@ namespace Microsoft.DotNet.VersionTools.Tests.BuildManifest
         [InlineData("What-Is-A.FooPackage.2.2.10.0.1", "10.0.1")]
         [InlineData("What-Is-A.FooPackage.2.2.10.0.1-beta.final", "10.0.1-beta.final")]
         [InlineData("What-Is-A.FooPackage.2.2.10.0.1-preview1.12345.1", "10.0.1-preview1.12345.1")]
+        [InlineData("What-Is-A.FooPackage.2.2.0.Extra.Stuff.10.0.1-preview1.12345.1", "10.0.1-preview1.12345.1")]
         [InlineData("What-Is-A.FooPackage", null)]
         [InlineData("What-Is-A.FooPackage-2.2-64", null)]
         [InlineData("What-Is-A.FooPackage-2.2.nupkg", null)]
