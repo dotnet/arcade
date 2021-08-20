@@ -42,6 +42,7 @@ $reboot=$false
 
 switch ($exit_code)
 {
+    # ADB_DEVICE_ENUMERATION_FAILURE
     85 {
         $ErrorActionPreference="Continue"
         Write-Error "Encountered ADB_DEVICE_ENUMERATION_FAILURE. This is typically not a failure of the work item. We will run it again and reboot this computer to help its devices"
@@ -51,6 +52,7 @@ switch ($exit_code)
         Break
     }
 
+    # PACKAGE_INSTALLATION_FAILURE
     78 {
         $ErrorActionPreference="Continue"
         Write-Error "Encountered PACKAGE_INSTALLATION_FAILURE. This is typically not a failure of the work item. We will try it again on another Helix agent"
@@ -60,15 +62,11 @@ switch ($exit_code)
     }
 }
 
-# ADB_DEVICE_ENUMERATION_FAILURE
 if ($retry) {
-
     & "$Env:HELIX_PYTHONPATH" -c "from helix.workitemutil import request_infra_retry; request_infra_retry('Retrying because we could not enumerate all Android devices')"
 }
 
-# PACKAGE_INSTALLATION_FAILURE
 if ($reboot) {
-
      & "$Env:HELIX_PYTHONPATH" -c "from helix.workitemutil import request_reboot; request_reboot('Rebooting to allow Android emulator or device to restart')"
 }
 
