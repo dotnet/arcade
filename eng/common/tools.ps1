@@ -881,7 +881,10 @@ function Try-LogClientIpAddress()
     Write-Host "Attempting to log this client's IP for Azure Package feed telemetry purposes"
     try
     {
+        $originalProgressPreference = $ProgressPreference
+        $ProgressPreference = "SilentlyContinue"
         $result = Invoke-WebRequest -Uri "http://co1.msedge.net/fdv2/diagnostics.aspx" -UseBasicParsing
+        $ProgressPreference = $originalProgressPreference
         $lines = $result.Content.Split([Environment]::NewLine) 
         $socketIp = $lines | Select-String -Pattern "^Socket IP:.*"
         Write-Host $socketIp
