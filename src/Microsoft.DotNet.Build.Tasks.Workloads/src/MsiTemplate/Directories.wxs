@@ -16,5 +16,29 @@
         </Directory>
       </Directory>
     </Directory>
+
+    <?if $(var.Platform) = x64 ?>
+    <CustomActionRef Id="Set_DOTNETHOME_x64" />
+    <?endif?>
+  </Fragment>
+
+  <Fragment>
+    <Property Id="PROCESSOR_ARCHITECTURE">
+      <RegistrySearch Id="Search_PROCESSOR_ARCHITECTURE"
+                      Root="HKLM"
+                      Key="SYSTEM\CurrentControlSet\Control\Session Manager\Environment"
+                      Name="PROCESSOR_ARCHITECTURE"
+                      Type="raw" />
+    </Property>
+    
+    <!-- Identify when installing in emulation as when PROCESSOR_ARCHITECTURE is not AMD64
+         https://docs.microsoft.com/en-us/windows/win32/winprog64/wow64-implementation-details -->
+    <SetProperty Id="INSTALLING_IN_EMULATION" Value="true" Before="Set_DOTNETHOME_x64">
+      NOT PROCESSOR_ARCHITECTURE="AMD64"
+    </SetProperty>
+    <!-- When running in x64 emulation and user hasn't specified install directory, install to an x64 subdirectory-->
+    <SetProperty Action="Set_DOTNETHOME_x64" Id="DOTNETHOME" Value="[$(var.ProgramFilesFolder)]dotnet_test\x64\" Before="CostFinalize">
+      INSTALLING_IN_EMULATION AND NOT DOTNETHOME
+    </SetProperty>
   </Fragment>
 </Wix>
