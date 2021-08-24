@@ -72,7 +72,7 @@
       NOT PROCESSOR_ARCHITECTURE="AMD64"
     </SetProperty>
     <!-- When running in x64 emulation and user hasn't specified install directory, install to an x64 subdirectory-->
-    <SetProperty Action="Set_DOTNETHOME_x64" Id="DOTNETHOME" Value="[$(var.ProgramFilesFolder)]dotnet\x64\" Before="CostFinalize">
+    <SetProperty Action="Set_DOTNETHOME_x64" Id="DOTNETHOME" Value="[$(var.Program_Files)]dotnet\x64\" Before="CostFinalize">
       INSTALLING_IN_EMULATION AND NOT DOTNETHOME
     </SetProperty>
   </Fragment>
