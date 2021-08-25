@@ -1,7 +1,8 @@
 <Project>
   <PropertyGroup>
     <IncludeDotNetCli Condition=" '$(IncludeDotNetCli)' != 'true' ">false</IncludeDotNetCli>
-    <AspNetCoreRuntimeVersion>6.0.0-rc.1.21378.2</AspNetCoreRuntimeVersion>
+    <!-- TODO (https://github.com/dotnet/arcade/issues/7787): When bumping this, we should do #7787 -->
+    <AspNetCoreRuntimeVersion>6.0.100-rc.1.21379.2</AspNetCoreRuntimeVersion>
     <DotNetCliPackageType Condition=" '$(DotNetCliPackageType)' == '' ">runtime</DotNetCliPackageType>
     <DotNetCliVersion Condition=" '$(DotNetCliVersion)' == '' AND '$(DotNetCliPackageType)' == 'runtime' ">$(BundledNETCoreAppPackageVersion)</DotNetCliVersion>
     <!-- TODO (https://github.com/dotnet/arcade/issues/7022): We are hardcoding this version to use the one tied to the SDK version from global.json -->
