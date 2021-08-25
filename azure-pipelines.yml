@@ -41,7 +41,7 @@ stages:
           manifests: true
       enableMicrobuild: true
       enablePublishUsingPipelines: true
-      enableSourceIndex: true
+      enableSourceIndex: false
       enableSourceBuild: false
       workspace:
         clean: all
