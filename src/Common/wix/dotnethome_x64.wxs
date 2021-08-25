@@ -14,7 +14,7 @@
     
     <!-- Identify when installing in emulation as when PROCESSOR_ARCHITECTURE is not AMD64
          https://docs.microsoft.com/en-us/windows/win32/winprog64/wow64-implementation-details -->
-    <SetProperty Id="INSTALLING_IN_EMULATION" Value="true" Before="Set_DOTNETHOME_x64">
+    <SetProperty Action="Set_INSTALLING_IN_EMULATION" Id="INSTALLING_IN_EMULATION" Value="true" Before="Set_DOTNETHOME_x64">
       NOT PROCESSOR_ARCHITECTURE="AMD64"
     </SetProperty>
     <!-- When running in x64 emulation and user hasn't specified install directory, install to an x64 subdirectory-->
