@@ -42,16 +42,7 @@ stages:
       enableMicrobuild: true
       enablePublishUsingPipelines: true
       enableSourceIndex: true
-      enableSourceBuild: true
-      sourceBuildParameters:
-        platform:
-          pool:
-            ${{ if eq(variables._RunAsPublic, True) }}:
-              name: NetCorePublic-Pool
-              queue: BuildPool.Ubuntu.1604.Amd64.Arcade.Open
-            ${{ if eq(variables._RunAsInternal, True) }}:
-              name: NetCoreInternal-Pool
-              queue: BuildPool.Ubuntu.1604.Amd64.Arcade
+      enableSourceBuild: false
       workspace:
         clean: all
       jobs:
