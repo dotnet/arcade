@@ -74,7 +74,7 @@
     <HelixTargetQueue Include="Debian.9.Amd64.Open"/>
     <HelixTargetQueue Include="RedHat.7.Amd64.Open"/>
     <HelixTargetQueue Include="Windows.10.Amd64.Open"/>
-	<HelixTargetQueue Include="(Debian.10.Amd64.Open)ubuntu.1804.amd64.open@mcr.microsoft.com/dotnet-buildtools/prereqs:debian-10-helix-amd64-20210304164434-56c6673"/>
+	<HelixTargetQueue Include="(Debian.10.Amd64.Open)pr-ubuntu.1804.amd64.open-hotfix-docker-reportin@mcr.microsoft.com/dotnet-buildtools/prereqs:debian-10-helix-amd64-20210304164434-56c6673"/>
   </ItemGroup>
 
   <PropertyGroup Condition="!$(HelixTargetQueue.StartsWith('Windows'))">
