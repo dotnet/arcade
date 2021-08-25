@@ -6,11 +6,12 @@
 
 
 *Goal*: The goal of this epic is to automate process of image creation. Mainly:
-* Command line tool wich:
-    * gets state of image based on tracking id
-    * submits a new job to Image Factory using payload from specified file
-    * given variables, searches all configurations which use these variables and send all of them to the Image Factory (additional it would be great to raise a new OSOB PR with changed images, but I'm not sure if this fits into this short epic)
-* Image definitions should be stored on our side instead of Image Factory repository - these have to be updated as we need to introduce variables.
+* Create a command line tool which:
+    * gets state of image creation from the Image Factory based on a Tracking Id
+    * submits a new job to Image Factory using payload from a specified file
+    * given variables, searches all configurations which use these variables, substitue variables and send all payloads to the Image Factory.
+* Image definitions should be moved to our side instead of the Image Factory repository as these have to be updated as we need to introduce variables.
+Note: This has to be checked with Casey, because if there is a need for changes, it will have to be updated by us. In a case we need to leave it in the [current location](https://devdiv.visualstudio.com/XlabImageFactory/_git/ImageConfigurations?path=%2FMonthly%2FHelixBaseImages), it's still doable with some kind of post processing. In a case this will go into our repository I would suggest JSON file format as it's expected input of the Image Factory.
 
 Examples
 * Used variable in configuration file:
@@ -24,6 +25,11 @@ VSBootstrapperURL: "{VS_2019_PREVIEW_URL}/vs_Enterprise.exe"
     "VS_2019_PREVIEW_VERSION":"16_11_0_4"
 }
 ```
+
+### Proposition for extension of this epic
+
+After images are successfully built raise a new OSOB PR updating image definitions with latest images. This shouldn't take longer than 1 more week of development and would save us lots of time every week.
+
 
 ### Stakeholders
 
