@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+<?ifndef Platform ?>
+  <?define Platform = "$(sys.BUILDARCH)" ?>
+<?endif ?>
 <!-- Only defined for x64 as that is the only platform we redirect -->
 <?if $(var.Platform)=x64?>
   <Fragment>
