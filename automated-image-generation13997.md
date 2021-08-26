@@ -10,15 +10,16 @@
     * gets state of image creation from the Image Factory based on a Tracking Id
     * submits a new job to Image Factory using payload from a specified file
     * given variables, searches all configurations which use these variables, substitue variables and send all payloads to the Image Factory.
-* Image definitions should be moved to our side instead of the Image Factory repository as these have to be updated as we need to introduce variables.
-Note: This has to be checked with Casey, because if there is a need for changes, it will have to be updated by us. In a case we need to leave it in the [current location](https://devdiv.visualstudio.com/XlabImageFactory/_git/ImageConfigurations?path=%2FMonthly%2FHelixBaseImages), it's still doable with some kind of post processing. In a case this will go into our repository I would suggest JSON file format as it's expected input of the Image Factory.
+* Move Helix image definitions from the Image Factory repository to our repository. I checked with Casey that there wasn't ever need for a change, except bounce of VS version. It shouldn't give us additional maintanace cost. The reason why we need to move them is introduction of custom variables (see example bellow). As part of the move I would suggest to start using JSON file format as it's expected input of the Image Factory. Having it in YAML would only mean that we will need to transform a payload before sending it.
+For more information you can find current image definitons [here](https://devdiv.visualstudio.com/XlabImageFactory/_git/ImageConfigurations?path=%2FMonthly%2FHelixBaseImages)
 
-Examples
-* Used variable in configuration file:
+### Examples
+
+* Variable in the payload:
 ```
 VSBootstrapperURL: "{VS_2019_PREVIEW_URL}/vs_Enterprise.exe"
 ```
-* Tool configuration:
+* Variable definitions used by tool:
 ```
 {
     "VS_2019_PREVIEW_URL":"https://aka.ms/vs/16/pre/184776537_-638374648",
