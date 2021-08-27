@@ -6,12 +6,10 @@
     <Feature Id="F_RegistryKeys" Absent="disallow" AllowAdvertise="no" Description="Registry keys."
              Display="hidden" InstallDefault="local" Level="1" Title="Workload Pack Registration" TypicalDefault="install">
       <Component Id="C_InstalledPack" Win64="$(var.Win64)" Directory="TARGETDIR">
-        <RegistryKey Root="HKLM" Key="SOFTWARE\Microsoft\dotnet\InstalledPacks\$(var.PackageId)\$(var.PackageVersion)">
+        <RegistryKey Root="HKLM" Key="SOFTWARE\Microsoft\dotnet\InstalledPacks\$(var.Platform)\$(var.PackageId)\$(var.PackageVersion)">
           <RegistryValue Name="DependencyProviderKey" Type="string" Value="$(var.DependencyProviderKeyName)" KeyPath="yes"/>
           <RegistryValue Name="ProductCode" Type="string" Value="$(var.ProductCode)"/>
           <RegistryValue Name="UpgradeCode" Type="string" Value="$(var.UpgradeCode)"/>
-          <!-- This allows us to differentiate cases such as x64 on arm64 since both would be writing to the same hive. -->
-          <RegistryValue Name="Platform" Type="string" Value="$(var.Platform)" />
           <RegistryValue Name="ProductVersion" Type="string" Value="$(var.ProductVersion)" />
           <RegistryValue Name="ProductLanguage" Type="integer" Value="$(var.ProductLanguage)" />
         </RegistryKey>
