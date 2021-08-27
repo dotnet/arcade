@@ -13,7 +13,7 @@
           <!-- This allows us to differentiate cases such as x64 on arm64 since both would be writing to the same hive. -->
           <RegistryValue Name="Platform" Type="string" Value="$(var.Platform)" />
           <RegistryValue Name="ProductVersion" Type="string" Value="$(var.ProductVersion)" />
-          <RegistryValue Name="ProductLanguage" Type="integer" Value="$(var.ProductLanguage)" />          
+          <RegistryValue Name="ProductLanguage" Type="integer" Value="$(var.ProductLanguage)" />
         </RegistryKey>
       </Component>
     </Feature>
