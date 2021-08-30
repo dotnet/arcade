@@ -109,8 +109,14 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             bool isAlreadyArchived = workItemName.EndsWith(".zip");
 
-            if (isAlreadyArchived || workItemName.EndsWith(".app"))
+            if (isAlreadyArchived)
             {
+                workItemName = workItemName.Substring(0, workItemName.Length - 4);
+            }
+
+            if (workItemName.EndsWith(".app"))
+            {
+                // If someone named the zip something.app.zip, we want both gone
                 workItemName = workItemName.Substring(0, workItemName.Length - 4);
             }
 

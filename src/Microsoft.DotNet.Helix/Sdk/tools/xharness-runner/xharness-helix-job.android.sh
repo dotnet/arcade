@@ -58,10 +58,6 @@ if [ -z "$timeout" ]; then
     die "No timeout was provided";
 fi
 
-if [ -z "$package_name" ]; then
-    die "Package name path wasn't provided";
-fi
-
 if [ -z "$output_directory" ]; then
     die "No output directory provided";
 fi
