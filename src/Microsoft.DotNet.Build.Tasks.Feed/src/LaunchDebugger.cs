@@ -3,7 +3,7 @@ using System.Diagnostics;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed
 {
-    public class LaunchDebugger : Task
+    public class LaunchDebugger : Microsoft.Build.Utilities.Task
     {
         public override bool Execute()
         {

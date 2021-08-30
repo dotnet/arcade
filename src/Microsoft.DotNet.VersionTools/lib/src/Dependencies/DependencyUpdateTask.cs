@@ -12,7 +12,7 @@ namespace Microsoft.DotNet.VersionTools.Dependencies
     /// A task that can be performed to update dependency versions to values in BuildInfos. Has
     /// properties that describe the task to be performed.
     /// </summary>
-    public class DependencyUpdateTask : Task<DependencyUpdateResults>
+    public class DependencyUpdateTask : Microsoft.Build.Utilities.Task<DependencyUpdateResults>
     {
         /// <summary>
         /// The dependency infos that were used to create this update task.

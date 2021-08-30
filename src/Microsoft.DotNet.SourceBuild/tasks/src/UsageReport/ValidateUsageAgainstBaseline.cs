@@ -12,7 +12,7 @@ using System.Xml.Linq;
 
 namespace Microsoft.DotNet.SourceBuild.Tasks.UsageReport
 {
-    public class ValidateUsageAgainstBaseline : Task
+    public class ValidateUsageAgainstBaseline : Microsoft.Build.Utilities.Task
     {
         [Required]
         public string DataFile { get; set; }

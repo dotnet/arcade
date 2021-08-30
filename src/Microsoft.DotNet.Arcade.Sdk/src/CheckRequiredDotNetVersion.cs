@@ -11,7 +11,7 @@ using NuGet.Versioning;
 
 namespace Microsoft.DotNet.Arcade.Sdk
 {
-    public class CheckRequiredDotNetVersion : Task
+    public class CheckRequiredDotNetVersion : Microsoft.Build.Utilities.Task
     {
         private static readonly string s_cacheKey = "CheckRequiredDotNetVersion-6ED0A075-A4B3-46B1-97D4-448558D515D3";
 

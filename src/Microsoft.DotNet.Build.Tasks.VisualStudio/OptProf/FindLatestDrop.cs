@@ -14,7 +14,7 @@ namespace Microsoft.DotNet.Build.Tasks.VisualStudio
     /// <summary>
     /// Find the latest drop in a JSON list of VS drops.
     /// </summary>
-    public sealed class FindLatestDrop : Task
+    public sealed class FindLatestDrop : Microsoft.Build.Utilities.Task
     {
         /// <summary>
         /// Full path to JSON file containing list of drops.

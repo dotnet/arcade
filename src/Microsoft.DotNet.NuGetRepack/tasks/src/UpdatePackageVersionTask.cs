@@ -16,7 +16,7 @@ namespace Microsoft.DotNet.Tools
     {
         static UpdatePackageVersionTask() => AssemblyResolution.Initialize();
 #else
-    public class UpdatePackageVersionTask : Task
+    public class UpdatePackageVersionTask : Microsoft.Build.Utilities.Task
     {
 #endif
         public string VersionKind { get; set; }

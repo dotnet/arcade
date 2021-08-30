@@ -9,7 +9,7 @@ using System.Security.Cryptography;
 
 namespace Microsoft.DotNet.Arcade.Sdk
 {
-    public class GenerateChecksums : Task
+    public class GenerateChecksums : Microsoft.Build.Utilities.Task
     {
         /// <summary>
         /// An item collection of files for which to generate checksums.  Each item must have metadata
