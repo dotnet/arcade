@@ -3,6 +3,7 @@
 
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
@@ -25,7 +26,9 @@ namespace Microsoft.Arcade.Common
             using (FileStream fs = File.OpenWrite(archivePath))
             using (var zip = new ZipArchive(fs, ZipArchiveMode.Create, false))
             {
-                zip.CreateEntryFromFile(filePath, Path.GetFileName(filePath));
+                var entryName = Path.GetFileName(filePath);
+                zip.Entries.FirstOrDefault(e => e.FullName == entryName)?.Delete();
+                zip.CreateEntryFromFile(filePath, entryName);
             }
         }
 
@@ -36,6 +39,7 @@ namespace Microsoft.Arcade.Common
         {
             using FileStream archiveStream = new FileStream(archivePath, FileMode.Open);
             using ZipArchive archive = new ZipArchive(archiveStream, ZipArchiveMode.Update);
+            archive.Entries.FirstOrDefault(e => e.FullName == targetFilename)?.Delete();
             ZipArchiveEntry entry = archive.CreateEntry(targetFilename);
             using Stream targetStream = entry.Open();
             await content.CopyToAsync(targetStream);
