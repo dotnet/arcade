@@ -10,7 +10,7 @@ using System.Linq;
 
 namespace Microsoft.DotNet.SourceBuild.Tasks
 {
-    public class ReadNuGetPackageInfos : Task
+    public class ReadNuGetPackageInfos : Microsoft.Build.Utilities.Task
     {
         [Required]
         public string[] PackagePaths { get; set; }

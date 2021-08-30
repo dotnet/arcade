@@ -12,7 +12,7 @@ using System.Xml.Linq;
 
 namespace Microsoft.DotNet.SourceBuild.Tasks.UsageReport
 {
-    public class WriteUsageReports : Task
+    public class WriteUsageReports : Microsoft.Build.Utilities.Task
     {
         private const string SnapshotPrefix = "PackageVersions.props.pre.";
         private const string SnapshotSuffix = ".xml";

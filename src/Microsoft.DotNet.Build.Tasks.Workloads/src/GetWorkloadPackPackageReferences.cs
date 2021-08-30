@@ -12,7 +12,7 @@ using Microsoft.NET.Sdk.WorkloadManifestReader;
 
 namespace Microsoft.DotNet.Build.Tasks.Workloads
 {
-    public class GetWorkloadPackPackageReferences : Task
+    public class GetWorkloadPackPackageReferences : Microsoft.Build.Utilities.Task
     {
         public string ProjectFile
         {

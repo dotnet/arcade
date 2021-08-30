@@ -6,7 +6,7 @@
   -->
   <PropertyGroup>
     <TargetFrameworkForNETSDK>netcoreapp3.1</TargetFrameworkForNETSDK>
-    <TargetFrameworkForNETSDK Condition="'$(DotNetBuildFromSource)' == 'true'">net5.0</TargetFrameworkForNETSDK>
+    <TargetFrameworkForNETSDK Condition="'$(DotNetBuildFromSource)' == 'true'">net6.0</TargetFrameworkForNETSDK>
   </PropertyGroup>
 
 </Project>

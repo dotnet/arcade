@@ -8,7 +8,7 @@ using System.Linq;
 
 namespace Microsoft.DotNet.Build.Tasks.Packaging
 {
-    public class GetRuntimeTargets : Task
+    public class GetRuntimeTargets : Microsoft.Build.Utilities.Task
     {
         // runtime.json file path
         [Required]
