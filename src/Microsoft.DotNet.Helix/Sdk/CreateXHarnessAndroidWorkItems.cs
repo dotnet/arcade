@@ -106,7 +106,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                 customCommands = GetDefaultCommand(appPackage, expectedExitCode);
 
                 // Validation of any metadata specific to Android stuff goes here
-                if (!string.IsNullOrEmpty(androidPackageName))
+                if (string.IsNullOrEmpty(androidPackageName))
                 {
                     Log.LogError($"{MetadataNames.AndroidPackageName} metadata must be specified when not supplying custom commands");
                     return null;
@@ -188,28 +188,28 @@ namespace Microsoft.DotNet.Helix.Sdk
             string fileToZip,
             string injectedCommands)
         {
-            string outputZipPath;
+            string fileName = $"xharness-apk-payload-{workItemName.ToLowerInvariant()}.zip";
+            string outputZipPath = fileSystem.PathCombine(fileSystem.GetDirectoryName(fileToZip), fileName);
 
-            if (isAlreadyArchived)
+            if (fileSystem.FileExists(outputZipPath))
             {
-                outputZipPath = fileToZip;
+                Log.LogMessage($"Zip archive '{outputZipPath}' already exists, overwriting..");
+                fileSystem.DeleteFile(outputZipPath);
+            }
+
+            if (!isAlreadyArchived)
+            {
+                zipArchiveManager.ArchiveFile(fileToZip, outputZipPath);
             }
             else
             {
-                string fileName = $"xharness-apk-payload-{workItemName.ToLowerInvariant()}.zip";
-                outputZipPath = fileSystem.PathCombine(fileSystem.GetDirectoryName(fileToZip), fileName);
-
-                if (fileSystem.FileExists(outputZipPath))
-                {
-                    Log.LogMessage($"Zip archive '{outputZipPath}' already exists, overwriting..");
-                    fileSystem.DeleteFile(outputZipPath);
-                }
-
-                zipArchiveManager.ArchiveFile(fileToZip, outputZipPath);
+                Log.LogMessage($"App payload '{workItemName}` has already been zipped. Copying to '{outputZipPath}` instead");
+                fileSystem.FileCopy(fileToZip, outputZipPath);
             }
 
             // WorkItem payloads of APKs can be reused if sent to multiple queues at once,
             // so we'll always include both scripts (very small)
+            Log.LogMessage($"Adding the XHarness job scripts into the payload archive");
             await zipArchiveManager.AddResourceFileToArchive<CreateXHarnessAndroidWorkItems>(outputZipPath, ScriptNamespace + PosixAndroidWrapperScript, PosixAndroidWrapperScript);
             await zipArchiveManager.AddResourceFileToArchive<CreateXHarnessAndroidWorkItems>(outputZipPath, ScriptNamespace + NonPosixAndroidWrapperScript, NonPosixAndroidWrapperScript);
             await zipArchiveManager.AddContentToArchive(outputZipPath, CustomCommandsScript + (IsPosixShell ? ".sh" : ".ps1"), injectedCommands);

@@ -62,10 +62,27 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             foreach (var appBundle in appBundles)
             {
+                string appBundlePath;
+                if (appBundle.TryGetMetadata(CreateXHarnessAppleWorkItems.MetadataNames.AppBundlePath, out string pathMetadata)
+                    && !string.IsNullOrEmpty(pathMetadata))
+                {
+                    appBundlePath = pathMetadata;
+                }
+                else
+                {
+                    appBundlePath = appBundle.ItemSpec;
+                }
+
                 if (!appBundle.TryGetMetadata(CreateXHarnessAppleWorkItems.MetadataNames.Target, out string bundleTargets))
                 {
                     _log.LogError("'Targets' metadata must be specified - " +
                         "expecting list of target device/simulator platforms to execute tests on (e.g. ios-simulator-64)");
+                    continue;
+                }
+
+                if (appBundlePath.EndsWith(".zip"))
+                {
+                    // TODO: We need to be able to add provisioning profiles into a zipped payload too
                     continue;
                 }
 
@@ -80,7 +97,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                     }
 
                     // App comes with a profile already
-                    var provisioningProfileDestPath = _fileSystem.PathCombine(appBundle.ItemSpec, "embedded.mobileprovision");
+                    var provisioningProfileDestPath = _fileSystem.PathCombine(appBundlePath, "embedded.mobileprovision");
                     if (_fileSystem.FileExists(provisioningProfileDestPath))
                     {
                         _log.LogMessage($"Bundle already contains a provisioning profile at `{provisioningProfileDestPath}`");
