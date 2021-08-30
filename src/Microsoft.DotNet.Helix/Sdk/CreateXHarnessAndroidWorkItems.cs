@@ -113,7 +113,12 @@ namespace Microsoft.DotNet.Helix.Sdk
                 }
             }
 
-            string command = GetHelixCommand(appPackage, apkPath, androidPackageName, testTimeout, expectedExitCode);
+            string apkName = Path.GetFileName(apkPath);
+            if (isAlreadyArchived) {
+                apkName = apkName.Replace(".zip", ".apk");
+            }
+
+            string command = GetHelixCommand(appPackage, apkName, androidPackageName, testTimeout, expectedExitCode);
 
             Log.LogMessage($"Creating work item with properties Identity: {workItemName}, Payload: {apkPath}, Command: {command}");
 
@@ -153,7 +158,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                 $"{ devOutArg } { instrumentationArg } { exitCodeArg } { extraArguments } { passthroughArgs }";
         }
 
-        private string GetHelixCommand(ITaskItem appPackage, string apkPath, string androidPackageName, TimeSpan xHarnessTimeout, int expectedExitCode)
+        private string GetHelixCommand(ITaskItem appPackage, string apkName, string androidPackageName, TimeSpan xHarnessTimeout, int expectedExitCode)
         {
             appPackage.TryGetMetadata(MetadataNames.AndroidInstrumentationName, out string androidInstrumentationName);
             appPackage.TryGetMetadata(MetadataNames.DeviceOutputPath, out string deviceOutputPath);
@@ -165,7 +170,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             // We either call .ps1 or .sh so we need to format the arguments well (PS has -argument, bash has --argument)
             string dash = IsPosixShell ? "--" : "-";
             string xharnessRunCommand = $"{xharnessHelixWrapperScript} " +
-                $"{dash}app \"{Path.GetFileName(apkPath)}\" " +
+                $"{dash}app \"{apkName}\" " +
                 $"{dash}timeout \"{xHarnessTimeout}\" " +
                 $"{dash}package_name \"{androidPackageName}\" " +
                 (expectedExitCode != 0 ? $" {dash}expected_exit_code \"{expectedExitCode}\" " : string.Empty) +
