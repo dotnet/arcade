@@ -120,8 +120,6 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             string command = GetHelixCommand(appPackage, apkName, androidPackageName, testTimeout, expectedExitCode);
 
-            Log.LogMessage($"Creating work item with properties Identity: {workItemName}, Payload: {apkPath}, Command: {command}");
-
             string workItemZip = await CreateZipArchiveOfPackageAsync(
                 zipArchiveManager,
                 fileSystem,

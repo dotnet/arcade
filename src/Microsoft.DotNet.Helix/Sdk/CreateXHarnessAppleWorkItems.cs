@@ -182,8 +182,6 @@ namespace Microsoft.DotNet.Helix.Sdk
             string helixCommand = GetHelixCommand(appName, target, testTimeout, launchTimeout, includesTestRunner, expectedExitCode, resetSimulator);
             string payloadArchivePath = await CreateZipArchiveOfFolder(zipArchiveManager, fileSystem, workItemName, isAlreadyArchived, appFolderPath, customCommands);
 
-            Log.LogMessage($"Creating work item with properties Identity: {workItemName}, Payload: {appFolderPath}, Command: {helixCommand}");
-
             return CreateTaskItem(workItemName, payloadArchivePath, helixCommand, workItemTimeout);
         }
 
