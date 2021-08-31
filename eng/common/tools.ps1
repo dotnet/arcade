@@ -709,6 +709,15 @@ function MSBuild() {
       Write-PipelineSetVariable -Name 'NUGET_PLUGIN_REQUEST_TIMEOUT_IN_SECONDS' -Value '20'
     }
 
+    if ($ci) {
+      $env:NUGET_ENABLE_EXPERIMENTAL_HTTP_RETRY = 'true'
+      $env:NUGET_EXPERIMENTAL_MAX_NETWORK_TRY_COUNT = 6
+      $env:NUGET_EXPERIMENTAL_NETWORK_RETRY_DELAY_MILLISECONDS = 1000
+      Write-PipelineSetVariable -Name 'NUGET_ENABLE_EXPERIMENTAL_HTTP_RETRY' -Value 'true'
+      Write-PipelineSetVariable -Name 'NUGET_EXPERIMENTAL_MAX_NETWORK_TRY_COUNT' -Value '6'
+      Write-PipelineSetVariable -Name 'NUGET_EXPERIMENTAL_NETWORK_RETRY_DELAY_MILLISECONDS' -Value '1000'
+    }
+
     $toolsetBuildProject = InitializeToolset
     $basePath = Split-Path -parent $toolsetBuildProject
     $possiblePaths = @(
