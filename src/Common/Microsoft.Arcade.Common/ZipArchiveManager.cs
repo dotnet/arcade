@@ -23,10 +23,12 @@ namespace Microsoft.Arcade.Common
 
         public void ArchiveFile(string filePath, string archivePath)
         {
+            bool archiveExists = File.Exists(archivePath);
+
             using (FileStream fs = File.OpenWrite(archivePath))
-            using (var zip = new ZipArchive(fs, ZipArchiveMode.Create, false))
+            using (var zip = new ZipArchive(fs, archiveExists ? ZipArchiveMode.Update : ZipArchiveMode.Create, false))
             {
-                var entryName = Path.GetFileName(filePath);
+                string entryName = Path.GetFileName(filePath);
                 zip.Entries.FirstOrDefault(e => e.FullName == entryName)?.Delete();
                 zip.CreateEntryFromFile(filePath, entryName);
             }
@@ -37,8 +39,8 @@ namespace Microsoft.Arcade.Common
 
         public async Task AddContentToArchive(string archivePath, string targetFilename, Stream content)
         {
-            using FileStream archiveStream = new FileStream(archivePath, FileMode.Open);
-            using ZipArchive archive = new ZipArchive(archiveStream, ZipArchiveMode.Update);
+            using var archiveStream = new FileStream(archivePath, FileMode.Open);
+            using var archive = new ZipArchive(archiveStream, ZipArchiveMode.Update);
             archive.Entries.FirstOrDefault(e => e.FullName == targetFilename)?.Delete();
             ZipArchiveEntry entry = archive.CreateEntry(targetFilename);
             using Stream targetStream = entry.Open();
