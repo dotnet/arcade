@@ -9,9 +9,10 @@
 * Extend osob-cli with functionality to:
     * get state of image creation from the Image Factory based on a Tracking Id
     * submit a new job to Image Factory using payload from a specified file
-    * search all configurations which use specified variables, substitue variables and send all payloads to the Image Factory.
-* Move Helix image definitions from the Image Factory repository to our repository. I checked with Casey that there wasn't ever need for a change, except bounce of VS version. It shouldn't give us additional maintanace cost. The reason why we need to move them is introduction of custom variables (see example bellow). As part of the move I would suggest to start using JSON file format as it's expected input of the Image Factory. Having it in YAML would only mean that we will need to transform a payload before sending it.
-For more information you can find current image definitons [here](https://devdiv.visualstudio.com/XlabImageFactory/_git/ImageConfigurations?path=%2FMonthly%2FHelixBaseImages)
+    * search all configurations which use specified variables, substitute variables and send all payloads to the Image Factory.
+* Create a new pipeline which will be triggered by a change of variables files. When any variable is updated (e.g. Visual Studio URL is updated to a new version) then all affected images are regenerated. As image generation takes long time to complete, this pipeline has to be executed several times per day to check status of image creation and to fail on any error.
+* Move Helix image definitions from the Image Factory repository to our repository. I checked with Casey that there wasn't ever need for a change, except bounce of VS version. It shouldn't give us additional maintenance cost. The reason why we need to move them is introduction of custom variables (see an example below). As part of the move I would suggest to start using JSON file format as it's expected input of the Image Factory. Having it in YAML would only mean that we will need to transform a payload before sending it.
+For more information you can find current image definitions [here](https://devdiv.visualstudio.com/XlabImageFactory/_git/ImageConfigurations?path=%2FMonthly%2FHelixBaseImages)
 
 ### Examples
 
