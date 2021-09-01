@@ -58,7 +58,7 @@ After images are successfully built raise a new OSOB PR updating image definitio
 - No repro/test/dev environments. Image starts to be used in production once updated in OSOB configuration and this change is deployed into production. Then it builds a new image based on an image from the Image Factory.
 
 #### Rollout and Deployment
-- Pipeline will take this tool from artifacts and executes it - once the change is merged it will be automatically used on the next execution.
+- A new pipeline will take this tool from artifacts and executes it - once the change is merged it will be automatically used on the next execution.
 - It is expected to be updated rarely.
 - There is no risk as we can always build images manually if something goes wrong.
 - It is dependent on the Image Factory. Breaking change in API of the Image Factory will break this tool too.
