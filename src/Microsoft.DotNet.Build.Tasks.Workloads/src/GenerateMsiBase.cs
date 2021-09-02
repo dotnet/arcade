@@ -116,6 +116,11 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         private readonly object extractNuGetLock = new object();
 
         /// <summary>
+        /// Used to syncrhonize access to MSI task items.
+        /// </summary>
+        private readonly object msiTaskItemsLock = new();
+
+        /// <summary>
         /// Generate a set of MSIs for the specified platforms using the specified NuGet package.
         /// </summary>
         /// <param name="sourcePackage">The NuGet package to convert into an MSI.</param>
@@ -124,11 +129,16 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         protected IEnumerable<ITaskItem> Generate(string sourcePackage, string swixPackageId, string outputPath, WorkloadPackKind kind, params string[] platforms)
         {
             NugetPackage nupkg = null;
+            List<TaskItem> msis = null;
+
             lock (extractNuGetLock)
             {
                 nupkg = new(sourcePackage, Log);
             }
-            List<TaskItem> msis = new();
+            lock (msiTaskItemsLock)
+            {
+                msis = new();
+            }
 
             // MSI ProductName defaults to the package title and fallback to the package ID with a warning.
             string productName = nupkg.Title;
@@ -310,7 +320,10 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                 // Generate a .csproj to build a NuGet payload package to carry the MSI and JSON manifest
                 msi.SetMetadata(Metadata.PackageProject, GeneratePackageProject(msi.ItemSpec, msiJsonPath, platform, nupkg));
 
-                msis.Add(msi);
+                lock (msiTaskItemsLock)
+                {
+                    msis.Add(msi);
+                }
             });
 
             return msis;

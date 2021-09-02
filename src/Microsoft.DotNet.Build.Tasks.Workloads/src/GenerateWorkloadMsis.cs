@@ -45,11 +45,20 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             set;
         }
 
+        /// <summary>
+        /// Used for synchronizing on MSI task item.
+        /// </summary>
+        private readonly object msiTaskItemsLock = new();
+
         public override bool Execute()
         {
             try
             {
-                List<ITaskItem> msis = new();
+                List<ITaskItem> msis = null;
+                lock (msiTaskItemsLock)
+                {
+                    msis = new();
+                }
                 List<ITaskItem> missingPacks = new();
 
                 if (string.IsNullOrWhiteSpace(PackagesPath))
@@ -96,7 +105,12 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
 
                 System.Threading.Tasks.Parallel.ForEach(packsToGenerate, p =>
                 {
-                    msis.AddRange(Generate(p.sourcePackage, p.swixPackageId, p.outputPath, p.kind, p.platforms));
+                    var msiItems = Generate(p.sourcePackage, p.swixPackageId, p.outputPath, p.kind, p.platforms);
+
+                    lock (msiTaskItemsLock)
+                    {
+                        msis.AddRange(msiItems);
+                    }
                 });
 
                 Msis = msis.ToArray();
