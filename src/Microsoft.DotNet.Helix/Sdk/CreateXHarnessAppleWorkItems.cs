@@ -109,8 +109,14 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             bool isAlreadyArchived = workItemName.EndsWith(".zip");
 
-            if (isAlreadyArchived || workItemName.EndsWith(".app"))
+            if (isAlreadyArchived)
             {
+                workItemName = workItemName.Substring(0, workItemName.Length - 4);
+            }
+
+            if (workItemName.EndsWith(".app"))
+            {
+                // If someone named the zip something.app.zip, we want both gone
                 workItemName = workItemName.Substring(0, workItemName.Length - 4);
             }
 
@@ -175,8 +181,6 @@ namespace Microsoft.DotNet.Helix.Sdk
             string appName = isAlreadyArchived ? $"{fileSystem.GetFileNameWithoutExtension(appFolderPath)}.app" : fileSystem.GetFileName(appFolderPath);
             string helixCommand = GetHelixCommand(appName, target, testTimeout, launchTimeout, includesTestRunner, expectedExitCode, resetSimulator);
             string payloadArchivePath = await CreateZipArchiveOfFolder(zipArchiveManager, fileSystem, workItemName, isAlreadyArchived, appFolderPath, customCommands);
-
-            Log.LogMessage($"Creating work item with properties Identity: {workItemName}, Payload: {appFolderPath}, Command: {helixCommand}");
 
             return CreateTaskItem(workItemName, payloadArchivePath, helixCommand, workItemTimeout);
         }

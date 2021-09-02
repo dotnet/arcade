@@ -13,7 +13,7 @@ using System.Text.RegularExpressions;
 
 namespace Microsoft.DotNet.SourceBuild.Tasks
 {
-    public class WriteBuildOutputProps : Task
+    public class WriteBuildOutputProps : Microsoft.Build.Utilities.Task
     {
         private static readonly Regex InvalidElementNameCharRegex = new Regex(@"(^|[^A-Za-z0-9])(?<FirstPartChar>.)");
 

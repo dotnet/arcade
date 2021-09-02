@@ -29,7 +29,7 @@ To prevent OneLocBuild from running in the public project where it will fail.
 
 3. Run the pipeline you want to use OneLocBuild on your test branch.
 4. Open a ticket with the localization team using
-   [this template](https://ceapex.visualstudio.com/CEINTL/_workitems/create/Loc%20Request?templateId=60b0dcf9-9892-4910-934e-d5becddd1bc1&ownerId=c2e38d3d-0e9e-429f-955d-6e39fc6f0457).
+   [this template](https://aka.ms/ceChangeLocConfig).
    Include the link to the test build you've done.
 5. The loc team will generate an LCL package for you and send you its ID. It will be something like
    `LCL-JUNO-PROD-YOURREPO`.
@@ -61,7 +61,7 @@ As a further note, the template by default assumes that your mirror repository i
 organization. If that is not the case, you will need to specify `GitHubOrg` as well.
 
 8. Merge the changes to your main branch and then open a
-   [repo modification ticket](https://ceapex.visualstudio.com/CEINTL/_workitems/create/Loc%20Request?templateId=415a0569-35ed-45c3-9321-8b1affff1f52&ownerId=c2e38d3d-0e9e-429f-955d-6e39fc6f0457)
+   [repo modification ticket](https://aka.ms/ceChangeLocConfig)
    with the loc team to let them know to retarget the branch.
 
 
@@ -82,7 +82,7 @@ If you're releasing from any other branch (including servicing branches), you mu
 ```yaml
   MirrorBranch: target-branch
 ```
-2. Open a [repo modification ticket](https://ceapex.visualstudio.com/CEINTL/_workitems/create/Loc%20Request?templateId=415a0569-35ed-45c3-9321-8b1affff1f52&ownerId=c2e38d3d-0e9e-429f-955d-6e39fc6f0457) with the 
+2. Open a [repo modification ticket](https://aka.ms/ceChangeLocConfig) with the 
    loc team at least two weeks before the release and request that they re-target your repository to the release branch.
 3. Merge the OneLocBuild PRs to your release branch.
 4. After the release, open another repo modification ticket to re-target your repository to the `main` branch again.

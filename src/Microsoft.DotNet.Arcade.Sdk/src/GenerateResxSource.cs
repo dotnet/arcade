@@ -14,7 +14,7 @@ using Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.Arcade.Sdk
 {
-    public sealed class GenerateResxSource : Task
+    public sealed class GenerateResxSource : Microsoft.Build.Utilities.Task
     {
         private const int maxDocCommentLength = 256;
 

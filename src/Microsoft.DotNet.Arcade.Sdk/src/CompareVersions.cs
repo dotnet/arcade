@@ -7,7 +7,7 @@ using NuGet.Versioning;
 
 namespace Microsoft.DotNet.Arcade.Sdk
 {
-    public class CompareVersions : Task
+    public class CompareVersions : Microsoft.Build.Utilities.Task
     {
         [Required]
         public string Left { get; set; }

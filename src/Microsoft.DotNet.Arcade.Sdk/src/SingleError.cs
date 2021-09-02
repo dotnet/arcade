@@ -6,7 +6,7 @@ using Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.Arcade.Sdk
 {
-    public sealed class SingleError : Task
+    public sealed class SingleError : Microsoft.Build.Utilities.Task
     {
         private static readonly string s_cacheKeyPrefix = "SingleError-F88E25C6-1488-4E81-A458-A0921794E6E3:";
 

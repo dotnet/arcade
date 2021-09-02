@@ -23,7 +23,7 @@ namespace Microsoft.DotNet.Tools
     {
         static ReplacePackageParts() => AssemblyResolution.Initialize();
 #else
-    public sealed class ReplacePackageParts : Task
+    public sealed class ReplacePackageParts : Microsoft.Build.Utilities.Task
     {
 #endif
         /// <summary>

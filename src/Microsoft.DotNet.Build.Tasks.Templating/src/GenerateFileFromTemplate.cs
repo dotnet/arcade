@@ -27,7 +27,7 @@ namespace Microsoft.DotNet.Build.Tasks.Templating
     /// </code>
     /// </example>
     /// </summary>
-    public class GenerateFileFromTemplate : Task
+    public class GenerateFileFromTemplate : Microsoft.Build.Utilities.Task
     {
         /// <summary>
         /// The template file using the variable syntax <c>${VarName}</c>.

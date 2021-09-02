@@ -13,7 +13,7 @@ namespace Microsoft.DotNet.Arcade.Sdk.SourceBuild
     /// Reads entries in a Version.Details.xml file to find intermediate nupkg dependencies. For
     /// each dependency with a "SourceBuild" element, adds an item to the "Dependencies" output.
     /// </summary>
-    public class ReadSourceBuildIntermediateNupkgDependencies : Task
+    public class ReadSourceBuildIntermediateNupkgDependencies : Microsoft.Build.Utilities.Task
     {
         [Required]
         public string VersionDetailsXmlFile { get; set; }

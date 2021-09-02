@@ -43,6 +43,14 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         public void FailOnceThenPass()
         {
             string target = Path.Combine(Environment.GetEnvironmentVariable("HELIX_WORKITEM_ROOT") ?? Environment.GetEnvironmentVariable("TEMP"), "my-test-file-123456.snt");
+
+            // If we're inside a Helix Docker work item, GetTempPath() is cleaned every execution, 
+            // but the work item's own directory is not (and is writeable from inside Docker), so use it.
+            if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("HELIX_DOCKER_ENTRYPOINT")))
+            {
+                target = Path.Combine(Environment.GetEnvironmentVariable("HELIX_WORKITEM_PAYLOAD"), "my-test-file-123456.snt");
+            }
+
             bool exists = File.Exists(target);
             if (!exists)
             {

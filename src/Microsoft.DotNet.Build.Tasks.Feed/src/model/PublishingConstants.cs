@@ -739,6 +739,20 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 PublicAndInternalSymbolTargets,
                 flatten: false),
 
+            // ".NET 6 Eng",
+            new TargetChannelConfig(
+                2293,
+                false,
+                PublishingInfraVersion.Next,
+                "eng/net6",
+                FeedDotNetEngShipping,
+                FeedDotNetEngTransport,
+                FeedDotNetEngSymbols,
+                FeedForChecksums,
+                FeedForInstallers,
+                PublicAndInternalSymbolTargets,
+                filenamesToExclude: FilenamesToExclude),
+
             // ".NET Eng - Validation",
             new TargetChannelConfig(
                 9,
@@ -759,6 +773,20 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 false,
                 PublishingInfraVersion.Next,
                 "eng/net5validation",
+                FeedDotNetEngShipping,
+                FeedDotNetEngTransport,
+                FeedDotNetEngSymbols,
+                FeedForChecksums,
+                FeedForInstallers,
+                PublicAndInternalSymbolTargets,
+                flatten: false),
+
+            // ".NET 6 Eng - Validation",
+            new TargetChannelConfig(
+                2294,
+                false,
+                PublishingInfraVersion.Next,
+                "eng/net6validation",
                 FeedDotNetEngShipping,
                 FeedDotNetEngTransport,
                 FeedDotNetEngSymbols,

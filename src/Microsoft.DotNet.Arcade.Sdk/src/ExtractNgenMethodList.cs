@@ -17,7 +17,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
     /// Used to convert a raw XML dump from IBCMerge into the set of methods which will be NGEN'd when 
     /// partial NGEN is enabled
     /// </summary>
-    public sealed class ExtractNgenMethodList : Task
+    public sealed class ExtractNgenMethodList : Microsoft.Build.Utilities.Task
     {
         /// <summary>
         /// This is the XML file produced by passing -dxml to ibcmerge. It will be transformed into the set of
