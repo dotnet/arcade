@@ -12,6 +12,8 @@ This will be implemented as a new command line tool which submits jobs for gener
 
 *Details*:
 
+Documentation of the Image Factory API can be found [here](https://devdiv.visualstudio.com/XlabImageFactory/_wiki/wikis/XlabImageFactory.wiki/6330/AccessingImageFactory).
+
 Here is an example of a fragment of templated image definition:
 ```
 # List of artifacts and parameters. Secrets will be marked by kv_<secretName>
