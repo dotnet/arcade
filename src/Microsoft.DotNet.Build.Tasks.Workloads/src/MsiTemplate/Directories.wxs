@@ -16,5 +16,9 @@
         </Directory>
       </Directory>
     </Directory>
+
+    <?if $(var.Platform)~=x64?>
+    <CustomActionRef Id="Set_DOTNETHOME_NON_NATIVE_ARCHITECTURE" />
+    <?endif?>
   </Fragment>
 </Wix>
