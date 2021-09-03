@@ -12,6 +12,7 @@
 
     <IncludeDotNetCli>true</IncludeDotNetCli>
     <DotNetCliPackageType>sdk</DotNetCliPackageType>
+    <DotNetCliUseProductVersion>true</DotNetCliUseProductVersion>
 
     <TestRunNamePrefix>$(AGENT_JOBNAME)</TestRunNamePrefix>
   </PropertyGroup>

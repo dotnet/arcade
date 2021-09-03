@@ -24,6 +24,13 @@ namespace Microsoft.DotNet.Helix.Sdk
         public string Version { get; set; }
 
         /// <summary>
+        ///   If true, checks DotNetCLI paths for a productVersion.txt file to 
+        ///   enable intentional mismatch of versions in the path
+        /// </summary>
+        [Required]
+        public bool UseProductVersion { get; set; }
+
+        /// <summary>
         ///   RID of dotnet cli to get
         /// </summary>
         [Required]
@@ -49,7 +56,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             NormalizeParameters();
             await ResolveVersionAsync();
 
-            string downloadUrl = GetDownloadUrl();
+            string downloadUrl = await GetDownloadUrlAsync();
 
             Log.LogMessage($"Retrieved dotnet cli {PackageType} version {Version} package uri {downloadUrl}, testing...");
 
@@ -80,14 +87,35 @@ namespace Microsoft.DotNet.Helix.Sdk
             }
         }
 
-        private string GetDownloadUrl()
+        private async Task<string> GetDownloadUrlAsync()
         {
             string extension = Runtime.StartsWith("win") ? "zip" : "tar.gz";
+            string effectiveVersion = Version;
+            if (UseProductVersion)
+            {
+                var productVersionText = (PackageType switch
+                {
+                    "sdk" => await _client.GetStringAsync($"{DotNetCliAzureFeed}/Sdk/{Version}/productVersion.txt"),
+                    "aspnetcore-runtime" => await _client.GetStringAsync($"{DotNetCliAzureFeed}/aspnetcore/Runtime/{Version}/productVersion.txt"),
+                    _ => await _client.GetStringAsync($"{DotNetCliAzureFeed}/Runtime/{Version}/productVersion.txt")
+                }).Trim(); // The file contains the version + '\r\n'
+
+                if (!productVersionText.Equals(Version))
+                {
+                    effectiveVersion = productVersionText;
+                    Log.LogMessage($"Switched to effective .NET Core version '{productVersionText}' from productVersion.txt");
+                }
+                else
+                {
+                    Log.LogMessage(MessageImportance.Low, $"'UseProductVersion' was set to true, but the version ('{Version}') was the same as specified");
+                }
+
+            }
             return PackageType switch
             {
-                "sdk"                => $"{DotNetCliAzureFeed}/Sdk/{Version}/dotnet-sdk-{Version}-{Runtime}.{extension}",
-                "aspnetcore-runtime" => $"{DotNetCliAzureFeed}/aspnetcore/Runtime/{Version}/aspnetcore-runtime-{Version}-{Runtime}.{extension}",
-                _                    => $"{DotNetCliAzureFeed}/Runtime/{Version}/dotnet-runtime-{Version}-{Runtime}.{extension}"
+                "sdk" => $"{DotNetCliAzureFeed}/Sdk/{Version}/dotnet-sdk-{effectiveVersion}-{Runtime}.{extension}",
+                "aspnetcore-runtime" => $"{DotNetCliAzureFeed}/aspnetcore/Runtime/{Version}/aspnetcore-runtime-{effectiveVersion}-{Runtime}.{extension}",
+                _ => $"{DotNetCliAzureFeed}/Runtime/{Version}/dotnet-runtime-{effectiveVersion}-{Runtime}.{extension}"
             };
         }
 
