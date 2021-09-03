@@ -1,58 +1,66 @@
-# One-Pager for Epics
+# Epic Template - One-Pagers Guidelines
 
-## How to Use
+## Goal and Motivation
 
-The goal of a one-pager is to document expectations and goals for an epic or feature before embarking down the path of implementation. The one-pager is also meant for the v-team to think about how we are going to measure the impact of the epic to our customers and how the changes will be supported by the First Responder v-team once the epic is complete. It's not meant to document specific implementation details, but as a means to think about the epic or feature as a whole and provide a place to discuss what the stakeholders want, what challenges the v-team could face and how to mitigate those challenges, what parts need more clarity and research, et cetera. 
+The information included within our epics are high level business objectives and does not always leave much room for practical information. Sometime the v-team is able to capture all the information listed within outlined below in the epic. If that is the case, there is no need for an additional document.
 
-Below are questions to think about when filling out the parts of the template. The end result isn't to have a dissertation, but a short "one-page" document of what the epic or feature will do, how we'll measure impact/usage telemetry, and how the engineering services team will support it. **Feel free to use the template in whole or in part to create your one-pager**. 
+In most cases, however, v-teams need a place where they can capture additional information that helps them "think about" how they are going to implement a given feature.
 
-In order to align with Epic Content Guidance, one-pagers should be stored in a folder called `One-Pagers` within the `Documentation` folder on `core-eng`. The name the one-pager is saved as should match the name of the epic it is associated with and included the epic issue number (for easy reference). Example: *Coordinate migration from "master" to "main" in all dotnet org repos - core-eng10412.md*. Use the PR to document the discussion around the content of the one-pager. 
+The goal of the one-pager is to bring clarity to how the v-team is going to implement and support specific aspects of the business goals defined in the epic.
 
-After all discussions have been resolved, the resulting one-pager document should be signed-off (this does not need to be a formal process) by stakeholders (e.g. v-team members, epic owners, et cetera) and then linked to the associated epic's GitHub issue for discoverability.
+The document below is meant to be a guideline on what the v-team should be thinking about when defining the feature they are working on. It is up to you what you include in your one pager.
 
-Some of the content for this template was taken from [this article](https://medium.com/@johnpcutler/great-one-pagers-592ebbaf80ec), which goes into more depth about one-pagers.
+## One-Pager Guidelines
 
-## One-Pager Template
+In this section you will find the areas that you should consider including in your one-pager.
 
 ### Stakeholders
 
-- Who are the stakeholders (e.g. folks who will be using this feature; folks who are requesting this work; folks who need to "sign-off" on the epic)
+Who is this work for (i.e. stakeholder and those that should "sign-off" on your POC) and what are the problem(s) they asking us to solve?  
+
+### Proof of Concept (POC)
+
+An effective proof of concept proves the goal of a proposed project is viable, and will be successful. The value of a POC is it can help the v-team identify gaps in processes that might interfere with success.
+
+A POC can help
+- Elicits feedback from everyone involved in a project, including those who might not have otherwise contributed, thereby mitigating unforeseen risk.
+- Creates a test project to evaluate before work begins on an actual project. 
+- Verifies that concepts and theories applied to a project will have a real-world application.
+- Helps us to prove our assumptions (for example, if certain functionality, like using a service account to post comments from GitHub to Teams in a service, is possible) before committing to completing the work in a given timeframe.
+- Helps us to adjust our expectations about how much work a feature might take to complete depending on the challenges we run into that we didn't originally consider in our assumptions.
+- Can have more than one POC, if necessary, for a project.
+
 
 ### Risk
 
-- What are the unknowns? 
-- Are there any POCs (proof of concepts) required to be built for this epic? 
-- What dependencies will this epic have? Are the dependencies currently in a state that the functionality in the epic can consume them now, or will they need to be updated? 
-- Will the new implementation of any existing functionality cause breaking changes for existing consumers? 
+- Will the new implementation of any existing functionality cause breaking changes for existing consumers?
+- What are your assumptions?
+- What are your unknowns?
+- What dependencies will this epic/feature(s) have?
+  - Are the dependencies currently in a state that the functionality in the epic can consume them now, or will they need to be updated?
 - Is there a goal to have this work completed by, and what is the risk of not hitting that date? (e.g. missed OKRs, increased pain-points for consumers, functionality is required for the next product release, et cetera)
-
-### Serviceability
-
-- How will the components that make up this epic be tested? 
-- How will we have confidence in the deployments/shipping of the components of this epic? 
-- Identifying secrets (e.g. PATs, certificates, et cetera) that will be used (new ones to be created; existing ones to be used).
-    - Instructions for rotating secret (if the secret is new)
-- Does this change any existing SDL threat or data privacy models? (models can be found in [sharepoint](https://microsoft.sharepoint.com/teams/netfx/engineering/Shared%20Documents/Forms/AllItems.aspx?FolderCTID=0x01200053A84D1D9752264EB84A423D43EE2F05&viewid=6e9ff2b3%2D49b8%2D468b%2Db0d3%2Db1652e0bbdd3&id=%2Fteams%2Fnetfx%2Fengineering%2FShared%20Documents%2FSecurity%20Docs) folder)
-- Does this require a new SDL threat or data privacy models?
-- Steps for setting up repro/test/dev environments?
-
-#### Rollout and Deployment
-- How will we roll this out safely into production?
-    - Are we deprecating something else?
-- How often and with what means we will deploy this?
-- What needs to be deployed and where?
-- What are the risks when doing it?
-- What are the dependencies when rolling out?
+- Does anything the new feature depend on consume a limited/throttled API resource? 
+- Have you estimated what maximum usage is? 
+- Are you utilizing any response data that allows intelligent back-off from the service?
+- What is the plan for getting more capacity if the feature both must exist and needs more capacity than available?
 
 ### Usage Telemetry
-- How are we tracking the “usefulness” to our customers of the goals? 
-- How are we tracking the usage of the changes of the goals? 
 
-### Monitoring 
-- Is there existing monitoring that will be used by this epic? 
-- If new monitoring is needed, it should be defined and alerting thresholds should be set up. 
+- How are we measuring the “usefulness” to the stakeholders of the business objectives?
+- How are we tracking the usage of this new feature?
 
-### FR Hand off
-- What documentation/information needs to be provided to FR so the team as a whole is successful in maintaining these changes? 
-- If you have created new monitoring rules - what tools/processes should FR use to troubleshoot alerts
-- If existing monitoring is used, do the parameters need to be updated to accommodiate these new updates
+## Service-ability of Feature
+
+Changes that we implement often require addition maintenance to support them long term. The FR group has been set up to handle this work but it is up to the v-team to make sure FR is successful in servicing the changes made within your epic long term. Please see the [Servicing Guidelines](https://github.com/dotnet/core-eng/blob/main/Documentation/Project-Docs/Servicing%20Guidelines.md) Document for what you should be thinking about during your feature creation to help the team be able to easily service your feature long term.
+
+## House Keeping
+
+In order to align with Epic Content Guidance, one-pagers should be stored in a central location. 
+- The folder to store your One-Pager can be found in the [Documentation Folder](https://github.com/dotnet/core-eng/tree/main/Documentation/One-Pagers)
+- The name the one-pager should contain the name of the epic and the epic issue number (for easy reference). 
+  - Example: Coordinate migration from "master" to "main" in all dotnet org repos - core-eng10412.md. 
+- Use the PR process to document the discussion around the content of the one-pager.
+
+Guidance for Epics can be found at [Guidelines for Epics](https://github.com/dotnet/core-eng/wiki/%5BInt%5D---Guidelines-for-Epics) wiki
+
+After all discussions have been resolved, the resulting one-pager document should be signed-off (this does not need to be a formal process) by stakeholders (e.g. v-team members, epic owners, et cetera) and then linked to the associated epic's GitHub issue for discover-ability.
