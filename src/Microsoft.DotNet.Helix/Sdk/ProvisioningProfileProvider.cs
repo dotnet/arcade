@@ -37,6 +37,7 @@ namespace Microsoft.DotNet.Helix.Sdk
         private readonly IHelpers _helpers;
         private readonly IFileSystem _fileSystem;
         private readonly HttpClient _httpClient;
+        private readonly IZipArchiveManager _zipArchiveManager;
         private readonly string? _profileUrlTemplate;
         private readonly string? _tmpDir;
 
@@ -45,6 +46,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             IHelpers helpers,
             IFileSystem fileSystem,
             HttpClient httpClient,
+            IZipArchiveManager zipArchiveManager,
             string? profileUrlTemplate,
             string? tmpDir)
         {
@@ -52,6 +54,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             _helpers = helpers ?? throw new ArgumentNullException(nameof(helpers));
             _fileSystem = fileSystem ?? throw new ArgumentNullException(nameof(fileSystem));
             _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
+            _zipArchiveManager = zipArchiveManager ?? throw new ArgumentNullException(nameof(zipArchiveManager));
             _profileUrlTemplate = profileUrlTemplate;
             _tmpDir = tmpDir;
         }
@@ -80,12 +83,8 @@ namespace Microsoft.DotNet.Helix.Sdk
                     continue;
                 }
 
-                if (appBundlePath.EndsWith(".zip"))
-                {
-                    // TODO: We need to be able to add provisioning profiles into a zipped payload too
-                    continue;
-                }
-
+                bool isZippedBundle = appBundlePath.EndsWith(".zip");
+                
                 foreach (var pair in s_targetNames)
                 {
                     var platform = pair.Key;
@@ -97,11 +96,19 @@ namespace Microsoft.DotNet.Helix.Sdk
                     }
 
                     // App comes with a profile already
-                    var provisioningProfileDestPath = _fileSystem.PathCombine(appBundlePath, "embedded.mobileprovision");
-                    if (_fileSystem.FileExists(provisioningProfileDestPath))
+                    string provisioningProfileDestPath;
+                    if (isZippedBundle)
                     {
-                        _log.LogMessage($"Bundle already contains a provisioning profile at `{provisioningProfileDestPath}`");
-                        continue;
+                        provisioningProfileDestPath = appBundlePath;
+                    }
+                    else
+                    {
+                        provisioningProfileDestPath = _fileSystem.PathCombine(appBundlePath, "embedded.mobileprovision");
+                        if (_fileSystem.FileExists(provisioningProfileDestPath))
+                        {
+                            _log.LogMessage($"Bundle already contains a provisioning profile at `{provisioningProfileDestPath}`");
+                            continue;
+                        }
                     }
 
                     // This makes sure we download the profile the first time we see an app that needs it
@@ -125,7 +132,14 @@ namespace Microsoft.DotNet.Helix.Sdk
 
                     // Copy the profile into the folder
                     _log.LogMessage($"Adding provisioning profile `{profilePath}` into the app bundle at `{provisioningProfileDestPath}`");
-                    _fileSystem.FileCopy(profilePath, provisioningProfileDestPath);
+                    if (isZippedBundle)
+                    {   
+                        _zipArchiveManager.AddContentToArchive(provisioningProfileDestPath, _fileSystem.GetFileName(profilePath), new MemoryStream(File.ReadAllBytes(profilePath)));
+                    }
+                    else
+                    {
+                        _fileSystem.FileCopy(profilePath, provisioningProfileDestPath);
+                    }
                 }
             }
         }
@@ -169,6 +183,7 @@ namespace Microsoft.DotNet.Helix.Sdk
         {
             collection.TryAddTransient<IHelpers, Arcade.Common.Helpers>();
             collection.TryAddTransient<IFileSystem, FileSystem>();
+            collection.TryAddTransient<IZipArchiveManager, ZipArchiveManager>();
             collection.TryAddSingleton(_ => new HttpClient(new HttpClientHandler { CheckCertificateRevocationList = true }));
             collection.TryAddSingleton<IProvisioningProfileProvider>(serviceProvider =>
             {
@@ -177,6 +192,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                     serviceProvider.GetRequiredService<IHelpers>(),
                     serviceProvider.GetRequiredService<IFileSystem>(),
                     serviceProvider.GetRequiredService<HttpClient>(),
+                    serviceProvider.GetRequiredService<IZipArchiveManager>(),
                     provisioningProfileUrlTemplate,
                     tmpDir);
             });

@@ -111,6 +111,7 @@
     <CreateXHarnessAppleWorkItems AppBundles="@(XHarnessAppBundleToTest)"
                                   XcodeVersion="$(XHarnessXcodeVersion)"
                                   ProvisioningProfileUrl="$(XHarnessAppleProvisioningProfileUrl)"
+                                  ShouldBuildApps="$(XHarnessAppleShouldBuildApps)"
                                   TmpDir="$(ArtifactsTmpDir)">
       <Output TaskParameter="WorkItems" ItemName="HelixWorkItem"/>
     </CreateXHarnessAppleWorkItems>

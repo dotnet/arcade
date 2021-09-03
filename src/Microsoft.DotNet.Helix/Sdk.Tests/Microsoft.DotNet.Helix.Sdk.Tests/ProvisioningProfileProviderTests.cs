@@ -21,6 +21,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         private readonly MockFileSystem _fileSystem;
         private readonly Mock<IHelpers> _helpersMock;
         private readonly ProvisioningProfileProvider _profileProvider;
+        private readonly Mock<IZipArchiveManager> _zipArchiveManager;
         private int _downloadCount = 0;
 
         public ProvisioningProfileProviderTests()
@@ -47,11 +48,21 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
 
             var httpClient = FakeHttpClient.WithResponses(response1, response2);
 
+            _zipArchiveManager = new();
+            _zipArchiveManager.SetReturnsDefault(System.Threading.Tasks.Task.CompletedTask);
+            _zipArchiveManager
+                .Setup(x => x.ArchiveDirectory(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<bool>()))
+                .Callback<string, string, bool>((folder, zipPath, _) =>
+                {
+                    _fileSystem.Files.Add(zipPath, "zip of " + folder);
+                });
+
             _profileProvider = new ProvisioningProfileProvider(
                 new TaskLoggingHelper(new MockBuildEngine(), nameof(ProvisioningProfileProviderTests)),
                 _helpersMock.Object,
                 _fileSystem,
                 httpClient,
+                _zipArchiveManager.Object,
                 "https://netcorenativeassets.azure.com/profiles/{PLATFORM}.mobileprovision",
                 "/tmp");
         }

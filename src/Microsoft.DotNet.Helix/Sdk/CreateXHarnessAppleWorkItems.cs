@@ -51,6 +51,11 @@ namespace Microsoft.DotNet.Helix.Sdk
         public string ProvisioningProfileUrl { get; set; }
 
         /// <summary>
+        /// Indicates whether we should run a user supplied script to build the native app on the fly
+        /// </summary>
+        public bool ShouldBuildApps { get; set; }
+
+        /// <summary>
         /// Path where we can store intermediate files.
         /// </summary>
         public string TmpDir { get; set; }
@@ -219,6 +224,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             =>
             $"chmod +x {EntryPointScript} && ./{EntryPointScript} " +
             $"--app \"{appName}\" " +
+            (ShouldBuildApps ? "--build " : string.Empty) +
             $"--target \"{target}\" " +
             $"--timeout \"{testTimeout}\" " +
             $"--launch-timeout \"{launchTimeout}\" " +
@@ -237,27 +243,33 @@ namespace Microsoft.DotNet.Helix.Sdk
             string injectedCommands)
         {
             string appFolderDirectory = fileSystem.GetDirectoryName(folderToZip);
-            string fileName = $"xharness-app-payload-{workItemName.ToLowerInvariant()}.zip";
-            string outputZipPath = fileSystem.PathCombine(appFolderDirectory, fileName);
-
-            if (fileSystem.FileExists(outputZipPath))
-            {
-                Log.LogMessage($"Zip archive '{outputZipPath}' already exists, overwriting..");
-                fileSystem.DeleteFile(outputZipPath);
-            }
+            
+            string fileName;
+            string outputZipPath;
 
             if (!isAlreadyArchived)
             {
+                fileName = $"xharness-app-payload-{workItemName.ToLowerInvariant()}.zip";
+                outputZipPath = fileSystem.PathCombine(appFolderDirectory, fileName);
+
+                if (fileSystem.FileExists(outputZipPath))
+                {
+                    Log.LogMessage($"Zip archive '{outputZipPath}' already exists, overwriting..");
+                    fileSystem.DeleteFile(outputZipPath);
+                }
+
                 zipArchiveManager.ArchiveDirectory(folderToZip, outputZipPath, true);
             }
             else
             {
-                Log.LogMessage($"App payload '{workItemName}` has already been zipped. Copying to '{outputZipPath}` instead");
-                fileSystem.FileCopy(folderToZip, outputZipPath);
+                Log.LogMessage($"App payload '{workItemName}` has already been zipped. Skipping creating zip archive");
+                fileName = fileSystem.GetFileName(folderToZip);
+                outputZipPath = fileSystem.PathCombine(appFolderDirectory, fileName);
             }
 
-            Log.LogMessage($"Adding the XHarness job scripts into the payload archive");
+            Log.LogMessage($"Adding the XHarness job scripts into the payload archive '{ScriptNamespace}{EntryPointScript}'");
             await zipArchiveManager.AddResourceFileToArchive<CreateXHarnessAppleWorkItems>(outputZipPath, ScriptNamespace + EntryPointScript, EntryPointScript);
+            Log.LogMessage($"2nd AddResourceFileToArchive");
             await zipArchiveManager.AddResourceFileToArchive<CreateXHarnessAppleWorkItems>(outputZipPath, ScriptNamespace + RunnerScript, RunnerScript);
             await zipArchiveManager.AddContentToArchive(outputZipPath, CustomCommandsScript + ".sh", injectedCommands);
 

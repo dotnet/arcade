@@ -7,6 +7,7 @@
 ###
 
 app=''
+build_app=false
 forwarded_args=''
 
 while [[ $# -gt 0 ]]; do
@@ -14,6 +15,10 @@ while [[ $# -gt 0 ]]; do
     case "$opt" in
       --app)
         app="$2"
+        shift
+        ;;
+      --build)
+        build_app=true
         shift
         ;;
       *)
@@ -24,6 +29,11 @@ while [[ $# -gt 0 ]]; do
 done
 
 set -x
+
+if [ "$build_app" = true ] ; then
+    chmod +x build-apple-app.sh
+    sh ./build-apple-app.sh
+fi
 
 # It is important we call the script via `launchctl asuser` in order to be able to spawn
 # the simulator which needs to run in a user session with GUI rendering capabilities.
