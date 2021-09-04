@@ -75,8 +75,8 @@
     <MicrosoftVisualStudioWebCodeGenerationDesignVersion>2.0.4</MicrosoftVisualStudioWebCodeGenerationDesignVersion>
     <MicrosoftDiaSymReaderPdb2PdbVersion>1.1.0-beta2-19575-01</MicrosoftDiaSymReaderPdb2PdbVersion>
     <MicrosoftDotNetMaestroClientVersion>1.1.0-beta.20258.6</MicrosoftDotNetMaestroClientVersion>
-    <MicrosoftSourceLinkGitHubVersion>1.1.0-beta-21452-01</MicrosoftSourceLinkGitHubVersion>
-    <MicrosoftSourceLinkAzureReposGitVersion>1.1.0-beta-21452-01</MicrosoftSourceLinkAzureReposGitVersion>
+    <MicrosoftSourceLinkGitHubVersion>1.1.0-beta-21453-01</MicrosoftSourceLinkGitHubVersion>
+    <MicrosoftSourceLinkAzureReposGitVersion>1.1.0-beta-21453-01</MicrosoftSourceLinkAzureReposGitVersion>
     <MicrosoftDotNetSwaggerGeneratorMSBuildVersion>7.0.0-beta.21453.2</MicrosoftDotNetSwaggerGeneratorMSBuildVersion>
     <MicrosoftDotNetXliffTasksVersion>1.0.0-beta.21452.1</MicrosoftDotNetXliffTasksVersion>
     <MicrosoftDotNetMaestroTasksVersion>1.1.0-beta.21378.2</MicrosoftDotNetMaestroTasksVersion>
