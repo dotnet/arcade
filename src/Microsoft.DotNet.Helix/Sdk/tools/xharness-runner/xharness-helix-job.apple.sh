@@ -37,6 +37,9 @@ sudo launchctl asuser "$helix_runner_uid" sh ./xharness-runner.apple.sh \
 
 exit_code=$?
 
+# Collect diagnostics data and upload it
+"$HELIX_PYTHONPATH" "$HELIX_WORKITEM_PAYLOAD/xharness-event-reporter.py"
+
 # For some of the issues such as Simulators get reeaally slow and they start failing to install apps,
 # the only solution is to reboot the machine.
 # We usually also ask the work item to be re-tried on a different machine
