@@ -23,8 +23,8 @@ namespace Microsoft.DotNet.Helix.Sdk
             public const string CustomCommands = "CustomCommands";
         }
 
-        protected const string ScriptNamespace = "tools.xharness_runner.";
-        protected const string CustomCommandsScript = "command";
+        private const string ScriptNamespace = "tools.xharness_runner.";
+        private const string CustomCommandsScript = "command";
 
         /// <summary>
         /// Extra arguments that will be passed to the iOS/Android/... app that is being run
@@ -137,7 +137,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             string[] payloadScripts)
         {
             string appFolderDirectory = fileSystem.GetDirectoryName(pathToZip);
-            string fileName = $"xharness-app-payload-{workItemName.ToLowerInvariant()}.zip";
+            string fileName = $"xharness-payload-{workItemName.ToLowerInvariant()}.zip";
             string outputZipPath = fileSystem.PathCombine(appFolderDirectory, fileName);
 
             if (fileSystem.FileExists(outputZipPath))
@@ -167,7 +167,7 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             foreach (var payloadScript in payloadScripts)
             {
-                await zipArchiveManager.AddResourceFileToArchive<CreateXHarnessAppleWorkItems>(
+                await zipArchiveManager.AddResourceFileToArchive<XHarnessTaskBase>(
                     outputZipPath,
                     ScriptNamespace + payloadScript,
                     payloadScript);
