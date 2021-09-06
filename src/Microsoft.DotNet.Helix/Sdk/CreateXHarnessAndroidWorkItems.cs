@@ -67,20 +67,7 @@ namespace Microsoft.DotNet.Helix.Sdk
         /// <returns>An ITaskItem instance representing the prepared HelixWorkItem.</returns>
         private async Task<ITaskItem> PrepareWorkItem(IZipArchiveManager zipArchiveManager, IFileSystem fileSystem, ITaskItem appPackage)
         {
-            // The user can re-use the same .apk for 2 work items so the name of the work item will come from ItemSpec and path from metadata
-            // This can be useful when we want to run the same app with different parameters or run the same app on different test targets, e.g. iOS 13 and 13.5
-            string workItemName;
-            string apkPath;
-            if (appPackage.TryGetMetadata(MetadataNames.ApkPath, out string apkPathMetadata) && !string.IsNullOrEmpty(apkPathMetadata))
-            {
-                workItemName = appPackage.ItemSpec;
-                apkPath = apkPathMetadata;
-            }
-            else
-            {
-                workItemName = fileSystem.GetFileNameWithoutExtension(appPackage.ItemSpec);
-                apkPath = appPackage.ItemSpec;
-            }
+            var (workItemName, apkPath) = GetNameAndPath(appPackage, MetadataNames.ApkPath, fileSystem);
 
             if (!fileSystem.FileExists(apkPath))
             {
@@ -120,13 +107,20 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             string command = GetHelixCommand(appPackage, apkName, androidPackageName, testTimeout, expectedExitCode);
 
-            string workItemZip = await CreateZipArchiveOfPackageAsync(
+            string workItemZip = await CreatePayloadArchive(
                 zipArchiveManager,
                 fileSystem,
                 workItemName,
                 isAlreadyArchived,
+                IsPosixShell,
                 apkPath,
-                customCommands);
+                customCommands,
+                new[]
+                {
+                    // WorkItem payloads of APKs can be reused if sent to multiple queues at once,
+                    // so we'll always include both scripts (very small)
+                    PosixAndroidWrapperScript, NonPosixAndroidWrapperScript
+                });
 
             return CreateTaskItem(workItemName, workItemZip, command, workItemTimeout);
         }
@@ -178,43 +172,6 @@ namespace Microsoft.DotNet.Helix.Sdk
             Log.LogMessage(MessageImportance.Low, $"Generated XHarness command: {xharnessRunCommand}");
 
             return xharnessRunCommand;
-        }
-
-        private async Task<string> CreateZipArchiveOfPackageAsync(
-            IZipArchiveManager zipArchiveManager,
-            IFileSystem fileSystem,
-            string workItemName,
-            bool isAlreadyArchived,
-            string fileToZip,
-            string injectedCommands)
-        {
-            string fileName = $"xharness-apk-payload-{workItemName.ToLowerInvariant()}.zip";
-            string outputZipPath = fileSystem.PathCombine(fileSystem.GetDirectoryName(fileToZip), fileName);
-
-            if (fileSystem.FileExists(outputZipPath))
-            {
-                Log.LogMessage($"Zip archive '{outputZipPath}' already exists, overwriting..");
-                fileSystem.DeleteFile(outputZipPath);
-            }
-
-            if (!isAlreadyArchived)
-            {
-                zipArchiveManager.ArchiveFile(fileToZip, outputZipPath);
-            }
-            else
-            {
-                Log.LogMessage($"App payload '{workItemName}` has already been zipped. Copying to '{outputZipPath}` instead");
-                fileSystem.FileCopy(fileToZip, outputZipPath);
-            }
-
-            // WorkItem payloads of APKs can be reused if sent to multiple queues at once,
-            // so we'll always include both scripts (very small)
-            Log.LogMessage($"Adding the XHarness job scripts into the payload archive");
-            await zipArchiveManager.AddResourceFileToArchive<CreateXHarnessAndroidWorkItems>(outputZipPath, ScriptNamespace + PosixAndroidWrapperScript, PosixAndroidWrapperScript);
-            await zipArchiveManager.AddResourceFileToArchive<CreateXHarnessAndroidWorkItems>(outputZipPath, ScriptNamespace + NonPosixAndroidWrapperScript, NonPosixAndroidWrapperScript);
-            await zipArchiveManager.AddContentToArchive(outputZipPath, CustomCommandsScript + (IsPosixShell ? ".sh" : ".ps1"), injectedCommands);
-
-            return outputZipPath;
         }
     }
 }
