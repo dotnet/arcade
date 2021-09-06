@@ -88,9 +88,9 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             _zipArchiveManager
                 .Verify(x => x.ArchiveFile("/apks/System.Foo.apk", payloadArchive), Times.Once);
             _zipArchiveManager
-                .Verify(x => x.AddResourceFileToArchive<CreateXHarnessAndroidWorkItems>(payloadArchive, It.Is<string>(s => s.Contains("xharness-helix-job.android.sh")), "xharness-helix-job.android.sh"), Times.AtLeastOnce);
+                .Verify(x => x.AddResourceFileToArchive<XHarnessTaskBase>(payloadArchive, It.Is<string>(s => s.Contains("xharness-helix-job.android.sh")), "xharness-helix-job.android.sh"), Times.AtLeastOnce);
             _zipArchiveManager
-                .Verify(x => x.AddResourceFileToArchive<CreateXHarnessAndroidWorkItems>(payloadArchive, It.Is<string>(s => s.Contains("xharness-helix-job.android.ps1")), "xharness-helix-job.android.ps1"), Times.AtLeastOnce);
+                .Verify(x => x.AddResourceFileToArchive<XHarnessTaskBase>(payloadArchive, It.Is<string>(s => s.Contains("xharness-helix-job.android.ps1")), "xharness-helix-job.android.ps1"), Times.AtLeastOnce);
         }
 
         [Fact]
@@ -104,7 +104,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 CreateApk("apks/System.Bar.apk", "System.Bar"),
             };
 
-            _fileSystem.Files.Add("apks/xharness-apk-payload-system.foo.zip", "archive");
+            _fileSystem.Files.Add("apks/xharness-payload-system.foo.zip", "archive");
 
             // Act
             using var provider = collection.BuildServiceProvider();
@@ -190,9 +190,9 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             _zipArchiveManager
                 .Verify(x => x.ArchiveFile(It.IsAny<string>(), It.IsAny<string>()), Times.Never);
             _zipArchiveManager
-                .Verify(x => x.AddResourceFileToArchive<CreateXHarnessAndroidWorkItems>(payloadArchive, It.Is<string>(s => s.Contains("xharness-helix-job.android.sh")), "xharness-helix-job.android.sh"), Times.AtLeastOnce);
+                .Verify(x => x.AddResourceFileToArchive<XHarnessTaskBase>(payloadArchive, It.Is<string>(s => s.Contains("xharness-helix-job.android.sh")), "xharness-helix-job.android.sh"), Times.AtLeastOnce);
             _zipArchiveManager
-                .Verify(x => x.AddResourceFileToArchive<CreateXHarnessAndroidWorkItems>(payloadArchive, It.Is<string>(s => s.Contains("xharness-helix-job.android.ps1")), "xharness-helix-job.android.ps1"), Times.AtLeastOnce);
+                .Verify(x => x.AddResourceFileToArchive<XHarnessTaskBase>(payloadArchive, It.Is<string>(s => s.Contains("xharness-helix-job.android.ps1")), "xharness-helix-job.android.ps1"), Times.AtLeastOnce);
         }
 
         [Fact]
