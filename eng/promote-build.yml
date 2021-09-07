@@ -58,6 +58,9 @@ trigger: none
 variables:
   _DotNetArtifactsCategory: .NETCore
 
+pool:
+  vmImage: ubuntu-latest
+
 stages:
 - stage: prepare_promotion
   displayName: Prepare for Promotion
