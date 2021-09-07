@@ -2,7 +2,7 @@
   <Target Name="AddDotNetSdk"
           Condition="$(IncludeDotNetCli)"
           BeforeTargets="CoreTest;AddXHarnessCli">
-    <FindDotNetCliPackage Version="$(DotNetCliVersion)" Runtime="$(DotNetCliRuntime)" PackageType="$(DotNetCliPackageType)" Channel="$(DotNetCliChannel)"  UseProductVersion="$(DotNetCliUseProductVersion)">
+    <FindDotNetCliPackage Version="$(DotNetCliVersion)" Runtime="$(DotNetCliRuntime)" PackageType="$(DotNetCliPackageType)" Channel="$(DotNetCliChannel)">
       <Output TaskParameter="PackageUri" PropertyName="DotNetCliPackageUri"/>
     </FindDotNetCliPackage>
     <ItemGroup>
