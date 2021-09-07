@@ -120,8 +120,6 @@ Given a local folder `$(TestFolder)` containing `runtests.cmd`, this will run `r
     <DotNetCliVersion>2.1.403</DotNetCliVersion>
     <!-- 'Current' or 'LTS', determines what channel 'latest' version pulls from -->
     <DotNetCliChannel>Current</DotNetCliChannel>
-    <!-- 'true' to parse 'productVersion.txt' if found and get its mixed version. Default 'false' -->
-    <DotNetCliUseProductVersion>false</DotNetCliUseProductVersion>
 
     <!-- Enable reporting of test results to azure dev ops -->
     <EnableAzurePipelinesReporter>false</EnableAzurePipelinesReporter>

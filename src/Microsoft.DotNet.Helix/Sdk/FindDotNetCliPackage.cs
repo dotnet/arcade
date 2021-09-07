@@ -104,7 +104,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                 string effectiveVersion = Version;
 
                 // Do nothing for older runtimes; the file won't exist
-                if (semanticVersion > new NuGetVersion("3.1.0"))
+                if (semanticVersion >= new NuGetVersion("5.0.0"))
                 {
                     var productVersionText = PackageType switch
                     {
