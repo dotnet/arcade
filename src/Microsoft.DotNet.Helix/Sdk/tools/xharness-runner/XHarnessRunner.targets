@@ -73,7 +73,7 @@
       <HelixPreCommands>$(HelixPreCommands);doskey xharness="dotnet exec %XHARNESS_CLI_PATH%"</HelixPreCommands>
 
       <HelixPreCommands Condition=" '$(EnableXHarnessTelemetry)' == 'true' ">$(HelixPreCommands);set XHARNESS_DIAGNOSTICS_PATH=%HELIX_WORKITEM_ROOT%\diagnostics.json</HelixPreCommands>
-      <HelixPostCommands Condition=" '$(EnableXHarnessTelemetry)' == 'true' ">python3 "%HELIX_CORRELATION_PAYLOAD%\xharness-event-reporter.py";$(HelixPostCommands)</HelixPostCommands>
+      <HelixPostCommands Condition=" '$(EnableXHarnessTelemetry)' == 'true' ">"%HELIX_PYTHONPATH%" "%HELIX_CORRELATION_PAYLOAD%\xharness-event-reporter.py";$(HelixPostCommands)</HelixPostCommands>
     </PropertyGroup>
   </Target>
 
