@@ -36,5 +36,7 @@ namespace Microsoft.Arcade.Common
         public void FileCopy(string sourceFileName, string destFileName) => File.Copy(sourceFileName, destFileName);
 
         public Stream GetFileStream(string path, FileMode mode, FileAccess access) => new FileStream(path, mode, access);
+
+        public FileAttributes GetAttributes(string path) => File.GetAttributes(path);
     }
 }

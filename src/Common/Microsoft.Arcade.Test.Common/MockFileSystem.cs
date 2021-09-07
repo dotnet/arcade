@@ -59,6 +59,18 @@ namespace Microsoft.Arcade.Test.Common
         public Stream GetFileStream(string path, FileMode mode, FileAccess access)
             => FileExists(path) ? new MemoryStream() : new MockFileStream(this, path);
 
+        public FileAttributes GetAttributes(string path)
+        {
+            var attributes = FileAttributes.Normal;
+
+            if (Directories.Contains(path))
+            {
+                attributes |= FileAttributes.Directory;
+            }
+
+            return  attributes;
+        }
+
         #endregion
 
         /// <summary>
