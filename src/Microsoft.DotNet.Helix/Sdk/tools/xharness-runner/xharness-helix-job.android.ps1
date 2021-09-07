@@ -64,9 +64,6 @@ switch ($exit_code)
     }
 }
 
-# Collect diagnostics data and upload it
-& "$Env:HELIX_PYTHONPATH" "$HELIX_WORKITEM_PAYLOAD/xharness-event-reporter.py"
-
 if ($retry) {
     & "$Env:HELIX_PYTHONPATH" -c "from helix.workitemutil import request_infra_retry; request_infra_retry('Retrying because we could not enumerate all Android devices')"
 }
