@@ -73,6 +73,12 @@
 
     <ItemGroup>
       <SourceRoot Update="@(SourceRoot)">
+        <ScmRepositoryUrl Condition="$([System.String]::Copy(%(SourceRoot.ScmRepositoryUrl)).Contains(`devdiv.visualstudio`))">$([System.String]::Copy(%(SourceRoot.ScmRepositoryUrl)).ToLower().Replace(`-trusted`,``))</ScmRepositoryUrl>
+      </SourceRoot>
+    </ItemGroup>
+
+    <ItemGroup>
+      <SourceRoot Update="@(SourceRoot)">
         <ScmRepositoryUrl>$([System.Text.RegularExpressions.Regex]::Replace(%(SourceRoot.ScmRepositoryUrl), $(_TranslateUrlPattern), $(_TranslateUrlReplacement)))</ScmRepositoryUrl>
       </SourceRoot>
     </ItemGroup>
