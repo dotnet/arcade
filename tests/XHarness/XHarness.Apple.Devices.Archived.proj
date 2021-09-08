@@ -24,9 +24,11 @@
         <CustomCommands>
           set -x
           result=0
-          xharness apple test -a $(XHarnessAppBundleName_1) -o $output_directory -t $target -v --timeout 00:08:50
+          sign System.Buffers.Tests.app
+          sign System.Runtime.Numerics.Tests.app
+          xharness apple test -a System.Buffers.Tests.app -o $output_directory -t $target -v --timeout 00:08:50
           ((result|=$?))
-          xharness apple test -a $(XHarnessAppBundleName_2) -o $output_directory -t $target -v --timeout 00:08:50
+          xharness apple test -a System.Runtime.Numerics.Tests.app -o $output_directory -t $target -v --timeout 00:08:50
           ((result|=$?))
           exit $result
         </CustomCommands>
