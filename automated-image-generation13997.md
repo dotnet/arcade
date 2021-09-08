@@ -9,7 +9,7 @@ Currently only way how to generate Helix custom images for our Windows queues is
 
 
 ### Goal
-The goal of this epic is to enable our team to be able to generate custom images by ourselfs and remove the dependency on DDFUN. These are images which contains various versions of Visual Studio and various versions of Windows. We will introduce a new automated and monitored process which removes the need for manual steps done by DDFUN.
+The goal of this epic is to enable our team to be able to generate custom images by ourselves and remove the dependency on DDFUN. These are images which contains various versions of Visual Studio and various versions of Windows. We will introduce a new automated and monitored process which removes the need for manual steps done by DDFUN.
 
 When this is completed we will be able to:
 * generate images ourselves without spending time on coordination with DDFUN, similarly to other teams using Image Factory
@@ -23,14 +23,14 @@ Part of this epic is also to take the ownership of [custom image definitions](ht
 
 Let's start with a scenario where we need to update Visual Studio 2019 Preview version per our [schedule](https://github.com/dotnet/core-eng/wiki/VS2019-Upgrade-Schedule) which has to be done almost every week.
 
-Currently this change requires update of same values in six [image definitions](https://devdiv.visualstudio.com/XlabImageFactory/_git/ImageConfigurations?path=/Monthly/HelixBaseImages/VS2019Preview). Specfically:
+Currently this change requires update of same values in six [image definitions](https://devdiv.visualstudio.com/XlabImageFactory/_git/ImageConfigurations?path=/Monthly/HelixBaseImages/VS2019Preview). Specifically:
 * update artifact windows-vs-willowreleased, set parameter VSBootstrapperURL to a new value.
 * update version in parameter CustomImageName under Destination.
 
 To simplify this, we will introduce templating, so variables are defined at exactly one place and are not duplicated across multiple files, similarly to what we have in OSOB.
 
 #### Example:
-Instead of harcoding the same version and the same URL at [six places](https://devdiv.visualstudio.com/XlabImageFactory/_git/ImageConfigurations?path=/Monthly/HelixBaseImages/VS2019Preview), we introduce template variable {VS_2019_PREVIEW_URL} which declares an URL to Visual Studio artifact and the template variable {VS_2019_PREVIEW_VERSION} which declares version of Visual Studio.
+Instead of hardcoding the same version and the same URL at [six places](https://devdiv.visualstudio.com/XlabImageFactory/_git/ImageConfigurations?path=/Monthly/HelixBaseImages/VS2019Preview), we introduce template variable {VS_2019_PREVIEW_URL} which declares an URL to Visual Studio artifact and the template variable {VS_2019_PREVIEW_VERSION} which declares version of Visual Studio.
 
 All templated variables will be stored in one file.
 
@@ -50,7 +50,7 @@ Documentation of the Image Factory API can be found [here](https://devdiv.visual
 
 ## Take ownership of Helix custom image definitions
 
-Making custom image definitions templated requires modifications. This is why we need to move all [definitions](https://devdiv.visualstudio.com/XlabImageFactory/_git/ImageConfigurations?path=%2FMonthly%2FHelixBaseImages) under our repository. It was confirmed by DDFUN (Casey) that these definitions aren't shared with any other team. Beside changing URL and version the structure is left unchanged, so there isn't any additional maintanance cost related to owning these definitions.
+Making custom image definitions templated requires modifications. This is why we need to move all [definitions](https://devdiv.visualstudio.com/XlabImageFactory/_git/ImageConfigurations?path=%2FMonthly%2FHelixBaseImages) under our repository. It was confirmed by DDFUN (Casey) that these definitions aren't shared with any other team. Beside changing URL and version the structure is left unchanged, so there isn't any additional maintenance cost related to owning these definitions.
 
 Currently the definitions with DDFUN use YAML only to be converted to JSON payloads. As part of the move I would suggest to start using JSON file format as it's expected input of the Image Factory. The only benefit of YAML are comments, but in our case these comments are copy pasted across all definitions and don't add any additional value.
 
@@ -149,7 +149,7 @@ in [core-eng/SDL](https://github.com/dotnet/core-eng/SDL) folder)
     - How to use the tool in manual mode
     - What to do when pipeline fails the build
 
-- The policies of generating images ovelaps with Matrix of Truth epic and will be further discussed with the epic owner.
+- The policies of generating images overlaps with Matrix of Truth epic and will be further discussed with the epic owner.
 
 ## Future outlook
 - Execution of the process should be possible to be done by vendors with minimal cost.
