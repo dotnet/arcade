@@ -3,6 +3,7 @@ using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.Build.Framework;
+using NuGet.Versioning;
 
 namespace Microsoft.DotNet.Helix.Sdk
 {
@@ -30,7 +31,7 @@ namespace Microsoft.DotNet.Helix.Sdk
         public string Runtime { get; set; }
 
         /// <summary>
-        ///   'sdk', 'runtime' or 'aspnetcore-runtime'
+        ///   'sdk', 'runtime' or 'aspnetcore-runtime' (default is runtime)
         /// </summary>
         [Required]
         public string PackageType { get; set; }
@@ -49,7 +50,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             NormalizeParameters();
             await ResolveVersionAsync();
 
-            string downloadUrl = GetDownloadUrl();
+            string downloadUrl = await GetDownloadUrlAsync();
 
             Log.LogMessage($"Retrieved dotnet cli {PackageType} version {Version} package uri {downloadUrl}, testing...");
 
@@ -80,15 +81,73 @@ namespace Microsoft.DotNet.Helix.Sdk
             }
         }
 
-        private string GetDownloadUrl()
+        private async Task<string> GetDownloadUrlAsync()
         {
             string extension = Runtime.StartsWith("win") ? "zip" : "tar.gz";
+            string effectiveVersion = await GetEffectiveVersion();
+
             return PackageType switch
             {
-                "sdk"                => $"{DotNetCliAzureFeed}/Sdk/{Version}/dotnet-sdk-{Version}-{Runtime}.{extension}",
-                "aspnetcore-runtime" => $"{DotNetCliAzureFeed}/aspnetcore/Runtime/{Version}/aspnetcore-runtime-{Version}-{Runtime}.{extension}",
-                _                    => $"{DotNetCliAzureFeed}/Runtime/{Version}/dotnet-runtime-{Version}-{Runtime}.{extension}"
+                "sdk" => $"{DotNetCliAzureFeed}/Sdk/{Version}/dotnet-sdk-{effectiveVersion}-{Runtime}.{extension}",
+                "aspnetcore-runtime" => $"{DotNetCliAzureFeed}/aspnetcore/Runtime/{Version}/aspnetcore-runtime-{effectiveVersion}-{Runtime}.{extension}",
+                _ => $"{DotNetCliAzureFeed}/Runtime/{Version}/dotnet-runtime-{effectiveVersion}-{Runtime}.{extension}"
             };
+        }
+
+        private async Task<string> GetEffectiveVersion()
+        {
+            if (NuGetVersion.TryParse(Version, out NuGetVersion semanticVersion))
+            {
+                // Pared down version of the logic from https://github.com/dotnet/install-scripts/blob/main/src/dotnet-install.ps1
+                // If this functionality stops working, review changes made there.
+                // Current strategy is to start with a runtime-specific name then fall back to 'productVersion.txt'
+                string effectiveVersion = Version;
+
+                // Do nothing for older runtimes; the file won't exist
+                if (semanticVersion >= new NuGetVersion("5.0.0"))
+                {
+                    var productVersionText = PackageType switch
+                    {
+                        "sdk" => await GetMatchingProductVersionTxtContents($"{DotNetCliAzureFeed}/Sdk/{Version}", "sdk-productVersion.txt"),
+                        "aspnetcore-runtime" => await GetMatchingProductVersionTxtContents($"{DotNetCliAzureFeed}/aspnetcore/Runtime/{Version}", "aspnetcore-productVersion.txt"),
+                        _ => await GetMatchingProductVersionTxtContents($"{DotNetCliAzureFeed}/Runtime/{Version}", "runtime-productVersion.txt")
+                    };
+
+                    if (!productVersionText.Equals(Version))
+                    {
+                        effectiveVersion = productVersionText;
+                        Log.LogMessage($"Switched to effective .NET Core version '{productVersionText}' from matching productVersion.txt");
+                    }
+                }
+                return effectiveVersion;
+            }
+            else
+            {
+                throw new ArgumentException($"'{Version}' is not a valid semantic version.");
+            }
+        }
+        private async Task<string> GetMatchingProductVersionTxtContents(string baseUri, string customVersionTextFileName)
+        {
+            using HttpResponseMessage specificResponse = await _client.GetAsync($"{baseUri}/{customVersionTextFileName}");
+            if (specificResponse.StatusCode == HttpStatusCode.NotFound)
+            {
+                using HttpResponseMessage genericResponse = await _client.GetAsync($"{baseUri}/productVersion.txt");
+                if (genericResponse.StatusCode != HttpStatusCode.NotFound)
+                {
+                    genericResponse.EnsureSuccessStatusCode();
+                    return (await genericResponse.Content.ReadAsStringAsync()).Trim();
+                }
+                else
+                {
+                    Log.LogMessage(MessageImportance.Low, $"No *productVersion.txt files found for {Version} under {baseUri}");
+                }
+            }
+            else
+            {
+                specificResponse.EnsureSuccessStatusCode();
+                return (await specificResponse.Content.ReadAsStringAsync()).Trim();
+            }
+            return Version;
         }
 
         private void NormalizeParameters()
@@ -136,9 +195,9 @@ namespace Microsoft.DotNet.Helix.Sdk
                 Log.LogMessage(MessageImportance.Low, "Resolving latest dotnet cli version.");
                 string latestVersionUrl = PackageType switch
                 {
-                    "sdk"                => $"{DotNetCliAzureFeed}/Sdk/{Channel}/latest.version",
+                    "sdk" => $"{DotNetCliAzureFeed}/Sdk/{Channel}/latest.version",
                     "aspnetcore-runtime" => $"{DotNetCliAzureFeed}/aspnetcore/Runtime/{Channel}/latest.version",
-                    _                    => $"{DotNetCliAzureFeed}/Runtime/{Channel}/latest.version"
+                    _ => $"{DotNetCliAzureFeed}/Runtime/{Channel}/latest.version"
                 };
 
                 Log.LogMessage(MessageImportance.Low, $"Resolving latest version from url {latestVersionUrl}");
