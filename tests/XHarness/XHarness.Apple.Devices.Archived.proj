@@ -3,31 +3,22 @@
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" />
 
   <PropertyGroup>
-    <XHarnessAppBundleName_1>System.Buffers.Tests.app</XHarnessRunAppBundleName_1>
-    <XHarnessAppBundleName_2>System.Collections..Tests.app</XHarnessRunAppBundleName_2>
-    <XHarnessAppBaseUrl>https://netcorenativeassets.blob.core.windows.net/resource-packages/external/ios/test-app/ios-device/</XHarnessAppBaseUrl>
+    <XHarnessZippedAppsUrl>https://netcorenativeassets.blob.core.windows.net/resource-packages/external/ios/test-app/tvos-device/multiple-app-bundles.zip</XHarnessZippedAppsUrl>
+    <XHarnessTmpDir>$(ArtifactsTmpDir)XHarness.Apple.Device.Archived</XHarnessTmpDir>
   </PropertyGroup>
 
-  <!-- We will download existing ones app bundles and package them into a zip so that we have coverage for injecting of provisioning profiles into archives -->
+  <!-- We will download existing zip with two apps inside so that we have coverage for injecting of provisioning profiles into archives -->
   <Target Name="Build" Returns="@(XHarnessAppBundleToTest)">
     <Error Condition=" '$(ArtifactsTmpDir)' == ''" Text="Not downloading AppBundle because ArtifactsTmpDir property is unset" />
 
-    <DownloadFile SourceUrl="$(XHarnessAppBaseUrl)$(XHarnessAppBundleName_1)" DestinationFolder="$(ArtifactsTmpDir)XHarness.Apple.Device.Archived" SkipUnchangedFiles="True" Retries="5">
-      <Output TaskParameter="DownloadedFile" ItemName="ZippedAppBundle_1" />
+    <DownloadFile SourceUrl="$(XHarnessZippedAppsUrl)" DestinationFolder="$(XHarnessTmpDir)" SkipUnchangedFiles="True" Retries="5">
+      <Output TaskParameter="DownloadedFile" ItemName="ZippedApps" />
     </DownloadFile>
 
-    <Message Text="Downloaded @(ZippedAppBundle_1) for XHarness Test purposes" Importance="High" />
-    
-    <DownloadFile SourceUrl="$(XHarnessAppBaseUrl)$(XHarnessAppBundleName_2)" DestinationFolder="$(ArtifactsTmpDir)XHarness.Apple.Device.Archived" SkipUnchangedFiles="True" Retries="5">
-      <Output TaskParameter="DownloadedFile" ItemName="ZippedAppBundle_2" />
-    </DownloadFile>
-
-    <Message Text="Downloaded @(ZippedAppBundle_2) for XHarness Test purposes" Importance="High" />
-
-    <ZipDirectory SourceDirectory="@(ZippedAppBundle_1);@(ZippedAppBundle_2)" DestinationFile="$(ArtifactsTmpDir)XHarness.Apple.Device.Archived\appbundles.zip" />
+    <Message Text="Downloaded @(ZippedApps) for XHarness Test purposes" Importance="High" />
 
     <ItemGroup>
-      <XHarnessAppBundleToTest Include="$(ArtifactsTmpDir)XHarness.Apple.Device.Archived\appbundles.zip">
+      <XHarnessAppBundleToTest Include="@(ZippedApps)">
         <TestTarget>tvos-device</TestTarget>
         <WorkItemTimeout>00:18:00</WorkItemTimeout>
         <CustomCommands>

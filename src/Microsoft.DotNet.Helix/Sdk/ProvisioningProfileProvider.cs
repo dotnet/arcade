@@ -170,7 +170,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                 // Check if archive comes with a profile already
                 if (!zipArchive.Entries.Any(e => e.FullName == ProfileFileName))
                 {
-                    zipArchive.CreateEntryFromFile(ProfileFileName, profilePath);
+                    zipArchive.CreateEntryFromFile(profilePath, ProfileFileName);
                 }
 
                 return;
@@ -184,7 +184,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                 // Check if app bundle comes with a profile already
                 if (!zipArchive.Entries.Any(e => e.FullName == profileDestPath))
                 {
-                    zipArchive.CreateEntryFromFile(profileDestPath, profilePath);
+                    zipArchive.CreateEntryFromFile(profilePath, profileDestPath);
                 }
             }
         }

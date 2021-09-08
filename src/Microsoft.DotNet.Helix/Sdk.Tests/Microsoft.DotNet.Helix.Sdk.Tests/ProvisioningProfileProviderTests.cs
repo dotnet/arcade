@@ -51,6 +51,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 new TaskLoggingHelper(new MockBuildEngine(), nameof(ProvisioningProfileProviderTests)),
                 _helpersMock.Object,
                 _fileSystem,
+                Mock.Of<IZipArchiveManager>(),
                 httpClient,
                 "https://netcorenativeassets.azure.com/profiles/{PLATFORM}.mobileprovision",
                 "/tmp");
