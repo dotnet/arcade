@@ -1,0 +1,46 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" />
+
+  <PropertyGroup>
+    <XHarnessAppBundleName_1>System.Buffers.Tests.app</XHarnessRunAppBundleName_1>
+    <XHarnessAppBundleName_2>System.Collections..Tests.app</XHarnessRunAppBundleName_2>
+    <XHarnessAppBaseUrl>https://netcorenativeassets.blob.core.windows.net/resource-packages/external/ios/test-app/ios-device/</XHarnessAppBaseUrl>
+  </PropertyGroup>
+
+  <!-- We will download existing ones app bundles and package them into a zip so that we have coverage for injecting of provisioning profiles into archives -->
+  <Target Name="Build" Returns="@(XHarnessAppBundleToTest)">
+    <Error Condition=" '$(ArtifactsTmpDir)' == ''" Text="Not downloading AppBundle because ArtifactsTmpDir property is unset" />
+
+    <DownloadFile SourceUrl="$(XHarnessAppBaseUrl)$(XHarnessAppBundleName_1)" DestinationFolder="$(ArtifactsTmpDir)XHarness.Apple.Device.Archived" SkipUnchangedFiles="True" Retries="5">
+      <Output TaskParameter="DownloadedFile" ItemName="ZippedAppBundle_1" />
+    </DownloadFile>
+
+    <Message Text="Downloaded @(ZippedAppBundle_1) for XHarness Test purposes" Importance="High" />
+    
+    <DownloadFile SourceUrl="$(XHarnessAppBaseUrl)$(XHarnessAppBundleName_2)" DestinationFolder="$(ArtifactsTmpDir)XHarness.Apple.Device.Archived" SkipUnchangedFiles="True" Retries="5">
+      <Output TaskParameter="DownloadedFile" ItemName="ZippedAppBundle_2" />
+    </DownloadFile>
+
+    <Message Text="Downloaded @(ZippedAppBundle_2) for XHarness Test purposes" Importance="High" />
+
+    <ZipDirectory SourceDirectory="@(ZippedAppBundle_1);@(ZippedAppBundle_2)" DestinationFile="$(ArtifactsTmpDir)XHarness.Apple.Device.Archived\appbundles.zip" />
+
+    <ItemGroup>
+      <XHarnessAppBundleToTest Include="$(ArtifactsTmpDir)XHarness.Apple.Device.Archived\appbundles.zip">
+        <TestTarget>tvos-device</TestTarget>
+        <WorkItemTimeout>00:18:00</WorkItemTimeout>
+        <CustomCommands>
+          set -x
+          result=0
+          xharness apple test -a $(XHarnessAppBundleName_1) -o $output_directory -t $target -v --timeout 00:08:50
+          ((result|=$?))
+          xharness apple test -a $(XHarnessAppBundleName_2) -o $output_directory -t $target -v --timeout 00:08:50
+          ((result|=$?))
+          exit $result
+        </CustomCommands>
+      </XHarnessAppBundleToTest>
+    </ItemGroup>
+  </Target>
+
+</Project>
