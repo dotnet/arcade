@@ -29,6 +29,10 @@ while [[ $# -gt 0 ]]; do
         output_directory="$2"
         shift
         ;;
+      --diagnostics-path)
+        export XHARNESS_DIAGNOSTICS_PATH="$2"
+        shift
+        ;;
       --target)
         target="$2"
         shift

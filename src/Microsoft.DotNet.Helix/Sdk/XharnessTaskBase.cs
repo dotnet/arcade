@@ -25,6 +25,7 @@ namespace Microsoft.DotNet.Helix.Sdk
 
         private const string ScriptNamespace = "tools.xharness_runner.";
         private const string CustomCommandsScript = "command";
+        private const string DiagnosticsScript = "xharness-event-reporter.py";
 
         /// <summary>
         /// Extra arguments that will be passed to the iOS/Android/... app that is being run
@@ -172,6 +173,11 @@ namespace Microsoft.DotNet.Helix.Sdk
                     ScriptNamespace + payloadScript,
                     payloadScript);
             }
+
+            await zipArchiveManager.AddResourceFileToArchive<XHarnessTaskBase>(
+                outputZipPath,
+                ScriptNamespace + DiagnosticsScript,
+                DiagnosticsScript);
 
             await zipArchiveManager.AddContentToArchive(
                 outputZipPath,
