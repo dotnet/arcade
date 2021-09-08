@@ -142,7 +142,7 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             if (includesTestRunner && expectedExitCode != 0 && customCommands != null)
             {
-                Log.LogWarning("The ExpectedExitCode property is ignored in the `apple test` scenario");
+                Log.LogWarning($"The {MetadataName.ExpectedExitCode} property is ignored in the `apple test` scenario");
             }
 
             bool resetSimulator = false;

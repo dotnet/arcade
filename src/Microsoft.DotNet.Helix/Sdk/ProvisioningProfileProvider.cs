@@ -36,14 +36,17 @@ namespace Microsoft.DotNet.Helix.Sdk
         private readonly TaskLoggingHelper _log;
         private readonly IHelpers _helpers;
         private readonly IFileSystem _fileSystem;
+        private readonly IZipArchiveManager _zipArchiveManager;
         private readonly HttpClient _httpClient;
         private readonly string? _profileUrlTemplate;
         private readonly string? _tmpDir;
+        private readonly Dictionary<ApplePlatform, string> _downloadedProfiles = new();
 
         public ProvisioningProfileProvider(
             TaskLoggingHelper log,
             IHelpers helpers,
             IFileSystem fileSystem,
+            IZipArchiveManager zipArchiveManager,
             HttpClient httpClient,
             string? profileUrlTemplate,
             string? tmpDir)
@@ -51,6 +54,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             _log = log ?? throw new ArgumentNullException(nameof(log));
             _helpers = helpers ?? throw new ArgumentNullException(nameof(helpers));
             _fileSystem = fileSystem ?? throw new ArgumentNullException(nameof(fileSystem));
+            _zipArchiveManager = zipArchiveManager ?? throw new ArgumentNullException(nameof(zipArchiveManager));
             _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
             _profileUrlTemplate = profileUrlTemplate;
             _tmpDir = tmpDir;
@@ -58,31 +62,14 @@ namespace Microsoft.DotNet.Helix.Sdk
 
         public void AddProfilesToBundles(ITaskItem[] appBundles)
         {
-            var profileLocations = new Dictionary<ApplePlatform, string>();
-
             foreach (var appBundle in appBundles)
             {
-                string appBundlePath;
-                if (appBundle.TryGetMetadata(CreateXHarnessAppleWorkItems.MetadataNames.AppBundlePath, out string pathMetadata)
-                    && !string.IsNullOrEmpty(pathMetadata))
-                {
-                    appBundlePath = pathMetadata;
-                }
-                else
-                {
-                    appBundlePath = appBundle.ItemSpec;
-                }
+                var (workItemName, appBundlePath) = XHarnessTaskBase.GetNameAndPath(appBundle, CreateXHarnessAppleWorkItems.MetadataNames.AppBundlePath, _fileSystem);
 
-                if (!appBundle.TryGetMetadata(CreateXHarnessAppleWorkItems.MetadataNames.Target, out string bundleTargets))
+                if (!appBundle.TryGetMetadata(CreateXHarnessAppleWorkItems.MetadataNames.Target, out string testTarget))
                 {
-                    _log.LogError("'Targets' metadata must be specified - " +
+                    _log.LogError($"'{CreateXHarnessAppleWorkItems.MetadataNames.Target}' metadata must be specified - " +
                         "expecting list of target device/simulator platforms to execute tests on (e.g. ios-simulator-64)");
-                    continue;
-                }
-
-                if (appBundlePath.EndsWith(".zip"))
-                {
-                    // TODO: We need to be able to add provisioning profiles into a zipped payload too
                     continue;
                 }
 
@@ -91,43 +78,55 @@ namespace Microsoft.DotNet.Helix.Sdk
                     var platform = pair.Key;
                     var targetName = pair.Value;
 
-                    if (!bundleTargets.Contains(targetName))
+                    if (!testTarget.Contains(targetName))
                     {
                         continue;
                     }
 
-                    // App comes with a profile already
-                    var provisioningProfileDestPath = _fileSystem.PathCombine(appBundlePath, "embedded.mobileprovision");
-                    if (_fileSystem.FileExists(provisioningProfileDestPath))
+                    if (appBundlePath.EndsWith(".zip"))
                     {
-                        _log.LogMessage($"Bundle already contains a provisioning profile at `{provisioningProfileDestPath}`");
-                        continue;
+                        // TODO: We need to be able to add provisioning profiles into a zipped payload too
                     }
-
-                    // This makes sure we download the profile the first time we see an app that needs it
-                    if (!profileLocations.TryGetValue(platform, out string? profilePath))
+                    else
                     {
-                        if (string.IsNullOrEmpty(_tmpDir))
-                        {
-                            _log.LogError("TmpDir parameter not set but required for real device targets!");
-                            return;
-                        }
-
-                        if (string.IsNullOrEmpty(_profileUrlTemplate))
-                        {
-                            _log.LogError("ProvisioningProfileUrl parameter not set but required for real device targets!");
-                            return;
-                        }
-
-                        profilePath = DownloadProvisioningProfile(platform);
-                        profileLocations.Add(platform, profilePath);
+                        AddProfileToBundle(platform, appBundlePath);
                     }
-
-                    // Copy the profile into the folder
-                    _log.LogMessage($"Adding provisioning profile `{profilePath}` into the app bundle at `{provisioningProfileDestPath}`");
-                    _fileSystem.FileCopy(profilePath, provisioningProfileDestPath);
                 }
             }
+        }
+
+        private void AddProfileToBundle(ApplePlatform platform, string appBundlePath)
+        {
+            // App comes with a profile already
+            var provisioningProfileDestPath = _fileSystem.PathCombine(appBundlePath, "embedded.mobileprovision");
+            if (_fileSystem.FileExists(provisioningProfileDestPath))
+            {
+                _log.LogMessage($"Bundle already contains a provisioning profile at `{provisioningProfileDestPath}`");
+                return;
+            }
+
+            // This makes sure we download the profile the first time we see an app that needs it
+            if (!_downloadedProfiles.TryGetValue(platform, out string? profilePath))
+            {
+                if (string.IsNullOrEmpty(_tmpDir))
+                {
+                    _log.LogError($"{nameof(CreateXHarnessAppleWorkItems.TmpDir)} parameter not set but required for real device targets!");
+                    return;
+                }
+
+                if (string.IsNullOrEmpty(_profileUrlTemplate))
+                {
+                    _log.LogError($"{nameof(CreateXHarnessAppleWorkItems.ProvisioningProfileUrl)} parameter not set but required for real device targets!");
+                    return;
+                }
+
+                profilePath = DownloadProvisioningProfile(platform);
+                _downloadedProfiles.Add(platform, profilePath);
+            }
+
+            // Copy the profile into the folder
+            _log.LogMessage($"Adding provisioning profile `{profilePath}` into the app bundle at `{provisioningProfileDestPath}`");
+            _fileSystem.FileCopy(profilePath, provisioningProfileDestPath);
         }
 
         private string DownloadProvisioningProfile(ApplePlatform platform)
@@ -169,6 +168,7 @@ namespace Microsoft.DotNet.Helix.Sdk
         {
             collection.TryAddTransient<IHelpers, Arcade.Common.Helpers>();
             collection.TryAddTransient<IFileSystem, FileSystem>();
+            collection.TryAddTransient<IZipArchiveManager, ZipArchiveManager>();
             collection.TryAddSingleton(_ => new HttpClient(new HttpClientHandler { CheckCertificateRevocationList = true }));
             collection.TryAddSingleton<IProvisioningProfileProvider>(serviceProvider =>
             {
@@ -176,6 +176,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                     serviceProvider.GetRequiredService<TaskLoggingHelper>(),
                     serviceProvider.GetRequiredService<IHelpers>(),
                     serviceProvider.GetRequiredService<IFileSystem>(),
+                    serviceProvider.GetRequiredService<IZipArchiveManager>(),
                     serviceProvider.GetRequiredService<HttpClient>(),
                     provisioningProfileUrlTemplate,
                     tmpDir);
