@@ -9,22 +9,52 @@ Currently only way how to generate Helix custom images for our Windows queues is
 
 
 ### Goal
-The goal of this epic is to enable our team to be able to generate custom images by ourself and remove the dependency on DDFUN. These are images which contains various versions of Visual Studio and various versions of Windows. We will introduce a new automated and monitored process which removes the need for manual steps done by DDFUN consisting of:
-* updating tens of configuration files
-* sending them into the Image Factory
-* monitoring of completion
+The goal of this epic is to enable our team to be able to generate custom images by ourselfs and remove the dependency on DDFUN. These are images which contains various versions of Visual Studio and various versions of Windows. We will introduce a new automated and monitored process which removes the need for manual steps done by DDFUN.
 
-Part of this epic is also to take the ownership of custom image definitions from DDFUN as this will enable us to introduce automation and make changes more quickly in future. You can find all current Helix custom image definitions [here](https://devdiv.visualstudio.com/XlabImageFactory/_git/ImageConfigurations?path=%2FMonthly%2FHelixBaseImages).
+When this is completed we will be able to:
+* generate images ourselves without spending time on coordination with DDFUN, similarly to other teams using Image Factory
+* specify new versions at one place instead of tens of configuration files
+* automatically regenerate images on change of configuration files
+* monitor completion of process instead of relying on notifications from DDFUN
+
+Part of this epic is also to take the ownership of [custom image definitions](https://devdiv.visualstudio.com/XlabImageFactory/_git/ImageConfigurations?path=%2FMonthly%2FHelixBaseImages) that currently reside with DDFUN to get complete control over the definitions and to be able to run our automation against them seamlessly.
 
 ### Implementation Details
 
-Let's start with a scenario where we need to updated Visual Studio 2019 Preview version per our [schedule](https://github.com/dotnet/core-eng/wiki/VS2019-Upgrade-Schedule) which has to be done almost every week.
+Let's start with a scenario where we need to update Visual Studio 2019 Preview version per our [schedule](https://github.com/dotnet/core-eng/wiki/VS2019-Upgrade-Schedule) which has to be done almost every week.
 
-This change requires update in six [image definitions](https://devdiv.visualstudio.com/XlabImageFactory/_git/ImageConfigurations?path=/Monthly/HelixBaseImages/VS2019Preview). The change in each file is to:
+Currently this change requires update of same values in six [image definitions](https://devdiv.visualstudio.com/XlabImageFactory/_git/ImageConfigurations?path=/Monthly/HelixBaseImages/VS2019Preview). Specfically:
 * update artifact windows-vs-willowreleased, set parameter VSBootstrapperURL to a new value.
 * update version in parameter CustomImageName under Destination.
 
-To simplify this, we will introduce templating. Template variables help you to re-use shared data from variables file in any template. For example the template variable {VS_2019_PREVIEW_URL} declares an URL to Visual Studio artifacts and the template variable {VS_2019_PREVIEW_VERSION} declares version of Visual Studio. Instead of hardcoded values for parameters VSBootstrapperURL and CustomImageName as it was [here](https://devdiv.visualstudio.com/XlabImageFactory/_git/ImageConfigurations?path=/Monthly/HelixBaseImages/VS2019Preview/Helix-Client-Enterprise-19H1-ES-ES-VS2019-Preview-Enterprise.yaml), we are going to use template variables. Here is an example of a fragment of a templated image definition:
+To simplify this, we will introduce templating, so variables are defined at exactly one place and are not duplicated across multiple files, similarly to what we have in OSOB.
+
+#### Example:
+Instead of harcoding the same version and the same URL at [six places](https://devdiv.visualstudio.com/XlabImageFactory/_git/ImageConfigurations?path=/Monthly/HelixBaseImages/VS2019Preview), we introduce template variable {VS_2019_PREVIEW_URL} which declares an URL to Visual Studio artifact and the template variable {VS_2019_PREVIEW_VERSION} which declares version of Visual Studio.
+
+All templated variables will be stored in one file.
+
+
+1. Given our example scenario, we will update variables VS_2019_PREVIEW_URL and VS_2019_PREVIEW_VERSION. And this change will be pushed into the repository. This change triggers our new build pipeline under Azure DevOps.
+
+2. The pipeline executes command line tool which processes all payloads and substitutes all template variables from the variable file and call Image Factory with this payload. To prevent duplication we will calculate hash of payload and store it a simple Azure storage table and call Image Factory only for payloads which haven't been processed yet. If needed it will be possible to force rebuilding of images.
+
+3. The pipeline won't block until all images are completed. It will post Image Factory jobs, store tracking ids in Azure storage table mentioned above and finish.
+
+4. To get results, the same pipeline will be executed periodically (e.g. every hour) and check states of all pending Image Factory jobs and provide summary report so it's clear if all images that were requested are ready. In case any image build fails, the pipeline will fail and FR will be notified by email.
+
+5. Once Helix custom images are generated, FR has to create an OSOB PR with updated image names. Existing OSOB post validation performs version test of Visual Studio.
+
+Documentation of the Image Factory API can be found [here](https://devdiv.visualstudio.com/XlabImageFactory/_wiki/wikis/XlabImageFactory.wiki/6330/AccessingImageFactory).
+
+
+## Take ownership of Helix custom image definitions
+
+Making custom image definitions templated requires modifications. This is why we need to move all [definitions](https://devdiv.visualstudio.com/XlabImageFactory/_git/ImageConfigurations?path=%2FMonthly%2FHelixBaseImages) under our repository. It was confirmed by DDFUN (Casey) that these definitions aren't shared with any other team. Beside changing URL and version the structure is left unchanged, so there isn't any additional maintanance cost related to owning these definitions.
+
+Currently the definitions with DDFUN use YAML only to be converted to JSON payloads. As part of the move I would suggest to start using JSON file format as it's expected input of the Image Factory. The only benefit of YAML are comments, but in our case these comments are copy pasted across all definitions and don't add any additional value.
+
+Here is an example of a fragment of a templated image definition with template variables VS_2019_PREVIEW_URL and VS_2019_PREVIEW_VERSION:
 ```
 {
     "Artifacts": [
@@ -49,39 +79,13 @@ To simplify this, we will introduce templating. Template variables help you to r
 
 _Note: Nested templated variables won't be supported._
 
-Then we define variables file which will be stored in the repository:
+Variables file:
 ```
-{"VS_2022_URL":"https://aka.ms/vs/17/pre/675457237_947042406",
-"VS_2022_VERSION":"17_0_3_1",
-"VS_2019_PREVIEW_URL":"https://aka.ms/vs/16/pre/133508311_-1151188015",
-"VS_2019_PREVIEW_VERSION":"16_11_2_1",
-"VS_2019_URL":"https://aka.ms/vs/16/release/133508311_-1151188015",
-"VS_2019_VERSION":"16_11_2_0"}
+{
+    "VS_2019_PREVIEW_URL":"https://aka.ms/vs/16/pre/133508311_-1151188015",
+    "VS_2019_PREVIEW_VERSION":"16_11_2_1",
+}
 ```
-
-Given our example scenario, we will update variables VS_2019_PREVIEW_URL and VS_2019_PREVIEW_VERSION. And this change will be pushed into the repository. This change triggers our new build pipeline under Azure DevOps.
-
-The pipeline executes command line tool which processes all payloads and substitutes all template variables from the variable file. For each payload it calculates hash and checks if this payload has already been sent. Images which are already in progress or completed won't be processed again. State will be persisted in a simple Azure storage table.
-
-If needed it will be possible to force rebuild of images.
-
-The pipeline won't run until all images are completed. It only post jobs, gets state of jobs and finishes. But it will be executed several times per day to check for completion of images. In a case any image build fails then the pipeline will fail and FR will be notified by email.
-
-Once Helix custom images are generated, FR has to create an OSOB PR with updated image names. OSOB performs version test of Visual Studio as part of post validation  of PR/main build. This step can be taken as smoke test of new images.
-
-Documentation of the Image Factory API can be found [here](https://devdiv.visualstudio.com/XlabImageFactory/_wiki/wikis/XlabImageFactory.wiki/6330/AccessingImageFactory).
-
-
-## Take ownership of Helix custom image definitions
-
-Making custom image definitions templated requires modifications. This is why we need to move all [definitions](https://devdiv.visualstudio.com/XlabImageFactory/_git/ImageConfigurations?path=%2FMonthly%2FHelixBaseImages) under our repository. I double checked that these definitions aren't shared and that there wasn't ever a need for changing them. Because of this, there isn't additional maintenance cost and it enables us to make changes fast. Also there is no risk that we need to transfer changes back to XlabImageFactory.
-
-As part of the move I would suggest to start using JSON file format as it's expected input of the Image Factory. Having them in YAML would only mean that we will need to transform payloads before sending them. Only additional benefit of YAML are comments, but in our case these comments are copy pasted between all definitions and don't add any additional value.
-
-
-## Proposition for extension of this epic
-
-After images are successfully built, raise a new OSOB Pull Request updating image definitions with the latest images. This shouldn't take longer than one additional week of development and would save us a lot of time every week.
 
 
 ## Stakeholders
@@ -89,10 +93,6 @@ After images are successfully built, raise a new OSOB Pull Request updating imag
 - .NET Engineering Services
 
 ## Risk
-
-- What are the unknowns?
-
-    Unknow is a way how we patch Windows images
 
 - Are there any POCs (proof of concepts) required to be built for this work?
 
@@ -111,7 +111,7 @@ After images are successfully built, raise a new OSOB Pull Request updating imag
 
 - How will the components that make up this epic be tested?
 
-    Tested by unit tests.
+    CLI will be tested by unit tests. There will be also scenario test which generates one image and verifies it.
 
 - Identifying secrets (e.g. PATs, certificates, et cetera) that will be used (new ones to be created; existing ones to be used).
 
@@ -132,7 +132,7 @@ in [core-eng/SDL](https://github.com/dotnet/core-eng/SDL) folder)
 
 ## Rollout and Deployment
 
-- A new Azure DevOps build pipeline will take this tool from artifacts and executes it.
+- A new Azure DevOps build pipeline will take specific version of this tool from artifacts and executes it.
 
 - In a case of issues, it is still possible generate images manually.
 
@@ -141,12 +141,17 @@ in [core-eng/SDL](https://github.com/dotnet/core-eng/SDL) folder)
 - This tool is internal only. Basic information about runs will be available from the pipeline history. We don't plan to include any additional data, unless they are requested. If we start experience problems with the image generation though, we might need to start gathering some reliability data.
 
 ## Monitoring
-- Monitoring is done by result of the build pipeline. It will send email notification on any failure. If there is any issue, it should be picked up by FR.
+- Monitoring is based on result of the build pipeline. It will send email notification on any failure. If there is any issue, it should be picked up by FR.
 
 ## FR Hand off
-- Will create documentation about
+- We will create documentation about
     - How to generate custom images with Visual Studio
     - How to use the tool in manual mode
     - What to do when pipeline fails the build
+
+- The policies of generating images ovelaps with Matrix of Truth epic and will be further discussed with the epic owner.
+
+## Future outlook
+- Execution of the process should be possible to be done by vendors with minimal cost.
 
 
