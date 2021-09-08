@@ -3,14 +3,14 @@
 
   <!--
     This is a project used in integration tests of Arcade.
-    It tests sending iOS (XHarness) workloads using the Helix SDK.
-    It builds two mock projects that do not build iOS apps but only downloads them from a storage account.
+    It tests sending tvOS (XHarness) workloads using the Helix SDK.
+    It builds a mock project that does not build the apps but only downloads them from a storage account.
    -->
 
   <!-- Test project which builds app bundle to run via XHarness -->
   <ItemGroup>
-    <XHarnessAppleProject Include="$(MSBuildThisFileDirectory)XHarness\XHarness.Device.AppleTest.proj" />
-    <HelixTargetQueue Include="osx.1015.amd64.iphone.open" />
+    <XHarnessAppleProject Include="$(MSBuildThisFileDirectory)XHarness\XHarness.Apple.Devices.Archived.proj" />
+    <HelixTargetQueue Include="osx.1015.amd64.appletv.open" />
   </ItemGroup>
 
   <Target Name="Pack"/>

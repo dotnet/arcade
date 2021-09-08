@@ -196,8 +196,8 @@ stages:
               -ci
               -restore
               -test
-              -projects $(Build.SourcesDirectory)/tests/UnitTests.XHarness.iOS.Simulator.proj
-              /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/UnitTests.XHarness.iOS.Simulator.binlog
+              -projects $(Build.SourcesDirectory)/tests/UnitTests.XHarness.Apple.Simulator.proj
+              /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/UnitTests.XHarness.Apple.Simulator.binlog
               /p:RestoreUsingNuGetTargets=false
             displayName: XHarness iOS Simulator Helix Testing
             env:
@@ -209,8 +209,8 @@ stages:
               -ci
               -restore
               -test
-              -projects $(Build.SourcesDirectory)/tests/UnitTests.XHarness.iOS.Device.proj
-              /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.XHarness.iOS.Device.binlog
+              -projects $(Build.SourcesDirectory)/tests/UnitTests.XHarness.Apple.Device.proj
+              /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.XHarness.Apple.Device.binlog
               /p:RestoreUsingNuGetTargets=false
             displayName: XHarness iOS Device Helix Testing
             env:

@@ -9,9 +9,9 @@
 
   <!-- Test project which builds app bundle to run via XHarness -->
   <ItemGroup>
-    <XHarnessAppleProject Include="$(MSBuildThisFileDirectory)XHarness\XHarness.Simulator.AppleTest.proj" />
-    <XHarnessAppleProject Include="$(MSBuildThisFileDirectory)XHarness\XHarness.Simulator.AppleRun.proj" />
-    <XHarnessAppleProject Include="$(MSBuildThisFileDirectory)XHarness\XHarness.Simulator.CustomCommands.proj" />
+    <XHarnessAppleProject Include="$(MSBuildThisFileDirectory)XHarness\XHarness.Apple.Simulator.Test.proj" />
+    <XHarnessAppleProject Include="$(MSBuildThisFileDirectory)XHarness\XHarness.Apple.Simulator.Run.proj" />
+    <XHarnessAppleProject Include="$(MSBuildThisFileDirectory)XHarness\XHarness.Apple.Simulator.CustomCommands.proj" />
 
     <HelixTargetQueue Include="osx.1015.amd64.open"/>
   </ItemGroup>
