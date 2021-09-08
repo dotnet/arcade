@@ -5,6 +5,7 @@ trigger:
     - main
     - release/3.x
     - release/5.0
+    - release/6.0
 
 pr:
   branches:
@@ -12,6 +13,7 @@ pr:
     - main
     - release/3.x
     - release/5.0
+    - release/6.0
     - templates
 
 variables:
