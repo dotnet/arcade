@@ -97,13 +97,14 @@ namespace Microsoft.DotNet.Helix.Sdk
 
                     // App comes with a profile already
                     string provisioningProfileDestPath;
+                    string provisioningProfileName = "embedded.mobileprovision";
                     if (isZippedBundle)
                     {
                         provisioningProfileDestPath = appBundlePath;
                     }
                     else
                     {
-                        provisioningProfileDestPath = _fileSystem.PathCombine(appBundlePath, "embedded.mobileprovision");
+                        provisioningProfileDestPath = _fileSystem.PathCombine(appBundlePath, provisioningProfileName);
                         if (_fileSystem.FileExists(provisioningProfileDestPath))
                         {
                             _log.LogMessage($"Bundle already contains a provisioning profile at `{provisioningProfileDestPath}`");
@@ -133,8 +134,8 @@ namespace Microsoft.DotNet.Helix.Sdk
                     // Copy the profile into the folder
                     _log.LogMessage($"Adding provisioning profile `{profilePath}` into the app bundle at `{provisioningProfileDestPath}`");
                     if (isZippedBundle)
-                    {   
-                        _zipArchiveManager.AddContentToArchive(provisioningProfileDestPath, _fileSystem.GetFileName(profilePath), new MemoryStream(File.ReadAllBytes(profilePath)));
+                    {
+                        _zipArchiveManager.AddContentToArchive(provisioningProfileDestPath, provisioningProfileName, new MemoryStream(File.ReadAllBytes(profilePath)));
                     }
                     else
                     {

@@ -19,7 +19,6 @@ while [[ $# -gt 0 ]]; do
         ;;
       --build)
         build_app=true
-        shift
         ;;
       *)
         forwarded_args="$forwarded_args $1"

@@ -131,6 +131,10 @@ if [ "$target" == 'ios-device' ] || [ "$target" == 'tvos-device' ]; then
 
     # Sign the app
     /usr/bin/codesign -v --force --sign "Apple Development" --keychain "$keychain_name" --entitlements entitlements.plist "$app"
+
+    #mkdir "$output_directory/HelixBuiltApp"
+    #zip -r "$app.zip" "$app/"
+    mv "$app.zip" "$output_directory"
 elif [[ "$target" =~ "simulator" ]]; then
     # Start the simulator if it is not running already
     simulator_app="$xcode_path/Contents/Developer/Applications/Simulator.app"
