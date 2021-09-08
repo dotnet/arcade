@@ -67,7 +67,7 @@
     <PropertyGroup>
       <!-- Repositories mirrored on devdiv.visualstudio will have '-Trusted' added to their name and this needs to be stripped off before translation
            Eventually, all repos should move to dnceng/internal when possible. -->
-      <ScmRepositoryUrl Condition="$(ScmRepositoryUrl.Contains(`devdiv.visualstudio`))">$(ScmRepositoryUrl.ToLower().Replace(`-trusted`,``))</ScmRepositoryUrl>
+      <ScmRepositoryUrl Condition=" '%(SourceRoot.ScmRepositoryUrl)' != '' and '$([System.String]::Copy(%(SourceRoot.ScmRepositoryUrl)).Contains(`devdiv.visualstudio`))' == 'true' ">$([System.String]::Copy(%(SourceRoot.ScmRepositoryUrl)).ToLower().Replace(`-trusted`,``))</ScmRepositoryUrl>
       <ScmRepositoryUrl>$([System.Text.RegularExpressions.Regex]::Replace($(ScmRepositoryUrl), $(_TranslateUrlPattern), $(_TranslateUrlReplacement)))</ScmRepositoryUrl>
     </PropertyGroup>
 
