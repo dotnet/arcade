@@ -109,6 +109,15 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         }
 
         /// <summary>
+        /// Generate msis in parallel.
+        /// </summary>
+        public bool RunInParallel
+        {
+            get;
+            set;
+        } = true;
+
+        /// <summary>
         /// The paths of the generated .swixproj files.
         /// </summary>
         [Output]
@@ -182,6 +191,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                 IntermediateBaseOutputPath = this.IntermediateBaseOutputPath,
                 OutputPath = this.OutputPath,
                 PackagesPath = this.PackagesPath,
+                RunInParallel = this.RunInParallel,
                 ShortNames = this.ShortNames,
                 SuppressIces = this.SuppressIces,
                 WixToolsetPath = this.WixToolsetPath,
