@@ -29,7 +29,7 @@ set -x
 # the simulator which needs to run in a user session with GUI rendering capabilities.
 # The problem with launchctl is that the spawned process won't share environment variables
 # so we have to set them again.
-exprot -p > envvars
+export -p > envvars
 chmod +x xharness-runner.apple.sh
 helix_runner_uid=$(id -u)
 sudo launchctl asuser "$helix_runner_uid" sh ./xharness-runner.apple.sh \
