@@ -199,7 +199,7 @@ stages:
               -projects $(Build.SourcesDirectory)/tests/UnitTests.XHarness.Apple.Simulator.proj
               /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/UnitTests.XHarness.Apple.Simulator.binlog
               /p:RestoreUsingNuGetTargets=false
-            displayName: XHarness iOS Simulator Helix Testing
+            displayName: XHarness Apple Simulator Helix Testing
             env:
               SYSTEM_ACCESSTOKEN: $(System.AccessToken)
               HelixAccessToken: ''
@@ -212,7 +212,7 @@ stages:
               -projects $(Build.SourcesDirectory)/tests/UnitTests.XHarness.Apple.Device.proj
               /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.XHarness.Apple.Device.binlog
               /p:RestoreUsingNuGetTargets=false
-            displayName: XHarness iOS Device Helix Testing
+            displayName: XHarness Apple Device Helix Testing
             env:
               SYSTEM_ACCESSTOKEN: $(System.AccessToken)
               HelixAccessToken: ''
