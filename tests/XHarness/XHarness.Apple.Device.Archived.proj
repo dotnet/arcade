@@ -16,10 +16,13 @@
       <Output TaskParameter="DownloadedFile" ItemName="TestApp" />
     </DownloadFile>
 
+    <!-- We have to untar and re-zipp the app while keeping the dir name as top-level archive entry (so we need to move it to a folder and zip that) -->
     <Message Text="Downloaded @(TestApp) for XHarness Test purposes" Importance="High" />
     <Exec Command="tar -xzf @(TestApp) -C $(XHarnessTmpDir)" />
+    <Exec Command="mkdir &quot;$(XHarnessTmpDir)/tmp-$(XHarnessTestAppName)&quot;" />
+    <Exec Command="mv &quot;$(XHarnessTmpDir)/$(XHarnessTestAppName)&quot; &quot;$(XHarnessTmpDir)/tmp-$(XHarnessTestAppName)&quot;" />
 
-    <ZipDirectory SourceDirectory="$(XHarnessTmpDir)/$(XHarnessTestAppName)" DestinationFile="$(XHarnessTmpDir)/XHarness.Apple.Device.Archived.payload.zip" Overwrite="true" />
+    <ZipDirectory SourceDirectory="$(XHarnessTmpDir)/tmp-$(XHarnessTestAppName)" DestinationFile="$(XHarnessTmpDir)/XHarness.Apple.Device.Archived.payload.zip" Overwrite="true" />
 
     <ItemGroup>
       <XHarnessAppBundleToTest Include="$(XHarnessTmpDir)/XHarness.Apple.Device.Archived.payload.zip">
