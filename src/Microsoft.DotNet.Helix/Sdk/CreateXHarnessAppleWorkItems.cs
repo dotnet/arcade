@@ -110,12 +110,12 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             // If we are re-using one .zip for multiple work items, we need to copy it to a new location
             // because we will be changing the contents (we assume we don't mind otherwise)
-            if (appBundleItem.MetadataNames.OfType<string>().Contains(MetadataNames.AppBundlePath))
+            if (isAlreadyArchived && appBundleItem.TryGetMetadata(MetadataNames.AppBundlePath, out string metadata) && !string.IsNullOrEmpty(metadata))
             {
                 string appFolderDirectory = fileSystem.GetDirectoryName(appFolderPath);
                 string fileName = $"xharness-payload-{workItemName.ToLowerInvariant()}.zip";
                 string archiveCopyPath = fileSystem.PathCombine(appFolderDirectory, fileName);
-                fileSystem.FileCopy(appFolderPath, archiveCopyPath);
+                fileSystem.CopyFile(appFolderPath, archiveCopyPath, overwrite: true);
                 appFolderPath = archiveCopyPath;
             }
             
