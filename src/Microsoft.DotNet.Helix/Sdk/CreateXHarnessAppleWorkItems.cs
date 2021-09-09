@@ -73,8 +73,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             IZipArchiveManager zipArchiveManager,
             IFileSystem fileSystem)
         {
-            provisioningProfileProvider.AddProfilesToBundles(AppBundles);
-            var tasks = AppBundles.Select(bundle => PrepareWorkItem(zipArchiveManager, fileSystem, bundle));
+            var tasks = AppBundles.Select(bundle => PrepareWorkItem(zipArchiveManager, fileSystem, provisioningProfileProvider, bundle));
 
             WorkItems = Task.WhenAll(tasks).GetAwaiter().GetResult().Where(wi => wi != null).ToArray();
 
@@ -89,6 +88,7 @@ namespace Microsoft.DotNet.Helix.Sdk
         private async Task<ITaskItem> PrepareWorkItem(
             IZipArchiveManager zipArchiveManager,
             IFileSystem fileSystem,
+            IProvisioningProfileProvider provisioningProfileProvider,
             ITaskItem appBundleItem)
         {
             var (workItemName, appFolderPath) = GetNameAndPath(appBundleItem, MetadataNames.AppBundlePath, fileSystem);
@@ -171,6 +171,8 @@ namespace Microsoft.DotNet.Helix.Sdk
                 appFolderPath,
                 customCommands,
                 new[] { EntryPointScript, RunnerScript });
+
+            provisioningProfileProvider.AddProfileToPayload(payloadArchivePath, target);
 
             return CreateTaskItem(workItemName, payloadArchivePath, helixCommand, workItemTimeout);
         }

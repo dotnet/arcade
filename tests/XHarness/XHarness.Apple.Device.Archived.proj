@@ -1,0 +1,36 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" />
+
+  <PropertyGroup>
+    <XHarnessTestAppName>System.Buffers.Tests.app</XHarnessTestAppName>
+    <XHarnessTestAppUrl>https://netcorenativeassets.blob.core.windows.net/resource-packages/external/ios/test-app/tvos-device/$(XHarnessTestAppName).zip</XHarnessTestAppUrl>
+    <XHarnessTmpDir>$(ArtifactsTmpDir)XHarness.Apple.Device.Archived</XHarnessTmpDir>
+  </PropertyGroup>
+
+  <!-- We will download existing app and package it so that we have coverage for injecting of provisioning profiles into archives -->
+  <Target Name="Build" Returns="@(XHarnessAppBundleToTest)">
+    <Error Condition=" '$(ArtifactsTmpDir)' == ''" Text="Not downloading AppBundle because ArtifactsTmpDir property is unset" />
+
+    <DownloadFile SourceUrl="$(XHarnessTestAppUrl)" DestinationFolder="$(XHarnessTmpDir)" SkipUnchangedFiles="True" Retries="5">
+      <Output TaskParameter="DownloadedFile" ItemName="TestApp" />
+    </DownloadFile>
+
+    <Message Text="Downloaded @(TestApp) for XHarness Test purposes" Importance="High" />
+    <Exec Command="tar -xzf @(TestApp) -C $(XHarnessTmpDir)" />
+
+    <ZipDirectory SourceDirectory="$(XHarnessTmpDir)/$(XHarnessTestAppName)" DestinationFile="$(XHarnessTmpDir)/XHarness.Apple.Device.Archived.payload.zip" Overwrite="true" />
+
+    <ItemGroup>
+      <XHarnessAppBundleToTest Include="$(XHarnessTmpDir)/XHarness.Apple.Device.Archived.payload.zip">
+        <TestTarget>tvos-device</TestTarget>
+        <WorkItemTimeout>00:18:00</WorkItemTimeout>
+        <CustomCommands>
+          sign $(XHarnessTestAppName)
+          xharness apple test -a $(XHarnessTestAppName) -o $output_directory -t $target -v --timeout 00:08:50
+        </CustomCommands>
+      </XHarnessAppBundleToTest>
+    </ItemGroup>
+  </Target>
+
+</Project>

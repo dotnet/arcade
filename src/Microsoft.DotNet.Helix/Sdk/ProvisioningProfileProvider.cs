@@ -9,7 +9,6 @@ using System.Linq;
 using System.Net.Http;
 using System.Text.RegularExpressions;
 using Microsoft.Arcade.Common;
-using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
@@ -25,7 +24,7 @@ namespace Microsoft.DotNet.Helix.Sdk
 
     public interface IProvisioningProfileProvider
     {
-        void AddProfilesToBundles(ITaskItem[] appBundles);
+        void AddProfileToPayload(string archivePath, string testTarget);
     }
 
     /// <summary>
@@ -33,8 +32,7 @@ namespace Microsoft.DotNet.Helix.Sdk
     /// App bundles are directories with files that represent an iOS or tvOS application.
     /// Provisioning profile is a file used for signing and differs per platform (iOS/tvOS).
     /// This class makes sure each app bundle has one before it is sent to Helix.
-    /// It can also inject the profiles into a .zip archive if it receives one.
-    /// The zip archive can contain multiple app bundles.
+    /// It injects the profiles into all top-level app bundles in a given .zip archive.
     /// </summary>
     public class ProvisioningProfileProvider : IProvisioningProfileProvider
     {
@@ -76,58 +74,39 @@ namespace Microsoft.DotNet.Helix.Sdk
             _tmpDir = tmpDir;
         }
 
-        public void AddProfilesToBundles(ITaskItem[] appBundles)
+        public void AddProfileToPayload(string archivePath, string testTarget)
         {
-            foreach (var appBundle in appBundles)
+            foreach (var pair in s_targetNames)
             {
-                var (workItemName, appBundlePath) = XHarnessTaskBase.GetNameAndPath(appBundle, CreateXHarnessAppleWorkItems.MetadataNames.AppBundlePath, _fileSystem);
+                ApplePlatform platform = pair.Key;
+                string targetName = pair.Value;
 
-                if (!appBundle.TryGetMetadata(CreateXHarnessAppleWorkItems.MetadataNames.Target, out string testTarget))
+                // Only app bundles that target iOS/tvOS devices need a profile (simulators don't)
+                if (!testTarget.Contains(targetName))
                 {
-                    _log.LogError($"'{CreateXHarnessAppleWorkItems.MetadataNames.Target}' metadata must be specified - " +
-                        "expecting list of target device/simulator platforms to execute tests on (e.g. ios-simulator-64)");
                     continue;
                 }
 
-                foreach (var pair in s_targetNames)
+                // This makes sure we download the profile the first time we see an app that needs it
+                if (!_downloadedProfiles.TryGetValue(platform, out string? profilePath))
                 {
-                    ApplePlatform platform = pair.Key;
-                    string targetName = pair.Value;
-
-                    // Only app bundles that target iOS/tvOS devices need a profile (simulators don't)
-                    if (!testTarget.Contains(targetName))
+                    if (string.IsNullOrEmpty(_tmpDir))
                     {
-                        continue;
+                        _log.LogError($"{nameof(CreateXHarnessAppleWorkItems.TmpDir)} parameter not set but required for real device targets!");
+                        return;
                     }
 
-                    // This makes sure we download the profile the first time we see an app that needs it
-                    if (!_downloadedProfiles.TryGetValue(platform, out string? profilePath))
+                    if (string.IsNullOrEmpty(_profileUrlTemplate))
                     {
-                        if (string.IsNullOrEmpty(_tmpDir))
-                        {
-                            _log.LogError($"{nameof(CreateXHarnessAppleWorkItems.TmpDir)} parameter not set but required for real device targets!");
-                            return;
-                        }
-
-                        if (string.IsNullOrEmpty(_profileUrlTemplate))
-                        {
-                            _log.LogError($"{nameof(CreateXHarnessAppleWorkItems.ProvisioningProfileUrl)} parameter not set but required for real device targets!");
-                            return;
-                        }
-
-                        profilePath = DownloadProvisioningProfile(platform);
-                        _downloadedProfiles.Add(platform, profilePath);
+                        _log.LogError($"{nameof(CreateXHarnessAppleWorkItems.ProvisioningProfileUrl)} parameter not set but required for real device targets!");
+                        return;
                     }
 
-                    if (appBundlePath.EndsWith(".zip"))
-                    {
-                        AddProfileToArchive(appBundlePath, profilePath);
-                    }
-                    else
-                    {
-                        AddProfileToBundle(appBundlePath, profilePath);
-                    }
+                    profilePath = DownloadProvisioningProfile(platform);
+                    _downloadedProfiles.Add(platform, profilePath);
                 }
+
+                AddProfileToArchive(archivePath, profilePath);
             }
         }
 
@@ -155,6 +134,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                 if (entry.FullName == appBundleName + "/" + ProfileFileName)
                 {
                     appBundlesWithProfile.Add(appBundleName);
+                    _log.LogMessage($"{appBundleName} already contains provisioning profile");
                 }
                 else
                 {
@@ -167,6 +147,8 @@ namespace Microsoft.DotNet.Helix.Sdk
             // If no .app bundles, add it to the root
             if (!rootLevelAppBundles.Any())
             {
+                _log.LogMessage($"No app bundles found in the archive. Adding provisioning profile to root");
+
                 // Check if archive comes with a profile already
                 if (!zipArchive.Entries.Any(e => e.FullName == ProfileFileName))
                 {
@@ -180,31 +162,9 @@ namespace Microsoft.DotNet.Helix.Sdk
             foreach (string appBundle in rootLevelAppBundles)
             {
                 var profileDestPath = appBundle + "/" + ProfileFileName;
-
-                // Check if app bundle comes with a profile already
-                if (!zipArchive.Entries.Any(e => e.FullName == profileDestPath))
-                {
-                    zipArchive.CreateEntryFromFile(profilePath, profileDestPath);
-                }
+                _log.LogMessage($"Adding provisioning profile to {appBundle}");
+                zipArchive.CreateEntryFromFile(profilePath, profileDestPath);
             }
-        }
-
-        /// <summary>
-        /// Adds a provisioning profile to an .app bundle (folder).
-        /// </summary>
-        private void AddProfileToBundle(string appBundlePath, string profilePath)
-        {
-            // Check if app comes with a profile already
-            var provisioningProfileDestPath = _fileSystem.PathCombine(appBundlePath, ProfileFileName);
-            if (_fileSystem.FileExists(provisioningProfileDestPath))
-            {
-                _log.LogMessage($"Bundle already contains a provisioning profile at `{provisioningProfileDestPath}`");
-                return;
-            }
-
-            // Copy the profile into the folder
-            _log.LogMessage($"Adding provisioning profile `{profilePath}` into the app bundle at `{provisioningProfileDestPath}`");
-            _fileSystem.FileCopy(profilePath, provisioningProfileDestPath);
         }
 
         /// <summary>
@@ -220,7 +180,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             {
                 if (_fileSystem.FileExists(targetFile))
                 {
-                    _log.LogMessage($"Provisioning profile is already downloaded");
+                    _log.LogMessage($"Using provisioning profile in {targetFile}");
                     return;
                 }
 

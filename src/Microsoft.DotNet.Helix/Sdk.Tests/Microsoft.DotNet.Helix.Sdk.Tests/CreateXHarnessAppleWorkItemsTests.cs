@@ -92,7 +92,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             command.Should().Contain("--launch-timeout \"00:02:33\"");
 
             _profileProvider
-                .Verify(x => x.AddProfilesToBundles(It.Is<ITaskItem[]>(bundles => bundles.Any(b => b.ItemSpec == "/apps/System.Foo.app"))), Times.Once);
+                .Verify(x => x.AddProfileToPayload(payloadArchive, "ios-device_13.5"), Times.Once);
             _zipArchiveManager
                 .Verify(x => x.ArchiveDirectory("/apps/System.Foo.app", payloadArchive, true), Times.Once);
             _zipArchiveManager
@@ -238,7 +238,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             command.Should().Contain("--launch-timeout \"00:02:33\"");
 
             _profileProvider
-                .Verify(x => x.AddProfilesToBundles(It.Is<ITaskItem[]>(bundles => bundles.Any(b => b.ItemSpec == "/apps/System.Foo.zip"))), Times.Once);
+                .Verify(x => x.AddProfileToPayload(payloadArchive, "ios-device_13.5"), Times.Once);
             _zipArchiveManager
                 .Verify(x => x.ArchiveDirectory("/apps/System.Foo.app", payloadArchive, true), Times.Never);
             _zipArchiveManager
