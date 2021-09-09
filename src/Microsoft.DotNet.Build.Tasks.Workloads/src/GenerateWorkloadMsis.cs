@@ -36,6 +36,15 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         }
 
         /// <summary>
+        /// Generate msis in parallel.
+        /// </summary>
+        public bool RunInParallel
+        {
+            get;
+            set;
+        } = true;
+
+        /// <summary>
         /// Gets the set of missing workload packs.
         /// </summary>
         [Output]
@@ -90,14 +99,24 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                         string swixPackageId = $"{pack.Id.ToString().Replace(ShortNames)}.{pack.Version}";
 
                         // Always select the pack ID for the VS MSI package, even when aliased.
-                        packsToGenerate.Add(new(sourcePackage, swixPackageId, OutputPath, pack.Kind, platforms));
+                        if (RunInParallel)
+                        {
+                            packsToGenerate.Add(new(sourcePackage, swixPackageId, OutputPath, pack.Kind, platforms));
+                        }
+                        else
+                        {
+                            msis.AddRange(Generate(sourcePackage, swixPackageId, OutputPath, pack.Kind, platforms));
+                        }
                     }
                 }
 
-                System.Threading.Tasks.Parallel.ForEach(packsToGenerate, p =>
+                if (RunInParallel)
                 {
-                    msis.AddRange(Generate(p.sourcePackage, p.swixPackageId, p.outputPath, p.kind, p.platforms));
-                });
+                    System.Threading.Tasks.Parallel.ForEach(packsToGenerate, p =>
+                    {
+                        msis.AddRange(Generate(p.sourcePackage, p.swixPackageId, p.outputPath, p.kind, p.platforms));
+                    });
+                }
 
                 Msis = msis.ToArray();
                 MissingPacks = missingPacks.ToArray();
