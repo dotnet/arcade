@@ -136,7 +136,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             await task.ParseTargetFeedConfigAsync();
             task.Log.HasLoggedErrors.Should().BeTrue();
             buildEngine.BuildErrorEvents.Should().Contain(e =>
-                e.Message.Equals("Invalid feed config type 'MyUnknownFeedType'. Possible values are: AzDoNugetFeed, AzureStorageFeed"));
+                e.Message.Equals("Invalid feed config type 'MyUnknownFeedType'. Possible values are: AzDoNugetFeed, AzureStorageFeed, AzureStorageContainer"));
         }
 
         [Fact]

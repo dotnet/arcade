@@ -12,6 +12,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed
 {
@@ -200,6 +201,15 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public int NonStreamingPublishingMaxClients {get; set;}
 
+        [Required]
+        public string DotNetBuildsPublicUri { get; set; }
+        [Required]
+        public string DotNetBuildsPublicChecksumsUri { get; set; }
+        [Required]
+        public string DotNetBuildsInternalUri { get; set; }
+        [Required]
+        public string DotNetBuildsInternalChecksumsUri { get; set; }
+
         /// <summary>
         /// Just an internal flag to keep track whether we published assets via a V3 manifest or not.
         /// </summary>
@@ -322,7 +332,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         internal PublishArtifactsInManifestBase ConstructPublishingV2Task(BuildModel buildModel)
         {
-            return new PublishArtifactsInManifestV2()
+            return new PublishArtifactsInManifestV2(new AssetPublisherFactory(Log))
             {
                 BuildEngine = this.BuildEngine,
                 TargetFeedConfig = this.TargetFeedConfig,
@@ -341,7 +351,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 AkaMSGroupOwner = this.AkaMSGroupOwner,
                 AkaMsOwners = this.AkaMsOwners,
                 AkaMSTenant = this.AkaMSTenant,
-                BuildQuality = this.BuildQuality
+                BuildQuality = this.BuildQuality,
             };
         }
 
@@ -349,7 +359,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         {
             PublishedV3Manifest = true;
 
-            return new PublishArtifactsInManifestV3()
+            return new PublishArtifactsInManifestV3(new AssetPublisherFactory(Log))
             {
                 BuildEngine = this.BuildEngine,
                 TargetChannels = this.TargetChannels,
@@ -395,8 +405,43 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 AzureDevOpsOrg = this.AzureDevOpsOrg,
                 UseStreamingPublishing = this.UseStreamingPublishing,
                 StreamingPublishingMaxClients = this.StreamingPublishingMaxClients,
-                NonStreamingPublishingMaxClients = this.NonStreamingPublishingMaxClients
+                NonStreamingPublishingMaxClients = this.NonStreamingPublishingMaxClients,
+                DotNetBuildsPublicUri = FixUpSasTokenForMSBuildEscaping(DotNetBuildsPublicUri),
+                DotNetBuildsPublicChecksumsUri = FixUpSasTokenForMSBuildEscaping(DotNetBuildsPublicChecksumsUri),
+                DotNetBuildsInternalUri = FixUpSasTokenForMSBuildEscaping(DotNetBuildsInternalUri),
+                DotNetBuildsInternalChecksumsUri = FixUpSasTokenForMSBuildEscaping(DotNetBuildsInternalChecksumsUri),
             };
+        }
+
+        private string FixUpSasTokenForMSBuildEscaping(string uriWithSas)
+        {
+            if (uriWithSas == null)
+            {
+                return null;
+            }
+            uriWithSas = TransformSection(uriWithSas, "sig=", "&se=", section => section.Replace("+", "%2B").Replace("/", "%2F").Replace("=", "%3D"));
+            uriWithSas = TransformSection(uriWithSas, "se=", "&sp=", section => section.Replace(":", "%3A"));
+            return uriWithSas;
+        }
+
+        private string TransformSection(string uri, string start, string end, Func<string, string> transform)
+        {
+            var startIndex = uri.IndexOf(start, StringComparison.Ordinal);
+            if (startIndex < 0)
+            {
+                throw new InvalidOperationException($"Unable to find '{start}'");
+            }
+
+            var endIndex = uri.IndexOf(end, startIndex, StringComparison.Ordinal);
+            if (endIndex < 0)
+            {
+                throw new InvalidOperationException($"Unable to find '{end}' after '{start}'");
+            }
+
+            var first = uri.Substring(0, startIndex + start.Length);
+            var middle = transform(uri.Substring(startIndex + start.Length, endIndex - (startIndex + start.Length)));
+            var last = uri.Substring(endIndex);
+            return first + middle + last;
         }
     }
 }

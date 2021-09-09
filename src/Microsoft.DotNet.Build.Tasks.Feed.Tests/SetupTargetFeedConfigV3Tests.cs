@@ -162,6 +162,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     AzureDevOpsFeedsKey,
                     buildEngine,
                     symbolTargetType,
+                    "public",
+                    "publicchecksums",
+                    "internal",
+                    "internalchecksums",
                     StablePackageFeed,
                     StableSymbolsFeed,
                     filesToExclude: FilesToExclude
@@ -275,6 +279,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     AzureDevOpsFeedsKey,
                     buildEngine: buildEngine,
                     symbolTargetType,
+                    "public",
+                    "publicchecksums",
+                    "internal",
+                    "internalchecksums",
                     filesToExclude: FilesToExclude
                 );
 
@@ -385,6 +393,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     AzureDevOpsFeedsKey,
                     buildEngine: buildEngine,
                     symbolTargetType,
+                    "public",
+                    "publicchecksums",
+                    "internal",
+                    "internalchecksums",
                     filesToExclude: FilesToExclude
                 );
 

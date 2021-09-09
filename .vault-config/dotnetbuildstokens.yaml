@@ -1,0 +1,49 @@
+storageLocation:
+  type: azure-key-vault
+  parameters:
+    subscription: 11c6037b-227b-4d63-bee1-18c7b68c3a40
+    name: dotnetbuildstokens
+
+references:
+  dotnetbuildskeys:
+    type: azure-key-vault
+    parameters:
+      subscription: 11c6037b-227b-4d63-bee1-18c7b68c3a40
+      name: dotnetbuildskeys
+
+secrets:
+  dotnetbuilds-internal-container-uri:
+    type: azure-storage-container-sas-uri
+    parameters:
+      connectionString:
+        name: dotnetbuilds-connection-string
+        location: dotnetbuildskeys
+      permissions: rlwc
+      container: internal
+
+  dotnetbuilds-internal-container-checksum-uri:
+    type: azure-storage-container-sas-uri
+    parameters:
+      connectionString:
+        name: dotnetbuilds-connection-string
+        location: dotnetbuildskeys
+      permissions: rlwc
+      container: internal-checksums
+
+  dotnetbuilds-public-container-uri:
+    type: azure-storage-container-sas-uri
+    parameters:
+      connectionString:
+        name: dotnetbuilds-connection-string
+        location: dotnetbuildskeys
+      permissions: rlwc
+      container: public
+
+  dotnetbuilds-public-container-checksum-uri:
+    type: azure-storage-container-sas-uri
+    parameters:
+      connectionString:
+        name: dotnetbuilds-connection-string
+        location: dotnetbuildskeys
+      permissions: rlwc
+      container: public-checksums

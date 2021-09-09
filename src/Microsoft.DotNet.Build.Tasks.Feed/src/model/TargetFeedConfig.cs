@@ -13,6 +13,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
     /// </summary>
     public class TargetFeedConfig
     {
+        public string SafeTargetURL => new UriBuilder(TargetURL) {Query = "", Fragment = ""}.Uri.AbsoluteUri;
+
         public TargetFeedContentType ContentType { get; }
 
         public string TargetURL { get; }
@@ -125,7 +127,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 $"\n Internal? '{Internal}' " +
                 $"\n AllowOverwrite? '{AllowOverwrite}' " +
                 $"\n ShortUrlPrefix: '{LatestLinkShortUrlPrefix}' " +
-                $"\n TargetURL: '{TargetURL}'" +
+                $"\n TargetURL: '{SafeTargetURL}'" +
                 $"\n FilenamesToExclude: \n\t{string.Join("\n\t", FilenamesToExclude)}" +
                 $"\n Flatten: '{Flatten}'";
         }
@@ -164,7 +166,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
     public enum FeedType
     {
         AzDoNugetFeed,
-        AzureStorageFeed
+        AzureStorageFeed,
+        AzureStorageContainer,
     }
 
     /// <summary>

@@ -66,6 +66,15 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public string PublicSymbolsFeedOverride { get; set; }
 
+        [Required]
+        public string DotNetBuildsPublicUri { get; set; }
+        [Required]
+        public string DotNetBuildsPublicChecksumsUri { get; set; }
+        [Required]
+        public string DotNetBuildsInternalUri { get; set; }
+        [Required]
+        public string DotNetBuildsInternalChecksumsUri { get; set; }
+
         public override bool Execute()
         {
             ExecuteAsync().GetAwaiter().GetResult();
@@ -160,8 +169,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         GetFeed(targetChannelConfig.SymbolsFeed, SymbolsFeedOverride),
                         shortLinkUrl,
                         AzureDevOpsFeedsKey,
-                        BuildEngine = this.BuildEngine,
+                        BuildEngine,
                         targetChannelConfig.SymbolTargetType,
+                        DotNetBuildsPublicUri,
+                        DotNetBuildsPublicChecksumsUri,
+                        DotNetBuildsInternalUri,
+                        DotNetBuildsInternalChecksumsUri,
                         azureDevOpsPublicStaticSymbolsFeed: GetFeed(null, PublicSymbolsFeedOverride),
                         filesToExclude: targetChannelConfig.FilenamesToExclude,
                         flatten: targetChannelConfig.Flatten);
@@ -269,6 +282,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         public string GetFeed(string feed, string feedOverride)
         {
             return (AllowFeedOverrides && !string.IsNullOrEmpty(feedOverride)) ? feedOverride : feed;
+        }
+
+        public PublishArtifactsInManifestV3(AssetPublisherFactory assetPublisherFactory = null) : base(assetPublisherFactory)
+        {
         }
     }
 }

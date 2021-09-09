@@ -37,6 +37,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         private bool Flatten { get; }
 
+        private string DotNetBuildsPublicUri { get; }
+        private string DotNetBuildsPublicChecksumsUri { get; }
+        private string DotNetBuildsInternalUri { get; }
+        private string DotNetBuildsInternalChecksumsUri { get; }
+
         public SetupTargetFeedConfigV3(bool isInternalBuild,
             bool isStableBuild,
             string repositoryName,
@@ -54,6 +59,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             string azureDevOpsFeedsKey,
             IBuildEngine buildEngine,
             SymbolTargetType symbolTargetType,
+            string dotNetBuildsPublicUri,
+            string dotNetBuildsPublicChecksumsUri,
+            string dotNetBuildsInternalUri,
+            string dotNetBuildsInternalChecksumsUri,
             string stablePackagesFeed = null,
             string stableSymbolsFeed = null,
             string azureDevOpsPublicStaticSymbolsFeed = null,
@@ -65,6 +74,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             StableSymbolsFeed = stableSymbolsFeed;
             StablePackagesFeed = stablePackagesFeed;
             SymbolTargetType = symbolTargetType;
+            DotNetBuildsPublicUri = dotNetBuildsPublicUri;
+            DotNetBuildsPublicChecksumsUri = dotNetBuildsPublicChecksumsUri;
+            DotNetBuildsInternalUri = dotNetBuildsInternalUri;
+            DotNetBuildsInternalChecksumsUri = dotNetBuildsInternalChecksumsUri;
             AzureDevOpsPublicStaticSymbolsFeed = azureDevOpsPublicStaticSymbolsFeed;
             FilesToExclude = filesToExclude ?? new List<string>();
             Flatten = flatten;
@@ -100,6 +113,20 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             {
                 foreach (var contentType in Installers)
                 {
+                    if (string.Equals(InstallersTargetStaticFeed, PublishingConstants.FeedForInstallers, StringComparison.OrdinalIgnoreCase))
+                    {
+                        targetFeedConfigs.Add(
+                            new TargetFeedConfig(
+                                contentType,
+                                DotNetBuildsPublicUri,
+                                FeedType.AzureStorageContainer,
+                                null,
+                                latestLinkShortUrlPrefix: LatestLinkShortUrlPrefix,
+                                @internal: IsInternalBuild,
+                                symbolTargetType: SymbolTargetType,
+                                filenamesToExclude: FilesToExclude,
+                                flatten: Flatten));
+                    }
                     targetFeedConfigs.Add(
                         new TargetFeedConfig(
                             contentType,
@@ -113,6 +140,20 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             flatten: Flatten));
                 }
 
+                if (string.Equals(ChecksumsTargetStaticFeed, PublishingConstants.FeedForChecksums, StringComparison.OrdinalIgnoreCase))
+                {
+                    targetFeedConfigs.Add(
+                        new TargetFeedConfig(
+                            TargetFeedContentType.Checksum,
+                            DotNetBuildsPublicChecksumsUri,
+                            FeedType.AzureStorageContainer,
+                            null,
+                            latestLinkShortUrlPrefix: LatestLinkShortUrlPrefix,
+                            @internal: IsInternalBuild,
+                            symbolTargetType: SymbolTargetType,
+                            filenamesToExclude: FilesToExclude,
+                            flatten: Flatten));
+                }
                 targetFeedConfigs.Add(
                     new TargetFeedConfig(
                         TargetFeedContentType.Checksum,
@@ -272,6 +313,21 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             {
                 foreach (var contentType in Installers)
                 {
+                    if (string.Equals(InstallersTargetStaticFeed, PublishingConstants.FeedForInstallers, StringComparison.OrdinalIgnoreCase))
+                    {
+                        targetFeedConfigs.Add(
+                            new TargetFeedConfig(
+                                contentType,
+                                DotNetBuildsPublicUri,
+                                FeedType.AzureStorageContainer,
+                                null,
+                                isolated: true,
+                                symbolTargetType: SymbolTargetType,
+                                latestLinkShortUrlPrefix: LatestLinkShortUrlPrefix,
+                                @internal: false,
+                                filenamesToExclude: FilesToExclude,
+                                flatten: Flatten));
+                    }
                     targetFeedConfigs.Add(
                         new TargetFeedConfig(
                             contentType,
@@ -283,6 +339,22 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             latestLinkShortUrlPrefix: LatestLinkShortUrlPrefix,
                             @internal: false,
                             allowOverwrite: true,
+                            filenamesToExclude: FilesToExclude,
+                            flatten: Flatten));
+                }
+
+                if (string.Equals(ChecksumsTargetStaticFeed, PublishingConstants.FeedForChecksums, StringComparison.OrdinalIgnoreCase))
+                {
+                    targetFeedConfigs.Add(
+                        new TargetFeedConfig(
+                            TargetFeedContentType.Checksum,
+                            DotNetBuildsPublicChecksumsUri,
+                            FeedType.AzureStorageContainer,
+                            null,
+                            isolated: true,
+                            symbolTargetType: SymbolTargetType,
+                            latestLinkShortUrlPrefix: LatestLinkShortUrlPrefix,
+                            @internal: false,
                             filenamesToExclude: FilesToExclude,
                             flatten: Flatten));
                 }
