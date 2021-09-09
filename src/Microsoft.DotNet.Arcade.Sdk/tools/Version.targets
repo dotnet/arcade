@@ -93,7 +93,7 @@
 #undef VER_FILEVERSION_STR
 #define VER_FILEVERSION_STR         "$(_WindowsFileVersion)$(_SourceBuildInfo)"
 #ifndef VER_LEGALCOPYRIGHT_STR
-#define VER_LEGALCOPYRIGHT_STR       "\xa9 Microsoft Corporation. All rights reserved."
+#define VER_LEGALCOPYRIGHT_STR      "\xa9 Microsoft Corporation. All rights reserved."
 #endif
 #ifndef VER_DEBUG
 #define VER_DEBUG                   $(_Windows_VER_DEBUG)
