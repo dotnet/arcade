@@ -148,20 +148,7 @@ stages:
             env:
               SYSTEM_ACCESSTOKEN: $(System.AccessToken)
               HelixAccessToken: ''
-          - powershell: eng\common\build.ps1
-              -configuration $(_BuildConfig) 
-              -prepareMachine
-              -ci
-              -restore
-              -test
-              -projects $(Build.SourcesDirectory)\tests\UnitTests.XHarness.Android.Device.proj
-              /bl:$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)\Helix.XHarness.Android.Device.binlog
-              /p:RestoreUsingNuGetTargets=false
-              /p:XHarnessTestARM64_V8A=true
-            displayName: XHarness Android Helix Testing (Windows)
-            env:
-              SYSTEM_ACCESSTOKEN: $(System.AccessToken)
-              HelixAccessToken: ''
+
         - job: Linux
           timeoutInMinutes: 90
           container: LinuxContainer
@@ -187,47 +174,6 @@ stages:
               /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.binlog
               /p:RestoreUsingNuGetTargets=false
             displayName: Run Helix Tests
-            env:
-              SYSTEM_ACCESSTOKEN: $(System.AccessToken)
-              HelixAccessToken: ''
-          - script: eng/common/build.sh
-              -configuration $(_BuildConfig)
-              -prepareMachine
-              -ci
-              -restore
-              -test
-              -projects $(Build.SourcesDirectory)/tests/UnitTests.XHarness.iOS.Simulator.proj
-              /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/UnitTests.XHarness.iOS.Simulator.binlog
-              /p:RestoreUsingNuGetTargets=false
-            displayName: XHarness iOS Simulator Helix Testing
-            env:
-              SYSTEM_ACCESSTOKEN: $(System.AccessToken)
-              HelixAccessToken: ''
-          - script: eng/common/build.sh
-              -configuration $(_BuildConfig)
-              -prepareMachine
-              -ci
-              -restore
-              -test
-              -projects $(Build.SourcesDirectory)/tests/UnitTests.XHarness.iOS.Device.proj
-              /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.XHarness.iOS.Device.binlog
-              /p:RestoreUsingNuGetTargets=false
-            displayName: XHarness iOS Device Helix Testing
-            env:
-              SYSTEM_ACCESSTOKEN: $(System.AccessToken)
-              HelixAccessToken: ''
-          - script: eng/common/build.sh
-              -configuration $(_BuildConfig) 
-              -prepareMachine
-              -ci
-              -restore
-              -test
-              -projects $(Build.SourcesDirectory)/tests/UnitTests.XHarness.Android.Simulator.proj
-              /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.XHarness.Android.Simulator.binlog
-              /p:RestoreUsingNuGetTargets=false
-              /p:XHarnessTestX86=true 
-              /p:XHarnessTestX86_64=true 
-            displayName: XHarness Android Helix Testing (Linux)
             env:
               SYSTEM_ACCESSTOKEN: $(System.AccessToken)
               HelixAccessToken: ''

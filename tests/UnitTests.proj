@@ -8,6 +8,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
+    <HelixBaseUri>https://helix.int-dot.net</HelixBaseUri>
     <HelixType>test/product/</HelixType>
 
     <IncludeDotNetCli>true</IncludeDotNetCli>
@@ -72,9 +73,9 @@
 
   <ItemGroup Condition=" '$(HelixAccessToken)' == '' ">
     <HelixTargetQueue Include="Debian.9.Amd64.Open"/>
-    <HelixTargetQueue Include="RedHat.7.Amd64.Open"/>
     <HelixTargetQueue Include="Windows.10.Amd64.Open"/>
     <HelixTargetQueue Include="(Debian.10.Amd64.Open)ubuntu.1804.amd64.open@mcr.microsoft.com/dotnet-buildtools/prereqs:debian-10-helix-amd64-20210304164434-56c6673"/>
+    <HelixTargetQueue Include="(ServerCore.2004.Amd64.Open)windows.10.amd64.server20h1.open.svc@mcr.microsoft.com/dotnet-buildtools/prereqs:windowsservercore-2004-helix-amd64-20200904200251-272704c"/>
   </ItemGroup>
 
   <PropertyGroup Condition="!$(HelixTargetQueue.StartsWith('Windows'))">
