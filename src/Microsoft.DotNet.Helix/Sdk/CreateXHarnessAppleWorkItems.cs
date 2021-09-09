@@ -107,6 +107,17 @@ namespace Microsoft.DotNet.Helix.Sdk
                 Log.LogError($"App bundle not found in {appFolderPath}");
                 return null;
             }
+
+            // If we are re-using one .zip for multiple work items, we need to copy it to a new location
+            // because we will be changing the contents (we assume we don't mind otherwise)
+            if (appBundleItem.MetadataNames.OfType<string>().Contains(MetadataNames.AppBundlePath))
+            {
+                string appFolderDirectory = fileSystem.GetDirectoryName(appFolderPath);
+                string fileName = $"xharness-payload-{workItemName.ToLowerInvariant()}.zip";
+                string archiveCopyPath = fileSystem.PathCombine(appFolderDirectory, fileName);
+                fileSystem.FileCopy(appFolderPath, archiveCopyPath);
+                appFolderPath = archiveCopyPath;
+            }
             
             var (testTimeout, workItemTimeout, expectedExitCode, customCommands) = ParseMetadata(appBundleItem);
 
