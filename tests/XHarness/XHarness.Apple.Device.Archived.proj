@@ -4,28 +4,20 @@
 
   <PropertyGroup>
     <XHarnessTestAppName>System.Buffers.Tests.app</XHarnessTestAppName>
-    <XHarnessTestAppUrl>https://netcorenativeassets.blob.core.windows.net/resource-packages/external/ios/test-app/tvos-device/$(XHarnessTestAppName).zip</XHarnessTestAppUrl>
-    <XHarnessTmpDir>$(ArtifactsTmpDir)XHarness.Apple.Device.Archived</XHarnessTmpDir>
+    <XHarnessTestAppUrl>https://netcorenativeassets.blob.core.windows.net/resource-packages/external/ios/test-app/tvos-device/zipped-apps.zip</XHarnessTestAppUrl>
+    <XHarnessTestTmpDir>$(ArtifactsTmpDir)XHarness.Apple.Device.Archived</XHarnessTestTmpDir>
   </PropertyGroup>
 
   <!-- We will download existing app and package it so that we have coverage for injecting of provisioning profiles into archives -->
   <Target Name="Build" Returns="@(XHarnessAppBundleToTest)">
     <Error Condition=" '$(ArtifactsTmpDir)' == ''" Text="Not downloading AppBundle because ArtifactsTmpDir property is unset" />
 
-    <DownloadFile SourceUrl="$(XHarnessTestAppUrl)" DestinationFolder="$(XHarnessTmpDir)" SkipUnchangedFiles="True" Retries="5">
+    <DownloadFile SourceUrl="$(XHarnessTestAppUrl)" DestinationFolder="$(XHarnessTestTmpDir)" SkipUnchangedFiles="True" Retries="5">
       <Output TaskParameter="DownloadedFile" ItemName="TestApp" />
     </DownloadFile>
 
-    <!-- We have to untar and re-zipp the app while keeping the dir name as top-level archive entry (so we need to move it to a folder and zip that) -->
-    <Message Text="Downloaded @(TestApp) for XHarness Test purposes" Importance="High" />
-    <Exec Command="tar -xzf @(TestApp) -C $(XHarnessTmpDir)" />
-    <Exec Command="mkdir &quot;$(XHarnessTmpDir)/tmp-$(XHarnessTestAppName)&quot;" />
-    <Exec Command="mv &quot;$(XHarnessTmpDir)/$(XHarnessTestAppName)&quot; &quot;$(XHarnessTmpDir)/tmp-$(XHarnessTestAppName)&quot;" />
-
-    <ZipDirectory SourceDirectory="$(XHarnessTmpDir)/tmp-$(XHarnessTestAppName)" DestinationFile="$(XHarnessTmpDir)/XHarness.Apple.Device.Archived.payload.zip" Overwrite="true" />
-
     <ItemGroup>
-      <XHarnessAppBundleToTest Include="$(XHarnessTmpDir)/XHarness.Apple.Device.Archived.payload.zip">
+      <XHarnessAppBundleToTest Include="@(TestApp)">
         <TestTarget>tvos-device</TestTarget>
         <WorkItemTimeout>00:18:00</WorkItemTimeout>
         <CustomCommands>
