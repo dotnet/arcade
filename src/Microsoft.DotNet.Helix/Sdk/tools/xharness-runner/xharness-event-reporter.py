@@ -28,6 +28,8 @@ if not os.path.isfile(diagnostics_file):
 # The JSON should be an array of objects (one per each executed XHarness command)
 operations = json.load(open(diagnostics_file))
 
+print(f"[XHarness reporter] Reporting {len(operations)} events from diagnostics file `{diagnostics_file}`")
+
 for operation in operations:
     custom_dimensions = dict()
 
