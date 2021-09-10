@@ -1634,7 +1634,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             return temporaryDirectory;
         }
 
-        private async Task PublishAssetsAsync(AssetPublisher assetPublisher, HashSet<string> assetsToPublish,
+        private async Task PublishAssetsAsync(IAssetPublisher assetPublisher, HashSet<string> assetsToPublish,
             Dictionary<string, HashSet<Asset>> buildAssets,
             TargetFeedConfig feedConfig,
             SemaphoreSlim clientThrottle)
@@ -1674,7 +1674,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         }
 
         private async Task PublishAssetsUsingStreamingPublishingAsync(
-            AssetPublisher assetPublisher,
+            IAssetPublisher assetPublisher,
             HashSet<string> assetsToPublish,
             Dictionary<string, HashSet<Asset>> buildAssets,
             TargetFeedConfig feedConfig,
@@ -1742,7 +1742,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         }
 
         private async Task PublishAssetsWithoutStreamingPublishingAsync(
-            AssetPublisher assetPublisher,
+            IAssetPublisher assetPublisher,
             HashSet<string> assetsToPublish,
             Dictionary<string, HashSet<Asset>> buildAssets,
             TargetFeedConfig feedConfig)

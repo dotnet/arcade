@@ -33,16 +33,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             }
 
             int bytesPerMegabyte = 1 * 1024 * 1024;
-            if (properties.ContentLength < bytesPerMegabyte)
-            {
-                byte[] existingBytes = new byte[properties.ContentLength];
-                byte[] localBytes = File.ReadAllBytes(file);
-
-                using var stream = new MemoryStream(existingBytes, true);
-                await client.DownloadToAsync(stream).ConfigureAwait(false);
-                return localBytes.SequenceEqual(existingBytes);
-            }
-
             using Stream localFileStream = File.OpenRead(file);
             byte[] localBuffer = new byte[bytesPerMegabyte];
             byte[] remoteBuffer = new byte[bytesPerMegabyte];

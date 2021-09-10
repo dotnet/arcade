@@ -9,18 +9,20 @@ using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed
 {
-    public abstract class AzureStorageAssetPublisher : AssetPublisher
+    public abstract class AzureStorageAssetPublisher : IAssetPublisher
     {
+        private readonly TaskLoggingHelper _log;
+
         protected AzureStorageAssetPublisher(TaskLoggingHelper log)
-            : base(log)
         {
+            _log = log;
         }
 
-        public override AddAssetLocationToAssetAssetLocationType LocationType => AddAssetLocationToAssetAssetLocationType.Container;
+        public AddAssetLocationToAssetAssetLocationType LocationType => AddAssetLocationToAssetAssetLocationType.Container;
 
         public abstract BlobClient CreateBlobClient(string blobPath);
 
-        public override async Task PublishAssetAsync(string file, string blobPath, PushOptions options, SemaphoreSlim clientThrottle = null)
+        public async Task PublishAssetAsync(string file, string blobPath, PushOptions options, SemaphoreSlim clientThrottle = null)
         {
             using (await SemaphoreLock.LockAsync(clientThrottle))
             {
@@ -32,17 +34,17 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     {
                         if (!await blobClient.IsFileIdenticalToBlobAsync(file))
                         {
-                            Log.LogError($"Asset '{file}' already exists with different contents at '{blobPath}'");
+                            _log.LogError($"Asset '{file}' already exists with different contents at '{blobPath}'");
                         }
 
                         return;
                     }
 
-                    Log.LogError($"Asset '{file}' already exists at '{blobPath}'");
+                    _log.LogError($"Asset '{file}' already exists at '{blobPath}'");
                     return;
                 }
 
-                Log.LogMessage($"Uploading '{file}' to '{blobPath}'");
+                _log.LogMessage($"Uploading '{file}' to '{blobPath}'");
                 await blobClient.UploadAsync(file);
             }
         }

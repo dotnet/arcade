@@ -16,8 +16,9 @@ using Task = System.Threading.Tasks.Task;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed
 {
-    public class AzureDevOpsNugetFeedAssetPublisher : AssetPublisher
+    public class AzureDevOpsNugetFeedAssetPublisher : IAssetPublisher, IDisposable
     {
+        private readonly TaskLoggingHelper _log;
         private readonly string _targetUrl;
         private readonly string _accessToken;
         private readonly PublishArtifactsInManifestBase _task;
@@ -26,8 +27,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         private readonly string _feedName;
         private readonly HttpClient _httpClient;
 
-        public AzureDevOpsNugetFeedAssetPublisher(TaskLoggingHelper log, string targetUrl, string accessToken, PublishArtifactsInManifestBase task) : base(log)
+        public AzureDevOpsNugetFeedAssetPublisher(TaskLoggingHelper log, string targetUrl, string accessToken, PublishArtifactsInManifestBase task)
         {
+            _log = log;
             _targetUrl = targetUrl;
             _accessToken = accessToken;
             _task = task;
@@ -35,9 +37,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             var parsedUri = Regex.Match(_targetUrl, PublishingConstants.AzDoNuGetFeedPattern);
             if (!parsedUri.Success)
             {
-                Log.LogError(
+                throw new ArgumentException(
                     $"Azure DevOps NuGetFeed was not in the expected format '{PublishingConstants.AzDoNuGetFeedPattern}'");
-                return;
             }
             _feedAccount = parsedUri.Groups["account"].Value;
             _feedVisibility = parsedUri.Groups["visibility"].Value;
@@ -55,18 +56,18 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             };
         }
 
-        protected override void Dispose(bool disposing)
+        public void Dispose()
         {
             _httpClient?.Dispose();
         }
 
-        public override AddAssetLocationToAssetAssetLocationType LocationType => AddAssetLocationToAssetAssetLocationType.NugetFeed;
+        public AddAssetLocationToAssetAssetLocationType LocationType => AddAssetLocationToAssetAssetLocationType.NugetFeed;
 
-        public override async Task PublishAssetAsync(string file, string blobPath, PushOptions options, SemaphoreSlim clientThrottle = null)
+        public async Task PublishAssetAsync(string file, string blobPath, PushOptions options, SemaphoreSlim clientThrottle = null)
         {
             if (!file.EndsWith(GeneralUtils.PackageSuffix, StringComparison.OrdinalIgnoreCase))
             {
-                Log.LogWarning(
+                _log.LogWarning(
                     $"AzDO feed publishing not available for blobs. Blob '{file}' was not published.");
                 return;
             }
@@ -83,7 +84,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             }
             catch (Exception e)
             {
-                Log.LogErrorFromException(e);
+                _log.LogErrorFromException(e);
             }
         }
     }
