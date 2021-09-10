@@ -57,7 +57,7 @@ In order to run them, one has to publish the SDK locally so that the unit tests 
     dotnet publish -f netcoreapp3.1 src/Microsoft.DotNet.Arcade.Sdk/Microsoft.DotNet.Arcade.Sdk.csproj
     dotnet publish -f netcoreapp3.1 src/Microsoft.DotNet.Helix/Sdk/Microsoft.DotNet.Helix.Sdk.csproj
     ```
-4. Pick one of the test `.proj` files, set some env variables and build it
+4. Pick one of the test `.proj` files, set some env variables and build it  
     Bash
     ```sh
     export BUILD_REASON=pr
@@ -79,7 +79,7 @@ In order to run them, one has to publish the SDK locally so that the unit tests 
 
     .\eng\common\build.ps1 -configuration Debug -restore -test -projects tests\UnitTests.XHarness.Apple.Device.proj /p:RestoreUsingNugetTargets=false /bl:Arcade.binlog
     ```
-5. An MSBuild log called `Arcade.binlog` will be produced which you can inspect using the [MSBuild Structured Log Viewer](https://msbuildlog.com/). There you can see which props were set with which values, in what order the targets were executed and so on.
+5. An MSBuild log file called `Arcade.binlog` will be produced which you can inspect using the [MSBuild Structured Log Viewer](https://msbuildlog.com/). There you can see which props were set with which values, in what order the targets were executed under which conditions and so on.
 
 ### Docker Support
 Helix machines now have (where available on the machine) the ability to run work items directly inside Docker containers.  This allows work items to use operating systems that only work for Docker scenarios, as well as custom configurations of already-supported operating systems.  
