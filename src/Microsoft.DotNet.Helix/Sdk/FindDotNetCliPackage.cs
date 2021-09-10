@@ -2,6 +2,7 @@ using System;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
+using Microsoft.Arcade.Common;
 using Microsoft.Build.Framework;
 using NuGet.Versioning;
 
@@ -9,6 +10,12 @@ namespace Microsoft.DotNet.Helix.Sdk
 {
     public class FindDotNetCliPackage : BaseTask
     {
+        // Use lots of retries since an Http Client failure here means failure to send to Helix
+        private ExponentialRetry _retry = new ExponentialRetry()
+        {
+            MaxAttempts = 10,
+            DelayBase = 3.0
+        };
         private static readonly HttpClient _client = new HttpClient(new HttpClientHandler { CheckCertificateRevocationList = true });
         private const string DotNetCliAzureFeed = "https://dotnetcli.blob.core.windows.net/dotnet";
 
@@ -56,8 +63,7 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             try
             {
-                using var req = new HttpRequestMessage(HttpMethod.Head, downloadUrl);
-                using HttpResponseMessage res = await _client.SendAsync(req);
+                using HttpResponseMessage res = await HeadRequestWithRetry(downloadUrl);
 
                 if (res.StatusCode == HttpStatusCode.NotFound)
                 {
@@ -128,10 +134,12 @@ namespace Microsoft.DotNet.Helix.Sdk
         }
         private async Task<string> GetMatchingProductVersionTxtContents(string baseUri, string customVersionTextFileName)
         {
-            using HttpResponseMessage specificResponse = await _client.GetAsync($"{baseUri}/{customVersionTextFileName}");
+            Log.LogMessage(MessageImportance.Low, $"Checking for productVersion.txt files under {baseUri}");
+
+            using HttpResponseMessage specificResponse = await GetAsyncWithRetry($"{baseUri}/{customVersionTextFileName}");
             if (specificResponse.StatusCode == HttpStatusCode.NotFound)
             {
-                using HttpResponseMessage genericResponse = await _client.GetAsync($"{baseUri}/productVersion.txt");
+                using HttpResponseMessage genericResponse = await GetAsyncWithRetry($"{baseUri}/productVersion.txt");
                 if (genericResponse.StatusCode != HttpStatusCode.NotFound)
                 {
                     genericResponse.EnsureSuccessStatusCode();
@@ -148,6 +156,53 @@ namespace Microsoft.DotNet.Helix.Sdk
                 return (await specificResponse.Content.ReadAsStringAsync()).Trim();
             }
             return Version;
+        }
+
+        private async Task<HttpResponseMessage> GetAsyncWithRetry(string uri)
+        {
+            HttpResponseMessage response = null;
+            await _retry.RunAsync(async attempt =>
+            {
+                try
+                {
+                    response = await _client.GetAsync(uri);
+                    return true;
+                }
+                catch (Exception toLog)
+                {
+                    Log.LogMessage(MessageImportance.Low, $"Hit exception in GetAsync(); will retry up to 10 times ({toLog.Message})");
+                    return false;
+                }
+            });
+            if (response == null)  // All retries failed
+            {
+                throw new Exception($"Failed to GET from {uri}, even after retrying");
+            }
+            return response;
+        }
+
+        private async Task<HttpResponseMessage> HeadRequestWithRetry(string uri)
+        {
+            HttpResponseMessage response = null;
+            await _retry.RunAsync(async attempt =>
+            {
+                try
+                {
+                    using var req = new HttpRequestMessage(HttpMethod.Head, uri);
+                    response = await _client.SendAsync(req);
+                    return true;
+                }
+                catch (Exception toLog)
+                {
+                    Log.LogMessage(MessageImportance.Low, $"Hit exception in SendAsync(); will retry up to 10 times ({toLog.Message})");
+                    return false;
+                }
+            });
+            if (response == null) // All retries failed
+            {
+                throw new Exception($"Failed to make HEAD request to {uri}, even after retrying");
+            }
+            return response;
         }
 
         private void NormalizeParameters()
@@ -201,7 +256,10 @@ namespace Microsoft.DotNet.Helix.Sdk
                 };
 
                 Log.LogMessage(MessageImportance.Low, $"Resolving latest version from url {latestVersionUrl}");
-                string latestVersionContent = await _client.GetStringAsync(latestVersionUrl);
+
+                using HttpResponseMessage versionResponse = await GetAsyncWithRetry(latestVersionUrl);
+                versionResponse.EnsureSuccessStatusCode();
+                string latestVersionContent = await versionResponse.Content.ReadAsStringAsync();
                 string[] versionData = latestVersionContent.Split(Array.Empty<char>(), StringSplitOptions.RemoveEmptyEntries);
                 Version = versionData[1];
                 Log.LogMessage(MessageImportance.Low, $"Got latest dotnet cli version {Version}");
