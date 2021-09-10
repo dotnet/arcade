@@ -83,7 +83,7 @@ fi
 
 # First we need to revive env variables since they were erased by launchctl
 # This file already has the expressions in the `export name=value` format
-. envvars
+. ./envvars
 
 output_directory=$HELIX_WORKITEM_UPLOAD_ROOT
 
