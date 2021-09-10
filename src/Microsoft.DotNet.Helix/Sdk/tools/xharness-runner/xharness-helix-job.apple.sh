@@ -28,13 +28,13 @@ set -x
 # It is important we call the script via `launchctl asuser` in order to be able to spawn
 # the simulator which needs to run in a user session with GUI rendering capabilities.
 # The problem with launchctl is that the spawned process won't share environment variables
-# so we have to pass all of them as parameters are set them again.
+# so we have to set them again.
+export -p > envvars
 chmod +x xharness-runner.apple.sh
 helix_runner_uid=$(id -u)
 sudo launchctl asuser "$helix_runner_uid" sh ./xharness-runner.apple.sh \
     $forwarded_args                                                     \
     --app "$HELIX_WORKITEM_ROOT/$app"                                   \
-    --xharness-cli-path "$XHARNESS_CLI_PATH"                            \
     --output-directory "$HELIX_WORKITEM_UPLOAD_ROOT"                    \
     --diagnostics-path "$XHARNESS_DIAGNOSTICS_PATH"                     \
 
