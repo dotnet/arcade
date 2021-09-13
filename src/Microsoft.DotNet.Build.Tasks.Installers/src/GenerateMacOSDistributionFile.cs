@@ -30,6 +30,8 @@ namespace Microsoft.DotNet.SharedFramework.Sdk
         [Required]
         public string DestinationFile { get; set; }
 
+        public string Alternativex64InstallPath { get; set; }
+
         public override bool Execute()
         {
             try
@@ -38,15 +40,62 @@ namespace Microsoft.DotNet.SharedFramework.Sdk
 
                 var titleElement = new XElement("title", $"{ProductBrandName} ({TargetArchitecture})");
 
-                var choiceLineElements = BundledPackages.Select(component => new XElement("line", new XAttribute("choice", component.GetMetadata("FileNameWithExtension"))));
+                IEnumerable<XElement> choiceLineElements;
+                IEnumerable<XElement> choiceElements;
+                XElement scriptElement = null;
+                if (TargetArchitecture.Equals("x64"))
+                {
+                    Alternativex64InstallPath ??= "/usr/local/share/dotnet/x64";
+                    var archScriptContent = @"<![CDATA[
+function IsX64Machine() {
+    var machine = system.sysctl(""hw.machine"");
+    system.log(""Machine type: "" + machine);
+    var result = machine == ""x64"" || machine.endsWith(""_x64"");
+    system.log(""IsX64Machine: "" + result);
+    return result;
+}
+]]>";
+                    scriptElement = new XElement("script", new XText(archScriptContent));
 
-                var choiceElements = BundledPackages
-                    .Select(component => new XElement("choice",
-                        new XAttribute("id", component.GetMetadata("FileNameWithExtension")),
-                        new XAttribute("visible", "true"),
-                        new XAttribute("title", component.GetMetadata("Title")),
-                        new XAttribute("description", component.GetMetadata("Description")),
-                        new XElement("pkg-ref", new XAttribute("id", component.GetMetadata("FileNameWithExtension")))));
+                    choiceLineElements = BundledPackages.SelectMany(component => new XElement[] { new XElement("line", new XAttribute("choice", $"{component.GetMetadata("FileNameWithExtension")}.x64")),
+                                                                                                  new XElement("line", new XAttribute("choice", $"{component.GetMetadata("FileNameWithExtension")}.arm64"))});
+
+                    choiceElements = BundledPackages
+                        .SelectMany(component => {
+                            var visibleAttribute = new XAttribute("visible", "true");
+                            var titleAttribute = new XAttribute("title", component.GetMetadata("Title"));
+                            var descriptionAttribute = new XAttribute("description", component.GetMetadata("Description"));
+                            var packageRefAttribute = new XElement("pkg-ref", new XAttribute("id", component.GetMetadata("FileNameWithExtension")));
+                            var x64Element = new XElement("choice",
+                                new XAttribute("id", $"{component.GetMetadata("FileNameWithExtension")}.x64"),
+                                new XAttribute("selected", "IsX64Machine()"),
+                                visibleAttribute,
+                                titleAttribute,
+                                descriptionAttribute,
+                                packageRefAttribute);
+                            var arm64Element = new XElement("choice",
+                                new XAttribute("id", $"{component.GetMetadata("FileNameWithExtension")}.arm64"),
+                                new XAttribute("selected", "!IsX64Machine()"),
+                                new XAttribute("customLocation", Alternativex64InstallPath),
+                                visibleAttribute,
+                                titleAttribute,
+                                descriptionAttribute,
+                                packageRefAttribute);
+                            
+                            return new XElement[] { x64Element, arm64Element };
+                        });
+                }
+                else {
+                    choiceLineElements = BundledPackages.Select(component => new XElement("line", new XAttribute("choice", component.GetMetadata("FileNameWithExtension"))));
+
+                    choiceElements = BundledPackages
+                        .Select(component => new XElement("choice",
+                            new XAttribute("id", component.GetMetadata("FileNameWithExtension")),
+                            new XAttribute("visible", "true"),
+                            new XAttribute("title", component.GetMetadata("Title")),
+                            new XAttribute("description", component.GetMetadata("Description")),
+                            new XElement("pkg-ref", new XAttribute("id", component.GetMetadata("FileNameWithExtension")))));
+                }
 
                 var pkgRefElements = BundledPackages
                     .Select(component => new XElement("pkg-ref",
@@ -78,6 +127,9 @@ namespace Microsoft.DotNet.SharedFramework.Sdk
                 document.Root.Add(new XElement("choices-outline", choiceLineElements));
                 document.Root.Add(choiceElements);
                 document.Root.Add(pkgRefElements);
+                if (scriptElement != null) {
+                    document.Root.Add(scriptElement);
+                }
                 using XmlWriter writer = XmlWriter.Create(File.OpenWrite(DestinationFile));
                 document.WriteTo(writer);
             }
