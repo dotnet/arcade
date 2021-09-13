@@ -66,7 +66,7 @@ In order to run them, one has to publish the SDK locally so that the unit tests 
     export SYSTEM_TEAMPROJECT=dnceng
     export SYSTEM_ACCESSTOKEN=''
 
-    eng/common/build.sh -test -projects tests/UnitTests.XHarness.Android.Device.proj /v:n /bl:Arcade.binlog
+    eng/common/build.sh -test -projects tests/UnitTests.XHarness.Apple.Device.proj /v:n /bl:Arcade.binlog
     ```
 
     PowerShell
