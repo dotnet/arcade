@@ -1,10 +1,16 @@
 <Project DefaultTargets="Test">
-  <Import Project="./UnitTests.XHarness.Common.props"/>
+  <Import Project="./XHarness.Tests.Common.props"/>
+
+  <!--
+    This is a project used in integration tests of Arcade.
+    It tests sending Android (XHarness) workloads using the Helix SDK to Linux-specific queues
+    It builds a mock project that does not build an APK directly but only downloads it from a storage account.
+   -->
 
   <!-- New Test Projects which build packages to run through XHarness/XHarness go here -->
   <ItemGroup>
     <XHarnessAndroidProject Include="$(MSBuildThisFileDirectory)XHarness/XHarness.TestApks.proj" />
-    <HelixTargetQueue Include="windows.10.amd64.android.open" />
+    <HelixTargetQueue Include="ubuntu.1804.amd64.android.29.open"/>
   </ItemGroup>
 
   <Target Name="Pack"/>

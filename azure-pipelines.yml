@@ -154,7 +154,7 @@ stages:
               -ci
               -restore
               -test
-              -projects $(Build.SourcesDirectory)\tests\UnitTests.XHarness.Android.Device.proj
+              -projects $(Build.SourcesDirectory)\tests\XHarness.Android.Device.proj
               /bl:$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)\Helix.XHarness.Android.Device.binlog
               /p:RestoreUsingNuGetTargets=false
               /p:XHarnessTestARM64_V8A=true
@@ -196,8 +196,8 @@ stages:
               -ci
               -restore
               -test
-              -projects $(Build.SourcesDirectory)/tests/UnitTests.XHarness.Apple.Simulator.proj
-              /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/UnitTests.XHarness.Apple.Simulator.binlog
+              -projects $(Build.SourcesDirectory)/tests/XHarness.Apple.Simulator.proj
+              /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/XHarness.Apple.Simulator.binlog
               /p:RestoreUsingNuGetTargets=false
             displayName: XHarness Apple Simulator Helix Testing
             env:
@@ -209,7 +209,7 @@ stages:
               -ci
               -restore
               -test
-              -projects $(Build.SourcesDirectory)/tests/UnitTests.XHarness.Apple.Device.proj
+              -projects $(Build.SourcesDirectory)/tests/XHarness.Apple.Device.proj
               /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.XHarness.Apple.Device.binlog
               /p:RestoreUsingNuGetTargets=false
             displayName: XHarness Apple Device Helix Testing
@@ -222,7 +222,7 @@ stages:
               -ci
               -restore
               -test
-              -projects $(Build.SourcesDirectory)/tests/UnitTests.XHarness.Android.Simulator.proj
+              -projects $(Build.SourcesDirectory)/tests/XHarness.Android.Simulator.proj
               /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.XHarness.Android.Simulator.binlog
               /p:RestoreUsingNuGetTargets=false
               /p:XHarnessTestX86=true 

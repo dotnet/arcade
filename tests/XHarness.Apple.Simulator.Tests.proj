@@ -1,5 +1,5 @@
 <Project DefaultTargets="Test">
-  <Import Project="./UnitTests.XHarness.Common.props"/>
+  <Import Project="./XHarness.Tests.Common.props"/>
 
   <!--
     This is a project used in integration tests of Arcade.
