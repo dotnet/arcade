@@ -46,7 +46,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
             _httpClient = new HttpClient(new HttpClientHandler {CheckCertificateRevocationList = true})
             {
-                Timeout = TimeSpan.FromSeconds(300),
+                Timeout = GeneralUtils.NugetFeedPublisherHttpClientTimeout,
                 DefaultRequestHeaders =
                 {
                     Authorization = new AuthenticationHeaderValue(
@@ -72,10 +72,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 return;
             }
 
-            using var packageReader = new PackageArchiveReader(file);
-            PackageIdentity packageIdentity = packageReader.GetIdentity();
-            string id = packageIdentity.Id;
-            string version = packageIdentity.Version.ToString();
+            string id;
+            string version;
+            using (var packageReader = new PackageArchiveReader(file))
+            {
+                PackageIdentity packageIdentity = packageReader.GetIdentity();
+                id = packageIdentity.Id;
+                version = packageIdentity.Version.ToString();
+            }
 
             try
             {

@@ -113,7 +113,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             {
                 foreach (var contentType in Installers)
                 {
-                    if (string.Equals(InstallersTargetStaticFeed, PublishingConstants.FeedForInstallers, StringComparison.OrdinalIgnoreCase))
+                    if (!string.IsNullOrEmpty(DotNetBuildsPublicUri) && string.Equals(InstallersTargetStaticFeed, PublishingConstants.FeedForInstallers, StringComparison.OrdinalIgnoreCase))
                     {
                         targetFeedConfigs.Add(
                             new TargetFeedConfig(
@@ -140,7 +140,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             flatten: Flatten));
                 }
 
-                if (string.Equals(ChecksumsTargetStaticFeed, PublishingConstants.FeedForChecksums, StringComparison.OrdinalIgnoreCase))
+                if (!string.IsNullOrEmpty(DotNetBuildsPublicChecksumsUri) && string.Equals(ChecksumsTargetStaticFeed, PublishingConstants.FeedForChecksums, StringComparison.OrdinalIgnoreCase))
                 {
                     targetFeedConfigs.Add(
                         new TargetFeedConfig(
@@ -313,7 +313,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             {
                 foreach (var contentType in Installers)
                 {
-                    if (string.Equals(InstallersTargetStaticFeed, PublishingConstants.FeedForInstallers, StringComparison.OrdinalIgnoreCase))
+                    if (!string.IsNullOrEmpty(DotNetBuildsPublicUri) && string.Equals(InstallersTargetStaticFeed, PublishingConstants.FeedForInstallers, StringComparison.OrdinalIgnoreCase))
                     {
                         targetFeedConfigs.Add(
                             new TargetFeedConfig(
@@ -343,7 +343,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             flatten: Flatten));
                 }
 
-                if (string.Equals(ChecksumsTargetStaticFeed, PublishingConstants.FeedForChecksums, StringComparison.OrdinalIgnoreCase))
+                if (!string.IsNullOrEmpty(DotNetBuildsPublicChecksumsUri) && string.Equals(ChecksumsTargetStaticFeed, PublishingConstants.FeedForChecksums, StringComparison.OrdinalIgnoreCase))
                 {
                     targetFeedConfigs.Add(
                         new TargetFeedConfig(

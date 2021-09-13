@@ -1664,12 +1664,17 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         Log);
                 }
 
-                // The latest links should be updated only after the publishing is complete, to avoid
-                // dead links in the interim.
-                await LinkManager.CreateOrUpdateLatestLinksAsync(
-                    assetsToPublish,
-                    feedConfig,
-                    feedConfig.Type == FeedType.AzureStorageContainer ? 0 : PublishingConstants.ExpectedFeedUrlSuffix.Length);
+                if (feedConfig.Type == FeedType.AzureStorageFeed) // AzureStorageFeed == old dotnetcli, dotnetbuilds is AzureStorageContainer
+                {
+                    // The latest links should be updated only after the publishing is complete, to avoid
+                    // dead links in the interim.
+                    await LinkManager.CreateOrUpdateLatestLinksAsync(
+                        assetsToPublish,
+                        feedConfig,
+                        feedConfig.Type == FeedType.AzureStorageContainer
+                            ? 0
+                            : PublishingConstants.ExpectedFeedUrlSuffix.Length);
+                }
             }
         }
 

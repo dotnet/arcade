@@ -99,10 +99,10 @@ jobs:
           /p:UseStreamingPublishing='true'
           /p:StreamingPublishingMaxClients=16
           /p:NonStreamingPublishingMaxClients=12
-          /p:DotNetBuildsPublicUri='$(dotnetbuilds-public-container-uri)'
-          /p:DotNetBuildsPublicChecksumsUri='$(dotnetbuilds-public-container-checksum-uri)'
-          /p:DotNetBuildsInternalUri='$(dotnetbuilds-internal-container-uri)'
-          /p:DotNetBuildsInternalChecksumsUri='$(dotnetbuilds-internal-container-checksum-uri)'
+          /p:DotNetBuildsPublicUriBase64='$(dotnetbuilds-public-container-uri-base64)'
+          /p:DotNetBuildsPublicChecksumsUriBase64='$(dotnetbuilds-public-container-checksum-uri-base64)'
+          /p:DotNetBuildsInternalUriBase64='$(dotnetbuilds-internal-container-uri-base64)'
+          /p:DotNetBuildsInternalChecksumsUriBase64='$(dotnetbuilds-internal-container-checksum-uri-base64)'
     - template: /eng/common/templates/steps/publish-logs.yml
       parameters:
         StageLabel: '${{ parameters.stageName }}'

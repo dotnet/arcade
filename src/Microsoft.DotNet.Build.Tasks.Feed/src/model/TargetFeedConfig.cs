@@ -13,6 +13,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
     /// </summary>
     public class TargetFeedConfig
     {
+        /// <summary>
+        ///   Returns the TargetURL stripped of SAS token so it can be used for logging purposes.
+        /// </summary>
         public string SafeTargetURL => new UriBuilder(TargetURL) {Query = "", Fragment = ""}.Uri.AbsoluteUri;
 
         public TargetFeedContentType ContentType { get; }

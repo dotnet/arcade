@@ -11,6 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using System;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Task = System.Threading.Tasks.Task;
 
@@ -201,14 +202,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public int NonStreamingPublishingMaxClients {get; set;}
 
-        [Required]
-        public string DotNetBuildsPublicUri { get; set; }
-        [Required]
-        public string DotNetBuildsPublicChecksumsUri { get; set; }
-        [Required]
-        public string DotNetBuildsInternalUri { get; set; }
-        [Required]
-        public string DotNetBuildsInternalChecksumsUri { get; set; }
+        public string DotNetBuildsPublicUriBase64 { get; set; }
+
+        public string DotNetBuildsPublicChecksumsUriBase64 { get; set; }
+
+        public string DotNetBuildsInternalUriBase64 { get; set; }
+
+        public string DotNetBuildsInternalChecksumsUriBase64 { get; set; }
 
         /// <summary>
         /// Just an internal flag to keep track whether we published assets via a V3 manifest or not.
@@ -406,42 +406,20 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 UseStreamingPublishing = this.UseStreamingPublishing,
                 StreamingPublishingMaxClients = this.StreamingPublishingMaxClients,
                 NonStreamingPublishingMaxClients = this.NonStreamingPublishingMaxClients,
-                DotNetBuildsPublicUri = FixUpSasTokenForMSBuildEscaping(DotNetBuildsPublicUri),
-                DotNetBuildsPublicChecksumsUri = FixUpSasTokenForMSBuildEscaping(DotNetBuildsPublicChecksumsUri),
-                DotNetBuildsInternalUri = FixUpSasTokenForMSBuildEscaping(DotNetBuildsInternalUri),
-                DotNetBuildsInternalChecksumsUri = FixUpSasTokenForMSBuildEscaping(DotNetBuildsInternalChecksumsUri),
+                DotNetBuildsPublicUri = ConvertFromBase64(DotNetBuildsPublicUriBase64),
+                DotNetBuildsPublicChecksumsUri = ConvertFromBase64(DotNetBuildsPublicChecksumsUriBase64),
+                DotNetBuildsInternalUri = ConvertFromBase64(DotNetBuildsInternalUriBase64),
+                DotNetBuildsInternalChecksumsUri = ConvertFromBase64(DotNetBuildsInternalChecksumsUriBase64),
             };
         }
 
-        private string FixUpSasTokenForMSBuildEscaping(string uriWithSas)
+        private string ConvertFromBase64(string value)
         {
-            if (uriWithSas == null)
+            if (value == null)
             {
                 return null;
             }
-            uriWithSas = TransformSection(uriWithSas, "sig=", "&se=", section => section.Replace("+", "%2B").Replace("/", "%2F").Replace("=", "%3D"));
-            uriWithSas = TransformSection(uriWithSas, "se=", "&sp=", section => section.Replace(":", "%3A"));
-            return uriWithSas;
-        }
-
-        private string TransformSection(string uri, string start, string end, Func<string, string> transform)
-        {
-            var startIndex = uri.IndexOf(start, StringComparison.Ordinal);
-            if (startIndex < 0)
-            {
-                throw new InvalidOperationException($"Unable to find '{start}'");
-            }
-
-            var endIndex = uri.IndexOf(end, startIndex, StringComparison.Ordinal);
-            if (endIndex < 0)
-            {
-                throw new InvalidOperationException($"Unable to find '{end}' after '{start}'");
-            }
-
-            var first = uri.Substring(0, startIndex + start.Length);
-            var middle = transform(uri.Substring(startIndex + start.Length, endIndex - (startIndex + start.Length)));
-            var last = uri.Substring(endIndex);
-            return first + middle + last;
+            return Encoding.UTF8.GetString(Convert.FromBase64String(value));
         }
     }
 }

@@ -21,6 +21,11 @@ secrets:
       permissions: rlwc
       container: internal
 
+  dotnetbuilds-internal-container-uri-base64:
+    type: base64-encoder
+    parameters:
+      secret: dotnetbuilds-internal-container-uri
+
   dotnetbuilds-internal-container-checksum-uri:
     type: azure-storage-container-sas-uri
     parameters:
@@ -29,6 +34,11 @@ secrets:
         location: dotnetbuildskeys
       permissions: rlwc
       container: internal-checksums
+
+  dotnetbuilds-internal-container-checksum-uri-base64:
+    type: base64-encoder
+    parameters:
+      secret: dotnetbuilds-internal-container-checksum-uri
 
   dotnetbuilds-public-container-uri:
     type: azure-storage-container-sas-uri
@@ -39,6 +49,11 @@ secrets:
       permissions: rlwc
       container: public
 
+  dotnetbuilds-public-container-uri-base64:
+    type: base64-encoder
+    parameters:
+      secret: dotnetbuilds-public-container-uri
+
   dotnetbuilds-public-container-checksum-uri:
     type: azure-storage-container-sas-uri
     parameters:
@@ -47,3 +62,8 @@ secrets:
         location: dotnetbuildskeys
       permissions: rlwc
       container: public-checksums
+
+  dotnetbuilds-public-container-checksum-uri-base64:
+    type: base64-encoder
+    parameters:
+      secret: dotnetbuilds-public-container-checksum-uri

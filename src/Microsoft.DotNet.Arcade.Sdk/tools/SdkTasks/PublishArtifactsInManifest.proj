@@ -165,10 +165,10 @@
       UseStreamingPublishing="$(UseStreamingPublishing)"
       StreamingPublishingMaxClients="$(StreamingPublishingMaxClients)"
       NonStreamingPublishingMaxClients="$(NonStreamingPublishingMaxClients)"
-      DotNetBuildsPublicUri="$(DotNetBuildsPublicUri)"
-      DotNetBuildsPublicChecksumsUri="$(DotNetBuildsPublicChecksumsUri)"
-      DotNetBuildsInternalUri="$(DotNetBuildsInternalUri)"
-      DotNetBuildsInternalChecksumsUri="$(DotNetBuildsInternalChecksumsUri)"
+      DotNetBuildsPublicUriBase64="$(DotNetBuildsPublicUriBase64)"
+      DotNetBuildsPublicChecksumsUriBase64="$(DotNetBuildsPublicChecksumsUriBase64)"
+      DotNetBuildsInternalUriBase64="$(DotNetBuildsInternalUriBase64)"
+      DotNetBuildsInternalChecksumsUriBase64="$(DotNetBuildsInternalChecksumsUriBase64)"
       />
   </Target>
 

@@ -25,6 +25,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         private string AkaMSCreatedBy { get; }
         private string AkaMSGroupOwner { get; }
 
+        private static HashSet<string> AccountsWithCdns { get; } = new()
+        {
+            "dotnetcli.blob.core.windows.net", "dotnetbuilds.blob.core.windows.net",
+        };
+
         public LatestLinksManager(
             string akaMSClientId,
             string akaMSClientSecret,
@@ -64,6 +69,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             {
                 feedBaseUrl += "/";
             }
+            if (AccountsWithCdns.Any(account => feedBaseUrl.Contains(account)))
+            {
+                // The storage accounts are in a single datacenter in the US and thus download 
+                // times can be painful elsewhere. The CDN helps with this therefore we point the target 
+                // of the aka.ms links to the CDN.
+                feedBaseUrl = feedBaseUrl.Replace(".blob.core.windows.net", ".azureedge.net");
+            }
 
             Logger.LogMessage(MessageImportance.High, "\nThe following aka.ms links for blobs will be created:");
             IEnumerable<AkaMSLink> linksToCreate = assetsToPublish
@@ -73,11 +85,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                 // blob path.
                 string actualTargetUrl = feedBaseUrl + asset;
-
-                // The storage accounts are in a single datacenter in the US and thus download 
-                // times can be painful elsewhere. The CDN helps with this therefore we point the target 
-                // of the aka.ms links to the CDN.
-                actualTargetUrl = actualTargetUrl.Replace(".blob.core.windows.net/", ".azureedge.net/");
 
                 AkaMSLink newLink = new AkaMSLink
                 {
