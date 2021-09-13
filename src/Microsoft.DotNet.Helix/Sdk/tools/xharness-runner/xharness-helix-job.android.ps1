@@ -12,8 +12,8 @@ param (
     [string]$app,
     [Parameter(Mandatory)]
     [string]$timeout,
-    [Parameter(Mandatory)]
-    [string]$package_name,
+    [Parameter()]
+    [string]$package_name = $null,
     [Parameter()]
     [int]$expected_exit_code = 0,
     [Parameter()]
