@@ -66,7 +66,7 @@ In order to run them, one has to publish the SDK locally so that the unit tests 
     export SYSTEM_TEAMPROJECT=dnceng
     export SYSTEM_ACCESSTOKEN=''
 
-    eng/common/build.sh -test -projects tests/UnitTests.XHarness.Apple.Device.proj /v:n /bl:Arcade.binlog
+    eng/common/build.sh -test -projects tests/XHarness.Apple.Device.Tests /v:n /bl:Arcade.binlog
     ```
 
     PowerShell
@@ -77,7 +77,7 @@ In order to run them, one has to publish the SDK locally so that the unit tests 
     $Env:SYSTEM_TEAMPROJECT = "dnceng"
     $Env:SYSTEM_ACCESSTOKEN = ""
 
-    .\eng\common\build.ps1 -configuration Debug -restore -test -projects tests\UnitTests.XHarness.Apple.Device.proj /p:RestoreUsingNugetTargets=false /bl:Arcade.binlog
+    .\eng\common\build.ps1 -configuration Debug -restore -test -projects tests\XHarness.Apple.Device.Tests /p:RestoreUsingNugetTargets=false /bl:Arcade.binlog
     ```
 5. An MSBuild log file called `Arcade.binlog` will be produced which you can inspect using the [MSBuild Structured Log Viewer](https://msbuildlog.com/). There you can see which props were set with which values, in what order the targets were executed under which conditions and so on.
 
