@@ -23,6 +23,8 @@
     <DownloadFile Condition="'$(XHarnessTestARM64_V8A)' == 'true'" SourceUrl="$(XHarnessARM64V8TestApkUrl)" DestinationFolder="$(ArtifactsTmpDir)XHarness.TestApk\arm64_v8a" SkipUnchangedFiles="True" Retries="5">
       <Output TaskParameter="DownloadedFile" ItemName="DownloadedApkFile" />
     </DownloadFile>
+    
+    <Error Condition=" '@(DownloadedApkFile)' == '' " Text="You have to specify at least one target by setting one of following properties to true - XHarnessX86TestApkUrl / XHarnessX64TestApkUrl / XHarnessARM64V8TestApkUrl" />
 
     <Message Text="Downloaded @(DownloadedApkFile) for XHarness Test purposes" Importance="High" />
 
