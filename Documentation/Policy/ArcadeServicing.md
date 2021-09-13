@@ -81,9 +81,21 @@ which Arcade can be branched for major release 'N' of .NET Core.
     - `.NET <N or next version> Eng - Validation`
 5. [Add default channel associations](https://github.com/dotnet/arcade/blob/master/Documentation/Darc.md#add-default-channel)
    for Arcade `release/<N>` to point to `.NET <N> Eng - Validation`
-6. [Create a subscription](https://github.com/dotnet/arcade/blob/master/Documentation/Darc.md#add-subscription) from `arcade`  to `arcade-validation` (branch `release/<N>`) to take changes from the `.NET <N> Eng - Validation` channel.
+6. [Create a subscription](https://github.com/dotnet/arcade/blob/master/Documentation/Darc.md#add-subscription) from `arcade`  to `arcade-validation` (branch `release/<N>`) to take changes from the `.NET <N> Eng - Validation` channel. 
 7. Modify the new release branch  `release/<N>` of arcade-validation to promote builds
    to `.NET <N> Eng`. ([example](https://github.com/dotnet/arcade-validation/pull/1857/files))
+   In the update-channel.ps1 remove call to 
+   - Get-AzDO-Build (https://github.com/dotnet/arcade-validation/blob/71d3397e87e13ae2e9fd9d9af9725cfb53942c55/eng/validation/update-channel.ps1#L22)
+   - Get-AzDOHeaders (https://github.com/dotnet/arcade-validation/blob/71d3397e87e13ae2e9fd9d9af9725cfb53942c55/eng/validation/update-channel.ps1#L30)
+   - Get-LatestBuildResult (https://github.com/dotnet/arcade-validation/blob/71d3397e87e13ae2e9fd9d9af9725cfb53942c55/eng/validation/update-channel.ps1#L37)
+   - Remove the reference to bellweather repos (https://github.com/dotnet/arcade-validation/blob/main/eng/validation/update-channel.ps1#L54-#L76) and (https://github.com/dotnet/arcade-validation/blob/71d3397e87e13ae2e9fd9d9af9725cfb53942c55/eng/validation/update-channel.ps1#L85)
+      In azure-pipeline.yml 
+   - Include the new release branch `release/<N.x>` (https://github.com/dotnet/arcade-validation/blob/71d3397e87e13ae2e9fd9d9af9725cfb53942c55/azure-pipelines.yml#L27)
+   - Update the branch name to `refs/heads/release/<N>` here (https://github.com/dotnet/arcade-validation/blob/71d3397e87e13ae2e9fd9d9af9725cfb53942c55/azure-pipelines.yml#L233)
+   - Update the channel name from `.NET Eng Latest` to `.Net <N> Eng` in the following places
+     (https://github.com/dotnet/arcade-validation/blob/71d3397e87e13ae2e9fd9d9af9725cfb53942c55/azure-pipelines.yml#L265),
+     (https://github.com/dotnet/arcade-validation/blob/71d3397e87e13ae2e9fd9d9af9725cfb53942c55/azure-pipelines.yml#L272) and 
+     (https://github.com/dotnet/arcade-validation/blob/71d3397e87e13ae2e9fd9d9af9725cfb53942c55/azure-pipelines.yml#L287)
 8. Update [PublishingConstants.cs](https://github.com/dotnet/arcade/blob/master/src/Microsoft.DotNet.Build.Tasks.Feed/src/model/PublishingConstants.cs)
    in Arcade's master for new channels ([example](https://github.com/dotnet/arcade/pull/6360/files))
 9. Reset arcade Maestro++ subscriptions targeting .NET release branches to
