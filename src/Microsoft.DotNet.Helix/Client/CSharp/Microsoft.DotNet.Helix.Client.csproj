@@ -15,7 +15,7 @@
     <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="1.1.0" />
     <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonVersion)" />
     <PackageReference Include="System.Collections.Immutable" Version="$(SystemCollectionsImmutableVersion)" />
-    <PackageReference Include="System.Text.Encodings.Web" Version="4.7.1" />
+    <PackageReference Include="System.Text.Encodings.Web" Version="4.7.2" />
 
     <PackageReference Include="Microsoft.DotNet.SwaggerGenerator.MSBuild" Version="$(MicrosoftDotNetSwaggerGeneratorMSBuildVersion)" PrivateAssets="all" />
   </ItemGroup>
