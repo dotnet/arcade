@@ -135,6 +135,7 @@ if [ "$target" == 'ios-device' ] || [ "$target" == 'tvos-device' ]; then
     #mkdir "$output_directory/HelixBuiltApp"
     #zip -r "$app.zip" "$app/"
     mv "$app.zip" "$output_directory"
+    mv xharness-output/AOTBuild.binlog "$output_directory"
 elif [[ "$target" =~ "simulator" ]]; then
     # Start the simulator if it is not running already
     simulator_app="$xcode_path/Contents/Developer/Applications/Simulator.app"
