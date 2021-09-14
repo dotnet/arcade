@@ -19,6 +19,8 @@
     <PackageReference Include="Moq" Version="$(MoqVersion)" />
     <!-- This is here so that we agree with the feed tasks project's transitive reference to NewtonSoft.Json and Azure.Core -->
     <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
+    <!-- Override the vulnerable version 4.5.0 brought in by Microsoft.DotNet.Maestro.Client -->
+    <PackageReference Include="System.Text.Encodings.Web" Version="$(SystemTextEncodingsWebVersion)" />
   </ItemGroup>
 
   <ItemGroup>

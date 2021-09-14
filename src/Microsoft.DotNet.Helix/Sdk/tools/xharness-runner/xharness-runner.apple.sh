@@ -7,11 +7,9 @@
 ###
 
 app=''
-output_directory=''
 target=''
 timeout=''
 launch_timeout=''
-xharness_cli_path=''
 xcode_version=''
 app_arguments=''
 expected_exit_code=0
@@ -25,8 +23,8 @@ while [[ $# -gt 0 ]]; do
         app="$2"
         shift
         ;;
-      --output-directory)
-        output_directory="$2"
+      --diagnostics-path)
+        export XHARNESS_DIAGNOSTICS_PATH="$2"
         shift
         ;;
       --target)
@@ -39,10 +37,6 @@ while [[ $# -gt 0 ]]; do
         ;;
       --launch-timeout)
         launch_timeout="$2"
-        shift
-        ;;
-      --xharness-cli-path)
-        xharness_cli_path="$2"
         shift
         ;;
       --xcode-version)
@@ -81,19 +75,17 @@ if [ -z "$target" ]; then
     die "No target was provided";
 fi
 
-if [ -z "$output_directory" ]; then
-    die "No output directory provided";
-fi
-
-if [ -z "$xharness_cli_path" ]; then
-    die "XHarness path wasn't provided";
-fi
-
 if [ -z "$xcode_version" ]; then
     xcode_path="$(dirname "$(dirname "$(xcode-select -p)")")"
 else
     xcode_path="/Applications/Xcode${xcode_version/./}.app"
 fi
+
+# First we need to revive env variables since they were erased by launchctl
+# This file already has the expressions in the `export name=value` format
+. ./envvars
+
+output_directory=$HELIX_WORKITEM_UPLOAD_ROOT
 
 # Signing
 if [ "$target" == 'ios-device' ] || [ "$target" == 'tvos-device' ]; then
@@ -137,12 +129,9 @@ elif [[ "$target" =~ "simulator" ]]; then
     open -a "$simulator_app"
 fi
 
-export XHARNESS_DISABLE_COLORED_OUTPUT=true
-export XHARNESS_LOG_WITH_TIMESTAMPS=true
-
 # The xharness alias
 function xharness() {
-    dotnet exec $xharness_cli_path "$@"
+    dotnet exec $XHARNESS_CLI_PATH "$@"
 }
 
 # Act out the actual commands
