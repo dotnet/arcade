@@ -369,6 +369,11 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                 writer.WriteElementString("Copyright", nupkg.Copyright);
             }
 
+            if (!string.IsNullOrWhiteSpace(nupkg.ProjectUrl))
+            {
+                writer.WriteElementString("PackageProjectUrl", nupkg.ProjectUrl);
+            }
+
             writer.WriteElementString("PackageLicenseExpression", "MIT");
             writer.WriteEndElement();
 
