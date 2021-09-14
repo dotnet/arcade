@@ -36,7 +36,6 @@ sudo launchctl asuser "$helix_runner_uid" sh ./xharness-runner.apple.sh \
     $forwarded_args                                                     \
     --app "$HELIX_WORKITEM_ROOT/$app"                                   \
     --output-directory "$HELIX_WORKITEM_UPLOAD_ROOT"                    \
-    --diagnostics-path "$XHARNESS_DIAGNOSTICS_PATH"                     \
 
 exit_code=$?
 
