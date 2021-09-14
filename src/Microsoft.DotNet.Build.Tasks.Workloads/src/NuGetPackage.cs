@@ -72,6 +72,11 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             get;
         }
 
+        public string ProjectUrl
+        {
+            get;
+        }
+
         /// <summary>
         /// The version of the NuGet package.
         /// </summary>
@@ -96,6 +101,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             Description = nuspecReader.GetDescription();
             Copyright = nuspecReader.GetCopyright();
             LicenseData = nuspecReader.GetLicenseMetadata();
+            ProjectUrl = nuspecReader.GetProjectUrl();
         }
 
         /// <summary>
