@@ -52,7 +52,6 @@ namespace Microsoft.DotNet.Helix.Sdk
         private readonly IFileSystem _fileSystem;
         private readonly IZipArchiveManager _zipArchiveManager;
         private readonly HttpClient _httpClient;
-        private readonly IZipArchiveManager _zipArchiveManager;
         private readonly string? _profileUrlTemplate;
         private readonly string? _tmpDir;
         private readonly Dictionary<ApplePlatform, string> _downloadedProfiles = new();
@@ -63,7 +62,6 @@ namespace Microsoft.DotNet.Helix.Sdk
             IFileSystem fileSystem,
             IZipArchiveManager zipArchiveManager,
             HttpClient httpClient,
-            IZipArchiveManager zipArchiveManager,
             string? profileUrlTemplate,
             string? tmpDir)
         {
@@ -224,7 +222,6 @@ namespace Microsoft.DotNet.Helix.Sdk
                     serviceProvider.GetRequiredService<IFileSystem>(),
                     serviceProvider.GetRequiredService<IZipArchiveManager>(),
                     serviceProvider.GetRequiredService<HttpClient>(),
-                    serviceProvider.GetRequiredService<IZipArchiveManager>(),
                     provisioningProfileUrlTemplate,
                     tmpDir);
             });
