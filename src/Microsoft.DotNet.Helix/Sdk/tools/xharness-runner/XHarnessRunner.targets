@@ -10,7 +10,7 @@
       <DotNetCliVersion Condition=" '$(DotNetCliVersion)' == '' ">$(AspNetCoreRuntimeVersion)</DotNetCliVersion>
     -->
     <DotNetCliPackageType>sdk</DotNetCliPackageType>
-    <DotNetCliVersion>6.0.100-rc.1.21379.2</DotNetCliVersion>
+    <DotNetCliVersion>6.0.100-rc.1.21430.12</DotNetCliVersion>
     <DotNetCliVersion Condition=" '$(DotNetCliVersion)' == '$(BundledNETCoreAppPackageVersion)' AND '$(DotNetCliPackageType)' == 'aspnetcore-runtime' ">$(AspNetCoreRuntimeVersion)</DotNetCliVersion>
   </PropertyGroup>
 
@@ -60,6 +60,9 @@
       <HelixPreCommands>$(HelixPreCommands);export XHARNESS_DISABLE_COLORED_OUTPUT=true</HelixPreCommands>
       <HelixPreCommands>$(HelixPreCommands);export XHARNESS_LOG_WITH_TIMESTAMPS=true</HelixPreCommands>
       <HelixPreCommands>$(HelixPreCommands);export XHARNESS_CLI_PATH=$HELIX_CORRELATION_PAYLOAD/microsoft.dotnet.xharness.cli/$(_XHarnessPackageVersion)/tools/net6.0/any/Microsoft.DotNet.XHarness.CLI.dll</HelixPreCommands>
+
+      <HelixPreCommands Condition=" '$(EnableXHarnessTelemetry)' == 'true' ">$(HelixPreCommands);export XHARNESS_DIAGNOSTICS_PATH=$HELIX_WORKITEM_ROOT/diagnostics.json</HelixPreCommands>
+      <HelixPostCommands Condition=" '$(EnableXHarnessTelemetry)' == 'true' ">"$HELIX_PYTHONPATH" "$HELIX_WORKITEM_PAYLOAD/xharness-event-reporter.py";$(HelixPostCommands)</HelixPostCommands>
     </PropertyGroup>
 
     <PropertyGroup Condition="!$(IsPosixShell)">
@@ -68,6 +71,9 @@
       <HelixPreCommands>$(HelixPreCommands);set XHARNESS_LOG_WITH_TIMESTAMPS=true</HelixPreCommands>
       <HelixPreCommands>$(HelixPreCommands);set XHARNESS_CLI_PATH=%HELIX_CORRELATION_PAYLOAD%\microsoft.dotnet.xharness.cli\$(_XHarnessPackageVersion)\tools\net6.0\any\Microsoft.DotNet.XHarness.CLI.dll</HelixPreCommands>
       <HelixPreCommands>$(HelixPreCommands);doskey xharness="dotnet exec %XHARNESS_CLI_PATH%"</HelixPreCommands>
+
+      <HelixPreCommands Condition=" '$(EnableXHarnessTelemetry)' == 'true' ">$(HelixPreCommands);set XHARNESS_DIAGNOSTICS_PATH=%HELIX_WORKITEM_ROOT%\diagnostics.json</HelixPreCommands>
+      <HelixPostCommands Condition=" '$(EnableXHarnessTelemetry)' == 'true' ">"%HELIX_PYTHONPATH%" "%HELIX_WORKITEM_PAYLOAD%\xharness-event-reporter.py";$(HelixPostCommands)</HelixPostCommands>
     </PropertyGroup>
   </Target>
 

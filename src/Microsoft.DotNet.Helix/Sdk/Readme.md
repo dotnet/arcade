@@ -25,6 +25,8 @@ Each of the following examples require dotnet-cli >= 2.1.300 and need the follow
 
 Versions of the package can be found by browsing the feed at https://dev.azure.com/dnceng/public/_packaging?_a=feed&feed=dotnet-eng
 
+### Developing Helix SDK
+
 The examples can all be run with `dotnet msbuild` and will require an environment variable or MSBuildProperty `HelixAccessToken` set if a queue with a value of IsInternalOnly=true (usually any not ending in '.Open') is selected for `HelixTargetQueues`. You will also need to set the following environment variables before building:
 
 ```
@@ -35,6 +37,49 @@ BUILD_REASON
 ```
 
 Also, make sure your helix project doesn't have `EnableAzurePipelinesReporter` set, or sets it to false, or building locally will fail with an error that looks like `SYSTEM_ACCESSTOKEN is not set`.
+
+Furthermore, when you need to make changes to Helix SDK, there's a way to run it locally with ease to test your changes in a tighter dev loop than having to have to wait for the full PR build.
+
+The repository contains E2E tests that utilize the Helix SDK to send test Helix jobs.
+In order to run them, one has to publish the SDK locally so that the unit tests can grab the re-built DLLs.
+
+#### Detailed steps:
+1. Make your changes
+2. Build the product
+    ```sh
+    # Linux/MacOS
+    ./build.sh
+    # Windows
+    .\Build.cmd
+    ```
+3. Publish Arcade SDK and Helix SDK
+    ```sh
+    dotnet publish -f netcoreapp3.1 src/Microsoft.DotNet.Arcade.Sdk/Microsoft.DotNet.Arcade.Sdk.csproj
+    dotnet publish -f netcoreapp3.1 src/Microsoft.DotNet.Helix/Sdk/Microsoft.DotNet.Helix.Sdk.csproj
+    ```
+4. Pick one of the test `.proj` files, set some env variables and build it  
+    Bash
+    ```sh
+    export BUILD_REASON=pr
+    export BUILD_REPOSITORY_NAME=arcade
+    export BUILD_SOURCEBRANCH=master
+    export SYSTEM_TEAMPROJECT=dnceng
+    export SYSTEM_ACCESSTOKEN=''
+
+    eng/common/build.sh -test -projects tests/XHarness.Apple.DeviceTests.proj /v:n /bl:Arcade.binlog
+    ```
+
+    PowerShell
+    ```ps1
+    $Env:BUILD_REASON = "pr"
+    $Env:BUILD_REPOSITORY_NAME = "arcade"
+    $Env:BUILD_SOURCEBRANCH = "master"
+    $Env:SYSTEM_TEAMPROJECT = "dnceng"
+    $Env:SYSTEM_ACCESSTOKEN = ""
+
+    .\eng\common\build.ps1 -configuration Debug -restore -test -projects tests\XHarness.Apple.DeviceTests.proj /p:RestoreUsingNugetTargets=false /bl:Arcade.binlog
+    ```
+5. An MSBuild log file called `Arcade.binlog` will be produced which you can inspect using the [MSBuild Structured Log Viewer](https://msbuildlog.com/). There you can see which props were set with which values, in what order the targets were executed under which conditions and so on.
 
 ### Docker Support
 Helix machines now have (where available on the machine) the ability to run work items directly inside Docker containers.  This allows work items to use operating systems that only work for Docker scenarios, as well as custom configurations of already-supported operating systems.  

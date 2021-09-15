@@ -7,11 +7,9 @@
 ###
 
 app=''
-output_directory=''
 target=''
 timeout=''
 launch_timeout=''
-xharness_cli_path=''
 xcode_version=''
 app_arguments=''
 expected_exit_code=0
@@ -25,10 +23,6 @@ while [[ $# -gt 0 ]]; do
         app="$2"
         shift
         ;;
-      --output-directory)
-        output_directory="$2"
-        shift
-        ;;
       --target)
         target="$2"
         shift
@@ -39,10 +33,6 @@ while [[ $# -gt 0 ]]; do
         ;;
       --launch-timeout)
         launch_timeout="$2"
-        shift
-        ;;
-      --xharness-cli-path)
-        xharness_cli_path="$2"
         shift
         ;;
       --xcode-version)
@@ -73,33 +63,11 @@ function die ()
     exit 1
 }
 
-if [ -z "$app" ]; then
-    die "App bundle path wasn't provided";
-fi
+function sign ()
+{
+    echo "Signing $1"
 
-if [ -z "$target" ]; then
-    die "No target was provided";
-fi
-
-if [ -z "$output_directory" ]; then
-    die "No output directory provided";
-fi
-
-if [ -z "$xharness_cli_path" ]; then
-    die "XHarness path wasn't provided";
-fi
-
-if [ -z "$xcode_version" ]; then
-    xcode_path="$(dirname "$(dirname "$(xcode-select -p)")")"
-else
-    xcode_path="/Applications/Xcode${xcode_version/./}.app"
-fi
-
-# Signing
-if [ "$target" == 'ios-device' ] || [ "$target" == 'tvos-device' ]; then
-    echo "Real device target detected, application will be signed"
-
-    provisioning_profile="$app/embedded.mobileprovision"
+    provisioning_profile="$1/embedded.mobileprovision"
     if [ ! -f "$provisioning_profile" ]; then
         echo "No embedded provisioning profile found at $provisioning_profile! Failed to sign the app!"
         exit 21
@@ -130,24 +98,48 @@ if [ "$target" == 'ios-device' ] || [ "$target" == 'tvos-device' ]; then
     /usr/libexec/PlistBuddy -x -c 'Print :Entitlements' provision.plist > entitlements.plist
 
     # Sign the app
-    /usr/bin/codesign -v --force --sign "Apple Development" --keychain "$keychain_name" --entitlements entitlements.plist "$app"
+    /usr/bin/codesign -v --force --sign "Apple Development" --keychain "$keychain_name" --entitlements entitlements.plist "$1"
 
-    #mkdir "$output_directory/HelixBuiltApp"
-    #zip -r "$app.zip" "$app/"
     mv "$app.zip" "$output_directory"
     mv xharness-output/AOTBuild.binlog "$output_directory"
+}
+
+if [ -z "$app" ]; then
+    die "App bundle path wasn't provided";
+fi
+
+if [ -z "$target" ]; then
+    die "No target was provided";
+fi
+
+if [ -z "$xcode_version" ]; then
+    xcode_path="$(dirname "$(dirname "$(xcode-select -p)")")"
+else
+    xcode_path="/Applications/Xcode${xcode_version/./}.app"
+fi
+
+# First we need to revive env variables since they were erased by launchctl
+# This file already has the expressions in the `export name=value` format
+. ./envvars
+
+output_directory=$HELIX_WORKITEM_UPLOAD_ROOT
+
+# Signing
+if [ "$target" == 'ios-device' ] || [ "$target" == 'tvos-device' ]; then
+    if [ -d "$app" ]; then
+        sign "$app"
+    else
+        echo 'Device target detected but app not found, skipping signing..'
+    fi
 elif [[ "$target" =~ "simulator" ]]; then
     # Start the simulator if it is not running already
     simulator_app="$xcode_path/Contents/Developer/Applications/Simulator.app"
     open -a "$simulator_app"
 fi
 
-export XHARNESS_DISABLE_COLORED_OUTPUT=true
-export XHARNESS_LOG_WITH_TIMESTAMPS=true
-
 # The xharness alias
 function xharness() {
-    dotnet exec $xharness_cli_path "$@"
+    dotnet exec "$XHARNESS_CLI_PATH" "$@"
 }
 
 # Act out the actual commands

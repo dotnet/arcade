@@ -82,7 +82,7 @@
 #define VER_ORIGINALFILENAME_STR    VER_FILEDESCRIPTION_STR
 #endif
 #ifndef VER_PRODUCTNAME_STR
-#define VER_PRODUCTNAME_STR         "Microsoft\xae .NET Framework"
+#define VER_PRODUCTNAME_STR         ".NET"
 #endif
 #undef VER_PRODUCTVERSION
 #define VER_PRODUCTVERSION          $(_WindowsFileVersion)

@@ -167,6 +167,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                     List<string> sourceFiles = new();
                     string msiSourcePath = Path.Combine(MsiDirectory, $"{nupkg.Id}", $"{nupkg.Version}", platform);
                     sourceFiles.Add(EmbeddedTemplates.Extract("DependencyProvider.wxs", msiSourcePath));
+                    sourceFiles.Add(EmbeddedTemplates.Extract("dotnethome_x64.wxs", msiSourcePath));
                     sourceFiles.Add(EmbeddedTemplates.Extract("ManifestProduct.wxs", msiSourcePath));
 
                     string EulaRtfPath = Path.Combine(msiSourcePath, "eula.rtf");
@@ -373,6 +374,11 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             if (!string.IsNullOrWhiteSpace(nupkg.Copyright))
             {
                 writer.WriteElementString("Copyright", nupkg.Copyright);
+            }
+
+            if (!string.IsNullOrWhiteSpace(nupkg.ProjectUrl))
+            {
+                writer.WriteElementString("PackageProjectUrl", nupkg.ProjectUrl);
             }
 
             writer.WriteElementString("PackageLicenseExpression", "MIT");

@@ -2,12 +2,20 @@ using System;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
+using Microsoft.Arcade.Common;
 using Microsoft.Build.Framework;
+using NuGet.Versioning;
 
 namespace Microsoft.DotNet.Helix.Sdk
 {
     public class FindDotNetCliPackage : BaseTask
     {
+        // Use lots of retries since an Http Client failure here means failure to send to Helix
+        private ExponentialRetry _retry = new ExponentialRetry()
+        {
+            MaxAttempts = 10,
+            DelayBase = 3.0
+        };
         private static readonly HttpClient _client = new HttpClient(new HttpClientHandler { CheckCertificateRevocationList = true });
         private const string DotNetCliAzureFeed = "https://dotnetcli.blob.core.windows.net/dotnet";
 
@@ -30,7 +38,7 @@ namespace Microsoft.DotNet.Helix.Sdk
         public string Runtime { get; set; }
 
         /// <summary>
-        ///   'sdk', 'runtime' or 'aspnetcore-runtime'
+        ///   'sdk', 'runtime' or 'aspnetcore-runtime' (default is runtime)
         /// </summary>
         [Required]
         public string PackageType { get; set; }
@@ -49,14 +57,13 @@ namespace Microsoft.DotNet.Helix.Sdk
             NormalizeParameters();
             await ResolveVersionAsync();
 
-            string downloadUrl = GetDownloadUrl();
+            string downloadUrl = await GetDownloadUrlAsync();
 
             Log.LogMessage($"Retrieved dotnet cli {PackageType} version {Version} package uri {downloadUrl}, testing...");
 
             try
             {
-                using var req = new HttpRequestMessage(HttpMethod.Head, downloadUrl);
-                using HttpResponseMessage res = await _client.SendAsync(req);
+                using HttpResponseMessage res = await HeadRequestWithRetry(downloadUrl);
 
                 if (res.StatusCode == HttpStatusCode.NotFound)
                 {
@@ -80,15 +87,122 @@ namespace Microsoft.DotNet.Helix.Sdk
             }
         }
 
-        private string GetDownloadUrl()
+        private async Task<string> GetDownloadUrlAsync()
         {
             string extension = Runtime.StartsWith("win") ? "zip" : "tar.gz";
+            string effectiveVersion = await GetEffectiveVersion();
+
             return PackageType switch
             {
-                "sdk"                => $"{DotNetCliAzureFeed}/Sdk/{Version}/dotnet-sdk-{Version}-{Runtime}.{extension}",
-                "aspnetcore-runtime" => $"{DotNetCliAzureFeed}/aspnetcore/Runtime/{Version}/aspnetcore-runtime-{Version}-{Runtime}.{extension}",
-                _                    => $"{DotNetCliAzureFeed}/Runtime/{Version}/dotnet-runtime-{Version}-{Runtime}.{extension}"
+                "sdk" => $"{DotNetCliAzureFeed}/Sdk/{Version}/dotnet-sdk-{effectiveVersion}-{Runtime}.{extension}",
+                "aspnetcore-runtime" => $"{DotNetCliAzureFeed}/aspnetcore/Runtime/{Version}/aspnetcore-runtime-{effectiveVersion}-{Runtime}.{extension}",
+                _ => $"{DotNetCliAzureFeed}/Runtime/{Version}/dotnet-runtime-{effectiveVersion}-{Runtime}.{extension}"
             };
+        }
+
+        private async Task<string> GetEffectiveVersion()
+        {
+            if (NuGetVersion.TryParse(Version, out NuGetVersion semanticVersion))
+            {
+                // Pared down version of the logic from https://github.com/dotnet/install-scripts/blob/main/src/dotnet-install.ps1
+                // If this functionality stops working, review changes made there.
+                // Current strategy is to start with a runtime-specific name then fall back to 'productVersion.txt'
+                string effectiveVersion = Version;
+
+                // Do nothing for older runtimes; the file won't exist
+                if (semanticVersion >= new NuGetVersion("5.0.0"))
+                {
+                    var productVersionText = PackageType switch
+                    {
+                        "sdk" => await GetMatchingProductVersionTxtContents($"{DotNetCliAzureFeed}/Sdk/{Version}", "sdk-productVersion.txt"),
+                        "aspnetcore-runtime" => await GetMatchingProductVersionTxtContents($"{DotNetCliAzureFeed}/aspnetcore/Runtime/{Version}", "aspnetcore-productVersion.txt"),
+                        _ => await GetMatchingProductVersionTxtContents($"{DotNetCliAzureFeed}/Runtime/{Version}", "runtime-productVersion.txt")
+                    };
+
+                    if (!productVersionText.Equals(Version))
+                    {
+                        effectiveVersion = productVersionText;
+                        Log.LogMessage($"Switched to effective .NET Core version '{productVersionText}' from matching productVersion.txt");
+                    }
+                }
+                return effectiveVersion;
+            }
+            else
+            {
+                throw new ArgumentException($"'{Version}' is not a valid semantic version.");
+            }
+        }
+        private async Task<string> GetMatchingProductVersionTxtContents(string baseUri, string customVersionTextFileName)
+        {
+            Log.LogMessage(MessageImportance.Low, $"Checking for productVersion.txt files under {baseUri}");
+
+            using HttpResponseMessage specificResponse = await GetAsyncWithRetry($"{baseUri}/{customVersionTextFileName}");
+            if (specificResponse.StatusCode == HttpStatusCode.NotFound)
+            {
+                using HttpResponseMessage genericResponse = await GetAsyncWithRetry($"{baseUri}/productVersion.txt");
+                if (genericResponse.StatusCode != HttpStatusCode.NotFound)
+                {
+                    genericResponse.EnsureSuccessStatusCode();
+                    return (await genericResponse.Content.ReadAsStringAsync()).Trim();
+                }
+                else
+                {
+                    Log.LogMessage(MessageImportance.Low, $"No *productVersion.txt files found for {Version} under {baseUri}");
+                }
+            }
+            else
+            {
+                specificResponse.EnsureSuccessStatusCode();
+                return (await specificResponse.Content.ReadAsStringAsync()).Trim();
+            }
+            return Version;
+        }
+
+        private async Task<HttpResponseMessage> GetAsyncWithRetry(string uri)
+        {
+            HttpResponseMessage response = null;
+            await _retry.RunAsync(async attempt =>
+            {
+                try
+                {
+                    response = await _client.GetAsync(uri);
+                    return true;
+                }
+                catch (Exception toLog)
+                {
+                    Log.LogMessage(MessageImportance.Low, $"Hit exception in GetAsync(); will retry up to 10 times ({toLog.Message})");
+                    return false;
+                }
+            });
+            if (response == null)  // All retries failed
+            {
+                throw new Exception($"Failed to GET from {uri}, even after retrying");
+            }
+            return response;
+        }
+
+        private async Task<HttpResponseMessage> HeadRequestWithRetry(string uri)
+        {
+            HttpResponseMessage response = null;
+            await _retry.RunAsync(async attempt =>
+            {
+                try
+                {
+                    using var req = new HttpRequestMessage(HttpMethod.Head, uri);
+                    response = await _client.SendAsync(req);
+                    return true;
+                }
+                catch (Exception toLog)
+                {
+                    Log.LogMessage(MessageImportance.Low, $"Hit exception in SendAsync(); will retry up to 10 times ({toLog.Message})");
+                    return false;
+                }
+            });
+            if (response == null) // All retries failed
+            {
+                throw new Exception($"Failed to make HEAD request to {uri}, even after retrying");
+            }
+            return response;
         }
 
         private void NormalizeParameters()
@@ -136,13 +250,16 @@ namespace Microsoft.DotNet.Helix.Sdk
                 Log.LogMessage(MessageImportance.Low, "Resolving latest dotnet cli version.");
                 string latestVersionUrl = PackageType switch
                 {
-                    "sdk"                => $"{DotNetCliAzureFeed}/Sdk/{Channel}/latest.version",
+                    "sdk" => $"{DotNetCliAzureFeed}/Sdk/{Channel}/latest.version",
                     "aspnetcore-runtime" => $"{DotNetCliAzureFeed}/aspnetcore/Runtime/{Channel}/latest.version",
-                    _                    => $"{DotNetCliAzureFeed}/Runtime/{Channel}/latest.version"
+                    _ => $"{DotNetCliAzureFeed}/Runtime/{Channel}/latest.version"
                 };
 
                 Log.LogMessage(MessageImportance.Low, $"Resolving latest version from url {latestVersionUrl}");
-                string latestVersionContent = await _client.GetStringAsync(latestVersionUrl);
+
+                using HttpResponseMessage versionResponse = await GetAsyncWithRetry(latestVersionUrl);
+                versionResponse.EnsureSuccessStatusCode();
+                string latestVersionContent = await versionResponse.Content.ReadAsStringAsync();
                 string[] versionData = latestVersionContent.Split(Array.Empty<char>(), StringSplitOptions.RemoveEmptyEntries);
                 Version = versionData[1];
                 Log.LogMessage(MessageImportance.Low, $"Got latest dotnet cli version {Version}");

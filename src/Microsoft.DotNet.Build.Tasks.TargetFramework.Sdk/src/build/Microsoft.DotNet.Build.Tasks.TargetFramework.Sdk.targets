@@ -12,7 +12,7 @@
 
   <!-- We filter _InnerBuildProjects items during DispatchToInnerBuilds and Clean to only run for best target frameworks. -->
   <Target Name="RunOnlyBestTargetFrameworks"
-          Condition="'$(IsCrossTargetingBuild)' == 'true' and ('$(BuildTargetFramework)' != '' or '$(MSBuildProjectExtension)' == '.pkgproj')" 
+          Condition="'$(IsCrossTargetingBuild)' == 'true' and '$(BuildTargetFramework)' != ''" 
           BeforeTargets="DispatchToInnerBuilds;Clean"
           DependsOnTargets="GetProjectWithBestTargetFrameworks">
     <ItemGroup>
@@ -83,7 +83,7 @@
 
     <ChooseBestP2PTargetFrameworkTask TargetFramework="$(_OriginalTargetFramework)"
                                       ProjectReferencesWithTargetFrameworks="@(_ProjectReferenceWithTargetFrameworks)"
-                                      RuntimeGraph="$(RuntimeGraph)" >
+                                      RuntimeGraph="$(RuntimeGraph)">
       <Output TaskParameter="AnnotatedProjectReferencesWithSetTargetFramework" ItemName="_ProjectReferenceWithBestTargetFramework" />
     </ChooseBestP2PTargetFrameworkTask>
     

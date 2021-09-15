@@ -92,13 +92,13 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             command.Should().Contain("--launch-timeout \"00:02:33\"");
 
             _profileProvider
-                .Verify(x => x.AddProfilesToBundles(It.Is<ITaskItem[]>(bundles => bundles.Any(b => b.ItemSpec == "/apps/System.Foo.app"))), Times.Once);
+                .Verify(x => x.AddProfileToPayload(payloadArchive, "ios-device_13.5"), Times.Once);
             _zipArchiveManager
                 .Verify(x => x.ArchiveDirectory("/apps/System.Foo.app", payloadArchive, true), Times.Once);
             _zipArchiveManager
-                .Verify(x => x.AddResourceFileToArchive<CreateXHarnessAppleWorkItems>(payloadArchive, It.Is<string>(s => s.Contains("xharness-helix-job.apple.sh")), "xharness-helix-job.apple.sh"), Times.Once);
+                .Verify(x => x.AddResourceFileToArchive<XHarnessTaskBase>(payloadArchive, It.Is<string>(s => s.Contains("xharness-helix-job.apple.sh")), "xharness-helix-job.apple.sh"), Times.Once);
             _zipArchiveManager
-                .Verify(x => x.AddResourceFileToArchive<CreateXHarnessAppleWorkItems>(payloadArchive, It.Is<string>(s => s.Contains("xharness-runner.apple.sh")), "xharness-runner.apple.sh"), Times.Once);
+                .Verify(x => x.AddResourceFileToArchive<XHarnessTaskBase>(payloadArchive, It.Is<string>(s => s.Contains("xharness-runner.apple.sh")), "xharness-runner.apple.sh"), Times.Once);
             _zipArchiveManager
                 .Verify(x => x.AddContentToArchive(payloadArchive, "command.sh", It.Is<string>(s => s.Contains("xharness apple test"))), Times.Once);
         }
@@ -114,7 +114,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 CreateAppBundle("apps/System.Bar.app", "ios-simulator-64_13.5"),
             };
 
-            _fileSystem.Files.Add("apps/xharness-app-payload-system.foo.zip", "archive");
+            _fileSystem.Files.Add("apps/xharness-payload-system.foo.zip", "archive");
 
             // Act
             using var provider = collection.BuildServiceProvider();
@@ -238,13 +238,13 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             command.Should().Contain("--launch-timeout \"00:02:33\"");
 
             _profileProvider
-                .Verify(x => x.AddProfilesToBundles(It.Is<ITaskItem[]>(bundles => bundles.Any(b => b.ItemSpec == "/apps/System.Foo.zip"))), Times.Once);
+                .Verify(x => x.AddProfileToPayload(payloadArchive, "ios-device_13.5"), Times.Once);
             _zipArchiveManager
                 .Verify(x => x.ArchiveDirectory("/apps/System.Foo.app", payloadArchive, true), Times.Never);
             _zipArchiveManager
-                .Verify(x => x.AddResourceFileToArchive<CreateXHarnessAppleWorkItems>(payloadArchive, It.Is<string>(s => s.Contains("xharness-helix-job.apple.sh")), "xharness-helix-job.apple.sh"), Times.Once);
+                .Verify(x => x.AddResourceFileToArchive<XHarnessTaskBase>(payloadArchive, It.Is<string>(s => s.Contains("xharness-helix-job.apple.sh")), "xharness-helix-job.apple.sh"), Times.Once);
             _zipArchiveManager
-                .Verify(x => x.AddResourceFileToArchive<CreateXHarnessAppleWorkItems>(payloadArchive, It.Is<string>(s => s.Contains("xharness-runner.apple.sh")), "xharness-runner.apple.sh"), Times.Once);
+                .Verify(x => x.AddResourceFileToArchive<XHarnessTaskBase>(payloadArchive, It.Is<string>(s => s.Contains("xharness-runner.apple.sh")), "xharness-runner.apple.sh"), Times.Once);
             _zipArchiveManager
                 .Verify(x => x.AddContentToArchive(payloadArchive, "command.sh", It.Is<string>(s => s.Contains("xharness apple test"))), Times.Once);
         }
