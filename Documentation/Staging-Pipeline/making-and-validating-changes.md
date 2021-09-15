@@ -55,6 +55,7 @@ there is a way to save time and test only a particular stage or set of stages.
           allowFailedBuilds: true
 ```
 Note: if you want to use artifacts from Stage-DotNet instead of Stage-DotNet-Test, set `pipeline` to `792` instead.
+
 3. Open up [`eng/pipeline/stage_dotnet.yml`](https://dev.azure.com/dnceng/internal/_git/dotnet-release?path=%2Feng%2Fpipeline%2Fstage_dotnet.yml&version=GBmain&_a=contents) and comment out all of the stages prior to the one you're testing.
 Then make sure to comment out the dependencies on those stages.
 4. Running the pipeline now will skip the most time-consuming stages and go straight to the stage you want to test.
