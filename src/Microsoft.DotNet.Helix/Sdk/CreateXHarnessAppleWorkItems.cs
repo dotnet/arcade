@@ -73,8 +73,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             IZipArchiveManager zipArchiveManager,
             IFileSystem fileSystem)
         {
-            provisioningProfileProvider.AddProfilesToBundles(AppBundles);
-            var tasks = AppBundles.Select(bundle => PrepareWorkItem(zipArchiveManager, fileSystem, bundle));
+            var tasks = AppBundles.Select(bundle => PrepareWorkItem(zipArchiveManager, fileSystem, provisioningProfileProvider, bundle));
 
             WorkItems = Task.WhenAll(tasks).GetAwaiter().GetResult().Where(wi => wi != null).ToArray();
 
@@ -89,6 +88,7 @@ namespace Microsoft.DotNet.Helix.Sdk
         private async Task<ITaskItem> PrepareWorkItem(
             IZipArchiveManager zipArchiveManager,
             IFileSystem fileSystem,
+            IProvisioningProfileProvider provisioningProfileProvider,
             ITaskItem appBundleItem)
         {
             var (workItemName, appFolderPath) = GetNameAndPath(appBundleItem, MetadataNames.AppBundlePath, fileSystem);
@@ -106,6 +106,17 @@ namespace Microsoft.DotNet.Helix.Sdk
             {
                 Log.LogError($"App bundle not found in {appFolderPath}");
                 return null;
+            }
+
+            // If we are re-using one .zip for multiple work items, we need to copy it to a new location
+            // because we will be changing the contents (we assume we don't mind otherwise)
+            if (isAlreadyArchived && appBundleItem.TryGetMetadata(MetadataNames.AppBundlePath, out string metadata) && !string.IsNullOrEmpty(metadata))
+            {
+                string appFolderDirectory = fileSystem.GetDirectoryName(appFolderPath);
+                string fileName = $"xharness-payload-{workItemName.ToLowerInvariant()}.zip";
+                string archiveCopyPath = fileSystem.PathCombine(appFolderDirectory, fileName);
+                fileSystem.CopyFile(appFolderPath, archiveCopyPath, overwrite: true);
+                appFolderPath = archiveCopyPath;
             }
             
             var (testTimeout, workItemTimeout, expectedExitCode, customCommands) = ParseMetadata(appBundleItem);
@@ -142,7 +153,7 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             if (includesTestRunner && expectedExitCode != 0 && customCommands != null)
             {
-                Log.LogWarning("The ExpectedExitCode property is ignored in the `apple test` scenario");
+                Log.LogWarning($"The {MetadataName.ExpectedExitCode} property is ignored in the `apple test` scenario");
             }
 
             bool resetSimulator = false;
@@ -171,6 +182,8 @@ namespace Microsoft.DotNet.Helix.Sdk
                 appFolderPath,
                 customCommands,
                 new[] { EntryPointScript, RunnerScript });
+
+            provisioningProfileProvider.AddProfileToPayload(payloadArchivePath, target);
 
             return CreateTaskItem(workItemName, payloadArchivePath, helixCommand, workItemTimeout);
         }

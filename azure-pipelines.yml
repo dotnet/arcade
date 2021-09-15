@@ -154,8 +154,8 @@ stages:
               -ci
               -restore
               -test
-              -projects $(Build.SourcesDirectory)\tests\UnitTests.XHarness.Android.Device.proj
-              /bl:$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)\Helix.XHarness.Android.Device.binlog
+              -projects $(Build.SourcesDirectory)\tests\XHarness.Android.DeviceTests.proj
+              /bl:$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)\Helix.XHarness.Android.Device.Tests.binlog
               /p:RestoreUsingNuGetTargets=false
             displayName: XHarness Android Helix Testing (Windows)
             env:
@@ -195,10 +195,10 @@ stages:
               -ci
               -restore
               -test
-              -projects $(Build.SourcesDirectory)/tests/UnitTests.XHarness.iOS.Simulator.proj
-              /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/UnitTests.XHarness.iOS.Simulator.binlog
+              -projects $(Build.SourcesDirectory)/tests/XHarness.Apple.SimulatorTests.proj
+              /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/XHarness.Apple.Simulator.Tests.binlog
               /p:RestoreUsingNuGetTargets=false
-            displayName: XHarness iOS Simulator Helix Testing
+            displayName: XHarness Apple Simulator Helix Testing
             env:
               SYSTEM_ACCESSTOKEN: $(System.AccessToken)
               HelixAccessToken: ''
@@ -208,10 +208,10 @@ stages:
               -ci
               -restore
               -test
-              -projects $(Build.SourcesDirectory)/tests/UnitTests.XHarness.iOS.Device.proj
-              /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.XHarness.iOS.Device.binlog
+              -projects $(Build.SourcesDirectory)/tests/XHarness.Apple.DeviceTests.proj
+              /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.XHarness.Apple.Device.Tests.binlog
               /p:RestoreUsingNuGetTargets=false
-            displayName: XHarness iOS Device Helix Testing
+            displayName: XHarness Apple Device Helix Testing
             env:
               SYSTEM_ACCESSTOKEN: $(System.AccessToken)
               HelixAccessToken: ''
@@ -221,8 +221,8 @@ stages:
               -ci
               -restore
               -test
-              -projects $(Build.SourcesDirectory)/tests/UnitTests.XHarness.Android.Simulator.proj
-              /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.XHarness.Android.Simulator.binlog
+              -projects $(Build.SourcesDirectory)/tests/XHarness.Android.SimulatorTests.proj
+              /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.XHarness.Android.Simulator.Tests.binlog
               /p:RestoreUsingNuGetTargets=false
             displayName: XHarness Android Helix Testing (Linux)
             env:

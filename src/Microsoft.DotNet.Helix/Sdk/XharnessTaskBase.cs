@@ -111,22 +111,6 @@ namespace Microsoft.DotNet.Helix.Sdk
             });
         }
 
-        /// <summary>
-        /// This method parses the name for the Helix work item and path of the app from the item's metadata.
-        /// The user can re-use the same .apk for 2 work items so the name of the work item will come from ItemSpec and path from metadata.
-        /// </summary>
-        protected (string WorkItemName, string AppPath) GetNameAndPath(ITaskItem item, string pathMetadataName, IFileSystem fileSystem)
-        {
-            if (item.TryGetMetadata(pathMetadataName, out string appPathMetadata) && !string.IsNullOrEmpty(appPathMetadata))
-            {
-                return (item.ItemSpec, appPathMetadata);
-            }
-            else
-            {
-                return (fileSystem.GetFileNameWithoutExtension(item.ItemSpec), item.ItemSpec);
-            }
-        }
-
         protected async Task<string> CreatePayloadArchive(
             IZipArchiveManager zipArchiveManager,
             IFileSystem fileSystem,
@@ -137,18 +121,19 @@ namespace Microsoft.DotNet.Helix.Sdk
             string injectedCommands,
             string[] payloadScripts)
         {
-            string appFolderDirectory = fileSystem.GetDirectoryName(pathToZip);
-            string fileName = $"xharness-payload-{workItemName.ToLowerInvariant()}.zip";
-            string outputZipPath = fileSystem.PathCombine(appFolderDirectory, fileName);
-
-            if (fileSystem.FileExists(outputZipPath))
-            {
-                Log.LogMessage($"Zip archive '{outputZipPath}' already exists, overwriting..");
-                fileSystem.DeleteFile(outputZipPath);
-            }
-
+            string outputZipPath;
             if (!isAlreadyArchived)
             {
+                string appFolderDirectory = fileSystem.GetDirectoryName(pathToZip);
+                string fileName = $"xharness-payload-{workItemName.ToLowerInvariant()}.zip";
+                outputZipPath = fileSystem.PathCombine(appFolderDirectory, fileName);
+
+                if (fileSystem.FileExists(outputZipPath))
+                {
+                    Log.LogMessage($"Zip archive '{outputZipPath}' already exists, overwriting..");
+                    fileSystem.DeleteFile(outputZipPath);
+                }
+
                 if (fileSystem.GetAttributes(pathToZip).HasFlag(FileAttributes.Directory))
                 {
                     zipArchiveManager.ArchiveDirectory(pathToZip, outputZipPath, true);
@@ -160,8 +145,8 @@ namespace Microsoft.DotNet.Helix.Sdk
             }
             else
             {
-                Log.LogMessage($"App payload '{workItemName}` has already been zipped. Copying to '{outputZipPath}` instead");
-                fileSystem.FileCopy(pathToZip, outputZipPath);
+                Log.LogMessage($"App payload '{workItemName}` has already been zipped");
+                outputZipPath = pathToZip;
             }
 
             Log.LogMessage($"Adding the XHarness job scripts into the payload archive");
@@ -185,6 +170,22 @@ namespace Microsoft.DotNet.Helix.Sdk
                 injectedCommands);
 
             return outputZipPath;
+        }
+
+        /// <summary>
+        /// This method parses the name for the Helix work item and path of the app from the item's metadata.
+        /// The user can re-use the same .apk for 2 work items so the name of the work item will come from ItemSpec and path from metadata.
+        /// </summary>
+        public static (string WorkItemName, string AppPath) GetNameAndPath(ITaskItem item, string pathMetadataName, IFileSystem fileSystem)
+        {
+            if (item.TryGetMetadata(pathMetadataName, out string appPathMetadata) && !string.IsNullOrEmpty(appPathMetadata))
+            {
+                return (item.ItemSpec, appPathMetadata);
+            }
+            else
+            {
+                return (fileSystem.GetFileNameWithoutExtension(item.ItemSpec), item.ItemSpec);
+            }
         }
     }
 }
