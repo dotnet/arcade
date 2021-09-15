@@ -154,7 +154,7 @@ stages:
               -ci
               -restore
               -test
-              -projects $(Build.SourcesDirectory)\tests\XHarness.Android.Device.Tests.proj
+              -projects $(Build.SourcesDirectory)\tests\XHarness.Android.DeviceTests.proj
               /bl:$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)\Helix.XHarness.Android.Device.Tests.binlog
               /p:RestoreUsingNuGetTargets=false
             displayName: XHarness Android Helix Testing (Windows)
@@ -195,7 +195,7 @@ stages:
               -ci
               -restore
               -test
-              -projects $(Build.SourcesDirectory)/tests/XHarness.Apple.Simulator.Tests.proj
+              -projects $(Build.SourcesDirectory)/tests/XHarness.Apple.SimulatorTests.proj
               /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/XHarness.Apple.Simulator.Tests.binlog
               /p:RestoreUsingNuGetTargets=false
             displayName: XHarness Apple Simulator Helix Testing
@@ -208,7 +208,7 @@ stages:
               -ci
               -restore
               -test
-              -projects $(Build.SourcesDirectory)/tests/XHarness.Apple.Device.Tests.proj
+              -projects $(Build.SourcesDirectory)/tests/XHarness.Apple.DeviceTests.proj
               /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.XHarness.Apple.Device.Tests.binlog
               /p:RestoreUsingNuGetTargets=false
             displayName: XHarness Apple Device Helix Testing
@@ -221,7 +221,7 @@ stages:
               -ci
               -restore
               -test
-              -projects $(Build.SourcesDirectory)/tests/XHarness.Android.Simulator.Tests.proj
+              -projects $(Build.SourcesDirectory)/tests/XHarness.Android.SimulatorTests.proj
               /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.XHarness.Android.Simulator.Tests.binlog
               /p:RestoreUsingNuGetTargets=false
             displayName: XHarness Android Helix Testing (Linux)
