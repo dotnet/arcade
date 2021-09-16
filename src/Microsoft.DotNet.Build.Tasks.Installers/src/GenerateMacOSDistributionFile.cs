@@ -51,9 +51,6 @@ return result;
 ]]>";
                 var scriptElement = new XElement("script", new XText(archScriptContent));
 
-                var choiceLineElements = BundledPackages
-                    .Select(component => new XElement("line", new XAttribute("choice", component.GetMetadata("FileNameWithExtension"))));
-
                 var choiceElements = BundledPackages
                     .Select(component => new XElement("choice",
                         new XAttribute("id", component.GetMetadata("FileNameWithExtension")),
@@ -74,12 +71,10 @@ return result;
                             .WithAttribute("id", c.Attribute("id").Value + ".alternate")
                             .WithAttribute("selected", "!IsX64Machine()")
                             .WithAttribute("customLocation", Alternativex64InstallPath)));
-                    
-                    choiceLineElements = 
-                        choiceLineElements.Concat(
-                            choiceLineElements.Select(c => new XElement(c)
-                                .WithAttribute("choice", c.Attribute("choice").Value + ".alternate")));
                 }
+
+                var choiceLineElements = choiceElements
+                    .Select(c => new XElement("line", new XAttribute("choice", c.Attribute("id").Value)));
 
                 var pkgRefElements = BundledPackages
                     .Select(component => new XElement("pkg-ref",
