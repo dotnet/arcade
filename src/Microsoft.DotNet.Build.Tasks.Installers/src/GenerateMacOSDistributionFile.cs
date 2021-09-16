@@ -30,6 +30,8 @@ namespace Microsoft.DotNet.SharedFramework.Sdk
         [Required]
         public string DestinationFile { get; set; }
 
+        public string Alternativex64InstallPath { get; set; }
+
         public override bool Execute()
         {
             try
@@ -38,7 +40,16 @@ namespace Microsoft.DotNet.SharedFramework.Sdk
 
                 var titleElement = new XElement("title", $"{ProductBrandName} ({TargetArchitecture})");
 
-                var choiceLineElements = BundledPackages.Select(component => new XElement("line", new XAttribute("choice", component.GetMetadata("FileNameWithExtension"))));
+                var archScriptContent = @"<![CDATA[
+function IsX64Machine() {
+var machine = system.sysctl(""hw.machine"");
+system.log(""Machine type: "" + machine);
+var result = machine == ""x64"" || machine.endsWith(""_x64"");
+system.log(""IsX64Machine: "" + result);
+return result;
+}
+]]>";
+                var scriptElement = new XElement("script", new XText(archScriptContent));
 
                 var choiceElements = BundledPackages
                     .Select(component => new XElement("choice",
@@ -47,6 +58,23 @@ namespace Microsoft.DotNet.SharedFramework.Sdk
                         new XAttribute("title", component.GetMetadata("Title")),
                         new XAttribute("description", component.GetMetadata("Description")),
                         new XElement("pkg-ref", new XAttribute("id", component.GetMetadata("FileNameWithExtension")))));
+
+                if (TargetArchitecture == "x64")
+                {
+                    Alternativex64InstallPath ??= "/usr/local/share/dotnet/x64";
+
+                    choiceElements =
+                        choiceElements.Select(c => new XElement(c)
+                            .WithAttribute("selected", "IsX64Machine()"))
+                        .Concat(
+                        choiceElements.Select(c => new XElement(c)
+                            .WithAttribute("id", c.Attribute("id").Value + ".alternate")
+                            .WithAttribute("selected", "!IsX64Machine()")
+                            .WithAttribute("customLocation", Alternativex64InstallPath)));
+                }
+
+                var choiceLineElements = choiceElements
+                    .Select(c => new XElement("line", new XAttribute("choice", c.Attribute("id").Value)));
 
                 var pkgRefElements = BundledPackages
                     .Select(component => new XElement("pkg-ref",
@@ -78,6 +106,7 @@ namespace Microsoft.DotNet.SharedFramework.Sdk
                 document.Root.Add(new XElement("choices-outline", choiceLineElements));
                 document.Root.Add(choiceElements);
                 document.Root.Add(pkgRefElements);
+                document.Root.Add(scriptElement);
                 using XmlWriter writer = XmlWriter.Create(File.OpenWrite(DestinationFile));
                 document.WriteTo(writer);
             }
@@ -87,6 +116,15 @@ namespace Microsoft.DotNet.SharedFramework.Sdk
                 return false;
             }
             return true;
+        }
+    }
+
+    static class XElementExtensions
+    {
+        public static XElement WithAttribute(this XElement element, XName attribute, object value)
+        {
+            element.SetAttributeValue(attribute, value);
+            return element;
         }
     }
 }
