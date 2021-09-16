@@ -145,10 +145,11 @@ The most basic structure for calling the OneLocBuild template is:
 
 ```yaml
 jobs:
-- template: /eng/common/templates/job/onelocbuild.yml
-  parameters:
-    LclSource: lclFilesfromPackage
-    LclPackageId: 'LCL-PACKAGE-ID'
+- ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.SourceBranch'], 'refs/heads/main')) }}:
+  - template: /eng/common/templates/job/onelocbuild.yml
+    parameters:
+      LclSource: lclFilesfromPackage
+      LclPackageId: 'LCL-PACKAGE-ID'
 ```
 
 The parameters that can be passed to the template are as follows:
