@@ -42,11 +42,16 @@ namespace Microsoft.DotNet.SharedFramework.Sdk
 
                 var archScriptContent = @"<![CDATA[
 function IsX64Machine() {
-var machine = system.sysctl(""hw.machine"");
-system.log(""Machine type: "" + machine);
-var result = machine == ""x64"" || machine.endsWith(""_x64"");
-system.log(""IsX64Machine: "" + result);
-return result;
+    var machine = system.sysctl(""hw.foo"");
+    var cputype = system.sysctl(""hw.cputype"");
+    var cpu64 = system.sysctl(""hw.cpu64bit_capable"");
+    system.log(""Machine type: "" + machine);
+    system.log(""Cpu type: "" + cputype);
+    system.log(""64-bit: "" + cpu64);
+    
+    var result = machine == ""amd64"" || machine == ""x86_64"" || cputype == ""16777223"" || (cputype == ""7"" && cpu64 == ""1"");
+    system.log(""IsX64Machine: "" + result);
+    return result;
 }
 ]]>";
                 var scriptElement = new XElement("script", new XText(archScriptContent));
