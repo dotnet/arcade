@@ -25,6 +25,7 @@
     <None Include="build/**/*.*" Pack="true">
       <PackagePath>build</PackagePath>
     </None>
+    <None Include="..\Common\wix\dotnethome_x64.wxs" Link="build\wix\product\dotnethome_x64.wxs" PackagePath="%(Link)" Pack="true" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)' == 'net472'">
