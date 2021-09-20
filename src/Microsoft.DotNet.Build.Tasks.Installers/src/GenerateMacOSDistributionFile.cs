@@ -42,7 +42,7 @@ namespace Microsoft.DotNet.SharedFramework.Sdk
 
                 var archScriptContent = @"<![CDATA[
 function IsX64Machine() {
-    var machine = system.sysctl(""hw.foo"");
+    var machine = system.sysctl(""hw.machine"");
     var cputype = system.sysctl(""hw.cputype"");
     var cpu64 = system.sysctl(""hw.cpu64bit_capable"");
     system.log(""Machine type: "" + machine);
