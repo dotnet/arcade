@@ -43,11 +43,11 @@ stages:
         timeoutInMinutes: 90
         pool:
           ${{ if eq(variables._RunAsPublic, True) }}:
-            name: NetCorePublic-Pool
-            queue: BuildPool.Server.Amd64.VS2017.Arcade.Open
+            name: NetCore1ESPool-Svc-Public
+            demands: ImageOverride -equals Build.Server.Amd64.VS2017.Open
           ${{ if eq(variables._RunAsInternal, True) }}:
-            name: NetCoreInternal-Pool
-            queue: BuildPool.Server.Amd64.VS2017.Arcade
+            name: NetCore1ESPool-Svc-Internal
+            demands: ImageOverride -equals Build.Server.Amd64.VS2017
         strategy:
           matrix:
             Build_Release:
@@ -69,8 +69,8 @@ stages:
         - job: Linux
           container: LinuxContainer
           pool:
-            name:  NetCorePublic-Pool
-            queue: BuildPool.Ubuntu.1604.Amd64.Arcade.Open
+            name: NetCore1ESPool-Svc-Public
+            demands: ImageOverride -equals Build.Ubuntu.1604.Amd64.Open
           strategy:
             matrix:
               Build_Debug:
