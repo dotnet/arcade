@@ -41,7 +41,6 @@ There are some required configuration properties that need to be set for XHarnes
   <HelixType>test/product/</HelixType>
   <HelixBaseUri>https://helix.int-dot.net</HelixBaseUri>
   <Creator>$(BUILD_SOURCEVERSIONAUTHOR)</Creator>
-  <EnableXUnitReporter>true</EnableXUnitReporter>
   <EnableAzurePipelinesReporter>true</EnableAzurePipelinesReporter>
 </PropertyGroup>
 
