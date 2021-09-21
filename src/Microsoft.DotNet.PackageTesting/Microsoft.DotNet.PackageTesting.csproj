@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <TargetFrameworks>netcoreapp3.1;net472</TargetFrameworks>
+    <TargetFrameworks Condition="'$(DotNetBuildFromSource)' == 'true'">net6.0</TargetFrameworks>
     <PackageType>MSBuildSdk</PackageType>
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <IsPackable>true</IsPackable>

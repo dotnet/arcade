@@ -6,7 +6,7 @@ using System.Text.RegularExpressions;
 
 namespace Microsoft.DotNet.Build.CloudTestTasks
 {
-    public abstract class AzureConnectionStringBuildTask : Task
+    public abstract class AzureConnectionStringBuildTask : Microsoft.Build.Utilities.Task
     {
         /// <summary>
         /// Azure Storage account connection string.  Supersedes Account Key / Name.  

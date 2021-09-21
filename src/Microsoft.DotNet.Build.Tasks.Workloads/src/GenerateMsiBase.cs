@@ -111,6 +111,11 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         }
 
         /// <summary>
+        /// Used to synchronize access to the NuGet being extracted.
+        /// </summary>
+        private readonly object extractNuGetLock = new object();
+
+        /// <summary>
         /// Generate a set of MSIs for the specified platforms using the specified NuGet package.
         /// </summary>
         /// <param name="sourcePackage">The NuGet package to convert into an MSI.</param>
@@ -118,7 +123,11 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
         /// <param name="platforms"></param>
         protected IEnumerable<ITaskItem> Generate(string sourcePackage, string swixPackageId, string outputPath, WorkloadPackKind kind, params string[] platforms)
         {
-            NugetPackage nupkg = new(sourcePackage, Log);
+            NugetPackage nupkg = null;
+            lock (extractNuGetLock)
+            {
+                nupkg = new(sourcePackage, Log);
+            }
             List<TaskItem> msis = new();
 
             // MSI ProductName defaults to the package title and fallback to the package ID with a warning.
@@ -139,7 +148,10 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             if ((kind != WorkloadPackKind.Library) && (kind != WorkloadPackKind.Template))
             {
                 Log.LogMessage(MessageImportance.Low, $"Extracting '{sourcePackage}' to '{packageContentsDirectory}'");
-                nupkg.Extract(packageContentsDirectory, exclusions);
+                lock (extractNuGetLock)
+                {
+                    nupkg.Extract(packageContentsDirectory, exclusions);
+                }
             }
             else
             {
@@ -164,6 +176,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                 string msiSourcePath = Path.Combine(MsiDirectory, $"{nupkg.Id}", $"{nupkg.Version}", platform);
                 sourceFiles.Add(EmbeddedTemplates.Extract("DependencyProvider.wxs", msiSourcePath));
                 sourceFiles.Add(EmbeddedTemplates.Extract("Directories.wxs", msiSourcePath));
+                sourceFiles.Add(EmbeddedTemplates.Extract("dotnethome_x64.wxs", msiSourcePath));
                 sourceFiles.Add(EmbeddedTemplates.Extract("Product.wxs", msiSourcePath));
                 sourceFiles.Add(EmbeddedTemplates.Extract("Registry.wxs", msiSourcePath));
 
@@ -188,9 +201,12 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                     SourceDirectory = packageContentsDirectory
                 };
 
-                if (!heat.Execute())
+                lock (extractNuGetLock)
                 {
-                    throw new Exception($"Failed to harvest package contents.");
+                    if (!heat.Execute())
+                    {
+                        throw new Exception($"Failed to harvest package contents.");
+                    }
                 }
 
                 // Compile the MSI sources
@@ -351,6 +367,11 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             if (!string.IsNullOrWhiteSpace(nupkg.Copyright))
             {
                 writer.WriteElementString("Copyright", nupkg.Copyright);
+            }
+
+            if (!string.IsNullOrWhiteSpace(nupkg.ProjectUrl))
+            {
+                writer.WriteElementString("PackageProjectUrl", nupkg.ProjectUrl);
             }
 
             writer.WriteElementString("PackageLicenseExpression", "MIT");

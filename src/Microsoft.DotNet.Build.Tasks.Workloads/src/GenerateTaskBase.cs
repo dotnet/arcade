@@ -10,7 +10,7 @@ using Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.Build.Tasks.Workloads
 {
-    public abstract class GenerateTaskBase : Task
+    public abstract class GenerateTaskBase : Microsoft.Build.Utilities.Task
     {
         public const int MaxPayloadRelativePath = 182;
 

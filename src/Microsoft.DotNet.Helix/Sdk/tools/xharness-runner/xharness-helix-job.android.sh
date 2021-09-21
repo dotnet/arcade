@@ -58,10 +58,6 @@ if [ -z "$timeout" ]; then
     die "No timeout was provided";
 fi
 
-if [ -z "$package_name" ]; then
-    die "Package name path wasn't provided";
-fi
-
 if [ -z "$output_directory" ]; then
     die "No output directory provided";
 fi
@@ -90,6 +86,8 @@ case "$exit_code" in
     # The only solution is to reboot the machine, so we request a work item retry + agent reboot when this happens
     echo 'Encountered ADB_DEVICE_ENUMERATION_FAILURE. This is typically not a failure of the work item. We will run it again and reboot this computer to help its devices'
     echo 'If this occurs repeatedly, please check for architectural mismatch, e.g. sending arm64_v8a APKs to an x86_64 / x86 only queue.'
+    # Copy emulator log
+    cp /tmp/*-logcat.log "$output_directory"
     retry=true
     reboot=true
     ;;

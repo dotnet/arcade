@@ -12,7 +12,7 @@ using System.Linq;
 
 namespace Microsoft.DotNet.Build.Tasks.VersionTools
 {
-    public class SubmitPullRequest : Task
+    public class SubmitPullRequest : Microsoft.Build.Utilities.Task
     {
         [Required]
         public string PullRequestServiceType { get; set; }

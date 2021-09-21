@@ -35,6 +35,10 @@
       </Directory>
     </Directory>
 
+    <?if $(var.Platform)~=x64?>
+    <CustomActionRef Id="Set_DOTNETHOME_NON_NATIVE_ARCHITECTURE" />
+    <?endif?>
+
     <MediaTemplate CompressionLevel="high" EmbedCab="yes" />
 
     <!-- Record the original package used to generate the MSI -->

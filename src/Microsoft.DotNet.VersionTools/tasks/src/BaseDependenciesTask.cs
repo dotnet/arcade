@@ -23,7 +23,7 @@ using System.Xml.Linq;
 
 namespace Microsoft.DotNet.Build.Tasks.VersionTools
 {
-    public abstract class BaseDependenciesTask : Task
+    public abstract class BaseDependenciesTask : Microsoft.Build.Utilities.Task
     {
         internal const string RawUrlMetadataName = "RawUrl";
         internal const string RawVersionsBaseUrlMetadataName = "RawVersionsBaseUrl";

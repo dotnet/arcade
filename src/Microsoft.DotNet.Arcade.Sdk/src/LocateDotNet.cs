@@ -10,7 +10,7 @@ using Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.Arcade.Sdk
 {
-    public class LocateDotNet : Task
+    public class LocateDotNet : Microsoft.Build.Utilities.Task
     {
         private static readonly string s_cacheKey = "LocateDotNet-FCDFF825-F35B-4601-9CB5-74DCA498B589";
 

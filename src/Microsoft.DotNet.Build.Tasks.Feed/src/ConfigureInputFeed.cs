@@ -8,7 +8,7 @@ using System;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed
 {
-    public class ConfigureInputFeed : Task
+    public class ConfigureInputFeed : Microsoft.Build.Utilities.Task
     {
         [Required]
         public ITaskItem[] EnableFeeds { get; set; }

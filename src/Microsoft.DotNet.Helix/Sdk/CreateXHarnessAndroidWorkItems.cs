@@ -67,20 +67,7 @@ namespace Microsoft.DotNet.Helix.Sdk
         /// <returns>An ITaskItem instance representing the prepared HelixWorkItem.</returns>
         private async Task<ITaskItem> PrepareWorkItem(IZipArchiveManager zipArchiveManager, IFileSystem fileSystem, ITaskItem appPackage)
         {
-            // The user can re-use the same .apk for 2 work items so the name of the work item will come from ItemSpec and path from metadata
-            // This can be useful when we want to run the same app with different parameters or run the same app on different test targets, e.g. iOS 13 and 13.5
-            string workItemName;
-            string apkPath;
-            if (appPackage.TryGetMetadata(MetadataNames.ApkPath, out string apkPathMetadata) && !string.IsNullOrEmpty(apkPathMetadata))
-            {
-                workItemName = appPackage.ItemSpec;
-                apkPath = apkPathMetadata;
-            }
-            else
-            {
-                workItemName = fileSystem.GetFileNameWithoutExtension(appPackage.ItemSpec);
-                apkPath = appPackage.ItemSpec;
-            }
+            var (workItemName, apkPath) = GetNameAndPath(appPackage, MetadataNames.ApkPath, fileSystem);
 
             if (!fileSystem.FileExists(apkPath))
             {
@@ -88,32 +75,52 @@ namespace Microsoft.DotNet.Helix.Sdk
                 return null;
             }
 
-            if (!fileSystem.GetExtension(apkPath).Equals(".apk", StringComparison.OrdinalIgnoreCase))
-            {
-                Log.LogError($"Unsupported app package type: {fileSystem.GetFileName(apkPath)}");
-                return null;
-            }
+            string extension = fileSystem.GetExtension(apkPath).ToLowerInvariant();
+            bool isAlreadyArchived = (extension == ".zip");
 
-            // Validation of any metadata specific to Android stuff goes here
-            if (!appPackage.GetRequiredMetadata(Log, MetadataNames.AndroidPackageName, out string androidPackageName))
+            if (!isAlreadyArchived && extension != ".apk")
             {
-                Log.LogError($"{MetadataNames.AndroidPackageName} metadata must be specified; this may match, but can vary from file name");
+                Log.LogError($"Unsupported payload file `{fileSystem.GetFileName(apkPath)}`; expecting .apk or .zip");
                 return null;
             }
 
             var (testTimeout, workItemTimeout, expectedExitCode, customCommands) = ParseMetadata(appPackage);
+            appPackage.TryGetMetadata(MetadataNames.AndroidPackageName, out string androidPackageName);
 
             if (customCommands == null)
             {
                 // When no user commands are specified, we add the default `android test ...` command
                 customCommands = GetDefaultCommand(appPackage, expectedExitCode);
+
+                // Validation of any metadata specific to Android stuff goes here
+                if (string.IsNullOrEmpty(androidPackageName))
+                {
+                    Log.LogError($"{MetadataNames.AndroidPackageName} metadata must be specified when not supplying custom commands");
+                    return null;
+                }
             }
 
-            string command = GetHelixCommand(appPackage, apkPath, androidPackageName, testTimeout, expectedExitCode);
+            string apkName = Path.GetFileName(apkPath);
+            if (isAlreadyArchived) {
+                apkName = apkName.Replace(".zip", ".apk");
+            }
 
-            Log.LogMessage($"Creating work item with properties Identity: {workItemName}, Payload: {apkPath}, Command: {command}");
+            string command = GetHelixCommand(appPackage, apkName, androidPackageName, testTimeout, expectedExitCode);
 
-            string workItemZip = await CreateZipArchiveOfPackageAsync(zipArchiveManager, fileSystem, workItemName, apkPath, customCommands);
+            string workItemZip = await CreatePayloadArchive(
+                zipArchiveManager,
+                fileSystem,
+                workItemName,
+                isAlreadyArchived,
+                IsPosixShell,
+                apkPath,
+                customCommands,
+                new[]
+                {
+                    // WorkItem payloads of APKs can be reused if sent to multiple queues at once,
+                    // so we'll always include both scripts (very small)
+                    PosixAndroidWrapperScript, NonPosixAndroidWrapperScript
+                });
 
             return CreateTaskItem(workItemName, workItemZip, command, workItemTimeout);
         }
@@ -143,7 +150,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                 $"{ devOutArg } { instrumentationArg } { exitCodeArg } { extraArguments } { passthroughArgs }";
         }
 
-        private string GetHelixCommand(ITaskItem appPackage, string apkPath, string androidPackageName, TimeSpan xHarnessTimeout, int expectedExitCode)
+        private string GetHelixCommand(ITaskItem appPackage, string apkName, string androidPackageName, TimeSpan xHarnessTimeout, int expectedExitCode)
         {
             appPackage.TryGetMetadata(MetadataNames.AndroidInstrumentationName, out string androidInstrumentationName);
             appPackage.TryGetMetadata(MetadataNames.DeviceOutputPath, out string deviceOutputPath);
@@ -155,7 +162,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             // We either call .ps1 or .sh so we need to format the arguments well (PS has -argument, bash has --argument)
             string dash = IsPosixShell ? "--" : "-";
             string xharnessRunCommand = $"{xharnessHelixWrapperScript} " +
-                $"{dash}app \"{Path.GetFileName(apkPath)}\" " +
+                $"{dash}app \"{apkName}\" " +
                 $"{dash}timeout \"{xHarnessTimeout}\" " +
                 $"{dash}package_name \"{androidPackageName}\" " +
                 (expectedExitCode != 0 ? $" {dash}expected_exit_code \"{expectedExitCode}\" " : string.Empty) +
@@ -165,33 +172,6 @@ namespace Microsoft.DotNet.Helix.Sdk
             Log.LogMessage(MessageImportance.Low, $"Generated XHarness command: {xharnessRunCommand}");
 
             return xharnessRunCommand;
-        }
-
-        private async Task<string> CreateZipArchiveOfPackageAsync(
-            IZipArchiveManager zipArchiveManager,
-            IFileSystem fileSystem,
-            string workItemName,
-            string fileToZip,
-            string injectedCommands)
-        {
-            string fileName = $"xharness-apk-payload-{workItemName.ToLowerInvariant()}.zip";
-            string outputZipPath = fileSystem.PathCombine(fileSystem.GetDirectoryName(fileToZip), fileName);
-
-            if (fileSystem.FileExists(outputZipPath))
-            {
-                Log.LogMessage($"Zip archive '{outputZipPath}' already exists, overwriting..");
-                fileSystem.DeleteFile(outputZipPath);
-            }
-
-            zipArchiveManager.ArchiveFile(fileToZip, outputZipPath);
-
-            // WorkItem payloads of APKs can be reused if sent to multiple queues at once,
-            // so we'll always include both scripts (very small)
-            await zipArchiveManager.AddResourceFileToArchive<CreateXHarnessAndroidWorkItems>(outputZipPath, ScriptNamespace + PosixAndroidWrapperScript, PosixAndroidWrapperScript);
-            await zipArchiveManager.AddResourceFileToArchive<CreateXHarnessAndroidWorkItems>(outputZipPath, ScriptNamespace + NonPosixAndroidWrapperScript, NonPosixAndroidWrapperScript);
-            await zipArchiveManager.AddContentToArchive(outputZipPath, CustomCommandsScript + (IsPosixShell ? ".sh" : ".ps1"), injectedCommands);
-
-            return outputZipPath;
         }
     }
 }

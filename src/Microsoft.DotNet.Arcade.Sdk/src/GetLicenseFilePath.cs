@@ -13,7 +13,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
     /// Finds a license file in the given directory.
     /// File is considered a license file if its name matches 'license(.txt|.md|)', ignoring case.
     /// </summary>
-    public class GetLicenseFilePath : Task
+    public class GetLicenseFilePath : Microsoft.Build.Utilities.Task
     {
         /// <summary>
         /// Full path to the directory to search for the license file.
