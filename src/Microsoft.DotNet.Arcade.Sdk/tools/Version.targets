@@ -25,20 +25,24 @@
       <Output TaskParameter="FileVersion" PropertyName="FileVersion"/>
     </Microsoft.DotNet.Arcade.Sdk.CalculateAssemblyAndFileVersions>
 
+    <PropertyGroup>
+      <PlaceholderVersion>42.42.42.42424</PlaceholderVersion>
+    </PropertyGroup>
+
     <PropertyGroup Condition="'$(VersionSuffixDateStamp)' == ''">
       <!--
         Set FileVersion to a distinct version that's greater than any shipping version.
         This makes it possible to install binaries produced by a dev build over product binaries,
         provided that the installer only requires higher version.
       -->
-      <FileVersion>42.42.42.42424</FileVersion>
+      <FileVersion>$(PlaceholderVersion)</FileVersion>
 
       <!--
         Respect version explicitly set by the project.
         The default .NET Core SDK implementation sets AssemblyVersion from NuGet package version,
         which we want to override in dev builds.
       -->
-      <AssemblyVersion Condition="'$(AssemblyVersion)' == ''">42.42.42.42</AssemblyVersion>
+      <AssemblyVersion Condition="'$(AssemblyVersion)' == ''">$(PlaceholderVersion)</AssemblyVersion>
     </PropertyGroup>
   </Target>
 
@@ -57,8 +61,9 @@
           DependsOnTargets="$(GenerateNativeVersionFileDependsOn)">
 
     <!-- To support builds without a source control provider available, allow this property to be unset. -->
-    <PropertyGroup Condition="'$(SourceRevisionId)' != ''">
-      <_SourceBuildInfo> %40Commit: $(SourceRevisionId)</_SourceBuildInfo>
+    <PropertyGroup>
+      <_SourceBuildInfo Condition="'$(SourceRevisionId)' != ''"> %40Commit: $(SourceRevisionId)</_SourceBuildInfo>
+      <_SourceBuildInfo Condition="'$(SourceRevisionId)' == ''"> %40Commit: N/A</_SourceBuildInfo>
     </PropertyGroup>
 
    <PropertyGroup Condition="'$(OS)' == 'Windows_NT'">
@@ -112,6 +117,8 @@
 
     <PropertyGroup Condition="'$(OS)' != 'Windows_NT'">
       <NativeVersionFile Condition="'$(NativeVersionFile)' == ''">$(ArtifactsObjDir)_version.c</NativeVersionFile>
+      <SccsidVersion Condition="'$(FileVersion)' != '$(PlaceholderVersion)'">$(FileVersion)</SccsidVersion>
+      <SccsidVersion Condition="'$(FileVersion)' == '$(PlaceholderVersion)'">N/A</SccsidVersion>
 
       <!--
         There isn't a defacto standard for including version information in a native binary on unix so we defined a static
@@ -120,7 +127,7 @@
       -->
       <_NativeVersionFileContents>
 <![CDATA[
-static char sccsid[] __attribute__((used)) = "@(#)Version $(FileVersion)$(_SourceBuildInfo)";
+static char sccsid[] __attribute__((used)) = "@(#)Version $(SccsidVersion)$(_SourceBuildInfo)";
  ]]>
       </_NativeVersionFileContents>
     </PropertyGroup>
