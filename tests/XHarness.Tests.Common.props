@@ -15,7 +15,6 @@
     <HelixType>test/product/</HelixType>
     <TestRunNamePrefix>$(AGENT_JOBNAME)</TestRunNamePrefix>
     <IncludeXHarnessCli>true</IncludeXHarnessCli>
-    <EnableXUnitReporter>true</EnableXUnitReporter>
     <EnableAzurePipelinesReporter>true</EnableAzurePipelinesReporter>
     <HelixBaseUri>https://helix.dot.net</HelixBaseUri>
     <EnableXHarnessTelemetry>true</EnableXHarnessTelemetry>
@@ -23,7 +22,6 @@
 
   <!-- For non-ci local runs -->
   <PropertyGroup Condition=" '$(AGENT_JOBNAME)' == '' ">
-    <EnableXUnitReporter>false</EnableXUnitReporter>
     <EnableAzurePipelinesReporter>false</EnableAzurePipelinesReporter>
   </PropertyGroup>
 

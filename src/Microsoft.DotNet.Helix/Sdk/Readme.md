@@ -180,7 +180,6 @@ Given a local folder `$(TestFolder)` containing `runtests.cmd`, this will run `r
         test-results.xml
         test_results.xml
     -->
-    <EnableXUnitReporter>false</EnableXUnitReporter>
     <!-- Instruct the sdk to wait for test result ingestion by MC, and fail if there are any failed work items or tests. -->
     <FailOnMissionControlTestFailure>false</FailOnMissionControlTestFailure>
 
