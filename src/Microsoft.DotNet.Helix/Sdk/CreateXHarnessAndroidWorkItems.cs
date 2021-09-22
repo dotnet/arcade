@@ -150,7 +150,13 @@ namespace Microsoft.DotNet.Helix.Sdk
                 $"{ devOutArg } { instrumentationArg } { exitCodeArg } { extraArguments } { passthroughArgs }";
         }
 
-        private string GetHelixCommand(ITaskItem appPackage, string apkName, string androidPackageName, TimeSpan xHarnessTimeout, int expectedExitCode)
+        private string GetHelixCommand(
+            ITaskItem appPackage,
+            string apkName,
+            string androidPackageName,
+            TimeSpan workItemTimeout,
+            TimeSpan xHarnessTimeout,
+            int expectedExitCode)
         {
             appPackage.TryGetMetadata(MetadataNames.AndroidInstrumentationName, out string androidInstrumentationName);
             appPackage.TryGetMetadata(MetadataNames.DeviceOutputPath, out string deviceOutputPath);
@@ -163,7 +169,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             string dash = IsPosixShell ? "--" : "-";
             string xharnessRunCommand = $"{xharnessHelixWrapperScript} " +
                 $"{dash}app \"{apkName}\" " +
-                $"{dash}command_timeout {(int)s_telemetryBuffer.TotalSeconds} " +
+                $"{dash}command_timeout {(int)workItemTimeout.TotalSeconds} " +
                 $"{dash}timeout \"{xHarnessTimeout}\" " +
                 $"{dash}package_name \"{androidPackageName}\" " +
                 (expectedExitCode != 0 ? $" {dash}expected_exit_code \"{expectedExitCode}\" " : string.Empty) +
