@@ -236,49 +236,5 @@ namespace Microsoft.DotNet.Helix.Sdk
             $"--expected-exit-code \"{expectedExitCode}\" " +
             (!string.IsNullOrEmpty(XcodeVersion) ? $" --xcode-version \"{XcodeVersion}\"" : string.Empty) +
             (!string.IsNullOrEmpty(AppArguments) ? $" --app-arguments \"{AppArguments}\"" : string.Empty);
-
-        /*
-        private async Task<string> CreateZipArchiveOfFolder(
-            IZipArchiveManager zipArchiveManager,
-            IFileSystem fileSystem,
-            string workItemName,
-            bool isAlreadyArchived,
-            string folderToZip,
-            string injectedCommands)
-        {
-            string appFolderDirectory = fileSystem.GetDirectoryName(folderToZip);
-            
-            string fileName;
-            string outputZipPath;
-
-            if (!isAlreadyArchived)
-            {
-                fileName = $"xharness-app-payload-{workItemName.ToLowerInvariant()}.zip";
-                outputZipPath = fileSystem.PathCombine(appFolderDirectory, fileName);
-
-                if (fileSystem.FileExists(outputZipPath))
-                {
-                    Log.LogMessage($"Zip archive '{outputZipPath}' already exists, overwriting..");
-                    fileSystem.DeleteFile(outputZipPath);
-                }
-
-                zipArchiveManager.ArchiveDirectory(folderToZip, outputZipPath, true);
-            }
-            else
-            {
-                Log.LogMessage($"App payload '{workItemName}` has already been zipped. Skipping creating zip archive");
-                fileName = fileSystem.GetFileName(folderToZip);
-                outputZipPath = fileSystem.PathCombine(appFolderDirectory, fileName);
-            }
-
-            Log.LogMessage($"Adding the XHarness job scripts into the payload archive '{ScriptNamespace}{EntryPointScript}'");
-            await zipArchiveManager.AddResourceFileToArchive<CreateXHarnessAppleWorkItems>(outputZipPath, ScriptNamespace + EntryPointScript, EntryPointScript);
-            Log.LogMessage($"2nd AddResourceFileToArchive");
-            await zipArchiveManager.AddResourceFileToArchive<CreateXHarnessAppleWorkItems>(outputZipPath, ScriptNamespace + RunnerScript, RunnerScript);
-            await zipArchiveManager.AddContentToArchive(outputZipPath, CustomCommandsScript + ".sh", injectedCommands);
-
-            return outputZipPath;
-        }
-        */
     }
 }

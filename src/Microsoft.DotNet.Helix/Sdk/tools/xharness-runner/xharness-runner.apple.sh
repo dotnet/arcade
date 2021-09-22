@@ -99,7 +99,6 @@ function sign ()
 
     # Sign the app
     /usr/bin/codesign -v --force --sign "Apple Development" --keychain "$keychain_name" --entitlements entitlements.plist "$1"
-
 }
 
 if [ -z "$app" ]; then

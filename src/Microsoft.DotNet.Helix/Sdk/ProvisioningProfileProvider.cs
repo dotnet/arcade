@@ -70,7 +70,6 @@ namespace Microsoft.DotNet.Helix.Sdk
             _fileSystem = fileSystem ?? throw new ArgumentNullException(nameof(fileSystem));
             _zipArchiveManager = zipArchiveManager ?? throw new ArgumentNullException(nameof(zipArchiveManager));
             _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
-            _zipArchiveManager = zipArchiveManager ?? throw new ArgumentNullException(nameof(zipArchiveManager));
             _profileUrlTemplate = profileUrlTemplate;
             _tmpDir = tmpDir;
         }
