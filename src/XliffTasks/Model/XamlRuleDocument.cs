@@ -1,7 +1,10 @@
 ﻿// Copyright (c) .NET Foundation and contributors. All rights reserved.
 // Licensed under the MIT license. See LICENSE file in the project root for full license information.
 
+#nullable enable
+
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Linq;
 
 namespace XliffTasks.Model
@@ -24,7 +27,7 @@ namespace XliffTasks.Model
                         yield return new TranslatableXmlAttribute(
                             id: GenerateIdForDisplayNameOrDescription(attribute),
                             source: attribute.Value,
-                            note: null,
+                            note: GetComment(element, XmlName(attribute)),
                             attribute: attribute);
                     }
                     else if (XmlName(attribute) == "Value"
@@ -33,7 +36,7 @@ namespace XliffTasks.Model
                         yield return new TranslatableXmlAttribute(
                             id: GenerateIdForPropertyMetadata(element),
                             source: attribute.Value,
-                            note: null,
+                            note: GetComment(element, XmlName(attribute)),
                             attribute: attribute);
                     }
                 }
@@ -58,6 +61,22 @@ namespace XliffTasks.Model
             XElement grandParent = element.Parent.Parent;
 
             return $"{XmlName(grandParent)}|{AttributedName(grandParent)}|Metadata|{AttributedName(element)}";
+        }
+
+        private static string? GetComment(XElement element, string attributeName)
+        {
+            foreach (var comment in element.Nodes().OfType<XComment>())
+            {
+                foreach (var line in comment.Value.Split(new[] { '\n' }, System.StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()))
+                {
+                    if (line.StartsWith(attributeName))
+                    {
+                        return line.Substring(attributeName.Length).Trim(':', ' ', '\t');
+                    }
+                }
+            }
+
+            return null;
         }
 
         private static string XmlName(XElement element) => element.Name.LocalName;
