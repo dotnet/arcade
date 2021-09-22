@@ -188,7 +188,7 @@ find "$output_directory" -name "*.log" -maxdepth 1 -size 0 -print -delete
 # Rename test result XML so that AzDO reporter recognizes it
 test_results=$(ls "$output_directory"/xunit-*.xml)
 if [ -f "$test_results" ]; then
-    echo "Found test results in $output_directory/$test_results. Renaming to testResults.xml to prepare for Helix upload"
+    echo "Found test results in $test_results. Renaming to testResults.xml to prepare for Helix upload"
 
     # Prepare test results for Helix to pick up
     mv "$test_results" "$output_directory/testResults.xml"

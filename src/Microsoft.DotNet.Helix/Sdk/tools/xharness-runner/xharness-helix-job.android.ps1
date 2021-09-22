@@ -42,7 +42,6 @@ $job = [PowerShell]::Create().AddScript({
         $output_directory,
         $app,
         $timeout,
-        $command_timeout,
         $package_name,
         $expected_exit_code,
         $device_output_path,
@@ -51,7 +50,7 @@ $job = [PowerShell]::Create().AddScript({
     $result.ExitCode = 0
     . "$current_dir\command.ps1"
     $result.ExitCode = $LASTEXITCODE
-}).AddArgument($PSScriptRoot).AddArgument($Env:HELIX_WORKITEM_UPLOAD_ROOT).AddArgument($app).AddArgument($timeout).AddArgument($command_timeout).AddArgument($package_name).AddArgument($expected_exit_code).AddArgument($device_output_path).AddArgument($instrumentation).AddArgument($code)
+}).AddArgument($PSScriptRoot).AddArgument($Env:HELIX_WORKITEM_UPLOAD_ROOT).AddArgument($app).AddArgument($timeout).AddArgument($package_name).AddArgument($expected_exit_code).AddArgument($device_output_path).AddArgument($instrumentation).AddArgument($code)
 
 $output = New-Object 'System.Management.Automation.PSDataCollection[psobject]'
 $task = $job.BeginInvoke($output, $output);
@@ -60,11 +59,15 @@ $timer = [Diagnostics.Stopwatch]::StartNew();
 do
 {
     if ($task.IsCompleted) {
+        # This prints the output of the $job (the actual user commands)
+        Write-Output $output;
         $exit_code = $code.ExitCode;
         break;
     }
 
     if ($timer.Elapsed.TotalSeconds -gt $command_timeout) {
+        # This prints the output of the $job (the actual user commands)
+        Write-Output $output;
         Write-Error "User command timed out after $command_timeout seconds!";
         $job.Stop();
         $exit_code = -3;
@@ -72,10 +75,7 @@ do
     }
 
     Start-Sleep -Milliseconds 250;
-} while (1 -eq 1)
-
-# This prints the output of the $job (the actual user commands)
-Write-Output $output;
+} while ($true);
 
 $job.Dispose();
 
