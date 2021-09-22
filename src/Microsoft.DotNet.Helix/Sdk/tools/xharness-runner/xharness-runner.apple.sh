@@ -100,8 +100,6 @@ function sign ()
     # Sign the app
     /usr/bin/codesign -v --force --sign "Apple Development" --keychain "$keychain_name" --entitlements entitlements.plist "$1"
 
-    mv "$app.zip" "$output_directory"
-    mv xharness-output/AOTBuild.binlog "$output_directory"
 }
 
 if [ -z "$app" ]; then

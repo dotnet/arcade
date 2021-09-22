@@ -30,8 +30,7 @@ done
 set -x
 
 if [ "$build_app" = true ] ; then
-    chmod +x build-apple-app.sh
-    sh ./build-apple-app.sh
+    source build-apple-app.sh
 fi
 
 # It is important we call the script via `launchctl asuser` in order to be able to spawn
