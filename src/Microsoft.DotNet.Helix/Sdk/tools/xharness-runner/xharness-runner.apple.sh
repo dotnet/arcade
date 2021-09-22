@@ -175,7 +175,7 @@ if [ $exit_code -eq 81 ] && [[ "$target" =~ "device" ]]; then
 fi
 
 # The simulator logs comming from the sudo-spawned Simulator.app are not readable by the helix uploader
-chmod 0644 "$output_directory"/*.log
+chmod -R 0777 "$output_directory"
 
 # Remove empty files
 find "$output_directory" -name "*.log" -maxdepth 1 -size 0 -print -delete
