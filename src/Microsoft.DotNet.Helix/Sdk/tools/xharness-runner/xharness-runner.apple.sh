@@ -10,6 +10,7 @@ app=''
 target=''
 timeout=''
 launch_timeout=''
+command_timeout=20
 xcode_version=''
 app_arguments=''
 expected_exit_code=0
@@ -29,6 +30,10 @@ while [[ $# -gt 0 ]]; do
         ;;
       --timeout)
         timeout="$2"
+        shift
+        ;;
+      --command-timeout)
+        command_timeout="$2"
         shift
         ;;
       --launch-timeout)
@@ -139,8 +144,8 @@ function xharness() {
     dotnet exec "$XHARNESS_CLI_PATH" "$@"
 }
 
-# Act out the actual commands
-source command.sh
+# Act out the actual commands (and time constrain them to create buffer for the end of this script)
+source command.sh & PID=$! ; (sleep $command_timeout && kill $PID 2> /dev/null & ) ; wait $PID
 exit_code=$?
 
 # Exit code values - https://github.com/dotnet/xharness/blob/main/src/Microsoft.DotNet.XHarness.Common/CLI/ExitCode.cs

@@ -163,6 +163,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             string dash = IsPosixShell ? "--" : "-";
             string xharnessRunCommand = $"{xharnessHelixWrapperScript} " +
                 $"{dash}app \"{apkName}\" " +
+                $"{dash}command_timeout {(int)s_telemetryBuffer.TotalSeconds} " +
                 $"{dash}timeout \"{xHarnessTimeout}\" " +
                 $"{dash}package_name \"{androidPackageName}\" " +
                 (expectedExitCode != 0 ? $" {dash}expected_exit_code \"{expectedExitCode}\" " : string.Empty) +

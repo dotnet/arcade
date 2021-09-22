@@ -13,6 +13,8 @@ param (
     [Parameter(Mandatory)]
     [string]$timeout,
     [Parameter()]
+    [int]$command_timeout = 20,
+    [Parameter()]
     [string]$package_name = $null,
     [Parameter()]
     [int]$expected_exit_code = 0,
@@ -35,11 +37,36 @@ function xharness() {
 $ErrorActionPreference="Continue"
 
 # Act out the actual commands
-. "$PSScriptRoot\command.ps1"
+# We have to time constrain them to create buffer for the end of this script
+$code = @{}
+$job = [PowerShell]::Create().AddScript({
+  param($JobFile, $Result)
+  $Result.ExitCode = 0
+  . "$PSScriptRoot\command.ps1"
+  $Result.ExitCode = $LASTEXITCODE
+}).AddArgument($JobFile).AddArgument($code)
+
+$async = $job.BeginInvoke();
+
+$timer = [Diagnostics.Stopwatch]::StartNew();
+
+do
+{
+    if ($async.IsCompleted) {
+        $job.EndInvoke($async);
+        $exit_code = $code.ExitCode;
+        break;
+    }
+
+    if ($timer.Elapsed.TotalSeconds -gt $command_timeout) {
+        $exit_code = -3;
+        break;
+    }
+
+    Start-Sleep -Milliseconds 500;
+} while (1 -eq 1)
 
 $ErrorActionPreference="Continue"
-
-$exit_code=$LASTEXITCODE
 
 $retry=$false
 $reboot=$false

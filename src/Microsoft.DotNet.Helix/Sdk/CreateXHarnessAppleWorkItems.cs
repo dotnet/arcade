@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Arcade.Common;
 using Microsoft.Build.Framework;
@@ -222,6 +223,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             $"chmod +x {EntryPointScript} && ./{EntryPointScript} " +
             $"--app \"{appName}\" " +
             $"--target \"{target}\" " +
+            $"--command-timeout {(int)s_telemetryBuffer.TotalSeconds} " +
             $"--timeout \"{testTimeout}\" " +
             $"--launch-timeout \"{launchTimeout}\" " +
             (includesTestRunner ? "--includes-test-runner " : string.Empty) +
