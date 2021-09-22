@@ -105,7 +105,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                 apkName = apkName.Replace(".zip", ".apk");
             }
 
-            string command = GetHelixCommand(appPackage, apkName, androidPackageName, testTimeout, expectedExitCode);
+            string command = GetHelixCommand(appPackage, apkName, androidPackageName, workItemTimeout, testTimeout, expectedExitCode);
 
             string workItemZip = await CreatePayloadArchive(
                 zipArchiveManager,
