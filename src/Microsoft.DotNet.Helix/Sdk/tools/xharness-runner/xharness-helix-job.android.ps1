@@ -12,8 +12,8 @@ param (
     [string]$app,
     [Parameter(Mandatory)]
     [string]$timeout,
-    [Parameter()]
-    [int]$command_timeout = 20,
+    [Parameter(Mandatory)]
+    [int]$command_timeout, # in seconds
     [Parameter()]
     [string]$package_name = $null,
     [Parameter()]
@@ -26,9 +26,6 @@ param (
 
 $ErrorActionPreference="Stop"
 
-[Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSUseDeclaredVarsMoreThanAssignments", "")] # Variable used in sourced script
-$output_directory=$Env:HELIX_WORKITEM_UPLOAD_ROOT
-
 # The xharness alias
 function xharness() {
     dotnet exec $Env:XHARNESS_CLI_PATH @args
@@ -40,31 +37,47 @@ $ErrorActionPreference="Continue"
 # We have to time constrain them to create buffer for the end of this script
 $code = @{}
 $job = [PowerShell]::Create().AddScript({
-  param($JobFile, $Result)
-  $Result.ExitCode = 0
-  . "$PSScriptRoot\command.ps1"
-  $Result.ExitCode = $LASTEXITCODE
-}).AddArgument($JobFile).AddArgument($code)
+    param(
+        $current_dir,
+        $output_directory,
+        $app,
+        $timeout,
+        $command_timeout,
+        $package_name,
+        $expected_exit_code,
+        $device_output_path,
+        $instrumentation,
+        $result)
+    $result.ExitCode = 0
+    . "$current_dir\command.ps1"
+    $result.ExitCode = $LASTEXITCODE
+}).AddArgument($PSScriptRoot).AddArgument($Env:HELIX_WORKITEM_UPLOAD_ROOT).AddArgument($app).AddArgument($timeout).AddArgument($command_timeout).AddArgument($package_name).AddArgument($expected_exit_code).AddArgument($device_output_path).AddArgument($instrumentation).AddArgument($code)
 
-$async = $job.BeginInvoke();
-
+$output = New-Object 'System.Management.Automation.PSDataCollection[psobject]'
+$task = $job.BeginInvoke($output, $output);
 $timer = [Diagnostics.Stopwatch]::StartNew();
 
 do
 {
-    if ($async.IsCompleted) {
-        $job.EndInvoke($async);
+    if ($task.IsCompleted) {
         $exit_code = $code.ExitCode;
         break;
     }
 
     if ($timer.Elapsed.TotalSeconds -gt $command_timeout) {
+        Write-Error "User command timed out after $command_timeout seconds!";
+        $job.Stop();
         $exit_code = -3;
         break;
     }
 
-    Start-Sleep -Milliseconds 500;
+    Start-Sleep -Milliseconds 250;
 } while (1 -eq 1)
+
+# This prints the output of the $job (the actual user commands)
+Write-Output $output;
+
+$job.Dispose();
 
 $ErrorActionPreference="Continue"
 
