@@ -587,4 +587,4 @@ Eg:
   tools/x64_arm64/mscordaccore.dll
   tools/x64_arm64/mscordbi.dll 
 
-During the build, arcade will pick up SymbolPublishingExclusionsFile.txt and exclude the symbols mentioned in it.
+During publishing, arcade will pick up SymbolPublishingExclusionsFile.txt and exclude the symbols mentioned in it.
