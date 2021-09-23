@@ -4,7 +4,8 @@ param(
   [Parameter(Mandatory = $true)][string] $DotnetSymbolVersion, # Version of dotnet symbol to use
   [Parameter(Mandatory = $false)][switch] $CheckForWindowsPdbs, # If we should check for the existence of windows pdbs in addition to portable PDBs
   [Parameter(Mandatory = $false)][switch] $ContinueOnError, # If we should keep checking symbols after an error
-  [Parameter(Mandatory = $false)][switch] $Clean                  # Clean extracted symbols directory after checking symbols
+  [Parameter(Mandatory = $false)][switch] $Clean,           # Clean extracted symbols directory after checking symbols
+  [Parameter(Mandatory = $false)][switch] $SymbolExclusion  # Exclude the symbols in the file from publishing to symbol server
 )
 
 # Maximum number of jobs to run in parallel
@@ -23,6 +24,17 @@ Set-Variable -Name "ERROR_FILEDOESNOTEXIST" -Option Constant -Value -2
 $WindowsPdbVerificationParam = ""
 if ($CheckForWindowsPdbs) {
   $WindowsPdbVerificationParam = "--windows-pdbs"
+}
+
+$ExclusionSet = New-Object System.Collections.Generic.HashSet[string];
+
+#Check if the path exists
+if(Test-path $SymbolExclusion){
+  $Exclusions = Get-Content "$SymbolExclusion" | foreach-object {} 
+  $Exclusions | foreach { if($_ -and $_.Trim()){$ExclusionSet.Add($_)} }
+}
+else{
+  Write-Host "Symbol Exclusion file does not exists.No symbols to exclude."
 }
 
 $CountMissingSymbols = {
@@ -142,37 +154,43 @@ $CountMissingSymbols = {
       return $null
     }
 
-    $FileGuid = New-Guid
-    $ExpandedSymbolsPath = Join-Path -Path $SymbolsPath -ChildPath $FileGuid
-
-    $SymbolsOnMSDL = & $FirstMatchingSymbolDescriptionOrDefault `
-        -FullPath $FileName `
-        -TargetServerParam '--microsoft-symbol-server' `
-        -SymbolsPath "$ExpandedSymbolsPath-msdl" `
-        -WindowsPdbVerificationParam $WindowsPdbVerificationParam
-    $SymbolsOnSymWeb = & $FirstMatchingSymbolDescriptionOrDefault `
-        -FullPath $FileName `
-        -TargetServerParam '--internal-server' `
-        -SymbolsPath "$ExpandedSymbolsPath-symweb" `
-        -WindowsPdbVerificationParam $WindowsPdbVerificationParam
-
-    Write-Host -NoNewLine "`t Checking file " $FileName "... "
-  
-    if ($SymbolsOnMSDL -ne $null -and $SymbolsOnSymWeb -ne $null) {
-      Write-Host "Symbols found on MSDL ($SymbolsOnMSDL) and SymWeb ($SymbolsOnSymWeb)"
+    if($ExclusionSet -ne $null -and $ExclusionSet.contains($SymbolPath))
+    {
+      Write-Host "Skipping $SymbolPath from symbol validation"
     }
-    else {
-      $MissingSymbols++
+    else{
+      $FileGuid = New-Guid
+      $ExpandedSymbolsPath = Join-Path -Path $SymbolsPath -ChildPath $FileGuid
 
-      if ($SymbolsOnMSDL -eq $null -and $SymbolsOnSymWeb -eq $null) {
-        Write-Host 'No symbols found on MSDL or SymWeb!'
+      $SymbolsOnMSDL = & $FirstMatchingSymbolDescriptionOrDefault `
+          -FullPath $FileName `
+          -TargetServerParam '--microsoft-symbol-server' `
+          -SymbolsPath "$ExpandedSymbolsPath-msdl" `
+          -WindowsPdbVerificationParam $WindowsPdbVerificationParam
+      $SymbolsOnSymWeb = & $FirstMatchingSymbolDescriptionOrDefault `
+          -FullPath $FileName `
+          -TargetServerParam '--internal-server' `
+          -SymbolsPath "$ExpandedSymbolsPath-symweb" `
+          -WindowsPdbVerificationParam $WindowsPdbVerificationParam
+
+      Write-Host -NoNewLine "`t Checking file " $FileName "... "
+  
+      if ($SymbolsOnMSDL -ne $null -and $SymbolsOnSymWeb -ne $null) {
+        Write-Host "Symbols found on MSDL ($SymbolsOnMSDL) and SymWeb ($SymbolsOnSymWeb)"
       }
       else {
-        if ($SymbolsOnMSDL -eq $null) {
-          Write-Host 'No symbols found on MSDL!'
+        $MissingSymbols++
+
+        if ($SymbolsOnMSDL -eq $null -and $SymbolsOnSymWeb -eq $null) {
+          Write-Host 'No symbols found on MSDL or SymWeb!'
         }
         else {
-          Write-Host 'No symbols found on SymWeb!'
+          if ($SymbolsOnMSDL -eq $null) {
+            Write-Host 'No symbols found on MSDL!'
+          }
+          else {
+            Write-Host 'No symbols found on SymWeb!'
+          }
         }
       }
     }
