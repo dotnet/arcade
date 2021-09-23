@@ -25,6 +25,7 @@ namespace Microsoft.DotNet.Helix.Sdk
 
         private const string PosixAndroidWrapperScript = "xharness-helix-job.android.sh";
         private const string NonPosixAndroidWrapperScript = "xharness-helix-job.android.ps1";
+        private const string NonPosixAndroidHeaderScript = "xharness-helix-job.android.header.ps1";
 
         /// <summary>
         /// Boolean true if this is a posix shell, false if not.
@@ -107,6 +108,12 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             string command = GetHelixCommand(appPackage, apkName, androidPackageName, workItemTimeout, testTimeout, expectedExitCode);
 
+            if (!IsPosixShell)
+            {
+                // For windows, we need to add a .ps1 header to turn the script into a cmdlet
+                customCommands = GetPowerShellHeader() + customCommands;
+            }
+
             string workItemZip = await CreatePayloadArchive(
                 zipArchiveManager,
                 fileSystem,
@@ -179,6 +186,14 @@ namespace Microsoft.DotNet.Helix.Sdk
             Log.LogMessage(MessageImportance.Low, $"Generated XHarness command: {xharnessRunCommand}");
 
             return xharnessRunCommand;
+        }
+
+        private static string GetPowerShellHeader()
+        {
+            using Stream stream = ZipArchiveManager.GetResourceFileContent<CreateXHarnessAndroidWorkItems>(
+                ScriptNamespace + NonPosixAndroidHeaderScript);
+            using StreamReader reader = new(stream);
+            return reader.ReadToEnd();
         }
     }
 }

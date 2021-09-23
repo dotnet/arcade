@@ -57,7 +57,7 @@ namespace Microsoft.Arcade.Common
             await content.CopyToAsync(targetStream);
         }
 
-        private static Stream GetResourceFileContent<TAssembly>(string resourceFileName)
+        public static Stream GetResourceFileContent<TAssembly>(string resourceFileName)
         {
             Assembly assembly = typeof(TAssembly).Assembly;
             return assembly.GetManifestResourceStream($"{assembly.GetName().Name}.{resourceFileName}");

@@ -24,7 +24,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             public const string CustomCommands = "CustomCommands";
         }
 
-        private const string ScriptNamespace = "tools.xharness_runner.";
+        protected const string ScriptNamespace = "tools.xharness_runner.";
         private const string CustomCommandsScript = "command";
         private const string DiagnosticsScript = "xharness-event-reporter.py";
 
