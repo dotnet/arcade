@@ -12,7 +12,7 @@
 
   <ItemGroup Condition="'@(XUnitProject)' != ''">
     <HelixCorrelationPayload Include="xunit-runner">
-      <Uri>https://dev.azure.com/dnceng/public/_packaging?_a=package&feed=dotnet-eng&package=xunit.runner.console&protocolType=NuGet&version=$(XUnitRunnerVersion)</Uri>
+      <Uri>https://dev.azure.com/dnceng/public/_packaging?_a=package&amp;feed=dotnet-eng&amp;package=xunit.runner.console&amp;protocolType=NuGet&amp;version=$(XUnitRunnerVersion)</Uri>
       <Destination>xunit-runner</Destination>
     </HelixCorrelationPayload>
   </ItemGroup>
