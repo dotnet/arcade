@@ -9,7 +9,7 @@ Currently only way how to generate Helix custom images for our Windows queues is
 
 
 ### Goal
-The goal of this epic is to enable our team to be able to generate custom images by ourselves and remove the dependency on DDFUN. These are images which contains various versions of Visual Studio and various versions of Windows. We will introduce a new automated and monitored process which removes the need for manual steps done by DDFUN.
+The goal of this epic is to automate the process of custom image generation, so this can be done by our team or vendors, without the need of external teams. These are images which contains various versions of Visual Studio and various versions of Windows. We will introduce a new automated and monitored process which removes the need for manual steps done by DDFUN.
 
 When this is completed we will be able to:
 * generate images ourselves without spending time on coordination with DDFUN, similarly to other teams using Image Factory
@@ -17,7 +17,7 @@ When this is completed we will be able to:
 * automatically regenerate images on change of configuration files
 * monitor completion of process instead of relying on notifications from DDFUN
 
-Part of this epic is also to take the ownership of [custom image definitions](https://devdiv.visualstudio.com/XlabImageFactory/_git/ImageConfigurations?path=%2FMonthly%2FHelixBaseImages) that currently reside with DDFUN to get complete control over the definitions and to be able to run our automation against them seamlessly.
+Part of this epic is to take the ownership of [custom image definitions](https://devdiv.visualstudio.com/XlabImageFactory/_git/ImageConfigurations?path=%2FMonthly%2FHelixBaseImages) that currently reside with DDFUN to get complete control over the definitions and to be able to run our automation against them seamlessly. This will be part of new documentation so maintenance of these definitions can be done also by vendors.
 
 ### Implementation Details
 
