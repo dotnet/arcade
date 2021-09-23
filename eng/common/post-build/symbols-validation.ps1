@@ -5,7 +5,7 @@ param(
   [Parameter(Mandatory = $false)][switch] $CheckForWindowsPdbs, # If we should check for the existence of windows pdbs in addition to portable PDBs
   [Parameter(Mandatory = $false)][switch] $ContinueOnError, # If we should keep checking symbols after an error
   [Parameter(Mandatory = $false)][switch] $Clean,           # Clean extracted symbols directory after checking symbols
-  [Parameter(Mandatory = $false)][switch] $SymbolExclusion  # Exclude the symbols in the file from publishing to symbol server
+  [Parameter(Mandatory = $false)][switch] $SymbolExclusionFile  # Exclude the symbols in the file from publishing to symbol server
 )
 
 # Maximum number of jobs to run in parallel
@@ -24,17 +24,6 @@ Set-Variable -Name "ERROR_FILEDOESNOTEXIST" -Option Constant -Value -2
 $WindowsPdbVerificationParam = ""
 if ($CheckForWindowsPdbs) {
   $WindowsPdbVerificationParam = "--windows-pdbs"
-}
-
-$ExclusionSet = New-Object System.Collections.Generic.HashSet[string];
-
-#Check if the path exists
-if(Test-path $SymbolExclusion){
-  $Exclusions = Get-Content "$SymbolExclusion" | foreach-object {} 
-  $Exclusions | foreach { if($_ -and $_.Trim()){$ExclusionSet.Add($_)} }
-}
-else{
-  Write-Host "Symbol Exclusion file does not exists.No symbols to exclude."
 }
 
 $CountMissingSymbols = {
@@ -154,7 +143,19 @@ $CountMissingSymbols = {
       return $null
     }
 
-    if($ExclusionSet -ne $null -and $ExclusionSet.contains($SymbolPath))
+    $ExclusionSet = New-Object System.Collections.Generic.HashSet[string];
+    $FileRelativePath = $FileName.Replace("$ExtractPath\", "")
+    
+    #Check if the path exists
+    if(Test-path $SymbolExclusionFile){
+      $Exclusions = Get-Content "$SymbolExclusionFile" | foreach-object {} 
+      $Exclusions | foreach { if($_ -and $_.Trim()){$ExclusionSet.Add($_)} }
+    }
+    else{
+      Write-Host "Symbol Exclusion file does not exists. No symbols to exclude."
+    }
+
+    if ($ExclusionSet -ne $null -and ($ExclusionSet.Contains($FileRelativePath) -or $ExclusionSet.Contains($FileRelativePath.Replace("\", "/"))))
     {
       Write-Host "Skipping $SymbolPath from symbol validation"
     }
