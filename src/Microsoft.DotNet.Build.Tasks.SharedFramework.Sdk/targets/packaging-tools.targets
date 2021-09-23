@@ -99,6 +99,14 @@
       <CompressedArchiveFile>$(AssetOutputPath)$(InstallerFileNameWithoutExtension)$(CompressedFileExtension)</CompressedArchiveFile>
     </PropertyGroup>
 
+    <PropertyGroup Condition="'$(InstallerExtension)' == '.rpm'">
+      <CreateRPMForCblMariner>true</CreateRPMForCblMariner>
+      <_CblMarinerVersionSuffix>cm.1</_CblMarinerVersionSuffix>
+      <_InstallerBuildPartCblMariner>$(ProductVersion)-$(_CblMarinerVersionSuffix)-$(TargetArchitecture)</_InstallerBuildPartCblMariner>
+      <_InstallerFileNameWithoutExtensionCblMariner>$(InstallerName)-$(_InstallerBuildPartCblMariner)$(CrossArchContentsBuildPart)</_InstallerFileNameWithoutExtensionCblMariner>
+      <_InstallerFileCblMariner Condition="'$(_InstallerFileCblMariner)' == ''">$(AssetOutputPath)$(_InstallerFileNameWithoutExtensionCblMariner)$(InstallerExtension)</_InstallerFileCblMariner>
+    </PropertyGroup>
+
     <!--
       Set the directory containing contents to include in the archive (zip/tarball). This default
       means the "shared" dir is inside the archive and it can be extracted directly into the dotnet
