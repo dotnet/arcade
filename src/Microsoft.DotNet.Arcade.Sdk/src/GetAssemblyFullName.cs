@@ -7,7 +7,7 @@ using Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.Arcade.Sdk
 {
-    public class GetAssemblyFullName : Task
+    public class GetAssemblyFullName : Microsoft.Build.Utilities.Task
     {
         [Required]
         public ITaskItem[] Items { get; set; }

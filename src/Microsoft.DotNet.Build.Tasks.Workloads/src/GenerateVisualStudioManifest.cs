@@ -14,7 +14,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
     /// MSBuild task for generating a Visual Studio manifest project (.vsmanproj). The generated project can be used
     /// to create a manifest (.vsman) by merging JSON manifest files produced from one or more SWIX project.
     /// </summary>
-    public class GenerateVisualStudioManifest : Task
+    public class GenerateVisualStudioManifest : Microsoft.Build.Utilities.Task
     {
         /// <summary>
         /// The base path where the project source will be generated.

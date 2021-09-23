@@ -18,7 +18,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
     {
         static Unsign() => AssemblyResolution.Initialize();
 #else
-    public class Unsign : Task
+    public class Unsign : Microsoft.Build.Utilities.Task
     {
 #endif
         [Required]

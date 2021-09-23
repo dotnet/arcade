@@ -13,7 +13,7 @@ using Tasks = System.Threading.Tasks;
 
 namespace Microsoft.DotNet.Arcade.Sdk
 {
-    public class DownloadFile : Task, ICancelableTask
+    public class DownloadFile : Microsoft.Build.Utilities.Task, ICancelableTask
     {
         /// <summary>
         /// List of URls to attempt download from. Accepted metadata are:

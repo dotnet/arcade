@@ -58,10 +58,6 @@ if [ -z "$timeout" ]; then
     die "No timeout was provided";
 fi
 
-if [ -z "$package_name" ]; then
-    die "Package name path wasn't provided";
-fi
-
 if [ -z "$output_directory" ]; then
     die "No output directory provided";
 fi
@@ -81,17 +77,21 @@ reboot=false
 
 # Too see where these values come from, check out https://github.com/dotnet/xharness/blob/master/src/Microsoft.DotNet.XHarness.Common/CLI/ExitCode.cs
 # Avoid any helix-ism in the Xharness!
+ADB_DEVICE_ENUMERATION_FAILURE=85
+PACKAGE_INSTALLATION_FAILURE=78
 
 case "$exit_code" in
-  85)
+  $ADB_DEVICE_ENUMERATION_FAILURE)
     # This handles issues where devices or emulators fail to start.
     # The only solution is to reboot the machine, so we request a work item retry + agent reboot when this happens
     echo 'Encountered ADB_DEVICE_ENUMERATION_FAILURE. This is typically not a failure of the work item. We will run it again and reboot this computer to help its devices'
     echo 'If this occurs repeatedly, please check for architectural mismatch, e.g. sending arm64_v8a APKs to an x86_64 / x86 only queue.'
+    # Copy emulator log
+    cp /tmp/*-logcat.log "$output_directory"
     retry=true
     reboot=true
     ;;
-  78)
+  $PACKAGE_INSTALLATION_FAILURE)
     # This handles issues where APKs fail to install.
     # We already reboot a device inside XHarness and now request a work item retry when this happens
     echo 'Encountered PACKAGE_INSTALLATION_FAILURE. This is typically not a failure of the work item. We will try it again on another Helix agent'
@@ -100,16 +100,12 @@ case "$exit_code" in
     ;;
 esac
 
-
-
-ADB_DEVICE_ENUMERATION_FAILURE=85
-if [ "$retry"]; then
+if [ "$retry" == true ]; then
     "$HELIX_PYTHONPATH" -c "from helix.workitemutil import request_infra_retry; request_infra_retry('Retrying because we could not enumerate all Android devices')"
 fi
 
-PACKAGE_INSTALLATION_FAILURE=78
-if [ $exit_code -eq PACKAGE_INSTALLATION_FAILURE ]; then
-    "$HELIX_PYTHONPATH" -c "from helix.workitemutil import request_reboot; request_reboot('Rebooting to allow Android emulator or device to restart.')"
+if [ "$reboot" == true ]; then
+    "$HELIX_PYTHONPATH" -c "from helix.workitemutil import request_reboot; request_reboot('Rebooting to allow Android emulator to restart')"
 fi
 
 exit $exit_code

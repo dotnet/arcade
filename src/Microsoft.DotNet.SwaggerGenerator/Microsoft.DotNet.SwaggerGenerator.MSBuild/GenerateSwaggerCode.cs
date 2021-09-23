@@ -13,7 +13,7 @@ using Task = Microsoft.Build.Utilities.Task;
 
 namespace Microsoft.DotNet.SwaggerGenerator.MSBuild
 {
-    public class GenerateSwaggerCode : Task
+    public class GenerateSwaggerCode : Microsoft.Build.Utilities.Task
     {
         [Required]
         public string SwaggerDocumentUri { get; set; }

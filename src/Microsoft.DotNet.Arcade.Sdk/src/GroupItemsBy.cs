@@ -30,7 +30,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
     /// ]]>
     /// 
     /// </summary>
-    public sealed class GroupItemsBy : Task
+    public sealed class GroupItemsBy : Microsoft.Build.Utilities.Task
     {
         /// <summary>
         /// Items to group by their ItemSpec.

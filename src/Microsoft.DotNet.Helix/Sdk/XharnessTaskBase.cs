@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Threading.Tasks;
 using Microsoft.Arcade.Common;
 using Microsoft.Build.Framework;
 
@@ -21,8 +23,9 @@ namespace Microsoft.DotNet.Helix.Sdk
             public const string CustomCommands = "CustomCommands";
         }
 
-        protected const string ScriptNamespace = "tools.xharness_runner.";
-        protected const string CustomCommandsScript = "command";
+        private const string ScriptNamespace = "tools.xharness_runner.";
+        private const string CustomCommandsScript = "command";
+        private const string DiagnosticsScript = "xharness-event-reporter.py";
 
         /// <summary>
         /// Extra arguments that will be passed to the iOS/Android/... app that is being run
@@ -95,13 +98,94 @@ namespace Microsoft.DotNet.Helix.Sdk
             return (testTimeout, workItemTimeout, expectedExitCode, customCommands);
         }
 
-        protected Build.Utilities.TaskItem CreateTaskItem(string workItemName, string payloadArchivePath, string command, TimeSpan timeout) =>
-            new (workItemName, new Dictionary<string, string>()
+        protected Build.Utilities.TaskItem CreateTaskItem(string workItemName, string payloadArchivePath, string command, TimeSpan timeout)
+        {
+            Log.LogMessage($"Creating work item with properties Identity: {workItemName}, Payload: {payloadArchivePath}, Command: {command}");
+
+            return new(workItemName, new Dictionary<string, string>()
             {
                 { "Identity", workItemName },
                 { "PayloadArchive", payloadArchivePath },
                 { "Command", command },
                 { "Timeout", timeout.ToString() },
             });
+        }
+
+        protected async Task<string> CreatePayloadArchive(
+            IZipArchiveManager zipArchiveManager,
+            IFileSystem fileSystem,
+            string workItemName,
+            bool isAlreadyArchived,
+            bool isPosix,
+            string pathToZip,
+            string injectedCommands,
+            string[] payloadScripts)
+        {
+            string outputZipPath;
+            if (!isAlreadyArchived)
+            {
+                string appFolderDirectory = fileSystem.GetDirectoryName(pathToZip);
+                string fileName = $"xharness-payload-{workItemName.ToLowerInvariant()}.zip";
+                outputZipPath = fileSystem.PathCombine(appFolderDirectory, fileName);
+
+                if (fileSystem.FileExists(outputZipPath))
+                {
+                    Log.LogMessage($"Zip archive '{outputZipPath}' already exists, overwriting..");
+                    fileSystem.DeleteFile(outputZipPath);
+                }
+
+                if (fileSystem.GetAttributes(pathToZip).HasFlag(FileAttributes.Directory))
+                {
+                    zipArchiveManager.ArchiveDirectory(pathToZip, outputZipPath, true);
+                }
+                else
+                {
+                    zipArchiveManager.ArchiveFile(pathToZip, outputZipPath);
+                }
+            }
+            else
+            {
+                Log.LogMessage($"App payload '{workItemName}` has already been zipped");
+                outputZipPath = pathToZip;
+            }
+
+            Log.LogMessage($"Adding the XHarness job scripts into the payload archive");
+
+            foreach (var payloadScript in payloadScripts)
+            {
+                await zipArchiveManager.AddResourceFileToArchive<XHarnessTaskBase>(
+                    outputZipPath,
+                    ScriptNamespace + payloadScript,
+                    payloadScript);
+            }
+
+            await zipArchiveManager.AddResourceFileToArchive<XHarnessTaskBase>(
+                outputZipPath,
+                ScriptNamespace + DiagnosticsScript,
+                DiagnosticsScript);
+
+            await zipArchiveManager.AddContentToArchive(
+                outputZipPath,
+                CustomCommandsScript + (isPosix ? ".sh" : ".ps1"),
+                injectedCommands);
+
+            return outputZipPath;
+        }
+
+        /// <summary>
+        /// This method parses the name for the Helix work item and path of the app from the item's metadata.
+        /// The user can re-use the same .apk for 2 work items so the name of the work item will come from ItemSpec and path from metadata.
+        /// </summary>
+        public static (string WorkItemName, string AppPath) GetNameAndPath(ITaskItem item, string pathMetadataName, IFileSystem fileSystem)
+        {
+            if (item.TryGetMetadata(pathMetadataName, out string appPathMetadata) && !string.IsNullOrEmpty(appPathMetadata))
+            {
+                return (item.ItemSpec, appPathMetadata);
+            }
+            else
+            {
+                return (fileSystem.GetFileNameWithoutExtension(item.ItemSpec), item.ItemSpec);
+            }
+        }
     }
 }

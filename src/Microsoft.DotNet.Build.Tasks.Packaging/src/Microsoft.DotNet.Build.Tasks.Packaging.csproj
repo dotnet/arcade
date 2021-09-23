@@ -87,7 +87,7 @@
   <Target Name="FindRuntimeJson" Inputs="%(_candidatPackageFolders.Identity)" Outputs="unused">
     <PropertyGroup>
       <_candidatePackageFolder>%(_candidatPackageFolders.Identity)</_candidatePackageFolder>
-      <_runtimeJsonSubPath>Microsoft.NETCore.Platforms\2.1.0\runtime.json</_runtimeJsonSubPath>
+      <_runtimeJsonSubPath>Microsoft.NETCore.Platforms\$(MicrosoftNETCorePlatformsVersion)\runtime.json</_runtimeJsonSubPath>
       <_runtimeJsonPath Condition="'$(_runtimeJsonPath)' == '' AND Exists('$(_candidatePackageFolder)\$(_runtimeJsonSubPath)')">$(_candidatePackageFolder)\$(_runtimeJsonSubPath)</_runtimeJsonPath>
       <_runtimeJsonPath Condition="'$(_runtimeJsonPath)' == '' AND Exists('$(_candidatePackageFolder)\$(_runtimeJsonSubPath.ToLower())')">$(_candidatePackageFolder)\$(_runtimeJsonSubPath.ToLower())</_runtimeJsonPath>
     </PropertyGroup>

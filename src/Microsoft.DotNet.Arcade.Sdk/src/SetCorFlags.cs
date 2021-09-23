@@ -18,7 +18,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
     {
         static SetCorFlags() => AssemblyResolution.Initialize();
 #else
-    public class SetCorFlags : Task
+    public class SetCorFlags : Microsoft.Build.Utilities.Task
     {
 #endif
         [Required]

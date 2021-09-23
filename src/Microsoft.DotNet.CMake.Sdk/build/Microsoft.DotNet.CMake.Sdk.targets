@@ -122,7 +122,7 @@
     <Error Condition="$([MSBuild]::IsOsPlatform(Windows))" Text="This SDK does not support using non-MSVC toolchains on Windows." />
     <PropertyGroup>
       <CMakeCompilerSearchScript>
-      . $([MSBuild]::MakeRelative('$(MSBuildProjectDirectory)', '$(RepositoryEngineeringDir)common/native/find-native-compiler.sh')) $(CMakeCompilerToolchain) $(CMakeCompilerMajorVersion) $(CMakeCompilerMinorVersion)
+      . $([MSBuild]::MakeRelative('$(MSBuildProjectDirectory)', '$(RepositoryEngineeringDir)common/native/init-compiler.sh')) $(Platform) $(CMakeCompilerToolchain) $(CMakeCompilerMajorVersion) $(CMakeCompilerMinorVersion)
       </CMakeCompilerSearchScript>
     </PropertyGroup>
   </Target>

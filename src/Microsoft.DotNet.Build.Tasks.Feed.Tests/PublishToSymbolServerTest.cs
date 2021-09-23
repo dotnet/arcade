@@ -216,7 +216,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     "1234",
                     "test.txt",
                     path));
-            Assert.Contains($"Failed to download local file '{path}' after {publishTask.RetryHandler.MaxAttempts} attempts.  See inner exception for details,", actualError.Message);
+            Assert.Contains($"Failed to download local file '{path}' after {publishTask.RetryHandler.MaxAttempts} attempts.  See inner exception for details.", actualError.Message);
         }
 
         [Theory]
@@ -259,7 +259,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                     "1234",
                     "test.txt",
                     path));
-            Assert.Contains($"Failed to download local file '{path}' after {publishTask.RetryHandler.MaxAttempts} attempts.  See inner exception for details,", actualError.Message);
+            Assert.Contains($"Failed to download local file '{path}' after {publishTask.RetryHandler.MaxAttempts} attempts.  See inner exception for details.", actualError.Message);
         }
 
         [Theory]

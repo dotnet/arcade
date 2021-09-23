@@ -54,10 +54,22 @@ namespace Microsoft.Arcade.Test.Common
 
         public void WriteToFile(string path, string content) => Files[path] = content;
 
-        public void FileCopy(string sourceFileName, string destFileName) => Files[destFileName] = Files[sourceFileName];
+        public void CopyFile(string sourceFileName, string destFileName, bool overwrite = false) => Files[destFileName] = Files[sourceFileName];
 
         public Stream GetFileStream(string path, FileMode mode, FileAccess access)
             => FileExists(path) ? new MemoryStream() : new MockFileStream(this, path);
+
+        public FileAttributes GetAttributes(string path)
+        {
+            var attributes = FileAttributes.Normal;
+
+            if (Directories.Contains(path))
+            {
+                attributes |= FileAttributes.Directory;
+            }
+
+            return  attributes;
+        }
 
         #endregion
 

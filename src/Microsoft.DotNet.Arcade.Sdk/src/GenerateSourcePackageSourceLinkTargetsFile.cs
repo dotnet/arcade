@@ -12,7 +12,7 @@ using Microsoft.Build.Utilities;
 
 namespace Microsoft.DotNet.Arcade.Sdk
 {
-    public sealed class GenerateSourcePackageSourceLinkTargetsFile : Task
+    public sealed class GenerateSourcePackageSourceLinkTargetsFile : Microsoft.Build.Utilities.Task
     {
         [Required]
         public string ProjectDirectory { get; set; }

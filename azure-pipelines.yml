@@ -52,8 +52,8 @@ stages:
           ${{ if eq(variables._RunAsPublic, True) }}:
             vmImage: windows-latest
           ${{ if eq(variables._RunAsInternal, True) }}:
-            name: NetCoreInternal-Pool
-            queue: BuildPool.Server.Amd64.VS2017.Arcade
+            name: NetCore1ESPool-Internal
+            demands: ImageOverride -equals Build.Server.Amd64.VS2017
         strategy:
           matrix:
             Build_Release:
@@ -123,6 +123,18 @@ stages:
           - checkout: self
             clean: true
           steps:
+          - task: PowerShell@2
+            displayName: sdk-task verification
+            inputs:
+              filePath: eng\common\sdk-task.ps1
+              arguments: -task PublishToSymbolServers /p:DryRun="true" -restore -msbuildEngine dotnet
+                /p:DotNetSymbolServerTokenMsdl=DryRunPTA
+                /p:DotNetSymbolServerTokenSymWeb=DryRunPTA
+                /p:PDBArtifactsDirectory='$(Build.ArtifactStagingDirectory)/PDBArtifacts/'
+                /p:BlobBasePath='$(Build.ArtifactStagingDirectory)/BlobArtifacts/'
+                /p:SymbolPublishingExclusionsFile='$(Build.SourcesDirectory)/eng/SymbolPublishingExclusionsFile.txt'
+                /p:Configuration=Release
+                /p:PublishToMSDL=false
           - powershell: eng\common\build.ps1
               -configuration $(_BuildConfig) 
               -prepareMachine
@@ -142,10 +154,9 @@ stages:
               -ci
               -restore
               -test
-              -projects $(Build.SourcesDirectory)\tests\UnitTests.XHarness.Android.Device.proj
-              /bl:$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)\Helix.XHarness.Android.Device.binlog
+              -projects $(Build.SourcesDirectory)\tests\XHarness.Android.DeviceTests.proj
+              /bl:$(Build.SourcesDirectory)\artifacts\log\$(_BuildConfig)\Helix.XHarness.Android.Device.Tests.binlog
               /p:RestoreUsingNuGetTargets=false
-              /p:XHarnessTestARM64_V8A=true
             displayName: XHarness Android Helix Testing (Windows)
             env:
               SYSTEM_ACCESSTOKEN: $(System.AccessToken)
@@ -184,10 +195,10 @@ stages:
               -ci
               -restore
               -test
-              -projects $(Build.SourcesDirectory)/tests/UnitTests.XHarness.iOS.Simulator.proj
-              /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/UnitTests.XHarness.iOS.Simulator.binlog
+              -projects $(Build.SourcesDirectory)/tests/XHarness.Apple.SimulatorTests.proj
+              /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/XHarness.Apple.Simulator.Tests.binlog
               /p:RestoreUsingNuGetTargets=false
-            displayName: XHarness iOS Simulator Helix Testing
+            displayName: XHarness Apple Simulator Helix Testing
             env:
               SYSTEM_ACCESSTOKEN: $(System.AccessToken)
               HelixAccessToken: ''
@@ -197,10 +208,10 @@ stages:
               -ci
               -restore
               -test
-              -projects $(Build.SourcesDirectory)/tests/UnitTests.XHarness.iOS.Device.proj
-              /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.XHarness.iOS.Device.binlog
+              -projects $(Build.SourcesDirectory)/tests/XHarness.Apple.DeviceTests.proj
+              /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.XHarness.Apple.Device.Tests.binlog
               /p:RestoreUsingNuGetTargets=false
-            displayName: XHarness iOS Device Helix Testing
+            displayName: XHarness Apple Device Helix Testing
             env:
               SYSTEM_ACCESSTOKEN: $(System.AccessToken)
               HelixAccessToken: ''
@@ -210,11 +221,9 @@ stages:
               -ci
               -restore
               -test
-              -projects $(Build.SourcesDirectory)/tests/UnitTests.XHarness.Android.Simulator.proj
-              /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.XHarness.Android.Simulator.binlog
+              -projects $(Build.SourcesDirectory)/tests/XHarness.Android.SimulatorTests.proj
+              /bl:$(Build.SourcesDirectory)/artifacts/log/$(_BuildConfig)/Helix.XHarness.Android.Simulator.Tests.binlog
               /p:RestoreUsingNuGetTargets=false
-              /p:XHarnessTestX86=true 
-              /p:XHarnessTestX86_64=true 
             displayName: XHarness Android Helix Testing (Linux)
             env:
               SYSTEM_ACCESSTOKEN: $(System.AccessToken)

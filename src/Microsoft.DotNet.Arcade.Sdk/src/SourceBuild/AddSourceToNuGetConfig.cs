@@ -15,7 +15,7 @@ namespace Microsoft.DotNet.Arcade.Sdk.SourceBuild
     /// also by default adds a 'clear' element if none exists, to avoid
     /// unintended leaks from the build environment.
     /// </summary>
-    public class AddSourceToNuGetConfig : Task
+    public class AddSourceToNuGetConfig : Microsoft.Build.Utilities.Task
     {
         [Required]
         public string NuGetConfigFile { get; set; }

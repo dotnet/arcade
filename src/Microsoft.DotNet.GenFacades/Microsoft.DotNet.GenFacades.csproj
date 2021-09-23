@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <TargetFrameworks>$(TargetFrameworkForNETSDK);net472</TargetFrameworks>
+    <TargetFrameworks Condition="'$(DotNetBuildFromSource)' == 'true'">$(TargetFrameworkForNETSDK)</TargetFrameworks>
     <PackageType>MSBuildSdk</PackageType>
     <IncludeBuildOutput>false</IncludeBuildOutput>
     <IsPackable>true</IsPackable>

@@ -12,6 +12,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
+using System.Net.Sockets;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -426,12 +427,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             HashSet<TargetFeedConfig> feedConfigsForSymbols = FeedConfigs[symbolCategory];
             Dictionary<string, string> serversToPublish =
                 GetTargetSymbolServers(feedConfigsForSymbols, msdlToken, symWebToken);
-            HashSet<string> excludeFiles = new HashSet<string>();
+            HashSet<string> excludeFiles = null;
             
             if(File.Exists(symbolPublishingExclusionsFile))
             {
                 Log.LogMessage(MessageImportance.Normal, $"SymbolPublishingExclusionFile exists");
                 string[] files = File.ReadAllLines(symbolPublishingExclusionsFile);
+                excludeFiles = new HashSet<string>();
 
                 foreach(var file in files)
                 {
@@ -955,7 +957,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                     return true;
                 }
-                catch (Exception toStore) when (toStore is HttpRequestException || toStore is TaskCanceledException)
+                catch (Exception toStore)
                 {
                     mostRecentlyCaughtException = toStore;
                     return false;
@@ -965,7 +967,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             if (!success)
             {
                 throw new Exception(
-                    $"Failed to download local file '{path}' after {RetryHandler.MaxAttempts} attempts.  See inner exception for details, {mostRecentlyCaughtException}");
+                    $"Failed to download local file '{path}' after {RetryHandler.MaxAttempts} attempts.  See inner exception for details.", mostRecentlyCaughtException);
             }
         }
 

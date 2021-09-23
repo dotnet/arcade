@@ -1,3 +1,5 @@
+trigger: none
+
 schedules:
 - cron: 0 12 * * 1
   displayName: Weekly Monday build
