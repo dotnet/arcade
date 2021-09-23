@@ -26,6 +26,18 @@ if ($CheckForWindowsPdbs) {
   $WindowsPdbVerificationParam = "--windows-pdbs"
 }
 
+$ExclusionSet = New-Object System.Collections.Generic.HashSet[string];
+$FileRelativePath = $FileName.Replace("$ExtractPath\", "")
+
+#Check if the path exists
+if(Test-path $SymbolExclusionFile){
+  $Exclusions = Get-Content "$SymbolExclusionFile" | foreach-object {} 
+  $Exclusions | foreach { if($_ -and $_.Trim()){$ExclusionSet.Add($_)} }
+}
+else{
+  Write-Host "Symbol Exclusion file does not exists. No symbols to exclude."
+}
+
 $CountMissingSymbols = {
   param( 
     [string] $PackagePath, # Path to a NuGet package
@@ -143,19 +155,7 @@ $CountMissingSymbols = {
       return $null
     }
 
-    $ExclusionSet = New-Object System.Collections.Generic.HashSet[string];
-    $FileRelativePath = $FileName.Replace("$ExtractPath\", "")
-    
-    #Check if the path exists
-    if(Test-path $SymbolExclusionFile){
-      $Exclusions = Get-Content "$SymbolExclusionFile" | foreach-object {} 
-      $Exclusions | foreach { if($_ -and $_.Trim()){$ExclusionSet.Add($_)} }
-    }
-    else{
-      Write-Host "Symbol Exclusion file does not exists. No symbols to exclude."
-    }
-
-    if ($ExclusionSet -ne $null -and ($ExclusionSet.Contains($FileRelativePath) -or $ExclusionSet.Contains($FileRelativePath.Replace("\", "/"))))
+    if (($($using:ExclusionSet) -ne $null) -and ($($using:ExclusionSet).Contains($FileRelativePath) -or ($($using:ExclusionSet).Contains($FileRelativePath.Replace("\", "/")))))
     {
       Write-Host "Skipping $SymbolPath from symbol validation"
     }
