@@ -12,6 +12,7 @@
     <PackageReference Include="log4net" Version="$(log4netVersion)" />
     <PackageReference Include="WindowsAzure.Storage" Version="$(WindowsAzureStorageVersion)" />
     <PackageReference Include="System.Net.Http" Version="$(SystemNetHttpVersion)" />
+    <PackageReference Include="Microsoft.Data.OData" Version="$(MicrosoftDataODataVersion" />
   </ItemGroup>
 
 </Project>
