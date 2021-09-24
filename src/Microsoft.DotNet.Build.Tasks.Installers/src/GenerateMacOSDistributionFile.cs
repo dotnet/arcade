@@ -40,8 +40,7 @@ namespace Microsoft.DotNet.SharedFramework.Sdk
 
                 var titleElement = new XElement("title", $"{ProductBrandName} ({TargetArchitecture})");
 
-                var archScriptContent = @"<![CDATA[
-function IsX64Machine() {
+                var archScriptContent = @"function IsX64Machine() {
     var machine = system.sysctl(""hw.machine"");
     var cputype = system.sysctl(""hw.cputype"");
     var cpu64 = system.sysctl(""hw.cpu64bit_capable"");
@@ -55,9 +54,8 @@ function IsX64Machine() {
     var result = machine == ""amd64"" || machine == ""x86_64"" || cputype == ""16777223"" || (cputype == ""7"" && cpu64 == ""1"");
     system.log(""IsX64Machine: "" + result);
     return result;
-}
-]]>";
-                var scriptElement = new XElement("script", new XText(archScriptContent));
+}";
+                var scriptElement = new XElement("script", new XCData(archScriptContent));
 
                 var choiceElements = BundledPackages
                     .Select(component => new XElement("choice",
