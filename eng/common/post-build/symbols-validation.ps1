@@ -5,7 +5,7 @@ param(
   [Parameter(Mandatory = $false)][switch] $CheckForWindowsPdbs, # If we should check for the existence of windows pdbs in addition to portable PDBs
   [Parameter(Mandatory = $false)][switch] $ContinueOnError, # If we should keep checking symbols after an error
   [Parameter(Mandatory = $false)][switch] $Clean,           # Clean extracted symbols directory after checking symbols
-  [Parameter(Mandatory = $false)][switch] $SymbolExclusionFile  # Exclude the symbols in the file from publishing to symbol server
+  [Parameter(Mandatory = $false)][string] $SymbolExclusionFile  # Exclude the symbols in the file from publishing to symbol server
 )
 
 # Maximum number of jobs to run in parallel
