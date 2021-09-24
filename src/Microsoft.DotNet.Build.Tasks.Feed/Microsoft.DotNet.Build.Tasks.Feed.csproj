@@ -16,6 +16,8 @@
     <PackageReference Include="Azure.Storage.Blobs" Version="$(AzureStorageBlobsVersion)" />
     <PackageReference Include="Microsoft.Build" Version="$(MicrosoftBuildVersion)" />
     <PackageReference Include="Microsoft.Build.Tasks.Core" Version="$(MicrosoftBuildTasksCoreVersion)" />
+    <PackageReference Include="Microsoft.Data.Services.Client" Version="$(MicrosoftDataServicesClientVersion)" />
+    <PackageReference Include="Microsoft.Data.OData" Version="$(MicrosoftDataODataVersion)" />
     <PackageReference Include="Microsoft.DotNet.Maestro.Client" Version="$(MicrosoftDotNetMaestroClientVersion)" />
     <PackageReference Include="System.Text.Encodings.Web" Version="$(SystemTextEncodingsWebVersion)" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="$(MicrosoftExtensionsDependencyInjectionVersion)" />
