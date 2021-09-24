@@ -54,8 +54,8 @@ stages:
           ${{ if eq(variables._RunAsPublic, True) }}:
             vmImage: windows-latest
           ${{ if eq(variables._RunAsInternal, True) }}:
-            name: NetCoreInternal-Pool
-            queue: BuildPool.Server.Amd64.VS2017.Arcade
+            name: NetCore1ESPool-Svc-Internal
+            demands: ImageOverride -equals Build.Server.Amd64.VS2017
         strategy:
           matrix:
             Build_Release:
