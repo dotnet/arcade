@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using Microsoft.Extensions.Azure;
 
@@ -57,7 +58,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
 
         public SymbolTargetType SymbolTargetType { get; }
 
-        public List<string> FilenamesToExclude { get; }
+        public ImmutableList<string> FilenamesToExclude { get; }
 
         public bool Flatten { get; }
 
@@ -71,7 +72,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             bool @internal = false, 
             bool allowOverwrite = false, 
             SymbolTargetType symbolTargetType = SymbolTargetType.None, 
-            List<string> filenamesToExclude = null,
+            IEnumerable<string> filenamesToExclude = null,
             bool flatten = true)
         {
             ContentType = contentType;
@@ -84,7 +85,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             AllowOverwrite = allowOverwrite;
             LatestLinkShortUrlPrefix = latestLinkShortUrlPrefix ?? string.Empty;
             SymbolTargetType = symbolTargetType;
-            FilenamesToExclude = filenamesToExclude ?? new List<string>();
+            FilenamesToExclude = filenamesToExclude?.ToImmutableList() ?? ImmutableList<string>.Empty;
             Flatten = flatten;
         }
 

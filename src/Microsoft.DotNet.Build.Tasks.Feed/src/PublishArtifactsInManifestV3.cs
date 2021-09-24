@@ -24,22 +24,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         [Required]
         public string TargetChannels { get; set; }
 
-        [Required] 
-        public string AzureDevOpsFeedsKey { get; set; }
-
-        [Required] 
-        public string AzureStorageTargetFeedKey { get; set; }
-
-        [Required] 
-        public string InstallersFeedKey { get; set; }
-
-        [Required] 
-        public string CheckSumsFeedKey { get; set; }
-
-        public string InternalInstallersFeedKey { get; set; }
-
-        public string InternalCheckSumsFeedKey { get; set; }
-
         public bool PublishInstallersAndChecksums { get; set; }
 
         public string PdbArtifactsBasePath { get; set; }
@@ -54,26 +38,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public bool AllowFeedOverrides { get; set; }
 
-        public string InstallersFeedOverride { get; set; }
+        public ITaskItem[] FeedKeys { get; set; }
+        public ITaskItem[] FeedSasUris { get; set; }
 
-        public string ChecksumsFeedOverride { get; set; }
-
-        public string ShippingFeedOverride { get; set; }
-
-        public string TransportFeedOverride { get; set; }
-
-        public string SymbolsFeedOverride { get; set; }
-
-        public string PublicSymbolsFeedOverride { get; set; }
-
-        [Required]
-        public string DotNetBuildsPublicUri { get; set; }
-        [Required]
-        public string DotNetBuildsPublicChecksumsUri { get; set; }
-        [Required]
-        public string DotNetBuildsInternalUri { get; set; }
-        [Required]
-        public string DotNetBuildsInternalChecksumsUri { get; set; }
+        public ITaskItem[] FeedOverrides { get; set; }
 
         public override bool Execute()
         {
@@ -154,35 +122,25 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         : $"dotnet/{targetChannelConfig.AkaMSChannelName}/{BuildQuality}";
 
                     var targetFeedsSetup = new SetupTargetFeedConfigV3(
+                        targetChannelConfig,
                         targetChannelConfig.IsInternal,
                         BuildModel.Identity.IsStable,
                         BuildModel.Identity.Name,
                         BuildModel.Identity.Commit,
-                        AzureStorageTargetFeedKey,
                         PublishInstallersAndChecksums,
-                        GetFeed(targetChannelConfig.InstallersFeed, InstallersFeedOverride),
-                        targetChannelConfig.IsInternal ? InternalInstallersFeedKey : InstallersFeedKey,
-                        GetFeed(targetChannelConfig.ChecksumsFeed, ChecksumsFeedOverride),
-                        targetChannelConfig.IsInternal ? InternalCheckSumsFeedKey : CheckSumsFeedKey,
-                        GetFeed(targetChannelConfig.ShippingFeed, ShippingFeedOverride),
-                        GetFeed(targetChannelConfig.TransportFeed, TransportFeedOverride),
-                        GetFeed(targetChannelConfig.SymbolsFeed, SymbolsFeedOverride),
+                        FeedKeys,
+                        FeedSasUris,
+                        AllowFeedOverrides ? FeedOverrides : Array.Empty<ITaskItem>(),
                         shortLinkUrl,
-                        AzureDevOpsFeedsKey,
                         BuildEngine,
                         targetChannelConfig.SymbolTargetType,
-                        DotNetBuildsPublicUri,
-                        DotNetBuildsPublicChecksumsUri,
-                        DotNetBuildsInternalUri,
-                        DotNetBuildsInternalChecksumsUri,
-                        azureDevOpsPublicStaticSymbolsFeed: GetFeed(null, PublicSymbolsFeedOverride),
                         filesToExclude: targetChannelConfig.FilenamesToExclude,
                         flatten: targetChannelConfig.Flatten);
 
                     var targetFeedConfigs = targetFeedsSetup.Setup();
 
                     // No target feeds to publish to, very likely this is an error
-                    if (targetFeedConfigs.Count() == 0)
+                    if (!targetFeedConfigs.Any())
                     {
                         Log.LogError($"No target feeds were found to publish the assets to.");
                         return false;

@@ -113,6 +113,22 @@
       <StreamingPublishingMaxClients Condition="'$(UseStreamingPublishing)' == 'true' and '$(StreamingPublishingMaxClients)' == ''">16</StreamingPublishingMaxClients>
     </PropertyGroup>
 
+    <ItemGroup>
+      <FeedKey Include="https://dotnetclichecksums.blob.core.windows.net/dotnet/index.json" Key="$(ChecksumsFeedKey)"/>
+      <FeedKey Include="https://dotnetcli.blob.core.windows.net/dotnet/index.json" Key="$(InstallersFeedKey)"/>
+      <FeedKey Include="https://dotnetclichecksumsmsrc.blob.core.windows.net/dotnet/index.json" Key="$(InternalChecksumsFeedKey)"/>
+      <FeedKey Include="https://dotnetclimsrc.blob.core.windows.net/dotnet/index.json" Key="$(InternalInstallersFeedKey)"/>
+      <FeedKey Include="https://pkgs.dev.azure.com/dnceng" Key="$(AzureDevOpsFeedsKey)"/>
+      <FeedSasUri Include="https://dotnetbuilds.blob.core.windows.net/public" Uri="$(DotNetBuildsPublicUriBase64)"/>
+      <FeedSasUri Include="https://dotnetbuilds.blob.core.windows.net/public-checksums" Uri="$(DotNetBuildsPublicChecksumsUriBase64)"/>
+      <FeedSasUri Include="https://dotnetbuilds.blob.core.windows.net/internal" Uri="$(DotNetBuildsInternalUriBase64)"/>
+      <FeedSasUri Include="https://dotnetbuilds.blob.core.windows.net/internal-checksums" Uri="$(DotNetBuildsInternalChecksumsUriBase64)"/>
+      <FeedOverride Include="https://dotnetclichecksums.blob.core.windows.net/dotnet/index.json" Replacement="$(ChecksumsFeedOverride)" Condition="'$(ChecksumsFeedOverride)' != ''"/>
+      <FeedOverride Include="https://dotnetcli.blob.core.windows.net/dotnet/index.json" Replacement="$(InstallersFeedOverride)" Condition="'$(InstallersFeedOverride)' != ''"/>
+      <FeedOverride Include="transport-packages" Replacement="$(TransportFeedOverride)" Condition="'$(TransportFeedOverride))' != ''"/>
+      <FeedOverride Include="shipping-packages" Replacement="$(ShippingFeedOverride)" Condition="'$(ShippingFeedOverride)' != ''"/>
+    </ItemGroup>
+
     <Error
       Condition="'@(ManifestFiles)' == ''"
       Text="No manifest file was found in the provided path: $(ManifestsBasePath)" />
@@ -128,12 +144,6 @@
       MaestroApiEndpoint="$(MaestroApiEndpoint)"
       BuildAssetRegistryToken="$(BuildAssetRegistryToken)"
       PublishInstallersAndChecksums="$(PublishInstallersAndChecksums)"
-      ChecksumsFeedKey="$(ChecksumsFeedKey)"
-      InstallersFeedKey="$(InstallersFeedKey)"
-      InternalChecksumsFeedKey="$(InternalChecksumsFeedKey)"
-      InternalInstallersFeedKey="$(InternalInstallersFeedKey)"
-      AzureDevOpsFeedsKey="$(AzureDevOpsFeedsKey)"
-      AzureStorageTargetFeedKey="$(AzureStorageTargetFeedPAT)"
       AssetManifestPaths="@(ManifestFiles)"
       BlobAssetsBasePath="$(BlobBasePath)"
       PackageAssetsBasePath="$(PackageBasePath)"
@@ -151,12 +161,6 @@
       PublishSpecialClrFiles="$(PublishSpecialClrFiles)"
       BuildQuality="$(BuildQuality)"
       AllowFeedOverrides="$(AllowFeedOverrides)"
-      InstallersFeedOverride="$(InstallersFeedOverride)"
-      ChecksumsFeedOverride="$(ChecksumsFeedOverride)"
-      TransportFeedOverride="$(TransportFeedOverride)"
-      ShippingFeedOverride="$(ShippingFeedOverride)"
-      SymbolsFeedOverride="$(SymbolsFeedOverride)" 
-      PublicSymbolsFeedOverride="$(PublicSymbolsFeedOverride)"
       AzdoApiToken="$(AzdoApiToken)"
       ArtifactsBasePath="$(ArtifactsBasePath)"
       BuildId="$(BuildId)"
@@ -165,10 +169,9 @@
       UseStreamingPublishing="$(UseStreamingPublishing)"
       StreamingPublishingMaxClients="$(StreamingPublishingMaxClients)"
       NonStreamingPublishingMaxClients="$(NonStreamingPublishingMaxClients)"
-      DotNetBuildsPublicUriBase64="$(DotNetBuildsPublicUriBase64)"
-      DotNetBuildsPublicChecksumsUriBase64="$(DotNetBuildsPublicChecksumsUriBase64)"
-      DotNetBuildsInternalUriBase64="$(DotNetBuildsInternalUriBase64)"
-      DotNetBuildsInternalChecksumsUriBase64="$(DotNetBuildsInternalChecksumsUriBase64)"
+      FeedKeys="@(FeedKey)"
+      FeedSasUris="@(FeedSasUri)"
+      FeedOverrides="@(FeedOverride)"
       />
   </Target>
 

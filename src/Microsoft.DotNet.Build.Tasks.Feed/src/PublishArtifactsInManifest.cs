@@ -107,31 +107,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public bool PublishInstallersAndChecksums { get; set; } = false;
 
-        public string AzureStorageTargetFeedKey { get; set; }
-
         public bool AllowFeedOverrides { get; set; }
 
-        public string ChecksumsFeedOverride { get; set; }
+        public ITaskItem[] FeedKeys { get; set; }
+        public ITaskItem[] FeedSasUris { get; set; }
 
-        public string ChecksumsFeedKey { get; set; }
-
-        public string InstallersFeedOverride { get; set; }
-
-        public string InstallersFeedKey { get; set; }
-
-        public string InternalInstallersFeedKey { get; set; }
-
-        public string InternalCheckSumsFeedKey { get; set; }
-
-        public string AzureDevOpsFeedsKey { get; set; }
-
-        public string TransportFeedOverride { get; set; }
-        
-        public string ShippingFeedOverride { get; set; }
-
-        public string SymbolsFeedOverride { get; set; }
-
-        public string PublicSymbolsFeedOverride { get; set; }
+        public ITaskItem[] FeedOverrides { get; set; }
 
         /// <summary>
         /// Path to dll and pdb files
@@ -201,14 +182,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         public int StreamingPublishingMaxClients {get; set;}
 
         public int NonStreamingPublishingMaxClients {get; set;}
-
-        public string DotNetBuildsPublicUriBase64 { get; set; }
-
-        public string DotNetBuildsPublicChecksumsUriBase64 { get; set; }
-
-        public string DotNetBuildsInternalUriBase64 { get; set; }
-
-        public string DotNetBuildsInternalChecksumsUriBase64 { get; set; }
 
         /// <summary>
         /// Just an internal flag to keep track whether we published assets via a V3 manifest or not.
@@ -332,27 +305,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         internal PublishArtifactsInManifestBase ConstructPublishingV2Task(BuildModel buildModel)
         {
-            return new PublishArtifactsInManifestV2(new AssetPublisherFactory(Log))
-            {
-                BuildEngine = this.BuildEngine,
-                TargetFeedConfig = this.TargetFeedConfig,
-                BuildModel = buildModel,
-                BlobAssetsBasePath = this.BlobAssetsBasePath,
-                PackageAssetsBasePath = this.PackageAssetsBasePath,
-                BARBuildId = this.BARBuildId,
-                MaestroApiEndpoint = this.MaestroApiEndpoint,
-                BuildAssetRegistryToken = this.BuildAssetRegistryToken,
-                NugetPath = this.NugetPath,
-                InternalBuild = this.InternalBuild,
-                SkipSafetyChecks = this.SkipSafetyChecks,
-                AkaMSClientId = this.AkaMSClientId,
-                AkaMSClientSecret = this.AkaMSClientSecret,
-                AkaMSCreatedBy = this.AkaMSCreatedBy,
-                AkaMSGroupOwner = this.AkaMSGroupOwner,
-                AkaMsOwners = this.AkaMsOwners,
-                AkaMSTenant = this.AkaMSTenant,
-                BuildQuality = this.BuildQuality,
-            };
+            Log.LogError("V2 Publishing is no longer supported.");
+            return null;
         }
 
         internal PublishArtifactsInManifestBase ConstructPublishingV3Task(BuildModel buildModel)
@@ -379,25 +333,16 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 AkaMsOwners = this.AkaMsOwners,
                 AkaMSTenant = this.AkaMSTenant,
                 PublishInstallersAndChecksums = this.PublishInstallersAndChecksums,
-                AzureDevOpsFeedsKey = this.AzureDevOpsFeedsKey,
-                InstallersFeedKey = this.InstallersFeedKey,
-                CheckSumsFeedKey = this.ChecksumsFeedKey,
-                InternalCheckSumsFeedKey = this.InternalCheckSumsFeedKey,
-                InternalInstallersFeedKey = this.InternalInstallersFeedKey,
-                AzureStorageTargetFeedKey = this.AzureStorageTargetFeedKey,
+                FeedKeys = this.FeedKeys,
+                FeedSasUris = this.FeedSasUris,
+                FeedOverrides = this.FeedOverrides,
+                AllowFeedOverrides = this.AllowFeedOverrides,
                 PdbArtifactsBasePath = this.PdbArtifactsBasePath,
                 SymWebToken = this.SymWebToken,
                 MsdlToken = this.MsdlToken,
                 SymbolPublishingExclusionsFile = this.SymbolPublishingExclusionsFile,
                 PublishSpecialClrFiles = this.PublishSpecialClrFiles,
                 BuildQuality = this.BuildQuality,
-                AllowFeedOverrides = this.AllowFeedOverrides,
-                InstallersFeedOverride = this.InstallersFeedOverride,
-                ChecksumsFeedOverride = this.ChecksumsFeedOverride,
-                ShippingFeedOverride = this.ShippingFeedOverride,
-                TransportFeedOverride = this.TransportFeedOverride,
-                SymbolsFeedOverride = this.SymbolsFeedOverride,
-                PublicSymbolsFeedOverride = this.PublicSymbolsFeedOverride,
                 ArtifactsBasePath =  this.ArtifactsBasePath,
                 AzdoApiToken = this.AzdoApiToken,
                 BuildId = this.BuildId,
@@ -406,10 +351,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 UseStreamingPublishing = this.UseStreamingPublishing,
                 StreamingPublishingMaxClients = this.StreamingPublishingMaxClients,
                 NonStreamingPublishingMaxClients = this.NonStreamingPublishingMaxClients,
-                DotNetBuildsPublicUri = ConvertFromBase64(DotNetBuildsPublicUriBase64),
-                DotNetBuildsPublicChecksumsUri = ConvertFromBase64(DotNetBuildsPublicChecksumsUriBase64),
-                DotNetBuildsInternalUri = ConvertFromBase64(DotNetBuildsInternalUriBase64),
-                DotNetBuildsInternalChecksumsUri = ConvertFromBase64(DotNetBuildsInternalChecksumsUriBase64),
             };
         }
 
