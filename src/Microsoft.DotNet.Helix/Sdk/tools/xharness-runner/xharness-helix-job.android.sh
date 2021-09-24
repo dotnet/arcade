@@ -12,6 +12,7 @@ echo "XHarness Helix Job Wrapper calling '$@'"
 set -x
 
 app=''
+command_timeout=20
 timeout=''
 package_name=''
 expected_exit_code=0
@@ -24,6 +25,10 @@ while [[ $# -gt 0 ]]; do
     case "$opt" in
       --app)
         app="$2"
+        shift
+        ;;
+      --command_timeout)
+        command_timeout="$2"
         shift
         ;;
       --timeout)
@@ -67,8 +72,8 @@ function xharness() {
     dotnet exec $XHARNESS_CLI_PATH "$@"
 }
 
-# Act out the actual commands
-source command.sh
+# Act out the actual commands (and time constrain them to create buffer for the end of this script)
+source command.sh & PID=$! ; (sleep $command_timeout && kill $PID 2> /dev/null & ) ; wait $PID
 
 exit_code=$?
 

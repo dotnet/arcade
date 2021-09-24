@@ -14,6 +14,7 @@ namespace Microsoft.DotNet.Helix.Sdk
     {
         private static readonly TimeSpan s_defaultWorkItemTimeout = TimeSpan.FromMinutes(20);
         private static readonly TimeSpan s_defaultTestTimeout = TimeSpan.FromMinutes(12);
+        protected static readonly TimeSpan s_telemetryBuffer = TimeSpan.FromSeconds(20); // extra time to send the XHarness telemetry
 
         public class MetadataName
         {
@@ -23,7 +24,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             public const string CustomCommands = "CustomCommands";
         }
 
-        private const string ScriptNamespace = "tools.xharness_runner.";
+        protected const string ScriptNamespace = "tools.xharness_runner.";
         private const string CustomCommandsScript = "command";
         private const string DiagnosticsScript = "xharness-event-reporter.py";
 
@@ -101,6 +102,9 @@ namespace Microsoft.DotNet.Helix.Sdk
         protected Build.Utilities.TaskItem CreateTaskItem(string workItemName, string payloadArchivePath, string command, TimeSpan timeout)
         {
             Log.LogMessage($"Creating work item with properties Identity: {workItemName}, Payload: {payloadArchivePath}, Command: {command}");
+
+            // Leave some time at the end of the work item to send the telemetry (in case it times out)
+            timeout += s_telemetryBuffer;
 
             return new(workItemName, new Dictionary<string, string>()
             {

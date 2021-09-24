@@ -12,6 +12,8 @@ param (
     [string]$app,
     [Parameter(Mandatory)]
     [string]$timeout,
+    [Parameter(Mandatory)]
+    [int]$command_timeout, # in seconds
     [Parameter()]
     [string]$package_name = $null,
     [Parameter()]
@@ -22,24 +24,33 @@ param (
     [string]$instrumentation = $null
 )
 
-$ErrorActionPreference="Stop"
-
-[Diagnostics.CodeAnalysis.SuppressMessageAttribute("PSUseDeclaredVarsMoreThanAssignments", "")] # Variable used in sourced script
-$output_directory=$Env:HELIX_WORKITEM_UPLOAD_ROOT
-
-# The xharness alias
-function xharness() {
-    dotnet exec $Env:XHARNESS_CLI_PATH @args
-}
-
 $ErrorActionPreference="Continue"
 
 # Act out the actual commands
-. "$PSScriptRoot\command.ps1"
+# We have to time constrain them to create buffer for the end of this script
+$psinfo = [System.Diagnostics.ProcessStartInfo]::new()
+$psinfo.FileName = "powershell"
+$psinfo.Arguments = " -ExecutionPolicy ByPass -NoProfile -File `"$PSScriptRoot\command.ps1`" -output_directory `"$Env:HELIX_WORKITEM_UPLOAD_ROOT`" -app `"$app`" -timeout `"$timeout`" -package_name `"$package_name`" -expected_exit_code `"$expected_exit_code`" -device_output_path `"$device_output_path`" -instrumentation `"$instrumentation`""
+$psinfo.RedirectStandardError = $false
+$psinfo.RedirectStandardOutput = $false
+$psinfo.UseShellExecute = $false
 
-$ErrorActionPreference="Continue"
+$process = [System.Diagnostics.Process]::new()
+$process.StartInfo = $psinfo
+$process.Start()
 
-$exit_code=$LASTEXITCODE
+Wait-Process -InputObject $process -TimeOut $command_timeout -ErrorVariable ev -ErrorAction SilentlyContinue
+
+if ($ev) {
+    $exit_code = -3
+    Stop-Process -InputObject $process -Force
+    $process.WaitForExit()
+    [Console]::Out.Flush()
+    Write-Output "User command timed out after $command_timeout seconds!"
+} else {
+    $exit_code = $process.ExitCode
+    Write-Output "User command ended with $exit_code"
+}
 
 $retry=$false
 $reboot=$false
