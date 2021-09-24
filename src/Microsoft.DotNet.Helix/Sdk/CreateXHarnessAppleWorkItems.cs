@@ -1,6 +1,7 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Arcade.Common;
 using Microsoft.Build.Framework;
@@ -168,11 +169,11 @@ namespace Microsoft.DotNet.Helix.Sdk
             if (customCommands == null)
             {
                 // When no user commands are specified, we add the default `apple test ...` command
-                customCommands = GetDefaultCommand(target, includesTestRunner, resetSimulator);
+                customCommands = GetDefaultCommand(includesTestRunner, resetSimulator);
             }
 
             string appName = isAlreadyArchived ? $"{fileSystem.GetFileNameWithoutExtension(appFolderPath)}.app" : fileSystem.GetFileName(appFolderPath);
-            string helixCommand = GetHelixCommand(appName, target, testTimeout, launchTimeout, includesTestRunner, expectedExitCode, resetSimulator);
+            string helixCommand = GetHelixCommand(appName, target, workItemTimeout, testTimeout, launchTimeout, includesTestRunner, expectedExitCode, resetSimulator);
             string payloadArchivePath = await CreatePayloadArchive(
                 zipArchiveManager,
                 fileSystem,
@@ -196,7 +197,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             return isAlreadyArchived ? fileSystem.FileExists(appBundlePath) : fileSystem.DirectoryExists(appBundlePath);
         }
 
-        private string GetDefaultCommand(string target, bool includesTestRunner, bool resetSimulator) =>
+        private string GetDefaultCommand(bool includesTestRunner, bool resetSimulator) =>
             $"xharness apple {(includesTestRunner ? "test" : "run")} " +
             "--app \"$app\" " +
             "--output-directory \"$output_directory\" " +
@@ -213,6 +214,7 @@ namespace Microsoft.DotNet.Helix.Sdk
         private string GetHelixCommand(
             string appName,
             string target,
+            TimeSpan workItemTimeout,
             TimeSpan testTimeout,
             TimeSpan launchTimeout,
             bool includesTestRunner,
@@ -222,6 +224,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             $"chmod +x {EntryPointScript} && ./{EntryPointScript} " +
             $"--app \"{appName}\" " +
             $"--target \"{target}\" " +
+            $"--command-timeout {(int)workItemTimeout.TotalSeconds} " +
             $"--timeout \"{testTimeout}\" " +
             $"--launch-timeout \"{launchTimeout}\" " +
             (includesTestRunner ? "--includes-test-runner " : string.Empty) +
