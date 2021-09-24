@@ -55,11 +55,11 @@ stages:
           # For public or PR jobs, use the hosted pool.  For internal jobs use the internal pool.
           # Will eventually change this to two BYOC pools.
           ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
-            name: NetCorePublic-Pool
-            queue: BuildPool.Windows.10.Amd64.VS2017.Open
+            name: NetCore1ESPool-Svc-Public
+            demands: ImageOverride -equals Build.Windows.10.Amd64.VS2017.Open
           ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
-            name: NetCoreInternal-Pool
-            queue: BuildPool.Windows.10.Amd64.VS2017
+            name: NetCore1ESPool-Svc-Internal
+            demands: ImageOverride -equals Build.Windows.10.Amd64.VS2017
         variables:
         - _Script: eng\common\cibuild.cmd
         - _ValidateSdkArgs: ''
@@ -150,11 +150,11 @@ stages:
           container: LinuxContainer
           pool:
             ${{ if or(eq(variables['System.TeamProject'], 'public'), in(variables['Build.Reason'], 'PullRequest')) }}:
-              name:  NetCorePublic-Pool
-              queue: BuildPool.Ubuntu.1804.Amd64.Open
+              name:  NetCore1ESPool-Svc-Public
+              demands: ImageOverride -equals Build.Ubuntu.1804.Amd64.Open
             ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
-              name:  NetCoreInternal-Pool
-              queue: BuildPool.Ubuntu.1804.Amd64
+              name:  NetCore1ESPool-Svc-Internal
+              demands: ImageOverride -equals Build.Ubuntu.1804.Amd64
           variables:
           - HelixApiAccessToken: ''
           - ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
