@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Text;
 using Microsoft.Build.Framework;
 using Microsoft.DotNet.Build.Tasks.Feed.Model;
 
@@ -53,9 +54,18 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             FilesToExclude = filesToExclude ?? ImmutableList<string>.Empty;
             Flatten = flatten;
             FeedKeys = feedKeys.ToImmutableDictionary(i => i.ItemSpec, i => i.GetMetadata("Key"));
-            FeedSasUris = feedSasUris.ToImmutableDictionary(i => i.ItemSpec, i => i.GetMetadata("Uri"));
+            FeedSasUris = feedSasUris.ToImmutableDictionary(i => i.ItemSpec, i => ConvertFromBase64(i.GetMetadata("Base64Uri")));
             FeedOverrides = feedOverrides.ToImmutableDictionary(i => i.ItemSpec, i => i.GetMetadata("Replacement"));
             AzureDevOpsFeedsKey = FeedKeys.TryGetValue("https://pkgs.dev.azure.com/dnceng", out string key) ? key : null;
+        }
+
+        private static string ConvertFromBase64(string value)
+        {
+            if (value == null)
+            {
+                return null;
+            }
+            return Encoding.UTF8.GetString(Convert.FromBase64String(value));
         }
 
         public ImmutableDictionary<string, string> FeedOverrides { get; set; }

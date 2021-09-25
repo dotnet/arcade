@@ -353,14 +353,5 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 NonStreamingPublishingMaxClients = this.NonStreamingPublishingMaxClients,
             };
         }
-
-        private string ConvertFromBase64(string value)
-        {
-            if (value == null)
-            {
-                return null;
-            }
-            return Encoding.UTF8.GetString(Convert.FromBase64String(value));
-        }
     }
 }
