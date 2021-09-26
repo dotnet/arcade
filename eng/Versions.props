@@ -83,8 +83,8 @@
     <MicrosoftDotNetXliffTasksVersion>1.0.0-beta.21473.1</MicrosoftDotNetXliffTasksVersion>
     <MicrosoftDotNetMaestroTasksVersion>1.1.0-beta.21378.2</MicrosoftDotNetMaestroTasksVersion>
     <MicrosoftDotNetXHarnessCLIVersion>1.0.0-prerelease.21465.1</MicrosoftDotNetXHarnessCLIVersion>
-    <MicrosoftSymbolUploaderBuildTaskVersion>2.0.0-preview.1.21466.7</MicrosoftSymbolUploaderBuildTaskVersion>
-    <MicrosoftSymbolUploaderVersion>2.0.0-preview.1.21466.7</MicrosoftSymbolUploaderVersion>
+    <MicrosoftSymbolUploaderBuildTaskVersion>2.0.0-preview.1.21474.2</MicrosoftSymbolUploaderBuildTaskVersion>
+    <MicrosoftSymbolUploaderVersion>2.0.0-preview.1.21474.2</MicrosoftSymbolUploaderVersion>
     <MicrosoftNetSdkWorkloadManifestReaderVersion>6.0.100-preview.5.21254.11</MicrosoftNetSdkWorkloadManifestReaderVersion>
     <MicrosoftDeploymentDotNetReleasesVersion>1.0.0-preview1.1.21116.1</MicrosoftDeploymentDotNetReleasesVersion>
   </PropertyGroup>
