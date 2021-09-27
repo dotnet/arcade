@@ -1,6 +1,6 @@
 # Test Retry
 
-Test retries is a new functionality that allows you to retry **helix-based testing**. The retries occur at an assembly level and the number of retries is configurable.  
+Automatic Test Retry allows you to retry **helix-based tests**. The retry occur at an assembly level and the number of retries is configurable.  
 
 It's important to know that all the reruns happen on the same machine and that the machines are not cleaned between reruns, this has an important implication: tests should be idempotent on the same machine. 
 
