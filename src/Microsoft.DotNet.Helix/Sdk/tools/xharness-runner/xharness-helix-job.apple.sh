@@ -45,11 +45,11 @@ exit_code=$?
 # Since we run the payload script using launchctl, env vars such as PYTHON_PATH are not set there and we have to do this part here
 # We signal this by creating files
 if [ -f './.retry' ]; then
-    "$HELIX_PYTHONPATH" -c "from helix.workitemutil import request_infra_retry; request_infra_retry('Retrying because XHarness ended with $exit_code')"
+    "$HELIX_PYTHONPATH" -c "from helix.workitemutil import request_infra_retry; request_infra_retry('Retrying work item because XHarness workload requested it')"
 fi
 
 if [ -f './.reboot' ]; then
-    "$HELIX_PYTHONPATH" -c "from helix.workitemutil import request_reboot; request_reboot('Rebooting because XHarness ended with $exit_code')"
+    "$HELIX_PYTHONPATH" -c "from helix.workitemutil import request_reboot; request_reboot('Rebooting because XHarness workload requested it)"
 fi
 
 exit $exit_code
