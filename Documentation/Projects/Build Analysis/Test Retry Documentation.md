@@ -4,7 +4,7 @@ Automatic Test Retry allows you to retry **helix-based tests**. The retry occur 
 
 It's important to know that all the reruns happen on the same machine and that the machines are not cleaned between reruns, this has an important implication: tests should be idempotent on the same machine. 
 
-Ex. if you are uploading to any fixed URLs, those need to check if that check was already done, and if copying files on the hard drive, be resilient that same copy command already having run
+Ex. if you are uploading to any fixed URLs, those need to check if that process was completed, and if copying files on the hard drive, it should be resilient to the same copy command having previously ran. 
 
 
 ## How to get on board
