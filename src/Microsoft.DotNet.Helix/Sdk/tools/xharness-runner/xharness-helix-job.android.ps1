@@ -47,6 +47,7 @@ if ($ev) {
     $process.WaitForExit()
     [Console]::Out.Flush()
     Write-Output "User command timed out after $command_timeout seconds!"
+    & "C:\adb\platform-tools\adb.exe" uninstall `"$package_name`"
 } else {
     $exit_code = $process.ExitCode
     Write-Output "User command ended with $exit_code"
