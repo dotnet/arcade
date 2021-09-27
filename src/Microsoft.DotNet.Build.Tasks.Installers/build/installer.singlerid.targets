@@ -399,7 +399,7 @@
              RemoveProperties="@(_GlobalPropertiesToRemoveForPublish)"  />
     <PropertyGroup>
       <_MacOSVersionComponent Condition="'$(IncludeVersionInMacOSComponentName)' == 'true'">.$(InstallerPackageVersion)</_MacOSVersionComponent>
-      <_MacOSComponentName Condition="'$(_MacOSComponentName)' == ''">com.microsoft.dotnet.$(MacOSComponentNamePackType)$(_MacOSVersionComponent).component.osx.x64</_MacOSComponentName>
+      <_MacOSComponentName Condition="'$(_MacOSComponentName)' == ''">com.microsoft.dotnet.$(MacOSComponentNamePackType)$(_MacOSVersionComponent).component.osx.$(InstallerTargetArchitecture)</_MacOSComponentName>
       <_MacOSSharedInstallDir>/usr/local/share/dotnet</_MacOSSharedInstallDir>
 
       <_pkgArgs></_pkgArgs>

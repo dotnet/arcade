@@ -24,8 +24,8 @@ stages:
       - job: Windows_NT
         timeoutInMinutes: 90
         pool:
-          name: NetCorePublic-Pool
-          queue: BuildPool.Server.Amd64.VS2017.Arcade.Open
+          name: NetCore1ESPool-Svc-Public
+          demands: ImageOverride -equals Build.Server.Amd64.VS2017.Open
         preSteps:
         - checkout: self
           clean: true
