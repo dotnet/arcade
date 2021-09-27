@@ -8,7 +8,7 @@ Ex. if you are uploading to any fixed URLs, those need to check if that check wa
 
 
 ## How to get on board
-As a first step you should [configurate the test-configuration.json](https://github.com/dotnet/arcade/tree/main/src/Microsoft.DotNet.Helix/Sdk#test-retry) file. This file should be allocated at `eng/test-configuration.json` and it will be [automatically picked up](ttps://github.com/dotnet/arcade/blob/b4fd1cc3817e0e85213dcc219ff7f7252761659f/src/Microsoft.DotNet.Helix/Sdk/tools/Microsoft.DotNet.Helix.Sdk.MonoQueue.targets#L8), no further changes are needed.
+As a first step you should [configurate the test-configuration.json](https://github.com/dotnet/arcade/tree/main/src/Microsoft.DotNet.Helix/Sdk#test-retry) file. This file should be allocated at `eng/test-configuration.json` and it will be [automatically picked up](https://github.com/dotnet/arcade/blob/b4fd1cc3817e0e85213dcc219ff7f7252761659f/src/Microsoft.DotNet.Helix/Sdk/tools/Microsoft.DotNet.Helix.Sdk.MonoQueue.targets#L8), no further changes are needed.
 
 There are a couple of rules that your test should meet:
 1. Using Helix
