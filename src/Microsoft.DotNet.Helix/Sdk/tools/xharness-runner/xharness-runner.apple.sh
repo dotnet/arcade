@@ -179,6 +179,14 @@ if [ $exit_code -eq 81 ] && [[ "$target" =~ "device" ]]; then
     touch './.reboot'
 fi
 
+# Simulators are known to slow down which results in installation taking several minutes
+# Retry+reboot usually resolves this
+# 86 - app installation timeout
+if [ $exit_code -eq 86 ]; then
+    touch './.retry'
+    touch './.reboot'
+fi
+
 # The simulator logs comming from the sudo-spawned Simulator.app are not readable/deletable by the helix uploader
 chmod -R 0766 "$output_directory"
 
