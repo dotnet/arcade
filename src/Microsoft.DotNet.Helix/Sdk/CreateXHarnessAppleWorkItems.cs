@@ -30,7 +30,7 @@ namespace Microsoft.DotNet.Helix.Sdk
         private const string EntryPointScript = "xharness-helix-job.apple.sh";
         private const string RunnerScript = "xharness-runner.apple.sh";
 
-        private static readonly TimeSpan s_defaultLaunchTimeout = TimeSpan.FromMinutes(10);
+        private static readonly TimeSpan s_defaultLaunchTimeout = TimeSpan.FromMinutes(5);
 
         /// <summary>
         /// An array of one or more paths to iOS/tvOS app bundles (folders ending with ".app" usually)

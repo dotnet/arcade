@@ -144,6 +144,13 @@ function xharness() {
     dotnet exec "$XHARNESS_CLI_PATH" "$@"
 }
 
+function report_infrastructure_failure() {
+    echo "Infrastructural problem reported by the user, requesting retry+reboot: $1"
+
+    touch './.retry'
+    touch './.reboot'
+}
+
 # Act out the actual commands (and time constrain them to create buffer for the end of this script)
 source command.sh & PID=$! ; (sleep $command_timeout && kill $PID 2> /dev/null & ) ; wait $PID
 exit_code=$?
@@ -156,27 +163,32 @@ if [ $exit_code -eq 80 ] && [[ "$target" =~ "simulator" ]]; then
     sudo pkill -9 -f "$simulator_app"
 fi
 
-# If we fail to find a simulator and we are not targeting a specific version (e.g. `ios-simulator_13.5`), it is probably an issue because Xcode should always have at least one runtime version inside
-# 81 - simulator/device not found
-if [ $exit_code -eq 81 ] && [[ "$target" =~ "simulator" ]] && [[ ! "$target" =~ "_" ]]; then
-    touch './.retry'
-    touch './.reboot'
-fi
-
 # If we have a launch failure AND we are on simulators, we need to signal that we want a reboot+retry
 # The script that is running this one will notice and request Helix to do it
 # 83 - app launch failure
 if [ $exit_code -eq 83 ] && [[ "$target" =~ "simulator" ]]; then
-    touch './.retry'
-    touch './.reboot'
+    report_infrastructure_failure "Failed to launch the application on a simulator"
+fi
+
+# If we fail to find a simulator and we are not targeting a specific version (e.g. `ios-simulator_13.5`),
+# it is probably an issue because Xcode should always have at least one runtime version inside
+# 81 - simulator/device not found
+if [ $exit_code -eq 81 ] && [[ "$target" =~ "simulator" ]] && [[ ! "$target" =~ "_" ]]; then
+    report_infrastructure_failure "No simulator runtime found"
 fi
 
 # If we fail to find a real device, it is unexpected as device queues should have one
 # It can often be fixed with a reboot
 # 81 - device not found
 if [ $exit_code -eq 81 ] && [[ "$target" =~ "device" ]]; then
-    touch './.retry'
-    touch './.reboot'
+    report_infrastructure_failure "Requested tethered Apple device not found"
+fi
+
+# Simulators are known to slow down which results in installation taking several minutes
+# Retry+reboot usually resolves this
+# 86 - app installation timeout
+if [ $exit_code -eq 86 ]; then
+    report_infrastructure_failure "Installation timed out"
 fi
 
 # The simulator logs comming from the sudo-spawned Simulator.app are not readable/deletable by the helix uploader
