@@ -1,11 +1,10 @@
-# Test Retry
+# Automatic Test Retry
 
 Automatic Test Retry allows you to retry **helix-based tests**. The retry occur at an assembly level and the number of retries is configurable.  
 
-It's important to know that all the reruns happen on the same machine and that the machines are not cleaned between reruns, this has an important implication: tests should be idempotent on the same machine. 
+It's important to know that all the reruns happen on the same machine and that the machines are not cleaned between reruns, this has an important implication: **tests should be idempotent on the same machine.** 
 
 Ex. if you are uploading to any fixed URLs, those need to check if that process was completed, and if copying files on the hard drive, it should be resilient to the same copy command having previously ran. 
-
 
 ## How to get on board
 As a first step you should [configurate the test-configuration.json](https://github.com/dotnet/arcade/tree/main/src/Microsoft.DotNet.Helix/Sdk#test-retry) file. This file should be allocated at `eng/test-configuration.json` and it will be [automatically picked up](https://github.com/dotnet/arcade/blob/b4fd1cc3817e0e85213dcc219ff7f7252761659f/src/Microsoft.DotNet.Helix/Sdk/tools/Microsoft.DotNet.Helix.Sdk.MonoQueue.targets#L8), no further changes are needed.
