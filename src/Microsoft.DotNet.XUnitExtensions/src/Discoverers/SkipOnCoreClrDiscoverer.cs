@@ -13,13 +13,13 @@ namespace Microsoft.DotNet.XUnitExtensions
 {
     public class SkipOnCoreClrDiscoverer : ITraitDiscoverer
     {
-        private static readonly Lazy<bool> s_isJitStress = new Lazy<bool>(() => !string.Equals(GetEnvironmentVariableValue("COMPlus_JitStress"), "0", StringComparison.InvariantCulture));
-        private static readonly Lazy<bool> s_isJitStressRegs = new Lazy<bool>(() => !string.Equals(GetEnvironmentVariableValue("COMPlus_JitStressRegs"), "0", StringComparison.InvariantCulture));
-        private static readonly Lazy<bool> s_isJitMinOpts = new Lazy<bool>(() => string.Equals(GetEnvironmentVariableValue("COMPlus_JITMinOpts"), "1", StringComparison.InvariantCulture));
-        private static readonly Lazy<bool> s_isTailCallStress = new Lazy<bool>(() => string.Equals(GetEnvironmentVariableValue("COMPlus_TailcallStress"), "1", StringComparison.InvariantCulture));
-        private static readonly Lazy<bool> s_isZapDisable = new Lazy<bool>(() => string.Equals(GetEnvironmentVariableValue("COMPlus_ZapDisable"), "1", StringComparison.InvariantCulture));
-        private static readonly Lazy<bool> s_isGCStress3 = new Lazy<bool>(() => CompareGCStressModeAsLower(GetEnvironmentVariableValue("COMPlus_GCStress"), "0x3", "3"));
-        private static readonly Lazy<bool> s_isGCStressC = new Lazy<bool>(() => CompareGCStressModeAsLower(GetEnvironmentVariableValue("COMPlus_GCStress"), "0xC", "C"));
+        private static readonly Lazy<bool> s_isJitStress = new Lazy<bool>(() => !string.Equals(GetEnvironmentVariableValue("JitStress"), "0", StringComparison.InvariantCulture));
+        private static readonly Lazy<bool> s_isJitStressRegs = new Lazy<bool>(() => !string.Equals(GetEnvironmentVariableValue("JitStressRegs"), "0", StringComparison.InvariantCulture));
+        private static readonly Lazy<bool> s_isJitMinOpts = new Lazy<bool>(() => string.Equals(GetEnvironmentVariableValue("JITMinOpts"), "1", StringComparison.InvariantCulture));
+        private static readonly Lazy<bool> s_isTailCallStress = new Lazy<bool>(() => string.Equals(GetEnvironmentVariableValue("TailcallStress"), "1", StringComparison.InvariantCulture));
+        private static readonly Lazy<bool> s_isZapDisable = new Lazy<bool>(() => string.Equals(GetEnvironmentVariableValue("ZapDisable"), "1", StringComparison.InvariantCulture));
+        private static readonly Lazy<bool> s_isGCStress3 = new Lazy<bool>(() => CompareGCStressModeAsLower(GetEnvironmentVariableValue("GCStress"), "0x3", "3"));
+        private static readonly Lazy<bool> s_isGCStressC = new Lazy<bool>(() => CompareGCStressModeAsLower(GetEnvironmentVariableValue("GCStress"), "0xC", "C"));
         private static readonly Lazy<bool> s_isCheckedRuntime = new Lazy<bool>(() => IsCheckedRuntime());
         private static readonly Lazy<bool> s_isReleaseRuntime = new Lazy<bool>(() => IsReleaseRuntime());
         private static readonly Lazy<bool> s_isDebugRuntime = new Lazy<bool>(() => IsDebugRuntime());
@@ -81,7 +81,8 @@ namespace Microsoft.DotNet.XUnitExtensions
             s_isJitStress.Value ||
             s_isJitMinOpts.Value;
 
-        private static string GetEnvironmentVariableValue(string name) => Environment.GetEnvironmentVariable(name) ?? "0";
+        private static string GetEnvironmentVariableValue(string name) =>
+            Environment.GetEnvironmentVariable("DOTNET_" + name) ?? Environment.GetEnvironmentVariable("COMPlus_" + name) ?? "0";
 
         private static bool IsCheckedRuntime() => AssemblyConfigurationEquals("Checked");
 
