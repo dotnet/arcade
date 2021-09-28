@@ -29,7 +29,9 @@ When your test failed, and you want to verify if it was retried or want to see t
     * On the title you will see `multiple executions` message 
     * `Previous executions` will be listed
 
-    ![](./Resources/ArtifactsTab.png?raw=true)
+    <img src="./Resources/ArtifactsTab.png" width="60%" height="60%">
+
+
 
 1. **Looking at the logs:** In there you will notice that you have 2 console.*.log files (one for each execution), furthermore in the run_client.log, will be some lines about the rerun:
  `Test configuration for test set indicates 'RERUN', re-executing workitem...`
@@ -41,4 +43,3 @@ When you want to know which test succeeded after a rerun you should go to the Az
 As can be appreciated in the image below:
 
 ![](./Resources/AzureDevOpsPassedOnRerun.png?raw=true)
-
