@@ -14,7 +14,7 @@ namespace Microsoft.DotNet.XUnitExtensions
     {
         private static readonly Lazy<bool> s_isMonoRuntime = new Lazy<bool>(() => Type.GetType("Mono.RuntimeStructs") != null);
         public static bool IsMonoRuntime => s_isMonoRuntime.Value;
-        public static bool IsRunningOnNetCoreApp { get; } = (Environment.Version.Major >= 5 || RuntimeInformation.FrameworkDescription.StartsWith(".NET", StringComparison.OrdinalIgnoreCase));
+        public static bool IsRunningOnNetCoreApp { get; } = (Environment.Version.Major >= 5 || !RuntimeInformation.FrameworkDescription.StartsWith(".NET Framework", StringComparison.OrdinalIgnoreCase));
         public static bool IsRunningOnNetFramework { get; } = RuntimeInformation.FrameworkDescription.StartsWith(".NET Framework", StringComparison.OrdinalIgnoreCase);
 
         public static bool TestPlatformApplies(TestPlatforms platforms) =>
