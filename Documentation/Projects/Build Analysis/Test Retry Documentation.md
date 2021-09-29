@@ -28,8 +28,8 @@ When your test failed, and you want to verify if it was retried or want to see t
     The Artifact tab now has the necessary context to know if a test was rerun, this will be easily recognizable by two things:
     * On the title you will see `multiple executions` message 
     * `Previous executions` will be listed
-
-    <img src="./Resources/ArtifactsTab.png" width="60%" height="60%">
+   
+    ![](./Resources/ArtifactsTab.png?raw=true)
 
 1. **Looking at the logs:** In there you will notice that you have 2 console.*.log files (one for each execution), furthermore in the run_client.log, will be some lines about the rerun:
  `Test configuration for test set indicates 'RERUN', re-executing workitem...`
