@@ -244,7 +244,8 @@
           -cg %(ComponentGroupName) ^
           -srd ^
           -dr %(DirectoryRef) ^
-          -out %(WixSourceFile)" />
+          -out %(WixSourceFile)
+          $(AdditionalHeatArgs)" />
 
       <CandleVariables Include="InstallFiles" Value="true" />
     </ItemGroup>
@@ -305,6 +306,7 @@
       <_wixArgs>$(_wixArgs) @(CandleVariables -> '-d%(Identity)="%(Value)"', ' ')</_wixArgs>
       <_wixArgs>$(_wixArgs) @(WixSrcFile -> '"%(FullPath)"', ' ')</_wixArgs>
       <_wixArgs>$(_wixArgs) @(DirectoryToHarvest -> '"%(WixSourceFile)"', ' ')</_wixArgs>
+      <_wixArgs>$(_wixArgs) $(AdditionalCandleArgs)</_wixArgs>
     </PropertyGroup>
 
     <Exec
@@ -327,6 +329,7 @@
       <_wixArgs>$(_wixArgs) @(WixExtensions -> '-ext %(Identity)', ' ')</_wixArgs>
       <_wixArgs>$(_wixArgs) @(WixSrcFile -> '"$(WixObjDir)%(Filename).wixobj"', ' ')</_wixArgs>
       <_wixArgs>$(_wixArgs) @(DirectoryToHarvest -> '"%(WixObjFile)"', ' ')</_wixArgs>
+      <_wixArgs>$(_wixArgs) $(AdditionalLightArgs)</_wixArgs>
       <_lightCommand>light.exe $(_wixArgs)</_lightCommand>
     </PropertyGroup>
 
