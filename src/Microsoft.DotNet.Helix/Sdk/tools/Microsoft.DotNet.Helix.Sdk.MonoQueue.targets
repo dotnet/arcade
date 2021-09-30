@@ -1,9 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<Project>
-  <PropertyGroup>
-    <EnableXUnitReporter Condition=" '$(EnableXUnitReporter)' != 'true' ">false</EnableXUnitReporter>
-  </PropertyGroup>
-  
+<Project>  
   <PropertyGroup Condition=" '$(HelixTestConfigurationFilePath)' == '' ">
     <HelixTestConfigurationFilePath Condition=" '$(RepositoryEngineeringDir)' != '' ">$(RepositoryEngineeringDir)/test-configuration.json</HelixTestConfigurationFilePath>
   </PropertyGroup>
@@ -22,18 +18,6 @@
   </Choose>
 
   <Import Project="$(_HelixMonoQueueTargets)" Condition="'$(_HelixMonoQueueTargets)' != ''"/>
-
-  <Target Name="AddXUnitReporter" Condition="$(EnableXUnitReporter)" BeforeTargets="CoreTest">
-    <ItemGroup>
-      <HelixCorrelationPayload Include="$(MSBuildThisFileDirectory)xunit-reporter"/>
-    </ItemGroup>
-    <PropertyGroup>
-      <HelixPostCommands Condition="$(IsPosixShell)">$(HelixPostCommands);$HELIX_PYTHONPATH -B $HELIX_CORRELATION_PAYLOAD/xunit-reporter.py</HelixPostCommands>
-      <HelixPostCommands Condition="!$(IsPosixShell)">$(HelixPostCommands);%HELIX_PYTHONPATH% -B %HELIX_CORRELATION_PAYLOAD%\xunit-reporter.py</HelixPostCommands>
-
-      <MaxRetryCount Condition="'$(MaxRetryCount)' == ''">0</MaxRetryCount>
-    </PropertyGroup>
-  </Target>
 
   <ItemGroup>
     <HelixProperties Condition="'$(HelixConfiguration)' != ''" Include="configuration" Value="$(HelixConfiguration)" />
