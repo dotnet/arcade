@@ -81,7 +81,7 @@
     <MicrosoftDotNetSwaggerGeneratorMSBuildVersion>7.0.0-beta.21474.2</MicrosoftDotNetSwaggerGeneratorMSBuildVersion>
     <MicrosoftDotNetXliffTasksVersion>1.0.0-beta.21475.1</MicrosoftDotNetXliffTasksVersion>
     <MicrosoftDotNetMaestroTasksVersion>1.1.0-beta.21378.2</MicrosoftDotNetMaestroTasksVersion>
-    <MicrosoftDotNetXHarnessCLIVersion>1.0.0-prerelease.21472.2</MicrosoftDotNetXHarnessCLIVersion>
+    <MicrosoftDotNetXHarnessCLIVersion>1.0.0-prerelease.21479.1</MicrosoftDotNetXHarnessCLIVersion>
     <MicrosoftSymbolUploaderBuildTaskVersion>2.0.0-preview.1.21474.2</MicrosoftSymbolUploaderBuildTaskVersion>
     <MicrosoftSymbolUploaderVersion>2.0.0-preview.1.21474.2</MicrosoftSymbolUploaderVersion>
     <MicrosoftNetSdkWorkloadManifestReaderVersion>6.0.100-preview.5.21254.11</MicrosoftNetSdkWorkloadManifestReaderVersion>
