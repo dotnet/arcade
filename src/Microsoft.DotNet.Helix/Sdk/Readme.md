@@ -339,7 +339,7 @@ If a test passes or fails in all attempts, only a single report is made represen
 
 To opt-in and configure test retries when using helix, create file in the reporitory at "eng/test-configuration.json"
 
-### test-configuraion.json format
+### test-configuration.json format
 ```json
 {
   "version" : 1,
