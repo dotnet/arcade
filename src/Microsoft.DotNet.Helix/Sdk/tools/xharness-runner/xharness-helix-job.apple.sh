@@ -49,7 +49,7 @@ if [ -f "$HELIX_WORKITEM_ROOT/.retry" ]; then
 fi
 
 if [ -f "$HELIX_WORKITEM_ROOT/.reboot" ]; then
-    "$HELIX_PYTHONPATH" -c "from helix.workitemutil import request_reboot; request_reboot('Rebooting because XHarness workload requested it)"
+    "$HELIX_PYTHONPATH" -c "from helix.workitemutil import request_reboot; request_reboot('Rebooting because XHarness workload requested it')"
 fi
 
 exit $exit_code
