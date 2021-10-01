@@ -33,7 +33,7 @@ function xharness() {
 function report_infrastructure_failure($message) {
     Write-Output "Infrastructural problem reported by the user, requesting retry+reboot: $message"
 
-    New-Item -Path "$Env:HELIX_WORKITEM_ROOT" -Name ".retry" -ItemType "file"
-    New-Item -Path "$Env:HELIX_WORKITEM_ROOT" -Name ".reboot" -ItemType "file"
+    New-Item -Path "$Env:HELIX_WORKITEM_ROOT" -Name ".retry" -ItemType "file" -Force
+    New-Item -Path "$Env:HELIX_WORKITEM_ROOT" -Name ".reboot" -ItemType "file" -Force
 }
 
