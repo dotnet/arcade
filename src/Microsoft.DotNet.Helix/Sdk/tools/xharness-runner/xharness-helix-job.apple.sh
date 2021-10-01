@@ -45,7 +45,7 @@ exit_code=$?
 # Since we run the payload script using launchctl, env vars such as PYTHON_PATH are not set there and we have to do this part here
 # We signal this by creating files
 if [ -f "$HELIX_WORKITEM_ROOT/.retry" ]; then
-    retry_message=$(cat "$HELIX_WORKITEM_ROOT/.retry")
+    retry_message=$(cat "$HELIX_WORKITEM_ROOT/.retry" | tr -d "'\\\\")
 
     if [ -z "$retry_message" ]; then
         retry_message='Retrying because we could not enumerate all Android devices'
@@ -55,7 +55,7 @@ if [ -f "$HELIX_WORKITEM_ROOT/.retry" ]; then
 fi
 
 if [ -f "$HELIX_WORKITEM_ROOT/.reboot" ]; then
-    reboot_message=$(cat "$HELIX_WORKITEM_ROOT/.reboot")
+    reboot_message=$(cat "$HELIX_WORKITEM_ROOT/.reboot" | tr -d "'\\\\")
 
     if [ -z "$reboot_message" ]; then
         reboot_message='Rebooting to allow Android emulator to restart'

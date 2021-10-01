@@ -36,7 +36,7 @@ function report_infrastructure_failure($message) {
     New-Item -Path "$Env:HELIX_WORKITEM_ROOT" -Name ".retry" -ItemType "file" -Force
     New-Item -Path "$Env:HELIX_WORKITEM_ROOT" -Name ".reboot" -ItemType "file" -Force
 
-    $message | Out-File -FilePath "$Env:HELIX_WORKITEM_ROOT\.retry"
-    $message | Out-File -FilePath "$Env:HELIX_WORKITEM_ROOT\.reboot"
+    $message -replace "['\\]" | Out-File -FilePath "$Env:HELIX_WORKITEM_ROOT\.retry"
+    $message -replace "['\\]" | Out-File -FilePath "$Env:HELIX_WORKITEM_ROOT\.reboot"
 }
 

@@ -114,12 +114,12 @@ esac
 
 if [ -f "$HELIX_WORKITEM_ROOT/.retry" ]; then
     retry=true
-    retry_message=$(cat "$HELIX_WORKITEM_ROOT/.retry")
+    retry_message=$(cat "$HELIX_WORKITEM_ROOT/.retry" | tr -d "'\\\\")
 fi
 
 if [ -f "$HELIX_WORKITEM_ROOT/.reboot" ]; then
     reboot=true
-    reboot_message=$(cat "$HELIX_WORKITEM_ROOT/.reboot")
+    reboot_message=$(cat "$HELIX_WORKITEM_ROOT/.reboot" | tr -d "'\\\\")
 fi
 
 if [ "$retry" == true ]; then
