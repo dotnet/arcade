@@ -44,11 +44,11 @@ exit_code=$?
 # We usually also ask the work item to be re-tried on a different machine
 # Since we run the payload script using launchctl, env vars such as PYTHON_PATH are not set there and we have to do this part here
 # We signal this by creating files
-if [ -f './.retry' ]; then
+if [ -f "$HELIX_WORKITEM_ROOT/.retry" ]; then
     "$HELIX_PYTHONPATH" -c "from helix.workitemutil import request_infra_retry; request_infra_retry('Retrying work item because XHarness workload requested it')"
 fi
 
-if [ -f './.reboot' ]; then
+if [ -f "$HELIX_WORKITEM_ROOT/.reboot" ]; then
     "$HELIX_PYTHONPATH" -c "from helix.workitemutil import request_reboot; request_reboot('Rebooting because XHarness workload requested it)"
 fi
 

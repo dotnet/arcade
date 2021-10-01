@@ -52,8 +52,8 @@ if ($ev) {
     Write-Output "User command ended with $exit_code"
 }
 
-$retry=$false
-$reboot=$false
+$retry = $false
+$reboot = $false
 
 switch ($exit_code)
 {
@@ -61,8 +61,8 @@ switch ($exit_code)
     85 {
         Write-Error "Encountered ADB_DEVICE_ENUMERATION_FAILURE. This is typically not a failure of the work item. We will run it again and reboot this computer to help its devices"
         Write-Error "If this occurs repeatedly, please check for architectural mismatch, e.g. sending x86 or x86_64 APKs to an arm64_v8a-only queue."
-        $retry=$true
-        $reboot=$true
+        $retry = $true
+        $reboot = $true
         Break
     }
 
@@ -70,9 +70,17 @@ switch ($exit_code)
     78 {
         Write-Error "Encountered PACKAGE_INSTALLATION_FAILURE. This is typically not a failure of the work item. We will try it again on another Helix agent"
         Write-Error "If this occurs repeatedly, please check for architectural mismatch, e.g. requesting installation on arm64_v8a-only queue for x86 or x86_64 APKs."
-        $retry=$true
+        $retry = $true
         Break
     }
+}
+
+if (Test-Path -Path "$Env:HELIX_WORKITEM_ROOT\.retry" -PathType Leaf) {
+    $retry = $true;
+}
+
+if (Test-Path -Path "$Env:HELIX_WORKITEM_ROOT\.reboot" -PathType Leaf) {
+    $reboot = $true;
 }
 
 if ($retry) {

@@ -105,6 +105,14 @@ case "$exit_code" in
     ;;
 esac
 
+if [ -f "$HELIX_WORKITEM_ROOT/.retry" ]; then
+    retry=true
+fi
+
+if [ -f "$HELIX_WORKITEM_ROOT/.reboot" ]; then
+    reboot=true
+fi
+
 if [ "$retry" == true ]; then
     "$HELIX_PYTHONPATH" -c "from helix.workitemutil import request_infra_retry; request_infra_retry('Retrying because we could not enumerate all Android devices')"
 fi
