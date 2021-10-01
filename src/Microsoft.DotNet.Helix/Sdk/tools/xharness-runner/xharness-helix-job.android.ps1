@@ -77,18 +77,28 @@ switch ($exit_code)
 
 if (Test-Path -Path "$Env:HELIX_WORKITEM_ROOT\.retry" -PathType Leaf) {
     $retry = $true;
+    $retry_message = Get-Content -Path "$Env:HELIX_WORKITEM_ROOT\.retry"
 }
 
 if (Test-Path -Path "$Env:HELIX_WORKITEM_ROOT\.reboot" -PathType Leaf) {
     $reboot = $true;
+    $reboot_message = Get-Content -Path "$Env:HELIX_WORKITEM_ROOT\.reboot"
 }
 
 if ($retry) {
-    & "$Env:HELIX_PYTHONPATH" -c "from helix.workitemutil import request_infra_retry; request_infra_retry('Retrying because we could not enumerate all Android devices')"
+    if ([string]::IsNullOrEmpty($retry_message)) {
+        $retry_message = 'Retrying because we could not enumerate all Android devices'
+    }
+
+    & "$Env:HELIX_PYTHONPATH" -c "from helix.workitemutil import request_infra_retry; request_infra_retry('$retry_message')"
 }
 
 if ($reboot) {
-     & "$Env:HELIX_PYTHONPATH" -c "from helix.workitemutil import request_reboot; request_reboot('Rebooting to allow Android emulator or device to restart')"
+    if ([string]::IsNullOrEmpty($reboot_message)) {
+        $reboot_message = 'Rebooting to allow Android emulator to restart'
+    }
+
+     & "$Env:HELIX_PYTHONPATH" -c "from helix.workitemutil import request_reboot; request_reboot('$reboot_message')"
 }
 
 exit $exit_code

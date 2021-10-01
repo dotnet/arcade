@@ -147,8 +147,8 @@ function xharness() {
 function report_infrastructure_failure() {
     echo "Infrastructural problem reported by the user, requesting retry+reboot: $1"
 
-    touch "$HELIX_WORKITEM_ROOT/.retry"
-    touch "$HELIX_WORKITEM_ROOT/.reboot"
+    echo "$1" > "$HELIX_WORKITEM_ROOT/.retry"
+    echo "$1" > "$HELIX_WORKITEM_ROOT/.reboot"
 }
 
 # Act out the actual commands (and time constrain them to create buffer for the end of this script)

@@ -45,11 +45,23 @@ exit_code=$?
 # Since we run the payload script using launchctl, env vars such as PYTHON_PATH are not set there and we have to do this part here
 # We signal this by creating files
 if [ -f "$HELIX_WORKITEM_ROOT/.retry" ]; then
-    "$HELIX_PYTHONPATH" -c "from helix.workitemutil import request_infra_retry; request_infra_retry('Retrying work item because XHarness workload requested it')"
+    retry_message=$(cat "$HELIX_WORKITEM_ROOT/.retry")
+
+    if [ -z "$retry_message" ]; then
+        retry_message='Retrying because we could not enumerate all Android devices'
+    fi
+
+    "$HELIX_PYTHONPATH" -c "from helix.workitemutil import request_infra_retry; request_infra_retry('$retry_message')"
 fi
 
 if [ -f "$HELIX_WORKITEM_ROOT/.reboot" ]; then
-    "$HELIX_PYTHONPATH" -c "from helix.workitemutil import request_reboot; request_reboot('Rebooting because XHarness workload requested it')"
+    reboot_message=$(cat "$HELIX_WORKITEM_ROOT/.reboot")
+
+    if [ -z "$reboot_message" ]; then
+        reboot_message='Rebooting to allow Android emulator to restart'
+    fi
+
+    "$HELIX_PYTHONPATH" -c "from helix.workitemutil import request_reboot; request_reboot('$reboot_message')"
 fi
 
 exit $exit_code
