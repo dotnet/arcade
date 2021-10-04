@@ -33,7 +33,10 @@ function xharness() {
 function report_infrastructure_failure($message) {
     Write-Output "Infrastructural problem reported by the user, requesting retry+reboot: $message"
 
-    & "$Env:HELIX_PYTHONPATH" -c "from helix.workitemutil import request_infra_retry; request_infra_retry('Retrying because we could not enumerate all Android devices')"
-    & "$Env:HELIX_PYTHONPATH" -c "from helix.workitemutil import request_reboot; request_reboot('Rebooting to allow Android emulator or device to restart')"
+    New-Item -Path "$Env:HELIX_WORKITEM_ROOT" -Name ".retry" -ItemType "file" -Force
+    New-Item -Path "$Env:HELIX_WORKITEM_ROOT" -Name ".reboot" -ItemType "file" -Force
+
+    $message -replace "['\\]" | Out-File -FilePath "$Env:HELIX_WORKITEM_ROOT\.retry"
+    $message -replace "['\\]" | Out-File -FilePath "$Env:HELIX_WORKITEM_ROOT\.reboot"
 }
 
