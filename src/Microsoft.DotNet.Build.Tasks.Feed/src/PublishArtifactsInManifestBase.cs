@@ -39,6 +39,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
     /// </summary>
     public abstract class PublishArtifactsInManifestBase : Microsoft.Build.Utilities.Task
     {
+        public AssetPublisherFactory AssetPublisherFactory { get; }
+
         /// <summary>
         /// Full path to the folder containing blob assets.
         /// </summary>
@@ -202,6 +204,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         }
 
         private int TimeoutInSeconds = 300;
+
+        protected PublishArtifactsInManifestBase(AssetPublisherFactory assetPublisherFactory)
+        {
+            AssetPublisherFactory = assetPublisherFactory;
+        }
 
         public override bool Execute()
         {
@@ -992,35 +999,21 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         foreach (var blob in filteredBlobs)
                         {
                             string isolatedString = feedConfig.Isolated ? "Isolated" : "Non-Isolated";
-                            string internalString = feedConfig.Internal ? $", Internal" : ", Public";
+                            string internalString = feedConfig.Internal ? ", Internal" : ", Public";
                             string shippingString = blob.NonShipping ? "NonShipping" : "Shipping";
                             Log.LogMessage(MessageImportance.High,
-                                $"Blob {blob.Id} ({shippingString}) should go to {feedConfig.TargetURL} ({isolatedString}{internalString})");
+                                $"Blob {blob.Id} ({shippingString}) should go to {feedConfig.SafeTargetURL} ({isolatedString}{internalString})");
                         }
 
-                        switch (feedConfig.Type)
-                        {
-                            case FeedType.AzDoNugetFeed:
-                                publishTasks.Add(
-                                    PublishBlobsToAzDoNugetFeedAsync(
-                                        filteredBlobs,
-                                        buildAssets,
-                                        feedConfig,
-                                        clientThrottle));
-                                break;
-                            case FeedType.AzureStorageFeed:
-                                publishTasks.Add(
-                                    PublishBlobsToAzureStorageNugetFeedAsync(
-                                        filteredBlobs,
-                                        buildAssets,
-                                        feedConfig,
-                                        clientThrottle));
-                                break;
-                            default:
-                                Log.LogError(
-                                    $"Unknown target feed type for category '{category}': '{feedConfig.Type}'.");
-                                break;
-                        }
+                        var assetsToPublish = new HashSet<string>(filteredBlobs.Select(b => b.Id));
+                        var publisher = AssetPublisherFactory.CreateAssetPublisher(feedConfig, this);
+                        publishTasks.Add(
+                            PublishAssetsAsync(
+                                publisher,
+                                assetsToPublish,
+                                buildAssets,
+                                feedConfig,
+                                clientThrottle));
                     }
                 }
                 else
@@ -1077,6 +1070,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     if (!Enum.TryParse(category, ignoreCase: true, out TargetFeedContentType categoryKey))
                     {
                         Log.LogError($"Invalid target feed config category '{category}'.");
+                        continue;
                     }
 
                     if (PackagesByCategory.ContainsKey(categoryKey))
@@ -1104,6 +1098,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     if (!Enum.TryParse(category, ignoreCase: true, out TargetFeedContentType categoryKey))
                     {
                         Log.LogError($"Invalid target feed config category '{category}'.");
+                        continue;
                     }
 
                     if (BlobsByCategory.ContainsKey(categoryKey))
@@ -1639,42 +1634,53 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             return temporaryDirectory;
         }
 
-        private async Task PublishBlobsToAzureStorageNugetFeedAsync(
-            HashSet<BlobArtifactModel> blobsToPublish,
+        private async Task PublishAssetsAsync(IAssetPublisher assetPublisher, HashSet<string> assetsToPublish,
             Dictionary<string, HashSet<Asset>> buildAssets,
             TargetFeedConfig feedConfig,
             SemaphoreSlim clientThrottle)
         {
             if (UseStreamingPublishing)
             {
-                await PublishBlobsToAzureStorageNugetUsingStreamingPublishingAsync(blobsToPublish, buildAssets, feedConfig, clientThrottle);
+                await PublishAssetsUsingStreamingPublishingAsync(assetPublisher, assetsToPublish, buildAssets, feedConfig, clientThrottle);
             }
             else
             {
-                await PublishBlobsToAzureStorageNugetAsync(blobsToPublish, buildAssets, feedConfig);
+                await PublishAssetsWithoutStreamingPublishingAsync(assetPublisher, assetsToPublish, buildAssets, feedConfig);
             }
 
-            if (LinkManager == null)
+            if (feedConfig.Type == FeedType.AzureStorageContainer ||
+                feedConfig.Type == FeedType.AzureStorageFeed)
             {
-                LinkManager = new LatestLinksManager(
-                    AkaMSClientId,
-                    AkaMSClientSecret,
-                    AkaMSTenant,
-                    AkaMSGroupOwner,
-                    AkaMSCreatedBy,
-                    AkaMsOwners,
-                    Log);
+
+                if (LinkManager == null)
+                {
+                    LinkManager = new LatestLinksManager(
+                        AkaMSClientId,
+                        AkaMSClientSecret,
+                        AkaMSTenant,
+                        AkaMSGroupOwner,
+                        AkaMSCreatedBy,
+                        AkaMsOwners,
+                        Log);
+                }
+
+                if (feedConfig.Type == FeedType.AzureStorageFeed) // AzureStorageFeed == old dotnetcli, dotnetbuilds is AzureStorageContainer
+                {
+                    // The latest links should be updated only after the publishing is complete, to avoid
+                    // dead links in the interim.
+                    await LinkManager.CreateOrUpdateLatestLinksAsync(
+                        assetsToPublish,
+                        feedConfig,
+                        feedConfig.Type == FeedType.AzureStorageContainer
+                            ? 0
+                            : PublishingConstants.ExpectedFeedUrlSuffix.Length);
+                }
             }
-            // The latest links should be updated only after the publishing is complete, to avoid
-            // dead links in the interim.
-            await LinkManager.CreateOrUpdateLatestLinksAsync(
-                blobsToPublish,
-                feedConfig,
-                PublishingConstants.ExpectedFeedUrlSuffix.Length);
         }
 
-        private async Task PublishBlobsToAzureStorageNugetUsingStreamingPublishingAsync(
-            HashSet<BlobArtifactModel> blobsToPublish,
+        private async Task PublishAssetsUsingStreamingPublishingAsync(
+            IAssetPublisher assetPublisher,
+            HashSet<string> assetsToPublish,
             Dictionary<string, HashSet<Asset>> buildAssets,
             TargetFeedConfig feedConfig,
             SemaphoreSlim clientThrottle)
@@ -1686,21 +1692,19 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             {
                 return;
             }
-            var blobFeedAction = CreateBlobFeedAction(feedConfig);
             var pushOptions = new PushOptions
             {
                 AllowOverwrite = feedConfig.AllowOverwrite,
-                PassIfExistingItemIdentical = true
+                PassIfExistingItemIdentical = true,
             };
             using HttpClient client = CreateAzdoClient(AzureDevOpsOrg, true, AzureProject);
 
-            await Task.WhenAll(blobsToPublish.Select(async blob =>
+            await Task.WhenAll(assetsToPublish.Select(async asset =>
             {
-                try
+                using (await SemaphoreLock.LockAsync(clientThrottle))
                 {
-                    await clientThrottle.WaitAsync();
                     string temporaryBlobDirectory = CreateTemporaryDirectory();
-                    var fileName = Path.GetFileName(blob.Id);
+                    var fileName = Path.GetFileName(asset);
                     var localBlobPath = Path.Combine(temporaryBlobDirectory, fileName);
                     Log.LogMessage(MessageImportance.Low, $"Downloading blob : {fileName} to {localBlobPath}");
 
@@ -1711,63 +1715,54 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         containerId,
                         fileName,
                         localBlobPath);
-
-                    if (!File.Exists(localBlobPath))
-                    {
-                        Log.LogError($"Could not locate '{blob.Id} at '{localBlobPath}'");
-                    }
                     gatherBlobDownloadTime.Stop();
                     Log.LogMessage(MessageImportance.Low, $"Time taken to download file to '{localBlobPath}' is {gatherBlobDownloadTime.ElapsedMilliseconds / 1000.0} (seconds)");
 
-                    Log.LogMessage(MessageImportance.Low,
-                        $"Successfully downloaded blob : {fileName} to {localBlobPath}");
+                    if (!File.Exists(localBlobPath))
+                    {
+                        Log.LogError($"Could not locate '{asset} at '{localBlobPath}'");
+                    }
+                    else
+                    {
+                        Log.LogMessage(MessageImportance.Low,
+                            $"Successfully downloaded blob : {fileName} to {localBlobPath}");
 
-                    var item = new Microsoft.Build.Utilities.TaskItem(localBlobPath,
-                        new Dictionary<string, string>
-                        {
-                            {"RelativeBlobPath", blob.Id}
-                        });
+                        TryAddAssetLocation(
+                            asset,
+                            assetVersion: null,
+                            buildAssets,
+                            feedConfig,
+                            assetPublisher.LocationType);
 
-                    TryAddAssetLocation(
-                        blob.Id,
-                        assetVersion: null,
-                        buildAssets,
-                        feedConfig,
-                        AddAssetLocationToAssetAssetLocationType.Container);
+                        Stopwatch gatherBlobPublishingTime = Stopwatch.StartNew();
+                        await assetPublisher.PublishAssetAsync(localBlobPath, asset, pushOptions, null);
+                        gatherBlobPublishingTime.Stop();
+                        Log.LogMessage(MessageImportance.Low,$"Publishing {localBlobPath} completed in {gatherBlobPublishingTime.ElapsedMilliseconds / 1000.0} (seconds)");
+                    }
 
-                    Stopwatch gatherBlobPublishingTime = Stopwatch.StartNew();
-                    await blobFeedAction.UploadAssetAsync(item, pushOptions, null);
-                    gatherBlobPublishingTime.Stop();
-                    Log.LogMessage(MessageImportance.Low,$"Publishing {item.ItemSpec} completed in {gatherBlobPublishingTime.ElapsedMilliseconds / 1000.0} (seconds)");
 
                     DeleteTemporaryDirectory(temporaryBlobDirectory);
-                }
-                finally
-                {
-                    clientThrottle.Release();
                 }
             }));
         }
 
-        private async Task PublishBlobsToAzureStorageNugetAsync(
-            HashSet<BlobArtifactModel> blobsToPublish,
+        private async Task PublishAssetsWithoutStreamingPublishingAsync(
+            IAssetPublisher assetPublisher,
+            HashSet<string> assetsToPublish,
             Dictionary<string, HashSet<Asset>> buildAssets,
             TargetFeedConfig feedConfig)
         {
-            var blobs = blobsToPublish
-                .Select(blob =>
+            var assets = assetsToPublish
+                .Select(asset =>
                 {
-                    var fileName = Path.GetFileName(blob.Id);
+                    var fileName = Path.GetFileName(asset);
                     var localBlobPath = Path.Combine(BlobAssetsBasePath, fileName);
                     if (!File.Exists(localBlobPath))
                     {
-                        Log.LogError($"Could not locate '{blob.Id} at '{localBlobPath}'");
+                        Log.LogError($"Could not locate '{asset} at '{localBlobPath}'");
                     }
 
-                    return new Microsoft.Build.Utilities.TaskItem(localBlobPath, new Dictionary<string, string>
-                    {
-                        {"RelativeBlobPath", blob.Id}
-                    });
+                    return (localBlobPath, id: asset);
                 })
                 .ToArray();
 
@@ -1776,23 +1771,25 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 return;
             }
 
-            var blobFeedAction = CreateBlobFeedAction(feedConfig);
             var pushOptions = new PushOptions
             {
                 AllowOverwrite = feedConfig.AllowOverwrite,
                 PassIfExistingItemIdentical = true
             };
 
-            blobsToPublish
-                .ToList()
-                .ForEach(blob => TryAddAssetLocation(
-                    blob.Id,
+            foreach (var asset in assetsToPublish)
+            {
+                TryAddAssetLocation(
+                    asset,
                     assetVersion: null,
                     buildAssets,
                     feedConfig,
-                    AddAssetLocationToAssetAssetLocationType.Container));
+                    AddAssetLocationToAssetAssetLocationType.Container);
+            }
 
-            await blobFeedAction.PublishToFlatContainerAsync(blobs, maxClients: MaxClients, pushOptions);
+            using var clientThrottle = new SemaphoreSlim(MaxClients, MaxClients);
+            await Task.WhenAll(assets.Select(asset =>
+                assetPublisher.PublishAssetAsync(asset.localBlobPath, asset.id, pushOptions, clientThrottle)));
         }
 
         private BlobFeedAction CreateBlobFeedAction(TargetFeedConfig feedConfig)
