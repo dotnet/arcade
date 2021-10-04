@@ -103,6 +103,7 @@ jobs:
           /p:DotNetBuildsPublicChecksumsUriBase64='$(dotnetbuilds-public-container-checksum-uri-base64)'
           /p:DotNetBuildsInternalUriBase64='$(dotnetbuilds-internal-container-uri-base64)'
           /p:DotNetBuildsInternalChecksumsUriBase64='$(dotnetbuilds-internal-container-checksum-uri-base64)'
+          /p:convertPortablePdbsToWindowsPdbs='true'
     - template: /eng/common/templates/steps/publish-logs.yml
       parameters:
         StageLabel: '${{ parameters.stageName }}'
