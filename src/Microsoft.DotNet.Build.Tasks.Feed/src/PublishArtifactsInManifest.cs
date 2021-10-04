@@ -139,7 +139,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// </summary>
         public bool PublishSpecialClrFiles { get; set; }
 
-        public bool ConvertPortablePdbsToWindowsPdbs { get; set; }
+        public bool ConvertPortablePdbsToWindowsPdbs { get; set; } = false;
 
         /// <summary>
         /// If true, safety checks only print messages and do not error
