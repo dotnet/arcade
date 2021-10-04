@@ -192,6 +192,7 @@ if [ $exit_code -eq 86 ]; then
 fi
 
 # The simulator logs comming from the sudo-spawned Simulator.app are not readable/deletable by the helix uploader
+sudo chown -R helix-runner "$output_directory"
 chmod -R 0766 "$output_directory"
 
 # Remove empty files
