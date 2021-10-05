@@ -172,6 +172,7 @@
       FeedKeys="@(FeedKey)"
       FeedSasUris="@(FeedSasUri)"
       FeedOverrides="@(FeedOverride)"
+      ConvertPortablePdbsToWindowsPdbs="@(ConvertPortablePdbsToWindowsPdbs)"
       />
   </Target>
 
