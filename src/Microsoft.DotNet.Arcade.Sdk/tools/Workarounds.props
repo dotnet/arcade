@@ -22,8 +22,6 @@
     It's also not necessary to generate these assets.
   -->
   <PropertyGroup Condition="'$(IsWpfTempProject)' == 'true'">
-    <_WpfTempProjectNuGetFilePathNoExt>$(ArtifactsObjDir)$(_TargetAssemblyProjectName)\$(_TargetAssemblyProjectName)$(MSBuildProjectExtension).nuget.g</_WpfTempProjectNuGetFilePathNoExt>
-
     <EnableSourceLink>false</EnableSourceLink>
     <EmbedUntrackedSources>false</EmbedUntrackedSources>
     <DeterministicSourcePaths>false</DeterministicSourcePaths>
