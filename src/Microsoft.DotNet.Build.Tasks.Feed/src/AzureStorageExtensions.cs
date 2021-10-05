@@ -32,6 +32,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 return blobMD5.Equals(localMD5, StringComparison.OrdinalIgnoreCase);
             }
 
+            var localFileSize = new FileInfo(file).Length;
+            var blobSize = (await client.GetPropertiesAsync()).Value.ContentLength;
+
+            if (localFileSize != blobSize)
+            {
+                return false;
+            }
+
             int bytesPerMegabyte = 1 * 1024 * 1024;
             using Stream localFileStream = File.OpenRead(file);
             byte[] localBuffer = new byte[bytesPerMegabyte];
@@ -42,6 +50,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             {
                 long start = localFileStream.Position;
                 localBytesRead = await localFileStream.ReadAsync(localBuffer, 0, bytesPerMegabyte);
+                if (localBytesRead == 0)
+                {
+                    // eof == we are done, we have already validated that they are the same size
+                    return true;
+                }
 
                 var range = new HttpRange(start, localBytesRead);
                 BlobDownloadInfo download = await client.DownloadAsync(range).ConfigureAwait(false);
