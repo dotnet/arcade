@@ -153,7 +153,7 @@ namespace Microsoft.DotNet.SignTool
 
                 _log.LogMessage(MessageImportance.High, $"Round {round}: Signing {enginesToSign.Length} engines.");
 
-                Dictionary<string, FileSignInfo> engines = new Dictionary<string, FileSignInfo>();
+                Dictionary<SignedFileContentKey, FileSignInfo> engines = new Dictionary<SignedFileContentKey, FileSignInfo>();
                 var workingDirectory = Path.Combine(_signTool.TempDir, "engines");
                 // extract engines
                 foreach (var file in enginesToSign)
