@@ -13,6 +13,7 @@ There are a couple of rules that your test should meet:
 1. Using Helix
 2. Using Azure Reporter - if your tests are already reported on azure this means that is all good
 3. Tests should be idempotent on the same machine
+4. Helix workitem exit code is zero for non-exceptional cases: normal execution, even with test failures, should return exit code 0
 
 **NOTE**: If your tests are not using the Helix SDK, you will need to replicate parts of Helix to ensure that the `test-configuration.json` file is uploaded with the payload. 
 
