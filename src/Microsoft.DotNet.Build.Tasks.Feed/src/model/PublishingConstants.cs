@@ -198,6 +198,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             (TargetFeedContentType.Package, FeedDotNet7Transport, AssetSelection.NonShippingOnly),
             (InstallersAndSymbols, FeedForInstallers),
             (TargetFeedContentType.Checksum, FeedForChecksums),
+            (InstallersAndSymbols, FeedStagingForInstallers),
+            (TargetFeedContentType.Checksum, FeedStagingForChecksums),
         };
 
         private static TargetFeedSpecification[] DotNetEngFeeds =
