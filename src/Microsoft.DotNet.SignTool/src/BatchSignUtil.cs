@@ -155,10 +155,11 @@ namespace Microsoft.DotNet.SignTool
 
                 Dictionary<SignedFileContentKey, FileSignInfo> engines = new Dictionary<SignedFileContentKey, FileSignInfo>();
                 var workingDirectory = Path.Combine(_signTool.TempDir, "engines");
+                int engineContainer = 0;
                 // extract engines
                 foreach (var file in enginesToSign)
                 {
-                    string engineFileName = $"{Path.Combine(workingDirectory, Guid.NewGuid().ToString(), file.FileName)}{SignToolConstants.MsiEngineExtension}";
+                    string engineFileName = $"{Path.Combine(workingDirectory, $"{engineContainer}", file.FileName)}{SignToolConstants.MsiEngineExtension}";
                     _log.LogMessage(MessageImportance.Normal, $"Extracting engine from {file.FullPath}");
                     if (!RunWixTool("insignia.exe", $"-ib {file.FullPath} -o {engineFileName}",
                         workingDirectory, _signTool.WixToolsPath, _log))
@@ -170,6 +171,7 @@ namespace Microsoft.DotNet.SignTool
                     var fileUniqueKey = new SignedFileContentKey(file.ContentHash, engineFileName);
 
                     engines.Add(fileUniqueKey, file);
+                    engineContainer++;
                 }
 
                 // sign engines
