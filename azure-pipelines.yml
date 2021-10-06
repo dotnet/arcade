@@ -50,7 +50,7 @@ stages:
         timeoutInMinutes: 90
         pool:
           ${{ if eq(variables._RunAsPublic, True) }}:
-            vmImage: windows-latest
+            name: Dotnet-Publishing-1ES
           ${{ if eq(variables._RunAsInternal, True) }}:
             name: NetCore1ESPool-Internal
             demands: ImageOverride -equals Build.Server.Amd64.VS2017
