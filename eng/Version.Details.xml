@@ -43,9 +43,9 @@
       <Uri>https://github.com/dotnet/xharness</Uri>
       <Sha>27779945a6f28639f526ec3d1e02f76436c6d22d</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.Net.Compilers.Toolset" Version="4.0.0-5.21476.2">
+    <Dependency Name="Microsoft.Net.Compilers.Toolset" Version="4.0.0-5.21501.19">
       <Uri>https://github.com/dotnet/roslyn</Uri>
-      <Sha>171c2f20ea4d586cf4f101f30ee41f625e01455e</Sha>
+      <Sha>8e1779e16298415843e85029d8b52a1ae9bb4c30</Sha>
     </Dependency>
     <Dependency Name="Microsoft.NET.ILLink.Tasks" Version="6.0.100-1.21473.1">
       <Uri>https://github.com/dotnet/linker</Uri>
@@ -68,9 +68,9 @@
       <Uri>https://github.com/dotnet/symreader-converter</Uri>
       <Sha>c5ba7c88f92e2dde156c324a8c8edc04d9fa4fe0</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.XliffTasks" Version="1.0.0-beta.21475.1">
+    <Dependency Name="Microsoft.DotNet.XliffTasks" Version="1.0.0-beta.21505.2">
       <Uri>https://github.com/dotnet/xliff-tasks</Uri>
-      <Sha>3fd0189eea3161e77698e98830a525059f2641b6</Sha>
+      <Sha>07ffa7413712abf31c2aaa14bc71486d0f5302f0</Sha>
     </Dependency>
   </ToolsetDependencies>
 </Dependencies>
