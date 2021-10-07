@@ -1054,9 +1054,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 filenamesToExclude: FilenamesToExclude,
                 flatten: false),
 
-            // "VS Master",
+            // "VS 17.1",
             new TargetChannelConfig(
-                1012,
+                2346,
                 false,
                 PublishingInfraVersion.All,
                 string.Empty,
