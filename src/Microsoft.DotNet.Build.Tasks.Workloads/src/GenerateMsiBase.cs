@@ -267,6 +267,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                 // Add WiX extensions
                 light.Extensions.Add("WixDependencyExtension");
                 light.Extensions.Add("WixUIExtension");
+                light.Extensions.Add("WixUtilExtension");
 
                 if (!light.Execute())
                 {
