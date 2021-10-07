@@ -153,12 +153,13 @@ namespace Microsoft.DotNet.SignTool
 
                 _log.LogMessage(MessageImportance.High, $"Round {round}: Signing {enginesToSign.Length} engines.");
 
-                Dictionary<string, FileSignInfo> engines = new Dictionary<string, FileSignInfo>();
+                Dictionary<SignedFileContentKey, FileSignInfo> engines = new Dictionary<SignedFileContentKey, FileSignInfo>();
                 var workingDirectory = Path.Combine(_signTool.TempDir, "engines");
+                int engineContainer = 0;
                 // extract engines
                 foreach (var file in enginesToSign)
                 {
-                    string engineFileName = $"{Path.Combine(workingDirectory, file.FileName)}{SignToolConstants.MsiEngineExtension}";
+                    string engineFileName = $"{Path.Combine(workingDirectory, $"{engineContainer}", file.FileName)}{SignToolConstants.MsiEngineExtension}";
                     _log.LogMessage(MessageImportance.Normal, $"Extracting engine from {file.FullPath}");
                     if (!RunWixTool("insignia.exe", $"-ib {file.FullPath} -o {engineFileName}",
                         workingDirectory, _signTool.WixToolsPath, _log))
@@ -166,12 +167,16 @@ namespace Microsoft.DotNet.SignTool
                         _log.LogError($"Failed to extract engine from {file.FullPath}");
                         return false;
                     }
-                    engines.Add(engineFileName, file);
+
+                    var fileUniqueKey = new SignedFileContentKey(file.ContentHash, engineFileName);
+
+                    engines.Add(fileUniqueKey, file);
+                    engineContainer++;
                 }
 
                 // sign engines
                 bool signResult = _signTool.Sign(_buildEngine, round, engines.Select(engine =>
-                    new FileSignInfo(new PathWithHash(engine.Key, engine.Value.ContentHash), engine.Value.SignInfo)));
+                    new FileSignInfo(new PathWithHash(engine.Key.FileName, engine.Value.ContentHash), engine.Value.SignInfo)));
                 if(!signResult)
                 {
                     _log.LogError($"Failed to sign engines");
@@ -181,12 +186,12 @@ namespace Microsoft.DotNet.SignTool
                 // attach engines
                 foreach (var engine in engines)
                 {
-                    _log.LogMessage(MessageImportance.Normal, $"Attaching engine {engine.Key} to {engine.Value.FullPath}");
+                    _log.LogMessage(MessageImportance.Normal, $"Attaching engine {engine.Key.FileName} to {engine.Value.FullPath}");
 
                     try
                     {
                         if (!RunWixTool("insignia.exe",
-                            $"-ab {engine.Key} {engine.Value.FullPath} -o {engine.Value.FullPath}", workingDirectory,
+                            $"-ab {engine.Key.FileName} {engine.Value.FullPath} -o {engine.Value.FullPath}", workingDirectory,
                             _signTool.WixToolsPath, _log))
                         {
                             _log.LogError($"Failed to attach engine to {engine.Value.FullPath}");
@@ -196,7 +201,7 @@ namespace Microsoft.DotNet.SignTool
                     finally
                     {
                         // cleanup engines (they fail signing verification if they stay in the drop
-                        File.Delete(engine.Key);
+                        File.Delete(engine.Key.FileName);
                     }
                 }
                 return true;
