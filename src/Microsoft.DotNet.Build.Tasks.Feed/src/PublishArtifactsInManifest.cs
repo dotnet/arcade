@@ -139,6 +139,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// </summary>
         public bool PublishSpecialClrFiles { get; set; }
 
+        public bool ConvertPortablePdbsToWindowsPdbs { get; set; }
+
         /// <summary>
         /// If true, safety checks only print messages and do not error
         /// - Internal asset to public feed
@@ -342,6 +344,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 MsdlToken = this.MsdlToken,
                 SymbolPublishingExclusionsFile = this.SymbolPublishingExclusionsFile,
                 PublishSpecialClrFiles = this.PublishSpecialClrFiles,
+                ConvertPortablePdbsToWindowsPdbs = this.ConvertPortablePdbsToWindowsPdbs,
                 BuildQuality = this.BuildQuality,
                 ArtifactsBasePath =  this.ArtifactsBasePath,
                 AzdoApiToken = this.AzdoApiToken,
