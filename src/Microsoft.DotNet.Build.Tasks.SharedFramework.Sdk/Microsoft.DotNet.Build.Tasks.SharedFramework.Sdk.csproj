@@ -34,6 +34,7 @@
     <None Include="targets/**/*.*" Pack="true">
       <PackagePath>targets/%(RecursiveDir)%(Filename)%(Extension)</PackagePath>
     </None>
+    <None Include="..\Common\wix\dotnethome_x64.wxs" Link="targets\windows\product\dotnethome_x64.wxs" PackagePath="%(Link)" Pack="true" />
   </ItemGroup>
 
   <ItemGroup>
