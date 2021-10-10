@@ -91,7 +91,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             };
             var path = TestInputs.GetFullPath("Symbol");
             var buildAsset = new Dictionary<string, HashSet<Asset>>();
-            await task.HandleSymbolPublishingAsync(path, MsdlToken, SymWebToken, "", false, false, buildAsset, null, path);
+            await task.HandleSymbolPublishingAsync(path, MsdlToken, SymWebToken, "", false, buildAsset, null, path);
             Assert.True(task.Log.HasLoggedErrors);
         }
 
