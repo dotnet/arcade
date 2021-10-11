@@ -36,7 +36,7 @@
     <MicrosoftExtensionsFileSystemGlobbingVersion>2.0.0</MicrosoftExtensionsFileSystemGlobbingVersion>
     <MicrosoftExtensionsLoggingConsoleVersion>2.1.1</MicrosoftExtensionsLoggingConsoleVersion>
     <MicrosoftNETCorePlatformsVersion>2.1.0</MicrosoftNETCorePlatformsVersion>
-    <MicrosoftNetCompilersToolsetVersion>4.0.0-5.21501.19</MicrosoftNetCompilersToolsetVersion>
+    <MicrosoftNetCompilersToolsetVersion>4.0.0-5.21508.3</MicrosoftNetCompilersToolsetVersion>
     <MicrosoftNetTestSdkVersion>16.7.1</MicrosoftNetTestSdkVersion>
     <MicrosoftNETILLinkTasksVersion>6.0.100-1.21473.1</MicrosoftNETILLinkTasksVersion>
     <MoqVersion>4.8.3</MoqVersion>
