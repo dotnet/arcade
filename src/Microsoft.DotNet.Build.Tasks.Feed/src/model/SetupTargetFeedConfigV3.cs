@@ -7,6 +7,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
 using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
 using Microsoft.DotNet.Build.Tasks.Feed.Model;
 
 namespace Microsoft.DotNet.Build.Tasks.Feed
@@ -27,6 +28,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         private bool Flatten { get; }
 
+        public TaskLoggingHelper Log { get; }
+
         public SetupTargetFeedConfigV3(
             TargetChannelConfig targetChannelConfig,
             bool isInternalBuild,
@@ -43,7 +46,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             string stablePackagesFeed = null,
             string stableSymbolsFeed = null,
             ImmutableList<string> filesToExclude = null,
-            bool flatten = true) 
+            bool flatten = true,
+            TaskLoggingHelper log = null) 
             : base(isInternalBuild, isStableBuild, repositoryName, commitSha, null, publishInstallersAndChecksums, null, null, null, null, null, null, null, latestLinkShortUrlPrefix, null)
         {
             _targetChannelConfig = targetChannelConfig;
@@ -57,6 +61,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             FeedSasUris = feedSasUris.ToImmutableDictionary(i => i.ItemSpec, i => ConvertFromBase64(i.GetMetadata("Base64Uri")));
             FeedOverrides = feedOverrides.ToImmutableDictionary(i => i.ItemSpec, i => i.GetMetadata("Replacement"));
             AzureDevOpsFeedsKey = FeedKeys.TryGetValue("https://pkgs.dev.azure.com/dnceng", out string key) ? key : null;
+            Log = log;
         }
 
         private static string ConvertFromBase64(string value)
@@ -164,8 +169,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         continue;
                     }
 
-                    var feed = spec.FeedUrl;
-                    feed = GetFeedOverride(feed);
+                    var oldFeed = spec.FeedUrl;
+                    var feed = GetFeedOverride(oldFeed);
                     if (type is TargetFeedContentType.Package &&
                         spec.Assets == AssetSelection.ShippingOnly &&
                         FeedOverrides.TryGetValue("transport-packages", out string newFeed))
@@ -180,6 +185,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     }
                     var key = GetFeedKey(feed);
                     var sasUri = GetFeedSasUri(feed);
+                    if (feed != oldFeed && string.IsNullOrEmpty(key) && string.IsNullOrEmpty(sasUri))
+                    {
+                        Log?.LogMessage($"No keys found for {feed}, falling back to keys for {oldFeed}.");
+                        // if we used an override, and didn't find a key, fallback to the keys for the non-override value
+                        key = GetFeedKey(oldFeed);
+                        sasUri = GetFeedSasUri(oldFeed);
+                    }
                     var feedType = feed.StartsWith("https://pkgs.dev.azure.com")
                         ? FeedType.AzDoNugetFeed
                         : (sasUri != null ? FeedType.AzureStorageContainer : FeedType.AzureStorageFeed);

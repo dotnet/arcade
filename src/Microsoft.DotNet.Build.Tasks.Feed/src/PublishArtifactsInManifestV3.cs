@@ -137,7 +137,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         BuildEngine,
                         targetChannelConfig.SymbolTargetType,
                         filesToExclude: targetChannelConfig.FilenamesToExclude,
-                        flatten: targetChannelConfig.Flatten);
+                        flatten: targetChannelConfig.Flatten,
+                        log: Log);
 
                     var targetFeedConfigs = targetFeedsSetup.Setup();
 
