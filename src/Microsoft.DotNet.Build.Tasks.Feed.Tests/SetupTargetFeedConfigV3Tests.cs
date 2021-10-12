@@ -72,7 +72,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             };
         }
 
-        private const SymbolTargetType symbolTargetType = SymbolTargetType.None;
+        private const SymbolTargetType symbolTargetType = SymbolTargetType.Msdl;
 
         private readonly ITestOutputHelper Output;
 

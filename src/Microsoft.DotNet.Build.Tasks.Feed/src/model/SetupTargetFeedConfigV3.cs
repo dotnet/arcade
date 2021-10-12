@@ -193,6 +193,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         false,
                         IsInternalBuild,
                         false,
+                        SymbolTargetType,
                         filenamesToExclude: FilesToExclude,
                         flatten: Flatten
                     );
