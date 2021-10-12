@@ -290,6 +290,7 @@
       <CandleVariables Include="NugetVersion" Value="$(Version)" />
       <CandleVariables Include="TargetArchitectureDescription" Value="$(InstallerTargetArchitecture)$(CrossArchContentsBuildPart)" />
       <CandleVariables Include="UpgradeCode" Value="$(UpgradeCode)" />
+      <CandleVariables Include="MajorUpgradeSchedule" Value="$(MajorUpgradeSchedule)" Condition="'$(MajorUpgradeSchedule)' != ''" />
 
       <!-- If this is a cross-arch MSI, add target arch to the dependency key for uniqueness. -->
       <CandleVariables Include="CrossArchContentsPlatformPart" Value="$(CrossArchContentsBuildPart.Replace('-', '_'))" />
