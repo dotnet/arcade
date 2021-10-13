@@ -38,8 +38,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public bool AllowFeedOverrides { get; set; }
 
-        public bool ConvertPortablePdbsToWindowsPdbs { get; set;}
-
         public ITaskItem[] FeedKeys { get; set; }
         public ITaskItem[] FeedSasUris { get; set; }
 
@@ -196,7 +194,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         SymWebToken,
                         SymbolPublishingExclusionsFile,
                         PublishSpecialClrFiles,
-                        ConvertPortablePdbsToWindowsPdbs,
                         buildAssets,
                         clientThrottle,
                         temporarySymbolsLocation)
