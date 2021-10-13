@@ -150,7 +150,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             // Now update the 'Local' feed view with aad tenant visibility.
                             var feedViewVisibilityPatch = new AzureDevOpsFeedView()
                             {
-                                Visibility = LocalViewVisibility
+                                Visibility = AzureDevOpsFeedVisibility.collection
                             };
 
                             string patchBody = JsonConvert.SerializeObject(feedViewVisibilityPatch, _serializerSettings);

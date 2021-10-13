@@ -3,11 +3,11 @@
 
 namespace Microsoft.DotNet.Build.Tasks.Feed
 {
-    /// <summary>
-    /// Represents a feed view
-    /// </summary>
-    public class AzureDevOpsFeedView
+    public enum AzureDevOpsFeedVisibility
     {
-        public AzureDevOpsFeedVisibility Visibility { get; set; }
+        collection,
+        aadTenant,
+        @private,
+        none
     }
 }
