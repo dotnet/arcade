@@ -75,16 +75,11 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <NETCORE_ENGINEERING_TELEMETRY>Publish</NETCORE_ENGINEERING_TELEMETRY>
 
-    <!-- Default publishing infra target is 2. -->
-    <PublishingInfraVersion Condition="'$(PublishingInfraVersion)' == ''">2</PublishingInfraVersion>
+    <!-- Default publishing infra target is 3. -->
+    <PublishingInfraVersion Condition="'$(PublishingInfraVersion)' == ''">3</PublishingInfraVersion>
   </PropertyGroup>
 
-  <Import Project="SetupTargetFeeds.proj" Condition="'$(PublishingInfraVersion)' == '2'" />
-
   <Target Name="Execute">
-    <CallTarget Targets="SetupTargetFeeds" Condition="'$(PublishingInfraVersion)' == '2'">
-      <Output TaskParameter="TargetOutputs" ItemName="TargetFeedConfig"/>
-    </CallTarget>
 
     <Error Condition="'$(ManifestsBasePath)' == ''" Text="ManifestsBasePath is empty. Please provide the full path to asset manifest(s) directory." />
     <Error Condition="'$(BlobBasePath)' == '' OR '$(PackageBasePath)' == ''" Text="A valid full path to BlobBasePath and PackageBasePath is required." />

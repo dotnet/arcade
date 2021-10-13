@@ -11,12 +11,6 @@
       - AzdoTargetFeedPAT                       : Required token to publish assets to feeds
   -->
 
-  <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
-    <NETCORE_ENGINEERING_TELEMETRY>Publish</NETCORE_ENGINEERING_TELEMETRY>
-    <AzureDevOpsOrg Condition="'$(AzureDevOpsOrg)' == ''">dnceng</AzureDevOpsOrg>
-  </PropertyGroup>
-
   <Target Name="Execute">
     <Error
       Condition="'$(IsInternalBuild)' == ''"
@@ -34,21 +28,29 @@
       Condition="'$(AzdoTargetFeedPAT)' == ''"
       Text="Parameters 'AzdoTargetFeedPAT' is empty." />
 
+    <PropertyGroup>
+      <TargetFramework>netcoreapp3.1</TargetFramework>
+      <NETCORE_ENGINEERING_TELEMETRY>Publish</NETCORE_ENGINEERING_TELEMETRY>
+      <AzureDevOpsOrg Condition="'$(AzureDevOpsOrg)' == ''">dnceng</AzureDevOpsOrg>
+      <AzureDevOpsProject>internal</AzureDevOpsProject>
+      <AzureDevOpsProject Condition="'$(IsInternalBuild)' == 'false'">public</AzureDevOpsProject>
+      </PropertyGroup>
+
     <!--Create the shipping feed-->
     <CreateAzureDevOpsFeed
-        IsInternal="$(IsInternalBuild)"
         AzureDevOpsPersonalAccessToken="$(AzdoTargetFeedPAT)"
         FeedName="$(FeedName)-shipping"
-        AzureDevOpsOrg="$(AzureDevOpsOrg)">
+        AzureDevOpsOrg="$(AzureDevOpsOrg)"
+        AzureDevOpsProject="$(AzureDevOpsProject)">
       <Output TaskParameter="TargetFeedURL" PropertyName="ShippingAzdoPackageFeedURL"/>
     </CreateAzureDevOpsFeed>
 
     <!--Create the nonshipping feed-->
     <CreateAzureDevOpsFeed
-        IsInternal="$(IsInternalBuild)"
         AzureDevOpsPersonalAccessToken="$(AzdoTargetFeedPAT)"
         FeedName="$(FeedName)-nonshipping"
-        AzureDevOpsOrg="$(AzureDevOpsOrg)">
+        AzureDevOpsOrg="$(AzureDevOpsOrg)"
+        AzureDevOpsProject="$(AzureDevOpsProject)">
       <Output TaskParameter="TargetFeedURL" PropertyName="NonShippingAzdoPackageFeedURL"/>
     </CreateAzureDevOpsFeed>
 

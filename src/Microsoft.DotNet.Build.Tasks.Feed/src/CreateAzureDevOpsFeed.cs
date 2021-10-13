@@ -23,8 +23,24 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         [Output]
         public string TargetFeedName { get; set; }
 
+        /// <summary>
+        /// Organization that the feed should be created in
+        /// </summary>
         [Required]
-        public bool IsInternal { get; set; }
+        public string AzureDevOpsOrg { get; set; }
+
+        /// <summary>
+        /// Project that that feed should be created in. The public/internal visibility
+        /// of this project will determine whether the feed is public.
+        /// </summary>
+        [Required]
+        public string AzureDevOpsProject { get; set; }
+
+        /// <summary>
+        /// Personal access token used to authorize to the API and create the feed
+        /// </summary>
+        [Required]
+        public string AzureDevOpsPersonalAccessToken { get; set; }
 
         public string RepositoryName { get; set; }
 
@@ -40,12 +56,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// </summary>
         public string ContentIdentifier { get; set; }
 
-        [Required]
-        public string AzureDevOpsPersonalAccessToken { get; set; }
-
-        public string AzureDevOpsFeedsApiVersion { get; set; } = "5.0-preview.1";
-
-        public string AzureDevOpsOrg { get; set; } = "dnceng";
+        public string AzureDevOpsFeedsApiVersion { get; set; } = "5.1-preview.1";
 
         /// <summary>
         /// Number of characters from the commit SHA prefix that should be included in the feed name.
@@ -86,16 +97,19 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 // or contain any of these: @ ~ ; { } ' + = , < > | / \ ? : & $ * " # [ ] %
                 string feedCompatibleRepositoryName = RepositoryName?.Replace('/', '-');
 
-                string accessType = IsInternal ? "internal" : "public";
-                string publicSegment = IsInternal ? string.Empty : "public/";
-                string accessId = IsInternal ? "int" : "pub";
+                // For clarity, and compatibility with existing infrastructure, we include the feed visibility tag.
+                // This serves two purposes:
+                // 1. In nuget.config files (and elsewhere), the name at a glance can identify its visibility
+                // 2. Existing automation has knowledge of "darc-int" and "darc-pub" for purposes of injecting authentication for internal builds
+                //    and managing the isolated feeds within the NuGet.config files.
+                string accessTag = GetFeedVisibilityTag(AzureDevOpsOrg, AzureDevOpsProject);
                 string extraContentInfo = !string.IsNullOrEmpty(ContentIdentifier) ? $"-{ContentIdentifier}" : "";
-                string baseFeedName = FeedName ?? $"darc-{accessId}{extraContentInfo}-{feedCompatibleRepositoryName}-{CommitSha.Substring(0, ShaUsableLength)}";
+                string baseFeedName = FeedName ?? $"darc-{accessTag}{extraContentInfo}-{feedCompatibleRepositoryName}-{CommitSha.Substring(0, ShaUsableLength)}";
                 string versionedFeedName = baseFeedName;
                 bool needsUniqueName = false;
                 int subVersion = 0;
 
-                Log.LogMessage(MessageImportance.High, $"Creating the new {accessType} Azure DevOps artifacts feed '{baseFeedName}'...");
+                Log.LogMessage(MessageImportance.High, $"Creating the new Azure DevOps artifacts feed '{baseFeedName}'...");
 
                 if (baseFeedName.Length > MaxLengthForAzDoFeedNames)
                 {
@@ -118,38 +132,61 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             "Basic",
                             Convert.ToBase64String(Encoding.ASCII.GetBytes(string.Format("{0}:{1}", "", AzureDevOpsPersonalAccessToken))));
 
-                        AzureDevOpsArtifactFeed newFeed = new AzureDevOpsArtifactFeed(versionedFeedName, AzureDevOpsOrg);
+                        AzureDevOpsArtifactFeed newFeed = new AzureDevOpsArtifactFeed(versionedFeedName, AzureDevOpsOrg, AzureDevOpsProject);
 
-                        string body = JsonConvert.SerializeObject(newFeed, _serializerSettings);
+                        string createBody = JsonConvert.SerializeObject(newFeed, _serializerSettings);
 
-                        HttpRequestMessage postMessage = new HttpRequestMessage(HttpMethod.Post, $"{publicSegment}_apis/packaging/feeds");
-                        postMessage.Content = new StringContent(body, Encoding.UTF8, "application/json");
-                        HttpResponseMessage response = await client.SendAsync(postMessage);
+                        using HttpRequestMessage createFeedMessage = new HttpRequestMessage(HttpMethod.Post, $"{AzureDevOpsProject}/_apis/packaging/feeds");
+                        createFeedMessage.Content = new StringContent(createBody, Encoding.UTF8, "application/json");
+                        using HttpResponseMessage createFeedResponse = await client.SendAsync(createFeedMessage);
 
-                        if (response.StatusCode == HttpStatusCode.Created)
+                        if (createFeedResponse.StatusCode == HttpStatusCode.Created)
                         {
                             needsUniqueName = false;
                             baseFeedName = versionedFeedName;
+
+                            // Now update the 'Local' feed view with aad tenant visibility.
+                            var feedViewVisibilityPatch = new FeedView()
+                            {
+                                Visibility = "collection"
+                            };
+
+                            string patchBody = JsonConvert.SerializeObject(feedViewVisibilityPatch, _serializerSettings);
+
+                            // Note that Framework doesn't natively have Patch
+#if NETFRAMEWORK
+                            HttpMethod patchMethod = new HttpMethod("PATCH");
+#else
+                            HttpMethod patchMethod = HttpMethod.Patch;
+#endif
+                            using HttpRequestMessage patchFeedViewMessage = new HttpRequestMessage(patchMethod, $"{AzureDevOpsProject}/_apis/packaging/feeds/{baseFeedName}/views/Local");
+                            patchFeedViewMessage.Content = new StringContent(patchBody, Encoding.UTF8, "application/json");
+                            using HttpResponseMessage patchFeedViewResponse = await client.SendAsync(patchFeedViewMessage);
+
+                            if (patchFeedViewResponse.StatusCode != HttpStatusCode.OK)
+                            {
+                                throw new Exception($"Feed view 'Local' for '{baseFeedName}' could not be updated to have aadTenant visibility. Exception: {await patchFeedViewResponse.Content.ReadAsStringAsync()}");
+                            }
                         }
-                        else if (response.StatusCode == HttpStatusCode.Conflict)
+                        else if (createFeedResponse.StatusCode == HttpStatusCode.Conflict)
                         {
                             versionedFeedName = $"{baseFeedName}-{++subVersion}";
                             needsUniqueName = true;
 
                             if (versionedFeedName.Length > MaxLengthForAzDoFeedNames)
                             {
-                                Log.LogError($"The name of the new feed ({baseFeedName}) exceeds the maximum feed name size of 64 chars. Aborting feed creation.");
+                                Console.WriteLine($"The name of the new feed ({baseFeedName}) exceeds the maximum feed name size of 64 chars. Aborting feed creation.");
                                 return false;
                             }
                         }
                         else
                         {
-                            throw new Exception($"Feed '{baseFeedName}' was not created. Request failed with status code {response.StatusCode}. Exception: {await response.Content.ReadAsStringAsync()}");
+                            throw new Exception($"Feed '{baseFeedName}' was not created. Request failed with status code {createFeedResponse.StatusCode}. Exception: {await createFeedResponse.Content.ReadAsStringAsync()}");
                         }
                     }
                 } while (needsUniqueName);
 
-                TargetFeedURL = $"https://pkgs.dev.azure.com/{AzureDevOpsOrg}/{publicSegment}_packaging/{baseFeedName}/nuget/v3/index.json";
+                TargetFeedURL = $"https://pkgs.dev.azure.com/{AzureDevOpsOrg}/{AzureDevOpsProject}/_packaging/{baseFeedName}/nuget/v3/index.json";
                 TargetFeedName = baseFeedName;
 
                 Log.LogMessage(MessageImportance.High, $"Feed '{TargetFeedURL}' created successfully!");
@@ -161,11 +198,37 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
             return !Log.HasLoggedErrors;
         }
+
+        /// <summary>
+        /// Returns a tag for feed visibility that will be added to the feed name
+        /// </summary>
+        /// <param name="organization">Organization containing the feed</param>
+        /// <param name="project">Project within <paramref name="organization"/> containing the feed</param>
+        /// <returns>Feed tag</returns>
+        /// <exception cref="NotImplementedException"></exception>
+        private string GetFeedVisibilityTag(string organization, string project)
+        {
+            switch (organization)
+            {
+                case "dnceng":
+                    switch (project)
+                    {
+                        case "internal":
+                            return "int";
+                        case "public":
+                            return "pub";
+                        default:
+                            throw new NotImplementedException($"Project '{project}' within organization '{organization}' has no visibility mapping.");
+                    }
+                default:
+                    throw new NotImplementedException($"Organization '{organization}' has no visibility mapping.");
+            }
+        }
     }
 
     public class Permission
     {
-        public Permission(string identityDescriptor, int role)
+        public Permission(string identityDescriptor, string role)
         {
             IdentityDescriptor = identityDescriptor;
             Role = role;
@@ -173,24 +236,56 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public string IdentityDescriptor { get; set; }
 
-        public int Role { get; set; }
+        public string Role { get; set; }
     }
 
+    /// <summary>
+    /// Represents a feed view
+    /// </summary>
+    public class FeedView
+    {
+        public string Visibility { get; set; }
+    }
+
+    /// <summary>
+    /// Represents the body of a request sent when creating a new feed.
+    /// </summary>
+    /// <remarks>>
+    /// When creating a new feed, we want to set up permissions based on the org and project.
+    /// Right now, only dnceng's public and internal projects are supported.
+    /// New feeds automatically get the feed administrators and project collection administrators as owners,
+    /// but we want to automatically add some additional permissions so that the build services can push to them,
+    /// and aadTenant users can read from them.
+    /// </remarks>
     public class AzureDevOpsArtifactFeed
     {
-        public AzureDevOpsArtifactFeed(string name, string organization)
+        public AzureDevOpsArtifactFeed(string name, string organization, string project)
         {
             Name = name;
-            if (organization == "dnceng")
+            switch (organization)
             {
-                Permissions = new List<Permission>
-                {
-                    // Mimic the permissions added to a feed when created in the browser
-                    new Permission("Microsoft.TeamFoundation.ServiceIdentity;116cce53-b859-4624-9a95-934af41eccef:Build:b55de4ed-4b5a-4215-a8e4-0a0a5f71e7d8", 3),                      // Project Collection Build Service
-                    new Permission("Microsoft.TeamFoundation.ServiceIdentity;116cce53-b859-4624-9a95-934af41eccef:Build:7ea9116e-9fac-403d-b258-b31fcf1bb293", 3),                      // internal Build Service
-                    new Permission("Microsoft.TeamFoundation.Identity;S-1-9-1551374245-1349140002-2196814402-2899064621-3782482097-0-0-0-0-1", 4),                                      // Feed administrators
-                    new Permission("Microsoft.TeamFoundation.Identity;S-1-9-1551374245-1846651262-2896117056-2992157471-3474698899-1-2052915359-1158038602-2757432096-2854636005", 4)   // Feed administrators and contributors
-                };
+                case "dnceng":
+                    switch (project)
+                    {
+                        case "public":
+                        case "internal":
+                            Permissions = new List<Permission>
+                            {
+                                // Project Collection Build Service
+                                new Permission("Microsoft.TeamFoundation.ServiceIdentity;116cce53-b859-4624-9a95-934af41eccef:Build:7ea9116e-9fac-403d-b258-b31fcf1bb293", "contributor"),
+                                // internal Build Service
+                                new Permission("Microsoft.TeamFoundation.ServiceIdentity;116cce53-b859-4624-9a95-934af41eccef:Build:b55de4ed-4b5a-4215-a8e4-0a0a5f71e7d8", "contributor"),
+                                // Project administrators
+                                new Permission("Microsoft.TeamFoundation.Identity;S-1-9-1551374245-1349140002-2196814402-2899064621-3782482097-0-0-0-0-1", "administrator"),
+                            };
+                            break;
+                        default:
+                            throw new NotImplementedException($"Project '{project}' within organization '{organization}' contains no feed permissions information.");
+                    }
+                    break;
+                default:
+                    throw new NotImplementedException($"Organization '{organization}' contains no feed permissions information.");
+
             }
         }
 
