@@ -3,7 +3,11 @@
 
   <Package Compressed="yes" InstallScope="perMachine" InstallerVersion="$(var.InstallerVersion)" />
 
-  <MajorUpgrade DowngradeErrorMessage="$(var.DowngradeErrorMessage)" Schedule="afterInstallInitialize"/>
+  <?ifndef MajorUpgradeSchedule?>
+    <?define MajorUpgradeSchedule = afterInstallInitialize?>
+  <?endif?>
+
+  <MajorUpgrade DowngradeErrorMessage="$(var.DowngradeErrorMessage)" Schedule="$(var.MajorUpgradeSchedule)"/>
 
   <MediaTemplate CompressionLevel="high" EmbedCab="yes"/>
 
