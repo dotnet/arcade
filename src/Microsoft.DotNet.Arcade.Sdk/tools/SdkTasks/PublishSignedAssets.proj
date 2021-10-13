@@ -32,9 +32,13 @@
       <TargetFramework>netcoreapp3.1</TargetFramework>
       <NETCORE_ENGINEERING_TELEMETRY>Publish</NETCORE_ENGINEERING_TELEMETRY>
       <AzureDevOpsOrg Condition="'$(AzureDevOpsOrg)' == ''">dnceng</AzureDevOpsOrg>
-      <AzureDevOpsProject>internal</AzureDevOpsProject>
-      <AzureDevOpsProject Condition="'$(IsInternalBuild)' == 'false'">public</AzureDevOpsProject>
-      </PropertyGroup>
+      <AzureDevOpsProject Condition="'(AzureDevOpsProject)' == '' and '(AzureDevOpsOrg)' == 'dnceng' and '$(IsInternalBuild)' == 'true'">internal</AzureDevOpsProject>
+      <AzureDevOpsProject Condition="'(AzureDevOpsProject)' == '' and '(AzureDevOpsOrg)' == 'dnceng' and '$(IsInternalBuild)' == 'false'">public</AzureDevOpsProject>
+    </PropertyGroup>
+
+    <Error
+      Condition="'$(AzureDevOpsProject)' == ''"
+      Text="Parameters 'AzureDevOpsProject' is empty." />
 
     <!--Create the shipping feed-->
     <CreateAzureDevOpsFeed

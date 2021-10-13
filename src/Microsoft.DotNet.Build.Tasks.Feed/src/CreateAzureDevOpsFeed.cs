@@ -58,6 +58,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public string AzureDevOpsFeedsApiVersion { get; set; } = "5.1-preview.1";
 
+        public string LocalViewVisibility { get; set; } = "collection";
+
         /// <summary>
         /// Number of characters from the commit SHA prefix that should be included in the feed name.
         /// </summary>
@@ -146,9 +148,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             baseFeedName = versionedFeedName;
 
                             // Now update the 'Local' feed view with aad tenant visibility.
-                            var feedViewVisibilityPatch = new FeedView()
+                            var feedViewVisibilityPatch = new AzureDevOpsFeedView()
                             {
-                                Visibility = "collection"
+                                Visibility = LocalViewVisibility
                             };
 
                             string patchBody = JsonConvert.SerializeObject(feedViewVisibilityPatch, _serializerSettings);
@@ -175,7 +177,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                             if (versionedFeedName.Length > MaxLengthForAzDoFeedNames)
                             {
-                                Console.WriteLine($"The name of the new feed ({baseFeedName}) exceeds the maximum feed name size of 64 chars. Aborting feed creation.");
+                                Log.LogError($"The name of the new feed ({baseFeedName}) exceeds the maximum feed name size of 64 chars. Aborting feed creation.");
                                 return false;
                             }
                         }
@@ -224,73 +226,5 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     throw new NotImplementedException($"Organization '{organization}' has no visibility mapping.");
             }
         }
-    }
-
-    public class Permission
-    {
-        public Permission(string identityDescriptor, string role)
-        {
-            IdentityDescriptor = identityDescriptor;
-            Role = role;
-        }
-
-        public string IdentityDescriptor { get; set; }
-
-        public string Role { get; set; }
-    }
-
-    /// <summary>
-    /// Represents a feed view
-    /// </summary>
-    public class FeedView
-    {
-        public string Visibility { get; set; }
-    }
-
-    /// <summary>
-    /// Represents the body of a request sent when creating a new feed.
-    /// </summary>
-    /// <remarks>>
-    /// When creating a new feed, we want to set up permissions based on the org and project.
-    /// Right now, only dnceng's public and internal projects are supported.
-    /// New feeds automatically get the feed administrators and project collection administrators as owners,
-    /// but we want to automatically add some additional permissions so that the build services can push to them,
-    /// and aadTenant users can read from them.
-    /// </remarks>
-    public class AzureDevOpsArtifactFeed
-    {
-        public AzureDevOpsArtifactFeed(string name, string organization, string project)
-        {
-            Name = name;
-            switch (organization)
-            {
-                case "dnceng":
-                    switch (project)
-                    {
-                        case "public":
-                        case "internal":
-                            Permissions = new List<Permission>
-                            {
-                                // Project Collection Build Service
-                                new Permission("Microsoft.TeamFoundation.ServiceIdentity;116cce53-b859-4624-9a95-934af41eccef:Build:7ea9116e-9fac-403d-b258-b31fcf1bb293", "contributor"),
-                                // internal Build Service
-                                new Permission("Microsoft.TeamFoundation.ServiceIdentity;116cce53-b859-4624-9a95-934af41eccef:Build:b55de4ed-4b5a-4215-a8e4-0a0a5f71e7d8", "contributor"),
-                                // Project administrators
-                                new Permission("Microsoft.TeamFoundation.Identity;S-1-9-1551374245-1349140002-2196814402-2899064621-3782482097-0-0-0-0-1", "administrator"),
-                            };
-                            break;
-                        default:
-                            throw new NotImplementedException($"Project '{project}' within organization '{organization}' contains no feed permissions information.");
-                    }
-                    break;
-                default:
-                    throw new NotImplementedException($"Organization '{organization}' contains no feed permissions information.");
-
-            }
-        }
-
-        public string Name { get; set; }
-
-        public List<Permission> Permissions { get; private set; }
     }
 }
