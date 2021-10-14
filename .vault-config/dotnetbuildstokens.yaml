@@ -12,6 +12,20 @@ references:
       name: dotnetbuildskeys
 
 secrets:
+  dotnetbuilds-internal-container-read-uri:
+    type: azure-storage-container-sas-uri
+    parameters:
+      connectionString:
+        name: dotnetbuilds-connection-string
+        location: dotnetbuildskeys
+      permissions: rl
+      container: internal
+
+  dotnetbuilds-internal-container-read-uri-base64:
+    type: base64-encoder
+    parameters:
+      secret: dotnetbuilds-internal-container-read-uri
+
   dotnetbuilds-internal-container-uri:
     type: azure-storage-container-sas-uri
     parameters:
