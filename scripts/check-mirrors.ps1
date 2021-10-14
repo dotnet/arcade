@@ -20,7 +20,8 @@ param
 (
     [Parameter(Mandatory=$true)][string]$RepoRoot,
     [Parameter(Mandatory=$true)][string]$RuntimeBranch,
-    [Parameter(Mandatory=$true)][string]$SdkBranch,
+    [Parameter(Mandatory=$true)][string[]]$SdkBranches,
+    [Parameter(Mandatory=$true)][ValidateSet('5.0','6.0')][string]$ReleaseBand,
     [switch]$NoFetch = $false
 )
 
@@ -28,68 +29,80 @@ $repos = @(
     @{
         org="dotnet";
         repo="runtime";
-        branch=$RuntimeBranch;
+        branches=@($RuntimeBranch);
         hasInternal=$true;
+        appliesTo=@("5.0","6.0");
     },
     @{
         org="dotnet";
         repo="emsdk";
-        branch=$RuntimeBranch;
+        branches=@($RuntimeBranch);
         hasInternal=$false;
+        appliesTo=@("6.0");
     },
     @{
         org="dotnet";
         repo="aspnetcore";
-        branch=$RuntimeBranch;
+        branches=@($RuntimeBranch);
         hasInternal=$true;
+        appliesTo=@("5.0","6.0");
     },
     @{
         org="dotnet";
         repo="efcore";
-        branch=$RuntimeBranch;
+        branches=@($RuntimeBranch);
         hasInternal=$true;
+        appliesTo=@("5.0","6.0");
     },
     @{
         org="dotnet";
         repo="windowsdesktop";
-        branch=$RuntimeBranch;
+        branches=@($RuntimeBranch);
         hasInternal=$true;
+        appliesTo=@("5.0","6.0");
     },
     @{
         org="dotnet";
         repo="winforms";
-        branch=$RuntimeBranch;
+        branches=@($RuntimeBranch);
         hasInternal=$true;
+        appliesTo=@("5.0","6.0");
     },
     @{
         org="dotnet";
         repo="wpf";
-        branch=$RuntimeBranch;
+        branches=@($RuntimeBranch);
         hasInternal=$true;
+        appliesTo=@("5.0","6.0");
     },
     @{
         org="dotnet";
         repo="templating";
-        branch=$SdkBranch;
+        branches=$SdkBranches;
         hasInternal=$true;
+        appliesTo=@("5.0","6.0");
     },
     @{
         org="dotnet";
         repo="sdk";
-        branch=$SdkBranch;
+        branches=$SdkBranches;
         hasInternal=$true;
+        appliesTo=@("5.0","6.0");
     },
     @{
         org="dotnet";
         repo="installer";
-        branch=$SdkBranch;
+        branches=$SdkBranches;
         hasInternal=$true;
+        appliesTo=@("5.0","6.0");
     },
+    # Roslyn-analyzers "kind of" applies to 5.0, but only in the dead 5.0.3xx branch.
     @{
         org="dotnet";
         repo="roslyn-analyzers";
-        branch=$SdkBranch;
+        branches=$SdkBranches;
         hasInternal=$false;
+        appliesTo=@("6.0");
     }
 )
 
@@ -97,9 +110,10 @@ function Fetch($dir, $remoteName)
 {
     try {
         pushd
-        & git fetch $remoteName 2>&1
-        if (!$?) {
+        $fetchOutput = & git fetch $remoteName 2>&1
+        if ($LASTEXITCODE -ne 0) {
             Write-Error "Failed to fetch in $dir"
+            WRite-Host $fetchOutput
         }
     } finally {
         popd
@@ -153,7 +167,13 @@ function CheckMergeMirror($dir, $publicRemoteName, $internalRemoteName, $publicR
 $availableDirs = Get-ChildItem -Directory $RepoRoot
 
 foreach ($repo in $repos) {
+    
     Write-Host "Finding & checking $($repo.org)/$($repo.repo)"
+    
+    if ($repo.appliesTo.indexOf($ReleaseBand) -eq -1) {
+        Write-Host "  $($repo.org)/$($repo.repo) does not apply to $ReleaseBand, skipping"
+        continue
+    }
 
     $publicRepo = "https://github.com/$($repo.org)/$($repo.repo)"
     $internalRepo = "https://dnceng@dev.azure.com/dnceng/internal/_git/$($repo.org)-$($repo.repo)"
@@ -187,9 +207,11 @@ foreach ($repo in $repos) {
                         Fetch $repoDir $publicRemoteName
                         Fetch $repoDir $internalRemoteName
                     }
-                    CheckDirectMirror $repoDir $publicRemoteName $internalRemoteName $publicRepo $internalRepo $repo.branch
-                    if ($repo.hasInternal) {
-                        CheckMergeMirror $repoDir $publicRemoteName $internalRemoteName $publicRepo $internalRepo $repo.branch
+                    foreach ($branchToCheck in $repo.branches) {
+                        CheckDirectMirror $repoDir $publicRemoteName $internalRemoteName $publicRepo $internalRepo $branchToCheck
+                        if ($repo.hasInternal) {
+                            CheckMergeMirror $repoDir $publicRemoteName $internalRemoteName $publicRepo $internalRepo $branchToCheck
+                        }
                     }
                     break
                 }
