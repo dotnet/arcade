@@ -205,9 +205,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         private int TimeoutInSeconds = 300;
 
-        protected PublishArtifactsInManifestBase(AssetPublisherFactory assetPublisherFactory)
+        protected PublishArtifactsInManifestBase(AssetPublisherFactory assetPublisherFactory = null)
         {
-            AssetPublisherFactory = assetPublisherFactory;
+            AssetPublisherFactory = assetPublisherFactory ?? new AssetPublisherFactory(new MsBuildUtils.TaskLoggingHelper(this));
         }
 
         public override bool Execute()
