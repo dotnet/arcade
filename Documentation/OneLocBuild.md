@@ -64,8 +64,6 @@ organization. If that is not the case, you will need to specify `GitHubOrg` as w
    [repo modification ticket](https://aka.ms/ceChangeLocConfig)
    with the loc team to let them know to retarget the branch.
 
-
-
 ## Releasing with OneLocBuild Using Arcade
 
 **Note: The SLA for translations is one week. Please allow at least two weeks from the release for this process.**
@@ -87,9 +85,15 @@ If you're releasing from any other branch (including servicing branches), you mu
 3. Merge the OneLocBuild PRs to your release branch.
 4. After the release, open another repo modification ticket to re-target your repository to the `main` branch again.
 
+# Common Issues
+
 ## Filing Issues for Translation Issues
 
 File a translation issue ticket with the localization team (see documentation [here](https://dev.azure.com/ceapex/CEINTL/_wiki/wikis/CEINTL.wiki/1361/Provide-Enough-Information-in-DevRel-Feedback-Ticket)).
+
+## Leaving Comments for Translators
+
+Sometimes the proper solution to translation issues is to give the translators context for their work. This can be done easily in RESX files (which will be carried over to the XLF files by xliff-tasks) or in JSON files directly. For more information on how to leave translation comments, see the documentation [here](https://aka.ms/commenting).
 
 # Technical Documentation
 
