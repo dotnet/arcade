@@ -17,6 +17,7 @@ expected_exit_code=0
 includes_test_runner=false
 reset_simulator=false
 
+# Ignore shellcheck lint warning about unused variables (they can be used in the sourced script)
 # shellcheck disable=SC2034
 while [[ $# -gt 0 ]]; do
     opt="$(echo "$1" | tr "[:upper:]" "[:lower:]")"
