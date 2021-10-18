@@ -147,28 +147,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             needsUniqueName = false;
                             baseFeedName = versionedFeedName;
 
-                            // Now update the 'Local' feed view with aad tenant visibility.
-                            var feedViewVisibilityPatch = new AzureDevOpsFeedView()
-                            {
-                                Visibility = AzureDevOpsFeedVisibility.collection
-                            };
-
-                            string patchBody = JsonConvert.SerializeObject(feedViewVisibilityPatch, _serializerSettings);
-
-                            // Note that Framework doesn't natively have Patch
-#if NETFRAMEWORK
-                            HttpMethod patchMethod = new HttpMethod("PATCH");
-#else
-                            HttpMethod patchMethod = HttpMethod.Patch;
-#endif
-                            using HttpRequestMessage patchFeedViewMessage = new HttpRequestMessage(patchMethod, $"{AzureDevOpsProject}/_apis/packaging/feeds/{baseFeedName}/views/Local");
-                            patchFeedViewMessage.Content = new StringContent(patchBody, Encoding.UTF8, "application/json");
-                            using HttpResponseMessage patchFeedViewResponse = await client.SendAsync(patchFeedViewMessage);
-
-                            if (patchFeedViewResponse.StatusCode != HttpStatusCode.OK)
-                            {
-                                throw new Exception($"Feed view 'Local' for '{baseFeedName}' could not be updated to have aadTenant visibility. Exception: {await patchFeedViewResponse.Content.ReadAsStringAsync()}");
-                            }
+                            /// This is where we would potentially update the Local feed view with permissions to the organization's
+                            /// valid users. But, see <seealso cref="AzureDevOpsArtifactFeed"/> for more info on why this is not
+                            /// done this way.
                         }
                         else if (createFeedResponse.StatusCode == HttpStatusCode.Conflict)
                         {
