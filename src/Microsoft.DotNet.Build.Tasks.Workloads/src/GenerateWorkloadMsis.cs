@@ -140,9 +140,11 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             // platform includes Windows
             var workloads = manifests.SelectMany(m => m.Workloads).
                 Select(w => w.Value).
-                Where(wd => (wd.Platforms == null) || wd.Platforms.Any(p => p.StartsWith("win")));
+                Where(wd => wd is WorkloadDefinition).
+                Where(wd => (((WorkloadDefinition)wd).Platforms == null) || ((WorkloadDefinition)wd).Platforms.Any(p => p.StartsWith("win")));
 
-            var packIds = workloads.Where(w => w.Packs != null).SelectMany(w => w.Packs).Distinct();
+            var packIds = workloads.Where(wd => wd is WorkloadDefinition).
+                                    Where(w => (((WorkloadDefinition)w).Packs != null)).SelectMany(w => ((WorkloadDefinition)w).Packs).Distinct();
 
             return manifests.SelectMany(m => m.Packs.Values).
                 Where(p => packIds.Contains(p.Id)).
