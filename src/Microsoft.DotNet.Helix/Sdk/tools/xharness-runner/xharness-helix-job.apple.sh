@@ -44,12 +44,24 @@ exit_code=$?
 # We usually also ask the work item to be re-tried on a different machine
 # Since we run the payload script using launchctl, env vars such as PYTHON_PATH are not set there and we have to do this part here
 # We signal this by creating files
-if [ -f './.retry' ]; then
-    "$HELIX_PYTHONPATH" -c "from helix.workitemutil import request_infra_retry; request_infra_retry('Retrying because XHarness ended with $exit_code')"
+if [ -f "$HELIX_WORKITEM_ROOT/.retry" ]; then
+    retry_message=$(cat "$HELIX_WORKITEM_ROOT/.retry" | tr -d "'\\\\")
+
+    if [ -z "$retry_message" ]; then
+        retry_message='Retrying because we could not enumerate all Android devices'
+    fi
+
+    "$HELIX_PYTHONPATH" -c "from helix.workitemutil import request_infra_retry; request_infra_retry('$retry_message')"
 fi
 
-if [ -f './.reboot' ]; then
-    "$HELIX_PYTHONPATH" -c "from helix.workitemutil import request_reboot; request_reboot('Rebooting because XHarness ended with $exit_code')"
+if [ -f "$HELIX_WORKITEM_ROOT/.reboot" ]; then
+    reboot_message=$(cat "$HELIX_WORKITEM_ROOT/.reboot" | tr -d "'\\\\")
+
+    if [ -z "$reboot_message" ]; then
+        reboot_message='Rebooting to allow Android emulator to restart'
+    fi
+
+    "$HELIX_PYTHONPATH" -c "from helix.workitemutil import request_reboot; request_reboot('$reboot_message')"
 fi
 
 exit $exit_code

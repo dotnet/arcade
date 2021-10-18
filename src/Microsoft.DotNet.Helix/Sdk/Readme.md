@@ -180,7 +180,6 @@ Given a local folder `$(TestFolder)` containing `runtests.cmd`, this will run `r
         test-results.xml
         test_results.xml
     -->
-    <EnableXUnitReporter>false</EnableXUnitReporter>
     <!-- Instruct the sdk to wait for test result ingestion by MC, and fail if there are any failed work items or tests. -->
     <FailOnMissionControlTestFailure>false</FailOnMissionControlTestFailure>
 
@@ -228,7 +227,7 @@ Given a local folder `$(TestFolder)` containing `runtests.cmd`, this will run `r
     <!-- TargetFramework of the xunit.runner.dll to use when running the tests -->
     <XUnitRuntimeTargetFramework>netcoreapp2.0</XUnitRuntimeTargetFramework>
     <!-- PackageVersion of xunit.runner.console to use -->
-    <XUnitRunnerVersion>2.4.1</XUnitRunnerVersion>
+    <XUnitRunnerVersion>2.4.2-pre.9</XUnitRunnerVersion>
     <!-- Additional command line arguments to pass to xunit.console.exe -->
     <XUnitArguments></XUnitArguments>
   </PropertyGroup>
@@ -340,7 +339,7 @@ If a test passes or fails in all attempts, only a single report is made represen
 
 To opt-in and configure test retries when using helix, create file in the reporitory at "eng/test-configuration.json"
 
-### test-configuraion.json format
+### test-configuration.json format
 ```json
 {
   "version" : 1,

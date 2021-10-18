@@ -1,6 +1,7 @@
 // Licensed to the .NET Foundation under one or more agreements.
 // The .NET Foundation licenses this file to you under the MIT license.
 
+using System;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Microsoft.DotNet.Build.Tasks.Feed.Model;
@@ -24,6 +25,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         private string AkaMSCreatedBy { get; }
         private string AkaMSGroupOwner { get; }
 
+        private static HashSet<string> AccountsWithCdns { get; } = new()
+        {
+            "dotnetcli.blob.core.windows.net", "dotnetbuilds.blob.core.windows.net",
+        };
+
         public LatestLinksManager(
             string akaMSClientId,
             string akaMSClientSecret,
@@ -44,7 +50,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         }
 
         public async System.Threading.Tasks.Task CreateOrUpdateLatestLinksAsync(
-            HashSet<BlobArtifactModel> blobsToPublish,
+            HashSet<string> assetsToPublish,
             TargetFeedConfig feedConfig,
             int expectedSuffixLength)
         {
@@ -53,28 +59,39 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 return;
             }
 
+            string feedBaseUrl = feedConfig.SafeTargetURL;
+            if (expectedSuffixLength != 0)
+            {
+                // Strip away the feed expected suffix (index.json)
+                feedBaseUrl = feedBaseUrl.Substring(0, feedBaseUrl.Length - expectedSuffixLength);
+            }
+            if (!feedBaseUrl.EndsWith("/", StringComparison.OrdinalIgnoreCase))
+            {
+                feedBaseUrl += "/";
+            }
+            if (AccountsWithCdns.Any(account => feedBaseUrl.Contains(account)))
+            {
+                // The storage accounts are in a single datacenter in the US and thus download 
+                // times can be painful elsewhere. The CDN helps with this therefore we point the target 
+                // of the aka.ms links to the CDN.
+                feedBaseUrl = feedBaseUrl.Replace(".blob.core.windows.net", ".azureedge.net");
+            }
+
             Logger.LogMessage(MessageImportance.High, "\nThe following aka.ms links for blobs will be created:");
-            IEnumerable<AkaMSLink> linksToCreate = blobsToPublish
-                .Where(blob => !feedConfig.FilenamesToExclude.Contains(Path.GetFileName(blob.Id)))
-                .Select(blob =>
+            IEnumerable<AkaMSLink> linksToCreate = assetsToPublish
+                .Where(asset => !feedConfig.FilenamesToExclude.Contains(Path.GetFileName(asset)))
+                .Select(asset =>
             {
 
-                // Strip away the feed expected suffix (index.json) and append on the
                 // blob path.
-                string actualTargetUrl = feedConfig.TargetURL.Substring(0,
-                    feedConfig.TargetURL.Length - expectedSuffixLength) + blob.Id;
-
-                // The dotnetcli storage account is in a single datacenter in the US and thus download 
-                // times can be painful elsewhere. The CDN helps with this thefore we point the target 
-                // of the aka.ms links to the CDN.
-                actualTargetUrl = actualTargetUrl.Replace("//dotnetcli.blob.core.windows.net/", "//dotnetcli.azureedge.net/");
+                string actualTargetUrl = feedBaseUrl + asset;
 
                 AkaMSLink newLink = new AkaMSLink
                 {
-                    ShortUrl = GetLatestShortUrlForBlob(feedConfig, blob, feedConfig.Flatten),
+                    ShortUrl = GetLatestShortUrlForBlob(feedConfig, asset, feedConfig.Flatten),
                     TargetUrl = actualTargetUrl
                 };
-                Logger.LogMessage(MessageImportance.High, $"  {Path.GetFileName(blob.Id)}");
+                Logger.LogMessage(MessageImportance.High, $"  {Path.GetFileName(asset)}");
 
                 Logger.LogMessage(MessageImportance.High, $"  aka.ms/{newLink.ShortUrl} -> {newLink.TargetUrl}");
 
@@ -90,10 +107,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// <param name="feedConfig">Feed configuration</param>
         /// <param name="blob">Blob</param>
         /// <returns>Short url prefix for the blob.</returns>
-        /// <remarks>
-        public string GetLatestShortUrlForBlob(TargetFeedConfig feedConfig, BlobArtifactModel blob, bool flatten)
+        public string GetLatestShortUrlForBlob(TargetFeedConfig feedConfig, string asset, bool flatten)
         {
-            string blobIdWithoutVersions = VersionIdentifier.RemoveVersions(blob.Id);
+            string blobIdWithoutVersions = VersionIdentifier.RemoveVersions(asset);
 
             if (flatten)
             {
