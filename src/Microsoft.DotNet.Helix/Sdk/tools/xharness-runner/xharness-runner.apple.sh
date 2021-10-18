@@ -17,6 +17,7 @@ expected_exit_code=0
 includes_test_runner=false
 reset_simulator=false
 
+# shellcheck disable=SC2034
 while [[ $# -gt 0 ]]; do
     opt="$(echo "$1" | tr "[:upper:]" "[:lower:]")"
     case "$opt" in
@@ -122,6 +123,7 @@ fi
 
 # First we need to revive env variables since they were erased by launchctl
 # This file already has the expressions in the `export name=value` format
+# shellcheck disable=SC1091
 . ./envvars
 
 output_directory=$HELIX_WORKITEM_UPLOAD_ROOT
@@ -151,9 +153,18 @@ function report_infrastructure_failure() {
     echo "$1" > "$HELIX_WORKITEM_ROOT/.reboot"
 }
 
+# Used to grep sys logs later in case of crashes
+start_time="$(date '+%Y-%m-%d %H:%M:%S')"
+
 # Act out the actual commands (and time constrain them to create buffer for the end of this script)
-source command.sh & PID=$! ; (sleep $command_timeout && kill $PID 2> /dev/null & ) ; wait $PID
+# shellcheck disable=SC1091
+source command.sh & PID=$! ; (sleep "$command_timeout" && kill $PID 2> /dev/null & ) ; wait $PID
 exit_code=$?
+
+# In case of issues, include the syslog (last 2 MB from the time this work item has been running)
+if [ $exit_code -ne 0 ]; then
+    sudo log show --style syslog --start "$start_time" --end "$(date '+%Y-%m-%d %H:%M:%S')" | tail -c 2097152 > "$output_directory/system.log"
+fi
 
 # Exit code values - https://github.com/dotnet/xharness/blob/main/src/Microsoft.DotNet.XHarness.Common/CLI/ExitCode.cs
 
