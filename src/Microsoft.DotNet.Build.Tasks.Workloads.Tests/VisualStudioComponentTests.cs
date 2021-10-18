@@ -22,7 +22,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
         public void ItAssignsDefaultValues()
         {
             WorkloadManifest manifest = Create("WorkloadManifest.json");
-            WorkloadDefinition definition = manifest.Workloads.FirstOrDefault().Value;
+            WorkloadDefinition definition = (WorkloadDefinition)manifest.Workloads.FirstOrDefault().Value;
             VisualStudioComponent component = VisualStudioComponent.Create(null, manifest, definition, NoItems, NoItems, NoItems, NoItems);
 
             string swixProjDirectory = RandomPath;
@@ -40,7 +40,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
         public void ItCanOverrideDefaultValues()
         {
             WorkloadManifest manifest = Create("WorkloadManifest.json");
-            WorkloadDefinition definition = manifest.Workloads.FirstOrDefault().Value;
+            WorkloadDefinition definition = (WorkloadDefinition)manifest.Workloads.FirstOrDefault().Value;
 
             ITaskItem[] resources = new ITaskItem[]
             {
@@ -68,7 +68,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
         public void ItCreatesSafeComponentIds()
         {
             WorkloadManifest manifest = Create("WorkloadManifest.json");
-            WorkloadDefinition definition = manifest.Workloads.FirstOrDefault().Value;
+            WorkloadDefinition definition = (WorkloadDefinition)manifest.Workloads.FirstOrDefault().Value;
             VisualStudioComponent component = VisualStudioComponent.Create(null, manifest, definition, NoItems, NoItems, NoItems, NoItems);
 
             string swixProjDirectory = RandomPath;
@@ -84,7 +84,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
         public void ItCreatesComponentsWhenWorkloadsDoNotIncludePacks()
         {
             WorkloadManifest manifest = Create("mauiWorkloadManifest.json");
-            WorkloadDefinition definition = manifest.Workloads.FirstOrDefault().Value;
+            WorkloadDefinition definition = (WorkloadDefinition)manifest.Workloads.FirstOrDefault().Value;
             VisualStudioComponent component = VisualStudioComponent.Create(null, manifest, definition, NoItems, NoItems, NoItems, NoItems);
 
             string swixProjDirectory = RandomPath;
