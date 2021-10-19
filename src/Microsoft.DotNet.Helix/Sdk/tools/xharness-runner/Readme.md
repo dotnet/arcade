@@ -185,6 +185,7 @@ Example:
     <TestTarget>ios-simulator-64</TestTarget>
     <WorkItemTimeout>00:12:00</WorkItemTimeout>
     <CustomCommands>
+      <![CDATA[
       set -e
       deviceId=`xharness apple device $target`
       xharness apple install -t $target --device "$deviceId" -o "$output_directory" --app=$app
@@ -195,6 +196,7 @@ Example:
       xharness apple uninstall -t $target --device "$deviceId" -o "$output_directory" --app net.dot.Some.iOS
       ((result|=$?))
       exit $result
+      ]]>
     </CustomCommands>
   </XHarnessAppBundleToTest>
 </ItemGroup>
@@ -236,7 +238,9 @@ You can then name the item however you like and supply the path to the app as me
   <AndroidPackageName>net.dot.System.Buffers.Tests</AndroidPackageName>
   <AndroidInstrumentationName>net.dot.MonoRunner</AndroidInstrumentationName>
   <CustomCommands>
+    <![CDATA[
     xharness android test --app "$app" --package-name "net.dot.System.Buffers.Tests" --output-directory "$output_directory" --instrumentation=net.dot.MonoRunner
+    ]]>
   </CustomCommands>
 </XHarnessApkToTest>
 ```
@@ -260,6 +264,7 @@ Example:
     <TestTarget>ios-device_14.4</TestTarget>
     <WorkItemTimeout>00:12:00</WorkItemTimeout>
     <CustomCommands>
+      <![CDATA[
       # Sign applications since we are targeting real devices in this example
       sign first.app
       sign second.app
@@ -269,6 +274,7 @@ Example:
       xharness apple test --target $target --output-directory "$output_directory" -app second.app
       ((result|=$?))
       exit $result
+      ]]>
     </CustomCommands>
   </XHarnessAppBundleToTest>
 </ItemGroup>
