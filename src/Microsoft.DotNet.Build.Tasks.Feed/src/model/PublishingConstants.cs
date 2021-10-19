@@ -155,7 +155,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
 
         private static TargetFeedSpecification[] DotNet31BlazorFeeds =
         {
-            (TargetFeedContentType.Package, FeedDotNet31Blazor),
+            (TargetFeedContentType.Package, FeedDotNet31Blazor, AssetSelection.ShippingOnly),
+            (TargetFeedContentType.Package, FeedDotNet31Blazor, AssetSelection.NonShippingOnly),
             (InstallersAndSymbols, FeedInternalForInstallers),
             (TargetFeedContentType.Checksum, FeedInternalForChecksums),
         };
@@ -204,35 +205,40 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
 
         private static TargetFeedSpecification[] DotNetEngFeeds =
         {
-            (TargetFeedContentType.Package, FeedDotNetEng),
+            (TargetFeedContentType.Package, FeedDotNetEng, AssetSelection.ShippingOnly),
+            (TargetFeedContentType.Package, FeedDotNetEng, AssetSelection.NonShippingOnly),
             (InstallersAndSymbols, FeedForInstallers),
             (TargetFeedContentType.Checksum, FeedForChecksums),
         };
 
         private static TargetFeedSpecification[] DotNetToolsFeeds =
         {
-            (TargetFeedContentType.Package, FeedDotNetTools),
+            (TargetFeedContentType.Package, FeedDotNetTools, AssetSelection.ShippingOnly),
+            (TargetFeedContentType.Package, FeedDotNetTools, AssetSelection.NonShippingOnly),
             (InstallersAndSymbols, FeedForInstallers),
             (TargetFeedContentType.Checksum, FeedForChecksums),
         };
 
         private static TargetFeedSpecification[] DotNetToolsInternalFeeds =
         {
-            (TargetFeedContentType.Package, FeedDotNetToolsInternal),
+            (TargetFeedContentType.Package, FeedDotNetToolsInternal, AssetSelection.ShippingOnly),
+            (TargetFeedContentType.Package, FeedDotNetToolsInternal, AssetSelection.NonShippingOnly),
             (InstallersAndSymbols, FeedInternalForInstallers),
             (TargetFeedContentType.Checksum, FeedInternalForChecksums),
         };
 
         private static TargetFeedSpecification[] DotNetExperimentalFeeds =
         {
-            (TargetFeedContentType.Package, FeedDotNetExperimental),
+            (TargetFeedContentType.Package, FeedDotNetExperimental, AssetSelection.ShippingOnly),
+            (TargetFeedContentType.Package, FeedDotNetExperimental, AssetSelection.NonShippingOnly),
             (InstallersAndSymbols, FeedForInstallers),
             (TargetFeedContentType.Checksum, FeedForChecksums),
         };
 
         private static TargetFeedSpecification[] GeneralTestingFeeds =
         {
-            (TargetFeedContentType.Package, FeedGeneralTesting),
+            (TargetFeedContentType.Package, FeedGeneralTesting, AssetSelection.ShippingOnly),
+            (TargetFeedContentType.Package, FeedGeneralTesting, AssetSelection.NonShippingOnly),
             (InstallersAndSymbols, FeedForInstallers),
             (TargetFeedContentType.Checksum, FeedForChecksums),
             (InstallersAndSymbols, FeedStagingForInstallers),
@@ -241,7 +247,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
 
         private static TargetFeedSpecification[] GeneralTestingInternalFeeds =
         {
-            (TargetFeedContentType.Package, FeedGeneralTestingInternal),
+            (TargetFeedContentType.Package, FeedGeneralTestingInternal, AssetSelection.ShippingOnly),
+            (TargetFeedContentType.Package, FeedGeneralTestingInternal, AssetSelection.NonShippingOnly),
             (InstallersAndSymbols, FeedInternalForInstallers),
             (TargetFeedContentType.Checksum, FeedInternalForChecksums),
             (InstallersAndSymbols, FeedStagingInternalForInstallers),

@@ -153,6 +153,15 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
 
         public TargetFeedSpecification(IEnumerable<TargetFeedContentType> contentTypes, string feedUrl, AssetSelection assets)
         {
+            // A feed targeted for content type 'Package' may not have asset selection 'All'.
+            // During TargetFeedConfig creation, the default feed spec for shipping packages will be ignored and replaced with
+            // a separate target feed config.
+
+            if (assets == AssetSelection.All && contentTypes.Contains(TargetFeedContentType.Package))
+            {
+                throw new ArgumentException($"Target feed specification for {feedUrl} must have a separated asset selection 'ShippingOnly' and 'NonShippingOnly packages");
+            }
+
             ContentTypes = contentTypes.ToImmutableList();
             FeedUrl = feedUrl;
             Assets = assets;

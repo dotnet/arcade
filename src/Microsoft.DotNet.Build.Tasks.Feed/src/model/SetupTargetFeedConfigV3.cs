@@ -86,46 +86,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         private IEnumerable<TargetFeedConfig> Feeds()
         {
+            // If the build is stable, we need to create two new feeds (if not provided)
+            // that can contain stable packages. These packages cannot be pushed to the normal
+            // feeds specified in the feed config because it would mean pushing the same package more than once
+            // to the same feed on successive builds, which is not allowed.
             if (IsStableBuild)
             {
-                if (string.IsNullOrEmpty(StablePackagesFeed))
-                {
-                    var packagesFeedTask = new CreateAzureDevOpsFeed()
-                    {
-                        BuildEngine = BuildEngine,
-                        IsInternal = IsInternalBuild,
-                        AzureDevOpsPersonalAccessToken = AzureDevOpsFeedsKey,
-                        RepositoryName = RepositoryName,
-                        CommitSha = CommitSha
-                    };
-
-                    if (!packagesFeedTask.Execute())
-                    {
-                        throw new Exception($"Problems creating an AzureDevOps feed for repository '{RepositoryName}' and commit '{CommitSha}'.");
-                    }
-
-                    StablePackagesFeed = packagesFeedTask.TargetFeedURL;
-                }
-
-                if (string.IsNullOrEmpty(StableSymbolsFeed))
-                {
-                    var symbolsFeedTask = new CreateAzureDevOpsFeed()
-                    {
-                        BuildEngine = BuildEngine,
-                        IsInternal = IsInternalBuild,
-                        AzureDevOpsPersonalAccessToken = AzureDevOpsFeedsKey,
-                        RepositoryName = RepositoryName,
-                        CommitSha = CommitSha,
-                        ContentIdentifier = "sym"
-                    };
-
-                    if (!symbolsFeedTask.Execute())
-                    {
-                        throw new Exception($"Problems creating an AzureDevOps (symbols) feed for repository '{RepositoryName}' and commit '{CommitSha}'.");
-                    }
-
-                    StableSymbolsFeed = symbolsFeedTask.TargetFeedURL;
-                }
+                CreateStablePackagesFeedIfNeeded();
+                CreateStableSymbolsFeedIfNeeded();
 
                 yield return new TargetFeedConfig(
                     TargetFeedContentType.Package,
@@ -152,6 +120,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     filenamesToExclude: FilesToExclude,
                     flatten: Flatten);
             }
+
             foreach (var spec in _targetChannelConfig.TargetFeeds)
             {
                 foreach (var type in spec.ContentTypes)
@@ -163,9 +132,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             continue;
                         }
                     }
+
+                    // If dealing with a stable build, the package feed targeted for shipping packages and symbols
+                    // should be skipped, as it is added above.
                     if (IsStableBuild && ((type is TargetFeedContentType.Package && spec.Assets == AssetSelection.ShippingOnly) || type is TargetFeedContentType.Symbols))
                     {
-                        // stable build shipping packages and symbols were handled above
                         continue;
                     }
 
@@ -210,6 +181,59 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         flatten: Flatten
                     );
                 }
+            }
+        }
+
+        /// <summary>
+        /// Create the stable symbol packages feed if one is not already explicitly provided
+        /// </summary>
+        /// <exception cref="Exception">Throws if the feed cannot be created</exception>
+        private void CreateStableSymbolsFeedIfNeeded()
+        {
+            if (string.IsNullOrEmpty(StableSymbolsFeed))
+            {
+                var symbolsFeedTask = new CreateAzureDevOpsFeed()
+                {
+                    BuildEngine = BuildEngine,
+                    IsInternal = IsInternalBuild,
+                    AzureDevOpsPersonalAccessToken = AzureDevOpsFeedsKey,
+                    RepositoryName = RepositoryName,
+                    CommitSha = CommitSha,
+                    ContentIdentifier = "sym"
+                };
+
+                if (!symbolsFeedTask.Execute())
+                {
+                    throw new Exception($"Problems creating an AzureDevOps (symbols) feed for repository '{RepositoryName}' and commit '{CommitSha}'.");
+                }
+
+                StableSymbolsFeed = symbolsFeedTask.TargetFeedURL;
+            }
+        }
+
+        /// <summary>
+        /// Create the stable packages feed if one is not already explicitly provided
+        /// </summary>
+        /// <exception cref="Exception">Throws if the feed cannot be created</exception>
+        private void CreateStablePackagesFeedIfNeeded()
+        {
+            if (string.IsNullOrEmpty(StablePackagesFeed))
+            {
+                var packagesFeedTask = new CreateAzureDevOpsFeed()
+                {
+                    BuildEngine = BuildEngine,
+                    IsInternal = IsInternalBuild,
+                    AzureDevOpsPersonalAccessToken = AzureDevOpsFeedsKey,
+                    RepositoryName = RepositoryName,
+                    CommitSha = CommitSha
+                };
+
+                if (!packagesFeedTask.Execute())
+                {
+                    throw new Exception($"Problems creating an AzureDevOps feed for repository '{RepositoryName}' and commit '{CommitSha}'.");
+                }
+
+                StablePackagesFeed = packagesFeedTask.TargetFeedURL;
             }
         }
 

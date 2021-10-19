@@ -437,5 +437,18 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
 
             return true;
         }
+
+        [Fact]
+        public void MustHaveSeparateTargetFeedSpecificationsForShippingAndNonShipping()
+        {
+            Action shouldFail = () => new TargetFeedSpecification(new TargetFeedContentType[] { TargetFeedContentType.Package }, "FooFeed", AssetSelection.All);
+            shouldFail.Should().Throw<ArgumentException>();
+
+            Action shouldPassShippingOnly = () => new TargetFeedSpecification(new TargetFeedContentType[] { TargetFeedContentType.Package }, "FooFeed", AssetSelection.ShippingOnly);
+            shouldPassShippingOnly.Should().NotThrow();
+
+            Action shouldPassNonShippingOnly = () => new TargetFeedSpecification(new TargetFeedContentType[] { TargetFeedContentType.Package }, "FooFeed", AssetSelection.NonShippingOnly);
+            shouldPassNonShippingOnly.Should().NotThrow();
+        }
     }
 }
