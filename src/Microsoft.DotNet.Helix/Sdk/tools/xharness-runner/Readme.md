@@ -14,7 +14,7 @@ and the SDK will create a Helix job with the specified payload and send it to He
 XHarness is a [.NET tool](https://docs.microsoft.com/en-us/dotnet/core/tools/global-tools) and requires .NET 6 ASP.NET runtime to execute on the Helix agent.
 The SDK will automatically pre-install the needed runtime and the XHarness tool and you can then call XHarness directly.
 
-Furthermore, in case your application contains the [XHarness TestRunner](https://github.com/dotnet/xharness#test-runners), Helix SDK can handle everything from you - you just need to point it to the application.
+Furthermore, in case your application contains the [XHarness TestRunner](https://github.com/dotnet/xharness#test-runners), Helix SDK can handle everything for you - you just need to point it to the application.
 XHarness will be called automatically and test results will be published to Azure DevOps.
 
 ## Table of contents
@@ -34,7 +34,7 @@ XHarness will be called automatically and test results will be published to Azur
 ## How to use
 
 There are few ways how to run XHarness using the Helix SDK:
-- Specifying the apks/app bundles using the `XHarnessApkToTest` and `XHarnessAppBundleToTest` items as described below and everything will be taken care of from there.
+- Specifying the apks/app bundles using the `XHarnessApkToTest` and `XHarnessAppBundleToTest` items as described below; rest (running the app and collecting results) will be taken care of from there.
   You no longer specify the `HelixCommand` to be executed even though you can specify your own custom commands to be executed.
   Each apk/app bundle will be processed as a separate Helix work item.
 - Specifying the `XHarnessAndroidProject` or `XHarnessAppleProject` task items which will point to projects that produce apks/app bundles from their `Build` target.
@@ -42,7 +42,7 @@ There are few ways how to run XHarness using the Helix SDK:
 - Specifying the apks/app bundles using the `XHarnessApkToTest` and `XHarnessAppBundleToTest` and providing custom commands to be executed via the `CustomCommands` property [(see below)](#calling-the-xharness-tool-directly-via-custom-commands).
 - Specifying the `XHarnessAndroidProject` or `XHarnessAppleProject` task items by pointing them to a zip archive [(see details below)](#supplying-arbitrary-zip-archive) including any number of apps (or no apps at all if these are for example built as part of the job) and providing custom commands to be executed via the `CustomCommands` property [(see below)](#calling-the-xharness-tool-directly-via-custom-commands).
 
-There is some required configuration needed for the SDK to enable XHarness. You can also provide some optional properties to customize the run further:
+There are some required configuration properties that need to be set for the SDK to enable XHarness. You can also provide some optional properties to customize the run further:
 
 ```xml
 <PropertyGroup>
@@ -245,7 +245,7 @@ For Apple it is the same, just the metadata property name is `<AppBundlePath>`.
 
 ### Supplying arbitrary .zip archive
 
-In some scenarios, you might not have the app/apk available because you will build it in Helix. Or you might need to send multiple apps and run XHarness commands over them.
+In some scenarios, you might not have the app/apk available because you will build it in Helix. Alternatively, you might need to send multiple apps and run XHarness commands over them.
 In these cases, you can point the SDK to a .zip archive with your payloads.
 The SDK will add some scripts needed for clean execution inside of this .zip archive and send it to Helix.
 The .zip archive will be extracted for you in the working directory.
@@ -276,7 +276,7 @@ Example:
 
 ### Detecting infrastructural issues
 
-The mobile platforms can sometimes be unreliable and the devices and emulators can get into some bad state which can fail the job.
+The mobile platforms can sometimes be unreliable and the devices and emulators can get into bad states which can fail the job.
 Examples can be:
 - Device rebooted and has not started properly
 - Device is locked
@@ -288,7 +288,7 @@ The SDK can detect most of these problems and will try to run your work on a dif
 This usually resolves the issue transparently for the end user.
 
 However, when supplying own commands via the [`CustomCommand` property](#calling-the-xharness-tool-directly-via-custom-commands), the SDK doesn't have visibility into the job and in those cases, it is up to the user to handle some of the issues.
-Usually the issues can be recognized from the exit code returned by XHarness, e.g.:
+Usually the issues can be recognized from the [exit code returned by XHarness](https://github.com/dotnet/xharness/blob/main/src/Microsoft.DotNet.XHarness.Common/CLI/ExitCode.cs), e.g.:
 - 78 - `PACKAGE_INSTALLATION_FAILURE`
 - 81 - `DEVICE_NOT_FOUND`
 - 85 - `ADB_DEVICE_ENUMERATION_FAILURE`
