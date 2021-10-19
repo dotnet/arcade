@@ -51,7 +51,7 @@ if ($ev) {
     $packages=& $adb_path shell pm list packages net.dot
     $split_packages=$packages.split(':')
     For ($i=1; $i -lt $split_packages.Length; $i+=2) {
-    echo $split_packages[$i] | %{&$adb_path uninstall $_}
+        echo $split_packages[$i] | %{&$adb_path uninstall $_}
     }
 } else {
     $exit_code = $process.ExitCode
