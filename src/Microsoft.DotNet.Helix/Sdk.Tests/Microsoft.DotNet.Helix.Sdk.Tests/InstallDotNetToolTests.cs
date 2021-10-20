@@ -36,6 +36,8 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         {
             "tool",
             "install",
+            "--framework",
+            "net6.0",
             "--version",
             ToolVersion,
             "--tool-path",
@@ -166,6 +168,8 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             {
                 "tool",
                 "install",
+                "--framework",
+                "net6.0",
                 "--version",
                 ToolVersion,
                 "--tool-path",
