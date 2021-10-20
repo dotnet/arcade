@@ -103,7 +103,6 @@
       <InternalChecksumsFeedKey>$(InternalChecksumsAzureAccountKey)</InternalChecksumsFeedKey>
       <AllowFeedOverrides Condition="'$(AllowFeedOverrides)' == ''">false</AllowFeedOverrides>
       <UseStreamingPublishing Condition="'$(UseStreamingPublishing)' == ''">false</UseStreamingPublishing>
-      <ConvertPortablePdbsToWindowsPdbs Condition="'$(ConvertPortablePdbsToWindowsPdbs)' == ''">false</ConvertPortablePdbsToWindowsPdbs>
       <ArtifactsBasePath Condition="'$(ArtifactsBasePath)' == ''">$(BlobBasePath)</ArtifactsBasePath>
       <NonStreamingPublishingMaxClients Condition="'$(NonStreamingPublishingMaxClients)' == ''">12</NonStreamingPublishingMaxClients>
       <StreamingPublishingMaxClients Condition="'$(UseStreamingPublishing)' == 'true' and '$(StreamingPublishingMaxClients)' == ''">16</StreamingPublishingMaxClients>
@@ -168,7 +167,6 @@
       FeedKeys="@(FeedKey)"
       FeedSasUris="@(FeedSasUri)"
       FeedOverrides="@(FeedOverride)"
-      ConvertPortablePdbsToWindowsPdbs="$(ConvertPortablePdbsToWindowsPdbs)"
       />
   </Target>
 

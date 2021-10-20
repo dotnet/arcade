@@ -205,9 +205,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         private int TimeoutInSeconds = 300;
 
-        protected PublishArtifactsInManifestBase(AssetPublisherFactory assetPublisherFactory)
+        protected PublishArtifactsInManifestBase(AssetPublisherFactory assetPublisherFactory = null)
         {
-            AssetPublisherFactory = assetPublisherFactory;
+            AssetPublisherFactory = assetPublisherFactory ?? new AssetPublisherFactory(new MsBuildUtils.TaskLoggingHelper(this));
         }
 
         public override bool Execute()
@@ -396,7 +396,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// <param name="symbolPublishingExclusionsFile">Right now we do not add any files to this, so this is going to be null</param>
         /// <param name="publishSpecialClrFiles">If true, the special coreclr module indexed files like DBI, DAC and SOS are published</param>
         /// <param name="clientThrottle">To avoid starting too many processes</param>
-        /// <param name="convertPortablePdbsToWindowsPdbs">If true, convert protable pdbs to windows pdbs</param>
         /// <returns>Task</returns>
         public async Task PublishSymbolsUsingStreamingAsync(
             string pdbArtifactsBasePath,
@@ -404,12 +403,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             string symWebToken,
             string symbolPublishingExclusionsFile,
             bool publishSpecialClrFiles,
-            bool convertPortablePdbsToWindowsPdbs,
             Dictionary<string, HashSet<Asset>> buildAssets,
             SemaphoreSlim clientThrottle)
         {
             Log.LogMessage(MessageImportance.High, 
-                $"Performing symbol publishing... \nExpirationInDays : {ExpirationInDays} \nConvertPortablePdbsToWindowsPdb : {convertPortablePdbsToWindowsPdbs} \ndryRun: false ");
+                $"Performing symbol publishing... \nExpirationInDays : {ExpirationInDays} \nConvertPortablePdbsToWindowsPdb : false \ndryRun: false ");
             var symbolCategory = TargetFeedContentType.Symbols;
 
             using HttpClient httpClient = CreateAzdoClient(AzureDevOpsOrg, false, AzureProject);
@@ -504,7 +502,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                                         null,
                                         excludeFiles,
                                         ExpirationInDays,
-                                        convertPortablePdbsToWindowsPdbs,
+                                        false,
                                         publishSpecialClrFiles,
                                         null,
                                         false,
@@ -602,14 +600,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// <param name="temporarySymbolsLocation">Path to Symbol.nupkgs</param>
         /// <param name="clientThrottle">To avoid starting too many processes</param>
         /// <param name="publishSpecialClrFiles">If true, the special coreclr module indexed files like DBI, DAC and SOS are published</param>
-        /// <param name="convertPortablePdbsToWindowsPdbs">If true, convert protable pdbs to windows pdbs</param>
         public async Task HandleSymbolPublishingAsync (
             string pdbArtifactsBasePath,
             string msdlToken, 
             string symWebToken,
             string symbolPublishingExclusionsFile,
             bool publishSpecialClrFiles,
-            bool convertPortablePdbsToWindowsPdbs,
             Dictionary<string, HashSet<Asset>> buildAssets,
             SemaphoreSlim clientThrottle = null,
             string temporarySymbolsLocation = null)
@@ -622,7 +618,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     symWebToken,
                     symbolPublishingExclusionsFile,
                     publishSpecialClrFiles,
-                    convertPortablePdbsToWindowsPdbs,
                     buildAssets,
                     clientThrottle);
             }
@@ -634,7 +629,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     symWebToken,
                     symbolPublishingExclusionsFile,
                     publishSpecialClrFiles,
-                    convertPortablePdbsToWindowsPdbs,
                     temporarySymbolsLocation);
             }
         }
@@ -648,14 +642,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// <param name="symbolPublishingExclusionsFile">Right now we do not add any files to this, so this is going to be null</param>
         /// <param name="temporarySymbolsLocation">Path to Symbol.nupkgs</param>
         /// <param name="publishSpecialClrFiles">If true, the special coreclr module indexed files like DBI, DAC and SOS are published</param>
-        /// <param name="convertPortablePdbsToWindowsPdbs">If true, convert protable pdbs to windows pdbs</param>
         public async Task PublishSymbolsfromBlobArtifactsAsync(
             string pdbArtifactsBasePath,
             string msdlToken,
             string symWebToken,
             string symbolPublishingExclusionsFile,
             bool publishSpecialClrFiles,
-            bool convertPortablePdbsToWindowsPdbs,
             string temporarySymbolsLocation = null)
         {
             if (Directory.Exists(temporarySymbolsLocation))
@@ -690,7 +682,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     var serverPath = server.Key;
                     var token = server.Value;;
                     Log.LogMessage(MessageImportance.High,
-                        $"Performing symbol publishing...\nSymbolServerPath : ${serverPath} \nExpirationInDays : {ExpirationInDays} \nConvertPortablePdbsToWindowsPdb : {convertPortablePdbsToWindowsPdbs} \ndryRun: false \nTotal number of symbol files : {fileEntries.Length} ");
+                        $"Performing symbol publishing...\nSymbolServerPath : ${serverPath} \nExpirationInDays : {ExpirationInDays} \nConvertPortablePdbsToWindowsPdb : false \ndryRun: false \nTotal number of symbol files : {fileEntries.Length} ");
                     
                     try
                     {
@@ -702,7 +694,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             filesToSymbolServer,
                             null,
                             ExpirationInDays,
-                            convertPortablePdbsToWindowsPdbs,
+                            false,
                             publishSpecialClrFiles,
                             null,
                             false,

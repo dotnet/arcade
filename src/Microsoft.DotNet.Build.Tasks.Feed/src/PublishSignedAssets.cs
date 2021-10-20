@@ -98,7 +98,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.src
                 });
         }
 
-        public PublishSignedAssets(AssetPublisherFactory assetPublisherFactory) : base(assetPublisherFactory)
+        public PublishSignedAssets() : base()
         {
         }
     }
