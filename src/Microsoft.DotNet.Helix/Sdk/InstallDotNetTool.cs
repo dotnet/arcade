@@ -97,6 +97,8 @@ namespace Microsoft.DotNet.Helix.Sdk
             {
                 "tool",
                 "install",
+                "--framework",
+                "net6.0",
                 "--version",
                 Version,
                 "--tool-path",
@@ -111,8 +113,10 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             args.Add(Name);
 
-            var command = commandFactory.Create(string.IsNullOrEmpty(DotnetPath) ? "dotnet" : DotnetPath, args);
-            CommandResult result = command.Execute();
+            var executable = string.IsNullOrEmpty(DotnetPath) ? "dotnet" : DotnetPath;
+            Log.LogMessage($"Executing {DotnetPath} {string.Join(" ", args)}");
+
+            CommandResult result = commandFactory.Create(executable, args).Execute();
 
             if (result.ExitCode != 0)
             {
