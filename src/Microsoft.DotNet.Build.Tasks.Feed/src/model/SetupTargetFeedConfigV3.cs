@@ -30,6 +30,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         public TaskLoggingHelper Log { get; }
 
+        public string AzureDevOpsOrg => "dnceng";
+
         public SetupTargetFeedConfigV3(
             TargetChannelConfig targetChannelConfig,
             bool isInternalBuild,
@@ -195,7 +197,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 var symbolsFeedTask = new CreateAzureDevOpsFeed()
                 {
                     BuildEngine = BuildEngine,
-                    IsInternal = IsInternalBuild,
+                    AzureDevOpsOrg = AzureDevOpsOrg,
+                    AzureDevOpsProject = IsInternalBuild ? "internal" : "public",
                     AzureDevOpsPersonalAccessToken = AzureDevOpsFeedsKey,
                     RepositoryName = RepositoryName,
                     CommitSha = CommitSha,
@@ -222,7 +225,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 var packagesFeedTask = new CreateAzureDevOpsFeed()
                 {
                     BuildEngine = BuildEngine,
-                    IsInternal = IsInternalBuild,
+                    AzureDevOpsOrg = AzureDevOpsOrg,
+                    AzureDevOpsProject = IsInternalBuild ? "internal" : "public",
                     AzureDevOpsPersonalAccessToken = AzureDevOpsFeedsKey,
                     RepositoryName = RepositoryName,
                     CommitSha = CommitSha
