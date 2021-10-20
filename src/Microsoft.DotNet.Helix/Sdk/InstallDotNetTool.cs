@@ -6,7 +6,7 @@ using Microsoft.Build.Framework;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
-namespace Microsoft.DotNet.Arcade.Sdk
+namespace Microsoft.DotNet.Helix.Sdk
 {
     /// <summary>
     /// Task that installs a .NET tool in a given folder.
@@ -53,7 +53,7 @@ namespace Microsoft.DotNet.Arcade.Sdk
         {
             collection.TryAddTransient<ICommandFactory, CommandFactory>();
             collection.TryAddTransient<IFileSystem, FileSystem>();
-            collection.TryAddTransient<IHelpers, Helpers>();
+            collection.TryAddTransient<IHelpers, Arcade.Common.Helpers>();
             collection.TryAddSingleton(Log);
         }
 

@@ -15,7 +15,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using Xunit;
 
-namespace Microsoft.DotNet.Arcade.Sdk.Tests
+namespace Microsoft.DotNet.Helix.Sdk.Tests
 {
     public class InstallDotNetToolTests
     {
@@ -209,7 +209,7 @@ namespace Microsoft.DotNet.Arcade.Sdk.Tests
                 .Setup(x => x.DirectoryExists(It.IsAny<string>()))
                 .Returns(true);
 
-            var helpers = new Helpers();
+            var helpers = new Microsoft.Arcade.Common.Helpers();
             var hangingCommandCalled = new TaskCompletionSource<bool>();
             var dotnetToolInstalled = new TaskCompletionSource<bool>();
 
@@ -234,12 +234,12 @@ namespace Microsoft.DotNet.Arcade.Sdk.Tests
             var collection1 = new ServiceCollection();
             collection1.AddSingleton(hangingCommandFactoryMock.Object);
             collection1.AddSingleton(fileSystemMock1.Object);
-            collection1.AddTransient<IHelpers, Helpers>();
+            collection1.AddTransient<IHelpers, Microsoft.Arcade.Common.Helpers>();
 
             var collection2 = new ServiceCollection();
             collection2.AddSingleton(_commandFactoryMock.Object);
             collection2.AddSingleton(fileSystemMock2.Object);
-            collection2.AddTransient<IHelpers, Helpers>();
+            collection2.AddTransient<IHelpers, Microsoft.Arcade.Common.Helpers>();
 
             var task1 = new InstallDotNetTool()
             {
