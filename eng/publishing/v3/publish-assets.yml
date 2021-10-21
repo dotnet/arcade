@@ -12,6 +12,7 @@ jobs:
   timeoutInMinutes: 120
   variables:
     - group: DotNet-Symbol-Server-Pats
+    - group: DotNetBuilds storage account tokens
     - name: BARBuildId
       value: $[ dependencies.setupMaestroVars.outputs['setReleaseVars.BARBuildId'] ]
     - name: IsStableBuild
@@ -98,6 +99,10 @@ jobs:
           /p:UseStreamingPublishing='true'
           /p:StreamingPublishingMaxClients=16
           /p:NonStreamingPublishingMaxClients=12
+          /p:DotNetBuildsPublicUriBase64='$(dotnetbuilds-public-container-uri-base64)'
+          /p:DotNetBuildsPublicChecksumsUriBase64='$(dotnetbuilds-public-container-checksum-uri-base64)'
+          /p:DotNetBuildsInternalUriBase64='$(dotnetbuilds-internal-container-uri-base64)'
+          /p:DotNetBuildsInternalChecksumsUriBase64='$(dotnetbuilds-internal-container-checksum-uri-base64)'
     - template: /eng/common/templates/steps/publish-logs.yml
       parameters:
         StageLabel: '${{ parameters.stageName }}'

@@ -25,7 +25,7 @@
     </PropertyGroup>
 
     <PropertyGroup>
-      <WixVersion>1.0.0-v3.14.0.4118</WixVersion>
+      <WixVersion>1.0.0-v3.14.0.5722</WixVersion>
       <WixToolsDir>$(BaseIntermediateOutputPath)WixTools.$(WixVersion)/</WixToolsDir>
       <!-- Used in WiX targets to locate files. -->
       <WixInstallPath>$(WixToolsDir)</WixInstallPath>
@@ -244,7 +244,8 @@
           -cg %(ComponentGroupName) ^
           -srd ^
           -dr %(DirectoryRef) ^
-          -out %(WixSourceFile)" />
+          -out %(WixSourceFile)
+          $(AdditionalHeatArgs)" />
 
       <CandleVariables Include="InstallFiles" Value="true" />
     </ItemGroup>
@@ -290,6 +291,7 @@
       <CandleVariables Include="NugetVersion" Value="$(Version)" />
       <CandleVariables Include="TargetArchitectureDescription" Value="$(InstallerTargetArchitecture)$(CrossArchContentsBuildPart)" />
       <CandleVariables Include="UpgradeCode" Value="$(UpgradeCode)" />
+      <CandleVariables Include="MajorUpgradeSchedule" Value="$(MajorUpgradeSchedule)" Condition="'$(MajorUpgradeSchedule)' != ''" />
 
       <!-- If this is a cross-arch MSI, add target arch to the dependency key for uniqueness. -->
       <CandleVariables Include="CrossArchContentsPlatformPart" Value="$(CrossArchContentsBuildPart.Replace('-', '_'))" />
@@ -305,6 +307,7 @@
       <_wixArgs>$(_wixArgs) @(CandleVariables -> '-d%(Identity)="%(Value)"', ' ')</_wixArgs>
       <_wixArgs>$(_wixArgs) @(WixSrcFile -> '"%(FullPath)"', ' ')</_wixArgs>
       <_wixArgs>$(_wixArgs) @(DirectoryToHarvest -> '"%(WixSourceFile)"', ' ')</_wixArgs>
+      <_wixArgs>$(_wixArgs) $(AdditionalCandleArgs)</_wixArgs>
     </PropertyGroup>
 
     <Exec
@@ -327,6 +330,7 @@
       <_wixArgs>$(_wixArgs) @(WixExtensions -> '-ext %(Identity)', ' ')</_wixArgs>
       <_wixArgs>$(_wixArgs) @(WixSrcFile -> '"$(WixObjDir)%(Filename).wixobj"', ' ')</_wixArgs>
       <_wixArgs>$(_wixArgs) @(DirectoryToHarvest -> '"%(WixObjFile)"', ' ')</_wixArgs>
+      <_wixArgs>$(_wixArgs) $(AdditionalLightArgs)</_wixArgs>
       <_lightCommand>light.exe $(_wixArgs)</_lightCommand>
     </PropertyGroup>
 

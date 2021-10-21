@@ -22,6 +22,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         public const string SnupkgPackageSuffix = ".snupkg";
         public const string PackageSuffix = ".nupkg";
         public const string PackagesCategory = "PACKAGE";
+        public static TimeSpan NugetFeedPublisherHttpClientTimeout => TimeSpan.FromSeconds(300);
 
         public static ExponentialRetry CreateDefaultRetryHandler()
             => new ExponentialRetry
