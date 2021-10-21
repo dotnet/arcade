@@ -41,18 +41,22 @@ $process.Start()
 
 Wait-Process -InputObject $process -TimeOut $command_timeout -ErrorVariable ev -ErrorAction SilentlyContinue
 
-if ($ev) {
-    $exit_code = -3
-    Stop-Process -InputObject $process -Force
-    $process.WaitForExit()
-    [Console]::Out.Flush()
-    Write-Output "User command timed out after $command_timeout seconds!"
+function Remove-Apps {
     $adb_path=dotnet xharness android state --adb
     $packages=& $adb_path shell pm list packages net.dot
     $split_packages=$packages.split(':')
     For ($i=1; $i -lt $split_packages.Length; $i+=2) {
         echo $split_packages[$i] | %{&$adb_path uninstall $_}
     }
+}
+
+if ($ev) {
+    $exit_code = -3
+    Stop-Process -InputObject $process -Force
+    $process.WaitForExit()
+    [Console]::Out.Flush()
+    Write-Output "User command timed out after $command_timeout seconds!"
+    Remove-Apps
 } else {
     $exit_code = $process.ExitCode
     Write-Output "User command ended with $exit_code"
@@ -77,12 +81,7 @@ switch ($exit_code)
         Write-Error "Encountered PACKAGE_INSTALLATION_FAILURE. This is typically not a failure of the work item. We will try it again on another Helix agent"
         Write-Error "If this occurs repeatedly, please check for architectural mismatch, e.g. requesting installation on arm64_v8a-only queue for x86 or x86_64 APKs."
 
-        $adb_path=dotnet xharness android state --adb
-        $packages=& $adb_path shell pm list packages net.dot
-        $split_packages=$packages.split(':')
-        For ($i=1; $i -lt $split_packages.Length; $i+=2) {
-            echo $split_packages[$i] | %{&$adb_path uninstall $_}
-        }
+        Remove-Apps
 
         $retry = $true
         Break
