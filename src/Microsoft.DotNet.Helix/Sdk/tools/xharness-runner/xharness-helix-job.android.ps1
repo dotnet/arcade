@@ -42,6 +42,7 @@ $process.Start()
 Wait-Process -InputObject $process -TimeOut $command_timeout -ErrorVariable ev -ErrorAction SilentlyContinue
 
 function Remove-Apps {
+    Write-Output "Removing installed apps after unsuccessful run"
     $adb_path = dotnet xharness android state --adb
     $packages = & $adb_path shell pm list packages net.dot
     $split_packages = $packages.split(':')
