@@ -42,10 +42,10 @@ $process.Start()
 Wait-Process -InputObject $process -TimeOut $command_timeout -ErrorVariable ev -ErrorAction SilentlyContinue
 
 function Remove-Apps {
-    $adb_path=dotnet xharness android state --adb
-    $packages=& $adb_path shell pm list packages net.dot
-    $split_packages=$packages.split(':')
-    For ($i=1; $i -lt $split_packages.Length; $i+=2) {
+    $adb_path = dotnet xharness android state --adb
+    $packages = & $adb_path shell pm list packages net.dot
+    $split_packages = $packages.split(':')
+    For ($i = 1; $i -lt $split_packages.Length; $i += 2) {
         echo $split_packages[$i] | %{&$adb_path uninstall $_}
     }
 }
