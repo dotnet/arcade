@@ -104,9 +104,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 // 1. In nuget.config files (and elsewhere), the name at a glance can identify its visibility
                 // 2. Existing automation has knowledge of "darc-int" and "darc-pub" for purposes of injecting authentication for internal builds
                 //    and managing the isolated feeds within the NuGet.config files.
-                string accessTag = GetFeedVisibilityTag(AzureDevOpsOrg, AzureDevOpsProject);
                 string extraContentInfo = !string.IsNullOrEmpty(ContentIdentifier) ? $"-{ContentIdentifier}" : "";
-                string baseFeedName = FeedName ?? $"darc-{accessTag}{extraContentInfo}-{feedCompatibleRepositoryName}-{CommitSha.Substring(0, ShaUsableLength)}";
+                string baseFeedName = FeedName ?? $"darc-{GetFeedVisibilityTag(AzureDevOpsOrg, AzureDevOpsProject)}{extraContentInfo}-{feedCompatibleRepositoryName}-{CommitSha.Substring(0, ShaUsableLength)}";
                 string versionedFeedName = baseFeedName;
                 bool needsUniqueName = false;
                 int subVersion = 0;
@@ -204,7 +203,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             throw new NotImplementedException($"Project '{project}' within organization '{organization}' has no visibility mapping.");
                     }
                 default:
-                    throw new NotImplementedException($"Organization '{organization}' has no visibility mapping.");
+                    return project.Substring(0, Math.Min(3, project.Length));
             }
         }
     }

@@ -55,7 +55,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     }
                     break;
                 default:
-                    throw new NotImplementedException($"Organization '{organization}' contains no feed permissions information.");
+                    //  Use the default permissions
+                    Permissions = null;
+                    break;
 
             }
         }
