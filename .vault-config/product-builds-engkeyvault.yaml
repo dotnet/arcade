@@ -142,3 +142,21 @@ secrets:
           name: dn-bot-account-redmond
       name: dn-symweb-symbol-server-pat
       organization: dnceng
+  
+  dotnetclichecksumsmsrc-storage-key:
+    type: text
+    parameters:
+      description: Also located in dnceng-pipeline-secrets keyvault.
+      
+  dotnetclichecksumsmsrc-connection-string:
+    type: azure-storage-connection-string
+    parameters:
+      storageKeySecret: dotnetclichecksumsmsrc-storage-key
+      account: dotnetclichecksumsmsrc
+      
+  dotnetclichecksumsmsrc-dotnet-read-list-sas-token:
+    type: azure-storage-container-sas-token
+    parameters:
+      connectionString: dotnetclichecksumsmsrc-connection-string
+      permissions: rl
+      container: dotnet
