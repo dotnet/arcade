@@ -494,6 +494,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                                 try
                                 {
+                                    // ConvertPortablePdbsToWindowsPdbs is always set to false, 
+                                    // because this is an expensive task so this is done in the staging pipeline post signing.
                                     await PublishSymbolsHelper.PublishAsync(
                                         Log,
                                         serverPath,
@@ -560,6 +562,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     
                     try
                     {
+                        // ConvertPortablePdbsToWindowsPdbs is always set to false,
+                        // because this is an expensive task so this is done in the staging pipeline post signing.
                         await PublishSymbolsHelper.PublishAsync(
                             Log,
                             serverPath,
@@ -686,6 +690,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     
                     try
                     {
+                        // ConvertPortablePdbsToWindowsPdbs is always set to false,
+                        // because this is an expensive task so this is done in the staging pipeline post signing.
                         await PublishSymbolsHelper.PublishAsync(
                             Log,
                             serverPath,
