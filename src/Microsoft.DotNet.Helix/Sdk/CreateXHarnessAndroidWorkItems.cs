@@ -111,7 +111,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             if (!IsPosixShell)
             {
                 // For windows, we need to add a .ps1 header to turn the script into a cmdlet
-                customCommands = GetPowerShellHeader() + customCommands;
+                customCommands = WrapCustomCommands(customCommands);
             }
 
             string workItemZip = await CreatePayloadArchive(
@@ -188,12 +188,16 @@ namespace Microsoft.DotNet.Helix.Sdk
             return xharnessRunCommand;
         }
 
-        private static string GetPowerShellHeader()
+        private static string WrapCustomCommands(string customCommands)
         {
-            using Stream stream = ZipArchiveManager.GetResourceFileContent<CreateXHarnessAndroidWorkItems>(
-                ScriptNamespace + NonPosixAndroidHeaderScript);
-            using StreamReader reader = new(stream);
-            return reader.ReadToEnd();
+            string templateContents;
+            using Stream stream = ZipArchiveManager.GetResourceFileContent<CreateXHarnessAndroidWorkItems>(ScriptNamespace + NonPosixAndroidHeaderScript);
+            using (StreamReader reader = new(stream))
+            {
+                templateContents = reader.ReadToEnd();
+            }
+
+            return templateContents.Replace("{%%USER COMMANDS%%}", customCommands);
         }
     }
 }
