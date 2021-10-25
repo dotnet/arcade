@@ -164,6 +164,7 @@ The parameters that can be passed to the template are as follows:
 | `SourcesDirectory` | `$(Build.SourcesDirectory)` | This is the root directory for your repository source code. |
 | `CreatePr` | `true` | When set to `true`, instructs the OneLocBuild task to make a PR back to the source repository containing the localized files. |
 | `AutoCompletePr` | `false` | When set to `true`, instructs the OneLocBuild task to autocomplete the created PR. Requires permissions to bypass any checks on the main branch. |
+| `ReusePr` | `true` | When set to `true`, instructs the OneLocBuild task to update an existing PR (if one exists) rather than open a new one to reduce PR noise. |
 | `UseLfLineEndings` | `true` | When set to `true`, instructs the OneLocBuild task to use LF line endings during check-in rather than CRLF. |
 | `GitHubOrg` | `'dotnet'` | The GitHub organization to be used when making a PR (only used when using a mirrored repository). |
 | `MirrorRepo` | `''` | The name of the GitHub repository to make a PR to (only used when using a mirrored repository). |
