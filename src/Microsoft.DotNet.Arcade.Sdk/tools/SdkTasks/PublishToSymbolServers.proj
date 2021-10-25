@@ -45,6 +45,7 @@
       <PublishToSymbolServer Condition="'@(FilesToPublishToSymbolServer)' == '' and '@(PackagesToPublishToSymbolServer)' == ''">false</PublishToSymbolServer>
       <PublishSpecialClrFiles Condition="'$(PublishSpecialClrFiles)' == ''">true</PublishSpecialClrFiles>
       <DryRun Condition="'$(DryRun)' == ''">false</DryRun>
+      <ConvertPortablePdbsToWindowsPdbs Condition="'$(ConvertPortablePdbsToWindowsPdbs)' == ''">false</ConvertPortablePdbsToWindowsPdbs>
     </PropertyGroup>
 
     <Message
@@ -98,7 +99,7 @@
                     ExpirationInDays="$(DotNetSymbolExpirationInDays)"
                     VerboseLogging="true"
                     DryRun="$(DryRun)"
-                    ConvertPortablePdbsToWindowsPdbs="false"
+                    ConvertPortablePdbsToWindowsPdbs="$(ConvertPortablePdbsToWindowsPdbs)"
                     PdbConversionTreatAsWarning=""
                     PublishSpecialClrFiles="$(PublishSpecialClrFiles)"
                     Condition="$(PublishToSymbolServer)"/>
