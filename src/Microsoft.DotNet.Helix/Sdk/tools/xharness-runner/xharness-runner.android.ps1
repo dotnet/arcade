@@ -40,6 +40,10 @@ function report_infrastructure_failure($message) {
     $message -replace "['\\]" | Out-File -FilePath "$Env:HELIX_WORKITEM_ROOT\.reboot"
 }
 
-{%%USER COMMANDS%%}
+# User commands begin here
+
+<#%%USER COMMANDS%%#>
+
+# User commands end here
 
 exit $LASTEXITCODE

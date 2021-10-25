@@ -190,14 +190,10 @@ namespace Microsoft.DotNet.Helix.Sdk
 
         private static string WrapCustomCommands(string customCommands)
         {
-            string templateContents;
-            using Stream stream = ZipArchiveManager.GetResourceFileContent<CreateXHarnessAndroidWorkItems>(ScriptNamespace + NonPosixAndroidHeaderScript);
-            using (StreamReader reader = new(stream))
-            {
-                templateContents = reader.ReadToEnd();
-            }
-
-            return templateContents.Replace("{%%USER COMMANDS%%}", customCommands);
+            using Stream stream = ZipArchiveManager.GetResourceFileContent<CreateXHarnessAndroidWorkItems>(
+                ScriptNamespace + NonPosixAndroidHeaderScript);
+            using StreamReader reader = new(stream);
+            return reader.ReadToEnd().Replace("<#%%USER COMMANDS%%#>", customCommands);
         }
     }
 }
