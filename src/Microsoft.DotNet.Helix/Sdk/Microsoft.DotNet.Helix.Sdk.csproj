@@ -36,13 +36,13 @@
     <EmbeddedResource Include="tools\xharness-runner\xharness-event-reporter.py">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </EmbeddedResource>
-    <EmbeddedResource Include="tools\xharness-runner\xharness-helix-job.android.header.ps1">
-      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
-    </EmbeddedResource>
     <EmbeddedResource Include="tools\xharness-runner\xharness-helix-job.apple.sh">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </EmbeddedResource>
     <EmbeddedResource Include="tools\xharness-runner\xharness-runner.apple.sh">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </EmbeddedResource>
+    <EmbeddedResource Include="tools\xharness-runner\xharness-runner.android.ps1">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </EmbeddedResource>
     <EmbeddedResource Include="tools\xharness-runner\xharness-helix-job.android.sh">
