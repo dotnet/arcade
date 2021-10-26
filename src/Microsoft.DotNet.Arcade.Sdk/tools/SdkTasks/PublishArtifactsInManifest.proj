@@ -69,6 +69,8 @@
           - InternalInstallersTargetStaticFeedKey
           - InternalChecksumsTargetStaticFeed
           - InternalChecksumsTargetStaticFeedKey
+
+    NOTE: For symbol publishing using V3, ConvertPortablePdbsToWindowsPdbs is always set to false, because this is an expensive task so this is done in the staging pipeline post signing.
   -->
 
   <PropertyGroup>
