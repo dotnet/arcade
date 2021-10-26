@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Arcade.Common;
 using Microsoft.Build.Framework;
@@ -30,7 +29,10 @@ namespace Microsoft.DotNet.Helix.Sdk
         private const string EntryPointScript = "xharness-helix-job.apple.sh";
         private const string RunnerScript = "xharness-runner.apple.sh";
 
-        private static readonly TimeSpan s_defaultLaunchTimeout = TimeSpan.FromMinutes(5);
+        // We have a more aggressive timeout towards simulators which tend to slow down until installation takes 20 minutes and the machine needs a reboot
+        // For this reason, it's better to be aggressive and detect a slower machine sooner
+        private static readonly TimeSpan s_defaultSimulatorLaunchTimeout = TimeSpan.FromMinutes(2);
+        private static readonly TimeSpan s_defaultDeviceLaunchTimeout = TimeSpan.FromMinutes(5);
 
         /// <summary>
         /// An array of one or more paths to iOS/tvOS app bundles (folders ending with ".app" usually)
@@ -133,7 +135,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             target = target.ToLowerInvariant();
 
             // Optional timeout for the how long it takes for the app to be installed, booted and tests start executing
-            TimeSpan launchTimeout = s_defaultLaunchTimeout;
+            TimeSpan launchTimeout = target.Contains("simulator") ? s_defaultSimulatorLaunchTimeout : s_defaultDeviceLaunchTimeout;
             if (appBundleItem.TryGetMetadata(MetadataNames.LaunchTimeout, out string launchTimeoutProp))
             {
                 if (!TimeSpan.TryParse(launchTimeoutProp, out launchTimeout) || launchTimeout.Ticks < 0)
