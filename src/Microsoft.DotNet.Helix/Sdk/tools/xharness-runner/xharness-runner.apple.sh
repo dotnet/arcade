@@ -151,7 +151,10 @@ function report_infrastructure_failure() {
     echo "Infrastructural problem reported by the user, requesting retry+reboot: $1"
 
     echo "$1" > "$HELIX_WORKITEM_ROOT/.retry"
-    echo "$1" > "$HELIX_WORKITEM_ROOT/.reboot"
+
+    if [[ "$2" -ne "--no-reboot" ]]; then
+        echo "$1" > "$HELIX_WORKITEM_ROOT/.reboot"
+    fi
 }
 
 # Used to grep sys logs later in case of crashes
@@ -186,7 +189,7 @@ fi
 # it is probably an issue because Xcode should always have at least one runtime version inside
 # 81 - simulator/device not found
 if [ $exit_code -eq 81 ] && [[ "$target" =~ "simulator" ]] && [[ ! "$target" =~ "_" ]]; then
-    report_infrastructure_failure "No simulator runtime found"
+    report_infrastructure_failure "No simulator runtime found" --no-reboot
 fi
 
 # If we fail to find a real device, it is unexpected as device queues should have one
@@ -201,6 +204,19 @@ fi
 # 86 - app installation timeout
 if [ $exit_code -eq 86 ]; then
     report_infrastructure_failure "Installation timed out"
+fi
+
+# Simulators are known to slow/break down and a reboot usually helps
+# This manifest by us not being able to launch the simulator
+# 88 - simulator failure
+if [ $exit_code -eq 88 ]; then
+    report_infrastructure_failure "Failed to launch simulator"
+fi
+
+# Devices can be locked or in a corrupted state, in this case we only retry the work item
+# 89 - device failure
+if [ $exit_code -eq 89 ]; then
+    report_infrastructure_failure "Problem with the mobile device" --no-reboot
 fi
 
 # The simulator logs comming from the sudo-spawned Simulator.app are not readable/deletable by the helix uploader
