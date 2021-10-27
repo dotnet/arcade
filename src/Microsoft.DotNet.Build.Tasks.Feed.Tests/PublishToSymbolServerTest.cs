@@ -139,6 +139,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 null,
                 false,
                 false,
+                false,
                 false).IsCompleted);
         }
 

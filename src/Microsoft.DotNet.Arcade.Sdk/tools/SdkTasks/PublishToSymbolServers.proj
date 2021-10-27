@@ -49,6 +49,7 @@
       <PublishSpecialClrFiles Condition="'$(PublishSpecialClrFiles)' == ''">true</PublishSpecialClrFiles>
       <DryRun Condition="'$(DryRun)' == ''">false</DryRun>
       <ConvertPortablePdbsToWindowsPdbs Condition="'$(ConvertPortablePdbsToWindowsPdbs)' == ''">false</ConvertPortablePdbsToWindowsPdbs>
+      <TreatPdbConversionIssuesAsInfo Condition="'$(TreatPdbConversionIssuesAsInfo)' == ''">false</TreatPdbConversionIssuesAsInfo>
     </PropertyGroup>
 
     <Message
@@ -105,7 +106,8 @@
                     ConvertPortablePdbsToWindowsPdbs="$(ConvertPortablePdbsToWindowsPdbs)"
                     PdbConversionTreatAsWarning=""
                     PublishSpecialClrFiles="$(PublishSpecialClrFiles)"
-                    Condition="$(PublishToSymbolServer)"/>
+                    Condition="$(PublishToSymbolServer)"
+                    TreatPdbConversionIssuesAsInfo="$(TreatPdbConversionIssuesAsInfo)"/>
   </Target>
 
   <ItemGroup>

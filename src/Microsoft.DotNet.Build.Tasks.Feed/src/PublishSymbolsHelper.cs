@@ -24,6 +24,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 bool convertPortablePdbsToWindowsPdbs,
                 bool publishSpecialClrFiles,
                 HashSet<int> pdbConversionTreatAsWarning,
+                bool treatPdbConversionIssuesAsInfo,
                 bool dryRun,
                 bool timer,
                 bool verboseLogging)
@@ -37,6 +38,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     PdbConversionTreatAsWarning = pdbConversionTreatAsWarning,
                     PublishSpecialClrFiles = publishSpecialClrFiles,
                     Timer = timer,
+                    TreatPdbConversionIssuesAsInfo = treatPdbConversionIssuesAsInfo
                 };
 
                 using (publishOperation)

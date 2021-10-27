@@ -509,6 +509,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                                         null,
                                         false,
                                         false,
+                                        false,
                                         true);
                                 }
                                 catch (Exception ex)
@@ -575,6 +576,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             false,
                             publishSpecialClrFiles,
                             null,
+                            false,
                             false,
                             false,
                             true);
@@ -703,6 +705,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             false,
                             publishSpecialClrFiles,
                             null,
+                            false,
                             false,
                             false,
                             true);
