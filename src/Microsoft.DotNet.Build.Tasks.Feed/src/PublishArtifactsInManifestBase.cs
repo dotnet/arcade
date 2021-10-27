@@ -683,28 +683,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     filesToSymbolServer = pdbEntries.Concat(dllEntries);
                 }
 
-                HashSet<string> excludeFiles = null;
-
-                if (File.Exists(symbolPublishingExclusionsFile))
-                {
-                    Log.LogMessage(MessageImportance.Normal, $"SymbolPublishingExclusionFile exists");
-                    string[] files = File.ReadAllLines(symbolPublishingExclusionsFile);
-                    excludeFiles = new HashSet<string>();
-
-                    foreach (var file in files)
-                    {
-                        if (!string.IsNullOrEmpty(file))
-                        {
-                            Log.LogMessage(MessageImportance.Normal, $"Exclude the file {file} from publishing to symbol server");
-                            excludeFiles.Add(file);
-                        }
-                    }
-                }
-                else
-                {
-                    Log.LogMessage(MessageImportance.Normal, $"SymbolPublishingExclusionFile was not found at ${symbolPublishingExclusionsFile} ");
-                }
-
                 foreach (var server in serversToPublish)
                 {
                     var serverPath = server.Key;
@@ -722,7 +700,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             personalAccessToken: token,
                             inputPackages: fileEntries,
                             inputFiles: filesToSymbolServer,
-                            packageExcludeFiles: excludeFiles,
+                            packageExcludeFiles: null,
                             expirationInDays: ExpirationInDays,
                             convertPortablePdbsToWindowsPdbs: false,
                             publishSpecialClrFiles: publishSpecialClrFiles,
