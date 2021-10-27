@@ -6,7 +6,8 @@ parameters:
   preSteps: []
   binlogPath: artifacts/log/Debug/Build.binlog
   pool:
-    vmImage: vs2017-win2016
+    name: NetCore1ESPool-Public
+    demands: ImageOverride -equals Build.Server.Amd64.VS2019.Open
   condition: ''
   dependsOn: ''
 
