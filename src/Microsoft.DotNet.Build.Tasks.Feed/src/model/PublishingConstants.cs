@@ -183,6 +183,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             (TargetFeedContentType.Package, FeedDotNet6Transport, AssetSelection.NonShippingOnly),
             (InstallersAndSymbols, FeedForInstallers),
             (TargetFeedContentType.Checksum, FeedForChecksums),
+            (InstallersAndSymbols, FeedStagingForInstallers),
+            (TargetFeedContentType.Checksum, FeedStagingForChecksums),
         };
 
         private static TargetFeedSpecification[] DotNet6InternalFeeds =
@@ -191,6 +193,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             (TargetFeedContentType.Package, FeedDotNet6InternalTransport, AssetSelection.NonShippingOnly),
             (InstallersAndSymbols, FeedInternalForInstallers),
             (TargetFeedContentType.Checksum, FeedInternalForChecksums),
+            (InstallersAndSymbols, FeedStagingInternalForInstallers),
+            (TargetFeedContentType.Checksum, FeedStagingInternalForChecksums),
         };
 
         private static TargetFeedSpecification[] DotNet7Feeds =
