@@ -497,19 +497,20 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                                     // ConvertPortablePdbsToWindowsPdbs is always set to false, 
                                     // because this is an expensive task so this is done in the staging pipeline post signing.
                                     await PublishSymbolsHelper.PublishAsync(
-                                        Log,
-                                        serverPath,
-                                        token,
-                                        symbolFiles,
-                                        null,
-                                        excludeFiles,
-                                        ExpirationInDays,
-                                        false,
-                                        publishSpecialClrFiles,
-                                        null,
-                                        false,
-                                        false,
-                                        true);
+                                        log: Log,
+                                        symbolServerPath: serverPath,
+                                        personalAccessToken: token,
+                                        inputPackages: symbolFiles,
+                                        inputFiles: null,
+                                        packageExcludeFiles: excludeFiles,
+                                        expirationInDays: ExpirationInDays,
+                                        convertPortablePdbsToWindowsPdbs: false,
+                                        publishSpecialClrFiles: publishSpecialClrFiles,
+                                        pdbConversionTreatAsWarning: null,
+                                        treatPdbConversionIssuesAsInfo: false,
+                                        dryRun: false,
+                                        timer: false,
+                                        verboseLogging: true);
                                 }
                                 catch (Exception ex)
                                 {
@@ -565,19 +566,20 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         // ConvertPortablePdbsToWindowsPdbs is always set to false,
                         // because this is an expensive task so this is done in the staging pipeline post signing.
                         await PublishSymbolsHelper.PublishAsync(
-                            Log,
-                            serverPath,
-                            token,
-                            null,
-                            filesToSymbolServer,
-                            excludeFiles,
-                            ExpirationInDays,
-                            false,
-                            publishSpecialClrFiles,
-                            null,
-                            false,
-                            false,
-                            true);
+                            log: Log,
+                            symbolServerPath: serverPath,
+                            personalAccessToken: token,
+                            inputPackages: null,
+                            inputFiles: filesToSymbolServer,
+                            packageExcludeFiles: excludeFiles,
+                            expirationInDays: ExpirationInDays,
+                            convertPortablePdbsToWindowsPdbs: false,
+                            publishSpecialClrFiles: publishSpecialClrFiles,
+                            pdbConversionTreatAsWarning: null,
+                            treatPdbConversionIssuesAsInfo: false,
+                            dryRun: false,
+                            timer: false,
+                            verboseLogging: true);
                     }
                     catch (Exception ex)
                     {
@@ -693,19 +695,20 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         // ConvertPortablePdbsToWindowsPdbs is always set to false,
                         // because this is an expensive task so this is done in the staging pipeline post signing.
                         await PublishSymbolsHelper.PublishAsync(
-                            Log,
-                            serverPath,
-                            token,
-                            fileEntries,
-                            filesToSymbolServer,
-                            null,
-                            ExpirationInDays,
-                            false,
-                            publishSpecialClrFiles,
-                            null,
-                            false,
-                            false,
-                            true);
+                            log: Log,
+                            symbolServerPath: serverPath,
+                            personalAccessToken: token,
+                            inputPackages: fileEntries,
+                            inputFiles: filesToSymbolServer,
+                            packageExcludeFiles: null,
+                            expirationInDays: ExpirationInDays,
+                            convertPortablePdbsToWindowsPdbs: false,
+                            publishSpecialClrFiles: publishSpecialClrFiles,
+                            pdbConversionTreatAsWarning: null,
+                            treatPdbConversionIssuesAsInfo: false,
+                            dryRun: false,
+                            timer: false,
+                            verboseLogging: true);
                     }
                     catch (Exception ex)
                     {
