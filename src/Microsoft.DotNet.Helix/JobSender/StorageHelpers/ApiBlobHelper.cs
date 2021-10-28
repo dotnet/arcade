@@ -1,9 +1,9 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Azure;
+using Azure.Storage.Blobs;
 using Microsoft.DotNet.Helix.Client.Models;
-using Microsoft.WindowsAzure.Storage.Auth;
-using Microsoft.WindowsAzure.Storage.Blob;
 
 namespace Microsoft.DotNet.Helix.Client
 {
@@ -20,17 +20,18 @@ namespace Microsoft.DotNet.Helix.Client
         public async Task<IBlobContainer> GetContainerAsync(string requestedName, string targetQueue, CancellationToken cancellationToken)
         {
             ContainerInformation info = await _helixApiStorage.NewAsync(new ContainerCreationRequest(30, requestedName, targetQueue), cancellationToken).ConfigureAwait(false);
-            var client = new CloudBlobClient(new Uri($"https://{info.StorageAccountName}.blob.core.windows.net/"), new StorageCredentials(info.WriteToken));
-            CloudBlobContainer container = client.GetContainerReference(info.ContainerName);
+            Uri containerUri = new Uri($"https://{info.StorageAccountName}.blob.core.windows.net/{info.ContainerName}");
+            AzureSasCredential creds = new AzureSasCredential(info.WriteToken);
+            var container = new BlobContainerClient(containerUri, creds);
             return new Container(container, info);
         }
 
         private class Container : ContainerBase
         {
-            private readonly CloudBlobContainer _container;
+            private readonly BlobContainerClient _container;
             private readonly ContainerInformation _info;
 
-            public Container(CloudBlobContainer container, ContainerInformation info)
+            public Container(BlobContainerClient container, ContainerInformation info)
             {
                 _container = container;
                 _info = info;
@@ -40,7 +41,7 @@ namespace Microsoft.DotNet.Helix.Client
             public override string ReadSas => _info.ReadToken;
             public override string WriteSas => _info.WriteToken;
 
-            protected override (CloudBlockBlob blob, string sasToken) GetBlob(string blobName)
+            protected override (BlobClient blob, string sasToken) GetBlob(string blobName)
             {
                 string sasToken = _info.ReadToken;
                 if (sasToken.StartsWith("?"))
@@ -48,7 +49,7 @@ namespace Microsoft.DotNet.Helix.Client
                     sasToken = sasToken.Substring(1);
                 }
 
-                CloudBlockBlob blob = _container.GetBlockBlobReference(blobName);
+                BlobClient blob = _container.GetBlobClient(blobName);
                 return (blob, sasToken);
             }
         }
