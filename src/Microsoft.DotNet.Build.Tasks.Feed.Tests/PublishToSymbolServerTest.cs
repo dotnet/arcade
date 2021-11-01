@@ -127,19 +127,21 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 @internal: false,
                 allowOverwrite: true,
                 SymbolTargetType.SymWeb));
-            Assert.True(PublishSymbolsHelper.PublishAsync(null,
-                path,
-                SymWebToken,
-                fileEntries,
-                fileEntries,
-                null,
-                365,
-                false,
-                false,
-                null,
-                false,
-                false,
-                false).IsCompleted);
+            Assert.True(PublishSymbolsHelper.PublishAsync(
+                log: null,
+                symbolServerPath: path,
+                personalAccessToken: SymWebToken,
+                inputPackages: fileEntries,
+                inputFiles: fileEntries,
+                packageExcludeFiles: null,
+                expirationInDays: 365,
+                convertPortablePdbsToWindowsPdbs: false,
+                publishSpecialClrFiles: false,
+                pdbConversionTreatAsWarning: null,
+                treatPdbConversionIssuesAsInfo: false,
+                dryRun: false,
+                timer: false,
+                verboseLogging: false).IsCompleted);
         }
 
         [Fact]
