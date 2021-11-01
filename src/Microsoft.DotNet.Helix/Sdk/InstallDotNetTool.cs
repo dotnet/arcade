@@ -55,11 +55,6 @@ namespace Microsoft.DotNet.Helix.Sdk
         public string TargetArchitecture { get; set; }
 
         /// <summary>
-        /// Determining whether to include pre-release versions of packages when installing the newest one (no version supplied)
-        /// </summary>
-        public bool IncludePreRelease { get; set; } = false;
-
-        /// <summary>
         /// Working directory when executing the command
         /// 
         /// There is an issue in the SDK where if the working directory contains .proj files, `dotnet tool install` will fail.
@@ -87,12 +82,6 @@ namespace Microsoft.DotNet.Helix.Sdk
             if (Version.Contains("*"))
             {
                 Log.LogError("InstallDotNetTool task doesn't accept * in the version");
-                return false;
-            }
-
-            if (!string.IsNullOrEmpty(Version) && IncludePreRelease)
-            {
-                Log.LogError("Prerelease flag cannot be combined with Version");
                 return false;
             }
 
@@ -150,11 +139,6 @@ namespace Microsoft.DotNet.Helix.Sdk
             {
                 args.Add("--add-source");
                 args.Add(Source);
-            }
-
-            if (IncludePreRelease)
-            {
-                args.Add("--prerelease");
             }
 
             args.Add(Name);

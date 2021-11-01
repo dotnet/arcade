@@ -176,7 +176,6 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 "arm64",
                 "--add-source",
                 "https://dev.azure.com/some/feed",
-                "--prerelease",
                 ToolName,
             };
 
@@ -184,7 +183,6 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             _task.ConfigureServices(collection);
             _task.Source = "https://dev.azure.com/some/feed";
             _task.DotnetPath = _dotnetPath = @"D:\dotnet\dotnet.exe";
-            _task.IncludePreRelease = true;
             _task.TargetArchitecture = "arm64";
             _task.TargetFramework = "net6.0";
 
