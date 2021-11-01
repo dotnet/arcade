@@ -55,7 +55,7 @@ stages:
             vmImage: windows-latest
           ${{ if eq(variables._RunAsInternal, True) }}:
             name: NetCore1ESPool-Svc-Internal
-            demands: ImageOverride -equals Build.Server.Amd64.VS2017
+            demands: ImageOverride -equals Build.Server.Amd64.VS2019
         strategy:
           matrix:
             Build_Release:
