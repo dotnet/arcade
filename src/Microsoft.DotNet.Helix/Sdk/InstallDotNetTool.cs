@@ -55,9 +55,9 @@ namespace Microsoft.DotNet.Helix.Sdk
         public string TargetArchitecture { get; set; }
 
         /// <summary>
-        /// Determining whether to include pre-release packages
+        /// Determining whether to include pre-release versions of packages
         /// </summary>
-        public bool PreRelease { get; set; } = false;
+        public bool IncludePreRelease { get; set; } = false;
 
         /// <summary>
         /// Working directory when executing the command
@@ -146,7 +146,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                 args.Add(Source);
             }
 
-            if (!PreRelease)
+            if (IncludePreRelease)
             {
                 args.Add("--prerelease");
             }

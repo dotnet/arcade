@@ -62,7 +62,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             _commandFactoryMock
                 .Setup(x => x.Create(
                     It.Is<string>(s => s == _dotnetPath),
-                    It.Is<IEnumerable<string>>(args => args.All(y => _expectedArgs.Contains(y)))))
+                    It.IsAny<IEnumerable<string>>()))
                 .Returns(_commandMock.Object)
                 .Verifiable();
 
@@ -95,7 +95,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 .Verify(
                     x => x.Create(
                         It.Is<string>(dotnet => dotnet == _dotnetPath),
-                        It.Is<IEnumerable<string>>(args => args.Count() == _expectedArgs.Count() && args.All(y => _expectedArgs.Contains(y)))),
+                        It.IsAny<IEnumerable<string>>()),
                     Times.Never);
 
             _commandMock.Verify(x => x.Execute(), Times.Never);
@@ -166,14 +166,17 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             {
                 "tool",
                 "install",
-                "--framework",
-                "net6.0",
                 "--version",
                 ToolVersion,
                 "--tool-path",
                 Path.Combine(InstallPath, ToolName, ToolVersion),
+                "--framework",
+                "net6.0",
+                "--arch",
+                "arm64",
                 "--add-source",
                 "https://dev.azure.com/some/feed",
+                "--prerelease",
                 ToolName,
             };
 
@@ -181,6 +184,9 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             _task.ConfigureServices(collection);
             _task.Source = "https://dev.azure.com/some/feed";
             _task.DotnetPath = _dotnetPath = @"D:\dotnet\dotnet.exe";
+            _task.IncludePreRelease = true;
+            _task.TargetArchitecture = "arm64";
+            _task.TargetFramework = "net6.0";
 
             // Act
             using var provider = collection.BuildServiceProvider();
@@ -221,7 +227,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 .Callback(() =>
                 {
                     hangingCommandCalled.SetResult(true);
-                    dotnetToolInstalled.Task.GetAwaiter().GetResult();
+                    dotnetToolInstalled.Task.GetAwaiter().GetResult(); // stop here
                 })
                 .Returns(new CommandResult(new ProcessStartInfo(), 0, "Tool installed", null));
 
@@ -275,7 +281,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 .Verify(
                     x => x.Create(
                         It.Is<string>(dotnet => dotnet == _dotnetPath),
-                        It.Is<IEnumerable<string>>(args => args.Count() == _expectedArgs.Count() && args.All(y => _expectedArgs.Contains(y)))),
+                        It.IsAny<IEnumerable<string>>()),
                     Times.Once);
 
             // The other command is waiting on the Mutex now
@@ -285,7 +291,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
                 .Verify(
                     x => x.Create(
                         It.Is<string>(dotnet => dotnet == _dotnetPath),
-                        It.Is<IEnumerable<string>>(args => args.Count() == _expectedArgs.Count() && args.All(y => _expectedArgs.Contains(y)))),
+                        It.IsAny<IEnumerable<string>>()),
                     Times.Never);
 
             // We now let `dotnet tool install` run to completion
