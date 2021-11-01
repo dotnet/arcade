@@ -55,7 +55,7 @@ namespace Microsoft.DotNet.Helix.Sdk
         public string TargetArchitecture { get; set; }
 
         /// <summary>
-        /// Determining whether to include pre-release versions of packages
+        /// Determining whether to include pre-release versions of packages when installing the newest one (no version supplied)
         /// </summary>
         public bool IncludePreRelease { get; set; } = false;
 
@@ -87,6 +87,12 @@ namespace Microsoft.DotNet.Helix.Sdk
             if (Version.Contains("*"))
             {
                 Log.LogError("InstallDotNetTool task doesn't accept * in the version");
+                return false;
+            }
+
+            if (!string.IsNullOrEmpty(Version) && IncludePreRelease)
+            {
+                Log.LogError("Prerelease flag cannot be combined with Version");
                 return false;
             }
 
