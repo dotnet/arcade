@@ -20,7 +20,7 @@ jobs:
     timeoutInMinutes: 90
     pool:
       name: NetCore1ESPool-Internal
-      demands: ImageOverride -equals Build.Server.Amd64.VS2017
+      demands: ImageOverride -equals Build.Server.Amd64.VS2019
     variables:
     - group: DotNet-Blob-Feed
     - group: Publish-Build-Assets

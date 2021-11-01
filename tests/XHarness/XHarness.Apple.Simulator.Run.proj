@@ -23,7 +23,6 @@
         <TestTarget>ios-simulator-64</TestTarget>
         <WorkItemTimeout>00:12:00</WorkItemTimeout>
         <TestTimeout>00:08:00</TestTimeout>
-        <LaunchTimeout>00:05:00</LaunchTimeout>
         <IncludesTestRunner>false</IncludesTestRunner>
         <ExpectedExitCode>200</ExpectedExitCode>
       </XHarnessAppBundleToTest>

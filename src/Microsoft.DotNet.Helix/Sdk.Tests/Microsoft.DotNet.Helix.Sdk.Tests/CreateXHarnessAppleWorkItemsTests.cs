@@ -133,6 +133,9 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             payloadArchive.Should().NotBeNullOrEmpty();
             _fileSystem.FileExists(payloadArchive).Should().BeTrue();
             _fileSystem.RemovedFiles.Should().Contain(payloadArchive);
+
+            var command = workItem.GetMetadata("Command");
+            command.Should().Contain("--launch-timeout \"00:02:00\"");
         }
 
         [Fact]
@@ -170,7 +173,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             _task.ConfigureServices(collection);
             _task.AppBundles = new[]
             {
-                CreateAppBundle("item-1", "ios-simulator-64_13.5", appBundlePath: "apps/System.Foo.app"),
+                CreateAppBundle("item-1", "ios-device_13.5", appBundlePath: "apps/System.Foo.app"),
                 CreateAppBundle("item-2", "ios-simulator-64_13.6", appBundlePath: "apps/System.Foo.app"),
             };
 
@@ -182,25 +185,27 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             _task.WorkItems.Length.Should().Be(2);
             _fileSystem.RemovedFiles.Should().BeEmpty();
 
-            var workItem1 = _task.WorkItems.Last();
-            workItem1.GetMetadata("Identity").Should().Be("item-2");
+            var workItem1 = _task.WorkItems.First();
+            workItem1.GetMetadata("Identity").Should().Be("item-1");
 
             var payloadArchive = workItem1.GetMetadata("PayloadArchive");
             payloadArchive.Should().NotBeNullOrEmpty();
             _fileSystem.FileExists(payloadArchive).Should().BeTrue();
 
             var command = workItem1.GetMetadata("Command");
-            command.Should().Contain("--target \"ios-simulator-64_13.6\"");
+            command.Should().Contain("--target \"ios-device_13.5\"");
+            command.Should().Contain("--launch-timeout \"00:05:00\"");
 
-            var workItem2 = _task.WorkItems.First();
-            workItem2.GetMetadata("Identity").Should().Be("item-1");
+            var workItem2 = _task.WorkItems.Last();
+            workItem2.GetMetadata("Identity").Should().Be("item-2");
 
             payloadArchive = workItem2.GetMetadata("PayloadArchive");
             payloadArchive.Should().NotBeNullOrEmpty();
             _fileSystem.FileExists(payloadArchive).Should().BeTrue();
 
             command = workItem2.GetMetadata("Command");
-            command.Should().Contain("--target \"ios-simulator-64_13.5\"");
+            command.Should().Contain("--target \"ios-simulator-64_13.6\"");
+            command.Should().Contain("--launch-timeout \"00:02:00\"");
         }
 
         [Fact]
