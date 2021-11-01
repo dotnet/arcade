@@ -28,7 +28,10 @@
       <XHarnessPackageSource>$([System.IO.Path]::GetDirectoryName($(XHarnessNupkgPath))) --no-cache</XHarnessPackageSource>
     </PropertyGroup>
 
-    <!-- It can happen that the SDK is invoked in parallel and then it can fail when re-using the install location, so we ignore the exit code -->
+    <!--
+      We install the tool locally on the build machine, then, installed as-is, we zip it up and send as a correlation payload
+      We do this so that we avoid all of the machines installing the tool too and ddosing the NuGet feed
+    -->
     <InstallDotNetTool Name="$(_XHarnessPackageName)"
                        DestinationPath="$(ArtifactsTmpDir)Microsoft.DotNet.XHarness.CLI"
                        Version="$(_XHarnessPackageVersion)"
@@ -39,11 +42,7 @@
       <Output TaskParameter="ToolPath" PropertyName="_XHarnessCliPath" />
     </InstallDotNetTool>
 
-    <!--
-      We install the tool locally on the build machine, then, installed as-is, we zip it up and send as a correlation payload.
-      We do this so that we avoid all of the machines installing the tool too and ddosing the NuGet feed.
-      In order to do this, we have to grab the unpacked .NET command line application from the .NET tool store where it is installed.
-    -->
+    <!-- We grab the unpacked .NET command line application from the .NET tool store where it is installed -->
     <PropertyGroup>
       <_XHarnessCliPath>$(_XHarnessCliPath)\.store\microsoft.dotnet.xharness.cli\$(_XHarnessPackageVersion)\microsoft.dotnet.xharness.cli\$(_XHarnessPackageVersion)</_XHarnessCliPath>
     </PropertyGroup>
