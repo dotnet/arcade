@@ -15,36 +15,61 @@ namespace Microsoft.DotNet.Helix.Sdk
     public class InstallDotNetTool : MSBuildTaskBase
     {
         /// <summary>
-        /// The name of the tool to install (same as the NuGet package name, e.g. Microsoft.DotNet.XHarness.CLI).
+        /// The name of the tool to install (same as the NuGet package name, e.g. Microsoft.DotNet.XHarness.CLI)
         /// </summary>
         [Required]
         public string Name { get; set; }
 
         /// <summary>
-        /// Directory where the tool will be installed.
+        /// Directory where the tool will be installed
         /// </summary>
         [Required]
         public string DestinationPath { get; set; }
 
         /// <summary>
-        /// Version of the tool to install.
+        /// Version of the tool to install
+        /// 
         /// Must not contain * so that we can make sure the right version is installed.
         /// </summary>
         [Required]
         public string Version { get; set; }
 
         /// <summary>
-        /// Optional path to dotnet.exe to use.
+        /// Optional path to dotnet.exe to use
         /// </summary>
         public string DotnetPath { get; set; }
 
         /// <summary>
-        /// Source to install the tool from.
+        /// Source to install the tool from
         /// </summary>
         public string Source { get; set; }
 
         /// <summary>
-        /// Location of where the tool was installed (including the version).
+        /// The target framework to install the tool for
+        /// </summary>
+        public string TargetFramework { get; set; }
+
+        /// <summary>
+        /// The target architecture to install the tool for
+        /// </summary>
+        public string TargetArchitecture { get; set; }
+
+        /// <summary>
+        /// Determining whether to include pre-release packages
+        /// </summary>
+        public bool PreRelease { get; set; } = false;
+
+        /// <summary>
+        /// Working directory when executing the command
+        /// 
+        /// There is an issue in the SDK where if the working directory contains .proj files, `dotnet tool install` will fail.
+        /// https://github.com/dotnet/sdk/issues/12120
+        /// You can use this property to work around this.
+        /// </summary>
+        public string WorkingDirectory { get; set; }
+
+        /// <summary>
+        /// Location of where the tool was installed (including the version)
         /// </summary>
         [Output]
         public string ToolPath { get; set; }
@@ -97,13 +122,23 @@ namespace Microsoft.DotNet.Helix.Sdk
             {
                 "tool",
                 "install",
-                "--framework",
-                "net6.0",
                 "--version",
                 Version,
                 "--tool-path",
                 ToolPath,
             };
+
+            if (!string.IsNullOrEmpty(TargetFramework))
+            {
+                args.Add("--framework");
+                args.Add(TargetFramework);
+            }
+
+            if (!string.IsNullOrEmpty(TargetArchitecture))
+            {
+                args.Add("--arch");
+                args.Add(TargetArchitecture);
+            }
 
             if (!string.IsNullOrEmpty(Source))
             {
@@ -111,12 +146,24 @@ namespace Microsoft.DotNet.Helix.Sdk
                 args.Add(Source);
             }
 
+            if (!PreRelease)
+            {
+                args.Add("--prerelease");
+            }
+
             args.Add(Name);
 
             var executable = string.IsNullOrEmpty(DotnetPath) ? "dotnet" : DotnetPath;
             Log.LogMessage($"Executing {DotnetPath} {string.Join(" ", args)}");
 
-            CommandResult result = commandFactory.Create(executable, args).Execute();
+            ICommand command = commandFactory.Create(executable, args);
+
+            if (!string.IsNullOrEmpty(WorkingDirectory))
+            {
+                command.WorkingDirectory(WorkingDirectory);
+            }
+
+            CommandResult result = command.Execute();
 
             if (result.ExitCode != 0)
             {
