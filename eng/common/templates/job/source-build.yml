@@ -35,7 +35,7 @@ parameters:
   # source-build builds run in Docker, including the default managed platform.
   defaultContainerHostPool:
     name: NetCore1ESPool-Public
-    demands: ImageOverride -equals Build.Server.Amd64.VS2019.Open
+    demands: ImageOverride -equals Build.Ubuntu.1804.Amd64.Open
 
 jobs:
 - job: ${{ parameters.jobNamePrefix }}_${{ parameters.platform.name }}

@@ -7,7 +7,7 @@ parameters:
   binlogPath: artifacts/log/Debug/Build.binlog
   pool:
     name: NetCore1ESPool-Public
-    demands: ImageOverride -equals Build.Server.Amd64.VS2019.Open
+    demands: ImageOverride -equals Build.Windows10.Amd64.Open
   condition: ''
   dependsOn: ''
 
