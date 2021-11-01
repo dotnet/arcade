@@ -11,6 +11,8 @@
     -->
     <DotNetCliPackageType>sdk</DotNetCliPackageType>
     <DotNetCliVersion>6.0.100-rc.1.21430.12</DotNetCliVersion>
+    <XHarnessTargetFramework Condition=" '$(XHarnessTargetFramework)' == '' ">net6.0</XHarnessTargetFramework>
+    <DotNetCliVersion Condition=" '$(DotNetCliVersion)' == '$(BundledNETCoreAppPackageVersion)' AND '$(DotNetCliPackageType)' == 'aspnetcore-runtime' ">$(AspNetCoreRuntimeVersion)</DotNetCliVersion>
     <DotNetCliVersion Condition=" '$(DotNetCliVersion)' == '$(BundledNETCoreAppPackageVersion)' AND '$(DotNetCliPackageType)' == 'aspnetcore-runtime' ">$(AspNetCoreRuntimeVersion)</DotNetCliVersion>
   </PropertyGroup>
 
@@ -36,7 +38,7 @@
                        DestinationPath="$(ArtifactsTmpDir)Microsoft.DotNet.XHarness.CLI"
                        Version="$(_XHarnessPackageVersion)"
                        Source="$(XHarnessPackageSource)"
-                       TargetFramework="net6.0"
+                       TargetFramework="$(XHarnessTargetFramework)"
                        WorkingDirectory="$(ArtifactsTmpDir)"
                        DotnetPath="$(DotNetTool)">
       <Output TaskParameter="ToolPath" PropertyName="_XHarnessCliPath" />
