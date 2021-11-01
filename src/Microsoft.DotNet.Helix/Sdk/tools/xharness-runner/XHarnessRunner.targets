@@ -11,6 +11,8 @@
     -->
     <DotNetCliPackageType>sdk</DotNetCliPackageType>
     <DotNetCliVersion>6.0.100-rc.1.21430.12</DotNetCliVersion>
+    <XHarnessTargetFramework Condition=" '$(XHarnessTargetFramework)' == '' ">net6.0</XHarnessTargetFramework>
+    <DotNetCliVersion Condition=" '$(DotNetCliVersion)' == '$(BundledNETCoreAppPackageVersion)' AND '$(DotNetCliPackageType)' == 'aspnetcore-runtime' ">$(AspNetCoreRuntimeVersion)</DotNetCliVersion>
     <DotNetCliVersion Condition=" '$(DotNetCliVersion)' == '$(BundledNETCoreAppPackageVersion)' AND '$(DotNetCliPackageType)' == 'aspnetcore-runtime' ">$(AspNetCoreRuntimeVersion)</DotNetCliVersion>
   </PropertyGroup>
 
@@ -28,16 +30,24 @@
       <XHarnessPackageSource>$([System.IO.Path]::GetDirectoryName($(XHarnessNupkgPath))) --no-cache</XHarnessPackageSource>
     </PropertyGroup>
 
-    <!-- We install the tool locally on the build machine, then, installed as-is, we zip it up and send as a correlation payload -->
-    <PropertyGroup>
-      <_XHarnessLocalToolPath>$(ArtifactsTmpDir)Microsoft.DotNet.XHarness.CLI</_XHarnessLocalToolPath>
-      <_XHarnessCliPath>$(_XHarnessLocalToolPath)\.store\microsoft.dotnet.xharness.cli\$(_XHarnessPackageVersion)\microsoft.dotnet.xharness.cli\$(_XHarnessPackageVersion)</_XHarnessCliPath>
-    </PropertyGroup>
+    <!--
+      We install the tool locally on the build machine, then, installed as-is, we zip it up and send as a correlation payload
+      We do this so that we avoid all of the machines installing the tool too and ddosing the NuGet feed
+    -->
+    <InstallDotNetTool Name="$(_XHarnessPackageName)"
+                       DestinationPath="$(ArtifactsTmpDir)Microsoft.DotNet.XHarness.CLI"
+                       Version="$(_XHarnessPackageVersion)"
+                       Source="$(XHarnessPackageSource)"
+                       TargetFramework="$(XHarnessTargetFramework)"
+                       WorkingDirectory="$(ArtifactsTmpDir)"
+                       DotnetPath="$(DotNetTool)">
+      <Output TaskParameter="ToolPath" PropertyName="_XHarnessCliPath" />
+    </InstallDotNetTool>
 
-    <!-- It can happen that the SDK is invoked in parallel and then it can fail when re-using the install location, so we ignore the exit code -->
-    <Exec Command="&quot;$(DotNetTool)&quot; tool install --framework net6.0 --tool-path $(_XHarnessLocalToolPath) --version $(_XHarnessPackageVersion) --add-source $(XHarnessPackageSource) $(_XHarnessPackageName)"
-          WorkingDirectory="$(ArtifactsTmpDir)"
-          IgnoreExitCode="true" />
+    <!-- We grab the unpacked .NET command line application from the .NET tool store where it is installed -->
+    <PropertyGroup>
+      <_XHarnessCliPath>$(_XHarnessCliPath)\.store\microsoft.dotnet.xharness.cli\$(_XHarnessPackageVersion)\microsoft.dotnet.xharness.cli\$(_XHarnessPackageVersion)</_XHarnessCliPath>
+    </PropertyGroup>
 
     <!-- There are files we don't need extracted inside of the extracted tool dir (such as the original .nupkg) that blow up the size 3x, so we remove them -->
     <ItemGroup>

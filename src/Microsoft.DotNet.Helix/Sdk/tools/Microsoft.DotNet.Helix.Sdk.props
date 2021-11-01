@@ -26,4 +26,5 @@
   <UsingTask TaskName="CheckAzurePipelinesTestResults" AssemblyFile="$(MicrosoftDotNetHelixSdkTasksAssembly)"/>
   <UsingTask TaskName="DownloadFromResultsContainer" AssemblyFile="$(MicrosoftDotNetHelixSdkTasksAssembly)"/>
   <UsingTask TaskName="CancelHelixJobs" AssemblyFile="$(MicrosoftDotNetHelixSdkTasksAssembly)"/>
+  <UsingTask TaskName="InstallDotNetTool" AssemblyFile="$(MicrosoftDotNetHelixSdkTasksAssembly)"/>
 </Project>
