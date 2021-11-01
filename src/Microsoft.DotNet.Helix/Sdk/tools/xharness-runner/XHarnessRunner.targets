@@ -39,6 +39,8 @@
                        DestinationPath="$(_XHarnessLocalToolPath)"
                        Version="$(_XHarnessPackageVersion)"
                        Source="$(XHarnessPackageSource)"
+                       TargetFramework="net6.0"
+                       WorkingDirectory="$(ArtifactsTmpDir)"
                        DotnetPath="$(DotNetTool)">
       <Output TaskParameter="ToolPath" PropertyName="_XHarnessCliPath" />
     </InstallDotNetTool>
