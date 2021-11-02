@@ -66,8 +66,8 @@
     <WindowsAzureStorageVersion>8.5.0</WindowsAzureStorageVersion>
     <XUnitVersion>2.4.2-pre.9</XUnitVersion>
     <XUnitAbstractionsVersion>2.0.3</XUnitAbstractionsVersion>
-    <MicrosoftDotNetBuildTasksFeedVersion>7.0.0-beta.21529.1</MicrosoftDotNetBuildTasksFeedVersion>
-    <MicrosoftDotNetSignToolVersion>7.0.0-beta.21529.1</MicrosoftDotNetSignToolVersion>
+    <MicrosoftDotNetBuildTasksFeedVersion>7.0.0-beta.21552.1</MicrosoftDotNetBuildTasksFeedVersion>
+    <MicrosoftDotNetSignToolVersion>7.0.0-beta.21552.1</MicrosoftDotNetSignToolVersion>
     <MicrosoftAzureDocumentDBVersion>1.22.0</MicrosoftAzureDocumentDBVersion>
     <MicrosoftAzureCosmosDBTableVersion>1.1.2</MicrosoftAzureCosmosDBTableVersion>
     <MicrosoftAspNetCoreAllVersion>2.0.0</MicrosoftAspNetCoreAllVersion>
@@ -78,7 +78,7 @@
     <MicrosoftDotNetMaestroClientVersion>1.1.0-beta.20258.6</MicrosoftDotNetMaestroClientVersion>
     <MicrosoftSourceLinkGitHubVersion>1.1.0-beta-21525-02</MicrosoftSourceLinkGitHubVersion>
     <MicrosoftSourceLinkAzureReposGitVersion>1.1.0-beta-21525-02</MicrosoftSourceLinkAzureReposGitVersion>
-    <MicrosoftDotNetSwaggerGeneratorMSBuildVersion>7.0.0-beta.21529.1</MicrosoftDotNetSwaggerGeneratorMSBuildVersion>
+    <MicrosoftDotNetSwaggerGeneratorMSBuildVersion>7.0.0-beta.21552.1</MicrosoftDotNetSwaggerGeneratorMSBuildVersion>
     <MicrosoftDotNetXliffTasksVersion>1.0.0-beta.21518.1</MicrosoftDotNetXliffTasksVersion>
     <MicrosoftDotNetMaestroTasksVersion>1.1.0-beta.21520.4</MicrosoftDotNetMaestroTasksVersion>
     <MicrosoftDotNetXHarnessCLIVersion>1.0.0-prerelease.21529.1</MicrosoftDotNetXHarnessCLIVersion>
