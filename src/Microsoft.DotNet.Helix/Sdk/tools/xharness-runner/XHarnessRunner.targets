@@ -27,7 +27,8 @@
     <Message Condition=" '$(XHarnessNupkgPath)' != '' " Text="XHarnessNupkgPath is set so XHarnessPackageSource will be ignored" Importance="normal" />
 
     <PropertyGroup Condition=" '$(XHarnessNupkgPath)' != '' ">
-      <XHarnessPackageSource>$([System.IO.Path]::GetDirectoryName($(XHarnessNupkgPath))) --no-cache</XHarnessPackageSource>
+      <XHarnessPackageSource>$([System.IO.Path]::GetDirectoryName($(XHarnessNupkgPath)))</XHarnessPackageSource>
+      <XHarnessNoCache>true</XHarnessNoCache>
     </PropertyGroup>
 
     <!--
@@ -40,7 +41,8 @@
                        Source="$(XHarnessPackageSource)"
                        TargetFramework="$(XHarnessTargetFramework)"
                        WorkingDirectory="$(ArtifactsTmpDir)"
-                       DotnetPath="$(DotNetTool)">
+                       DotnetPath="$(DotNetTool)"
+                       NoCache="$(XHarnessNoCache)">
       <Output TaskParameter="ToolPath" PropertyName="_XHarnessCliPath" />
     </InstallDotNetTool>
 

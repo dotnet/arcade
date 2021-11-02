@@ -64,6 +64,11 @@ namespace Microsoft.DotNet.Helix.Sdk
         public string WorkingDirectory { get; set; }
 
         /// <summary>
+        /// Do not use a cached .nupkg when installing
+        /// </summary>
+        public bool NoCache { get; set; } = false;
+
+        /// <summary>
         /// Location of where the tool was installed (including the version)
         /// </summary>
         [Output]
@@ -139,6 +144,11 @@ namespace Microsoft.DotNet.Helix.Sdk
             {
                 args.Add("--add-source");
                 args.Add(Source);
+            }
+
+            if (NoCache)
+            {
+                args.Add("--no-cache");
             }
 
             args.Add(Name);
