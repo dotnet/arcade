@@ -1,10 +1,8 @@
 <#
 This script is used as a payload of Helix jobs that execute Android workloads through XHarness on Windows systems.
-This is used as the entrypoint of the work item so that XHarness failures can be detected and (when appropriate)
-cause the work item to retry and reboot the Helix agent the work is running on.
 
-Currently no special functionality is needed beyond causing infrastructure retry and reboot if the emulators
-or devices have trouble, but to add more Helix-specific Android XHarness behaviors, this is one extensibility point.
+The purpose of this script is to time-constrain user commands (command.ps1) so that we have time at the end of the
+work item to process XHarness telemetry.
 #>
 
 param (
@@ -41,78 +39,14 @@ $process.Start()
 
 Wait-Process -InputObject $process -TimeOut $command_timeout -ErrorVariable ev -ErrorAction SilentlyContinue
 
-function Remove-Apps {
-    Write-Output "Removing installed apps after unsuccessful run"
-    $adb_path = dotnet xharness android state --adb
-    $packages = & $adb_path shell pm list packages net.dot
-    $split_packages = $packages.split(':')
-    For ($i = 1; $i -lt $split_packages.Length; $i += 2) {
-        echo $split_packages[$i] | %{&$adb_path uninstall $_}
-    }
-}
-
 if ($ev) {
-    $exit_code = -3
     Stop-Process -InputObject $process -Force
     $process.WaitForExit()
     [Console]::Out.Flush()
     Write-Output "User command timed out after $command_timeout seconds!"
     Remove-Apps
+    exit -3
 } else {
-    $exit_code = $process.ExitCode
-    Write-Output "User command ended with $exit_code"
+    Write-Output "User command ended with $($process.ExitCode)"
+    exit $process.ExitCode
 }
-
-$retry = $false
-$reboot = $false
-
-switch ($exit_code)
-{
-    # ADB_DEVICE_ENUMERATION_FAILURE
-    85 {
-        Write-Error "Encountered ADB_DEVICE_ENUMERATION_FAILURE. This is typically not a failure of the work item. We will run it again and reboot this computer to help its devices"
-        Write-Error "If this occurs repeatedly, please check for architectural mismatch, e.g. sending x86 or x86_64 APKs to an arm64_v8a-only queue."
-        $retry = $true
-        $reboot = $true
-        Break
-    }
-
-    # PACKAGE_INSTALLATION_FAILURE
-    78 {
-        Write-Error "Encountered PACKAGE_INSTALLATION_FAILURE. This is typically not a failure of the work item. We will try it again on another Helix agent"
-        Write-Error "If this occurs repeatedly, please check for architectural mismatch, e.g. requesting installation on arm64_v8a-only queue for x86 or x86_64 APKs."
-
-        Remove-Apps
-
-        $retry = $true
-        Break
-    }
-}
-
-if (Test-Path -Path "$Env:HELIX_WORKITEM_ROOT\.retry" -PathType Leaf) {
-    $retry = $true;
-    $retry_message = Get-Content -Path "$Env:HELIX_WORKITEM_ROOT\.retry"
-}
-
-if (Test-Path -Path "$Env:HELIX_WORKITEM_ROOT\.reboot" -PathType Leaf) {
-    $reboot = $true;
-    $reboot_message = Get-Content -Path "$Env:HELIX_WORKITEM_ROOT\.reboot"
-}
-
-if ($retry) {
-    if ([string]::IsNullOrEmpty($retry_message)) {
-        $retry_message = 'Retrying because we could not enumerate all Android devices'
-    }
-
-    & "$Env:HELIX_PYTHONPATH" -c "from helix.workitemutil import request_infra_retry; request_infra_retry('$retry_message')"
-}
-
-if ($reboot) {
-    if ([string]::IsNullOrEmpty($reboot_message)) {
-        $reboot_message = 'Rebooting to allow Android emulator to restart'
-    }
-
-     & "$Env:HELIX_PYTHONPATH" -c "from helix.workitemutil import request_reboot; request_reboot('$reboot_message')"
-}
-
-exit $exit_code
