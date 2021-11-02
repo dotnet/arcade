@@ -13,7 +13,8 @@
     <LibGit2SharpVersion>0.25.2</LibGit2SharpVersion>
     <log4netVersion>2.0.10</log4netVersion>
     <SystemNetHttpVersion>4.3.4</SystemNetHttpVersion>
-    <AzureStorageBlobsVersion>12.3.0</AzureStorageBlobsVersion>
+    <AzureCoreVersion>1.19.0</AzureCoreVersion>
+    <AzureStorageBlobsVersion>12.10.0</AzureStorageBlobsVersion>
     <FluentAssertionsVersion>5.10.3</FluentAssertionsVersion>
     <MicrosoftApplicationInsightsVersion>2.16.0</MicrosoftApplicationInsightsVersion>
     <MicrosoftAzureKeyVaultVersion>3.0.0</MicrosoftAzureKeyVaultVersion>
@@ -62,7 +63,7 @@
     <SystemRuntimeInteropServicesRuntimeInformation>4.3.0</SystemRuntimeInteropServicesRuntimeInformation>
     <SystemTextEncodingsWebVersion>4.7.2</SystemTextEncodingsWebVersion>
     <SystemThreadingTasksExtensionVersion>4.5.2</SystemThreadingTasksExtensionVersion>
-    <SystemValueTupleVersion>4.4.0</SystemValueTupleVersion>
+    <SystemValueTupleVersion>4.5.0</SystemValueTupleVersion>
     <WindowsAzureStorageVersion>8.5.0</WindowsAzureStorageVersion>
     <XUnitVersion>2.4.2-pre.9</XUnitVersion>
     <XUnitAbstractionsVersion>2.0.3</XUnitAbstractionsVersion>

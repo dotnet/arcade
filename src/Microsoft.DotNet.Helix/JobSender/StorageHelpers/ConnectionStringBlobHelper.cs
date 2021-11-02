@@ -1,13 +1,11 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+
 using System;
-using System.Diagnostics;
-using System.IO;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.DotNet.Helix.Client.Models;
-using Microsoft.WindowsAzure.Storage;
-using Microsoft.WindowsAzure.Storage.Auth;
-using Microsoft.WindowsAzure.Storage.Blob;
+using Azure.Storage.Blobs;
+using Azure.Storage.Sas;
 
 namespace Microsoft.DotNet.Helix.Client
 {
@@ -23,60 +21,43 @@ namespace Microsoft.DotNet.Helix.Client
 
         public async Task<IBlobContainer> GetContainerAsync(string requestedName, string targetQueue, CancellationToken cancellationToken)
         {
-            CloudStorageAccount account = CloudStorageAccount.Parse(_connectionString);
-            CloudBlobClient client = account.CreateCloudBlobClient();
-            CloudBlobContainer container = client.GetContainerReference(requestedName);
+            BlobServiceClient account = new BlobServiceClient(_connectionString, StorageRetryPolicy.GetBlobClientOptionsRetrySettings());
+
+            BlobContainerClient container = account.GetBlobContainerClient(requestedName);
             await container.CreateIfNotExistsAsync();
             return new Container(container);
         }
 
         private class Container : ContainerBase
         {
-            private readonly CloudBlobContainer _container;
+            private readonly BlobContainerClient _container;
 
-            public Container(CloudBlobContainer container)
+            public Container(BlobContainerClient container)
             {
                 _container = container;
             }
 
             public override string Uri => _container.Uri.ToString();
-            public override string ReadSas => _container.GetSharedAccessSignature(SasReadOnly);
-            public override string WriteSas => _container.GetSharedAccessSignature(SasReadWrite);
+            public override string ReadSas => GetSasTokenForPermissions(BlobContainerSasPermissions.Read, DateTime.UtcNow.AddDays(30));
+            public override string WriteSas => GetSasTokenForPermissions(BlobContainerSasPermissions.Write | 
+                                                                         BlobContainerSasPermissions.Read,
+                                                                         DateTime.UtcNow.AddDays(30));
 
-
-            private SharedAccessBlobPolicy SasReadOnly
+            private string GetSasTokenForPermissions(BlobContainerSasPermissions permissions, DateTime expiration)
             {
-                get
-                {
-                    return new SharedAccessBlobPolicy
-                    {
-                        SharedAccessExpiryTime = DateTime.UtcNow.AddDays(30),
-                        Permissions = SharedAccessBlobPermissions.Read
-                    };
-                }
+                string sas = _container.GenerateSasUri(permissions, expiration).ToString();
+                return sas.Substring(sas.IndexOf('?'));
             }
 
-            private SharedAccessBlobPolicy SasReadWrite
+            protected override (BlobClient blob, string sasToken) GetBlob(string blobName)
             {
-                get
-                {
-                    return new SharedAccessBlobPolicy
-                    {
-                        SharedAccessExpiryTime = DateTime.UtcNow.AddDays(30),
-                        Permissions = SharedAccessBlobPermissions.Write | SharedAccessBlobPermissions.Read
-                    };
-                }
-            }
-
-            protected override (CloudBlockBlob blob, string sasToken) GetBlob(string blobName)
-            {
-                string sasToken = _container.GetSharedAccessSignature(SasReadOnly);
+                string sasToken = GetSasTokenForPermissions(BlobContainerSasPermissions.Read, DateTime.UtcNow.AddDays(30));
                 if (sasToken.StartsWith("?"))
                 {
                     sasToken = sasToken.Substring(1);
                 }
 
-                CloudBlockBlob blob = _container.GetBlockBlobReference(blobName);
+                BlobClient blob = _container.GetBlobClient(blobName);
                 return (blob, sasToken);
             }
         }
