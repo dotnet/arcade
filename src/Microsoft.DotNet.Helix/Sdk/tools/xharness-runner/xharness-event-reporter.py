@@ -41,6 +41,8 @@ for operation in operations:
             custom_dimensions['target'] = operation['target'] + '_' + operation['targetOS']
         else:
             custom_dimensions['target'] = operation['target']
+    elif 'targetOS' in operation:
+        custom_dimensions['target'] = operation['targetOS']
 
     app_insights.send_metric('XHarnessOperation', operation['exitCode'], properties=custom_dimensions)
     app_insights.send_metric('XHarnessOperationDuration', operation['duration'], properties=custom_dimensions)
