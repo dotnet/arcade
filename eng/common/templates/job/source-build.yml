@@ -34,7 +34,8 @@ parameters:
   # The default VM host AzDO pool. This should be capable of running Docker containers: almost all
   # source-build builds run in Docker, including the default managed platform.
   defaultContainerHostPool:
-    vmImage: ubuntu-20.04
+    name: NetCore1ESPool-Public
+    demands: ImageOverride -equals Build.Ubuntu.1804.Amd64.Open
 
 jobs:
 - job: ${{ parameters.jobNamePrefix }}_${{ parameters.platform.name }}

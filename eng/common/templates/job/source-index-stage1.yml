@@ -6,7 +6,8 @@ parameters:
   preSteps: []
   binlogPath: artifacts/log/Debug/Build.binlog
   pool:
-    vmImage: 'windows-2019'
+    name: NetCore1ESPool-Public
+    demands: ImageOverride -equals Build.Windows.10.Amd64.Open
   condition: ''
   dependsOn: ''
 
