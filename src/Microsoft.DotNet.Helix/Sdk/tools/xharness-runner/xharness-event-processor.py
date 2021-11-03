@@ -7,6 +7,10 @@ import sys
 from helix.appinsights import app_insights
 from helix.workitemutil import request_reboot, request_infra_retry
 
+### This script's purpose is to parse the diagnostics.json file produced by XHarness, evaluate it and send it to AppInsights
+### The diagnostics.json file contains information about each XHarness command executed during the job
+### In case of events that suggest infrastructure issues, we request a retry and for some reboot the agent
+
 opts, args = getopt.gnu_getopt(sys.argv[1:], 'd:', ['diagnostics-data='])
 opt_dict = dict(opts)
 
@@ -46,7 +50,6 @@ def remove_android_apps():
     # Remove all installed apps
     for app in installed_apps:
         subprocess.call([adb_path, 'uninstall', app])
-
 
 def analyze_operation(command: str, platform: str, isDevice: bool, target: str, exitCode: int):
     """ Analyzes the result and requests retry/reboot in case of an infra failure
@@ -133,6 +136,8 @@ operations = json.load(open(diagnostics_file))
 
 print(f"[XHarness reporter] Reporting {len(operations)} events from diagnostics file `{diagnostics_file}`")
 
+# Parse operations, analyze them and send them to Application Insights
+
 for operation in operations:
     command = operation['command']
     platform = operation['platform']
@@ -158,6 +163,8 @@ for operation in operations:
 
     app_insights.send_metric('XHarnessOperation', exitCode, properties=custom_dimensions)
     app_insights.send_metric('XHarnessOperationDuration', duration, properties=custom_dimensions)
+
+# Retry / reboot is handled here
 
 if os.path.exists('./.retry'):
     retry = True
