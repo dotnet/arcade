@@ -61,7 +61,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             _httpClient?.Dispose();
         }
 
-        public AddAssetLocationToAssetAssetLocationType LocationType => AddAssetLocationToAssetAssetLocationType.NugetFeed;
+        public LocationType LocationType => LocationType.NugetFeed;
 
         public async Task PublishAssetAsync(string file, string blobPath, PushOptions options, SemaphoreSlim clientThrottle = null)
         {

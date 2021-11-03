@@ -160,8 +160,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         private readonly Dictionary<TargetFeedContentType, HashSet<BlobArtifactModel>> BlobsByCategory = 
             new Dictionary<TargetFeedContentType, HashSet<BlobArtifactModel>>();
 
-        private readonly ConcurrentDictionary<(int AssetId, string AssetLocation, AddAssetLocationToAssetAssetLocationType LocationType), ValueTuple> NewAssetLocations =
-            new ConcurrentDictionary<(int AssetId, string AssetLocation, AddAssetLocationToAssetAssetLocationType LocationType), ValueTuple>();
+        private readonly ConcurrentDictionary<(int AssetId, string AssetLocation, LocationType LocationType), ValueTuple> NewAssetLocations =
+            new ConcurrentDictionary<(int AssetId, string AssetLocation, LocationType LocationType), ValueTuple>();
 
         // Matches versions such as 1.0.0.1234
         private static readonly string FourPartVersionPattern = @"\d+\.\d+\.\d+\.\d+";
