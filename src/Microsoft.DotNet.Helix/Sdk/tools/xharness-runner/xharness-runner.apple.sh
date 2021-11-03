@@ -138,8 +138,8 @@ if [ "$target" == 'ios-device' ] || [ "$target" == 'tvos-device' ]; then
     fi
 elif [[ "$target" =~ "simulator" ]]; then
     # Start the simulator if it is not running already
-    simulator_app="$xcode_path/Contents/Developer/Applications/Simulator.app"
-    open -a "$simulator_app"
+    export SIMULATOR_APP="$xcode_path/Contents/Developer/Applications/Simulator.app"
+    open -a "$SIMULATOR_APP"
 fi
 
 # The xharness alias
@@ -168,55 +168,6 @@ exit_code=$?
 # In case of issues, include the syslog (last 2 MB from the time this work item has been running)
 if [ $exit_code -ne 0 ]; then
     sudo log show --style syslog --start "$start_time" --end "$(date '+%Y-%m-%d %H:%M:%S')" | tail -c 2097152 > "$output_directory/system.log"
-fi
-
-# Exit code values - https://github.com/dotnet/xharness/blob/main/src/Microsoft.DotNet.XHarness.Common/CLI/ExitCode.cs
-
-# Kill the simulator just in case when we fail to launch the app
-# 80 - app crash
-if [ $exit_code -eq 80 ] && [[ "$target" =~ "simulator" ]]; then
-    sudo pkill -9 -f "$simulator_app"
-fi
-
-# If we have a launch failure AND we are on simulators, we need to signal that we want a reboot+retry
-# The script that is running this one will notice and request Helix to do it
-# 83 - app launch failure
-if [ $exit_code -eq 83 ] && [[ "$target" =~ "simulator" ]]; then
-    report_infrastructure_failure "Failed to launch the application on a simulator"
-fi
-
-# If we fail to find a simulator and we are not targeting a specific version (e.g. `ios-simulator_13.5`),
-# it is probably an issue because Xcode should always have at least one runtime version inside
-# 81 - simulator/device not found
-if [ $exit_code -eq 81 ] && [[ "$target" =~ "simulator" ]] && [[ ! "$target" =~ "_" ]]; then
-    report_infrastructure_failure "No simulator runtime found" --no-reboot
-fi
-
-# If we fail to find a real device, it is unexpected as device queues should have one
-# It can often be fixed with a reboot
-# 81 - device not found
-if [ $exit_code -eq 81 ] && [[ "$target" =~ "device" ]]; then
-    report_infrastructure_failure "Requested tethered Apple device not found"
-fi
-
-# Simulators are known to slow down which results in installation taking several minutes
-# Retry+reboot usually resolves this
-# 86 - app installation timeout
-if [ $exit_code -eq 86 ]; then
-    report_infrastructure_failure "Installation timed out"
-fi
-
-# Simulators are known to slow/break down and a reboot usually helps
-# This manifest by us not being able to launch the simulator
-# 88 - simulator failure
-if [ $exit_code -eq 88 ]; then
-    report_infrastructure_failure "Failed to launch simulator"
-fi
-
-# Devices can be locked or in a corrupted state, in this case we only retry the work item
-# 89 - device failure
-if [ $exit_code -eq 89 ]; then
-    report_infrastructure_failure "Problem with the mobile device" --no-reboot
 fi
 
 # The simulator logs comming from the sudo-spawned Simulator.app are not readable/deletable by the helix uploader
