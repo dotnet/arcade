@@ -285,7 +285,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         /// <param name="feedConfig">Configuration of where the asset was published.</param>
         /// <param name="assetLocationType">Type of feed location that is being added.</param>
         /// <returns>True if that asset didn't have the informed location recorded already.</returns>
-        private bool TryAddAssetLocation(string assetId, string assetVersion, Dictionary<string, HashSet<Asset>> buildAssets, TargetFeedConfig feedConfig, AddAssetLocationToAssetAssetLocationType assetLocationType)
+        private bool TryAddAssetLocation(string assetId, string assetVersion, Dictionary<string, HashSet<Asset>> buildAssets, TargetFeedConfig feedConfig, LocationType assetLocationType)
         {
             Asset assetRecord = string.IsNullOrEmpty(assetVersion) ?
                 LookupAsset(assetId, buildAssets) :
@@ -1143,7 +1143,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         package.Version,
                         buildAssets,
                         feedConfig,
-                        AddAssetLocationToAssetAssetLocationType.NugetFeed);
+                        LocationType.NugetFeed);
 
                     await PushNugetPackageAsync(
                         feed,
@@ -1211,7 +1211,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         package.Version,
                         buildAssets,
                         feedConfig,
-                        AddAssetLocationToAssetAssetLocationType.NugetFeed);
+                        LocationType.NugetFeed);
 
                     using HttpClient httpClient = new HttpClient(new HttpClientHandler
                     {
@@ -1479,7 +1479,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         assetVersion: null,
                         buildAssets,
                         feedConfig,
-                        AddAssetLocationToAssetAssetLocationType.Container))
+                        LocationType.Container))
                     {
                         // Determine the local path to the blob
                         string fileName = Path.GetFileName(blob.Id);
@@ -1538,7 +1538,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         assetVersion: null,
                         buildAssets,
                         feedConfig,
-                        AddAssetLocationToAssetAssetLocationType.Container))
+                        LocationType.Container))
                     {
                         string temporaryBlobDirectory = CreateTemporaryDirectory();
                         string fileName = Path.GetFileName(blob.Id);
@@ -1793,7 +1793,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     assetVersion: null,
                     buildAssets,
                     feedConfig,
-                    AddAssetLocationToAssetAssetLocationType.Container);
+                    LocationType.Container);
             }
 
             using var clientThrottle = new SemaphoreSlim(MaxClients, MaxClients);
