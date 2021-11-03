@@ -183,8 +183,8 @@ for operation in operations:
     elif 'targetOS' in operation:
         custom_dimensions['target'] = targetOS
 
-    # TODO app_insights.send_metric('XHarnessOperation', exitCode, properties=custom_dimensions)
-    # TODO app_insights.send_metric('XHarnessOperationDuration', duration, properties=custom_dimensions)
+    app_insights.send_metric('XHarnessOperation', exitCode, properties=custom_dimensions)
+    app_insights.send_metric('XHarnessOperationDuration', duration, properties=custom_dimensions)
 
 # Retry / reboot is handled here
 
@@ -195,9 +195,7 @@ if os.path.exists('./.reboot'):
     reboot = True
 
 if retry:
-    # TODO request_infra_retry('Requesting work item retry because an infrastructure issue was detected on this machine')
-    print('Requesting work item retry because an infrastructure issue was detected on this machine')
+    request_infra_retry('Requesting work item retry because an infrastructure issue was detected on this machine')
 
 if reboot:
-    # TODO request_reboot('Requesting machine reboot as an infrastructure issue was detected on this machine')
-    print('Requesting machine reboot as an infrastructure issue was detected on this machine')
+    request_reboot('Requesting machine reboot as an infrastructure issue was detected on this machine')
