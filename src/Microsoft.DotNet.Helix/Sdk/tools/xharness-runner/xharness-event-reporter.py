@@ -37,10 +37,10 @@ def remove_android_apps():
 
     print('Removing installed apps after unsuccessful run')
 
-    adb_path = subprocess.check_output(['dotnet', 'xharness', 'android', 'state', '--adb']).decode('utf-8')
+    adb_path = subprocess.check_output(['dotnet', 'xharness', 'android', 'state', '--adb']).decode('utf-8').strip()
 
     # Get list of installed apps
-    installed_apps = subprocess.check_output([adb_path, 'shell', 'pm', 'list', 'packages', 'net.dot']).decode('utf-8').split('\n')
+    installed_apps = subprocess.check_output([adb_path, 'shell', 'pm', 'list', 'packages', 'net.dot']).decode('utf-8').splitlines()
     installed_apps = [app.split(':')[1] for app in installed_apps if app]
 
     # Remove all installed apps

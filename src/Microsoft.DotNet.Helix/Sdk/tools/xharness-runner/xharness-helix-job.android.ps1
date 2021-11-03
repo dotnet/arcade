@@ -44,7 +44,15 @@ if ($ev) {
     $process.WaitForExit()
     [Console]::Out.Flush()
     Write-Output "User command timed out after $command_timeout seconds!"
-    Remove-Apps
+
+    Write-Output "Removing installed apps after unsuccessful run"
+    $adb_path = & dotnet xharness android state --adb
+    $packages = & $adb_path shell pm list packages net.dot
+    $split_packages = $packages.split(':')
+    For ($i = 1; $i -lt $split_packages.Length; $i += 2) {
+        & $adb_path uninstall $split_packages[$i]
+    }
+
     exit -3
 } else {
     Write-Output "User command ended with $($process.ExitCode)"
