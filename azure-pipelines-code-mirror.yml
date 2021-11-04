@@ -48,7 +48,7 @@ jobs:
           targetType: inline
           workingDirectory: $(WorkingDirectoryName)
           script: |
-            git push azdo-mirror $(BranchToMirror) $(ExtraPushArgs)
+            git push azdo-mirror $(BranchToMirror) --tags $(ExtraPushArgs)
 
             if ($LASTEXITCODE -EQ 0) {
               Write-Host "Push was successful"
