@@ -18,7 +18,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             _log = log;
         }
 
-        public AddAssetLocationToAssetAssetLocationType LocationType => AddAssetLocationToAssetAssetLocationType.Container;
+        public LocationType LocationType => LocationType.Container;
 
         public abstract BlobClient CreateBlobClient(string blobPath);
 
