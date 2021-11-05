@@ -88,7 +88,7 @@
     <MicrosoftNetSdkWorkloadManifestReaderVersion>6.0.100-rtm.21515.10</MicrosoftNetSdkWorkloadManifestReaderVersion>
     <MicrosoftDeploymentDotNetReleasesVersion>1.0.0-preview1.1.21116.1</MicrosoftDeploymentDotNetReleasesVersion>
     
-    <!-- Use to flow Source Link version through Arcade SDK -->
+    <!-- Used to flow Source Link version through Arcade SDK -->
     <MicrosoftSourceLinkVersion>$(MicrosoftSourceLinkGitHubVersion)</MicrosoftSourceLinkVersion>
   </PropertyGroup>
 </Project>
