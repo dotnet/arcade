@@ -37,7 +37,7 @@
   DevDiv to DncEng](AzureDevOps/MovingFromDevDivToDncEng.md).
 - Onboard onto dependency flow (Darc). - See [Dependency Flow
   Onboarding](DependencyFlowOnboarding.md).
-- Use Helix for testing where possible - See [Sending Jobs to Helix](https://github.com/dotnet/arcade/blob/main/Documentation/AzureDevOps/SendingJobsToHelix.md)
+- Use [Helix](/Documentation/Helix.md) for testing where possible - See [Sending Jobs to Helix](https://github.com/dotnet/arcade/blob/main/Documentation/AzureDevOps/SendingJobsToHelix.md)
 
 ## Which branches should I make these changes in?
 
