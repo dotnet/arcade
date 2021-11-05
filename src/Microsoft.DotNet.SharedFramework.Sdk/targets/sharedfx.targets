@@ -360,7 +360,7 @@
   </Target>
 
   <Target Name="_CreatePlatformManifest" DependsOnTargets="_GenerateTemplatedPlatformManifest;_GeneratePlatformManifestFromRuntimePack"
-          Condition="'$(PlatformPackageType)' == 'TargetingPack' and '$(SkipGeneratingPlatformManifest)' == ''">
+          Condition="'$(PlatformPackageType)' == 'TargetingPack' and '$(CreatePlatformManifest)' != 'false'">
     <ItemGroup>
       <_PlatformManifestFile Include="$(IntermediateOutputPath)PlatformManifest.txt" TargetPath="data" GeneratedBuildFile="true" />
     </ItemGroup>
