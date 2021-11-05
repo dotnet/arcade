@@ -55,14 +55,17 @@ def remove_android_apps(device: str = None):
     # Remove all installed apps
     for app in installed_apps:
         print(f'        Removing {app}')
+        
+        try:
+            if device:
+                result = subprocess.run([adb_path, '-s', device, 'uninstall', app], stdout=subprocess.PIPE)
+            else:
+                result = subprocess.run([adb_path, 'uninstall', app], stderr=subprocess.STDOUT)
 
-        if device:
-            result = subprocess.run([adb_path, '-s', device, 'uninstall', app], stdout=subprocess.PIPE)
-        else:
-            result = subprocess.run([adb_path, 'uninstall', app], stderr=subprocess.STDOUT)
-
-        output = result.stdout.decode('utf8')
-        print(f'            {output}')
+            output = result.stdout.decode('utf8')
+            print(f'            {output}')
+        except Exception as e:
+            print(f'            Failed to remove app: {e}')
 
 def analyze_operation(command: str, platform: str, device: str, isDevice: bool, target: str, exitCode: int):
     """ Analyzes the result and requests retry/reboot in case of an infra failure
