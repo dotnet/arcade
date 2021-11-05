@@ -64,8 +64,6 @@ organization. If that is not the case, you will need to specify `GitHubOrg` as w
    [repo modification ticket](https://aka.ms/ceChangeLocConfig)
    with the loc team to let them know to retarget the branch.
 
-
-
 ## Releasing with OneLocBuild Using Arcade
 
 **Note: The SLA for translations is one week. Please allow at least two weeks from the release for this process.**
@@ -87,9 +85,15 @@ If you're releasing from any other branch (including servicing branches), you mu
 3. Merge the OneLocBuild PRs to your release branch.
 4. After the release, open another repo modification ticket to re-target your repository to the `main` branch again.
 
+# Common Issues
+
 ## Filing Issues for Translation Issues
 
 File a translation issue ticket with the localization team (see documentation [here](https://dev.azure.com/ceapex/CEINTL/_wiki/wikis/CEINTL.wiki/1361/Provide-Enough-Information-in-DevRel-Feedback-Ticket)).
+
+## Leaving Comments for Translators
+
+Sometimes the proper solution to translation issues is to give the translators context for their work. This can be done easily in RESX files (which will be carried over to the XLF files by xliff-tasks) or in JSON files directly. For more information on how to leave translation comments, see the documentation [here](https://aka.ms/commenting).
 
 # Technical Documentation
 
@@ -145,10 +149,11 @@ The most basic structure for calling the OneLocBuild template is:
 
 ```yaml
 jobs:
-- template: /eng/common/templates/job/onelocbuild.yml
-  parameters:
-    LclSource: lclFilesfromPackage
-    LclPackageId: 'LCL-PACKAGE-ID'
+- ${{ if and(ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest'), eq(variables['Build.SourceBranch'], 'refs/heads/main')) }}:
+  - template: /eng/common/templates/job/onelocbuild.yml
+    parameters:
+      LclSource: lclFilesfromPackage
+      LclPackageId: 'LCL-PACKAGE-ID'
 ```
 
 The parameters that can be passed to the template are as follows:
@@ -159,6 +164,7 @@ The parameters that can be passed to the template are as follows:
 | `SourcesDirectory` | `$(Build.SourcesDirectory)` | This is the root directory for your repository source code. |
 | `CreatePr` | `true` | When set to `true`, instructs the OneLocBuild task to make a PR back to the source repository containing the localized files. |
 | `AutoCompletePr` | `false` | When set to `true`, instructs the OneLocBuild task to autocomplete the created PR. Requires permissions to bypass any checks on the main branch. |
+| `ReusePr` | `true` | When set to `true`, instructs the OneLocBuild task to update an existing PR (if one exists) rather than open a new one to reduce PR noise. |
 | `UseLfLineEndings` | `true` | When set to `true`, instructs the OneLocBuild task to use LF line endings during check-in rather than CRLF. |
 | `GitHubOrg` | `'dotnet'` | The GitHub organization to be used when making a PR (only used when using a mirrored repository). |
 | `MirrorRepo` | `''` | The name of the GitHub repository to make a PR to (only used when using a mirrored repository). |

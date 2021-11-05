@@ -30,10 +30,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         private SleetSource source;
         private bool hasToken = false;
 
-        private string AccountName { get; set; }
-        public string AccountKey { get; set; }
-        private string ContainerName { get; set; }
-        public string RelativePath { get; set; }
+        public string AccountName { get; }
+        public string AccountKey { get; }
+        public string ContainerName { get; }
+        public string RelativePath { get; }
 
         public BlobFeedAction(string expectedFeedUrl, string accountKey, MSBuild.TaskLoggingHelper Log)
         {

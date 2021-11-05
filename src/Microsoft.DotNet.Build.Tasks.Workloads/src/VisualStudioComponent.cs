@@ -249,7 +249,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             // processing direct pack dependencies
             if (workload.Extends?.Count() > 0)
             {
-                foreach (WorkloadDefinitionId dependency in workload.Extends)
+                foreach (WorkloadId dependency in workload.Extends)
                 {
                     // Component dependencies, aka. workload extensions only have minimum version dependencies.
                     component.AddDependency($"{Utils.ToSafeId(dependency.ToString())}", new Version("1.0.0.0"), maxVersion: null);

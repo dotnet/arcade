@@ -3,6 +3,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using Microsoft.Extensions.Azure;
 
@@ -13,6 +14,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
     /// </summary>
     public class TargetFeedConfig
     {
+        /// <summary>
+        ///   Returns the TargetURL stripped of SAS token so it can be used for logging purposes.
+        /// </summary>
+        public string SafeTargetURL => new UriBuilder(TargetURL) {Query = "", Fragment = ""}.Uri.AbsoluteUri;
+
         public TargetFeedContentType ContentType { get; }
 
         public string TargetURL { get; }
@@ -52,7 +58,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
 
         public SymbolTargetType SymbolTargetType { get; }
 
-        public List<string> FilenamesToExclude { get; }
+        public ImmutableList<string> FilenamesToExclude { get; }
 
         public bool Flatten { get; }
 
@@ -66,7 +72,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             bool @internal = false, 
             bool allowOverwrite = false, 
             SymbolTargetType symbolTargetType = SymbolTargetType.None, 
-            List<string> filenamesToExclude = null,
+            IEnumerable<string> filenamesToExclude = null,
             bool flatten = true)
         {
             ContentType = contentType;
@@ -79,7 +85,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             AllowOverwrite = allowOverwrite;
             LatestLinkShortUrlPrefix = latestLinkShortUrlPrefix ?? string.Empty;
             SymbolTargetType = symbolTargetType;
-            FilenamesToExclude = filenamesToExclude ?? new List<string>();
+            FilenamesToExclude = filenamesToExclude?.ToImmutableList() ?? ImmutableList<string>.Empty;
             Flatten = flatten;
         }
 
@@ -125,7 +131,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 $"\n Internal? '{Internal}' " +
                 $"\n AllowOverwrite? '{AllowOverwrite}' " +
                 $"\n ShortUrlPrefix: '{LatestLinkShortUrlPrefix}' " +
-                $"\n TargetURL: '{TargetURL}'" +
+                $"\n TargetURL: '{SafeTargetURL}'" +
                 $"\n FilenamesToExclude: \n\t{string.Join("\n\t", FilenamesToExclude)}" +
                 $"\n Flatten: '{Flatten}'";
         }
@@ -164,7 +170,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
     public enum FeedType
     {
         AzDoNugetFeed,
-        AzureStorageFeed
+        AzureStorageFeed,
+        AzureStorageContainer,
     }
 
     /// <summary>

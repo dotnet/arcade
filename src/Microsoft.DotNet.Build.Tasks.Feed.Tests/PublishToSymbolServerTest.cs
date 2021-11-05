@@ -82,7 +82,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         }
 
         [Fact]
-        public void TemporarySymbolDirectoryDoesNotExists()
+        public async Task TemporarySymbolDirectoryDoesNotExists()
         {
             var buildEngine = new MockBuildEngine();
             var task = new PublishArtifactsInManifestV3()
@@ -91,7 +91,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             };
             var path = TestInputs.GetFullPath("Symbol");
             var buildAsset = new Dictionary<string, HashSet<Asset>>();
-            var publish = task.HandleSymbolPublishingAsync(path, MsdlToken, SymWebToken, "", false, buildAsset, null, path);
+            await task.HandleSymbolPublishingAsync(path, MsdlToken, SymWebToken, "", false, buildAsset, null, path);
             Assert.True(task.Log.HasLoggedErrors);
         }
 
@@ -113,7 +113,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
         [Fact]
         public void PublishSymbolApiIsCalledTest()
         {
-            var publishTask = new PublishArtifactsInManifestV3();
             var path = TestInputs.GetFullPath("Symbols");
             string[] fileEntries = Directory.GetFiles(path);
             var feedConfigsForSymbols = new HashSet<TargetFeedConfig>();
@@ -128,21 +127,21 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
                 @internal: false,
                 allowOverwrite: true,
                 SymbolTargetType.SymWeb));
-            Dictionary<string, string> test =
-                publishTask.GetTargetSymbolServers(feedConfigsForSymbols, MsdlToken, SymWebToken);
-            Assert.True(PublishSymbolsHelper.PublishAsync(null,
-                path,
-                SymWebToken,
-                fileEntries,
-                fileEntries,
-                null,
-                365,
-                false,
-                false,
-                null,
-                false,
-                false,
-                false).IsCompleted);
+            Assert.True(PublishSymbolsHelper.PublishAsync(
+                log: null,
+                symbolServerPath: path,
+                personalAccessToken: SymWebToken,
+                inputPackages: fileEntries,
+                inputFiles: fileEntries,
+                packageExcludeFiles: null,
+                expirationInDays: 365,
+                convertPortablePdbsToWindowsPdbs: false,
+                publishSpecialClrFiles: false,
+                pdbConversionTreatAsWarning: null,
+                treatPdbConversionIssuesAsInfo: false,
+                dryRun: false,
+                timer: false,
+                verboseLogging: false).IsCompleted);
         }
 
         [Fact]

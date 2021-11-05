@@ -23,8 +23,9 @@ namespace Microsoft.DotNet.Helix.Sdk
             public const string ApkPath = "ApkPath";
         }
 
-        private const string PosixAndroidWrapperScript = "xharness-helix-job.android.sh";
-        private const string NonPosixAndroidWrapperScript = "xharness-helix-job.android.ps1";
+        private const string PosixAndroidScript = "xharness-helix-job.android.sh";
+        private const string NonPosixAndroidScript = "xharness-helix-job.android.ps1";
+        private const string NonPosixAndroidWrapperScript = "xharness-runner.android.ps1";
 
         /// <summary>
         /// Boolean true if this is a posix shell, false if not.
@@ -105,7 +106,13 @@ namespace Microsoft.DotNet.Helix.Sdk
                 apkName = apkName.Replace(".zip", ".apk");
             }
 
-            string command = GetHelixCommand(appPackage, apkName, androidPackageName, testTimeout, expectedExitCode);
+            string command = GetHelixCommand(appPackage, apkName, androidPackageName, workItemTimeout, testTimeout, expectedExitCode);
+
+            if (!IsPosixShell)
+            {
+                // For windows, we need to add a .ps1 header to turn the script into a cmdlet
+                customCommands = WrapCustomCommands(customCommands);
+            }
 
             string workItemZip = await CreatePayloadArchive(
                 zipArchiveManager,
@@ -119,7 +126,7 @@ namespace Microsoft.DotNet.Helix.Sdk
                 {
                     // WorkItem payloads of APKs can be reused if sent to multiple queues at once,
                     // so we'll always include both scripts (very small)
-                    PosixAndroidWrapperScript, NonPosixAndroidWrapperScript
+                    PosixAndroidScript, NonPosixAndroidScript
                 });
 
             return CreateTaskItem(workItemName, workItemZip, command, workItemTimeout);
@@ -150,12 +157,18 @@ namespace Microsoft.DotNet.Helix.Sdk
                 $"{ devOutArg } { instrumentationArg } { exitCodeArg } { extraArguments } { passthroughArgs }";
         }
 
-        private string GetHelixCommand(ITaskItem appPackage, string apkName, string androidPackageName, TimeSpan xHarnessTimeout, int expectedExitCode)
+        private string GetHelixCommand(
+            ITaskItem appPackage,
+            string apkName,
+            string androidPackageName,
+            TimeSpan workItemTimeout,
+            TimeSpan xHarnessTimeout,
+            int expectedExitCode)
         {
             appPackage.TryGetMetadata(MetadataNames.AndroidInstrumentationName, out string androidInstrumentationName);
             appPackage.TryGetMetadata(MetadataNames.DeviceOutputPath, out string deviceOutputPath);
 
-            string wrapperScriptName = IsPosixShell ? PosixAndroidWrapperScript : NonPosixAndroidWrapperScript;
+            string wrapperScriptName = IsPosixShell ? PosixAndroidScript : NonPosixAndroidScript;
             string xharnessHelixWrapperScript = IsPosixShell ? $"chmod +x ./{wrapperScriptName} && ./{wrapperScriptName}"
                                                              : $"powershell -ExecutionPolicy ByPass -NoProfile -File \"{wrapperScriptName}\"";
 
@@ -163,6 +176,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             string dash = IsPosixShell ? "--" : "-";
             string xharnessRunCommand = $"{xharnessHelixWrapperScript} " +
                 $"{dash}app \"{apkName}\" " +
+                $"{dash}command_timeout {(int)workItemTimeout.TotalSeconds} " +
                 $"{dash}timeout \"{xHarnessTimeout}\" " +
                 $"{dash}package_name \"{androidPackageName}\" " +
                 (expectedExitCode != 0 ? $" {dash}expected_exit_code \"{expectedExitCode}\" " : string.Empty) +
@@ -172,6 +186,14 @@ namespace Microsoft.DotNet.Helix.Sdk
             Log.LogMessage(MessageImportance.Low, $"Generated XHarness command: {xharnessRunCommand}");
 
             return xharnessRunCommand;
+        }
+
+        private static string WrapCustomCommands(string customCommands)
+        {
+            using Stream stream = ZipArchiveManager.GetResourceFileContent<CreateXHarnessAndroidWorkItems>(
+                ScriptNamespace + NonPosixAndroidWrapperScript);
+            using StreamReader reader = new(stream);
+            return reader.ReadToEnd().Replace("<#%%USER COMMANDS%%#>", customCommands);
         }
     }
 }

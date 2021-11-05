@@ -12,6 +12,9 @@ namespace Microsoft.Arcade.Common
 {
     public class ZipArchiveManager : IZipArchiveManager
     {
+        public ZipArchive OpenArchive(string archivePath, ZipArchiveMode mode)
+            => ZipFile.Open(archivePath, mode);
+
         public async Task AddResourceFileToArchive<TAssembly>(string archivePath, string resourceName, string targetFileName = null)
         {
             using Stream fileStream = GetResourceFileContent<TAssembly>(resourceName);
@@ -54,7 +57,7 @@ namespace Microsoft.Arcade.Common
             await content.CopyToAsync(targetStream);
         }
 
-        private static Stream GetResourceFileContent<TAssembly>(string resourceFileName)
+        public static Stream GetResourceFileContent<TAssembly>(string resourceFileName)
         {
             Assembly assembly = typeof(TAssembly).Assembly;
             return assembly.GetManifestResourceStream($"{assembly.GetName().Name}.{resourceFileName}");

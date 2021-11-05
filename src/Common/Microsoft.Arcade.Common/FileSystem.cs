@@ -33,7 +33,7 @@ namespace Microsoft.Arcade.Common
             File.WriteAllText(path, content);
         }
 
-        public void FileCopy(string sourceFileName, string destFileName) => File.Copy(sourceFileName, destFileName);
+        public void CopyFile(string sourceFileName, string destFileName, bool overwrite = false) => File.Copy(sourceFileName, destFileName, overwrite);
 
         public Stream GetFileStream(string path, FileMode mode, FileAccess access) => new FileStream(path, mode, access);
 

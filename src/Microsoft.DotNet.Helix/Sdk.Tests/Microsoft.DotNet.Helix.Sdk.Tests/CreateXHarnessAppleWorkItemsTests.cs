@@ -79,7 +79,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
 
             var workItem = _task.WorkItems.First();
             workItem.GetMetadata("Identity").Should().Be("System.Foo");
-            workItem.GetMetadata("Timeout").Should().Be("00:15:42");
+            workItem.GetMetadata("Timeout").Should().Be("00:16:02");
 
             var payloadArchive = workItem.GetMetadata("PayloadArchive");
             payloadArchive.Should().NotBeNullOrEmpty();
@@ -92,7 +92,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             command.Should().Contain("--launch-timeout \"00:02:33\"");
 
             _profileProvider
-                .Verify(x => x.AddProfilesToBundles(It.Is<ITaskItem[]>(bundles => bundles.Any(b => b.ItemSpec == "/apps/System.Foo.app"))), Times.Once);
+                .Verify(x => x.AddProfileToPayload(payloadArchive, "ios-device_13.5"), Times.Once);
             _zipArchiveManager
                 .Verify(x => x.ArchiveDirectory("/apps/System.Foo.app", payloadArchive, true), Times.Once);
             _zipArchiveManager
@@ -133,6 +133,9 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             payloadArchive.Should().NotBeNullOrEmpty();
             _fileSystem.FileExists(payloadArchive).Should().BeTrue();
             _fileSystem.RemovedFiles.Should().Contain(payloadArchive);
+
+            var command = workItem.GetMetadata("Command");
+            command.Should().Contain("--launch-timeout \"00:02:00\"");
         }
 
         [Fact]
@@ -170,7 +173,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             _task.ConfigureServices(collection);
             _task.AppBundles = new[]
             {
-                CreateAppBundle("item-1", "ios-simulator-64_13.5", appBundlePath: "apps/System.Foo.app"),
+                CreateAppBundle("item-1", "ios-device_13.5", appBundlePath: "apps/System.Foo.app"),
                 CreateAppBundle("item-2", "ios-simulator-64_13.6", appBundlePath: "apps/System.Foo.app"),
             };
 
@@ -182,25 +185,27 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             _task.WorkItems.Length.Should().Be(2);
             _fileSystem.RemovedFiles.Should().BeEmpty();
 
-            var workItem1 = _task.WorkItems.Last();
-            workItem1.GetMetadata("Identity").Should().Be("item-2");
+            var workItem1 = _task.WorkItems.First();
+            workItem1.GetMetadata("Identity").Should().Be("item-1");
 
             var payloadArchive = workItem1.GetMetadata("PayloadArchive");
             payloadArchive.Should().NotBeNullOrEmpty();
             _fileSystem.FileExists(payloadArchive).Should().BeTrue();
 
             var command = workItem1.GetMetadata("Command");
-            command.Should().Contain("--target \"ios-simulator-64_13.6\"");
+            command.Should().Contain("--target \"ios-device_13.5\"");
+            command.Should().Contain("--launch-timeout \"00:05:00\"");
 
-            var workItem2 = _task.WorkItems.First();
-            workItem2.GetMetadata("Identity").Should().Be("item-1");
+            var workItem2 = _task.WorkItems.Last();
+            workItem2.GetMetadata("Identity").Should().Be("item-2");
 
             payloadArchive = workItem2.GetMetadata("PayloadArchive");
             payloadArchive.Should().NotBeNullOrEmpty();
             _fileSystem.FileExists(payloadArchive).Should().BeTrue();
 
             command = workItem2.GetMetadata("Command");
-            command.Should().Contain("--target \"ios-simulator-64_13.5\"");
+            command.Should().Contain("--target \"ios-simulator-64_13.6\"");
+            command.Should().Contain("--launch-timeout \"00:02:00\"");
         }
 
         [Fact]
@@ -225,7 +230,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
 
             var workItem = _task.WorkItems.First();
             workItem.GetMetadata("Identity").Should().Be("System.Foo");
-            workItem.GetMetadata("Timeout").Should().Be("00:15:42");
+            workItem.GetMetadata("Timeout").Should().Be("00:16:02");
 
             var payloadArchive = workItem.GetMetadata("PayloadArchive");
             payloadArchive.Should().NotBeNullOrEmpty();
@@ -238,7 +243,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             command.Should().Contain("--launch-timeout \"00:02:33\"");
 
             _profileProvider
-                .Verify(x => x.AddProfilesToBundles(It.Is<ITaskItem[]>(bundles => bundles.Any(b => b.ItemSpec == "/apps/System.Foo.zip"))), Times.Once);
+                .Verify(x => x.AddProfileToPayload(payloadArchive, "ios-device_13.5"), Times.Once);
             _zipArchiveManager
                 .Verify(x => x.ArchiveDirectory("/apps/System.Foo.app", payloadArchive, true), Times.Never);
             _zipArchiveManager

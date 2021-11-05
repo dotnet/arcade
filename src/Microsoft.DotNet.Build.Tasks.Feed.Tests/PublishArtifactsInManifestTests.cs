@@ -30,33 +30,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
 
         // This test should be refactored: https://github.com/dotnet/arcade/issues/6715
         [Fact]
-        public void ConstructV2PublishingTask()
-        {
-            var manifestFullPath = TestInputs.GetFullPath(Path.Combine("Manifests", "SampleV2.xml"));
-
-            var buildEngine = new MockBuildEngine();
-            var task = new PublishArtifactsInManifest()
-            {
-                BuildEngine = buildEngine,
-                TargetChannels = GeneralTestingChannelId
-            };
-
-            // Dependency Injection setup
-            var collection = new ServiceCollection()
-                .AddSingleton<IFileSystem, FileSystem>()
-                .AddSingleton<IBuildModelFactory, BuildModelFactory>();
-            task.ConfigureServices(collection);
-            using var provider = collection.BuildServiceProvider();
-
-            // Act and Assert
-            task.InvokeExecute(provider);
-
-            var which = task.WhichPublishingTask(manifestFullPath);
-            which.Should().BeOfType<PublishArtifactsInManifestV2>();
-        }
-
-        // This test should be refactored: https://github.com/dotnet/arcade/issues/6715
-        [Fact]
         public void ConstructV3PublishingTask()
         {
             var manifestFullPath = TestInputs.GetFullPath(Path.Combine("Manifests", "SampleV3.xml"));
@@ -136,7 +109,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Tests
             await task.ParseTargetFeedConfigAsync();
             task.Log.HasLoggedErrors.Should().BeTrue();
             buildEngine.BuildErrorEvents.Should().Contain(e =>
-                e.Message.Equals("Invalid feed config type 'MyUnknownFeedType'. Possible values are: AzDoNugetFeed, AzureStorageFeed"));
+                e.Message.Equals("Invalid feed config type 'MyUnknownFeedType'. Possible values are: AzDoNugetFeed, AzureStorageFeed, AzureStorageContainer"));
         }
 
         [Fact]

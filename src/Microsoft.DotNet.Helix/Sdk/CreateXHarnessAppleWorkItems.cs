@@ -29,7 +29,10 @@ namespace Microsoft.DotNet.Helix.Sdk
         private const string EntryPointScript = "xharness-helix-job.apple.sh";
         private const string RunnerScript = "xharness-runner.apple.sh";
 
-        private static readonly TimeSpan s_defaultLaunchTimeout = TimeSpan.FromMinutes(10);
+        // We have a more aggressive timeout towards simulators which tend to slow down until installation takes 20 minutes and the machine needs a reboot
+        // For this reason, it's better to be aggressive and detect a slower machine sooner
+        private static readonly TimeSpan s_defaultSimulatorLaunchTimeout = TimeSpan.FromMinutes(2);
+        private static readonly TimeSpan s_defaultDeviceLaunchTimeout = TimeSpan.FromMinutes(5);
 
         /// <summary>
         /// An array of one or more paths to iOS/tvOS app bundles (folders ending with ".app" usually)
@@ -73,8 +76,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             IZipArchiveManager zipArchiveManager,
             IFileSystem fileSystem)
         {
-            provisioningProfileProvider.AddProfilesToBundles(AppBundles);
-            var tasks = AppBundles.Select(bundle => PrepareWorkItem(zipArchiveManager, fileSystem, bundle));
+            var tasks = AppBundles.Select(bundle => PrepareWorkItem(zipArchiveManager, fileSystem, provisioningProfileProvider, bundle));
 
             WorkItems = Task.WhenAll(tasks).GetAwaiter().GetResult().Where(wi => wi != null).ToArray();
 
@@ -89,6 +91,7 @@ namespace Microsoft.DotNet.Helix.Sdk
         private async Task<ITaskItem> PrepareWorkItem(
             IZipArchiveManager zipArchiveManager,
             IFileSystem fileSystem,
+            IProvisioningProfileProvider provisioningProfileProvider,
             ITaskItem appBundleItem)
         {
             var (workItemName, appFolderPath) = GetNameAndPath(appBundleItem, MetadataNames.AppBundlePath, fileSystem);
@@ -107,6 +110,17 @@ namespace Microsoft.DotNet.Helix.Sdk
                 Log.LogError($"App bundle not found in {appFolderPath}");
                 return null;
             }
+
+            // If we are re-using one .zip for multiple work items, we need to copy it to a new location
+            // because we will be changing the contents (we assume we don't mind otherwise)
+            if (isAlreadyArchived && appBundleItem.TryGetMetadata(MetadataNames.AppBundlePath, out string metadata) && !string.IsNullOrEmpty(metadata))
+            {
+                string appFolderDirectory = fileSystem.GetDirectoryName(appFolderPath);
+                string fileName = $"xharness-payload-{workItemName.ToLowerInvariant()}.zip";
+                string archiveCopyPath = fileSystem.PathCombine(appFolderDirectory, fileName);
+                fileSystem.CopyFile(appFolderPath, archiveCopyPath, overwrite: true);
+                appFolderPath = archiveCopyPath;
+            }
             
             var (testTimeout, workItemTimeout, expectedExitCode, customCommands) = ParseMetadata(appBundleItem);
 
@@ -121,7 +135,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             target = target.ToLowerInvariant();
 
             // Optional timeout for the how long it takes for the app to be installed, booted and tests start executing
-            TimeSpan launchTimeout = s_defaultLaunchTimeout;
+            TimeSpan launchTimeout = target.Contains("device") ? s_defaultDeviceLaunchTimeout : s_defaultSimulatorLaunchTimeout;
             if (appBundleItem.TryGetMetadata(MetadataNames.LaunchTimeout, out string launchTimeoutProp))
             {
                 if (!TimeSpan.TryParse(launchTimeoutProp, out launchTimeout) || launchTimeout.Ticks < 0)
@@ -142,7 +156,7 @@ namespace Microsoft.DotNet.Helix.Sdk
 
             if (includesTestRunner && expectedExitCode != 0 && customCommands != null)
             {
-                Log.LogWarning("The ExpectedExitCode property is ignored in the `apple test` scenario");
+                Log.LogWarning($"The {MetadataName.ExpectedExitCode} property is ignored in the `apple test` scenario");
             }
 
             bool resetSimulator = false;
@@ -157,11 +171,11 @@ namespace Microsoft.DotNet.Helix.Sdk
             if (customCommands == null)
             {
                 // When no user commands are specified, we add the default `apple test ...` command
-                customCommands = GetDefaultCommand(target, includesTestRunner, resetSimulator);
+                customCommands = GetDefaultCommand(includesTestRunner, resetSimulator);
             }
 
             string appName = isAlreadyArchived ? $"{fileSystem.GetFileNameWithoutExtension(appFolderPath)}.app" : fileSystem.GetFileName(appFolderPath);
-            string helixCommand = GetHelixCommand(appName, target, testTimeout, launchTimeout, includesTestRunner, expectedExitCode, resetSimulator);
+            string helixCommand = GetHelixCommand(appName, target, workItemTimeout, testTimeout, launchTimeout, includesTestRunner, expectedExitCode, resetSimulator);
             string payloadArchivePath = await CreatePayloadArchive(
                 zipArchiveManager,
                 fileSystem,
@@ -171,6 +185,8 @@ namespace Microsoft.DotNet.Helix.Sdk
                 appFolderPath,
                 customCommands,
                 new[] { EntryPointScript, RunnerScript });
+
+            provisioningProfileProvider.AddProfileToPayload(payloadArchivePath, target);
 
             return CreateTaskItem(workItemName, payloadArchivePath, helixCommand, workItemTimeout);
         }
@@ -183,7 +199,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             return isAlreadyArchived ? fileSystem.FileExists(appBundlePath) : fileSystem.DirectoryExists(appBundlePath);
         }
 
-        private string GetDefaultCommand(string target, bool includesTestRunner, bool resetSimulator) =>
+        private string GetDefaultCommand(bool includesTestRunner, bool resetSimulator) =>
             $"xharness apple {(includesTestRunner ? "test" : "run")} " +
             "--app \"$app\" " +
             "--output-directory \"$output_directory\" " +
@@ -195,12 +211,12 @@ namespace Microsoft.DotNet.Helix.Sdk
                 ? $"--launch-timeout \"$launch_timeout\" "
                 : $"--expected-exit-code $expected_exit_code ") +
             (resetSimulator ? $"--reset-simulator " : string.Empty) +
-            (target.Contains("device") ? $"--signal-app-end " : string.Empty) + // iOS/tvOS 14+ workaround
             (!string.IsNullOrEmpty(AppArguments) ? "-- " + AppArguments : string.Empty);
 
         private string GetHelixCommand(
             string appName,
             string target,
+            TimeSpan workItemTimeout,
             TimeSpan testTimeout,
             TimeSpan launchTimeout,
             bool includesTestRunner,
@@ -210,6 +226,7 @@ namespace Microsoft.DotNet.Helix.Sdk
             $"chmod +x {EntryPointScript} && ./{EntryPointScript} " +
             $"--app \"{appName}\" " +
             $"--target \"{target}\" " +
+            $"--command-timeout {(int)workItemTimeout.TotalSeconds} " +
             $"--timeout \"{testTimeout}\" " +
             $"--launch-timeout \"{launchTimeout}\" " +
             (includesTestRunner ? "--includes-test-runner " : string.Empty) +

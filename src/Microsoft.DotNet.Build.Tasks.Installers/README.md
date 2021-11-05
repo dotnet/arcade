@@ -23,6 +23,8 @@ If you have files that need to have a stabilized identity in the MSI file, you c
 
 If you want to create MSIs for the target RID that target other architecture install locations, you can add `CrossArchSdkMsiInstallerArch` items for all of the target architecture install locations you want to generate installers of the current build for.
 
+To control the order in which an older product is removed during an upgrade, set the `MajorUpgradeSchedule` property to a value defined [here](https://wixtoolset.org/documentation/manual/v3/xsd/wix/majorupgrade.html).  The default is `afterInstallInitialize`.
+
 ### Linux package configuration
 
 To add package dependencies for linux packages, add a `LinuxPackageDependency` item with the version in the `Version` metadata.

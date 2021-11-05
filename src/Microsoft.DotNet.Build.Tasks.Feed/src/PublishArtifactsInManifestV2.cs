@@ -93,7 +93,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     string feedKey = fc.GetMetadata(nameof(Model.TargetFeedConfig.Token));
                     string type = fc.GetMetadata(nameof(Model.TargetFeedConfig.Type));
                     AssetSelection assetSelection = AssetSelection.All;
-                    bool isInternalFeed = false;
+                    bool isInternalFeed;
                     bool isIsolatedFeed = false;
                     bool isOverridableFeed = false;
 
@@ -219,6 +219,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     FeedConfigs[categoryKey].Add(feedConfig);
                 }
             }
+        }
+
+        public PublishArtifactsInManifestV2(AssetPublisherFactory assetPublisherFactory = null) : base(assetPublisherFactory)
+        {
         }
     }
 }

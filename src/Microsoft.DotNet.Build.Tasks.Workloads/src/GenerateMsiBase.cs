@@ -267,6 +267,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                 // Add WiX extensions
                 light.Extensions.Add("WixDependencyExtension");
                 light.Extensions.Add("WixUIExtension");
+                light.Extensions.Add("WixUtilExtension");
 
                 if (!light.Execute())
                 {
@@ -367,6 +368,11 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             if (!string.IsNullOrWhiteSpace(nupkg.Copyright))
             {
                 writer.WriteElementString("Copyright", nupkg.Copyright);
+            }
+
+            if (!string.IsNullOrWhiteSpace(nupkg.ProjectUrl))
+            {
+                writer.WriteElementString("PackageProjectUrl", nupkg.ProjectUrl);
             }
 
             writer.WriteElementString("PackageLicenseExpression", "MIT");

@@ -786,7 +786,7 @@ $@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "CoreLibCr
 $@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "4", "ABCDEFG/MsiSetup.msi"))}"">
   <Authenticode>Microsoft400</Authenticode>
 </FilesToSign>",
-$@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "engines\\MsiBootstrapper.exe-engine.exe"))}"">
+$@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "engines\\0\\MsiBootstrapper.exe-engine.exe"))}"">
   <Authenticode>Microsoft400</Authenticode>
 </FilesToSign>",
 $@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "4", "MsiBootstrapper.exe"))}"">
@@ -1195,7 +1195,7 @@ $@"
 $@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "ContainerSigning", "0", "ABCDEFG/MsiSetup.msi"))}"">
   <Authenticode>Microsoft400</Authenticode>
 </FilesToSign>",
- $@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "engines", "MsiBootstrapper.exe-engine.exe"))}"">
+ $@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "engines", "0", "MsiBootstrapper.exe-engine.exe"))}"">
   <Authenticode>Microsoft400</Authenticode>
 </FilesToSign>",
  $@"<FilesToSign Include=""{Uri.EscapeDataString(Path.Combine(_tmpDir, "MsiBootstrapper.exe"))}"">

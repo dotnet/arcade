@@ -1,9 +1,9 @@
 # Microsoft.DotNet.Helix.Sdk
 
-This Package provides Helix Job sending functionality from an MSBuild project file.
+This Package provides Helix Job-sending functionality from an MSBuild project file.
 
 ## Examples
-Each of the following examples require dotnet-cli >= 2.1.300 and need the following files in a directory at or above the example project's directory.
+Each of the following examples require dotnet-cli >= 3.1.x, and need the following files in a directory at or above the example project's directory.
 #### NuGet.config
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
@@ -66,7 +66,7 @@ In order to run them, one has to publish the SDK locally so that the unit tests 
     export SYSTEM_TEAMPROJECT=dnceng
     export SYSTEM_ACCESSTOKEN=''
 
-    eng/common/build.sh -test -projects tests/XHarness.Apple.Device.Tests /v:n /bl:Arcade.binlog
+    eng/common/build.sh -test -projects tests/XHarness.Apple.DeviceTests.proj /v:n /bl:Arcade.binlog
     ```
 
     PowerShell
@@ -77,7 +77,7 @@ In order to run them, one has to publish the SDK locally so that the unit tests 
     $Env:SYSTEM_TEAMPROJECT = "dnceng"
     $Env:SYSTEM_ACCESSTOKEN = ""
 
-    .\eng\common\build.ps1 -configuration Debug -restore -test -projects tests\XHarness.Apple.Device.Tests /p:RestoreUsingNugetTargets=false /bl:Arcade.binlog
+    .\eng\common\build.ps1 -configuration Debug -restore -test -projects tests\XHarness.Apple.DeviceTests.proj /p:RestoreUsingNugetTargets=false /bl:Arcade.binlog
     ```
 5. An MSBuild log file called `Arcade.binlog` will be produced which you can inspect using the [MSBuild Structured Log Viewer](https://msbuildlog.com/). There you can see which props were set with which values, in what order the targets were executed under which conditions and so on.
 
@@ -149,13 +149,21 @@ Given a local folder `$(TestFolder)` containing `runtests.cmd`, this will run `r
     <!-- The helix queue this job should run on. -->
     <HelixTargetQueue>Windows.10.Amd64.Open</HelixTargetQueue>
 
+    <!-- Whether to fail the build if any Helix queues supplied don't exist.
+         If set to false, sending to non-existent Helix Queues will only print a warning. Defaults to true. 
+         Only set this to false if losing this coverage when the target queue is deprecated is acceptable.
+         For any job waiting on runs, this will still cause failure if all queues do not exist as there must be
+         one or more runs started for waiting to not log errors.  Only set if you need it.
+    -->
+    <FailOnMissingTargetQueue>false</FailOnMissingTargetQueue>
+
     <!--
       The set of helix queues to send jobs to.
       This property is multiplexed over just like <TargetFrameworks> for C# projects.
       The project is built once per entry in this list with <HelixTargetQueue> set to the current list element value.
       Note that all payloads sent need to be able to run on all variations included.
     -->
-    <HelixTargetQueues>Ubuntu.1804.Amd64.Open;Ubuntu.1604.Amd64.Open;(Alpine.39.Amd64)Ubuntu.1604.Amd64.Open@mcr.microsoft.com/dotnet-buildtools/prereqs:alpine-3.9-helix-bfcd90a-20200123191053</HelixTargetQueues>
+    <HelixTargetQueues>Ubuntu.1804.Amd64.Open;Ubuntu.1604.Amd64.Open;(Alpine.39.Amd64)Ubuntu.1804.Amd64.Open@mcr.microsoft.com/dotnet-buildtools/prereqs:alpine-3.9-helix-bfcd90a-20200123191053</HelixTargetQueues>
 
     <!-- 'true' to download dotnet cli and add it to the path for every workitem. Default 'false' -->
     <IncludeDotNetCli>true</IncludeDotNetCli>
@@ -170,19 +178,6 @@ Given a local folder `$(TestFolder)` containing `runtests.cmd`, this will run `r
     <EnableAzurePipelinesReporter>false</EnableAzurePipelinesReporter>
     <!-- 'true' to produce a build error when tests fail. Default 'true' -->
     <FailOnTestFailure>true</FailOnTestFailure>
-
-    <!--
-      'true' to enable the xunit reporter. Default 'false'
-      The xunit reporter will report test results from a test results
-      xml file found in the work item working directory.
-      The following file names are accepted:
-        testResults.xml
-        test-results.xml
-        test_results.xml
-    -->
-    <EnableXUnitReporter>false</EnableXUnitReporter>
-    <!-- Instruct the sdk to wait for test result ingestion by MC, and fail if there are any failed work items or tests. -->
-    <FailOnMissionControlTestFailure>false</FailOnMissionControlTestFailure>
 
     <!--
       Commands that are run before each workitem's command
@@ -228,11 +223,10 @@ Given a local folder `$(TestFolder)` containing `runtests.cmd`, this will run `r
     <!-- TargetFramework of the xunit.runner.dll to use when running the tests -->
     <XUnitRuntimeTargetFramework>netcoreapp2.0</XUnitRuntimeTargetFramework>
     <!-- PackageVersion of xunit.runner.console to use -->
-    <XUnitRunnerVersion>2.4.1</XUnitRunnerVersion>
+    <XUnitRunnerVersion>2.4.2-pre.9</XUnitRunnerVersion>
     <!-- Additional command line arguments to pass to xunit.console.exe -->
     <XUnitArguments></XUnitArguments>
   </PropertyGroup>
-
 
   <ItemGroup>
     <!--
@@ -340,7 +334,7 @@ If a test passes or fails in all attempts, only a single report is made represen
 
 To opt-in and configure test retries when using helix, create file in the reporitory at "eng/test-configuration.json"
 
-### test-configuraion.json format
+### test-configuration.json format
 ```json
 {
   "version" : 1,

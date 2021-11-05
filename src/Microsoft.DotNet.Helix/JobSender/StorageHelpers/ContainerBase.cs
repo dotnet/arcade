@@ -1,26 +1,24 @@
+// Licensed to the .NET Foundation under one or more agreements.
+// The .NET Foundation licenses this file to you under the MIT license.
+
 using System;
-using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.DotNet.Helix.Client.Models;
-using Microsoft.WindowsAzure.Storage;
-using Microsoft.WindowsAzure.Storage.Auth;
-using Microsoft.WindowsAzure.Storage.Blob;
+using Azure.Storage.Blobs;
 
 namespace Microsoft.DotNet.Helix.Client
 {
 
     internal abstract class ContainerBase : IBlobContainer
     {
-        protected abstract (CloudBlockBlob blob, string sasToken) GetBlob(string blobName);
+        protected abstract (BlobClient blob, string sasToken) GetBlob(string blobName);
 
         public async Task<Uri> UploadFileAsync(Stream stream, string blobName, CancellationToken cancellationToken)
         {
             var (pageBlob, sasToken) = GetBlob(blobName);
-
-            await pageBlob.UploadFromStreamAsync(stream, default(AccessCondition), default(BlobRequestOptions), default(OperationContext), cancellationToken);
+            await pageBlob.UploadAsync(stream, cancellationToken);
 
             return new UriBuilder(pageBlob.Uri) { Query = sasToken }.Uri;
         }
@@ -29,9 +27,8 @@ namespace Microsoft.DotNet.Helix.Client
         {
             var (pageBlob, sasToken) = GetBlob(blobName);
             byte[] bytes = Encoding.UTF8.GetBytes(text);
-            await pageBlob.UploadFromByteArrayAsync(bytes, 0, bytes.Length, default(AccessCondition), default(BlobRequestOptions), default(OperationContext), cancellationToken);
 
-            return new UriBuilder(pageBlob.Uri) { Query = sasToken }.Uri;
+            return await UploadFileAsync(new MemoryStream(bytes), blobName, cancellationToken);
         }
 
         public abstract string Uri { get; }
