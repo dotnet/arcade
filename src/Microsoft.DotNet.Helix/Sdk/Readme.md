@@ -308,7 +308,7 @@ Linux / OSX: `$HELIX_PYTHONPATH -c "from helix.public import request_reboot; req
 Windows: `%HELIX_PYTHONPATH% -c "from helix.public import request_reboot; request_reboot('Optional reason string')"`
 
 #### Send workitem metric
-Send custom metric for the current workitem. The API accepts metric name, value and metric dimensions. These metrics are stored in the Kusto Metrics table.
+Send custom metric for the current workitem. The API accepts metric name, value (float) and metric dimensions. These metrics are stored in the Kusto Metrics table.
 
 ##### Sample usage:
 
@@ -317,18 +317,18 @@ Send custom metric for the current workitem. The API accepts metric name, value 
 ```
 from helix.public import send_metric
 
-send_metric('Metric name', <value>, {'Dimension names', 'Dimension values'})
+send_metric('Metric name', <value>, {'Dimension1': 'value1', 'Dimension2' : 'value2', ...})
 
 ```
 
 ###### Outside python:
 
-Linux / OSX: `$HELIX_PYTHONPATH -c "from helix.public import send_metric; send_metric('Metric name', <value>, {'Dimension name', 'Dimension value'})"`
+Linux / OSX: `$HELIX_PYTHONPATH -c "from helix.public import send_metric; send_metric(...)"`
 
-Windows: `%HELIX_PYTHONPATH% -c "from helix.public import send_metric; send_metric('Metric name', <value>, {'Dimension name', 'Dimension value'})"`
+Windows: `%HELIX_PYTHONPATH% -c "from helix.public import send_metric; send_metric(...)"`
 
 #### Send workitem metrics
-Send custom metrics for the current workitem. The API accepts metric names, values and metrics dimensions. These metrics are stored in the Kusto Metrics Table.
+Send custom metrics for the current workitem. The API accepts metric names, values (floats) and metrics dimensions. These metrics are stored in the Kusto Metrics Table.
 
 ##### Sample usage:
 
@@ -337,15 +337,15 @@ Send custom metrics for the current workitem. The API accepts metric names, valu
 ```
 from helix.public import send_metrics
 
-send_metrics({'Metric names', <values>}, {'Dimension names', 'Dimension values'})
+send_metrics({'Metric1': <value1>, 'Metric2': <value2>,...}, {'Dimension1': 'value1', 'Dimension2' : 'value2', ...})
 
 ```
 
 ###### Outside python:
 
-Linux / OSX: `$HELIX_PYTHONPATH -c "from helix.public import send_metrics; send_metrics({'Metric names', <values>}, {'Dimension names', 'Dimension values'})"`
+Linux / OSX: `$HELIX_PYTHONPATH -c "from helix.public import send_metrics; send_metrics(...)"`
 
-Windows: `%HELIX_PYTHONPATH% -c "from helix.public import send_metrics; send_metrics({'Metric names', <values>}, {'Dimension names', 'Dimension values'})"`
+Windows: `%HELIX_PYTHONPATH% -c "from helix.public import send_metrics; send_metrics(...)"`
 
 ### Common Helix client environment variables
 
