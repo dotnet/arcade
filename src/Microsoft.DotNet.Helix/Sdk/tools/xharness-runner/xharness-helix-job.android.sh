@@ -67,7 +67,7 @@ fi
 
 # The xharness alias
 function xharness() {
-    dotnet exec $XHARNESS_CLI_PATH "$@"
+    dotnet exec "$XHARNESS_CLI_PATH" "$@"
 }
 
 function report_infrastructure_failure() {
@@ -78,7 +78,6 @@ function report_infrastructure_failure() {
 }
 
 # Act out the actual commands (and time constrain them to create buffer for the end of this script)
-source command.sh & PID=$! ; (sleep $command_timeout && kill $PID 2> /dev/null & ) ; wait $PID
+source command.sh & PID=$! ; (sleep "$command_timeout" && kill $PID 2> /dev/null & ) ; wait $PID
 
-exit_code=$?
-exit $exit_code
+exit $?
