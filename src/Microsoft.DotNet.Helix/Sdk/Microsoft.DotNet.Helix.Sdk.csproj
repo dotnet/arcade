@@ -33,7 +33,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="tools\xharness-runner\xharness-event-reporter.py">
+    <EmbeddedResource Include="tools\xharness-runner\xharness-event-processor.py">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </EmbeddedResource>
     <EmbeddedResource Include="tools\xharness-runner\xharness-helix-job.apple.sh">

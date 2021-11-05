@@ -1,11 +1,9 @@
 #!/bin/bash
 
 ### This script is used as a payload of Helix jobs that execute Android workloads through XHarness on Linux systems.
-### This is used as the entrypoint of the work item so that XHarness failures can be detected and (when appropriate)
-### cause the work item to retry and reboot the Helix agent the work is running on.
 ###
-### This scripts sets up the environment and then sources the actual XHarness commands that come either from the Helix
-### SDK or from user via the <CustomCommands> property.
+### The purpose of this script is to time-constrain user commands (command.ps1) so that we have time at the end of the
+### work item to process XHarness telemetry.
 
 echo "XHarness Helix Job Wrapper calling '$@'"
 
@@ -69,7 +67,7 @@ fi
 
 # The xharness alias
 function xharness() {
-    dotnet exec $XHARNESS_CLI_PATH "$@"
+    dotnet exec "$XHARNESS_CLI_PATH" "$@"
 }
 
 function report_infrastructure_failure() {
@@ -80,62 +78,6 @@ function report_infrastructure_failure() {
 }
 
 # Act out the actual commands (and time constrain them to create buffer for the end of this script)
-source command.sh & PID=$! ; (sleep $command_timeout && kill $PID 2> /dev/null & ) ; wait $PID
+source command.sh & PID=$! ; (sleep "$command_timeout" && kill $PID 2> /dev/null & ) ; wait $PID
 
-exit_code=$?
-
-retry=false
-reboot=false
-
-# Too see where these values come from, check out https://github.com/dotnet/xharness/blob/master/src/Microsoft.DotNet.XHarness.Common/CLI/ExitCode.cs
-# Avoid any helix-ism in the Xharness!
-ADB_DEVICE_ENUMERATION_FAILURE=85
-PACKAGE_INSTALLATION_FAILURE=78
-
-case "$exit_code" in
-  $ADB_DEVICE_ENUMERATION_FAILURE)
-    # This handles issues where devices or emulators fail to start.
-    # The only solution is to reboot the machine, so we request a work item retry + agent reboot when this happens
-    echo 'Encountered ADB_DEVICE_ENUMERATION_FAILURE. This is typically not a failure of the work item. We will run it again and reboot this computer to help its devices'
-    echo 'If this occurs repeatedly, please check for architectural mismatch, e.g. sending arm64_v8a APKs to an x86_64 / x86 only queue.'
-    # Copy emulator log
-    cp /tmp/*-logcat.log "$output_directory"
-    retry=true
-    reboot=true
-    ;;
-  $PACKAGE_INSTALLATION_FAILURE)
-    # This handles issues where APKs fail to install.
-    # We already reboot a device inside XHarness and now request a work item retry when this happens
-    echo 'Encountered PACKAGE_INSTALLATION_FAILURE. This is typically not a failure of the work item. We will try it again on another Helix agent'
-    echo 'If this occurs repeatedly, please check for architectural mismatch, e.g. requesting installation on arm64_v8a-only queue for x86 or x86_64 APKs.'
-    retry=true
-    ;;
-esac
-
-if [ -f "$HELIX_WORKITEM_ROOT/.retry" ]; then
-    retry=true
-    retry_message=$(cat "$HELIX_WORKITEM_ROOT/.retry" | tr -d "'\\\\")
-fi
-
-if [ -f "$HELIX_WORKITEM_ROOT/.reboot" ]; then
-    reboot=true
-    reboot_message=$(cat "$HELIX_WORKITEM_ROOT/.reboot" | tr -d "'\\\\")
-fi
-
-if [ "$retry" == true ]; then
-    if [ -z "$retry_message" ]; then
-        retry_message='Retrying because we could not enumerate all Android devices'
-    fi
-
-    "$HELIX_PYTHONPATH" -c "from helix.workitemutil import request_infra_retry; request_infra_retry('$retry_message')"
-fi
-
-if [ "$reboot" == true ]; then
-    if [ -z "$reboot_message" ]; then
-        reboot_message='Rebooting to allow Android emulator to restart'
-    fi
-
-    "$HELIX_PYTHONPATH" -c "from helix.workitemutil import request_reboot; request_reboot('$reboot_message')"
-fi
-
-exit $exit_code
+exit $?
