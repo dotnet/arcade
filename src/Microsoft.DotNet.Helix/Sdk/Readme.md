@@ -275,7 +275,7 @@ An "infrastructure retry" is pre-existing functionality Helix Clients use in cas
 ###### In Python:
 
 ```
-from helix.workitemutil import request_infra_retry
+from helix.public import request_infra_retry
 
 request_infra_retry('Optional reason string')
 
@@ -283,9 +283,9 @@ request_infra_retry('Optional reason string')
 
 ###### Outside python:
 
-Linux / OSX: `$HELIX_PYTHONPATH -c "from helix.workitemutil import request_infra_retry; request_infra_retry('Optional reason string')"`
+Linux / OSX: `$HELIX_PYTHONPATH -c "from helix.public import request_infra_retry; request_infra_retry('Optional reason string')"`
 
-Windows: `%HELIX_PYTHONPATH% -c "from helix.workitemutil import request_infra_retry; request_infra_retry('Optional reason string')"`
+Windows: `%HELIX_PYTHONPATH% -c "from helix.public import request_infra_retry; request_infra_retry('Optional reason string')"`
 
 #### Request post-workitem reboot
 Helix work items explicitly rebooting the helix client machine themself will never "finish", since this will in most cases preclude sending the final event telemetry for these work items.  However, a work item may know that the machine is in a bad state where a reboot would be desirable (for instance, if the Helix agent is acting as a build machine and some leaked build process is preventing workspace cleanup). After calling this API, the work item runs to completion as normal, then after sending the usual telemetry and uploading results will perform a reboot before taking the next work item. 
@@ -295,7 +295,7 @@ Helix work items explicitly rebooting the helix client machine themself will nev
 ###### In Python:
 
 ```
-from helix.workitemutil import request_reboot
+from helix.public import request_reboot
 
 request_reboot('Optional reason string')
 
@@ -303,9 +303,49 @@ request_reboot('Optional reason string')
 
 ###### Outside python:
 
-Linux / OSX: `$HELIX_PYTHONPATH -c "from helix.workitemutil import request_reboot; request_reboot('Optional reason string')"`
+Linux / OSX: `$HELIX_PYTHONPATH -c "from helix.public import request_reboot; request_reboot('Optional reason string')"`
 
-Windows: `%HELIX_PYTHONPATH% -c "from helix.workitemutil import request_reboot; request_reboot('Optional reason string')"`
+Windows: `%HELIX_PYTHONPATH% -c "from helix.public import request_reboot; request_reboot('Optional reason string')"`
+
+#### Send workitem metric
+Send custom metric for the current workitem. The API accepts metric name, value and metric dimensions. These metrics are stored in the Kusto Metrics table.
+
+##### Sample usage:
+
+###### In Python:
+
+```
+from helix.public import send_metric
+
+send_metric('Metric name', <value>, {'Dimension names', 'Dimension values'})
+
+```
+
+###### Outside python:
+
+Linux / OSX: `$HELIX_PYTHONPATH -c "from helix.public import send_metric; send_metric('Metric name', <value>, {'Dimension name', 'Dimension value'})"`
+
+Windows: `%HELIX_PYTHONPATH% -c "from helix.public import send_metric; send_metric('Metric name', <value>, {'Dimension name', 'Dimension value'})"`
+
+#### Send workitem metrics
+Send custom metrics for the current workitem. The API accepts metric names, values and metrics dimensions. These metrics are stored in the Kusto Metrics Table.
+
+##### Sample usage:
+
+###### In Python:
+
+```
+from helix.public import send_metrics
+
+send_metrics({'Metric names', <values>}, {'Dimension names', 'Dimension values'})
+
+```
+
+###### Outside python:
+
+Linux / OSX: `$HELIX_PYTHONPATH -c "from helix.public import send_metrics; send_metrics({'Metric names', <values>}, {'Dimension names', 'Dimension values'})"`
+
+Windows: `%HELIX_PYTHONPATH% -c "from helix.public import send_metrics; send_metrics({'Metric names', <values>}, {'Dimension names', 'Dimension values'})"`
 
 ### Common Helix client environment variables
 
