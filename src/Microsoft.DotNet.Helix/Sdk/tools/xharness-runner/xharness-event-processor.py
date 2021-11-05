@@ -190,11 +190,12 @@ for operation in operations:
     app_insights.send_metric('XHarnessOperationDuration', duration, properties=custom_dimensions)
 
 # Retry / reboot is handled here
+script_dir = os.getenv('HELIX_WORKITEM_ROOT')
 
-if os.path.exists('./.retry'):
+if os.path.exists(os.path.join(script_dir, '.retry')):
     retry = True
 
-if os.path.exists('./.reboot'):
+if os.path.exists(os.path.join(script_dir, '.reboot')):
     reboot = True
 
 if retry:
