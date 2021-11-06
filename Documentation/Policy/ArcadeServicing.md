@@ -84,6 +84,16 @@ which Arcade can be branched for major release 'N' of .NET Core.
 6. [Create a subscription](https://github.com/dotnet/arcade/blob/master/Documentation/Darc.md#add-subscription) from `arcade`  to `arcade-validation` (branch `release/<N>`) to take changes from the `.NET <N> Eng - Validation` channel.
 7. Modify the new release branch  `release/<N>` of arcade-validation to promote builds
    to `.NET <N> Eng`. ([example](https://github.com/dotnet/arcade-validation/pull/1857/files))
+   In the update-channel.ps1 remove call to 
+   - Get-AzDO-Build 
+   - Get-AzDOHeaders 
+   - Get-LatestBuildResult
+   - Remove the reference to bellweather repos runtime, aspnetcore, installer and also the for loop in the same file.
+   In azure-pipelines.yml 
+   - Include the new release branch under trigger `release/<N.x>`.
+   - Update the branch name to `refs/heads/release/<N>` for the Validate_Publishing condition.
+   - Update the display name from `Promote Arcade to '.NET Eng - Latest' channel` to `Promote Arcade to 'Net <N> Eng' channel`
+   - Update the display name from  `Promote Arcade to 'Latest' channel` to `Promote Arcade to 'Net <N> Eng' channel`
 8. Update [PublishingConstants.cs](https://github.com/dotnet/arcade/blob/master/src/Microsoft.DotNet.Build.Tasks.Feed/src/model/PublishingConstants.cs)
    in Arcade's master for new channels ([example](https://github.com/dotnet/arcade/pull/6360/files))
 9. Reset arcade Maestro++ subscriptions targeting .NET release branches to
