@@ -154,6 +154,15 @@ namespace Microsoft.DotNet.Helix.Client
 
             var (queueId, dockerTag, queueAlias) = ParseQueueId(TargetQueueId);
 
+            try
+            {
+                QueueInfo queueInfo = await HelixApi.Information.QueueInfoAsync(queueId, CancellationToken.None);
+            }
+            // 404 = this queue does not exist, or did and was removed.
+            catch (RestApiException ex) when ((int)ex.Response?.StatusCode == 404)
+            {
+                throw new ArgumentException($"Helix API does not contain an entry for {queueId}");
+            }
             IBlobContainer storageContainer = await storage.GetContainerAsync(TargetContainerName, queueId);
             var jobList = new List<JobListEntry>();
 
