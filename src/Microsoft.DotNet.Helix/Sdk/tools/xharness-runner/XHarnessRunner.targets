@@ -10,7 +10,7 @@
       <DotNetCliVersion Condition=" '$(DotNetCliVersion)' == '' ">$(AspNetCoreRuntimeVersion)</DotNetCliVersion>
     -->
     <DotNetCliPackageType>sdk</DotNetCliPackageType>
-    <DotNetCliVersion>6.0.100-rc.1.21430.12</DotNetCliVersion>
+    <DotNetCliVersion>6.0.100</DotNetCliVersion>
     <DotNetCliVersion Condition=" '$(DotNetCliVersion)' == '$(BundledNETCoreAppPackageVersion)' AND '$(DotNetCliPackageType)' == 'aspnetcore-runtime' ">$(AspNetCoreRuntimeVersion)</DotNetCliVersion>
   </PropertyGroup>
 
