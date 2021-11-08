@@ -12,6 +12,7 @@ usage()
     echo "lldbx.y - optional, LLDB version, can be: lldb3.9(default), lldb4.0, lldb5.0, lldb6.0 no-lldb. Ignored for alpine and FreeBSD"
     echo "--skipunmount - optional, will skip the unmount of rootfs folder."
     echo "--use-mirror - optional, use mirror URL to fetch resources, when available."
+    echo "--apt-proxy - optional, the URL of an Apt-Cacher NG server."
     exit 1
 }
 
@@ -80,6 +81,7 @@ __UbuntuPackages+=" libomp5"
 __UbuntuPackages+=" libomp-dev"
 
 __UseMirror=0
+__AptProxy=
 
 __UnprocessedBuildArgs=
 while :; do
@@ -228,6 +230,10 @@ while :; do
         --use-mirror)
             __UseMirror=1
             ;;
+        --apt-proxy)
+            shift
+            __AptProxy=$1
+            ;;
         *)
             __UnprocessedBuildArgs="$__UnprocessedBuildArgs $1"
             ;;
@@ -337,8 +343,14 @@ elif [[ "$__CodeName" == "illumos" ]]; then
     wget -P "$__RootfsDir"/usr/include/netpacket https://raw.githubusercontent.com/illumos/illumos-gate/master/usr/src/uts/common/inet/sockmods/netpacket/packet.h
     wget -P "$__RootfsDir"/usr/include/sys https://raw.githubusercontent.com/illumos/illumos-gate/master/usr/src/uts/common/sys/sdt.h
 elif [[ -n $__CodeName ]]; then
+    if [ -n "$__AptProxy" ]; then
+        export http_proxy=${__AptProxy}
+    fi
     qemu-debootstrap --arch $__UbuntuArch $__CodeName $__RootfsDir $__UbuntuRepo
     cp $__CrossDir/$__BuildArch/sources.list.$__CodeName $__RootfsDir/etc/apt/sources.list
+    if [ -n "$__AptProxy" ]; then
+        echo "Acquire::http { Proxy \"$__AptProxy\"; };" > $__RootfsDir/etc/apt/apt.conf.d/51cache
+    fi
     chroot $__RootfsDir apt-get update
     chroot $__RootfsDir apt-get -f -y install
     chroot $__RootfsDir apt-get -y install $__UbuntuPackages
