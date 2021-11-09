@@ -1,3 +1,4 @@
+#if !NET472_OR_GREATER
 using Microsoft.DotNet.Maestro.Client.Models;
 using System.Collections.Generic;
 
@@ -35,3 +36,4 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         }
     }
 }
+#endif
