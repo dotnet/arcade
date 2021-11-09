@@ -202,4 +202,4 @@ To validate that created subscriptions and channels work as expected you'd need 
                      ]
    - Last Build: N/A
    ```
-2. Let @alexperovich, @jcagme or @mmitche know about the errors in the unsuccessful entry
+2. Incase of any errors contact @dnceng. 
