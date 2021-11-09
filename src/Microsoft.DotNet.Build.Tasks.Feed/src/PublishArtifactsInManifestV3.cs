@@ -9,6 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.DotNet.Build.Tasks.Feed.Model;
+#if !NET472_OR_GREATER
 using Microsoft.DotNet.Maestro.Client;
 using Microsoft.DotNet.Maestro.Client.Models;
 using Microsoft.DotNet.VersionTools.BuildManifest.Model;
@@ -248,3 +249,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         }
     }
 }
+#else
+public class PublishArtifactsInManifestV3 : Microsoft.Build.Utilities.Task
+{
+    public override bool Execute() => throw new NotSupportedException("PublishArtifactsInManifestV3 depends on Maestro.Client, which has discontinued support for desktop frameworks.");
+}
+#endif
