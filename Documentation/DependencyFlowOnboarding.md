@@ -202,17 +202,4 @@ To validate that created subscriptions and channels work as expected you'd need 
                      ]
    - Last Build: N/A
    ```
-2. Use the ID and query for the subscription history:
-   ```
-   darc get-subscription-history --id <id>
-   ```
-   For example:
-   ```
-   darc get-subscription-history --id d2d2e80d-8b31-4744-1959-08d6175791f6
-   10/19/2018 9:15:17 AM: (Success) - Checking merge policy for pr 'https://api.github.com/repos/dotnet/arcade-minimalci-sample/pulls/129'
-   10/19/2018 9:10:15 AM: (Success) - Checking merge policy for pr 'https://api.github.com/repos/dotnet/arcade-minimalci-sample/pulls/129'
-   10/19/2018 9:05:14 AM: (Success) - Checking merge policy for pr 'https://api.github.com/repos/dotnet/arcade-minimalci-sample/pulls/129'
-   10/19/2018 9:05:04 AM: (Success) - Updating subscription for build '146'
-   ```
-   Any failed actions will be marked as such, along with a retry command.
-3. Let @alexperovich, @jcagme or @mmitche know about the errors in the unsuccessful entry
+2. Let @alexperovich, @jcagme or @mmitche know about the errors in the unsuccessful entry
