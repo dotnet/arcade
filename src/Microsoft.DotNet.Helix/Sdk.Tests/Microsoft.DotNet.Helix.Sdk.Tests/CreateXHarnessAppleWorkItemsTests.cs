@@ -135,7 +135,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
             _fileSystem.RemovedFiles.Should().Contain(payloadArchive);
 
             var command = workItem.GetMetadata("Command");
-            command.Should().Contain("--launch-timeout \"00:02:00\"");
+            command.Should().Contain("--launch-timeout \"00:03:00\"");
         }
 
         [Fact]
@@ -205,7 +205,7 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
 
             command = workItem2.GetMetadata("Command");
             command.Should().Contain("--target \"ios-simulator-64_13.6\"");
-            command.Should().Contain("--launch-timeout \"00:02:00\"");
+            command.Should().Contain("--launch-timeout \"00:03:00\"");
         }
 
         [Fact]

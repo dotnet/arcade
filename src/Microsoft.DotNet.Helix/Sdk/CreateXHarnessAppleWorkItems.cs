@@ -31,7 +31,7 @@ namespace Microsoft.DotNet.Helix.Sdk
 
         // We have a more aggressive timeout towards simulators which tend to slow down until installation takes 20 minutes and the machine needs a reboot
         // For this reason, it's better to be aggressive and detect a slower machine sooner
-        private static readonly TimeSpan s_defaultSimulatorLaunchTimeout = TimeSpan.FromMinutes(2);
+        private static readonly TimeSpan s_defaultSimulatorLaunchTimeout = TimeSpan.FromMinutes(3);
         private static readonly TimeSpan s_defaultDeviceLaunchTimeout = TimeSpan.FromMinutes(5);
 
         /// <summary>
