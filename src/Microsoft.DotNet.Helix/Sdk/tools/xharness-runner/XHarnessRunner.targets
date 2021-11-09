@@ -36,7 +36,7 @@
       We do this so that we avoid all of the machines installing the tool too and ddosing the NuGet feed
     -->
     <InstallDotNetTool Name="$(_XHarnessPackageName)"
-                       DestinationPath="$(ArtifactsTmpDir)Microsoft.DotNet.XHarness.CLI"
+                       DestinationPath="$(ArtifactsTmpDir)"
                        Version="$(_XHarnessPackageVersion)"
                        Source="$(XHarnessPackageSource)"
                        TargetFramework="$(XHarnessTargetFramework)"
