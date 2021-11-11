@@ -270,82 +270,44 @@ There are times when a work item may detect that the machine being executed on i
 #### Request Infrastructure Retry
 An "infrastructure retry" is pre-existing functionality Helix Clients use in cases such as when communication to the telemetry service or Azure Service Bus fails; this allows the work item be run again in entirety, generally (but not guaranteedly) on a different machine, with the hope that the next machine will be in a better state.  Note that requesting this prevents any job using it from finishing, and as a FIFO queue the work items that get retried go to the back of the queue, so calling this API can significantly increase job execution time based off how many jobs are being handled by a given queue.      
 
-##### Sample usage:
+##### Sample usage in Python:
 
-###### In Python:
 
 ```
 from helix.public import request_infra_retry
 
 request_infra_retry('Optional reason string')
-
 ```
-
-###### Outside python:
-
-Linux / OSX: `$HELIX_PYTHONPATH -c "from helix.public import request_infra_retry; request_infra_retry('Optional reason string')"`
-
-Windows: `%HELIX_PYTHONPATH% -c "from helix.public import request_infra_retry; request_infra_retry('Optional reason string')"`
 
 #### Request post-workitem reboot
 Helix work items explicitly rebooting the helix client machine themself will never "finish", since this will in most cases preclude sending the final event telemetry for these work items.  However, a work item may know that the machine is in a bad state where a reboot would be desirable (for instance, if the Helix agent is acting as a build machine and some leaked build process is preventing workspace cleanup). After calling this API, the work item runs to completion as normal, then after sending the usual telemetry and uploading results will perform a reboot before taking the next work item. 
 
-##### Sample usage:
-
-###### In Python:
+##### Sample usage in Python:
 
 ```
 from helix.public import request_reboot
 
 request_reboot('Optional reason string')
-
 ```
 
-###### Outside python:
+#### Send workitem metric / metrics
+Send custom metric(s) for the current workitem. The API accepts metric name(s), value(s) (float) and metric dimensions. These metrics are stored in the Kusto Metrics table.
 
-Linux / OSX: `$HELIX_PYTHONPATH -c "from helix.public import request_reboot; request_reboot('Optional reason string')"`
-
-Windows: `%HELIX_PYTHONPATH% -c "from helix.public import request_reboot; request_reboot('Optional reason string')"`
-
-#### Send workitem metric
-Send custom metric for the current workitem. The API accepts metric name, value (float) and metric dimensions. These metrics are stored in the Kusto Metrics table.
-
-##### Sample usage:
-
-###### In Python:
+##### Sample usage in Python:
 
 ```
-from helix.public import send_metric
+from helix.public import send_metric, send_metrics
 
-send_metric('Metric name', <value>, {'Dimension1': 'value1', 'Dimension2' : 'value2', ...})
-
-```
-
-###### Outside python:
-
-Linux / OSX: `$HELIX_PYTHONPATH -c "from helix.public import send_metric; send_metric(...)"`
-
-Windows: `%HELIX_PYTHONPATH% -c "from helix.public import send_metric; send_metric(...)"`
-
-#### Send workitem metrics
-Send custom metrics for the current workitem. The API accepts metric names, values (floats) and metrics dimensions. These metrics are stored in the Kusto Metrics Table.
-
-##### Sample usage:
-
-###### In Python:
-
-```
-from helix.public import send_metrics
+send_metric('MetricName', <value>, {'Dimension1': 'value1', 'Dimension2' : 'value2', ...})
 
 send_metrics({'Metric1': <value1>, 'Metric2': <value2>,...}, {'Dimension1': 'value1', 'Dimension2' : 'value2', ...})
-
 ```
 
-###### Outside python:
+#### Sample usage from outside python:
 
-Linux / OSX: `$HELIX_PYTHONPATH -c "from helix.public import send_metrics; send_metrics(...)"`
+Linux / OSX: `$HELIX_PYTHONPATH -c "from helix.public import <function>; <function>(...)"`
 
-Windows: `%HELIX_PYTHONPATH% -c "from helix.public import send_metrics; send_metrics(...)"`
+Windows: `%HELIX_PYTHONPATH% -c "from helix.public import <function>; <function>(...)"`
 
 ### Common Helix client environment variables
 
