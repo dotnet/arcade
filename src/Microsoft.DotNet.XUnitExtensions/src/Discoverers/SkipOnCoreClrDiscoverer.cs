@@ -13,16 +13,16 @@ namespace Microsoft.DotNet.XUnitExtensions
 {
     public class SkipOnCoreClrDiscoverer : ITraitDiscoverer
     {
-        private static readonly Lazy<bool> s_isJitStress = new Lazy<bool>(() => Xunit.CoreClrConfigurationDetection.IsJitStress);
-        private static readonly Lazy<bool> s_isJitStressRegs = new Lazy<bool>(() => Xunit.CoreClrConfigurationDetection.IsJitStressRegs);
-        private static readonly Lazy<bool> s_isJitMinOpts = new Lazy<bool>(() => Xunit.CoreClrConfigurationDetection.IsJitMinOpts);
-        private static readonly Lazy<bool> s_isTailCallStress = new Lazy<bool>(() => Xunit.CoreClrConfigurationDetection.IsTailCallStress);
-        private static readonly Lazy<bool> s_isZapDisable = new Lazy<bool>(() => Xunit.CoreClrConfigurationDetection.IsZapDisable);
-        private static readonly Lazy<bool> s_isGCStress3 = new Lazy<bool>(() => Xunit.CoreClrConfigurationDetection.IsGCStress3);
-        private static readonly Lazy<bool> s_isGCStressC = new Lazy<bool>(() => Xunit.CoreClrConfigurationDetection.IsGCStressC);
-        private static readonly Lazy<bool> s_isCheckedRuntime = new Lazy<bool>(() => Xunit.CoreClrConfigurationDetection.IsCheckedRuntime);
-        private static readonly Lazy<bool> s_isReleaseRuntime = new Lazy<bool>(() => Xunit.CoreClrConfigurationDetection.IsReleaseRuntime);
-        private static readonly Lazy<bool> s_isDebugRuntime = new Lazy<bool>(() => Xunit.CoreClrConfigurationDetection.IsDebugRuntime);
+        private static readonly Lazy<bool> s_isJitStress = new Lazy<bool>(() => CoreClrConfigurationDetection.IsJitStress);
+        private static readonly Lazy<bool> s_isJitStressRegs = new Lazy<bool>(() => CoreClrConfigurationDetection.IsJitStressRegs);
+        private static readonly Lazy<bool> s_isJitMinOpts = new Lazy<bool>(() => CoreClrConfigurationDetection.IsJitMinOpts);
+        private static readonly Lazy<bool> s_isTailCallStress = new Lazy<bool>(() => CoreClrConfigurationDetection.IsTailCallStress);
+        private static readonly Lazy<bool> s_isZapDisable = new Lazy<bool>(() => CoreClrConfigurationDetection.IsZapDisable);
+        private static readonly Lazy<bool> s_isGCStress3 = new Lazy<bool>(() => CoreClrConfigurationDetection.IsGCStress3);
+        private static readonly Lazy<bool> s_isGCStressC = new Lazy<bool>(() => CoreClrConfigurationDetection.IsGCStressC);
+        private static readonly Lazy<bool> s_isCheckedRuntime = new Lazy<bool>(() => CoreClrConfigurationDetection.IsCheckedRuntime);
+        private static readonly Lazy<bool> s_isReleaseRuntime = new Lazy<bool>(() => CoreClrConfigurationDetection.IsReleaseRuntime);
+        private static readonly Lazy<bool> s_isDebugRuntime = new Lazy<bool>(() => CoreClrConfigurationDetection.IsDebugRuntime);
         private static readonly Lazy<bool> s_isStressTest = new Lazy<bool>(() =>  CoreClrConfigurationDetection.IsStressTest);
 
         public IEnumerable<KeyValuePair<string, string>> GetTraits(IAttributeInfo traitAttribute)
