@@ -96,7 +96,12 @@
   <Target Name="_GetUpgradeCode"
           DependsOnTargets="GetWixBuildConfiguration"
           Condition="'$(UpgradeCode)' == ''">
-    <GenerateGuidFromName Name="$(_OutInstallerFile)">
+
+    <PropertyGroup>
+      <MsiUpgradeCodeSeed Condition="'$(MsiUpgradeCodeSeed)' == ''">$(_OutInstallerFile)</MsiUpgradeCodeSeed>
+    </PropertyGroup>
+
+    <GenerateGuidFromName Name="$(MsiUpgradeCodeSeed)">
       <Output TaskParameter="GeneratedGuid" PropertyName="UpgradeCode" />
     </GenerateGuidFromName>
   </Target>
