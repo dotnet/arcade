@@ -59,11 +59,6 @@
   </ItemGroup>
 
   <ItemGroup Condition=" '$(HelixAccessToken)' != '' ">
-    <HelixTargetQueue Include="Debian.9.Amd64"/>
-    <HelixTargetQueue Include="RedHat.7.Amd64"/>
-    <HelixTargetQueue Include="Windows.10.Amd64"/>
-    <HelixTargetQueue Include="(Debian.10.Amd64)ubuntu.1804.amd64@mcr.microsoft.com/dotnet-buildtools/prereqs:debian-10-helix-amd64-20210304164434-56c6673"/>
-    <HelixTargetQueue Include="SLES.12.Amd64.Open"/>
   </ItemGroup>
 
   <PropertyGroup Condition=" '$(HelixAccessToken)' == '' ">
@@ -73,10 +68,7 @@
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(HelixAccessToken)' == '' ">
-    <HelixTargetQueue Include="Debian.9.Amd64.Open"/>
-    <HelixTargetQueue Include="RedHat.7.Amd64.Open"/>
-    <HelixTargetQueue Include="Windows.10.Amd64.Open"/>
-    <HelixTargetQueue Include="(Debian.10.Amd64.Open)ubuntu.1804.amd64.open@mcr.microsoft.com/dotnet-buildtools/prereqs:debian-10-helix-amd64-20210304164434-56c6673"/>
+    <HelixTargetQueue Include="SLES.12.Amd64.Open"/>
   </ItemGroup>
 
   <PropertyGroup Condition="!$(HelixTargetQueue.StartsWith('Windows'))">
