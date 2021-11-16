@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Threading.Tasks;
@@ -17,7 +19,6 @@ namespace Microsoft.DotNet.Helix.Sdk
             DelayBase = 3.0
         };
         private static readonly HttpClient _client = new HttpClient(new HttpClientHandler { CheckCertificateRevocationList = true });
-        private const string DotNetCliAzureFeed = "https://dotnetcli.blob.core.windows.net/dotnet";
 
         /// <summary>
         ///   'LTS' or 'Current'
@@ -55,71 +56,105 @@ namespace Microsoft.DotNet.Helix.Sdk
         private async Task ExecuteAsync()
         {
             NormalizeParameters();
-            await ResolveVersionAsync();
-
-            string downloadUrl = await GetDownloadUrlAsync();
-
-            Log.LogMessage($"Retrieved dotnet cli {PackageType} version {Version} package uri {downloadUrl}, testing...");
-
-            try
+            var feeds = new List<string>
             {
-                using HttpResponseMessage res = await HeadRequestWithRetry(downloadUrl);
+                "https://dotnetcli.azureedge.net/dotnet",
+                "https://dotnetbuilds.azureedge.net/public",
+            };
 
-                if (res.StatusCode == HttpStatusCode.NotFound)
+            string finalDownloadUrl = null;
+            foreach (var feed in feeds)
+            {
+                string downloadUrl = await GetDownloadUrlAsync(feed);
+                if (downloadUrl == null)
                 {
-                    // 404 means that we successfully hit the server, and it returned 404. This cannot be a network hiccup
-                    Log.LogError(FailureCategory.Build, $"Unable to find dotnet cli {PackageType} version {Version}, tried {downloadUrl}");
+                    Log.LogMessage($"Could not retrieve dotnet cli {PackageType} version {Version} package uri from feed {feed}");
+                    continue;
                 }
-                else
+
+                Log.LogMessage($"Retrieved dotnet cli {PackageType} version {Version} package uri {downloadUrl} from feed {feed}, testing...");
+
+                try
                 {
+                    using HttpResponseMessage res = await HeadRequestWithRetry(downloadUrl);
+
+                    if (res.StatusCode == HttpStatusCode.NotFound)
+                    {
+                        // 404 means that we successfully hit the server, and it returned 404. This cannot be a network hiccup
+                        Log.LogMessage($"Unable to find dotnet cli {PackageType} version {Version} from feed {feed}");
+                        continue;
+                    }
+
                     res.EnsureSuccessStatusCode();
+                    finalDownloadUrl = downloadUrl;
+                }
+                catch (Exception ex)
+                {
+                    Log.LogMessage($"Unable to access dotnet cli {PackageType} version {Version} from feed {feed}, {ex.Message}");
                 }
             }
-            catch (Exception ex)
+
+            if (finalDownloadUrl == null)
             {
-                Log.LogError(FailureCategory.Build, $"Unable to access dotnet cli {PackageType} version {Version} at {downloadUrl}, {ex.Message}");
+                Log.LogError(FailureCategory.Build, $"Unable to find dotnet cli {PackageType} version {Version} from any of the specified feeds.");
             }
+
 
             if (!Log.HasLoggedErrors)
             {
-                Log.LogMessage($"Url {downloadUrl} is valid.");
-                PackageUri = downloadUrl;
+                Log.LogMessage($"Url {finalDownloadUrl} is valid.");
+                PackageUri = finalDownloadUrl;
             }
         }
 
-        private async Task<string> GetDownloadUrlAsync()
+        private async Task<string> GetDownloadUrlAsync(string feed)
         {
-            string extension = Runtime.StartsWith("win") ? "zip" : "tar.gz";
-            string effectiveVersion = await GetEffectiveVersion();
-
-            return PackageType switch
+            var oldVersion = Version; // ResolveVersionAsync will adjust the Version property, but we need it set back for other feeds to see the same initial Version
+            try
             {
-                "sdk" => $"{DotNetCliAzureFeed}/Sdk/{Version}/dotnet-sdk-{effectiveVersion}-{Runtime}.{extension}",
-                "aspnetcore-runtime" => $"{DotNetCliAzureFeed}/aspnetcore/Runtime/{Version}/aspnetcore-runtime-{effectiveVersion}-{Runtime}.{extension}",
-                _ => $"{DotNetCliAzureFeed}/Runtime/{Version}/dotnet-runtime-{effectiveVersion}-{Runtime}.{extension}"
-            };
+                var version = await ResolveVersionAsync(feed);
+                string extension = Runtime.StartsWith("win") ? "zip" : "tar.gz";
+                string effectiveVersion = await GetEffectiveVersion(feed, version);
+
+                return PackageType switch
+                {
+                    "sdk" => $"{feed}/Sdk/{version}/dotnet-sdk-{effectiveVersion}-{Runtime}.{extension}",
+                    "aspnetcore-runtime" =>
+                        $"{feed}/aspnetcore/Runtime/{version}/aspnetcore-runtime-{effectiveVersion}-{Runtime}.{extension}",
+                    _ => $"{feed}/Runtime/{version}/dotnet-runtime-{effectiveVersion}-{Runtime}.{extension}"
+                };
+            }
+            catch (Exception ex)
+            {
+                Log.LogWarning($"Unable to resolve download link from feed {feed}; {ex.Message}");
+                return null;
+            }
+            finally
+            {
+                Version = oldVersion;
+            }
         }
 
-        private async Task<string> GetEffectiveVersion()
+        private async Task<string> GetEffectiveVersion(string feed, string version)
         {
-            if (NuGetVersion.TryParse(Version, out NuGetVersion semanticVersion))
+            if (NuGetVersion.TryParse(version, out NuGetVersion semanticVersion))
             {
                 // Pared down version of the logic from https://github.com/dotnet/install-scripts/blob/main/src/dotnet-install.ps1
                 // If this functionality stops working, review changes made there.
                 // Current strategy is to start with a runtime-specific name then fall back to 'productVersion.txt'
-                string effectiveVersion = Version;
+                string effectiveVersion = version;
 
                 // Do nothing for older runtimes; the file won't exist
                 if (semanticVersion >= new NuGetVersion("5.0.0"))
                 {
                     var productVersionText = PackageType switch
                     {
-                        "sdk" => await GetMatchingProductVersionTxtContents($"{DotNetCliAzureFeed}/Sdk/{Version}", "sdk-productVersion.txt"),
-                        "aspnetcore-runtime" => await GetMatchingProductVersionTxtContents($"{DotNetCliAzureFeed}/aspnetcore/Runtime/{Version}", "aspnetcore-productVersion.txt"),
-                        _ => await GetMatchingProductVersionTxtContents($"{DotNetCliAzureFeed}/Runtime/{Version}", "runtime-productVersion.txt")
+                        "sdk" => await GetMatchingProductVersionTxtContents($"{feed}/Sdk/{version}", "sdk-productVersion.txt"),
+                        "aspnetcore-runtime" => await GetMatchingProductVersionTxtContents($"{feed}/aspnetcore/Runtime/{version}", "aspnetcore-productVersion.txt"),
+                        _ => await GetMatchingProductVersionTxtContents($"{feed}/Runtime/{version}", "runtime-productVersion.txt")
                     };
 
-                    if (!productVersionText.Equals(Version))
+                    if (!productVersionText.Equals(version))
                     {
                         effectiveVersion = productVersionText;
                         Log.LogMessage($"Switched to effective .NET Core version '{productVersionText}' from matching productVersion.txt");
@@ -127,10 +162,8 @@ namespace Microsoft.DotNet.Helix.Sdk
                 }
                 return effectiveVersion;
             }
-            else
-            {
-                throw new ArgumentException($"'{Version}' is not a valid semantic version.");
-            }
+
+            throw new ArgumentException($"'{version}' is not a valid semantic version.");
         }
         private async Task<string> GetMatchingProductVersionTxtContents(string baseUri, string customVersionTextFileName)
         {
@@ -243,16 +276,17 @@ namespace Microsoft.DotNet.Helix.Sdk
             }
         }
 
-        private async Task ResolveVersionAsync()
+        private async Task<string> ResolveVersionAsync(string feed)
         {
+            string version = Version;
             if (Version == "latest")
             {
                 Log.LogMessage(MessageImportance.Low, "Resolving latest dotnet cli version.");
                 string latestVersionUrl = PackageType switch
                 {
-                    "sdk" => $"{DotNetCliAzureFeed}/Sdk/{Channel}/latest.version",
-                    "aspnetcore-runtime" => $"{DotNetCliAzureFeed}/aspnetcore/Runtime/{Channel}/latest.version",
-                    _ => $"{DotNetCliAzureFeed}/Runtime/{Channel}/latest.version"
+                    "sdk" => $"{feed}/Sdk/{Channel}/latest.version",
+                    "aspnetcore-runtime" => $"{feed}/aspnetcore/Runtime/{Channel}/latest.version",
+                    _ => $"{feed}/Runtime/{Channel}/latest.version"
                 };
 
                 Log.LogMessage(MessageImportance.Low, $"Resolving latest version from url {latestVersionUrl}");
@@ -261,9 +295,11 @@ namespace Microsoft.DotNet.Helix.Sdk
                 versionResponse.EnsureSuccessStatusCode();
                 string latestVersionContent = await versionResponse.Content.ReadAsStringAsync();
                 string[] versionData = latestVersionContent.Split(Array.Empty<char>(), StringSplitOptions.RemoveEmptyEntries);
-                Version = versionData[1];
-                Log.LogMessage(MessageImportance.Low, $"Got latest dotnet cli version {Version}");
+                version = versionData[1];
+                Log.LogMessage(MessageImportance.Low, $"Got latest dotnet cli version {version}");
             }
+
+            return version;
         }
     }
 }
