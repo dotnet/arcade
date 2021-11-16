@@ -89,7 +89,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 List<AkaMSLink> newLinks = new List<AkaMSLink>();
                 newLinks.Add(GetAkaMSLinkForAsset(feedConfig.LatestLinkShortUrlPrefix, feedBaseUrl, asset, feedConfig.Flatten));
 
-                if (feedConfig.AlternateShortUrlPrefix != null)
+                if (!string.IsNullOrEmpty(feedConfig.AlternateShortUrlPrefix))
                 {
                     newLinks.Add(GetAkaMSLinkForAsset(feedConfig.AlternateShortUrlPrefix, feedBaseUrl, asset, feedConfig.Flatten));
                 }
