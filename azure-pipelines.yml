@@ -51,7 +51,7 @@ stages:
         pool:
           ${{ if eq(variables._RunAsPublic, True) }}:
             name: NetCore1ESPool-Public-Int
-            demands: ImageOverride -equals Build.Server.Amd64.VS2019
+            demands: ImageOverride -equals Build.Server.Amd64.VS2019.Open
           ${{ if eq(variables._RunAsInternal, True) }}:
             name: NetCore1ESPool-Internal
             demands: ImageOverride -equals Build.Server.Amd64.VS2019
