@@ -102,6 +102,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 (Type == other.Type) &&
                 Token.Equals(other.Token) &&
                 LatestLinkShortUrlPrefix.Equals(other.LatestLinkShortUrlPrefix, StringComparison.OrdinalIgnoreCase) &&
+                AlternateShortUrlPrefix.Equals(other.AlternateShortUrlPrefix, StringComparison.OrdinalIgnoreCase) &&
                 (AssetSelection == other.AssetSelection) &&
                 (Isolated == other.Isolated) &&
                 (Internal == other.Internal) &&
@@ -122,7 +123,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
 
         public override int GetHashCode()
         {
-            return (ContentType, Type, AssetSelection, Isolated, Internal, AllowOverwrite, LatestLinkShortUrlPrefix, TargetURL, Token, Flatten, string.Join(" ", FilenamesToExclude)).GetHashCode();
+            return (ContentType, Type, AssetSelection, Isolated, Internal, AllowOverwrite, LatestLinkShortUrlPrefix, AlternateShortUrlPrefix, TargetURL, Token, Flatten, string.Join(" ", FilenamesToExclude)).GetHashCode();
         }
 
         public override string ToString()
@@ -135,6 +136,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 $"\n Internal? '{Internal}' " +
                 $"\n AllowOverwrite? '{AllowOverwrite}' " +
                 $"\n ShortUrlPrefix: '{LatestLinkShortUrlPrefix}' " +
+                $"\n AlternateShortUrlPrefix: '{AlternateShortUrlPrefix}' " +
                 $"\n TargetURL: '{SafeTargetURL}'" +
                 $"\n FilenamesToExclude: \n\t{string.Join("\n\t", FilenamesToExclude)}" +
                 $"\n Flatten: '{Flatten}'";
