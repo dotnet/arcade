@@ -46,6 +46,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
 
         public bool Flatten { get; }
 
+        public string AlternateAkaMSChannelName { get; }
+
         public TargetChannelConfig(
             int id,
             bool isInternal,
@@ -54,7 +56,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             IEnumerable<TargetFeedSpecification> targetFeeds,
             SymbolTargetType symbolTargetType,
             List<string> filenamesToExclude = null,
-            bool flatten = true)
+            bool flatten = true,
+            string alternateAkaMSChannelName = null)
         {
             Id = id;
             IsInternal = isInternal;
@@ -64,6 +67,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             SymbolTargetType = symbolTargetType;
             FilenamesToExclude = filenamesToExclude?.ToImmutableList() ?? ImmutableList<string>.Empty;
             Flatten = flatten;
+            AlternateAkaMSChannelName = alternateAkaMSChannelName;
         }
 
         public override string ToString()
@@ -72,6 +76,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 $"\n Channel ID: '{Id}' " +
                 $"\n Infra-version: '{PublishingInfraVersion}' " +
                 $"\n AkaMSChannelName: '{AkaMSChannelName}' " +
+                $"\n Alternate AkaMSChannelName: '{AlternateAkaMSChannelName}' " +
                 "\n Target Feeds:" +
                 $"\n  {string.Join("\n  ", TargetFeeds.Select(f => $"{string.Join(", ", f.ContentTypes)} -> {f.FeedUrl}"))}" +
                 $"\n SymbolTargetType: '{SymbolTargetType}' " +
@@ -86,6 +91,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 PublishingInfraVersion == config.PublishingInfraVersion &&
                 Id == config.Id &&
                 string.Equals(AkaMSChannelName, config.AkaMSChannelName, StringComparison.OrdinalIgnoreCase) &&
+                string.Equals(AlternateAkaMSChannelName, config.AlternateAkaMSChannelName, StringComparison.OrdinalIgnoreCase) &&
                 TargetFeeds.Count == config.TargetFeeds.Count &&
                 TargetFeeds.Zip(config.TargetFeeds, (l, r) => l.Equals(r)).All(b => b) &&
                 IsInternal == config.IsInternal &&
@@ -110,6 +116,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             hash.Add(Id);
             hash.Add(IsInternal);
             hash.Add(AkaMSChannelName);
+            hash.Add(AlternateAkaMSChannelName);
             foreach (var feedSpec in TargetFeeds)
             {
                 hash.Add(feedSpec);

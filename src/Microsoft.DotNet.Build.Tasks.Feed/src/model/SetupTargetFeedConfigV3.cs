@@ -28,6 +28,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         private bool Flatten { get; }
 
+        private string AlternateShortUrlPrefix { get; }
+
         public TaskLoggingHelper Log { get; }
 
         public string AzureDevOpsOrg => "dnceng";
@@ -49,6 +51,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             string stableSymbolsFeed = null,
             ImmutableList<string> filesToExclude = null,
             bool flatten = true,
+            string alternateShortUrlPrefix = null,
             TaskLoggingHelper log = null) 
             : base(isInternalBuild, isStableBuild, repositoryName, commitSha, null, publishInstallersAndChecksums, null, null, null, null, null, null, null, latestLinkShortUrlPrefix, null)
         {
@@ -63,6 +66,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             FeedSasUris = feedSasUris.ToImmutableDictionary(i => i.ItemSpec, i => ConvertFromBase64(i.GetMetadata("Base64Uri")));
             FeedOverrides = feedOverrides.ToImmutableDictionary(i => i.ItemSpec, i => i.GetMetadata("Replacement"));
             AzureDevOpsFeedsKey = FeedKeys.TryGetValue("https://pkgs.dev.azure.com/dnceng", out string key) ? key : null;
+            AlternateShortUrlPrefix = alternateShortUrlPrefix;
             Log = log;
         }
 
@@ -103,6 +107,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     FeedType.AzDoNugetFeed,
                     AzureDevOpsFeedsKey,
                     LatestLinkShortUrlPrefix,
+                    AlternateShortUrlPrefix,
                     assetSelection: AssetSelection.ShippingOnly,
                     symbolTargetType: SymbolTargetType,
                     isolated: true,
@@ -116,6 +121,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     FeedType.AzDoNugetFeed,
                     AzureDevOpsFeedsKey,
                     LatestLinkShortUrlPrefix,
+                    AlternateShortUrlPrefix,
                     symbolTargetType: SymbolTargetType,
                     isolated: true,
                     @internal: IsInternalBuild,
@@ -174,6 +180,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         feedType,
                         key,
                         LatestLinkShortUrlPrefix,
+                        AlternateShortUrlPrefix,
                         spec.Assets,
                         false,
                         IsInternalBuild,

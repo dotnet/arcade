@@ -122,6 +122,10 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         ? $"dotnet/"
                         : $"dotnet/{targetChannelConfig.AkaMSChannelName}/{BuildQuality}";
 
+                    string alternateShortLinkUrl = string.IsNullOrEmpty(targetChannelConfig.AlternateAkaMSChannelName)
+                        ? null
+                        : $"dotnet/{targetChannelConfig.AlternateAkaMSChannelName}/{BuildQuality}";
+
                     var targetFeedsSetup = new SetupTargetFeedConfigV3(
                         targetChannelConfig,
                         targetChannelConfig.IsInternal,
@@ -137,6 +141,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         targetChannelConfig.SymbolTargetType,
                         filesToExclude: targetChannelConfig.FilenamesToExclude,
                         flatten: targetChannelConfig.Flatten,
+                        alternateShortUrlPrefix: alternateShortLinkUrl,
                         log: Log);
 
                     var targetFeedConfigs = targetFeedsSetup.Setup();

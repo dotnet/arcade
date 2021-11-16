@@ -210,6 +210,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             feedType,
                             feedKey,
                             latestLinkShortUrlPrefix,
+                            null,
                             assetSelection,
                             isIsolatedFeed,
                             isInternalFeed,

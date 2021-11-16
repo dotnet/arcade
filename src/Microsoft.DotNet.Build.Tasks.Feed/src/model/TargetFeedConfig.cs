@@ -56,6 +56,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
         /// </summary>
         public string LatestLinkShortUrlPrefix { get; }
 
+        public string AlternateShortUrlPrefix { get; }
+
         public SymbolTargetType SymbolTargetType { get; }
 
         public ImmutableList<string> FilenamesToExclude { get; }
@@ -67,6 +69,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             FeedType type, 
             string token, 
             string latestLinkShortUrlPrefix = null, 
+            string alternateShortUrlPrefix = null,
             AssetSelection assetSelection = AssetSelection.All, 
             bool isolated = false, 
             bool @internal = false, 
@@ -84,6 +87,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             Internal = @internal;
             AllowOverwrite = allowOverwrite;
             LatestLinkShortUrlPrefix = latestLinkShortUrlPrefix ?? string.Empty;
+            AlternateShortUrlPrefix = alternateShortUrlPrefix;
             SymbolTargetType = symbolTargetType;
             FilenamesToExclude = filenamesToExclude?.ToImmutableList() ?? ImmutableList<string>.Empty;
             Flatten = flatten;

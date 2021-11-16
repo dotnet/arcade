@@ -288,7 +288,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 "7.0.1xx",
                 DotNet7Feeds,
                 PublicAndInternalSymbolTargets,
-                filenamesToExclude: FilenamesToExclude),
+                filenamesToExclude: FilenamesToExclude,
+                alternateAkaMSChannelName: "7.0"),
 
             // ".NET 6",
             new TargetChannelConfig(
@@ -338,7 +339,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 "6.0.2xx",
                 DotNet6Feeds,
                 PublicAndInternalSymbolTargets,
-                filenamesToExclude: FilenamesToExclude),
+                filenamesToExclude: FilenamesToExclude,
+                alternateAkaMSChannelName: "6.0"),
 
             // ".NET 6 SDK 6.0.2xx Internal",
             new TargetChannelConfig(
@@ -767,7 +769,8 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 PublishingInfraVersion.All,
                 "generaltesting",
                 GeneralTestingFeeds,
-                PublicAndInternalSymbolTargets),
+                PublicAndInternalSymbolTargets,
+                alternateAkaMSChannelName: "gentest"),
 
             // "General Testing Internal",
             new TargetChannelConfig(

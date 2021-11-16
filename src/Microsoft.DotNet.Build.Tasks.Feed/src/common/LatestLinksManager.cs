@@ -86,28 +86,55 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 // blob path.
                 string actualTargetUrl = feedBaseUrl + asset;
 
-                AkaMSLink newLink = new AkaMSLink
+                List<AkaMSLink> newLinks = new List<AkaMSLink>();
+                newLinks.Add(GetAkaMSLinkForAsset(feedConfig.LatestLinkShortUrlPrefix, feedBaseUrl, asset, feedConfig.Flatten));
+
+                if (feedConfig.AlternateShortUrlPrefix != null)
                 {
-                    ShortUrl = GetLatestShortUrlForBlob(feedConfig, asset, feedConfig.Flatten),
-                    TargetUrl = actualTargetUrl
-                };
-                Logger.LogMessage(MessageImportance.High, $"  {Path.GetFileName(asset)}");
+                    newLinks.Add(GetAkaMSLinkForAsset(feedConfig.AlternateShortUrlPrefix, feedBaseUrl, asset, feedConfig.Flatten));
+                }
 
-                Logger.LogMessage(MessageImportance.High, $"  aka.ms/{newLink.ShortUrl} -> {newLink.TargetUrl}");
-
-                return newLink;
-            }).ToList();
+                return newLinks;
+            })
+                .SelectMany(links => links)
+                .ToList();
 
             await LinkManager.CreateOrUpdateLinksAsync(linksToCreate, AkaMsOwners, AkaMSCreatedBy, AkaMSGroupOwner, true);
+        }
+
+        /// <sunnary>
+        ///     Create the aka.ms link info
+        /// </summary>
+        /// <param name="shortUrlPrefix">aka.ms short url prefix</param>
+        /// <param name="feedBaseUrl">Base feed url for the asset</param>
+        /// <param name="asset">Asset</param>
+        /// <param name="flatten">If we should only use the filename when creating the aka.ms link</param>
+        /// <returns>The AkaMSLink object for the asset</returns>
+        public AkaMSLink GetAkaMSLinkForAsset(string shortUrlPrefix, string feedBaseUrl, string asset, bool flatten)
+        {
+            // blob path.
+            string actualTargetUrl = feedBaseUrl + asset;
+
+            AkaMSLink newLink = new AkaMSLink
+            {
+                ShortUrl = GetLatestShortUrlForBlob(shortUrlPrefix, asset, flatten),
+                TargetUrl = actualTargetUrl
+            };
+            Logger.LogMessage(MessageImportance.High, $"  {Path.GetFileName(asset)}");
+
+            Logger.LogMessage(MessageImportance.High, $"  aka.ms/{newLink.ShortUrl} -> {newLink.TargetUrl}");
+
+            return newLink;
         }
 
         /// <summary>
         ///     Get the short url for a blob.
         /// </summary>
-        /// <param name="feedConfig">Feed configuration</param>
-        /// <param name="blob">Blob</param>
+        /// <param name="latestLinkShortUrlPrefix">aka.ms short url prefix</param>
+        /// <param name="asset">Asset</param>
+        /// <param name="flatten">If we should only use the filename when creating the aka.ms link</param>
         /// <returns>Short url prefix for the blob.</returns>
-        public string GetLatestShortUrlForBlob(TargetFeedConfig feedConfig, string asset, bool flatten)
+        public string GetLatestShortUrlForBlob(string latestLinkShortUrlPrefix, string asset, bool flatten)
         {
             string blobIdWithoutVersions = VersionIdentifier.RemoveVersions(asset);
 
@@ -116,7 +143,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 blobIdWithoutVersions = Path.GetFileName(blobIdWithoutVersions);
             }
 
-            return Path.Combine(feedConfig.LatestLinkShortUrlPrefix, blobIdWithoutVersions).Replace("\\", "/");
+            return Path.Combine(latestLinkShortUrlPrefix, blobIdWithoutVersions).Replace("\\", "/");
         }
     }
 }
