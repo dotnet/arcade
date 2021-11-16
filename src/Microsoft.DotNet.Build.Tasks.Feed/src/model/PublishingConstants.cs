@@ -769,8 +769,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 PublishingInfraVersion.All,
                 "generaltesting",
                 GeneralTestingFeeds,
-                PublicAndInternalSymbolTargets,
-                alternateAkaMSChannelName: "gentest"),
+                PublicAndInternalSymbolTargets),
 
             // "General Testing Internal",
             new TargetChannelConfig(
