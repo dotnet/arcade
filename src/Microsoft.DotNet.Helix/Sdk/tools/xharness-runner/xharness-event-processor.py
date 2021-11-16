@@ -5,7 +5,7 @@ import subprocess
 import sys
 
 from helix.appinsights import app_insights
-from helix.public import request_reboot, request_infra_retry
+from helix.workitemutil import request_reboot, request_infra_retry
 
 ### This script's purpose is to parse the diagnostics.json file produced by XHarness, evaluate it and send it to AppInsights
 ### The diagnostics.json file contains information about each XHarness command executed during the job
