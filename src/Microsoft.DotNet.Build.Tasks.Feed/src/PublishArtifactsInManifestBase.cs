@@ -1103,7 +1103,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                 if (!blobAsset.Attributes.TryGetValue("Category", out categories))
                 {
-                    categories = GeneralUtils.InferCategory(blobAsset.Id, Log);
+                    if (string.IsNullOrEmpty(categories) || string.Equals(categories, "NONE"))
+                    {
+                        categories = GeneralUtils.InferCategory(blobAsset.Id, Log);
+                    }
+                    else if(!string.IsNullOrEmpty(categories) && string.Equals(categories, "OTHER"))
+                    {
+                        categories = "OTHER";
+                    }
                 }
 
                 foreach (var category in categories.Split(';'))
