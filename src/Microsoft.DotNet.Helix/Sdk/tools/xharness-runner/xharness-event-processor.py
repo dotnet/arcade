@@ -157,8 +157,10 @@ operations = json.load(open(diagnostics_file))
 
 print(f"Reporting {len(operations)} events from diagnostics file `{diagnostics_file}`")
 
-# Parse operations, analyze them and send them to Application Insights
+retry_dimensions = None
+reboot_dimensions = None
 
+# Parse operations, analyze them and send them to Application Insights
 for operation in operations:
     command = operation['command']
     platform = operation['platform']
@@ -186,6 +188,13 @@ for operation in operations:
     elif 'targetOS' in operation:
         custom_dimensions['target'] = targetOS
 
+    # Note down the dimensions that caused retry/reboot
+    if retry and retry_dimensions is None:
+        retry_dimensions = custom_dimensions
+
+    if reboot and reboot_dimensions is None:
+        reboot_dimensions = custom_dimensions
+
     app_insights.send_metric('XHarnessOperation', exitCode, properties=custom_dimensions)
     app_insights.send_metric('XHarnessOperationDuration', duration, properties=custom_dimensions)
 
@@ -199,7 +208,9 @@ if os.path.exists(os.path.join(script_dir, '.reboot')):
     reboot = True
 
 if retry:
+    app_insights.send_metric('XHarnessRetry', 1, properties=retry_dimensions)
     request_infra_retry('Requesting work item retry because an infrastructure issue was detected on this machine')
 
 if reboot:
+    app_insights.send_metric('XHarnessReboot', 1, properties=reboot_dimensions)
     request_reboot('Requesting machine reboot as an infrastructure issue was detected on this machine')
