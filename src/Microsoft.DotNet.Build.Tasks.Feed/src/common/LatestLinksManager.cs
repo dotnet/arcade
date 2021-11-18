@@ -54,7 +54,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             TargetFeedConfig feedConfig,
             int expectedSuffixLength)
         {
-            if (string.IsNullOrEmpty(feedConfig.LatestLinkShortUrlPrefix))
+            if (!feedConfig.LatestLinkShortUrlPrefixes.Any())
             {
                 return;
             }
@@ -87,11 +87,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 string actualTargetUrl = feedBaseUrl + asset;
 
                 List<AkaMSLink> newLinks = new List<AkaMSLink>();
-                newLinks.Add(GetAkaMSLinkForAsset(feedConfig.LatestLinkShortUrlPrefix, feedBaseUrl, asset, feedConfig.Flatten));
-
-                if (!string.IsNullOrEmpty(feedConfig.AlternateShortUrlPrefix))
+                foreach (string shortUrlPrefix in feedConfig.LatestLinkShortUrlPrefixes)
                 {
-                    newLinks.Add(GetAkaMSLinkForAsset(feedConfig.AlternateShortUrlPrefix, feedBaseUrl, asset, feedConfig.Flatten));
+                    newLinks.Add(GetAkaMSLinkForAsset(shortUrlPrefix, feedBaseUrl, asset, feedConfig.Flatten));
                 }
 
                 return newLinks;

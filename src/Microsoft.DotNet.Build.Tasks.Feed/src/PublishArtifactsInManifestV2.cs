@@ -172,7 +172,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         }
                     }
 
-                    string latestLinkShortUrlPrefix = fc.GetMetadata(nameof(Model.TargetFeedConfig.LatestLinkShortUrlPrefix));
+                    string latestLinkShortUrlPrefix = fc.GetMetadata(nameof(Model.TargetFeedConfig.LatestLinkShortUrlPrefixes));
                     if (!string.IsNullOrEmpty(latestLinkShortUrlPrefix))
                     {
                         // Verify other inputs are provided
@@ -209,8 +209,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                             targetFeedUrl,
                             feedType,
                             feedKey,
-                            latestLinkShortUrlPrefix,
-                            null,
+                            new List<string>() {latestLinkShortUrlPrefix},
                             assetSelection,
                             isIsolatedFeed,
                             isInternalFeed,

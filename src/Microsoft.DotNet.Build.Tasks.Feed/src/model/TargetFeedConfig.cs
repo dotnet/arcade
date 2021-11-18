@@ -52,11 +52,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
         /// Not applicable to packages
         /// Generates a link the blob, stripping away any version information in the file or blob path.
         /// E.g. 
-        ///      [LatestLinkShortUrlPrefix]/aspnetcore/Runtime/dotnet-hosting-win.exe -> aspnetcore/Runtime/3.1.0-preview2.19511.6/dotnet-hosting-3.1.0-preview2.19511.6-win.exe
+        ///      [LatestLinkShortUrlPrefixes]/aspnetcore/Runtime/dotnet-hosting-win.exe -> aspnetcore/Runtime/3.1.0-preview2.19511.6/dotnet-hosting-3.1.0-preview2.19511.6-win.exe
         /// </summary>
-        public string LatestLinkShortUrlPrefix { get; }
-
-        public string AlternateShortUrlPrefix { get; }
+        public List<string> LatestLinkShortUrlPrefixes { get; }
 
         public SymbolTargetType SymbolTargetType { get; }
 
@@ -68,8 +66,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             string targetURL, 
             FeedType type, 
             string token, 
-            string latestLinkShortUrlPrefix = null, 
-            string alternateShortUrlPrefix = null,
+            List<string> latestLinkShortUrlPrefixes = null, 
             AssetSelection assetSelection = AssetSelection.All, 
             bool isolated = false, 
             bool @internal = false, 
@@ -86,8 +83,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
             Isolated = isolated;
             Internal = @internal;
             AllowOverwrite = allowOverwrite;
-            LatestLinkShortUrlPrefix = latestLinkShortUrlPrefix ?? string.Empty;
-            AlternateShortUrlPrefix = alternateShortUrlPrefix;
+            LatestLinkShortUrlPrefixes = latestLinkShortUrlPrefixes ?? new List<string>();
             SymbolTargetType = symbolTargetType;
             FilenamesToExclude = filenamesToExclude?.ToImmutableList() ?? ImmutableList<string>.Empty;
             Flatten = flatten;
@@ -101,14 +97,14 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 TargetURL.Equals(other.TargetURL, StringComparison.OrdinalIgnoreCase) &&
                 (Type == other.Type) &&
                 Token.Equals(other.Token) &&
-                LatestLinkShortUrlPrefix.Equals(other.LatestLinkShortUrlPrefix, StringComparison.OrdinalIgnoreCase) &&
-                AlternateShortUrlPrefix.Equals(other.AlternateShortUrlPrefix, StringComparison.OrdinalIgnoreCase) &&
+                LatestLinkShortUrlPrefixes.SequenceEqual(other.LatestLinkShortUrlPrefixes) &&
                 (AssetSelection == other.AssetSelection) &&
                 (Isolated == other.Isolated) &&
                 (Internal == other.Internal) &&
                 (AllowOverwrite == other.AllowOverwrite) &&
                 (Flatten == other.Flatten))
             {
+                
                 if (FilenamesToExclude is null)
                     return other.FilenamesToExclude is null;
                 
@@ -123,7 +119,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
 
         public override int GetHashCode()
         {
-            return (ContentType, Type, AssetSelection, Isolated, Internal, AllowOverwrite, LatestLinkShortUrlPrefix, AlternateShortUrlPrefix, TargetURL, Token, Flatten, string.Join(" ", FilenamesToExclude)).GetHashCode();
+            return (ContentType, Type, AssetSelection, Isolated, Internal, AllowOverwrite, string.Join(" ", LatestLinkShortUrlPrefixes), TargetURL, Token, Flatten, string.Join(" ", FilenamesToExclude)).GetHashCode();
         }
 
         public override string ToString()
@@ -135,8 +131,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 $"\n Isolated? '{Isolated}' " +
                 $"\n Internal? '{Internal}' " +
                 $"\n AllowOverwrite? '{AllowOverwrite}' " +
-                $"\n ShortUrlPrefix: '{LatestLinkShortUrlPrefix}' " +
-                $"\n AlternateShortUrlPrefix: '{AlternateShortUrlPrefix}' " +
+                $"\n ShortUrlPrefix: \n\t{string.Join("\n\t", LatestLinkShortUrlPrefixes)}" +
                 $"\n TargetURL: '{SafeTargetURL}'" +
                 $"\n FilenamesToExclude: \n\t{string.Join("\n\t", FilenamesToExclude)}" +
                 $"\n Flatten: '{Flatten}'";

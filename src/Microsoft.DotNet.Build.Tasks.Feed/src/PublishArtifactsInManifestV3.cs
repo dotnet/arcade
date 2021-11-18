@@ -118,30 +118,28 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                     Log.LogMessage(MessageImportance.High, $"Publishing to this target channel: {targetChannelConfig}");
 
-                    string shortLinkUrl = string.IsNullOrEmpty(targetChannelConfig.AkaMSChannelName)
-                        ? $"dotnet/"
-                        : $"dotnet/{targetChannelConfig.AkaMSChannelName}/{BuildQuality}";
+                    List<string> shortLinkUrls = new List<string>();
 
-                    string alternateShortLinkUrl = string.IsNullOrEmpty(targetChannelConfig.AlternateAkaMSChannelName)
-                        ? null
-                        : $"dotnet/{targetChannelConfig.AlternateAkaMSChannelName}/{BuildQuality}";
+                    foreach (string akaMSChannelName in targetChannelConfig.AkaMSChannelNames)
+                    {
+                        shortLinkUrls.Add($"dotnet/{akaMSChannelName}/{BuildQuality}");
+                    }
 
                     var targetFeedsSetup = new SetupTargetFeedConfigV3(
-                        targetChannelConfig,
-                        targetChannelConfig.IsInternal,
-                        BuildModel.Identity.IsStable,
-                        BuildModel.Identity.Name,
-                        BuildModel.Identity.Commit,
-                        PublishInstallersAndChecksums,
-                        FeedKeys,
-                        FeedSasUris,
-                        AllowFeedOverrides ? FeedOverrides : Array.Empty<ITaskItem>(),
-                        shortLinkUrl,
-                        BuildEngine,
+                        targetChannelConfig: targetChannelConfig,
+                        isInternalBuild: targetChannelConfig.IsInternal,
+                        isStableBuild: BuildModel.Identity.IsStable,
+                        repositoryName: BuildModel.Identity.Name,
+                        commitSha: BuildModel.Identity.Commit,
+                        publishInstallersAndChecksums: PublishInstallersAndChecksums,
+                        feedKeys: FeedKeys,
+                        feedSasUris: FeedSasUris,
+                        feedOverrides: AllowFeedOverrides ? FeedOverrides : Array.Empty<ITaskItem>(),
+                        latestLinkShortUrlPrefixes: shortLinkUrls,
+                        buildEngine: BuildEngine,
                         targetChannelConfig.SymbolTargetType,
                         filesToExclude: targetChannelConfig.FilenamesToExclude,
                         flatten: targetChannelConfig.Flatten,
-                        alternateShortUrlPrefix: alternateShortLinkUrl,
                         log: Log);
 
                     var targetFeedConfigs = targetFeedsSetup.Setup();
