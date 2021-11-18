@@ -28,8 +28,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         private bool Flatten { get; }
 
-        private string AlternateShortUrlPrefix { get; }
-
         public TaskLoggingHelper Log { get; }
 
         public string AzureDevOpsOrg => "dnceng";
@@ -51,7 +49,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             string stableSymbolsFeed = null,
             ImmutableList<string> filesToExclude = null,
             bool flatten = true,
-            string alternateShortUrlPrefix = null,
             TaskLoggingHelper log = null) 
             : base(isInternalBuild, isStableBuild, repositoryName, commitSha, null, publishInstallersAndChecksums, null, null, null, null, null, null, null, latestLinkShortUrlPrefixes, null)
         {
@@ -66,7 +63,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             FeedSasUris = feedSasUris.ToImmutableDictionary(i => i.ItemSpec, i => ConvertFromBase64(i.GetMetadata("Base64Uri")));
             FeedOverrides = feedOverrides.ToImmutableDictionary(i => i.ItemSpec, i => i.GetMetadata("Replacement"));
             AzureDevOpsFeedsKey = FeedKeys.TryGetValue("https://pkgs.dev.azure.com/dnceng", out string key) ? key : null;
-            AlternateShortUrlPrefix = alternateShortUrlPrefix;
             Log = log;
         }
 
