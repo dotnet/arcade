@@ -104,7 +104,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 (AllowOverwrite == other.AllowOverwrite) &&
                 (Flatten == other.Flatten))
             {
-                
                 if (FilenamesToExclude is null)
                     return other.FilenamesToExclude is null;
                 
