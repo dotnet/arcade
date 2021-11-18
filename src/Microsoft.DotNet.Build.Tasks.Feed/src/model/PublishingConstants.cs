@@ -201,8 +201,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
         {
             (TargetFeedContentType.Package, FeedDotNet7Shipping, AssetSelection.ShippingOnly),
             (TargetFeedContentType.Package, FeedDotNet7Transport, AssetSelection.NonShippingOnly),
-            (InstallersAndSymbols, FeedForInstallers),
-            (TargetFeedContentType.Checksum, FeedForChecksums),
             (InstallersAndSymbols, FeedStagingForInstallers),
             (TargetFeedContentType.Checksum, FeedStagingForChecksums),
         };
@@ -309,6 +307,16 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 DotNet6InternalFeeds,
                 InternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude),
+                
+            // ".NET 6 MAUI",
+            new TargetChannelConfig(
+                2453,
+                false,
+                PublishingInfraVersion.All,
+                "maui/6.0",
+                DotNet6Feeds,
+                PublicAndInternalSymbolTargets,
+                filenamesToExclude: FilenamesToExclude),
 
             // ".NET 6 SDK 6.0.1xx",
             new TargetChannelConfig(
@@ -346,256 +354,6 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 true,
                 PublishingInfraVersion.All,
                 new List<string>() {"internal/6.0.2xx"},
-                DotNet6InternalFeeds,
-                InternalSymbolTargets,
-                filenamesToExclude: FilenamesToExclude),
-
-            // ".NET 6 Preview 1",
-            new TargetChannelConfig(
-                1670,
-                false,
-                PublishingInfraVersion.All,
-                "6.0-preview1",
-                DotNet6Feeds,
-                PublicAndInternalSymbolTargets,
-                filenamesToExclude: FilenamesToExclude),
-
-            // ".NET 6 Preview 2" ,
-            new TargetChannelConfig(
-                1752,
-                false,
-                PublishingInfraVersion.All,
-                "6.0-preview2",
-                DotNet6Feeds,
-                PublicAndInternalSymbolTargets,
-                filenamesToExclude: FilenamesToExclude),
-
-            // ".NET 6.0.1xx SDK Preview 2",
-            new TargetChannelConfig(
-                1753,
-                false,
-                PublishingInfraVersion.All,
-                "6.0.1xx-preview2",
-                DotNet6Feeds,
-                PublicAndInternalSymbolTargets,
-                filenamesToExclude: FilenamesToExclude),
-
-            // ".NET 6 Preview 3" ,
-            new TargetChannelConfig(
-                1850,
-                false,
-                PublishingInfraVersion.All,
-                "6.0-preview3",
-                DotNet6Feeds,
-                PublicAndInternalSymbolTargets,
-                filenamesToExclude: FilenamesToExclude),
-
-            // ".NET 6.0.1xx SDK Preview 3",
-            new TargetChannelConfig(
-                1847,
-                false,
-                PublishingInfraVersion.All,
-                "6.0.1xx-preview3",
-                DotNet6Feeds,
-                PublicAndInternalSymbolTargets,
-                filenamesToExclude: FilenamesToExclude),
-
-            // ".NET 6 Preview 4" ,
-            new TargetChannelConfig(
-                1851,
-                false,
-                PublishingInfraVersion.All,
-                "6.0-preview4",
-                DotNet6Feeds,
-                PublicAndInternalSymbolTargets,
-                filenamesToExclude: FilenamesToExclude),
-
-            // ".NET 6.0.1xx SDK Preview 4",
-            new TargetChannelConfig(
-                1848,
-                false,
-                PublishingInfraVersion.All,
-                "6.0.1xx-preview4",
-                DotNet6Feeds,
-                PublicAndInternalSymbolTargets,
-                filenamesToExclude: FilenamesToExclude),
-
-            // ".NET 6 Preview 5" ,
-            new TargetChannelConfig(
-                1852,
-                false,
-                PublishingInfraVersion.All,
-                "6.0-preview5",
-                DotNet6Feeds,
-                PublicAndInternalSymbolTargets,
-                filenamesToExclude: FilenamesToExclude),
-
-            // ".NET 6.0.1xx SDK Preview 5",
-            new TargetChannelConfig(
-                1849,
-                false,
-                PublishingInfraVersion.All,
-                "6.0.1xx-preview5",
-                DotNet6Feeds,
-                PublicAndInternalSymbolTargets,
-                filenamesToExclude: FilenamesToExclude),
-
-            // ".NET 6 Preview 6" ,
-            new TargetChannelConfig(
-                1963,
-                false,
-                PublishingInfraVersion.All,
-                "6.0-preview6",
-                DotNet6Feeds,
-                PublicAndInternalSymbolTargets,
-                filenamesToExclude: FilenamesToExclude),
-
-            // ".NET 6 Preview 6 Internal" ,
-            new TargetChannelConfig(
-                2092,
-                true,
-                PublishingInfraVersion.All,
-                "internal/6.0-preview6",
-                DotNet6InternalFeeds,
-                InternalSymbolTargets,
-                filenamesToExclude: FilenamesToExclude),
-
-            // ".NET 6.0.1xx SDK Preview 6",
-            new TargetChannelConfig(
-                1965,
-                false,
-                PublishingInfraVersion.All,
-                "6.0.1xx-preview6",
-                DotNet6Feeds,
-                PublicAndInternalSymbolTargets,
-                filenamesToExclude: FilenamesToExclude),
-
-            // ".NET 6.0.1xx SDK Preview 6 Internal",
-            new TargetChannelConfig(
-                2086,
-                true,
-                PublishingInfraVersion.All,
-                "internal/6.0.1xx-preview6",
-                DotNet6InternalFeeds,
-                InternalSymbolTargets,
-                filenamesToExclude: FilenamesToExclude),
-
-            // ".NET 6 Preview 7" ,
-            new TargetChannelConfig(
-                1964,
-                false,
-                PublishingInfraVersion.All,
-                "6.0-preview7",
-                DotNet6Feeds,
-                PublicAndInternalSymbolTargets,
-                filenamesToExclude: FilenamesToExclude),
-
-            // ".NET 6 Preview 7 Internal",
-            new TargetChannelConfig(
-                2091,
-                true,
-                PublishingInfraVersion.All,
-                "internal/6.0-preview7",
-                DotNet6InternalFeeds,
-                InternalSymbolTargets,
-                filenamesToExclude: FilenamesToExclude),
-
-            // ".NET 6.0.1xx SDK Preview 7",
-            new TargetChannelConfig(
-                1966,
-                false,
-                PublishingInfraVersion.All,
-                "6.0.1xx-preview7",
-                DotNet6Feeds,
-                PublicAndInternalSymbolTargets,
-                filenamesToExclude: FilenamesToExclude),
-
-            // ".NET 6.0.1xx SDK Preview 7 Internal",
-            new TargetChannelConfig(
-                2085,
-                true,
-                PublishingInfraVersion.All,
-                "internal/6.0.1xx-preview7",
-                DotNet6InternalFeeds,
-                InternalSymbolTargets,
-                filenamesToExclude: FilenamesToExclude),
-
-            // ".NET 6 RC 1" ,
-            new TargetChannelConfig(
-                2095,
-                false,
-                PublishingInfraVersion.All,
-                "6.0-rc1",
-                DotNet6Feeds,
-                PublicAndInternalSymbolTargets,
-                filenamesToExclude: FilenamesToExclude),
-
-            // ".NET 6 RC 1 Internal",
-            new TargetChannelConfig(
-                2093,
-                true,
-                PublishingInfraVersion.All,
-                "internal/6.0-rc1",
-                DotNet6InternalFeeds,
-                InternalSymbolTargets,
-                filenamesToExclude: FilenamesToExclude),
-
-            // ".NET 6.0.1xx SDK RC 1",
-            new TargetChannelConfig(
-                2087,
-                false,
-                PublishingInfraVersion.All,
-                "6.0.1xx-rc1",
-                DotNet6Feeds,
-                PublicAndInternalSymbolTargets,
-                filenamesToExclude: FilenamesToExclude),
-
-            // ".NET 6.0.1xx SDK RC 1 Internal",
-            new TargetChannelConfig(
-                2088,
-                true,
-                PublishingInfraVersion.All,
-                "internal/6.0.1xx-rc1",
-                DotNet6InternalFeeds,
-                InternalSymbolTargets,
-                filenamesToExclude: FilenamesToExclude),
-
-            // ".NET 6 RC 2" ,
-            new TargetChannelConfig(
-                2096,
-                false,
-                PublishingInfraVersion.All,
-                "6.0-rc2",
-                DotNet6Feeds,
-                PublicAndInternalSymbolTargets,
-                filenamesToExclude: FilenamesToExclude),
-
-            // ".NET 6 RC 2 Internal",
-            new TargetChannelConfig(
-                2094,
-                true,
-                PublishingInfraVersion.All,
-                "internal/6.0-rc2",
-                DotNet6InternalFeeds,
-                InternalSymbolTargets,
-                filenamesToExclude: FilenamesToExclude),
-
-            // ".NET 6.0.1xx SDK RC 2",
-            new TargetChannelConfig(
-                2090,
-                false,
-                PublishingInfraVersion.All,
-                "6.0.1xx-rc2",
-                DotNet6Feeds,
-                PublicAndInternalSymbolTargets,
-                filenamesToExclude: FilenamesToExclude),
-
-            // ".NET 6.0.1xx SDK RC 2 Internal",
-            new TargetChannelConfig(
-                2089,
-                true,
-                PublishingInfraVersion.All,
-                "internal/6.0.1xx-rc2",
                 DotNet6InternalFeeds,
                 InternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude),
