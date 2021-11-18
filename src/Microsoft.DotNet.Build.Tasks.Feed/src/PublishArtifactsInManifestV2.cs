@@ -205,15 +205,15 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     }
 
                     TargetFeedConfig feedConfig = new TargetFeedConfig(
-                            categoryKey,
-                            targetFeedUrl,
-                            feedType,
-                            feedKey,
-                            new List<string>() {latestLinkShortUrlPrefix},
-                            assetSelection,
-                            isIsolatedFeed,
-                            isInternalFeed,
-                            isOverridableFeed);
+                            contentType: categoryKey,
+                            targetURL: targetFeedUrl,
+                            type: feedType,
+                            token: feedKey,
+                            latestLinkShortUrlPrefixes: new List<string>() { latestLinkShortUrlPrefix },
+                            assetSelection: assetSelection,
+                            isolated: isIsolatedFeed,
+                            @internal: isInternalFeed,
+                            allowOverwrite: isOverridableFeed);
 
                     CheckForInternalBuildsOnPublicFeeds(feedConfig);
 
