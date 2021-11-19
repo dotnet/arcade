@@ -49,7 +49,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         ///                                     If false, an error is thrown if an asset already exists
         ///                                     If not provided then defaults to false.
         ///                                     Azure DevOps feeds can never be overwritten.
-        /// Metadata LatestLinkShortUrlPrefix (optional): If provided, AKA ms links are generated (for artifacts blobs only)
+        /// Metadata LatestLinkShortUrlPrefixes (optional): If provided, AKA ms links are generated (for artifacts blobs only)
         ///                                               that target this short url path. The link is construct as such:
         ///                                               aka.ms/AkaShortUrlPath/BlobArtifactPath -> Target blob url
         ///                                               If specified, then AkaMSClientId, AkaMSClientSecret and AkaMSTenant must be provided.

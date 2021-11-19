@@ -42,7 +42,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             ITaskItem[] feedKeys,
             ITaskItem[] feedSasUris,
             ITaskItem[] feedOverrides,
-            string latestLinkShortUrlPrefix,
+            List<string> latestLinkShortUrlPrefixes,
             IBuildEngine buildEngine,
             SymbolTargetType symbolTargetType,
             string stablePackagesFeed = null,
@@ -50,7 +50,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             ImmutableList<string> filesToExclude = null,
             bool flatten = true,
             TaskLoggingHelper log = null) 
-            : base(isInternalBuild, isStableBuild, repositoryName, commitSha, null, publishInstallersAndChecksums, null, null, null, null, null, null, null, latestLinkShortUrlPrefix, null)
+            : base(isInternalBuild, isStableBuild, repositoryName, commitSha, null, publishInstallersAndChecksums, null, null, null, null, null, null, null, latestLinkShortUrlPrefixes, null)
         {
             _targetChannelConfig = targetChannelConfig;
             BuildEngine = buildEngine;
@@ -102,7 +102,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     StablePackagesFeed,
                     FeedType.AzDoNugetFeed,
                     AzureDevOpsFeedsKey,
-                    LatestLinkShortUrlPrefix,
+                    LatestLinkShortUrlPrefixes,
                     assetSelection: AssetSelection.ShippingOnly,
                     symbolTargetType: SymbolTargetType,
                     isolated: true,
@@ -115,7 +115,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     StableSymbolsFeed,
                     FeedType.AzDoNugetFeed,
                     AzureDevOpsFeedsKey,
-                    LatestLinkShortUrlPrefix,
+                    LatestLinkShortUrlPrefixes,
                     symbolTargetType: SymbolTargetType,
                     isolated: true,
                     @internal: IsInternalBuild,
@@ -173,7 +173,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         sasUri ?? feed,
                         feedType,
                         key,
-                        LatestLinkShortUrlPrefix,
+                        LatestLinkShortUrlPrefixes,
                         spec.Assets,
                         false,
                         IsInternalBuild,
