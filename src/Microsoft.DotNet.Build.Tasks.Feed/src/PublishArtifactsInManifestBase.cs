@@ -302,7 +302,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                 return false;
             }
 
-            return NewAssetLocations.TryAdd((assetRecord.Id, feedConfig.TargetURL, assetLocationType), ValueTuple.Create());
+            return NewAssetLocations.TryAdd((assetRecord.Id, feedConfig.SafeTargetURL, assetLocationType), ValueTuple.Create());
         }
 
         /// <summary>
