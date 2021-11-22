@@ -40,6 +40,12 @@ namespace Microsoft.DotNet.Helix.Sdk.Tests
         }
 
         [Fact]
+        public void AlwaysFailingTestingStaticsReported()
+        {
+            Assert.True(false);
+        }
+
+        [Fact]
         public void FailOnceThenPass()
         {
             string target = Path.Combine(Environment.GetEnvironmentVariable("HELIX_WORKITEM_ROOT") ?? Environment.GetEnvironmentVariable("TEMP"), "my-test-file-123456.snt");
