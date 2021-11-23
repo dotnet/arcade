@@ -174,7 +174,6 @@ fi
 sudo chown -R helix-runner "$output_directory"
 chmod -R 0766 "$output_directory"
 
-# Remove empty files
 echo "Removing empty log files:"
 find "$output_directory" -name "*.log" -maxdepth 1 -size 0 -print -delete
 
