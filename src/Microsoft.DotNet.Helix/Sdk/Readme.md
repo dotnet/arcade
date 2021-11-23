@@ -273,7 +273,7 @@ An "infrastructure retry" is pre-existing functionality Helix Clients use in cas
 ##### Sample usage in Python:
 
 
-```
+```py
 from helix.public import request_infra_retry
 
 request_infra_retry('Optional reason string')
@@ -284,7 +284,7 @@ Helix work items explicitly rebooting the helix client machine themself will nev
 
 ##### Sample usage in Python:
 
-```
+```py
 from helix.public import request_reboot
 
 request_reboot('Optional reason string')
@@ -295,7 +295,7 @@ Send custom metric(s) for the current workitem. The API accepts metric name(s), 
 
 ##### Sample usage in Python:
 
-```
+```py
 from helix.public import send_metric, send_metrics
 
 send_metric('MetricName', <value>, {'Dimension1': 'value1', 'Dimension2' : 'value2', ...})
