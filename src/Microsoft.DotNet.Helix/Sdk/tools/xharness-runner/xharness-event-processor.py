@@ -11,6 +11,12 @@ from helix.workitemutil import request_reboot, request_infra_retry
 ### The diagnostics.json file contains information about each XHarness command executed during the job
 ### In case of events that suggest infrastructure issues, we request a retry and for some reboot the agent
 
+# Name of metrics we send to Helix
+OPERATION_METRIC_NAME = 'XHarnessOperation'
+DURATION_METRIC_NAME = 'XHarnessOperationDuration'
+RETRY_METRIC_NAME = 'XHarnessRetry'
+REBOOT_METRIC_NAME = 'XHarnessReboot'
+
 opts, args = getopt.gnu_getopt(sys.argv[1:], 'd:', ['diagnostics-data='])
 opt_dict = dict(opts)
 
@@ -32,6 +38,9 @@ if not os.path.isfile(diagnostics_file):
     exit(2)
 
 output_directory = os.getenv('HELIX_WORKITEM_UPLOAD_ROOT')
+
+# For the first operation that causes a retry/reboot, we send a metric to Helix
+# Retry/reboot can be also asked for by the client (by creating .retry/.reboot files)
 retry = False
 reboot = False
 retry_dimensions = None
@@ -198,8 +207,8 @@ for operation in operations:
     if reboot and reboot_dimensions is None:
         reboot_dimensions = custom_dimensions
 
-    app_insights.send_metric('XHarnessOperation', exit_code, properties=custom_dimensions)
-    app_insights.send_metric('XHarnessOperationDuration', duration, properties=custom_dimensions)
+    app_insights.send_metric(OPERATION_METRIC_NAME, exit_code, properties=custom_dimensions)
+    app_insights.send_metric(DURATION_METRIC_NAME, duration, properties=custom_dimensions)
 
 # Retry / reboot is handled here
 script_dir = os.getenv('HELIX_WORKITEM_ROOT')
@@ -211,9 +220,9 @@ if os.path.exists(os.path.join(script_dir, '.reboot')):
     reboot = True
 
 if retry:
-    app_insights.send_metric('XHarnessRetry', retry_exit_code, properties=retry_dimensions)
+    app_insights.send_metric(RETRY_METRIC_NAME, retry_exit_code, properties=retry_dimensions)
     request_infra_retry('Requesting work item retry because an infrastructure issue was detected on this machine')
 
 if reboot:
-    app_insights.send_metric('XHarnessReboot', reboot_exit_code, properties=reboot_dimensions)
+    app_insights.send_metric(REBOOT_METRIC_NAME, reboot_exit_code, properties=reboot_dimensions)
     request_reboot('Requesting machine reboot as an infrastructure issue was detected on this machine')
