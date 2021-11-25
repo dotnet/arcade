@@ -113,7 +113,7 @@ fi
 
 # Only lld version >= 9 can be considered stable
 if [[ "$compiler" == "clang" && "$majorVersion" -ge 9 ]]; then
-    if "$CC" -fuse-ld=lld -Wl,--version 2>&1; then
+    if "$CC" -fuse-ld=lld -Wl,--version 2>/dev/null; then
         LDFLAGS="-fuse-ld=lld"
     fi
 fi
