@@ -2,6 +2,7 @@
 #
 # This file detects the C/C++ compiler and exports it to the CC/CXX environment variables
 #
+# NOTE: some scripts source this file and rely on stdout being empty, make sure to not output anything here! 
 
 if [[ "$#" -lt 3 ]]; then
   echo "Usage..."
