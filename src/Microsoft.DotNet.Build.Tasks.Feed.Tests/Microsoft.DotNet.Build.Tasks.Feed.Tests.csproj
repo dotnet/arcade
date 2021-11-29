@@ -18,8 +18,6 @@
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="$(MicrosoftExtensionsLoggingConsoleVersion)" />
     <PackageReference Include="Microsoft.SymbolUploader" Version="$(MicrosoftSymbolUploaderVersion)" />
     <PackageReference Include="Moq" Version="$(MoqVersion)" />
-    <!-- This is here so that we agree with the feed tasks project's transitive reference to NewtonSoft.Json and Azure.Core -->
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
     <PackageReference Include="System.Text.Encodings.Web" Version="$(SystemTextEncodingsWebVersion)" />
   </ItemGroup>
 
