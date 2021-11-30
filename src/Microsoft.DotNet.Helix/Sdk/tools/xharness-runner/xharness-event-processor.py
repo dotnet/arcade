@@ -223,6 +223,13 @@ if retry:
     app_insights.send_metric(RETRY_METRIC_NAME, retry_exit_code, properties=retry_dimensions)
     request_infra_retry('Requesting work item retry because an infrastructure issue was detected on this machine')
 
+    # TODO https://github.com/dotnet/core-eng/issues/15059 
+    # We need to remove testResults.xml so that it is not uploaded since this run will be discarded
+    # This is a workaround until we make AzDO reporter not upload test results
+    test_results = os.path.join(output_directory, "testResults.xml")
+    if os.path.exists(test_results):
+        os.remove(test_results)
+
 if reboot:
     app_insights.send_metric(REBOOT_METRIC_NAME, reboot_exit_code, properties=reboot_dimensions)
     request_reboot('Requesting machine reboot as an infrastructure issue was detected on this machine')
