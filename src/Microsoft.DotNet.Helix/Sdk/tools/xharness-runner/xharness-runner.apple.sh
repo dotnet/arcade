@@ -170,10 +170,6 @@ if [ $exit_code -ne 0 ]; then
     sudo log show --style syslog --start "$start_time" --end "$(date '+%Y-%m-%d %H:%M:%S')" | tail -c 2097152 > "$output_directory/system.log"
 fi
 
-# The simulator logs comming from the sudo-spawned Simulator.app are not readable/deletable by the helix uploader
-sudo chown -R helix-runner "$output_directory"
-chmod -R 0766 "$output_directory"
-
 echo "Removing empty log files:"
 find "$output_directory" -name "*.log" -maxdepth 1 -size 0 -print -delete
 
