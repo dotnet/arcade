@@ -31,11 +31,12 @@ set -x
 # so we have to set them again.
 export -p > envvars
 chmod +x xharness-runner.apple.sh
-helix_runner_uid=$(id -u)
-sudo launchctl asuser "$helix_runner_uid" sh ./xharness-runner.apple.sh \
-    $forwarded_args                                                     \
-    --app "$HELIX_WORKITEM_ROOT/$app"                                   \
-    --output-directory "$HELIX_WORKITEM_UPLOAD_ROOT"                    \
+uid=$(id -u)
+username=$(id -un)
+sudo launchctl asuser "$uid" sudo -u "$username" sh ./xharness-runner.apple.sh \
+    $forwarded_args                                                            \
+    --app "$HELIX_WORKITEM_ROOT/$app"                                          \
+    --output-directory "$HELIX_WORKITEM_UPLOAD_ROOT"                           \
 
 exit_code=$?
 
