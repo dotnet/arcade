@@ -125,6 +125,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         shortLinkUrls.Add($"dotnet/{akaMSChannelName}/{BuildQuality}");
                     }
 
+                    // If there are no channel names, default to dotnet/
+                    if (!targetChannelConfig.AkaMSChannelNames.Any())
+                    {
+                        shortLinkUrls.Add("dotnet/");
+                    }
+
                     var targetFeedsSetup = new SetupTargetFeedConfigV3(
                         targetChannelConfig: targetChannelConfig,
                         isInternalBuild: targetChannelConfig.IsInternal,
