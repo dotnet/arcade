@@ -106,6 +106,7 @@ while :; do
             __UbuntuRepo="http://raspbian.raspberrypi.org/raspbian/"
             __CodeName=stretch
             __LLDB_Package="liblldb-4.0-dev"
+            __Keyring="/usr/share/keyrings/raspbian-archive-keyring.gpg"
             ;;
         arm64)
             __BuildArch=arm64
@@ -244,6 +245,12 @@ while :; do
     shift
 done
 
+if [ -e "$__Keyring" ]; then
+    __Keyring="--keyring=$__Keyring"
+else
+    __Keyring=""
+fi
+
 if [ "$__BuildArch" == "armel" ]; then
     __LLDB_Package="lldb-3.5-dev"
 fi
@@ -345,7 +352,7 @@ elif [[ "$__CodeName" == "illumos" ]]; then
     wget -P "$__RootfsDir"/usr/include/netpacket https://raw.githubusercontent.com/illumos/illumos-gate/master/usr/src/uts/common/inet/sockmods/netpacket/packet.h
     wget -P "$__RootfsDir"/usr/include/sys https://raw.githubusercontent.com/illumos/illumos-gate/master/usr/src/uts/common/sys/sdt.h
 elif [[ -n $__CodeName ]]; then
-    qemu-debootstrap --arch $__UbuntuArch $__CodeName $__RootfsDir $__UbuntuRepo
+    qemu-debootstrap $__Keyring --arch $__UbuntuArch $__CodeName $__RootfsDir $__UbuntuRepo
     cp $__CrossDir/$__BuildArch/sources.list.$__CodeName $__RootfsDir/etc/apt/sources.list
     chroot $__RootfsDir apt-get update
     chroot $__RootfsDir apt-get -f -y install
