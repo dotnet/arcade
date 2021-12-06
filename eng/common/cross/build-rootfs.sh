@@ -99,6 +99,14 @@ while :; do
             __AlpineArch=armv7
             __QEMUArch=arm
             ;;
+        armv6)
+            __BuildArch=armv6
+            __UbuntuArch=armhf
+            __QEMUArch=arm
+            __UbuntuRepo="http://raspbian.raspberrypi.org/raspbian/"
+            __CodeName=stretch
+            __LLDB_Package="liblldb-4.0-dev"
+            ;;
         arm64)
             __BuildArch=arm64
             __UbuntuArch=arm64
