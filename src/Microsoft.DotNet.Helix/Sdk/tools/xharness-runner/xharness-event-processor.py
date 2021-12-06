@@ -165,6 +165,13 @@ def analyze_operation(command: str, platform: str, device: str, is_device: bool,
                 reboot = True
                 retry = True
 
+            # Simulators are known to slow/break down and a reboot usually helps
+            # This manifest by us not being able to launch the simulator/start the test run in time
+            if exit_code == 90: # APP_LAUNCH_TIMEOUT
+                print(f'    Failed to start the test execution in time. {retry_message}{reboot_message}')
+                reboot = True
+                retry = True
+
 # The JSON should be an array of objects (one per each executed XHarness command)
 operations = json.load(open(diagnostics_file))
 
