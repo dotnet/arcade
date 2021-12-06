@@ -104,8 +104,8 @@ while :; do
             __UbuntuArch=armhf
             __QEMUArch=arm
             __UbuntuRepo="http://raspbian.raspberrypi.org/raspbian/"
-            __CodeName=stretch
-            __LLDB_Package="liblldb-4.0-dev"
+            __CodeName=buster
+            __LLDB_Package="liblldb-6.0-dev"
             __Keyring="/usr/share/keyrings/raspbian-archive-keyring.gpg"
             ;;
         arm64)
