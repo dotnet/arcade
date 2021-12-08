@@ -89,7 +89,7 @@ If you're releasing from any other branch (including servicing branches), you mu
 
 ## Filing Issues for Translation Issues
 
-File a translation issue ticket with the localization team (see documentation [here](https://dev.azure.com/ceapex/CEINTL/_wiki/wikis/CEINTL.wiki/1361/Provide-Enough-Information-in-DevRel-Feedback-Ticket)).
+File a translation issue ticket with the localization team [here](https://aka.ms/ceLocBug).
 
 ## Leaving Comments for Translators
 
