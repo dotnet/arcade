@@ -55,30 +55,30 @@ def remove_android_apps(device: str = None):
     print(f'    Removing installed apps after unsuccessful run' + (' from ' + device if device else ""))
 
     xharness_cli_path = os.getenv('XHARNESS_CLI_PATH')
-    adb_path = subprocess.check_output(['dotnet', 'exec', xharness_cli_path, 'android', 'state', '--adb']).decode('utf-8').strip()
+    adb_args = ['dotnet', 'exec', xharness_cli_path, 'android', 'adb', '--']
 
     # Get list of installed apps
+    args = ['shell', 'pm', 'list', 'packages', 'net.dot']
     if device:
-        installed_apps = subprocess.check_output([adb_path, '-s', device, 'shell', 'pm', 'list', 'packages', 'net.dot']).decode('utf-8').splitlines()
-    else:
-        installed_apps = subprocess.check_output([adb_path, 'shell', 'pm', 'list', 'packages', 'net.dot']).decode('utf-8').splitlines()
+        args = ['-s', device] + args
 
+    installed_apps = subprocess.check_output(adb_args + args).decode('utf-8').splitlines()
     installed_apps = [app.split(':')[1] for app in installed_apps if app]
 
     # Remove all installed apps
     for app in installed_apps:
         print(f'        Removing {app}')
-        
-        try:
-            if device:
-                result = subprocess.run([adb_path, '-s', device, 'uninstall', app], stdout=subprocess.PIPE)
-            else:
-                result = subprocess.run([adb_path, 'uninstall', app], stderr=subprocess.STDOUT)
 
+        args = ['uninstall', app]
+        if device:
+            args = ['-s', device] + args
+
+        try:
+            result = subprocess.run(adb_args + args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             output = result.stdout.decode('utf8')
             print(f'            {output}')
         except Exception as e:
-            print(f'            Failed to remove app: {e}')
+            print(f'            Failed to remove app {app}: {e}')
 
 def analyze_operation(command: str, platform: str, device: str, is_device: bool, target: str, exit_code: int):
     """ Analyzes the result and requests retry/reboot in case of an infra failure
@@ -230,7 +230,7 @@ if retry:
     app_insights.send_metric(RETRY_METRIC_NAME, retry_exit_code, properties=retry_dimensions)
     request_infra_retry('Requesting work item retry because an infrastructure issue was detected on this machine')
 
-    # TODO https://github.com/dotnet/core-eng/issues/15059 
+    # TODO https://github.com/dotnet/core-eng/issues/15059
     # We need to remove testResults.xml so that it is not uploaded since this run will be discarded
     # This is a workaround until we make AzDO reporter not upload test results
     test_results = os.path.join(output_directory, "testResults.xml")
