@@ -120,7 +120,7 @@ stages:
               Build_Debug:
                 _BuildConfig: Debug
           variables:
-            _Testing: Helix
+          - _Testing: Helix
           preSteps:
           - checkout: self
             clean: true
@@ -161,7 +161,7 @@ stages:
               Build_Debug:
                 _BuildConfig: Debug
           variables:
-            _Testing: Xharness
+          - _Testing: Xharness
           preSteps:
           - checkout: self
             clean: true
@@ -191,7 +191,7 @@ stages:
               Build_Release:
                 _BuildConfig: Release
           variables:
-            _Testing: Helix
+          - _Testing: Helix
           preSteps:
           - checkout: self
             clean: true
@@ -209,7 +209,7 @@ stages:
             env:
               SYSTEM_ACCESSTOKEN: $(System.AccessToken)
               HelixAccessToken: ''
-        - job: Linux_XHarness
+        - job: Linux_XHarness_Apple_Simulator
           timeoutInMinutes: 90
           container: LinuxContainer
           pool:
@@ -221,7 +221,7 @@ stages:
               Build_Release:
                 _BuildConfig: Release
           variables:
-            _Testing: Xharness
+          - _Testing: Xharness_Apple_Simulator
           preSteps:
           - checkout: self
             clean: true
@@ -239,6 +239,23 @@ stages:
             env:
               SYSTEM_ACCESSTOKEN: $(System.AccessToken)
               HelixAccessToken: ''
+        - job: Linux_XHarness_Apple_Device
+          timeoutInMinutes: 90
+          container: LinuxContainer
+          pool:
+            vmimage: ubuntu-latest
+          strategy:
+            matrix:
+              Build_Debug:
+                _BuildConfig: Debug
+              Build_Release:
+                _BuildConfig: Release
+          variables:
+          - _Testing: Xharness_Apple_Device
+          preSteps:
+          - checkout: self
+            clean: true
+          steps:
           - script: eng/common/build.sh
               -configuration $(_BuildConfig)
               -prepareMachine
@@ -252,6 +269,23 @@ stages:
             env:
               SYSTEM_ACCESSTOKEN: $(System.AccessToken)
               HelixAccessToken: ''
+        - job: Linux_XHarness
+          timeoutInMinutes: 90
+          container: LinuxContainer
+          pool:
+            vmimage: ubuntu-latest
+          strategy:
+            matrix:
+              Build_Debug:
+                _BuildConfig: Debug
+              Build_Release:
+                _BuildConfig: Release
+          variables:
+          - _Testing: Xharness
+          preSteps:
+          - checkout: self
+            clean: true
+          steps:
           - script: eng/common/build.sh
               -configuration $(_BuildConfig) 
               -prepareMachine
