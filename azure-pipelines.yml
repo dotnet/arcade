@@ -148,6 +148,20 @@ stages:
             env:
               SYSTEM_ACCESSTOKEN: $(System.AccessToken)
               HelixAccessToken: ''
+        - job: Windows_NT_XHarness
+          timeoutInMinutes: 90
+          pool:
+            vmimage: windows-latest
+          strategy:
+            matrix:
+              Build_Release:
+                _BuildConfig: Release
+              Build_Debug:
+                _BuildConfig: Debug
+          preSteps:
+          - checkout: self
+            clean: true
+          steps:
           - powershell: eng\common\build.ps1
               -configuration $(_BuildConfig) 
               -prepareMachine
@@ -189,6 +203,21 @@ stages:
             env:
               SYSTEM_ACCESSTOKEN: $(System.AccessToken)
               HelixAccessToken: ''
+        - job: Linux_XHarness
+          timeoutInMinutes: 90
+          container: LinuxContainer
+          pool:
+            vmimage: ubuntu-latest
+          strategy:
+            matrix:
+              Build_Debug:
+                _BuildConfig: Debug
+              Build_Release:
+                _BuildConfig: Release
+          preSteps:
+          - checkout: self
+            clean: true
+          steps:
           - script: eng/common/build.sh
               -configuration $(_BuildConfig)
               -prepareMachine
