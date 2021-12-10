@@ -119,6 +119,8 @@ stages:
                 _BuildConfig: Release
               Build_Debug:
                 _BuildConfig: Debug
+          variables:
+            _Testing: Helix
           preSteps:
           - checkout: self
             clean: true
@@ -158,6 +160,8 @@ stages:
                 _BuildConfig: Release
               Build_Debug:
                 _BuildConfig: Debug
+          variables:
+            _Testing: Xharness
           preSteps:
           - checkout: self
             clean: true
@@ -186,6 +190,8 @@ stages:
                 _BuildConfig: Debug
               Build_Release:
                 _BuildConfig: Release
+          variables:
+            _Testing: Helix
           preSteps:
           - checkout: self
             clean: true
@@ -214,6 +220,8 @@ stages:
                 _BuildConfig: Debug
               Build_Release:
                 _BuildConfig: Release
+          variables:
+            _Testing: Xharness
           preSteps:
           - checkout: self
             clean: true
