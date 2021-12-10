@@ -102,9 +102,9 @@ stages:
         artifacts:
           publish:
             artifacts:
-              name: Artifacts_Test_$(Agent.OS)_$(_BuildConfig)
+              name: Artifacts_Test_$(Agent.OS)_$(_BuildConfig)_$(_Testing)
             logs: 
-              name: Logs_Test_$(Agent.OS)_$(_BuildConfig)
+              name: Logs_Test_$(Agent.OS)_$(_BuildConfig)_$(_Testing)
           download: true
         workspace:
           clean: all
