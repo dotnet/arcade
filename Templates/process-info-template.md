@@ -3,7 +3,7 @@
 ## Process Details
 
 ### Summary: 
-Why does this "process" exists in the first place? Who benefits? What happens if it doesn't happen?
+Why does this "process" exist in the first place? Who benefits? What happens if it doesn't happen?
 
 ### Process Boundaries
 
