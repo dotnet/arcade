@@ -25,6 +25,7 @@
         <TestTimeout>00:05:00</TestTimeout>
         <LaunchTimeout>00:05:00</LaunchTimeout>
         <CustomCommands>
+          <![CDATA[
           set -ex
           deviceId=`xharness apple device $target`
           xharness apple install -t=$target --device="$deviceId" -o="$output_directory" --app="$app" -v
@@ -35,6 +36,7 @@
           xharness apple uninstall -t=$target --device="$deviceId" -o="$output_directory" --app="net.dot.$(XHarnessAppBundleName)" -v
           ((result|=$?))
           exit $result
+          ]]>
         </CustomCommands>
       </XHarnessAppBundleToTest>
     </ItemGroup>

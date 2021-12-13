@@ -23,6 +23,8 @@
     <DownloadFile Condition="'$(XHarnessTestARM64_V8A)' == 'true'" SourceUrl="$(XHarnessARM64V8TestApkUrl)" DestinationFolder="$(ArtifactsTmpDir)XHarness.TestApk\arm64_v8a" SkipUnchangedFiles="True" Retries="5">
       <Output TaskParameter="DownloadedFile" ItemName="DownloadedApkFile" />
     </DownloadFile>
+    
+    <Error Condition=" '@(DownloadedApkFile)' == '' " Text="You have to specify at least one target by setting one of following properties to true - XHarnessX86TestApkUrl / XHarnessX64TestApkUrl / XHarnessARM64V8TestApkUrl" />
 
     <Message Text="Downloaded @(DownloadedApkFile) for XHarness Test purposes" Importance="High" />
 
@@ -48,7 +50,11 @@
         <AndroidInstrumentationName>net.dot.MonoRunner</AndroidInstrumentationName>
 
         <!-- This command is the same for PowerShell and bash so no need to detect the platform -->
-        <CustomCommands>xharness android test --app "$app" --package-name "$package_name" --output-directory "$output_directory" --instrumentation "$instrumentation" --timeout "$timeout" -v</CustomCommands>
+        <CustomCommands>
+          <![CDATA[
+          xharness android test --app "$app" --package-name "$package_name" --output-directory "$output_directory" --instrumentation "$instrumentation" --timeout "$timeout" -v
+          ]]>
+        </CustomCommands>
       </XHarnessApkToTest>
     </ItemGroup>
   </Target>
