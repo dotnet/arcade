@@ -76,7 +76,7 @@
     <MicrosoftMLVersion>1.0.0</MicrosoftMLVersion>
     <MicrosoftVisualStudioWebCodeGenerationDesignVersion>2.0.4</MicrosoftVisualStudioWebCodeGenerationDesignVersion>
     <MicrosoftDiaSymReaderPdb2PdbVersion>1.1.0-beta2-19575-01</MicrosoftDiaSymReaderPdb2PdbVersion>
-    <MicrosoftDotNetMaestroClientVersion>1.1.0-beta.21553.1</MicrosoftDotNetMaestroClientVersion>
+    <MicrosoftDotNetMaestroClientVersion>1.1.0-beta.21613.1</MicrosoftDotNetMaestroClientVersion>
     <MicrosoftSourceLinkGitHubVersion>1.1.1-beta-21559-02</MicrosoftSourceLinkGitHubVersion>
     <MicrosoftSourceLinkAzureReposGitVersion>1.1.1-beta-21559-02</MicrosoftSourceLinkAzureReposGitVersion>
     <MicrosoftDotNetSwaggerGeneratorMSBuildVersion>7.0.0-beta.21559.3</MicrosoftDotNetSwaggerGeneratorMSBuildVersion>
