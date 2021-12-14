@@ -48,21 +48,51 @@ reboot_dimensions = None
 retry_exit_code = -1
 reboot_exit_code = -1
 
+def call_xharness(args: list, throw_on_error: bool = False, capture_output: bool = False):
+    """ Calls the XHarness CLI with given arguments
+    """
+
+    xharness_cli_path = os.getenv('XHARNESS_CLI_PATH')
+
+    if capture_output:
+        stdout = None
+        stderr = None
+    else:
+        stdout = subprocess.PIPE
+        stderr = subprocess.STDOUT # Combines output to stdout
+
+    return subprocess.run(
+        ['dotnet', 'exec', xharness_cli_path] + args,
+        stdout=stdout,
+        stderr=stderr,
+        capture_output=capture_output,
+        check=throw_on_error)
+
+def call_adb(args: list, throw_on_error: bool = False, capture_output: bool = False):
+    """ Calls the XHarness CLI with `android adb` command and given arguments
+    """
+
+    return call_xharness(['android', 'adb', '--'] + args, throw_on_error, capture_output)
+
 def remove_android_apps(device: str = None):
     """ Removes all Android applications from the target device/emulator
     """
 
-    print(f'    Removing installed apps after unsuccessful run' + (' from ' + device if device else ""))
-
-    xharness_cli_path = os.getenv('XHARNESS_CLI_PATH')
-    adb_args = ['dotnet', 'exec', xharness_cli_path, 'android', 'adb', '--']
+    print('    Removing installed apps after unsuccessful run' + (' from ' + device if device else ""))
 
     # Get list of installed apps
     args = ['shell', 'pm', 'list', 'packages', 'net.dot']
     if device:
         args = ['-s', device] + args
 
-    installed_apps = subprocess.check_output(adb_args + args).decode('utf-8').splitlines()
+    result = call_adb(args)
+
+    if result.returncode != 0:
+        print('    Failed to get list of installed apps:')
+        print(f'        {result.stdout.decode("utf-8")}')
+        return
+
+    installed_apps = result.stdout.decode('utf-8').splitlines()
     installed_apps = [app.split(':')[1] for app in installed_apps if app]
 
     # Remove all installed apps
@@ -74,9 +104,7 @@ def remove_android_apps(device: str = None):
             args = ['-s', device] + args
 
         try:
-            result = subprocess.run(adb_args + args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-            output = result.stdout.decode('utf8')
-            print(f'            {output}')
+            call_adb(args, throw_on_error=True)
         except Exception as e:
             print(f'            Failed to remove app {app}: {e}')
 
