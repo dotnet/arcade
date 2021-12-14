@@ -2,12 +2,20 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 
 using System.IO;
+using System.IO.Compression;
 using System.Threading.Tasks;
 
 namespace Microsoft.Arcade.Common
 {
     public interface IZipArchiveManager
     {
+        /// <summary>
+        /// Opens a given archive.
+        /// </summary>
+        /// <param name="archivePath">Path to the zip archive</param>
+        /// <param name="mode">Access mode</param>
+        ZipArchive OpenArchive(string archivePath, ZipArchiveMode mode);
+
         /// <summary>
         /// Loads an embedded resource and adds it to a target archive.
         /// </summary>
