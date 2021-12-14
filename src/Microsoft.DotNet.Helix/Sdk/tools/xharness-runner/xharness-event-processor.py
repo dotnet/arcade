@@ -16,6 +16,7 @@ OPERATION_METRIC_NAME = 'XHarnessOperation'
 DURATION_METRIC_NAME = 'XHarnessOperationDuration'
 RETRY_METRIC_NAME = 'XHarnessRetry'
 REBOOT_METRIC_NAME = 'XHarnessReboot'
+NETWORK_CONNECTIVITY_METRIC_NAME = 'XHarnessDeviceNetworkFailure'
 
 opts, args = getopt.gnu_getopt(sys.argv[1:], 'd:', ['diagnostics-data='])
 opt_dict = dict(opts)
@@ -47,6 +48,20 @@ retry_dimensions = None
 reboot_dimensions = None
 retry_exit_code = -1
 reboot_exit_code = -1
+android_connectivity_verified = False
+
+class AdditionalTelemetryRequired(Exception):
+    """Exception raised when we need to send additional telemetry during analysis
+
+    Attributes:
+        metric_name -- name of the even
+        metric_value -- value of the metric event
+    """
+
+    def __init__(self, metric_name, metric_value):
+        self.metric_name = metric_name
+        self.metric_value = metric_value
+        super().__init__("Additional telemetry required")
 
 def call_xharness(args: list, throw_on_error: bool = False, capture_output: bool = False):
     """ Calls the XHarness CLI with given arguments
@@ -115,7 +130,7 @@ def analyze_operation(command: str, platform: str, device: str, is_device: bool,
 
     print(f'Analyzing {platform}/{command}@{target} ({exit_code})')
 
-    global retry, reboot
+    global retry, reboot, android_connectivity_verified
 
     if platform == "android":
         if exit_code == 85: # ADB_DEVICE_ENUMERATION_FAILURE
@@ -144,6 +159,18 @@ def analyze_operation(command: str, platform: str, device: str, is_device: bool,
                     print(f'    Failed to remove installed apps from device: {e}')
 
             retry = True
+
+        if exit_code != 0 and android_connectivity_verified and is_device:
+            # Any issue can also be caused by network connectivity problems (devices sometimes lose the WiFi connection)
+            # In those cases, we want a retry and we want to report this
+            android_connectivity_verified = True
+
+            result = call_adb(['shell', 'ping', '-c', '2', '8.8.8.8'], throw_on_error=False, capture_output=True)
+            
+            if result.returncode != 0:
+                retry = True
+                print('    Detected network connectivity issue. This is typically not a failure of the work item. We will try it again on another Helix agent')
+                raise AdditionalTelemetryRequired(NETWORK_CONNECTIVITY_METRIC_NAME, 1)
 
     elif platform == "apple":
         retry_message = 'This is typically not a failure of the work item. It will be run again. '
@@ -216,11 +243,6 @@ for operation in operations:
     target_os = operation.get('targetOS')
     is_device = operation.get('isDevice', False)
 
-    try:
-        analyze_operation(command, platform, device, is_device, target, exit_code)
-    except Exception as e:
-        print(f'    Failed to analyze operation: {e}')
-
     custom_dimensions = dict()
     custom_dimensions['command'] = operation['command']
     custom_dimensions['platform'] = operation['platform']
@@ -233,6 +255,13 @@ for operation in operations:
             custom_dimensions['target'] = target
     elif 'targetOS' in operation:
         custom_dimensions['target'] = target_os
+
+    try:
+        analyze_operation(command, platform, device, is_device, target, exit_code)
+    except AdditionalTelemetryRequired as e:
+        app_insights.send_metric(e.metric_name, e.metric_value, properties=custom_dimensions)
+    except Exception as e:
+        print(f'    Failed to analyze operation: {e}')
 
     # Note down the dimensions that caused retry/reboot
     if retry and retry_dimensions is None:
