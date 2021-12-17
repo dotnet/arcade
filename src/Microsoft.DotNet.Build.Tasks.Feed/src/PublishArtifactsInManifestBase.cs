@@ -1101,7 +1101,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             {
                 string categories = string.Empty;
 
-                if (!blobAsset.Attributes.TryGetValue("Category", out categories))
+                if (!blobAsset.Attributes.TryGetValue("Category", out categories) || string.Equals(categories, "NONE"))
                 {
                     categories = GeneralUtils.InferCategory(blobAsset.Id, Log);
                 }
