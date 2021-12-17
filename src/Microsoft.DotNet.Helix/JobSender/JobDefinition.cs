@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -158,6 +159,7 @@ namespace Microsoft.DotNet.Helix.Client
             try
             {
                 QueueInfo queueInfo = await HelixApi.Information.QueueInfoAsync(queueId, false, cancellationToken);
+                WarnForImpendingRemoval(log, queueInfo);
             }
             // 404 = this queue does not exist, or did and was removed.
             catch (RestApiException ex) when (ex.Response?.Status == 404)
@@ -232,6 +234,36 @@ namespace Microsoft.DotNet.Helix.Client
             var newJob = await JobApi.NewAsync(creationRequest, jobStartIdentifier, cancellationToken).ConfigureAwait(false);
 
             return new SentJob(JobApi, newJob, newJob.ResultsUri, newJob.ResultsUriRSAS);
+        }
+
+        private void WarnForImpendingRemoval(Action<string> log, QueueInfo queueInfo) 
+        {
+            bool azDoVariableDefined = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SYSTEM_TEAMPROJECT"));
+            DateTime whenItExpires = DateTime.MaxValue;
+
+            if (DateTime.TryParseExact(queueInfo.EstimatedRemovalDate, "yyyy-MM-dd", null, DateTimeStyles.AssumeUniversal, out DateTime dtIso))
+            {
+                whenItExpires = dtIso;
+            }
+            // This branch can be removed once the strings start coming in in ISO-8601 format
+            // Currently the API provides values in this format though and they are unlikely to get confused with each other.
+            else if (DateTime.TryParseExact(queueInfo.EstimatedRemovalDate, "M/d/yyyy", null, DateTimeStyles.AssumeUniversal, out DateTime dtUsa))
+            {
+                whenItExpires = dtUsa;
+            }
+
+            if (whenItExpires != DateTime.MaxValue) // We recognized a date from the string
+            {
+                TimeSpan untilRemoved = whenItExpires.ToUniversalTime().Subtract(DateTime.UtcNow);
+                if (untilRemoved.TotalDays <= 21)
+                {
+                    Console.WriteLine($"{(azDoVariableDefined ? "##vso[task.logissue type=warning]" : "")}Helix queue {queueInfo.QueueId} {(untilRemoved.TotalDays < 0 ? "was" : "is")} slated for removal on {queueInfo.EstimatedRemovalDate}. Please discontinue usage.  Contact dnceng for questions / concerns ");
+                }
+            }
+            else
+            {
+                Console.WriteLine($"{(azDoVariableDefined ? "##vso[task.logissue type=warning]" : "")}Unable to parse estimated removal date '{queueInfo.EstimatedRemovalDate}' for queue '{queueInfo.QueueId}' (please contact dnceng with this information)");
+            }
         }
 
         private (string queueId, string dockerTag, string queueAlias) ParseQueueId(string value)
