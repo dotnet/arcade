@@ -22,6 +22,9 @@ steps:
 
 - task: NuGetToolInstaller@1
   displayName: 'Install NuGet.exe'
+
+- powershell: |
+    Write-Host $(GuardianVersion)
   
 - task: NuGetCommand@2
   displayName: 'Install Guardian'
