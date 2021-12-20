@@ -54,7 +54,7 @@ class AdditionalTelemetryRequired(Exception):
     """Exception raised when we need to send additional telemetry during analysis
 
     Attributes:
-        metric_name -- name of the even
+        metric_name -- name of the event
         metric_value -- value of the metric event
     """
 
@@ -160,7 +160,7 @@ def analyze_operation(command: str, platform: str, device: str, is_device: bool,
 
             retry = True
 
-        if exit_code != 0 and android_connectivity_verified and is_device:
+        if exit_code != 0 and not android_connectivity_verified and is_device:
             # Any issue can also be caused by network connectivity problems (devices sometimes lose the WiFi connection)
             # In those cases, we want a retry and we want to report this
             android_connectivity_verified = True
