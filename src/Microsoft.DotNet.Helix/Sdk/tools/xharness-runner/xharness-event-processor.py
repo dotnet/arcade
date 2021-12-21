@@ -186,7 +186,7 @@ for operation in operations:
     device = operation.get('device')
     target = operation.get('target')
     target_os = operation.get('targetOS')
-    is_device = operation.get('isDevice', False)
+    is_device = operation.get('isDevice', None)
 
     try:
         analyze_operation(command, platform, device, is_device, target, exit_code)
@@ -194,9 +194,11 @@ for operation in operations:
         print(f'    Failed to analyze operation: {e}')
 
     custom_dimensions = dict()
-    custom_dimensions['command'] = operation['command']
-    custom_dimensions['platform'] = operation['platform']
-    custom_dimensions['isDevice'] = 'true' if operation['isDevice'] else 'false'
+    custom_dimensions['command'] = command
+    custom_dimensions['platform'] = platform
+
+    if is_device is not None:
+        custom_dimensions['isDevice'] = 'true' if str(is_device).lower() == 'true' else 'false'
 
     if 'target' in operation:
         if 'targetOS' in operation:
