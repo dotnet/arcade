@@ -6,7 +6,7 @@ namespace Microsoft.DotNet.Helix.Client.Models
 {
     public partial class BuildAggregation
     {
-        public BuildAggregation(string buildNumber, IImmutableDictionary<string, BuildAggregationSource> sources)
+        public BuildAggregation(string buildNumber, IImmutableDictionary<string, Models.BuildAggregationSource> sources)
         {
             BuildNumber = buildNumber;
             Sources = sources;
@@ -16,7 +16,7 @@ namespace Microsoft.DotNet.Helix.Client.Models
         public string BuildNumber { get; set; }
 
         [JsonProperty("Sources")]
-        public IImmutableDictionary<string, BuildAggregationSource> Sources { get; }
+        public IImmutableDictionary<string, Models.BuildAggregationSource> Sources { get; }
 
         [JsonIgnore]
         public bool IsValid
