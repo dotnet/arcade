@@ -27,7 +27,6 @@ namespace Microsoft.DotNet.Helix.Client
         IInformation Information { get; }
         IJob Job { get; }
         IMachine Machine { get; }
-        IRepository Repository { get; }
         IScaleSets ScaleSets { get; }
         IStorage Storage { get; }
         ITelemetry Telemetry { get; }
@@ -58,8 +57,6 @@ namespace Microsoft.DotNet.Helix.Client
 
         public IMachine Machine { get; }
 
-        public IRepository Repository { get; }
-
         public IScaleSets ScaleSets { get; }
 
         public IStorage Storage { get; }
@@ -88,14 +85,13 @@ namespace Microsoft.DotNet.Helix.Client
             :base(handlers)
         {
             HttpClientHandler.SslProtocols = SslProtocols.Tls12;
-            BaseUri = baseUri ?? new Uri("https://helix.dot.net/");
+            BaseUri = baseUri ?? new Uri("https://helix.dot.net//");
             Credentials = credentials;
             Aggregate = new Aggregate(this);
             Analysis = new Analysis(this);
             Information = new Information(this);
             Job = new Job(this);
             Machine = new Machine(this);
-            Repository = new Repository(this);
             ScaleSets = new ScaleSets(this);
             Storage = new Storage(this);
             Telemetry = new Telemetry(this);

@@ -18,6 +18,21 @@ namespace Microsoft.DotNet.Helix.Client.Models
         [JsonProperty("FailureReason")]
         public FailureReason FailureReason { get; set; }
 
+        [JsonProperty("Queued")]
+        public DateTimeOffset? Queued { get; set; }
+
+        [JsonProperty("Started")]
+        public DateTimeOffset? Started { get; set; }
+
+        [JsonProperty("Finished")]
+        public DateTimeOffset? Finished { get; set; }
+
+        [JsonProperty("Delay")]
+        public string Delay { get; set; }
+
+        [JsonProperty("Duration")]
+        public string Duration { get; set; }
+
         [JsonProperty("Id")]
         public string Id { get; set; }
 
@@ -39,8 +54,8 @@ namespace Microsoft.DotNet.Helix.Client.Models
         [JsonProperty("Logs")]
         public IImmutableList<WorkItemLog> Logs { get; set; }
 
-        [JsonProperty("Analysis")]
-        public AnalysisReport Analysis { get; set; }
+        [JsonProperty("Files")]
+        public IImmutableList<WorkItemFile> Files { get; set; }
 
         [JsonProperty("OtherEvents")]
         public IImmutableList<Newtonsoft.Json.Linq.JToken> OtherEvents { get; set; }

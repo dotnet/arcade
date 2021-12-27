@@ -13,19 +13,19 @@ namespace Microsoft.DotNet.Helix.Client
 {
     public partial interface IJob
     {
-        Task<IImmutableList<JobSummary>> ListAsync(
-            int? count = default,
-            string filterBuild = default,
-            string filterCreator = default,
-            string filterName = default,
-            string filterSource = default,
-            string filterType = default,
-            CancellationToken cancellationToken = default
-        );
-
         Task<JobCreationResult> NewAsync(
             JobCreationRequest body,
             string idempotencyKey,
+            CancellationToken cancellationToken = default
+        );
+
+        Task<IImmutableList<JobSummary>> ListAsync(
+            string build = default,
+            int? count = default,
+            string creator = default,
+            string name = default,
+            string source = default,
+            string type = default,
             CancellationToken cancellationToken = default
         );
 
@@ -44,12 +44,13 @@ namespace Microsoft.DotNet.Helix.Client
             CancellationToken cancellationToken = default
         );
 
-        Task<Newtonsoft.Json.Linq.JToken> CancelAsync(
+        Task CancelAsync(
             string job,
+            string jobCancellationToken = default,
             CancellationToken cancellationToken = default
         );
 
-        Task<Newtonsoft.Json.Linq.JToken> WaitAsync(
+        Task WaitAsync(
             string job,
             CancellationToken cancellationToken = default
         );
@@ -66,120 +67,6 @@ namespace Microsoft.DotNet.Helix.Client
         public HelixApi Client { get; }
 
         partial void HandleFailedRequest(RestApiException ex);
-
-        partial void HandleFailedListRequest(RestApiException ex);
-
-        public async Task<IImmutableList<JobSummary>> ListAsync(
-            int? count = default,
-            string filterBuild = default,
-            string filterCreator = default,
-            string filterName = default,
-            string filterSource = default,
-            string filterType = default,
-            CancellationToken cancellationToken = default
-        )
-        {
-            using (var _res = await ListInternalAsync(
-                count,
-                filterBuild,
-                filterCreator,
-                filterName,
-                filterSource,
-                filterType,
-                cancellationToken
-            ).ConfigureAwait(false))
-            {
-                return _res.Body;
-            }
-        }
-
-        internal async Task OnListFailed(HttpRequestMessage req, HttpResponseMessage res)
-        {
-            var content = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
-            var ex = new RestApiException(
-                new HttpRequestMessageWrapper(req, null),
-                new HttpResponseMessageWrapper(res, content));
-            HandleFailedListRequest(ex);
-            HandleFailedRequest(ex);
-            Client.OnFailedRequest(ex);
-            throw ex;
-        }
-
-        internal async Task<HttpOperationResponse<IImmutableList<JobSummary>>> ListInternalAsync(
-            int? count = default,
-            string filterBuild = default,
-            string filterCreator = default,
-            string filterName = default,
-            string filterSource = default,
-            string filterType = default,
-            CancellationToken cancellationToken = default
-        )
-        {
-
-            var _path = "/api/2019-06-17/jobs";
-
-            var _query = new QueryBuilder();
-            if (count != default)
-            {
-                _query.Add("count", Client.Serialize(count));
-            }
-            if (!string.IsNullOrEmpty(filterCreator))
-            {
-                _query.Add("filter.creator", Client.Serialize(filterCreator));
-            }
-            if (!string.IsNullOrEmpty(filterSource))
-            {
-                _query.Add("filter.source", Client.Serialize(filterSource));
-            }
-            if (!string.IsNullOrEmpty(filterType))
-            {
-                _query.Add("filter.type", Client.Serialize(filterType));
-            }
-            if (!string.IsNullOrEmpty(filterBuild))
-            {
-                _query.Add("filter.build", Client.Serialize(filterBuild));
-            }
-            if (!string.IsNullOrEmpty(filterName))
-            {
-                _query.Add("filter.name", Client.Serialize(filterName));
-            }
-
-            var _uriBuilder = new UriBuilder(Client.BaseUri);
-            _uriBuilder.Path = _uriBuilder.Path.TrimEnd('/') + _path;
-            _uriBuilder.Query = _query.ToString();
-            var _url = _uriBuilder.Uri;
-
-            HttpRequestMessage _req = null;
-            HttpResponseMessage _res = null;
-            try
-            {
-                _req = new HttpRequestMessage(HttpMethod.Get, _url);
-
-                if (Client.Credentials != null)
-                {
-                    await Client.Credentials.ProcessHttpRequestAsync(_req, cancellationToken).ConfigureAwait(false);
-                }
-
-                _res = await Client.SendAsync(_req, cancellationToken).ConfigureAwait(false);
-                if (!_res.IsSuccessStatusCode)
-                {
-                    await OnListFailed(_req, _res);
-                }
-                string _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
-                return new HttpOperationResponse<IImmutableList<JobSummary>>
-                {
-                    Request = _req,
-                    Response = _res,
-                    Body = Client.Deserialize<IImmutableList<JobSummary>>(_responseContent),
-                };
-            }
-            catch (Exception)
-            {
-                _req?.Dispose();
-                _res?.Dispose();
-                throw;
-            }
-        }
 
         partial void HandleFailedNewRequest(RestApiException ex);
 
@@ -202,9 +89,11 @@ namespace Microsoft.DotNet.Helix.Client
         internal async Task OnNewFailed(HttpRequestMessage req, HttpResponseMessage res)
         {
             var content = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
-            var ex = new RestApiException(
+            var ex = new RestApiException<ApiError>(
                 new HttpRequestMessageWrapper(req, content),
-                new HttpResponseMessageWrapper(res, content));
+                new HttpResponseMessageWrapper(res, content),
+                Client.Deserialize<ApiError>(content)
+                );
             HandleFailedNewRequest(ex);
             HandleFailedRequest(ex);
             Client.OnFailedRequest(ex);
@@ -232,10 +121,12 @@ namespace Microsoft.DotNet.Helix.Client
                 throw new ArgumentNullException(nameof(idempotencyKey));
             }
 
+            const string apiVersion = "2019-06-17";
 
-            var _path = "/api/2019-06-17/jobs";
+            var _path = "/api/jobs";
 
             var _query = new QueryBuilder();
+            _query.Add("api-version", Client.Serialize(apiVersion));
 
             var _uriBuilder = new UriBuilder(Client.BaseUri);
             _uriBuilder.Path = _uriBuilder.Path.TrimEnd('/') + _path;
@@ -292,6 +183,124 @@ namespace Microsoft.DotNet.Helix.Client
             }
         }
 
+        partial void HandleFailedListRequest(RestApiException ex);
+
+        public async Task<IImmutableList<JobSummary>> ListAsync(
+            string build = default,
+            int? count = default,
+            string creator = default,
+            string name = default,
+            string source = default,
+            string type = default,
+            CancellationToken cancellationToken = default
+        )
+        {
+            using (var _res = await ListInternalAsync(
+                build,
+                count,
+                creator,
+                name,
+                source,
+                type,
+                cancellationToken
+            ).ConfigureAwait(false))
+            {
+                return _res.Body;
+            }
+        }
+
+        internal async Task OnListFailed(HttpRequestMessage req, HttpResponseMessage res)
+        {
+            var content = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
+            var ex = new RestApiException<ApiError>(
+                new HttpRequestMessageWrapper(req, null),
+                new HttpResponseMessageWrapper(res, content),
+                Client.Deserialize<ApiError>(content)
+                );
+            HandleFailedListRequest(ex);
+            HandleFailedRequest(ex);
+            Client.OnFailedRequest(ex);
+            throw ex;
+        }
+
+        internal async Task<HttpOperationResponse<IImmutableList<JobSummary>>> ListInternalAsync(
+            string build = default,
+            int? count = default,
+            string creator = default,
+            string name = default,
+            string source = default,
+            string type = default,
+            CancellationToken cancellationToken = default
+        )
+        {
+            const string apiVersion = "2019-06-17";
+
+            var _path = "/api/jobs";
+
+            var _query = new QueryBuilder();
+            if (!string.IsNullOrEmpty(creator))
+            {
+                _query.Add("Creator", Client.Serialize(creator));
+            }
+            if (!string.IsNullOrEmpty(source))
+            {
+                _query.Add("Source", Client.Serialize(source));
+            }
+            if (!string.IsNullOrEmpty(type))
+            {
+                _query.Add("Type", Client.Serialize(type));
+            }
+            if (!string.IsNullOrEmpty(build))
+            {
+                _query.Add("Build", Client.Serialize(build));
+            }
+            if (!string.IsNullOrEmpty(name))
+            {
+                _query.Add("Name", Client.Serialize(name));
+            }
+            if (count != default)
+            {
+                _query.Add("count", Client.Serialize(count));
+            }
+            _query.Add("api-version", Client.Serialize(apiVersion));
+
+            var _uriBuilder = new UriBuilder(Client.BaseUri);
+            _uriBuilder.Path = _uriBuilder.Path.TrimEnd('/') + _path;
+            _uriBuilder.Query = _query.ToString();
+            var _url = _uriBuilder.Uri;
+
+            HttpRequestMessage _req = null;
+            HttpResponseMessage _res = null;
+            try
+            {
+                _req = new HttpRequestMessage(HttpMethod.Get, _url);
+
+                if (Client.Credentials != null)
+                {
+                    await Client.Credentials.ProcessHttpRequestAsync(_req, cancellationToken).ConfigureAwait(false);
+                }
+
+                _res = await Client.SendAsync(_req, cancellationToken).ConfigureAwait(false);
+                if (!_res.IsSuccessStatusCode)
+                {
+                    await OnListFailed(_req, _res);
+                }
+                string _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
+                return new HttpOperationResponse<IImmutableList<JobSummary>>
+                {
+                    Request = _req,
+                    Response = _res,
+                    Body = Client.Deserialize<IImmutableList<JobSummary>>(_responseContent),
+                };
+            }
+            catch (Exception)
+            {
+                _req?.Dispose();
+                _res?.Dispose();
+                throw;
+            }
+        }
+
         partial void HandleFailedPassFailRequest(RestApiException ex);
 
         public async Task<JobPassFail> PassFailAsync(
@@ -311,9 +320,11 @@ namespace Microsoft.DotNet.Helix.Client
         internal async Task OnPassFailFailed(HttpRequestMessage req, HttpResponseMessage res)
         {
             var content = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
-            var ex = new RestApiException(
+            var ex = new RestApiException<ApiError>(
                 new HttpRequestMessageWrapper(req, null),
-                new HttpResponseMessageWrapper(res, content));
+                new HttpResponseMessageWrapper(res, content),
+                Client.Deserialize<ApiError>(content)
+                );
             HandleFailedPassFailRequest(ex);
             HandleFailedRequest(ex);
             Client.OnFailedRequest(ex);
@@ -330,11 +341,13 @@ namespace Microsoft.DotNet.Helix.Client
                 throw new ArgumentNullException(nameof(job));
             }
 
+            const string apiVersion = "2019-06-17";
 
-            var _path = "/api/2019-06-17/jobs/{job}/pf";
+            var _path = "/api/jobs/{job}/pf";
             _path = _path.Replace("{job}", Client.Serialize(job));
 
             var _query = new QueryBuilder();
+            _query.Add("api-version", Client.Serialize(apiVersion));
 
             var _uriBuilder = new UriBuilder(Client.BaseUri);
             _uriBuilder.Path = _uriBuilder.Path.TrimEnd('/') + _path;
@@ -392,9 +405,11 @@ namespace Microsoft.DotNet.Helix.Client
         internal async Task OnSummaryFailed(HttpRequestMessage req, HttpResponseMessage res)
         {
             var content = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
-            var ex = new RestApiException(
+            var ex = new RestApiException<ApiError>(
                 new HttpRequestMessageWrapper(req, null),
-                new HttpResponseMessageWrapper(res, content));
+                new HttpResponseMessageWrapper(res, content),
+                Client.Deserialize<ApiError>(content)
+                );
             HandleFailedSummaryRequest(ex);
             HandleFailedRequest(ex);
             Client.OnFailedRequest(ex);
@@ -411,11 +426,13 @@ namespace Microsoft.DotNet.Helix.Client
                 throw new ArgumentNullException(nameof(job));
             }
 
+            const string apiVersion = "2019-06-17";
 
-            var _path = "/api/2019-06-17/jobs/{job}";
+            var _path = "/api/jobs/{job}";
             _path = _path.Replace("{job}", Client.Serialize(job));
 
             var _query = new QueryBuilder();
+            _query.Add("api-version", Client.Serialize(apiVersion));
 
             var _uriBuilder = new UriBuilder(Client.BaseUri);
             _uriBuilder.Path = _uriBuilder.Path.TrimEnd('/') + _path;
@@ -473,9 +490,11 @@ namespace Microsoft.DotNet.Helix.Client
         internal async Task OnDetailsFailed(HttpRequestMessage req, HttpResponseMessage res)
         {
             var content = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
-            var ex = new RestApiException(
+            var ex = new RestApiException<ApiError>(
                 new HttpRequestMessageWrapper(req, null),
-                new HttpResponseMessageWrapper(res, content));
+                new HttpResponseMessageWrapper(res, content),
+                Client.Deserialize<ApiError>(content)
+                );
             HandleFailedDetailsRequest(ex);
             HandleFailedRequest(ex);
             Client.OnFailedRequest(ex);
@@ -492,11 +511,13 @@ namespace Microsoft.DotNet.Helix.Client
                 throw new ArgumentNullException(nameof(job));
             }
 
+            const string apiVersion = "2019-06-17";
 
-            var _path = "/api/2019-06-17/jobs/{job}/details";
+            var _path = "/api/jobs/{job}/details";
             _path = _path.Replace("{job}", Client.Serialize(job));
 
             var _query = new QueryBuilder();
+            _query.Add("api-version", Client.Serialize(apiVersion));
 
             var _uriBuilder = new UriBuilder(Client.BaseUri);
             _uriBuilder.Path = _uriBuilder.Path.TrimEnd('/') + _path;
@@ -537,34 +558,39 @@ namespace Microsoft.DotNet.Helix.Client
 
         partial void HandleFailedCancelRequest(RestApiException ex);
 
-        public async Task<Newtonsoft.Json.Linq.JToken> CancelAsync(
+        public async Task CancelAsync(
             string job,
+            string jobCancellationToken = default,
             CancellationToken cancellationToken = default
         )
         {
-            using (var _res = await CancelInternalAsync(
+            using (await CancelInternalAsync(
                 job,
+                jobCancellationToken,
                 cancellationToken
             ).ConfigureAwait(false))
             {
-                return _res.Body;
+                return;
             }
         }
 
         internal async Task OnCancelFailed(HttpRequestMessage req, HttpResponseMessage res)
         {
             var content = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
-            var ex = new RestApiException(
+            var ex = new RestApiException<ApiError>(
                 new HttpRequestMessageWrapper(req, null),
-                new HttpResponseMessageWrapper(res, content));
+                new HttpResponseMessageWrapper(res, content),
+                Client.Deserialize<ApiError>(content)
+                );
             HandleFailedCancelRequest(ex);
             HandleFailedRequest(ex);
             Client.OnFailedRequest(ex);
             throw ex;
         }
 
-        internal async Task<HttpOperationResponse<Newtonsoft.Json.Linq.JToken>> CancelInternalAsync(
+        internal async Task<HttpOperationResponse> CancelInternalAsync(
             string job,
+            string jobCancellationToken = default,
             CancellationToken cancellationToken = default
         )
         {
@@ -573,11 +599,17 @@ namespace Microsoft.DotNet.Helix.Client
                 throw new ArgumentNullException(nameof(job));
             }
 
+            const string apiVersion = "2019-06-17";
 
-            var _path = "/api/2019-06-17/jobs/{job}/cancel";
+            var _path = "/api/jobs/{job}/cancel";
             _path = _path.Replace("{job}", Client.Serialize(job));
 
             var _query = new QueryBuilder();
+            if (!string.IsNullOrEmpty(jobCancellationToken))
+            {
+                _query.Add("jobCancellationToken", Client.Serialize(jobCancellationToken));
+            }
+            _query.Add("api-version", Client.Serialize(apiVersion));
 
             var _uriBuilder = new UriBuilder(Client.BaseUri);
             _uriBuilder.Path = _uriBuilder.Path.TrimEnd('/') + _path;
@@ -601,11 +633,10 @@ namespace Microsoft.DotNet.Helix.Client
                     await OnCancelFailed(_req, _res);
                 }
                 string _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
-                return new HttpOperationResponse<Newtonsoft.Json.Linq.JToken>
+                return new HttpOperationResponse
                 {
                     Request = _req,
                     Response = _res,
-                    Body = Client.Deserialize<Newtonsoft.Json.Linq.JToken>(_responseContent),
                 };
             }
             catch (Exception)
@@ -618,33 +649,35 @@ namespace Microsoft.DotNet.Helix.Client
 
         partial void HandleFailedWaitRequest(RestApiException ex);
 
-        public async Task<Newtonsoft.Json.Linq.JToken> WaitAsync(
+        public async Task WaitAsync(
             string job,
             CancellationToken cancellationToken = default
         )
         {
-            using (var _res = await WaitInternalAsync(
+            using (await WaitInternalAsync(
                 job,
                 cancellationToken
             ).ConfigureAwait(false))
             {
-                return _res.Body;
+                return;
             }
         }
 
         internal async Task OnWaitFailed(HttpRequestMessage req, HttpResponseMessage res)
         {
             var content = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
-            var ex = new RestApiException(
+            var ex = new RestApiException<ApiError>(
                 new HttpRequestMessageWrapper(req, null),
-                new HttpResponseMessageWrapper(res, content));
+                new HttpResponseMessageWrapper(res, content),
+                Client.Deserialize<ApiError>(content)
+                );
             HandleFailedWaitRequest(ex);
             HandleFailedRequest(ex);
             Client.OnFailedRequest(ex);
             throw ex;
         }
 
-        internal async Task<HttpOperationResponse<Newtonsoft.Json.Linq.JToken>> WaitInternalAsync(
+        internal async Task<HttpOperationResponse> WaitInternalAsync(
             string job,
             CancellationToken cancellationToken = default
         )
@@ -654,11 +687,13 @@ namespace Microsoft.DotNet.Helix.Client
                 throw new ArgumentNullException(nameof(job));
             }
 
+            const string apiVersion = "2019-06-17";
 
-            var _path = "/api/2019-06-17/jobs/{job}/wait";
+            var _path = "/api/jobs/{job}/wait";
             _path = _path.Replace("{job}", Client.Serialize(job));
 
             var _query = new QueryBuilder();
+            _query.Add("api-version", Client.Serialize(apiVersion));
 
             var _uriBuilder = new UriBuilder(Client.BaseUri);
             _uriBuilder.Path = _uriBuilder.Path.TrimEnd('/') + _path;
@@ -682,11 +717,10 @@ namespace Microsoft.DotNet.Helix.Client
                     await OnWaitFailed(_req, _res);
                 }
                 string _responseContent = await _res.Content.ReadAsStringAsync().ConfigureAwait(false);
-                return new HttpOperationResponse<Newtonsoft.Json.Linq.JToken>
+                return new HttpOperationResponse
                 {
                     Request = _req,
                     Response = _res,
-                    Body = Client.Deserialize<Newtonsoft.Json.Linq.JToken>(_responseContent),
                 };
             }
             catch (Exception)

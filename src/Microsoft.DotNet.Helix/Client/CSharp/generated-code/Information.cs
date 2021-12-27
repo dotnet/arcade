@@ -15,10 +15,12 @@ namespace Microsoft.DotNet.Helix.Client
     {
         Task<QueueInfo> QueueInfoAsync(
             string queueId,
+            bool? includeQueueDepth = default,
             CancellationToken cancellationToken = default
         );
 
         Task<IImmutableList<QueueInfo>> QueueInfoListAsync(
+            bool? includeQueueDepth = default,
             CancellationToken cancellationToken = default
         );
 
@@ -39,11 +41,13 @@ namespace Microsoft.DotNet.Helix.Client
 
         public async Task<QueueInfo> QueueInfoAsync(
             string queueId,
+            bool? includeQueueDepth = default,
             CancellationToken cancellationToken = default
         )
         {
             using (var _res = await QueueInfoInternalAsync(
                 queueId,
+                includeQueueDepth,
                 cancellationToken
             ).ConfigureAwait(false))
             {
@@ -54,9 +58,11 @@ namespace Microsoft.DotNet.Helix.Client
         internal async Task OnQueueInfoFailed(HttpRequestMessage req, HttpResponseMessage res)
         {
             var content = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
-            var ex = new RestApiException(
+            var ex = new RestApiException<ApiError>(
                 new HttpRequestMessageWrapper(req, null),
-                new HttpResponseMessageWrapper(res, content));
+                new HttpResponseMessageWrapper(res, content),
+                Client.Deserialize<ApiError>(content)
+                );
             HandleFailedQueueInfoRequest(ex);
             HandleFailedRequest(ex);
             Client.OnFailedRequest(ex);
@@ -65,6 +71,7 @@ namespace Microsoft.DotNet.Helix.Client
 
         internal async Task<HttpOperationResponse<QueueInfo>> QueueInfoInternalAsync(
             string queueId,
+            bool? includeQueueDepth = default,
             CancellationToken cancellationToken = default
         )
         {
@@ -73,11 +80,17 @@ namespace Microsoft.DotNet.Helix.Client
                 throw new ArgumentNullException(nameof(queueId));
             }
 
+            const string apiVersion = "2019-06-17";
 
-            var _path = "/api/2019-06-17/info/queues/{queueId}";
+            var _path = "/api/info/queues/{queueId}";
             _path = _path.Replace("{queueId}", Client.Serialize(queueId));
 
             var _query = new QueryBuilder();
+            if (includeQueueDepth != default)
+            {
+                _query.Add("includeQueueDepth", Client.Serialize(includeQueueDepth));
+            }
+            _query.Add("api-version", Client.Serialize(apiVersion));
 
             var _uriBuilder = new UriBuilder(Client.BaseUri);
             _uriBuilder.Path = _uriBuilder.Path.TrimEnd('/') + _path;
@@ -119,10 +132,12 @@ namespace Microsoft.DotNet.Helix.Client
         partial void HandleFailedQueueInfoListRequest(RestApiException ex);
 
         public async Task<IImmutableList<QueueInfo>> QueueInfoListAsync(
+            bool? includeQueueDepth = default,
             CancellationToken cancellationToken = default
         )
         {
             using (var _res = await QueueInfoListInternalAsync(
+                includeQueueDepth,
                 cancellationToken
             ).ConfigureAwait(false))
             {
@@ -133,9 +148,11 @@ namespace Microsoft.DotNet.Helix.Client
         internal async Task OnQueueInfoListFailed(HttpRequestMessage req, HttpResponseMessage res)
         {
             var content = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
-            var ex = new RestApiException(
+            var ex = new RestApiException<ApiError>(
                 new HttpRequestMessageWrapper(req, null),
-                new HttpResponseMessageWrapper(res, content));
+                new HttpResponseMessageWrapper(res, content),
+                Client.Deserialize<ApiError>(content)
+                );
             HandleFailedQueueInfoListRequest(ex);
             HandleFailedRequest(ex);
             Client.OnFailedRequest(ex);
@@ -143,13 +160,20 @@ namespace Microsoft.DotNet.Helix.Client
         }
 
         internal async Task<HttpOperationResponse<IImmutableList<QueueInfo>>> QueueInfoListInternalAsync(
+            bool? includeQueueDepth = default,
             CancellationToken cancellationToken = default
         )
         {
+            const string apiVersion = "2019-06-17";
 
-            var _path = "/api/2019-06-17/info/queues";
+            var _path = "/api/info/queues";
 
             var _query = new QueryBuilder();
+            if (includeQueueDepth != default)
+            {
+                _query.Add("includeQueueDepth", Client.Serialize(includeQueueDepth));
+            }
+            _query.Add("api-version", Client.Serialize(apiVersion));
 
             var _uriBuilder = new UriBuilder(Client.BaseUri);
             _uriBuilder.Path = _uriBuilder.Path.TrimEnd('/') + _path;

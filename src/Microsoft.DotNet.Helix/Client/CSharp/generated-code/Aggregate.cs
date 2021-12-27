@@ -17,11 +17,11 @@ namespace Microsoft.DotNet.Helix.Client
             IImmutableList<string> groupBy,
             IImmutableList<string> otherProperties,
             string workitem,
-            string filterBuild = default,
-            string filterCreator = default,
-            string filterName = default,
-            string filterSource = default,
-            string filterType = default,
+            string build = default,
+            string creator = default,
+            string name = default,
+            string source = default,
+            string type = default,
             CancellationToken cancellationToken = default
         );
 
@@ -41,21 +41,21 @@ namespace Microsoft.DotNet.Helix.Client
         Task<IImmutableList<AggregatedWorkItemCounts>> JobSummaryAsync(
             IImmutableList<string> groupBy,
             int maxResultSets,
-            string filterBuild = default,
-            string filterCreator = default,
-            string filterName = default,
-            string filterSource = default,
-            string filterType = default,
+            string build = default,
+            string creator = default,
+            string name = default,
+            string source = default,
+            string type = default,
             CancellationToken cancellationToken = default
         );
 
         Task<IImmutableList<AggregatedWorkItemCounts>> WorkItemSummaryAsync(
             IImmutableList<string> groupBy,
-            string filterBuild = default,
-            string filterCreator = default,
-            string filterName = default,
-            string filterSource = default,
-            string filterType = default,
+            string build = default,
+            string creator = default,
+            string name = default,
+            string source = default,
+            string type = default,
             CancellationToken cancellationToken = default
         );
 
@@ -71,11 +71,11 @@ namespace Microsoft.DotNet.Helix.Client
         );
 
         Task<IImmutableDictionary<string, Newtonsoft.Json.Linq.JToken>> PropertiesAsync(
-            string filterBuild = default,
-            string filterCreator = default,
-            string filterName = default,
-            string filterSource = default,
-            string filterType = default,
+            string build = default,
+            string creator = default,
+            string name = default,
+            string source = default,
+            string type = default,
             CancellationToken cancellationToken = default
         );
 
@@ -88,11 +88,11 @@ namespace Microsoft.DotNet.Helix.Client
             IImmutableList<string> groupBy,
             int maxGroups,
             int maxResults,
-            string filterBuild = default,
-            string filterCreator = default,
-            string filterName = default,
-            string filterSource = default,
-            string filterType = default,
+            string build = default,
+            string creator = default,
+            string name = default,
+            string source = default,
+            string type = default,
             CancellationToken cancellationToken = default
         );
 
@@ -130,11 +130,11 @@ namespace Microsoft.DotNet.Helix.Client
             IImmutableList<string> groupBy,
             IImmutableList<string> otherProperties,
             string workitem,
-            string filterBuild = default,
-            string filterCreator = default,
-            string filterName = default,
-            string filterSource = default,
-            string filterType = default,
+            string build = default,
+            string creator = default,
+            string name = default,
+            string source = default,
+            string type = default,
             CancellationToken cancellationToken = default
         )
         {
@@ -142,11 +142,11 @@ namespace Microsoft.DotNet.Helix.Client
                 groupBy,
                 otherProperties,
                 workitem,
-                filterBuild,
-                filterCreator,
-                filterName,
-                filterSource,
-                filterType,
+                build,
+                creator,
+                name,
+                source,
+                type,
                 cancellationToken
             ).ConfigureAwait(false))
             {
@@ -157,9 +157,11 @@ namespace Microsoft.DotNet.Helix.Client
         internal async Task OnAnalysisSummaryFailed(HttpRequestMessage req, HttpResponseMessage res)
         {
             var content = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
-            var ex = new RestApiException(
+            var ex = new RestApiException<ApiError>(
                 new HttpRequestMessageWrapper(req, null),
-                new HttpResponseMessageWrapper(res, content));
+                new HttpResponseMessageWrapper(res, content),
+                Client.Deserialize<ApiError>(content)
+                );
             HandleFailedAnalysisSummaryRequest(ex);
             HandleFailedRequest(ex);
             Client.OnFailedRequest(ex);
@@ -170,11 +172,11 @@ namespace Microsoft.DotNet.Helix.Client
             IImmutableList<string> groupBy,
             IImmutableList<string> otherProperties,
             string workitem,
-            string filterBuild = default,
-            string filterCreator = default,
-            string filterName = default,
-            string filterSource = default,
-            string filterType = default,
+            string build = default,
+            string creator = default,
+            string name = default,
+            string source = default,
+            string type = default,
             CancellationToken cancellationToken = default
         )
         {
@@ -193,10 +195,31 @@ namespace Microsoft.DotNet.Helix.Client
                 throw new ArgumentNullException(nameof(workitem));
             }
 
+            const string apiVersion = "2019-06-17";
 
-            var _path = "/api/2019-06-17/aggregate/analysis";
+            var _path = "/api/aggregate/analysis";
 
             var _query = new QueryBuilder();
+            if (!string.IsNullOrEmpty(creator))
+            {
+                _query.Add("Creator", Client.Serialize(creator));
+            }
+            if (!string.IsNullOrEmpty(source))
+            {
+                _query.Add("Source", Client.Serialize(source));
+            }
+            if (!string.IsNullOrEmpty(type))
+            {
+                _query.Add("Type", Client.Serialize(type));
+            }
+            if (!string.IsNullOrEmpty(build))
+            {
+                _query.Add("Build", Client.Serialize(build));
+            }
+            if (!string.IsNullOrEmpty(name))
+            {
+                _query.Add("Name", Client.Serialize(name));
+            }
             if (!string.IsNullOrEmpty(workitem))
             {
                 _query.Add("workitem", Client.Serialize(workitem));
@@ -215,26 +238,7 @@ namespace Microsoft.DotNet.Helix.Client
                     _query.Add("otherProperties", Client.Serialize(_item));
                 }
             }
-            if (!string.IsNullOrEmpty(filterCreator))
-            {
-                _query.Add("filter.creator", Client.Serialize(filterCreator));
-            }
-            if (!string.IsNullOrEmpty(filterSource))
-            {
-                _query.Add("filter.source", Client.Serialize(filterSource));
-            }
-            if (!string.IsNullOrEmpty(filterType))
-            {
-                _query.Add("filter.type", Client.Serialize(filterType));
-            }
-            if (!string.IsNullOrEmpty(filterBuild))
-            {
-                _query.Add("filter.build", Client.Serialize(filterBuild));
-            }
-            if (!string.IsNullOrEmpty(filterName))
-            {
-                _query.Add("filter.name", Client.Serialize(filterName));
-            }
+            _query.Add("api-version", Client.Serialize(apiVersion));
 
             var _uriBuilder = new UriBuilder(Client.BaseUri);
             _uriBuilder.Path = _uriBuilder.Path.TrimEnd('/') + _path;
@@ -294,9 +298,11 @@ namespace Microsoft.DotNet.Helix.Client
         internal async Task OnBuildHistoryFailed(HttpRequestMessage req, HttpResponseMessage res)
         {
             var content = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
-            var ex = new RestApiException(
+            var ex = new RestApiException<ApiError>(
                 new HttpRequestMessageWrapper(req, null),
-                new HttpResponseMessageWrapper(res, content));
+                new HttpResponseMessageWrapper(res, content),
+                Client.Deserialize<ApiError>(content)
+                );
             HandleFailedBuildHistoryRequest(ex);
             HandleFailedRequest(ex);
             Client.OnFailedRequest(ex);
@@ -319,8 +325,9 @@ namespace Microsoft.DotNet.Helix.Client
                 throw new ArgumentNullException(nameof(type));
             }
 
+            const string apiVersion = "2019-06-17";
 
-            var _path = "/api/2019-06-17/aggregate/build/history";
+            var _path = "/api/aggregate/build/history";
 
             var _query = new QueryBuilder();
             if (source != default)
@@ -337,6 +344,7 @@ namespace Microsoft.DotNet.Helix.Client
                     _query.Add("type", Client.Serialize(_item));
                 }
             }
+            _query.Add("api-version", Client.Serialize(apiVersion));
 
             var _uriBuilder = new UriBuilder(Client.BaseUri);
             _uriBuilder.Path = _uriBuilder.Path.TrimEnd('/') + _path;
@@ -398,9 +406,11 @@ namespace Microsoft.DotNet.Helix.Client
         internal async Task OnBuildFailed(HttpRequestMessage req, HttpResponseMessage res)
         {
             var content = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
-            var ex = new RestApiException(
+            var ex = new RestApiException<ApiError>(
                 new HttpRequestMessageWrapper(req, null),
-                new HttpResponseMessageWrapper(res, content));
+                new HttpResponseMessageWrapper(res, content),
+                Client.Deserialize<ApiError>(content)
+                );
             HandleFailedBuildRequest(ex);
             HandleFailedRequest(ex);
             Client.OnFailedRequest(ex);
@@ -429,8 +439,9 @@ namespace Microsoft.DotNet.Helix.Client
                 throw new ArgumentNullException(nameof(types));
             }
 
+            const string apiVersion = "2019-06-17";
 
-            var _path = "/api/2019-06-17/aggregate/build";
+            var _path = "/api/aggregate/build";
 
             var _query = new QueryBuilder();
             if (sources != default)
@@ -451,6 +462,7 @@ namespace Microsoft.DotNet.Helix.Client
             {
                 _query.Add("buildNumber", Client.Serialize(buildNumber));
             }
+            _query.Add("api-version", Client.Serialize(apiVersion));
 
             var _uriBuilder = new UriBuilder(Client.BaseUri);
             _uriBuilder.Path = _uriBuilder.Path.TrimEnd('/') + _path;
@@ -494,22 +506,22 @@ namespace Microsoft.DotNet.Helix.Client
         public async Task<IImmutableList<AggregatedWorkItemCounts>> JobSummaryAsync(
             IImmutableList<string> groupBy,
             int maxResultSets,
-            string filterBuild = default,
-            string filterCreator = default,
-            string filterName = default,
-            string filterSource = default,
-            string filterType = default,
+            string build = default,
+            string creator = default,
+            string name = default,
+            string source = default,
+            string type = default,
             CancellationToken cancellationToken = default
         )
         {
             using (var _res = await JobSummaryInternalAsync(
                 groupBy,
                 maxResultSets,
-                filterBuild,
-                filterCreator,
-                filterName,
-                filterSource,
-                filterType,
+                build,
+                creator,
+                name,
+                source,
+                type,
                 cancellationToken
             ).ConfigureAwait(false))
             {
@@ -520,9 +532,11 @@ namespace Microsoft.DotNet.Helix.Client
         internal async Task OnJobSummaryFailed(HttpRequestMessage req, HttpResponseMessage res)
         {
             var content = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
-            var ex = new RestApiException(
+            var ex = new RestApiException<ApiError>(
                 new HttpRequestMessageWrapper(req, null),
-                new HttpResponseMessageWrapper(res, content));
+                new HttpResponseMessageWrapper(res, content),
+                Client.Deserialize<ApiError>(content)
+                );
             HandleFailedJobSummaryRequest(ex);
             HandleFailedRequest(ex);
             Client.OnFailedRequest(ex);
@@ -532,11 +546,11 @@ namespace Microsoft.DotNet.Helix.Client
         internal async Task<HttpOperationResponse<IImmutableList<AggregatedWorkItemCounts>>> JobSummaryInternalAsync(
             IImmutableList<string> groupBy,
             int maxResultSets,
-            string filterBuild = default,
-            string filterCreator = default,
-            string filterName = default,
-            string filterSource = default,
-            string filterType = default,
+            string build = default,
+            string creator = default,
+            string name = default,
+            string source = default,
+            string type = default,
             CancellationToken cancellationToken = default
         )
         {
@@ -550,10 +564,31 @@ namespace Microsoft.DotNet.Helix.Client
                 throw new ArgumentNullException(nameof(maxResultSets));
             }
 
+            const string apiVersion = "2019-06-17";
 
-            var _path = "/api/2019-06-17/aggregate/jobs";
+            var _path = "/api/aggregate/jobs";
 
             var _query = new QueryBuilder();
+            if (!string.IsNullOrEmpty(creator))
+            {
+                _query.Add("Creator", Client.Serialize(creator));
+            }
+            if (!string.IsNullOrEmpty(source))
+            {
+                _query.Add("Source", Client.Serialize(source));
+            }
+            if (!string.IsNullOrEmpty(type))
+            {
+                _query.Add("Type", Client.Serialize(type));
+            }
+            if (!string.IsNullOrEmpty(build))
+            {
+                _query.Add("Build", Client.Serialize(build));
+            }
+            if (!string.IsNullOrEmpty(name))
+            {
+                _query.Add("Name", Client.Serialize(name));
+            }
             if (groupBy != default)
             {
                 foreach (var _item in groupBy)
@@ -565,26 +600,7 @@ namespace Microsoft.DotNet.Helix.Client
             {
                 _query.Add("maxResultSets", Client.Serialize(maxResultSets));
             }
-            if (!string.IsNullOrEmpty(filterCreator))
-            {
-                _query.Add("filter.creator", Client.Serialize(filterCreator));
-            }
-            if (!string.IsNullOrEmpty(filterSource))
-            {
-                _query.Add("filter.source", Client.Serialize(filterSource));
-            }
-            if (!string.IsNullOrEmpty(filterType))
-            {
-                _query.Add("filter.type", Client.Serialize(filterType));
-            }
-            if (!string.IsNullOrEmpty(filterBuild))
-            {
-                _query.Add("filter.build", Client.Serialize(filterBuild));
-            }
-            if (!string.IsNullOrEmpty(filterName))
-            {
-                _query.Add("filter.name", Client.Serialize(filterName));
-            }
+            _query.Add("api-version", Client.Serialize(apiVersion));
 
             var _uriBuilder = new UriBuilder(Client.BaseUri);
             _uriBuilder.Path = _uriBuilder.Path.TrimEnd('/') + _path;
@@ -627,21 +643,21 @@ namespace Microsoft.DotNet.Helix.Client
 
         public async Task<IImmutableList<AggregatedWorkItemCounts>> WorkItemSummaryAsync(
             IImmutableList<string> groupBy,
-            string filterBuild = default,
-            string filterCreator = default,
-            string filterName = default,
-            string filterSource = default,
-            string filterType = default,
+            string build = default,
+            string creator = default,
+            string name = default,
+            string source = default,
+            string type = default,
             CancellationToken cancellationToken = default
         )
         {
             using (var _res = await WorkItemSummaryInternalAsync(
                 groupBy,
-                filterBuild,
-                filterCreator,
-                filterName,
-                filterSource,
-                filterType,
+                build,
+                creator,
+                name,
+                source,
+                type,
                 cancellationToken
             ).ConfigureAwait(false))
             {
@@ -652,9 +668,11 @@ namespace Microsoft.DotNet.Helix.Client
         internal async Task OnWorkItemSummaryFailed(HttpRequestMessage req, HttpResponseMessage res)
         {
             var content = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
-            var ex = new RestApiException(
+            var ex = new RestApiException<ApiError>(
                 new HttpRequestMessageWrapper(req, null),
-                new HttpResponseMessageWrapper(res, content));
+                new HttpResponseMessageWrapper(res, content),
+                Client.Deserialize<ApiError>(content)
+                );
             HandleFailedWorkItemSummaryRequest(ex);
             HandleFailedRequest(ex);
             Client.OnFailedRequest(ex);
@@ -663,11 +681,11 @@ namespace Microsoft.DotNet.Helix.Client
 
         internal async Task<HttpOperationResponse<IImmutableList<AggregatedWorkItemCounts>>> WorkItemSummaryInternalAsync(
             IImmutableList<string> groupBy,
-            string filterBuild = default,
-            string filterCreator = default,
-            string filterName = default,
-            string filterSource = default,
-            string filterType = default,
+            string build = default,
+            string creator = default,
+            string name = default,
+            string source = default,
+            string type = default,
             CancellationToken cancellationToken = default
         )
         {
@@ -676,10 +694,31 @@ namespace Microsoft.DotNet.Helix.Client
                 throw new ArgumentNullException(nameof(groupBy));
             }
 
+            const string apiVersion = "2019-06-17";
 
-            var _path = "/api/2019-06-17/aggregate/workitems";
+            var _path = "/api/aggregate/workitems";
 
             var _query = new QueryBuilder();
+            if (!string.IsNullOrEmpty(creator))
+            {
+                _query.Add("Creator", Client.Serialize(creator));
+            }
+            if (!string.IsNullOrEmpty(source))
+            {
+                _query.Add("Source", Client.Serialize(source));
+            }
+            if (!string.IsNullOrEmpty(type))
+            {
+                _query.Add("Type", Client.Serialize(type));
+            }
+            if (!string.IsNullOrEmpty(build))
+            {
+                _query.Add("Build", Client.Serialize(build));
+            }
+            if (!string.IsNullOrEmpty(name))
+            {
+                _query.Add("Name", Client.Serialize(name));
+            }
             if (groupBy != default)
             {
                 foreach (var _item in groupBy)
@@ -687,26 +726,7 @@ namespace Microsoft.DotNet.Helix.Client
                     _query.Add("groupBy", Client.Serialize(_item));
                 }
             }
-            if (!string.IsNullOrEmpty(filterCreator))
-            {
-                _query.Add("filter.creator", Client.Serialize(filterCreator));
-            }
-            if (!string.IsNullOrEmpty(filterSource))
-            {
-                _query.Add("filter.source", Client.Serialize(filterSource));
-            }
-            if (!string.IsNullOrEmpty(filterType))
-            {
-                _query.Add("filter.type", Client.Serialize(filterType));
-            }
-            if (!string.IsNullOrEmpty(filterBuild))
-            {
-                _query.Add("filter.build", Client.Serialize(filterBuild));
-            }
-            if (!string.IsNullOrEmpty(filterName))
-            {
-                _query.Add("filter.name", Client.Serialize(filterName));
-            }
+            _query.Add("api-version", Client.Serialize(apiVersion));
 
             var _uriBuilder = new UriBuilder(Client.BaseUri);
             _uriBuilder.Path = _uriBuilder.Path.TrimEnd('/') + _path;
@@ -776,9 +796,11 @@ namespace Microsoft.DotNet.Helix.Client
         internal async Task OnAnalysisDetailFailed(HttpRequestMessage req, HttpResponseMessage res)
         {
             var content = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
-            var ex = new RestApiException(
+            var ex = new RestApiException<ApiError>(
                 new HttpRequestMessageWrapper(req, null),
-                new HttpResponseMessageWrapper(res, content));
+                new HttpResponseMessageWrapper(res, content),
+                Client.Deserialize<ApiError>(content)
+                );
             HandleFailedAnalysisDetailRequest(ex);
             HandleFailedRequest(ex);
             Client.OnFailedRequest(ex);
@@ -831,8 +853,9 @@ namespace Microsoft.DotNet.Helix.Client
                 throw new ArgumentNullException(nameof(workitem));
             }
 
+            const string apiVersion = "2019-06-17";
 
-            var _path = "/api/2019-06-17/aggregate/analysisdetail";
+            var _path = "/api/aggregate/analysisdetail";
 
             var _query = new QueryBuilder();
             if (!string.IsNullOrEmpty(source))
@@ -866,6 +889,7 @@ namespace Microsoft.DotNet.Helix.Client
                     _query.Add("groupBy", Client.Serialize(_item));
                 }
             }
+            _query.Add("api-version", Client.Serialize(apiVersion));
 
             var _uriBuilder = new UriBuilder(Client.BaseUri);
             _uriBuilder.Path = _uriBuilder.Path.TrimEnd('/') + _path;
@@ -907,20 +931,20 @@ namespace Microsoft.DotNet.Helix.Client
         partial void HandleFailedPropertiesRequest(RestApiException ex);
 
         public async Task<IImmutableDictionary<string, Newtonsoft.Json.Linq.JToken>> PropertiesAsync(
-            string filterBuild = default,
-            string filterCreator = default,
-            string filterName = default,
-            string filterSource = default,
-            string filterType = default,
+            string build = default,
+            string creator = default,
+            string name = default,
+            string source = default,
+            string type = default,
             CancellationToken cancellationToken = default
         )
         {
             using (var _res = await PropertiesInternalAsync(
-                filterBuild,
-                filterCreator,
-                filterName,
-                filterSource,
-                filterType,
+                build,
+                creator,
+                name,
+                source,
+                type,
                 cancellationToken
             ).ConfigureAwait(false))
             {
@@ -931,9 +955,11 @@ namespace Microsoft.DotNet.Helix.Client
         internal async Task OnPropertiesFailed(HttpRequestMessage req, HttpResponseMessage res)
         {
             var content = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
-            var ex = new RestApiException(
+            var ex = new RestApiException<ApiError>(
                 new HttpRequestMessageWrapper(req, null),
-                new HttpResponseMessageWrapper(res, content));
+                new HttpResponseMessageWrapper(res, content),
+                Client.Deserialize<ApiError>(content)
+                );
             HandleFailedPropertiesRequest(ex);
             HandleFailedRequest(ex);
             Client.OnFailedRequest(ex);
@@ -941,38 +967,40 @@ namespace Microsoft.DotNet.Helix.Client
         }
 
         internal async Task<HttpOperationResponse<IImmutableDictionary<string, Newtonsoft.Json.Linq.JToken>>> PropertiesInternalAsync(
-            string filterBuild = default,
-            string filterCreator = default,
-            string filterName = default,
-            string filterSource = default,
-            string filterType = default,
+            string build = default,
+            string creator = default,
+            string name = default,
+            string source = default,
+            string type = default,
             CancellationToken cancellationToken = default
         )
         {
+            const string apiVersion = "2019-06-17";
 
-            var _path = "/api/2019-06-17/aggregate/properties";
+            var _path = "/api/aggregate/properties";
 
             var _query = new QueryBuilder();
-            if (!string.IsNullOrEmpty(filterCreator))
+            if (!string.IsNullOrEmpty(creator))
             {
-                _query.Add("filter.creator", Client.Serialize(filterCreator));
+                _query.Add("Creator", Client.Serialize(creator));
             }
-            if (!string.IsNullOrEmpty(filterSource))
+            if (!string.IsNullOrEmpty(source))
             {
-                _query.Add("filter.source", Client.Serialize(filterSource));
+                _query.Add("Source", Client.Serialize(source));
             }
-            if (!string.IsNullOrEmpty(filterType))
+            if (!string.IsNullOrEmpty(type))
             {
-                _query.Add("filter.type", Client.Serialize(filterType));
+                _query.Add("Type", Client.Serialize(type));
             }
-            if (!string.IsNullOrEmpty(filterBuild))
+            if (!string.IsNullOrEmpty(build))
             {
-                _query.Add("filter.build", Client.Serialize(filterBuild));
+                _query.Add("Build", Client.Serialize(build));
             }
-            if (!string.IsNullOrEmpty(filterName))
+            if (!string.IsNullOrEmpty(name))
             {
-                _query.Add("filter.name", Client.Serialize(filterName));
+                _query.Add("Name", Client.Serialize(name));
             }
+            _query.Add("api-version", Client.Serialize(apiVersion));
 
             var _uriBuilder = new UriBuilder(Client.BaseUri);
             _uriBuilder.Path = _uriBuilder.Path.TrimEnd('/') + _path;
@@ -1030,9 +1058,11 @@ namespace Microsoft.DotNet.Helix.Client
         internal async Task OnInvestigation_ContinueFailed(HttpRequestMessage req, HttpResponseMessage res)
         {
             var content = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
-            var ex = new RestApiException(
+            var ex = new RestApiException<ApiError>(
                 new HttpRequestMessageWrapper(req, null),
-                new HttpResponseMessageWrapper(res, content));
+                new HttpResponseMessageWrapper(res, content),
+                Client.Deserialize<ApiError>(content)
+                );
             HandleFailedInvestigation_ContinueRequest(ex);
             HandleFailedRequest(ex);
             Client.OnFailedRequest(ex);
@@ -1049,11 +1079,13 @@ namespace Microsoft.DotNet.Helix.Client
                 throw new ArgumentNullException(nameof(id));
             }
 
+            const string apiVersion = "2019-06-17";
 
-            var _path = "/api/2019-06-17/aggregate/investigation/continue/{id}";
+            var _path = "/api/aggregate/investigation/continue/{id}";
             _path = _path.Replace("{id}", Client.Serialize(id));
 
             var _query = new QueryBuilder();
+            _query.Add("api-version", Client.Serialize(apiVersion));
 
             var _uriBuilder = new UriBuilder(Client.BaseUri);
             _uriBuilder.Path = _uriBuilder.Path.TrimEnd('/') + _path;
@@ -1098,11 +1130,11 @@ namespace Microsoft.DotNet.Helix.Client
             IImmutableList<string> groupBy,
             int maxGroups,
             int maxResults,
-            string filterBuild = default,
-            string filterCreator = default,
-            string filterName = default,
-            string filterSource = default,
-            string filterType = default,
+            string build = default,
+            string creator = default,
+            string name = default,
+            string source = default,
+            string type = default,
             CancellationToken cancellationToken = default
         )
         {
@@ -1110,11 +1142,11 @@ namespace Microsoft.DotNet.Helix.Client
                 groupBy,
                 maxGroups,
                 maxResults,
-                filterBuild,
-                filterCreator,
-                filterName,
-                filterSource,
-                filterType,
+                build,
+                creator,
+                name,
+                source,
+                type,
                 cancellationToken
             ).ConfigureAwait(false))
             {
@@ -1125,9 +1157,11 @@ namespace Microsoft.DotNet.Helix.Client
         internal async Task OnInvestigationFailed(HttpRequestMessage req, HttpResponseMessage res)
         {
             var content = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
-            var ex = new RestApiException(
+            var ex = new RestApiException<ApiError>(
                 new HttpRequestMessageWrapper(req, null),
-                new HttpResponseMessageWrapper(res, content));
+                new HttpResponseMessageWrapper(res, content),
+                Client.Deserialize<ApiError>(content)
+                );
             HandleFailedInvestigationRequest(ex);
             HandleFailedRequest(ex);
             Client.OnFailedRequest(ex);
@@ -1138,11 +1172,11 @@ namespace Microsoft.DotNet.Helix.Client
             IImmutableList<string> groupBy,
             int maxGroups,
             int maxResults,
-            string filterBuild = default,
-            string filterCreator = default,
-            string filterName = default,
-            string filterSource = default,
-            string filterType = default,
+            string build = default,
+            string creator = default,
+            string name = default,
+            string source = default,
+            string type = default,
             CancellationToken cancellationToken = default
         )
         {
@@ -1161,10 +1195,31 @@ namespace Microsoft.DotNet.Helix.Client
                 throw new ArgumentNullException(nameof(maxResults));
             }
 
+            const string apiVersion = "2019-06-17";
 
-            var _path = "/api/2019-06-17/aggregate/investigation";
+            var _path = "/api/aggregate/investigation";
 
             var _query = new QueryBuilder();
+            if (!string.IsNullOrEmpty(creator))
+            {
+                _query.Add("Creator", Client.Serialize(creator));
+            }
+            if (!string.IsNullOrEmpty(source))
+            {
+                _query.Add("Source", Client.Serialize(source));
+            }
+            if (!string.IsNullOrEmpty(type))
+            {
+                _query.Add("Type", Client.Serialize(type));
+            }
+            if (!string.IsNullOrEmpty(build))
+            {
+                _query.Add("Build", Client.Serialize(build));
+            }
+            if (!string.IsNullOrEmpty(name))
+            {
+                _query.Add("Name", Client.Serialize(name));
+            }
             if (groupBy != default)
             {
                 foreach (var _item in groupBy)
@@ -1180,26 +1235,7 @@ namespace Microsoft.DotNet.Helix.Client
             {
                 _query.Add("maxResults", Client.Serialize(maxResults));
             }
-            if (!string.IsNullOrEmpty(filterCreator))
-            {
-                _query.Add("filter.creator", Client.Serialize(filterCreator));
-            }
-            if (!string.IsNullOrEmpty(filterSource))
-            {
-                _query.Add("filter.source", Client.Serialize(filterSource));
-            }
-            if (!string.IsNullOrEmpty(filterType))
-            {
-                _query.Add("filter.type", Client.Serialize(filterType));
-            }
-            if (!string.IsNullOrEmpty(filterBuild))
-            {
-                _query.Add("filter.build", Client.Serialize(filterBuild));
-            }
-            if (!string.IsNullOrEmpty(filterName))
-            {
-                _query.Add("filter.name", Client.Serialize(filterName));
-            }
+            _query.Add("api-version", Client.Serialize(apiVersion));
 
             var _uriBuilder = new UriBuilder(Client.BaseUri);
             _uriBuilder.Path = _uriBuilder.Path.TrimEnd('/') + _path;
@@ -1267,9 +1303,11 @@ namespace Microsoft.DotNet.Helix.Client
         internal async Task OnHistoryFailed(HttpRequestMessage req, HttpResponseMessage res)
         {
             var content = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
-            var ex = new RestApiException(
+            var ex = new RestApiException<ApiError>(
                 new HttpRequestMessageWrapper(req, null),
-                new HttpResponseMessageWrapper(res, content));
+                new HttpResponseMessageWrapper(res, content),
+                Client.Deserialize<ApiError>(content)
+                );
             HandleFailedHistoryRequest(ex);
             HandleFailedRequest(ex);
             Client.OnFailedRequest(ex);
@@ -1316,8 +1354,9 @@ namespace Microsoft.DotNet.Helix.Client
                 throw new ArgumentNullException(nameof(workitem));
             }
 
+            const string apiVersion = "2019-06-17";
 
-            var _path = "/api/2019-06-17/aggregate/history/{analysisType}";
+            var _path = "/api/aggregate/history/{analysisType}";
             _path = _path.Replace("{analysisType}", Client.Serialize(analysisType));
 
             var _query = new QueryBuilder();
@@ -1341,6 +1380,7 @@ namespace Microsoft.DotNet.Helix.Client
             {
                 _query.Add("days", Client.Serialize(days));
             }
+            _query.Add("api-version", Client.Serialize(apiVersion));
 
             var _uriBuilder = new UriBuilder(Client.BaseUri);
             _uriBuilder.Path = _uriBuilder.Path.TrimEnd('/') + _path;
@@ -1398,9 +1438,11 @@ namespace Microsoft.DotNet.Helix.Client
         internal async Task OnMultiSourceFailed(HttpRequestMessage req, HttpResponseMessage res)
         {
             var content = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
-            var ex = new RestApiException(
+            var ex = new RestApiException<ApiError>(
                 new HttpRequestMessageWrapper(req, content),
-                new HttpResponseMessageWrapper(res, content));
+                new HttpResponseMessageWrapper(res, content),
+                Client.Deserialize<ApiError>(content)
+                );
             HandleFailedMultiSourceRequest(ex);
             HandleFailedRequest(ex);
             Client.OnFailedRequest(ex);
@@ -1417,10 +1459,12 @@ namespace Microsoft.DotNet.Helix.Client
                 throw new ArgumentNullException(nameof(body));
             }
 
+            const string apiVersion = "2019-06-17";
 
-            var _path = "/api/2019-06-17/aggregate/multi-source";
+            var _path = "/api/aggregate/multi-source";
 
             var _query = new QueryBuilder();
+            _query.Add("api-version", Client.Serialize(apiVersion));
 
             var _uriBuilder = new UriBuilder(Client.BaseUri);
             _uriBuilder.Path = _uriBuilder.Path.TrimEnd('/') + _path;

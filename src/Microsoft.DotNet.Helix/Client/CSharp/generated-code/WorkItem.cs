@@ -77,9 +77,11 @@ namespace Microsoft.DotNet.Helix.Client
         internal async Task OnGetFileFailed(HttpRequestMessage req, HttpResponseMessage res)
         {
             var content = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
-            var ex = new RestApiException(
+            var ex = new RestApiException<ApiError>(
                 new HttpRequestMessageWrapper(req, null),
-                new HttpResponseMessageWrapper(res, content));
+                new HttpResponseMessageWrapper(res, content),
+                Client.Deserialize<ApiError>(content)
+                );
             HandleFailedGetFileRequest(ex);
             HandleFailedRequest(ex);
             Client.OnFailedRequest(ex);
@@ -108,13 +110,15 @@ namespace Microsoft.DotNet.Helix.Client
                 throw new ArgumentNullException(nameof(job));
             }
 
+            const string apiVersion = "2019-06-17";
 
-            var _path = "/api/2019-06-17/jobs/{job}/workitems/{id}/files/{file}";
+            var _path = "/api/jobs/{job}/workitems/{id}/files/{file}";
             _path = _path.Replace("{job}", Client.Serialize(job));
             _path = _path.Replace("{id}", Client.Serialize(id));
             _path = _path.Replace("{file}", Client.Serialize(file));
 
             var _query = new QueryBuilder();
+            _query.Add("api-version", Client.Serialize(apiVersion));
 
             var _uriBuilder = new UriBuilder(Client.BaseUri);
             _uriBuilder.Path = _uriBuilder.Path.TrimEnd('/') + _path;
@@ -174,9 +178,11 @@ namespace Microsoft.DotNet.Helix.Client
         internal async Task OnListFilesFailed(HttpRequestMessage req, HttpResponseMessage res)
         {
             var content = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
-            var ex = new RestApiException(
+            var ex = new RestApiException<ApiError>(
                 new HttpRequestMessageWrapper(req, null),
-                new HttpResponseMessageWrapper(res, content));
+                new HttpResponseMessageWrapper(res, content),
+                Client.Deserialize<ApiError>(content)
+                );
             HandleFailedListFilesRequest(ex);
             HandleFailedRequest(ex);
             Client.OnFailedRequest(ex);
@@ -199,12 +205,14 @@ namespace Microsoft.DotNet.Helix.Client
                 throw new ArgumentNullException(nameof(job));
             }
 
+            const string apiVersion = "2019-06-17";
 
-            var _path = "/api/2019-06-17/jobs/{job}/workitems/{id}/files";
+            var _path = "/api/jobs/{job}/workitems/{id}/files";
             _path = _path.Replace("{job}", Client.Serialize(job));
             _path = _path.Replace("{id}", Client.Serialize(id));
 
             var _query = new QueryBuilder();
+            _query.Add("api-version", Client.Serialize(apiVersion));
 
             var _uriBuilder = new UriBuilder(Client.BaseUri);
             _uriBuilder.Path = _uriBuilder.Path.TrimEnd('/') + _path;
@@ -262,9 +270,11 @@ namespace Microsoft.DotNet.Helix.Client
         internal async Task OnConsoleLogFailed(HttpRequestMessage req, HttpResponseMessage res)
         {
             var content = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
-            var ex = new RestApiException(
+            var ex = new RestApiException<ApiError>(
                 new HttpRequestMessageWrapper(req, null),
-                new HttpResponseMessageWrapper(res, content));
+                new HttpResponseMessageWrapper(res, content),
+                Client.Deserialize<ApiError>(content)
+                );
             HandleFailedConsoleLogRequest(ex);
             HandleFailedRequest(ex);
             Client.OnFailedRequest(ex);
@@ -287,12 +297,14 @@ namespace Microsoft.DotNet.Helix.Client
                 throw new ArgumentNullException(nameof(job));
             }
 
+            const string apiVersion = "2019-06-17";
 
-            var _path = "/api/2019-06-17/jobs/{job}/workitems/{id}/console";
+            var _path = "/api/jobs/{job}/workitems/{id}/console";
             _path = _path.Replace("{job}", Client.Serialize(job));
             _path = _path.Replace("{id}", Client.Serialize(id));
 
             var _query = new QueryBuilder();
+            _query.Add("api-version", Client.Serialize(apiVersion));
 
             var _uriBuilder = new UriBuilder(Client.BaseUri);
             _uriBuilder.Path = _uriBuilder.Path.TrimEnd('/') + _path;
@@ -350,9 +362,11 @@ namespace Microsoft.DotNet.Helix.Client
         internal async Task OnListFailed(HttpRequestMessage req, HttpResponseMessage res)
         {
             var content = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
-            var ex = new RestApiException(
+            var ex = new RestApiException<ApiError>(
                 new HttpRequestMessageWrapper(req, null),
-                new HttpResponseMessageWrapper(res, content));
+                new HttpResponseMessageWrapper(res, content),
+                Client.Deserialize<ApiError>(content)
+                );
             HandleFailedListRequest(ex);
             HandleFailedRequest(ex);
             Client.OnFailedRequest(ex);
@@ -369,11 +383,13 @@ namespace Microsoft.DotNet.Helix.Client
                 throw new ArgumentNullException(nameof(job));
             }
 
+            const string apiVersion = "2019-06-17";
 
-            var _path = "/api/2019-06-17/jobs/{job}/workitems";
+            var _path = "/api/jobs/{job}/workitems";
             _path = _path.Replace("{job}", Client.Serialize(job));
 
             var _query = new QueryBuilder();
+            _query.Add("api-version", Client.Serialize(apiVersion));
 
             var _uriBuilder = new UriBuilder(Client.BaseUri);
             _uriBuilder.Path = _uriBuilder.Path.TrimEnd('/') + _path;
@@ -433,9 +449,11 @@ namespace Microsoft.DotNet.Helix.Client
         internal async Task OnDetailsFailed(HttpRequestMessage req, HttpResponseMessage res)
         {
             var content = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
-            var ex = new RestApiException(
+            var ex = new RestApiException<ApiError>(
                 new HttpRequestMessageWrapper(req, null),
-                new HttpResponseMessageWrapper(res, content));
+                new HttpResponseMessageWrapper(res, content),
+                Client.Deserialize<ApiError>(content)
+                );
             HandleFailedDetailsRequest(ex);
             HandleFailedRequest(ex);
             Client.OnFailedRequest(ex);
@@ -458,12 +476,14 @@ namespace Microsoft.DotNet.Helix.Client
                 throw new ArgumentNullException(nameof(job));
             }
 
+            const string apiVersion = "2019-06-17";
 
-            var _path = "/api/2019-06-17/jobs/{job}/workitems/{id}";
+            var _path = "/api/jobs/{job}/workitems/{id}";
             _path = _path.Replace("{job}", Client.Serialize(job));
             _path = _path.Replace("{id}", Client.Serialize(id));
 
             var _query = new QueryBuilder();
+            _query.Add("api-version", Client.Serialize(apiVersion));
 
             var _uriBuilder = new UriBuilder(Client.BaseUri);
             _uriBuilder.Path = _uriBuilder.Path.TrimEnd('/') + _path;

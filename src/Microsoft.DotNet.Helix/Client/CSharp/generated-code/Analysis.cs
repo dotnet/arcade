@@ -70,9 +70,11 @@ namespace Microsoft.DotNet.Helix.Client
         internal async Task OnSetReasonFailed(HttpRequestMessage req, HttpResponseMessage res)
         {
             var content = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
-            var ex = new RestApiException(
+            var ex = new RestApiException<ApiError>(
                 new HttpRequestMessageWrapper(req, content),
-                new HttpResponseMessageWrapper(res, content));
+                new HttpResponseMessageWrapper(res, content),
+                Client.Deserialize<ApiError>(content)
+                );
             HandleFailedSetReasonRequest(ex);
             HandleFailedRequest(ex);
             Client.OnFailedRequest(ex);
@@ -113,8 +115,9 @@ namespace Microsoft.DotNet.Helix.Client
                 throw new ArgumentNullException(nameof(workitem));
             }
 
+            const string apiVersion = "2019-06-17";
 
-            var _path = "/api/2019-06-17/analysis/{job}/{analysisType}/reason";
+            var _path = "/api/analysis/{job}/{analysisType}/reason";
             _path = _path.Replace("{job}", Client.Serialize(job));
             _path = _path.Replace("{analysisType}", Client.Serialize(analysisType));
 
@@ -127,6 +130,7 @@ namespace Microsoft.DotNet.Helix.Client
             {
                 _query.Add("analysisName", Client.Serialize(analysisName));
             }
+            _query.Add("api-version", Client.Serialize(apiVersion));
 
             var _uriBuilder = new UriBuilder(Client.BaseUri);
             _uriBuilder.Path = _uriBuilder.Path.TrimEnd('/') + _path;
@@ -202,9 +206,11 @@ namespace Microsoft.DotNet.Helix.Client
         internal async Task OnGetDetailsFailed(HttpRequestMessage req, HttpResponseMessage res)
         {
             var content = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
-            var ex = new RestApiException(
+            var ex = new RestApiException<ApiError>(
                 new HttpRequestMessageWrapper(req, null),
-                new HttpResponseMessageWrapper(res, content));
+                new HttpResponseMessageWrapper(res, content),
+                Client.Deserialize<ApiError>(content)
+                );
             HandleFailedGetDetailsRequest(ex);
             HandleFailedRequest(ex);
             Client.OnFailedRequest(ex);
@@ -239,8 +245,9 @@ namespace Microsoft.DotNet.Helix.Client
                 throw new ArgumentNullException(nameof(workitem));
             }
 
+            const string apiVersion = "2019-06-17";
 
-            var _path = "/api/2019-06-17/analysis/{job}/{analysisType}";
+            var _path = "/api/analysis/{job}/{analysisType}";
             _path = _path.Replace("{job}", Client.Serialize(job));
             _path = _path.Replace("{analysisType}", Client.Serialize(analysisType));
 
@@ -253,6 +260,7 @@ namespace Microsoft.DotNet.Helix.Client
             {
                 _query.Add("analysisName", Client.Serialize(analysisName));
             }
+            _query.Add("api-version", Client.Serialize(apiVersion));
 
             var _uriBuilder = new UriBuilder(Client.BaseUri);
             _uriBuilder.Path = _uriBuilder.Path.TrimEnd('/') + _path;
