@@ -257,12 +257,12 @@ namespace Microsoft.DotNet.Helix.Client
                 TimeSpan untilRemoved = whenItExpires.ToUniversalTime().Subtract(DateTime.UtcNow);
                 if (untilRemoved.TotalDays <= 21)
                 {
-                    Console.WriteLine($"{(azDoVariableDefined ? "##vso[task.logissue type=warning]" : "")}Helix queue {queueInfo.QueueId} {(untilRemoved.TotalDays < 0 ? "was" : "is")} slated for removal on {queueInfo.EstimatedRemovalDate}. Please discontinue usage.  Contact dnceng for questions / concerns ");
+                    log?.Invoke($"{(azDoVariableDefined ? "##vso[task.logissue type=warning]" : "")}Helix queue {queueInfo.QueueId} {(untilRemoved.TotalDays < 0 ? "was" : "is")} slated for removal on {queueInfo.EstimatedRemovalDate}. Please discontinue usage.  Contact dnceng for questions / concerns ");
                 }
             }
             else
             {
-                Console.WriteLine($"{(azDoVariableDefined ? "##vso[task.logissue type=warning]" : "")}Unable to parse estimated removal date '{queueInfo.EstimatedRemovalDate}' for queue '{queueInfo.QueueId}' (please contact dnceng with this information)");
+                log?.Invoke($"{(azDoVariableDefined ? "##vso[task.logissue type=warning]" : "")}Unable to parse estimated removal date '{queueInfo.EstimatedRemovalDate}' for queue '{queueInfo.QueueId}' (please contact dnceng with this information)");
             }
         }
 
