@@ -42,7 +42,7 @@
     <UsingToolVisualStudioIbcTraining Condition="'$(UsingToolVisualStudioIbcTraining)' == ''">false</UsingToolVisualStudioIbcTraining>
     <UsingToolNuGetRepack Condition="'$(UsingToolNuGetRepack)' == ''">false</UsingToolNuGetRepack>
     <UsingToolSymbolUploader Condition="'$(UsingToolSymbolUploader)' == ''">false</UsingToolSymbolUploader>
-
+    <UsingSpeedometer Condition="'$(UsingSpeedometer)' == ''">false</UsingSpeedometer>
     <!-- Deprecated features -->
     <!--
       The UsingToolXUnit property is deprecated,

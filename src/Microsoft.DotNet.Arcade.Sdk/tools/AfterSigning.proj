@@ -49,6 +49,12 @@
   -->
   <Import Project="VisualStudio.BuildIbcTrainingInputs.targets" Condition="'$(UsingToolVSSDK)' == 'true' and '$(UsingToolVisualStudioIbcTraining)' == 'true' and '$(MSBuildRuntimeType)' != 'Core'" />
 
+  <!-- 
+    Generate Speedometer inputs for VS insertion components.
+  -->
+  <Import Project="VisualStudio.SpeedometerInputs.targets" Condition="'$(UsingToolVSSDK)' == 'true' and '$(UsingSpeedometer)' == 'true' and '$(MSBuildRuntimeType)' != 'Core'" />
+
+
   <!-- Repository extension point -->
   <Import Project="$(RepositoryEngineeringDir)AfterSigning.targets" Condition="Exists('$(RepositoryEngineeringDir)AfterSigning.targets')"/>
 
