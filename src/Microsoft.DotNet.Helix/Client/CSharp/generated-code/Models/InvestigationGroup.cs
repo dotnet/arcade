@@ -6,7 +6,7 @@ namespace Microsoft.DotNet.Helix.Client.Models
 {
     public partial class InvestigationGroup
     {
-        public InvestigationGroup(IImmutableDictionary<string, string> key, IImmutableDictionary<string, IImmutableList<Newtonsoft.Json.Linq.JToken>> data)
+        public InvestigationGroup(IImmutableDictionary<string, string> key, IImmutableDictionary<string, IImmutableList<Models.InvestigationAnalysis>> data)
         {
             Key = key;
             Data = data;
@@ -16,7 +16,7 @@ namespace Microsoft.DotNet.Helix.Client.Models
         public IImmutableDictionary<string, string> Key { get; set; }
 
         [JsonProperty("Data")]
-        public IImmutableDictionary<string, IImmutableList<Newtonsoft.Json.Linq.JToken>> Data { get; set; }
+        public IImmutableDictionary<string, IImmutableList<Models.InvestigationAnalysis>> Data { get; set; }
 
         [JsonIgnore]
         public bool IsValid
@@ -27,7 +27,7 @@ namespace Microsoft.DotNet.Helix.Client.Models
                 {
                     return false;
                 }
-                if (Data == default(IImmutableDictionary<string, IImmutableList<Newtonsoft.Json.Linq.JToken>>))
+                if (Data == default(IImmutableDictionary<string, IImmutableList<Models.InvestigationAnalysis>>))
                 {
                     return false;
                 }

@@ -11,7 +11,7 @@ namespace Microsoft.DotNet.Helix.Client.Models
         }
 
         [JsonProperty("Result")]
-        public IImmutableList<InvestigationGroup> Result { get; set; }
+        public IImmutableList<Models.InvestigationGroup> Result { get; set; }
 
         [JsonProperty("ContinuationToken")]
         public string ContinuationToken { get; set; }

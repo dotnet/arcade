@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Text;
@@ -6,7 +7,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using Azure;
 using Azure.Core;
-using Microsoft.DotNet.Helix.Client.Models;
+
+
 
 namespace Microsoft.DotNet.Helix.Client
 {
@@ -19,7 +21,7 @@ namespace Microsoft.DotNet.Helix.Client
             CancellationToken cancellationToken = default
         );
 
-        Task<IImmutableList<UploadedFile>> ListFilesAsync(
+        Task<IImmutableList<Models.UploadedFile>> ListFilesAsync(
             string id,
             string job,
             CancellationToken cancellationToken = default
@@ -31,12 +33,12 @@ namespace Microsoft.DotNet.Helix.Client
             CancellationToken cancellationToken = default
         );
 
-        Task<IImmutableList<WorkItemSummary>> ListAsync(
+        Task<IImmutableList<Models.WorkItemSummary>> ListAsync(
             string job,
             CancellationToken cancellationToken = default
         );
 
-        Task<WorkItemDetails> DetailsAsync(
+        Task<Models.WorkItemDetails> DetailsAsync(
             string id,
             string job,
             CancellationToken cancellationToken = default
@@ -64,6 +66,7 @@ namespace Microsoft.DotNet.Helix.Client
             CancellationToken cancellationToken = default
         )
         {
+
             if (string.IsNullOrEmpty(file))
             {
                 throw new ArgumentNullException(nameof(file));
@@ -79,14 +82,16 @@ namespace Microsoft.DotNet.Helix.Client
                 throw new ArgumentNullException(nameof(job));
             }
 
+            const string apiVersion = "2019-06-17";
 
             var _baseUri = Client.Options.BaseUri;
             var _url = new RequestUriBuilder();
             _url.Reset(_baseUri);
             _url.AppendPath(
-                "/api/2019-06-17/jobs/{job}/workitems/{id}/files/{file}".Replace("{job}", Uri.EscapeDataString(Client.Serialize(job))).Replace("{id}", Uri.EscapeDataString(Client.Serialize(id))).Replace("{file}", Uri.EscapeDataString(Client.Serialize(file))),
+                "/api/jobs/{job}/workitems/{id}/files/{file}".Replace("{job}", Uri.EscapeDataString(Client.Serialize(job))).Replace("{id}", Uri.EscapeDataString(Client.Serialize(id))).Replace("{file}", Uri.EscapeDataString(Client.Serialize(file))),
                 false);
 
+            _url.AppendQuery("api-version", Client.Serialize(apiVersion));
 
 
             using (var _req = Client.Pipeline.CreateRequest())
@@ -122,10 +127,12 @@ namespace Microsoft.DotNet.Helix.Client
                 }
             }
 
-            var ex = new RestApiException(
+            var ex = new RestApiException<Models.ApiError>(
                 req,
                 res,
-                content);
+                content,
+                Client.Deserialize<Models.ApiError>(content)
+                );
             HandleFailedGetFileRequest(ex);
             HandleFailedRequest(ex);
             Client.OnFailedRequest(ex);
@@ -134,12 +141,13 @@ namespace Microsoft.DotNet.Helix.Client
 
         partial void HandleFailedListFilesRequest(RestApiException ex);
 
-        public async Task<IImmutableList<UploadedFile>> ListFilesAsync(
+        public async Task<IImmutableList<Models.UploadedFile>> ListFilesAsync(
             string id,
             string job,
             CancellationToken cancellationToken = default
         )
         {
+
             if (string.IsNullOrEmpty(id))
             {
                 throw new ArgumentNullException(nameof(id));
@@ -150,14 +158,16 @@ namespace Microsoft.DotNet.Helix.Client
                 throw new ArgumentNullException(nameof(job));
             }
 
+            const string apiVersion = "2019-06-17";
 
             var _baseUri = Client.Options.BaseUri;
             var _url = new RequestUriBuilder();
             _url.Reset(_baseUri);
             _url.AppendPath(
-                "/api/2019-06-17/jobs/{job}/workitems/{id}/files".Replace("{job}", Uri.EscapeDataString(Client.Serialize(job))).Replace("{id}", Uri.EscapeDataString(Client.Serialize(id))),
+                "/api/jobs/{job}/workitems/{id}/files".Replace("{job}", Uri.EscapeDataString(Client.Serialize(job))).Replace("{id}", Uri.EscapeDataString(Client.Serialize(id))),
                 false);
 
+            _url.AppendQuery("api-version", Client.Serialize(apiVersion));
 
 
             using (var _req = Client.Pipeline.CreateRequest())
@@ -180,7 +190,7 @@ namespace Microsoft.DotNet.Helix.Client
                     using (var _reader = new StreamReader(_res.ContentStream))
                     {
                         var _content = await _reader.ReadToEndAsync().ConfigureAwait(false);
-                        var _body = Client.Deserialize<IImmutableList<UploadedFile>>(_content);
+                        var _body = Client.Deserialize<IImmutableList<Models.UploadedFile>>(_content);
                         return _body;
                     }
                 }
@@ -198,10 +208,12 @@ namespace Microsoft.DotNet.Helix.Client
                 }
             }
 
-            var ex = new RestApiException(
+            var ex = new RestApiException<Models.ApiError>(
                 req,
                 res,
-                content);
+                content,
+                Client.Deserialize<Models.ApiError>(content)
+                );
             HandleFailedListFilesRequest(ex);
             HandleFailedRequest(ex);
             Client.OnFailedRequest(ex);
@@ -216,6 +228,7 @@ namespace Microsoft.DotNet.Helix.Client
             CancellationToken cancellationToken = default
         )
         {
+
             if (string.IsNullOrEmpty(id))
             {
                 throw new ArgumentNullException(nameof(id));
@@ -226,14 +239,16 @@ namespace Microsoft.DotNet.Helix.Client
                 throw new ArgumentNullException(nameof(job));
             }
 
+            const string apiVersion = "2019-06-17";
 
             var _baseUri = Client.Options.BaseUri;
             var _url = new RequestUriBuilder();
             _url.Reset(_baseUri);
             _url.AppendPath(
-                "/api/2019-06-17/jobs/{job}/workitems/{id}/console".Replace("{job}", Uri.EscapeDataString(Client.Serialize(job))).Replace("{id}", Uri.EscapeDataString(Client.Serialize(id))),
+                "/api/jobs/{job}/workitems/{id}/console".Replace("{job}", Uri.EscapeDataString(Client.Serialize(job))).Replace("{id}", Uri.EscapeDataString(Client.Serialize(id))),
                 false);
 
+            _url.AppendQuery("api-version", Client.Serialize(apiVersion));
 
 
             using (var _req = Client.Pipeline.CreateRequest())
@@ -269,10 +284,12 @@ namespace Microsoft.DotNet.Helix.Client
                 }
             }
 
-            var ex = new RestApiException(
+            var ex = new RestApiException<Models.ApiError>(
                 req,
                 res,
-                content);
+                content,
+                Client.Deserialize<Models.ApiError>(content)
+                );
             HandleFailedConsoleLogRequest(ex);
             HandleFailedRequest(ex);
             Client.OnFailedRequest(ex);
@@ -281,24 +298,27 @@ namespace Microsoft.DotNet.Helix.Client
 
         partial void HandleFailedListRequest(RestApiException ex);
 
-        public async Task<IImmutableList<WorkItemSummary>> ListAsync(
+        public async Task<IImmutableList<Models.WorkItemSummary>> ListAsync(
             string job,
             CancellationToken cancellationToken = default
         )
         {
+
             if (string.IsNullOrEmpty(job))
             {
                 throw new ArgumentNullException(nameof(job));
             }
 
+            const string apiVersion = "2019-06-17";
 
             var _baseUri = Client.Options.BaseUri;
             var _url = new RequestUriBuilder();
             _url.Reset(_baseUri);
             _url.AppendPath(
-                "/api/2019-06-17/jobs/{job}/workitems".Replace("{job}", Uri.EscapeDataString(Client.Serialize(job))),
+                "/api/jobs/{job}/workitems".Replace("{job}", Uri.EscapeDataString(Client.Serialize(job))),
                 false);
 
+            _url.AppendQuery("api-version", Client.Serialize(apiVersion));
 
 
             using (var _req = Client.Pipeline.CreateRequest())
@@ -321,7 +341,7 @@ namespace Microsoft.DotNet.Helix.Client
                     using (var _reader = new StreamReader(_res.ContentStream))
                     {
                         var _content = await _reader.ReadToEndAsync().ConfigureAwait(false);
-                        var _body = Client.Deserialize<IImmutableList<WorkItemSummary>>(_content);
+                        var _body = Client.Deserialize<IImmutableList<Models.WorkItemSummary>>(_content);
                         return _body;
                     }
                 }
@@ -339,10 +359,12 @@ namespace Microsoft.DotNet.Helix.Client
                 }
             }
 
-            var ex = new RestApiException(
+            var ex = new RestApiException<Models.ApiError>(
                 req,
                 res,
-                content);
+                content,
+                Client.Deserialize<Models.ApiError>(content)
+                );
             HandleFailedListRequest(ex);
             HandleFailedRequest(ex);
             Client.OnFailedRequest(ex);
@@ -351,12 +373,13 @@ namespace Microsoft.DotNet.Helix.Client
 
         partial void HandleFailedDetailsRequest(RestApiException ex);
 
-        public async Task<WorkItemDetails> DetailsAsync(
+        public async Task<Models.WorkItemDetails> DetailsAsync(
             string id,
             string job,
             CancellationToken cancellationToken = default
         )
         {
+
             if (string.IsNullOrEmpty(id))
             {
                 throw new ArgumentNullException(nameof(id));
@@ -367,14 +390,16 @@ namespace Microsoft.DotNet.Helix.Client
                 throw new ArgumentNullException(nameof(job));
             }
 
+            const string apiVersion = "2019-06-17";
 
             var _baseUri = Client.Options.BaseUri;
             var _url = new RequestUriBuilder();
             _url.Reset(_baseUri);
             _url.AppendPath(
-                "/api/2019-06-17/jobs/{job}/workitems/{id}".Replace("{job}", Uri.EscapeDataString(Client.Serialize(job))).Replace("{id}", Uri.EscapeDataString(Client.Serialize(id))),
+                "/api/jobs/{job}/workitems/{id}".Replace("{job}", Uri.EscapeDataString(Client.Serialize(job))).Replace("{id}", Uri.EscapeDataString(Client.Serialize(id))),
                 false);
 
+            _url.AppendQuery("api-version", Client.Serialize(apiVersion));
 
 
             using (var _req = Client.Pipeline.CreateRequest())
@@ -397,7 +422,7 @@ namespace Microsoft.DotNet.Helix.Client
                     using (var _reader = new StreamReader(_res.ContentStream))
                     {
                         var _content = await _reader.ReadToEndAsync().ConfigureAwait(false);
-                        var _body = Client.Deserialize<WorkItemDetails>(_content);
+                        var _body = Client.Deserialize<Models.WorkItemDetails>(_content);
                         return _body;
                     }
                 }
@@ -415,10 +440,12 @@ namespace Microsoft.DotNet.Helix.Client
                 }
             }
 
-            var ex = new RestApiException(
+            var ex = new RestApiException<Models.ApiError>(
                 req,
                 res,
-                content);
+                content,
+                Client.Deserialize<Models.ApiError>(content)
+                );
             HandleFailedDetailsRequest(ex);
             HandleFailedRequest(ex);
             Client.OnFailedRequest(ex);

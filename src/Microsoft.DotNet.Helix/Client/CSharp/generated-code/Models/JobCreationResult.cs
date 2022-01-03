@@ -6,11 +6,12 @@ namespace Microsoft.DotNet.Helix.Client.Models
 {
     public partial class JobCreationResult
     {
-        public JobCreationResult(string name, string summaryUrl, string waitUrl)
+        public JobCreationResult(string name, string summaryUrl, string resultsUri, string resultsUriRSAS)
         {
             Name = name;
             SummaryUrl = summaryUrl;
-            WaitUrl = waitUrl;
+            ResultsUri = resultsUri;
+            ResultsUriRSAS = resultsUriRSAS;
         }
 
         [JsonProperty("Name")]
@@ -19,14 +20,14 @@ namespace Microsoft.DotNet.Helix.Client.Models
         [JsonProperty("SummaryUrl")]
         public string SummaryUrl { get; set; }
 
-        [JsonProperty("WaitUrl")]
-        public string WaitUrl { get; set; }
-
         [JsonProperty("ResultsUri")]
         public string ResultsUri { get; set; }
 
         [JsonProperty("ResultsUriRSAS")]
         public string ResultsUriRSAS { get; set; }
+
+        [JsonProperty("CancellationToken")]
+        public string CancellationToken { get; set; }
 
         [JsonIgnore]
         public bool IsValid
@@ -41,7 +42,11 @@ namespace Microsoft.DotNet.Helix.Client.Models
                 {
                     return false;
                 }
-                if (string.IsNullOrEmpty(WaitUrl))
+                if (string.IsNullOrEmpty(ResultsUri))
+                {
+                    return false;
+                }
+                if (string.IsNullOrEmpty(ResultsUriRSAS))
                 {
                     return false;
                 }

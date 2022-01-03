@@ -6,12 +6,12 @@ namespace Microsoft.DotNet.Helix.Client.Models
 {
     public partial class MultiSourceResponse
     {
-        public MultiSourceResponse(IImmutableDictionary<string, MultiSourceResponseSource> sources)
+        public MultiSourceResponse(IImmutableDictionary<string, Models.MultiSourceResponseSource> sources)
         {
             Sources = sources;
         }
 
         [JsonProperty("Sources")]
-        public IImmutableDictionary<string, MultiSourceResponseSource> Sources { get; }
+        public IImmutableDictionary<string, Models.MultiSourceResponseSource> Sources { get; }
     }
 }

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Text;
@@ -6,59 +7,60 @@ using System.Threading;
 using System.Threading.Tasks;
 using Azure;
 using Azure.Core;
-using Microsoft.DotNet.Helix.Client.Models;
+
+
 
 namespace Microsoft.DotNet.Helix.Client
 {
     public partial interface IAggregate
     {
-        Task<AggregateWorkItemSummary> AnalysisSummaryAsync(
+        Task<Models.AggregateWorkItemSummary> AnalysisSummaryAsync(
             IImmutableList<string> groupBy,
             IImmutableList<string> otherProperties,
             string workitem,
-            string filterBuild = default,
-            string filterCreator = default,
-            string filterName = default,
-            string filterSource = default,
-            string filterType = default,
+            string build = default,
+            string creator = default,
+            string name = default,
+            string source = default,
+            string type = default,
             CancellationToken cancellationToken = default
         );
 
-        Task<IImmutableList<BuildHistoryItem>> BuildHistoryAsync(
+        Task<IImmutableList<Models.BuildHistoryItem>> BuildHistoryAsync(
             IImmutableList<string> source,
             IImmutableList<string> type,
             CancellationToken cancellationToken = default
         );
 
-        Task<BuildAggregation> BuildAsync(
+        Task<Models.BuildAggregation> BuildAsync(
             string buildNumber,
             IImmutableList<string> sources,
             IImmutableList<string> types,
             CancellationToken cancellationToken = default
         );
 
-        Task<IImmutableList<AggregatedWorkItemCounts>> JobSummaryAsync(
+        Task<IImmutableList<Models.AggregatedWorkItemCounts>> JobSummaryAsync(
             IImmutableList<string> groupBy,
             int maxResultSets,
-            string filterBuild = default,
-            string filterCreator = default,
-            string filterName = default,
-            string filterSource = default,
-            string filterType = default,
+            string build = default,
+            string creator = default,
+            string name = default,
+            string source = default,
+            string type = default,
             CancellationToken cancellationToken = default
         );
 
-        Task<IImmutableList<AggregatedWorkItemCounts>> WorkItemSummaryAsync(
+        Task<IImmutableList<Models.AggregatedWorkItemCounts>> WorkItemSummaryAsync(
             IImmutableList<string> groupBy,
-            string filterBuild = default,
-            string filterCreator = default,
-            string filterName = default,
-            string filterSource = default,
-            string filterType = default,
+            string build = default,
+            string creator = default,
+            string name = default,
+            string source = default,
+            string type = default,
             CancellationToken cancellationToken = default
         );
 
-        Task<IImmutableList<AggregateAnalysisDetail>> AnalysisDetailAsync(
+        Task<IImmutableList<Models.AggregateAnalysisDetail>> AnalysisDetailAsync(
             string analysisName,
             string analysisType,
             string build,
@@ -70,32 +72,32 @@ namespace Microsoft.DotNet.Helix.Client
         );
 
         Task<IImmutableDictionary<string, Newtonsoft.Json.Linq.JToken>> PropertiesAsync(
-            string filterBuild = default,
-            string filterCreator = default,
-            string filterName = default,
-            string filterSource = default,
-            string filterType = default,
+            string build = default,
+            string creator = default,
+            string name = default,
+            string source = default,
+            string type = default,
             CancellationToken cancellationToken = default
         );
 
-        Task<InvestigationResult> Investigation_ContinueAsync(
+        Task<Models.InvestigationResult> Investigation_ContinueAsync(
             string id,
             CancellationToken cancellationToken = default
         );
 
-        Task<InvestigationResult> InvestigationAsync(
+        Task<Models.InvestigationResult> InvestigationAsync(
             IImmutableList<string> groupBy,
             int maxGroups,
             int maxResults,
-            string filterBuild = default,
-            string filterCreator = default,
-            string filterName = default,
-            string filterSource = default,
-            string filterType = default,
+            string build = default,
+            string creator = default,
+            string name = default,
+            string source = default,
+            string type = default,
             CancellationToken cancellationToken = default
         );
 
-        Task<IImmutableList<HistoricalAnalysisItem>> HistoryAsync(
+        Task<IImmutableList<Models.HistoricalAnalysisItem>> HistoryAsync(
             string analysisName,
             string analysisType,
             int days,
@@ -105,8 +107,8 @@ namespace Microsoft.DotNet.Helix.Client
             CancellationToken cancellationToken = default
         );
 
-        Task<MultiSourceResponse> MultiSourceAsync(
-            MultiSourceRequest body,
+        Task<Models.MultiSourceResponse> MultiSourceAsync(
+            Models.MultiSourceRequest body,
             CancellationToken cancellationToken = default
         );
 
@@ -125,18 +127,19 @@ namespace Microsoft.DotNet.Helix.Client
 
         partial void HandleFailedAnalysisSummaryRequest(RestApiException ex);
 
-        public async Task<AggregateWorkItemSummary> AnalysisSummaryAsync(
+        public async Task<Models.AggregateWorkItemSummary> AnalysisSummaryAsync(
             IImmutableList<string> groupBy,
             IImmutableList<string> otherProperties,
             string workitem,
-            string filterBuild = default,
-            string filterCreator = default,
-            string filterName = default,
-            string filterSource = default,
-            string filterType = default,
+            string build = default,
+            string creator = default,
+            string name = default,
+            string source = default,
+            string type = default,
             CancellationToken cancellationToken = default
         )
         {
+
             if (groupBy == default(IImmutableList<string>))
             {
                 throw new ArgumentNullException(nameof(groupBy));
@@ -152,14 +155,35 @@ namespace Microsoft.DotNet.Helix.Client
                 throw new ArgumentNullException(nameof(workitem));
             }
 
+            const string apiVersion = "2019-06-17";
 
             var _baseUri = Client.Options.BaseUri;
             var _url = new RequestUriBuilder();
             _url.Reset(_baseUri);
             _url.AppendPath(
-                "/api/2019-06-17/aggregate/analysis",
+                "/api/aggregate/analysis",
                 false);
 
+            if (!string.IsNullOrEmpty(creator))
+            {
+                _url.AppendQuery("Creator", Client.Serialize(creator));
+            }
+            if (!string.IsNullOrEmpty(source))
+            {
+                _url.AppendQuery("Source", Client.Serialize(source));
+            }
+            if (!string.IsNullOrEmpty(type))
+            {
+                _url.AppendQuery("Type", Client.Serialize(type));
+            }
+            if (!string.IsNullOrEmpty(build))
+            {
+                _url.AppendQuery("Build", Client.Serialize(build));
+            }
+            if (!string.IsNullOrEmpty(name))
+            {
+                _url.AppendQuery("Name", Client.Serialize(name));
+            }
             if (!string.IsNullOrEmpty(workitem))
             {
                 _url.AppendQuery("workitem", Client.Serialize(workitem));
@@ -178,26 +202,7 @@ namespace Microsoft.DotNet.Helix.Client
                     _url.AppendQuery("otherProperties", Client.Serialize(_item));
                 }
             }
-            if (!string.IsNullOrEmpty(filterCreator))
-            {
-                _url.AppendQuery("filter.creator", Client.Serialize(filterCreator));
-            }
-            if (!string.IsNullOrEmpty(filterSource))
-            {
-                _url.AppendQuery("filter.source", Client.Serialize(filterSource));
-            }
-            if (!string.IsNullOrEmpty(filterType))
-            {
-                _url.AppendQuery("filter.type", Client.Serialize(filterType));
-            }
-            if (!string.IsNullOrEmpty(filterBuild))
-            {
-                _url.AppendQuery("filter.build", Client.Serialize(filterBuild));
-            }
-            if (!string.IsNullOrEmpty(filterName))
-            {
-                _url.AppendQuery("filter.name", Client.Serialize(filterName));
-            }
+            _url.AppendQuery("api-version", Client.Serialize(apiVersion));
 
 
             using (var _req = Client.Pipeline.CreateRequest())
@@ -220,7 +225,7 @@ namespace Microsoft.DotNet.Helix.Client
                     using (var _reader = new StreamReader(_res.ContentStream))
                     {
                         var _content = await _reader.ReadToEndAsync().ConfigureAwait(false);
-                        var _body = Client.Deserialize<AggregateWorkItemSummary>(_content);
+                        var _body = Client.Deserialize<Models.AggregateWorkItemSummary>(_content);
                         return _body;
                     }
                 }
@@ -238,10 +243,12 @@ namespace Microsoft.DotNet.Helix.Client
                 }
             }
 
-            var ex = new RestApiException(
+            var ex = new RestApiException<Models.ApiError>(
                 req,
                 res,
-                content);
+                content,
+                Client.Deserialize<Models.ApiError>(content)
+                );
             HandleFailedAnalysisSummaryRequest(ex);
             HandleFailedRequest(ex);
             Client.OnFailedRequest(ex);
@@ -250,12 +257,13 @@ namespace Microsoft.DotNet.Helix.Client
 
         partial void HandleFailedBuildHistoryRequest(RestApiException ex);
 
-        public async Task<IImmutableList<BuildHistoryItem>> BuildHistoryAsync(
+        public async Task<IImmutableList<Models.BuildHistoryItem>> BuildHistoryAsync(
             IImmutableList<string> source,
             IImmutableList<string> type,
             CancellationToken cancellationToken = default
         )
         {
+
             if (source == default(IImmutableList<string>))
             {
                 throw new ArgumentNullException(nameof(source));
@@ -266,12 +274,13 @@ namespace Microsoft.DotNet.Helix.Client
                 throw new ArgumentNullException(nameof(type));
             }
 
+            const string apiVersion = "2019-06-17";
 
             var _baseUri = Client.Options.BaseUri;
             var _url = new RequestUriBuilder();
             _url.Reset(_baseUri);
             _url.AppendPath(
-                "/api/2019-06-17/aggregate/build/history",
+                "/api/aggregate/build/history",
                 false);
 
             if (source != default(IImmutableList<string>))
@@ -288,6 +297,7 @@ namespace Microsoft.DotNet.Helix.Client
                     _url.AppendQuery("type", Client.Serialize(_item));
                 }
             }
+            _url.AppendQuery("api-version", Client.Serialize(apiVersion));
 
 
             using (var _req = Client.Pipeline.CreateRequest())
@@ -310,7 +320,7 @@ namespace Microsoft.DotNet.Helix.Client
                     using (var _reader = new StreamReader(_res.ContentStream))
                     {
                         var _content = await _reader.ReadToEndAsync().ConfigureAwait(false);
-                        var _body = Client.Deserialize<IImmutableList<BuildHistoryItem>>(_content);
+                        var _body = Client.Deserialize<IImmutableList<Models.BuildHistoryItem>>(_content);
                         return _body;
                     }
                 }
@@ -328,10 +338,12 @@ namespace Microsoft.DotNet.Helix.Client
                 }
             }
 
-            var ex = new RestApiException(
+            var ex = new RestApiException<Models.ApiError>(
                 req,
                 res,
-                content);
+                content,
+                Client.Deserialize<Models.ApiError>(content)
+                );
             HandleFailedBuildHistoryRequest(ex);
             HandleFailedRequest(ex);
             Client.OnFailedRequest(ex);
@@ -340,13 +352,14 @@ namespace Microsoft.DotNet.Helix.Client
 
         partial void HandleFailedBuildRequest(RestApiException ex);
 
-        public async Task<BuildAggregation> BuildAsync(
+        public async Task<Models.BuildAggregation> BuildAsync(
             string buildNumber,
             IImmutableList<string> sources,
             IImmutableList<string> types,
             CancellationToken cancellationToken = default
         )
         {
+
             if (string.IsNullOrEmpty(buildNumber))
             {
                 throw new ArgumentNullException(nameof(buildNumber));
@@ -362,12 +375,13 @@ namespace Microsoft.DotNet.Helix.Client
                 throw new ArgumentNullException(nameof(types));
             }
 
+            const string apiVersion = "2019-06-17";
 
             var _baseUri = Client.Options.BaseUri;
             var _url = new RequestUriBuilder();
             _url.Reset(_baseUri);
             _url.AppendPath(
-                "/api/2019-06-17/aggregate/build",
+                "/api/aggregate/build",
                 false);
 
             if (sources != default(IImmutableList<string>))
@@ -388,6 +402,7 @@ namespace Microsoft.DotNet.Helix.Client
             {
                 _url.AppendQuery("buildNumber", Client.Serialize(buildNumber));
             }
+            _url.AppendQuery("api-version", Client.Serialize(apiVersion));
 
 
             using (var _req = Client.Pipeline.CreateRequest())
@@ -410,7 +425,7 @@ namespace Microsoft.DotNet.Helix.Client
                     using (var _reader = new StreamReader(_res.ContentStream))
                     {
                         var _content = await _reader.ReadToEndAsync().ConfigureAwait(false);
-                        var _body = Client.Deserialize<BuildAggregation>(_content);
+                        var _body = Client.Deserialize<Models.BuildAggregation>(_content);
                         return _body;
                     }
                 }
@@ -428,10 +443,12 @@ namespace Microsoft.DotNet.Helix.Client
                 }
             }
 
-            var ex = new RestApiException(
+            var ex = new RestApiException<Models.ApiError>(
                 req,
                 res,
-                content);
+                content,
+                Client.Deserialize<Models.ApiError>(content)
+                );
             HandleFailedBuildRequest(ex);
             HandleFailedRequest(ex);
             Client.OnFailedRequest(ex);
@@ -440,35 +457,52 @@ namespace Microsoft.DotNet.Helix.Client
 
         partial void HandleFailedJobSummaryRequest(RestApiException ex);
 
-        public async Task<IImmutableList<AggregatedWorkItemCounts>> JobSummaryAsync(
+        public async Task<IImmutableList<Models.AggregatedWorkItemCounts>> JobSummaryAsync(
             IImmutableList<string> groupBy,
             int maxResultSets,
-            string filterBuild = default,
-            string filterCreator = default,
-            string filterName = default,
-            string filterSource = default,
-            string filterType = default,
+            string build = default,
+            string creator = default,
+            string name = default,
+            string source = default,
+            string type = default,
             CancellationToken cancellationToken = default
         )
         {
+
             if (groupBy == default(IImmutableList<string>))
             {
                 throw new ArgumentNullException(nameof(groupBy));
             }
 
-            if (maxResultSets == default(int))
-            {
-                throw new ArgumentNullException(nameof(maxResultSets));
-            }
-
+            const string apiVersion = "2019-06-17";
 
             var _baseUri = Client.Options.BaseUri;
             var _url = new RequestUriBuilder();
             _url.Reset(_baseUri);
             _url.AppendPath(
-                "/api/2019-06-17/aggregate/jobs",
+                "/api/aggregate/jobs",
                 false);
 
+            if (!string.IsNullOrEmpty(creator))
+            {
+                _url.AppendQuery("Creator", Client.Serialize(creator));
+            }
+            if (!string.IsNullOrEmpty(source))
+            {
+                _url.AppendQuery("Source", Client.Serialize(source));
+            }
+            if (!string.IsNullOrEmpty(type))
+            {
+                _url.AppendQuery("Type", Client.Serialize(type));
+            }
+            if (!string.IsNullOrEmpty(build))
+            {
+                _url.AppendQuery("Build", Client.Serialize(build));
+            }
+            if (!string.IsNullOrEmpty(name))
+            {
+                _url.AppendQuery("Name", Client.Serialize(name));
+            }
             if (groupBy != default(IImmutableList<string>))
             {
                 foreach (var _item in groupBy)
@@ -480,26 +514,7 @@ namespace Microsoft.DotNet.Helix.Client
             {
                 _url.AppendQuery("maxResultSets", Client.Serialize(maxResultSets));
             }
-            if (!string.IsNullOrEmpty(filterCreator))
-            {
-                _url.AppendQuery("filter.creator", Client.Serialize(filterCreator));
-            }
-            if (!string.IsNullOrEmpty(filterSource))
-            {
-                _url.AppendQuery("filter.source", Client.Serialize(filterSource));
-            }
-            if (!string.IsNullOrEmpty(filterType))
-            {
-                _url.AppendQuery("filter.type", Client.Serialize(filterType));
-            }
-            if (!string.IsNullOrEmpty(filterBuild))
-            {
-                _url.AppendQuery("filter.build", Client.Serialize(filterBuild));
-            }
-            if (!string.IsNullOrEmpty(filterName))
-            {
-                _url.AppendQuery("filter.name", Client.Serialize(filterName));
-            }
+            _url.AppendQuery("api-version", Client.Serialize(apiVersion));
 
 
             using (var _req = Client.Pipeline.CreateRequest())
@@ -522,7 +537,7 @@ namespace Microsoft.DotNet.Helix.Client
                     using (var _reader = new StreamReader(_res.ContentStream))
                     {
                         var _content = await _reader.ReadToEndAsync().ConfigureAwait(false);
-                        var _body = Client.Deserialize<IImmutableList<AggregatedWorkItemCounts>>(_content);
+                        var _body = Client.Deserialize<IImmutableList<Models.AggregatedWorkItemCounts>>(_content);
                         return _body;
                     }
                 }
@@ -540,10 +555,12 @@ namespace Microsoft.DotNet.Helix.Client
                 }
             }
 
-            var ex = new RestApiException(
+            var ex = new RestApiException<Models.ApiError>(
                 req,
                 res,
-                content);
+                content,
+                Client.Deserialize<Models.ApiError>(content)
+                );
             HandleFailedJobSummaryRequest(ex);
             HandleFailedRequest(ex);
             Client.OnFailedRequest(ex);
@@ -552,29 +569,51 @@ namespace Microsoft.DotNet.Helix.Client
 
         partial void HandleFailedWorkItemSummaryRequest(RestApiException ex);
 
-        public async Task<IImmutableList<AggregatedWorkItemCounts>> WorkItemSummaryAsync(
+        public async Task<IImmutableList<Models.AggregatedWorkItemCounts>> WorkItemSummaryAsync(
             IImmutableList<string> groupBy,
-            string filterBuild = default,
-            string filterCreator = default,
-            string filterName = default,
-            string filterSource = default,
-            string filterType = default,
+            string build = default,
+            string creator = default,
+            string name = default,
+            string source = default,
+            string type = default,
             CancellationToken cancellationToken = default
         )
         {
+
             if (groupBy == default(IImmutableList<string>))
             {
                 throw new ArgumentNullException(nameof(groupBy));
             }
 
+            const string apiVersion = "2019-06-17";
 
             var _baseUri = Client.Options.BaseUri;
             var _url = new RequestUriBuilder();
             _url.Reset(_baseUri);
             _url.AppendPath(
-                "/api/2019-06-17/aggregate/workitems",
+                "/api/aggregate/workitems",
                 false);
 
+            if (!string.IsNullOrEmpty(creator))
+            {
+                _url.AppendQuery("Creator", Client.Serialize(creator));
+            }
+            if (!string.IsNullOrEmpty(source))
+            {
+                _url.AppendQuery("Source", Client.Serialize(source));
+            }
+            if (!string.IsNullOrEmpty(type))
+            {
+                _url.AppendQuery("Type", Client.Serialize(type));
+            }
+            if (!string.IsNullOrEmpty(build))
+            {
+                _url.AppendQuery("Build", Client.Serialize(build));
+            }
+            if (!string.IsNullOrEmpty(name))
+            {
+                _url.AppendQuery("Name", Client.Serialize(name));
+            }
             if (groupBy != default(IImmutableList<string>))
             {
                 foreach (var _item in groupBy)
@@ -582,26 +621,7 @@ namespace Microsoft.DotNet.Helix.Client
                     _url.AppendQuery("groupBy", Client.Serialize(_item));
                 }
             }
-            if (!string.IsNullOrEmpty(filterCreator))
-            {
-                _url.AppendQuery("filter.creator", Client.Serialize(filterCreator));
-            }
-            if (!string.IsNullOrEmpty(filterSource))
-            {
-                _url.AppendQuery("filter.source", Client.Serialize(filterSource));
-            }
-            if (!string.IsNullOrEmpty(filterType))
-            {
-                _url.AppendQuery("filter.type", Client.Serialize(filterType));
-            }
-            if (!string.IsNullOrEmpty(filterBuild))
-            {
-                _url.AppendQuery("filter.build", Client.Serialize(filterBuild));
-            }
-            if (!string.IsNullOrEmpty(filterName))
-            {
-                _url.AppendQuery("filter.name", Client.Serialize(filterName));
-            }
+            _url.AppendQuery("api-version", Client.Serialize(apiVersion));
 
 
             using (var _req = Client.Pipeline.CreateRequest())
@@ -624,7 +644,7 @@ namespace Microsoft.DotNet.Helix.Client
                     using (var _reader = new StreamReader(_res.ContentStream))
                     {
                         var _content = await _reader.ReadToEndAsync().ConfigureAwait(false);
-                        var _body = Client.Deserialize<IImmutableList<AggregatedWorkItemCounts>>(_content);
+                        var _body = Client.Deserialize<IImmutableList<Models.AggregatedWorkItemCounts>>(_content);
                         return _body;
                     }
                 }
@@ -642,10 +662,12 @@ namespace Microsoft.DotNet.Helix.Client
                 }
             }
 
-            var ex = new RestApiException(
+            var ex = new RestApiException<Models.ApiError>(
                 req,
                 res,
-                content);
+                content,
+                Client.Deserialize<Models.ApiError>(content)
+                );
             HandleFailedWorkItemSummaryRequest(ex);
             HandleFailedRequest(ex);
             Client.OnFailedRequest(ex);
@@ -654,7 +676,7 @@ namespace Microsoft.DotNet.Helix.Client
 
         partial void HandleFailedAnalysisDetailRequest(RestApiException ex);
 
-        public async Task<IImmutableList<AggregateAnalysisDetail>> AnalysisDetailAsync(
+        public async Task<IImmutableList<Models.AggregateAnalysisDetail>> AnalysisDetailAsync(
             string analysisName,
             string analysisType,
             string build,
@@ -665,6 +687,7 @@ namespace Microsoft.DotNet.Helix.Client
             CancellationToken cancellationToken = default
         )
         {
+
             if (string.IsNullOrEmpty(analysisName))
             {
                 throw new ArgumentNullException(nameof(analysisName));
@@ -700,12 +723,13 @@ namespace Microsoft.DotNet.Helix.Client
                 throw new ArgumentNullException(nameof(workitem));
             }
 
+            const string apiVersion = "2019-06-17";
 
             var _baseUri = Client.Options.BaseUri;
             var _url = new RequestUriBuilder();
             _url.Reset(_baseUri);
             _url.AppendPath(
-                "/api/2019-06-17/aggregate/analysisdetail",
+                "/api/aggregate/analysisdetail",
                 false);
 
             if (!string.IsNullOrEmpty(source))
@@ -739,6 +763,7 @@ namespace Microsoft.DotNet.Helix.Client
                     _url.AppendQuery("groupBy", Client.Serialize(_item));
                 }
             }
+            _url.AppendQuery("api-version", Client.Serialize(apiVersion));
 
 
             using (var _req = Client.Pipeline.CreateRequest())
@@ -761,7 +786,7 @@ namespace Microsoft.DotNet.Helix.Client
                     using (var _reader = new StreamReader(_res.ContentStream))
                     {
                         var _content = await _reader.ReadToEndAsync().ConfigureAwait(false);
-                        var _body = Client.Deserialize<IImmutableList<AggregateAnalysisDetail>>(_content);
+                        var _body = Client.Deserialize<IImmutableList<Models.AggregateAnalysisDetail>>(_content);
                         return _body;
                     }
                 }
@@ -779,10 +804,12 @@ namespace Microsoft.DotNet.Helix.Client
                 }
             }
 
-            var ex = new RestApiException(
+            var ex = new RestApiException<Models.ApiError>(
                 req,
                 res,
-                content);
+                content,
+                Client.Deserialize<Models.ApiError>(content)
+                );
             HandleFailedAnalysisDetailRequest(ex);
             HandleFailedRequest(ex);
             Client.OnFailedRequest(ex);
@@ -792,42 +819,45 @@ namespace Microsoft.DotNet.Helix.Client
         partial void HandleFailedPropertiesRequest(RestApiException ex);
 
         public async Task<IImmutableDictionary<string, Newtonsoft.Json.Linq.JToken>> PropertiesAsync(
-            string filterBuild = default,
-            string filterCreator = default,
-            string filterName = default,
-            string filterSource = default,
-            string filterType = default,
+            string build = default,
+            string creator = default,
+            string name = default,
+            string source = default,
+            string type = default,
             CancellationToken cancellationToken = default
         )
         {
+
+            const string apiVersion = "2019-06-17";
 
             var _baseUri = Client.Options.BaseUri;
             var _url = new RequestUriBuilder();
             _url.Reset(_baseUri);
             _url.AppendPath(
-                "/api/2019-06-17/aggregate/properties",
+                "/api/aggregate/properties",
                 false);
 
-            if (!string.IsNullOrEmpty(filterCreator))
+            if (!string.IsNullOrEmpty(creator))
             {
-                _url.AppendQuery("filter.creator", Client.Serialize(filterCreator));
+                _url.AppendQuery("Creator", Client.Serialize(creator));
             }
-            if (!string.IsNullOrEmpty(filterSource))
+            if (!string.IsNullOrEmpty(source))
             {
-                _url.AppendQuery("filter.source", Client.Serialize(filterSource));
+                _url.AppendQuery("Source", Client.Serialize(source));
             }
-            if (!string.IsNullOrEmpty(filterType))
+            if (!string.IsNullOrEmpty(type))
             {
-                _url.AppendQuery("filter.type", Client.Serialize(filterType));
+                _url.AppendQuery("Type", Client.Serialize(type));
             }
-            if (!string.IsNullOrEmpty(filterBuild))
+            if (!string.IsNullOrEmpty(build))
             {
-                _url.AppendQuery("filter.build", Client.Serialize(filterBuild));
+                _url.AppendQuery("Build", Client.Serialize(build));
             }
-            if (!string.IsNullOrEmpty(filterName))
+            if (!string.IsNullOrEmpty(name))
             {
-                _url.AppendQuery("filter.name", Client.Serialize(filterName));
+                _url.AppendQuery("Name", Client.Serialize(name));
             }
+            _url.AppendQuery("api-version", Client.Serialize(apiVersion));
 
 
             using (var _req = Client.Pipeline.CreateRequest())
@@ -868,10 +898,12 @@ namespace Microsoft.DotNet.Helix.Client
                 }
             }
 
-            var ex = new RestApiException(
+            var ex = new RestApiException<Models.ApiError>(
                 req,
                 res,
-                content);
+                content,
+                Client.Deserialize<Models.ApiError>(content)
+                );
             HandleFailedPropertiesRequest(ex);
             HandleFailedRequest(ex);
             Client.OnFailedRequest(ex);
@@ -880,24 +912,27 @@ namespace Microsoft.DotNet.Helix.Client
 
         partial void HandleFailedInvestigation_ContinueRequest(RestApiException ex);
 
-        public async Task<InvestigationResult> Investigation_ContinueAsync(
+        public async Task<Models.InvestigationResult> Investigation_ContinueAsync(
             string id,
             CancellationToken cancellationToken = default
         )
         {
+
             if (string.IsNullOrEmpty(id))
             {
                 throw new ArgumentNullException(nameof(id));
             }
 
+            const string apiVersion = "2019-06-17";
 
             var _baseUri = Client.Options.BaseUri;
             var _url = new RequestUriBuilder();
             _url.Reset(_baseUri);
             _url.AppendPath(
-                "/api/2019-06-17/aggregate/investigation/continue/{id}".Replace("{id}", Uri.EscapeDataString(Client.Serialize(id))),
+                "/api/aggregate/investigation/continue/{id}".Replace("{id}", Uri.EscapeDataString(Client.Serialize(id))),
                 false);
 
+            _url.AppendQuery("api-version", Client.Serialize(apiVersion));
 
 
             using (var _req = Client.Pipeline.CreateRequest())
@@ -920,7 +955,7 @@ namespace Microsoft.DotNet.Helix.Client
                     using (var _reader = new StreamReader(_res.ContentStream))
                     {
                         var _content = await _reader.ReadToEndAsync().ConfigureAwait(false);
-                        var _body = Client.Deserialize<InvestigationResult>(_content);
+                        var _body = Client.Deserialize<Models.InvestigationResult>(_content);
                         return _body;
                     }
                 }
@@ -938,10 +973,12 @@ namespace Microsoft.DotNet.Helix.Client
                 }
             }
 
-            var ex = new RestApiException(
+            var ex = new RestApiException<Models.ApiError>(
                 req,
                 res,
-                content);
+                content,
+                Client.Deserialize<Models.ApiError>(content)
+                );
             HandleFailedInvestigation_ContinueRequest(ex);
             HandleFailedRequest(ex);
             Client.OnFailedRequest(ex);
@@ -950,41 +987,53 @@ namespace Microsoft.DotNet.Helix.Client
 
         partial void HandleFailedInvestigationRequest(RestApiException ex);
 
-        public async Task<InvestigationResult> InvestigationAsync(
+        public async Task<Models.InvestigationResult> InvestigationAsync(
             IImmutableList<string> groupBy,
             int maxGroups,
             int maxResults,
-            string filterBuild = default,
-            string filterCreator = default,
-            string filterName = default,
-            string filterSource = default,
-            string filterType = default,
+            string build = default,
+            string creator = default,
+            string name = default,
+            string source = default,
+            string type = default,
             CancellationToken cancellationToken = default
         )
         {
+
             if (groupBy == default(IImmutableList<string>))
             {
                 throw new ArgumentNullException(nameof(groupBy));
             }
 
-            if (maxGroups == default(int))
-            {
-                throw new ArgumentNullException(nameof(maxGroups));
-            }
-
-            if (maxResults == default(int))
-            {
-                throw new ArgumentNullException(nameof(maxResults));
-            }
-
+            const string apiVersion = "2019-06-17";
 
             var _baseUri = Client.Options.BaseUri;
             var _url = new RequestUriBuilder();
             _url.Reset(_baseUri);
             _url.AppendPath(
-                "/api/2019-06-17/aggregate/investigation",
+                "/api/aggregate/investigation",
                 false);
 
+            if (!string.IsNullOrEmpty(creator))
+            {
+                _url.AppendQuery("Creator", Client.Serialize(creator));
+            }
+            if (!string.IsNullOrEmpty(source))
+            {
+                _url.AppendQuery("Source", Client.Serialize(source));
+            }
+            if (!string.IsNullOrEmpty(type))
+            {
+                _url.AppendQuery("Type", Client.Serialize(type));
+            }
+            if (!string.IsNullOrEmpty(build))
+            {
+                _url.AppendQuery("Build", Client.Serialize(build));
+            }
+            if (!string.IsNullOrEmpty(name))
+            {
+                _url.AppendQuery("Name", Client.Serialize(name));
+            }
             if (groupBy != default(IImmutableList<string>))
             {
                 foreach (var _item in groupBy)
@@ -1000,26 +1049,7 @@ namespace Microsoft.DotNet.Helix.Client
             {
                 _url.AppendQuery("maxResults", Client.Serialize(maxResults));
             }
-            if (!string.IsNullOrEmpty(filterCreator))
-            {
-                _url.AppendQuery("filter.creator", Client.Serialize(filterCreator));
-            }
-            if (!string.IsNullOrEmpty(filterSource))
-            {
-                _url.AppendQuery("filter.source", Client.Serialize(filterSource));
-            }
-            if (!string.IsNullOrEmpty(filterType))
-            {
-                _url.AppendQuery("filter.type", Client.Serialize(filterType));
-            }
-            if (!string.IsNullOrEmpty(filterBuild))
-            {
-                _url.AppendQuery("filter.build", Client.Serialize(filterBuild));
-            }
-            if (!string.IsNullOrEmpty(filterName))
-            {
-                _url.AppendQuery("filter.name", Client.Serialize(filterName));
-            }
+            _url.AppendQuery("api-version", Client.Serialize(apiVersion));
 
 
             using (var _req = Client.Pipeline.CreateRequest())
@@ -1042,7 +1072,7 @@ namespace Microsoft.DotNet.Helix.Client
                     using (var _reader = new StreamReader(_res.ContentStream))
                     {
                         var _content = await _reader.ReadToEndAsync().ConfigureAwait(false);
-                        var _body = Client.Deserialize<InvestigationResult>(_content);
+                        var _body = Client.Deserialize<Models.InvestigationResult>(_content);
                         return _body;
                     }
                 }
@@ -1060,10 +1090,12 @@ namespace Microsoft.DotNet.Helix.Client
                 }
             }
 
-            var ex = new RestApiException(
+            var ex = new RestApiException<Models.ApiError>(
                 req,
                 res,
-                content);
+                content,
+                Client.Deserialize<Models.ApiError>(content)
+                );
             HandleFailedInvestigationRequest(ex);
             HandleFailedRequest(ex);
             Client.OnFailedRequest(ex);
@@ -1072,7 +1104,7 @@ namespace Microsoft.DotNet.Helix.Client
 
         partial void HandleFailedHistoryRequest(RestApiException ex);
 
-        public async Task<IImmutableList<HistoricalAnalysisItem>> HistoryAsync(
+        public async Task<IImmutableList<Models.HistoricalAnalysisItem>> HistoryAsync(
             string analysisName,
             string analysisType,
             int days,
@@ -1082,6 +1114,7 @@ namespace Microsoft.DotNet.Helix.Client
             CancellationToken cancellationToken = default
         )
         {
+
             if (string.IsNullOrEmpty(analysisName))
             {
                 throw new ArgumentNullException(nameof(analysisName));
@@ -1090,11 +1123,6 @@ namespace Microsoft.DotNet.Helix.Client
             if (string.IsNullOrEmpty(analysisType))
             {
                 throw new ArgumentNullException(nameof(analysisType));
-            }
-
-            if (days == default(int))
-            {
-                throw new ArgumentNullException(nameof(days));
             }
 
             if (string.IsNullOrEmpty(source))
@@ -1112,12 +1140,13 @@ namespace Microsoft.DotNet.Helix.Client
                 throw new ArgumentNullException(nameof(workitem));
             }
 
+            const string apiVersion = "2019-06-17";
 
             var _baseUri = Client.Options.BaseUri;
             var _url = new RequestUriBuilder();
             _url.Reset(_baseUri);
             _url.AppendPath(
-                "/api/2019-06-17/aggregate/history/{analysisType}".Replace("{analysisType}", Uri.EscapeDataString(Client.Serialize(analysisType))),
+                "/api/aggregate/history/{analysisType}".Replace("{analysisType}", Uri.EscapeDataString(Client.Serialize(analysisType))),
                 false);
 
             if (!string.IsNullOrEmpty(source))
@@ -1140,6 +1169,7 @@ namespace Microsoft.DotNet.Helix.Client
             {
                 _url.AppendQuery("days", Client.Serialize(days));
             }
+            _url.AppendQuery("api-version", Client.Serialize(apiVersion));
 
 
             using (var _req = Client.Pipeline.CreateRequest())
@@ -1162,7 +1192,7 @@ namespace Microsoft.DotNet.Helix.Client
                     using (var _reader = new StreamReader(_res.ContentStream))
                     {
                         var _content = await _reader.ReadToEndAsync().ConfigureAwait(false);
-                        var _body = Client.Deserialize<IImmutableList<HistoricalAnalysisItem>>(_content);
+                        var _body = Client.Deserialize<IImmutableList<Models.HistoricalAnalysisItem>>(_content);
                         return _body;
                     }
                 }
@@ -1180,10 +1210,12 @@ namespace Microsoft.DotNet.Helix.Client
                 }
             }
 
-            var ex = new RestApiException(
+            var ex = new RestApiException<Models.ApiError>(
                 req,
                 res,
-                content);
+                content,
+                Client.Deserialize<Models.ApiError>(content)
+                );
             HandleFailedHistoryRequest(ex);
             HandleFailedRequest(ex);
             Client.OnFailedRequest(ex);
@@ -1192,24 +1224,27 @@ namespace Microsoft.DotNet.Helix.Client
 
         partial void HandleFailedMultiSourceRequest(RestApiException ex);
 
-        public async Task<MultiSourceResponse> MultiSourceAsync(
-            MultiSourceRequest body,
+        public async Task<Models.MultiSourceResponse> MultiSourceAsync(
+            Models.MultiSourceRequest body,
             CancellationToken cancellationToken = default
         )
         {
-            if (body == default(MultiSourceRequest))
+
+            if (body == default(Models.MultiSourceRequest))
             {
                 throw new ArgumentNullException(nameof(body));
             }
 
+            const string apiVersion = "2019-06-17";
 
             var _baseUri = Client.Options.BaseUri;
             var _url = new RequestUriBuilder();
             _url.Reset(_baseUri);
             _url.AppendPath(
-                "/api/2019-06-17/aggregate/multi-source",
+                "/api/aggregate/multi-source",
                 false);
 
+            _url.AppendQuery("api-version", Client.Serialize(apiVersion));
 
 
             using (var _req = Client.Pipeline.CreateRequest())
@@ -1217,7 +1252,7 @@ namespace Microsoft.DotNet.Helix.Client
                 _req.Uri = _url;
                 _req.Method = RequestMethod.Post;
 
-                if (body != default(MultiSourceRequest))
+                if (body != default(Models.MultiSourceRequest))
                 {
                     _req.Content = RequestContent.Create(Encoding.UTF8.GetBytes(Client.Serialize(body)));
                     _req.Headers.Add("Content-Type", "application/json; charset=utf-8");
@@ -1238,7 +1273,7 @@ namespace Microsoft.DotNet.Helix.Client
                     using (var _reader = new StreamReader(_res.ContentStream))
                     {
                         var _content = await _reader.ReadToEndAsync().ConfigureAwait(false);
-                        var _body = Client.Deserialize<MultiSourceResponse>(_content);
+                        var _body = Client.Deserialize<Models.MultiSourceResponse>(_content);
                         return _body;
                     }
                 }
@@ -1256,10 +1291,12 @@ namespace Microsoft.DotNet.Helix.Client
                 }
             }
 
-            var ex = new RestApiException(
+            var ex = new RestApiException<Models.ApiError>(
                 req,
                 res,
-                content);
+                content,
+                Client.Deserialize<Models.ApiError>(content)
+                );
             HandleFailedMultiSourceRequest(ex);
             HandleFailedRequest(ex);
             Client.OnFailedRequest(ex);

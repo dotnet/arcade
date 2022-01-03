@@ -6,10 +6,9 @@ namespace Microsoft.DotNet.Helix.Client.Models
 {
     public partial class JobCreationRequest
     {
-        public JobCreationRequest(string type, IImmutableDictionary<string, string> properties, string listUri, string queueId)
+        public JobCreationRequest(string type, string listUri, string queueId)
         {
             Type = type;
-            Properties = properties;
             ListUri = listUri;
             QueueId = queueId;
         }
@@ -59,10 +58,6 @@ namespace Microsoft.DotNet.Helix.Client.Models
             get
             {
                 if (string.IsNullOrEmpty(Type))
-                {
-                    return false;
-                }
-                if (Properties == default(IImmutableDictionary<string, string>))
                 {
                     return false;
                 }
