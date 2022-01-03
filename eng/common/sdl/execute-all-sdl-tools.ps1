@@ -64,8 +64,6 @@ try {
     $guardianCliLocation = $GuardianCliLocation
   }
 
-  Write-Host "We think guardian lives at $guardianCliLocation"
-
   $workingDirectory = (Split-Path $SourceDirectory -Parent)
   $ValidPath = Test-Path $guardianCliLocation
 
