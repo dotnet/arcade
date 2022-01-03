@@ -6,7 +6,7 @@
     <Description>This package provides access to the Helix Api located at https://helix.dot.net/</Description>
     <LangVersion>latest</LangVersion>
 
-    <SwaggerDocumentUri>https://helix.dot.net/swagger/docs</SwaggerDocumentUri>
+    <SwaggerDocumentUri>https://helix.dot.net/api/openapi.json</SwaggerDocumentUri>
     <SwaggerClientName>HelixApi</SwaggerClientName>
     <ExcludeFromSourceBuild>true</ExcludeFromSourceBuild>
   </PropertyGroup>

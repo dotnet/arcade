@@ -4,9 +4,9 @@ using Newtonsoft.Json;
 
 namespace Microsoft.DotNet.Helix.Client.Models
 {
-    public partial class KeyedData
+    public partial class AggregateAnalysisSummaryKeyedData
     {
-        public KeyedData(IImmutableDictionary<string, string> key, AggregateAnalysisSummary data)
+        public AggregateAnalysisSummaryKeyedData(IImmutableDictionary<string, string> key, AggregateAnalysisSummary data)
         {
             Key = key;
             Data = data;

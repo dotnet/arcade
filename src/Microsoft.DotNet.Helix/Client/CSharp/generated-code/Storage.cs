@@ -60,9 +60,11 @@ namespace Microsoft.DotNet.Helix.Client
         internal async Task OnListFailed(HttpRequestMessage req, HttpResponseMessage res)
         {
             var content = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
-            var ex = new RestApiException(
+            var ex = new RestApiException<ApiError>(
                 new HttpRequestMessageWrapper(req, null),
-                new HttpResponseMessageWrapper(res, content));
+                new HttpResponseMessageWrapper(res, content),
+                Client.Deserialize<ApiError>(content)
+                );
             HandleFailedListRequest(ex);
             HandleFailedRequest(ex);
             Client.OnFailedRequest(ex);
@@ -74,14 +76,16 @@ namespace Microsoft.DotNet.Helix.Client
             CancellationToken cancellationToken = default
         )
         {
+            const string apiVersion = "2019-06-17";
 
-            var _path = "/api/2019-06-17/storage";
+            var _path = "/api/storage";
 
             var _query = new QueryBuilder();
             if (getSasTokens != default)
             {
                 _query.Add("getSasTokens", Client.Serialize(getSasTokens));
             }
+            _query.Add("api-version", Client.Serialize(apiVersion));
 
             var _uriBuilder = new UriBuilder(Client.BaseUri);
             _uriBuilder.Path = _uriBuilder.Path.TrimEnd('/') + _path;
@@ -139,9 +143,11 @@ namespace Microsoft.DotNet.Helix.Client
         internal async Task OnNewFailed(HttpRequestMessage req, HttpResponseMessage res)
         {
             var content = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
-            var ex = new RestApiException(
+            var ex = new RestApiException<ApiError>(
                 new HttpRequestMessageWrapper(req, content),
-                new HttpResponseMessageWrapper(res, content));
+                new HttpResponseMessageWrapper(res, content),
+                Client.Deserialize<ApiError>(content)
+                );
             HandleFailedNewRequest(ex);
             HandleFailedRequest(ex);
             Client.OnFailedRequest(ex);
@@ -163,10 +169,12 @@ namespace Microsoft.DotNet.Helix.Client
                 throw new ArgumentException("The parameter is not valid", nameof(body));
             }
 
+            const string apiVersion = "2019-06-17";
 
-            var _path = "/api/2019-06-17/storage";
+            var _path = "/api/storage";
 
             var _query = new QueryBuilder();
+            _query.Add("api-version", Client.Serialize(apiVersion));
 
             var _uriBuilder = new UriBuilder(Client.BaseUri);
             _uriBuilder.Path = _uriBuilder.Path.TrimEnd('/') + _path;
@@ -237,9 +245,11 @@ namespace Microsoft.DotNet.Helix.Client
         internal async Task OnExtendExpirationFailed(HttpRequestMessage req, HttpResponseMessage res)
         {
             var content = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
-            var ex = new RestApiException(
+            var ex = new RestApiException<ApiError>(
                 new HttpRequestMessageWrapper(req, content),
-                new HttpResponseMessageWrapper(res, content));
+                new HttpResponseMessageWrapper(res, content),
+                Client.Deserialize<ApiError>(content)
+                );
             HandleFailedExtendExpirationRequest(ex);
             HandleFailedRequest(ex);
             Client.OnFailedRequest(ex);
@@ -261,10 +271,12 @@ namespace Microsoft.DotNet.Helix.Client
                 throw new ArgumentException("The parameter is not valid", nameof(body));
             }
 
+            const string apiVersion = "2019-06-17";
 
-            var _path = "/api/2019-06-17/storage/renew";
+            var _path = "/api/storage/renew";
 
             var _query = new QueryBuilder();
+            _query.Add("api-version", Client.Serialize(apiVersion));
 
             var _uriBuilder = new UriBuilder(Client.BaseUri);
             _uriBuilder.Path = _uriBuilder.Path.TrimEnd('/') + _path;

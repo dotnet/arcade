@@ -6,7 +6,7 @@ namespace Microsoft.DotNet.Helix.Client.Models
 {
     public partial class AggregateWorkItemSummary
     {
-        public AggregateWorkItemSummary(IImmutableList<WorkItemAggregateSummary> workItems, IImmutableList<KeyedData> analyses)
+        public AggregateWorkItemSummary(IImmutableList<WorkItemAggregateSummary> workItems, IImmutableList<AggregateAnalysisSummaryKeyedData> analyses)
         {
             WorkItems = workItems;
             Analyses = analyses;
@@ -16,7 +16,7 @@ namespace Microsoft.DotNet.Helix.Client.Models
         public IImmutableList<WorkItemAggregateSummary> WorkItems { get; set; }
 
         [JsonProperty("Analyses")]
-        public IImmutableList<KeyedData> Analyses { get; set; }
+        public IImmutableList<AggregateAnalysisSummaryKeyedData> Analyses { get; set; }
 
         [JsonIgnore]
         public bool IsValid

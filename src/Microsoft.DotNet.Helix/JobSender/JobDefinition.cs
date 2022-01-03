@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -156,7 +157,8 @@ namespace Microsoft.DotNet.Helix.Client
 
             try
             {
-                QueueInfo queueInfo = await HelixApi.Information.QueueInfoAsync(queueId, CancellationToken.None);
+                QueueInfo queueInfo = await HelixApi.Information.QueueInfoAsync(queueId, false, CancellationToken.None);
+                WarnForImpendingRemoval(log, queueInfo);
             }
             // 404 = this queue does not exist, or did and was removed.
             catch (RestApiException ex) when ((int)ex.Response?.StatusCode == 404)
@@ -203,12 +205,13 @@ namespace Microsoft.DotNet.Helix.Client
                 ResultContainerPrefix  = multipleDashes.Replace(illegalCharacters.Replace(ResultContainerPrefix, ""), "-");
             }
 
-            var creationRequest = new JobCreationRequest(Type, _properties.ToImmutableDictionary(), jobListUri.ToString(), queueId)
+            var creationRequest = new JobCreationRequest(Type, jobListUri.ToString(), queueId)
             {
                 Creator = Creator,
                 ResultContainerPrefix = ResultContainerPrefix,
                 DockerTag = dockerTag,
                 QueueAlias = queueAlias,
+                Properties = _properties.ToImmutableDictionary(),
             };
 
             if (string.IsNullOrEmpty(Source))
@@ -230,6 +233,36 @@ namespace Microsoft.DotNet.Helix.Client
                 CancellationToken.None);
 
             return new SentJob(JobApi, newJob, newJob.ResultsUri, newJob.ResultsUriRSAS);
+        }
+
+        private void WarnForImpendingRemoval(Action<string> log, QueueInfo queueInfo)
+        {
+            bool azDoVariableDefined = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("SYSTEM_TEAMPROJECT"));
+            DateTime whenItExpires = DateTime.MaxValue;
+
+            if (DateTime.TryParseExact(queueInfo.EstimatedRemovalDate, "yyyy-MM-dd", null, DateTimeStyles.AssumeUniversal, out DateTime dtIso))
+            {
+                whenItExpires = dtIso;
+            }
+            // This branch can be removed once the strings start coming in in ISO-8601 format
+            // Currently the API provides values in this format though and they are unlikely to get confused with each other.
+            else if (DateTime.TryParseExact(queueInfo.EstimatedRemovalDate, "M/d/yyyy", null, DateTimeStyles.AssumeUniversal, out DateTime dtUsa))
+            {
+                whenItExpires = dtUsa;
+            }
+
+            if (whenItExpires != DateTime.MaxValue) // We recognized a date from the string
+            {
+                TimeSpan untilRemoved = whenItExpires.ToUniversalTime().Subtract(DateTime.UtcNow);
+                if (untilRemoved.TotalDays <= 21)
+                {
+                    log?.Invoke($"{(azDoVariableDefined ? "##vso[task.logissue type=warning]" : "")}Helix queue {queueInfo.QueueId} {(untilRemoved.TotalDays < 0 ? "was" : "is")} slated for removal on {queueInfo.EstimatedRemovalDate}. Please discontinue usage.  Contact dnceng for questions / concerns ");
+                }
+            }
+            else
+            {
+                log?.Invoke($"{(azDoVariableDefined ? "##vso[task.logissue type=warning]" : "")}Unable to parse estimated removal date '{queueInfo.EstimatedRemovalDate}' for queue '{queueInfo.QueueId}' (please contact dnceng with this information)");
+            }
         }
 
         private (string queueId, string dockerTag, string queueAlias) ParseQueueId(string value)

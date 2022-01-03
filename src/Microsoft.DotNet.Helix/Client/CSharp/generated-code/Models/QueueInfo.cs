@@ -60,5 +60,8 @@ namespace Microsoft.DotNet.Helix.Client.Models
 
         [JsonProperty("WorkspacePath")]
         public string WorkspacePath { get; set; }
+
+        [JsonProperty("EstimatedRemovalDate")]
+        public string EstimatedRemovalDate { get; set; }
     }
 }

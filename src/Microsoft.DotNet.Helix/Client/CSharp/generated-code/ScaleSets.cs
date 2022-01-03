@@ -58,9 +58,11 @@ namespace Microsoft.DotNet.Helix.Client
         internal async Task OnGetDetailedVMScalingHistoryFailed(HttpRequestMessage req, HttpResponseMessage res)
         {
             var content = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
-            var ex = new RestApiException(
+            var ex = new RestApiException<ApiError>(
                 new HttpRequestMessageWrapper(req, null),
-                new HttpResponseMessageWrapper(res, content));
+                new HttpResponseMessageWrapper(res, content),
+                Client.Deserialize<ApiError>(content)
+                );
             HandleFailedGetDetailedVMScalingHistoryRequest(ex);
             HandleFailedRequest(ex);
             Client.OnFailedRequest(ex);
@@ -78,8 +80,9 @@ namespace Microsoft.DotNet.Helix.Client
                 throw new ArgumentNullException(nameof(date));
             }
 
+            const string apiVersion = "2019-06-17";
 
-            var _path = "/api/2019-06-17/scalesets/detailedHistory";
+            var _path = "/api/scalesets/detailedHistory";
 
             var _query = new QueryBuilder();
             if (date != default)
@@ -90,6 +93,7 @@ namespace Microsoft.DotNet.Helix.Client
             {
                 _query.Add("scaleSet", Client.Serialize(scaleSet));
             }
+            _query.Add("api-version", Client.Serialize(apiVersion));
 
             var _uriBuilder = new UriBuilder(Client.BaseUri);
             _uriBuilder.Path = _uriBuilder.Path.TrimEnd('/') + _path;
@@ -147,9 +151,11 @@ namespace Microsoft.DotNet.Helix.Client
         internal async Task OnGetAggregatedVMScalingHistoryFailed(HttpRequestMessage req, HttpResponseMessage res)
         {
             var content = await res.Content.ReadAsStringAsync().ConfigureAwait(false);
-            var ex = new RestApiException(
+            var ex = new RestApiException<ApiError>(
                 new HttpRequestMessageWrapper(req, null),
-                new HttpResponseMessageWrapper(res, content));
+                new HttpResponseMessageWrapper(res, content),
+                Client.Deserialize<ApiError>(content)
+                );
             HandleFailedGetAggregatedVMScalingHistoryRequest(ex);
             HandleFailedRequest(ex);
             Client.OnFailedRequest(ex);
@@ -166,14 +172,16 @@ namespace Microsoft.DotNet.Helix.Client
                 throw new ArgumentNullException(nameof(date));
             }
 
+            const string apiVersion = "2019-06-17";
 
-            var _path = "/api/2019-06-17/scalesets/aggregatedHistory";
+            var _path = "/api/scalesets/aggregatedHistory";
 
             var _query = new QueryBuilder();
             if (date != default)
             {
                 _query.Add("date", Client.Serialize(date));
             }
+            _query.Add("api-version", Client.Serialize(apiVersion));
 
             var _uriBuilder = new UriBuilder(Client.BaseUri);
             _uriBuilder.Path = _uriBuilder.Path.TrimEnd('/') + _path;
