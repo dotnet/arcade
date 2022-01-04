@@ -11,7 +11,7 @@ i) Software Transparency - this is a small step towards increasing trust as the 
 ii) File checksums for integrity verification purposes
 
 ## Goals
-Primary goal is to generate SBOM for all the softwares produced by Microsoft. Here we are focusing on the following areas:
+Primary goal is to generate SBOM for all the software produced by .Net. Here we are focusing on the following areas:
 
 i) Staging pipeline 
 ii) Arcade and all the repos that use arcade eg: Runtime, aspnetcore etc.
@@ -20,17 +20,20 @@ iii) Repos that are not on-boarded to arcade eg: arcade-services, OSOB, helix et
 ## Stakeholders
 - .NET Core Engineering
 - .NET Core Engingeering Partners
-- US government
+- Microsoft
 
 ## Unknowns 
-We are going to be focusing on generation of SBOM and archiving it, like we do for our manifest currently. Eventually SBOM will end up in a data base. We will know which service we will need to call to upload it to that db when we use the executable to generate SBOM. For now it is TBD. When we use the azure task, uploading is taken care of.
+There are 2 ways to generate SBOM 
+1) Azure Task - Helps with generation of SBOM and uploads it to db
+2) Executable - Creates the manifest but uploading is TBD
 
 ## Rollout and Deployment
-- Firstly we will be generating SBOM for staging pipeline. Here we already have a place where we upload all the signed assets, so we will need to add a azure task to generate and upload the SBOM. After generating SBOM, we will need to get a sign off from partners to see if the generated SBOM is valid and contains all the assets.
-- Then focus on our Engineering systems - In Arcade (main branch) we are planning to use the executable to generate SBOM. Here we will validate if SBOM is generated correctly.
-- Backport SBOM generation changes to release-6.0 branch.
-- The repos that use arcade may have multiple places where will have to generate SBOM. We will need to generate SBOM for all the repos that use arcade.There might be mutliple SBOM in this scenario. Then we need to get sign off from the repo owners to validate SBOM.
+- Firstly we will be generating SBOM for staging pipeline. Here we already have a place where we upload all the signed assets, so we will need to add a azure task to generate and upload the SBOM. After generating SBOM, we will need to get a one time manual sign off from partners to see if the generated SBOM is valid and contains all the 'expected' items.
+- Then focus on our Engineering systems - In Arcade (main branch) we are planning to use the executable to generate SBOM. Here we will validate if SBOM is generated correctly. In Arcade we will add a feature flag for SBOM generation. We will initially turn on this feature for a few repos and see if SBOM is getting generated correctly, then roll out for all the other repos. This gives repo owners the ability to opt-out of the feature incase of failure, while we investigate.
+- Backport SBOM generation changes to release/6.0 branch.
+- The repos that use arcade may have multiple places where will have to generate SBOM. We will need to generate SBOM for all the repos that use arcade.There might be multiple SBOM in this scenario. Then we need to get sign off from the repo owners to validate SBOM.
 - Lastly, we will have to work on repos that are not on-boarded to arcade like arcade-service, helix, OSOB. 
 
 ## FR handoff 
+- Will document SBOM generation in arcade and how repo owners can on-board. 
 - Will document any failures as I encounter. 
