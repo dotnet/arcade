@@ -165,7 +165,7 @@ def analyze_operation(command: str, platform: str, device: str, is_device: bool,
             # In those cases, we want a retry and we want to report this
             android_connectivity_verified = True
 
-            result = call_adb(['shell', 'ping', '-c', '2', '8.8.8.8'], throw_on_error=False, capture_output=True)
+            result = call_adb(['shell', 'ping', '-c', '2', 'microsoft.com'], throw_on_error=False, capture_output=True)
             
             if result.returncode != 0:
                 retry = True
