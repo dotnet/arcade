@@ -165,9 +165,9 @@ def analyze_operation(command: str, platform: str, device: str, is_device: bool,
         #     # Any issue can also be caused by network connectivity problems (devices sometimes lose the WiFi connection)
         #     # In those cases, we want a retry and we want to report this
         #     android_connectivity_verified = True
-
-        #     result = call_adb(['shell', 'ping', '-c', '2', 'microsoft.com'], throw_on_error=False, capture_output=True)
-            
+        #
+        #     result = call_adb(['shell', 'ping', '-i', '0.2', '-c', '3', 'www.microsoft.com'], throw_on_error=False, capture_output=True)
+        #
         #     if result.returncode != 0:
         #         retry = True
         #         print('    Detected network connectivity issue. This is typically not a failure of the work item. We will try it again on another Helix agent')
