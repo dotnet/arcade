@@ -160,17 +160,18 @@ def analyze_operation(command: str, platform: str, device: str, is_device: bool,
 
             retry = True
 
-        if exit_code != 0 and not android_connectivity_verified and is_device:
-            # Any issue can also be caused by network connectivity problems (devices sometimes lose the WiFi connection)
-            # In those cases, we want a retry and we want to report this
-            android_connectivity_verified = True
+        # TODO (https://github.com/dotnet/arcade/issues/8232): Only detect network issues when it is requested by user
+        # if exit_code != 0 and not android_connectivity_verified and is_device:
+        #     # Any issue can also be caused by network connectivity problems (devices sometimes lose the WiFi connection)
+        #     # In those cases, we want a retry and we want to report this
+        #     android_connectivity_verified = True
 
-            result = call_adb(['shell', 'ping', '-c', '2', 'microsoft.com'], throw_on_error=False, capture_output=True)
+        #     result = call_adb(['shell', 'ping', '-c', '2', 'microsoft.com'], throw_on_error=False, capture_output=True)
             
-            if result.returncode != 0:
-                retry = True
-                print('    Detected network connectivity issue. This is typically not a failure of the work item. We will try it again on another Helix agent')
-                raise AdditionalTelemetryRequired(NETWORK_CONNECTIVITY_METRIC_NAME, 1)
+        #     if result.returncode != 0:
+        #         retry = True
+        #         print('    Detected network connectivity issue. This is typically not a failure of the work item. We will try it again on another Helix agent')
+        #         raise AdditionalTelemetryRequired(NETWORK_CONNECTIVITY_METRIC_NAME, 1)
 
     elif platform == "apple":
         retry_message = 'This is typically not a failure of the work item. It will be run again. '
