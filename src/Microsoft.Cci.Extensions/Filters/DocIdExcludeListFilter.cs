@@ -2,13 +2,10 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 // See the LICENSE file in the project root for more information.
 
-using System;
+using Microsoft.Cci.Extensions;
+using Microsoft.Cci.Extensions.CSharp;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using Microsoft.Cci.Extensions;
-using System.IO;
-using Microsoft.Cci.Extensions.CSharp;
 
 namespace Microsoft.Cci.Filters
 {
@@ -23,9 +20,9 @@ namespace Microsoft.Cci.Filters
             _excludeMembers = excludeMembers;
         }
 
-        public DocIdExcludeListFilter(string whiteListFilePath, bool excludeMembers)
+        public DocIdExcludeListFilter(string allowListFilePath, bool excludeMembers)
         {
-            _docIds = DocIdExtensions.ReadDocIds(whiteListFilePath);
+            _docIds = DocIdExtensions.ReadDocIds(allowListFilePath);
             _excludeMembers = excludeMembers;
         }
 
