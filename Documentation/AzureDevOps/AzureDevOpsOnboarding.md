@@ -13,7 +13,6 @@
     - [Internal : (Pool Provider: NetCoreInternal-Pool)](#internal--pool-provider-netcoreinternal-pool)
   - [CI badge link](#ci-badge-link)
   - [Signed Builds](#signed-builds)
-  - [Generate Graph Files](#generate-graph-files)
   - [Security](#security)
   - [Notes about Yaml](#notes-about-yaml)
   - [Troubleshooting](#troubleshooting)
@@ -154,10 +153,6 @@ https://dev.azure.com/dnceng/public/_build?definitionId=208&branchName=master
 ## Signed Builds
 
 dev.azure.com/dnceng now has support for signed builds.  Code should be mirrored to dev.azure.com/dnceng/internal as outlined in the [Azure DevOps Guidance](./AzureDevOpsGuidance.md#projects).  See [MovingFromDevDivToDncEng.md](./MovingFromDevDivToDncEng.md) for information about moving signed builds from DevDiv to DncEng.
-
-## Generate Graph Files
-
-Generation of graph files as part of official builds is now supported. See [GeneratingGraphFiles.md](GeneratingGraphFiles.md) for information on how to opt-in to this feature.
 
 ## Security
 
