@@ -10,6 +10,13 @@ references:
     parameters:
       subscription: a4fc5514-21a9-4296-bfaf-5c7ee7fa35d1
       name: helixkv
+      
+references:
+  dotnetbuildskeys:
+    type: azure-key-vault
+    parameters:
+      subscription: 11c6037b-227b-4d63-bee1-18c7b68c3a40
+      name: dotnetbuildskeys
 
 secrets:
   BotAccount-dotnet-maestro-bot:
@@ -142,3 +149,22 @@ secrets:
           name: dn-bot-account-redmond
       name: dn-symweb-symbol-server-pat
       organization: dnceng
+
+  dotnetbuilds-internal-container-read-token:
+    type: azure-storage-container-sas-token
+    parameters:
+      connectionString:
+        name: dotnetbuilds-connection-string
+        location: dotnetbuildskeys
+      permissions: rl
+      container: internal
+
+  dotnetbuilds-public-container-read-token:
+    type: azure-storage-container-sas-token
+    parameters:
+      connectionString:
+        name: dotnetbuilds-connection-string
+        location: dotnetbuildskeys
+      permissions: rl
+      container: public
+      
