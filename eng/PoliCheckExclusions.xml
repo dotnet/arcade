@@ -1,0 +1,6 @@
+<!-- See https://www.1eswiki.com/wiki/PoliCheck_Build_Task#Excluding_Files_or_folders_from_the_PoliCheck_scan for guidance -->
+<PoliCheckExclusions>
+  <!-- License files which can't be modified, both contain an appropriate usage of a term for geographical location -->
+  <Exclusion Type="FileName">MICROSOFTDOTNETLIBRARY.TXT</Exclusion>
+  <Exclusion Type="FileName">VISUALSTUDIOEXTENSIONS.TXT</Exclusion>
+</PoliCheckExclusions>
