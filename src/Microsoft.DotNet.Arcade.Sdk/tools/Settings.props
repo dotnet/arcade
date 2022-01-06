@@ -24,8 +24,4 @@
   <Import Project="Linker.props" Condition="'$(UsingToolMicrosoftNetILLinkTasks)' == 'true'" />
   <Import Project="VisualStudio.props" Condition="'$(UsingToolVSSDK)' == 'true' and '$(MSBuildRuntimeType)' != 'Core'"/>
 
-  <!--
-    Import NuGet props to WPF temp projects (workaround for https://github.com/dotnet/sourcelink/issues/91) 
-  -->
-  <Import Project="$(_WpfTempProjectNuGetFilePathNoExt).props" Condition="'$(_WpfTempProjectNuGetFilePathNoExt)' != '' and Exists('$(_WpfTempProjectNuGetFilePathNoExt).props')"/>
 </Project>

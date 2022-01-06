@@ -10,7 +10,7 @@ jobs:
     jobs:
     - job: Merge_GitHub_to_Azure_DevOps
       pool:
-        name: Hosted VS2017
+        vmImage: 'windows-2019'
       variables:
       - name: WorkingDirectoryName
         value: repo-dir
@@ -48,7 +48,7 @@ jobs:
           targetType: inline
           workingDirectory: $(WorkingDirectoryName)
           script: |
-            git push azdo-mirror $(BranchToMirror) $(ExtraPushArgs)
+            git push azdo-mirror $(BranchToMirror) --tags $(ExtraPushArgs)
 
             if ($LASTEXITCODE -EQ 0) {
               Write-Host "Push was successful"

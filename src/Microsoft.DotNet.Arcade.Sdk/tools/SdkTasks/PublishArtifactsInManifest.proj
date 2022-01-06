@@ -69,6 +69,8 @@
           - InternalInstallersTargetStaticFeedKey
           - InternalChecksumsTargetStaticFeed
           - InternalChecksumsTargetStaticFeedKey
+
+    NOTE: For symbol publishing using V3, ConvertPortablePdbsToWindowsPdbs is always set to false, because this is an expensive task so this is done in the staging pipeline post signing.
   -->
 
   <PropertyGroup>
@@ -114,13 +116,21 @@
       <FeedKey Include="https://dotnetclichecksumsmsrc.blob.core.windows.net/dotnet/index.json" Key="$(InternalChecksumsFeedKey)"/>
       <FeedKey Include="https://dotnetclimsrc.blob.core.windows.net/dotnet/index.json" Key="$(InternalInstallersFeedKey)"/>
       <FeedKey Include="https://pkgs.dev.azure.com/dnceng" Key="$(AzureDevOpsFeedsKey)"/>
+      <FeedKey Include="$(ChecksumsFeedOverride)" Key="$(ChecksumsFeedKey)" Condition="'$(ChecksumsFeedOverride)' != ''"/>
+      <FeedKey Include="$(InstallersFeedOverride)" Key="$(InstallersFeedKey)" Condition="'$(InstallersFeedOverride)' != ''"/>
       <FeedSasUri Include="https://dotnetbuilds.blob.core.windows.net/public" Base64Uri="$(DotNetBuildsPublicUriBase64)"/>
       <FeedSasUri Include="https://dotnetbuilds.blob.core.windows.net/public-checksums" Base64Uri="$(DotNetBuildsPublicChecksumsUriBase64)"/>
       <FeedSasUri Include="https://dotnetbuilds.blob.core.windows.net/internal" Base64Uri="$(DotNetBuildsInternalUriBase64)"/>
       <FeedSasUri Include="https://dotnetbuilds.blob.core.windows.net/internal-checksums" Base64Uri="$(DotNetBuildsInternalChecksumsUriBase64)"/>
       <FeedOverride Include="https://dotnetclichecksums.blob.core.windows.net/dotnet/index.json" Replacement="$(ChecksumsFeedOverride)" Condition="'$(ChecksumsFeedOverride)' != ''"/>
       <FeedOverride Include="https://dotnetcli.blob.core.windows.net/dotnet/index.json" Replacement="$(InstallersFeedOverride)" Condition="'$(InstallersFeedOverride)' != ''"/>
-      <FeedOverride Include="transport-packages" Replacement="$(TransportFeedOverride)" Condition="'$(TransportFeedOverride))' != ''"/>
+      <FeedOverride Include="https://dotnetclichecksumsmsrc.blob.core.windows.net/dotnet/index.json" Replacement="$(ChecksumsFeedOverride)" Condition="'$(ChecksumsFeedOverride)' != ''"/>
+      <FeedOverride Include="https://dotnetclimsrc.blob.core.windows.net/dotnet/index.json" Replacement="$(InstallersFeedOverride)" Condition="'$(InstallersFeedOverride)' != ''"/>
+      <FeedOverride Include="https://dotnetbuilds.blob.core.windows.net/public-checksums" Replacement="$(ChecksumsFeedOverride)" Condition="'$(ChecksumsFeedOverride)' != ''"/>
+      <FeedOverride Include="https://dotnetbuilds.blob.core.windows.net/public" Replacement="$(InstallersFeedOverride)" Condition="'$(InstallersFeedOverride)' != ''"/>
+      <FeedOverride Include="https://dotnetbuilds.blob.core.windows.net/internal-checksums" Replacement="$(ChecksumsFeedOverride)" Condition="'$(ChecksumsFeedOverride)' != ''"/>
+      <FeedOverride Include="https://dotnetbuilds.blob.core.windows.net/internal" Replacement="$(InstallersFeedOverride)" Condition="'$(InstallersFeedOverride)' != ''"/>
+      <FeedOverride Include="transport-packages" Replacement="$(TransportFeedOverride)" Condition="'$(TransportFeedOverride)' != ''"/>
       <FeedOverride Include="shipping-packages" Replacement="$(ShippingFeedOverride)" Condition="'$(ShippingFeedOverride)' != ''"/>
     </ItemGroup>
 

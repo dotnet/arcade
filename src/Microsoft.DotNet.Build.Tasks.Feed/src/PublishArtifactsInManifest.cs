@@ -4,6 +4,7 @@
 using Microsoft.Arcade.Common;
 using Microsoft.Build.Framework;
 using Microsoft.DotNet.Build.Tasks.Feed.Model;
+#if !NET472_OR_GREATER
 using Microsoft.DotNet.Maestro.Client;
 using Microsoft.DotNet.VersionTools.Automation;
 using Microsoft.DotNet.VersionTools.BuildManifest.Model;
@@ -48,7 +49,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         ///                                     If false, an error is thrown if an asset already exists
         ///                                     If not provided then defaults to false.
         ///                                     Azure DevOps feeds can never be overwritten.
-        /// Metadata LatestLinkShortUrlPrefix (optional): If provided, AKA ms links are generated (for artifacts blobs only)
+        /// Metadata LatestLinkShortUrlPrefixes (optional): If provided, AKA ms links are generated (for artifacts blobs only)
         ///                                               that target this short url path. The link is construct as such:
         ///                                               aka.ms/AkaShortUrlPath/BlobArtifactPath -> Target blob url
         ///                                               If specified, then AkaMSClientId, AkaMSClientSecret and AkaMSTenant must be provided.
@@ -355,3 +356,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         }
     }
 }
+#else
+public class PublishArtifactsInManifest : Microsoft.Build.Utilities.Task
+{
+    public override bool Execute() => throw new System.NotSupportedException("PublishArtifactsInManifest depends on Maestro.Client, which has discontinued support for desktop frameworks.");
+}
+#endif

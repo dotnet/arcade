@@ -9,6 +9,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using Microsoft.Build.Utilities;
 using Microsoft.DotNet.Build.Tasks.Feed.Model;
+#if !NET472_OR_GREATER
 using Microsoft.DotNet.Maestro.Client.Models;
 using NuGet.Packaging;
 using NuGet.Packaging.Core;
@@ -61,7 +62,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
             _httpClient?.Dispose();
         }
 
-        public AddAssetLocationToAssetAssetLocationType LocationType => AddAssetLocationToAssetAssetLocationType.NugetFeed;
+        public LocationType LocationType => LocationType.NugetFeed;
 
         public async Task PublishAssetAsync(string file, string blobPath, PushOptions options, SemaphoreSlim clientThrottle = null)
         {
@@ -93,3 +94,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         }
     }
 }
+#else
+public class AzureDevOpsNugetFeedAssetPublisher : Task
+{
+    public override bool Execute() => throw new NotSupportedException("AzureDevOpsNugetFeedAssetPublisher depends on Maestro.Client, which has discontinued support for desktop frameworks.");
+}
+#endif

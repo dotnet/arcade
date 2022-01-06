@@ -26,7 +26,7 @@ namespace Microsoft.DotNet.Helix.Sdk
 
         protected const string ScriptNamespace = "tools.xharness_runner.";
         private const string CustomCommandsScript = "command";
-        private const string DiagnosticsScript = "xharness-event-reporter.py";
+        private const string DiagnosticsScript = "xharness-event-processor.py";
 
         /// <summary>
         /// Extra arguments that will be passed to the iOS/Android/... app that is being run

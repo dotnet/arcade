@@ -9,6 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.DotNet.Build.Tasks.Feed.Model;
+#if !NET472_OR_GREATER
 using Microsoft.DotNet.Maestro.Client;
 using Microsoft.DotNet.Maestro.Client.Models;
 using Microsoft.DotNet.VersionTools.BuildManifest.Model;
@@ -117,22 +118,31 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                     Log.LogMessage(MessageImportance.High, $"Publishing to this target channel: {targetChannelConfig}");
 
-                    string shortLinkUrl = string.IsNullOrEmpty(targetChannelConfig.AkaMSChannelName)
-                        ? $"dotnet/"
-                        : $"dotnet/{targetChannelConfig.AkaMSChannelName}/{BuildQuality}";
+                    List<string> shortLinkUrls = new List<string>();
+
+                    foreach (string akaMSChannelName in targetChannelConfig.AkaMSChannelNames)
+                    {
+                        shortLinkUrls.Add($"dotnet/{akaMSChannelName}/{BuildQuality}");
+                    }
+
+                    // If there are no channel names, default to dotnet/
+                    if (!targetChannelConfig.AkaMSChannelNames.Any())
+                    {
+                        shortLinkUrls.Add("dotnet/");
+                    }
 
                     var targetFeedsSetup = new SetupTargetFeedConfigV3(
-                        targetChannelConfig,
-                        targetChannelConfig.IsInternal,
-                        BuildModel.Identity.IsStable,
-                        BuildModel.Identity.Name,
-                        BuildModel.Identity.Commit,
-                        PublishInstallersAndChecksums,
-                        FeedKeys,
-                        FeedSasUris,
-                        AllowFeedOverrides ? FeedOverrides : Array.Empty<ITaskItem>(),
-                        shortLinkUrl,
-                        BuildEngine,
+                        targetChannelConfig: targetChannelConfig,
+                        isInternalBuild: targetChannelConfig.IsInternal,
+                        isStableBuild: BuildModel.Identity.IsStable,
+                        repositoryName: BuildModel.Identity.Name,
+                        commitSha: BuildModel.Identity.Commit,
+                        publishInstallersAndChecksums: PublishInstallersAndChecksums,
+                        feedKeys: FeedKeys,
+                        feedSasUris: FeedSasUris,
+                        feedOverrides: AllowFeedOverrides ? FeedOverrides : Array.Empty<ITaskItem>(),
+                        latestLinkShortUrlPrefixes: shortLinkUrls,
+                        buildEngine: BuildEngine,
                         targetChannelConfig.SymbolTargetType,
                         filesToExclude: targetChannelConfig.FilenamesToExclude,
                         flatten: targetChannelConfig.Flatten,
@@ -248,3 +258,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         }
     }
 }
+#else
+public class PublishArtifactsInManifestV3 : Microsoft.Build.Utilities.Task
+{
+    public override bool Execute() => throw new NotSupportedException("PublishArtifactsInManifestV3 depends on Maestro.Client, which has discontinued support for desktop frameworks.");
+}
+#endif

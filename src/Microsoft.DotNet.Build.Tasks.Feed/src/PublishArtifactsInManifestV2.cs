@@ -3,6 +3,7 @@
 
 using Microsoft.Build.Framework;
 using Microsoft.DotNet.Build.Tasks.Feed.Model;
+#if !NET472_OR_GREATER
 using Microsoft.DotNet.Maestro.Client;
 using Microsoft.DotNet.Maestro.Client.Models;
 using System;
@@ -171,7 +172,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                         }
                     }
 
-                    string latestLinkShortUrlPrefix = fc.GetMetadata(nameof(Model.TargetFeedConfig.LatestLinkShortUrlPrefix));
+                    string latestLinkShortUrlPrefix = fc.GetMetadata(nameof(Model.TargetFeedConfig.LatestLinkShortUrlPrefixes));
                     if (!string.IsNullOrEmpty(latestLinkShortUrlPrefix))
                     {
                         // Verify other inputs are provided
@@ -204,15 +205,15 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     }
 
                     TargetFeedConfig feedConfig = new TargetFeedConfig(
-                            categoryKey,
-                            targetFeedUrl,
-                            feedType,
-                            feedKey,
-                            latestLinkShortUrlPrefix,
-                            assetSelection,
-                            isIsolatedFeed,
-                            isInternalFeed,
-                            isOverridableFeed);
+                            contentType: categoryKey,
+                            targetURL: targetFeedUrl,
+                            type: feedType,
+                            token: feedKey,
+                            latestLinkShortUrlPrefixes: new List<string>() { latestLinkShortUrlPrefix },
+                            assetSelection: assetSelection,
+                            isolated: isIsolatedFeed,
+                            @internal: isInternalFeed,
+                            allowOverwrite: isOverridableFeed);
 
                     CheckForInternalBuildsOnPublicFeeds(feedConfig);
 
@@ -226,3 +227,9 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
         }
     }
 }
+#else
+public class PublishArtifactsInManifestV2 : Microsoft.Build.Utilities.Task
+{
+    public override bool Execute() => throw new System.NotSupportedException("PublishArtifactsInManifestV2 depends on Maestro.Client, which has discontinued support for desktop frameworks.");
+}
+#endif

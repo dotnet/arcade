@@ -13,13 +13,19 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Azure.Core" Version="$(AzureCoreVersion)" />
     <PackageReference Include="Azure.Storage.Blobs" Version="$(AzureStorageBlobsVersion)" />
     <PackageReference Include="DotNet.SleetLib" Version="$(DotNetSleetLibVersion)" />
     <PackageReference Include="Microsoft.Build" Version="$(MicrosoftBuildVersion)" />
     <PackageReference Include="Microsoft.Build.Tasks.Core" Version="$(MicrosoftBuildTasksCoreVersion)" />
     <PackageReference Include="Microsoft.Data.Services.Client" Version="$(MicrosoftDataServicesClientVersion)" />
     <PackageReference Include="Microsoft.Data.OData" Version="$(MicrosoftDataODataVersion)" />
-    <PackageReference Include="Microsoft.DotNet.Maestro.Client" Version="$(MicrosoftDotNetMaestroClientVersion)" />    
+
+    <!-- Maestro.Client stopped supporting .NET 4.7.2 long ago. 
+         This functionality should eventually be moved into an arcade-services package, 
+         but for users consuming other functionality we'll still support 4.7.2 by ifdefing it out. -->
+    <PackageReference Condition="'$(TargetFramework)' != 'net472'" Include="Microsoft.DotNet.Maestro.Client" Version="$(MicrosoftDotNetMaestroClientVersion)" />    
+
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="$(MicrosoftExtensionsDependencyInjectionVersion)" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="$(MicrosoftExtensionsDependencyInjectionAbstractionsVersion)" />
     <PackageReference Include="Microsoft.SymbolUploader" Version="$(MicrosoftSymbolUploaderVersion)" />

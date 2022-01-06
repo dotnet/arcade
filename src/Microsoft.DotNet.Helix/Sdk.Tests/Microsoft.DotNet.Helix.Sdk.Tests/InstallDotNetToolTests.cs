@@ -15,7 +15,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using Xunit;
 
-namespace Microsoft.DotNet.Arcade.Sdk.Tests
+namespace Microsoft.DotNet.Helix.Sdk.Tests
 {
     public class InstallDotNetToolTests
     {
@@ -62,7 +62,7 @@ namespace Microsoft.DotNet.Arcade.Sdk.Tests
             _commandFactoryMock
                 .Setup(x => x.Create(
                     It.Is<string>(s => s == _dotnetPath),
-                    It.Is<IEnumerable<string>>(args => args.All(y => _expectedArgs.Contains(y)))))
+                    It.IsAny<IEnumerable<string>>()))
                 .Returns(_commandMock.Object)
                 .Verifiable();
 
@@ -95,7 +95,7 @@ namespace Microsoft.DotNet.Arcade.Sdk.Tests
                 .Verify(
                     x => x.Create(
                         It.Is<string>(dotnet => dotnet == _dotnetPath),
-                        It.Is<IEnumerable<string>>(args => args.Count() == _expectedArgs.Count() && args.All(y => _expectedArgs.Contains(y)))),
+                        It.IsAny<IEnumerable<string>>()),
                     Times.Never);
 
             _commandMock.Verify(x => x.Execute(), Times.Never);
@@ -170,6 +170,10 @@ namespace Microsoft.DotNet.Arcade.Sdk.Tests
                 ToolVersion,
                 "--tool-path",
                 Path.Combine(InstallPath, ToolName, ToolVersion),
+                "--framework",
+                "net6.0",
+                "--arch",
+                "arm64",
                 "--add-source",
                 "https://dev.azure.com/some/feed",
                 ToolName,
@@ -179,6 +183,8 @@ namespace Microsoft.DotNet.Arcade.Sdk.Tests
             _task.ConfigureServices(collection);
             _task.Source = "https://dev.azure.com/some/feed";
             _task.DotnetPath = _dotnetPath = @"D:\dotnet\dotnet.exe";
+            _task.TargetArchitecture = "arm64";
+            _task.TargetFramework = "net6.0";
 
             // Act
             using var provider = collection.BuildServiceProvider();
@@ -209,7 +215,7 @@ namespace Microsoft.DotNet.Arcade.Sdk.Tests
                 .Setup(x => x.DirectoryExists(It.IsAny<string>()))
                 .Returns(true);
 
-            var helpers = new Helpers();
+            var helpers = new Microsoft.Arcade.Common.Helpers();
             var hangingCommandCalled = new TaskCompletionSource<bool>();
             var dotnetToolInstalled = new TaskCompletionSource<bool>();
 
@@ -219,7 +225,7 @@ namespace Microsoft.DotNet.Arcade.Sdk.Tests
                 .Callback(() =>
                 {
                     hangingCommandCalled.SetResult(true);
-                    dotnetToolInstalled.Task.GetAwaiter().GetResult();
+                    dotnetToolInstalled.Task.GetAwaiter().GetResult(); // stop here
                 })
                 .Returns(new CommandResult(new ProcessStartInfo(), 0, "Tool installed", null));
 
@@ -234,12 +240,12 @@ namespace Microsoft.DotNet.Arcade.Sdk.Tests
             var collection1 = new ServiceCollection();
             collection1.AddSingleton(hangingCommandFactoryMock.Object);
             collection1.AddSingleton(fileSystemMock1.Object);
-            collection1.AddTransient<IHelpers, Helpers>();
+            collection1.AddTransient<IHelpers, Microsoft.Arcade.Common.Helpers>();
 
             var collection2 = new ServiceCollection();
             collection2.AddSingleton(_commandFactoryMock.Object);
             collection2.AddSingleton(fileSystemMock2.Object);
-            collection2.AddTransient<IHelpers, Helpers>();
+            collection2.AddTransient<IHelpers, Microsoft.Arcade.Common.Helpers>();
 
             var task1 = new InstallDotNetTool()
             {
@@ -273,7 +279,7 @@ namespace Microsoft.DotNet.Arcade.Sdk.Tests
                 .Verify(
                     x => x.Create(
                         It.Is<string>(dotnet => dotnet == _dotnetPath),
-                        It.Is<IEnumerable<string>>(args => args.Count() == _expectedArgs.Count() && args.All(y => _expectedArgs.Contains(y)))),
+                        It.IsAny<IEnumerable<string>>()),
                     Times.Once);
 
             // The other command is waiting on the Mutex now
@@ -283,7 +289,7 @@ namespace Microsoft.DotNet.Arcade.Sdk.Tests
                 .Verify(
                     x => x.Create(
                         It.Is<string>(dotnet => dotnet == _dotnetPath),
-                        It.Is<IEnumerable<string>>(args => args.Count() == _expectedArgs.Count() && args.All(y => _expectedArgs.Contains(y)))),
+                        It.IsAny<IEnumerable<string>>()),
                     Times.Never);
 
             // We now let `dotnet tool install` run to completion
