@@ -167,4 +167,21 @@ secrets:
         location: dotnetbuildskeys
       permissions: rl
       container: public
-      
+
+  dotnetbuilds-internal-checksums-container-read-token:
+    type: azure-storage-container-sas-token
+    parameters:
+      connectionString:
+        name: dotnetbuilds-connection-string
+        location: dotnetbuildskeys
+      permissions: rl
+      container: internal-checksums
+
+  dotnetbuilds-public-checksums-container-read-token:
+    type: azure-storage-container-sas-token
+    parameters:
+      connectionString:
+        name: dotnetbuilds-connection-string
+        location: dotnetbuildskeys
+      permissions: rl
+      container: public-checksums
