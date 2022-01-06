@@ -150,6 +150,80 @@ secrets:
       name: dn-symweb-symbol-server-pat
       organization: dnceng
 
+  dotnetfeedmsrc-storage-access-key-1:
+    type: text
+    parameters:
+      description: Also located in dnceng-pipeline-secrets keyvault.
+      
+  dotnetfeedmsrc-private-feed-url:
+    type: text
+    parameters:
+      description: created manually from SAS in the format https://dotnetfeedmsrc.azurewebsites.net/sig/{sig}/se{se}
+
+  dotnetfeedmsrc-connection-string:
+    type: azure-storage-connection-string
+    parameters:
+      storageKeySecret: dotnetfeedmsrc-storage-access-key-1
+      account: dotnetfeedmsrc
+
+  dotnetfeedmsrc-read-sas-token:
+    type: azure-storage-container-sas-token
+    parameters:
+      connectionString: dotnetfeedmsrc-connection-string
+      permissions: r
+      container: $root
+
+  dotnetfeedmsrc-read-sas-token-base64:
+    type: base64-encoder
+    parameters:
+      secret: dotnetfeedmsrc-read-sas-token
+
+  dotnetclimsrc-access-key:
+    type: text
+    parameters:
+      description: Also located in dnceng-pipeline-secrets keyvault.
+
+  dotnetclimsrc-private-feed-url:
+    type: text
+    parameters:
+      description: created manually from SAS in the format https://dotnetclimsrc.azurewebsites.net/sig/{sig}/se{se}
+
+  dotnetclimsrc-connection-string:
+    type: azure-storage-connection-string
+    parameters:
+      storageKeySecret: dotnetclimsrc-access-key
+      account: dotnetclimsrc
+
+  dotnetclimsrc-read-sas-token:
+    type: azure-storage-container-sas-token
+    parameters:
+      connectionString: dotnetclimsrc-connection-string
+      permissions: rl
+      container: dotnet
+
+  dotnetclimsrc-read-sas-token-base64:
+    type: base64-encoder
+    parameters:
+      secret: dotnetclimsrc-read-sas-token
+
+  dotnetclichecksumsmsrc-storage-key:
+    type: text
+    parameters:
+      description: Also located in dnceng-pipeline-secrets keyvault.
+
+  dotnetclichecksumsmsrc-connection-string:
+    type: azure-storage-connection-string
+    parameters:
+      storageKeySecret: dotnetclichecksumsmsrc-storage-key
+      account: dotnetclichecksumsmsrc
+      
+  dotnetclichecksumsmsrc-dotnet-read-list-sas-token:
+    type: azure-storage-container-sas-token
+    parameters:
+      connectionString: dotnetclichecksumsmsrc-connection-string
+      permissions: rl
+      container: dotnet
+
   dotnetbuilds-internal-container-read-token:
     type: azure-storage-container-sas-token
     parameters:
