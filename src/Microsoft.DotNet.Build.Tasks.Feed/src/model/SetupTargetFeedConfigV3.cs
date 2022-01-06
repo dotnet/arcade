@@ -241,7 +241,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         private string GetFeedOverride(string feed)
         {
-            foreach (var prefix in FeedOverrides.Keys)
+            foreach (var prefix in FeedOverrides.Keys.OrderByDescending(f => f.Length))
             {
                 if (feed.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
                 {
@@ -254,7 +254,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         private string GetFeedSasUri(string feed)
         {
-            foreach (var prefix in FeedSasUris.Keys)
+            foreach (var prefix in FeedSasUris.Keys.OrderByDescending(f => f.Length))
             {
                 if (feed.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
                 {
@@ -267,7 +267,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
         private string GetFeedKey(string feed)
         {
-            foreach (var prefix in FeedKeys.Keys)
+            foreach (var prefix in FeedKeys.Keys.OrderByDescending(f => f.Length))
             {
                 if (feed.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
                 {
