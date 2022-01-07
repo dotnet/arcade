@@ -4,9 +4,8 @@ parameters:
   - name: PublishingInfraVersion
     displayName: Which version of publishing should be used to promote the build definition?
     type: number
-    default: 2
+    default: 3
     values:
-      - 2
       - 3
       
   - name: BARBuildId
@@ -135,24 +134,6 @@ stages:
             MAESTRO_API_TOKEN: $(MaestroApiAccessToken)
             BARBuildId: ${{ parameters.BARBuildId }}
             PromoteToChannelIds: ${{ parameters.PromoteToChannelIds }}
-
-- ${{ if le(parameters.PublishingInfraVersion, 2) }}:
-  - template: \eng\common\templates\post-build\post-build.yml
-    parameters:
-      PromoteToChannelIds: ${{ parameters.PromoteToChannelIds }}
-      BARBuildId: ${{ parameters.BARBuildId }}
-    
-      enableSourceLinkValidation: ${{ parameters.EnableSourceLinkValidation }}
-      enableNugetValidation: ${{ parameters.EnableNugetValidation }}
-      enableSigningValidation: ${{ parameters.EnableSigningValidation }}
-      
-      validateDependsOn:
-        - prepare_promotion
-           
-      publishInstallersAndChecksums: ${{ parameters.PublishInstallersAndChecksums }}
-      symbolPublishingAdditionalParameters: ${{ parameters.SymbolPublishingAdditionalParameters }}
-      artifactsPublishingAdditionalParameters: ${{ parameters.ArtifactsPublishingAdditionalParameters }}
-      signingValidationAdditionalParameters: ${{ parameters.SigningValidationAdditionalParameters }}
 
 - ${{ if ge(parameters.PublishingInfraVersion, 3) }}:
   - template: \eng\publishing\v3\publish.yml
