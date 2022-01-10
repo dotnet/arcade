@@ -43,9 +43,9 @@
       <Uri>https://github.com/dotnet/arcade-services</Uri>
       <Sha>a5f3ed9d5f560555ff6d26b286acdcfbb7ce3b14</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.XHarness.CLI" Version="1.0.0-prerelease.22053.1">
+    <Dependency Name="Microsoft.DotNet.XHarness.CLI" Version="1.0.0-prerelease.22060.1">
       <Uri>https://github.com/dotnet/xharness</Uri>
-      <Sha>31dd69263e7a18c8e804e0c8ba088a11431e23e2</Sha>
+      <Sha>6f4215e4ef72ecf808621f15ab92b2ccefc270c4</Sha>
     </Dependency>
     <Dependency Name="Microsoft.Net.Compilers.Toolset" Version="4.0.1-1.21619.1">
       <Uri>https://github.com/dotnet/roslyn</Uri>
@@ -72,9 +72,9 @@
       <Uri>https://github.com/dotnet/symreader-converter</Uri>
       <Sha>c5ba7c88f92e2dde156c324a8c8edc04d9fa4fe0</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.XliffTasks" Version="1.0.0-beta.22055.1">
+    <Dependency Name="Microsoft.DotNet.XliffTasks" Version="1.0.0-beta.22057.1">
       <Uri>https://github.com/dotnet/xliff-tasks</Uri>
-      <Sha>4b9b46a95bebd9f058238c50f0039590e6c58d51</Sha>
+      <Sha>9eccf0f490397043a39454d810b82a0474687226</Sha>
     </Dependency>
   </ToolsetDependencies>
 </Dependencies>
