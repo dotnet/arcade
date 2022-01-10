@@ -212,7 +212,6 @@ function Build {
     /p:PerformanceTest=$performance_test \
     /p:Sign=$sign \
     /p:Publish=$publish \
-    /p:RestoreIgnoreFailedSources=true \
     $properties
 
   ExitWithExitCode 0
