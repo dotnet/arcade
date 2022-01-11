@@ -68,20 +68,16 @@ def call_xharness(args: list, throw_on_error: bool = False, capture_output: bool
     """
 
     xharness_cli_path = os.getenv('XHARNESS_CLI_PATH')
+    args = ['dotnet', 'exec', xharness_cli_path] + args
 
     if capture_output:
+        stdout = subprocess.PIPE
+        stderr = subprocess.STDOUT # Combines outputs
+    else:
         stdout = None
         stderr = None
-    else:
-        stdout = subprocess.PIPE
-        stderr = subprocess.STDOUT # Combines output to stdout
 
-    return subprocess.run(
-        ['dotnet', 'exec', xharness_cli_path] + args,
-        stdout=stdout,
-        stderr=stderr,
-        capture_output=capture_output,
-        check=throw_on_error)
+    return subprocess.run(args, stdout=stdout, stderr=stderr, text=True, check=throw_on_error)
 
 def call_adb(args: list, throw_on_error: bool = False, capture_output: bool = False):
     """ Calls the XHarness CLI with `android adb` command and given arguments
@@ -100,14 +96,12 @@ def remove_android_apps(device: str = None):
     if device:
         args = ['-s', device] + args
 
-    result = call_adb(args)
+    try:
+        result = call_adb(args, capture_output=True)
+    except Exception as e:
+        print(f'    Failed to get list of installed apps: {e}')
 
-    if result.returncode != 0:
-        print('    Failed to get list of installed apps:')
-        print(f'        {result.stdout.decode("utf-8")}')
-        return
-
-    installed_apps = result.stdout.decode('utf-8').splitlines()
+    installed_apps = result.stdout.splitlines()
     installed_apps = [app.split(':')[1] for app in installed_apps if app]
 
     # Remove all installed apps
@@ -164,14 +158,15 @@ def analyze_operation(command: str, platform: str, device: str, is_device: bool,
         # if exit_code != 0 and not android_connectivity_verified and is_device:
         #     # Any issue can also be caused by network connectivity problems (devices sometimes lose the WiFi connection)
         #     # In those cases, we want a retry and we want to report this
+        #     print('    Encountered non-zero exit code. Checking network connectivity...')
         #     android_connectivity_verified = True
-        #
-        #     result = call_adb(['shell', 'ping', '-i', '0.2', '-c', '3', 'www.microsoft.com'], throw_on_error=False, capture_output=True)
-        #
+
+        #     result = call_adb(['shell', 'ping', '-i', '0.2', '-c', '3', 'www.microsoft.com'], throw_on_error=False)
+
         #     if result.returncode != 0:
         #         retry = True
         #         print('    Detected network connectivity issue. This is typically not a failure of the work item. We will try it again on another Helix agent')
-        #         raise AdditionalTelemetryRequired(NETWORK_CONNECTIVITY_METRIC_NAME, 1)
+        #     raise AdditionalTelemetryRequired(NETWORK_CONNECTIVITY_METRIC_NAME, 1)
 
     elif platform == "apple":
         retry_message = 'This is typically not a failure of the work item. It will be run again. '
