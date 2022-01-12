@@ -9,8 +9,8 @@
 
     <!-- MajorUpgrade element doesn't support setting the language attribute in the upgrade table -->
     <Upgrade Id="$(var.UpgradeCode)">
-      <UpgradeVersion Language="1033" Maximum="$(var.ProductVersion)" MigrateFeatures="yes" IncludeMinimum="no" Property="WIX_UPGRADE_DETECTED" />
-      <UpgradeVersion Language="1033" Minimum="$(var.ProductVersion)" IncludeMinimum="no" OnlyDetect="yes" Property="WIX_DOWNGRADE_DETECTED" />
+      <UpgradeVersion Maximum="$(var.ProductVersion)" MigrateFeatures="yes" IncludeMinimum="no" Property="WIX_UPGRADE_DETECTED" />
+      <UpgradeVersion Minimum="$(var.ProductVersion)" IncludeMinimum="no" OnlyDetect="yes" Property="WIX_DOWNGRADE_DETECTED" />
     </Upgrade>
 
     <!-- The new MSI is installed before the older version is removed. This is the fastest upgrade option. -->
