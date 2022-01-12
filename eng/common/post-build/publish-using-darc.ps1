@@ -30,27 +30,6 @@ try {
     $optionalParams.Add("--no-wait") | Out-Null
   }
 
-  if ("false" -ne $PublishInstallersAndChecksums) {
-    $optionalParams.Add("--publish-installers-and-checksums") | Out-Null
-  }
-
-  if ("true" -eq $EnableNugetValidation) {
-    $optionalParams.Add("--validate-nuget") | Out-Null
-  }
-
-  if ("true" -eq $EnableSourceLinkValidation) {
-    $optionalParams.Add("--validate-sourcelinkchecksums") | Out-Null
-  }
-
-  if ("true" -eq $EnableSigningValidation) {
-    $optionalParams.Add("--validate-signingchecksums") | Out-Null
-
-    if ("" -ne $SigningValidationAdditionalParameters) {
-      $optionalParams.Add("--signing-validation-parameters") | Out-Null
-      $optionalParams.Add($SigningValidationAdditionalParameters) | Out-Null
-    }
-  }
-
   & $darc add-build-to-channel `
   --id $buildId `
   --publishing-infra-version $PublishingInfraVersion `
