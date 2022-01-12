@@ -17,6 +17,20 @@ parameters:
     type: string 
     default: ' '
 
+  - name: SymbolPublishingAdditionalParameters
+    displayName: Additional (MSBuild) properties for symbol publishing
+    type: string 
+    default: ' '
+
+  - name: ArtifactsPublishingAdditionalParameters
+    displayName: Additional (MSBuild) properties for general asset publishing
+    type: string 
+    default: ' '
+
+  # The parameters below here are legacy. They are passed by add-build-to-channel
+  # to the build pipeline, and if they are not present in the pipeline, then queueing
+  # will fail. Remove once add-build-to-channel has been updated to remove the parameters.
+
   - name: EnableSourceLinkValidation
     displayName: Should Sourcelink validation be performed?
     type: boolean 
@@ -36,16 +50,6 @@ parameters:
     displayName: Should installers and checksums be published?
     type: boolean 
     default: true
-      
-  - name: SymbolPublishingAdditionalParameters
-    displayName: Additional (MSBuild) properties for symbol publishing
-    type: string 
-    default: ' '
-
-  - name: ArtifactsPublishingAdditionalParameters
-    displayName: Additional (MSBuild) properties for general asset publishing
-    type: string 
-    default: ' '
     
   - name: SigningValidationAdditionalParameters
     displayName: Additional (MSBuild) properties for signing validation
@@ -54,101 +58,10 @@ parameters:
 
 trigger: none
 
-variables:
-  _DotNetArtifactsCategory: .NETCore
-
-pool:
-  vmImage: ubuntu-latest
-
 stages:
-- stage: prepare_promotion
-  displayName: Prepare for Promotion
-  jobs:
-    - job:
-      displayName: Validate Parameters
-      variables:
-        - template: common\templates\post-build\common-variables.yml
-      steps:
-        - checkout: none
-        
-        - task: PowerShell@2
-          displayName: Validate Build & Channel
-          inputs:
-            targetType: inline
-            script: |
-              # Keeping this script inline so that we don't need to checkout the whole repo to use just one file
-              try {
-                  $buildApiEndpoint = "$(MaestroApiEndPoint)/api/builds/${Env:BARBuildId}?api-version=$(MaestroApiVersion)"
-
-                  $apiHeaders = New-Object 'System.Collections.Generic.Dictionary[[String],[String]]'
-                  $apiHeaders.Add('Accept', 'application/json')
-                  $apiHeaders.Add('Authorization',"Bearer ${Env:MAESTRO_API_TOKEN}")
-
-                  $buildInfo = try { Invoke-WebRequest -Method Get -Uri $buildApiEndpoint -Headers $apiHeaders | ConvertFrom-Json } catch { Write-Host "Error: $_" }
-
-                  if (!$buildInfo) {
-                    Write-Host "Build with BAR ID ${Env:BARBuildId} was not found in BAR!"
-                    exit 1
-                  }
-
-                  $channels = ${Env:PromoteToChannelIds} -split "-"
-                  foreach ($channelId in $channels) {
-                    $channelApiEndpoint = "$(MaestroApiEndPoint)/api/channels/${channelId}?api-version=$(MaestroApiVersion)"
-                    $channelInfo = try { Invoke-WebRequest -Method Get -Uri $channelApiEndpoint -Headers $apiHeaders | ConvertFrom-Json } catch { Write-Host "Error: $_" }
-
-                    if (!$channelInfo) {
-                      Write-Host "Channel with ID ${channelId} was not found in BAR. Aborting."
-                      exit 1
-                    }
-                  }
-                  
-                  $azureDevOpsBuildNumber = $buildInfo.azureDevOpsBuildNumber
-                  $channelName = $channelInfo.name
-                  $azureDevOpsRepository = "Unknown"
-                  $lastIndexOfSlash = $buildInfo.azureDevOpsRepository.LastIndexOf('/')
-
-                  if ($lastIndexOfSlash -ne -1) {
-                    $azureDevOpsRepository = $buildInfo.azureDevOpsRepository.Substring($lastIndexOfSlash + 1)
-
-                    # Invalid chars in Azdo build number: '"', '/', ':', '<', '>', '\', '|', '?', '@', and '*'
-                    $azureDevOpsRepository = $azureDevOpsRepository -replace '["/:<>\\|?@*"]', '_'
-                  }
-
-                  $buildNumberName = "Promoting $azureDevOpsRepository build $azureDevOpsBuildNumber to channel(s) ${Env:PromoteToChannelIds}#"
-
-                  # Maximum buildnumber length is 255 chars
-                  if ($buildNumberName.Length -GT 255) {
-                    $buildNumberName = $buildNumberName.Substring(0, 255)
-                  }
-
-                  Write-Host "##vso[build.updatebuildnumber]$buildNumberName"
-                  Write-Host "##vso[build.addbuildtag]$channelName"
-              }
-              catch {
-                Write-Host $_
-                Write-Host $_.Exception
-                Write-Host $_.ScriptStackTrace
-                exit 1
-              }
-          env:
-            MAESTRO_API_TOKEN: $(MaestroApiAccessToken)
-            BARBuildId: ${{ parameters.BARBuildId }}
-            PromoteToChannelIds: ${{ parameters.PromoteToChannelIds }}
-
-- ${{ if ge(parameters.PublishingInfraVersion, 3) }}:
-  - template: \eng\publishing\v3\publish.yml
-    parameters:
-      PromoteToChannelIds: ${{ parameters.PromoteToChannelIds }}
-      BARBuildId: ${{ parameters.BARBuildId }}
-    
-      enableSourceLinkValidation: ${{ parameters.EnableSourceLinkValidation }}
-      enableNugetValidation: ${{ parameters.EnableNugetValidation }}
-      enableSigningValidation: ${{ parameters.EnableSigningValidation }}
-      
-      validateDependsOn:
-        - prepare_promotion
-      
-      publishInstallersAndChecksums: ${{ parameters.PublishInstallersAndChecksums }}
-      symbolPublishingAdditionalParameters: ${{ parameters.SymbolPublishingAdditionalParameters }}
-      artifactsPublishingAdditionalParameters: ${{ parameters.ArtifactsPublishingAdditionalParameters }}
-      signingValidationAdditionalParameters: ${{ parameters.SigningValidationAdditionalParameters }}
+- template: \eng\publishing\v3\publish.yml
+  parameters:
+    PromoteToChannelIds: ${{ parameters.PromoteToChannelIds }}
+    BARBuildId: ${{ parameters.BARBuildId }}
+    symbolPublishingAdditionalParameters: ${{ parameters.SymbolPublishingAdditionalParameters }}
+    artifactsPublishingAdditionalParameters: ${{ parameters.ArtifactsPublishingAdditionalParameters }}
