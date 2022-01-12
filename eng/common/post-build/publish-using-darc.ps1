@@ -5,8 +5,13 @@ param(
   [Parameter(Mandatory=$true)][string] $MaestroToken,
   [Parameter(Mandatory=$false)][string] $MaestroApiEndPoint = 'https://maestro-prod.westus2.cloudapp.azure.com',
   [Parameter(Mandatory=$true)][string] $WaitPublishingFinish,
+  [Parameter(Mandatory=$false)][string] $EnableSourceLinkValidation,
+  [Parameter(Mandatory=$false)][string] $EnableSigningValidation,
+  [Parameter(Mandatory=$false)][string] $EnableNugetValidation,
+  [Parameter(Mandatory=$false)][string] $PublishInstallersAndChecksums,
   [Parameter(Mandatory=$false)][string] $ArtifactsPublishingAdditionalParameters,
-  [Parameter(Mandatory=$false)][string] $SymbolPublishingAdditionalParameters
+  [Parameter(Mandatory=$false)][string] $SymbolPublishingAdditionalParameters,
+  [Parameter(Mandatory=$false)][string] $SigningValidationAdditionalParameters
 )
 
 try {
