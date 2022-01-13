@@ -11,6 +11,8 @@ Caveats (Jan 7, 2022):
 - [Test Reporting Queries](#test-reporting-queries)
   - [Index](#index)
   - [Tests That Have Failed X% of the Time in the Recent Timespan](#tests-that-have-failed-x-of-the-time-in-the-recent-timespan)
+  - [Mean Value for the Expected Pass Rate of Tests](#mean-value-for-the-expected-pass-rate-of-tests)
+  - [Pass Rate Confidence Level](#pass-rate-confidence-level)
 
 ## Tests That Have Failed X% of the Time in the Recent Timespan
 
@@ -40,3 +42,35 @@ subtable
 ```
 
 :part_alternation_mark: [Link](https://dataexplorer.azure.com/clusters/engsrvprod/databases/engineeringdata?query=H4sIAAAAAAAAA51SzW7bMAy+5ymInGzUaNrTgHkukC4YdtkypHkBpqZjbbJkSFRTF3v4UTLitGkOxXwwbIr8/kRNDOyhgk91CRefxQK2qiPfo4En1IFmWmYc9Vam5rVlQ7xwwbA0zctpZt2zsgb1Z/CRwgJ1PQ/g2SmzB9XAYAMc0EQoH7RoaJztALVO2F6xdYp8ImtQ6eBo20pra3UtxDfXt+VJ4MqGnaZRHtRkLEcSbgm0PZAX/viKMOCQKcpxxMGZBE/PjzrUtNQHHPw3aYrDFbALVCb4e2s1obmGh9FKPEmWxsER/WiDW2RAR2Il4iVWAUxMPuwYo9IKli/iaEVP695vZdw/hK5DN8z+wqElmd5ICI5XUe1dBbi3Gfsc0NSSXZON8Uv+8yJ1priGWDn9nZ/EmVzwfWJSLwQmdCR5WFdJLYvOv1q5yLxIGXap+gu9T9Wr6fwq1tZmQ+yG4wD6dRPFVh0+ZyftOewGuA9K1ytqlFFxJ35iRwVE0+PX0u1Fh+Hv6NsyxYSvKj+w/9+03ngVHa+JTrS+nB2vZYJL9uEOblLgGds6LVg2BZYvplrqzfPI+25Pj9d1acOKD+J+gdsibVz0o639E3rIzhLKwZo39qS1d/Y3PfJH0/cFRGGbeIeXhMECzqWNE2kDqqlRsC2j3gQzHqTe8h/Tt/8tZwQAAA==) to query editor
+
+## Mean Value for the Expected Pass Rate of Tests
+
+This query will return a list of tests and the mean value for the expected pass rate based on historical data. (Comparably, an inverse to [Tests That Have Failed X% of the Time in the Recent Timespan](#tests-that-have-failed-x-of-the-time-in-the-recent-timespan))
+
+Calculate the expected value (E[_Y_]) for how often a test is likely to pass on its initial run (retries not included) based on its historical data (e.g. monthly, weekly, daily aggregates). Ex: A test is known to fail once out of every seven runs. Its expected value (E[_Y_]) is determined to be 85.7%, meaning, we expect this test to succeed 85.7% of the time.
+
+Variables: 
+- `ts`: [Kusto timespan format](https://docs.microsoft.com/en-us/azure/data-explorer/kusto/query/scalar-data-types/timespan). Default is `7d`.
+- `repo`: Repository to filter on. Set to empty string to inclue all repositories. Default is `dotnet/runtime`.
+- `excludeAlwaysPassing`: Set to true to filter out tests that are always passing. Default is `true`.
+
+```
+let ts = 7d;                      // Timespan value
+let repo = "dotnet/runtime";      // Optional: set to empty string if you want results from all repositories
+let excludeAlwaysPassing = true;  // Boolean. Set to true to exclude test results that are always passing
+let subtable = AzureDevOpsTestsSummary
+| where ReportDate >= ago(ts) and iff(repo == "", Repository == Repository, Repository == repo)
+| summarize numerator=sum(PassCount), denom=sum(PassCount+FailCount+PassOnRetryCount), asOfDate=max(ReportDate) by BuildDefinitionName, TestName, ArgumentHash;
+let argumentHashMap = AzureDevOpsTestsSummary
+| where ReportDate >= ago(ts)
+| summarize by ArgumentHash, Arguments;
+subtable
+| where denom > 0 and iff(excludeAlwaysPassing, (todouble(numerator)/todouble(denom)) < 1, true)
+| lookup (argumentHashMap) on ArgumentHash
+| project BuildDefinitionName, TestName, Arguments, MeanPassRate=(todouble(numerator) / todouble(denom)), PassCount=numerator, TotalRunCount=denom
+| order by MeanPassRate;
+```
+
+## Pass Rate Confidence Level
+
+Calculate the confidence level for a test’s pass rate. We want to have enough “fudge” room on either side of the expected value when new results come in so that slightly tipping the expected value in one direction or another (especially for tests that don’t run very often) doesn’t cause the test to be seen as “interesting”. Suggested calculation: mean +/- 1.96*(standardDeviation/sqrt(n)), where n is the number of known tests used to calculate the standardDeviation 
