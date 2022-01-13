@@ -276,12 +276,32 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 PublicAndInternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude),
 
+            // ".NET 7 SDK 7.0.1xx",
+            new TargetChannelConfig(
+                2237,
+                false,
+                PublishingInfraVersion.All,
+                new List<string>() { "7.0.1xx", "7.0" },
+                DotNet7Feeds,
+                PublicAndInternalSymbolTargets,
+                filenamesToExclude: FilenamesToExclude),
+
             // ".NET 7 preview 1",
             new TargetChannelConfig(
                 2543,
                 false,
                 PublishingInfraVersion.All,
                 new List<string>() { "7.0-preview1" },
+                DotNet7Feeds,
+                PublicAndInternalSymbolTargets,
+                filenamesToExclude: FilenamesToExclude),
+
+            // ".NET 7 SDK 7.0.1xx Preview 1",
+            new TargetChannelConfig(
+                2546,
+                false,
+                PublishingInfraVersion.All,
+                new List<string>() { "7.0.1xx-preview1", "7.0-preview1" },
                 DotNet7Feeds,
                 PublicAndInternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude),
@@ -296,6 +316,16 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 PublicAndInternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude),
 
+            // ".NET 7 SDK 7.0.1xx Preview 2",
+            new TargetChannelConfig(
+                2547,
+                false,
+                PublishingInfraVersion.All,
+                new List<string>() { "7.0.1xx-preview2", "7.0-preview2" },
+                DotNet7Feeds,
+                PublicAndInternalSymbolTargets,
+                filenamesToExclude: FilenamesToExclude),
+
             // ".NET 7 preview 3",
             new TargetChannelConfig(
                 2545,
@@ -306,12 +336,12 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 PublicAndInternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude),
 
-            // ".NET 7 SDK 7.0.1xx",
+            // ".NET 7 SDK 7.0.1xx Preview 3",
             new TargetChannelConfig(
-                2237,
+                2548,
                 false,
                 PublishingInfraVersion.All,
-                new List<string>() { "7.0.1xx", "7.0" },
+                new List<string>() { "7.0.1xx-preview3", "7.0-preview3" },
                 DotNet7Feeds,
                 PublicAndInternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude),
