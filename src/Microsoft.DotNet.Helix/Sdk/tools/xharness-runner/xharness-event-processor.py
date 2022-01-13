@@ -3,6 +3,7 @@ import json
 import os
 import subprocess
 import sys
+from typing import Tuple
 
 from helix.appinsights import app_insights
 from helix.public import request_reboot, request_infra_retry
@@ -16,6 +17,7 @@ OPERATION_METRIC_NAME = 'XHarnessOperation'
 DURATION_METRIC_NAME = 'XHarnessOperationDuration'
 RETRY_METRIC_NAME = 'XHarnessRetry'
 REBOOT_METRIC_NAME = 'XHarnessReboot'
+NETWORK_CONNECTIVITY_METRIC_NAME = 'XHarnessDeviceNetworkFailure'
 
 opts, args = getopt.gnu_getopt(sys.argv[1:], 'd:', ['diagnostics-data='])
 opt_dict = dict(opts)
@@ -47,23 +49,59 @@ retry_dimensions = None
 reboot_dimensions = None
 retry_exit_code = -1
 reboot_exit_code = -1
+android_connectivity_verified = False
+
+class AdditionalTelemetryRequired(Exception):
+    """Exception raised when we need to send additional telemetry during analysis
+
+    Attributes:
+        metric_name -- name of the event
+        metric_value -- value of the metric event
+    """
+
+    def __init__(self, metric_name, metric_value):
+        self.metric_name = metric_name
+        self.metric_value = metric_value
+        super().__init__("Additional telemetry required")
+
+def call_xharness(args: list, capture_output: bool = False) -> Tuple[int, str]:
+    """ Calls the XHarness CLI with given arguments
+    """
+
+    xharness_cli_path = os.getenv('XHARNESS_CLI_PATH')
+    args = ['dotnet', 'exec', xharness_cli_path] + args
+
+    if capture_output:
+        process = subprocess.Popen(args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+        stdout = process.communicate()[0]
+        return process.returncode, stdout
+    else:
+        return subprocess.run(args, stdout=None, stderr=None, text=True).returncode, None
+
+def call_adb(args: list, capture_output: bool = False):
+    """ Calls the XHarness CLI with `android adb` command and given arguments
+    """
+
+    return call_xharness(['android', 'adb', '--'] + args, capture_output)
 
 def remove_android_apps(device: str = None):
     """ Removes all Android applications from the target device/emulator
     """
 
-    print(f'    Removing installed apps after unsuccessful run' + (' from ' + device if device else ""))
-
-    xharness_cli_path = os.getenv('XHARNESS_CLI_PATH')
-    adb_args = ['dotnet', 'exec', xharness_cli_path, 'android', 'adb', '--']
+    print('    Removing installed apps after unsuccessful run' + (' from ' + device if device else ""))
 
     # Get list of installed apps
     args = ['shell', 'pm', 'list', 'packages', 'net.dot']
     if device:
         args = ['-s', device] + args
 
-    installed_apps = subprocess.check_output(adb_args + args).decode('utf-8').splitlines()
-    installed_apps = [app.split(':')[1] for app in installed_apps if app]
+    exit_code, output = call_adb(args, capture_output=True)
+    if exit_code != 0:
+        print(f'    Failed to get list of installed apps: {output}')
+        return
+
+    installed_apps = output.splitlines()
+    installed_apps = [app.split(':')[1] for app in installed_apps if app and app.startswith('package:')]
 
     # Remove all installed apps
     for app in installed_apps:
@@ -73,12 +111,10 @@ def remove_android_apps(device: str = None):
         if device:
             args = ['-s', device] + args
 
-        try:
-            result = subprocess.run(adb_args + args, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-            output = result.stdout.decode('utf8')
-            print(f'            {output}')
-        except Exception as e:
-            print(f'            Failed to remove app {app}: {e}')
+        exit_code, _ = call_adb(args)
+
+        if exit_code != 0:
+            print(f'            Failed to remove app {app}')
 
 def analyze_operation(command: str, platform: str, device: str, is_device: bool, target: str, exit_code: int):
     """ Analyzes the result and requests retry/reboot in case of an infra failure
@@ -87,7 +123,7 @@ def analyze_operation(command: str, platform: str, device: str, is_device: bool,
 
     print(f'Analyzing {platform}/{command}@{target} ({exit_code})')
 
-    global retry, reboot
+    global retry, reboot, android_connectivity_verified
 
     if platform == "android":
         if exit_code == 85: # ADB_DEVICE_ENUMERATION_FAILURE
@@ -116,6 +152,20 @@ def analyze_operation(command: str, platform: str, device: str, is_device: bool,
                     print(f'    Failed to remove installed apps from device: {e}')
 
             retry = True
+
+        # TODO (https://github.com/dotnet/arcade/issues/8232): Only detect network issues when it is requested by user
+        # if exit_code != 0 and not android_connectivity_verified and is_device:
+        #     # Any issue can also be caused by network connectivity problems (devices sometimes lose the WiFi connection)
+        #     # In those cases, we want a retry and we want to report this
+        #     print('    Encountered non-zero exit code. Checking network connectivity...')
+        #     android_connectivity_verified = True
+        #
+        #     exitcode, _ = call_adb(['shell', 'ping', '-i', '0.2', '-c', '3', 'www.microsoft.com'])
+        #
+        #     if exitcode != 0:
+        #         retry = True
+        #         print('    Detected network connectivity issue. This is typically not a failure of the work item. We will try it again on another Helix agent')
+        #         raise AdditionalTelemetryRequired(NETWORK_CONNECTIVITY_METRIC_NAME, 1)
 
     elif platform == "apple":
         retry_message = 'This is typically not a failure of the work item. It will be run again. '
@@ -188,11 +238,6 @@ for operation in operations:
     target_os = operation.get('targetOS')
     is_device = operation.get('isDevice', None)
 
-    try:
-        analyze_operation(command, platform, device, is_device, target, exit_code)
-    except Exception as e:
-        print(f'    Failed to analyze operation: {e}')
-
     custom_dimensions = dict()
     custom_dimensions['command'] = command
     custom_dimensions['platform'] = platform
@@ -207,6 +252,13 @@ for operation in operations:
             custom_dimensions['target'] = target
     elif 'targetOS' in operation:
         custom_dimensions['target'] = target_os
+
+    try:
+        analyze_operation(command, platform, device, is_device, target, exit_code)
+    except AdditionalTelemetryRequired as e:
+        app_insights.send_metric(e.metric_name, e.metric_value, properties=custom_dimensions)
+    except Exception as e:
+        print(f'    Failed to analyze operation: {e}')
 
     # Note down the dimensions that caused retry/reboot
     if retry and retry_dimensions is None:
