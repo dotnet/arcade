@@ -34,9 +34,9 @@ parameters:
   # the 'setupMaestroVars' dependency. Overriding this parameter is necessary if SDL tasks are
   # running without Maestro++/BAR involved, or to download artifacts from a specific existing build
   # to iterate quickly on SDL changes.
-  AzDOProjectName: $[ dependencies.setupMaestroVars.outputs['setReleaseVars.AzDOProjectName'] ]
-  AzDOPipelineId: $[ dependencies.setupMaestroVars.outputs['setReleaseVars.AzDOPipelineId'] ]
-  AzDOBuildId: $[ dependencies.setupMaestroVars.outputs['setReleaseVars.AzDOBuildId'] ]
+  AzDOProjectName: ''
+  AzDOPipelineId: ''
+  AzDOBuildId: ''
 
 jobs:
 - job: Run_SDL
@@ -55,7 +55,8 @@ jobs:
     - name: GuardianVersion
       value: ${{ coalesce(parameters.overrideGuardianVersion, '$(DefaultGuardianVersion)') }}
   pool:
-    vmImage: windows-2019
+    name: NetCore1ESPool-Internal
+    demands: ImageOverride -equals Build.Server.Amd64.VS2019
   steps:
   - checkout: self
     clean: true
