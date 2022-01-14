@@ -145,13 +145,13 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
                     var oldFeed = spec.FeedUrl;
                     var feed = GetFeedOverride(oldFeed);
                     if (type is TargetFeedContentType.Package &&
-                        spec.Assets == AssetSelection.ShippingOnly &&
+                        spec.Assets == AssetSelection.NonShippingOnly &&
                         FeedOverrides.TryGetValue("transport-packages", out string newFeed))
                     {
                         feed = newFeed;
                     }
                     else if (type is TargetFeedContentType.Package &&
-                        spec.Assets == AssetSelection.NonShippingOnly &&
+                        spec.Assets == AssetSelection.ShippingOnly &&
                         FeedOverrides.TryGetValue("shipping-packages", out newFeed))
                     {
                         feed = newFeed;
