@@ -2,17 +2,17 @@
 
 The following is a list of default queries to use to look up information about failed tests. Feel free to change them for your own usages. 
 
-Caveats (Jan 7, 2022): 
+Caveats (Jan 14, 2022): 
 - This data is only accessible by internal Microsoft employees. 
 - Test data is only recently populated, thus, we only have about 2.5 weeks worth of data. 
 - There is a [known issue](https://github.com/dotnet/core-eng/issues/14708) with how we're capturing this data that is currently being worked on, thus, some of the data we have may not be complete. 
 
 ## Index
-- [Test Reporting Queries](#test-reporting-queries)
-  - [Index](#index)
   - [Tests That Have Failed X% of the Time in the Recent Timespan](#tests-that-have-failed-x-of-the-time-in-the-recent-timespan)
-  - [Mean Value for the Expected Pass Rate of Tests](#mean-value-for-the-expected-pass-rate-of-tests)
-  - [Pass Rate Confidence Level](#pass-rate-confidence-level)
+  - [Mean Value for the Expected Pass Rate for Tests](#mean-value-for-the-expected-pass-rate-for-tests)
+  - [Mean Value for the Expected Pass on Retry Rate for Tests](#mean-value-for-the-expected-pass-on-retry-rate-for-tests)
+  - [Build Analysis Reporting](#build-analysis-reporting)
+  - [Sentiment Tracker Feedback](#sentiment-tracker-feedback)
 
 ## Tests That Have Failed X% of the Time in the Recent Timespan
 
@@ -43,7 +43,7 @@ subtable
 
 :part_alternation_mark: [Link](https://dataexplorer.azure.com/clusters/engsrvprod/databases/engineeringdata?query=H4sIAAAAAAAAA51SzW7bMAy+5ymInGzUaNrTgHkukC4YdtkypHkBpqZjbbJkSFRTF3v4UTLitGkOxXwwbIr8/kRNDOyhgk91CRefxQK2qiPfo4En1IFmWmYc9Vam5rVlQ7xwwbA0zctpZt2zsgb1Z/CRwgJ1PQ/g2SmzB9XAYAMc0EQoH7RoaJztALVO2F6xdYp8ImtQ6eBo20pra3UtxDfXt+VJ4MqGnaZRHtRkLEcSbgm0PZAX/viKMOCQKcpxxMGZBE/PjzrUtNQHHPw3aYrDFbALVCb4e2s1obmGh9FKPEmWxsER/WiDW2RAR2Il4iVWAUxMPuwYo9IKli/iaEVP695vZdw/hK5DN8z+wqElmd5ICI5XUe1dBbi3Gfsc0NSSXZON8Uv+8yJ1priGWDn9nZ/EmVzwfWJSLwQmdCR5WFdJLYvOv1q5yLxIGXap+gu9T9Wr6fwq1tZmQ+yG4wD6dRPFVh0+ZyftOewGuA9K1ytqlFFxJ35iRwVE0+PX0u1Fh+Hv6NsyxYSvKj+w/9+03ngVHa+JTrS+nB2vZYJL9uEOblLgGds6LVg2BZYvplrqzfPI+25Pj9d1acOKD+J+gdsibVz0o639E3rIzhLKwZo39qS1d/Y3PfJH0/cFRGGbeIeXhMECzqWNE2kDqqlRsC2j3gQzHqTe8h/Tt/8tZwQAAA==) to query editor
 
-## Mean Value for the Expected Pass Rate of Tests
+## Mean Value for the Expected Pass Rate for Tests
 
 This query will return a list of tests and the mean value for the expected pass rate based on historical data. (Comparably, an inverse to [Tests That Have Failed X% of the Time in the Recent Timespan](#tests-that-have-failed-x-of-the-time-in-the-recent-timespan))
 
@@ -71,6 +71,45 @@ subtable
 | order by MeanPassRate;
 ```
 
-## Pass Rate Confidence Level
+:part_alternation_mark: [Link](https://dataexplorer.azure.com/clusters/engsrvprod/databases/engineeringdata?query=H4sIAAAAAAAAA51U3WvbMBB/L/R/OAoDm5lkexgdzVJIP8b20GWkZTDGHi7xOdEiS0Y6NXXpH7+T3DhpycNYXqxI9/u4n84eDuH6oaEFUwk/UAeCyjr4jt7DDJnO4BL1ImhZAq8IaFt7n2qz618/f+cJsrIbsBWTAQQmz6A8aLUm3QJbaCKhNaDYgzKKFWpwwUDmiJ0iD8YKwix0KKnM4fhoOIQ5ehF6Bq2UZ+vUQnAlMkJGg+UAamt4pdsCNkTr+CxRiSAul46W4tnnA2nvDCa9pbWxGxMdVVIp5AsCG1icA92Ta8HLw0RrfgBfRTc5Ody1sJXE5Gpl5Ego5wQfPwxO3xRQExplltHXM1jSk/rkQip9WCxIQKk8isdsWdU0EEFNUuNhDKflCA7+xNKdFPsGTWepAzlqrMBOSsuGeChNRMqTUQ+aNqysQX0mbSYfVDcsPcsVmCWoClobYIMmUvmgxUTlbA2odeL2Kl4B+U6NHtJtTfQGWx8HJnKMgV2gUVK7sFZLDgO47cTiSRLtgF0YWyFeIQM6ErHIlwZGCDspH+aMc01CP3kMjq7oftr4O8H721DX6NrjoyfYrEjwMzHq+CoO7PlYJsFm7HNAU0p/VdZFJBmdFKkytdTGnd2/1ycRk0cBn7TUI4EJNTmUgrHsZbH5Sytp5zKAZGz9cvftZxm1bhX3pmYmM99uAeinVXQ7rvEh25nPYd7CRVC6vKIqvTHWfMOaCohtd6uJW4oPw1/Qr0ZdUri3dYPNfwf2sl2xsq+1U/Yiu72cHWPKAM7hXR/7oVkpIGNb2iDQrM8zH/Z7iSXP4RO8L9LsJFPa2nVoIHvVaB6/E/seY23j7J/46v1jjL6AG5nXaC9++saH7MEQXhssoL/pcV8o/JZRz4LpDlJt9GRdSS4Gui81+gtMm5LlhgUAAA==) to query editor
 
-Calculate the confidence level for a test’s pass rate. We want to have enough “fudge” room on either side of the expected value when new results come in so that slightly tipping the expected value in one direction or another (especially for tests that don’t run very often) doesn’t cause the test to be seen as “interesting”. Suggested calculation: mean +/- 1.96*(standardDeviation/sqrt(n)), where n is the number of known tests used to calculate the standardDeviation 
+## Mean Value for the Expected Pass on Retry Rate for Tests
+
+Retries are meant to unblock and prevent a build from failing due to failing test, but they are still indicative of unwanted behavior, therefore, we need to track how often a test passes when retries are introduced. Ex: A test has a 100% pass rate, but only when the test re-runs after a failure every six runs, so it’s expected value for re-runs is 83.3%.
+
+Variables: 
+- `ts`: [Kusto timespan format](https://docs.microsoft.com/en-us/azure/data-explorer/kusto/query/scalar-data-types/timespan). Default is `14d`.
+- `repo`: Repository to filter on. Set to empty string to inclue all repositories. Default is `dotnet/arcade`.
+
+```
+let ts = 14d;                      // Timespan value
+let repo = "dotnet/arcade";        // Optional: set to empty string if you want results from all repositories
+let subtable = AzureDevOpsTestsSummary
+| where ReportDate >= ago(ts) and iff(repo == "", Repository == Repository, Repository == repo) and PassOnRetryCount > 0
+| summarize numerator=sum(PassOnRetryCount), denom=sum(FailCount+PassOnRetryCount), asOfDate=max(ReportDate) by BuildDefinitionName, TestName, ArgumentHash;
+let argumentHashMap = AzureDevOpsTestsSummary
+| where ReportDate >= ago(ts)
+| summarize by ArgumentHash, Arguments;
+subtable
+| where denom > 0
+| lookup (argumentHashMap) on ArgumentHash
+| project BuildDefinitionName, TestName, Arguments, MeanPassOnRetryRate=(todouble(numerator) / todouble(denom)), PassOnRetryCount=numerator, TotalRunCount=denom
+| order by MeanPassOnRetryRate;
+```
+
+:part_alternation_mark: [Link](https://dataexplorer.azure.com/clusters/engsrvprod/databases/engineeringdata?query=H4sIAAAAAAAAA51U3WvbMBB/L/R/OAoDm5lkexgdzVJIP8b20GWkZTDGHi7xOdEiS0Y6NXXpH7+T3DhpycNYXqxI9/u4n84eDuH6oaEFUwk/UAeCyjr4jt7DDJnO4BL1ImhZAq8IaFt7n2qz618/f+cJsrIbsBWTAQQmz6A8aLUm3QJbaCKhNaDYgzKKFWpwwUDmiJ0iD8YKwix0KKnM4fhoOIQ5ehF6Bq2UZ+vUQnAlMkJGg+UAamt4pdsCNkTr+CxRiSAul46W4tnnA2nvDCa9pbWxGxMdVVIp5AsCG1icA92Ta8HLw0RrfgBfRTc5Ody1sJXE5Gpl5Ego5wQfPwxO3xRQExplltHXM1jSk/rkQip9WCxIQKk8isdsWdU0EEFNUuNhDKflCA7+xNKdFPsGTWepAzlqrMBOSsuGeChNRMqTUQ+aNqysQX0mbSYfVDcsPcsVmCWoClobYIMmUvmgxUTlbA2odeL2Kl4B+U6NHtJtTfQGWx8HJnKMgV2gUVK7sFZLDgO47cTiSRLtgF0YWyFeIQM6ErHIlwZGCDspH+aMc01CP3kMjq7oftr4O8H721DX6NrjoyfYrEjwMzHq+CoO7PlYJsFm7HNAU0p/VdZFJBmdFKkytdTGnd2/1ycRk0cBn7TUI4EJNTmUgrHsZbH5Sytp5zKAZGz9cvftZxm1bhX3pmYmM99uAeinVXQ7rvEh25nPYd7CRVC6vKIqvTHWfMOaCohtd6uJW4oPw1/Qr0ZdUri3dYPNfwf2sl2xsq+1U/Yiu72cHWPKAM7hXR/7oVkpIGNb2iDQrM8zH/Z7iSXP4RO8L9LsJFPa2nVoIHvVaB6/E/seY23j7J/46v1jjL6AG5nXaC9++saH7MEQXhssoL/pcV8o/JZRz4LpDlJt9GRdSS4Gui81+gtMm5LlhgUAAA==) to query editor
+
+## Build Analysis Reporting
+
+This Power BI page contains the following reports: 
+- Details of PRs outcomes when merged (e.g. when a PR was merged on red)
+- Build outcomes and retry metrics
+- Tests that pass on rerun
+
+:part_alternation_mark: [Link](https://msit.powerbi.com/groups/me/reports/8bdd4339-ea39-4e67-963a-fc44a450605b/ReportSection?ctid=72f988bf-86f1-41af-91ab-2d7cd011db47) to Power BI Report
+
+## Sentiment Tracker Feedback
+
+This report tracks the usage and trends of the feedback we receive via the sentiment tracker in the Build Analysis check on the PRs. 
+
+:part_alternation_mark: [Link](https://msit.powerbi.com/groups/de8c4cb8-b06d-4af8-8609-3182bb4bdc7c/reports/e6deb422-46fc-4f80-8892-ba7036081986/ReportSection) to Power BI Report
