@@ -6,7 +6,7 @@ import sys
 from typing import Tuple
 
 from helix.appinsights import app_insights
-from helix.public import request_reboot, request_infra_retry
+from helix.public import request_reboot, request_infra_retry, send_metrics
 
 ### This script's purpose is to parse the diagnostics.json file produced by XHarness, evaluate it and send it to AppInsights
 ### The diagnostics.json file contains information about each XHarness command executed during the job
@@ -268,8 +268,15 @@ for operation in operations:
     if reboot and reboot_dimensions is None:
         reboot_dimensions = custom_dimensions
 
+    # TODO (https://github.com/dotnet/core-eng/issues/15274): Stop sending app insights telemetry
     app_insights.send_metric(OPERATION_METRIC_NAME, exit_code, properties=custom_dimensions)
     app_insights.send_metric(DURATION_METRIC_NAME, duration, properties=custom_dimensions)
+
+    kusto_metrics = dict()
+    kusto_metrics[OPERATION_METRIC_NAME] = exit_code
+    kusto_metrics[DURATION_METRIC_NAME] = duration
+
+    send_metrics(kusto_metrics, custom_dimensions)
 
 # Retry / reboot is handled here
 script_dir = os.getenv('HELIX_WORKITEM_ROOT')
