@@ -4,41 +4,40 @@
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Microsoft.DotNet.Build.Tasks.TargetFramework.Sdk
 {
     public class ChooseBestTargetFrameworksTask : BuildTask
     {
         [Required]
-        public ITaskItem[] SupportedTargetFrameworks { get; set; }
-        
-        [Required]
-        public ITaskItem[] BuildTargetFrameworks { get; set; }
+        public string[] BuildTargetFrameworks { get; set; }
 
         [Required]
         public string RuntimeGraph { get; set; }
 
+        [Required]
+        public string[] SupportedTargetFrameworks { get; set; }
+
         [Output]
-        public ITaskItem[] BestTargetFrameworks { get; set; }
+        public string[] BestTargetFrameworks { get; set; }
 
         public override bool Execute()
         {
-            var bestTargetFrameworkList = new List<ITaskItem>();
+            var bestTargetFrameworkList = new HashSet<string>(BuildTargetFrameworks.Length);
             var targetframeworkResolver = new TargetFrameworkResolver(RuntimeGraph);
-            
-            foreach (ITaskItem buildTargetFramework in BuildTargetFrameworks)
+ 
+            foreach (string buildTargetFramework in BuildTargetFrameworks)
             {
-                string bestTargetFramework = targetframeworkResolver.GetBestSupportedTargetFramework(SupportedTargetFrameworks.Select(t => t.ItemSpec), buildTargetFramework.ItemSpec);
+                string bestTargetFramework = targetframeworkResolver.GetBestSupportedTargetFramework(SupportedTargetFrameworks, buildTargetFramework);
                 if (bestTargetFramework != null)
-                {                    
-                    TaskItem item = new TaskItem(SupportedTargetFrameworks.First(t => t.ItemSpec == bestTargetFramework));
-                    buildTargetFramework.CopyMetadataTo(item);
-                    bestTargetFrameworkList.Add(item);
+                {
+                    bestTargetFrameworkList.Add(bestTargetFramework);
                 }
             }
 
-            BestTargetFrameworks = bestTargetFrameworkList.ToArray();
+            BestTargetFrameworks = new string[bestTargetFrameworkList.Count];
+            bestTargetFrameworkList.CopyTo(BestTargetFrameworks);
+ 
             return !Log.HasLoggedErrors;
         }
     }
