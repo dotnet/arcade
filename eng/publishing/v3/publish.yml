@@ -30,7 +30,9 @@ stages:
           value: "2020-02-20"
 
       pool:
-        vmImage: 'windows-2019'
+        name: NetCore1ESPool-Internal
+        demands: ImageOverride -equals Build.Server.Amd64.VS2019
+
       steps:
         - task: PowerShell@2
           displayName: Validate and Locate Build
