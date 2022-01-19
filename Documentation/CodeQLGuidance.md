@@ -181,7 +181,7 @@ For more documentation on the SDL Extension, see [Secure Development Tools Exten
 
 ## Alert suppression
 
-Supression may be done using inline comments (in whatever comment form is appropriate for the language). The comment must appear on the same line as the alert, or the first line if the alert spans multiple lines. 
+Suppression may be done using inline comments (in whatever comment form is appropriate for the language). The comment must appear on the same line as the alert, or the first line if the alert spans multiple lines. 
 
 A suppression comment is made of:
 
