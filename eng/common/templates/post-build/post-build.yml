@@ -211,9 +211,6 @@ stages:
 
     - template: /eng/common/templates/job/execute-sdl.yml
       parameters:
-        AzDOProjectName: $(AzDOProjectName)
-        AzDOPipelineId: $(AzDOPipelineId)
-        AzDOBuildId: $(AzDOBuildId)
         enable: ${{ parameters.SDLValidationParameters.enable }}
         additionalParameters: ${{ parameters.SDLValidationParameters.params }}
         continueOnError: ${{ parameters.SDLValidationParameters.continueOnError }}
