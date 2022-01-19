@@ -20,14 +20,6 @@ If using Arcade,
    - For projects with multiple languages, duplicate the Job for each. 
 4. Create a new Pipeline executing this newly-created definition. 
 
-If using the SDL Azure DevOps Extension,
-
-1. Copy the example pipeline definition from [Use with SDL Azure DevOps Extension](#Use-with-SDL-Azure-DevOps-Extension) section to your repository.
-2. Modify the example to work for your repository's needs
-   - For projects using compiled languages, like C#, update the `buildCommand`.
-   - Update the `language` parameter to match your project's language 
-   - For projects with multiple languages, duplicate the Job for each. 
-3. Create a new Pipeline executing this newly-created definition.
 
 ## Use with Arcade
 
@@ -95,89 +87,6 @@ Much of this template can be used as-is for most repositories. The important ele
 - `additionalParameters`: These are the typical TSA configuration options usually already populated for .NET projects. Ensure that `TsaRepositoryName` and `TsaCodebaseName` are correct for your repository.
 
 For more information on SDL/Guardian in Arcade, see [How To Add SDL Run To Pipeline](https://github.dev/dotnet/arcade/blob/main/Documentation/HowToAddSDLRunToPipeline.md).
-
-## Use with SDL Azure DevOps Extension
-
-The [SDL Azure DevOps Extension](https://aka.ms/sdtvstsext) provides access to Guardian tools through custom pipeline tasks.
-
-```yaml
-variables:
-  LGTM.UploadSnapshot: false  # Do not use the LGTM service
-  Semmle.SkipAnalysis: false  # Do use the Guardian-included alerts
-
-# Execute only on a schedule, once each week
-trigger: none
-
-schedules:
-  - cron: 0 12 * * 1
-    displayName: Weekly Monday CodeQL/Semmle run
-    branches:
-      include:
-      - main
-    always: true
-
-# One stage, one job: just CodeQL
-stages:
-- stage: CodeQL
-  displayName: CodeQL
-
-  jobs:
-  - job: CSharp
-    timeoutInMinutes: 90
-    pool: 
-      name: NetCore1ESPool-Internal
-      demands: ImageOverride -equals Build.Server.Amd64.VS2019
-      displayName: "CodeQL: C#"
-  
-    steps:      
-    # Run the CodeQL (aka Semmle) scan
-    - task: Semmle@1
-      displayName: 'Analyze csharp projects'
-      inputs:
-        toolVersion: 'Latest'
-        sourceCodeDirectory: '$(Build.SourcesDirectory)'
-        language: 'csharp'
-        buildCommandsString: 'build.cmd -configuration Release -prepareMachine /p:Test=false /P:Sign=false'
-        querySuite: 'Required'
-        timeout: '1800'
-        ram: '16384'
-        addProjectDirToScanningExclusionList: true
-
-    # Generate SARIF report
-    - task: SdtReport@2 
-      displayName: Generate Reports
-      inputs:
-        GdnExportAllTools: true
-
-    # Save the report for discovery in the Azure DevOps UI
-    - task: PublishSecurityAnalysisLogs@3
-      displayName: Publish Logs
-      inputs:
-        ArtifactName: CodeAnalysisLogs
-        ArtifactType: Container
-
-    # If alerts are found, fail the build
-    - task: PostAnalysis@2
-      displayName: Post Analysis (Build Break)
-      inputs:
-        GdnBreakAllTools: true
-```
-
-Most of this example may be used as-is by most repositories. The important elements to examine are:
-
-- `language`: The language mode to operate in. 
-- `buildCommandsString`: For compile languages, the command to execute to build the project. For interpreted languages this may be excluded. 
-
-If scanning more than one language, duplicate the Job for each.
-
-More information about these tasks, including a reference for YAML elements, is available from the individual task sites.
-
-- [CodeQL Build Task](https://www.1eswiki.com/wiki/CodeQL_Build_Task) aka Semmle
-- [Security Analysis Report Build Task](https://www.1eswiki.com/wiki/Security_Analysis_Report_Build_Task) aka SdtReport
-- [Publish Security Analysis Logs Build Task](https://www.1eswiki.com/wiki/Publish_Security_Analysis_Logs_Build_Task) aka PublishSecurityAnalysisLogs
-- [Post Analysis Build Task](https://www.1eswiki.com/wiki/Post_Analysis_Build_Task) aka PostAnalysis
-
-For more documentation on the SDL Extension, see [Secure Development Tools Extension For Azure DevOps](https://aka.ms/sdt-AzDevOps)
 
 ## Alert suppression
 
