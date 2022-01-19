@@ -14,7 +14,9 @@ stages:
     jobs:
     - job: Synchronize
       pool:
-        vmImage: windows-2019
+        name: NetCore1ESPool-Internal
+        demands: ImageOverride -equals Build.Server.Amd64.VS2019
+
       steps:
       - task: UseDotNet@2
         displayName: Install Correct .NET Version
