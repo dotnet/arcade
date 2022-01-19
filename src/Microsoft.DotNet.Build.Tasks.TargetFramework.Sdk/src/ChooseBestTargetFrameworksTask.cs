@@ -4,7 +4,6 @@
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Microsoft.DotNet.Build.Tasks.TargetFramework.Sdk
 {
