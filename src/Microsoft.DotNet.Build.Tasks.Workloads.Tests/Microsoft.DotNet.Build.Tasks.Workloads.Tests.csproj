@@ -12,8 +12,9 @@
     <PackageReference Include="Microsoft.Build.Tasks.Core" Version="$(MicrosoftBuildTasksCoreVersion)" />
     <PackageReference Include="Microsoft.Build.Utilities.Core" Version="$(MicrosoftBuildUtilitiesCoreVersion)" />
     <PackageReference Include="Microsoft.Build.Framework" Version="$(MicrosoftBuildFrameworkVersion)" />
+    <PackageReference Include="Microsoft.Deployment.DotNet.Releases" Version="$(MicrosoftDeploymentDotNetReleasesVersion)" />
     <PackageReference Include="Microsoft.NET.Sdk.WorkloadManifestReader" Version="$(MicrosoftNetSdkWorkloadManifestReaderVersion)" />
-    <PackageReference Include="NuGet.Packaging" Version="$(NuGetVersion)" />
+    <PackageReference Include="NuGet.Packaging" Version="$(NuGetVersion)" />    
   </ItemGroup>
 
   <ItemGroup>
