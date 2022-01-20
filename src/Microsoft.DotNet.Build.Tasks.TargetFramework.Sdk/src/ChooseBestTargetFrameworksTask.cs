@@ -41,9 +41,7 @@ namespace Microsoft.DotNet.Build.Tasks.TargetFramework.Sdk
                 }
             }
 
-            BestTargetFrameworks = new TaskItem[bestTargetFrameworkList.Count];
-            bestTargetFrameworkList.CopyTo(BestTargetFrameworks);
- 
+            BestTargetFrameworks = bestTargetFrameworkList.ToArray(); 
             return !Log.HasLoggedErrors;
         }
     }
