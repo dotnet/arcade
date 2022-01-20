@@ -4,13 +4,14 @@
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Microsoft.DotNet.Build.Tasks.TargetFramework.Sdk
 {
     public class ChooseBestTargetFrameworksTask : BuildTask
     {
         [Required]
-        public string[] BuildTargetFrameworks { get; set; }
+        public ITaskItem[] BuildTargetFrameworks { get; set; }
 
         [Required]
         public string RuntimeGraph { get; set; }
@@ -18,24 +19,29 @@ namespace Microsoft.DotNet.Build.Tasks.TargetFramework.Sdk
         [Required]
         public string[] SupportedTargetFrameworks { get; set; }
 
+        // Returns distinct items only. Compares the include values. Metadata is ignored.
+        public bool Distinct { get; set; }
+
         [Output]
-        public string[] BestTargetFrameworks { get; set; }
+        public ITaskItem[] BestTargetFrameworks { get; set; }
 
         public override bool Execute()
         {
-            var bestTargetFrameworkList = new HashSet<string>(BuildTargetFrameworks.Length);
+            var bestTargetFrameworkList = new List<ITaskItem>(BuildTargetFrameworks.Length);
             var targetframeworkResolver = new TargetFrameworkResolver(RuntimeGraph);
  
-            foreach (string buildTargetFramework in BuildTargetFrameworks)
+            foreach (ITaskItem buildTargetFramework in BuildTargetFrameworks)
             {
-                string bestTargetFramework = targetframeworkResolver.GetBestSupportedTargetFramework(SupportedTargetFrameworks, buildTargetFramework);
-                if (bestTargetFramework != null)
+                string bestTargetFramework = targetframeworkResolver.GetBestSupportedTargetFramework(SupportedTargetFrameworks, buildTargetFramework.ItemSpec);
+                if (bestTargetFramework != null && (!Distinct || !bestTargetFrameworkList.Any(b => b.ItemSpec == bestTargetFramework)))
                 {
-                    bestTargetFrameworkList.Add(bestTargetFramework);
+                    var item = new TaskItem(bestTargetFramework);
+                    buildTargetFramework.CopyMetadataTo(item);
+                    bestTargetFrameworkList.Add(item);
                 }
             }
 
-            BestTargetFrameworks = new string[bestTargetFrameworkList.Count];
+            BestTargetFrameworks = new TaskItem[bestTargetFrameworkList.Count];
             bestTargetFrameworkList.CopyTo(BestTargetFrameworks);
  
             return !Log.HasLoggedErrors;
