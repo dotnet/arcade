@@ -46,7 +46,8 @@
     
     <ChooseBestTargetFrameworksTask BuildTargetFrameworks="@(_BuildTargetFrameworkWithTargetOS);$(AdditionalBuildTargetFrameworks)"
                                     SupportedTargetFrameworks="$(TargetFrameworks)"
-                                    RuntimeGraph="$(RuntimeGraph)">
+                                    RuntimeGraph="$(RuntimeGraph)"
+                                    Distinct="true">
       <Output TaskParameter="BestTargetFrameworks" ItemName="_BestTargetFramework" />
     </ChooseBestTargetFrameworksTask>
 
