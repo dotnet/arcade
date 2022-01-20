@@ -68,8 +68,5 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads.Tests
 
             Assert.Equal(expectedManifestId, actual);
         }
-
-        //Microsoft.NET.Workload.Emscripten.Manifest-6.0.100
-
     }
 }
