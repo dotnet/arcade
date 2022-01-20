@@ -3,7 +3,6 @@
 
   <UsingTask TaskName="ChooseBestP2PTargetFrameworkTask" AssemblyFile="$(DotNetBuildTasksTargetFrameworkSdkAssembly)" />
   <UsingTask TaskName="ChooseBestTargetFrameworksTask" AssemblyFile="$(DotNetBuildTasksTargetFrameworkSdkAssembly)" />
-  <UsingTask TaskName="AddTargetFrameworksToProjectTask" AssemblyFile="$(DotNetBuildTasksTargetFrameworkSdkAssembly)" />
 
   <!-- Strip away the TargetPlatforms during the graph build restore for frameworks older than net5.0 -->
   <PropertyGroup Condition="'$(IsGraphBuild)' == 'true' and '$(MSBuildRestoreSessionId)' != ''">
@@ -51,10 +50,12 @@
       <Output TaskParameter="BestTargetFrameworks" ItemName="_BestTargetFramework" />
     </ChooseBestTargetFrameworksTask>
 
-    <AddTargetFrameworksToProjectTask ProjectName="$(MSBuildProjectFile)"
-                                      BestTargetFrameworks="@(_BestTargetFramework)" >
-      <Output TaskParameter="InnerBuildProjects" ItemName="InnerBuildProjectsWithBestTargetFramework" />
-    </AddTargetFrameworksToProjectTask>
+    <!-- Create inner build project nodes with the TargetFramework supplied via AdditionalProperties. -->
+    <ItemGroup>
+      <_BestTargetFramework Project="$(MSBuildProjectFile)" />
+      <InnerBuildProjectsWithBestTargetFramework Include="%(_BestTargetFramework.Project)"
+                                                 AdditionalProperties="TargetFramework=%(Identity)" />
+    </ItemGroup>
   </Target>
 
   <!--
