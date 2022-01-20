@@ -39,7 +39,7 @@
     <MicrosoftNETCorePlatformsVersion>2.1.0</MicrosoftNETCorePlatformsVersion>
     <MicrosoftNetCompilersToolsetVersion>4.0.1-1.22053.6</MicrosoftNetCompilersToolsetVersion>
     <MicrosoftNetTestSdkVersion>16.7.1</MicrosoftNetTestSdkVersion>
-    <MicrosoftNETILLinkTasksVersion>6.0.100-1.21519.4</MicrosoftNETILLinkTasksVersion>
+    <MicrosoftNETILLinkTasksVersion>6.0.100-1.22069.3</MicrosoftNETILLinkTasksVersion>
     <MoqVersion>4.8.3</MoqVersion>
     <MonoOptionsVersion>5.3.0.1</MonoOptionsVersion>
     <McMasterExtensionsCommandLineUtils>2.3.0</McMasterExtensionsCommandLineUtils>
