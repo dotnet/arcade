@@ -3,6 +3,7 @@
     <TargetFrameworks>netcoreapp3.1</TargetFrameworks>
     <LangVersion>Latest</LangVersion>
     <SignAssembly>false</SignAssembly>
+    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\src\Microsoft.DotNet.RemoteExecutor.csproj" />
