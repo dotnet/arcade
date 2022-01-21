@@ -30,14 +30,21 @@ stages:
           value: "2020-02-20"
 
       pool:
-        name: NetCore1ESPool-Internal
-        demands: ImageOverride -equals Build.Server.Amd64.VS2019
+        # We don't use the collection uri here because it might vary (.visualstudio.com vs. dev.azure.com)
+        ${{ if eq(variables['System.TeamProject'], 'DevDiv') }}:
+          name: VSEngSS-MicroBuild2022-1ES
+          demands: Cmd
+        # If it's not devdiv, it's dnceng
+        ${{ if ne(variables['System.TeamProject'], 'DevDiv') }}:
+          name: NetCore1ESPool-Internal
+          demands: ImageOverride -equals Build.Server.Amd64.VS2019
 
       steps:
         - task: PowerShell@2
           displayName: Validate and Locate Build
           inputs:
             targetType: inline
+            pwsh: true
             script: |
               # Keeping this script inline so that we don't need to checkout the whole repo to use just one file
               try {
