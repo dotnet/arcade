@@ -10,7 +10,7 @@ schedules:
     displayName: Weekly Monday CodeQL/Semmle run
     branches:
       include:
-      - main
+      - release/6.0
     always: true
 
 stages:
