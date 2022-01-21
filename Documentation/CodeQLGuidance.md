@@ -10,20 +10,20 @@ CodeQL adds a significant time to builds. We therefore recommend creating a new,
 
 ## TL;DR: Quickstart
 
-If using Arcade, 
+Arcade provides new templates to encapsulate the build process and start the Guardian-driven CodeQL engine. They may be used from an "empty" pipeline definition 
 
 1. Ensure your repository has the latest Arcade version
-2. Copy Arcade's CodeQL pipeline definition file [`azure-pipelines-codeql.yml`](https://github.dev/dotnet/arcade/blob/ecf92bbdc4354adc1960fa53808e87d91624f9b5/azure-pipelines-codeql.yml) to your repository
-3. Modify the pipeline definition to work for your repository's needs
-   - For projects using compiled languages, like C#, update the `buildCommand`.
-   - Update the `language` parameter to match your project's language 
+2. Copy Arcade's CodeQL pipeline definition file [`azure-pipelines-codeql.yml`](https://github.dev/dotnet/arcade/blob/main/azure-pipelines-codeql.yml) to your repository
+3. Modify the pipeline definition to work for your repository's needs. 
+   - For projects using compiled languages, like C#, update the `buildCommand` to build the project. Unlike other Guardian tools, the CodeQL engine executes these in an instrumented environment to enable analysis. Note that if not provided, the engine may use heuristics to build. 
+   - Update the `language` parameter to match your project's language. Valid values are `cpp`, `csharp`, `javascript`, `java`, `python`, and `go`
    - For projects with multiple languages, duplicate the Job for each. 
 4. Create a new Pipeline executing this newly-created definition. 
 
 
 ## Use with Arcade
 
-Arcade version (arcade version) provides a new Job template "[codeql-build.yml](https://github.com/dotnet/arcade/blob/main/eng/common/templates/jobs/codeql-build.yml)" and step template "[execute-codeql.yml](https://github.dev/dotnet/arcade/blob/main/eng/common/templates/steps/execute-codeql.yml)". It extends Arcade's existing use of Guardian to provide SDL tooling and workflow.
+Arcade version (arcade version) provides a new Job template "[codeql-build.yml](https://github.com/dotnet/arcade/blob/main/eng/common/templates/jobs/codeql-build.yml)" and step template "[execute-codeql.yml](https://github.com/dotnet/arcade/blob/main/eng/common/templates/steps/execute-codeql.yml)". It extends Arcade's existing use of Guardian to provide SDL tooling and workflow.
 
 A working example pipeline defintion follows.
 
