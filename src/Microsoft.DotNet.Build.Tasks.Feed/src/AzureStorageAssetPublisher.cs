@@ -4,7 +4,9 @@
 using System;
 using System.Threading;
 using Azure.Storage.Blobs;
+using Azure.Storage.Blobs.Models;
 using Microsoft.Build.Utilities;
+using Microsoft.DotNet.Build.CloudTestTasks;
 #if !NET472_OR_GREATER
 using Microsoft.DotNet.Maestro.Client.Models;
 #endif
@@ -52,7 +54,11 @@ namespace Microsoft.DotNet.Build.Tasks.Feed
 
                 try
                 {
-                    await blobClient.UploadAsync(file);
+                    BlobUploadOptions blobUploadOptions = new()
+                    {
+                        HttpHeaders = AzureStorageUtils.GetBlobHeadersByExtension(file)
+                    };
+                    await blobClient.UploadAsync(file, blobUploadOptions);
                 }
                 catch (Exception e)
                 {
