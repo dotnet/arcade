@@ -1,6 +1,9 @@
 Param(
+  [Parameter(Mandatory)]
   [string] $GuardianCliLocation,
+  [Parameter(Mandatory)]
   [string] $WorkingDirectory,
+  [ValidateSet("Trace", "Verbose", "Standard", "Warning", "Error")]
   [string] $GuardianLoggerLevel='Standard'
 )
 
