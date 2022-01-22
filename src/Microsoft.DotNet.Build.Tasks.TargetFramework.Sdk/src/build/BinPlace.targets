@@ -117,10 +117,16 @@
   </Target>
 
   <Target Name="GetBinPlaceTargetFramework">
-    <!-- find which, if any, supported target framework of this project is best
-         for each binplace targetFramework -->     
+    <ItemGroup>
+      <!-- This needs to be a separate item as batching doesn't work when passing in the ValueOrDefault result directly. -->
+      <_supportedTargetFramework Include="$(TargetFrameworks)" Condition="'$(TargetFrameworks)' != ''" />
+      <_supportedTargetFramework Include="$(TargetFramework)" Condition="'@(_supportedTargetFramework)' == '' and '$(TargetFramework)' != ''" />
+    </ItemGroup>
+
+    <!-- Find which, if any, supported target framework of this project is best
+         for each binplace targetFramework. -->
     <ChooseBestTargetFrameworksTask BuildTargetFrameworks="@(BinPlaceTargetFrameworks)"
-                                    SupportedTargetFrameworks="$([MSBuild]::ValueOrDefault('$(TargetFrameworks)', '$(TargetFramework)'))"
+                                    SupportedTargetFrameworks="@(_supportedTargetFramework)"
                                     RuntimeGraph="$(RuntimeGraph)">
       <Output TaskParameter="BestTargetFrameworks" ItemName="_bestBinPlaceTargetFrameworks" />
     </ChooseBestTargetFrameworksTask>
