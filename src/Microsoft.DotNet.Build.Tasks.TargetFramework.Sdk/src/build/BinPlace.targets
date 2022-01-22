@@ -9,13 +9,13 @@
   <Target Name="BinPlace"
           DependsOnTargets="GetBinPlaceTargetFramework;BinPlaceFiles;BinPlaceProps"
           AfterTargets="CopyFilesToOutputDirectory"
-          Condition="'$(EnableBinPlacing)' == 'true' OR '@(BinPlaceDir)' != ''" />
+          Condition="'$(EnableBinPlacing)' == 'true' or '@(BinPlaceDir)' != ''" />
 
   <Target Name="BinPlaceFiles"
           Condition="'@(BinPlaceDir)' != ''"
           DependsOnTargets="GetBinPlaceItems"
           Inputs="@(BinPlaceDir);%(BinPlaceDir.ItemName);%(BinPlaceDir.Identity)"
-          Outputs="unused" >
+          Outputs="unused">
 
     <PropertyGroup>
       <_BinPlaceItemName>%(BinPlaceDir.ItemName)</_BinPlaceItemName>
@@ -120,8 +120,8 @@
     <!-- find which, if any, supported target framework of this project is best
          for each binplace targetFramework -->     
     <ChooseBestTargetFrameworksTask BuildTargetFrameworks="@(BinPlaceTargetFrameworks)"
-                                   SupportedTargetFrameworks="$(TargetFrameworks)"
-                                   RuntimeGraph="$(RuntimeGraph)" >
+                                    SupportedTargetFrameworks="$([MSBuild]::ValueOrDefault('$(TargetFrameworks)', '$(TargetFramework)'))"
+                                    RuntimeGraph="$(RuntimeGraph)">
       <Output TaskParameter="BestTargetFrameworks" ItemName="_bestBinPlaceTargetFrameworks" />
     </ChooseBestTargetFrameworksTask>
 
