@@ -111,10 +111,6 @@ namespace Microsoft.DotNet.RemoteExecutor
         /// <param name="options">Options to use for the invocation.</param>
         public static RemoteInvokeHandle Invoke(Action method, RemoteInvokeOptions options = null)
         {
-            // There's no exit code to check
-            options = options ?? new RemoteInvokeOptions();
-            options.CheckExitCode = false;
-
             return Invoke(GetMethodInfo(method), Array.Empty<string>(), options);
         }
 
@@ -124,10 +120,6 @@ namespace Microsoft.DotNet.RemoteExecutor
         /// <param name="options">Options to use for the invocation.</param>
         public static RemoteInvokeHandle Invoke(Action<string> method, string arg, RemoteInvokeOptions options = null)
         {
-            // There's no exit code to check
-            options = options ?? new RemoteInvokeOptions();
-            options.CheckExitCode = false;
-
             return Invoke(GetMethodInfo(method), new[] { arg }, options);
         }
 
@@ -137,10 +129,6 @@ namespace Microsoft.DotNet.RemoteExecutor
         public static RemoteInvokeHandle Invoke(Action<string, string> method, string arg1, string arg2,
             RemoteInvokeOptions options = null)
         {
-            // There's no exit code to check
-            options = options ?? new RemoteInvokeOptions();
-            options.CheckExitCode = false;
-
             return Invoke(GetMethodInfo(method), new[] { arg1, arg2 }, options);
         }
 
@@ -150,10 +138,6 @@ namespace Microsoft.DotNet.RemoteExecutor
         public static RemoteInvokeHandle Invoke(Action<string, string, string> method, string arg1, string arg2,
             string arg3, RemoteInvokeOptions options = null)
         {
-            // There's no exit code to check
-            options = options ?? new RemoteInvokeOptions();
-            options.CheckExitCode = false;
-
             return Invoke(GetMethodInfo(method), new[] { arg1, arg2, arg3 }, options);
         }
 
@@ -163,10 +147,6 @@ namespace Microsoft.DotNet.RemoteExecutor
         public static RemoteInvokeHandle Invoke(Action<string, string, string, string> method, string arg1,
             string arg2, string arg3, string arg4, RemoteInvokeOptions options = null)
         {
-            // There's no exit code to check
-            options = options ?? new RemoteInvokeOptions();
-            options.CheckExitCode = false;
-
             return Invoke(GetMethodInfo(method), new[] { arg1, arg2, arg3, arg4 }, options);
         }
 
@@ -216,10 +196,6 @@ namespace Microsoft.DotNet.RemoteExecutor
         /// <param name="options">Options to use for the invocation.</param>
         public static RemoteInvokeHandle Invoke(Func<Task> method, RemoteInvokeOptions options = null)
         {
-            // There's no exit code to check
-            options = options ?? new RemoteInvokeOptions();
-            options.CheckExitCode = false;
-
             return Invoke(GetMethodInfo(method), Array.Empty<string>(), options);
         }
 
@@ -230,10 +206,6 @@ namespace Microsoft.DotNet.RemoteExecutor
         public static RemoteInvokeHandle Invoke(Func<string, Task> method, string arg,
             RemoteInvokeOptions options = null)
         {
-            // There's no exit code to check
-            options = options ?? new RemoteInvokeOptions();
-            options.CheckExitCode = false;
-
             return Invoke(GetMethodInfo(method), new[] { arg }, options);
         }
 
@@ -245,10 +217,6 @@ namespace Microsoft.DotNet.RemoteExecutor
         public static RemoteInvokeHandle Invoke(Func<string, string, Task> method, string arg1, string arg2,
             RemoteInvokeOptions options = null)
         {
-            // There's no exit code to check
-            options = options ?? new RemoteInvokeOptions();
-            options.CheckExitCode = false;
-
             return Invoke(GetMethodInfo(method), new[] { arg1, arg2 }, options);
         }
 
@@ -261,10 +229,6 @@ namespace Microsoft.DotNet.RemoteExecutor
         public static RemoteInvokeHandle Invoke(Func<string, string, string, Task> method, string arg1,
             string arg2, string arg3, RemoteInvokeOptions options = null)
         {
-            // There's no exit code to check
-            options = options ?? new RemoteInvokeOptions();
-            options.CheckExitCode = false;
-
             return Invoke(GetMethodInfo(method), new[] { arg1, arg2, arg3 }, options);
         }
 
