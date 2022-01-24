@@ -16,7 +16,6 @@ schedules:
 stages:
 - stage: build
   displayName: Build
-  # Three phases for each of the three OSes we want to run on
   jobs:
   - template: /eng/common/templates/jobs/codeql-build.yml
     parameters:
