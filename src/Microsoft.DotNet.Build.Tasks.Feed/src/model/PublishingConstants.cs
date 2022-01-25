@@ -411,7 +411,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 2435,
                 true,
                 PublishingInfraVersion.All,
-                new List<string>() { "internal/6.0.2xx", "internal/6.0" },
+                new List<string>() { "internal/6.0.2xx" },
                 DotNet6InternalFeeds,
                 InternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude),
