@@ -416,6 +416,26 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 InternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude),
 
+            // ".NET 6 SDK 6.0.3xx",
+            new TargetChannelConfig(
+                2551,
+                false,
+                PublishingInfraVersion.All,
+                new List<string>() { "6.0.3xx", "6.0" },
+                DotNet6Feeds,
+                PublicAndInternalSymbolTargets,
+                filenamesToExclude: FilenamesToExclude),
+
+            // ".NET 6 SDK 6.0.3xx Internal",
+            new TargetChannelConfig(
+                2552,
+                true,
+                PublishingInfraVersion.All,
+                new List<string>() { "internal/6.0.3xx", "internal/6.0" },
+                DotNet6InternalFeeds,
+                InternalSymbolTargets,
+                filenamesToExclude: FilenamesToExclude),
+
             // ".NET 5" (public),
             new TargetChannelConfig(
                 1299,
