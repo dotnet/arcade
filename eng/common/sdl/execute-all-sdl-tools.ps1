@@ -74,7 +74,7 @@ try {
   }
 
   Exec-BlockVerbosely {
-    & $(Join-Path $PSScriptRoot 'init-sdl.ps1') -GuardianCliLocation $guardianCliLocation -Repository $RepoName -BranchName $BranchName -WorkingDirectory $workingDirectory -AzureDevOpsAccessToken $AzureDevOpsAccessToken -GuardianLoggerLevel $GuardianLoggerLevel
+    & $(Join-Path $PSScriptRoot 'init-sdl.ps1') -GuardianCliLocation $guardianCliLocation -WorkingDirectory $workingDirectory -GuardianLoggerLevel $GuardianLoggerLevel
   }
   $gdnFolder = Join-Path $workingDirectory '.gdn'
 
