@@ -5,6 +5,7 @@
   <UsingTask TaskName="GenPartialFacadeSource" AssemblyFile="$(GenFacadesTargetAssemblyPath)" />
 
   <PropertyGroup>
+    <GenFacadesReferencePathItemName Condition="'$(GenFacadesReferencePathItemName)' == ''">ReferencePath</GenFacadesReferencePathItemName>
     <!-- Tell ResolveMatchingContract to run and resolve contract to project reference -->
     <ResolveMatchingContract>true</ResolveMatchingContract>
     <GeneratePartialFacadeSourceDependsOn>$(GeneratePartialFacadeSourceDependsOn);ResolveMatchingContract</GeneratePartialFacadeSourceDependsOn>
@@ -17,7 +18,7 @@
   </PropertyGroup>
 
   <Target Name="GeneratePartialFacadeSource"
-          Inputs="$(MSBuildAllProjects);@(ResolvedMatchingContract);@(ReferencePath);@(Compile)"
+          Inputs="$(MSBuildAllProjects);@(ResolvedMatchingContract);@($(GenFacadesReferencePathItemName));@(Compile)"
           Outputs="$(OutputSourcePath)"
           DependsOnTargets="$(GeneratePartialFacadeSourceDependsOn)">
     <PropertyGroup>
@@ -25,7 +26,7 @@
     </PropertyGroup>
 
     <GenPartialFacadeSource
-      ReferencePaths="@(ReferencePath)"
+      ReferencePaths="@($(GenFacadesReferencePathItemName))"
       ReferenceAssembly="$(ReferenceAssembly)"
       CompileFiles="@(Compile)"
       DefineConstants="$(DefineConstants)"
