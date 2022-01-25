@@ -421,7 +421,7 @@ namespace Microsoft.DotNet.Build.Tasks.Feed.Model
                 2551,
                 false,
                 PublishingInfraVersion.All,
-                new List<string>() { "6.0.3xx" },
+                new List<string>() { "6.0.3xx", "6.0" },
                 DotNet6Feeds,
                 PublicAndInternalSymbolTargets,
                 filenamesToExclude: FilenamesToExclude),
