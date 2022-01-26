@@ -1,6 +1,6 @@
 # Maestro deployment
 
-The Maestro web application is deployed at <http://maestro-prod.azurewebsites.net>.  It is currently published in the [maestro-prod app service](https://ms.portal.azure.com/#resource/subscriptions/68672ab8-de0c-40f1-8d1b-ffb20bd62c0f/resourcegroups/maestro/providers/Microsoft.Web/sites/maestro-prod/appServices) in the HelixProd Azure subscription.
+The Maestro web application is deployed at <http://maestro-prod.azurewebsites.net>.  It is currently published in the [maestro-prod app service](https://ms.portal.azure.com/#resource/subscriptions/68672ab8-de0c-40f1-8d1b-ffb20bd62c0f/resourcegroups/maestro/providers/Microsoft.Web/sites/maestro-prod/appServices) in the 'Helix' Azure subscription.
 
 ## Logs
 The logs are in the [maestroprodstorage Storage Account](https://ms.portal.azure.com/#resource/subscriptions/68672ab8-de0c-40f1-8d1b-ffb20bd62c0f/resourceGroups/maestro/providers/Microsoft.Storage/storageAccounts/maestroprodstorage/overview).  The CSV files can be viewed by opening the maestro-logs blob container in Azure or your favorite blob storage viewer (e.g. Cloud Explorer in VS or Storage Explorer).
@@ -14,7 +14,7 @@ Whenever a change to the Maestro source code is submitted, the app needs to be p
  4. Build the solution.
  5. Right-click on the Microsoft.DotNet.Maestro.WebApi project, and select Publish.
  6. Select “Microsoft Azure App Service”.
- 7. Select the “maestro-prod” app service in the HelixProd subscription and click OK.
+ 7. Select the “maestro-prod” app service in the 'Helix' subscription and click OK.
  8. On the Settings page of the publish wizard, select the Release configuration.
  9. Click Publish.
  10. Right-click on the Microsoft.DotNet.Maestro.WebJob project, and select Publish as Azure WebJob.
