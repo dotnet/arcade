@@ -2,6 +2,18 @@
 
 ## Process Details
 
+### Glossary of terms:
+
+- **End of life (EOL)**: The date at which an operating system is no longer supported by its publisher. Publishers will often provide more than one timeline for this (often charging customers money for longer terms). For .NET Core's purposes, this is usally the longest possible period where security vulnerabilities will be addressed as this is what customers running .NET on these operating systems expect, as we will need to be able to continue testing the shipped product on these operating systems until the final days of their support lifecycle.
+
+- **Estimated Removal Date (ERD)**: The date that .NET Core Engineering Services intends to remove a test queue or build image. This date is meant to force conversations to be had and actions to be taken, and is not meant to indicate a customer promise of .NET Core's OS support.  The date may be before, or after the EOL date (preferably before) at DncEng's discretion. With the exception of the dotnet-helix-machines build where it can become an error once elapsed, this time is only used to inform warnings to users. Estimated removal dates thus can be arbitrarily extended (leaving history behind in Git commits) with sufficient cause, but the goal is to never have unsupported and un-patch-able operating systems managed by the team.
+
+- **Matrix of Truth**: ([Epic issue link](https://github.com/dotnet/core-eng/issues/11077)) Ongoing work to provide a single source of information for operating system test matrix and life cycle for .NET Core Engineering systems.
+
+- **Helix Queue**: Set of machines, whether they are an Azure VM Scaleset or physical machines, which execute test work items.
+
+- **Build image**: Azure Compute Gallery image used to populate 1ES Pool provider instances used for all .NET Core builds. Due to executive order, we must perform all builds through images pushed to this system.
+
 ### Summary:
 
 #### Why does this "process" exist in the first place?
@@ -13,7 +25,7 @@ Previously, removing old Helix queues and images has been a best-effort process.
 - Users would frequently only find out on rollout that their queue/image had been removed.
 
 #### Who benefits? 
-Helix users benefit from secure, patched machines and a regular communication of when what they use will be deprecated. The .NET Core product teams get the most secure, and accurate-to-real-users'-machines possible images to run tests or builds on.
+Helix users benefit from secure, patched machines and a regular communication of when what they use will be deprecated. The .NET Core product teams get the most secure and accurate-to-real-users'-machines images (that is, containing all the recent patches and updates to operating systems and components which could affect test / product behaviors) possible to run their tests or builds on.
 
 #### What happens if it doesn't happen?
 Without a regular process, we will be bogged down with responding to alerts for VMs or other resources using 'old' images, and even ignoring any security-related implications (reasonable for most Helix test machines, less so for build images), we will continue to pay for storage and compute costs for no-longer-supported operating systems.
@@ -82,6 +94,7 @@ If you feel this removal is in error, or need to extend support beyond this date
   - Documentation: https://dnceng.visualstudio.com/internal/_git/dotnet-helix-machines?path=/definitions/readme.md
   - Pipeline: https://dnceng.visualstudio.com/internal/_build?definitionId=596
   - ImageFactory Wiki (includes access instructions): https://dev.azure.com/devdiv/XlabImageFactory/_wiki/wikis/XlabImageFactory.wiki (includes access instructions)
+  - .NET PM team's OS Version Management calendar: https://dev.azure.com/devdiv/DevDiv/_wiki/wikis/DevDiv.wiki/12624/OS-Version-Management-Calendar-2022 (Adjust year for the current year)
 
 - Known issues impacting the area: None
 - Known tech debt that may cause validation "blindness: 
@@ -97,8 +110,8 @@ When the dotnet-helix-machines-ci build to be rolled out produces warnings with 
 
 When the dotnet-helix-machines-ci build to be rolled out fails with `{QueueOrImageName} has estimated removal date: {c.EstimatedRemovalDate}, which has elapsed.  Either extend this date in the yaml definition or remove it from usage to proceed.`:
 
-1. Review the date and confirm using internet search / .NET Release PM Team calendar.
-2. If the date is incorrect, consult with DncEng operations v-team to determine a new date and extend it via pull-request to this repository
+1. Review the date and confirm using internet search / .NET Release PM Team calendar.  **Note the "Matrix of Truth" data, once it exists, supersedes any data in "Estimated Removal dates"
+2. If the date is incorrect, consult with DncEng Operations v-team (or, use judgment) to determine a new date and extend it via pull-request to this repository
 3. If the date is valid, remove the definition via pull request to this repository.  If we have erroneously never communicated this state, you may use discretion to set a date sometime in the future to keep the current status quo, but please include a comment over the definition explaining why.
 
 - Known issues impacting the area: n/a
@@ -113,7 +126,11 @@ When the dotnet-helix-machines-ci build to be rolled out fails with `{QueueOrIma
 
 After completing manual steps: (cadence TBD, but probably weekly before rollouts), perform the following checks and make a note in https://github.com/dotnet/core-eng/wiki/Helix-Machine-Management-Operations-Notes
 
+Template (insert at top of wiki mentioned abov)
+```
+Date:
 Executor of manual checks: (Github or MS alias)
+Link to Production rollout pipeline: 
 
 Pipeline state:
 - Monitor the next dotnet-helix-machines pipeline execution.  No warnings or errors related to EstimatedRemovalDate time elapsing should be seen.  Provide a link to this pipeline execution.
@@ -122,7 +139,7 @@ Pipeline state:
 Notes: 
 - Anything interesting or unusual that happened as part of this week's check-in.
 - Issue(s) falling out of the process for this week:
-
+```
 
 
 
