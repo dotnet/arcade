@@ -1,6 +1,6 @@
 # Autoscaler - Debugging 
 
-The autoscaler is running on HelixProd and HelixStaging subscriptions. <br>
+The autoscaler is running on all Helix subscriptions and HelixStaging . <br>
 All the logs, traces, and exceptions of the autoscaler live on Application Insights.
 
 If you want to find any error or log about the running service, for production navigate to [dotnet-eng](https://ms.portal.azure.com/#@microsoft.onmicrosoft.com/resource/subscriptions/68672ab8-de0c-40f1-8d1b-ffb20bd62c0f/resourceGroups/dotnet-eng-cluster/providers/microsoft.insights/components/dotnet-eng/logs) and for staging navigate to [dotnet-eng-int](https://ms.portal.azure.com/#@microsoft.onmicrosoft.com/resource/subscriptions/cab65fc3-d077-467d-931f-3932eabf36d3/resourceGroups/dotnet-eng-int-cluster/providers/Microsoft.Insights/components/dotnet-eng-int/logs). You can use this [dotnet-eng/dotnet-eng-int guide](#logs-in-dotnet-engdotnet-eng-int) to navigate the information.
@@ -150,7 +150,7 @@ To access the heartbeats table using Azure Portal, follow these steps:
 
 To access the heartbeats table using Microsoft Azure Storage Explorer, follow these steps:
 1. Open Microsoft Azure Storage Explorer.
-2. Navigate to HelixProd/HelixStaging subscription.
+2. Navigate to Helix/HelixStaging subscription.
 3. Find the storage account helixscripts2 or helixstagescripts2. 
 4. Open the Tables tab.
 5. Click on heartbeats.
