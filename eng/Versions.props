@@ -81,7 +81,7 @@
     <MicrosoftSourceLinkAzureReposGitVersion>1.2.0-beta-22071-02</MicrosoftSourceLinkAzureReposGitVersion>
     <MicrosoftDotNetSwaggerGeneratorMSBuildVersion>7.0.0-beta.22076.9</MicrosoftDotNetSwaggerGeneratorMSBuildVersion>
     <MicrosoftDotNetXliffTasksVersion>1.0.0-beta.22076.1</MicrosoftDotNetXliffTasksVersion>
-    <MicrosoftDotNetMaestroTasksVersion>1.1.0-beta.21615.11</MicrosoftDotNetMaestroTasksVersion>
+    <MicrosoftDotNetMaestroTasksVersion>1.1.0-beta.22076.4</MicrosoftDotNetMaestroTasksVersion>
     <MicrosoftDotNetXHarnessCLIVersion>1.0.0-prerelease.22071.1</MicrosoftDotNetXHarnessCLIVersion>
     <MicrosoftSymbolUploaderBuildTaskVersion>2.0.0-preview.1.21526.15</MicrosoftSymbolUploaderBuildTaskVersion>
     <MicrosoftSymbolUploaderVersion>2.0.0-preview.1.21526.15</MicrosoftSymbolUploaderVersion>
