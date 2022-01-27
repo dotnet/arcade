@@ -48,7 +48,7 @@ Without a regular process, we will be bogged down with responding to alerts for 
     - Patching of Operating systems or updating of artifacts (tracked by https://github.com/dotnet/core-eng/issues/14605)
 
 - Contacts for non-owned parts of the process: For external ownership, who can we talk to?
-  - For end-of-life operating systems, the release PM team owns the final word of when we can actually get rid of support. Certain operating systems can and will be maintained outside their publicly-communicated lifespan, usually owing to some important customer need.  Contact jamshedd, rlander, and rbhanda for questions in this space. Some examples of operating systems we support beyond their normal end-of-life include Ubuntu  16.04 and Windows 7 / Server 2k8R2, but there will be more exceptions.
+  - For end-of-life operating systems, the release PM team owns the final word of when we can actually get rid of support. Certain operating systems can and will be maintained outside their publicly-communicated lifespan, usually owing to some important customer need.  The release PM team is composed of Jamshed Damkewala (jamshedd), Rich Lander (rlander), Lee Coward (leecow), and Rahul Bhandari (rbhanda); contact them for any questions in this space. Some examples of operating systems we support beyond their normal end-of-life include Ubuntu 16.04 and Windows 7 / Server 2k8R2, but there will be more exceptions.
   - DncEng "matrix of truth": IlyaS, general SME : MattGal
 
 ### Process Inputs / Outputs
@@ -63,9 +63,13 @@ Inputs:
 - EstimatedRemovalDate warnings / errors from the dotnet-helix-machines-ci pipeline
 
 Outputs:
+- An issue filed for removal of EOL queues for a particular timetable
 - Removal of Helix image definition from dotnet-helix-machines repository.
-- Communication with the release PM team ensuring any "first time" removed 
+- Communication with the release PM team ensuring any "first time" removals of a given OS are acceptable; this team may veto this and will provide new estimated removal dates if they do
+  - If not removing all instances of an OS at once (e.g. if removing build images while leaving test queues), mark the remaining instances of the OS with a comment indicating removal has already been approved so this step may be skipped
 - Communication blurb following the below template in weekly rollout email.  As these warnings are designed to appear 3 weeks prior to expiration, it should consistently allow the current week's rollout (or "not rolling out" mail) to indicate that users need to take action.
+
+#### Example Communication
 
 The following Helix Queues and/or Build images will be removed on the Wednesday rollout following the estimated date. Please remove usage of these queues/images before this date to keep your pipelines and tests functional.
 
@@ -96,9 +100,8 @@ If you feel this removal is in error, or need to extend support beyond this date
   - ImageFactory Wiki (includes access instructions): https://dev.azure.com/devdiv/XlabImageFactory/_wiki/wikis/XlabImageFactory.wiki (includes access instructions)
   - .NET PM team's OS Version Management calendar: https://dev.azure.com/devdiv/DevDiv/_wiki/wikis/DevDiv.wiki/12624/OS-Version-Management-Calendar-2022 (Adjust year for the current year)
 
-- Known issues impacting the area: None
-- Known tech debt that may cause validation "blindness: 
-  - We need to establish EstimatedRemovalDate for all Helix images / queues : https://github.com/dotnet/core-eng/issues/14994  (we can punt all we want by setting dates 100 years in the future). Until this is done, (ETA 11/30/2021; need to meet with release PMs) removing old stuff is a best-effort process.
+- Known issues impacting the area: [Matrix of Truth](https://github.com/dotnet/core-eng/issues/11077)]
+- Known tech debt: None
 
 #### Manual processes:
 
@@ -120,7 +123,7 @@ When the dotnet-helix-machines-ci build to be rolled out fails with `{QueueOrIma
 
 #### Troubleshooting:
 
-- Ensure all EstimatedRemovalDate values are expressed in MM/DD/YYYY format.  Accidentally using DD/MM/YYYY format will occasionally work (e.g. 11/10/2021 vs 10/11/2021)
+- Ensure all EstimatedRemovalDate values are expressed in YYYY-MM-DD format.
 
 ### Validation Steps
 
@@ -133,7 +136,7 @@ Executor of manual checks: (Github or MS alias)
 Link to Production rollout pipeline: 
 
 Pipeline state:
-- Monitor the next dotnet-helix-machines pipeline execution.  No warnings or errors related to EstimatedRemovalDate time elapsing should be seen.  Provide a link to this pipeline execution.
+- Monitor the next dotnet-helix-machines pipeline execution.  No warnings or errors related to EstimatedRemovalDate time elapsing should be seen.  Provide a link to this pipeline execution.  Validate that all queues expected to be deleted did actually get deleted (this can be seen in the "Run DeployQueues" step of the Deploy Queues job).
 - Monitor First Responders Teams channel for surprised users; in the case of erroneous deprecation, work with DncEng team for a hot fix.  In the case of expected removal, use discretion and help unblock the user.
 
 Notes: 
