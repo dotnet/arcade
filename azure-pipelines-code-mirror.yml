@@ -1,6 +1,9 @@
 # Disable CI triggers, only called using Maestro
 trigger: none
 
+variables:
+  - group: Mirror-Credentials
+
 # Moves code from GitHub into internal repos
 jobs:
 - template: /eng/common/templates/jobs/jobs.yml
