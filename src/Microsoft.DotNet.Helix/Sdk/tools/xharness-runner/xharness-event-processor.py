@@ -174,7 +174,7 @@ def analyze_operation(command: str, platform: str, device: str, is_device: bool,
         #     if exitcode != 0:
         #         retry = True
         #         print('    Detected network connectivity issue. This is typically not a failure of the work item. We will try it again on another Helix agent')
-        #         raise AdditionalTelemetryRequired(NETWORK_CONNECTIVITY_METRIC_NAME, 1)
+        #         raise AdditionalTelemetryRequired(KUSTO_NETWORK_CONNECTIVITY_METRIC_NAME, 1)
 
     elif platform == "apple":
         retry_message = 'This is typically not a failure of the work item. It will be run again. '
@@ -256,7 +256,7 @@ for operation in operations:
 
     if 'target' in operation:
         if 'targetOS' in operation:
-            custom_dimensions['target'] = target + '_' + target_os
+            custom_dimensions['target'] = target + ':' + target_os
         else:
             custom_dimensions['target'] = target
     elif 'targetOS' in operation:
