@@ -5,7 +5,7 @@ using Microsoft.Build.Framework;
 using System;
 using System.IO;
 
-namespace Microsoft.DotNet.Build.Tasks.TargetFramework.Sdk
+namespace Microsoft.DotNet.Build.Tasks.TargetFramework
 {
     public class ChooseBestP2PTargetFrameworkTask : BuildTask
     {

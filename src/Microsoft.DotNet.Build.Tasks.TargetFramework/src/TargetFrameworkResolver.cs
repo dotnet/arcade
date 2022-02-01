@@ -8,7 +8,7 @@ using NuGet.RuntimeModel;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Microsoft.DotNet.Build.Tasks.TargetFramework.Sdk
+namespace Microsoft.DotNet.Build.Tasks.TargetFramework
 {
     /// <summary>
     /// This class uses NuGet's asset selection logic to choose the best TargetFramework given the list of supported TargetFrameworks.

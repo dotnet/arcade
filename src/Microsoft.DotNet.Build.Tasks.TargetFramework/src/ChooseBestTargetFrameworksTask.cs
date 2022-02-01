@@ -6,7 +6,7 @@ using Microsoft.Build.Utilities;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Microsoft.DotNet.Build.Tasks.TargetFramework.Sdk
+namespace Microsoft.DotNet.Build.Tasks.TargetFramework
 {
     public class ChooseBestTargetFrameworksTask : BuildTask
     {

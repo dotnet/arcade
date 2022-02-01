@@ -1,13 +1,7 @@
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
 <Project>
-
-  <UsingTask TaskName="ChooseBestP2PTargetFrameworkTask" AssemblyFile="$(DotNetBuildTasksTargetFrameworkSdkAssembly)" />
-  <UsingTask TaskName="ChooseBestTargetFrameworksTask" AssemblyFile="$(DotNetBuildTasksTargetFrameworkSdkAssembly)" />
-
-  <!-- Strip away the TargetPlatforms during the graph build restore for frameworks older than net5.0 -->
-  <PropertyGroup Condition="'$(IsGraphBuild)' == 'true' and '$(MSBuildRestoreSessionId)' != ''">
-    <TargetFrameworks Condition="'$(TargetFrameworks)' != ''">$([System.Text.RegularExpressions.Regex]::Replace('$(TargetFrameworks)', '$(TargetFrameworkPattern)', '${1}'))</TargetFrameworks>
-  </PropertyGroup>
+  <UsingTask TaskName="ChooseBestP2PTargetFrameworkTask" AssemblyFile="$(DotNetBuildTasksTargetFrameworkAssembly)" />
+  <UsingTask TaskName="ChooseBestTargetFrameworksTask" AssemblyFile="$(DotNetBuildTasksTargetFrameworkAssembly)" />
 
   <!-- We filter _InnerBuildProjects items during DispatchToInnerBuilds and Clean to only run for best target frameworks. -->
   <Target Name="RunOnlyBestTargetFrameworks"
@@ -66,10 +60,6 @@
           Condition="'@(ProjectReference)' != ''"
           BeforeTargets="AssignProjectConfiguration"
           DependsOnTargets="ResolvePackageDependenciesForBuild">
-    <PropertyGroup>
-      <_OriginalTargetFramework Condition="'$(_OriginalTargetFramework)' == ''">$(TargetFramework)</_OriginalTargetFramework>
-    </PropertyGroup>
-
     <MSBuild Projects="@(ProjectReference)"
              Targets="GetTargetFrameworks"
              BuildInParallel="$(BuildInParallel)"
@@ -83,7 +73,7 @@
       <_ProjectReferenceWithTargetFrameworks Include="@(ProjectReference->WithMetadataValue('SkipGetTargetFrameworkProperties', 'true'))" />
     </ItemGroup>
 
-    <ChooseBestP2PTargetFrameworkTask TargetFramework="$(_OriginalTargetFramework)"
+    <ChooseBestP2PTargetFrameworkTask TargetFramework="$(TargetFramework)"
                                       ProjectReferencesWithTargetFrameworks="@(_ProjectReferenceWithTargetFrameworks)"
                                       RuntimeGraph="$(RuntimeGraph)">
       <Output TaskParameter="AnnotatedProjectReferencesWithSetTargetFramework" ItemName="_ProjectReferenceWithBestTargetFramework" />
@@ -95,4 +85,5 @@
     </ItemGroup>
   </Target>
 
+  <Import Project="BinPlace.targets" />
 </Project>

@@ -91,7 +91,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Helix.JobS
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.CMake.Sdk", "src\Microsoft.DotNet.CMake.Sdk\Microsoft.DotNet.CMake.Sdk.csproj", "{B1BFCB54-0FE7-4745-A471-2D7F21B5C7B9}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Build.Tasks.TargetFramework.Sdk", "src\Microsoft.DotNet.Build.Tasks.TargetFramework.Sdk\src\Microsoft.DotNet.Build.Tasks.TargetFramework.Sdk.csproj", "{E83B25A9-66C3-4E15-9BC3-E843CC471622}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Build.Tasks.TargetFramework", "src\Microsoft.DotNet.Build.Tasks.TargetFramework\src\Microsoft.DotNet.Build.Tasks.TargetFramework.csproj", "{E83B25A9-66C3-4E15-9BC3-E843CC471622}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.DotNet.Helix.Sdk.Tests", "src\Microsoft.DotNet.Helix\Sdk.Tests\Microsoft.DotNet.Helix.Sdk.Tests\Microsoft.DotNet.Helix.Sdk.Tests.csproj", "{03390E61-9DC1-4893-93A4-193D76C16034}"
 EndProject
