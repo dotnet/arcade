@@ -1,6 +1,7 @@
 <!-- Licensed to the .NET Foundation under one or more agreements. The .NET Foundation licenses this file to you under the MIT license. -->
 <Project>
-  <UsingTask TaskName="ChooseBestTargetFrameworksTask" AssemblyFile="$(DotNetBuildTasksTargetFrameworkSdkAssembly)"/>
+  <UsingTask TaskName="ChooseBestTargetFrameworksTask" AssemblyFile="$(DotNetBuildTasksTargetFrameworkAssembly)" />
+
   <PropertyGroup>
     <BinPlaceUseHardlinksIfPossible Condition="'$(BinPlaceUseHardlinksIfPossible)' == ''">true</BinPlaceUseHardlinksIfPossible>
     <EnableBinPlacing Condition="'$(EnableBinPlacing)' == '' and ('$(BinPlaceNative)' == 'true' or '$(BinPlaceRef)' == 'true' or '$(BinPlaceRuntime)' == 'true' or '$(BinPlaceTest)' == 'true')">true</EnableBinPlacing>
@@ -59,8 +60,8 @@
 
     <!-- This filename is chosen so that each build of every project has a uniquie filename.-->
     <PropertyGroup>
-      <_propsFilename>$(TargetName).$(_OriginalTargetFramework)</_propsFilename>
-      <_propsFilename Condition="'$(TargetName)' == ''">$(MSBuildProjectName).$(_OriginalTargetFramework)</_propsFilename>
+      <_propsFilename>$(TargetName).$(TargetFramework)</_propsFilename>
+      <_propsFilename Condition="'$(TargetName)' == ''">$(MSBuildProjectName).$(TargetFramework)</_propsFilename>
       <_projectDirLength>$(ProjectDir.Length)</_projectDirLength>
     </PropertyGroup>
 
@@ -130,13 +131,9 @@
                                     RuntimeGraph="$(RuntimeGraph)">
       <Output TaskParameter="BestTargetFrameworks" ItemName="_bestBinPlaceTargetFrameworks" />
     </ChooseBestTargetFrameworksTask>
-
-    <PropertyGroup>
-      <_OriginalTargetFramework Condition="'$(_OriginalTargetFramework)' == ''">$(TargetFramework)</_OriginalTargetFramework>
-    </PropertyGroup>
     
     <ItemGroup>
-      <_currentBinPlaceTargetFrameworks Include="@(_bestBinPlaceTargetFrameworks)" Condition="'%(Identity)' == '$(_OriginalTargetFramework)'" />
+      <_currentBinPlaceTargetFrameworks Include="@(_bestBinPlaceTargetFrameworks)" Condition="'%(Identity)' == '$(TargetFramework)'" />
 
       <BinPlaceDir Condition="'$(BinPlaceNative)' == 'true'" Include="@(_currentBinPlaceTargetFrameworks->'%(NativePath)')" />
       <BinPlaceDir Condition="'$(BinPlaceRef)' == 'true'" Include="@(_currentBinPlaceTargetFrameworks->'%(RefPath)')" />
