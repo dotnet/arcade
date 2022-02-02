@@ -195,7 +195,6 @@ jobs:
         - template: /eng/common/templates/steps/generate-sbom.yml
           parameters:
             BuildDropPath : '$(Build.SourcesDirectory)/artifacts'
-          continueOnError: true
 
         - task: PublishBuildArtifacts@1
           displayName: Push Asset Manifests
