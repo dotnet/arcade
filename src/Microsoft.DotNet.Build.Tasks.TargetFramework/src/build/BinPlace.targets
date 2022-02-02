@@ -4,13 +4,12 @@
 
   <PropertyGroup>
     <BinPlaceUseHardlinksIfPossible Condition="'$(BinPlaceUseHardlinksIfPossible)' == ''">true</BinPlaceUseHardlinksIfPossible>
-    <EnableBinPlacing Condition="'$(EnableBinPlacing)' == '' and ('$(BinPlaceNative)' == 'true' or '$(BinPlaceRef)' == 'true' or '$(BinPlaceRuntime)' == 'true' or '$(BinPlaceTest)' == 'true')">true</EnableBinPlacing>
   </PropertyGroup>
 
   <Target Name="BinPlace"
           DependsOnTargets="GetBinPlaceTargetFramework;BinPlaceFiles;BinPlaceProps"
           AfterTargets="CopyFilesToOutputDirectory"
-          Condition="'$(EnableBinPlacing)' == 'true' or '@(BinPlaceDir)' != ''" />
+          Condition="'$(BinPlaceNative)' == 'true' or '$(BinPlaceRef)' == 'true' or '$(BinPlaceRuntime)' == 'true' or '$(BinPlaceTest)' == 'true' or '@(BinPlaceDir)' != ''" />
 
   <Target Name="BinPlaceFiles"
           Condition="'@(BinPlaceDir)' != ''"
