@@ -23,7 +23,8 @@ stages:
       - job: Windows_NT_CSharp
         timeoutInMinutes: 90
         pool:
-          vmImage: windows-2019
+          name: NetCore1ESPool-Internal
+          demands: ImageOverride -equals Build.Server.Amd64.VS2019
 
         steps:
         - checkout: self
