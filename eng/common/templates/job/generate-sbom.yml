@@ -3,7 +3,7 @@ parameters:
 
 steps:
 - powershell: |
-    if (!(Test-Path -path $(Build.ArtifactStagingDirectory)/sbom-manifest
+    if (!(Test-Path -path $(Build.ArtifactStagingDirectory)/sbom-manifest))
     {
       New-Item -ItemType Directory -path $(Build.ArtifactStagingDirectory)/sbom-manifest
     }
