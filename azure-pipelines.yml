@@ -43,6 +43,7 @@ stages:
       enablePublishUsingPipelines: true
       enableSourceIndex: true
       enableSourceBuild: true
+      enableSbom: true
       workspace:
         clean: all
       jobs:

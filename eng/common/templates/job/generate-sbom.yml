@@ -1,0 +1,25 @@
+parameters:
+  assetsFolder: ''
+
+steps:
+- powershell: |
+    if (!(Test-Path -path $(Build.ArtifactStagingDirectory)/sbom-manifest
+    {
+      New-Item -ItemType Directory -path $(Build.ArtifactStagingDirectory)/sbom-manifest
+    }
+  displayName: Create SBOM output folder
+
+- task: AzureArtifacts.manifest-generator-task.manifest-generator-task.ManifestGeneratorTask@0
+  displayName: 'Generate SBOM manifest'
+  inputs:
+    BuildDropPath: '$(Build.SourcesDirectory)/${{parameters.assetsFolder}}'
+    ManifestDirPath: '$(Build.ArtifactStagingDirectory)/sbom-manifest'
+    Verbosity: 'Verbose'
+    PackageName: '.NET'
+
+- task: PublishPipelineArtifact@1
+  displayName: Publish Sbom manifest
+  inputs:
+    targetPath: '$(Build.ArtifactStagingDirectory)/sbom-manifest'
+    artifactName: BlobArtifacts
+
