@@ -22,13 +22,13 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
 {
     public class AzureStorageUtils
     {
-        private readonly Dictionary<string, string> MimeMappings = new Dictionary<string, string>()
+        private static readonly Dictionary<string, string> MimeMappings = new Dictionary<string, string>()
         {
             {".svg", "image/svg+xml"},
             {".version", "text/plain"}
         };
 
-        private readonly Dictionary<string, string> CacheMappings = new Dictionary<string, string>()
+        private static readonly Dictionary<string, string> CacheMappings = new Dictionary<string, string>()
         {
             {".svg", "no-cache"}
         };
@@ -138,7 +138,7 @@ namespace Microsoft.DotNet.Build.CloudTestTasks
             await GetBlob(blobPath).ExistsAsync().ConfigureAwait(false);
 
 
-        private BlobHttpHeaders GetBlobHeadersByExtension(string filePath)
+        public static BlobHttpHeaders GetBlobHeadersByExtension(string filePath)
         {
             if (string.IsNullOrWhiteSpace(filePath))
             {

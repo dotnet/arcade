@@ -15,7 +15,9 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
 {
     public class GenerateManifestMsi : GenerateTaskBase
     {
-        private Version _sdkFeaureBandVersion;
+        private const string ManifestSeparator = ".Manifest-";
+
+        private ReleaseVersion _sdkFeaureBandVersion;
 
         /// <summary>
         /// Gets or sets whether a corresponding SWIX project should be generated for the MSI.
@@ -55,16 +57,11 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             protected set;
         }
 
-        private Version SdkFeatureBandVersion
+        private ReleaseVersion SdkFeatureBandVersion
         {
             get
             {
-                if (_sdkFeaureBandVersion == null)
-                {
-                    ReleaseVersion sdkReleaseVersion = new ReleaseVersion(SdkVersion);
-
-                    _sdkFeaureBandVersion = new($"{sdkReleaseVersion.Major}.{sdkReleaseVersion.Minor}.{sdkReleaseVersion.SdkFeatureBand}");
-                }
+                _sdkFeaureBandVersion ??= GetSdkFeatureBandVersion(SdkVersion);
 
                 return _sdkFeaureBandVersion;
             }
@@ -121,27 +118,26 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
                 NugetPackage nupkg = new(WorkloadManifestPackage, Log);
                 List<TaskItem> msis = new();
 
-                var manifestSeparator = ".Manifest-";
+                // Extract the manifest ID from manifest package ID if no value was provided.
                 if (string.IsNullOrWhiteSpace(ManifestId))
                 {
-                    if ($"{nupkg.Id}".IndexOf(manifestSeparator, StringComparison.OrdinalIgnoreCase) == -1)
+                    ManifestId = GetManifestIdFromPackageId(nupkg.Id);
+
+                    if (string.IsNullOrWhiteSpace(ManifestId))
                     {
                         Log.LogError($"Unable to parse a manifest ID from package ID: '{nupkg.Id}'. Please provide the 'ManifestId' parameter.");
                     }
-                    else
-                    {
-                        ManifestId = $"{nupkg.Id}".Substring(0, $"{nupkg.Id}".IndexOf(manifestSeparator));
-                    }
                 }
+
+                // If no explicit SDK version is provided we extract it from the package ID. Manifest packages
+                // have a fixed format that must end in the target SDK.
                 if (string.IsNullOrWhiteSpace(SdkVersion))
                 {
-                    if ($"{nupkg.Id}".IndexOf(manifestSeparator, StringComparison.OrdinalIgnoreCase) == -1)
-                    {
+                    SdkVersion = GetSdkVersionFromPackageId(nupkg.Id);
+
+                    if (string.IsNullOrWhiteSpace(SdkVersion))
+                    { 
                         Log.LogError($"Unable to parse the SDK version from package ID: '{nupkg.Id}'. Please provide the 'SdkVersion' parameter.");
-                    }
-                    else
-                    {
-                        SdkVersion = $"{nupkg.Id}".Substring($"{nupkg.Id}".IndexOf(manifestSeparator) + manifestSeparator.Length);
                     }
                 }
 
@@ -194,7 +190,7 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
 
                     // To support upgrades, the UpgradeCode must be stable withing a feature band.
                     // For example, 6.0.101 and 6.0.108 will generate the same GUID for the same platform.
-                    var upgradeCode = Utils.CreateUuid(GenerateMsiBase.UpgradeCodeNamespaceUuid, $"{ManifestId};{SdkFeatureBandVersion};{platform}");
+                    var upgradeCode = GenerateUpgradeCode(ManifestId, SdkFeatureBandVersion, platform);
                     var productCode = Guid.NewGuid();
                     Log.LogMessage($"UC: {upgradeCode}, PC: {productCode}, {SdkFeatureBandVersion}, {SdkVersion}, {platform}");
 
@@ -441,6 +437,43 @@ namespace Microsoft.DotNet.Build.Tasks.Workloads
             }
 
             return swixTask.SwixProject;
+        }
+
+        internal static string GetManifestIdFromPackageId(string packageId)
+        {
+            return !string.IsNullOrWhiteSpace(packageId) && packageId.IndexOf(ManifestSeparator) > -1 ?
+                packageId.Substring(0, packageId.IndexOf(ManifestSeparator)) :
+                null;
+        }
+
+        internal static string GetSdkVersionFromPackageId(string packageId)
+        {
+            return !string.IsNullOrWhiteSpace(packageId) && packageId.IndexOf(ManifestSeparator) > -1 ?
+                packageId.Substring(packageId.IndexOf(ManifestSeparator) + ManifestSeparator.Length) :
+                null;
+        }
+
+        internal static ReleaseVersion GetSdkFeatureBandVersion(string version)
+        {
+            ReleaseVersion sdkVersion = new(version);
+
+            if (string.IsNullOrEmpty(sdkVersion.Prerelease) || sdkVersion.Prerelease.Split('.').Any(s => string.Equals("ci", s) || string.Equals("dev", s)))
+            {
+                return new ReleaseVersion(sdkVersion.Major, sdkVersion.Minor, sdkVersion.SdkFeatureBand);
+            }
+
+            string[] preleaseParts = sdkVersion.Prerelease.Split('.');
+
+            string prerelease = (preleaseParts.Length > 1) ?
+                $"{preleaseParts[0]}.{preleaseParts[1]}" :
+                preleaseParts[0];
+            
+            return new ReleaseVersion(sdkVersion.Major, sdkVersion.Minor, sdkVersion.SdkFeatureBand, prerelease);
+        }
+
+        internal static Guid GenerateUpgradeCode(string manifestId, ReleaseVersion sdkFeatureBandVersion, string platform)
+        {
+            return Utils.CreateUuid(GenerateMsiBase.UpgradeCodeNamespaceUuid, $"{manifestId};{sdkFeatureBandVersion};{platform}");
         }
     }
 }

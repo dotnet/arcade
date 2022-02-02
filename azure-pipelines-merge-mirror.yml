@@ -1,6 +1,9 @@
 # Disable CI triggers, only called using Maestro
 trigger: none
 
+variables:
+  - group: Mirror-Credentials
+
 # Merges code from GitHub into internal branches in internal repos
 jobs:
 - template: /eng/common/templates/jobs/jobs.yml
@@ -10,7 +13,8 @@ jobs:
     jobs:
     - job: Merge_GitHub_to_Azure_DevOps
       pool:
-        vmImage: 'windows-2019'
+        name: NetCore1ESPool-Internal
+        demands: ImageOverride -equals Build.Server.Amd64.VS2019
       variables:
       - name: WorkingDirectoryName
         value: repo-dir

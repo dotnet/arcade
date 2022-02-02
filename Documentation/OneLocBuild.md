@@ -73,17 +73,34 @@ If you're releasing from the main branch of your repository, all that you need t
 PRs from OneLocBuild as they are made and that you allow the translator SLA for any new strings prior to the release.
 
 ### If You're Releasing from a Branch Other Than `main` (Including Servicing Branches)
-If you're releasing from any other branch (including servicing branches), you must do the following:
-
-1. Add the OneLocBuild job template to the pipeline YAML of the release branch. When you do this, you have to change the YAML of both the main branch and the target branch to include a conditional specifying 
+Depending on how often you want to release from the servicing branch you could:
+* Change the loc task, that parses your default branch, to temporarily parse resources from the servicing branch. Here is what you would need to do for that:
+  1. Add the OneLocBuild job template to the pipeline YAML of the release branch. When you do this, you have to change the YAML of both the main branch and the target branch to include a conditional specifying 
    the target branch rather than main (as above). Additionally, your YAML should include the following line (substituting your target branch for `target-branch`):
-```yaml
-  MirrorBranch: target-branch
-```
-2. Open a [repo modification ticket](https://aka.ms/ceChangeLocConfig) with the 
+   ```yaml
+      MirrorBranch: target-branch
+   ```
+  2. Open a [repo modification ticket](https://aka.ms/ceChangeLocConfig) with the 
    loc team at least two weeks before the release and request that they re-target your repository to the release branch.
-3. Merge the OneLocBuild PRs to your release branch.
-4. After the release, open another repo modification ticket to re-target your repository to the `main` branch again.
+  3. Merge the OneLocBuild PRs to your release branch.
+  4. After the release, open another repo modification ticket to re-target your repository to the `main` branch again.
+
+* Register a servicing branch with the loc team using [this ticket](https://aka.ms/ceNewLoc) ([Here](https://ceapex.visualstudio.com/CEINTL/_workitems/edit/523494)'s an example). This allows the loc team to parse your servicing branch(es) while your default branch continues to be parsed. If you already have an old servicing branch parsed by the loc team, you could update it to point to a newer servicing branch. Here's what you would need to do to update the branch:
+   1. Open a [repo modification ticket](https://aka.ms/ceChangeLocConfig) with the 
+   loc team at least two weeks before the release and request that they re-target your servicing branch to new branch.
+   2. Ask the loc team for a package Id for this servicing branch on the ticket. The value of the Package ID would then be substituted in the YAML of the OneLocBuild task.
+   ```yaml
+      LclPackageId: 'LCL-JUNO-PROD-YOURREPOSVC'
+   ```
+   3. Update the conditional on the OneLocBuild task to point to the right branch and change/add in a MirrorBranch field to the task as well. So if the servicing branch is `dev17.0.x` the task would look like:
+   ```yaml
+   - ${{ if eq(variables['Build.SourceBranch'], 'refs/heads/dev17.0.x') }}:
+     - template: /eng/common/templates/job/onelocbuild.yml
+       parameters:
+         LclSource: lclFilesfromPackage
+         LclPackageId: 'LCL-JUNO-PROD-YOURREPOSVC'
+         MirrorBranch: dev17.0.x
+   ```
 
 # Common Issues
 

@@ -5,7 +5,7 @@ using Microsoft.Build.Framework;
 using System;
 using System.IO;
 
-namespace Microsoft.DotNet.Build.Tasks.TargetFramework.Sdk
+namespace Microsoft.DotNet.Build.Tasks.TargetFramework
 {
     public class ChooseBestP2PTargetFrameworkTask : BuildTask
     {
@@ -52,7 +52,25 @@ namespace Microsoft.DotNet.Build.Tasks.TargetFramework.Sdk
                         Log.LogError($"Not able to find a compatible supported target framework for {referringTargetFramework} in Project {Path.GetFileName(projectReference.ItemSpec)}. The Supported Configurations are {string.Join(", ", targetFrameworks)}");
                     }
 
-                    projectReference.SetMetadata("SetTargetFramework", "TargetFramework=" + bestTargetFramework);
+                    // Mimic msbuild's Common.targets behavior: https://github.com/dotnet/msbuild/blob/3c8fb11a080a5a15199df44fabf042a22e9ad4da/src/Tasks/Microsoft.Common.CurrentVersion.targets#L1842-L1853
+                    if (projectReference.GetMetadata("HasSingleTargetFramework") != "true")
+                    {
+                        projectReference.SetMetadata("SetTargetFramework", "TargetFramework=" + bestTargetFramework);
+                    }
+                    else
+                    {
+                        // If the project has a single TargetFramework, we need to Undefine TargetFramework to avoid another project evaluation.
+                        string undefineProperties = projectReference.GetMetadata("UndefineProperties");
+                        projectReference.SetMetadata("UndefineProperties", undefineProperties + ";TargetFramework");
+                    }
+
+                    if (projectReference.GetMetadata("IsRidAgnostic") == "true")
+                    {
+                        // If the project is RID agnostic, undefine the RuntimeIdentifier property to avoid another evaluation. -->
+                        string undefineProperties = projectReference.GetMetadata("UndefineProperties");
+                        projectReference.SetMetadata("UndefineProperties", undefineProperties + ";RuntimeIdentifier");
+                    }
+
                     projectReference.SetMetadata("SkipGetTargetFrameworkProperties", "true");
                 }
 

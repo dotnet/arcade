@@ -29,7 +29,7 @@
         $(RepoRoot)src/Microsoft.DotNet.Arcade.Sdk/tools/BuildTasks.props;
         $(RepoRoot)src/Microsoft.DotNet.Build.Tasks.Installers/build/Microsoft.DotNet.Build.Tasks.Installers.props;
         $(RepoRoot)src/Microsoft.DotNet.Build.Tasks.Packaging/src/build/Packaging.common.targets;
-        $(RepoRoot)src/Microsoft.DotNet.Build.Tasks.TargetFramework.Sdk/src/build/Microsoft.DotNet.Build.Tasks.TargetFramework.Sdk.props;
+        $(RepoRoot)src/Microsoft.DotNet.Build.Tasks.TargetFramework/src/build/Microsoft.DotNet.Build.Tasks.TargetFramework.props;
         $(RepoRoot)src/Microsoft.DotNet.GenFacades/build/Microsoft.DotNet.GenFacades.targets;
         $(RepoRoot)src/Microsoft.DotNet.SourceBuild/tasks/build/Microsoft.DotNet.SourceBuild.Tasks.props" />
     </ItemGroup>

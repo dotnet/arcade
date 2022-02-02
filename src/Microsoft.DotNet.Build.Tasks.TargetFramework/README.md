@@ -1,4 +1,4 @@
-Part of the TargetFramework SDK is the binplacing infrastructure which is described below. The TargetFramework SDK infrastructure itself isn't yet documented.
+Part of the TargetFramework package is the binplacing infrastructure which is described below. The TargetFramework package infrastructure itself isn't yet documented.
 
 ## BinPlacing
 
