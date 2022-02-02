@@ -6,7 +6,7 @@ parameters:
 
 steps:
 - powershell: |
-    if (!(Test-Path -path ${{parameters.manifestDirPath}})
+    if (!(Test-Path -path ${{parameters.manifestDirPath}}))
     {
       New-Item -ItemType Directory -path ${{parameters.manifestDirPath}}
     }
