@@ -31,7 +31,7 @@ parameters:
   name: ''
   preSteps: []
   runAsPublic: false
-  enableSbom : false
+  enableSbom : true
 
 jobs:
 - job: ${{ parameters.name }}
@@ -192,9 +192,10 @@ jobs:
 
     - ${{ if and(eq(parameters.runAsPublic, 'false'), ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
       - ${{ if eq(parameters.enableSbom, 'true') }}:
-        - template: /eng/common/templates/job/generate-sbom.yml
+        - template: /eng/common/templates/steps/generate-sbom.yml
           parameters:
-            assetsFolder: 'artifacts'
+            BuildDropPath : '$(Build.SourcesDirectory)/artifacts'
+          continueOnError: true
 
         - task: PublishBuildArtifacts@1
           displayName: Push Asset Manifests
