@@ -1,5 +1,6 @@
 parameters:
   BuildDropPath: ''
+  BuildComponentPath: ''
   PackageName: '.NET'
   PackageVersion: '7.0'
   ManifestDirPath: $(Build.ArtifactStagingDirectory)\sbom
@@ -22,6 +23,7 @@ steps:
       BuildDropPath: ${{parameters.buildDropPath}}
       PackageVersion: ${{parameters.packageVersion}}
       ManifestDirPath: ${{parameters.manifestDirPath}}
+      BuildComponentPath: ${{parameters.buildComponentPath}}
 
 - task: PublishPipelineArtifact@1
   displayName: Publish SBOM manifest

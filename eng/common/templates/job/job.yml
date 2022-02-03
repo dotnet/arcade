@@ -254,4 +254,6 @@ jobs:
     - ${{ if eq(parameters.enableSbom, 'true') }}:
       - template: /eng/common/templates/steps/generate-sbom.yml
         parameters:
-          BuildDropPath : '$(Build.SourcesDirectory)'
+          BuildDropPath : '$(Build.SourcesDirectory)/artifacts'
+          BuildComponentPath : '$(Build.SourceDirectory)/.packages'
+
