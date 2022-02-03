@@ -3,6 +3,7 @@ parameters:
   PackageName: '.NET'
   PackageVersion: '7.0'
   ManifestDirPath: $(Build.ArtifactStagingDirectory)\sbom
+  sbomContinueOnError: true
 
 steps:
 - powershell: |
@@ -11,9 +12,11 @@ steps:
       New-Item -ItemType Directory -path ${{parameters.manifestDirPath}}
     }
   displayName: Create SBOM output folder
+  continueOnError: ${{parameters.sbomContinueOnError}}
 
 - task: AzureArtifacts.manifest-generator-task.manifest-generator-task.ManifestGeneratorTask@0
   displayName: 'Generate SBOM manifest'
+  continueOnError: ${{parameters.sbomContinueOnError}}
   inputs:
       PackageName: ${{parameters.packageName}}
       BuildDropPath: ${{parameters.buildDropPath}}
@@ -22,6 +25,7 @@ steps:
 
 - task: PublishPipelineArtifact@1
   displayName: Publish Sbom manifest
+  continueOnError: ${{parameters.sbomContinueOnError}}
   inputs:
     targetPath: '${{parameters.manifestDirPath}}'
     artifactName: $(System.StageName)_$(Agent.JobName)_SBOM

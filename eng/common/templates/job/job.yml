@@ -31,7 +31,6 @@ parameters:
   name: ''
   preSteps: []
   runAsPublic: false
-  enableSbom : true
 
 jobs:
 - job: ${{ parameters.name }}
@@ -190,12 +189,6 @@ jobs:
           continueOnError: ${{ parameters.continueOnError }}
           condition: and(succeeded(), eq(variables['_DotNetPublishToBlobFeed'], 'true'))
 
-    - ${{ if and(eq(parameters.runAsPublic, 'false'), ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
-      - ${{ if eq(parameters.enableSbom, 'true') }}:
-        - template: /eng/common/templates/steps/generate-sbom.yml
-          parameters:
-            BuildDropPath : '$(Build.SourcesDirectory)/artifacts'
-
         - task: PublishBuildArtifacts@1
           displayName: Push Asset Manifests
           inputs:
@@ -255,3 +248,8 @@ jobs:
         ArtifactName: AssetManifests
       continueOnError: ${{ parameters.continueOnError }}
       condition: and(succeeded(), eq(variables['_DotNetPublishToBlobFeed'], 'true'))
+
+  - ${{ if and(eq(parameters.runAsPublic, 'false'), ne(variables['System.TeamProject'], 'public'), notin(variables['Build.Reason'], 'PullRequest')) }}:
+    - template: /eng/common/templates/steps/generate-sbom.yml
+      parameters:
+        BuildDropPath : '$(Build.SourcesDirectory)/artifacts'
